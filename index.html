@@ -576,7 +576,7 @@ hr{border:0;border-top:1.5px solid var(--paperline);margin:16px 0}
 .wm-home{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);padding:8px 26px;border-radius:12px;border:2px solid #6b3b1f;background:#c0392b;color:#fff;font-family:inherit;font-size:18px;box-shadow:0 3px 10px rgba(0,0,0,.45)}
 @keyframes wmglow{0%,100%{opacity:.4;transform:scale(.85)}50%{opacity:1;transform:scale(1.15)}}
 @keyframes wmpop{from{opacity:0;transform:translate(-50%,-30%) scale(.8)}to{opacity:1;transform:translate(-50%,-50%)}}
-</style>
+.keystat{color:#b3261e;font-weight:700;font-size:1.15em}.sortnote{color:#b3261e;font-weight:700;margin-top:-4px}</style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute">
@@ -8880,11 +8880,12 @@ const UI = {
   postStatTxt(g, post) { const s = POSTS[post].stat; return s >= 0 ? `${STAT_NAMES[s]} ${F.stat(g, s)}` : `等級 ${F.glv(g)}`; },
   pickWorker(post, back) {
     const s = POSTS[post].stat;
-    const list = S.ghosts.filter(g => g.k !== 'afu' && g.post !== post).sort((a, b) => (s >= 0 ? F.stat(b, s) - F.stat(a, s) : F.glv(b) - F.glv(a)));
-    let h = `<p class="desc">挑一位去「${POSTS[post].name}」。${s >= 0 ? `這份工看【${STAT_NAMES[s]}】。` : '這份工看等級。'}已在別處打工的，會被調過來。</p><div class="glist">`;
+    const val = (g) => s >= 0 ? F.stat(g, s) : F.glv(g), fbd = (g) => (GHOSTS[g.k] && GHOSTS[g.k].forbid || []).includes(post) ? 1 : 0;
+    const list = S.ghosts.filter(g => g.k !== 'afu' && g.post !== post).sort((a, b) => fbd(a) - fbd(b) || val(b) - val(a) || F.glv(b) - F.glv(a));
+    let h = `<p class="desc">挑一位去「${POSTS[post].name}」。${s >= 0 ? `這份工看【${STAT_NAMES[s]}】。` : '這份工看等級。'}已在別處打工的，會被調過來。</p><p class="desc sortnote">▼ 已按【${s >= 0 ? STAT_NAMES[s] : '等級'}】由高到低排好</p><div class="glist">`;
     for (const g of list) {
       const fb = (GHOSTS[g.k] && GHOSTS[g.k].forbid || []).includes(post);
-      h += `<div class="gi ${fb ? 'dis' : ''}" data-g="${g.id}"><canvas data-por="${g.k}"></canvas><div><b>${g.name}</b> <i class="q q${g.q}">${g.q}</i><small>Lv${F.glv(g)}　力${F.stat(g, 0)} 智${F.stat(g, 1)} 武${F.stat(g, 2)}</small><small>${g.post ? '目前：' + POSTS[g.post].name : '閒著'}${fb ? '　<span class="lack">怕糯米，不肯去</span>' : ''}</small></div></div>`;
+      h += `<div class="gi ${fb ? 'dis' : ''}" data-g="${g.id}"><canvas data-por="${g.k}"></canvas><div><b>${g.name}</b> <i class="q q${g.q}">${g.q}</i><small><span class="keystat">${s >= 0 ? STAT_NAMES[s] : '等級'} ${val(g)}</span>　${s >= 0 ? 'Lv' + F.glv(g) + '　' : ''}${[0, 1, 2].filter(i => i !== s).map(i => STAT_NAMES[i] + F.stat(g, i)).join(' ')}</small><small>${g.post ? '目前：' + POSTS[g.post].name : '閒著'}${fb ? '　<span class="lack">怕糯米，不肯去</span>' : ''}</small></div></div>`;
     }
     if (!list.length) h += '<p class="desc">沒有可以派的鬼怪。</p>';
     h += `</div><button class="btn wide" id="pkback">返回</button>`;
@@ -11353,7 +11354,7 @@ const World = {
 
 // ===================== 網址版（GitHub Pages）＋ 下載檔案當啟動器 =====================
 // 下載的檔案：打開就把存檔搬到網址版，直接開始玩。網址版：可以加到手機桌面，離線也能玩，更新自動生效。
-const GAME_VER = '2026.11.07r';
+const GAME_VER = '2026.11.07s';
 const WEB_URL = 'https://lawrancelow.github.io/ghost-battles/';
 const IS_WEB = /^https?:$/.test(location.protocol) && /github\.io$/.test(location.hostname);
 const IS_FILE = !/^https?:$/.test(location.protocol);
