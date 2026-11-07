@@ -6519,7 +6519,7 @@ const Graveyard = {
 // ===================== 出村：陰間地圖 =====================
 // 從村口牌坊出去，先到這張地圖，再選要去哪裡。
 const World = {
-  YARD_READY: false, // 亂葬崗推理驗證完成後打開
+  YARD_READY: true, // 亂葬崗推理驗證完成後打開
   // 地圖上的去處：位置（圖的比例）、名稱、怎麼打開、什麼時候開放
   SPOTS: [
     { id:'battle', x:0.48, y:0.20, lx:0.46, ly:0.23, name:'出征', sub:'彼岸花戰場', go:() => UI.open('battle') },
@@ -6550,7 +6550,7 @@ const World = {
 
 // ===================== 網址版（GitHub Pages）＋ 下載檔案當啟動器 =====================
 // 下載的檔案：打開就把存檔搬到網址版，直接開始玩。網址版：可以加到手機桌面，離線也能玩，更新自動生效。
-const GAME_VER = '2026.11.07j';
+const GAME_VER = '2026.11.07k';
 const WEB_URL = 'https://lawrancelow.github.io/ghost-battles/';
 const IS_WEB = /^https?:$/.test(location.protocol) && /github\.io$/.test(location.hostname);
 const IS_FILE = !/^https?:$/.test(location.protocol);
