@@ -2194,20 +2194,22 @@ const SPECIAL = (() => {
   const HOP_SY = [[0, 1], [0.15, 0.84], [0.24, 1.14], [0.45, 1.03], [0.62, 1.08], [0.70, 1.1], [0.78, 0.8], [0.89, 1.05], [1, 1]];
 
   // ---------- 每個實例的狀態（彈簧、攻擊計時），以位置追蹤 ----------
-  const states = new Map(); let uid = 0, lastClean = 0;
+  const states = new Map(); let uid = 0, lastClean = 0, epoch = 0, lastCall = 0;
   function getState(type, x, o) {
     const now = performance.now();
+    if (now - lastCall > 6) epoch++; // 同一幀內的連續繪製算同一輪；一個狀態一輪只能被一個角色認領
+    lastCall = now;
     let st = null;
     if (o.key != null) st = states.get(type + '#' + o.key);
     else {
       let best = 1e9;
       for (const s of states.values()) {
-        if (s.type !== type || s.keyed || now - s.seen > 400 || now - s.seen < 4) continue; // <4ms：同一幀已被別人認領
+        if (s.type !== type || s.keyed || now - s.seen > 400 || s.ep === epoch) continue;
         const d = Math.abs(s.x - x); if (d < 30 && d < best) { best = d; st = s; }
       }
     }
     if (!st) {
-      st = { type, keyed:o.key != null, x, seen:now - 16, L:0, V:0, aclk:-1, atkOn:false, hclk:-1, hurtOn:false };
+      st = { type, keyed:o.key != null, x, seen:now - 16, ep:-1, L:0, V:0, aclk:-1, atkOn:false, hclk:-1, hurtOn:false };
       states.set(o.key != null ? type + '#' + o.key : type + '@' + (uid++), st);
     }
     let dt = (now - st.seen) / 1000; dt = dt < 0 ? 0 : dt > 0.05 ? 0.05 : dt;
@@ -2216,7 +2218,7 @@ const SPECIAL = (() => {
     st.L -= (o.flip ? -dx : dx);
     for (let i = 0; i < 2; i++) { const h = dt / 2, a = -170 * st.L - 9 * st.V; st.V += a * h; st.L += st.V * h; }
     if (st.L > 9) st.L = 9; else if (st.L < -9) st.L = -9;
-    st.x = x; st.seen = now; st.dt = dt;
+    st.x = x; st.seen = now; st.dt = dt; st.ep = epoch;
     if (now - lastClean > 2000) { lastClean = now; for (const [k, s] of states) if (now - s.seen > 2000) states.delete(k); }
     return st;
   }
@@ -2243,7 +2245,7 @@ const SPECIAL = (() => {
   // local(u, v, P, out)：圖內局部位移；lag(u,v)：該點用多少秒前的姿勢；gain：跟隨誇張度
   const C = {};
   C.penanggal = {
-    grid:[8, 22], pu:0.46, pv:0.37, cap:4.5,
+    grid:[7, 18], pu:0.46, pv:0.37, cap:4.5,
     drive(G, tt, pa, ph, o, hf) { // hf：高頻抖動的保留比例（延遲取樣時壓低，避免網格混疊撕裂）
       let x = Math.sin(tt * 1.3) * 1.2, y = -4 - Math.sin(tt * 2.6) * 2.2, r = Math.sin(tt * 1.3 + 0.6) * 0.06, sx = 1, sy = 1;
       if (o.walk) { y -= Math.sin(tt * 5.2) * 1.6; r += 0.1 + Math.sin(tt * 5.2 + 0.8) * 0.05; x += Math.sin(tt * 2.6) * 1; }
@@ -2277,7 +2279,7 @@ const SPECIAL = (() => {
     gain(u, v, W) { return 1 + 0.12 * W.dw; },
   };
   C.pocong = {
-    grid:[4, 22], pu:0.5, pv:1, cap:1.6,
+    grid:[3, 18], pu:0.5, pv:1, cap:1.6,
     hopping(o) { return !!(o.walk || o.enemy || o.work); },
     hop(tt, o) { // 回傳 [相位, 高度]
       const rate = o.work ? 2.2 : o.walk ? 1.55 : 1.25, h = o.work ? 2.5 : o.walk ? 7 : 4.5;
@@ -2314,7 +2316,7 @@ const SPECIAL = (() => {
     gain(u, v, W) { return 1 + 0.4 * W.kw; },
   };
   C.toyol = {
-    grid:[6, 22], pu:0.5, pv:0.62, cap:4,
+    grid:[5, 18], pu:0.5, pv:0.62, cap:4,
     drive(G, tt, pa, ph, o, hf) { // hf：高頻抖動的保留比例（延遲取樣時壓低，避免網格混疊撕裂）
       let x = Math.sin(tt * 1.4) * 0.8, y = -Math.sin(tt * 2.8) * 1.0, r = Math.sin(tt * 1.7) * 0.05, sy = 1 + Math.sin(tt * 3.0) * 0.02, sx = 1 - Math.sin(tt * 3.0) * 0.012;
       if (o.walk) { r += 0.15 + Math.sin(tt * 6) * 0.03; y += Math.sin(tt * 6) * 0.9; }
@@ -2497,13 +2499,15 @@ const SPECIAL = (() => {
   return {
     has(type) { return !!(C[type] && typeof SPR !== 'undefined' && SPR[type] && SPR[type].naturalWidth); },
     draw,
-    _dbg:{ VX, VY },
+    _dbg:{ VX, VY, C },
   };
 })();
 
 // ===================== 木偶貼片動畫（關節會動的角色）=====================
 // 每個角色拆成頭、身體、手臂（上臂＋前臂），工具拿在手上。座標都是分件圖原圖的像素。
 // 角度：0 = 手臂自然垂下，正數 = 往前（臉朝的方向）抬。角色原圖臉朝左。
+// 木偶分件目前關閉：角色一律用原本的立繪（改成 true 可以重新打開）
+let PUPPET_ON = false;
 const Puppet = (() => {
   const RIGS = {
     afu: {
@@ -2534,7 +2538,7 @@ const Puppet = (() => {
   }
   function addRigs(obj) { for (const id in obj) { const R = obj[id]; R.id = id; RIGS[id] = R; } }
   const ok = (k) => typeof sprOk === 'function' && sprOk(k);
-  const has = (id) => { const r = RIGS[id]; if (r) mirror(r); return !!(r && ok(r.torso[0]) && ok(r.heads.n) && ok(r.uF[0]) && ok(r.fF[0]) && ok(r.uB[0]) && ok(r.fB[0])); };
+  const has = (id) => { if (!PUPPET_ON) return false; const r = RIGS[id]; if (r) mirror(r); return !!(r && ok(r.torso[0]) && ok(r.heads.n) && ok(r.uF[0]) && ok(r.fF[0]) && ok(r.uB[0]) && ok(r.fB[0])); };
   const img = (k, x, y, w, h, ctx) => { ctx.save(); ctx.scale(-1, 1); ctx.drawImage(SPR[k], -x - w, y, w, h); ctx.restore(); };
   // 工具尺寸：分件圖第二張的圖自己量
   function toolDef(name) {
@@ -4838,7 +4842,7 @@ function pick(a) { return Array.isArray(a) ? a[Math.floor(Math.random() * a.leng
 
 // ===================== 網址版（GitHub Pages）＋ 下載檔案當啟動器 =====================
 // 下載的檔案：打開就把存檔搬到網址版，直接開始玩。網址版：可以加到手機桌面，離線也能玩，更新自動生效。
-const GAME_VER = '2026.11.07g';
+const GAME_VER = '2026.11.07h';
 const WEB_URL = 'https://lawrancelow.github.io/ghost-battles/';
 const IS_WEB = /^https?:$/.test(location.protocol) && /github\.io$/.test(location.hostname);
 const IS_FILE = !/^https?:$/.test(location.protocol);
