@@ -5884,7 +5884,7 @@ const SCENE = (() => {
   };
   ART.drawGate = function (ctx, x, y, t) {
     const im = img('gate'); if (!im) return origGate(ctx, x, y, t);
-    const r = put(ctx, im, x, y + 6, BW.gate); plaqueText(ctx, r, PLAQUE.gate, '出征', 0);
+    const r = put(ctx, im, x, y + 6, BW.gate); plaqueText(ctx, r, PLAQUE.gate, '出村', 0);
   };
   // 槐樹：有沒烏鴉的樹就另外畫停著的烏鴉；砍倒畫樹樁
   const PERCH = [[-0.22, 0.40, 1], [0.24, 0.30, -1]];
@@ -7069,7 +7069,7 @@ function startGame() {
   // 舊存檔補欄位
   const d = newState(); for (const k in d) if (S[k] === undefined) S[k] = d[k];
   Village.init(); Battle.init();
-  document.querySelectorAll('#nav button').forEach(b => b.onclick = () => { Sound.play('click'); UI.open(b.dataset.t); });
+  document.querySelectorAll('#nav button').forEach(b => b.onclick = () => { Sound.play('click'); if (b.dataset.t === 'battle' && typeof World !== 'undefined') { UI.close(); World.open(); return; } UI.open(b.dataset.t); });
   $('#sndtop').onclick = () => { Sound.toggle(); syncSnd(); }; syncSnd();
   $('#sheet .sh-close').onclick = () => UI.close();
   const RES_HELP = {
@@ -9412,7 +9412,7 @@ const World = {
 
 // ===================== 網址版（GitHub Pages）＋ 下載檔案當啟動器 =====================
 // 下載的檔案：打開就把存檔搬到網址版，直接開始玩。網址版：可以加到手機桌面，離線也能玩，更新自動生效。
-const GAME_VER = '2026.11.07p';
+const GAME_VER = '2026.11.07q';
 const WEB_URL = 'https://lawrancelow.github.io/ghost-battles/';
 const IS_WEB = /^https?:$/.test(location.protocol) && /github\.io$/.test(location.hostname);
 const IS_FILE = !/^https?:$/.test(location.protocol);
