@@ -13504,7 +13504,7 @@ const Scare = {
     const sel = this.sel && !this.sel.gone && !this.sel.out && !this.sel.fleeing && !this.sel.d.guard ? this.sel : null, sp = sel && tags.find(q => q[0] === sel);
     if (sp) { ctx.save(); ctx.setLineDash([6, 5]); ctx.lineDashOffset = -t * 20; ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,90,80,.75)';
       for (const [m, x, by] of tags) if (m !== sel && !m.out && this.sees(m, sel)) { ctx.beginPath(); ctx.moveTo(x - 38, by - 9); ctx.lineTo(sp[1], sp[2] - 4); ctx.stroke(); } ctx.restore(); }
-    this._bubR = [];
+    this._bubR = (this._tagR || []).map(r => [r[0] - 48, r[1] - 22, 96, r[2] + 24]); // 對白框連名牌都唔准蓋住
     for (const [n, x, by] of tags) {
       if (n.out) continue;
       { // 眼：開＝望緊四周（會見到怪事），合埋＝低頭做緊嘢；紅＝望緊你點中嗰個
@@ -15075,6 +15075,13 @@ const Graveyard = {
     // 香（墓碑圖本身有香爐就不畫）
     if (!tab) for (let k = -1; k <= 1; k++) { const hx = r.cx + k * 5 * u - r.w * 0.66, hy = r.by + 2 * u; ctx.strokeStyle = '#b8742a'; ctx.lineWidth = 1.4 * u; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + k * 1.5 * u, hy - 14 * u); ctx.stroke(); ctx.fillStyle = `rgba(255,${120 + 60 * Math.sin(t * 5 + k + gi)},60,.95)`; ctx.beginPath(); ctx.arc(hx + k * 1.5 * u, hy - 14 * u, 1.6 * u, 0, Math.PI * 2); ctx.fill(); }
     if (view) { ctx.strokeStyle = 'rgba(255,230,140,.9)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(r.x - 6 * u, r.y - 6 * u, r.w + 12 * u, r.h + 8 * u, 10 * u); ctx.stroke(); }
+    // 墳前祭品：直接寫在墳前的小紙牌上，一眼看得到（線索會提到）
+    if (g.off) {
+      const fs = Math.max(11, Math.round(11.5 * u)); ctx.font = `800 ${fs}px "PingFang TC","Noto Sans CJK TC",sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const txt = '祭品・' + g.off, tw = ctx.measureText(txt).width + 12 * u, th = fs + 8 * u, ty = r.by + 10 * u + th / 2;
+      ctx.fillStyle = 'rgba(250,240,214,.94)'; ctx.strokeStyle = '#6b4a2b'; ctx.lineWidth = 1.6 * u; ctx.beginPath(); ctx.roundRect(r.cx - tw / 2, ty - th / 2, tw, th, 5 * u); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#3a2614'; ctx.fillText(txt, r.cx, ty + 0.5); ctx.textBaseline = 'alphabetic';
+    }
     ctx.restore();
   },
   drawSoul(ctx, s, t, restK) {
@@ -17901,7 +17908,7 @@ const World = {
 
 // ===================== 網址版（GitHub Pages）＋ 下載檔案當啟動器 =====================
 // 下載的檔案：打開就把存檔搬到網址版，直接開始玩。網址版：可以加到手機桌面，離線也能玩，更新自動生效。
-const GAME_VER = '2026.11.08a';
+const GAME_VER = '2026.11.08b';
 const WEB_URL = 'https://lawrancelow.github.io/ghost-battles/';
 const IS_WEB = /^https?:$/.test(location.protocol) && /github\.io$/.test(location.hostname);
 const IS_FILE = !/^https?:$/.test(location.protocol);
