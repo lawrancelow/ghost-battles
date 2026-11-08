@@ -13345,7 +13345,7 @@ const Scare = {
     }
   },
   daoTick(n, dt) {
-    const spot = [0.55, 0.90];
+    const spot = [0.66, 0.90];
     if (n.ds === 'in') { const dx = spot[0] - n.x, dy = spot[1] - n.y, d = Math.hypot(dx, dy), sp = n.d.speed * dt; n.act = 'walk'; n.dir = dx >= 0 ? 1 : -1;
       if (d <= sp) { n.x = spot[0]; n.y = spot[1]; n.ds = 'ritual'; n.rT = 0; n.act = 'ritual'; this.bubble(n, '（搖鈴）各位，借個位。', 2.4); } else { n.x += dx / d * sp; n.y += dy / d * sp; } return; }
     if (n.ds === 'ritual') {
@@ -13504,7 +13504,8 @@ const Scare = {
     const sel = this.sel && !this.sel.gone && !this.sel.out && !this.sel.fleeing && !this.sel.d.guard ? this.sel : null, sp = sel && tags.find(q => q[0] === sel);
     if (sp) { ctx.save(); ctx.setLineDash([6, 5]); ctx.lineDashOffset = -t * 20; ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,90,80,.75)';
       for (const [m, x, by] of tags) if (m !== sel && !m.out && this.sees(m, sel)) { ctx.beginPath(); ctx.moveTo(x - 38, by - 9); ctx.lineTo(sp[1], sp[2] - 4); ctx.stroke(); } ctx.restore(); }
-    this._bubR = (this._tagR || []).map(r => [r[0] - 48, r[1] - 22, 96, r[2] + 24]); // 對白框連名牌都唔准蓋住
+    this._bubLast = (this._bubR || []).slice(this._nTag || 0); // 上一格嘅對白框位置（家具標籤要避開）
+    this._bubR = (this._tagR || []).map(r => [r[0] - 48, r[1] - 22, 96, r[2] + 24]); this._nTag = this._bubR.length; // 對白框連名牌都唔准蓋住
     for (const [n, x, by] of tags) {
       if (n.out) continue;
       { // 眼：開＝望緊四周（會見到怪事），合埋＝低頭做緊嘢；紅＝望緊你點中嗰個
@@ -13573,8 +13574,9 @@ const Scare = {
       const ok = this.mana >= p.cost && this.propOK(k, this.sel), a = ok ? 0.35 + 0.25 * Math.sin(t * 3 + x1) : 0.1; // 只對點中的人：佢唔喺附近就變暗
       ctx.strokeStyle = `rgba(150,255,200,${a})`; ctx.lineWidth = 2; ctx.setLineDash([5, 4]); ctx.strokeRect(x1, y1, x2 - x1, y2 - y1); ctx.setLineDash([]);
       const cdl = p.group && (this.pcd || {})[k] > 0 ? Math.ceil(this.pcd[k]) + '秒' : p.cost, lab = `${p.name}${p.group ? '（全場）' : ''}・${cdl}`;
-      ctx.font = '600 11px sans-serif'; ctx.textAlign = 'center'; const tw = ctx.measureText(lab).width / 2 + 4, lx = Math.max(tw, Math.min(this.W - tw, (x1 + x2) / 2)), TR = this._tagR || [], hit = (yy) => TR.some(r => Math.abs(r[0] - lx) < tw + 44 && yy > r[1] - 22 && yy - 12 < r[1] + r[2]); // 標籤避開名牌：上、下、框入面揀一個冇撞到嘅位
+      ctx.font = '600 11px sans-serif'; ctx.textAlign = 'center'; const tw = ctx.measureText(lab).width / 2 + 4, lx = Math.max(tw, Math.min(this.W - tw, (x1 + x2) / 2)), TR = this._tagR || [], BR = this._bubLast || [], hit = (yy) => TR.some(r => Math.abs(r[0] - lx) < tw + 44 && yy > r[1] - 22 && yy - 12 < r[1] + r[2]) || BR.some(r => lx + tw > r[0] && lx - tw < r[0] + r[2] && yy > r[1] && yy - 12 < r[1] + r[3]); // 標籤避開名牌：上、下、框入面揀一個冇撞到嘅位
       let ly = p.label === 'up' ? y1 - 5 : y2 + 13; for (const c of [y1 - 5, y2 + 13, y1 + 14]) if (!hit(ly)) break; else ly = c;
+      if (hit(ly)) continue; // 冇位就唔寫字（虛線框照畫），唔好蓋住名牌
       if (this.office()) { ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(10,8,20,.75)'; ctx.strokeText(lab, lx, ly); }
       ctx.fillStyle = p.group ? `rgba(190,215,255,${ok ? 0.9 : 0.4})` : `rgba(190,255,215,${ok ? 0.9 : 0.4})`; ctx.fillText(lab, lx, ly);
     }
@@ -13763,7 +13765,7 @@ const Scare = {
       ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 2;
       for (let i = 0; i < 4; i++) { const ly = y - hh * (0.25 + i * 0.17), lx = x - side * hh * (0.3 + ((t * 3 + i * 0.37) % 1) * 0.15); ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx - side * hh * 0.25, ly); ctx.stroke(); }
     }
-    if (n.scream > 0 || (o.run && !n.bub)) { // 尖叫：字在身體旁邊抖，不壓到名字、不出畫面
+    if (o.run && !n.bub) { // 尖叫字只跟住逃跑嘅人（企喺度嘅尖叫交俾對白框，唔會蓋住名牌） // 尖叫：字在身體旁邊抖，不壓到名字、不出畫面
       const k = n.scream > 0 ? Math.min(1, n.scream * 2) : 0.75, chars = [...(n.d.k === 'auntie' ? '哎呀——！' : '啊——！')], fs = Math.round(14 + hh * 0.05), step = fs * 0.85, w = step * chars.length;
       let sd = side; let x0 = sd > 0 ? x + hh * 0.3 : x - hh * 0.3 - w; if (x0 + w > this.W - 6) x0 = x - hh * 0.3 - w; if (x0 < 6) x0 = x + hh * 0.3;
       ctx.font = `900 ${fs}px sans-serif`; ctx.textAlign = 'left'; ctx.lineWidth = 3.5; ctx.strokeStyle = `rgba(0,0,0,${k})`; ctx.fillStyle = `rgba(255,96,80,${k})`;
@@ -13838,8 +13840,9 @@ const Scare = {
   drawBubble(ctx, text, x, y, ghost, age) {
     const pk = age == null ? 1 : Math.min(1, age / 0.22), ps = pk >= 1 ? 1 : 1 + 2.70158 * Math.pow(pk - 1, 3) + 1.70158 * Math.pow(pk - 1, 2);
     ctx.save(); ctx.translate(x, y); ctx.scale(Math.max(0.05, ps), Math.max(0.05, ps)); ctx.translate(-x, -y); if (pk < 1) ctx.globalAlpha *= Math.min(1, pk * 3);
-    ctx.font = '600 13px sans-serif'; const maxW = 170; const words = [...text]; const lines = []; let cur = '';
+    ctx.font = '600 13px sans-serif'; const maxW = 200; const words = [...text]; const lines = []; let cur = '';
     for (const ch of words) { if (ctx.measureText(cur + ch).width > maxW) { lines.push(cur); cur = ch; } else cur += ch; } lines.push(cur);
+    if (lines.length > 1 && [...lines[lines.length - 1]].length <= 2) { const pv = [...lines[lines.length - 2]]; lines[lines.length - 1] = pv.splice(-2).join('') + lines[lines.length - 1]; lines[lines.length - 2] = pv.join(''); } // 最後一行唔好得一兩個字
     const w = Math.min(maxW, Math.max(...lines.map(l => ctx.measureText(l).width))) + 16, h = lines.length * 17 + 10;
     let bx = Math.max(6, Math.min(this.W - w - 6, x - w / 2)), by = y - h - 10; const by0 = by;
     const R = this._bubR || (this._bubR = []); // 幾個人同時講嘢：對白框唔好疊埋，後面嗰個往上推
@@ -17908,7 +17911,7 @@ const World = {
 
 // ===================== 網址版（GitHub Pages）＋ 下載檔案當啟動器 =====================
 // 下載的檔案：打開就把存檔搬到網址版，直接開始玩。網址版：可以加到手機桌面，離線也能玩，更新自動生效。
-const GAME_VER = '2026.11.08b';
+const GAME_VER = '2026.11.08c';
 const WEB_URL = 'https://lawrancelow.github.io/ghost-battles/';
 const IS_WEB = /^https?:$/.test(location.protocol) && /github\.io$/.test(location.hostname);
 const IS_FILE = !/^https?:$/.test(location.protocol);
