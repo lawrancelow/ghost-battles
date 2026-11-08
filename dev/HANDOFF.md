@@ -6,7 +6,7 @@
 - 線上網址：https://lawrancelow.github.io/ghost-battles/ （GitHub Pages PWA，會自動更新）
 - 發佈 repo：lawrancelow/ghost-battles（本機路徑 /home/claude/ghost-battles，只放 build 好的 site/）
 - 原始碼：/home/claude/gb/src（不是 git repo）。美術：/home/claude/gb/art（raw 原圖、cut 切好的圖、pack.py 打包進 src/assets.js）
-- **注意：容器會重置，/home/claude 和 /tmp 不一定還在。** 若不在，原始碼只能從線上 index.html 還原（單檔 html 已含全部程式與圖）。
+- **注意：容器會重置，/home/claude 和 /tmp 不一定還在。** 原始碼已備份在 GitHub repo lawrancelow/ghost-battles 的 `dev/` 資料夾（dev/src 全部原始碼含 assets.js、dev/build.py、dev/art/*.py 工具、dev/tools/ 測試腳本、dev/HANDOFF.md 本文件）。新容器：clone repo → 把 dev/ 內容放回 /home/claude/gb 對應位置即可 build。美術原圖（art/raw、art/cut）沒有備份，但都已打包在 assets.js 內。
 - Build：`python3 /home/claude/gb/build.py` → GhostBattles.html + site/
 - 上線：改 src/web.js 的 GAME_VER（目前 '2026.11.08e'）→ build → `cp -r site/. /home/claude/ghost-battles/` → git commit（結尾加 Co-Authored-By / Claude-Session 兩行）→ push
 - 回歸測試（都在 /tmp/claude-0）：t_smoke2.py、t_act.py、t_sc.py、t_world.py、t_craft_fx.py、t_gy.py、reltests/t_chatter.py，加 /home/claude/gb/tools/gy_verify.py（亂葬崗唯一解）
