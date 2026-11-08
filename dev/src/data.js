@@ -1,0 +1,177 @@
+// ===================== 數據 =====================
+// 技能：kind hit/aoe/heal；apply = 造成狀態（air 浮空 / down 倒地 / push 擊退）；follow = 對該狀態的目標追擊 x1.8
+const SKILLS = {
+  afu:      { name:'通宵斧', kind:'hit', mult:1.7, apply:'push', follow:'down', desc:'劈向前方敵人並擊退；對倒地目標追擊。' },
+  xiaozhi:  { name:'紙錢漫天', kind:'aoe', mult:0.8, apply:'down', desc:'紙錢撒滿全場，所有敵人倒地。' },
+  eguiking: { name:'大胃一口', kind:'hit', mult:2.1, follow:'down', drain:0.4, desc:'咬一大口，回復傷害 40% 的血；對倒地目標追擊。' },
+  toyol:    { name:'順手牽羊', kind:'hit', mult:1.3, apply:'push', steal:25, sap:35, desc:'偷走敵人能量與冥幣，並擊退。' },
+  laojiang: { name:'跳屍撞', kind:'hit', mult:1.5, apply:'air', desc:'一跳撞飛前方敵人，使其浮空。' },
+  pontianak:{ name:'長髮纏', kind:'hit', mult:1.4, follow:'air', apply:'down', desc:'長髮捲住浮空的敵人砸向地面（追擊浮空，造成倒地）。' },
+  pocong:   { name:'裹屍壓', kind:'aoe', mult:1.0, follow:'down', desc:'跳起壓向全場；對倒地目標追擊。' },
+  penanggal:{ name:'飛頭咬', kind:'hit', mult:1.6, follow:'air', drain:0.5, desc:'飛頭撲咬，吸血 50%；對浮空目標追擊。' },
+  mengpo:   { name:'一碗湯', kind:'heal', mult:0.3, forget:true, desc:'全隊回復 30% 血量，並讓敵人「忘記」積攢的能量。' },
+  baiwu:    { name:'一見生財', kind:'aoe', mult:0.9, apply:'air', steal:30, desc:'全場敵人浮空，順便生財。' },
+  tianhua:  { name:'從天而降', kind:'hit', mult:1.7, follow:'air', apply:'down', desc:'從天花板掉下來壓住敵人，造成倒地；對浮空目標追擊。（掉下來以後，請幫她推上去。）' },
+  heiwu:    { name:'天下太平', kind:'aoe', mult:1.3, follow:'air', desc:'鎖鏈橫掃全場；對浮空目標追擊。' },
+  // 雜鬼
+  youhun:   { name:'陰風', kind:'hit', mult:1.3, apply:'push', desc:'一陣陰風，擊退敵人。' },
+  egui:     { name:'搶食', kind:'hit', mult:1.4, drain:0.3, desc:'搶咬一口並回血。' },
+  xiaogui:  { name:'偷襲', kind:'hit', mult:1.6, desc:'從背後偷襲。' },
+  zombie:   { name:'跳撞', kind:'hit', mult:1.3, apply:'air', desc:'撞飛敵人。' },
+  shuigui:  { name:'拖下水', kind:'hit', mult:1.3, apply:'down', desc:'拖倒敵人。' },
+  zhiren:   { name:'紙刃', kind:'hit', mult:1.5, desc:'鋒利的紙邊。' },
+  // 敵方專屬
+  niutou:   { name:'牛角頂', kind:'hit', mult:1.6, apply:'air', desc:'' },
+  mamian:   { name:'馬蹄踏', kind:'hit', mult:1.6, follow:'down', desc:'' },
+  huang:    { name:'年終考核', kind:'aoe', mult:1.4, apply:'down', desc:'' },
+};
+const COMBOS = [
+  { id:'wuchang', a:'baiwu', b:'heiwu', name:'勾魂索命', mult:3.2, desc:'黑白無常同時在場：全場浮空後重重摔下。' },
+  { id:'jump', a:'laojiang', b:'pocong', name:'一跳又一跳', mult:2.4, desc:'老殭與 Pocong 同時在場：一起跳，全場倒地。' },
+];
+
+// 鬼怪名冊（名鬼）
+const GHOSTS = {
+  afu:      { name:'阿福', title:'過勞死打工仔', q:'主', base:[30,30,30], range:'melee', trait:'主角。等級跟隨主公等級成長。' },
+  xiaozhi:  { name:'小紙', title:'媽媽燒來的紙紮人', q:'名', base:[25,75,35], range:'ranged', trait:'怕火。手巧，包子包得特別好看。' },
+  eguiking: { name:'餓鬼王', title:'餓了五百年', q:'名', base:[95,20,70], range:'melee', trait:'喉細如針，肚大如鼓。只認包子當工資。' },
+  toyol:    { name:'Toyol', title:'被主人遺棄的小鬼', q:'名', base:[30,65,50], range:'melee', trait:'在倉庫打工時，每分鐘會「撿到」一些冥幣。' },
+  laojiang: { name:'老殭', title:'大清七品・跳了兩百年', q:'名', base:[120,25,80], range:'melee', trait:'怕糯米：不能派去糯米田。睡過兩百年棺材，最懂棺材板。', forbid:['rice'] },
+  pontianak:{ name:'Pontianak', title:'香蕉樹下的女人', q:'名', base:[40,85,95], range:'melee', trait:'後頸釘著一根棺材釘。不上夜班。' },
+  pocong:   { name:'Pocong', title:'終於可以舉手了', q:'名', base:[70,30,75], range:'melee', trait:'結解開了，還是只會跳。' },
+  penanggal:{ name:'Penanggal', title:'只有頭的接生婆', q:'名', base:[35,80,100], range:'ranged', trait:'每天收工要泡倉庫那缸醋。從此只做一份工。' },
+  mengpo:   { name:'孟婆', title:'下班了的廚子', q:'名', base:[30,130,40], range:'ranged', trait:'煮了一千年湯。包子鋪大師傅。' },
+  baiwu:    { name:'白無常', title:'一見生財', q:'名', base:[70,90,105], range:'melee', trait:'帽子上寫什麼，就是什麼規定。' },
+  tianhua:  { name:'天花姐', title:'在天花板爬了二十年', q:'名', base:[40,70,90], range:'ranged', trait:'倉庫最上面那一層，只有她拿得到。腰不好：不能派去伐木、割稻。', forbid:['wood','rice'] },
+  heiwu:    { name:'黑無常', title:'天下太平', q:'名', base:[105,60,110], range:'melee', trait:'話少。押送專家。' },
+};
+// 雜鬼（招魂台）
+const FODDER = {
+  youhun: { name:'遊魂', range:'melee', unlock:null },
+  zhiren: { name:'紙人偶', range:'ranged', unlock:null },
+  egui:   { name:'餓鬼', range:'melee', unlock:'1-3' },
+  xiaogui:{ name:'小鬼', range:'melee', unlock:'2-3' },
+  zombie: { name:'殭屍兵', range:'melee', unlock:'3-3' },
+  shuigui:{ name:'水鬼', range:'melee', unlock:'4-3' },
+};
+const NICKS = ['阿強','阿明','阿珍','阿華','阿妹','阿Ben','阿財','阿喜','阿旺','Ah Boy','阿彬','阿娟','阿豪','阿蓮','阿龍','阿玲','阿發','阿輝','阿英','阿德','Ah Girl','阿傑','阿貴','阿秀'];
+
+// 崗位（工作）
+const POSTS = {
+  wood:  { name:'伐木', bld:'wood', stat:-1, desc:'產出槐木（看鬼怪等級）' },
+  rice:  { name:'割稻', bld:'rice', stat:-1, desc:'產出糯米（看鬼怪等級）' },
+  plank: { name:'做棺材板', bld:'plank', stat:0, desc:'槐木→棺材板（看力量）' },
+  bun:   { name:'包壽包', bld:'bun', stat:1, desc:'糯米→壽包（看智力）' },
+  store: { name:'管倉庫', bld:'store', stat:2, desc:'提高倉庫容量（看武力）' },
+  boss:  { name:'工頭', bld:'house', stat:-1, desc:'升級建築省棺材板（看等級）' },
+  camp:  { name:'練陰兵', bld:'camp', stat:2, desc:'壽包→陰兵（看武力）' },
+};
+const STAT_NAMES = ['力','智','武'];
+
+// 建築
+const BUILDINGS = {
+  house:  { name:'鬼宅', desc:'村子的中心。等級決定其他建築的等級上限。可派一名「工頭」。', build:null, posts:['boss'] },
+  wood:   { name:'伐木場', desc:'派鬼怪伐木。等級越高，產量越高、崗位越多。', build:null, posts:['wood'] },
+  rice:   { name:'糯米田', desc:'派鬼怪割稻。等級越高，產量越高、崗位越多。', build:null, posts:['rice'] },
+  plank:  { name:'棺材鋪', desc:'把槐木做成棺材板（2 槐木 → 1 板）。力量型鬼怪做得最快。等級越高，藍箱開出越多棺材板。', build:{wood:20}, posts:['plank'] },
+  bun:    { name:'包子鋪', desc:'把糯米包成壽包（2 糯米 → 1 包）。智力型鬼怪包得最快。等級越高，綠箱開出越多壽包。', build:{wood:20, rice:10}, posts:['bun'] },
+  store:  { name:'倉庫', desc:'等級決定各種資源的存放上限。派武力高的鬼怪管倉庫，容量更大。', build:{planks:80}, posts:['store'], unlockQuest:true },
+  home:   { name:'民宅', desc:'等級決定陰兵上限與雜鬼名額。', build:{planks:60}, posts:[], unlockQuest:true },
+  camp:   { name:'陰兵營', desc:'把壽包練成陰兵（1 包 → 2 兵）。等級越高，陰兵越強。', build:{planks:60}, posts:['camp'], unlockLv:5 },
+  altar:  { name:'招魂台', desc:'花冥幣與壽包，招來雜鬼。', build:{planks:40}, posts:[], unlockStage:'1-3' },
+  furnace:{ name:'化寶爐', desc:'每 5 分鐘可燒出一次冥幣。等級越高，燒得越多。', build:{planks:50}, posts:[], unlockLv:6 },
+};
+const BLD_ORDER = ['house','wood','rice','plank','bun','store','home','camp','altar','furnace'];
+
+// 關卡
+const ENEMY_T = { // 血量倍率, 攻擊倍率, 名稱
+  youhun:[1.0,1.0,'遊魂'], egui:[1.25,1.1,'餓鬼'], xiaogui:[0.95,1.5,'小鬼'], zombie:[1.9,1.1,'殭屍兵'],
+  shuigui:[1.3,1.25,'水鬼'], zhiren:[1.15,1.3,'紙人偶'], niutou:[1.8,1.3,'牛頭'], mamian:[1.4,1.5,'馬面'],
+  eguiking:[2.4,1.15,'餓鬼王'], toyol:[3.0,1.7,'Toyol'], laojiang:[3.2,1.3,'老殭'], pontianak:[3.6,1.8,'Pontianak'],
+  pocong:[3.0,1.5,'Pocong'], penanggal:[3.6,1.9,'Penanggal'], baiwu:[2.4,1.4,'白無常'], heiwu:[2.6,1.5,'黑無常'], huang:[4.2,1.5,'黃總'],
+};
+const CHAPTERS = [
+  { id:1, name:'餓鬼搶包', bg:'field', intro:['ch1_intro','ch1_intro2'], stages:[
+    { name:'槐林邊', req:3, p:1, en:['youhun','youhun','youhun'] },
+    { name:'包子鋪後巷', req:3, p:2, en:['egui','youhun','egui','egui'] },
+    { name:'餓鬼王', req:4, p:3, en:['egui','eguiking','egui'], boss:'eguiking', before:'ch1_boss', after:['ch1_end'], join:['eguiking'] },
+  ]},
+  { id:2, name:'小鬼當家', bg:'kampung', intro:['ch2_intro'], stages:[
+    { name:'甘榜小路', req:6, p:5, en:['xiaogui','youhun','xiaogui','egui'] },
+    { name:'高腳屋下', req:6, p:6, en:['xiaogui','xiaogui','xiaogui','xiaogui'] },
+    { name:'Toyol', req:7, p:7, en:['xiaogui','toyol','xiaogui'], boss:'toyol', before:'ch2_boss', after:['ch2_end','gift_phone'], join:['toyol'] },
+  ]},
+  { id:3, name:'湘西來的乘客', bg:'road', intro:['ch3_intro','ch3_intro2'], stages:[
+    { name:'南下的屍隊', req:8, p:9, en:['zombie','zombie','zombie'] },
+    { name:'跳過國境線', req:9, p:10, en:['zombie','xiaogui','zombie','zombie'] },
+    { name:'老殭', req:9, p:11, en:['zombie','laojiang','zombie'], boss:'laojiang', before:'ch3_boss', after:['ch3_end'], join:['laojiang'] },
+  ]},
+  { id:4, name:'香蕉樹下', bg:'banana', intro:['ch4_intro','ch4_intro2'], stages:[
+    { name:'河邊', req:10, p:13, en:['shuigui','youhun','shuigui','shuigui'] },
+    { name:'香蕉園', req:11, p:14, en:['shuigui','zombie','egui','shuigui'] },
+    { name:'Pontianak', req:11, p:15, en:['shuigui','pontianak','shuigui'], boss:'pontianak', before:'ch4_boss', after:['ch4_end'], join:['pontianak'] },
+  ]},
+  { id:5, name:'飛頭與裹屍布', bg:'kampung', intro:['ch5_intro','ch5_intro2'], stages:[
+    { name:'村口的白布', req:12, p:17, en:['zhiren','xiaogui','zhiren','xiaogui'] },
+    { name:'Pocong', req:13, p:18, en:['zhiren','pocong','zhiren'], boss:'pocong', after:['ch5_pocong'], join:['pocong'] },
+    { name:'Penanggal', req:14, p:20, en:['xiaogui','penanggal','shuigui'], boss:'penanggal', before:'ch5_boss', after:['ch5_end','gift_car'], join:['penanggal'] },
+  ]},
+  { id:6, name:'地府集團', bg:'hq', intro:['ch6_intro','ch6_intro2'], stages:[
+    { name:'集團大門', req:15, p:21, en:['niutou','zhiren','mamian','zhiren'] },
+    { name:'黑白無常', req:16, p:22, en:['baiwu','heiwu'], boss:'heiwu', after:['ch6_wuchang','ch6_mengpo'], join:['baiwu','heiwu','mengpo'] },
+    { name:'頂樓・黃總', req:17, p:23, en:['niutou','huang','mamian'], boss:'huang', before:'ch6_boss', after:['ch6_end','ch6_reboot','epilogue'], join:[] },
+  ]},
+];
+
+// 主線任務
+const QUESTS = [
+  { t:'chop', n:3, text:'砍倒 3 棵槐樹', go:'tree', r:{exp:25} },
+  { t:'rice', n:3, text:'收割 3 次糯米', go:'paddy', r:{exp:25} },
+  { t:'build', b:'plank', text:'建造棺材鋪', go:'plank', r:{exp:30, wood:10} },
+  { t:'craftPlank', n:3, text:'在棺材鋪親手做 3 次棺材板', go:'plank', r:{exp:35} },
+  { t:'build', b:'bun', text:'建造包子鋪', go:'bun', r:{exp:35, rice:10} },
+  { t:'craftBun', n:3, text:'在包子鋪親手包 3 次壽包', go:'bun', r:{exp:40, coins:40} },
+  { t:'level', n:3, text:'升到 3 級', go:'tree', r:{troops:60}, note:'村裡的遊魂自願當陰兵（陰兵 +60）' },
+  { t:'stage', s:'1-1', text:'出征：第一章 1-1', go:'gate', r:{exp:20}, onStart:['ch1_intro','ch1_intro2'] },
+  { t:'level', n:4, text:'升到 4 級', go:'tree', r:{buns:30} },
+  { t:'assign', n:1, text:'任命一位鬼怪去打工', go:'bun', r:{exp:40} },
+  { t:'stage', s:'1-2', text:'出征：第一章 1-2', go:'gate', r:{coins:60} },
+  { t:'bLevel', b:'wood', n:2, text:'把伐木場升到 2 級', go:'wood', r:{exp:50, coins:30} },
+  { t:'ghostLv', n:6, text:'把任一鬼怪升到 6 級', go:'roster', r:{buns:40} },
+  { t:'stage', s:'1-3', text:'擊敗餓鬼王', go:'gate', r:{exp:60} },
+  { t:'build', b:'altar', text:'建造招魂台', go:'altar', r:{coins:150, buns:30} },
+  { t:'recruit', n:1, text:'在招魂台招 1 隻雜鬼', go:'altar', r:{exp:60} },
+  { t:'build', b:'home', text:'建造民宅（增加雜鬼名額）', go:'home', r:{exp:60, troops:60} },
+  { t:'assign', n:3, text:'讓 3 位鬼怪同時打工', go:'roster', r:{exp:60, coins:60} },
+  { t:'level', n:5, text:'升到 5 級', go:'tree', r:{planks:40} },
+  { t:'build', b:'camp', text:'建造陰兵營', go:'camp', r:{exp:60} },
+  { t:'troops', n:150, text:'派鬼怪去陰兵營練兵，陰兵達到 150', go:'camp', r:{exp:80, coins:80} },
+  { t:'build', b:'store', text:'建造倉庫（提高存放上限）', go:'store', r:{exp:100, coins:100} },
+  { t:'bLevel', b:'plank', n:3, text:'把棺材鋪升到 3 級', go:'plank', r:{exp:90} },
+  { t:'bLevel', b:'bun', n:3, text:'把包子鋪升到 3 級', go:'bun', r:{exp:90, chest:'g'} },
+  { t:'stage', s:'2-1', text:'出征：第二章 2-1', go:'gate', r:{exp:80}, onStart:['ch2_intro'] },
+  { t:'build', b:'furnace', text:'建造化寶爐', go:'furnace', r:{exp:80} },
+  { t:'stage', s:'2-2', text:'出征：第二章 2-2', go:'gate', r:{chest:'b'} },
+  { t:'bLevel', b:'store', n:3, text:'把倉庫升到 3 級', go:'store', r:{exp:120, chest:'b'} },
+  { t:'stage', s:'2-3', text:'抓住 Toyol', go:'gate', r:{exp:120} },
+  { t:'bLevel', b:'house', n:4, text:'把鬼宅升到 4 級', go:'house', r:{exp:150, chest:'p'} },
+  { t:'stage', s:'3-1', text:'出征：第三章 3-1', go:'gate', r:{exp:120}, onStart:['ch3_intro','ch3_intro2'] },
+  { t:'bLevel', b:'home', n:3, text:'把民宅升到 3 級', go:'home', r:{exp:120, troops:100} },
+  { t:'stage', s:'3-2', text:'出征：第三章 3-2', go:'gate', r:{coins:200} },
+  { t:'stage', s:'3-3', text:'收服老殭', go:'gate', r:{exp:180} },
+  { t:'bLevel', b:'plank', n:5, text:'把棺材鋪升到 5 級', go:'plank', r:{exp:200} },
+  { t:'stage', s:'4-1', text:'出征：第四章 4-1', go:'gate', r:{exp:180}, onStart:['ch4_intro','ch4_intro2'] },
+  { t:'ghostLv', n:15, text:'把任一鬼怪升到 15 級', go:'roster', r:{chest:'g'} },
+  { t:'stage', s:'4-2', text:'出征：第四章 4-2', go:'gate', r:{coins:300} },
+  { t:'stage', s:'4-3', text:'為 Pontianak 釘上那根釘', go:'gate', r:{exp:260} },
+  { t:'bLevel', b:'house', n:6, text:'把鬼宅升到 6 級', go:'house', r:{exp:300, chest:'p'} },
+  { t:'stage', s:'5-1', text:'出征：第五章 5-1', go:'gate', r:{exp:260}, onStart:['ch5_intro','ch5_intro2'] },
+  { t:'stage', s:'5-2', text:'解開 Pocong 的結', go:'gate', r:{exp:300} },
+  { t:'feast', n:1, text:'在鬼宅擺一次盂蘭宴', go:'house', r:{exp:300} },
+  { t:'stage', s:'5-3', text:'送 Penanggal 回家', go:'gate', r:{exp:350} },
+  { t:'bLevel', b:'house', n:8, text:'把鬼宅升到 8 級', go:'house', r:{exp:400, chest:'p'} },
+  { t:'stage', s:'6-1', text:'出征：第六章 6-1', go:'gate', r:{exp:400}, onStart:['ch6_intro','ch6_intro2'] },
+  { t:'stage', s:'6-2', text:'打贏黑白無常', go:'gate', r:{exp:450} },
+  { t:'ghostLv', n:25, text:'把任一鬼怪升到 25 級', go:'roster', r:{chest:'b'} },
+  { t:'stage', s:'6-3', text:'上頂樓，見黃總', go:'gate', r:{exp:600} },
+];

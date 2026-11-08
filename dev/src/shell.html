@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#16131b">
+<title>過勞鬼大作戰</title>
+<style>/*CSS*/</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-wood" viewBox="0 0 24 24"><rect x="3" y="7" width="15" height="10" rx="2" fill="#8a5a2e" stroke="#2a1608" stroke-width="1.5"/><ellipse cx="18" cy="12" rx="3.5" ry="5" fill="#d9a86a" stroke="#2a1608" stroke-width="1.5"/><ellipse cx="18" cy="12" rx="1.4" ry="2.2" fill="none" stroke="#8a5a2e" stroke-width="1"/><path d="M6 10h7M7 14h6" stroke="#5e3a18" stroke-width="1.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-rice" viewBox="0 0 24 24"><path d="M12 21C12 14 13 8 17 3" stroke="#9a8a3a" stroke-width="1.6" fill="none" stroke-linecap="round"/><g fill="#f2e3a6" stroke="#5a4a14" stroke-width="1.1"><ellipse cx="9" cy="8" rx="2.2" ry="3.4" transform="rotate(-30 9 8)"/><ellipse cx="15" cy="9" rx="2.2" ry="3.4" transform="rotate(30 15 9)"/><ellipse cx="9.5" cy="14" rx="2.2" ry="3.4" transform="rotate(-35 9.5 14)"/><ellipse cx="15.5" cy="15" rx="2.2" ry="3.4" transform="rotate(35 15.5 15)"/></g></symbol>
+    <symbol id="i-planks" viewBox="0 0 24 24"><path d="M4 18 7 6h10l3 12z" fill="#6b3a1e" stroke="#200e04" stroke-width="1.5" stroke-linejoin="round"/><path d="M8.5 9h7M8 13h8" stroke="#3a1c08" stroke-width="1.2"/><text x="12" y="16.8" font-size="5.5" text-anchor="middle" fill="#e8b84a" font-weight="900">壽</text></symbol>
+    <symbol id="i-buns" viewBox="0 0 24 24"><path d="M3 16c0-6 4-10 9-10s9 4 9 10c0 1.4-1 2-2.2 2H5.2C4 18 3 17.4 3 16z" fill="#f6efe0" stroke="#5a4630" stroke-width="1.5"/><path d="M12 6c-1 2-1 4 0 5 1-1 1-3 0-5M8 9c1 1 2 2 4 2M16 9c-1 1-2 2-4 2" stroke="#c8b08a" stroke-width="1" fill="none"/><circle cx="12" cy="13.5" r="1.6" fill="#d8323c"/></symbol>
+    <symbol id="i-coins" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#e2b04a" stroke="#4a3006" stroke-width="1.5"/><circle cx="12" cy="12" r="6.6" fill="none" stroke="#8a5c10" stroke-width="1"/><rect x="9.6" y="9.6" width="4.8" height="4.8" fill="#4a3006"/></symbol>
+    <symbol id="i-troops" viewBox="0 0 24 24"><path d="M12 3c4 0 6 3 6 7v10l-2-1.6-2 1.6-2-1.6-2 1.6-2-1.6L6 20V10c0-4 2-7 6-7z" fill="#d8eef0" stroke="#1e3a40" stroke-width="1.5" stroke-linejoin="round"/><circle cx="9.8" cy="10" r="1.3" fill="#1e3a40"/><circle cx="14.2" cy="10" r="1.3" fill="#1e3a40"/></symbol>
+    <symbol id="n-village" viewBox="0 0 32 32"><path d="M3 14 16 5l13 9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 14.5c3 1 6 .5 8-1M30.5 14.5c-3 1-6 .5-8-1" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M7 14v13h18V14" fill="none" stroke="currentColor" stroke-width="2.2"/><rect x="13" y="19" width="6" height="8" fill="currentColor"/></symbol>
+    <symbol id="n-roster" viewBox="0 0 32 32"><path d="M16 4c6 0 9 4.5 9 10v14l-3-2.4-3 2.4-3-2.4-3 2.4-3-2.4L7 28V14c0-5.5 3-10 9-10z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12.6" cy="14" r="1.9" fill="currentColor"/><circle cx="19.4" cy="14" r="1.9" fill="currentColor"/></symbol>
+    <symbol id="n-battle" viewBox="0 0 32 32"><path d="M8 3h16v26l-8-5-8 5z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M16 8v12M12 11h8M12.5 16l7 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="n-chest" viewBox="0 0 32 32"><path d="M4 13c0-4 3-6 6-6h12c3 0 6 2 6 6v14H4z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M4 15h24" stroke="currentColor" stroke-width="2.2"/><rect x="13.5" y="13" width="5" height="6" rx="1" fill="currentColor"/></symbol>
+    <symbol id="n-story" viewBox="0 0 32 32"><path d="M7 5h16c1.6 0 3 1.4 3 3v19H10c-1.6 0-3-1.4-3-3z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M7 24c0-1.6 1.4-3 3-3h16" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 10h9M12 14h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+<div id="app">
+  <header id="top">
+    <div id="seal"><small>主公</small><b id="lv">1</b></div>
+    <div id="topmain">
+      <div id="incense"><div id="expbar"><i></i><s></s></div><small id="exptxt"></small><button id="sndtop" aria-label="聲音">🔊</button></div>
+      <div id="resbox">
+        <span class="rs" title="槐木"><svg><use href="#i-wood"/></svg><b id="r-wood">0</b></span>
+        <span class="rs" title="糯米"><svg><use href="#i-rice"/></svg><b id="r-rice">0</b></span>
+        <span class="rs" title="棺材板"><svg><use href="#i-planks"/></svg><b id="r-planks">0</b></span>
+        <span class="rs" title="壽包"><svg><use href="#i-buns"/></svg><b id="r-buns">0</b></span>
+        <span class="rs" title="冥幣"><svg><use href="#i-coins"/></svg><b id="r-coins">0</b></span>
+        <span class="rs" title="陰兵"><svg><use href="#i-troops"/></svg><b id="r-troops">0</b></span>
+      </div>
+    </div>
+  </header>
+  <main id="stagewrap"><canvas id="village"></canvas><div id="quest"></div><div id="praise"></div></main>
+  <nav id="nav">
+    <button data-t="village" class="on"><svg><use href="#n-village"/></svg><span>村子</span></button>
+    <button data-t="roster"><svg><use href="#n-roster"/></svg><span>鬼怪</span></button>
+    <button data-t="battle" class="main"><svg><use href="#n-battle"/></svg><span>出征</span></button>
+    <button data-t="chest"><svg><use href="#n-chest"/></svg><span>箱子</span><i></i></button>
+    <button data-t="story"><svg><use href="#n-story"/></svg><span>劇情</span></button>
+  </nav>
+  <section id="sheet"><div class="sh-head"><span class="sh-title"></span><button class="sh-close" aria-label="關閉">✕</button></div><div class="sh-body"></div></section>
+  <section id="battle">
+    <div id="b-top"><button id="b-quit" class="btn sm ghost">撤退</button><b id="b-title"></b><span id="b-time"></span><button id="b-speed" class="btn sm">×1</button><button id="b-auto" class="btn sm">自動</button></div>
+    <canvas id="bcvs"></canvas>
+    <div id="b-hint">符滿了就點，放出技能。先讓敵人「浮空」或「倒地」，再用追擊技能打出連招。</div>
+    <div id="b-cards"></div>
+    <div id="b-result"></div>
+  </section>
+  <section id="scare"></section><section id="world"></section>
+  <section id="gyard"></section>
+  <section id="gstreet"></section>
+  <div id="dlg"></div>
+  <div id="phone"></div>
+  <div id="title"></div>
+  <div id="banner"></div>
+  <div id="toasts"></div>
+</div>
+<script>/*JS*/</script>
+</body>
+</html>
