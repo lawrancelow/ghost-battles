@@ -70,7 +70,7 @@ const TOWN = (() => {
   }
   // 字：不跟著角色翻（翻了的話翻回來）
   function text(S, x, y, txt, size, alpha, opt) {
-    if (alpha <= 0.01) return; const c = S.ctx; opt = opt || {};
+    opt = opt || {}; if (alpha <= 0.01 || (S.o.quiet && !opt.fx)) return; const c = S.ctx; // quiet：個人頭上有對白框 → 動作自帶嘅字唔出（唔好兩句疊埋）
     c.save(); c.translate(x, y); if (S.flip) c.scale(-1, 1); c.rotate(opt.rot || 0); c.globalAlpha *= cl(alpha);
     c.font = `900 ${size}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
     c.strokeStyle = opt.out || '#2a1a22'; c.lineWidth = size * 0.26; c.strokeText(txt, 0, 0);
@@ -100,7 +100,7 @@ const TOWN = (() => {
     ctx.closePath(); ctx.fillStyle = '#fffbe8'; ctx.strokeStyle = 'rgba(90,70,20,.6)'; ctx.lineWidth = Math.max(1, r * 0.12); ctx.stroke(); ctx.fill(); ctx.restore();
   }
   function zzz(S, x, y, size, t, a) { // Zzz 往上飄
-    for (let i = 0; i < 3; i++) { const q = ((t * 0.45 + i / 3) % 1); text(S, x + q * size * 1.2 + Math.sin(q * 6 + i) * size * 0.2, y - q * size * 2.2, i === 1 ? 'Z' : 'z', size * (0.6 + q * 0.6), a * Math.sin(q * PI), { col:'#dfe8ff', out:'#2a2a48' }); }
+    for (let i = 0; i < 3; i++) { const q = ((t * 0.45 + i / 3) % 1); text(S, x + q * size * 1.2 + Math.sin(q * 6 + i) * size * 0.2, y - q * size * 2.2, i === 1 ? 'Z' : 'z', size * (0.6 + q * 0.6), a * Math.sin(q * PI), { col:'#dfe8ff', out:'#2a2a48', fx:1 }); }
   }
   function marks(ctx, x, y, r, k, col) { // 驚訝／生氣的三條短線
     if (k <= 0) return; ctx.save(); ctx.globalAlpha *= k;
@@ -198,7 +198,7 @@ const TOWN = (() => {
         sparkle(ctx, p[0] + S.W * 0.04, p[1] - S.W * 0.05, S.H * 0.05, bump(t, 2.75, 2.9, 3.4) * k); } });
     // 哈氣
     const m = S.P(...BOSS.MOUTH); puff(ctx, lerp(m[0], m[0] + S.fs * S.W * 0.12, seg(t, 0.75, 1.2)), m[1], S.H * 0.035, seg(t, 0.7, 1.3), 7.7);
-    text(S, m[0] + S.fs * S.W * 0.42, m[1] - S.H * 0.06, '哈——', S.H * 0.085, bump(t, 0.7, 0.85, 1.3) * k);
+    text(S, m[0] - S.fs * S.W * 0.30, m[1] - S.H * 0.17, '哈——', S.H * 0.085, bump(t, 0.7, 0.85, 1.3) * k);
     end(S); return true;
   };
   // 看錶：手套手抬到胸前，低頭看錶，不耐煩地點腳，「嘖」
@@ -376,6 +376,87 @@ const TOWN = (() => {
     end(S); return true;
   };
 
+  // ======================================================================
+  // 回陽間・辦公室專屬動作（scare.js 按 n.act 強制播：office_*／town_guard_dozeL）——全部用現成的原圖件轉、移、縮，唔重畫
+  // 循環動作：a.o.adur 好大（一直做），頭 0.35 秒淡入；換動作時 tick() 自己淡出
+  // ======================================================================
+  const loop = (t, T) => ((t % T) + T) % T;
+  // 陳總開會：面向白板，手套手舉高指住白板，一下一下篤（講到重點），頭喺白板同下面之間望嚟望去
+  DAILY.office_boss_present = function (ctx, a) {
+    const S = begin(ctx, a, 'npc_boss__bodyN', false); if (!S) return false;
+    const t = S.at, k = S.env, q = loop(t, 5.2), up = kf([[0, 0.55], [0.6, 1], [3.6, 1], [4.3, 0.55], [5.2, 0.55]], q);
+    const jab = Math.max(0, Math.sin(t * 6.5)) * bump(q, 0.8, 1.2, 3.2), look = Math.sin(t * 0.9);
+    bossDraw(S, { glove:-k * (up * 2.3 + jab * 0.10), shUp:k * up * 0.012, head:S.fs * k * (-0.05 * up + 0.04 * look), lean:-S.fs * k * jab * 0.012, ball:k * 0.04 * Math.sin(t * 1.3) });
+    end(S); return true;
+  };
+  // 陳總睇報告：手套手揸住一張紙（op_paper）擺喺胸前，低頭睇，眼一行一行掃落去，間中揭頁
+  DAILY.office_boss_read = function (ctx, a) {
+    const S = begin(ctx, a, 'npc_boss__bodyN', false); if (!S) return false;
+    const t = S.at, k = S.env, q = loop(t, 4.6), flip = bump(q, 3.6, 3.85, 4.2), scan = (q / 3.6) % 1;
+    bossDraw(S, { glove:k * (1.25 + 0.04 * Math.sin(t * 1.1) - flip * 0.12), shUp:k * 0.012, head:S.fs * k * (0.13 + scan * 0.05), lean:S.fs * k * 0.02,
+      gfn:(L) => { const p = L(...BOSS.HAND); prop(ctx, 'op_paper_fly', p[0] + S.fs * S.W * 0.03, p[1] - S.H * 0.05, S.H * 0.22 * k + 0.0001, -S.fs * 0.15 - 1.25 * k, 0.5, 0.6, (1 - flip * 1.6) * (S.fs > 0 ? 1 : -1), 1); } });
+    end(S); return true;
+  };
+  // 陳總坐崗講電話：手機（afu__phone）貼住耳仔，頭側少少，「嗯」「係」一路應；間中激動，手揮一揮
+  DAILY.office_boss_phone = function (ctx, a) {
+    const S = begin(ctx, a, 'npc_boss__bodyN', false); if (!S) return false;
+    const t = S.at, k = S.env, q = loop(t, 7), rant = bump(q, 4.6, 5.0, 6.2), nod = Math.max(0, Math.sin(t * 2.2)) * (1 - rant);
+    bossDraw(S, { glove:k * (2.55 - rant * 0.25 + Math.sin(t * 9) * 0.03 * rant), shUp:k * 0.04, head:S.fs * k * (-0.10 + nod * 0.05 - rant * 0.04), lean:-S.fs * k * rant * 0.02, ball:k * (rant * 0.12 * Math.sin(t * 6)),
+      gfn:(L) => { const p = L(...BOSS.HAND); prop(ctx, 'afu__phone', p[0] + S.fs * S.W * 0.01, p[1] - S.H * 0.035, S.H * 0.12 * k + 0.0001, -S.fs * 0.5 - 2.55 * k, 0.5, 0.6, -S.fs, 1); } });
+    end(S); return true;
+  };
+  // 陳總收工：水晶球攬返入懷，手套手喺台面撥兩撥（執嘢），最後抬手睇錶
+  DAILY.office_boss_pack = function (ctx, a) {
+    const S = begin(ctx, a, 'npc_boss__bodyN', false); if (!S) return false;
+    const t = S.at, k = S.env, sweep = Math.sin(t * 4.5) * bump(t, 0.3, 0.6, 2.0), watch = kf([[0, 0], [2.1, 0], [2.5, 1], [3.5, 1]], t);
+    bossDraw(S, { glove:k * (lerp(-0.45 + sweep * 0.25, 1.45, watch)), shUp:k * watch * 0.01, ball:k * 0.22, elUp:k * 0.01, head:S.fs * k * (0.12 + watch * 0.05), lean:S.fs * k * 0.05 * (1 - watch) });
+    end(S); return true;
+  };
+  // 保安阿伯坐崗瞌眼瞓（循環）：頭慢慢沉落去、一起一伏咁呼吸、手電筒垂低；隔一陣頭一跌驚醒，又再瞓
+  DAILY.town_guard_dozeL = function (ctx, a) {
+    const S = begin(ctx, a, 'npc_guard__bodyN', false); if (!S) return false;
+    const t = S.at, k = S.env, q = loop(t, 8), br = Math.sin(t * 1.5);
+    const nod = kf([[0, 0.25], [1.6, 0.85], [5.9, 1], [6.15, 1.12], [6.3, -0.2], [6.8, 0.1], [8, 0.25]], q) + br * 0.04, jerk = bump(q, 6.15, 6.3, 6.8);
+    ctx.save(); ctx.scale(1, 1 - 0.025 * Math.max(0, nod) * k + 0.006 * br * k);
+    guardDraw(S, { head:S.fs * k * nod * 0.45, lean:S.fs * k * nod * 0.05, dy:k * (Math.max(0, nod) * S.H * 0.012 - jerk * S.H * 0.02), fl:-k * Math.max(0, nod) * 0.32 });
+    ctx.restore();
+    const h = S.P(0.3, 0.12); zzz(S, h[0] - S.fs * S.W * 0.15, h[1], S.H * 0.09, t, (1 - bump(q, 6.0, 6.3, 7.2)) * k);
+    marks(ctx, S.P(0.5, 0.05)[0], S.P(0.5, 0.05)[1] - S.H * 0.03, S.H * 0.09, jerk * k);
+    end(S); return true;
+  };
+  // 阿Ken 喺茶水間圓枱瞓著：成個人伏落枱（上身向前倒、頭擱喺手臂上），慢慢一起一伏，Zzz
+  DAILY.office_ken_nap = function (ctx, a) {
+    const S = begin(ctx, a, 'npc_ken__bodyF', false, { noLift:1 }); if (!S) return false;
+    const t = S.at, k = S.env, br = Math.sin(t * 1.25);
+    ctx.save(); ctx.scale(1, 1 + 0.012 * br * k);
+    kenDraw(S, { lean:S.fs * k * (0.42 + 0.012 * br), head:S.fs * k * (0.75 + 0.02 * br), ang:-k * 0.55 });
+    ctx.restore();
+    const h = S.P(0.45, 0.40); zzz(S, h[0] + S.fs * S.W * 0.55, h[1] - S.H * 0.05, S.H * 0.1, t * 0.7, k);
+    end(S); return true;
+  };
+  // 小晴／其他 mesh 角色：網格身體直接擺姿勢（npc_it：armF = 拎筆電嗰隻、armB = 拎珍奶嗰隻）
+  function meshBody(S, rig, key, add) { const z = Object.assign({}, S.z); z.x = 0; z.y = 0; z.sx = 1; z.sy = 1; z.rot = 0; z.legF = 0; z.legB = 0; for (const k in add) z[k] = (z[k] || 0) + add[k]; MeshAnim.drawBody(S.ctx, rig, key, S.H, z); }
+  // 小晴開會抄筆記：低頭望住部筆電，打字（手一下一下）、間中抬頭望白板
+  DAILY.office_it_notes = function (ctx, a) {
+    const S = begin(ctx, a, 'npc_it', true); if (!S) return false;
+    const t = S.at, k = S.env, q = loop(t, 6), look = bump(q, 4.2, 4.6, 5.5), tap = Math.sin(t * 14) * (1 - look);
+    meshBody(S, 'npc_it', 'npc_it', { head:S.fs * k * (0.26 - look * 0.34), body:S.fs * k * 0.04 * (1 - look), armF:S.fs * k * (0.10 + tap * 0.03), armB:S.fs * k * (0.08 + tap * 0.02) });
+    end(S); return true;
+  };
+  // 小晴收工：合埋筆電夾喺手、低頭執嘢，最後擰轉頭望一望電梯
+  DAILY.office_it_pack = function (ctx, a) {
+    const S = begin(ctx, a, 'npc_it', true); if (!S) return false;
+    const t = S.at, k = S.env, bend = bump(t, 0.2, 0.7, 2.2), sw = Math.sin(t * 7) * bend;
+    meshBody(S, 'npc_it', 'npc_it', { head:S.fs * k * (bend * 0.22 - bump(t, 2.3, 2.8, 3.5) * 0.12), body:S.fs * k * bend * 0.12, armF:-S.fs * k * (0.25 * bend + sw * 0.06), armB:S.fs * k * (0.18 * bend + sw * 0.05) });
+    end(S); return true;
+  };
+  // 清潔安娣收工：拖把企直揸住，彎低腰執埋啲嘢入桶、捶兩捶腰
+  DAILY.office_auntie_pack = function (ctx, a) {
+    const S = begin(ctx, a, 'npc_auntie__bodyH', false); if (!S) return false;
+    const t = S.at, k = S.env, q = ss(k), bend = bump(t, 0.2, 0.7, 1.4) + bump(t, 1.3, 1.8, 2.5), rub = bump(t, 2.5, 2.8, 3.5);
+    auntieDraw(S, { th:auTh(S, PI / 2 + S.fs * 0.12) * q, fx:q * S.fs * 0.05, fy:q * 0.04, floor:-S.H * 0.06, reach:q, lean:S.fs * k * (0.16 * bend - 0.05 * rub), head:S.fs * k * (0.22 * bend - 0.08 * rub), hipA:k * rub * Math.sin(t * 16) * 0.12 });
+    end(S); return true;
+  };
   // ======================================================================
   // 冥街夜市・店主
   // ======================================================================
@@ -623,11 +704,12 @@ const TOWN = (() => {
   };
   // st：角色身上的排程狀態 { act, at, dur, w, cd:{} }；eligible：現在能不能做（false = 慢慢放回原圖姿勢）；walk：正在走路
   function tick(st, id, dt, eligible, walk, force) {
-    const L = LIST[id]; if (!L) return st;
+    const L = LIST[id] || [];
     st = st || { act:null, at:0, dur:0, w:0, cd:{} };
+    if (!force && st.forced) { st.forced = false; st.dur = Math.min(st.dur, st.at + 0.35); } // 唔再強制：0.35 秒淡出，再揀返平日動作
     for (const k in st.cd) st.cd[k] -= dt;
     const can = (e) => !walk || e[4] === 'walk';
-    if (force && (st.act !== force[0] || st.at > st.dur)) { st.act = force[0]; st.at = 0; st.dur = force[1]; }
+    if (force && (st.act !== force[0] || st.at > st.dur)) { st.act = force[0]; st.at = 0; st.dur = force[1]; st.forced = true; }
     st.at += dt;
     const cur = L.find(e => e[0] === st.act);
     const want = eligible && (st.act && cur ? can(cur) : true);
@@ -648,14 +730,18 @@ const TOWN = (() => {
 
   // ---------- 回陽間：scare.js 用 ----------
   // 冷靜（沒被嚇）＋沒在反應（或是木訥／保安喝茶）＝ 可以做平日動作
+  const ACT = { npc_boss:{ present:'office_boss_present', read:'office_boss_read', call:'office_boss_phone', pack:'office_boss_pack' }, npc_guard:{ doze:'town_guard_dozeL' },
+    npc_ken:{ brk_nap:'office_ken_nap' }, npc_it:{ notes:'office_it_notes', pack:'office_it_pack' }, npc_auntie:{ pack:'office_auntie_pack' } };
   function npcTick(n, dt, scare) {
     const d = n.d, rx = n.rx && n.rx.t >= 0 ? n.rx : null;
     const calm = !n.fleeing && !n.gone && n.fear < 25 && (!rx || rx.k === 'numb' || rx.k === 'sip');
     const walk = n.act === 'walk';
-    const force = rx && rx.k === 'sip' && d.spr === 'npc_guard' ? ['town_guard_sip', Math.max(3.3, rx.dur + 0.4)] : null;
+    let force = rx && rx.k === 'sip' && d.spr === 'npc_guard' ? ['town_guard_sip', Math.max(3.3, rx.dur + 0.4)] : null;
+    const fa = !force && !walk && ACT[d.spr] && ACT[d.spr][n.act]; if (fa) force = [fa, n.act === 'pack' ? 3.6 : 1e9]; // 辦公室嘅事（開會、講電話、瞓覺……）
     n.daily = tick(n.daily, d.spr, dt, calm, walk, force);
   }
-  const npcOpts = (n) => opts(n.daily);
+  const npcOpts = (n) => { const o = opts(n.daily); if (o.act && n.bub && n.bubT > 0) o.quiet = true; return o; };
 
-  return { tick, opts, npcTick, npcOpts, LIST };
+  const actAnim = (n) => (ACT[n.d.spr] || {})[n.act] || null; // 呢個 act 有冇專屬動作
+  return { tick, opts, npcTick, npcOpts, LIST, ACT, actAnim };
 })();

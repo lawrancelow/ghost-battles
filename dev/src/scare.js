@@ -91,6 +91,9 @@ const SCARE_GHOSTS = {
 const MIS_POST = OFFMAP.SPOT.reception; // 美美：大堂前台（背向左邊會議室門口、面向右邊），坐喺枱後面
 const COPY_AT = [OFFMAP.SPOT.copier[0] - 0.16, OFFMAP.SPOT.copier[1] + 0.05]; // 影印機（洗手間／影印房）前面企嘅位
 // 茶水間休息：坐低碌手機／飲嘢／瞌一陣（坐喺 Pantry 張枱後面，枱擋住腳）
+const EMPTY_SAY = (() => { const T = (yue, zh) => { if (typeof LANG !== 'undefined' && LANG.add) LANG.add({ [yue]:zh }); return yue; };
+  T('陳總～搵我呀？', '陳總～找我嗎？'); T('陳總，搵我？', '陳總，找我？');
+  return { mis:T('陳總去咗邊呀？咁我出返去等先啦。', '陳總去哪了？那我先出去等吧。'), it:T('叫人入嚟自己又唔喺度……我返去做嘢先。', '叫人進來自己又不在……我先回去做事。') }; })(); // 被叫入房，陳總唔喺度
 const BRK = (() => { const T = (yue, zh) => { if (typeof LANG !== 'undefined' && LANG.add) LANG.add({ [yue]:zh }); return yue; };
   return { it:T('抖陣先，個 server 自己頂住。', '休息一下，伺服器自己撐著。'), mis:T('坐低碌下手機先～', '坐下來滑一下手機～'), boss:T('（飲啖茶）唔好話我偷懶。', '（喝口茶）別說我偷懶。'),
     auntie:T('拖到腰都痛，坐陣先。', '拖到腰都痛，坐一會兒。'), ken:T('（打個呵欠）瞇五分鐘……', '（打個呵欠）瞇五分鐘……') }; })();
@@ -141,6 +144,7 @@ const SCARE_SITES = {
     ] },
 };
 
+const PANO_ZOOM = 0.72; // 回陽間鏡頭遠近（1 = 背景剛好塞滿高度）
 const Scare = {
   active:false,
   open(siteId) {
@@ -184,7 +188,7 @@ const Scare = {
   // ---------- 開局 ----------
   start(siteId, team, headless, seed) {
     const site = SCARE_SITES[siteId];
-    Object.assign(this, { endAt:0, expo:0, expoMax:0, expoT:-99, alert:false, daoCall:0, daoIn:false, expelled:false, kpiCut:false, known:{}, guardKarma:false, site, siteId, active:true, headless:!!headless, t:0, kpi:0, mana:60 + (typeof GhostStreet !== 'undefined' && !headless ? GhostStreet.bonus('mana') : 0), team, fx:[], parts:[], floats:[], karma:[], shake:0, vign:0, paused:!headless, sel:null });
+    Object.assign(this, { endAt:0, expo:0, expoMax:0, expoT:-99, alert:false, daoCall:0, daoIn:false, expelled:false, kpiCut:false, known:{}, guardKarma:false, site, siteId, active:true, headless:!!headless, t:0, kpi:0, mana:60 + (typeof GhostStreet !== 'undefined' && !headless ? GhostStreet.bonus('mana') : 0), team, fx:[], parts:[], floats:[], fq:[], bq:[], karma:[], shake:0, vign:0, paused:!headless, sel:null });
     this.cd = {}; this.pcd = {}; this.caught = {}; team.forEach(k => this.cd[k] = 0);
     this.npcs = site.npcs.map((d, i) => ({ d, x:d.route[0][0], y:d.route[0][1], wi:0, wait:d.route[0][2] * (0.3 + i * 0.25), dir:1, fear:0, peak:0, gone:false, exitT:0, bounce:0, look:0, bub:null, bubT:0, act:d.route[0][3], ph:Math.random() * 6 }));
     this.seed = seed != null ? seed : (Date.now() % 100000); this.door = 0;
@@ -240,7 +244,7 @@ const Scare = {
     }
     const c = this.clampCam(this.camX); if (c !== this.camX) this.camV = 0; this.camX = c;
   },
-  bgScale() { if (this.site && this.site.pano) { const W = this.W || 390, H = this.H || 580, iw = OFFMAP.PXU, ih = OFFMAP.SH, s = Math.max(H / ih, W / (OFFMAP.WW * iw)); return { s, iw, ih, ox:-(this.camX || 0) * iw * s, oy:H - ih * s }; }
+  bgScale() { if (this.site && this.site.pano) { const W = this.W || 390, H = this.H || 580, iw = OFFMAP.PXU, ih = OFFMAP.SH, s = Math.max(H / ih * PANO_ZOOM, W / (OFFMAP.WW * iw)); return { s, iw, ih, ox:-(this.camX || 0) * iw * s, oy:H - ih * s }; } // 貼底；PANO_ZOOM < 1：鏡頭拉遠，上面露出嘅位由 rooms.js 用天花補
     const img = SPR['bg_' + this.site.bg]; const iw = img && img.naturalWidth || 768, ih = img && img.naturalHeight || 1152, W = this.W || 390, H = this.H || 580; const s = Math.max(W / iw, H / ih); return { s, iw, ih, ox:(W - iw * s) / 2, oy:H - ih * s }; },
   pt(fx, fy) { const b = this.bgScale(); return [fx * b.iw * b.s + b.ox, fy * b.ih * b.s + b.oy]; }, // 全景：x = 世界座標（減鏡頭）
   depth(y) { return this.site && this.site.persp ? this.hh(y) / ((this.H || 580) * 0.165) : 0.72 + 0.5 * Math.max(0, Math.min(1, (y - 0.55) / 0.42)); },
@@ -257,6 +261,7 @@ const Scare = {
     const rdt = Math.min(0.05, (now - this.last) / 1000), dt = rdt * (this.timeScale || 1); this.last = now; this.camTick(rdt);
     if (!this.paused && !Story.busy()) this.step(dt);
     if (!this.active) return;
+    this.floatTick(rdt); // 提示字用真實時間：暫停／開面板都會照樣淡走，唔會留低半透明嘅殘影
     this.draw(now / 1000);
     if (!this.paused) this.hud();
     requestAnimationFrame((n) => this.frame(n));
@@ -273,10 +278,9 @@ const Scare = {
     for (const f of this.fx) if (f.ghost && !f.caught && g && this.inBeam(g, f.gx, f.gy)) { f.caught = true; this.caught[f.ghost] = true; this.cd[f.ghost] = 999; this.bubble(g, g.d.say.catchG, 2.6); this.react(g, 'catch'); f.busted = this.t; this.float(f.gx, f.gy - 0.08, `${SCARE_GHOSTS[f.ghost].name} 被請去喝茶`, '#9ad'); this.addKarma(g.d, 0, ''); if (!this.headless) this.renderDock(); }
     this.fx = this.fx.filter(f => (f.life -= dt) > 0);
     this.parts = this.parts.filter(p => { if (p.delay > 0) { p.delay -= dt; return true; } p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += (p.g || 0) * dt; p.rot = (p.rot || 0) + (p.vr || 0) * dt; return p.life > 0; });
-    this.floats = this.floats.filter(f => (f.life -= dt) > 0);
     if (!this.headless) { // 排隊嘅對白、提示字
       if (this.bq && this.bq.length && this.npcs.filter(m => m.bub && m.bubT > 0 && !m.gone).length < 2) { while (this.bq.length) { const q = this.bq.shift(); if (this.t - q.at < 4 && !q.n.gone && !q.n.out) { this.bubble(q.n, q.text, q.dur, q.ghost); break; } } }
-      if (!this.floats.length && this.fq && this.fq.length) { const f = this.fq.shift(); f.life = f.max = this.fq.length ? 0.9 : f.max; this.floats.push(f); } }
+    }
     this.shake = Math.max(0, this.shake - dt * 2.2); this.vign = Math.max(0, this.vign - dt * 1.2);
     if (this.expelled) { if (!this.kpiCut) { this.kpiCut = true; this.kpi = Math.round(this.kpi * EXPO.expelMul); } if (this.headless) this.active = false; else if (this.t - this.endAt > 2.6) this.finish(false); return; }
     if (this.t >= NIGHT_SEC || this.npcs.every(n => n.gone || n.d.guard || (n.left && n.out))) { if (this.headless) this.active = false; else if (this.t >= NIGHT_SEC) this.finish(false); else { this.endAt = this.endAt || this.t; if (this.t - this.endAt > 2.2) this.finish(false); } } // 全跑光：讓最後一個衝出畫面再收工
@@ -305,8 +309,10 @@ const Scare = {
     }
     if (n.d.daoshi) { this.daoTick(n, dt); return; } // 道士：行入嚟 → 做法 → 收工／放棄
     if (n.d.post && this.site.shift) { this.planMove(n, dt); return; } // 有崗位的人：留在崗位做事，有目的才走開
-    if (n.wait > 0) { n.wait -= dt * (n.fear >= 50 ? 0.4 : 1); n.act = n.d.route[n.wi][3]; return; }
-    const nxt = n.d.route[(n.wi + 1) % n.d.route.length], dx = nxt[0] - n.x, dy = nxt[1] - n.y, d = Math.hypot(dx, dy);
+    if (n.wait > 0) { n.wait -= dt * (n.fear >= 50 ? 0.4 : 1); n.act = n.d.route[n.wi][3]; if (n.act === 'brk_nap' && n.fear < 25) n.dir = n.x <= _SP.restTable[0] + 0.01 ? 1 : -1; return; }
+    let nxt = n.d.route[(n.wi + 1) % n.d.route.length];
+    if (nxt[3] === 'brk_nap' && this.site.pano) { if (!n.napAt) n.napAt = this.freeSeat(n, nxt); nxt = [n.napAt[0], n.napAt[1], nxt[2], nxt[3]]; } else n.napAt = null; // 茶水間圓枱：有人坐咗就揀第二張櫈
+    const dx = nxt[0] - n.x, dy = nxt[1] - n.y, d = Math.hypot(dx, dy);
     const sp = n.d.speed * (n.fear >= 50 ? 0.55 : 1) * dt; n.act = 'walk';
     if (n.fear < 25) n.dir = dx >= 0 ? 1 : -1;
     if (d <= sp) { n.x = nxt[0]; n.y = nxt[1]; n.wi = (n.wi + 1) % n.d.route.length; n.wait = nxt[2]; } else { n.x += dx / d * sp; n.y += dy / d * sp; }
@@ -354,11 +360,15 @@ const Scare = {
       if (e.k === 'in') { n.ev.shift(); continue; }
       if (e.k === 'callin' || e.k === 'meeting') { if (n.leaving || n.fleeing || n.fear >= 50 || !this.bossCall(n, e.k)) { e.t += 5; break; } n.ev.shift(); continue; }
     }
-    if (n.call && !n.leaving) { const c = n.call; if (c.delay > 0) c.delay -= dt; else { n.call = null; n.next = null; n.step = { x:c.x, y:c.y, wait:c.wait, act:c.act, arrived:false, path:null, pi:0, say:c.say, called:true }; if (c.go) this.bubble(n, c.go, 2.2); } }
+    if (n.call && !n.leaving) { const c = n.call, cb = c.boss;
+      if (cb && (cb.gone || cb.out || cb.fleeing)) { n.call = null; } // 陳總自己走咗／嚇走咗：唔使去
+      else if (cb && this.roomOf(cb) !== 'boss' && (c.hold = (c.hold || 0) + dt) < 25) { /* 等陳總行返入房先出發 */ }
+      else if (c.delay > 0) c.delay -= dt; else { n.call = null; n.next = null; n.step = { x:c.x, y:c.y, wait:c.wait, act:c.act, arrived:false, path:null, pi:0, say:c.say, called:true, boss:c.boss || null }; if (c.go) this.bubble(n, c.go, 2.2); } }
     if (!n.step) { n.step = n.next ? this.mkStep(n, n.next) : this.planNext(n); n.next = null; if (n.step.arrived) n.wait = n.step.wait; }
     const s = n.step;
     if (!s.arrived && !s.go) { // 出發前睇吓：沿途嘅房已經有兩個人行緊 → 企喺度等一陣（最多等 8 秒）
-      s.hold = (s.hold || 0) + dt; if (!(s.called && n.d.k === 'boss' && OFFMAP.roomAt(n.x) === OFFMAP.roomAt(s.x)) && this.walkBlocked(n, s.x) && s.hold < 15 && !n.fleeing) { if (n.act === 'walk') n.act = 'idle'; return; } s.go = true; }
+      s.hold = (s.hold || 0) + dt; // 已經行緊路（路線中途換咗目的地）或者企喺牆／門口：唔好停喺度，直接行
+      if (n.act !== 'walk' && !this.inDoor(n.x) && !(s.called && n.d.k === 'boss') && this.walkBlocked(n, s.x) && s.hold < 6 && !n.fleeing) { n.act = 'idle'; return; } s.go = true; }
     if (!s.arrived) {
       const tgt = s.path && s.pi < s.path.length ? s.path[s.pi] : [s.x, s.y];
       const dx = tgt[0] - n.x, dy = tgt[1] - n.y, dd = Math.hypot(dx, dy), sp = d.speed * (n.fear >= 50 ? 0.55 : 1) * dt;
@@ -371,15 +381,22 @@ const Scare = {
       return;
     }
     n.act = s.act; n.wait -= dt * (n.fear >= 50 ? 0.4 : 1);
+    if (s.called && s.boss && n.fear < 50) { const b = s.boss; // 被叫入房：陳總唔喺房 → 等一陣，等唔到就返去
+      if (b.gone || b.out || b.fleeing || this.roomOf(b) !== 'boss') { s.empty = (s.empty || 0) + dt; n.wait += dt; if (s.empty > 6) { this.bubble(n, EMPTY_SAY[n.d.k] || EMPTY_SAY.it, 2.6); n.step = null; return; } } else s.empty = 0; }
     const atPost = d.post && Math.hypot(n.x - d.post[0], n.y - d.post[1]) < 0.012;
     if (atPost && d.post[3] && n.fear < 25) n.dir = d.post[3]; // 崗位有方向：陳總對住白板、阿伯對住電梯口
+    if (n.act === 'present' && n.fear < 25) n.dir = 1; // 開會：企喺白板右邊，手套手向後指住白板
+    if (s.sit && s.act === 'brk_nap' && n.fear < 25) n.dir = n.x <= _SP.restTable[0] + 0.01 ? 1 : -1; // 伏喺枱：面向圓枱
     if (n.d.guard && n.act === 'doze' && n.fear > 0) n.act = 'look';
     if (atPost && d.lines && d.lines.work && n.fear < 25 && !s.cue) { n.wl = (n.wl == null ? 4 + this.rng(n) * 6 : n.wl) - dt; if (n.wl <= 0) { n.wl = 9 + this.rng(n) * 8; if (!n.bub && (this.headless || !this.npcs.some(m => m.bub && m.bubT > 0))) this.bubble(n, d.lines.work[Math.floor(this.rng(n) * d.lines.work.length)], 2.4); } }
     if (n.wait <= 0) { if (s.meet) { let i = 0; for (const m of this.npcs) if (m.step && m.step.act === 'notes' && m.step.arrived) { m.wait = Math.min(m.wait, 1.5 + 3 * i++); } else if (m.call && m.call.act === 'notes') m.call = null; this.bubble(n, '散會！聽朝九點前交。', 2.4); } n.step = null; }
   },
   // 走去電梯／從電梯出來：繞過影印機和飲水機（先到 (0.80, 0.60) 再轉）
+  freeSeat(n, pref) { const S = _SP.restSeats, near = (a, p) => a && Math.hypot(a[0] - p[0], a[1] - p[1]) < 0.02;
+    const busy = (p) => this.npcs.some(m => m !== n && !m.gone && !m.out && (near([m.x, m.y], p) || (m.step && near([m.step.x, m.step.y], p)) || near(m.napAt, p)));
+    if (!busy(pref)) return [pref[0], pref[1]]; const f = S.find(p => !busy(p)); return f ? [f[0], f[1]] : [pref[0], pref[1]]; },
   restStep(n, wait, say, acts) { // 茶水間休息：揀一張冇人坐嘅櫈
-    const S = _SP.restSeats, busy = (p) => this.npcs.some(m => m !== n && !m.gone && !m.out && ((m.step && Math.hypot(m.step.x - p[0], m.step.y - p[1]) < 0.01) || Math.hypot(m.x - p[0], m.y - p[1]) < 0.01)), free = S.filter(p => !busy(p));
+    const S = _SP.restSeats, busy = (p) => this.npcs.some(m => m !== n && !m.gone && !m.out && ((m.step && Math.hypot(m.step.x - p[0], m.step.y - p[1]) < 0.01) || Math.hypot(m.x - p[0], m.y - p[1]) < 0.01 || (m.napAt && Math.hypot(m.napAt[0] - p[0], m.napAt[1] - p[1]) < 0.01))), free = S.filter(p => !busy(p));
     const [px, py, pact] = n.d.post; if (!free.length || this.busy(n, free[0][0])) return { x:px, y:py, wait:this.U(n, 4, 8), act:pact, arrived:true };
     const p = free[Math.floor(this.rng(n) * free.length)], a = acts || ['brk_phone', 'brk_drink', 'brk_nap']; if (say) this.bubble(n, say, 2.2);
     return { x:p[0], y:p[1], wait, act:a[Math.floor(this.rng(n) * a.length)], arrived:false, path:null, pi:0, sit:true };
@@ -417,6 +434,7 @@ const Scare = {
     return { x:to[0], y:to[1], wait:U(...e[3]), act:'idle', arrived:false, path:null, pi:0 };
   },
   // 一間房同一時間最多兩個人行緊路（出發嗰間、目的地嗰間都計）
+  inDoor(x) { if (!this.site.pano) return false; const W = OFFMAP.WALLS, w = OFFMAP.WALLW; return W.some(v => x >= (v - 45) / 1165 && x <= (v + w + 45) / 1165); }, // 牆／門口嗰條（左右各多 45px）
   walkBlocked(n, tx) { if (!this.site.pano) return false; const a = Math.min(n.x, tx), b = Math.max(n.x, tx);
     return OFFMAP.ROOMS.some(r => r.x1 > a && r.x0 < b + 1e-6 && this.npcs.filter(m => m !== n && !m.gone && !m.out && !m.fleeing && (m.act === 'walk' || (!m.d.post && !m.d.daoshi && m.wait < 7)) && OFFMAP.roomAt(m.x) === r).length >= 2); }, // 阿Ken（固定路線）就快起身都當佢行緊，留位俾佢
   busy(n, tx) { if (!this.site.pano) return false; const rs = [OFFMAP.roomAt(n.x), OFFMAP.roomAt(tx)];
@@ -433,7 +451,7 @@ const Scare = {
     if (!cand.length) return false;
     if (kind === 'callin') { const c = cand[Math.floor(this.rng(b) * cand.length)];
       this.bubble(b, `${c.d.name}，入嚟我房！`, 2.6); b.next = null; b.step = { x:b.d.post[0], y:b.d.post[1], wait:24, act:'read', arrived:Math.hypot(b.x - b.d.post[0], b.y - b.d.post[1]) < 0.012, path:null, pi:0, say:'（睇報告）企喺度等我睇完先。', called:true }; if (b.step.arrived) { b.wait = 24; this.bubble(b, b.step.say, 2.4); }
-      c.call = { x:_SP.bossFront[0], y:_SP.bossFront[1], wait:14, act:'idle', delay:1.2, go:c.d.k === 'mis' ? '嚟緊喇陳總～' : '……係。', say:'陳總，搵我？' }; this.callT = this.t; this.callWho = c; return true; }
+      c.call = { x:_SP.bossFront[0], y:_SP.bossFront[1], wait:14, act:'idle', delay:1.2, go:c.d.k === 'mis' ? '嚟緊喇陳總～' : '……係。', say:c.d.k === 'mis' ? '陳總～搵我呀？' : '陳總，搵我？', boss:b }; this.callT = this.t; this.callWho = c; return true; }
     const k = cand.length > 1 && this.rng(b) < 0.6 ? 2 : 1, who = cand.sort(() => this.rng(b) - 0.5).slice(0, k);
     this.bubble(b, who.length > 1 ? `${who.map(m => m.d.name).join('、')}，入會議室開會！` : `${who[0].d.name}，入會議室！`, 2.8);
     b.next = null; b.step = { x:_SP.board[0], y:_SP.board[1], wait:22, act:'present', arrived:false, path:null, pi:0, say:'（指住白板）呢季嘅數……', called:true, meet:true };
@@ -441,8 +459,9 @@ const Scare = {
     this.meetT = this.t; return true;
   },
   // 要走了的提示：頭上一圈倒數（橘色），「走」字
+  tagExt(n) { return n === this.sel || (n.mocked > 0 && !n.d.guard) ? 16 : 0; }, // 名牌上面有冇狀態膠囊（幾多人望緊、冇人信）
   drawCue(ctx, n, x, by, t) {
-    const k = Math.max(0, Math.min(1, 1 - n.wait / 3.5)), cx = x - 40, cy = by - 22, r = 10;
+    const k = Math.max(0, Math.min(1, 1 - n.wait / 3.5)), cx = x + 46, cy = by + 1, r = 9; // 恐懼條右邊（唔撞眼、名、！）
     ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.beginPath(); ctx.arc(cx, cy, r + 3, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#ffb34a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); ctx.stroke();
     ctx.font = '900 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#ffe2b0'; ctx.fillText('走', cx, cy + 0.5); ctx.restore();
@@ -690,6 +709,8 @@ const Scare = {
       if (live >= 2) { this.bq = (this.bq || []).filter(q => q.n !== n); this.bq.push({ n, text, dur, ghost, at:this.t }); if (this.bq.length > 3) this.bq.shift(); return; } }
     n.bub = text; n.bubT = dur || 2; n.bubG = !!ghost; n.bubAt = this.t; },
   // 提示字（恐懼 +N、連擊、發現…）：一次一條，排隊喺畫面上方中間嗰條固定位置出
+  floatTick(dt) { this.floats = this.floats.filter(f => (f.life -= dt) > 0.02); // 淡到差唔多冇就即刻收走
+    if (!this.floats.length && this.fq && this.fq.length) { const f = this.fq.shift(); f.life = f.max = this.fq.length ? 0.9 : f.max; this.floats.push(f); } },
   float(x, y, text, color, life) { if (this.headless) return; this.fq = this.fq || []; this.fq.push({ text, color, life:Math.min(1.6, life || 1.3), max:Math.min(1.6, life || 1.3) }); if (this.fq.length > 3) this.fq.shift(); },
   floatOld(x, y, text, color, life) { this.floats.push({ x, y, text, color, life:life || 1.6, max:life || 1.6 }); },
   toast(t) { if (!this.headless) this.float(0.5, 0.5, t, '#fff', 1.2); },
@@ -762,22 +783,23 @@ const Scare = {
     // 名字、恐懼條、心情符號
     // 邊個望緊點中嗰個人：紅色虛線（佢望到就會穿崩）
     { const placed = []; // 名牌（眼＋名＋恐懼條）：前面嘅人先放，撞到就往上推
-      for (const q of tags.slice().sort((a, b) => b[2] - a[2])) { if (q[0].out) continue; q[1] = Math.max(52, Math.min((this.W || 390) - 50, q[1])); const ext = (q[0] === this.sel || q[0].mocked > 0) ? 14 : 0; let y = q[2];
-        for (let k = 0; k < 6; k++) { const o = placed.find(r => Math.abs(r[0] - q[1]) < 86 && y - 20 < r[1] + r[2] && y + 8 + ext > r[1] - 20); if (!o) break; y = o[1] - 20 - (8 + ext) - 2; }
-        q[2] = y; placed.push([q[1], y, 8 + ext]); } this._tagR = placed; }
+      for (const q of tags.slice().sort((a, b) => b[2] - a[2])) { if (q[0].out) continue; q[1] = Math.max(56, Math.min((this.W || 390) - 58, q[1])); const ext = this.tagExt(q[0]); let y = q[2]; // 一個名牌 = [y-20-ext, y+9]
+        for (let k = 0; k < 8; k++) { const o = placed.find(r => Math.abs(r[0] - q[1]) < 100 && y - 20 - ext < r[1] + 9 && y + 9 > r[1] - 20 - r[3]); if (!o) break; y = o[1] - 20 - o[3] - 9 - 2; }
+        q[2] = y; placed.push([q[1], y, 8, ext]); } this._tagR = placed; }
     const sel = this.sel && !this.sel.gone && !this.sel.out && !this.sel.fleeing && !this.sel.d.guard ? this.sel : null, sp = sel && tags.find(q => q[0] === sel);
     if (sp) { ctx.save(); ctx.setLineDash([6, 5]); ctx.lineDashOffset = -t * 20; ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,90,80,.75)';
-      for (const [m, x, by] of tags) if (m !== sel && !m.out && this.sees(m, sel)) { ctx.beginPath(); ctx.moveTo(x - 38, by - 9); ctx.lineTo(sp[1], sp[2] - 4); ctx.stroke(); } ctx.restore(); }
+      for (const [m, x, by] of tags) if (m !== sel && !m.out && this.sees(m, sel)) { ctx.beginPath(); ctx.moveTo(x, by + 6); ctx.lineTo(sp[1], sp[2] - 4); ctx.stroke(); } ctx.restore(); }
     this._bubLast = (this._bubR || []).slice(this._nTag || 0); // 上一格嘅對白框位置（家具標籤要避開）
-    this._bubR = (this._tagR || []).map(r => [r[0] - 48, r[1] - 22, 96, r[2] + 24]); this._nTag = this._bubR.length; // 對白框連名牌都唔准蓋住
+    this._bubR = (this._tagR || []).map(r => [r[0] - 52, r[1] - 22 - r[3], 104, 32 + r[3]]); this._nTag = this._bubR.length; // 對白框連名牌都唔准蓋住
     { let nb = 0; const bs = tags.filter(q => q[0].bub && !q[0].out).sort((a, b) => (b[0] === this.sel) - (a[0] === this.sel) || (b[0].bubAt || 0) - (a[0].bubAt || 0)); this._bubOK = new Set(bs.slice(0, 2).map(q => q[0])); nb; } // 畫面最多兩個對白框
     for (const [n, x, by] of tags) {
       if (n.out) continue;
       { // 眼：開＝望緊四周（會見到怪事），合埋＝低頭做緊嘢；紅＝望緊你點中嗰個
-        const ex = x - 38, ey = by - 9, op = this.watching(n), red = sel && n !== sel && this.sees(n, sel);
-        ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.beginPath(); ctx.arc(ex, ey, 8.5, 0, Math.PI * 2); ctx.fill(); ctx.lineWidth = 1.6;
-        if (op) { ctx.fillStyle = red ? '#ff6a5a' : '#f2f2f2'; ctx.beginPath(); ctx.ellipse(ex, ey, 6.5, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex + (n.dir || 1) * 1.2, ey, 2, 0, Math.PI * 2); ctx.fill(); }
-        else { ctx.strokeStyle = '#9aa'; ctx.beginPath(); ctx.arc(ex, ey - 2, 5.5, 0.25 * Math.PI, 0.75 * Math.PI); ctx.stroke(); }
+        ctx.font = '700 11px sans-serif'; const nw2 = ctx.measureText(n.d.name).width / 2;
+        const ex = x - nw2 - 12, ey = by - 10, op = this.watching(n), red = sel && n !== sel && this.sees(n, sel);
+        ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.beginPath(); ctx.arc(ex, ey, 7.5, 0, Math.PI * 2); ctx.fill(); ctx.lineWidth = 1.6;
+        if (op) { ctx.fillStyle = red ? '#ff6a5a' : '#f2f2f2'; ctx.beginPath(); ctx.ellipse(ex, ey, 5.5, 3.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex + (n.dir || 1) * 1.2, ey, 2, 0, Math.PI * 2); ctx.fill(); }
+        else { ctx.strokeStyle = '#9aa'; ctx.beginPath(); ctx.arc(ex, ey - 2, 4.5, 0.25 * Math.PI, 0.75 * Math.PI); ctx.stroke(); }
         ctx.restore(); }
       if (n.step && n.step.cue) this.drawCue(ctx, n, x, by, t);
       const bw = 60, f = Math.min(1, n.fear / 100), hk = Math.max(0, n.barHit || 0), shk = n.shaken > 0, bh = 6 + hk * 3; // 恐懼條：中招時變粗、閃白；心有餘悸時紅框一閃一閃
@@ -788,13 +810,15 @@ const Scare = {
       ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.fillRect(x - bw / 2 + bw * 0.25, by - 2, 1, bh + 2); ctx.fillRect(x - bw / 2 + bw * 0.5, by - 2, 1, bh + 2);
       ctx.font = '700 11px sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.strokeText(n.d.name, x, by - 6); ctx.fillStyle = n === this.sel ? '#a8ffcf' : '#eee'; ctx.fillText(n.d.name, x, by - 6);
       if (n === sel || (n.mocked > 0 && !n.d.guard)) { const nw = n === sel ? this.witnesses(n).length : -1, a = nw < 0 ? '' : nw ? `${nw}人望緊` : '冇人望緊', b = n.mocked > 0 ? `冇人信×${Math.min(4, n.mocked)}` : '';
-        ctx.font = '800 12px sans-serif'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.85)'; const tx = [a, b].filter(Boolean).join('・'); ctx.strokeText(tx, x, by + 18); ctx.fillStyle = nw > 0 ? '#ff8a7a' : b && nw < 0 ? '#d6a0ff' : '#8fe8b0'; ctx.fillText(tx, x, by + 18); }
+        ctx.font = '800 11px sans-serif'; const tx = [a, b].filter(Boolean).join('・'), tw = ctx.measureText(tx).width; // 名上面一粒細膠囊（唔再壓住個頭）
+        ctx.fillStyle = 'rgba(10,8,18,.72)'; ctx.beginPath(); ctx.roundRect(x - tw / 2 - 6, by - 33, tw + 12, 15, 7.5); ctx.fill();
+        ctx.fillStyle = nw > 0 ? '#ff8a7a' : b && nw < 0 ? '#d6a0ff' : '#8fe8b0'; ctx.fillText(tx, x, by - 21.5); }
       if (n.d.daoshi && n.ds === 'ritual') { const pw = 110, pr = Math.min(1, n.prog || 0), fy = this.pt(n.x, n.y)[1] + 10; ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.72)'; ctx.fillRect(x - pw / 2 - 3, fy, pw + 6, 26); ctx.fillStyle = '#4a3a10'; ctx.fillRect(x - pw / 2, fy + 16, pw, 6); ctx.fillStyle = '#ffd36a'; ctx.fillRect(x - pw / 2, fy + 16, pw * pr, 6); // 做法進度：喺佢腳下，唔會撞對白
         ctx.font = '800 11px sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffe9a8'; ctx.fillText(`做法中 ${Math.round(pr * 100)}%${n.fear >= 50 ? '・嚇親停咗' : (this.expo || 0) < 25 ? '・冇動靜慢咗' : ''}`, x, fy + 12); ctx.restore(); }
       const mark = n.fleeing ? '!!!' : n.fear >= 50 ? '！' : n.fear >= 25 ? '？' : '';
-      if (mark) { const pop = Math.max(0, n.markPop || 0), ms = 1 + pop * 1.4; ctx.save(); ctx.translate(x + 30, by - 20 - Math.abs(Math.sin(t * 6)) * 4); ctx.scale(ms, ms); ctx.rotate(Math.sin(t * 9) * 0.08 * (n.fear >= 50 ? 1 : 0.4));
-        ctx.font = `900 ${n.fear >= 50 ? 22 : 18}px sans-serif`; ctx.textAlign = 'center'; ctx.fillStyle = n.fear >= 50 ? '#ff6a5a' : '#ffd36a'; ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.strokeText(mark, 0, 0); ctx.fillText(mark, 0, 0); ctx.restore(); }
-      if (n.bub && this._bubOK.has(n)) this.drawBubble(ctx, n.bub, x, by - 18, n.bubG, this.t - (n.bubAt || 0));
+      if (mark) { const pop = Math.max(0, n.markPop || 0), ms = 1 + pop * 0.8; ctx.font = '700 11px sans-serif'; ctx.save(); ctx.translate(x + ctx.measureText(n.d.name).width / 2 + (mark.length > 1 ? 16 : 10), by - 3 - Math.abs(Math.sin(t * 6)) * 2); // 名嘅右邊，同名一行 ctx.scale(ms, ms); ctx.rotate(Math.sin(t * 9) * 0.08 * (n.fear >= 50 ? 1 : 0.4));
+        ctx.font = `900 ${n.fear >= 50 ? 19 : 16}px sans-serif`; ctx.textAlign = 'center'; ctx.fillStyle = n.fear >= 50 ? '#ff6a5a' : '#ffd36a'; ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.strokeText(mark, 0, 0); ctx.fillText(mark, 0, 0); ctx.restore(); }
+      if (n.bub && this._bubOK.has(n)) this.drawBubble(ctx, n.bub, x, by - 20 - this.tagExt(n), n.bubG, this.t - (n.bubAt || 0)); // 對白框喺成個名牌上面
     }
     if (this.site.pano) this.drawEdge(ctx, t);
     // 漂浮字
@@ -915,15 +939,16 @@ const Scare = {
     else if (f >= 80) Object.assign(o, { pose:'cower', face:'t', jit:0.8 });
     else if (f >= 50) Object.assign(o, { pose:'tremble', face:'f', jit:0.3 });
     else if (f >= 25) Object.assign(o, { pose:'look', face:'q' });
-    else if (n.act === 'brk_nap') Object.assign(o, { pose:'idle', face:'c', rot:0.2 + 0.015 * Math.sin((n.at || 0) * 1.3), sy:0.95 - 0.01 * Math.sin((n.at || 0) * 1.3), doze:true }); // 伏低瞌眼：身向前傾、一起一伏
+    else if (n.act === 'brk_nap') Object.assign(o, { pose:'idle', face:'c', doze:true }); // 伏喺枱瞓：動作喺 daily_town.js（office_ken_nap）
     else if (n.act === 'brk_phone') Object.assign(o, { pose:'phone', face:'b' });
     else if (n.act === 'brk_drink') Object.assign(o, { pose:'sip', face:'c' });
     else if (d.k === 'ken') Object.assign(o, { pose:'phone', face:'b' }); // 盯著發光的手機，魂不在身上
     else if (n.act === 'mop') Object.assign(o, { pose:'mop', face:'b' });
     else if (d.daoshi && n.act === 'ritual') o.pose = 'ritual'; // 道士做法（自己的原畫）
-    else if (d.guard && n.act === 'doze') Object.assign(o, { pose:'idle', face:'c', sy:1 - 0.012 * (1 + Math.sin((n.at || 0) * 1.4)), rot:0.03, doze:true }); // 坐崗打瞌睡：頭一沉一沉
+    else if (d.guard && n.act === 'doze') Object.assign(o, { pose:'idle', face:'c', doze:true }); // 坐崗打瞌睡：動作喺 daily_town.js（town_guard_dozeL）
     else if (d.guard) Object.assign(o, { pose:'look', face:'n' });
     else if (d.k === 'boss') o.pose = 'hold'; // 抱著水晶球
+    if (f < 25 && !walking && !n.fleeing && typeof TOWN !== 'undefined' && TOWN.actAnim(n)) o.pose = n.act; // 有專屬動作（daily_town.js office_*）：開會、講電話、瞓覺、收拾……
     if (rx) {
       const p = Math.min(1, rx.t / rx.dur); o.src = rx.src;
       const jump = (A, mul) => { // A 秒的預備（蹲一下），然後彈起來
@@ -983,7 +1008,8 @@ const Scare = {
     ctx.filter = 'none'; ctx.restore();
     if (d.mop && o.pose === 'mop' && Math.random() < 0.05) this.parts.push({ kind:'drop', x:vp[0] + (right ? 1 : -1) * 0.05, y:vp[1], vx:0, vy:0, life:1.4 });
     this.npcFx(ctx, n, o, x + jx, y - lift, hh, right, t); ctx.globalAlpha = 1;
-    return { x, top:y - lift + sit - hh * (o.pose === 'cower' ? 0.8 : 1) * o.sy };
+    const nap = n.act === 'brk_nap' && n.daily && n.daily.forced && n.daily.w > 0.5 ? hh * 0.15 : 0; // 伏喺枱瞓：頭低咗，名牌跟住落
+    return { x, top:y - lift + sit + nap - hh * (o.pose === 'cower' ? 0.8 : 1) * o.sy };
   },
   // 還沒有關節圖的人：用整張圖做出姿勢的感覺
   drawNpcSprite(ctx, n, o, hh, right) {
@@ -1039,7 +1065,7 @@ const Scare = {
       ctx.strokeStyle = 'rgba(255,200,180,.55)'; ctx.lineWidth = 1.5;
       for (const s of [-1, 1]) for (let i = 0; i < 2; i++) { const r = hh * (0.3 + i * 0.06) + Math.sin(t * 30) * 1.5; ctx.beginPath(); ctx.arc(x, y - hh * 0.45, r, s > 0 ? -0.35 : Math.PI - 0.35, s > 0 ? 0.35 : Math.PI + 0.35); ctx.stroke(); }
     }
-    if (o.doze && !o.rxk) { // 打瞌睡：Z 一個一個飄上去
+    if (o.doze && !o.rxk && !(n.daily && n.daily.forced && n.daily.w > 0)) { // 打瞌睡（有專屬動作嗰陣佢自己畫 Zzz）：Z 一個一個飄上去
       ctx.font = '800 13px sans-serif'; ctx.textAlign = 'center';
       for (let i = 0; i < 3; i++) { const q = (t * 0.45 + i / 3) % 1; ctx.fillStyle = `rgba(220,230,255,${0.85 * Math.sin(q * Math.PI)})`; ctx.fillText('Z', x + side * hh * (0.18 + q * 0.15), y - hh * (0.95 + q * 0.3)); }
     }
@@ -1068,7 +1094,7 @@ const Scare = {
         return;
       }
       const ready = !this.caught[k] && this.cd[k] <= 0 && this.mana >= 35, dx = Math.sin(t * 0.35 + i * 2.1);
-      const x = this.W * (0.17 + 0.33 * i) + dx * this.W * 0.06, y = this.H * 0.27 + Math.sin(t * 0.9 + i) * 6;
+      const x = this.W * (0.17 + 0.33 * i) + dx * this.W * 0.06, y = (this.site.pano ? this.pt(0, 0.36)[1] : this.H * 0.27) + Math.sin(t * 0.9 + i) * 6; // 喺房入面天花下面飄（鏡頭拉遠後唔好飄出去夜空）
       const a = (ready ? 0.34 : 0.13) + 0.06 * Math.sin(t * 1.7 + i);
       ART.drawChar(ctx, k, x, y, 0.8, { t:t + i * 1.3, pose:'idle', alpha:a, flip:Math.cos(t * 0.35 + i * 2.1) < 0, shadow:false });
     });

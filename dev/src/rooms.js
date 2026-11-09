@@ -37,7 +37,7 @@ const OFFMAP = (() => {
     // ---- 新佈局新增（新全景 px，用 npx）----
     restTable:[npx(6890), 0.86], restSeats:[[npx(6720), 0.80], [npx(6890), 0.80], [npx(7060), 0.80]], // 茶水間休息區：圓枱＋三張櫈（坐喺枱後面向鏡頭）
     reception:[npx(3330), 0.80], // 大堂前台（美美）：背向左邊會議室門口、面向右邊
-    copier:[npx(8250), 0.70], wcM:[npx(7860), 0.70], wcF:[npx(8160), 0.70], // 洗手間門口、影印機
+    copier:[npx(8320), 0.70], wcM:[npx(7868), 0.70], wcF:[npx(8108), 0.70], // 洗手間門口、影印機
     meetTable:[npx(2370), 0.82], server:[npx(10660), 0.78], qaDesks:[npx(8800), npx(9150), npx(9500)], sofa:[npx(11850), 0.70],
   };
   const LANE = [[Ru(1.80), 0.93], [Ru(2.24), 0.91], // 開放辦公區：只拖前面兩格（唔好擋住阿Ken、小晴張枱）；之後一路向右拖到休息室，再拖返轉頭（唔使由盡頭行返去）
@@ -121,7 +121,15 @@ const OFFMAP = (() => {
   // 後牆上嘅道具（喺人後面畫）
   function drawBack(ctx, t) {
     const c = pano(), b = SC.bgScale();
-    if (c) { const k = c.height / SH, sx = SC.camX * PXU * k, sw = SC.W / (b.s / k) * 1; ctx.drawImage(c, sx, 0, SC.W * k / b.s, c.height, 0, b.oy, SC.W, b.ih * b.s); }
+    if (c) { const k = c.height / SH, sx = SC.camX * PXU * k, sw = SC.W * k / b.s; ctx.drawImage(c, sx, 0, sw, c.height, 0, b.oy, SC.W, b.ih * b.s);
+      if (b.oy > 0) { // 鏡頭拉遠：上面露出嘅位畫成大樓剖面——上一層嘅樓板，再上面係夜空同遠處大廈燈
+        const y0 = b.oy, slab = Math.max(10, b.s * 34);
+        const g = ctx.createLinearGradient(0, 0, 0, y0 - slab); g.addColorStop(0, '#0b0a1c'); g.addColorStop(1, '#1d1838'); ctx.fillStyle = g; ctx.fillRect(0, 0, SC.W, y0 - slab + 1);
+        ctx.save(); const px0 = SC.camX * 140; for (let i = 0; i < 26; i++) { const bx = ((i * 97 - px0) % (SC.W + 120) + SC.W + 120) % (SC.W + 120) - 60, bh = (0.35 + ((i * 53) % 10) / 16) * (y0 - slab), bw = 26 + (i * 31) % 30;
+          ctx.fillStyle = 'rgba(30,26,58,.9)'; ctx.fillRect(bx, y0 - slab - bh, bw, bh); ctx.fillStyle = 'rgba(255,214,140,.35)'; for (let w = 0; w < 6; w++) if ((i * 7 + w * 3) % 5 === 0) ctx.fillRect(bx + 4 + (w % 3) * 7, y0 - slab - bh + 6 + Math.floor(w / 3) * 10, 3, 4); }
+        ctx.restore();
+        const sg = ctx.createLinearGradient(0, y0 - slab, 0, y0); sg.addColorStop(0, '#5a5068'); sg.addColorStop(0.25, '#3c3448'); sg.addColorStop(1, '#2a2434'); ctx.fillStyle = sg; ctx.fillRect(0, y0 - slab, SC.W, slab);
+        ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(0, y0 - slab, SC.W, 1.5); ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, y0 - 2, SC.W, 2); } }
     if (!st) return;
     // 微波爐：自己開，入面著燈、轉盤、叮
     if (st.micro > 0) { const [x, y, w, h] = rect(A.microWin), on = Math.sin(t * 40) > -0.6; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(255,200,110,${on ? 0.75 : 0.35})`; ctx.fillRect(x, y, w, h);
@@ -176,8 +184,17 @@ const OFFMAP = (() => {
     const tb = tint('of_meet_table'); if (tb) { const [mx, my] = SPOT.meetTable; out.push([my, (ctx) => { const b = SC.bgScale(), k = b.ih * b.s / SH * MT_K, w = 869 * k, h = 192 * k, [x, y] = P(mx, my);
       ctx.save(); ctx.fillStyle = 'rgba(6,4,18,.32)'; ctx.beginPath(); ctx.ellipse(x, y - h * 0.03, w * 0.52, h * 0.14, 0, 0, PI * 2); ctx.fill(); ctx.drawImage(tb, x - w / 2, y - h, w, h); ctx.restore(); }]); }
     // 大堂前台（美美）：張枱喺佢前面（近鏡頭）擋住下半身
-    const dk = tint('of_desk_clean'); if (dk) { const [rx, ry] = SPOT.reception, dy = ry + 0.02; out.push([dy, (ctx) => { const u = U(dy), h = 0.56 * u, w = h * dk.width / dk.height, [x, y] = P(rx + 0.03, dy);
-      ctx.save(); ctx.fillStyle = 'rgba(6,4,18,.35)'; ctx.beginPath(); ctx.ellipse(x, y - h * 0.04, w * 0.5, h * 0.1, 0, 0, PI * 2); ctx.fill(); ctx.translate(x, y); ctx.scale(-1, 1); ctx.drawImage(dk, -w / 2, -h, w, h); ctx.restore(); }]); }
+    { // 大堂前台：美美面向右邊坐。椅背喺佢左邊（背向會議室門口）；側面嘅辦公枱喺佢右邊、擋住雙腳；螢幕對住佢；枱邊有「前台」牌
+      const ch = tint('of_chair_front'), dk = tint('of_desk_side'), [rx, ry] = SPOT.reception;
+      if (ch) out.push([ry - 0.004, (ctx) => { const u = U(ry), h = 0.6 * u, w = h * ch.width / ch.height, [x, y] = P(rx - 0.012, ry);
+        ctx.save(); ctx.fillStyle = 'rgba(6,4,18,.3)'; ctx.beginPath(); ctx.ellipse(x, y, w * 0.4, h * 0.06, 0, 0, PI * 2); ctx.fill(); ctx.drawImage(ch, x - w / 2, y - h, w, h); ctx.restore(); }]);
+      if (dk) { const dy = ry + 0.012; out.push([dy, (ctx) => { const u = U(dy), h = 0.74 * u, w = h * dk.width / dk.height, [x, y] = P(rx + 0.075, dy);
+        ctx.save(); ctx.fillStyle = 'rgba(6,4,18,.35)'; ctx.beginPath(); ctx.ellipse(x, y - h * 0.02, w * 0.52, h * 0.07, 0, 0, PI * 2); ctx.fill();
+        ctx.translate(x, y); ctx.scale(-1, 1); ctx.drawImage(dk, -w / 2, -h, w, h); ctx.restore();
+        // 前台牌（枱面右邊，企喺度）
+        const bw = w * 0.34, bh = h * 0.1, bx = x + w * 0.08, by = y - h * 0.62; ctx.save(); ctx.fillStyle = '#3a2a24'; ctx.fillRect(bx - 1.5, by - 1.5, bw + 3, bh + 3); ctx.fillStyle = '#c9a65a'; ctx.fillRect(bx, by, bw, bh);
+        ctx.fillStyle = '#2a1a10'; ctx.font = `900 ${Math.round(bh * 0.72)}px "PingFang TC","Noto Sans TC",sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('前台', bx + bw / 2, by + bh * 0.55); ctx.restore(); }]); }
+    }
     const ch = tint('of_chair_back');
     if (ch) for (const c of st.spare) { const y = c.y + c.oz; out.push([y, (ctx) => { const [x, yy] = P(c.x + c.ox, y), u = U(y), h = 0.62 * u, w = h * ch.width / ch.height, s = Math.cos(c.sw);
       ctx.save(); ctx.fillStyle = 'rgba(6,4,18,.3)'; ctx.beginPath(); ctx.ellipse(x, yy, w * 0.42, w * 0.1, 0, 0, PI * 2); ctx.fill(); ctx.translate(x, yy); ctx.scale(Math.max(0.35, Math.abs(s)) * (s < 0 ? -1 : 1), 1); ctx.drawImage(ch, -w / 2, -h, w, h); ctx.restore();
@@ -200,8 +217,9 @@ const OFFMAP = (() => {
   }
   // ---------- 小地圖（畫面頂）：四間房、每個人一粒（恐懼顏色）、點中嘅人金圈、望緊佢嘅人紅圈；點一下跳過去 ----------
   function mapHTML() {
-    return `<div id="sc-map">${ROOMS.map(r => `<div class="scm-r" data-r="${r.k}" style="left:${r.x0 / WW * 100}%;width:${(r.x1 - r.x0) / WW * 100}%"><span>${r.name}</span></div>`).join('')}<i id="scm-view"></i><div id="scm-dots"></div></div><button id="sc-follow" class="on" title="鏡頭跟住點中嘅人">跟</button>`;
+    return `<div id="sc-map">${ROOMS.map(r => `<div class="scm-r" data-r="${r.k}" style="left:${r.x0 / WW * 100}%;width:${(r.x1 - r.x0) / WW * 100}%"><span>${SHORT[r.k] || r.name}</span></div>`).join('')}<i id="scm-view"></i><div id="scm-dots"></div></div><button id="sc-follow" class="on" title="鏡頭跟住點中嘅人">跟</button>`;
   }
+  const SHORT = { boss:'陳總', meeting:'會議', lobby:'大堂', main:'工程', pantry:'茶水', wc:'洗手', qa:'設計', server:'機房', rest:'休息' }; // 小地圖格仔窄：用兩個字
   const DOTCH = { ken:'K', it:'晴', mis:'美', boss:'陳', auntie:'娣', guard:'伯', daoshi:'道', kol:'網' };
   function mapTick(S) {
     const box = document.getElementById('scm-dots'); if (!box) return;

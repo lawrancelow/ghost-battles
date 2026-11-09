@@ -95,7 +95,7 @@ const OFFICE = (() => {
       kids:[{ id:'binder1', spr:'op_binder', u:0.30, v:0.055, h:0.19, fall:1 }, { id:'binder2', spr:'op_binder', u:0.47, v:0.05, h:0.19, fall:1, flip:1 }, { id:'stack', spr:'op_stack', u:0.74, v:0.07, h:0.13, fall:1 }] },
     // 小晴的桌子（同一套背面的桌子）：檯燈、仙人掌、文件、背對我們的螢幕
     { id:'idesk', spr:'of_desk_back_empty', x:0, y:0, uy:0.515, z:0.515, h:0.90, ax:360 / 567, ay:52 / 435, shadow:1.25, shu:0.5, shv:0.9, floorV:0.966, stn:'it', back:1,
-      kids:[{ id:'lamp', spr:'of_lamp', u:0.10, v:0.40, h:0.34, ax:0.78, lamp:1 }, { id:'icactus', spr:'op_cactus', u:0.86, v:0.30, h:0.11, fall:1 }, { id:'ipaper', spr:'op_paper', u:0.28, v:0.16, h:0.075, paper:1, rot:0.2 },
+      kids:[{ id:'lamp', spr:'of_lamp', u:0.16, v:0.31, h:0.30, ax:0.78, lamp:1 } /* 檯燈：企喺枱面左後角（同螢幕底一樣高），唔好吊喺枱前面 */, { id:'icactus', spr:'op_cactus', u:0.86, v:0.30, h:0.11, fall:1 }, { id:'ipaper', spr:'op_paper', u:0.28, v:0.16, h:0.075, paper:1, rot:0.2 },
             { id:'imon', spr:'op_mon_back', u:0.45, v:0.33, h:0.50, ax:0.5, ay:0.96, mon:1, stn:'it', back:1 }] },
     { id:'achair', spr:'of_chair_back', x:0.45, y:0.59, h:0.66, shadow:0.5, chair:1 }, // 空的辦公椅（「辦公椅自己轉」）
     { id:'copier', spr:'of_copier', x:0.705, y:0.515, h:0.74, ay:0.97, shadow:0.9, copier:1 },
@@ -111,6 +111,15 @@ const OFFICE = (() => {
       kids:[{ id:'kmug', spr:'op_mug_back', u:0.22, v:0.34, h:0.12, mug:1, fall:1 }, { id:'kpaper', spr:'op_paper', u:0.30, v:0.15, h:0.075, paper:1, rot:0.25 },
             { id:'kmon', spr:'op_mon_back', u:0.45, v:0.33, h:0.50, ax:0.5, ay:0.96, mon:1, stn:'ken', back:1 }] },
   ];
+  // IT 公司：多啲工位（新全景 px，世界座標；glow = 螢幕亮緊、有人OT留低嘅位）
+  const WS = [[5430, 0.715, 1], [5810, 0.715, 0], // 工程師區：沿窗一排（阿Ken、小晴右邊），前面留走道
+    [8790, 0.715, 1], [9170, 0.715, 0], [9550, 0.715, 1], // 設計測試區：沿窗一排
+    [10330, 0.885, 1]]; // 伺服器房：值班位喺機櫃前面
+  WS.forEach(([px, y, on], i) => {
+    DEF.push({ id:'wsch' + i, spr:'of_chair_front', wx:px / OFFMAP.PXU + (i % 2 ? -0.085 : 0.085), wy:y - 0.004, h:0.6, ay:0.98, shadow:0.45, flip:i % 2 }); // 椅子推開咗喺枱側（人走咗），睇得到
+    DEF.push({ id:'ws' + i, spr:'of_desk_back_empty', wx:px / OFFMAP.PXU, wy:y, h:0.9, ay:0.97, shadow:1.1, glow:on,
+      kids:[{ id:'wsm' + i, spr:'op_mon_back', u:0.47, v:0.33, h:0.5, ax:0.5, ay:0.96 }, { id:'wsk' + i, spr:'op_keyboard', u:0.5, v:0.2, h:0.06 }].concat(i % 3 === 1 ? [{ id:'wsg' + i, spr:'op_mug_back', u:0.2, v:0.34, h:0.12 }] : []) });
+  });
   // 牆上的鐘（右牆窄牆，冷氣和電梯中間）、天花板燈管、冷氣、窗（背景比例）
   const CLOCK = { x:0.815, y:0.335, d:0.42, depth:0.48 };
   const TUBES = [[0.075, 0.042, 0.34, 0.034], [0.59, 0.042, 0.345, 0.038], [0.165, 0.148, 0.24, 0.022], [0.535, 0.148, 0.25, 0.022], [0.215, 0.204, 0.185, 0.012], [0.51, 0.204, 0.18, 0.012]];
@@ -126,7 +135,9 @@ const OFFICE = (() => {
     SC = S; items = {}; list = []; kids = []; flying = []; floor = []; drops = [];
     for (const d of DEF) {
       const it = Object.assign({ ax:0.5, ay:1, dx:0, dy:0, rot:0, vr:0, sx:1, sy:1, ph:Math.random() * 6 }, d, { kids:[] });
-      if (!d.stn) { it.x = OFFMAP.M(d.x); it.y = OFFMAP.MY(d.y); } // 舊辦公室座標 → 全景世界座標（開放辦公區）
+      if (d.wx != null) { it.x = d.wx; it.y = d.wy; } // 新工位：直接用世界座標
+      else if (!d.stn) { it.x = OFFMAP.M(d.x); it.y = OFFMAP.MY(d.y); } // 舊辦公室座標 → 全景世界座標（開放辦公區）
+      if (d.water) { it.x = OFFMAP.npx(4050); } // 飲水機：大堂右邊吉位（唔再夾住前台同電梯）
       if (d.copier) { it.x = OFFMAP.SPOT.copier[0]; it.y = OFFMAP.SPOT.copier[1]; it.h = 0.62; } // 影印機：搬去洗手間／影印房，企喺後牆前面
       items[d.id] = it; list.push(it);
       for (const k of d.kids || []) { const c = Object.assign({ ax:0.5, ay:1, dx:0, dy:0, rot:k.rot || 0, base:k.rot || 0, vr:0, sx:1, sy:1, hide:0, ph:Math.random() * 6 }, k, { parent:it }); it.kids.push(c); items[k.id] = c; kids.push(c); }
@@ -462,6 +473,7 @@ const OFFICE = (() => {
     if (it.copier) copierFx(ctx, L, T, w, h, u, t);
     if (it.water) waterFx(ctx, L, T, w, h, u, t);
     if (it.stn) deskFx(ctx, it, L, T, w, h, u, t);
+    if (it.glow) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gx = L + w * 0.47, gy = T + h * 0.05, r = w * 0.55, g = ctx.createRadialGradient(gx, gy, 0, gx, gy, r); g.addColorStop(0, `rgba(120,170,255,${0.22 + 0.03 * Math.sin(t * 2 + it.ph)})`); g.addColorStop(1, 'rgba(120,170,255,0)'); ctx.fillStyle = g; ctx.fillRect(gx - r, gy - r, r * 2, r * 2); ctx.restore(); } // 有人OT：螢幕光照住枱面
     ctx.restore();
   }
   const kenAtDesk = (s) => { const K = (s || STN).K; return !!K && (K.mode === 'sit' || K.mode === 'jump' || K.mode === 'rise' || K.mode === 'sitdown'); };
