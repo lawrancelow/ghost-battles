@@ -29,7 +29,7 @@ const Presence = (() => {
   const T = (l) => (zh() || WRITTEN[l[0]] ? l[2] : l[1]);
   const seen = (id) => !!(S && S.seen && S.seen[id]);
   const rnd = (a) => a[Math.floor(Math.random() * a.length)];
-  let started = false, scenes = [], playing = false, inPlaza = false, lastBub = null, sceneGap = 0;
+  let started = false, scenes = [], playing = false, inPlaza = false, lastBub = null, sceneGap = 0, cur = null;
 
   // ---------- 時間（示範同測試可以撥快） ----------
   function clock() { const p = S_() && S.presence; return Date.now() + ((p && p.skew) || 0); }
@@ -133,19 +133,20 @@ const Presence = (() => {
     const c = cst(), r = rankOf(c.rank), now = clock();
     Object.assign(c, { state:'active', start:now, end:now + (r.days + (extra || 0)) * DAY, kpi:0, target:r.target, taunted:false, crisis:null });
   }
+  const has = (k) => cur === k || scenes.some(s => s.kind === k); // 正在播嗰幕都算（避免重複排隊）
   function contractTick() {
     const c = cst(), now = clock(), a = S.ghosts.find(isAfu);
-    if (c.state === 'none') { if (seen('ch1_end') && !scenes.some(s => s.kind === 'issue')) scenes.push({ kind:'issue' }); return; }
+    if (c.state === 'none') { if (seen('ch1_end') && !has('issue')) scenes.push({ kind:'issue' }); return; }
     if (c.state === 'active') {
-      if (c.kpi >= c.target && !scenes.some(s => s.kind === 'promote')) { scenes.push({ kind:'promote' }); return; }
-      if (now >= c.end && c.kpi < c.target && !scenes.some(s => s.kind === 'crisis')) { scenes.push({ kind:'crisis' }); return; }
+      if (c.kpi >= c.target && !has('promote')) { scenes.push({ kind:'promote' }); return; }
+      if (now >= c.end && c.kpi < c.target && !has('crisis')) { scenes.push({ kind:'crisis' }); return; }
       const el = (now - c.start) / (c.end - c.start);
-      if (!c.taunted && el > 0.55 && c.kpi < c.target * 0.5 && !scenes.some(s => s.kind === 'taunt')) scenes.push({ kind:'taunt' });
+      if (!c.taunted && el > 0.55 && c.kpi < c.target * 0.5 && !has('taunt')) scenes.push({ kind:'taunt' });
     }
     if (c.state === 'crisis') {
       if (a) st().p[a.id] = Math.min(val(a), 18);
-      if (c.crisis.ok && !scenes.some(s => s.kind === 'redeem')) scenes.push({ kind:'redeem' });
-      else if (!c.crisis.ok && now >= c.crisis.end && !scenes.some(s => s.kind === 'more')) scenes.push({ kind:'more' });
+      if (c.crisis.ok && !has('redeem')) scenes.push({ kind:'redeem' });
+      else if (!c.crisis.ok && now >= c.crisis.end && !has('more')) scenes.push({ kind:'more' });
     }
   }
 
@@ -173,8 +174,8 @@ const Presence = (() => {
     return !(typeof Story !== 'undefined' && Story.busy()) && !(typeof Battle !== 'undefined' && Battle.active);
   }
   function runScene(s) {
-    const c = cst(), done = () => { playing = false; sceneGap = 4; try { save(); } catch (e) {} try { UI.refresh && UI.refresh(); } catch (e) {} hud(); };
-    playing = true;
+    const c = cst(), done = () => { playing = false; cur = null; sceneGap = 4; try { save(); } catch (e) {} try { UI.refresh && UI.refresh(); } catch (e) {} hud(); };
+    playing = true; cur = s.kind;
     if (s.kind === 'issue') {
       stage(PRES_TXT.issue, null, '試用期合約', '合約', () => { newPeriod(3); done(); try { Fx.toast(`試用期合約：<b>${PRES_RANKS[0].days + 3} 日</b>內 KPI ${PRES_RANKS[0].target}。右下角可以查看合約。`); } catch (e) {} });
     } else if (s.kind === 'taunt') {
@@ -255,6 +256,7 @@ const Presence = (() => {
       if (!g) return; const v = val(g);
       const e = document.createElement('small'); e.className = 'tr presln'; e.innerHTML = `存在感 ${Math.round(v)}${bar(v)}${badge(g)}`; main.appendChild(e);
       const cv = c.querySelector('canvas'); if (cv) cv.style.opacity = alphaOf(g);
+      if (isAfu(g) && cst().rank >= 5) { c.style.boxShadow = '0 0 0 2px #d9b440, 0 0 10px rgba(217,180,64,.55)'; c.style.borderRadius = '10px'; } // 合夥鬼：名冊金邊
     });
     const rc = sh.querySelector('[data-act=recruit]');
     if (rc && !sh.querySelector('#pres-gone')) {

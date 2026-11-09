@@ -99,12 +99,14 @@ const ScareX = (() => {
   const ALL = () => Object.keys(SCARE_GHOSTS);
 
   // ---------- 帶邊幾隻鬼 ----------
-  const MAXSQ = 3;
+  const CN = ['零', '一', '兩', '三', '四', '五', '六'];
+  const MAXSQ_BASE = 3; // 升職加名額（presence.js perk('squad')）
+  const maxSq = () => MAXSQ_BASE + (typeof Presence !== 'undefined' && Presence.perk ? Presence.perk('squad') : 0);
   const owned = () => { if (typeof S === 'undefined' || !S || !S.ghosts) return []; const ks = []; for (const g of S.ghosts) if (g.k !== 'afu' && SCARE_GHOSTS[g.k] && !ks.includes(g.k)) ks.push(g.k); return ks; };
   const squad = {
     options:owned,
-    get() { const o = owned(); let s = (typeof S !== 'undefined' && S && S.scareSquad) || null; if (!s) s = ['tianhua', 'pontianak'].filter(k => o.includes(k)); s = s.filter(k => o.includes(k)).slice(0, MAXSQ); if (!s.length) s = o.slice(0, 2); return s; },
-    set(ids) { if (typeof S === 'undefined' || !S) return []; const o = owned(); S.scareSquad = (ids || []).filter((k, i, a) => k !== 'afu' && o.includes(k) && a.indexOf(k) === i).slice(0, MAXSQ); if (typeof save === 'function') save(); return S.scareSquad.slice(); },
+    get() { const o = owned(); let s = (typeof S !== 'undefined' && S && S.scareSquad) || null; if (!s) s = ['tianhua', 'pontianak'].filter(k => o.includes(k)); s = s.filter(k => o.includes(k)).slice(0, maxSq()); if (!s.length) s = o.slice(0, 2); return s; },
+    set(ids) { if (typeof S === 'undefined' || !S) return []; const o = owned(); S.scareSquad = (ids || []).filter((k, i, a) => k !== 'afu' && o.includes(k) && a.indexOf(k) === i).slice(0, maxSq()); if (typeof save === 'function') save(); return S.scareSquad.slice(); },
     team() { return ['afu'].concat(this.get()); },
   };
 
@@ -277,18 +279,18 @@ const ScareX = (() => {
     const weakCount = (t) => npcs.filter(d => d.weak.includes(t)).length, immCount = (t) => npcs.filter(d => d.immune.includes(t)).length;
     const render = () => {
       const best = (S.scare && S.scare.best[siteId]) || 0, st = Scare.starsOf(siteId, best), lg = legend(siteId);
-      let h = `<p class="desc">${site.name}。${Lx(T('揀今晚帶邊幾隻鬼：招式啱佢哋怕嘅嘢，先嚇得到人。阿福一定去，另外最多帶三隻。', '選今晚帶哪幾隻鬼：招式對上他們怕的東西，才嚇得到人。阿福一定去，另外最多帶三隻。'))}</p>`;
+      let h = `<p class="desc">${site.name}。${Lf(T('揀今晚帶邊幾隻鬼：招式啱佢哋怕嘅嘢，先嚇得到人。阿福一定去，另外最多帶{n}隻。', '選今晚帶哪幾隻鬼：招式對上他們怕的東西，才嚇得到人。阿福一定去，另外最多帶{n}隻。'), { n:CN[maxSq()] })}</p>`;
       h += `<p class="desc">最高紀錄：${best}　${'★'.repeat(st)}${'☆'.repeat(3 - st)}　｜　${Lx(T('都市傳說', '都市傳說'))} Lv${lg.lv}「${lg.name}」</p>`;
       h += `<div class="sq-who">${npcs.map(d => `<span><b>${d.name}</b> 怕 ${d.weak.map(t => (d.hide || []).includes(t) && !((Scare.known || {})[d.k] || new Set()).has(t) ? '？' : FEAR_WORD[t]).join('、')}</span>`).join('')}</div>`;
       const card = (k, fixed) => { const g = SCARE_GHOSTS[k], ts = g.types || [g.type], w = ts.reduce((s, t) => s + weakCount(t), 0), im = ts.every(t => immCount(t) > 0) && w === 0;
         return `<button class="sq-g ${fixed || chosen.includes(k) ? 'on' : ''} ${w >= 2 ? 'good' : im ? 'bad' : ''}" data-k="${k}" ${fixed ? 'disabled' : ''}><canvas data-por="${k}"></canvas><b>${g.name}</b><small>${g.skill}</small><i>${ts.map(t => FEAR_WORD[t]).join('／')}${g.aoe ? '・全場' : ''}・${g.cost || 35}</i>${w ? `<em>${w}人怕</em>` : ''}</button>`; };
       h += `<div class="sq-grid">${card('afu', true)}${opts.map(k => card(k)).join('')}</div>`;
-      h += `<p class="desc">${Lx(T('已揀', '已選'))} ${chosen.length}/3：${chosen.map(k => SCARE_GHOSTS[k].name).join('、') || '—'}</p><button class="btn gold wide" id="sc-go">出發，回陽間</button>`;
+      h += `<p class="desc">${Lx(T('已揀', '已選'))} ${chosen.length}/${maxSq()}：${chosen.map(k => SCARE_GHOSTS[k].name).join('、') || '—'}</p><button class="btn gold wide" id="sc-go">出發，回陽間</button>`;
       return h;
     };
     const bind = () => {
       paintPortraits($('#sheet'));
-      $('#sheet').querySelectorAll('.sq-g:not([disabled])').forEach(b => b.onclick = () => { const k = b.dataset.k; if (chosen.includes(k)) chosen.splice(chosen.indexOf(k), 1); else if (chosen.length < MAXSQ) chosen.push(k); else { Fx.toast('最多帶三隻'); return; } const sc = $('#sheet .sh-body').scrollTop; $('#sheet .sh-body').innerHTML = render(); $('#sheet .sh-body').scrollTop = sc; bind(); });
+      $('#sheet').querySelectorAll('.sq-g:not([disabled])').forEach(b => b.onclick = () => { const k = b.dataset.k; if (chosen.includes(k)) chosen.splice(chosen.indexOf(k), 1); else if (chosen.length < maxSq()) chosen.push(k); else { Fx.toast(Lf(T('最多帶{n}隻', '最多帶{n}隻'), { n:CN[maxSq()] })); return; } const sc = $('#sheet .sh-body').scrollTop; $('#sheet .sh-body').innerHTML = render(); $('#sheet .sh-body').scrollTop = sc; bind(); });
       $('#sc-go').onclick = () => { squad.set(chosen); UI.close(); Scare.start(siteId, ['afu'].concat(squad.get())); };
     };
     UI.sheet('回陽間・帶隊出更', render()); bind();

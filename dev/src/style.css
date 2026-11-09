@@ -577,7 +577,7 @@ hr{border:0;border-top:1.5px solid var(--paperline);margin:16px 0}
 #sc-follow{position:absolute;right:8px;top:6px;width:30px;height:30px;border-radius:8px;border:0;background:rgba(10,8,16,.72);color:#889;font:800 12px sans-serif;box-shadow:inset 0 0 0 1px #4a3a5a;z-index:2}
 #sc-follow.on{color:#a8ffcf;box-shadow:inset 0 0 0 1.5px #a8ffcf}
 /* 回陽間・帶隊出更：揀鬼 */
-.sq-who{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;line-height:1.5;margin:4px 0 8px;opacity:.9}.sq-who b{color:#ffcf6a}
+.sq-who{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;line-height:1.55;margin:4px 0 8px}.sq-who b{color:#8a2d1a}
 .sq-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:46vh;overflow:auto;padding:2px}
 .sq-g{position:relative;display:flex;flex-direction:column;align-items:center;padding:5px 2px 4px;border:0;border-radius:10px;background:#2e2638;color:#eee;font:inherit;box-shadow:inset 0 0 0 1px #4a3a5a;line-height:1.2}
 .sq-g canvas{width:40px;height:40px;border-radius:7px}.sq-g b{font-size:12px;margin-top:2px}.sq-g small{font-size:11px;opacity:.85}.sq-g i{font-style:normal;font-size:10px;opacity:.7}
