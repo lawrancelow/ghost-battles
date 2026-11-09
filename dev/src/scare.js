@@ -201,7 +201,7 @@ const Scare = {
       <div id="sc-stage"><canvas id="sc-cvs"></canvas>${site.pano ? OFFMAP.mapHTML() : ''}</div>
       <div id="sc-panel"><div id="sc-target"></div><div id="sc-dock"></div></div><div id="sc-phone"></div>`;
     $('#sc-quit').onclick = () => { if (!confirmInline($('#sc-quit'), '確定收工？')) return; this.finish(true); };
-    const cv = $('#sc-cvs'); this.camX = 0; this.camV = 0; this.follow = true; this.userPan = -99; this._dots = null;
+    const cv = $('#sc-cvs'); this.camX = 0; this.camV = 0; this.follow = false; // 預設唔跟：員工去茶水間／洗手間／休息區多數喺右邊，以前鏡頭會一路跟到最右；玩家要跟先撳「跟」 this.userPan = -99; this._dots = null;
     if (site.pano) this.bindPan(cv); else cv.addEventListener('pointerdown', (e) => this.tap(e));
     Sound.setMode('story');
     this.renderDock(); this.renderTarget(); this.resize();

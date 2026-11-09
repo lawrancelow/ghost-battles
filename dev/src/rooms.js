@@ -222,7 +222,7 @@ const OFFMAP = (() => {
   }
   // ---------- 小地圖（畫面頂）：四間房、每個人一粒（恐懼顏色）、點中嘅人金圈、望緊佢嘅人紅圈；點一下跳過去 ----------
   function mapHTML() {
-    return `<div id="sc-map">${ROOMS.map(r => `<div class="scm-r" data-r="${r.k}" style="left:${r.x0 / WW * 100}%;width:${(r.x1 - r.x0) / WW * 100}%"><span>${SHORT[r.k] || r.name}</span></div>`).join('')}<i id="scm-view"></i><div id="scm-dots"></div></div><button id="sc-follow" class="on" title="鏡頭跟住點中嘅人">跟</button>`;
+    return `<div id="sc-map">${ROOMS.map(r => `<div class="scm-r" data-r="${r.k}" style="left:${r.x0 / WW * 100}%;width:${(r.x1 - r.x0) / WW * 100}%"><span>${SHORT[r.k] || r.name}</span></div>`).join('')}<i id="scm-view"></i><div id="scm-dots"></div></div><button id="sc-follow" class="" title="鏡頭跟住點中嘅人（預設關：唔好自己捲走個畫面）">跟</button>`;
   }
   const SHORT = { boss:'陳總', meeting:'會議', lobby:'大堂', main:'工程', pantry:'茶水', wc:'洗手', qa:'設計', server:'機房', rest:'休息' }; // 小地圖格仔窄：用兩個字
   const DOTCH = { ken:'K', it:'晴', mis:'美', boss:'陳', auntie:'娣', guard:'伯', daoshi:'道', kol:'網' };
