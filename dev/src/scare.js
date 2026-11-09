@@ -63,7 +63,7 @@ const SCARE_PROPS = {
 };
 // 開放辦公區嘅家具：舊辦公室座標 → 全景世界座標（同 office.js 一樣搬法）
 for (const k in SCARE_PROPS) { const p = SCARE_PROPS[k]; p.room = 'main'; if (p.group) continue; p.front = [OFFMAP.M(p.front[0]), OFFMAP.MY(p.front[1])]; p.rect = [OFFMAP.M(p.rect[0]), OFFMAP.MY(p.rect[1]), p.rect[2], p.rect[3] * 0.75]; }
-{ const c = OFFMAP.SPOT.copier, p = SCARE_PROPS.printer; p.room = 'wc'; p.front = [c[0] - 0.12, c[1] + 0.05]; p.r = 0.4; p.rect = [c[0] - 0.13, c[1] - 0.2, 0.26, 0.2]; } // 影印機搬咗去洗手間／影印房
+{ const c = OFFMAP.SPOT.copier, p = SCARE_PROPS.printer; p.room = 'pantry'; p.front = [c[0] + 0.12, c[1] + 0.05]; p.r = 0.4; p.rect = [c[0] - 0.13, c[1] - 0.2, 0.26, 0.2]; } // 影印機搬咗去洗手間／影印房
 // 其他房間嘅道具（rooms.js 量好嘅位置；效果喺 rooms.js 程式畫）。每招對應一種怕法
 { const O = OFFMAP, SP = O.SPOT, A = O.A, R = O.R, px = O.px;
   Object.assign(SCARE_PROPS, {
@@ -89,7 +89,7 @@ const SCARE_GHOSTS = {
   laojiang: { name:'老殭', skill:'跳過走廊', type:'shadow', base:32, line:'（玻璃門外，一跳、一跳、一跳）' },
 };
 const MIS_POST = OFFMAP.SPOT.reception; // 美美：大堂前台（背向左邊會議室門口、面向右邊），坐喺枱後面
-const COPY_AT = [OFFMAP.SPOT.copier[0] - 0.16, OFFMAP.SPOT.copier[1] + 0.05]; // 影印機（洗手間／影印房）前面企嘅位
+const COPY_AT = [OFFMAP.SPOT.copier[0] + 0.16, OFFMAP.SPOT.copier[1] + 0.05]; // 影印機（洗手間／影印房）前面企嘅位
 // 茶水間休息：坐低碌手機／飲嘢／瞌一陣（坐喺 Pantry 張枱後面，枱擋住腳）
 const EMPTY_SAY = (() => { const T = (yue, zh) => { if (typeof LANG !== 'undefined' && LANG.add) LANG.add({ [yue]:zh }); return yue; };
   T('陳總～搵我呀？', '陳總～找我嗎？'); T('陳總，搵我？', '陳總，找我？');

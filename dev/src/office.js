@@ -100,7 +100,7 @@ const OFFICE = (() => {
     { id:'achair', spr:'of_chair_back', x:0.45, y:0.59, h:0.66, shadow:0.5, chair:1 }, // 空的辦公椅（「辦公椅自己轉」）
     { id:'copier', spr:'of_copier', x:0.705, y:0.515, h:0.74, ay:0.97, shadow:0.9, copier:1 },
     { id:'water', spr:'of_water', x:0.83, y:0.51, h:0.80, ay:0.985, shadow:0.42, water:1 },
-    { id:'fan', spr:'of_fan', x:0.03, y:0.56, h:0.78, shadow:0.42, fan:1 },
+    { id:'fan', spr:'of_fan', x:0.03, y:0.56, wx:OFFMAP.npx(5180), wy:0.74, h:0.78, shadow:0.42, fan:1 },
     { id:'bin', spr:'op_bin', x:0.245, y:0.522, h:0.22, shadow:0.3 },
     // 前景：左下白板、右下盆栽（框住畫面，也讓前面的人有東西比大小）
     // 阿Ken 的桌子：位置由工位算（手放在鍵盤右半邊）
@@ -698,7 +698,7 @@ const OFFICE = (() => {
       const pass = (SC.npcs || []).find(m => m !== n && !m.gone && (m.d.k === 'ken' || m.d.k === 'it') && m.act === 'walk' && Math.hypot(m.x - n.x, m.y - n.y) < 0.2);
       if (pass && s.act !== 'roll' && (s.cd.roll || 0) <= 0) { s.act = 'roll'; s.at = 0; s.dur = 1.8; s.cd.roll = 9; s.rollAt = pass.x; if (Math.random() < 0.5 && SC.bubble) SC.bubble(n, MIS_SAY.roll, 2); }
       else if (s.at >= s.dur) {
-        const opts = MIS_ACTS.filter(e => (s.cd[e[0]] || 0) <= 0 && e[0] !== s.act && (e[0] !== 'copy' || Math.hypot(n.x - (OFFMAP.SPOT.copier[0] - 0.16), n.y - (OFFMAP.SPOT.copier[1] + 0.05)) < 0.06)); /* 影印：要企喺影印機前面先做 */ if (!opts.length) opts.push(MIS_ACTS.find(q => q[0] === 'stand') || MIS_ACTS[0]); /* 全部動作冷卻中（例如啱啱影印完行開咗）：企住等，唔好爆 */ let r = Math.random() * opts.reduce((q, e) => q + e[1], 0), e = opts[0];
+        const opts = MIS_ACTS.filter(e => (s.cd[e[0]] || 0) <= 0 && e[0] !== s.act && (e[0] !== 'copy' || Math.hypot(n.x - (OFFMAP.SPOT.copier[0] + 0.16), n.y - (OFFMAP.SPOT.copier[1] + 0.05)) < 0.06)); /* 影印：要企喺影印機前面先做 */ if (!opts.length) opts.push(MIS_ACTS.find(q => q[0] === 'stand') || MIS_ACTS[0]); /* 全部動作冷卻中（例如啱啱影印完行開咗）：企住等，唔好爆 */ let r = Math.random() * opts.reduce((q, e) => q + e[1], 0), e = opts[0];
         for (const q of opts) { r -= q[1]; if (r <= 0) { e = q; break; } }
         s.act = e[0]; s.at = 0; s.dur = e[2][0] + Math.random() * (e[2][1] - e[2][0]); s.cd[e[0]] = e[3] + s.dur;
         if (SC.bubble && Math.random() < 0.35) SC.bubble(n, s.act === 'selfie' ? MIS_SAY.selfie : MIS_SAY.sigh, 2.2);
