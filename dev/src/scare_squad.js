@@ -285,11 +285,12 @@ const ScareX = (() => {
       const card = (k, fixed) => { const g = SCARE_GHOSTS[k], ts = g.types || [g.type], w = ts.reduce((s, t) => s + weakCount(t), 0), im = ts.every(t => immCount(t) > 0) && w === 0;
         return `<button class="sq-g ${fixed || chosen.includes(k) ? 'on' : ''} ${w >= 2 ? 'good' : im ? 'bad' : ''}" data-k="${k}" ${fixed ? 'disabled' : ''}><canvas data-por="${k}"></canvas><b>${g.name}</b><small>${g.skill}</small><i>${ts.map(t => FEAR_WORD[t]).join('／')}${g.aoe ? '・全場' : ''}・${g.cost || 35}</i>${w ? `<em>${w}人怕</em>` : ''}</button>`; };
       h += `<div class="sq-grid">${card('afu', true)}${opts.map(k => card(k)).join('')}</div>`;
-      h += `<p class="desc">${Lx(T('已揀', '已選'))} ${chosen.length}/${maxSq()}：${chosen.map(k => SCARE_GHOSTS[k].name).join('、') || '—'}</p><button class="btn gold wide" id="sc-go">出發，回陽間</button>`;
+      h += `<p class="desc">${Lx(T('已揀', '已選'))} ${chosen.length}/${maxSq()}：${chosen.map(k => SCARE_GHOSTS[k].name).join('、') || '—'}</p>${typeof Rework !== 'undefined' ? Rework.kitHTML() : ''}<button class="btn gold wide" id="sc-go">出發，回陽間</button>`;
       return h;
     };
     const bind = () => {
       paintPortraits($('#sheet'));
+      if (typeof Rework !== 'undefined') Rework.bindKit($('#sheet'));
       $('#sheet').querySelectorAll('.sq-g:not([disabled])').forEach(b => b.onclick = () => { const k = b.dataset.k; if (chosen.includes(k)) chosen.splice(chosen.indexOf(k), 1); else if (chosen.length < maxSq()) chosen.push(k); else { Fx.toast(Lf(T('最多帶{n}隻', '最多帶{n}隻'), { n:CN[maxSq()] })); return; } const sc = $('#sheet .sh-body').scrollTop; $('#sheet .sh-body').innerHTML = render(); $('#sheet .sh-body').scrollTop = sc; bind(); });
       $('#sc-go').onclick = () => { squad.set(chosen); UI.close(); Scare.start(siteId, ['afu'].concat(squad.get())); };
     };

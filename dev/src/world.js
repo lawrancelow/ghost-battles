@@ -4,7 +4,7 @@ const World = {
   YARD_READY: true, // 亂葬崗推理驗證完成後打開
   // 地圖上的去處：位置（圖的比例）、名稱、怎麼打開、什麼時候開放
   SPOTS: [
-    { id:'battle', x:0.48, y:0.20, lx:0.46, ly:0.23, name:'出征', sub:'彼岸花戰場', go:() => UI.open('battle') },
+    { id:'battle', x:0.48, y:0.20, lx:0.46, ly:0.23, name:'搶地盤', sub:'陽間地盤', go:() => UI.open('battle') },
     { id:'yard', x:0.76, y:0.30, lx:0.73, ly:0.37, name:'亂葬崗', sub:'無名墳', go:() => Graveyard.open(), ready:() => typeof Graveyard !== 'undefined' && World.YARD_READY },
     { id:'street', x:0.20, y:0.38, lx:0.17, ly:0.50, name:'冥街夜市', sub:'下班後的陰間', go:() => GhostStreet.open(), ready:() => typeof GhostStreet !== 'undefined' },
     { id:'scare', x:0.80, y:0.50, lx:0.79, ly:0.63, name:'回陽間', sub:'夜班嚇人', go:() => Scare.open('office'), need:() => S.seen.ch1_end, lock:'打完第一章才開放' },

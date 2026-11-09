@@ -653,7 +653,7 @@ const ART = (() => {
       rr(ctx, x + 30, y - 58, 2, 58, 1, '#5a3a1a');
       poly(ctx, [x + 32, y - 58, x + 52 + Math.sin(t * 3) * 3, y - 52, x + 32, y - 46], '#7a2a8a', OUT, 1);
       ctx.fillStyle = '#fff'; ctx.font = 'bold 8px sans-serif'; ctx.fillText('陰', x + 36, y - 49);
-      plaque(ctx, x - 6, y - 56, '陰兵營', lv);
+      plaque(ctx, x - 6, y - 56, '嚇人班', lv);
     },
     altar(ctx, x, y, lv, t) {
       el(ctx, x, y + 4, 40, 9, 'rgba(0,0,0,.3)');
@@ -787,7 +787,7 @@ const ART = (() => {
     rr(ctx, x - 52, y - 54, 14, 54, 2, '#5a2a2a', OUT, 2); rr(ctx, x + 38, y - 54, 14, 54, 2, '#5a2a2a', OUT, 2);
     rr(ctx, x - 60, y - 66, 120, 12, 3, '#3a2a3a', OUT, 2); rr(ctx, x - 50, y - 50, 100, 8, 2, '#7a3a3a', OUT, 1.5);
     roof(ctx, x, y - 84, 110, 18, '#2a2438');
-    plaque(ctx, x, y - 46, '出征', 0);
+    plaque(ctx, x, y - 46, '地盤', 0);
     lantern(ctx, x - 45, y - 40, t); lantern(ctx, x + 45, y - 40, t);
   }
   function drawDecor(ctx, kind, x, y, t) {

@@ -794,6 +794,42 @@ const WORK = (() => {
     },
   };
 
+  // ---------- 嚇人訓練班：縮埋 → 彈起「嘩！」 ----------
+  ACT.boo = {
+    dur:(v) => (v.n * 1.7 + 0.3) / sp(v),
+    f(a, R, at, v) {
+      const s = sp(v), t = at * s, H = a.H, n = v.n, T = 1.7, i = Math.floor(t / T), p = t % T;
+      let k = Object.assign({}, DEF);
+      if (i < n) k = kf([[0, {}], [0.45, { sy:0.9, sx:1.06, bend:22, lean:6, head:12, hx:-0.02, hy:0.03 }, 'io'], [0.75, { sy:0.9, sx:1.06, bend:24, lean:7, head:14, hx:-0.02, hy:0.03 }],
+        [0.86, { dy:-0.07, sy:1.12, sx:0.92, bend:-6, lean:-4, head:-12, hx:0.03, hy:-0.1, hr:R.long ? -70 : -30 }, 'o'], [1.25, { dy:-0.05, sy:1.08, sx:0.95, bend:-5, lean:-3, head:-10, hx:0.03, hy:-0.09, hr:R.long ? -66 : -28 }], [1.7, {}, 'io']], p);
+      const front = (ctx, P) => {
+        for (let j = 0; j < n; j++) { const g = (t - (j * T + 0.86)) / s; if (g < 0 || g > 0.35) continue;
+          MoveKit.burst(ctx, P.mouth[0] + 0.1 * H, P.mouth[1] - 0.02 * H, 0.13 * H, 1 - g / 0.35, '#e8d0ff', 40 + j, 8); }
+      };
+      return { k, front };
+    },
+  };
+  // ---------- 嚇人訓練班：對住空氣扮鬼臉（頭左右扭、成個人擠扁拉長）----------
+  ACT.grimace = {
+    dur:(v) => 2.8 / sp(v),
+    f(a, R, at, v) {
+      const t = at * sp(v), H = a.H, w = t > 0.3 && t < 2.4 ? Math.sin((t - 0.3) * 7.5) : 0, e = Math.min(1, Math.max(0, (t - 0.3) * 4)) * Math.min(1, Math.max(0, (2.4 - t) * 4));
+      const k = Object.assign({}, DEF, { head:w * 14 * e - 4 * e, lean:w * 4 * e, sx:1 + 0.05 * w * e, sy:1 - 0.05 * w * e, hx:0.02 * e, hy:-0.04 * e, hr:(R.long ? -40 : -14) * e });
+      const front = (ctx, P) => { if (e > 0.5 && Math.abs(w) > 0.92) MoveKit.burst(ctx, P.mouth[0] + 0.06 * H * Math.sign(w), P.mouth[1] - 0.05 * H, 0.06 * H, 0.6, '#ffe0f0', 60 + Math.round(t * 3), 5); };
+      return { k, front };
+    },
+  };
+  // ---------- 嚇人訓練班：練「背後吹氣」 ----------
+  ACT.blow = {
+    dur:(v) => 2.6 / sp(v),
+    f(a, R, at, v) {
+      const t = at * sp(v), H = a.H;
+      const k = kf([[0, {}], [0.4, { dy:0.01, sy:1.04, sx:0.97, bend:-6, head:-8 }, 'io'], [0.6, { lean:14, bend:12, head:8, sy:0.96, sx:1.03, dx:0.03 }, 'o'], [1.8, { lean:15, bend:13, head:9, sy:0.97, sx:1.02, dx:0.035 }], [2.6, {}, 'io']], t);
+      const front = (ctx, P) => { for (let j = 0; j < 4; j++) { const g = t - 0.6 - j * 0.25; puff(ctx, P.mouth[0] + 0.05 * H + Math.max(0, g) * 0.25 * H, P.mouth[1], g, 0.9, 0.22 * H, 80 + j); } };
+      return { k, front };
+    },
+  };
+
   // ===================== 對外：DAILY 登記 =====================
   function run(name, ctx, a) {
     const R = rigOf(a.type); if (!R || typeof MoveKit === 'undefined') return false;
@@ -814,7 +850,7 @@ const WORK = (() => {
     bun:[['knead', 5], ['steam', 3], ['sneak', 1.5]],
     store:[['crate', 4], ['coins', 4], ['push', 2]],
     boss:[['inspect', 5], ['burn', 2.5], ['rest', 1]],
-    camp:[['march', 4], ['salute', 3], ['drill', 4]],
+    camp:[['boo', 4], ['grimace', 3], ['blow', 3]],
   };
   function defaults(name, type, r) {
     const R = (x) => rnd(r * 13.7 + x * 7.1);
@@ -828,6 +864,7 @@ const WORK = (() => {
     if (name === 'coins') v.n = 4 + Math.floor(R(3) * 2);
     if (name === 'burn') v.n = 2 + Math.floor(R(3) * 2);
     if (name === 'march') v.n = 8 + 2 * Math.floor(R(3) * 3);
+    if (name === 'boo') v.n = 2;
     if (name === 'drill') v.n = 3;
     return v;
   }

@@ -68,11 +68,12 @@ function ratesPerMin() {
       case 'rice': r.rice += (9 + 0.7 * lv) * F.mult('rice'); break;
       case 'plank': { const o = (2.5 + F.stat(g, 0) * 0.05) * F.mult('plank'); r.planks += o; r.woodUse += o * 2; break; }
       case 'bun': { const o = (2.5 + F.stat(g, 1) * 0.05) * F.mult('bun'); r.buns += o; r.riceUse += o * 2; break; }
-      case 'camp': { const o = (3 + F.stat(g, 2) * 0.06) * F.mult('camp'); r.troops += o; r.bunUse += o * 0.5; break; }
+      case 'camp': { const o = (2 + F.stat(g, 2) * 0.04) * F.mult('camp'); r.drill = (r.drill || 0) + o; r.bunUse += o * 0.6; (r.drillBy = r.drillBy || []).push([g.k, o]); break; } // 嚇人訓練班：練嚇功（rework.js）
       case 'store': if (g.k === 'toyol') r.coins += 2 + lv * 0.25; break;
     }
     r.exp += 0.6;
   }
+  if (S.bld.home) r.troops += 1.2 + 1.3 * S.bld.home; // 村裡的遊魂自願當陰兵（民宅）
   return r;
 }
 // 推進 dt 秒的產出（含加工鏈，原料不足時按比例）
@@ -83,7 +84,8 @@ function produce(dt) {
   if (R.rice < cap) R.rice = Math.min(cap, R.rice + r.rice * m);
   if (r.planks && R.planks < cap) { const need = r.woodUse * m; const k = need > 0 ? Math.min(1, R.wood / need) : 0; R.wood -= need * k; R.planks = Math.min(cap, R.planks + r.planks * m * k); }
   if (r.buns && R.buns < cap) { const need = r.riceUse * m; const k = need > 0 ? Math.min(1, R.rice / need) : 0; R.rice -= need * k; R.buns = Math.min(cap, R.buns + r.buns * m * k); }
-  if (r.troops && R.troops < F.troopCap()) { const need = r.bunUse * m; const k = need > 0 ? Math.min(1, R.buns / need) : 0; R.buns -= need * k; R.troops = Math.min(F.troopCap(), R.troops + r.troops * m * k); }
+  if (r.troops && R.troops < F.troopCap()) R.troops = Math.min(F.troopCap(), R.troops + r.troops * m);
+  if (r.drillBy) { const need = r.bunUse * m; const k = need > 0 ? Math.min(1, R.buns / need) : 0; R.buns -= need * k; S.drill = S.drill || {}; for (const [gk, o] of r.drillBy) S.drill[gk] = (S.drill[gk] || 0) + o * m * k; }
   R.coins += r.coins * m;
   expAcc += r.exp * m; if (expAcc >= 1) { const e = Math.floor(expAcc); expAcc -= e; gainExp(e, true); }
 }
@@ -143,6 +145,7 @@ const Quest = {
       case 'recruit': return [S.cnt.recruit, q.n];
       case 'ghostLv': return [Math.max(...S.ghosts.filter(g => g.k !== 'afu').map(g => g.lv), 0), q.n];
       case 'troops': return [Math.floor(S.res.troops), q.n];
+      case 'drill': { const m = Math.max(0, ...Object.values(S.drill || {}).concat([0])); return [Math.floor(Math.min(m, q.n)), q.n]; }
       case 'feast': return [S.cnt.feast, q.n];
       case 'visit': return [S.visit && S.visit[q.place] ? 1 : 0, 1]; // guide.js
     }
@@ -819,8 +822,8 @@ const UI = {
       case 'plank': return L(`崗位 ${F.slots('plank')}　目前 棺材板 +${r.planks.toFixed(1)}/分（耗槐木 ${r.woodUse.toFixed(1)}/分）<br>藍箱可開出 棺材板 ${F.chestGain('b').planks}`);
       case 'bun': return L(`崗位 ${F.slots('bun')}　目前 壽包 +${r.buns.toFixed(1)}/分（耗糯米 ${r.riceUse.toFixed(1)}/分）<br>綠箱可開出 壽包 ${F.chestGain('g').buns}`);
       case 'store': return L(`槐木、糯米、棺材板、壽包 存放上限：${fmt(F.cap())}`);
-      case 'home': return L(`陰兵上限 ${fmt(F.troopCap())}　雜鬼名額 ${F.rosterCap()}`);
-      case 'camp': return L(`陰兵戰力 +${(S.bld.camp - 1) * 8}%　目前 陰兵 +${r.troops.toFixed(1)}/分（耗壽包 ${r.bunUse.toFixed(1)}/分）　上限 ${fmt(F.troopCap())}`);
+      case 'home': return L(`雜鬼名額 ${F.rosterCap()}　遊魂自願當陰兵 +${r.troops.toFixed(1)}/分　陰兵上限 ${fmt(F.troopCap())}`);
+      case 'camp': { const ws = workersAt('camp'); return L(`練習速度 ×${F.mult('camp').toFixed(1)}　崗位 ${F.slots('camp')}　耗壽包 ${r.bunUse.toFixed(1)}/分<br>嚇功越高：回陽間招式更嚇人、更省陰氣；戰鬥嚇法更痛。`) + (ws.length ? '<br>' + ws.map(g => { const lv = Rework.drillLv(g.k), nx = Rework.drillNext(g.k); return `${g.name} 嚇功 Lv${lv}${nx ? `（${Math.floor(Rework.drillXp(g.k))}/${nx}）` : '（滿）'}`; }).join('　') : ''); }
       default: return '';
     }
   },
@@ -975,9 +978,9 @@ function startGame() {
     '棺材板':'棺材板：在<b>棺材鋪</b>把 2 槐木做成 1 板（力量高的鬼做得快）。藍箱也會開出。用來建造和升級建築。',
     '壽包':'壽包：在<b>包子鋪</b>把 2 糯米包成 1 個（智力高的鬼包得快）。綠箱也會開出。用來升級鬼怪、練陰兵。',
     '冥幣':'冥幣：打關卡、開紫箱、燒<b>化寶爐</b>。Toyol 管倉庫時也會「撿到」冥幣。',
-    '陰兵':'陰兵：派鬼怪去<b>陰兵營</b>練兵，1 個壽包練出 2 個陰兵。出征時每 25 個組成一隊（最多 8 隊），戰死的隊伍會扣掉。上限看民宅和陰兵營等級。',
+    '陰兵':'陰兵：村裡的遊魂見你有地盤，自願加入。<b>民宅</b>越高級來得越快、上限越高。搶地盤時每 25 個組成一隊（最多 8 隊），戰死的會扣掉。',
   };
-  document.querySelectorAll('#resbox .rs').forEach(el => el.onclick = () => Fx.toast(RES_HELP[el.title] + (el.title === '陰兵' && !S.bld.camp ? '<br>（主公 5 級解鎖陰兵營）' : '')));
+  document.querySelectorAll('#resbox .rs').forEach(el => el.onclick = () => Fx.toast(RES_HELP[el.title] + (el.title === '陰兵' && !S.bld.home ? '<br>（建好民宅，遊魂才會來）' : '')));
   $('#quest').onclick = () => { const p = Village.questTarget(); const q = Quest.cur(); if (q && q.go === 'roster') { UI.open('roster'); return; } if (q && q.go === 'gate' && Quest.cur().t === 'stage') { UI.open('battle'); return; } if (p) { UI.close(); Village.focus(p[0], p[1]); } };
   if (!(DEBUG && /nophone/.test(location.search))) Title.show(fresh);
   UI.refresh(); requestAnimationFrame(loop);

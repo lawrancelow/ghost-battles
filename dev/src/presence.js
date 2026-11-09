@@ -279,14 +279,25 @@ const Presence = (() => {
         h += `<p class="desc">KPI ${c.kpi}／${c.target}<span style="display:block;height:10px;border-radius:5px;background:rgba(0,0,0,.18);overflow:hidden;margin:4px 0"><i style="display:block;height:100%;width:${pr * 100}%;background:#d9a441"></i></span>剩下 <b>${left.toFixed(1)}</b> 日</p>`;
       } else h += `<p class="desc" style="color:#c0392b"><b>淡化危機</b>：${Math.max(0, (c.crisis.end - now) / DAY).toFixed(1)} 日內回陽間完成一晚（一星或以上），阿福就會被記起。不會遊戲結束。</p>`;
       const nx = PRES_RANKS[c.rank + 1]; h += `<p class="desc">${nx ? `下一級：<b>${nx.name}</b>　解鎖：${nx.unlock}` : '已經是最高職級。每期過關有花紅。'}</p>`;
-      h += `<p class="desc">KPI 怎樣算：每晚回陽間，每顆星 10 分；傳說熱度每級 5 分（最多 25）；有驚嚇值 5 分；被道士請走扣 5 分。</p>`;
+      h += `<p class="desc">KPI 怎樣算：每晚回陽間，每顆星 10 分；傳說熱度每級 5 分（最多 25）；有驚嚇值 5 分；被道士請走扣 5 分。另外陽間地盤每日收租（每 3 個地盤 +1），奪回被搶的地盤 +4。</p>`;
     }
     h += `<h4 class="stand-h">村裡的存在感</h4><p class="desc">鬼要有人記得才存在。每天自然流失 ${(TUNE.DECAY * perk('decay')).toFixed(1)}；回陽間一晚全村 +${TUNE.RIPPLE}～${TUNE.RIPPLE + TUNE.RIPPLE_STAR * 3 + perk('ripple')}，出動的鬼更多。上台講棟篤笑、打贏仗、在陰間日常出場也有少少。</p>`;
     const p = st(); if (clock() < p.grace) h += `<p class="desc">新功能保護期：還有 ${((p.grace - clock()) / DAY).toFixed(1)} 日不會流失。</p>`;
-    h += S.ghosts.slice().sort((a, b) => val(a) - val(b)).map(g => `<div class="row"><span>${g.name}</span><span>${Math.round(val(g))}${bar(val(g))}${badge(g)}</span></div>`).join('');
+    h += `<p class="desc">上供品：用 ${OFFER.buns} 個壽包替一隻鬼上供，存在感 +${OFFER.add}（每隻鬼每日一次）。壽包 ${fmt(S.res.buns)}</p>`;
+    const od = p.offered || {}, today = gday(clock());
+    h += S.ghosts.slice().sort((a, b) => val(a) - val(b)).map(g => `<div class="row"><span>${g.name}</span><span>${Math.round(val(g))}${bar(val(g))}${badge(g)}${!isAfu(g) && val(g) < 100 ? ` <button class="btn sm ${od[g.id] === today ? '' : 'gold'}" data-offer="${g.id}" ${od[g.id] === today ? 'disabled' : ''}>${od[g.id] === today ? '已上供' : '上供'}</button>` : ''}</span></div>`).join('');
     return h;
   }
-  function openPanel() { try { UI.sheet('合約與存在感', panelHTML()); } catch (e) {} }
+  const OFFER = { buns:30, add:12 };
+  function offer(id) {
+    const g = S.ghosts.find(x => x.id === id), p = st(), today = gday(clock()); if (!g) return;
+    p.offered = p.offered || {}; if (p.offered[g.id] === today) return;
+    if ((S.res.buns || 0) < OFFER.buns) { try { Fx.toast('壽包不夠'); } catch (e) {} return; }
+    S.res.buns -= OFFER.buns; p.offered[g.id] = today; set(g, val(g) + OFFER.add);
+    try { Fx.toast(`替 <b>${g.name}</b> 上供：存在感 +${OFFER.add}`); save(); } catch (e) {}
+  }
+  function openPanel() { try { UI.sheet('合約與存在感', panelHTML()); bindPanel(); } catch (e) {} }
+  function bindPanel() { const sh = document.querySelector('#sheet'); if (!sh) return; sh.querySelectorAll('[data-offer]').forEach(b => b.onclick = () => { offer(b.dataset.offer); const sc = sh.querySelector('.sh-body'), y = sc ? sc.scrollTop : 0; if (sc) { sc.innerHTML = panelHTML(); bindPanel(); sc.scrollTop = y; } }); }
   function hud() {
     const wrap = document.getElementById('stagewrap'); if (!wrap || !S_()) return;
     let el = document.getElementById('pres-chip'); const c = cst();

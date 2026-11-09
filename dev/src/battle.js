@@ -24,13 +24,14 @@ const Battle = {
       for (let i = 0; i < 3; i++) { const g = ghostById(S.team[i]); h += `<div class="tslot" data-slot="${i}">${g ? `<canvas data-por="${g.k}"></canvas><b>${g.name}</b><small>Lv${F.glv(g)}</small>` : '<span>＋<br>出陣</span>'}</div>`; }
       const ad = ghostById(S.adviser);
       h += `<div class="tslot adv" data-slot="adv">${ad ? `<canvas data-por="${ad.k}"></canvas><b>${ad.name}</b><small>軍師</small>` : '<span>＋<br>軍師</span>'}</div></div>`;
-      h += `<p class="desc">軍師不上場，坐鎮後方：全隊攻擊 +${ad ? Math.round(F.stat(ad, 1) / 8) : 0}%（看智力），能量滿了也能放技能。出征前可隨時換人。　</p><div class="troopbox"><b>帶上陣的陰兵</b><span>現有 ${fmt(S.res.troops)}，可組成 <em>${Math.min(8, Math.floor(S.res.troops / 25))}</em> 隊（每 25 個一隊，最多 8 隊）</span><small>${S.bld.camp ? '去陰兵營派鬼怪練兵：1 壽包 → 2 陰兵。戰死的隊伍會扣掉。' : '主公 5 級解鎖陰兵營，派鬼怪用壽包練兵。'}</small></div>`;
+      h += `<p class="desc">軍師不上場，坐鎮後方：全隊攻擊 +${ad ? Math.round(F.stat(ad, 1) / 8) : 0}%（看智力），能量滿了也能放技能。出征前可隨時換人。　</p><div class="troopbox"><b>帶上陣的陰兵</b><span>現有 ${fmt(S.res.troops)}，可組成 <em>${Math.min(8, Math.floor(S.res.troops / 25))}</em> 隊（每 25 個一隊，最多 8 隊）</span><small>${S.bld.home ? '村裡的遊魂見你有地盤，會自願當陰兵（民宅越高級來得越快）。戰死的會扣掉。' : '建好民宅，遊魂才會來投靠當陰兵。'}</small></div>`;
       if (S.seen.ch1_end) { const b = (S.scare && S.scare.best.office) || 0; h += `<div class="sc-entry"><div><b>回陽間・夜班嚇人</b><small>舊公司・二十三樓　最高 ${b}　${'★'.repeat(Scare.starsOf('office', b))}</small></div><button class="btn gold" id="sc-open">回去</button></div>`; }
+      h += Rework.turfHead();
       CHAPTERS.forEach((ch, ci) => {
         h += `<div class="chap"><div class="ch-h">第${'一二三四五六'[ci]}章・${ch.name}</div>`;
         ch.stages.forEach((st, si) => {
           const sid = this.sidOf(ci, si), open = this.stageOpen(ci, si), done = S.cleared[sid], lvOk = S.lv >= st.req;
-          h += `<div class="stg ${open ? '' : 'locked'} ${st.boss ? 'boss' : ''}"><span class="sn">${sid}</span><span class="st"><b>${st.name}</b><small>${open ? `需主公 Lv${st.req}　敵方 ${st.en.map(e => ENEMY_T[e][2]).join('、')}` : '先打通上一關'}</small></span>${open ? `<button class="btn sm ${done ? '' : 'gold'}" data-go="${ci},${si}" ${lvOk ? '' : 'disabled'}>${done ? '再戰' : lvOk ? '出征' : `Lv${st.req}`}</button>` : '<span class="lk">🔒</span>'}${done ? '<i class="ok">✓</i>' : ''}</div>`;
+          h += `<div class="stg ${open ? '' : 'locked'} ${st.boss ? 'boss' : ''}"><span class="sn">${sid}</span><span class="st"><b>${st.name}</b><small>${open ? `需主公 Lv${st.req}　${Rework.turfTag(sid)}</small><small class="rw-efs">${Rework.enemyHint(st.en)}` : '先打通上一關'}</small></span>${open ? `<button class="btn sm ${done && !Rework.isLost(sid) ? '' : 'gold'}" data-go="${ci},${si}" ${lvOk ? '' : 'disabled'}>${done ? (Rework.isLost(sid) ? '奪回' : '巡場') : lvOk ? '搶地盤' : `Lv${st.req}`}</button>` : '<span class="lk">🔒</span>'}${done ? '<i class="ok">✓</i>' : ''}</div>`;
         });
         h += '</div>';
       });
@@ -44,7 +45,7 @@ const Battle = {
       const so = $('#sc-open'); if (so) so.onclick = () => Scare.open('office');
       $('#sheet').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { const [ci, si] = b.dataset.go.split(',').map(Number); this.tryStart(ci, si); });
     };
-    UI.sheet('出征', render()); bind();
+    UI.sheet('陽間地盤', render()); bind();
     this._reSelect = () => { const sc = $('#sheet .sh-body').scrollTop; $('#sheet .sh-body').innerHTML = render(); bind(); $('#sheet .sh-body').scrollTop = sc; };
     // 自動捲到目前主線關卡
     setTimeout(() => { const b = $('#sheet .btn.gold[data-go]'); if (b) b.scrollIntoView({ block:'center' }); }, 30);
@@ -57,7 +58,7 @@ const Battle = {
     if (cur) h += `<div class="gi" data-g=""><div><b>— 空著 —</b></div></div>`;
     for (const g of list) {
       const sk = SKILLS[g.k]; const where = S.team.includes(g.id) ? '出陣中' : S.adviser === g.id ? '軍師' : '';
-      h += `<div class="gi ${g.id === cur ? 'sel' : ''}" data-g="${g.id}"><canvas data-por="${g.k}"></canvas><div><b>${g.name}</b> <i class="q q${g.q}">${g.q}</i> ${where ? `<i class="tag">${where}</i>` : ''}<small>Lv${F.glv(g)}　力${F.stat(g, 0)} 智${F.stat(g, 1)} 武${F.stat(g, 2)}　${gdef(g).range === 'ranged' ? '遠程' : '近戰'}</small><small class="sk">【${sk.name}】${sk.desc}</small></div></div>`;
+      h += `<div class="gi ${g.id === cur ? 'sel' : ''}" data-g="${g.id}"><canvas data-por="${g.k}"></canvas><div><b>${g.name}</b> <i class="q q${g.q}">${g.q}</i> ${where ? `<i class="tag">${where}</i>` : ''}<small>Lv${F.glv(g)}　力${F.stat(g, 0)} 智${F.stat(g, 1)} 武${F.stat(g, 2)}　${gdef(g).range === 'ranged' ? '遠程' : '近戰'}<br>${Rework.teamHint(g)}</small><small class="sk">【${sk.name}】${sk.desc}</small></div></div>`;
     }
     h += `</div><button class="btn wide" id="pkback">返回</button>`;
     UI.sheet('佈陣', h); paintPortraits($('#sheet'));
@@ -99,7 +100,7 @@ const Battle = {
     this.adviser = ad ? { k:ad.k, name:ad.name, energy:0, sk:SKILLS[ad.k], bonus:F.stat(ad, 1) / 8 / 100, atk:20 + F.stat(ad, 2) * 1.4, side:0 } : null;
     // 陰兵
     const sq = Math.min(8, Math.floor(S.res.troops / 25)); this.squads = sq;
-    const tb = 1 + 0.08 * Math.max(0, S.bld.camp - 1);
+    const tb = 1 + 0.08 * Math.max(0, S.bld.home - 1);
     for (let i = 0; i < sq; i++) { const hp = (90 + 14 * S.lv) * tb; this.units.push({ side:0, k:'youhun', name:'陰兵', minion:true, hp, maxhp:hp, atk:(9 + 2.2 * S.lv) * tb, range:38, spd:52, x:120 + Math.floor(i / 4) * 18, lane:(i % 4) * 0.95 + 0.4, energy:0, sk:null, st:{}, cd:Math.random() }); }
     // 敵人
     st.en.forEach((e, i) => {
@@ -155,7 +156,7 @@ const Battle = {
     this.kick(Math.min(9, (sk ? 2.5 : 0.8) + dmg / v.maxhp * 26) * (v.minion && src.minion ? 0.4 : 1));
     if (sk) this.hitStopFor(0.12, true);
     else if ((!src.minion || !v.minion) && this.t - (this.lastHS || -9) > 0.4) { this.lastHS = this.t; this.hitStopFor(dmg > v.maxhp * 0.12 ? 0.08 : 0.055); }
-    if (comboHit && src.side === 0) { Sound.play('combo', this.combo); this.combo = this.comboT > 0 ? this.combo + 1 : 1; this.comboT = 3; this.comboPop = 1; this.fx.push({ x:195, y:(this.H || 640) * 0.3, text:`連招 ×${this.combo + 1}！`, col:'#ffd84a', t:0, life:1.2, center:true }); }
+    if (comboHit && src.side === 0) { Sound.play('combo', this.combo); this.combo = this.comboT > 0 ? this.combo + 1 : 1; this.comboT = 3; this.comboPop = 1; this.fx.push({ x:195, y:(this.H || 640) * 0.3, text:`連嚇 ×${this.combo + 1}！`, col:'#ffd84a', t:0, life:1.2, center:true }); }
     if (sk && sk.apply && v.hp > 0) {
       if (sk.apply === 'air') { v.st.air = v.st.airMax = 1.0; v.st.down = 0; }
       if (sk.apply === 'down') { v.st.down = v.st.downMax = 1.4; v.st.air = 0; this.dust(v.x, this.uy(v), 1.2); }
@@ -324,7 +325,7 @@ const Battle = {
     }
     const box = $('#b-result');
     box.innerHTML = `<div class="br ${win ? 'win' : 'lose'}"><h2>${win ? (first ? '首次通關！' : '勝利') : quit ? '撤退' : timeout ? '時間到' : '戰敗'}</h2>
-      ${win ? `<p class="quip">${WIN_QUIPS[Math.floor(Math.random() * WIN_QUIPS.length)]}</p><p>${txt}</p>` : `${quit ? '' : `<p class="quip">${LOSE_QUIPS[Math.floor(Math.random() * LOSE_QUIPS.length)]}</p>`}<p>${quit ? '' : '提示：用壽包升級鬼怪、換上更強的陣容、多練陰兵；試試先把敵人「浮空」或「倒地」，再用追擊技能打連招。'}</p>`}
+      ${win ? `<p class="quip">${WIN_QUIPS[Math.floor(Math.random() * WIN_QUIPS.length)]}</p><p>${txt}</p>` : `${quit ? '' : `<p class="quip">${LOSE_QUIPS[Math.floor(Math.random() * LOSE_QUIPS.length)]}</p>`}<p>${quit ? '' : '提示：用壽包升級鬼怪、換上嚇法對得上的陣容（看敵人怕什麼）、去嚇人訓練班練嚇功；先嚇到敵人失神，再接另一種他怕的，打出連嚇。'}</p>`}
       ${lost ? `<p class="lost">陰兵戰死 ${Math.floor(lost)}</p>` : ''}
       <button class="btn gold wide" id="b-ok">${win && first && st.after ? '繼續' : '回村子'}</button></div>`;
     box.classList.add('on');
@@ -399,7 +400,8 @@ const Battle = {
       if (u.hp > 0) { const bx = u.x + P.ox * 0.4, bw = u.minion ? 26 : u.boss ? 64 : 46, by = y0 - (u.minion ? 36 : u.boss ? 92 : 72); ART.rr(ctx, bx - bw / 2, by, bw, 5, 2, 'rgba(0,0,0,.6)'); ART.rr(ctx, bx - bw / 2, by, bw * u.hp / u.maxhp, 5, 2, u.side ? '#e84a5f' : '#4ade80');
         if (u.sk && !u.minion) { ART.rr(ctx, bx - bw / 2, by + 6, bw * u.energy / 100, 3, 1.5, u.energy >= 100 ? '#ffd84a' : '#7dd3fc'); }
         if (u.boss) { ctx.fillStyle = '#ffd0d8'; ctx.font = 'bold 12px "PingFang TC","Noto Sans TC",sans-serif'; ctx.textAlign = 'center'; ctx.fillText(u.name, bx, by - 4); }
-        if (u.st.air > 0 || u.st.down > 0) { ctx.fillStyle = u.st.air > 0 ? '#9ff' : '#fc9'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(u.st.air > 0 ? '浮空' : '倒地', bx, by - (u.boss ? 18 : 4)); }
+        if (u.st.air > 0 || u.st.down > 0) { ctx.fillStyle = u.st.air > 0 ? '#9ff' : '#fc9'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(u.st.air > 0 ? '嚇彈起' : '腳軟', bx, by - (u.boss ? 18 : 4)); }
+        if (u.side === 1 && u.fearT && u.fearT.until > this.t) { ctx.save(); ctx.font = 'bold 11px "PingFang TC","Noto Sans TC",sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,0,30,.8)'; ctx.fillStyle = '#e6c4ff'; const ty = by - (u.boss ? 18 : 6) - (u.st.air > 0 || u.st.down > 0 ? 13 : 0), tx = `失神・${Rework.word(u.fearT.t)}`; ctx.strokeText(tx, bx, ty); ctx.fillText(tx, bx, ty); ctx.restore(); } // 怕什麼連嚇（rework.js）
       }
     }
     // 軍師／合體技蓄力
