@@ -3,40 +3,56 @@
 // 正面直視：人的大小只跟 y（離後牆幾遠）有關，同一條 y 上邊度都一樣大（scare.js persp）
 // 只管：房間範圍、站位、各房間附身道具（程式畫）、玩電燈／冷氣（只影響鏡頭所在嗰間）、小地圖。分數喺 scare.js
 const OFFMAP = (() => {
-  const SW = 5964, SH = 1024, PXU = 1165;
-  const px = (v) => v / PXU, py = (v) => v / SH, PI = Math.PI;
-  const WW = SW / PXU;
-  const SEAM = [1506, 2982, 4458].map(px), PILLAR = 36 / PXU;
-  const ROOMS = [
-    { k:'boss', name:'老闆房', x0:0, x1:SEAM[0], vent:[600, 70] },
-    { k:'main', name:'開放辦公區', x0:SEAM[0], x1:SEAM[1], vent:[2474, 70] },
-    { k:'pantry', name:'茶水間', x0:SEAM[1], x1:SEAM[2], vent:[3726, 120] },
-    { k:'meeting', name:'會議室', x0:SEAM[2], x1:WW, vent:[5432, 66] },
+  const SW = 12168, SH = 1024, PXU = 1165;
+  // IT 公司佈局（2026-11-09）：舊全景四間房剪開重排，加大堂、洗手間、設計測試區、伺服器房、休息室，房與房之間有牆有門
+  // 舊源圖 px → 新全景 px（同一段內平移，距離不變；所以舊嘅家具、站位、路線全部自動搬過去）
+  const REMAP = [[0, 1506, 0], [4458, 5964, 1616], [2560, 2982, 3472], [1506, 2560, 4242], [2982, 4458, 6152]];
+  const Rp = (v) => { for (const [a, b, n] of REMAP) if (v >= a && v <= b) return n + v - a; return v; };
+  const Ru = (u) => Rp(u * PXU) / PXU;
+  const px = (v) => Rp(v) / PXU, npx = (v) => v / PXU, py = (v) => v / SH, PI = Math.PI; // px：舊源圖座標；npx：新全景座標
+  const WW = SW / PXU, MT_K = 1.17; // MT_K：會議枱由後牆（y≈0.6）搬到房中間（y=0.82）放大幾多
+  const WALLS = [1506, 3122, 4132, 6042, 7628, 8438, 9948, 11258], WALLW = 110; // 新全景：每道牆嘅左邊
+  const SEAM = WALLS.map(v => npx(v + WALLW / 2)), PILLAR = WALLW / PXU;
+  const ROOMS = [ // vent：新全景 px
+    { k:'boss', name:'陳總房', x0:0, x1:SEAM[0], vent:[600, 70] },
+    { k:'meeting', name:'會議室', x0:SEAM[0], x1:SEAM[1], vent:[2590, 66] },
+    { k:'lobby', name:'電梯大堂', x0:SEAM[1], x1:SEAM[2], vent:[3700, 70] },
+    { k:'main', name:'工程師區', x0:SEAM[2], x1:SEAM[3], vent:[5210, 70] },
+    { k:'pantry', name:'茶水間', x0:SEAM[3], x1:SEAM[4], vent:[6896, 120] },
+    { k:'wc', name:'洗手間', x0:SEAM[4], x1:SEAM[5], vent:[8090, 70] },
+    { k:'qa', name:'設計測試區', x0:SEAM[5], x1:SEAM[6], vent:[9250, 70] },
+    { k:'server', name:'伺服器房', x0:SEAM[6], x1:SEAM[7], vent:[10660, 70] },
+    { k:'rest', name:'休息室', x0:SEAM[7], x1:WW, vent:[11760, 70] },
   ];
   const RM = {}; ROOMS.forEach((r, i) => { r.i = i; r.cx = (r.x0 + r.x1) / 2; RM[r.k] = r; });
   // 舊辦公室（一個畫面）搬入開放辦公區：x 照搬（平移 OX，距離不變），y 由舊地板 0.5~0.95 壓到新地板 0.64~0.98
-  const OX = 1.37, M = (x) => OX + x, MY = (y) => 0.64 + (y - 0.5) * 0.75;
-  const roomAt = (x) => x < SEAM[0] ? RM.boss : x < SEAM[1] ? RM.main : x < SEAM[2] ? RM.pantry : RM.meeting;
+  const OX = 1.37, M = (x) => Ru(OX + x), MY = (y) => 0.64 + (y - 0.5) * 0.75;
+  const roomAt = (x) => { for (const r of ROOMS) if (x < r.x1) return r; return ROOMS[ROOMS.length - 1]; };
   // 站位（源圖量出嚟：後牆家具前面一步）
   const SPOT = {
     bossDesk:[px(1010), 0.668], bossFront:[px(720), 0.73], golf:[px(300), 0.80], bossVisit:[px(860), 0.72],
     water:[px(4060), 0.68], coffee:[px(3770), 0.675], micro:[px(3650), 0.68], vend:[px(4300), 0.70], fridge:[px(3990), 0.69], kettle:[px(3860), 0.672], sink:[px(3470), 0.672],
-    board:[px(5300), 0.672], seat1:[px(4900), 0.73], seat2:[px(5110), 0.76],
+    board:[npx(2905), 0.80], seat1:[npx(2264), 0.72], seat2:[npx(2477), 0.72], seat3:[npx(2034), 0.72], // 會議枱（喺房中間，of_meet_table）：陳總企喺枱右邊白板前，其他人坐枱後面（椅背之間，唔會畀椅背遮住）
     elev:[px(2762), 0.655],
+    // ---- 新佈局新增（新全景 px，用 npx）----
+    restTable:[npx(6890), 0.86], restSeats:[[npx(6720), 0.80], [npx(6890), 0.80], [npx(7060), 0.80]], // 茶水間休息區：圓枱＋三張櫈（坐喺枱後面向鏡頭）
+    reception:[npx(3330), 0.80], // 大堂前台（美美）：背向左邊會議室門口、面向右邊
+    copier:[npx(8250), 0.70], wcM:[npx(7860), 0.70], wcF:[npx(8160), 0.70], // 洗手間門口、影印機
+    meetTable:[npx(2370), 0.82], server:[npx(10660), 0.78], qaDesks:[npx(8800), npx(9150), npx(9500)], sofa:[npx(11850), 0.70],
   };
-  const LANE = [[1.80, 0.93], [2.24, 0.91], // 開放辦公區：只拖前面兩格（唔好擋住阿Ken、小晴張枱）
-    [px(3320), 0.80], [px(3620), 0.86], [px(3960), 0.80],
-    [px(4720), 0.84], [px(5120), 0.88], [px(5520), 0.83]];
-  const PATROL = [[px(780), 0.80], [M(0.14), MY(0.71)], [px(3700), 0.80], [px(5150), 0.82]];
+  const LANE = [[Ru(1.80), 0.93], [Ru(2.24), 0.91], // 開放辦公區：只拖前面兩格（唔好擋住阿Ken、小晴張枱）；之後一路向右拖到休息室，再拖返轉頭（唔使由盡頭行返去）
+    [px(3320), 0.93], [px(3960), 0.92], [npx(7900), 0.88], [npx(9300), 0.90], [npx(10700), 0.88], [npx(11500), 0.90],
+    [npx(9600), 0.84], [px(3620), 0.95], [npx(3700), 0.92], [npx(2600), 0.93]];
+  const PATROL = [[px(780), 0.80], [npx(2750), 0.88], [M(0.14), MY(0.71)], [npx(6500), 0.90], [npx(8000), 0.84], [npx(9300), 0.86], [npx(10600), 0.84], [npx(11600), 0.84]]; // 0~2：左邊三間；3~7：右邊五間
   // 附身道具的位置（源圖 px：x, y, w, h）
   const A = {
     micro:[3594, 392, 120, 72], microWin:[3606, 402, 78, 52], fridge:[3906, 256, 176, 350], fridgeDoor:[3910, 260, 168, 148],
     vend:[4202, 264, 224, 344], vendGlass:[4232, 288, 160, 186], vendSlot:[4236, 512, 124, 38], kettle:[3818, 392, 72, 72],
-    tv:[4728, 195, 391, 219], speaker:[5143, 450, 94, 36], spare:[[4590, 0.79], [4700, 0.865]],
+    tv:[4728, 195, 391, 219], speaker:[5143, 450, 94, 36], spare:[[npx(1780), 0.80], [npx(2960), 0.90]], // spare：新全景（枱兩頭各一張）
     golfBag:[0, 328, 112, 264], chair:[680, 362, 178, 120], trophy:[262, 204, 46, 96],
   };
   const R = (a) => [px(a[0]), py(a[1]), px(a[2]), py(a[3])];
-  const WIN = [[368, 240, 792, 240], [1575, 200, 995, 216], [3026, 208, 296, 280]]; // 有城市燈嘅窗（夜色下保留亮度）
+  const WIN = [[368, 240, 792, 240], [4311, 200, 995, 216], [5296, 200, 746, 216], [6196, 208, 296, 280], [8617, 200, 985, 216]]; // 有城市燈嘅窗（新全景 px，夜色下保留亮度）
 
   let SC = null, st = null, PANO = null, CROP = {}, TC = {};
   const ok = (k) => typeof sprOk === 'function' && sprOk(k);
@@ -45,10 +61,10 @@ const OFFMAP = (() => {
     if (PANO) return PANO; if (!ok('bg_office_pano')) return null;
     const im = SPR.bg_office_pano, c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
     const x = c.getContext('2d'), k = c.height / SH; x.drawImage(im, 0, 0);
-    x.globalCompositeOperation = 'multiply'; x.fillStyle = 'rgb(150,140,196)'; x.fillRect(0, 0, c.width, c.height);
+    x.globalCompositeOperation = 'multiply'; x.fillStyle = 'rgb(118,110,170)'; // 夜晚加班：比舊版暗 x.fillRect(0, 0, c.width, c.height);
     const g = x.createLinearGradient(0, c.height * 0.62, 0, c.height); g.addColorStop(0, 'rgb(255,255,255)'); g.addColorStop(1, 'rgb(160,152,186)');
     x.fillStyle = g; x.fillRect(0, c.height * 0.62, c.width, c.height * 0.38);
-    x.globalCompositeOperation = 'screen'; x.globalAlpha = 0.35;
+    x.globalCompositeOperation = 'screen'; x.globalAlpha = 0.45;
     for (const w of WIN) x.drawImage(im, w[0] * k, w[1] * k, w[2] * k, w[3] * k, w[0] * k, w[1] * k, w[2] * k, w[3] * k);
     return PANO = c;
   }
@@ -56,10 +72,10 @@ const OFFMAP = (() => {
   function crop(id, a, fill) {
     if (CROP[id]) return CROP[id]; const src = pano(); if (!src) return null; const k = src.height / SH;
     const c = document.createElement('canvas'); c.width = Math.round(a[2] * k); c.height = Math.round(a[3] * k);
-    c.getContext('2d').drawImage(src, a[0] * k, a[1] * k, a[2] * k, a[3] * k, 0, 0, c.width, c.height);
+    c.getContext('2d').drawImage(src, Rp(a[0]) * k, a[1] * k, a[2] * k, a[3] * k, 0, 0, c.width, c.height);
     let f = null;
     if (fill) { f = document.createElement('canvas'); f.width = c.width; f.height = c.height; const fx = f.getContext('2d');
-      const L = src.getContext('2d').getImageData(Math.max(0, a[0] * k - 2), a[1] * k, 1, c.height).data, Rr = src.getContext('2d').getImageData(Math.min(src.width - 1, (a[0] + a[2]) * k + 2), a[1] * k, 1, c.height).data;
+      const L = src.getContext('2d').getImageData(Math.max(0, Rp(a[0]) * k - 2), a[1] * k, 1, c.height).data, Rr = src.getContext('2d').getImageData(Math.min(src.width - 1, (Rp(a[0]) + a[2]) * k + 2), a[1] * k, 1, c.height).data;
       for (let y = 0; y < c.height; y++) { const g = fx.createLinearGradient(0, 0, c.width, 0); g.addColorStop(0, `rgb(${L[y * 4]},${L[y * 4 + 1]},${L[y * 4 + 2]})`); g.addColorStop(1, `rgb(${Rr[y * 4]},${Rr[y * 4 + 1]},${Rr[y * 4 + 2]})`); fx.fillStyle = g; fx.fillRect(0, y, c.width, 1); } }
     return CROP[id] = { c, f };
   }
@@ -69,7 +85,7 @@ const OFFMAP = (() => {
 
   function init(S) {
     SC = S; st = { t:0, micro:0, fridge:0, vend:0, can:null, kettle:0, tv:0, speaker:0, chairs:0, golf:null, bchair:0, trophy:null, lights:null, ac:null,
-      spare:A.spare.map(([x, y], i) => ({ x:px(x), y, ox:0, oz:0, vx:0, vz:0, sw:i ? 0.4 : -0.3, vs:0 })) };
+      spare:A.spare.map(([x, y], i) => ({ x, y, ox:0, oz:0, vx:0, vz:0, sw:i ? 0.4 : -0.3, vs:0 })) };
   }
   function tick(dt) {
     if (!st) return; st.t += dt;
@@ -156,6 +172,12 @@ const OFFMAP = (() => {
       if (g.t < 2.4) { ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 1.5; for (let i = 1; i < 4; i++) { ctx.beginPath(); ctx.moveTo(x - Math.sign(g.x1 - g.x0) * u * (0.05 + i * 0.05), y - r - i * 2 + 4); ctx.lineTo(x - Math.sign(g.x1 - g.x0) * u * (0.1 + i * 0.05), y - r - i * 2 + 4); ctx.stroke(); } ctx.restore(); text(ctx, x, y - u * 0.12, '咕碌——', u * 0.07, 1 - g.t / 2.4); } }]);
     if (st.trophy) out.push([st.trophy.y > 0.64 ? 0.656 : 0.6, (ctx) => { const T = st.trophy, C = crop('trophy', A.trophy, true); if (!C) return; const [x, y] = P(T.x, T.y), w = rect(A.trophy)[2], h = rect(A.trophy)[3];
       ctx.save(); ctx.translate(x, y - (T.y >= T.floor ? w * 0.5 : h * 0.5)); ctx.rotate(T.rot); ctx.drawImage(C.c, -w / 2, -h / 2, w, h); ctx.restore(); if (T.land >= 0 && T.t - T.land < 0.6) text(ctx, x, y - h * 0.9, '哐啷！', h * 0.35, 1 - (T.t - T.land) / 0.6); }]);
+    // 會議枱（由背景剪出嚟，搬到房中間）：前面嗰排椅背向鏡頭、後面三張面向鏡頭，人坐後面
+    const tb = tint('of_meet_table'); if (tb) { const [mx, my] = SPOT.meetTable; out.push([my, (ctx) => { const b = SC.bgScale(), k = b.ih * b.s / SH * MT_K, w = 869 * k, h = 192 * k, [x, y] = P(mx, my);
+      ctx.save(); ctx.fillStyle = 'rgba(6,4,18,.32)'; ctx.beginPath(); ctx.ellipse(x, y - h * 0.03, w * 0.52, h * 0.14, 0, 0, PI * 2); ctx.fill(); ctx.drawImage(tb, x - w / 2, y - h, w, h); ctx.restore(); }]); }
+    // 大堂前台（美美）：張枱喺佢前面（近鏡頭）擋住下半身
+    const dk = tint('of_desk_clean'); if (dk) { const [rx, ry] = SPOT.reception, dy = ry + 0.02; out.push([dy, (ctx) => { const u = U(dy), h = 0.56 * u, w = h * dk.width / dk.height, [x, y] = P(rx + 0.03, dy);
+      ctx.save(); ctx.fillStyle = 'rgba(6,4,18,.35)'; ctx.beginPath(); ctx.ellipse(x, y - h * 0.04, w * 0.5, h * 0.1, 0, 0, PI * 2); ctx.fill(); ctx.translate(x, y); ctx.scale(-1, 1); ctx.drawImage(dk, -w / 2, -h, w, h); ctx.restore(); }]); }
     const ch = tint('of_chair_back');
     if (ch) for (const c of st.spare) { const y = c.y + c.oz; out.push([y, (ctx) => { const [x, yy] = P(c.x + c.ox, y), u = U(y), h = 0.62 * u, w = h * ch.width / ch.height, s = Math.cos(c.sw);
       ctx.save(); ctx.fillStyle = 'rgba(6,4,18,.3)'; ctx.beginPath(); ctx.ellipse(x, yy, w * 0.42, w * 0.1, 0, 0, PI * 2); ctx.fill(); ctx.translate(x, yy); ctx.scale(Math.max(0.35, Math.abs(s)) * (s < 0 ? -1 : 1), 1); ctx.drawImage(ch, -w / 2, -h, w, h); ctx.restore();
@@ -171,7 +193,7 @@ const OFFMAP = (() => {
       for (let i = 0; i < 3; i++) { const t0 = 0.9 + i * 0.3, v = q < 0.9 ? fl : q < 2.7 ? (q < t0 ? fl : Math.min(0.74, 0.2 + (q - t0) * 3)) : 0; if (v > 0) { ctx.fillStyle = `rgba(4,3,14,${v})`; ctx.fillRect(r0 + bw * i - 1, 0, bw + 2, H); } }
       if (q >= 2.7 && q < 3.1) { ctx.fillStyle = `rgba(255,250,230,${0.35 * (1 - (q - 2.7) / 0.4)})`; ctx.fillRect(a, 0, b - a, H); }
       ctx.restore(); if (q > 0.95 && q < 2.6) { const i = Math.min(2, Math.floor((q - 0.9) / 0.3)); text(ctx, Math.max(a + 20, Math.min(b - 20, r0 + bw * (i + 0.5))), H * 0.16, '啪', H * 0.035, 1 - ((q - 0.9) % 0.3) / 0.3); } } }
-    if (st.ac) { const A0 = st.ac, r = RM[A0.room], [a, b] = roomScreen(r); if (b > a) { const e = Math.min(1, A0.t * 3, (2.6 - A0.t) * 3), [vx, vy] = P(px(r.vent[0]), py(r.vent[1]));
+    if (st.ac) { const A0 = st.ac, r = RM[A0.room], [a, b] = roomScreen(r); if (b > a) { const e = Math.min(1, A0.t * 3, (2.6 - A0.t) * 3), [vx, vy] = P(npx(r.vent[0]), py(r.vent[1]));
       ctx.save(); ctx.beginPath(); ctx.rect(a, 0, b - a, H); ctx.clip(); ctx.fillStyle = `rgba(150,200,255,${0.14 * e})`; ctx.fillRect(a, 0, b - a, H); ctx.lineCap = 'round';
       for (let i = 0; i < 9; i++) { const q = (t * 0.9 + i / 9) % 1, sx = vx + (i - 4) * 9, ex = sx + (i - 4) * 14 * q - 10 * q, ey = vy + q * H * 0.5; ctx.strokeStyle = `rgba(210,235,255,${0.5 * e * (1 - q)})`; ctx.lineWidth = 2.2 * (1 - q * 0.5); ctx.beginPath(); ctx.moveTo(sx, vy); ctx.quadraticCurveTo(sx + Math.sin(t * 6 + i) * 8, (vy + ey) / 2, ex, ey); ctx.stroke(); }
       ctx.restore(); } }
@@ -197,6 +219,6 @@ const OFFMAP = (() => {
     // 同一間房、位置太近嘅點：上下錯開
     const vis = want.slice().sort((a, b) => a.x - b.x); let last = -9, row = 0; for (const n of vis) { const d = S._dots[n.d.k]; const p = n.x / WW * 100; row = p - last < 4.2 ? (row + 1) % 2 : 0; last = p; d.style.top = row ? '15px' : '1px'; }
   }
-  return { PXU, WW, SW, SH, SEAM, PILLAR, ROOMS, RM, OX, M, MY, px, py, roomAt, SPOT, LANE, PATROL, A, R, init, tick, onProp, drawBack, drawables, drawOver, mapHTML, mapTick,
+  return { PXU, WW, SW, SH, SEAM, WALLS, WALLW, PILLAR, ROOMS, RM, OX, M, MY, px, npx, py, Rp, Ru, roomAt, SPOT, LANE, PATROL, A, R, init, tick, onProp, drawBack, drawables, drawOver, mapHTML, mapTick,
     WINMAIN:[px(1575), py(200), px(995), py(216)], ELEV:{ x0:px(2652), x1:px(2872), seam:px(2762), top:py(248), bot:py(570), btn:[px(2910), py(380)] } };
 })();

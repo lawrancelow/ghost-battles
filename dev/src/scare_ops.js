@@ -141,13 +141,15 @@ const ScareOps = (() => {
     },
   };
   // 茶水間：大家共用，揀佢怕嗰樣
-  const PANTRY = [
-    { id:'p1', text:'熱水爐咕嚕咕嚕，好像在說：「好凍……」', type:'sound', tier:1, base:24, cost:18 },
-    { id:'p2', text:'微波爐自己「叮」一聲，門後貼著一張臉', type:'face', tier:3, base:38, cost:30 },
-    { id:'p3', text:'雪櫃門自己慢慢打開，一陣冷氣湧出來', type:'cold', tier:1, base:22, cost:16 },
-    { id:'p4', text:'杯子的倒影裡，他身後多了一個人', type:'shadow', tier:3, base:38, cost:30 },
-    { id:'p5', text:'茶水間的燈一閃一閃', type:'light', tier:1, base:22, cost:16 },
-    { id:'p6', text:'有人在他耳邊，輕輕叫他的名字', type:'breath', tier:3, base:36, cost:28 },
+  const PANTRY = [ // fx：茶水間邊部機郁（pantry.js 畫效果）
+    { id:'p1', text:'販賣機自己「哐咚」掉出一罐汽水，滾到他腳邊', type:'sound', tier:1, base:24, cost:18, fx:'vend' },
+    { id:'p2', text:'販賣機玻璃後面黑影一閃，一包零食自己掉了出來', type:'shadow', tier:2, base:30, cost:22, fx:'snack' },
+    { id:'p3', text:'雪櫃門自己開了又關、關了又開，冷氣一陣一陣湧出來', type:'cold', tier:1, base:22, cost:16, fx:'fridgeloop' },
+    { id:'p4', text:'水機自己漏水，一滴一滴，地上積了一灘冰水', type:'cold', tier:2, base:28, cost:20, fx:'water' },
+    { id:'p5', text:'咖啡機自己沖了一杯咖啡，熱氣呼到他臉上', type:'breath', tier:2, base:30, cost:22, fx:'coffee' },
+    { id:'p6', text:'微波爐自己轉起來「叮」一聲，門後貼著一張臉', type:'face', tier:3, base:38, cost:30, fx:'micro' },
+    { id:'p7', text:'熱水壺咕嚕咕嚕，好像在說：「好凍……」', type:'sound', tier:1, base:20, cost:14, fx:'kettle' },
+    { id:'p8', text:'茶水間的燈一閃一閃', type:'light', tier:1, base:22, cost:16, fx:'lights' },
   ];
   const TAB = { msg:'訊息', photo:'相簿', search:'搜尋紀錄', note:'備忘錄' };
   const INTEL_NAME = { afu:'阿福哥的舊訊息', mom:'媽媽的湯', quit:'他想辭職', gossip:'八卦群的傳聞', boba:'珍奶店訂單', selfie:'自拍裡的模糊人影', boss:'陳總的訊息', master:'Master Lee 的叮囑', board:'董事會', son:'兒子的雞飯' };
@@ -228,6 +230,7 @@ const ScareOps = (() => {
     if (!Sc.headless) { try { Sound.play(kind === 'msg' ? 'click' : kind === 'pc' ? 'paper' : 'whoosh'); } catch (e) {} Sc.fx.push({ kind:kind === 'msg' ? 'phone' : 'breath', life:1.6, max:1.6, n }); }
     const tag = kind === 'msg' ? `📱 ${o.who}：${o.text}` : o.text;
     Sc.float(n.x, n.y - 0.3, tag.length > 26 ? tag.slice(0, 25) + '…' : tag, '#e8d8ff', 2);
+    if (o.fx && typeof Pantry !== 'undefined' && !Sc.headless) { try { Pantry.fx(o.fx, n); } catch (e) {} } // 茶水間：對應嗰部機真係郁
     if (o.trap) { n.fear = Math.max(0, n.fear - 20); n.combo = 0; Sc.bubble(n, Lx(o.say), 2.6); Sc.float(n.x, n.y - 0.34, `反效果：${o.why}`, '#ff9a8a', 2); return; }
     if (o.warm) { n.fear = Math.max(0, n.fear - 10); Sc.bubble(n, Lx(o.say), 2.8); Sc.addKarma(n.d, 1, `${n.d.name}：${o.why}`); Sc.float(n.x, n.y - 0.34, '陰德 +1', '#a8f0b0', 2); return; }
     const personal = !!o.need;

@@ -63,6 +63,7 @@ const SCARE_PROPS = {
 };
 // 開放辦公區嘅家具：舊辦公室座標 → 全景世界座標（同 office.js 一樣搬法）
 for (const k in SCARE_PROPS) { const p = SCARE_PROPS[k]; p.room = 'main'; if (p.group) continue; p.front = [OFFMAP.M(p.front[0]), OFFMAP.MY(p.front[1])]; p.rect = [OFFMAP.M(p.rect[0]), OFFMAP.MY(p.rect[1]), p.rect[2], p.rect[3] * 0.75]; }
+{ const c = OFFMAP.SPOT.copier, p = SCARE_PROPS.printer; p.room = 'wc'; p.front = [c[0] - 0.12, c[1] + 0.05]; p.r = 0.4; p.rect = [c[0] - 0.13, c[1] - 0.2, 0.26, 0.2]; } // 影印機搬咗去洗手間／影印房
 // 其他房間嘅道具（rooms.js 量好嘅位置；效果喺 rooms.js 程式畫）。每招對應一種怕法
 { const O = OFFMAP, SP = O.SPOT, A = O.A, R = O.R, px = O.px;
   Object.assign(SCARE_PROPS, {
@@ -87,33 +88,38 @@ const SCARE_GHOSTS = {
   penanggal:{ name:'Penanggal', skill:'飛頭', type:'face', base:38, line:'（一個頭從他身邊飄過去）' },
   laojiang: { name:'老殭', skill:'跳過走廊', type:'shadow', base:32, line:'（玻璃門外，一跳、一跳、一跳）' },
 };
-const MIS_POST = [OFFMAP.M(0.02), OFFMAP.MY(0.86)]; // 美美：守喺老闆房門口（開放辦公區最左、近間隔柱），邊個入老闆房佢都見到
+const MIS_POST = OFFMAP.SPOT.reception; // 美美：大堂前台（背向左邊會議室門口、面向右邊），坐喺枱後面
+const COPY_AT = [OFFMAP.SPOT.copier[0] - 0.16, OFFMAP.SPOT.copier[1] + 0.05]; // 影印機（洗手間／影印房）前面企嘅位
+// 茶水間休息：坐低碌手機／飲嘢／瞌一陣（坐喺 Pantry 張枱後面，枱擋住腳）
+const BRK = (() => { const T = (yue, zh) => { if (typeof LANG !== 'undefined' && LANG.add) LANG.add({ [yue]:zh }); return yue; };
+  return { it:T('抖陣先，個 server 自己頂住。', '休息一下，伺服器自己撐著。'), mis:T('坐低碌下手機先～', '坐下來滑一下手機～'), boss:T('（飲啖茶）唔好話我偷懶。', '（喝口茶）別說我偷懶。'),
+    auntie:T('拖到腰都痛，坐陣先。', '拖到腰都痛，坐一會兒。'), ken:T('（打個呵欠）瞇五分鐘……', '（打個呵欠）瞇五分鐘……') }; })();
 const _M = OFFMAP.M, _MY = OFFMAP.MY, _SP = OFFMAP.SPOT; // 開放辦公區：舊座標平移（阿Ken 路線距離、時間不變）；其他房間用 rooms.js 量好嘅站位
 const SCARE_SITES = {
   office:{ name:'舊公司・二十三樓', bg:'office_pano', pano:true, layout:'office', persp:{ c:0.211, hz:-0.70 }, need:'ch1_end', shift:true, stars:[1100, 1300, 1480], oldStars:[250, 450, 760], exit:OFFMAP.SPOT.elev, /* 星星門檻（全景四間房改版後用 t21_v5 機械人重新量：人分散咗、落單多咗，整體分數高咗）（細緻玩法改版 t21_v4）：亂按、狂按、全場亂槍 < 1★；普通玩家 1~2★；3★ 要揀人、避開視線、連擊接爆點。oldStars = 舊算法的門檻，舊存檔的最高分照比例換過來 */
     intro:[['旁白','凌晨十二點。阿福回到他生前的公司。'],['阿福','門禁卡還能刷。公司也沒有人通知它。'],['系統','親～今晚的 KPI：嚇人。點場景裡發光的東西附身，點人可以偷看手機。'],['系統','先用小動靜讓他起疑，等他頭上冒「！」再出大招。小心巡邏的保安阿伯，被他的手電筒照到，就會被請去喝茶。']],
     npcs:[
       { k:'ken', name:'阿Ken', role:'加班仔', spr:'npc_ken', speed:0.05, calm:2.2, weak:['phone','face','paper'], immune:['light','cold'], hide:['paper'], imm:{ light:'（盯住手機）燈閃？我部手機光過佢。', cold:'凍？OT 慣咗。' }, karma:3, phone:true,
-        route:[[_M(0.24), _MY(0.60), 14, 'work'], [_M(0.64), _MY(0.55), 4, 'idle'], [_M(0.24), _MY(0.60), 12, 'work'], [_M(0.79), _MY(0.57), 5, 'idle']],
+        route:[[_M(0.24), _MY(0.60), 14, 'work'], [_M(0.64), _MY(0.55), 4, 'idle'], [_M(0.24), _MY(0.60), 12, 'work'], [_M(0.79), _MY(0.57), 5, 'idle'], [_M(0.24), _MY(0.60), 12, 'work'], [_SP.restSeats[0][0], _SP.restSeats[0][1], 9, 'brk_nap']],
         say:{ immune:'（沒抬頭，在回老闆訊息）', rational:['我太累了……','眼花，一定是眼花。','加班加到出現幻覺了。'], prime:['……誰？','剛剛是不是有聲音？','（回頭看了一眼）'], hit:['哇！！','老……老闆？！','不、不是我做的！'], weak:'（手機一亮，整個人跳起來）在、在！我在！',
           flee:'阿Ken 看著空氣很久：「你也是……做到這麼晚？」第二天，他遞了辭職信，回老家吃媽媽煮的飯。' },
         chat:[['老闆','23:02','阿Ken，明早九點董事會，PPT 再改一版。'],['阿Ken','23:03','好的老闆，收到。'],['老闆','01:40','在嗎？'],['阿Ken','01:40','在！'],['媽','昨天','阿Ken，這個禮拜回來吃飯嗎？媽煲了湯。'],['阿Ken','昨天','下次吧，最近很忙']] },
       { k:'it', name:'小晴', role:'IT 工程師・今晚值班', spr:'npc_it', speed:0.08,
-        post:[_M(0.66), 0.80, 'work'], work:[26, 40], trips:[['water', 2.6, _SP.water, [4, 6], '去茶水間斟杯水先。'], ['tea', 1.6, _SP.kettle, [4, 6], '沖杯茶頂下。'], ['copier', 1.2, [_M(0.69), _MY(0.55)], [3, 5], '印埋份 log。'], ['out', 1.4, 'out', [12, 18], '去個洗手間。', '返嚟喇。']],
+        post:[_M(0.66), 0.80, 'work'], work:[26, 40], trips:[['water', 2.6, _SP.water, [4, 6], '去茶水間斟杯水先。'], ['tea', 1.6, _SP.kettle, [4, 6], '沖杯茶頂下。'], ['copier', 1.2, COPY_AT, [3, 5], '印埋份 log。'], ['rest', 1.2, 'rest', [8, 12], BRK.it, null, ['brk_phone', 'brk_drink']], ['out', 1.4, 'out', [12, 18], '去個洗手間。', '返嚟喇。']],
         lines:{ cue:'（收拾筆電）差唔多喇……', bye:'終於收工！', back:'唔記得拎充電器……', work:['server 又 down……', '邊個又改咗個 config……', '（飲一啖珍奶）頂住先。'] }, calm:2.4, weak:['phone', 'sound', 'light'], immune:['cold', 'paper'], hide:['light'], imm:{ cold:'（拉緊帽T）我有帽，唔凍。', paper:'紙？我哋 paperless 㗎。' }, karma:-1, phone:true,
         route:[[_M(0.66), 0.80, 16, 'work']],
         say:{ immune:'（拉緊帽T：我有帽子，不冷。）', rational:['應該是網絡延遲。', '是 cache 的問題。', '伺服器又在搞我。', '一定是 Windows 在更新。'], prime:['……誰 ping 我？', '耳機裡怎麼有人在講話？', '（把耳機拿下來聽了一下）'], hit:['production 掛了嗎？！', '這不是 bug……這不是 bug……', '我只是來值班的！'], weak:'（手機和耳機一起響：「小晴……還在嗎……」）！！！',
           flee:'小晴把電腦一合：「這個 bug 明天再修！」衝進電梯。第二天她請了一星期假，去喝了七杯珍奶。' },
         chat:[['值班系統','01:12','【P1】23 樓伺服器溫度 4°C，請立即處理。'],['陳總','02:03','小晴，網站是不是慢了？我覺得慢了。'],['小晴','02:04','陳總，是你家的 Wi-Fi。'],['二十三樓八卦群','00:30','聽說 23 樓半夜影印機會自己印東西 👻'],['小晴','00:31','是驅動程式的問題，不要迷信。'],['媽','23:40','妹，又值夜班？記得吃飯。'],['小晴','23:41','有啦，珍奶算一餐。'],['珍奶店','22:58','您的訂單：全糖、多珍珠、去冰（第 3 杯）已送達。']] },
       { k:'mis', name:'美美', role:'陳總的秘書・心腹', spr:'npc_mis', speed:0.075,
-        post:[MIS_POST[0], MIS_POST[1], 'idle', -1], work:[22, 34], trips:[['copier', 1.6, [_M(0.72), _MY(0.57)], [4, 6], '又要印多十份……'], ['micro', 2.0, _SP.micro, [4, 6], '叮個宵夜先～'], ['boss', 2.2, 'boss', [4, 6], '陳總～份文件幫你印好喇～'], ['out', 1.6, 'out', [12, 20], '去補個妝先。', '補完妝喇～']],
+        post:[MIS_POST[0], MIS_POST[1], 'idle', 1], work:[22, 34], trips:[['copier', 1.6, COPY_AT, [4, 6], '又要印多十份……'], ['rest', 1.0, 'rest', [8, 12], BRK.mis, null, ['brk_phone', 'brk_drink']], ['micro', 2.0, _SP.micro, [4, 6], '叮個宵夜先～'], ['boss', 2.2, 'boss', [4, 6], '陳總～份文件幫你印好喇～'], ['out', 1.6, 'out', [12, 20], '去補個妝先。', '補完妝喇～']],
         lines:{ cue:'（照鏡、拎手袋）', bye:'我走先喇～', back:'仲有嘢未搞掂……', late:'仲有嘢未搞掂……', work:['（接電話）陳總開緊會喎～', '又要印多十份……', '（釘文件）好煩呀～'] }, calm:2.6, weak:['phone', 'breath'], immune:['cold'], hide:['breath'], imm:{ cold:'冷氣凍啲先唔會甩妝。' }, karma:1, phone:true, fleeVia:'boss',
         route:[[MIS_POST[0], MIS_POST[1], 7, 'idle']],
         say:{ immune:'冷氣凍啲先唔會甩妝。', rational:['一定係阿Ken搞嘢。', '唔好嚇人啦，我粉底會裂㗎。', '呢啲嘢搵阿Ken做啦。'], prime:['……邊個喺度呀？', '（照一照鏡）我頭髮亂咗？', '咩聲嚟㗎？'], hit:['呀——我隻甲！', '陳總～有嘢呀～', '我部電話！'], weak:'（自拍鏡頭入面，佢後面多咗一塊臉）', shout:'陳總～救命呀～！',
           flee:'美美尖叫著衝去找陳總：「陳總～救命呀～！」第二天她請了「驚嚇假」，飛去日本購物壓驚，報告全部丟給阿Ken。' },
         chat:[['陳總','00:45','美美，聽日陪我去見客，記得著靚啲。'],['美美','00:46','陳總～人哋要放假啦～'],['陳總','00:46','放！做完呢季就放！'],['姊妹群','01:02','你仲喺公司？'],['美美','01:03','係呀，陳總話佢一個人驚 🙄'],['美美','01:20','阿Ken，份報告你幫我打埋佢啦，陳總要嘅。'],['阿Ken','01:21','……好。'],['網購','昨天','您訂購的「防甩妝噴霧 ×6」已出貨。']] },
       { k:'boss', name:'陳總', role:'新老闆', spr:'npc_boss', speed:0.075,
-        post:[_SP.bossDesk[0], _SP.bossDesk[1], 'call', -1], work:[22, 32], trips:[['golf', 2.2, _SP.golf, [7, 10], '（練下推桿）'], ['ken', 1.4, [_M(0.40), _MY(0.665)], [4, 6], '阿Ken，份 PPT 呢？'], ['coffee', 1.2, _SP.coffee, [4, 6], '（自己沖咖啡）'], ['out', 1, 'out', [12, 18], '出去食支煙。', '繼續做嘢！']],
+        post:[_SP.bossDesk[0], _SP.bossDesk[1], 'call', -1], work:[22, 32], trips:[['golf', 2.2, _SP.golf, [7, 10], '（練下推桿）'], ['ken', 1.4, [_M(0.40), _MY(0.665)], [4, 6], '阿Ken，份 PPT 呢？'], ['coffee', 1.2, _SP.coffee, [4, 6], '（自己沖咖啡）'], ['rest', 0.9, 'rest', [8, 12], BRK.boss, null, ['brk_drink', 'brk_phone']], ['out', 1, 'out', [12, 18], '出去食支煙。', '繼續做嘢！']],
         lines:{ cue:'（看錶）咁夜喇……', bye:'我走先，你哋繼續做。', late:'全部人留低開會！', golf:['（推桿）入！', '（推桿）……又偏咗。'], work:['喂？我唔理，聽朝九點前要見到！', '（對住電話）你講多次？預算爆咗？', '呢份計劃書邊個寫㗎？成份重做！', '（揭文件）專業啲好唔好呀……'] }, calm:3, weak:['paper','shadow'], immune:['sound', 'phone'], hide:['shadow'], imm:{ sound:'（戴住降噪耳機睇高爾夫）', phone:'（掛咗佢）唔識嘅號碼一律唔聽。' }, karma:2, phone:true,
         route:[[_SP.bossDesk[0], _SP.bossDesk[1], 9, 'call']],
         say:{ immune:'（戴著降噪耳機看高爾夫）', rational:['哼，風水問題。','明天叫 Master Lee 來看。','一定是實習生在搞鬼。'], prime:['……水晶球呢？','誰在那裡？','（把水晶球抱緊）'], hit:['誰印的？！虧損報表？！','誰批准你加班的？！','Master Lee！救命！'], weak:'（看到影印機自己在印）本、本季虧損報表？誰印的？！',
@@ -128,8 +134,8 @@ const SCARE_SITES = {
           flee:'安娣拖著水桶走了：「這間我不做了！隔壁大廈的鬼比較有禮貌！」' },
         chat:[['老闆娘','20:00','安娣，今晚地板要拖三次，陳總說要亮。'],['清潔安娣','20:01','好。'],['兒子','22:30','媽，又做到幾點？'],['清潔安娣','22:31','做完就回。你先吃，不用等。']] },
       { k:'guard', name:'保安阿伯', role:'夜班三十年・每間房都巡', spr:'npc_guard', speed:0.07,
-        post:[2.49, 0.79, 'doze', -1], work:[40, 55], lines:{ work:['（打瞌睡）Zzz……', '（醒一醒）……冇嘢，冇嘢。'] }, trips:[['patrol', 1, 'patrol', [3, 4], '巡一巡先。']], calm:99, weak:[], immune:['light','cold','sound','paper','phone','face','shadow'], karma:-1, guard:true, phone:true,
-        route:[[2.49, 0.79, 3, 'look']],
+        post:[OFFMAP.Ru(2.49), 0.79, 'doze', -1], work:[40, 55], lines:{ work:['（打瞌睡）Zzz……', '（醒一醒）……冇嘢，冇嘢。'] }, trips:[['patrol', 1, 'patrol', [3, 4], '巡一巡先。']], calm:99, weak:[], immune:['light','cold','sound','paper','phone','face','shadow'], karma:-1, guard:true, phone:true,
+        route:[[OFFMAP.Ru(2.49), 0.79, 3, 'look']],
         say:{ immune:'又來？喝杯茶吧。', calmOther:'沒事啦，我在這裡三十年了。', catchG:'出來啦，不要躲。來，喝杯茶。' },
         chat:[['阿福','三個月前','阿伯，我又加班，今晚不用幫我留燈。'],['保安阿伯','三個月前','留咯。你走了我才關。'],['女兒','今天','爸，今晚幾點下班？'],['保安阿伯','今天','天亮。'],['保安阿伯','今天','那個阿Ken，跟阿福一樣，都不回家。']] },
     ] },
@@ -336,7 +342,7 @@ const Scare = {
     n.out = false; n.inAt = this.t; this.elevator(); if (this.office() && n.d.k === 'it') OFFICE.offline('it', false);
     const [ex, ey] = this.exitPt(); n.x = ex; n.y = ey; n.dir = -1; if (n.inSay) this.bubble(n, n.inSay, 2.6); n.inSay = null; n.step = null; n.next = null;
   },
-  elevator() { this.door = 1.8; this.jumpy(null, 'main'); if (!this.headless) { if (typeof Sound !== 'undefined') Sound.play('coin'); if (this.office()) OFFICE.elevator(); } },
+  elevator() { this.door = 1.8; this.jumpy(null, 'lobby'); if (!this.headless) { if (typeof Sound !== 'undefined') Sound.play('coin'); if (this.office()) OFFICE.elevator(); } },
   // 有崗位的人：一步一步走（path = 經過的點），到了就做那件事 wait 秒
   planMove(n, dt) {
     const d = n.d;
@@ -372,6 +378,14 @@ const Scare = {
     if (n.wait <= 0) { if (s.meet) { let i = 0; for (const m of this.npcs) if (m.step && m.step.act === 'notes' && m.step.arrived) { m.wait = Math.min(m.wait, 1.5 + 3 * i++); } else if (m.call && m.call.act === 'notes') m.call = null; this.bubble(n, '散會！聽朝九點前交。', 2.4); } n.step = null; }
   },
   // 走去電梯／從電梯出來：繞過影印機和飲水機（先到 (0.80, 0.60) 再轉）
+  restStep(n, wait, say, acts) { // 茶水間休息：揀一張冇人坐嘅櫈
+    const S = _SP.restSeats, busy = (p) => this.npcs.some(m => m !== n && !m.gone && !m.out && ((m.step && Math.hypot(m.step.x - p[0], m.step.y - p[1]) < 0.01) || Math.hypot(m.x - p[0], m.y - p[1]) < 0.01)), free = S.filter(p => !busy(p));
+    const [px, py, pact] = n.d.post; if (!free.length || this.busy(n, free[0][0])) return { x:px, y:py, wait:this.U(n, 4, 8), act:pact, arrived:true };
+    const p = free[Math.floor(this.rng(n) * free.length)], a = acts || ['brk_phone', 'brk_drink', 'brk_nap']; if (say) this.bubble(n, say, 2.2);
+    return { x:p[0], y:p[1], wait, act:a[Math.floor(this.rng(n) * a.length)], arrived:false, path:null, pi:0, sit:true };
+  },
+  sitting(n) { if (n.gone || n.out || n.fleeing || n.act === 'walk') return false; if (n.act && (n.act.startsWith('brk_') || n.act === 'notes')) return true;
+    return this.site.pano && n.d.k === 'mis' && Math.hypot(n.x - MIS_POST[0], n.y - MIS_POST[1]) < 0.012; }, // 坐低：成個人降低、腳底以下唔畫（張枱擋住）
   viaElev(n, x, y) { const p = []; if (y < _MY(0.6) && x > _M(0.5) && x < _M(0.86)) p.push([_M(0.80), _MY(0.60)]); return p; },
   mkStep(n, o) {
     const [ex, ey] = this.exitPt();
@@ -383,6 +397,7 @@ const Scare = {
     const atPost = Math.hypot(n.x - px, n.y - py) < 0.012;
     if (d.lane) { // 清潔安娣：沿著拖地的路線一格一格拖（拖完一格才往下一格），偶爾去換水
       n.li = (n.li || 0) + 1; if (d.tripEvery && n.li % (d.tripEvery * d.lane.length) === 0 && this.present(n) >= 3) { const tr = d.trips[0]; return this.mkStep(n, { out:true, outDur:U(...tr[3]), backSay:tr[5], sayStart:tr[4] }); }
+      if (n.li % d.lane.length === 4 && this.roomOf(n) === 'pantry' && this.rng(n) < 0.6) { const st = this.restStep(n, U(8, 12), BRK.auntie, ['brk_drink', 'brk_nap']); if (st.sit) return st; }
       const p0 = d.lane[n.li % d.lane.length], p = this.freeSpot(n, p0[0], p0[1]); return { x:p[0], y:p[1], wait:U(...d.laneWait), act:'mop', arrived:false, mopWalk:true };
     }
     if (d.guard && n.tour && n.tour.length) { const p = n.tour.shift(); return { x:p[0], y:p[1], wait:U(3, 4.5), act:'look', arrived:false, path:null, pi:0 }; } // 保安巡房：一間一間行
@@ -393,7 +408,8 @@ const Scare = {
     if (!e) return { x:px, y:py, wait:U(...this.workOf(n)), act:pact, arrived:true };
     if (e[2] === 'out') { if (this.present(n) < 2 || this.busy(n, this.exitPt()[0])) return { x:px, y:py, wait:U(4, 8), act:pact, arrived:true }; return this.mkStep(n, { out:true, outDur:U(...e[3]), backSay:e[5], sayStart:e[4] }); }
     let to = e[2];
-    if (to === 'patrol') { const P = OFFMAP.PATROL; n.pt = (n.pt || 0) + 1; n.tour = n.pt % 2 ? [P[2], P[3]] : [P[1], P[0]]; const p = n.tour.shift(); if (e[4]) this.bubble(n, e[4], 2.2); return { x:p[0], y:p[1], wait:U(3, 4.5), act:'look', arrived:false, path:null, pi:0 }; } // 一次巡兩間：茶水間＋會議室／辦公區另一邊＋老闆房
+    if (to === 'patrol') { const P = OFFMAP.PATROL; n.pt = (n.pt || 0) + 1; n.tour = n.pt % 2 ? P.slice(3) : [P[2], P[1], P[0]]; const p = n.tour.shift(); if (e[4]) this.bubble(n, e[4], 2.2); return { x:p[0], y:p[1], wait:U(3, 4.5), act:'look', arrived:false, path:null, pi:0 }; } // 一次巡兩間：茶水間＋會議室／辦公區另一邊＋老闆房
+    if (to === 'rest') return this.restStep(n, U(...e[3]), e[4], e[6]);
     if (to === 'boss') { const b = this.npcs.find(m => m.d.k === 'boss' && !m.out && !m.gone && !m.fleeing); if (!b || this.roomOf(b) !== 'boss') return { x:px, y:py, wait:U(4, 8), act:pact, arrived:true }; to = _SP.bossVisit; }
     if (this.busy(n, to[0])) return { x:px, y:py, wait:U(3, 6), act:pact, arrived:true }; // 嗰邊已經有兩個人行緊：遲啲先去（唔好成堆人一齊行）
     to = this.freeSpot(n, to[0], to[1]);
@@ -421,7 +437,7 @@ const Scare = {
     const k = cand.length > 1 && this.rng(b) < 0.6 ? 2 : 1, who = cand.sort(() => this.rng(b) - 0.5).slice(0, k);
     this.bubble(b, who.length > 1 ? `${who.map(m => m.d.name).join('、')}，入會議室開會！` : `${who[0].d.name}，入會議室！`, 2.8);
     b.next = null; b.step = { x:_SP.board[0], y:_SP.board[1], wait:22, act:'present', arrived:false, path:null, pi:0, say:'（指住白板）呢季嘅數……', called:true, meet:true };
-    who.forEach((c, i) => { c.call = { x:[_SP.seat1, _SP.seat2][i][0], y:[_SP.seat1, _SP.seat2][i][1], wait:60, act:'notes', delay:1.5 + i * 3.5, go:i ? null : '又開會……' }; });
+    who.forEach((c, i) => { c.call = { x:[_SP.seat1, _SP.seat2, _SP.seat3][i % 3][0], y:[_SP.seat1, _SP.seat2, _SP.seat3][i % 3][1], wait:60, act:'notes', delay:1.5 + i * 3.5, go:i ? null : '又開會……' }; });
     this.meetT = this.t; return true;
   },
   // 要走了的提示：頭上一圈倒數（橘色），「走」字
@@ -445,7 +461,7 @@ const Scare = {
       if (this.pcd[k] > 0) { this.toast(`${p.name}冷卻中`); return; } if (this.mana < p.cost) { this.toast('陰氣不夠，等一下'); return; }
       const rm = this.groupRoom(), RR = rm && OFFMAP.RM[rm];
       if (!this.npcs.some(m => !m.gone && !m.out && !m.fleeing && !m.d.guard && this.inGroup(m, rm))) { this.toast(`${RR ? RR.name : '呢度'}冇人`); return; }
-      if (RR) p.rect = [OFFMAP.px(RR.vent[0]) - 0.06, OFFMAP.py(RR.vent[1]), 0.12, 0.02];
+      if (RR) p.rect = [OFFMAP.npx(RR.vent[0]) - 0.06, OFFMAP.py(RR.vent[1]), 0.12, 0.02];
       this.mana -= p.cost; this.pcd[k] = p.cdT; const cx = p.rect[0] + p.rect[2] / 2, cy = p.rect[1] + p.rect[3]; this.fx.push({ kind:k, life:2.2, x:cx, y:cy, room:rm });
       if (!this.headless) { Sound.play(k === 'lights' ? 'click' : 'whoosh'); this.propParts(k, p); if (this.site.pano) OFFMAP.onProp(k, null, rm); else if (this.office()) OFFICE.onProp(k); this.float(0.5, 0.36, `${RR ? RR.name + '入面' : '全場'}一齊經歷：冇人會話邊個黐線　之後單嚇 ×${FEAR.uneasyMul}`, '#bcd4ff', 2.2); }
       const tg = this.npcs.filter(m => !m.gone && !m.out && !m.fleeing && this.inGroup(m, rm)); this._src = cx; this._dl = 0; this._group = true;
@@ -457,7 +473,7 @@ const Scare = {
     this.mana -= p.cost;
     const cx = p.r ? p.rect[0] + p.rect[2] / 2 : n.x, cy = p.r ? p.rect[1] + p.rect[3] : n.y - 0.2;
     this.fx.push({ kind:k, life:2.2, x:cx, y:cy, n });
-    if (!this.headless) { Sound.play(k === 'printer' || k === 'vend' ? 'paper' : k === 'lamp' || k === 'drop' || k === 'trophy' ? 'hit' : k === 'water' || k === 'kettle' ? 'crow' : 'whoosh'); this.propParts(k, p, n); if (this.office()) { if (p.room && p.room !== 'main') OFFMAP.onProp(k, n); else OFFICE.onProp(k); } }
+    if (!this.headless) { Sound.play(k === 'printer' || k === 'vend' ? 'paper' : k === 'lamp' || k === 'drop' || k === 'trophy' ? 'hit' : k === 'water' || k === 'kettle' ? 'crow' : 'whoosh'); this.propParts(k, p, n); if (this.office()) { if (p.room && p.room !== 'main' && k !== 'printer') OFFMAP.onProp(k, n); else OFFICE.onProp(k); } }
     this._src = cx; this._dl = 0; this._vis = !!p.vis; this.hit(n, p.type, p.base, p.tier); this._src = null; this._vis = false;
   },
   usePhone(n) {
@@ -899,6 +915,9 @@ const Scare = {
     else if (f >= 80) Object.assign(o, { pose:'cower', face:'t', jit:0.8 });
     else if (f >= 50) Object.assign(o, { pose:'tremble', face:'f', jit:0.3 });
     else if (f >= 25) Object.assign(o, { pose:'look', face:'q' });
+    else if (n.act === 'brk_nap') Object.assign(o, { pose:'idle', face:'c', rot:0.2 + 0.015 * Math.sin((n.at || 0) * 1.3), sy:0.95 - 0.01 * Math.sin((n.at || 0) * 1.3), doze:true }); // 伏低瞌眼：身向前傾、一起一伏
+    else if (n.act === 'brk_phone') Object.assign(o, { pose:'phone', face:'b' });
+    else if (n.act === 'brk_drink') Object.assign(o, { pose:'sip', face:'c' });
     else if (d.k === 'ken') Object.assign(o, { pose:'phone', face:'b' }); // 盯著發光的手機，魂不在身上
     else if (n.act === 'mop') Object.assign(o, { pose:'mop', face:'b' });
     else if (d.daoshi && n.act === 'ritual') o.pose = 'ritual'; // 道士做法（自己的原畫）
@@ -954,7 +973,9 @@ const Scare = {
     const rig = this.rigOK(d.spr), jx = o.jit ? (Math.random() - 0.5) * 3.2 * o.jit : 0, jy = o.jit ? (Math.random() - 0.5) * 1.2 * o.jit : 0, lift = o.lift * hh * (rig ? 0.1 : 0.16); // 木偶本身也會跳，少加一點
     if (n === this.sel && !n.gone && !n.fleeing) { ctx.fillStyle = 'rgba(160,255,200,.28)'; ctx.beginPath(); ctx.ellipse(x, y, hh * 0.34, hh * 0.08, 0, 0, Math.PI * 2); ctx.fill(); }
     const shk = 1 - Math.min(0.5, o.lift * 0.35); ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(x, y, hh * 0.22 * shk * (o.pose === 'cower' ? 1.2 : 1), hh * 0.05 * shk, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.save(); ctx.translate(x + jx, y + jy - lift); if (o.rot) ctx.rotate(o.rot * (right ? 1 : -1)); ctx.scale(o.sx, o.sy);
+    const sit = this.sitting(n) ? hh * 0.22 : 0; if (sit && d.k === 'mis' && !o.src) right = true; // 美美坐前台：面向右
+    ctx.save(); if (sit) { ctx.beginPath(); ctx.rect(x - hh, y - hh * 2, hh * 2, hh * 2 - hh * 0.02); ctx.clip(); }
+    ctx.translate(x + jx, y + jy - lift + sit); if (o.rot) ctx.rotate(o.rot * (right ? 1 : -1)); ctx.scale(o.sx, o.sy);
     if (d.tint) ctx.filter = d.tint; // 靈探 KOL：借小晴套骨架換色
     if (d.k === 'mis' && this.office() && OFFICE.drawMis(ctx, n, o, hh, right, t)) { /* 美美：自己的幾張原圖（office.js） */ }
     else if (rig) ART.drawChar(ctx, d.spr, 0, 0, hh / NPC_UNIT, Object.assign({ t:n.at || 0, pose:o.pose, pt:o.pt, face:o.face, flip:!right, walk:o.walk, shadow:false }, typeof TOWN !== 'undefined' ? TOWN.npcOpts(n) : {}));
@@ -962,7 +983,7 @@ const Scare = {
     ctx.filter = 'none'; ctx.restore();
     if (d.mop && o.pose === 'mop' && Math.random() < 0.05) this.parts.push({ kind:'drop', x:vp[0] + (right ? 1 : -1) * 0.05, y:vp[1], vx:0, vy:0, life:1.4 });
     this.npcFx(ctx, n, o, x + jx, y - lift, hh, right, t); ctx.globalAlpha = 1;
-    return { x, top:y - lift - hh * (o.pose === 'cower' ? 0.8 : 1) * o.sy };
+    return { x, top:y - lift + sit - hh * (o.pose === 'cower' ? 0.8 : 1) * o.sy };
   },
   // 還沒有關節圖的人：用整張圖做出姿勢的感覺
   drawNpcSprite(ctx, n, o, hh, right) {

@@ -127,6 +127,7 @@ const OFFICE = (() => {
     for (const d of DEF) {
       const it = Object.assign({ ax:0.5, ay:1, dx:0, dy:0, rot:0, vr:0, sx:1, sy:1, ph:Math.random() * 6 }, d, { kids:[] });
       if (!d.stn) { it.x = OFFMAP.M(d.x); it.y = OFFMAP.MY(d.y); } // 舊辦公室座標 → 全景世界座標（開放辦公區）
+      if (d.copier) { it.x = OFFMAP.SPOT.copier[0]; it.y = OFFMAP.SPOT.copier[1]; it.h = 0.62; } // 影印機：搬去洗手間／影印房，企喺後牆前面
       items[d.id] = it; list.push(it);
       for (const k of d.kids || []) { const c = Object.assign({ ax:0.5, ay:1, dx:0, dy:0, rot:k.rot || 0, base:k.rot || 0, vr:0, sx:1, sy:1, hide:0, ph:Math.random() * 6 }, k, { parent:it }); it.kids.push(c); items[k.id] = c; kids.push(c); }
     }
@@ -685,7 +686,7 @@ const OFFICE = (() => {
       const pass = (SC.npcs || []).find(m => m !== n && !m.gone && (m.d.k === 'ken' || m.d.k === 'it') && m.act === 'walk' && Math.hypot(m.x - n.x, m.y - n.y) < 0.2);
       if (pass && s.act !== 'roll' && (s.cd.roll || 0) <= 0) { s.act = 'roll'; s.at = 0; s.dur = 1.8; s.cd.roll = 9; s.rollAt = pass.x; if (Math.random() < 0.5 && SC.bubble) SC.bubble(n, MIS_SAY.roll, 2); }
       else if (s.at >= s.dur) {
-        const opts = MIS_ACTS.filter(e => (s.cd[e[0]] || 0) <= 0 && e[0] !== s.act && (e[0] !== 'copy' || Math.hypot(n.x - OFFMAP.M(0.72), n.y - OFFMAP.MY(0.57)) < 0.06)); /* 影印：要企喺影印機前面先做 */ let r = Math.random() * opts.reduce((q, e) => q + e[1], 0), e = opts[0];
+        const opts = MIS_ACTS.filter(e => (s.cd[e[0]] || 0) <= 0 && e[0] !== s.act && (e[0] !== 'copy' || Math.hypot(n.x - (OFFMAP.SPOT.copier[0] - 0.16), n.y - (OFFMAP.SPOT.copier[1] + 0.05)) < 0.06)); /* 影印：要企喺影印機前面先做 */ let r = Math.random() * opts.reduce((q, e) => q + e[1], 0), e = opts[0];
         for (const q of opts) { r -= q[1]; if (r <= 0) { e = q; break; } }
         s.act = e[0]; s.at = 0; s.dur = e[2][0] + Math.random() * (e[2][1] - e[2][0]); s.cd[e[0]] = e[3] + s.dur;
         if (SC.bubble && Math.random() < 0.35) SC.bubble(n, s.act === 'selfie' ? MIS_SAY.selfie : MIS_SAY.sigh, 2.2);
