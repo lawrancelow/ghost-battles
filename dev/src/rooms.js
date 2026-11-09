@@ -184,16 +184,21 @@ const OFFMAP = (() => {
     const tb = tint('of_meet_table'); if (tb) { const [mx, my] = SPOT.meetTable; out.push([my, (ctx) => { const b = SC.bgScale(), k = b.ih * b.s / SH * MT_K, w = 869 * k, h = 192 * k, [x, y] = P(mx, my);
       ctx.save(); ctx.fillStyle = 'rgba(6,4,18,.32)'; ctx.beginPath(); ctx.ellipse(x, y - h * 0.03, w * 0.52, h * 0.14, 0, 0, PI * 2); ctx.fill(); ctx.drawImage(tb, x - w / 2, y - h, w, h); ctx.restore(); }]); }
     // 大堂前台（美美）：張枱喺佢前面（近鏡頭）擋住下半身
-    { // 大堂前台：美美面向右邊坐。椅背喺佢左邊（背向會議室門口）；側面嘅辦公枱喺佢右邊、擋住雙腳；螢幕對住佢；枱邊有「前台」牌
-      const ch = tint('of_chair_front'), dk = tint('of_desk_side'), [rx, ry] = SPOT.reception;
-      if (ch) out.push([ry - 0.004, (ctx) => { const u = U(ry), h = 0.6 * u, w = h * ch.width / ch.height, [x, y] = P(rx - 0.012, ry);
-        ctx.save(); ctx.fillStyle = 'rgba(6,4,18,.3)'; ctx.beginPath(); ctx.ellipse(x, y, w * 0.4, h * 0.06, 0, 0, PI * 2); ctx.fill(); ctx.drawImage(ch, x - w / 2, y - h, w, h); ctx.restore(); }]);
-      if (dk) { const dy = ry + 0.012; out.push([dy, (ctx) => { const u = U(dy), h = 0.74 * u, w = h * dk.width / dk.height, [x, y] = P(rx + 0.075, dy);
-        ctx.save(); ctx.fillStyle = 'rgba(6,4,18,.35)'; ctx.beginPath(); ctx.ellipse(x, y - h * 0.02, w * 0.52, h * 0.07, 0, 0, PI * 2); ctx.fill();
-        ctx.translate(x, y); ctx.scale(-1, 1); ctx.drawImage(dk, -w / 2, -h, w, h); ctx.restore();
-        // 前台牌（枱面右邊，企喺度）
-        const bw = w * 0.34, bh = h * 0.1, bx = x + w * 0.08, by = y - h * 0.62; ctx.save(); ctx.fillStyle = '#3a2a24'; ctx.fillRect(bx - 1.5, by - 1.5, bw + 3, bh + 3); ctx.fillStyle = '#c9a65a'; ctx.fillRect(bx, by, bw, bh);
-        ctx.fillStyle = '#2a1a10'; ctx.font = `900 ${Math.round(bh * 0.72)}px "PingFang TC","Noto Sans TC",sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('前台', bx + bw / 2, by + bh * 0.55); ctx.restore(); }]); }
+    { // 大堂接待處（L 形前台櫃，用陳總大班枱嘅木紋金邊）：美美坐喺低嗰段後面、面向右邊（電梯／訪客），椅背喺佢左邊（背向會議室門口）
+      //   低段擋住佢腰以下（所以睇落係坐低）；右邊加高嗰段對住訪客，上面有「接待處」牌；電腦螢幕喺佢面前（右邊）對住佢
+      const rc = tint('of_reception'), ch = tint('of_chair_front'), mon = tint('op_mon_side_on'), [rx, ry] = SPOT.reception;
+      const geo = () => { const dy = ry + 0.02, u = U(dy), h = 0.62 * u, w = h * (rc ? rc.width / rc.height : 2.26), [mx] = P(rx, ry), [, y] = P(rx, dy); const wa = w * 400 / 578; return { dy, u, h, w, wa, x0:mx - wa * 0.36, y }; };
+      if (ch) out.push([ry - 0.006, (ctx) => { const u = U(ry), h = 0.6 * u, w = h * ch.width / ch.height, [x, y] = P(rx, ry - 0.006);
+        ctx.save(); ctx.translate(x - w * 0.18, y); ctx.scale(-1, 1); ctx.drawImage(ch, -w / 2, -h, w, h); ctx.restore(); }]);
+      if (rc) out.push([ry + 0.02, (ctx) => { const g = geo();
+        ctx.save(); ctx.fillStyle = 'rgba(6,4,18,.38)'; ctx.beginPath(); ctx.ellipse(g.x0 + g.w / 2, g.y - g.h * 0.01, g.w * 0.54, g.h * 0.09, 0, 0, PI * 2); ctx.fill();
+        // 螢幕：放喺低段枱面、佢前面（右邊），對住佢（向左）
+        if (mon) { const mh = g.h * 0.62, mw = mh * mon.width / mon.height, top = g.y - g.h * (170 / 256); ctx.save(); ctx.translate(g.x0 + g.wa * 0.80, top + mh * 0.05); ctx.scale(-1, 1); ctx.drawImage(mon, -mw / 2, -mh, mw, mh); ctx.restore(); }
+        ctx.drawImage(rc, g.x0, g.y - g.h, g.w, g.h);
+        // 加高段頂：「接待處」金牌
+        const bw = (g.w - g.wa) * 0.82, bh = g.h * 0.11, bx = g.x0 + g.wa + (g.w - g.wa - bw) / 2 - g.w * 0.005, by = g.y - g.h - bh * 0.92;
+        ctx.fillStyle = '#2a1a14'; ctx.fillRect(bx - 1.5, by - 1.5, bw + 3, bh + 3); ctx.fillStyle = '#d4b062'; ctx.fillRect(bx, by, bw, bh);
+        ctx.fillStyle = '#2a1a10'; ctx.font = `900 ${Math.round(bh * 0.7)}px "PingFang TC","Noto Sans TC",sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('接待處', bx + bw / 2, by + bh * 0.55); ctx.restore(); }]);
     }
     const ch = tint('of_chair_back');
     if (ch) for (const c of st.spare) { const y = c.y + c.oz; out.push([y, (ctx) => { const [x, yy] = P(c.x + c.ox, y), u = U(y), h = 0.62 * u, w = h * ch.width / ch.height, s = Math.cos(c.sw);
