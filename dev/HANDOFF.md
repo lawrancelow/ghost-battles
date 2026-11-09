@@ -62,3 +62,11 @@
 - 未做：訓練班建築圖仍是軍營帳篷（有兵器架），等 Lawrance 用 ChatGPT 生新圖；孟婆湯研究所（烹飪）未做
 - 他說「上線／放進去」時：src/web.js GAME_VER 改新版本 → python3 build.py → cp site/. 到 repo 根目錄 → push
 - 回陽間・近身操作（src/scare_ops.js，樣板版）：揀中人後按佢做緊乜出「手機／電腦／茶水間」；手機四個 app 揭到情報（_intel）解鎖針對性訊息；冒充發訊息、篡改電腦、六種茶水間嚇法；全部經 Scare.hit() 計分；有反效果（trap）同陰德（warm）選項；陳總唔聽陌生號碼，但冒充 Master Lee 就會睇
+
+## 8. 手機發燙修正（2026-11-10，預覽版）
+- meshanim.js：網格角色改用 WebGL 一次過畫（MGL / drawGL），唔得自動退返舊 clip 方法；`?nogl` 可強制舊方法。全透明網格格唔畫。
+- game.js：回陽間／墳場／鬼街／運動會開住時唔畫村莊；主循環上限 30fps。scare / graveyard / ghoststreet 都上限 30fps（運動會保留 60）。
+- pantry.js：家電投影、調暗櫈預先烘好，唔再每格 shadowBlur / filter。
+- audio.js：關聲或切後台 → AudioContext.suspend()。
+- office.js：美美全部動作冷卻中時 opts 空陣列爆錯（misTick）已修。
+- 量度（無 GPU 電腦）：村莊主線程 96%→35%；回陽間每格 64ms→23ms。
