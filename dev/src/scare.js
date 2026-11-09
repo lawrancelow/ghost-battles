@@ -183,7 +183,7 @@ const Scare = {
     this.npcs = site.npcs.map((d, i) => ({ d, x:d.route[0][0], y:d.route[0][1], wi:0, wait:d.route[0][2] * (0.3 + i * 0.25), dir:1, fear:0, peak:0, gone:false, exitT:0, bounce:0, look:0, bub:null, bubT:0, act:d.route[0][3], ph:Math.random() * 6 }));
     this.seed = seed != null ? seed : (Date.now() % 100000); this.door = 0;
     if (site.shift) this.shiftInit();
-    this.sel = this.npcs[0];
+    this.sel = this.npcs[0]; this.selAuto = false;
     if (typeof ScareX !== 'undefined') ScareX.night(this); // 傳說熱度嘅變化、靈探 KOL、Bryan（scare_squad.js）
     if (headless) return;
     const el = $('#scare'); el.classList.add('on');
@@ -216,8 +216,8 @@ const Scare = {
     let d = null; const unit = () => { const b = this.bgScale(); return b.iw * b.s; };
     cv.addEventListener('pointerdown', (e) => { d = { x0:e.clientX, y0:e.clientY, c0:this.camX, moved:false, lx:e.clientX, lt:performance.now(), id:e.pointerId }; this.camV = 0; try { cv.setPointerCapture(e.pointerId); } catch (_) {} });
     cv.addEventListener('pointermove', (e) => { if (!d) return; const dx = e.clientX - d.x0; if (!d.moved && Math.abs(dx) > 9) d.moved = true;
-      if (d.moved) { const now = performance.now(), dt = Math.max(1, now - d.lt); this.camX = this.clampCam(d.c0 - dx / unit()); this.camV = 0.7 * this.camV + 0.3 * (-(e.clientX - d.lx) / unit()) / (dt / 1000); d.lx = e.clientX; d.lt = now; this.userPan = this.t; } });
-    const up = (e) => { if (!d) return; const was = d; d = null; if (!was.moved) { this.camV = 0; this.tap(e); } else { if (performance.now() - was.lt > 90) this.camV = 0; this.userPan = this.t; } };
+      if (d.moved) { const now = performance.now(), dt = Math.max(16, now - d.lt); this.camX = this.clampCam(d.c0 - dx / unit()); this.camV = Math.max(-2.5, Math.min(2.5, 0.7 * this.camV + 0.3 * (-(e.clientX - d.lx) / unit()) / (dt / 1000))); d.lx = e.clientX; d.lt = now; this.userPan = this.t; } }); // dt 最少 16ms、速度有上限：手機兩個觸控事件同一刻到，唔會計出超大速度令畫面飛走
+    const up = (e) => { if (!d) return; const was = d; d = null; if (!was.moved) { this.camV = 0; this.tap(e); } else { if (performance.now() - was.lt > 90 || Math.abs(e.clientX - was.x0) < 40) this.camV = 0; this.userPan = this.t; } }; // 拖得好短（其實係想點人）：唔留慣性
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', () => { d = null; });
     const m = $('#sc-map'); if (m) m.addEventListener('pointerdown', (e) => { const r = m.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * OFFMAP.WW; this.camV = 0; this.camTo = this.clampCam(x - this.viewW() / 2); this.userPan = this.t; });
     const f = $('#sc-follow'); if (f) f.onclick = () => { this.follow = !this.follow; f.classList.toggle('on', this.follow); if (this.follow) this.userPan = -99; };
@@ -229,7 +229,7 @@ const Scare = {
     else if (!(this._panning && this._panning())) {
       if (Math.abs(this.camV) > 0.01) { this.camX += this.camV * rdt; this.camV *= Math.exp(-rdt * 4.5); }
       const n = this.sel; // 跟住點中嘅人：佢行近畫面邊（或者出咗畫面），鏡頭慢慢移過去
-      if (this.follow && n && !n.gone && !n.out && this.t - this.userPan > 2.5 && Math.abs(this.camV) < 0.05) { const vx = n.vX != null ? n.vX : n.x, l = this.camX + vw * 0.18, r = this.camX + vw * 0.82;
+      if (this.follow && n && !n.gone && !n.out && !n.fleeing && !n.leaving && !this.selAuto && this.t - this.userPan > 2.5 && Math.abs(this.camV) < 0.05) { const vx = n.vX != null ? n.vX : n.x, l = this.camX + vw * 0.18, r = this.camX + vw * 0.82;
         if (vx < l || vx > r) this.camX += ((vx < l ? vx - vw * 0.18 : vx - vw * 0.82)) * Math.min(1, rdt * 2.2); }
     }
     const c = this.clampCam(this.camX); if (c !== this.camX) this.camV = 0; this.camX = c;
@@ -620,8 +620,8 @@ const Scare = {
     // 先看有沒有點到人
     let best = null, bd = 1e9;
     for (const n of this.npcs) { if (n.gone || n.out) continue; const [x, y] = this.pt(n.x + (this.office() ? OFFICE.kenOff(n) : 0), n.y), hh = this.hh(n.y); if (mx > x - hh * 0.32 && mx < x + hh * 0.32 && my > y - hh && my < y + 6) { const dd = Math.abs(mx - x) + Math.abs(my - (y - hh / 2)) * 0.3; if (dd < bd) { bd = dd; best = n; } } }
-    if (this.armed && best) { const k = this.armed; this.armed = null; this.useGhost(k, best); this.sel = best; this.renderDock(); this.renderTarget(); return; }
-    if (best) { this.sel = best; this.renderTarget(); return; }
+    if (this.armed && best) { const k = this.armed; this.armed = null; this.useGhost(k, best); this.sel = best; this.selAuto = false; this.renderDock(); this.renderTarget(); return; }
+    if (best) { this.sel = best; this.selAuto = false; this.renderTarget(); return; }
     // 再看有沒有點到物件
     for (const k in SCARE_PROPS) { if (SCARE_PROPS[k].group) continue; const p = SCARE_PROPS[k], [x1, y1] = this.pt(p.rect[0], p.rect[1]), [x2, y2] = this.pt(p.rect[0] + p.rect[2], p.rect[1] + p.rect[3]); if (mx > x1 - 10 && mx < x2 + 10 && my > y1 - 10 && my < y2 + 10) { this.useProp(k); return; } }
     if (this.armed) { const g = SCARE_GHOSTS[this.armed]; if (g.aoe) { const k = this.armed; this.armed = null; this.useGhost(k); this.renderDock(); } }
@@ -660,7 +660,7 @@ const Scare = {
     p.classList.add('on'); $('#sc-ph-x').onclick = () => { p.classList.remove('on'); this.paused = false; this.last = performance.now(); };
   },
   hud() {
-    if (this.sel && (this.sel.gone || this.sel.fleeing || (this.sel.left && this.sel.out))) { this.sel = this.npcs.find(n => !n.gone && !n.out && !n.fleeing && !n.d.guard) || null; this.renderTarget(); }
+    if (this.sel && (this.sel.gone || this.sel.fleeing || (this.sel.left && this.sel.out))) { const vis = (n) => this.onScreen(n.vX != null ? n.vX : n.x, 0); const ok = this.npcs.filter(n => !n.gone && !n.out && !n.fleeing && !n.d.guard); this.sel = ok.find(vis) || ok[0] || null; this.selAuto = true; this.renderTarget(); } // 自動改選：優先揀畫面入面嘅人，而且鏡頭唔跟（等玩家自己點）
     else if (this.sel && !!this.sel.out !== !!this._selOut) this.renderTarget(); // 他剛走開／回來：按鈕變灰／恢復
     const mins = Math.min(360, Math.floor(this.t / NIGHT_SEC * 360)), hh = String(Math.floor(mins / 60)).padStart(2, '0'), mm = String(Math.floor(mins % 60 / 10) * 10).padStart(2, '0');
     $('#sc-clock').textContent = `${hh}:${mm}`; $('#sc-kpi').textContent = `驚嚇 ${this.kpi}`;
