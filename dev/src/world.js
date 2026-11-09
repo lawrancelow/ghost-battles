@@ -20,12 +20,14 @@ const World = {
     }
     h += `<button class="wm-home" id="wm-home"><b>回村</b></button></div>`;
     el.innerHTML = h; el.classList.add('on'); Sound.play && Sound.play('click');
-    el.querySelectorAll('.wm-spot').forEach(b => b.onclick = () => {
+    // 村口喺村莊頂部正中，同地圖「搶地盤」同一個位：手指放開時開地圖，瀏覽器跟住嗰下 click 會落喺新出嘅掣度 → 直接出征。開咗 0.45 秒內唔收 click
+    const t0 = performance.now(), ghost = () => performance.now() - t0 < 450;
+    el.querySelectorAll('.wm-spot').forEach(b => b.onclick = () => { if (ghost()) return;
       const s = this.SPOTS.find(x => x.id === b.dataset.id);
       if (b.classList.contains('off')) { Fx.toast(s.ready && !s.ready() ? `${s.name}還在施工，快好了` : s.lock || ''); return; }
       this.close(); if (typeof Guide !== 'undefined') Guide.visit(s.id); s.go();
     });
-    $('#wm-home').onclick = () => this.close();
+    $('#wm-home').onclick = () => { if (!ghost()) this.close(); };
   },
   close() { const el = $('#world'); if (el) { el.classList.remove('on'); el.innerHTML = ''; } UI.refresh && UI.refresh(); },
 };

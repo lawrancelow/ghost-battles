@@ -20842,19 +20842,21 @@ const World = {
     }
     h += `<button class="wm-home" id="wm-home"><b>回村</b></button></div>`;
     el.innerHTML = h; el.classList.add('on'); Sound.play && Sound.play('click');
-    el.querySelectorAll('.wm-spot').forEach(b => b.onclick = () => {
+    // 村口喺村莊頂部正中，同地圖「搶地盤」同一個位：手指放開時開地圖，瀏覽器跟住嗰下 click 會落喺新出嘅掣度 → 直接出征。開咗 0.45 秒內唔收 click
+    const t0 = performance.now(), ghost = () => performance.now() - t0 < 450;
+    el.querySelectorAll('.wm-spot').forEach(b => b.onclick = () => { if (ghost()) return;
       const s = this.SPOTS.find(x => x.id === b.dataset.id);
       if (b.classList.contains('off')) { Fx.toast(s.ready && !s.ready() ? `${s.name}還在施工，快好了` : s.lock || ''); return; }
       this.close(); if (typeof Guide !== 'undefined') Guide.visit(s.id); s.go();
     });
-    $('#wm-home').onclick = () => this.close();
+    $('#wm-home').onclick = () => { if (!ghost()) this.close(); };
   },
   close() { const el = $('#world'); if (el) { el.classList.remove('on'); el.innerHTML = ''; } UI.refresh && UI.refresh(); },
 };
 
 // ===================== 網址版（GitHub Pages）＋ 下載檔案當啟動器 =====================
 // 下載的檔案：打開就把存檔搬到網址版，直接開始玩。網址版：可以加到手機桌面，離線也能玩，更新自動生效。
-const GAME_VER = '2026.11.10b';
+const GAME_VER = '2026.11.10c';
 const WEB_URL = 'https://lawrancelow.github.io/ghost-battles/';
 const IS_WEB = /^https?:$/.test(location.protocol) && /github\.io$/.test(location.hostname);
 const IS_FILE = !/^https?:$/.test(location.protocol);
