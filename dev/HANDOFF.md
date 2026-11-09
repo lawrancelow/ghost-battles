@@ -61,3 +61,4 @@
 - daily_work.js：訓練班工人動作 boo／grimace／blow 取代踏步敬禮操練
 - 未做：訓練班建築圖仍是軍營帳篷（有兵器架），等 Lawrance 用 ChatGPT 生新圖；孟婆湯研究所（烹飪）未做
 - 他說「上線／放進去」時：src/web.js GAME_VER 改新版本 → python3 build.py → cp site/. 到 repo 根目錄 → push
+- 回陽間・近身操作（src/scare_ops.js，樣板版）：揀中人後按佢做緊乜出「手機／電腦／茶水間」；手機四個 app 揭到情報（_intel）解鎖針對性訊息；冒充發訊息、篡改電腦、六種茶水間嚇法；全部經 Scare.hit() 計分；有反效果（trap）同陰德（warm）選項；陳總唔聽陌生號碼，但冒充 Master Lee 就會睇

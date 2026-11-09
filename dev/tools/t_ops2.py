@@ -1,0 +1,26 @@
+from playwright.sync_api import sync_playwright
+J=lambda pg,s: pg.evaluate(s)
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path='/usr/bin/google-chrome'); pg=b.new_context(viewport={'width':390,'height':844},device_scale_factor=2).new_page(); errs=[]
+    pg.on('pageerror',lambda e:errs.append(str(e))); pg.on('console',lambda m: errs.append(m.text) if m.type=='error' else None)
+    pg.goto('file:///home/claude/gb/GhostBattles.html?debug&nophone'); pg.wait_for_function('window.G'); pg.wait_for_timeout(1200)
+    J(pg,"()=>{document.querySelectorAll('#title,#dlg,#phone').forEach(e=>e.style.display='none');const S=G.S();S.seen.prologue_sys=1;S.seen.ch1_end=1;S.seen.sc_intro=1;save();Scare.start('office',['afu','tianhua','pontianak'])}")
+    for i in range(10):
+        J(pg,"()=>{const b=[...document.querySelectorAll('button')].find(b=>b.offsetParent&&/跳過/.test(b.textContent));if(b)b.click();else if(Story.busy()){document.querySelector('#dlg').click()}}"); pg.wait_for_timeout(300)
+    J(pg,"()=>{const n=Scare.npcs.find(m=>m.d.k==='ken');Scare.sel=n;Scare.renderTarget()}"); pg.wait_for_timeout(300); pg.screenshot(path='/tmp/claude-0/op0.png')
+    J(pg,"()=>document.querySelector('[data-op=phone]').click()"); pg.wait_for_timeout(300); pg.screenshot(path='/tmp/claude-0/op1.png')
+    J(pg,"()=>document.querySelector('[data-tab=photo]').click()"); pg.wait_for_timeout(200); pg.screenshot(path='/tmp/claude-0/op2.png')
+    J(pg,"()=>document.querySelector('[data-send]').click()"); pg.wait_for_timeout(200); pg.screenshot(path='/tmp/claude-0/op3.png')
+    J(pg,"()=>{ScareOps.openPC(Scare,Scare.sel)}"); pg.wait_for_timeout(200); pg.screenshot(path='/tmp/claude-0/op4.png')
+    J(pg,"()=>{Scare.mana=100;document.querySelector('[data-o=kp2]').click()}"); pg.wait_for_timeout(1300); pg.screenshot(path='/tmp/claude-0/op5.png')
+    print('ken after pc', J(pg,"[Math.round(Scare.npcs.find(m=>m.d.k==='ken').fear),Scare.kpi]"))
+    J(pg,"()=>{const n=Scare.npcs.find(m=>m.d.k==='boss');Scare.mana=100;ScareOps.act(Scare,n,ScareOps.OPS.boss.msgs[0],'msg')}"); pg.wait_for_timeout(500)
+    print('boss unknown', J(pg,"(()=>{const n=Scare.npcs.find(m=>m.d.k==='boss');return [Math.round(n.fear),n.bub]})()"))
+    J(pg,"()=>{const n=Scare.npcs.find(m=>m.d.k==='boss');ScareOps.intel(Scare,'boss').add('master');Scare.mana=100;ScareOps.act(Scare,n,ScareOps.OPS.boss.msgs[2],'msg')}"); pg.wait_for_timeout(500)
+    print('boss master', J(pg,"(()=>{const n=Scare.npcs.find(m=>m.d.k==='boss');return [Math.round(n.fear),n.bub]})()"))
+    J(pg,"()=>{const n=Scare.npcs.find(m=>m.d.k==='it');Scare.sel=n;Scare.mana=100;ScareOps.openPantry(Scare,n)}"); pg.wait_for_timeout(200); pg.screenshot(path='/tmp/claude-0/op6.png')
+    J(pg,"()=>document.querySelector('[data-o=p5]').click()"); pg.wait_for_timeout(600)
+    print('it pantry light(hidden weak)', J(pg,"[Math.round(Scare.sel.fear),Scare.sel.bub,Scare.paused]"))
+    J(pg,"()=>{const n=Scare.npcs.find(m=>m.d.k==='it');Scare.mana=100;ScareOps.act(Scare,n,ScareOps.OPS.it.msgs[4],'msg')}"); pg.wait_for_timeout(400)
+    print('it trap', J(pg,"(()=>{const n=Scare.npcs.find(m=>m.d.k==='it');return [Math.round(n.fear),n.bub]})()"))
+    print('errs',errs[:5]); b.close()
