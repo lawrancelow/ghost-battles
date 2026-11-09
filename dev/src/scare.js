@@ -258,6 +258,7 @@ const Scare = {
   // ---------- 每一幀 ----------
   frame(now) {
     if (!this.active) return;
+    if (now - this.last < 1000 / 30 - 2) { requestAnimationFrame((n) => this.frame(n)); return; } // 上限每秒 30 格（手機發燙）
     const rdt = Math.min(0.05, (now - this.last) / 1000), dt = rdt * (this.timeScale || 1); this.last = now; this.camTick(rdt);
     if (!this.paused && !Story.busy()) this.step(dt);
     if (!this.active) return;

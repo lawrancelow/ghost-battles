@@ -698,7 +698,7 @@ const OFFICE = (() => {
       const pass = (SC.npcs || []).find(m => m !== n && !m.gone && (m.d.k === 'ken' || m.d.k === 'it') && m.act === 'walk' && Math.hypot(m.x - n.x, m.y - n.y) < 0.2);
       if (pass && s.act !== 'roll' && (s.cd.roll || 0) <= 0) { s.act = 'roll'; s.at = 0; s.dur = 1.8; s.cd.roll = 9; s.rollAt = pass.x; if (Math.random() < 0.5 && SC.bubble) SC.bubble(n, MIS_SAY.roll, 2); }
       else if (s.at >= s.dur) {
-        const opts = MIS_ACTS.filter(e => (s.cd[e[0]] || 0) <= 0 && e[0] !== s.act && (e[0] !== 'copy' || Math.hypot(n.x - (OFFMAP.SPOT.copier[0] - 0.16), n.y - (OFFMAP.SPOT.copier[1] + 0.05)) < 0.06)); /* 影印：要企喺影印機前面先做 */ let r = Math.random() * opts.reduce((q, e) => q + e[1], 0), e = opts[0];
+        const opts = MIS_ACTS.filter(e => (s.cd[e[0]] || 0) <= 0 && e[0] !== s.act && (e[0] !== 'copy' || Math.hypot(n.x - (OFFMAP.SPOT.copier[0] - 0.16), n.y - (OFFMAP.SPOT.copier[1] + 0.05)) < 0.06)); /* 影印：要企喺影印機前面先做 */ if (!opts.length) opts.push(MIS_ACTS.find(q => q[0] === 'stand') || MIS_ACTS[0]); /* 全部動作冷卻中（例如啱啱影印完行開咗）：企住等，唔好爆 */ let r = Math.random() * opts.reduce((q, e) => q + e[1], 0), e = opts[0];
         for (const q of opts) { r -= q[1]; if (r <= 0) { e = q; break; } }
         s.act = e[0]; s.at = 0; s.dur = e[2][0] + Math.random() * (e[2][1] - e[2][0]); s.cd[e[0]] = e[3] + s.dur;
         if (SC.bubble && Math.random() < 0.35) SC.bubble(n, s.act === 'selfie' ? MIS_SAY.selfie : MIS_SAY.sigh, 2.2);

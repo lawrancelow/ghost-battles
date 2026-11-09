@@ -18,7 +18,7 @@ const Sound = (() => {
     noiseBuf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate); const nd = noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
     return true;
   }
-  function unlock() { if (!init()) return; if (ac.state === 'suspended') ac.resume(); if (want && want !== mode) setMode(want, true); }
+  function unlock() { if (!init()) return; if (ac.state === 'suspended' && on && !document.hidden) ac.resume(); if (want && want !== mode) setMode(want, true); sync(); }
   ['pointerdown', 'keydown', 'touchstart'].forEach(ev => window.addEventListener(ev, unlock, { passive:true }));
   const now = () => ac.currentTime;
   // ---------- 基本音源 ----------
@@ -140,6 +140,9 @@ const Sound = (() => {
     whoosh() { noise({ d:0.5, f:300, f2:2500, q:1.5, v:0.2, a:0.15 }); },
   };
   function play(name, ...a) { if (!ac || !on || ac.state !== 'running') return; try { S[name] && S[name](...a); } catch (e) {} }
-  function toggle() { on = !on; try { localStorage.setItem('gb_sound', on ? '1' : '0'); } catch (e) {} if (ac) master.gain.setTargetAtTime(on ? 0.9 : 0, now(), 0.05); return on; }
+  // 手機發燙：關咗聲／切咗去後台，成個音效引擎（背景音樂、3 秒殘響）以前照轉，只係音量 0 → 而家直接暫停
+  function sync() { if (!ac) return; const want = on && !(typeof document !== 'undefined' && document.hidden); try { if (want && ac.state === 'suspended') ac.resume(); else if (!want && ac.state === 'running') ac.suspend(); } catch (e) {} }
+  if (typeof document !== 'undefined') document.addEventListener('visibilitychange', sync);
+  function toggle() { on = !on; try { localStorage.setItem('gb_sound', on ? '1' : '0'); } catch (e) {} if (ac) { master.gain.setTargetAtTime(on ? 0.9 : 0, now(), 0.05); if (on) sync(); else setTimeout(sync, 150); } return on; }
   return { play, setMode, toggle, isOn:() => on, unlock };
 })();

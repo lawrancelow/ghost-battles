@@ -40,6 +40,7 @@ const Pantry = (() => {
     const g = x.createLinearGradient(0, c.height * 0.62, 0, c.height); g.addColorStop(0, 'rgb(255,255,255)'); g.addColorStop(1, 'rgb(160,152,186)'); x.fillStyle = g; x.fillRect(0, c.height * 0.62, c.width, c.height * 0.38);
     return NIGHT = { c, k, X0 };
   }
+  const SHC = {}, DIMC = {};
   function cut(id) { // 按形狀剪出嚟（透明背景，邊位跟返黑色描邊）
     if (CUT[id]) return CUT[id]; const N = night(); if (!N) return null; const A = AP[id], [bx, by, bw, bh] = A.b, k = N.k;
     const c = document.createElement('canvas'); c.width = Math.ceil(bw * k); c.height = Math.ceil(bh * k); const x = c.getContext('2d');
@@ -123,8 +124,10 @@ const Pantry = (() => {
       const [cx, cy] = Q(bx + bw / 2, by + bh - 2); ctx.save(); const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, w * 0.62); g.addColorStop(0, 'rgba(8,4,22,.55)'); g.addColorStop(0.6, 'rgba(8,4,22,.25)'); g.addColorStop(1, 'rgba(8,4,22,0)');
       ctx.fillStyle = g; ctx.translate(cx, cy); ctx.scale(1, 0.16); ctx.beginPath(); ctx.arc(0, 0, w * 0.62, 0, PI * 2); ctx.fill(); ctx.restore(); }
     const f = A.floor ? 1.018 : 1.012, dw = w * f, dh = h * f, dx = x + (w - dw) / 2, dy = y + h - dh; // 向鏡頭行前少少（底部對齊）
-    ctx.save(); ctx.shadowColor = 'rgba(6,2,20,.55)'; ctx.shadowBlur = 9 * s * 3; ctx.shadowOffsetX = 3 * s * 2; ctx.shadowOffsetY = 2 * s * 2;
-    ctx.imageSmoothingQuality = 'high'; ctx.drawImage(img, dx, dy, dw, dh); ctx.restore();
+    { // 投影預先烘好（以前每格對五部電器即場 shadowBlur，手機 GPU 最食力）
+      const M = ctx.getTransform(), k = Math.hypot(M.a, M.b) * dw / img.width, b = 27 * s / k, ox = 6 * s / k, oy = 4 * s / k, key = id + '|' + Math.round(b * 2);
+      let c = SHC[key]; if (!c) { const pad = Math.ceil(b * 2 + Math.max(ox, oy)); c = document.createElement('canvas'); c.width = img.width + pad * 2; c.height = img.height + pad * 2; const g = c.getContext('2d'); g.shadowColor = 'rgba(6,2,20,.55)'; g.shadowBlur = b; g.shadowOffsetX = ox; g.shadowOffsetY = oy; g.imageSmoothingQuality = 'high'; g.drawImage(img, pad, pad); c.pad = pad; SHC[key] = c; }
+      const u = dw / img.width; ctx.save(); ctx.imageSmoothingQuality = 'high'; ctx.drawImage(c, dx - c.pad * u, dy - c.pad * u, c.width * u, c.height * u); ctx.restore(); }
     // 邊光：左上一條淡紫藍光（夜光由窗嗰邊嚟）
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineWidth = Math.max(1, 2.2 * s); const g = ctx.createLinearGradient(dx, dy, dx + dw * 0.6, dy + dh * 0.6); g.addColorStop(0, 'rgba(170,160,255,.42)'); g.addColorStop(1, 'rgba(170,160,255,0)'); ctx.strokeStyle = g;
     for (const [sx, sy, sw, shh, r] of A.sh) { const [px0, py0] = Q(bx + (sx - bx) * f - (bw * (f - 1)) / 2, by + bh - (by + bh - sy) * f); rr(ctx, px0 + 1.5 * s, py0 + 1.5 * s, sw * s * f - 3 * s, shh * s * f - 3 * s, r * s); ctx.stroke(); }
@@ -234,7 +237,7 @@ const Pantry = (() => {
   const t0 = () => Scare.t || 0;
   function chair(ctx, x, y) {
     if (!ok('of_chair_front')) return; const im = SPR.of_chair_front, [X, Y] = Scare.pt(x, y), H = Scare.hh(y) * 0.6, W = H * im.naturalWidth / im.naturalHeight;
-    ctx.save(); ctx.fillStyle = 'rgba(6,4,18,.3)'; ctx.beginPath(); ctx.ellipse(X, Y, W * 0.42, W * 0.09, 0, 0, PI * 2); ctx.fill(); ctx.filter = 'brightness(.78) saturate(.9)'; ctx.drawImage(im, X - W / 2, Y - H, W, H); ctx.restore();
+    ctx.save(); ctx.fillStyle = 'rgba(6,4,18,.3)'; ctx.beginPath(); ctx.ellipse(X, Y, W * 0.42, W * 0.09, 0, 0, PI * 2); ctx.fill(); if (!DIMC.chair) { const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; const g = c.getContext('2d'); g.filter = 'brightness(.78) saturate(.9)'; g.drawImage(im, 0, 0); DIMC.chair = c; } ctx.drawImage(DIMC.chair, X - W / 2, Y - H, W, H); ctx.restore(); // 調暗嘅櫈預先做好（每格 filter 好食力）
   }
   function drawTable(ctx) { // 小圓枱：同背景一樣嘅粗黑描邊
     const [x, y] = table, [X, Y] = Scare.pt(x, y), u = Scare.hh(y), R0 = u * 0.36, top = Y - u * 0.4, lw = Math.max(1.5, u * 0.012);

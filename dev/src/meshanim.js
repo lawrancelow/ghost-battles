@@ -98,7 +98,19 @@ const MeshAnim = (() => {
       for (let k = 0; k < w.length; k++) w[k] /= sum;
       verts.push({ u, v, w });
     }
-    return cache[id] = { R, verts, idx, ar };
+    // 全透明嘅格（角色圖四周嘅空白）唔使畫：每格先睇原圖有冇實色，冇就跳過（畫面一模一樣，少咗三四成三角形）
+    let live = null;
+    try {
+      const iw = img.naturalWidth, ih = img.naturalHeight, c = document.createElement('canvas'); c.width = iw; c.height = ih;
+      const g = c.getContext('2d', { willReadFrequently:true }); g.drawImage(img, 0, 0); const d = g.getImageData(0, 0, iw, ih).data;
+      live = new Uint8Array(GX * GY);
+      for (let j = 0; j < GY; j++) for (let i = 0; i < GX; i++) {
+        const x0 = Math.max(0, Math.floor(i / GX * iw) - 2), x1 = Math.min(iw, Math.ceil((i + 1) / GX * iw) + 2), y0 = Math.max(0, Math.floor(j / GY * ih) - 2), y1 = Math.min(ih, Math.ceil((j + 1) / GY * ih) + 2);
+        let hit = 0; for (let y = y0; y < y1 && !hit; y++) for (let x = x0; x < x1; x++) if (d[(y * iw + x) * 4 + 3] > 4) { hit = 1; break; }
+        live[j * GX + i] = hit;
+      }
+    } catch (e) { live = null; }
+    return cache[id] = { R, verts, idx, ar, live };
   }
   // 骨頭轉換：每根骨頭繞自己的支點轉，子骨頭疊加父骨頭
   function solve(R, pose) {
@@ -125,13 +137,75 @@ const MeshAnim = (() => {
   }
   // 半透明時：網格三角形互相疊會露出格線，先畫到暫存畫布（不透明）再整張半透明貼上去
   const MBUF = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+  // ---------- GPU 畫網格（手機發燙）：以前每個三角形都要 clip＋drawImage 一次（一個角色 ~500 次），而家一個角色一次過交俾 WebGL 畫，
+  // 再成塊貼返落 2D 畫布。畫出嚟同原本一樣（仲冇咗三角形之間嘅細縫），半透明都唔使暫存畫布。WebGL 唔得就自動用返舊方法。
+  const MGL = (() => {
+    if (typeof document === 'undefined') return null;
+    let cv = null, gl = null, isGL2 = false, prog = null, buf = null, aP = -1, aU = -1, dead = false; const texs = new Map();
+    function init() {
+      if (gl || dead) return !!gl;
+      try {
+        cv = document.createElement('canvas'); cv.width = cv.height = 256;
+        const opt = { alpha:true, premultipliedAlpha:true, antialias:false, depth:false, stencil:false, preserveDrawingBuffer:false };
+        gl = cv.getContext('webgl2', opt); isGL2 = !!gl; if (!gl) gl = cv.getContext('webgl', opt); if (!gl) { dead = true; return false; }
+        const sh = (type, src) => { const o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
+        prog = gl.createProgram();
+        gl.attachShader(prog, sh(gl.VERTEX_SHADER, 'attribute vec2 p;attribute vec2 u;varying vec2 v;void main(){v=u;gl_Position=vec4(p,0.0,1.0);}'));
+        gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, 'precision mediump float;varying vec2 v;uniform sampler2D t;void main(){gl_FragColor=texture2D(t,v);}'));
+        gl.linkProgram(prog); if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error('link');
+        gl.useProgram(prog); aP = gl.getAttribLocation(prog, 'p'); aU = gl.getAttribLocation(prog, 'u'); buf = gl.createBuffer();
+        gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.clearColor(0, 0, 0, 0);
+        cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); gl = null; dead = true; texs.clear(); });
+        return true;
+      } catch (e) { gl = null; dead = true; return false; }
+    }
+    function tex(img) {
+      let t = texs.get(img); if (t) return t;
+      t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); // 唔用 mipmap：同 2D 畫布一樣利（mipmap 會矇少少）
+      texs.set(img, t); return t;
+    }
+    let arr = new Float32Array(0);
+    // dev：每個頂點喺目標畫布嘅裝置像素座標 [x0,y0,x1,y1,…]；uv：原圖 0..1；tris：三角形頂點索引
+    function draw(ctx, img, dev, uv, tris, nTri) {
+      if (!init()) return false;
+      const cw = ctx.canvas.width, ch = ctx.canvas.height; let bx0 = 1e9, by0 = 1e9, bx1 = -1e9, by1 = -1e9;
+      for (let i = 0; i < nTri * 3; i++) { const k = tris[i] * 2, X = dev[k], Y = dev[k + 1]; if (X < bx0) bx0 = X; if (X > bx1) bx1 = X; if (Y < by0) by0 = Y; if (Y > by1) by1 = Y; }
+      bx0 = Math.max(0, Math.floor(bx0) - 1); by0 = Math.max(0, Math.floor(by0) - 1); bx1 = Math.min(cw, Math.ceil(bx1) + 1); by1 = Math.min(ch, Math.ceil(by1) + 1);
+      const bw = bx1 - bx0, bh = by1 - by0; if (bw <= 0 || bh <= 0) return true; // 喺畫面外：唔使畫
+      if (bw > 4096 || bh > 4096) return false;
+      try {
+        if (cv.width < bw || cv.height < bh) { cv.width = Math.max(cv.width, Math.ceil(bw / 64) * 64); cv.height = Math.max(cv.height, Math.ceil(bh / 64) * 64); }
+        const need = nTri * 3 * 4; if (arr.length < need) arr = new Float32Array(need);
+        for (let i = 0; i < nTri * 3; i++) { const k = tris[i] * 2, o = i * 4; arr[o] = (dev[k] - bx0) / bw * 2 - 1; arr[o + 1] = 1 - (dev[k + 1] - by0) / bh * 2; arr[o + 2] = uv[k]; arr[o + 3] = uv[k + 1]; }
+        gl.viewport(0, cv.height - bh, bw, bh); gl.disable(gl.SCISSOR_TEST); gl.clear(gl.COLOR_BUFFER_BIT); // 只用左上角一格：viewport 底 = 畫布高 − bh
+        gl.useProgram(prog); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex(img));
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, arr.subarray(0, need), gl.STREAM_DRAW);
+        gl.enableVertexAttribArray(aP); gl.vertexAttribPointer(aP, 2, gl.FLOAT, false, 16, 0); gl.enableVertexAttribArray(aU); gl.vertexAttribPointer(aU, 2, gl.FLOAT, false, 16, 8);
+        gl.drawArrays(gl.TRIANGLES, 0, nTri * 3);
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(cv, 0, 0, bw, bh, bx0, by0, bw, bh); ctx.restore();
+        return true;
+      } catch (e) { dead = true; gl = null; return false; }
+    }
+    return { draw, off:() => { dead = true; gl = null; }, ok:() => init() };
+  })();
   function drawRaw(ctx, id, x, y, h, pose, flip) {
     const img = SPR[id]; if (!img || !RIG[id]) return false;
+    if (MGL && !NOGL && ctx.canvas && ctx.canvas.width && drawGL(ctx, img, id, x, y, h, pose, flip)) return true;
     if (MBUF && ctx.globalAlpha < 0.995 && ctx.canvas && ctx.canvas !== MBUF && ctx.canvas.width) {
       const cv = ctx.canvas; if (MBUF.width !== cv.width || MBUF.height !== cv.height) { MBUF.width = cv.width; MBUF.height = cv.height; }
-      const b = MBUF.getContext('2d'); b.setTransform(1, 0, 0, 1, 0, 0); b.clearRect(0, 0, MBUF.width, MBUF.height); b.globalAlpha = 1; b.globalCompositeOperation = 'source-over';
-      b.setTransform(ctx.getTransform()); drawRaw(b, id, x, y, h, pose, flip);
-      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(MBUF, 0, 0); ctx.restore(); return true;
+      // 只清／貼角色身處嗰一細格（以前每隻半透明鬼都清成張全屏畫布再貼返，手機好食力）
+      const M = ctx.getTransform(), ar0 = img.naturalHeight / img.naturalWidth, hw = Math.max(h / ar0, h) * 0.85 + Math.abs(pose.x || 0) * h / ar0;
+      const ux0 = x - hw, ux1 = x + hw, uy0 = y - h * 1.45 + Math.min(0, (pose.y || 0) * h), uy1 = y + h * 0.35 + Math.max(0, (pose.y || 0) * h);
+      let bx0 = 1e9, by0 = 1e9, bx1 = -1e9, by1 = -1e9;
+      for (const [ux, uy] of [[ux0, uy0], [ux1, uy0], [ux0, uy1], [ux1, uy1]]) { const X = M.a * ux + M.c * uy + M.e, Y = M.b * ux + M.d * uy + M.f; bx0 = Math.min(bx0, X); bx1 = Math.max(bx1, X); by0 = Math.min(by0, Y); by1 = Math.max(by1, Y); }
+      bx0 = Math.max(0, Math.floor(bx0)); by0 = Math.max(0, Math.floor(by0)); bx1 = Math.min(cv.width, Math.ceil(bx1)); by1 = Math.min(cv.height, Math.ceil(by1));
+      if (bx1 <= bx0 || by1 <= by0) return true;
+      const b = MBUF.getContext('2d'); b.setTransform(1, 0, 0, 1, 0, 0); b.clearRect(bx0, by0, bx1 - bx0, by1 - by0); b.globalAlpha = 1; b.globalCompositeOperation = 'source-over';
+      b.save(); b.beginPath(); b.rect(bx0, by0, bx1 - bx0, by1 - by0); b.clip(); b.setTransform(M); drawRaw(b, id, x, y, h, pose, flip); b.restore();
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(MBUF, bx0, by0, bx1 - bx0, by1 - by0, bx0, by0, bx1 - bx0, by1 - by0); ctx.restore(); return true;
     }
     const C = cache[id] || build(id, img), R = C.R, ar = C.ar;
     const W = h / ar, iw = img.naturalWidth, ih = img.naturalHeight;
@@ -145,11 +219,33 @@ const MeshAnim = (() => {
     ctx.save(); ctx.translate(x + (pose.x || 0) * W, y + (pose.y || 0) * h); if (flip) ctx.scale(-1, 1);
     if (pose.rot) { ctx.translate(0, -h * 0.35); ctx.rotate(pose.rot); ctx.translate(0, h * 0.35); }
     ctx.scale(pose.sx || 1, pose.sy || 1); ctx.translate(-W / 2, -h);
+    const live = C.live;
     for (let j = 0; j < GY; j++) for (let i = 0; i < GX; i++) {
+      if (live && !live[j * GX + i]) continue;
       const a = j * (GX + 1) + i, b = a + 1, c = a + GX + 1, d = c + 1;
       tri(ctx, img, iw, ih, W, h, C.verts, pts, a, b, c); tri(ctx, img, iw, ih, W, h, C.verts, pts, b, d, c);
     }
     ctx.restore(); return true;
+  }
+  let NOGL = typeof location !== 'undefined' && /[?&]nogl\b/.test(location.search);
+  function drawGL(ctx, img, id, x, y, h, pose, flip) {
+    const C = cache[id] || build(id, img), R = C.R, ar = C.ar, W = h / ar, T = solve(R, pose), bones = R.bones, NV = C.verts.length;
+    if (!C.uv) { // 每個 rig 只做一次：uv 同埋有實色嘅三角形清單
+      C.uv = new Float32Array(NV * 2); C.verts.forEach((V, i) => { C.uv[i * 2] = V.u; C.uv[i * 2 + 1] = V.v; });
+      const t = []; for (let j = 0; j < GY; j++) for (let i = 0; i < GX; i++) { if (C.live && !C.live[j * GX + i]) continue; const a = j * (GX + 1) + i, b = a + 1, c = a + GX + 1, d = c + 1; t.push(a, b, c, b, d, c); }
+      C.tris = new Uint16Array(t); C.dev = new Float32Array(NV * 2);
+    }
+    ctx.save(); ctx.translate(x + (pose.x || 0) * W, y + (pose.y || 0) * h); if (flip) ctx.scale(-1, 1);
+    if (pose.rot) { ctx.translate(0, -h * 0.35); ctx.rotate(pose.rot); ctx.translate(0, h * 0.35); }
+    ctx.scale(pose.sx || 1, pose.sy || 1); ctx.translate(-W / 2, -h);
+    const M = ctx.getTransform(); ctx.restore();
+    const cs = bones.map(b => { const t = T[b[0]]; return [Math.cos(t.a), Math.sin(t.a), t.tx, t.ty]; }), dev = C.dev;
+    for (let i = 0; i < NV; i++) {
+      const V = C.verts[i], vy = V.v * ar; let X = 0, Y = 0;
+      for (let k = 0; k < bones.length; k++) { const wk = V.w[k]; if (wk < 0.002) continue; const q = cs[k]; X += wk * (q[0] * V.u - q[1] * vy + q[2]); Y += wk * (q[1] * V.u + q[0] * vy + q[3]); }
+      const lx = X * W, ly = Y / ar * h; dev[i * 2] = M.a * lx + M.c * ly + M.e; dev[i * 2 + 1] = M.b * lx + M.d * ly + M.f;
+    }
+    return MGL.draw(ctx, img, dev, C.uv, C.tris, C.tris.length / 3);
   }
   // 把原圖的一個三角形貼到變形後的三角形（稍微外擴避免縫）
   function tri(ctx, img, iw, ih, W, H, V, P, i0, i1, i2) {
@@ -211,5 +307,5 @@ const MeshAnim = (() => {
     if (!RIG[imgKey] && RIG[rigId]) RIG[imgKey] = { bones: RIG[rigId].bones.filter(b => !['armF', 'axe'].includes(b[0])) };
     return drawRaw(ctx, imgKey, 0, 0, h, pose, false);
   }
-  return { drawBody, draw, ANIM, RIG, NATIVE_R, mk, has: (id) => !!RIG[id] && typeof sprOk === 'function' && sprOk(id) };
+  return { drawBody, draw, ANIM, RIG, NATIVE_R, mk, gl:(on) => { NOGL = !on; }, has: (id) => !!RIG[id] && typeof sprOk === 'function' && sprOk(id) };
 })();

@@ -428,6 +428,7 @@ const Graveyard = {
   // ---------- 每一幀 ----------
   frame(now, tok) {
     if (!this.active || tok !== this._tok) return;
+    if (now - this.last < 1000 / 30 - 2) { requestAnimationFrame((n) => this.frame(n, tok)); return; } // 上限 30 格（手機發燙）
     const dt = Math.min(0.05, (now - this.last) / 1000); this.last = now;
     this.step(dt); this.draw(this.t);
     requestAnimationFrame((n) => this.frame(n, tok));

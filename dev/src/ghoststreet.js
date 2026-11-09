@@ -236,6 +236,7 @@ const GhostStreet = {
   // ---------- 每一幀 ----------
   frame(now) {
     if (!this.active) return;
+    if (now - this.last < 1000 / 30 - 2) { requestAnimationFrame((n) => this.frame(n)); return; } // 上限 30 格（手機發燙）
     const dt = Math.min(0.05, (now - this.last) / 1000); this.last = now;
     this.step(dt); this.draw(now / 1000);
     requestAnimationFrame((n) => this.frame(n));

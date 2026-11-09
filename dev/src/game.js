@@ -941,15 +941,19 @@ function recruitFodder(rare) {
 
 // ---------------- 主迴圈 ----------------
 let lastT = performance.now(), saveT = 0, uiT = 0;
+// 手機發燙：(1) 回陽間／陰間運動會／墳場／鬼街打開時，村莊喺後面照畫（白燒一倍）→ 蓋住就唔畫；(2) 90/120Hz 手機每秒畫 120 格 → 上限 30 格
+const FRAME_MS = 1000 / 30 - 2;
+function covered() { return (typeof Scare !== 'undefined' && Scare.active) || (typeof Graveyard !== 'undefined' && Graveyard.active) || (typeof GhostStreet !== 'undefined' && GhostStreet.active) || (typeof Sports !== 'undefined' && Sports._g && !!Sports._g()); }
 function loop(now) {
+  requestAnimationFrame(loop);
+  if (now - lastT < FRAME_MS) return;
   let dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
   if (!Battle.active) {
     produce(dt * TIME_SCALE); Village.update(dt);
-    Village.draw();
+    if (!covered()) Village.draw();
   } else { produce(dt * TIME_SCALE); Battle.update(dt); Battle.draw(); }
   uiT += dt; if (uiT > 0.5) { uiT = 0; UI.refresh(); Quest.check(); }
   saveT += dt; if (saveT > 5) { saveT = 0; save(); }
-  requestAnimationFrame(loop);
 }
 function offlineGain() {
   const sec = Math.min(8 * 3600, Math.max(0, (Date.now() - (S.last || Date.now())) / 1000));
