@@ -52,3 +52,12 @@
 - 修正：升職「多帶一隻鬼」原本沒生效，隊伍上限改為 3＋職級加成；合夥鬼名冊金邊補上；選隊名單字色加深
 - 新測試：dev/tools/t_pres2.py（合約→夜晚 KPI→升職→危機→補救）、t_fw.py（倒數→消失→招回）
 - 下一步：第 4 點計劃 2（去掉《熱血大作戰》影子）
+
+## 7. 2026-11-09 大改版（只在樣板版 /preview/，正式版未上）
+- 樣板網址 https://lawrancelow.github.io/ghost-battles/preview/ ；`PREVIEW=1 OUT=GhostBattles_preview.html python3 build.py` → site_preview/（獨立存檔 ghostBattles_preview，第一次打開複製正式版進度；快取名 gbp-）
+- src/rework.js：戰鬥「怕什麼」連嚇（敵鬼怕／唔怕表 EFEAR，新鬼自動）、嚇人訓練班練嚇功（S.drill，Lv 門檻 300/1000/2500/5000）、陰兵由民宅自來、供品／道具箱（S.scareKit）、搶地盤（S.turf：每日收租、鄰村 8~14 小時搶一個、奪回）
+- presence.js：合約面板「上供」（30 壽包 → 存在感 +12，每鬼每日一次）
+- src/sports.js：陰間運動會四項（跳遠、拔河、倒掛、游泳），每項每日首次贏 Bryan 有獎；入口在「地盤」頁
+- daily_work.js：訓練班工人動作 boo／grimace／blow 取代踏步敬禮操練
+- 未做：訓練班建築圖仍是軍營帳篷（有兵器架），等 Lawrance 用 ChatGPT 生新圖；孟婆湯研究所（烹飪）未做
+- 他說「上線／放進去」時：src/web.js GAME_VER 改新版本 → python3 build.py → cp site/. 到 repo 根目錄 → push

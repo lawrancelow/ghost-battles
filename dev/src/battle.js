@@ -26,6 +26,7 @@ const Battle = {
       h += `<div class="tslot adv" data-slot="adv">${ad ? `<canvas data-por="${ad.k}"></canvas><b>${ad.name}</b><small>軍師</small>` : '<span>＋<br>軍師</span>'}</div></div>`;
       h += `<p class="desc">軍師不上場，坐鎮後方：全隊攻擊 +${ad ? Math.round(F.stat(ad, 1) / 8) : 0}%（看智力），能量滿了也能放技能。出征前可隨時換人。　</p><div class="troopbox"><b>帶上陣的陰兵</b><span>現有 ${fmt(S.res.troops)}，可組成 <em>${Math.min(8, Math.floor(S.res.troops / 25))}</em> 隊（每 25 個一隊，最多 8 隊）</span><small>${S.bld.home ? '村裡的遊魂見你有地盤，會自願當陰兵（民宅越高級來得越快）。戰死的會扣掉。' : '建好民宅，遊魂才會來投靠當陰兵。'}</small></div>`;
       if (S.seen.ch1_end) { const b = (S.scare && S.scare.best.office) || 0; h += `<div class="sc-entry"><div><b>回陽間・夜班嚇人</b><small>舊公司・二十三樓　最高 ${b}　${'★'.repeat(Scare.starsOf('office', b))}</small></div><button class="btn gold" id="sc-open">回去</button></div>`; }
+      if (S.seen.ch1_end && typeof Sports !== 'undefined') h += `<div class="sc-entry sp-entry"><div><b>陰間運動會</b><small>殭屍跳遠、舌頭對脖子拔河、倒掛耐力、河童游泳</small></div><button class="btn gold" id="sp-open">參加</button></div>`;
       h += Rework.turfHead();
       CHAPTERS.forEach((ch, ci) => {
         h += `<div class="chap"><div class="ch-h">第${'一二三四五六'[ci]}章・${ch.name}</div>`;
@@ -43,6 +44,7 @@ const Battle = {
       if (typeof N30W !== 'undefined') N30W.bindSelect($('#sheet'));
       $('#sheet').querySelectorAll('.tslot').forEach(el => el.onclick = () => this.pickSlot(el.dataset.slot));
       const so = $('#sc-open'); if (so) so.onclick = () => Scare.open('office');
+      const spo = $('#sp-open'); if (spo) spo.onclick = () => Sports.open();
       $('#sheet').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { const [ci, si] = b.dataset.go.split(',').map(Number); this.tryStart(ci, si); });
     };
     UI.sheet('陽間地盤', render()); bind();

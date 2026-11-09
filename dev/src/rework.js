@@ -4,6 +4,7 @@
 // 3) 壽包＝供品、棺材板＝道具：回陽間前可帶；壽包可上供補存在感（presence.js）
 // 4) 推關 → 搶地盤：打下的關卡就是你的地盤，每日帶來 KPI 同存在感；鄰村鬼幫會來搶，要奪回
 const Rework = (() => {
+  const D = (yue, zh) => { if (typeof LANG !== 'undefined') LANG.add({ [yue]:zh }); return yue; };
   const DAY = 864e5, HOUR = 36e5;
   const W = { breath:'吹氣', light:'燈', cold:'凍', sound:'怪聲', paper:'紙', phone:'電話', face:'鬼臉', shadow:'黑影' };
   const TYPES = Object.keys(W);
@@ -55,10 +56,10 @@ const Rework = (() => {
 
   // ---------- 地盤 ----------
   const GANGS = [
-    { name:'鄰村・夜冷村', boss:'Bryan', line:'Bryan：「呢度？我哋夜冷村接手喇。你慢慢跑，我哋慢慢嚇。」' },
-    { name:'鄰村・夜冷村', boss:'Bryan', line:'Bryan：「你嗰度啲人怕咩我全部記低咗。多謝分享。」' },
-    { name:'無牌鬼幫', boss:'', line:'一班無牌鬼插咗支旗：「呢度而家我哋話事，KPI 我哋計。」' },
-    { name:'過江鬼聯盟', boss:'', line:'一群過江鬼：「我哋喺第二區冇人驚，過嚟借你地方用下。」' },
+    { name:'鄰村・夜冷村', boss:'Bryan', line:D('Bryan：「呢度？我哋夜冷村接手喇。你慢慢跑，我哋慢慢嚇。」', 'Bryan：「這裡？我們夜冷村接手了。你慢慢跑，我們慢慢嚇。」') },
+    { name:'鄰村・夜冷村', boss:'Bryan', line:D('Bryan：「你嗰度啲人怕咩，我全部抄低咗。多謝分享。」', 'Bryan：「你那邊的人怕什麼，我全部抄下來了。謝謝分享。」') },
+    { name:'無牌鬼幫', boss:'', line:D('一班無牌鬼插咗支旗：「呢度而家我哋話事，KPI 我哋計。」', '一群無牌鬼插了一支旗：「這裡現在我們說了算，KPI 我們來算。」') },
+    { name:'過江鬼聯盟', boss:'', line:D('一群過江鬼：「我哋喺第二區冇人驚，過嚟借你地方用下。」', '一群過江鬼：「我們在別區沒人怕，過來借你的地方用一下。」') },
   ];
   function turf() { if (!S.turf) S.turf = { lost:{}, gang:{}, next:0, day:null, gain:0 }; const t = S.turf; t.lost = t.lost || {}; t.gang = t.gang || {}; return t; }
   function allSids() { const a = []; CHAPTERS.forEach((ch, ci) => ch.stages.forEach((st, si) => a.push(`${ci + 1}-${si + 1}`))); return a; }
@@ -102,7 +103,7 @@ const Rework = (() => {
   function turfHead() {
     const t = turf(), h = held(), lost = Object.keys(t.lost);
     let s = `<div class="rw-turf"><b>陽間地盤 ${h.length}</b><small>每日收租：合約 KPI +${Math.min(8, Math.floor(h.length / 3))}，全村存在感 +${Math.round(Math.min(6, h.length * 0.4))}。打下一關就多一個地盤；鄰村鬼幫會不時來搶。</small>`;
-    if (lost.length) s += lost.map(sid => { const g = GANGS[t.gang[sid] || 0]; return `<p class="rw-raid">⚑ <b>${stageOf(sid).name}</b>（${sid}）被${g.name}搶走：<br><i>${g.line}</i></p>`; }).join('');
+    if (lost.length) s += lost.map(sid => { const g = GANGS[t.gang[sid] || 0]; return `<p class="rw-raid">⚑ <b>${stageOf(sid).name}</b>（${sid}）被${g.name}搶走：<br><i>${typeof L === 'function' ? L(g.line) : g.line}</i></p>`; }).join('');
     return s + '</div>';
   }
   function retake(sid) {

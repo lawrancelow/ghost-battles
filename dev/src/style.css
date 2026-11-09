@@ -604,3 +604,18 @@ hr{border:0;border-top:1.5px solid var(--paperline);margin:16px 0}
 .rw-kb{display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;width:calc(50% - 6px);margin:0 4px 6px 0;padding:6px 8px;border-radius:10px;border:1.5px solid rgba(90,60,30,.3);background:rgba(255,255,255,.35);font:inherit;text-align:left;color:inherit;cursor:pointer}
 .rw-kb b{font-size:14px}.rw-kb small{font-size:11px}.rw-kb i{font-style:normal;font-size:12px;opacity:.8}
 .rw-kb.on{border-color:#b8862b;background:#f6e3b4;box-shadow:0 0 0 2px rgba(184,134,43,.35)}.rw-kb.dim{opacity:.55}
+/* ===== 陰間運動會（sports.js） ===== */
+#sports{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;background:#120f16;color:#f3ead8}
+#sports.on{display:flex}
+#sp-top{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;background:rgba(0,0,0,.45)}
+#sp-top b{flex:1;font-size:17px;color:#ffd84a}#sp-hud{font-size:14px;font-variant-numeric:tabular-nums}
+#sp-cvs{flex:1;width:100%;min-height:0;touch-action:none;display:block}
+#sp-panel{padding:10px 14px calc(env(safe-area-inset-bottom) + 12px);background:rgba(30,24,34,.96);border-top:1px solid rgba(255,255,255,.08)}
+#sp-rule{font-size:13px;line-height:1.55;margin:0 0 8px;opacity:.88}#sp-rule i{color:#ffd0a0;font-style:normal}
+#sp-btns{display:flex;gap:10px}#sp-btns .sp-b{flex:1;font-size:22px;padding:14px 0;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.sp-tip{margin:0;text-align:center;font-size:14px;opacity:.85;width:100%}
+.sp-end h3{margin:2px 0 4px;color:#ffd84a;font-size:20px}.sp-end .desc{color:#efe4cc}.sp-big{font-size:30px;font-weight:700;margin:2px 0 6px}
+.sp-endb{display:flex;gap:10px;margin-top:8px}.sp-endb .btn{flex:1}
+.sp-ev{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;background:rgba(255,255,255,.35);margin-bottom:8px}
+.sp-ev canvas{width:52px;height:52px;border-radius:8px;flex:none}.sp-ev>div{flex:1;min-width:0}.sp-ev b{font-size:15px}
+.sp-ev small{display:block;font-size:12px;line-height:1.45;opacity:.85}.sp-ev em{font-style:normal;color:#3a7a2a;font-weight:700}.sp-ev.won{opacity:.85}
