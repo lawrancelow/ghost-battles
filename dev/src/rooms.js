@@ -242,6 +242,6 @@ const OFFMAP = (() => {
     // 同一間房、位置太近嘅點：上下錯開
     const vis = want.slice().sort((a, b) => a.x - b.x); let last = -9, row = 0; for (const n of vis) { const d = S._dots[n.d.k]; const p = n.x / WW * 100; row = p - last < 4.2 ? (row + 1) % 2 : 0; last = p; d.style.top = row ? '15px' : '1px'; }
   }
-  return { PXU, WW, SW, SH, SEAM, WALLS, WALLW, PILLAR, ROOMS, RM, OX, M, MY, px, npx, py, Rp, Ru, roomAt, SPOT, LANE, PATROL, A, R, init, tick, onProp, drawBack, drawables, drawOver, mapHTML, mapTick,
+  return { pano, PXU, WW, SW, SH, SEAM, WALLS, WALLW, PILLAR, ROOMS, RM, OX, M, MY, px, npx, py, Rp, Ru, roomAt, SPOT, LANE, PATROL, A, R, init, tick, onProp, drawBack, drawables, drawOver, mapHTML, mapTick,
     WINMAIN:[px(1575), py(200), px(995), py(216)], ELEV:{ x0:px(2652), x1:px(2872), seam:px(2762), top:py(248), bot:py(570), btn:[px(2910), py(380)] } };
 })();

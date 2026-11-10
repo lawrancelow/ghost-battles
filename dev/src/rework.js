@@ -70,6 +70,7 @@ const Rework = (() => {
   function gday(ms) { const d = new Date(ms); return Math.floor((ms - d.getTimezoneOffset() * 60000) / DAY); }
   function turfTick() {
     if (!S || !S.cleared) return; const t = turf(), now = clock(), h = held();
+    if (typeof Station !== 'undefined') { t.lost = {}; t.gang = {}; return; } // 站崗系統取代舊地盤（打通關卡＝地盤、收租、被搶）
     // 每日：地盤帶來 KPI 同存在感
     const today = gday(now);
     if (t.day == null) t.day = today;
@@ -96,7 +97,7 @@ const Rework = (() => {
     }
   }
   function turfTag(sid) {
-    if (!S.cleared || !S.cleared[sid]) return '';
+    if (!S.cleared || !S.cleared[sid] || typeof Station !== 'undefined') return '';
     const t = turf(); if (t.lost[sid]) { const g = GANGS[t.gang[sid] || 0]; return `<em class="rw-lost">被${g.name}搶走</em>`; }
     return '<em class="rw-own">我方地盤</em>';
   }

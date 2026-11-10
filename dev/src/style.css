@@ -645,3 +645,32 @@ hr{border:0;border-top:1.5px solid var(--paperline);margin:16px 0}
 .so-mon{background:#2a2432;padding-bottom:10px}
 .so-scr{margin:0 10px;background:#0e1a24;border:6px solid #3a3440;border-radius:6px;padding:10px;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#9fe0b0;line-height:1.55}
 .so-scr b{display:block;color:#fff;font-family:inherit;margin-bottom:4px}.so-scr p{margin:0}
+/* ===== 站崗嚇人・陽間地盤 ===== */
+.stn-entry b{color:#ffd98a}.stn-alert{color:#ff8a8a;font-style:normal;font-weight:700}
+.stn-top p{margin:0 0 6px;line-height:1.55;font-size:15px}.stn-top small{opacity:.8}
+.stn-card{margin:12px 0;padding:12px;border-radius:14px;background:linear-gradient(160deg,#2a2142,#191226);color:#eee;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.stn-card.soon{opacity:.6}.stn-card.soon small{display:block;margin-top:4px}
+.stn-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.stn-h b{font-family:var(--serif);font-size:19px;color:#fff}
+.stn-h em{font-style:normal;font-size:13px;padding:2px 8px;border-radius:999px;background:#3a3150}
+.stn-own{background:#2e6b3c!important}.stn-war{background:#7a5a1e!important}.stn-lost{background:#7a2626!important}.stn-stable{background:#b08a1e!important;color:#fff}
+.stn-bar{display:flex;height:10px;border-radius:6px;overflow:hidden;background:#3b3550;margin:10px 0 4px}.stn-bar .me{background:#7be08a}.stn-bar .en{background:#ff6a6a}
+.stn-sub{display:block;font-size:13px;opacity:.85;margin:2px 0}
+.stn-posts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.stn-post{padding:8px;border-radius:10px;background:rgba(255,255,255,.06)}.stn-post.raid{box-shadow:inset 0 0 0 2px #ff6a6a}
+.stn-pn{font-weight:700;font-size:15px}.stn-pn small{display:block;font-weight:400;opacity:.7;font-size:12px}
+.stn-g{display:flex;align-items:center;gap:6px;margin:6px 0}.stn-g canvas{width:40px;height:40px;border-radius:8px;background:#0003}.stn-g b{font-size:14px}.stn-g small{display:block;font-size:12px;opacity:.8}
+.stn-g.empty{opacity:.55;font-size:13px;min-height:40px}.stn-leg{font-style:normal;color:#ffd98a}
+.stn-en{font-size:12px;color:#ff9a9a;margin:4px 0}.stn-btns{display:flex;gap:6px;flex-wrap:wrap}.stn-btns .btn.sm{font-size:13px;padding:5px 9px}
+.stn-btns .btn.red{background:#a33}.stn-acts{margin-top:10px;text-align:right}
+.stn-log{margin-top:12px;padding:10px;border-radius:12px;background:rgba(0,0,0,.2);font-size:13px}.stn-log p{margin:4px 0;line-height:1.5}
+.stn-pick .gi{display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;margin:6px 0;background:rgba(255,255,255,.06);cursor:pointer}.stn-pick canvas{width:44px;height:44px}.stn-fit{color:#7be08a;font-style:normal}
+#stn-live{position:fixed;inset:0;z-index:60;display:none;background:#120c1e}#stn-live.on{display:block}
+#stn-cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.stn-hud{position:absolute;left:0;right:0;top:0;display:flex;gap:10px;align-items:center;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px;background:linear-gradient(#000a,#0000);color:#fff}
+.stn-hh b{display:block;font-family:var(--serif);font-size:18px}.stn-hh span{font-size:13px;opacity:.9}.stn-hh em{color:#ffd98a;font-style:normal}
+.stn-tip{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 12px);padding:8px 12px;border-radius:10px;background:#0009;color:#ddd;font-size:13px;line-height:1.5}
+.stn-board{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 64px);padding:10px 12px;border-radius:12px;background:rgba(20,14,34,.75);color:#ddd;font-size:13px;line-height:1.45;pointer-events:none}
+.stn-board .stn-bar{margin:0 0 4px}.stn-bl{display:flex;gap:12px;font-size:13px}.stn-bl .me{color:#7be08a}.stn-bl .en{color:#ff8a8a}
+.stn-hab{display:flex;align-items:center;gap:8px;margin:6px 0 2px}.stn-hm{flex:1;height:8px;border-radius:5px;background:#3b3550;overflow:hidden}.stn-hm i{display:block;height:100%;background:linear-gradient(90deg,#8a7bff,#ff9a5a)}
+.stn-board p{margin:3px 0 0;font-size:12px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stn-report{margin:0 0 10px;padding:10px 12px;border-radius:12px;background:#3a2a10;color:#ffe9b0}.stn-report p{margin:4px 0;font-size:14px}.stn-report .ev{font-size:13px;opacity:.85}
