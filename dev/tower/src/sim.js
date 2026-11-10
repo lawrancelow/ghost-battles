@@ -278,6 +278,28 @@ var LYG_SIM = (function(){
   };
 
   // ---------- 玩家指令 ----------
+  // 模擬搖桿：jx/jy 為 -1..1（畫面方向，下為正）。在節點時揀最順方向、可以通行的鄰點；在邊上反方向推就掉頭；放手就停喺原地
+  P.joy = function(gi, jx, jy){
+    var g=this.ghosts[gi]; if (!g || g.stun>0 || g.respawn>0) return;
+    var mag=Math.hypot(jx,jy);
+    if (mag<0.3){ if (g.joying){ g.joying=false; g.path=[]; } return; }
+    if (!g.joying){ g.channel=null; g.hide=null; g.hang=0; if (g.ring) g.ring=null; }
+    g.joying=true;
+    var ux=jx/mag, uy=jy/mag;
+    if (g.edge){
+      var E=g.edge, dx=E.to.x-E.from.x, dy=E.to.y-E.from.y, L=Math.hypot(dx,dy)||1, d=(dx*ux+dy*uy)/L;
+      if (d < -0.35){ g.edge={e:E.e, from:E.to, to:E.from}; g.et=1-g.et; g.node=E.to.id; g.path=[E.from.id]; }
+      else g.path=[E.to.id];
+      return;
+    }
+    var n=GR.idx[g.node], best=null, bs=0.5, blocked=null, bb=0.5, self=this;
+    n.adj.forEach(function(e){ var o = e.a===n ? e.b : e.a; var dx=o.x-n.x, dy=o.y-n.y, L=Math.hypot(dx,dy)||1, sc=(dx*ux+dy*uy)/L;
+      if (!ALLOW[g.id][e.type]) return;
+      if (!self.edgeOpen(e,g.id,n)){ if (sc>bb){ bb=sc; blocked=e; } return; }
+      if (sc>bs){ bs=sc; best=o; } });
+    if (best){ g.path=[best.id]; }
+    else { g.path=[]; if (blocked && (!g.blockT || this.t-g.blockT>1.5)){ g.blockT=this.t; var why = blocked.type==='door' ? (this.units[blocked.unit].doorGod?'门神挡住了':this.units[blocked.unit].salt?'门口有盐，过不去':'铁闸锁着') : '路被挡住了'; this.float(g.x,g.y-70,why,'#ff9a9a'); } }
+  };
   P.moveGhost = function(gi, toId){
     var g=this.ghosts[gi]; if (g.stun>0) return false; g.channel=null;
     if (g.ring) g.ring=null;

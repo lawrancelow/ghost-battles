@@ -604,7 +604,7 @@
     game.onFx=sfxFx; bakeStatic(); overview=false; camManual=0; paused=false;
     var g=game.ghosts[0]; cam.x=g.x-VW/cam.zDefault/2; cam.y=g.y-200;
     scene='play'; recorded=false;
-    seenTip={0:1}; game.toast('今晚三张委托。饿鬼王闻得到全楼宵夜（金圈），点房间就会走过去。');
+    seenTip={0:1}; game.toast('今晚三张委托。按住画面拖动就能移动：门口往上推进房，楼梯往上下推换楼层。点人选为目标。');
   }
   var recorded=false, seenTip={0:1};
   var GHOST_TIPS=['饿鬼王闻得到全楼的宵夜（金圈）。宵夜到时间会被住户吃掉，要赶。体型大，钻不了通风口和电梯井。',
@@ -616,10 +616,21 @@
   }
 
   // ---------- 输入 ----------
-  var ptr=null;
-  cv.addEventListener('pointerdown',function(e){ ac(); var p=pt(e); ptr={x:p.x,y:p.y,sx:p.x,sy:p.y,drag:false,cx:cam.x,cy:cam.y}; });
-  cv.addEventListener('pointermove',function(e){ if(!ptr) return; var p=pt(e); if (scene==='play' && !overview && ptr.sy>TOP && ptr.sy<VH-BOT){ if (Math.hypot(p.x-ptr.sx,p.y-ptr.sy)>10) ptr.drag=true; if (ptr.drag){ cam.x=ptr.cx-(p.x-ptr.sx)/cam.z; cam.y=ptr.cy-(p.y-ptr.sy)/cam.z; clampCam(); camManual=4; } } });
-  cv.addEventListener('pointerup',function(e){ if(!ptr) return; var p=pt(e), was=ptr; ptr=null; if (!was.drag) tap(p.x,p.y); });
+  var ptr=null, joy=null; // joy：浮動虛擬搖桿（手指按落嘅位置做中心）
+  var JOY_R=58;
+  cv.addEventListener('pointerdown',function(e){ ac(); var p=pt(e); ptr={x:p.x,y:p.y,sx:p.x,sy:p.y,drag:false,id:e.pointerId};
+    if (scene==='play' && !overview && !paused && p.y>TOP && p.y<VH-BOT){ joy={ox:p.x,oy:p.y,x:p.x,y:p.y,on:false}; }
+    try{ cv.setPointerCapture(e.pointerId); }catch(_){} });
+  cv.addEventListener('pointermove',function(e){ if(!ptr) return; var p=pt(e);
+    if (Math.hypot(p.x-ptr.sx,p.y-ptr.sy)>12) ptr.drag=true;
+    if (joy){ joy.x=p.x; joy.y=p.y; if (ptr.drag) joy.on=true; } });
+  function joyEnd(){ if (joy && game && scene==='play') game.joy(game.active,0,0); joy=null; }
+  cv.addEventListener('pointerup',function(e){ if(!ptr) return; var p=pt(e), was=ptr; ptr=null; var wasJoy=joy&&joy.on; joyEnd(); if (!was.drag && !wasJoy) tap(p.x,p.y); });
+  cv.addEventListener('pointercancel',function(){ ptr=null; joyEnd(); });
+  function joyVec(){ if (!joy||!joy.on) return null; var dx=joy.x-joy.ox, dy=joy.y-joy.oy, L=Math.hypot(dx,dy); if (L>JOY_R){ dx*=JOY_R/L; dy*=JOY_R/L; } return {x:dx/JOY_R, y:dy/JOY_R}; }
+  function drawJoy(){ if (!joy||!joy.on) return; var v=joyVec(); screenT();
+    ctx.fillStyle='rgba(20,12,40,0.45)'; ctx.strokeStyle='rgba(200,180,255,0.55)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(joy.ox,joy.oy,JOY_R,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='rgba(138,255,200,0.85)'; ctx.beginPath(); ctx.arc(joy.ox+v.x*JOY_R,joy.oy+v.y*JOY_R,24,0,Math.PI*2); ctx.fill(); }
   function pt(e){ var r=cv.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
   function tap(x,y){
     for (var i=0;i<buttons.length;i++){ var b=buttons[i]; if (x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){ press(b.id); return; } }
@@ -630,15 +641,7 @@
     // 点人
     var hit=null;
     G.residents.concat(G.guards).forEach(function(r){ if (r.state==='shower'&&!r.edge) return; if (Math.abs(w.x-r.x)<20 && w.y<r.y+4 && w.y>r.y-58) hit=r; });
-    if (hit){
-      g.target=hit; G.float(hit.x,hit.y-70,'选为目标','#ffd54a');
-      if (hit.mode) return;
-      var hn=GR.idx[hit.node];
-      if (hn.lane==='room'){ var dest = g.id==='tianhua' ? 'E'+hn.room+hn.f+'_'+hn.u : hn.id; var cur=g.edge?null:g.node; if (cur!==dest) G.moveGhost(gi,dest); }
-      return;
-    }
-    var nid=G.nodeForTap(gi,w.x,w.y);
-    if (nid){ G.moveGhost(gi,nid); var n=GR.idx[nid]; tapMark={x:n.x,y:n.y-6,t:1}; camManual=0; }
+    if (hit){ g.target=hit; G.float(hit.x,hit.y-70,'选为目标','#ffd54a'); }
   }
   function press(id){
     var G=game;
@@ -666,10 +669,10 @@
     if (tapMark) tapMark.t-=dt*1.5;
     if (scene==='title'){ drawTitle(); return; }
     if (scene==='play'){
-      if (!game.over && !paused){ var steps=Math.ceil(dt/(1/30)); for (var i=0;i<steps;i++) game.update(dt/steps); }
+      if (!game.over && !paused){ var jv=joyVec(); if (jv) game.joy(game.active,jv.x,jv.y); var steps=Math.ceil(dt/(1/30)); for (var i=0;i<steps;i++) game.update(dt/steps); }
       updateCam(dt);
       screenT(); ctx.fillStyle='#120a26'; ctx.fillRect(0,0,VW,VH);
-      drawWorld(); drawUI();
+      drawWorld(); drawUI(); drawJoy();
       if (paused){ screenT(); ctx.fillStyle='rgba(10,5,22,0.55)'; ctx.fillRect(0,TOP,VW,viewH()); ctx.fillStyle='#fff'; ctx.font='bold 26px '+FONT; ctx.textAlign='center'; ctx.fillText('暂停中',VW/2,TOP+viewH()/2); ctx.font='14px '+FONT; ctx.fillText('按「继续」回到这一夜',VW/2,TOP+viewH()/2+28); }
       if (game.lastToast && game.lastToast!==lastToastSeen){ lastToastSeen=game.lastToast; sfxToast(game.lastToast.msg); }
       if (game.over){ onResult(); drawResult(); }

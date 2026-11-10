@@ -566,14 +566,25 @@ hr{border:0;border-top:1.5px solid var(--paperline);margin:16px 0}
 #world{position:absolute;inset:0;z-index:34;display:none;background:#14101a}
 #world.on{display:block}
 .wm-map{position:absolute;inset:0;background-size:cover;background-position:center}
-.wm-spot{position:absolute;transform:translate(-50%,-50%);min-width:96px;padding:6px 12px;border-radius:12px;border:2px solid #6b3b1f;background:rgba(248,232,196,.92);color:#3a2212;font-family:inherit;box-shadow:0 3px 10px rgba(0,0,0,.45);animation:wmpop .5s ease-out both}
-.wm-spot b{display:block;font-size:19px;letter-spacing:2px}
-.wm-spot small{display:block;font-size:12px;color:#7a5236}
-.wm-spot.off{filter:grayscale(.8) brightness(.8)}
-.wm-spot.dot::after{content:'';position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:#e8303a;border:2px solid #fff3e0;box-shadow:0 1px 4px rgba(0,0,0,.5)}
-.wm-spot:active{transform:translate(-50%,-50%) scale(.95)}
 .wm-glow{position:absolute;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,220,140,.35),rgba(255,220,140,0) 70%);animation:wmglow 2.4s ease-in-out infinite}
-.wm-home{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);padding:8px 26px;border-radius:12px;border:2px solid #6b3b1f;background:#c0392b;color:#fff;font-family:inherit;font-size:18px;box-shadow:0 3px 10px rgba(0,0,0,.45)}
+.wm-map::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,16,26,.55) 0,rgba(20,16,26,0) 16%,rgba(20,16,26,0) 42%,rgba(20,16,26,.88) 62%,rgba(20,16,26,.96) 100%)}
+.wm-top{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;padding:max(12px,env(safe-area-inset-top)) 14px 10px;color:#f8e8c4;text-shadow:0 2px 4px #000}
+.wm-top b{font-size:22px;letter-spacing:4px}
+.wm-top span{font-size:13px;opacity:.8}
+.wm-home{padding:7px 14px;border-radius:12px;border:2px solid #6b3b1f;background:#c0392b;color:#fff;font-family:inherit;font-size:16px;box-shadow:0 3px 10px rgba(0,0,0,.45)}
+.wm-board{position:absolute;left:0;right:0;bottom:0;max-height:62%;overflow-y:auto;padding:12px 12px max(16px,env(safe-area-inset-bottom))}
+.wm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.wm-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px 9px;border-radius:14px;border:2px solid #6b3b1f;background:rgba(248,232,196,.95);color:#3a2212;font-family:inherit;box-shadow:0 3px 10px rgba(0,0,0,.5);animation:wmcard .4s ease-out both}
+.wm-card i{font-style:normal;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:#7a2a1c;color:#ffe9c0;font-size:22px;font-weight:bold;border:2px solid #3a1a10;margin-bottom:3px}
+.wm-card b{font-size:17px;letter-spacing:1px;white-space:nowrap}
+.wm-card small{font-size:11.5px;color:#7a5236;line-height:1.3;text-align:center}
+.wm-card.new{border-color:#c0392b;box-shadow:0 0 0 2px rgba(255,200,120,.6),0 3px 12px rgba(0,0,0,.5)}
+.wm-card.off{filter:grayscale(.85) brightness(.8)}
+.wm-card.res{background:rgba(60,48,66,.7);border:2px dashed #9a8aa6;color:#cdbfd8;box-shadow:none}
+.wm-card.res i{background:transparent;border:2px dashed #9a8aa6;color:#cdbfd8}
+.wm-card.res small{color:#a99bb5}
+.wm-card.dot::after{content:'';position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:#e8303a;border:2px solid #fff3e0;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.wm-card:active{transform:scale(.95)}
 @keyframes wmglow{0%,100%{opacity:.4;transform:scale(.85)}50%{opacity:1;transform:scale(1.15)}}
 @keyframes wmpop{from{opacity:0;transform:translate(-50%,-30%) scale(.8)}to{opacity:1;transform:translate(-50%,-50%)}}
 .keystat{color:#b3261e;font-weight:700;font-size:1.15em}.sortnote{color:#b3261e;font-weight:700;margin-top:-4px}
@@ -677,7 +688,7 @@ hr{border:0;border-top:1.5px solid var(--paperline);margin:16px 0}
 .stn-btns .btn.red{background:#a33}.stn-acts{margin-top:10px;text-align:right}
 .stn-log{margin-top:12px;padding:10px;border-radius:12px;background:rgba(0,0,0,.2);font-size:13px}.stn-log p{margin:4px 0;line-height:1.5}
 .stn-pick .gi{display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;margin:6px 0;background:rgba(255,255,255,.06);cursor:pointer}.stn-pick canvas{width:44px;height:44px}.stn-fit{color:#7be08a;font-style:normal}
-#stn-live{position:fixed;inset:0;z-index:60;display:none;background:#120c1e}#stn-live.on{display:block}
+#stn-live{position:fixed;inset:0;z-index:99995;display:none;background:#120c1e}#stn-live.on{display:block}
 #stn-cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 .stn-hud{position:absolute;left:0;right:0;top:0;display:flex;gap:10px;align-items:center;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px;background:linear-gradient(#000a,#0000);color:#fff}
 .stn-hh b{display:block;font-family:var(--serif);font-size:18px}.stn-hh span{font-size:13px;opacity:.9}.stn-hh em{color:#ffd98a;font-style:normal}
@@ -687,6 +698,8 @@ hr{border:0;border-top:1.5px solid var(--paperline);margin:16px 0}
 .stn-hab{display:flex;align-items:center;gap:8px;margin:6px 0 2px}.stn-hm{flex:1;height:8px;border-radius:5px;background:#3b3550;overflow:hidden}.stn-hm i{display:block;height:100%;background:linear-gradient(90deg,#8a7bff,#ff9a5a)}
 .stn-board p{margin:3px 0 0;font-size:12px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stn-report{margin:0 0 10px;padding:10px 12px;border-radius:12px;background:#3a2a10;color:#ffe9b0}.stn-report p{margin:4px 0;font-size:14px}.stn-report .ev{font-size:13px;opacity:.85}
+
+@keyframes wmcard{from{opacity:0;transform:translateY(14px) scale(.9)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -10952,7 +10965,7 @@ const $ = (q) => document.querySelector(q);
 const fmt = (n) => { n = Math.floor(n); if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M'; if (n >= 1e4) return (n / 1e3).toFixed(1) + 'K'; return '' + n; };
 const RES_NAMES = { wood:'槐木', rice:'糯米', planks:'棺材板', buns:'壽包', coins:'冥幣', troops:'陰兵' };
 const SPEAKER_ART = { '阿福':'afu','小紙':'xiaozhi','白無常':'baiwu','黑無常':'heiwu','黑白無常':'baiwu','黃總':'huang','餓鬼王':'eguiking','餓鬼':'egui','Toyol':'toyol','老殭':'laojiang','Pontianak':'pontianak','Pocong':'pocong','Penanggal':'penanggal','孟婆':'mengpo','遊魂阿強':'youhun','天花姐':'tianhua' };
-const SAVE_KEY = 'ghostBattles_preview'; try { if (!localStorage.getItem(SAVE_KEY) && localStorage.getItem('ghostBattles_v1')) localStorage.setItem(SAVE_KEY, localStorage.getItem('ghostBattles_v1')); } catch (e) {}
+const SAVE_KEY = 'ghostBattles_preview'; window.STN_TEST = 1; try { if (!localStorage.getItem(SAVE_KEY) && localStorage.getItem('ghostBattles_v1')) localStorage.setItem(SAVE_KEY, localStorage.getItem('ghostBattles_v1')); } catch (e) {}
 const DEBUG = /debug/.test(location.search);
 
 let S; // 存檔狀態
@@ -20882,13 +20895,13 @@ const Station = (() => {
       this.def = def; this.on = true; this.walkers = []; this.fx = []; this.spawnAcc = TUNE.every - 1.5; this.t = 0;
       let el = $('#stn-live'); if (!el) { el = document.createElement('div'); el.id = 'stn-live'; document.body.appendChild(el); }
       el.innerHTML = `<canvas id="stn-cv"></canvas><div class="stn-hud"><button class="btn sm" id="stn-x">返回</button><div class="stn-hh"><b>${def.name}</b><span id="stn-info"></span></div></div><div class="stn-board" id="stn-board"></div><div class="stn-tip" id="stn-tip">點站崗的鬼放大招（下一個路人 ×2.5，冷卻 20 秒）。點夜冷村的鬼出手驅趕。左右拖動看整條路。</div>`;
-      el.classList.add('on'); this.cv = $('#stn-cv'); this.ctx = this.cv.getContext('2d');
+      el.classList.add('on'); this.cv = $('#stn-cv'); const tb = document.getElementById('stn-testbtn'); if (tb) tb.style.display = 'none'; this.ctx = this.cv.getContext('2d');
       this.resize(); this.camX = this.maxCam(); // 路人由右邊行入
       $('#stn-x').onclick = () => this.close();
       this.bindPan(); this.last = performance.now(); cancelAnimationFrame(this.raf); this.raf = requestAnimationFrame((n) => this.frame(n));
       if (has(Sound) && Sound.setMode) try { Sound.setMode('scare'); } catch (e) {}
     },
-    close() { this.on = false; cancelAnimationFrame(this.raf); const el = $('#stn-live'); if (el) el.classList.remove('on'); st().t = Date.now(); if (has(Sound) && Sound.setMode) try { Sound.setMode('village'); } catch (e) {} openPanel(); },
+    close() { this.on = false; cancelAnimationFrame(this.raf); const el = $('#stn-live'); if (el) el.classList.remove('on'); const tb = document.getElementById('stn-testbtn'); if (tb) tb.style.display = ''; st().t = Date.now(); if (has(Sound) && Sound.setMode) try { Sound.setMode('village'); } catch (e) {} openPanel(); },
     resize() { const dpr = Math.min(2, window.devicePixelRatio || 1), r = this.cv.getBoundingClientRect(); this.W = r.width || innerWidth; this.H = r.height || innerHeight; this.cv.width = Math.round(this.W * dpr); this.cv.height = Math.round(this.H * dpr); this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0); this.dpr = dpr; },
     // 背景：底部對齊，高度填滿畫面
     img() { if (this.def.id === 'office' && has(OFFMAP) && OFFMAP.pano) { const c = OFFMAP.pano(); if (c) return c; } return SPR[this.def.bg]; },
@@ -21029,7 +21042,21 @@ const Station = (() => {
     },
   };
 
+  // 測試版（單檔 HTML 給 Lawrance 測）：window.STN_TEST 時自動解鎖、送鬼、右上角加入口掣
+  function testHook() {
+    if (typeof window === 'undefined' || !window.STN_TEST) return;
+    if (!window._stnTestT) window._stnTestT = setInterval(() => { try {
+      if (has(S) && S && S.ghosts && !S._stnTest) testHook(); // 開新遊戲會換一份存檔：再送一次
+      // 離開標題畫面後自動打開站崗面板一次
+      const tt = document.getElementById('title'); if (!window._stnAuto && !(tt && tt.classList.contains('on'))) { window._stnAuto = 1; setTimeout(() => { try { openPanel(); const sh = document.getElementById('sheet'); if (sh) sh.style.zIndex = 99990; } catch (e) {} }, 800); }
+    } catch (e) {} }, 1500);
+    S._stnTest = 1; S.seen.ch1_end = 1; ['tianhua', 'eguiking', 'laojiang', 'pontianak', 'xiaozhi', 'toyol'].forEach(k => { try { if (has(joinGhost) && has(GHOSTS) && GHOSTS[k]) joinGhost(k); } catch (e) {} });
+    if (!document.getElementById('stn-testbtn')) { const b = document.createElement('button'); b.id = 'stn-testbtn'; b.textContent = '站崗測試'; b.onclick = () => { try { if (Live.on) return; openPanel(); const sh = document.getElementById('sheet'); if (sh) sh.style.zIndex = 99990; } catch (e) {} };
+      b.textContent = '站崗測試（點我）'; setInterval(() => { try { const tt = document.getElementById('title'), sh = document.getElementById('sheet'); b.style.display = (Live.on || (tt && tt.classList.contains('on')) || (sh && sh.classList.contains('on'))) ? 'none' : ''; } catch (e) {} }, 300); b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 86px);z-index:99999;padding:12px 22px;border-radius:14px;border:2px solid #ffd98a;background:#b8341f;color:#fff;font-weight:800;font-size:18px;box-shadow:0 3px 10px #000a'; document.body.appendChild(b); }
+    try { save(); } catch (e) {}
+  }
   function init() {
+    try { testHook(); } catch (e) { console.error(e); }
     if (has(POSTS) && !POSTS.station) POSTS.station = { name:'陽間站崗', bld:null, stat:2, desc:'在陽間地盤站崗嚇路人' };
     try { st(); } catch (e) {}
     setInterval(() => { try { if (!Live.on) tick(); } catch (e) { console.error(e); } }, 5000);
@@ -21361,22 +21388,31 @@ const World = {
     { id:'battle', x:0.48, y:0.20, lx:0.46, ly:0.23, name:'搶地盤', sub:'陽間地盤', go:() => UI.open('battle') },
     { id:'yard', x:0.76, y:0.30, lx:0.73, ly:0.37, name:'亂葬崗', sub:'無名墳', go:() => Graveyard.open(), ready:() => typeof Graveyard !== 'undefined' && World.YARD_READY },
     { id:'street', x:0.20, y:0.38, lx:0.17, ly:0.50, name:'冥街夜市', sub:'下班後的陰間', go:() => GhostStreet.open(), ready:() => typeof GhostStreet !== 'undefined' },
+    { id:'station', x:0.34, y:0.66, lx:0.32, ly:0.76, name:'陽間站崗', sub:'派鬼嚇路人', go:() => Station.openPanel(), ready:() => typeof Station !== 'undefined', need:() => S.seen.ch1_end || window.STN_TEST, lock:'打完第一章才開放' },
     { id:'scare', x:0.80, y:0.50, lx:0.79, ly:0.63, name:'回陽間', sub:'夜班嚇人', go:() => Scare.open('office'), need:() => S.seen.ch1_end, lock:'打完第一章才開放' },
   ],
+  // 保留地：之後開發新去處就由呢度補上（換成真嘅 SPOTS 項目）
+  RESERVED: 4,
+  ICON: { battle:'戰', yard:'墳', street:'市', scare:'嚇', station:'崗' },
   open() {
     let el = $('#world'); if (!el) { el = document.createElement('section'); el.id = 'world'; document.body.appendChild(el); }
     const src = typeof BG_SRC !== 'undefined' && BG_SRC.worldmap ? BG_SRC.worldmap : '';
     let h = `<div class="wm-map" style="background-image:url('${src}')">`;
+    for (const s of this.SPOTS) h += `<i class="wm-glow" style="left:${s.x * 100}%;top:${s.y * 100}%"></i>`;
+    h += `</div><div class="wm-top"><button class="wm-home" id="wm-home">◀ 回村</button><b>陰間地圖</b><span>揀個去處</span></div>`;
+    h += `<div class="wm-board"><div class="wm-grid">`;
     for (const s of this.SPOTS) {
       const ready = !s.ready || s.ready(), open = !s.need || s.need();
-      h += `<button class="wm-spot ${ready && open ? '' : 'off'} ${typeof Guide !== 'undefined' && Guide.dot(s.id) ? 'dot' : ''}" data-id="${s.id}" style="left:${s.lx * 100}%;top:${s.ly * 100}%"><b>${s.name}</b><small>${!ready ? '施工中' : !open ? s.lock : s.sub}</small></button>`;
-      h += `<i class="wm-glow" style="left:${s.x * 100}%;top:${s.y * 100}%"></i>`;
+      const dot = typeof Guide !== 'undefined' && Guide.dot(s.id);
+      h += `<button class="wm-card ${ready && open ? '' : 'off'} ${dot ? 'dot' : ''} ${s.id === 'station' ? 'new' : ''}" data-id="${s.id}"><i>${this.ICON[s.id] || '鬼'}</i><b>${s.name}</b><small>${!ready ? '施工中' : !open ? s.lock : s.sub}</small></button>`;
     }
-    h += `<button class="wm-home" id="wm-home"><b>回村</b></button></div>`;
+    for (let i = 0; i < this.RESERVED; i++) h += `<button class="wm-card res" data-res="1"><i>？</i><b>保留地</b><small>敬請期待</small></button>`;
+    h += `</div></div>`;
     el.innerHTML = h; el.classList.add('on'); Sound.play && Sound.play('click');
-    // 村口喺村莊頂部正中，同地圖「搶地盤」同一個位：手指放開時開地圖，瀏覽器跟住嗰下 click 會落喺新出嘅掣度 → 直接出征。開咗 0.45 秒內唔收 click
+    // 村口喺村莊頂部：手指放開時開地圖，瀏覽器跟住嗰下 click 會落喺新出嘅掣度。開咗 0.45 秒內唔收 click
     const t0 = performance.now(), ghost = () => performance.now() - t0 < 450;
-    el.querySelectorAll('.wm-spot').forEach(b => b.onclick = () => { if (ghost()) return;
+    el.querySelectorAll('.wm-card').forEach(b => b.onclick = () => { if (ghost()) return;
+      if (b.dataset.res) { Fx.toast('呢塊地仲未開發，遲啲再嚟'); return; }
       const s = this.SPOTS.find(x => x.id === b.dataset.id);
       if (b.classList.contains('off')) { Fx.toast(s.ready && !s.ready() ? `${s.name}還在施工，快好了` : s.lock || ''); return; }
       this.close(); if (typeof Guide !== 'undefined') Guide.visit(s.id); s.go();

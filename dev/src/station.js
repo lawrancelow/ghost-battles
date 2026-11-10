@@ -342,13 +342,13 @@ const Station = (() => {
       this.def = def; this.on = true; this.walkers = []; this.fx = []; this.spawnAcc = TUNE.every - 1.5; this.t = 0;
       let el = $('#stn-live'); if (!el) { el = document.createElement('div'); el.id = 'stn-live'; document.body.appendChild(el); }
       el.innerHTML = `<canvas id="stn-cv"></canvas><div class="stn-hud"><button class="btn sm" id="stn-x">返回</button><div class="stn-hh"><b>${def.name}</b><span id="stn-info"></span></div></div><div class="stn-board" id="stn-board"></div><div class="stn-tip" id="stn-tip">點站崗的鬼放大招（下一個路人 ×2.5，冷卻 20 秒）。點夜冷村的鬼出手驅趕。左右拖動看整條路。</div>`;
-      el.classList.add('on'); this.cv = $('#stn-cv'); this.ctx = this.cv.getContext('2d');
+      el.classList.add('on'); this.cv = $('#stn-cv'); const tb = document.getElementById('stn-testbtn'); if (tb) tb.style.display = 'none'; this.ctx = this.cv.getContext('2d');
       this.resize(); this.camX = this.maxCam(); // 路人由右邊行入
       $('#stn-x').onclick = () => this.close();
       this.bindPan(); this.last = performance.now(); cancelAnimationFrame(this.raf); this.raf = requestAnimationFrame((n) => this.frame(n));
       if (has(Sound) && Sound.setMode) try { Sound.setMode('scare'); } catch (e) {}
     },
-    close() { this.on = false; cancelAnimationFrame(this.raf); const el = $('#stn-live'); if (el) el.classList.remove('on'); st().t = Date.now(); if (has(Sound) && Sound.setMode) try { Sound.setMode('village'); } catch (e) {} openPanel(); },
+    close() { this.on = false; cancelAnimationFrame(this.raf); const el = $('#stn-live'); if (el) el.classList.remove('on'); const tb = document.getElementById('stn-testbtn'); if (tb) tb.style.display = ''; st().t = Date.now(); if (has(Sound) && Sound.setMode) try { Sound.setMode('village'); } catch (e) {} openPanel(); },
     resize() { const dpr = Math.min(2, window.devicePixelRatio || 1), r = this.cv.getBoundingClientRect(); this.W = r.width || innerWidth; this.H = r.height || innerHeight; this.cv.width = Math.round(this.W * dpr); this.cv.height = Math.round(this.H * dpr); this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0); this.dpr = dpr; },
     // 背景：底部對齊，高度填滿畫面
     img() { if (this.def.id === 'office' && has(OFFMAP) && OFFMAP.pano) { const c = OFFMAP.pano(); if (c) return c; } return SPR[this.def.bg]; },
@@ -489,7 +489,21 @@ const Station = (() => {
     },
   };
 
+  // 測試版（單檔 HTML 給 Lawrance 測）：window.STN_TEST 時自動解鎖、送鬼、右上角加入口掣
+  function testHook() {
+    if (typeof window === 'undefined' || !window.STN_TEST) return;
+    if (!window._stnTestT) window._stnTestT = setInterval(() => { try {
+      if (has(S) && S && S.ghosts && !S._stnTest) testHook(); // 開新遊戲會換一份存檔：再送一次
+      // 離開標題畫面後自動打開站崗面板一次
+      const tt = document.getElementById('title'); if (!window._stnAuto && !(tt && tt.classList.contains('on'))) { window._stnAuto = 1; setTimeout(() => { try { openPanel(); const sh = document.getElementById('sheet'); if (sh) sh.style.zIndex = 99990; } catch (e) {} }, 800); }
+    } catch (e) {} }, 1500);
+    S._stnTest = 1; S.seen.ch1_end = 1; ['tianhua', 'eguiking', 'laojiang', 'pontianak', 'xiaozhi', 'toyol'].forEach(k => { try { if (has(joinGhost) && has(GHOSTS) && GHOSTS[k]) joinGhost(k); } catch (e) {} });
+    if (!document.getElementById('stn-testbtn')) { const b = document.createElement('button'); b.id = 'stn-testbtn'; b.textContent = '站崗測試'; b.onclick = () => { try { if (Live.on) return; openPanel(); const sh = document.getElementById('sheet'); if (sh) sh.style.zIndex = 99990; } catch (e) {} };
+      b.textContent = '站崗測試（點我）'; setInterval(() => { try { const tt = document.getElementById('title'), sh = document.getElementById('sheet'); b.style.display = (Live.on || (tt && tt.classList.contains('on')) || (sh && sh.classList.contains('on'))) ? 'none' : ''; } catch (e) {} }, 300); b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 86px);z-index:99999;padding:12px 22px;border-radius:14px;border:2px solid #ffd98a;background:#b8341f;color:#fff;font-weight:800;font-size:18px;box-shadow:0 3px 10px #000a'; document.body.appendChild(b); }
+    try { save(); } catch (e) {}
+  }
   function init() {
+    try { testHook(); } catch (e) { console.error(e); }
     if (has(POSTS) && !POSTS.station) POSTS.station = { name:'陽間站崗', bld:null, stat:2, desc:'在陽間地盤站崗嚇路人' };
     try { st(); } catch (e) {}
     setInterval(() => { try { if (!Live.on) tick(); } catch (e) { console.error(e); } }, 5000);
