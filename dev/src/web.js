@@ -1,6 +1,6 @@
 // ===================== 網址版（GitHub Pages）＋ 下載檔案當啟動器 =====================
 // 下載的檔案：打開就把存檔搬到網址版，直接開始玩。網址版：可以加到手機桌面，離線也能玩，更新自動生效。
-const GAME_VER = '2026.11.11b';
+const GAME_VER = '2026.11.11c';
 const WEB_URL = 'https://lawrancelow.github.io/ghost-battles/';
 const IS_WEB = /^https?:$/.test(location.protocol) && /github\.io$/.test(location.hostname);
 const IS_FILE = !/^https?:$/.test(location.protocol);
@@ -56,6 +56,13 @@ const Web = {
   init() {
     if (!IS_WEB) return;
     try { if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
+    // 開住遊戲過夜都要知有新版：返到畫面時查一查，有就出橫額，撳一下存檔再更新
+    try { if (!IS_FILE) { let last = 0; const chk = () => { if (document.hidden || Date.now() - last < 60000) return; last = Date.now();
+      fetch('sw.js?t=' + Date.now(), { cache: 'no-store' }).then(r => r.text()).then(t => { const m = t.match(/const C='gb-([^']+)'/); if (!m || m[1] === GAME_VER || document.getElementById('gb-upd')) return;
+        const b = document.createElement('button'); b.id = 'gb-upd'; b.textContent = '有新版本 ✨ 撳我即刻更新';
+        b.style.cssText = 'position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 8px);transform:translateX(-50%);z-index:200000;padding:10px 18px;border-radius:22px;border:2px solid #2a0d07;background:linear-gradient(180deg,#d4a54a,#a8742a);color:#2a1408;font:bold 16px inherit;box-shadow:0 4px 14px rgba(0,0,0,.6)';
+        b.onclick = () => { try { save(); } catch (e) {} location.reload(); }; document.body.appendChild(b); }).catch(() => {}); };
+      document.addEventListener('visibilitychange', chk); setInterval(chk, 5 * 60000); setTimeout(chk, 8000); } } catch (e) {}
     try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {} // 申請永久保存：手機清空間時唔好清走存檔
     try {
       const v = localStorage.getItem('gb_ver'); if (v && v !== GAME_VER) setTimeout(() => Fx.toast('遊戲已經自動更新到新版本 ✨'), 1800);
