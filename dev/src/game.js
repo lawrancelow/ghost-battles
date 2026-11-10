@@ -22,7 +22,7 @@ function newState() {
     uid:1, prod:{},
   };
 }
-function save() { try { if (!S || typeof S !== 'object') return; S.last = Date.now(); const prev = localStorage.getItem(SAVE_KEY); if (prev) { try { const pv = JSON.parse(prev); if (pv && (pv.lv || 1) > (S.lv || 1) + 2) localStorage.setItem(SAVE_KEY + '_hi', prev); } catch (e) {} } localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
+function save() { try { if (!S || typeof S !== 'object' || window.__NOSAVE) return; S.last = Date.now(); const prev = localStorage.getItem(SAVE_KEY); if (prev) { try { const pv = JSON.parse(prev); if (pv && (pv.lv || 1) > (S.lv || 1) + 2) localStorage.setItem(SAVE_KEY + '_hi', prev); } catch (e) {} } localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
 function load() { try { const j = localStorage.getItem(SAVE_KEY); if (j) return JSON.parse(j); } catch (e) {} return null; }
 
 // ---------------- 數值公式 ----------------
@@ -921,8 +921,8 @@ const UI = {
     $('#resetbtn').onclick = (e) => { if (!confirmInline(e.target, '再按一次確定刪檔')) return; try { localStorage.setItem(SAVE_KEY + '_del', localStorage.getItem(SAVE_KEY) || ''); } catch (er) {} localStorage.removeItem(SAVE_KEY); location.reload(); };
     $('#expbtn').onclick = () => { save(); const code = Web.enc(S); const done = () => Fx.toast('存檔碼已複製，貼去記事本或者 WhatsApp 自己收好'); try { navigator.clipboard.writeText(code).then(done, () => { $('#impbox').hidden = false; $('#impta').value = code; $('#impta').select(); Fx.toast('自己長按複製呢段存檔碼'); }); } catch (er) { $('#impbox').hidden = false; $('#impta').value = code; } };
     $('#impbtn').onclick = () => { $('#impbox').hidden = false; $('#impta').value = ''; $('#impta').focus(); };
-    $('#impgo').onclick = (e) => { let o = null; try { o = Web.dec($('#impta').value.trim().replace(/^.*#save=/, '')); } catch (er) {} if (!o || !o.res) { Fx.toast('存檔碼讀唔到，檢查吓有冇貼齊'); return; } if (!confirmInline(e.target, `再按一次：換成主公 ${o.lv || 1} 級嘅存檔`)) return; try { localStorage.setItem(SAVE_KEY + '_bak', localStorage.getItem(SAVE_KEY) || ''); window.removeEventListener('beforeunload', save); o.last = Date.now(); localStorage.setItem(SAVE_KEY, JSON.stringify(o)); S = null; } catch (er) {} location.reload(); };
-    const rb = $('#restorebtn'); if (rb) rb.onclick = (e) => { if (!confirmInline(e.target, '再按一次確定恢復')) return; try { const k = SAVE_KEY + rb.dataset.k; const v = localStorage.getItem(k); localStorage.setItem(SAVE_KEY + '_bak', localStorage.getItem(SAVE_KEY) || ''); window.removeEventListener('beforeunload', save); localStorage.setItem(SAVE_KEY, v); S = null; } catch (er) {} location.reload(); };
+    $('#impgo').onclick = (e) => { let o = null; try { o = Web.dec($('#impta').value.trim().replace(/^.*#save=/, '')); } catch (er) {} if (!o || !o.res) { Fx.toast('存檔碼讀唔到，檢查吓有冇貼齊'); return; } if (!confirmInline(e.target, `再按一次：換成主公 ${o.lv || 1} 級嘅存檔`)) return; try { localStorage.setItem(SAVE_KEY + '_bak', localStorage.getItem(SAVE_KEY) || ''); window.removeEventListener('beforeunload', save); o.last = Date.now(); localStorage.setItem(SAVE_KEY, JSON.stringify(o)); window.__NOSAVE = 1; } catch (er) {} location.reload(); };
+    const rb = $('#restorebtn'); if (rb) rb.onclick = (e) => { if (!confirmInline(e.target, '再按一次確定恢復')) return; try { const k = SAVE_KEY + rb.dataset.k; const v = localStorage.getItem(k); localStorage.setItem(SAVE_KEY + '_bak', localStorage.getItem(SAVE_KEY) || ''); window.removeEventListener('beforeunload', save); localStorage.setItem(SAVE_KEY, v); window.__NOSAVE = 1; } catch (er) {} location.reload(); };
   },
   openBattleSelect() { Battle.openSelect(); },
 };
