@@ -23,7 +23,7 @@ R("btn('title',VW/2+10,y+420-60,120,44,'返主頁','#2c2c33');","btn('toMap',VW/
 R("function frame(ts){ requestAnimationFrame(frame);","function frame(ts){ if (!OPEN){ RAF=0; return; } RAF=requestAnimationFrame(frame);")
 R("window.addEventListener('resize',resize); resize();","window.addEventListener('resize',function(){ if (OPEN) resize(); });")
 i=s.index("  (function load(cb){"); j=s.index("\n",i)
-s=s[:i]+"""  function loadImgs(){ var M={flatbg:'bg_tw_flat',shopbg:'bg_tw_shop'}; ['eguiking','toyol','tianhua','tianhua_hang','npc_ken','npc_auntie','npc_guard','npc_it','npc_mis','npc_boss','flatbg','shopbg'].forEach(function(k){ IMG[k]=SPR[M[k]||k]; }); }
+s=s[:i]+"""  function loadImgs(){ var M={flatbg:'bg_tw_flat',shopbg:'bg_tw_shop'}; ['eguiking','toyol','tianhua','tianhua_hang','npc_ken','npc_auntie','npc_guard','npc_it','npc_mis','npc_boss','npc_it_sit','npc_ken_sit','res_gamer','res_uncle','res_granny','res_helper','res_mjaunty','res_shopper','res_collector','res_guard','res_ot','res_gym','room_mahjong','room_gamer','room_nurse','room_helper','room_gym','room_shopper','room_carpark','room_lobby','flatbg','shopbg'].forEach(function(k){ IMG[k]=SPR[M[k]||k]; }); }
   function open(){ loadImgs(); TS(); ROOT.classList.add('on'); OPEN=true; scene='title'; resize(); last=0; if (!RAF) RAF=requestAnimationFrame(frame); try{ Sound.setMode&&Sound.setMode('story'); }catch(e){} try{ window.Policy&&Policy.firstEnter&&Policy.firstEnter('tower'); }catch(e){} }
   function close(){ OPEN=false; ROOT.classList.remove('on'); joy=null; ptr=null; try{ save(); Sound.setMode&&Sound.setMode('village'); }catch(e){} if (typeof World!=='undefined') World.open(); }
   return { open:open, close:close, get on(){ return OPEN; } };"""+s[j:]
@@ -32,4 +32,5 @@ open(D+'tower.js','w',encoding='utf-8').write(s)
 a={'tw_flat':'flatbg','tw_shop':'shopbg'}
 js="// 自動產生（tools/port_tower.py）：樓裡有鬼兩棟樓背景，加入 BG_SRC → SPR['bg_tw_flat'] / SPR['bg_tw_shop']\n"
 for k,f in a.items(): js+="BG_SRC[%s]='data:image/webp;base64,%s';\n"%(json.dumps(k),base64.b64encode(open(f'{L}/assets/{f}.webp','rb').read()).decode())
+for k in ['res_gamer','res_uncle','res_granny','res_helper','res_mjaunty','res_shopper','res_collector','res_guard','res_ot','res_gym','room_mahjong','room_gamer','room_nurse','room_helper','room_gym','room_shopper','room_carpark','room_lobby']: js+="SPR_SRC[%s]='data:image/webp;base64,%s';\n"%(json.dumps(k),base64.b64encode(open(f'{L}/assets/{k}.webp','rb').read()).decode())
 open(D+'tower_assets.js','w').write(js); print('ok',len(s),len(js))

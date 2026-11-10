@@ -791,3 +791,35 @@ body.st-on #stn-testbtn{display:none!important}
 .tw-root{position:fixed;inset:0;z-index:60;display:none;justify-content:center;background:#0b0b0d;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
 .tw-root.on{display:flex}
 .tw-root .tw-cv{display:block;touch-action:none}
+
+/* ===== 新陰間地圖（全幅蠟筆路線圖） ===== */
+#world .wm-scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:#120d18;-webkit-overflow-scrolling:touch}
+#world .wm-map2{position:relative;width:100%;max-width:560px;margin:0 auto;aspect-ratio:2/3}
+#world .wm-img{display:block;width:100%;height:100%;object-fit:cover;user-select:none;-webkit-user-drag:none}
+#world .wm-map2::before{content:'';position:absolute;left:0;right:0;top:0;height:90px;background:linear-gradient(180deg,rgba(12,8,16,.85),rgba(12,8,16,0));z-index:1;pointer-events:none}
+#world .wm-glow{z-index:2;width:96px;height:96px;margin:-48px 0 0 -48px;background:radial-gradient(circle,rgba(255,200,110,.32),rgba(255,200,110,0) 70%)}
+#world .wm-glow.dim{opacity:.25}
+#world .wm-hit{position:absolute;z-index:3;width:92px;height:92px;margin:-46px 0 0 -46px;border-radius:50%;border:0;background:transparent;padding:0}
+#world .wm-fog{position:absolute;z-index:2;width:130px;height:90px;margin:-45px 0 0 -65px;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse,rgba(170,160,190,.55),rgba(120,110,140,.25) 50%,rgba(120,110,140,0) 72%);filter:blur(4px);animation:wmfog 6s ease-in-out infinite alternate}
+@keyframes wmfog{from{transform:translateX(-6px) scale(1)}to{transform:translateX(6px) scale(1.08)}}
+#world .wm-tag{position:absolute;z-index:4;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:0;min-width:74px;padding:4px 9px 5px;border-radius:9px;border:2px solid #3b2414;background:linear-gradient(180deg,#5a3a22,#3d2616);color:#f6e2b8;box-shadow:0 3px 8px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,220,170,.25);font-family:inherit;text-shadow:0 1px 2px #000;white-space:nowrap}
+#world .wm-tag b{font-size:15px;letter-spacing:1px;line-height:1.25}
+#world .wm-tag small{font-size:10.5px;color:#d9b98c;line-height:1.2}
+#world .wm-tag.off{filter:grayscale(.7) brightness(.75)}
+#world .wm-tag.res{background:rgba(48,40,58,.82);border:2px dashed #9a8aa6;color:#d8cce4}
+#world .wm-tag.res small{color:#b0a3bf}
+#world .wm-tag.wm-gate{background:linear-gradient(180deg,#7a2a1c,#4e190f);border-color:#2a0d07}
+#world .wm-tag:active{transform:translate(-50%,-50%) scale(.94)}
+#world .wm-tag.dot::after{content:'';position:absolute;top:-6px;right:-6px;width:13px;height:13px;border-radius:50%;background:#e8303a;border:2px solid #fff3e0}
+#world .wm-top{z-index:6;background:linear-gradient(180deg,rgba(12,8,16,.92),rgba(12,8,16,0))}
+
+#world .wm-scroll{display:flex;flex-direction:column;padding-top:max(54px,calc(env(safe-area-inset-top) + 46px))}
+#world .wm-map2{flex:none}
+#world .wm-info{flex:1;min-height:150px;margin:0 auto;width:100%;max-width:560px;box-sizing:border-box;padding:14px 18px max(18px,env(safe-area-inset-bottom));color:#f2dfb6;background:linear-gradient(180deg,#1d1424,#120d18);border-top:2px solid #3b2414;display:flex;flex-direction:column;gap:4px}
+#world .wm-info b{font-size:22px;letter-spacing:2px}
+#world .wm-info small{font-size:13px;color:#c9a77a}
+#world .wm-info p{margin:4px 0 0;font-size:15px;line-height:1.5;color:#e4d3b4}
+#world .wm-info .wm-hint{margin:auto 0;text-align:center;color:#a8957f}
+#world .wm-go{margin-top:10px;align-self:stretch;padding:12px;border-radius:12px;border:2px solid #2a0d07;background:linear-gradient(180deg,#b8402a,#7a2a1c);color:#fff3dc;font-family:inherit;font-size:19px;letter-spacing:3px;box-shadow:0 4px 12px rgba(0,0,0,.6)}
+#world .wm-lock{margin-top:10px;padding:10px;border-radius:10px;background:rgba(80,70,90,.5);color:#cdbfd8;text-align:center;font-size:15px}
+#world .wm-tag.sel{border-color:#ffcf6a;box-shadow:0 0 0 2px #ffcf6a,0 0 16px rgba(255,200,100,.8)}
