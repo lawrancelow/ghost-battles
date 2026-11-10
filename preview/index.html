@@ -20547,8 +20547,8 @@ const Station = (() => {
   const has = (o) => typeof o !== 'undefined';
   const R = (a, b) => a + Math.random() * (b - a);
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
-  const W = { breath:'吹氣', light:'燈', cold:'凍', sound:'怪聲', paper:'紙', phone:'電話', face:'鬼臉', shadow:'黑影' };
-  const TYPES = Object.keys(W);
+  const W = { steal:'偷錢', breath:'吹氣', light:'燈', cold:'凍', sound:'怪聲', paper:'紙', phone:'電話', face:'鬼臉', shadow:'黑影' };
+  const TYPES = Object.keys(W).filter(t => t !== 'steal');
   const TUNE = {
     every:8,            // 每幾秒一個路人（實況同放置一樣）
     hp0:60, hpLv:15,    // 路人膽量＝hp0＋見慣度×hpLv
@@ -20574,11 +20574,26 @@ const Station = (() => {
         { spr:'npc_mis', name:'前台秘書', weak:['face', 'cold', 'shadow'], imm:['phone', 'paper'] },
         { spr:'npc_boss', name:'老闆', weak:['phone', 'paper', 'breath'], imm:['face', 'shadow'] },
       ] },
-    { id:'flat', name:'組屋走廊', short:'組屋', bg:'st_flat', soon:true, desc:'夜歸上班族、倒垃圾的阿姨、打遊戲的學生。路人膽子小，入門地圖。', posts:[], people:[] },
-    { id:'bus', name:'巴士站', short:'巴士站', bg:'st_bus', soon:true, desc:'等末班車的人會停很久：同一個崗位可以重複嚇同一個人。', posts:[], people:[] },
+    // 以下兩張等 ChatGPT 背景（1536×1024）：SPR 有咗 st_flat / st_bus 就自動開放；崗位 x 用背景像素，收到圖再對位
+    { id:'flat', name:'組屋走廊', short:'組屋', bg:'st_flat', seg:[0, 1536], walkY:0.84, dir:1, need:'ch1_end', easy:0.85,
+      desc:'夜歸上班族、倒垃圾的阿姨、打遊戲的學生。路人膽子小，入門地圖。',
+      posts:[ { x:230, name:'電梯口', fit:'sound' }, { x:430, name:'垃圾槽', fit:'shadow' }, { x:820, name:'住戶門口', fit:'face' }, { x:1300, name:'樓梯間', fit:'breath' } ],
+      people:[
+        { spr:'npc_ken', name:'夜歸上班族', weak:['phone', 'face', 'shadow'], imm:['light', 'cold'] },
+        { spr:'npc_auntie', name:'倒垃圾阿姨', weak:['face', 'shadow', 'breath'], imm:['sound', 'cold'] },
+        { spr:'npc_it', name:'打機學生', weak:['sound', 'shadow', 'cold'], imm:['phone', 'light'] },
+      ] },
+    { id:'bus', name:'巴士站', short:'巴士站', bg:'st_bus', seg:[0, 1536], walkY:0.84, dir:1, need:'ch1_end', wait:2,
+      desc:'等末班車的人會停很久：站牌那個崗位會重複嚇同一個人。',
+      posts:[ { x:250, name:'路燈下', fit:'light' }, { x:700, name:'站牌後', fit:'paper' }, { x:1150, name:'草叢', fit:'sound' } ],
+      people:[
+        { spr:'npc_ken', name:'等末班車的上班族', weak:['phone', 'breath', 'paper'], imm:['light', 'face'] },
+        { spr:'npc_mis', name:'夜歸女子', weak:['sound', 'cold', 'shadow'], imm:['phone', 'paper'] },
+        { spr:'npc_boss', name:'等司機的老闆', weak:['phone', 'paper', 'shadow'], imm:['face', 'sound'] },
+      ] },
   ];
   const mapOf = (id) => MAPS.find(m => m.id === id);
-  const open = (m) => !m.soon && (!m.need || (has(S) && S.seen && S.seen[m.need])) && (!m.bg || (has(SPR) && SPR[m.bg]));
+  const open = (m) => !!(!m.soon && (!m.need || (has(S) && S.seen && S.seen[m.need])) && (!m.bg || (has(SPR) && SPR[m.bg])));
 
   // ---------- 夜冷村 ----------
   const RIVALS = ['youhun', 'egui', 'xiaogui', 'zombie', 'zhiren', 'shuigui', 'niutou', 'mamian'];
@@ -20590,8 +20605,33 @@ const Station = (() => {
 
   // ---------- 傳說 ----------
   const LEGEND = { afu:'半夜亮著燈的空工位', tianhua:'天花板上的女人', eguiking:'收攤後的開飯鈴', laojiang:'走廊一跳一跳的影子', xiaozhi:'門縫下的紙人', pontianak:'窗外的笑聲', penanggal:'窗外飄過的頭', toyol:'錢包少了錢' };
-  const LEG_N = [30, 100, 300], LEG_T = ['', '傳聞', '都市傳說', '經典'];
+  const LEG_N = [50, 200, 600], LEG_T = ['', '傳聞', '都市傳說', '經典'];
   const legendName = (k, g) => LEGEND[k] || `${g ? g.name : k}的怪談`;
+  // 怪談升到「都市傳說」嗰陣嘅小劇場（粵語原文＋中文版）
+  const SKIT = {
+    tianhua:[['旁白', D('組屋群組有人貼咗張相：走廊天花板，一束長頭髮垂落嚟。', '組屋群組有人貼了一張相片：走廊天花板，一束長頭髮垂下來。')],
+      ['天花姐', D('影到我好肥喎。邊個影㗎？叫佢刪咗佢。', '把我拍得好胖。誰拍的？叫他刪掉。')],
+      ['天花姐', D('……算啦，留住佢。最少有人記得我。', '……算了，留著吧。至少有人記得我。')]],
+    afu:[['旁白', D('公司 IT 部收到投訴：二十三樓有部電腦，每晚三點自己開機，打一句「好的老闆，收到」。', '公司 IT 部收到投訴：二十三樓有一部電腦，每晚三點自己開機，打一句「好的老闆，收到」。')],
+      ['阿福', D('我淨係想交埋份報告先走。', '我只是想把報告交了再走。')],
+      ['旁白', D('份報告冇人收。但成間公司都記得咗佢個名。', '那份報告沒有人收。但整間公司都記住了他的名字。')]],
+    laojiang:[['旁白', D('保安巡樓報告：「凌晨兩點，閉路電視見到有人跳過走廊。追出去，乜都冇。」', '保安巡樓報告：「凌晨兩點，監控看到有人跳過走廊。追出去，什麼都沒有。」')],
+      ['老殭', D('我唔係跳，我係行。行咗兩百年都係咁行。', '我不是跳，我是走。走了兩百年都是這樣走。')],
+      ['老殭', D('叫我都市傳說？好過叫我老人家。', '叫我都市傳說？總比叫我老人家好。')]],
+    toyol:[['旁白', D('夜市攤主互相提醒：「收檔數錢記住數兩次，聽講有細路仔偷錢。」', '夜市攤主互相提醒：「收攤數錢記得數兩次，聽說有小孩偷錢。」')],
+      ['Toyol', D('我淨係攞散紙！大紙我唔郁㗎！', '我只拿零錢！大鈔我不碰的！')],
+      ['Toyol', D('……今晚郁咗少少啫。', '……今晚碰了一點點而已。')]],
+    eguiking:[['旁白', D('夜市後巷傳開：「收檔之後聽到有人敲碗，敲足成條巷。」', '夜市後巷傳開了：「收攤之後聽到有人敲碗，敲遍整條巷子。」')],
+      ['餓鬼王', D('敲碗係禮貌嚟㗎，即係話我想開飯。', '敲碗是禮貌，意思是我想開飯了。')]],
+    pontianak:[['旁白', D('網上有人發帖：「半夜聽到窗外有女人笑，笑完之後好香。」', '網上有人發帖：「半夜聽到窗外有女人在笑，笑完之後好香。」')],
+      ['Pontianak', D('香？我今晚噴咗新香水。佢哋識貨。', '香？我今晚噴了新的香水。他們識貨。')]],
+    xiaozhi:[['旁白', D('住戶投訴：「門縫底下成日塞咗張紙公仔入嚟，對住我笑。」', '住戶投訴：「門縫底下常常塞進來一張紙人，對著我笑。」')],
+      ['小紙', D('我唔係塞入嚟，我係自己行入嚟。好大分別。', '我不是被塞進來，我是自己走進來的。差很多。')]],
+  };
+  function skitFor(g, def) {
+    const lines = SKIT[g.k] || [['旁白', `${def.short}附近開始有人講起「${legendName(g.k, g)}」。`], [g.name, '終於有人記得我了。']];
+    return { style:'talk', title:`怪談成形：${legendName(g.k, g)}`, lines };
+  }
 
   // ---------- 狀態 ----------
   function st() {
@@ -20622,13 +20662,15 @@ const Station = (() => {
     const nWeak = hb < 4 ? 2 : hb < 7 ? (Math.random() < 0.5 ? 2 : 1) : 1;
     weak = weak.slice(0, nWeak);
     const tough = hb >= 10 ? 3 : hb >= 7 ? 2 : 1; // 要幾連嚇先破
-    return { def:p, spr:p.spr, name:p.name, weak, imm:p.imm, hp:TUNE.hp0 + Math.min(10, hb) * TUNE.hpLv, fear:0, dazed:null, hits:0, tough, done:false, by:0, x:0, i:0, t:0, react:0, say:null };
+    return { def:p, spr:p.spr, name:p.name, weak, imm:p.imm, hp:(TUNE.hp0 + Math.min(10, hb) * TUNE.hpLv) * (def.easy || 1), fear:0, dazed:null, hits:0, tough, done:false, by:0, x:0, i:0, t:0, react:0, say:null };
   }
   // 一個崗位對一個路人出手：返回 { dmg, combo, tag }
   function strike(def, m, pi, P, who) {
     const post = def.posts[pi];
     let type, pw, g = null, legend = 0;
-    if (who === 1) { g = ghost(m.posts[pi]); if (!g) return null; type = typesOf(g.k)[0]; pw = power(g); legend = legLv(m, g.id); }
+    if (who === 1) { g = ghost(m.posts[pi]); if (!g) return null; type = typesOf(g.k)[0]; pw = power(g); legend = legLv(m, g.id);
+      // Toyol 站崗唔嚇人：偷路人錢。發現錢少咗嘅人疑神疑鬼（恐懼 +25%、算失神），下一個崗位更易嚇破
+      if (g.k === 'toyol') { const coin = 1 + Math.floor(m.habit / 3); if (has(S) && S.res) S.res.coins += coin; m.stolen = (m.stolen || 0) + coin; P.dazed = 'steal'; P.stolen = true; m.leg[g.id] = (m.leg[g.id] || 0) + 0.34; return { dmg:P.hp * 0.25, combo:false, tag:`偷了 ${coin} 冥幣`, type:'steal', g }; } }
     else { const e = m.enemy[pi]; if (!e) return null; type = rivalType(e.k); pw = rivalPower(e.k, m); }
     let mul = 1, tag = '';
     if (P.imm.includes(type) && !(legend >= 3)) { mul *= 0.5; tag = '不怕'; }
@@ -20673,7 +20715,7 @@ const Station = (() => {
   // 放置：一個路人即時行完
   function simOne(def, m) {
     const P = makePerson(def, m), order = def.posts.map((_, i) => i);
-    for (const i of order) { if (P.done) break; const res = passPost(def, m, i, P); if (P.done) P.atPost = i; }
+    for (const i of order) { const reps = (def.wait && i === 1) ? def.wait : 1; for (let r = 0; r < reps && !P.done; r++) { passPost(def, m, i, P); if (P.done) P.atPost = i; } }
     finish(def, m, P); return P;
   }
   // 夜冷村行動（每次 tick 用實際分鐘數）
@@ -20723,7 +20765,7 @@ const Station = (() => {
   // 傳說升級提示
   function legendStep(def, m) {
     m.legSeen = m.legSeen || {};
-    for (const gid in m.leg) { const lv = legLv(m, gid); if (lv > (m.legSeen[gid] || 0)) { m.legSeen[gid] = lv; const g = ghost(+gid) || ghost(gid); if (g) log(`<b>${g.name}</b> 在${def.short}的怪談升級為「${LEG_T[lv]}」：${legendName(g.k, g)}`); } }
+    for (const gid in m.leg) { const lv = legLv(m, gid); if (lv > (m.legSeen[gid] || 0)) { m.legSeen[gid] = lv; const g = ghost(+gid) || ghost(gid); if (g) { log(`<b>${g.name}</b> 在${def.short}的怪談升級為「${LEG_T[lv]}」：${legendName(g.k, g)}`); if (lv === 2 && has(Story)) { m.skit = m.skit || {}; if (!m.skit[g.k]) { m.skit[g.k] = 1; try { Story.queue(skitFor(g, def)); } catch (e) {} } } } } }
   }
   // 主 tick：實際經過時間 → 放置路人（實況中嗰張地圖由 Live 逐個行）
   // 鬼被村裡派咗去幹活（或者被趕走）：崗位清返
@@ -20851,8 +20893,8 @@ const Station = (() => {
     // 背景：底部對齊，高度填滿畫面
     img() { if (this.def.id === 'office' && has(OFFMAP) && OFFMAP.pano) { const c = OFFMAP.pano(); if (c) return c; } return SPR[this.def.bg]; },
     // 竪屏：背景縮細放中間偏下（上面留位俾 HUD 同夜空），一屏睇得到成段路
-    bgH() { return Math.min(this.H * 0.60, this.W * 1.25); },
-    top() { return Math.max(this.H * 0.16, this.H - this.bgH() - this.H * 0.17); },
+    bgH() { return Math.min(this.H * 0.56, this.W * 1.25); },
+    top() { return Math.max(270, this.H - this.bgH() - this.H * 0.15); }, // 270：狀態板下面
     sc() { const img = this.img(); return this.bgH() / img.height; },
     maxCam() { const [a, b] = this.def.seg; return Math.max(0, (b - a) * this.sc() - this.W); },
     sx(px) { return (px - this.def.seg[0]) * this.sc() - this.camX; },
@@ -20904,8 +20946,8 @@ const Station = (() => {
         P.x += def.dir * P.speed * dt;
         const i = order[P.next];
         if (i != null && ((def.dir < 0 && P.x <= def.posts[i].x) || (def.dir > 0 && P.x >= def.posts[i].x))) {
-          P.next++;
-          const res = passPost(def, m, i, P);
+          const stay = def.wait && i === 1 && (P.wt = (P.wt || 0) + 1) < def.wait; if (!stay) P.next++; // 巴士站：喺站牌等車，會被嚇多次
+          const res = passPost(def, m, i, P); if (stay && !P.done) P.react = Math.max(P.react || 0, 2.4);
           if (P.done) P.atPost = i;
           const [px, py] = this.postXY(i), h = this.personH();
           res.forEach((r, k) => {
@@ -20914,7 +20956,7 @@ const Station = (() => {
             this.float(px, py - h * (1.15 + k * 0.18), txt, r.who === 2 ? '#ff7b7b' : r.broke ? '#ffe066' : r.tag === '不怕' ? '#aab' : '#e8f4ff');
             if (r.who === 1 && r.g) { r.g._act = this.t; }
           });
-          if (res.length) { P.react = 0.7; P.scaredT = this.t; }
+          if (res.length) { P.react = Math.max(P.react || 0, 0.7); P.scaredT = this.t; }
           if (P.done && P.by === 2 && res.length && res[res.length - 1].who === 2 && m.posts.some((x, j) => j < i && x != null)) { if (Math.random() < 0.35) this.float(px, py - h * 1.6, L(pick(BRYAN_LINES)).replace(/^Bryan：/, 'Bryan：'), '#ff9a9a'); }
         }
         if ((def.dir < 0 && P.x < def.seg[0] - 100) || (def.dir > 0 && P.x > def.seg[1] + 100)) { if (!P.done) { P.done = true; P.by = 0; } P.gone = true; }
@@ -20927,7 +20969,7 @@ const Station = (() => {
         const bd = $('#stn-board'); if (bd) { const stp = m.stable ? '已穩定：固定產出，離線照算' : m.stableAt ? `穩定倒數 ${Math.max(0, Math.ceil((TUNE.stableHours * 3600000 - (Date.now() - m.stableAt)) / 3600000))} 小時` : m.habit >= 10 ? `嚇破膽要 ≥${pct(TUNE.stableRatio)} 才開始計穩定（現在 ${pct(s.me)}）` : '見慣度到 10 才能穩定';
           bd.innerHTML = `<div class="stn-bar"><i class="me" style="width:${pct(s.me)}"></i><i class="en" style="width:${pct(s.en)}"></i></div><div class="stn-bl"><span class="me">我方 ${pct(s.me)}</span><span class="en">夜冷村 ${pct(s.en)}</span><span>最近 ${s.n} 人</span></div>`
             + `<div class="stn-hab"><span>見慣度</span><div class="stn-hm"><i style="width:${m.habit * 10}%"></i></div><b>${m.habit.toFixed(1)}</b></div><small>${stp}</small>`
-            + st().log.slice(0, 3).map(x => `<p>${x.h}</p>`).join(''); } }
+            + st().log.filter(x => x.h.includes(def.short)).slice(0, 3).map(x => `<p>${x.h}</p>`).join(''); } }
     },
     drawChar(ctx, id, x, y, h, pose, right, alpha) {
       ctx.save(); if (alpha != null) ctx.globalAlpha = alpha;
