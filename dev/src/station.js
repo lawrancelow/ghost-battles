@@ -495,11 +495,12 @@ const Station = (() => {
     if (!window._stnTestT) window._stnTestT = setInterval(() => { try {
       if (has(S) && S && S.ghosts && !S._stnTest) testHook(); // 開新遊戲會換一份存檔：再送一次
       // 離開標題畫面後自動打開站崗面板一次
-      const tt = document.getElementById('title'); if (!window._stnAuto && !(tt && tt.classList.contains('on'))) { window._stnAuto = 1; setTimeout(() => { try { openPanel(); const sh = document.getElementById('sheet'); if (sh) sh.style.zIndex = 99990; } catch (e) {} }, 800); }
+      const tt = document.getElementById('title'); if (!window._stnAuto && !(tt && tt.classList.contains('on'))) { window._stnAuto = 1; setTimeout(() => { try { if (typeof Street !== 'undefined') Street.open(); } catch (e) {} }, 800); }
     } catch (e) {} }, 1500);
-    S._stnTest = 1; S.seen.ch1_end = 1; ['tianhua', 'eguiking', 'laojiang', 'pontianak', 'xiaozhi', 'toyol'].forEach(k => { try { if (has(joinGhost) && has(GHOSTS) && GHOSTS[k]) joinGhost(k); } catch (e) {} });
-    if (!document.getElementById('stn-testbtn')) { const b = document.createElement('button'); b.id = 'stn-testbtn'; b.textContent = '站崗測試'; b.onclick = () => { try { if (Live.on) return; openPanel(); const sh = document.getElementById('sheet'); if (sh) sh.style.zIndex = 99990; } catch (e) {} };
-      b.textContent = '站崗測試（點我）'; setInterval(() => { try { const tt = document.getElementById('title'), sh = document.getElementById('sheet'); b.style.display = (Live.on || (tt && tt.classList.contains('on')) || (sh && sh.classList.contains('on'))) ? 'none' : ''; } catch (e) {} }, 300); b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 86px);z-index:99999;padding:12px 22px;border-radius:14px;border:2px solid #ffd98a;background:#b8341f;color:#fff;font-weight:800;font-size:18px;box-shadow:0 3px 10px #000a'; document.body.appendChild(b); }
+    try { if (has(LANG) && !localStorage.getItem('gb_stntest_yue')) { localStorage.setItem('gb_stntest_yue', '1'); LANG.set('yue'); } } catch (e) {} // 測試版預設粵語
+    S._stnTest = 1; S.seen.ch1_end = 1; ['tianhua', 'eguiking', 'laojiang', 'pontianak', 'xiaozhi', 'toyol'].concat(has(GHOSTS) ? Object.keys(GHOSTS) : []).filter((k, i, a) => a.indexOf(k) === i && k !== 'afu').forEach(k => { try { if (has(joinGhost) && has(GHOSTS) && GHOSTS[k] && !S.ghosts.some(g => g.k === k)) joinGhost(k); } catch (e) {} });
+    if (!document.getElementById('stn-testbtn')) { const b = document.createElement('button'); b.id = 'stn-testbtn'; b.textContent = '站崗測試'; b.onclick = () => { try { if (typeof Street !== 'undefined') Street.open(); } catch (e) {} };
+      b.textContent = '陽間站崗（點我）'; setInterval(() => { try { const tt = document.getElementById('title'), sh = document.getElementById('sheet'); b.style.display = (Live.on || (tt && tt.classList.contains('on')) || (sh && sh.classList.contains('on'))) ? 'none' : ''; } catch (e) {} }, 300); b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 86px);z-index:99999;padding:12px 22px;border-radius:14px;border:2px solid #ffd98a;background:#b8341f;color:#fff;font-weight:800;font-size:18px;box-shadow:0 3px 10px #000a'; document.body.appendChild(b); }
     try { save(); } catch (e) {}
   }
   function init() {

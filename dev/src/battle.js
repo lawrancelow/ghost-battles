@@ -45,7 +45,7 @@ const Battle = {
       $('#sheet').querySelectorAll('.tslot').forEach(el => el.onclick = () => this.pickSlot(el.dataset.slot));
       const so = $('#sc-open'); if (so) so.onclick = () => Scare.open('office');
       const spo = $('#sp-open'); if (spo) spo.onclick = () => Sports.open();
-      const sto = $('#stn-open'); if (sto) sto.onclick = () => Station.openPanel();
+      const sto = $('#stn-open'); if (sto) sto.onclick = () => (typeof Street !== 'undefined' ? Street.open() : Station.openPanel());
       $('#sheet').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { const [ci, si] = b.dataset.go.split(',').map(Number); this.tryStart(ci, si); });
     };
     UI.sheet('陽間地盤', render()); bind();
