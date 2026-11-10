@@ -22,7 +22,7 @@ function newState() {
     uid:1, prod:{},
   };
 }
-function save() { try { S.last = Date.now(); localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
+function save() { try { if (!S || typeof S !== 'object') return; S.last = Date.now(); const prev = localStorage.getItem(SAVE_KEY); if (prev) { try { const pv = JSON.parse(prev); if (pv && (pv.lv || 1) > (S.lv || 1) + 2) localStorage.setItem(SAVE_KEY + '_hi', prev); } catch (e) {} } localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
 function load() { try { const j = localStorage.getItem(SAVE_KEY); if (j) return JSON.parse(j); } catch (e) {} return null; }
 
 // ---------------- 數值公式 ----------------
@@ -911,14 +911,15 @@ const UI = {
     SCENE_ORDER.forEach(([name, ids], i) => { const ok = ids.some(id => S.seen[id]); h += `<button class="btn wide ${ok ? '' : 'ghost'}" data-sc="${i}" ${ok ? '' : 'disabled'}>${ok ? name : '？？？'}</button>`; });
     h += '</div><h4 class="stand-h">開麥之夜・陰間脫口秀</h4><p class="desc">村裡的鬼，入了村就能上台。</p><div class="slist">';
     STANDUP.forEach((st, i) => { const ok = standOk(st); h += `<button class="btn wide ${ok ? '' : 'ghost'}" data-st="${i}" ${ok ? '' : 'disabled'}>${ok ? `<small>${st.who}</small>　${st.title}` : '？？？（' + st.hint + '）'}</button>`; });
-    h += `</div><hr>${IS_WEB && !isStandalone() ? '<button class="btn wide gold" id="instbtn">放到手機桌面（自動更新）</button>' : ''}<button class="btn wide" id="phonebtn">看手機</button><button class="btn wide" id="sndbtn">聲音：${Sound.isOn() ? '開' : '關'}</button><button class="btn wide ghost" id="resetbtn">重新開始（刪除存檔）</button>`;
+    h += `</div><hr>${IS_WEB && !isStandalone() ? '<button class="btn wide gold" id="instbtn">放到手機桌面（自動更新）</button>' : ''}<button class="btn wide" id="phonebtn">看手機</button><button class="btn wide" id="sndbtn">聲音：${Sound.isOn() ? '開' : '關'}</button><button class="btn wide ghost" id="resetbtn">重新開始（刪除存檔）</button>${(() => { let best = null; for (const k of ['_hi', '_bak', '_del']) { try { const o = JSON.parse(localStorage.getItem(SAVE_KEY + k) || 'null'); if (o && (o.lv || 1) > (S.lv || 1) && (!best || o.lv > best.o.lv)) best = { k, o }; } catch (e) {} } return best ? `<button class="btn wide gold" id="restorebtn" data-k="${best.k}">恢復備份存檔（主公 ${best.o.lv} 級）</button>` : ''; })()}`;
     this.sheet('劇情', h);
     $('#sheet').querySelectorAll('[data-sc]').forEach(b => b.onclick = () => { this.close(); SCENE_ORDER[+b.dataset.sc][1].filter(id => S.seen[id]).forEach(id => Story.queue(id)); });
     $('#sheet').querySelectorAll('[data-st]').forEach(b => b.onclick = () => { this.close(); const st = STANDUP[+b.dataset.st]; Story.queue({ style:'talk', bg:st.bg, mic:true, title:st.title, lines:[...st.lines, ['旁白', st.end]] }); });
     const ib = $('#instbtn'); if (ib) ib.onclick = () => { this.close(); Web.installGuide(false); };
     $('#phonebtn').onclick = () => { this.close(); Phone.home('post'); };
     $('#sndbtn').onclick = (e) => { const on = Sound.toggle(); e.target.textContent = '聲音：' + (on ? '開' : '關'); syncSnd(); };
-    $('#resetbtn').onclick = (e) => { if (!confirmInline(e.target, '再按一次確定刪檔')) return; localStorage.removeItem(SAVE_KEY); location.reload(); };
+    $('#resetbtn').onclick = (e) => { if (!confirmInline(e.target, '再按一次確定刪檔')) return; try { localStorage.setItem(SAVE_KEY + '_del', localStorage.getItem(SAVE_KEY) || ''); } catch (er) {} localStorage.removeItem(SAVE_KEY); location.reload(); };
+    const rb = $('#restorebtn'); if (rb) rb.onclick = (e) => { if (!confirmInline(e.target, '再按一次確定恢復')) return; try { const k = SAVE_KEY + rb.dataset.k; const v = localStorage.getItem(k); localStorage.setItem(SAVE_KEY + '_bak', localStorage.getItem(SAVE_KEY) || ''); window.removeEventListener('beforeunload', save); localStorage.setItem(SAVE_KEY, v); S = null; } catch (er) {} location.reload(); };
   },
   openBattleSelect() { Battle.openSelect(); },
 };

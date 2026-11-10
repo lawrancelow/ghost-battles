@@ -1,6 +1,6 @@
 // ===================== 網址版（GitHub Pages）＋ 下載檔案當啟動器 =====================
 // 下載的檔案：打開就把存檔搬到網址版，直接開始玩。網址版：可以加到手機桌面，離線也能玩，更新自動生效。
-const GAME_VER = '2026.11.10e';
+const GAME_VER = '2026.11.10f';
 const WEB_URL = 'https://lawrancelow.github.io/ghost-battles/';
 const IS_WEB = /^https?:$/.test(location.protocol) && /github\.io$/.test(location.hostname);
 const IS_FILE = !/^https?:$/.test(location.protocol);
@@ -45,11 +45,12 @@ const Web = {
     const h = location.hash || ''; if (!IS_WEB || !h.startsWith('#save=')) return done();
     history.replaceState(null, '', location.pathname + location.search);
     let o = null; try { o = this.dec(decodeURIComponent(h.slice(6))); } catch (e) { Fx.toast('搬家失敗：存檔讀不出來'); return done(); }
-    const put = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(o)); localStorage.setItem('gb_justmoved', '1'); } catch (e) { Fx.toast('存不進去：手機空間不夠'); } done(); };
+    const put = () => { try { const old = localStorage.getItem(SAVE_KEY); if (old) localStorage.setItem(SAVE_KEY + '_bak', old); localStorage.setItem(SAVE_KEY, JSON.stringify(o)); localStorage.setItem('gb_justmoved', '1'); } catch (e) { Fx.toast('存不進去：手機空間不夠'); } done(); };
     let cur = null; try { cur = localStorage.getItem(SAVE_KEY); } catch (e) {}
     if (!cur) return put();
     let c = null; try { c = JSON.parse(cur); } catch (e) {}
     if (c && (c.last || 0) >= (o.last || 0)) { done(); return; } // 這裡的進度比較新，就不蓋掉
+    if (c && (c.lv || 1) > (o.lv || 1)) { Fx.toast(`下載版只係 ${o.lv || 1} 級，這裡係 ${c.lv} 級，保留這裡的進度`); done(); return; } // 低級檔永遠唔蓋高級檔
     this.overlay('搬家', `<p>要把下載版的進度（主公 ${o.lv || 1} 級）搬進來嗎？</p><p><b>這裡現在的進度（主公 ${(c && c.lv) || 1} 級）會被取代。</b></p>`, [['搬進來', put], ['不要，留著這裡的', done]]);
   },
   init() {
