@@ -28,6 +28,11 @@ s=s[:i]+"""  function loadImgs(){ var M={flatbg:'bg_tw_flat',shopbg:'bg_tw_shop'
   function close(){ OPEN=false; ROOT.classList.remove('on'); joy=null; ptr=null; try{ save(); Sound.setMode&&Sound.setMode('village'); }catch(e){} if (typeof World!=='undefined') World.open(); }
   return { open:open, close:close, get on(){ return OPEN; } };"""+s[j:]
 s="// ===================== 樓裡有鬼（由 /home/claude/lyg 獨立版移植；用 tools/port_tower.py 重新生成，唔好直接改）=====================\n"+s
+# 電梯模組（core/lift.js）：要喺 Tower 之前載入；gb 入面 tw-root 係 z-index 60，𨋢層要疊喺上面；Tower 收埋時當 scene 唔係 play
+LJ=open(L+'/core/lift.js',encoding='utf-8').read().replace('z-index:5;','z-index:61;').replace('z-index:30;','z-index:62;')
+assert LJ.count('z-index:61;')==1 and LJ.count('z-index:62;')==1
+R("get scene(){return scene;}","get scene(){return OPEN?scene:'closed';}")
+s="// ---- 電梯模組 core/lift.js ----\n"+LJ+"\n"+s
 open(D+'tower.js','w',encoding='utf-8').write(s)
 a={'tw_flat':'flatbg','tw_shop':'shopbg'}
 js="// 自動產生（tools/port_tower.py）：樓裡有鬼兩棟樓背景，加入 BG_SRC → SPR['bg_tw_flat'] / SPR['bg_tw_shop']\n"
