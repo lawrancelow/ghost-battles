@@ -39,7 +39,10 @@ const StnFoes = (() => {
 
   // ---------- 狀態（唔入存檔）----------
   let S = null;
-  function reset() { S = { seals:[], pause:new Map(), salt:new Map(), saltFx:[], beams:[], wave:0, warned:new Set(), lines:new Set() }; }
+  function reset() { S = { seals:[], brk:[], pause:new Map(), salt:new Map(), saltFx:[], beams:[], wave:0, warned:new Set(), lines:new Set() }; }
+  // 解封／撤符：記低位置，畫封條撕開、鎖鏈散開（1 秒）
+  const brkAdd = (s, W) => { if (!S.brk) S.brk = []; const p = spotOf(s, W); if (p) S.brk.push({ kind:s.kind, i:s.i, x:p[0], y:p[1], t:0, dur:1.0, seed:s.seed || 0 }); };
+  const sealIm = () => { const im = typeof SPR !== 'undefined' && SPR.vfx_seal; return im && im.naturalWidth ? im : null; };
   reset();
 
   // 同一關內唔好兩個角色講同一句：每句講完先回收
@@ -101,7 +104,7 @@ const StnFoes = (() => {
 
   // ---------- 更新 ----------
   function release(by, W, quiet) {
-    S.seals = S.seals.filter(s => { if (s.by !== by) return true; if (!quiet && W) { const p = spotOf(s, W); if (p) W.float(p[0], p[1] - 0.06, T('黃符撤走', '黃符撤走'), '#ffe9a0'); } return false; });
+    S.seals = S.seals.filter(s => { if (s.by !== by) return true; if (W) brkAdd(s, W); if (!quiet && W) { const p = spotOf(s, W); if (p) W.float(p[0], p[1] - 0.06, T('黃符撤走', '黃符撤走'), '#ffe9a0'); } return false; });
   }
   function spotOf(s, W) { if (s.kind === 'boss') return W.bpos ? W.bpos(s.tgt) : null; const sp = W.lay.posts[s.i]; return sp ? [sp.x, sp.y] : null; }
   function devList(W) { const out = []; (W.sd.posts || []).forEach((p, i) => { const sp = W.lay.posts[i]; if (p && p.role && !(p.build > 0) && sp) out.push({ p, i, sp }); }); return out; }
@@ -109,9 +112,9 @@ const StnFoes = (() => {
   function update(dt, W) {
     for (const s of S.seals) s.t += dt;
     S.seals = S.seals.filter(s => { const gone = s.kind === 'boss' ? !(W.bosses || []).includes(s.tgt) : W.sd.posts[s.i] !== s.tgt;
-      if (gone) return false; if (s.t < s.dur) return true; const p = spotOf(s, W); if (p) W.float(p[0], p[1] - 0.06, T('解封！', '解封！'), '#9ef0b0'); return false; });
+      if (gone) return false; if (s.t < s.dur) return true; brkAdd(s, W); const p = spotOf(s, W); if (p) W.float(p[0], p[1] - 0.06, T('解封！', '解封！'), '#9ef0b0'); return false; });
     for (const M of [S.pause, S.salt]) for (const [k, v] of M) { v.t += dt; if (v.t >= v.dur) M.delete(k); }
-    S.saltFx = S.saltFx.filter(f => (f.t += dt) < f.dur);
+    S.saltFx = S.saltFx.filter(f => (f.t += dt) < f.dur); S.brk = (S.brk || []).filter(f => (f.t += dt) < f.dur);
     S.beams = S.beams.filter(f => (f.t += dt) < f.dur);
     for (const w of W.walkers) {
       if (!w.foe) continue; const F = w.foe;
@@ -225,15 +228,28 @@ const StnFoes = (() => {
     for (const s of S.seals) { const left = s.dur - s.t, pop = Math.min(1, s.t / 0.25), endBlink = left < 1.5 ? 0.6 + 0.4 * Math.sin(t * 18) : 1;
       if (s.kind === 'dev') { const rc = devRect(W, s.i); if (!rc) continue; const [x0, y0, cw, ch] = rc, cx = x0 + cw / 2;
         c.fillStyle = 'rgba(40,24,0,0.5)'; c.fillRect(x0, y0, cw, ch);
-        c.save(); c.globalAlpha = endBlink; chainLine(c, x0 - 4 * U, y0 + 4 * U, x0 + cw + 4 * U, y0 + ch - 4 * U, U, t); chainLine(c, x0 + cw + 4 * U, y0 + 4 * U, x0 - 4 * U, y0 + ch - 4 * U, U, t + 1); c.restore();
-        const fw = Math.min(cw * 0.42, 30 * U) * pop, fh = fw * 2.5; drawFu(c, cx, y0 - fh * 0.32, fw, fh, t, s.seed, endBlink);
+        const SI = sealIm();
+        if (SI) { const H0 = Math.max(ch * 1.25, cw * 0.95) * Math.min(1.3, Math.max(0.9, 1)), sc = pop < 1 ? 1.5 - 0.5 * pop + Math.sin(pop * Math.PI) * 0.12 : 1 + Math.sin(t * 2.2 + s.seed) * 0.025, hW = H0 * SI.naturalWidth / SI.naturalHeight;
+          c.save(); c.globalAlpha = Math.min(1, pop * 1.5) * endBlink; c.translate(cx, y0 + ch * 0.5); c.rotate(Math.sin(t * 1.6 + s.seed) * 0.04); c.scale(sc, sc);
+          const g = c.createRadialGradient(0, 0, 4 * U, 0, 0, H0 * 0.62); g.addColorStop(0, `rgba(255,215,90,${0.32 + 0.12 * Math.sin(t * 4)})`); g.addColorStop(1, 'rgba(255,215,90,0)'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, H0 * 0.62, 0, 7); c.fill();
+          c.drawImage(SI, -hW / 2, -H0 / 2, hW, H0); c.restore(); }
+        else { c.save(); c.globalAlpha = endBlink; chainLine(c, x0 - 4 * U, y0 + 4 * U, x0 + cw + 4 * U, y0 + ch - 4 * U, U, t); chainLine(c, x0 + cw + 4 * U, y0 + 4 * U, x0 - 4 * U, y0 + ch - 4 * U, U, t + 1); c.restore();
+        const fw = Math.min(cw * 0.42, 30 * U) * pop, fh = fw * 2.5; drawFu(c, cx, y0 - fh * 0.32, fw, fh, t, s.seed, endBlink); }
         const named = s.tgt && s.tgt.staff != null && W.staffMul && W.staffMul(s.tgt).named;
         { const bx = x0 + cw + 2 * U, by = y0 + 2 * U, br = 12 * U; c.fillStyle = 'rgba(40,20,0,0.9)'; c.beginPath(); c.arc(bx, by, br, 0, 7); c.fill(); c.strokeStyle = '#ffd45a'; c.lineWidth = 2.5 * U; c.beginPath(); c.arc(bx, by, br, -Math.PI / 2, -Math.PI / 2 + 6.283 * left / s.dur); c.stroke(); bigTxt(c, String(Math.ceil(left)), bx, by + 6 * U, 17 * U, '#ffd45a', '#2a1600'); }
         bigTxt(c, named ? T(`名鬼被封印 ${Math.ceil(left)} 秒`, `名鬼被封印 ${Math.ceil(left)} 秒`) : T('封禁中', '封禁中'), cx, y0 + ch + 14 * U, 10 * U, '#ffe9a0'); }
       else if (W.bpos) { const [x, y] = W.P(...W.bpos(s.tgt)), top = y - hh * 1.55;
         c.strokeStyle = `rgba(255,212,90,${0.5 * endBlink})`; c.lineWidth = 3 * U; c.beginPath(); c.ellipse(x, y, hh * 0.8, hh * 0.26, 0, t * 2, t * 2 + 5.2); c.stroke();
-        const fw = 18 * U * pop; drawFu(c, x, top - fw * 2.4, fw, fw * 2.4, t, s.seed, endBlink);
+        const fw = 18 * U * pop, SI = sealIm(); if (SI) { const H0 = fw * 3.2, hW = H0 * SI.naturalWidth / SI.naturalHeight; c.save(); c.globalAlpha = endBlink; c.translate(x, top - H0 * 0.42); c.rotate(Math.sin(t * 1.8 + s.seed) * 0.06); c.drawImage(SI, -hW / 2, -H0 / 2, hW, H0); c.restore(); } else drawFu(c, x, top - fw * 2.4, fw, fw * 2.4, t, s.seed, endBlink);
         bigTxt(c, T(`被封印 ${Math.ceil(left)} 秒`, `被封印 ${Math.ceil(left)} 秒`), x, top - fw * 2.6, 12 * U, '#ffd45a'); } }
+    // 解封：封條左右撕開飛走＋鎖鏈碎、金光粒子
+    for (const f of (S.brk || [])) { const SI = sealIm(), k = f.t / f.dur, e = 1 - Math.pow(1 - k, 2), [px, py] = W.P(f.x, f.y), rc = f.kind === 'dev' ? devRect(W, f.i) : null;
+      const cx = rc ? rc[0] + rc[2] / 2 : px, cy = rc ? rc[1] + rc[3] / 2 : py - hh * 1.9, H0 = rc ? Math.max(rc[3] * 1.25, rc[2] * 0.95) : 18 * U * 3.2;
+      c.save(); c.globalAlpha = 1 - k;
+      if (SI) { const hW = H0 * SI.naturalWidth / SI.naturalHeight, iw = SI.naturalWidth, ih = SI.naturalHeight;
+        for (const sd of [-1, 1]) { c.save(); c.translate(cx + sd * e * H0 * 0.55, cy - Math.sin(k * Math.PI) * H0 * 0.25 + e * H0 * 0.2); c.rotate(sd * e * 0.9); const sx = sd < 0 ? 0 : iw / 2; c.drawImage(SI, sx, 0, iw / 2, ih, sd < 0 ? -hW / 2 : 0, -H0 / 2, hW / 2, H0); c.restore(); } }
+      for (let j = 0; j < 14; j++) { const a = j * 0.449 + f.seed, d = e * H0 * (0.4 + (j % 4) * 0.15); c.fillStyle = j % 3 ? `rgba(255,214,90,${1 - k})` : `rgba(255,250,220,${1 - k})`; c.beginPath(); c.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d * 0.7 + k * k * 20 * U, (2.6 - k * 1.5) * U, 0, 7); c.fill(); }
+      c.restore(); }
     // 道士唸咒進度圈＋強敵標記
     for (const w of W.walkers) { if (!w.foe || w.gone || !W.alive(w)) continue; const F = w.foe, C = FOES[F.id], [x, y] = W.P(...W.wp(w));
       if (F.chant) { const k = Math.min(1, F.chant.t / F.chant.dur), cy = y - hh * 1.55, r = 13 * U, jx = F.chant.jolt > 0 ? (Math.random() - 0.5) * 5 * U : 0;

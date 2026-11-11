@@ -8,7 +8,7 @@ def R(a,b,cnt=1):
 R("(function(){\n","const Tower=(function(){\n  var OPEN=false, RAF=0, ROOT=document.createElement('section'); ROOT.id='tw-root'; ROOT.className='tw-root';\n  var _cv=document.createElement('canvas'); _cv.className='tw-cv'; ROOT.appendChild(_cv); document.body.appendChild(ROOT);\n  function TS(){ if (!S.tower) S.tower={unlocked:true,cleared:{},best:0,nights:0}; S.tower.cleared=S.tower.cleared||{}; return S.tower; }\n  if (typeof World!=='undefined') World.ICON.tower='樓';\n")
 R("var cv=document.getElementById('c'), ctx=cv.getContext('2d');","var cv=_cv, ctx=cv.getContext('2d');")
 R("try{ var sv=JSON.parse(localStorage.getItem('lyg_pangsa')||'{}'); sv.nights=(sv.nights||0)+1; if (why!=='fail'){ sv.best=Math.max(sv.best||0,kept); sv['clear_'+curLv]=1; } localStorage.setItem('lyg_pangsa',JSON.stringify(sv)); }catch(e){}",
-  "try{ var sv=TS(), first=why==='gate'&&!sv['gate_'+curLv]; if (first) sv['gate_'+curLv]=1; sv.nights=(sv.nights||0)+1; var rw=why==='gate'?40+15*kept+25*story:why==='doll'?20+8*kept:0; if (first) rw+=100; if (why!=='fail'){ sv.best=Math.max(sv.best||0,kept); sv.cleared[curLv]=1; } G.over.reward=rw; S.res.coins+=rw; save(); }catch(e){ console.error(e); }")
+  "try{ var sv=TS(), first=why==='gate'&&!sv['gate_'+curLv]; if (first) sv['gate_'+curLv]=1; sv.nights=(sv.nights||0)+1; var rw=(why==='gate'?40+15*kept+25*story:why==='doll'?20+8*kept:0)+(why!=='fail'?(G.unitCoins||0):0); if (first) rw+=100; if (why!=='fail'){ sv.best=Math.max(sv.best||0,kept); sv.cleared[curLv]=1; } G.over.reward=rw; S.res.coins+=rw; save(); }catch(e){ console.error(e); }")
 R("var sv={}; try{ sv=JSON.parse(localStorage.getItem('lyg_pangsa')||'{}'); }catch(e){} var shopOpen=!!sv.clear_flat||Q.has('unlock');",
   "var sv=TS(); var shopOpen=!!sv.cleared.flat||Q.has('unlock')||!!window.STN_TEST;")
 R("'組屋'+(sv.clear_flat?' ✓':'')","'組屋'+(sv.cleared.flat?' ✓':'')"); R("'老店屋'+(sv.clear_shop?' ✓':'')","'老店屋'+(sv.cleared.shop?' ✓':'')")
@@ -23,7 +23,7 @@ R("btn('title',VW/2+10,y+420-60,120,44,'返主頁','#2c2c33');","btn('toMap',VW/
 R("function frame(ts){ requestAnimationFrame(frame);","function frame(ts){ if (!OPEN){ RAF=0; return; } RAF=requestAnimationFrame(frame);")
 R("window.addEventListener('resize',resize); resize();","window.addEventListener('resize',function(){ if (OPEN) resize(); });")
 i=s.index("  (function load(cb){"); j=s.index("\n",i)
-s=s[:i]+"""  function loadImgs(){ var M={flatbg:'bg_tw_flat',shopbg:'bg_tw_shop'}; ['eguiking','toyol','tianhua','tianhua_hang','npc_ken','npc_auntie','npc_guard','npc_it','npc_mis','npc_boss','npc_it_sit','npc_ken_sit','res_gamer','res_uncle','res_granny','res_helper','res_mjaunty','res_shopper','res_collector','res_guard','res_ot','res_gym','room_mahjong','room_gamer','room_nurse','room_helper','room_gym','room_shopper','room_carpark','room_lobby','flatbg','shopbg'].forEach(function(k){ IMG[k]=SPR[M[k]||k]; }); }
+s=s[:i]+"""  function loadImgs(){ var M={flatbg:'bg_tw_flat',shopbg:'bg_tw_shop'}; ['eguiking','toyol','tianhua','tianhua_hang','npc_ken','npc_auntie','npc_guard','npc_it','npc_mis','npc_boss','npc_it_sit','npc_ken_sit','res_gamer','res_uncle','res_granny','res_helper','res_mjaunty','res_shopper','res_collector','res_guard','res_ot','res_gym','room_mahjong','room_gamer','room_nurse','room_helper','room_gym','room_shopper','room_carpark','room_lobby','flatbg','shopbg','gb_unit_ppr','gb_unit_gamer','gb_unit_shop'].forEach(function(k){ IMG[k]=SPR[M[k]||k]; }); }
   function open(){ loadImgs(); TS(); ROOT.classList.add('on'); OPEN=true; scene='title'; resize(); last=0; if (!RAF) RAF=requestAnimationFrame(frame); try{ Sound.setMode&&Sound.setMode('story'); }catch(e){} try{ window.Policy&&Policy.firstEnter&&Policy.firstEnter('tower'); }catch(e){} }
   function close(){ OPEN=false; ROOT.classList.remove('on'); joy=null; ptr=null; try{ save(); Sound.setMode&&Sound.setMode('village'); }catch(e){} if (typeof World!=='undefined') World.open(); }
   return { open:open, close:close, get on(){ return OPEN; } };"""+s[j:]
@@ -32,10 +32,17 @@ s="// ===================== 樓裡有鬼（由 /home/claude/lyg 獨立版移植�
 LJ=open(L+'/core/lift.js',encoding='utf-8').read().replace('z-index:5;','z-index:61;').replace('z-index:30;','z-index:62;')
 assert LJ.count('z-index:61;')==1 and LJ.count('z-index:62;')==1
 R("get scene(){return scene;}","get scene(){return OPEN?scene:'closed';}")
-s="// ---- 電梯模組 core/lift.js ----\n"+LJ+"\n"+s
+# 入屋模式（core/unit.js）：疊層 canvas z-index 要高過 tw-root(60)／𨋢(61,62)；Tower 收埋時當 scene 唔係 play
+UJ=open(L+'/core/unit.js',encoding='utf-8').read().replace('z-index:40;','z-index:63;'); assert UJ.count('z-index:63;')==1
+LAYJ=json.load(open(L+'/core/unit_layouts.json',encoding='utf-8'))
+for _k in LAYJ: LAYJ[_k].pop('src',None)
+R("get scene(){ return scene; }","get scene(){ return OPEN?scene:'closed'; }")
+s="// ---- 電梯模組 core/lift.js ----\n"+LJ+"\n// ---- 入屋模式 core/unit.js（背景數據表 core/unit_layouts.json）----\nwindow.UNIT_LAYOUTS="+json.dumps(LAYJ,ensure_ascii=False)+";\n"+UJ+"\n"+s
 open(D+'tower.js','w',encoding='utf-8').write(s)
 a={'tw_flat':'flatbg','tw_shop':'shopbg'}
 js="// 自動產生（tools/port_tower.py）：樓裡有鬼兩棟樓背景，加入 BG_SRC → SPR['bg_tw_flat'] / SPR['bg_tw_shop']\n"
 for k,f in a.items(): js+="BG_SRC[%s]='data:image/webp;base64,%s';\n"%(json.dumps(k),base64.b64encode(open(f'{L}/assets/{f}.webp','rb').read()).decode())
+import os
+for k in [l['img'] for l in json.load(open(L+'/core/unit_layouts.json',encoding='utf-8')).values() if os.path.exists(L+'/assets/'+l['img']+'.webp')]: js+="SPR_SRC[%s]='data:image/webp;base64,%s';\n"%(json.dumps(k),base64.b64encode(open(f'{L}/assets/{k}.webp','rb').read()).decode())
 for k in ['res_gamer','res_uncle','res_granny','res_helper','res_mjaunty','res_shopper','res_collector','res_guard','res_ot','res_gym','room_mahjong','room_gamer','room_nurse','room_helper','room_gym','room_shopper','room_carpark','room_lobby']: js+="SPR_SRC[%s]='data:image/webp;base64,%s';\n"%(json.dumps(k),base64.b64encode(open(f'{L}/assets/{k}.webp','rb').read()).decode())
 open(D+'tower_assets.js','w').write(js); print('ok',len(s),len(js))

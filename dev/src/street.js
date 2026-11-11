@@ -74,6 +74,23 @@ const DevFx = (() => {
     for (const s of [-1, 1]) { c.beginPath(); c.ellipse(s * w * 0.16, -Hh * 0.79, w * 0.075, Hh * 0.022 * bl, 0, 0, 7); c.fill(); }
     c.restore(); }
 
+  // 手繪特效圖（station_squad_art.js：vfx_*，已預先 decode；一張圖只 new Image 一次）
+  const vx = (k) => { const im = typeof SPR !== 'undefined' && SPR[k]; return im && im.naturalWidth ? im : null; };
+  // 以腳底 (0,0) 為錨畫一張特效圖：高 Hh，可縮放／旋轉／透明
+  function vxDraw(c, im, x, y, Hh, o) { if (!im) return; o = o || {}; const a = o.alpha == null ? 1 : o.alpha; if (a <= 0.01) return; const h = Hh, w = h * im.naturalWidth / im.naturalHeight;
+    c.save(); c.globalAlpha *= Math.min(1, a); c.translate(x, y); if (o.rot) c.rotate(o.rot); c.scale((o.flip ? -1 : 1) * (o.sx || 1), o.sy || 1); c.drawImage(im, -w * (o.ax == null ? 0.5 : o.ax), -h * (o.ay == null ? 1 : o.ay), w, h); c.restore(); }
+  // 鬼影三格：p＝現身進度 0~1（0–0.42 冒出、0.36–0.74 前撲、0.68–1 散煙，交界交叉淡入淡出＋縮放補間）
+  function shadeArt(c, x, y, Hh, o, p) {
+    const A = vx('vfx_ghost_rise'), B = vx('vfx_ghost_lunge'), C = vx('vfx_ghost_smoke'); if (!A || !B || !C) return false; if (p == null) p = 0.5;
+    const al = o.alpha == null ? 1 : o.alpha, fl = !!o.flip, H2 = Hh * 1.12, t = o.t || 0;
+    const wA = p < 0.36 ? 1 : p < 0.42 ? 1 - sm((p - 0.36) / 0.06) : 0, wB = p < 0.36 ? 0 : p < 0.42 ? sm((p - 0.36) / 0.06) : p < 0.68 ? 1 : p < 0.74 ? 1 - sm((p - 0.68) / 0.06) : 0, wC = p < 0.68 ? 0 : p < 0.74 ? sm((p - 0.68) / 0.06) : 1;
+    const rise = sm(Math.min(1, p / 0.3)), lun = sm(Math.max(0, Math.min(1, (p - 0.36) / 0.3))), fade = p < 0.74 ? 1 : 1 - sm((p - 0.74) / 0.26);
+    const wob = sn(t * 7) * 0.03;
+    if (wA > 0) vxDraw(c, A, x, y, H2 * (0.55 + 0.45 * rise), { alpha:al * wA, sx:0.85 + 0.15 * rise, rot:wob, flip:fl });
+    if (wB > 0) vxDraw(c, B, x + (fl ? 1 : -1) * Hh * 0.18 * lun, y - Hh * 0.05 * lun, H2 * (1 + 0.14 * lun), { alpha:al * wB, rot:(fl ? 1 : -1) * 0.1 * lun + wob, flip:fl });
+    if (wC > 0) vxDraw(c, C, x + (fl ? 1 : -1) * Hh * 0.2, y - Hh * 0.18 * (1 - fade), H2 * (1 + 0.25 * (1 - fade)), { alpha:al * wC * fade, flip:fl });
+    return true; }
+
   // ---------- 1. 類型色框（每件已建設備四周，呼吸閃爍，觸發時亮一下）----------
   function frame(c, role, x0, y0, w, h, t, i, trig, U) {
     const col = COL[role]; if (!col) return; const br = Math.min(1.6, 0.62 + 0.22 * sn(t * 2.3 + i * 1.3) + trig * 0.95), r = Math.min(w, h) * 0.2, pd = 4 * U;
@@ -100,7 +117,7 @@ const DevFx = (() => {
     const p = E && E.p != null ? E.p : null, o = outK(p), a = actK(p), gh = E ? 52 * E.sc / f : H * 0.8;
     const G = (lx, ly, s, op) => { if (!E) return; op = Object.assign({ t, alpha:1 }, op); if (op.alpha <= 0.01) return;
       if (E.k && typeof ART !== 'undefined' && ART.drawChar) { try { ART.drawChar(c, E.k, lx, ly, E.sc * s / f * 0.78, Object.assign({ shadow:false }, op)); return; } catch (e) {} }
-      shade(c, lx, ly, gh * s, op); };
+      if (!shadeArt(c, lx, ly, gh * s, op, p)) shade(c, lx, ly, gh * s, op); };
     c.save(); c.translate(dx, dy); c.scale(f, f);
     const shd = c.shadowBlur; let x;
     const P = () => { put(c, W, H); c.shadowBlur = 0; c.shadowColor = 'transparent'; };
@@ -233,7 +250,7 @@ const DevFx = (() => {
         break; }
     }
     c.shadowBlur = shd; c.restore(); }
-  return { COL, HEX, KEY, frame, draw, emerge, trigOf, shade, DUR };
+  return { COL, HEX, KEY, frame, draw, emerge, trigOf, shade, shadeArt, vx, vxDraw, DUR };
 })();
 
 const Street = (() => {
@@ -298,12 +315,12 @@ const Street = (() => {
   // ---------- 特殊路人組：網紅組／探險組（難嚇、刁鑽；嚇跑就出「嚇爆」帖文，放過就出「打臉」帖文）----------
   const SQUAD = {
     influencer:{ n:['網紅組', '網紅組'], tag:'#ff6fae', hp:7.2, minLv:4, members:[
-      { r:['主播', '主播'], spr:'pb_runner', acc:'ring' }, { r:['攝影', '攝影'], spr:'pb_backpacker', acc:'cam' }, { r:['助手', '助手'], spr:'pb_grab', acc:'stick' }],
+      { r:['主播', '主播'], spr:'pb_sq_host', acc:'ring' }, { r:['攝影', '攝影'], spr:'pb_sq_cam', acc:'cam' }, { r:['助手', '助手'], spr:'pb_sq_aide', acc:'stick', alt:1 }, { r:['直播仔', '直播小哥'], spr:'pb_sq_live', acc:'ring', alt:1 }],
       acct:['@Kitty夜遊Live', '@阿峰探鬼直播', '@靈異小妹Mandy', '@夜半開咪Ricky'],
       win:[['今晚喺{s}真係撞到嘢！！唔好嚟！！#猛鬼{s}', '今晚在{s}真的撞到東西！！不要來！！#猛鬼{s}'], ['直播直播下部機自己熄咗……我發誓冇做戲😭 #{s}有嘢', '直播到一半機器自己關了……我發誓沒有演😭 #{s}有東西'], ['助手喊住走咗，我以後唔再拍呢類片 #猛鬼{s} #真係有', '助手哭著跑了，我以後不再拍這類片 #猛鬼{s} #真的有']],
       lose:[['乜鬼都冇，網上傳到咁恐怖係假嘅😂 #都市傳說破解', '什麼都沒有，網上傳得那麼恐怖是假的😂 #都市傳說破解'], ['{s}行咗一轉，最恐怖係蚊😂 #猛鬼{s}係假', '{s}走了一圈，最恐怖是蚊子😂 #猛鬼{s}是假的'], ['兩粒鐘直播，零靈異，得我塊面 #都市傳說破解', '兩小時直播，零靈異，只有我的臉 #都市傳說破解']] },
     explorer:{ n:['探險組', '探險組'], tag:'#7fd0ff', hp:5.6, minLv:5, members:[
-      { r:['領隊', '領隊'], spr:'pb_backpacker', acc:'map' }, { r:['攝影機', '攝影機'], spr:'pb_couple_m', acc:'cam' }, { r:['電筒', '電筒'], spr:'pb_guardbo', acc:'torch' }, { r:['錄音筆', '錄音筆'], spr:'pb_nurse', acc:'rec' }],
+      { r:['領隊', '領隊'], spr:'pb_sq_lead', acc:'map' }, { r:['攝影機', '攝影機'], spr:'pb_sq_vcam', acc:'cam' }, { r:['電筒', '電筒'], spr:'pb_sq_torch', acc:'torch' }, { r:['錄音', '錄音'], spr:'pb_sq_sound', acc:'rec' }],
       acct:['@廢墟夜行者', '@阿Ben冒險日記', '@港馬探險隊', '@夜探三人行'],
       win:[['探咗十年都未試過咁……{s}係真嘅，大家唔好鐵齒 #猛鬼{s}', '探了十年都沒試過這樣……{s}是真的，大家別嘴硬 #猛鬼{s}'], ['錄音筆錄到有把聲喺耳邊叫我個名，成隊人即刻撤 #{s}靈異事件', '錄音筆錄到有聲音在耳邊叫我的名字，整隊人馬上撤 #{s}靈異事件'], ['電筒照過去明明冇人，影返出嚟有個影😨 #猛鬼{s}', '手電筒照過去明明沒人，拍出來有個影子😨 #猛鬼{s}']],
       lose:[['{s}全程探晒，零發現，網上啲傳聞可以收皮 #都市傳說破解', '{s}全程探完，零發現，網上的傳聞可以收工了 #都市傳說破解'], ['帶齊器材入{s}，錄到嘅只有冷氣機聲😂 #猛鬼{s}係假', '帶齊器材進{s}，錄到的只有冷氣機聲😂 #猛鬼{s}是假的'], ['又一個「猛鬼」地方被我哋踩平，下一站邊度？ #都市傳說破解', '又一個「猛鬼」地方被我們踩平，下一站去哪？ #都市傳說破解']] },
@@ -460,6 +477,10 @@ const Street = (() => {
     { id:'durian', spr:'pb_durian', n:'榴槤檔老闆', zh:'榴槤攤老闆', hp:1.3, spd:0.9, w:1, trait:'durian', big:[['我收檔唔做喇！', '我收攤不做了！'], ['榴槤都唔要喇！', '榴槤都不要了！']], re:[['聞到榴槤味，邊隻鬼都怕。', '聞到榴槤味，哪隻鬼都怕。']] },
     { id:'guardbo', spr:'pb_guardbo', n:'保安阿伯', zh:'保安阿伯', hp:1.5, spd:0.8, w:1, trait:'torch', big:[['我做咗三十年都未見過！', '我做了三十年都沒見過！'], ['報告……報告管理處！', '報告……報告管理處！']], re:[['邊個喺度？照下先！', '誰在那？先照一下！'], ['後生仔，咪玩喇！', '年輕人，別玩了！']] },
     { id:'couple', spr:'pb_couple_m', n:'拍拖情侶', zh:'約會情侶', hp:0.9, spd:0.95, w:1, trait:'couple', big:[['等埋我呀！', '等等我啊！'], ['你唔好掉低我！', '你不要丟下我！']], re:[['你驚唔驚呀？', '你怕不怕？'], ['揸實我隻手。', '握緊我的手。']] },
+    { id:'guide', spr:'pb_guide', n:'鬼故團導遊', zh:'鬼故團導遊', hp:1.6, spd:0.8, w:1, trait:'calm', big:[['呢段唔喺行程入面㗎！', '這段不在行程裡的！'], ['團友跟實我，散隊呀！', '團友跟緊我，解散啦！']], re:[['各位團友，呢度就係傳聞嗰個位喇～', '各位團友，這裡就是傳聞那個地方了～'], ['唔使驚，講吓故仔啫。', '不用怕，講講故事而已。']] },
+    { id:'ghostclub', spr:'pb_ghostclub', n:'捉鬼學會學生', zh:'捉鬼社大學生', hp:0.8, spd:1.05, w:1, trait:'emf', big:[['數據唔要喇！走先！', '數據不要了！先走！'], ['我退會！我即刻退會！', '我退社！我馬上退社！']], re:[['部機響緊！讀數爆錶喇！', '機器在響！讀數爆表了！'], ['今晚終於有料交功課。', '今晚終於有東西交報告。']] },
+    { id:'walkdel', spr:'pb_walkdel', n:'步行外賣姐姐', zh:'步行外送姐姐', hp:0.8, spd:1.25, w:1.2, trait:'walkdel', big:[['份餐我唔理喇！', '這份餐我不管了！'], ['客人自己落嚟攞啦！', '客人自己下來拿吧！']], re:[['仲有三分鐘就超時……', '還有三分鐘就超時……'], ['抄呢條近路……應該冇事啩。', '抄這條近路……應該沒事吧。']] },
+    { id:'hawker', spr:'pb_hawker', n:'夜市阿伯', zh:'夜市阿伯', hp:1.8, spd:0.6, w:0.8, trait:'', big:[['架車唔要喇！', '推車不要了！'], ['收檔收檔，今晚唔做喇！', '收攤收攤，今晚不做了！']], re:[['後生仔，買串魚蛋先走啦。', '年輕人，買串魚丸再走吧。'], ['我喺度推咗四十年車，乜都見過。', '我在這推了四十年車，什麼都見過。']] },
     { id:'drunk', spr:'pb_drunk', n:'醉酒佬', zh:'醉漢', hp:2, spd:0.7, w:1, trait:'drunk', big:[['嘩……醒晒酒……', '哇……酒全醒了……'], ['我以後唔飲喇！', '我以後不喝了！']], re:[['嗝～你都嚟飲杯？', '嗝～你也來喝一杯？'], ['兩個月亮……', '兩個月亮……']] },
   ];
   const PARTNER = { spr:'pb_couple_f', n:'拍拖情侶', zh:'約會情侶' };
@@ -593,7 +614,8 @@ const Street = (() => {
       const posts = sd.posts.map((p, i) => p && p.role && !(p.build > 0) ? [p, L.posts[i]] : null).filter(Boolean);
       for (let k = 0; k < SQ_TUNE.routes; k++) { const pts = route(L); let sc = 0; for (const q of pts) for (const [p, s] of posts) { const chk = (p.role === 'slow' ? 1.2 * CELL : DEV[p.role][p.sz || 1].check * PX || CELL); if (this.rdist(q.p, s) <= chk) sc++; } if (sc < bs) { bs = sc; best = pts; } }
       const sq = { kind, mem:[], scared:0, leaked:0, done:false, cheerT:2 };
-      S0.members.forEach((m, j) => { const w = this.newWalker(null); const hp = Math.round(w.max * SQ_TUNE.hp[kind]); Object.assign(w, { sq, sqRole:m, sqAcc:m.acc, spr:m.spr, tint:null, p:{ id:'sq', n:'', acc:null }, tr:'', mate:null, n:`${T(S0.n[0], S0.n[1])}・${T(m.r[0], m.r[1])}`, hp, max:hp, award:Math.round(w.award * 3), j:(j - (S0.members.length - 1) / 2) * 0.016, film:0, filmT:R(1, 5), spd:R(102, 106) * PX * 1.8 }); this.mkRoute(w, best); sq.mem.push(w); });
+      const altK = S0.members.filter(m => m.alt), altPick = altK.length ? pick(altK) : null, mems = S0.members.filter(m => !m.alt || m === altPick || window.SQ_ALL);
+      mems.forEach((m, j) => { const w = this.newWalker(null); const hp = Math.round(w.max * SQ_TUNE.hp[kind]); Object.assign(w, { sq, sqRole:m, sqAcc:m.acc, spr:m.spr, tint:null, p:{ id:'sq', n:'', acc:null }, tr:'', mate:null, n:`${T(S0.n[0], S0.n[1])}・${T(m.r[0], m.r[1])}`, hp, max:hp, award:Math.round(w.award * 3), j:(j - (mems.length - 1) / 2) * 0.016, film:0, filmT:R(1, 5), spd:R(102, 106) * PX * 1.8 }); this.mkRoute(w, best); sq.mem.push(w); });
       return sq; },
     // 每格：互相打氣、輪流開機拍片、睇準設備冷卻先衝（返 true＝今格企定）
     sqWalk(w, dt) { const sq = w.sq; if (!sq || w.gone) return false; w.rushM = 1;
@@ -642,13 +664,7 @@ const Street = (() => {
       try { const im = SPR[S0.members[0].spr], cv = el.querySelector('canvas'), x = cv.getContext('2d'); x.fillStyle = '#1a1014'; x.fillRect(0, 0, 44, 44); if (im && im.naturalWidth) { const s = 44 / (im.naturalWidth * 0.8); x.drawImage(im, im.naturalWidth * 0.1, 0, im.naturalWidth * 0.8, im.naturalWidth * 0.8, 0, 0, 44, 44); } } catch (e) {}
       const t0 = performance.now(), nums = el.querySelectorAll('i[data-n]'), up = () => { const k = Math.min(1, (performance.now() - t0) / 1500), e2 = 1 - Math.pow(1 - k, 3); nums.forEach(n2 => { const v = Math.round(+n2.dataset.n * e2); n2.textContent = v >= 10000 ? (v / 10000).toFixed(1) + T('萬', '萬') : v; }); if (k < 1 && el.isConnected) requestAnimationFrame(up); }; up();
       const close = () => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }; el.onclick = close; setTimeout(() => { if (el.isConnected) close(); }, 4200); },
-    drawSqAcc(w, hh, t) { const c = this.c, a = w.sqAcc; if (!a) return; c.save(); c.lineWidth = 1.5;
-      if (a === 'ring') { c.strokeStyle = 'rgba(255,240,220,0.95)'; c.lineWidth = hh * 0.05; c.beginPath(); c.arc(hh * 0.3, -hh * 1.0, hh * 0.13, 0, 7); c.stroke(); const g = c.createRadialGradient(hh * 0.3, -hh * 1.0, 1, hh * 0.3, -hh * 1.0, hh * 0.5); g.addColorStop(0, 'rgba(255,240,230,0.35)'); g.addColorStop(1, 'rgba(255,240,230,0)'); c.fillStyle = g; c.beginPath(); c.arc(hh * 0.3, -hh * 1.0, hh * 0.5, 0, 7); c.fill(); c.strokeStyle = '#333'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(hh * 0.3, -hh * 0.87); c.lineTo(hh * 0.22, -hh * 0.5); c.stroke(); }
-      else if (a === 'stick') { c.strokeStyle = '#2a2a2a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(hh * 0.15, -hh * 0.5); c.lineTo(hh * 0.42, -hh * 1.1); c.stroke(); c.fillStyle = '#111'; c.fillRect(hh * 0.37, -hh * 1.2, hh * 0.12, hh * 0.18); c.fillStyle = 'rgba(160,220,255,0.8)'; c.fillRect(hh * 0.39, -hh * 1.18, hh * 0.08, hh * 0.12); }
-      else if (a === 'cam') { c.fillStyle = '#1e1e22'; c.fillRect(hh * 0.12, -hh * 0.78, hh * 0.24, hh * 0.15); c.fillStyle = '#556'; c.beginPath(); c.arc(hh * 0.4, -hh * 0.705, hh * 0.05, 0, 7); c.fill(); }
-      else if (a === 'rec') { c.fillStyle = '#333'; c.fillRect(hh * 0.16, -hh * 0.62, hh * 0.07, hh * 0.16); c.fillStyle = '#ff3030'; c.beginPath(); c.arc(hh * 0.195, -hh * 0.6, hh * 0.018, 0, 7); c.fill(); }
-      else if (a === 'map') { c.fillStyle = '#e8dcb8'; c.fillRect(-hh * 0.34, -hh * 0.6, hh * 0.2, hh * 0.15); c.strokeStyle = '#a33'; c.beginPath(); c.moveTo(-hh * 0.32, -hh * 0.5); c.lineTo(-hh * 0.18, -hh * 0.55); c.stroke(); }
-      else if (a === 'torch' && !w.gone) { const g = c.createLinearGradient(hh * 0.3, 0, hh * 1.0, 0); g.addColorStop(0, 'rgba(255,245,190,0.35)'); g.addColorStop(1, 'rgba(255,245,190,0)'); c.fillStyle = g; c.beginPath(); c.moveTo(hh * 0.3, -hh * 0.45); c.lineTo(hh * 1.0, -hh * 0.65); c.lineTo(hh * 1.0, -hh * 0.2); c.closePath(); c.fill(); }
+    drawSqAcc(w, hh, t) { const c = this.c, a = w.sqAcc; if (!a) return; c.save(); c.lineWidth = 1.5; // 專屬造型（station_squad_art.js）已經畫咗配件，呢度只加 REC 燈＋組別三角
       if (w.film > 0 && !w.gone) { c.fillStyle = Math.floor(t * 3) % 2 ? '#ff2a2a' : '#7a1010'; c.beginPath(); c.arc(-hh * 0.22, -hh * 1.12, hh * 0.04, 0, 7); c.fill(); c.font = `bold ${hh * 0.14}px sans-serif`; c.fillStyle = '#ffd0d0'; c.textAlign = 'left'; c.fillText('REC', -hh * 0.16, -hh * 1.08); }
       c.fillStyle = w.sq ? SQUAD[w.sq.kind].tag : '#fff'; c.beginPath(); c.moveTo(-hh * 0.08, -hh * 1.32); c.lineTo(hh * 0.08, -hh * 1.32); c.lineTo(0, -hh * 1.22); c.closePath(); c.fill(); c.restore(); },
     newWalker(eliteId) {
@@ -663,9 +679,37 @@ const Street = (() => {
     float(x, y, s, col) { this.fx.push({ x, y, s, col, t:0 }); },
     // 塔防命中特效：每種設備一款（陷阱鬼手抓腳、鬼打牆紫霧、減速黑水、驚嚇衝擊波＋嘩、氛圍冷霧、投擲碎片）
     hitFx(w, k) { const L = this.dfx || (this.dfx = []); if (L.some(e => e.w === w && e.k === k && e.t < (k === 'aura' || k === 'slow' || k === 'puzzle' ? 0.7 : 0.25))) return; if (L.length > 70) L.shift();
-      L.push({ k, w, t:0, dur:{ trap:1.4, puzzle:1.0, slow:1.0, scare:0.9, aura:1.1, throw:0.6 }[k] || 0.8, seed:Math.random() * 9 }); },
+      L.push({ k, w, t:0, dur:{ trap:1.4, puzzle:1.0, slow:1.0, scare:1.25, aura:1.1, throw:0.6 }[k] || 0.8, seed:Math.random() * 9 }); },
     drawDfx(U, hh, t) { const c = this.c; this.dfx = (this.dfx || []).filter(e => e.t < e.dur);
+      const VX = DevFx.vx, VD = DevFx.vxDraw, sm = (q) => q <= 0 ? 0 : q >= 1 ? 1 : q * q * (3 - 2 * q);
       for (const e of this.dfx) { const w = e.w, [x, y] = this.P(...this.wp(w)), k = e.t / e.dur, fa = k < 0.8 ? 1 : (1 - k) / 0.2; c.save(); c.globalAlpha = Math.max(0, fa);
+        // ---- 手繪特效（有圖就用圖）----
+        if (e.k === 'trap' && VX('vfx_hand_crack')) { // 鬼拉腳：地面爆裂伸出鬼手（過衝彈出、抓緊抖動）
+          const im = VX('vfx_hand_crack'), up = Math.min(1, k / 0.22), bo = up < 1 ? 1 + 2.2 * Math.pow(up - 1, 3) * 1.0 + 1.2 * Math.pow(up - 1, 2) : 1, grip = k > 0.25 && k < 0.8 ? Math.sin(e.t * 26) * 0.025 : 0, H2 = hh * 0.72;
+          c.fillStyle = `rgba(20,8,8,${0.5 * fa})`; c.beginPath(); c.ellipse(x, y + hh * 0.02, hh * 0.36, hh * 0.1, 0, 0, 7); c.fill();
+          VD(c, im, x + hh * 0.05, y + hh * 0.1, H2 * Math.max(0.05, bo), { alpha:Math.min(1, up * 2), rot:grip, sx:1 + grip });
+          if (k < 0.3) for (let j = 0; j < 6; j++) { const a2 = j * 1.05 + e.seed, d2 = k / 0.3 * hh * 0.5; c.fillStyle = `rgba(120,110,105,${1 - k / 0.3})`; c.fillRect(x + Math.cos(a2) * d2, y - Math.abs(Math.sin(a2)) * d2 * 0.8, 3 * U, 3 * U); }
+          c.restore(); continue; }
+        if (e.k === 'puzzle' && VX('vfx_mist_ring')) { // 鬼打牆：紫霧圈圍住人，慢慢轉＋呼吸
+          const im = VX('vfx_mist_ring'), fi = Math.min(1, k / 0.18), br = 1 + Math.sin(t * 2.4 + e.seed) * 0.06, D = hh * 1.45 * br;
+          c.globalAlpha = Math.max(0, Math.min(fi, fa)) * 0.92; c.save(); c.translate(x, y - hh * 0.1); c.scale(1, 0.56); c.rotate(t * 0.7 + e.seed); c.drawImage(im, -D / 2, -D / 2 * im.naturalHeight / im.naturalWidth, D, D * im.naturalHeight / im.naturalWidth); c.restore();
+          c.globalAlpha = Math.max(0, Math.min(fi, fa)) * 0.35; c.save(); c.translate(x, y - hh * 0.55); c.scale(1, 0.75); c.rotate(-t * 0.5 + e.seed); c.drawImage(im, -D * 0.4, -D * 0.4, D * 0.8, D * 0.8); c.restore();
+          c.globalAlpha = Math.max(0, Math.min(fi, fa)); c.fillStyle = '#e4c8ff'; c.font = `900 ${12 * U}px sans-serif`; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = '#1a0a2a'; const qx = x + Math.sin(t * 6) * hh * 0.3; c.strokeText('？', qx, y - hh * 1.25); c.fillText('？', qx, y - hh * 1.25);
+          c.restore(); continue; }
+        if (e.k === 'slow' && VX('vfx_water_hands')) { // 卡到陰：腳下黑水伸出濕手
+          const im = VX('vfx_water_hands'), fi = sm(Math.min(1, k / 0.2)), H2 = hh * 0.8 * (0.85 + 0.15 * fi);
+          VD(c, im, x, y + H2 * 0.32, H2, { alpha:Math.min(fi, fa) * 0.95, sy:0.9 + Math.sin(t * 5 + e.seed) * 0.05, sx:1 + Math.sin(t * 3 + e.seed) * 0.03 });
+          c.restore(); continue; }
+        if (e.k === 'aura' && VX('vfx_frost')) { // 冷霧：喺身上爆開，放大、旋開、淡出
+          const im = VX('vfx_frost'), ex = sm(Math.min(1, k / 0.35)), H2 = hh * (0.45 + 0.55 * ex);
+          VD(c, im, x, y - hh * 0.5, H2, { ay:0.5, alpha:(k < 0.12 ? k / 0.12 : 1) * (1 - sm(Math.max(0, (k - 0.45) / 0.55))) * 0.78, rot:(e.seed % 1 - 0.5) * 0.4 + k * 0.5 });
+          c.restore(); continue; }
+        if (e.k === 'scare' && VX('vfx_ghost_rise')) { // 嚇人設備：黑影鬼由地底冒出→前撲→散煙（三格補間），保留衝擊波＋「嘩！」
+          const side = (e.seed % 2) < 1 ? 1 : -1, gx = x + side * hh * 0.5, kk = Math.min(1, k / 0.6);
+          if (k > 0.3) { const k2 = (k - 0.3) / 0.7, r = hh * (0.3 + k2 * 1.4); c.strokeStyle = `rgba(255,150,46,${1 - k2})`; c.lineWidth = 4 * (1 - k2) + 1; c.beginPath(); c.ellipse(x, y - hh * 0.4, r, r * 0.6, 0, 0, 7); c.stroke(); }
+          DevFx.shadeArt(c, gx, y + hh * 0.04, hh * 1.05, { t, alpha:1, flip:side < 0 }, Math.min(1, k * 1.05));
+          if (k > 0.3) { const k2 = (k - 0.3) / 0.7, sc = k2 < 0.15 ? k2 / 0.15 * 1.4 : 1.4 - Math.min(0.4, (k2 - 0.15) * 2); c.translate(x - side * hh * 0.1, y - hh * 1.45 - k2 * hh * 0.3); c.rotate(-0.12); c.scale(sc, sc); c.font = `900 ${20 * U}px sans-serif`; c.textAlign = 'center'; c.lineWidth = 5; c.strokeStyle = '#2a0e00'; c.strokeText(T('嘩！', '哇！'), 0, 0); c.fillStyle = '#ffb040'; c.fillText(T('嘩！', '哇！'), 0, 0); }
+          void kk; c.restore(); continue; }
         if (e.k === 'trap') { const rise = Math.min(1, k * 4); c.fillStyle = 'rgba(70,10,10,0.55)'; c.beginPath(); c.ellipse(x, y, hh * 0.42, hh * 0.12, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,80,60,0.8)'; c.lineWidth = 1.5; for (let j = 0; j < 5; j++) { const a = j * 1.26 + e.seed; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * hh * 0.42, y + Math.sin(a) * hh * 0.12); c.stroke(); }
           for (const sd of [-1, 1]) { const hx = x + sd * hh * 0.16, top = y - hh * 0.32 * rise, grip = Math.sin(e.t * 14) * 0.1; c.strokeStyle = 'rgba(150,170,140,0.95)'; c.lineCap = 'round'; c.lineWidth = hh * 0.07; c.beginPath(); c.moveTo(hx, y + hh * 0.02); c.lineTo(hx - sd * hh * 0.05, top); c.stroke(); c.lineWidth = hh * 0.025; for (let f = -1; f <= 1; f++) { c.beginPath(); c.moveTo(hx - sd * hh * 0.05, top); c.lineTo(hx - sd * hh * (0.05 + 0.08) + f * hh * 0.04, top - hh * (0.07 - grip * 0.3)); c.stroke(); } } }
         else if (e.k === 'puzzle') { for (let j = 0; j < 4; j++) { const a = t * 4 + j * 1.57 + e.seed, gx = x + Math.cos(a) * hh * 0.45, gy = y - hh * 0.35 + Math.sin(a) * hh * 0.16; const g = c.createRadialGradient(gx, gy, 1, gx, gy, hh * 0.28); g.addColorStop(0, 'rgba(170,100,255,0.45)'); g.addColorStop(1, 'rgba(170,100,255,0)'); c.fillStyle = g; c.beginPath(); c.arc(gx, gy, hh * 0.28, 0, 7); c.fill(); }
@@ -683,7 +727,7 @@ const Street = (() => {
       if (!o.force && w.el && w.el.buf === 'dodge' && Math.random() < 0.3) { if (!o.aura) this.float(x, y - 0.06, T('閃避', '閃避'), '#9cf'); return; }
       if (!o.force) { if (w.el && w.el.buf === 'tough') dmg *= 0.7; if ((w.el && w.el.buf === 'aura') || this.walkers.some(q => q !== w && q.el && q.el.buf === 'aura' && this.alive(q) && this.dist(this.wp(q), [x, y]) < 200 * PX)) dmg *= 0.85; }
       if (w.target > 0) dmg *= 1.5;
-      if (o.aura && (w.tr === 'runner' ? (dmg *= 0.5) : w.tr === 'phone' ? (dmg *= 0.75) : 0)) {}
+      if (o.aura && (w.tr === 'runner' ? (dmg *= 0.5) : (w.tr === 'phone' || w.tr === 'walkdel') ? (dmg *= 0.75) : 0)) {}
       if ((o.aura || o.force) && this.walkers.some(q => q.tr === 'durian' && this.alive(q) && this.dist(this.wp(q), [x, y]) < 120 * PX)) dmg *= 0.7;
       if (w.tr === 'drunk' && o.fright) o = Object.assign({}, o, { fright:0 });
       if (w.sq && !o.force && SQ_TUNE.armor > 0) dmg = Math.max(dmg * 0.25, dmg - w.max * SQ_TUNE.armor); // 膽大：細嚇幾乎無感，要大嚇先有用
@@ -704,6 +748,7 @@ const Street = (() => {
       if (w.tr === 'couple' && w.mate && this.alive(w.mate)) { const mt = w.mate; this.hit(mt, mt.max * 0.45, { force:true }); if (!mt.gone) { mt.back = CELL * 2.5; mt.say = { s:T('等埋我呀！', '等等我啊！'), t:1.4 }; } }
       if (w.tr === 'groceries') { this.addTrace('veg', pos[0], pos[1], 80, 7, { by:'auntie' }); this.cap(T('啲餸跌晒落地！', '菜全掉在地上！'), pos[0], pos[1] - 0.14, { col:'#b8f0a0', size:13, style:'pop', font:'sans-serif' }); }
       if (w.tr === 'rider') this.addTrace('bowl', pos[0], pos[1], 90, 6, { by:'rider' });
+      if (w.tr === 'walkdel') { this.addTrace('bowl', pos[0], pos[1], 90, 6, { by:'rider' }); this.cap(T('份外賣跌咗落地！', '外送掉在地上了！'), pos[0], pos[1] - 0.14, { col:'#ffd0a0', size:13, style:'pop', font:'sans-serif' }); }
       if (w.sq) this.sqMember(w, 'run');
     },
     leak(w) { const sd = this.sd; sd.leaked++; sd.leakAcc = (sd.leakAcc || 0) + 1; if (sd.leakAcc >= 4) { sd.leakAcc = 0; sd.modCur = Math.max(0.9, (sd.modCur || 0.9) - 0.06); }
@@ -1096,7 +1141,7 @@ const Street = (() => {
       else if (pose === 'idle') { sy = 1 + Math.sin(t * 2 + (w.seed || 0)) * 0.012; }
       if (w.tr === 'drunk' && pose === 'move') rot += Math.sin(t * 1.3 + (w.seed || 0)) * 0.08;
       c.save(); c.translate(dx, dy); c.rotate(flip ? -rot : rot); c.scale((flip ? -1 : 1) * sx, sy);
-      if ((pose === 'move' || pose === 'run') && /^(pb_|foe_)/.test(w.spr)) { // Q 版走路：上身照畫，雙腳左右分開交替抬腳
+      if ((pose === 'move' || pose === 'run') && /^(pb_|foe_)/.test(w.spr) && !(typeof STN_AB_NOLEG !== 'undefined' && STN_AB_NOLEG[w.spr])) { // Q 版走路：上身照畫，雙腳左右分開交替抬腳
         const iw = im.naturalWidth, ih = im.naturalHeight, lt = 0.76, f2 = pose === 'run' ? 5.5 : 3.2, sw = Math.sin(ph * f2), A = (pose === 'run' ? 0.08 : 0.055) * H;
         for (const [sd2, s2] of [[1, -1], [0, 1]]) { const lift = Math.max(0, s2 * sw) * A; c.drawImage(im, sd2 * iw / 2, ih * lt, iw / 2, ih * (1 - lt), -ww / 2 + sd2 * ww / 2 + s2 * sw * ww * 0.035, -H + H * lt - lift, ww / 2 + 0.5, H * (1 - lt)); }
         c.drawImage(im, 0, 0, iw, ih * lt + 1, -ww / 2, -H, ww, H * lt + H / ih); }
@@ -1590,6 +1635,8 @@ const Street = (() => {
         if (best >= 0) { const p = this.sd.posts[best]; p.stun = 2.5; w.beam = { i:best, t:1.0 }; w.say = { s:pick([T('邊個喺度？照下先！', '誰在那？先照一下！'), T('出嚟！我見到你喇！', '出來！我看到你了！')]), t:1.4 }; this.cap(T('電筒照住！設備停 2.5 秒', '手電筒照住！設備停 2.5 秒'), this.lay.posts[best].x, this.lay.posts[best].y - 0.1, { col:'#fff3b0', size:12, style:'pop', font:'sans-serif' }); } }
       else if (w.tr === 'calm' && w.tT <= 0) { w.tT = 1; this.walkers.forEach(q => { if (q !== w && this.alive(q) && this.dist(this.wp(q), p0) < 120 * PX) { q.hp = Math.min(q.max, q.hp + q.max * 0.02); if (q.stay > 0.6) q.stay -= 0.5; q.calmFx = 0.6; } }); }
       else if (w.tr === 'photo' && w.tT <= 0) { w.tT = R(5, 9); this.act(w, 'idle', 1.5); w.flash = 0.25; w.say = { s:T('影張相先！', '先拍張照！'), t:1.2 }; this.sd.posts.forEach((p, i) => { if (p && p.role && this.dist(p0, [this.lay.posts[i].x, this.lay.posts[i].y]) < 150 * PX) p.stun = Math.max(p.stun || 0, 1); }); }
+      else if (w.tr === 'emf' && w.tT <= 0) { w.tT = R(7, 10); let near = false; this.sd.posts.forEach((p, i) => { if (p && p.role && !(p.build > 0) && this.dist(p0, [this.lay.posts[i].x, this.lay.posts[i].y]) < 160 * PX) near = true; });
+        if (near) { this.act(w, 'idle', 1.4); const [x, y] = p0; this.float(x, y - 0.09, T('嗶嗶嗶——', '嗶嗶嗶——'), '#9ef07a'); w.say = { s:pick([T('讀數爆錶！就喺呢度！', '讀數爆表！就在這裡！'), T('等等，我量多次先！', '等等，我再量一次！')]), t:1.3 }; } }
       else if (w.tr === 'drunk' && w.tT <= 0) { w.tT = R(3, 6); if (Math.random() < 0.45) { w.back = CELL * 0.7; w.say = { s:pick([T('嗝～行錯路……', '嗝～走錯路……'), T('再飲多杯……', '再喝一杯……')]), t:1.2 }; } }
       else if (w.tr === 'couple' && w.mate && w.tT <= 0) { w.tT = R(6, 10); if (Math.random() < 0.5) w.say = { s:T(pick(w.p.re)[0], pick(w.p.re)[1]), t:1.2 }; }
       if (w.beam) { w.beam.t -= dt; if (w.beam.t <= 0) w.beam = null; } if (w.flash > 0) w.flash -= dt; if (w.calmFx > 0) w.calmFx -= dt;
