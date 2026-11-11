@@ -268,6 +268,7 @@ const Street = (() => {
   const hpP = (d) => d < HPP.length ? HPP[Math.max(1, d)] : HPP[HPP.length - 1] * Math.pow(1.096, d - HPP.length + 1);
   const coP = (d) => d < COP.length ? COP[Math.max(1, d)] : COP[COP.length - 1] * Math.pow(1.035, d - COP.length + 1);
   const PX = 1 / 2160, CELL = 150 * PX;
+  const PPL = 1.9; // 路人（含強敵、網紅組／探險組）顯示高度倍數：手機預設鏡頭約 110–120px 高，先睇得出大頭 Q 版
   const ROOM_MAXLV = [5, 5, 14, 24];                                   // 收益封頂：最後解鎖嗰間房嘅 MAXLevel
   const UNLOCK = [null, null, { rep:30, bd:20, coin:1200 }, { rep:120, bd:40, coin:3000 }]; // 開下一間：惡名＋建設度＋冥幣（三重條件）
   // 六類裝置 × 1格／2格（數值 1:1 照原作 Trap / TrapLevel：價錢、耐久、驚嚇值、回靈秒、重置秒、減速、LevelSituation）
@@ -623,7 +624,7 @@ const Street = (() => {
         const cw = 0.36 * BW, ch = cw * 170 / 240, cx = (pos[0] - r) * BW, cy = (pos[1] - 0.025) * BH, x0 = Math.max(0, Math.min(BW - cw, cx - cw / 2)), y0 = Math.max(0, Math.min(BH - ch, cy - ch / 2)), k = 240 / cw;
         x.fillStyle = '#120c10'; x.fillRect(0, 0, 240, 170); if (win) { x.translate(120, 85); x.rotate(-0.07); x.scale(1.08, 1.08); x.translate(-120, -85); }
         if (bg && bg.naturalWidth) { x.filter = win ? 'blur(1.6px) brightness(0.75) contrast(1.25)' : 'brightness(1.15) saturate(0.9)'; x.drawImage(bg, x0, y0, cw, ch, 0, 0, 240, 170); x.filter = 'none'; }
-        const toC = (q) => [((q[0] - r) * BW - x0) * k, (q[1] * BH - y0) * k], hP = 0.042 * BH * 0.92 * k;
+        const toC = (q) => [((q[0] - r) * BW - x0) * k, (q[1] * BH - y0) * k], hP = 0.042 * BH * 0.92 * k * PPL;
         if (win) { const [gx, gy] = toC([pos[0] + 0.04, pos[1] - 0.01]); x.save(); x.filter = 'blur(2px)'; x.globalAlpha = 0.75; DevFx.shade(x, gx, gy, hP * 1.6, { t:1, alpha:0.85, reach:0.6 }); x.restore(); }
         (sq.mem || []).forEach((m, j) => { const im = has(SPR) && SPR[m.spr]; if (!im || !im.naturalWidth) return; let q = m.gone === 'out' ? [pos[0] - 0.02 * j, pos[1]] : this.wp(m); if (Math.abs(q[0] - pos[0]) > 0.25) q = [pos[0] - 0.03 * (j + 1), pos[1] + 0.01 * j]; const [mx, my] = toC(q), ww = hP * im.naturalWidth / im.naturalHeight;
           x.save(); if (win) { x.filter = 'blur(1.2px)'; x.translate(mx, my); x.rotate((j - 1) * 0.15); x.drawImage(im, -ww / 2, -hP, ww, hP); } else x.drawImage(im, mx - ww / 2, my - hP, ww, hP); x.restore(); });
@@ -822,7 +823,7 @@ const Street = (() => {
         for (let j = 0; j < 5; j++) { const e = Math.min(1, Math.max(0, qq * 1.4 - j * 0.12)); if (e <= 0 || e >= 1) continue; const a2 = j * 1.3 + e * 9, rr = RG * 1.2 * (1 - e * e), px = vxs + Math.cos(a2) * rr, py = vys + Math.sin(a2) * rr * 0.75, s2 = (1 - e) * 1.2 + 0.2;
           c.save(); c.translate(px, py); c.rotate(e * 14 + j); c.scale(s2, s2); if (j % 2) { c.fillStyle = '#efe6cc'; c.strokeStyle = '#2e4a86'; c.lineWidth = 2; c.beginPath(); c.ellipse(0, 0, 16, 9, 0, 0, Math.PI); c.closePath(); c.fill(); c.stroke(); c.fillStyle = '#d8ccb0'; c.beginPath(); c.ellipse(0, 0, 16, 4.5, 0, 0, 7); c.fill(); c.stroke(); }
           else { c.strokeStyle = '#a0662a'; c.lineWidth = 3; c.beginPath(); c.moveTo(-18, -3); c.lineTo(18, 3); c.moveTo(-18, 4); c.lineTo(18, 9); c.stroke(); } c.restore(); } }
-      { const hh = b.h * 0.042; for (const w of this.walkers) { if (w.gone !== 'suck' || !w.suckFrom) continue; const e = Math.min(1, w.suckT / 1.0); if (e >= 0.98) continue; const e2 = e * e, [ax, ay] = this.P(...w.suckFrom), r2 = 1 - e2, an = e * Math.PI * 3, dx = ax - vxs, dy = ay - vys, px = vxs + (dx * Math.cos(an) - dy * Math.sin(an)) * r2, py = vys + (dx * Math.sin(an) + dy * Math.cos(an)) * r2 * 0.8, s2 = Math.max(0.08, 1 - e * 0.9);
+      { const hh = b.h * 0.042 * PPL; for (const w of this.walkers) { if (w.gone !== 'suck' || !w.suckFrom) continue; const e = Math.min(1, w.suckT / 1.0); if (e >= 0.98) continue; const e2 = e * e, [ax, ay] = this.P(...w.suckFrom), r2 = 1 - e2, an = e * Math.PI * 3, dx = ax - vxs, dy = ay - vys, px = vxs + (dx * Math.cos(an) - dy * Math.sin(an)) * r2, py = vys + (dx * Math.sin(an) + dy * Math.cos(an)) * r2 * 0.8, s2 = Math.max(0.08, 1 - e * 0.9);
           c.save(); c.globalAlpha = Math.min(1, (1 - e) * 4); c.translate(px, py); c.rotate(e * 9); c.scale(s2, s2); const im = has(SPR) && SPR[w.spr];
           if (im && im.naturalWidth && !CHAR_H_OK(w.spr)) { const H = hh * 0.95, ww = H * im.naturalWidth / im.naturalHeight; c.drawImage(im, -ww / 2, -H * 0.6, ww, H); } else try { ART.drawChar(c, w.spr, 0, hh * 0.4, hh / 69, { t, pose:'startle', shadow:false }); } catch (e3) {} c.restore(); } }
       // 打嗝：綠煙冒出
@@ -993,7 +994,7 @@ const Street = (() => {
     // 逐像素：某點（世界比例座標）有冇被前景件實際遮住（睇切圖 alpha，唔係睇外框）
     fgAt(F, fx, fy) { if (!F._a) { const im = STN_FG_img(F.it); if (!im.complete || !im.naturalWidth) return false; const cv = document.createElement('canvas'); cv.width = im.naturalWidth; cv.height = im.naturalHeight; const x = cv.getContext('2d'); x.drawImage(im, 0, 0); F._a = { d:x.getImageData(0, 0, cv.width, cv.height).data, w:cv.width, h:cv.height }; }
       const A = F._a, px = Math.floor(((fx - F.r) * STN_FG_W - F.it.x) / F.it.w * A.w), py = Math.floor((fy * STN_FG_H - F.it.y) / F.it.h * A.h); return px >= 0 && py >= 0 && px < A.w && py < A.h && A.d[(py * A.w + px) * 4 + 3] > 110; },
-    fgCover(fx, fy) { for (const F of this.fgList()) { if (fy >= F.fy || fx < F.x0 || fx > F.x1 || fy < F.y0) continue; let n = 0; for (const dy of [0.008, 0.02, 0.032]) if (this.fgAt(F, fx, fy - dy)) n++; if (n) return F; } return null; },
+    fgCover(fx, fy) { for (const F of this.fgList()) { if (fy >= F.fy || fx < F.x0 || fx > F.x1 || fy < F.y0) continue; let n = 0; for (const dy of [0.008, 0.02, 0.032]) if (this.fgAt(F, fx, fy - dy * PPL)) n++; if (n) return F; } return null; },
     fgHold(s) { return this.fgList().find(F => s.x >= F.x0 && s.x <= F.x1 && s.y >= F.y0 - 0.02 && s.y <= F.y1 + 0.02); }, // 槽本身掛喺呢件嘢上面
     // 埋伏：設備正前面（腳底 y 對下 0~0.14）有大件遮住 → 路人睇唔到，出手驚嚇加成
     ambush(i) { const L2 = this.lay; L2._amb = L2._amb || {}; const key = i + ':' + L2.nv; if (L2._amb[key] != null) return L2._amb[key]; const s = L2.posts[i], q = this.rect(s), hold = this.fgHold(s);
@@ -1122,7 +1123,7 @@ const Street = (() => {
       if (w.calmFx > 0) { c.fillStyle = `rgba(120,240,150,${w.calmFx})`; c.font = `bold ${10 * U}px sans-serif`; c.textAlign = 'center'; c.fillText('＋', 0, -hh * 1.1); }
       c.restore();
       // 名牌：細字標示路人類型
-      if (w.p && w.p.id !== 'office' && !w.crew && !w.gone) { c.save(); c.font = `${8.5 * U}px sans-serif`; c.textAlign = 'center'; c.fillStyle = 'rgba(230,220,200,0.75)'; c.lineWidth = 2.5; c.strokeStyle = 'rgba(0,0,0,0.7)'; c.strokeText(w.n, 0, 10 * U); c.fillText(w.n, 0, 10 * U); c.restore(); }
+      if (w.p && w.p.id !== 'office' && !w.crew && !w.gone) { c.save(); const zf = 1 / ((this.cam && this.cam.z) || 1), fs = 11 * zf; c.font = `${fs}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; const tw = c.measureText(w.n).width + 8 * zf, ty = 8 * zf; c.fillStyle = 'rgba(10,6,8,0.45)'; c.fillRect(-tw / 2, ty - fs * 0.6, tw, fs * 1.2); c.fillStyle = 'rgba(234,219,191,0.9)'; c.fillText(w.n, 0, ty); c.restore(); }
     },
     say(w, big) {
       const now = performance.now(); if (w.say || (!big && now - (w.sayAt || 0) < 1800)) return; w.sayAt = now;
@@ -1172,10 +1173,10 @@ const Street = (() => {
         if ((S.res.coins || 0) >= this.upCost(p) && !(p.build > 0)) { c.fillStyle = '#e8303a'; c.beginPath(); c.arc(x0 + cw - 4 * U, y0 + 2 * U, 5 * U, 0, 7); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.stroke(); } });
       this.drawProps(); this.drawTraces(); this.drawObsFx();
       // 路人（含 Bryan 一夥）
-      const NU = typeof NPC_UNIT !== 'undefined' ? NPC_UNIT : 69, hh = b.h * 0.042;
+      const NU = typeof NPC_UNIT !== 'undefined' ? NPC_UNIT : 69, hh = b.h * 0.042, hhP = hh * PPL;
       const list = this.walkers.filter(w => w.t >= 0 && (w.gone || !this.wseg(w).hide) && !(w.gone === 'suck' && this.ult && this.ult.mouth)).map(w => { let [x, y] = this.P(...this.wp(w)); if (w.gone === 'suck') { const e = Math.min(1, w.suckT / 1.0), e2 = e * e, [ax, ay] = this.P(...w.suckFrom), [tx2, ty2] = this.ult && this.ult.mouthXY ? this.ult.mouthXY : this.P(...w.suckTo), r2 = 1 - e2, an = e * Math.PI * 3, dx = ax - tx2, dy = ay - ty2; x = tx2 + (dx * Math.cos(an) - dy * Math.sin(an)) * r2; y = ty2 + (dx * Math.sin(an) + dy * Math.cos(an)) * r2 * 0.8; } if (!w.gone) { const of = this.wOff(w, U); x += of[0]; y += of[1]; w._rot = of[2]; } else w._rot = 0; return [y, w, x]; }).sort((a, z) => a[0] - z[0]);
       // mode：undefined＝全畫；'body'＝只畫身（被前景件遮住時排序入面用）；'ghost'＝淡剪影＋頭頂資訊（遮擋件之上再畫）
-      const drawW = (y0, w, x0, mode) => {
+      const drawW = (y0, w, x0, mode) => { const hh = hhP; // 路人放大
         let x = x0, y = y0, a = 1; const run = w.gone === 'run', suck = w.gone === 'suck'; if (run) a = w.runT < 1.5 ? 1 : Math.max(0, 1 - (w.runT - 1.5) / 0.5); const ssc = suck ? Math.max(0.05, 1 - w.suckT) : 1;
         const react = w.react > 0 ? w.react / 0.6 : 0, lift = Math.sin(react * Math.PI) * hh * 0.35, spin = w.spin > 0;
         const right = run ? ((w.runPath && w.runPath.length > 1 ? w.runPath[1][0] - w.runPath[0][0] : 0) < 0) : (this.wp(w, 0.01)[0] - this.wp(w)[0]) >= 0;
@@ -1198,7 +1199,7 @@ const Street = (() => {
             if (w.crew.n === '天師') { for (let j = 0; j < 3; j++) { const rr = (k * 1.2 + j * 0.3) % 1; c.strokeStyle = `rgba(255,210,90,${1 - rr})`; c.lineWidth = 3; c.beginPath(); c.arc(x + hh * 0.25, y - hh * 0.8, rr * 40 * U, -1, 1); c.stroke(); } c.fillStyle = '#ffd45a'; c.font = `bold ${12 * U}px sans-serif`; c.fillText('叮鈴！', x + 18 * U, y - hh * 1.05); }
             else { const g2 = c.createLinearGradient(x, y - hh * 0.6, px, py); g2.addColorStop(0, w.crew.n === '保安' ? 'rgba(255,250,200,0.7)' : 'rgba(255,255,255,0.85)'); g2.addColorStop(1, 'rgba(255,255,220,0)'); c.fillStyle = g2; c.beginPath(); c.moveTo(x, y - hh * 0.6); c.lineTo(px - 18 * U, py - 10 * U); c.lineTo(px + 18 * U, py + 10 * U); c.closePath(); c.fill();
               if (w.crew.n !== '保安' && k < 0.3) { c.fillStyle = 'rgba(255,255,255,0.7)'; c.beginPath(); c.arc(x + 10 * U, y - hh * 0.7, 12 * U, 0, 7); c.fill(); c.fillStyle = '#ff4d6a'; c.font = `bold ${10 * U}px sans-serif`; c.fillText('● LIVE', x, y - hh * 1.15); } } } }
-        if (!w.gone) { const bw = hh * 0.62; c.fillStyle = 'rgba(0,0,0,0.65)'; c.fillRect(x - bw / 2, y - hh - 9 * U, bw, 5 * U); c.fillStyle = w.crew ? '#ff8a5a' : '#6ec3ff'; c.fillRect(x - bw / 2, y - hh - 9 * U, bw * Math.max(0, w.hp / w.max), 5 * U); }
+        if (!w.gone) { const bw = hh * 0.4; c.fillStyle = 'rgba(0,0,0,0.65)'; c.fillRect(x - bw / 2, y - hh - 7 * U, bw, 4 * U); c.fillStyle = w.crew ? '#ff8a5a' : '#6ec3ff'; c.fillRect(x - bw / 2, y - hh - 7 * U, bw * Math.max(0, w.hp / w.max), 4 * U); }
         if (react <= 0) w.weak2 = null;
         if (w.pulled > 0) { w.pulled -= 1 / 30; c.strokeStyle = `rgba(192,132,255,${w.pulled})`; c.lineWidth = 3; for (let j = 0; j < 2; j++) { c.beginPath(); c.arc(x, y - hh * 0.5, (14 + j * 9) * U, t * 5 + j, t * 5 + j + 4.5); c.stroke(); } }
         if ((react > 0 || w.stay > 0) && !w.crew) { c.fillStyle = '#ffe14a'; c.font = `900 ${18 * U}px sans-serif`; c.textAlign = 'center'; c.lineWidth = 4; c.strokeStyle = '#2a1006'; c.strokeText('!', x + hh * 0.32, y - hh - 14 * U - lift); c.fillText('!', x + hh * 0.32, y - hh - 14 * U - lift); }
@@ -1252,7 +1253,7 @@ const Street = (() => {
       if (typeof StnFoes !== 'undefined') StnFoes.draw(c, this); // 強敵特效：封禁黃符／鎖鏈／倒數、電筒扇形、鹽米、光環、唸咒圈
       for (const w of this.walkers) if (w.beam && !w.gone) { const sp = this.lay.posts[w.beam.i]; if (!sp) continue; const [ax, ay] = this.P(...this.wp(w)), [bx2, by2] = this.P(sp.x, sp.y), g2 = c.createLinearGradient(ax, ay - hh * 0.5, bx2, by2); g2.addColorStop(0, 'rgba(255,250,200,0.75)'); g2.addColorStop(1, 'rgba(255,250,200,0.1)'); c.fillStyle = g2; c.beginPath(); c.moveTo(ax, ay - hh * 0.5); c.lineTo(bx2 - 22 * U, by2 - 14 * U); c.lineTo(bx2 + 22 * U, by2 + 14 * U); c.closePath(); c.fill(); }
       this.drawSpecial();
-      this.drawDfx(U, hh, t);
+      this.drawDfx(U, hhP, t);
       // 鬼被彈飛
       if (this.blown) { const B = this.blown; B.t += 1 / 30; const [x, y] = this.P(B.x, B.y); if (B.k) ghostDraw(B.k, x + B.t * 120 * U, y - B.t * 160 * U, hh / 60 * (1 - B.t * 0.5), { t, pose:'startle', alpha:Math.max(0, 1 - B.t), rot:B.t * 6, flip:false }); if (B.t > 1) this.blown = null; }
       // 拋物
@@ -1301,7 +1302,7 @@ const Street = (() => {
       for (const B of this.bosses || []) if (B.screen && Math.hypot(B.screen[0] - x, B.screen[1] - y) < b.w * 0.09) { if (B.en >= 100 && !this.ult) { B.en = 0; this.sd.bEn[B.g.id] = 0; const g = B.g, pos = this.bpos(B), nm = this.ULT[g.k] || [`${g.name}・怨氣爆發`, `${g.name}・怨氣爆發`]; this.focusOn(pos[0], pos[1]); this.ult = Object.assign({ t:0, i:-1, pos, k:g.k, name:T(nm[0], nm[1]), gname:g.name, pw:power(g), done:false, fx:[] }, this.ULTT[g.k] || {}); this.shake = 0.5; } else Fx.toast(T(`${B.g.name}：能量 ${Math.round(B.en)}%（出招一次 +14）`, `${B.g.name}：能量 ${Math.round(B.en)}%（出招一次 +14）`)); return; }
       if (i >= 0 && (this.buildMode || (this.sd.posts[i] && this.sd.posts[i].role))) { this.pickRole(i); return; }
       // 撳路人：每次 1% 膽量（無視減傷），嚇人力 100，每 300 秒回 1
-      const hh = this.box.h * 0.034; let best = null, bd = 1e9;
+      const hh = this.box.h * 0.034 * PPL; let best = null, bd = 1e9;
       for (const w of this.walkers) { if (!this.alive(w)) continue; const [wx, wy] = this.P(...this.wp(w)), d = Math.hypot(wx - x, wy - hh * 0.5 - y); if (d < bd) { bd = d; best = w; } }
       if (best && bd < hh * 0.9) { const s0 = st(); if (s0.tapE == null) s0.tapE = 100; if (s0.tapE < 1) { this.float(...this.wp(best), T('嚇人力用晒', '嚇人力用完了'), '#aaa'); return; } if (s0.tapE >= 100) s0.tapAt = Date.now(); s0.tapE--; const sc2 = this.toScreen(x, y); this.tapFx = { x:sc2[0], y:sc2[1], t:0 };
         this.hit(best, Math.ceil(best.max * 0.01), { force:true }); if (has(Sound) && Sound.play) Sound.play('click'); }
