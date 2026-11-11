@@ -913,3 +913,19 @@ body #pol-ov .pol-ring{border-radius:0!important;box-shadow:0 0 0 3px #d9a441,0 
 /* 樓裡有鬼 v7 黑暗系蠟筆 UI（只加 .tw- 規則）*/
 .tw-root{background:#141016}
 .tw-lift #lift-st,.tw-lift .lb,.tw-lift .ld,.tw-lift .lt{-webkit-tap-highlight-color:transparent}
+/* 網紅組／探險組帖文卡（黑暗蠟筆框；3–4 秒自動收起或撳收起）*/
+.sq-post{position:absolute;z-index:20;left:50%;top:calc(env(safe-area-inset-top) + 96px);width:min(310px,86vw);transform:translateX(-50%) rotate(-1.2deg);padding:10px 12px 8px;animation:sqIn .35s cubic-bezier(.2,1.4,.4,1)}
+.sq-post.out{opacity:0;transform:translateX(-50%) translateY(-14px) rotate(-1.2deg);transition:all .3s}
+@keyframes sqIn{from{opacity:0;transform:translateX(-50%) scale(.7) rotate(4deg)}}
+.sq-post.win{border-image-source:var(--cr-b-red)!important}.sq-post.lose{border-image-source:var(--cr-b-violet)!important}
+.sq-h{display:flex;align-items:center;gap:8px;position:relative}.sq-h canvas{width:40px;height:40px;border:2px solid #d9c9a8;flex:none}
+.sq-h b{display:block;font-size:15px;color:var(--cr-ink)}.sq-h small{display:block;font-size:11.5px;color:var(--cr-ink2)}
+.sq-stamp{position:absolute;right:-2px;top:-4px;font-style:normal;font-weight:900;font-size:17px;color:#ff5a4a;border:3px solid #ff5a4a;padding:1px 6px;transform:rotate(9deg);font-family:var(--serif);text-shadow:none;background:rgba(20,8,8,.6)}
+.sq-stamp.hot{color:#ffd45a;border-color:#ffd45a}
+.sq-post p{margin:7px 0 6px;font-size:15px;line-height:1.45;color:var(--cr-ink)}
+.sq-post img{display:block;width:100%;height:auto;border:2px solid rgba(217,201,168,.5)}
+.sq-f{display:flex;gap:12px;align-items:center;margin-top:6px;font-size:14px;font-weight:900;color:#f3d58a}.sq-f i{font-style:normal}
+.sq-eff{margin-left:auto;font-size:11.5px;font-weight:700;color:#ffb0a0}.sq-post.win .sq-eff{color:#a8e08a}
+.sq-x{display:block;text-align:right;font-size:11px;color:var(--cr-ink2);margin-top:3px}
+.sq-warn{position:absolute;z-index:20;left:50%;top:calc(env(safe-area-inset-top) + 92px);transform:translateX(-50%) rotate(.8deg);width:min(300px,84vw);padding:9px 12px;text-align:center;animation:sqIn .35s cubic-bezier(.2,1.4,.4,1)}
+.sq-warn b{display:block;font-family:var(--serif);font-size:20px;letter-spacing:1px}.sq-warn small{display:block;font-size:12.5px;color:var(--cr-ink2);margin-top:2px}.sq-warn.out{opacity:0;transition:opacity .3s}

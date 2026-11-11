@@ -294,6 +294,22 @@ const Street = (() => {
   const WALL_ROLES = ['scare', 'aura', 'throw'], ROAD_ROLES = ['trap', 'puzzle', 'slow'];
   const ROLE_OF = { sound:'trap', phone:'puzzle', face:'scare', shadow:'scare', cold:'aura', breath:'aura', light:'slow', paper:'throw' }; // 鬼嘅嚇法 → 可以幫邊類裝置勵鬼加持
   // 精英路人（原作 4 款：減傷30%／閃避30%／光環 200px 令身邊人減傷15%／飛毛腿）——換成 Bryan 一夥同外賣仔
+  // ---------- 特殊路人組：網紅組／探險組（難嚇、刁鑽；嚇跑就出「嚇爆」帖文，放過就出「打臉」帖文）----------
+  const SQUAD = {
+    influencer:{ n:['網紅組', '網紅組'], tag:'#ff6fae', hp:7.2, minLv:4, members:[
+      { r:['主播', '主播'], spr:'pb_runner', acc:'ring' }, { r:['攝影', '攝影'], spr:'pb_backpacker', acc:'cam' }, { r:['助手', '助手'], spr:'pb_grab', acc:'stick' }],
+      acct:['@Kitty夜遊Live', '@阿峰探鬼直播', '@靈異小妹Mandy', '@夜半開咪Ricky'],
+      win:[['今晚喺{s}真係撞到嘢！！唔好嚟！！#猛鬼{s}', '今晚在{s}真的撞到東西！！不要來！！#猛鬼{s}'], ['直播直播下部機自己熄咗……我發誓冇做戲😭 #{s}有嘢', '直播到一半機器自己關了……我發誓沒有演😭 #{s}有東西'], ['助手喊住走咗，我以後唔再拍呢類片 #猛鬼{s} #真係有', '助手哭著跑了，我以後不再拍這類片 #猛鬼{s} #真的有']],
+      lose:[['乜鬼都冇，網上傳到咁恐怖係假嘅😂 #都市傳說破解', '什麼都沒有，網上傳得那麼恐怖是假的😂 #都市傳說破解'], ['{s}行咗一轉，最恐怖係蚊😂 #猛鬼{s}係假', '{s}走了一圈，最恐怖是蚊子😂 #猛鬼{s}是假的'], ['兩粒鐘直播，零靈異，得我塊面 #都市傳說破解', '兩小時直播，零靈異，只有我的臉 #都市傳說破解']] },
+    explorer:{ n:['探險組', '探險組'], tag:'#7fd0ff', hp:5.6, minLv:5, members:[
+      { r:['領隊', '領隊'], spr:'pb_backpacker', acc:'map' }, { r:['攝影機', '攝影機'], spr:'pb_couple_m', acc:'cam' }, { r:['電筒', '電筒'], spr:'pb_guardbo', acc:'torch' }, { r:['錄音筆', '錄音筆'], spr:'pb_nurse', acc:'rec' }],
+      acct:['@廢墟夜行者', '@阿Ben冒險日記', '@港馬探險隊', '@夜探三人行'],
+      win:[['探咗十年都未試過咁……{s}係真嘅，大家唔好鐵齒 #猛鬼{s}', '探了十年都沒試過這樣……{s}是真的，大家別嘴硬 #猛鬼{s}'], ['錄音筆錄到有把聲喺耳邊叫我個名，成隊人即刻撤 #{s}靈異事件', '錄音筆錄到有聲音在耳邊叫我的名字，整隊人馬上撤 #{s}靈異事件'], ['電筒照過去明明冇人，影返出嚟有個影😨 #猛鬼{s}', '手電筒照過去明明沒人，拍出來有個影子😨 #猛鬼{s}']],
+      lose:[['{s}全程探晒，零發現，網上啲傳聞可以收皮 #都市傳說破解', '{s}全程探完，零發現，網上的傳聞可以收工了 #都市傳說破解'], ['帶齊器材入{s}，錄到嘅只有冷氣機聲😂 #猛鬼{s}係假', '帶齊器材進{s}，錄到的只有冷氣機聲😂 #猛鬼{s}是假的'], ['又一個「猛鬼」地方被我哋踩平，下一站邊度？ #都市傳說破解', '又一個「猛鬼」地方被我們踩平，下一站去哪？ #都市傳說破解']] },
+  };
+  // 難度調校（模擬搵出嚟）：膽量倍數、打氣回復、試幾多條路揀最少設備、每件設備最多等幾秒
+  const SQ_TUNE = { hp:{ influencer:7.2, explorer:5.6 }, cheer:0.09, routes:14, wait:2.2, rush:1.7, armor:0 }; if (typeof window !== 'undefined') window.SQ_TUNE = SQ_TUNE;
+  const SQ_CHEER = [['頂住呀！', '撐住啊！'], ['唔使驚！', '不用怕！'], ['繼續拍！', '繼續拍！'], ['跟實我！', '跟緊我！'], ['冇嘢嘅！', '沒事的！'], ['鏡頭對住！', '鏡頭對準！']];
   const ELITE = [
     { id:'coach', spr:'npc_kpiboss', n:'拳館教練', zh:'拳館教練', hp:115, atk:10, spd:100, award:45, buf:'tough', tag:'#e8a33a', rep:40, tip:['減傷三成', '減傷三成'] },
     { id:'wanghong', spr:'npc_it', n:'探靈網紅', zh:'探靈網紅', hp:80, atk:30, spd:75, award:30, buf:'dodge', tag:'#d64ab8', rep:40, tip:['三成機會閃避', '三成機會閃避'] },
@@ -533,7 +549,7 @@ const Street = (() => {
       this.lay = longLay(def.long, sd.unlocked, def.rn, def.id); this.fixPosts(); if (typeof STN_FG_preload === 'function') STN_FG_preload(def.id);
       // 血量補正 max：Σ裝置等級 ÷ 最高裝置等級（原作只喺開局／讀檔計一次）
       const blt = sd.posts.filter(p => p && p.role), mx = blt.reduce((a, p) => Math.max(a, p.lv || 1), 0); this.modMax = blt.length ? blt.reduce((a, p) => a + (p.lv || 1), 0) / mx : 1;
-      this.bosses = []; this.walkers = []; if (typeof StnFoes !== 'undefined') StnFoes.reset(); this.dfx = []; this.fx = []; this.shots = []; this.parts = []; this.blown = null; this.shake = 0; this.flash = 0; this.rateAcc = 0; this.rateT = 0; this.moveFrom = null;
+      this.bosses = []; this.walkers = []; if (typeof StnFoes !== 'undefined') StnFoes.reset(); this.dfx = []; this.sqPlan = null; this.waveNo = 0; this.sqCD = 1; this.slowmo = 0; this.fx = []; this.shots = []; this.parts = []; this.blown = null; this.shake = 0; this.flash = 0; this.rateAcc = 0; this.rateT = 0; this.moveFrom = null;
       this.q = { st:'gap', t:3, n:0, made:0, list:[] }; this.eliteT = R(75, 125); this.eliteNext = null;
       let el = $('#st-turf'); if (!el) { el = document.createElement('section'); el.id = 'st-turf'; document.body.appendChild(el); }
       el.innerHTML = `<canvas id="stt-cv"></canvas><div class="stt-top"><button id="stt-back">◀ ${T('返街', '回街上')}</button><div class="stt-name"><b>${T(def.n, def.zh)}</b><small id="stt-lv"></small></div><span id="stt-coin"></span></div>`
@@ -562,10 +578,82 @@ const Street = (() => {
       for (let i = 0; i < pts.length - 1; i++) { const [ax, ay] = J(pts[i]), [bx, by] = J(pts[i + 1]), d = Math.hypot(bx - ax, (by - ay) * 1.5) || 1e-6; w.segs.push({ ax, ay, bx, by, d, s:L0, hide:pts[i + 1].hide, k:pts[i + 1].k, nk:pts[i + 2] && pts[i + 2].k }); L0 += d; }
       w.len = L0; return w; },
     wp(w, dt) { if (w.gone === 'run' && w.runPath) return this.runPos(w); const t = w.t + (dt || 0), S2 = w.segs || this.segs; for (const g of S2) if (t <= g.s + g.d) { const k = Math.max(0, (t - g.s) / g.d); return [g.ax + (g.bx - g.ax) * k, g.ay + (g.by - g.ay) * k]; } const z = S2[S2.length - 1]; return [z.bx, z.by]; },
+    // ===== 特殊路人組（網紅組／探險組）=====
+    sqWaveDone() { // 每放一組人入場之後：中等以上地盤先會預告／安排踩場
+      const sd = this.sd; this.waveNo = (this.waveNo || 0) + 1; if (this.sqPlan) return; this.sqCD = (this.sqCD == null ? 1 : this.sqCD) - 1;
+      const ok = Object.keys(SQUAD).filter(k => sd.lv >= SQUAD[k].minLv); if (!ok.length || this.sqCD > 0 || Math.random() > (window.SQ_FORCE ? 1 : 0.45)) return;
+      const kind = window.SQ_FORCE && SQUAD[window.SQ_FORCE] ? window.SQ_FORCE : pick(ok); this.sqPlan = { kind, wave:this.waveNo + 2 }; this.sqCD = 3;
+      const nm = T(SQUAD[kind].n[0], SQUAD[kind].n[1]), E0 = this.lay.nodes['0E'];
+      Fx.toast(T(`⚠ 今晚有${nm}嚟踩場！再過一組就到，快啲執好設備！`, `⚠ 今晚有${nm}來踩場！再過一組就到，快點佈置好設備！`));
+      this.sqBanner(T(`今晚有${nm}嚟踩場！`, `今晚有${nm}來踩場！`), T('再過一組就到・佢哋難嚇又識避設備', '再過一組就到・他們難嚇又會避開設備'), SQUAD[kind].tag); void E0; },
+    sqBanner(big, small, col) { const el0 = $('#st-turf'); if (!el0) return; let el = $('#sq-warn'); if (el) el.remove(); el = document.createElement('div'); el.id = 'sq-warn'; el.className = 'cr-panel sq-warn'; el.innerHTML = `<b style="color:${col}">${big}</b><small>${small}</small>`; el0.appendChild(el); el.onclick = () => el.remove(); setTimeout(() => { if (el.isConnected) { el.classList.add('out'); setTimeout(() => el.remove(), 300); } }, 3200); },
+    sqMake(kind) { // 開一組人：同一條路（揀設備最少嗰條）、膽量高
+      const S0 = SQUAD[kind], sd = this.sd, L = this.lay; let best = null, bs = 1e9;
+      const posts = sd.posts.map((p, i) => p && p.role && !(p.build > 0) ? [p, L.posts[i]] : null).filter(Boolean);
+      for (let k = 0; k < SQ_TUNE.routes; k++) { const pts = route(L); let sc = 0; for (const q of pts) for (const [p, s] of posts) { const chk = (p.role === 'slow' ? 1.2 * CELL : DEV[p.role][p.sz || 1].check * PX || CELL); if (this.rdist(q.p, s) <= chk) sc++; } if (sc < bs) { bs = sc; best = pts; } }
+      const sq = { kind, mem:[], scared:0, leaked:0, done:false, cheerT:2 };
+      S0.members.forEach((m, j) => { const w = this.newWalker(null); const hp = Math.round(w.max * SQ_TUNE.hp[kind]); Object.assign(w, { sq, sqRole:m, sqAcc:m.acc, spr:m.spr, tint:null, p:{ id:'sq', n:'', acc:null }, tr:'', mate:null, n:`${T(S0.n[0], S0.n[1])}・${T(m.r[0], m.r[1])}`, hp, max:hp, award:Math.round(w.award * 3), j:(j - (S0.members.length - 1) / 2) * 0.016, film:0, filmT:R(1, 5), spd:R(102, 106) * PX * 1.8 }); this.mkRoute(w, best); sq.mem.push(w); });
+      return sq; },
+    // 每格：互相打氣、輪流開機拍片、睇準設備冷卻先衝（返 true＝今格企定）
+    sqWalk(w, dt) { const sq = w.sq; if (!sq || w.gone) return false; w.rushM = 1;
+      if (w.film > 0) w.film -= dt; else if ((w.filmT -= dt) <= 0 && (sq.kind === 'influencer' || w.sqAcc === 'cam')) { w.film = 3; w.filmT = R(6, 9); }
+      if (w.cheerCD > 0) w.cheerCD -= dt; else { w.cheerCD = 2.6; const mates = sq.mem.filter(q => q !== w && this.alive(q) && q.hp < q.max * 0.9 && this.dist(this.wp(q), this.wp(w)) < 150 * PX);
+        if (mates.length && this.alive(w)) { mates.forEach(q => { q.hp = Math.min(q.max, q.hp + q.max * SQ_TUNE.cheer); }); if (!(sq.cheerF > performance.now())) { sq.cheerF = performance.now() + 4000; const [x, y] = this.wp(w); this.float(x, y - 0.08, T(`隊友打氣 +${Math.round(SQ_TUNE.cheer * 100)}%`, `隊友打氣 +${Math.round(SQ_TUNE.cheer * 100)}%`), '#9ef0b0'); } if (!w.say && Math.random() < 0.5) { const used = new Set(this.walkers.filter(q => q.say).map(q => q.say.s)), o = SQ_CHEER.filter(c2 => !used.has(T(c2[0], c2[1]))); if (o.length) { const c2 = pick(o); w.say = { s:T(c2[0], c2[1]), t:1.3 }; } } } }
+      if (!this.alive(w) || w.stay > 0 || w.block > 0) return false;
+      const sd = this.sd, cur = this.wp(w), ahead = this.wp(w, 110 * PX); let wait = false, rush = false;
+      sd.posts.forEach((p, i) => { if (!p || !p.role || p.build > 0 || p.role === 'slow' || p.role === 'aura' || p.role === 'puzzle') return; const s = this.lay.posts[i], chk = DEV[p.role][p.sz || 1].check * PX; if (!chk || this.rdist(ahead, s) > chk || this.rdist(cur, s) <= chk) return;
+        const L0 = DEV[p.role][p.sz || 1].lv[(p.lv || 1) - 1], ready = (p.cd || 0) >= L0[3] * this.staffMul(p).cd * 0.8 && !p.win && p.anim == null, blocked = typeof StnFoes !== 'undefined' && StnFoes.blocks(p);
+        if (ready && !blocked) { w.waited = w.waited || {}; if ((w.waited[i] || 0) < SQ_TUNE.wait) { w.waited[i] = (w.waited[i] || 0) + dt; wait = true; } } else rush = true; });
+      if (wait) { if (!w.say && Math.random() < dt * 0.6) w.say = { s:T('等陣，嗰度有古怪……', '等一下，那裡有古怪……'), t:1.2 }; return true; }
+      if (rush) { w.rushM = SQ_TUNE.rush; if (!w.rushSay) { w.rushSay = 1; const [x, y] = this.wp(w); this.float(x, y - 0.1, T('趁冷卻衝！', '趁冷卻衝！'), '#ffb060'); } }
+      return false; },
+    sqMember(w, how) { const sq = w.sq; if (!sq || sq.done) return; if (how === 'run') sq.scared++; else sq.leaked++; if (sq.scared + sq.leaked < sq.mem.length) return; sq.done = true; this.sqEnd(sq, w); },
+    sqEnd(sq, last) { const sd = this.sd, S0 = SQUAD[sq.kind], win = sq.scared > sq.leaked, dmgK = sq.mem.reduce((a, q) => a + Math.min(1, Math.max(0, (q.max - Math.max(0, q.hp)) / q.max)), 0) / sq.mem.length, smooth = !win && dmgK < 0.25;
+      const log = sd.sqLog || (sd.sqLog = { win:0, lose:0, exposed:0 }), res = win ? 'win' : smooth ? 'exposed' : 'lose'; log[res]++; log[sq.kind + '_' + res] = (log[sq.kind + '_' + res] || 0) + 1;
+      const pos = this.wp(last), nm = T(S0.n[0], S0.n[1]), siteN = T(this.def.n, this.def.zh);
+      const shot = this.sqShot(pos, win, sq);
+      if (win) { const v = Math.round(5 + (1 - Math.min(1, sq.leaked / sq.mem.length)) * 3); const m = addHot(sd, v, this.def); sd.panic = 120; const bonus = this.unit() * 12; S.res.coins = (S.res.coins || 0) + bonus; sd.coins += bonus;
+        this.slowmo = 0.9; this.flash = 0.3; this.shake = 0.4; this.cap(T('嚇爆！', '嚇爆！'), pos[0], pos[1] - 0.12, { col:'#ff3b2f', size:40, style:'pop', font:'serif' });
+        this.float(pos[0], pos[1] - 0.05, T(`傳說名氣 +${v}・冥幣 +${bonus}`, `傳說名氣 +${v}・冥幣 +${bonus}`), '#ffd45a'); if (m) Fx.toast(m); }
+      else { const v = smooth ? -10 : -6; const m = addHot(sd, v, this.def); sd.badPress = 120; this.float(pos[0], pos[1] - 0.05, T(`傳說名氣 ${v}`, `傳說名氣 ${v}`), '#ff8a8a'); if (m) Fx.toast(m); }
+      setTimeout(() => this.sqPost(sq, win, smooth, shot, siteN), win ? 900 : 300); },
+    // 帖文相：唔靠鏡頭（人可能喺畫面外），用嗰屏背景圖＋組員位置自己砌一張「手機相」
+    sqShot(pos, win, sq) { try { const L = this.lay, r = Math.max(0, Math.min(L.nv - 1, Math.floor(pos[0]))), P0 = L.panels[r], bgk = P0 && (P0.bg || (ROOMG[P0.room] && ROOMG[P0.room].bg)), bg = has(SPR) && SPR[bgk];
+        const o = document.createElement('canvas'); o.width = 240; o.height = 170; const x = o.getContext('2d'), BW = bg && bg.naturalWidth ? bg.naturalWidth : 768, BH = bg && bg.naturalHeight ? bg.naturalHeight : 1152;
+        const cw = 0.36 * BW, ch = cw * 170 / 240, cx = (pos[0] - r) * BW, cy = (pos[1] - 0.025) * BH, x0 = Math.max(0, Math.min(BW - cw, cx - cw / 2)), y0 = Math.max(0, Math.min(BH - ch, cy - ch / 2)), k = 240 / cw;
+        x.fillStyle = '#120c10'; x.fillRect(0, 0, 240, 170); if (win) { x.translate(120, 85); x.rotate(-0.07); x.scale(1.08, 1.08); x.translate(-120, -85); }
+        if (bg && bg.naturalWidth) { x.filter = win ? 'blur(1.6px) brightness(0.75) contrast(1.25)' : 'brightness(1.15) saturate(0.9)'; x.drawImage(bg, x0, y0, cw, ch, 0, 0, 240, 170); x.filter = 'none'; }
+        const toC = (q) => [((q[0] - r) * BW - x0) * k, (q[1] * BH - y0) * k], hP = 0.042 * BH * 0.92 * k;
+        if (win) { const [gx, gy] = toC([pos[0] + 0.04, pos[1] - 0.01]); x.save(); x.filter = 'blur(2px)'; x.globalAlpha = 0.75; DevFx.shade(x, gx, gy, hP * 1.6, { t:1, alpha:0.85, reach:0.6 }); x.restore(); }
+        (sq.mem || []).forEach((m, j) => { const im = has(SPR) && SPR[m.spr]; if (!im || !im.naturalWidth) return; let q = m.gone === 'out' ? [pos[0] - 0.02 * j, pos[1]] : this.wp(m); if (Math.abs(q[0] - pos[0]) > 0.25) q = [pos[0] - 0.03 * (j + 1), pos[1] + 0.01 * j]; const [mx, my] = toC(q), ww = hP * im.naturalWidth / im.naturalHeight;
+          x.save(); if (win) { x.filter = 'blur(1.2px)'; x.translate(mx, my); x.rotate((j - 1) * 0.15); x.drawImage(im, -ww / 2, -hP, ww, hP); } else x.drawImage(im, mx - ww / 2, my - hP, ww, hP); x.restore(); });
+        x.setTransform(1, 0, 0, 1, 0, 0);
+        if (win) { const [gx, gy] = toC([pos[0] + 0.04, pos[1] - 0.03]); x.strokeStyle = '#ff2a2a'; x.lineWidth = 3; x.beginPath(); x.ellipse(gx, gy - hP * 0.4, hP * 0.75, hP * 0.95, -0.2, 0, 6.2); x.stroke(); x.font = '900 17px sans-serif'; x.textAlign = 'center'; x.lineWidth = 4; x.strokeStyle = '#000'; x.fillStyle = '#ff3b2f'; const tx = Math.max(56, Math.min(184, gx)); x.strokeText(T('呢度有嘢！', '這裡有東西！'), tx, 158); x.fillText(T('呢度有嘢！', '這裡有東西！'), tx, 158); x.fillStyle = 'rgba(255,255,255,0.14)'; x.fillRect(0, 0, 240, 170); }
+        else { x.font = '900 13px sans-serif'; x.fillStyle = 'rgba(255,255,255,0.85)'; x.textAlign = 'right'; x.fillText(T('打卡 ✓', '打卡 ✓'), 232, 162); }
+        return o.toDataURL('image/jpeg', 0.82); } catch (e) { return ''; } },
+    sqPost(sq, win, smooth, shot, siteN) { const S0 = SQUAD[sq.kind], el0 = $('#st-turf'); if (!el0) return; let el = $('#sq-post'); if (el) el.remove();
+      const ac = pick(S0.acct), tx = pick(win ? S0.win : S0.lose), txt = T(tx[0], tx[1]).split('{s}').join(siteN.replace(/\s/g, '')), plat = win ? T('陰聞', '陰聞') : T('夜遊誌', '夜遊誌');
+      const likes = win ? Math.round(R(12000, 86000)) : Math.round(R(3000, 26000)), shares = Math.round(likes * R(0.08, 0.2));
+      el = document.createElement('div'); el.id = 'sq-post'; el.className = 'cr-panel sq-post ' + (win ? 'win' : 'lose');
+      el.innerHTML = `<div class="sq-h"><canvas width="44" height="44"></canvas><div><b>${ac}</b><small>${plat}・${T('啱啱', '剛剛')}</small></div>${smooth ? `<em class="sq-stamp">${T('被拆穿！', '被拆穿！')}</em>` : win ? `<em class="sq-stamp hot">${T('嚇爆！', '嚇爆！')}</em>` : ''}</div>
+        <p>${txt}</p>${shot ? `<img src="${shot}" alt="">` : ''}<div class="sq-f"><span>♥ <i data-n="${likes}">0</i></span><span>⤴ <i data-n="${shares}">0</i></span><span class="sq-eff">${win ? T('傳說名氣大升・路人膽細咗', '傳說名氣大升・路人變膽小') : smooth ? T('傳說名氣 −10・收益下降', '傳說名氣 −10・收益下降') : T('傳說名氣 −6・收益下降', '傳說名氣 −6・收益下降')}</span></div><small class="sq-x">${T('撳一下收起', '點一下收起')}</small>`;
+      el0.appendChild(el);
+      try { const im = SPR[S0.members[0].spr], cv = el.querySelector('canvas'), x = cv.getContext('2d'); x.fillStyle = '#1a1014'; x.fillRect(0, 0, 44, 44); if (im && im.naturalWidth) { const s = 44 / (im.naturalWidth * 0.8); x.drawImage(im, im.naturalWidth * 0.1, 0, im.naturalWidth * 0.8, im.naturalWidth * 0.8, 0, 0, 44, 44); } } catch (e) {}
+      const t0 = performance.now(), nums = el.querySelectorAll('i[data-n]'), up = () => { const k = Math.min(1, (performance.now() - t0) / 1500), e2 = 1 - Math.pow(1 - k, 3); nums.forEach(n2 => { const v = Math.round(+n2.dataset.n * e2); n2.textContent = v >= 10000 ? (v / 10000).toFixed(1) + T('萬', '萬') : v; }); if (k < 1 && el.isConnected) requestAnimationFrame(up); }; up();
+      const close = () => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }; el.onclick = close; setTimeout(() => { if (el.isConnected) close(); }, 4200); },
+    drawSqAcc(w, hh, t) { const c = this.c, a = w.sqAcc; if (!a) return; c.save(); c.lineWidth = 1.5;
+      if (a === 'ring') { c.strokeStyle = 'rgba(255,240,220,0.95)'; c.lineWidth = hh * 0.05; c.beginPath(); c.arc(hh * 0.3, -hh * 1.0, hh * 0.13, 0, 7); c.stroke(); const g = c.createRadialGradient(hh * 0.3, -hh * 1.0, 1, hh * 0.3, -hh * 1.0, hh * 0.5); g.addColorStop(0, 'rgba(255,240,230,0.35)'); g.addColorStop(1, 'rgba(255,240,230,0)'); c.fillStyle = g; c.beginPath(); c.arc(hh * 0.3, -hh * 1.0, hh * 0.5, 0, 7); c.fill(); c.strokeStyle = '#333'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(hh * 0.3, -hh * 0.87); c.lineTo(hh * 0.22, -hh * 0.5); c.stroke(); }
+      else if (a === 'stick') { c.strokeStyle = '#2a2a2a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(hh * 0.15, -hh * 0.5); c.lineTo(hh * 0.42, -hh * 1.1); c.stroke(); c.fillStyle = '#111'; c.fillRect(hh * 0.37, -hh * 1.2, hh * 0.12, hh * 0.18); c.fillStyle = 'rgba(160,220,255,0.8)'; c.fillRect(hh * 0.39, -hh * 1.18, hh * 0.08, hh * 0.12); }
+      else if (a === 'cam') { c.fillStyle = '#1e1e22'; c.fillRect(hh * 0.12, -hh * 0.78, hh * 0.24, hh * 0.15); c.fillStyle = '#556'; c.beginPath(); c.arc(hh * 0.4, -hh * 0.705, hh * 0.05, 0, 7); c.fill(); }
+      else if (a === 'rec') { c.fillStyle = '#333'; c.fillRect(hh * 0.16, -hh * 0.62, hh * 0.07, hh * 0.16); c.fillStyle = '#ff3030'; c.beginPath(); c.arc(hh * 0.195, -hh * 0.6, hh * 0.018, 0, 7); c.fill(); }
+      else if (a === 'map') { c.fillStyle = '#e8dcb8'; c.fillRect(-hh * 0.34, -hh * 0.6, hh * 0.2, hh * 0.15); c.strokeStyle = '#a33'; c.beginPath(); c.moveTo(-hh * 0.32, -hh * 0.5); c.lineTo(-hh * 0.18, -hh * 0.55); c.stroke(); }
+      else if (a === 'torch' && !w.gone) { const g = c.createLinearGradient(hh * 0.3, 0, hh * 1.0, 0); g.addColorStop(0, 'rgba(255,245,190,0.35)'); g.addColorStop(1, 'rgba(255,245,190,0)'); c.fillStyle = g; c.beginPath(); c.moveTo(hh * 0.3, -hh * 0.45); c.lineTo(hh * 1.0, -hh * 0.65); c.lineTo(hh * 1.0, -hh * 0.2); c.closePath(); c.fill(); }
+      if (w.film > 0 && !w.gone) { c.fillStyle = Math.floor(t * 3) % 2 ? '#ff2a2a' : '#7a1010'; c.beginPath(); c.arc(-hh * 0.22, -hh * 1.12, hh * 0.04, 0, 7); c.fill(); c.font = `bold ${hh * 0.14}px sans-serif`; c.fillStyle = '#ffd0d0'; c.textAlign = 'left'; c.fillText('REC', -hh * 0.16, -hh * 1.08); }
+      c.fillStyle = w.sq ? SQUAD[w.sq.kind].tag : '#fff'; c.beginPath(); c.moveTo(-hh * 0.08, -hh * 1.32); c.lineTo(hh * 0.08, -hh * 1.32); c.lineTo(0, -hh * 1.22); c.closePath(); c.fill(); c.restore(); },
     newWalker(eliteId) {
       const sd = this.sd; let w;
       if (eliteId) { const E = ELITE.find(e => e.id === eliteId), d = sd.lv, hp = Math.round(E.hp * hpP(d) * this.mod() * 1.25); w = { el:E, crew:{ n:T(E.n, E.zh), tag:E.tag }, spr:E.spr, n:T(E.n, E.zh), hp, max:hp, d, spd:E.spd * PX * 1.8, award:E.award }; }
-      else { let tw = PEOPLE.reduce((a, q) => a + q.w, 0) * Math.random(), p = PEOPLE.find(q => (tw -= q.w) <= 0) || PEOPLE[0]; const r = Math.random() * 80, fl = r < 15 ? -3 : r < 25 ? -2 : r < 32 ? -1 : 0, d = Math.max(1, sd.lv + fl), hp = Math.round(R(75, 100) * p.hp * hpP(d) * this.mod() * 1.25); w = { p, spr:p.spr, tint:p.tint, n:T(p.n, p.zh), hp, max:hp, d, spd:R(100, 110) * p.spd * PX * 1.8, award:13, tr:p.trait, tT:R(2, 6) };
+      else { let tw = PEOPLE.reduce((a, q) => a + q.w, 0) * Math.random(), p = PEOPLE.find(q => (tw -= q.w) <= 0) || PEOPLE[0]; const r = Math.random() * 80, fl = r < 15 ? -3 : r < 25 ? -2 : r < 32 ? -1 : 0, d = Math.max(1, sd.lv + fl), hp = Math.round(R(75, 100) * p.hp * hpP(d) * this.mod() * 1.25 * (sd.panic > 0 ? 0.8 : 1)); w = { p, spr:p.spr, tint:p.tint, n:T(p.n, p.zh), hp, max:hp, d, spd:R(100, 110) * p.spd * PX * 1.8, award:13, tr:p.trait, tT:R(2, 6) };
         if (p.trait === 'couple') { const hp2 = Math.round(hp * R(0.85, 1.15)); w.mate = { p, spr:PARTNER.spr, tint:PARTNER.tint, n:T(PARTNER.n, PARTNER.zh), hp:hp2, max:hp2, d, spd:w.spd, award:13, tr:'couple', tT:9 }; } }
       Object.assign(w, { t:0, stay:0, block:0, fear:0, slowM:1, slowT:0, hist:[], seed:Math.random() * 9 });
       this.mkRoute(w); if (w.mate) { const m = w.mate; Object.assign(m, { t:0, stay:0, block:0, fear:0, slowM:1, slowT:0, hist:[], seed:Math.random() * 9, segs:w.segs.map(g => Object.assign({}, g, { ax:g.ax + 0.02, bx:g.bx + 0.02 })), len:w.len, mate:w, j:w.j }); }
@@ -597,6 +685,8 @@ const Street = (() => {
       if (o.aura && (w.tr === 'runner' ? (dmg *= 0.5) : w.tr === 'phone' ? (dmg *= 0.75) : 0)) {}
       if ((o.aura || o.force) && this.walkers.some(q => q.tr === 'durian' && this.alive(q) && this.dist(this.wp(q), [x, y]) < 120 * PX)) dmg *= 0.7;
       if (w.tr === 'drunk' && o.fright) o = Object.assign({}, o, { fright:0 });
+      if (w.sq && !o.force && SQ_TUNE.armor > 0) dmg = Math.max(dmg * 0.25, dmg - w.max * SQ_TUNE.armor); // 膽大：細嚇幾乎無感，要大嚇先有用
+      if (w.sq && w.film > 0 && (o.src === 'aura' || (o.aura && !o.force))) { if (!w.filmSay || performance.now() - w.filmSay > 2500) { w.filmSay = performance.now(); this.float(x, y - 0.07, T('拍緊片，唔覺凍！', '拍緊片，不覺得冷！'), '#ffb0d0'); } return; }
       if (typeof StnFoes !== 'undefined') dmg = StnFoes.onHit(w, dmg, o, this); w.hp -= dmg; if (!o.aura || w.hp <= 0) { w.react = 0.6; this.say(w, false); } if (!o.aura) this.float(x, y - 0.06, `-${Math.round(dmg)}`, o.force ? '#ffd45a' : '#fff');
       if (o.fear) w.fear = 0.5;
       if (o.src) this.hitFx(w, o.src);
@@ -606,16 +696,17 @@ const Street = (() => {
     scared(w) {
       const sd = this.sd, pos = this.wp(w); w.gone = 'run'; w.runT = 0; w.runPath = [pos].concat(w.hist.slice(-5).reverse()); this.say(w, true);
       for (let j = 0; j < 5; j++) this.parts.push({ kind:'coin', x:pos[0] + R(-0.03, 0.03), y:pos[1] - 0.05, life:0.9 + j * 0.08, k:-j * 0.08 });
-      const cap = this.incomeCap(), coin = Math.floor(w.award * coP(w.d > cap ? cap : Math.min(sd.lv, cap)) * 1.15);
+      const cap = this.incomeCap(), coin = Math.floor(w.award * coP(w.d > cap ? cap : Math.min(sd.lv, cap)) * 1.15 * (sd.badPress > 0 ? 0.8 : 1));
       sd.scared++; sd.jar = (sd.jar || 0) + 1; if (sd.jar % 40 === 0) { const bonus = this.unit() * 20; S.res.coins = (S.res.coins || 0) + bonus; Fx.toast(T(`收集罐滿咗！冥幣 +${bonus}`, `收集罐滿了！冥幣 +${bonus}`)); } S.res.coins = (S.res.coins || 0) + coin; sd.coins += coin; this.rateAcc += coin;
       this.float(pos[0], pos[1] - 0.09, T(`嚇走！冥幣+${coin}`, `嚇跑！冥幣+${coin}`), '#7dffb0');
       const m = addHot(sd, HOT.add, this.def); if (m) Fx.toast(m);
       if (w.tr === 'couple' && w.mate && this.alive(w.mate)) { const mt = w.mate; this.hit(mt, mt.max * 0.45, { force:true }); if (!mt.gone) { mt.back = CELL * 2.5; mt.say = { s:T('等埋我呀！', '等等我啊！'), t:1.4 }; } }
       if (w.tr === 'groceries') { this.addTrace('veg', pos[0], pos[1], 80, 7, { by:'auntie' }); this.cap(T('啲餸跌晒落地！', '菜全掉在地上！'), pos[0], pos[1] - 0.14, { col:'#b8f0a0', size:13, style:'pop', font:'sans-serif' }); }
       if (w.tr === 'rider') this.addTrace('bowl', pos[0], pos[1], 90, 6, { by:'rider' });
+      if (w.sq) this.sqMember(w, 'run');
     },
     leak(w) { const sd = this.sd; sd.leaked++; sd.leakAcc = (sd.leakAcc || 0) + 1; if (sd.leakAcc >= 4) { sd.leakAcc = 0; sd.modCur = Math.max(0.9, (sd.modCur || 0.9) - 0.06); }
-      const m = addHot(sd, HOT.leak, this.def), [x, y] = this.lay.nodes[this.lay.last]; this.float(x - 0.08, y - 0.04, T('漏咗一個…名氣 −18', '漏掉一個…名氣 −18'), '#ff8a8a'); if (m) Fx.toast(m); },
+      const m = addHot(sd, HOT.leak, this.def), [x, y] = this.lay.nodes[this.lay.last]; this.float(x - 0.08, y - 0.04, T('漏咗一個…名氣 −18', '漏掉一個…名氣 −18'), '#ff8a8a'); if (m) Fx.toast(m); if (w.sq) this.sqMember(w, 'out'); },
     // 排隊：每組 4／5／6 人（排隊區等級），門外最多一組；人齊之後 90 秒自動放行，撳「進入」即刻放
     tick(dt) {
       const sd = this.sd;
@@ -627,6 +718,7 @@ const Street = (() => {
       for (const p of sd.posts) if (p && p.fx) { p.fx.t += dt; if (p.fx.t > 1.1) p.fx = null; }
       for (const p of sd.posts) if (p && p.auraOn > 0) p.auraOn -= dt;
       for (const e of this.dfx || []) e.t += dt;
+      if (sd.panic > 0) sd.panic -= dt; if (sd.badPress > 0) sd.badPress -= dt;
       this.parts = this.parts.filter(q => { q.life -= dt; if (q.kind === 'coin') { q.k = Math.min(1, (q.k || 0) + dt * 1.4); } else { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 0.35 * dt; } return q.life > 0; });
       for (const w of this.walkers) { if (w.react > 0) w.react -= dt; if (w.frost > 0) w.frost -= dt; if (w.fear > 0) w.fear -= dt; if (w.say && (w.say.t -= dt) <= 0) w.say = null; }
       this.shake = Math.max(0, (this.shake || 0) - dt); this.flash = Math.max(0, (this.flash || 0) - dt);
@@ -635,12 +727,13 @@ const Street = (() => {
       for (const w of this.walkers) {
         if (w.gone === 'suck') { w.suckT += dt; continue; }
         if (w.gone === 'run') { w.runT += dt; continue; }
+        if (w.sq && this.sqWalk(w, dt)) continue;
         if (this.walkerFx(w, dt)) continue;
         if (w.spin > 0) { w.spin -= dt; continue; }
         if (w.stay > 0) { w.stay -= dt; continue; }
         if (w.block > 0) { w.block -= dt; continue; }
         if (w.back > 0) { const sb = w.spd * 1.3 * dt; w.t = Math.max(0.01, w.t - sb); w.back -= sb; w.rev = 0.3; continue; } if (w.rev > 0) w.rev -= dt;
-        const sg = this.wseg(w), sp = w.spd * (sg && sg.hide ? 4 : 1) * (w.slowT > 0 ? w.slowM : 1); w.slowT -= dt; if (w.slowT <= 0) w.slowM = 1;
+        const sg = this.wseg(w), sp = w.spd * (sg && sg.hide ? 4 : 1) * (w.slowT > 0 ? w.slowM : 1) * (w.rushM || 1); w.slowT -= dt; if (w.slowT <= 0) w.slowM = 1;
         w.t += sp * dt;
         if (w.t > 0 && !(sg && sg.hide)) { const pos = this.wp(w), h = w.hist, lp = h[h.length - 1]; if (!lp || this.dist(lp, pos) >= CELL) { h.push(pos); if (h.length > 6) h.shift(); } }
         if (w.t >= w.len) { w.gone = 'out'; this.leak(w); }
@@ -657,7 +750,7 @@ const Street = (() => {
       const dt = Math.min(0.1, (t - this.last) / 1000); if (dt < 1 / 31) return; this.last = t;
       const U2 = this.ult; if (U2) { U2.t += dt; if (U2.t >= (U2.at || 0.9) && !U2.done) { U2.done = true; this.ultApply(U2); } if (U2.t > (U2.dur || 2.6)) this.ult = null; }
       this.my = Math.min(100, (this.my == null ? 100 : this.my) + 5 * dt);
-      this.tick(U2 && U2.t < 0.9 ? dt * 0.2 : dt); this.draw(); if (this.ult) this.drawUlt(); this.drawMy(); this.hud();
+      this.tick(U2 && U2.t < 0.9 ? dt * 0.2 : this.slowmo > 0 ? (this.slowmo -= dt, dt * 0.25) : dt); this.draw(); if (this.ult) this.drawUlt(); this.drawMy(); this.hud();
     },
     ULT: {
       mengpo:['孟婆湯', '孟婆湯'], n30_yukionna:['冰封', '冰封'], n30_qionggui:['散財', '散財'], n30_guhangui:['一毛不拔', '一毛不拔'], n30_taozhai:['追債', '追債'],
@@ -1071,7 +1164,7 @@ const Street = (() => {
         if (w.tint) c.filter = w.tint; if (gh2) c.filter = 'brightness(0) invert(1) sepia(1) hue-rotate(150deg) saturate(4)'; // 被遮：淡藍剪影提示位置
         let ok = !!(w.foe && typeof StnFoes !== 'undefined' && StnFoes.drawBody(c, w, hh, t, { flip:(run || w.back > 0 || w.rev > 0 ? right : !right) })); if (!ok && hasArt && CHAR_H_OK(w.spr)) { try { ART.drawChar(c, w.spr, 0, 0, hh / NU, { t:t + (w.seed || (w.seed = Math.random() * 9)), pose, pt:react ? 1 - react : 0, face, walk:!react && !(w.stay > 0) && !(w.block > 0) && !(w.act && w.act.hold), flip:run || w.back > 0 || w.rev > 0 ? right : !right, shadow:false }); ok = true; } catch (e) {} }
         if (!ok) { const im = has(SPR) && SPR[w.spr]; if (im && im.naturalWidth) this.drawSprite(im, w, hh * (/^(pb_|foe_)/.test(w.spr) ? 0.92 : 1.06), pose, t, run || w.back > 0 || w.rev > 0 ? right : !right, react, U); }
-        c.filter = 'none'; c.globalAlpha = a; this.drawAcc(w, hh, t, U);
+        c.filter = 'none'; c.globalAlpha = a; this.drawAcc(w, hh, t, U); if (w.sqAcc) this.drawSqAcc(w, hh, t);
         c.restore(); if (mode === 'body') return; c.save(); c.globalAlpha = a;
         if (w.crew) { // 搞事動畫
           c.font = `bold ${11 * U}px sans-serif`; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = '#000'; c.strokeText(w.n, x, y - hh - 16 * U); c.fillStyle = w.crew.tag; c.fillText(w.n, x, y - hh - 16 * U);
@@ -1261,7 +1354,8 @@ const Street = (() => {
     alive(w) { return !w.gone && w.t > 0 && !this.wseg(w).hide; },
     queueTick(dt) {
       const q = this.q, n = 3 + Math.min(3, this.sd.unlocked - 1);
-      if (q.st === 'gap') { q.t -= dt; if (q.t <= 0) { q.st = 'form'; q.n = n; q.made = 0; q.t = 0; q.list = []; } }
+      if (q.st === 'gap') { q.t -= dt; if (q.t <= 0) { q.st = 'form'; q.n = n; q.made = 0; q.t = 0; q.list = [];
+        if (this.sqPlan && (this.waveNo || 0) + 1 >= this.sqPlan.wave) { const sq = this.sqMake(this.sqPlan.kind); this.sqPlan = null; q.list = sq.mem.slice(); q.n = q.made = q.list.length; q.sq = sq; q.st = 'ready'; q.t = 90; this.sqBanner(T(`${SQUAD[sq.kind].n[0]}到咗門口！`, `${SQUAD[sq.kind].n[1]}到門口了！`), T('撳「進入」放佢哋入嚟，或者等 90 秒', '點「進入」放他們進來，或等 90 秒'), SQUAD[sq.kind].tag); } } }
       else if (q.st === 'form') { q.t -= dt; if (q.t <= 0 && q.made < q.n) { q.t = 0.5; q.made++; let el = null; if (this.eliteT <= 0) { const ok = ELITE.filter(e => this.sd.scared >= e.rep); if (ok.length) { el = pick(ok).id; this.eliteT = R(75, 125); } } const nw = this.newWalker(el); if (!el && typeof StnFoes !== 'undefined') { const fid = StnFoes.roll(this.sd.lv, q); if (fid) StnFoes.decorate(nw, fid); } q.list.push(nw); if (nw.mate && q.made < q.n) { q.made++; q.list.push(nw.mate); } } if (q.made >= q.n && q.t <= 0) { q.st = 'ready'; q.t = 90; } }
       else if (q.st === 'ready') { q.t -= dt; if (q.t <= 0) this.release(false); }
       this.eliteT -= dt;
@@ -1271,7 +1365,7 @@ const Street = (() => {
       let tt = 0; q.list.forEach((w, i) => { w.t = w.tr === 'couple' && w.mate && q.list[i - 1] === w.mate ? q.list[i - 1].t - 0.025 : (tt -= 0.07); this.walkers.push(w); });
       const n = q.list.length; this.sd.modCur = Math.min(1.05, (this.sd.modCur || 0.9) + 0.01);
       this.float(this.lay.nodes['0E'][0] + 0.15, this.lay.nodes['0E'][1] - 0.2, manual ? T(`放咗 ${n} 個人入嚟！`, `放了 ${n} 個人進來！`) : T(`等足 90 秒，${n} 個人自己行入嚟`, `等滿 90 秒，${n} 個人自己走進來`), '#ffe9b0');
-      q.st = 'gap'; q.t = 8; q.list = []; q.made = 0; this.focusOn(this.lay.nodes['0E'][0], this.lay.nodes['0E'][1] - 0.3); return true;
+      q.st = 'gap'; q.t = 8; q.list = []; q.made = 0; q.sq = null; this.sqWaveDone(); this.focusOn(this.lay.nodes['0E'][0], this.lay.nodes['0E'][1] - 0.3); return true;
     },
     staffMul(p) { const g = p.staff != null && ghost(p.staff); if (!g) return { atk:1, cd:1, hp:1 }; return this.SPECIAL.includes(g.k) ? { atk:1.5, cd:0.8, hp:1.5, named:1 } : { atk:1.3, cd:0.9, hp:1.3 }; }, // 勵鬼加持
     devK(p) { const g = p.staff != null && ghost(p.staff); return g ? g.k : DEV[p.role].k; },
