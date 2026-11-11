@@ -76,6 +76,9 @@ window.LiftSys=function(A){
   function sayR(o,t){ o.say=t; o.sayT=2.8; }
   function fl(x,y,t,c){ try{ A.float(x,y,t,c); }catch(e){} }
   function riderSpr(o){ return o.kind==='guard'?((A.HUM&&A.HUM[o.ref.kind]&&A.HUM[o.ref.kind].spr)||'res_guard'):o.ref.sprite; }
+  // PEOPLE：Q 版／驚嚇圖（window.PPLFX，pangsa v10）
+  function rKey(o){ var k=riderSpr(o), F=window.PPLFX; return F?F.key(k,o.mood==='bolt'||o.mood==='cower'):k; }
+  function rH(o,k,h){ var F=window.PPLFX; return F?F.hgt(riderSpr(o),k,h):h; }
   function inCab(){ return S.riders.filter(function(o){return o.ph==='ride';}); }
   function resIn(){ return inCab().filter(function(o){return o.kind==='res';}); }
 
@@ -127,7 +130,7 @@ window.LiftSys=function(A){
       if (o.mood==='mroom'){ S.mroom.push({h:h,t:22}); fl(c.cx,y-110,'保安去咗機房（離開巡邏 22 秒）','#9fd6bf'); log('mroom'); return; }
       h.state='patrol'; g0.guards.push(h); return; }
     var r=o.ref; r.y=y-16;
-    if (o.mood==='bolt'){ r.state='flee'; r.vx=(rnd()<0.5?-1:1)*150; r.x=c.cx; g0.res.push(r); sayR(r,line('bolt')); r.sayT=2.4; log('bolt'); return; }
+    if (o.mood==='bolt'){ r.state='flee'; r.vx=(rnd()<0.5?-1:1)*150; r.x=c.cx; g0.res.push(r); if (window.PPLFX) PPLFX.screamOn(r); else sayR(r,line('bolt')); r.sayT=2.4; log('bolt'); return; }
     if (o.trip==='back'){ o.ph='walkHome'; o.f=f; o.x=c.cx; S.riders.push(o); return; }
     // 落咗 G 樓：出門（離開地圖），一陣返嚟
     if (o.trip==='snack') S.away.push({o:o,t:16+rnd()*12});
@@ -227,7 +230,7 @@ window.LiftSys=function(A){
   L.scareWaiting=function(g){ if (!S||!S.on||!g) return 0; var n=G().nodes[g.node]; if (!n) return 0; var f=n.f, y=A.fy(f), g0=G(), c=col(), got=0;
     S.riders.filter(function(o){ return (o.ph==='wait'||o.ph==='walk'||o.ph==='walkHome')&&o.f===f&&Math.abs(o.x-g.x)<150; }).forEach(function(o){ S.riders.splice(S.riders.indexOf(o),1); got++;
       if (o.kind==='guard'){ var h=o.ref; h.node='f'+f+'_l'; h.to=null; h.p=0; h.x=o.x; h.y=y; h.state='patrol'; g0.guards.push(h); try{ A.spook(h,line('gLand')); }catch(e){} return; }
-      var r=o.ref; r.state='flee'; r.vx=(o.x<g.x?-1:1)*160; r.x=o.x; r.y=y-16; g0.res.push(r); sayR(r,line('bolt')); r.sayT=2.4; });
+      var r=o.ref; r.state='flee'; r.vx=(o.x<g.x?-1:1)*160; r.x=o.x; r.y=y-16; g0.res.push(r); if (window.PPLFX) PPLFX.screamOn(r); else sayR(r,line('bolt')); r.sayT=2.4; });
     if (got){ try{ A.addFear&&A.addFear(10*got,g.x,y-110); }catch(e){} g.dir=1; log('scareWait'); }
     return got; };
   function flash(m){ S.msg=m; S.msgT=1.6; var g=ghost(); if (g) fl(g.x,g.y-120,m,'#ffd54a'); }
@@ -247,7 +250,7 @@ window.LiftSys=function(A){
     // 行去𨋢口 / 行返屋企
     var c=col();
     S.riders.forEach(function(o){ o.sayT=Math.max(0,(o.sayT||0)-dt); if (o.sayT<=0) o.say=null;
-      if (o.ph==='walk'){ var slot=S.riders.filter(function(p){return p.ph==='wait'&&p.f===o.f;}).length, tx=c.cx-44-slot*16; o.x+=Math.sign(tx-o.x)*Math.min(Math.abs(tx-o.x),62*dt); if (Math.abs(tx-o.x)<1){ o.ph='wait'; o.waitT=0; } }
+      if (o.ph==='walk'){ var slot=S.riders.filter(function(p){return p.ph==='wait'&&p.f===o.f;}).length, tx=c.cx-44-slot*16; o.x+=Math.sign(tx-o.x)*Math.min(Math.abs(tx-o.x),(o.kind==='guard'?36:62)*dt);   /* PEOPLE：保安行慢 */ if (Math.abs(tx-o.x)<1){ o.ph='wait'; o.waitT=0; } }
       else if (o.ph==='wait'){ o.waitT=(o.waitT||0)+dt; if (o.waitT>7&&!o.said){ o.said=1; sayR(o,line('wait')); } }
       else if (o.ph==='walkHome'){ var r=o.ref, hx=r.unit.rx[0]+(r.unit.rx[1]-r.unit.rx[0])*0.42; o.x+=Math.sign(hx-o.x)*Math.min(Math.abs(hx-o.x),62*dt); if (Math.abs(hx-o.x)<1){ S.riders.splice(S.riders.indexOf(o),1); r.x=hx; r.y=A.fy(r.unit.f)-16; r.state='home'; r.fear=Math.max(0,(r.fear||0)); g0.res.push(r); if (r.unit) r.unit.doorOpen=2; } }
     });
@@ -334,7 +337,7 @@ window.LiftSys=function(A){
       if (q.d.key==='tianhua'&&!q.to&&!(q.dropT>0)) sprAt(wx,q.d.sprite,q.x,A.fy(Math.min(FL(),nq.f+1))+14,q.d.h,al,q.dir<0,-1); else sprAt(wx,q.d.sprite,q.x,q.y,q.d.h,al,q.dir<0);
       if (qi===G().active){ wx.strokeStyle='rgba(138,255,200,0.55)'; wx.setLineDash([4,4]); wx.lineWidth=1.5; wx.beginPath(); wx.ellipse(q.x,q.y-2,30,8,0,0,7); wx.stroke(); wx.setLineDash([]); } });
     // 等𨋢嘅人 + 行緊嘅人
-    S.riders.forEach(function(o){ if (o.ph==='ride') return; var y=A.fy(o.f); sprAt(wx,riderSpr(o),o.x,y-2,(o.kind==='guard'?64:(o.ref.h||66))*0.9,1,o.ph==='walkHome'?o.x>((o.ref.unit&&o.ref.unit.rx[0])||0):o.x>c.cx); });
+    S.riders.forEach(function(o){ if (o.ph==='ride') return; var y=A.fy(o.f); var rk=rKey(o); sprAt(wx,rk,o.x,y-2,rH(o,rk,(o.kind==='guard'?64:(o.ref.h||66))*0.9),1,o.ph==='walkHome'?o.x>((o.ref.unit&&o.ref.unit.rx[0])||0):o.x>c.cx); });
     S.riders.forEach(function(o){ if (!o.say) return; if (o.ph==='ride') bub(wx,c.cx,cy-ch-8,o.say,1); else bub(wx,o.x,A.fy(o.f)-80,o.say,1); });
     wx.restore();
   }
@@ -485,7 +488,7 @@ window.LiftSys=function(A){
     c.shadowColor=c.fillStyle; c.shadowBlur=8; c.fillText(ovr?'OVER':stuck?'- -':((S.dir>0&&mv?'▲':S.dir<0&&mv?'▼':' ')+lab(cabF())),W/2,iy+19); c.shadowBlur=0;
     // 𨋢內嘅人（前景）＋鬼
     var g=ghost(), slots=[W*0.13,W*0.87,W*0.3,W*0.7];
-    inn.forEach(function(o,i){ var x=slots[i%4], cower=o.mood==='cower', hh=H*(cower?0.5:0.78), shk=(cower||o.mood==='bolt')?Math.sin(t*40+i)*1.8:0; sprAt(c,riderSpr(o),x+shk,H+4,hh,1,x>W/2); if (o.say){ c.font='bold 13px '+A.FONT; var tw=Math.min(W*0.46,c.measureText(o.say).width+14), bx=Math.max(4,Math.min(W-tw-4,x-tw/2)), byy=H*0.2+i*28; c.fillStyle='rgba(255,250,240,0.96)'; c.fillRect(bx,byy,tw,24); c.strokeStyle='#1a1a1e'; c.lineWidth=1.5; c.strokeRect(bx,byy,tw,24); c.fillStyle='#1a1a1e'; c.textAlign='center'; c.fillText(o.say,bx+tw/2,byy+17,tw-6); } });
+    inn.forEach(function(o,i){ var x=slots[i%4], cower=o.mood==='cower', hh=H*(cower?0.5:0.78), shk=(cower||o.mood==='bolt')?Math.sin(t*40+i)*1.8:0; var rk=rKey(o); sprAt(c,rk,x+shk,H+4,Math.min(H*0.9,rH(o,rk,hh)),1,x>W/2); if (o.say){ c.font='bold 13px '+A.FONT; var tw=Math.min(W*0.46,c.measureText(o.say).width+14), bx=Math.max(4,Math.min(W-tw-4,x-tw/2)), byy=H*0.2+i*28; c.fillStyle='rgba(255,250,240,0.96)'; c.fillRect(bx,byy,tw,24); c.strokeStyle='#1a1a1e'; c.lineWidth=1.5; c.strokeRect(bx,byy,tw,24); c.fillStyle='#1a1a1e'; c.textAlign='center'; c.fillText(o.say,bx+tw/2,byy+17,tw-6); } });
     if (g){ sprAt(c,g.d.sprite,W*0.5,H*1.04+Math.sin(t*2.6)*3,H*0.5,0.5,false); }
     // 燈光：暗、閃、黑
     var dk=1-lit; if (dk>0){ c.fillStyle='rgba(0,0,0,'+(0.92*dk)+')'; c.fillRect(-20,-20,W+40,H+40); if (S.fx.dark>0&&lit<0.1){ c.fillStyle='rgba(220,235,255,0.5)'; var ey=H*0.45+Math.sin(t*1.3)*4; c.fillRect(W*0.62,ey,4,2); c.fillRect(W*0.62+12,ey,4,2); c.font='14px '+A.FONT; c.fillStyle='rgba(200,210,220,0.55)'; c.textAlign='center'; c.fillText('……呼……呼……',W/2,H*0.35); } }

@@ -236,3 +236,6 @@ s=open(p,encoding='utf-8').read(); s=_m8.patch(s); open(p,'w',encoding='utf-8').
 # ===== v9：入屋模式（點門入住戶室內介面）— tools/patch_v9_unit.py =====
 _sp9=_iu.spec_from_file_location('p9','/home/claude/lyg/tools/patch_v9_unit.py'); _m9=_iu.module_from_spec(_sp9); _sp9.loader.exec_module(_m9)
 s=open(p,encoding='utf-8').read(); s=_m9.patch(s); open(p,'w',encoding='utf-8').write(s); print('ok-v9')
+# ===== v10：人物（Q 版統一畫法、嚇親反應、鬼初始點安全區、保安行慢）— tools/patch_v10_people.py =====
+_sp10=_iu.spec_from_file_location('p10','/home/claude/lyg/tools/patch_v10_people.py'); _m10=_iu.module_from_spec(_sp10); _sp10.loader.exec_module(_m10)
+s=open(p,encoding='utf-8').read(); s=_m10.patch(s); open(p,'w',encoding='utf-8').write(s); print('ok-v10')

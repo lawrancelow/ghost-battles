@@ -333,22 +333,33 @@ window.UnitSys=function(A){
     c.globalAlpha=1; c.restore();
     if (ready&&inR) txt(HOT[k].v,q.x,q.y-r*0.62-6,12,'#e6a85a');
   }
-  function drawActor(a,V){ var r=a.r, lay=S.lay, h=lay.ph*(r.h||74)/74*V.s, q=P(a.x,lay.floor,V), rot=0, sy=1, sx=0, oy=0, al=1;
+  // 住客：用 window.PPLFX（pangsa v10）統一畫法——Q 版高度、驚嚇圖（res_xxx_scared，npc_* 唔換臉）、嚇中跳起／!!／臉青白、驚值高發抖四圍望縮起、驚走舉手＋浮字慘叫
+  function drawActor(a,V){ var r=a.r, lay=S.lay, FX=window.PPLFX, run=a.st==='run', scared=!!FX&&((r.shockT>0)||run), h0=lay.ph*(r.h||74)/74*V.s, k2=FX?FX.key(r.sprite,scared):r.sprite, h=FX?FX.hgt(r.sprite,k2,h0):h0, art=k2!==r.sprite,
+      q=P(a.x,lay.floor,V), rot=0, sy=1, sx=0, oy=0, al=1, sxs=1, tint=0, flip=a.dir<0, bed=a.act==='bed'&&a.st==='act';
     if (q.x<-80||q.x>W+80||a.hid) return;
     var lit=S.light[roomAt(a.x)];
     if (a.pose==='sit'&&a.st==='act'){ sy=0.86; }
-    if (a.act==='bed'&&a.st==='act'){ rot=-1.45; oy=-(lay.acts.bed.lift||60)*V.s; sx=h*0.45; }
+    if (bed){ rot=-1.45; oy=-(lay.acts.bed.lift||60)*V.s; sx=h*0.45; }
     if (a.act==='shower'&&a.st==='act'){ al=0.85; }
     if (a.st==='cower'||r.react){ sx+=Math.sin(S.t*40)*2; sy*=0.94; }
-    if (a.st==='run'){ oy-=Math.abs(Math.sin(S.t*16))*10; rot=-a.dir*0.18; }
-    if (r.jumpT>0){ oy-=Math.sin((0.5-r.jumpT)/0.5*Math.PI)*16; }
+    if (run){ oy-=Math.abs(Math.sin(a.x*0.045))*10; rot=-a.dir*0.18; tint=art?0.12:0.3; }
+    if (FX&&r.shockT>0&&!run&&!bed){ var S0=FX.shock(r.shockT,r.shockA||1); sy*=S0.sy; sxs=S0.sx; oy+=S0.jy*h; sx+=S0.sh*h; tint=S0.tint*(art?0.55:1); }
+    else if (FX&&r.awake&&(r.fear||0)>=55&&!run&&!bed){ var T0=FX.tremble(r,S.t); sx+=T0.sh*h; sy*=T0.sy; if (a.st!=='walk'&&a.st!=='go'&&T0.flip!=null) flip=T0.flip; tint=T0.tint; }
+    else if (!FX&&r.jumpT>0){ oy-=Math.sin((0.5-r.jumpT)/0.5*Math.PI)*16; }
+    // 嚇中嗰下：汗滴／淚滴（每次嚇中一次）
+    if (FX&&r.shockN&&a.shkN!==r.shockN){ a.shkN=r.shockN; for (var j=0;j<5;j++) part(a.x+(Math.random()-0.5)*30,lay.floor-lay.ph*0.85,(Math.random()-0.5)*220,-120-Math.random()*90,0.8,'drop'); }
     c.fillStyle='rgba(0,0,0,0.45)'; c.beginPath(); c.ellipse(q.x,q.y,26*V.s+6,6,0,0,7); c.fill();
-    sprite(r.sprite,q.x+sx,q.y+oy,h,{flip:a.dir<0,rot:rot,sy:sy,alpha:al});
+    if (FX&&run&&!art) FX.arms(c,q.x+sx,q.y+oy,h,a.dir,S.t);
+    if (FX) FX.draw(c,r.sprite,k2,q.x+sx,q.y+oy,h,{flip:flip,rot:rot,sy:sy,sx:sxs,alpha:al,tint:tint});
+    else sprite(r.sprite,q.x+sx,q.y+oy,h,{flip:flip,rot:rot,sy:sy,alpha:al});
     if (a.act==='shower'&&a.st==='act'){ for (var i=0;i<3;i++){ c.fillStyle='rgba(220,230,235,0.18)'; c.beginPath(); c.arc(q.x+(i-1)*30*V.s,q.y-h*(0.4+0.2*i)-((S.t*20+i*10)%20),24*V.s+8,0,7); c.fill(); } }
-    if (a.act==='bed'&&a.st==='act'&&!r.awake){ txt('Z',q.x+h*0.5,q.y+oy-h*0.25-((S.t*14)%14),15,'#c8d8ff'); txt('z',q.x+h*0.6,q.y+oy-h*0.35-((S.t*14+7)%14),11,'#c8d8ff'); }
-    var top=q.y+oy-(a.act==='bed'&&a.st==='act'?h*0.35:h*sy);
-    if (r.fear>0&&a.st!=='run') A.crBar(c,q.x-24,top-12,48,8,r.fear/100,'red');
-    if (a.saw&&a.seeT>0.2){ txt('！',q.x,top-18,26,'#ffe25a'); }
+    if (bed&&!r.awake){ txt('Z',q.x+h*0.5,q.y+oy-h*0.25-((S.t*14)%14),15,'#c8d8ff'); txt('z',q.x+h*0.6,q.y+oy-h*0.35-((S.t*14+7)%14),11,'#c8d8ff'); }
+    var top=q.y+oy-(bed?h*0.35:h*Math.min(1,sy));
+    if (FX&&r.shockT>0) FX.bang(c,q.x+sx,top-10,1-r.shockT/0.9,1.1);
+    else if (FX&&run) FX.bang(c,q.x,top-8,0.5,0.9);
+    if (r.fear>0&&!run) A.crBar(c,q.x-24,top-12,48,8,r.fear/100,'red');
+    if (a.saw&&a.seeT>0.2&&!(r.shockT>0)){ txt('！',q.x,top-18,26,'#ffe25a'); }
+    if (FX&&r.scream) FX.scream(c,clamp(q.x,90,W-90),top-24,r.scream,1.15);
     if (r.say) bubble(q.x,top-(r.fear>0?18:6),r.say);
   }
   function drawGhost(V){ var g=S.g, lay=S.lay, gr=roomAt(S.gx), lit=S.light[gr]&&S.invT<=0, h=lay.ph*0.74*(g.d.h/76)*V.s, q=P(S.gx,lay.floor,V), key=g.d.sprite, by=q.y, sy=1, rot=0, ox=0, oy=0;

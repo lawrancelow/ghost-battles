@@ -77,6 +77,9 @@ window.LiftSys=function(A){
   function sayR(o,t){ o.say=t; o.sayT=2.8; }
   function fl(x,y,t,c){ try{ A.float(x,y,t,c); }catch(e){} }
   function riderSpr(o){ return o.kind==='guard'?((A.HUM&&A.HUM[o.ref.kind]&&A.HUM[o.ref.kind].spr)||'res_guard'):o.ref.sprite; }
+  // PEOPLE：Q 版／驚嚇圖（window.PPLFX，pangsa v10）
+  function rKey(o){ var k=riderSpr(o), F=window.PPLFX; return F?F.key(k,o.mood==='bolt'||o.mood==='cower'):k; }
+  function rH(o,k,h){ var F=window.PPLFX; return F?F.hgt(riderSpr(o),k,h):h; }
   function inCab(){ return S.riders.filter(function(o){return o.ph==='ride';}); }
   function resIn(){ return inCab().filter(function(o){return o.kind==='res';}); }
 
@@ -128,7 +131,7 @@ window.LiftSys=function(A){
       if (o.mood==='mroom'){ S.mroom.push({h:h,t:22}); fl(c.cx,y-110,'保安去咗機房（離開巡邏 22 秒）','#9fd6bf'); log('mroom'); return; }
       h.state='patrol'; g0.guards.push(h); return; }
     var r=o.ref; r.y=y-16;
-    if (o.mood==='bolt'){ r.state='flee'; r.vx=(rnd()<0.5?-1:1)*150; r.x=c.cx; g0.res.push(r); sayR(r,line('bolt')); r.sayT=2.4; log('bolt'); return; }
+    if (o.mood==='bolt'){ r.state='flee'; r.vx=(rnd()<0.5?-1:1)*150; r.x=c.cx; g0.res.push(r); if (window.PPLFX) PPLFX.screamOn(r); else sayR(r,line('bolt')); r.sayT=2.4; log('bolt'); return; }
     if (o.trip==='back'){ o.ph='walkHome'; o.f=f; o.x=c.cx; S.riders.push(o); return; }
     // 落咗 G 樓：出門（離開地圖），一陣返嚟
     if (o.trip==='snack') S.away.push({o:o,t:16+rnd()*12});
@@ -228,7 +231,7 @@ window.LiftSys=function(A){
   L.scareWaiting=function(g){ if (!S||!S.on||!g) return 0; var n=G().nodes[g.node]; if (!n) return 0; var f=n.f, y=A.fy(f), g0=G(), c=col(), got=0;
     S.riders.filter(function(o){ return (o.ph==='wait'||o.ph==='walk'||o.ph==='walkHome')&&o.f===f&&Math.abs(o.x-g.x)<150; }).forEach(function(o){ S.riders.splice(S.riders.indexOf(o),1); got++;
       if (o.kind==='guard'){ var h=o.ref; h.node='f'+f+'_l'; h.to=null; h.p=0; h.x=o.x; h.y=y; h.state='patrol'; g0.guards.push(h); try{ A.spook(h,line('gLand')); }catch(e){} return; }
-      var r=o.ref; r.state='flee'; r.vx=(o.x<g.x?-1:1)*160; r.x=o.x; r.y=y-16; g0.res.push(r); sayR(r,line('bolt')); r.sayT=2.4; });
+      var r=o.ref; r.state='flee'; r.vx=(o.x<g.x?-1:1)*160; r.x=o.x; r.y=y-16; g0.res.push(r); if (window.PPLFX) PPLFX.screamOn(r); else sayR(r,line('bolt')); r.sayT=2.4; });
     if (got){ try{ A.addFear&&A.addFear(10*got,g.x,y-110); }catch(e){} g.dir=1; log('scareWait'); }
     return got; };
   function flash(m){ S.msg=m; S.msgT=1.6; var g=ghost(); if (g) fl(g.x,g.y-120,m,'#ffd54a'); }
@@ -248,7 +251,7 @@ window.LiftSys=function(A){
     // 行去𨋢口 / 行返屋企
     var c=col();
     S.riders.forEach(function(o){ o.sayT=Math.max(0,(o.sayT||0)-dt); if (o.sayT<=0) o.say=null;
-      if (o.ph==='walk'){ var slot=S.riders.filter(function(p){return p.ph==='wait'&&p.f===o.f;}).length, tx=c.cx-44-slot*16; o.x+=Math.sign(tx-o.x)*Math.min(Math.abs(tx-o.x),62*dt); if (Math.abs(tx-o.x)<1){ o.ph='wait'; o.waitT=0; } }
+      if (o.ph==='walk'){ var slot=S.riders.filter(function(p){return p.ph==='wait'&&p.f===o.f;}).length, tx=c.cx-44-slot*16; o.x+=Math.sign(tx-o.x)*Math.min(Math.abs(tx-o.x),(o.kind==='guard'?36:62)*dt);   /* PEOPLE：保安行慢 */ if (Math.abs(tx-o.x)<1){ o.ph='wait'; o.waitT=0; } }
       else if (o.ph==='wait'){ o.waitT=(o.waitT||0)+dt; if (o.waitT>7&&!o.said){ o.said=1; sayR(o,line('wait')); } }
       else if (o.ph==='walkHome'){ var r=o.ref, hx=r.unit.rx[0]+(r.unit.rx[1]-r.unit.rx[0])*0.42; o.x+=Math.sign(hx-o.x)*Math.min(Math.abs(hx-o.x),62*dt); if (Math.abs(hx-o.x)<1){ S.riders.splice(S.riders.indexOf(o),1); r.x=hx; r.y=A.fy(r.unit.f)-16; r.state='home'; r.fear=Math.max(0,(r.fear||0)); g0.res.push(r); if (r.unit) r.unit.doorOpen=2; } }
     });
@@ -335,7 +338,7 @@ window.LiftSys=function(A){
       if (q.d.key==='tianhua'&&!q.to&&!(q.dropT>0)) sprAt(wx,q.d.sprite,q.x,A.fy(Math.min(FL(),nq.f+1))+14,q.d.h,al,q.dir<0,-1); else sprAt(wx,q.d.sprite,q.x,q.y,q.d.h,al,q.dir<0);
       if (qi===G().active){ wx.strokeStyle='rgba(138,255,200,0.55)'; wx.setLineDash([4,4]); wx.lineWidth=1.5; wx.beginPath(); wx.ellipse(q.x,q.y-2,30,8,0,0,7); wx.stroke(); wx.setLineDash([]); } });
     // 等𨋢嘅人 + 行緊嘅人
-    S.riders.forEach(function(o){ if (o.ph==='ride') return; var y=A.fy(o.f); sprAt(wx,riderSpr(o),o.x,y-2,(o.kind==='guard'?64:(o.ref.h||66))*0.9,1,o.ph==='walkHome'?o.x>((o.ref.unit&&o.ref.unit.rx[0])||0):o.x>c.cx); });
+    S.riders.forEach(function(o){ if (o.ph==='ride') return; var y=A.fy(o.f); var rk=rKey(o); sprAt(wx,rk,o.x,y-2,rH(o,rk,(o.kind==='guard'?64:(o.ref.h||66))*0.9),1,o.ph==='walkHome'?o.x>((o.ref.unit&&o.ref.unit.rx[0])||0):o.x>c.cx); });
     S.riders.forEach(function(o){ if (!o.say) return; if (o.ph==='ride') bub(wx,c.cx,cy-ch-8,o.say,1); else bub(wx,o.x,A.fy(o.f)-80,o.say,1); });
     wx.restore();
   }
@@ -486,7 +489,7 @@ window.LiftSys=function(A){
     c.shadowColor=c.fillStyle; c.shadowBlur=8; c.fillText(ovr?'OVER':stuck?'- -':((S.dir>0&&mv?'▲':S.dir<0&&mv?'▼':' ')+lab(cabF())),W/2,iy+19); c.shadowBlur=0;
     // 𨋢內嘅人（前景）＋鬼
     var g=ghost(), slots=[W*0.13,W*0.87,W*0.3,W*0.7];
-    inn.forEach(function(o,i){ var x=slots[i%4], cower=o.mood==='cower', hh=H*(cower?0.5:0.78), shk=(cower||o.mood==='bolt')?Math.sin(t*40+i)*1.8:0; sprAt(c,riderSpr(o),x+shk,H+4,hh,1,x>W/2); if (o.say){ c.font='bold 13px '+A.FONT; var tw=Math.min(W*0.46,c.measureText(o.say).width+14), bx=Math.max(4,Math.min(W-tw-4,x-tw/2)), byy=H*0.2+i*28; c.fillStyle='rgba(255,250,240,0.96)'; c.fillRect(bx,byy,tw,24); c.strokeStyle='#1a1a1e'; c.lineWidth=1.5; c.strokeRect(bx,byy,tw,24); c.fillStyle='#1a1a1e'; c.textAlign='center'; c.fillText(o.say,bx+tw/2,byy+17,tw-6); } });
+    inn.forEach(function(o,i){ var x=slots[i%4], cower=o.mood==='cower', hh=H*(cower?0.5:0.78), shk=(cower||o.mood==='bolt')?Math.sin(t*40+i)*1.8:0; var rk=rKey(o); sprAt(c,rk,x+shk,H+4,Math.min(H*0.9,rH(o,rk,hh)),1,x>W/2); if (o.say){ c.font='bold 13px '+A.FONT; var tw=Math.min(W*0.46,c.measureText(o.say).width+14), bx=Math.max(4,Math.min(W-tw-4,x-tw/2)), byy=H*0.2+i*28; c.fillStyle='rgba(255,250,240,0.96)'; c.fillRect(bx,byy,tw,24); c.strokeStyle='#1a1a1e'; c.lineWidth=1.5; c.strokeRect(bx,byy,tw,24); c.fillStyle='#1a1a1e'; c.textAlign='center'; c.fillText(o.say,bx+tw/2,byy+17,tw-6); } });
     if (g){ sprAt(c,g.d.sprite,W*0.5,H*1.04+Math.sin(t*2.6)*3,H*0.5,0.5,false); }
     // 燈光：暗、閃、黑
     var dk=1-lit; if (dk>0){ c.fillStyle='rgba(0,0,0,'+(0.92*dk)+')'; c.fillRect(-20,-20,W+40,H+40); if (S.fx.dark>0&&lit<0.1){ c.fillStyle='rgba(220,235,255,0.5)'; var ey=H*0.45+Math.sin(t*1.3)*4; c.fillRect(W*0.62,ey,4,2); c.fillRect(W*0.62+12,ey,4,2); c.font='14px '+A.FONT; c.fillStyle='rgba(200,210,220,0.55)'; c.textAlign='center'; c.fillText('……呼……呼……',W/2,H*0.35); } }
@@ -859,22 +862,33 @@ window.UnitSys=function(A){
     c.globalAlpha=1; c.restore();
     if (ready&&inR) txt(HOT[k].v,q.x,q.y-r*0.62-6,12,'#e6a85a');
   }
-  function drawActor(a,V){ var r=a.r, lay=S.lay, h=lay.ph*(r.h||74)/74*V.s, q=P(a.x,lay.floor,V), rot=0, sy=1, sx=0, oy=0, al=1;
+  // 住客：用 window.PPLFX（pangsa v10）統一畫法——Q 版高度、驚嚇圖（res_xxx_scared，npc_* 唔換臉）、嚇中跳起／!!／臉青白、驚值高發抖四圍望縮起、驚走舉手＋浮字慘叫
+  function drawActor(a,V){ var r=a.r, lay=S.lay, FX=window.PPLFX, run=a.st==='run', scared=!!FX&&((r.shockT>0)||run), h0=lay.ph*(r.h||74)/74*V.s, k2=FX?FX.key(r.sprite,scared):r.sprite, h=FX?FX.hgt(r.sprite,k2,h0):h0, art=k2!==r.sprite,
+      q=P(a.x,lay.floor,V), rot=0, sy=1, sx=0, oy=0, al=1, sxs=1, tint=0, flip=a.dir<0, bed=a.act==='bed'&&a.st==='act';
     if (q.x<-80||q.x>W+80||a.hid) return;
     var lit=S.light[roomAt(a.x)];
     if (a.pose==='sit'&&a.st==='act'){ sy=0.86; }
-    if (a.act==='bed'&&a.st==='act'){ rot=-1.45; oy=-(lay.acts.bed.lift||60)*V.s; sx=h*0.45; }
+    if (bed){ rot=-1.45; oy=-(lay.acts.bed.lift||60)*V.s; sx=h*0.45; }
     if (a.act==='shower'&&a.st==='act'){ al=0.85; }
     if (a.st==='cower'||r.react){ sx+=Math.sin(S.t*40)*2; sy*=0.94; }
-    if (a.st==='run'){ oy-=Math.abs(Math.sin(S.t*16))*10; rot=-a.dir*0.18; }
-    if (r.jumpT>0){ oy-=Math.sin((0.5-r.jumpT)/0.5*Math.PI)*16; }
+    if (run){ oy-=Math.abs(Math.sin(a.x*0.045))*10; rot=-a.dir*0.18; tint=art?0.12:0.3; }
+    if (FX&&r.shockT>0&&!run&&!bed){ var S0=FX.shock(r.shockT,r.shockA||1); sy*=S0.sy; sxs=S0.sx; oy+=S0.jy*h; sx+=S0.sh*h; tint=S0.tint*(art?0.55:1); }
+    else if (FX&&r.awake&&(r.fear||0)>=55&&!run&&!bed){ var T0=FX.tremble(r,S.t); sx+=T0.sh*h; sy*=T0.sy; if (a.st!=='walk'&&a.st!=='go'&&T0.flip!=null) flip=T0.flip; tint=T0.tint; }
+    else if (!FX&&r.jumpT>0){ oy-=Math.sin((0.5-r.jumpT)/0.5*Math.PI)*16; }
+    // 嚇中嗰下：汗滴／淚滴（每次嚇中一次）
+    if (FX&&r.shockN&&a.shkN!==r.shockN){ a.shkN=r.shockN; for (var j=0;j<5;j++) part(a.x+(Math.random()-0.5)*30,lay.floor-lay.ph*0.85,(Math.random()-0.5)*220,-120-Math.random()*90,0.8,'drop'); }
     c.fillStyle='rgba(0,0,0,0.45)'; c.beginPath(); c.ellipse(q.x,q.y,26*V.s+6,6,0,0,7); c.fill();
-    sprite(r.sprite,q.x+sx,q.y+oy,h,{flip:a.dir<0,rot:rot,sy:sy,alpha:al});
+    if (FX&&run&&!art) FX.arms(c,q.x+sx,q.y+oy,h,a.dir,S.t);
+    if (FX) FX.draw(c,r.sprite,k2,q.x+sx,q.y+oy,h,{flip:flip,rot:rot,sy:sy,sx:sxs,alpha:al,tint:tint});
+    else sprite(r.sprite,q.x+sx,q.y+oy,h,{flip:flip,rot:rot,sy:sy,alpha:al});
     if (a.act==='shower'&&a.st==='act'){ for (var i=0;i<3;i++){ c.fillStyle='rgba(220,230,235,0.18)'; c.beginPath(); c.arc(q.x+(i-1)*30*V.s,q.y-h*(0.4+0.2*i)-((S.t*20+i*10)%20),24*V.s+8,0,7); c.fill(); } }
-    if (a.act==='bed'&&a.st==='act'&&!r.awake){ txt('Z',q.x+h*0.5,q.y+oy-h*0.25-((S.t*14)%14),15,'#c8d8ff'); txt('z',q.x+h*0.6,q.y+oy-h*0.35-((S.t*14+7)%14),11,'#c8d8ff'); }
-    var top=q.y+oy-(a.act==='bed'&&a.st==='act'?h*0.35:h*sy);
-    if (r.fear>0&&a.st!=='run') A.crBar(c,q.x-24,top-12,48,8,r.fear/100,'red');
-    if (a.saw&&a.seeT>0.2){ txt('！',q.x,top-18,26,'#ffe25a'); }
+    if (bed&&!r.awake){ txt('Z',q.x+h*0.5,q.y+oy-h*0.25-((S.t*14)%14),15,'#c8d8ff'); txt('z',q.x+h*0.6,q.y+oy-h*0.35-((S.t*14+7)%14),11,'#c8d8ff'); }
+    var top=q.y+oy-(bed?h*0.35:h*Math.min(1,sy));
+    if (FX&&r.shockT>0) FX.bang(c,q.x+sx,top-10,1-r.shockT/0.9,1.1);
+    else if (FX&&run) FX.bang(c,q.x,top-8,0.5,0.9);
+    if (r.fear>0&&!run) A.crBar(c,q.x-24,top-12,48,8,r.fear/100,'red');
+    if (a.saw&&a.seeT>0.2&&!(r.shockT>0)){ txt('！',q.x,top-18,26,'#ffe25a'); }
+    if (FX&&r.scream) FX.scream(c,clamp(q.x,90,W-90),top-24,r.scream,1.15);
     if (r.say) bubble(q.x,top-(r.fear>0?18:6),r.say);
   }
   function drawGhost(V){ var g=S.g, lay=S.lay, gr=roomAt(S.gx), lit=S.light[gr]&&S.invT<=0, h=lay.ph*0.74*(g.d.h/76)*V.s, q=P(S.gx,lay.floor,V), key=g.d.sprite, by=q.y, sy=1, rot=0, ox=0, oy=0;
@@ -1143,7 +1157,7 @@ const Tower=(function(){
   // ---------- 遊戲狀態 ----------
   var G=null, scene='title', paused=false;
   var PHT=60;                                         // 每個時辰秒數
-  var HUM={collector:{n:'收數佬',sp:0,spr:'res_collector',h:76}, guard:{n:'保安',sp:74,spr:'res_guard',h:78}, compass:{n:'羅盤保安',sp:78,spr:'npc_guard',h:78}, mirror:{n:'鏡子道士',sp:66,spr:'npc_boss',h:76}, decoy:{n:'道士',sp:64,spr:'npc_boss',h:76}, dog:{n:'看門狗',sp:230,spr:null,h:38}};
+  var HUM={collector:{n:'收數佬',sp:0,spr:'res_collector',h:76}, guard:{n:'保安',sp:43,spr:'res_guard',h:78}, compass:{n:'羅盤保安',sp:45,spr:'npc_guard',h:78}, mirror:{n:'鏡子道士',sp:38,spr:'npc_boss',h:76}, decoy:{n:'道士',sp:37,spr:'npc_boss',h:76},   /* PEOPLE HOOK：舊 74/78/66/64 ×0.58 */ dog:{n:'看門狗',sp:230,spr:null,h:38}};
   var ITEM={food:{n:'宵夜',t:0.8,who:'eking'}, money:{n:'銀包',t:1.3,who:'toyol'}, comb:{n:'木梳',t:1.6,who:'tianhua'}, doll:{n:'替身紙人',t:2.0}, key:{n:'紅鎖匙',t:2.6}, key2:{n:'黃鎖匙',t:2.6}, lost:{n:'失物',t:1.5}};
   var BAGMAX=10;
   function newGame(s,lv){
@@ -1156,7 +1170,7 @@ const Tower=(function(){
     G.gh.forEach(function(g){ var n=G.nodes[g.node]; g.x=n.x; g.y=n.y; });
     cam.z=1; cam.free=null; cam.s=VW/((LV&&LV.camW)||600);
     G.parts=[]; G.ult=null; G.wardFx=[]; G.dark={};
-    spawnZoneGuards();
+    spawnZoneGuards(); initSafe(); G.pdrops=[];   // PEOPLE HOOK
     scene='play'; paused=false;
     toast(LV.name+'（'+(FL-1)+' 層＋地庫＋天台）：鬆手企定先嚇得人、搜得嘢。保安唔係捉鬼師傅——附身電器、敲水管、叫𨋢可以引開佢哋。左上細地圖撳一下睇全棟。');
   }
@@ -1270,12 +1284,12 @@ const Tower=(function(){
   function dijkstra(h,src,dst){
     var dist={}, prev={}, Q=Object.keys(G.nodes); Q.forEach(function(k){dist[k]=1e9;}); dist[src]=0;
     while(Q.length){ var bi=0; for (var i=1;i<Q.length;i++) if (dist[Q[i]]<dist[Q[bi]]) bi=i; var u=Q.splice(bi,1)[0]; if (u===dst||dist[u]>=1e9) break;
-      G.nodes[u].links.forEach(function(l){ if (!humanPass(h,l.e)) return; var a=G.nodes[u], b=G.nodes[l.to], w=Math.hypot(a.x-b.x,a.y-b.y); if (dist[u]+w<dist[l.to]){ dist[l.to]=dist[u]+w; prev[l.to]=u; } }); }
+      G.nodes[u].links.forEach(function(l){ if (!humanPass(h,l.e)) return; if (safeNode(l.to)&&!safeNode(src)) return; var a=G.nodes[u], b=G.nodes[l.to], w=Math.hypot(a.x-b.x,a.y-b.y); if (dist[u]+w<dist[l.to]){ dist[l.to]=dist[u]+w; prev[l.to]=u; } }); }
     if (dist[dst]>=1e9) return null; var p=[dst]; while(p[0]!==src) p.unshift(prev[p[0]]); return p.slice(1);
   }
   function humanPassTo(h,a,b){ var l=a.links.find(function(l){return l.to===b.id;}); return !l||humanPass(h,l.e); }
   function nearNode(o){ var best=null,bd=1e9; for (var k in G.nodes){ var n=G.nodes[k]; if (n.kind==='in') continue; var d=Math.abs(n.x-o.x)+Math.abs(n.y-o.y)*3; if (d<bd){bd=d;best=k;} } return best; }
-  function mirrorOn(g){ var m=null; G.guards.forEach(function(h){ if (h.kind!=='mirror'||h.state==='gone') return; if (Math.abs(h.y-g.y)>40) return; var dx=g.x-h.x; if (Math.abs(dx)>220) return; if (Math.sign(dx)===h.dir && g.dir===-h.dir) m=h; }); return m; }
+  function mirrorOn(g){ if (inSafe(g)) return null; var m=null; G.guards.forEach(function(h){ if (h.kind!=='mirror'||h.state==='gone') return; if (Math.abs(h.y-g.y)>40) return; var dx=g.x-h.x; if (Math.abs(dx)>220) return; if (Math.sign(dx)===h.dir && g.dir===-h.dir) m=h; }); return m; }
 
   // ---------- 主更新 ----------
   function update(dt){
@@ -1315,14 +1329,14 @@ const Tower=(function(){
     });
     // 住客：夜晚行出門口（開門窗口）、逃走
     G.res.forEach(function(r){
-      r.jumpT=Math.max(0,(r.jumpT||0)-dt); r.tangle=Math.max(0,(r.tangle||0)-dt);
+      pplResTick(r,dt); r.jumpT=Math.max(0,(r.jumpT||0)-dt); r._pj=r.jumpT; r.tangle=Math.max(0,(r.tangle||0)-dt);
       if (r.state==='flee'){ if (r.tripT>0){ r.tripT-=dt; r.x+=r.vx*0.18*dt; } else r.x+=r.vx*dt; if (r.x<SX||r.x>LX) r.state='gone'; if (rnd()<dt*8) part(r.x-Math.sign(r.vx)*10,r.y-4,-r.vx*0.1,-10,0.5,'dust'); }
       if (r.state==='home' && r.unit.door){ r.doorT-=dt; if (r.doorT<=0){ r.unit.doorOpen=2.6; r.doorT=12+rnd()*8; say(r,pick(['出去倒杯水先','邊個喺門口？','開門透下氣'])); } }
       if (r.unit.doorOpen>0) r.unit.doorOpen-=dt;
     });
     if (G.phase>=2) G.units.forEach(function(un){ un.litT-=dt; if (un.res&&un.res.state==='home'&&!un.lit&&rnd()<dt*0.04){ un.lit=true; un.litT=7; say(un.res,line('wake')); } if (un.lit&&un.litT<=0) un.lit=false; });
     traceUpdate(dt); G.phoneCd=Math.max(0,(G.phoneCd||0)-dt);
-    resUpdate2(dt);
+    resUpdate2(dt); pplTick(dt);   // PEOPLE HOOK
     G.guards.forEach(function(h){ humanUpdate(h,dt); }); G.guards=G.guards.filter(function(h){return h.state!=='gone';});
     G.ultCool=Math.max(0,(G.ultCool||0)-dt);
     if (G.choiceQ>0 && !G.ult && G.ultCool<=0){ G.choiceQ--; G.choice=shuffle(CARDS).slice(0,3); }
@@ -1349,40 +1363,162 @@ const Tower=(function(){
       G.shake=0.4;
     }
   }
+
+  // ===== PEOPLE HOOK（tools/patch_v10_people.py）：鬼初始點安全區、人物統一畫法、嚇親反應 =====
+  var PPL_META={"res_gamer": {"n": {"foot": 0.0}, "s": {"k": 1.031, "foot": 0.0}}, "res_uncle": {"n": {"foot": 0.0}, "s": {"k": 1.0167, "foot": 0.0}}, "res_granny": {"n": {"foot": 0.0}, "s": {"k": 1.0071, "foot": 0.0}}, "res_helper": {"n": {"foot": 0.0}, "s": {"k": 1.0238, "foot": 0.0}}, "res_mjaunty": {"n": {"foot": 0.0}, "s": {"k": 0.9929, "foot": 0.0}}, "res_shopper": {"n": {"foot": 0.0}, "s": {"k": 0.9548, "foot": 0.0}}, "res_collector": {"n": {"foot": 0.0}, "s": {"k": 0.9167, "foot": 0.0}}, "res_guard": {"n": {"foot": 0.0}, "s": {"k": 0.9429, "foot": 0.0}}, "res_ot": {"n": {"foot": 0.0}, "s": {"k": 0.9262, "foot": 0.0}}, "res_gym": {"n": {"foot": 0.0}, "s": {"k": 0.9429, "foot": 0.0}}};
+  var SAFE=null, SAFE_R=150;
+  function initSafe(){ var n=G.nodes['f0_e']; SAFE=null; if (!n) return; SAFE={node:'f0_e',x:n.x,y:n.y,f:n.f,r:SAFE_R,nodes:{},a:1,was:true}; for (var k in G.nodes){ var m=G.nodes[k]; if (m.f===n.f&&Math.abs(m.x-n.x)<=SAFE_R) SAFE.nodes[k]=1; } }
+  function safeOn(){ return !!(G&&SAFE&&!(G.gate&&G.gate.node===SAFE.node)); }
+  function inSafeXY(x,y){ return safeOn()&&Math.abs(y-SAFE.y)<30&&Math.abs(x-SAFE.x)<=SAFE.r; }
+  function inSafe(g){ if (!g||g.home||g.out) return false; if (inSafeXY(g.x,g.y)){ g._sgT=G.t; return true; } return safeOn()&&g._sgT!=null&&(G.t-g._sgT)<2&&Math.abs(g.y-SAFE.y)<30&&Math.abs(g.x-SAFE.x)<=SAFE.r+110; }   // 出咗陰氣地仲有 2 秒餘蔭，保安守唔死出口
+  function safeNode(id){ return safeOn()&&!!SAFE.nodes[id]; }
+  function nearSafe(h){ return !!SAFE&&Math.abs(h.y-SAFE.y)<200&&Math.abs(h.x-SAFE.x)<SAFE.r+340; }
+  function nearestAny(h){ var best=null, bd=1e9; G.gh.forEach(function(g){ if (g.home||g.out||g.inv>0) return; var d=Math.abs(g.x-h.x)+Math.abs(g.y-h.y)*1.5; if (d<bd){ bd=d; best=g; } }); return best; }
+  function nearNodeH(h){ var best=null,bd=1e9; for (var k in G.nodes){ var n=G.nodes[k]; if (n.kind==='in'||safeNode(k)) continue; var d=Math.abs(n.x-h.x)+Math.abs(n.y-h.y)*3; if (d<bd){bd=d;best=k;} } return best; }
+  // 同一晚唔會兩個人講同一句（慘叫、保安嚇親、安全區放棄）
+  function uniq(pool){ var U=G._uq||(G._uq={}); var free=pool.filter(function(t){ return t&&!U[t]; }); if (!free.length) return null; var t=free[Math.floor(Math.random()*free.length)]; U[t]=1; return t; }
+  var SCREAM=['鬼呀——！走先！','救命呀！屋企有嘢呀！','唔理啦，我落樓先！','開門開門！我要出去！','死啦死啦，真係有鬼！','拖鞋都唔要啦，走呀！','保安！保安！快啲上嚟！','唔好追我呀——！',
+    '媽呀——！','嘩——！唔關我事㗎！','我唔住喇！聽日搬！','走呀走呀！咪理銀包喇！','有鬼呀！真係有鬼呀！','我仲未想死呀——！','乜嘢嚟㗎嗰樣嘢？！走！','唔好搵我呀，我好人嚟㗎！',
+    '頂唔順喇，走為上着！','喂！等埋我呀——！','我以後唔夜瞓喇！','唔好過嚟呀——！','救命呀！有冇人呀？！','我對腳軟晒……走呀！','今晚去酒店瞓好過！','係咪我眼花……唔理喇走！',
+    '嗚哇——！嚇死人咩！','我發誓以後唔講粗口！','快啲快啲，落樓梯！','唔好捉我呀——！','咩鬼嘢呀！走呀！','喊都喊唔出呀！','我要返鄉下！','頭先嗰個……唔係人嚟！',
+    '電話呢？算啦，走先！','我心口好翳……走呀！','冇眼睇喇，閃！','條頸凍晒，走呀！','唔玩喇唔玩喇！','鬼打牆呀——！','我以後晚晚開晒燈！','快啲開門呀——！',
+    '嘩呀——！頂唔順！','救命呀——！鬼呀！','我唔要命呀……唔係，我要命呀！','走啦走啦，唔好望！','阿媽救我呀——！','嗰度有對眼呀——！','我條腳唔聽話呀！','落樓！落樓！快啲！','冇得傾，我走先！','唔好掂我呀——！','咩呀咩呀咩呀——！','我好驚呀——！','點解會咁㗎——！','我錯喇我錯喇！','唔好嚇我呀大佬！','走得快好世界！','我出去搵人幫手先！','救我呀，邊個都好！','嘩，佢望住我呀！','我今晚唔返嚟瞓喇！','頭皮發晒麻呀！','我要報警呀——！','佢喺我後面呀——！','唔好再跟住我呀！','我以後唔睇鬼片喇！','嚇到魂都冇埋！','係真㗎！係真㗎！','我唔信邪……但我信喇！','快走，唔好回頭！','我把聲都震晒呀！','佢冇腳㗎——！','好凍呀！好凍呀！','開燈呀！開晒啲燈呀！','唔好笑呀——！','我唔識你呀——！','冇得頂！','我寧願返工都唔留喺度！','呢間屋有嘢㗎！','我仲有供樓未還㗎！','我唔玩捉迷藏呀！','我隻手凍到冇知覺！','跑呀，唔好企喺度！','我眼花，一定係眼花……走！','邊個喺度笑呀——！','我隻拖鞋呢？唔要喇！','我發夢……一定係發夢！','我收工喇！收工喇！','鬼呀鬼呀鬼呀——！','唔好拉我呀——！','我未食飯㗎，唔好食我！','嗰把聲喺耳邊呀——！','啲燈熄晒喇，走呀！','我唔夠膽再望多一眼！','我腳都軟埋——走！','唔關事，真係唔關事！','我出去瞓街好過！','隻手！有隻手呀——！','我啲寒毛企晒起身！','我同你冇仇㗎——！','嗚嗚嗚，我要返屋企……','我錯晒，我以後早啲瞓！','快啲搵人嚟呀——！','我把心跳到出嚟！','嗰陣味好臭呀，走！','個天花板有嘢呀——！','我唔做呢份工喇！','邊度走得最快呀？！','我出去等天光！','佢叫咗我個名呀——！','唔好企喺門口呀，走！'];
+  var SPOOKL=['嘩！！','乜……乜嘢嚟㗎？！','我唔做喇……','嘩！有嘢喺我後面！','咩、咩聲呀？！','手電筒點解閃㗎？！','冇嘢嘅冇嘢嘅……','頭先係咪有嘢掂我？','我……我去飲杯水先','邊個喺度？！出嚟！',
+    '唔好玩嘢呀！','份人工唔包驚㗎！','對講機！對講機呢？！','我對腳震緊……','係風……一定係風……','老細冇講過有呢樣嘢㗎！','佢、佢郁咗！','我要加人工先得！','嚇到我心都離一離','背脊涼晒……'];
+  var BALKL=['頂……嗰邊陰陰森森，唔過去喇','嗰度凍到入骨，我唔行埋去','老細話過嗰邊夜晚唔好去……','算數，嗰度我唔跟喇','嗰邊陰風陣陣……返轉頭先','唔通真係有嘢？我返轉頭好過','嗰度啲燈成日閃，唔去喇','我條命緊要過份工','嗰邊冇人去㗎，我都唔去','唔該，嗰度我真係唔敢入'];
+  function pplScream(o){ var t=uniq(SCREAM); o.scream=t?{t:t,T:1.9}:null; if (t) { o.say=null; o.sayT=0; } }
+  function balk(h,talk){ h.state='balk'; h.balkT=2.6; h.balkTurn=0; h.path=null; h.lostT=0; h.alertT=0; h.dir=SAFE&&SAFE.x>h.x?1:-1; if (talk){ var t=uniq(BALKL); if (t){ h.say=t; h.sayT=2.6; } } }
+  // 跌嘢（冇驚嚇圖嘅角色先用；Q 版驚嚇圖本身已經畫咗飛出去嘅物件）
+  var DROPK={couple:'cup',mahjong:'tile',taxi:'cup',cook:'bowl',insomnia:'cup',nurse:'cup',debt:'cup',gamer:'pad',granny:'fan',elder:'cup',helper:'cup',shopper:'box',ot:'cup',gym:'cup'};
+  function startShock(r,amp){ r.shockT=0.9; r.shockA=amp; r.shockN=(r.shockN||0)+1; var H=(r.h||66)*1.12;
+    for (var k=0;k<(amp>=1?5:3);k++) part(r.x+(Math.random()-0.5)*24,r.y-H*0.82,(Math.random()-0.5)*150,-90-Math.random()*70,0.75,k%2?'tear':'sweat');
+    if (amp>=1&&!r.dropped&&r.state==='home'&&!PPLFX.hasScared(r.sprite)&&DROPK[r.hh]){ r.dropped=1; (G.pdrops||(G.pdrops=[])).push({k:DROPK[r.hh],x:r.x+(r.vx<0?-10:10),y:r.y-H*0.5,fy:r.y,vx:(Math.random()<0.5?-1:1)*(40+Math.random()*50),vy:-140,rot:0,vr:(Math.random()-0.5)*14,life:3.2}); } }
+  function pplResTick(r,dt){ if ((r.jumpT||0)>(r._pj||0)+0.001) startShock(r,r.jumpT>=0.5?1:0.65);
+    r.shockT=Math.max(0,(r.shockT||0)-dt); if (r.scream){ r.scream.T-=dt; if (r.scream.T<=0) r.scream=null; }
+    if (r.state==='home'&&r.awake&&(r.fear||0)>=55&&Math.random()<dt*1.1) part(r.x+(Math.random()<0.5?-12:12),r.y-(r.h||66)*0.95,(Math.random()-0.5)*30,-20,0.6,'sweat'); }
+  function pplTick(dt){ (G.pdrops||[]).forEach(function(d){ d.life-=dt; d.vy+=520*dt; d.x+=d.vx*dt; d.y+=d.vy*dt; d.rot+=d.vr*dt; if (d.y>=d.fy-3){ d.y=d.fy-3; d.vy=-Math.abs(d.vy)*0.28; d.vx*=0.55; d.vr*=0.4; if (Math.abs(d.vy)<20) d.vy=0; } }); if (G.pdrops) G.pdrops=G.pdrops.filter(function(d){return d.life>0;});
+    if (SAFE){ var on=safeOn(); if (SAFE.was&&!on) float(SAFE.x,SAFE.y-110,'陰門一開，陰氣散晒——保安殺到！','#d8b8ff'); SAFE.was=on; } }
+  function drawDrops(){ (G.pdrops||[]).forEach(function(d){ ctx.save(); ctx.globalAlpha=Math.min(1,d.life/0.6); ctx.translate(d.x,d.y); ctx.rotate(d.rot); ctx.lineWidth=1.5; ctx.strokeStyle='#1a1418';
+      if (d.k==='cup'){ ctx.fillStyle='#e8e2d4'; ctx.fillRect(-4,-5,8,9); ctx.strokeRect(-4,-5,8,9); ctx.beginPath(); ctx.arc(5,-1,3,-1.4,1.4); ctx.stroke(); }
+      else if (d.k==='tile'){ ctx.fillStyle='#f2efe2'; ctx.fillRect(-4,-6,8,11); ctx.strokeRect(-4,-6,8,11); ctx.fillStyle='#3a8a5a'; ctx.fillRect(-2,-3,4,4); }
+      else if (d.k==='bowl'){ ctx.fillStyle='#f0e8d8'; ctx.beginPath(); ctx.arc(0,-2,6,0,Math.PI); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+      else if (d.k==='pad'){ ctx.fillStyle='#2a2a34'; ctx.fillRect(-7,-3,14,7); ctx.strokeRect(-7,-3,14,7); }
+      else if (d.k==='fan'){ ctx.fillStyle='#d8c08a'; ctx.beginPath(); ctx.moveTo(0,4); ctx.arc(0,4,10,-2.6,-0.5); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+      else { ctx.fillStyle='#c89a5a'; ctx.fillRect(-6,-5,12,10); ctx.strokeRect(-6,-5,12,10); }
+      ctx.restore(); }); }
+  // 鬼初始點安全區：地上淡紫陰氣
+  function drawSafe(){ if (!SAFE) return; var on=safeOn(); SAFE.a+=((on?1:0)-SAFE.a)*0.06; var A0=SAFE.a; if (A0<0.02) return; var x=SAFE.x, y=SAFE.y, R=SAFE.r;
+    ctx.save(); var gr=ctx.createRadialGradient(x,y-6,6,x,y-6,R); gr.addColorStop(0,'rgba(150,95,205,'+(0.24*A0)+')'); gr.addColorStop(0.65,'rgba(125,75,185,'+(0.11*A0)+')'); gr.addColorStop(1,'rgba(110,60,170,0)'); ctx.fillStyle=gr; ctx.beginPath(); ctx.ellipse(x,y-5,R,20,0,0,7); ctx.fill();
+    for (var k=0;k<7;k++){ var u=((G.t*8+k*13)%46)/46, px=x+Math.sin(G.t*0.45+k*2.1)*R*0.78, py=y-8-u*46; ctx.fillStyle='rgba(190,150,235,'+((1-u)*0.15*A0)+')'; ctx.beginPath(); ctx.ellipse(px,py,18+(k%3)*7,4.5,0,0,7); ctx.fill(); }
+    ctx.strokeStyle='rgba(195,160,240,'+(0.2*A0)+')'; ctx.setLineDash([5,7]); ctx.lineWidth=1.5; ctx.beginPath(); ctx.ellipse(x,y-5,R,13,0,0.08,Math.PI-0.08); ctx.stroke(); ctx.setLineDash([]);
+    ctx.globalAlpha=0.5*A0; ctx.font='bold 10px '+FONT; ctx.textAlign='center'; ctx.lineWidth=3; ctx.strokeStyle='#120c16'; ctx.strokeText('陰氣地・保安止步',x,y+14); ctx.fillStyle='#d6c0f2'; ctx.fillText('陰氣地・保安止步',x,y+14); ctx.restore(); }
+  // 人物共用畫法（大樓、入屋、電梯共用）：Q 版高度、驚嚇圖、臉青白、跳起、!!、舉手、浮字慘叫
+  var PPLFX=window.PPLFX=(function(){ var CHIBI_K=1.12, TC={};
+    function im(k){ var i=k&&IMG[k]; return i&&i.width?i:null; }
+    function hasScared(k){ return !!k&&k.indexOf('res_')===0&&!!im(k+'_scared'); }
+    function key(k,scared){ return scared&&hasScared(k)?k+'_scared':k; }
+    function chibi(k){ var i=im(k); return !!i&&i.width/i.height>=0.42; }
+    function hgt(base,k2,h){ var m=PPL_META[base]; return h*(chibi(base)?CHIBI_K:1)*(k2!==base&&m&&m.s?m.s.k:1); }
+    function foot(base,k2){ var m=PPL_META[base]; if (!m) return 0; return k2!==base?(m.s&&m.s.foot||0):(m.n&&m.n.foot||0); }
+    function tintCv(k){ var i=im(k); if (!i) return null; var c=TC[k]; if (c&&c._src===i) return c; c=document.createElement('canvas'); var s=Math.min(1,220/i.height); c.width=Math.max(1,Math.round(i.width*s)); c.height=Math.max(1,Math.round(i.height*s)); var x=c.getContext('2d'); x.drawImage(i,0,0,c.width,c.height); x.globalCompositeOperation='source-atop'; x.fillStyle='rgb(178,222,236)'; x.fillRect(0,0,c.width,c.height); c._src=i; TC[k]=c; return c; }
+    function blit(c2,i,x,y,h,o){ var w=h*i.width/i.height; c2.save(); c2.globalAlpha=(o.alpha==null?1:o.alpha); c2.translate(x,y); if (o.rot) c2.rotate(o.rot); c2.scale((o.flip?-1:1)*(o.sx||1),o.sy||1); c2.drawImage(i,-w/2,-h,w,h); c2.restore(); }
+    // k2＝已揀好嘅圖、h＝已計好嘅顯示高度；腳底以下有飛出物件時按 meta 下移
+    function draw(c2,base,k2,x,y,h,o){ o=o||{}; var i=im(k2); if (!i) return; var fy0=y+foot(base,k2)*h; blit(c2,i,x,fy0,h,o);
+      if (o.tint>0.02){ var t=tintCv(k2); if (t){ var sb=c2.shadowBlur; c2.shadowBlur=0; blit(c2,t,x,fy0,h,{flip:o.flip,rot:o.rot,sx:o.sx,sy:o.sy,alpha:(o.alpha==null?1:o.alpha)*Math.min(0.4,o.tint*0.45)}); c2.shadowBlur=sb; } } }
+    // 嚇中瞬間：先縮（squash）→ 彈起拉長（stretch）→ 落地震；回傳比例（jy／sh 係身高嘅分率）
+    function shock(t,amp){ var q=1-t/0.9, a=amp||1, o={sx:1,sy:1,jy:0,sh:0,tint:0.95*(1-q*0.55)};
+      if (q<0.12){ var c=q/0.12; o.sy=1-0.22*c*a; o.sx=1+0.16*c*a; }
+      else if (q<0.5){ var c2=(q-0.12)/0.38; o.jy=-Math.sin(c2*Math.PI)*0.3*a; o.sy=1+(0.17*(1-c2))*a; o.sx=1-(0.11*(1-c2))*a; }
+      else { var c3=(q-0.5)/0.5; o.sy=1-0.07*Math.sin(c3*Math.PI)*(1-c3)*a; o.sx=1+0.05*Math.sin(c3*Math.PI)*(1-c3)*a; o.sh=Math.sin(performance.now()/1000*62)*0.032*(1-c3); }
+      return o; }
+    // 驚值高未走：發抖、四圍望、縮起
+    function tremble(r,t){ var ph=Math.floor((t+((r.x||0)%5))*1.15); return {sh:Math.sin(t*47+(r.x||0))*0.018, sy:0.93, flip:ph%3===2?null:ph%3===1, tint:0.16}; }
+    function bang(c2,x,y,q,s){ s=s||1; var pop=1+0.7*Math.max(0,1-q/0.16), al=q>0.8?Math.max(0,(1-q)/0.2):1; c2.save(); c2.globalAlpha=al; c2.translate(x,y); c2.rotate(-0.12); c2.scale(pop*s,pop*s); c2.font='900 22px '+FONT; c2.textAlign='center'; c2.lineJoin='round'; c2.lineWidth=5; c2.strokeStyle='#160c10'; c2.strokeText('!!',0,0); c2.fillStyle='#ffe25a'; c2.fillText('!!',0,0);
+      c2.strokeStyle='#ffe25a'; c2.lineWidth=2; for (var i=0;i<3;i++){ var an=-2.5+i*0.5; c2.beginPath(); c2.moveTo(Math.cos(an)*15-2,Math.sin(an)*15-8); c2.lineTo(Math.cos(an)*22-2,Math.sin(an)*22-8); c2.stroke(); var an2=-0.65-i*0.5; c2.beginPath(); c2.moveTo(Math.cos(an2)*15+2,Math.sin(an2)*15-8); c2.lineTo(Math.cos(an2)*22+2,Math.sin(an2)*22-8); c2.stroke(); } c2.restore(); }
+    // 狂奔雙手舉高（畫喺身後，得手掌露出頭頂兩邊）：只用喺冇驚嚇圖嘅角色（老闆原創 npc_* 唔改佢張臉）
+    function arms(c2,x,y,h,dir,t){ var sh=y-h*0.5; c2.save(); c2.lineCap='round'; for (var s=-1;s<=1;s+=2){ var w=Math.sin(t*19+s)*h*0.035, hx=x+s*h*0.3+w, hy=y-h*0.97+Math.cos(t*19+s)*h*0.02, sx0=x+s*h*0.12;
+      c2.strokeStyle='#1a1214'; c2.lineWidth=Math.max(3,h*0.075); c2.beginPath(); c2.moveTo(sx0,sh); c2.lineTo(hx,hy); c2.stroke(); c2.strokeStyle='#f0c8a4'; c2.lineWidth=Math.max(1.6,h*0.045); c2.beginPath(); c2.moveTo(sx0,sh); c2.lineTo(hx,hy); c2.stroke();
+      c2.fillStyle='#f0c8a4'; c2.strokeStyle='#1a1214'; c2.lineWidth=1.5; c2.beginPath(); c2.arc(hx,hy,Math.max(2.5,h*0.05),0,7); c2.fill(); c2.stroke(); } c2.restore(); }
+    // 浮字慘叫：跟住個人、慢慢升、淡出
+    function scream(c2,x,y,sc,s){ if (!sc) return; s=s||1; var u=1-sc.T/1.9; c2.save(); c2.globalAlpha=Math.min(1,sc.T/0.45); c2.font='900 '+Math.round(14*s)+'px '+FONT; c2.textAlign='center'; c2.lineJoin='round'; c2.lineWidth=4; c2.strokeStyle='#14080a'; var yy=y-u*22*s; c2.strokeText(sc.t,x,yy); c2.fillStyle='#ff9a86'; c2.fillText(sc.t,x,yy); c2.restore(); }
+    function uq(){ return uniq(SCREAM); }
+    return {key:key, hasScared:hasScared, chibi:chibi, hgt:hgt, foot:foot, draw:draw, shock:shock, tremble:tremble, bang:bang, arms:arms, scream:scream, screamOn:function(o){ pplScream(o); }, tint:tintCv, CHIBI_K:CHIBI_K, uniqScream:uq};
+  })();
+  // 住客（大樓剖面）
+  function pplDrawRes(r,viewW,viewH){ if (r.state==='gone'||r.state==='away') return; if (r.x<cam.x-60||r.x>cam.x+viewW+60||r.y<cam.y-20||r.y>cam.y+viewH+120) return; if (r.state==='leave'||r.state==='back') r.vx=r.vx||1;
+    var home=r.state==='home', F=r.fear||0, flee=r.state==='flee', scared=(r.shockT>0)||flee, k2=PPLFX.key(r.sprite,scared), H=PPLFX.hgt(r.sprite,k2,r.h||58), art=k2!==r.sprite;
+    ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.beginPath(); ctx.ellipse(r.x,r.y-1,PPLFX.chibi(r.sprite)?20:16,4,0,0,7); ctx.fill();
+    var jy=0, sh=0, ro=0, sy=1, sx=1, flip=r.vx<0, tint=0, arms=false;
+    if (r.shockT>0){ var S0=PPLFX.shock(r.shockT,r.shockA||1); sx=S0.sx; sy=S0.sy; jy=S0.jy*H; sh=S0.sh*H; tint=S0.tint*(art?0.18:0.7); }
+    else if (home&&r.awake&&F>=55){ var T0=PPLFX.tremble(r,G.t); sh=T0.sh*H; sy=T0.sy; if (T0.flip!=null) flip=T0.flip; tint=T0.tint; }
+    else if (home&&F>60) sh=Math.sin(G.t*40)*1.6;
+    if (flee){ if (r.tripT>0){ ro=(r.vx>0?1:-1)*1.25; jy=-6; } else { jy=-Math.abs(Math.sin(r.x*0.12))*7; ro=(r.vx>0?1:-1)*0.18; arms=!art; } tint=Math.max(tint,art?0:0.15); }
+    if (r.tangle>0){ sh+=Math.sin(G.t*30)*2; sy*=0.96; }
+    if (r.state==='leave'||r.state==='back'){ jy=-Math.abs(Math.sin(r.x*0.2))*3; }
+    if (home&&!r.awake&&!r.react){ ro=-1.45; jy=-8; ctx.fillStyle='rgba(200,220,255,0.8)'; ctx.font='bold 12px '+FONT; ctx.textAlign='center'; ctx.fillText('Z',r.x+18,r.y-30-((G.t*12)%10)); ctx.font='bold 9px '+FONT; ctx.fillText('z',r.x+26,r.y-40-((G.t*12+5)%10)); }
+    var P={sh:0,jy:0,ro:0,sy:1}; reactPose(r,P); sh+=P.sh; jy+=P.jy; ro+=P.ro; sy*=P.sy;
+    var by=r.y+jy+(r.dy||0);
+    if (arms) PPLFX.arms(ctx,r.x+sh,by,H,r.vx>0?1:-1,G.t);
+    ctx.shadowColor='rgba(255,236,200,0.75)'; ctx.shadowBlur=5;
+    PPLFX.draw(ctx,r.sprite,k2,r.x+sh,by,H,{flip:flip,rot:ro,sx:sx,sy:sy,tint:tint}); ctx.shadowBlur=0; reactProps(r,P);
+    var top=by-H*Math.min(1,sy);
+    if (r.shockT>0) PPLFX.bang(ctx,r.x+sh+(art?0:4),top-8,1-r.shockT/0.9,0.9);
+    else if (flee&&!r.tripT) PPLFX.bang(ctx,r.x,top-6,0.5,0.7);
+    if (home&&F>0) crBar(ctx,r.x-20,top-10,40,7,F/100,'red');
+    if (r.scream) PPLFX.scream(ctx,r.x,top-16,r.scream,1);
+    if (r.say) bubble(r.x,top-12-(home&&F>0?6:0),r.say); }
+  // 保安：步頻跟實際行咗幾遠（唔會腳快身慢）
+  function pplStep(s){ var d=s._lx==null?0:Math.hypot(s.x-s._lx,s.y-s._ly); s._lx=s.x; s._ly=s.y; if (d>40) d=0; var run=s.state==='flee'||(s.state==='scared'&&(s.scT||0)<1.7);
+    s.stepPh=(s.stepPh||0)+d*Math.PI/(run?26:17); if (d>0.05) s.mvT=0.15; else s.mvT=Math.max(0,(s.mvT||0)-1/60);
+    if (s.mvT>0){ s._sway=Math.sin(s.stepPh)*0.035; return -Math.abs(Math.sin(s.stepPh))*(run?4:2.4); } s._sway=0; return Math.sin(G.t*1.8+s.x)*0.6-0.6; }
+  function pplGuard(s,H,bob,fl){ var scared=s.shockT>0||s.state==='scared'||s.state==='flee', k2=PPLFX.key(H.spr,scared), HH=PPLFX.hgt(H.spr,k2,H.h), art=k2!==H.spr;
+    var sx=1, sy=1, jy=0, sh=0, ro=s._sway||0, tint=0;
+    if (s.shockT>0){ var S0=PPLFX.shock(s.shockT,1); sx=S0.sx; sy=S0.sy; jy=S0.jy*HH; sh=S0.sh*HH; tint=S0.tint*(art?0.18:0.7); }
+    else if (s.state==='scared'){ sh=Math.sin(G.t*45+s.x)*1.3; sy=0.95; tint=0.22; }
+    if (s.state==='flee'){ ro=s.vx>0?0.2:-0.2; tint=Math.max(tint,art?0:0.15); if (!art) PPLFX.arms(ctx,s.x,s.y+bob+jy,HH,s.vx>0?1:-1,G.t); }
+    PPLFX.draw(ctx,H.spr,k2,s.x+sh,s.y+bob+jy,HH,{flip:fl,alpha:s.kind==='decoy'?0.88:1,rot:ro,sx:sx,sy:sy,tint:tint});
+    var top=s.y+bob+jy-HH*Math.min(1,sy);
+    if (s.shockT>0) PPLFX.bang(ctx,s.x+sh,top-8,1-s.shockT/0.9,0.9);
+    if (s.scream) PPLFX.scream(ctx,s.x,top-34,s.scream,1); }
   // ---------- 人類 ----------
-  function nearestGhost(h){ var best=null, bd=1e9; G.gh.forEach(function(g){ if (g.home||g.out||g.inv>0) return; var d=Math.abs(g.x-h.x)+Math.abs(g.y-h.y)*1.5; if (d<bd){ bd=d; best=g; } }); return best; }
+  function nearestGhost(h){ var best=null, bd=1e9; G.gh.forEach(function(g){ if (g.home||g.out||g.inv>0||inSafe(g)) return; var d=Math.abs(g.x-h.x)+Math.abs(g.y-h.y)*1.5; if (d<bd){ bd=d; best=g; } }); return best; }
   function humanUpdate(h,dt){
-    var H=HUM[h.kind]; h.alertT=Math.max(0,h.alertT-dt); h.talkT-=dt; if (h.sayT>0) h.sayT-=dt; else h.say=null;
-    if (h.state==='flee'){ h.x+=h.vx*dt; if (h.x<SX-20||h.x>LX+20) h.state='gone'; return; }
-    if (h.state==='scared'){ h.scT-=dt; var nx=h.x+h.vx*dt; if (nx<SX||nx>LX) h.vx*=-1; else h.x=nx; if (h.scT<=0){ h.state='patrol'; var nn=nearNode(h); h.node=nn; h.to=null; h.p=0; var q0=G.nodes[nn]; h.x=q0.x; h.y=q0.y; } return; }
+    var H=HUM[h.kind]; h.alertT=Math.max(0,h.alertT-dt); h.shockT=Math.max(0,(h.shockT||0)-dt); if (h.scream){ h.scream.T-=dt; if (h.scream.T<=0) h.scream=null; } h.talkT-=dt; if (h.sayT>0) h.sayT-=dt; else h.say=null;
+    if (h.state==='flee'){ if (inSafeXY(h.x+h.vx*dt,h.y)) h.vx*=-1; if (Math.random()<dt*8) part(h.x-Math.sign(h.vx)*10,h.y-4,-h.vx*0.1,-10,0.5,'dust'); h.x+=h.vx*dt; if (h.x<SX-20||h.x>LX+20) h.state='gone'; return; }
+    if (h.state==='scared'){ h.scT-=dt; var bk=h.scT>1.7; if (h.scAway){ h.vx=h.scAway*(bk?55:95); h.dir=bk?-h.scAway:h.scAway; } var nx=h.x+h.vx*dt; if (nx<SX||nx>LX||inSafeXY(nx,h.y)){ h.vx*=-1; if (h.scAway) h.scAway*=-1; } else h.x=nx; if (h.scT<=0){ h.state='patrol'; var nn=nearNodeH(h); h.node=nn; h.to=null; h.p=0; var q0=G.nodes[nn]; h.x=q0.x; h.y=q0.y; } return; }
     if (h.state==='shift'||h.state==='inv'){ if (!h.to){ if (!h.path||!h.path.length){ if (h.state==='shift'){ h.state='gone'; return; } h.state='puzzle'; h.puzzleT=3.5; h.say=pick(['咩都冇喎……','係咪我聽錯？','奇怪……啱啱明明有聲']); h.sayT=2.4; return; } h.to=h.path.shift(); h.p=0; }
       var a0=G.nodes[h.node], b0=G.nodes[h.to]; if (!humanPassTo(h,a0,b0)){ h.to=null; h.path=dijkstra(h,h.node,h.state==='shift'?'f1_s':h.invNode); if (!h.path){ h.state='patrol'; } return; }
-      var D0=Math.max(1,Math.hypot(b0.x-a0.x,b0.y-a0.y)); h.p+=H.sp*0.65*dt/D0; if (b0.x!==a0.x) h.dir=b0.x>a0.x?1:-1; if (h.p>=1){ h.node=h.to; h.to=null; h.p=0; } var p0=posOf(h); h.x=p0.x; h.y=p0.y;
+      var D0=Math.max(1,Math.hypot(b0.x-a0.x,b0.y-a0.y)); h.p+=H.sp*0.7*dt/D0; if (b0.x!==a0.x) h.dir=b0.x>a0.x?1:-1; if (h.p>=1){ h.node=h.to; h.to=null; h.p=0; } var p0=posOf(h); h.x=p0.x; h.y=p0.y;
       if (h.state==='inv'){ var tg0=nearestGhost(h); if (tg0 && Math.abs(tg0.y-h.y)<40 && (tg0.x-h.x)*h.dir>0 && Math.abs(tg0.x-h.x)<150){ h.state='chase'; h.alertT=1.2; h.say=line('guardHit'); h.sayT=2; } }
       return; }
+    if (h.state==='balk'){ h.balkT-=dt; if (h.balkT<1.3&&!h.balkTurn){ h.balkTurn=1; h.dir=-h.dir; } if (h.balkT<=0){ h.state='patrol'; h.wait=0.2; h.repath=0; h.path=null; h.balkCd=6; } return; }
     if (h.state==='puzzle'){ h.puzzleT-=dt; h.dir=Math.floor(h.puzzleT*1.2)%2?1:-1; var tg1=nearestGhost(h); if (tg1 && Math.abs(tg1.y-h.y)<40 && (tg1.x-h.x)*h.dir>0 && Math.abs(tg1.x-h.x)<130){ h.state='chase'; h.alertT=1.2; h.say=line('guardHit'); h.sayT=2; } else if (h.puzzleT<=0){ h.state='patrol'; h.wait=0.5; } return; }
     if (h.kind==='collector'){ return; }
+    var tgS=nearestAny(h); h.balkCd=Math.max(0,(h.balkCd||0)-dt);   // PEOPLE HOOK：追到陰氣地邊就停低、講句、返轉頭
+    if (tgS&&inSafe(tgS)&&!(h.balkCd>0)&&nearSafe(h)&&(h.state==='chase'||(h.kind!=='guard'&&h.kind!=='collector'&&!(h.kind==='decoy'&&!h.real)))){ balk(h,h.kind!=='dog'); return; }
+    if (h.state==='chase'&&tgS&&inSafe(tgS)){ balk(h,false); return; }
     if (h.state==='chase'){ var tg2=nearestGhost(h); var far=!tg2||Math.abs(G.nodes[tg2.node].f-G.nodes[h.node].f)>=2||Math.abs(tg2.x-h.x)>460; if (tg2&&!inZone(h,G.nodes[tg2.node].f,1)) h.lostT=(h.lostT||0)+dt*3; h.lostT=far?(h.lostT||0)+dt:0; if (h.lostT>8){ h.state='patrol'; h.lostT=0; h.path=null; h.say=pick(['走甩咗……','跑得咁快？算數','嗰樣嘢去咗邊？']); h.sayT=2.2; } }
     if (h.talkT<=0 && h.kind!=='dog'){ h.say=h.kind==='guard'?line('guard'):h.kind==='compass'?pick(['羅盤指住呢邊……','針震緊，有嘢喺附近']):pick(['照妖鏡在此，莫要亂來','鏡光到處，邪靈退後']); h.sayT=2.4; h.talkT=8+rnd()*8; }
     var tg=nearestGhost(h), chaser=h.kind!=='guard'||h.state==='chase';
     if (h.kind==='guard' && tg && Math.abs(tg.y-h.y)<40 && (tg.x-h.x)*h.dir>0 && Math.abs(tg.x-h.x)<150 && h.state!=='chase'){ h.state='chase'; h.alertT=1.2; h.say=line('guardHit'); h.sayT=2; }
     if (h.kind==='decoy' && !h.real) chaser=false;
     if (!h.to){ h.wait-=dt; if (h.wait>0) return; h.repath-=dt;
-      if (chaser && tg){ var tn=tg.to? (Math.abs(G.nodes[tg.node].x-tg.x)<Math.abs(G.nodes[tg.to].x-tg.x)?tg.node:tg.to) : tg.node; if (h.repath<=0||!h.path){ h.path=dijkstra(h,h.node,tn); h.repath=0.5; } if (h.path&&h.path.length){ h.to=h.path.shift(); h.p=0; } }
-      if (!h.to){ var n=G.nodes[h.node], zm=h.zone?(h.zone[0]+h.zone[1])/2:0, opts=n.links.filter(function(l){ var m=G.nodes[l.to]; return m.kind!=='in' && m.kind!=='portal' && humanPass(h,l.e) && (inZone(h,m.f)||(!inZone(h,n.f)&&Math.abs(m.f-zm)<Math.abs(n.f-zm))); }); if (opts.length){ h.to=pick(opts).to; h.p=0; } } }
+      if (chaser && tg){ var tn=tg.to? (Math.abs(G.nodes[tg.node].x-tg.x)<Math.abs(G.nodes[tg.to].x-tg.x)?tg.node:tg.to) : tg.node; if (safeNode(tn)){ balk(h,h.kind!=='dog'&&nearSafe(h)&&!(h.balkCd>0)); return; } if (h.repath<=0||!h.path){ h.path=dijkstra(h,h.node,tn); h.repath=0.5; } if (h.path&&h.path.length){ h.to=h.path.shift(); h.p=0; } }
+      if (!h.to){ var n=G.nodes[h.node], zm=h.zone?(h.zone[0]+h.zone[1])/2:0, opts=n.links.filter(function(l){ var m=G.nodes[l.to]; return m.kind!=='in' && m.kind!=='portal' && !safeNode(l.to) && humanPass(h,l.e) && (inZone(h,m.f)||(!inZone(h,n.f)&&Math.abs(m.f-zm)<Math.abs(n.f-zm))); }); if (opts.length){ h.to=pick(opts).to; h.p=0; } } }
     var a=G.nodes[h.node], b=G.nodes[h.to]; if (!b){ h.to=null; return; } var D=Math.max(1,Math.hypot(b.x-a.x,b.y-a.y));
-    var sp=H.sp*(h.boost||1)*(G.gate?(G.gate.t>20?1.4:1.2):1)*(1+0.08*G.phase); if (tg&&chaser){ sp*=0.75*Math.pow(1.15,Math.abs(G.nodes[tg.node].f-a.f)); sp=Math.min(sp,tg.d.sp*G.mods.spd*0.85); } else sp*=0.45; h.walkSp=sp;
+    var sp=H.sp*(h.boost||1)*(G.gate?(G.gate.t>20?1.4:1.2):1)*(1+0.08*G.phase); if (tg&&chaser){ sp*=1.05*Math.pow(1.15,Math.abs(G.nodes[tg.node].f-a.f)); sp=Math.min(sp,tg.d.sp*G.mods.spd*0.85); } else sp*=0.45; h.walkSp=sp;
     h.p+=sp*dt/D; if (b.x!==a.x) h.dir=b.x>a.x?1:-1;
     if (h.p>=1){ h.node=h.to; h.to=null; h.p=0; h.wait=chaser?0:0.3+rnd()*0.8; }
     var p=posOf(h); h.x=p.x; h.y=p.y;
     // 撞到鬼
-    G.gh.forEach(function(g){ if (g.home||g.out||g.inv>0||g.stun>0||(h.catchCd||0)>0) return; if (Math.abs(g.y-h.y)>30||Math.abs(g.x-h.x)>18) return;
+    G.gh.forEach(function(g){ if (g.home||g.out||g.inv>0||g.stun>0||(h.catchCd||0)>0||inSafe(g)) return; if (Math.abs(g.y-h.y)>30||Math.abs(g.x-h.x)>18) return;
       if (h.kind==='dog'){ g.stun=1; G.alert+=1; checkAlert(); float(g.x,g.y-80,'狗吠到成棟樓醒晒！','#ffb0b0'); h.catchCd=2; return; }
       if (h.kind==='decoy'&&!h.real) return; if (h.kind==='guard'&&h.state!=='chase') return;
       catchGhost(g,h); h.catchCd=2.2; });
     h.catchCd=Math.max(0,(h.catchCd||0)-dt);
   }
   function catchGhost(g,h){
+    if (inSafe(g)) return;   // PEOPLE HOOK：陰氣地入面唔會被捉
     var near=G.guards.filter(function(o){ return o.state!=='flee'&&o.kind!=='dog'&&!(o.kind==='decoy'&&!o.real)&&Math.abs(o.y-g.y)<30&&Math.abs(o.x-g.x)<90; }).length;
     g.caught+= near>=2?3:1; if (near>=2) float(g.x,g.y-110,'被圍！','#ff5a4a');
     g.hitT=0.8; g.hitDir=h.dir; g.stun=1.5; g.to=null; g.auto=null; h.alertT=1.3; h.say=line('guardHit'); h.sayT=2; G.shake=0.35;
@@ -1399,7 +1535,7 @@ const Tower=(function(){
     var T=G.tao; if (!T) return;
     T.life-=dt; T.x+=T.dir*36*dt; if (T.x>LX-10||T.x<SX+10) T.dir*=-1; T.sayT-=dt;
     T.ringT-=dt; if (T.ringT<=0){ T.ringT=4; T.waves.push({r:10,t:1}); T.say=pick(TAOL); T.sayT=2.4;
-      G.gh.forEach(function(g){ if (g.home||g.out) return; if (g.inUnit) return; if (G.nodes[g.node].f!==T.f) return; if (Math.abs(g.x-T.x)>140) return;
+      G.gh.forEach(function(g){ if (g.home||g.out) return; if (g.inUnit) return; if (inSafe(g)) return; if (G.nodes[g.node].f!==T.f) return; if (Math.abs(g.x-T.x)>140) return;
         g.sealT=3; g.hitT=0.8; g.hitDir=g.x>T.x?1:-1; g.to=null; g.auto=null; g.taskP=0;
         var n=G.nodes[g.node], away=n.links.map(function(l){return G.nodes[l.to];}).filter(function(m){return m.kind!=='in'&&(m.x-T.x)*(g.x-T.x)>=0&&Math.abs(m.x-T.x)>Math.abs(n.x-T.x);})[0];
         if (n.kind==='in') g.node=n.id.replace('_i','_d'); else if (away) g.node=away.id;
@@ -1427,7 +1563,7 @@ const Tower=(function(){
   function say(r,t){ r.say=t; r.sayT=2.6; }
   function scareRes(r,amt,g){ if (r.state!=='home') return; if (!r.awake){ r.awake=true; r.woke=true; amt*=0.6; } r.fear+=amt*G.mods.pow*(1-r.brave); if (r.unit&&r.unit.rs) r.unit.rs.forEach(function(o){ if (o!==r&&o.state==='home'){ o.awake=true; o.woke=true; o.fear+=amt*0.35*(1-o.brave); o.jumpT=0.4; if (o.fear>=100&&!(o.fleeAfter>0)){ o.fleeAfter=1; o.fleeG=g; } } }); r.jumpT=0.5; if (g) g.energy=Math.min(100,g.energy+(r.brave?8:18)); for (var k=0;k<5;k++) part(r.x,r.y-48,(rnd()-0.5)*90,-60-rnd()*40,0.6,'sweat'); doReact(r,g); if (r.fear>=100 && !(r.fleeAfter>0)){ r.fleeAfter=0.9; r.fleeG=g; } }
   function flee(r,g){
-    r.state='flee'; r.y=fy(r.unit.f); r.vx=(r.x<WW/2?-1:1)*150; chain(r.unit,16,r.chainD||0); r.tripT=rnd()<0.35?0.9:0; say(r,line('flee')); if (g) g.energy=Math.min(100,g.energy+20);
+    r.state='flee'; r.y=fy(r.unit.f); r.vx=(r.x<WW/2?-1:1)*150; chain(r.unit,16,r.chainD||0); r.tripT=rnd()<0.35?0.9:0; pplScream(r); if (g) g.energy=Math.min(100,g.energy+20);
     addFear(Math.round(15*G.mods.fear),r.x,r.y-80);
     G.units.forEach(function(u){ if (u.ot===1&&u.dep===r.unit&&!u.open){ unlockUnit(u,'隔籬人心惶惶，入得喇（黑屋）'); } });
     if (r.unit.story && G.story.indexOf(r.unit.si)<0){ G.story.push(r.unit.si); G.story.sort(); toast('收集到故事碎片——'+STORY[r.unit.si]+'（要正規經陰門返去先帶得走）'); }
@@ -1476,11 +1612,11 @@ const Tower=(function(){
     if (h.kind==='mirror' && Math.sign(g.x-h.x)===h.dir){ float(h.x,h.y-90,'正面對住面鏡，嚇唔到！兜去背後','#ffe9a0'); return; }
     if (h.kind==='decoy' && !h.real){ h.state='gone'; for (var k=0;k<12;k++) part(h.x,h.y-30,(rnd()-0.5)*120,-60-rnd()*60,0.9,'paper'); float(h.x,h.y-80,'紙人替身！','#e8d8b0'); return; }
     if (h.kind==='guard'){ spook(h,pick(['嘩！有嘢喺我後面！','乜……乜嘢嚟㗎？！'])); g.energy=Math.min(100,g.energy+15); return; }
-    h.courage--; h.alertT=0.8; float(h.x,h.y-90,h.kind==='compass'?'羅盤保安膽量 -1（剩 '+Math.max(0,h.courage)+'）':'嚇！','#ff7a5a');
-    if (h.courage<=0){ h.state='flee'; h.vx=(h.x<WW/2?-1:1)*170; h.say=line('flee'); h.sayT=2; addFear(h.kind==='dog'?6:12,h.x,h.y-80); g.energy=Math.min(100,g.energy+20); }
+    h.courage--; h.alertT=0.8; h.shockT=0.9; float(h.x,h.y-90,h.kind==='compass'?'羅盤保安膽量 -1（剩 '+Math.max(0,h.courage)+'）':'嚇！','#ff7a5a');
+    if (h.courage<=0){ h.state='flee'; h.vx=(h.x<WW/2?-1:1)*170; pplScream(h); addFear(h.kind==='dog'?6:12,h.x,h.y-80); g.energy=Math.min(100,g.energy+20); }
   }
   function part(x,y,vx,vy,life,type){ if (G.parts.length<260) G.parts.push({x:x,y:y,vx:vx,vy:vy,life:life,max:life,type:type}); }
-  function stepFx(dt){ G.parts.forEach(function(p){ p.life-=dt; p.x+=p.vx*dt; p.y+=p.vy*dt; if (p.type==='coin'||p.type==='crumb'||p.type==='sweat'||p.type==='paper'||p.type==='drip') p.vy+=220*dt; if (p.type==='smoke') { p.vx*=0.96; p.vy*=0.96; } if (p.tx!=null){ p.x+=(p.tx-p.x)*dt*3; p.y+=(p.ty-p.y)*dt*3; } }); G.parts=G.parts.filter(function(p){return p.life>0;});
+  function stepFx(dt){ G.parts.forEach(function(p){ p.life-=dt; p.x+=p.vx*dt; p.y+=p.vy*dt; if (p.type==='coin'||p.type==='crumb'||p.type==='sweat'||p.type==='tear'||p.type==='paper'||p.type==='drip') p.vy+=220*dt; if (p.type==='smoke') { p.vx*=0.96; p.vy*=0.96; } if (p.tx!=null){ p.x+=(p.tx-p.x)*dt*3; p.y+=(p.ty-p.y)*dt*3; } }); G.parts=G.parts.filter(function(p){return p.life>0;});
     G.wardFx.forEach(function(w){ w.t-=dt; }); G.wardFx=G.wardFx.filter(function(w){return w.t>0;}); G.shake=Math.max(0,(G.shake||0)-dt);
     G.units.forEach(function(u){ if (u.unlockFx>0) u.unlockFx-=dt; });
     for (var k in G.dark){ G.dark[k]-=dt; if (G.dark[k]<=0) delete G.dark[k]; } }
@@ -1936,7 +2072,7 @@ const Tower=(function(){
   }
   function spook(h,txt0){
     if (h.state==='shift'||h.state==='gone') return;
-    h.nerve=(h.nerve==null?3:h.nerve)-1; h.state='scared'; h.scT=2.6; h.to=null; h.path=null; h.vx=(rnd()<0.5?-1:1)*120; h.say=txt0||pick(['嘩！！','乜嘢嚟㗎？！','我唔做喇……']); h.sayT=2; h.alertT=0.6;
+    h.nerve=(h.nerve==null?3:h.nerve)-1; h.state='scared'; h.scT=2.6; h.to=null; h.path=null; var gS=null, dS=1e9; G.gh.forEach(function(g){ if (g.home||g.out) return; var d=Math.abs(g.x-h.x)+Math.abs(g.y-h.y)*3; if (d<dS){ dS=d; gS=g; } }); h.scAway=gS&&dS<400?(h.x>=gS.x?1:-1):(rnd()<0.5?-1:1); h.vx=h.scAway*55; h.dir=-h.scAway; h.shockT=0.9; h.say=uniq([txt0])||uniq(SPOOKL); h.sayT=2; h.alertT=0.6;
     addFear(6,h.x,h.y-90); float(h.x,h.y-110,'保安嚇親！','#ffd54a');
     if (rnd()<0.3){ G.alert+=1; checkAlert(); float(h.x,h.y-130,'對講機：「管理處！'+FLN[G.nodes[h.node].f]+'有怪事！」警覺 +1','#ffb0b0'); }
     if (h.nerve<=0){ h.state='shift'; h.say='唔做喇！交更！'; h.sayT=2.5; float(h.x,h.y-130,'保安頂唔順，落樓交更','#9fd6bf'); G.relief.push({t:26,zone:h.zone}); h.path=dijkstra(h,h.node,'f1_s'); }
@@ -2155,31 +2291,25 @@ const Tower=(function(){
       for (var k=0;k<3;k++){ var fx=((G.t*(10+k*4)+k*200+f*90)%(WW+100))-50; ctx.fillStyle='rgba(180,220,210,0.07)'; ctx.beginPath(); ctx.ellipse(fx,fy(f)-6,70,9,0,0,7); ctx.fill(); }
       if (G.dark[f]){ ctx.fillStyle='rgba(0,0,0,'+Math.min(0.78,G.dark[f]*0.6)+')'; ctx.fillRect(0,fy(f+1)+8,WW,fy(f)-fy(f+1)-6); } }
     G.wardFx.forEach(function(w){ var a=w.t/0.9, gr=ctx.createRadialGradient(w.x,w.y-30,4,w.x,w.y-30,60); gr.addColorStop(0,'rgba(255,220,140,'+(0.7*a)+')'); gr.addColorStop(1,'rgba(255,220,140,0)'); ctx.fillStyle=gr; ctx.fillRect(w.x-60,w.y-90,120,120); ctx.strokeStyle='rgba(255,230,160,'+a+')'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(w.x,w.y-30,30+(1-a)*30,0,7); ctx.stroke(); });
-    drawTraces();
-    G.res.forEach(function(r){ if (r.state==='gone'||r.state==='away') return; if (r.x<cam.x-60||r.x>cam.x+viewW+60||r.y<cam.y-20||r.y>cam.y+viewH+120) return; if (r.state==='leave'||r.state==='back') r.vx=r.vx||1; ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.beginPath(); ctx.ellipse(r.x,r.y-1,16,4,0,0,7); ctx.fill(); ctx.shadowColor='rgba(255,236,200,0.75)'; ctx.shadowBlur=5; var jy=r.jumpT>0?-Math.sin((0.5-r.jumpT)/0.5*Math.PI)*16:0, sh=(r.state==='home'&&r.fear>60)?Math.sin(G.t*40)*1.6:0, ro=0, sy=1;
-      if (r.state==='flee'){ if (r.tripT>0){ ro=(r.vx>0?1:-1)*1.25; jy=-6; } else { jy=-Math.abs(Math.sin(G.t*16))*7; ro=(r.vx>0?1:-1)*0.18; } }
-      if (r.tangle>0){ sh=Math.sin(G.t*30)*2; sy=0.96; }
-      if (r.state==='leave'||r.state==='back'){ jy=-Math.abs(Math.sin(G.t*10))*3; }
-      if (r.state==='home'&&!r.awake&&!r.react){ ro=-1.45; jy=-8; ctx.fillStyle='rgba(200,220,255,0.8)'; ctx.font='bold 12px '+FONT; ctx.textAlign='center'; ctx.fillText('Z',r.x+18,r.y-30-((G.t*12)%10)); ctx.font='bold 9px '+FONT; ctx.fillText('z',r.x+26,r.y-40-((G.t*12+5)%10)); }
-      var P={sh:0,jy:0,ro:0,sy:1}; reactPose(r,P); sh+=P.sh; jy+=P.jy; ro+=P.ro; sy*=P.sy;
-      spr(r.sprite,r.x+sh,r.y+jy+(r.dy||0),r.h||58,{flip:r.vx<0,rot:ro,sy:sy}); ctx.shadowBlur=0; reactProps(r,P); if (r.state==='flee'&&!r.tripT){ ctx.fillStyle='#fff'; ctx.font='bold 13px '+FONT; ctx.textAlign='center'; ctx.fillText('！！',r.x,r.y-66+jy); } var RH=(r.h||58)+(r.dy||0); if (r.state==='home'&&r.fear>0){ crBar(ctx,r.x-20,r.y-RH-8,40,7,r.fear/100,'red'); } if (r.say) bubble(r.x,r.y-RH-10,r.say); });
+    drawTraces(); drawSafe(); drawDrops();   // PEOPLE HOOK
+    G.res.forEach(function(r){ pplDrawRes(r,viewW,viewH); });   // PEOPLE HOOK：住客統一畫法
     if (G.tao){ var T=G.tao, ty=fy(T.f); T.waves.forEach(function(w){ ctx.strokeStyle='rgba(255,215,90,'+(w.t*0.85)+')'; ctx.lineWidth=4; ctx.beginPath(); ctx.ellipse(T.x,ty-30,w.r,w.r*0.45,0,0,7); ctx.stroke(); });
       ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.beginPath(); ctx.ellipse(T.x,ty-1,16,4,0,0,7); ctx.fill();
       ctx.shadowColor='rgba(255,215,90,0.9)'; ctx.shadowBlur=9; spr('npc_boss',T.x,ty,62,{flip:T.dir<0,oy:-Math.abs(Math.sin(G.t*6))*2}); ctx.shadowBlur=0;
       var bx=T.x+T.dir*16, byy=ty-40+Math.sin(G.t*14)*2; ctx.fillStyle='#e8b830'; ctx.beginPath(); ctx.moveTo(bx-6,byy+8); ctx.quadraticCurveTo(bx,byy-10,bx+6,byy+8); ctx.closePath(); ctx.fill(); ctx.strokeStyle='#5a3a10'; ctx.lineWidth=1; ctx.stroke();
       ctx.fillStyle='#ffe9a0'; ctx.font='bold 12px '+FONT; ctx.textAlign='center'; ctx.lineWidth=3; ctx.strokeStyle='#000'; ctx.strokeText('天師',T.x,ty-70); ctx.fillText('天師',T.x,ty-70); if (T.sayT>0) bubble(T.x,ty-78,T.say); }
     G.gh.forEach(function(o){ if (o.sealT>0&&!o.home){ ctx.strokeStyle='rgba(255,215,90,0.7)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(o.x,o.y-o.d.h*0.5,o.d.h*0.55,0,7); ctx.stroke(); } });
-    G.guards.forEach(function(s){ var H=HUM[s.kind]; s.alertT=Math.max(0,(s.alertT||0)-0.0);
-      if (s.kind==='guard'||s.kind==='compass'){ var sw=Math.sin(G.t*2.4+s.x*0.01)*14; var bg=ctx.createLinearGradient(s.x,0,s.x+s.dir*150,0); bg.addColorStop(0,'rgba(255,245,180,'+(s.state==='chase'||s.kind==='compass'?0.45:0.3)+')'); bg.addColorStop(1,'rgba(255,245,180,0)'); ctx.fillStyle=bg; ctx.beginPath(); ctx.moveTo(s.x+s.dir*8,s.y-30); ctx.lineTo(s.x+s.dir*150,s.y-56+sw); ctx.lineTo(s.x+s.dir*150,s.y-4+sw*0.4); ctx.closePath(); ctx.fill(); }
+    G.guards.forEach(function(s){ var H=HUM[s.kind], HHt=H.spr?PPLFX.hgt(H.spr,H.spr,H.h):H.h; s.alertT=Math.max(0,(s.alertT||0)-0.0);
+      if (s.kind==='guard'||s.kind==='compass'){ var sw=s.state==='scared'?Math.sin(G.t*23+s.x)*46+Math.sin(G.t*37)*18:Math.sin(G.t*2.4+s.x*0.01)*14; var bg=ctx.createLinearGradient(s.x,0,s.x+s.dir*150,0); bg.addColorStop(0,'rgba(255,245,180,'+((s.state==='chase'||s.kind==='compass'?0.45:0.3)*(s.state==='scared'?0.4+0.6*Math.abs(Math.sin(G.t*29)):1))+')'); bg.addColorStop(1,'rgba(255,245,180,0)'); ctx.fillStyle=bg; ctx.beginPath(); ctx.moveTo(s.x+s.dir*8,s.y-30); ctx.lineTo(s.x+s.dir*150,s.y-56+sw); ctx.lineTo(s.x+s.dir*150,s.y-4+sw*0.4); ctx.closePath(); ctx.fill(); }
       ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.beginPath(); ctx.ellipse(s.x,s.y-1,16,4,0,0,7); ctx.fill();
-      var bob=-Math.abs(Math.sin(G.t*(s.kind==='dog'?18:8)+s.x))*(s.kind==='dog'?5:2), fl=s.state==='flee'?s.vx<0:s.dir<0;
+      var bob=s.kind==='dog'?-Math.abs(Math.sin(G.t*18+s.x))*5:pplStep(s), fl=s.state==='flee'?s.vx<0:s.dir<0;
       if (s.kind==='dog'){ ctx.save(); ctx.translate(s.x,s.y+bob); ctx.scale(fl?-1:1,1); ctx.fillStyle='#3a2e24'; ctx.strokeStyle='#e8d8b0'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.ellipse(0,-14,20,9,0,0,7); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(18,-22,9,7,0,0,7); ctx.fill(); ctx.stroke(); ctx.fillStyle='#ff4a3a'; ctx.fillRect(21,-25,3,3); ctx.strokeStyle='#3a2e24'; ctx.lineWidth=3; [-12,-4,6,12].forEach(function(lx,k){ ctx.beginPath(); ctx.moveTo(lx,-8); ctx.lineTo(lx+Math.sin(G.t*20+k)*4,0); ctx.stroke(); }); ctx.beginPath(); ctx.moveTo(-19,-16); ctx.lineTo(-28,-24+Math.sin(G.t*25)*3); ctx.stroke(); ctx.restore(); }
-      else { ctx.shadowColor=s.kind==='mirror'||s.kind==='decoy'?'rgba(255,215,90,0.8)':'rgba(255,236,200,0.75)'; ctx.shadowBlur=6; spr(H.spr,s.x,s.y+bob,H.h,{flip:fl,alpha:s.kind==='decoy'?0.88:1,rot:s.state==='flee'?(s.vx>0?0.2:-0.2):0}); ctx.shadowBlur=0; }
+      else { ctx.shadowColor=s.kind==='mirror'||s.kind==='decoy'?'rgba(255,215,90,0.8)':'rgba(255,236,200,0.75)'; ctx.shadowBlur=6; pplGuard(s,H,bob,fl); ctx.shadowBlur=0; }
       if (s.kind==='mirror'){ var mx=s.x+s.dir*14, my=s.y-40; ctx.fillStyle='#d8c070'; ctx.beginPath(); ctx.arc(mx,my,8,0,7); ctx.fill(); ctx.fillStyle='rgba(220,245,255,'+(0.6+0.3*Math.sin(G.t*6))+')'; ctx.beginPath(); ctx.arc(mx,my,5.5,0,7); ctx.fill(); var mg=ctx.createLinearGradient(mx,0,mx+s.dir*220,0); mg.addColorStop(0,'rgba(220,245,255,0.25)'); mg.addColorStop(1,'rgba(220,245,255,0)'); ctx.fillStyle=mg; ctx.beginPath(); ctx.moveTo(mx,my); ctx.lineTo(mx+s.dir*220,my-26); ctx.lineTo(mx+s.dir*220,my+26); ctx.closePath(); ctx.fill(); }
-      if (s.kind==='compass'){ ctx.fillStyle='#c8a050'; ctx.beginPath(); ctx.arc(s.x+s.dir*12,s.y-30,6,0,7); ctx.fill(); ctx.strokeStyle='#600'; ctx.lineWidth=1.5; var na=G.t*7; ctx.beginPath(); ctx.moveTo(s.x+s.dir*12,s.y-30); ctx.lineTo(s.x+s.dir*12+Math.cos(na)*5,s.y-30+Math.sin(na)*5); ctx.stroke(); for (var q=0;q<s.courage;q++){ ctx.fillStyle='#ffd54a'; ctx.fillRect(s.x-12+q*5,s.y-H.h-10,4,4); } }
-      var lab=H.n; ctx.font='bold 11px '+FONT; ctx.textAlign='center'; ctx.lineWidth=3; ctx.strokeStyle='#000'; ctx.strokeText(lab,s.x,s.y-H.h-14); ctx.fillStyle=s.kind==='guard'?'#e8e4dc':'#ffe9a0'; ctx.fillText(lab,s.x,s.y-H.h-14);
-      if (s.alertT>0){ ctx.fillStyle='#ffe25a'; ctx.strokeStyle='#000'; ctx.lineWidth=3; ctx.font='bold 26px '+FONT; ctx.textAlign='center'; var bb=Math.sin(G.t*20)*2; ctx.strokeText('！',s.x,s.y-H.h-24+bb); ctx.fillText('！',s.x,s.y-H.h-24+bb); }
-      if (s.say) bubble(s.x,s.y-H.h-30,s.say); });
+      if (s.kind==='compass'){ ctx.fillStyle='#c8a050'; ctx.beginPath(); ctx.arc(s.x+s.dir*12,s.y-30,6,0,7); ctx.fill(); ctx.strokeStyle='#600'; ctx.lineWidth=1.5; var na=G.t*7; ctx.beginPath(); ctx.moveTo(s.x+s.dir*12,s.y-30); ctx.lineTo(s.x+s.dir*12+Math.cos(na)*5,s.y-30+Math.sin(na)*5); ctx.stroke(); for (var q=0;q<s.courage;q++){ ctx.fillStyle='#ffd54a'; ctx.fillRect(s.x-12+q*5,s.y-HHt-10,4,4); } }
+      var lab=H.n; ctx.font='bold 11px '+FONT; ctx.textAlign='center'; ctx.lineWidth=3; ctx.strokeStyle='#000'; ctx.strokeText(lab,s.x,s.y-HHt-14); ctx.fillStyle=s.kind==='guard'?'#e8e4dc':'#ffe9a0'; ctx.fillText(lab,s.x,s.y-HHt-14);
+      if (s.alertT>0){ ctx.fillStyle='#ffe25a'; ctx.strokeStyle='#000'; ctx.lineWidth=3; ctx.font='bold 26px '+FONT; ctx.textAlign='center'; var bb=Math.sin(G.t*20)*2; ctx.strokeText('！',s.x,s.y-HHt-24+bb); ctx.fillText('！',s.x,s.y-HHt-24+bb); }
+      if (s.say) bubble(s.x,s.y-HHt-30,s.say); });
     // 房間遮罩：未踩點=黑屋；鎖住=鎖頭/注入進度/鎖匙；門閂住=木門
     G.units.forEach(function(u){ var top=fy(u.f+1)+16, w=u.rx[1]-u.rx[0], hgt=u.y-top-4;
       if (!u.seen){ ctx.fillStyle='rgba(2,2,4,'+(u.open?0.82:0.9)+')'; ctx.fillRect(u.rx[0],top,w,hgt); if (u.unlockFx>0){ ctx.strokeStyle='rgba(159,214,191,'+u.unlockFx+')'; ctx.lineWidth=3; ctx.strokeRect(u.rx[0]+2,top+2,w-4,hgt-4); } }
@@ -2230,6 +2360,7 @@ const Tower=(function(){
       if (p.type==='coin'){ ctx.fillStyle='#ffd54a'; ctx.beginPath(); ctx.ellipse(p.x,p.y,4,4*Math.abs(Math.sin(G.t*12+p.x)),0,0,7); ctx.fill(); }
       else if (p.type==='crumb'){ ctx.fillStyle='#e8c07a'; ctx.fillRect(p.x,p.y,3,3); }
       else if (p.type==='sweat'){ ctx.fillStyle='#9fe0ff'; ctx.beginPath(); ctx.arc(p.x,p.y,2.5,0,7); ctx.fill(); }
+      else if (p.type==='tear'){ ctx.fillStyle='#bfeaff'; ctx.strokeStyle='#2a4a5a'; ctx.lineWidth=0.8; ctx.beginPath(); ctx.moveTo(p.x,p.y-4.5); ctx.quadraticCurveTo(p.x+3.2,p.y,p.x,p.y+2.6); ctx.quadraticCurveTo(p.x-3.2,p.y,p.x,p.y-4.5); ctx.fill(); ctx.stroke(); }
       else if (p.type==='hair'){ ctx.strokeStyle='#222'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x+3,p.y+9); ctx.stroke(); }
       else if (p.type==='smoke'){ ctx.fillStyle='rgba(200,210,205,0.5)'; ctx.beginPath(); ctx.arc(p.x,p.y,4+(1-a)*10,0,7); ctx.fill(); }
       else if (p.type==='dust'){ ctx.fillStyle='rgba(180,170,150,0.5)'; ctx.beginPath(); ctx.arc(p.x,p.y,3+(1-a)*5,0,7); ctx.fill(); }
@@ -2362,9 +2493,9 @@ const Tower=(function(){
     fy:fy, rnd:rnd, float:float, toast:toast, say:say, addFear:addFear, scareRes:scareRes, takeItem:takeItem, onArrive:onArrive, unitOf:unitOf, doorBlock:doorBlock, ctxAction:ctxAction, actPress:actPress, gotoNode:gotoNode, noise:noise, checkAlert:checkAlert,
     crPanel:crPanel, crText:crText, crBtn:crBtn, crBar:crBar, crGet:crGet, crBlit:crBlit}):null;
   window.UNIT=UNIT;
-  window.TW={cam:function(){ return {z:cam.z,free:!!cam.free,x:cam.x,y:cam.y}; }, btns:function(){ return buttons.map(function(b){return {id:b.id,x:b.x,y:b.y,w:b.w,h:b.h};}); }, act:function(){ actPress(); }, ctx:function(){ return ctxAction(G.gh[G.active]); }, noise:function(id,l){ noise(id,l); }, zoom:function(z){cam.z=z;}, pause:function(v){paused=v;}, step:function(dt,n){ var pp=paused; paused=false; for (var i=0;i<(n||1);i++) update(dt); paused=pp; draw(); }, gate:gatePress, doll:dollEscape, catchG:function(i){ catchGhost(G.gh[i],G.guards[0]||{dir:1}); }, ult:ultPress, press:press, tap:tap, goto:function(i,id){ return gotoNode(G.gh[i],id); }, choose:chooseCard, skip:function(s){ G.t+=s; }, get G(){return G;}, set G(v){}, w2s:function(x,y){return W2S(x,y);}};
+  window.TW={safe:function(){ return SAFE?{x:SAFE.x,y:SAFE.y,r:SAFE.r,f:SAFE.f,nodes:Object.keys(SAFE.nodes),on:safeOn()}:null; }, inSafe:function(i){ return inSafe(G.gh[i]); }, inSafeXY:function(x,y){ return inSafeXY(x,y); }, uq:function(){ return Object.keys(G._uq||{}); }, cam:function(){ return {z:cam.z,free:!!cam.free,x:cam.x,y:cam.y}; }, btns:function(){ return buttons.map(function(b){return {id:b.id,x:b.x,y:b.y,w:b.w,h:b.h};}); }, act:function(){ actPress(); }, ctx:function(){ return ctxAction(G.gh[G.active]); }, noise:function(id,l){ noise(id,l); }, zoom:function(z){cam.z=z;}, pause:function(v){paused=v;}, step:function(dt,n){ var pp=paused; paused=false; for (var i=0;i<(n||1);i++) update(dt); paused=pp; draw(); }, gate:gatePress, doll:dollEscape, catchG:function(i){ catchGhost(G.gh[i],G.guards[0]||{dir:1}); }, ult:ultPress, press:press, tap:tap, goto:function(i,id){ return gotoNode(G.gh[i],id); }, choose:chooseCard, skip:function(s){ G.t+=s; }, get G(){return G;}, set G(v){}, w2s:function(x,y){return W2S(x,y);}};
   window.addEventListener('resize',function(){ if (OPEN) resize(); });
-  function loadImgs(){ var M={flatbg:'bg_tw_flat',shopbg:'bg_tw_shop'}; ['eguiking','toyol','tianhua','tianhua_hang','npc_ken','npc_auntie','npc_guard','npc_it','npc_mis','npc_boss','npc_it_sit','npc_ken_sit','res_gamer','res_uncle','res_granny','res_helper','res_mjaunty','res_shopper','res_collector','res_guard','res_ot','res_gym','room_mahjong','room_gamer','room_nurse','room_helper','room_gym','room_shopper','room_carpark','room_lobby','flatbg','shopbg','gb_unit_ppr','gb_unit_gamer','gb_unit_shop'].forEach(function(k){ IMG[k]=SPR[M[k]||k]; }); }
+  function loadImgs(){ var M={flatbg:'bg_tw_flat',shopbg:'bg_tw_shop'}; ['res_gamer_scared','res_uncle_scared','res_granny_scared','res_helper_scared','res_mjaunty_scared','res_shopper_scared','res_collector_scared','res_guard_scared','res_ot_scared','res_gym_scared','eguiking','toyol','tianhua','tianhua_hang','npc_ken','npc_auntie','npc_guard','npc_it','npc_mis','npc_boss','npc_it_sit','npc_ken_sit','res_gamer','res_uncle','res_granny','res_helper','res_mjaunty','res_shopper','res_collector','res_guard','res_ot','res_gym','room_mahjong','room_gamer','room_nurse','room_helper','room_gym','room_shopper','room_carpark','room_lobby','flatbg','shopbg','gb_unit_ppr','gb_unit_gamer','gb_unit_shop'].forEach(function(k){ IMG[k]=SPR[M[k]||k]; }); }
   function open(){ loadImgs(); TS(); ROOT.classList.add('on'); OPEN=true; scene='title'; resize(); last=0; if (!RAF) RAF=requestAnimationFrame(frame); try{ Sound.setMode&&Sound.setMode('story'); }catch(e){} try{ window.Policy&&Policy.firstEnter&&Policy.firstEnter('tower'); }catch(e){} }
   function close(){ OPEN=false; ROOT.classList.remove('on'); joy=null; ptr=null; try{ save(); Sound.setMode&&Sound.setMode('village'); }catch(e){} if (typeof World!=='undefined') World.open(); }
   return { open:open, close:close, get on(){ return OPEN; } };
