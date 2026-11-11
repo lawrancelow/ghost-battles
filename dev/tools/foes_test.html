@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><title>StnFoes 測試</title>
+<style>html,body{margin:0;background:#0d0a14;color:#eee;font:14px sans-serif}canvas{display:block}#log{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.6);padding:6px 10px;border-radius:6px;white-space:pre}</style>
+</head><body><canvas id="cv" width="840" height="620"></canvas><div id="log"></div>
+<script src="../src/station_foes.js"></script>
+<script>
+// 固定隨機數，令每次結果一樣
+let seed = 12345; Math.random = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+const PX = 1 / 2160, CELL = 150 * PX, cv = document.getElementById('cv'), c = cv.getContext('2d');
+const box = { x:0, y:-40, w:840, h:1260 }, PATH_Y = 0.3;
+const W = {
+  box, walkers:[], bosses:[], fxs:[], _foeRole:null,
+  lay:{ posts:[{ x:0.30, y:0.245, h:1 }, { x:0.45, y:0.355, h:0 }, { x:0.62, y:0.245, h:1 }, { x:0.73, y:0.355, h:0 }] },
+  sd:{ posts:[{ role:'scare', lv:1, on:0 }, { role:'trap', lv:1, on:0 }, { role:'aura', lv:1, on:0 }, { role:'slow', lv:1, on:0, staff:7 }] },
+  P(x, y) { return [box.x + x * box.w, box.y + y * box.h]; },
+  wp(w, d) { return [-0.05 + w.t + (d || 0), PATH_Y]; },
+  alive(w) { return !w.gone && w.t > 0; },
+  dist(a, b) { return Math.hypot(a[0] - b[0], (a[1] - b[1]) * 1.5); },
+  rect(s) { const w = CELL, h = CELL / 1.5; return [s.x - w / 2, s.y - h / 2, s.x + w / 2, s.y + h / 2]; },
+  rdist(pt, s) { const r = this.rect(s), dx = Math.max(r[0] - pt[0], 0, pt[0] - r[2]), dy = Math.max(r[1] - pt[1], 0, pt[1] - r[3]); return Math.hypot(dx, dy * 1.5); },
+  bpos(B) { return B.pos; },
+  staffMul(p) { return p.staff != null ? { named:1 } : {}; },
+  float(x, y, s, col) { this.fxs.push({ x, y, s, col, t:0 }); LOG.push(`[${TIME.toFixed(2)}s] ${s}`); },
+};
+let TIME = 0; const LOG = [];
+function mkWalker(id, t0, hp) { const w = { t:t0, spd:0.05, hp:hp || 100, max:hp || 100, seed:Math.random() * 9, block:0 }; if (id) StnFoes.decorate(w, id); W.walkers.push(w); return w; }
+function step(dt) {
+  TIME += dt; StnFoes.update(dt, W);
+  W.sd.posts.forEach(p => { if (!StnFoes.blocks(p)) p.on += dt * StnFoes.devMul(p); }); // 模擬設備：每秒輸出 1 × 效果倍數
+  for (const w of W.walkers) { if (w.say && (w.say.t -= dt) <= 0) w.say = null; if (w.gone) continue; if (w.block > 0) { w.block -= dt; continue; } w.t += w.spd * dt; if (w.t > 1.1) w.gone = 'out'; }
+  W.fxs = W.fxs.filter(f => (f.t += dt) < 1.2);
+}
+function sim(sec, every) { const n = Math.round(sec * 30); for (let i = 0; i < n; i++) { step(1 / 30); if (every) every(); } }
+function render() {
+  c.fillStyle = '#16121f'; c.fillRect(0, 0, cv.width, cv.height);
+  const U = box.w / 840, hh = box.h * 0.042, t = performance.now() / 1000;
+  c.fillStyle = '#2a2433'; const [, py] = W.P(0, PATH_Y); c.fillRect(0, py - 40, cv.width, 70); c.strokeStyle = '#3d3550'; c.setLineDash([12, 10]); c.beginPath(); c.moveTo(0, py - 5); c.lineTo(cv.width, py - 5); c.stroke(); c.setLineDash([]);
+  const COL = { scare:'#e8633a', trap:'#e8c03a', aura:'#7ab8ff', slow:'#5fd38f' };
+  W.lay.posts.forEach((s, i) => { const p = W.sd.posts[i], q = W.rect(s), [x0, y0] = W.P(q[0], q[1]), cw = (q[2] - q[0]) * box.w, ch = (q[3] - q[1]) * box.h; c.fillStyle = '#2c2238'; c.fillRect(x0, y0, cw, ch); c.strokeStyle = COL[p.role]; c.lineWidth = 3; c.strokeRect(x0, y0, cw, ch);
+    c.fillStyle = COL[p.role]; c.font = 'bold 13px sans-serif'; c.textAlign = 'center'; c.fillText(p.role + (p.staff != null ? '★' : ''), x0 + cw / 2, y0 + ch / 2 - 4); c.fillStyle = '#ddd'; c.font = '11px sans-serif'; c.fillText('輸出 ' + p.on.toFixed(1), x0 + cw / 2, y0 + ch / 2 + 12); });
+  for (const B of W.bosses) { const [x, y] = W.P(...B.pos); c.fillStyle = 'rgba(190,140,255,0.85)'; c.beginPath(); c.ellipse(x, y - hh * 0.7, hh * 0.35, hh * 0.7, 0, 0, 7); c.fill(); c.fillStyle = '#fff'; c.font = 'bold 12px sans-serif'; c.textAlign = 'center'; c.fillText('名鬼', x, y - hh * 0.6); }
+  for (const w of W.walkers.filter(W.alive).sort((a, z) => a.t - z.t)) { const [x, y] = W.P(...W.wp(w));
+    c.fillStyle = 'rgba(0,0,0,0.4)'; c.beginPath(); c.ellipse(x, y, hh * 0.24, hh * 0.06, 0, 0, 7); c.fill();
+    c.save(); c.translate(x, y); if (!StnFoes.drawBody(c, w, hh, t, { flip:false })) { c.fillStyle = '#9ab'; c.beginPath(); c.arc(0, -hh * 0.75, hh * 0.22, 0, 7); c.fill(); c.fillRect(-hh * 0.12, -hh * 0.55, hh * 0.24, hh * 0.5); } c.restore();
+    const bw = hh * 0.62; c.fillStyle = 'rgba(0,0,0,0.65)'; c.fillRect(x - bw / 2, y - hh - 9, bw, 5); c.fillStyle = w.foe ? '#ff8a5a' : '#6ec3ff'; c.fillRect(x - bw / 2, y - hh - 9, bw * w.hp / w.max, 5);
+    if (w.n) { c.font = '9px sans-serif'; c.fillStyle = '#ddd'; c.textAlign = 'center'; c.fillText(w.n, x, y + 12); }
+    if (w.say) { c.font = 'bold 12px sans-serif'; const tw = c.measureText(w.say.s).width + 12, bx = x - tw / 2, by = y - hh - 46; c.fillStyle = 'rgba(255,250,235,0.95)'; c.strokeStyle = '#3a2212'; c.lineWidth = 2; c.beginPath(); c.roundRect(bx, by, tw, 20, 8); c.fill(); c.stroke(); c.fillStyle = '#3a2212'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(w.say.s, bx + 6, by + 10); c.textBaseline = 'alphabetic'; } }
+  StnFoes.draw(c, W);
+  c.textAlign = 'center'; for (const f of W.fxs) { const [x, y] = W.P(f.x, f.y); c.globalAlpha = Math.max(0, 1 - f.t / 1.2); c.font = 'bold 15px sans-serif'; c.lineWidth = 4; c.strokeStyle = '#1a0f08'; c.strokeText(f.s, x, y - f.t * 30); c.fillStyle = f.col; c.fillText(f.s, x, y - f.t * 30); } c.globalAlpha = 1;
+  document.getElementById('log').textContent = `t=${TIME.toFixed(2)}s  ${window.CAP || ''}`;
+}
+function resetWorld() { StnFoes.reset(); W.walkers = []; W.bosses = []; W.fxs = []; TIME = 0; LOG.length = 0; W.sd.posts.forEach(p => p.on = 0); }
+window.T = { W, sim, step, render, mkWalker, resetWorld, LOG, get TIME() { return TIME; } };
+</script></body></html>
