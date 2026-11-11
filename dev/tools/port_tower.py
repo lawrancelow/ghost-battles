@@ -16,8 +16,8 @@ R("if (id==='lv_shop'){ var sv={}; try{ sv=JSON.parse(localStorage.getItem('lyg_
   "if (id==='exit'){ close(); return; }\n    if (id==='quit'){ scene='title'; return; }\n    if (id==='lv_shop'){ var sv=TS(); if (sv.cleared.flat||Q.has('unlock')||window.STN_TEST){")
 R("if (id==='title'){ scene='title'; return; }","if (id==='title'){ scene='title'; return; } if (id==='toMap'){ close(); return; }")
 # 返地圖掣
-R("  function drawTitle(){ ctx.fillStyle='#0e0e11'; ctx.fillRect(0,0,VW,VH);","  function drawTitle(){ ctx.fillStyle='#0e0e11'; ctx.fillRect(0,0,VW,VH); btn('exit',12,14,92,36,'◀ 返地圖','#2c2c33');")
-R("btn('zin',VW-50,TOP+8,40,36,'＋','#24242a');","btn('quit',10,TOP+8,52,30,'離開','#2c2c33'); btn('zin',VW-50,TOP+8,40,36,'＋','#24242a');")
+R("  function drawTitle(){ ctx.fillStyle='#0e0e11'; ctx.fillRect(0,0,VW,VH);","  function drawTitle(){ ctx.fillStyle='#0e0e11'; ctx.fillRect(0,0,VW,VH); btn('exit',12,14,104,46,'◀ 返地圖','#2c2c33');")
+R("btn('zin',VW-56,TOP+8,46,46,'＋','#24242a');","btn('quit',10,TOP+8,62,46,'離開','#2c2c33'); btn('zin',VW-56,TOP+8,46,46,'＋','#24242a');")
 R("btn('title',VW/2+10,y0+0","btn('title',VW/2+10,y0+0",0)  # no-op check
 R("btn('title',VW/2+10,y+420-60,120,44,'返主頁','#2c2c33');","btn('toMap',VW/2+10,y+420-60,120,44,'返地圖','#2c2c33'); if (o.reward!=null){ ctx.fillStyle='#ffd54a'; ctx.font='bold 16px '+FONT; ctx.textAlign='center'; ctx.fillText('收到冥幣 +'+o.reward,VW/2,y+420-76); }")
 R("function frame(ts){ requestAnimationFrame(frame);","function frame(ts){ if (!OPEN){ RAF=0; return; } RAF=requestAnimationFrame(frame);")

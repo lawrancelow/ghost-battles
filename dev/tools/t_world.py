@@ -6,5 +6,5 @@ with sync_playwright() as p:
     pg.evaluate("()=>{document.querySelectorAll('#title,#dlg,#phone').forEach(e=>e.style.display='none');G.S().seen.ch1_end=1;}")
     pg.evaluate("G.Village.tap(POS.gate[0],POS.gate[1]-20)"); pg.wait_for_timeout(700)
     pg.screenshot(path='/tmp/claude-0/world.png')
-    pg.click('.wm-spot[data-id=yard]'); pg.wait_for_timeout(1200); pg.screenshot(path='/tmp/claude-0/world_street.png')
+    pg.click('.wm-card[data-id=yard]'); pg.wait_for_timeout(1200); pg.screenshot(path='/tmp/claude-0/world_street.png')
     print('street on', pg.evaluate("document.querySelector('#gyard').classList.contains('on')"), errs[:5]); b.close()

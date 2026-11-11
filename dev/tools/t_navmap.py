@@ -7,5 +7,5 @@ with sync_playwright() as p:
     pg.evaluate("()=>{document.querySelectorAll('#story,.story').forEach(e=>e.remove())}")
     pg.evaluate("()=>document.querySelector('#nav button[data-t=battle]').click()")
     pg.wait_for_timeout(800)
-    print('world on:',pg.evaluate("()=>!!document.querySelector('#world.on')"), 'spots:',pg.evaluate("()=>[...document.querySelectorAll('.wm-spot b')].map(x=>x.textContent)"))
+    print('world on:',pg.evaluate("()=>!!document.querySelector('#world.on')"), 'spots:',pg.evaluate("()=>[...document.querySelectorAll('.wm-card b')].map(x=>x.textContent)"))
     pg.screenshot(path='navmap.png');print('errs',errs);b.close()
