@@ -824,7 +824,7 @@ body.st-on #stn-testbtn{display:none!important}
 #world .wm-lock{margin-top:10px;padding:10px;border-radius:10px;background:rgba(80,70,90,.5);color:#cdbfd8;text-align:center;font-size:15px}
 #world .wm-tag.sel{border-color:#ffcf6a;box-shadow:0 0 0 2px #ffcf6a,0 0 16px rgba(255,200,100,.8)}
 /* 樓裡有鬼開住時：龐總提示框移去上面（唔好遮住底部掣），測試掣收埋 */
-body:has(#tw-root.on) #pol-tip,#tw-root.on ~ #pol-tip{bottom:auto!important;top:calc(env(safe-area-inset-top) + 100px)!important;left:118px!important;right:64px!important;max-width:none!important;font-size:13px!important}
+body:has(#tw-root.on) #pol-tip,#tw-root.on ~ #pol-tip{bottom:auto!important;top:calc(env(safe-area-inset-top) + 300px)!important;left:24px!important;right:24px!important;max-width:none!important;font-size:13px!important}
 body:has(#tw-root.on) #stn-testbtn,#tw-root.on ~ #stn-testbtn{display:none!important}
 /* 站崗 v6：長卷分屏 */
 #st-turf .stt-top{background:linear-gradient(rgba(8,8,12,.88),rgba(8,8,12,.55));}
@@ -909,3 +909,7 @@ body .pol-box,body #pol-tip.pol-box{border:5px solid transparent!important;borde
 body .pol-box b{color:#e0603e!important;text-shadow:1px 1px 0 #000}body .pol-box small{color:var(--cr-ink2)!important}
 #world .wm-top b{white-space:nowrap;font-size:20px!important;letter-spacing:2px!important}#world .wm-top span{white-space:nowrap;font-size:12px}#world .wm-home{white-space:nowrap;padding:6px 10px!important;font-size:15px!important}.wm-pol{padding:6px 9px!important}
 body #pol-ov .pol-ring{border-radius:0!important;box-shadow:0 0 0 3px #d9a441,0 0 18px 6px rgba(217,164,65,.7)!important}
+
+/* 樓裡有鬼 v7 黑暗系蠟筆 UI（只加 .tw- 規則）*/
+.tw-root{background:#141016}
+.tw-lift #lift-st,.tw-lift .lb,.tw-lift .ld,.tw-lift .lt{-webkit-tap-highlight-color:transparent}

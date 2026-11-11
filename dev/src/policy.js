@@ -155,6 +155,8 @@ const Policy = (() => {
           el.querySelector('span').textContent = typeof L === 'function' ? L(tips[i]) : tips[i]; };
         show();
         el.onclick = (e) => { e.stopPropagation(); Sound.play && Sound.play('click'); if (++i < tips.length) show(); else el.remove(); };
+        // 樓裡有鬼：一撳遊戲其他地方（例如揀樓開局）就收起提示，唔遮住遊戲
+        if (mode === 'tower') { const off = (ev) => { if (!document.body.contains(el)) { document.removeEventListener('pointerdown', off, true); return; } if (!el.contains(ev.target)) { el.remove(); document.removeEventListener('pointerdown', off, true); } }; document.addEventListener('pointerdown', off, true); }
       }, 500);
     } catch (e) {}
   }
