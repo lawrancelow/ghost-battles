@@ -833,3 +833,79 @@ body:has(#tw-root.on) #stn-testbtn,#tw-root.on ~ #stn-testbtn{display:none!impor
 .stt-build.on{border-color:#ffd45a;background:radial-gradient(#a8541a,#5a2408);box-shadow:0 0 12px rgba(255,200,80,.6)}
 .stt-sp{top:178px;right:10px}.stt-box{top:230px;right:10px}
 .stt-hot{height:5px}.stt-info{font-size:11px}
+
+/* ===================== 黑暗系蠟筆 UI（.cr- 共用樣式；站崗、世界地圖、龐總提示都套用）===================== */
+:root{--cr-paper:#1b1418;--cr-paper2:#261b22;--cr-ink:#eadbbf;--cr-ink2:#bfae90;--cr-red:#8f1f1f;--cr-red2:#b3372c;--cr-rust:#b8662a;--cr-violet:#6d5690;--cr-gold:#d9a441;
+  --cr-paper-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.82  0 0 0 0 0.7  0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(#n)'/%3E%3C/svg%3E");--cr-hatch:repeating-linear-gradient(-38deg,rgba(235,215,185,.045) 0 1px,transparent 1px 6px),repeating-linear-gradient(52deg,rgba(0,0,0,.18) 0 1px,transparent 1px 7px);
+  --cr-b-bone:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cfilter id='r' x='-10%' y='-10%' width='120%' height='120%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' seed='3'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='3.6'/%3E%3C/filter%3E%3Cg filter='url(#r)' fill='none' stroke='#d9c9a8' stroke-linecap='round'%3E%3Crect x='4.5' y='4.5' width='63' height='63' stroke-width='3.2'/%3E%3Crect x='6.5' y='7' width='59' height='58.5' stroke-width='1.3' stroke-opacity='.55'/%3E%3Cpath d='M3 10 L9 3 M63 69 L69 62' stroke-width='1.2' stroke-opacity='.5'/%3E%3C/g%3E%3C/svg%3E");--cr-b-red:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cfilter id='r' x='-10%' y='-10%' width='120%' height='120%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' seed='5'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='3.6'/%3E%3C/filter%3E%3Cg filter='url(#r)' fill='none' stroke='#a3302a' stroke-linecap='round'%3E%3Crect x='4.5' y='4.5' width='63' height='63' stroke-width='3.2'/%3E%3Crect x='6.5' y='7' width='59' height='58.5' stroke-width='1.3' stroke-opacity='.55'/%3E%3Cpath d='M3 10 L9 3 M63 69 L69 62' stroke-width='1.2' stroke-opacity='.5'/%3E%3C/g%3E%3C/svg%3E");--cr-b-rust:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cfilter id='r' x='-10%' y='-10%' width='120%' height='120%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' seed='8'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='3.6'/%3E%3C/filter%3E%3Cg filter='url(#r)' fill='none' stroke='#c06a2c' stroke-linecap='round'%3E%3Crect x='4.5' y='4.5' width='63' height='63' stroke-width='3.2'/%3E%3Crect x='6.5' y='7' width='59' height='58.5' stroke-width='1.3' stroke-opacity='.55'/%3E%3Cpath d='M3 10 L9 3 M63 69 L69 62' stroke-width='1.2' stroke-opacity='.5'/%3E%3C/g%3E%3C/svg%3E");--cr-b-violet:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cfilter id='r' x='-10%' y='-10%' width='120%' height='120%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' seed='11'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='3.6'/%3E%3C/filter%3E%3Cg filter='url(#r)' fill='none' stroke='#8a6fb0' stroke-linecap='round'%3E%3Crect x='4.5' y='4.5' width='63' height='63' stroke-width='3.2'/%3E%3Crect x='6.5' y='7' width='59' height='58.5' stroke-width='1.3' stroke-opacity='.55'/%3E%3Cpath d='M3 10 L9 3 M63 69 L69 62' stroke-width='1.2' stroke-opacity='.5'/%3E%3C/g%3E%3C/svg%3E");--cr-b-gold:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cfilter id='r' x='-10%' y='-10%' width='120%' height='120%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' seed='13'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='3.6'/%3E%3C/filter%3E%3Cg filter='url(#r)' fill='none' stroke='#d9a441' stroke-linecap='round'%3E%3Crect x='4.5' y='4.5' width='63' height='63' stroke-width='3.2'/%3E%3Crect x='6.5' y='7' width='59' height='58.5' stroke-width='1.3' stroke-opacity='.55'/%3E%3Cpath d='M3 10 L9 3 M63 69 L69 62' stroke-width='1.2' stroke-opacity='.5'/%3E%3C/g%3E%3C/svg%3E")}
+.cr-panel,.cr-btn{border:4px solid transparent;border-radius:0;border-image:var(--cr-b-bone) 16 / 4px / 1px round;background:var(--cr-paper-img),var(--cr-hatch),linear-gradient(165deg,var(--cr-paper2),var(--cr-paper));background-clip:padding-box;color:var(--cr-ink);
+  text-shadow:1px 1px 0 #000,-1px 0 0 rgba(0,0,0,.6),0 0 3px rgba(0,0,0,.8);font-family:inherit;box-shadow:0 4px 0 rgba(0,0,0,.35),0 6px 14px rgba(0,0,0,.55)}
+.cr-btn{min-height:44px;min-width:44px;font-weight:900;letter-spacing:1px;cursor:pointer;transition:transform .06s,filter .06s}
+.cr-btn:active{border-width:6px;border-image-width:6px;transform:translateY(2px);filter:brightness(1.2) contrast(1.1);box-shadow:0 1px 0 rgba(0,0,0,.4)}
+.cr-red{border-image-source:var(--cr-b-red)!important;background:var(--cr-paper-img),var(--cr-hatch),linear-gradient(165deg,#4a1414,#2a0c0e)!important;background-clip:padding-box!important}
+.cr-rust{border-image-source:var(--cr-b-rust)!important;background:var(--cr-paper-img),var(--cr-hatch),linear-gradient(165deg,#5a2e14,#2e170c)!important;background-clip:padding-box!important}
+.cr-violet{border-image-source:var(--cr-b-violet)!important;background:var(--cr-paper-img),var(--cr-hatch),linear-gradient(165deg,#33264a,#1c1428)!important;background-clip:padding-box!important}
+.cr-gold{border-image-source:var(--cr-b-gold)!important}
+.cr-chip{border:3px solid transparent;border-image:var(--cr-b-bone) 16 / 3px / 1px round;background:rgba(20,14,18,.86);background-clip:padding-box;color:var(--cr-ink);text-shadow:1px 1px 0 #000;border-radius:0}
+
+/* ---- 套用：陽間站崗 ---- */
+#stt-back,.sts-back,.stt-build,.stt-sp,.stt-box,.stt-zoom button,.stt-enter,.stt-next,.stp-buy,.stp-x,.stp-row button,.stp-close,.stp-cur button,.stp-list button,
+#world .wm-home,#world .wm-go,.wm-pol,#world .wm-tag,.sts-plate{border:4px solid transparent!important;border-radius:0!important;border-image:var(--cr-b-bone) 16 / 4px / 1px round!important;
+  background:var(--cr-paper-img),var(--cr-hatch),linear-gradient(165deg,var(--cr-paper2),var(--cr-paper))!important;background-clip:padding-box!important;color:var(--cr-ink)!important;
+  text-shadow:1px 1px 0 #000,-1px 0 0 rgba(0,0,0,.6),0 0 3px rgba(0,0,0,.8)!important;font-weight:900;box-shadow:0 4px 0 rgba(0,0,0,.35),0 6px 14px rgba(0,0,0,.55)!important;transition:transform .06s,filter .06s}
+#stt-back,.sts-back,.stt-build,.stt-sp,.stt-box,.stt-zoom button,.stt-next,.stp-buy,.stp-x,.stp-row button,.stp-close,#world .wm-home,#world .wm-go,.wm-pol{min-height:44px;min-width:44px}
+#stt-back:active,.sts-back:active,.stt-build:active,.stt-sp:active,.stt-box:active,.stt-zoom button:active,.stt-enter:active,.stt-next:active,.stp-buy:active,.stp-x:active,.stp-row button:active,.stp-close:active,
+#world .wm-home:active,#world .wm-go:active,.wm-pol:active,.stp-list button:active{border-width:6px!important;border-image-width:6px!important;filter:brightness(1.25) contrast(1.1);transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.4)!important}
+#stt-back,.sts-back,.stp-x,.stp-close,#world .wm-home,.sts-plate.gate,#world .wm-tag.wm-gate{border-image-source:var(--cr-b-red)!important;background:var(--cr-paper-img),var(--cr-hatch),linear-gradient(165deg,#4a1414,#26090b)!important;background-clip:padding-box!important}
+.stp-buy,#world .wm-go,.stt-enter{border-image-source:var(--cr-b-rust)!important;background:var(--cr-paper-img),var(--cr-hatch),linear-gradient(165deg,#6a3416,#33180a)!important;background-clip:padding-box!important;color:#ffe2b8!important}
+.stp-buy:disabled{filter:grayscale(.85) brightness(.65)!important}
+.stt-sp,.stt-box,.stp-row button,.stt-zoom button,.wm-pol{border-image-source:var(--cr-b-violet)!important}
+.stt-build.on,.stt-zoom button.on,.stt-enter.autoon{border-image-source:var(--cr-b-gold)!important;filter:drop-shadow(0 0 6px rgba(217,164,65,.6))}
+.stt-enter.autoon{background:conic-gradient(rgba(217,164,65,.38) calc(var(--qk,0)*360deg),transparent 0),var(--cr-paper-img),var(--cr-hatch),linear-gradient(165deg,#6a3416,#33180a)!important;background-clip:padding-box!important}
+.stt-sp b,.stt-box b{color:#e9b45a!important}.stt-sp,.stt-box{color:var(--cr-ink2)!important;font-size:11.5px!important;padding:4px 7px!important}
+.stt-zoom button{width:48px!important;height:48px!important;border-radius:0!important}
+.stt-build{width:52px!important;height:48px!important;top:126px!important;font-size:14px!important}.stt-sp{top:182px!important}.stt-box{top:240px!important}
+.stt-enter{width:98px!important;height:82px!important;font-size:18px}
+/* 頂部 HUD／冥幣／底部統計 */
+#st-turf .stt-top{background:var(--cr-hatch),linear-gradient(rgba(14,9,12,.94),rgba(14,9,12,.62))!important;border-bottom:3px solid transparent;border-image:var(--cr-b-red) 16 / 0 0 3px 0 / 0 round}
+.stt-name b{color:var(--cr-ink);text-shadow:1px 1px 0 #000,0 0 4px #000;font-family:var(--serif)}.stt-name small{color:var(--cr-ink2)}.stt-name small b{color:var(--cr-gold)!important}
+#stt-coin,.sts-top span{border:3px solid transparent!important;border-image:var(--cr-b-gold) 16 / 3px / 1px round!important;background:rgba(24,16,14,.9)!important;background-clip:padding-box!important;border-radius:0!important;color:#f3d58a!important;font-weight:900;text-shadow:1px 1px 0 #000;padding:5px 10px!important}
+.stt-info span{border:2px solid transparent!important;border-image:var(--cr-b-bone) 16 / 2px / 0 round!important;background:rgba(20,14,18,.86)!important;background-clip:padding-box!important;border-radius:0!important;color:var(--cr-ink)!important;text-shadow:1px 1px 0 #000;font-size:11.5px}
+.stt-hot{height:7px!important;background:repeating-linear-gradient(-45deg,rgba(255,255,255,.08) 0 2px,transparent 2px 5px),rgba(0,0,0,.6)!important;border-radius:0!important;outline:2px solid rgba(217,201,168,.35)}
+#stt-hotbar.up{background:repeating-linear-gradient(-60deg,rgba(0,0,0,.18) 0 2px,transparent 2px 5px),linear-gradient(90deg,#6d5690,#b3372c)!important}#stt-hotbar.down{background:repeating-linear-gradient(-60deg,rgba(0,0,0,.2) 0 2px,transparent 2px 5px),#556670!important}
+/* 建造選單／設備資訊／升級面板 */
+#stt-pick{background:rgba(6,3,6,.62)!important}
+.stp-card1,.stp-card2,.stp-box{border:5px solid transparent!important;border-radius:0!important;border-image:var(--cr-b-bone) 16 / 5px / 2px round!important;background:var(--cr-paper-img),var(--cr-hatch),linear-gradient(170deg,#2a1d25,#160f13)!important;background-clip:padding-box!important;color:var(--cr-ink)!important;text-shadow:1px 1px 0 #000}
+.stp-h{font-family:var(--serif);letter-spacing:1px}.stp-h small,.stp-card1 small,.stp-box h3 small,.stp-list small{color:var(--cr-ink2)!important}
+.stp-opt{border:3px solid transparent;border-image:var(--cr-b-violet) 16 / 3px / 0 round;background:rgba(10,6,10,.5)!important;background-clip:padding-box!important;border-radius:0!important}
+.stp-opt b{background:linear-gradient(90deg,transparent,rgba(143,31,31,.85),transparent)!important}
+.stp-opt small,.stp-card1 p{color:var(--cr-ink)!important;font-size:12.5px}
+.stp-frame,.stp-card1 canvas{border-radius:0!important;background:#0f0a0d!important}
+.stp-ico{border-radius:0!important;text-shadow:none!important}
+.stp-card1 em{color:#a8d48a!important}.stp-card1 i{color:var(--cr-gold)!important}
+/* 地盤選擇（陽間街）木牌 */
+.sts-plate b{color:var(--cr-ink)!important}.sts-plate small{color:var(--cr-ink2)!important}.sts-plate small i{color:#e0603e!important}
+.sts-plate.res{border-image-source:var(--cr-b-violet)!important;opacity:.85}.sts-plate.war{border-image-source:var(--cr-b-red)!important;filter:drop-shadow(0 0 6px rgba(179,55,44,.7))}
+.sts-top{background:var(--cr-hatch),linear-gradient(#140d12f2,#140d1200)!important}
+/* 提示泡泡／結算（站崗開住時） */
+body.st-on .toast{border:3px solid transparent!important;border-image:var(--cr-b-rust) 16 / 3px / 1px round!important;border-radius:0!important;background:var(--cr-paper-img),var(--cr-hatch),#1f1519!important;background-clip:padding-box!important;color:var(--cr-ink)!important;text-shadow:1px 1px 0 #000}
+body.st-on .toast b{color:var(--cr-gold)!important}
+
+/* ---- 套用：陰間世界地圖 ---- */
+#world .wm-top{background:var(--cr-hatch),linear-gradient(180deg,rgba(14,9,12,.95),rgba(14,9,12,0))!important}
+#world .wm-top b{font-family:var(--serif);color:var(--cr-ink);text-shadow:2px 2px 0 #000,0 0 6px #000}
+#world .wm-tag{border-image-source:var(--cr-b-rust)!important;background:var(--cr-paper-img),repeating-linear-gradient(4deg,rgba(0,0,0,.22) 0 2px,transparent 2px 7px),linear-gradient(180deg,#4a2c18,#2a170c)!important;background-clip:padding-box!important;min-height:44px;justify-content:center}
+#world .wm-tag small{color:#d6b88c!important}#world .wm-tag.res{border-image-source:var(--cr-b-violet)!important;opacity:.9}
+#world .wm-tag.sel{border-image-source:var(--cr-b-gold)!important;filter:drop-shadow(0 0 8px rgba(217,164,65,.85));box-shadow:none!important}
+#world .wm-tag:active{transform:translate(-50%,-50%) translateY(2px)!important}
+#world .wm-info{background:var(--cr-paper-img),var(--cr-hatch),linear-gradient(180deg,#22171e,#130d11)!important;border-top:4px solid transparent!important;border-image:var(--cr-b-red) 16 / 4px 0 0 0 / 0 round!important;color:var(--cr-ink)!important}
+#world .wm-info b{font-family:var(--serif);text-shadow:2px 2px 0 #000}#world .wm-info small{color:var(--cr-ink2)!important}#world .wm-info p{color:#ddd0b6!important}
+#world .wm-go{font-size:20px!important;letter-spacing:4px;min-height:52px}
+#world .wm-lock{border:3px solid transparent;border-image:var(--cr-b-violet) 16 / 3px / 0 round;border-radius:0!important;background:rgba(30,22,40,.7)!important;background-clip:padding-box!important;color:var(--cr-ink2)!important}
+
+/* ---- 套用：龐總政策講解框／firstEnter 提示框 ---- */
+body .pol-box,body #pol-tip.pol-box{border:5px solid transparent!important;border-image:var(--cr-b-bone) 16 / 5px / 1px round!important;border-radius:0!important;background:var(--cr-paper-img),var(--cr-hatch),linear-gradient(170deg,#2c1f26,#160f13)!important;background-clip:padding-box!important;
+  color:var(--cr-ink)!important;text-shadow:1px 1px 0 #000;box-shadow:0 6px 18px rgba(0,0,0,.7)!important}
+body .pol-box b{color:#e0603e!important;text-shadow:1px 1px 0 #000}body .pol-box small{color:var(--cr-ink2)!important}
+#world .wm-top b{white-space:nowrap;font-size:20px!important;letter-spacing:2px!important}#world .wm-top span{white-space:nowrap;font-size:12px}#world .wm-home{white-space:nowrap;padding:6px 10px!important;font-size:15px!important}.wm-pol{padding:6px 9px!important}
+body #pol-ov .pol-ring{border-radius:0!important;box-shadow:0 0 0 3px #d9a441,0 0 18px 6px rgba(217,164,65,.7)!important}
