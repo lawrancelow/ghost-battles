@@ -1,6 +1,6 @@
 // ===================== 網址版（GitHub Pages）＋ 下載檔案當啟動器 =====================
 // 下載的檔案：打開就把存檔搬到網址版，直接開始玩。網址版：可以加到手機桌面，離線也能玩，更新自動生效。
-const GAME_VER = '2026.11.11n';
+const GAME_VER = '2026.11.11o';
 const WEB_URL = 'https://lawrancelow.github.io/ghost-battles/';
 const IS_WEB = /^https?:$/.test(location.protocol) && /github\.io$/.test(location.hostname);
 const IS_FILE = !/^https?:$/.test(location.protocol);

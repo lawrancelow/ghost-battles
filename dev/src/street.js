@@ -794,15 +794,41 @@ const Street = (() => {
         if (!['tianhua', 'pontianak', 'toyol', 'laojiang', 'xiaozhi', 'zhiren', 'eguiking', 'egui'].includes(U.k)) { const [x, y] = this.P(...(U.pos || [this.lay.posts[U.i].x, this.lay.posts[U.i].y])); c.strokeStyle = `rgba(200,150,255,${1 - q})`; c.lineWidth = 10; c.beginPath(); c.arc(x, y, q * b.h * 1.2, 0, 7); c.stroke(); }
       }
     },
+    // 餓鬼王大招：美術嘴（art/cut_egui_mouth.py 切）浮現→閉→半開→全開（喉嚨漩渦轉、吸人入喉、碗筷飛入）→咀嚼兩下→合返→打嗝綠煙淡出
     drawMouth(U, q, t) {
-      const c = this.c, b = this.box, [mx, my] = this.P(...U.mouth), H = b.h * 0.5, o = Math.sin(Math.min(1, q * 1.6) * Math.PI), al = Math.min(1, q * 6) * (q > 0.85 ? (1 - q) / 0.15 : 1);
-      try { ART.drawChar(c, U.k, mx, my + H * 0.15, H / 66, { t, pose:'strike', pt:Math.min(1, q * 2), atk:true, alpha:al * 0.95, flip:false, shadow:false }); } catch (e) {}
-      const hx = mx, hy = my - H * 0.5, rw = H * 0.22 * o, rh = H * 0.17 * o; if (rw < 2) return;
-      c.save(); c.globalAlpha = al; const rg = c.createRadialGradient(hx, hy, 2, hx, hy, rw); rg.addColorStop(0, '#000'); rg.addColorStop(0.6, '#2a0306'); rg.addColorStop(1, '#6e0f14');
-      c.fillStyle = rg; c.beginPath(); c.ellipse(hx, hy, rw, rh, 0, 0, 7); c.fill(); c.strokeStyle = '#3a0508'; c.lineWidth = 4; c.stroke();
-      c.fillStyle = '#efe6cf'; for (let j = 0; j < 9; j++) { const xx = hx - rw * 0.85 + j * rw * 0.21; c.beginPath(); c.moveTo(xx - rw * 0.08, hy - rh * 0.88); c.lineTo(xx + rw * 0.08, hy - rh * 0.88); c.lineTo(xx, hy - rh * 0.55); c.fill(); c.beginPath(); c.moveTo(xx - rw * 0.08, hy + rh * 0.88); c.lineTo(xx + rw * 0.08, hy + rh * 0.88); c.lineTo(xx, hy + rh * 0.55); c.fill(); }
-      for (let j = 0; j < 22; j++) { const a2 = j * 0.83 + t * 2, d = ((t * 1.6 + j * 0.13) % 1), rr = rw * 2.6 * (1 - d); c.fillStyle = `rgba(255,190,190,${0.6 * d})`; c.beginPath(); c.arc(hx + Math.cos(a2) * rr, hy + Math.sin(a2) * rr * 0.8, 2.5, 0, 7); c.fill(); }
-      c.restore(); U.mouthXY = [hx, hy];
+      const c = this.c, b = this.box, [mx, my] = this.P(...U.mouth), IM = [1, 2, 3].map(i => has(SPR) && SPR['egui_mouth_' + i]);
+      if (!IM.every(im => im && im.naturalWidth)) return;
+      const zc = (this.cam && this.cam.z) || 1, k0 = Math.min(innerWidth * 0.78, 330) / zc / IM[2].naturalWidth, cx = mx, cy = my - b.h * 0.12;
+      // 時間表（q：0→1＝1.7 秒）：[開始, 格]
+      const SEQ = [[0, 0], [0.17, 1], [0.24, 2], [0.62, 2], [0.66, 1], [0.7, 2], [0.74, 1], [0.78, 0], [1.01, 0]];
+      let fi = 0, nx = 0, m = 0; for (let j = 0; j < SEQ.length - 1; j++) if (q >= SEQ[j][0] && q < SEQ[j + 1][0]) { fi = SEQ[j][1]; nx = SEQ[j + 1][1]; const span = SEQ[j + 1][0] - SEQ[j][0], left = SEQ[j + 1][0] - q; m = nx !== fi && left < Math.min(0.025, span) ? 1 - left / Math.min(0.025, span) : 0; }
+      const appear = Math.min(1, q / 0.1), ap = 1 - Math.pow(1 - appear, 3), fade = q > 0.9 ? Math.max(0, 1 - (q - 0.9) / 0.1) : 1, sc = (0.55 + 0.45 * ap) * (q > 0.86 ? 1 - (q - 0.86) * 0.6 : 1);
+      const chew = q >= 0.62 && q < 0.78, open = q >= 0.24 && q < 0.62;
+      if (q < 0.86 && q > 0.17) this.shake = Math.max(this.shake || 0, chew ? 0.22 : 0.1);
+      let sx = 0, sy = 0; if (chew) { sx = (Math.random() - 0.5) * 8; sy = Math.sin(q * 140) * 6; }
+      c.save(); c.globalAlpha = ap * fade;
+      // 綠光暈
+      const RG = IM[2].naturalWidth * k0 * 0.9, gr = c.createRadialGradient(cx, cy, 10, cx, cy, RG); gr.addColorStop(0, `rgba(90,255,120,${open ? 0.35 : 0.2})`); gr.addColorStop(1, 'rgba(40,120,60,0)'); c.fillStyle = gr; c.beginPath(); c.arc(cx, cy, RG, 0, 7); c.fill();
+      const drawF = (i, al) => { if (al <= 0.01) return; const im = IM[i], w = im.naturalWidth * k0 * sc, h = im.naturalHeight * k0 * sc; c.save(); c.globalAlpha *= al; c.translate(cx + sx, cy + sy); c.drawImage(im, -w / 2, -h / 2, w, h);
+        if (i === 2) { // 喉嚨漩渦：裁出中間一圈，原地轉
+          const vx = (0.53 - 0.5) * w, vy = (0.56 - 0.5) * h, rx = w * 0.25, ry = h * 0.19; c.save(); c.beginPath(); c.ellipse(vx, vy, rx, ry, 0, 0, 7); c.clip(); c.translate(vx, vy); c.rotate(-t * 3.2); c.scale(1.08, 1.08); c.translate(-vx, -vy); c.globalAlpha *= 0.85; c.drawImage(im, -w / 2, -h / 2, w, h); c.restore();
+          const g2 = c.createRadialGradient(vx, vy, 2, vx, vy, rx); g2.addColorStop(0, 'rgba(0,0,0,0.85)'); g2.addColorStop(0.5, 'rgba(10,40,15,0.25)'); g2.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g2; c.beginPath(); c.ellipse(vx, vy, rx, ry, 0, 0, 7); c.fill(); }
+        c.restore(); };
+      drawF(fi, 1 - m); drawF(nx, m);
+      const im3 = IM[2], vxs = cx + sx + (0.03) * im3.naturalWidth * k0 * sc, vys = cy + sy + 0.06 * im3.naturalHeight * k0 * sc; U.mouthXY = [vxs, vys];
+      // 吸力：螺旋綠氣＋碗筷飛入
+      if (open) { const qq = (q - 0.24) / 0.38;
+        for (let j = 0; j < 26; j++) { const d = (t * 0.9 + j / 26) % 1, a2 = j * 2.4 + d * 7, rr = RG * 1.3 * (1 - d); c.fillStyle = `rgba(150,255,160,${0.55 * d})`; c.beginPath(); c.arc(vxs + Math.cos(a2) * rr, vys + Math.sin(a2) * rr * 0.75, 2 + 2 * d, 0, 7); c.fill(); }
+        for (let j = 0; j < 5; j++) { const e = Math.min(1, Math.max(0, qq * 1.4 - j * 0.12)); if (e <= 0 || e >= 1) continue; const a2 = j * 1.3 + e * 9, rr = RG * 1.2 * (1 - e * e), px = vxs + Math.cos(a2) * rr, py = vys + Math.sin(a2) * rr * 0.75, s2 = (1 - e) * 1.2 + 0.2;
+          c.save(); c.translate(px, py); c.rotate(e * 14 + j); c.scale(s2, s2); if (j % 2) { c.fillStyle = '#efe6cc'; c.strokeStyle = '#2e4a86'; c.lineWidth = 2; c.beginPath(); c.ellipse(0, 0, 16, 9, 0, 0, Math.PI); c.closePath(); c.fill(); c.stroke(); c.fillStyle = '#d8ccb0'; c.beginPath(); c.ellipse(0, 0, 16, 4.5, 0, 0, 7); c.fill(); c.stroke(); }
+          else { c.strokeStyle = '#a0662a'; c.lineWidth = 3; c.beginPath(); c.moveTo(-18, -3); c.lineTo(18, 3); c.moveTo(-18, 4); c.lineTo(18, 9); c.stroke(); } c.restore(); } }
+      { const hh = b.h * 0.042; for (const w of this.walkers) { if (w.gone !== 'suck' || !w.suckFrom) continue; const e = Math.min(1, w.suckT / 1.0); if (e >= 0.98) continue; const e2 = e * e, [ax, ay] = this.P(...w.suckFrom), r2 = 1 - e2, an = e * Math.PI * 3, dx = ax - vxs, dy = ay - vys, px = vxs + (dx * Math.cos(an) - dy * Math.sin(an)) * r2, py = vys + (dx * Math.sin(an) + dy * Math.cos(an)) * r2 * 0.8, s2 = Math.max(0.08, 1 - e * 0.9);
+          c.save(); c.globalAlpha = Math.min(1, (1 - e) * 4); c.translate(px, py); c.rotate(e * 9); c.scale(s2, s2); const im = has(SPR) && SPR[w.spr];
+          if (im && im.naturalWidth && !CHAR_H_OK(w.spr)) { const H = hh * 0.95, ww = H * im.naturalWidth / im.naturalHeight; c.drawImage(im, -ww / 2, -H * 0.6, ww, H); } else try { ART.drawChar(c, w.spr, 0, hh * 0.4, hh / 69, { t, pose:'startle', shadow:false }); } catch (e3) {} c.restore(); } }
+      // 打嗝：綠煙冒出
+      if (q > 0.8) { const bq = (q - 0.8) / 0.2; for (let j = 0; j < 7; j++) { const r0 = 18 + bq * (40 + j * 8), ox = (j - 3) * 14 + Math.sin(t * 3 + j) * 6, oy = -bq * (70 + j * 12) - 10; const g3 = c.createRadialGradient(cx + ox, cy + oy, 2, cx + ox, cy + oy, r0); g3.addColorStop(0, `rgba(140,230,120,${0.5 * (1 - bq)})`); g3.addColorStop(1, 'rgba(80,160,80,0)'); c.fillStyle = g3; c.beginPath(); c.arc(cx + ox, cy + oy, r0, 0, 7); c.fill(); }
+        if (q < 0.95) { c.font = `900 ${Math.round(RG * 0.16)}px serif`; c.textAlign = 'center'; c.lineWidth = 5; c.strokeStyle = '#0c1a0c'; c.fillStyle = '#b8f5a0'; c.strokeText(T('嗝——', '嗝——'), cx + RG * 0.4, cy - RG * 0.55 - bq * 30); c.fillText(T('嗝——', '嗝——'), cx + RG * 0.4, cy - RG * 0.55 - bq * 30); } }
+      c.restore();
     },
     drawUlt() {
       const U = this.ult, c = this.c, Wd = innerWidth, Hd = innerHeight, b = this.box, t = performance.now() / 1000, k = U.t;
@@ -1147,7 +1173,7 @@ const Street = (() => {
       this.drawProps(); this.drawTraces(); this.drawObsFx();
       // 路人（含 Bryan 一夥）
       const NU = typeof NPC_UNIT !== 'undefined' ? NPC_UNIT : 69, hh = b.h * 0.042;
-      const list = this.walkers.filter(w => w.t >= 0 && (w.gone || !this.wseg(w).hide)).map(w => { let [x, y] = this.P(...this.wp(w)); if (w.gone === 'suck') { const e = Math.min(1, w.suckT / 1.0), e2 = e * e, [ax, ay] = this.P(...w.suckFrom), [tx2, ty2] = this.ult && this.ult.mouthXY ? this.ult.mouthXY : this.P(...w.suckTo); x = ax + (tx2 - ax) * e2 + Math.sin(e * 12) * 10 * (1 - e); y = ay + (ty2 - ay) * e2; } if (!w.gone) { const of = this.wOff(w, U); x += of[0]; y += of[1]; w._rot = of[2]; } else w._rot = 0; return [y, w, x]; }).sort((a, z) => a[0] - z[0]);
+      const list = this.walkers.filter(w => w.t >= 0 && (w.gone || !this.wseg(w).hide) && !(w.gone === 'suck' && this.ult && this.ult.mouth)).map(w => { let [x, y] = this.P(...this.wp(w)); if (w.gone === 'suck') { const e = Math.min(1, w.suckT / 1.0), e2 = e * e, [ax, ay] = this.P(...w.suckFrom), [tx2, ty2] = this.ult && this.ult.mouthXY ? this.ult.mouthXY : this.P(...w.suckTo), r2 = 1 - e2, an = e * Math.PI * 3, dx = ax - tx2, dy = ay - ty2; x = tx2 + (dx * Math.cos(an) - dy * Math.sin(an)) * r2; y = ty2 + (dx * Math.sin(an) + dy * Math.cos(an)) * r2 * 0.8; } if (!w.gone) { const of = this.wOff(w, U); x += of[0]; y += of[1]; w._rot = of[2]; } else w._rot = 0; return [y, w, x]; }).sort((a, z) => a[0] - z[0]);
       // mode：undefined＝全畫；'body'＝只畫身（被前景件遮住時排序入面用）；'ghost'＝淡剪影＋頭頂資訊（遮擋件之上再畫）
       const drawW = (y0, w, x0, mode) => {
         let x = x0, y = y0, a = 1; const run = w.gone === 'run', suck = w.gone === 'suck'; if (run) a = w.runT < 1.5 ? 1 : Math.max(0, 1 - (w.runT - 1.5) / 0.5); const ssc = suck ? Math.max(0.05, 1 - w.suckT) : 1;
