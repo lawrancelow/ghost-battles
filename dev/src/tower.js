@@ -9,7 +9,7 @@
 'use strict';
 window.LiftSys=function(A){
   var L={}, S=null, lastG=null;
-  var CAP=4, VMAX=0.75, ACC=1.4, DOOR_T=0.65, HOLD=2.6;
+  var CAP=4, VMAX=0.75, ACC=1.4, DOOR_T=0.5, HOLD=2.6;
   var TR={
     dark:{n:'熄燈',cd:14,f:34,d:'閃兩下熄晒，黑暗中有人唞氣'},
     btns:{n:'亂按',cd:18,f:22,d:'全部樓層掣自己亮，層層都停'},
@@ -83,7 +83,7 @@ window.LiftSys=function(A){
   function reset(){
     lastG=G(); lnUsed={};
     S={on:!!(A.LV&&A.LV.lift), pos:1, v:0, dir:0, st:'idle', door:0, hold:0, target:null, stops:{}, lit:{}, riders:[], away:[], mroom:[],
-       gi:null, gCall:null, cd:{}, fx:{dark:0,mirror:0,over:0,flick:0,btnAll:0}, stuckT:0, stuckTo:null, spawnT:6, gSpawnT:14, t:0, log:[], shake:0, ext:null};
+       gi:null, gCall:null, dfx:{}, prevSt:'idle', cd:{}, fx:{dark:0,mirror:0,over:0,flick:0,btnAll:0}, stuckT:0, stuckTo:null, spawnT:6, gSpawnT:14, t:0, log:[], shake:0, ext:null};
     TRK.forEach(function(k){ S.cd[k]=0; });
     hideUI();
   }
@@ -117,10 +117,10 @@ window.LiftSys=function(A){
     S.xT=(S.xT||0)-dt; if (S.xT>0) return; S.xT=0.35;
     // 落𨋢
     var out=inCab().find(function(o){ return o.dest===f || o.mood==='bolt' || o.mood==='mroom'; });
-    if (out){ exitRider(out,f); S.hold=Math.max(S.hold,1.0); return; }
+    if (out){ exitRider(out,f); dingFx(f,true); S.hold=Math.max(S.hold,1.0); return; }
     // 上𨋢
     var w=S.riders.find(function(o){ return o.ph==='wait'&&o.f===f; });
-    if (w){ if (inCab().length>=CAP){ if (!w.fullSaid){ w.fullSaid=1; sayR(w,line('full')); } return; } w.ph='ride'; w.x=c.cx+(inCab().length-1.5)*10; sayR(w,rnd()<0.5?line('board'):lab(w.dest)+'樓，唔該'); S.hold=Math.max(S.hold,1.2); }
+    if (w){ if (inCab().length>=CAP){ if (!w.fullSaid){ w.fullSaid=1; sayR(w,line('full')); } return; } w.ph='ride'; dingFx(f,true); w.x=c.cx+(inCab().length-1.5)*10; sayR(w,rnd()<0.5?line('board'):lab(w.dest)+'樓，唔該'); S.hold=Math.max(S.hold,1.2); }
   }
   function exitRider(o,f){
     var c=col(), y=A.fy(f), g0=G(); S.riders.splice(S.riders.indexOf(o),1);
@@ -172,12 +172,12 @@ window.LiftSys=function(A){
   function doEnter(g,f){
     S.gi=g.i; S.gCall=null; S.gWait=null; g.to=null; g.auto=null; g.autoS=null;
     if (S.st==='idle'){ S.st='opening'; SND.ding(); SND.door(); }
-    S.hold=Math.max(S.hold,3.5); log('enter'); showUI();
+    S.hold=Math.max(S.hold,3.5); dingFx(f); log('enter'); showUI();
     A.toast&&A.toast('入咗𨋢：揀樓層、撳開關門。有人一齊搭嘅時候，上面會出「𨋢內嚇人」。');
   }
   L.exit=function(){ var g=ghost(); if (!g) return false;
     if (!(S.st==='open'&&S.door>0.8&&atFloor())){ flash('門未開，出唔到'); return false; }
-    var f=cabF(), c=col(); S.gi=null; g.node='f'+f+'_l'; g.to=null; g.x=c.cx; g.y=A.fy(f); g.inv=0; g.still=1; hideUI(); log('exit'); return true; };
+    var f=cabF(), c=col(); S.gi=null; g.node='f'+f+'_l'; g.to=null; g.x=c.cx; g.y=A.fy(f); g.inv=0; g.still=1; dingFx(f); if (S.st==='open') S.hold=Math.max(S.hold,0.8); hideUI(); log('exit'); return true; };
   L.press=function(f){ if (!S||S.gi==null) return; SND.click(); f=+f;
     if (atFloor() && cabF()===f && S.st!=='move'){ L.open(); return; }
     if (S.st==='stuck'||S.st==='stuckMove'){ flash('卡住咗，掣冇反應'); return; }
@@ -223,6 +223,14 @@ window.LiftSys=function(A){
       if (o.kind==='guard'){ var h=o.ref; h.node='f'+f+'_l'; h.to=null; h.p=0; h.x=c.cx-30; h.y=y; h.state='patrol'; g0.guards.push(h); try{ A.spook(h,line('gLand')); }catch(e){} return; }
       var r=o.ref; r.state='flee'; r.vx=(o.x<c.cx?-1:1)*160; r.x=o.x; r.y=y-16; g0.res.push(r); sayR(r,line('land')); r.sayT=2.4; });
   }
+  // 𨋢口特效：叮字浮出＋樓層燈閃（同一層 0.8 秒內唔重複）
+  function dingFx(f,quiet){ if (!S) return; var d=S.dfx[f]; if (d&&d.t<0.8) return; S.dfx[f]={t:0}; if (!quiet) try{ SND.ding(); }catch(e){} }
+  L.scareWaiting=function(g){ if (!S||!S.on||!g) return 0; var n=G().nodes[g.node]; if (!n) return 0; var f=n.f, y=A.fy(f), g0=G(), c=col(), got=0;
+    S.riders.filter(function(o){ return (o.ph==='wait'||o.ph==='walk'||o.ph==='walkHome')&&o.f===f&&Math.abs(o.x-g.x)<150; }).forEach(function(o){ S.riders.splice(S.riders.indexOf(o),1); got++;
+      if (o.kind==='guard'){ var h=o.ref; h.node='f'+f+'_l'; h.to=null; h.p=0; h.x=o.x; h.y=y; h.state='patrol'; g0.guards.push(h); try{ A.spook(h,line('gLand')); }catch(e){} return; }
+      var r=o.ref; r.state='flee'; r.vx=(o.x<g.x?-1:1)*160; r.x=o.x; r.y=y-16; g0.res.push(r); sayR(r,line('bolt')); r.sayT=2.4; });
+    if (got){ try{ A.addFear&&A.addFear(10*got,g.x,y-110); }catch(e){} g.dir=1; log('scareWait'); }
+    return got; };
   function flash(m){ S.msg=m; S.msgT=1.6; var g=ghost(); if (g) fl(g.x,g.y-120,m,'#ffd54a'); }
   function log(e){ S.log.push(e); if (S.log.length>80) S.log.shift(); }
 
@@ -270,6 +278,8 @@ window.LiftSys=function(A){
     // 鬼喺𨋢入面：釘住位置、保安睇唔到
     g=ghost();
     if (g){ g.to=null; g.auto=null; g.autoS=null; var fN=Math.max(0,Math.min(top(),Math.round(S.pos))); g.node='f'+fN+'_l'; g.x=c.cx; g.y=fyf(S.pos); if (S.door<0.5||!atFloor()) g.inv=Math.max(g.inv||0,0.15); g.taskP=0; }
+    for (var df in S.dfx){ S.dfx[df].t+=dt; if (S.dfx[df].t>1.6) delete S.dfx[df]; }
+    if (S.st!==S.prevSt){ if (S.st==='opening'&&atFloor()) dingFx(cabF(),true); S.prevSt=S.st; }
     if (S.st==='stuck'||S.st==='stuckMove') S.riders.forEach(function(o){ if (o.ph==='ride'&&o.mood==='bolt'&&!o.boltSaid){ o.boltSaid=1; } });
   };
 
@@ -289,15 +299,6 @@ window.LiftSys=function(A){
     wx.setTransform(D,0,0,D,0,0); wx.save(); wx.beginPath(); var cb=(G().toastT>0&&G().toast)?62:0; wx.rect(0,A.TOP,A.VW,A.VH-A.TOP-A.BOT-cb); wx.clip();
     wx.setTransform(D*sc,0,0,D*sc,D*p0.x,D*p0.y);
     var c=col(), fh=FH(), cw=(c.x1-c.x0)*0.66, ch=fh*0.6, t=S.t;
-    // 𨋢口（每層）
-    for (var f=0;f<=top();f++){ var y=A.fy(f), here=atFloor()&&cabF()===f, op=here?S.door:0;
-      wx.fillStyle='#2a2b2e'; wx.fillRect(c.cx-cw/2-4,y-ch-4,cw+8,ch+4);
-      wx.fillStyle='#121214'; wx.fillRect(c.cx-cw/2,y-ch,cw,ch);
-      var pw=cw/2*(1-op);
-      [[-1],[1]].forEach(function(s){ var sx=s[0]<0?c.cx-cw/2:c.cx+cw/2-pw; var gr=wx.createLinearGradient(sx,0,sx+pw,0); gr.addColorStop(0,'#8f9397'); gr.addColorStop(0.5,'#c3c6c9'); gr.addColorStop(1,'#7d8185'); wx.fillStyle=gr; if (pw>0.5) wx.fillRect(sx,y-ch,pw,ch); });
-      wx.fillStyle='#000'; wx.fillRect(c.cx-12,y-ch-18,24,12); wx.fillStyle=Math.abs(S.pos-f)<0.5?'#ffb347':'#7a4a20'; wx.font='bold 10px '+A.FONT; wx.textAlign='center'; wx.fillText(lab(cabF()),c.cx,y-ch-9);
-      var wn=S.riders.some(function(o){return o.ph==='wait'&&o.f===f;})||S.gCall===f; wx.fillStyle=wn?'#ffd54a':'#444'; wx.beginPath(); wx.arc(c.cx+cw/2+9,y-ch*0.5,3.2,0,7); wx.fill();
-    }
     // 鋼纜 + 𨋢廂
     var cy=fyf(S.pos), sh=(S.st==='move'?Math.sin(t*41)*0.8:0)+(S.shake>0?(Math.random()-0.5)*4:0);
     wx.strokeStyle='rgba(180,180,170,0.7)'; wx.lineWidth=1.2; wx.beginPath(); wx.moveTo(c.cx-6,A.fy(FL())-40); wx.lineTo(c.cx-6,cy-ch-2); wx.moveTo(c.cx+6,A.fy(FL())-40); wx.lineTo(c.cx+6,cy-ch-2); wx.stroke();
@@ -309,15 +310,44 @@ window.LiftSys=function(A){
     inn.forEach(function(o){ var px=c.cx-cw/2+cw*(n===1?0.5:0.18+0.64*k/(Math.max(1,n-1))); k++; sprAt(wx,riderSpr(o),px,cy-1,ch*0.82*(o.mood==='cower'?0.7:1),1,k%2===0,null); });
     if (g){ var px2=c.cx-cw/2+cw*(n===1?0.5:0.18+0.64*k/(Math.max(1,n-1))); sprAt(wx,g.d.sprite,px2,cy-2+Math.sin(t*3)*1.5,ch*0.82,0.75,false); }
     if (lit<0.3){ wx.fillStyle='rgba(0,0,0,0.75)'; wx.fillRect(c.cx-cw/2,cy-ch,cw,ch); }
-    // 𨋢門（半透）
-    var pw2=cw/2*(1-S.door); wx.fillStyle='rgba(160,165,170,0.55)'; if (pw2>0.5){ wx.fillRect(c.cx-cw/2,cy-ch,pw2,ch); wx.fillRect(c.cx+cw/2-pw2,cy-ch,pw2,ch); }
+    // 𨋢廂門（只喺兩層之間／卡𨋢時見到；到咗層由𨋢口鋼門負責）
+    if (!atFloor()){ var pw2=cw/2*(1-S.door); if (pw2>0.5){ steel(c.cx-cw/2,cy-ch,pw2,ch,1); steel(c.cx+cw/2-pw2,cy-ch,pw2,ch,-1); } if (S.door>0.02) gapLight(c.cx,cy,cw*S.door/2,ch,Math.min(1,S.door*3)); }
     if (S.fx.over>0&&Math.floor(t*6)%2){ wx.fillStyle='rgba(255,40,30,0.35)'; wx.fillRect(c.cx-cw/2,cy-ch,cw,ch); }
     wx.restore();
+    // 𨋢口（每層，畫喺𨋢廂前面）：兩扇鋼門左右滑開／合埋、門罅透光、樓層燈閃、叮字
+    for (var f=0;f<=top();f++){ var y=A.fy(f), here=atFloor()&&cabF()===f, op=here?ease(S.door):0, dfx=S.dfx[f];
+      wx.fillStyle='#2a2b2e'; wx.fillRect(c.cx-cw/2-5,y-ch-5,cw+10,5); wx.fillRect(c.cx-cw/2-5,y-ch,5,ch); wx.fillRect(c.cx+cw/2,y-ch,5,ch); wx.fillStyle='#4a4c50'; wx.fillRect(c.cx-cw/2-5,y-ch-5,cw+10,2);
+      if (!here){ wx.fillStyle='#121214'; wx.fillRect(c.cx-cw/2,y-ch,cw,ch); }
+      var pw=cw/2*(1-op);
+      if (pw>0.5){ steel(c.cx-cw/2,y-ch,pw,ch,1); steel(c.cx+cw/2-pw,y-ch,pw,ch,-1); }
+      if (here&&S.door>0.001) gapLight(c.cx,y,cw*op/2,ch,S.door<1?1:0.55);
+      // 樓層燈箱
+      var fl2=dfx&&dfx.t<1.2&&(Math.floor(dfx.t/0.15)%2===0), lampOn=Math.abs(S.pos-f)<0.5;
+      if (fl2){ var hg=wx.createRadialGradient(c.cx,y-ch-12,2,c.cx,y-ch-12,26); hg.addColorStop(0,'rgba(255,214,120,0.85)'); hg.addColorStop(1,'rgba(255,214,120,0)'); wx.fillStyle=hg; wx.fillRect(c.cx-28,y-ch-40,56,56); }
+      wx.fillStyle='#000'; wx.fillRect(c.cx-14,y-ch-19,28,13); wx.fillStyle=fl2?'#fff3c0':lampOn?'#ffb347':'#7a4a20'; wx.font='bold 10px '+A.FONT; wx.textAlign='center';
+      wx.fillText((S.st==='move'?(S.dir>0?'▲':'▼'):'')+lab(cabF()),c.cx,y-ch-9);
+      var wn=S.riders.some(function(o){return o.ph==='wait'&&o.f===f;})||S.gCall===f; wx.fillStyle=wn||fl2?'#ffd54a':'#444'; wx.beginPath(); wx.arc(c.cx+cw/2+9,y-ch*0.5,3.2,0,7); wx.fill();
+      // 叮
+      if (dfx&&dfx.t<1.4){ var u=dfx.t/1.4, pop=1+0.5*Math.max(0,1-dfx.t/0.18); wx.save(); wx.globalAlpha=Math.min(1,(1-u)*1.6); wx.translate(c.cx+cw/2+16,y-ch-14-u*34); wx.scale(pop,pop); wx.font='bold 20px '+A.FONT; wx.lineWidth=4; wx.strokeStyle='#1a1205'; wx.strokeText('叮',0,0); wx.fillStyle='#ffd54a'; wx.fillText('叮',0,0); wx.restore(); }
+    }
+    // 企喺𨋢口（未入𨋢）嘅鬼：重畫喺門前，唔好俾鋼門遮住
+    (G().gh||[]).forEach(function(q,qi){ if (q.home||q.out||qi===S.gi) return; var nq=G().nodes[q.node]; if (!nq||nq.kind!=='lift'||Math.abs(q.x-c.cx)>cw*0.7) return; var al=(q.inv>0?0.35:0.92);
+      if (q.d.key==='tianhua'&&!q.to&&!(q.dropT>0)) sprAt(wx,q.d.sprite,q.x,A.fy(Math.min(FL(),nq.f+1))+14,q.d.h,al,q.dir<0,-1); else sprAt(wx,q.d.sprite,q.x,q.y,q.d.h,al,q.dir<0);
+      if (qi===G().active){ wx.strokeStyle='rgba(138,255,200,0.55)'; wx.setLineDash([4,4]); wx.lineWidth=1.5; wx.beginPath(); wx.ellipse(q.x,q.y-2,30,8,0,0,7); wx.stroke(); wx.setLineDash([]); } });
     // 等𨋢嘅人 + 行緊嘅人
     S.riders.forEach(function(o){ if (o.ph==='ride') return; var y=A.fy(o.f); sprAt(wx,riderSpr(o),o.x,y-2,(o.kind==='guard'?64:(o.ref.h||66))*0.9,1,o.ph==='walkHome'?o.x>((o.ref.unit&&o.ref.unit.rx[0])||0):o.x>c.cx); });
     S.riders.forEach(function(o){ if (!o.say) return; if (o.ph==='ride') bub(wx,c.cx,cy-ch-8,o.say,1); else bub(wx,o.x,A.fy(o.f)-80,o.say,1); });
     wx.restore();
   }
+  function ease(x){ return x<0.5?2*x*x:1-Math.pow(-2*x+2,2)/2; }
+  function steel(x,y,w,h,side){ var gr=wx.createLinearGradient(x,0,x+w,0); gr.addColorStop(0,'#7f8387'); gr.addColorStop(0.45,'#c9ccd0'); gr.addColorStop(1,'#8a8e92'); wx.fillStyle=gr; wx.fillRect(x,y,w,h);
+    wx.fillStyle='rgba(255,255,255,0.10)'; for (var i=1;i<4;i++) wx.fillRect(x,y+h*i/4,w,0.8);
+    var ex=side>0?x+w-1.6:x; wx.fillStyle='#4a4d52'; wx.fillRect(ex,y,1.6,h); if (w>6){ wx.fillStyle='rgba(40,42,46,0.7)'; wx.fillRect(side>0?x+w-5:x+3.4,y+h*0.42,1.6,h*0.16); } }
+  function gapLight(cx,y,half,ch,a){   // 門罅透光：門邊一條暖光＋地下一片光，唔蓋住𨋢內
+    wx.save();
+    if (half<4){ var gs=wx.createLinearGradient(cx-10,0,cx+10,0); gs.addColorStop(0,'rgba(255,226,150,0)'); gs.addColorStop(0.5,'rgba(255,244,200,'+(0.95*a)+')'); gs.addColorStop(1,'rgba(255,226,150,0)'); wx.fillStyle=gs; wx.fillRect(cx-10,y-ch,20,ch); }
+    else [-1,1].forEach(function(sd){ var ex=cx+sd*half, gr=wx.createLinearGradient(ex,0,ex+sd*9,0); gr.addColorStop(0,'rgba(255,236,170,'+(0.75*a)+')'); gr.addColorStop(1,'rgba(255,236,170,0)'); wx.fillStyle=gr; wx.fillRect(Math.min(ex,ex+sd*9),y-ch,9,ch); });
+    var w=Math.max(3,half*2); wx.fillStyle='rgba(255,220,140,'+(0.30*a)+')'; wx.beginPath(); wx.moveTo(cx-w/2,y); wx.lineTo(cx+w/2,y); wx.lineTo(cx+w/2+26,y+9); wx.lineTo(cx-w/2-26,y+9); wx.closePath(); wx.fill(); wx.restore(); }
   function lightLevel(){ var d=S.fx.dark; if (d>0){ var e=4.2-d; if (e<0.7){ return (Math.floor(e/0.175)%2)?0.15:1; } return 0.04; } if (S.fx.flick>0) return 0.55; if (S.st==='stuck') return 0.6+0.3*Math.abs(Math.sin(S.t*9)); return 1; }
 
   // ---------- 𨋢內 UI（HTML 疊層）----------
@@ -364,6 +394,7 @@ window.LiftSys=function(A){
     trickBox.style.top=(A.TOP+cabH-58)+'px';
     block.style.top=(A.TOP+cabH)+'px'; block.style.height=Math.max(0,H-bot-A.TOP-cabH)+'px';
     panel.style.top=(H-bot)+'px'; panel.style.height=bot+'px';
+    L._band={y0:A.TOP+cabH,y1:H-bot};
     return {W:W,H:cabH,D:D};
   }
   function refresh(){
@@ -378,6 +409,8 @@ window.LiftSys=function(A){
   }
   function showUI(){ if (built!==top()+1) build(); ui.classList.add('on'); layout(); requestAnimationFrame(function(){ ui.classList.add('show'); }); refresh(); }
   function hideUI(){ ui.classList.remove('show'); ui.classList.remove('on'); }
+  // 面板開住時：遊戲鏡頭用嚟將𨋢口擺喺中間透明帶（見到𨋢口鋼門開關）
+  L.band=function(){ return (S&&S.gi!=null&&ui.classList.contains('on')&&L._band)?L._band:null; };
 
   // ---------- 𨋢廂內景（程序畫，蠟筆風）----------
   var tex=null;
@@ -462,7 +495,7 @@ window.LiftSys=function(A){
   }
   requestAnimationFrame(loop);
   // 測試介面
-  L.state=function(){ if (!S) return null; return {on:S.on,pos:S.pos,st:S.st,door:S.door,dir:S.dir,stops:Object.keys(S.stops).map(Number),gi:S.gi,gCall:S.gCall,cd:JSON.parse(JSON.stringify(S.cd)),fx:JSON.parse(JSON.stringify(S.fx)),riders:S.riders.map(function(o){return {kind:o.kind,ph:o.ph,f:o.f,dest:o.dest,mood:o.mood,fear:Math.round(o.fear||0),say:o.say};}),mroom:S.mroom.length,away:S.away.length,log:S.log.slice(-30),err:L._err||null,top:top()}; };
+  L.state=function(){ if (!S) return null; return {dfx:Object.keys(S.dfx).map(Number),on:S.on,pos:S.pos,st:S.st,door:S.door,dir:S.dir,stops:Object.keys(S.stops).map(Number),gi:S.gi,gCall:S.gCall,cd:JSON.parse(JSON.stringify(S.cd)),fx:JSON.parse(JSON.stringify(S.fx)),riders:S.riders.map(function(o){return {kind:o.kind,ph:o.ph,f:o.f,dest:o.dest,mood:o.mood,fear:Math.round(o.fear||0),say:o.say};}),mroom:S.mroom.length,away:S.away.length,log:S.log.slice(-30),err:L._err||null,top:top()}; };
   L.debugRider=function(kind,f,dest){ if (G()!==lastG) reset(); var g0=G(), o;
     if (kind==='guard'){ var h=g0.guards.find(function(h){return h.kind==='guard'&&h.state!=='gone';}); if (!h) return null; o=addGuardRider(h,dest); }
     else { var r=g0.res.find(function(r){return r.state==='home'&&r.unit&&r.unit.f===f;})||g0.res.find(function(r){return r.state==='home'&&r.unit&&r.unit.f>=2;}); if (!r) return null; o=addResRider(r,'snack',dest); r.brave=0; }
@@ -642,7 +675,14 @@ const Tower=(function(){
   function spawnZoneGuards(){ var nz=Math.max(2,Math.round((FL-1)/3)), span=(FL-1)/nz; for (var i=0;i<nz;i++){ var a=1+Math.round(i*span), b=Math.min(FL-1,Math.round((i+1)*span)); var h=mkHuman('guard','f'+a+'_'+(i%2?'b':'s')); h.zone=[a,b]; G.guards.push(h); } }
   function inZone(h,f,pad){ return !h.zone||(f>=h.zone[0]-(pad||0)&&f<=h.zone[1]+(pad||0)); }
   function toast(m){ G.toast=m; G.toastT=5.5; }
-  function float(x,y,t,c){ G.floats.push({x:x,y:y,t:t,c:c||'#fff',life:1.6}); }
+  function float(x,y,t,c){ if (!G) return; var now=performance.now(), fc=G.fcd||(G.fcd={}), L0=fc[t];
+    // 同一句：1.5 秒內喺附近唔再出；仲喺畫面上就唔再疊
+    if (L0 && now-L0.t<1500 && Math.abs(L0.x-x)<260 && Math.abs(L0.y-y)<200) return;
+    if (G.floats.some(function(f){ return f.t===t && Math.abs(f.x-x)<260 && Math.abs(f.y0-y)<200; })) return;
+    fc[t]={t:now,x:x,y:y};
+    // 唔同句喺同一位：自動向上錯開，唔會疊埋一舊
+    var yy=y, k=0; while (k<4 && G.floats.some(function(f){ return Math.abs(f.x-x)<120 && Math.abs(f.y-yy)<17; })){ yy-=18; k++; }
+    G.floats.push({x:x,y:yy,y0:y,t:t,c:c||'#fff',life:1.6}); if (G.floats.length>10) G.floats.shift(); }
 
   // ---------- 通行規則 ----------
   function shortcut(g,e){ return e.ward && g.d.cross[e.ward]; }       // Toyol 鑽鐵閘管道、天花姐行天花過糯米
@@ -716,7 +756,7 @@ const Tower=(function(){
         if (!g.to){ if (g.node===nx) g.auto.shift(); else { var ln=G.nodes[g.node].links.find(function(l){return l.to===nx;}); if (ln&&canPass(g,ln.e)===true){ g.to=nx; g.p=0; } else g.auto=null; } }
         if (g.to){ var a=G.nodes[g.node], b=G.nodes[g.to], D=Math.hypot(b.x-a.x,b.y-a.y); g.p+=g.d.sp*G.mods.spd*dt/D; g.still=0; g.taskP=0; if (b.x!==a.x) g.dir=b.x>a.x?1:-1; if (g.p>=1){ g.node=g.to; g.to=null; g.p=0; if (g.auto&&g.auto[0]===g.node) g.auto.shift(); onArrive(g); } } }
       var p=posOf(g); g.mv=Math.max(0,g.mv-dt); if (Math.abs(p.x-g.x)+Math.abs(p.y-g.y)>0.2){ g.mv=0.18; g.still=0; } else g.still+=dt; g.x=p.x; g.y=p.y;
-      if (g.autoS && !g.to && !(g.auto&&g.auto.length) && g.still>=0.12){ g.autoS=null; if (G.active===g.i && g.scareCd<=0) scarePress(); }
+      if (g.autoS && !g.to && !(g.auto&&g.auto.length) && g.still>=0.12 && g.stun<=0 && g.scareCd<=0){ g.autoS=null; if (G.active===g.i && g.scareCd<=0) scarePress(); }
       var n=G.nodes[g.node], st=!g.to&&g.still>=0.1&&g.stun<=0&&!mirrorOn(g);
       // 搜刮讀條：逐件、越值錢越耐、收穫有格數上限
       if (st && n.kind==='in'){ var un=unitOf(n.id);
@@ -828,7 +868,7 @@ const Tower=(function(){
     if (T.life<=0){ G.tao=null; G.taoCd=16+rnd()*10; }
   }
   // ---------- 撤離 ----------
-  function gatePress(){ var g=G.gh[G.active], n=G.nodes[g.node]; if (G.gate||g.to||n.kind!=='portal') return; if (g.still<0.1){ float(g.x,g.y-80,'企定先開得陰門','#ffd54a'); return; } G.gateCharge=0.001; G.gateG=g.i; }
+  function gatePress(){ var g=G.gh[G.active], n=G.nodes[g.node]; if (G.gate||g.to||n.kind!=='portal') return; standStill(g); calm(g); G.gateCharge=0.001; G.gateG=g.i; }
   function gateUpdate(dt){
     if (G.gateCharge>0 && !G.gate){ var g=G.gh[G.gateG]; if (g.to||g.still<0.1||G.nodes[g.node].kind!=='portal'){ G.gateCharge=0; float(g.x,g.y-80,'郁咗，陰門開唔到','#ffb0b0'); } else { G.gateCharge+=dt; if (G.gateCharge>=1){ G.gateCharge=0; G.gate={t:0,f:G.nodes[g.node].f,node:g.node,sp:1.2,fin:false}; G.tao=null; toast('陰門開咗！企穩 30 秒——樓梯封住，追兵會越嚟越快，最後 8 秒天師會喺你兩邊出現。'); G.shake=0.5; } } }
     var Gt=G.gate; if (!Gt) return; Gt.t+=dt; Gt.sp-=dt;
@@ -853,15 +893,45 @@ const Tower=(function(){
     if (r.unit.story && G.story.indexOf(r.unit.si)<0){ G.story.push(r.unit.si); G.story.sort(); toast('收集到故事碎片——'+STORY[r.unit.si]+'（要正規經陰門返去先帶得走）'); }
   }
   function addFear(a,x,y){ G.fear+=a; G.fearTotal+=a; float(x,y,'怕意 +'+a,'#9fd6bf'); if (G.fearTotal>=G.fearNext){ G.fearNext+=30; G.choiceQ=(G.choiceQ||0)+1; } }
+  // 停低：取消搖桿、自動行；企定計時當已企定（撳掣嗰下鬼即刻停）
+  function standStill(g){ g.auto=null; g.autoS=null; if (joy) joy=null; }
+  function calm(g){ g.still=Math.max(g.still||0,0.12); g.mv=0; }
+  // 由而家位置（可能喺兩點中間）行去 target：揀較近嗰頭，再沿路行
+  function approach(g,target){
+    if (!g.to){ if (g.node===target) return true; var ok=gotoNode(g,target); return ok; }
+    var a=g.node, b=g.to, p=g.p, na=G.nodes[a], nb=G.nodes[b], E=Math.hypot(nb.x-na.x,nb.y-na.y);
+    function plen(st,arr){ var L=0, c=G.nodes[st]; (arr||[]).forEach(function(k){ var m=G.nodes[k]; L+=Math.hypot(m.x-c.x,m.y-c.y); c=m; }); return L; }
+    g.to=null; g.node=b; var okB=gotoNode(g,target), pB=g.auto; g.node=a; var okA=gotoNode(g,target), pA=g.auto; g.auto=null; g.node=a; g.to=b; g.p=p;
+    var cB=okB?E*(1-p)+plen(b,pB):1e9, cA=okA?E*p+plen(a,pA):1e9; if (!okA&&!okB) return false;
+    if (cA<cB){ g.node=b; g.to=a; g.p=1-p; g.auto=[a].concat(pA||[]); } else g.auto=[b].concat(pB||[]);
+    return true; }
+  function nearRes(g,R){ var f=G.nodes[g.node].f, best=null, bd=R; G.res.forEach(function(r){ if (r.state!=='home'||!r.unit||r.unit.f!==f) return; var d=Math.abs(r.x-g.x); if (d<bd){ bd=d; best=r; } }); return best; }
+  function doorBlock(g,un){ var dn=G.nodes[un.did], l=dn&&dn.links.find(function(l){return l.to===un.id;}); if (!l) return 'door'; var ok=canPass(g,l.e); return ok===true?null:ok; }
   function scarePress(){
-    var g=G.gh[G.active]; if (g.scareCd>0||g.home||g.out) return; var n=G.nodes[g.node];
-    if (g.to||g.still<0.1){ float(g.x,g.y-80,'鬆手企定先嚇得','#ffd54a'); return; }
+    var g=G.gh[G.active]; if (!g||g.home||g.out) return;
+    if (LIFT&&LIFT.state&&(LIFT.state()||{}).gi===g.i) return;
+    if (g.sc) return;
+    if (g.scareCd>0){ float(g.x,g.y-80,'啱啱嚇完，等陣先','#dddddd'); return; }
+    if (g.stun>0){ float(g.x,g.y-80,g.dropT>0?'跌咗落嚟，等陣先嚇得':g.countT>0?'數緊綠豆，數完先嚇得':'暈緊，等陣先嚇得','#ffd54a'); return; }
+    standStill(g);
     if (g.sealT>0){ float(g.x,g.y-80,'鈴聲未散，暫時嚇唔到人','#ffe9a0'); return; }
     if (mirrorOn(g)){ float(g.x,g.y-80,'被鏡照住，嚇唔出','#ffe9a0'); return; }
-    var un=n.kind==='in'?unitOf(n.id):null;
-    if (un&&un.res&&un.res.state==='home'){ if (g.sc) return; startMove(g,un.res,un); return; }
-    var h=null, bd=90; G.guards.forEach(function(o){ if (o.state==='flee') return; if (Math.abs(o.y-g.y)>30) return; var d=Math.abs(o.x-g.x); if (d<bd){ bd=d; h=o; } });
-    if (!h){ float(g.x,g.y-80,'附近冇人可以嚇','#ddd'); return; }
+    var n=G.nodes[g.node];
+    if (!g.to && n.kind==='in'){ var un0=unitOf(n.id); if (un0.res&&un0.res.state==='home'){ calm(g); startMove(g,un0.res,un0); return; } }
+    var h=null, bd=90; G.guards.forEach(function(o){ if (o.state==='flee'||o.state==='gone') return; if (Math.abs(o.y-g.y)>30) return; var d=Math.abs(o.x-g.x); if (d<bd){ bd=d; h=o; } });
+    // 住戶：優先揀最近而又入得嘅一戶；全部入唔到先講原因
+    var f0=n.f, cands=G.res.filter(function(q){ return q.state==='home'&&q.unit&&q.unit.f===f0&&Math.abs(q.x-g.x)<260; }).sort(function(a,b){ return Math.abs(a.x-g.x)-Math.abs(b.x-g.x); });
+    var r=null, blocked=null; for (var ci=0;ci<cands.length;ci++){ var cq=cands[ci], wq=doorBlock(g,cq.unit); if (!wq){ r=cq; break; } if (!blocked&&Math.abs(cq.x-g.x)<190) blocked={r:cq,why:wq}; }
+    if (h && (!r || Math.abs(h.x-g.x)<=Math.abs(r.x-g.x)+20)){ calm(g); scareGuard(g,h); return; }
+    if (LIFT&&LIFT.scareWaiting){ var lw=LIFT.scareWaiting(g); if (lw){ calm(g); g.scareCd=1.2; g.actT=0.9; G.shake=0.25; return; } }
+    if (r){ var un=r.unit, tr=un.res&&un.res.state==='home'?un.res:r;
+      if (approach(g,un.id)){ g.autoS={r:tr}; if (!g.to&&!(g.auto&&g.auto.length)){ calm(g); g.autoS=null; startMove(g,tr,un); return; } float(tr.x,tr.y-86,'飄埋去嚇'+(HH[tr.hh]?HH[tr.hh].n:'住戶'),'#ffb7a0'); return; }
+      float(r.x,r.y-80,'嚇唔到：行唔到入呢戶','#ffb0b0'); return; }
+    if (blocked){ float(g.x,g.y-80,'嚇唔到——'+(BLOCKMSG[blocked.why]||'呢戶未入得'),'#ffb0b0'); return; }
+    var f=n.f, some=G.res.some(function(q){ return q.state==='home'&&q.unit&&q.unit.f===f; }), out=G.res.some(function(q){ return q.unit&&q.unit.f===f&&Math.abs(q.x-g.x)<190&&(q.state==='away'||q.state==='leave'||q.state==='back'); });
+    float(g.x,g.y-80,out?'佢出咗門，唔喺屋企':some?'附近冇人：行近住戶（或者撳住戶）先嚇':'呢層冇人喺屋企','#dddddd');
+  }
+  function scareGuard(g,h){
     g.scareCd=1.2; g.actT=0.9; g.dir=h.x>g.x?1:-1; G.shake=0.25;
     if (h.kind==='mirror' && Math.sign(g.x-h.x)===h.dir){ float(h.x,h.y-90,'正面對住面鏡，嚇唔到！兜去背後','#ffe9a0'); return; }
     if (h.kind==='decoy' && !h.real){ h.state='gone'; for (var k=0;k<12;k++) part(h.x,h.y-30,(rnd()-0.5)*120,-60-rnd()*60,0.9,'paper'); float(h.x,h.y-80,'紙人替身！','#e8d8b0'); return; }
@@ -1301,7 +1371,7 @@ const Tower=(function(){
   }
   function actPress(){
     var g=G.gh[G.active], a=ctxAction(g); if (!a) return;
-    if (g.still<0.1){ float(g.x,g.y-80,'鬆手企定先做得','#ffd54a'); return; }
+    standStill(g); if (g.to){ float(g.x,g.y-80,'行到位先做得','#ffd54a'); return; } calm(g);
     if (a.k==='liftIn'){ LIFT.enter(g); return; }   // LIFT HOOK 3：入𨋢／叫𨋢
     if (a.k==='respect'){ float(g.x,g.y-90,'祖先牌位要尊重，我哋唔郁','#e8d8b0'); return; }
     if (a.k==='deliver'){ var q=a.q; q.state=2; G.carry=null; var ow=q.owner.res; if (ow){ say(ow,'咦？我副'+q.thing+'點解會喺張枱度嘅？多謝晒……'); ow.fear=0; }
@@ -1398,7 +1468,7 @@ const Tower=(function(){
   function draw(){
     ctx.setTransform(DPR,0,0,DPR,0,0); ctx.fillStyle='#0b0b0d'; ctx.fillRect(0,0,VW,VH); buttons=[];
     if (scene==='title'){ drawTitle(); return; }
-    var g=G.gh[G.active], S=cam.s*cam.z, viewH=(VH-TOP-BOT)/S, viewW=VW/S, fxc=cam.free?cam.free.x:g.x, fyc=cam.free?cam.free.y:g.y, ty=clamp(fyc-viewH*0.55,0,Math.max(0,WH-viewH+70)), tx=clamp(fxc-viewW/2,0,Math.max(0,WW-viewW)); cam.y+=(ty-cam.y)*0.15; cam.x+=(tx-cam.x)*0.15;
+    var g=G.gh[G.active], S=cam.s*cam.z, viewH=(VH-TOP-BOT)/S, viewW=VW/S, fxc=cam.free?cam.free.x:g.x, fyc=cam.free?cam.free.y:g.y, LB=(!cam.free&&LIFT&&LIFT.band)?LIFT.band():null, ty=LB?fyc-(LB.y1-14-TOP)/S:clamp(fyc-viewH*0.55,0,Math.max(0,WH-viewH+70)), tx=clamp(fxc-viewW/2,0,Math.max(0,WW-viewW)); cam.y+=(ty-cam.y)*0.15; cam.x+=(tx-cam.x)*0.15;
     var shk=G.shake>0?(Math.random()-0.5)*G.shake*16:0; ctx.save(); ctx.translate(shk,TOP); ctx.beginPath(); ctx.rect(0,0,VW,VH-TOP-BOT); ctx.clip(); ctx.scale(S,S); ctx.translate(-cam.x,-cam.y);
     ctx.drawImage(staticCv,0,0,WW,WH);
     G.units.forEach(function(un){ var top=fy(un.f+1)+16; if (un.lit){ ctx.fillStyle='rgba(255,230,140,0.38)'; ctx.fillRect(un.rx[0],top,un.rx[1]-un.rx[0],un.y-top-4); }
@@ -1563,16 +1633,18 @@ const Tower=(function(){
 
   // ---------- 輸入 ----------
   var joy=null, ptr=null, JR=58, pts={}, pinch=null;
-  cv.addEventListener('pointerdown',function(e){ if (e.isPrimary) pts={}; var p=pt(e); pts[e.pointerId]=p; var hb=hitBtn(p.x,p.y); if (hb){ PRESS={id:hb.id,t:performance.now()}; try{ navigator.vibrate&&navigator.vibrate(12); }catch(_){} ptr={sx:p.x,sy:p.y,drag:false,btn:hb.id}; joy=null; try{cv.setPointerCapture(e.pointerId);}catch(_){} return; } var ids=Object.keys(pts); if (ids.length===2){ var a=pts[ids[0]],b=pts[ids[1]]; pinch={d:Math.hypot(a.x-b.x,a.y-b.y),z:cam.z}; joy=null; ptr=null; return; } ptr={sx:p.x,sy:p.y,drag:false}; if (scene==='play'&&!G.over&&!G.choice&&!G.showStory&&p.y>TOP&&p.y<VH-BOT) joy={ox:p.x,oy:p.y,x:p.x,y:p.y,on:false}; try{cv.setPointerCapture(e.pointerId);}catch(_){} });
-  cv.addEventListener('pointermove',function(e){ var p=pt(e); if (pts[e.pointerId]) pts[e.pointerId]=p; if (pinch){ var ids=Object.keys(pts); if (ids.length===2){ var a=pts[ids[0]],b=pts[ids[1]]; cam.z=clamp(pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d,0.5,1.5); var S9=cam.s*cam.z, mxp=(a.x+b.x)/2, myp=(a.y+b.y)/2; if (pinch.mx!=null){ var c0=cam.free||{x:cam.x+VW/S9/2,y:cam.y+(VH-TOP-BOT)/S9*0.55}; cam.free={x:c0.x-(mxp-pinch.mx)/S9,y:c0.y-(myp-pinch.my)/S9}; } pinch.mx=mxp; pinch.my=myp; } return; } if(!ptr) return; if (!ptr.btn&&Math.hypot(p.x-ptr.sx,p.y-ptr.sy)>12) ptr.drag=true; if (joy){ joy.x=p.x; joy.y=p.y; if (ptr.drag) joy.on=true; } });
-  cv.addEventListener('pointerup',function(e){ delete pts[e.pointerId]; if (pinch){ if (!Object.keys(pts).length) pinch=null; return; } var p=pt(e), was=ptr; ptr=null; var j=joy&&joy.on; joy=null; if (was&&was.btn){ LASTP=p; var hb=hitBtn(p.x,p.y); if (hb&&hb.id===was.btn) press(hb.id); else if (Math.hypot(p.x-was.sx,p.y-was.sy)<24) press(was.btn); return; } if (was&&!was.drag&&!j) tap(p.x,p.y); });
+  cv.addEventListener('pointerdown',function(e){ if (e.isPrimary) pts={}; var p=pt(e); pts[e.pointerId]=p; var hb=hitBtn(p.x,p.y); if (hb){ PRESS={id:hb.id,t:performance.now()}; try{ navigator.vibrate&&navigator.vibrate(12); }catch(_){} ptr={sx:p.x,sy:p.y,drag:false,btn:hb.id,id:e.pointerId}; joy=null; try{cv.setPointerCapture(e.pointerId);}catch(_){} return; } var ids=Object.keys(pts); if (ids.length===2){ var a=pts[ids[0]],b=pts[ids[1]]; pinch={d:Math.hypot(a.x-b.x,a.y-b.y),z:cam.z}; joy=null; ptr=null; return; } ptr={sx:p.x,sy:p.y,drag:false,id:e.pointerId,hud:p.y>=VH-BOT||p.y<=TOP}; if (scene==='play'&&!G.over&&!G.choice&&!G.showStory&&p.y>TOP&&p.y<VH-BOT) joy={ox:p.x,oy:p.y,x:p.x,y:p.y,on:false}; try{cv.setPointerCapture(e.pointerId);}catch(_){} });
+  cv.addEventListener('pointermove',function(e){ var p=pt(e); if (pts[e.pointerId]) pts[e.pointerId]=p; if (pinch){ var ids=Object.keys(pts); if (ids.length===2){ var a=pts[ids[0]],b=pts[ids[1]]; cam.z=clamp(pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d,0.5,1.5); var S9=cam.s*cam.z, mxp=(a.x+b.x)/2, myp=(a.y+b.y)/2; if (pinch.mx!=null){ var c0=cam.free||{x:cam.x+VW/S9/2,y:cam.y+(VH-TOP-BOT)/S9*0.55}; cam.free={x:c0.x-(mxp-pinch.mx)/S9,y:c0.y-(myp-pinch.my)/S9}; } pinch.mx=mxp; pinch.my=myp; } return; } if(!ptr||ptr.id!==e.pointerId) return; if (!ptr.btn&&Math.hypot(p.x-ptr.sx,p.y-ptr.sy)>12) ptr.drag=true; if (joy){ joy.x=p.x; joy.y=p.y; if (ptr.drag) joy.on=true; } });
+  cv.addEventListener('pointerup',function(e){ delete pts[e.pointerId]; if (pinch){ if (!Object.keys(pts).length) pinch=null; return; } if (ptr&&ptr.id!=null&&ptr.id!==e.pointerId) return; var p=pt(e), was=ptr; ptr=null; var j=joy&&joy.on; joy=null; if (j&&scene==='play'&&G&&!G.over) settleNear(G.gh[G.active],44); if (was&&was.btn){ LASTP=p; var hb=hitBtn(p.x,p.y); if (hb&&hb.id===was.btn) press(hb.id); else if (Math.hypot(p.x-was.sx,p.y-was.sy)<24) press(was.btn); return; } if (was&&!was.drag&&!j) tap(p.x,p.y); });
   cv.addEventListener('pointercancel',function(e){ delete pts[e.pointerId]; pinch=null; ptr=null; joy=null; });
+  // 搖桿鬆手時離最近嗰點好近：自動行埋去，唔好卡喺兩點中間
+  function settleNear(g,R0){ if (!g||!g.to||g.home||g.out) return; var a=G.nodes[g.node], b=G.nodes[g.to], E=Math.hypot(b.x-a.x,b.y-a.y); if (E*(1-g.p)<=R0) g.auto=[g.to]; else if (E*g.p<=R0){ var t=g.node; g.node=g.to; g.to=t; g.p=1-g.p; g.auto=[t]; } }
   function pt(e){ var r=cv.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; }
   function joyVec(){ if (!joy||!joy.on) return null; var dx=joy.x-joy.ox, dy=joy.y-joy.oy, L=Math.hypot(dx,dy); if (L>JR){ dx*=JR/L; dy*=JR/L; } return {x:dx/JR,y:dy/JR}; }
   function drawJoy(){ if (!joy||!joy.on) return; var v=joyVec(); ctx.setTransform(DPR,0,0,DPR,0,0); ctx.fillStyle='rgba(10,10,12,0.5)'; ctx.strokeStyle='rgba(170,200,185,0.55)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(joy.ox,joy.oy,JR,0,7); ctx.fill(); ctx.stroke(); ctx.fillStyle='rgba(138,255,200,0.85)'; ctx.beginPath(); ctx.arc(joy.ox+v.x*JR,joy.oy+v.y*JR,24,0,7); ctx.fill(); }
   var PRESS=null, PAD=10;
   function hitBtn(x,y){ var best=null, bd=1e9; for (var i=buttons.length-1;i>=0;i--){ var b=buttons[i]; if (x>=b.x-PAD&&x<=b.x+b.w+PAD&&y>=b.y-PAD&&y<=b.y+b.h+PAD){ var d=(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h)?-1:Math.hypot(x-(b.x+b.w/2),y-(b.y+b.h/2)); if (d<bd){ bd=d; best=b; } } } return best; }
-  function tap(x,y){ LASTP={x:x,y:y}; var b=hitBtn(x,y); if (b){ press(b.id); return; } if (scene==='play'&&G&&!G.over&&!G.choice&&!G.showStory) worldTap(x,y); }
+  function tap(x,y){ LASTP={x:x,y:y}; var b=hitBtn(x,y); if (b){ press(b.id); return; } if (scene==='play'&&G&&!G.over&&!G.choice&&!G.showStory&&y>TOP&&y<VH-BOT) worldTap(x,y); }
   function worldTap(x,y){ var S=cam.s*cam.z, wx=x/S+cam.x, wy=(y-TOP)/S+cam.y, best=null, bd=40;
     var gb=null, gbd=26; G.gh.forEach(function(g,i){ if (g.home||g.out||i===G.active) return; var d=Math.hypot(g.x-wx,(g.y-g.d.h*0.5)-wy); if (d<gbd){ gbd=d; gb={g:i}; } });
     G.res.forEach(function(r){ if (r.state!=='home') return; var d=Math.hypot(r.x-wx,(r.y-26)-wy); if (d<bd){ bd=d; best={r:r}; } });
