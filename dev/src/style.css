@@ -826,3 +826,10 @@ body.st-on #stn-testbtn{display:none!important}
 /* 樓裡有鬼開住時：龐總提示框移去上面（唔好遮住底部掣），測試掣收埋 */
 body:has(#tw-root.on) #pol-tip,#tw-root.on ~ #pol-tip{bottom:auto!important;top:calc(env(safe-area-inset-top) + 100px)!important;left:118px!important;right:64px!important;max-width:none!important;font-size:13px!important}
 body:has(#tw-root.on) #stn-testbtn,#tw-root.on ~ #stn-testbtn{display:none!important}
+/* 站崗 v6：長卷分屏 */
+#st-turf .stt-top{background:linear-gradient(rgba(8,8,12,.88),rgba(8,8,12,.55));}
+.stt-zoom{top:76px;right:10px}.stt-zoom button.on{border-color:#ffd45a;color:#ffd45a}
+.stt-build{position:absolute;right:10px;top:122px;z-index:3;width:48px;height:48px;border-radius:12px;border:2px solid #6a5a40;background:rgba(20,22,24,.9);color:#ffe9b0;font-family:inherit;font-size:13px;font-weight:900}
+.stt-build.on{border-color:#ffd45a;background:radial-gradient(#a8541a,#5a2408);box-shadow:0 0 12px rgba(255,200,80,.6)}
+.stt-sp{top:178px;right:10px}.stt-box{top:230px;right:10px}
+.stt-hot{height:5px}.stt-info{font-size:11px}
