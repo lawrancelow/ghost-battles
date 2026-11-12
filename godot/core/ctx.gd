@@ -471,6 +471,8 @@ static func font_res(family: String, weight: int) -> Font:
 	if serif: file = "serif_k" if weight >= 900 else "serif_b"
 	else: file = "sans_k" if weight >= 900 else ("sans_b" if weight >= 600 else "sans_r")
 	var fnt: Font = load("res://fonts/%s.otf" % file)
+	if not _fonts.has("emoji"): _fonts["emoji"] = load("res://fonts/emoji.ttf")
+	if fnt is FontFile and fnt.fallbacks.is_empty(): fnt.fallbacks = [_fonts["emoji"]]
 	_fonts[key] = fnt
 	return fnt
 

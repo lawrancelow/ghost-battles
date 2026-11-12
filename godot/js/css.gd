@@ -50,7 +50,17 @@ static func _parse_block(css: String, depth: int) -> void:
 			continue
 		for one in sel.split(","):
 			var s = one.strip_edges()
-			if s == "" or s.contains("::") or s.contains(":before") or s.contains(":after") or s.contains(":hover") or s.contains(":active") or s.contains(":focus") or s.contains(":disabled") or s.contains(":placeholder") or s.contains("::-webkit"): continue
+			var pk = ""
+			for suf in ["::before", "::after", ":before", ":after"]:
+				if s.ends_with(suf): pk = suf.trim_prefix(":").trim_prefix(":"); s = s.substr(0, s.length() - suf.length()); break
+			if pk != "" and not (s.contains(":hover") or s.contains(":active") or s.contains(":focus") or s.contains("::")):
+				var pc = _compile(s)
+				if pc != null:
+					order += 1
+					if not pseudo_rules.has(pk): pseudo_rules[pk] = []
+					pseudo_rules[pk].append([pc, _spec(pc) + 1, order, decls])
+				continue
+			if s == "" or s.contains("::") or s.contains(":before") or s.contains(":after") or s.contains(":hover") or s.contains(":active") or s.contains(":focus") or s.contains(":placeholder") or s.contains("::-webkit"): continue
 			var comp = _compile(s)
 			if comp == null: continue
 			order += 1
@@ -230,12 +240,24 @@ static func match_compound(el: El, c: Dictionary) -> bool:
 		if ps == "last-child" and (sibs.is_empty() or sibs[-1] != el): return false
 		if ps == "empty" and el.children.size(): return false
 		if ps == "checked" and not J.t(el.props.get("checked")): return false
+		if ps.begins_with("has("):
+			var hs = ps.substr(4, ps.length() - 5)
+			if not _has_desc(el, hs): return false
+		if ps == "disabled":
+			var dv = el.props.get("disabled")
+			if dv == null or (typeof(dv) == TYPE_BOOL and not dv): return false
 		if ps.begins_with("nth-child("):
 			var arg = ps.substr(10, ps.length() - 11); var idx = sibs.find(el) + 1
 			if arg == "odd" and idx % 2 == 0: return false
 			if arg == "even" and idx % 2 == 1: return false
 			if arg.is_valid_int() and idx != arg.to_int(): return false
 	return true
+
+static func _has_desc(el: El, sel: String) -> bool:
+	for k in el.children:
+		if not (k is El) or k.tagName == "#TEXT": continue
+		if sel_matches(k, sel) or _has_desc(k, sel): return true
+	return false
 
 static func matches(el: El, comp: Array) -> bool:
 	return _match_from(el, comp, comp.size() - 1)
@@ -271,6 +293,23 @@ static func sel_matches(el: El, selector: String) -> bool:
 	return false
 
 # ---------------- 計算樣式 ----------------
+# ::before／::after：冇 content 就當冇；有就返一份計好嘅樣式（已繼承宿主）
+static var pseudo_rules = {}
+static func pseudo(el: El, kind: String, host_cs: Dictionary):
+	if not pseudo_rules.has(kind): return null
+	var hits = []
+	for r in pseudo_rules[kind]:
+		if matches(el, r[0]): hits.append(r)
+	if hits.is_empty(): return null
+	hits.sort_custom(func(a, b): return a[1] < b[1] or (a[1] == b[1] and a[2] < b[2]))
+	var cs = {}
+	for k in INHERIT:
+		if host_cs.has(k): cs[k] = host_cs[k]
+	for r in hits:
+		for k in r[3]: cs[k] = r[3][k]
+	if not cs.has("content") or cs.get("display", "") == "none": return null
+	return cs
+
 static func computed(el: El, parent_cs: Dictionary) -> Dictionary:
 	var cs = {}
 	for k in INHERIT:
@@ -327,6 +366,7 @@ static func resolve_var(v: String) -> String:
 static func px(v, ref: float, fs: float = 16.0, vw: float = 390.0, vh: float = 844.0):
 	if v == null: return null
 	var s = resolve_var(J.str(v)).strip_edges()
+	if s.contains("env("): s = RegEx.create_from_string("env\\([^)]*\\)").sub(s, "0px", true)
 	if s == "" or s == "auto" or s == "none" or s == "normal" or s == "fit-content" or s == "max-content" or s == "min-content": return null
 	if s.begins_with("calc(") or s.begins_with("min(") or s.begins_with("max(") or s.begins_with("clamp("): return _calc(s, ref, fs, vw, vh)
 	if s.begins_with("env("): return 0.0

@@ -74,6 +74,7 @@ func _boot_js() -> void:
 	J.mc(J.G.get("Village"), "resize", [])
 	refresh()
 	loading.queue_free(); loading = null
+	Snd.warm()
 	print("[boot] ready ", Time.get_ticks_msec() - t0, "ms")
 
 func _process_js_state() -> void:
@@ -133,7 +134,8 @@ func _build_top() -> void:
 	var grid = GridContainer.new(); grid.columns = 3; grid.add_theme_constant_override("h_separation", 4); grid.add_theme_constant_override("v_separation", 4)
 	grid.anchor_right = 1; grid.offset_left = 76; grid.offset_top = 36; grid.offset_right = -9; grid.add_theme_constant_override("v_separation", 5); top.add_child(grid)
 	var snd = UIKit.btn("聲", "", true); snd.anchor_left = 1; snd.anchor_right = 1; snd.offset_left = -35; snd.offset_right = -9; snd.offset_top = 6; snd.offset_bottom = 30; snd.add_theme_font_size_override("font_size", 12)
-	snd.pressed.connect(func(): snd.text = "靜" if snd.text == "聲" else "聲"; AudioServer.set_bus_mute(0, snd.text == "靜")); top.add_child(snd)
+	snd.text = "聲" if Snd.is_on() else "靜"
+	snd.pressed.connect(func(): snd.text = "聲" if Snd.toggle() else "靜"); top.add_child(snd)
 	var help = {"wood": "槐木：主公親手砍樹，或派鬼怪去[b]伐木場[/b]伐木。", "rice": "糯米：主公親手收割，或派鬼怪去[b]糯米田[/b]割稻。", "planks": "棺材板：在[b]棺材鋪[/b]把 2 槐木做成 1 板（力量高的鬼做得快）。藍箱也會開出。用來建造和升級建築。", "buns": "壽包：在[b]包子鋪[/b]把 2 糯米包成 1 個（智力高的鬼包得快）。綠箱也會開出。用來升級鬼怪、練陰兵。", "coins": "冥幣：打關卡、開紫箱、燒[b]化寶爐[/b]。Toyol 管倉庫時也會「撿到」冥幣。", "troops": "陰兵：村裡的遊魂見你有地盤，自願加入。[b]民宅[/b]越高級來得越快、上限越高。"}
 	for k in ["wood", "rice", "planks", "buns", "coins", "troops"]:
 		var cell = PanelContainer.new(); cell.custom_minimum_size = Vector2(0, 26); cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -507,7 +509,10 @@ func open_story() -> void:
 
 # ---------------- 標題畫面 ----------------
 func _show_title(fresh: bool) -> void:
-	if JSRun.skip_title: JSRun.skip_title = false; return
+	if JSRun.skip_title:
+		var v = JSRun.skip_title; JSRun.skip_title = false
+		if v is String and v == "pre": call_deferred("phone_home", "pre")
+		return
 	title_ov = Control.new(); title_ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); title_ov.mouse_filter = Control.MOUSE_FILTER_STOP; add_child(title_ov)
 	var bg = ColorRect.new(); bg.color = Color("#2e2422"); bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); title_ov.add_child(bg)
 	# 封面：寬度鋪滿、靠頂（background-size:100% auto; position:center top），底部漸變接返底色
@@ -544,13 +549,13 @@ func _show_title(fresh: bool) -> void:
 
 func _title_cont(fresh: bool) -> void:
 	if fresh: return
-	_hide_title(); G.offline_gain()   # 網頁版：繼續遊戲 → 結算離線收益
+	_snd("gong"); _hide_title(); phone_home("post")   # 網頁版：繼續遊戲 → 手機（陰間版 WhatsApp）→ 主對話 → 結算離線收益
 
 func _title_new(fresh: bool, bn: TextureButton, hint: Label) -> void:
 	if not fresh and not bn.has_meta("armed"):
 		bn.set_meta("armed", 1); hint.text = "會刪掉現在的存檔。再點一次「開始新遊戲」確定。"; return
-	if not fresh: restart_with(null, true); return
-	_hide_title(); refresh()
+	if not fresh: restart_with(null, "pre"); return
+	_snd("gong"); _hide_title(); refresh(); phone_home("pre")
 
 func _vgrad(stops: Array) -> GradientTexture2D:
 	var gt = GradientTexture2D.new(); var gr = Gradient.new()
@@ -561,6 +566,39 @@ func _vgrad(stops: Array) -> GradientTexture2D:
 func _gray_mat() -> ShaderMaterial:
 	var sh = Shader.new(); sh.code = "shader_type canvas_item; void fragment(){ vec4 c = texture(TEXTURE, UV) * COLOR; float g = dot(c.rgb, vec3(0.299,0.587,0.114)); COLOR = vec4(mix(c.rgb, vec3(g), 0.85), c.a); }"
 	var m = ShaderMaterial.new(); m.shader = sh; return m
+
+# ---------------- 手機（仿 WhatsApp）----------------
+var phone: WA = null
+func phone_home(ph: String) -> void:
+	if phone == null:
+		phone = WA.new(); add_child(phone)
+		phone.on_enter = _phone_enter
+	move_child(phone, get_child_count() - 1)
+	phone.show_home(ph)
+	_phone_flag(true)
+	var s = J.G.get("Sound")
+	if s is Dictionary: J.mc(s, "setMode", ["office" if ph == "pre" else "story"])
+
+func phone_close() -> void:
+	if phone: phone.queue_free(); phone = null
+	_phone_flag(false)
+
+func _phone_flag(on: bool) -> void:
+	var p = J.G.get("Phone")
+	if p is Dictionary: p["on"] = on
+
+func _phone_enter(ph: String) -> void:
+	phone_close()
+	if ph == "pre":
+		for id in ["prologue_chat", "prologue_narr", "prologue_road", "prologue_sys"]: story.queue(id)
+	else:
+		G.offline_gain()
+		var s = J.G.get("Sound")
+		if s is Dictionary: J.mc(s, "setMode", ["village"])
+
+func _snd(n: String) -> void:
+	var s = J.G.get("Sound")
+	if s is Dictionary and s.has("play"): J.mc(s, "play", [n])
 
 func _hide_title() -> void:
 	if title_ov: title_ov.queue_free(); title_ov = null
@@ -573,7 +611,7 @@ func import_save(code: String) -> bool:
 	o.last = G.now_ms()
 	restart_with(o, true); return true
 
-func restart_with(save, skip_title: bool) -> void:
+func restart_with(save, skip_title) -> void:
 	if JSRun.ls.has(SAVE_KEY): JSRun.ls[SAVE_KEY + "_bak"] = JSRun.ls[SAVE_KEY]
 	if save == null: JSRun.ls.erase(SAVE_KEY)
 	else: JSRun.ls[SAVE_KEY] = J.to_json(save)

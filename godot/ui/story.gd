@@ -48,16 +48,24 @@ func next() -> void:
 	cur = {"sc": sc, "cb": it.cb, "id": it.sc if it.sc is String else ""}
 	li = 0; visible = true
 	_build(sc)
+	if wa != null: return
 	_show_line()
 
 func _clear() -> void:
 	for c in get_children(): c.queue_free()
-	stage = null; talkbox = null; syswin = null
+	stage = null; talkbox = null; syswin = null; wa = null
+
+var wa: WA = null
 
 func _build(sc: Dictionary) -> void:
 	_clear()
 	var dim = ColorRect.new(); dim.color = Color(0.04, 0.03, 0.05, 0.72); dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); dim.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(dim)
 	var style: String = sc.get("style", "talk")
+	if style == "chat":
+		dim.color = Color(0, 0, 0, 1)
+		wa = WA.new(); add_child(wa)
+		wa.start_scene(sc, str(cur.id), func(): next(), func(): skip_scene())
+		return
 	if style == "talk":
 		stage = Control.new(); stage.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		stage.set_script(load("res://ui/story_stage.gd")); add_child(stage)
@@ -154,6 +162,7 @@ func _gui_input(e: InputEvent) -> void:
 
 func advance() -> void:
 	if cur == null: return
+	if wa != null: wa.advance(false); return
 	if typing: shown = full_text.length(); _render_text(); typing = false; return
 	li += 1
 	if li >= cur.sc.lines.size(): next(); return
@@ -163,5 +172,6 @@ func skip_scene() -> void:
 	typing = false; next()
 
 func speaker() -> String:
+	if wa != null: return ""
 	if cur == null or li >= cur.sc.lines.size(): return ""
 	return cur.sc.lines[li][0]

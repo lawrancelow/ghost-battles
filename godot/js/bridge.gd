@@ -61,9 +61,17 @@ static func connect_ui(main) -> void:
 	var G = J.G
 	var story = main.story
 	G["Title"] = {"show": func(_t, a): main.call_deferred("_show_title", J.t(a[0])), "hide": func(_t, a): main._hide_title()}
+	# 聲音：WebAudio 換成原生合成引擎（core/snd.gd）
+	G["Sound"] = {"play": func(_t, a): Snd.play(J.str(a[0]), a[1] if a.size() > 1 else null); return null,
+		"setMode": func(_t, a): Snd.set_mode(J.str(a[0])); return null,
+		"toggle": func(_t, a): return Snd.toggle(),
+		"isOn": func(_t, a): return Snd.is_on(),
+		"unlock": func(_t, a): return null}
 	var phone = G.get("Phone")
 	if phone is Dictionary:
-		phone["home"] = func(_t, a): return null
+		phone["home"] = func(_t, a): main.call_deferred("phone_home", J.str(a[0]) if a.size() > 0 else "post"); return null
+		phone["close"] = func(_t, a): main.phone_close(); return null
+		phone["enter"] = func(_t, a): main._phone_enter("post"); return null
 		phone["on"] = false
 	var st = {"q": [], "cur": null,
 		"busy": func(_t, a): return story.busy(),

@@ -32,6 +32,25 @@ func _run() -> void:
 				print("IMPORT ", main().import_save(code))
 				await get_tree().create_timer(12.0).timeout
 			"notitle": main()._hide_title()
+			"sndbake":
+				await Snd.bake(s[1]); print("SND baked")
+			"sndtest":
+				for n in s.slice(1):
+					var t1 = Time.get_ticks_msec(); Snd._cache.erase(n)
+					var st = Snd._sfx_stream(n, 1)
+					print("SND ", n, " ", st.data.size() / 2, " samples ", Time.get_ticks_msec() - t1, "ms"); st.save_to_wav("/tmp/snd_%s.wav" % n)
+			"modetest":
+				var t1 = Time.get_ticks_msec(); Snd.mode = ""; Snd._cache.clear(); Snd.set_mode(s[1])
+				while not Snd._bed.playing: await get_tree().process_frame
+				print("SND mode ", s[1], " ready ", Time.get_ticks_msec() - t1, "ms"); Snd._bed.stream.save_to_wav("/tmp/bed_%s.wav" % s[1])
+			"click":
+				var pos = Vector2(float(s[1]), float(s[2]))
+				var vp = get_viewport(); var xf = vp.get_final_transform()
+				for down in [true, false]:
+					var ev = InputEventMouseButton.new(); ev.button_index = MOUSE_BUTTON_LEFT; ev.pressed = down
+					ev.position = xf * pos; ev.global_position = ev.position
+					vp.push_input(ev)
+					await get_tree().process_frame
 			"js":
 				print("JS ", s[1], " = ", J.str(J.cl(J.G.get(s[1]), null, s.slice(2))).substr(0, 200))
 			"tap": J.mc(J.G.get("Village"), "tap", [float(s[1]), float(s[2])])
@@ -63,5 +82,6 @@ func _run() -> void:
 				else: print("EL ", s[1], " tag=", e.tagName, " cls=", e.classList.d.keys(), " kids=", e.children.size(), " parent=", (e.parentNode.tagName if e.parentNode else "none"), " cs.display=", Css.computed(e, {}).get("display"), " pos=", Css.computed(e, {}).get("position"), " z=", Css.computed(e, {}).get("z-index"), " style=", e.style)
 			"css":
 				var e2 = JSRun.query(s[1], null)
+				if e2: print("CSSALL ", s[1], " ", str(e2.props.get("_cs", {})).substr(0, 900))
 				if e2: print("CSS ", s[1], " ", e2.props.get("_cs", {}).keys().filter(func(k): return k.begins_with("back") or k == "display" or k == "opacity"), " bg=", J.str(e2.props.get("_cs", {}).get("background", "")).substr(0, 200), " bgi=", J.str(e2.props.get("_cs", {}).get("background-image", "")).substr(0, 120), " bgc=", e2.props.get("_cs", {}).get("background-color"))
 			"quit": get_tree().quit(); return

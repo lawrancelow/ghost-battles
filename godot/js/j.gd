@@ -384,6 +384,7 @@ static func mc(o, m, a: Array):
 			var f = o.get(mm)
 			if f == null and o.has("__proto") and not o.has(mm): f = gp(o["__proto"], mm)
 			if f != null: return cl(f, o, a)
+			if o.has("__date"): return _date_call(o, mm, a)
 			match mm:
 				"hasOwnProperty": return o.has(J.str(a[0]))
 				"toString": return "[object Object]"
@@ -611,3 +612,25 @@ static func _ctx_call(o: Ctx, m: String, a: Array):
 		else: o.clip()
 		return null
 	return o.callv(m, b)
+
+# Date 物件方法（本地時間）
+static func _date_call(o: Dictionary, m: String, a: Array):
+	var ms: float = o["__date"]
+	var tz = Time.get_time_zone_from_system().get("bias", 0)
+	var d = Time.get_datetime_dict_from_unix_time(int(floor(ms / 1000.0)) + tz * 60)
+	match m:
+		"getTime", "valueOf": return ms
+		"getHours": return float(d.hour)
+		"getMinutes": return float(d.minute)
+		"getSeconds": return float(d.second)
+		"getMilliseconds": return fmod(ms, 1000.0)
+		"getFullYear": return float(d.year)
+		"getMonth": return float(d.month - 1)
+		"getDate": return float(d.day)
+		"getDay": return float(d.weekday)
+		"getTimezoneOffset": return float(-tz)
+		"toISOString": return Time.get_datetime_string_from_unix_time(int(ms / 1000.0)) + "Z"
+		"toString", "toLocaleString": return "%04d-%02d-%02d %02d:%02d" % [d.year, d.month, d.day, d.hour, d.minute]
+		"toLocaleDateString": return "%d/%d/%d" % [d.year, d.month, d.day]
+		"toLocaleTimeString": return "%02d:%02d" % [d.hour, d.minute]
+	return null
