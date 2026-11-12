@@ -64,7 +64,7 @@ func _solve(R: Dictionary, pose: Dictionary) -> Dictionary:
 	var T = {}
 	for b in R.bones:
 		var n: String = b[0]; var par = b[1]; var px: float = b[2]; var py: float = b[3]
-		var a: float = float(pose.get(n, 0.0))
+		var pv = pose.get(n); var a: float = 0.0 if pv == null else float(J.num(pv))
 		var P: Array = T[par] if par != null and T.has(par) else [0.0, 0.0, 0.0]
 		var ppx: float = cos(P[0]) * px - sin(P[0]) * py + P[1]
 		var ppy: float = sin(P[0]) * px + cos(P[0]) * py + P[2]
@@ -210,3 +210,45 @@ func pose_for(type: String, o: Dictionary) -> Dictionary:
 	if o.get("atk", false): return strike(0.6, t, type)
 	if o.get("walk", false): return walk(t)
 	return idle(t)
+
+# 轉譯版 meshanim.js 嘅 drawRaw 交俾呢度（rig = JS 嗰邊嘅 RIG[id]，可能係 n30_rigs 加嘅）
+var _jcache := {}
+var _warned := {}
+func draw_js(ctx, id: String, rig, x: float, y: float, h: float, pose: Dictionary, flip: bool) -> bool:
+	if not (ctx is Ctx):
+		if not _warned.has(id): _warned[id] = 1; push_warning("meshDraw 冇 ctx: %s %s" % [id, typeof(ctx)])
+		return false
+	var tex := Spr.get_tex(id)
+	if tex == null or rig == null: return false
+	var C: Dictionary = _jcache.get(id, {})
+	if C.is_empty() or C.R != rig:
+		var bones: Array = rig.get("bones", [])
+		C = _build({"bones": bones}, tex); C.R = rig; _jcache[id] = C
+	var ar: float = C.ar; var W := h / ar
+	var bones2: Array = rig.get("bones", [])
+	var T := _solve({"bones": bones2}, pose)
+	var cs: Array = []
+	for b in bones2:
+		var t: Array = T[b[0]]; cs.append([cos(t[0]), sin(t[0]), t[1], t[2]])
+	var uv: PackedVector2Array = C.uv; var Wt: Array = C.w
+	var pts := PackedVector2Array(); pts.resize(uv.size())
+	for i in uv.size():
+		var u := uv[i].x; var vy := uv[i].y * ar; var X := 0.0; var Y := 0.0
+		var w: PackedFloat32Array = Wt[i]
+		for k in bones2.size():
+			var wk := w[k]
+			if wk < 0.002: continue
+			var q: Array = cs[k]
+			X += wk * (q[0] * u - q[1] * vy + q[2]); Y += wk * (q[1] * u + q[0] * vy + q[3])
+		pts[i] = Vector2(X * W, Y / ar * h)
+	ctx.save()
+	ctx.translate(x + float(J.num(pose.get("x", 0.0))) * W, y + float(J.num(pose.get("y", 0.0))) * h)
+	if flip: ctx.scale(-1, 1)
+	var rot := J.num(pose.get("rot", 0.0))
+	if rot != 0.0 and not is_nan(rot):
+		ctx.translate(0, -h * 0.35); ctx.rotate(rot); ctx.translate(0, h * 0.35)
+	var sx = pose.get("sx"); var sy = pose.get("sy")
+	ctx.scale(J.num(sx) if sx != null else 1.0, J.num(sy) if sy != null else 1.0); ctx.translate(-W / 2, -h)
+	ctx.drawTriangles(tex, pts, uv, C.tris)
+	ctx.restore()
+	return true

@@ -16,6 +16,8 @@ func main() -> Node: return get_tree().root.get_node_or_null("Main")
 
 func _run() -> void:
 	await get_tree().process_frame
+	while main() == null or main().get("loading") != null or J.G.get("S") == null:
+		await get_tree().create_timer(0.2).timeout
 	for s in steps:
 		var cmd: String = s[0]
 		match cmd:
@@ -27,18 +29,39 @@ func _run() -> void:
 				get_viewport().get_texture().get_image().save_png(s[1]); print("SHOT ", s[1])
 			"import":
 				var code = FileAccess.open(s[1], FileAccess.READ).get_as_text()
-				print("IMPORT ", G.import_code(code), " lv=", G.S.get("lv"))
-				main().refresh()
+				print("IMPORT ", main().import_save(code))
+				await get_tree().create_timer(12.0).timeout
 			"notitle": main()._hide_title()
-			"tap": main().village.tap(float(s[1]), float(s[2]))
-			"cam": main().village.set_cam(float(s[1]))
+			"js":
+				print("JS ", s[1], " = ", J.str(J.cl(J.G.get(s[1]), null, s.slice(2))).substr(0, 200))
+			"tap": J.mc(J.G.get("Village"), "tap", [float(s[1]), float(s[2])])
+			"cam": J.mc(J.G.get("Village"), "setCam", [float(s[1])])
 			"call":
-				var obj = main() if s[1] == "main" else (main().village if s[1] == "village" else get_tree().root.get_node(s[1]))
-				obj.callv(s[2], s.slice(3))
+				if s[1] == "main": main().callv(s[2], s.slice(3))
+				else: J.mc(J.G.get(s[1]), s[2], s.slice(3))
 			"set": G.S[s[1]] = s[2]
 			"print": print("STATE ", s[1], "=", str(G.S.get(s[1])).substr(0, 300))
 			"export":
 				var fo = FileAccess.open(s[1], FileAccess.WRITE); fo.store_string(G.enc(G.S)); fo.close(); print("EXPORT ok")
 			"assign":
 				var g = G.ghostById(s[1]); g.post = s[2]; print("ASSIGN ", g.name, " -> ", s[2])
+			"dom":
+				var dv = main().dom
+				print("DOM boxes=", dv.boxes.size())
+				for b in dv.boxes.slice(0, int(s[1]) if s.size() > 1 else 40):
+					print("  ", "  ".repeat(b.depth), b.el.tagName, "#", b.el.id_, ".", ".".join(b.el.classList.d.keys()), " ", b.kind, " [", int(b.x), ",", int(b.y), " ", int(b.w), "x", int(b.h), "] a=", snapped(b.alpha, 0.01), " disp=", b.cs.get("display", ""), " pos=", b.cs.get("position", ""), " bg=", J.str(b.cs.get("background", b.cs.get("background-color", ""))).substr(0, 30), (" txt=" + str(b.lines.size())) if b.kind == "text" else "")
+			"jget":
+				var o = J.G.get(s[1])
+				for k in s.slice(2): print("JGET ", s[1], ".", k, " = ", J.str(J.gp(o, k)).substr(0, 160), "  type=", typeof(J.gp(o, k)))
+			"jeval":
+				# 用法 ["jeval", "Battle", "units"] → 逐個印
+				var arr = J.gp(J.G.get(s[1]), s[2])
+				for u in J.iter(arr): print("JEV ", J.to_json(u).substr(0, 220))
+			"el":
+				var e = JSRun.query(s[1], null)
+				if e == null: print("EL ", s[1], " = null")
+				else: print("EL ", s[1], " tag=", e.tagName, " cls=", e.classList.d.keys(), " kids=", e.children.size(), " parent=", (e.parentNode.tagName if e.parentNode else "none"), " cs.display=", Css.computed(e, {}).get("display"), " pos=", Css.computed(e, {}).get("position"), " z=", Css.computed(e, {}).get("z-index"), " style=", e.style)
+			"css":
+				var e2 = JSRun.query(s[1], null)
+				if e2: print("CSS ", s[1], " ", e2.props.get("_cs", {}).keys().filter(func(k): return k.begins_with("back") or k == "display" or k == "opacity"), " bg=", J.str(e2.props.get("_cs", {}).get("background", "")).substr(0, 200), " bgi=", J.str(e2.props.get("_cs", {}).get("background-image", "")).substr(0, 120), " bgc=", e2.props.get("_cs", {}).get("background-color"))
 			"quit": get_tree().quit(); return

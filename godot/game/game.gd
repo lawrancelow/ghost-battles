@@ -16,6 +16,9 @@ var TIME_SCALE = 1.0
 var exp_acc = 0.0
 var story_busy = func() -> bool: return false   # 由 Story 接管
 var modal_open = func() -> bool: return false
+var js_mode := false   # true = 遊戲邏輯由轉譯版 JS 跑，呢度只做轉駁
+func jcall(n: String, a: Array = []): return J.cl(J.G.get(n), null, a)
+func jm(o: String, m: String, a: Array = []): return J.mc(J.G.get(o), m, a)
 
 func now_ms() -> float: return Time.get_unix_time_from_system() * 1000.0
 func D(n: String) -> Variant: return DB.D[n]
@@ -41,6 +44,7 @@ func new_state() -> Dictionary:
 
 # ---------------- 存檔 ----------------
 func save() -> void:
+	if js_mode: jcall("save"); return
 	if S.is_empty(): return
 	S.last = now_ms()
 	var prev = _read(SAVE_PATH)
@@ -222,6 +226,7 @@ func canPay(c: Dictionary) -> bool:
 		if float(S.res.get(k, 0)) < float(c[k]) - 1e-6: return false
 	return true
 func pay(c: Dictionary) -> void:
+	if js_mode: jcall("pay", [c]); return
 	for k in c: S.res[k] = float(S.res[k]) - float(c[k])
 func costText(c: Dictionary) -> String:
 	var parts = []
@@ -232,6 +237,7 @@ func costText(c: Dictionary) -> String:
 		parts.append(t if ok else "[color=#ff8a7a]%s[/color]" % t)
 	return "　".join(parts)
 func give(r: Dictionary) -> String:
+	if js_mode: return JSBridge.html2bb(J.str(jcall("give", [r])))
 	var parts = []
 	for k in r:
 		if k == "exp": gainExp(r.exp); parts.append("好評 +%d" % int(r.exp))
@@ -239,6 +245,7 @@ func give(r: Dictionary) -> String:
 		else: S.res[k] = float(S.res.get(k, 0)) + float(r[k]); parts.append("%s +%s" % [D("RES_NAMES")[k], fmt(r[k])])
 	return "，".join(parts)
 func gainExp(n: float, _silent := false) -> void:
+	if js_mode: jcall("gainExp", [n]); return
 	S.exp = float(S.exp) + n; var up = false
 	while S.lv < 20 and S.exp >= expNeed(S.lv):
 		S.exp -= expNeed(S.lv); S.lv = int(S.lv) + 1; up = true; onLevelUp(int(S.lv))
@@ -255,6 +262,7 @@ func onLevelUp(lv: int) -> void:
 		story_req.emit("gift_xiaozhi", Callable())
 		story_req.emit("gift_xiaozhi2", func(): joinGhost("xiaozhi"))
 func joinGhost(k: String) -> void:
+	if js_mode: jcall("joinGhost", [k]); return
 	for g in S.ghosts:
 		if g.k == k: return
 	var d: Dictionary = D("GHOSTS")[k]
@@ -267,6 +275,7 @@ func joinGhost(k: String) -> void:
 	refreshed.emit()
 
 func recruitFodder(rare: bool) -> Dictionary:
+	if js_mode: return jcall("recruitFodder", [rare])
 	var F_: Dictionary = D("FODDER"); var pool = []
 	for k in F_:
 		if F_[k].get("unlock") == null or S.cleared.get(F_[k].unlock, false): pool.append(k)
@@ -333,6 +342,7 @@ func quest_progress(q: Dictionary) -> Array:
 func quest_done(q: Dictionary) -> bool:
 	var p = quest_progress(q); return float(p[0]) >= float(p[1])
 func quest_check() -> void:
+	if js_mode: jm("Quest", "check"); return
 	var q = quest_cur()
 	if q == null: return
 	if quest_done(q) and not story_busy.call(): quest_complete()
@@ -350,6 +360,7 @@ func quest_complete() -> void:
 
 # ---------------- 離線收益 ----------------
 func offline_gain() -> void:
+	if js_mode: jcall("offlineGain"); return
 	var sec = minf(8 * 3600, maxf(0, (now_ms() - float(S.get("last", now_ms()))) / 1000.0))
 	if sec < 60: return
 	var before: Dictionary = S.res.duplicate()

@@ -4,7 +4,8 @@
 class_name Ctx
 extends RefCounted
 
-var ci: CanvasItem
+var ci   # CanvasItem 或 Recorder
+var canvas = null   # 對應 JS 嘅 ctx.canvas（El）
 var base = Transform2D.IDENTITY   # 外層（鏡頭／縮放）
 var T = Transform2D.IDENTITY      # 當前變換（含 base）
 var globalAlpha = 1.0
@@ -27,7 +28,7 @@ var _clip = null            # 簡化 clip：只支援矩形（裝置座標 Rect2
 
 const TAU2 := PI * 2.0
 
-func _init(item: CanvasItem, b: Transform2D = Transform2D.IDENTITY) -> void:
+func _init(item, b: Transform2D = Transform2D.IDENTITY) -> void:
 	ci = item; base = b; T = b
 
 # ---------------- 狀態 ----------------
@@ -309,7 +310,7 @@ func _fill_poly(p: PackedVector2Array, style: Variant) -> void:
 	var c = _a(col(style))
 	if c.a <= 0.001: return
 	var cols = PackedColorArray(); cols.resize(q.size()); cols.fill(c)
-	RenderingServer.canvas_item_add_triangle_array(ci.get_canvas_item(), idx, q, cols)
+	_tris(idx, q, cols)
 
 func _dedupe(q: PackedVector2Array) -> PackedVector2Array:
 	var o = PackedVector2Array()
@@ -327,7 +328,7 @@ func _fill_grad_tris(q: PackedVector2Array, idx: PackedInt32Array, g: Grad) -> v
 		_subtri(A, B, C, sub, g, pts, cols)
 	var ii = PackedInt32Array(); ii.resize(pts.size())
 	for k in pts.size(): ii[k] = k
-	RenderingServer.canvas_item_add_triangle_array(ci.get_canvas_item(), ii, pts, cols)
+	_tris(ii, pts, cols)
 
 func _subtri(A: Vector2, B: Vector2, C: Vector2, n: int, g: Grad, pts: PackedVector2Array, cols: PackedColorArray) -> void:
 	var P = func(i: int, j: int) -> Vector2: return A + (B - A) * (float(i) / n) + (C - A) * (float(j) / n)
@@ -361,7 +362,7 @@ func _linear_rect(x: float, y: float, w: float, h: float, g: Grad) -> void:
 		for i in range(n):
 			var a = j * (n + 1) + i
 			idx.append_array([a, a + 1, a + n + 1, a + 1, a + n + 2, a + n + 1])
-	RenderingServer.canvas_item_add_triangle_array(ci.get_canvas_item(), idx, pts, cols)
+	_tris(idx, pts, cols)
 
 func _radial_rect(x: float, y: float, w: float, h: float, g: Grad) -> void:
 	# 光暈：以漸變中心畫同心圓環（外面＝最後一格顏色；透明就唔畫）
@@ -387,23 +388,43 @@ func _radial_rect(x: float, y: float, w: float, h: float, g: Grad) -> void:
 	ci.draw_set_transform_matrix(Transform2D.IDENTITY)
 	# 粗略裁到 rect（光暈通常 rect 包住個圓）
 	if not rect_dev.has_point(c1): return
-	RenderingServer.canvas_item_add_triangle_array(ci.get_canvas_item(), idx, pts, cols)
+	_tris(idx, pts, cols)
 	if outside.a > 0.01:
 		var oc = _a(outside)
 		# 外圈：rect 減圓，簡單用四條帶
 		ci.draw_rect(rect_dev, Color(oc, 0.0), false)
 
+func _tris(idx: PackedInt32Array, pts: PackedVector2Array, cols: PackedColorArray, uvs := PackedVector2Array(), tex = null) -> void:
+	if ci is Recorder: ci.tris(idx, pts, cols, uvs, tex); return
+	if tex != null: RenderingServer.canvas_item_add_triangle_array(ci.get_canvas_item(), idx, pts, cols, uvs, PackedInt32Array(), PackedFloat32Array(), tex.get_rid())
+	else: RenderingServer.canvas_item_add_triangle_array(ci.get_canvas_item(), idx, pts, cols)
+
 func strokeRect(x: float, y: float, w: float, h: float) -> void:
 	beginPath(); rect(x, y, w, h); stroke()
 
-func clearRect(_x: float, _y: float, _w: float, _h: float) -> void:
-	pass
+func clearRect(_x = 0.0, _y = 0.0, _w = 0.0, _h = 0.0) -> void:
+	if ci is Recorder: ci.clear()
+func fill_rect_clear(): pass
+func getImageData(_a = 0, _b = 0, _c = 0, _d = 0): return null
+func putImageData(_a = null, _b = 0, _c = 0) -> void: pass
+func createPattern(_a = null, _b = null): return null
+func isPointInPath(_a = null, _b = null, _c = null) -> bool: return false
+func setLineDashOffset(_a = 0) -> void: pass
 
 # ---------------- 圖片 ----------------
 # drawImage(tex, dx, dy) / (tex, dx, dy, dw, dh) / (tex, sx, sy, sw, sh, dx, dy, dw, dh)
-func drawImage(tex: Texture2D, a: float, b: float, c = null, d = null, e = null, f = null, g = null, h = null) -> void:
+func drawImage(src, a: float, b: float, c = null, d = null, e = null, f = null, g = null, h = null) -> void:
+	if src == null: return
+	var tex: Texture2D = null
+	if src is Texture2D: tex = src
+	elif src is Object and src.has_method("js_tex"):
+		tex = src.js_tex()
+		if tex == null:
+			var rec = src.js_rec()
+			if rec != null: _draw_rec(rec, src, a, b, c, d, e, f, g, h)
+			return
 	if tex == null: return
-	var m = _mod()
+	var m := _mod()
 	if m.a <= 0.001: return
 	ci.draw_set_transform_matrix(T)
 	if e == null:
@@ -414,6 +435,21 @@ func drawImage(tex: Texture2D, a: float, b: float, c = null, d = null, e = null,
 		ci.draw_texture_rect_region(tex, Rect2(float(e), float(f), float(g), float(h)), Rect2(a, b, float(c), float(d)), m)
 	ci.draw_set_transform_matrix(Transform2D.IDENTITY)
 
+# 畫另一塊（錄製）畫布：只支援整塊或者整塊縮放；9 參數嘅源矩形用變換對應（唔裁切）
+func _draw_rec(rec: Recorder, el, a, b, c, d, e, f, g, h) -> void:
+	var cw: float = rec.width; var chh: float = rec.height
+	var M := Transform2D.IDENTITY
+	if e == null:
+		var w: float = cw if c == null else float(c); var hh: float = chh if d == null else float(d)
+		M = Transform2D(Vector2(w / maxf(1, cw), 0), Vector2(0, hh / maxf(1, chh)), Vector2(a, b))
+	else:
+		var sx: float = a; var sy: float = b; var sw: float = float(c); var sh: float = float(d)
+		var dx: float = float(e); var dy: float = float(f); var dw: float = float(g); var dh: float = float(h)
+		M = Transform2D(Vector2(dw / maxf(0.001, sw), 0), Vector2(0, dh / maxf(0.001, sh)), Vector2(dx, dy)) * Transform2D(0.0, Vector2(-sx, -sy))
+	if ci is Recorder: ci.rec(rec, T * M, globalAlpha); return
+	rec.replay(ci, T * M, globalAlpha)
+	ci.draw_set_transform_matrix(Transform2D.IDENTITY)
+
 # 網格貼圖（MeshAnim 用）：pts 已係本地座標，會套當前變換
 func drawTriangles(tex: Texture2D, pts: PackedVector2Array, uvs: PackedVector2Array, idx: PackedInt32Array, tint := Color.WHITE) -> void:
 	var m = _mod() * tint
@@ -422,7 +458,7 @@ func drawTriangles(tex: Texture2D, pts: PackedVector2Array, uvs: PackedVector2Ar
 	for i in pts.size(): dev[i] = T * pts[i]
 	var cols = PackedColorArray(); cols.resize(pts.size()); cols.fill(m)
 	ci.draw_set_transform_matrix(Transform2D.IDENTITY)
-	RenderingServer.canvas_item_add_triangle_array(ci.get_canvas_item(), idx, dev, cols, uvs, PackedInt32Array(), PackedFloat32Array(), tex.get_rid())
+	_tris(idx, dev, cols, uvs, tex)
 
 # ---------------- 文字 ----------------
 static var _fonts = {}

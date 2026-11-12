@@ -2,6 +2,7 @@
 extends Control
 
 var village: Control
+var dom: Control
 var quest_bar: PanelContainer
 var quest_lbl: RichTextLabel
 var quest_prog: Label
@@ -34,18 +35,49 @@ const TOP_H := 102.0
 const NAV_H := 58.0
 
 func _ready() -> void:
+	print("[boot] main ready")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var bg = ColorRect.new(); bg.color = UIKit.INK; bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(bg)
-	var fresh = G.start()
 	_build_village(); _build_top(); _build_nav(); _build_sheet()
 	story = Control.new(); story.set_script(load("res://ui/story.gd")); add_child(story)
 	_build_fx()
 	move_child(praise_box, sheet.get_index())   # 系統誇獎喺村子層，面板蓋住佢（同網頁版 z-index 一樣）
-	G.modal_open = func() -> bool: return sheet.visible
+	G.modal_open = func() -> bool: return J.t(J.mc(J.G.get("UI"), "modalOpen", []))
 	G.refreshed.connect(refresh); G.toast.connect(show_toast); G.banner.connect(show_banner); G.praise.connect(show_praise)
-	refresh()
-	_show_title(fresh)
 	get_tree().auto_accept_quit = false
+	# ---- 轉譯版 JS 遊戲：逐個模塊載入（每幀一個），顯示進度 ----
+	_boot_js()
+
+var loading: Control
+func _boot_js() -> void:
+	loading = ColorRect.new(); loading.color = Color("#0d0b10"); loading.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(loading)
+	var cov = TextureRect.new(); cov.texture = Spr.get_tex("cover"); cov.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; cov.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	cov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); cov.modulate = Color(0.55, 0.55, 0.55); loading.add_child(cov)
+	var lb = UIKit.label("陰間連線中…", 16, Color("#f3e6c8"), "serif", 900); lb.anchor_left = 0; lb.anchor_right = 1; lb.anchor_top = 0.82; lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; loading.add_child(lb)
+	var bar_bg = ColorRect.new(); bar_bg.color = Color("#3a2e26"); bar_bg.anchor_left = 0.15; bar_bg.anchor_right = 0.85; bar_bg.anchor_top = 0.87; bar_bg.anchor_bottom = 0.87; bar_bg.offset_bottom = 6; loading.add_child(bar_bg)
+	var bar = ColorRect.new(); bar.color = Color("#c2362b"); bar.size = Vector2(0, 6); bar_bg.add_child(bar)
+	await get_tree().process_frame
+	var t0 = Time.get_ticks_msec()
+	JSBridge.install_natives(JSRun)
+	JSRun.boot_dom("res://web/shell.html")
+	dom = Control.new(); dom.set_script(load("res://ui/dom_view.gd")); add_child(dom); move_child(dom, sheet.get_index())
+	var names = FileAccess.get_file_as_string("res://jsgen/modules.txt").split("\n", false)
+	for i in names.size():
+		JSRun.load_modules([names[i]])
+		bar.size.x = bar_bg.size.x * float(i + 1) / names.size()
+		await get_tree().process_frame
+	print("[boot] modules ", Time.get_ticks_msec() - t0, "ms")
+	JSBridge.connect_ui(self)
+	village.bind(JSRun.by_id("village"))
+	J.cl(J.G.get("startGame"), null, [])
+	G.S = J.G["S"]; G.js_mode = true
+	J.mc(J.G.get("Village"), "resize", [])
+	refresh()
+	loading.queue_free(); loading = null
+	print("[boot] ready ", Time.get_ticks_msec() - t0, "ms")
+
+func _process_js_state() -> void:
+	if J.G.get("S") is Dictionary and not is_same(J.G["S"], G.S): G.S = J.G["S"]
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_APPLICATION_FOCUS_OUT:
@@ -54,20 +86,16 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_RESUMED and not G.S.is_empty() and title_ov == null: G.offline_gain()
 
 func _process(dt: float) -> void:
-	if G.S.is_empty() or title_ov != null: return
-	G.produce(minf(dt, 0.1) * G.TIME_SCALE)
+	if loading != null: return
+	_process_js_state()
 	ui_t += dt
-	if ui_t > 0.5: ui_t = 0; refresh(); G.quest_check()
-	save_t += dt
-	if save_t > 5: save_t = 0; G.save()
+	if ui_t > 0.5 and title_ov == null: ui_t = 0; refresh()
 
 # ---------------- 版面 ----------------
 func _build_village() -> void:
-	village = Control.new(); village.set_script(load("res://game/village.gd"))
+	village = Control.new(); village.set_script(load("res://ui/js_canvas_view.gd"))
 	village.anchor_right = 1; village.anchor_bottom = 1; village.offset_top = TOP_H; village.offset_bottom = -NAV_H
 	add_child(village)
-	village.open_building.connect(open_building)
-	village.open_gate.connect(func(): show_toast("出村（世界地圖、地盤、陽間站崗、樓裡有鬼…）：下一階段移植"))
 	quest_bar = PanelContainer.new()
 	var s = UIKit.sb(UIKit.PAPER, 2, UIKit.PAPERLINE, 1, Vector4(7, 7, 12, 7)); s.shadow_color = Color(0, 0, 0, 0.35); s.shadow_size = 0; s.shadow_offset = Vector2(0, 3)
 	quest_bar.add_theme_stylebox_override("panel", s)
@@ -83,8 +111,8 @@ func _build_village() -> void:
 		if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
 			var q = G.quest_cur()
 			if q and q.go == "roster": open_roster(); return
-			var p = village.quest_target()
-			if p: close_sheet(); village.focus(p[0], p[1]))
+			var p = J.mc(J.G.get("Village"), "questTarget", [])
+			if p: close_sheet(); J.mc(J.G.get("Village"), "focus", [p[0], p[1]]))
 
 func _build_top() -> void:
 	var top = Panel.new(); top.anchor_right = 1; top.offset_bottom = TOP_H
@@ -149,16 +177,13 @@ func _nav_on(t: String) -> void:
 		var on: bool = k == t
 		nav_btns[k][1].texture = load("res://assets/ui/n-%s%s.svg" % [k, "_on" if on else ("_main" if k == "battle" else "")])
 		nav_btns[k][2].add_theme_color_override("font_color", UIKit.GOLD2 if on else (Color("#f0c8a0") if k == "battle" else Color("#b8a08e")))
-	village.set("pointer_on", t == "village")
+	var jui = J.G.get("UI")
+	if jui is Dictionary: jui["tab"] = t
 
 func _nav(t: String) -> void:
-	match t:
-		"village": close_sheet()
-		"roster": open_roster()
-		"battle": show_toast("地盤（世界地圖、搶地盤戰鬥）：下一階段移植"); return
-		"chest": open_chests()
-		"story": open_story()
-	_nav_on(t)
+	var ui = J.G.get("UI")
+	if t == "battle": J.mc(J.G.get("UI"), "close", []); J.mc(J.G.get("World"), "open", []); return
+	J.mc(ui, "open", [t])
 
 func _build_sheet() -> void:
 	sheet = Panel.new(); sheet.anchor_right = 1; sheet.anchor_top = 0.16; sheet.anchor_bottom = 1; sheet.visible = false
@@ -295,7 +320,7 @@ func _render_building(id: String) -> void:
 		var bs = []
 		for n in [1, 5, 10]:
 			var nn: int = n
-			bs.append(_act(UIKit.btn("做%d份" % n if n == 1 else "一次做%d份" % n, "", true), func(): close_sheet(); _nav_on("village"); village.craft(id, nn), can >= 1))
+			bs.append(_act(UIKit.btn("做%d份" % n if n == 1 else "一次做%d份" % n, "", true), func(): close_sheet(); _nav_on("village"); J.mc(J.G.get("Village"), "craft", [id, nn]), can >= 1))
 		_row("親手做：每份 4 %s　好評 +1\n[font_size=12]現有%s %d，夠做 %d 份[/font_size]" % ["槐木 → 2 棺材板" if id == "plank" else "糯米 → 2 壽包", D.RES_NAMES[src], int(S.res[src]), can], bs)
 	if id == "furnace":
 		var left = maxf(0, G.furnaceCD - (G.now_ms() - float(S.furnaceAt)) * G.TIME_SCALE / 1000)
@@ -473,15 +498,16 @@ func open_story() -> void:
 		var o = G.dec(ta.text if ta.text.strip_edges() != "" else DisplayServer.clipboard_get())
 		if o == null: show_toast("存檔碼讀唔到，檢查吓有冇貼齊"); return
 		if not im.has_meta("armed"): im.set_meta("armed", 1); im.text = "再按一次：換成主公 %d 級嘅存檔" % int(o.get("lv", 1)); return
-		G.import_code(ta.text if ta.text.strip_edges() != "" else DisplayServer.clipboard_get()); close_sheet(); _nav_on("village"); refresh(); show_toast("存檔已導入"))
+		import_save(ta.text if ta.text.strip_edges() != "" else DisplayServer.clipboard_get()))
 	var rs = UIKit.btn("重新開始（刪除存檔）", "ghost"); sheet_body.add_child(rs)
 	rs.pressed.connect(func():
 		if not rs.has_meta("armed"): rs.set_meta("armed", 1); rs.text = "再按一次確定刪檔"; return
-		G.reset(); close_sheet(); refresh(); _nav_on("village"))
+		restart_with(null, true))
 	_p("[font_size=11]Godot 版 %s（對應網頁版 %s）[/font_size]" % [ProjectSettings.get_setting("application/config/version", "dev"), D.get("GAME_VER", "")], 11)
 
 # ---------------- 標題畫面 ----------------
 func _show_title(fresh: bool) -> void:
+	if JSRun.skip_title: JSRun.skip_title = false; return
 	title_ov = Control.new(); title_ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); title_ov.mouse_filter = Control.MOUSE_FILTER_STOP; add_child(title_ov)
 	var bg = ColorRect.new(); bg.color = Color("#2e2422"); bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); title_ov.add_child(bg)
 	# 封面：寬度鋪滿、靠頂（background-size:100% auto; position:center top），底部漸變接返底色
@@ -518,16 +544,13 @@ func _show_title(fresh: bool) -> void:
 
 func _title_cont(fresh: bool) -> void:
 	if fresh: return
-	_hide_title(); G.offline_gain()
+	_hide_title(); G.offline_gain()   # 網頁版：繼續遊戲 → 結算離線收益
 
 func _title_new(fresh: bool, bn: TextureButton, hint: Label) -> void:
 	if not fresh and not bn.has_meta("armed"):
 		bn.set_meta("armed", 1); hint.text = "會刪掉現在的存檔。再點一次「開始新遊戲」確定。"; return
-	if not fresh: G.reset()
+	if not fresh: restart_with(null, true); return
 	_hide_title(); refresh()
-	var q = G.quest_cur()
-	if q and q.get("onStart"):
-		for id in q.onStart: story.queue(id)
 
 func _vgrad(stops: Array) -> GradientTexture2D:
 	var gt = GradientTexture2D.new(); var gr = Gradient.new()
@@ -541,3 +564,24 @@ func _gray_mat() -> ShaderMaterial:
 
 func _hide_title() -> void:
 	if title_ov: title_ov.queue_free(); title_ov = null
+
+# ---------------- 存檔：經 JS 嘅 localStorage，然後重新載入場景（同網頁版 location.reload 一樣）----------------
+const SAVE_KEY := "ghostBattles_v1"
+func import_save(code: String) -> bool:
+	var o = G.dec(code)
+	if o == null: show_toast("存檔碼讀唔到，檢查吓有冇貼齊"); return false
+	o.last = G.now_ms()
+	restart_with(o, true); return true
+
+func restart_with(save, skip_title: bool) -> void:
+	if JSRun.ls.has(SAVE_KEY): JSRun.ls[SAVE_KEY + "_bak"] = JSRun.ls[SAVE_KEY]
+	if save == null: JSRun.ls.erase(SAVE_KEY)
+	else: JSRun.ls[SAVE_KEY] = J.to_json(save)
+	JSRun.flush_ls()
+	JSRun.skip_title = skip_title
+	JSRun.reset_world()
+	get_tree().call_deferred("reload_current_scene")
+
+func open_html_sheet(title: String, html: String) -> void:
+	open_sheet(title); _clear_body()
+	_p(JSBridge.html2bb(html), 14, UIKit.INKTXT)

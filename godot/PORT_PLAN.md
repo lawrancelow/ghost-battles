@@ -3,7 +3,29 @@
 方針：GDScript 原生重寫，分階段逐個玩法搬；邏輯、數值、文字、美術同網頁版一致；以後方便擴展。
 引擎：Godot 4.3（GL Compatibility 渲染，手機／網頁都穩）。導出：網頁、Android、Windows、Mac、iOS（Xcode 工程）。
 
-## 一、架構
+
+## 〇、2026-11-12 晚：架構升級（v0.2）——整個網頁版轉譯落 Godot
+
+第一階段係人手逐句搬；而家改為**自動轉譯**，所有玩法一次過搬晒：
+
+| 位置 | 作用 |
+|---|---|
+| `tools/jsgd/jsgd.js` | JS → GDScript 轉譯器（acorn 解析；閉包變數裝入作用域字典；表達式降級；switch/for/解構/展開/getter 都支援）。`tools/jsgd/build.sh` 一鍵轉晒 61 個模塊 → `jsgen/*.gd` |
+| `tools/jsgd/patches.js` | 轉譯前嘅原碼修改：熱點交俾原生（例如 meshanim 嘅網格變形 → `MeshAnim.draw_js`） |
+| `js/j.gd`（class `J`） | JS 運行庫：真假值、加減、比較、屬性讀寫、方法分派、JSON/Object/Array/Math/Date… |
+| `js/ja.gd` `js/jstr.gd` `js/jsmap.gd` `js/jsset.gd` `js/jsregexp.gd` `js/jspromise.gd` `js/jspath.gd` | 陣列／字串／Map／Set／正則／Promise／Path2D |
+| `js/jsrun.gd`（autoload `JSRun`） | 宿主：計時器、requestAnimationFrame、localStorage（user://localStorage.json）、window/document、模塊載入 |
+| `js/el.gd` `js/html.gd` `js/css.gd` | DOM 替身＋HTML 解析＋CSS 引擎（讀網頁版 style.css 同各模塊動態加嘅 `<style>`） |
+| `js/recorder.gd` `js/baker.gd` | 每塊 `<canvas>` 係錄製器；Godot 喺 `_draw` 重播；大嘅靜態畫布自動拍成貼圖 |
+| `ui/dom_view.gd` | 把各玩法嘅 HTML 介面按 CSS 排版畫出嚟（block／flex／absolute／文字換行／背景圖／圓角），撳嘢轉做 click/pointer 事件 |
+| `ui/js_canvas_view.gd` | 村子畫布顯示＋觸控 |
+| `js/bridge.gd` | 原生替身（SPR、sprOk、網格變形、Web）＋ JS 介面（Story、Fx、Title、Phone）轉駁去 Godot |
+
+**移植程度**：原碼 3120KB，轉譯並喺 Godot 跑緊 3056KB ＝ **98%**（全部 61 個遊戲模塊；冇轉嘅只有瀏覽器啟動器 web.js 同圖片數據檔，圖片已另外導出成素材）。
+**已實機驗證（截圖＋0 個腳本錯誤）**：村子全套生活、建築／名冊／箱子／劇情面板、陰間地圖、搶地盤戰鬥、陽間站崗地圖、樓裡有鬼入口、冥街夜市、亂葬崗、夜班嚇人選隊。
+**未完成**：聲音（WebAudio 合成未接）、手機序章（Phone）、部分 CSS 細節（偽元素 ::before/::after、陰影、動畫過渡）、各玩法深入流程未逐一試玩、網頁版 Godot 匯出效能慢（建議用 App）。
+
+## 一、架構（第一階段，人手移植部分；仍保留做原生底層）
 
 | 位置 | 作用 |
 |---|---|
