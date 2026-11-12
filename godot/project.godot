@@ -1,0 +1,68 @@
+; 過勞鬼大作戰 Godot 版
+config_version=5
+
+[application]
+config/name="過勞鬼大作戰"
+config/version="0.1.0"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+config/icon="res://icon.png"
+boot_splash/bg_color=Color(0.086, 0.075, 0.106, 1)
+boot_splash/show_image=false
+
+[autoload]
+DB="*res://core/db.gd"
+Spr="*res://core/spr.gd"
+MeshAnim="*res://core/meshanim.gd"
+Limbs="*res://core/limbs.gd"
+Art="*res://core/art.gd"
+G="*res://game/game.gd"
+Tst="*res://core/tester.gd"
+
+[display]
+window/size/viewport_width=390
+window/size/viewport_height=844
+window/size/window_width_override=450
+window/size/window_height_override=975
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep_width"
+window/handheld/orientation=1
+
+[gui]
+theme/custom_font="res://fonts/sans_r.otf"
+common/drop_mouse_on_gui_input_disabled=true
+
+[input_devices]
+pointing/emulate_touch_from_mouse=false
+pointing/emulate_mouse_from_touch=true
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=1
+environment/defaults/default_clear_color=Color(0.086, 0.075, 0.106, 1)
+anti_aliasing/quality/msaa_2d=0
+textures/vram_compression/import_etc2_astc=true
+
+[debug]
+gdscript/warnings/untyped_declaration=0
+gdscript/warnings/inference_on_variant=0
+gdscript/warnings/unsafe_property_access=0
+gdscript/warnings/unsafe_method_access=0
+gdscript/warnings/unsafe_cast=0
+gdscript/warnings/unsafe_call_argument=0
+gdscript/warnings/integer_division=0
+gdscript/warnings/narrowing_conversion=0
+gdscript/warnings/shadowed_variable=0
+gdscript/warnings/unused_variable=0
+gdscript/warnings/unused_parameter=0
+gdscript/warnings/return_value_discarded=0
+gdscript/warnings/confusable_local_declaration=0
+
+[importer_defaults]
+texture={
+"compress/mode": 1,
+"compress/lossy_quality": 0.92,
+"mipmaps/generate": false,
+"process/fix_alpha_border": true
+}
