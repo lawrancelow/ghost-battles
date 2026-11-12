@@ -22490,7 +22490,7 @@ const Street = (() => {
     offline();
     let el = $('#st-street'); if (!el) { el = document.createElement('section'); el.id = 'st-street'; document.body.appendChild(el); }
     const src = has(SPR_SRC) && SPR_SRC.st_street || '';
-    let h = `<div class="sts-top"><button class="sts-back" id="sts-back">◀ ${T('返陰間', '回陰間')}</button><b>${T('陽間街・站崗', '陽間街・站崗')}</b><span>${T('冥幣', '冥幣')} ${Math.floor(S.res.coins || 0)}</span></div>`;
+    let h = `<div class="sts-top"><button class="sts-back" id="sts-back">◀ ${T('返陰間', '回陰間')}</button><b>${T('陽間街・站崗', '陽間街・站崗')}</b><span>${T('村莊發展收入', '村莊發展收入')} +${devTotalRate()}/${T('分', '分')}</span></div>`;
     h += `<div class="sts-map" style="background-image:url('${src}')">`;
     for (const d of SITES) {
       const sd = site(d.id), held = sd.posts.filter(p => p && p.g != null).length, lost = sd.posts.filter(p => p && p.b).length;
@@ -22508,21 +22508,36 @@ const Street = (() => {
     $('#sts-gate').onclick = () => { if (!ghostClick()) closeStreet(); };
   }
   function closeStreet() { const el = $('#st-street'); if (el) { el.classList.remove('on'); el.innerHTML = ''; } document.body.classList.remove('st-on'); save_(); if (has(UI) && UI.refresh) UI.refresh(); }
-  // 離線：按最近每分鐘收入嘅一半補，最多 8 小時
-  function offline() {
-    const s = st(), now = Date.now(), mins = Math.min(480, (now - (s.last || now)) / 60000); s.last = now;
-    const anyPost = SITES.some(d => site(d.id).posts.some(p => p && p.g != null));
-    if (mins >= 3 && anyPost && s.rate > 0) { const got = Math.round(s.rate * 0.5 * mins); if (got > 0) { S.res.coins = (S.res.coins || 0) + got; Fx.toast(T(`你唔喺度嗰陣，站崗嘅鬼嚇走咗唔少人：冥幣 +${got}`, `你不在的時候，站崗的鬼嚇走了不少人：冥幣 +${got}`)); } }
-    save_();
+  // ---------- 本關冥幣＋村莊發展收入 ----------
+  // 本關冥幣（sd.wal）：每個地盤自己一個錢包，只喺嗰關入面用（起設備、升級、開房、請鬼），唔帶入、唔帶出。
+  // 佔領度（sd.occ）：最近 60 個路人入面嚇走嘅比例；≥50% 先會俾村莊「發展收入」（入 WAL.v，離線照計，最多 8 小時）。
+  const WAL = { get v() { const sd = Turf && Turf.sd; return sd ? (sd.wal || 0) : 0; }, set v(x) { const sd = Turf && Turf.sd; if (sd) sd.wal = Math.max(0, Math.round(x)); } };
+  const OCC_N = 60, OCC_MIN = 12, OCC_LINE = 0.5;
+  function occOf(sd) { const h = sd && sd.occH; if (!h || h.length < OCC_MIN) return null; let a = 0; for (const x of h) a += x; return a / h.length; }
+  function occPush(sd, v) { sd.occH = sd.occH || []; sd.occH.push(v ? 1 : 0); if (sd.occH.length > OCC_N) sd.occH.splice(0, sd.occH.length - OCC_N); }
+  function devRate(sd) { const o = occOf(sd); if (o == null || o < OCC_LINE) return 0; if (!(sd.posts || []).some(p => p && p.role)) return 0; return Math.max(1, Math.round((4 + 3 * (sd.maxLv || 1)) * (0.5 + o))); } // 每分鐘
+  function devTotalRate() { const s = st(); let r = 0; for (const k in s.sites) r += devRate(s.sites[k]); return r; }
+  function devTick(showToast) {
+    const s = st(), now = Date.now(); if (!s.devT) { s.devT = now; return 0; }
+    const mins = Math.min(480, (now - s.devT) / 60000); if (mins < 1) return 0;
+    let got = 0; for (const k in s.sites) { const sd = s.sites[k], r = devRate(sd); if (r > 0) { const g = Math.floor(r * mins); sd.devGot = (sd.devGot || 0) + g; got += g; } }
+    s.devT = now; if (got > 0) { S.res.coins = (S.res.coins || 0) + got; s.devSum = (s.devSum || 0) + got;
+      if (showToast || mins >= 3) { try { Fx.toast(T(`地盤發展收入：村莊冥幣 +${got}（${Math.round(mins)} 分鐘）`, `地盤發展收入：村莊冥幣 +${got}（${Math.round(mins)} 分鐘）`)); } catch (e) {} }
+      try { if (has(UI) && UI.refresh && !Turf.on) UI.refresh(); } catch (e) {} save_(); }
+    return got;
   }
+  function offline() { const s = st(); s.last = Date.now(); devTick(true); save_(); }
+  setTimeout(() => { try { devTick(true); } catch (e) {} }, 4000);
+  setInterval(() => { try { devTick(false); } catch (e) {} }, 60000);
 
   // ---------- 地盤場景 ----------
   const Turf = {
     on:false, def:null, sd:null, cv:null, c:null, raf:0, last:0, walkers:[], fx:[], shots:[], spawn:0, crewT:0, len:0, segs:[], box:null, cds:[], rateAcc:0, rateT:0,
     open(id, room) {
       const def = SITES.find(d => d.id === id); if (!def) return; this.room = 0;
-      if (!st().grant) { st().grant = 1; S.res.coins = (S.res.coins || 0) + 600; setTimeout(() => Fx.toast(T('開張資金：冥幣 +600。撳橙色（路）／紫色（牆）格起設備，升級要用冥幣；有啲路人會照電筒、影相，紙皮箱同手推車會擋住驚嚇視線。人齊撳「進入」放佢哋入嚟！', '開張資金：冥幣 +600。點橙色（路）／紫色（牆）格建設備，升級要用冥幣；有些路人會照手電筒、拍照，紙箱和手推車會擋住驚嚇視線。人到齊點「進入」放他們進來！')), 400); }
-      this.def = def; const sd = this.sd = site(id); if (sd.pv !== 6) { sd.pv = 6; sd.posts = []; sd.unlocked = 2; } sd.unlocked = Math.max(2, sd.unlocked || 2); if (sd.modCur == null) sd.modCur = 0.9; sd.bosses = sd.bosses || []; if (sd.special != null) { if (!sd.bosses.includes(sd.special)) sd.bosses.push(sd.special); sd.special = null; }
+      if (false) { setTimeout(() => Fx.toast(T('開張資金：冥幣 +600。撳橙色（路）／紫色（牆）格起設備，升級要用冥幣；有啲路人會照電筒、影相，紙皮箱同手推車會擋住驚嚇視線。人齊撳「進入」放佢哋入嚟！', '開張資金：冥幣 +600。點橙色（路）／紫色（牆）格建設備，升級要用冥幣；有些路人會照手電筒、拍照，紙箱和手推車會擋住驚嚇視線。人到齊點「進入」放他們進來！')), 400); }
+      this.def = def; const sd = this.sd = site(id);
+      if (sd.wal == null) { sd.wal = 600; setTimeout(() => Fx.toast(T('本關開張資金：冥幣 +600（只可以喺呢個地盤用，唔帶得走）。嚇走路人會賺返本關冥幣，留住慢慢起設備、升級。佔領度過 50%，村莊就會有發展收入！', '本關開張資金：冥幣 +600（只能在這個地盤用，帶不走）。嚇跑路人會賺回本關冥幣，存起來慢慢建設、升級。佔領度超過 50%，村莊就會有發展收入！')), 400); } if (sd.pv !== 6) { sd.pv = 6; sd.posts = []; sd.unlocked = 2; } sd.unlocked = Math.max(2, sd.unlocked || 2); if (sd.modCur == null) sd.modCur = 0.9; sd.bosses = sd.bosses || []; if (sd.special != null) { if (!sd.bosses.includes(sd.special)) sd.bosses.push(sd.special); sd.special = null; }
       this.lay = longLay(def.long, sd.unlocked, def.rn, def.id); this.fixPosts(); if (typeof STN_FG_preload === 'function') STN_FG_preload(def.id);
       // 血量補正 max：Σ裝置等級 ÷ 最高裝置等級（原作只喺開局／讀檔計一次）
       const blt = sd.posts.filter(p => p && p.role), mx = blt.reduce((a, p) => Math.max(a, p.lv || 1), 0); this.modMax = blt.length ? blt.reduce((a, p) => a + (p.lv || 1), 0) / mx : 1;
@@ -22590,7 +22605,7 @@ const Street = (() => {
       const log = sd.sqLog || (sd.sqLog = { win:0, lose:0, exposed:0 }), res = win ? 'win' : smooth ? 'exposed' : 'lose'; log[res]++; log[sq.kind + '_' + res] = (log[sq.kind + '_' + res] || 0) + 1;
       const pos = this.wp(last), nm = T(S0.n[0], S0.n[1]), siteN = T(this.def.n, this.def.zh);
       const shot = this.sqShot(pos, win, sq);
-      if (win) { const v = Math.round(5 + (1 - Math.min(1, sq.leaked / sq.mem.length)) * 3); const m = addHot(sd, v, this.def); sd.panic = 120; const bonus = this.unit() * 12; S.res.coins = (S.res.coins || 0) + bonus; sd.coins += bonus;
+      if (win) { const v = Math.round(5 + (1 - Math.min(1, sq.leaked / sq.mem.length)) * 3); const m = addHot(sd, v, this.def); sd.panic = 120; const bonus = this.unit() * 12; WAL.v = WAL.v + bonus; sd.coins += bonus;
         this.slowmo = 0.9; this.flash = 0.3; this.shake = 0.4; this.cap(T('嚇爆！', '嚇爆！'), pos[0], pos[1] - 0.12, { col:'#ff3b2f', size:40, style:'pop', font:'serif' });
         this.float(pos[0], pos[1] - 0.05, T(`傳說名氣 +${v}・冥幣 +${bonus}`, `傳說名氣 +${v}・冥幣 +${bonus}`), '#ffd45a'); if (m) Fx.toast(m); }
       else { const v = smooth ? -10 : -6; const m = addHot(sd, v, this.def); sd.badPress = 120; this.float(pos[0], pos[1] - 0.05, T(`傳說名氣 ${v}`, `傳說名氣 ${v}`), '#ff8a8a'); if (m) Fx.toast(m); }
@@ -22697,7 +22712,7 @@ const Street = (() => {
       const sd = this.sd, pos = this.wp(w); w.gone = 'run'; w.runT = 0; w.runPath = [pos].concat(w.hist.slice(-5).reverse()); this.say(w, true);
       for (let j = 0; j < 5; j++) this.parts.push({ kind:'coin', x:pos[0] + R(-0.03, 0.03), y:pos[1] - 0.05, life:0.9 + j * 0.08, k:-j * 0.08 });
       const cap = this.incomeCap(), coin = Math.floor(w.award * coP(w.d > cap ? cap : Math.min(sd.lv, cap)) * 1.15 * (sd.badPress > 0 ? 0.8 : 1));
-      sd.scared++; sd.jar = (sd.jar || 0) + 1; if (sd.jar % 40 === 0) { const bonus = this.unit() * 20; S.res.coins = (S.res.coins || 0) + bonus; Fx.toast(T(`收集罐滿咗！冥幣 +${bonus}`, `收集罐滿了！冥幣 +${bonus}`)); } S.res.coins = (S.res.coins || 0) + coin; sd.coins += coin; this.rateAcc += coin;
+      sd.scared++; occPush(sd, 1); sd.jar = (sd.jar || 0) + 1; if (sd.jar % 40 === 0) { const bonus = this.unit() * 20; WAL.v = WAL.v + bonus; Fx.toast(T(`收集罐滿咗！冥幣 +${bonus}`, `收集罐滿了！冥幣 +${bonus}`)); } WAL.v = WAL.v + coin; sd.coins += coin; this.rateAcc += coin;
       this.float(pos[0], pos[1] - 0.09, T(`嚇走！冥幣+${coin}`, `嚇跑！冥幣+${coin}`), '#7dffb0');
       const m = addHot(sd, HOT.add, this.def); if (m) Fx.toast(m);
       if (w.tr === 'couple' && w.mate && this.alive(w.mate)) { const mt = w.mate; this.hit(mt, mt.max * 0.45, { force:true }); if (!mt.gone) { mt.back = CELL * 2.5; mt.say = { s:T('等埋我呀！', '等等我啊！'), t:1.4 }; } }
@@ -22706,7 +22721,7 @@ const Street = (() => {
       if (w.tr === 'walkdel') { this.addTrace('bowl', pos[0], pos[1], 90, 6, { by:'rider' }); this.cap(T('份外賣跌咗落地！', '外送掉在地上了！'), pos[0], pos[1] - 0.14, { col:'#ffd0a0', size:13, style:'pop', font:'sans-serif' }); }
       if (w.sq) this.sqMember(w, 'run');
     },
-    leak(w) { const sd = this.sd; sd.leaked++; sd.leakAcc = (sd.leakAcc || 0) + 1; if (sd.leakAcc >= 4) { sd.leakAcc = 0; sd.modCur = Math.max(0.9, (sd.modCur || 0.9) - 0.06); }
+    leak(w) { const sd = this.sd; sd.leaked++; occPush(sd, 0); sd.leakAcc = (sd.leakAcc || 0) + 1; if (sd.leakAcc >= 4) { sd.leakAcc = 0; sd.modCur = Math.max(0.9, (sd.modCur || 0.9) - 0.06); }
       const m = addHot(sd, HOT.leak, this.def), [x, y] = this.lay.nodes[this.lay.last]; this.float(x - 0.08, y - 0.04, T('漏咗一個…名氣 −18', '漏掉一個…名氣 −18'), '#ff8a8a'); if (m) Fx.toast(m); if (w.sq) this.sqMember(w, 'out'); },
     // 排隊：每組 4／5／6 人（排隊區等級），門外最多一組；人齊之後 90 秒自動放行，撳「進入」即刻放
     tick(dt) {
@@ -22774,7 +22789,7 @@ const Street = (() => {
         case 'tianhua': break;
         case 'pontianak': hitAll(live, 10, w => { w.t = Math.max(0.01, w.t - 0.12); }); break;
         case 'eguiking': case 'egui': { const mx = Math.max(0.25, Math.min(0.75, me.x)), my = Math.max(0.35, Math.min(0.8, me.y + 0.15)); U.mouth = [mx, my]; const near = live.filter(w => this.dist(this.wp(w), U.mouth) < 0.55 && !w.crew).slice(0, 6); near.forEach(w => { w.suckFrom = this.wp(w); w.hp = 0; this.scared(w, null); w.gone = 'suck'; w.suckT = 0; w.suckTo = [mx, my - 0.17]; }); for (let j = 0; j < 3; j++) this.addTrace('bowl', mx - 0.12 + j * 0.12, my + 0.05, 110, 6, { by:'eguiking' }); break; }
-        case 'toyol': live.forEach(w => { if (!w.crew) { const c2 = this.unit(); S.res.coins = (S.res.coins || 0) + c2; this.sd.coins += c2; const [x, y] = this.wp(w); for (let j = 0; j < 3; j++) this.parts.push({ kind:'coin', x, y:y - 0.05, life:1 + j * 0.1, k:-j * 0.1 }); } if (w.hp < w.max * 0.6) this.hit(w, w.hp + 1, null, 'face'); else w.react = 0.6; }); break;
+        case 'toyol': live.forEach(w => { if (!w.crew) { const c2 = this.unit(); WAL.v = WAL.v + c2; this.sd.coins += c2; const [x, y] = this.wp(w); for (let j = 0; j < 3; j++) this.parts.push({ kind:'coin', x, y:y - 0.05, life:1 + j * 0.1, k:-j * 0.1 }); } if (w.hp < w.max * 0.6) this.hit(w, w.hp + 1, null, 'face'); else w.react = 0.6; }); break;
         case 'laojiang': U.hop = 0; break;
         case 'xiaozhi': case 'zhiren': hitAll(live, 7, w => { w.block = 2.5; w.papers = 2.5; }); break;
         default: hitAll(live, 8);
@@ -22918,7 +22933,7 @@ const Street = (() => {
           c.fillStyle = 'rgba(5,6,8,0.82)'; c.fillRect(x, b.y, b.w, b.h);
           c.strokeStyle = 'rgba(120,125,130,0.75)'; c.lineWidth = 4; for (let xx = x + 10; xx < x + b.w; xx += 22) { c.beginPath(); c.moveTo(xx, b.y + b.h * 0.08); c.lineTo(xx, b.y + b.h * 0.92); c.stroke(); }
           for (let yy = 0.15; yy < 0.9; yy += 0.1) { c.beginPath(); c.moveTo(x + 6, b.y + b.h * yy); c.lineTo(x + b.w - 6, b.y + b.h * yy); c.stroke(); }
-          const need = UNLOCK[r] || UNLOCK[UNLOCK.length - 1], bd = this.build(), okR = sd.scared >= need.rep, okB = bd >= need.bd, okC = (S.res.coins || 0) >= need.coin, ok = okR && okB && okC;
+          const need = UNLOCK[r] || UNLOCK[UNLOCK.length - 1], bd = this.build(), okR = sd.scared >= need.rep, okB = bd >= need.bd, okC = (WAL.v || 0) >= need.coin, ok = okR && okB && okC;
           const bw = Math.min(b.w * 0.6, 330 * U), bh = 132 * U, bx = x + 16 * U, by = b.y + b.h * 0.42;
           c.fillStyle = ok ? 'rgba(110,20,20,0.96)' : 'rgba(26,28,32,0.96)'; c.fillRect(bx, by, bw, bh); c.strokeStyle = ok ? '#ffd45a' : '#666'; c.lineWidth = 3; c.strokeRect(bx, by, bw, bh);
           c.fillStyle = '#f1e6d6'; c.textAlign = 'center'; c.font = `900 ${15 * U}px sans-serif`; c.fillText(`${T(nm[0], nm[1])}${T('（鐵閘鎖住）', '（鐵閘鎖住）')}`, bx + bw / 2, by + 24 * U);
@@ -23030,7 +23045,7 @@ const Street = (() => {
     tryGate(x, y) {
       const b = this.box; for (const g of this.gates || []) { const gx = b.x + g.x * b.w, gy = b.y + g.y * b.h; if (x >= gx && x <= gx + g.w * b.w && y >= gy && y <= gy + g.h * b.h) {
         if (!g.ok) { Fx.toast(T('惡名、建設度、冥幣三樣都要夠先開到鐵閘', '惡名、建設度、冥幣三項都要達標才能開鐵閘')); return true; }
-        S.res.coins -= g.need.coin; this.sd.unlocked = g.r + 1; this.lay = longLay(this.def.long, this.sd.unlocked, this.def.rn, this.def.id); this.fixPosts(); this.buildPath(); this._cc = {};
+        WAL.v -= g.need.coin; this.sd.unlocked = g.r + 1; this.lay = longLay(this.def.long, this.sd.unlocked, this.def.rn, this.def.id); this.fixPosts(); this.buildPath(); this._cc = {};
         Fx.toast(T('生人入口擴闊咗！新一間房開放：每組多一個人、裝置等級上限 +2。', '生人入口擴闊了！新房間開放：每組多一個人、裝置等級上限 +2。')); save_(); return true; } } return false;
     },
     SPECIAL:['tianhua', 'pontianak', 'eguiking', 'laojiang', 'toyol', 'xiaozhi', 'penanggal', 'pocong', 'mengpo', 'n30_yukionna', 'n30_qionggui', 'n30_guhangui', 'n30_taozhai'],
@@ -23059,7 +23074,7 @@ const Street = (() => {
       else if (k === 'pontianak') { near.filter(x => x[1] < 0.3).forEach(([w]) => { this.hit(w, P * 0.9, g, null); w.t = Math.max(0.01, w.t - 0.06); }); }
       else if (k === 'eguiking' || k === 'egui') { this.hit(near[0][0], P * 2.6, g, null); }
       else if (k === 'laojiang') { const t0 = SP.t; SP.t = Math.min(this.len * 0.92, SP.t + 0.3); F.from = this.at(t0); live.forEach(w => { const pw = this.wp(w); for (let q = 0; q <= 1; q += 0.1) if (this.dist(pw, this.at(t0 + 0.3 * q)) < 0.09) { this.hit(w, P * 1.4, g, null); break; } }); }
-      else if (k === 'toyol') { near.filter(x => x[1] < 0.3).forEach(([w]) => { if (!w.crew) { S.res.coins = (S.res.coins || 0) + 5; const [x, y] = this.wp(w); this.parts.push({ kind:'coin', x, y:y - 0.05, life:1, k:0 }); } this.hit(w, P * 0.4, g, null); }); }
+      else if (k === 'toyol') { near.filter(x => x[1] < 0.3).forEach(([w]) => { if (!w.crew) { WAL.v = WAL.v + 5; const [x, y] = this.wp(w); this.parts.push({ kind:'coin', x, y:y - 0.05, life:1, k:0 }); } this.hit(w, P * 0.4, g, null); }); }
       else if (k === 'xiaozhi') { near.filter(x => x[1] < 0.3).slice(0, 4).forEach(([w]) => { w.block = 2; w.papers = 2; this.hit(w, P * 0.6, g, null); }); }
       else { this.hit(near[0][0], P * 1.5, g, null); }
     },
@@ -23170,7 +23185,7 @@ const Street = (() => {
         if (p.staff != null) { const nm2 = this.staffMul(p).named; c.strokeStyle = nm2 ? `rgba(255,212,90,${0.6 + 0.3 * Math.sin(t * 4)})` : 'rgba(158,240,176,0.7)'; c.lineWidth = 3; c.strokeRect(x0 - 2, y0 - 2, cw + 4, ch + 4); c.fillStyle = nm2 ? '#ffd45a' : '#9ef0b0'; c.font = `bold ${9 * U}px sans-serif`; c.textAlign = 'right'; c.fillText(T('加持', '加持') + (nm2 ? '★' : ''), x0 + cw - 2, y0 + ch - 3); c.textAlign = 'left'; }
         if (p.blind > 0) { p.blind -= 1 / 30; c.fillStyle = 'rgba(0,0,0,0.6)'; c.fillRect(x0, y0 + ch * 0.35, cw, 14 * U); c.fillStyle = '#ffb0a0'; c.font = `bold ${9.5 * U}px sans-serif`; c.textAlign = 'center'; c.fillText(T('視線被擋', '視線被擋'), x0 + cw / 2, y0 + ch * 0.35 + 10.5 * U); c.textAlign = 'left'; }
         if (p.stun > 0) { c.fillStyle = 'rgba(255,250,200,0.35)'; c.fillRect(x0, y0, cw, ch); c.fillStyle = '#fff3b0'; c.font = `bold ${9.5 * U}px sans-serif`; c.textAlign = 'center'; c.fillText(T('被照住', '被照住'), x0 + cw / 2, y0 + ch * 0.6); c.textAlign = 'left'; }
-        if ((S.res.coins || 0) >= this.upCost(p) && !(p.build > 0)) { c.fillStyle = '#e8303a'; c.beginPath(); c.arc(x0 + cw - 4 * U, y0 + 2 * U, 5 * U, 0, 7); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.stroke(); } });
+        if ((WAL.v || 0) >= this.upCost(p) && !(p.build > 0)) { c.fillStyle = '#e8303a'; c.beginPath(); c.arc(x0 + cw - 4 * U, y0 + 2 * U, 5 * U, 0, 7); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.stroke(); } });
       this.drawProps(); this.drawTraces(); this.drawObsFx();
       // 路人（含 Bryan 一夥）
       const NU = typeof NPC_UNIT !== 'undefined' ? NPC_UNIT : 69, hh = b.h * 0.042, hhP = hh * PPL;
@@ -23282,14 +23297,16 @@ const Street = (() => {
       const sd = this.sd, def = this.def, need = HOT.up * (sd.lv >= def.cap ? HOT.overMul : 1), s0 = st();
       const lv = $('#stt-lv'), coin = $('#stt-coin'), bar = $('#stt-hotbar'), info = $('#stt-info'); if (!lv) return;
       const bd = this.build(); this.bd = bd;
-      lv.innerHTML = `${T('主題建設度', '主題建設度')} <b>${bd}%</b>　${T('路人膽量', '路人膽量')} <b>Lv${sd.lv}</b><br>${T('單位收益', '單位收益')} <b>${this.unit()}</b>`;
+      const oc0 = occOf(sd), dr0 = devRate(sd);
+      lv.innerHTML = `${T('主題建設度', '主題建設度')} <b>${bd}%</b>　${T('路人膽量', '路人膽量')} <b>Lv${sd.lv}</b><br>${T('單位收益', '單位收益')} <b>${this.unit()}</b>　${T('佔領度', '佔領度')} <b style="color:${oc0 == null ? '#cfc4b0' : oc0 >= OCC_LINE ? '#7dffb0' : '#ff8a7a'}">${oc0 == null ? '--' : Math.round(oc0 * 100) + '%'}</b>${dr0 > 0 ? `<br><span style="color:#ffd45a">${T('村莊發展', '村莊發展')} +${dr0}/${T('分', '分')}</span>` : ''}`;
       const q = this.q, qe = $('#stt-q'), en = $('#stt-enter'); if (qe) qe.textContent = q.st === 'gap' ? T(`下一組 ${Math.ceil(q.t)} 秒`, `下一組 ${Math.ceil(q.t)} 秒`) : q.st === 'form' ? T(`將至 ${q.made}/${q.n}`, `將至 ${q.made}/${q.n}`) : T(`${q.n} 人・${Math.ceil(q.t)} 秒自動入`, `${q.n} 人・${Math.ceil(q.t)} 秒自動進`);
       if (en) { en.classList.toggle('autoon', q.st === 'ready'); en.style.setProperty('--qk', q.st === 'ready' ? (1 - q.t / 90).toFixed(3) : 0); }
       const spb = $('#stt-sp'); if (spb) { const on = (sd.bosses || []).map(ghost).filter(Boolean); spb.innerHTML = on.length ? T(`有名鬼<br><b>本圖已上場：${on.map(g => g.name).join('、')}</b>`, `有名鬼<br><b>本圖已上場：${on.map(g => g.name).join('、')}</b>`) : T('有名鬼<br><b>派佢上場</b>', '有名鬼<br><b>派牠上場</b>'); }
       const bx = $('#stt-box'); if (bx) { const n = s0.box == null ? 1 : s0.box; bx.innerHTML = n >= 1 ? T('驚嚇盒<br><b>1/1</b>', '驚嚇盒<br><b>1/1</b>') : T(`驚嚇盒<br><b>${Math.ceil((20 * 60000 - (Date.now() - (s0.boxAt || 0))) / 60000)}分</b>`, `驚嚇盒<br><b>${Math.ceil((20 * 60000 - (Date.now() - (s0.boxAt || 0))) / 60000)}分</b>`); bx.disabled = n < 1; }
-      coin.textContent = `${T('冥幣', '冥幣')} ${Math.floor(S.res.coins || 0)}`;
+      coin.textContent = `${T('本關冥幣', '本關冥幣')} ${Math.floor(WAL.v || 0)}`;
+      const oc = occOf(sd), dr = devRate(sd), ocT = oc == null ? T(`佔領度 計緊（${(sd.occH || []).length}/${OCC_MIN}）`, `佔領度 統計中（${(sd.occH || []).length}/${OCC_MIN}）`) : `${T('佔領度', '佔領度')} <b style="color:${oc >= OCC_LINE ? '#7dffb0' : '#ff8a7a'}">${Math.round(oc * 100)}%</b>` + (dr > 0 ? T(`・村莊發展 +${dr}/分`, `・村莊發展 +${dr}/分`) : oc >= OCC_LINE ? T('・起咗設備先有發展收入', '・建了設備才有發展收入') : T('・過 50% 村莊先有發展收入', '・超過 50% 村莊才有發展收入'));
       const k = sd.hot >= 0 ? sd.hot / need : sd.hot / -HOT.down; bar.style.width = Math.abs(k) * 50 + '%'; bar.style.left = k >= 0 ? '50%' : (50 + k * 50) + '%'; bar.className = k >= 0 ? 'up' : 'down';
-      info.innerHTML = `<span>${T('傳說名氣', '傳說名氣')} ${Math.round(sd.hot)}/${need}</span><span>${T('惡名', '惡名')} ${sd.scared}</span><span>${T('漏人', '漏人')} ${sd.leaked}</span><span>${T('膽量補正', '膽量補正')} ×${this.mod().toFixed(2)}</span>`;
+      info.innerHTML = `<span>${ocT}</span><span>${T('傳說名氣', '傳說名氣')} ${Math.round(sd.hot)}/${need}</span><span>${T('惡名', '惡名')} ${sd.scared}</span><span>${T('漏人', '漏人')} ${sd.leaked}</span><span>${T('膽量補正', '膽量補正')} ×${this.mod().toFixed(2)}</span>`;
     },
     tap(e) {
       const r = this.cv.getBoundingClientRect(), [x, y] = this.toScene(e.clientX - r.left, e.clientY - r.top), b = this.box;
@@ -23337,7 +23354,7 @@ const Street = (() => {
       this.selPost = i; this.selAt = performance.now(); // 撳設備時顯示射程圈
       const sd = this.sd, p = sd.posts[i], spot = this.lay.posts[i], sz = spot.s || 1, cap = this.lvCap();
       let el = $('#stt-pick'); if (!el) { el = document.createElement('div'); el.id = 'stt-pick'; document.body.appendChild(el); }
-      const close = () => el.remove(), coins = Math.floor(S.res.coins || 0), szT = sz === 2 ? T('2格', '2格') : T('1格', '1格');
+      const close = () => el.remove(), coins = Math.floor(WAL.v || 0), szT = sz === 2 ? T('2格', '2格') : T('1格', '1格');
       if (p && p.role) {
         const D = DEV[p.role], lv = p.lv || 1, a = this.statTxt(p.role, sz, lv), nx = lv < cap ? this.statTxt(p.role, sz, lv + 1) : null, cost = this.upCost(p), stf = p.staff != null ? ghost(p.staff) : null;
         const cand = freeGhosts().filter(g => this.SPECIAL.includes(g.k) || typesOf(g.k).some(t => ROLE_OF[t] === p.role)).sort((a, z) => (this.SPECIAL.includes(z.k) ? 1 : 0) - (this.SPECIAL.includes(a.k) ? 1 : 0)).slice(0, 6);
@@ -23348,8 +23365,8 @@ const Street = (() => {
           + `<div class="stp-row"><button id="stp-mv">${T('移位', '移位')}</button><button id="stp-del">${T(`拆走（退返 ${p.spent}）`, `拆除（退回 ${p.spent}）`)}</button></div>`
           + `<div class="stp-row stp-staff">${stf ? `<button data-st="off">${T(`叫 ${stf.name} 唔使加持`, `讓 ${stf.name} 停止加持`)}</button>` : cand.map(g => `<button data-st="${g.id}">${T('叫', '叫')} ${g.name} ${T('加持', '加持')}${this.SPECIAL.includes(g.k) ? '★' : ''}</button>`).join('') || `<small>${T('冇得閒嘅鬼可以加持', '沒有空閒的鬼可以加持')}</small>`}</div>`
           + `<div class="stp-row"><button id="stp-x">${T('關閉', '關閉')}</button></div></div>`;
-        el.querySelector('#stp-up').onclick = () => { if (!nx || (S.res.coins || 0) < cost) return; S.res.coins -= cost; p.lv = lv + 1; p.spent = (p.spent || 0) + cost; p.ph = null; p.build = 3; close(); save_(); Fx.toast(T('招魂中…（升級）', '招魂中…（升級）')); };
-        el.querySelector('#stp-del').onclick = () => { S.res.coins = (S.res.coins || 0) + (p.spent || 0); if (stf) stf.post = null; sd.posts[i] = null; close(); save_(); Fx.toast(T(`拆咗，退返冥幣 ${p.spent}`, `已拆除，退回冥幣 ${p.spent}`)); };
+        el.querySelector('#stp-up').onclick = () => { if (!nx || (WAL.v || 0) < cost) return; WAL.v -= cost; p.lv = lv + 1; p.spent = (p.spent || 0) + cost; p.ph = null; p.build = 3; close(); save_(); Fx.toast(T('招魂中…（升級）', '招魂中…（升級）')); };
+        el.querySelector('#stp-del').onclick = () => { WAL.v = WAL.v + (p.spent || 0); if (stf) stf.post = null; sd.posts[i] = null; close(); save_(); Fx.toast(T(`拆咗，退返冥幣 ${p.spent}`, `已拆除，退回冥幣 ${p.spent}`)); };
         el.querySelector('#stp-mv').onclick = () => { this.moveFrom = i; close(); };
         el.querySelectorAll('[data-st]').forEach(bt => bt.onclick = () => { if (bt.dataset.st === 'off') { if (stf) stf.post = null; p.staff = null; } else { const g = ghost(+bt.dataset.st) || ghost(bt.dataset.st); if (!g) return; if (stf) stf.post = null; p.staff = g.id; g.post = 'street'; Fx.toast(T(`${g.name} 為「${T(D.n[sz][0], D.n[sz][1])}」勵鬼加持！`, `${g.name} 為「${D.n[sz][1]}」勵鬼加持！`)); } close(); save_(); });
       } else {
@@ -23358,7 +23375,7 @@ const Street = (() => {
             return `<div class="stp-opt"><div class="stp-frame" style="border-color:${DevFx.HEX[r]};box-shadow:0 0 10px ${DevFx.HEX[r]}88,inset 0 0 8px ${DevFx.HEX[r]}55"><canvas data-pk="${D.k}" data-dv="dv_${r}_${sz}"></canvas></div><b>${T(D.n[sz][0], D.n[sz][1])}</b><span class="stp-ico" style="background:${DevFx.HEX[r]};color:#160c1e;font-weight:900">${{ trap:T('鬼拉腳', '鬼拉腳'), puzzle:T('鬼打牆', '鬼打牆'), slow:T('卡到陰', '卡到陰'), scare:T('驚嚇', '驚嚇'), aura:T('氛圍', '氛圍'), throw:T('投擲', '投擲') }[r]}</span>`
               + st2.map(q => `<small>${q[0]}：${q[1]}</small>`).join('') + `<button class="stp-buy" data-r="${r}" data-pr="${pr}" ${coins < pr ? 'disabled' : ''}>${coins < pr ? T(`差 ${pr - coins} 冥幣`, `差 ${pr - coins} 冥幣`) : `💴 ${pr}`}</button></div>`; }).join('')
           + `</div><button id="stp-x" class="stp-x">${T('關閉', '關閉')}</button></div>`;
-        el.querySelectorAll('[data-r]').forEach(btn => btn.onclick = () => { const r = btn.dataset.r, pr = +btn.dataset.pr; if ((S.res.coins || 0) < pr) return; S.res.coins -= pr;
+        el.querySelectorAll('[data-r]').forEach(btn => btn.onclick = () => { const r = btn.dataset.r, pr = +btn.dataset.pr; if ((WAL.v || 0) < pr) return; WAL.v -= pr;
           sd.posts[i] = { g:'dev:' + r, role:r, sz, lv:1, build:5, spent:pr, cd:0 }; close(); save_(); Fx.toast(T(`開工建造：${T(DEV[r].n[sz][0], DEV[r].n[sz][1])}（5秒）`, `開始建造：${DEV[r].n[sz][1]}（5秒）`)); });
       }
       el.querySelectorAll('canvas[data-pk]').forEach(cv => { try { const dv = cv.dataset.dv && has(SPR) && SPR[cv.dataset.dv]; cv.width = 80; cv.height = 80; if (dv && dv.naturalWidth) { const k = 76 / Math.max(dv.naturalWidth, dv.naturalHeight); cv.getContext('2d').drawImage(dv, 40 - dv.naturalWidth * k / 2, 40 - dv.naturalHeight * k / 2, dv.naturalWidth * k, dv.naturalHeight * k); } else cv.getContext('2d').drawImage(ART.portrait(cv.dataset.pk, 80), 0, 0, 80, 80); } catch (e) {} });
@@ -23468,7 +23485,7 @@ const Street = (() => {
       for (const w of this.walkers) { if (!this.alive(w) || B.hitSet.has(w) || this.dist(this.wp(w), pos) > R0) continue; if (K.single && B.hitSet.size >= 1) break;
         B.hitSet.add(w); if (B.fx) B.fx.tg = this.wp(w).slice();
         if (K.push) w.t = Math.max(0.01, w.t - CELL);
-        if (K.coin && !w.el) { S.res.coins = (S.res.coins || 0) + K.coin; this.sd.coins += K.coin; const [x, y] = this.wp(w); this.parts.push({ kind:'coin', x, y:y - 0.05, life:1, k:0 }); this.float(x, y - 0.1, T(`偷到 ${K.coin}`, `偷到 ${K.coin}`), '#ffd45a'); }
+        if (K.coin && !w.el) { WAL.v = WAL.v + K.coin; this.sd.coins += K.coin; const [x, y] = this.wp(w); this.parts.push({ kind:'coin', x, y:y - 0.05, life:1, k:0 }); this.float(x, y - 0.1, T(`偷到 ${K.coin}`, `偷到 ${K.coin}`), '#ffd45a'); }
         if (K.block) { w.block = K.block; w.papers = K.block; }
         this.hit(w, base * K.dmg, { force:true, fright:K.block ? 0 : (K.fright || 2) }); }
     },
@@ -23536,9 +23553,9 @@ const Street = (() => {
       switch (L === this.LORE.eguiking ? 'eguiking' : k) {
         case 'tianhua': if (tg) { tg.lift = { t:0, dur:2.0, h:95 }; hit(tg, 1, { fright:0 }); B.sx.list = [tg]; } near.slice(1, 3).forEach(w => this.react(w, 'head')); break;
         case 'pontianak': { const line = near.slice(0, 5).sort((a, z) => this.wp(a)[0] - this.wp(z)[0]); B.sx.list = line; B.sx.a = line.length ? this.wp(line[0]) : tp; B.sx.b = line.length ? this.wp(line[line.length - 1]) : tp; line.forEach((w, j) => { hit(w, 1, { fright:1.5 }); setTimeout(() => this.react(w, j % 2 ? 'scream' : 'fall'), 200 + j * 90); }); trAt = [(B.sx.a[0] + B.sx.b[0]) / 2, (B.sx.a[1] + B.sx.b[1]) / 2]; break; }
-        case 'eguiking': near.slice(0, 3).forEach(w => { hit(w, 1, { fright:2 }); this.act(w, 'startle', 2.2); w.say = { s:T('我嘅叉燒包呢？！', '我的叉燒包呢？！'), t:1.6 }; if (!w.el) { S.res.coins = (S.res.coins || 0) + 3; this.sd.coins += 3; } }); B.sx.list = near.slice(0, 3); break;
+        case 'eguiking': near.slice(0, 3).forEach(w => { hit(w, 1, { fright:2 }); this.act(w, 'startle', 2.2); w.say = { s:T('我嘅叉燒包呢？！', '我的叉燒包呢？！'), t:1.6 }; if (!w.el) { WAL.v = WAL.v + 3; this.sd.coins += 3; } }); B.sx.list = near.slice(0, 3); break;
         case 'laojiang': { const cand = near.filter(w => !(w.breath > 0)), tgt = cand.sort((a, z) => z.spd - a.spd)[0]; if (tgt) { const p2 = this.wp(tgt); B.sx.tp = p2; B.sx.list = [tgt]; near.forEach(w => { if (w.breath > 0) { w.say = { s:T('（唔敢唞氣）', '（不敢喘氣）'), t:1.5 }; return; } const d = this.segDist(this.wp(w), pos, p2); if (d < 70 * PX) { hit(w, w === tgt ? 1 : 0.6, { fright:0 }); w.fly = { t:0, dur:0.8, dx:(p2[0] > pos[0] ? 1 : -1) * 0.06 }; } }); trAt = p2; } break; }
-        case 'toyol': near.slice(0, 2).forEach((w, j) => { hit(w, 1, { fright:0 }); if (!w.el) { S.res.coins = (S.res.coins || 0) + 6; this.sd.coins += 6; } w.chase = { t:0, dur:2.6, ph:j * 2 }; w.say = { s:T('喂！我個銀包！', '喂！我的錢包！'), t:1.5 }; }); B.sx.list = near.slice(0, 2); break;
+        case 'toyol': near.slice(0, 2).forEach((w, j) => { hit(w, 1, { fright:0 }); if (!w.el) { WAL.v = WAL.v + 6; this.sd.coins += 6; } w.chase = { t:0, dur:2.6, ph:j * 2 }; w.say = { s:T('喂！我個銀包！', '喂！我的錢包！'), t:1.5 }; }); B.sx.list = near.slice(0, 2); break;
         case 'xiaozhi': { const c0 = tg ? this.wp(tg) : pos, cage = this.walkers.filter(w => this.alive(w) && this.dist(this.wp(w), c0) < 90 * PX); cage.forEach(w => { w.block = 2.6; hit(w, 1, { fright:0 }); this.act(w, pick(['tremble', 'cower']), 2.6); }); B.sx.c = c0; B.sx.list = cage; break; }
         case 'pocong': { const y0 = tp[1], row = near.filter(w => Math.abs(this.wp(w)[1] - y0) * 1.5 < 80 * PX); B.sx.y0 = y0; B.sx.list = row; row.forEach(w => { hit(w, 1, { fright:1.2 }); this.reroute(w) ? (w.say = { s:T('呢邊唔行得！行第二條路！', '這邊不能走！走另一條！'), t:1.6 }) : this.react(w, 'flee'); }); break; }
         case 'penanggal': { const c0 = tg ? this.wp(tg) : pos; B.sx.c = c0; const ring = this.walkers.filter(w => this.alive(w) && this.dist(this.wp(w), c0) < 120 * PX); ring.forEach(w => { hit(w, 1, { fright:1.5 }); this.react(w); }); B.sx.list = ring; trAt = c0; break; }
@@ -23688,7 +23705,7 @@ const Street = (() => {
         case 'mengpo': U.vic = live.slice(); U.river = 0; return true;
         case 'n30_yukionna': all(8, w => { w.frost = 3; this.act(w, 'tremble', 3); }); tr('ice', 100, 8); return true;
         case 'n30_qionggui': all(6, w => { this.act(w, 'cower', 3.2); w.target = 6; }); tr('notes', 90, 7); return true;
-        case 'n30_guhangui': all(7, w => { this.act(w, 'tremble', 3); if (!w.el) { S.res.coins = (S.res.coins || 0) + 2; } }); tr('clink', 90, 5); return true;
+        case 'n30_guhangui': all(7, w => { this.act(w, 'tremble', 3); if (!w.el) { WAL.v = WAL.v + 2; } }); tr('clink', 90, 5); return true;
         case 'n30_taozhai': all(7, w => { w.back = CELL * 3; this.bump(w, 60); }); tr('debt', 80, 6); return true;
       }
       return false;
@@ -23728,7 +23745,7 @@ const Street = (() => {
       if (k === 'toyol') { // 一陣風捲走全場路人手上嘢，再撒錢引人蹲低
         const k2 = U.t - at, vic = U.vic || [], gx = cx - vw / 2 + vw * Math.min(1.2, k2 / 1.0);
         if (k2 < 1.2) { c.strokeStyle = 'rgba(230,230,210,0.5)'; c.lineWidth = 2; for (let j = 0; j < 22; j++) { const yy = cy - vh / 2 + (j / 22) * vh, len = 60 + (j * 37 % 80); c.beginPath(); c.moveTo(gx - len * U2 - (j * 23 % 50), yy); c.quadraticCurveTo(gx - len * U2 * 0.5, yy - 8, gx - (j * 23 % 50), yy); c.stroke(); } }
-        vic.forEach((w, j) => { if (w.gone) return; const [wx, wy] = this.P(...this.wp(w)); if (gx >= wx && !w._gust) { w._gust = 1; this.act(w, 'startle', 1.2); w.say = { s:pick([T('我部電話呢？', '我的手機呢？'), T('個袋飛咗！', '包包飛走了！'), T('我串魚蛋！', '我的魚蛋！')]), t:1.4 }; if (!w.el) { S.res.coins = (S.res.coins || 0) + 4; } }
+        vic.forEach((w, j) => { if (w.gone) return; const [wx, wy] = this.P(...this.wp(w)); if (gx >= wx && !w._gust) { w._gust = 1; this.act(w, 'startle', 1.2); w.say = { s:pick([T('我部電話呢？', '我的手機呢？'), T('個袋飛咗！', '包包飛走了！'), T('我串魚蛋！', '我的魚蛋！')]), t:1.4 }; if (!w.el) { WAL.v = WAL.v + 4; } }
           if (w._gust) { const e = Math.min(1, (k2 - (wx - (cx - vw / 2)) / vw) / 0.8); if (e < 1) { const ix = wx + e * vw * 0.4, iy = wy - b.h * 0.08 - Math.sin(e * Math.PI) * 50 * U2, kd = j % 4; c.save(); c.translate(ix, iy); c.rotate(e * 8); if (kd === 0) { c.fillStyle = '#222'; c.fillRect(-4 * U2, -7 * U2, 8 * U2, 14 * U2); c.fillStyle = '#7cc8ff'; c.fillRect(-3 * U2, -5 * U2, 6 * U2, 9 * U2); } else if (kd === 1) { c.fillStyle = '#a0522d'; c.fillRect(-8 * U2, -5 * U2, 16 * U2, 11 * U2); c.strokeStyle = '#5a2a10'; c.lineWidth = 2; c.beginPath(); c.arc(0, -5 * U2, 5 * U2, 3.14, 0); c.stroke(); } else if (kd === 2) { c.strokeStyle = '#8a6a3a'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(-9 * U2, 0); c.lineTo(9 * U2, 0); c.stroke(); c.fillStyle = '#f0d070'; for (let q2 = 0; q2 < 3; q2++) { c.beginPath(); c.arc(-5 * U2 + q2 * 5 * U2, 0, 3 * U2, 0, 7); c.fill(); } } else { c.fillStyle = '#7fae6a'; c.fillRect(-9 * U2, -4 * U2, 18 * U2, 8 * U2); } c.restore(); } } });
         for (let j = 0; j < 3; j++) { const e = Math.min(1, k2 / 1.2), x = cx - vw / 2 + vw * e + (j - 1) * 30 * U2, y = cy + (j - 1) * vh * 0.2; try { ART.drawChar(c, 'toyol', x, y, b.h * 0.06 / 46, { t:t + j, walk:true, pose:'move', alpha:0.9, shadow:false }); } catch (e2) {} }
         if (k2 > 1.4) { const e = Math.min(1, (k2 - 1.4) / 0.6); for (let j = 0; j < 30; j++) { const a0 = j * 0.7, rr = e * vh * 0.4 * ((j * 13 % 10) / 10 + 0.3), x = cx + Math.cos(a0) * rr, y = cy + Math.sin(a0) * rr * 0.7 - Math.sin(e * Math.PI) * 40 * U2; c.fillStyle = '#ffd45a'; c.strokeStyle = '#7a4a10'; c.lineWidth = 1; c.beginPath(); c.ellipse(x, y, 5 * U2 * Math.abs(Math.cos(t * 6 + j)) + 1.5, 5 * U2, 0, 0, 7); c.fill(); c.stroke(); }
@@ -23743,13 +23760,13 @@ const Street = (() => {
       return this.pickRole(i);
       const sd = this.sd, p = sd.posts[i], spot = this.lay.posts[i];
       let el = $('#stt-pick'); if (!el) { el = document.createElement('div'); el.id = 'stt-pick'; document.body.appendChild(el); }
-      const close = () => el.remove(), coins = Math.floor(S.res.coins || 0);
+      const close = () => el.remove(), coins = Math.floor(WAL.v || 0);
       if (p && p.g != null) { // 已建：升級
         const g = ghost(p.g); if (!g) return; const lv = p.lv || 1, a = this.stats(g, spot, lv), b2 = this.stats(g, spot, lv + 1), cost = this.upCost(p);
         el.innerHTML = `<div class="stp-card1"><div class="stp-top"><canvas data-pk="${g.k}"></canvas><div><b>${g.name}</b><small>${spot.n}・Lv${lv}</small><i>${T(a.K.n, a.K.zh)}</i></div></div>
           <p>${a.K.aura ? T('驚嚇值/秒', '驚嚇值/秒') : T('驚嚇值', '驚嚇值')}：${a.scare} → <em>${b2.scare}</em></p><p>${a.K.aura ? T('驚嚇頻率', '驚嚇頻率') : T('回靈速度', '回靈速度')}：${a.cd} 秒 → <em>${b2.cd} 秒</em></p>
           <div class="stp-row"><button class="stp-buy" id="stp-up" ${coins < cost || p.build > 0 ? 'disabled' : ''}>${T('升級', '升級')}　💴 ${cost}</button></div><div class="stp-row"><button id="stp-off">${T('收工（拆走）', '收工（拆走）')}</button><button id="stp-x">${T('關閉', '關閉')}</button></div></div>`;
-        el.querySelector('#stp-up').onclick = () => { if ((S.res.coins || 0) < cost) return; S.res.coins -= cost; p.lv = lv + 1; p.max = Math.round(p.max * 1.2); p.hp = p.max; close(); save_(); Fx.toast(T(`${g.name} 升到 Lv${p.lv}！`, `${g.name} 升到 Lv${p.lv}！`)); };
+        el.querySelector('#stp-up').onclick = () => { if ((WAL.v || 0) < cost) return; WAL.v -= cost; p.lv = lv + 1; p.max = Math.round(p.max * 1.2); p.hp = p.max; close(); save_(); Fx.toast(T(`${g.name} 升到 Lv${p.lv}！`, `${g.name} 升到 Lv${p.lv}！`)); };
         el.querySelector('#stp-off').onclick = () => { g.post = null; sd.posts[i] = null; close(); save_(); };
       } else { // 空格：二選一
         const list = freeGhosts().map(g => { const st2 = this.stats(g, spot, 1); return { g, st2, fit:(st2.K.ground && !spot.h) || (st2.K.high && spot.h) ? 2 : st2.K.aura ? 1 : 0 }; }).sort((x, y) => y.fit - x.fit || y.st2.scare - x.st2.scare).slice(0, 2);
@@ -23760,7 +23777,7 @@ const Street = (() => {
             <button class="stp-buy" data-g="${o.g.id}" data-pr="${price(j)}" ${coins < price(j) ? 'disabled' : ''}>💴 ${price(j)}</button></div>`).join('') : `<p>${T('冇得閒嘅鬼。返村叫佢哋收工先。', '沒有空閒的鬼。先回村叫牠們收工。')}</p>`)
           + `</div><button id="stp-x" class="stp-x">${T('關閉', '關閉')}</button></div>`;
         el.querySelectorAll('[data-g]').forEach(btn => btn.onclick = () => {
-          const g = ghost(+btn.dataset.g) || ghost(btn.dataset.g), pr = +btn.dataset.pr; if (!g || (S.res.coins || 0) < pr) return; S.res.coins -= pr;
+          const g = ghost(+btn.dataset.g) || ghost(btn.dataset.g), pr = +btn.dataset.pr; if (!g || (WAL.v || 0) < pr) return; WAL.v -= pr;
           g.post = 'street'; const mx = Math.round(60 + power(g)); if (p && p.b) sd.lost = Math.max(0, sd.lost - 1);
           sd.posts[i] = { g:g.id, hp:mx, max:mx, lv:1, build:5, en:0 }; close(); save_(); Fx.toast(T(`開工建造：${g.name}・${spot.n}`, `開始建造：${g.name}・${spot.n}`));
         });
@@ -26827,7 +26844,7 @@ const Tower=(function(){
 
 // ===================== 網址版（GitHub Pages）＋ 下載檔案當啟動器 =====================
 // 下載的檔案：打開就把存檔搬到網址版，直接開始玩。網址版：可以加到手機桌面，離線也能玩，更新自動生效。
-const GAME_VER = '2026.11.12a';
+const GAME_VER = '2026.11.12b';
 const WEB_URL = 'https://lawrancelow.github.io/ghost-battles/';
 const IS_WEB = /^https?:$/.test(location.protocol) && /github\.io$/.test(location.hostname);
 const IS_FILE = !/^https?:$/.test(location.protocol);
