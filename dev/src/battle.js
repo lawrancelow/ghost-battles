@@ -21,10 +21,11 @@ const Battle = {
   openSelect() {
     const render = () => {
       let h = `<div class="team">`;
-      for (let i = 0; i < 3; i++) { const g = ghostById(S.team[i]); h += `<div class="tslot" data-slot="${i}">${g ? `<canvas data-por="${g.k}"></canvas><b>${g.name}</b><small>Lv${F.glv(g)}</small>` : '<span>＋<br>出陣</span>'}</div>`; }
+      for (let i = 0; i < 3; i++) { const g = ghostById(S.team[i]); h += `<div class="tslot" data-slot="${i}">${g ? `<canvas data-por="${g.k}"></canvas><b>${g.name}</b><small>Lv${F.glv(g)}・${GP.T('鬼力', '鬼力')}${GP.pow(g)}</small>` : '<span>＋<br>出陣</span>'}</div>`; }
+      const myGP = GP.avg(S.team.map(ghostById));
       const ad = ghostById(S.adviser);
       h += `<div class="tslot adv" data-slot="adv">${ad ? `<canvas data-por="${ad.k}"></canvas><b>${ad.name}</b><small>軍師</small>` : '<span>＋<br>軍師</span>'}</div></div>`;
-      h += `<p class="desc">軍師不上場，坐鎮後方：全隊攻擊 +${ad ? Math.round(F.stat(ad, 1) / 8) : 0}%（看智力），能量滿了也能放技能。出征前可隨時換人。　</p><div class="troopbox"><b>帶上陣的陰兵</b><span>現有 ${fmt(S.res.troops)}，可組成 <em>${Math.min(8, Math.floor(S.res.troops / 25))}</em> 隊（每 25 個一隊，最多 8 隊）</span><small>${S.bld.home ? '村裡的遊魂見你有地盤，會自願當陰兵（民宅越高級來得越快）。戰死的會扣掉。' : '建好民宅，遊魂才會來投靠當陰兵。'}</small></div>`;
+      h += `<p class="desc">軍師不上場，坐鎮後方：全隊攻擊 +${ad ? Math.round(F.stat(ad, 1) / 8) : 0}%（看智力），能量滿了也能放技能。出征前可隨時換人。　</p><p class="desc gp-line">${GP.T('出陣平均', '出陣平均')} ${GP.tag(myGP, 0)}　<small>${GP.T('每關都有「建議鬼力」，紅字＝未夠，返村升級或者練嚇功先。', '每關都有「建議鬼力」，紅字＝不足，先回村升級或練嚇功。')}</small></p><div class="troopbox"><b>帶上陣的陰兵</b><span>現有 ${fmt(S.res.troops)}，可組成 <em>${Math.min(8, Math.floor(S.res.troops / 25))}</em> 隊（每 25 個一隊，最多 8 隊）</span><small>${S.bld.home ? '村裡的遊魂見你有地盤，會自願當陰兵（民宅越高級來得越快）。戰死的會扣掉。' : '建好民宅，遊魂才會來投靠當陰兵。'}</small></div>`;
       if (S.seen.ch1_end) { const b = (S.scare && S.scare.best.office) || 0; h += `<div class="sc-entry"><div><b>回陽間・夜班嚇人</b><small>舊公司・二十三樓　最高 ${b}　${'★'.repeat(Scare.starsOf('office', b))}</small></div><button class="btn gold" id="sc-open">回去</button></div>`; }
       if (S.seen.ch1_end && typeof Sports !== 'undefined') h += `<div class="sc-entry sp-entry"><div><b>陰間運動會</b><small>殭屍跳遠、舌頭對脖子拔河、倒掛耐力、河童游泳</small></div><button class="btn gold" id="sp-open">參加</button></div>`;
       h += typeof Station !== 'undefined' ? Station.entryHTML() : Rework.turfHead();
@@ -32,7 +33,7 @@ const Battle = {
         h += `<div class="chap"><div class="ch-h">第${'一二三四五六'[ci]}章・${ch.name}</div>`;
         ch.stages.forEach((st, si) => {
           const sid = this.sidOf(ci, si), open = this.stageOpen(ci, si), done = S.cleared[sid], lvOk = S.lv >= st.req;
-          h += `<div class="stg ${open ? '' : 'locked'} ${st.boss ? 'boss' : ''}"><span class="sn">${sid}</span><span class="st"><b>${st.name}</b><small>${open ? `需主公 Lv${st.req}　${Rework.turfTag(sid)}</small><small class="rw-efs">${Rework.enemyHint(st.en)}` : '先打通上一關'}</small></span>${open ? `<button class="btn sm ${done && !Rework.isLost(sid) ? '' : 'gold'}" data-go="${ci},${si}" ${lvOk ? '' : 'disabled'}>${done ? (Rework.isLost(sid) ? '奪回' : '巡場') : lvOk ? '搶地盤' : `Lv${st.req}`}</button>` : '<span class="lk">🔒</span>'}${done ? '<i class="ok">✓</i>' : ''}</div>`;
+          h += `<div class="stg ${open ? '' : 'locked'} ${st.boss ? 'boss' : ''}"><span class="sn">${sid}</span><span class="st"><b>${st.name}</b><small>${open ? `需主公 Lv${st.req}　<span class="gp-need ${myGP < GP.stageNeed(st, sid) ? 'gp-low' : 'gp-ok'}">${GP.T('建議鬼力', '建議鬼力')} ${GP.stageNeed(st, sid)}</span>　${Rework.turfTag(sid)}</small><small class="rw-efs">${Rework.enemyHint(st.en)}` : '先打通上一關'}</small></span>${open ? `<button class="btn sm ${done && !Rework.isLost(sid) ? '' : 'gold'}" data-go="${ci},${si}" ${lvOk ? '' : 'disabled'}>${done ? (Rework.isLost(sid) ? '奪回' : '巡場') : lvOk ? '搶地盤' : `Lv${st.req}`}</button>` : '<span class="lk">🔒</span>'}${done ? '<i class="ok">✓</i>' : ''}</div>`;
         });
         h += '</div>';
       });
@@ -61,7 +62,7 @@ const Battle = {
     if (cur) h += `<div class="gi" data-g=""><div><b>— 空著 —</b></div></div>`;
     for (const g of list) {
       const sk = SKILLS[g.k]; const where = S.team.includes(g.id) ? '出陣中' : S.adviser === g.id ? '軍師' : '';
-      h += `<div class="gi ${g.id === cur ? 'sel' : ''}" data-g="${g.id}"><canvas data-por="${g.k}"></canvas><div><b>${g.name}</b> <i class="q q${g.q}">${g.q}</i> ${where ? `<i class="tag">${where}</i>` : ''}<small>Lv${F.glv(g)}　力${F.stat(g, 0)} 智${F.stat(g, 1)} 武${F.stat(g, 2)}　${gdef(g).range === 'ranged' ? '遠程' : '近戰'}<br>${Rework.teamHint(g)}</small><small class="sk">【${sk.name}】${sk.desc}</small></div></div>`;
+      h += `<div class="gi ${g.id === cur ? 'sel' : ''}" data-g="${g.id}"><canvas data-por="${g.k}"></canvas><div><b>${g.name}</b> <i class="q q${g.q}">${g.q}</i> ${where ? `<i class="tag">${where}</i>` : ''}<small>Lv${F.glv(g)}　<b class="gp-pw">${GP.T('鬼力', '鬼力')} ${GP.pow(g)}</b>　力${F.stat(g, 0)} 智${F.stat(g, 1)} 武${F.stat(g, 2)}　${gdef(g).range === 'ranged' ? '遠程' : '近戰'}<br>${Rework.teamHint(g)}</small><small class="sk">【${sk.name}】${sk.desc}</small></div></div>`;
     }
     h += `</div><button class="btn wide" id="pkback">返回</button>`;
     UI.sheet('佈陣', h); paintPortraits($('#sheet'));
@@ -89,8 +90,8 @@ const Battle = {
   // ---------- 開戰 ----------
   mkGhostUnit(g, i) {
     const lv = F.glv(g), P = F.stat(g, 0), I = F.stat(g, 1), A = F.stat(g, 2), d = gdef(g);
-    const hp = 300 + P * 8 + A * 4;
-    return { side:0, k:g.k, gid:g.id, name:g.name, hp, maxhp:hp, atk:20 + A * 1.4, range:d.range === 'ranged' ? 150 : 46, spd:d.range === 'ranged' ? 38 : 46, x:78 - i * 14, lane:i * 1.1, energy:20, sk:SKILLS[g.k], st:{}, cd:Math.random() * 0.5, lv };
+    const dm = GP.drillMul(g.k), hp = (300 + P * 8 + A * 4) * dm; // 嚇功（訓練班）都帶入戰鬥：嚇功 1 ×1、嚇功 5 ×1.42（gpower.js）
+    return { side:0, k:g.k, gid:g.id, name:g.name, hp, maxhp:hp, atk:(20 + A * 1.4) * dm, range:d.range === 'ranged' ? 150 : 46, spd:d.range === 'ranged' ? 38 : 46, x:78 - i * 14, lane:i * 1.1, energy:20, sk:SKILLS[g.k], st:{}, cd:Math.random() * 0.5, lv };
   },
   start(ci, si, wild) { // wild：野鬼戰（n30_data.js 的 N30W.fight），{ stage, bg, sid }
     const ch = wild ? { bg:wild.bg } : CHAPTERS[ci], st = wild ? wild.stage : ch.stages[si];
@@ -328,10 +329,12 @@ const Battle = {
     }
     const box = $('#b-result');
     box.innerHTML = `<div class="br ${win ? 'win' : 'lose'}"><h2>${win ? (first ? '首次通關！' : '勝利') : quit ? '撤退' : timeout ? '時間到' : '戰敗'}</h2>
-      ${win ? `<p class="quip">${WIN_QUIPS[Math.floor(Math.random() * WIN_QUIPS.length)]}</p><p>${txt}</p>` : `${quit ? '' : `<p class="quip">${LOSE_QUIPS[Math.floor(Math.random() * LOSE_QUIPS.length)]}</p>`}<p>${quit ? '' : '提示：用壽包升級鬼怪、換上嚇法對得上的陣容（看敵人怕什麼）、去嚇人訓練班練嚇功；先嚇到敵人失神，再接另一種他怕的，打出連嚇。'}</p>`}
+      ${win ? `<p class="quip">${WIN_QUIPS[Math.floor(Math.random() * WIN_QUIPS.length)]}</p><p>${txt}</p>` : `${quit ? '' : `<p class="quip">${LOSE_QUIPS[Math.floor(Math.random() * LOSE_QUIPS.length)]}</p>`}<p>${quit ? '' : '提示：換上嚇法對得上的陣容（看敵人怕什麼）；先嚇到敵人失神，再接另一種他怕的，打出連嚇。'}</p>`}
       ${lost ? `<p class="lost">陰兵戰死 ${Math.floor(lost)}</p>` : ''}
-      <button class="btn gold wide" id="b-ok">${win && first && st.after ? '繼續' : '回村子'}</button></div>`;
+      ${!win && !quit ? GP.failHTML(GP.avg(S.team.map(ghostById)), GP.stageNeed(st, sid)) : ''}
+      <button class="btn ${!win && !quit ? '' : 'gold '}wide" id="b-ok">${win && first && st.after ? '繼續' : '回村子'}</button></div>`;
     box.classList.add('on');
+    GP.bindBack(box, () => { const ok = $('#b-ok'); if (ok) ok.onclick(); });
     $('#b-ok').onclick = () => {
       box.classList.remove('on'); this.active = false; $('#battle').classList.remove('on');
       if (first && st.wild) { if (typeof N30W !== 'undefined') N30W.onWin(st); }

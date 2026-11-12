@@ -37,6 +37,8 @@ const Sports = (() => {
     const r = rnd(gday() * 7 + ORDER.indexOf(id) * 131);
     return id === 'jump' ? +(5.6 + r * 1.0).toFixed(2) : id === 'hang' ? Math.round(22 + r * 14) : id === 'swim' ? +(17.5 + r * 4).toFixed(1) : 0;
   }
+  // 鬼力（gpower.js）：體能 ×(1＋0.12×(成長−1))；1 級 ×1（同舊版一樣）。倒掛耐力純靠平衡，唔加
+  function gpf(a) { try { return a && a.g ? 1 + 0.12 * (GP.grow(a.g) - 1) : 1; } catch (e) { return 1; } }
   function owned(k) { return S.ghosts.find(g => g.k === k) || null; }
   function athlete(id) { const E = EV[id], g = owned(E.who); return g ? { k:E.who, g, name:g.name, sub:false } : { k:'afu', g:S.ghosts.find(x => x.k === 'afu'), name:'阿福', sub:true }; }
   const fmtV = (id, v) => id === 'tug' ? '' : id === 'jump' ? v.toFixed(2) + ' 米' : id === 'swim' ? v.toFixed(1) + ' 秒' : Math.floor(v) + ' 秒';
@@ -62,9 +64,9 @@ const Sports = (() => {
   }
   function start(id) {
     const E = EV[id], a = athlete(id), root = el();
-    G = { id, E, a, t:0, phase:'intro', introT:2.6, done:false, fx:[], score:null, msg:'', msgT:0 };
+    G = { id, E, a, t:0, phase:'intro', introT:2.6, done:false, fx:[], score:null, msg:'', msgT:0, gpf:gpf(a) };
     root.innerHTML = `<div id="sp-top"><button class="btn sm ghost" id="sp-quit">收場</button><b>${E.name}</b><span id="sp-hud"></span></div>
-      <canvas id="sp-cvs"></canvas><div id="sp-panel"><p id="sp-rule">${E.rule}${a.sub ? `<br><i>${E.sub}</i>` : ''}</p><div id="sp-btns"></div></div>`;
+      <canvas id="sp-cvs"></canvas><div id="sp-panel"><p id="sp-rule">${E.rule}${a.sub ? `<br><i>${E.sub}</i>` : ''}${id !== 'hang' && a.g ? `<br><small class="gp-sub">${Lx(D('鬼力', '鬼力'))} ${GP.pow(a.g)}・${Lx(D('體能', '體能'))} ×${G.gpf.toFixed(2)}</small>` : ''}</p><div id="sp-btns"></div></div>`;
     root.classList.add('on');
     $('#sp-quit').onclick = () => close();
     const cv = $('#sp-cvs'); G.cv = cv; G.ctx = cv.getContext('2d');
@@ -151,7 +153,7 @@ const Sports = (() => {
       if (G.fly || G.hop < HOPS) return;
       const gap = (G.lineX - G.x) / PX; const sp = 0.6 + 0.4 * avg();
       if (gap < 0) { G.fly = { t:0, dist:0, foul:true }; say('踩線犯規！', 1.6); return; }
-      const dist = Math.max(0.5, sp * 7.6 - gap * 1.2);
+      const dist = Math.max(0.5, sp * 7.6 * G.gpf - gap * 1.2); // 鬼力：17 級 ×1.06、40 級 ×1.13
       G.fly = { t:0, dist, x0:G.x, foul:false };
     };
     btns([['跳', () => tapHop()]]);
@@ -191,7 +193,7 @@ const Sports = (() => {
     const pull = () => {
       if (G.done) return;
       if (G.taut > 0) { G.p -= 0.07; G.slip = 0.5; pop('舌頭打滑！', 120, G.H * 0.42, '#ff8080', 16); return; }
-      G.p += 0.032; if (Math.random() < 0.25) pop('拉！', 90 + Math.random() * 40, G.H * 0.46, '#ffe8a0', 14);
+      G.p += 0.032 * G.gpf; if (Math.random() < 0.25) pop('拉！', 90 + Math.random() * 40, G.H * 0.46, '#ffe8a0', 14);
     };
     btns([['拉', pull]]);
     G.down = () => { if (G.phase === 'play') pull(); };
@@ -267,7 +269,7 @@ const Sports = (() => {
       const gap = G.t - G.lastT; G.lastT = G.t;
       const same = side === G.lastSide; G.lastSide = side; G.stroke = 0.35;
       const power = G.water > 0.25 ? 1 : 0.45; // 碟水乾了就冇力
-      G.vel += (same ? 0.5 : 2.1) * power * (gap < 0.22 ? 0.6 : 1); // 同一邊連划、划得太急都冇乜力
+      G.vel += (same ? 0.5 : 2.1) * power * (gap < 0.22 ? 0.6 : 1) * G.gpf; // 同一邊連划、划得太急都冇乜力
       let kick = same ? 0.9 : 0.35; if (gap < 0.22) kick += 0.6; // 划太急
       G.sv += side * kick;
       if (same) pop('同一邊！', 195 + side * 70, G.H * 0.38, '#ffb0a0', 14);

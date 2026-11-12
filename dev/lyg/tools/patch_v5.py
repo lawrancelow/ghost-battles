@@ -239,3 +239,6 @@ s=open(p,encoding='utf-8').read(); s=_m9.patch(s); open(p,'w',encoding='utf-8').
 # ===== v10：人物（Q 版統一畫法、嚇親反應、鬼初始點安全區、保安行慢）— tools/patch_v10_people.py =====
 _sp10=_iu.spec_from_file_location('p10','/home/claude/lyg/tools/patch_v10_people.py'); _m10=_iu.module_from_spec(_sp10); _sp10.loader.exec_module(_m10)
 s=open(p,encoding='utf-8').read(); s=_m10.patch(s); open(p,'w',encoding='utf-8').write(s); print('ok-v10')
+# ===== v11：鬼力關聯（村入面升級 → 樓裡有鬼能力；建議鬼力；失敗返村升級）— tools/patch_v11_gp.py =====
+_sp11=_iu.spec_from_file_location('p11','/home/claude/lyg/tools/patch_v11_gp.py'); _m11=_iu.module_from_spec(_sp11); _sp11.loader.exec_module(_m11)
+s=open(p,encoding='utf-8').read(); s=_m11.patch(s); open(p,'w',encoding='utf-8').write(s); print('ok-v11')

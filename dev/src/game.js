@@ -742,6 +742,8 @@ function paintBg(ctx, w, h, bg, t) {
 }
 
 // ---------------- 介面 ----------------
+// 崗位名：村入面嘅崗位（POSTS）以外，鬼仲可以去陽間站崗（'street'、'boss:地盤'）或者其他玩法 —— 舊版直接 POSTS[x].name，鬼喺陽間站崗時名冊會出錯
+function postLabel(p) { if (POSTS[p]) return '打工：' + POSTS[p].name; if (p === 'street' || String(p).startsWith('boss:')) return '陽間站崗中'; if (String(p).startsWith('tower')) return '樓裡有鬼出更中'; return '出外工作中'; }
 const UI = {
   tab:'village',
   modalOpen() { return $('#sheet').classList.contains('on') || $('#battle').classList.contains('on'); },
@@ -851,7 +853,7 @@ const UI = {
     let h = `<p class="desc">挑一位去「${POSTS[post].name}」。${s >= 0 ? `這份工看【${STAT_NAMES[s]}】。` : '這份工看等級。'}已在別處打工的，會被調過來。</p><p class="desc sortnote">▼ 已按【${s >= 0 ? STAT_NAMES[s] : '等級'}】由高到低排好</p><div class="glist">`;
     for (const g of list) {
       const fb = (GHOSTS[g.k] && GHOSTS[g.k].forbid || []).includes(post);
-      h += `<div class="gi ${fb ? 'dis' : ''}" data-g="${g.id}"><canvas data-por="${g.k}"></canvas><div><b>${g.name}</b> <i class="q q${g.q}">${g.q}</i><small><span class="keystat">${s >= 0 ? STAT_NAMES[s] : '等級'} ${val(g)}</span>　${s >= 0 ? 'Lv' + F.glv(g) + '　' : ''}${[0, 1, 2].filter(i => i !== s).map(i => STAT_NAMES[i] + F.stat(g, i)).join(' ')}</small><small>${g.post ? '目前：' + POSTS[g.post].name : '閒著'}${fb ? '　<span class="lack">怕糯米，不肯去</span>' : ''}</small></div></div>`;
+      h += `<div class="gi ${fb ? 'dis' : ''}" data-g="${g.id}"><canvas data-por="${g.k}"></canvas><div><b>${g.name}</b> <i class="q q${g.q}">${g.q}</i><small><span class="keystat">${s >= 0 ? STAT_NAMES[s] : '等級'} ${val(g)}</span>　${s >= 0 ? 'Lv' + F.glv(g) + '　' : ''}${[0, 1, 2].filter(i => i !== s).map(i => STAT_NAMES[i] + F.stat(g, i)).join(' ')}</small><small>${g.post ? '目前：' + postLabel(g.post).replace(/^打工：/, '') : '閒著'}${fb ? '　<span class="lack">怕糯米，不肯去</span>' : ''}</small></div></div>`;
     }
     if (!list.length) h += '<p class="desc">沒有可以派的鬼怪。</p>';
     h += `</div><button class="btn wide" id="pkback">返回</button>`;
@@ -866,16 +868,18 @@ const UI = {
   // --- 鬼怪名冊 ---
   openRoster() {
     const render = () => {
-      let h = `<p class="desc">用壽包升級鬼怪。等級上限 ${F.ghostCap()}。雜鬼名額 ${fodderCount()}/${F.rosterCap()}　壽包 ${fmt(S.res.buns)}</p>${typeof N30W !== 'undefined' ? `<button class="btn wide" id="n30cx">新鬼圖鑑（${N30W.ids().filter(k => N30W.owned(k)).length}/${N30W.ids().length}）</button>` : ''}<div class="glist">`;
+      let h = `<p class="desc">用壽包升級鬼怪。等級上限 ${F.ghostCap()}。雜鬼名額 ${fodderCount()}/${F.rosterCap()}　壽包 ${fmt(S.res.buns)}</p><p class="desc gp-line">${GP.T('鬼力會帶到主線戰鬥、陽間站崗、樓裡有鬼、夜班嚇人、運動會等所有玩法：喺村升級、落訓練班練嚇功，出面即刻勁啲。出面打唔過，就返嚟升級。', '鬼力會帶到主線戰鬥、陽間站崗、樓裡有鬼、夜班嚇人、運動會等所有玩法：在村裡升級、去訓練班練嚇功，外面立即變強。外面打不過，就回來升級。')}</p>${typeof N30W !== 'undefined' ? `<button class="btn wide" id="n30cx">新鬼圖鑑（${N30W.ids().filter(k => N30W.owned(k)).length}/${N30W.ids().length}）</button>` : ''}<div class="glist">`;
       const order = S.ghosts.slice().sort((a, b) => (a.k === 'afu' ? -1 : b.k === 'afu' ? 1 : (a.q === '名' ? 0 : 1) - (b.q === '名' ? 0 : 1) || F.glv(b) - F.glv(a)));
       for (const g of order) {
         const lv = F.glv(g), cost = F.lvCost(lv), d = gdef(g), sk = SKILLS[g.k];
         const inTeam = S.team.includes(g.id) ? '出陣' : S.adviser === g.id ? '軍師' : '';
+        const gpNow = GP.pow(g), gpNext = g.k !== 'afu' && lv < F.ghostCap() ? (() => { const o = g.lv; g.lv = o + 1; const v = GP.pow(g); g.lv = o; return v; })() : null;
         h += `<div class="gcard"><canvas data-por="${g.k}"></canvas><div class="gc-main"><div><b>${g.name}</b> <i class="q q${g.q}">${g.q}</i> <span class="lvl">Lv${lv}</span> ${inTeam ? `<i class="tag">${inTeam}</i>` : ''}</div>
           <small>${GHOSTS[g.k] ? GHOSTS[g.k].title + '　' : ''}力 ${F.stat(g, 0)}　智 ${F.stat(g, 1)}　武 ${F.stat(g, 2)}　${d.range === 'ranged' ? '遠程' : '近戰'}</small>
+          <small class="gp-row">${GP.T('鬼力', '鬼力')} <b>${gpNow}</b>${gpNext ? `　${GP.T('升級後', '升級後')} <b class="gp-up">${gpNext}</b>（+${gpNext - gpNow}）` : ''}${typeof Rework !== 'undefined' ? `　${GP.T('嚇功', '嚇功')} Lv${Rework.drillLv(g.k)}` : ''}</small>
           <small class="sk">【${sk.name}】${sk.desc}</small>
           ${GHOSTS[g.k] ? `<small class="tr">${typeof L === 'function' ? L(GHOSTS[g.k].trait) : GHOSTS[g.k].trait}</small>` : ''}${GHOSTS[g.k] && GHOSTS[g.k].lore ? `<small class="tr">${GHOSTS[g.k].lore}</small>` : ''}
-          <small>${g.post ? '打工：' + POSTS[g.post].name : g.k === 'afu' ? '主公本人' : '閒著'}</small></div>
+          <small>${g.post ? postLabel(g.post) : g.k === 'afu' ? '主公本人' : '閒著'}</small></div>
           <div class="gc-act">${g.k === 'afu' ? '<small>隨主公等級成長</small>' : lv < F.ghostCap() ? `<button class="btn sm gold" data-up="${g.id}" ${S.res.buns >= cost ? '' : 'disabled'}>升級<br><small>壽包 ${cost}</small></button>` : '<small>已達上限</small>'}
           ${g.q !== '名' && g.q !== '主' ? `<button class="btn sm ghost" data-rel="${g.id}">送去投胎</button>` : ''}</div></div>`;
       }

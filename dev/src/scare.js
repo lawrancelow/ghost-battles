@@ -156,7 +156,7 @@ const Scare = {
       const best = (S.scare && S.scare.best[siteId]) || 0, st = this.starsOf(siteId, best);
       let h = `<p class="desc">${site.name}。天亮前三分鐘。<br>先用小動靜讓人起疑，等他頭上冒「！」再出大招。</p>`;
       h += `<p class="desc">最高紀錄：${best}　${'★'.repeat(st)}${'☆'.repeat(3 - st)}</p>`;
-      h += `<div class="sc-pick">${ghosts.map(k => `<button class="sc-g ${this.pick.chosen.includes(k) ? 'on' : ''}" data-k="${k}" ${k === 'afu' ? 'disabled' : ''}><canvas data-por="${k}"></canvas><b>${SCARE_GHOSTS[k].name}</b><small>${SCARE_GHOSTS[k].skill}・${SCARE_TYPES[SCARE_GHOSTS[k].type]}</small></button>`).join('')}</div>`;
+      h += `<div class="sc-pick">${ghosts.map(k => `<button class="sc-g ${this.pick.chosen.includes(k) ? 'on' : ''}" data-k="${k}" ${k === 'afu' ? 'disabled' : ''}><canvas data-por="${k}"></canvas><b>${SCARE_GHOSTS[k].name}</b><small>${SCARE_GHOSTS[k].skill}・${SCARE_TYPES[SCARE_GHOSTS[k].type]}・鬼力 ${k === 'afu' ? GP.pow(S.ghosts.find(x => x.k === 'afu')) : GP.kindPow(k)}</small></button>`).join('')}</div>`;
       h += `<p class="desc">阿福一定去。另外最多帶兩隻。</p><button class="btn gold wide" id="sc-go">出發，回陽間</button>`;
       return h;
     };
@@ -513,16 +513,18 @@ const Scare = {
     const g = SCARE_GHOSTS[k]; if (!g || this.cd[k] > 0) return; const cost = g.cost || 35;
     if (this.mana < cost) { this.toast('陰氣不夠，等一下'); return; }
     if (!g.aoe && (!n || n.gone)) { this.toast('先點一個人'); return; } if (!g.aoe && n.out) { this.toast(`${n.d.name}不在`); return; }
-    this.mana -= cost; this.cd[k] = 22;
+    const gq = this.gpq(k); this.mana -= cost; this.cd[k] = Math.round(22 / (1 + 0.25 * (gq - 1)) * 10) / 10; // 鬼力：17 級 ≈19 秒、40 級 ≈17 秒（gpower.js）
     const gx = g.aoe ? (this.site.pano ? this.camX + this.viewW() / 2 : 0.5) : n.x + (this.site.pano ? (this.pt(n.x, 0)[0] > this.W / 2 ? -0.13 : 0.13) : (n.x > 0.5 ? -0.13 : 0.13)), gy = g.aoe ? 0.45 : n.y;
     this.fx.push({ kind:'ghost', ghost:k, life:2.4, max:2.4, gx, gy, n, sig:g.fx, sigText:g.fxText, col:g.col });
     if (!this.headless) { Sound.play('skill'); this.shake = 1; this.vign = 1; if (this.office()) setTimeout(() => this.active && OFFICE.onScare(gx, gy, g.aoe ? 0.75 : 1), (g.aoe ? 0.5 : 0.9) * 1000); }
     const tg = g.aoe ? this.npcs.filter(m => !m.gone && !m.out && !m.fleeing) : [n];
     if (g.aoe && !this.headless) this.float(0.5, 0.4, g.line, '#e8c8ff', 2.2);
     this._src = gx; this._dl = g.aoe ? 0.5 : 0.9; // 鬼「出手」那一刻（strike）才嚇到人
-    this._ghost = k; this._vis = true; this._aoe = !!g.aoe; for (const m of tg) this.hit(m, this.ghostType(k, m), g.base, 3, g.aoe ? null : (typeof L === 'function' ? L(g.line) : g.line), !g.aoe); this._ghost = null; this._src = null; this._dl = 0; this._vis = false; this._aoe = false;
+    this._ghost = k; this._vis = true; this._aoe = !!g.aoe; for (const m of tg) this.hit(m, this.ghostType(k, m), Math.round(g.base * (1 + 0.35 * (gq - 1))), 3, g.aoe ? null : (typeof L === 'function' ? L(g.line) : g.line), !g.aoe); this._ghost = null; this._src = null; this._dl = 0; this._vis = false; this._aoe = false;
     if (g.aoe) { this.wakeGuard(null); this.expose(EXPO.aoe); if (!this.headless) this.float(0.5, 0.33, '全場都見到：冇人會話佢哋黐線', '#c9b8ff', 2.2); }
   },
+  // 鬼力（gpower.js）：同一隻鬼相對自己 1 級嘅成長（1 級 = 1，手感同舊版一樣）。大招驚嚇 ×(1＋0.35×(成長−1))，冷卻 ÷(1＋0.25×(成長−1))
+  gpq(k) { try { return k === 'afu' ? GP.grow(S.ghosts.find(g => g.k === 'afu')) : GP.kindGrow(k); } catch (e) { return 1; } },
   // 混合類型嘅招（例如 燈／電話）：對住呢個人揀佢最怕嗰種
   ghostType(k, n) { const g = SCARE_GHOSTS[k], ts = g.types || [g.type]; if (!n || ts.length < 2) return ts[0]; return ts.find(t => n.d.weak.includes(t)) || ts.find(t => !n.d.immune.includes(t)) || ts[0]; },
   hit(n, type, base, tier, ghostLine, direct) {

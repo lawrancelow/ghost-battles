@@ -149,7 +149,7 @@ window.UnitSys=function(A){
     g.inv=Math.max(g.inv||0,0.25); g.node=un.id; g.to=null; g.auto=null; g.autoS=null;
     if (g0.active!==g.i) g0.active=g.i;
     // 鬼移動
-    var sp=g.d.sp*g0.mods.spd*2.1, mv=0, jx=S.joy&&S.joy.on?(S.joy.x-S.joy.ox)/58:0;
+    var sp=g.d.sp*g0.mods.spd*(g.spm||1)*2.1, mv=0, jx=S.joy&&S.joy.on?(S.joy.x-S.joy.ox)/58:0;
     if (S.stun>0||S.sc&&S.sc.t<OMEN+0.5) jx=0;
     if (Math.abs(jx)>0.2){ S.goX=null; S.pend=null; mv=clamp(jx,-1,1)*sp*dt; if (S.cam.free) S.cam.free=null; }
     else if (S.goX!=null&&S.stun<=0){ var d=S.goX-S.gx; if (Math.abs(d)<4){ S.goX=null; } else mv=Math.sign(d)*Math.min(Math.abs(d),sp*dt); }
@@ -189,12 +189,12 @@ window.UnitSys=function(A){
     var st=S.still>=0.12&&S.stun<=0&&!S.sc&&S.t>0.8;
     if (near<0||!st){ if (S.searchI!==near) S.searchP=0; S.searchI=near; return; }
     if (S.searchI!==near){ S.searchI=near; S.searchP=0; }
-    if (near===99){ S.searchP+=dt*g0.mods.task/2.4; if (rnd()<dt*8) part(S.task.x+(rnd()-0.5)*30,S.task.y,(rnd()-0.5)*60,-80,0.6,'dust');
+    if (near===99){ S.searchP+=dt*g0.mods.task*(g.tm||1)/2.4; if (rnd()<dt*8) part(S.task.x+(rnd()-0.5)*30,S.task.y,(rnd()-0.5)*60,-80,0.6,'dust');
       if (S.searchP>=1){ S.searchP=0; S.task.done=true; taskDone(); } return; }
     var it=itemsAt(near).find(function(k){ var I=A.ITEM[k]; return !I.who||I.who===g.d.key; });
     if (!it){ if (!S.flags['who'+near]){ S.flags['who'+near]=1; var k0=itemsAt(near)[0], w=A.ITEM[k0].who; wfl(S.search[near].x,S.search[near].y-50,(A.ITEM[k0].n)+'要'+({eking:'餓鬼',toyol:'Toyol',tianhua:'天花姐'}[w]||'其他鬼')+'先拎得','#e6a85a'); } return; }
     if (it!=='doll'&&it!=='key'&&it!=='key2'&&it!=='lost'&&g0.bag.length>=A.BAGMAX){ if (!S.flags.full){ S.flags.full=1; wfl(S.gx,lay.floor-lay.ph-20,'收穫格滿咗！','#e48a78'); } return; }
-    S.searchP+=dt*g0.mods.task/A.ITEM[it].t;
+    S.searchP+=dt*g0.mods.task*(g.tm||1)/A.ITEM[it].t;
     if (S.searchP>=1){ S.searchP=0; var ix=un.items.indexOf(it); if (ix>=0){ un.items.splice(ix,1); A.takeItem(g,it,un); wfl(S.search[near].x,S.search[near].y-60,'搜到'+A.ITEM[it].n+'！','#e6a85a'); } }
   }
   // 物件分佈喺各個搜嘢點：un.items 第 j 件放喺第 j%n 個點
@@ -267,7 +267,7 @@ window.UnitSys=function(A){
     if (hit){ A.addFear(2,S.un.x,S.un.y-100); g.energy=Math.min(100,(g.energy||0)+6); }
     for (var i=0;i<8;i++) part(p.x+(rnd()-0.5)*40,p.y+(rnd()-0.5)*30,(rnd()-0.5)*120,-60-rnd()*60,0.8,p.k==='tap'||p.k==='shower'||p.k==='jar'?'drop':'spark');
     return true; }
-  function addRFear(a,amt){ var r=a.r, g0=G(); r.fear=(r.fear||0)+amt*g0.mods.pow*(1-(r.brave||0)); r.jumpT=0.5; a.hitT=S.t; if (a.st==='act'||a.st==='walk') { a.st='cower'; a.cowT=0.9; }
+  function addRFear(a,amt){ var r=a.r, g0=G(); r.fear=(r.fear||0)+amt*g0.mods.pow*(A.gpF?A.gpF(S.g):1)*(1-(r.brave||0));   // GP HOOK：鬼力 ×mul ÷ 樓力 r.jumpT=0.5; a.hitT=S.t; if (a.st==='act'||a.st==='walk') { a.st='cower'; a.cowT=0.9; }
     if (r.fear>=100&&!(r.fleeAfter>0)&&r.state==='home'){ r.fleeAfter=0.9; r.fleeG=S.g; } }
   function roomTask(a){ var T=S.task; if (T.k!=='room'||T.done) return; var R=S.lay.rooms[roomAt(a.x)]; if (R.k===T.room&&(a.act===T.act||a.prevAct===T.act)&&(a.st==='act'||a.st==='cower')){ T.done=true; taskDone(); } }
   function taskDone(){ var g=S.g, g0=G(), I=iu(S.un); if (I.done) return; I.done=true; S.task.done=true;
@@ -455,7 +455,7 @@ window.UnitSys=function(A){
     if (id==='follow'){ S.cam.free=null; return; }
     if (id.indexOf('room')===0){ var R=S.lay.rooms[+id.slice(4)], V=view(); S.cam.free=clamp((R.x0+R.x1)/2-V.vw/2,0,Math.max(0,S.lay.W-V.vw)); return; }
     if (id==='scare'){ S.cam.free=null; U.scare(); return; }
-    if (id==='inv'){ if (g.invCd>0) return; S.invT=g0.mods.inv; g.invCd=g0.mods.inv+9; wfl(S.gx,S.lay.floor-S.lay.ph-20,'隱身','#a9a0d8'); return; }
+    if (id==='inv'){ if (g.invCd>0) return; S.invT=g0.mods.inv*(g.im||1); g.invCd=S.invT+9*(g.icd||1); wfl(S.gx,S.lay.floor-S.lay.ph-20,'隱身','#a9a0d8'); return; }
     if (id==='ctx'){ var C=ctxBtn(); if (!C) return; if (C.k==='deliver'){ A.actPress(); msg('交還咗失物，佢哋好似冇咁驚喇','#b2d394'); return; } if (C.k==='hot') trigger(C.p,false); return; }
   }
   function worldTap(x,y){ var V=view(), wx=x/V.s+S.cam.x, wy=(y-V.top)/V.s+S.lay.crop[0], lay=S.lay;

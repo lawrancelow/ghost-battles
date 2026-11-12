@@ -20,6 +20,11 @@ R("  function drawTitle(){ crBg(); crTitleDeco();","  function drawTitle(){ crBg
 R("btn('zin',VW-56,TOP+8,46,46,'＋','#24242a');","btn('quit',10,TOP+8,62,46,'離開','#2c2c33'); btn('zin',VW-56,TOP+8,46,46,'＋','#24242a');")
 R("btn('title',VW/2+10,y0+0","btn('title',VW/2+10,y0+0",0)  # no-op check
 R("btn('title',VW/2+10,y+420-60,120,44,'返主頁','#2c2c33');","btn('toMap',VW/2+10,y+420-60,120,44,'返地圖','#2c2c33'); if (o.reward!=null){ crText(ctx,'收到冥幣 +'+o.reward,VW/2,y+420-76,17,'#e6a85a','center'); }")
+# GP HOOK（lyg/tools/patch_v11_gp.py）：樓力存喺 S.tower（endNight 嗰度會 save()）；返村升級＝收埋 Tower、收地圖、開鬼怪名冊
+R("  function gpSv(){ try{ return JSON.parse(localStorage.getItem('lyg_pangsa')||'{}'); }catch(e){ return {}; } }\n  function gpSvPut(sv){ try{ localStorage.setItem('lyg_pangsa',JSON.stringify(sv)); }catch(e){} }",
+  "  function gpSv(){ return TS(); }\n  function gpSvPut(sv){}")
+R("  function gpGoVillage(){ scene='title'; }",
+  "  function gpGoVillage(){ var o=G&&G.over, need=o&&o.gpTeam<o.gpNeed?o.gpNeed:0; close(); try{ if (typeof World!=='undefined') World.close(); }catch(e){ console.warn(e); }\n    var ok=false; try{ if (typeof UI!=='undefined'&&UI.openRoster){ UI.openRoster(); ok=true; } }catch(e){ console.warn(e); }\n    try{ Fx.toast((ok?'':'返到村喇！')+(window.GP?GP.hint(need):'返村幫隻鬼升級再嚟過！')); }catch(e){} }")
 R("function frame(ts){ requestAnimationFrame(frame);","function frame(ts){ if (!OPEN){ RAF=0; return; } RAF=requestAnimationFrame(frame);")
 R("window.addEventListener('resize',resize); resize();","window.addEventListener('resize',function(){ if (OPEN) resize(); });")
 i=s.index("  (function load(cb){"); j=s.index("\n",i)

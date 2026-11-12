@@ -73,6 +73,7 @@ window.LiftSys=function(A){
   function cabF(){ return Math.round(S.pos); }
   function atFloor(){ return Math.abs(S.pos-Math.round(S.pos))<0.002; }
   function ghost(){ return S&&S.gi!=null?G().gh[S.gi]:null; }
+  function gpm(){ try{ return (window.TW&&TW.gpF&&S&&S.gi!=null)?(TW.gpF(S.gi)||1):1; }catch(e){ return 1; } }   // 鬼力：電梯嚇人都跟村入面成長
   function sayR(o,t){ o.say=t; o.sayT=2.8; }
   function fl(x,y,t,c){ try{ A.float(x,y,t,c); }catch(e){} }
   function riderSpr(o){ return o.kind==='guard'?((A.HUM&&A.HUM[o.ref.kind]&&A.HUM[o.ref.kind].spr)||'res_guard'):o.ref.sprite; }
@@ -206,12 +207,12 @@ window.LiftSys=function(A){
     if (k==='mirror'){ S.fx.mirror=3.6; tone(196,0,1.6,0.05,'triangle'); }
     if (k==='over'){ S.fx.over=3.6; SND.buzz(); if (S.st==='closing'){ S.st='opening'; } }
     if (k==='stuck'){ var mid=Math.min(top()-0.5,Math.max(0.5,Math.floor(S.pos)+0.5)); if (S.dir<0&&!atFloor()) mid=Math.max(0.5,Math.ceil(S.pos)-0.5); S.stuckTo=mid; S.st='stuckMove'; S.stuckT=5.5; SND.hum(true); if (S.door>0){ /* 由開門狀態直接拉走：先閂 */ S.door=0; SND.door(); } }
-    if (k==='door'){ S.fx.dark=Math.max(S.fx.dark,2.2); scareLanding(); A.addFear&&A.addFear(Math.round(T.f*0.4),c.cx,fyf(S.pos)-120); return true; }
+    if (k==='door'){ S.fx.dark=Math.max(S.fx.dark,2.2); scareLanding(); A.addFear&&A.addFear(Math.round(T.f*0.4*gpm()),c.cx,fyf(S.pos)-120); return true; }
     // 𨋢入面嘅人
     var tot=0;
     inCab().forEach(function(o){
       if (o.kind==='guard'){ sayR(o,line('gReport')); o.mood='mroom'; tot+=8; fl(c.cx,fyf(S.pos)-130,'保安用對講機報𨋢故障','#ffb0b0'); return; }
-      var r=o.ref, amt=T.f*(1-(r.brave||0)); o.fear+=amt; r.fear=(r.fear||0)+amt*0.3; tot+=amt;
+      var r=o.ref, amt=T.f*(1-(r.brave||0))*gpm(); o.fear+=amt; r.fear=(r.fear||0)+amt*0.3; tot+=amt;
       if (o.fear>=60||k==='stuck'&&o.fear>=45){ o.mood='bolt'; sayR(o,line(k)); }
       else { o.mood='cower'; sayR(o,line(k)); }
     });

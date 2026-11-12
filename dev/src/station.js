@@ -107,7 +107,7 @@ const Station = (() => {
   function drillLv(k) { return has(Rework) ? Rework.drillLv(k) : 1; }
   function rivalType(k) { if (k === 'bryan') return 'sound'; const f = has(Rework) ? Rework.fearOf(k) : null; return f ? f.i[0] : 'shadow'; }
   // 鬼嘅站崗威力
-  function power(g) { const lv = has(F) ? F.glv(g) : 1; return 34 * (1 + 0.24 * (drillLv(g.k) - 1)) * (1 + lv / 55); }
+  function power(g) { return 34 * (has(GP) ? GP.mul(g) : 1); } // 鬼力（gpower.js）：1 級名鬼 ≈ 34（舊版 34.6），17 級 ≈ 51–69，40 級＋嚇功 5 ≈ 100
   function rivalPower(k, m) { return k === 'bryan' ? 70 : 30 + m.habit * 2.2; }
   const share = (m) => { const h = m.hist; if (!h.length) return { me:0, en:0, n:0 }; let a = 0, b = 0; for (const x of h) { if (x === 1) a++; else if (x === 2) b++; } return { me:a / h.length, en:b / h.length, n:h.length }; };
   const brokeRatio = (m) => { const s = share(m); return s.me + s.en; };
@@ -307,7 +307,7 @@ const Station = (() => {
     const def = mapOf(mapId), p = def.posts[pi], list = freeGhosts();
     const cur = ms(mapId).posts[pi];
     let h = `<p class="desc">派一隻鬼到 <b>${def.short}・${p.name}</b>。這個崗位適合「${W[p.fit]}」。路人：${def.people.map(x => x.name).join('、')}。</p>`;
-    h += `<div class="stn-pick">` + list.map(g => { const ts = typesOf(g.k), fit = ts.includes(p.fit); return `<div class="gi" data-st-pick="${g.id}"><canvas data-por="${g.k}"></canvas><div><b>${g.name}</b> <i class="q q${g.q}">${g.q}</i><small>嚇法：${ts.map(t => W[t]).join('／')}${fit ? '　<em class="stn-fit">啱這個崗位</em>' : ''}　嚇功 Lv${drillLv(g.k)}　威力 ${Math.round(power(g))}</small></div></div>`; }).join('') + `</div>`;
+    h += `<div class="stn-pick">` + list.map(g => { const ts = typesOf(g.k), fit = ts.includes(p.fit); return `<div class="gi" data-st-pick="${g.id}"><canvas data-por="${g.k}"></canvas><div><b>${g.name}</b> <i class="q q${g.q}">${g.q}</i><small>嚇法：${ts.map(t => W[t]).join('／')}${fit ? '　<em class="stn-fit">啱這個崗位</em>' : ''}　嚇功 Lv${drillLv(g.k)}　鬼力 ${has(GP) ? GP.pow(g) : '-'}　威力 ${Math.round(power(g))}</small></div></div>`; }).join('') + `</div>`;
     if (!list.length) h += `<p class="desc">沒有空閒的鬼。先把村裡幹活的鬼撤下來，或等被趕走的鬼休息好。</p>`;
     h += `<button class="btn" data-st-back="1">返回</button>`;
     return h;

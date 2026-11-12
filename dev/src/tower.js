@@ -74,6 +74,7 @@ window.LiftSys=function(A){
   function cabF(){ return Math.round(S.pos); }
   function atFloor(){ return Math.abs(S.pos-Math.round(S.pos))<0.002; }
   function ghost(){ return S&&S.gi!=null?G().gh[S.gi]:null; }
+  function gpm(){ try{ return (window.TW&&TW.gpF&&S&&S.gi!=null)?(TW.gpF(S.gi)||1):1; }catch(e){ return 1; } }   // 鬼力：電梯嚇人都跟村入面成長
   function sayR(o,t){ o.say=t; o.sayT=2.8; }
   function fl(x,y,t,c){ try{ A.float(x,y,t,c); }catch(e){} }
   function riderSpr(o){ return o.kind==='guard'?((A.HUM&&A.HUM[o.ref.kind]&&A.HUM[o.ref.kind].spr)||'res_guard'):o.ref.sprite; }
@@ -207,12 +208,12 @@ window.LiftSys=function(A){
     if (k==='mirror'){ S.fx.mirror=3.6; tone(196,0,1.6,0.05,'triangle'); }
     if (k==='over'){ S.fx.over=3.6; SND.buzz(); if (S.st==='closing'){ S.st='opening'; } }
     if (k==='stuck'){ var mid=Math.min(top()-0.5,Math.max(0.5,Math.floor(S.pos)+0.5)); if (S.dir<0&&!atFloor()) mid=Math.max(0.5,Math.ceil(S.pos)-0.5); S.stuckTo=mid; S.st='stuckMove'; S.stuckT=5.5; SND.hum(true); if (S.door>0){ /* 由開門狀態直接拉走：先閂 */ S.door=0; SND.door(); } }
-    if (k==='door'){ S.fx.dark=Math.max(S.fx.dark,2.2); scareLanding(); A.addFear&&A.addFear(Math.round(T.f*0.4),c.cx,fyf(S.pos)-120); return true; }
+    if (k==='door'){ S.fx.dark=Math.max(S.fx.dark,2.2); scareLanding(); A.addFear&&A.addFear(Math.round(T.f*0.4*gpm()),c.cx,fyf(S.pos)-120); return true; }
     // 𨋢入面嘅人
     var tot=0;
     inCab().forEach(function(o){
       if (o.kind==='guard'){ sayR(o,line('gReport')); o.mood='mroom'; tot+=8; fl(c.cx,fyf(S.pos)-130,'保安用對講機報𨋢故障','#ffb0b0'); return; }
-      var r=o.ref, amt=T.f*(1-(r.brave||0)); o.fear+=amt; r.fear=(r.fear||0)+amt*0.3; tot+=amt;
+      var r=o.ref, amt=T.f*(1-(r.brave||0))*gpm(); o.fear+=amt; r.fear=(r.fear||0)+amt*0.3; tot+=amt;
       if (o.fear>=60||k==='stuck'&&o.fear>=45){ o.mood='bolt'; sayR(o,line(k)); }
       else { o.mood='cower'; sayR(o,line(k)); }
     });
@@ -678,7 +679,7 @@ window.UnitSys=function(A){
     g.inv=Math.max(g.inv||0,0.25); g.node=un.id; g.to=null; g.auto=null; g.autoS=null;
     if (g0.active!==g.i) g0.active=g.i;
     // 鬼移動
-    var sp=g.d.sp*g0.mods.spd*2.1, mv=0, jx=S.joy&&S.joy.on?(S.joy.x-S.joy.ox)/58:0;
+    var sp=g.d.sp*g0.mods.spd*(g.spm||1)*2.1, mv=0, jx=S.joy&&S.joy.on?(S.joy.x-S.joy.ox)/58:0;
     if (S.stun>0||S.sc&&S.sc.t<OMEN+0.5) jx=0;
     if (Math.abs(jx)>0.2){ S.goX=null; S.pend=null; mv=clamp(jx,-1,1)*sp*dt; if (S.cam.free) S.cam.free=null; }
     else if (S.goX!=null&&S.stun<=0){ var d=S.goX-S.gx; if (Math.abs(d)<4){ S.goX=null; } else mv=Math.sign(d)*Math.min(Math.abs(d),sp*dt); }
@@ -718,12 +719,12 @@ window.UnitSys=function(A){
     var st=S.still>=0.12&&S.stun<=0&&!S.sc&&S.t>0.8;
     if (near<0||!st){ if (S.searchI!==near) S.searchP=0; S.searchI=near; return; }
     if (S.searchI!==near){ S.searchI=near; S.searchP=0; }
-    if (near===99){ S.searchP+=dt*g0.mods.task/2.4; if (rnd()<dt*8) part(S.task.x+(rnd()-0.5)*30,S.task.y,(rnd()-0.5)*60,-80,0.6,'dust');
+    if (near===99){ S.searchP+=dt*g0.mods.task*(g.tm||1)/2.4; if (rnd()<dt*8) part(S.task.x+(rnd()-0.5)*30,S.task.y,(rnd()-0.5)*60,-80,0.6,'dust');
       if (S.searchP>=1){ S.searchP=0; S.task.done=true; taskDone(); } return; }
     var it=itemsAt(near).find(function(k){ var I=A.ITEM[k]; return !I.who||I.who===g.d.key; });
     if (!it){ if (!S.flags['who'+near]){ S.flags['who'+near]=1; var k0=itemsAt(near)[0], w=A.ITEM[k0].who; wfl(S.search[near].x,S.search[near].y-50,(A.ITEM[k0].n)+'要'+({eking:'餓鬼',toyol:'Toyol',tianhua:'天花姐'}[w]||'其他鬼')+'先拎得','#e6a85a'); } return; }
     if (it!=='doll'&&it!=='key'&&it!=='key2'&&it!=='lost'&&g0.bag.length>=A.BAGMAX){ if (!S.flags.full){ S.flags.full=1; wfl(S.gx,lay.floor-lay.ph-20,'收穫格滿咗！','#e48a78'); } return; }
-    S.searchP+=dt*g0.mods.task/A.ITEM[it].t;
+    S.searchP+=dt*g0.mods.task*(g.tm||1)/A.ITEM[it].t;
     if (S.searchP>=1){ S.searchP=0; var ix=un.items.indexOf(it); if (ix>=0){ un.items.splice(ix,1); A.takeItem(g,it,un); wfl(S.search[near].x,S.search[near].y-60,'搜到'+A.ITEM[it].n+'！','#e6a85a'); } }
   }
   // 物件分佈喺各個搜嘢點：un.items 第 j 件放喺第 j%n 個點
@@ -796,7 +797,7 @@ window.UnitSys=function(A){
     if (hit){ A.addFear(2,S.un.x,S.un.y-100); g.energy=Math.min(100,(g.energy||0)+6); }
     for (var i=0;i<8;i++) part(p.x+(rnd()-0.5)*40,p.y+(rnd()-0.5)*30,(rnd()-0.5)*120,-60-rnd()*60,0.8,p.k==='tap'||p.k==='shower'||p.k==='jar'?'drop':'spark');
     return true; }
-  function addRFear(a,amt){ var r=a.r, g0=G(); r.fear=(r.fear||0)+amt*g0.mods.pow*(1-(r.brave||0)); r.jumpT=0.5; a.hitT=S.t; if (a.st==='act'||a.st==='walk') { a.st='cower'; a.cowT=0.9; }
+  function addRFear(a,amt){ var r=a.r, g0=G(); r.fear=(r.fear||0)+amt*g0.mods.pow*(A.gpF?A.gpF(S.g):1)*(1-(r.brave||0));   // GP HOOK：鬼力 ×mul ÷ 樓力 r.jumpT=0.5; a.hitT=S.t; if (a.st==='act'||a.st==='walk') { a.st='cower'; a.cowT=0.9; }
     if (r.fear>=100&&!(r.fleeAfter>0)&&r.state==='home'){ r.fleeAfter=0.9; r.fleeG=S.g; } }
   function roomTask(a){ var T=S.task; if (T.k!=='room'||T.done) return; var R=S.lay.rooms[roomAt(a.x)]; if (R.k===T.room&&(a.act===T.act||a.prevAct===T.act)&&(a.st==='act'||a.st==='cower')){ T.done=true; taskDone(); } }
   function taskDone(){ var g=S.g, g0=G(), I=iu(S.un); if (I.done) return; I.done=true; S.task.done=true;
@@ -984,7 +985,7 @@ window.UnitSys=function(A){
     if (id==='follow'){ S.cam.free=null; return; }
     if (id.indexOf('room')===0){ var R=S.lay.rooms[+id.slice(4)], V=view(); S.cam.free=clamp((R.x0+R.x1)/2-V.vw/2,0,Math.max(0,S.lay.W-V.vw)); return; }
     if (id==='scare'){ S.cam.free=null; U.scare(); return; }
-    if (id==='inv'){ if (g.invCd>0) return; S.invT=g0.mods.inv; g.invCd=g0.mods.inv+9; wfl(S.gx,S.lay.floor-S.lay.ph-20,'隱身','#a9a0d8'); return; }
+    if (id==='inv'){ if (g.invCd>0) return; S.invT=g0.mods.inv*(g.im||1); g.invCd=S.invT+9*(g.icd||1); wfl(S.gx,S.lay.floor-S.lay.ph-20,'隱身','#a9a0d8'); return; }
     if (id==='ctx'){ var C=ctxBtn(); if (!C) return; if (C.k==='deliver'){ A.actPress(); msg('交還咗失物，佢哋好似冇咁驚喇','#b2d394'); return; } if (C.k==='hot') trigger(C.p,false); return; }
   }
   function worldTap(x,y){ var V=view(), wx=x/V.s+S.cam.x, wy=(y-V.top)/V.s+S.lay.crop[0], lay=S.lay;
@@ -1134,9 +1135,9 @@ const Tower=(function(){
 
   // ---------- 鬼 ----------
   var GH=[
-    {key:'eking', name:'餓鬼', sprite:'eguiking', h:76, sp:104, task:'food', cross:{}, tip:'餓鬼：入屋搵宵夜，站喺金圈讀條。'},
-    {key:'toyol', name:'Toyol', sprite:'toyol', h:70, sp:132, task:'money', cross:{zha:1}, tip:'Toyol：細隻，鐵閘罅都鑽得過，專偷銀包。'},
-    {key:'tianhua', name:'天花姐', sprite:'tianhua', h:74, sp:114, task:'comb', cross:{nuomi:1}, tip:'天花姐：喺天花爬，地下撒嘅糯米攔佢唔住。'}
+    {key:'eking', gpk:'eguiking', name:'餓鬼', sprite:'eguiking', h:76, sp:104, task:'food', cross:{}, tip:'餓鬼：入屋搵宵夜，站喺金圈讀條。'},
+    {key:'toyol', gpk:'toyol', name:'Toyol', sprite:'toyol', h:70, sp:132, task:'money', cross:{zha:1}, tip:'Toyol：細隻，鐵閘罅都鑽得過，專偷銀包。'},
+    {key:'tianhua', gpk:'tianhua', name:'天花姐', sprite:'tianhua', h:74, sp:114, task:'comb', cross:{nuomi:1}, tip:'天花姐：喺天花爬，地下撒嘅糯米攔佢唔住。'}
   ];
   var WARD={
     fu:{n:'紅紙符', m:'門頂貼住紅紙符，入唔到，繞路啦'},
@@ -1154,6 +1155,50 @@ const Tower=(function(){
     {id:'fear', t:'怕意加成', d:'嚇走人掉多 30% 怕意'}
   ];
 
+  // ===== GP HOOK（tools/patch_v11_gp.py）：村入面嘅鬼力 → 樓裡有鬼三隻鬼嘅能力 =====
+  var GP_TRAINEE_POW=250, GP_BASE={flat:1100, shop:1500}, GP_TIER_MAX=8;
+  var GP_TRAINEE_MSG='村入面未有呢隻鬼，只係見習水平。返村招募／升級先會變強！';
+  function gpRead(d){ var P=window.GP; if (!P||!d.gpk) return {mul:1,pow:0,tr:false,na:true};
+    try{ var pw=P.kindPow(d.gpk)||0, m=P.kindMul(d.gpk); if (!isFinite(m)||m<=0) m=1; return {mul:m,pow:pw,tr:pw<=0,na:false}; }catch(e){ return {mul:1,pow:0,tr:false,na:true}; } }
+  function gpApply(g){ var r=gpRead(g.d), m=r.mul; g.mul=m; g.pow=r.pow; g.trainee=r.tr; g.gpNA=r.na;
+    g.spm=Math.min(1.12,1+0.08*(m-1));                         // 移動（封頂 +12%，唔好快過保安太多）
+    g.em=1+0.2*(m-1);                                            // 能量累積
+    g.tm=Math.min(1.3,1+0.1*(m-1));                              // 讀條（搜嘢）
+    g.im=Math.max(0.85,Math.min(1.35,1+0.15*(m-1)));            // 隱身時間
+    g.icd=Math.max(0.7,Math.min(1.1,1-0.15*(m-1)));             // 隱身冷卻（9 秒嗰部分）
+    g.um=Math.max(0.9,Math.min(1.3,1+0.15*(m-1)));              // 大招控場時長
+    g._eL=g.energy||0; }
+  function gpSv(){ return TS(); }
+  function gpSvPut(sv){}
+  function gpTier(lv){ if (!window.GP) return 0; var sv=gpSv()||{}; return Math.min(GP_TIER_MAX,+(sv['win_'+lv]||0)); }
+  function gpNeed(lv){ return Math.round((GP_BASE[lv]||1100)*(1+0.18*gpTier(lv))/10)*10; }
+  function gpDiff(lv){ return Math.pow(1+0.18*gpTier(lv),0.6); }
+  function gpPowOf(d){ var r=gpRead(d); return r.na?0:r.tr?GP_TRAINEE_POW:r.pow; }
+  function gpTeam(){ return GH.reduce(function(s,d){ return s+gpPowOf(d); },0); }
+  // 住客受驚倍率：鬼嘅 mul ÷ 樓力難度（冇鬼／陷阱自己嚇＝1）
+  function gpF(g){ return ((g&&g.mul)||1)/((G&&G.gpD)||1); }
+  // 能量：每幀將「增加咗嘅部分」乘 em（所有來源，包括入屋模式、𨋢、支線）
+  function gpE(g){ var e=g.energy||0, L=g._eL; if (L!=null&&e>L&&g.em&&g.em!==1) g.energy=Math.min(100,L+(e-L)*g.em); g._eL=g.energy; }
+  function gpStart(){ G.gh.forEach(gpApply); G.gpHas=!!window.GP; G.gpTier=gpTier(curLv); G.gpD=gpDiff(curLv); G.gpNeed=gpNeed(curLv); G.gpTeam=gpTeam();
+    G.gpMsg=G.gpHas?('今晚'+LV.name+'第 '+(G.gpTier+1)+' 級：建議鬼力 '+G.gpNeed+'，我哋三隻合共 '+G.gpTeam+(G.gpTeam<G.gpNeed?'——唔夠喎，小心啲！打唔過就返村升級。':'，夠晒膽！')+(G.gh.some(function(g){return g.trainee;})?'（有見習鬼）':'')):null; }
+  function gpTick(){ if (G.gpMsg&&G.t>=5.6){ toast(G.gpMsg); G.gpMsg=null; } }
+  function gpOnEnd(why){ var o=G.over; o.gpHas=!!G.gpHas; o.gpNeed=G.gpNeed; o.gpTeam=G.gpTeam; o.gpTier=G.gpTier;
+    if (why!=='fail'&&G.gpHas){ var sv=gpSv()||{}; sv['win_'+curLv]=(+(sv['win_'+curLv]||0))+1; gpSvPut(sv); o.gpUp=gpTier(curLv)>G.gpTier; } }
+  function gpGoVillage(){ var o=G&&G.over, need=o&&o.gpTeam<o.gpNeed?o.gpNeed:0; close(); try{ if (typeof World!=='undefined') World.close(); }catch(e){ console.warn(e); }
+    var ok=false; try{ if (typeof UI!=='undefined'&&UI.openRoster){ UI.openRoster(); ok=true; } }catch(e){ console.warn(e); }
+    try{ Fx.toast((ok?'':'返到村喇！')+(window.GP?GP.hint(need):'返村幫隻鬼升級再嚟過！')); }catch(e){} }
+  function gpPill(x,y,w,t,bg,fg){ ctx.save(); ctx.fillStyle=bg; ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.lineWidth=1.5; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x,y,w,16,8); else ctx.rect(x,y,w,16); ctx.fill(); ctx.stroke(); ctx.restore(); crText(ctx,t,x+w/2,y+12.5,11,fg,'center',w-4); }
+  function gpBadge(o,x,y){ if (!G.gpHas) return; if (o.trainee) gpPill(x+8,y-12,48,'見習','#7a2522','#ffd9c8'); else gpPill(x+2,y-12,60,'鬼力 '+o.pow,'#26331f','#d8f0b8'); }
+  function gpTitle(){ if (!window.GP) return; var team=gpTeam();
+    GH.forEach(function(d,i){ var r=gpRead(d), cx=VW/2+(i-1)*100; crText(ctx,r.tr?'見習（未招募）':'鬼力 '+r.pow,cx,VH*0.52+18,13,r.tr?'#ff8a72':'#c8e6a8','center',96); });
+    crText(ctx,'三隻合共鬼力 '+team,VW/2,VH*0.52+40,15,'#efe5cf','center',VW-30);
+    ['flat','shop'].forEach(function(lv,i){ var need=gpNeed(lv), cx=i?34+(VW-56)/2+(VW-56)/4:22+(VW-56)/4, ok=team>=need;
+      crText(ctx,'建議鬼力 '+need+(ok?'':'（唔夠）'),cx,VH*0.80+76,13,ok?'#b2d394':'#ff6a5a','center',(VW-56)/2); }); }
+  function gpOver(o,y){ if (!o.gpHas) return; var ok=o.gpTeam>=o.gpNeed;
+    ctx.textAlign='center'; ctx.fillStyle=ok?'#d8f0b8':'#ff7a64'; ctx.font='bold 16px '+FONT; crFill('你嘅鬼力 '+o.gpTeam+'／建議 '+o.gpNeed,VW/2,y+204,VW-50);
+    ctx.fillStyle='#efdcb4'; ctx.font='bold 13px '+FONT; ctx.textAlign='left'; var tx=window.GP&&GP.hint?GP.hint(ok?0:o.gpNeed):''; wrap(tx,36,y+230,VW-72,18); ctx.textAlign='center';
+    btn('toVillage',VW/2-125,y+268,250,44,'返村升級','#8a5a14'); }
+
   // ---------- 遊戲狀態 ----------
   var G=null, scene='title', paused=false;
   var PHT=60;                                         // 每個時辰秒數
@@ -1167,7 +1212,7 @@ const Tower=(function(){
        alert:0, alertLv:0, bag:[], dolls:0, keys:{}, wave:0, waveT:20, gate:null, gateCharge:0, captured:0};
     buildMap2(); placeUnits2();
     G.gh=GH.map(function(d,i){ return {d:d, i:i, node:'f0_e', to:null, p:0, x:0, y:0, dir:1, loot:0, taskP:0, inv:0, invCd:0, stun:0, scareCd:0, home:false, energy:0, actT:0, hitT:0, bounceT:0, mv:0, ph:Math.random()*6, still:1, caught:0, out:false, mirrored:0}; });
-    G.gh.forEach(function(g){ var n=G.nodes[g.node]; g.x=n.x; g.y=n.y; });
+    G.gh.forEach(function(g){ var n=G.nodes[g.node]; g.x=n.x; g.y=n.y; }); gpStart();   // GP HOOK
     cam.z=1; cam.free=null; cam.s=VW/((LV&&LV.camW)||600);
     G.parts=[]; G.ult=null; G.wardFx=[]; G.dark={};
     spawnZoneGuards(); initSafe(); G.pdrops=[];   // PEOPLE HOOK
@@ -1254,7 +1299,7 @@ const Tower=(function(){
     if (g.stun>0||g.home||g.out) return;
     var L=Math.hypot(jx,jy); if (L<0.25) return; jx/=L; jy/=L;
     var mt=mirrorOn(g); if (mt && Math.sign(mt.x-g.x)===Math.sign(jx) && Math.abs(jx)>0.3){ if (!g.blockT||g.blockT<=0){ float(g.x,g.y-80,'被鏡照住！轉身先走得','#ffe9a0'); g.blockT=1; } return; }
-    var sp=g.d.sp*G.mods.spd;
+    var sp=g.d.sp*G.mods.spd*(g.spm||1);
     if (!g.to){ var n=G.nodes[g.node], best=null, bd=0.55;
       n.links.forEach(function(l){ var m=G.nodes[l.to], dx=m.x-n.x, dy=m.y-n.y, D=Math.hypot(dx,dy), dot=(dx*jx+dy*jy)/D; if (Math.abs(dy)>Math.abs(dx)) dot+=0.12; if (dot>bd){ bd=dot; best=l; } });
       if (!best) return;
@@ -1297,10 +1342,10 @@ const Tower=(function(){
     if (G.ult){ G.ult.t+=dt; if (G.ult.t<1.3){ stepFx(dt); return; } if (!G.ult.done){ G.ult.done=true; applyUlt(G.ult); } if (G.ult.t>4){ G.ult=null; G.ultCool=1.5; } }
     G.t+=dt; var np=Math.min(3,Math.floor(G.t/PHT));
     if (np!==G.phase){ G.phase=np; toast(np<3?PH[np]+'到喇——巡邏加派，越近天光人越精。':'天光喇！樓下開始有人起身，追兵越嚟越快，快啲走！'); }
-    G.toastT-=dt; if (!G.traces) G.traces=[]; setupBeans();
+    G.toastT-=dt; gpTick(); if (!G.traces) G.traces=[]; setupBeans();
     // 波次：每個時辰入面定時加派巡邏，天光後指數加強
-    G.waveT-=dt; if (G.waveT<=0 && !G.gate){ G.wave++; G.waveT=G.phase>=3?18:30; var f=1+Math.floor(rnd()*(FL-1)); var h=mkHuman('guard','f'+f+'_'+(rnd()<0.5?'s':'l')); h.zone=[Math.max(1,f-1),Math.min(FL-1,f+1)]; h.boost=G.phase>=3?Math.pow(1.15,G.wave):1; G.guards.push(h); float(h.x,h.y-80,'加派保安','#ffb0b0'); }
-    G.gh.forEach(function(g){ if (g.home||g.out) return;
+    G.waveT-=dt; if (G.waveT<=0 && !G.gate){ G.wave++; G.waveT=(G.phase>=3?18:30)/(1+0.06*(G.gpTier||0)); var f=1+Math.floor(rnd()*(FL-1)); var h=mkHuman('guard','f'+f+'_'+(rnd()<0.5?'s':'l')); h.zone=[Math.max(1,f-1),Math.min(FL-1,f+1)]; h.boost=G.phase>=3?Math.pow(1.15,G.wave):1; G.guards.push(h); float(h.x,h.y-80,'加派保安','#ffb0b0'); }
+    G.gh.forEach(function(g){ gpE(g); if (g.home||g.out) return;
       g.blockT=(g.blockT||0)-dt; g.inv=Math.max(0,g.inv-dt); g.invCd=Math.max(0,g.invCd-dt); g.stun=Math.max(0,g.stun-dt); g.scareCd=Math.max(0,g.scareCd-dt);
       g.actT=Math.max(0,g.actT-dt); g.hitT=Math.max(0,g.hitT-dt); g.bounceT=Math.max(0,g.bounceT-dt); g.sealT=Math.max(0,(g.sealT||0)-dt); g.dropT=Math.max(0,(g.dropT||0)-dt);
       if (g.inUnit) return;   // UNIT HOOK 2：鬼喺屋入面，由 unit.js 推進
@@ -1308,7 +1353,7 @@ const Tower=(function(){
       if (g.d.key==='toyol'){ g.flipT=Math.max(0,(g.flipT||0)-dt); if (g.mv>0){ g.flipCd=(g.flipCd==null?1.2:g.flipCd)-dt; if (g.flipCd<=0){ g.flipT=0.55; g.flipCd=2.2+rnd()*1.5; } } }
       if (g.auto&&g.auto.length){ var nx=g.auto[0];
         if (!g.to){ if (g.node===nx) g.auto.shift(); else { var ln=G.nodes[g.node].links.find(function(l){return l.to===nx;}); if (ln&&canPass(g,ln.e)===true){ g.to=nx; g.p=0; } else g.auto=null; } }
-        if (g.to){ var a=G.nodes[g.node], b=G.nodes[g.to], D=Math.hypot(b.x-a.x,b.y-a.y); g.p+=g.d.sp*G.mods.spd*dt/D; g.still=0; g.taskP=0; if (b.x!==a.x) g.dir=b.x>a.x?1:-1; if (g.p>=1){ g.node=g.to; g.to=null; g.p=0; if (g.auto&&g.auto[0]===g.node) g.auto.shift(); onArrive(g); } } }
+        if (g.to){ var a=G.nodes[g.node], b=G.nodes[g.to], D=Math.hypot(b.x-a.x,b.y-a.y); g.p+=g.d.sp*G.mods.spd*(g.spm||1)*dt/D; g.still=0; g.taskP=0; if (b.x!==a.x) g.dir=b.x>a.x?1:-1; if (g.p>=1){ g.node=g.to; g.to=null; g.p=0; if (g.auto&&g.auto[0]===g.node) g.auto.shift(); onArrive(g); } } }
       var p=posOf(g); g.mv=Math.max(0,g.mv-dt); if (Math.abs(p.x-g.x)+Math.abs(p.y-g.y)>0.2){ g.mv=0.18; g.still=0; } else g.still+=dt; g.x=p.x; g.y=p.y;
       if (g.autoS && !g.to && !(g.auto&&g.auto.length) && g.still>=0.12 && g.stun<=0 && g.scareCd<=0){ g.autoS=null; if (G.active===g.i && g.scareCd<=0) scarePress(); }
       var n=G.nodes[g.node], st=!g.to&&g.still>=0.1&&g.stun<=0&&!mirrorOn(g);
@@ -1317,9 +1362,9 @@ const Tower=(function(){
         if (un.lit){ float(g.x,g.y-70,'開咗燈！被逼返出去','#ffb0b0'); g.node=un.did; g.stun=0.6; loseLoot(g,0.3); }
         else { var it=un.items.find(function(k){ var I=ITEM[k]; return !I.who||I.who===g.d.key; });
           if (it){ if (it!=='doll'&&it!=='key'&&it!=='key2'&&it!=='lost'&&G.bag.length>=BAGMAX){ if (!g.fullT||g.fullT<=0){ float(g.x,g.y-80,'收穫格滿咗！','#ffb0b0'); g.fullT=2; } g.fullT-=dt; }
-            else { g.taskP+=dt*G.mods.task/ITEM[it].t; if (rnd()<dt*14){ if (g.d.key==='toyol'){ var pn={x:g.x+g.dir*30,y:g.y-36,vx:rnd(),vy:0,life:0.7,max:0.7,type:'note'}; pn.tx=g.x; pn.ty=g.y-g.d.h*0.45; G.parts.push(pn); } else if (g.d.key==='tianhua') part(g.x+(rnd()-0.5)*20,g.y-g.d.h*0.5,(rnd()-0.5)*60,-40-rnd()*40,0.7,'hair'); }
+            else { g.taskP+=dt*G.mods.task*(g.tm||1)/ITEM[it].t; if (rnd()<dt*14){ if (g.d.key==='toyol'){ var pn={x:g.x+g.dir*30,y:g.y-36,vx:rnd(),vy:0,life:0.7,max:0.7,type:'note'}; pn.tx=g.x; pn.ty=g.y-g.d.h*0.45; G.parts.push(pn); } else if (g.d.key==='tianhua') part(g.x+(rnd()-0.5)*20,g.y-g.d.h*0.5,(rnd()-0.5)*60,-40-rnd()*40,0.7,'hair'); }
               if (g.taskP>=1){ g.taskP=0; un.items.splice(un.items.indexOf(it),1); takeItem(g,it,un); } } }
-          if (un.res && un.res.state==='home'){ un.res.fear+=dt*3*G.mods.pow; if (un.res.fear>=100) flee(un.res,g); } } }
+          if (un.res && un.res.state==='home'){ un.res.fear+=dt*3*G.mods.pow*gpF(g); if (un.res.fear>=100) flee(un.res,g); } } }
       else if (!st) g.taskP=0;
       // 破鎮宅：企喺門口 0.5 秒後每 0.1 秒注入 1 點怕意，離開保留進度
       if (!g.to && n.kind==='door'){ var du=unitByDoor(n.id); g.injT=st?(g.injT||0)+dt:0; if (du && !du.open && du.ot===2 && g.injT>=0.5){ g.injAcc=(g.injAcc||0)+dt; while (g.injAcc>=0.1 && G.fear>0 && du.paid<du.cost){ g.injAcc-=0.1; G.fear--; du.paid++; if (rnd()<0.6) part(g.x,g.y-40,(du.x-g.x)*2,-20,0.5,'suck'); }
@@ -1557,11 +1602,12 @@ const Tower=(function(){
     if (G.over) return;
     var kept=why==='gate'?G.bag.length:why==='doll'?Math.floor(G.bag.length/2):0, story=why==='gate'?G.story.length:0;
     G.over={ok:why!=='fail', why:why, kept:kept, lost:G.bag.length-kept, home:G.gh.filter(function(g){return !g.out;}).length, fear:G.fearTotal, story:story, storyLost:why==='doll'?G.story.length:0, alert:G.alert};
+    gpOnEnd(why);   // GP HOOK
     try{ var sv=TS(), first=why==='gate'&&!sv['gate_'+curLv]; if (first) sv['gate_'+curLv]=1; sv.nights=(sv.nights||0)+1; var rw=(why==='gate'?40+15*kept+25*story:why==='doll'?20+8*kept:0)+(why!=='fail'?(G.unitCoins||0):0); if (first) rw+=100; if (why!=='fail'){ sv.best=Math.max(sv.best||0,kept); sv.cleared[curLv]=1; } G.over.reward=rw; S.res.coins+=rw; save(); }catch(e){ console.error(e); }
   }
   // ---------- 嚇人（要企定）----------
   function say(r,t){ r.say=t; r.sayT=2.6; }
-  function scareRes(r,amt,g){ if (r.state!=='home') return; if (!r.awake){ r.awake=true; r.woke=true; amt*=0.6; } r.fear+=amt*G.mods.pow*(1-r.brave); if (r.unit&&r.unit.rs) r.unit.rs.forEach(function(o){ if (o!==r&&o.state==='home'){ o.awake=true; o.woke=true; o.fear+=amt*0.35*(1-o.brave); o.jumpT=0.4; if (o.fear>=100&&!(o.fleeAfter>0)){ o.fleeAfter=1; o.fleeG=g; } } }); r.jumpT=0.5; if (g) g.energy=Math.min(100,g.energy+(r.brave?8:18)); for (var k=0;k<5;k++) part(r.x,r.y-48,(rnd()-0.5)*90,-60-rnd()*40,0.6,'sweat'); doReact(r,g); if (r.fear>=100 && !(r.fleeAfter>0)){ r.fleeAfter=0.9; r.fleeG=g; } }
+  function scareRes(r,amt,g){ if (r.state!=='home') return; if (!r.awake){ r.awake=true; r.woke=true; amt*=0.6; } r.fear+=amt*G.mods.pow*gpF(g)*(1-r.brave); if (r.unit&&r.unit.rs) r.unit.rs.forEach(function(o){ if (o!==r&&o.state==='home'){ o.awake=true; o.woke=true; o.fear+=amt*0.35*gpF(g)*(1-o.brave); o.jumpT=0.4; if (o.fear>=100&&!(o.fleeAfter>0)){ o.fleeAfter=1; o.fleeG=g; } } }); r.jumpT=0.5; if (g) g.energy=Math.min(100,g.energy+(r.brave?8:18)); for (var k=0;k<5;k++) part(r.x,r.y-48,(rnd()-0.5)*90,-60-rnd()*40,0.6,'sweat'); doReact(r,g); if (r.fear>=100 && !(r.fleeAfter>0)){ r.fleeAfter=0.9; r.fleeG=g; } }
   function flee(r,g){
     r.state='flee'; r.y=fy(r.unit.f); r.vx=(r.x<WW/2?-1:1)*150; chain(r.unit,16,r.chainD||0); r.tripT=rnd()<0.35?0.9:0; pplScream(r); if (g) g.energy=Math.min(100,g.energy+20);
     addFear(Math.round(15*G.mods.fear),r.x,r.y-80);
@@ -1623,12 +1669,12 @@ const Tower=(function(){
   var ULT={eking:{n:'大胃王',d:'整層熄燈，黑暗中得返一張巨口！'},toyol:{n:'一掃光',d:'分身滿層亂竄，偷到一個唔留！'},tianhua:{n:'千絲垂髮',d:'頭髮沿走廊爬去隔籬屋，纏實成層人！'}};
   function ultPress(i){ var g=G.gh[i]; if (g.energy<100||g.home||g.out||G.ult) return false; g.energy=0; G.ult={g:g,t:0,f:G.nodes[g.node].f,done:false}; return true; }
   function applyUlt(U){ var g=U.g, f=U.f, k=g.d.key, rs=G.res.filter(function(r){return r.unit.f===f&&r.state==='home';}), hs=G.guards.filter(function(h){return G.nodes[h.node].f===f&&h.state!=='flee';});
-    if (k==='eking'){ G.dark[f]=3.2; rs.forEach(function(r){ scareRes(r,130,g); for (var q=0;q<6;q++){ var p={x:r.x,y:r.y-30,vx:0,vy:0,life:1.4,max:1.4,type:'suck'}; p.tx=g.x; p.ty=g.y-30; G.parts.push(p); } }); hs.forEach(function(h){ h.wait=3; }); }
+    if (k==='eking'){ G.dark[f]=3.2*(g.um||1); rs.forEach(function(r){ scareRes(r,130,g); for (var q=0;q<6;q++){ var p={x:r.x,y:r.y-30,vx:0,vy:0,life:1.4,max:1.4,type:'suck'}; p.tx=g.x; p.ty=g.y-30; G.parts.push(p); } }); hs.forEach(function(h){ h.wait=3*(g.um||1); }); }
     if (k==='toyol'){ U.clones=[0,1,2,3,4].map(function(j){ return {x:Math.max(60,G.gh[0].x-260)+j*110,v:(j%2?1:-1)*(220+j*30)}; }); var got=0; G.units.forEach(function(u){ if (u.f===f&&u.open){ for (var q=u.items.length-1;q>=0;q--){ var it=u.items[q]; if ((it==='money'||it==='key'||it==='doll')&&(it!=='money'||G.bag.length<BAGMAX)){ u.items.splice(q,1); takeItem(g,it,u); got++; } } } }); float(g.x,g.y-100,'一掃光！攞到 '+got+' 件','#ffd54a'); rs.forEach(function(r){ scareRes(r,85,g); }); }
-    if (k==='tianhua'){ rs.forEach(function(r){ r.tangle=3.2; scareRes(r,105,g); }); hs.forEach(function(h){ h.wait=3.2; h.to=null; }); }
+    if (k==='tianhua'){ rs.forEach(function(r){ r.tangle=3.2*(g.um||1); scareRes(r,105,g); }); hs.forEach(function(h){ h.wait=3.2*(g.um||1); h.to=null; }); }
     G.shake=0.5;
   }
-  function invPress(){ var g=G.gh[G.active]; if (g.invCd>0||g.out) return; g.inv=G.mods.inv; g.invCd=G.mods.inv+9; float(g.x,g.y-90,'隱身','#9fe0ff'); }
+  function invPress(){ var g=G.gh[G.active]; if (g.invCd>0||g.out) return; g.inv=G.mods.inv*(g.im||1); g.invCd=g.inv+9*(g.icd||1); float(g.x,g.y-90,'隱身','#9fe0ff'); }
   function chooseCard(i){
     var c=G.choice[i]; if (!c) return; var m=G.mods;
     if (c.id==='spd') m.spd*=1.2; if (c.id==='pow') m.pow*=1.4; if (c.id==='inv') m.inv+=2; if (c.id==='task') m.task*=1.35; if (c.id==='arm') m.arm=0.5; if (c.id==='fear') m.fear*=1.3;
@@ -2104,7 +2150,7 @@ const Tower=(function(){
     if (a.k==='deliver'){ var q=a.q; q.state=2; G.carry=null; var ow=q.owner.res; if (ow){ say(ow,'咦？我副'+q.thing+'點解會喺張枱度嘅？多謝晒……'); ow.fear=0; }
       addFear(25,g.x,g.y-90); G.gh.forEach(function(x){ x.energy=Math.min(100,x.energy+30); }); float(g.x,g.y-120,'支線完成：'+q.t,'#8affc8'); giveStory(); toast('支線完成！'+q.t+'——怕意 +25、三隻鬼能量 +30。'); return; }
     if (a.k==='prop'){ var p=a.p, un=a.un, P=PROP[p.k]; if (G.lureCd>0) return; p.t=3; p.cd=18; G.lureCd=1.5; g.actT=0.9; g.dir=p.x>g.x?1:-1;
-      un.rs.forEach(function(r){ if (r.state!=='home') return; if (!r.awake){ r.awake=true; r.woke=true; r.fear+=P.f*0.6*G.mods.pow*(1-r.brave); r.jumpT=0.5; say(r,pick(['咩聲呀……邊個？','發開夢？'])); }
+      un.rs.forEach(function(r){ if (r.state!=='home') return; if (!r.awake){ r.awake=true; r.woke=true; r.fear+=P.f*0.6*G.mods.pow*gpF(g)*(1-r.brave); r.jumpT=0.5; say(r,pick(['咩聲呀……邊個？','發開夢？'])); }
         else { scareRes(r,P.f,g); if (rnd()<0.6) say(r,pick(PROPLINE[p.k])); } });
       if (p.k==='mahjong'){ for (var q2=0;q2<10;q2++) part(p.x,un.y-40,(rnd()-0.5)*90,-60-rnd()*40,0.8,'paper'); }
       float(p.x,un.y-96,P.v+'！','#ffb7a0'); noise(un.did,P.lv,P.n); lureCost(); g.energy=Math.min(100,g.energy+8); return; }
@@ -2403,7 +2449,7 @@ const Tower=(function(){
       sprite(o.d.sprite,x+32,y+58+dy,46,false,o.home||o.out?0.3:1);
       crBar(ctx,x+6,y+5+dy,52,6,o.energy/100,full?'rust':'red');
       if (full) crText(ctx,'點我放大招',x+32,y+24+dy,11,'#f6dcb6','center',60);
-      crText(ctx,o.out?'被收服':o.home?'已返':o.d.name+(o.caught?' '+o.caught+'/3':''),x+32,y+69+dy,12,act?'#e4ecd2':'#ebe3d6','center',60); });
+      crText(ctx,o.out?'被收服':o.home?'已返':o.d.name+(o.caught?' '+o.caught+'/3':''),x+32,y+69+dy,12,act?'#e4ecd2':'#ebe3d6','center',60); gpBadge(o,x,y+dy); });
     var g=G.gh[G.active], n=G.nodes[g.node], atP=!g.to&&n.kind==='portal'&&!g.home;
     btn('scare',VW-170,y0+12,74,52,'嚇！','#6e1c1c');
     btn('inv',VW-88,y0+12,76,52,g.invCd>0?'隱身 '+Math.ceil(g.invCd):'隱身','#2a4a7a',g.invCd<=0);
@@ -2430,6 +2476,7 @@ const Tower=(function(){
       :['三隻鬼全部畀人收服','收穫全部冇晒：'+o.lost+' 件','今晚怕意總共：'+o.fear,'全樓警覺：'+o.alert];
     msg.forEach(function(m,i){ crFill(m,VW/2,y+90+i*30,VW-50); });
     if (o.story===STORY.length){ ctx.fillStyle='#ffd54a'; ctx.font='bold 13px '+FONT; ctx.textAlign='left'; wrap(TRUTH,36,y+250,VW-72,18); }
+    if (!o.ok) gpOver(o,y);
     btn('again',VW/2-130,y+420-60,120,44,'再嚟一晚','#5a1c1c'); btn('toMap',VW/2+10,y+420-60,120,44,'返地圖','#2c2c33'); if (o.reward!=null){ crText(ctx,'收到冥幣 +'+o.reward,VW/2,y+420-76,17,'#e6a85a','center'); } }
   function crTitleDeco(){ var r=crRnd(5), y=VH*0.24+52; ctx.save(); ctx.strokeStyle='#7a2522'; ctx.lineCap='round';
     for (var p=0;p<3;p++){ ctx.globalAlpha=0.5+r()*0.4; ctx.lineWidth=2.4-p*0.5; ctx.beginPath(); ctx.moveTo(VW*0.2+r()*6,y+r()*3); for (var k=1;k<=8;k++) ctx.lineTo(VW*0.2+VW*0.6*k/8,y+(r()-0.5)*4); ctx.stroke(); }
@@ -2439,7 +2486,7 @@ const Tower=(function(){
     ctx.fillStyle='#c8ccc4'; ctx.font='bold 14px '+FONT; ['三隻鬼一齊出動：餓鬼搵宵夜、Toyol 偷錢、天花姐梳頭。','成棟樓幾十戶人：打機、返夜更、打麻雀、網購……','保安唔係捉鬼師傅：附身電器、敲水管、叫𨋢引開佢。','有紅紙符、門神、拿督公、祖先牌位要尊重，繞路行。','子時→丑時→寅時，天光前由地庫或天台陰門返陰間。'].forEach(function(t,i){ crFill(t,VW/2,VH*0.62+i*24,VW-30); });
     var sv=TS(); var shopOpen=!!sv.cleared.flat||Q.has('unlock')||!!window.STN_TEST;
     btn('lv_flat',22,VH*0.80,(VW-56)/2,58,'組屋'+(sv.cleared.flat?' ✓':''),'#5a1c1c'); btn('lv_shop',34+(VW-56)/2,VH*0.80,(VW-56)/2,58,shopOpen?'老店屋'+(sv.cleared.shop?' ✓':''):'老店屋（未解鎖）','#2f5a4a',shopOpen);
-    ctx.fillStyle='#7a7f78'; ctx.font='bold 13px '+FONT; ctx.textAlign='center'; crFill(shopOpen?'揀一棟樓開始今晚':'組屋過關（安全返陰間）就解鎖老店屋',VW/2,VH*0.80+78); }
+    ctx.fillStyle='#7a7f78'; ctx.font='bold 13px '+FONT; ctx.textAlign='center'; crFill(shopOpen?'揀一棟樓開始今晚':'組屋過關（安全返陰間）就解鎖老店屋',VW/2,VH*0.80+(window.GP?100:78)); gpTitle(); }
 
   // ---------- 輸入 ----------
   var joy=null, ptr=null, JR=58, pts={}, pinch=null;
@@ -2469,13 +2516,13 @@ const Tower=(function(){
     if (id==='exit'){ close(); return; }
     if (id==='quit'){ scene='title'; return; }
     if (id==='lv_shop'){ var sv=TS(); if (sv.cleared.flat||Q.has('unlock')||window.STN_TEST){ newGame(null,'shop'); bake(); } return; }
-    if (id==='again'){ newGame(); bake(); return; } if (id==='title'){ scene='title'; return; } if (id==='toMap'){ close(); return; }
+    if (id==='again'){ newGame(); bake(); return; } if (id==='toVillage'){ gpGoVillage(); return; } if (id==='title'){ scene='title'; return; } if (id==='toMap'){ close(); return; }
     if (scene!=='play') return;
     if (id.indexOf('card')===0){ chooseCard(+id.slice(4)); return; }
     if (id==='zin'){ cam.z=Math.min(1.5,cam.z*1.25); return; } if (id==='zout'){ cam.z=Math.max(0.5,cam.z/1.25); return; } if (id==='mini'){ miniJump(); return; } if (id==='follow'){ cam.free=null; return; } if (id==='act'){ actPress(); return; } if (id==='ult'){ ultPress(G.active); return; }
     if (id==='story'){ G.showStory=true; return; } if (id==='closeStory'){ G.showStory=false; return; }
     if (G.over||G.choice||G.showStory) return;
-    if (id.indexOf('gh')===0){ cam.free=null; var i=+id.slice(2); if (G.gh[i].home) return; if (i===G.active&&G.gh[i].energy>=100){ ultPress(i); return; } G.active=i; toast(GH[i].tip+(G.gh[i].energy>=100?'（能量滿！再點頭像放大招）':'')); return; }
+    if (id.indexOf('gh')===0){ cam.free=null; var i=+id.slice(2); if (G.gh[i].home) return; if (i===G.active&&G.gh[i].energy>=100){ ultPress(i); return; } G.active=i; toast(G.gh[i].trainee?GP_TRAINEE_MSG:GH[i].tip+(G.gh[i].energy>=100?'（能量滿！再點頭像放大招）':'')); return; }
     if (id==='scare') scarePress(); if (id==='inv') invPress(); if (id==='gate') gatePress(); if (id==='doll') dollEscape();
   }
   var last=0;
@@ -2490,10 +2537,10 @@ const Tower=(function(){
   // UNIT HOOK 1：入屋模式（core/unit.js）——只係將閉包變數交俾模組，模組自己行 rAF、自己開疊層 canvas
   var UNIT=window.UnitSys?window.UnitSys({get G(){ return G; }, get LV(){ return LV; }, get FL(){ return FL; }, get FLN(){ return FLN; }, get IMG(){ return IMG; }, get scene(){ return OPEN?scene:'closed'; }, get paused(){ return paused; },
     get VW(){ return VW; }, get VH(){ return VH; }, get TOP(){ return TOP; }, get BOT(){ return BOT; }, FONT:FONT, HH:HH, ITEM:ITEM, BAGMAX:BAGMAX, MV:MV, BLOCKMSG:BLOCKMSG, PH:PH, PHT:PHT, cv:cv,
-    fy:fy, rnd:rnd, float:float, toast:toast, say:say, addFear:addFear, scareRes:scareRes, takeItem:takeItem, onArrive:onArrive, unitOf:unitOf, doorBlock:doorBlock, ctxAction:ctxAction, actPress:actPress, gotoNode:gotoNode, noise:noise, checkAlert:checkAlert,
+    fy:fy, rnd:rnd, float:float, toast:toast, say:say, addFear:addFear, scareRes:scareRes, gpF:gpF, takeItem:takeItem, onArrive:onArrive, unitOf:unitOf, doorBlock:doorBlock, ctxAction:ctxAction, actPress:actPress, gotoNode:gotoNode, noise:noise, checkAlert:checkAlert,
     crPanel:crPanel, crText:crText, crBtn:crBtn, crBar:crBar, crGet:crGet, crBlit:crBlit}):null;
   window.UNIT=UNIT;
-  window.TW={safe:function(){ return SAFE?{x:SAFE.x,y:SAFE.y,r:SAFE.r,f:SAFE.f,nodes:Object.keys(SAFE.nodes),on:safeOn()}:null; }, inSafe:function(i){ return inSafe(G.gh[i]); }, inSafeXY:function(x,y){ return inSafeXY(x,y); }, uq:function(){ return Object.keys(G._uq||{}); }, cam:function(){ return {z:cam.z,free:!!cam.free,x:cam.x,y:cam.y}; }, btns:function(){ return buttons.map(function(b){return {id:b.id,x:b.x,y:b.y,w:b.w,h:b.h};}); }, act:function(){ actPress(); }, ctx:function(){ return ctxAction(G.gh[G.active]); }, noise:function(id,l){ noise(id,l); }, zoom:function(z){cam.z=z;}, pause:function(v){paused=v;}, step:function(dt,n){ var pp=paused; paused=false; for (var i=0;i<(n||1);i++) update(dt); paused=pp; draw(); }, gate:gatePress, doll:dollEscape, catchG:function(i){ catchGhost(G.gh[i],G.guards[0]||{dir:1}); }, ult:ultPress, press:press, tap:tap, goto:function(i,id){ return gotoNode(G.gh[i],id); }, choose:chooseCard, skip:function(s){ G.t+=s; }, get G(){return G;}, set G(v){}, w2s:function(x,y){return W2S(x,y);}};
+  window.TW={gp:function(){ return G&&{has:G.gpHas,need:G.gpNeed,team:G.gpTeam,D:G.gpD,tier:G.gpTier,gh:G.gh.map(function(g){ return {k:g.d.key,mul:g.mul,pow:g.pow,trainee:g.trainee,spm:g.spm,em:g.em,tm:g.tm,im:g.im,icd:g.icd,um:g.um}; })}; }, gpRe:function(){ gpStart(); }, gpF:function(i){ return gpF(G.gh[i]); }, end:function(w){ endNight(w); }, sr:function(r,amt,i){ scareRes(r,amt,i==null?null:G.gh[i]); }, ng:function(sd,lv){ newGame(sd,lv); bake(); }, safe:function(){ return SAFE?{x:SAFE.x,y:SAFE.y,r:SAFE.r,f:SAFE.f,nodes:Object.keys(SAFE.nodes),on:safeOn()}:null; }, inSafe:function(i){ return inSafe(G.gh[i]); }, inSafeXY:function(x,y){ return inSafeXY(x,y); }, uq:function(){ return Object.keys(G._uq||{}); }, cam:function(){ return {z:cam.z,free:!!cam.free,x:cam.x,y:cam.y}; }, btns:function(){ return buttons.map(function(b){return {id:b.id,x:b.x,y:b.y,w:b.w,h:b.h};}); }, act:function(){ actPress(); }, ctx:function(){ return ctxAction(G.gh[G.active]); }, noise:function(id,l){ noise(id,l); }, zoom:function(z){cam.z=z;}, pause:function(v){paused=v;}, step:function(dt,n){ var pp=paused; paused=false; for (var i=0;i<(n||1);i++) update(dt); paused=pp; draw(); }, gate:gatePress, doll:dollEscape, catchG:function(i){ catchGhost(G.gh[i],G.guards[0]||{dir:1}); }, ult:ultPress, press:press, tap:tap, goto:function(i,id){ return gotoNode(G.gh[i],id); }, choose:chooseCard, skip:function(s){ G.t+=s; }, get G(){return G;}, set G(v){}, w2s:function(x,y){return W2S(x,y);}};
   window.addEventListener('resize',function(){ if (OPEN) resize(); });
   function loadImgs(){ var M={flatbg:'bg_tw_flat',shopbg:'bg_tw_shop'}; ['res_gamer_scared','res_uncle_scared','res_granny_scared','res_helper_scared','res_mjaunty_scared','res_shopper_scared','res_collector_scared','res_guard_scared','res_ot_scared','res_gym_scared','eguiking','toyol','tianhua','tianhua_hang','npc_ken','npc_auntie','npc_guard','npc_it','npc_mis','npc_boss','npc_it_sit','npc_ken_sit','res_gamer','res_uncle','res_granny','res_helper','res_mjaunty','res_shopper','res_collector','res_guard','res_ot','res_gym','room_mahjong','room_gamer','room_nurse','room_helper','room_gym','room_shopper','room_carpark','room_lobby','flatbg','shopbg','gb_unit_ppr','gb_unit_gamer','gb_unit_shop'].forEach(function(k){ IMG[k]=SPR[M[k]||k]; }); }
   function open(){ loadImgs(); TS(); ROOT.classList.add('on'); OPEN=true; scene='title'; resize(); last=0; if (!RAF) RAF=requestAnimationFrame(frame); try{ Sound.setMode&&Sound.setMode('story'); }catch(e){} try{ window.Policy&&Policy.firstEnter&&Policy.firstEnter('tower'); }catch(e){} }

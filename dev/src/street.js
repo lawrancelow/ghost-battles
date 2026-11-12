@@ -348,6 +348,17 @@ const Street = (() => {
   };
   const bsk = (k) => BSK[k] || BSK._;
   const BOSS_CD = 15, BOSS_DMG = 362, BOSS_MAX = 3;
+  // ---- 鬼力（gpower.js）接駁 ----
+  // 有名鬼出招傷害：舊版 Lv1=362、Lv2–4=542、Lv5 以上封頂 903。而家跟 GP.grow 連續升：
+  //   k = 1 + 4.5×(grow−1)（grow ≤ 4/3，約 11 級前）；之後 2.5 + 2×(grow−4/3)
+  //   Lv1 ×1.0（362）・Lv8 ×2.05・Lv17 ×2.83（1024，舊 903）・Lv20 ×2.99・Lv30 ×3.5・Lv40 ×3.95（1430）・Lv40＋嚇功5 ×5.7
+  function bossK(g) { const q = g ? GP.grow(g) : 1; return q <= 4 / 3 ? 1 + 4.5 * (q - 1) : 2.5 + 2 * (q - 4 / 3); }
+  function bossDmg(g) { return BOSS_DMG * bossK(g); }
+  function bossCD(g) { return BOSS_CD / Math.sqrt(g ? GP.grow(g) : 1); } // 出招冷卻：Lv1 15 秒・Lv17 12.3 秒・Lv40 10.4 秒
+  // 勵鬼加持：驚嚇／耐久 ×(1＋0.3×mul^1.5)，回靈 ×0.9^mul；有名鬼驚嚇／耐久再 ×1.15、回靈再 ×0.89
+  //   1 級（mul≈1）：雜鬼 ×1.3／0.9，名鬼 ×1.5／0.8，同舊版一樣；mul 2 → 名鬼驚嚇 ×2.13；mul 2.9 → ×2.85
+  function staffOf(g, named) { const m = GP.mul(g), nm = named ? 1.15 : 1, a = 1 + 0.3 * Math.pow(m, 1.5); return { atk:a * nm, hp:a * nm, cd:Math.pow(0.9, m) * (named ? 0.89 : 1), named:named ? 1 : 0, m, pw:GP.pow(g) }; }
+  const staffTxt = (M) => T(`驚嚇 ×${M.atk.toFixed(2)}・回靈 ×${M.cd.toFixed(2)}`, `驚嚇 ×${M.atk.toFixed(2)}・回靈 ×${M.cd.toFixed(2)}`);
 
   // ---------- 地盤 ----------
   const LOBBY_PATH = [[0.25, 1.02], [0.25, 0.82], [0.20, 0.72], [0.20, 0.60], [0.30, 0.53], [0.37, 0.45], [0.37, 0.32], [0.45, 0.27], [0.80, 0.27], [1.03, 0.21]];
@@ -536,11 +547,14 @@ const Street = (() => {
     let el = $('#st-street'); if (!el) { el = document.createElement('section'); el.id = 'st-street'; document.body.appendChild(el); }
     const src = has(SPR_SRC) && SPR_SRC.st_street || '';
     let h = `<div class="sts-top"><button class="sts-back" id="sts-back">◀ ${T('返陰間', '回陰間')}</button><b>${T('陽間街・站崗', '陽間街・站崗')}</b><span>${T('村莊發展收入', '村莊發展收入')} +${devTotalRate()}/${T('分', '分')}</span></div>`;
+    const myGP = GP.top(3);
+    h += `<div class="sts-gp">${T('你最強三隻鬼平均', '你最強三隻鬼平均')} ${GP.tag(myGP, 0)}　<small>${T('紅字＝鬼力未夠，返村升級先', '紅字＝鬼力不足，先回村升級')}</small></div>`;
     h += `<div class="sts-map" style="background-image:url('${src}')">`;
     for (const d of SITES) {
       const sd = site(d.id), held = sd.posts.filter(p => p && p.g != null).length, lost = sd.posts.filter(p => p && p.b).length;
       const sub = held || sd.scared ? `Lv${sd.lv}・${T('嚇走', '嚇走')}${sd.scared}${lost ? `・<i>${T('Bryan 佔', 'Bryan 佔')}${lost}</i>` : ''}` : T('未有鬼站崗', '還沒有鬼站崗');
-      h += `<button class="sts-plate ${d.real ? '' : 'wip'} ${lost ? 'war' : ''}" data-site="${d.id}" style="left:${d.x * 100}%;top:${d.y * 100}%"><b>${T(d.n, d.zh)}</b><small>${sub}</small></button>`;
+      const nd = GP.turfNeed(sd.lv), lowN = myGP < nd;
+      h += `<button class="sts-plate ${d.real ? '' : 'wip'} ${lost ? 'war' : ''}" data-site="${d.id}" style="left:${d.x * 100}%;top:${d.y * 100}%"><b>${T(d.n, d.zh)}</b><small>${sub}</small><small class="gp-need ${lowN ? 'gp-low' : 'gp-ok'}">${T('建議鬼力', '建議鬼力')} ${nd}</small></button>`;
     }
     for (const [x, y] of RESERVED) h += `<button class="sts-plate res" data-res="1" style="left:${x * 100}%;top:${y * 100}%"><b>${T('保留地', '保留地')}</b><small>${T('敬請期待', '敬請期待')}</small></button>`;
     h += `<button class="sts-plate gate" id="sts-gate" style="left:${GATE[0] * 100}%;top:${GATE[1] * 100}%"><b>${T('返村', '回村')}</b></button></div>`;
@@ -653,7 +667,7 @@ const Street = (() => {
       if (win) { const v = Math.round(5 + (1 - Math.min(1, sq.leaked / sq.mem.length)) * 3); const m = addHot(sd, v, this.def); sd.panic = 120; const bonus = this.unit() * 12; WAL.v = WAL.v + bonus; sd.coins += bonus;
         this.slowmo = 0.9; this.flash = 0.3; this.shake = 0.4; this.cap(T('嚇爆！', '嚇爆！'), pos[0], pos[1] - 0.12, { col:'#ff3b2f', size:40, style:'pop', font:'serif' });
         this.float(pos[0], pos[1] - 0.05, T(`傳說名氣 +${v}・冥幣 +${bonus}`, `傳說名氣 +${v}・冥幣 +${bonus}`), '#ffd45a'); if (m) Fx.toast(m); }
-      else { const v = smooth ? -10 : -6; const m = addHot(sd, v, this.def); sd.badPress = 120; this.float(pos[0], pos[1] - 0.05, T(`傳說名氣 ${v}`, `傳說名氣 ${v}`), '#ff8a8a'); if (m) Fx.toast(m); }
+      else { const v = smooth ? -10 : -6; const m = addHot(sd, v, this.def); sd.badPress = 120; this.float(pos[0], pos[1] - 0.05, T(`傳說名氣 ${v}`, `傳說名氣 ${v}`), '#ff8a8a'); if (m) { Fx.toast(m); this.gpWarn('drop', T('嚇唔走成隊人，路人膽量跌咗級', '嚇不走整隊人，路人膽量降級了')); } }
       setTimeout(() => this.sqPost(sq, win, smooth, shot, siteN), win ? 900 : 300); },
     // 帖文相：唔靠鏡頭（人可能喺畫面外），用嗰屏背景圖＋組員位置自己砌一張「手機相」
     sqShot(pos, win, sq) { try { const L = this.lay, r = Math.max(0, Math.min(L.nv - 1, Math.floor(pos[0]))), P0 = L.panels[r], bgk = P0 && (P0.bg || (ROOMG[P0.room] && ROOMG[P0.room].bg)), bg = has(SPR) && SPR[bgk];
@@ -767,7 +781,7 @@ const Street = (() => {
       if (w.sq) this.sqMember(w, 'run');
     },
     leak(w) { const sd = this.sd; sd.leaked++; occPush(sd, 0); sd.leakAcc = (sd.leakAcc || 0) + 1; if (sd.leakAcc >= 4) { sd.leakAcc = 0; sd.modCur = Math.max(0.9, (sd.modCur || 0.9) - 0.06); }
-      const m = addHot(sd, HOT.leak, this.def), [x, y] = this.lay.nodes[this.lay.last]; this.float(x - 0.08, y - 0.04, T('漏咗一個…名氣 −18', '漏掉一個…名氣 −18'), '#ff8a8a'); if (m) Fx.toast(m); if (w.sq) this.sqMember(w, 'out'); },
+      const m = addHot(sd, HOT.leak, this.def), [x, y] = this.lay.nodes[this.lay.last]; this.float(x - 0.08, y - 0.04, T('漏咗一個…名氣 −18', '漏掉一個…名氣 −18'), '#ff8a8a'); if (m) { Fx.toast(m); this.gpWarn('drop', T('漏人太多，路人膽量跌咗級', '漏掉太多人，路人膽量降級了')); } if (w.sq) this.sqMember(w, 'out'); },
     // 排隊：每組 4／5／6 人（排隊區等級），門外最多一組；人齊之後 90 秒自動放行，撳「進入」即刻放
     tick(dt) {
       const sd = this.sd;
@@ -822,11 +836,11 @@ const Street = (() => {
     startUlt(i) {
       const p = this.sd.posts[i], g = ghost(p.g); if (!g) return; p.en = 0;
       const nm = this.ULT[g.k] || [`${g.name}・怨氣爆發`, `${g.name}・怨氣爆發`];
-      this.focusOn(this.lay.posts[i].x, this.lay.posts[i].y); if (this.cam) this.cam.user = 0; this.ult = { t:0, i, k:g.k, name:T(nm[0], nm[1]), gname:g.name, pw:power(g), done:false, fx:[] }; this.shake = 0.5;
+      this.focusOn(this.lay.posts[i].x, this.lay.posts[i].y); if (this.cam) this.cam.user = 0; this.ult = { t:0, i, k:g.k, name:T(nm[0], nm[1]), gname:g.name, pw:power(g), pm:GP.grow(g), done:false, fx:[] }; this.shake = 0.5;
       if (has(Sound) && Sound.play) try { Sound.play('scare'); } catch (e) {}
     },
     ultApply(U) {
-      const live = this.walkers.filter(w => this.alive(w)), P = BOSS_DMG, me = U.pos ? { x:U.pos[0], y:U.pos[1] } : this.lay.posts[U.i];
+      const live = this.walkers.filter(w => this.alive(w)), P = BOSS_DMG * (U.pm || 1), me = U.pos ? { x:U.pos[0], y:U.pos[1] } : this.lay.posts[U.i];
       const hitAll = (list, mul, extra) => list.forEach(w => { this.hit(w, P * mul, null, 'face'); if (extra) extra(w); });
       this.shake = 0.6; this.flash = 0.18;
       if (this.ultNew(U)) return;
@@ -1098,7 +1112,7 @@ const Street = (() => {
       const sd = this.sd, on = (sd.bosses || []).map(ghost).filter(Boolean), list = S.ghosts.filter(g => this.SPECIAL.includes(g.k) && (!g.post || on.some(o => o.id === g.id)));
       let el = $('#stt-pick'); if (!el) { el = document.createElement('div'); el.id = 'stt-pick'; document.body.appendChild(el); }
       el.innerHTML = `<div class="stp-card2"><div class="stp-h">${T('有名鬼（每隻獨一無二）', '有名鬼（每隻獨一無二）')}<small>${on.length ? T(`本圖已上場：${on.map(g => g.name).join('、')}`, `本圖已上場：${on.map(g => g.name).join('、')}`) : T('唔使佔格，會喺1號房出現，沿成條路來回巡邏；附近有人就停低放招。', '不用佔格，會在1號房出現，沿整條路來回巡邏；附近有人就停下放招。')}<br>${T(`每張地圖最多 ${BOSS_MAX} 隻；一隻鬼同一時間只可以喺一個地盤。`, `每張地圖最多 ${BOSS_MAX} 隻；一隻鬼同一時間只能在一個地盤。`)}</small></div><div class="stp-two stp-three">`
-        + list.map(g => { const isOn = on.some(o => o.id === g.id), K = Object.assign({}, bsk(g.k), { n:this.lore(g.k).n, r:this.lore(g.k).r, last:6 }); return `<div class="stp-opt ${isOn ? 'on' : ''}"><div class="stp-frame"><canvas data-pk="${g.k}"></canvas></div><b>${g.name}</b><span class="stp-ico">${T(K.n[0], K.n[1])}</span><small>${T(`範圍 ${K.r}・停低 ${K.last} 秒・冷卻 ${BOSS_CD} 秒`, `範圍 ${K.r}・停下 ${K.last} 秒・冷卻 ${BOSS_CD} 秒`)}</small><button class="stp-buy" data-sp="${g.id}" ${!isOn && on.length >= BOSS_MAX ? 'disabled' : ''}>${isOn ? T('收工', '收工') : T('派佢上場', '派牠上場')}</button></div>`; }).join('') + `</div><button id="stp-x" class="stp-x">${T('關閉', '關閉')}</button></div>`;
+        + list.map(g => { const isOn = on.some(o => o.id === g.id), K = Object.assign({}, bsk(g.k), { n:this.lore(g.k).n, r:this.lore(g.k).r, last:6 }); return `<div class="stp-opt ${isOn ? 'on' : ''}"><div class="stp-frame"><canvas data-pk="${g.k}"></canvas></div><b>${g.name}</b><span class="stp-ico">${T(K.n[0], K.n[1])}</span><small>${T(`範圍 ${K.r}・停低 ${K.last} 秒・冷卻 ${bossCD(g).toFixed(1)} 秒`, `範圍 ${K.r}・停下 ${K.last} 秒・冷卻 ${bossCD(g).toFixed(1)} 秒`)}</small><small class="gp-sub">${T('鬼力', '鬼力')} <b>${GP.pow(g)}</b>・${T('出招', '出招')} ${Math.round(bossDmg(g) * (this.lore(g.k).dmg || 1))}</small><button class="stp-buy" data-sp="${g.id}" ${!isOn && on.length >= BOSS_MAX ? 'disabled' : ''}>${isOn ? T('收工', '收工') : T('派佢上場', '派牠上場')}</button></div>`; }).join('') + `</div><button id="stp-x" class="stp-x">${T('關閉', '關閉')}</button></div>`;
       el.querySelectorAll('canvas[data-pk]').forEach(cv => { try { const im = ART.portrait(cv.dataset.pk, 80); cv.width = 80; cv.height = 80; cv.getContext('2d').drawImage(im, 0, 0, 80, 80); } catch (e) {} });
       el.querySelectorAll('[data-sp]').forEach(b2 => b2.onclick = () => { const g = ghost(+b2.dataset.sp) || ghost(b2.dataset.sp); if (!g) return;
         if (sd.bosses.includes(g.id)) { sd.bosses = sd.bosses.filter(x => x !== g.id); g.post = null; Fx.toast(T(`${g.name} 收工`, `${g.name} 收工`)); }
@@ -1351,8 +1365,21 @@ const Street = (() => {
       coin.textContent = `${T('本關冥幣', '本關冥幣')} ${Math.floor(WAL.v || 0)}`;
       const oc = occOf(sd), dr = devRate(sd), ocT = oc == null ? T(`佔領度 計緊（${(sd.occH || []).length}/${OCC_MIN}）`, `佔領度 統計中（${(sd.occH || []).length}/${OCC_MIN}）`) : `${T('佔領度', '佔領度')} <b style="color:${oc >= OCC_LINE ? '#7dffb0' : '#ff8a7a'}">${Math.round(oc * 100)}%</b>` + (dr > 0 ? T(`・村莊發展 +${dr}/分`, `・村莊發展 +${dr}/分`) : oc >= OCC_LINE ? T('・起咗設備先有發展收入', '・建了設備才有發展收入') : T('・過 50% 村莊先有發展收入', '・超過 50% 村莊才有發展收入'));
       const k = sd.hot >= 0 ? sd.hot / need : sd.hot / -HOT.down; bar.style.width = Math.abs(k) * 50 + '%'; bar.style.left = k >= 0 ? '50%' : (50 + k * 50) + '%'; bar.className = k >= 0 ? 'up' : 'down';
-      info.innerHTML = `<span>${ocT}</span><span>${T('傳說名氣', '傳說名氣')} ${Math.round(sd.hot)}/${need}</span><span>${T('惡名', '惡名')} ${sd.scared}</span><span>${T('漏人', '漏人')} ${sd.leaked}</span><span>${T('膽量補正', '膽量補正')} ×${this.mod().toFixed(2)}</span>`;
+      info.innerHTML = `<span>${ocT}</span><span>${T('傳說名氣', '傳說名氣')} ${Math.round(sd.hot)}/${need}</span><span>${T('惡名', '惡名')} ${sd.scared}</span><span>${T('漏人', '漏人')} ${sd.leaked}</span><span>${T('膽量補正', '膽量補正')} ×${this.mod().toFixed(2)}</span>${(() => { const hv = this.gpHave(), nd = GP.turfNeed(sd.lv); return `<span class="gp-hud ${hv < nd ? 'gp-low' : 'gp-ok'}">${T('鬼力', '鬼力')} <b>${hv}</b>／${T('建議', '建議')} ${nd}</span>`; })()}`;
+      this.gpCheck(oc);
     },
+    // ---- 鬼力（gpower.js）：場上嘅鬼（有名鬼＋加持）平均鬼力；未派就用村入面最強三隻 ----
+    gpHave() { const ids = (this.sd.bosses || []).concat((this.sd.posts || []).filter(p => p && p.staff != null).map(p => p.staff)), list = ids.map(ghost).filter(g => g && !g.dev); return list.length ? GP.avg(list) : GP.top(3); },
+    // 打唔過：漏人令膽量跌級／佔領度跌落 50% 以下／有名鬼全部被道士封印 → 提示返村升級（每種原因 120 秒最多一次，唔遮畫面中間）
+    gpCheck(oc) { const now = performance.now(); this._gpT = this._gpT || {};
+      if (oc != null && oc < OCC_LINE && (this.sd.occH || []).length >= OCC_MIN) this.gpWarn('occ', T(`佔領度得 ${Math.round(oc * 100)}%，跌咗落 50% 以下`, `佔領度只有 ${Math.round(oc * 100)}%，跌到 50% 以下`), now);
+      const bs = this.bosses || []; if (bs.length && bs.every(B => B.sealed > 0)) this.gpWarn('seal', T('有名鬼全部俾道士封咗', '有名鬼全部被道士封印'), now); },
+    gpWarn(why, txt, now) { now = now || performance.now(); this._gpT = this._gpT || {}; if (this._gpT[why] && now - this._gpT[why] < 120000) return; this._gpT[why] = now;
+      const root = $('#st-turf'); if (!root) return; let el = $('#gp-warn'); if (el) el.remove(); el = document.createElement('div'); el.id = 'gp-warn'; el.className = 'gp-warn';
+      const have = this.gpHave(), need = GP.turfNeed(this.sd.lv), low = have < need;
+      el.innerHTML = `<button class="gp-x" aria-label="close">×</button><b>${txt}</b>` + GP.failHTML(have, need, low ? '' : T('鬼力夠喇：試下升級設備、換位，或者派多隻鬼加持。', '鬼力夠了：試試升級設備、換位置，或多派一隻鬼加持。'));
+      root.appendChild(el); GP.bindBack(el); el.querySelector('.gp-x').onclick = (e) => { e.stopPropagation(); el.remove(); }; this.gpLast = why;
+      clearTimeout(this._gpHide); this._gpHide = setTimeout(() => { if (el.parentNode) el.remove(); }, 12000); },
     tap(e) {
       const r = this.cv.getBoundingClientRect(), [x, y] = this.toScene(e.clientX - r.left, e.clientY - r.top), b = this.box;
       if (this.miniBox) { const [mx, my, mw, mh] = this.miniBox, px = e.clientX - r.left, py = e.clientY - r.top; if (px >= mx - 3 && px <= mx + mw + 3 && py >= my - 3 && py <= my + mh + 3) { const C = this.cam; this.intro = null; C.x = C.tx = (px - mx) / mw * this.lay.worldW; C.y = C.ty = (py - my) / mh * this.lay.worldH; C.user = performance.now(); this.camClamp(); return; } }
@@ -1361,7 +1388,7 @@ const Street = (() => {
         if (A.h !== B.h || (A.s || 1) !== (B.s || 1)) { Fx.toast(T('要同類（牆／路）同大小嘅格先可以互換', '要同類（牆／路）同大小的格才能互換')); return; }
         const t0 = this.sd.posts[a]; this.sd.posts[a] = this.sd.posts[i]; this.sd.posts[i] = t0; [a, i].forEach(k => { const p = this.sd.posts[k]; if (p) { p.win = null; p.anim = null; p.ph = null; p.solved = 0; } }); Fx.toast(T('互換咗位置', '已互換位置')); save_(); return; }
       if (this.tryGate(x, y)) return;
-      for (const B of this.bosses || []) if (B.screen && Math.hypot(B.screen[0] - x, B.screen[1] - y) < b.w * 0.09) { if (B.en >= 100 && !this.ult) { B.en = 0; this.sd.bEn[B.g.id] = 0; const g = B.g, pos = this.bpos(B), nm = this.ULT[g.k] || [`${g.name}・怨氣爆發`, `${g.name}・怨氣爆發`]; this.focusOn(pos[0], pos[1]); this.ult = Object.assign({ t:0, i:-1, pos, k:g.k, name:T(nm[0], nm[1]), gname:g.name, pw:power(g), done:false, fx:[] }, this.ULTT[g.k] || {}); this.shake = 0.5; } else Fx.toast(T(`${B.g.name}：能量 ${Math.round(B.en)}%（出招一次 +14）`, `${B.g.name}：能量 ${Math.round(B.en)}%（出招一次 +14）`)); return; }
+      for (const B of this.bosses || []) if (B.screen && Math.hypot(B.screen[0] - x, B.screen[1] - y) < b.w * 0.09) { if (B.en >= 100 && !this.ult) { B.en = 0; this.sd.bEn[B.g.id] = 0; const g = B.g, pos = this.bpos(B), nm = this.ULT[g.k] || [`${g.name}・怨氣爆發`, `${g.name}・怨氣爆發`]; this.focusOn(pos[0], pos[1]); this.ult = Object.assign({ t:0, i:-1, pos, k:g.k, name:T(nm[0], nm[1]), gname:g.name, pw:power(g), pm:GP.grow(g), done:false, fx:[] }, this.ULTT[g.k] || {}); this.shake = 0.5; } else Fx.toast(T(`${B.g.name}：能量 ${Math.round(B.en)}%（出招一次 +14）`, `${B.g.name}：能量 ${Math.round(B.en)}%（出招一次 +14）`)); return; }
       if (i >= 0 && (this.buildMode || (this.sd.posts[i] && this.sd.posts[i].role))) { this.pickRole(i); return; }
       // 撳路人：每次 1% 膽量（無視減傷），嚇人力 100，每 300 秒回 1
       const hh = this.box.h * 0.034 * PPL; let best = null, bd = 1e9;
@@ -1405,10 +1432,11 @@ const Street = (() => {
         const cand = freeGhosts().filter(g => this.SPECIAL.includes(g.k) || typesOf(g.k).some(t => ROLE_OF[t] === p.role)).sort((a, z) => (this.SPECIAL.includes(z.k) ? 1 : 0) - (this.SPECIAL.includes(a.k) ? 1 : 0)).slice(0, 6);
         el.innerHTML = `<div class="stp-card1"><div class="stp-top"><canvas data-pk="${this.devK(p)}"></canvas><div><b>${T(D.n[sz][0], D.n[sz][1])}</b><small>${spot.n}・${szT}・Lv${lv}${lv >= cap ? T('（已到上限）', '（已達上限）') : ''}</small><i>${T(D.desc[0], D.desc[1])}</i></div></div>`
           + a.map((r, j) => `<p>${r[0]}：${r[1]}${nx ? ` → <em>${nx[j][1]}</em>` : ''}</p>`).join('')
-          + `<p>${T('勵鬼加持', '勵鬼加持')}：${stf ? `${stf.name}（${this.SPECIAL.includes(stf.k) ? T('名鬼加持：驚嚇 ×1.5・回靈快兩成', '名鬼加持：驚嚇 ×1.5・回靈快兩成') : T('雜鬼加持：驚嚇 ×1.3・回靈快一成', '雜鬼加持：驚嚇 ×1.3・回靈快一成')}）` : T('未有（同類型雜鬼 ×1.3；有名鬼任何類型 ×1.5）', '未有（同類型雜鬼 ×1.3；有名鬼任何類型 ×1.5）')}</p>`
+          + `<p>${T('勵鬼加持', '勵鬼加持')}：${stf ? (() => { const M = this.staffMul(p); return `${stf.name}${M.named ? '★' : ''}（${T('鬼力', '鬼力')} ${M.pw}：${staffTxt(M)}）`; })() : T('未有（同類型雜鬼或者任何有名鬼都得；鬼力愈高，加持愈勁）', '未有（同類型雜鬼或任何有名鬼都可以；鬼力越高，加持越強）')}</p>`
+          + `<p class="gp-note">${T('加持效果跟鬼力：返村升級隻鬼、練嚇功，呢度即刻勁啲。', '加持效果跟鬼力：回村升級鬼、練嚇功，這裡立即變強。')}</p>`
           + `<div class="stp-row"><button class="stp-buy" id="stp-up" ${!nx || coins < cost || p.build > 0 ? 'disabled' : ''}>${nx ? (coins < cost ? T(`冥幣唔夠（仲差 ${cost - coins}）`, `冥幣不足（還差 ${cost - coins}）`) : `${T('升級', '升級')}　💴 ${cost}`) : (lv >= 5 ? T('已滿級', '已滿級') : T(`上限 Lv${cap}（開下一間房 +2）`, `上限 Lv${cap}（開下一間房 +2）`))}</button></div>`
           + `<div class="stp-row"><button id="stp-mv">${T('移位', '移位')}</button><button id="stp-del">${T(`拆走（退返 ${p.spent}）`, `拆除（退回 ${p.spent}）`)}</button></div>`
-          + `<div class="stp-row stp-staff">${stf ? `<button data-st="off">${T(`叫 ${stf.name} 唔使加持`, `讓 ${stf.name} 停止加持`)}</button>` : cand.map(g => `<button data-st="${g.id}">${T('叫', '叫')} ${g.name} ${T('加持', '加持')}${this.SPECIAL.includes(g.k) ? '★' : ''}</button>`).join('') || `<small>${T('冇得閒嘅鬼可以加持', '沒有空閒的鬼可以加持')}</small>`}</div>`
+          + `<div class="stp-row stp-staff">${stf ? `<button data-st="off">${T(`叫 ${stf.name} 唔使加持`, `讓 ${stf.name} 停止加持`)}</button>` : cand.map(g => { const M = staffOf(g, this.SPECIAL.includes(g.k)); return `<button data-st="${g.id}">${T('叫', '叫')} ${g.name} ${T('加持', '加持')}${M.named ? '★' : ''}<small class="gp-sub">${T('鬼力', '鬼力')} <b>${M.pw}</b><br>${T('驚嚇', '驚嚇')} ×${M.atk.toFixed(2)}<br>${T('回靈', '回靈')} ×${M.cd.toFixed(2)}</small></button>`; }).join('') || `<small>${T('冇得閒嘅鬼可以加持', '沒有空閒的鬼可以加持')}</small>`}</div>`
           + `<div class="stp-row"><button id="stp-x">${T('關閉', '關閉')}</button></div></div>`;
         el.querySelector('#stp-up').onclick = () => { if (!nx || (WAL.v || 0) < cost) return; WAL.v -= cost; p.lv = lv + 1; p.spent = (p.spent || 0) + cost; p.ph = null; p.build = 3; close(); save_(); Fx.toast(T('招魂中…（升級）', '招魂中…（升級）')); };
         el.querySelector('#stp-del').onclick = () => { WAL.v = WAL.v + (p.spent || 0); if (stf) stf.post = null; sd.posts[i] = null; close(); save_(); Fx.toast(T(`拆咗，退返冥幣 ${p.spent}`, `已拆除，退回冥幣 ${p.spent}`)); };
@@ -1434,7 +1462,7 @@ const Street = (() => {
     // 建設度＝(台數×1.5＋升級次數×0.875)/(5×槽數)×0.6 ＋ 勵鬼加持/槽數×0.4 ＋ 有名鬼 0.1 起
     build() { const sd = this.sd, TM = this.lay.tm, blt = sd.posts.filter(p => p && p.role && !(p.build > 0 && (p.lv || 1) === 1));
       let v = (blt.length * 1.5 + blt.reduce((a, p) => a + ((p.lv || 1) - 1) * 0.875, 0)) / (5 * TM) * 0.6 + blt.filter(p => p.staff != null).length / TM * 0.4;
-      if ((sd.bosses || []).length) { const g = ghost(sd.bosses[0]); v += 0.1 + (Math.min(6, (g && (g.lv || g.level)) || 1) - 1) * 0.02; }
+      if ((sd.bosses || []).length) { const g = ghost(sd.bosses[0]); v += 0.1 + Math.min(0.15, ((g ? GP.grow(g) : 1) - 1) * 0.2); }
       return Math.round(v * 1000) / 10; },
     rect(spot) { const w = CELL * (spot.s === 2 && !spot.d ? 2 : 1), h = CELL * (spot.s === 2 && spot.d ? 2 : 1) / 1.5; return [spot.x - w / 2, spot.y - h / 2, spot.x + w / 2, spot.y + h / 2]; },
     rdist(pt, spot) { const r = this.rect(spot), dx = Math.max(r[0] - pt[0], 0, pt[0] - r[2]), dy = Math.max(r[1] - pt[1], 0, pt[1] - r[3]); return Math.hypot(dx, dy * 1.5); },
@@ -1456,7 +1484,7 @@ const Street = (() => {
       this.float(this.lay.nodes['0E'][0] + 0.15, this.lay.nodes['0E'][1] - 0.2, manual ? T(`放咗 ${n} 個人入嚟！`, `放了 ${n} 個人進來！`) : T(`等足 90 秒，${n} 個人自己行入嚟`, `等滿 90 秒，${n} 個人自己走進來`), '#ffe9b0');
       q.st = 'gap'; q.t = 8; q.list = []; q.made = 0; q.sq = null; this.sqWaveDone(); this.focusOn(this.lay.nodes['0E'][0], this.lay.nodes['0E'][1] - 0.3); return true;
     },
-    staffMul(p) { const g = p.staff != null && ghost(p.staff); if (!g) return { atk:1, cd:1, hp:1 }; return this.SPECIAL.includes(g.k) ? { atk:1.5, cd:0.8, hp:1.5, named:1 } : { atk:1.3, cd:0.9, hp:1.3 }; }, // 勵鬼加持
+    staffMul(p) { const g = p.staff != null && ghost(p.staff); if (!g) return { atk:1, cd:1, hp:1 }; return staffOf(g, this.SPECIAL.includes(g.k)); }, // 勵鬼加持（跟鬼力：gpower.js）
     devK(p) { const g = p.staff != null && ghost(p.staff); return g ? g.k : DEV[p.role].k; },
     devTick(i, p, dt) {
       if (p.stun > 0) { p.stun -= dt; return; } if (typeof StnFoes !== 'undefined' && StnFoes.blocks(p)) return;
@@ -1506,11 +1534,11 @@ const Street = (() => {
     bossTick(dt) {
       const sd = this.sd, L = this.lay; sd.bosses = (sd.bosses || []).filter(id => ghost(id)); sd.bEn = sd.bEn || {};
       for (const id of sd.bosses) if (!this.bosses.some(b => b.g.id === id)) { const g = ghost(id); const ks0 = Object.keys(L.nodes).filter(k => k[0] === '0' && !/E$|X$|c_|~/.test(k)), mid = ks0[Math.floor(ks0.length * 0.6)] || '0E', used = this.bosses.map(q => q.a), a0 = ks0.slice(Math.floor(ks0.length * 0.45)).find(k => !used.includes(k) && (L.edges[k] || []).length) || mid; this.bosses.push({ g, a:a0, b:pick(L.edges[a0] || L.edges['0E']), k:0.5, dir:1, cd:R(2, 4), stay:0, en:sd.bEn[id] || 0, fx:null, hitSet:null }); }
-      this.bosses = this.bosses.filter(b => sd.bosses.includes(b.g.id));
+      this.bosses = this.bosses.filter(b => sd.bosses.includes(b.g.id)); this.bg = this.bosses.length ? this.bosses.reduce((a, b) => a + GP.grow(b.g), 0) / this.bosses.length : 1;
       for (const B of this.bosses) { B.sealed = typeof StnFoes !== 'undefined' ? StnFoes.isSealed(B) : 0; if (B.sealed > 0) continue;
         const K = bsk(B.g.k), hid = L.hide.has(B.a + '>' + B.b) || L.hide.has(B.b + '>' + B.a); B.hid = hid;
         if (B.stay > 0) { B.stay -= dt; B.pt += dt; if (B.ph === 'omen' && B.pt >= 1.3) { B.ph = 'strike'; B.pt = 0; this.loreStrike(B); B.fx = { t:0, k:'_', at:this.bpos(B), tg:B.sx.tp }; } else if (B.ph === 'strike' && B.pt >= 1.2) { B.ph = 'rest'; B.pt = 0; }
-          if (B.fx) { B.fx.t += dt; if (B.fx.t > 1.1) B.fx = null; } if (B.stay <= 0) { B.stay = 0; B.cd = BOSS_CD; B.ph = null; B.fx = null; } continue; }
+          if (B.fx) { B.fx.t += dt; if (B.fx.t > 1.1) B.fx = null; } if (B.stay <= 0) { B.stay = 0; B.cd = bossCD(B.g); B.ph = null; B.fx = null; } continue; }
         this.bstep(B, 100 * PX * (hid ? 4 : 1) * dt);
         B.cd -= dt; if (B.cd > 0 || B.hid) continue;
         const pos = this.bpos(B), near = this.walkers.filter(w => this.alive(w) && this.dist(this.wp(w), pos) <= this.lore(B.g.k).r * PX); if (!near.length) continue;
@@ -1524,7 +1552,7 @@ const Street = (() => {
         else { nx = L.preds[cur] || []; if (!nx.length) { B.dir = 1; nx = (L.edges[cur] || []).filter(n => n !== 'OUT'); } }
         B.a = cur; B.b = pick(nx) || cur; } },
     bossSkill(B, K, dt) {
-      const g = B.g, lv = Math.min(6, g.lv || g.level || 1), base = BOSS_DMG + (lv >= 2 ? 180 : 0) + (lv >= 5 ? 361 : 0);
+      const g = B.g, base = bossDmg(g);
       if (K.dash) this.bstep(B, 300 * PX / K.last * dt);
       const pos = this.bpos(B), R0 = (K.dash ? 80 : K.r) * PX;
       for (const w of this.walkers) { if (!this.alive(w) || B.hitSet.has(w) || this.dist(this.wp(w), pos) > R0) continue; if (K.single && B.hitSet.size >= 1) break;
@@ -1590,7 +1618,7 @@ const Street = (() => {
     },
     // 出手
     loreStrike(B) {
-      const g = B.g, k = g.k, L = this.lore(k), lv = Math.min(6, g.lv || g.level || 1), base = (BOSS_DMG + (lv >= 2 ? 180 : 0) + (lv >= 5 ? 361 : 0)) * L.dmg, pos = this.bpos(B);
+      const g = B.g, k = g.k, L = this.lore(k), base = bossDmg(g) * L.dmg, pos = this.bpos(B);
       const near = this.walkers.filter(w => this.alive(w) && this.dist(this.wp(w), pos) < L.r * PX).sort((a, z) => this.dist(this.wp(a), pos) - this.dist(this.wp(z), pos));
       const hit = (w, m, o) => this.hit(w, base * (m || 1), Object.assign({ force:true }, o || {}));
       this.snd(L.snd[1]); this.tint = { col:L.col, t:1.2 }; this.shake = 0.3; const tg = near[0], tp = tg ? this.wp(tg) : B.om ? B.om.tp : pos; B.sx = { t:0, tp:tp.slice(), from:pos.slice(), list:[] };
@@ -1618,13 +1646,13 @@ const Street = (() => {
     // 被趕回頭嘅人撞落後面人群：每撞一個再推下一個，最多 4 個連環跌
     chainFall(w0) { let cur = w0; const done = new Set([w0]); let n = 0;
       for (let i = 0; i < 4; i++) { const p0 = this.wp(cur), nx = this.walkers.filter(o => this.alive(o) && !done.has(o)).map(o => [o, this.dist(this.wp(o), p0)]).filter(a => a[1] < 90 * PX).sort((a, z) => a[1] - z[1])[0]; if (!nx) break; const o = nx[0]; done.add(o); n++;
-        o.cb3c = 1; this.act(o, 'cower', 1.6 + i * 0.2, { rot:(i % 2 ? -1 : 1) * 1.25 }); this.hit(o, BOSS_DMG * 0.2, { force:true, aura:1 }); o.say = { s:pick([T('哎呀！', '哎呀！'), T('咪推呀！', '別推啊！'), T('撞到我喇！', '撞到我了！')]), t:1.2 }; cur = o; }
+        o.cb3c = 1; this.act(o, 'cower', 1.6 + i * 0.2, { rot:(i % 2 ? -1 : 1) * 1.25 }); this.hit(o, BOSS_DMG * (this.bg || 1) * 0.2, { force:true, aura:1 }); o.say = { s:pick([T('哎呀！', '哎呀！'), T('咪推呀！', '別推啊！'), T('撞到我喇！', '撞到我了！')]), t:1.2 }; cur = o; }
       if (n >= 2) { const [x, y] = this.wp(w0); this.cap(T(`連環跌 ×${n}！`, `連環跌倒 ×${n}！`), x, y - 0.16, { col:'#ffb0b0', style:'pop', size:16 }); } },
     traceTick(dt) {
       const TR = this.traces = (this.traces || []).filter(r => (r.t += dt) < r.life);
       for (const w of this.walkers) { if (!this.alive(w)) continue; const p = this.wp(w), on = TR.filter(r => this.dist(p, [r.x, r.y]) < r.r), ks = new Set(on.concat(on.length ? TR.filter(r => this.dist(p, [r.x, r.y]) < r.r + 0.12) : []).map(r => r.kind)); /* 聯動：兩種餘痕相鄰就算疊埋 */ if (!on.length) continue; const [x, y] = p;
         // 聯動①：濕髮＋冰息 = 冰髮，全部跣低
-        if (ks.has('hair') && ks.has('ice') && !w.cb1) { w.cb1 = 1; this.act(w, 'cower', 2.6, { rot:1.3 }); this.hit(w, BOSS_DMG * 0.6, { force:true }); this.cap(T('冰髮！跣到四腳朝天！', '冰髮！滑倒在地！'), x, y - 0.1, { col:'#bfe8ff', style:'shake', size:17, font:'serif' }); this.tint = { col:'rgba(150,210,255,0.25)', t:0.8 }; continue; }
+        if (ks.has('hair') && ks.has('ice') && !w.cb1) { w.cb1 = 1; this.act(w, 'cower', 2.6, { rot:1.3 }); this.hit(w, BOSS_DMG * (this.bg || 1) * 0.6, { force:true }); this.cap(T('冰髮！跣到四腳朝天！', '冰髮！滑倒在地！'), x, y - 0.1, { col:'#bfe8ff', style:'shake', size:17, font:'serif' }); this.tint = { col:'rgba(150,210,255,0.25)', t:0.8 }; continue; }
         // 聯動②：Toyol 灑錢＋窮鬼假鈔 = 成班人蹲低執錢，變成靶
         if (ks.has('coins') && ks.has('notes') && !w.cb2) { w.cb2 = 1; this.act(w, 'cower', 3.5); w.target = 5; w.say = { s:T('有錢執呀！', '有錢撿啊！'), t:1.5 }; this.cap(T('成班人蹲低執錢！（受嚇 ×1.5）', '一群人蹲下撿錢！（受驚 ×1.5）'), x, y - 0.12, { col:'#ffe08a', style:'pop', size:15 }); continue; }
         // 聯動③：孟婆失憶＋討債窄口 = 喺窄口嚟回撞
@@ -1635,10 +1663,10 @@ const Street = (() => {
           else if (r.kind === 'ice') { if (Math.random() < 0.45) { this.act(w, 'cower', 1.3, { rot:-1.1 }); w.frost = 1.2; } }
           else if (r.kind === 'shadow') { w.back = CELL * 1.2; w.say = { s:pick([T('頭先嗰個白影係咩？', '剛剛那個白影是什麼？'), T('我唔過去喇……', '我不過去了……')]), t:1.4 }; }
           else if (r.kind === 'bowl') { this.act(w, 'idle', 1.6); w.say = { s:T('邊個個碗喺度轆？', '誰的碗在滾？'), t:1.3 }; }
-          else if (r.kind === 'claw') { w.fear = 1.5; this.hit(w, BOSS_DMG * 0.15, { force:true, aura:1 }); }
+          else if (r.kind === 'claw') { w.fear = 1.5; this.hit(w, BOSS_DMG * (this.bg || 1) * 0.15, { force:true, aura:1 }); }
           else if (r.kind === 'coins' || r.kind === 'notes') { this.act(w, 'cower', 1.6); w.say = { s:r.kind === 'coins' ? T('跌咗啲散紙！', '掉了零錢！') : T('有張銀紙！', '有張鈔票！'), t:1.2 }; }
           else if (r.kind === 'cloth') { if (this.reroute(w)) w.say = { s:T('嗰邊有白布……行第二條路', '那邊有白布……走另一條'), t:1.4 }; }
-          else if (r.kind === 'ring') { this.hit(w, BOSS_DMG * 0.35, { force:true, fright:1 }); this.react(w, 'scream'); }
+          else if (r.kind === 'ring') { this.hit(w, BOSS_DMG * (this.bg || 1) * 0.35, { force:true, fright:1 }); this.react(w, 'scream'); }
           else if (r.kind === 'soup') { w.amnesia = 6; w.back = CELL; w.say = { s:T('我頭先想去邊？', '我剛剛要去哪？'), t:1.3 }; }
           else if (r.kind === 'debt') { w.back = CELL * 1.2; this.bump(w, 50); w.say = { s:T('唔好搵我！', '別找我！'), t:1.2 }; }
           else if (r.kind === 'clink') { w.fear = 1; w.say = { s:T('邊個喺度數錢？', '誰在數錢？'), t:1.2 }; } } }
@@ -1661,7 +1689,7 @@ const Street = (() => {
     walkerFx(w, dt) {
       if (w.tr && this.alive(w)) this.traitTick(w, dt);
       for (const f of ['amnesia', 'target', 'breath', 'dbCd']) if (w[f] > 0) w[f] -= dt;
-      if (w.lift) { w.lift.t += dt; if (w.lift.t >= w.lift.dur) { w.lift = null; this.act(w, 'cower', 1.2, { rot:1.2 }); this.hit(w, BOSS_DMG * 0.3, { force:true, fright:1 }); w.say = { s:T('呀——！', '啊——！'), t:1 }; } return true; }
+      if (w.lift) { w.lift.t += dt; if (w.lift.t >= w.lift.dur) { w.lift = null; this.act(w, 'cower', 1.2, { rot:1.2 }); this.hit(w, BOSS_DMG * (this.bg || 1) * 0.3, { force:true, fright:1 }); w.say = { s:T('呀——！', '啊——！'), t:1 }; } return true; }
       if (w.fly) { w.fly.t += dt; if (w.fly.t >= w.fly.dur) { w.fly = null; this.act(w, 'cower', 1.3, { rot:1.3 }); w.say = { s:T('痛呀……', '好痛……'), t:1 }; } return true; }
       if (w.chase) { w.chase.t += dt; if (Math.random() < dt * 3) this.bump(w, 45); if (w.chase.t >= w.chase.dur) w.chase = null; return true; }
       if (w.act) { w.act.t -= dt; if (w.act.t <= 0) w.act = null; else if (w.act.hold) return true; }
@@ -1738,7 +1766,7 @@ const Street = (() => {
     ULTT:{ pontianak:{ dur:3.8, at:3.0 }, tianhua:{ dur:3.3 }, laojiang:{ dur:3.2 }, n30_yukionna:{ dur:3 }, mengpo:{ dur:3.6 }, pocong:{ dur:3.4 }, penanggal:{ dur:3.6 }, toyol:{ dur:3.6 } },
     // 新增大招（同普通招嘅餘痕呼應）；返回 true 代表已處理
     ultNew(U) {
-      const live = this.walkers.filter(w => this.alive(w)), P = BOSS_DMG, all = (m, f) => live.forEach(w => { if (f) f(w); this.hit(w, P * m, { force:true }); });
+      const live = this.walkers.filter(w => this.alive(w)), P = BOSS_DMG * (U.pm || 1), all = (m, f) => live.forEach(w => { if (f) f(w); this.hit(w, P * m, { force:true }); });
       const tr = (kind, r, life) => live.forEach(w => { const p = this.wp(w); this.addTrace(kind, p[0], p[1], r, life, { by:U.k }); });
       switch (U.k) {
         case 'tianhua': live.forEach(w => { w.lift = { t:0, dur:2.0, h:80 + Math.random() * 40 }; }); setTimeout(() => { live.forEach(w => { if (this.alive(w)) this.hit(w, P * 6, { force:true, fright:2.5 }); }); }, 2100); tr('hair', 90, 7); return true;
@@ -1777,7 +1805,7 @@ const Street = (() => {
         U.trail = (U.trail || []).concat([[hx, hy]]).slice(-26);
         c.save(); c.lineCap = 'round'; for (let j = 1; j < U.trail.length; j++) { const a2 = j / U.trail.length; c.strokeStyle = `rgba(120,10,20,${0.8 * a2})`; c.lineWidth = (2 + 7 * a2) * U2; c.beginPath(); c.moveTo(U.trail[j - 1][0], U.trail[j - 1][1] + Math.sin(t * 9 + j) * 4); c.lineTo(U.trail[j][0], U.trail[j][1] + Math.sin(t * 9 + j + 1) * 4); c.stroke(); c.strokeStyle = `rgba(170,255,130,${0.35 * a2})`; c.lineWidth = 2 * U2; c.stroke(); } c.restore();
         try { ART.drawChar(c, 'penanggal', hx, hy + b.h * 0.06, b.h * 0.09 / 60, { t, pose:'strike', pt:1, atk:true, alpha:0.97, flip:(pts[i0 + 1][0] < pts[i0][0]), shadow:false }); } catch (e2) {}
-        for (let j = 0; j < vic.length; j++) if (j + 1 <= seg && (U.hitI || 0) <= j) { U.hitI = j + 1; const w = vic[j]; if (this.alive(w)) { this.hit(w, BOSS_DMG * 8, { force:true, fright:1.5 }); this.react(w, pick(['scream', 'fall', 'head'])); const p2 = this.wp(w); this.addTrace('ring', p2[0], p2[1], 70, 3, { by:'penanggal' }); this.cap(T('嘶——', '嘶——'), p2[0], p2[1] - 0.12, { style:'shake', col:'#c8ffb0', size:14, life:0.8 }); } }
+        for (let j = 0; j < vic.length; j++) if (j + 1 <= seg && (U.hitI || 0) <= j) { U.hitI = j + 1; const w = vic[j]; if (this.alive(w)) { this.hit(w, BOSS_DMG * (U.pm || 1) * 8, { force:true, fright:1.5 }); this.react(w, pick(['scream', 'fall', 'head'])); const p2 = this.wp(w); this.addTrace('ring', p2[0], p2[1], 70, 3, { by:'penanggal' }); this.cap(T('嘶——', '嘶——'), p2[0], p2[1] - 0.12, { style:'shake', col:'#c8ffb0', size:14, life:0.8 }); } }
         return true; }
       if (k === 'mengpo') { // 一碗湯傾落地，沿條路變成一條湯河；行入去嘅人唔記得方向原地兜圈
         const k2 = U.t - at, tilt = Math.min(1, k2 / 0.5), bx = cx - vw * 0.3, by = cy - vh * 0.42;
@@ -1785,7 +1813,7 @@ const Street = (() => {
         const rv = Math.max(0, Math.min(1, (k2 - 0.3) / 1.4)); U.river = rv;
         if (rv > 0) { c.save(); c.lineCap = 'round'; c.lineJoin = 'round'; const n = 60; c.beginPath(); c.moveTo(bx + 20 * U2, by + 10 * U2); for (let j = 0; j <= n * rv; j++) { const [x, y] = this.P(...this.at(this.len * j / n)); c.lineTo(x + Math.sin(j * 0.7 + t * 2) * 6 * U2, y); } c.strokeStyle = 'rgba(200,130,50,0.55)'; c.lineWidth = 46 * U2; c.stroke(); c.strokeStyle = 'rgba(255,220,160,0.35)'; c.lineWidth = 14 * U2; c.stroke(); c.restore();
           for (let j = 0; j < 14; j++) { const [x, y] = this.P(...this.at(this.len * ((j / 14) * rv))); const rr = (t * 0.6 + j * 0.13) % 1; c.strokeStyle = `rgba(255,240,220,${0.5 * (1 - rr)})`; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y - rr * 40 * U2); c.quadraticCurveTo(x + 8 * U2, y - rr * 40 * U2 - 10 * U2, x, y - rr * 40 * U2 - 20 * U2); c.stroke(); } }
-        for (const w of U.vic || []) { if (!this.alive(w) || w._river) continue; let near = false; const p2 = this.wp(w); for (let j = 0; j <= 60 * rv; j += 2) if (this.dist(this.at(this.len * j / 60), p2) < 70 * PX) { near = true; break; } if (near) { w._river = 1; w.spin = 2.2; w.amnesia = 10; this.act(w, 'idle', 2.2); this.hit(w, BOSS_DMG * 5, { force:true }); w.say = { s:pick([T('我……我係邊個？', '我……我是誰？'), T('我要去邊度？', '我要去哪？'), T('呢度係邊？', '這是哪裡？')]), t:2 }; setTimeout(() => { w.back = CELL * 2.5; }, 2200); } }
+        for (const w of U.vic || []) { if (!this.alive(w) || w._river) continue; let near = false; const p2 = this.wp(w); for (let j = 0; j <= 60 * rv; j += 2) if (this.dist(this.at(this.len * j / 60), p2) < 70 * PX) { near = true; break; } if (near) { w._river = 1; w.spin = 2.2; w.amnesia = 10; this.act(w, 'idle', 2.2); this.hit(w, BOSS_DMG * (U.pm || 1) * 5, { force:true }); w.say = { s:pick([T('我……我係邊個？', '我……我是誰？'), T('我要去邊度？', '我要去哪？'), T('呢度係邊？', '這是哪裡？')]), t:2 }; setTimeout(() => { w.back = CELL * 2.5; }, 2200); } }
         return true; }
       if (k === 'toyol') { // 一陣風捲走全場路人手上嘢，再撒錢引人蹲低
         const k2 = U.t - at, vic = U.vic || [], gx = cx - vw / 2 + vw * Math.min(1.2, k2 / 1.0);
@@ -1794,7 +1822,7 @@ const Street = (() => {
           if (w._gust) { const e = Math.min(1, (k2 - (wx - (cx - vw / 2)) / vw) / 0.8); if (e < 1) { const ix = wx + e * vw * 0.4, iy = wy - b.h * 0.08 - Math.sin(e * Math.PI) * 50 * U2, kd = j % 4; c.save(); c.translate(ix, iy); c.rotate(e * 8); if (kd === 0) { c.fillStyle = '#222'; c.fillRect(-4 * U2, -7 * U2, 8 * U2, 14 * U2); c.fillStyle = '#7cc8ff'; c.fillRect(-3 * U2, -5 * U2, 6 * U2, 9 * U2); } else if (kd === 1) { c.fillStyle = '#a0522d'; c.fillRect(-8 * U2, -5 * U2, 16 * U2, 11 * U2); c.strokeStyle = '#5a2a10'; c.lineWidth = 2; c.beginPath(); c.arc(0, -5 * U2, 5 * U2, 3.14, 0); c.stroke(); } else if (kd === 2) { c.strokeStyle = '#8a6a3a'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(-9 * U2, 0); c.lineTo(9 * U2, 0); c.stroke(); c.fillStyle = '#f0d070'; for (let q2 = 0; q2 < 3; q2++) { c.beginPath(); c.arc(-5 * U2 + q2 * 5 * U2, 0, 3 * U2, 0, 7); c.fill(); } } else { c.fillStyle = '#7fae6a'; c.fillRect(-9 * U2, -4 * U2, 18 * U2, 8 * U2); } c.restore(); } } });
         for (let j = 0; j < 3; j++) { const e = Math.min(1, k2 / 1.2), x = cx - vw / 2 + vw * e + (j - 1) * 30 * U2, y = cy + (j - 1) * vh * 0.2; try { ART.drawChar(c, 'toyol', x, y, b.h * 0.06 / 46, { t:t + j, walk:true, pose:'move', alpha:0.9, shadow:false }); } catch (e2) {} }
         if (k2 > 1.4) { const e = Math.min(1, (k2 - 1.4) / 0.6); for (let j = 0; j < 30; j++) { const a0 = j * 0.7, rr = e * vh * 0.4 * ((j * 13 % 10) / 10 + 0.3), x = cx + Math.cos(a0) * rr, y = cy + Math.sin(a0) * rr * 0.7 - Math.sin(e * Math.PI) * 40 * U2; c.fillStyle = '#ffd45a'; c.strokeStyle = '#7a4a10'; c.lineWidth = 1; c.beginPath(); c.ellipse(x, y, 5 * U2 * Math.abs(Math.cos(t * 6 + j)) + 1.5, 5 * U2, 0, 0, 7); c.fill(); c.stroke(); }
-          if (!U.coinDone) { U.coinDone = 1; this.cap(T('撒錢喇！', '撒錢啦！'), (cx - b.x) / b.w, (cy - b.y) / b.h - 0.2, { style:'shake', col:'#ffe08a', size:20, font:'sans-serif' }); vic.forEach(w => { if (!this.alive(w)) return; const p2 = this.wp(w); this.addTrace('coins', p2[0], p2[1], 90, 6, { by:'toyol' }); this.act(w, 'cower', 3); w.target = 6; this.hit(w, BOSS_DMG * 4, { force:true }); w.say = null; }); } }
+          if (!U.coinDone) { U.coinDone = 1; this.cap(T('撒錢喇！', '撒錢啦！'), (cx - b.x) / b.w, (cy - b.y) / b.h - 0.2, { style:'shake', col:'#ffe08a', size:20, font:'sans-serif' }); vic.forEach(w => { if (!this.alive(w)) return; const p2 = this.wp(w); this.addTrace('coins', p2[0], p2[1], 90, 6, { by:'toyol' }); this.act(w, 'cower', 3); w.target = 6; this.hit(w, BOSS_DMG * (U.pm || 1) * 4, { force:true }); w.say = null; }); } }
         return true; }
       if (k === 'n30_yukionna') { const g = c.createRadialGradient(cx, cy, vh * 0.1, cx, cy, vh * 0.8); g.addColorStop(0, 'rgba(200,235,255,0.1)'); g.addColorStop(1, `rgba(220,245,255,${0.55 * Math.min(1, q * 2)})`); c.fillStyle = g; c.fillRect(cx - vw / 2, cy - vh / 2, vw, vh); for (let j = 0; j < 40; j++) { const xx = cx - vw / 2 + ((j * 53) % 100) / 100 * vw, yy = cy - vh / 2 + ((t * 0.2 + j * 0.037) % 1) * vh; c.fillStyle = 'rgba(255,255,255,0.85)'; c.beginPath(); c.arc(xx, yy, 2.2, 0, 7); c.fill(); } return true; }
       if (k === 'n30_qionggui' || k === 'n30_taozhai' || k === 'n30_guhangui') { for (let j = 0; j < 26; j++) { const xx = cx - vw / 2 + ((j * 37) % 100) / 100 * vw, yy = cy - vh / 2 + ((q * 1.2 + j * 0.041) % 1.1) * vh; c.save(); c.translate(xx, yy); c.rotate(t * 3 + j); if (k === 'n30_taozhai') { c.fillStyle = '#f1e4c8'; c.fillRect(-9, -12, 18, 24); c.fillStyle = '#b01010'; c.font = '900 10px sans-serif'; c.textAlign = 'center'; c.fillText('債', 0, 4); } else if (k === 'n30_qionggui') { c.fillStyle = j % 2 ? '#7fae6a' : '#d8b450'; c.fillRect(-12, -5, 24, 10); } else { c.fillStyle = '#ffd45a'; c.beginPath(); c.ellipse(0, 0, 6 * Math.abs(Math.cos(t * 5 + j)) + 1, 6, 0, 0, 7); c.fill(); } c.restore(); } return true; }
