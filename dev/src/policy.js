@@ -156,7 +156,11 @@ const Policy = (() => {
         show();
         el.onclick = (e) => { e.stopPropagation(); Sound.play && Sound.play('click'); if (++i < tips.length) show(); else el.remove(); };
         // 樓裡有鬼：一撳遊戲其他地方（例如揀樓開局）就收起提示，唔遮住遊戲
-        if (mode === 'tower') { const off = (ev) => { if (!document.body.contains(el)) { document.removeEventListener('pointerdown', off, true); return; } if (!el.contains(ev.target)) { el.remove(); document.removeEventListener('pointerdown', off, true); } }; document.addEventListener('pointerdown', off, true); }
+        // 所有玩法：一撳提示以外嘅地方就收起，唔遮住遊戲（之前站崗提示會一直留喺畫面，連村入面「派人」都撳唔到）
+        const off = (ev) => { if (!document.body.contains(el)) { document.removeEventListener('pointerdown', off, true); return; } if (!el.contains(ev.target)) { el.remove(); document.removeEventListener('pointerdown', off, true); } }; document.addEventListener('pointerdown', off, true);
+        // 離開咗嗰個玩法（畫面收埋）就即刻收起提示
+        const ROOTS = { station: '#st-street', tower: '#tw-root' };
+        const wt = setInterval(() => { if (!document.body.contains(el)) { clearInterval(wt); return; } const r = document.querySelector(ROOTS[mode] || '#none'); const vis = r && r.classList.contains('on') && getComputedStyle(r).display !== 'none'; if (!vis) { el.remove(); clearInterval(wt); } }, 400);
       }, 500);
     } catch (e) {}
   }
