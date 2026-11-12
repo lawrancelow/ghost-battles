@@ -1,0 +1,17 @@
+0 [true,true,"CANVAS#.tw-cv / SECTION#tw-root.tw-root on / CANVAS#village.","story,mini,quit,zin,zout,gh0,gh1,gh2,scare,inv,gate,doll"]
+unit {"id":"f3_i4","did":"f3_d4","f":3,"hh":"granny","x":1368,"y":1538,"n":1}
+walk true false null ["f3_d4",null,1368,1538]
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+page.evaluate: TypeError: Cannot read properties of null (reading 'x')
+    at eval (eval at evaluate (:311:30), <anonymous>:1:76)
+    at UtilityScript.evaluate (<anonymous>:313:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at ev (/tmp/claude-0/ut/play.js:5:22)
+    at /tmp/claude-0/ut/play.js:28:15 {
+  log: []
+}
+
+Node.js v22.23.4

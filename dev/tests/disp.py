@@ -1,0 +1,31 @@
+from playwright.sync_api import sync_playwright
+import http.server, threading, functools
+H=functools.partial(http.server.SimpleHTTPRequestHandler, directory='/tmp/claude-0/old')
+srv=http.server.ThreadingHTTPServer(('127.0.0.1',8831),H); threading.Thread(target=srv.serve_forever,daemon=True).start()
+with sync_playwright() as p:
+    b=p.chromium.launch(); ctx=b.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True); pg=ctx.new_page()
+    errs=[]; pg.on('pageerror',lambda e:errs.append(str(e)[:300])); pg.on('console',lambda m: errs.append('c:'+m.text[:300]) if m.type=='error' else None)
+    pg.goto('http://127.0.0.1:8831/live.html'); pg.wait_for_timeout(7000)
+    pg.evaluate("(c)=>{var o=Web.dec(c); o.last=Date.now(); window.removeEventListener('beforeunload', save); localStorage.setItem(SAVE_KEY, JSON.stringify(o)); window.__NOSAVE=1;}", 'eyJ2IjoxLCJsdiI6MTgsImV4cCI6MCwicmVzIjp7Indvb2QiOjMwMDAsInJpY2UiOjMwMDAsInBsYW5rcyI6MjAwMCwiYnVucyI6MjAwMCwiY29pbnMiOjMwMDAwLCJ0cm9vcHMiOjE1MH0sImJsZCI6eyJob3VzZSI6Nywid29vZCI6NywicmljZSI6NywicGxhbmsiOjcsImJ1biI6Nywic3RvcmUiOjcsImhvbWUiOjcsImNhbXAiOjcsImFsdGFyIjo3LCJmdXJuYWNlIjo3fSwiZ2hvc3RzIjpbeyJpZCI6ImFmdSIsImsiOiJhZnUiLCJuYW1lIjoi6Zi/56aPIiwicSI6IuS4uyIsImx2IjoxLCJzdCI6WzMwLDMwLDMwXSwicG9zdCI6bnVsbCwic3BlbnQiOjB9LHsiaWQiOiJnMSIsImsiOiJ4aWFvemhpIiwibmFtZSI6IuWwj+e0mSIsInEiOiLlkI0iLCJsdiI6MTcsInN0IjpbMjUsNzUsMzVdLCJwb3N0IjpudWxsLCJzcGVudCI6MH0seyJpZCI6ImcyIiwiayI6ImVndWlraW5nIiwibmFtZSI6Iumkk+msvOeOiyIsInEiOiLlkI0iLCJsdiI6MTcsInN0IjpbOTUsMjAsNzBdLCJwb3N0IjpudWxsLCJzcGVudCI6MH0seyJpZCI6ImczIiwiayI6InRveW9sIiwibmFtZSI6IlRveW9sIiwicSI6IuWQjSIsImx2IjoxNywic3QiOlszMCw2NSw1MF0sInBvc3QiOm51bGwsInNwZW50IjowfSx7ImlkIjoiZzQiLCJrIjoibGFvamlhbmciLCJuYW1lIjoi6ICB5q6tIiwicSI6IuWQjSIsImx2IjoxNywic3QiOlsxMjAsMjUsODBdLCJwb3N0IjpudWxsLCJzcGVudCI6MH0seyJpZCI6Imc1IiwiayI6InBvbnRpYW5hayIsIm5hbWUiOiJQb250aWFuYWsiLCJxIjoi5ZCNIiwibHYiOjE3LCJzdCI6WzQwLDg1LDk1XSwicG9zdCI6bnVsbCwic3BlbnQiOjB9LHsiaWQiOiJnNiIsImsiOiJwb2NvbmciLCJuYW1lIjoiUG9jb25nIiwicSI6IuWQjSIsImx2IjoxNywic3QiOls3MCwzMCw3NV0sInBvc3QiOm51bGwsInNwZW50IjowfV0sInRlYW0iOlsiZzEiLCJnMiIsImc0Il0sImFkdmlzZXIiOm51bGwsImNsZWFyZWQiOnt9LCJxaSI6MCwiY250Ijp7ImNob3AiOjAsInJpY2UiOjAsImNyYWZ0UGxhbmsiOjAsImNyYWZ0QnVuIjowLCJyZWNydWl0IjowLCJmZWFzdCI6MCwiY2hlc3QiOjB9LCJzZWVuIjp7fSwiY2hlc3RzIjp7ImciOjMwLCJiIjozMCwicCI6MzB9LCJmdXJuYWNlQXQiOjAsImZlYXN0QXQiOjAsImxhc3QiOjE3OTQ0MDM4NzU2MjQsImVuZGVkIjpmYWxzZSwidHJlZXMiOlszLDMsMywzLDMsMywzLDNdLCJ0cmVlUmVncm93IjpbMCwwLDAsMCwwLDAsMCwwXSwicGFkZHkiOlsxLDEsMSwxLDEsMV0sInBhZGR5UmVncm93IjpbMCwwLDAsMCwwLDBdLCJ1aWQiOjcsInByb2QiOnt9fQ==')
+    pg.reload(); pg.wait_for_timeout(7000)
+    print('lv',pg.evaluate("()=>[S.lv,S.ghosts.length]"))
+    pg.evaluate("()=>{S.seen.ch1_end=true;S.seen.ch1_end=true;var t=document.getElementById('title'); if(t){t.classList.remove('on');t.style.display='none'}; UI.refresh&&UI.refresh(); UI.openBuilding('wood');}")
+    pg.wait_for_timeout(1500); pg.screenshot(path='/tmp/claude-0/out/disp1.png')
+    btn=pg.locator('[data-act=assign]').first
+    print('assign btns',pg.locator('[data-act=assign]').count())
+    bb=btn.bounding_box(); print('box',bb)
+    el=pg.evaluate("([x,y])=>{var e=document.elementFromPoint(x,y); var a=[]; while(e){a.push(e.tagName+'#'+e.id+'.'+(e.className&&e.className.baseVal===undefined?e.className:'')); e=e.parentElement;} return a.slice(0,6)}",[bb['x']+bb['width']/2,bb['y']+bb['height']/2])
+    print('top element',el)
+    pg.touchscreen.tap(bb['x']+bb['width']/2,bb['y']+bb['height']/2); pg.wait_for_timeout(1200)
+    print('title', pg.evaluate("()=>{var t=document.querySelector('#sheet .sh-title, #sheet h2, #sheet h3'); return t&&t.textContent}"))
+    pg.screenshot(path='/tmp/claude-0/out/disp2.png')
+    gi=pg.locator('#sheet .gi:not(.dis)'); print('gi count',gi.count())
+    if gi.count():
+        bb=gi.first.bounding_box(); print('gi box',bb)
+        print('top',pg.evaluate("([x,y])=>{var e=document.elementFromPoint(x,y); var a=[]; while(e){a.push(e.tagName+'#'+e.id+'.'+(typeof e.className=='string'?e.className:'')); e=e.parentElement;} return a.slice(0,5)}",[bb['x']+bb['width']/2,bb['y']+bb['height']/2]))
+        pg.touchscreen.tap(bb['x']+bb['width']/2,bb['y']+bb['height']/2); pg.wait_for_timeout(1200)
+        print('after title', pg.evaluate("()=>{var t=document.querySelector('#sheet .sh-title, #sheet h2, #sheet h3'); return t&&t.textContent}"), pg.evaluate("()=>S.ghosts.filter(g=>g.post==='wood').length"))
+        pg.screenshot(path='/tmp/claude-0/out/disp3.png')
+    print('errs',errs)
+    b.close()
+srv.shutdown()

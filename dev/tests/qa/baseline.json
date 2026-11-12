@@ -1,0 +1,129 @@
+{
+ "page": "unit_before.html (HUM guard sp 74)",
+ "data": {
+  "flat": {
+   "guard": {
+    "patrol": {
+     "moving": 33.3,
+     "overall": 30.6,
+     "n": 828
+    },
+    "chase": {
+     "moving": 55.5,
+     "overall": 55.5,
+     "n": 90
+    }
+   },
+   "compass": {
+    "patrol": {
+     "moving": 35,
+     "overall": 35,
+     "n": 900
+    },
+    "chase": {
+     "moving": 58.5,
+     "overall": 58.5,
+     "n": 90
+    }
+   },
+   "mirror": {
+    "patrol": {
+     "moving": 29.6,
+     "overall": 29.6,
+     "n": 900
+    },
+    "chase": {
+     "moving": 49.5,
+     "overall": 49.5,
+     "n": 90
+    }
+   },
+   "decoy": {
+    "patrol": {
+     "moving": 28.7,
+     "overall": 28.7,
+     "n": 900
+    },
+    "chase": {
+     "moving": 48,
+     "overall": 48,
+     "n": 90
+    }
+   },
+   "dog": {
+    "patrol": {
+     "moving": 101.8,
+     "overall": 101.8,
+     "n": 900
+    },
+    "chase": {
+     "moving": 87.5,
+     "overall": 87.5,
+     "n": 90
+    }
+   }
+  },
+  "shop": {
+   "guard": {
+    "patrol": {
+     "moving": 33.2,
+     "overall": 29.7,
+     "n": 804
+    },
+    "chase": {
+     "moving": 55.5,
+     "overall": 55.5,
+     "n": 90
+    }
+   },
+   "compass": {
+    "patrol": {
+     "moving": 34.8,
+     "overall": 34.8,
+     "n": 900
+    },
+    "chase": {
+     "moving": 58.5,
+     "overall": 58.5,
+     "n": 90
+    }
+   },
+   "mirror": {
+    "patrol": {
+     "moving": 29.7,
+     "overall": 29.7,
+     "n": 900
+    },
+    "chase": {
+     "moving": 49.5,
+     "overall": 49.5,
+     "n": 90
+    }
+   },
+   "decoy": {
+    "patrol": {
+     "moving": 28.7,
+     "overall": 28.7,
+     "n": 900
+    },
+    "chase": {
+     "moving": 48,
+     "overall": 48,
+     "n": 90
+    }
+   },
+   "dog": {
+    "patrol": {
+     "moving": 102.4,
+     "overall": 102.4,
+     "n": 900
+    },
+    "chase": {
+     "moving": 87.9,
+     "overall": 87.9,
+     "n": 90
+    }
+   }
+  }
+ }
+}

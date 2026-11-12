@@ -1,0 +1,36 @@
+PASS A-flat-guard 巡邏 19.3/33.3=58% (≤65%)；追捕 45.1/55.5=81%
+PASS A-flat-compass 巡邏 20.2/35.0=58% (≤65%)；追捕 47.2/58.5=81%
+PASS A-flat-mirror 巡邏 17.1/29.6=58% (≤65%)；追捕 39.9/49.5=81%
+PASS A-flat-decoy 巡邏 16.6/28.7=58% (≤65%)；追捕 38.8/48.0=81%
+WARN A-flat-dog 巡邏 102.1/101.8=100% (≤65%)；追捕 87.5/87.5=100%
+PASS A-shop-guard 巡邏 19.3/33.2=58% (≤65%)；追捕 45.1/55.5=81%
+PASS A-shop-compass 巡邏 20.2/34.8=58% (≤65%)；追捕 47.3/58.5=81%
+PASS A-shop-mirror 巡邏 17.1/29.7=58% (≤65%)；追捕 39.9/49.5=81%
+PASS A-shop-decoy 巡邏 16.6/28.7=58% (≤65%)；追捕 38.8/48.0=81%
+WARN A-shop-dog 巡邏 102.2/102.4=100% (≤65%)；追捕 87.9/87.9=100%
+PASS B-flat-夜間模擬 R=150；3 晚；保安入安全區幀數=0；安全區內被捉=0；保安同層最近 dx=[193, 193, 193]；驚走入區幀=0；鬼行出區邊即刻被捉=1；safe off 幀=[0, 0, 0]
+PASS B-flat-強制追捕 caught+0 追入幀0 巡入幀0 最近dx193/193 TW.catchG直接+0; caught+0 追入幀0 巡入幀0 最近dx193/193 TW.catchG直接+0; caught+0 追入幀0 巡入幀0 最近dx193/193 TW.catchG直接+0
+PASS B-shop-夜間模擬 R=150；3 晚；保安入安全區幀數=0；安全區內被捉=0；保安同層最近 dx=[154, 154, 736]；驚走入區幀=0；鬼行出區邊即刻被捉=0；safe off 幀=[0, 0, 0]
+PASS B-shop-強制追捕 caught+0 追入幀0 巡入幀0 最近dx154/154 TW.catchG直接+0; caught+0 追入幀0 巡入幀0 最近dx154/154 TW.catchG直接+0; caught+0 追入幀0 巡入幀0 最近dx154/156 TW.catchG直接+0
+PASS C-flat-住客 res_helper：hit jumpT=0.45 shockT=0.85 key=res_helper_scared；驚走 state=flee 慘叫=「我把聲都震晒呀！」key=res_helper_scared
+PASS C-flat-保安 state=scared shockT=0.75 講=「嘩！有嘢喺我後面！」 PPLFX.key 用過=['res_gamer_scared', 'res_helper_scared', 'res_uncle_scared', 'res_gym_scared', 'res_guard_scared']
+PASS C-flat-截圖 /tmp/claude-0/out/qa_react_new_res0_before.png /tmp/claude-0/out/qa_react_new_res1_hit.png /tmp/claude-0/out/qa_react_new_res2_shake.png /tmp/claude-0/out/qa_react_new_res3_flee.png /tmp/claude-0/out/qa_react_new_res4_run.png /tmp/claude-0/out/qa_react_new_grd0_before.png /tmp/claude-0/out/qa_react_new_grd1_hit.png /tmp/claude-0/out/qa_react_new_grd2_shake.png
+PASS C-shop-住客 res_uncle：hit jumpT=0.45 shockT=0.85 key=res_uncle_scared；驚走 state=flee 慘叫=「鬼呀——！走先！」key=res_uncle_scared
+PASS C-shop-保安 state=scared shockT=0.85 講=「嘩！有嘢喺我後面！」 PPLFX.key 用過=['res_gamer_scared', 'res_uncle_scared', 'res_guard_scared']
+PASS C-shop-截圖 /tmp/claude-0/out/qa_react_new_shop_res0_before.png /tmp/claude-0/out/qa_react_new_shop_res1_hit.png /tmp/claude-0/out/qa_react_new_shop_res2_shake.png /tmp/claude-0/out/qa_react_new_shop_res3_flee.png /tmp/claude-0/out/qa_react_new_shop_res4_run.png /tmp/claude-0/out/qa_react_new_shop_grd0_before.png /tmp/claude-0/out/qa_react_new_shop_grd1_hit.png /tmp/claude-0/out/qa_react_new_shop_grd2_shake.png
+PASS D-flat-慘叫唔重複 驚走 86 人，慘叫 86 句，重複=[]
+WARN D-flat-驚走時其他對白 驚走中嘅人講同一句（非慘叫，似係陷阱反應 say）：['嘩！碗入面有隻眼！ ×2']
+PASS D-shop-慘叫唔重複 驚走 42 人，慘叫 42 句，重複=[]
+PASS E-play flat ERRS=[] viol=[] err=[]
+PASS E-play shop ERRS=[] viol=[] err=[]
+PASS E-sim flat ERRS=[] viol=['[]'] err=[]
+PASS E-sim shop ERRS=[] viol=['[]'] err=[]
+PASS E-unitshot-flat 戶=f3_i3 gamer；入屋用圖=['res_gamer']；嚇後 scared=['res_gamer_scared']；截圖 /tmp/claude-0/out/qa_unit_flat_1_inside.png /tmp/claude-0/out/qa_unit_flat_2_scare.png /tmp/claude-0/out/qa_unit_flat_3_after.png
+PASS E-unitshot-shop 戶=f2_i3 granny；入屋用圖=['res_granny']；嚇後 scared=['res_granny_scared']；截圖 /tmp/claude-0/out/qa_unit_shop_1_inside.png /tmp/claude-0/out/qa_unit_shop_2_scare.png /tmp/claude-0/out/qa_unit_shop_3_after.png
+PASS F-prodchk lv 18 errs []
+PASS F-tw errs []
+PASS F-st2 ['office', 'cafe', 'bus', 'market', 'flat'] ‖ errs []
+PASS F-mig old saved 18 [] ‖ new lv [18, '{"v":1,"lv":18,"exp":0,"res":{"wood":0,"rice":0,"planks":0,"'] [] ‖ after reload [18, 18] []
+PASS G-console/pageerror 合計 0：[]
+
+==== 摘要：PASS 31 / WARN 3 / FAIL 0 ====

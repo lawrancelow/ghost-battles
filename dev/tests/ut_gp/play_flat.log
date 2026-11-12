@@ -1,0 +1,84 @@
+0 [true,true,"CANVAS#.tw-cv / SECTION#tw-root.tw-root on / CANVAS#village.","story,mini,quit,zin,zout,gh0,gh1,gh2,scare,inv,gate,doll"]
+unit {"id":"f6_i4","did":"f6_d4","f":6,"hh":"couple","x":1096,"y":1294,"n":2}
+walk true true {"k":"unitIn","t":"入屋：新婚夫婦"} ["f6_d4",null,1096,1294]
+inside {"un":"f6_i4","hh":"couple","lay":"ppr","gx":112,"room":0,"alert":0,"limit":78,"light":[false,true,false,false],"dark":[0,0,0,0],"task":{"k":"allout","t":"令全屋人走晒（嚇到佢哋奔出屋）","done":false},"actors":[{"hh":"couple","x":604,"room":1,"act":"cook","st":"act","awake":true,"fear":0,"rstate":"home"},{"hh":"couple","x":534,"room":1,"act":"cook","st":"act","awake":true,"fear":0,"rstate":"home"}],"spots":[{"k":"lamp","x":352,"y":400,"room":0,"cd":0},{"k":"tv","x":474,"y":582,"room":0,"cd":0},{"k":"tap","x":668,"y":572,"room":1,"cd":0},{"k":"fridge","x":770,"y":600,"room":1,"cd":0},{"k":"wardrobe","x":1136,
+{
+ "walk": true,
+ "btnShown": true,
+ "ctx": {
+  "k": "unitIn",
+  "t": "入屋：新婚夫婦"
+ },
+ "entered": true,
+ "joyMoved": 328,
+ "hot": true,
+ "hotFear": [
+  [
+   0,
+   0
+  ],
+  [
+   24,
+   24
+  ],
+  "tap"
+ ],
+ "fled": [
+  "flee",
+  "home"
+ ],
+ "fearGain": 23,
+ "onBeforeTask": false,
+ "taskK": "allout",
+ "taskDone": false,
+ "reward": {
+  "dolls": 0
+ },
+ "out": {
+  "on": false,
+  "inUnit": false,
+  "node": "f6_d4",
+  "did": "f6_d4",
+  "done": false,
+  "story": [],
+  "res": [
+   "gone",
+   "home"
+  ]
+ },
+ "reenter": {
+  "on": true,
+  "done": false
+ },
+ "deityCtx": {
+  "k": "unitRespect",
+  "t": "（神明鎮宅：要尊重，唔入）"
+ },
+ "deity": {
+  "on": false,
+  "floats": [
+   "呢度有神明鎮宅，要尊重，我哋唔入"
+  ]
+ },
+ "kCtx": {
+  "k": "unitIn",
+  "t": "入屋：失眠阿叔"
+ },
+ "kEnter": true,
+ "kick": {
+  "on": false,
+  "ban": 25,
+  "node": "f2_d0",
+  "did": "f2_d0",
+  "alert": 6,
+  "alert0": 5
+ },
+ "reban": {
+  "on": false,
+  "f": [
+   "呢戶啱啱被趕出嚟，佢哋開晒燈，24 秒後先好再入"
+  ]
+ },
+ "err": null
+}
+ERRS []

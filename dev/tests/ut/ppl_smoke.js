@@ -1,0 +1,14 @@
+const {boot}=require('./common.js');
+(async()=>{ const {b,pg,errs}=await boot('flat'); const O='/tmp/claude-0/out/';
+  const info=await pg.evaluate(()=>{ TW.pause(true); const G=TW.G; G.units.forEach(u=>u.seen=true);
+    const r=G.res.find(r=>r.state==='home'&&r.sprite.indexOf('res_')===0&&r.unit.f>=2); const g=G.gh[0];
+    const d=G.nodes[r.unit.did]; g.node=d.id; g.x=d.x; g.y=d.y; TW.zoom(1.4); for (let i=0;i<40;i++) TW.step(0.0001,1);
+    return {sp:r.sprite, key:PPLFX.key(r.sprite,true), npc:PPLFX.key('npc_ken',true), h:PPLFX.hgt(r.sprite,r.sprite,74), hs:PPLFX.hgt(r.sprite,PPLFX.key(r.sprite,true),74), rid:G.res.indexOf(r), safe:TW.safe()}; });
+  await pg.screenshot({path:O+'ppl_1_normal.png'});
+  await pg.evaluate((i)=>{ const r=TW.G.res[i]; r.awake=true; r.jumpT=0.5; r.fear=40; TW.step(0.3,1); },info.rid); await pg.screenshot({path:O+'ppl_2_shock.png'});
+  await pg.evaluate((i)=>{ const r=TW.G.res[i]; r.shockT=0; r.fear=70; TW.step(0.0001,1); },info.rid); await pg.screenshot({path:O+'ppl_3_tremble.png'});
+  await pg.evaluate((i)=>{ const r=TW.G.res[i]; r.fear=100; r.fleeAfter=0.01; r.fleeG=TW.G.gh[0]; TW.step(0.05,6); },info.rid); await pg.screenshot({path:O+'ppl_4_flee.png'});
+  await pg.evaluate(()=>{ const G=TW.G, g=G.gh[0], n=G.nodes['f0_e']; g.node='f0_e'; g.to=null; g.x=n.x; g.y=n.y; const h=G.guards.find(h=>h.kind==='guard'); const m=G.nodes['f0_d1']; h.node=m.id; h.to=null; h.x=m.x; h.y=m.y; h.state='chase'; h.zone=null; h.wait=0; for (let i=0;i<20;i++) TW.step(1/30,1); });
+  const st=await pg.evaluate(()=>TW.G.guards.map(h=>h.state+':'+(h.say||'')).filter(s=>s.startsWith('balk')));
+  await pg.screenshot({path:O+'ppl_5_safe.png'});
+  console.log(JSON.stringify(info), JSON.stringify(st)); console.log('ERRS',errs); await b.close(); })();
