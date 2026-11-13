@@ -605,6 +605,35 @@ func _hide_title() -> void:
 
 # ---------------- 存檔：經 JS 嘅 localStorage，然後重新載入場景（同網頁版 location.reload 一樣）----------------
 const SAVE_KEY := "ghostBattles_v1"
+# 原生「匯入存檔碼」視窗：貼上網頁版（或其他機）嘅存檔碼，即刻換成嗰個進度
+func open_import() -> void:
+	var ov = ColorRect.new(); ov.color = Color(0, 0, 0, 0.6); ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(ov)
+	var pn = PanelContainer.new(); pn.add_theme_stylebox_override("panel", UIKit.sb(Color("#f3e7c9"), 10, Color("#6b4a2b"), 2, Vector4(16, 14, 16, 14)))
+	pn.set_anchors_and_offsets_preset(Control.PRESET_CENTER); pn.offset_left = -170; pn.offset_right = 170; pn.offset_top = -190; pn.offset_bottom = 190
+	ov.add_child(pn)
+	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 10); pn.add_child(vb)
+	vb.add_child(UIKit.label("導入存檔碼", 18, UIKit.INKTXT, "serif", 700))
+	var tip = UIKit.label("喺網頁版「劇情」頁底撳「備份存檔（複製存檔碼）」，再返嚟貼落下面。", 13, UIKit.INKTXT); tip.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; vb.add_child(tip)
+	var te = TextEdit.new(); te.custom_minimum_size = Vector2(0, 150); te.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	te.placeholder_text = "長按貼上存檔碼"; te.add_theme_font_size_override("font_size", 12); vb.add_child(te)
+	var info = UIKit.label("", 14, Color("#9a2a1e"), "sans", 700); info.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; vb.add_child(info)
+	var check = func():
+		var o = G.dec(te.text)
+		info.text = ("讀到：主公 %d 級存檔。撳「換成呢個進度」即刻轉。" % int(J.num(o.get("lv", 1)))) if o != null else ("存檔碼讀唔到，檢查吓有冇貼齊" if te.text.strip_edges() != "" else "")
+		return o
+	te.text_changed.connect(func(): check.call())
+	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 8); vb.add_child(hb)
+	var mk = func(t: String, f: Callable):
+		var b = Button.new(); b.text = t; b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 42
+		b.add_theme_font_override("font", UIKit.font("sans", 700)); b.add_theme_font_size_override("font_size", 14)
+		b.pressed.connect(f); hb.add_child(b); return b
+	mk.call("貼上", func(): te.text = DisplayServer.clipboard_get(); check.call())
+	mk.call("取消", func(): ov.queue_free())
+	mk.call("換成呢個進度", func():
+		if check.call() != null: ov.queue_free(); import_save(te.text))
+	if DisplayServer.clipboard_has() and G.dec(DisplayServer.clipboard_get()) != null:
+		te.text = DisplayServer.clipboard_get(); check.call()
+
 func import_save(code: String) -> bool:
 	var o = G.dec(code)
 	if o == null: show_toast("存檔碼讀唔到，檢查吓有冇貼齊"); return false

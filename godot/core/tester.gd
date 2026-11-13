@@ -72,6 +72,9 @@ func _run() -> void:
 			"jget":
 				var o = J.G.get(s[1])
 				for k in s.slice(2): print("JGET ", s[1], ".", k, " = ", J.str(J.gp(o, k)).substr(0, 160), "  type=", typeof(J.gp(o, k)))
+			"encdec":
+				var w = J.G["Web"]; var code = J.mc(w, "enc", [J.G["S"]]); var back = J.mc(w, "dec", [code])
+				print("ENCDEC len=", str(code).length(), " lv=", back.get("lv") if back is Dictionary else "FAIL", " G.dec ok=", G.dec(code) != null)
 			"jeval":
 				# 用法 ["jeval", "Battle", "units"] → 逐個印
 				var arr = J.gp(J.G.get(s[1]), s[2])

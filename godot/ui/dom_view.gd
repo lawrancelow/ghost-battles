@@ -675,6 +675,15 @@ func _ev(type: String, p: Vector2, target: El) -> Dictionary:
 		"preventDefault": func(_t, _a): pass, "stopPropagation": func(_t, _a): pass}
 
 func _bubble(type: String, p: Vector2, target: El) -> void:
+	# 匯入存檔碼：網頁版用 textarea，Godot 改用原生輸入框（可以長按貼上）
+	if type == "click":
+		var t2 = target
+		while t2 is El:
+			if J.str(t2.props.get("id", "")) in ["impbtn", "impta", "impgo"]:
+				var mn = get_tree().current_scene
+				if mn and mn.has_method("open_import"): mn.open_import()
+				return
+			t2 = t2.parentNode
 	var e = _ev(type, p, target)
 	var stop = [false]
 	e["stopPropagation"] = func(_t, _a): stop[0] = true

@@ -36,7 +36,11 @@ static func install_natives(host: Node) -> void:
 	G["isStandalone"] = func(_t, a): return true
 
 static func G_enc(o) -> String: return Marshalls.utf8_to_base64(J.to_json(o))
-static func G_dec(t: String): return JSON.parse_string(Marshalls.base64_to_utf8(t))
+static func G_dec(t: String):
+	t = t.strip_edges()
+	var i = t.find("#save=")
+	if i >= 0: t = t.substr(i + 6).uri_decode()
+	return JSON.parse_string(Marshalls.base64_to_utf8(t))
 
 # 簡單 HTML → BBCode（提示、面板文字用）
 static func html2bb(h: String) -> String:
