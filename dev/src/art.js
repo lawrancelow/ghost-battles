@@ -415,6 +415,8 @@ const ART = (() => {
     const T1 = { idle:1, move:1, walk:1, run:1, look:1, mop:1, sip:1, stand:1, hold:1 };
     const pz = T1[name] ? A[name](o.t) : A[name](o.pt || 0, o.t);
     if (o.face) pz.hk = o.face;
+    if (o.weapon) { pz.wpn = o.weapon; if (!pz.tool && type === 'afu') { pz.tool = '_W'; pz.tr = -(pz.aF + pz.eF) + 0.25; } } // 巡陰裝備：手上一直拿住武器
+    if (o.cloth) pz.cloth = o.cloth; if (o.badge) pz.badge = o.badge;
     if (!pz.tool && type !== 'afu' && !human && Puppet.armed(type)) { pz.tool = '_W'; pz.tr = -(pz.aF + pz.eF) + 0.15; }
     if (!PUPPET_ANIM[name] && o.atk) Object.assign(pz, { aF:1.6, eF:0.1 });
     if (HOP[type] && (name === 'idle' || name === 'move')) { Object.assign(pz, { aF:1.5, eF:0.05, aB:1.4, eB:0.05, lean:0 }); if (name === 'move' || o.enemy) pz.dy = -Math.abs(Math.sin(o.t * 5)) * 7; }

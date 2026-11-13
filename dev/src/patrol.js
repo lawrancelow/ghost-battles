@@ -7,7 +7,7 @@
 // 地圖：每章一個區域，3 行 × 4 格 = 12 個區（之字形）；第 4、8 區出口有主管閘口，第 12 區盡頭係總監
 const Patrol = (() => {
   const T = (yue, zh) => (typeof GP !== 'undefined' ? GP.T(yue, zh) : zh);
-  const CW = 800, CH = 700, WW = CW * 4, WH = CH * 3, VIEW = 400, FOG = 100;
+  const CW = 800, CH = 700, COLS = 5, ROWS = 4, WW = CW * COLS, WH = CH * ROWS, VIEW = 400, FOG = 100;
   const FAC = {
     yuan:{ name:'怨靈系', mat:'怨念', col:'#c890ff', d:'高輸出、脆' },
     chan:{ name:'餓鬼系', mat:'饞念', col:'#ffb85a', d:'吸血、越打越勇' },
@@ -25,12 +25,68 @@ const Patrol = (() => {
     { site:'night',   g0:'#1b1a24', g1:'#262433', props:['pillar', 'cabinet', 'plant', 'cooler', 'pillar', 'grass'] },
   ];
   const CH_FOD = [['youhun', 'egui'], ['xiaogui'], ['zombie'], ['shuigui'], ['zhiren'], ['niutou', 'mamian']];
-  // 區域設施（區號 0~11）：地鐵站、茶水間、扣押室、通宵加班房
-  const FACI = [
-    { t:'station', z:0, ox:-250, oy:-70 }, { t:'tea', z:2, ox:220, oy:-60 }, { t:'station', z:4, ox:250, oy:-170 },
-    { t:'prison', z:5, ox:0, oy:200 }, { t:'tea', z:6, ox:-220, oy:190 }, { t:'station', z:8, ox:-250, oy:-150 },
-    { t:'overtime', z:9, ox:0, oy:190 }, { t:'tea', z:10, ox:220, oy:-170 },
+  // ===== 地頭（territory）=====
+  // 每章一張 5×4 格嘅大地圖，分 6 個地頭；地頭之間係深坑，只可以經閘口過。每個地頭有自己嘅王（有啲得一個，有啲有大王同小王）。
+  // 主線三關 = 第 1、3、5 號地頭嘅王（部門主管／總監）；其餘地頭王係典籍鬼／脫口秀鬼，打贏就會跟你返村。
+  const TLAY = [ // [行][列] → 地頭號（第 0 行喺最上面）
+    [3, 4, 4, 5, 5],
+    [3, 3, 4, 4, 5],
+    [0, 1, 1, 2, 2],
+    [0, 0, 1, 1, 2],
   ];
+  const TGATE = [ // 閘口：[地頭A, 地頭B, 格A(r,c), 格B(r,c)]；A 或 B 嘅王打贏咗就開
+    [0, 1, [3, 1], [3, 2]], [1, 2, [3, 3], [3, 4]], [1, 3, [2, 1], [1, 1]], [3, 4, [1, 1], [1, 2]], [2, 5, [2, 4], [1, 4]], [4, 5, [0, 2], [0, 3]],
+  ];
+  const TLAIR = [[2, 0], [2, 2], [3, 4], [0, 0], [0, 1], [0, 4]]; // 王嘅巢（格中心）
+  const TMAIN = { 1:0, 3:1, 5:2 }; // 地頭 → 主線第幾關
+  const TNAME = [
+    ['村口槐樹頭', '槐林邊', '老磚窰', '包子鋪後巷', '亂葬崗北', '餓鬼王大宅'],
+    ['甘榜入口', '甘榜小路', '椰林深處', '高腳屋下', '舊膠園', 'Toyol 老窩'],
+    ['古道驛站', '南下的屍隊', '斷橋渡口', '跳過國境線', '荒廢客棧', '老殭棺材鋪'],
+    ['河口', '河邊', '紅樹林', '香蕉園', '舊水閘', 'Pontianak 香蕉樹'],
+    ['巴士站', '村口的白布', '十字路口', '舊組屋', '高架橋底', 'Penanggal 屋頂'],
+    ['集團停車場', '集團大門', '檔案室', '黑白無常值班室', '董事會走廊', '頂樓・黃總'],
+  ];
+  // 非主線地頭王（big 大王、small 小王）：典籍鬼（n30）＋ 黑色幽默脫口秀嘅鬼（patrol_ghosts.js 嘅 pg_*）
+  const TKING = [
+    { 0:{ small:'n30_qionggui' }, 2:{ big:'n30_taozhai', small:'n30_guhangui' }, 4:{ big:'pg_tuimo', small:'n30_dugui' } },
+    { 0:{ small:'n30_pelesit' }, 2:{ big:'n30_hanturaya', small:'n30_polong' }, 4:{ big:'n30_hantugalah', small:'n30_jenglot' } },
+    { 0:{ small:'n30_wutou' }, 2:{ big:'n30_shanxiao', small:'n30_changgui' }, 4:{ big:'pg_songding', small:'n30_baigujing' } },
+    { 0:{ small:'n30_phiam' }, 2:{ big:'n30_maenak', small:'n30_churel' }, 4:{ big:'pg_ex', small:'n30_tikbalang' } },
+    { 0:{ small:'n30_zipai' }, 2:{ big:'pg_landlady', small:'n30_zhongshu' }, 4:{ big:'n30_chehuo', small:'n30_daji' } },
+    { 0:{ small:'n30_kasaobake' }, 2:{ big:'pg_ji', small:'n30_nopperabo' }, 4:{ big:'n30_hannya', small:'n30_rokurokubi' } },
+  ];
+  const TTIER = [0.15, 0.33, 0.5, 0.66, 0.83, 1];
+  let MIR = false; // 單數章左右反轉，每章地形唔同
+  const mc = (c) => MIR ? COLS - 1 - c : c;
+  function terAt(r, c) { return TLAY[r][MIR ? COLS - 1 - c : c]; }
+  function zoneCell(z) { const r = Math.floor(z / COLS), c = z % COLS; return { r, c, x:c * CW + CW / 2, y:r * CH + CH / 2 }; }
+  function zoneAt(x, y) { const r = Math.max(0, Math.min(ROWS - 1, Math.floor(y / CH))), c = Math.max(0, Math.min(COLS - 1, Math.floor(x / CW))); return r * COLS + c; }
+  function terOf(z) { const c = zoneCell(z); return terAt(c.r, c.c); }
+  function terAtXY(x, y) { return terOf(zoneAt(x, y)); }
+  function terP(ci, t) { const hi = CHAPTERS[ci].stages[2].p, lo = ci > 0 ? CHAPTERS[ci - 1].stages[2].p : 0; return TMAIN[t] != null ? CHAPTERS[ci].stages[TMAIN[t]].p : lo + (hi - lo) * TTIER[t]; }
+  function zoneP(ci, z) { const t = terOf(z), c = zoneCell(z), j = ((c.r * 7 + c.c * 3) % 5) / 5; return Math.max(0.2, terP(ci, t) * (0.85 + 0.15 * j)); }
+  function zoneName(ci, z) { return TNAME[ci][terOf(z)]; }
+  function lairPos(t) { const [r, c] = TLAIR[t]; return { x:mc(c) * CW + CW / 2, y:r * CH + CH / 2 }; }
+  function guardPos(si) { const t = +Object.keys(TMAIN).find(k => TMAIN[k] === si); return lairPos(t); }
+  function gateList() { // 閘口位置：兩格之間嘅邊線中點；vert = 邊線係直嘅
+    return TGATE.map(([a, b, ca, cb], i) => { const ra = ca[0], rb = cb[0], xa = mc(ca[1]), xb = mc(cb[1]), za = ra * COLS + xa, zb = rb * COLS + xb;
+      if (ra === rb) return { i, a, b, za, zb, vert:true, x:Math.max(xa, xb) * CW, y:ra * CH + CH / 2 };
+      return { i, a, b, za, zb, vert:false, x:xa * CW + CW / 2, y:Math.max(ra, rb) * CH }; });
+  }
+  let GATES = [];
+  const GW = 220;
+  function kingDone(t) { if (!R) return false; if (TMAIN[t] != null) return !!S.cleared[sidOf(R.ci, TMAIN[t])]; return !!(regSt(R.ci).kings || {})[t]; }
+  function gateOpen(g) { return kingDone(g.a) || kingDone(g.b); }
+  // 設施：[種類, 行, 列, ox, oy]
+  const FACI0 = [
+    ['station', 3, 0, -170, 120], ['tea', 3, 1, 150, 100], ['station', 3, 2, -120, 150], ['tea', 2, 1, -150, -120],
+    ['tea', 3, 3, 120, -140], ['prison', 2, 3, 0, 150], ['station', 1, 1, 150, -150], ['tea', 1, 0, 140, 150],
+    ['station', 1, 2, -150, 120], ['overtime', 0, 2, 0, 160], ['tea', 1, 3, 150, 120], ['tea', 1, 4, -150, 150],
+  ];
+  let FACI = [];
+  function mkFaci() { FACI = FACI0.map(([t, r, c, ox, oy]) => ({ t, z:r * COLS + mc(c), ox:MIR ? -ox : ox, oy })); GATES = gateList(); }
+  mkFaci();
   const TEA_CD = 60, DOWN_T = 4.5;
   const MEET = [
     ['龐總：「阿福，臨時開會。你部門今晚嘅表現，我哋逐張 slide 傾。」', '龐總：「阿福，臨時開會。你部門今晚的表現，我們一張張投影片來談。」'],
@@ -65,21 +121,11 @@ const Patrol = (() => {
     if (p.min == null) p.min = 18 * 60; p.kills = p.kills || 0; p.rec = p.rec || 0; p.poach = p.poach || [];
     return p;
   }
-  function regSt(ci) { const p = st(); if (!p.reg[ci]) p.reg[ci] = { fog:'', sta:{ 0:1 }, ot:-1, pr:-1 }; const r = p.reg[ci]; r.sta = r.sta || { 0:1 }; return r; }
+  function regSt(ci) { const p = st(); let r = p.reg[ci]; if (!r || r.v !== 2) { r = p.reg[ci] = { v:2, fog:'', sta:{}, ot:-1, pr:-1, kings:{} }; } r.sta = r.sta || {}; r.kings = r.kings || {}; return r; }
+  function startZ(ci) { const m = MIR; MIR = ci % 2 === 1; const z = 3 * COLS + mc(0); MIR = m; return z; }
+  function staName(z) { return TNAME[R ? R.ci : 0][terOf(z)]; }
   const sidOf = (ci, si) => `${ci + 1}-${si + 1}`;
   function regionOpen(ci) { return ci === 0 || !!S.cleared[sidOf(ci - 1, 2)]; }
-  function zoneCell(z) { const r = Math.floor(z / 4), c = r % 2 ? 3 - (z % 4) : z % 4; return { r, c, x:c * CW + CW / 2, y:r * CH + CH / 2 }; }
-  function zoneAt(x, y) { const r = Math.max(0, Math.min(2, Math.floor(y / CH))), c = Math.max(0, Math.min(3, Math.floor(x / CW))); return r * 4 + (r % 2 ? 3 - c : c); }
-  function zoneP(ci, z) {
-    const sts = CHAPTERS[ci].stages, si = Math.floor(z / 4), hi = sts[si].p;
-    const lo = si > 0 ? sts[si - 1].p : ci > 0 ? CHAPTERS[ci - 1].stages[2].p : 0;
-    return lo + (hi - lo) * ((z % 4) + 1) / 4;
-  }
-  function zoneName(ci, z) { const s = CHAPTERS[ci].stages[Math.floor(z / 4)]; return `${s.name}・${'一二三四'[z % 4]}`; }
-  // 閘口：0 = 第 4→5 區（右上落去），1 = 第 8→9 區（左中落去）；守住佢嘅係該段主線關卡
-  const GATES = [{ x:CW * 3.5, y:CH, si:0 }, { x:CW * 0.5, y:CH * 2, si:1 }];
-  const GW = 220;
-  function guardPos(si) { return si === 0 ? { x:CW * 3.5, y:CH - 110 } : si === 1 ? { x:CW * 0.5, y:CH * 2 - 110 } : { x:CW * 3.5 + 90, y:CH * 2.5 }; }
   function faciPos(f) { const c = zoneCell(f.z); return { x:c.x + f.ox, y:c.y + f.oy }; }
   function elitesOf(ci) { return has(N30W) ? N30W.ids().filter(k => N30_G[k].at === REG[ci].site) : []; }
   function eliteOfZone(ci, z) { const l = elitesOf(ci); if (!l.length) return null; const k = l[z % l.length]; return (z < l.length || z % 2 === 0) && N30W.open(k) ? k : null; }
@@ -105,6 +151,17 @@ const Patrol = (() => {
     const hp = (crew ? 220 + P * 6 + A * 3 : 300 + P * 8 + A * 4) * dm * gm.hp * cm.hp, atk = (crew ? 15 + A * 1.1 : 20 + A * 1.4) * dm * gm.atk * cm.atk;
     const rng = d.range === 'ranged' ? 150 : 46;
     return { side:0, role, g, gid:g.id, k:g.k, name:g.name, fac, hp, maxhp:hp, atk, rng, aspd:rng > 60 ? 1.2 : 1.0, spd:role === 'lead' ? 160 : 175, cd:Math.random() * 0.6, energy:role === 'crew' ? 0 : 30, sk:role === 'crew' ? null : SKILLS[g.k], s:role === 'afu' ? 0.6 : role === 'lead' ? 0.6 : 0.48, x:0, y:0, ox:0, oy:0, flip:false, anim:0, hurt:0 };
+  }
+  // ---------- 裝備上身：武器拎喺手、衣服換色、心口掛工作證 ----------
+  const CLOTH = { yuan:['sepia(.45) hue-rotate(215deg) saturate(1.5)', 'sepia(.6) hue-rotate(225deg) saturate(2.2) brightness(.9)'], chan:['sepia(.55) hue-rotate(-25deg) saturate(1.6)', 'sepia(.7) hue-rotate(-30deg) saturate(2.4) brightness(.92)'], lan:['sepia(.45) hue-rotate(160deg) saturate(1.5)', 'sepia(.6) hue-rotate(170deg) saturate(2.2) brightness(.9)'] };
+  let wReg = false;
+  function regWeapons() { if (wReg || !has(Gear) || typeof Puppet === 'undefined' || !Puppet.addTool) return; wReg = true;
+    Gear.WIMG.flat().forEach(n => { const src = PT_IMG_SRC[n]; if (!src) return; const key = 'pt_' + n, im = new Image(); im.onload = () => { im._ok = true; const h = 330, w = h * im.naturalWidth / im.naturalHeight; Puppet.addTool(n, key, w, h, 0.86); }; im.src = src; SPR[key] = im; }); }
+  function equip(u, g) {
+    regWeapons(); if (!has(Gear) || !g) return;
+    const w = Gear.weaponOf(g); if (w) { u.wpn = w; u.rng = w.S.rng; u.aspd = w.S.aspd; }
+    const ar = Gear.armorOf(g); u.cloth = ar ? CLOTH[ar.f][ar.c >= 3 ? 1 : 0] : null;
+    const bd = Gear.badgeOf(g); u.badge = bd ? { col:FAC[bd.f].col, c:bd.c } : null;
   }
   function troopUnit(i) {
     const tb = 1 + 0.08 * Math.max(0, S.bld.home - 1), hp = (90 + 14 * S.lv) * tb;
@@ -132,14 +189,40 @@ const Patrol = (() => {
   // 擋路嘅擺設（半徑，世界單位）
   const SOLID = { tomb:20, tree:18, stilt:46, palm:12, well:28, lamp:8, cart:30, stone:20, rock2:30, banana:14, pond:44, hut:42, slamp:8, bus:46, scooter:26, pillar:22, cabinet:22, cooler:16, rock:24 };
   let PGRID = {};
+  // ---------- 地形：地頭之間嘅深坑／河（只可以經閘口過）＋ 地頭內嘅斷崖、河道 ----------
+  let WALLS = [];
+  function keyPts() { return [...FACI.map(faciPos), ...[0, 1, 2, 3, 4, 5].map(lairPos), ...GATES.flatMap(g => g.vert ? [{ x:g.x - 60, y:g.y }, { x:g.x + 60, y:g.y }] : [{ x:g.x, y:g.y - 60 }, { x:g.x, y:g.y + 60 }])]; }
+  function segD(w, x, y) { const along = w.h ? x : y, across = w.h ? y : x, t = Math.max(w.a, Math.min(w.b, along)); return Math.hypot(along - t, across - w.p); }
+  function blockedAt(x, y, m) { m = m || 50; return WALLS.some(w => { if (segD(w, x, y) > m) return false; if (w.gap && Math.abs((w.h ? x : y) - w.gap.c) < GW / 2) return false; return true; }); }
+  function mkWalls(ci) {
+    WALLS = [];
+    const gateOn = (h, p, a, b) => GATES.find(g => (h ? !g.vert && g.y === p && g.x > a && g.x < b : g.vert && g.x === p && g.y > a && g.y < b));
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+      if (c < COLS - 1 && terAt(r, c) !== terAt(r, c + 1)) { const p = (c + 1) * CW, a = r * CH, b = (r + 1) * CH, g = gateOn(false, p, a, b); WALLS.push({ h:false, p, a, b, kind:'border', gap:g ? { c:g.y, g } : null }); }
+      if (r < ROWS - 1 && terAt(r, c) !== terAt(r + 1, c)) { const p = (r + 1) * CH, a = c * CW, b = (c + 1) * CW, g = gateOn(true, p, a, b); WALLS.push({ h:true, p, a, b, kind:'border', gap:g ? { c:g.x, g } : null }); }
+    }
+    // 地頭內：斷崖／陰河，由格邊伸入去一半，迫你兜路
+    const rnd = seeded(ci * 57 + 11), kp = keyPts(), inner = [], kind = ci === 3 || ci === 1 ? 'river' : 'ravine';
+    for (let n = 0; n < COLS * ROWS * 2; n++) { const z = n % (COLS * ROWS); if (rnd() < (n < COLS * ROWS ? 0.1 : 0.45)) continue; const cell = zoneCell(z), h = rnd() < 0.5, L = (0.42 + rnd() * 0.18) * (h ? CW : CH), off = 0.3 + rnd() * 0.4, fromLo = rnd() < 0.5;
+      const w = h ? { h:true, p:cell.r * CH + CH * off, a:fromLo ? cell.c * CW : (cell.c + 1) * CW - L, b:fromLo ? cell.c * CW + L : (cell.c + 1) * CW, kind, gap:null }
+                  : { h:false, p:cell.c * CW + CW * off, a:fromLo ? cell.r * CH : (cell.r + 1) * CH - L, b:fromLo ? cell.r * CH + L : (cell.r + 1) * CH, kind, gap:null };
+      if (kp.some(q => segD(w, q.x, q.y) < 150) || inner.some(o => o.h === w.h && Math.abs(o.p - w.p) < 160 && o.a < w.b && w.a < o.b)) continue; inner.push(w); }
+    // 連通檢查：所有閘口當開，由起點行唔行到每個設施、王巢、閘口；唔得就拆最後加嗰條
+    const ok = () => { const G = 40, gw = Math.ceil(WW / G), gh = Math.ceil(WH / G), seen = new Uint8Array(gw * gh), q = [];
+      const free = (i, j) => { const x = i * G + G / 2, y = j * G + G / 2; return !WALLS.some(w => segD(w, x, y) < 18 && !(w.gap && Math.abs((w.h ? x : y) - w.gap.c) < GW / 2 - 14)); };
+      const s0 = faciPos(FACI[0]), si = Math.floor(s0.x / G), sj = Math.floor(s0.y / G); seen[sj * gw + si] = 1; q.push(si, sj);
+      while (q.length) { const j = q.pop(), i = q.pop(); for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const a = i + di, b = j + dj; if (a < 0 || b < 0 || a >= gw || b >= gh || seen[b * gw + a]) continue; seen[b * gw + a] = 1; if (free(a, b)) q.push(a, b); else seen[b * gw + a] = 2; } }
+      return kp.every(p => seen[Math.floor(p.y / G) * gw + Math.floor(p.x / G)] === 1); };
+    for (const w of inner) { WALLS.push(w); if (!ok()) WALLS.pop(); }
+  }
   function mkProps(ci) {
-    PGRID = {};
+    PGRID = {}; mkWalls(ci);
     const rnd = seeded(ci * 31 + 3), out = [], rg = REG[ci];
-    const avoid = [...FACI.map(faciPos), ...FACI.filter(f => f.t === 'station').map(f => { const q = faciPos(f); return { x:q.x + 60, y:q.y + 60 }; }), ...GATES.map(g => ({ x:g.x, y:g.y })), guardPos(0), guardPos(1), guardPos(2)];
-    for (let i = 0; i < 420 && out.length < 230; i++) {
+    const avoid = [...FACI.map(faciPos), ...FACI.filter(f => f.t === 'station').map(f => { const q = faciPos(f); return { x:q.x + 60, y:q.y + 60 }; }), ...GATES.map(g => ({ x:g.x, y:g.y })), ...[0, 1, 2, 3, 4, 5].map(lairPos)];
+    for (let i = 0; i < 900 && out.length < 420; i++) {
       const x = 40 + rnd() * (WW - 80), y = 40 + rnd() * (WH - 80), t = rg.props[Math.floor(rnd() * rg.props.length)], sc = 0.75 + rnd() * 0.5, big = SOLID[t] ? 1 : 0;
       if (avoid.some(a => Math.hypot(a.x - x, a.y - y) < (big ? 190 : 150))) continue;
-      if (Math.abs(y % CH) < 90 || Math.abs(y % CH) > CH - 60) continue;
+      if (blockedAt(x, y, big ? 80 : 56)) continue;
       if (out.some(o => Math.hypot(o.x - x, (o.y - y) * 1.4) < (SOLID[o.t] || big ? 120 : 70))) continue;
       out.push({ x, y, t, s:sc, v:rnd(), r:SOLID[t] ? SOLID[t] * sc : 0 });
     }
@@ -210,8 +293,8 @@ const Patrol = (() => {
     h += `<div class="pt-regs">`;
     CHAPTERS.forEach((ch, ci) => {
       const open = regionOpen(ci), r = regSt(ci), n = ch.stages.filter((s, si) => S.cleared[sidOf(ci, si)]).length;
-      const cur = open && n < 3, stas = FACI.filter(f => f.t === 'station' && r.sta[f.z]);
-      h += `<div class="pt-reg ${open ? '' : 'locked'} ${cur ? 'cur' : ''}"><div><b>第${'一二三四五六'[ci]}區・${ch.name}</b><small>${open ? `主線 ${n}/3　${GP.T('建議鬼力', '建議鬼力')} ${GP.stageNeed(ch.stages[Math.min(2, n)], sidOf(ci, Math.min(2, n)))}　需主公 Lv${ch.stages[0].req}` : '打完上一區總監才開放'}</small></div>${open ? `<div class="pt-go">${stas.map(f => `<button class="btn sm ${cur && f.z === 0 ? 'gold' : ''}" data-go="${ci},${f.z}">${f.z === 0 ? '出發' : `${f.z + 1}區站`}</button>`).join('')}</div>` : '<span class="lk">🔒</span>'}</div>`;
+      const cur = open && n < 3; MIR = ci % 2 === 1; mkFaci(); const st0 = startZ(ci), stas = FACI.filter(f => f.t === 'station' && (f.z === st0 || r.sta[f.z])); const kn = Object.keys(r.kings).length + n;
+      h += `<div class="pt-reg ${open ? '' : 'locked'} ${cur ? 'cur' : ''}"><div><b>第${'一二三四五六'[ci]}區・${ch.name}</b><small>${open ? `地頭 ${kn}/6　主線 ${n}/3　${GP.T('建議鬼力', '建議鬼力')} ${GP.stageNeed(ch.stages[Math.min(2, n)], sidOf(ci, Math.min(2, n)))}　需主公 Lv${ch.stages[0].req}` : '打完上一區總監才開放'}</small></div>${open ? `<div class="pt-go">${stas.map(f => `<button class="btn sm ${cur && f.z === st0 ? 'gold' : ''}" data-go="${ci},${f.z}">${f.z === st0 ? '出發' : `${TNAME[ci][terOf(f.z)]}站`}</button>`).join('')}</div>` : '<span class="lk">🔒</span>'}</div>`;
     });
     if (S.seen.ch1_end && typeof Sports !== 'undefined') h += `</div><div class="sc-entry sp-entry"><div><b>陰間運動會</b><small>殭屍跳遠、舌頭對脖子拔河、倒掛耐力、河童游泳</small></div><button class="btn gold" id="sp-open">參加</button>`;
     h += `</div><label class="pt-auto"><input type="checkbox" id="pt-autoc" ${p0.auto ? 'checked' : ''}> 自動送去投胎（不用逐隻選；遞合約要手動）</label>`;
@@ -249,13 +332,14 @@ const Patrol = (() => {
     if (any) Story.queue({ style:'narr', lines:[['旁白', `第${'一二三四五六'[ci]}區・${ch.name}`]] }, go); else go();
   }
   function begin(ci, z0) {
-    const p = st(), rs = regSt(ci);
+    MIR = ci % 2 === 1; mkFaci(); const p = st(), rs = regSt(ci);
     R = { ci, units:[], foes:[], fx:[], proj:[], downs:[], t:0, joy:null, keys:{}, cam:{ x:0, y:0 }, packs:{}, nextSp:{}, zoneSeen:{}, tea:{}, act:null,
       loot:{ coins:0, exp:0, yuan:0, chan:0, lan:0, rec:0, kills:0, buns:0 }, streak:0, bryan:null, bryanDone:false, ended:false, gearMsg:'',
-      pat:null, props:mkProps(ci), fog:(rs.fog || '').padEnd(Math.ceil(WW / FOG) * Math.ceil(WH / FOG), '0').split(''), crewBuff:has(Gear) ? Gear.crewBuff() : {} };
+      pat:null, props:mkProps(ci), kings:{}, fog:(rs.fog || '').padEnd(Math.ceil(WW / FOG) * Math.ceil(WH / FOG), '0').split(''), crewBuff:has(Gear) ? Gear.crewBuff() : {} };
+    rs.sta[startZ(ci)] = 1;
     const sp = faciPos(FACI.find(f => f.t === 'station' && f.z === z0) || FACI[0]);
     const lx = sp.x + 60, ly = sp.y + 60;
-    const afu = ghostById('afu'); const L0 = unitFromGhost(afu, 'afu'); L0.x = lx; L0.y = ly; L0.leader = true; R.units.push(L0); R.L = L0;
+    const afu = ghostById('afu'); const L0 = unitFromGhost(afu, 'afu'); L0.x = lx; L0.y = ly; L0.leader = true; equip(L0, afu); R.units.push(L0); R.L = L0;
     leads().forEach((g, i) => { const u = unitFromGhost(g, 'lead'); u.slot = i; R.units.push(u); });
     crewList().forEach((g, i) => { const u = unitFromGhost(g, 'crew'); u.slot = 3 + i; if ((g.fat || 0) >= 70) u.atk *= 0.7; R.units.push(u); });
     for (let i = 0; i < troopTeams(); i++) { const u = troopUnit(i); u.slot = 20 + i; R.units.push(u); }
@@ -309,12 +393,17 @@ const Patrol = (() => {
   }
 
   // ---------- 移動、碰撞 ----------
-  function gateOpen(i) { return !!S.cleared[sidOf(R.ci, GATES[i].si)]; }
   function moveTo(u, nx, ny) {
     nx = Math.max(20, Math.min(WW - 20, nx)); ny = Math.max(30, Math.min(WH - 20, ny));
-    for (let i = 0; i < 2; i++) { const by = CH * (i + 1); const g = GATES.find(G => G.y === by);
-      const cross = (u.y < by - 14) !== (ny < by - 14) || Math.abs(ny - by) < 14;
-      if (cross) { const inGap = g && Math.abs(nx - g.x) < GW / 2 - 12 && (u.side === 1 || gateOpen(GATES.indexOf(g))); if (!inGap) ny = u.y < by ? Math.min(ny, by - 15) : Math.max(ny, by + 15); }
+    for (const w of WALLS) {
+      if (w.h) { if (nx < w.a - 14 || nx > w.b + 14) continue; const by = w.p;
+        const cross = (u.y < by) !== (ny < by) || Math.abs(ny - by) < 14; if (!cross) continue;
+        if (w.gap && Math.abs(nx - w.gap.c) < GW / 2 - 12 && (u.side === 1 || gateOpen(w.gap.g))) continue;
+        ny = u.y < by ? Math.min(ny, by - 15) : Math.max(ny, by + 15);
+      } else { if (ny < w.a - 14 || ny > w.b + 14) continue; const bx = w.p;
+        const cross = (u.x < bx) !== (nx < bx) || Math.abs(nx - bx) < 14; if (!cross) continue;
+        if (w.gap && Math.abs(ny - w.gap.c) < GW / 2 - 12 && (u.side === 1 || gateOpen(w.gap.g))) continue;
+        nx = u.x < bx ? Math.min(nx, bx - 15) : Math.max(nx, bx + 15); }
     }
     const gx = Math.floor(nx / 200), gy = Math.floor(ny / 200);
     for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const l = PGRID[(gx + i) + ',' + (gy + j)]; if (!l) continue;
@@ -339,12 +428,12 @@ const Patrol = (() => {
     let x = 0, y = 0, ok = false;
     for (let k = 0; k < 12 && !ok; k++) {
       x = cell.x + (Math.random() - 0.5) * (CW - 160); y = cell.y + (Math.random() - 0.5) * (CH - 160);
-      ok = Math.hypot(x - R.L.x, y - R.L.y) > 380 && !FACI.some(f => { const q = faciPos(f); return Math.hypot(q.x - x, q.y - y) < 170; }) && ![0, 1, 2].some(si => { const q = guardPos(si); return Math.hypot(q.x - x, q.y - y) < 220; });
+      ok = Math.hypot(x - R.L.x, y - R.L.y) > 380 && !FACI.some(f => { const q = faciPos(f); return Math.hypot(q.x - x, q.y - y) < 170; }) && ![0, 1, 2, 3, 4, 5].some(t => { const q = lairPos(t); return Math.hypot(q.x - x, q.y - y) < 260; }) && !blockedAt(x, y);
     }
     if (!ok) return;
-    const n = 1 + Math.floor(Math.random() * Math.min(ci === 0 ? 4 : 5, 1 + Math.floor(z / 3) + Math.min(ci, 2)));
+    const tz = terOf(z), n = 1 + Math.floor(Math.random() * Math.min(ci === 0 ? 4 : 5, 1 + tz + Math.min(ci, 2)));
     // 每區新面孔：佢嘅種類只喺呢區之後先出（累積式）
-    const unlocked = pool.slice(0, Math.max(1, Math.min(pool.length, CH_FOD.slice(0, ci).reduce((s, a) => s + a.length, 0) + 1 + Math.floor(z / 3))));
+    const unlocked = pool.slice(0, Math.max(1, Math.min(pool.length, CH_FOD.slice(0, ci).reduce((s, a) => s + a.length, 0) + 1 + Math.floor(tz / 2))));
     const pk = [];
     for (let i = 0; i < n; i++) {
       const k = unlocked[Math.random() < 0.55 ? unlocked.length - 1 : Math.floor(Math.random() * unlocked.length)];
@@ -368,8 +457,29 @@ const Patrol = (() => {
     });
     R.guards[si] = arr;
   }
+  // 非主線地頭王：大王＋小王，帶幾隻手下；未打贏先出現
+  function spawnKing(t) {
+    if (TMAIN[t] != null || kingDone(t) || R.kings[t]) return;
+    const d = TKING[R.ci][t]; if (!d) return;
+    const lp = lairPos(t), p = terP(R.ci, t), arr = [], pool = fodOf(R.ci);
+    const mk = (k, big, dx, lab) => { if (!k || !ENEMY_T[k]) return; const e = foe(k, p, big ? { hp:5.5, atk:1.6 } : { hp:3.4, atk:1.35 }, { king:t, boss:big, elite:false, kname:lab }); e.sk = SKILLS[k] || null; e.s = big ? 0.8 : 0.66; e.x = lp.x + dx; e.y = lp.y - 10; e.hx = e.x; e.hy = e.y; e.name = GHOSTS[k] ? GHOSTS[k].name : e.name; arr.push(e); };
+    mk(d.big, true, d.small ? -55 : 0, '大王'); mk(d.small, !d.big, d.big ? 60 : 0, d.big ? '小王' : '地頭王');
+    for (let i = 0; i < 2 + Math.min(3, t); i++) { const k = pool[(i + t) % pool.length], e = foe(k, p, { hp:1.4, atk:1.1 }, { king:t, minion:true }); const a = i / (2 + Math.min(3, t)) * Math.PI * 2; e.x = lp.x + Math.cos(a) * 110; e.y = lp.y + Math.sin(a) * 70; e.hx = e.x; e.hy = e.y; arr.push(e); }
+    arr.forEach(e => R.foes.push(e)); R.kings[t] = arr;
+  }
+  function kingWin(t) {
+    const rs = regSt(R.ci), d = TKING[R.ci][t] || {}, first = !rs.kings[t]; rs.kings[t] = Date.now();
+    const p = terP(R.ci, t), rew = { coins:Math.round(60 + 45 * p), exp:Math.round(25 + 18 * p) }; gain(rew);
+    if (first) { S.chests[d.big ? 'p' : 'b']++; }
+    try { Sound.play('win'); spr('fx_scream', R.L.x, R.L.y - 40, { s0:0.4, s1:2.2, life:0.8 }); spr('fx_gold', R.L.x, R.L.y - 60, { s0:0.4, s1:0.9, life:1 }); R.flash = 0.4; } catch (e) {}
+    Fx.banner(`拿下地頭：${TNAME[R.ci][t]}！`);
+    Fx.toast(`地頭王擊破：冥幣 +${rew.coins}，好評 +${rew.exp}${first ? `，${d.big ? '紫' : '藍'}箱 ×1` : ''}。相連的閘口開了。`);
+    const join = [d.big, d.small].filter(k => k && GHOSTS[k] && !S.ghosts.some(g => g.k === k));
+    join.forEach(k => Story.queue({ style:'narr', lines:[['旁白', `${GHOSTS[k].name}：「${L(GHOSTS[k].say || '')}」`], ['旁白', T(`${GHOSTS[k].name}輸咗地頭，決定跟你返落魄村。`, `${GHOSTS[k].name}輸了地頭，決定跟你回落魄村。`)]] }, () => { joinGhost(k); save(); }));
+    persist(); save(); UI.refresh();
+  }
   function spawnBryan(z) {
-    if (R.bryan || R.bryanDone || !R.bryanWant || z < 4) return;
+    if (R.bryan || R.bryanDone || !R.bryanWant || terOf(z) < 1) return;
     const cell = zoneCell(z), x = cell.x + (Math.random() - 0.5) * 300, y = cell.y + (Math.random() - 0.5) * 240;
     if (Math.hypot(x - R.L.x, y - R.L.y) < 420) return;
     const p = zoneP(R.ci, z) + 0.6, pool = fodOf(R.ci), arr = [];
@@ -437,11 +547,16 @@ const Patrol = (() => {
     }
     revealAround(L.x, L.y);
     const z = zoneAt(L.x, L.y);
-    if (!R.zoneSeen[z]) { R.zoneSeen[z] = 1; const ek = eliteOfZone(R.ci, z); msg(`${zoneName(R.ci, z)}${ek && !N30W.owned(ek) ? `　新面孔出沒：<b>${GHOSTS[ek].name}</b>（${GHOSTS[ek].title}）` : ''}`, 3); }
-    for (const zz of [z - 1, z, z + 1]) if (zz >= 0 && zz < 12) spawnZone(zz);
+    const tNow = terOf(z);
+    if (R.lastT !== tNow) { R.lastT = tNow; const d = TKING[R.ci][tNow], kn = TMAIN[tNow] != null ? `主線・${CHAPTERS[R.ci].stages[TMAIN[tNow]].name}` : d ? [d.big, d.small].filter(Boolean).map(k => GHOSTS[k] ? GHOSTS[k].name : k).join('、') : '';
+      msg(`<b>地頭：${TNAME[R.ci][tNow]}</b>${kingDone(tNow) ? '　（已拿下）' : kn ? `　${TMAIN[tNow] != null ? '' : '地頭王：'}${kn}` : ''}`, 3); }
+    if (!R.zoneSeen[z]) { R.zoneSeen[z] = 1; const ek = eliteOfZone(R.ci, z); if (ek && !N30W.owned(ek)) setTimeout(() => msg(`新面孔出沒：<b>${GHOSTS[ek].name}</b>（${GHOSTS[ek].title}）`, 3), 2500); }
+    for (const zz of R.near || []) spawnZone(zz);
+    if (!R.nearT || R.t > R.nearT) { R.nearT = R.t + 0.5; R.near = []; for (let q = 0; q < COLS * ROWS; q++) { const c = zoneCell(q); if (Math.abs(c.x - L.x) < CW * 1.05 && Math.abs(c.y - L.y) < CH * 1.05) R.near.push(q); } }
+    for (let t = 0; t < 6; t++) { const lp = lairPos(t); if (Math.hypot(lp.x - L.x, lp.y - L.y) < 900) spawnKing(t); }
     for (let si = 0; si < 3; si++) { const gp = guardPos(si); if (Math.hypot(gp.x - L.x, gp.y - L.y) < 900) spawnGuards(si); }
     spawnBryan(z);
-    R.foes = R.foes.filter(e => { if (e.guard != null || e.bryan || e.ot) return true; if (Math.abs(e.z - z) > 1 && Math.hypot(e.x - L.x, e.y - L.y) > 1200) { e.gone = 1; return false; } return true; });
+    R.foes = R.foes.filter(e => { if (e.guard != null || e.bryan || e.ot || e.king != null) return true; if (!(R.near || []).includes(e.z) && Math.hypot(e.x - L.x, e.y - L.y) > 1200) { e.gone = 1; return false; } return true; });
     for (const zz in R.packs) R.packs[zz] = R.packs[zz].map(pk => pk.filter(e => !e.gone && !e.fled && !e.done)).filter(pk => pk.length);
     for (let si = 0; si < 3; si++) {
       const sid = sidOf(R.ci, si), stg = CHAPTERS[R.ci].stages[si], gp = guardPos(si), d = Math.hypot(gp.x - L.x, gp.y - L.y);
@@ -525,8 +640,13 @@ const Patrol = (() => {
     }
     R.foes = R.foes.filter(e => !((e.hp <= 0 || e.fled) && !(e.down > 0) && (e.deadT || 0) > 1.5));
     if (R.ot && R.ot.every(e => (e.hp <= 0 || e.fled) && !(e.down > 0))) { R.ot = null; S.chests.p++; gain({ coins:Math.round(80 + 60 * zoneP(R.ci, 9)), exp:30 }); Fx.toast('通宵加班房搞定！紫箱 ×1'); msg(T('加班鬼：「多謝你哋……我終於可以收工。」佢瞓咗。', '加班鬼：「謝謝你們……我終於可以下班了。」他睡著了。'), 3); }
+    for (const t in R.kings) { const g = R.kings[t]; if (!g) continue; const lp = lairPos(+t);
+      if (!g.woke && Math.hypot(lp.x - L.x, lp.y - L.y) < 300) { g.woke = 1; g.forEach(e => { e.provoked = true; }); const d = TKING[R.ci][t]; msg(T(`<b>${TNAME[R.ci][t]}</b>係我哋嘅地頭！`, `<b>${TNAME[R.ci][t]}</b>是我們的地頭！`) + (d && d.big ? `（大王：${GHOSTS[d.big] ? GHOSTS[d.big].name : ''}）` : ''), 2.5); R.shake = 6; }
+      if (g.every(e => e.hp <= 0 && !(e.down > 0))) { R.kings[t] = null; kingWin(+t); } }
     if (R.guards) for (const si in R.guards) { const g = R.guards[si]; if (g && g.length && g.every(e => e.hp <= 0)) { R.guards[si] = null; stageWin(+si); } }
     R.fx = R.fx.filter(f => { f.t += dt; return f.t < f.life; });
+    if (R.later) R.later = R.later.filter(q => { q.t -= dt; if (q.t > 0) return true; try { q.f(); } catch (e) {} return false; });
+    if (L.swing) { L.swing.t += dt; if (L.swing.t > 0.45) L.swing = null; }
     ambient(dt);
     facilities(dt);
     // 鏡頭：跟阿福，望多少少前面
@@ -555,12 +675,41 @@ const Patrol = (() => {
     if (a.cast) { skill(u); return; }
     if (a.slam) return;
     const v = a.tg; if (!v || v.hp <= 0 || v.down > 0) return;
+    if (u.leader && u.wpn) { wfire(u, v); return; }
     if (u.rng > 60) { R.proj.push({ x:u.x + (u.flip ? -14 : 14), y:u.y - 44 * u.s * 1.65, tg:v, src:u, spd:560, col:u.side ? '#ff9ac0' : projCol(u), hue:u.side ? HUE.foe : HUE[u.fac] || 0, big:u.role === 'lead' || u.elite || u.boss ? 1.3 : 1, trail:[], ph:Math.random() * 6 }); return; }
     const dir = Math.sign(v.x - u.x) || 1;
     u.vx += dir * 120; // 衝前少少
     if (img('fx_slash')) { const big = u.boss ? 1.5 : u.leader || u.role === 'lead' || u.elite ? 1.15 : u.role === 'troop' ? 0.6 : 0.8; spr('fx_slash', v.x - dir * 6, v.y - 34 * v.s * 1.65, { s0:0.16 * big, s1:0.3 * big, life:0.2, flip:dir < 0, rot:(Math.random() - 0.5) * 0.6, hue:u.side ? -155 : u.leader ? 0 : HUE[u.fac] || 0 }); }
     else R.fx.push({ kind:'slash', x:v.x, y:v.y - 34 * v.s * 1.65, dir, t:0, life:0.2, r:22 + (u.boss ? 14 : u.leader ? 6 : 0), col:u.side ? '#ff9ac0' : u.leader ? '#ffe9a0' : '#bff' });
     hit(u, v, 1);
+  }
+  // 阿福用唔同武器 → 唔同打法
+  function later(t, f) { (R.later = R.later || []).push({ t, f }); }
+  function foesNear(x, y, r) { return R.foes.filter(e => e.hp > 0 && !(e.down > 0) && !e.fled && !(e.guard != null && !e.awake) && Math.hypot(e.x - x, (e.y - y) * 1.3) < r); }
+  function wfire(u, v) {
+    const w = u.wpn, m = w.lvMul, dir = Math.sign(v.x - u.x) || 1, hy = (e) => e.y - 34 * e.s * 1.65, hue = HUE[w.it.f] || 0;
+    u.swing = { sty:w.sty, t:0 };
+    switch (w.sty) {
+      case 'shoot': for (let i = 0; i < 3; i++) later(i * 0.09, () => { if (v.hp <= 0) return; R.proj.push({ x:u.x + dir * 16, y:u.y - 50, tg:v, src:u, spd:720, col:'#d6e4ff', hue, big:0.7, trail:[], ph:Math.random() * 6, mult:0.5 * m }); try { Sound.play('click'); } catch (e) {} }); u.vx -= dir * 90; break;
+      case 'smash': case 'drain': { u.vx += dir * 260; const r = w.sty === 'smash' ? 80 : 62, hs = foesNear(v.x, v.y, r); hs.forEach(e => hit(u, e, (w.sty === 'smash' ? 1.6 : 1.3) * m, { kb:230, from:u }));
+        spr('fx_shock', v.x, v.y, { ground:true, s0:0.2, s1:0.55, life:0.35, hue }); dust(v.x, v.y, 1.2); R.shake = Math.max(R.shake, 6); R.stop = Math.max(R.stop || 0, 0.05);
+        if (w.sty === 'drain' && hs.length) { const h = u.atk * 0.3 * hs.length * m; u.hp = Math.min(u.maxhp, u.hp + h); fxText(u.x, u.y - 70, '+' + Math.round(h), '#8affb0'); hs.forEach(e => spr('fx_heal', e.x, hy(e), { s0:0.15, s1:0.05, life:0.4, vx:u.x - e.x, vy:-(u.y - e.y), hue:HUE.yuan })); } break; }
+      case 'spin': case 'flail': { const r = w.sty === 'spin' ? 120 : 160; foesNear(u.x, u.y, r).forEach(e => hit(u, e, (w.sty === 'spin' ? 0.8 : 0.72) * m, { kb:200, from:u }));
+        spr('fx_wind', u.x, u.y, { s0:0.4, s1:r / 150, life:0.4, anchor:0.85, hue, spin:9 }); R.fx.push({ kind:'ring', x:u.x, y:u.y, t:0, life:0.35, col:'#bfe0ff', r }); break; }
+      case 'beam': { const L = w.S.rng + 50, ang = Math.atan2(v.y - u.y, v.x - u.x), ex = Math.cos(ang), ey = Math.sin(ang);
+        R.foes.filter(e => e.hp > 0 && !(e.down > 0) && !e.fled).forEach(e => { const px = e.x - u.x, py = e.y - u.y, t = px * ex + py * ey; if (t > 0 && t < L && Math.abs(px * ey - py * ex) < 34) hit(u, e, 1.0 * m, { kb:120, from:u }); });
+        spr('fx_beam', u.x + ex * L / 2, u.y - 40 + ey * L / 2, { s0:0.4, s1:0.5, sx:L / 180, life:0.25, rot:ang - Math.PI / 2, hue }); R.flash = Math.max(R.flash || 0, 0.08); break; }
+      case 'combo': for (let i = 0; i < 3; i++) later(i * 0.12, () => { if (v.hp <= 0) return; u.vx += dir * 60; hit(u, v, (i === 2 ? 0.8 : 0.45) * m, { kb:i === 2 ? 260 : 40 }); spr('fx_slash', v.x - dir * 6, hy(v) + (i - 1) * 8, { s0:0.16, s1:0.3, life:0.16, flip:(i % 2 ? dir > 0 : dir < 0), rot:(i - 1) * 0.5, hue }); }); break;
+      case 'splash': { const tx = v.x, ty = v.y; spr('fx_smoke', u.x + dir * 20, u.y - 50, { s0:0.1, s1:0.2, life:0.3, vx:tx - u.x, vy:-(ty - u.y), hue });
+        later(0.3, () => { foesNear(tx, ty, 95).forEach(e => { hit(u, e, 0.85 * m, { kb:90, from:{ x:tx, y:ty } }); e.cd += 0.5; e.slow = 1.5; }); spr('fx_smoke', tx, ty, { ground:true, s0:0.3, s1:0.75, life:0.7, hue }); fxText(tx, ty - 60, '燙！', '#ffc27a'); }); break; }
+      case 'pull': { const d = Math.hypot(v.x - u.x, v.y - u.y) || 1; if (!v.boss) { v.kb = { x:-(v.x - u.x) / d * 520, y:-(v.y - u.y) / d * 300 }; } spr('fx_bolt', (u.x + v.x) / 2, (u.y + v.y) / 2 - 40, { s0:0.2, s1:0.3, sx:d / 160, life:0.2, rot:Math.atan2(v.y - u.y, v.x - u.x), hue });
+        later(0.18, () => { if (v.hp > 0) hit(u, v, 1.25 * m, { kb:200 }); }); break; }
+      case 'poke': { const ang = Math.atan2(v.y - u.y, v.x - u.x), ex = Math.cos(ang), ey = Math.sin(ang); u.vx += ex * 160;
+        R.foes.filter(e => e.hp > 0 && !(e.down > 0) && !e.fled).map(e => { const px = e.x - u.x, py = e.y - u.y; return [e, px * ex + py * ey, Math.abs(px * ey - py * ex)]; }).filter(q => q[1] > 0 && q[1] < w.S.rng + 30 && q[2] < 30).sort((a, b) => a[1] - b[1]).slice(0, 2).forEach(([e]) => hit(u, e, 0.95 * m, { kb:150, from:u }));
+        spr('fx_dash', u.x + ex * 60, u.y - 40, { s0:0.25, s1:0.4, life:0.18, rot:ang, hue }); break; }
+      case 'slam': { u.vx += dir * 200; later(0.12, () => { foesNear(v.x, v.y, 150).forEach(e => { hit(u, e, 1.35 * m, { kb:120, from:v }); if (!e.boss && e.hp > 0) { e.cd += 1.0; fxText(e.x, e.y - 70 * e.s, '壓扁', '#ffd0a0'); } });
+        spr('fx_shock', v.x, v.y, { ground:true, s0:0.3, s1:0.9, life:0.45, hue }); dust(v.x - 30, v.y, 1.6); dust(v.x + 30, v.y, 1.6); R.shake = Math.max(R.shake, 9); R.stop = Math.max(R.stop || 0, 0.07); try { Sound.play('skill'); } catch (e) {} }); break; }
+    }
   }
   function hit(u, v, mult, o) {
     if (v.hp <= 0 || v.down > 0 || v.inv) return;
@@ -631,7 +780,7 @@ const Patrol = (() => {
     const a = f.alpha * (f.fadeIn && p < 0.2 ? p / 0.2 : 1) * (p < 0.55 ? 1 : 1 - (p - 0.55) / 0.45);
     const w = (im.naturalWidth || im.width) * sc * f.sx, h = (im.naturalHeight || im.height) * sc * f.sy;
     c.save(); c.globalAlpha = Math.max(0, a); if (f.add) c.globalCompositeOperation = 'lighter';
-    c.translate(f.x, f.y - f.vy * p); if (f.rot) c.rotate(f.rot + (f.spin || 0) * p); if (f.flip) c.scale(-1, 1);
+    c.translate(f.x + (f.vx || 0) * p, f.y - f.vy * p); if (f.rot || f.spin) c.rotate(f.rot + (f.spin || 0) * p); if (f.flip) c.scale(-1, 1);
     c.drawImage(im, -w / 2, -h * (f.anchor != null ? f.anchor : 0.5), w, h); c.restore();
   }
   const HUE = { yuan:110, chan:-150, lan:35, foe:-155, gold:0 }; // 特效底色係鬼火青綠：+110 ≈ 幽紫（怨）、-150 ≈ 暗血紅（饞／敵）、+35 ≈ 冷藍（懶）
@@ -734,7 +883,7 @@ const Patrol = (() => {
   }
 
   // ---------- 設施：地鐵站、茶水間、扣押室、通宵加班房 ----------
-  function stationCost(z) { const c = R.ci + 1; return z === 0 ? 0 : Math.round((z === 4 ? 10 : 20) * Math.pow(c, 1.5)); }
+  function stationCost(z) { const c = R.ci + 1; return z === startZ(R.ci) ? 0 : Math.round((10 + 4 * terOf(z)) * Math.pow(c, 1.5)); }
   function matTotal() { const m = st().mats; return m.yuan + m.chan + m.lan; }
   function payMat(n) { const m = st().mats; let left = n; for (const k of Object.keys(m).sort((a, b) => m[b] - m[a])) { const d = Math.min(m[k], left); m[k] -= d; left -= d; if (!left) break; } }
   function facilities(dt) {
@@ -748,7 +897,7 @@ const Patrol = (() => {
     let h = '';
     if (near.t === 'station') {
       if (!rs.sta[near.z]) { const c = stationCost(near.z); h = `<b>陰間地鐵站（未開通）</b><small>開通後可從準備畫面直接在這裡出發，巡邏中也能互相轉站。</small><button class="btn gold" id="pa-go" ${matTotal() >= c ? '' : 'disabled'}>開通（執念 ${c}，任何派系）</button>`; }
-      else { const others = FACI.filter(f => f.t === 'station' && f.z !== near.z && rs.sta[f.z]); h = `<b>陰間地鐵站・${near.z + 1}區</b><small>${others.length ? '搭到：' : '其他站未開通'}</small>${others.map(f => `<button class="btn" data-tp="${f.z}">${f.z + 1}區站</button>`).join('')}`; }
+      else { const others = FACI.filter(f => f.t === 'station' && f.z !== near.z && rs.sta[f.z]); h = `<b>陰間地鐵站・${staName(near.z)}</b><small>${others.length ? '搭到：' : '其他站未開通'}</small>${others.map(f => `<button class="btn" data-tp="${f.z}">${staName(f.z)}站</button>`).join('')}`; }
     } else if (near.t === 'tea') {
       const cd = (R.tea[near.z] || 0) - R.t;
       h = `<b>陰間茶水間</b><small>全部門回血，過勞 -40。</small><button class="btn gold" id="pa-go" ${cd > 0 ? 'disabled' : ''}>${cd > 0 ? `在沖咖啡（${Math.ceil(cd)} 秒）` : '進去歇一下'}</button>`;
@@ -764,7 +913,7 @@ const Patrol = (() => {
   function teleport(x, y) { R.L.x = x; R.L.y = y; R.units.forEach(u => { u.vx = u.vy = 0; if (!u.leader) { const o = formation(u.slot || 0); u.x = x + o.x; u.y = y + o.y; } }); R.cam.x = x; R.cam.y = y; R.actKey = null; revealAround(x, y); msg('到站。', 1.2); }
   function useFaci(f) {
     const rs = regSt(R.ci), day = Math.floor(Date.now() / 864e5), q = faciPos(f); R.actKey = null;
-    if (f.t === 'station') { const c = stationCost(f.z); if (matTotal() < c) return; payMat(c); rs.sta[f.z] = 1; msg(`開通了 ${f.z + 1} 區地鐵站。`, 2); save(); }
+    if (f.t === 'station') { const c = stationCost(f.z); if (matTotal() < c) return; payMat(c); rs.sta[f.z] = 1; msg(`開通了 ${staName(f.z)} 地鐵站。`, 2); save(); }
     else if (f.t === 'tea') { R.tea[f.z] = R.t + TEA_CD; R.units.forEach(u => { if (u.hp > 0) u.hp = u.maxhp; if (u.g && u.g.fat) { u.g.fat = Math.max(0, u.g.fat - 40); if (u.g.fat < 70 && u.tired) { u.tired = 0; u.atk /= 0.7; } } }); msg(T('茶水間：「咖啡機又壞咗。」大家飲住熱水休息咗一陣。全部門回血，過勞 -40。', '茶水間：「咖啡機又壞了。」大家喝熱水休息了一下。全部門回血，過勞 -40。'), 3); try { Sound.play('click'); } catch (e) {} }
     else if (f.t === 'prison') { if (fodderCount() >= F.rosterCap()) return; rs.pr = day; const pool = fodOf(R.ci), k = pool[Math.floor(Math.random() * pool.length)]; const g = addCrew(k, zoneP(R.ci, f.z), false, q.x, q.y + 30); R.loot.rec++; fxText(q.x, q.y - 60, g.name + ' 入部門', '#9fffb0', true); msg(T('實習鬼：「多謝前輩！報告我聽日一定交！」（佢唔會交）', '實習鬼：「謝謝前輩！報告我明天一定交！」（他不會交）'), 3); }
     else if (f.t === 'overtime') { rs.ot = day; const z = f.z, p = zoneP(R.ci, z) + 0.5, pool = fodOf(R.ci), arr = [];
@@ -831,10 +980,15 @@ const Patrol = (() => {
     if (!PAT['p' + R.ci]) PAT['p' + R.ci] = c.createPattern(mkPattern(R.ci), 'repeat'); return PAT['p' + R.ci];
   }
   // 小路：沿住 12 個區嘅中心行一條之字路，等玩家知道去邊
-  function pathPts() {
-    if (R.path) return R.path; const rnd = seeded(R.ci * 13 + 5), pts = [];
-    for (let z = 0; z < 12; z++) { const c = zoneCell(z); pts.push([c.x + (rnd() - 0.5) * 160, c.y + (rnd() - 0.5) * 140]); if (z === 3) pts.push([GATES[0].x, GATES[0].y]); if (z === 7) pts.push([GATES[1].x, GATES[1].y]); }
-    const g2 = guardPos(2); pts.push([g2.x + 60, g2.y]); return (R.path = pts);
+  function pathPts() { // 小路：起點 → 各地頭王巢（主線次序），經閘口過界
+    if (R.path) return R.path; const rnd = seeded(R.ci * 13 + 5), N = COLS * ROWS;
+    const nb = (z) => { const { r, c } = zoneCell(z), out = []; for (const [dr, dc] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) { const rr = r + dr, cc = c + dc; if (rr < 0 || cc < 0 || rr >= ROWS || cc >= COLS) continue; const z2 = rr * COLS + cc, ta = terOf(z), tb = terOf(z2);
+      if (ta === tb) out.push([z2, null]); else { const g = GATES.find(G => (G.za === z && G.zb === z2) || (G.zb === z && G.za === z2)); if (g) out.push([z2, g]); } } return out; };
+    const route = (a, b) => { const prev = {}; prev[a] = [-1]; const q = [a]; while (q.length) { const z = q.shift(); if (z === b) break; for (const [z2, g] of nb(z)) if (!(z2 in prev)) { prev[z2] = [z, g]; q.push(z2); } }
+      const out = []; let z = b; while (z !== a && prev[z]) { out.unshift([z, prev[z][1]]); z = prev[z][0]; } return out; };
+    const pts = [], s0 = faciPos(FACI[0]); pts.push([s0.x + 60, s0.y - 40]); let cur = FACI[0].z;
+    for (const t of [0, 1, 3, 4, 5]) { const lp = lairPos(t), zt = zoneAt(lp.x, lp.y); for (const [z, g] of route(cur, zt)) { if (g) pts.push([g.x, g.y]); const c = zoneCell(z); if (z !== zt) pts.push([c.x + (rnd() - 0.5) * 200, c.y + (rnd() - 0.5) * 180]); } pts.push([lp.x, lp.y + 120]); cur = zt; }
+    return (R.path = pts);
   }
   function drawPath(c) {
     const pts = pathPts(); c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
@@ -844,24 +998,39 @@ const Patrol = (() => {
     c.setLineDash([3, 14]); c.strokeStyle = 'rgba(200,180,140,.12)'; c.lineWidth = 3; line(); c.setLineDash([]);
     c.restore();
   }
-  function drawChasm(c, y, g, open, cx, vw) { // 兩行之間係深坑，只可以經閘口過
-    const x0 = Math.max(0, cx - 60), x1 = Math.min(WW, cx + vw + 60), H2 = 46;
+  function drawWall(c, w, cx, cy, vw, vh) { // 深坑／陰河：世界座標轉做「沿住條線」嘅本地座標畫
+    const len = w.b - w.a, H2 = w.kind === 'border' ? 46 : 34; const x0w = w.h ? w.a : w.p - H2, x1w = w.h ? w.b : w.p + H2, y0w = w.h ? w.p - H2 : w.a, y1w = w.h ? w.p + H2 : w.b;
+    if (x1w < cx - 60 || x0w > cx + vw + 60 || y1w < cy - 60 || y0w > cy + vh + 100) return;
+    c.save(); if (w.h) c.translate(w.a, w.p); else { c.translate(w.p, w.a); c.rotate(Math.PI / 2); }
+    const river = w.kind === 'river', cap = w.kind !== 'border';
     const band = (a, b) => { if (b <= a) return;
-      const gr = c.createLinearGradient(0, y - H2, 0, y + H2); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.3, 'rgba(4,3,8,.95)'); gr.addColorStop(0.7, 'rgba(4,3,8,.95)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
-      c.fillStyle = gr; c.fillRect(a, y - H2, b - a, H2 * 2);
-      c.strokeStyle = 'rgba(70,58,50,.75)'; c.lineWidth = 3; c.lineJoin = 'round';
-      for (const s of [-1, 1]) { c.beginPath(); for (let x = a; x <= b; x += 16) { const j = Math.sin(x * 0.07 + s) * 4 + ((x * 7919) % 11) * 0.5; c.lineTo(x, y + s * (H2 * 0.36) + j * s); } c.stroke(); }
-      c.fillStyle = 'rgba(120,140,170,.05)'; for (let x = a - (a % 90); x < b; x += 90) { c.beginPath(); c.ellipse(x + Math.sin(R.t * 0.4 + x) * 20, y, 70, 12, 0, 0, 7); c.fill(); } };
-    band(x0, Math.min(x1, g.x - GW / 2)); band(Math.max(x0, g.x + GW / 2), x1);
-    if (g.x + GW / 2 < x0 || g.x - GW / 2 > x1) return;
-    c.save(); // 木橋
-    c.fillStyle = '#3a2c20'; c.strokeStyle = '#120c08'; c.lineWidth = 2;
-    for (let yy = y - H2 + 4; yy < y + H2 - 4; yy += 12) { c.fillRect(g.x - GW / 2 + 22, yy, GW - 44, 9); c.strokeRect(g.x - GW / 2 + 22, yy, GW - 44, 9); }
-    c.strokeStyle = '#2a1c12'; c.lineWidth = 4; c.beginPath(); c.moveTo(g.x - GW / 2 + 18, y - H2); c.lineTo(g.x - GW / 2 + 18, y + H2); c.moveTo(g.x + GW / 2 - 18, y - H2); c.lineTo(g.x + GW / 2 - 18, y + H2); c.stroke();
-    if (!open) { for (let i = 0; i < 5; i++) { const x = g.x - GW / 2 + 30 + i * (GW - 60) / 4; c.fillStyle = '#1a1414'; c.fillRect(x - 3, y - 50, 6, 32); }
-      c.fillStyle = '#c8402c'; c.fillRect(g.x - GW / 2 + 24, y - 46, GW - 48, 10); c.fillStyle = '#eee'; for (let i = 0; i < 7; i++) c.fillRect(g.x - GW / 2 + 32 + i * 24, y - 46, 11, 10);
-      c.fillStyle = '#e8dcc0'; c.fillRect(g.x - 44, y - 76, 88, 22); c.strokeStyle = '#2a1a10'; c.lineWidth = 2; c.strokeRect(g.x - 44, y - 76, 88, 22);
-      c.fillStyle = '#7a1a10'; c.font = '900 13px "PingFang TC","Noto Sans TC",sans-serif'; c.textAlign = 'center'; c.fillText('主管當值', g.x, y - 60); }
+      const gr = c.createLinearGradient(0, -H2, 0, H2); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.3, river ? 'rgba(6,18,16,.95)' : 'rgba(4,3,8,.95)'); gr.addColorStop(0.7, river ? 'rgba(6,18,16,.95)' : 'rgba(4,3,8,.95)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = gr; c.fillRect(a, -H2, b - a, H2 * 2);
+      c.strokeStyle = river ? 'rgba(40,70,60,.8)' : 'rgba(70,58,50,.75)'; c.lineWidth = 3; c.lineJoin = 'round';
+      for (const sg of [-1, 1]) { c.beginPath(); for (let x = a; x <= b; x += 16) { const X = x + w.a, j = Math.sin(X * 0.07 + sg) * 4 + ((X * 7919) % 11) * 0.5; c.lineTo(x, sg * (H2 * 0.36) + j * sg); } c.stroke(); }
+      if (river) { c.save(); c.globalCompositeOperation = 'lighter'; for (let x = a - (a % 60); x < b; x += 60) { const ph = (R.t * 0.6 + x * 0.013) % 1; c.fillStyle = `rgba(90,255,170,${0.10 * Math.sin(ph * Math.PI)})`; c.beginPath(); c.ellipse(x + ph * 40, Math.sin(x) * 6, 18, 3, 0, 0, 7); c.fill(); } c.restore(); }
+      else { c.fillStyle = 'rgba(120,140,170,.05)'; for (let x = a - (a % 90); x < b; x += 90) { c.beginPath(); c.ellipse(x + Math.sin(R.t * 0.4 + x) * 20, 0, 70, 12, 0, 0, 7); c.fill(); } } };
+    const g = w.gap, gc = g ? g.c - w.a : -1e9;
+    if (g) { band(0, gc - GW / 2); band(gc + GW / 2, len); } else band(0, len);
+    if (cap) { c.fillStyle = river ? 'rgba(6,18,16,.9)' : 'rgba(4,3,8,.9)'; for (const e of [0, len]) { c.beginPath(); c.ellipse(e, 0, H2 * 0.6, H2 * 0.5, 0, 0, 7); c.fill(); } }
+    if (g) { // 木橋
+      c.fillStyle = '#3a2c20'; c.strokeStyle = '#120c08'; c.lineWidth = 2;
+      for (let yy = -H2 + 4; yy < H2 - 4; yy += 12) { c.fillRect(gc - GW / 2 + 22, yy, GW - 44, 9); c.strokeRect(gc - GW / 2 + 22, yy, GW - 44, 9); }
+      c.strokeStyle = '#2a1c12'; c.lineWidth = 4; c.beginPath(); c.moveTo(gc - GW / 2 + 18, -H2); c.lineTo(gc - GW / 2 + 18, H2); c.moveTo(gc + GW / 2 - 18, -H2); c.lineTo(gc + GW / 2 - 18, H2); c.stroke();
+      if (!gateOpen(g.g)) { for (let i = 0; i < 5; i++) { const x = gc - GW / 2 + 30 + i * (GW - 60) / 4; c.fillStyle = '#1a1414'; c.fillRect(x - 3, -26, 6, 32); }
+        c.fillStyle = '#7a1420'; c.fillRect(gc - GW / 2 + 24, -22, GW - 48, 10); c.fillStyle = '#222'; for (let i = 0; i < 7; i++) c.fillRect(gc - GW / 2 + 32 + i * 24, -22, 11, 10); }
+    }
+    c.restore();
+    if (g && !gateOpen(g.g)) { const gx = g.g.x, gy = g.g.y - (g.g.vert ? 30 : 50), main = TMAIN[g.g.a] != null || TMAIN[g.g.b] != null; c.save();
+      c.fillStyle = '#e8dcc0'; c.fillRect(gx - 50, gy - 26, 100, 22); c.strokeStyle = '#2a1a10'; c.lineWidth = 2; c.strokeRect(gx - 50, gy - 26, 100, 22);
+      c.fillStyle = '#7a1a10'; c.font = '900 13px "PingFang TC","Noto Sans TC",sans-serif'; c.textAlign = 'center'; c.fillText(main ? '主管當值' : '地頭封路', gx, gy - 10); c.restore(); }
+  }
+  function drawLair(c, t) { // 王嘅巢：一圈鬼火、地上裂紋
+    const lp = lairPos(t), done = kingDone(t), r = 150; c.save();
+    const g = c.createRadialGradient(lp.x, lp.y, 20, lp.x, lp.y, r); g.addColorStop(0, done ? 'rgba(30,40,40,.15)' : 'rgba(40,0,10,.35)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.beginPath(); c.ellipse(lp.x, lp.y, r, r * 0.62, 0, 0, 7); c.fill();
+    c.strokeStyle = done ? 'rgba(120,140,140,.25)' : 'rgba(150,30,40,.45)'; c.lineWidth = 3; c.setLineDash([14, 10]); c.beginPath(); c.ellipse(lp.x, lp.y, r * 0.9, r * 0.56, 0, 0, 7); c.stroke(); c.setLineDash([]);
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 0.3, x = lp.x + Math.cos(a) * r * 0.9, y = lp.y + Math.sin(a) * r * 0.56; c.fillStyle = '#1a1612'; c.fillRect(x - 3, y - 26, 6, 26);
+      if (!done) { c.save(); c.globalCompositeOperation = 'lighter'; const f = 0.7 + 0.3 * Math.sin(R.t * 7 + i * 1.7), gg = c.createRadialGradient(x, y - 32, 0, x, y - 32, 16 * f); gg.addColorStop(0, 'rgba(160,255,190,.9)'); gg.addColorStop(1, 'rgba(40,200,120,0)'); c.fillStyle = gg; c.beginPath(); c.arc(x, y - 32, 16 * f, 0, 7); c.fill(); c.restore(); } }
     c.restore();
   }
   function drawPropImg(c, p) {
@@ -881,6 +1050,7 @@ const Patrol = (() => {
     const gx0 = Math.max(0, cx), gy0 = Math.max(0, cy), gx1 = Math.min(WW, cx + vw), gy1 = Math.min(WH, cy + vh);
     c.fillStyle = groundPat(c); c.fillRect(gx0, gy0, gx1 - gx0, gy1 - gy0);
     drawPath(c);
+    for (let t = 0; t < 6; t++) { const lp = lairPos(t); if (Math.abs(lp.x - (cx + vw / 2)) < vw && Math.abs(lp.y - (cy + vh / 2)) < vh) drawLair(c, t); }
     // 地上嘅預警紅圈
     for (const f of R.fx) if (f.kind === 'spr' && f.ground) drawSpr(c, f);
     if (R.tele) for (const t of R.tele) { const p = t.t / t.dur; const wi = fxImg('fx_warn'); if (wi) { c.save(); const pul = 0.7 + 0.25 * Math.sin(R.t * 18); c.globalAlpha = pul; const W = t.r * 2.2, H = W * wi.naturalHeight / wi.naturalWidth; c.drawImage(wi, t.x - W / 2, t.y - H / 2, W, H); c.globalAlpha = 0.5 + 0.4 * p; const W2 = W * p, H2 = H * p; c.drawImage(wi, t.x - W2 / 2, t.y - H2 / 2, W2, H2); c.restore(); continue; } c.save(); c.globalAlpha = 0.35 + 0.25 * Math.sin(R.t * 20); c.fillStyle = 'rgba(200,30,20,.35)'; c.strokeStyle = '#ff5a3a'; c.lineWidth = 3; c.beginPath(); c.ellipse(t.x, t.y, t.r, t.r * 0.6, 0, 0, 7); c.fill(); c.stroke(); c.globalAlpha = 0.6; c.fillStyle = 'rgba(255,90,60,.5)'; c.beginPath(); c.ellipse(t.x, t.y, t.r * p, t.r * 0.6 * p, 0, 0, 7); c.fill(); c.restore(); }
@@ -890,12 +1060,13 @@ const Patrol = (() => {
     const items = [], lights = [];
     for (const p of R.props) if (p.x > cx - 90 && p.x < cx + vw + 90 && p.y > cy - 20 && p.y < cy + vh + 160) { items.push({ y:p.y, f:() => drawPropImg(c, p) }); const d = PROP[p.t]; if (d && d.light) lights.push({ x:p.x, y:p.y - d.h * p.s * 0.6, r:150, col:d.light }); }
     for (const f of FACI) { const q = faciPos(f); if (q.x > cx - 140 && q.x < cx + vw + 140 && q.y > cy - 60 && q.y < cy + vh + 160) { items.push({ y:q.y, f:() => drawFaci(c, f, q) }); lights.push({ x:q.x, y:q.y - 40, r:170, col:f.t === 'station' ? '120,255,160' : f.t === 'tea' ? '255,200,120' : f.t === 'overtime' ? '140,200,255' : null }); } }
+    for (let t = 0; t < 6; t++) if (!kingDone(t)) { const lp = lairPos(t); lights.push({ x:lp.x, y:lp.y, r:200, col:'90,255,160' }); }
     for (const u of R.units) if ((u.hp > 0 || (u.deadT || 0) < 0.8) && !u.gone && vis(u, cx, cy, vw, vh)) { items.push({ y:u.y, f:() => drawUnit(c, u) }); if (u.hp > 0 && !u.leader) lights.push({ x:u.x, y:u.y - 30, r:60 }); }
     for (const e of R.foes) if (((e.hp > 0 && !e.fled) || e.down > 0 || (e.deadT || 0) < 0.8 || (e.fled && (e.deadT || 0) < 1.2)) && vis(e, cx, cy, vw, vh)) items.push({ y:e.y, f:() => drawUnit(c, e) });
     for (const f of R.fx) if (f.kind === 'after') items.push({ y:f.y - 0.1, f:() => { c.save(); c.globalAlpha = 0.35 * (1 - f.t / f.life); c.globalCompositeOperation = 'lighter'; try { ART.drawChar(c, f.k, f.x, f.y, f.s * 1.65, { flip:f.flip, shadow:false, tamed:true, untied:true, pose:'move', walk:true, t:R.t }); } catch (e) {} c.restore(); } });
     items.sort((a, b) => a.y - b.y).forEach(i => i.f());
     // 兩行之間嘅深坑（畫喺人前面，因為佢係地形嘅「前景邊」）
-    for (let i = 0; i < 2; i++) if (CH * (i + 1) > cy - 60 && CH * (i + 1) < cy + vh + 60) drawChasm(c, CH * (i + 1), GATES[i], gateOpen(i), cx, vw);
+    for (const w of WALLS) drawWall(c, w, cx, cy, vw, vh);
     for (const q of R.proj) { drawProj(c, q); lights.push({ x:q.x, y:q.y, r:50 }); }
     for (const f of R.fx) {
       if (f.kind === 'spr') { if (!f.ground) { drawSpr(c, f); if (f.add && f.t < f.life * 0.5) lights.push({ x:f.x, y:f.y, r:60 }); } }
@@ -948,13 +1119,13 @@ const Patrol = (() => {
       const w = 118, h = w * im.naturalHeight / im.naturalWidth, off = (f.t === 'station' && !rs.sta[f.z]) || (f.t === 'tea' && (R.tea[f.z] || 0) > R.t);
       if (off) c.filter = 'grayscale(.85) brightness(.6)';
       c.drawImage(im, x - w / 2, y - h + 8, w, h); c.filter = 'none';
-      const L = { station:[rs.sta[f.z] ? `地鐵站・${f.z + 1}區` : '地鐵站（未開通）', rs.sta[f.z] ? '#9fe0b8' : '#aaa'], tea:['茶水間', '#ffd69a'], prison:['扣押室', '#d8c8c8'], overtime:['通宵加班房', '#bcd8ff'] }[f.t];
+      const L = { station:[rs.sta[f.z] ? `地鐵站・${staName(f.z)}` : '地鐵站（未開通）', rs.sta[f.z] ? '#9fe0b8' : '#aaa'], tea:['茶水間', '#ffd69a'], prison:['扣押室', '#d8c8c8'], overtime:['通宵加班房', '#bcd8ff'] }[f.t];
       label(L[0], L[1]); c.restore(); return;
     }
     if (f.t === 'station') { const on = rs.sta[f.z];
       c.fillStyle = '#1c1a22'; c.strokeStyle = '#0a090c'; c.lineWidth = 2; c.fillRect(x - 32, y - 30, 64, 30); c.strokeRect(x - 32, y - 30, 64, 30); c.fillStyle = '#0a090c'; c.fillRect(x - 18, y - 22, 36, 22);
       c.strokeStyle = '#3a3440'; c.beginPath(); c.moveTo(x - 22, y - 30); c.lineTo(x - 22, y - 62); c.stroke(); c.fillStyle = on ? '#3fa36a' : '#555'; c.beginPath(); c.arc(x - 22, y - 70, 12, 0, 7); c.fill(); c.fillStyle = '#fff'; c.font = '900 13px sans-serif'; c.fillText('陰', x - 22, y - 65);
-      label(on ? `地鐵站・${f.z + 1}區` : '地鐵站（未開通）', on ? '#9fe0b8' : '#aaa'); }
+      label(on ? `地鐵站・${staName(f.z)}` : '地鐵站（未開通）', on ? '#9fe0b8' : '#aaa'); }
     else if (f.t === 'tea') { const cd = (R.tea[f.z] || 0) > R.t;
       c.fillStyle = '#3a2e26'; c.strokeStyle = '#0d0a08'; c.lineWidth = 2; c.fillRect(x - 30, y - 34, 60, 34); c.strokeRect(x - 30, y - 34, 60, 34); c.fillStyle = '#2a201a'; c.beginPath(); c.moveTo(x - 36, y - 34); c.lineTo(x, y - 52); c.lineTo(x + 36, y - 34); c.closePath(); c.fill(); c.stroke();
       c.fillStyle = cd ? 'rgba(120,120,120,.5)' : 'rgba(255,214,140,.75)'; c.fillRect(x - 10, y - 26, 20, 14); if (!cd) { c.strokeStyle = 'rgba(255,255,255,.4)'; c.beginPath(); c.moveTo(x - 4, y - 56); c.quadraticCurveTo(x + 4, y - 64, x - 2, y - 72); c.stroke(); }
@@ -981,14 +1152,16 @@ const Patrol = (() => {
     else if (u.moving) pose = 'move';
     if (pose === 'idle' && !dying) { const tt = R.t + (u.x * 0.013); oy = -Math.abs(Math.sin(tt * 3.2)) * 1.6; }
     if (u.dash > 0) rot = (u.flip ? 0.18 : -0.18);
+    if (u.swing && (u.swing.sty === 'spin' || u.swing.sty === 'flail') && u.swing.t < 0.32) { rot = (u.flip ? -1 : 1) * u.swing.t / 0.32 * Math.PI * 2; pose = 'strike'; pt = 1; }
     const s = u.s * 1.65;
     const o = { t:R.t + (u.x % 7), walk:pose === 'move', pose, pt, flip:!!u.flip, enemy:u.side === 1, tamed:u.side === 0, untied:u.side === 0, rot,
       tdx:tg ? tg.x - u.x : (u.flip ? -40 : 40), tdy:tg ? tg.y - u.y : 0,
       alpha:u.fled ? Math.max(0, 0.6 - p * 0.6) : dying ? 1 - p : u.down > 0 ? 0.55 + 0.3 * Math.sin(R.t * 12) : 1 };
+    if (u.wpn) o.weapon = u.wpn.img; if (u.cloth) o.cloth = u.cloth;
     const x = u.x + ox, y = u.y + oy;
     if (u.side === 0 && R.buff > 0 && u.hp > 0 && !dying) { const ai = fxImg('fx_aura'); if (ai) { c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.35 + 0.15 * Math.sin(R.t * 8 + u.x); const W = 70 * s, H = W * ai.naturalHeight / ai.naturalWidth; c.drawImage(ai, u.x - W / 2, u.y - H * 0.92, W, H); c.restore(); } }
     if (a && (a.cast || a.slam) && a.ph === 'windup') { const ri = fxImg('fx_ring', u.side ? 150 : 0); if (ri) { const pp = Math.min(1, a.t / a.dur); c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.5 + pp * 0.5; const W = (120 - 50 * pp) * s * (u.boss ? 1.4 : 1), H = W * ri.naturalHeight / ri.naturalWidth; c.drawImage(ri, u.x - W / 2, u.y - H / 2, W, H); c.restore(); } else Battle.drawCharge.call({ t:R.t }, c, x, y - 28 * s, s, a.t / a.dur, u.side ? '#ff9ac0' : '#9ff3ff', false); }
-    try { ART.drawChar(c, u.k, x, y, s, o); if (u.flash > 0) { c.save(); c.globalCompositeOperation = 'lighter'; ART.drawChar(c, u.k, x, y, s, Object.assign({}, o, { alpha:o.alpha * u.flash * 0.8, shadow:false })); c.restore(); } }
+    try { ART.drawChar(c, u.k, x, y, s, o); if (u.cloth && pose !== 'down' && !dying) drawCloth(c, u, x, y, s, o); if (u.badge && !rot && pose !== 'down' && !dying) drawBadge(c, u, x, y, s); if (u.wpn && pose !== 'down' && !dying) drawWeapon(c, u, x, y, s, pose, pt, rot); if (u.flash > 0) { c.save(); c.globalCompositeOperation = 'lighter'; ART.drawChar(c, u.k, x, y, s, Object.assign({}, o, { alpha:o.alpha * u.flash * 0.8, shadow:false })); c.restore(); } }
     catch (e) { c.fillStyle = u.side ? '#a55' : '#5a5'; c.beginPath(); c.arc(x, y - 20, 12, 0, 7); c.fill(); }
     if (a && (a.cast || a.slam) && a.ph === 'windup' && !fxImg('fx_ring')) Battle.drawCharge.call({ t:R.t }, c, x, y - 28 * s, s, a.t / a.dur, u.side ? '#ff9ac0' : '#9ff3ff', true);
     if (dying) return;
@@ -1003,29 +1176,59 @@ const Patrol = (() => {
     }
     if (named || u.leader) {
       c.save(); c.font = `900 ${u.boss ? 13 : 11}px "PingFang TC","Noto Sans TC",sans-serif`; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.85)';
-      const t = u.leader ? '阿福' : u.elite ? `釘子戶・${u.name}` : u.name, col = u.leader ? '#ffe9a0' : u.elite ? '#ffb0ff' : u.bryan ? '#ff9a9a' : '#ffd0d8';
+      const t = u.leader ? '阿福' : u.kname ? `${u.kname}・${u.name}` : u.elite ? `釘子戶・${u.name}` : u.name, col = u.leader ? '#ffe9a0' : u.elite ? '#ffb0ff' : u.bryan ? '#ff9a9a' : '#ffd0d8';
       c.strokeText(t, u.x, top - 5); c.fillStyle = col; c.fillText(t, u.x, top - 5);
       if (u.guard != null && !u.awake && u.boss) { const req = CHAPTERS[R.ci].stages[u.guard].req; if (S.lv < req) { c.fillStyle = '#ff8a8a'; c.strokeText(`需主公 Lv${req}`, u.x, top - 19); c.fillText(`需主公 Lv${req}`, u.x, top - 19); } }
       c.restore();
     }
     if (u.side === 1 && phase(st().min) === 'work' && !u.provoked && u.guard == null && !u.bryan) { c.save(); c.font = '800 10px sans-serif'; c.fillStyle = 'rgba(200,220,255,.75)'; c.textAlign = 'center'; c.fillText('摸魚中 z', u.x, top - 5); c.restore(); }
   }
+  function drawCloth(c, u, x, y, s, o) { // 衣服：只將身（頸以下）換色
+    const H = 58 * s; c.save(); c.beginPath(); c.rect(x - H, y - H * 0.5, H * 2, H * 0.62); c.clip(); c.filter = u.cloth; c.globalAlpha = 0.72;
+    ART.drawChar(c, u.k, x, y, s, Object.assign({}, o, { shadow:false })); c.restore();
+  }
+  function drawWeapon(c, u, x, y, s, pose, pt, rot) { // 武器拎喺手：跟出手三段揮
+    const im = img(u.wpn.img); if (!im) return;
+    const H = 58 * s, fd = u.flip ? -1 : 1, sty = u.wpn.sty, far = ['shoot', 'beam', 'poke', 'pull', 'splash'].includes(sty), eo = q => 1 - Math.pow(1 - Math.min(1, Math.max(0, q)), 3);
+    let a = 0.45 + Math.sin(R.t * 3 + x * 0.01) * 0.05;
+    if (pose === 'move') a = 0.6 + Math.sin(R.t * 9) * 0.12;
+    else if (pose === 'windup') a = far ? 0.45 + 0.9 * pt : 0.45 - 1.7 * eo(pt);
+    else if (pose === 'strike') a = far ? 1.5 : -1.25 + 3.0 * eo(pt);
+    else if (pose === 'recover') a = far ? 1.5 - 1.05 * pt : 1.75 - 1.3 * pt;
+    const hx = x + fd * H * 0.2, hy = y - H * 0.4, h = H * 0.74 * (sty === 'slam' || sty === 'flail' ? 1.15 : 1), w = h * im.naturalWidth / im.naturalHeight;
+    c.save(); if (rot) { c.translate(x, y - 15 * s); c.rotate(rot); c.translate(-x, -(y - 15 * s)); }
+    c.translate(hx, hy); c.scale(fd, 1); c.rotate(a);
+    c.drawImage(im, -w / 2, -h * 0.86, w, h);
+    if (u.swing && u.swing.t < 0.12 && !far) { c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.5 * (1 - u.swing.t / 0.12); c.drawImage(im, -w / 2, -h * 0.86, w, h); }
+    c.restore();
+  }
+  function drawBadge(c, u, x, y, s) { // 掛繩工作證：頸到心口
+    const H = 58 * s, fx = u.flip ? -1 : 1, nx = x + fx * H * 0.02, ny = y - H * 0.74, bx = x + fx * H * 0.03 + Math.sin(R.t * 3 + x) * 0.8, by = y - H * 0.5;
+    c.save(); c.strokeStyle = u.badge.col; c.lineWidth = 1.4 * s; c.beginPath(); c.moveTo(nx - 5 * s, ny); c.lineTo(bx, by - 3 * s); c.lineTo(nx + 5 * s, ny); c.stroke();
+    c.fillStyle = '#f4efe2'; c.strokeStyle = '#2a2018'; c.lineWidth = 1 * s; c.fillRect(bx - 3.5 * s, by - 3 * s, 7 * s, 9 * s); c.strokeRect(bx - 3.5 * s, by - 3 * s, 7 * s, 9 * s);
+    c.fillStyle = u.badge.col; c.fillRect(bx - 3.5 * s, by - 3 * s, 7 * s, 2.4 * s); if (u.badge.c >= 3) { c.fillStyle = '#ffd84a'; c.fillRect(bx - 1.5 * s, by + 2.5 * s, 3 * s, 2.5 * s); }
+    c.restore();
+  }
   function drawMini() {
     if (!mini) return; const m = mini.getContext('2d'), W = mini.width, H = mini.height, k = W / WW;
     m.clearRect(0, 0, W, H); m.fillStyle = 'rgba(8,6,12,.85)'; m.fillRect(0, 0, W, H);
     const cw = Math.ceil(WW / FOG); m.fillStyle = 'rgba(120,110,140,.45)';
     for (let i = 0; i < R.fog.length; i++) if (R.fog[i] === '1') m.fillRect((i % cw) * FOG * k, Math.floor(i / cw) * FOG * k, FOG * k + 0.5, FOG * k + 0.5);
-    m.fillStyle = '#000'; for (let i = 0; i < 2; i++) { const y = CH * (i + 1) * k, g = GATES[i]; m.fillRect(0, y - 1, (g.x - GW / 2) * k, 2); m.fillRect((g.x + GW / 2) * k, y - 1, W, 2); if (!gateOpen(i)) { m.fillStyle = '#e84a5f'; m.fillRect((g.x - GW / 2) * k, y - 1.5, GW * k, 3); m.fillStyle = '#000'; } }
+    const TC = ['rgba(120,200,140,.10)', 'rgba(220,180,90,.10)', 'rgba(140,160,240,.10)', 'rgba(220,120,200,.10)', 'rgba(110,210,230,.10)', 'rgba(240,90,90,.12)'];
+    for (let z = 0; z < COLS * ROWS; z++) { const cl = zoneCell(z); m.fillStyle = TC[terOf(z)]; m.fillRect(cl.c * CW * k, cl.r * CH * k, CW * k + 0.5, CH * k + 0.5); }
+    for (const w of WALLS) { const th = w.kind === 'border' ? 2 : 1.3; m.fillStyle = w.kind === 'river' ? '#0e2a24' : '#000';
+      const seg = (a, b) => { if (b <= a) return; if (w.h) m.fillRect(a * k, w.p * k - th / 2, (b - a) * k, th); else m.fillRect(w.p * k - th / 2, a * k, th, (b - a) * k); };
+      if (w.gap) { seg(w.a, w.gap.c - GW / 2); seg(w.gap.c + GW / 2, w.b); if (!gateOpen(w.gap.g)) { m.fillStyle = '#e84a5f'; if (w.h) m.fillRect((w.gap.c - GW / 2) * k, w.p * k - 1.5, GW * k, 3); else m.fillRect(w.p * k - 1.5, (w.gap.c - GW / 2) * k, 3, GW * k); } } else seg(w.a, w.b); }
     const rs = regSt(R.ci);
     for (const f of FACI) { const q = faciPos(f); m.fillStyle = f.t === 'station' ? (rs.sta[f.z] ? '#3fa36a' : '#666') : f.t === 'tea' ? '#ffd69a' : f.t === 'prison' ? '#d8c8c8' : '#9cc8ff'; m.fillRect(q.x * k - 2, q.y * k - 2, 4, 4); }
-    for (let si = 0; si < 3; si++) if (!S.cleared[sidOf(R.ci, si)]) { const q = guardPos(si); m.fillStyle = si === 2 ? '#ff4a6a' : '#ff9a5a'; m.beginPath(); m.arc(q.x * k, q.y * k, si === 2 ? 3.5 : 2.6, 0, 7); m.fill(); }
+    for (let t = 0; t < 6; t++) if (!kingDone(t)) { const q = lairPos(t), main = TMAIN[t] != null, big = main ? TMAIN[t] === 2 : !!(TKING[R.ci][t] || {}).big; m.fillStyle = main ? '#ff4a6a' : '#c77dff'; m.beginPath(); m.arc(q.x * k, q.y * k, big ? 3.5 : 2.6, 0, 7); m.fill(); }
     if (R.bryan) { const b = R.bryan[0]; m.fillStyle = '#ff6a6a'; m.fillRect(b.x * k - 1.5, b.y * k - 1.5, 3, 3); }
     m.fillStyle = '#ffe9a0'; m.beginPath(); m.arc(R.L.x * k, R.L.y * k, 3, 0, 7); m.fill();
   }
   function hud() {
     if (!R) return; const p = st(), z = zoneAt(R.L.x, R.L.y), ph = PH[phase(p.min)], hh = Math.floor(p.min / 60), mm = Math.floor(p.min % 60);
     const a = $('#pt-reg'), b = $('#pt-zone'), c = $('#pt-clock'), d = $('#pt-ph'), r = $('#pt-res'); if (!a) return;
-    a.textContent = `第${'一二三四五六'[R.ci]}區・${CHAPTERS[R.ci].name}`; b.textContent = `${z + 1}/12　${zoneName(R.ci, z)}`;
+    a.textContent = `第${'一二三四五六'[R.ci]}區・${CHAPTERS[R.ci].name}`; b.textContent = `地頭・${zoneName(R.ci, z)}${kingDone(terOf(z)) ? '（已拿下）' : ''}`;
     c.textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`; d.textContent = ph.n; d.title = ph.d;
     const crew = R.units.filter(u => u.role === 'crew' && u.hp > 0).length, crewAll = R.units.filter(u => u.role === 'crew').length;
     r.innerHTML = `<span>冥幣 ${fmt(S.res.coins)}</span><span>壽包 ${fmt(S.res.buns)}</span>${Object.keys(FAC).map(f => `<span style="color:${FAC[f].col}">${FAC[f].mat} ${fmt(p.mats[f])}</span>`).join('')}<span>部門 ${crew}/${crewAll}</span>${R.streak > 4 ? `<span class="pt-str">連巡 ×${(1 + Math.min(1, R.streak * 0.01)).toFixed(2)}</span>` : ''}`;
@@ -1036,7 +1239,7 @@ const Patrol = (() => {
     document.querySelectorAll('#pt-leads [data-lu]').forEach(b => { const u = R.units.find(x => x.gid === b.dataset.lu); if (!u) return; b.classList.toggle('dead', u.hp <= 0); b.classList.toggle('ready', u.hp > 0 && u.energy >= 100); b.querySelector('i').style.height = (u.hp > 0 ? Math.min(100, u.energy || 0) : 0) + '%'; });
   }
 
-  return { open:openPrep, openPrep, close, get active() { return active; }, FAC, facOf, st, regionOpen, _R:() => R, _end:end, _gain:gain, _test:{ foe, onDown, resolveDown, signInfo, fxImg, img, telegraph } };
+  return { open:openPrep, openPrep, close, get active() { return active; }, FAC, facOf, st, regionOpen, _R:() => R, _end:end, _gain:gain, _test:{ foe, onDown, resolveDown, signInfo, fxImg, img, telegraph, map:() => ({ walls:WALLS, gates:GATES.map(g => ({ x:g.x, y:g.y, vert:g.vert, open:gateOpen(g) })), lairs:[0, 1, 2, 3, 4, 5].map(t => ({ ...lairPos(t), done:kingDone(t) })), faci:FACI.map(f => ({ t:f.t, ...faciPos(f) })), ter:TLAY.map((r, ri) => r.map((v, c) => terAt(ri, c))), props:R.props.filter(p => p.r).map(p => [p.x | 0, p.y | 0, p.r | 0]), path:R.path, W:WW, H:WH, CW, CH }), kingWin, spawnKing } };
 })();
 
 // ===================== 裝備房 =====================
@@ -1046,11 +1249,30 @@ const Patrol = (() => {
 const Gear = (() => {
   const SLOTS = { wea:'武器', arm:'衣服', acc:'掛繩' };
   const NAMES = {
-    wea:[['尖嘴釘書機', '不鏽鋼飯盒', '午睡抱枕'], ['雷射筆', '外賣保溫袋', '人體工學椅背'], ['機械鍵盤', '保溫咖啡壺', '暖蛋寶'], ['碎紙機', '自助餐夾', '按摩槌'], ['投影遙控器', '火鍋長筷', 'U 型頸枕'], ['總裁鋼筆', '金飯碗', '躺平床墊']],
+    wea:[['尖嘴釘書機', '三層鐵飯盒', '午睡抱枕'], ['雷射筆', '外賣保溫袋', '人體工學辦公椅'], ['機械鍵盤', '保溫咖啡壺', '熱水袋'], ['碎紙機', '自助餐夾', '按摩槌'], ['投影遙控器', '火鍋長筷', 'U 型頸枕'], ['總裁鋼筆', '金飯碗', '躺平床墊']],
     arm:[['舊恤衫', '油漬圍裙', '珊瑚絨睡衣'], ['保安制服', '外賣制服', '酒店浴袍'], ['二手西裝', '廚師服', '毛毯斗篷'], ['即棄雨衣', '大胃王戰衣', '懶人睡袋'], ['公司風褸', '食評家背心', '連身睡衣'], ['總監西裝', '星級廚袍', '五星浴袍']],
     acc:[['實習生證'], ['正式員工證'], ['組長證'], ['主任證'], ['經理證'], ['總監證']],
   };
   const FK = ['yuan', 'chan', 'lan'];
+  // 武器：圖＋招式（阿福換武器＝換打法）
+  const WIMG = [['w_stapler', 'w_tiffin', 'w_pillow'], ['w_laser', 'w_bag', 'w_chair'], ['w_keyboard', 'w_coffee', 'w_bottle'], ['w_shredder', 'w_tongs', 'w_hammer'], ['w_remote', 'w_chopsticks', 'w_neck'], ['w_pen', 'w_goldbowl', 'w_mattress']];
+  const WSTY = [['shoot', 'smash', 'spin'], ['beam', 'drain', 'spin'], ['combo', 'splash', 'flail'], ['combo', 'pull', 'smash'], ['beam', 'poke', 'spin'], ['poke', 'smash', 'slam']];
+  const STY = { // 阿福用：範圍、出手間隔、每下倍率、說明
+    shoot:{ rng:180, aspd:0.6, n:'連射', d:'遠距離連發三粒釘，射完退半步。' },
+    smash:{ rng:62, aspd:1.25, n:'重砸', d:'衝前一下砸落地，震開身邊一圈。' },
+    spin:{ rng:72, aspd:1.05, n:'迴旋', d:'原地轉一圈，掃中身邊所有敵人。' },
+    beam:{ rng:230, aspd:1.0, n:'光束', d:'一條直線射穿，線上全部中。' },
+    drain:{ rng:62, aspd:1.15, n:'吸魂砸', d:'砸中會吸返血。' },
+    combo:{ rng:56, aspd:0.75, n:'三連', d:'快手連打三下，最後一下打飛。' },
+    splash:{ rng:160, aspd:1.15, n:'潑', d:'拋過去潑一地，範圍傷害兼減慢。' },
+    flail:{ rng:95, aspd:1.0, n:'流星錘', d:'甩住大圈轉，範圍最大。' },
+    pull:{ rng:150, aspd:1.0, n:'夾過嚟', d:'遠處夾住敵人拉到面前再打。' },
+    poke:{ rng:115, aspd:0.7, n:'長刺', d:'一路刺過去，穿兩隻。' },
+    slam:{ rng:80, aspd:1.5, n:'壓扁', d:'成張床墊壓落去，大範圍，壓暈。' },
+  };
+  function weaponOf(g) { const it = held(g).find(x => x.slot === 'wea'); if (!it) return null; const i = FK.indexOf(it.f); return { it, img:WIMG[it.c][i], sty:WSTY[it.c][i], S:STY[WSTY[it.c][i]], lvMul:1 + 0.04 * (it.lv - 1) }; }
+  function armorOf(g) { return held(g).find(x => x.slot === 'arm') || null; }
+  function badgeOf(g) { return held(g).find(x => x.slot === 'acc') || null; }
   function st() { if (!S.gear) S.gear = { items:[], uid:1 }; return S.gear; }
   function nameOf(it) { const l = NAMES[it.slot][it.c]; return it.slot === 'acc' ? `${l[0]}・${Patrol.FAC[it.f].name}` : l[FK.indexOf(it.f)]; }
   function pct(it) { return Math.round((5 + 5 * it.c) * (1 + 0.15 * (it.lv - 1))); }
@@ -1068,7 +1290,8 @@ const Gear = (() => {
     for (const it of st().items) if (ids.includes(it.who)) { const p = pct(it) / 100; if (it.slot === 'acc') out[it.f].atk += p * 0.6; if (it.slot === 'arm') out[it.f].hp += p * 0.5; }
     return out;
   }
-  function effText(it) { const p = pct(it), f = Patrol.FAC[it.f].name; return it.slot === 'wea' ? `攻擊 +${p}%` : it.slot === 'arm' ? `血 +${Math.round(p * 1.2)}%・${f}組員血 +${Math.round(p * 0.5)}%` : `${f}組員攻擊 +${Math.round(p * 0.6)}%・自己攻擊 +${Math.round(p * 0.3)}%`; }
+  function effText(it) { const p = pct(it), f = Patrol.FAC[it.f].name; return it.slot === 'wea' ? `攻擊 +${p}%・${STY[WSTY[it.c][FK.indexOf(it.f)]].n}：${STY[WSTY[it.c][FK.indexOf(it.f)]].d}` : it.slot === 'arm' ? `血 +${Math.round(p * 1.2)}%・${f}組員血 +${Math.round(p * 0.5)}%` : `${f}組員攻擊 +${Math.round(p * 0.6)}%・自己攻擊 +${Math.round(p * 0.3)}%`; }
+  function icon(it) { if (it.slot !== 'wea') return ''; const src = typeof PT_IMG_SRC !== 'undefined' && PT_IMG_SRC[WIMG[it.c][FK.indexOf(it.f)]]; return src ? `<img class="gr-ic" src="${src}" alt="">` : ''; }
   let back = null, tab = 'wea';
   function open(b) { if (b) back = b; render(); }
   function render() {
@@ -1080,7 +1303,7 @@ const Gear = (() => {
     h += `<div class="ch-h">我的${SLOTS[tab]}（${mine.length}）</div><div class="gr-list">`;
     for (const it of mine) {
       const w = ghostById(it.who), uc = upCost(it);
-      h += `<div class="gr-it"><div class="gr-n"><b style="color:${Patrol.FAC[it.f].col}">${nameOf(it)}</b> <i>Lv${it.lv}</i><small>${effText(it)}</small><small>${w ? `佩戴：${w.name}` : '未戴'}</small></div>
+      h += `<div class="gr-it"><div class="gr-n">${icon(it)}<b style="color:${Patrol.FAC[it.f].col}">${nameOf(it)}</b> <i>Lv${it.lv}</i><small>${effText(it)}</small><small>${w ? `佩戴：${w.name}` : '未戴'}</small></div>
         <div class="gr-b"><select data-who="${it.id}"><option value="">— 不戴 —</option>${who.map(g => `<option value="${g.id}" ${g.id === it.who ? 'selected' : ''}>${g.name}</option>`).join('')}</select>
         ${it.lv < 10 ? `<button class="btn sm gold" data-up="${it.id}" ${canPayAll(uc) ? '' : 'disabled'}>升級<small>${costHTML(uc)}</small></button>` : '<small>滿級</small>'}</div></div>`;
     }
@@ -1091,7 +1314,7 @@ const Gear = (() => {
       FK.forEach(f => {
         if (tab === 'acc' && false) return;
         const it = { slot:tab, c, f, lv:1 }, cc = craftCost(c, f);
-        h += `<div class="gr-it ${open ? '' : 'dis'}"><div class="gr-n"><b style="color:${Patrol.FAC[f].col}">${nameOf(it)}</b> <i>第${'一二三四五六'[c]}區</i><small>${effText(it)}</small></div><div class="gr-b">${open ? `<button class="btn sm" data-mk="${c},${f}" ${canPayAll(cc) ? '' : 'disabled'}>打造<small>${costHTML(cc)}</small></button>` : '<small>巡到這區才解鎖</small>'}</div></div>`;
+        h += `<div class="gr-it ${open ? '' : 'dis'}"><div class="gr-n">${icon(it)}<b style="color:${Patrol.FAC[f].col}">${nameOf(it)}</b> <i>第${'一二三四五六'[c]}區</i><small>${effText(it)}</small></div><div class="gr-b">${open ? `<button class="btn sm" data-mk="${c},${f}" ${canPayAll(cc) ? '' : 'disabled'}>打造<small>${costHTML(cc)}</small></button>` : '<small>巡到這區才解鎖</small>'}</div></div>`;
       });
     });
     h += `</div><button class="btn wide" id="gr-back">返回</button>`;
@@ -1105,5 +1328,5 @@ const Gear = (() => {
     $('#gr-back').onclick = () => (back ? back() : UI.close());
   }
   function keep(f) { const b = $('#sheet .sh-body'), sc = b ? b.scrollTop : 0; f(); const b2 = $('#sheet .sh-body'); if (b2) b2.scrollTop = sc; }
-  return { open, unitMul, gpMul, crewBuff, held, nameOf, pct, SLOTS };
+  return { open, unitMul, gpMul, crewBuff, held, nameOf, pct, SLOTS, weaponOf, armorOf, badgeOf, STY, WIMG };
 })();

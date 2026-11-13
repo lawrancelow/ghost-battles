@@ -1052,3 +1052,6 @@ body #pol-ov .pol-ring{border-radius:0!important;box-shadow:0 0 0 3px #d9a441,0 
 .pt-rb b{position:relative;z-index:2;font-size:14px;font-weight:900}
 .pt-rb i{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:1}
 .pt-rb.cd b{opacity:.55}
+.gr-it{position:relative}
+.gr-it:has(.gr-ic){padding-left:48px}
+.gr-ic{position:absolute;left:6px;top:50%;transform:translateY(-50%) rotate(-18deg);height:46px;width:36px;object-fit:contain;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}

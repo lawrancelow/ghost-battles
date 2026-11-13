@@ -122,7 +122,7 @@ const Puppet = (() => {
   function drawTorso(ctx, R, pz) {
     const [k, w, h] = R.torso, im = SPR[k], [rx, ry] = R.root, cut = R.lF ? h : ry - 20;
     const pw = im.naturalWidth / w; // 圖被縮過，換算回原圖像素
-    ctx.save(); ctx.scale(-1, 1); const u0 = rx - w; // 鏡像：原圖 x → 畫面 -x
+    ctx.save(); if (pz.cloth) ctx.filter = pz.cloth; ctx.scale(-1, 1); const u0 = rx - w; // 巡陰衣服：身體換色；鏡像：原圖 x → 畫面 -x
     ctx.drawImage(im, 0, 0, im.naturalWidth, cut * pw, u0, -ry, w, cut);
     const step = 8; // 尾巴一條一條畫，越往下飄得越大
     for (let y = cut; y < h - 0.5; y += step) {
@@ -144,7 +144,8 @@ const Puppet = (() => {
     ctx.rotate(-pz.lean); const AS = R.armS || 0.62;
     const [rx, ry] = R.root;
     if (pz.tool === '_P') pz = Object.assign({}, pz, { tool:R.tool ? '_' + id : null });
-    if (pz.tool === '_W' || (pz.tool === 'axe' && id !== 'afu')) pz = Object.assign({}, pz, { tool:R.tool ? '_' + id : id === 'afu' ? 'axe' : null });
+    if (pz.wpn && (pz.tool === '_W' || pz.tool === 'axe') && toolDef(pz.wpn)) pz = Object.assign({}, pz, { tool:pz.wpn });
+    else if (pz.tool === '_W' || (pz.tool === 'axe' && id !== 'afu')) pz = Object.assign({}, pz, { tool:R.tool ? '_' + id : id === 'afu' ? 'axe' : null });
     const T = toolDef(pz.tool);
     // 前手的握把位置（身體座標），給後手抓
     const sF = [R.shF[0] - rx, R.shF[1] - ry];
@@ -188,5 +189,7 @@ const Puppet = (() => {
     return [x + (flip ? -w[0] : w[0]), y + (pz.dy || 0) * worldH / 58 + w[1]];
   }
   const armed = (id) => id === 'afu' || !!(RIGS[id] && RIGS[id].tool);
-  return { armed, has, draw, ANIMS, tipWorld, RIGS, addRigs };
+  // 外加道具（巡陰武器）：key = 圖（SPR），w/h = 畫出來的大小（身體座標），握把 = 圖底中間偏上
+  function addTool(name, key, w, h, gy) { TOOLS[name] = [key, w, h, [w / 2, h * (gy || 0.88)], false]; }
+  return { addTool, TOOLS, armed, has, draw, ANIMS, tipWorld, RIGS, addRigs };
 })();
