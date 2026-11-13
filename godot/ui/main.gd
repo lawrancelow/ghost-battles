@@ -544,6 +544,10 @@ func _show_title(fresh: bool) -> void:
 	var bc: TextureButton = mk.call("btn_cont", fresh)
 	var hint = UIKit.label("還沒有存檔" if fresh else "", 13, Color("#e8dcc4")); hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; hint.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; hint.custom_minimum_size = Vector2(0, 18)
 	hint.add_theme_color_override("font_shadow_color", Color.BLACK); hint.add_theme_constant_override("shadow_offset_y", 1); vb.add_child(hint)
+	# 版本號（測試員報問題時用）：右下角細字，唔遮內容
+	var vl = UIKit.label(Boot.label(), 11, Color(1, 1, 1, 0.45)); vl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	vl.anchor_left = 1; vl.anchor_right = 1; vl.anchor_top = 1; vl.anchor_bottom = 1; vl.offset_left = -200; vl.offset_right = -8; vl.offset_top = -20; vl.offset_bottom = -4
+	vl.mouse_filter = Control.MOUSE_FILTER_IGNORE; title_ov.add_child(vl)
 	bc.pressed.connect(_title_cont.bind(fresh))
 	bn.pressed.connect(_title_new.bind(fresh, bn, hint))
 
