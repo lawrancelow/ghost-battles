@@ -456,7 +456,7 @@ const Patrol = (() => {
     // 我方
     for (const u of R.units) {
       u.flash = Math.max(0, (u.flash || 0) - dt * 5); u.hurt = Math.max(0, (u.hurt || 0) - dt);
-      if (u.hp <= 0) { u.deadT = (u.deadT || 0) + dt; if (u.role === 'lead' && u.deadT > 25) { u.hp = u.maxhp * 0.6; u.deadT = 0; u.x = L.x; u.y = L.y; u.vx = u.vy = 0; fxText(u.x, u.y - 50, '歸隊！', '#9ff'); R.fx.push({ kind:'ring', x:u.x, y:u.y, t:0, life:0.5, col:'#9ff', r:60 }); } continue; }
+      if (u.hp <= 0) { u.deadT = (u.deadT || 0) + dt; if (u.role === 'lead' && u.deadT > 25) { u.hp = u.maxhp * 0.6; u.deadT = 0; u.x = L.x; u.y = L.y; u.vx = u.vy = 0; fxText(u.x, u.y - 50, '歸隊！', '#9ff'); spr('fx_beam', u.x, u.y + 6, { s0:0.3, s1:0.4, sx:0.7, life:0.8, anchor:0.95 }); R.fx.push({ kind:'ring', x:u.x, y:u.y, t:0, life:0.5, col:'#9ff', r:60 }); } continue; }
       if (u.leader) { // 阿福：自己行，敵人入咗攻擊範圍就自動打
         if (u.act) tickAct(u, dt); else { u.cd -= dt; const tg = nearest(u, foes, u.rng + 10); if (tg && u.cd <= 0 && !(u.dash > 0)) startAttack(u, tg); }
         continue;
@@ -500,7 +500,7 @@ const Patrol = (() => {
     }
     // 預警圈落地
     if (R.tele) R.tele = R.tele.filter(t => { t.t += dt; if (t.t < t.dur) return true;
-      const src = t.src; if (src.hp > 0 && !(src.down > 0)) { R.shake = 9; dust(t.x, t.y, 1.6); R.fx.push({ kind:'ring', x:t.x, y:t.y, t:0, life:0.4, col:'#ff6a4a', r:t.r });
+      const src = t.src; if (src.hp > 0 && !(src.down > 0)) { R.shake = 9; dust(t.x - 20, t.y, 1.6); dust(t.x + 20, t.y, 1.4); if (img('fx_shock')) spr('fx_shock', t.x, t.y, { ground:true, s0:t.r * 1.4 / 256, s1:t.r * 2.3 / 256, life:0.5 }); else R.fx.push({ kind:'ring', x:t.x, y:t.y, t:0, life:0.4, col:'#ff6a4a', r:t.r });
         for (const u of R.units) if (u.hp > 0 && !u.inv && Math.hypot((u.x - t.x) / t.r, (u.y - t.y) / (t.r * 0.6)) < 1) hit(src, u, 2.2, { kb:260, from:t }); try { Sound.play('skill'); } catch (e) {} }
       return false; });
     // 分開（軟推）
@@ -514,8 +514,8 @@ const Patrol = (() => {
       const v = q.tg; if (!v || v.hp <= 0 || v.down > 0) { q.dead = (q.dead || 0) + dt; return q.dead < 0.15; }
       const ty = v.y - 34 * v.s * 1.65, dx = v.x - q.x, dy = ty - q.y, d = Math.hypot(dx, dy), stp = q.spd * dt;
       q.trail.push([q.x, q.y]); if (q.trail.length > 7) q.trail.shift();
-      if (d <= stp + 6) { hit(q.src, v, q.mult || 1); return false; }
-      q.x += dx / d * stp; q.y += dy / d * stp + Math.sin(R.t * 18 + q.ph) * 0.8; return true;
+      if (d <= stp + 6) { hit(q.src, v, q.mult || 1); spr('fx_fire', q.x, q.y, { s0:0.12, s1:0.26, life:0.18, hue:q.hue, rot:Math.atan2(q.vy || 0, q.vx || 1) + Math.PI }); return false; }
+      q.vx = dx; q.vy = dy; q.x += dx / d * stp; q.y += dy / d * stp + Math.sin(R.t * 18 + q.ph) * 0.8; return true;
     });
     // Bryan 挖角
     if (R.bryan) {
@@ -555,10 +555,11 @@ const Patrol = (() => {
     if (a.cast) { skill(u); return; }
     if (a.slam) return;
     const v = a.tg; if (!v || v.hp <= 0 || v.down > 0) return;
-    if (u.rng > 60) { R.proj.push({ x:u.x + (u.flip ? -14 : 14), y:u.y - 44 * u.s * 1.65, tg:v, src:u, spd:560, col:u.side ? '#ff9ac0' : projCol(u), trail:[], ph:Math.random() * 6 }); return; }
+    if (u.rng > 60) { R.proj.push({ x:u.x + (u.flip ? -14 : 14), y:u.y - 44 * u.s * 1.65, tg:v, src:u, spd:560, col:u.side ? '#ff9ac0' : projCol(u), hue:u.side ? HUE.foe : HUE[u.fac] || 0, big:u.role === 'lead' || u.elite || u.boss ? 1.3 : 1, trail:[], ph:Math.random() * 6 }); return; }
     const dir = Math.sign(v.x - u.x) || 1;
     u.vx += dir * 120; // 衝前少少
-    R.fx.push({ kind:'slash', x:v.x, y:v.y - 34 * v.s * 1.65, dir, t:0, life:0.2, r:22 + (u.boss ? 14 : u.leader ? 6 : 0), col:u.side ? '#ff9ac0' : u.leader ? '#ffe9a0' : '#bff' });
+    if (img('fx_slash')) { const big = u.boss ? 1.5 : u.leader || u.role === 'lead' || u.elite ? 1.15 : u.role === 'troop' ? 0.6 : 0.8; spr('fx_slash', v.x - dir * 6, v.y - 34 * v.s * 1.65, { s0:0.16 * big, s1:0.3 * big, life:0.2, flip:dir < 0, rot:(Math.random() - 0.5) * 0.6, hue:u.side ? -155 : u.leader ? 0 : HUE[u.fac] || 0 }); }
+    else R.fx.push({ kind:'slash', x:v.x, y:v.y - 34 * v.s * 1.65, dir, t:0, life:0.2, r:22 + (u.boss ? 14 : u.leader ? 6 : 0), col:u.side ? '#ff9ac0' : u.leader ? '#ffe9a0' : '#bff' });
     hit(u, v, 1);
   }
   function hit(u, v, mult, o) {
@@ -593,9 +594,9 @@ const Patrol = (() => {
     const foes = R.foes.filter(e => e.hp > 0 && !(e.down > 0) && !e.fled), allies = R.units.filter(x => x.hp > 0 && !x.gone);
     const enemies = u.side === 0 ? foes : allies, mine = u.side === 0 ? allies : foes;
     const col = u.side ? '#ff9ac0' : '#9ff3ff';
-    if (sk.kind === 'heal') mine.filter(v => Math.hypot(v.x - u.x, v.y - u.y) < 280).forEach(v => { const h = v.maxhp * sk.mult; v.hp = Math.min(v.maxhp, v.hp + h); fxText(v.x, v.y - 60, '+' + Math.round(h), '#8affb0'); R.fx.push({ kind:'ring', x:v.x, y:v.y, t:0, life:0.5, col:'#8affb0', r:40 }); });
-    else if (sk.kind === 'aoe') { enemies.filter(v => Math.hypot(v.x - u.x, (v.y - u.y) * 1.3) < 210).forEach(v => hit(u, v, sk.mult, { kb:240 })); R.fx.push({ kind:'ring', x:u.x, y:u.y, t:0, life:0.5, col, r:210 }); R.flash = 0.35; R.shake = 8; }
-    else { const v = nearest(u, enemies, 280); if (v) { const n = sk.hits || 1; for (let i = 0; i < n; i++) hit(u, v, sk.mult / n, { kb:i === n - 1 ? 260 : 60 }); R.fx.push({ kind:'slash', x:v.x, y:v.y - 34 * v.s * 1.65, dir:Math.sign(v.x - u.x) || 1, t:0, life:0.3, r:40, col }); if (sk.steal && u.side === 0) gain({ coins:sk.steal }); } }
+    if (sk.kind === 'heal') mine.filter(v => Math.hypot(v.x - u.x, v.y - u.y) < 280).forEach(v => { const h = v.maxhp * sk.mult; v.hp = Math.min(v.maxhp, v.hp + h); spr('fx_heal', v.x, v.y - 30, { s0:0.15, s1:0.35, life:0.8, vy:30, spin:1.5 }); fxText(v.x, v.y - 60, '+' + Math.round(h), '#8affb0'); R.fx.push({ kind:'ring', x:v.x, y:v.y, t:0, life:0.5, col:'#8affb0', r:40 }); });
+    else if (sk.kind === 'aoe') { enemies.filter(v => Math.hypot(v.x - u.x, (v.y - u.y) * 1.3) < 210).forEach(v => hit(u, v, sk.mult, { kb:240 })); if (img('fx_wind')) { spr('fx_wind', u.x, u.y, { s0:0.4, s1:1.1, life:0.6, anchor:0.85, hue:u.side ? -155 : 0 }); spr('fx_scream', u.x, u.y - 40, { s0:0.3, s1:1.6, life:0.5, alpha:0.8, hue:u.side ? -155 : 0 }); spr('fx_shock', u.x, u.y, { ground:true, s0:0.8, s1:1.8, life:0.5, hue:u.side ? -155 : 0 }); } else R.fx.push({ kind:'ring', x:u.x, y:u.y, t:0, life:0.5, col, r:210 }); R.flash = 0.35; R.shake = 8; }
+    else { const v = nearest(u, enemies, 280); if (v) { const n = sk.hits || 1; for (let i = 0; i < n; i++) hit(u, v, sk.mult / n, { kb:i === n - 1 ? 260 : 60 }); if (img('fx_slash')) { const d = Math.sign(v.x - u.x) || 1; spr('fx_slash', v.x, v.y - 34 * v.s * 1.65, { s0:0.35, s1:0.6, life:0.3, flip:d < 0, hue:u.side ? -155 : HUE[u.fac] || 0 }); spr('fx_hit', v.x, v.y - 34 * v.s * 1.65, { s0:0.2, s1:0.45, life:0.25 }); spr('fx_bolt', v.x, v.y - 50, { s0:0.25, s1:0.4, life:0.2 }); } else R.fx.push({ kind:'slash', x:v.x, y:v.y - 34 * v.s * 1.65, dir:Math.sign(v.x - u.x) || 1, t:0, life:0.3, r:40, col }); if (sk.steal && u.side === 0) gain({ coins:sk.steal }); } }
     R.fx.push({ kind:'num', x:u.x, y:u.y - 95 * u.s * 1.65, text:sk.name, col, skill:true, t:0, life:1.1 });
     try { Sound.play('skill'); } catch (e) {}
   }
@@ -603,17 +604,39 @@ const Patrol = (() => {
   function dash() {
     const L = R && R.L; if (!L || L.hp <= 0 || R.dashCd > 0 || R.ended) return;
     const f = R.face || { x:L.flip ? -1 : 1, y:0 }; L.vx = f.x * 640; L.vy = f.y * 640; L.dash = 0.24; L.dashHit = new Set(); L.act = null;
-    R.dashCd = 3.5; dust(L.x, L.y, 1.1); try { Sound.play('click'); } catch (e) {}
+    R.dashCd = 3.5; dust(L.x, L.y, 1.1); if (img('fx_dash')) spr('fx_dash', L.x + f.x * 50, L.y - 34, { s0:0.35, s1:0.55, life:0.3, rot:Math.atan2(f.y, f.x) }); try { Sound.play('click'); } catch (e) {}
   }
   function pie() {
     if (!R || R.pieCd > 0 || R.ended || R.L.hp <= 0) return;
     R.buff = 8; R.pieCd = 30; R.flash = 0.25;
-    for (const u of R.units) if (u.hp > 0) { R.fx.push({ kind:'ring', x:u.x, y:u.y, t:0, life:0.6, col:'#ffd84a', r:36 }); if (u.g && u.role === 'crew') u.g.fat = Math.min(100, (u.g.fat || 0) + 4); }
+    for (const u of R.units) if (u.hp > 0) { if (img('fx_aura')) spr('fx_aura', u.x, u.y + 4, { s0:0.15, s1:0.3, life:0.8, anchor:0.95 }); else R.fx.push({ kind:'ring', x:u.x, y:u.y, t:0, life:0.6, col:'#ffd84a', r:36 }); if (u.g && u.role === 'crew') u.g.fat = Math.min(100, (u.g.fat || 0) + 4); }
     const lines = [['阿福', T('各位！做完今晚，年尾分紅一定有！（應該）', '各位！做完今晚，年底分紅一定有！（應該）')], ['阿福', T('公司好睇好你哋㗎！（我估）', '公司很看好你們的！（我猜）')], ['阿福', T('呢個 project 做完，大家升職！（未批）', '這個 project 做完，大家升職！（還沒批）')]];
     const l = lines[Math.floor(Math.random() * lines.length)]; msg(`<b>${l[0]}</b>：${l[1]}　全隊攻擊 +30%`, 2.5); try { Sound.play('gong'); } catch (e) {}
   }
-  function spark(x, y, k, col) { const n = 7 + Math.floor(Math.random() * 4), rays = []; for (let i = 0; i < n; i++) rays.push({ a:(i / n) * Math.PI * 2 + (Math.random() - 0.5) * 0.5, len:(12 + Math.random() * 14) * k, j:Math.random() * 1000 }); R.fx.push({ kind:'spark', x, y, t:0, life:0.24, rays, col, k, rot:Math.random() * Math.PI }); }
-  function dust(x, y, k) { const puffs = []; for (let i = 0; i < 5; i++) puffs.push({ dx:(Math.random() - 0.5) * 18 * k, vx:(Math.random() - 0.5) * 60 * k, r:(4 + Math.random() * 4) * k }); R.fx.push({ kind:'dust', x, y, t:0, life:0.45, puffs }); }
+  function spark(x, y, k, col) {
+    if (img('fx_hit')) { spr('fx_hit', x, y, { s0:0.08 * k, s1:0.22 * k, life:0.18, rot:Math.random() * 6.28, hue:col === '#ff9a7a' ? -155 : 0 }); if (k >= 1.3 && img('fx_bolt')) spr('fx_bolt', x, y - 6, { s0:0.18, s1:0.3, life:0.16, rot:(Math.random() - 0.5) * 1.2 }); return; } const n = 7 + Math.floor(Math.random() * 4), rays = []; for (let i = 0; i < n; i++) rays.push({ a:(i / n) * Math.PI * 2 + (Math.random() - 0.5) * 0.5, len:(12 + Math.random() * 14) * k, j:Math.random() * 1000 }); R.fx.push({ kind:'spark', x, y, t:0, life:0.24, rays, col, k, rot:Math.random() * Math.PI }); }
+  // ===== 特效圖（老闆 ChatGPT 生成、黑底發光，用 lighter 疊）=====
+  // spr(名, x, y, {s0,s1 由細變大, life, rot, alpha, add 疊光, ground 畫喺地面層, sx/sy 拉扁, vy 上升, tint 色相})
+  const TINT = {};
+  function fxImg(n, hue) {
+    const im = img(n); if (!im) return null; if (!hue) return im;
+    const k = n + '@' + hue; if (TINT[k]) return TINT[k];
+    const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; const x = c.getContext('2d');
+    x.filter = `hue-rotate(${hue}deg) saturate(1.2)`; x.drawImage(im, 0, 0); return (TINT[k] = c);
+  }
+  function spr(n, x, y, o) { o = o || {}; R.fx.push(Object.assign({ kind:'spr', n, x, y, t:0, life:0.3, s0:0.3, s1:0.5, rot:0, alpha:1, add:true, sx:1, sy:1, vy:0, hue:0 }, o)); }
+  function drawSpr(c, f) {
+    const im = fxImg(f.n, f.hue); if (!im) return;
+    const p = f.t / f.life, e = 1 - Math.pow(1 - p, 2.2), sc = f.s0 + (f.s1 - f.s0) * e;
+    const a = f.alpha * (f.fadeIn && p < 0.2 ? p / 0.2 : 1) * (p < 0.55 ? 1 : 1 - (p - 0.55) / 0.45);
+    const w = (im.naturalWidth || im.width) * sc * f.sx, h = (im.naturalHeight || im.height) * sc * f.sy;
+    c.save(); c.globalAlpha = Math.max(0, a); if (f.add) c.globalCompositeOperation = 'lighter';
+    c.translate(f.x, f.y - f.vy * p); if (f.rot) c.rotate(f.rot + (f.spin || 0) * p); if (f.flip) c.scale(-1, 1);
+    c.drawImage(im, -w / 2, -h * (f.anchor != null ? f.anchor : 0.5), w, h); c.restore();
+  }
+  const HUE = { yuan:110, chan:-150, lan:35, foe:-155, gold:0 }; // 特效底色係鬼火青綠：+110 ≈ 幽紫（怨）、-150 ≈ 暗血紅（饞／敵）、+35 ≈ 冷藍（懶）
+  function dust(x, y, k) {
+    if (img('fx_dust')) { spr('fx_dust', x + (Math.random() - 0.5) * 10, y, { add:true, alpha:0.45, s0:0.06 * k, s1:0.16 * k, life:0.5, vy:10, anchor:0.8, flip:Math.random() < 0.5 }); return; } const puffs = []; for (let i = 0; i < 5; i++) puffs.push({ dx:(Math.random() - 0.5) * 18 * k, vx:(Math.random() - 0.5) * 60 * k, r:(4 + Math.random() * 4) * k }); R.fx.push({ kind:'dust', x, y, t:0, life:0.45, puffs }); }
   // 環境：鬼火、霧
   function ambient(dt) {
     R.wisps = R.wisps || []; const L = R.L;
@@ -655,7 +678,7 @@ const Patrol = (() => {
     const coins = Math.max(1, Math.round((3 + 2.2 * v.p) * m)), mat = Math.max(1, Math.round((1 + v.p / 5) * m * (0.7 + Math.random() * 0.6))), exp = Math.max(1, Math.round((1 + v.p * 0.8) * (v.elite ? 4 : 1)));
     const f = v.fac in FAC ? v.fac : 'lan', g = { coins, exp }; g[f] = mat; gain(g);
     if (v.elite && Math.random() < 0.5) { S.chests.g++; fxText(v.x, v.y - 90, '綠箱 ×1', '#9f9', true); }
-    fxText(v.x, v.y - 70, `+${coins} 冥幣　+${mat} ${FAC[f].mat}`, '#ffe08a'); R.fx.push({ kind:'soul', x:v.x, y:v.y, t:0, life:1.3 });
+    fxText(v.x, v.y - 70, `+${coins} 冥幣　+${mat} ${FAC[f].mat}`, '#ffe08a'); if (img('fx_beam')) { spr('fx_beam', v.x, v.y + 6, { s0:0.35, s1:0.5, sx:0.7, life:1.1, anchor:0.95, fadeIn:true }); spr('fx_gold', v.x, v.y - 40, { s0:0.15, s1:0.35, life:0.7, vy:40 }); } else R.fx.push({ kind:'soul', x:v.x, y:v.y, t:0, life:1.3 });
   }
   function gain(g) {
     for (const k in g) {
@@ -677,9 +700,9 @@ const Patrol = (() => {
           const g = addCrew(v.k, v.p, v.elite, v.x, v.y);
           msg(`<b>收編成功！</b>${g.name}（${g.q}・Lv${g.lv}）加入部門。${I.fear ? '（對症收編 +20%）' : ''}`, 3);
         }
-        fxText(v.x, v.y - 80, '簽約！', '#9fffb0', true); try { Sound.play('gong'); } catch (e) {}
+        fxText(v.x, v.y - 80, '簽約！', '#9fffb0', true); spr('fx_ring', v.x, v.y, { ground:true, s0:0.2, s1:0.55, life:0.8 }); spr('fx_gold', v.x, v.y - 50, { s0:0.2, s1:0.5, life:0.8, vy:30 }); try { Sound.play('gong'); } catch (e) {}
       } else {
-        st().pity[v.k] = (st().pity[v.k] || 0) + 15; v.fled = 1;
+        st().pity[v.k] = (st().pity[v.k] || 0) + 15; v.fled = 1; spr('fx_smoke', v.x, v.y - 30, { s0:0.2, s1:0.5, life:0.7, add:false, alpha:0.9 });
         fxText(v.x, v.y - 80, '跑掉了！', '#fca', true); msg(T(`${v.name}睇完合約，走咗。（下次收同種 +15%）`, `${v.name}看完合約，跑了。（下次收同種 +15%）`), 2.5);
       }
     }
@@ -756,7 +779,7 @@ const Patrol = (() => {
     const ci = R.ci, ch = CHAPTERS[ci], stg = ch.stages[si], sid = sidOf(ci, si), first = !S.cleared[sid];
     const rew = first ? { coins:60 * stg.p + 40, exp:30 * stg.p + 40, chest:['g', 'b', 'p'][si] } : { coins:20 * stg.p, exp:8 * stg.p };
     S.cleared[sid] = true; const txt = give(rew); R.loot.coins += rew.coins || 0; R.loot.exp += rew.exp || 0;
-    try { Sound.play('win'); } catch (e) {}
+    try { Sound.play('win'); spr('fx_scream', R.L.x, R.L.y - 40, { s0:0.4, s1:2.2, life:0.8 }); spr('fx_gold', R.L.x, R.L.y - 60, { s0:0.4, s1:0.9, life:1 }); R.flash = 0.4; } catch (e) {}
     Fx.banner(si === 2 ? `區域總監 ${stg.name} 擊破！` : `部門主管擊破！${si === 0 ? '第 4 區閘口開放' : '第 8 區閘口開放'}`);
     Fx.toast(`${sid}　${stg.name}　${txt}`);
     if (first) {
@@ -859,7 +882,8 @@ const Patrol = (() => {
     c.fillStyle = groundPat(c); c.fillRect(gx0, gy0, gx1 - gx0, gy1 - gy0);
     drawPath(c);
     // 地上嘅預警紅圈
-    if (R.tele) for (const t of R.tele) { const p = t.t / t.dur; c.save(); c.globalAlpha = 0.35 + 0.25 * Math.sin(R.t * 20); c.fillStyle = 'rgba(200,30,20,.35)'; c.strokeStyle = '#ff5a3a'; c.lineWidth = 3; c.beginPath(); c.ellipse(t.x, t.y, t.r, t.r * 0.6, 0, 0, 7); c.fill(); c.stroke(); c.globalAlpha = 0.6; c.fillStyle = 'rgba(255,90,60,.5)'; c.beginPath(); c.ellipse(t.x, t.y, t.r * p, t.r * 0.6 * p, 0, 0, 7); c.fill(); c.restore(); }
+    for (const f of R.fx) if (f.kind === 'spr' && f.ground) drawSpr(c, f);
+    if (R.tele) for (const t of R.tele) { const p = t.t / t.dur; const wi = fxImg('fx_warn'); if (wi) { c.save(); const pul = 0.7 + 0.25 * Math.sin(R.t * 18); c.globalAlpha = pul; const W = t.r * 2.2, H = W * wi.naturalHeight / wi.naturalWidth; c.drawImage(wi, t.x - W / 2, t.y - H / 2, W, H); c.globalAlpha = 0.5 + 0.4 * p; const W2 = W * p, H2 = H * p; c.drawImage(wi, t.x - W2 / 2, t.y - H2 / 2, W2, H2); c.restore(); continue; } c.save(); c.globalAlpha = 0.35 + 0.25 * Math.sin(R.t * 20); c.fillStyle = 'rgba(200,30,20,.35)'; c.strokeStyle = '#ff5a3a'; c.lineWidth = 3; c.beginPath(); c.ellipse(t.x, t.y, t.r, t.r * 0.6, 0, 0, 7); c.fill(); c.stroke(); c.globalAlpha = 0.6; c.fillStyle = 'rgba(255,90,60,.5)'; c.beginPath(); c.ellipse(t.x, t.y, t.r * p, t.r * 0.6 * p, 0, 0, 7); c.fill(); c.restore(); }
     // 阿福腳下光圈
     const L = R.L; c.save(); c.strokeStyle = 'rgba(255,220,120,.55)'; c.lineWidth = 2; c.setLineDash([6, 5]); c.lineDashOffset = -R.t * 20; c.beginPath(); c.ellipse(L.x, L.y + 2, 26, 9, 0, 0, 7); c.stroke(); c.restore();
     for (const f of R.fx) if (f.kind === 'dust') Battle.drawDust(c, f);
@@ -874,7 +898,8 @@ const Patrol = (() => {
     for (let i = 0; i < 2; i++) if (CH * (i + 1) > cy - 60 && CH * (i + 1) < cy + vh + 60) drawChasm(c, CH * (i + 1), GATES[i], gateOpen(i), cx, vw);
     for (const q of R.proj) { drawProj(c, q); lights.push({ x:q.x, y:q.y, r:50 }); }
     for (const f of R.fx) {
-      if (f.kind === 'spark') Battle.drawSpark(c, f); else if (f.kind === 'slash') Battle.drawSlash(c, f);
+      if (f.kind === 'spr') { if (!f.ground) { drawSpr(c, f); if (f.add && f.t < f.life * 0.5) lights.push({ x:f.x, y:f.y, r:60 }); } }
+      else if (f.kind === 'spark') Battle.drawSpark(c, f); else if (f.kind === 'slash') Battle.drawSlash(c, f);
       else if (f.kind === 'ring') { const p = f.t / f.life; c.save(); c.strokeStyle = f.col; c.globalAlpha = 1 - p; c.lineWidth = 4 * (1 - p) + 1; c.beginPath(); c.ellipse(f.x, f.y, f.r * (0.3 + 0.7 * p), f.r * 0.6 * (0.3 + 0.7 * p), 0, 0, 7); c.stroke(); c.restore(); lights.push({ x:f.x, y:f.y, r:f.r * 0.8 }); }
       else if (f.kind === 'soul') { const p = f.t / f.life; c.save(); c.globalCompositeOperation = 'lighter'; const y = f.y - 40 - p * 90, g = c.createRadialGradient(f.x, y, 0, f.x, y, 16); g.addColorStop(0, `rgba(220,240,255,${0.9 * (1 - p)})`); g.addColorStop(1, 'rgba(120,180,255,0)'); c.fillStyle = g; c.beginPath(); c.arc(f.x, y, 16, 0, 7); c.fill();
         c.fillStyle = `rgba(160,200,255,${0.18 * (1 - p)})`; c.fillRect(f.x - 7, f.y - 160, 14, 160); c.restore(); lights.push({ x:f.x, y, r:70 }); }
@@ -906,6 +931,7 @@ const Patrol = (() => {
     drawMini();
   }
   function drawProj(c, p) {
+    const fi = fxImg('fx_fire', p.hue); if (fi) { const v = p.tg, ang = Math.atan2(p.vy || 0, p.vx || 1), W = 46 * (p.big || 1), H = W * (fi.naturalHeight || fi.height) / (fi.naturalWidth || fi.width); c.save(); c.globalCompositeOperation = 'lighter'; c.translate(p.x, p.y); c.rotate(ang); c.drawImage(fi, -W * 0.8, -H / 2, W, H); c.restore(); return; }
     c.save(); c.lineCap = 'round';
     for (let i = 1; i < p.trail.length; i++) { const [x0, y0] = p.trail[i - 1], [x1, y1] = p.trail[i], f = i / p.trail.length; c.globalAlpha = f * 0.7; c.strokeStyle = p.col; c.lineWidth = 1 + f * 5; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); }
     c.globalAlpha = 1; c.globalCompositeOperation = 'lighter'; const g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, 11); g.addColorStop(0, '#fff'); g.addColorStop(0.35, p.col); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.beginPath(); c.arc(p.x, p.y, 11, 0, 7); c.fill(); c.restore();
@@ -960,10 +986,11 @@ const Patrol = (() => {
       tdx:tg ? tg.x - u.x : (u.flip ? -40 : 40), tdy:tg ? tg.y - u.y : 0,
       alpha:u.fled ? Math.max(0, 0.6 - p * 0.6) : dying ? 1 - p : u.down > 0 ? 0.55 + 0.3 * Math.sin(R.t * 12) : 1 };
     const x = u.x + ox, y = u.y + oy;
-    if (a && (a.cast || a.slam) && a.ph === 'windup') Battle.drawCharge.call({ t:R.t }, c, x, y - 28 * s, s, a.t / a.dur, u.side ? '#ff9ac0' : '#9ff3ff', false);
+    if (u.side === 0 && R.buff > 0 && u.hp > 0 && !dying) { const ai = fxImg('fx_aura'); if (ai) { c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.35 + 0.15 * Math.sin(R.t * 8 + u.x); const W = 70 * s, H = W * ai.naturalHeight / ai.naturalWidth; c.drawImage(ai, u.x - W / 2, u.y - H * 0.92, W, H); c.restore(); } }
+    if (a && (a.cast || a.slam) && a.ph === 'windup') { const ri = fxImg('fx_ring', u.side ? 150 : 0); if (ri) { const pp = Math.min(1, a.t / a.dur); c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.5 + pp * 0.5; const W = (120 - 50 * pp) * s * (u.boss ? 1.4 : 1), H = W * ri.naturalHeight / ri.naturalWidth; c.drawImage(ri, u.x - W / 2, u.y - H / 2, W, H); c.restore(); } else Battle.drawCharge.call({ t:R.t }, c, x, y - 28 * s, s, a.t / a.dur, u.side ? '#ff9ac0' : '#9ff3ff', false); }
     try { ART.drawChar(c, u.k, x, y, s, o); if (u.flash > 0) { c.save(); c.globalCompositeOperation = 'lighter'; ART.drawChar(c, u.k, x, y, s, Object.assign({}, o, { alpha:o.alpha * u.flash * 0.8, shadow:false })); c.restore(); } }
     catch (e) { c.fillStyle = u.side ? '#a55' : '#5a5'; c.beginPath(); c.arc(x, y - 20, 12, 0, 7); c.fill(); }
-    if (a && (a.cast || a.slam) && a.ph === 'windup') Battle.drawCharge.call({ t:R.t }, c, x, y - 28 * s, s, a.t / a.dur, u.side ? '#ff9ac0' : '#9ff3ff', true);
+    if (a && (a.cast || a.slam) && a.ph === 'windup' && !fxImg('fx_ring')) Battle.drawCharge.call({ t:R.t }, c, x, y - 28 * s, s, a.t / a.dur, u.side ? '#ff9ac0' : '#9ff3ff', true);
     if (dying) return;
     const top = u.y - (u.leader ? 70 : u.boss ? 88 : 78) * s - 2;
     if (u.down > 0) { c.save(); c.strokeStyle = '#ffd84a'; c.lineWidth = 3; c.beginPath(); c.arc(u.x, top - 6, 11, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (u.down / u.downMax)); c.stroke(); c.fillStyle = '#ffd84a'; c.font = '900 12px sans-serif'; c.textAlign = 'center'; c.fillText('?', u.x, top - 2); c.restore(); return; }
@@ -1009,7 +1036,7 @@ const Patrol = (() => {
     document.querySelectorAll('#pt-leads [data-lu]').forEach(b => { const u = R.units.find(x => x.gid === b.dataset.lu); if (!u) return; b.classList.toggle('dead', u.hp <= 0); b.classList.toggle('ready', u.hp > 0 && u.energy >= 100); b.querySelector('i').style.height = (u.hp > 0 ? Math.min(100, u.energy || 0) : 0) + '%'; });
   }
 
-  return { open:openPrep, openPrep, close, get active() { return active; }, FAC, facOf, st, regionOpen, _R:() => R, _end:end, _gain:gain, _test:{ foe, onDown, resolveDown, signInfo } };
+  return { open:openPrep, openPrep, close, get active() { return active; }, FAC, facOf, st, regionOpen, _R:() => R, _end:end, _gain:gain, _test:{ foe, onDown, resolveDown, signInfo, fxImg, img, telegraph } };
 })();
 
 // ===================== 裝備房 =====================
