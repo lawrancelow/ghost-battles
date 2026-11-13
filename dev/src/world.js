@@ -4,7 +4,7 @@ const World = {
   YARD_READY: true, // 亂葬崗推理驗證完成後打開
   // 地圖上的去處：位置（圖的比例）、名稱、怎麼打開、什麼時候開放
   SPOTS: [
-    { id:'battle', x:0.2, y:0.68, lx:0.25, ly:0.745, name:'搶地盤', sub:'陽間地盤', go:() => UI.open('battle') },
+    { id:'battle', x:0.2, y:0.68, lx:0.25, ly:0.745, name:'夜班巡陰', sub:'帶部門巡陰間', go:() => (typeof Patrol !== 'undefined' ? Patrol.openPrep() : UI.open('battle')) },
     { id:'yard', x:0.76, y:0.7, lx:0.79, ly:0.745, name:'亂葬崗', sub:'無名墳', go:() => Graveyard.open(), ready:() => typeof Graveyard !== 'undefined' && World.YARD_READY },
     { id:'street', x:0.22, y:0.53, lx:0.25, ly:0.565, name:'冥街夜市', sub:'下班後的陰間', go:() => GhostStreet.open(), ready:() => typeof GhostStreet !== 'undefined' },
     { id:'station', x:0.8, y:0.52, lx:0.735, ly:0.555, name:'陽間站崗', sub:'派鬼嚇路人', go:() => Street.open(), ready:() => typeof Street !== 'undefined', need:() => S.seen.ch1_end || window.STN_TEST, lock:'打完第一章才開放' },
@@ -13,9 +13,9 @@ const World = {
   ],
   // 保留地：之後開發新去處就由呢度補上（換成真嘅 SPOTS 項目）
   RESERVED: 3,
-  ICON: { battle:'戰', yard:'墳', street:'市', scare:'嚇', station:'崗' },
+  ICON: { battle:'巡', yard:'墳', street:'市', scare:'嚇', station:'崗' },
   // 保留地喺地圖上嘅位置（霧鎖住嘅地方）
-  DESC: { battle:'帶鬼出陣，同陽間各路人馬爭地盤。', yard:'無名墳一排排，聽清楚邊個講大話。', street:'收工後嘅陰間夜市，食嘢、行街、見老友。', station:'喺陽間地盤擺鬼站崗，嚇走路過嘅人。', scare:'返去陽間返夜班，一間間辦公室嚇過去。', tower:'揀一棟樓，由地下嚇到天台，天光前返陰間。' },
+  DESC: { battle:'帶住部門巡陰間：遊魂可以送去投胎，亦可以遞合約收編。主線關卡嘅主管同總監都喺度。', yard:'無名墳一排排，聽清楚邊個講大話。', street:'收工後嘅陰間夜市，食嘢、行街、見老友。', station:'喺陽間地盤擺鬼站崗，嚇走路過嘅人。', scare:'返去陽間返夜班，一間間辦公室嚇過去。', tower:'揀一棟樓，由地下嚇到天台，天光前返陰間。' },
   RES_SPOTS: [ { x:0.78, y:0.27, lx:0.80, ly:0.325 }, { x:0.50, y:0.06, lx:0.50, ly:0.135 }, { x:0.15, y:0.07, lx:0.15, ly:0.135 } ],
   open() {
     document.querySelectorAll('#pol-tip').forEach(e => e.remove()); // 離開玩法返地圖：收起龐總現場提示

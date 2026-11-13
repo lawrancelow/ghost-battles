@@ -928,7 +928,7 @@ const UI = {
     $('#impgo').onclick = (e) => { let o = null; try { o = Web.dec($('#impta').value.trim().replace(/^.*#save=/, '')); } catch (er) {} if (!o || !o.res) { Fx.toast('存檔碼讀唔到，檢查吓有冇貼齊'); return; } if (!confirmInline(e.target, `再按一次：換成主公 ${o.lv || 1} 級嘅存檔`)) return; try { localStorage.setItem(SAVE_KEY + '_bak', localStorage.getItem(SAVE_KEY) || ''); window.removeEventListener('beforeunload', save); o.last = Date.now(); localStorage.setItem(SAVE_KEY, JSON.stringify(o)); window.__NOSAVE = 1; } catch (er) {} location.reload(); };
     const rb = $('#restorebtn'); if (rb) rb.onclick = (e) => { if (!confirmInline(e.target, '再按一次確定恢復')) return; try { const k = SAVE_KEY + rb.dataset.k; const v = localStorage.getItem(k); localStorage.setItem(SAVE_KEY + '_bak', localStorage.getItem(SAVE_KEY) || ''); window.removeEventListener('beforeunload', save); localStorage.setItem(SAVE_KEY, v); window.__NOSAVE = 1; } catch (er) {} location.reload(); };
   },
-  openBattleSelect() { Battle.openSelect(); },
+  openBattleSelect() { if (typeof Patrol !== 'undefined') Patrol.openPrep(); else Battle.openSelect(); }, // 搶地盤暫時由夜班巡陰（patrol.js）取代
 };
 function standOk(st) { return !st.need || !!S.seen[st.need]; }
 function syncSnd() { const b = $('#sndtop'); if (b) { b.textContent = Sound.isOn() ? '🔊' : '🔇'; b.classList.toggle('off', !Sound.isOn()); } }
@@ -951,7 +951,7 @@ function recruitFodder(rare) {
 let lastT = performance.now(), saveT = 0, uiT = 0;
 // 手機發燙：(1) 回陽間／陰間運動會／墳場／鬼街打開時，村莊喺後面照畫（白燒一倍）→ 蓋住就唔畫；(2) 90/120Hz 手機每秒畫 120 格 → 上限 30 格
 const FRAME_MS = 1000 / 30 - 2;
-function covered() { return (typeof Scare !== 'undefined' && Scare.active) || (typeof Graveyard !== 'undefined' && Graveyard.active) || (typeof GhostStreet !== 'undefined' && GhostStreet.active) || (typeof Sports !== 'undefined' && Sports._g && !!Sports._g()); }
+function covered() { return (typeof Patrol !== 'undefined' && Patrol.active) || (typeof Scare !== 'undefined' && Scare.active) || (typeof Graveyard !== 'undefined' && Graveyard.active) || (typeof GhostStreet !== 'undefined' && GhostStreet.active) || (typeof Sports !== 'undefined' && Sports._g && !!Sports._g()); }
 function loop(now) {
   requestAnimationFrame(loop);
   if (now - lastT < FRAME_MS) return;
@@ -990,7 +990,7 @@ function startGame() {
     '棺材板':'棺材板：在<b>棺材鋪</b>把 2 槐木做成 1 板（力量高的鬼做得快）。藍箱也會開出。用來建造和升級建築。',
     '壽包':'壽包：在<b>包子鋪</b>把 2 糯米包成 1 個（智力高的鬼包得快）。綠箱也會開出。用來升級鬼怪、練陰兵。',
     '冥幣':'冥幣：打關卡、開紫箱、燒<b>化寶爐</b>。Toyol 管倉庫時也會「撿到」冥幣。',
-    '陰兵':'陰兵：村裡的遊魂見你有地盤，自願加入。<b>民宅</b>越高級來得越快、上限越高。搶地盤時每 25 個組成一隊（最多 8 隊），戰死的會扣掉。',
+    '陰兵':'陰兵：村裡的遊魂見你有地盤，自願加入。<b>民宅</b>越高級來得越快、上限越高。夜班巡陰時每 25 個跟一隊（最多 4 隊），倒下的會扣掉。',
   };
   document.querySelectorAll('#resbox .rs').forEach(el => el.onclick = () => Fx.toast(RES_HELP[el.title] + (el.title === '陰兵' && !S.bld.home ? '<br>（建好民宅，遊魂才會來）' : '')));
   $('#quest').onclick = () => { const p = Village.questTarget(); const q = Quest.cur(); if (q && q.go === 'roster') { UI.open('roster'); return; } if (q && q.go === 'gate' && Quest.cur().t === 'stage') { UI.open('battle'); return; } if (p) { UI.close(); Village.focus(p[0], p[1]); } };

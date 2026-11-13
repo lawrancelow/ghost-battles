@@ -32,7 +32,8 @@ const GP = (() => {
     try { const s = g.st || ((ok(GHOSTS) && GHOSTS[g.k]) || (ok(FODDER) && FODDER[g.k]) || {}).base; if (s && s.length) return (s[0] + s[1] + s[2]) / 3; } catch (e) {}
     return 30;
   }
-  function raw(g) { if (!g) return 0; const s = stats(g); return ((s[0] + s[1] + s[2]) / 3) * (1 + 0.2 * (drill(g.k) - 1)); }
+  function gearMul(g) { try { return typeof Gear !== 'undefined' && Gear.gpMul ? Gear.gpMul(g) : 1; } catch (e) { return 1; } } // 裝備房（patrol.js）
+  function raw(g) { if (!g) return 0; const s = stats(g); return ((s[0] + s[1] + s[2]) / 3) * (1 + 0.2 * (drill(g.k) - 1)) * gearMul(g); }
   function pow(g) { return Math.round(raw(g) * 10); }
   function mul(g) { if (!g) return NONE; const m = Math.pow(raw(g) / REF, 0.6); return Math.max(MIN, Math.min(MAX, isFinite(m) ? m : 1)); }
   function grow(g) { if (!g) return 1; const m = Math.pow(raw(g) / Math.max(1, base(g)), 0.6); return Math.max(1, Math.min(MAX, isFinite(m) ? m : 1)); }
