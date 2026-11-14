@@ -22,7 +22,8 @@ static func _setup_table() -> void:
 	FN["xiaogui"] = mv_xiaogui
 	FN["laojiang"] = mv_jiangshi
 	FN["zombie"] = mv_jiangshi
-	for k in BtMoves2.table(): FN[k] = BtMoves2.table()[k]
+	for tb in [BtMoves2.table(), BtN30a.table()]:
+		for k in tb: FN[k] = tb[k]
 
 static func has(k: String) -> bool:
 	_setup_table(); return FN.has(k)
