@@ -447,10 +447,31 @@ func recruit_scene(k: String, tail: Array = []):
 		DB.D.LANG_ZH.merge(zh, true)
 	return {"style": "talk", "bg": "village", "lines": lines}
 
+# 村內閒聊：雜鬼按 id 固定揀一種性格
+static func fodder_pers(g: Dictionary) -> Dictionary:
+	var FP: Dictionary = DB.D.get("FODDER_PERS", {})
+	var k = str(g.get("k", ""))
+	if not FP.has(k) or FP[k].is_empty(): return {}
+	var arr: Array = FP[k]
+	return arr[abs(str(g.get("id", k)).hash()) % arr.size()]
+
+# 返回可直接 DB.L() 嘅句子 key 列表（名鬼用 CHATTER，雜鬼用性格句，冇就退返類型 CHATTER）
+static func chatter_pool(g: Dictionary) -> Array:
+	var k = str(g.get("k", ""))
+	if DB.D.get("FODDER", {}).has(k):
+		var p = fodder_pers(g)
+		if not p.is_empty(): return p.lines + DB.D.CHATTER.get(k, [])
+	return DB.D.get("CHATTER", {}).get(k, [])
+
 # 測試用
 func t_pay(id: String) -> void:
 	var x = sdef(id); var e = sq().get(id)
 	if e != null: pay_step(x, e)
+func t_chat() -> void:
+	for g in [{"k": "youhun", "id": 3}, {"k": "youhun", "id": 7}, {"k": "egui", "id": "a1"}, {"k": "n30_pelesit", "id": 1}, {"k": "baiwu", "id": 2}]:
+		var p = fodder_pers(g); var pool = chatter_pool(g)
+		print("CHAT ", g.k, " pers=", p.get("id", "-"), " enter=", DB.L(p.get("enter", "")), " n=", pool.size(), " ", DB.L(pool[0]))
+
 func t_dump() -> void:
 	for k in sq(): print("SQ ", k, " ", sq()[k])
 	print("DQ ", dq())
