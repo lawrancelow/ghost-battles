@@ -213,6 +213,7 @@ func begin(c: int, z0: int) -> void:
 	for g in S.ghosts: if J.t(g.get("poached")): any_poached = true
 	bryan_want = any_poached or randf() < 0.4
 	J.cl(N.setActive, null, [true])
+	QX.bump("patrol")
 	_build_view()
 	reveal_around(lx, ly)
 	spots = MAP.spots
@@ -220,6 +221,7 @@ func begin(c: int, z0: int) -> void:
 	if has_g("Guide"): jm("Guide", "visit", ["battle"])
 	hud.refresh_leads()
 	_hud(true)
+	QX.event("patrol_begin:%d" % ci)
 
 func _start_z() -> int:
 	return 6 * MAP.COLS + MAP.mc(0)
@@ -546,7 +548,7 @@ func update(dt: float) -> void:
 			if randf() < 0.7: fx.append({"kind": "after", "u": L, "x": L.x, "y": L.y, "s": L.s, "flip": L.flip, "t": 0.0, "life": 0.28})
 			for e in foes:
 				if e.hp > 0 and not e.fled and not e.down > 0 and not L.dash_hit.has(e) and Vector2(e.x - L.x, (e.y - L.y) * 1.3).length() < 40:
-					L.dash_hit[e] = 1; hit(L, e, 0.8, {"kb": 300.0})
+					L.dash_hit[e] = 1; hit(L, e, 0.8, {"kb": 300.0}); QX.bump("dashHit")
 		else:
 			var spd = L.spd * (1.12 if buff > 0 else 1.0); approach_v(L, mx * spd, my * spd, dt, 1800.0 if ml > 0.05 else 2400.0)
 		integrate(L, dt)
@@ -845,7 +847,9 @@ func start_attack(u: PtU, v: PtU, cast := false) -> void:
 	u.cd = u.aspd * (0.85 + randf() * 0.3)
 	if absf(v.x - u.x) > 2: u.flip = v.x < u.x
 	if u.side == 0 and v.side == 1: provoke(v)
-	if cast: u.energy = 0; snd("click")
+	if cast:
+		u.energy = 0; snd("click")
+		if u.side == 0 and u.role == "lead": QX.bump("cast")
 
 func tick_act(u: PtU, dt: float) -> void:
 	var a = u.act; a.t += dt
@@ -1017,7 +1021,7 @@ func dash() -> void:
 
 func pie() -> void:
 	if pie_cd > 0 or ended or L.hp <= 0: return
-	buff = 8; pie_cd = 30; flash_a = 0.25
+	buff = 8; pie_cd = 30; flash_a = 0.25; QX.bump("pie")
 	for u in units:
 		if u.hp > 0:
 			spr("fx_aura", u.x, u.y + 4, {"s0": 0.15, "s1": 0.3, "life": 0.8, "anchor": 0.95})
@@ -1057,6 +1061,8 @@ func on_down(v: PtU, _by: PtU) -> void:
 		if v.role == "troop": S.res.troops = maxf(0, J.num(S.res.troops) - 25)
 		return
 	streak += 1; loot.kills += 1; st().kills = J.num(st().get("kills", 0)) + 1
+	QX.bump("k_" + v.k)
+	if v.elite: QX.bump("elite")
 	for u in units:
 		if u.role == "crew" and u.hp > 0 and u.in_fight: u.g.fat = minf(100, J.num(u.g.get("fat", 0)) + 1.5)
 	if v.guard >= 0 or v.bryan or v.ot_boss: v.dead_t = 0; soul_drop(v, 0.6); return
@@ -1107,7 +1113,7 @@ func gain(g: Dictionary) -> void:
 func resolve_down(v: PtU, how: String, _timeout := false) -> void:
 	if v.done: return
 	v.done = true; v.down = 0; v.dead_t = 0; downs.erase(v)
-	if how == "soul": soul_drop(v); v.soul = true
+	if how == "soul": soul_drop(v); v.soul = true; QX.bump("soul")
 	else:
 		var I = sign_info(v)
 		if not I.ok:
@@ -1168,7 +1174,7 @@ func spot_tick(dt: float) -> void:
 	for sp in spots:
 		var d = Vector2(sp.x - L.x, (sp.y - L.y) * 1.2).length()
 		if sp.k == "lm" and not J.t(rs.lm.get(str(sp.id))) and d < 170:
-			rs.lm[str(sp.id)] = 1.0; var rew = {"coins": 8 + ci * 6, "exp": 6 + ci * 3}; gain(rew); reveal_around(sp.x, sp.y, 7)
+			rs.lm[str(sp.id)] = 1.0; QX.bump("lm"); var rew = {"coins": 8 + ci * 6, "exp": 6 + ci * 3}; gain(rew); reveal_around(sp.x, sp.y, 7)
 			msg("<b>發現地標：%s</b>　冥幣 +%d　好評 +%d　（地標 %d/%d）" % [sp.name, rew.coins, rew.exp, rs.lm.size(), N.LMNAME[ci].size()], 3.5)
 			spr("fx_ring", sp.x, sp.y, {"ground": true, "s0": 0.2, "s1": 0.9, "life": 0.7, "hue": HUE.lan}); snd("click"); persist()
 			J.cl(N.emit, null, ["discover", {"ci": float(ci), "id": float(sp.id), "name": sp.name, "t": float(sp.t)}])
@@ -1181,7 +1187,7 @@ func spot_tick(dt: float) -> void:
 		if dig == null or dig.sp != digging: dig = {"sp": digging, "t": 0.0}
 		dig.t += dt
 		if dig.t > 1.3:
-			var sp = digging; rs.ca[str(sp.id)] = 1.0; dig = null
+			var sp = digging; rs.ca[str(sp.id)] = 1.0; dig = null; QX.bump("dig")
 			var f = FAC.keys()[sp.id % 3]; var n = 3 + randi() % 4 + ci * 2; var coins = 15 + ci * 12; var box = randf() < 0.18
 			loot[f] += n; st().mats[f] = J.num(st().mats[f]) + n; gain({"coins": coins})
 			if box: S.chests.b = J.num(S.chests.b) + 1
@@ -1261,7 +1267,7 @@ func use_faci(f: Dictionary) -> void:
 		if mat_total() < c: return
 		pay_mat(c); rs.sta[str(f.z)] = 1.0; msg("開通了 %s 地鐵站。" % N.TNAME[ci][MAP.ter_of(f.z)], 2); save()
 	elif f.t == "tea":
-		tea[f.z] = t + TEA_CD
+		tea[f.z] = t + TEA_CD; QX.bump("tea")
 		for u in units:
 			if u.hp > 0: u.hp = u.maxhp
 			if u.g != null and J.num(u.g.get("fat", 0)) > 0:
@@ -1329,6 +1335,7 @@ func end(died: bool) -> void:
 	ended = true; persist()
 	st().restAt = J.now()
 	if died: streak = 0
+	elif loot.kills >= 10: QX.bump("cleanRun")
 	var q = N.MEET[randi() % N.MEET.size()]
 	hud.end_show(died, T(J.str(q[0]), J.str(q[1])), loot)
 	snd("lose" if died else "win")

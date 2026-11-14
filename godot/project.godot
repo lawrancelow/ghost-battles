@@ -21,6 +21,7 @@ G="*res://game/game.gd"
 Tst="*res://core/tester.gd"
 JSRun="*res://js/jsrun.gd"
 Snd="*res://core/snd.gd"
+QX="*res://game/quest/qx.gd"
 
 [display]
 window/size/viewport_width=390

@@ -168,7 +168,15 @@ func draw_lily(ctx: Ctx, x: float, y: float, t: float) -> void:
 const LIMB_POSES := {"idle": 1, "move": 1, "walk": 1, "run": 1, "windup": 1, "strike": 1, "follow": 1, "recover": 1, "chop": 1, "hammer": 1, "proud": 1}
 
 func spr_key(type: String) -> String: return "afu_body" if type == "afu" else type
-func has_spr(type: String) -> bool: return CHAR_H.has(type) and Spr.ok(spr_key(type))
+func has_spr(type: String) -> bool: return char_h(type) > 0 and PtGfx.tex(spr_key(type)) != null
+# 原生表冇嘅角色（n30、巡陰新鬼、npc_*）：用 JS ART.CHAR_H 嘅高度
+func char_h(type: String) -> float:
+	if CHAR_H.has(type): return CHAR_H[type]
+	var A = J.G.get("ART")
+	if A != null:
+		var h = J.gp(A, "CHAR_H")
+		if h is Dictionary and h.has(type): return J.num(h[type])
+	return 0.0
 
 func draw_char(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary = {}) -> void:
 	if not o.has("t"): o.t = 0.0
@@ -218,8 +226,8 @@ func _draw_plain(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictio
 	ctx.restore()
 
 func _draw_sprite(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary) -> void:
-	var key = spr_key(type); var img = Spr.get_tex(key); var iw = img.get_width(); var ih = img.get_height()
-	var t: float = o.get("t", 0.0); var H: float = CHAR_H[type] * s; var Wd = H * iw / ih
+	var key = spr_key(type); var img = PtGfx.tex(key); var iw = img.get_width(); var ih = img.get_height()
+	var t: float = o.get("t", 0.0); var H: float = char_h(type) * s; var Wd = H * iw / ih
 	var sy = 1 + sin(t * 2.2) * 0.02; var sx = 1 - (sy - 1) * 0.5; var r = 0.0; var dy = 0.0
 	if o.get("walk", false): r += sin(t * 9) * 0.07; dy -= absf(sin(t * 9)) * 1.5 * s
 	if o.get("work", false): r += sin(t * 12) * 0.12

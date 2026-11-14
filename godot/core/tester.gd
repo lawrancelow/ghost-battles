@@ -57,6 +57,7 @@ func _run() -> void:
 			"cam": J.mc(J.G.get("Village"), "setCam", [float(s[1])])
 			"call":
 				if s[1] == "main": main().callv(s[2], s.slice(3))
+				elif get_tree().root.has_node(s[1]): get_tree().root.get_node(s[1]).callv(s[2], s.slice(3))
 				else: J.mc(J.G.get(s[1]), s[2], s.slice(3))
 			"set": G.S[s[1]] = s[2]
 			"print": print("STATE ", s[1], "=", str(G.S.get(s[1])).substr(0, 300))
@@ -105,6 +106,13 @@ func _run() -> void:
 				var t0 = Time.get_ticks_usec(); var fr0 = Engine.get_process_frames(); await get_tree().create_timer(float(s[1])).timeout
 				print("PROF frames=", Engine.get_process_frames() - fr0, " process_ms=", snapped(Performance.get_monitor(Performance.TIME_PROCESS) * 1000, 0.1), " fps=", Engine.get_frames_per_second())
 			"bench": load("res://core/bench.gd").run(s[1])
+			"vbench": load("res://core/bench.gd").village()
+			"vparts": load("res://core/bench.gd").vparts()
+			"storyskip":
+				for i in int(s[1]) if s.size() > 1 else 10:
+					var st = main().story
+					if st.cur == null: break
+					st.skip_scene(); await get_tree().process_frame
 			"pt":
 				var r = PtRun.cur
 				if r == null: print("PT none")
