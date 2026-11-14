@@ -29,6 +29,8 @@ static func install_natives(host: Node) -> void:
 	G["SPR_READY"] = JSPromise.new(null)
 	G["sprOk"] = func(_t, a): return a.size() > 0 and (Spr.ok(J.str(a[0])) or (G["SPR"] as SprProxy).extra.has(J.str(a[0])))
 	G["__nat_patrolMenu"] = func(_t, a): return PatrolMenu.hook(a)
+	G["__nat_menu"] = func(_t, a): return Menus.hook(a)
+	G["__nat_menuClose"] = func(_t, a): Menus.close_hook(); return null
 	G["__nat_patrol"] = func(_t, a): return PtRun.start_run(int(J.num(a[0])), int(J.num(a[1])))
 	G["__nat_scare"] = func(_t, a): return ScRun.hook(a[0])
 	G["__nat_scSize"] = func(_t, a): return ScRun.size_of()

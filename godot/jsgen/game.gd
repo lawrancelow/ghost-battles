@@ -25,16 +25,16 @@ func run(env):
 	J.G["furnaceReady"] = Callable(self, "_f121").bind(env)
 	J.G["paintBg"] = Callable(self, "_f168").bind(env)
 	J.G["postLabel"] = Callable(self, "_f169").bind(env)
-	J.G["standOk"] = Callable(self, "_f245").bind(env)
-	J.G["syncSnd"] = Callable(self, "_f246").bind(env)
-	J.G["confirmInline"] = Callable(self, "_f247").bind(env)
-	J.G["paintPortraits"] = Callable(self, "_f249").bind(env)
-	J.G["recruitFodder"] = Callable(self, "_f251").bind(env)
-	J.G["covered"] = Callable(self, "_f255").bind(env)
-	J.G["loop"] = Callable(self, "_f256").bind(env)
-	J.G["offlineGain"] = Callable(self, "_f257").bind(env)
-	J.G["start"] = Callable(self, "_f258").bind(env)
-	J.G["startGame"] = Callable(self, "_f261").bind(env)
+	J.G["standOk"] = Callable(self, "_f270").bind(env)
+	J.G["syncSnd"] = Callable(self, "_f271").bind(env)
+	J.G["confirmInline"] = Callable(self, "_f272").bind(env)
+	J.G["paintPortraits"] = Callable(self, "_f274").bind(env)
+	J.G["recruitFodder"] = Callable(self, "_f276").bind(env)
+	J.G["covered"] = Callable(self, "_f280").bind(env)
+	J.G["loop"] = Callable(self, "_f281").bind(env)
+	J.G["offlineGain"] = Callable(self, "_f282").bind(env)
+	J.G["start"] = Callable(self, "_f283").bind(env)
+	J.G["startGame"] = Callable(self, "_f286").bind(env)
 	J.G["$"] = Callable(self, "_f1").bind(env)
 	J.G["fmt"] = Callable(self, "_f2").bind(env)
 	J.G["RES_NAMES"] = {"wood": "槐木", "rice": "糯米", "planks": "棺材板", "buns": "壽包", "coins": "冥幣", "troops": "陰兵"}
@@ -57,7 +57,7 @@ func run(env):
 	J.G["JossFx"] = {"play": Callable(self, "_f122").bind(env)}
 	J.G["Fx"] = {"lastPraise": {}, "float": Callable(self, "_f125").bind(env), "toast": Callable(self, "_f126").bind(env), "banner": Callable(self, "_f129").bind(env), "praise": Callable(self, "_f130").bind(env)}
 	J.G["Story"] = {"q": [], "cur": null, "li": 0.0, "typing": false, "shown": "", "timer": null, "cb": null, "actors": [], "busy": Callable(self, "_f131").bind(env), "queue": Callable(self, "_f132").bind(env), "next": Callable(self, "_f133").bind(env), "render": Callable(self, "_f134").bind(env), "frame": Callable(self, "_f138").bind(env), "drawStage": Callable(self, "_f139").bind(env), "showLine": Callable(self, "_f141").bind(env), "drawAnchor": Callable(self, "_f146").bind(env), "chatLine": Callable(self, "_f147").bind(env), "chatEnd": Callable(self, "_f159").bind(env), "advance": Callable(self, "_f166").bind(env), "skipScene": Callable(self, "_f167").bind(env)}
-	J.G["UI"] = {"tab": "village", "modalOpen": Callable(self, "_f170").bind(env), "refresh": Callable(self, "_f171").bind(env), "open": Callable(self, "_f173").bind(env), "sheet": Callable(self, "_f175").bind(env), "close": Callable(self, "_f176").bind(env), "openBuilding": Callable(self, "_f178").bind(env), "bldEffect": Callable(self, "_f188").bind(env), "postHtml": Callable(self, "_f191").bind(env), "postStatTxt": Callable(self, "_f193").bind(env), "pickWorker": Callable(self, "_f194").bind(env), "openRoster": Callable(self, "_f204").bind(env), "openChests": Callable(self, "_f218").bind(env), "openStory": Callable(self, "_f223").bind(env), "openBattleSelect": Callable(self, "_f244").bind(env)}
+	J.G["UI"] = {"tab": "village", "modalOpen": Callable(self, "_f170").bind(env), "refresh": Callable(self, "_f171").bind(env), "open": Callable(self, "_f173").bind(env), "sheet": Callable(self, "_f175").bind(env), "close": Callable(self, "_f176").bind(env), "openBuilding": Callable(self, "_f178").bind(env), "bldEffect": Callable(self, "_f188").bind(env), "postHtml": Callable(self, "_f191").bind(env), "postStatTxt": Callable(self, "_f193").bind(env), "pickWorker": Callable(self, "_f194").bind(env), "openRoster": Callable(self, "_f204").bind(env), "openChests": Callable(self, "_f218").bind(env), "openStory": Callable(self, "_f223").bind(env), "_n": {"bld": Callable(self, "_f244").bind(env), "bldAct": Callable(self, "_f249").bind(env), "pick": Callable(self, "_f250").bind(env), "pickDo": Callable(self, "_f258").bind(env), "roster": Callable(self, "_f259").bind(env), "rosterAct": Callable(self, "_f263").bind(env), "chests": Callable(self, "_f266").bind(env), "chestOpen": Callable(self, "_f268").bind(env)}, "openBattleSelect": Callable(self, "_f269").bind(env)}
 	J.G["lastT"] = J.S_performance_("now", [])
 	J.G["saveT"] = 0.0
 	J.G["uiT"] = 0.0
@@ -816,109 +816,109 @@ func _f169(this_, a: Array, env):
 		return "樓裡有鬼出更中"
 	return "出外工作中"
 
-func _f245(this_, a: Array, env):
-	var v_st_928 = null
-	v_st_928 = J.arg(a, 0)
-	var _t148 = (not J.t(J.gp(v_st_928, "need")))
-	return (_t148 if _t148 else (not (not J.t(J.gp(J.gp(J.G.get("S"), "seen"), J.gp(v_st_928, "need"))))))
+func _f270(this_, a: Array, env):
+	var v_st_1035 = null
+	v_st_1035 = J.arg(a, 0)
+	var _t148 = (not J.t(J.gp(v_st_1035, "need")))
+	return (_t148 if _t148 else (not (not J.t(J.gp(J.gp(J.G.get("S"), "seen"), J.gp(v_st_1035, "need"))))))
 
-func _f246(this_, a: Array, env):
-	var v_b_931 = null
+func _f271(this_, a: Array, env):
+	var v_b_1038 = null
 	var _t149 = J.G.get("$")
-	v_b_931 = J.cl(_t149, null, ["#sndtop"])
-	if J.t(v_b_931):
+	v_b_1038 = J.cl(_t149, null, ["#sndtop"])
+	if J.t(v_b_1038):
 		var _t150 = ("🔊" if J.t(J.mc(J.G.get("Sound"), "isOn", [])) else "🔇")
-		J.sp(v_b_931, "textContent", _t150)
-		var _t151 = J.gp(v_b_931, "classList")
+		J.sp(v_b_1038, "textContent", _t150)
+		var _t151 = J.gp(v_b_1038, "classList")
 		J.mc(_t151, "toggle", ["off", (not J.t(J.mc(J.G.get("Sound"), "isOn", [])))])
 
-func _f248(this_, a: Array, env):
+func _f273(this_, a: Array, env):
 	J.del(J.gp(env["btn"], "dataset"), "armed")
 	var _t154 = env["btn"]
 	var _t155 = env["o"]
 	J.sp(_t154, "innerHTML", _t155)
 
-func _f247(this_, a: Array, env):
-	var v_msg_935 = null
-	var _s516 = {"__p": env, "btn": null, "o": null}
-	_s516["btn"] = J.arg(a, 0)
-	v_msg_935 = J.arg(a, 1)
-	if J.t(J.gp(J.gp(_s516["btn"], "dataset"), "armed")):
+func _f272(this_, a: Array, env):
+	var v_msg_1042 = null
+	var _s589 = {"__p": env, "btn": null, "o": null}
+	_s589["btn"] = J.arg(a, 0)
+	v_msg_1042 = J.arg(a, 1)
+	if J.t(J.gp(J.gp(_s589["btn"], "dataset"), "armed")):
 		return true
-	var _t152 = J.gp(_s516["btn"], "dataset")
+	var _t152 = J.gp(_s589["btn"], "dataset")
 	J.sp(_t152, "armed", 1.0)
-	_s516["o"] = J.gp(_s516["btn"], "innerHTML")
-	var _t153 = _s516["btn"]
-	J.sp(_t153, "innerHTML", v_msg_935)
-	J.F_setTimeout([Callable(self, "_f248").bind(_s516), 2500.0])
+	_s589["o"] = J.gp(_s589["btn"], "innerHTML")
+	var _t153 = _s589["btn"]
+	J.sp(_t153, "innerHTML", v_msg_1042)
+	J.F_setTimeout([Callable(self, "_f273").bind(_s589), 2500.0])
 	return false
 
-func _f250(this_, a: Array, env):
-	var v_c_940 = null; var v_p_941 = null
-	v_c_940 = J.arg(a, 0)
-	if J.t(J.gp(J.gp(v_c_940, "dataset"), "done")):
+func _f275(this_, a: Array, env):
+	var v_c_1047 = null; var v_p_1048 = null
+	v_c_1047 = J.arg(a, 0)
+	if J.t(J.gp(J.gp(v_c_1047, "dataset"), "done")):
 		return null
-	var _t157 = J.gp(v_c_940, "dataset")
+	var _t157 = J.gp(v_c_1047, "dataset")
 	J.sp(_t157, "done", 1.0)
-	v_p_941 = J.mc(J.G.get("ART"), "portrait", [J.gp(J.gp(v_c_940, "dataset"), "por"), 64.0, {"tamed": true, "untied": true}])
-	var _t158 = J.gp(v_p_941, "width")
-	J.sp(v_c_940, "width", _t158)
-	var _t159 = J.gp(v_p_941, "height")
-	J.sp(v_c_940, "height", _t159)
-	var _t160 = J.mc(v_c_940, "getContext", ["2d"])
-	J.mc(_t160, "drawImage", [v_p_941, 0.0, 0.0])
+	v_p_1048 = J.mc(J.G.get("ART"), "portrait", [J.gp(J.gp(v_c_1047, "dataset"), "por"), 64.0, {"tamed": true, "untied": true}])
+	var _t158 = J.gp(v_p_1048, "width")
+	J.sp(v_c_1047, "width", _t158)
+	var _t159 = J.gp(v_p_1048, "height")
+	J.sp(v_c_1047, "height", _t159)
+	var _t160 = J.mc(v_c_1047, "getContext", ["2d"])
+	J.mc(_t160, "drawImage", [v_p_1048, 0.0, 0.0])
 
-func _f249(this_, a: Array, env):
-	var v_root_939 = null
-	v_root_939 = J.arg(a, 0)
-	var _t156 = J.mc(v_root_939, "querySelectorAll", ["canvas[data-por]"])
-	J.mc(_t156, "forEach", [Callable(self, "_f250").bind(env)])
+func _f274(this_, a: Array, env):
+	var v_root_1046 = null
+	v_root_1046 = J.arg(a, 0)
+	var _t156 = J.mc(v_root_1046, "querySelectorAll", ["canvas[data-por]"])
+	J.mc(_t156, "forEach", [Callable(self, "_f275").bind(env)])
 
-func _f252(this_, a: Array, env):
-	var v_k_953 = null
-	v_k_953 = J.arg(a, 0)
-	var _t162 = (not J.t(J.gp(J.gp(J.G.get("FODDER"), v_k_953), "unlock")))
-	return (_t162 if _t162 else J.gp(J.gp(J.G.get("S"), "cleared"), J.gp(J.gp(J.G.get("FODDER"), v_k_953), "unlock")))
+func _f277(this_, a: Array, env):
+	var v_k_1060 = null
+	v_k_1060 = J.arg(a, 0)
+	var _t162 = (not J.t(J.gp(J.gp(J.G.get("FODDER"), v_k_1060), "unlock")))
+	return (_t162 if _t162 else J.gp(J.gp(J.G.get("S"), "cleared"), J.gp(J.gp(J.G.get("FODDER"), v_k_1060), "unlock")))
 
-func _f253(this_, a: Array, env):
+func _f278(this_, a: Array, env):
 	return J.round(J.num(J.mul((15.0 + (randf() * 32.0)), env["m"])))
 
-func _f254(this_, a: Array, env):
-	var v_g_954 = null
-	v_g_954 = J.arg(a, 0)
-	return J.gp(v_g_954, "name")
+func _f279(this_, a: Array, env):
+	var v_g_1061 = null
+	v_g_1061 = J.arg(a, 0)
+	return J.gp(v_g_1061, "name")
 
-func _f251(this_, a: Array, env):
-	var v_rare_944 = null; var v_pool_945 = null; var v_k_946 = null; var v_purple_947 = null; var v_st_949 = null; var v_used_950 = null; var v_name_951 = null; var v_g_952 = null; var v_i_955 = null
-	var _s520 = {"__p": env, "m": null}
-	v_rare_944 = J.arg(a, 0)
+func _f276(this_, a: Array, env):
+	var v_rare_1051 = null; var v_pool_1052 = null; var v_k_1053 = null; var v_purple_1054 = null; var v_st_1056 = null; var v_used_1057 = null; var v_name_1058 = null; var v_g_1059 = null; var v_i_1062 = null
+	var _s593 = {"__p": env, "m": null}
+	v_rare_1051 = J.arg(a, 0)
 	var _t161 = J.S_Object_("keys", [J.G.get("FODDER")])
-	v_pool_945 = J.mc(_t161, "filter", [Callable(self, "_f252").bind(_s520)])
-	v_k_946 = J.gp(v_pool_945, floor(J.num((randf() * J.len(v_pool_945)))))
-	v_purple_947 = (v_rare_944 if J.t(v_rare_944) else (randf() < 0.15))
-	_s520["m"] = (1.45 if J.t(v_purple_947) else 1.0)
+	v_pool_1052 = J.mc(_t161, "filter", [Callable(self, "_f277").bind(_s593)])
+	v_k_1053 = J.gp(v_pool_1052, floor(J.num((randf() * J.len(v_pool_1052)))))
+	v_purple_1054 = (v_rare_1051 if J.t(v_rare_1051) else (randf() < 0.15))
+	_s593["m"] = (1.45 if J.t(v_purple_1054) else 1.0)
 	var _t163 = [0.0, 0.0, 0.0]
-	v_st_949 = J.mc(_t163, "map", [Callable(self, "_f253").bind(_s520)])
+	v_st_1056 = J.mc(_t163, "map", [Callable(self, "_f278").bind(_s593)])
 	var _t164 = J.gp(J.G.get("S"), "ghosts")
-	v_used_950 = J.new_("Set", [J.mc(_t164, "map", [Callable(self, "_f254").bind(_s520)])])
-	v_name_951 = null
-	v_i_955 = 0.0
+	v_used_1057 = J.new_("Set", [J.mc(_t164, "map", [Callable(self, "_f279").bind(_s593)])])
+	v_name_1058 = null
+	v_i_1062 = 0.0
 	while true:
-		if not J.cmp(v_i_955, 40.0, "<"): break
-		var _t165 = J.add(J.add(J.gp(J.gp(J.G.get("FODDER"), v_k_946), "name"), "・"), J.gp(J.G.get("NICKS"), floor(J.num((randf() * J.len(J.G.get("NICKS")))))))
-		v_name_951 = _t165
-		if (not J.t(J.mc(v_used_950, "has", [v_name_951]))):
+		if not J.cmp(v_i_1062, 40.0, "<"): break
+		var _t165 = J.add(J.add(J.gp(J.gp(J.G.get("FODDER"), v_k_1053), "name"), "・"), J.gp(J.G.get("NICKS"), floor(J.num((randf() * J.len(J.G.get("NICKS")))))))
+		v_name_1058 = _t165
+		if (not J.t(J.mc(v_used_1057, "has", [v_name_1058]))):
 			break
-		v_i_955 = J.num(v_i_955) + 1.0
+		v_i_1062 = J.num(v_i_1062) + 1.0
 	var _t166 = J.G.get("S")
 	var _t167 = J.num(J.gp(_t166, "uid"))
 	J.sp(_t166, "uid", _t167 + 1.0)
-	v_g_952 = {"id": J.add("g", _t167), "k": v_k_946, "name": v_name_951, "q": ("紫" if J.t(v_purple_947) else "藍"), "lv": 1.0, "st": v_st_949, "post": null, "spent": 0.0}
+	v_g_1059 = {"id": J.add("g", _t167), "k": v_k_1053, "name": v_name_1058, "q": ("紫" if J.t(v_purple_1054) else "藍"), "lv": 1.0, "st": v_st_1056, "post": null, "spent": 0.0}
 	var _t168 = J.gp(J.G.get("S"), "ghosts")
-	J.mc(_t168, "push", [v_g_952])
-	return v_g_952
+	J.mc(_t168, "push", [v_g_1059])
+	return v_g_1059
 
-func _f255(this_, a: Array, env):
+func _f280(this_, a: Array, env):
 	var _t169 = (not J.seq(J.typeof_(J.G.get("Patrol")), "undefined"))
 	var _t171 = (J.gp(J.G.get("Patrol"), "active") if _t169 else _t169)
 	if not J.t(_t171):
@@ -939,40 +939,40 @@ func _f255(this_, a: Array, env):
 		_t178 = ((not (not J.t(J.mc(J.G.get("Sports"), "_g", [])))) if J.t(_t177) else _t177)
 	return _t178
 
-func _f256(this_, a: Array, env):
-	var v_now_960 = null; var v_dt_961 = null
-	v_now_960 = J.arg(a, 0)
+func _f281(this_, a: Array, env):
+	var v_now_1067 = null; var v_dt_1068 = null
+	v_now_1067 = J.arg(a, 0)
 	J.F_requestAnimationFrame([J.G.get("loop")])
-	if J.cmp(J.sub(v_now_960, J.G.get("lastT")), J.G.get("FRAME_MS"), "<"):
+	if J.cmp(J.sub(v_now_1067, J.G.get("lastT")), J.G.get("FRAME_MS"), "<"):
 		return null
-	v_dt_961 = J.min_([0.1, J.div(J.sub(v_now_960, J.G.get("lastT")), 1000.0)])
-	J.G["lastT"] = v_now_960
+	v_dt_1068 = J.min_([0.1, J.div(J.sub(v_now_1067, J.G.get("lastT")), 1000.0)])
+	J.G["lastT"] = v_now_1067
 	if (not J.t(J.gp(J.G.get("Battle"), "active"))):
 		var _t179 = J.G.get("produce")
-		J.cl(_t179, null, [J.mul(v_dt_961, J.G.get("TIME_SCALE"))])
-		J.mc(J.G.get("Village"), "update", [v_dt_961])
+		J.cl(_t179, null, [J.mul(v_dt_1068, J.G.get("TIME_SCALE"))])
+		J.mc(J.G.get("Village"), "update", [v_dt_1068])
 		var _t180 = (not J.t(J.cl(J.G.get("covered"), null, [])))
 		if (J.seq(J.typeof_(J.G.get("__nat_village")), "undefined") if _t180 else _t180):
 			J.mc(J.G.get("Village"), "draw", [])
 	else:
 		var _t181 = J.G.get("produce")
-		J.cl(_t181, null, [J.mul(v_dt_961, J.G.get("TIME_SCALE"))])
-		J.mc(J.G.get("Battle"), "update", [v_dt_961])
+		J.cl(_t181, null, [J.mul(v_dt_1068, J.G.get("TIME_SCALE"))])
+		J.mc(J.G.get("Battle"), "update", [v_dt_1068])
 		J.mc(J.G.get("Battle"), "draw", [])
-	var _t182 = J.add(J.G.get("uiT"), v_dt_961)
+	var _t182 = J.add(J.G.get("uiT"), v_dt_1068)
 	J.G["uiT"] = _t182
 	if J.cmp(J.G.get("uiT"), 0.5, ">"):
 		J.G["uiT"] = 0.0
 		J.mc(J.G.get("UI"), "refresh", [])
 		J.mc(J.G.get("Quest"), "check", [])
-	var _t183 = J.add(J.G.get("saveT"), v_dt_961)
+	var _t183 = J.add(J.G.get("saveT"), v_dt_1068)
 	J.G["saveT"] = _t183
 	if J.cmp(J.G.get("saveT"), 5.0, ">"):
 		J.G["saveT"] = 0.0
 		J.cl(J.G.get("save"), null, [])
 
-func _f257(this_, a: Array, env):
-	var v_sec_964 = null; var v_before_965 = null; var v_lv0_966 = null; var v_e0_967 = null; var v_parts_968 = null; var v_s_969 = null; var v_k_970 = null; var v_d_971 = null
+func _f282(this_, a: Array, env):
+	var v_sec_1071 = null; var v_before_1072 = null; var v_lv0_1073 = null; var v_e0_1074 = null; var v_parts_1075 = null; var v_s_1076 = null; var v_k_1077 = null; var v_d_1078 = null
 	var _t188 = (8.0 * 3600.0)
 	var _t185 = J.S_Date_("now", [])
 	var _t184 = J.gp(J.G.get("S"), "last")
@@ -983,48 +983,48 @@ func _f257(this_, a: Array, env):
 	var _t189 = J.gp(J.G.get("S"), "last")
 	var _t192 = J.S_Date_("now", [])
 	var _t191 = J.gp(J.G.get("S"), "last")
-	v_sec_964 = J.min_([_t193, J.max_([0.0, J.div(J.sub(_t192, (_t191 if J.t(_t191) else J.S_Date_("now", []))), 1000.0)])])
-	if J.cmp(v_sec_964, 60.0, "<"):
+	v_sec_1071 = J.min_([_t193, J.max_([0.0, J.div(J.sub(_t192, (_t191 if J.t(_t191) else J.S_Date_("now", []))), 1000.0)])])
+	if J.cmp(v_sec_1071, 60.0, "<"):
 		return null
-	v_before_965 = J.S_Object_("assign", [{}, J.gp(J.G.get("S"), "res")])
-	v_lv0_966 = J.gp(J.G.get("S"), "lv")
-	v_e0_967 = J.gp(J.G.get("S"), "exp")
-	v_s_969 = 0.0
+	v_before_1072 = J.S_Object_("assign", [{}, J.gp(J.G.get("S"), "res")])
+	v_lv0_1073 = J.gp(J.G.get("S"), "lv")
+	v_e0_1074 = J.gp(J.G.get("S"), "exp")
+	v_s_1076 = 0.0
 	while true:
-		if not J.cmp(v_s_969, v_sec_964, "<"): break
+		if not J.cmp(v_s_1076, v_sec_1071, "<"): break
 		var _t194 = J.G.get("produce")
-		J.cl(_t194, null, [J.min_([60.0, J.sub(v_sec_964, v_s_969)])])
-		var _t195 = J.add(v_s_969, 60.0)
-		v_s_969 = _t195
-	v_parts_968 = []
+		J.cl(_t194, null, [J.min_([60.0, J.sub(v_sec_1071, v_s_1076)])])
+		var _t195 = J.add(v_s_1076, 60.0)
+		v_s_1076 = _t195
+	v_parts_1075 = []
 	for _t196 in J.iter(["wood", "rice", "planks", "buns", "troops", "coins"]):
-		v_k_970 = _t196
-		v_d_971 = floor(J.num(J.sub(J.gp(J.gp(J.G.get("S"), "res"), v_k_970), J.gp(v_before_965, v_k_970))))
-		if J.cmp(v_d_971, 0.0, ">"):
-			var _t198 = J.gp(J.G.get("RES_NAMES"), v_k_970)
+		v_k_1077 = _t196
+		v_d_1078 = floor(J.num(J.sub(J.gp(J.gp(J.G.get("S"), "res"), v_k_1077), J.gp(v_before_1072, v_k_1077))))
+		if J.cmp(v_d_1078, 0.0, ">"):
+			var _t198 = J.gp(J.G.get("RES_NAMES"), v_k_1077)
 			var _t197 = J.G.get("fmt")
-			J.mc(v_parts_968, "push", [(J.str(_t198) + " +" + J.str(J.cl(_t197, null, [v_d_971])))])
+			J.mc(v_parts_1075, "push", [(J.str(_t198) + " +" + J.str(J.cl(_t197, null, [v_d_1078])))])
 	var _t199 = J.G.get("S")
 	var _t200 = J.S_Date_("now", [])
 	J.sp(_t199, "last", _t200)
-	if J.t(J.len(v_parts_968)):
-		J.mc(J.G.get("Story"), "queue", [{"style": "sys", "lines": [["系統", ("親，你離開了 " + J.str(floor(J.num(J.div(v_sec_964, 3600.0)))) + " 小時 " + J.str(floor(J.num(J.div(J.mod(v_sec_964, 3600.0), 60.0)))) + " 分鐘。鬼怪們沒有偷懶哦～（最多計 8 小時）")], ["旁白", J.add("離線收益：", J.mc(v_parts_968, "join", ["，"]))]]}])
+	if J.t(J.len(v_parts_1075)):
+		J.mc(J.G.get("Story"), "queue", [{"style": "sys", "lines": [["系統", ("親，你離開了 " + J.str(floor(J.num(J.div(v_sec_1071, 3600.0)))) + " 小時 " + J.str(floor(J.num(J.div(J.mod(v_sec_1071, 3600.0), 60.0)))) + " 分鐘。鬼怪們沒有偷懶哦～（最多計 8 小時）")], ["旁白", J.add("離線收益：", J.mc(v_parts_1075, "join", ["，"]))]]}])
 
-func _f260(this_, a: Array, env):
+func _f285(this_, a: Array, env):
 	return J.mc(J.G.get("Web"), "init", [])
 
-func _f259(this_, a: Array, env):
+func _f284(this_, a: Array, env):
 	var _t201 = (J.G.get("SPR_READY") if (not J.seq(J.typeof_(J.G.get("SPR_READY")), "undefined")) else J.S_Promise_("resolve", []))
 	var _t202 = J.mc(_t201, "then", [J.G.get("startGame"), J.G.get("startGame")])
-	return J.mc(_t202, "then", [Callable(self, "_f260").bind(env)])
+	return J.mc(_t202, "then", [Callable(self, "_f285").bind(env)])
 
-func _f258(this_, a: Array, env):
+func _f283(this_, a: Array, env):
 	return null
 	if J.t(J.mc(J.G.get("Web"), "boot", [])):
 		return null
-	J.mc(J.G.get("Web"), "receive", [Callable(self, "_f259").bind(env)])
+	J.mc(J.G.get("Web"), "receive", [Callable(self, "_f284").bind(env)])
 
-func _f263(this_, a: Array, env):
+func _f288(this_, a: Array, env):
 	J.mc(J.G.get("Sound"), "play", ["click"])
 	var _t210 = J.seq(J.gp(J.gp(env["b"], "dataset"), "t"), "battle")
 	if ((not J.seq(J.typeof_(J.G.get("World")), "undefined")) if _t210 else _t210):
@@ -1033,112 +1033,112 @@ func _f263(this_, a: Array, env):
 		return null
 	J.mc(J.G.get("UI"), "open", [J.gp(J.gp(env["b"], "dataset"), "t")])
 
-func _f262(this_, a: Array, env):
-	var _s541 = {"__p": env, "b": null}
-	_s541["b"] = J.arg(a, 0)
-	var _t209 = _s541["b"]
-	var _t211 = Callable(self, "_f263").bind(_s541)
+func _f287(this_, a: Array, env):
+	var _s614 = {"__p": env, "b": null}
+	_s614["b"] = J.arg(a, 0)
+	var _t209 = _s614["b"]
+	var _t211 = Callable(self, "_f288").bind(_s614)
 	J.sp(_t209, "onclick", _t211)
 	return _t211
 
-func _f264(this_, a: Array, env):
+func _f289(this_, a: Array, env):
 	J.mc(J.G.get("Sound"), "toggle", [])
 	J.cl(J.G.get("syncSnd"), null, [])
 
-func _f265(this_, a: Array, env):
+func _f290(this_, a: Array, env):
 	return J.mc(J.G.get("UI"), "close", [])
 
-func _f267(this_, a: Array, env):
+func _f292(this_, a: Array, env):
 	var _t221 = J.gp(env["__p"]["RES_HELP"], J.gp(env["el"], "title"))
 	var _t220 = J.seq(J.gp(env["el"], "title"), "陰兵")
 	return J.mc(J.G.get("Fx"), "toast", [J.add(_t221, ("<br>（建好民宅，遊魂才會來）" if ((not J.t(J.gp(J.gp(J.G.get("S"), "bld"), "home"))) if _t220 else _t220) else ""))])
 
-func _f266(this_, a: Array, env):
-	var _s546 = {"__p": env, "el": null}
-	_s546["el"] = J.arg(a, 0)
-	var _t219 = _s546["el"]
-	var _t222 = Callable(self, "_f267").bind(_s546)
+func _f291(this_, a: Array, env):
+	var _s619 = {"__p": env, "el": null}
+	_s619["el"] = J.arg(a, 0)
+	var _t219 = _s619["el"]
+	var _t222 = Callable(self, "_f292").bind(_s619)
 	J.sp(_t219, "onclick", _t222)
 	return _t222
 
-func _f268(this_, a: Array, env):
-	var v_p_982 = null; var v_q_983 = null
-	v_p_982 = J.mc(J.G.get("Village"), "questTarget", [])
-	v_q_983 = J.mc(J.G.get("Quest"), "cur", [])
-	if J.t((J.seq(J.gp(v_q_983, "go"), "roster") if J.t(v_q_983) else v_q_983)):
+func _f293(this_, a: Array, env):
+	var v_p_1089 = null; var v_q_1090 = null
+	v_p_1089 = J.mc(J.G.get("Village"), "questTarget", [])
+	v_q_1090 = J.mc(J.G.get("Quest"), "cur", [])
+	if J.t((J.seq(J.gp(v_q_1090, "go"), "roster") if J.t(v_q_1090) else v_q_1090)):
 		J.mc(J.G.get("UI"), "open", ["roster"])
 		return null
-	var _t225 = (J.seq(J.gp(v_q_983, "go"), "gate") if J.t(v_q_983) else v_q_983)
+	var _t225 = (J.seq(J.gp(v_q_1090, "go"), "gate") if J.t(v_q_1090) else v_q_1090)
 	if J.t((J.seq(J.gp(J.mc(J.G.get("Quest"), "cur", []), "t"), "stage") if J.t(_t225) else _t225)):
 		J.mc(J.G.get("UI"), "open", ["battle"])
 		return null
-	if J.t(v_p_982):
+	if J.t(v_p_1089):
 		J.mc(J.G.get("UI"), "close", [])
-		J.mc(J.G.get("Village"), "focus", [J.gp(v_p_982, 0.0), J.gp(v_p_982, 1.0)])
+		J.mc(J.G.get("Village"), "focus", [J.gp(v_p_1089, 0.0), J.gp(v_p_1089, 1.0)])
 
-func _f269(this_, a: Array, env):
+func _f294(this_, a: Array, env):
 	if J.t(J.gp(J.G.get("document"), "hidden")):
 		J.cl(J.G.get("save"), null, [])
 	else:
 		if J.t(((not J.t(J.gp(J.G.get("Phone"), "on"))) if J.t(J.G.get("S")) else J.G.get("S"))):
 			J.cl(J.G.get("offlineGain"), null, [])
 
-func _f270(this_, a: Array, env):
+func _f295(this_, a: Array, env):
 	return J.G.get("S")
 
-func _f271(this_, a: Array, env):
-	var v_k_984 = null
-	v_k_984 = J.arg(a, 0)
-	J.G["TIME_SCALE"] = v_k_984
+func _f296(this_, a: Array, env):
+	var v_k_1091 = null
+	v_k_1091 = J.arg(a, 0)
+	J.G["TIME_SCALE"] = v_k_1091
 	return J.G.get("TIME_SCALE")
 
-func _f261(this_, a: Array, env):
-	var v_fresh_976 = null; var v_d_977 = null; var v_k_979 = null
-	var _s539 = {"__p": env, "RES_HELP": null}
+func _f286(this_, a: Array, env):
+	var v_fresh_1083 = null; var v_d_1084 = null; var v_k_1086 = null
+	var _s612 = {"__p": env, "RES_HELP": null}
 	var _t203 = J.cl(J.G.get("load"), null, [])
 	J.G["S"] = _t203
-	v_fresh_976 = (not J.t(J.G.get("S")))
+	v_fresh_1083 = (not J.t(J.G.get("S")))
 	if (not J.t(J.G.get("S"))):
 		var _t204 = J.cl(J.G.get("newState"), null, [])
 		J.G["S"] = _t204
-	v_d_977 = J.cl(J.G.get("newState"), null, [])
-	for _t205 in J.keys(v_d_977):
-		v_k_979 = _t205
-		if J.seq(J.gp(J.G.get("S"), v_k_979), null):
+	v_d_1084 = J.cl(J.G.get("newState"), null, [])
+	for _t205 in J.keys(v_d_1084):
+		v_k_1086 = _t205
+		if J.seq(J.gp(J.G.get("S"), v_k_1086), null):
 			var _t206 = J.G.get("S")
-			var _t207 = J.gp(v_d_977, v_k_979)
-			J.sp(_t206, v_k_979, _t207)
+			var _t207 = J.gp(v_d_1084, v_k_1086)
+			J.sp(_t206, v_k_1086, _t207)
 	if (not J.seq(J.typeof_(J.G.get("Guide")), "undefined")):
-		J.mc(J.G.get("Guide"), "migrate", [v_fresh_976])
+		J.mc(J.G.get("Guide"), "migrate", [v_fresh_1083])
 	J.mc(J.G.get("Village"), "init", [])
 	J.mc(J.G.get("Battle"), "init", [])
 	var _t208 = J.S_document_("querySelectorAll", ["#nav button"])
-	J.mc(_t208, "forEach", [Callable(self, "_f262").bind(_s539)])
+	J.mc(_t208, "forEach", [Callable(self, "_f287").bind(_s612)])
 	var _t212 = J.G.get("$")
 	var _t213 = J.cl(_t212, null, ["#sndtop"])
-	var _t214 = Callable(self, "_f264").bind(_s539)
+	var _t214 = Callable(self, "_f289").bind(_s612)
 	J.sp(_t213, "onclick", _t214)
 	J.cl(J.G.get("syncSnd"), null, [])
 	var _t215 = J.G.get("$")
 	var _t216 = J.cl(_t215, null, ["#sheet .sh-close"])
-	var _t217 = Callable(self, "_f265").bind(_s539)
+	var _t217 = Callable(self, "_f290").bind(_s612)
 	J.sp(_t216, "onclick", _t217)
-	_s539["RES_HELP"] = {"槐木": "槐木：主公親手砍樹，或派鬼怪去<b>伐木場</b>伐木。", "糯米": "糯米：主公親手收割，或派鬼怪去<b>糯米田</b>割稻。", "棺材板": "棺材板：在<b>棺材鋪</b>把 2 槐木做成 1 板（力量高的鬼做得快）。藍箱也會開出。用來建造和升級建築。", "壽包": "壽包：在<b>包子鋪</b>把 2 糯米包成 1 個（智力高的鬼包得快）。綠箱也會開出。用來升級鬼怪、練陰兵。", "冥幣": "冥幣：打關卡、開紫箱、燒<b>化寶爐</b>。Toyol 管倉庫時也會「撿到」冥幣。", "陰兵": "陰兵：村裡的遊魂見你有地盤，自願加入。<b>民宅</b>越高級來得越快、上限越高。夜班巡陰時每 25 個跟一隊（最多 4 隊），倒下的會扣掉。"}
+	_s612["RES_HELP"] = {"槐木": "槐木：主公親手砍樹，或派鬼怪去<b>伐木場</b>伐木。", "糯米": "糯米：主公親手收割，或派鬼怪去<b>糯米田</b>割稻。", "棺材板": "棺材板：在<b>棺材鋪</b>把 2 槐木做成 1 板（力量高的鬼做得快）。藍箱也會開出。用來建造和升級建築。", "壽包": "壽包：在<b>包子鋪</b>把 2 糯米包成 1 個（智力高的鬼包得快）。綠箱也會開出。用來升級鬼怪、練陰兵。", "冥幣": "冥幣：打關卡、開紫箱、燒<b>化寶爐</b>。Toyol 管倉庫時也會「撿到」冥幣。", "陰兵": "陰兵：村裡的遊魂見你有地盤，自願加入。<b>民宅</b>越高級來得越快、上限越高。夜班巡陰時每 25 個跟一隊（最多 4 隊），倒下的會扣掉。"}
 	var _t218 = J.S_document_("querySelectorAll", ["#resbox .rs"])
-	J.mc(_t218, "forEach", [Callable(self, "_f266").bind(_s539)])
+	J.mc(_t218, "forEach", [Callable(self, "_f291").bind(_s612)])
 	var _t223 = J.G.get("$")
 	var _t224 = J.cl(_t223, null, ["#quest"])
-	var _t226 = Callable(self, "_f268").bind(_s539)
+	var _t226 = Callable(self, "_f293").bind(_s612)
 	J.sp(_t224, "onclick", _t226)
 	if (not J.t((J.mc(J.re("nophone", ""), "test", [J.gp(J.G.get("location"), "search")]) if J.t(J.G.get("DEBUG")) else J.G.get("DEBUG")))):
-		J.mc(J.G.get("Title"), "show", [v_fresh_976])
+		J.mc(J.G.get("Title"), "show", [v_fresh_1083])
 	J.mc(J.G.get("UI"), "refresh", [])
 	J.F_requestAnimationFrame([J.G.get("loop")])
 	J.S_window_("addEventListener", ["beforeunload", J.G.get("save")])
-	J.S_document_("addEventListener", ["visibilitychange", Callable(self, "_f269").bind(_s539)])
+	J.S_document_("addEventListener", ["visibilitychange", Callable(self, "_f294").bind(_s612)])
 	if J.t(J.G.get("DEBUG")):
 		var _t227 = J.G.get("window")
-		var _t228 = {"JossFx": J.G.get("JossFx"), "Phone": J.G.get("Phone"), "Sound": J.G.get("Sound"), "S": Callable(self, "_f270").bind(_s539), "F": J.G.get("F"), "Quest": J.G.get("Quest"), "Village": J.G.get("Village"), "Battle": J.G.get("Battle"), "Story": J.G.get("Story"), "UI": J.G.get("UI"), "give": J.G.get("give"), "setScale": Callable(self, "_f271").bind(_s539), "produce": J.G.get("produce"), "joinGhost": J.G.get("joinGhost"), "recruitFodder": J.G.get("recruitFodder"), "ratesPerMin": J.G.get("ratesPerMin"), "save": J.G.get("save")}
+		var _t228 = {"JossFx": J.G.get("JossFx"), "Phone": J.G.get("Phone"), "Sound": J.G.get("Sound"), "S": Callable(self, "_f295").bind(_s612), "F": J.G.get("F"), "Quest": J.G.get("Quest"), "Village": J.G.get("Village"), "Battle": J.G.get("Battle"), "Story": J.G.get("Story"), "UI": J.G.get("UI"), "give": J.G.get("give"), "setScale": Callable(self, "_f296").bind(_s612), "produce": J.G.get("produce"), "joinGhost": J.G.get("joinGhost"), "recruitFodder": J.G.get("recruitFodder"), "ratesPerMin": J.G.get("ratesPerMin"), "save": J.G.get("save")}
 		J.sp(_t227, "G", _t228)
 
 func _f1(this_, a: Array, env):
@@ -3716,6 +3716,8 @@ func _f175(this_, a: Array, env):
 	v_title_758 = J.arg(a, 0)
 	v_html_759 = J.arg(a, 1)
 	v_refresher_760 = J.arg(a, 2)
+	if (not J.seq(J.typeof_(J.G.get("__nat_menuClose")), "undefined")):
+		J.cl(J.G.get("__nat_menuClose"), null, [])
 	var _t901 = J.G.get("$")
 	v_sh_761 = J.cl(_t901, null, ["#sheet"])
 	var _t902 = J.gp(v_sh_761, "classList")
@@ -3740,6 +3742,8 @@ func _f177(this_, a: Array, env):
 	return J.mc(_t913, "toggle", ["on", J.seq(J.gp(J.gp(v_b_764, "dataset"), "t"), "village")])
 
 func _f176(this_, a: Array, env):
+	if (not J.seq(J.typeof_(J.G.get("__nat_menuClose")), "undefined")):
+		J.cl(J.G.get("__nat_menuClose"), null, [])
 	var _t909 = J.G.get("$")
 	var _t910 = J.gp(J.cl(_t909, null, ["#sheet"]), "classList")
 	J.mc(_t910, "remove", ["on", "was"])
@@ -3751,8 +3755,8 @@ func _f176(this_, a: Array, env):
 func _f180(this_, a: Array, env):
 	var v_k_781 = null
 	v_k_781 = J.arg(a, 0)
-	var _t940 = (not J.t(J.gp(J.gp(J.G.get("FODDER"), v_k_781), "unlock")))
-	return (_t940 if _t940 else J.gp(J.gp(J.G.get("S"), "cleared"), J.gp(J.gp(J.G.get("FODDER"), v_k_781), "unlock")))
+	var _t942 = (not J.t(J.gp(J.gp(J.G.get("FODDER"), v_k_781), "unlock")))
+	return (_t942 if _t942 else J.gp(J.gp(J.G.get("S"), "cleared"), J.gp(J.gp(J.G.get("FODDER"), v_k_781), "unlock")))
 
 func _f181(this_, a: Array, env):
 	var v_k_782 = null
@@ -3769,84 +3773,84 @@ func _f179(this_, a: Array, env):
 	var v_b_771 = null; var v_lv_772 = null; var v_h_773 = null; var v_c_774 = null; var v_src_775 = null; var v_can_776 = null; var v_dis_777 = null; var v_left_778 = null; var v_c_779 = null; var v_pool_780 = null; var v_iq_783 = null; var v_left_784 = null; var v_p_787 = null
 	v_b_771 = J.gp(J.G.get("BUILDINGS"), env["id"])
 	v_lv_772 = J.gp(J.gp(J.G.get("S"), "bld"), env["id"])
-	var _t914 = J.gp(J.G.get("FLAVOR"), env["id"])
-	v_h_773 = ("<p class=\"flavor\">" + J.str((_t914 if J.t(_t914) else "")) + "</p><p class=\"desc\">" + J.str(J.gp(v_b_771, "desc")) + "</p>")
+	var _t916 = J.gp(J.G.get("FLAVOR"), env["id"])
+	v_h_773 = ("<p class=\"flavor\">" + J.str((_t916 if J.t(_t916) else "")) + "</p><p class=\"desc\">" + J.str(J.gp(v_b_771, "desc")) + "</p>")
 	if (not J.t(v_lv_772)):
-		var _t915 = J.G.get("bldUnlocked")
-		if (not J.t(J.cl(_t915, null, [env["id"]]))):
-			var _t916 = J.add(v_h_773, ("<p class=\"lack\">尚未解鎖。</p>"))
-			v_h_773 = _t916
+		var _t917 = J.G.get("bldUnlocked")
+		if (not J.t(J.cl(_t917, null, [env["id"]]))):
+			var _t918 = J.add(v_h_773, ("<p class=\"lack\">尚未解鎖。</p>"))
+			v_h_773 = _t918
 		else:
-			var _t917 = J.G.get("costText")
-			var _t919 = J.cl(_t917, null, [J.gp(v_b_771, "build")])
-			var _t918 = J.G.get("canPay")
-			var _t920 = J.add(v_h_773, ("<div class=\"row\"><span>建造費用：" + J.str(_t919) + "</span><button class=\"btn gold\" data-act=\"build\" " + ("" if J.t(J.cl(_t918, null, [J.gp(v_b_771, "build")])) else "disabled") + ">建造</button></div>"))
-			v_h_773 = _t920
+			var _t919 = J.G.get("costText")
+			var _t921 = J.cl(_t919, null, [J.gp(v_b_771, "build")])
+			var _t920 = J.G.get("canPay")
+			var _t922 = J.add(v_h_773, ("<div class=\"row\"><span>建造費用：" + J.str(_t921) + "</span><button class=\"btn gold\" data-act=\"build\" " + ("" if J.t(J.cl(_t920, null, [J.gp(v_b_771, "build")])) else "disabled") + ">建造</button></div>"))
+			v_h_773 = _t922
 	else:
-		var _t921 = J.add(v_h_773, ("<div class=\"stat\">等級 <b>Lv " + J.str(v_lv_772) + "</b>" + (("（上限 = 鬼宅等級 " + J.str(J.gp(J.gp(J.G.get("S"), "bld"), "house")) + "）") if (not J.seq(env["id"], "house")) else "") + "</div>"))
-		v_h_773 = _t921
-		var _t922 = J.add(v_h_773, J.mc(env["this"], "bldEffect", [env["id"]]))
-		v_h_773 = _t922
+		var _t923 = J.add(v_h_773, ("<div class=\"stat\">等級 <b>Lv " + J.str(v_lv_772) + "</b>" + (("（上限 = 鬼宅等級 " + J.str(J.gp(J.gp(J.G.get("S"), "bld"), "house")) + "）") if (not J.seq(env["id"], "house")) else "") + "</div>"))
+		v_h_773 = _t923
+		var _t924 = J.add(v_h_773, J.mc(env["this"], "bldEffect", [env["id"]]))
+		v_h_773 = _t924
 		if J.cmp(v_lv_772, J.mc(J.G.get("F"), "bldMax", [env["id"]]), "<"):
 			v_c_774 = J.mc(J.G.get("F"), "upCost", [env["id"], v_lv_772])
-			var _t923 = J.G.get("costText")
-			var _t925 = J.cl(_t923, null, [v_c_774])
-			var _t926 = (("<br><small>工頭省了 " + J.str(J.round(J.num(J.mul(J.mc(J.G.get("F"), "builderDiscount", []), 100.0)))) + "% 棺材板</small>") if J.t(J.mc(J.G.get("F"), "builderDiscount", [])) else "")
-			var _t924 = J.G.get("canPay")
-			var _t927 = J.add(v_h_773, ("<div class=\"row\"><span>升級：" + J.str(_t925) + _t926 + "</span><button class=\"btn gold\" data-act=\"up\" " + ("" if J.t(J.cl(_t924, null, [v_c_774])) else "disabled") + ">升級</button></div>"))
-			v_h_773 = _t927
+			var _t925 = J.G.get("costText")
+			var _t927 = J.cl(_t925, null, [v_c_774])
+			var _t928 = (("<br><small>工頭省了 " + J.str(J.round(J.num(J.mul(J.mc(J.G.get("F"), "builderDiscount", []), 100.0)))) + "% 棺材板</small>") if J.t(J.mc(J.G.get("F"), "builderDiscount", [])) else "")
+			var _t926 = J.G.get("canPay")
+			var _t929 = J.add(v_h_773, ("<div class=\"row\"><span>升級：" + J.str(_t927) + _t928 + "</span><button class=\"btn gold\" data-act=\"up\" " + ("" if J.t(J.cl(_t926, null, [v_c_774])) else "disabled") + ">升級</button></div>"))
+			v_h_773 = _t929
 		else:
-			var _t928 = J.add(v_h_773, ("<p class=\"desc\">" + ("已達最高等級。" if J.seq(env["id"], "house") else "已達上限，先升級鬼宅。") + "</p>"))
-			v_h_773 = _t928
-		var _t929 = J.seq(env["id"], "plank")
-		if (_t929 if _t929 else J.seq(env["id"], "bun")):
+			var _t930 = J.add(v_h_773, ("<p class=\"desc\">" + ("已達最高等級。" if J.seq(env["id"], "house") else "已達上限，先升級鬼宅。") + "</p>"))
+			v_h_773 = _t930
+		var _t931 = J.seq(env["id"], "plank")
+		if (_t931 if _t931 else J.seq(env["id"], "bun")):
 			v_src_775 = ("wood" if J.seq(env["id"], "plank") else "rice")
 			v_can_776 = floor(J.num(J.div(J.gp(J.gp(J.G.get("S"), "res"), v_src_775), 4.0)))
 			v_dis_777 = ("disabled" if J.cmp(v_can_776, 1.0, "<") else "")
-			var _t930 = J.add(v_h_773, ("<div class=\"row craft-row\"><span>親手做：每份 4 " + ("槐木 → 2 棺材板" if J.seq(env["id"], "plank") else "糯米 → 2 壽包") + "　好評 +1<br><small>現有" + J.str(J.gp(J.G.get("RES_NAMES"), v_src_775)) + " " + J.str(J.gp(J.gp(J.G.get("S"), "res"), v_src_775)) + "，夠做 " + J.str(v_can_776) + " 份</small></span><div class=\"craft-btns\"><button class=\"btn\" data-act=\"craft\" data-n=\"1\" " + J.str(v_dis_777) + ">做1份</button><button class=\"btn\" data-act=\"craft\" data-n=\"5\" " + J.str(v_dis_777) + ">一次做5份</button><button class=\"btn\" data-act=\"craft\" data-n=\"10\" " + J.str(v_dis_777) + ">一次做10份</button></div></div>"))
-			v_h_773 = _t930
+			var _t932 = J.add(v_h_773, ("<div class=\"row craft-row\"><span>親手做：每份 4 " + ("槐木 → 2 棺材板" if J.seq(env["id"], "plank") else "糯米 → 2 壽包") + "　好評 +1<br><small>現有" + J.str(J.gp(J.G.get("RES_NAMES"), v_src_775)) + " " + J.str(J.gp(J.gp(J.G.get("S"), "res"), v_src_775)) + "，夠做 " + J.str(v_can_776) + " 份</small></span><div class=\"craft-btns\"><button class=\"btn\" data-act=\"craft\" data-n=\"1\" " + J.str(v_dis_777) + ">做1份</button><button class=\"btn\" data-act=\"craft\" data-n=\"5\" " + J.str(v_dis_777) + ">一次做5份</button><button class=\"btn\" data-act=\"craft\" data-n=\"10\" " + J.str(v_dis_777) + ">一次做10份</button></div></div>"))
+			v_h_773 = _t932
 		if J.seq(env["id"], "furnace"):
 			v_left_778 = J.max_([0.0, J.sub(J.gp(J.G.get("F"), "furnaceCD"), J.div(J.mul(J.sub(J.S_Date_("now", []), J.gp(J.G.get("S"), "furnaceAt")), J.G.get("TIME_SCALE")), 1000.0))])
-			var _t931 = J.add(v_h_773, ("<div class=\"row\"><span>" + (("還要 " + J.str(ceil(J.num(J.div(v_left_778, 60.0)))) + " 分鐘") if J.cmp(v_left_778, 0.0, ">") else "爐火正旺！") + "　可燒出 冥幣 " + J.str(J.mc(J.G.get("F"), "furnaceCoins", [])) + "</span><button class=\"btn gold\" data-act=\"burn\" " + ("disabled" if J.cmp(v_left_778, 0.0, ">") else "") + ">燒</button></div>"))
-			v_h_773 = _t931
+			var _t933 = J.add(v_h_773, ("<div class=\"row\"><span>" + (("還要 " + J.str(ceil(J.num(J.div(v_left_778, 60.0)))) + " 分鐘") if J.cmp(v_left_778, 0.0, ">") else "爐火正旺！") + "　可燒出 冥幣 " + J.str(J.mc(J.G.get("F"), "furnaceCoins", [])) + "</span><button class=\"btn gold\" data-act=\"burn\" " + ("disabled" if J.cmp(v_left_778, 0.0, ">") else "") + ">燒</button></div>"))
+			v_h_773 = _t933
 		if J.seq(env["id"], "altar"):
 			v_c_779 = J.mc(J.G.get("F"), "recruitCost", [])
-			var _t932 = J.G.get("costText")
-			var _t935 = J.cl(_t932, null, [v_c_779])
-			var _t936 = J.cl(J.G.get("fodderCount"), null, [])
-			var _t937 = J.mc(J.G.get("F"), "rosterCap", [])
-			var _t933 = J.G.get("canPay")
-			var _t934 = J.cl(_t933, null, [v_c_779])
-			var _t938 = J.add(v_h_773, ("<div class=\"row\"><span>招魂一次：" + J.str(_t935) + "<br><small>雜鬼名額 " + J.str(_t936) + "/" + J.str(_t937) + "（升級民宅增加；收服的名鬼不佔名額）</small></span><button class=\"btn gold\" data-act=\"recruit\" " + ("" if J.t((J.cmp(J.cl(J.G.get("fodderCount"), null, []), J.mc(J.G.get("F"), "rosterCap", []), "<") if J.t(_t934) else _t934)) else "disabled") + ">招魂</button></div>"))
-			v_h_773 = _t938
-			var _t939 = J.S_Object_("keys", [J.G.get("FODDER")])
-			var _t941 = J.mc(_t939, "filter", [Callable(self, "_f180").bind(env)])
-			var _t942 = J.mc(_t941, "map", [Callable(self, "_f181").bind(env)])
-			v_pool_780 = J.mc(_t942, "join", ["、"])
-			var _t943 = J.add(v_h_773, ("<p class=\"desc\">目前可能招到：" + J.str(v_pool_780) + "。收服更多鬼怪後，招魂池會變大。</p>"))
-			v_h_773 = _t943
-		var _t944 = J.seq(env["id"], "house")
-		if (J.cmp(J.gp(J.G.get("S"), "lv"), 12.0, ">=") if _t944 else _t944):
-			var _t945 = J.gp(J.G.get("S"), "ghosts")
-			v_iq_783 = J.mc(_t945, "reduce", [Callable(self, "_f182").bind(env), 0.0])
+			var _t934 = J.G.get("costText")
+			var _t937 = J.cl(_t934, null, [v_c_779])
+			var _t938 = J.cl(J.G.get("fodderCount"), null, [])
+			var _t939 = J.mc(J.G.get("F"), "rosterCap", [])
+			var _t935 = J.G.get("canPay")
+			var _t936 = J.cl(_t935, null, [v_c_779])
+			var _t940 = J.add(v_h_773, ("<div class=\"row\"><span>招魂一次：" + J.str(_t937) + "<br><small>雜鬼名額 " + J.str(_t938) + "/" + J.str(_t939) + "（升級民宅增加；收服的名鬼不佔名額）</small></span><button class=\"btn gold\" data-act=\"recruit\" " + ("" if J.t((J.cmp(J.cl(J.G.get("fodderCount"), null, []), J.mc(J.G.get("F"), "rosterCap", []), "<") if J.t(_t936) else _t936)) else "disabled") + ">招魂</button></div>"))
+			v_h_773 = _t940
+			var _t941 = J.S_Object_("keys", [J.G.get("FODDER")])
+			var _t943 = J.mc(_t941, "filter", [Callable(self, "_f180").bind(env)])
+			var _t944 = J.mc(_t943, "map", [Callable(self, "_f181").bind(env)])
+			v_pool_780 = J.mc(_t944, "join", ["、"])
+			var _t945 = J.add(v_h_773, ("<p class=\"desc\">目前可能招到：" + J.str(v_pool_780) + "。收服更多鬼怪後，招魂池會變大。</p>"))
+			v_h_773 = _t945
+		var _t946 = J.seq(env["id"], "house")
+		if (J.cmp(J.gp(J.G.get("S"), "lv"), 12.0, ">=") if _t946 else _t946):
+			var _t947 = J.gp(J.G.get("S"), "ghosts")
+			v_iq_783 = J.mc(_t947, "reduce", [Callable(self, "_f182").bind(env), 0.0])
 			v_left_784 = J.max_([0.0, J.sub(J.gp(J.G.get("F"), "feastCD"), J.div(J.mul(J.sub(J.S_Date_("now", []), J.gp(J.G.get("S"), "feastAt")), J.G.get("TIME_SCALE")), 1000.0))])
-			var _t948 = J.gp(J.G.get("F"), "feastNeed")
-			var _t949 = (("　冷卻 " + J.str(ceil(J.num(J.div(v_left_784, 60.0)))) + " 分") if J.cmp(v_left_784, 0.0, ">") else "")
-			var _t946 = J.cmp(J.gp(J.gp(J.G.get("S"), "res"), "buns"), 300.0, ">=")
-			var _t947 = (J.cmp(v_iq_783, J.gp(J.G.get("F"), "feastNeed"), ">=") if _t946 else _t946)
-			var _t950 = J.add(v_h_773, ("<div class=\"row\"><span>盂蘭宴：壽包 300<br><small>全村智力總和 " + J.str(v_iq_783) + "/" + J.str(_t948) + _t949 + "</small></span><button class=\"btn gold\" data-act=\"feast\" " + ("" if (J.cmp(v_left_784, 0.0, "<=") if _t947 else _t947) else "disabled") + ">擺宴</button></div>"))
-			v_h_773 = _t950
-		for _t951 in J.iter(J.gp(v_b_771, "posts")):
-			v_p_787 = _t951
-			var _t952 = J.add(v_h_773, J.mc(env["this"], "postHtml", [v_p_787]))
+			var _t950 = J.gp(J.G.get("F"), "feastNeed")
+			var _t951 = (("　冷卻 " + J.str(ceil(J.num(J.div(v_left_784, 60.0)))) + " 分") if J.cmp(v_left_784, 0.0, ">") else "")
+			var _t948 = J.cmp(J.gp(J.gp(J.G.get("S"), "res"), "buns"), 300.0, ">=")
+			var _t949 = (J.cmp(v_iq_783, J.gp(J.G.get("F"), "feastNeed"), ">=") if _t948 else _t948)
+			var _t952 = J.add(v_h_773, ("<div class=\"row\"><span>盂蘭宴：壽包 300<br><small>全村智力總和 " + J.str(v_iq_783) + "/" + J.str(_t950) + _t951 + "</small></span><button class=\"btn gold\" data-act=\"feast\" " + ("" if (J.cmp(v_left_784, 0.0, "<=") if _t949 else _t949) else "disabled") + ">擺宴</button></div>"))
 			v_h_773 = _t952
+		for _t953 in J.iter(J.gp(v_b_771, "posts")):
+			v_p_787 = _t953
+			var _t954 = J.add(v_h_773, J.mc(env["this"], "postHtml", [v_p_787]))
+			v_h_773 = _t954
 	return v_h_773
 
 func _f183(this_, a: Array, env):
-	var _t953 = J.G.get("$")
-	var _t954 = J.cl(_t953, null, ["#sheet .sh-body"])
-	var _t955 = J.cl(env["render"], null, [])
-	J.sp(_t954, "innerHTML", _t955)
+	var _t955 = J.G.get("$")
+	var _t956 = J.cl(_t955, null, ["#sheet .sh-body"])
+	var _t957 = J.cl(env["render"], null, [])
+	J.sp(_t956, "innerHTML", _t957)
 	J.cl(env["bind"], null, [])
 
 func _f186(this_, a: Array, env):
@@ -3854,83 +3858,83 @@ func _f186(this_, a: Array, env):
 	v_a_789 = J.gp(J.gp(env["btn"], "dataset"), "act")
 	if J.seq(v_a_789, "build"):
 		J.mc(J.G.get("Sound"), "play", ["build"])
-		var _t960 = J.G.get("pay")
-		J.cl(_t960, null, [J.gp(J.gp(J.G.get("BUILDINGS"), env["__p"]["id"]), "build")])
-		var _t961 = J.gp(J.G.get("S"), "bld")
-		var _t962 = env["__p"]["id"]
-		J.sp(_t961, _t962, 1.0)
-		var _t963 = J.G.get("gainExp")
-		J.cl(_t963, null, [15.0])
+		var _t962 = J.G.get("pay")
+		J.cl(_t962, null, [J.gp(J.gp(J.G.get("BUILDINGS"), env["__p"]["id"]), "build")])
+		var _t963 = J.gp(J.G.get("S"), "bld")
+		var _t964 = env["__p"]["id"]
+		J.sp(_t963, _t964, 1.0)
+		var _t965 = J.G.get("gainExp")
+		J.cl(_t965, null, [15.0])
 		J.mc(J.G.get("Fx"), "banner", [(J.str(J.gp(J.gp(J.G.get("BUILDINGS"), env["__p"]["id"]), "name")) + " 建好了！")])
 		J.mc(J.G.get("Quest"), "check", [])
 	if J.seq(v_a_789, "up"):
 		J.mc(J.G.get("Sound"), "play", ["build"])
 		v_c_790 = J.mc(J.G.get("F"), "upCost", [env["__p"]["id"], J.gp(J.gp(J.G.get("S"), "bld"), env["__p"]["id"])])
-		var _t964 = J.G.get("pay")
-		J.cl(_t964, null, [v_c_790])
-		var _t965 = J.gp(J.G.get("S"), "bld")
-		var _t966 = env["__p"]["id"]
-		J.sp(_t965, _t966, J.num(J.gp(_t965, _t966)) + 1.0)
-		var _t967 = J.G.get("gainExp")
-		J.cl(_t967, null, [(10.0 + J.mul(8.0, J.gp(J.gp(J.G.get("S"), "bld"), env["__p"]["id"])))])
+		var _t966 = J.G.get("pay")
+		J.cl(_t966, null, [v_c_790])
+		var _t967 = J.gp(J.G.get("S"), "bld")
+		var _t968 = env["__p"]["id"]
+		J.sp(_t967, _t968, J.num(J.gp(_t967, _t968)) + 1.0)
+		var _t969 = J.G.get("gainExp")
+		J.cl(_t969, null, [(10.0 + J.mul(8.0, J.gp(J.gp(J.G.get("S"), "bld"), env["__p"]["id"])))])
 		J.mc(J.G.get("Fx"), "banner", [(J.str(J.gp(J.gp(J.G.get("BUILDINGS"), env["__p"]["id"]), "name")) + " 升到 Lv " + J.str(J.gp(J.gp(J.G.get("S"), "bld"), env["__p"]["id"])))])
 		J.mc(J.G.get("Quest"), "check", [])
 	if J.seq(v_a_789, "craft"):
 		J.mc(env["__p"]["this"], "close", [])
-		var _t969 = env["__p"]["id"]
-		var _t968 = J.num(J.gp(J.gp(env["btn"], "dataset"), "n"))
-		J.mc(J.G.get("Village"), "craft", [_t969, (_t968 if J.t(_t968) else 1.0)])
+		var _t971 = env["__p"]["id"]
+		var _t970 = J.num(J.gp(J.gp(env["btn"], "dataset"), "n"))
+		J.mc(J.G.get("Village"), "craft", [_t971, (_t970 if J.t(_t970) else 1.0)])
 		return null
 	if J.seq(v_a_789, "burn"):
 		if (not J.t(J.cl(J.G.get("furnaceReady"), null, []))):
 			return null
 		J.mc(J.G.get("Sound"), "play", ["coin"])
 		J.mc(J.G.get("JossFx"), "play", [])
-		var _t970 = J.G.get("S")
-		var _t971 = J.S_Date_("now", [])
-		J.sp(_t970, "furnaceAt", _t971)
+		var _t972 = J.G.get("S")
+		var _t973 = J.S_Date_("now", [])
+		J.sp(_t972, "furnaceAt", _t973)
 		v_c_791 = J.mc(J.G.get("F"), "furnaceCoins", [])
-		var _t972 = J.gp(J.G.get("S"), "res")
-		var _t973 = J.add(J.gp(_t972, "coins"), v_c_791)
-		J.sp(_t972, "coins", _t973)
+		var _t974 = J.gp(J.G.get("S"), "res")
+		var _t975 = J.add(J.gp(_t974, "coins"), v_c_791)
+		J.sp(_t974, "coins", _t975)
 		J.mc(J.G.get("Fx"), "toast", [("化寶爐燒出 <b>冥幣 " + J.str(v_c_791) + "</b>")])
 	if J.seq(v_a_789, "recruit"):
 		J.mc(J.G.get("Sound"), "play", ["whoosh"])
-		var _t974 = J.G.get("pay")
-		J.cl(_t974, null, [J.mc(J.G.get("F"), "recruitCost", [])])
-		var _t975 = J.G.get("recruitFodder")
-		v_g_792 = J.cl(_t975, null, [false])
-		var _t976 = J.gp(J.G.get("S"), "cnt")
-		J.sp(_t976, "recruit", J.num(J.gp(_t976, "recruit")) + 1.0)
+		var _t976 = J.G.get("pay")
+		J.cl(_t976, null, [J.mc(J.G.get("F"), "recruitCost", [])])
+		var _t977 = J.G.get("recruitFodder")
+		v_g_792 = J.cl(_t977, null, [false])
+		var _t978 = J.gp(J.G.get("S"), "cnt")
+		J.sp(_t978, "recruit", J.num(J.gp(_t978, "recruit")) + 1.0)
 		J.mc(J.G.get("Fx"), "toast", [("招來了 <b>" + J.str(J.gp(v_g_792, "name")) + "</b>（" + J.str(J.gp(v_g_792, "q")) + "）")])
 		J.mc(J.G.get("Quest"), "check", [])
 	if J.seq(v_a_789, "feast"):
 		J.mc(J.G.get("Sound"), "play", ["gong"])
-		var _t977 = J.gp(J.G.get("S"), "res")
-		var _t978 = J.sub(J.gp(_t977, "buns"), 300.0)
-		J.sp(_t977, "buns", _t978)
-		var _t979 = J.G.get("S")
-		var _t980 = J.S_Date_("now", [])
-		J.sp(_t979, "feastAt", _t980)
-		var _t981 = J.gp(J.G.get("S"), "cnt")
-		J.sp(_t981, "feast", J.num(J.gp(_t981, "feast")) + 1.0)
-		var _t982 = J.G.get("gainExp")
-		J.cl(_t982, null, [150.0])
+		var _t979 = J.gp(J.G.get("S"), "res")
+		var _t980 = J.sub(J.gp(_t979, "buns"), 300.0)
+		J.sp(_t979, "buns", _t980)
+		var _t981 = J.G.get("S")
+		var _t982 = J.S_Date_("now", [])
+		J.sp(_t981, "feastAt", _t982)
+		var _t983 = J.gp(J.G.get("S"), "cnt")
+		J.sp(_t983, "feast", J.num(J.gp(_t983, "feast")) + 1.0)
+		var _t984 = J.G.get("gainExp")
+		J.cl(_t984, null, [150.0])
 		if J.cmp(J.cl(J.G.get("fodderCount"), null, []), J.mc(J.G.get("F"), "rosterCap", []), "<"):
-			var _t983 = J.G.get("recruitFodder")
-			v_g_793 = J.cl(_t983, null, [true])
+			var _t985 = J.G.get("recruitFodder")
+			v_g_793 = J.cl(_t985, null, [true])
 			J.mc(J.G.get("Fx"), "toast", [("盂蘭宴請來了稀客 <b>" + J.str(J.gp(v_g_793, "name")) + "</b>（紫）！好評 +150")])
 		else:
-			var _t984 = J.gp(J.G.get("S"), "chests")
-			J.sp(_t984, "p", J.num(J.gp(_t984, "p")) + 1.0)
+			var _t986 = J.gp(J.G.get("S"), "chests")
+			J.sp(_t986, "p", J.num(J.gp(_t986, "p")) + 1.0)
 			J.mc(J.G.get("Fx"), "toast", ["盂蘭宴賓客滿座，可惜村裡住不下了。客人留下一個<b>紫箱</b>就走了。好評 +150"])
 		J.mc(J.G.get("Quest"), "check", [])
 	if J.seq(v_a_789, "assign"):
 		J.mc(env["__p"]["this"], "pickWorker", [J.gp(J.gp(env["btn"], "dataset"), "post"), env["__p"]["id"]])
 		return null
 	if J.seq(v_a_789, "unassign"):
-		var _t985 = J.G.get("ghostById")
-		v_g_794 = J.cl(_t985, null, [J.gp(J.gp(env["btn"], "dataset"), "g")])
+		var _t987 = J.G.get("ghostById")
+		v_g_794 = J.cl(_t987, null, [J.gp(J.gp(env["btn"], "dataset"), "g")])
 		if J.t(v_g_794):
 			J.sp(v_g_794, "post", null)
 	J.cl(J.G.get("save"), null, [])
@@ -3940,44 +3944,50 @@ func _f186(this_, a: Array, env):
 func _f185(this_, a: Array, env):
 	var _s407 = {"__p": env, "btn": null}
 	_s407["btn"] = J.arg(a, 0)
-	var _t959 = _s407["btn"]
-	var _t986 = Callable(self, "_f186").bind(_s407)
-	J.sp(_t959, "onclick", _t986)
-	return _t986
+	var _t961 = _s407["btn"]
+	var _t988 = Callable(self, "_f186").bind(_s407)
+	J.sp(_t961, "onclick", _t988)
+	return _t988
 
 func _f184(this_, a: Array, env):
-	var _t956 = J.G.get("$")
-	var _t957 = J.cl(_t956, null, ["#sheet .sh-body"])
-	var _t958 = J.mc(_t957, "querySelectorAll", ["[data-act]"])
-	J.mc(_t958, "forEach", [Callable(self, "_f185").bind(env)])
+	var _t958 = J.G.get("$")
+	var _t959 = J.cl(_t958, null, ["#sheet .sh-body"])
+	var _t960 = J.mc(_t959, "querySelectorAll", ["[data-act]"])
+	J.mc(_t960, "forEach", [Callable(self, "_f185").bind(env)])
 
 func _f187(this_, a: Array, env):
 	var v_sc_795 = null
-	var _t988 = (not J.t(J.gp(J.G.get("document"), "activeElement")))
-	var _t990 = (_t988 if _t988 else (not J.t(J.gp(J.gp(J.G.get("document"), "activeElement"), "closest"))))
-	if not J.t(_t990):
-		var _t989 = J.gp(J.G.get("document"), "activeElement")
-		_t990 = (not J.t(J.mc(_t989, "closest", ["#sheet"])))
-	if _t990:
-		var _t991 = J.G.get("$")
-		v_sc_795 = J.gp(J.cl(_t991, null, ["#sheet .sh-body"]), "scrollTop")
+	var _t990 = (not J.t(J.gp(J.G.get("document"), "activeElement")))
+	var _t992 = (_t990 if _t990 else (not J.t(J.gp(J.gp(J.G.get("document"), "activeElement"), "closest"))))
+	if not J.t(_t992):
+		var _t991 = J.gp(J.G.get("document"), "activeElement")
+		_t992 = (not J.t(J.mc(_t991, "closest", ["#sheet"])))
+	if _t992:
+		var _t993 = J.G.get("$")
+		v_sc_795 = J.gp(J.cl(_t993, null, ["#sheet .sh-body"]), "scrollTop")
 		J.cl(env["re"], null, [])
-		var _t992 = J.G.get("$")
-		var _t993 = J.cl(_t992, null, ["#sheet .sh-body"])
-		J.sp(_t993, "scrollTop", v_sc_795)
+		var _t994 = J.G.get("$")
+		var _t995 = J.cl(_t994, null, ["#sheet .sh-body"])
+		J.sp(_t995, "scrollTop", v_sc_795)
 
 func _f178(this_, a: Array, env):
 	var _s391 = {"__p": env, "this": null, "id": null, "render": null, "re": null, "bind": null}
 	_s391["this"] = this_
 	_s391["id"] = J.arg(a, 0)
+	var _t915 = (not J.seq(J.typeof_(J.G.get("__nat_menu")), "undefined"))
+	if J.t(_t915):
+		var _t914 = J.G.get("__nat_menu")
+		_t915 = J.cl(_t914, null, ["bld", _s391["id"]])
+	if J.t(_t915):
+		return null
 	_s391["render"] = Callable(self, "_f179").bind(_s391)
 	_s391["re"] = Callable(self, "_f183").bind(_s391)
 	_s391["bind"] = Callable(self, "_f184").bind(_s391)
 	J.mc(_s391["this"], "sheet", [J.gp(J.gp(J.G.get("BUILDINGS"), _s391["id"]), "name"), J.cl(_s391["render"], null, []), null])
 	J.cl(_s391["bind"], null, [])
-	var _t987 = _s391["this"]
-	var _t994 = Callable(self, "_f187").bind(_s391)
-	J.sp(_t987, "sheetRefresh", _t994)
+	var _t989 = _s391["this"]
+	var _t996 = Callable(self, "_f187").bind(_s391)
+	J.sp(_t989, "sheetRefresh", _t996)
 
 func _f189(this_, a: Array, env):
 	var v_a_801 = null
@@ -3996,76 +4006,76 @@ func _f188(this_, a: Array, env):
 	v_id_798 = J.arg(a, 0)
 	v_r_799 = J.cl(J.G.get("ratesPerMin"), null, [])
 	v_L_800 = Callable(self, "_f189").bind(env)
-	var _t995 = -1
-	var _t996 = false
-	if _t995 == -1 and J.seq(v_id_798, "house"): _t995 = 0
-	if _t995 == -1 and J.seq(v_id_798, "wood"): _t995 = 1
-	if _t995 == -1 and J.seq(v_id_798, "rice"): _t995 = 2
-	if _t995 == -1 and J.seq(v_id_798, "plank"): _t995 = 3
-	if _t995 == -1 and J.seq(v_id_798, "bun"): _t995 = 4
-	if _t995 == -1 and J.seq(v_id_798, "store"): _t995 = 5
-	if _t995 == -1 and J.seq(v_id_798, "home"): _t995 = 6
-	if _t995 == -1 and J.seq(v_id_798, "camp"): _t995 = 7
-	if _t995 == -1: _t995 = 8
+	var _t997 = -1
+	var _t998 = false
+	if _t997 == -1 and J.seq(v_id_798, "house"): _t997 = 0
+	if _t997 == -1 and J.seq(v_id_798, "wood"): _t997 = 1
+	if _t997 == -1 and J.seq(v_id_798, "rice"): _t997 = 2
+	if _t997 == -1 and J.seq(v_id_798, "plank"): _t997 = 3
+	if _t997 == -1 and J.seq(v_id_798, "bun"): _t997 = 4
+	if _t997 == -1 and J.seq(v_id_798, "store"): _t997 = 5
+	if _t997 == -1 and J.seq(v_id_798, "home"): _t997 = 6
+	if _t997 == -1 and J.seq(v_id_798, "camp"): _t997 = 7
+	if _t997 == -1: _t997 = 8
 	while true:
-		if _t995 <= 0 and _t995 >= 0:
+		if _t997 <= 0 and _t997 >= 0:
 			return J.cl(v_L_800, null, [("其他建築最高可升到 Lv " + J.str(J.gp(J.gp(J.G.get("S"), "bld"), "house")))])
-		if _t995 <= 1 and _t995 >= 0:
-			var _t997 = J.mc(J.G.get("F"), "mult", ["wood"])
-			var _t999 = J.mc(_t997, "toFixed", [1.0])
-			var _t1000 = J.mc(J.G.get("F"), "slots", ["wood"])
-			var _t998 = J.gp(v_r_799, "wood")
-			return J.cl(v_L_800, null, [("每崗產量 ×" + J.str(_t999) + "　崗位 " + J.str(_t1000) + "　目前 槐木 +" + J.str(J.mc(_t998, "toFixed", [1.0])) + "/分")])
-		if _t995 <= 2 and _t995 >= 0:
-			var _t1001 = J.mc(J.G.get("F"), "mult", ["rice"])
-			var _t1003 = J.mc(_t1001, "toFixed", [1.0])
-			var _t1004 = J.mc(J.G.get("F"), "slots", ["rice"])
-			var _t1002 = J.gp(v_r_799, "rice")
-			return J.cl(v_L_800, null, [("每崗產量 ×" + J.str(_t1003) + "　崗位 " + J.str(_t1004) + "　目前 糯米 +" + J.str(J.mc(_t1002, "toFixed", [1.0])) + "/分")])
-		if _t995 <= 3 and _t995 >= 0:
-			var _t1006 = J.mc(J.G.get("F"), "slots", ["plank"])
-			var _t1005 = J.gp(v_r_799, "planks")
-			var _t1008 = J.mc(_t1005, "toFixed", [1.0])
-			var _t1007 = J.gp(v_r_799, "woodUse")
-			return J.cl(v_L_800, null, [("崗位 " + J.str(_t1006) + "　目前 棺材板 +" + J.str(_t1008) + "/分（耗槐木 " + J.str(J.mc(_t1007, "toFixed", [1.0])) + "/分）<br>藍箱可開出 棺材板 " + J.str(J.gp(J.mc(J.G.get("F"), "chestGain", ["b"]), "planks")))])
-		if _t995 <= 4 and _t995 >= 0:
-			var _t1010 = J.mc(J.G.get("F"), "slots", ["bun"])
-			var _t1009 = J.gp(v_r_799, "buns")
-			var _t1012 = J.mc(_t1009, "toFixed", [1.0])
-			var _t1011 = J.gp(v_r_799, "riceUse")
-			return J.cl(v_L_800, null, [("崗位 " + J.str(_t1010) + "　目前 壽包 +" + J.str(_t1012) + "/分（耗糯米 " + J.str(J.mc(_t1011, "toFixed", [1.0])) + "/分）<br>綠箱可開出 壽包 " + J.str(J.gp(J.mc(J.G.get("F"), "chestGain", ["g"]), "buns")))])
-		if _t995 <= 5 and _t995 >= 0:
-			var _t1013 = J.G.get("fmt")
-			return J.cl(v_L_800, null, [("槐木、糯米、棺材板、壽包 存放上限：" + J.str(J.cl(_t1013, null, [J.mc(J.G.get("F"), "cap", [])])))])
-		if _t995 <= 6 and _t995 >= 0:
-			var _t1015 = J.mc(J.G.get("F"), "rosterCap", [])
-			var _t1014 = J.gp(v_r_799, "troops")
-			var _t1017 = J.mc(_t1014, "toFixed", [1.0])
-			var _t1016 = J.G.get("fmt")
-			return J.cl(v_L_800, null, [("雜鬼名額 " + J.str(_t1015) + "　遊魂自願當陰兵 +" + J.str(_t1017) + "/分　陰兵上限 " + J.str(J.cl(_t1016, null, [J.mc(J.G.get("F"), "troopCap", [])])))])
-		if _t995 <= 7 and _t995 >= 0:
-			var _t1018 = J.G.get("workersAt")
-			v_ws_802 = J.cl(_t1018, null, ["camp"])
-			var _t1019 = J.mc(J.G.get("F"), "mult", ["camp"])
-			var _t1021 = J.mc(_t1019, "toFixed", [1.0])
-			var _t1022 = J.mc(J.G.get("F"), "slots", ["camp"])
-			var _t1020 = J.gp(v_r_799, "bunUse")
-			var _t1025 = J.cl(v_L_800, null, [("練習速度 ×" + J.str(_t1021) + "　崗位 " + J.str(_t1022) + "　耗壽包 " + J.str(J.mc(_t1020, "toFixed", [1.0])) + "/分<br>嚇功越高：回陽間招式更嚇人、更省陰氣；戰鬥嚇法更痛。")])
-			var _t1024 = null
+		if _t997 <= 1 and _t997 >= 0:
+			var _t999 = J.mc(J.G.get("F"), "mult", ["wood"])
+			var _t1001 = J.mc(_t999, "toFixed", [1.0])
+			var _t1002 = J.mc(J.G.get("F"), "slots", ["wood"])
+			var _t1000 = J.gp(v_r_799, "wood")
+			return J.cl(v_L_800, null, [("每崗產量 ×" + J.str(_t1001) + "　崗位 " + J.str(_t1002) + "　目前 槐木 +" + J.str(J.mc(_t1000, "toFixed", [1.0])) + "/分")])
+		if _t997 <= 2 and _t997 >= 0:
+			var _t1003 = J.mc(J.G.get("F"), "mult", ["rice"])
+			var _t1005 = J.mc(_t1003, "toFixed", [1.0])
+			var _t1006 = J.mc(J.G.get("F"), "slots", ["rice"])
+			var _t1004 = J.gp(v_r_799, "rice")
+			return J.cl(v_L_800, null, [("每崗產量 ×" + J.str(_t1005) + "　崗位 " + J.str(_t1006) + "　目前 糯米 +" + J.str(J.mc(_t1004, "toFixed", [1.0])) + "/分")])
+		if _t997 <= 3 and _t997 >= 0:
+			var _t1008 = J.mc(J.G.get("F"), "slots", ["plank"])
+			var _t1007 = J.gp(v_r_799, "planks")
+			var _t1010 = J.mc(_t1007, "toFixed", [1.0])
+			var _t1009 = J.gp(v_r_799, "woodUse")
+			return J.cl(v_L_800, null, [("崗位 " + J.str(_t1008) + "　目前 棺材板 +" + J.str(_t1010) + "/分（耗槐木 " + J.str(J.mc(_t1009, "toFixed", [1.0])) + "/分）<br>藍箱可開出 棺材板 " + J.str(J.gp(J.mc(J.G.get("F"), "chestGain", ["b"]), "planks")))])
+		if _t997 <= 4 and _t997 >= 0:
+			var _t1012 = J.mc(J.G.get("F"), "slots", ["bun"])
+			var _t1011 = J.gp(v_r_799, "buns")
+			var _t1014 = J.mc(_t1011, "toFixed", [1.0])
+			var _t1013 = J.gp(v_r_799, "riceUse")
+			return J.cl(v_L_800, null, [("崗位 " + J.str(_t1012) + "　目前 壽包 +" + J.str(_t1014) + "/分（耗糯米 " + J.str(J.mc(_t1013, "toFixed", [1.0])) + "/分）<br>綠箱可開出 壽包 " + J.str(J.gp(J.mc(J.G.get("F"), "chestGain", ["g"]), "buns")))])
+		if _t997 <= 5 and _t997 >= 0:
+			var _t1015 = J.G.get("fmt")
+			return J.cl(v_L_800, null, [("槐木、糯米、棺材板、壽包 存放上限：" + J.str(J.cl(_t1015, null, [J.mc(J.G.get("F"), "cap", [])])))])
+		if _t997 <= 6 and _t997 >= 0:
+			var _t1017 = J.mc(J.G.get("F"), "rosterCap", [])
+			var _t1016 = J.gp(v_r_799, "troops")
+			var _t1019 = J.mc(_t1016, "toFixed", [1.0])
+			var _t1018 = J.G.get("fmt")
+			return J.cl(v_L_800, null, [("雜鬼名額 " + J.str(_t1017) + "　遊魂自願當陰兵 +" + J.str(_t1019) + "/分　陰兵上限 " + J.str(J.cl(_t1018, null, [J.mc(J.G.get("F"), "troopCap", [])])))])
+		if _t997 <= 7 and _t997 >= 0:
+			var _t1020 = J.G.get("workersAt")
+			v_ws_802 = J.cl(_t1020, null, ["camp"])
+			var _t1021 = J.mc(J.G.get("F"), "mult", ["camp"])
+			var _t1023 = J.mc(_t1021, "toFixed", [1.0])
+			var _t1024 = J.mc(J.G.get("F"), "slots", ["camp"])
+			var _t1022 = J.gp(v_r_799, "bunUse")
+			var _t1027 = J.cl(v_L_800, null, [("練習速度 ×" + J.str(_t1023) + "　崗位 " + J.str(_t1024) + "　耗壽包 " + J.str(J.mc(_t1022, "toFixed", [1.0])) + "/分<br>嚇功越高：回陽間招式更嚇人、更省陰氣；戰鬥嚇法更痛。")])
+			var _t1026 = null
 			if J.t(J.len(v_ws_802)):
-				var _t1023 = J.mc(v_ws_802, "map", [Callable(self, "_f190").bind(env)])
-				_t1024 = J.add("<br>", J.mc(_t1023, "join", ["　"]))
+				var _t1025 = J.mc(v_ws_802, "map", [Callable(self, "_f190").bind(env)])
+				_t1026 = J.add("<br>", J.mc(_t1025, "join", ["　"]))
 			else:
-				_t1024 = ""
-			return J.add(_t1025, _t1024)
-		if _t995 <= 8 and _t995 >= 0:
+				_t1026 = ""
+			return J.add(_t1027, _t1026)
+		if _t997 <= 8 and _t997 >= 0:
 			return ""
 		break
 
 func _f192(this_, a: Array, env):
-	var _t1036 = J.G.get("paintPortraits")
-	var _t1037 = J.G.get("$")
-	return J.cl(_t1036, null, [J.cl(_t1037, null, ["#sheet"])])
+	var _t1038 = J.G.get("paintPortraits")
+	var _t1039 = J.G.get("$")
+	return J.cl(_t1038, null, [J.cl(_t1039, null, ["#sheet"])])
 
 func _f191(this_, a: Array, env):
 	var v_post_808 = null; var v_P_809 = null; var v_n_810 = null; var v_h_811 = null; var v_ws_812 = null; var v_i_813 = null; var v_g_814 = null
@@ -4074,31 +4084,31 @@ func _f191(this_, a: Array, env):
 	v_n_810 = J.mc(J.G.get("F"), "slots", [v_post_808])
 	if (not J.t(v_n_810)):
 		return ""
-	var _t1026 = J.seq(v_post_808, "wood")
-	var _t1027 = (_t1026 if _t1026 else J.seq(v_post_808, "rice"))
-	var _t1028 = (_t1027 if _t1027 else J.seq(v_post_808, "plank"))
-	var _t1029 = (_t1028 if _t1028 else J.seq(v_post_808, "bun"))
-	var _t1030 = (_t1029 if _t1029 else J.seq(v_post_808, "camp"))
-	var _t1031 = (_t1030 if _t1030 else J.seq(v_post_808, "store"))
-	if (_t1031 if _t1031 else J.seq(v_post_808, "boss")):
+	var _t1028 = J.seq(v_post_808, "wood")
+	var _t1029 = (_t1028 if _t1028 else J.seq(v_post_808, "rice"))
+	var _t1030 = (_t1029 if _t1029 else J.seq(v_post_808, "plank"))
+	var _t1031 = (_t1030 if _t1030 else J.seq(v_post_808, "bun"))
+	var _t1032 = (_t1031 if _t1031 else J.seq(v_post_808, "camp"))
+	var _t1033 = (_t1032 if _t1032 else J.seq(v_post_808, "store"))
+	if (_t1033 if _t1033 else J.seq(v_post_808, "boss")):
 		if J.cmp(J.gp(J.G.get("S"), "lv"), 4.0, "<"):
 			return ("<div class=\"post\"><div class=\"ph\">" + J.str(J.gp(v_P_809, "name")) + "崗位</div><p class=\"lack\">升到 4 級【略懂管理學】後可派鬼怪打工。</p></div>")
 	v_h_811 = ("<div class=\"post\"><div class=\"ph\">" + J.str(J.gp(v_P_809, "name")) + "崗位 <small>" + J.str(J.gp(v_P_809, "desc")) + "</small></div><div class=\"slots\">")
-	var _t1032 = J.G.get("workersAt")
-	v_ws_812 = J.cl(_t1032, null, [v_post_808])
+	var _t1034 = J.G.get("workersAt")
+	v_ws_812 = J.cl(_t1034, null, [v_post_808])
 	v_i_813 = 0.0
 	while true:
 		if not J.cmp(v_i_813, v_n_810, "<"): break
 		v_g_814 = J.gp(v_ws_812, v_i_813)
 		if J.t(v_g_814):
-			var _t1033 = J.add(v_h_811, ("<div class=\"slot\"><canvas data-por=\"" + J.str(J.gp(v_g_814, "k")) + "\"></canvas><div><b>" + J.str(J.gp(v_g_814, "name")) + "</b><small>Lv" + J.str(J.mc(J.G.get("F"), "glv", [v_g_814])) + "　" + J.str(J.mc(this_, "postStatTxt", [v_g_814, v_post_808])) + "</small></div><button class=\"btn sm\" data-act=\"unassign\" data-g=\"" + J.str(J.gp(v_g_814, "id")) + "\">撤下</button></div>"))
-			v_h_811 = _t1033
+			var _t1035 = J.add(v_h_811, ("<div class=\"slot\"><canvas data-por=\"" + J.str(J.gp(v_g_814, "k")) + "\"></canvas><div><b>" + J.str(J.gp(v_g_814, "name")) + "</b><small>Lv" + J.str(J.mc(J.G.get("F"), "glv", [v_g_814])) + "　" + J.str(J.mc(this_, "postStatTxt", [v_g_814, v_post_808])) + "</small></div><button class=\"btn sm\" data-act=\"unassign\" data-g=\"" + J.str(J.gp(v_g_814, "id")) + "\">撤下</button></div>"))
+			v_h_811 = _t1035
 		else:
-			var _t1034 = J.add(v_h_811, ("<div class=\"slot empty\"><span>空崗位</span><button class=\"btn sm\" data-act=\"assign\" data-post=\"" + J.str(v_post_808) + "\">派人</button></div>"))
-			v_h_811 = _t1034
+			var _t1036 = J.add(v_h_811, ("<div class=\"slot empty\"><span>空崗位</span><button class=\"btn sm\" data-act=\"assign\" data-post=\"" + J.str(v_post_808) + "\">派人</button></div>"))
+			v_h_811 = _t1036
 		v_i_813 = J.num(v_i_813) + 1.0
-	var _t1035 = J.add(v_h_811, "</div></div>")
-	v_h_811 = _t1035
+	var _t1037 = J.add(v_h_811, "</div></div>")
+	v_h_811 = _t1037
 	J.F_setTimeout([Callable(self, "_f192").bind(env), 0.0])
 	return v_h_811
 
@@ -4117,31 +4127,31 @@ func _f195(this_, a: Array, env):
 func _f196(this_, a: Array, env):
 	var v_g_830 = null
 	v_g_830 = J.arg(a, 0)
-	var _t1038 = J.gp(J.G.get("GHOSTS"), J.gp(v_g_830, "k"))
-	var _t1039 = (J.gp(J.gp(J.G.get("GHOSTS"), J.gp(v_g_830, "k")), "forbid") if J.t(_t1038) else _t1038)
-	var _t1040 = (_t1039 if J.t(_t1039) else [])
-	return (1.0 if J.t(J.mc(_t1040, "includes", [env["post"]])) else 0.0)
+	var _t1042 = J.gp(J.G.get("GHOSTS"), J.gp(v_g_830, "k"))
+	var _t1043 = (J.gp(J.gp(J.G.get("GHOSTS"), J.gp(v_g_830, "k")), "forbid") if J.t(_t1042) else _t1042)
+	var _t1044 = (_t1043 if J.t(_t1043) else [])
+	return (1.0 if J.t(J.mc(_t1044, "includes", [env["post"]])) else 0.0)
 
 func _f197(this_, a: Array, env):
 	var v_g_831 = null
 	v_g_831 = J.arg(a, 0)
-	var _t1042 = (not J.seq(J.gp(v_g_831, "k"), "afu"))
-	return ((not J.seq(J.gp(v_g_831, "post"), env["post"])) if _t1042 else _t1042)
+	var _t1046 = (not J.seq(J.gp(v_g_831, "k"), "afu"))
+	return ((not J.seq(J.gp(v_g_831, "post"), env["post"])) if _t1046 else _t1046)
 
 func _f198(this_, a: Array, env):
 	var v_a_832 = null; var v_b_833 = null
 	v_a_832 = J.arg(a, 0)
 	v_b_833 = J.arg(a, 1)
-	var _t1044 = env["fbd"]
-	var _t1046 = J.cl(_t1044, null, [v_a_832])
-	var _t1045 = env["fbd"]
-	var _t1050 = J.sub(_t1046, J.cl(_t1045, null, [v_b_833]))
-	if not J.t(_t1050):
-		var _t1047 = env["val"]
-		var _t1049 = J.cl(_t1047, null, [v_b_833])
-		var _t1048 = env["val"]
-		_t1050 = J.sub(_t1049, J.cl(_t1048, null, [v_a_832]))
-	return (_t1050 if J.t(_t1050) else J.sub(J.mc(J.G.get("F"), "glv", [v_b_833]), J.mc(J.G.get("F"), "glv", [v_a_832])))
+	var _t1048 = env["fbd"]
+	var _t1050 = J.cl(_t1048, null, [v_a_832])
+	var _t1049 = env["fbd"]
+	var _t1054 = J.sub(_t1050, J.cl(_t1049, null, [v_b_833]))
+	if not J.t(_t1054):
+		var _t1051 = env["val"]
+		var _t1053 = J.cl(_t1051, null, [v_b_833])
+		var _t1052 = env["val"]
+		_t1054 = J.sub(_t1053, J.cl(_t1052, null, [v_a_832]))
+	return (_t1054 if J.t(_t1054) else J.sub(J.mc(J.G.get("F"), "glv", [v_b_833]), J.mc(J.G.get("F"), "glv", [v_a_832])))
 
 func _f199(this_, a: Array, env):
 	var v_i_836 = null
@@ -4158,15 +4168,15 @@ func _f201(this_, a: Array, env):
 
 func _f203(this_, a: Array, env):
 	var v_g_839 = null; var v_old_840 = null
-	var _t1084 = J.G.get("ghostById")
-	v_g_839 = J.cl(_t1084, null, [J.gp(J.gp(env["el"], "dataset"), "g")])
-	var _t1085 = J.G.get("workersAt")
-	if J.cmp(J.len(J.cl(_t1085, null, [env["__p"]["post"]])), J.mc(J.G.get("F"), "slots", [env["__p"]["post"]]), ">="):
-		var _t1086 = J.G.get("workersAt")
-		v_old_840 = J.gp(J.cl(_t1086, null, [env["__p"]["post"]]), 0.0)
+	var _t1088 = J.G.get("ghostById")
+	v_g_839 = J.cl(_t1088, null, [J.gp(J.gp(env["el"], "dataset"), "g")])
+	var _t1089 = J.G.get("workersAt")
+	if J.cmp(J.len(J.cl(_t1089, null, [env["__p"]["post"]])), J.mc(J.G.get("F"), "slots", [env["__p"]["post"]]), ">="):
+		var _t1090 = J.G.get("workersAt")
+		v_old_840 = J.gp(J.cl(_t1090, null, [env["__p"]["post"]]), 0.0)
 		J.sp(v_old_840, "post", null)
-	var _t1087 = env["__p"]["post"]
-	J.sp(v_g_839, "post", _t1087)
+	var _t1091 = env["__p"]["post"]
+	J.sp(v_g_839, "post", _t1091)
 	J.mc(J.G.get("Quest"), "check", [])
 	J.cl(J.G.get("save"), null, [])
 	J.mc(J.G.get("UI"), "refresh", [])
@@ -4175,10 +4185,10 @@ func _f203(this_, a: Array, env):
 func _f202(this_, a: Array, env):
 	var _s442 = {"__p": env, "el": null}
 	_s442["el"] = J.arg(a, 0)
-	var _t1083 = _s442["el"]
-	var _t1088 = Callable(self, "_f203").bind(_s442)
-	J.sp(_t1083, "onclick", _t1088)
-	return _t1088
+	var _t1087 = _s442["el"]
+	var _t1092 = Callable(self, "_f203").bind(_s442)
+	J.sp(_t1087, "onclick", _t1092)
+	return _t1092
 
 func _f194(this_, a: Array, env):
 	var v_list_827 = null; var v_h_828 = null; var v_fb_835 = null
@@ -4186,60 +4196,66 @@ func _f194(this_, a: Array, env):
 	_s432["this"] = this_
 	_s432["post"] = J.arg(a, 0)
 	_s432["back"] = J.arg(a, 1)
+	var _t1041 = (not J.seq(J.typeof_(J.G.get("__nat_menu")), "undefined"))
+	if J.t(_t1041):
+		var _t1040 = J.G.get("__nat_menu")
+		_t1041 = J.cl(_t1040, null, ["pick", _s432["post"], _s432["back"]])
+	if J.t(_t1041):
+		return null
 	_s432["s"] = J.gp(J.gp(J.G.get("POSTS"), _s432["post"]), "stat")
 	_s432["val"] = Callable(self, "_f195").bind(_s432)
 	_s432["fbd"] = Callable(self, "_f196").bind(_s432)
-	var _t1041 = J.gp(J.G.get("S"), "ghosts")
-	var _t1043 = J.mc(_t1041, "filter", [Callable(self, "_f197").bind(_s432)])
-	v_list_827 = J.mc(_t1043, "sort", [Callable(self, "_f198").bind(_s432)])
+	var _t1045 = J.gp(J.G.get("S"), "ghosts")
+	var _t1047 = J.mc(_t1045, "filter", [Callable(self, "_f197").bind(_s432)])
+	v_list_827 = J.mc(_t1047, "sort", [Callable(self, "_f198").bind(_s432)])
 	v_h_828 = ("<p class=\"desc\">挑一位去「" + J.str(J.gp(J.gp(J.G.get("POSTS"), _s432["post"]), "name")) + "」。" + (("這份工看【" + J.str(J.gp(J.G.get("STAT_NAMES"), _s432["s"])) + "】。") if J.cmp(_s432["s"], 0.0, ">=") else "這份工看等級。") + "已在別處打工的，會被調過來。</p><p class=\"desc sortnote\">▼ 已按【" + J.str((J.gp(J.G.get("STAT_NAMES"), _s432["s"]) if J.cmp(_s432["s"], 0.0, ">=") else "等級")) + "】由高到低排好</p><div class=\"glist\">")
-	for _t1051 in J.iter(v_list_827):
+	for _t1055 in J.iter(v_list_827):
 		var _s437 = {"__p": _s432, "g": null}
-		_s437["g"] = _t1051
-		var _t1052 = J.gp(J.G.get("GHOSTS"), J.gp(_s437["g"], "k"))
-		var _t1053 = (J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s437["g"], "k")), "forbid") if J.t(_t1052) else _t1052)
-		var _t1054 = (_t1053 if J.t(_t1053) else [])
-		v_fb_835 = J.mc(_t1054, "includes", [_s437["__p"]["post"]])
-		var _t1056 = ("dis" if J.t(v_fb_835) else "")
-		var _t1057 = J.gp(_s437["g"], "id")
-		var _t1058 = J.gp(_s437["g"], "k")
-		var _t1059 = J.gp(_s437["g"], "name")
-		var _t1060 = J.gp(_s437["g"], "q")
-		var _t1061 = J.gp(_s437["g"], "q")
-		var _t1062 = (J.gp(J.G.get("STAT_NAMES"), _s437["__p"]["s"]) if J.cmp(_s437["__p"]["s"], 0.0, ">=") else "等級")
-		var _t1055 = _s437["__p"]["val"]
-		var _t1066 = J.cl(_t1055, null, [_s437["g"]])
-		var _t1067 = ((J.add("Lv", J.mc(J.G.get("F"), "glv", [_s437["g"]])) + "　") if J.cmp(_s437["__p"]["s"], 0.0, ">=") else "")
-		var _t1063 = [0.0, 1.0, 2.0]
-		var _t1064 = J.mc(_t1063, "filter", [Callable(self, "_f199").bind(_s437)])
-		var _t1065 = J.mc(_t1064, "map", [Callable(self, "_f200").bind(_s437)])
-		var _t1071 = J.mc(_t1065, "join", [" "])
-		var _t1070 = null
+		_s437["g"] = _t1055
+		var _t1056 = J.gp(J.G.get("GHOSTS"), J.gp(_s437["g"], "k"))
+		var _t1057 = (J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s437["g"], "k")), "forbid") if J.t(_t1056) else _t1056)
+		var _t1058 = (_t1057 if J.t(_t1057) else [])
+		v_fb_835 = J.mc(_t1058, "includes", [_s437["__p"]["post"]])
+		var _t1060 = ("dis" if J.t(v_fb_835) else "")
+		var _t1061 = J.gp(_s437["g"], "id")
+		var _t1062 = J.gp(_s437["g"], "k")
+		var _t1063 = J.gp(_s437["g"], "name")
+		var _t1064 = J.gp(_s437["g"], "q")
+		var _t1065 = J.gp(_s437["g"], "q")
+		var _t1066 = (J.gp(J.G.get("STAT_NAMES"), _s437["__p"]["s"]) if J.cmp(_s437["__p"]["s"], 0.0, ">=") else "等級")
+		var _t1059 = _s437["__p"]["val"]
+		var _t1070 = J.cl(_t1059, null, [_s437["g"]])
+		var _t1071 = ((J.add("Lv", J.mc(J.G.get("F"), "glv", [_s437["g"]])) + "　") if J.cmp(_s437["__p"]["s"], 0.0, ">=") else "")
+		var _t1067 = [0.0, 1.0, 2.0]
+		var _t1068 = J.mc(_t1067, "filter", [Callable(self, "_f199").bind(_s437)])
+		var _t1069 = J.mc(_t1068, "map", [Callable(self, "_f200").bind(_s437)])
+		var _t1075 = J.mc(_t1069, "join", [" "])
+		var _t1074 = null
 		if J.t(J.gp(_s437["g"], "post")):
-			var _t1068 = J.G.get("postLabel")
-			var _t1069 = J.cl(_t1068, null, [J.gp(_s437["g"], "post")])
-			_t1070 = J.add("目前：", J.mc(_t1069, "replace", [J.re("^打工：", ""), ""]))
+			var _t1072 = J.G.get("postLabel")
+			var _t1073 = J.cl(_t1072, null, [J.gp(_s437["g"], "post")])
+			_t1074 = J.add("目前：", J.mc(_t1073, "replace", [J.re("^打工：", ""), ""]))
 		else:
-			_t1070 = "閒著"
-		var _t1072 = J.add(v_h_828, ("<div class=\"gi " + _t1056 + "\" data-g=\"" + J.str(_t1057) + "\"><canvas data-por=\"" + J.str(_t1058) + "\"></canvas><div><b>" + J.str(_t1059) + "</b> <i class=\"q q" + J.str(_t1060) + "\">" + J.str(_t1061) + "</i><small><span class=\"keystat\">" + J.str(_t1062) + " " + J.str(_t1066) + "</span>　" + _t1067 + J.str(_t1071) + "</small><small>" + _t1070 + ("　<span class=\"lack\">怕糯米，不肯去</span>" if J.t(v_fb_835) else "") + "</small></div></div>"))
-		v_h_828 = _t1072
+			_t1074 = "閒著"
+		var _t1076 = J.add(v_h_828, ("<div class=\"gi " + _t1060 + "\" data-g=\"" + J.str(_t1061) + "\"><canvas data-por=\"" + J.str(_t1062) + "\"></canvas><div><b>" + J.str(_t1063) + "</b> <i class=\"q q" + J.str(_t1064) + "\">" + J.str(_t1065) + "</i><small><span class=\"keystat\">" + J.str(_t1066) + " " + J.str(_t1070) + "</span>　" + _t1071 + J.str(_t1075) + "</small><small>" + _t1074 + ("　<span class=\"lack\">怕糯米，不肯去</span>" if J.t(v_fb_835) else "") + "</small></div></div>"))
+		v_h_828 = _t1076
 	if (not J.t(J.len(v_list_827))):
-		var _t1073 = J.add(v_h_828, "<p class=\"desc\">沒有可以派的鬼怪。</p>")
-		v_h_828 = _t1073
-	var _t1074 = J.add(v_h_828, ("</div><button class=\"btn wide\" id=\"pkback\">返回</button>"))
-	v_h_828 = _t1074
+		var _t1077 = J.add(v_h_828, "<p class=\"desc\">沒有可以派的鬼怪。</p>")
+		v_h_828 = _t1077
+	var _t1078 = J.add(v_h_828, ("</div><button class=\"btn wide\" id=\"pkback\">返回</button>"))
+	v_h_828 = _t1078
 	J.mc(_s432["this"], "sheet", [("派人：" + J.str(J.gp(J.gp(J.G.get("POSTS"), _s432["post"]), "name"))), v_h_828])
-	var _t1075 = J.G.get("paintPortraits")
-	var _t1076 = J.G.get("$")
-	J.cl(_t1075, null, [J.cl(_t1076, null, ["#sheet"])])
-	var _t1077 = J.G.get("$")
-	var _t1078 = J.cl(_t1077, null, ["#pkback"])
-	var _t1079 = Callable(self, "_f201").bind(_s432)
-	J.sp(_t1078, "onclick", _t1079)
+	var _t1079 = J.G.get("paintPortraits")
 	var _t1080 = J.G.get("$")
-	var _t1081 = J.cl(_t1080, null, ["#sheet"])
-	var _t1082 = J.mc(_t1081, "querySelectorAll", [".gi:not(.dis)"])
-	J.mc(_t1082, "forEach", [Callable(self, "_f202").bind(_s432)])
+	J.cl(_t1079, null, [J.cl(_t1080, null, ["#sheet"])])
+	var _t1081 = J.G.get("$")
+	var _t1082 = J.cl(_t1081, null, ["#pkback"])
+	var _t1083 = Callable(self, "_f201").bind(_s432)
+	J.sp(_t1082, "onclick", _t1083)
+	var _t1084 = J.G.get("$")
+	var _t1085 = J.cl(_t1084, null, ["#sheet"])
+	var _t1086 = J.mc(_t1085, "querySelectorAll", [".gi:not(.dis)"])
+	J.mc(_t1086, "forEach", [Callable(self, "_f202").bind(_s432)])
 
 func _f206(this_, a: Array, env):
 	var v_k_848 = null
@@ -4250,115 +4266,115 @@ func _f207(this_, a: Array, env):
 	var v_a_849 = null; var v_b_850 = null
 	v_a_849 = J.arg(a, 0)
 	v_b_850 = J.arg(a, 1)
-	var _t1100 = null
+	var _t1106 = null
 	if J.seq(J.gp(v_a_849, "k"), "afu"):
-		_t1100 = (-1.0)
+		_t1106 = (-1.0)
 	else:
-		var _t1099 = null
+		var _t1105 = null
 		if J.seq(J.gp(v_b_850, "k"), "afu"):
-			_t1099 = 1.0
+			_t1105 = 1.0
 		else:
-			var _t1098 = ((0.0 if J.seq(J.gp(v_a_849, "q"), "名") else 1.0) - (0.0 if J.seq(J.gp(v_b_850, "q"), "名") else 1.0))
-			_t1099 = (_t1098 if J.t(_t1098) else J.sub(J.mc(J.G.get("F"), "glv", [v_b_850]), J.mc(J.G.get("F"), "glv", [v_a_849])))
-		_t1100 = _t1099
-	return _t1100
+			var _t1104 = ((0.0 if J.seq(J.gp(v_a_849, "q"), "名") else 1.0) - (0.0 if J.seq(J.gp(v_b_850, "q"), "名") else 1.0))
+			_t1105 = (_t1104 if J.t(_t1104) else J.sub(J.mc(J.G.get("F"), "glv", [v_b_850]), J.mc(J.G.get("F"), "glv", [v_a_849])))
+		_t1106 = _t1105
+	return _t1106
 
 func _f208(this_, a: Array, env):
 	var v_o_859 = null; var v_v_860 = null
 	v_o_859 = J.gp(env["g"], "lv")
-	var _t1105 = env["g"]
-	var _t1106 = J.add(v_o_859, 1.0)
-	J.sp(_t1105, "lv", _t1106)
+	var _t1111 = env["g"]
+	var _t1112 = J.add(v_o_859, 1.0)
+	J.sp(_t1111, "lv", _t1112)
 	v_v_860 = J.mc(J.G.get("GP"), "pow", [env["g"]])
-	var _t1107 = env["g"]
-	J.sp(_t1107, "lv", v_o_859)
+	var _t1113 = env["g"]
+	J.sp(_t1113, "lv", v_o_859)
 	return v_v_860
 
 func _f205(this_, a: Array, env):
 	var v_h_846 = null; var v_order_847 = null; var v_lv_852 = null; var v_cost_853 = null; var v_d_854 = null; var v_sk_855 = null; var v_inTeam_856 = null; var v_gpNow_857 = null; var v_gpNext_858 = null
-	var _t1090 = J.mc(J.G.get("F"), "ghostCap", [])
-	var _t1091 = J.cl(J.G.get("fodderCount"), null, [])
-	var _t1092 = J.mc(J.G.get("F"), "rosterCap", [])
-	var _t1089 = J.G.get("fmt")
-	var _t1095 = J.cl(_t1089, null, [J.gp(J.gp(J.G.get("S"), "res"), "buns")])
-	var _t1096 = J.mc(J.G.get("GP"), "T", ["鬼力會帶到主線戰鬥、陽間站崗、樓裡有鬼、夜班嚇人、運動會等所有玩法：喺村升級、落訓練班練嚇功，出面即刻勁啲。出面打唔過，就返嚟升級。", "鬼力會帶到主線戰鬥、陽間站崗、樓裡有鬼、夜班嚇人、運動會等所有玩法：在村裡升級、去訓練班練嚇功，外面立即變強。外面打不過，就回來升級。"])
-	var _t1094 = null
+	var _t1096 = J.mc(J.G.get("F"), "ghostCap", [])
+	var _t1097 = J.cl(J.G.get("fodderCount"), null, [])
+	var _t1098 = J.mc(J.G.get("F"), "rosterCap", [])
+	var _t1095 = J.G.get("fmt")
+	var _t1101 = J.cl(_t1095, null, [J.gp(J.gp(J.G.get("S"), "res"), "buns")])
+	var _t1102 = J.mc(J.G.get("GP"), "T", ["鬼力會帶到主線戰鬥、陽間站崗、樓裡有鬼、夜班嚇人、運動會等所有玩法：喺村升級、落訓練班練嚇功，出面即刻勁啲。出面打唔過，就返嚟升級。", "鬼力會帶到主線戰鬥、陽間站崗、樓裡有鬼、夜班嚇人、運動會等所有玩法：在村裡升級、去訓練班練嚇功，外面立即變強。外面打不過，就回來升級。"])
+	var _t1100 = null
 	if (not J.seq(J.typeof_(J.G.get("N30W")), "undefined")):
-		var _t1093 = J.mc(J.G.get("N30W"), "ids", [])
-		_t1094 = ("<button class=\"btn wide\" id=\"n30cx\">新鬼圖鑑（" + J.str(J.len(J.mc(_t1093, "filter", [Callable(self, "_f206").bind(env)]))) + "/" + J.str(J.len(J.mc(J.G.get("N30W"), "ids", []))) + "）</button>")
+		var _t1099 = J.mc(J.G.get("N30W"), "ids", [])
+		_t1100 = ("<button class=\"btn wide\" id=\"n30cx\">新鬼圖鑑（" + J.str(J.len(J.mc(_t1099, "filter", [Callable(self, "_f206").bind(env)]))) + "/" + J.str(J.len(J.mc(J.G.get("N30W"), "ids", []))) + "）</button>")
 	else:
-		_t1094 = ""
-	v_h_846 = ("<p class=\"desc\">用壽包升級鬼怪。等級上限 " + J.str(_t1090) + "。雜鬼名額 " + J.str(_t1091) + "/" + J.str(_t1092) + "　壽包 " + J.str(_t1095) + "</p><p class=\"desc gp-line\">" + J.str(_t1096) + "</p>" + _t1094 + "<div class=\"glist\">")
-	var _t1097 = J.mc(J.gp(J.G.get("S"), "ghosts"), "slice", [])
-	v_order_847 = J.mc(_t1097, "sort", [Callable(self, "_f207").bind(env)])
-	for _t1101 in J.iter(v_order_847):
+		_t1100 = ""
+	v_h_846 = ("<p class=\"desc\">用壽包升級鬼怪。等級上限 " + J.str(_t1096) + "。雜鬼名額 " + J.str(_t1097) + "/" + J.str(_t1098) + "　壽包 " + J.str(_t1101) + "</p><p class=\"desc gp-line\">" + J.str(_t1102) + "</p>" + _t1100 + "<div class=\"glist\">")
+	var _t1103 = J.mc(J.gp(J.G.get("S"), "ghosts"), "slice", [])
+	v_order_847 = J.mc(_t1103, "sort", [Callable(self, "_f207").bind(env)])
+	for _t1107 in J.iter(v_order_847):
 		var _s449 = {"__p": env, "g": null}
-		_s449["g"] = _t1101
+		_s449["g"] = _t1107
 		v_lv_852 = J.mc(J.G.get("F"), "glv", [_s449["g"]])
 		v_cost_853 = J.mc(J.G.get("F"), "lvCost", [v_lv_852])
-		var _t1102 = J.G.get("gdef")
-		v_d_854 = J.cl(_t1102, null, [_s449["g"]])
+		var _t1108 = J.G.get("gdef")
+		v_d_854 = J.cl(_t1108, null, [_s449["g"]])
 		v_sk_855 = J.gp(J.G.get("SKILLS"), J.gp(_s449["g"], "k"))
-		var _t1103 = J.gp(J.G.get("S"), "team")
-		v_inTeam_856 = ("出陣" if J.t(J.mc(_t1103, "includes", [J.gp(_s449["g"], "id")])) else ("軍師" if J.seq(J.gp(J.G.get("S"), "adviser"), J.gp(_s449["g"], "id")) else ""))
+		var _t1109 = J.gp(J.G.get("S"), "team")
+		v_inTeam_856 = ("出陣" if J.t(J.mc(_t1109, "includes", [J.gp(_s449["g"], "id")])) else ("軍師" if J.seq(J.gp(J.G.get("S"), "adviser"), J.gp(_s449["g"], "id")) else ""))
 		v_gpNow_857 = J.mc(J.G.get("GP"), "pow", [_s449["g"]])
-		var _t1104 = (not J.seq(J.gp(_s449["g"], "k"), "afu"))
-		v_gpNext_858 = (J.cl(Callable(self, "_f208").bind(_s449), null, []) if (J.cmp(v_lv_852, J.mc(J.G.get("F"), "ghostCap", []), "<") if _t1104 else _t1104) else null)
-		var _t1111 = J.gp(_s449["g"], "k")
-		var _t1112 = J.gp(_s449["g"], "name")
-		var _t1113 = J.gp(_s449["g"], "q")
-		var _t1114 = J.gp(_s449["g"], "q")
-		var _t1115 = (("<i class=\"tag\">" + J.str(v_inTeam_856) + "</i>") if J.t(v_inTeam_856) else "")
-		var _t1116 = (J.add(J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k")), "title"), "　") if J.t(J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k"))) else "")
-		var _t1117 = J.mc(J.G.get("F"), "stat", [_s449["g"], 0.0])
-		var _t1118 = J.mc(J.G.get("F"), "stat", [_s449["g"], 1.0])
-		var _t1119 = J.mc(J.G.get("F"), "stat", [_s449["g"], 2.0])
-		var _t1120 = ("遠程" if J.seq(J.gp(v_d_854, "range"), "ranged") else "近戰")
-		var _t1121 = J.mc(J.G.get("GP"), "T", ["鬼力", "鬼力"])
-		var _t1122 = (("　" + J.str(J.mc(J.G.get("GP"), "T", ["升級後", "升級後"])) + " <b class=\"gp-up\">" + J.str(v_gpNext_858) + "</b>（+" + J.str(J.sub(v_gpNext_858, v_gpNow_857)) + "）") if J.t(v_gpNext_858) else "")
-		var _t1123 = (("　" + J.str(J.mc(J.G.get("GP"), "T", ["嚇功", "嚇功"])) + " Lv" + J.str(J.mc(J.G.get("Rework"), "drillLv", [J.gp(_s449["g"], "k")]))) if (not J.seq(J.typeof_(J.G.get("Rework")), "undefined")) else "")
-		var _t1124 = J.gp(v_sk_855, "name")
-		var _t1125 = J.gp(v_sk_855, "desc")
-		var _t1110 = null
+		var _t1110 = (not J.seq(J.gp(_s449["g"], "k"), "afu"))
+		v_gpNext_858 = (J.cl(Callable(self, "_f208").bind(_s449), null, []) if (J.cmp(v_lv_852, J.mc(J.G.get("F"), "ghostCap", []), "<") if _t1110 else _t1110) else null)
+		var _t1117 = J.gp(_s449["g"], "k")
+		var _t1118 = J.gp(_s449["g"], "name")
+		var _t1119 = J.gp(_s449["g"], "q")
+		var _t1120 = J.gp(_s449["g"], "q")
+		var _t1121 = (("<i class=\"tag\">" + J.str(v_inTeam_856) + "</i>") if J.t(v_inTeam_856) else "")
+		var _t1122 = (J.add(J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k")), "title"), "　") if J.t(J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k"))) else "")
+		var _t1123 = J.mc(J.G.get("F"), "stat", [_s449["g"], 0.0])
+		var _t1124 = J.mc(J.G.get("F"), "stat", [_s449["g"], 1.0])
+		var _t1125 = J.mc(J.G.get("F"), "stat", [_s449["g"], 2.0])
+		var _t1126 = ("遠程" if J.seq(J.gp(v_d_854, "range"), "ranged") else "近戰")
+		var _t1127 = J.mc(J.G.get("GP"), "T", ["鬼力", "鬼力"])
+		var _t1128 = (("　" + J.str(J.mc(J.G.get("GP"), "T", ["升級後", "升級後"])) + " <b class=\"gp-up\">" + J.str(v_gpNext_858) + "</b>（+" + J.str(J.sub(v_gpNext_858, v_gpNow_857)) + "）") if J.t(v_gpNext_858) else "")
+		var _t1129 = (("　" + J.str(J.mc(J.G.get("GP"), "T", ["嚇功", "嚇功"])) + " Lv" + J.str(J.mc(J.G.get("Rework"), "drillLv", [J.gp(_s449["g"], "k")]))) if (not J.seq(J.typeof_(J.G.get("Rework")), "undefined")) else "")
+		var _t1130 = J.gp(v_sk_855, "name")
+		var _t1131 = J.gp(v_sk_855, "desc")
+		var _t1116 = null
 		if J.t(J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k"))):
-			var _t1109 = null
+			var _t1115 = null
 			if J.seq(J.typeof_(J.G.get("L")), "function"):
-				var _t1108 = J.G.get("L")
-				_t1109 = J.cl(_t1108, null, [J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k")), "trait")])
+				var _t1114 = J.G.get("L")
+				_t1115 = J.cl(_t1114, null, [J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k")), "trait")])
 			else:
-				_t1109 = J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k")), "trait")
-			_t1110 = ("<small class=\"tr\">" + J.str(_t1109) + "</small>")
+				_t1115 = J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k")), "trait")
+			_t1116 = ("<small class=\"tr\">" + J.str(_t1115) + "</small>")
 		else:
-			_t1110 = ""
-		var _t1126 = J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k"))
-		var _t1129 = (("<small class=\"tr\">" + J.str(J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k")), "lore")) + "</small>") if J.t((J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k")), "lore") if J.t(_t1126) else _t1126)) else "")
-		var _t1128 = null
+			_t1116 = ""
+		var _t1132 = J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k"))
+		var _t1135 = (("<small class=\"tr\">" + J.str(J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k")), "lore")) + "</small>") if J.t((J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s449["g"], "k")), "lore") if J.t(_t1132) else _t1132)) else "")
+		var _t1134 = null
 		if J.t(J.gp(_s449["g"], "post")):
-			var _t1127 = J.G.get("postLabel")
-			_t1128 = J.cl(_t1127, null, [J.gp(_s449["g"], "post")])
+			var _t1133 = J.G.get("postLabel")
+			_t1134 = J.cl(_t1133, null, [J.gp(_s449["g"], "post")])
 		else:
-			_t1128 = ("主公本人" if J.seq(J.gp(_s449["g"], "k"), "afu") else "閒著")
-		var _t1131 = ("<small>隨主公等級成長</small>" if J.seq(J.gp(_s449["g"], "k"), "afu") else (("<button class=\"btn sm gold\" data-up=\"" + J.str(J.gp(_s449["g"], "id")) + "\" " + ("" if J.cmp(J.gp(J.gp(J.G.get("S"), "res"), "buns"), v_cost_853, ">=") else "disabled") + ">升級<br><small>壽包 " + J.str(v_cost_853) + "</small></button>") if J.cmp(v_lv_852, J.mc(J.G.get("F"), "ghostCap", []), "<") else "<small>已達上限</small>"))
-		var _t1130 = (not J.seq(J.gp(_s449["g"], "q"), "名"))
-		var _t1132 = J.add(v_h_846, ("<div class=\"gcard\"><canvas data-por=\"" + J.str(_t1111) + "\"></canvas><div class=\"gc-main\"><div><b>" + J.str(_t1112) + "</b> <i class=\"q q" + J.str(_t1113) + "\">" + J.str(_t1114) + "</i> <span class=\"lvl\">Lv" + J.str(v_lv_852) + "</span> " + _t1115 + "</div>\n          <small>" + _t1116 + "力 " + J.str(_t1117) + "　智 " + J.str(_t1118) + "　武 " + J.str(_t1119) + "　" + _t1120 + "</small>\n          <small class=\"gp-row\">" + J.str(_t1121) + " <b>" + J.str(v_gpNow_857) + "</b>" + _t1122 + _t1123 + "</small>\n          <small class=\"sk\">【" + J.str(_t1124) + "】" + J.str(_t1125) + "</small>\n          " + _t1110 + _t1129 + "\n          <small>" + J.str(_t1128) + "</small></div>\n          <div class=\"gc-act\">" + _t1131 + "\n          " + (("<button class=\"btn sm ghost\" data-rel=\"" + J.str(J.gp(_s449["g"], "id")) + "\">送去投胎</button>") if ((not J.seq(J.gp(_s449["g"], "q"), "主")) if _t1130 else _t1130) else "") + "</div></div>"))
-		v_h_846 = _t1132
+			_t1134 = ("主公本人" if J.seq(J.gp(_s449["g"], "k"), "afu") else "閒著")
+		var _t1137 = ("<small>隨主公等級成長</small>" if J.seq(J.gp(_s449["g"], "k"), "afu") else (("<button class=\"btn sm gold\" data-up=\"" + J.str(J.gp(_s449["g"], "id")) + "\" " + ("" if J.cmp(J.gp(J.gp(J.G.get("S"), "res"), "buns"), v_cost_853, ">=") else "disabled") + ">升級<br><small>壽包 " + J.str(v_cost_853) + "</small></button>") if J.cmp(v_lv_852, J.mc(J.G.get("F"), "ghostCap", []), "<") else "<small>已達上限</small>"))
+		var _t1136 = (not J.seq(J.gp(_s449["g"], "q"), "名"))
+		var _t1138 = J.add(v_h_846, ("<div class=\"gcard\"><canvas data-por=\"" + J.str(_t1117) + "\"></canvas><div class=\"gc-main\"><div><b>" + J.str(_t1118) + "</b> <i class=\"q q" + J.str(_t1119) + "\">" + J.str(_t1120) + "</i> <span class=\"lvl\">Lv" + J.str(v_lv_852) + "</span> " + _t1121 + "</div>\n          <small>" + _t1122 + "力 " + J.str(_t1123) + "　智 " + J.str(_t1124) + "　武 " + J.str(_t1125) + "　" + _t1126 + "</small>\n          <small class=\"gp-row\">" + J.str(_t1127) + " <b>" + J.str(v_gpNow_857) + "</b>" + _t1128 + _t1129 + "</small>\n          <small class=\"sk\">【" + J.str(_t1130) + "】" + J.str(_t1131) + "</small>\n          " + _t1116 + _t1135 + "\n          <small>" + J.str(_t1134) + "</small></div>\n          <div class=\"gc-act\">" + _t1137 + "\n          " + (("<button class=\"btn sm ghost\" data-rel=\"" + J.str(J.gp(_s449["g"], "id")) + "\">送去投胎</button>") if ((not J.seq(J.gp(_s449["g"], "q"), "主")) if _t1136 else _t1136) else "") + "</div></div>"))
+		v_h_846 = _t1138
 	return J.add(v_h_846, "</div>")
 
 func _f211(this_, a: Array, env):
 	var v_g_863 = null; var v_c_864 = null
-	var _t1137 = J.G.get("ghostById")
-	v_g_863 = J.cl(_t1137, null, [J.gp(J.gp(env["b"], "dataset"), "up")])
+	var _t1143 = J.G.get("ghostById")
+	v_g_863 = J.cl(_t1143, null, [J.gp(J.gp(env["b"], "dataset"), "up")])
 	v_c_864 = J.mc(J.G.get("F"), "lvCost", [J.gp(v_g_863, "lv")])
 	if J.cmp(J.gp(J.gp(J.G.get("S"), "res"), "buns"), v_c_864, "<"):
 		return null
-	var _t1138 = J.gp(J.G.get("S"), "res")
-	var _t1139 = J.sub(J.gp(_t1138, "buns"), v_c_864)
-	J.sp(_t1138, "buns", _t1139)
-	var _t1140 = J.add(J.gp(v_g_863, "spent"), v_c_864)
-	J.sp(v_g_863, "spent", _t1140)
+	var _t1144 = J.gp(J.G.get("S"), "res")
+	var _t1145 = J.sub(J.gp(_t1144, "buns"), v_c_864)
+	J.sp(_t1144, "buns", _t1145)
+	var _t1146 = J.add(J.gp(v_g_863, "spent"), v_c_864)
+	J.sp(v_g_863, "spent", _t1146)
 	J.sp(v_g_863, "lv", J.num(J.gp(v_g_863, "lv")) + 1.0)
-	var _t1141 = J.G.get("gainExp")
-	J.cl(_t1141, null, [2.0])
+	var _t1147 = J.G.get("gainExp")
+	J.cl(_t1147, null, [2.0])
 	J.mc(J.G.get("Quest"), "check", [])
 	J.cl(J.G.get("save"), null, [])
 	J.mc(J.G.get("UI"), "refresh", [])
@@ -4367,10 +4383,10 @@ func _f211(this_, a: Array, env):
 func _f210(this_, a: Array, env):
 	var _s453 = {"__p": env, "b": null}
 	_s453["b"] = J.arg(a, 0)
-	var _t1136 = _s453["b"]
-	var _t1142 = Callable(self, "_f211").bind(_s453)
-	J.sp(_t1136, "onclick", _t1142)
-	return _t1142
+	var _t1142 = _s453["b"]
+	var _t1148 = Callable(self, "_f211").bind(_s453)
+	J.sp(_t1142, "onclick", _t1148)
+	return _t1148
 
 func _f214(this_, a: Array, env):
 	var v_x_868 = null
@@ -4385,26 +4401,26 @@ func _f215(this_, a: Array, env):
 func _f213(this_, a: Array, env):
 	var v_back_867 = null
 	var _s456 = {"__p": env, "g": null}
-	var _t1147 = J.G.get("ghostById")
-	_s456["g"] = J.cl(_t1147, null, [J.gp(J.gp(_s456["__p"]["b"], "dataset"), "rel")])
-	var _t1148 = J.G.get("confirmInline")
-	if (not J.t(J.cl(_t1148, null, [_s456["__p"]["b"], "確定？"]))):
+	var _t1153 = J.G.get("ghostById")
+	_s456["g"] = J.cl(_t1153, null, [J.gp(J.gp(_s456["__p"]["b"], "dataset"), "rel")])
+	var _t1154 = J.G.get("confirmInline")
+	if (not J.t(J.cl(_t1154, null, [_s456["__p"]["b"], "確定？"]))):
 		return null
 	v_back_867 = floor(J.num(J.mul(J.gp(_s456["g"], "spent"), 0.6)))
-	var _t1149 = J.gp(J.G.get("S"), "res")
-	var _t1150 = J.add(J.gp(_t1149, "buns"), v_back_867)
-	J.sp(_t1149, "buns", _t1150)
-	var _t1151 = J.G.get("S")
-	var _t1152 = J.gp(J.G.get("S"), "ghosts")
-	var _t1153 = J.mc(_t1152, "filter", [Callable(self, "_f214").bind(_s456)])
-	J.sp(_t1151, "ghosts", _t1153)
-	var _t1154 = J.G.get("S")
-	var _t1155 = J.gp(J.G.get("S"), "team")
-	var _t1156 = J.mc(_t1155, "map", [Callable(self, "_f215").bind(_s456)])
-	J.sp(_t1154, "team", _t1156)
+	var _t1155 = J.gp(J.G.get("S"), "res")
+	var _t1156 = J.add(J.gp(_t1155, "buns"), v_back_867)
+	J.sp(_t1155, "buns", _t1156)
+	var _t1157 = J.G.get("S")
+	var _t1158 = J.gp(J.G.get("S"), "ghosts")
+	var _t1159 = J.mc(_t1158, "filter", [Callable(self, "_f214").bind(_s456)])
+	J.sp(_t1157, "ghosts", _t1159)
+	var _t1160 = J.G.get("S")
+	var _t1161 = J.gp(J.G.get("S"), "team")
+	var _t1162 = J.mc(_t1161, "map", [Callable(self, "_f215").bind(_s456)])
+	J.sp(_t1160, "team", _t1162)
 	if J.seq(J.gp(J.G.get("S"), "adviser"), J.gp(_s456["g"], "id")):
-		var _t1157 = J.G.get("S")
-		J.sp(_t1157, "adviser", null)
+		var _t1163 = J.G.get("S")
+		J.sp(_t1163, "adviser", null)
 	J.mc(J.G.get("Fx"), "toast", [(J.str(J.gp(_s456["g"], "name")) + " 去投胎了。退回 壽包 " + J.str(v_back_867))])
 	J.cl(J.G.get("save"), null, [])
 	J.mc(J.G.get("UI"), "refresh", [])
@@ -4413,69 +4429,75 @@ func _f213(this_, a: Array, env):
 func _f212(this_, a: Array, env):
 	var _s455 = {"__p": env, "b": null}
 	_s455["b"] = J.arg(a, 0)
-	var _t1146 = _s455["b"]
-	var _t1158 = Callable(self, "_f213").bind(_s455)
-	J.sp(_t1146, "onclick", _t1158)
-	return _t1158
+	var _t1152 = _s455["b"]
+	var _t1164 = Callable(self, "_f213").bind(_s455)
+	J.sp(_t1152, "onclick", _t1164)
+	return _t1164
 
 func _f216(this_, a: Array, env):
 	return J.mc(J.G.get("N30W"), "openCodex", [])
 
 func _f209(this_, a: Array, env):
 	var v_cx_861 = null
-	var _t1133 = J.G.get("$")
-	var _t1134 = J.cl(_t1133, null, ["#sheet"])
-	var _t1135 = J.mc(_t1134, "querySelectorAll", ["[data-up]"])
-	J.mc(_t1135, "forEach", [Callable(self, "_f210").bind(env)])
-	var _t1143 = J.G.get("$")
-	var _t1144 = J.cl(_t1143, null, ["#sheet"])
-	var _t1145 = J.mc(_t1144, "querySelectorAll", ["[data-rel]"])
-	J.mc(_t1145, "forEach", [Callable(self, "_f212").bind(env)])
-	var _t1159 = J.G.get("paintPortraits")
-	var _t1160 = J.G.get("$")
-	J.cl(_t1159, null, [J.cl(_t1160, null, ["#sheet"])])
-	var _t1161 = J.G.get("$")
-	v_cx_861 = J.cl(_t1161, null, ["#n30cx"])
+	var _t1139 = J.G.get("$")
+	var _t1140 = J.cl(_t1139, null, ["#sheet"])
+	var _t1141 = J.mc(_t1140, "querySelectorAll", ["[data-up]"])
+	J.mc(_t1141, "forEach", [Callable(self, "_f210").bind(env)])
+	var _t1149 = J.G.get("$")
+	var _t1150 = J.cl(_t1149, null, ["#sheet"])
+	var _t1151 = J.mc(_t1150, "querySelectorAll", ["[data-rel]"])
+	J.mc(_t1151, "forEach", [Callable(self, "_f212").bind(env)])
+	var _t1165 = J.G.get("paintPortraits")
+	var _t1166 = J.G.get("$")
+	J.cl(_t1165, null, [J.cl(_t1166, null, ["#sheet"])])
+	var _t1167 = J.G.get("$")
+	v_cx_861 = J.cl(_t1167, null, ["#n30cx"])
 	if J.t(v_cx_861):
-		var _t1162 = Callable(self, "_f216").bind(env)
-		J.sp(v_cx_861, "onclick", _t1162)
+		var _t1168 = Callable(self, "_f216").bind(env)
+		J.sp(v_cx_861, "onclick", _t1168)
 
 func _f217(this_, a: Array, env):
 	var v_sc_870 = null
-	var _t1163 = J.G.get("$")
-	v_sc_870 = J.gp(J.cl(_t1163, null, ["#sheet .sh-body"]), "scrollTop")
-	var _t1164 = J.G.get("$")
-	var _t1165 = J.cl(_t1164, null, ["#sheet .sh-body"])
-	var _t1166 = J.cl(env["render"], null, [])
-	J.sp(_t1165, "innerHTML", _t1166)
+	var _t1169 = J.G.get("$")
+	v_sc_870 = J.gp(J.cl(_t1169, null, ["#sheet .sh-body"]), "scrollTop")
+	var _t1170 = J.G.get("$")
+	var _t1171 = J.cl(_t1170, null, ["#sheet .sh-body"])
+	var _t1172 = J.cl(env["render"], null, [])
+	J.sp(_t1171, "innerHTML", _t1172)
 	J.cl(env["bind"], null, [])
-	var _t1167 = J.G.get("$")
-	var _t1168 = J.cl(_t1167, null, ["#sheet .sh-body"])
-	J.sp(_t1168, "scrollTop", v_sc_870)
+	var _t1173 = J.G.get("$")
+	var _t1174 = J.cl(_t1173, null, ["#sheet .sh-body"])
+	J.sp(_t1174, "scrollTop", v_sc_870)
 
 func _f204(this_, a: Array, env):
 	var _s445 = {"__p": env, "render": null, "bind": null, "re": null}
+	var _t1094 = (not J.seq(J.typeof_(J.G.get("__nat_menu")), "undefined"))
+	if J.t(_t1094):
+		var _t1093 = J.G.get("__nat_menu")
+		_t1094 = J.cl(_t1093, null, ["roster"])
+	if J.t(_t1094):
+		return null
 	_s445["render"] = Callable(self, "_f205").bind(_s445)
 	_s445["bind"] = Callable(self, "_f209").bind(_s445)
 	_s445["re"] = Callable(self, "_f217").bind(_s445)
 	J.mc(this_, "sheet", ["鬼怪名冊", J.cl(_s445["render"], null, [])])
 	J.cl(_s445["bind"], null, [])
-	var _t1169 = this_
-	J.sp(_t1169, "sheetRefresh", null)
+	var _t1175 = this_
+	J.sp(_t1175, "sheetRefresh", null)
 
 func _f219(this_, a: Array, env):
 	var v_C_875 = null; var v_h_876 = null; var v_k_877 = null; var v_n_878 = null; var v_d_879 = null
 	v_C_875 = [["g", "綠箱", "壽包", ("開出 壽包 " + J.str(J.gp(J.mc(J.G.get("F"), "chestGain", ["g"]), "buns")) + "（隨包子鋪等級提升）")], ["b", "藍箱", "棺材板", ("開出 棺材板 " + J.str(J.gp(J.mc(J.G.get("F"), "chestGain", ["b"]), "planks")) + "（隨棺材鋪等級提升）")], ["p", "紫箱", "冥幣", ("開出 冥幣 " + J.str(J.gp(J.mc(J.G.get("F"), "chestGain", ["p"]), "coins")) + "（隨鬼宅等級提升）")]]
 	v_h_876 = ("<p class=\"desc\">小提示：箱子不會過期。先把對應的建築升高，再開，收穫更多。</p>")
-	for _t1170 in J.iter(v_C_875):
-		var _t1171 = J.gp(_t1170, 0.0)
-		v_k_877 = _t1171
-		var _t1172 = J.gp(_t1170, 1.0)
-		v_n_878 = _t1172
-		var _t1173 = J.gp(_t1170, 3.0)
-		v_d_879 = _t1173
-		var _t1174 = J.add(v_h_876, ("<div class=\"row chest\"><span class=\"cb k-" + J.str(v_k_877) + "\"></span><span><b>" + J.str(v_n_878) + " ×" + J.str(J.gp(J.gp(J.G.get("S"), "chests"), v_k_877)) + "</b><br><small>" + J.str(v_d_879) + "</small></span><span class=\"btns\"><button class=\"btn sm gold\" data-open=\"" + J.str(v_k_877) + "\" data-n=\"1\" " + ("" if J.t(J.gp(J.gp(J.G.get("S"), "chests"), v_k_877)) else "disabled") + ">開 1</button><button class=\"btn sm\" data-open=\"" + J.str(v_k_877) + "\" data-n=\"all\" " + ("" if J.cmp(J.gp(J.gp(J.G.get("S"), "chests"), v_k_877), 1.0, ">") else "disabled") + ">全開</button></span></div>"))
-		v_h_876 = _t1174
+	for _t1178 in J.iter(v_C_875):
+		var _t1179 = J.gp(_t1178, 0.0)
+		v_k_877 = _t1179
+		var _t1180 = J.gp(_t1178, 1.0)
+		v_n_878 = _t1180
+		var _t1181 = J.gp(_t1178, 3.0)
+		v_d_879 = _t1181
+		var _t1182 = J.add(v_h_876, ("<div class=\"row chest\"><span class=\"cb k-" + J.str(v_k_877) + "\"></span><span><b>" + J.str(v_n_878) + " ×" + J.str(J.gp(J.gp(J.G.get("S"), "chests"), v_k_877)) + "</b><br><small>" + J.str(v_d_879) + "</small></span><span class=\"btns\"><button class=\"btn sm gold\" data-open=\"" + J.str(v_k_877) + "\" data-n=\"1\" " + ("" if J.t(J.gp(J.gp(J.G.get("S"), "chests"), v_k_877)) else "disabled") + ">開 1</button><button class=\"btn sm\" data-open=\"" + J.str(v_k_877) + "\" data-n=\"all\" " + ("" if J.cmp(J.gp(J.gp(J.G.get("S"), "chests"), v_k_877), 1.0, ">") else "disabled") + ">全開</button></span></div>"))
+		v_h_876 = _t1182
 	return v_h_876
 
 func _f222(this_, a: Array, env):
@@ -4487,45 +4509,51 @@ func _f222(this_, a: Array, env):
 	while true:
 		if not J.cmp(v_i_884, v_n_882, "<"): break
 		v_g_885 = J.mc(J.G.get("F"), "chestGain", [v_k_881])
-		for _t1179 in J.keys(v_g_885):
-			v_r_886 = _t1179
-			var _t1180 = J.gp(v_tot_883, v_r_886)
-			var _t1181 = J.add((_t1180 if J.t(_t1180) else 0.0), J.gp(v_g_885, v_r_886))
-			J.sp(v_tot_883, v_r_886, _t1181)
+		for _t1187 in J.keys(v_g_885):
+			v_r_886 = _t1187
+			var _t1188 = J.gp(v_tot_883, v_r_886)
+			var _t1189 = J.add((_t1188 if J.t(_t1188) else 0.0), J.gp(v_g_885, v_r_886))
+			J.sp(v_tot_883, v_r_886, _t1189)
 		v_i_884 = J.num(v_i_884) + 1.0
 	J.mc(J.G.get("Sound"), "play", ["chest"])
-	var _t1182 = J.gp(J.G.get("S"), "chests")
-	var _t1183 = J.sub(J.gp(_t1182, v_k_881), v_n_882)
-	J.sp(_t1182, v_k_881, _t1183)
-	var _t1184 = J.gp(J.G.get("S"), "cnt")
-	var _t1185 = J.add(J.gp(_t1184, "chest"), v_n_882)
-	J.sp(_t1184, "chest", _t1185)
-	var _t1186 = J.G.get("give")
-	J.mc(J.G.get("Fx"), "toast", [("開箱：" + J.str(J.cl(_t1186, null, [v_tot_883])))])
+	var _t1190 = J.gp(J.G.get("S"), "chests")
+	var _t1191 = J.sub(J.gp(_t1190, v_k_881), v_n_882)
+	J.sp(_t1190, v_k_881, _t1191)
+	var _t1192 = J.gp(J.G.get("S"), "cnt")
+	var _t1193 = J.add(J.gp(_t1192, "chest"), v_n_882)
+	J.sp(_t1192, "chest", _t1193)
+	var _t1194 = J.G.get("give")
+	J.mc(J.G.get("Fx"), "toast", [("開箱：" + J.str(J.cl(_t1194, null, [v_tot_883])))])
 	J.cl(J.G.get("save"), null, [])
 	J.mc(J.G.get("UI"), "refresh", [])
-	var _t1187 = J.G.get("$")
-	var _t1188 = J.cl(_t1187, null, ["#sheet .sh-body"])
-	var _t1189 = J.cl(env["__p"]["render"], null, [])
-	J.sp(_t1188, "innerHTML", _t1189)
+	var _t1195 = J.G.get("$")
+	var _t1196 = J.cl(_t1195, null, ["#sheet .sh-body"])
+	var _t1197 = J.cl(env["__p"]["render"], null, [])
+	J.sp(_t1196, "innerHTML", _t1197)
 	J.cl(env["__p"]["bind"], null, [])
 
 func _f221(this_, a: Array, env):
 	var _s465 = {"__p": env, "b": null}
 	_s465["b"] = J.arg(a, 0)
-	var _t1178 = _s465["b"]
-	var _t1190 = Callable(self, "_f222").bind(_s465)
-	J.sp(_t1178, "onclick", _t1190)
-	return _t1190
+	var _t1186 = _s465["b"]
+	var _t1198 = Callable(self, "_f222").bind(_s465)
+	J.sp(_t1186, "onclick", _t1198)
+	return _t1198
 
 func _f220(this_, a: Array, env):
-	var _t1175 = J.G.get("$")
-	var _t1176 = J.cl(_t1175, null, ["#sheet"])
-	var _t1177 = J.mc(_t1176, "querySelectorAll", ["[data-open]"])
-	return J.mc(_t1177, "forEach", [Callable(self, "_f221").bind(env)])
+	var _t1183 = J.G.get("$")
+	var _t1184 = J.cl(_t1183, null, ["#sheet"])
+	var _t1185 = J.mc(_t1184, "querySelectorAll", ["[data-open]"])
+	return J.mc(_t1185, "forEach", [Callable(self, "_f221").bind(env)])
 
 func _f218(this_, a: Array, env):
 	var _s461 = {"__p": env, "render": null, "bind": null}
+	var _t1177 = (not J.seq(J.typeof_(J.G.get("__nat_menu")), "undefined"))
+	if J.t(_t1177):
+		var _t1176 = J.G.get("__nat_menu")
+		_t1177 = J.cl(_t1176, null, ["chest"])
+	if J.t(_t1177):
+		return null
 	_s461["render"] = Callable(self, "_f219").bind(_s461)
 	_s461["bind"] = Callable(self, "_f220").bind(_s461)
 	J.mc(this_, "sheet", ["箱子", J.cl(_s461["render"], null, [])])
@@ -4538,44 +4566,44 @@ func _f225(this_, a: Array, env):
 
 func _f224(this_, a: Array, env):
 	var v_name_892 = null; var v_ids_893 = null; var v_i_894 = null; var v_ok_895 = null
-	var _t1191 = J.gp(J.arg(a, 0), 0.0)
-	v_name_892 = _t1191
-	var _t1192 = J.gp(J.arg(a, 0), 1.0)
-	v_ids_893 = _t1192
+	var _t1199 = J.gp(J.arg(a, 0), 0.0)
+	v_name_892 = _t1199
+	var _t1200 = J.gp(J.arg(a, 0), 1.0)
+	v_ids_893 = _t1200
 	v_i_894 = J.arg(a, 1)
 	v_ok_895 = J.mc(v_ids_893, "some", [Callable(self, "_f225").bind(env)])
-	var _t1193 = J.add(env["h"], ("<button class=\"btn wide " + ("" if J.t(v_ok_895) else "ghost") + "\" data-sc=\"" + J.str(v_i_894) + "\" " + ("" if J.t(v_ok_895) else "disabled") + ">" + J.str((v_name_892 if J.t(v_ok_895) else "？？？")) + "</button>"))
-	env["h"] = _t1193
+	var _t1201 = J.add(env["h"], ("<button class=\"btn wide " + ("" if J.t(v_ok_895) else "ghost") + "\" data-sc=\"" + J.str(v_i_894) + "\" " + ("" if J.t(v_ok_895) else "disabled") + ">" + J.str((v_name_892 if J.t(v_ok_895) else "？？？")) + "</button>"))
+	env["h"] = _t1201
 
 func _f226(this_, a: Array, env):
 	var v_st_897 = null; var v_i_898 = null; var v_ok_899 = null
 	v_st_897 = J.arg(a, 0)
 	v_i_898 = J.arg(a, 1)
-	var _t1195 = J.G.get("standOk")
-	v_ok_899 = J.cl(_t1195, null, [v_st_897])
-	var _t1196 = J.add(env["h"], ("<button class=\"btn wide " + ("" if J.t(v_ok_899) else "ghost") + "\" data-st=\"" + J.str(v_i_898) + "\" " + ("" if J.t(v_ok_899) else "disabled") + ">" + (("<small>" + J.str(J.gp(v_st_897, "who")) + "</small>　" + J.str(J.gp(v_st_897, "title"))) if J.t(v_ok_899) else (J.add("？？？（", J.gp(v_st_897, "hint")) + "）")) + "</button>"))
-	env["h"] = _t1196
+	var _t1203 = J.G.get("standOk")
+	v_ok_899 = J.cl(_t1203, null, [v_st_897])
+	var _t1204 = J.add(env["h"], ("<button class=\"btn wide " + ("" if J.t(v_ok_899) else "ghost") + "\" data-st=\"" + J.str(v_i_898) + "\" " + ("" if J.t(v_ok_899) else "disabled") + ">" + (("<small>" + J.str(J.gp(v_st_897, "who")) + "</small>　" + J.str(J.gp(v_st_897, "title"))) if J.t(v_ok_899) else (J.add("？？？（", J.gp(v_st_897, "hint")) + "）")) + "</button>"))
+	env["h"] = _t1204
 
 func _f227(this_, a: Array, env):
 	var v_best_900 = null; var v_k_901 = null; var v_o_902 = null; var v_e_903 = null
 	v_best_900 = null
-	for _t1197 in J.iter(["_hi", "_bak", "_del"]):
-		v_k_901 = _t1197
-		var _t1198 = J.S_localStorage_("getItem", [J.add(J.G.get("SAVE_KEY"), v_k_901)])
-		v_o_902 = J.S_JSON_("parse", [(_t1198 if J.t(_t1198) else "null")])
-		var _t1202 = v_o_902
-		if J.t(_t1202):
-			var _t1199 = J.gp(v_o_902, "lv")
-			var _t1201 = (_t1199 if J.t(_t1199) else 1.0)
-			var _t1200 = J.gp(J.G.get("S"), "lv")
-			_t1202 = J.cmp(_t1201, (_t1200 if J.t(_t1200) else 1.0), ">")
-		var _t1204 = _t1202
-		if J.t(_t1204):
-			var _t1203 = (not J.t(v_best_900))
-			_t1204 = (_t1203 if _t1203 else J.cmp(J.gp(v_o_902, "lv"), J.gp(J.gp(v_best_900, "o"), "lv"), ">"))
-		if J.t(_t1204):
-			var _t1205 = {"k": v_k_901, "o": v_o_902}
-			v_best_900 = _t1205
+	for _t1205 in J.iter(["_hi", "_bak", "_del"]):
+		v_k_901 = _t1205
+		var _t1206 = J.S_localStorage_("getItem", [J.add(J.G.get("SAVE_KEY"), v_k_901)])
+		v_o_902 = J.S_JSON_("parse", [(_t1206 if J.t(_t1206) else "null")])
+		var _t1210 = v_o_902
+		if J.t(_t1210):
+			var _t1207 = J.gp(v_o_902, "lv")
+			var _t1209 = (_t1207 if J.t(_t1207) else 1.0)
+			var _t1208 = J.gp(J.G.get("S"), "lv")
+			_t1210 = J.cmp(_t1209, (_t1208 if J.t(_t1208) else 1.0), ">")
+		var _t1212 = _t1210
+		if J.t(_t1212):
+			var _t1211 = (not J.t(v_best_900))
+			_t1212 = (_t1211 if _t1211 else J.cmp(J.gp(v_o_902, "lv"), J.gp(J.gp(v_best_900, "o"), "lv"), ">"))
+		if J.t(_t1212):
+			var _t1213 = {"k": v_k_901, "o": v_o_902}
+			v_best_900 = _t1213
 	return (("<button class=\"btn wide gold\" id=\"restorebtn\" data-k=\"" + J.str(J.gp(v_best_900, "k")) + "\">恢復備份存檔（主公 " + J.str(J.gp(J.gp(v_best_900, "o"), "lv")) + " 級）</button>") if J.t(v_best_900) else "")
 
 func _f230(this_, a: Array, env):
@@ -4590,17 +4618,17 @@ func _f231(this_, a: Array, env):
 
 func _f229(this_, a: Array, env):
 	J.mc(env["__p"]["this"], "close", [])
-	var _t1211 = J.gp(J.gp(J.G.get("SCENE_ORDER"), J.num(J.gp(J.gp(env["b"], "dataset"), "sc"))), 1.0)
-	var _t1212 = J.mc(_t1211, "filter", [Callable(self, "_f230").bind(env)])
-	J.mc(_t1212, "forEach", [Callable(self, "_f231").bind(env)])
+	var _t1219 = J.gp(J.gp(J.G.get("SCENE_ORDER"), J.num(J.gp(J.gp(env["b"], "dataset"), "sc"))), 1.0)
+	var _t1220 = J.mc(_t1219, "filter", [Callable(self, "_f230").bind(env)])
+	J.mc(_t1220, "forEach", [Callable(self, "_f231").bind(env)])
 
 func _f228(this_, a: Array, env):
 	var _s480 = {"__p": env, "b": null}
 	_s480["b"] = J.arg(a, 0)
-	var _t1210 = _s480["b"]
-	var _t1213 = Callable(self, "_f229").bind(_s480)
-	J.sp(_t1210, "onclick", _t1213)
-	return _t1213
+	var _t1218 = _s480["b"]
+	var _t1221 = Callable(self, "_f229").bind(_s480)
+	J.sp(_t1218, "onclick", _t1221)
+	return _t1221
 
 func _f233(this_, a: Array, env):
 	var v_st_908 = null
@@ -4611,10 +4639,10 @@ func _f233(this_, a: Array, env):
 func _f232(this_, a: Array, env):
 	var _s484 = {"__p": env, "b": null}
 	_s484["b"] = J.arg(a, 0)
-	var _t1217 = _s484["b"]
-	var _t1218 = Callable(self, "_f233").bind(_s484)
-	J.sp(_t1217, "onclick", _t1218)
-	return _t1218
+	var _t1225 = _s484["b"]
+	var _t1226 = Callable(self, "_f233").bind(_s484)
+	J.sp(_t1225, "onclick", _t1226)
+	return _t1226
 
 func _f234(this_, a: Array, env):
 	J.mc(env["this"], "close", [])
@@ -4628,20 +4656,20 @@ func _f236(this_, a: Array, env):
 	var v_e_909 = null; var v_on_910 = null
 	v_e_909 = J.arg(a, 0)
 	v_on_910 = J.mc(J.G.get("Sound"), "toggle", [])
-	var _t1226 = J.gp(v_e_909, "target")
-	var _t1227 = ("聲音：" + ("開" if J.t(v_on_910) else "關"))
-	J.sp(_t1226, "textContent", _t1227)
+	var _t1234 = J.gp(v_e_909, "target")
+	var _t1235 = ("聲音：" + ("開" if J.t(v_on_910) else "關"))
+	J.sp(_t1234, "textContent", _t1235)
 	J.cl(J.G.get("syncSnd"), null, [])
 
 func _f237(this_, a: Array, env):
 	var v_e_911 = null; var v_er_912 = null
 	v_e_911 = J.arg(a, 0)
-	var _t1231 = J.G.get("confirmInline")
-	if (not J.t(J.cl(_t1231, null, [J.gp(v_e_911, "target"), "再按一次確定刪檔"]))):
+	var _t1239 = J.G.get("confirmInline")
+	if (not J.t(J.cl(_t1239, null, [J.gp(v_e_911, "target"), "再按一次確定刪檔"]))):
 		return null
-	var _t1233 = J.add(J.G.get("SAVE_KEY"), "_del")
-	var _t1232 = J.S_localStorage_("getItem", [J.G.get("SAVE_KEY")])
-	J.S_localStorage_("setItem", [_t1233, (_t1232 if J.t(_t1232) else "")])
+	var _t1241 = J.add(J.G.get("SAVE_KEY"), "_del")
+	var _t1240 = J.S_localStorage_("getItem", [J.G.get("SAVE_KEY")])
+	J.S_localStorage_("setItem", [_t1241, (_t1240 if J.t(_t1240) else "")])
 	J.S_localStorage_("removeItem", [J.G.get("SAVE_KEY")])
 	J.S_location_("reload", [])
 
@@ -4649,15 +4677,15 @@ func _f239(this_, a: Array, env):
 	return J.mc(J.G.get("Fx"), "toast", ["存檔碼已複製，貼去記事本或者 WhatsApp 自己收好"])
 
 func _f240(this_, a: Array, env):
-	var _t1239 = J.G.get("$")
-	var _t1240 = J.cl(_t1239, null, ["#impbox"])
-	J.sp(_t1240, "hidden", false)
-	var _t1241 = J.G.get("$")
-	var _t1242 = J.cl(_t1241, null, ["#impta"])
-	var _t1243 = env["code"]
-	J.sp(_t1242, "value", _t1243)
-	var _t1244 = J.G.get("$")
-	J.mc(J.cl(_t1244, null, ["#impta"]), "select", [])
+	var _t1247 = J.G.get("$")
+	var _t1248 = J.cl(_t1247, null, ["#impbox"])
+	J.sp(_t1248, "hidden", false)
+	var _t1249 = J.G.get("$")
+	var _t1250 = J.cl(_t1249, null, ["#impta"])
+	var _t1251 = env["code"]
+	J.sp(_t1250, "value", _t1251)
+	var _t1252 = J.G.get("$")
+	J.mc(J.cl(_t1252, null, ["#impta"]), "select", [])
 	J.mc(J.G.get("Fx"), "toast", ["自己長按複製呢段存檔碼"])
 
 func _f238(this_, a: Array, env):
@@ -4666,63 +4694,63 @@ func _f238(this_, a: Array, env):
 	J.cl(J.G.get("save"), null, [])
 	_s493["code"] = J.mc(J.G.get("Web"), "enc", [J.G.get("S")])
 	v_done_914 = Callable(self, "_f239").bind(_s493)
-	var _t1237 = J.gp(J.G.get("navigator"), "clipboard")
-	var _t1238 = J.mc(_t1237, "writeText", [_s493["code"]])
-	J.mc(_t1238, "then", [v_done_914, Callable(self, "_f240").bind(_s493)])
+	var _t1245 = J.gp(J.G.get("navigator"), "clipboard")
+	var _t1246 = J.mc(_t1245, "writeText", [_s493["code"]])
+	J.mc(_t1246, "then", [v_done_914, Callable(self, "_f240").bind(_s493)])
 
 func _f241(this_, a: Array, env):
-	var _t1248 = J.G.get("$")
-	var _t1249 = J.cl(_t1248, null, ["#impbox"])
-	J.sp(_t1249, "hidden", false)
-	var _t1250 = J.G.get("$")
-	var _t1251 = J.cl(_t1250, null, ["#impta"])
-	J.sp(_t1251, "value", "")
-	var _t1252 = J.G.get("$")
-	J.mc(J.cl(_t1252, null, ["#impta"]), "focus", [])
+	var _t1256 = J.G.get("$")
+	var _t1257 = J.cl(_t1256, null, ["#impbox"])
+	J.sp(_t1257, "hidden", false)
+	var _t1258 = J.G.get("$")
+	var _t1259 = J.cl(_t1258, null, ["#impta"])
+	J.sp(_t1259, "value", "")
+	var _t1260 = J.G.get("$")
+	J.mc(J.cl(_t1260, null, ["#impta"]), "focus", [])
 
 func _f242(this_, a: Array, env):
 	var v_e_916 = null; var v_o_917 = null; var v_er_918 = null; var v_er_919 = null
 	v_e_916 = J.arg(a, 0)
 	v_o_917 = null
-	var _t1256 = J.G.get("$")
-	var _t1257 = J.mc(J.gp(J.cl(_t1256, null, ["#impta"]), "value"), "trim", [])
-	var _t1258 = J.mc(J.G.get("Web"), "dec", [J.mc(_t1257, "replace", [J.re("^.*#save=", ""), ""])])
-	v_o_917 = _t1258
-	var _t1259 = (not J.t(v_o_917))
-	if (_t1259 if _t1259 else (not J.t(J.gp(v_o_917, "res")))):
+	var _t1264 = J.G.get("$")
+	var _t1265 = J.mc(J.gp(J.cl(_t1264, null, ["#impta"]), "value"), "trim", [])
+	var _t1266 = J.mc(J.G.get("Web"), "dec", [J.mc(_t1265, "replace", [J.re("^.*#save=", ""), ""])])
+	v_o_917 = _t1266
+	var _t1267 = (not J.t(v_o_917))
+	if (_t1267 if _t1267 else (not J.t(J.gp(v_o_917, "res")))):
 		J.mc(J.G.get("Fx"), "toast", ["存檔碼讀唔到，檢查吓有冇貼齊"])
 		return null
-	var _t1260 = J.G.get("confirmInline")
-	var _t1262 = J.gp(v_e_916, "target")
-	var _t1261 = J.gp(v_o_917, "lv")
-	if (not J.t(J.cl(_t1260, null, [_t1262, ("再按一次：換成主公 " + J.str((_t1261 if J.t(_t1261) else 1.0)) + " 級嘅存檔")]))):
+	var _t1268 = J.G.get("confirmInline")
+	var _t1270 = J.gp(v_e_916, "target")
+	var _t1269 = J.gp(v_o_917, "lv")
+	if (not J.t(J.cl(_t1268, null, [_t1270, ("再按一次：換成主公 " + J.str((_t1269 if J.t(_t1269) else 1.0)) + " 級嘅存檔")]))):
 		return null
-	var _t1264 = J.add(J.G.get("SAVE_KEY"), "_bak")
-	var _t1263 = J.S_localStorage_("getItem", [J.G.get("SAVE_KEY")])
-	J.S_localStorage_("setItem", [_t1264, (_t1263 if J.t(_t1263) else "")])
+	var _t1272 = J.add(J.G.get("SAVE_KEY"), "_bak")
+	var _t1271 = J.S_localStorage_("getItem", [J.G.get("SAVE_KEY")])
+	J.S_localStorage_("setItem", [_t1272, (_t1271 if J.t(_t1271) else "")])
 	J.S_window_("removeEventListener", ["beforeunload", J.G.get("save")])
-	var _t1265 = J.S_Date_("now", [])
-	J.sp(v_o_917, "last", _t1265)
+	var _t1273 = J.S_Date_("now", [])
+	J.sp(v_o_917, "last", _t1273)
 	J.S_localStorage_("setItem", [J.G.get("SAVE_KEY"), J.S_JSON_("stringify", [v_o_917])])
-	var _t1266 = J.G.get("window")
-	J.sp(_t1266, "__NOSAVE", 1.0)
+	var _t1274 = J.G.get("window")
+	J.sp(_t1274, "__NOSAVE", 1.0)
 	J.S_location_("reload", [])
 
 func _f243(this_, a: Array, env):
 	var v_e_920 = null; var v_k_921 = null; var v_v_922 = null; var v_er_923 = null
 	v_e_920 = J.arg(a, 0)
-	var _t1270 = J.G.get("confirmInline")
-	if (not J.t(J.cl(_t1270, null, [J.gp(v_e_920, "target"), "再按一次確定恢復"]))):
+	var _t1278 = J.G.get("confirmInline")
+	if (not J.t(J.cl(_t1278, null, [J.gp(v_e_920, "target"), "再按一次確定恢復"]))):
 		return null
 	v_k_921 = J.add(J.G.get("SAVE_KEY"), J.gp(J.gp(env["rb"], "dataset"), "k"))
 	v_v_922 = J.S_localStorage_("getItem", [v_k_921])
-	var _t1272 = J.add(J.G.get("SAVE_KEY"), "_bak")
-	var _t1271 = J.S_localStorage_("getItem", [J.G.get("SAVE_KEY")])
-	J.S_localStorage_("setItem", [_t1272, (_t1271 if J.t(_t1271) else "")])
+	var _t1280 = J.add(J.G.get("SAVE_KEY"), "_bak")
+	var _t1279 = J.S_localStorage_("getItem", [J.G.get("SAVE_KEY")])
+	J.S_localStorage_("setItem", [_t1280, (_t1279 if J.t(_t1279) else "")])
 	J.S_window_("removeEventListener", ["beforeunload", J.G.get("save")])
 	J.S_localStorage_("setItem", [J.G.get("SAVE_KEY"), v_v_922])
-	var _t1273 = J.G.get("window")
-	J.sp(_t1273, "__NOSAVE", 1.0)
+	var _t1281 = J.G.get("window")
+	J.sp(_t1281, "__NOSAVE", 1.0)
 	J.S_location_("reload", [])
 
 func _f223(this_, a: Array, env):
@@ -4731,57 +4759,603 @@ func _f223(this_, a: Array, env):
 	_s470["this"] = this_
 	_s470["h"] = "<p class=\"desc\">看過的劇情，可以在這裡重溫。</p><div class=\"slist\">"
 	J.mc(J.G.get("SCENE_ORDER"), "forEach", [Callable(self, "_f224").bind(_s470)])
-	var _t1194 = J.add(_s470["h"], "</div><h4 class=\"stand-h\">開麥之夜・陰間脫口秀</h4><p class=\"desc\">村裡的鬼，入了村就能上台。</p><div class=\"slist\">")
-	_s470["h"] = _t1194
+	var _t1202 = J.add(_s470["h"], "</div><h4 class=\"stand-h\">開麥之夜・陰間脫口秀</h4><p class=\"desc\">村裡的鬼，入了村就能上台。</p><div class=\"slist\">")
+	_s470["h"] = _t1202
 	J.mc(J.G.get("STANDUP"), "forEach", [Callable(self, "_f226").bind(_s470)])
-	var _t1206 = J.add(_s470["h"], ("</div><hr>" + ("<button class=\"btn wide gold\" id=\"instbtn\">放到手機桌面（自動更新）</button>" if J.t(((not J.t(J.cl(J.G.get("isStandalone"), null, []))) if J.t(J.G.get("IS_WEB")) else J.G.get("IS_WEB"))) else "") + "<button class=\"btn wide\" id=\"phonebtn\">看手機</button><button class=\"btn wide\" id=\"sndbtn\">聲音：" + ("開" if J.t(J.mc(J.G.get("Sound"), "isOn", [])) else "關") + "</button><button class=\"btn wide\" id=\"expbtn\">備份存檔（複製存檔碼）</button><button class=\"btn wide\" id=\"impbtn\">導入存檔碼</button><div id=\"impbox\" hidden><textarea id=\"impta\" rows=\"4\" style=\"width:100%;font-size:14px\" placeholder=\"貼上存檔碼\"></textarea><button class=\"btn wide gold\" id=\"impgo\">確定導入</button></div><button class=\"btn wide ghost\" id=\"resetbtn\">重新開始（刪除存檔）</button>" + J.str(J.cl(Callable(self, "_f227").bind(_s470), null, []))))
-	_s470["h"] = _t1206
+	var _t1214 = J.add(_s470["h"], ("</div><hr>" + ("<button class=\"btn wide gold\" id=\"instbtn\">放到手機桌面（自動更新）</button>" if J.t(((not J.t(J.cl(J.G.get("isStandalone"), null, []))) if J.t(J.G.get("IS_WEB")) else J.G.get("IS_WEB"))) else "") + "<button class=\"btn wide\" id=\"phonebtn\">看手機</button><button class=\"btn wide\" id=\"sndbtn\">聲音：" + ("開" if J.t(J.mc(J.G.get("Sound"), "isOn", [])) else "關") + "</button><button class=\"btn wide\" id=\"expbtn\">備份存檔（複製存檔碼）</button><button class=\"btn wide\" id=\"impbtn\">導入存檔碼</button><div id=\"impbox\" hidden><textarea id=\"impta\" rows=\"4\" style=\"width:100%;font-size:14px\" placeholder=\"貼上存檔碼\"></textarea><button class=\"btn wide gold\" id=\"impgo\">確定導入</button></div><button class=\"btn wide ghost\" id=\"resetbtn\">重新開始（刪除存檔）</button>" + J.str(J.cl(Callable(self, "_f227").bind(_s470), null, []))))
+	_s470["h"] = _t1214
 	J.mc(_s470["this"], "sheet", ["劇情", _s470["h"]])
-	var _t1207 = J.G.get("$")
-	var _t1208 = J.cl(_t1207, null, ["#sheet"])
-	var _t1209 = J.mc(_t1208, "querySelectorAll", ["[data-sc]"])
-	J.mc(_t1209, "forEach", [Callable(self, "_f228").bind(_s470)])
-	var _t1214 = J.G.get("$")
-	var _t1215 = J.cl(_t1214, null, ["#sheet"])
-	var _t1216 = J.mc(_t1215, "querySelectorAll", ["[data-st]"])
-	J.mc(_t1216, "forEach", [Callable(self, "_f232").bind(_s470)])
-	var _t1219 = J.G.get("$")
-	v_ib_890 = J.cl(_t1219, null, ["#instbtn"])
+	var _t1215 = J.G.get("$")
+	var _t1216 = J.cl(_t1215, null, ["#sheet"])
+	var _t1217 = J.mc(_t1216, "querySelectorAll", ["[data-sc]"])
+	J.mc(_t1217, "forEach", [Callable(self, "_f228").bind(_s470)])
+	var _t1222 = J.G.get("$")
+	var _t1223 = J.cl(_t1222, null, ["#sheet"])
+	var _t1224 = J.mc(_t1223, "querySelectorAll", ["[data-st]"])
+	J.mc(_t1224, "forEach", [Callable(self, "_f232").bind(_s470)])
+	var _t1227 = J.G.get("$")
+	v_ib_890 = J.cl(_t1227, null, ["#instbtn"])
 	if J.t(v_ib_890):
-		var _t1220 = Callable(self, "_f234").bind(_s470)
-		J.sp(v_ib_890, "onclick", _t1220)
-	var _t1221 = J.G.get("$")
-	var _t1222 = J.cl(_t1221, null, ["#phonebtn"])
-	var _t1223 = Callable(self, "_f235").bind(_s470)
-	J.sp(_t1222, "onclick", _t1223)
-	var _t1224 = J.G.get("$")
-	var _t1225 = J.cl(_t1224, null, ["#sndbtn"])
-	var _t1228 = Callable(self, "_f236").bind(_s470)
-	J.sp(_t1225, "onclick", _t1228)
+		var _t1228 = Callable(self, "_f234").bind(_s470)
+		J.sp(v_ib_890, "onclick", _t1228)
 	var _t1229 = J.G.get("$")
-	var _t1230 = J.cl(_t1229, null, ["#resetbtn"])
-	var _t1234 = Callable(self, "_f237").bind(_s470)
-	J.sp(_t1230, "onclick", _t1234)
-	var _t1235 = J.G.get("$")
-	var _t1236 = J.cl(_t1235, null, ["#expbtn"])
-	var _t1245 = Callable(self, "_f238").bind(_s470)
-	J.sp(_t1236, "onclick", _t1245)
-	var _t1246 = J.G.get("$")
-	var _t1247 = J.cl(_t1246, null, ["#impbtn"])
-	var _t1253 = Callable(self, "_f241").bind(_s470)
-	J.sp(_t1247, "onclick", _t1253)
+	var _t1230 = J.cl(_t1229, null, ["#phonebtn"])
+	var _t1231 = Callable(self, "_f235").bind(_s470)
+	J.sp(_t1230, "onclick", _t1231)
+	var _t1232 = J.G.get("$")
+	var _t1233 = J.cl(_t1232, null, ["#sndbtn"])
+	var _t1236 = Callable(self, "_f236").bind(_s470)
+	J.sp(_t1233, "onclick", _t1236)
+	var _t1237 = J.G.get("$")
+	var _t1238 = J.cl(_t1237, null, ["#resetbtn"])
+	var _t1242 = Callable(self, "_f237").bind(_s470)
+	J.sp(_t1238, "onclick", _t1242)
+	var _t1243 = J.G.get("$")
+	var _t1244 = J.cl(_t1243, null, ["#expbtn"])
+	var _t1253 = Callable(self, "_f238").bind(_s470)
+	J.sp(_t1244, "onclick", _t1253)
 	var _t1254 = J.G.get("$")
-	var _t1255 = J.cl(_t1254, null, ["#impgo"])
-	var _t1267 = Callable(self, "_f242").bind(_s470)
-	J.sp(_t1255, "onclick", _t1267)
-	var _t1268 = J.G.get("$")
-	_s470["rb"] = J.cl(_t1268, null, ["#restorebtn"])
+	var _t1255 = J.cl(_t1254, null, ["#impbtn"])
+	var _t1261 = Callable(self, "_f241").bind(_s470)
+	J.sp(_t1255, "onclick", _t1261)
+	var _t1262 = J.G.get("$")
+	var _t1263 = J.cl(_t1262, null, ["#impgo"])
+	var _t1275 = Callable(self, "_f242").bind(_s470)
+	J.sp(_t1263, "onclick", _t1275)
+	var _t1276 = J.G.get("$")
+	_s470["rb"] = J.cl(_t1276, null, ["#restorebtn"])
 	if J.t(_s470["rb"]):
-		var _t1269 = _s470["rb"]
-		var _t1274 = Callable(self, "_f243").bind(_s470)
-		J.sp(_t1269, "onclick", _t1274)
+		var _t1277 = _s470["rb"]
+		var _t1282 = Callable(self, "_f243").bind(_s470)
+		J.sp(_t1277, "onclick", _t1282)
+
+func _f245(this_, a: Array, env):
+	var v_k_934 = null
+	v_k_934 = J.arg(a, 0)
+	var _t1308 = (not J.t(J.gp(J.gp(J.G.get("FODDER"), v_k_934), "unlock")))
+	return (_t1308 if _t1308 else J.gp(J.gp(J.G.get("S"), "cleared"), J.gp(J.gp(J.G.get("FODDER"), v_k_934), "unlock")))
+
+func _f246(this_, a: Array, env):
+	var v_k_935 = null
+	v_k_935 = J.arg(a, 0)
+	return J.gp(J.gp(J.G.get("FODDER"), v_k_935), "name")
+
+func _f247(this_, a: Array, env):
+	var v_x_937 = null
+	v_x_937 = J.arg(a, 0)
+	return {"name": J.gp(v_x_937, "name"), "lv": J.gp(v_x_937, "lv")}
+
+func _f248(this_, a: Array, env):
+	var v_a_941 = null; var v_g_942 = null
+	v_a_941 = J.arg(a, 0)
+	v_g_942 = J.arg(a, 1)
+	return J.add(v_a_941, J.mc(J.G.get("F"), "stat", [v_g_942, 1.0]))
 
 func _f244(this_, a: Array, env):
+	var v_id_926 = null; var v_b_927 = null; var v_lv_928 = null; var v_o_929 = null; var v_c_930 = null; var v_src_931 = null; var v_left_932 = null; var v_c_933 = null; var v_p_936 = null; var v_e_938 = null; var v_iq_939 = null; var v_left_940 = null; var v_p_943 = null; var v_P_944 = null; var v_n_945 = null; var v_lock_946 = null; var v_ws_947 = null; var v_sl_948 = null; var v_i_949 = null; var v_g_950 = null
+	v_id_926 = J.arg(a, 0)
+	v_b_927 = J.gp(J.G.get("BUILDINGS"), v_id_926)
+	var _t1283 = J.gp(J.gp(J.G.get("S"), "bld"), v_id_926)
+	v_lv_928 = (_t1283 if J.t(_t1283) else 0.0)
+	var _t1285 = J.gp(v_b_927, "name")
+	var _t1284 = J.gp(J.G.get("FLAVOR"), v_id_926)
+	v_o_929 = {"id": v_id_926, "name": _t1285, "flavor": (_t1284 if J.t(_t1284) else ""), "desc": J.gp(v_b_927, "desc"), "lv": v_lv_928, "house": J.gp(J.gp(J.G.get("S"), "bld"), "house")}
+	if (not J.t(v_lv_928)):
+		var _t1286 = J.G.get("bldUnlocked")
+		var _t1287 = J.cl(_t1286, null, [v_id_926])
+		J.sp(v_o_929, "unlocked", _t1287)
+		var _t1288 = J.G.get("costText")
+		var _t1289 = J.cl(_t1288, null, [J.gp(v_b_927, "build")])
+		J.sp(v_o_929, "cost", _t1289)
+		var _t1290 = J.G.get("canPay")
+		var _t1291 = J.cl(_t1290, null, [J.gp(v_b_927, "build")])
+		J.sp(v_o_929, "canBuild", _t1291)
+		return v_o_929
+	var _t1292 = J.mc(J.G.get("UI"), "bldEffect", [v_id_926])
+	var _t1293 = J.mc(_t1292, "replace", [J.re("<\\/?div[^>]*>", "g"), ""])
+	J.sp(v_o_929, "effect", _t1293)
+	var _t1294 = J.mc(J.G.get("F"), "bldMax", [v_id_926])
+	J.sp(v_o_929, "max", _t1294)
+	if J.cmp(v_lv_928, J.gp(v_o_929, "max"), "<"):
+		v_c_930 = J.mc(J.G.get("F"), "upCost", [v_id_926, v_lv_928])
+		var _t1295 = J.G.get("costText")
+		var _t1296 = J.cl(_t1295, null, [v_c_930])
+		J.sp(v_o_929, "upCost", _t1296)
+		var _t1297 = J.G.get("canPay")
+		var _t1298 = J.cl(_t1297, null, [v_c_930])
+		J.sp(v_o_929, "canUp", _t1298)
+		var _t1299 = (J.round(J.num(J.mul(J.mc(J.G.get("F"), "builderDiscount", []), 100.0))) if J.t(J.mc(J.G.get("F"), "builderDiscount", [])) else 0.0)
+		J.sp(v_o_929, "disc", _t1299)
+	var _t1300 = J.seq(v_id_926, "plank")
+	if (_t1300 if _t1300 else J.seq(v_id_926, "bun")):
+		v_src_931 = ("wood" if J.seq(v_id_926, "plank") else "rice")
+		var _t1301 = {"src": J.gp(J.G.get("RES_NAMES"), v_src_931), "have": J.gp(J.gp(J.G.get("S"), "res"), v_src_931), "can": floor(J.num(J.div(J.gp(J.gp(J.G.get("S"), "res"), v_src_931), 4.0))), "label": ("槐木 → 2 棺材板" if J.seq(v_id_926, "plank") else "糯米 → 2 壽包")}
+		J.sp(v_o_929, "craft", _t1301)
+	if J.seq(v_id_926, "furnace"):
+		v_left_932 = J.max_([0.0, J.sub(J.gp(J.G.get("F"), "furnaceCD"), J.div(J.mul(J.sub(J.S_Date_("now", []), J.gp(J.G.get("S"), "furnaceAt")), J.G.get("TIME_SCALE")), 1000.0))])
+		var _t1302 = {"left": v_left_932, "coins": J.mc(J.G.get("F"), "furnaceCoins", [])}
+		J.sp(v_o_929, "furnace", _t1302)
+	if J.seq(v_id_926, "altar"):
+		v_c_933 = J.mc(J.G.get("F"), "recruitCost", [])
+		var _t1303 = J.G.get("costText")
+		var _t1306 = J.cl(_t1303, null, [v_c_933])
+		var _t1304 = J.G.get("canPay")
+		var _t1305 = J.cl(_t1304, null, [v_c_933])
+		var _t1311 = (J.cmp(J.cl(J.G.get("fodderCount"), null, []), J.mc(J.G.get("F"), "rosterCap", []), "<") if J.t(_t1305) else _t1305)
+		var _t1312 = J.cl(J.G.get("fodderCount"), null, [])
+		var _t1313 = J.mc(J.G.get("F"), "rosterCap", [])
+		var _t1307 = J.S_Object_("keys", [J.G.get("FODDER")])
+		var _t1309 = J.mc(_t1307, "filter", [Callable(self, "_f245").bind(env)])
+		var _t1310 = J.mc(_t1309, "map", [Callable(self, "_f246").bind(env)])
+		var _t1314 = {"cost": _t1306, "can": _t1311, "cnt": _t1312, "cap": _t1313, "pool": J.mc(_t1310, "join", ["、"])}
+		J.sp(v_o_929, "altar", _t1314)
+		if (not J.seq(J.typeof_(J.G.get("Presence")), "undefined")):
+			v_p_936 = J.mc(J.G.get("Presence"), "st", [])
+			var _t1315 = (J.gp(v_p_936, "gone") if J.t(v_p_936) else v_p_936)
+			if J.t((J.len(J.gp(v_p_936, "gone")) if J.t(_t1315) else _t1315)):
+				var _t1316 = J.gp(v_o_929, "altar")
+				var _t1317 = J.gp(v_p_936, "gone")
+				var _t1318 = J.mc(_t1317, "map", [Callable(self, "_f247").bind(env)])
+				J.sp(_t1316, "gone", _t1318)
+	var _t1319 = J.seq(v_id_926, "house")
+	if (J.cmp(J.gp(J.G.get("S"), "lv"), 12.0, ">=") if _t1319 else _t1319):
+		var _t1320 = J.gp(J.G.get("S"), "ghosts")
+		v_iq_939 = J.mc(_t1320, "reduce", [Callable(self, "_f248").bind(env), 0.0])
+		v_left_940 = J.max_([0.0, J.sub(J.gp(J.G.get("F"), "feastCD"), J.div(J.mul(J.sub(J.S_Date_("now", []), J.gp(J.G.get("S"), "feastAt")), J.G.get("TIME_SCALE")), 1000.0))])
+		var _t1323 = J.gp(J.G.get("F"), "feastNeed")
+		var _t1321 = J.cmp(J.gp(J.gp(J.G.get("S"), "res"), "buns"), 300.0, ">=")
+		var _t1322 = (J.cmp(v_iq_939, J.gp(J.G.get("F"), "feastNeed"), ">=") if _t1321 else _t1321)
+		var _t1324 = {"iq": v_iq_939, "need": _t1323, "left": v_left_940, "can": (J.cmp(v_left_940, 0.0, "<=") if _t1322 else _t1322)}
+		J.sp(v_o_929, "feast", _t1324)
+	var _t1325 = []
+	J.sp(v_o_929, "posts", _t1325)
+	for _t1326 in J.iter(J.gp(v_b_927, "posts")):
+		v_p_943 = _t1326
+		v_P_944 = J.gp(J.G.get("POSTS"), v_p_943)
+		v_n_945 = J.mc(J.G.get("F"), "slots", [v_p_943])
+		if (not J.t(v_n_945)):
+			continue
+		var _t1327 = ["wood", "rice", "plank", "bun", "camp", "store", "boss"]
+		var _t1328 = J.mc(_t1327, "includes", [v_p_943])
+		v_lock_946 = (J.cmp(J.gp(J.G.get("S"), "lv"), 4.0, "<") if J.t(_t1328) else _t1328)
+		var _t1329 = J.G.get("workersAt")
+		v_ws_947 = J.cl(_t1329, null, [v_p_943])
+		v_sl_948 = []
+		v_i_949 = 0.0
+		while true:
+			if not J.cmp(v_i_949, v_n_945, "<"): break
+			v_g_950 = J.gp(v_ws_947, v_i_949)
+			J.mc(v_sl_948, "push", [({"id": J.gp(v_g_950, "id"), "k": J.gp(v_g_950, "k"), "name": J.gp(v_g_950, "name"), "lv": J.mc(J.G.get("F"), "glv", [v_g_950]), "stat": J.mc(J.G.get("UI"), "postStatTxt", [v_g_950, v_p_943])} if J.t(v_g_950) else null)])
+			v_i_949 = J.num(v_i_949) + 1.0
+		var _t1330 = J.gp(v_o_929, "posts")
+		J.mc(_t1330, "push", [{"post": v_p_943, "name": J.gp(v_P_944, "name"), "desc": J.gp(v_P_944, "desc"), "lock": v_lock_946, "slots": v_sl_948}])
+	return v_o_929
+
+func _f249(this_, a: Array, env):
+	var v_id_953 = null; var v_a_954 = null; var v_arg_955 = null; var v_c_956 = null; var v_c_957 = null; var v_g_958 = null; var v_g_959 = null; var v_g_960 = null; var v_g_961 = null; var v_e_962 = null
+	v_id_953 = J.arg(a, 0)
+	v_a_954 = J.arg(a, 1)
+	v_arg_955 = J.arg(a, 2)
+	if J.seq(v_a_954, "build"):
+		var _t1331 = J.G.get("canPay")
+		if (not J.t(J.cl(_t1331, null, [J.gp(J.gp(J.G.get("BUILDINGS"), v_id_953), "build")]))):
+			return null
+		J.mc(J.G.get("Sound"), "play", ["build"])
+		var _t1332 = J.G.get("pay")
+		J.cl(_t1332, null, [J.gp(J.gp(J.G.get("BUILDINGS"), v_id_953), "build")])
+		var _t1333 = J.gp(J.G.get("S"), "bld")
+		J.sp(_t1333, v_id_953, 1.0)
+		var _t1334 = J.G.get("gainExp")
+		J.cl(_t1334, null, [15.0])
+		J.mc(J.G.get("Fx"), "banner", [(J.str(J.gp(J.gp(J.G.get("BUILDINGS"), v_id_953), "name")) + " 建好了！")])
+		J.mc(J.G.get("Quest"), "check", [])
+	if J.seq(v_a_954, "up"):
+		v_c_956 = J.mc(J.G.get("F"), "upCost", [v_id_953, J.gp(J.gp(J.G.get("S"), "bld"), v_id_953)])
+		var _t1335 = J.G.get("canPay")
+		var _t1336 = (not J.t(J.cl(_t1335, null, [v_c_956])))
+		if (_t1336 if _t1336 else J.cmp(J.gp(J.gp(J.G.get("S"), "bld"), v_id_953), J.mc(J.G.get("F"), "bldMax", [v_id_953]), ">=")):
+			return null
+		J.mc(J.G.get("Sound"), "play", ["build"])
+		var _t1337 = J.G.get("pay")
+		J.cl(_t1337, null, [v_c_956])
+		var _t1338 = J.gp(J.G.get("S"), "bld")
+		J.sp(_t1338, v_id_953, J.num(J.gp(_t1338, v_id_953)) + 1.0)
+		var _t1339 = J.G.get("gainExp")
+		J.cl(_t1339, null, [(10.0 + J.mul(8.0, J.gp(J.gp(J.G.get("S"), "bld"), v_id_953)))])
+		J.mc(J.G.get("Fx"), "banner", [(J.str(J.gp(J.gp(J.G.get("BUILDINGS"), v_id_953), "name")) + " 升到 Lv " + J.str(J.gp(J.gp(J.G.get("S"), "bld"), v_id_953)))])
+		J.mc(J.G.get("Quest"), "check", [])
+	if J.seq(v_a_954, "craft"):
+		J.mc(J.G.get("UI"), "close", [])
+		var _t1340 = J.num(v_arg_955)
+		J.mc(J.G.get("Village"), "craft", [v_id_953, (_t1340 if J.t(_t1340) else 1.0)])
+		return "close"
+	if J.seq(v_a_954, "burn"):
+		if (not J.t(J.cl(J.G.get("furnaceReady"), null, []))):
+			return null
+		J.mc(J.G.get("Sound"), "play", ["coin"])
+		J.mc(J.G.get("JossFx"), "play", [])
+		var _t1341 = J.G.get("S")
+		var _t1342 = J.S_Date_("now", [])
+		J.sp(_t1341, "furnaceAt", _t1342)
+		v_c_957 = J.mc(J.G.get("F"), "furnaceCoins", [])
+		var _t1343 = J.gp(J.G.get("S"), "res")
+		var _t1344 = J.add(J.gp(_t1343, "coins"), v_c_957)
+		J.sp(_t1343, "coins", _t1344)
+		J.mc(J.G.get("Fx"), "toast", [("化寶爐燒出 <b>冥幣 " + J.str(v_c_957) + "</b>")])
+	if J.seq(v_a_954, "recruit"):
+		var _t1345 = J.G.get("canPay")
+		var _t1346 = (not J.t(J.cl(_t1345, null, [J.mc(J.G.get("F"), "recruitCost", [])])))
+		if (_t1346 if _t1346 else J.cmp(J.cl(J.G.get("fodderCount"), null, []), J.mc(J.G.get("F"), "rosterCap", []), ">=")):
+			return null
+		J.mc(J.G.get("Sound"), "play", ["whoosh"])
+		var _t1347 = J.G.get("pay")
+		J.cl(_t1347, null, [J.mc(J.G.get("F"), "recruitCost", [])])
+		var _t1348 = J.G.get("recruitFodder")
+		v_g_958 = J.cl(_t1348, null, [false])
+		var _t1349 = J.gp(J.G.get("S"), "cnt")
+		J.sp(_t1349, "recruit", J.num(J.gp(_t1349, "recruit")) + 1.0)
+		J.mc(J.G.get("Fx"), "toast", [("招來了 <b>" + J.str(J.gp(v_g_958, "name")) + "</b>（" + J.str(J.gp(v_g_958, "q")) + "）")])
+		J.mc(J.G.get("Quest"), "check", [])
+	if J.seq(v_a_954, "feast"):
+		J.mc(J.G.get("Sound"), "play", ["gong"])
+		var _t1350 = J.gp(J.G.get("S"), "res")
+		var _t1351 = J.sub(J.gp(_t1350, "buns"), 300.0)
+		J.sp(_t1350, "buns", _t1351)
+		var _t1352 = J.G.get("S")
+		var _t1353 = J.S_Date_("now", [])
+		J.sp(_t1352, "feastAt", _t1353)
+		var _t1354 = J.gp(J.G.get("S"), "cnt")
+		J.sp(_t1354, "feast", J.num(J.gp(_t1354, "feast")) + 1.0)
+		var _t1355 = J.G.get("gainExp")
+		J.cl(_t1355, null, [150.0])
+		if J.cmp(J.cl(J.G.get("fodderCount"), null, []), J.mc(J.G.get("F"), "rosterCap", []), "<"):
+			var _t1356 = J.G.get("recruitFodder")
+			v_g_959 = J.cl(_t1356, null, [true])
+			J.mc(J.G.get("Fx"), "toast", [("盂蘭宴請來了稀客 <b>" + J.str(J.gp(v_g_959, "name")) + "</b>（紫）！好評 +150")])
+		else:
+			var _t1357 = J.gp(J.G.get("S"), "chests")
+			J.sp(_t1357, "p", J.num(J.gp(_t1357, "p")) + 1.0)
+			J.mc(J.G.get("Fx"), "toast", ["盂蘭宴賓客滿座，可惜村裡住不下了。客人留下一個<b>紫箱</b>就走了。好評 +150"])
+		J.mc(J.G.get("Quest"), "check", [])
+	if J.seq(v_a_954, "unassign"):
+		var _t1358 = J.G.get("ghostById")
+		v_g_960 = J.cl(_t1358, null, [v_arg_955])
+		if J.t(v_g_960):
+			J.sp(v_g_960, "post", null)
+	if J.seq(v_a_954, "regone"):
+		var _t1359 = J.gp(J.G.get("Presence"), "dev")
+		v_g_961 = J.mc(_t1359, "resummon", [J.num(v_arg_955)])
+		if J.t(v_g_961):
+			J.cl(J.G.get("save"), null, [])
+			J.mc(J.G.get("UI"), "close", [])
+			J.mc(J.G.get("UI"), "refresh", [])
+			return "close"
+	J.cl(J.G.get("save"), null, [])
+	J.mc(J.G.get("UI"), "refresh", [])
+
+func _f251(this_, a: Array, env):
+	var v_g_970 = null
+	v_g_970 = J.arg(a, 0)
+	return (J.mc(J.G.get("F"), "stat", [v_g_970, env["s"]]) if J.cmp(env["s"], 0.0, ">=") else J.mc(J.G.get("F"), "glv", [v_g_970]))
+
+func _f252(this_, a: Array, env):
+	var v_g_971 = null
+	v_g_971 = J.arg(a, 0)
+	var _t1360 = J.gp(J.G.get("GHOSTS"), J.gp(v_g_971, "k"))
+	var _t1361 = (J.gp(J.gp(J.G.get("GHOSTS"), J.gp(v_g_971, "k")), "forbid") if J.t(_t1360) else _t1360)
+	var _t1362 = (_t1361 if J.t(_t1361) else [])
+	return (1.0 if J.t(J.mc(_t1362, "includes", [env["post"]])) else 0.0)
+
+func _f253(this_, a: Array, env):
+	var v_g_972 = null
+	v_g_972 = J.arg(a, 0)
+	var _t1364 = (not J.seq(J.gp(v_g_972, "k"), "afu"))
+	return ((not J.seq(J.gp(v_g_972, "post"), env["post"])) if _t1364 else _t1364)
+
+func _f254(this_, a: Array, env):
+	var v_a_973 = null; var v_b_974 = null
+	v_a_973 = J.arg(a, 0)
+	v_b_974 = J.arg(a, 1)
+	var _t1366 = env["fbd"]
+	var _t1368 = J.cl(_t1366, null, [v_a_973])
+	var _t1367 = env["fbd"]
+	var _t1372 = J.sub(_t1368, J.cl(_t1367, null, [v_b_974]))
+	if not J.t(_t1372):
+		var _t1369 = env["val"]
+		var _t1371 = J.cl(_t1369, null, [v_b_974])
+		var _t1370 = env["val"]
+		_t1372 = J.sub(_t1371, J.cl(_t1370, null, [v_a_973]))
+	return (_t1372 if J.t(_t1372) else J.sub(J.mc(J.G.get("F"), "glv", [v_b_974]), J.mc(J.G.get("F"), "glv", [v_a_973])))
+
+func _f256(this_, a: Array, env):
+	var v_i_976 = null
+	v_i_976 = J.arg(a, 0)
+	return (not J.seq(v_i_976, env["__p"]["s"]))
+
+func _f257(this_, a: Array, env):
+	var v_i_977 = null
+	v_i_977 = J.arg(a, 0)
+	return J.add(J.gp(J.G.get("STAT_NAMES"), v_i_977), J.mc(J.G.get("F"), "stat", [env["g"], v_i_977]))
+
+func _f255(this_, a: Array, env):
+	var _s551 = {"__p": env, "g": null}
+	_s551["g"] = J.arg(a, 0)
+	var _t1374 = J.gp(_s551["g"], "id")
+	var _t1375 = J.gp(_s551["g"], "k")
+	var _t1376 = J.gp(_s551["g"], "name")
+	var _t1377 = J.gp(_s551["g"], "q")
+	var _t1373 = _s551["__p"]["val"]
+	var _t1381 = J.cl(_t1373, null, [_s551["g"]])
+	var _t1382 = J.mc(J.G.get("F"), "glv", [_s551["g"]])
+	var _t1378 = [0.0, 1.0, 2.0]
+	var _t1379 = J.mc(_t1378, "filter", [Callable(self, "_f256").bind(_s551)])
+	var _t1380 = J.mc(_t1379, "map", [Callable(self, "_f257").bind(_s551)])
+	var _t1386 = J.mc(_t1380, "join", [" "])
+	var _t1385 = null
+	if J.t(J.gp(_s551["g"], "post")):
+		var _t1383 = J.G.get("postLabel")
+		var _t1384 = J.cl(_t1383, null, [J.gp(_s551["g"], "post")])
+		_t1385 = J.mc(_t1384, "replace", [J.re("^打工：", ""), ""])
+	else:
+		_t1385 = "閒著"
+	var _t1387 = _s551["__p"]["fbd"]
+	return {"id": _t1374, "k": _t1375, "name": _t1376, "q": _t1377, "key": _t1381, "lv": _t1382, "other": _t1386, "where": _t1385, "fb": (not (not J.t(J.cl(_t1387, null, [_s551["g"]]))))}
+
+func _f250(this_, a: Array, env):
+	var v_list_969 = null
+	var _s546 = {"__p": env, "post": null, "s": null, "val": null, "fbd": null}
+	_s546["post"] = J.arg(a, 0)
+	_s546["s"] = J.gp(J.gp(J.G.get("POSTS"), _s546["post"]), "stat")
+	_s546["val"] = Callable(self, "_f251").bind(_s546)
+	_s546["fbd"] = Callable(self, "_f252").bind(_s546)
+	var _t1363 = J.gp(J.G.get("S"), "ghosts")
+	var _t1365 = J.mc(_t1363, "filter", [Callable(self, "_f253").bind(_s546)])
+	v_list_969 = J.mc(_t1365, "sort", [Callable(self, "_f254").bind(_s546)])
+	return {"name": J.gp(J.gp(J.G.get("POSTS"), _s546["post"]), "name"), "stat": (J.gp(J.G.get("STAT_NAMES"), _s546["s"]) if J.cmp(_s546["s"], 0.0, ">=") else "等級"), "list": J.mc(v_list_969, "map", [Callable(self, "_f255").bind(_s546)])}
+
+func _f258(this_, a: Array, env):
+	var v_post_980 = null; var v_gid_981 = null; var v_g_982 = null; var v_old_983 = null
+	v_post_980 = J.arg(a, 0)
+	v_gid_981 = J.arg(a, 1)
+	var _t1388 = J.G.get("ghostById")
+	v_g_982 = J.cl(_t1388, null, [v_gid_981])
+	if (not J.t(v_g_982)):
+		return null
+	var _t1389 = J.G.get("workersAt")
+	if J.cmp(J.len(J.cl(_t1389, null, [v_post_980])), J.mc(J.G.get("F"), "slots", [v_post_980]), ">="):
+		var _t1390 = J.G.get("workersAt")
+		v_old_983 = J.gp(J.cl(_t1390, null, [v_post_980]), 0.0)
+		J.sp(v_old_983, "post", null)
+	J.sp(v_g_982, "post", v_post_980)
+	J.mc(J.G.get("Quest"), "check", [])
+	J.cl(J.G.get("save"), null, [])
+	J.mc(J.G.get("UI"), "refresh", [])
+
+func _f260(this_, a: Array, env):
+	var v_k_988 = null
+	v_k_988 = J.arg(a, 0)
+	return J.mc(J.G.get("N30W"), "owned", [v_k_988])
+
+func _f261(this_, a: Array, env):
+	var v_a_989 = null; var v_b_990 = null
+	v_a_989 = J.arg(a, 0)
+	v_b_990 = J.arg(a, 1)
+	var _t1400 = null
+	if J.seq(J.gp(v_a_989, "k"), "afu"):
+		_t1400 = (-1.0)
+	else:
+		var _t1399 = null
+		if J.seq(J.gp(v_b_990, "k"), "afu"):
+			_t1399 = 1.0
+		else:
+			var _t1398 = ((0.0 if J.seq(J.gp(v_a_989, "q"), "名") else 1.0) - (0.0 if J.seq(J.gp(v_b_990, "q"), "名") else 1.0))
+			_t1399 = (_t1398 if J.t(_t1398) else J.sub(J.mc(J.G.get("F"), "glv", [v_b_990]), J.mc(J.G.get("F"), "glv", [v_a_989])))
+		_t1400 = _t1399
+	return _t1400
+
+func _f262(this_, a: Array, env):
+	var v_o2_999 = null; var v_v_1000 = null
+	v_o2_999 = J.gp(env["g"], "lv")
+	var _t1404 = env["g"]
+	var _t1405 = J.add(v_o2_999, 1.0)
+	J.sp(_t1404, "lv", _t1405)
+	v_v_1000 = J.mc(J.G.get("GP"), "pow", [env["g"]])
+	var _t1406 = env["g"]
+	J.sp(_t1406, "lv", v_o2_999)
+	return v_v_1000
+
+func _f259(this_, a: Array, env):
+	var v_o_986 = null; var v_order_987 = null; var v_lv_992 = null; var v_cost_993 = null; var v_d_994 = null; var v_sk_995 = null; var v_gpNow_996 = null; var v_gpNext_997 = null; var v_e_998 = null; var v_a_1001 = null; var v_er_1002 = null; var v_v_1003 = null; var v_dl_1004 = null; var v_er_1005 = null; var v_t_1006 = null; var v_er_1007 = null
+	var _t1392 = J.mc(J.G.get("F"), "ghostCap", [])
+	var _t1393 = J.cl(J.G.get("fodderCount"), null, [])
+	var _t1394 = J.mc(J.G.get("F"), "rosterCap", [])
+	var _t1391 = J.G.get("fmt")
+	v_o_986 = {"cap": _t1392, "fcnt": _t1393, "rcap": _t1394, "buns": J.cl(_t1391, null, [J.gp(J.gp(J.G.get("S"), "res"), "buns")]), "list": []}
+	if (not J.seq(J.typeof_(J.G.get("N30W")), "undefined")):
+		var _t1395 = J.mc(J.G.get("N30W"), "ids", [])
+		var _t1396 = J.add(J.add(J.len(J.mc(_t1395, "filter", [Callable(self, "_f260").bind(env)])), "/"), J.len(J.mc(J.G.get("N30W"), "ids", [])))
+		J.sp(v_o_986, "codex", _t1396)
+	var _t1397 = J.mc(J.gp(J.G.get("S"), "ghosts"), "slice", [])
+	v_order_987 = J.mc(_t1397, "sort", [Callable(self, "_f261").bind(env)])
+	for _t1401 in J.iter(v_order_987):
+		var _s559 = {"__p": env, "g": null}
+		_s559["g"] = _t1401
+		v_lv_992 = J.mc(J.G.get("F"), "glv", [_s559["g"]])
+		v_cost_993 = J.mc(J.G.get("F"), "lvCost", [v_lv_992])
+		var _t1402 = J.G.get("gdef")
+		v_d_994 = J.cl(_t1402, null, [_s559["g"]])
+		v_sk_995 = J.gp(J.G.get("SKILLS"), J.gp(_s559["g"], "k"))
+		v_gpNow_996 = J.mc(J.G.get("GP"), "pow", [_s559["g"]])
+		var _t1403 = (not J.seq(J.gp(_s559["g"], "k"), "afu"))
+		v_gpNext_997 = (J.cl(Callable(self, "_f262").bind(_s559), null, []) if (J.cmp(v_lv_992, J.mc(J.G.get("F"), "ghostCap", []), "<") if _t1403 else _t1403) else null)
+		var _t1408 = J.gp(_s559["g"], "id")
+		var _t1409 = J.gp(_s559["g"], "k")
+		var _t1410 = J.gp(_s559["g"], "name")
+		var _t1411 = J.gp(_s559["g"], "q")
+		var _t1407 = J.gp(J.G.get("S"), "team")
+		var _t1415 = ("出陣" if J.t(J.mc(_t1407, "includes", [J.gp(_s559["g"], "id")])) else ("軍師" if J.seq(J.gp(J.G.get("S"), "adviser"), J.gp(_s559["g"], "id")) else ""))
+		var _t1416 = (J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s559["g"], "k")), "title") if J.t(J.gp(J.G.get("GHOSTS"), J.gp(_s559["g"], "k"))) else "")
+		var _t1417 = [J.mc(J.G.get("F"), "stat", [_s559["g"], 0.0]), J.mc(J.G.get("F"), "stat", [_s559["g"], 1.0]), J.mc(J.G.get("F"), "stat", [_s559["g"], 2.0])]
+		var _t1418 = J.seq(J.gp(v_d_994, "range"), "ranged")
+		var _t1419 = (J.mc(J.G.get("Rework"), "drillLv", [J.gp(_s559["g"], "k")]) if (not J.seq(J.typeof_(J.G.get("Rework")), "undefined")) else null)
+		var _t1420 = (J.gp(v_sk_995, "name") if J.t(v_sk_995) else "")
+		var _t1421 = (J.gp(v_sk_995, "desc") if J.t(v_sk_995) else "")
+		var _t1414 = null
+		if J.t(J.gp(J.G.get("GHOSTS"), J.gp(_s559["g"], "k"))):
+			var _t1413 = null
+			if J.seq(J.typeof_(J.G.get("L")), "function"):
+				var _t1412 = J.G.get("L")
+				_t1413 = J.cl(_t1412, null, [J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s559["g"], "k")), "trait")])
+			else:
+				_t1413 = J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s559["g"], "k")), "trait")
+			_t1414 = _t1413
+		else:
+			_t1414 = ""
+		var _t1422 = J.gp(J.G.get("GHOSTS"), J.gp(_s559["g"], "k"))
+		var _t1423 = (J.gp(J.gp(J.G.get("GHOSTS"), J.gp(_s559["g"], "k")), "lore") if J.t(_t1422) else _t1422)
+		var _t1426 = (_t1423 if J.t(_t1423) else "")
+		var _t1425 = null
+		if J.t(J.gp(_s559["g"], "post")):
+			var _t1424 = J.G.get("postLabel")
+			_t1425 = J.cl(_t1424, null, [J.gp(_s559["g"], "post")])
+		else:
+			_t1425 = ("主公本人" if J.seq(J.gp(_s559["g"], "k"), "afu") else "閒著")
+		var _t1428 = J.seq(J.gp(_s559["g"], "k"), "afu")
+		var _t1429 = J.cmp(v_lv_992, J.mc(J.G.get("F"), "ghostCap", []), ">=")
+		var _t1430 = J.cmp(J.gp(J.gp(J.G.get("S"), "res"), "buns"), v_cost_993, ">=")
+		var _t1427 = (not J.seq(J.gp(_s559["g"], "q"), "名"))
+		v_e_998 = {"id": _t1408, "k": _t1409, "name": _t1410, "q": _t1411, "lv": v_lv_992, "tag": _t1415, "title": _t1416, "st": _t1417, "ranged": _t1418, "gp": v_gpNow_996, "gpNext": v_gpNext_997, "drill": _t1419, "sk": _t1420, "skd": _t1421, "trait": _t1414, "lore": _t1426, "where": _t1425, "afu": _t1428, "maxed": _t1429, "cost": v_cost_993, "canUp": _t1430, "canRel": ((not J.seq(J.gp(_s559["g"], "q"), "主")) if _t1427 else _t1427), "extra": [], "alpha": 1.0, "gold": false}
+		var _t1432 = (not J.seq(J.typeof_(J.G.get("Chatter")), "undefined"))
+		if J.t(_t1432):
+			var _t1431 = J.seq(J.gp(_s559["g"], "q"), "藍")
+			_t1432 = (_t1431 if _t1431 else J.seq(J.gp(_s559["g"], "q"), "紫"))
+		if _t1432:
+			v_a_1001 = J.mc(J.G.get("Chatter"), "archOf", [_s559["g"]])
+			if J.t(v_a_1001):
+				var _t1433 = J.gp(v_e_998, "extra")
+				J.mc(_t1433, "push", [["#7a4a9a", ("性格：" + J.str(J.gp(v_a_1001, "label")) + "　「" + J.str((J.mc(J.G.get("Chatter"), "sample", [_s559["g"]]) if J.t(J.gp(J.G.get("Chatter"), "sample")) else "")) + "」")]])
+		if (not J.seq(J.typeof_(J.G.get("Presence")), "undefined")):
+			v_v_1003 = J.mc(J.G.get("Presence"), "val", [_s559["g"]])
+			v_dl_1004 = J.mc(J.G.get("Presence"), "daysLeft", [_s559["g"]])
+			var _t1434 = J.round(J.num(v_v_1003))
+			J.sp(v_e_998, "pres", _t1434)
+			J.sp(v_e_998, "presDays", v_dl_1004)
+			var _t1435 = J.mc(J.G.get("Presence"), "alphaOf", [_s559["g"]])
+			J.sp(v_e_998, "alpha", _t1435)
+			var _t1436 = J.seq(J.gp(_s559["g"], "k"), "afu")
+			var _t1437 = (J.cmp(J.gp(J.mc(J.G.get("Presence"), "cst", []), "rank"), 5.0, ">=") if _t1436 else _t1436)
+			J.sp(v_e_998, "gold", _t1437)
+		if (not J.seq(J.typeof_(J.G.get("Bonds")), "undefined")):
+			v_t_1006 = J.mc(J.G.get("Bonds"), "bondLine", [J.gp(_s559["g"], "k")])
+			if J.t(v_t_1006):
+				var _t1438 = J.gp(v_e_998, "extra")
+				J.mc(_t1438, "push", [["#c0603a", v_t_1006]])
+		var _t1439 = J.gp(v_o_986, "list")
+		J.mc(_t1439, "push", [v_e_998])
+	return v_o_986
+
+func _f264(this_, a: Array, env):
+	var v_x_1015 = null
+	v_x_1015 = J.arg(a, 0)
+	return (not J.seq(v_x_1015, env["g"]))
+
+func _f265(this_, a: Array, env):
+	var v_x_1016 = null
+	v_x_1016 = J.arg(a, 0)
+	return (null if J.seq(v_x_1016, J.gp(env["g"], "id")) else v_x_1016)
+
+func _f263(this_, a: Array, env):
+	var v_a_1010 = null; var v_id_1011 = null; var v_c_1013 = null; var v_back_1014 = null
+	var _s574 = {"__p": env, "g": null}
+	v_a_1010 = J.arg(a, 0)
+	v_id_1011 = J.arg(a, 1)
+	var _t1440 = J.G.get("ghostById")
+	_s574["g"] = J.cl(_t1440, null, [v_id_1011])
+	if (not J.t(_s574["g"])):
+		return null
+	if J.seq(v_a_1010, "up"):
+		v_c_1013 = J.mc(J.G.get("F"), "lvCost", [J.gp(_s574["g"], "lv")])
+		var _t1441 = J.cmp(J.gp(J.gp(J.G.get("S"), "res"), "buns"), v_c_1013, "<")
+		if (_t1441 if _t1441 else J.cmp(J.mc(J.G.get("F"), "glv", [_s574["g"]]), J.mc(J.G.get("F"), "ghostCap", []), ">=")):
+			return null
+		var _t1442 = J.gp(J.G.get("S"), "res")
+		var _t1443 = J.sub(J.gp(_t1442, "buns"), v_c_1013)
+		J.sp(_t1442, "buns", _t1443)
+		var _t1444 = _s574["g"]
+		var _t1445 = J.add(J.gp(_t1444, "spent"), v_c_1013)
+		J.sp(_t1444, "spent", _t1445)
+		var _t1446 = _s574["g"]
+		J.sp(_t1446, "lv", J.num(J.gp(_t1446, "lv")) + 1.0)
+		var _t1447 = J.G.get("gainExp")
+		J.cl(_t1447, null, [2.0])
+		J.mc(J.G.get("Quest"), "check", [])
+		J.cl(J.G.get("save"), null, [])
+		J.mc(J.G.get("UI"), "refresh", [])
+	if J.seq(v_a_1010, "rel"):
+		v_back_1014 = floor(J.num(J.mul(J.gp(_s574["g"], "spent"), 0.6)))
+		var _t1448 = J.gp(J.G.get("S"), "res")
+		var _t1449 = J.add(J.gp(_t1448, "buns"), v_back_1014)
+		J.sp(_t1448, "buns", _t1449)
+		var _t1450 = J.G.get("S")
+		var _t1451 = J.gp(J.G.get("S"), "ghosts")
+		var _t1452 = J.mc(_t1451, "filter", [Callable(self, "_f264").bind(_s574)])
+		J.sp(_t1450, "ghosts", _t1452)
+		var _t1453 = J.G.get("S")
+		var _t1454 = J.gp(J.G.get("S"), "team")
+		var _t1455 = J.mc(_t1454, "map", [Callable(self, "_f265").bind(_s574)])
+		J.sp(_t1453, "team", _t1455)
+		if J.seq(J.gp(J.G.get("S"), "adviser"), J.gp(_s574["g"], "id")):
+			var _t1456 = J.G.get("S")
+			J.sp(_t1456, "adviser", null)
+		J.mc(J.G.get("Fx"), "toast", [(J.str(J.gp(_s574["g"], "name")) + " 去投胎了。退回 壽包 " + J.str(v_back_1014))])
+		J.cl(J.G.get("save"), null, [])
+		J.mc(J.G.get("UI"), "refresh", [])
+
+func _f267(this_, a: Array, env):
+	var v_k_1019 = null; var v_n_1020 = null; var v_d_1021 = null
+	var _t1458 = J.gp(J.arg(a, 0), 0.0)
+	v_k_1019 = _t1458
+	var _t1459 = J.gp(J.arg(a, 0), 1.0)
+	v_n_1020 = _t1459
+	var _t1460 = J.gp(J.arg(a, 0), 2.0)
+	v_d_1021 = _t1460
+	return {"k": v_k_1019, "name": v_n_1020, "n": J.gp(J.gp(J.G.get("S"), "chests"), v_k_1019), "d": v_d_1021}
+
+func _f266(this_, a: Array, env):
+	var _t1457 = [["g", "綠箱", ("開出 壽包 " + J.str(J.gp(J.mc(J.G.get("F"), "chestGain", ["g"]), "buns")) + "（隨包子鋪等級提升）")], ["b", "藍箱", ("開出 棺材板 " + J.str(J.gp(J.mc(J.G.get("F"), "chestGain", ["b"]), "planks")) + "（隨棺材鋪等級提升）")], ["p", "紫箱", ("開出 冥幣 " + J.str(J.gp(J.mc(J.G.get("F"), "chestGain", ["p"]), "coins")) + "（隨鬼宅等級提升）")]]
+	return J.mc(_t1457, "map", [Callable(self, "_f267").bind(env)])
+
+func _f268(this_, a: Array, env):
+	var v_k_1024 = null; var v_all_1025 = null; var v_n_1026 = null; var v_tot_1027 = null; var v_i_1028 = null; var v_g_1029 = null; var v_r_1030 = null
+	v_k_1024 = J.arg(a, 0)
+	v_all_1025 = J.arg(a, 1)
+	v_n_1026 = (J.gp(J.gp(J.G.get("S"), "chests"), v_k_1024) if J.t(v_all_1025) else J.min_([1.0, J.gp(J.gp(J.G.get("S"), "chests"), v_k_1024)]))
+	if (not J.t(v_n_1026)):
+		return null
+	v_tot_1027 = {}
+	v_i_1028 = 0.0
+	while true:
+		if not J.cmp(v_i_1028, v_n_1026, "<"): break
+		v_g_1029 = J.mc(J.G.get("F"), "chestGain", [v_k_1024])
+		for _t1461 in J.keys(v_g_1029):
+			v_r_1030 = _t1461
+			var _t1462 = J.gp(v_tot_1027, v_r_1030)
+			var _t1463 = J.add((_t1462 if J.t(_t1462) else 0.0), J.gp(v_g_1029, v_r_1030))
+			J.sp(v_tot_1027, v_r_1030, _t1463)
+		v_i_1028 = J.num(v_i_1028) + 1.0
+	J.mc(J.G.get("Sound"), "play", ["chest"])
+	var _t1464 = J.gp(J.G.get("S"), "chests")
+	var _t1465 = J.sub(J.gp(_t1464, v_k_1024), v_n_1026)
+	J.sp(_t1464, v_k_1024, _t1465)
+	var _t1466 = J.gp(J.G.get("S"), "cnt")
+	var _t1467 = J.add(J.gp(_t1466, "chest"), v_n_1026)
+	J.sp(_t1466, "chest", _t1467)
+	var _t1468 = J.G.get("give")
+	J.mc(J.G.get("Fx"), "toast", [("開箱：" + J.str(J.cl(_t1468, null, [v_tot_1027])))])
+	J.cl(J.G.get("save"), null, [])
+	J.mc(J.G.get("UI"), "refresh", [])
+
+func _f269(this_, a: Array, env):
 	if (not J.seq(J.typeof_(J.G.get("Patrol")), "undefined")):
 		J.mc(J.G.get("Patrol"), "openPrep", [])
 	else:
