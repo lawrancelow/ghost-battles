@@ -277,6 +277,11 @@ func _process(dt: float) -> void:
 	var main = get_tree().root.get_node_or_null("Main")
 	if main == null or main.get("loading") != null: return
 	if btn == null or not is_instance_valid(btn): _mk_btn(main)
+	# 劇情播緊時，提示改喺頂部出，唔好遮住對白
+	var tq = main.get("toasts")
+	if tq:
+		var top = main.story != null and main.story.get("cur") != null
+		tq.offset_bottom = -86 - (main.size.y * 0.62 if top else 0.0)
 	_spk()
 	dq(); side_tick()
 	if btn.visible and not J.t(J.mc(J.G.get("Story"), "busy", [])) and not main.sheet.visible: event("village")
@@ -422,6 +427,25 @@ func _rtext(r: Dictionary) -> String:
 		if k == "chest": out.append({"g": "綠箱", "b": "藍箱", "p": "紫箱"}[r[k]])
 		else: out.append("%s %d" % [names.get(k, k), int(r[k])])
 	return "、".join(out)
+
+# 收編劇情：第一次收服名鬼（巡陰簽約／打贏地頭王）
+func recruit_scene(k: String, tail: Array = []):
+	var R = D.get("recruit", {})
+	if not R.has(k): return null
+	var G = J.G.get("GHOSTS")
+	if G is Dictionary and G.has(k):
+		var nm = J.str(G[k].name); var m = DB.D.get("SPEAKER_ART", {})
+		if not m.has(nm) and Art.char_h(k) > 0: m[nm] = k
+	var lines = []; var zh = {}
+	for l in R[k] + tail:
+		var txt = l[1]
+		if txt is Array: zh[txt[0]] = txt[1]; txt = txt[0]
+		lines.append([l[0], txt])
+	if zh.size():
+		J.mc(J.G.get("LANG"), "add", [zh])
+		if not DB.D.has("LANG_ZH"): DB.D.LANG_ZH = {}
+		DB.D.LANG_ZH.merge(zh, true)
+	return {"style": "talk", "bg": "village", "lines": lines}
 
 # 測試用
 func t_pay(id: String) -> void:

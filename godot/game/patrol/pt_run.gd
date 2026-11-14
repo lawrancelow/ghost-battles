@@ -431,7 +431,9 @@ func king_win(tt: int) -> void:
 		for g in S.ghosts: if g.k == k: owned = true
 		if owned: continue
 		var G = GHOSTS[k]; var kk = k
-		jm("Story", "queue", [{"style": "narr", "lines": [["旁白", "%s：「%s」" % [G.name, J.str(jc("L", [G.get("say", "")]))]], ["旁白", T("%s輸咗地頭，決定跟你返落魄村。" % G.name, "%s輸了地頭，決定跟你回落魄村。" % G.name)]]}, func(_t, _a): jc("joinGhost", [kk]); save()])
+		var sc = QX.recruit_scene(k, [["旁白", [ "%s輸咗地頭，決定跟你返落魄村。" % G.name, "%s輸了地頭，決定跟你回落魄村。" % G.name]]])
+		if sc == null: sc = {"style": "narr", "lines": [["旁白", "%s：「%s」" % [G.name, J.str(jc("L", [G.get("say", "")]))]], ["旁白", T("%s輸咗地頭，決定跟你返落魄村。" % G.name, "%s輸了地頭，決定跟你回落魄村。" % G.name)]]}
+		jm("Story", "queue", [sc, func(_t, _a): jc("joinGhost", [kk]); save()])
 	persist(); save(); jm("UI", "refresh")
 
 func spawn_bryan(z: int) -> void:
@@ -1123,7 +1125,9 @@ func resolve_down(v: PtU, how: String, _timeout := false) -> void:
 			st().pity[v.k] = 0.0; loot.rec += 1; st().rec = J.num(st().get("rec", 0)) + 1; v.signed = true
 			if I.isN:
 				var k = v.k; var G = GHOSTS[k]
-				jm("Story", "queue", [{"style": "narr", "lines": [[G.name, G.get("say", "")], ["旁白", T("%s簽咗合約，跟你返落魄村。" % G.name, "%s簽了合約，跟你回落魄村。" % G.name)]]}, func(_t, _a): jc("joinGhost", [k]); persist()])
+				var sc = QX.recruit_scene(k, [["旁白", ["%s簽咗合約，跟你返落魄村。" % G.name, "%s簽了合約，跟你回落魄村。" % G.name]]])
+				if sc == null: sc = {"style": "narr", "lines": [[G.name, G.get("say", "")], ["旁白", T("%s簽咗合約，跟你返落魄村。" % G.name, "%s簽了合約，跟你回落魄村。" % G.name)]]}
+				jm("Story", "queue", [sc, func(_t, _a): jc("joinGhost", [k]); persist()])
 			else:
 				var g = add_crew(v.k, v.p, v.elite, v.x, v.y)
 				msg("<b>收編成功！</b>%s（%s・Lv%d）加入部門。%s" % [g.name, g.q, int(J.num(g.lv)), "（對症收編 +20%）" if I.fear else ""], 3)
