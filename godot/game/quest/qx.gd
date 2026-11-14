@@ -22,6 +22,19 @@ func _spk() -> void:
 	var m = DB.D.get("SPEAKER_ART", {})
 	for k in SPK: if not m.has(k) and Art.char_h(SPK[k]) > 0: m[k] = SPK[k]
 
+func _pgchat() -> void:
+	# 5 隻 pg 鬼嘅碎碎念：網頁版 CHAT_DATA.named 冇，由 core.json 補入（[粵, 中]）
+	if DB.D.is_empty(): return
+	var CD = J.G.get("CHAT_DATA")   # 匯入存檔會重開 JS，所以每次檢查
+	if CD is Dictionary and CD.get("named") is Dictionary and not CD.named.has("pg_tuimo"):
+		var CH: Dictionary = DB.D.get("CHATTER", {}); var LZ: Dictionary = DB.D.get("LANG_ZH", {})
+		for k in CH:
+			if not str(k).begins_with("pg_"): continue
+			if CD.named.has(k): continue
+			var arr := []
+			for l in CH[k]: arr.append([l, LZ.get(l, l)])
+			CD.named[k] = arr
+
 # ---------------- 劇情節點（主線補劇情）：on = patrol_begin:<區> / village ----------------
 func event(ev: String) -> void:
 	var s = S(); if s == null: return
@@ -282,7 +295,7 @@ func _process(dt: float) -> void:
 	if tq:
 		var top = main.story != null and main.story.get("cur") != null
 		tq.offset_bottom = -86 - (main.size.y * 0.62 if top else 0.0)
-	_spk()
+	_spk(); _pgchat()
 	dq(); side_tick()
 	if btn.visible and not J.t(J.mc(J.G.get("Story"), "busy", [])) and not main.sheet.visible: event("village")
 	var n = daily_ready()
@@ -475,3 +488,7 @@ func t_chat() -> void:
 func t_dump() -> void:
 	for k in sq(): print("SQ ", k, " ", sq()[k])
 	print("DQ ", dq())
+
+func t_pgchat() -> void:
+	var CD = J.G.get("CHAT_DATA")
+	for k in ["pg_ji", "pg_ex", "n30_qionggui"]: print("PGCHAT ", k, " ", CD.named.get(k, []).size(), " ", CD.named.get(k, [[""]])[0])

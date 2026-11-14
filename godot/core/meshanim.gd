@@ -214,7 +214,14 @@ func pose_for(type: String, o: Dictionary) -> Dictionary:
 # 轉譯版 meshanim.js 嘅 drawRaw 交俾呢度（rig = JS 嗰邊嘅 RIG[id]，可能係 n30_rigs 加嘅）
 var _jcache := {}
 var _warned := {}
+var prof_us := 0
+var prof_n := 0
 func draw_js(ctx, id: String, rig, x: float, y: float, h: float, pose: Dictionary, flip: bool) -> bool:
+	var __t0 = Time.get_ticks_usec()
+	var __r = _draw_js(ctx, id, rig, x, y, h, pose, flip)
+	prof_us += Time.get_ticks_usec() - __t0; prof_n += 1
+	return __r
+func _draw_js(ctx, id: String, rig, x: float, y: float, h: float, pose: Dictionary, flip: bool) -> bool:
 	if not (ctx is Ctx):
 		if not _warned.has(id): _warned[id] = 1; push_warning("meshDraw 冇 ctx: %s %s" % [id, typeof(ctx)])
 		return false

@@ -94,7 +94,7 @@ func _process(dt: float) -> void:
 
 # ---------------- 版面 ----------------
 func _build_village() -> void:
-	village = Control.new(); village.set_script(load("res://ui/js_canvas_view.gd"))
+	village = Control.new(); village.set_script(load("res://ui/nv_village.gd"))
 	village.anchor_right = 1; village.anchor_bottom = 1; village.offset_top = TOP_H; village.offset_bottom = -NAV_H
 	add_child(village)
 	quest_bar = PanelContainer.new()
