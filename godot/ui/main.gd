@@ -51,13 +51,17 @@ func _ready() -> void:
 var loading: Control
 func _boot_js() -> void:
 	loading = ColorRect.new(); loading.color = Color("#0d0b10"); loading.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(loading)
-	var cov = TextureRect.new(); cov.texture = Spr.get_tex("cover"); cov.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; cov.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	cov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); cov.modulate = Color(0.55, 0.55, 0.55); loading.add_child(cov)
+	# 封面闊度鋪滿、靠頂（長身手機唔再左右裁走），下面接底色
+	var ctex: Texture2D = Spr.get_tex("cover")
+	var cov = TextureRect.new(); cov.texture = ctex; cov.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; cov.stretch_mode = TextureRect.STRETCH_SCALE
+	cov.anchor_right = 1; cov.modulate = Color(0.55, 0.55, 0.55); loading.add_child(cov)
+	var cfit = func(): if ctex: cov.offset_bottom = loading.size.x * ctex.get_height() / ctex.get_width()
+	loading.resized.connect(cfit); cfit.call()
 	var lb = UIKit.label("陰間連線中…", 16, Color("#f3e6c8"), "serif", 900); lb.anchor_left = 0; lb.anchor_right = 1; lb.anchor_top = 0.82; lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; loading.add_child(lb)
 	var bar_bg = ColorRect.new(); bar_bg.color = Color("#3a2e26"); bar_bg.anchor_left = 0.15; bar_bg.anchor_right = 0.85; bar_bg.anchor_top = 0.87; bar_bg.anchor_bottom = 0.87; bar_bg.offset_bottom = 6; loading.add_child(bar_bg)
 	var bar = ColorRect.new(); bar.color = Color("#c2362b"); bar.size = Vector2(0, 6); bar_bg.add_child(bar)
 	await get_tree().process_frame
-	var t0 = Time.get_ticks_msec()
+	var t0 = Time.get_ticks_msec(); boot_full_t = t0 + 70000   # 載模塊階段：90 秒都未完先出記錄
 	JSBridge.install_natives(JSRun)
 	JSRun.boot_dom("res://web/shell.html")
 	dom = Control.new(); dom.set_script(load("res://ui/dom_view.gd")); add_child(dom); move_child(dom, sheet.get_index())
@@ -67,15 +71,39 @@ func _boot_js() -> void:
 		bar.size.x = bar_bg.size.x * float(i + 1) / names.size()
 		await get_tree().process_frame
 	print("[boot] modules ", Time.get_ticks_msec() - t0, "ms")
-	JSBridge.connect_ui(self)
-	village.bind(JSRun.by_id("village"))
-	J.cl(J.G.get("startGame"), null, [])
-	G.S = J.G["S"]; G.js_mode = true
-	J.mc(J.G.get("Village"), "resize", [])
-	refresh()
+	lb.text = "陰間連線中…（開門）"; boot_full_t = Time.get_ticks_msec()
+	# 每一步獨立行：其中一步出錯都唔會卡死喺載入畫面；出錯會記低，喺畫面同設定入面睇到
+	_boot_step("ui", func(): JSBridge.connect_ui(self))
+	_boot_step("village", func(): village.bind(JSRun.by_id("village")))
+	_boot_step("start", func(): J.cl(J.G.get("startGame"), null, []))
+	_boot_step("state", func(): G.S = J.G["S"]; G.js_mode = true)
+	_boot_step("resize", func(): J.mc(J.G.get("Village"), "resize", []))
+	_boot_step("refresh", func(): refresh())
 	loading.queue_free(); loading = null
-	Snd.warm()
+	_boot_step("snd", func(): Snd.warm())
 	print("[boot] ready ", Time.get_ticks_msec() - t0, "ms")
+	var lt = log_tail(400); var nerr = lt.count("SCRIPT ERROR")
+	if nerr > 0: boot_fail.append("%d 個腳本錯誤" % nerr)
+	if boot_fail.size():
+		show_toast("開機有 %d 步出錯（%s），可以喺設定「錯誤記錄」睇詳情，截圖俾開發者。" % [boot_fail.size(), ", ".join(boot_fail)])
+
+var boot_fail: Array = []
+var _step_ok := false
+func _boot_step(name: String, f: Callable) -> void:
+	_step_ok = false
+	_boot_run(f)
+	if not _step_ok: boot_fail.append(name); push_error("[boot] step failed: " + name)
+func _boot_run(f: Callable) -> void:
+	f.call()
+	_step_ok = true
+
+# 讀返 Godot 記錄檔最尾幾十行（手機上冇電腦都可以睇錯誤）
+static func log_tail(n := 60) -> String:
+	var p = ProjectSettings.get_setting("debug/file_logging/log_path", "user://logs/godot.log")
+	var f = FileAccess.open(p, FileAccess.READ)
+	if f == null: return "（冇記錄檔）"
+	var lines = f.get_as_text().split("\n")
+	return "\n".join(lines.slice(maxi(0, lines.size() - n)))
 
 func _process_js_state() -> void:
 	if J.G.get("S") is Dictionary and not is_same(J.G["S"], G.S): G.S = J.G["S"]
@@ -86,8 +114,18 @@ func _notification(what: int) -> void:
 		if what == NOTIFICATION_WM_CLOSE_REQUEST: get_tree().quit()
 	if what == NOTIFICATION_APPLICATION_RESUMED and not G.S.is_empty() and title_ov == null: G.offline_gain()
 
+var boot_full_t := 0
+var _boot_diag = null
 func _process(dt: float) -> void:
-	if loading != null: return
+	if loading != null:
+		# 看門狗：模塊載完 20 秒仲未入到遊戲 → 喺載入畫面顯示錯誤記錄，可以截圖俾開發者
+		if boot_full_t > 0 and Time.get_ticks_msec() - boot_full_t > 20000 and _boot_diag == null:
+			_boot_diag = Label.new(); _boot_diag.text = "開機卡住咗，請截圖俾開發者：\n" + log_tail(30)
+			_boot_diag.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; _boot_diag.add_theme_font_size_override("font_size", 9)
+			_boot_diag.add_theme_color_override("font_color", Color("#ffd8c8")); _boot_diag.anchor_right = 1; _boot_diag.anchor_bottom = 0.78
+			_boot_diag.offset_left = 8; _boot_diag.offset_right = -8; _boot_diag.offset_top = 40; loading.add_child(_boot_diag)
+			DisplayServer.clipboard_set(log_tail(200))
+		return
 	_process_js_state()
 	ui_t += dt
 	if ui_t > 0.5 and title_ov == null: ui_t = 0; refresh()
@@ -501,6 +539,10 @@ func open_story() -> void:
 		if o == null: show_toast("存檔碼讀唔到，檢查吓有冇貼齊"); return
 		if not im.has_meta("armed"): im.set_meta("armed", 1); im.text = "再按一次：換成主公 %d 級嘅存檔" % int(o.get("lv", 1)); return
 		import_save(ta.text if ta.text.strip_edges() != "" else DisplayServer.clipboard_get()))
+	var lgb = UIKit.btn("錯誤記錄（有問題時截圖俾開發者）", "ghost"); sheet_body.add_child(lgb)
+	lgb.pressed.connect(func():
+		var lt = UIKit.label(log_tail(40), 10, UIKit.INKTXT); lt.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; sheet_body.add_child(lt)
+		DisplayServer.clipboard_set(log_tail(200)); show_toast("記錄已複製，可以貼去 WhatsApp 俾開發者"))
 	var rs = UIKit.btn("重新開始（刪除存檔）", "ghost"); sheet_body.add_child(rs)
 	rs.pressed.connect(func():
 		if not rs.has_meta("armed"): rs.set_meta("armed", 1); rs.text = "再按一次確定刪檔"; return
