@@ -93,6 +93,7 @@ func _process(_dt: float) -> void:
 	if X == null or not J.t(J.cl(X.open, null, [])): return
 	stage.queue_redraw()
 	_update_lift()
+	_update_tip()
 
 func _unit():
 	var X = TWX(); return X.unit if X != null else null
@@ -149,12 +150,46 @@ func _stage_input(ev: InputEvent) -> void:
 	elif ev is InputEventMouseMotion and _down:
 		p = ev.position; kind = "PM"
 	else: return
-	if kind == "PD": _down = true
+	if kind == "PD": _down = true; _tip_off()
 	if kind == "PU": _down = false
 	var pre = "__twU" if _covering() else "__tw"
 	var f = J.G.get(pre + kind)
 	if f != null: J.cl(f, null, [_ev(p)])
 	accept_event()
+
+# ---------------- 龐總提示（policy.js #pol-tip，DOM 收埋咗，原生照畫） ----------------
+var tip: Button
+var _tip_sig := ""
+func _update_tip() -> void:
+	var el = JSRun.by_id("pol-tip")
+	var txt := ""
+	if el != null:
+		var b = J.mc(el, "querySelector", ["b"]); var sp = J.mc(el, "querySelector", ["span"]); var sm = J.mc(el, "querySelector", ["small"])
+		txt = "%s\n%s\n%s" % [J.str(J.gp(b, "textContent")) if b else "", J.str(J.gp(sp, "textContent")) if sp else "", J.str(J.gp(sm, "textContent")) if sm else ""]
+	if txt == _tip_sig: return
+	_tip_sig = txt
+	if txt == "":
+		if tip: tip.visible = false
+		return
+	if tip == null:
+		tip = Button.new(); tip.alignment = HORIZONTAL_ALIGNMENT_LEFT; tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		tip.add_theme_font_override("font", UIKit.font("sans", 700)); tip.add_theme_font_size_override("font_size", 15)
+		var sb = UIKit.sb(Color(246 / 255.0, 236 / 255.0, 210 / 255.0, 0.96), 6, Color("#8a6a4a"), 2, Vector4(12, 8, 12, 9))
+		for k in ["normal", "hover", "pressed", "focus"]: tip.add_theme_stylebox_override(k, sb)
+		for k in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]: tip.add_theme_color_override(k, Color("#3a2618"))
+		tip.anchor_left = 0; tip.anchor_right = 1; tip.anchor_top = 1; tip.anchor_bottom = 1
+		tip.offset_left = 12; tip.offset_right = -12; tip.offset_bottom = -10; tip.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		tip.pressed.connect(func():
+			var e = JSRun.by_id("pol-tip")
+			if e != null: e.fire("click", {"type": "click", "stopPropagation": func(_t, _a): pass, "preventDefault": func(_t, _a): pass, "target": e}))
+		add_child(tip)
+	tip.text = txt; tip.visible = true
+
+# 撳提示以外：同網頁版一樣收起提示
+func _tip_off() -> void:
+	if tip and tip.visible:
+		var e = JSRun.by_id("pol-tip")
+		if e != null: J.mc(e, "remove", [])
 
 # ---------------- 電梯面板（原生） ----------------
 func _update_lift() -> void:
@@ -326,3 +361,12 @@ static func t_unit() -> void:
 			print("t_unit ", J.str(un.name), " ok=", J.mc(U, "enterFromDoor", [g, un])); return
 	print("t_unit: none enterable")
 static func t_exit_unit() -> void: print("unit exit=", J.mc(J.G.get("UNIT"), "exit", ["door"]))
+static func t_tip() -> void:
+	if cur and cur.tip and cur.tip.visible: cur.tip.pressed.emit(); print("tip pressed")
+	else: print("no tip")
+# 模擬原生觸控（邏輯座標）
+static func t_touch(x: float, y: float) -> void:
+	if cur == null: return
+	var p = Vector2(x, y) * cur.s
+	var d = InputEventMouseButton.new(); d.button_index = MOUSE_BUTTON_LEFT; d.pressed = true; d.position = p; cur._stage_input(d)
+	var u = InputEventMouseButton.new(); u.button_index = MOUSE_BUTTON_LEFT; u.pressed = false; u.position = p; cur._stage_input(u)
