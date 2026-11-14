@@ -34,6 +34,41 @@ module.exports = {
     // 線路 D：全景只畫鏡頭附近嘅家具（以前成層 12 個畫面闊嘅工位每幀都畫）
     ['    for (const it of list) {', '    for (const it of list) { if (SC && SC._nat && SC.site && SC.site.pano && it.x != null && !SC.onScreen(it.x, 0.7)) continue;'],
   ],
+  // 線 I：冥街夜市——<canvas> 交俾原生 game/minis/mini_stage.gd 直接畫（唔經錄製器）；角色冇平日動作嘅交俾原生 Art；規則、DOM 面板照舊
+  ghoststreet: [
+    ["const GhostStreet = {", "const __gsDC = (c, k, x, y, s, o) => (GhostStreet._nat && !(o && o.act) && typeof __nat_drawChar !== 'undefined') ? __nat_drawChar(c, k, x, y, s, o || {}) : ART['drawChar'](c, k, x, y, s, o);\nconst GhostStreet = {"],
+    ["ART.drawChar(", "__gsDC("],
+    ["    this.last = performance.now(); requestAnimationFrame((n) => this.frame(n));\n    if (!s.seen.street)", "    this._nat = typeof __nat_mini !== 'undefined' && __nat_mini(this, '#gs-stage', '#gstreet', 'draw', '#gs-cvs');\n    this.last = performance.now(); requestAnimationFrame((n) => this.frame(n));\n    if (!s.seen.street)"],
+    ["    this.step(dt); this.draw(now / 1000);", "    this.step(dt); if (!this._nat) this.draw(now / 1000);"],
+    ["    const c = $('#gs-cvs'); if (!c) return; const ctx = c.getContext('2d'); ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);", "    if (this._nat && this._natCtx && typeof __nat_gsDraw !== 'undefined') { __nat_gsDraw(this._natCtx, this, t); return; } if (this._nat && !this._natCtx) return; const c = this._natCtx ? null : $('#gs-cvs'); if (!this._natCtx && !c) return; const ctx = this._natCtx || c.getContext('2d'); const dp = this._natCtx ? 1 : this.dpr; ctx.setTransform(dp, 0, 0, dp, 0, 0);"],
+    ["    if (!this.active) return; this.active = false;\n    $('#gstreet')", "    if (!this.active) return; this.active = false; if (this._nat && typeof __nat_miniEnd !== 'undefined') { __nat_miniEnd(); this._nat = false; }\n    $('#gstreet')"],
+  ],
+  // 線 I：亂葬崗——<canvas> 交俾原生 game/minis/mini_stage.gd 直接畫；魂同阿福交俾原生 Art；規則、DOM 面板照舊
+  graveyard: [
+    // 紅線：唔用真實品牌（叫車平台、飲品）
+    ["  'Grab司機': {", "  '網約車司機': {"],
+    ["'Milo 罐'", "'麥芽飲品罐'"],
+    ["const Graveyard = {", "const __gyDC = (c, k, x, y, s, o) => (Graveyard._nat && typeof __nat_drawChar !== 'undefined') ? __nat_drawChar(c, k, x, y, s, o || {}) : ART['drawChar'](c, k, x, y, s, o);\nconst Graveyard = {\n  _nd() { this.draw(this.t); },"],
+    ["if (typeof ART !== 'undefined') ART.drawChar(", "if (typeof ART !== 'undefined') __gyDC("],
+    ["    const tok = this._tok = {}; this.last = performance.now();", "    this._nat = typeof __nat_mini !== 'undefined' && __nat_mini(this, '#gy-stage', '#gyard', '_nd', '', '#gy-panel');\n    const tok = this._tok = {}; this.last = performance.now();"],
+    ["    this.step(dt); this.draw(this.t);", "    this.step(dt); if (!this._nat) this.draw(this.t);"],
+    ["    const c = $('#gy-cvs'); if (!c) return; const ctx = c.getContext('2d'); ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);", "    if (this._nat && !this._natCtx) return; const c = this._natCtx ? null : $('#gy-cvs'); if (!this._natCtx && !c) return; const ctx = this._natCtx || c.getContext('2d'); const dp = this._natCtx ? 1 : this.dpr; ctx.setTransform(dp, 0, 0, dp, 0, 0);"],
+    ["  resize() {\n    const c = $('#gy-cvs'), box = $('#gy-stage').getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);", "  resize() {\n    const c = $('#gy-cvs'), box = this._nat ? (() => { const r = __nat_miniSize(); return { width:r[0], height:r[1] }; })() : $('#gy-stage').getBoundingClientRect(), dpr = this._nat ? 1 : Math.min(2, window.devicePixelRatio || 1);"],
+    // 結算卡交俾原生 game/minis/gy_end.gd（DOM 卡片 overflow:auto 喺 Godot 會字疊字）
+    ["    $('#gy-end').classList.add('on');", "    this._endRows = this.p.souls.map((s, i) => { const g = this.p.graves[s.grave], wrong = this.souls[i].place !== s.grave; return { tag:s.tag, col:GY_COLORS[i], a:`${g.name}・${g.job}・${g.birth}–${g.death}`, b:ok ? `「${GY_JOBS[g.job].last}」` : `${wrong ? '其實睡在' : '睡在'}${GY_SPOTS[g.spot].name}那座${wrong ? '' : '，你擺對了'}` }; }); this._endInfo = { title, word, stay, got };\n    if (!(this._nat && typeof __nat_gyEnd !== 'undefined' && __nat_gyEnd(this))) $('#gy-end').classList.add('on');"],
+    ["    $('#gy-back').onclick = () => {", "    $('#gy-back').onclick = this._endBack = () => {"],
+    ["    $('#gy-next').onclick = () => {", "    $('#gy-next').onclick = this._endNext = () => {"],
+    ["  close() {\n    this.active = false; this._tok = null;", "  close() {\n    this.active = false; this._tok = null; if (this._nat && typeof __nat_miniEnd !== 'undefined') { __nat_miniEnd(); this._nat = false; }"],
+  ],
+  // 線 I：運動會——<canvas> 交俾原生 game/minis/mini_stage.gd 直接畫；角色交俾原生 Art（Bryan 原畫仍用 JS Antag）
+  sports: [
+    ["    const cv = $('#sp-cvs'); G.cv = cv; G.ctx = cv.getContext('2d');", "    const cv = $('#sp-cvs'); G.cv = cv; G.ctx = cv.getContext('2d'); G._nd = () => { if (G) draw(); }; G._nat = typeof __nat_mini !== 'undefined' && __nat_mini(G, '#sp-cvs', '#sports', '_nd');"],
+    ["const r = G.cv.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1);", "const r = G.cv.getBoundingClientRect(), d = G._nat ? 1 : Math.min(2, window.devicePixelRatio || 1);"],
+    ["    draw(); requestAnimationFrame(frame);", "    if (!G._nat) draw(); requestAnimationFrame(frame);"],
+    ["    const c = G.ctx, H = G.H; c.setTransform(G.k, 0, 0, G.k, 0, 0);", "    if (G._nat && !G._natCtx) return; const c = G._natCtx || G.ctx, H = G.H; c.setTransform(G.k, 0, 0, G.k, 0, 0);"],
+    ["  function close() { G = null;", "  function close() { if (G && G._nat && typeof __nat_miniEnd !== 'undefined') __nat_miniEnd(); G = null;"],
+    ["  function char(c, k, x, y, s, o) { try { ART.drawChar(c, k, x, y, s,", "  function char(c, k, x, y, s, o) { try { (G && G._nat && typeof __nat_drawChar !== 'undefined' ? __nat_drawChar : ART.drawChar)(c, k, x, y, s,"],
+  ],
   patrol: [
     // 線路 A：巡邏本身交俾 Godot 原生（game/patrol/pt_run.gd）；JS 只負責選單、劇情、存檔同規則函數
     ['  function begin(ci, z0) {', "  function begin(ci, z0) { if (typeof __nat_patrol !== 'undefined' && __nat_patrol(ci, z0)) return;"],
