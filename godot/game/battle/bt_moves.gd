@@ -22,7 +22,7 @@ static func _setup_table() -> void:
 	FN["xiaogui"] = mv_xiaogui
 	FN["laojiang"] = mv_jiangshi
 	FN["zombie"] = mv_jiangshi
-	for tb in [BtMoves2.table(), BtN30a.table()]:
+	for tb in [BtMoves2.table(), BtN30a.table(), BtN30b.table(), BtN30c.table(), BtN30d.table()]:
 		for k in tb: FN[k] = tb[k]
 
 static func has(k: String) -> bool:
@@ -33,6 +33,7 @@ static func draw(ctx: Ctx, k: String, x: float, y: float, s: float, o: Dictionar
 	_setup_table()
 	if not FN.has(k): return false
 	var ch = Art.char_h(k)
+	if k.begins_with("n30_"): BtN30.ensure_rig(k)
 	if ch <= 0 or not MeshAnim.has(k) or (Art.SPECIAL_T.has(k) and Art.has_spr(k)):
 		Art.draw_char(ctx, k, x, y, s, o.duplicate()); return true
 	var solid = Art.SOLID.has(k) or J.t(J.gp(J.gp(J.G.get("ART"), "SOLID"), k))
