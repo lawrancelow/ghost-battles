@@ -199,6 +199,8 @@ func _draw_mesh(ctx: Ctx, type: String, x: float, y: float, s: float, o: Diction
 		Limbs.draw(ctx, type, x, y - (0.0 if solid else (3 + sin(t * 2.4) * 2) * s), H, o, not o.get("flip", false), mp)
 		ctx.restore(); return
 	var pz = MeshAnim.pose_for(type, o)
+	var JR = J.gp(J.gp(J.G.get("MeshAnim"), "RIG"), type)   # n30 走路／待機方式（n30_rigs.js RIG.tweak）
+	if JR is Dictionary and JR.get("tweak") is Callable: J.cl(JR.tweak, null, [pz, o])
 	var R: Dictionary = MeshAnim.RIG[type]
 	if R.get("hop", false) and (o.get("walk", false) or o.get("enemy", false) or pose == "move"): pz.y = float(pz.get("y", 0)) - absf(sin(t * 5)) * 0.09
 	if o.get("shadow", true) != false:

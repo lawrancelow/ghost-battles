@@ -1,5 +1,13 @@
 // 轉譯前對原 JS 做嘅修改：熱點交俾原生 GDScript、瀏覽器專屬部分換樁
 module.exports = {
+  // 線路 E：主線戰鬥——原生外殼（game/battle/bt_run.gd）：頂欄、技能卡、畫面由原生喺 _draw 叫 draw()（唔經錄製器、唔經 DOM 排版）；角色交俾原生 Art（出招 MOVES／反派 custom 仍用 JS）
+  battle: [
+    ["const GIFT_REWARD = {", "const __BT_ATK = { windup:1, strike:1, follow:1, recover:1 };\nconst __btDC = (c, k, x, y, s, o) => { if (Battle._nat && typeof __nat_drawChar !== 'undefined' && !(__BT_ATK[o.pose] && typeof MOVES !== 'undefined' && MOVES[k]) && !(typeof MeshAnim !== 'undefined' && MeshAnim.RIG[k] && MeshAnim.RIG[k].custom)) return __nat_drawChar(c, k, x, y, s, o); return ART['drawChar'](c, k, x, y, s, o); };\nconst GIFT_REWARD = {"],
+    ["    $('#b-title').textContent = st.wild ? `野鬼　${st.name}` : `${this.sid}　${st.name}`;\n  },", "    $('#b-title').textContent = st.wild ? `野鬼　${st.name}` : `${this.sid}　${st.name}`;\n    this._nat = false; if (typeof __nat_battle !== 'undefined' && __nat_battle(this)) { this._nat = true; this.resize(); }\n  },"],
+    ["  resize() {\n", "  resize() { if (this._nat) { const r = __nat_btSize(); this.dpr = 1; this.w = r[0]; this.h = r[1]; this.sc = this.w / 390; return; }\n"],
+    ["  draw() {\n    if (!this.active) return;\n    const ctx = this.ctx,", "  draw() {\n    if (!this.active) return; if (this._nat && !this._natCtx) return;\n    const ctx = this._natCtx || this.ctx,"],
+    ["      ART.drawChar(ctx, u.k, x, y, s, o);\n      if (u.flash > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ART.drawChar(ctx, u.k, x, y, s,", "      __btDC(ctx, u.k, x, y, s, o);\n      if (u.flash > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; __btDC(ctx, u.k, x, y, s,"],
+  ],
   // 線路 C：巡陰選單（準備畫面、揀主管、裝備房）交俾 Godot 原生介面（ui/patrol_menu）
   // 線路 D：回陽間・夜班嚇人——角色交俾原生 Art（每隻 JS ART.drawChar 約 9ms → 原生 <0.5ms）
   scare: [
