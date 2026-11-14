@@ -104,4 +104,20 @@ func _run() -> void:
 			"profile":
 				var t0 = Time.get_ticks_usec(); var fr0 = Engine.get_process_frames(); await get_tree().create_timer(float(s[1])).timeout
 				print("PROF frames=", Engine.get_process_frames() - fr0, " process_ms=", snapped(Performance.get_monitor(Performance.TIME_PROCESS) * 1000, 0.1), " fps=", Engine.get_frames_per_second())
+			"bench": load("res://core/bench.gd").run(s[1])
+			"pt":
+				var r = PtRun.cur
+				if r == null: print("PT none")
+				else: print("PT ", s[1], " = ", str(r.callv(s[1], s.slice(2))).substr(0, 200))
+			"ptl":
+				var r2 = PtRun.cur
+				if r2: r2.L.set(s[1], s[2]); print("PTL ", s[1])
+			"procs":
+				var acc = []
+				var stack = [get_tree().root]
+				while stack.size():
+					var n = stack.pop_back()
+					if n.is_processing() or n.is_physics_processing(): acc.append(str(n.get_path()) + " " + str(n.get_script().resource_path if n.get_script() else n.get_class()))
+					stack.append_array(n.get_children())
+				print("PROCS ", acc.size()); for a in acc.slice(0, 60): print("  ", a)
 			"quit": get_tree().quit(); return

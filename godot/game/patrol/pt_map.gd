@@ -22,6 +22,7 @@ var GATES: Array = [] # {i, a, b, za, zb, sec, vert, x, y}
 var WALLS: Array = [] # {h, p, a, b, kind, gap:{c, g}|null}
 var props: Array = [] # {x, y, t, s, v, r}
 var PGRID := {}
+var PROPGRID := {}   # 所有擺設（畫用）
 var spots: Array = []
 var path: PackedVector2Array
 var walk_blk: PackedInt32Array
@@ -193,6 +194,10 @@ func _mk_props() -> void:
 			if Vector2(o.x - x, (o.y - y) * 1.4).length() < (120.0 if (o.r > 0 or big) else 70.0): bad = true; break
 		if bad: continue
 		props.append({"x": x, "y": y, "t": t, "s": sc, "v": rnd.call(), "r": float(SOLID[t]) * sc if big else 0.0})
+	for o in props:
+		var kk = Vector2i(int(floor(o.x / 200)), int(floor(o.y / 200)))
+		if not PROPGRID.has(kk): PROPGRID[kk] = []
+		PROPGRID[kk].append(o)
 	for o in props:
 		if o.r <= 0: continue
 		var k = Vector2i(int(floor(o.x / 200)), int(floor(o.y / 200)))

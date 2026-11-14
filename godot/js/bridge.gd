@@ -28,6 +28,8 @@ static func install_natives(host: Node) -> void:
 	G["BG_SRC"] = SrcProxy.new("bg_")
 	G["SPR_READY"] = JSPromise.new(null)
 	G["sprOk"] = func(_t, a): return a.size() > 0 and (Spr.ok(J.str(a[0])) or (G["SPR"] as SprProxy).extra.has(J.str(a[0])))
+	G["__nat_patrolMenu"] = func(_t, a): return PatrolMenu.hook(a)
+	G["__nat_patrol"] = func(_t, a): return PtRun.start_run(int(J.num(a[0])), int(J.num(a[1])))
 	G["__nat_meshDraw"] = func(_t, a): return MeshAnim.draw_js(a[0], J.str(a[1]), a[2], J.num(a[3]), J.num(a[4]), J.num(a[5]), a[6] if a[6] is Dictionary else {}, J.t(a[7]))
 	G["Web"] = {"boot": func(_t, a): return false, "receive": func(_t, a): J.cl(a[0], null, []); return null, "init": func(_t, a): return null,
 		"enc": func(_t, a): return G_enc(a[0]), "dec": func(_t, a): return G_dec(J.str(a[0])), "installGuide": func(_t, a): return null, "local": true}

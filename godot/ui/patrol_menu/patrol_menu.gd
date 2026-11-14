@@ -1,7 +1,8 @@
-# 夜班巡陰：選單介面（準備畫面、揀帶隊主管、裝備房）Godot 原生版（線路 C）
-# JS 嘅 Patrol.openPrep / Gear.open 經 patches.js 轉呼叫 __nat_patrolMenu → 呢度。
-# 數據、動作仍然用轉譯咗嘅 JS 運行庫（J.G）。
-extends Node
+# 夜班巡陰：選單介面（準備畫面、揀帶隊主管、裝備房）Godot 原生版
+# JS 嘅 Patrol.openPrep / Gear.open 經 patches.js 轉呼叫 __nat_patrolMenu → PatrolMenu.hook
+# 數據、動作仍然用轉譯咗嘅 JS（Patrol._menu、Gear._menu）；介面掛喺 Main（劇情、提示喺上面）
+class_name PatrolMenu
+extends Control
 
 const PAPER := Color("#ecd9a4")
 const CARD := Color(1, 0.97, 0.88, 0.6)
@@ -11,7 +12,8 @@ const DIM := Color("#6e5838")
 const RED := Color("#c2362b")
 const CN := "一二三四五六"
 
-var layer: CanvasLayer
+static var inst: PatrolMenu = null
+
 var panel: Panel
 var title_lbl: Label
 var scroll: ScrollContainer
@@ -19,9 +21,14 @@ var body: VBoxContainer
 var gear_tab := "wea"
 var gear_back = null   # JS 回呼（返準備畫面）
 
-func _process(_dt: float) -> void:
-	if J.G.get("__nat_patrolMenu") == null:
-		J.G["__nat_patrolMenu"] = func(_t, a): return _hook(a)
+static func hook(a: Array) -> bool:
+	var main = Engine.get_main_loop().root.get_node_or_null("Main")
+	if main == null: return false
+	if inst == null or not is_instance_valid(inst):
+		inst = PatrolMenu.new(); inst.name = "PatrolMenu"; main.add_child(inst)
+	var st = main.get("story")
+	if st is Node: main.move_child(inst, st.get_index())
+	return inst._hook(a)
 
 func _hook(a: Array) -> bool:
 	var kind := J.str(a[0]) if a.size() else ""
@@ -39,16 +46,20 @@ func fmt(v) -> String: return J.str(J.cl(g("fmt"), null, [v]))
 func save() -> void: J.cl(g("save"), null, [])
 func strip(h: String) -> String:
 	var re = RegEx.new(); re.compile("<[^>]+>"); return re.sub(h, "", true)
-func fcol(f: String) -> String: return J.str(J.gp(J.gp(J.gp(menu(), "FAC"), f), "col"))
+func fcol(f: String) -> String: return _dark(J.str(J.gp(J.gp(J.gp(menu(), "FAC"), f), "col")))
+# 網頁版 .pt-mats span[style]{filter:brightness(.62) saturate(1.4)}：派系色喺紙上壓暗
+func _dark(hex: String) -> String:
+	var c = Color(hex); var h = c.h; var sat = minf(1.0, c.s * 1.4); var v = c.v * 0.62
+	return "#" + Color.from_hsv(h, sat, v).to_html(false)
 
 # ---------------- 外框 ----------------
 func _ensure() -> void:
-	if layer and is_instance_valid(layer): return
-	layer = CanvasLayer.new(); layer.layer = 40; get_tree().root.add_child(layer)
-	var dim = ColorRect.new(); dim.color = Color(0, 0, 0, 0.45); dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); layer.add_child(dim)
-	panel = Panel.new(); panel.anchor_right = 1; panel.anchor_top = 0.07; panel.anchor_bottom = 1
+	if panel and is_instance_valid(panel): return
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var dim = ColorRect.new(); dim.color = Color(0, 0, 0, 0.45); dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(dim)
+	panel = Panel.new(); panel.anchor_right = 1; panel.anchor_bottom = 1; panel.offset_top = 128
 	var s = UIKit.sb(PAPER, 10); s.corner_radius_bottom_left = 0; s.corner_radius_bottom_right = 0; s.shadow_color = Color(0, 0, 0, 0.6); s.shadow_size = 20
-	panel.add_theme_stylebox_override("panel", s); layer.add_child(panel)
+	panel.add_theme_stylebox_override("panel", s); add_child(panel)
 	var head = HBoxContainer.new(); head.anchor_right = 1; head.offset_left = 16; head.offset_right = -12; head.offset_top = 10; head.offset_bottom = 52; panel.add_child(head)
 	title_lbl = UIKit.label("", 23, INK, "serif", 900); title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; head.add_child(title_lbl)
 	var cl = UIKit.btn("✕", "ghost", true); cl.custom_minimum_size = Vector2(40, 40); cl.pressed.connect(close); head.add_child(cl)
@@ -58,16 +69,16 @@ func _ensure() -> void:
 	body = VBoxContainer.new(); body.size_flags_horizontal = Control.SIZE_EXPAND_FILL; body.add_theme_constant_override("separation", 8); scroll.add_child(body)
 
 func _sheet(t: String, keep_scroll := false) -> void:
-	_ensure(); layer.visible = true; title_lbl.text = t
+	_ensure(); visible = true; title_lbl.text = t
 	var sc = scroll.scroll_vertical if keep_scroll else 0
 	for c in body.get_children(): body.remove_child(c); c.queue_free()
 	if keep_scroll: (func(): await get_tree().process_frame; await get_tree().process_frame; scroll.scroll_vertical = sc).call()
 	else: scroll.scroll_vertical = 0
 
 func close() -> void:
-	if layer and is_instance_valid(layer): layer.visible = false
+	visible = false
 
-func is_open() -> bool: return layer != null and is_instance_valid(layer) and layer.visible
+func is_open() -> bool: return visible and panel != null
 
 func _p(bb: String, size := 15, col := DIM) -> RichTextLabel:
 	var r = UIKit.rich(bb, size, col); body.add_child(r); return r
@@ -85,7 +96,7 @@ func _mats_row(extra: Array) -> void:
 	var mats = J.gp(m(menu(), "st"), "mats"); var fac = J.gp(menu(), "FAC")
 	var bits = []
 	for f in ["yuan", "chan", "lan"]:
-		var d = J.gp(fac, f); bits.append("[color=%s][b]%s[/b] %s[/color]" % [J.str(J.gp(d, "col")), J.str(J.gp(d, "mat")), fmt(J.gp(mats, f))])
+		var d = J.gp(fac, f); bits.append("[color=%s][b]%s[/b] %s[/color]" % [_dark(J.str(J.gp(d, "col"))), J.str(J.gp(d, "mat")), fmt(J.gp(mats, f))])
 	for e in extra: bits.append("[b]%s[/b] %s" % e)
 	var pc = _card(0.85, Vector4(10, 6, 10, 6)); var r = UIKit.rich("　".join(bits), 15, INK); pc.add_child(r); body.add_child(pc)
 
@@ -178,7 +189,9 @@ func _region_card(ci: int) -> Control:
 	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 6); pc.add_child(vb)
 	var name := "第%s區・%s" % [CN[ci], J.str(J.gp(ch, "name"))]
 	if not open:
-		vb.add_child(UIKit.rich("[b]%s[/b]　🔒\n[font_size=13]打完上一區總監才開放[/font_size]" % name, 16, Color(INK, 0.55)))
+		var lh = HBoxContainer.new(); vb.add_child(lh)
+		var li = UIKit.rich("[b]%s[/b]\n[font_size=13]打完上一區總監才開放[/font_size]" % name, 16, Color(INK, 0.55)); li.size_flags_horizontal = Control.SIZE_EXPAND_FILL; lh.add_child(li)
+		var lk = UIKit.label("🔒", 16, Color(INK, 0.5)); lk.size_flags_vertical = Control.SIZE_SHRINK_CENTER; lh.add_child(lk)
 		return pc
 	m(M, "setMir", [ci]); m(M, "mkFaci")
 	var st0 = J.num(m(M, "startZ", [ci])); var kings = J.gp(r, "kings"); var lm = J.gp(r, "lm"); var sta = J.gp(r, "sta")
@@ -186,8 +199,10 @@ func _region_card(ci: int) -> Control:
 	var lmt = (J.gp(J.gp(M, "LMNAME"), ci) as Array).size()
 	var stg = stages[min(2, n)]; var need = J.str(m(g("GP"), "stageNeed", [stg, m(M, "sidOf", [ci, min(2, n)])]))
 	var req = J.str(J.gp(stages[0], "req"))
-	vb.add_child(UIKit.rich("[b]%s[/b]\n[font_size=13]地頭 %d/9　地標 %d/%d　主線 %d/3　%s %s　需主公 Lv%s[/font_size]" % [name, kn, lmn, lmt, n, T("建議鬼力", "建議鬼力"), need, req], 16, INK))
-	var fl = HFlowContainer.new(); fl.add_theme_constant_override("h_separation", 6); fl.add_theme_constant_override("v_separation", 6); vb.add_child(fl)
+	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 8); vb.add_child(hb)
+	var info = UIKit.rich("[b]%s[/b]\n[font_size=13]地頭 %d/9　地標 %d/%d　主線 %d/3　%s %s　需主公 Lv%s[/font_size]" % [name, kn, lmn, lmt, n, T("建議鬼力", "建議鬼力"), need, req], 16, INK)
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hb.add_child(info)
+	var fl = VBoxContainer.new(); fl.add_theme_constant_override("separation", 4); fl.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hb.add_child(fl)
 	var faci: Array = m(M, "faci"); var tn = J.gp(J.gp(M, "TNAME"), ci)
 	for f in faci:
 		if J.str(J.gp(f, "t")) != "station": continue
@@ -200,8 +215,6 @@ func _region_card(ci: int) -> Control:
 
 func go(ci: int, z: float) -> void:
 	close()
-	var np = get_tree().root.get_node_or_null("NPatrol")
-	if np and np.has_method("begin"): np.begin(ci, z); return
 	m(menu(), "start", [float(ci), z])
 
 # ---------------- 揀帶隊主管 ----------------
@@ -228,10 +241,10 @@ func pick_lead(i: int) -> void:
 		var pc = _card(0.85 if id == now else 0.55); var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 10); pc.add_child(hb)
 		hb.add_child(UIKit.portrait(k, 60))
 		var f = J.str(m(M, "facOf", [k])); var fd = J.gp(J.gp(M, "FAC"), f)
-		var txt = "[b]%s[/b]%s\n[font_size=13]Lv%s　[b]%s %s[/b]　[color=%s]%s[/color][/font_size]" % [J.str(J.gp(gh, "name")), "　[bgcolor=#c2362b][color=#fff] 帶隊中 [/color][/bgcolor]" if cur.has(id) else "", J.str(m(g("F"), "glv", [gh])), T("鬼力", "鬼力"), J.str(m(g("GP"), "pow", [gh])), J.str(J.gp(fd, "col")), J.str(J.gp(fd, "name"))]
+		var txt = "[b]%s[/b]%s\n[font_size=13]Lv%s　[b]%s %s[/b]　[color=%s]%s[/color][/font_size]" % [J.str(J.gp(gh, "name")), "　[bgcolor=#c2362b][color=#fff] 帶隊中 [/color][/bgcolor]" if cur.has(id) else "", J.str(m(g("F"), "glv", [gh])), T("鬼力", "鬼力"), J.str(m(g("GP"), "pow", [gh])), _dark(J.str(J.gp(fd, "col"))), J.str(J.gp(fd, "name"))]
 		if sk != null: txt += "\n[font_size=13][color=#2e5d55]【%s】%s[/color][/font_size]" % [J.str(J.gp(sk, "name")), J.str(J.gp(sk, "desc"))]
 		var info = UIKit.rich(txt, 16, INK); info.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hb.add_child(info)
-		var idd = id; hb.add_child(_btn("揀", "gold" if id != now else "", true, func(): setf.call(idd), id != now))
+		var idd = id; var pb = _btn("揀", "gold" if id != now else "", true, func(): setf.call(idd), id != now); pb.custom_minimum_size = Vector2(52, 40); pb.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hb.add_child(pb)
 		body.add_child(pc)
 	body.add_child(_btn("返回", "", false, func(): _render_prep()))
 
