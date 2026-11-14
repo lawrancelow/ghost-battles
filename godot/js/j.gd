@@ -377,6 +377,8 @@ static func new_(n: String, a: Array):
 static func re(p: String, f: String) -> JSRegExp: return JSRegExp.new(p, f)
 
 # 方法呼叫：o.m(args)
+static var CTXPROF := {}
+static var CTXPROF_ON := false
 static func mc(o, m, a: Array):
 	var mm: String = m if typeof(m) == TYPE_STRING else J.str(m)
 	match typeof(o):
@@ -390,7 +392,12 @@ static func mc(o, m, a: Array):
 				"toString": return "[object Object]"
 				"call": return null
 			return null
-		TYPE_ARRAY: return JA.call_(o, mm, a)
+		TYPE_ARRAY:
+			# arr[1](x)：JS 呼叫陣列入面嘅函數（轉譯成數字方法名）
+			if typeof(m) == TYPE_FLOAT or typeof(m) == TYPE_INT:
+				var i = int(m)
+				return cl(o[i], o, a) if i >= 0 and i < o.size() else null
+			return JA.call_(o, mm, a)
 		TYPE_STRING: return JStr.call_(o, mm, a)
 		TYPE_FLOAT, TYPE_INT: return JStr.num_call(float(o), mm, a)
 		TYPE_CALLABLE:
@@ -404,7 +411,12 @@ static func mc(o, m, a: Array):
 		TYPE_OBJECT:
 			if o == null: return null
 			if o.has_method("_js_" + mm): return o.callv("_js_" + mm, [a])
-			if o is Ctx: return _ctx_call(o, mm, a)
+			if o is Ctx:
+				if CTXPROF_ON:
+					var _t0 = Time.get_ticks_usec(); var _r = _ctx_call(o, mm, a)
+					CTXPROF[mm] = CTXPROF.get(mm, 0) + Time.get_ticks_usec() - _t0; CTXPROF["#" + mm] = CTXPROF.get("#" + mm, 0) + 1
+					return _r
+				return _ctx_call(o, mm, a)
 			if o.has_method(mm): return o.callv(mm, a)
 			return null
 		TYPE_TRANSFORM2D:

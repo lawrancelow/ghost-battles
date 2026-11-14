@@ -1590,25 +1590,43 @@ func _f66(this_, a: Array, env):
 func _f68(this_, a: Array, env):
 	var v_ctx_436 = null
 	v_ctx_436 = J.arg(a, 0)
-	var _t556 = env["__p"]["__p"]["drawFreeChair"]
-	return J.cl(_t556, null, [v_ctx_436, env["it"], env["__p"]["t"]])
+	var _t560 = J.gp(env["__p"]["__p"]["SC"], "_nat")
+	var _t563 = null
+	if J.t(((not J.seq(J.typeof_(J.G.get("__nat_scItem")), "undefined")) if J.t(_t560) else _t560)):
+		var _t561 = J.G.get("__nat_scItem")
+		_t563 = J.cl(_t561, null, [v_ctx_436, env["__p"]["__p"]["SC"], env["it"], env["__p"]["t"], "chair"])
+	else:
+		var _t562 = env["__p"]["__p"]["drawFreeChair"]
+		_t563 = J.cl(_t562, null, [v_ctx_436, env["it"], env["__p"]["t"]])
+	return _t563
 
 func _f69(this_, a: Array, env):
 	var v_ctx_437 = null
 	v_ctx_437 = J.arg(a, 0)
-	var _t559 = env["__p"]["__p"]["drawItem"]
-	return J.cl(_t559, null, [v_ctx_437, env["it"], env["__p"]["t"]])
+	var _t566 = J.gp(env["__p"]["__p"]["SC"], "_nat")
+	var _t569 = null
+	if J.t(((not J.seq(J.typeof_(J.G.get("__nat_scItem")), "undefined")) if J.t(_t566) else _t566)):
+		var _t567 = J.G.get("__nat_scItem")
+		_t569 = J.cl(_t567, null, [v_ctx_437, env["__p"]["__p"]["SC"], env["it"], env["__p"]["t"], ""])
+	else:
+		var _t568 = env["__p"]["__p"]["drawItem"]
+		_t569 = J.cl(_t568, null, [v_ctx_437, env["it"], env["__p"]["t"]])
+	return _t569
 
 func _f71(this_, a: Array, env):
 	var v_ctx_439 = null; var v_keep_440 = null
 	v_ctx_439 = J.arg(a, 0)
+	var _t571 = J.gp(env["__p"]["__p"]["SC"], "_nat")
+	if J.t(((not J.seq(J.typeof_(J.G.get("__nat_scItem")), "undefined")) if J.t(_t571) else _t571)):
+		var _t572 = J.G.get("__nat_scItem")
+		return J.cl(_t572, null, [v_ctx_439, env["__p"]["__p"]["SC"], env["s"], env["__p"]["t"], "kenchair"])
 	v_keep_440 = env["__p"]["__p"]["STN"]
-	var _t561 = env["__p"]["__p"]["use"]
-	J.cl(_t561, null, [env["s"]])
-	var _t562 = env["__p"]["__p"]["drawKenChair"]
-	J.cl(_t562, null, [v_ctx_439, null, env["__p"]["t"]])
-	var _t563 = env["__p"]["__p"]["use"]
-	J.cl(_t563, null, [v_keep_440])
+	var _t573 = env["__p"]["__p"]["use"]
+	J.cl(_t573, null, [env["s"]])
+	var _t574 = env["__p"]["__p"]["drawKenChair"]
+	J.cl(_t574, null, [v_ctx_439, null, env["__p"]["t"]])
+	var _t575 = env["__p"]["__p"]["use"]
+	J.cl(_t575, null, [v_keep_440])
 
 func _f70(this_, a: Array, env):
 	var _s172 = {"__p": env, "s": null}
@@ -1619,14 +1637,14 @@ func _f70(this_, a: Array, env):
 func _f72(this_, a: Array, env):
 	var v_ctx_442 = null
 	v_ctx_442 = J.arg(a, 0)
-	var _t566 = env["__p"]["__p"]["drawFallen"]
-	return J.cl(_t566, null, [v_ctx_442, env["c"]])
+	var _t578 = env["__p"]["__p"]["drawFallen"]
+	return J.cl(_t578, null, [v_ctx_442, env["c"]])
 
 func _f73(this_, a: Array, env):
 	var v_ctx_444 = null
 	v_ctx_444 = J.arg(a, 0)
-	var _t568 = env["__p"]["__p"]["drawFlying"]
-	return J.cl(_t568, null, [v_ctx_444, env["p"], env["__p"]["t"]])
+	var _t580 = env["__p"]["__p"]["drawFlying"]
+	return J.cl(_t580, null, [v_ctx_444, env["p"], env["__p"]["t"]])
 
 func _f67(this_, a: Array, env):
 	var _s166 = {"__p": env, "t": null, "out": null}
@@ -1635,29 +1653,35 @@ func _f67(this_, a: Array, env):
 	for _t553 in J.iter(_s166["__p"]["list"]):
 		var _s167 = {"__p": _s166, "it": null}
 		_s167["it"] = _t553
-		if J.t(J.gp(_s167["it"], "chair")):
-			var _t555 = J.gp(_s167["it"], "y")
-			var _t554 = J.gp(_s167["it"], "oz")
-			J.mc(_s167["__p"]["out"], "push", [[J.add(_t555, (_t554 if J.t(_t554) else 0.0)), Callable(self, "_f68").bind(_s167)]])
+		var _t554 = (J.gp(_s167["__p"]["__p"]["SC"], "_nat") if J.t(_s167["__p"]["__p"]["SC"]) else _s167["__p"]["__p"]["SC"])
+		var _t555 = (J.gp(_s167["__p"]["__p"]["SC"], "site") if J.t(_t554) else _t554)
+		var _t556 = (J.gp(J.gp(_s167["__p"]["__p"]["SC"], "site"), "pano") if J.t(_t555) else _t555)
+		var _t557 = ((not J.leq(J.gp(_s167["it"], "x"), null)) if J.t(_t556) else _t556)
+		if J.t(((not J.t(J.mc(_s167["__p"]["__p"]["SC"], "onScreen", [J.gp(_s167["it"], "x"), 0.7]))) if J.t(_t557) else _t557)):
 			continue
-		var _t558 = J.gp(_s167["it"], "stn")
-		if J.t(_t558):
-			var _t557 = _s167["__p"]["__p"]["kenAtDesk"]
-			_t558 = J.cl(_t557, null, [J.gp(_s167["__p"]["__p"]["STATIONS"], J.gp(_s167["it"], "stn"))])
-		if J.t(_t558):
+		if J.t(J.gp(_s167["it"], "chair")):
+			var _t559 = J.gp(_s167["it"], "y")
+			var _t558 = J.gp(_s167["it"], "oz")
+			J.mc(_s167["__p"]["out"], "push", [[J.add(_t559, (_t558 if J.t(_t558) else 0.0)), Callable(self, "_f68").bind(_s167)]])
+			continue
+		var _t565 = J.gp(_s167["it"], "stn")
+		if J.t(_t565):
+			var _t564 = _s167["__p"]["__p"]["kenAtDesk"]
+			_t565 = J.cl(_t564, null, [J.gp(_s167["__p"]["__p"]["STATIONS"], J.gp(_s167["it"], "stn"))])
+		if J.t(_t565):
 			continue
 		J.mc(_s167["__p"]["out"], "push", [[(J.gp(_s167["it"], "z") if (not J.leq(J.gp(_s167["it"], "z"), null)) else J.gp(_s167["it"], "y")), Callable(self, "_f69").bind(_s167)]])
-	var _t560 = _s166["__p"]["eachStn"]
-	J.cl(_t560, null, [Callable(self, "_f70").bind(_s166)])
-	for _t564 in J.iter(_s166["__p"]["kids"]):
+	var _t570 = _s166["__p"]["eachStn"]
+	J.cl(_t570, null, [Callable(self, "_f70").bind(_s166)])
+	for _t576 in J.iter(_s166["__p"]["kids"]):
 		var _s174 = {"__p": _s166, "c": null}
-		_s174["c"] = _t564
-		var _t565 = J.gp(_s174["c"], "falling")
-		if J.t((J.gp(J.gp(_s174["c"], "falling"), "off") if J.t(_t565) else _t565)):
+		_s174["c"] = _t576
+		var _t577 = J.gp(_s174["c"], "falling")
+		if J.t((J.gp(J.gp(_s174["c"], "falling"), "off") if J.t(_t577) else _t577)):
 			J.mc(_s174["__p"]["out"], "push", [[J.add((J.gp(J.gp(_s174["c"], "parent"), "z") if (not J.leq(J.gp(J.gp(_s174["c"], "parent"), "z"), null)) else J.gp(J.gp(_s174["c"], "parent"), "y")), 0.006), Callable(self, "_f72").bind(_s174)]])
-	for _t567 in J.iter(_s166["__p"]["flying"]):
+	for _t579 in J.iter(_s166["__p"]["flying"]):
 		var _s176 = {"__p": _s166, "p": null}
-		_s176["p"] = _t567
+		_s176["p"] = _t579
 		J.mc(_s176["__p"]["out"], "push", [[J.gp(_s176["p"], "y"), Callable(self, "_f73").bind(_s176)]])
 	return _s166["out"]
 
@@ -1665,20 +1689,20 @@ func _f74(this_, a: Array, env):
 	var v_ctx_447 = null; var v_t_448 = null; var v_im_449 = null; var v_p_450 = null; var v_x_451 = null; var v_y_452 = null; var v_u_453 = null; var v_w_454 = null; var v_a_455 = null
 	v_ctx_447 = J.arg(a, 0)
 	v_t_448 = J.arg(a, 1)
-	var _t569 = env["img"]
-	v_im_449 = J.cl(_t569, null, ["op_paper"])
+	var _t581 = env["img"]
+	v_im_449 = J.cl(_t581, null, ["op_paper"])
 	if (not J.t(v_im_449)):
 		return null
-	for _t570 in J.iter(env["floor"]):
-		v_p_450 = _t570
-		var _t571 = env["P"]
-		var _t572 = J.cl(_t571, null, [J.gp(v_p_450, "x"), J.gp(v_p_450, "y")])
-		var _t573 = J.gp(_t572, 0.0)
-		v_x_451 = _t573
-		var _t574 = J.gp(_t572, 1.0)
-		v_y_452 = _t574
-		var _t575 = env["U"]
-		v_u_453 = J.cl(_t575, null, [J.gp(v_p_450, "y")])
+	for _t582 in J.iter(env["floor"]):
+		v_p_450 = _t582
+		var _t583 = env["P"]
+		var _t584 = J.cl(_t583, null, [J.gp(v_p_450, "x"), J.gp(v_p_450, "y")])
+		var _t585 = J.gp(_t584, 0.0)
+		v_x_451 = _t585
+		var _t586 = J.gp(_t584, 1.0)
+		v_y_452 = _t586
+		var _t587 = env["U"]
+		v_u_453 = J.cl(_t587, null, [J.gp(v_p_450, "y")])
 		v_w_454 = (J.mul(J.gp(v_p_450, "w"), v_u_453) * 1.4)
 		v_a_455 = J.min_([1.0, J.div(J.gp(v_p_450, "life"), 1.5)])
 		J.mc(v_ctx_447, "save", [])
@@ -1692,19 +1716,19 @@ func _f74(this_, a: Array, env):
 func _f75(this_, a: Array, env):
 	var v_it_458 = null; var v_im_459 = null; var v_u_460 = null; var v_h_461 = null; var v_w_462 = null; var v_x_463 = null; var v_y_464 = null
 	v_it_458 = J.arg(a, 0)
-	var _t576 = env["img"]
-	var _t577 = J.cl(_t576, null, [J.gp(v_it_458, "spr")])
-	v_im_459 = (_t577 if J.t(_t577) else {"width": 1.0, "height": 1.0})
-	var _t578 = env["U"]
-	v_u_460 = J.cl(_t578, null, [(J.gp(v_it_458, "uy") if (not J.leq(J.gp(v_it_458, "uy"), null)) else J.gp(v_it_458, "y"))])
+	var _t588 = env["img"]
+	var _t589 = J.cl(_t588, null, [J.gp(v_it_458, "spr")])
+	v_im_459 = (_t589 if J.t(_t589) else {"width": 1.0, "height": 1.0})
+	var _t590 = env["U"]
+	v_u_460 = J.cl(_t590, null, [(J.gp(v_it_458, "uy") if (not J.leq(J.gp(v_it_458, "uy"), null)) else J.gp(v_it_458, "y"))])
 	v_h_461 = J.mul(J.gp(v_it_458, "h"), v_u_460)
 	v_w_462 = J.div(J.mul(v_h_461, J.gp(v_im_459, "width")), J.gp(v_im_459, "height"))
-	var _t579 = env["P"]
-	var _t580 = J.cl(_t579, null, [J.gp(v_it_458, "x"), J.gp(v_it_458, "y")])
-	var _t581 = J.gp(_t580, 0.0)
-	v_x_463 = _t581
-	var _t582 = J.gp(_t580, 1.0)
-	v_y_464 = _t582
+	var _t591 = env["P"]
+	var _t592 = J.cl(_t591, null, [J.gp(v_it_458, "x"), J.gp(v_it_458, "y")])
+	var _t593 = J.gp(_t592, 0.0)
+	v_x_463 = _t593
+	var _t594 = J.gp(_t592, 1.0)
+	v_y_464 = _t594
 	return {"x": v_x_463, "y": v_y_464, "u": v_u_460, "w": v_w_462, "h": v_h_461, "im": v_im_459}
 
 func _f76(this_, a: Array, env):
@@ -1713,48 +1737,48 @@ func _f76(this_, a: Array, env):
 	v_it_468 = J.arg(a, 1)
 	v_t_469 = J.arg(a, 2)
 	v_mode_470 = J.arg(a, 3)
-	var _t583 = env["frameOf"]
-	v_F_471 = J.cl(_t583, null, [v_it_468])
-	var _t584 = env["img"]
-	if (not J.t(J.cl(_t584, null, [J.gp(v_it_468, "spr")]))):
+	var _t595 = env["frameOf"]
+	v_F_471 = J.cl(_t595, null, [v_it_468])
+	var _t596 = env["img"]
+	if (not J.t(J.cl(_t596, null, [J.gp(v_it_468, "spr")]))):
 		return null
-	var _t585 = J.gp(v_F_471, "x")
-	v_x_472 = _t585
-	var _t586 = J.gp(v_F_471, "y")
-	v_y_473 = _t586
-	var _t587 = J.gp(v_F_471, "u")
-	v_u_474 = _t587
-	var _t588 = J.gp(v_F_471, "w")
-	v_w_475 = _t588
-	var _t589 = J.gp(v_F_471, "h")
-	v_h_476 = _t589
-	var _t590 = env["img"]
-	v_im_477 = J.cl(_t590, null, [J.gp(v_it_468, "spr")])
-	var _t591 = J.gp(v_it_468, "shadow")
-	if J.t(((not J.seq(v_mode_470, "kids")) if J.t(_t591) else _t591)):
+	var _t597 = J.gp(v_F_471, "x")
+	v_x_472 = _t597
+	var _t598 = J.gp(v_F_471, "y")
+	v_y_473 = _t598
+	var _t599 = J.gp(v_F_471, "u")
+	v_u_474 = _t599
+	var _t600 = J.gp(v_F_471, "w")
+	v_w_475 = _t600
+	var _t601 = J.gp(v_F_471, "h")
+	v_h_476 = _t601
+	var _t602 = env["img"]
+	v_im_477 = J.cl(_t602, null, [J.gp(v_it_468, "spr")])
+	var _t603 = J.gp(v_it_468, "shadow")
+	if J.t(((not J.seq(v_mode_470, "kids")) if J.t(_t603) else _t603)):
 		if (not J.leq(J.gp(v_it_468, "shu"), null)):
-			var _t592 = env["shadowAt"]
-			J.cl(_t592, null, [v_ctx_467, J.add(v_x_472, J.mul(J.sub(J.gp(v_it_468, "shu"), J.gp(v_it_468, "ax")), v_w_475)), J.add(v_y_473, J.mul(J.sub(J.gp(v_it_468, "shv"), J.gp(v_it_468, "ay")), v_h_476)), J.mul(J.gp(v_it_468, "shadow"), v_u_474)])
+			var _t604 = env["shadowAt"]
+			J.cl(_t604, null, [v_ctx_467, J.add(v_x_472, J.mul(J.sub(J.gp(v_it_468, "shu"), J.gp(v_it_468, "ax")), v_w_475)), J.add(v_y_473, J.mul(J.sub(J.gp(v_it_468, "shv"), J.gp(v_it_468, "ay")), v_h_476)), J.mul(J.gp(v_it_468, "shadow"), v_u_474)])
 		else:
-			var _t593 = env["shadowAt"]
-			J.cl(_t593, null, [v_ctx_467, v_x_472, J.sub(v_y_473, J.mul(v_h_476, 0.01)), J.mul(J.gp(v_it_468, "shadow"), v_u_474)])
+			var _t605 = env["shadowAt"]
+			J.cl(_t605, null, [v_ctx_467, v_x_472, J.sub(v_y_473, J.mul(v_h_476, 0.01)), J.mul(J.gp(v_it_468, "shadow"), v_u_474)])
 	J.mc(v_ctx_467, "save", [])
 	J.mc(v_ctx_467, "translate", [v_x_472, v_y_473])
 	if J.t(J.gp(v_it_468, "water")):
 		v_g_480 = J.gp(J.gp(env["st"], "water"), "glug")
-		var _t594 = J.gp(v_it_468, "rot")
-		var _t595 = J.add((_t594 if J.t(_t594) else 0.0), (((sin(J.num(J.mul(v_t_469, 22.0))) * 0.012) * J.min_([1.0, v_g_480])) if J.cmp(v_g_480, 0.0, ">") else 0.0))
-		J.sp(v_it_468, "rot", _t595)
-	var _t596 = J.gp(v_it_468, "copier")
-	if J.t((J.cmp(J.gp(J.gp(env["st"], "copier"), "print"), 0.0, ">") if J.t(_t596) else _t596)):
+		var _t606 = J.gp(v_it_468, "rot")
+		var _t607 = J.add((_t606 if J.t(_t606) else 0.0), (((sin(J.num(J.mul(v_t_469, 22.0))) * 0.012) * J.min_([1.0, v_g_480])) if J.cmp(v_g_480, 0.0, ">") else 0.0))
+		J.sp(v_it_468, "rot", _t607)
+	var _t608 = J.gp(v_it_468, "copier")
+	if J.t((J.cmp(J.gp(J.gp(env["st"], "copier"), "print"), 0.0, ">") if J.t(_t608) else _t608)):
 		J.mc(v_ctx_467, "translate", [(J.mul(sin(J.num(J.mul(v_t_469, 60.0))), v_u_474) * 0.006), (J.mul(sin(J.num(J.mul(v_t_469, 47.0))), v_u_474) * 0.004)])
 	if J.t(J.gp(v_it_468, "rot")):
 		J.mc(v_ctx_467, "rotate", [J.gp(v_it_468, "rot")])
 	if J.t(J.gp(v_it_468, "flip")):
 		J.mc(v_ctx_467, "scale", [(-1.0), 1.0])
 	if J.t(J.gp(v_it_468, "fan")):
-		var _t597 = env["drawFan"]
-		J.cl(_t597, null, [v_ctx_467, v_it_468, v_F_471, v_t_469])
+		var _t609 = env["drawFan"]
+		J.cl(_t609, null, [v_ctx_467, v_it_468, v_F_471, v_t_469])
 		J.mc(v_ctx_467, "restore", [])
 		return null
 	if J.t(J.gp(v_it_468, "plant")):
@@ -1764,30 +1788,30 @@ func _f76(this_, a: Array, env):
 	v_T_479 = J.mul((-J.num(J.gp(v_it_468, "ay"))), v_h_476)
 	if (not J.seq(v_mode_470, "kids")):
 		J.mc(v_ctx_467, "drawImage", [v_im_477, v_L_478, v_T_479, v_w_475, v_h_476])
-	var _t598 = J.gp(v_it_468, "back")
-	if J.t(((not J.seq(v_mode_470, "base")) if J.t(_t598) else _t598)):
-		var _t599 = J.gp(v_it_468, "stn")
-		var _t600 = (J.gp(env["items"], J.gp(J.gp(env["STATIONS"], J.gp(v_it_468, "stn")), "mon")) if J.t(_t599) else _t599)
-		env["this_mon"] = _t600
-		var _t601 = env["deskSpill"]
-		J.cl(_t601, null, [v_ctx_467, v_L_478, v_T_479, v_w_475, v_h_476, v_u_474, v_t_469])
+	var _t610 = J.gp(v_it_468, "back")
+	if J.t(((not J.seq(v_mode_470, "base")) if J.t(_t610) else _t610)):
+		var _t611 = J.gp(v_it_468, "stn")
+		var _t612 = (J.gp(env["items"], J.gp(J.gp(env["STATIONS"], J.gp(v_it_468, "stn")), "mon")) if J.t(_t611) else _t611)
+		env["this_mon"] = _t612
+		var _t613 = env["deskSpill"]
+		J.cl(_t613, null, [v_ctx_467, v_L_478, v_T_479, v_w_475, v_h_476, v_u_474, v_t_469])
 	if (not J.seq(v_mode_470, "base")):
-		for _t602 in J.iter(J.gp(v_it_468, "kids")):
-			v_c_482 = _t602
-			var _t603 = env["drawKid"]
-			J.cl(_t603, null, [v_ctx_467, v_c_482, v_L_478, v_T_479, v_w_475, v_h_476, v_u_474, v_t_469])
+		for _t614 in J.iter(J.gp(v_it_468, "kids")):
+			v_c_482 = _t614
+			var _t615 = env["drawKid"]
+			J.cl(_t615, null, [v_ctx_467, v_c_482, v_L_478, v_T_479, v_w_475, v_h_476, v_u_474, v_t_469])
 	if J.seq(v_mode_470, "base"):
 		J.mc(v_ctx_467, "restore", [])
 		return null
 	if J.t(J.gp(v_it_468, "copier")):
-		var _t604 = env["copierFx"]
-		J.cl(_t604, null, [v_ctx_467, v_L_478, v_T_479, v_w_475, v_h_476, v_u_474, v_t_469])
+		var _t616 = env["copierFx"]
+		J.cl(_t616, null, [v_ctx_467, v_L_478, v_T_479, v_w_475, v_h_476, v_u_474, v_t_469])
 	if J.t(J.gp(v_it_468, "water")):
-		var _t605 = env["waterFx"]
-		J.cl(_t605, null, [v_ctx_467, v_L_478, v_T_479, v_w_475, v_h_476, v_u_474, v_t_469])
+		var _t617 = env["waterFx"]
+		J.cl(_t617, null, [v_ctx_467, v_L_478, v_T_479, v_w_475, v_h_476, v_u_474, v_t_469])
 	if J.t(J.gp(v_it_468, "stn")):
-		var _t606 = env["deskFx"]
-		J.cl(_t606, null, [v_ctx_467, v_it_468, v_L_478, v_T_479, v_w_475, v_h_476, v_u_474, v_t_469])
+		var _t618 = env["deskFx"]
+		J.cl(_t618, null, [v_ctx_467, v_it_468, v_L_478, v_T_479, v_w_475, v_h_476, v_u_474, v_t_469])
 	if J.t(J.gp(v_it_468, "glow")):
 		J.mc(v_ctx_467, "save", [])
 		J.sp(v_ctx_467, "globalCompositeOperation", "lighter")
@@ -1805,11 +1829,11 @@ func _f76(this_, a: Array, env):
 func _f78(this_, a: Array, env):
 	var v_c_491 = null; var v_m_492 = null; var v_q_493 = null
 	v_c_491 = J.arg(a, 0)
-	var _t607 = J.gp(v_c_491, "stn")
-	v_m_492 = (J.gp(J.gp(env["STATIONS"], J.gp(v_c_491, "stn")), "monSt") if J.t(_t607) else _t607)
+	var _t619 = J.gp(v_c_491, "stn")
+	v_m_492 = (J.gp(J.gp(env["STATIONS"], J.gp(v_c_491, "stn")), "monSt") if J.t(_t619) else _t619)
 	v_q_493 = (J.gp(v_m_492, "seq") if J.t(v_m_492) else (-1.0))
-	var _t608 = (not J.t(v_m_492))
-	if J.t((_t608 if _t608 else J.gp(J.gp(env["STATIONS"], J.gp(v_c_491, "stn")), "offline"))):
+	var _t620 = (not J.t(v_m_492))
+	if J.t((_t620 if _t620 else J.gp(J.gp(env["STATIONS"], J.gp(v_c_491, "stn")), "offline"))):
 		return "off"
 	if J.cmp(v_q_493, 0.0, "<"):
 		return "on"
@@ -1850,98 +1874,98 @@ func _f80(this_, a: Array, env):
 	v_h_508 = J.arg(a, 5)
 	v_u_509 = J.arg(a, 6)
 	v_t_510 = J.arg(a, 7)
-	var _t609 = J.gp(_s195["c"], "falling")
-	if J.t((J.gp(J.gp(_s195["c"], "falling"), "off") if J.t(_t609) else _t609)):
+	var _t621 = J.gp(_s195["c"], "falling")
+	if J.t((J.gp(J.gp(_s195["c"], "falling"), "off") if J.t(_t621) else _t621)):
 		return null
-	var _t610 = J.gp(J.gp(_s195["c"], "parent"), "stn")
-	v_sK_521 = (J.gp(J.gp(_s195["__p"]["STATIONS"], J.gp(J.gp(_s195["c"], "parent"), "stn")), "K") if J.t(_t610) else _t610)
-	var _t611 = J.gp(_s195["c"], "mug")
-	var _t612 = (v_sK_521 if J.t(_t611) else _t611)
-	var _t613 = (J.seq(J.gp(v_sK_521, "mode"), "sit") if J.t(_t612) else _t612)
-	var _t614 = (J.seq(J.gp(v_sK_521, "act"), "drink") if J.t(_t613) else _t613)
-	var _t615 = (J.cmp(J.gp(v_sK_521, "at"), 0.45, ">") if J.t(_t614) else _t614)
-	if J.t((J.cmp(J.gp(v_sK_521, "at"), J.sub(J.gp(v_sK_521, "dur"), 0.4), "<") if J.t(_t615) else _t615)):
+	var _t622 = J.gp(J.gp(_s195["c"], "parent"), "stn")
+	v_sK_521 = (J.gp(J.gp(_s195["__p"]["STATIONS"], J.gp(J.gp(_s195["c"], "parent"), "stn")), "K") if J.t(_t622) else _t622)
+	var _t623 = J.gp(_s195["c"], "mug")
+	var _t624 = (v_sK_521 if J.t(_t623) else _t623)
+	var _t625 = (J.seq(J.gp(v_sK_521, "mode"), "sit") if J.t(_t624) else _t624)
+	var _t626 = (J.seq(J.gp(v_sK_521, "act"), "drink") if J.t(_t625) else _t625)
+	var _t627 = (J.cmp(J.gp(v_sK_521, "at"), 0.45, ">") if J.t(_t626) else _t626)
+	if J.t((J.cmp(J.gp(v_sK_521, "at"), J.sub(J.gp(v_sK_521, "dur"), 0.4), "<") if J.t(_t627) else _t627)):
 		return null
-	var _t616 = _s195["__p"]["kidImg"]
-	v_key_511 = J.cl(_t616, null, [_s195["c"]])
-	var _t617 = _s195["__p"]["img"]
-	v_im_512 = J.cl(_t617, null, [v_key_511])
+	var _t628 = _s195["__p"]["kidImg"]
+	v_key_511 = J.cl(_t628, null, [_s195["c"]])
+	var _t629 = _s195["__p"]["img"]
+	v_im_512 = J.cl(_t629, null, [v_key_511])
 	if (not J.t(v_im_512)):
 		return null
 	v_a_513 = (((1.0 - J.div(J.gp(_s195["c"], "hide"), 0.6)) if J.cmp(J.gp(_s195["c"], "hide"), 0.6, "<") else 0.0) if J.cmp(J.gp(_s195["c"], "hide"), 0.0, ">") else 1.0)
 	if J.cmp(v_a_513, 0.0, "<="):
 		return null
 	v_ch_514 = J.mul(J.gp(_s195["c"], "h"), v_u_509)
-	var _t618 = J.gp(_s195["c"], "mon")
-	v_cw_515 = (J.mul(0.47, v_u_509) if J.t(((not J.t(J.gp(_s195["c"], "side"))) if J.t(_t618) else _t618)) else J.div(J.mul(v_ch_514, J.gp(v_im_512, "width")), J.gp(v_im_512, "height")))
-	var _t619 = J.gp(_s195["c"], "mon")
-	v_chh_516 = (J.div(J.mul(v_cw_515, J.gp(v_im_512, "height")), J.gp(v_im_512, "width")) if J.t(((not J.t(J.gp(_s195["c"], "side"))) if J.t(_t619) else _t619)) else v_ch_514)
+	var _t630 = J.gp(_s195["c"], "mon")
+	v_cw_515 = (J.mul(0.47, v_u_509) if J.t(((not J.t(J.gp(_s195["c"], "side"))) if J.t(_t630) else _t630)) else J.div(J.mul(v_ch_514, J.gp(v_im_512, "width")), J.gp(v_im_512, "height")))
+	var _t631 = J.gp(_s195["c"], "mon")
+	v_chh_516 = (J.div(J.mul(v_cw_515, J.gp(v_im_512, "height")), J.gp(v_im_512, "width")) if J.t(((not J.t(J.gp(_s195["c"], "side"))) if J.t(_t631) else _t631)) else v_ch_514)
 	v_x_517 = J.add(v_L_505, J.mul(J.gp(_s195["c"], "u"), v_w_507))
 	v_y_518 = J.add(v_T_506, J.mul(J.gp(_s195["c"], "v"), v_h_508))
 	if J.t(J.gp(_s195["c"], "on")):
-		var _t620 = J.gp(J.gp(_s195["c"], "parent"), "kids")
-		v_m_522 = J.mc(_t620, "find", [Callable(self, "_f81").bind(_s195)])
+		var _t632 = J.gp(J.gp(_s195["c"], "parent"), "kids")
+		v_m_522 = J.mc(_t632, "find", [Callable(self, "_f81").bind(_s195)])
 		if J.t(v_m_522):
-			var _t621 = J.add(J.add(v_L_505, J.mul(J.gp(v_m_522, "u"), v_w_507)), J.mul((J.sub(J.gp(_s195["c"], "u"), 0.5) * 0.47), v_u_509))
-			v_x_517 = _t621
-			var _t622 = J.sub(J.add(v_T_506, J.mul(J.gp(v_m_522, "v"), v_h_508)), (J.mul((J.sub(1.0, J.gp(_s195["c"], "v")) * 0.47), v_u_509) * 0.98))
-			v_y_518 = _t622
+			var _t633 = J.add(J.add(v_L_505, J.mul(J.gp(v_m_522, "u"), v_w_507)), J.mul((J.sub(J.gp(_s195["c"], "u"), 0.5) * 0.47), v_u_509))
+			v_x_517 = _t633
+			var _t634 = J.sub(J.add(v_T_506, J.mul(J.gp(v_m_522, "v"), v_h_508)), (J.mul((J.sub(1.0, J.gp(_s195["c"], "v")) * 0.47), v_u_509) * 0.98))
+			v_y_518 = _t634
 	J.mc(v_ctx_503, "save", [])
-	var _t623 = J.mul(J.gp(v_ctx_503, "globalAlpha"), v_a_513)
-	J.sp(v_ctx_503, "globalAlpha", _t623)
+	var _t635 = J.mul(J.gp(v_ctx_503, "globalAlpha"), v_a_513)
+	J.sp(v_ctx_503, "globalAlpha", _t635)
 	J.mc(v_ctx_503, "translate", [v_x_517, v_y_518])
 	v_r_519 = J.gp(_s195["c"], "rot")
 	if J.t(J.gp(_s195["c"], "paper")):
-		var _t624 = J.add(v_r_519, J.mul((sin(J.num(J.add(J.mul(v_t_510, 9.0), J.gp(_s195["c"], "ph")))) * 0.06), J.gp(_s195["__p"]["st"], "flutter")))
-		v_r_519 = _t624
+		var _t636 = J.add(v_r_519, J.mul((sin(J.num(J.add(J.mul(v_t_510, 9.0), J.gp(_s195["c"], "ph")))) * 0.06), J.gp(_s195["__p"]["st"], "flutter")))
+		v_r_519 = _t636
 	if J.t(J.gp(_s195["c"], "lamp")):
-		var _t625 = J.add(v_r_519, J.gp(J.gp(_s195["__p"]["st"], "lamp"), "sway"))
-		v_r_519 = _t625
+		var _t637 = J.add(v_r_519, J.gp(J.gp(_s195["__p"]["st"], "lamp"), "sway"))
+		v_r_519 = _t637
 	J.mc(v_ctx_503, "rotate", [v_r_519])
 	if J.t(J.gp(_s195["c"], "flip")):
 		J.mc(v_ctx_503, "scale", [(-1.0), 1.0])
 	if J.t(J.gp(_s195["c"], "paper")):
 		J.mc(v_ctx_503, "scale", [1.0, (0.62 - (J.mul(0.12, J.gp(_s195["__p"]["st"], "flutter")) * (0.5 + (0.5 * sin(J.num(J.add(J.mul(v_t_510, 13.0), J.gp(_s195["c"], "ph"))))))))])
 	v_kay_520 = (1.0 if J.leq(J.gp(_s195["c"], "ay"), null) else J.gp(_s195["c"], "ay"))
-	var _t626 = J.gp(_s195["c"], "back")
-	if J.t((J.gp(_s195["c"], "mon") if J.t(_t626) else _t626)):
-		var _t627 = _s195["__p"]["monHalo"]
-		var _t628 = _s195["__p"]["monState"]
-		J.cl(_t627, null, [v_ctx_503, J.cl(_t628, null, [_s195["c"]]), J.mul((-J.num((0.5 if J.leq(J.gp(_s195["c"], "ax"), null) else J.gp(_s195["c"], "ax")))), v_cw_515), J.mul((-J.num(v_kay_520)), v_chh_516), v_cw_515, v_chh_516, v_u_509, v_t_510])
+	var _t638 = J.gp(_s195["c"], "back")
+	if J.t((J.gp(_s195["c"], "mon") if J.t(_t638) else _t638)):
+		var _t639 = _s195["__p"]["monHalo"]
+		var _t640 = _s195["__p"]["monState"]
+		J.cl(_t639, null, [v_ctx_503, J.cl(_t640, null, [_s195["c"]]), J.mul((-J.num((0.5 if J.leq(J.gp(_s195["c"], "ax"), null) else J.gp(_s195["c"], "ax")))), v_cw_515), J.mul((-J.num(v_kay_520)), v_chh_516), v_cw_515, v_chh_516, v_u_509, v_t_510])
 	J.mc(v_ctx_503, "drawImage", [v_im_512, J.mul((-J.num((0.5 if J.leq(J.gp(_s195["c"], "ax"), null) else J.gp(_s195["c"], "ax")))), v_cw_515), J.mul((-J.num(v_kay_520)), v_chh_516), v_cw_515, v_chh_516])
 	if J.t(J.gp(_s195["c"], "side")):
-		var _t629 = _s195["__p"]["monScreen"]
-		J.cl(_t629, null, [v_ctx_503, _s195["c"], v_key_511, J.mul((-J.num((0.5 if J.leq(J.gp(_s195["c"], "ax"), null) else J.gp(_s195["c"], "ax")))), v_cw_515), J.mul((-J.num(v_kay_520)), v_chh_516), v_cw_515, v_chh_516, v_t_510])
+		var _t641 = _s195["__p"]["monScreen"]
+		J.cl(_t641, null, [v_ctx_503, _s195["c"], v_key_511, J.mul((-J.num((0.5 if J.leq(J.gp(_s195["c"], "ax"), null) else J.gp(_s195["c"], "ax")))), v_cw_515), J.mul((-J.num(v_kay_520)), v_chh_516), v_cw_515, v_chh_516, v_t_510])
 	if J.t(J.gp(_s195["c"], "lamp")):
-		var _t630 = _s195["__p"]["lampFx"]
-		J.cl(_t630, null, [v_ctx_503, v_cw_515, v_chh_516, v_u_509, v_t_510])
-	var _t631 = J.gp(_s195["c"], "mon")
-	var _t632 = ((not J.t(J.gp(_s195["c"], "side"))) if J.t(_t631) else _t631)
-	if J.t((J.seq(v_key_511, "op_mon_on") if J.t(_t632) else _t632)):
+		var _t642 = _s195["__p"]["lampFx"]
+		J.cl(_t642, null, [v_ctx_503, v_cw_515, v_chh_516, v_u_509, v_t_510])
+	var _t643 = J.gp(_s195["c"], "mon")
+	var _t644 = ((not J.t(J.gp(_s195["c"], "side"))) if J.t(_t643) else _t643)
+	if J.t((J.seq(v_key_511, "op_mon_on") if J.t(_t644) else _t644)):
 		v_g_524 = ((0.12 + (0.04 * sin(J.num(J.mul(v_t_510, 5.0))))) + (0.08 if (sin(J.num(J.mul(v_t_510, 0.7))) > 0.9) else 0.0))
 		J.sp(v_ctx_503, "globalCompositeOperation", "lighter")
-		var _t633 = ("rgba(120,190,255," + J.str(v_g_524) + ")")
-		J.sp(v_ctx_503, "fillStyle", _t633)
+		var _t645 = ("rgba(120,190,255," + J.str(v_g_524) + ")")
+		J.sp(v_ctx_503, "fillStyle", _t645)
 		J.mc(v_ctx_503, "fillRect", [((-J.num(v_cw_515)) * 0.44), ((-J.num(v_chh_516)) * 0.95), J.mul(v_cw_515, 0.88), J.mul(v_chh_516, 0.68)])
-	var _t634 = J.gp(_s195["c"], "mon")
-	if J.t((J.seq(v_key_511, "op_mon_static") if J.t(_t634) else _t634)):
+	var _t646 = J.gp(_s195["c"], "mon")
+	if J.t((J.seq(v_key_511, "op_mon_static") if J.t(_t646) else _t646)):
 		J.sp(v_ctx_503, "globalCompositeOperation", "lighter")
 		v_i_525 = 0.0
 		while true:
 			if not J.cmp(v_i_525, 5.0, "<"): break
-			var _t635 = ("rgba(255,255,255," + J.str((0.15 * randf())) + ")")
-			J.sp(v_ctx_503, "fillStyle", _t635)
+			var _t647 = ("rgba(255,255,255," + J.str((0.15 * randf())) + ")")
+			J.sp(v_ctx_503, "fillStyle", _t647)
 			J.mc(v_ctx_503, "fillRect", [((-J.num(v_cw_515)) * 0.42), ((-J.num(v_chh_516)) * (0.92 - (randf() * 0.62))), J.mul(v_cw_515, 0.84), 1.5])
 			v_i_525 = J.num(v_i_525) + 1.0
 	J.mc(v_ctx_503, "restore", [])
-	var _t636 = J.gp(_s195["c"], "mug")
-	if J.t((J.cmp(J.gp(_s195["c"], "puddle"), 0.0, ">") if J.t(_t636) else _t636)):
-		var _t637 = _s195["c"]
-		var _t638 = J.sub(J.gp(_t637, "puddle"), J.div(1.0, 60.0))
-		J.sp(_t637, "puddle", _t638)
+	var _t648 = J.gp(_s195["c"], "mug")
+	if J.t((J.cmp(J.gp(_s195["c"], "puddle"), 0.0, ">") if J.t(_t648) else _t648)):
+		var _t649 = _s195["c"]
+		var _t650 = J.sub(J.gp(_t649, "puddle"), J.div(1.0, 60.0))
+		J.sp(_t649, "puddle", _t650)
 		J.mc(v_ctx_503, "save", [])
-		var _t639 = ("rgba(70,40,20," + J.str((0.55 * J.min_([1.0, J.div(J.gp(_s195["c"], "puddle"), 2.0)]))) + ")")
-		J.sp(v_ctx_503, "fillStyle", _t639)
+		var _t651 = ("rgba(70,40,20," + J.str((0.55 * J.min_([1.0, J.div(J.gp(_s195["c"], "puddle"), 2.0)]))) + ")")
+		J.sp(v_ctx_503, "fillStyle", _t651)
 		J.mc(v_ctx_503, "beginPath", [])
 		J.mc(v_ctx_503, "ellipse", [J.add(v_x_517, J.mul(v_u_509, 0.06)), J.add(v_y_518, J.mul(v_u_509, 0.01)), J.mul(v_u_509, 0.07), J.mul(v_u_509, 0.016), 0.0, 0.0, J.mul(_s195["__p"]["PI"], 2.0)])
 		J.mc(v_ctx_503, "fill", [])
@@ -1974,52 +1998,52 @@ func _f82(this_, a: Array, env):
 		return null
 	v_m_537 = (J.gp(_s206["__p"]["st"], "mon") if J.t(J.gp(v_c_529, "ken")) else J.gp(_s206["__p"]["st"], "amon"))
 	v_q_538 = J.gp(v_m_537, "seq")
-	var _t640 = J.cmp(v_q_538, 0.0, ">=")
-	var _t643 = (J.seq(v_key_530, "op_mon_side_off") if _t640 else _t640)
-	if J.t(_t643):
-		var _t642 = J.cmp(v_q_538, 0.55, "<")
-		if not J.t(_t642):
-			var _t641 = J.cmp(v_q_538, 1.4, ">=")
-			_t642 = ((sin(J.num(J.mul(v_q_538, 60.0))) > 0.0) if _t641 else _t641)
-		_t643 = _t642
-	v_isStatic_539 = _t643
+	var _t652 = J.cmp(v_q_538, 0.0, ">=")
+	var _t655 = (J.seq(v_key_530, "op_mon_side_off") if _t652 else _t652)
+	if J.t(_t655):
+		var _t654 = J.cmp(v_q_538, 0.55, "<")
+		if not J.t(_t654):
+			var _t653 = J.cmp(v_q_538, 1.4, ">=")
+			_t654 = ((sin(J.num(J.mul(v_q_538, 60.0))) > 0.0) if _t653 else _t653)
+		_t655 = _t654
+	v_isStatic_539 = _t655
 	v_on_540 = J.seq(v_key_530, "op_mon_side_on")
-	var _t644 = (not J.t(v_on_540))
-	if ((not J.t(v_isStatic_539)) if _t644 else _t644):
+	var _t656 = (not J.t(v_on_540))
+	if ((not J.t(v_isStatic_539)) if _t656 else _t656):
 		return null
 	J.mc(_s206["ctx"], "save", [])
 	J.mc(_s206["ctx"], "beginPath", [])
 	J.mc(v_Q_536, "forEach", [Callable(self, "_f83").bind(_s206)])
 	J.mc(_s206["ctx"], "closePath", [])
 	J.mc(_s206["ctx"], "clip", [])
-	var _t645 = _s206["ctx"]
-	J.sp(_t645, "globalCompositeOperation", "lighter")
+	var _t657 = _s206["ctx"]
+	J.sp(_t657, "globalCompositeOperation", "lighter")
 	if J.t(v_on_540):
 		v_g_545 = ((0.1 + (0.04 * sin(J.num(J.mul(v_t_535, 5.0))))) + (0.08 if (sin(J.num(J.mul(v_t_535, 0.7))) > 0.9) else 0.0))
-		var _t646 = _s206["ctx"]
-		var _t647 = ("rgba(120,190,255," + J.str(v_g_545) + ")")
-		J.sp(_t646, "fillStyle", _t647)
+		var _t658 = _s206["ctx"]
+		var _t659 = ("rgba(120,190,255," + J.str(v_g_545) + ")")
+		J.sp(_t658, "fillStyle", _t659)
 		J.mc(_s206["ctx"], "fillRect", [_s206["L"], _s206["T"], _s206["w"], _s206["h"]])
 	else:
-		var _t648 = _s206["ctx"]
-		J.sp(_t648, "fillStyle", "rgba(120,120,150,.25)")
+		var _t660 = _s206["ctx"]
+		J.sp(_t660, "fillStyle", "rgba(120,120,150,.25)")
 		J.mc(_s206["ctx"], "fillRect", [_s206["L"], _s206["T"], _s206["w"], _s206["h"]])
 		v_i_546 = 0.0
 		while true:
 			if not J.cmp(v_i_546, 14.0, "<"): break
 			v_yy_547 = J.add(_s206["T"], J.mul(_s206["h"], (0.05 + (randf() * 0.7))))
 			v_a_548 = (0.25 + (randf() * 0.5))
-			var _t649 = _s206["ctx"]
-			var _t650 = ("rgba(" + J.str(J.bor((200.0 + (randf() * 55.0)), 0.0)) + "," + J.str(J.bor((200.0 + (randf() * 55.0)), 0.0)) + ",255," + J.str(v_a_548) + ")")
-			J.sp(_t649, "fillStyle", _t650)
+			var _t661 = _s206["ctx"]
+			var _t662 = ("rgba(" + J.str(J.bor((200.0 + (randf() * 55.0)), 0.0)) + "," + J.str(J.bor((200.0 + (randf() * 55.0)), 0.0)) + ",255," + J.str(v_a_548) + ")")
+			J.sp(_t661, "fillStyle", _t662)
 			J.mc(_s206["ctx"], "fillRect", [J.add(_s206["L"], J.mul(_s206["w"], 0.2)), v_yy_547, J.mul(_s206["w"], 0.75), J.max_([1.0, J.mul(_s206["h"], 0.012)])])
 			v_i_546 = J.num(v_i_546) + 1.0
 		v_i_549 = 0.0
 		while true:
 			if not J.cmp(v_i_549, 40.0, "<"): break
-			var _t651 = _s206["ctx"]
-			var _t652 = ("rgba(255,255,255," + J.str((randf() * 0.6)) + ")")
-			J.sp(_t651, "fillStyle", _t652)
+			var _t663 = _s206["ctx"]
+			var _t664 = ("rgba(255,255,255," + J.str((randf() * 0.6)) + ")")
+			J.sp(_t663, "fillStyle", _t664)
 			J.mc(_s206["ctx"], "fillRect", [J.add(_s206["L"], J.mul(_s206["w"], (0.22 + (randf() * 0.68)))), J.add(_s206["T"], J.mul(_s206["h"], (0.08 + (randf() * 0.62)))), 1.5, 1.5])
 			v_i_549 = J.num(v_i_549) + 1.0
 	J.mc(_s206["ctx"], "restore", [])
@@ -2044,8 +2068,8 @@ func _f85(this_, a: Array, env):
 	v_h_561 = J.arg(a, 5)
 	v_u_562 = J.arg(a, 6)
 	v_t_563 = J.arg(a, 7)
-	var _t653 = env["monLight"]
-	v_c_564 = J.cl(_t653, null, [v_s_557, v_t_563])
+	var _t665 = env["monLight"]
+	v_c_564 = J.cl(_t665, null, [v_s_557, v_t_563])
 	if (not J.t(v_c_564)):
 		return null
 	v_cx_565 = J.add(v_L_558, J.mul(v_w_560, 0.5))
@@ -2072,12 +2096,12 @@ func _f86(this_, a: Array, env):
 	v_u_576 = J.arg(a, 5)
 	v_t_577 = J.arg(a, 6)
 	v_m_578 = env["this_mon"]
-	var _t656 = v_m_578
-	if J.t(_t656):
-		var _t654 = env["monLight"]
-		var _t655 = env["monState"]
-		_t656 = J.cl(_t654, null, [J.cl(_t655, null, [v_m_578]), v_t_577])
-	v_c_579 = _t656
+	var _t668 = v_m_578
+	if J.t(_t668):
+		var _t666 = env["monLight"]
+		var _t667 = env["monState"]
+		_t668 = J.cl(_t666, null, [J.cl(_t667, null, [v_m_578]), v_t_577])
+	v_c_579 = _t668
 	if (not J.t(v_c_579)):
 		return null
 	v_x_580 = J.add(v_L_572, J.mul(J.gp(v_m_578, "u"), v_w_574))
@@ -2132,11 +2156,11 @@ func _f88(this_, a: Array, env):
 	v_h_601 = J.arg(a, 4)
 	v_u_602 = J.arg(a, 5)
 	v_t_603 = J.arg(a, 6)
-	var _t658 = J.gp(J.gp(env["st"], "copier"), "print")
-	var _t657 = J.gp(J.gp(env["st"], "copier"), "idle")
-	var _t660 = J.gp(J.gp(env["st"], "copier"), "print")
-	var _t659 = J.gp(J.gp(env["st"], "copier"), "idle")
-	v_k_604 = J.max_([_t660, (_t659 if J.t(_t659) else 0.0)])
+	var _t670 = J.gp(J.gp(env["st"], "copier"), "print")
+	var _t669 = J.gp(J.gp(env["st"], "copier"), "idle")
+	var _t672 = J.gp(J.gp(env["st"], "copier"), "print")
+	var _t671 = J.gp(J.gp(env["st"], "copier"), "idle")
+	v_k_604 = J.max_([_t672, (_t671 if J.t(_t671) else 0.0)])
 	if J.cmp(v_k_604, 0.0, "<="):
 		return null
 	v_q_605 = J.mod(J.mul(v_t_603, 1.6), 1.0)
@@ -2144,8 +2168,8 @@ func _f88(this_, a: Array, env):
 	v_e_607 = J.min_([1.0, J.mul(v_k_604, 3.0)])
 	J.mc(v_ctx_597, "save", [])
 	J.sp(v_ctx_597, "globalCompositeOperation", "lighter")
-	var _t661 = ("rgba(150,255,190," + J.str(J.mul(0.55, v_e_607)) + ")")
-	J.sp(v_ctx_597, "fillStyle", _t661)
+	var _t673 = ("rgba(150,255,190," + J.str(J.mul(0.55, v_e_607)) + ")")
+	J.sp(v_ctx_597, "fillStyle", _t673)
 	J.mc(v_ctx_597, "fillRect", [v_x_606, J.add(v_T_599, J.mul(v_h_601, 0.27)), J.mul(v_w_600, 0.03), J.mul(v_h_601, 0.06)])
 	v_g_608 = J.mc(v_ctx_597, "createRadialGradient", [J.add(v_L_598, J.mul(v_w_600, 0.55)), J.add(v_T_599, J.mul(v_h_601, 0.3)), 0.0, J.add(v_L_598, J.mul(v_w_600, 0.55)), J.add(v_T_599, J.mul(v_h_601, 0.3)), J.mul(v_w_600, 0.5)])
 	J.mc(v_g_608, "addColorStop", [0.0, ("rgba(150,255,190," + J.str(J.mul(0.25, v_e_607)) + ")")])
@@ -2173,17 +2197,17 @@ func _f89(this_, a: Array, env):
 	v_i_619 = 0.0
 	while true:
 		if not J.cmp(v_i_619, 9.0, "<"): break
-		var _t662 = env["rnd"]
-		var _t664 = J.mul(v_t_617, (0.7 + J.mul(J.cl(_t662, null, [v_i_619]), 0.6)))
-		var _t663 = env["rnd"]
-		v_q_620 = J.mod(J.add(_t664, J.cl(_t663, null, [J.add(v_i_619, 9.0)])), 1.0)
-		var _t665 = env["rnd"]
-		v_bx_621 = J.add(J.add(v_L_612, J.mul(v_w_614, (0.3 + J.mul(0.36, J.cl(_t665, null, [J.add(v_i_619, 3.0)]))))), (J.mul(sin(J.num(J.add(J.mul(v_t_617, 5.0), v_i_619))), v_w_614) * 0.03))
+		var _t674 = env["rnd"]
+		var _t676 = J.mul(v_t_617, (0.7 + J.mul(J.cl(_t674, null, [v_i_619]), 0.6)))
+		var _t675 = env["rnd"]
+		v_q_620 = J.mod(J.add(_t676, J.cl(_t675, null, [J.add(v_i_619, 9.0)])), 1.0)
+		var _t677 = env["rnd"]
+		v_bx_621 = J.add(J.add(v_L_612, J.mul(v_w_614, (0.3 + J.mul(0.36, J.cl(_t677, null, [J.add(v_i_619, 3.0)]))))), (J.mul(sin(J.num(J.add(J.mul(v_t_617, 5.0), v_i_619))), v_w_614) * 0.03))
 		v_by_622 = J.add(v_T_613, J.mul(v_h_615, (0.37 - J.mul(v_q_620, 0.3))))
-		var _t666 = env["rnd"]
-		v_r_623 = (J.mul(v_w_614, (0.03 + J.mul(0.05, J.cl(_t666, null, [J.add(v_i_619, 5.0)])))) * (0.6 + J.mul(v_q_620, 0.6)))
-		var _t667 = ("rgba(225,245,255," + J.str((0.85 * J.min_([1.0, v_k_618]))) + ")")
-		J.sp(v_ctx_611, "strokeStyle", _t667)
+		var _t678 = env["rnd"]
+		v_r_623 = (J.mul(v_w_614, (0.03 + J.mul(0.05, J.cl(_t678, null, [J.add(v_i_619, 5.0)])))) * (0.6 + J.mul(v_q_620, 0.6)))
+		var _t679 = ("rgba(225,245,255," + J.str((0.85 * J.min_([1.0, v_k_618]))) + ")")
+		J.sp(v_ctx_611, "strokeStyle", _t679)
 		J.sp(v_ctx_611, "lineWidth", 1.4)
 		J.mc(v_ctx_611, "beginPath", [])
 		J.mc(v_ctx_611, "arc", [v_bx_621, v_by_622, v_r_623, 0.0, J.mul(env["PI"], 2.0)])
@@ -2201,25 +2225,25 @@ func _f90(this_, a: Array, env):
 	v_h_631 = J.arg(a, 5)
 	v_u_632 = J.arg(a, 6)
 	v_t_633 = J.arg(a, 7)
-	var _t668 = J.gp(v_it_627, "stn")
-	v_K_634 = (J.gp(J.gp(env["STATIONS"], J.gp(v_it_627, "stn")), "K") if J.t(_t668) else _t668)
+	var _t680 = J.gp(v_it_627, "stn")
+	v_K_634 = (J.gp(J.gp(env["STATIONS"], J.gp(v_it_627, "stn")), "K") if J.t(_t680) else _t680)
 	if (not J.t(v_K_634)):
 		return null
 	J.mc(v_ctx_626, "save", [])
 	J.sp(v_ctx_626, "globalCompositeOperation", "lighter")
-	for _t669 in J.iter(J.gp(v_K_634, "keys")):
-		v_k_635 = _t669
-		var _t670 = ("rgba(200,240,255," + J.str(J.mul(J.gp(v_k_635, "life"), 3.0)) + ")")
-		J.sp(v_ctx_626, "fillStyle", _t670)
+	for _t681 in J.iter(J.gp(v_K_634, "keys")):
+		v_k_635 = _t681
+		var _t682 = ("rgba(200,240,255," + J.str(J.mul(J.gp(v_k_635, "life"), 3.0)) + ")")
+		J.sp(v_ctx_626, "fillStyle", _t682)
 		J.mc(v_ctx_626, "fillRect", [J.add(v_L_628, J.mul(J.gp(v_k_635, "u"), v_w_630)), J.add(v_T_629, J.mul(J.gp(v_k_635, "v"), v_h_631)), J.mul(v_w_630, 0.022), J.mul(v_h_631, 0.014)])
 	J.mc(v_ctx_626, "restore", [])
-	for _t671 in J.iter(env["drops"]):
-		v_d_636 = _t671
+	for _t683 in J.iter(env["drops"]):
+		v_d_636 = _t683
 		if J.seq(J.gp(v_d_636, "desk"), v_it_627):
 			v_x_637 = J.add(J.add(v_L_628, J.mul(J.gp(v_d_636, "u"), v_w_630)), J.mul(J.gp(v_d_636, "ox"), v_u_632))
 			v_y_638 = J.sub(J.add(v_T_629, J.mul(J.gp(v_d_636, "v"), v_h_631)), J.mul(J.gp(v_d_636, "z"), v_u_632))
-			var _t672 = ("rgba(80,46,22," + J.str((0.85 * J.min_([1.0, J.gp(v_d_636, "life")]))) + ")")
-			J.sp(v_ctx_626, "fillStyle", _t672)
+			var _t684 = ("rgba(80,46,22," + J.str((0.85 * J.min_([1.0, J.gp(v_d_636, "life")]))) + ")")
+			J.sp(v_ctx_626, "fillStyle", _t684)
 			J.mc(v_ctx_626, "beginPath", [])
 			J.mc(v_ctx_626, "ellipse", [v_x_637, v_y_638, J.mul(v_u_632, 0.009), (J.mul(v_u_632, 0.005) if J.t(J.gp(v_d_636, "land")) else J.mul(v_u_632, 0.012)), 0.0, 0.0, J.mul(env["PI"], 2.0)])
 			J.mc(v_ctx_626, "fill", [])
@@ -2230,14 +2254,14 @@ func _f91(this_, a: Array, env):
 	v_it_642 = J.arg(a, 1)
 	v_F_643 = J.arg(a, 2)
 	v_t_644 = J.arg(a, 3)
-	var _t673 = env["img"]
-	v_im_645 = J.cl(_t673, null, [J.gp(v_it_642, "spr")])
-	var _t674 = J.gp(v_F_643, "w")
-	v_w_646 = _t674
-	var _t675 = J.gp(v_F_643, "h")
-	v_h_647 = _t675
-	var _t676 = J.gp(v_F_643, "u")
-	v_u_648 = _t676
+	var _t685 = env["img"]
+	v_im_645 = J.cl(_t685, null, [J.gp(v_it_642, "spr")])
+	var _t686 = J.gp(v_F_643, "w")
+	v_w_646 = _t686
+	var _t687 = J.gp(v_F_643, "h")
+	v_h_647 = _t687
+	var _t688 = J.gp(v_F_643, "u")
+	v_u_648 = _t688
 	v_L_649 = J.mul((-0.5), v_w_646)
 	v_T_650 = (-J.num(v_h_647))
 	v_osc_651 = (sin(J.num(J.gp(J.gp(env["st"], "fan"), "osc"))) * (0.7 + J.mul(J.gp(J.gp(env["st"], "fan"), "boost"), 0.2)))
@@ -2258,10 +2282,10 @@ func _f91(this_, a: Array, env):
 	while true:
 		if not J.cmp(v_i_658, 3.0, "<"): break
 		v_a_659 = J.add(J.gp(J.gp(env["st"], "fan"), "spin"), J.div(J.mul(J.mul(v_i_658, 2.0), env["PI"]), 3.0))
-		var _t677 = ("rgba(235,230,210," + J.str((0.18 + (0.1 * J.min_([1.0, J.div(v_spd_657, 3.0)])))) + ")")
-		J.sp(v_ctx_641, "strokeStyle", _t677)
-		var _t678 = J.mul(v_r_656, 0.28)
-		J.sp(v_ctx_641, "lineWidth", _t678)
+		var _t689 = ("rgba(235,230,210," + J.str((0.18 + (0.1 * J.min_([1.0, J.div(v_spd_657, 3.0)])))) + ")")
+		J.sp(v_ctx_641, "strokeStyle", _t689)
+		var _t690 = J.mul(v_r_656, 0.28)
+		J.sp(v_ctx_641, "lineWidth", _t690)
 		J.mc(v_ctx_641, "beginPath", [])
 		J.mc(v_ctx_641, "arc", [v_cx_653, v_cy_654, J.mul(v_r_656, 0.62), v_a_659, J.add(J.add(v_a_659, 0.5), (0.35 * J.min_([1.0, J.div(v_spd_657, 3.0)])))])
 		J.mc(v_ctx_641, "stroke", [])
@@ -2269,8 +2293,8 @@ func _f91(this_, a: Array, env):
 	J.mc(v_ctx_641, "restore", [])
 	if J.cmp(J.gp(J.gp(env["st"], "fan"), "boost"), 0.2, ">"):
 		J.mc(v_ctx_641, "save", [])
-		var _t679 = ("rgba(230,240,255," + J.str((0.35 * J.min_([1.0, J.gp(J.gp(env["st"], "fan"), "boost")]))) + ")")
-		J.sp(v_ctx_641, "strokeStyle", _t679)
+		var _t691 = ("rgba(230,240,255," + J.str((0.35 * J.min_([1.0, J.gp(J.gp(env["st"], "fan"), "boost")]))) + ")")
+		J.sp(v_ctx_641, "strokeStyle", _t691)
 		J.sp(v_ctx_641, "lineWidth", 1.5)
 		v_i_660 = 0.0
 		while true:
@@ -2290,21 +2314,21 @@ func _f92(this_, a: Array, env):
 	v_ctx_666 = J.arg(a, 0)
 	v_it_667 = J.arg(a, 1)
 	v_t_668 = J.arg(a, 2)
-	var _t680 = J.gp(v_it_667, "ox")
-	v_ox_669 = (_t680 if J.t(_t680) else 0.0)
-	var _t681 = J.gp(v_it_667, "oz")
-	v_oz_670 = (_t681 if J.t(_t681) else 0.0)
-	var _t682 = env["P"]
-	var _t683 = J.cl(_t682, null, [J.add(J.gp(v_it_667, "x"), v_ox_669), J.add(J.gp(v_it_667, "y"), v_oz_670)])
-	var _t684 = J.gp(_t683, 0.0)
-	v_x_671 = _t684
-	var _t685 = J.gp(_t683, 1.0)
-	v_y_672 = _t685
-	var _t686 = env["U"]
-	v_u_673 = J.cl(_t686, null, [J.add(J.gp(v_it_667, "y"), v_oz_670)])
-	var _t687 = env["chairSprite"]
-	var _t688 = J.gp(v_it_667, "sw")
-	J.cl(_t687, null, [v_ctx_666, v_x_671, v_y_672, v_u_673, (_t688 if J.t(_t688) else 0.0), 0.0, "of_chair_back", J.gp(v_it_667, "h"), false])
+	var _t692 = J.gp(v_it_667, "ox")
+	v_ox_669 = (_t692 if J.t(_t692) else 0.0)
+	var _t693 = J.gp(v_it_667, "oz")
+	v_oz_670 = (_t693 if J.t(_t693) else 0.0)
+	var _t694 = env["P"]
+	var _t695 = J.cl(_t694, null, [J.add(J.gp(v_it_667, "x"), v_ox_669), J.add(J.gp(v_it_667, "y"), v_oz_670)])
+	var _t696 = J.gp(_t695, 0.0)
+	v_x_671 = _t696
+	var _t697 = J.gp(_t695, 1.0)
+	v_y_672 = _t697
+	var _t698 = env["U"]
+	v_u_673 = J.cl(_t698, null, [J.add(J.gp(v_it_667, "y"), v_oz_670)])
+	var _t699 = env["chairSprite"]
+	var _t700 = J.gp(v_it_667, "sw")
+	J.cl(_t699, null, [v_ctx_666, v_x_671, v_y_672, v_u_673, (_t700 if J.t(_t700) else 0.0), 0.0, "of_chair_back", J.gp(v_it_667, "h"), false])
 
 func _f93(this_, a: Array, env):
 	var v_ctx_676 = null; var v_x_677 = null; var v_y_678 = null; var v_u_679 = null; var v_sw_680 = null; var v_lean_681 = null; var v_front_682 = null; var v_hU_683 = null; var v_flipFront_684 = null; var v_anchorU_685 = null; var v_c_686 = null; var v_useBack_687 = null; var v_key_688 = null; var v_im_689 = null; var v_h_690 = null; var v_w_691 = null; var v_sx_692 = null; var v_ax_693 = null
@@ -2321,27 +2345,27 @@ func _f93(this_, a: Array, env):
 	v_c_686 = cos(J.num(v_sw_680))
 	v_useBack_687 = J.cmp(v_c_686, 0.0, "<")
 	v_key_688 = (("of_chair_front" if J.seq(v_front_682, "of_chair_back") else "of_chair_back") if J.t(v_useBack_687) else v_front_682)
-	var _t689 = env["img"]
-	v_im_689 = J.cl(_t689, null, [v_key_688])
+	var _t701 = env["img"]
+	v_im_689 = J.cl(_t701, null, [v_key_688])
 	if (not J.t(v_im_689)):
 		return null
 	v_h_690 = J.mul(v_hU_683, v_u_679)
 	v_w_691 = J.div(J.mul(v_h_690, J.gp(v_im_689, "width")), J.gp(v_im_689, "height"))
 	v_sx_692 = (J.max_([0.35, absf(J.num(v_c_686))]) * (1.0 if (not J.seq((sin(J.num(v_sw_680)) > 0.0), v_useBack_687)) else 1.0))
-	var _t690 = env["shadowAt"]
-	J.cl(_t690, null, [v_ctx_676, v_x_677, v_y_678, J.mul(v_w_691, 0.85), 0.34])
+	var _t702 = env["shadowAt"]
+	J.cl(_t702, null, [v_ctx_676, v_x_677, v_y_678, J.mul(v_w_691, 0.85), 0.34])
 	J.mc(v_ctx_676, "save", [])
 	J.mc(v_ctx_676, "translate", [v_x_677, v_y_678])
 	if J.t(v_lean_681):
 		J.mc(v_ctx_676, "translate", [0.0, ((-J.num(v_h_690)) * 0.4)])
 		J.mc(v_ctx_676, "rotate", [v_lean_681])
 		J.mc(v_ctx_676, "translate", [0.0, J.mul(v_h_690, 0.4)])
-	var _t693 = ((not J.t(v_useBack_687)) if J.t(v_flipFront_684) else v_flipFront_684)
-	if not J.t(_t693):
-		var _t691 = (not J.t(v_flipFront_684))
-		var _t692 = (v_useBack_687 if _t691 else _t691)
-		_t693 = ((not J.seq(v_front_682, "of_chair_back")) if J.t(_t692) else _t692)
-	J.mc(v_ctx_676, "scale", [J.mul(v_sx_692, ((-1.0) if J.t(_t693) else 1.0)), 1.0])
+	var _t705 = ((not J.t(v_useBack_687)) if J.t(v_flipFront_684) else v_flipFront_684)
+	if not J.t(_t705):
+		var _t703 = (not J.t(v_flipFront_684))
+		var _t704 = (v_useBack_687 if _t703 else _t703)
+		_t705 = ((not J.seq(v_front_682, "of_chair_back")) if J.t(_t704) else _t704)
+	J.mc(v_ctx_676, "scale", [J.mul(v_sx_692, ((-1.0) if J.t(_t705) else 1.0)), 1.0])
 	v_ax_693 = ((J.sub(1.0, v_anchorU_685) if J.t(v_useBack_687) else v_anchorU_685) if (not J.leq(v_anchorU_685, null)) else 0.5)
 	J.mc(v_ctx_676, "drawImage", [v_im_689, J.mul((-J.num(v_ax_693)), v_w_691), (-J.num(v_h_690)), v_w_691, v_h_690])
 	J.mc(v_ctx_676, "restore", [])
@@ -2352,27 +2376,27 @@ func _f94(this_, a: Array, env):
 	v___697 = J.arg(a, 1)
 	v_t_698 = J.arg(a, 2)
 	v_ch_699 = J.gp(env["K"], "ch")
-	var _t694 = env["P"]
-	var _t695 = J.cl(_t694, null, [J.add(J.gp(env["SEATV"], "x"), J.gp(v_ch_699, "dx")), J.add(J.gp(env["SEAT"], "y"), J.gp(v_ch_699, "dz"))])
-	var _t696 = J.gp(_t695, 0.0)
-	v_x_700 = _t696
-	var _t697 = J.gp(_t695, 1.0)
-	v_y_701 = _t697
-	var _t698 = env["U"]
-	v_u_702 = J.cl(_t698, null, [J.add(J.gp(env["SEAT"], "y"), J.gp(v_ch_699, "dz"))])
+	var _t706 = env["P"]
+	var _t707 = J.cl(_t706, null, [J.add(J.gp(env["SEATV"], "x"), J.gp(v_ch_699, "dx")), J.add(J.gp(env["SEAT"], "y"), J.gp(v_ch_699, "dz"))])
+	var _t708 = J.gp(_t707, 0.0)
+	v_x_700 = _t708
+	var _t709 = J.gp(_t707, 1.0)
+	v_y_701 = _t709
+	var _t710 = env["U"]
+	v_u_702 = J.cl(_t710, null, [J.add(J.gp(env["SEAT"], "y"), J.gp(v_ch_699, "dz"))])
 	v_bx_703 = v_x_700
-	var _t699 = env["chairSprite"]
-	J.cl(_t699, null, [v_ctx_696, v_bx_703, v_y_701, v_u_702, J.gp(v_ch_699, "sw"), 0.0, J.gp(env["CHAIR"], "spr"), J.gp(env["CHAIR"], "h"), true, J.sub(1.0, J.gp(env["CHAIR"], "back"))])
+	var _t711 = env["chairSprite"]
+	J.cl(_t711, null, [v_ctx_696, v_bx_703, v_y_701, v_u_702, J.gp(v_ch_699, "sw"), 0.0, J.gp(env["CHAIR"], "spr"), J.gp(env["CHAIR"], "h"), true, J.sub(1.0, J.gp(env["CHAIR"], "back"))])
 
 func _f95(this_, a: Array, env):
 	var v_ctx_706 = null; var v_c_707 = null; var v_p_708 = null; var v_F_709 = null; var v_im_710 = null; var v_G_711 = null; var v_fv_712 = null; var v_ch_713 = null; var v_cw_714 = null; var v_sg_715 = null; var v_fx_716 = null; var v_fy_717 = null; var v_q_718 = null
 	v_ctx_706 = J.arg(a, 0)
 	v_c_707 = J.arg(a, 1)
 	v_p_708 = J.gp(v_c_707, "parent")
-	var _t700 = env["frameOf"]
-	v_F_709 = J.cl(_t700, null, [v_p_708])
-	var _t701 = env["img"]
-	v_im_710 = J.cl(_t701, null, [J.gp(v_c_707, "spr")])
+	var _t712 = env["frameOf"]
+	v_F_709 = J.cl(_t712, null, [v_p_708])
+	var _t713 = env["img"]
+	v_im_710 = J.cl(_t713, null, [J.gp(v_c_707, "spr")])
 	if (not J.t(v_im_710)):
 		return null
 	v_G_711 = J.gp(v_c_707, "falling")
@@ -2383,30 +2407,30 @@ func _f95(this_, a: Array, env):
 	v_fx_716 = J.add(J.add(J.gp(v_F_709, "x"), J.mul(J.mul(v_sg_715, J.sub(J.gp(v_c_707, "u"), J.gp(v_p_708, "ax"))), J.gp(v_F_709, "w"))), J.mul(J.gp(v_G_711, "x"), J.gp(v_F_709, "u")))
 	v_fy_717 = J.add(J.add(J.gp(v_F_709, "y"), J.mul(J.sub(v_fv_712, J.gp(v_p_708, "ay")), J.gp(v_F_709, "h"))), J.mul(J.gp(v_F_709, "u"), 0.03))
 	if J.cmp(J.gp(v_G_711, "z"), 0.3, "<"):
-		var _t702 = env["shadowAt"]
-		J.cl(_t702, null, [v_ctx_706, v_fx_716, v_fy_717, J.mul(v_cw_714, 0.9), (0.25 * (1.0 - J.div(J.gp(v_G_711, "z"), 0.3)))])
+		var _t714 = env["shadowAt"]
+		J.cl(_t714, null, [v_ctx_706, v_fx_716, v_fy_717, J.mul(v_cw_714, 0.9), (0.25 * (1.0 - J.div(J.gp(v_G_711, "z"), 0.3)))])
 	J.mc(v_ctx_706, "save", [])
 	J.mc(v_ctx_706, "translate", [v_fx_716, J.sub(v_fy_717, J.mul(J.gp(v_G_711, "z"), J.gp(v_F_709, "u")))])
 	J.mc(v_ctx_706, "rotate", [J.gp(v_c_707, "rot")])
 	if J.t(J.gp(v_c_707, "flip")):
 		J.mc(v_ctx_706, "scale", [(-1.0), 1.0])
-	var _t705 = J.div((-J.num(v_cw_714)), 2.0)
-	var _t704 = (-J.num(v_ch_713))
-	var _t703 = J.gp(v_G_711, "off")
-	J.mc(v_ctx_706, "drawImage", [v_im_710, _t705, (_t704 * (0.6 if J.t((J.cmp(J.gp(v_G_711, "z"), 0.0, "<=") if J.t(_t703) else _t703)) else 1.0)), v_cw_714, v_ch_713])
+	var _t717 = J.div((-J.num(v_cw_714)), 2.0)
+	var _t716 = (-J.num(v_ch_713))
+	var _t715 = J.gp(v_G_711, "off")
+	J.mc(v_ctx_706, "drawImage", [v_im_710, _t717, (_t716 * (0.6 if J.t((J.cmp(J.gp(v_G_711, "z"), 0.0, "<=") if J.t(_t715) else _t715)) else 1.0)), v_cw_714, v_ch_713])
 	J.mc(v_ctx_706, "restore", [])
 	if J.cmp(J.gp(v_G_711, "land"), 0.0, ">="):
 		v_q_718 = J.div(J.sub(J.gp(v_G_711, "t"), J.gp(v_G_711, "land")), 0.5)
 		if J.cmp(v_q_718, 1.0, "<"):
 			J.mc(v_ctx_706, "save", [])
-			var _t706 = ("rgba(220,210,190," + J.str((0.6 * J.sub(1.0, v_q_718))) + ")")
-			J.sp(v_ctx_706, "strokeStyle", _t706)
+			var _t718 = ("rgba(220,210,190," + J.str((0.6 * J.sub(1.0, v_q_718))) + ")")
+			J.sp(v_ctx_706, "strokeStyle", _t718)
 			J.sp(v_ctx_706, "lineWidth", 2.0)
 			J.mc(v_ctx_706, "beginPath", [])
 			J.mc(v_ctx_706, "ellipse", [v_fx_716, v_fy_717, J.mul(J.gp(v_F_709, "u"), (0.08 + J.mul(v_q_718, 0.12))), J.mul(J.gp(v_F_709, "u"), (0.02 + J.mul(v_q_718, 0.03))), 0.0, 0.0, J.mul(env["PI"], 2.0)])
 			J.mc(v_ctx_706, "stroke", [])
-			var _t707 = env["text"]
-			J.cl(_t707, null, [v_ctx_706, v_fx_716, J.sub(v_fy_717, J.mul(J.gp(v_F_709, "u"), (0.2 + J.mul(v_q_718, 0.08)))), ("鏘！" if J.t(J.gp(v_c_707, "mug")) else ("啪！" if J.seq(J.gp(v_c_707, "spr"), "op_stack") else "哐！")), J.mul(J.gp(v_F_709, "u"), 0.13), J.sub(1.0, v_q_718)])
+			var _t719 = env["text"]
+			J.cl(_t719, null, [v_ctx_706, v_fx_716, J.sub(v_fy_717, J.mul(J.gp(v_F_709, "u"), (0.2 + J.mul(v_q_718, 0.08)))), ("鏘！" if J.t(J.gp(v_c_707, "mug")) else ("啪！" if J.seq(J.gp(v_c_707, "spr"), "op_stack") else "哐！")), J.mul(J.gp(v_F_709, "u"), 0.13), J.sub(1.0, v_q_718)])
 			J.mc(v_ctx_706, "restore", [])
 
 func _f96(this_, a: Array, env):
@@ -2414,22 +2438,22 @@ func _f96(this_, a: Array, env):
 	v_ctx_721 = J.arg(a, 0)
 	v_p_722 = J.arg(a, 1)
 	v_t_723 = J.arg(a, 2)
-	var _t708 = env["img"]
-	v_im_724 = J.cl(_t708, null, ["op_paper_fly"])
+	var _t720 = env["img"]
+	v_im_724 = J.cl(_t720, null, ["op_paper_fly"])
 	if (not J.t(v_im_724)):
 		return null
-	var _t709 = env["P"]
-	var _t710 = J.cl(_t709, null, [J.gp(v_p_722, "x"), J.gp(v_p_722, "y")])
-	var _t711 = J.gp(_t710, 0.0)
-	v_x_725 = _t711
-	var _t712 = J.gp(_t710, 1.0)
-	v_y_726 = _t712
-	var _t713 = env["U"]
-	v_u_727 = J.cl(_t713, null, [J.gp(v_p_722, "y")])
+	var _t721 = env["P"]
+	var _t722 = J.cl(_t721, null, [J.gp(v_p_722, "x"), J.gp(v_p_722, "y")])
+	var _t723 = J.gp(_t722, 0.0)
+	v_x_725 = _t723
+	var _t724 = J.gp(_t722, 1.0)
+	v_y_726 = _t724
+	var _t725 = env["U"]
+	v_u_727 = J.cl(_t725, null, [J.gp(v_p_722, "y")])
 	v_w_728 = (J.mul(J.gp(v_p_722, "w"), v_u_727) * 1.3)
 	v_h_729 = J.div(J.mul(v_w_728, J.gp(v_im_724, "height")), J.gp(v_im_724, "width"))
-	var _t714 = env["shadowAt"]
-	J.cl(_t714, null, [v_ctx_721, v_x_725, v_y_726, (J.mul(v_w_728, 0.6) * J.max_([0.3, J.sub(1.0, J.gp(v_p_722, "z"))])), 0.18])
+	var _t726 = env["shadowAt"]
+	J.cl(_t726, null, [v_ctx_721, v_x_725, v_y_726, (J.mul(v_w_728, 0.6) * J.max_([0.3, J.sub(1.0, J.gp(v_p_722, "z"))])), 0.18])
 	J.mc(v_ctx_721, "save", [])
 	J.mc(v_ctx_721, "translate", [v_x_725, J.sub(v_y_726, J.mul(J.gp(v_p_722, "z"), v_u_727))])
 	J.mc(v_ctx_721, "rotate", [J.gp(v_p_722, "rot")])
@@ -2438,13 +2462,13 @@ func _f96(this_, a: Array, env):
 	J.mc(v_ctx_721, "restore", [])
 
 func _f97(this_, a: Array, env):
-	var _t715 = J.seq(J.typeof_(J.G.get("MeshAnim")), "undefined")
-	if J.t((_t715 if _t715 else J.gp(J.gp(J.G.get("MeshAnim"), "RIG"), J.gp(env["STN"], "base")))):
+	var _t727 = J.seq(J.typeof_(J.G.get("MeshAnim")), "undefined")
+	if J.t((_t727 if _t727 else J.gp(J.gp(J.G.get("MeshAnim"), "RIG"), J.gp(env["STN"], "base")))):
 		return null
-	var _t716 = J.gp(J.G.get("MeshAnim"), "RIG")
-	var _t717 = J.gp(env["STN"], "base")
-	var _t718 = {"bones": J.gp(env["STN"], "bones")}
-	J.sp(_t716, _t717, _t718)
+	var _t728 = J.gp(J.G.get("MeshAnim"), "RIG")
+	var _t729 = J.gp(env["STN"], "base")
+	var _t730 = {"bones": J.gp(env["STN"], "bones")}
+	J.sp(_t728, _t729, _t730)
 
 func _f98(this_, a: Array, env):
 	var v_u_734 = null
@@ -2454,8 +2478,8 @@ func _f98(this_, a: Array, env):
 func _f100(this_, a: Array, env):
 	var v_s_768 = null
 	v_s_768 = J.arg(a, 0)
-	var _t747 = env["__p"]["rnd"]
-	return (J.sub(J.cl(_t747, null, [floor(J.num(J.add(J.mul(env["t"], 9.0), v_s_768)))]), 0.5) * 2.0)
+	var _t761 = env["__p"]["rnd"]
+	return (J.sub(J.cl(_t761, null, [floor(J.num(J.add(J.mul(env["t"], 9.0), v_s_768)))]), 0.5) * 2.0)
 
 func _f101(this_, a: Array, env):
 	var v_clipArms_778 = null; var v_A_779 = null; var v_gx_780 = null; var v_gy_781 = null; var v_R_782 = null; var v_g_783 = null; var v_a0_784 = null
@@ -2472,15 +2496,15 @@ func _f101(this_, a: Array, env):
 		J.mc(env["ctx"], "beginPath", [])
 		J.mc(env["ctx"], "rect", [(J.mul((-J.num(J.gp(env["S"], 0.0))), env["W"]) + J.mul(J.gp(v_A_779, 0.0), env["W"])), (J.mul((-J.num(J.gp(env["S"], 1.0))), env["H"]) + J.mul(J.gp(v_A_779, 1.0), env["H"])), J.mul(J.gp(v_A_779, 2.0), env["W"]), J.mul(J.gp(v_A_779, 3.0), env["H"])])
 		J.mc(env["ctx"], "clip", [])
-	var _t797 = ((not J.seq(J.typeof_(J.G.get("MeshAnim")), "undefined")) if J.t(env["mesh"]) else env["mesh"])
-	if J.t((J.seq(env["key"], J.gp(env["__p"]["STN"], "base")) if J.t(_t797) else _t797)):
+	var _t811 = ((not J.seq(J.typeof_(J.G.get("MeshAnim")), "undefined")) if J.t(env["mesh"]) else env["mesh"])
+	if J.t((J.seq(env["key"], J.gp(env["__p"]["STN"], "base")) if J.t(_t811) else _t811)):
 		J.mc(J.G.get("MeshAnim"), "draw", [env["ctx"], env["key"], J.mul((-J.sub(J.gp(env["S"], 0.0), 0.5)), env["W"]), J.mul(J.sub(1.0, J.gp(env["S"], 1.0)), env["H"]), env["H"], env["pose"], false])
 	else:
 		J.mc(env["ctx"], "drawImage", [env["im"], J.mul((-J.num(J.gp(env["S"], 0.0))), env["W"]), J.mul((-J.num(J.gp(env["S"], 1.0))), env["H"]), env["W"], env["H"]])
-	var _t798 = (not J.t(v_clipArms_778))
-	if (J.seq(env["key"], "npc_ken_sit_coffee") if _t798 else _t798):
-		var _t799 = env["__p"]["steam"]
-		J.cl(_t799, null, [env["ctx"], (J.mul((-J.num(J.gp(env["S"], 0.0))), env["W"]) + J.mul(env["W"], 0.28)), (J.mul((-J.num(J.gp(env["S"], 1.0))), env["H"]) + J.mul(env["H"], 0.27)), env["u"], env["t"]])
+	var _t812 = (not J.t(v_clipArms_778))
+	if (J.seq(env["key"], "npc_ken_sit_coffee") if _t812 else _t812):
+		var _t813 = env["__p"]["steam"]
+		J.cl(_t813, null, [env["ctx"], (J.mul((-J.num(J.gp(env["S"], 0.0))), env["W"]) + J.mul(env["W"], 0.28)), (J.mul((-J.num(J.gp(env["S"], 1.0))), env["H"]) + J.mul(env["H"], 0.27)), env["u"], env["t"]])
 	if J.t(((not J.seq(J.gp(env["__p"]["K"], "mode"), "jump")) if J.t(env["ml"]) else env["ml"])):
 		v_gx_780 = (J.mul((-J.num(J.gp(env["S"], 0.0))), env["W"]) + J.mul(env["W"], J.gp(J.gp(env["__p"]["STN"], "face"), 0.0)))
 		v_gy_781 = (J.mul((-J.num(J.gp(env["S"], 1.0))), env["H"]) + J.mul(env["H"], J.gp(J.gp(env["__p"]["STN"], "face"), 1.0)))
@@ -2489,10 +2513,10 @@ func _f101(this_, a: Array, env):
 		v_a0_784 = J.mul(0.42, J.gp(env["ml"], 3.0))
 		J.mc(v_g_783, "addColorStop", [0.0, ("rgba(" + J.str(J.gp(env["ml"], 0.0)) + "," + J.str(J.gp(env["ml"], 1.0)) + "," + J.str(J.gp(env["ml"], 2.0)) + "," + J.str(v_a0_784) + ")")])
 		J.mc(v_g_783, "addColorStop", [1.0, ("rgba(" + J.str(J.gp(env["ml"], 0.0)) + "," + J.str(J.gp(env["ml"], 1.0)) + "," + J.str(J.gp(env["ml"], 2.0)) + ",0)")])
-		var _t800 = env["ctx"]
-		J.sp(_t800, "globalCompositeOperation", "lighter")
-		var _t801 = env["ctx"]
-		J.sp(_t801, "fillStyle", v_g_783)
+		var _t814 = env["ctx"]
+		J.sp(_t814, "globalCompositeOperation", "lighter")
+		var _t815 = env["ctx"]
+		J.sp(_t815, "fillStyle", v_g_783)
 		J.mc(env["ctx"], "beginPath", [])
 		J.mc(env["ctx"], "arc", [v_gx_780, v_gy_781, v_R_782, 0.0, J.mul(env["__p"]["PI"], 2.0)])
 		J.mc(env["ctx"], "fill", [])
@@ -2504,26 +2528,30 @@ func _f99(this_, a: Array, env):
 	_s245["ctx"] = J.arg(a, 0)
 	v_n_738 = J.arg(a, 1)
 	_s245["t"] = J.arg(a, 2)
-	var _t719 = _s245["__p"]["stnOf"]
-	v_s0_740 = J.cl(_t719, null, [v_n_738])
-	var _t720 = (not J.t(v_s0_740))
-	if (_t720 if _t720 else (not J.t(J.gp(v_s0_740, "K")))):
+	var _t731 = (J.gp(_s245["__p"]["SC"], "_nat") if J.t(_s245["__p"]["SC"]) else _s245["__p"]["SC"])
+	if J.t(((not J.seq(J.typeof_(J.G.get("__nat_scKen")), "undefined")) if J.t(_t731) else _t731)):
+		var _t732 = J.G.get("__nat_scKen")
+		return J.cl(_t732, null, [_s245["ctx"], _s245["__p"]["SC"], v_n_738, _s245["t"]])
+	var _t733 = _s245["__p"]["stnOf"]
+	v_s0_740 = J.cl(_t733, null, [v_n_738])
+	var _t734 = (not J.t(v_s0_740))
+	if (_t734 if _t734 else (not J.t(J.gp(v_s0_740, "K")))):
 		return {"x": 0.0, "top": 0.0, "H": 0.0}
-	var _t721 = _s245["__p"]["use"]
-	J.cl(_t721, null, [v_s0_740])
+	var _t735 = _s245["__p"]["use"]
+	J.cl(_t735, null, [v_s0_740])
 	J.cl(_s245["__p"]["rig"], null, [])
 	v_ch_741 = J.gp(_s245["__p"]["K"], "ch")
-	var _t722 = _s245["__p"]["P"]
-	var _t723 = J.cl(_t722, null, [J.add(J.gp(_s245["__p"]["SEATV"], "x"), J.gp(v_ch_741, "dx")), J.add(J.gp(_s245["__p"]["SEAT"], "y"), J.gp(v_ch_741, "dz"))])
-	var _t724 = J.gp(_t723, 0.0)
-	v_x_742 = _t724
-	var _t725 = J.gp(_t723, 1.0)
-	v_y_743 = _t725
-	var _t726 = _s245["__p"]["U"]
-	_s245["u"] = J.cl(_t726, null, [J.gp(_s245["__p"]["SEAT"], "y")])
+	var _t736 = _s245["__p"]["P"]
+	var _t737 = J.cl(_t736, null, [J.add(J.gp(_s245["__p"]["SEATV"], "x"), J.gp(v_ch_741, "dx")), J.add(J.gp(_s245["__p"]["SEAT"], "y"), J.gp(v_ch_741, "dz"))])
+	var _t738 = J.gp(_t737, 0.0)
+	v_x_742 = _t738
+	var _t739 = J.gp(_t737, 1.0)
+	v_y_743 = _t739
+	var _t740 = _s245["__p"]["U"]
+	_s245["u"] = J.cl(_t740, null, [J.gp(_s245["__p"]["SEAT"], "y")])
 	v_sw_745 = J.gp(v_ch_741, "sw")
-	var _t727 = J.gp(v_n_738, "rx")
-	v_rx_746 = (J.gp(v_n_738, "rx") if J.t((J.cmp(J.gp(J.gp(v_n_738, "rx"), "t"), 0.0, ">=") if J.t(_t727) else _t727)) else null)
+	var _t741 = J.gp(v_n_738, "rx")
+	v_rx_746 = (J.gp(v_n_738, "rx") if J.t((J.cmp(J.gp(J.gp(v_n_738, "rx"), "t"), 0.0, ">=") if J.t(_t741) else _t741)) else null)
 	_s245["key"] = J.gp(_s245["__p"]["STN"], "base")
 	v_lift_748 = 0.0
 	_s245["sq"] = 1.0
@@ -2534,220 +2562,220 @@ func _f99(this_, a: Array, env):
 	v_a_754 = J.gp(_s245["__p"]["K"], "at")
 	_s245["sc"] = J.max_([0.35, absf(J.num(cos(J.num(v_sw_745))))])
 	if J.seq(J.gp(_s245["__p"]["K"], "mode"), "sit"):
-		var _t728 = J.seq(J.gp(_s245["__p"]["K"], "act"), "stretch")
-		if (J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if _t728 else _t728):
-			var _t729 = J.cmp(v_a_754, 0.3, ">")
-			v_on_766 = (J.cmp(v_a_754, J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.35), "<") if _t729 else _t729)
+		var _t742 = J.seq(J.gp(_s245["__p"]["K"], "act"), "stretch")
+		if (J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if _t742 else _t742):
+			var _t743 = J.cmp(v_a_754, 0.3, ">")
+			v_on_766 = (J.cmp(v_a_754, J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.35), "<") if _t743 else _t743)
 			if J.t(v_on_766):
 				_s245["key"] = J.gp(_s245["__p"]["STN"], "stretch")
 				_s245["mesh"] = false
-			var _t730 = _s245["__p"]["bump"]
-			var _t734 = (1.0 + J.mul(0.04, J.cl(_t730, null, [v_a_754, 0.3, 0.6, 1.2])))
-			var _t731 = _s245["__p"]["bump"]
-			var _t733 = J.cl(_t731, null, [v_a_754, 0.15, 0.3, 0.45])
-			var _t732 = _s245["__p"]["bump"]
-			var _t735 = (_t734 - J.mul(0.05, J.add(_t733, J.cl(_t732, null, [v_a_754, J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.5), J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.35), J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.2)]))))
-			_s245["sq"] = _t735
-			var _t736 = _s245["__p"]["bump"]
-			var _t737 = J.mul(0.02, J.cl(_t736, null, [v_a_754, 0.5, 1.3, 2.6]))
-			v_lift_748 = _t737
+			var _t744 = _s245["__p"]["bump"]
+			var _t748 = (1.0 + J.mul(0.04, J.cl(_t744, null, [v_a_754, 0.3, 0.6, 1.2])))
+			var _t745 = _s245["__p"]["bump"]
+			var _t747 = J.cl(_t745, null, [v_a_754, 0.15, 0.3, 0.45])
+			var _t746 = _s245["__p"]["bump"]
+			var _t749 = (_t748 - J.mul(0.05, J.add(_t747, J.cl(_t746, null, [v_a_754, J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.5), J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.35), J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.2)]))))
+			_s245["sq"] = _t749
+			var _t750 = _s245["__p"]["bump"]
+			var _t751 = J.mul(0.02, J.cl(_t750, null, [v_a_754, 0.5, 1.3, 2.6]))
+			v_lift_748 = _t751
 		else:
-			var _t738 = J.seq(J.gp(_s245["__p"]["K"], "act"), "drink")
-			if (J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if _t738 else _t738):
-				var _t739 = J.cmp(v_a_754, 0.45, ">")
-				v_on_767 = (J.cmp(v_a_754, J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.4), "<") if _t739 else _t739)
+			var _t752 = J.seq(J.gp(_s245["__p"]["K"], "act"), "drink")
+			if (J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if _t752 else _t752):
+				var _t753 = J.cmp(v_a_754, 0.45, ">")
+				v_on_767 = (J.cmp(v_a_754, J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.4), "<") if _t753 else _t753)
 				if J.t(v_on_767):
 					_s245["key"] = J.gp(_s245["__p"]["STN"], "drink")
 					_s245["mesh"] = false
-					var _t740 = _s245["__p"]["bump"]
-					var _t741 = J.sub(_s245["rot"], J.mul(0.06, J.cl(_t740, null, [v_a_754, 1.0, 1.6, 2.8])))
-					_s245["rot"] = _t741
-				var _t742 = _s245["__p"]["bump"]
-				var _t744 = J.cl(_t742, null, [v_a_754, 0.3, 0.45, 0.6])
-				var _t743 = _s245["__p"]["bump"]
-				var _t745 = (1.0 - J.mul(0.04, J.add(_t744, J.cl(_t743, null, [v_a_754, J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.55), J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.4), J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.25)]))))
-				_s245["sq"] = _t745
-		var _t746 = J.seq(J.gp(_s245["__p"]["K"], "act"), "type")
-		v_type_764 = (J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if _t746 else _t746)
+					var _t754 = _s245["__p"]["bump"]
+					var _t755 = J.sub(_s245["rot"], J.mul(0.06, J.cl(_t754, null, [v_a_754, 1.0, 1.6, 2.8])))
+					_s245["rot"] = _t755
+				var _t756 = _s245["__p"]["bump"]
+				var _t758 = J.cl(_t756, null, [v_a_754, 0.3, 0.45, 0.6])
+				var _t757 = _s245["__p"]["bump"]
+				var _t759 = (1.0 - J.mul(0.04, J.add(_t758, J.cl(_t757, null, [v_a_754, J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.55), J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.4), J.sub(J.gp(_s245["__p"]["K"], "dur"), 0.25)]))))
+				_s245["sq"] = _t759
+		var _t760 = J.seq(J.gp(_s245["__p"]["K"], "act"), "type")
+		v_type_764 = (J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if _t760 else _t760)
 		v_tap_765 = Callable(self, "_f100").bind(_s245)
-		var _t748 = {"armF": ((J.mul(0.035, J.cl(v_tap_765, null, [0.0])) + (0.02 * sin(J.num(J.mul(_s245["t"], 18.0))))) if J.t(v_type_764) else (0.01 * sin(J.num(J.mul(_s245["t"], 1.6))))), "head": (((0.012 * sin(J.num(J.mul(_s245["t"], 3.1)))) if J.t(v_type_764) else (0.025 * sin(J.num(J.mul(_s245["t"], 1.2))))) + ((sin(J.num(J.mul(J.gp(_s245["__p"]["K"], "mt"), 1.6))) * 0.06) if J.cmp(J.gp(v_n_738, "fear"), 25.0, ">=") else 0.0)), "body": (0.012 * sin(J.num(J.mul(_s245["t"], 1.8)))), "sy": (1.0 + (0.01 * sin(J.num(J.mul(_s245["t"], 1.8)))))}
-		_s245["pose"] = _t748
-		var _t749 = J.seq(J.gp(_s245["__p"]["K"], "act"), "neck")
-		if (J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if _t749 else _t749):
-			var _t750 = _s245["__p"]["ss"]
-			var _t752 = J.cl(_t750, null, [J.div(v_a_754, 0.4)])
-			var _t751 = _s245["__p"]["ss"]
-			v_e_769 = J.mul(_t752, J.cl(_t751, null, [J.div(J.sub(J.gp(_s245["__p"]["K"], "dur"), v_a_754), 0.4)]))
-			var _t753 = _s245["__p"]["cl"]
-			v_q_770 = J.mul(J.mul(J.cl(_t753, null, [J.div(J.sub(v_a_754, 0.3), 2.2)]), 2.0), _s245["__p"]["PI"])
-			var _t754 = _s245["pose"]
-			var _t755 = J.mul(((sin(J.num(v_q_770)) * 0.16) - 0.04), v_e_769)
-			J.sp(_t754, "head", _t755)
-			var _t756 = _s245["pose"]
-			var _t757 = (J.mul((-0.05), v_e_769) * sin(J.num(J.mul(v_q_770, 0.5))))
-			J.sp(_t756, "body", _t757)
-			var _t758 = _s245["pose"]
-			var _t759 = J.mul((sin(J.num(J.sub(v_q_770, 0.6))) * 0.12), v_e_769)
-			J.sp(_t758, "hair", _t759)
-			var _t760 = _s245["pose"]
-			var _t761 = J.mul(0.06, v_e_769)
-			J.sp(_t760, "armF", _t761)
-			var _t762 = J.mul(_s245["sq"], (1.0 + J.mul(0.02, v_e_769)))
-			_s245["sq"] = _t762
-		var _t763 = J.seq(J.gp(_s245["__p"]["K"], "act"), "vibe")
+		var _t762 = {"armF": ((J.mul(0.035, J.cl(v_tap_765, null, [0.0])) + (0.02 * sin(J.num(J.mul(_s245["t"], 18.0))))) if J.t(v_type_764) else (0.01 * sin(J.num(J.mul(_s245["t"], 1.6))))), "head": (((0.012 * sin(J.num(J.mul(_s245["t"], 3.1)))) if J.t(v_type_764) else (0.025 * sin(J.num(J.mul(_s245["t"], 1.2))))) + ((sin(J.num(J.mul(J.gp(_s245["__p"]["K"], "mt"), 1.6))) * 0.06) if J.cmp(J.gp(v_n_738, "fear"), 25.0, ">=") else 0.0)), "body": (0.012 * sin(J.num(J.mul(_s245["t"], 1.8)))), "sy": (1.0 + (0.01 * sin(J.num(J.mul(_s245["t"], 1.8)))))}
+		_s245["pose"] = _t762
+		var _t763 = J.seq(J.gp(_s245["__p"]["K"], "act"), "neck")
 		if (J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if _t763 else _t763):
 			var _t764 = _s245["__p"]["ss"]
 			var _t766 = J.cl(_t764, null, [J.div(v_a_754, 0.4)])
 			var _t765 = _s245["__p"]["ss"]
-			v_e_771 = J.mul(_t766, J.cl(_t765, null, [J.div(J.sub(J.gp(_s245["__p"]["K"], "dur"), v_a_754), 0.4)]))
+			v_e_769 = J.mul(_t766, J.cl(_t765, null, [J.div(J.sub(J.gp(_s245["__p"]["K"], "dur"), v_a_754), 0.4)]))
+			var _t767 = _s245["__p"]["cl"]
+			v_q_770 = J.mul(J.mul(J.cl(_t767, null, [J.div(J.sub(v_a_754, 0.3), 2.2)]), 2.0), _s245["__p"]["PI"])
+			var _t768 = _s245["pose"]
+			var _t769 = J.mul(((sin(J.num(v_q_770)) * 0.16) - 0.04), v_e_769)
+			J.sp(_t768, "head", _t769)
+			var _t770 = _s245["pose"]
+			var _t771 = (J.mul((-0.05), v_e_769) * sin(J.num(J.mul(v_q_770, 0.5))))
+			J.sp(_t770, "body", _t771)
+			var _t772 = _s245["pose"]
+			var _t773 = J.mul((sin(J.num(J.sub(v_q_770, 0.6))) * 0.12), v_e_769)
+			J.sp(_t772, "hair", _t773)
+			var _t774 = _s245["pose"]
+			var _t775 = J.mul(0.06, v_e_769)
+			J.sp(_t774, "armF", _t775)
+			var _t776 = J.mul(_s245["sq"], (1.0 + J.mul(0.02, v_e_769)))
+			_s245["sq"] = _t776
+		var _t777 = J.seq(J.gp(_s245["__p"]["K"], "act"), "vibe")
+		if (J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if _t777 else _t777):
+			var _t778 = _s245["__p"]["ss"]
+			var _t780 = J.cl(_t778, null, [J.div(v_a_754, 0.4)])
+			var _t779 = _s245["__p"]["ss"]
+			v_e_771 = J.mul(_t780, J.cl(_t779, null, [J.div(J.sub(J.gp(_s245["__p"]["K"], "dur"), v_a_754), 0.4)]))
 			v_beat_772 = absf(J.num(sin(J.num((J.mul(v_a_754, _s245["__p"]["PI"]) * 2.2)))))
-			var _t767 = _s245["pose"]
-			var _t768 = J.mul((J.mul((-0.05), v_beat_772) + 0.02), v_e_771)
-			J.sp(_t767, "head", _t768)
-			var _t769 = _s245["pose"]
-			var _t770 = J.mul((0.1 * sin(J.num(((J.mul(v_a_754, _s245["__p"]["PI"]) * 2.2) - 0.8)))), v_e_771)
-			J.sp(_t769, "hair", _t770)
-			var _t771 = _s245["pose"]
-			var _t772 = _s245["__p"]["rnd"]
-			var _t773 = ((0.03 * J.sub(J.cl(_t772, null, [floor(J.num(J.mul(_s245["t"], 9.0)))]), 0.5)) * 2.0)
-			J.sp(_t771, "armF", _t773)
+			var _t781 = _s245["pose"]
+			var _t782 = J.mul((J.mul((-0.05), v_beat_772) + 0.02), v_e_771)
+			J.sp(_t781, "head", _t782)
+			var _t783 = _s245["pose"]
+			var _t784 = J.mul((0.1 * sin(J.num(((J.mul(v_a_754, _s245["__p"]["PI"]) * 2.2) - 0.8)))), v_e_771)
+			J.sp(_t783, "hair", _t784)
+			var _t785 = _s245["pose"]
+			var _t786 = _s245["__p"]["rnd"]
+			var _t787 = ((0.03 * J.sub(J.cl(_t786, null, [floor(J.num(J.mul(_s245["t"], 9.0)))]), 0.5)) * 2.0)
+			J.sp(_t785, "armF", _t787)
 		if J.t(v_rx_746):
 			v_p_773 = J.div(J.gp(v_rx_746, "t"), J.gp(v_rx_746, "dur"))
 			if J.seq(J.gp(v_rx_746, "k"), "flinch"):
-				var _t774 = (1.0 - (0.06 * J.sub(1.0, v_p_773)))
-				_s245["sq"] = _t774
-				var _t775 = (((randf() - 0.5) * 3.0) * J.sub(1.0, v_p_773))
-				_s245["jx"] = _t775
-				var _t776 = _s245["pose"]
-				var _t777 = ((-0.08) * J.sub(1.0, v_p_773))
-				J.sp(_t776, "head", _t777)
+				var _t788 = (1.0 - (0.06 * J.sub(1.0, v_p_773)))
+				_s245["sq"] = _t788
+				var _t789 = (((randf() - 0.5) * 3.0) * J.sub(1.0, v_p_773))
+				_s245["jx"] = _t789
+				var _t790 = _s245["pose"]
+				var _t791 = ((-0.08) * J.sub(1.0, v_p_773))
+				J.sp(_t790, "head", _t791)
 			if J.seq(J.gp(v_rx_746, "k"), "rational"):
 				v_s_774 = sin(J.num(J.mul(J.min_([1.0, J.div(J.gp(v_rx_746, "t"), 0.55)]), _s245["__p"]["PI"])))
-				var _t778 = (1.0 + J.mul(0.04, v_s_774))
-				_s245["sq"] = _t778
-				var _t779 = J.mul(0.02, v_s_774)
-				v_lift_748 = _t779
-		var _t780 = J.cmp(J.gp(v_n_738, "fear"), 25.0, ">=")
-		if (J.cmp(J.gp(v_n_738, "fear"), 50.0, "<") if _t780 else _t780):
-			var _t781 = J.add(_s245["jx"], ((randf() - 0.5) * 1.2))
-			_s245["jx"] = _t781
+				var _t792 = (1.0 + J.mul(0.04, v_s_774))
+				_s245["sq"] = _t792
+				var _t793 = J.mul(0.02, v_s_774)
+				v_lift_748 = _t793
+		var _t794 = J.cmp(J.gp(v_n_738, "fear"), 25.0, ">=")
+		if (J.cmp(J.gp(v_n_738, "fear"), 50.0, "<") if _t794 else _t794):
+			var _t795 = J.add(_s245["jx"], ((randf() - 0.5) * 1.2))
+			_s245["jx"] = _t795
 	else:
 		if J.seq(J.gp(_s245["__p"]["K"], "mode"), "jump"):
 			_s245["key"] = J.gp(_s245["__p"]["STN"], "jump")
 			_s245["mesh"] = false
 			v_p_775 = J.div(J.gp(_s245["__p"]["K"], "mt"), 0.62)
-			var _t782 = ((sin(J.num(J.mul(J.min_([1.0, J.mul(v_p_775, 1.3)]), _s245["__p"]["PI"]))) * 0.16) + ((-0.02) if J.cmp(v_p_775, 0.12, "<") else 0.0))
-			v_lift_748 = _t782
-			var _t783 = (0.92 if J.cmp(v_p_775, 0.12, "<") else (1.0 + (0.08 * sin(J.num(J.mul(J.min_([1.0, J.mul(v_p_775, 1.3)]), _s245["__p"]["PI"]))))))
-			_s245["sq"] = _t783
-			var _t784 = ((randf() - 0.5) * 2.0)
-			_s245["jx"] = _t784
+			var _t796 = ((sin(J.num(J.mul(J.min_([1.0, J.mul(v_p_775, 1.3)]), _s245["__p"]["PI"]))) * 0.16) + ((-0.02) if J.cmp(v_p_775, 0.12, "<") else 0.0))
+			v_lift_748 = _t796
+			var _t797 = (0.92 if J.cmp(v_p_775, 0.12, "<") else (1.0 + (0.08 * sin(J.num(J.mul(J.min_([1.0, J.mul(v_p_775, 1.3)]), _s245["__p"]["PI"]))))))
+			_s245["sq"] = _t797
+			var _t798 = ((randf() - 0.5) * 2.0)
+			_s245["jx"] = _t798
 		else:
 			if J.seq(J.gp(_s245["__p"]["K"], "mode"), "rise"):
 				v_p_776 = J.div(J.gp(_s245["__p"]["K"], "mt"), 0.34)
-				var _t785 = J.sub(_s245["rot"], (0.18 * sin(J.num((J.mul(v_p_776, _s245["__p"]["PI"]) * 0.5)))))
-				_s245["rot"] = _t785
-				var _t786 = J.mul(0.04, v_p_776)
-				v_lift_748 = _t786
-				var _t787 = (1.0 - (0.05 * sin(J.num(J.mul(v_p_776, _s245["__p"]["PI"])))))
-				_s245["sq"] = _t787
+				var _t799 = J.sub(_s245["rot"], (0.18 * sin(J.num((J.mul(v_p_776, _s245["__p"]["PI"]) * 0.5)))))
+				_s245["rot"] = _t799
+				var _t800 = J.mul(0.04, v_p_776)
+				v_lift_748 = _t800
+				var _t801 = (1.0 - (0.05 * sin(J.num(J.mul(v_p_776, _s245["__p"]["PI"])))))
+				_s245["sq"] = _t801
 				_s245["mesh"] = false
 			else:
 				if J.seq(J.gp(_s245["__p"]["K"], "mode"), "sitdown"):
 					v_p_777 = J.div(J.gp(_s245["__p"]["K"], "mt"), 0.32)
-					var _t788 = _s245["__p"]["ss"]
-					var _t789 = (0.07 * J.sub(1.0, J.cl(_t788, null, [v_p_777])))
-					v_lift_748 = _t789
-					var _t790 = ((1.0 - (0.06 * sin(J.num(J.mul(J.div(J.sub(v_p_777, 0.6), 0.4), _s245["__p"]["PI"]))))) if J.cmp(v_p_777, 0.6, ">") else 1.0)
-					_s245["sq"] = _t790
+					var _t802 = _s245["__p"]["ss"]
+					var _t803 = (0.07 * J.sub(1.0, J.cl(_t802, null, [v_p_777])))
+					v_lift_748 = _t803
+					var _t804 = ((1.0 - (0.06 * sin(J.num(J.mul(J.div(J.sub(v_p_777, 0.6), 0.4), _s245["__p"]["PI"]))))) if J.cmp(v_p_777, 0.6, ">") else 1.0)
+					_s245["sq"] = _t804
 	if J.cmp(J.gp(_s245["__p"]["K"], "pop"), 0.0, ">"):
-		var _t791 = J.mul(_s245["sq"], (1.0 - (0.05 * sin(J.num(J.mul(J.div(J.gp(_s245["__p"]["K"], "pop"), 0.18), _s245["__p"]["PI"]))))))
-		_s245["sq"] = _t791
+		var _t805 = J.mul(_s245["sq"], (1.0 - (0.05 * sin(J.num(J.mul(J.div(J.gp(_s245["__p"]["K"], "pop"), 0.18), _s245["__p"]["PI"]))))))
+		_s245["sq"] = _t805
 	if (not J.seq(J.gp(_s245["__p"]["K"], "mode"), "jump")):
-		var _t792 = _s245["__p"]["chairSprite"]
-		J.cl(_t792, null, [_s245["ctx"], v_x_742, v_y_743, _s245["u"], v_sw_745, J.gp(v_ch_741, "lean"), J.gp(_s245["__p"]["CHAIR"], "spr"), J.gp(_s245["__p"]["CHAIR"], "h"), true, J.sub(1.0, J.gp(_s245["__p"]["CHAIR"], "back"))])
+		var _t806 = _s245["__p"]["chairSprite"]
+		J.cl(_t806, null, [_s245["ctx"], v_x_742, v_y_743, _s245["u"], v_sw_745, J.gp(v_ch_741, "lean"), J.gp(_s245["__p"]["CHAIR"], "spr"), J.gp(_s245["__p"]["CHAIR"], "h"), true, J.sub(1.0, J.gp(_s245["__p"]["CHAIR"], "back"))])
 	_s245["im"] = J.gp(J.G.get("SPR"), _s245["key"])
-	var _t793 = _s245["__p"]["ok"]
-	if (not J.t(J.cl(_t793, null, [_s245["key"]]))):
+	var _t807 = _s245["__p"]["ok"]
+	if (not J.t(J.cl(_t807, null, [_s245["key"]]))):
 		return {"x": v_x_742, "top": J.sub(v_y_743, _s245["u"])}
 	_s245["S"] = J.gp(_s245["__p"]["SIT"], _s245["key"])
-	var _t794 = _s245["__p"]["seatH"]
-	_s245["H"] = J.div(J.mul(J.cl(_t794, null, [_s245["u"]]), J.gp(_s245["im"], "naturalHeight")), J.gp(J.gp(J.G.get("SPR"), "npc_ken_sit"), "naturalHeight"))
+	var _t808 = _s245["__p"]["seatH"]
+	_s245["H"] = J.div(J.mul(J.cl(_t808, null, [_s245["u"]]), J.gp(_s245["im"], "naturalHeight")), J.gp(J.gp(J.G.get("SPR"), "npc_ken_sit"), "naturalHeight"))
 	_s245["W"] = J.div(J.mul(_s245["H"], J.gp(_s245["im"], "naturalWidth")), J.gp(_s245["im"], "naturalHeight"))
 	_s245["bx"] = v_x_742
 	_s245["by"] = J.sub(v_y_743, J.mul(v_lift_748, _s245["u"]))
-	var _t795 = _s245["__p"]["monLight"]
-	var _t796 = _s245["__p"]["monState"]
-	_s245["ml"] = J.cl(_t795, null, [J.cl(_t796, null, [J.gp(_s245["__p"]["items"], J.gp(_s245["__p"]["STN"], "mon"))]), _s245["t"]])
+	var _t809 = _s245["__p"]["monLight"]
+	var _t810 = _s245["__p"]["monState"]
+	_s245["ml"] = J.cl(_t809, null, [J.cl(_t810, null, [J.gp(_s245["__p"]["items"], J.gp(_s245["__p"]["STN"], "mon"))]), _s245["t"]])
 	v_body_763 = Callable(self, "_f101").bind(_s245)
 	J.cl(v_body_763, null, [false])
-	var _t802 = _s245["__p"]["drawItem"]
-	J.cl(_t802, null, [_s245["ctx"], J.gp(_s245["__p"]["items"], J.gp(_s245["__p"]["STN"], "desk")), _s245["t"], "base"])
-	var _t803 = J.seq(_s245["key"], J.gp(_s245["__p"]["STN"], "base"))
-	if ((not J.seq(J.gp(_s245["__p"]["K"], "mode"), "jump")) if _t803 else _t803):
+	var _t816 = _s245["__p"]["drawItem"]
+	J.cl(_t816, null, [_s245["ctx"], J.gp(_s245["__p"]["items"], J.gp(_s245["__p"]["STN"], "desk")), _s245["t"], "base"])
+	var _t817 = J.seq(_s245["key"], J.gp(_s245["__p"]["STN"], "base"))
+	if ((not J.seq(J.gp(_s245["__p"]["K"], "mode"), "jump")) if _t817 else _t817):
 		J.cl(v_body_763, null, [true])
-	var _t804 = _s245["__p"]["drawItem"]
-	J.cl(_t804, null, [_s245["ctx"], J.gp(_s245["__p"]["items"], J.gp(_s245["__p"]["STN"], "desk")), _s245["t"], "kids"])
-	var _t805 = J.seq(J.gp(_s245["__p"]["K"], "mode"), "sit")
-	var _t806 = (J.seq(J.gp(_s245["__p"]["K"], "act"), "stretch") if _t805 else _t805)
-	var _t807 = (J.gp(_s245["__p"]["STN"], "stretchSay") if _t806 else _t806)
-	var _t808 = (J.cmp(v_a_754, 0.6, ">") if J.t(_t807) else _t807)
-	if J.t((J.cmp(v_a_754, 2.4, "<") if J.t(_t808) else _t808)):
-		var _t809 = _s245["__p"]["text"]
-		var _t811 = _s245["ctx"]
-		var _t812 = J.sub(v_x_742, J.mul(_s245["u"], 0.78))
-		var _t813 = J.sub(v_y_743, J.mul(_s245["u"], 0.72))
-		var _t814 = J.gp(_s245["__p"]["STN"], "stretchSay")
-		var _t815 = J.mul(_s245["u"], 0.15)
-		var _t810 = _s245["__p"]["bump"]
-		J.cl(_t809, null, [_t811, _t812, _t813, _t814, _t815, J.cl(_t810, null, [v_a_754, 0.7, 0.9, 2.3])])
-	var _t816 = J.seq(J.gp(_s245["__p"]["K"], "mode"), "sit")
-	var _t817 = (J.seq(J.gp(_s245["__p"]["K"], "act"), "drink") if _t816 else _t816)
-	var _t818 = (J.gp(_s245["__p"]["STN"], "drinkSay") if _t817 else _t817)
-	var _t819 = (J.cmp(v_a_754, 0.9, ">") if J.t(_t818) else _t818)
-	var _t820 = (J.cmp(v_a_754, 3.0, "<") if J.t(_t819) else _t819)
-	if J.t((J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if J.t(_t820) else _t820)):
-		var _t821 = _s245["__p"]["text"]
-		var _t823 = _s245["ctx"]
-		var _t824 = J.sub(v_x_742, J.mul(_s245["u"], 0.62))
-		var _t825 = J.sub(v_y_743, J.mul(_s245["u"], 0.86))
-		var _t826 = J.gp(_s245["__p"]["STN"], "drinkSay")
-		var _t827 = J.mul(_s245["u"], 0.12)
-		var _t822 = _s245["__p"]["bump"]
-		J.cl(_t821, null, [_t823, _t824, _t825, _t826, _t827, J.cl(_t822, null, [v_a_754, 1.0, 1.3, 2.8])])
-	var _t828 = J.seq(J.gp(_s245["__p"]["K"], "mode"), "sit")
-	var _t829 = (J.seq(J.gp(_s245["__p"]["K"], "act"), "vibe") if _t828 else _t828)
-	if (J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if _t829 else _t829):
+	var _t818 = _s245["__p"]["drawItem"]
+	J.cl(_t818, null, [_s245["ctx"], J.gp(_s245["__p"]["items"], J.gp(_s245["__p"]["STN"], "desk")), _s245["t"], "kids"])
+	var _t819 = J.seq(J.gp(_s245["__p"]["K"], "mode"), "sit")
+	var _t820 = (J.seq(J.gp(_s245["__p"]["K"], "act"), "stretch") if _t819 else _t819)
+	var _t821 = (J.gp(_s245["__p"]["STN"], "stretchSay") if _t820 else _t820)
+	var _t822 = (J.cmp(v_a_754, 0.6, ">") if J.t(_t821) else _t821)
+	if J.t((J.cmp(v_a_754, 2.4, "<") if J.t(_t822) else _t822)):
+		var _t823 = _s245["__p"]["text"]
+		var _t825 = _s245["ctx"]
+		var _t826 = J.sub(v_x_742, J.mul(_s245["u"], 0.78))
+		var _t827 = J.sub(v_y_743, J.mul(_s245["u"], 0.72))
+		var _t828 = J.gp(_s245["__p"]["STN"], "stretchSay")
+		var _t829 = J.mul(_s245["u"], 0.15)
+		var _t824 = _s245["__p"]["bump"]
+		J.cl(_t823, null, [_t825, _t826, _t827, _t828, _t829, J.cl(_t824, null, [v_a_754, 0.7, 0.9, 2.3])])
+	var _t830 = J.seq(J.gp(_s245["__p"]["K"], "mode"), "sit")
+	var _t831 = (J.seq(J.gp(_s245["__p"]["K"], "act"), "drink") if _t830 else _t830)
+	var _t832 = (J.gp(_s245["__p"]["STN"], "drinkSay") if _t831 else _t831)
+	var _t833 = (J.cmp(v_a_754, 0.9, ">") if J.t(_t832) else _t832)
+	var _t834 = (J.cmp(v_a_754, 3.0, "<") if J.t(_t833) else _t833)
+	if J.t((J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if J.t(_t834) else _t834)):
+		var _t835 = _s245["__p"]["text"]
+		var _t837 = _s245["ctx"]
+		var _t838 = J.sub(v_x_742, J.mul(_s245["u"], 0.62))
+		var _t839 = J.sub(v_y_743, J.mul(_s245["u"], 0.86))
+		var _t840 = J.gp(_s245["__p"]["STN"], "drinkSay")
+		var _t841 = J.mul(_s245["u"], 0.12)
+		var _t836 = _s245["__p"]["bump"]
+		J.cl(_t835, null, [_t837, _t838, _t839, _t840, _t841, J.cl(_t836, null, [v_a_754, 1.0, 1.3, 2.8])])
+	var _t842 = J.seq(J.gp(_s245["__p"]["K"], "mode"), "sit")
+	var _t843 = (J.seq(J.gp(_s245["__p"]["K"], "act"), "vibe") if _t842 else _t842)
+	if (J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if _t843 else _t843):
 		v_i_785 = 0.0
 		while true:
 			if not J.cmp(v_i_785, 2.0, "<"): break
 			v_q_786 = J.mod((J.mul(v_a_754, 0.6) + J.mul(v_i_785, 0.5)), 1.0)
-			var _t830 = _s245["__p"]["text"]
-			var _t833 = _s245["ctx"]
-			var _t834 = (J.sub(v_x_742, J.mul(_s245["u"], (0.05 - J.mul(0.1, v_q_786)))) + (J.mul(v_i_785, _s245["u"]) * 0.08))
-			var _t835 = J.sub(v_y_743, J.mul(_s245["u"], (0.9 + J.mul(0.2, v_q_786))))
-			var _t836 = ("♫" if J.t(v_i_785) else "♪")
-			var _t837 = J.mul(_s245["u"], 0.12)
-			var _t832 = sin(J.num(J.mul(v_q_786, _s245["__p"]["PI"])))
-			var _t831 = _s245["__p"]["ss"]
-			J.cl(_t830, null, [_t833, _t834, _t835, _t836, _t837, J.mul(_t832, J.cl(_t831, null, [J.div(v_a_754, 0.5)]))])
+			var _t844 = _s245["__p"]["text"]
+			var _t847 = _s245["ctx"]
+			var _t848 = (J.sub(v_x_742, J.mul(_s245["u"], (0.05 - J.mul(0.1, v_q_786)))) + (J.mul(v_i_785, _s245["u"]) * 0.08))
+			var _t849 = J.sub(v_y_743, J.mul(_s245["u"], (0.9 + J.mul(0.2, v_q_786))))
+			var _t850 = ("♫" if J.t(v_i_785) else "♪")
+			var _t851 = J.mul(_s245["u"], 0.12)
+			var _t846 = sin(J.num(J.mul(v_q_786, _s245["__p"]["PI"])))
+			var _t845 = _s245["__p"]["ss"]
+			J.cl(_t844, null, [_t847, _t848, _t849, _t850, _t851, J.mul(_t846, J.cl(_t845, null, [J.div(v_a_754, 0.5)]))])
 			v_i_785 = J.num(v_i_785) + 1.0
-	var _t838 = J.seq(J.gp(_s245["__p"]["K"], "mode"), "sit")
-	var _t839 = (J.seq(J.gp(_s245["__p"]["K"], "act"), "neck") if _t838 else _t838)
-	if (J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if _t839 else _t839):
-		var _t840 = _s245["__p"]["text"]
-		var _t842 = _s245["ctx"]
-		var _t843 = J.sub(v_x_742, J.mul(_s245["u"], 0.7))
-		var _t844 = J.sub(v_y_743, J.mul(_s245["u"], 0.8))
-		var _t845 = J.mul(_s245["u"], 0.11)
-		var _t841 = _s245["__p"]["bump"]
-		J.cl(_t840, null, [_t842, _t843, _t844, "喀", _t845, J.cl(_t841, null, [v_a_754, 1.2, 1.35, 1.7])])
-	var _t848 = J.sub(v_x_742, J.mul(_s245["u"], 0.22))
-	var _t847 = J.sub(v_y_743, J.mul(v_lift_748, _s245["u"]))
-	var _t846 = _s245["__p"]["seatH"]
-	var _t850 = (_t847 - J.mul(J.cl(_t846, null, [_s245["u"]]), (1.0 if J.seq(_s245["key"], J.gp(_s245["__p"]["STN"], "stretch")) else 0.98)))
-	var _t849 = _s245["__p"]["seatH"]
-	return {"x": _t848, "top": _t850, "H": J.cl(_t849, null, [_s245["u"]])}
+	var _t852 = J.seq(J.gp(_s245["__p"]["K"], "mode"), "sit")
+	var _t853 = (J.seq(J.gp(_s245["__p"]["K"], "act"), "neck") if _t852 else _t852)
+	if (J.cmp(J.gp(v_n_738, "fear"), 25.0, "<") if _t853 else _t853):
+		var _t854 = _s245["__p"]["text"]
+		var _t856 = _s245["ctx"]
+		var _t857 = J.sub(v_x_742, J.mul(_s245["u"], 0.7))
+		var _t858 = J.sub(v_y_743, J.mul(_s245["u"], 0.8))
+		var _t859 = J.mul(_s245["u"], 0.11)
+		var _t855 = _s245["__p"]["bump"]
+		J.cl(_t854, null, [_t856, _t857, _t858, "喀", _t859, J.cl(_t855, null, [v_a_754, 1.2, 1.35, 1.7])])
+	var _t862 = J.sub(v_x_742, J.mul(_s245["u"], 0.22))
+	var _t861 = J.sub(v_y_743, J.mul(v_lift_748, _s245["u"]))
+	var _t860 = _s245["__p"]["seatH"]
+	var _t864 = (_t861 - J.mul(J.cl(_t860, null, [_s245["u"]]), (1.0 if J.seq(_s245["key"], J.gp(_s245["__p"]["STN"], "stretch")) else 0.98)))
+	var _t863 = _s245["__p"]["seatH"]
+	return {"x": _t862, "top": _t864, "H": J.cl(_t863, null, [_s245["u"]])}
 
 func _f102(this_, a: Array, env):
 	var v_ctx_789 = null; var v_x_790 = null; var v_y_791 = null; var v_u_792 = null; var v_t_793 = null; var v_i_794 = null; var v_q_795 = null; var v_sx_796 = null
@@ -2762,10 +2790,10 @@ func _f102(this_, a: Array, env):
 	while true:
 		if not J.cmp(v_i_794, 2.0, "<"): break
 		v_q_795 = J.mod((J.mul(v_t_793, 0.6) + J.mul(v_i_794, 0.5)), 1.0)
-		var _t851 = ("rgba(240,240,240," + J.str((0.5 * J.sub(1.0, v_q_795))) + ")")
-		J.sp(v_ctx_789, "strokeStyle", _t851)
-		var _t852 = J.mul(v_u_792, 0.012)
-		J.sp(v_ctx_789, "lineWidth", _t852)
+		var _t865 = ("rgba(240,240,240," + J.str((0.5 * J.sub(1.0, v_q_795))) + ")")
+		J.sp(v_ctx_789, "strokeStyle", _t865)
+		var _t866 = J.mul(v_u_792, 0.012)
+		J.sp(v_ctx_789, "lineWidth", _t866)
 		J.mc(v_ctx_789, "beginPath", [])
 		v_sx_796 = J.add(v_x_790, (J.mul(J.sub(v_i_794, 0.5), v_u_792) * 0.03))
 		J.mc(v_ctx_789, "moveTo", [v_sx_796, J.sub(v_y_791, (J.mul(v_q_795, v_u_792) * 0.05))])
@@ -2785,11 +2813,11 @@ func _f103(this_, a: Array, env):
 	if J.cmp(v_a_804, 0.01, "<="):
 		return null
 	J.mc(v_ctx_799, "save", [])
-	var _t853 = env["cl"]
-	var _t854 = J.mul(J.gp(v_ctx_799, "globalAlpha"), J.cl(_t853, null, [v_a_804]))
-	J.sp(v_ctx_799, "globalAlpha", _t854)
-	var _t855 = ("900 " + J.str(J.round(J.num(v_sz_803))) + "px sans-serif")
-	J.sp(v_ctx_799, "font", _t855)
+	var _t867 = env["cl"]
+	var _t868 = J.mul(J.gp(v_ctx_799, "globalAlpha"), J.cl(_t867, null, [v_a_804]))
+	J.sp(v_ctx_799, "globalAlpha", _t868)
+	var _t869 = ("900 " + J.str(J.round(J.num(v_sz_803))) + "px sans-serif")
+	J.sp(v_ctx_799, "font", _t869)
 	J.sp(v_ctx_799, "textAlign", "center")
 	J.sp(v_ctx_799, "lineWidth", 3.0)
 	J.sp(v_ctx_799, "strokeStyle", "#1a1020")
@@ -2800,33 +2828,33 @@ func _f103(this_, a: Array, env):
 
 func _f104(this_, a: Array, env):
 	if J.t(env["st"]):
-		var _t856 = J.gp(env["st"], "copier")
-		var _t857 = J.gp(J.gp(env["st"], "copier"), "idle")
-		var _t858 = J.gp(J.gp(env["st"], "copier"), "idle")
-		var _t859 = J.max_([(_t858 if J.t(_t858) else 0.0), 0.4])
-		J.sp(_t856, "idle", _t859)
+		var _t870 = J.gp(env["st"], "copier")
+		var _t871 = J.gp(J.gp(env["st"], "copier"), "idle")
+		var _t872 = J.gp(J.gp(env["st"], "copier"), "idle")
+		var _t873 = J.max_([(_t872 if J.t(_t872) else 0.0), 0.4])
+		J.sp(_t870, "idle", _t873)
 
 func _f106(this_, a: Array, env):
 	var v_m_817 = null
 	v_m_817 = J.arg(a, 0)
-	var _t877 = (not J.seq(v_m_817, env["n"]))
-	var _t879 = ((not J.t(J.gp(v_m_817, "gone"))) if _t877 else _t877)
-	if J.t(_t879):
-		var _t878 = J.seq(J.gp(J.gp(v_m_817, "d"), "k"), "ken")
-		_t879 = (_t878 if _t878 else J.seq(J.gp(J.gp(v_m_817, "d"), "k"), "it"))
-	var _t880 = (J.seq(J.gp(v_m_817, "act"), "walk") if _t879 else _t879)
-	return ((J.hypot_([J.sub(J.gp(v_m_817, "x"), J.gp(env["n"], "x")), J.sub(J.gp(v_m_817, "y"), J.gp(env["n"], "y"))]) < 0.2) if _t880 else _t880)
+	var _t891 = (not J.seq(v_m_817, env["n"]))
+	var _t893 = ((not J.t(J.gp(v_m_817, "gone"))) if _t891 else _t891)
+	if J.t(_t893):
+		var _t892 = J.seq(J.gp(J.gp(v_m_817, "d"), "k"), "ken")
+		_t893 = (_t892 if _t892 else J.seq(J.gp(J.gp(v_m_817, "d"), "k"), "it"))
+	var _t894 = (J.seq(J.gp(v_m_817, "act"), "walk") if _t893 else _t893)
+	return ((J.hypot_([J.sub(J.gp(v_m_817, "x"), J.gp(env["n"], "x")), J.sub(J.gp(v_m_817, "y"), J.gp(env["n"], "y"))]) < 0.2) if _t894 else _t894)
 
 func _f107(this_, a: Array, env):
 	var v_e_821 = null
 	v_e_821 = J.arg(a, 0)
-	var _t890 = J.gp(J.gp(env["s"], "cd"), J.gp(v_e_821, 0.0))
-	var _t891 = J.cmp((_t890 if J.t(_t890) else 0.0), 0.0, "<=")
-	var _t893 = ((not J.seq(J.gp(v_e_821, 0.0), J.gp(env["s"], "act"))) if _t891 else _t891)
-	if J.t(_t893):
-		var _t892 = (not J.seq(J.gp(v_e_821, 0.0), "copy"))
-		_t893 = (_t892 if _t892 else (J.hypot_([J.sub(J.gp(env["n"], "x"), J.add(J.gp(J.gp(J.gp(J.G.get("OFFMAP"), "SPOT"), "copier"), 0.0), 0.16)), J.sub(J.gp(env["n"], "y"), J.add(J.gp(J.gp(J.gp(J.G.get("OFFMAP"), "SPOT"), "copier"), 1.0), 0.05))]) < 0.06))
-	return _t893
+	var _t904 = J.gp(J.gp(env["s"], "cd"), J.gp(v_e_821, 0.0))
+	var _t905 = J.cmp((_t904 if J.t(_t904) else 0.0), 0.0, "<=")
+	var _t907 = ((not J.seq(J.gp(v_e_821, 0.0), J.gp(env["s"], "act"))) if _t905 else _t905)
+	if J.t(_t907):
+		var _t906 = (not J.seq(J.gp(v_e_821, 0.0), "copy"))
+		_t907 = (_t906 if _t906 else (J.hypot_([J.sub(J.gp(env["n"], "x"), J.add(J.gp(J.gp(J.gp(J.G.get("OFFMAP"), "SPOT"), "copier"), 0.0), 0.16)), J.sub(J.gp(env["n"], "y"), J.add(J.gp(J.gp(J.gp(J.G.get("OFFMAP"), "SPOT"), "copier"), 1.0), 0.05))]) < 0.06))
+	return _t907
 
 func _f108(this_, a: Array, env):
 	var v_q_822 = null
@@ -2844,113 +2872,113 @@ func _f105(this_, a: Array, env):
 	var _s271 = {"__p": env, "n": null, "s": null}
 	_s271["n"] = J.arg(a, 0)
 	v_dt_810 = J.arg(a, 1)
-	var _t860 = _s271["n"]
-	var _t861 = J.gp(_s271["n"], "mis")
-	var _t862 = (_t861 if J.t(_t861) else {"act": "stand", "at": 0.0, "dur": 2.0, "cd": {}, "jumpT": (-1.0), "rollT": (-9.0)})
-	J.sp(_t860, "mis", _t862)
-	_s271["s"] = _t862
-	var _t863 = J.gp(_s271["n"], "rx")
-	v_rx_812 = (J.gp(_s271["n"], "rx") if J.t((J.cmp(J.gp(J.gp(_s271["n"], "rx"), "t"), 0.0, ">=") if J.t(_t863) else _t863)) else null)
-	var _t864 = (not J.t(J.gp(_s271["n"], "fleeing")))
-	var _t866 = (J.cmp(J.gp(_s271["n"], "fear"), 25.0, "<") if _t864 else _t864)
-	if J.t(_t866):
-		var _t865 = (not J.t(v_rx_812))
-		_t866 = (_t865 if _t865 else J.seq(J.gp(v_rx_812, "k"), "numb"))
-	v_calm_813 = ((not J.seq(J.gp(_s271["n"], "act"), "walk")) if _t866 else _t866)
-	for _t867 in J.keys(J.gp(_s271["s"], "cd")):
-		v_k_815 = _t867
-		var _t868 = J.gp(_s271["s"], "cd")
-		var _t869 = J.sub(J.gp(_t868, v_k_815), v_dt_810)
-		J.sp(_t868, v_k_815, _t869)
-	var _t870 = _s271["s"]
-	var _t871 = J.add(J.gp(_t870, "at"), v_dt_810)
-	J.sp(_t870, "at", _t871)
+	var _t874 = _s271["n"]
+	var _t875 = J.gp(_s271["n"], "mis")
+	var _t876 = (_t875 if J.t(_t875) else {"act": "stand", "at": 0.0, "dur": 2.0, "cd": {}, "jumpT": (-1.0), "rollT": (-9.0)})
+	J.sp(_t874, "mis", _t876)
+	_s271["s"] = _t876
+	var _t877 = J.gp(_s271["n"], "rx")
+	v_rx_812 = (J.gp(_s271["n"], "rx") if J.t((J.cmp(J.gp(J.gp(_s271["n"], "rx"), "t"), 0.0, ">=") if J.t(_t877) else _t877)) else null)
+	var _t878 = (not J.t(J.gp(_s271["n"], "fleeing")))
+	var _t880 = (J.cmp(J.gp(_s271["n"], "fear"), 25.0, "<") if _t878 else _t878)
+	if J.t(_t880):
+		var _t879 = (not J.t(v_rx_812))
+		_t880 = (_t879 if _t879 else J.seq(J.gp(v_rx_812, "k"), "numb"))
+	v_calm_813 = ((not J.seq(J.gp(_s271["n"], "act"), "walk")) if _t880 else _t880)
+	for _t881 in J.keys(J.gp(_s271["s"], "cd")):
+		v_k_815 = _t881
+		var _t882 = J.gp(_s271["s"], "cd")
+		var _t883 = J.sub(J.gp(_t882, v_k_815), v_dt_810)
+		J.sp(_t882, v_k_815, _t883)
+	var _t884 = _s271["s"]
+	var _t885 = J.add(J.gp(_t884, "at"), v_dt_810)
+	J.sp(_t884, "at", _t885)
 	if (not J.t(v_calm_813)):
 		if (not J.seq(J.gp(_s271["s"], "act"), "stand")):
-			var _t872 = _s271["s"]
-			J.sp(_t872, "act", "stand")
-			var _t873 = _s271["s"]
-			J.sp(_t873, "at", 0.0)
-			var _t874 = _s271["s"]
-			J.sp(_t874, "dur", 1.0)
-	else:
-		var _t875 = J.gp(_s271["__p"]["SC"], "npcs")
-		var _t876 = (_t875 if J.t(_t875) else [])
-		v_pass_816 = J.mc(_t876, "find", [Callable(self, "_f106").bind(_s271)])
-		var _t882 = ((not J.seq(J.gp(_s271["s"], "act"), "roll")) if J.t(v_pass_816) else v_pass_816)
-		if J.t(_t882):
-			var _t881 = J.gp(J.gp(_s271["s"], "cd"), "roll")
-			_t882 = J.cmp((_t881 if J.t(_t881) else 0.0), 0.0, "<=")
-		if J.t(_t882):
-			var _t883 = _s271["s"]
-			J.sp(_t883, "act", "roll")
-			var _t884 = _s271["s"]
-			J.sp(_t884, "at", 0.0)
-			var _t885 = _s271["s"]
-			J.sp(_t885, "dur", 1.8)
-			var _t886 = J.gp(_s271["s"], "cd")
-			J.sp(_t886, "roll", 9.0)
+			var _t886 = _s271["s"]
+			J.sp(_t886, "act", "stand")
 			var _t887 = _s271["s"]
-			var _t888 = J.gp(v_pass_816, "x")
-			J.sp(_t887, "rollAt", _t888)
-			var _t889 = (randf() < 0.5)
-			if J.t((J.gp(_s271["__p"]["SC"], "bubble") if _t889 else _t889)):
+			J.sp(_t887, "at", 0.0)
+			var _t888 = _s271["s"]
+			J.sp(_t888, "dur", 1.0)
+	else:
+		var _t889 = J.gp(_s271["__p"]["SC"], "npcs")
+		var _t890 = (_t889 if J.t(_t889) else [])
+		v_pass_816 = J.mc(_t890, "find", [Callable(self, "_f106").bind(_s271)])
+		var _t896 = ((not J.seq(J.gp(_s271["s"], "act"), "roll")) if J.t(v_pass_816) else v_pass_816)
+		if J.t(_t896):
+			var _t895 = J.gp(J.gp(_s271["s"], "cd"), "roll")
+			_t896 = J.cmp((_t895 if J.t(_t895) else 0.0), 0.0, "<=")
+		if J.t(_t896):
+			var _t897 = _s271["s"]
+			J.sp(_t897, "act", "roll")
+			var _t898 = _s271["s"]
+			J.sp(_t898, "at", 0.0)
+			var _t899 = _s271["s"]
+			J.sp(_t899, "dur", 1.8)
+			var _t900 = J.gp(_s271["s"], "cd")
+			J.sp(_t900, "roll", 9.0)
+			var _t901 = _s271["s"]
+			var _t902 = J.gp(v_pass_816, "x")
+			J.sp(_t901, "rollAt", _t902)
+			var _t903 = (randf() < 0.5)
+			if J.t((J.gp(_s271["__p"]["SC"], "bubble") if _t903 else _t903)):
 				J.mc(_s271["__p"]["SC"], "bubble", [_s271["n"], J.gp(_s271["__p"]["MIS_SAY"], "roll"), 2.0])
 		else:
 			if J.cmp(J.gp(_s271["s"], "at"), J.gp(_s271["s"], "dur"), ">="):
 				v_opts_818 = J.mc(_s271["__p"]["MIS_ACTS"], "filter", [Callable(self, "_f107").bind(_s271)])
 				if (not J.t(J.len(v_opts_818))):
-					var _t894 = J.mc(_s271["__p"]["MIS_ACTS"], "find", [Callable(self, "_f108").bind(_s271)])
-					J.mc(v_opts_818, "push", [(_t894 if J.t(_t894) else J.gp(_s271["__p"]["MIS_ACTS"], 0.0))])
+					var _t908 = J.mc(_s271["__p"]["MIS_ACTS"], "find", [Callable(self, "_f108").bind(_s271)])
+					J.mc(v_opts_818, "push", [(_t908 if J.t(_t908) else J.gp(_s271["__p"]["MIS_ACTS"], 0.0))])
 				v_r_819 = J.mul(randf(), J.mc(v_opts_818, "reduce", [Callable(self, "_f109").bind(_s271), 0.0]))
 				v_e_820 = J.gp(v_opts_818, 0.0)
-				for _t895 in J.iter(v_opts_818):
-					v_q_825 = _t895
-					var _t896 = J.sub(v_r_819, J.gp(v_q_825, 1.0))
-					v_r_819 = _t896
+				for _t909 in J.iter(v_opts_818):
+					v_q_825 = _t909
+					var _t910 = J.sub(v_r_819, J.gp(v_q_825, 1.0))
+					v_r_819 = _t910
 					if J.cmp(v_r_819, 0.0, "<="):
 						v_e_820 = v_q_825
 						break
-				var _t897 = _s271["s"]
-				var _t898 = J.gp(v_e_820, 0.0)
-				J.sp(_t897, "act", _t898)
-				var _t899 = _s271["s"]
-				J.sp(_t899, "at", 0.0)
-				var _t900 = _s271["s"]
-				var _t901 = J.add(J.gp(J.gp(v_e_820, 2.0), 0.0), (randf() * J.sub(J.gp(J.gp(v_e_820, 2.0), 1.0), J.gp(J.gp(v_e_820, 2.0), 0.0))))
-				J.sp(_t900, "dur", _t901)
-				var _t902 = J.gp(_s271["s"], "cd")
-				var _t903 = J.gp(v_e_820, 0.0)
-				var _t904 = J.add(J.gp(v_e_820, 3.0), J.gp(_s271["s"], "dur"))
-				J.sp(_t902, _t903, _t904)
-				var _t905 = J.gp(_s271["__p"]["SC"], "bubble")
-				if J.t(((randf() < 0.35) if J.t(_t905) else _t905)):
+				var _t911 = _s271["s"]
+				var _t912 = J.gp(v_e_820, 0.0)
+				J.sp(_t911, "act", _t912)
+				var _t913 = _s271["s"]
+				J.sp(_t913, "at", 0.0)
+				var _t914 = _s271["s"]
+				var _t915 = J.add(J.gp(J.gp(v_e_820, 2.0), 0.0), (randf() * J.sub(J.gp(J.gp(v_e_820, 2.0), 1.0), J.gp(J.gp(v_e_820, 2.0), 0.0))))
+				J.sp(_t914, "dur", _t915)
+				var _t916 = J.gp(_s271["s"], "cd")
+				var _t917 = J.gp(v_e_820, 0.0)
+				var _t918 = J.add(J.gp(v_e_820, 3.0), J.gp(_s271["s"], "dur"))
+				J.sp(_t916, _t917, _t918)
+				var _t919 = J.gp(_s271["__p"]["SC"], "bubble")
+				if J.t(((randf() < 0.35) if J.t(_t919) else _t919)):
 					J.mc(_s271["__p"]["SC"], "bubble", [_s271["n"], (J.gp(_s271["__p"]["MIS_SAY"], "selfie") if J.seq(J.gp(_s271["s"], "act"), "selfie") else J.gp(_s271["__p"]["MIS_SAY"], "sigh")), 2.2])
-	var _t908 = v_rx_812
-	if J.t(_t908):
-		var _t906 = J.seq(J.gp(v_rx_812, "k"), "startle")
-		var _t907 = (_t906 if _t906 else J.seq(J.gp(v_rx_812, "k"), "weakjump"))
-		_t908 = (_t907 if _t907 else J.seq(J.gp(v_rx_812, "k"), "burst"))
-	v_big_814 = _t908
+	var _t922 = v_rx_812
+	if J.t(_t922):
+		var _t920 = J.seq(J.gp(v_rx_812, "k"), "startle")
+		var _t921 = (_t920 if _t920 else J.seq(J.gp(v_rx_812, "k"), "weakjump"))
+		_t922 = (_t921 if _t921 else J.seq(J.gp(v_rx_812, "k"), "burst"))
+	v_big_814 = _t922
 	if J.t((J.cmp(J.gp(_s271["s"], "jumpT"), 0.0, "<") if J.t(v_big_814) else v_big_814)):
-		var _t909 = _s271["s"]
-		J.sp(_t909, "jumpT", 0.0)
+		var _t923 = _s271["s"]
+		J.sp(_t923, "jumpT", 0.0)
 	if J.cmp(J.gp(_s271["s"], "jumpT"), 0.0, ">="):
-		var _t910 = _s271["s"]
-		var _t911 = J.add(J.gp(_t910, "jumpT"), v_dt_810)
-		J.sp(_t910, "jumpT", _t911)
-		var _t912 = J.cmp(J.gp(_s271["s"], "jumpT"), 1.5, ">")
-		if ((not J.t(v_big_814)) if _t912 else _t912):
-			var _t913 = _s271["s"]
-			var _t914 = (-1.0)
-			J.sp(_t913, "jumpT", _t914)
+		var _t924 = _s271["s"]
+		var _t925 = J.add(J.gp(_t924, "jumpT"), v_dt_810)
+		J.sp(_t924, "jumpT", _t925)
+		var _t926 = J.cmp(J.gp(_s271["s"], "jumpT"), 1.5, ">")
+		if ((not J.t(v_big_814)) if _t926 else _t926):
+			var _t927 = _s271["s"]
+			var _t928 = (-1.0)
+			J.sp(_t927, "jumpT", _t928)
 
 func _f111(this_, a: Array, env):
 	var v_key_846 = null; var v_pose_847 = null; var v_h_848 = null
 	v_key_846 = J.arg(a, 0)
 	v_pose_847 = J.arg(a, 1)
-	var _t916 = env["__p"]["ok"]
-	if (not J.t(J.cl(_t916, null, [v_key_846]))):
+	var _t930 = env["__p"]["ok"]
+	if (not J.t(J.cl(_t930, null, [v_key_846]))):
 		return false
 	v_h_848 = J.div(J.mul(env["H"], J.gp(J.gp(J.G.get("SPR"), v_key_846), "naturalHeight")), J.gp(J.gp(J.G.get("SPR"), "npc_mis"), "naturalHeight"))
 	return J.mc(J.G.get("MeshAnim"), "draw", [env["ctx"], v_key_846, 0.0, 0.0, v_h_848, v_pose_847, env["right"]])
@@ -2958,9 +2986,9 @@ func _f111(this_, a: Array, env):
 func _f112(this_, a: Array, env):
 	var v_f_849 = null
 	v_f_849 = J.arg(a, 0)
-	var _t918 = J.seq(J.gp(v_f_849, "kind"), "phone")
-	var _t919 = (J.seq(J.gp(v_f_849, "n"), env["n"]) if _t918 else _t918)
-	return (J.cmp(J.gp(v_f_849, "life"), 0.8, ">") if _t919 else _t919)
+	var _t932 = J.seq(J.gp(v_f_849, "kind"), "phone")
+	var _t933 = (J.seq(J.gp(v_f_849, "n"), env["n"]) if _t932 else _t932)
+	return (J.cmp(J.gp(v_f_849, "life"), 0.8, ">") if _t933 else _t933)
 
 func _f110(this_, a: Array, env):
 	var v_o_830 = null; var v_hh_831 = null; var v_t_833 = null; var v_s_834 = null; var v_A_836 = null; var v_fx_837 = null; var v_draw_838 = null; var v_phoneFx_839 = null; var v_fAge_840 = null; var v_z_841 = null; var v_at_842 = null; var v_dur_843 = null; var v_e_844 = null; var v_pz_845 = null; var v_k_850 = null; var v_px_851 = null; var v_py_852 = null; var v_pc_853 = null; var v_sz_854 = null; var v_i_855 = null; var v_key_856 = null; var v_q_857 = null; var v_up_858 = null; var v_sq_859 = null; var v_im_860 = null; var v_h_861 = null; var v_w_862 = null; var v_k_863 = null; var v_cx_864 = null; var v_cy_865 = null; var v_i_866 = null; var v_a_867 = null; var v_r_868 = null; var v_i_869 = null; var v_vx_870 = null; var v_vy_871 = null; var v_px_872 = null; var v_py_873 = null; var v_sp_874 = null; var v_ph_875 = null; var v_bob_876 = null; var v_sway_877 = null; var v_pz_878 = null; var v_r2_879 = null; var v_k_880 = null; var v_pose2_881 = null; var v_fl_882 = null; var v_px_883 = null; var v_py_884 = null; var v_g_885 = null; var v_k_886 = null; var v_wig_887 = null; var v_sx_888 = null; var v_sy_889 = null; var v_k_890 = null; var v_tap_891 = null; var v_k_892 = null; var v_sw_893 = null; var v_k_894 = null; var v_i_895 = null; var v_bx_896 = null
@@ -2972,74 +3000,74 @@ func _f110(this_, a: Array, env):
 	_s286["right"] = J.arg(a, 4)
 	v_t_833 = J.arg(a, 5)
 	v_s_834 = J.gp(_s286["n"], "mis")
-	var _t915 = (not J.t(v_s_834))
-	if (_t915 if _t915 else J.seq(J.typeof_(J.G.get("MeshAnim")), "undefined")):
+	var _t929 = (not J.t(v_s_834))
+	if (_t929 if _t929 else J.seq(J.typeof_(J.G.get("MeshAnim")), "undefined")):
 		return false
 	_s286["H"] = J.div(J.mul(v_hh_831, 62.0), (64.0 * 1.08))
 	v_A_836 = J.gp(J.G.get("MeshAnim"), "ANIM")
 	v_fx_837 = (1.0 if J.t(_s286["right"]) else (-1.0))
 	v_draw_838 = Callable(self, "_f111").bind(_s286)
-	var _t920 = J.gp(_s286["__p"]["SC"], "fx")
-	if J.t(_t920):
-		var _t917 = J.gp(_s286["__p"]["SC"], "fx")
-		_t920 = J.mc(_t917, "find", [Callable(self, "_f112").bind(_s286)])
-	v_phoneFx_839 = _t920
+	var _t934 = J.gp(_s286["__p"]["SC"], "fx")
+	if J.t(_t934):
+		var _t931 = J.gp(_s286["__p"]["SC"], "fx")
+		_t934 = J.mc(_t931, "find", [Callable(self, "_f112").bind(_s286)])
+	v_phoneFx_839 = _t934
 	if J.t(((not J.t(J.gp(v_o_830, "run"))) if J.t(v_phoneFx_839) else v_phoneFx_839)):
 		v_k_850 = (1.0 - J.div(J.gp(v_phoneFx_839, "life"), 1.6))
 		J.cl(v_draw_838, null, ["npc_mis_selfie", J.mc(v_A_836, "idle", [v_t_833])])
 		v_px_851 = (J.mul((-J.num(v_fx_837)), _s286["H"]) * 0.17)
 		v_py_852 = ((-J.num(_s286["H"])) * 0.83)
 		J.mc(_s286["ctx"], "save", [])
-		var _t921 = _s286["ctx"]
-		var _t922 = J.mul(J.gp(_t921, "globalAlpha"), (0.5 + (0.5 * randf())))
-		J.sp(_t921, "globalAlpha", _t922)
-		var _t923 = (not J.seq(J.typeof_(J.G.get("ART")), "undefined"))
-		if J.t((J.gp(J.G.get("ART"), "portrait") if _t923 else _t923)):
+		var _t935 = _s286["ctx"]
+		var _t936 = J.mul(J.gp(_t935, "globalAlpha"), (0.5 + (0.5 * randf())))
+		J.sp(_t935, "globalAlpha", _t936)
+		var _t937 = (not J.seq(J.typeof_(J.G.get("ART")), "undefined"))
+		if J.t((J.gp(J.G.get("ART"), "portrait") if _t937 else _t937)):
 			v_pc_853 = J.mc(J.G.get("ART"), "portrait", ["afu", 64.0, {"tamed": true}])
-			var _t924 = _s286["ctx"]
-			J.sp(_t924, "globalCompositeOperation", "lighter")
+			var _t938 = _s286["ctx"]
+			J.sp(_t938, "globalCompositeOperation", "lighter")
 			v_sz_854 = J.mul(_s286["H"], 0.16)
 			J.mc(_s286["ctx"], "drawImage", [v_pc_853, (J.sub(v_px_851, J.div(v_sz_854, 2.0)) + ((randf() - 0.5) * 3.0)), J.sub(v_py_852, J.div(v_sz_854, 2.0)), v_sz_854, v_sz_854])
-		var _t925 = _s286["ctx"]
-		J.sp(_t925, "globalCompositeOperation", "source-over")
+		var _t939 = _s286["ctx"]
+		J.sp(_t939, "globalCompositeOperation", "source-over")
 		v_i_855 = 0.0
 		while true:
 			if not J.cmp(v_i_855, 5.0, "<"): break
-			var _t926 = _s286["ctx"]
-			var _t927 = ("rgba(" + ("255,60,120" if (randf() < 0.5) else "80,220,255") + ",.6)")
-			J.sp(_t926, "fillStyle", _t927)
+			var _t940 = _s286["ctx"]
+			var _t941 = ("rgba(" + ("255,60,120" if (randf() < 0.5) else "80,220,255") + ",.6)")
+			J.sp(_t940, "fillStyle", _t941)
 			J.mc(_s286["ctx"], "fillRect", [J.sub(v_px_851, J.mul(_s286["H"], 0.08)), (J.sub(v_py_852, J.mul(_s286["H"], 0.08)) + (J.mul(randf(), _s286["H"]) * 0.16)), J.mul(_s286["H"], 0.16), 1.5])
 			v_i_855 = J.num(v_i_855) + 1.0
 		J.mc(_s286["ctx"], "restore", [])
 		return true
-	var _t928 = J.gp(_s286["n"], "fleeing")
-	var _t931 = null
-	if J.t(((not J.leq(J.gp(_s286["n"], "fleeT"), null)) if J.t(_t928) else _t928)):
-		var _t930 = J.sub(J.gp(_s286["__p"]["SC"], "t"), J.gp(_s286["n"], "fleeT"))
-		var _t929 = J.gp(_s286["n"], "fleeHold")
-		_t931 = (_t930 - J.sub((_t929 if J.t(_t929) else 0.0), 0.4))
+	var _t942 = J.gp(_s286["n"], "fleeing")
+	var _t945 = null
+	if J.t(((not J.leq(J.gp(_s286["n"], "fleeT"), null)) if J.t(_t942) else _t942)):
+		var _t944 = J.sub(J.gp(_s286["__p"]["SC"], "t"), J.gp(_s286["n"], "fleeT"))
+		var _t943 = J.gp(_s286["n"], "fleeHold")
+		_t945 = (_t944 - J.sub((_t943 if J.t(_t943) else 0.0), 0.4))
 	else:
-		_t931 = (-1.0)
-	v_fAge_840 = _t931
-	var _t940 = (not J.t(v_phoneFx_839))
-	if J.t(_t940):
-		var _t932 = J.cmp(v_fAge_840, 0.0, ">=")
-		var _t939 = (J.cmp(v_fAge_840, 0.55, "<") if _t932 else _t932)
-		if not J.t(_t939):
-			var _t933 = (not J.t(J.gp(_s286["n"], "fleeing")))
-			var _t934 = (J.cmp(J.gp(v_s_834, "jumpT"), 0.0, ">=") if _t933 else _t933)
-			var _t938 = (J.cmp(J.gp(v_s_834, "jumpT"), 1.3, "<") if _t934 else _t934)
-			if J.t(_t938):
-				var _t935 = J.seq(J.gp(v_o_830, "pose"), "startle")
-				var _t936 = (_t935 if _t935 else J.seq(J.gp(v_o_830, "rxk"), "startle"))
-				var _t937 = (_t936 if _t936 else J.seq(J.gp(v_o_830, "rxk"), "weakjump"))
-				_t938 = (_t937 if _t937 else J.seq(J.gp(v_o_830, "rxk"), "burst"))
-			_t939 = _t938
-		_t940 = _t939
-	if _t940:
+		_t945 = (-1.0)
+	v_fAge_840 = _t945
+	var _t954 = (not J.t(v_phoneFx_839))
+	if J.t(_t954):
+		var _t946 = J.cmp(v_fAge_840, 0.0, ">=")
+		var _t953 = (J.cmp(v_fAge_840, 0.55, "<") if _t946 else _t946)
+		if not J.t(_t953):
+			var _t947 = (not J.t(J.gp(_s286["n"], "fleeing")))
+			var _t948 = (J.cmp(J.gp(v_s_834, "jumpT"), 0.0, ">=") if _t947 else _t947)
+			var _t952 = (J.cmp(J.gp(v_s_834, "jumpT"), 1.3, "<") if _t948 else _t948)
+			if J.t(_t952):
+				var _t949 = J.seq(J.gp(v_o_830, "pose"), "startle")
+				var _t950 = (_t949 if _t949 else J.seq(J.gp(v_o_830, "rxk"), "startle"))
+				var _t951 = (_t950 if _t950 else J.seq(J.gp(v_o_830, "rxk"), "weakjump"))
+				_t952 = (_t951 if _t951 else J.seq(J.gp(v_o_830, "rxk"), "burst"))
+			_t953 = _t952
+		_t954 = _t953
+	if _t954:
 		v_key_856 = "npc_mis_jump"
-		var _t941 = _s286["__p"]["ok"]
-		if (not J.t(J.cl(_t941, null, [v_key_856]))):
+		var _t955 = _s286["__p"]["ok"]
+		if (not J.t(J.cl(_t955, null, [v_key_856]))):
 			return false
 		v_q_857 = (v_fAge_840 if J.cmp(v_fAge_840, 0.0, ">=") else J.gp(v_s_834, "jumpT"))
 		v_up_858 = J.mul((sin(J.num(J.mul(J.min_([1.0, J.div(v_q_857, 0.6)]), _s286["__p"]["PI"]))) * 0.12), _s286["H"])
@@ -3058,36 +3086,36 @@ func _f110(this_, a: Array, env):
 		v_i_866 = 0.0
 		while true:
 			if not J.cmp(v_i_866, 10.0, "<"): break
-			var _t943 = _s286["__p"]["PI"]
-			var _t942 = _s286["__p"]["rnd"]
-			v_a_867 = J.mul(_t943, (0.75 + J.mul(J.cl(_t942, null, [v_i_866]), 0.6)))
-			var _t946 = _s286["H"]
-			var _t945 = J.mul(0.3, v_k_863)
-			var _t944 = _s286["__p"]["rnd"]
-			v_r_868 = J.mul(_t946, (0.05 + J.mul(_t945, J.add(0.5, J.cl(_t944, null, [J.add(v_i_866, 4.0)])))))
-			var _t947 = _s286["ctx"]
-			var _t948 = ("rgba(250,225,205," + J.str(J.max_([0.0, (0.6 - J.mul(v_q_857, 0.45))])) + ")")
-			J.sp(_t947, "fillStyle", _t948)
+			var _t957 = _s286["__p"]["PI"]
+			var _t956 = _s286["__p"]["rnd"]
+			v_a_867 = J.mul(_t957, (0.75 + J.mul(J.cl(_t956, null, [v_i_866]), 0.6)))
+			var _t960 = _s286["H"]
+			var _t959 = J.mul(0.3, v_k_863)
+			var _t958 = _s286["__p"]["rnd"]
+			v_r_868 = J.mul(_t960, (0.05 + J.mul(_t959, J.add(0.5, J.cl(_t958, null, [J.add(v_i_866, 4.0)])))))
+			var _t961 = _s286["ctx"]
+			var _t962 = ("rgba(250,225,205," + J.str(J.max_([0.0, (0.6 - J.mul(v_q_857, 0.45))])) + ")")
+			J.sp(_t961, "fillStyle", _t962)
 			J.mc(_s286["ctx"], "beginPath", [])
-			var _t952 = J.add(v_cx_864, J.mul(cos(J.num(v_a_867)), v_r_868))
-			var _t951 = J.add(v_cy_865, J.mul(sin(J.num(v_a_867)), v_r_868))
-			var _t950 = J.mul(J.mul(J.mul(0.3, _s286["H"]), v_k_863), v_k_863)
-			var _t949 = _s286["__p"]["rnd"]
-			J.mc(_s286["ctx"], "arc", [_t952, J.add(_t951, J.mul(_t950, J.cl(_t949, null, [J.add(v_i_866, 7.0)]))), J.mul(_s286["H"], (0.02 + J.mul(0.03, v_k_863))), 0.0, J.mul(_s286["__p"]["PI"], 2.0)])
+			var _t966 = J.add(v_cx_864, J.mul(cos(J.num(v_a_867)), v_r_868))
+			var _t965 = J.add(v_cy_865, J.mul(sin(J.num(v_a_867)), v_r_868))
+			var _t964 = J.mul(J.mul(J.mul(0.3, _s286["H"]), v_k_863), v_k_863)
+			var _t963 = _s286["__p"]["rnd"]
+			J.mc(_s286["ctx"], "arc", [_t966, J.add(_t965, J.mul(_t964, J.cl(_t963, null, [J.add(v_i_866, 7.0)]))), J.mul(_s286["H"], (0.02 + J.mul(0.03, v_k_863))), 0.0, J.mul(_s286["__p"]["PI"], 2.0)])
 			J.mc(_s286["ctx"], "fill", [])
 			v_i_866 = J.num(v_i_866) + 1.0
 		v_i_869 = 0.0
 		while true:
 			if not J.cmp(v_i_869, 8.0, "<"): break
-			var _t953 = _s286["__p"]["rnd"]
-			v_vx_870 = J.mul((-(0.1 + J.mul(J.cl(_t953, null, [J.add(v_i_869, 11.0)]), 0.4))), _s286["H"])
-			var _t954 = _s286["__p"]["rnd"]
-			v_vy_871 = J.mul((-(0.2 + J.mul(J.cl(_t954, null, [J.add(v_i_869, 13.0)]), 0.35))), _s286["H"])
+			var _t967 = _s286["__p"]["rnd"]
+			v_vx_870 = J.mul((-(0.1 + J.mul(J.cl(_t967, null, [J.add(v_i_869, 11.0)]), 0.4))), _s286["H"])
+			var _t968 = _s286["__p"]["rnd"]
+			v_vy_871 = J.mul((-(0.2 + J.mul(J.cl(_t968, null, [J.add(v_i_869, 13.0)]), 0.35))), _s286["H"])
 			v_px_872 = (((-J.num(v_w_862)) * 0.2) + J.mul(v_vx_870, v_k_863))
 			v_py_873 = ((((-J.num(v_h_861)) * 0.75) + J.mul(v_vy_871, v_k_863)) + J.mul(J.mul(J.mul(0.8, _s286["H"]), v_k_863), v_k_863))
-			var _t955 = _s286["ctx"]
-			var _t956 = ("rgba(255," + J.str((180.0 + (J.mod(v_i_869, 3.0) * 30.0))) + ",220," + J.str(J.max_([0.0, (1.0 - J.div(v_q_857, 1.3))])) + ")")
-			J.sp(_t955, "fillStyle", _t956)
+			var _t969 = _s286["ctx"]
+			var _t970 = ("rgba(255," + J.str((180.0 + (J.mod(v_i_869, 3.0) * 30.0))) + ",220," + J.str(J.max_([0.0, (1.0 - J.div(v_q_857, 1.3))])) + ")")
+			J.sp(_t969, "fillStyle", _t970)
 			J.mc(_s286["ctx"], "save", [])
 			J.mc(_s286["ctx"], "translate", [v_px_872, v_py_873])
 			J.mc(_s286["ctx"], "rotate", [J.add(J.mul(v_t_833, 8.0), v_i_869)])
@@ -3096,8 +3124,8 @@ func _f110(this_, a: Array, env):
 			v_i_869 = J.num(v_i_869) + 1.0
 		J.mc(_s286["ctx"], "restore", [])
 		return true
-	var _t957 = J.gp(v_o_830, "run")
-	if J.t((_t957 if J.t(_t957) else J.gp(v_o_830, "walk"))):
+	var _t971 = J.gp(v_o_830, "run")
+	if J.t((_t971 if J.t(_t971) else J.gp(v_o_830, "walk"))):
 		v_sp_874 = (13.0 if J.t(J.gp(v_o_830, "run")) else 7.0)
 		v_ph_875 = J.mul(v_t_833, v_sp_874)
 		v_bob_876 = (J.mul(absf(J.num(sin(J.num(v_ph_875)))), _s286["H"]) * (0.04 if J.t(J.gp(v_o_830, "run")) else 0.015))
@@ -3108,16 +3136,16 @@ func _f110(this_, a: Array, env):
 		v_r2_879 = J.cl(v_draw_838, null, ["npc_mis_walk", v_pz_878])
 		J.mc(_s286["ctx"], "restore", [])
 		return v_r2_879
-	var _t958 = J.cmp(J.gp(_s286["n"], "fear"), 25.0, ">=")
-	if J.t((_t958 if _t958 else J.gp(_s286["n"], "rx"))):
+	var _t972 = J.cmp(J.gp(_s286["n"], "fear"), 25.0, ">=")
+	if J.t((_t972 if _t972 else J.gp(_s286["n"], "rx"))):
 		return false
 	v_z_841 = J.mc(v_A_836, "idle", [v_t_833])
 	v_at_842 = J.gp(v_s_834, "at")
 	v_dur_843 = J.gp(v_s_834, "dur")
-	var _t959 = _s286["__p"]["ss"]
-	var _t961 = J.cl(_t959, null, [J.div(v_at_842, 0.35)])
-	var _t960 = _s286["__p"]["ss"]
-	v_e_844 = J.mul(_t961, J.cl(_t960, null, [J.div(J.sub(v_dur_843, v_at_842), 0.35)]))
+	var _t973 = _s286["__p"]["ss"]
+	var _t975 = J.cl(_t973, null, [J.div(v_at_842, 0.35)])
+	var _t974 = _s286["__p"]["ss"]
+	v_e_844 = J.mul(_t975, J.cl(_t974, null, [J.div(J.sub(v_dur_843, v_at_842), 0.35)]))
 	v_pz_845 = J.S_Object_("assign", [{}, v_z_841])
 	J.sp(v_pz_845, "armF", 0.0)
 	J.sp(v_pz_845, "armB", 0.0)
@@ -3125,46 +3153,46 @@ func _f110(this_, a: Array, env):
 		v_k_880 = v_e_844
 		v_pose2_881 = J.S_Object_("assign", [{}, v_pz_845, {"head": J.mul((0.05 * sin(J.num(J.mul(v_at_842, 2.0)))), v_k_880), "body": J.mul((-0.03), v_k_880), "armB": J.mul((0.06 * sin(J.num(J.mul(v_at_842, 7.0)))), v_k_880)}])
 		J.cl(v_draw_838, null, ["npc_mis_selfie", v_pose2_881])
-		var _t962 = (J.mod(v_at_842, 1.1) < 0.12)
-		v_fl_882 = (J.cmp(v_at_842, 0.6, ">") if _t962 else _t962)
+		var _t976 = (J.mod(v_at_842, 1.1) < 0.12)
+		v_fl_882 = (J.cmp(v_at_842, 0.6, ">") if _t976 else _t976)
 		if J.t(v_fl_882):
 			v_px_883 = (J.mul((-J.num(v_fx_837)), _s286["H"]) * 0.17)
 			v_py_884 = ((-J.num(_s286["H"])) * 0.83)
 			J.mc(_s286["ctx"], "save", [])
-			var _t963 = _s286["ctx"]
-			J.sp(_t963, "globalCompositeOperation", "lighter")
+			var _t977 = _s286["ctx"]
+			J.sp(_t977, "globalCompositeOperation", "lighter")
 			v_g_885 = J.mc(_s286["ctx"], "createRadialGradient", [v_px_883, v_py_884, 0.0, v_px_883, v_py_884, J.mul(_s286["H"], 0.25)])
 			J.mc(v_g_885, "addColorStop", [0.0, "rgba(255,255,255,.9)"])
 			J.mc(v_g_885, "addColorStop", [1.0, "rgba(255,255,255,0)"])
-			var _t964 = _s286["ctx"]
-			J.sp(_t964, "fillStyle", v_g_885)
+			var _t978 = _s286["ctx"]
+			J.sp(_t978, "fillStyle", v_g_885)
 			J.mc(_s286["ctx"], "beginPath", [])
 			J.mc(_s286["ctx"], "arc", [v_px_883, v_py_884, J.mul(_s286["H"], 0.25), 0.0, J.mul(_s286["__p"]["PI"], 2.0)])
 			J.mc(_s286["ctx"], "fill", [])
 			J.mc(_s286["ctx"], "restore", [])
-			var _t965 = _s286["__p"]["text"]
-			J.cl(_t965, null, [_s286["ctx"], v_px_883, J.sub(v_py_884, J.mul(_s286["H"], 0.12)), "咔嚓", J.mul(_s286["H"], 0.08), 1.0])
+			var _t979 = _s286["__p"]["text"]
+			J.cl(_t979, null, [_s286["ctx"], v_px_883, J.sub(v_py_884, J.mul(_s286["H"], 0.12)), "咔嚓", J.mul(_s286["H"], 0.08), 1.0])
 		return true
 	if J.seq(J.gp(v_s_834, "act"), "nails"):
 		v_k_886 = v_e_844
-		var _t967 = sin(J.num(J.mul(v_at_842, 9.0)))
-		var _t966 = _s286["__p"]["bump"]
-		v_wig_887 = J.mul(_t967, J.cl(_t966, null, [v_at_842, 0.6, 1.0, J.sub(v_dur_843, 0.6)]))
-		var _t968 = J.mul((0.06 + (0.02 * sin(J.num(J.mul(v_at_842, 1.5))))), v_k_886)
-		J.sp(v_pz_845, "head", _t968)
-		var _t969 = J.mul(((-0.06) + J.mul(0.05, v_wig_887)), v_k_886)
-		J.sp(v_pz_845, "armF", _t969)
-		var _t970 = J.mul(0.03, v_k_886)
-		J.sp(v_pz_845, "hips", _t970)
+		var _t981 = sin(J.num(J.mul(v_at_842, 9.0)))
+		var _t980 = _s286["__p"]["bump"]
+		v_wig_887 = J.mul(_t981, J.cl(_t980, null, [v_at_842, 0.6, 1.0, J.sub(v_dur_843, 0.6)]))
+		var _t982 = J.mul((0.06 + (0.02 * sin(J.num(J.mul(v_at_842, 1.5))))), v_k_886)
+		J.sp(v_pz_845, "head", _t982)
+		var _t983 = J.mul(((-0.06) + J.mul(0.05, v_wig_887)), v_k_886)
+		J.sp(v_pz_845, "armF", _t983)
+		var _t984 = J.mul(0.03, v_k_886)
+		J.sp(v_pz_845, "hips", _t984)
 		J.cl(v_draw_838, null, ["npc_mis", v_pz_845])
 		if (sin(J.num(J.mul(v_at_842, 2.5))) > 0.6):
 			v_sx_888 = (J.mul((-J.num(v_fx_837)), _s286["H"]) * 0.35)
 			v_sy_889 = ((-J.num(_s286["H"])) * 0.86)
 			J.mc(_s286["ctx"], "save", [])
-			var _t971 = _s286["ctx"]
-			J.sp(_t971, "strokeStyle", "rgba(255,240,170,.9)")
-			var _t972 = _s286["ctx"]
-			J.sp(_t972, "lineWidth", 1.6)
+			var _t985 = _s286["ctx"]
+			J.sp(_t985, "strokeStyle", "rgba(255,240,170,.9)")
+			var _t986 = _s286["ctx"]
+			J.sp(_t986, "lineWidth", 1.6)
 			J.mc(_s286["ctx"], "beginPath", [])
 			J.mc(_s286["ctx"], "moveTo", [J.sub(v_sx_888, 5.0), v_sy_889])
 			J.mc(_s286["ctx"], "lineTo", [J.add(v_sx_888, 5.0), v_sy_889])
@@ -3175,57 +3203,57 @@ func _f110(this_, a: Array, env):
 		return true
 	if J.seq(J.gp(v_s_834, "act"), "copy"):
 		v_k_890 = v_e_844
-		var _t973 = _s286["__p"]["bump"]
-		v_tap_891 = J.cl(_t973, null, [J.mod(v_at_842, 1.6), 0.2, 0.4, 0.7])
-		var _t974 = J.mul(((-0.12) - J.mul(0.06, v_tap_891)), v_k_890)
-		J.sp(v_pz_845, "armF", _t974)
-		var _t975 = J.mul(0.03, v_k_890)
-		J.sp(v_pz_845, "body", _t975)
-		var _t976 = J.mul(0.06, v_k_890)
-		J.sp(v_pz_845, "head", _t976)
+		var _t987 = _s286["__p"]["bump"]
+		v_tap_891 = J.cl(_t987, null, [J.mod(v_at_842, 1.6), 0.2, 0.4, 0.7])
+		var _t988 = J.mul(((-0.12) - J.mul(0.06, v_tap_891)), v_k_890)
+		J.sp(v_pz_845, "armF", _t988)
+		var _t989 = J.mul(0.03, v_k_890)
+		J.sp(v_pz_845, "body", _t989)
+		var _t990 = J.mul(0.06, v_k_890)
+		J.sp(v_pz_845, "head", _t990)
 		J.cl(v_draw_838, null, ["npc_mis", v_pz_845])
 		if J.cmp(v_at_842, 0.5, ">"):
 			J.cl(_s286["__p"]["copyIdle"], null, [])
 		return true
 	if J.seq(J.gp(v_s_834, "act"), "hair"):
-		var _t977 = _s286["__p"]["bump"]
-		v_k_892 = J.mul(v_e_844, J.cl(_t977, null, [v_at_842, 0.1, 0.6, 2.2]))
-		var _t979 = sin(J.num(J.mul(v_at_842, 8.0)))
-		var _t978 = _s286["__p"]["bump"]
-		v_sw_893 = J.mul(_t979, J.cl(_t978, null, [v_at_842, 0.4, 0.8, 1.8]))
-		var _t980 = (J.mul((-0.12), v_k_892) + J.mul(0.04, v_sw_893))
-		J.sp(v_pz_845, "head", _t980)
-		var _t981 = (J.mul((-0.3), v_k_892) + J.mul(0.12, v_sw_893))
-		J.sp(v_pz_845, "hairR", _t981)
-		var _t982 = J.mul((-0.03), v_k_892)
-		J.sp(v_pz_845, "body", _t982)
-		var _t983 = J.mul((-0.1), v_k_892)
-		J.sp(v_pz_845, "armB", _t983)
+		var _t991 = _s286["__p"]["bump"]
+		v_k_892 = J.mul(v_e_844, J.cl(_t991, null, [v_at_842, 0.1, 0.6, 2.2]))
+		var _t993 = sin(J.num(J.mul(v_at_842, 8.0)))
+		var _t992 = _s286["__p"]["bump"]
+		v_sw_893 = J.mul(_t993, J.cl(_t992, null, [v_at_842, 0.4, 0.8, 1.8]))
+		var _t994 = (J.mul((-0.12), v_k_892) + J.mul(0.04, v_sw_893))
+		J.sp(v_pz_845, "head", _t994)
+		var _t995 = (J.mul((-0.3), v_k_892) + J.mul(0.12, v_sw_893))
+		J.sp(v_pz_845, "hairR", _t995)
+		var _t996 = J.mul((-0.03), v_k_892)
+		J.sp(v_pz_845, "body", _t996)
+		var _t997 = J.mul((-0.1), v_k_892)
+		J.sp(v_pz_845, "armB", _t997)
 		J.cl(v_draw_838, null, ["npc_mis", v_pz_845])
 		return true
 	if J.seq(J.gp(v_s_834, "act"), "roll"):
-		var _t984 = _s286["__p"]["bump"]
-		v_k_894 = J.cl(_t984, null, [v_at_842, 0.1, 0.4, 1.6])
-		var _t985 = J.mul((-0.16), v_k_894)
-		J.sp(v_pz_845, "head", _t985)
-		var _t986 = J.mul((-0.04), v_k_894)
-		J.sp(v_pz_845, "body", _t986)
-		var _t987 = J.mul((-0.15), v_k_894)
-		J.sp(v_pz_845, "hairR", _t987)
+		var _t998 = _s286["__p"]["bump"]
+		v_k_894 = J.cl(_t998, null, [v_at_842, 0.1, 0.4, 1.6])
+		var _t999 = J.mul((-0.16), v_k_894)
+		J.sp(v_pz_845, "head", _t999)
+		var _t1000 = J.mul((-0.04), v_k_894)
+		J.sp(v_pz_845, "body", _t1000)
+		var _t1001 = J.mul((-0.15), v_k_894)
+		J.sp(v_pz_845, "hairR", _t1001)
 		J.cl(v_draw_838, null, ["npc_mis", v_pz_845])
-		var _t988 = _s286["__p"]["text"]
-		var _t990 = _s286["ctx"]
-		var _t991 = (J.mul((-J.num(v_fx_837)), _s286["H"]) * 0.3)
-		var _t992 = ((-J.num(_s286["H"])) * 1.02)
-		var _t993 = J.mul(_s286["H"], 0.11)
-		var _t989 = _s286["__p"]["bump"]
-		J.cl(_t988, null, [_t990, _t991, _t992, "哼", _t993, J.cl(_t989, null, [v_at_842, 0.2, 0.4, 1.4])])
+		var _t1002 = _s286["__p"]["text"]
+		var _t1004 = _s286["ctx"]
+		var _t1005 = (J.mul((-J.num(v_fx_837)), _s286["H"]) * 0.3)
+		var _t1006 = ((-J.num(_s286["H"])) * 1.02)
+		var _t1007 = J.mul(_s286["H"], 0.11)
+		var _t1003 = _s286["__p"]["bump"]
+		J.cl(_t1002, null, [_t1004, _t1005, _t1006, "哼", _t1007, J.cl(_t1003, null, [v_at_842, 0.2, 0.4, 1.4])])
 		J.mc(_s286["ctx"], "save", [])
-		var _t994 = _s286["ctx"]
-		var _t995 = ("rgba(40,30,60," + J.str(J.mul(0.8, v_k_894)) + ")")
-		J.sp(_t994, "strokeStyle", _t995)
-		var _t996 = _s286["ctx"]
-		J.sp(_t996, "lineWidth", 1.5)
+		var _t1008 = _s286["ctx"]
+		var _t1009 = ("rgba(40,30,60," + J.str(J.mul(0.8, v_k_894)) + ")")
+		J.sp(_t1008, "strokeStyle", _t1009)
+		var _t1010 = _s286["ctx"]
+		J.sp(_t1010, "lineWidth", 1.5)
 		v_i_895 = 0.0
 		while true:
 			if not J.cmp(v_i_895, 3.0, "<"): break
@@ -3251,59 +3279,59 @@ func _f113(this_, a: Array, env):
 	var _s308 = {"__p": env, "b": null}
 	v_id_899 = J.arg(a, 0)
 	v_it_900 = J.gp(_s308["__p"]["items"], v_id_899)
-	var _t998 = (not J.t(v_it_900))
-	if not J.t(_t998):
-		var _t997 = _s308["__p"]["img"]
-		_t998 = (not J.t(J.cl(_t997, null, [(J.gp(J.gp(v_it_900, "parent"), "spr") if J.t(J.gp(v_it_900, "parent")) else J.gp(v_it_900, "spr"))])))
-	if _t998:
+	var _t1012 = (not J.t(v_it_900))
+	if not J.t(_t1012):
+		var _t1011 = _s308["__p"]["img"]
+		_t1012 = (not J.t(J.cl(_t1011, null, [(J.gp(J.gp(v_it_900, "parent"), "spr") if J.t(J.gp(v_it_900, "parent")) else J.gp(v_it_900, "spr"))])))
+	if _t1012:
 		return null
-	var _t999 = J.gp(v_it_900, "parent")
-	v_p_901 = (_t999 if J.t(_t999) else v_it_900)
-	var _t1000 = _s308["__p"]["frameOf"]
-	v_F_902 = J.cl(_t1000, null, [v_p_901])
+	var _t1013 = J.gp(v_it_900, "parent")
+	v_p_901 = (_t1013 if J.t(_t1013) else v_it_900)
+	var _t1014 = _s308["__p"]["frameOf"]
+	v_F_902 = J.cl(_t1014, null, [v_p_901])
 	_s308["b"] = J.mc(_s308["__p"]["SC"], "bgScale", [])
 	v_toF_904 = Callable(self, "_f114").bind(_s308)
 	if (not J.t(J.gp(v_it_900, "parent"))):
-		var _t1001 = J.cl(v_toF_904, null, [J.sub(J.gp(v_F_902, "x"), J.mul(J.gp(v_it_900, "ax"), J.gp(v_F_902, "w"))), J.sub(J.gp(v_F_902, "y"), J.mul(J.gp(v_it_900, "ay"), J.gp(v_F_902, "h")))])
-		var _t1002 = J.gp(_t1001, 0.0)
-		v_x1_916 = _t1002
-		var _t1003 = J.gp(_t1001, 1.0)
-		v_y1_917 = _t1003
-		var _t1004 = J.cl(v_toF_904, null, [J.add(J.gp(v_F_902, "x"), J.mul(J.sub(1.0, J.gp(v_it_900, "ax")), J.gp(v_F_902, "w"))), J.add(J.gp(v_F_902, "y"), J.mul(J.sub(1.0, J.gp(v_it_900, "ay")), J.gp(v_F_902, "h")))])
-		var _t1005 = J.gp(_t1004, 0.0)
-		v_x2_918 = _t1005
-		var _t1006 = J.gp(_t1004, 1.0)
-		v_y2_919 = _t1006
+		var _t1015 = J.cl(v_toF_904, null, [J.sub(J.gp(v_F_902, "x"), J.mul(J.gp(v_it_900, "ax"), J.gp(v_F_902, "w"))), J.sub(J.gp(v_F_902, "y"), J.mul(J.gp(v_it_900, "ay"), J.gp(v_F_902, "h")))])
+		var _t1016 = J.gp(_t1015, 0.0)
+		v_x1_916 = _t1016
+		var _t1017 = J.gp(_t1015, 1.0)
+		v_y1_917 = _t1017
+		var _t1018 = J.cl(v_toF_904, null, [J.add(J.gp(v_F_902, "x"), J.mul(J.sub(1.0, J.gp(v_it_900, "ax")), J.gp(v_F_902, "w"))), J.add(J.gp(v_F_902, "y"), J.mul(J.sub(1.0, J.gp(v_it_900, "ay")), J.gp(v_F_902, "h")))])
+		var _t1019 = J.gp(_t1018, 0.0)
+		v_x2_918 = _t1019
+		var _t1020 = J.gp(_t1018, 1.0)
+		v_y2_919 = _t1020
 		return [v_x1_916, v_y1_917, J.sub(v_x2_918, v_x1_916), J.sub(v_y2_919, v_y1_917)]
-	var _t1007 = _s308["__p"]["img"]
-	v_im_905 = J.cl(_t1007, null, [J.gp(v_it_900, "spr")])
+	var _t1021 = _s308["__p"]["img"]
+	v_im_905 = J.cl(_t1021, null, [J.gp(v_it_900, "spr")])
 	v_ch_906 = J.mul(J.gp(v_it_900, "h"), J.gp(v_F_902, "u"))
 	v_cw_907 = J.div(J.mul(v_ch_906, J.gp(v_im_905, "width")), J.gp(v_im_905, "height"))
 	v_cx_908 = (J.sub(J.gp(v_F_902, "x"), J.mul(J.gp(v_p_901, "ax"), J.gp(v_F_902, "w"))) + J.mul(J.gp(v_it_900, "u"), J.gp(v_F_902, "w")))
 	v_cy_909 = (J.sub(J.gp(v_F_902, "y"), J.mul(J.gp(v_p_901, "ay"), J.gp(v_F_902, "h"))) + J.mul(J.gp(v_it_900, "v"), J.gp(v_F_902, "h")))
-	var _t1008 = J.cl(v_toF_904, null, [J.sub(v_cx_908, J.mul((0.5 if J.leq(J.gp(v_it_900, "ax"), null) else J.gp(v_it_900, "ax")), v_cw_907)), J.sub(v_cy_909, v_ch_906)])
-	var _t1009 = J.gp(_t1008, 0.0)
-	v_x1_910 = _t1009
-	var _t1010 = J.gp(_t1008, 1.0)
-	v_y1_911 = _t1010
-	var _t1011 = J.cl(v_toF_904, null, [J.add(v_cx_908, J.mul(J.sub(1.0, (0.5 if J.leq(J.gp(v_it_900, "ax"), null) else J.gp(v_it_900, "ax"))), v_cw_907)), v_cy_909])
-	var _t1012 = J.gp(_t1011, 0.0)
-	v_x2_912 = _t1012
-	var _t1013 = J.gp(_t1011, 1.0)
-	v_y2_913 = _t1013
+	var _t1022 = J.cl(v_toF_904, null, [J.sub(v_cx_908, J.mul((0.5 if J.leq(J.gp(v_it_900, "ax"), null) else J.gp(v_it_900, "ax")), v_cw_907)), J.sub(v_cy_909, v_ch_906)])
+	var _t1023 = J.gp(_t1022, 0.0)
+	v_x1_910 = _t1023
+	var _t1024 = J.gp(_t1022, 1.0)
+	v_y1_911 = _t1024
+	var _t1025 = J.cl(v_toF_904, null, [J.add(v_cx_908, J.mul(J.sub(1.0, (0.5 if J.leq(J.gp(v_it_900, "ax"), null) else J.gp(v_it_900, "ax"))), v_cw_907)), v_cy_909])
+	var _t1026 = J.gp(_t1025, 0.0)
+	v_x2_912 = _t1026
+	var _t1027 = J.gp(_t1025, 1.0)
+	v_y2_913 = _t1027
 	return [v_x1_910, v_y1_911, J.sub(v_x2_912, v_x1_910), J.sub(v_y2_913, v_y1_911)]
 
 func _f2(this_, a: Array, env):
 	var v_v_109 = null; var v_a_110 = null; var v_b_111 = null
 	v_v_109 = J.arg(a, 0)
-	var _t1014 = J.arg(a, 1)
-	if _t1014 == null:
-		_t1014 = 0.0
-	v_a_110 = _t1014
-	var _t1015 = J.arg(a, 2)
-	if _t1015 == null:
-		_t1015 = 1.0
-	v_b_111 = _t1015
+	var _t1028 = J.arg(a, 1)
+	if _t1028 == null:
+		_t1028 = 0.0
+	v_a_110 = _t1028
+	var _t1029 = J.arg(a, 2)
+	if _t1029 == null:
+		_t1029 = 1.0
+	v_b_111 = _t1029
 	return (v_a_110 if J.cmp(v_v_109, v_a_110, "<") else (v_b_111 if J.cmp(v_v_109, v_b_111, ">") else v_v_109))
 
 func _f3(this_, a: Array, env):
@@ -3316,9 +3344,9 @@ func _f3(this_, a: Array, env):
 func _f4(this_, a: Array, env):
 	var v_t_115 = null
 	v_t_115 = J.arg(a, 0)
-	var _t1016 = env["cl"]
-	var _t1017 = J.cl(_t1016, null, [v_t_115])
-	v_t_115 = _t1017
+	var _t1030 = env["cl"]
+	var _t1031 = J.cl(_t1030, null, [v_t_115])
+	v_t_115 = _t1031
 	return (J.mul(v_t_115, v_t_115) * (3.0 - J.mul(2.0, v_t_115)))
 
 func _f5(this_, a: Array, env):
@@ -3327,20 +3355,20 @@ func _f5(this_, a: Array, env):
 	v_a_117 = J.arg(a, 1)
 	v_m_118 = J.arg(a, 2)
 	v_b_119 = J.arg(a, 3)
-	var _t1018 = J.cmp(v_t_116, v_a_117, "<=")
-	var _t1022 = null
-	if (_t1018 if _t1018 else J.cmp(v_t_116, v_b_119, ">=")):
-		_t1022 = 0.0
+	var _t1032 = J.cmp(v_t_116, v_a_117, "<=")
+	var _t1036 = null
+	if (_t1032 if _t1032 else J.cmp(v_t_116, v_b_119, ">=")):
+		_t1036 = 0.0
 	else:
-		var _t1021 = null
+		var _t1035 = null
 		if J.cmp(v_t_116, v_m_118, "<"):
-			var _t1019 = env["ss"]
-			_t1021 = J.cl(_t1019, null, [J.div(J.sub(v_t_116, v_a_117), J.sub(v_m_118, v_a_117))])
+			var _t1033 = env["ss"]
+			_t1035 = J.cl(_t1033, null, [J.div(J.sub(v_t_116, v_a_117), J.sub(v_m_118, v_a_117))])
 		else:
-			var _t1020 = env["ss"]
-			_t1021 = J.sub(1.0, J.cl(_t1020, null, [J.div(J.sub(v_t_116, v_m_118), J.sub(v_b_119, v_m_118))]))
-		_t1022 = _t1021
-	return _t1022
+			var _t1034 = env["ss"]
+			_t1035 = J.sub(1.0, J.cl(_t1034, null, [J.div(J.sub(v_t_116, v_m_118), J.sub(v_b_119, v_m_118))]))
+		_t1036 = _t1035
+	return _t1036
 
 func _f6(this_, a: Array, env):
 	var v_s_120 = null; var v_x_121 = null
@@ -3351,11 +3379,11 @@ func _f6(this_, a: Array, env):
 func _f7(this_, a: Array, env):
 	var v_k_122 = null
 	v_k_122 = J.arg(a, 0)
-	var _t1024 = J.seq(J.typeof_(J.G.get("sprOk")), "function")
-	if J.t(_t1024):
-		var _t1023 = J.G.get("sprOk")
-		_t1024 = J.cl(_t1023, null, [v_k_122])
-	return _t1024
+	var _t1038 = J.seq(J.typeof_(J.G.get("sprOk")), "function")
+	if J.t(_t1038):
+		var _t1037 = J.G.get("sprOk")
+		_t1038 = J.cl(_t1037, null, [v_k_122])
+	return _t1038
 
 func _f8(this_, a: Array, env):
 	var v_y_123 = null
@@ -3376,44 +3404,44 @@ func _f10(this_, a: Array, env):
 func _f14(this_, a: Array, env):
 	var v_n_148 = null
 	v_n_148 = J.arg(a, 0)
-	var _t1029 = (J.gp(v_n_148, "d") if J.t(v_n_148) else v_n_148)
-	var _t1030 = (J.gp(env["STATIONS"], J.gp(J.gp(v_n_148, "d"), "k")) if J.t(_t1029) else _t1029)
-	return (_t1030 if J.t(_t1030) else null)
+	var _t1043 = (J.gp(v_n_148, "d") if J.t(v_n_148) else v_n_148)
+	var _t1044 = (J.gp(env["STATIONS"], J.gp(J.gp(v_n_148, "d"), "k")) if J.t(_t1043) else _t1043)
+	return (_t1044 if J.t(_t1044) else null)
 
 func _f15(this_, a: Array, env):
 	var v_n_149 = null; var v_s_150 = null
 	v_n_149 = J.arg(a, 0)
-	var _t1031 = env["stnOf"]
-	v_s_150 = J.cl(_t1031, null, [v_n_149])
+	var _t1045 = env["stnOf"]
+	v_s_150 = J.cl(_t1045, null, [v_n_149])
 	return (J.mul(J.gp(v_s_150, "koff"), J.max_([0.0, (1.0 - J.div(J.hypot_([J.sub(J.gp(v_n_149, "x"), J.gp(J.gp(v_s_150, "seat"), "x")), J.sub(J.gp(v_n_149, "y"), J.gp(J.gp(v_s_150, "seat"), "y"))]), 0.07))])) if J.t(v_s_150) else 0.0)
 
 func _f16(this_, a: Array, env):
 	var v_fn_151 = null; var v_keep_152 = null; var v_k_153 = null
 	v_fn_151 = J.arg(a, 0)
 	v_keep_152 = env["STN"]
-	for _t1032 in J.keys(env["STATIONS"]):
-		v_k_153 = _t1032
+	for _t1046 in J.keys(env["STATIONS"]):
+		v_k_153 = _t1046
 		if J.t(J.gp(J.gp(env["STATIONS"], v_k_153), "K")):
-			var _t1033 = env["use"]
-			J.cl(_t1033, null, [J.gp(env["STATIONS"], v_k_153)])
+			var _t1047 = env["use"]
+			J.cl(_t1047, null, [J.gp(env["STATIONS"], v_k_153)])
 			J.cl(v_fn_151, null, [J.gp(env["STATIONS"], v_k_153)])
-	var _t1034 = env["use"]
-	J.cl(_t1034, null, [v_keep_152])
+	var _t1048 = env["use"]
+	J.cl(_t1048, null, [v_keep_152])
 
 func _f17(this_, a: Array, env):
 	var v_px_154 = null; var v_y_155 = null; var v_on_156 = null; var v_i_157 = null
-	var _t1035 = J.gp(J.arg(a, 0), 0.0)
-	v_px_154 = _t1035
-	var _t1036 = J.gp(J.arg(a, 0), 1.0)
-	v_y_155 = _t1036
-	var _t1037 = J.gp(J.arg(a, 0), 2.0)
-	v_on_156 = _t1037
+	var _t1049 = J.gp(J.arg(a, 0), 0.0)
+	v_px_154 = _t1049
+	var _t1050 = J.gp(J.arg(a, 0), 1.0)
+	v_y_155 = _t1050
+	var _t1051 = J.gp(J.arg(a, 0), 2.0)
+	v_on_156 = _t1051
 	v_i_157 = J.arg(a, 1)
 	J.mc(env["DEF"], "push", [{"id": J.add("wsch", v_i_157), "spr": "of_chair_front", "wx": (J.div(v_px_154, J.gp(J.G.get("OFFMAP"), "PXU")) + ((-0.085) if J.t(J.mod(v_i_157, 2.0)) else 0.085)), "wy": J.sub(v_y_155, 0.004), "h": 0.6, "ay": 0.98, "shadow": 0.45, "flip": J.mod(v_i_157, 2.0)}])
-	var _t1039 = J.add("ws", v_i_157)
-	var _t1040 = J.div(v_px_154, J.gp(J.G.get("OFFMAP"), "PXU"))
-	var _t1038 = [{"id": J.add("wsm", v_i_157), "spr": "op_mon_back", "u": 0.47, "v": 0.33, "h": 0.5, "ax": 0.5, "ay": 0.96}, {"id": J.add("wsk", v_i_157), "spr": "op_keyboard", "u": 0.5, "v": 0.2, "h": 0.06}]
-	J.mc(env["DEF"], "push", [{"id": _t1039, "spr": "of_desk_back_empty", "wx": _t1040, "wy": v_y_155, "h": 0.9, "ay": 0.97, "shadow": 1.1, "glow": v_on_156, "kids": J.mc(_t1038, "concat", [([{"id": J.add("wsg", v_i_157), "spr": "op_mug_back", "u": 0.2, "v": 0.34, "h": 0.12}] if J.seq(J.mod(v_i_157, 3.0), 1.0) else [])])}])
+	var _t1053 = J.add("ws", v_i_157)
+	var _t1054 = J.div(v_px_154, J.gp(J.G.get("OFFMAP"), "PXU"))
+	var _t1052 = [{"id": J.add("wsm", v_i_157), "spr": "op_mon_back", "u": 0.47, "v": 0.33, "h": 0.5, "ax": 0.5, "ay": 0.96}, {"id": J.add("wsk", v_i_157), "spr": "op_keyboard", "u": 0.5, "v": 0.2, "h": 0.06}]
+	J.mc(env["DEF"], "push", [{"id": _t1053, "spr": "of_desk_back_empty", "wx": _t1054, "wy": v_y_155, "h": 0.9, "ay": 0.97, "shadow": 1.1, "glow": v_on_156, "kids": J.mc(_t1052, "concat", [([{"id": J.add("wsg", v_i_157), "spr": "op_mug_back", "u": 0.2, "v": 0.34, "h": 0.12}] if J.seq(J.mod(v_i_157, 3.0), 1.0) else [])])}])
 
 func _f20(this_, a: Array, env):
 	var v_y_172 = null
@@ -3424,39 +3452,48 @@ func _f77(this_, a: Array, env):
 	var v_s_487 = null; var v_K_488 = null
 	v_s_487 = J.arg(a, 0)
 	v_K_488 = J.gp((v_s_487 if J.t(v_s_487) else env["STN"]), "K")
-	var _t1044 = (not (not J.t(v_K_488)))
-	if J.t(_t1044):
-		var _t1041 = J.seq(J.gp(v_K_488, "mode"), "sit")
-		var _t1042 = (_t1041 if _t1041 else J.seq(J.gp(v_K_488, "mode"), "jump"))
-		var _t1043 = (_t1042 if _t1042 else J.seq(J.gp(v_K_488, "mode"), "rise"))
-		_t1044 = (_t1043 if _t1043 else J.seq(J.gp(v_K_488, "mode"), "sitdown"))
-	return _t1044
+	var _t1058 = (not (not J.t(v_K_488)))
+	if J.t(_t1058):
+		var _t1055 = J.seq(J.gp(v_K_488, "mode"), "sit")
+		var _t1056 = (_t1055 if _t1055 else J.seq(J.gp(v_K_488, "mode"), "jump"))
+		var _t1057 = (_t1056 if _t1056 else J.seq(J.gp(v_K_488, "mode"), "rise"))
+		_t1058 = (_t1057 if _t1057 else J.seq(J.gp(v_K_488, "mode"), "sitdown"))
+	return _t1058
 
 func _f115(this_, a: Array, env):
-	if J.t(env["st"]):
-		var _t1045 = env["st"]
-		J.sp(_t1045, "door", 1.8)
+	return env["st"]
 
 func _f116(this_, a: Array, env):
+	return env["items"]
+
+func _f117(this_, a: Array, env):
+	return env["drops"]
+
+func _f118(this_, a: Array, env):
+	if J.t(env["st"]):
+		var _t1059 = env["st"]
+		J.sp(_t1059, "door", 1.8)
+
+func _f119(this_, a: Array, env):
 	var v_k_920 = null; var v_v_921 = null
 	v_k_920 = J.arg(a, 0)
 	v_v_921 = J.arg(a, 1)
 	if J.t(J.gp(env["STATIONS"], v_k_920)):
-		var _t1046 = J.gp(env["STATIONS"], v_k_920)
-		var _t1047 = (not (not J.t(v_v_921)))
-		J.sp(_t1046, "offline", _t1047)
+		var _t1060 = J.gp(env["STATIONS"], v_k_920)
+		var _t1061 = (not (not J.t(v_v_921)))
+		J.sp(_t1060, "offline", _t1061)
 
-func _f117(this_, a: Array, env):
+func _f120(this_, a: Array, env):
 	var v_n_922 = null; var v_s_923 = null
 	v_n_922 = J.arg(a, 0)
-	var _t1048 = env["stnOf"]
-	v_s_923 = J.cl(_t1048, null, [v_n_922])
+	var _t1062 = env["stnOf"]
+	v_s_923 = J.cl(_t1062, null, [v_n_922])
 	return (J.gp(J.gp(env["items"], J.gp(v_s_923, "desk")), "z") if J.t((J.gp(env["items"], J.gp(v_s_923, "desk")) if J.t(v_s_923) else v_s_923)) else (J.gp(v_n_922, "y") if J.t(v_n_922) else 0.6))
 
-func _f118(this_, a: Array, env):
+func _f121(this_, a: Array, env):
 	return env["items"]
 
-func _f119(this_, a: Array, env):
+func _f122(this_, a: Array, env):
 	var v_k_924 = null
 	v_k_924 = J.arg(a, 0)
 	return J.gp(J.gp(env["STATIONS"], (v_k_924 if J.t(v_k_924) else "ken")), "K")
@@ -3541,12 +3578,12 @@ func _f1(this_, a: Array, env):
 	_s3["TC"] = {}
 	_s3["BGC"] = null
 	_s3["STATIONS"] = {"ken": {"k": "ken", "seat": {"x": J.mc(J.G.get("OFFMAP"), "M", [0.24]), "y": J.mc(J.G.get("OFFMAP"), "MY", [0.6])}, "koff": 0.065, "desk": "kdesk", "mon": "kmon", "mug": "kmug", "base": "npc_ken_sit", "stretch": "npc_ken_sit_stretch", "drink": "npc_ken_sit_coffee", "jump": "npc_ken_sit_jump", "hand": [0.39, 0.315], "arms": [(-0.05), 0.5, 0.67, 0.185], "face": [0.3, 0.28], "drinkSay": null, "stretchSay": "哈～", "acts": [["type", 5.0, [4.0, 8.0], 0.0], ["stretch", 1.2, [3.2, 3.2], 11.0], ["drink", 1.3, [3.8, 3.8], 12.0], ["roll", 1.0, [3.0, 3.0], 7.0], ["spin", 0.6, [2.6, 2.6], 14.0]], "bones": [["thigh", null, 0.92, 0.74, 0.22, 0.7, 0.13], ["shin", null, 0.3, 0.72, 0.3, 0.99, 0.14], ["body", null, 0.85, 0.72, 0.68, 0.42, 0.2], ["head", "body", 0.64, 0.4, 0.52, 0.06, 0.32], ["armF", "body", 0.62, 0.55, 0.1, 0.63, 0.085]]}, "it": {"k": "it", "seat": {"x": J.mc(J.G.get("OFFMAP"), "M", [0.66]), "y": 0.8}, "koff": 0.0, "desk": "idesk", "mon": "imon", "mug": null, "base": "npc_it_sit", "stretch": null, "drink": "npc_it_sit_tea", "jump": "npc_it_sit_jump", "hand": [0.385, 0.37], "arms": [(-0.03), 0.47, 0.62, 0.16], "face": [0.32, 0.3], "drinkSay": "啜——", "stretchSay": null, "acts": [["type", 5.0, [4.0, 8.0], 0.0], ["drink", 1.4, [3.8, 3.8], 11.0], ["neck", 1.1, [3.0, 3.0], 9.0], ["vibe", 1.2, [3.5, 5.0], 8.0], ["roll", 0.8, [3.0, 3.0], 8.0], ["spin", 0.5, [2.6, 2.6], 14.0]], "bones": [["thigh", null, 0.8, 0.7, 0.2, 0.7, 0.13], ["shin", null, 0.25, 0.72, 0.22, 0.99, 0.14], ["body", null, 0.72, 0.68, 0.55, 0.45, 0.22], ["hair", "body", 0.62, 0.3, 0.86, 0.55, 0.16], ["head", "body", 0.48, 0.44, 0.42, 0.06, 0.34], ["armF", "body", 0.52, 0.48, 0.06, 0.56, 0.09]]}}
-	var _t1025 = J.gp(_s3["STATIONS"], "ken")
-	var _t1026 = {"x": J.add(J.gp(J.gp(J.gp(_s3["STATIONS"], "ken"), "seat"), "x"), J.gp(J.gp(_s3["STATIONS"], "ken"), "koff")), "y": J.gp(J.gp(J.gp(_s3["STATIONS"], "ken"), "seat"), "y")}
-	J.sp(_t1025, "SEATV", _t1026)
-	var _t1027 = J.gp(_s3["STATIONS"], "it")
-	var _t1028 = {"x": J.add(J.gp(J.gp(J.gp(_s3["STATIONS"], "it"), "seat"), "x"), J.gp(J.gp(_s3["STATIONS"], "it"), "koff")), "y": J.gp(J.gp(J.gp(_s3["STATIONS"], "it"), "seat"), "y")}
-	J.sp(_t1027, "SEATV", _t1028)
+	var _t1039 = J.gp(_s3["STATIONS"], "ken")
+	var _t1040 = {"x": J.add(J.gp(J.gp(J.gp(_s3["STATIONS"], "ken"), "seat"), "x"), J.gp(J.gp(_s3["STATIONS"], "ken"), "koff")), "y": J.gp(J.gp(J.gp(_s3["STATIONS"], "ken"), "seat"), "y")}
+	J.sp(_t1039, "SEATV", _t1040)
+	var _t1041 = J.gp(_s3["STATIONS"], "it")
+	var _t1042 = {"x": J.add(J.gp(J.gp(J.gp(_s3["STATIONS"], "it"), "seat"), "x"), J.gp(J.gp(_s3["STATIONS"], "it"), "koff")), "y": J.gp(J.gp(J.gp(_s3["STATIONS"], "it"), "seat"), "y")}
+	J.sp(_t1041, "SEATV", _t1042)
 	_s3["STN"] = J.gp(_s3["STATIONS"], "ken")
 	_s3["SEAT"] = J.gp(_s3["STN"], "seat")
 	_s3["SEATV"] = J.gp(_s3["STN"], "SEATV")
@@ -3578,4 +3615,4 @@ func _f1(this_, a: Array, env):
 	_s3["QUAD"] = {"op_mon_side_on": [[0.245, 0.218], [0.887, 0.065], [0.887, 0.632], [0.245, 0.719]], "op_mon_side_off": [[0.23, 0.226], [0.897, 0.086], [0.897, 0.645], [0.23, 0.742]]}
 	_s3["MIS_ACTS"] = [["copy", 2.4, [3.0, 5.0], 3.0], ["nails", 2.2, [3.0, 5.0], 0.0], ["selfie", 1.6, [3.2, 3.2], 7.0], ["hair", 1.3, [2.6, 2.6], 6.0], ["stand", 1.0, [1.5, 3.0], 0.0]]
 	_s3["MIS_SAY"] = {"selfie": "唔該你哋行開少少，阻住我影相。", "sigh": "陳總～人哋要放假啦～", "roll": "呢啲嘢搵阿Ken做啦。"}
-	return {"elevator": Callable(self, "_f115").bind(_s3), "offline": Callable(self, "_f116").bind(_s3), "drawMis": v_drawMis_107, "kenOff": v_kenOff_26, "init": v_init_44, "tick": v_tick_52, "kenTick": v_kenTick_51, "onScare": _s3["onScare"], "onProp": v_onProp_63, "drawBack": v_drawBack_68, "drawFloor": v_drawFloor_76, "drawables": v_drawables_75, "drawKen": v_drawKen_100, "drawDark": v_drawDark_66, "kenZ": Callable(self, "_f117").bind(_s3), "STATIONS": _s3["STATIONS"], "seated": v_seated_50, "clipWindow": v_clipWindow_74, "rectOf": v_rectOf_108, "SEAT": J.gp(J.gp(_s3["STATIONS"], "ken"), "seat"), "items": Callable(self, "_f118").bind(_s3), "K": Callable(self, "_f119").bind(_s3), "AC": _s3["AC"], "WIN": v_WIN_33, "CLOCK": _s3["CLOCK"]}
+	return {"_n": {"st": Callable(self, "_f115").bind(_s3), "STATIONS": _s3["STATIONS"], "items": Callable(self, "_f116").bind(_s3), "drops": Callable(self, "_f117").bind(_s3)}, "elevator": Callable(self, "_f118").bind(_s3), "offline": Callable(self, "_f119").bind(_s3), "drawMis": v_drawMis_107, "kenOff": v_kenOff_26, "init": v_init_44, "tick": v_tick_52, "kenTick": v_kenTick_51, "onScare": _s3["onScare"], "onProp": v_onProp_63, "drawBack": v_drawBack_68, "drawFloor": v_drawFloor_76, "drawables": v_drawables_75, "drawKen": v_drawKen_100, "drawDark": v_drawDark_66, "kenZ": Callable(self, "_f120").bind(_s3), "STATIONS": _s3["STATIONS"], "seated": v_seated_50, "clipWindow": v_clipWindow_74, "rectOf": v_rectOf_108, "SEAT": J.gp(J.gp(_s3["STATIONS"], "ken"), "seat"), "items": Callable(self, "_f121").bind(_s3), "K": Callable(self, "_f122").bind(_s3), "AC": _s3["AC"], "WIN": v_WIN_33, "CLOCK": _s3["CLOCK"]}

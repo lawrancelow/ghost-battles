@@ -106,6 +106,7 @@ func _run() -> void:
 				var t0 = Time.get_ticks_usec(); var fr0 = Engine.get_process_frames(); await get_tree().create_timer(float(s[1])).timeout
 				print("PROF frames=", Engine.get_process_frames() - fr0, " process_ms=", snapped(Performance.get_monitor(Performance.TIME_PROCESS) * 1000, 0.1), " fps=", Engine.get_frames_per_second())
 			"bench": load("res://core/bench.gd").run(s[1])
+			"gdrun": await load(s[1]).new().call(s[2], self)
 			"vbench": load("res://core/bench.gd").village()
 			"vparts": load("res://core/bench.gd").vparts()
 			"storyskip":

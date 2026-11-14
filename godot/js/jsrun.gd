@@ -8,6 +8,7 @@ var ls = {}
 var _ls_dirty = false
 var modules: Array = []
 var frame_t = 0.0
+var prof_timer := 0
 var canvas_rects = {}   # El → Callable 回傳 Rect
 var skip_title = false
 
@@ -98,6 +99,7 @@ func _process(dt: float) -> void:
 		var _u = Time.get_ticks_usec()
 		J.cl(t.fn, null, [Time.get_ticks_usec() / 1000.0] if t.raf else [])
 		if OS.has_environment("GB_PROF") and Time.get_ticks_usec() - _u > 20000: print("[timer] ", (Time.get_ticks_usec() - _u) / 1000.0, "ms raf=", t.raf)
+		if OS.has_environment("GB_PROF2"): prof_timer += Time.get_ticks_usec() - _u
 	timers = timers.filter(func(t): return not t.get("dead", false))
 	if _ls_dirty: _ls_dirty = false; _save_ls()
 

@@ -319,7 +319,50 @@ func _dedupe(q: PackedVector2Array) -> PackedVector2Array:
 	if o.size() > 1 and o[0].distance_squared_to(o[o.size() - 1]) < 0.000001: o.remove_at(o.size() - 1)
 	return o
 
+# 漸變貼圖快取（同一組顏色只整一次）：漸變填色改成貼圖 UV，唔再逐個細分三角形計色（舊做法一個光暈幾千個頂點）
+static var _gtex := {}
+static func _grad_tex(g: Grad) -> Texture2D:
+	var k0 = 0.0
+	if g.radial and g.r1 > 0.0001: k0 = clampf(g.r0 / g.r1, 0.0, 0.999)
+	var key = ("r" if g.radial else "l") + str(snappedf(k0, 0.01))
+	for st in g.stops: key += "|%.3f,%s" % [st[0], (st[1] as Color).to_html()]
+	if _gtex.has(key): return _gtex[key]
+	var gr = Gradient.new(); var offs = PackedFloat32Array(); var cs = PackedColorArray()
+	for st in g.stops: offs.append(k0 + float(st[0]) * (1.0 - k0)); cs.append(st[1])
+	if offs.is_empty(): offs.append(0.0); cs.append(Color(0, 0, 0, 0))
+	if k0 > 0.0: offs.insert(0, 0.0); cs.insert(0, cs[0])
+	gr.offsets = offs; gr.colors = cs
+	var tx
+	if g.radial:
+		tx = GradientTexture2D.new(); tx.gradient = gr; tx.width = 64; tx.height = 64
+		tx.fill = GradientTexture2D.FILL_RADIAL; tx.fill_from = Vector2(0.5, 0.5); tx.fill_to = Vector2(1.0, 0.5)
+	else:
+		tx = GradientTexture1D.new(); tx.gradient = gr; tx.width = 128
+	if _gtex.size() > 400: _gtex.clear()
+	_gtex[key] = tx
+	return tx
+
+func _grad_uv(v: Vector2, g: Grad) -> Vector2:
+	if g.radial:
+		var r = maxf(0.0001, g.r1)
+		return Vector2(0.5, 0.5) + (v - g.p1) / (2.0 * r)
+	var dir = g.p1 - g.p0; var L2 = dir.length_squared()
+	var t = 0.0 if L2 < 1e-9 else (v - g.p0).dot(dir) / L2
+	return Vector2(clampf(t, 0.002, 0.998), 0.5)
+
 func _fill_grad_tris(q: PackedVector2Array, idx: PackedInt32Array, g: Grad) -> void:
+	if g.stops.size() > 0:
+		var m = _mod()
+		if m.a <= 0.001: return
+		var uvs = PackedVector2Array(); uvs.resize(q.size())
+		for k in q.size(): uvs[k] = _grad_uv(q[k], g)
+		var cols = PackedColorArray(); cols.resize(q.size()); cols.fill(m)
+		ci.draw_set_transform_matrix(Transform2D.IDENTITY)
+		_tris(idx, q, cols, uvs, _grad_tex(g))
+		return
+	_fill_grad_tris_old(q, idx, g)
+
+func _fill_grad_tris_old(q: PackedVector2Array, idx: PackedInt32Array, g: Grad) -> void:
 	# 細分三角形令漸變順滑
 	var pts = PackedVector2Array(); var cols = PackedColorArray()
 	var sub = 3 if not g.radial else 5
@@ -341,6 +384,9 @@ func _subtri(A: Vector2, B: Vector2, C: Vector2, n: int, g: Grad, pts: PackedVec
 				for v in [b, d, c]: pts.push_back(v); cols.push_back(_a(g.at(v)))
 
 func fillRect(x: float, y: float, w: float, h: float) -> void:
+	if fillStyle is Grad and (fillStyle as Grad).stops.size() > 0:
+		var q = PackedVector2Array([T * Vector2(x, y), T * Vector2(x + w, y), T * Vector2(x + w, y + h), T * Vector2(x, y + h)])
+		_fill_grad_tris(q, PackedInt32Array([0, 1, 2, 0, 2, 3]), fillStyle); return
 	if fillStyle is Grad and (fillStyle as Grad).radial:
 		_radial_rect(x, y, w, h, fillStyle); return
 	if fillStyle is Grad:
