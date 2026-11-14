@@ -41,3 +41,24 @@ func report(_t) -> void:
 	var ks = acc.keys(); ks.sort_custom(func(a, b): return acc[a][0] > acc[b][0])
 	print("[tick] ", ", ".join(ks.map(func(k): return "%s %.0fms(%d)" % [k, acc[k][0] / 1000.0, acc[k][1]])))
 	acc.clear()
+func close(_t) -> void:
+	J.mc(J.G.get("Street").Turf, "close", [])
+func sp(_t) -> void:
+	J.mc(J.G.get("Street").Turf, "specialPick", [])
+func streetback(_t) -> void:
+	J.mc(J.G.get("Street"), "close", []); J.mc(J.G.get("World"), "open", [])
+func wrapd(_t) -> void:
+	var tf = J.G.get("Street").Turf
+	var objs = [[tf, ["drawSprite", "drawAcc", "drawSqAcc", "drawDfx", "drawProp", "say", "drawFg", "wOff", "drawTraces", "drawObsFx", "drawProps", "drawLongBg", "drawCaps", "draw"]], [J.G.get("DevFx"), ["frame", "draw", "trigOf"]], [J.G.get("StnFoes"), ["drawBody"]]]
+	for ob in objs:
+		var o = ob[0]
+		if o == null: continue
+		for m in ob[1]:
+			var orig = o.get(m)
+			if not (orig is Callable): print("nowrap ", m); continue
+			var mm = m
+			o[m] = func(th, a):
+				var q0 = Time.get_ticks_usec(); var r = orig.call(th, a)
+				var k = acc.get(mm, [0, 0]); k[0] += Time.get_ticks_usec() - q0; k[1] += 1; acc[mm] = k
+				return r
+	acc.clear()
