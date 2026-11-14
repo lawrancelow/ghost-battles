@@ -45,6 +45,10 @@ static func install_natives(host: Node) -> void:
 	G["__nat_scEnd"] = func(_t, a): ScRun.end_hook(a[0]); return null
 	G["__nat_battle"] = func(_t, a): return BtRun.hook(a[0])
 	G["__nat_btSize"] = func(_t, a): return BtRun.size_of()
+	G["__nat_stStreet"] = func(_t, a): return StStreet.hook()
+	G["__nat_stStreetEnd"] = func(_t, a): StStreet.end_hook(); return null
+	G["__nat_turf"] = func(_t, a): return StTurf.hook(a[0])
+	G["__nat_turfEnd"] = func(_t, a): StTurf.end_hook(a[0]); return null
 	G["__nat_drawChar"] = func(_t, a): Art.draw_char(a[0], J.str(a[1]), J.num(a[2]), J.num(a[3]), J.num(a[4]), (a[5] as Dictionary).duplicate() if a.size() > 5 and a[5] is Dictionary else {}); return null
 	G["__nat_meshDraw"] = func(_t, a): return MeshAnim.draw_js(a[0], J.str(a[1]), a[2], J.num(a[3]), J.num(a[4]), J.num(a[5]), a[6] if a[6] is Dictionary else {}, J.t(a[7]))
 	G["Web"] = {"boot": func(_t, a): return false, "receive": func(_t, a): J.cl(a[0], null, []); return null, "init": func(_t, a): return null,

@@ -322,6 +322,7 @@ func _process(dt: float) -> void:
 				var e = JSRun.by_id(id)
 				if e != null and (" " + J.str(J.gp(e, "className")) + " ").contains(" on "): vis = false; break
 			if get_tree().root.get_node_or_null("Main/ScRun") != null: vis = false
+			if get_tree().root.get_node_or_null("Main/StTurf") != null or get_tree().root.get_node_or_null("Main/StStreet") != null: vis = false
 	btn.visible = vis
 
 # ---------------- 任務掣＋面板 ----------------

@@ -72,4 +72,20 @@ module.exports = {
   },
   scatterCrows(i) {`],
   ],
+  // 線路 F：陽間站崗——街地圖、地盤場景交俾原生外殼（game/station/）；規則同 AI 照用 street.js
+  street: [
+    // 原生：長卷只畫鏡頭見到嗰幾屏（鐵閘排線好多）
+    ["      L2.panels.forEach((P, r) => { if (r >= L2.nv) return; const x = b.x + r * b.w, nm = L2.names[r];", "      const __vx0 = this._nat ? this.toScene(0, 0)[0] : -1e9, __vx1 = this._nat ? this.toScene(innerWidth, 0)[0] : 1e9;\n      L2.panels.forEach((P, r) => { if (r >= L2.nv) return; const x = b.x + r * b.w, nm = L2.names[r]; if (x + b.w < __vx0 || x > __vx1) return;"],
+    ["const CrUI = (() => {", "const __stDC = (c, k, x, y, s, o) => typeof __nat_drawChar !== 'undefined' ? __nat_drawChar(c, k, x, y, s, o || {}) : ART['drawChar'](c, k, x, y, s, o);\nconst CrUI = (() => {"],
+    ["ART.drawChar(", "__stDC("],
+    ["    offline();\n    let el = $('#st-street');", "    offline();\n    if (typeof __nat_stStreet !== 'undefined' && __nat_stStreet()) return;\n    let el = $('#st-street');"],
+    ["  function closeStreet() {", "  function closeStreet() { if (typeof __nat_stStreetEnd !== 'undefined') __nat_stStreetEnd();"],
+    ["      this.buildMode = false; this.resize(); this.buildPath();", "      this.buildMode = false; this._nat = typeof __nat_turf !== 'undefined' && !!__nat_turf(this); this.resize(); this.buildPath();"],
+    ["    close() { this.on = false; cancelAnimationFrame(this.raf);", "    close() { this.on = false; cancelAnimationFrame(this.raf); if (this._nat && typeof __nat_turfEnd !== 'undefined') __nat_turfEnd(this); this._nat = false;"],
+    ["      this.cv.width = Wd * dpr; this.cv.height = Hd * dpr; this.cv.style.width = Wd + 'px'; this.cv.style.height = Hd + 'px'; this.c.setTransform(dpr, 0, 0, dpr, 0, 0);", "      if (!this._nat) { this.cv.width = Wd * dpr; this.cv.height = Hd * dpr; this.cv.style.width = Wd + 'px'; this.cv.style.height = Hd + 'px'; this.c.setTransform(dpr, 0, 0, dpr, 0, 0); }"],
+    ["this.draw(); if (this.ult) this.drawUlt(); this.drawMy(); this.hud();", "if (this._nat) { this._fno = (this._fno || 0) + 1; if (this._fno % 3 === 0) this.hud(); return; } this.draw(); if (this.ult) this.drawUlt(); this.drawMy(); this.hud();"],
+    ["const coinEl = $('#stt-coin'), cr = coinEl ?", "const coinEl = this._nat ? null : $('#stt-coin'), cr = this._nat && this._natCoin ? this._natCoin : coinEl ?"],
+    ["const r = this.cv.getBoundingClientRect(), [x, y] = this.toScene(", "const r = this._nat ? { left:0, top:0 } : this.cv.getBoundingClientRect(), [x, y] = this.toScene("],
+    ["  return { TUNE, open:openStreet, close:closeStreet, Turf,", "  return { _n:{ RESERVED, GATE, devTotalRate, occOf, devRate }, TUNE, open:openStreet, close:closeStreet, Turf,"],
+  ],
 };
