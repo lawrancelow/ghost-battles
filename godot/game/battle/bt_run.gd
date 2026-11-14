@@ -127,7 +127,7 @@ func _build() -> void:
 	PtChar.setup_static()
 	layer = Node2D.new(); stage.add_child(layer)
 	over = PtDraw.new(); over.fn = func(n): if J.t(B.get("active")): BtDraw.draw_over(Ctx.new(n), B, _k, _sh)
-	stage.add_child(over)
+	over.tag = "over"; stage.add_child(over)
 	for u in B.units:
 		var c = BtChar.new(u, B); layer.add_child(c); chars.append(c)
 	stage.resized.connect(func(): if J.t(B.get("active")): J.mc(B, "resize", []))
@@ -302,6 +302,7 @@ func _draw_stage() -> void:
 		if prof_n >= 30:
 			print("[battle] bg=%.1fms sync=%.1fms nodes=%.1fms js_timers=%.1fms" % [prof_d / 30000.0, prof_s / 30000.0, PtDraw.prof_us / 30000.0, JSRun.prof_timer / 30000.0]); JSRun.prof_timer = 0; PtDraw.prof_us = 0; prof_s = 0
 			var ks = BtDraw.PROFK.keys(); ks.sort_custom(func(a, b): return BtDraw.PROFK[a] > BtDraw.PROFK[b])
+			print("[tags] ", PtDraw.prof_tag.keys().map(func(k): return "%s=%.1f" % [k, PtDraw.prof_tag[k] / 30000.0])); PtDraw.prof_tag.clear()
 			print("[moves] ", ", ".join(ks.map(func(k): return "%s=%.1f" % [k, BtDraw.PROFK[k] / 30000.0]))); BtDraw.PROFK.clear()
 			prof_d = 0; prof_n = 0
 

@@ -10,7 +10,7 @@ func grid(t) -> void:
 	var bg = ColorRect.new(); bg.color = Color("#3a3440"); bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); c.add_child(bg)
 	var d = Control.new(); d.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); c.add_child(d)
 	d.draw.connect(func():
-		var ctx = Ctx.new(d)
+		var ctx = BtCtx.new(d)
 		var cw = 75.0; var rh = 950.0 / (ks.size() * 2)
 		for r in ks.size():
 			for j in PTS.size():

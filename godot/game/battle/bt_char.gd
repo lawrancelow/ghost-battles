@@ -21,10 +21,10 @@ func _init(unit: Dictionary, battle: Dictionary) -> void:
 	u = unit; B = battle
 	if _moves == null: _moves = J.G.get("MOVES"); _rig = J.gp(J.G.get("MeshAnim"), "RIG")
 	pu = {"k": J.str(u.k), "x": 0.0, "y": 0.0, "boss": J.t(u.get("boss")), "side": int(J.num(u.side))}
-	back = PtDraw.new(); back.fn = _draw_back; var gm = CanvasItemMaterial.new(); gm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD; back.material = gm; add_child(back)
+	back = PtDraw.new(); back.fn = _draw_back; back.tag = "back"; var gm = CanvasItemMaterial.new(); gm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD; back.material = gm; add_child(back)
 	pc = PtChar.new(pu, self); add_child(pc)
 	pc.over.visible = false; pc.glow.visible = false
-	mv = PtDraw.new(); mv.fn = _draw_mv; add_child(mv)
+	mv = PtDraw.new(); mv.fn = _draw_mv; mv.tag = "mv"; add_child(mv)
 
 # PtChar 要嘅 run 介面
 func fx_tex(_n): return null
@@ -68,7 +68,7 @@ func _draw_mv(n: CanvasItem) -> void:
 	if st.is_empty(): return
 	var ctx = null
 	if use_ctx:
-		ctx = Ctx.new(n)
+		ctx = BtCtx.new(n)
 		BtDraw.draw_char(ctx, pu.k, st.x, st.y, st.s, st.o)
 		if st.flash > 0:
 			ctx.save(); ctx.globalCompositeOperation = "lighter"

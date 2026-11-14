@@ -83,32 +83,49 @@ static func draw_bg(ctx: Ctx, B: Dictionary, k: float, sh: Vector2) -> void:
 	if slowT > 0: ctx.fillStyle = Color(8 / 255.0, 4 / 255.0, 20 / 255.0, minf(0.35, slowT * 2.4)); ctx.fillRect(-20, -20, 430, H + 40)
 	for f in B.fx: if J.str(f.get("kind", "")) == "dust": draw_dust(ctx, f)
 
-static func draw_over(ctx: Ctx, B: Dictionary, k: float, sh: Vector2) -> void:
-	ctx.setTransform(k, 0, 0, k, sh.x * k, sh.y * k)
-	var H = J.num(B.get("H", 560)); var T = J.num(B.get("t", 0))
+static var _sb := {}
+static func _box(c: Color, r: float) -> StyleBoxFlat:
+	var key = "%s|%s" % [c.to_html(), r]
+	if not _sb.has(key):
+		var b = StyleBoxFlat.new(); b.bg_color = c; b.set_corner_radius_all(int(round(r))); b.anti_aliasing = false; _sb[key] = b
+	return _sb[key]
+static func _bar(n: CanvasItem, x: float, y: float, w: float, h: float, r: float, c: Color) -> void:
+	if w <= 0.3: return
+	n.draw_style_box(_box(c, r), Rect2(x, y, w, h))
+static func _txt(n: CanvasItem, f: Font, s: String, x: float, y: float, sz: int, c: Color, ow := 0, oc := Color.BLACK) -> void:
+	var w = f.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, sz).x
+	if ow > 0: n.draw_string_outline(f, Vector2(x - w / 2, y), s, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, ow, oc)
+	n.draw_string(f, Vector2(x - w / 2, y), s, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, c)
+
+# 血條、名、狀態字（直接用 CanvasItem 畫，唔經 Ctx 路徑）
+static func draw_bars(n: CanvasItem, B: Dictionary, k: float, sh: Vector2) -> void:
+	n.draw_set_transform(sh * k, 0, Vector2(k, k))
+	var T = J.num(B.get("t", 0)); var fb = UIKit.font("sans", 700)
 	for u in B.units:
 		var hp = J.num(u.hp)
 		if hp <= 0: continue
 		var P = pose_of(B, u); var y0 = uy(B, u); var side1 = J.num(u.side) != 0
 		var mn = J.t(u.get("minion")); var bo = J.t(u.get("boss"))
 		var bx = J.num(u.x) + P.ox * 0.4; var bw = 26.0 if mn else (64.0 if bo else 46.0); var by = y0 - (36.0 if mn else (92.0 if bo else 72.0))
-		rr(ctx, bx - bw / 2, by, bw, 5, 2, Color(0, 0, 0, 0.6))
-		rr(ctx, bx - bw / 2, by, bw * hp / J.num(u.maxhp), 5, 2, Color("#e84a5f") if side1 else Color("#4ade80"))
+		_bar(n, bx - bw / 2, by, bw, 5, 2, Color(0, 0, 0, 0.6))
+		_bar(n, bx - bw / 2, by, bw * hp / J.num(u.maxhp), 5, 2, Color("#e84a5f") if side1 else Color("#4ade80"))
 		var en = J.num(u.get("energy", 0))
-		if u.get("sk") != null and not mn: rr(ctx, bx - bw / 2, by + 6, bw * en / 100.0, 3, 1.5, Color("#ffd84a") if en >= 100 else Color("#7dd3fc"))
+		if u.get("sk") != null and not mn: _bar(n, bx - bw / 2, by + 6, bw * en / 100.0, 3, 1.5, Color("#ffd84a") if en >= 100 else Color("#7dd3fc"))
 		var st: Dictionary = u.st
-		ctx.textAlign = "center"
-		if bo: ctx.fillStyle = Color("#ffd0d8"); ctx.font = "bold 12px sans-serif"; ctx.fillText(J.str(DB.L(J.str(u.name))), bx, by - 4)
+		if bo: _txt(n, fb, J.str(DB.L(J.str(u.name))), bx, by - 4, 12, Color("#ffd0d8"))
 		var air = J.num(st.get("air", 0)) > 0; var down = J.num(st.get("down", 0)) > 0
-		if air or down:
-			ctx.fillStyle = Color("#99ffff") if air else Color("#ffcc99"); ctx.font = "bold 11px sans-serif"
-			ctx.fillText(J.str(DB.L("嚇彈起" if air else "腳軟")), bx, by - (18.0 if bo else 4.0))
+		if air or down: _txt(n, fb, J.str(DB.L("嚇彈起" if air else "腳軟")), bx, by - (18.0 if bo else 4.0), 11, Color("#99ffff") if air else Color("#ffcc99"))
 		var ft = u.get("fearT")
 		if side1 and ft is Dictionary and J.num(ft.get("until", 0)) > T:
-			ctx.save(); ctx.font = "bold 11px sans-serif"; ctx.textAlign = "center"; ctx.lineWidth = 3; ctx.strokeStyle = Color(20 / 255.0, 0, 30 / 255.0, 0.8); ctx.fillStyle = Color("#e6c4ff")
 			var ty = by - (18.0 if bo else 6.0) - (13.0 if air or down else 0.0)
 			var tx = J.str(DB.L("失神")) + "・" + J.str(DB.L(J.str(J.mc(js("Rework"), "word", [ft.get("t")]))))
-			ctx.strokeText(tx, bx, ty); ctx.fillText(tx, bx, ty); ctx.restore()
+			_txt(n, fb, tx, bx, ty, 11, Color("#e6c4ff"), 3, Color(20 / 255.0, 0, 30 / 255.0, 0.8))
+	n.draw_set_transform_matrix(Transform2D.IDENTITY)
+
+static func draw_over(ctx: Ctx, B: Dictionary, k: float, sh: Vector2) -> void:
+	draw_bars(ctx.ci, B, k, sh)
+	ctx.setTransform(k, 0, 0, k, sh.x * k, sh.y * k)
+	var H = J.num(B.get("H", 560)); var T = J.num(B.get("t", 0))
 	# 軍師／合體技蓄力
 	var ac = B.get("advCast")
 	if ac is Dictionary: draw_charge(ctx, T, 34, H * 0.36, 1, J.num(ac.t) / J.num(ac.dur), Color("#c8ffb0"), true)
@@ -151,28 +168,34 @@ static func draw_text(ctx: Ctx, f: Dictionary) -> void:
 	var tx = J.str(DB.L(J.str(f.text)))
 	ctx.strokeText(tx, 0, 0); ctx.fillStyle = f.col; ctx.fillText(tx, 0, 0); ctx.restore()
 
-# 蠟筆風火花
+# 蠟筆風火花（每一層所有線一次過 draw_multiline，唔逐條 stroke）
 static func draw_spark(ctx: Ctx, f: Dictionary) -> void:
 	var p = J.num(f.t) / J.num(f.life); var e = 1 - pow(1 - p, 2); var a = 1 - p; var fk = J.num(f.k)
-	ctx.save(); ctx.lineCap = "round"; ctx.translate(J.num(f.x), J.num(f.y))
+	var M: Transform2D = ctx.T * Transform2D(0, Vector2(J.num(f.x), J.num(f.y)))
+	var scl = sqrt(absf(M.determinant()))
 	var rays: Array = f.rays
-	var passes = [[Color(20 / 255.0, 10 / 255.0, 30 / 255.0, 0.85), 4.2 * fk * (1 - p * 0.5), 0.8, 0], [f.col, 2.4 * fk * (1 - p * 0.5), 1.0, 2], [Color.WHITE, 1.0 * fk, 0.9, 4]]
+	var passes = [[Color(20 / 255.0, 10 / 255.0, 30 / 255.0, 0.85), 4.2 * fk * (1 - p * 0.5), 0.8, 0], [Ctx.col(f.col), 2.4 * fk * (1 - p * 0.5), 1.0, 2], [Color.WHITE, 1.0 * fk, 0.9, 4]]
+	var ci: CanvasItem = ctx.ci
+	ci.draw_set_transform_matrix(Transform2D.IDENTITY)
 	for ps in passes:
-		ctx.strokeStyle = ps[0]; ctx.globalAlpha = ps[2] * a; ctx.lineWidth = ps[1]; var off = ps[3]
+		var c: Color = ps[0]; c.a *= ps[2] * a * ctx.globalAlpha; var off: int = ps[3]
+		if c.a <= 0.003: continue
+		var pts = PackedVector2Array()
 		for r in rays:
 			var ln = J.num(r.len); var ra = J.num(r.a); var rj = J.num(r.j)
-			var r0 = ln * (0.15 + e * 0.55); var r1 = ln * (0.45 + e * 0.75); var c = cos(ra); var sn = sin(ra)
+			var r0 = ln * (0.15 + e * 0.55); var r1 = ln * (0.45 + e * 0.75); var cc = cos(ra); var sn = sin(ra)
 			for i in 2:
-				ctx.beginPath()
-				ctx.moveTo(c * r0 + sin(rj + (i + off) * 7.3) * 1.6, sn * r0 + sin(rj + (i + off + 3) * 7.3) * 1.6)
-				ctx.lineTo(c * r1 + sin(rj + (i + off + 5) * 7.3) * 1.6, sn * r1 + sin(rj + (i + off + 1) * 7.3) * 1.6); ctx.stroke()
+				pts.append(M * Vector2(cc * r0 + sin(rj + (i + off) * 7.3) * 1.6, sn * r0 + sin(rj + (i + off + 3) * 7.3) * 1.6))
+				pts.append(M * Vector2(cc * r1 + sin(rj + (i + off + 5) * 7.3) * 1.6, sn * r1 + sin(rj + (i + off + 1) * 7.3) * 1.6))
+		ci.draw_multiline(pts, c, maxf(1.0, float(ps[1]) * scl))
 	if p < 0.5:
-		var q = (1 - p * 2) * 12 * fk; ctx.globalAlpha = 1 - p * 2; ctx.rotate(J.num(f.rot)); ctx.fillStyle = Color.WHITE; ctx.beginPath()
+		var q = (1 - p * 2) * 12 * fk; var R = M * Transform2D(J.num(f.rot), Vector2.ZERO)
+		var poly = PackedVector2Array()
 		for i in 8:
 			var ang = i * PI / 4; var rr2 = q * 0.28 if i % 2 else q
-			ctx.lineTo(cos(ang) * rr2, sin(ang) * rr2)
-		ctx.closePath(); ctx.fill()
-	ctx.restore()
+			poly.append(R * Vector2(cos(ang) * rr2, sin(ang) * rr2))
+		var wc = Color(1, 1, 1, (1 - p * 2) * ctx.globalAlpha)
+		if Geometry2D.triangulate_polygon(poly).size(): ci.draw_colored_polygon(poly, wc)
 
 # 刀光弧
 static func draw_slash(ctx: Ctx, f: Dictionary) -> void:
