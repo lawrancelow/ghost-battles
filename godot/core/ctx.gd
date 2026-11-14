@@ -493,6 +493,14 @@ func _draw_rec(rec: Recorder, el, a, b, c, d, e, f, g, h) -> void:
 		var dx: float = float(e); var dy: float = float(f); var dw: float = float(g); var dh: float = float(h)
 		M = Transform2D(Vector2(dw / maxf(0.001, sw), 0), Vector2(0, dh / maxf(0.001, sh)), Vector2(dx, dy)) * Transform2D(0.0, Vector2(-sx, -sy))
 	if ci is Recorder: ci.rec(rec, T * M, globalAlpha); return
+	# 線路 G：原生直畫時，大離屏畫布（蠟筆框、紙紋）拍成貼圖，唔使每幀重播幾百筆
+	if rec.baked != null:
+		var m2 := _mod()
+		if m2.a > 0.001:
+			ci.draw_set_transform_matrix(T * M); ci.draw_texture_rect(rec.baked, Rect2(0, 0, rec.width, rec.height), false, m2)
+			ci.draw_set_transform_matrix(Transform2D.IDENTITY)
+		return
+	if rec.cmds.size() > 120: Baker.request(rec)
 	rec.replay(ci, T * M, globalAlpha)
 	ci.draw_set_transform_matrix(Transform2D.IDENTITY)
 

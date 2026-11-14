@@ -33,6 +33,13 @@ static func install_natives(host: Node) -> void:
 	G["__nat_menuClose"] = func(_t, a): Menus.close_hook(); return null
 	G["__nat_patrol"] = func(_t, a): return PtRun.start_run(int(J.num(a[0])), int(J.num(a[1])))
 	G["__nat_scare"] = func(_t, a): return ScRun.hook(a[0])
+	G["__nat_tower"] = func(_t, a): return TwRun.hook(J.t(a[0]))
+	G["__nat_twUnits1"] = func(_t, a): return TwDraw.units1(a[0], a[1], a[2], a[3])
+	G["__nat_twLamps"] = func(_t, a): return TwDraw.lamps(a[0], a[1], a[2], int(J.num(a[3])), J.num(a[4]), J.num(a[5]), J.num(a[6]))
+	G["__nat_twMask"] = func(_t, a): return TwDraw.mask(a[0], a[1], a[2], a[3], a[4])
+	G["__nat_twMini"] = func(_t, a): return TwDraw.mini(a[0], a[1], a[2], J.num(a[3]), J.num(a[4]), J.num(a[5]), J.num(a[6]), J.num(a[7]), J.num(a[8]), J.num(a[9]), J.num(a[10]), J.num(a[11]), J.num(a[12]), int(J.num(a[13])))
+	G["__nat_twProps"] = func(_t, a): return TwDraw.props(a[0], a[1], a[2], a[3])
+	G["__nat_crText"] = func(_t, a): TwRun.cr_text(a[0], J.str(a[1]), J.num(a[2]), J.num(a[3]), J.num(a[4]), a[5], J.str(a[6]), J.num(a[7]), J.t(a[8]), J.str(a[9])); return null
 	G["__nat_scSize"] = func(_t, a): return ScRun.size_of()
 	G["__nat_scNpc"] = func(_t, a): return ScNpc.draw(a[0], a[1], a[2], J.num(a[3]))
 	G["__nat_scItem"] = func(_t, a):
