@@ -7,6 +7,8 @@ module.exports = {
     ["  resize() {\n", "  resize() { if (this._nat) { const r = __nat_btSize(); this.dpr = 1; this.w = r[0]; this.h = r[1]; this.sc = this.w / 390; return; }\n"],
     ["  draw() {\n    if (!this.active) return;\n    const ctx = this.ctx,", "  draw() {\n    if (!this.active) return; if (this._nat && !this._natCtx) return;\n    const ctx = this._natCtx || this.ctx,"],
     ["      ART.drawChar(ctx, u.k, x, y, s, o);\n      if (u.flash > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ART.drawChar(ctx, u.k, x, y, s,", "      __btDC(ctx, u.k, x, y, s, o);\n      if (u.flash > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; __btDC(ctx, u.k, x, y, s,"],
+    ["  openSelect() {\n", "  openSelect() { if (typeof __nat_btSelect !== 'undefined' && __nat_btSelect('select')) return;\n"],
+    ["  pickSlot(slot) {\n", "  pickSlot(slot) { if (typeof __nat_btSelect !== 'undefined' && __nat_btSelect('pick', slot)) return;\n"],
   ],
   // 線路 C：巡陰選單（準備畫面、揀主管、裝備房）交俾 Godot 原生介面（ui/patrol_menu）
   // 線路 D：回陽間・夜班嚇人——角色交俾原生 Art（每隻 JS ART.drawChar 約 9ms → 原生 <0.5ms）

@@ -52,6 +52,7 @@ static func install_natives(host: Node) -> void:
 	G["__nat_scEnd"] = func(_t, a): ScRun.end_hook(a[0]); return null
 	G["__nat_battle"] = func(_t, a): return BtRun.hook(a[0])
 	G["__nat_btSize"] = func(_t, a): return BtRun.size_of()
+	G["__nat_btSelect"] = func(_t, a): return BtSelect.hook(a)
 	G["__nat_stStreet"] = func(_t, a): return StStreet.hook()
 	G["__nat_stStreetEnd"] = func(_t, a): StStreet.end_hook(); return null
 	G["__nat_turf"] = func(_t, a): return StTurf.hook(a[0])
