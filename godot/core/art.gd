@@ -6,7 +6,7 @@ const TAU := PI * 2
 const SERIF := "\"Songti TC\",\"Noto Serif CJK TC\",serif"
 const SOLID := {"npc_it": 1, "npc_mis": 1, "npc_ken": 1, "npc_boss": 1, "npc_guard": 1, "npc_auntie": 1, "laojiang": 1, "zombie": 1, "pocong": 1, "xiaozhi": 1, "zhiren": 1, "penanggal": 1}
 const HOP := {"laojiang": 1, "zombie": 1, "pocong": 1}
-const CHAR_H := {"npc_it": 60, "npc_mis": 62, "npc_ken": 64, "npc_boss": 64, "npc_guard": 64, "npc_auntie": 60, "afu": 58, "xiaozhi": 54, "egui": 54, "eguiking": 66, "xiaogui": 46, "toyol": 46, "laojiang": 58, "zombie": 54, "shuigui": 56, "pontianak": 60, "pocong": 54, "penanggal": 52, "mengpo": 56, "youhun": 46, "baiwu": 76, "heiwu": 76, "niutou": 64, "mamian": 64, "huang": 62, "zhiren": 54, "tianhua": 60}
+const CHAR_H := {"npc_it": 60, "npc_mis": 62, "npc_ken": 64, "npc_boss": 64, "npc_guard": 64, "npc_auntie": 60, "afu": 58, "xiaozhi": 54, "egui": 54, "eguiking": 66, "xiaogui": 46, "toyol": 46, "laojiang": 58, "zombie": 54, "shuigui": 56, "pontianak": 60, "pocong": 54, "penanggal": 52, "mengpo": 56, "youhun": 46, "baiwu": 76, "heiwu": 76, "niutou": 64, "mamian": 64, "huang": 62, "zhiren": 54, "tianhua": 60, "npc_kiln": 58, "npc_receipt": 56, "npc_driver": 58, "npc_ferry": 60, "npc_shop": 58, "npc_rubber": 58, "npc_fisher": 58, "npc_dock": 60, "npc_stall": 58, "npc_ticket": 56, "npc_dj": 56, "npc_inn": 58, "npc_granny": 54, "npc_grandpa": 56, "npc_hq": 58, "npc_clerk": 56}
 const SPECIAL_T := {"penanggal": 1, "pocong": 1, "toyol": 1}
 
 # ---------------- 基本形狀 ----------------
@@ -241,7 +241,7 @@ func _draw_sprite(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dicti
 const PCROP := {"baiwu": [0.30, 0.95], "heiwu": [0.30, 0.95], "penanggal": [0.02, 0.85], "eguiking": [0.0, 0.8], "huang": [0.0, 0.8], "niutou": [0.04, 0.82], "mamian": [0.04, 0.82], "afu": [0.0, 0.72], "tree": [0, 1]}
 func portrait_region(type: String) -> Array:
 	var key = spr_key(type)
-	var img = Spr.get_tex(key)
+	var img = PtGfx.tex(key)
 	if img == null: return []
 	var iw = float(img.get_width()); var ih = float(img.get_height())
 	var c: Array = PCROP.get(type, [0.0, 0.86])

@@ -14,7 +14,7 @@ func _ready() -> void:
 	if f: D = JSON.parse_string(f.get_as_text())
 	set_process(true)
 
-const SPK := {"龐總": "npc_kpiboss", "冼小姐": "npc_hr", "Bryan": "npc_rival", "窮鬼": "n30_qionggui", "討債鬼": "n30_taozhai", "孤寒鬼": "n30_guhangui", "推磨鬼": "pg_tuimo", "賭鬼": "n30_dugui", "Pelesit": "n30_pelesit", "Polong": "n30_polong", "Hantu Raya": "n30_hanturaya", "Jenglot": "n30_jenglot", "老殭": "laojiang", "無頭鬼": "n30_wutou", "被賣鬼": "pg_songding", "白骨精": "n30_baigujing", "山魈": "n30_shanxiao", "Mae Nak": "n30_maenak", "前女友鬼": "pg_ex", "Churel": "n30_churel", "Tikbalang": "n30_tikbalang", "Pontianak": "pontianak", "自拍跌死鬼": "n30_zipai", "二房東": "pg_landlady", "中暑鬼": "n30_zhongshu", "車禍鬼": "n30_chehuo", "打機猝死鬼": "n30_daji", "唐傘妖": "n30_kasaobake", "聻": "pg_ji", "無臉鬼": "n30_nopperabo", "般若": "n30_hannya", "轆轤首": "n30_rokurokubi", "Pocong": "pocong"}
+const SPK := {"龐總": "npc_kpiboss", "冼小姐": "npc_hr", "Bryan": "npc_rival", "窮鬼": "n30_qionggui", "討債鬼": "n30_taozhai", "孤寒鬼": "n30_guhangui", "推磨鬼": "pg_tuimo", "賭鬼": "n30_dugui", "Pelesit": "n30_pelesit", "Polong": "n30_polong", "Hantu Raya": "n30_hanturaya", "Jenglot": "n30_jenglot", "老殭": "laojiang", "無頭鬼": "n30_wutou", "被賣鬼": "pg_songding", "白骨精": "n30_baigujing", "山魈": "n30_shanxiao", "Mae Nak": "n30_maenak", "前女友鬼": "pg_ex", "Churel": "n30_churel", "Tikbalang": "n30_tikbalang", "Pontianak": "pontianak", "自拍跌死鬼": "n30_zipai", "二房東": "pg_landlady", "中暑鬼": "n30_zhongshu", "車禍鬼": "n30_chehuo", "打機猝死鬼": "n30_daji", "唐傘妖": "n30_kasaobake", "聻": "pg_ji", "無臉鬼": "n30_nopperabo", "般若": "n30_hannya", "轆轤首": "n30_rokurokubi", "Pocong": "pocong", "窰工鬼": "npc_kiln", "收據鬼": "npc_receipt", "趕屍匠": "npc_driver", "擺渡鬼": "npc_ferry", "雜貨店伯": "npc_shop", "割膠鬼": "npc_rubber", "漁夫鬼": "npc_fisher", "苦力鬼": "npc_dock", "宵夜檔老闆": "npc_stall", "售票員鬼": "npc_ticket", "DJ": "npc_dj", "客棧掌櫃鬼": "npc_inn", "榴槤鬼": "n30_liulian", "婆婆鬼": "npc_granny", "伯伯鬼": "npc_grandpa", "總部員工鬼": "npc_hq", "投胎辦職員": "npc_clerk"}
 var _spk_done := false
 func _spk() -> void:
 	if _spk_done or DB.D.is_empty(): return
@@ -306,23 +306,29 @@ func _process(dt: float) -> void:
 	if N != null:
 		for gl in D.get("goals", []):
 			if not sq().has("goal_" + gl.id) and J.t(J.cl(N.regionOpen, null, [float(gl.ci)])) and metric(gl.m) >= float(gl.n): n += 1
-	dot.visible = n > 0
+	dot.visible = n > 0; badge_n = n
 	btn.visible = main.get("title_ov") == null and get_tree().root.get_node_or_null("Main/PtRun") == null
 
 # ---------------- 任務掣＋面板 ----------------
 func _mk_btn(main: Node) -> void:
 	btn = Button.new(); btn.text = "任務"
+	var ic = PtGfx.tex("ico_main")
+	if ic: btn.icon = ic; btn.expand_icon = true; btn.add_theme_constant_override("icon_max_width", 20)
 	btn.add_theme_font_override("font", UIKit.font("serif", 900)); btn.add_theme_font_size_override("font_size", 14)
 	var sb = UIKit.sb(Color("#2a2024", 0.92), 18, Color("#c2362b"), 2, Vector4(10, 6, 10, 6))
 	for k in ["normal", "hover", "pressed"]: btn.add_theme_stylebox_override(k, sb)
 	btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	for k in ["font_color", "font_hover_color", "font_pressed_color"]: btn.add_theme_color_override(k, Color("#f3e3c0"))
-	btn.anchor_left = 1; btn.anchor_right = 1; btn.anchor_top = 1; btn.anchor_bottom = 1; btn.offset_left = -66; btn.offset_right = -8; btn.offset_top = -58 - 46; btn.offset_bottom = -58 - 12
-	dot = Panel.new(); dot.add_theme_stylebox_override("panel", UIKit.sb(Color("#e84a5f"), 6, Color("#fff3e0"), 1)); dot.size = Vector2(11, 11); dot.position = Vector2(50, -3); dot.mouse_filter = Control.MOUSE_FILTER_IGNORE; btn.add_child(dot)
+	btn.anchor_left = 1; btn.anchor_right = 1; btn.anchor_top = 1; btn.anchor_bottom = 1; btn.offset_left = -86; btn.offset_right = -8; btn.offset_top = -58 - 46; btn.offset_bottom = -58 - 12
+	dot = Panel.new(); dot.add_theme_stylebox_override("panel", UIKit.sb(Color("#e84a5f"), 6, Color("#fff3e0"), 1)); dot.size = Vector2(11, 11); dot.position = Vector2(70, -3); dot.mouse_filter = Control.MOUSE_FILTER_IGNORE; btn.add_child(dot)
 	btn.pressed.connect(func(): open("daily" if daily_ready() > 0 else "main"))
+	btn.visible = false
 	main.add_child(btn)
 	var sh = main.get("sheet")
 	if sh: main.move_child(btn, sh.get_index())
+
+var badge_n := 0
+func has_new() -> bool: return badge_n > 0
 
 var tab := "main"
 func open(t := "") -> void:
@@ -334,6 +340,8 @@ func open(t := "") -> void:
 	var tabs = HBoxContainer.new(); tabs.add_theme_constant_override("separation", 6); body.add_child(tabs)
 	for k in [["main", "主線"], ["side", "支線"], ["daily", "日常"]]:
 		var b = UIKit.btn(k[1], "gold" if tab == k[0] else "", true); var kk = k[0]
+		var ic = PtGfx.tex("ico_" + k[0])
+		if ic: b.icon = ic; b.add_theme_constant_override("icon_max_width", 22)
 		b.pressed.connect(func(): open(kk)); tabs.add_child(b)
 	body.add_child(UIKit.hsep())
 	match tab:
@@ -431,7 +439,13 @@ func _daily_tab(body: VBoxContainer) -> void:
 		b.pressed.connect(func(): claim_daily(ee); open()); b.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hb.add_child(b)
 		body.add_child(UIKit.hsep())
 	var done = q.list.filter(func(e): return e.got).size()
-	body.add_child(UIKit.rich("全勤獎（%d/%d）：%s%s　連續全勤 %d 日（7 日有紫箱）" % [done, q.list.size(), _rtext(D.daily_bonus.r), "　已領" if q.bonus else "", int(J.num(q.get("streak", 0)))], 13, UIKit.INKDIM))
+	var brow = HBoxContainer.new(); brow.add_theme_constant_override("separation", 8); body.add_child(brow)
+	var stamp = TextureRect.new(); stamp.texture = PtGfx.tex("ico_stamp"); stamp.custom_minimum_size = Vector2(44, 44)
+	stamp.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; stamp.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	stamp.modulate = Color(1, 1, 1, 1.0 if q.bonus else 0.25); stamp.rotation = -0.2 if q.bonus else 0.0; stamp.pivot_offset = Vector2(22, 22)
+	brow.add_child(stamp)
+	var bl = UIKit.rich("全勤獎（%d/%d）：%s%s　連續全勤 %d 日（7 日有紫箱）" % [done, q.list.size(), _rtext(D.daily_bonus.r), "　已領" if q.bonus else "", int(J.num(q.get("streak", 0)))], 13, UIKit.INKDIM)
+	bl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; brow.add_child(bl)
 
 func _rtext(r: Dictionary) -> String:
 	var names = {"coins": "冥幣", "exp": "好評", "buns": "壽包", "planks": "棺材板", "wood": "槐木", "rice": "糯米", "troops": "陰兵"}
@@ -492,3 +506,13 @@ func t_dump() -> void:
 func t_pgchat() -> void:
 	var CD = J.G.get("CHAT_DATA")
 	for k in ["pg_ji", "pg_ex", "n30_qionggui"]: print("PGCHAT ", k, " ", CD.named.get(k, []).size(), " ", CD.named.get(k, [[""]])[0])
+
+# 測試：直接播某場劇情（beat id 或 side id:start/end/after<n>）
+func t_play(id: String, part: String = "") -> void:
+	for b in D.get("beats", []):
+		if b.id == id: _story(b.story); return
+	var x = sdef(id)
+	if x.is_empty(): print("t_play: no ", id); return
+	if part == "end": _story(x.end)
+	elif part.begins_with("after"): _story(x.steps[int(part.substr(5))].after)
+	else: _story(x.start)

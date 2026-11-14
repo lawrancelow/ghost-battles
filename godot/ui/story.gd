@@ -91,6 +91,12 @@ func _build(sc: Dictionary) -> void:
 		tx.position = Vector2(108, 24); tx.size = Vector2(250, 120); tx.anchor_right = 1; tx.offset_right = -14
 		talkbox.add_child(tx)
 	else:
+		if sc.has("bg") and Spr.ok("bg_" + str(sc.bg)):
+			# 信件／電台／工單都可以有背景（例如電台錄音室），窗口疊喺上面
+			var bgr = TextureRect.new(); bgr.texture = Spr.get_tex("bg_" + str(sc.bg)); bgr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			bgr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; bgr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED; bgr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			bgr.modulate = Color(0.75, 0.72, 0.8); add_child(bgr); move_child(bgr, dim.get_index())
+			dim.color.a = 0.25
 		syswin = Panel.new()
 		var ss = UIKit.sb(Color(0.016, 0.118, 0.11, 0.94), 6, Color("#6ff0d0"), 2); ss.shadow_color = Color(0.43, 0.94, 0.82, 0.3); ss.shadow_size = 24
 		if style != "sys": ss = UIKit.sb(Color(0.08, 0.06, 0.09, 0.95), 4, Color("#8a6a4a"), 1)
@@ -119,9 +125,11 @@ func _show_line() -> void:
 		nm.get_parent().visible = who != "旁白"; nm.text = who
 		var art = "sys" if who == "系統" else DB.D.SPEAKER_ART.get(who)
 		pt.visible = art != null
+		tx.offset_left = 108 if art != null else 18
 		if art != null and art != "sys":
 			var r = Art.portrait_region(art)
 			if r.size(): var at = AtlasTexture.new(); at.atlas = r[0]; at.region = r[1]; pt.texture = at
+			else: pt.visible = false; tx.offset_left = 18
 		elif art == "sys": pt.texture = null
 		tx.add_theme_color_override("font_color", UIKit.INKDIM if who == "旁白" else UIKit.INKTXT)
 		cur_line_label = tx; tx.text = ""

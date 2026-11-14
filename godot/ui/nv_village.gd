@@ -130,9 +130,14 @@ func _sync_statics() -> void:
 		elif J.t(J.cl(bunl, null, [id])):
 			var nm = J.str(BUILDINGS[id].name)
 			_static("b_" + id, p[1], "site", false, func(ctx): Art.draw_site(ctx, p[0], p[1], nm))
+	# 原生新增：任務公告板（撳落去開任務面板）、投胎辦事處
+	for e in EXTRA:
+		var ek: String = e[0]; var ex: float = e[1]; var ey: float = e[2]; var ew: float = e[3]
+		_static("x_" + ek, ey, QX.has_new() if ek == "vil_board" else 0, true, func(ctx): _extra(ctx, ek, ex, ey, ew))
 	var i = 0
 	for d in J.G.get("DECOR"):
 		var kind = J.str(d[0]); var dx = J.num(d[1]); var dy = J.num(d[2])
+		if _decor_hidden(dx, dy): i += 1; continue
 		var anim = kind in ["banana", "scarecrow", "post", "willo", "offer"]
 		_static("d_%d" % i, dy, 0, anim, func(ctx): _decor(ctx, kind, dx, dy))
 		i += 1
@@ -341,6 +346,46 @@ func _decor(ctx: Ctx, kind: String, x: float, y: float) -> void:
 			ctx.beginPath(); ctx.moveTo(x - 3, fy + 2); ctx.quadraticCurveTo(x - 3, fy - 5, x + sin(t * 5) * 1.5, fy - 9); ctx.quadraticCurveTo(x + 3, fy - 5, x + 3, fy + 2); ctx.arc(x, fy + 2, 3, 0, PI)
 			ctx.fillStyle = Color(190 / 255.0, 240 / 255.0, 1, a + 0.2); ctx.fill(); return
 	Art.draw_decor(ctx, kind, x, y, t)
+
+const EXTRA := [["vil_board", 56.0, 268.0, 74.0], ["vil_rebirth", 62.0, 1116.0, 84.0]]
+func _decor_hidden(x: float, y: float) -> bool:
+	return absf(x - 20) < 1 and absf(y - 1060) < 1   # 投胎辦事處位置原本有棵蕉樹
+
+func _extra(ctx: Ctx, k: String, x: float, y: float, w: float) -> void:
+	var c = ctx.ci; var B = ctx.base; var im = PtGfx.tex(k)
+	if im == null: return
+	var h = w * im.get_height() / im.get_width()
+	c.draw_set_transform_matrix(B); c.draw_texture_rect(im, Rect2(x - w / 2, y - h, w, h), false)
+	if k == "vil_board":
+		_glow(c, B, x + w * 0.36, y - h * 0.62, 16, Color(1, 0.5, 0.3, 0.3 + sin(t * 2.3) * 0.08))
+		if QX.has_new():
+			var r = 6 + sin(t * 5) * 1.2
+			c.draw_set_transform_matrix(B); c.draw_circle(Vector2(x + w * 0.42, y - h * 0.95), r, Color("#e8303a")); c.draw_arc(Vector2(x + w * 0.42, y - h * 0.95), r, 0, TAU, 20, Color("#fff3e0"), 1.5)
+	else:
+		_glow(c, B, x + 2, y - h * 0.98, 26, Color(0.85, 0.95, 1, 0.22 + sin(t * 1.4) * 0.06))
+	c.draw_set_transform_matrix(Transform2D.IDENTITY)
+
+func extra_hit(p: Vector2) -> String:
+	var wp = Vector2(p.x / sc, p.y / sc + cam_y)
+	for e in EXTRA:
+		var im = PtGfx.tex(e[0]); if im == null: continue
+		var w: float = e[3]; var h = w * im.get_height() / im.get_width()
+		if Rect2(e[1] - w / 2, e[2] - h, w, h).has_point(wp): return e[0]
+	return ""
+
+func _gui_input(ev: InputEvent) -> void:
+	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
+		if ev.pressed: _down_p = ev.position
+		elif ev.position.distance_to(_down_p) < 10:
+			var hit = extra_hit(ev.position)
+			if hit == "vil_board": QX.open("main"); Snd.play("paper"); accept_event(); return
+			if hit == "vil_rebirth":
+				var zh = DB.lang != "yue"
+				var lines = [["投胎辦事處：今日輪候人數「好多」。請先拎籌。", "投胎辦事處：今日輪候人數「很多」。請先取號。"], ["投胎辦事處：第二志願「做貓」已經額滿。", "投胎辦事處：第二志願「做貓」已經額滿。"], ["投胎辦事處：在職員工唔可以投胎，請先辭職。", "投胎辦事處：在職員工不能投胎，請先辭職。"], ["投胎辦事處：午飯時間，請兩小時後再嚟。而家係凌晨三點。", "投胎辦事處：午飯時間，請兩小時後再來。現在是凌晨三點。"]]
+				var l = lines[randi() % lines.size()]
+				J.mc(J.G.get("Fx"), "toast", [l[1] if zh else l[0]]); Snd.play("paper"); accept_event(); return
+	super._gui_input(ev)
+var _down_p := Vector2.ZERO
 
 func _furnace_glow(c: CanvasItem, x: float, y: float) -> void:
 	var im = Spr.get_tex("furnace")

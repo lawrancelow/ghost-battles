@@ -376,6 +376,7 @@ func spawn_zone(z: int) -> void:
 		var e = foe(ek, maxf(p, J.num(tier.p)), {"hp": 3.2, "atk": 1.5}, {"elite": true}); e.s = 0.58; e.x = x; e.y = y; e.hx = x; e.hy = y; e.z = z; pk.append(e)
 	for e in pk: _add_foe(e)
 	packs[z].append(pk)
+	if Vector2(x - L.x, y - L.y).length() < 900: appear_fx(x, y, ci % 4, 0.8)
 
 func _add_foe(e: PtU) -> void:
 	foes.append(e)
@@ -411,6 +412,7 @@ func spawn_king(tt: int) -> void:
 		var a = float(i) / nmin * PI * 2; e.x = lp.x + cos(a) * 110; e.y = lp.y + sin(a) * 70; e.hx = e.x; e.hy = e.y; arr.append(e)
 	for e in arr: _add_foe(e)
 	kings[tt] = arr
+	appear_fx(lp.x, lp.y, 3, 1.4); appear_fx(lp.x, lp.y - 10, 1, 1.2)
 
 func king_win(tt: int) -> void:
 	var rs = reg_st(); var d = king_def(tt); if d == null: d = {}
@@ -1049,6 +1051,31 @@ func ambient(dt: float) -> void:
 		w.x += (w.vx + sin(t + w.ph) * 8) * dt; w.y += w.vy * dt
 		if absf(w.x - L.x) > 420 or absf(w.y - L.y) > 620: w.x = L.x + (randf() - 0.5) * 700; w.y = L.y + 300 + randf() * 300
 
+# 鬼出場：0 鬼火聚形、1 黑霧散開、2 碎紙旋風、3 地底爬出（裂地）
+func appear_fx(x: float, y: float, style: int, k := 1.0) -> void:
+	match style:
+		0:
+			for i in 4:
+				var a = i * PI / 2 + randf() * 0.6; var r = 70.0 * k
+				spr("fx2_ghostfire", x + cos(a) * r, y - 30 + sin(a) * r * 0.5, {"vx": -cos(a) * r, "vy": sin(a) * r * 0.5, "s0": 0.22 * k, "s1": 0.1 * k, "life": 0.55, "anchor": 0.85})
+			spr("fx2_burst", x, y - 34, {"s0": 0.1 * k, "s1": 0.45 * k, "life": 0.5, "alpha": 0.9})
+		1:
+			spr("fx2_smoke", x, y - 20, {"s0": 0.2 * k, "s1": 0.75 * k, "life": 0.9, "add": false, "alpha": 0.85, "vy": 20.0})
+			spr("fx2_smoke", x + 20 * k, y - 10, {"s0": 0.15 * k, "s1": 0.5 * k, "life": 0.75, "add": false, "alpha": 0.7, "flip": true, "rot": 0.4})
+		2:
+			spr("fx2_scraps", x, y - 30, {"s0": 0.25 * k, "s1": 0.6 * k, "life": 0.85, "add": false, "spin": 5.0, "alpha": 0.95})
+			spr("fx2_scraps", x, y - 30, {"s0": 0.4 * k, "s1": 0.8 * k, "life": 0.7, "add": false, "spin": -4.0, "alpha": 0.6, "flip": true})
+		_:
+			spr("fx2_crack", x, y + 6, {"ground": true, "add": false, "s0": 0.32 * k, "s1": 0.4 * k, "life": 1.6, "alpha": 1.0, "sy": 0.6})
+			spr("fx2_ghostfire", x, y - 10, {"s0": 0.12 * k, "s1": 0.3 * k, "life": 0.7, "vy": 50.0, "anchor": 0.9, "alpha": 0.8, "hue": 280.0})
+	snd("paper" if style == 2 else "hit")
+
+# 收編：合約由頭頂落嚟，蓋個印
+func contract_fx(x: float, y: float) -> void:
+	spr("fx2_contract", x, y - 120, {"s0": 0.18, "s1": 0.32, "life": 0.9, "vy": -40.0, "add": false, "alpha": 1.0, "rot": -0.15, "spin": 0.3})
+	var f = {"kind": "spr", "n": "fx2_seal", "x": x + 6, "y": y - 70, "t": -0.45, "life": 0.9, "s0": 0.4, "s1": 0.16, "rot": 0.2, "alpha": 1.0, "add": false, "sx": 1.0, "sy": 1.0, "vy": 0.0, "hue": 0.0}
+	fx.append(f)
+
 func fx_text(x: float, y: float, text: String, col: Color, big := false) -> void:
 	fx.append({"kind": "num", "x": x, "y": y, "text": text, "col": col, "big": big, "t": 0.0, "life": 0.95, "vx": (randf() - 0.5) * 30})
 
@@ -1115,7 +1142,10 @@ func gain(g: Dictionary) -> void:
 func resolve_down(v: PtU, how: String, _timeout := false) -> void:
 	if v.done: return
 	v.done = true; v.down = 0; v.dead_t = 0; downs.erase(v)
-	if how == "soul": soul_drop(v); v.soul = true; QX.bump("soul")
+	if how == "soul":
+		soul_drop(v); v.soul = true; QX.bump("soul")
+		spr("fx2_pillar", v.x, v.y + 8, {"s0": 0.5, "s1": 0.62, "sx": 0.8, "life": 1.3, "anchor": 0.95, "fadeIn": true, "alpha": 0.9})
+		spr("fx2_sparkle", v.x, v.y - 60, {"s0": 0.12, "s1": 0.22, "life": 1.0, "vy": 60.0, "alpha": 0.9})
 	else:
 		var I = sign_info(v)
 		if not I.ok:
@@ -1132,6 +1162,7 @@ func resolve_down(v: PtU, how: String, _timeout := false) -> void:
 				var g = add_crew(v.k, v.p, v.elite, v.x, v.y)
 				msg("<b>收編成功！</b>%s（%s・Lv%d）加入部門。%s" % [g.name, g.q, int(J.num(g.lv)), "（對症收編 +20%）" if I.fear else ""], 3)
 			fx_text(v.x, v.y - 80, "簽約！", Color("#9fffb0"), true); spr("fx_ring", v.x, v.y, {"ground": true, "s0": 0.2, "s1": 0.55, "life": 0.8}); spr("fx_gold", v.x, v.y - 50, {"s0": 0.2, "s1": 0.5, "life": 0.8, "vy": 30.0}); snd("gong")
+			contract_fx(v.x, v.y)
 		else:
 			st().pity[v.k] = J.num(st().pity.get(v.k, 0)) + 15; v.fled = true; spr("fx_smoke", v.x, v.y - 30, {"s0": 0.2, "s1": 0.5, "life": 0.7, "add": false, "alpha": 0.9})
 			fx_text(v.x, v.y - 80, "跑掉了！", Color("#fca"), true); msg(T("%s睇完合約，走咗。（下次收同種 +15%%）" % v.name, "%s看完合約，跑了。（下次收同種 +15%%）" % v.name), 2.5)
@@ -1615,7 +1646,7 @@ func _sync_fx() -> void:
 
 func _draw_spr(c: CanvasItem, f: Dictionary) -> void:
 	var im = fx_tex(f.n)
-	if im == null: return
+	if im == null or f.t < 0: return
 	var p = f.t / f.life; var e = 1 - pow(1 - p, 2.2); var s = f.s0 + (f.s1 - f.s0) * e
 	var a = f.alpha * ((p / 0.2) if f.get("fadeIn", false) and p < 0.2 else 1.0) * (1.0 if p < 0.55 else 1 - (p - 0.55) / 0.45)
 	var w = im.get_width() * s * f.sx; var h = im.get_height() * s * f.sy
@@ -1977,3 +2008,7 @@ func draw_over(n: CanvasItem, u: PtU, o: Dictionary) -> void:
 		var mt = "摸魚中 z"; var mw = fnt.get_string_size(mt, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
 		n.draw_string(fnt, Vector2(-mw / 2, top - 5), mt, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(200 / 255.0, 220 / 255.0, 1, 0.75))
 	n.draw_set_transform_matrix(Transform2D.IDENTITY)
+func t_fx(i: int) -> void:
+	if i < 4: appear_fx(L.x + 90, L.y - 60, i, 1.2)
+	elif i == 4: contract_fx(L.x + 60, L.y)
+	else: spr("fx2_pillar", L.x - 70, L.y + 8, {"s0": 0.5, "s1": 0.62, "sx": 0.8, "life": 1.3, "anchor": 0.95, "fadeIn": true, "alpha": 0.9})
