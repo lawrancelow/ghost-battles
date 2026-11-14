@@ -22,6 +22,12 @@ func _spk() -> void:
 	var m = DB.D.get("SPEAKER_ART", {})
 	for k in SPK: if not m.has(k) and Art.char_h(SPK[k]) > 0: m[k] = SPK[k]
 
+# 舊存檔：打過第一區總監（1-3）但冇 ch1_end 標記 → 補返，回陽間／站崗／樓裡有鬼先解鎖到
+func _fix_unlock() -> void:
+	var S = J.G.get("S")
+	if not (S is Dictionary) or not (S.get("seen") is Dictionary) or not (S.get("cleared") is Dictionary): return
+	if J.t(S.cleared.get("1-3")) and not J.t(S.seen.get("ch1_end")): S.seen["ch1_end"] = true
+
 func _pgchat() -> void:
 	# 5 隻 pg 鬼嘅碎碎念：網頁版 CHAT_DATA.named 冇，由 core.json 補入（[粵, 中]）
 	if DB.D.is_empty(): return
@@ -295,7 +301,7 @@ func _process(dt: float) -> void:
 	if tq:
 		var top = main.story != null and main.story.get("cur") != null
 		tq.offset_bottom = -86 - (main.size.y * 0.62 if top else 0.0)
-	_spk(); _pgchat()
+	_spk(); _pgchat(); _fix_unlock()
 	dq(); side_tick()
 	if btn.visible and not J.t(J.mc(J.G.get("Story"), "busy", [])) and not main.sheet.visible: event("village")
 	var n = daily_ready()
@@ -307,7 +313,14 @@ func _process(dt: float) -> void:
 		for gl in D.get("goals", []):
 			if not sq().has("goal_" + gl.id) and J.t(J.cl(N.regionOpen, null, [float(gl.ci)])) and metric(gl.m) >= float(gl.n): n += 1
 	dot.visible = n > 0; badge_n = n
-	btn.visible = main.get("title_ov") == null and get_tree().root.get_node_or_null("Main/PtRun") == null
+	var vis = main.get("title_ov") == null and get_tree().root.get_node_or_null("Main/PtRun") == null and main.get("tab") == "village"
+	if vis:
+		var busy = J.t(J.mc(J.G.get("Story"), "busy", [])); var cov = J.G.get("covered")
+		if busy or (cov != null and J.t(J.cl(cov, null, []))): vis = false
+		else:
+			var doc = J.G.get("document")
+			if doc != null and J.mc(doc, "querySelector", ["#world.on"]) != null: vis = false
+	btn.visible = vis
 
 # ---------------- 任務掣＋面板 ----------------
 func _mk_btn(main: Node) -> void:

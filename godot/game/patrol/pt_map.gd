@@ -62,12 +62,18 @@ static func seeded(n: int) -> Callable:
 		st[0] = (st[0] * 9301 + 49297) % 233280
 		return float(st[0]) / 233280.0
 
+const BOOTHS := [[6, 5, 130, -120], [4, 1, -130, 120], [4, 6, 120, 130], [3, 7, -120, -130], [3, 1, 130, -130], [1, 2, -130, -120], [0, 7, 130, 120], [0, 1, -120, 130], [2, 5, 130, -130]]
 func _mk_faci() -> void:
 	FACI.clear()
 	for f in D.FACI0:
 		var z = int(f[1]) * COLS + mc(int(f[2])); var ox = -float(f[3]) if MIR else float(f[3])
 		var c = zone_center(z)
 		FACI.append({"t": String(f[0]), "z": z, "ox": ox, "oy": float(f[4]), "x": c.x + ox, "y": c.y + float(f[4])})
+	# 原生新增：陰間電話亭（傳送點），掂一下就激活，同已開通地鐵站互相直達
+	for f in BOOTHS:
+		var z = int(f[0]) * COLS + mc(int(f[1])); var ox = -float(f[2]) if MIR else float(f[2])
+		var c = zone_center(z)
+		FACI.append({"t": "booth", "z": z, "ox": ox, "oy": float(f[3]), "x": c.x + ox, "y": c.y + float(f[3])})
 
 func _mk_gates() -> void:
 	GATES.clear()

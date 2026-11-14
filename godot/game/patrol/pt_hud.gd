@@ -48,6 +48,7 @@ func _ready() -> void:
 	var confirm = [0.0]
 	quit_b.pressed.connect(func():
 		if run.ended: return
+		if not run.try_quit(): return
 		if Time.get_ticks_msec() - confirm[0] < 2500: run.end(false); return
 		confirm[0] = Time.get_ticks_msec(); quit_b.text = "確定？"
 		get_tree().create_timer(2.5).timeout.connect(func(): if is_instance_valid(quit_b): quit_b.text = "收工"))
@@ -349,8 +350,11 @@ func draw_map(m: CanvasItem, W: float, H: float, ox: float, oy: float, k: float,
 		else: seg.call(w.a, w.b, col, th)
 	var sz = 2.0 if big else 1.0
 	for f in M.FACI:
-		var col2 = (Color("#3fa36a") if J.t(rs.sta.get(str(f.z))) else Color("#666")) if f.t == "station" else (Color("#ffd69a") if f.t == "tea" else (Color("#d8c8c8") if f.t == "prison" else Color("#9cc8ff")))
+		var col2 = (Color("#3fa36a") if J.t(rs.sta.get(str(f.z))) else Color("#666")) if f.t == "station" else (Color("#ffd69a") if f.t == "tea" else (Color("#d8c8c8") if f.t == "prison" else (Color("#7fd8ff") if run.booth_on(f) else Color("#55606a")) if f.t == "booth" else Color("#9cc8ff")))
 		m.draw_rect(Rect2(f.x * k - 2 * sz, f.y * k - 2 * sz, 4 * sz, 4 * sz), col2)
+		if f == run.start_f:
+			var pr = (5.0 if big else 3.5) + (2.0 + sin(run.t * 6) * 1.5 if run.evac_ping > 0 else 0.0)
+			m.draw_arc(Vector2(f.x * k, f.y * k), pr, 0, TAU, 16, Color("#a8ffe0"), 1.5 if big else 1.0)
 	for sp in run.spots:
 		if sp.k == "lm" and J.t(rs.lm.get(str(sp.id))):
 			m.draw_set_transform_matrix(X * Transform2D(PI / 4, Vector2(sp.x * k, sp.y * k)))

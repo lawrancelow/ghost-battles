@@ -190,6 +190,8 @@ func begin(c: int, z0: int) -> void:
 	stas[J.str(float(_start_z()))] = 1.0
 	var sp = MAP.FACI[0]
 	for f in MAP.FACI: if f.t == "station" and f.z == z0: sp = f; break
+	start_f = sp
+	if not (rs.get("booth") is Dictionary): rs.booth = {}
 	var lx = sp.x + 60; var ly = sp.y + 60
 	var afu = jc("ghostById", ["afu"])
 	var L0 = unit_from_ghost(afu, "afu"); L0.x = lx; L0.y = ly; L0.leader = true; equip(L0, afu); units.append(L0); L = L0
@@ -524,6 +526,7 @@ func wander(u: PtU, dt: float) -> void:
 
 # ---------------- 主更新 ----------------
 func update(dt: float) -> void:
+	if evac_ping > 0: evac_ping -= dt
 	if stop > 0:
 		stop -= dt
 		for f in fx: if f.kind == "num": f.t += dt * 0.2
@@ -1231,6 +1234,32 @@ func spot_tick(dt: float) -> void:
 	elif dig != null: dig = null
 
 # ---------------- 設施 ----------------
+var start_f: Dictionary = {}
+
+func faci_label(f: Dictionary) -> String:
+	if f.t == "booth": return "%s電話亭" % N.TNAME[ci][MAP.ter_of(f.z)]
+	return "%s站" % N.TNAME[ci][MAP.ter_of(f.z)]
+func booth_on(f: Dictionary) -> bool:
+	var b = reg_st().get("booth"); return b is Dictionary and J.t(b.get(str(f.z)))
+# 傳送網：已開通地鐵站＋已激活電話亭（撤離點＝出發站，永遠喺網入面）
+func net_dests(from: Dictionary) -> Array:
+	var rs = reg_st(); var out = []
+	for f in MAP.FACI:
+		if f == from: continue
+		if (f.t == "station" and J.t(rs.sta.get(str(f.z)))) or (f.t == "booth" and booth_on(f)): out.append(f)
+	out.sort_custom(func(a, b): return a == start_f)
+	return out
+func near_evac() -> bool:
+	return not start_f.is_empty() and Vector2(start_f.x + 30 - L.x, start_f.y + 40 - L.y).length() < 150
+func try_quit() -> bool:
+	if near_evac(): return true
+	var d = Vector2(start_f.x - L.x, start_f.y - L.y)
+	var dir = ["東", "東南", "南", "西南", "西", "西北", "北", "東北"][int(round(fposmod(d.angle(), TAU) / (PI / 4))) % 8]
+	msg(T("撤離點喺出發點（%s，向%s）。行返去，或者搭地鐵／電話亭返去先收得工。" % [faci_label(start_f), dir], "撤離點在出發點（%s，往%s）。走回去，或者搭地鐵／電話亭回去才能下班。" % [faci_label(start_f), dir]), 3)
+	evac_ping = 3.0; snd("click")
+	return false
+var evac_ping := 0.0
+
 func station_cost(z: int) -> int:
 	var c = ci + 1
 	return 0 if z == _start_z() else int(round((10 + 4 * MAP.ter_of(z)) * pow(c, 1.5)))
@@ -1250,12 +1279,34 @@ func facilities(_dt: float) -> void:
 	for f in MAP.FACI:
 		if Vector2(f.x - L.x, f.y - L.y).length() < 90: nf = f; break
 	var key = ""
-	if nf != null: key = "%s%d:%d%d%s%s" % [nf.t, nf.z, 1 if J.t(rs.sta.get(str(nf.z))) else 0, 1 if tea.get(nf.z, 0.0) > t else 0, J.num(rs.get("ot", -1)) == day, J.num(rs.get("pr", -1)) == day]
+	if nf != null: key = "%s%d:%d%d%d%s%s" % [nf.t, nf.z, 1 if J.t(rs.sta.get(str(nf.z))) else 0, net_dests(nf).size(), 1 if tea.get(nf.z, 0.0) > t else 0, J.num(rs.get("ot", -1)) == day, J.num(rs.get("pr", -1)) == day]
 	if key == act_key: return
 	act_key = key
 	if nf == null: hud.act_hide(); return
 	var title = ""; var desc = ""; var btns = []
 	var F = js("F")
+	if nf.t == "booth" and not booth_on(nf):
+		rs.booth[str(nf.z)] = 1.0; save(); snd("gong"); act_key = "x"
+		spr("fx2_pillar", nf.x, nf.y + 6, {"s0": 0.4, "s1": 0.5, "sx": 0.7, "life": 1.1, "anchor": 0.95, "fadeIn": true, "alpha": 0.9})
+		spr("fx2_sparkle", nf.x, nf.y - 70, {"s0": 0.1, "s1": 0.2, "life": 0.9, "vy": 40.0})
+		fx_text(nf.x, nf.y - 90, T("電話亭接通！", "電話亭接通！"), Color("#9fe8ff"), true)
+		msg(T("電話亭：「嘟——你撥打嘅號碼……已經接通。」以後喺任何已開通嘅站同電話亭都可以直接過嚟。", "電話亭：「嘟——你撥打的號碼……已經接通。」以後在任何已開通的站和電話亭都可以直接過來。"), 3)
+		return
+	if nf == start_f:
+		title = "撤離點・%s" % faci_label(nf); desc = T("今晚由呢度出發，亦都要由呢度收工。", "今晚從這裡出發，也要從這裡下班。")
+		btns.append([T("收工回村", "下班回村"), true, func(): end(false), false])
+		for f in net_dests(nf):
+			var ff = f
+			btns.append([faci_label(f), true, func(): teleport(ff.x + 60, ff.y + 60), false])
+		hud.act_show(title, desc, btns); return
+	if nf.t == "booth":
+		title = "陰間電話亭・%s" % N.TNAME[ci][MAP.ter_of(nf.z)]
+		var ds = net_dests(nf)
+		desc = T("撥去邊度？（第一個係撤離點）", "撥到哪裡？（第一個是撤離點）") if ds.size() else T("未有其他接通咗嘅點。", "還沒有其他接通的點。")
+		for f in ds:
+			var ff = f
+			btns.append([("撤離點・" if f == start_f else "") + faci_label(f), true, func(): teleport(ff.x + 60, ff.y + 60), false])
+		hud.act_show(title, desc, btns); return
 	if nf.t == "station":
 		if not J.t(rs.sta.get(str(nf.z))):
 			var c = station_cost(nf.z)
@@ -1263,12 +1314,11 @@ func facilities(_dt: float) -> void:
 			btns.append(["開通（執念 %d，任何派系）" % c, mat_total() >= c, func(): use_faci(nf), true])
 		else:
 			title = "陰間地鐵站・%s" % N.TNAME[ci][MAP.ter_of(nf.z)]
-			var others = []
-			for f in MAP.FACI: if f.t == "station" and f.z != nf.z and J.t(rs.sta.get(str(f.z))): others.append(f)
+			var others = net_dests(nf)
 			desc = "搭到：" if others.size() else "其他站未開通"
 			for f in others:
 				var ff = f
-				btns.append(["%s站" % N.TNAME[ci][MAP.ter_of(f.z)], true, func(): teleport(ff.x + 60, ff.y + 60), false])
+				btns.append([("撤離點・" if f == start_f else "") + faci_label(f), true, func(): teleport(ff.x + 60, ff.y + 60), false])
 	elif nf.t == "tea":
 		var cdv = tea.get(nf.z, 0.0) - t
 		title = "陰間茶水間"; desc = "全部門回血，過勞 -40。"
@@ -1520,7 +1570,8 @@ func _render() -> void:
 		faci_nodes[i].visible = on2
 		if on2:
 			faci_nodes[i].queue_redraw()
-			var col = {"station": Color8(120, 255, 160), "tea": Color8(255, 200, 120), "overtime": Color8(140, 200, 255)}.get(f.t)
+			var col = {"station": Color8(120, 255, 160), "tea": Color8(255, 200, 120), "overtime": Color8(140, 200, 255), "booth": Color8(130, 220, 255) if booth_on(f) else Color8(90, 90, 120)}.get(f.t)
+			if f == start_f: col = Color8(150, 255, 230)
 			lights.append([f.x, f.y - 40, 170.0, 0.85, col])
 		i += 1
 	for tt in 9:
@@ -1788,16 +1839,30 @@ func _draw_prop(c: CanvasItem, p: Dictionary) -> void:
 func _draw_faci(c: CanvasItem, f: Dictionary) -> void:
 	var rs = reg_st(); var fnt = PtGfx.font(900)
 	_ell(c, 0, 2, 52, 14, Color(0, 0, 0, 0.4))
-	var im = PtGfx.tex(f.t)
-	var on = J.t(rs.sta.get(str(f.z)))
+	var on = J.t(rs.sta.get(str(f.z))) if f.t != "booth" else booth_on(f)
+	var im = PtGfx.tex("booth_on" if f.t == "booth" and on else f.t)
+	if f == start_f:
+		# 撤離點：地上一圈光，頭上光柱
+		var pulse = 0.5 + 0.5 * sin(t * 2.2)
+		_ell(c, 30, 40, 92 + pulse * 8, 30 + pulse * 3, Color(0.55, 1, 0.85, 0.16 + pulse * 0.1))
+		var pil = PtGfx.tex("fx2_pillar")
+		if pil: c.draw_texture_rect(pil, Rect2(30 - 34, -250, 68, 300), false, Color(0.7, 1, 0.9, 0.35 + pulse * 0.15))
 	if im:
 		var w = 118.0; var h = w * im.get_height() / im.get_width()
+		if f.t == "booth": w = 70.0; h = w * im.get_height() / im.get_width()
 		var off = (f.t == "station" and not on) or (f.t == "tea" and tea.get(f.z, 0.0) > t)
 		c.draw_texture_rect(im, Rect2(-w / 2, -h + 8, w, h), false, Color(0.42, 0.42, 0.42) if off else Color.WHITE)
-	var lab = {"station": ["地鐵站・%s" % N.TNAME[ci][MAP.ter_of(f.z)] if on else "地鐵站（未開通）", Color("#9fe0b8") if on else Color("#aaa")], "tea": ["茶水間", Color("#ffd69a")], "prison": ["扣押室", Color("#d8c8c8")], "overtime": ["通宵加班房", Color("#bcd8ff")]}[f.t]
+	if im == null and f.t == "booth": _draw_booth_fallback(c, on)
+	var lab = {"station": ["地鐵站・%s" % N.TNAME[ci][MAP.ter_of(f.z)] if on else "地鐵站（未開通）", Color("#9fe0b8") if on else Color("#aaa")], "tea": ["茶水間", Color("#ffd69a")], "prison": ["扣押室", Color("#d8c8c8")], "overtime": ["通宵加班房", Color("#bcd8ff")], "booth": ["電話亭" if on else "電話亭（未接通）", Color("#9fe8ff") if on else Color("#aaa")]}[f.t]
+	if f == start_f: lab = ["撤離點・" + lab[0], Color("#a8ffe0")]
 	var sw = fnt.get_string_size(lab[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
 	c.draw_string_outline(fnt, Vector2(-sw / 2, 18), lab[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, 3, Color(0, 0, 0, 0.8))
 	c.draw_string(fnt, Vector2(-sw / 2, 18), lab[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, lab[1])
+
+func _draw_booth_fallback(c: CanvasItem, on: bool) -> void:
+	var col = Color("#4a6a8a") if on else Color("#4a4a52")
+	c.draw_rect(Rect2(-22, -78, 44, 80), col); c.draw_rect(Rect2(-22, -78, 44, 80), Color.BLACK, false, 3)
+	c.draw_rect(Rect2(-14, -64, 28, 34), Color(0.7, 0.95, 1, 0.5 if on else 0.15))
 
 # ---------------- 深坑／陰河／閘口 ----------------
 func _band_quad(c: CanvasItem, a: float, b: float, H2: float, col: Color) -> void:
@@ -2012,3 +2077,7 @@ func t_fx(i: int) -> void:
 	if i < 4: appear_fx(L.x + 90, L.y - 60, i, 1.2)
 	elif i == 4: contract_fx(L.x + 60, L.y)
 	else: spr("fx2_pillar", L.x - 70, L.y + 8, {"s0": 0.5, "s1": 0.62, "sx": 0.8, "life": 1.3, "anchor": 0.95, "fadeIn": true, "alpha": 0.9})
+func t_booth(i: int) -> void:
+	var bs = MAP.FACI.filter(func(f): return f.t == "booth")
+	var f = bs[i % bs.size()]; teleport(f.x - 10, f.y + 50)
+func t_quit() -> void: print("TQUIT ", try_quit())
