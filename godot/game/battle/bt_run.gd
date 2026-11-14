@@ -28,6 +28,11 @@ var _hidden: Array = []
 var _quit_arm := 0.0
 var _result_shown := false
 var _title_t := 0.0
+var layer: Node2D              # 角色（BtChar）
+var over: PtDraw               # 血條、字、特效
+var chars: Array = []
+var _sh := Vector2.ZERO
+var _k := 1.0
 
 static func js(n: String): return J.G.get(n)
 static func L(s) -> String: return J.str(DB.L(J.str(s)))
@@ -119,6 +124,12 @@ func _build() -> void:
 	stage = Control.new(); stage.clip_contents = true; stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stage.anchor_right = 1; stage.anchor_bottom = 1; stage.offset_top = TOP_H + safe_top; stage.offset_bottom = -(CARD_H + 36 + 18 + safe_bot)
 	stage.draw.connect(_draw_stage); add_child(stage)
+	PtChar.setup_static()
+	layer = Node2D.new(); stage.add_child(layer)
+	over = PtDraw.new(); over.fn = func(n): if J.t(B.get("active")): BtDraw.draw_over(Ctx.new(n), B, _k, _sh)
+	stage.add_child(over)
+	for u in B.units:
+		var c = BtChar.new(u, B); layer.add_child(c); chars.append(c)
 	stage.resized.connect(func(): if J.t(B.get("active")): J.mc(B, "resize", []))
 	# 提示
 	hint_l = UIKit.label(L("符滿了就點。先用敵人怕的嚇法嚇到他「失神」，再接另一種他怕的，就是「連嚇」。"), 12.5, Color(0.86, 0.8, 0.72, 0.75))
@@ -235,10 +246,11 @@ func _update_cards() -> void:
 # ---------------- 每幀 ----------------
 var prof_d := 0
 var prof_n := 0
+var prof_s := 0
 func _process(dt: float) -> void:
 	if not J.t(B.get("active")):
 		_teardown(); return
-	if not OS.has_environment("GB_NODRAW"): stage.queue_redraw()
+	var __t = Time.get_ticks_usec(); _sync_world(); prof_s += Time.get_ticks_usec() - __t
 	if B.get("result") != null:
 		if not _result_shown:
 			_result_shown = true; _show_dom(true)
@@ -257,6 +269,21 @@ func _process(dt: float) -> void:
 		if _quit_arm <= 0: quit_b.text = L("撤退")
 	_update_cards()
 
+# 鏡頭（同 battle.js draw 開頭一樣）：縮放、震、角色排序
+func _sync_world() -> void:
+	_k = J.num(B.get("sc", 1.0))
+	var A = J.num(B.get("shakeA", 0))
+	_sh = Vector2((randf() - 0.5) * 2 * A, (randf() - 0.5) * 1.2 * A) if A > 0 else Vector2.ZERO
+	B["H"] = J.num(B.get("h", 560)) / _k
+	layer.transform = Transform2D(Vector2(_k, 0), Vector2(0, _k), _sh * _k)
+	var T = J.num(B.get("t", 0))
+	var ord = chars.duplicate()
+	ord.sort_custom(func(a, b): return J.num(a.u.get("lane", 0)) < J.num(b.u.get("lane", 0)))
+	for i in ord.size():
+		if ord[i].get_index() != i: layer.move_child(ord[i], i)
+		ord[i].sync(T)
+	stage.queue_redraw(); over.queue_redraw()
+
 func _draw_stage() -> void:
 	if not J.t(B.get("active")): return
 	var ctx = Ctx.new(stage)
@@ -264,8 +291,7 @@ func _draw_stage() -> void:
 	var t0 = Time.get_ticks_usec()
 	var cp = OS.has_environment("GB_CTXPROF") and prof_n == 29
 	if cp: J.CTXPROF.clear(); J.CTXPROF_ON = true
-	if OS.has_environment("GB_JSDRAW"): J.mc(B, "draw", [])
-	else: BtDraw.draw(ctx, B)
+	BtDraw.draw_bg(ctx, B, _k, _sh)
 	if cp:
 		J.CTXPROF_ON = false; var ks = J.CTXPROF.keys().filter(func(k): return not k.begins_with("#"))
 		ks.sort_custom(func(a, b): return J.CTXPROF[a] > J.CTXPROF[b])
@@ -274,7 +300,9 @@ func _draw_stage() -> void:
 	if OS.has_environment("GB_PROF"):
 		prof_d += Time.get_ticks_usec() - t0; prof_n += 1
 		if prof_n >= 30:
-			print("[battle] draw=%.1fms js_timers=%.1fms" % [prof_d / 30000.0, JSRun.prof_timer / 30000.0]); JSRun.prof_timer = 0
+			print("[battle] bg=%.1fms sync=%.1fms nodes=%.1fms js_timers=%.1fms" % [prof_d / 30000.0, prof_s / 30000.0, PtDraw.prof_us / 30000.0, JSRun.prof_timer / 30000.0]); JSRun.prof_timer = 0; PtDraw.prof_us = 0; prof_s = 0
+			var ks = BtDraw.PROFK.keys(); ks.sort_custom(func(a, b): return BtDraw.PROFK[a] > BtDraw.PROFK[b])
+			print("[moves] ", ", ".join(ks.map(func(k): return "%s=%.1f" % [k, BtDraw.PROFK[k] / 30000.0]))); BtDraw.PROFK.clear()
 			prof_d = 0; prof_n = 0
 
 func _on_quit() -> void:

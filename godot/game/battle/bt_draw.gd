@@ -5,6 +5,8 @@ class_name BtDraw
 const ATK := {"windup": 1, "strike": 1, "follow": 1, "recover": 1}
 const DARK := Color(10 / 255.0, 6 / 255.0, 20 / 255.0, 0.92)
 static var _moves = null
+static var PROFK := {}
+static var PROF_ON := OS.has_environment("GB_PROF")
 static var _rig = null
 
 static func js(n: String): return J.G.get(n)
@@ -58,69 +60,55 @@ static func draw_char(ctx: Ctx, k: String, x: float, y: float, s: float, o: Dict
 	var jsd = false
 	if ATK.has(o.pose) and _moves is Dictionary and _moves.has(k): jsd = true
 	elif _rig is Dictionary and _rig.get(k) is Dictionary and _rig[k].get("custom") != null: jsd = true
-	if jsd: J.mc(js("ART"), "drawChar", [ctx, k, x, y, s, o])
+	var t0 = Time.get_ticks_usec(); var tag = "art"
+	if jsd:
+		tag = "nat:" + k
+		if not BtMoves.draw(ctx, k, x, y, s, o): J.mc(js("ART"), "drawChar", [ctx, k, x, y, s, o]); tag = "js:" + k
 	else: Art.draw_char(ctx, k, x, y, s, o.duplicate())
+	if PROF_ON: PROFK[tag] = PROFK.get(tag, 0) + Time.get_ticks_usec() - t0
 
 static func rr(ctx: Ctx, x: float, y: float, w: float, h: float, r: float, col: Color) -> void:
 	ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect(x, y, maxf(0.0, w), h, r); ctx.fill()
 
 # ---------------- 主畫面 ----------------
-static func draw(ctx: Ctx, B: Dictionary) -> void:
-	var k = J.num(B.sc); var A = J.num(B.get("shakeA", 0))
-	var shx = (randf() - 0.5) * 2 * A if A > 0 else 0.0; var shy = (randf() - 0.5) * 1.2 * A if A > 0 else 0.0
-	ctx.setTransform(k, 0, 0, k, shx * k, shy * k)
-	var H = J.num(B.h) / k; B["H"] = H
-	var T = J.num(B.t)
-	var SC = js("SCENE")
-	if not J.t(J.mc(SC, "drawBg", [ctx, 390.0, H, B.bg])):
+# 背景（stage 自己畫）：背景圖、慢鏡暗角、地面塵土；角色由 BtChar 節點畫；其餘（血條、字、特效）由 draw_over 畫喺角色上面
+static func draw_bg(ctx: Ctx, B: Dictionary, k: float, sh: Vector2) -> void:
+	ctx.setTransform(k, 0, 0, k, sh.x * k, sh.y * k)
+	var H = J.num(B.get("H", 560)); var T = J.num(B.get("t", 0))
+	if not J.t(J.mc(js("SCENE"), "drawBg", [ctx, 390.0, H, B.bg])):
 		J.cl(js("paintBg"), null, [ctx, 390.0, H * 0.545, B.bg, T])
 		var gy = H * 0.36; var gg = ctx.createLinearGradient(0, gy, 0, H)
 		gg.addColorStop(0, "#2a2622"); gg.addColorStop(0.5, "#1c1a1a"); gg.addColorStop(1, "#121012"); ctx.fillStyle = gg; ctx.fillRect(0, gy, 390, H - gy)
 	var slowT = J.num(B.get("slowT", 0))
 	if slowT > 0: ctx.fillStyle = Color(8 / 255.0, 4 / 255.0, 20 / 255.0, minf(0.35, slowT * 2.4)); ctx.fillRect(-20, -20, 430, H + 40)
-	var fxs: Array = B.fx
-	for f in fxs: if J.str(f.get("kind", "")) == "dust": draw_dust(ctx, f)
-	var list: Array = B.units.duplicate()
-	list.sort_custom(func(a, b): return J.num(a.get("lane", 0)) < J.num(b.get("lane", 0)))
-	var fw = UIKit.font("sans", 900)
-	for u in list:
+	for f in B.fx: if J.str(f.get("kind", "")) == "dust": draw_dust(ctx, f)
+
+static func draw_over(ctx: Ctx, B: Dictionary, k: float, sh: Vector2) -> void:
+	ctx.setTransform(k, 0, 0, k, sh.x * k, sh.y * k)
+	var H = J.num(B.get("H", 560)); var T = J.num(B.get("t", 0))
+	for u in B.units:
 		var hp = J.num(u.hp)
-		if hp <= 0 and J.num(u.get("deadT", 0)) > 0.8: continue
-		var P = pose_of(B, u); var s = scale_of(u); var x = J.num(u.x) + P.ox; var y0 = uy(B, u); var y = y0 + P.oy
-		var side1 = J.num(u.side) != 0
-		var cc = Color("#ff9ac0") if side1 else Color("#9ff3ff")
-		if u.get("casting") != null: draw_charge(ctx, T, x, y0 - 28 * s, s, J.num(u.casting.t) / J.num(u.casting.dur), cc, false)
-		var tg = u.anim.get("tg") if u.get("anim") is Dictionary else null
-		if tg is Dictionary and J.num(tg.hp) <= 0: tg = null
-		var o = {"tdx": J.num(tg.x) - J.num(u.x) if tg != null else (-40.0 if side1 else 40.0), "tdy": uy(B, tg) - uy(B, u) if tg != null else 0.0,
-			"t": T + J.num(u.get("lane", 0)), "walk": P.pose == "move", "pose": P.pose, "pt": P.pt, "flip": side1, "enemy": side1, "alpha": P.alpha, "rot": P.rot, "tamed": not side1, "untied": not side1}
-		draw_char(ctx, J.str(u.k), x, y, s, o)
-		var fl = J.num(u.get("flash", 0))
-		if fl > 0:
-			ctx.save(); ctx.globalCompositeOperation = "lighter"
-			var o2 = o.duplicate(); o2.alpha = P.alpha * fl * 0.85; o2.shadow = false
-			draw_char(ctx, J.str(u.k), x, y, s, o2); ctx.restore()
-		if u.get("casting") != null: draw_charge(ctx, T, x, y0 - 28 * s, s, J.num(u.casting.t) / J.num(u.casting.dur), cc, true)
-		if hp > 0:
-			var mn = J.t(u.get("minion")); var bo = J.t(u.get("boss"))
-			var bx = J.num(u.x) + P.ox * 0.4; var bw = 26.0 if mn else (64.0 if bo else 46.0); var by = y0 - (36.0 if mn else (92.0 if bo else 72.0))
-			rr(ctx, bx - bw / 2, by, bw, 5, 2, Color(0, 0, 0, 0.6))
-			rr(ctx, bx - bw / 2, by, bw * hp / J.num(u.maxhp), 5, 2, Color("#e84a5f") if side1 else Color("#4ade80"))
-			var en = J.num(u.get("energy", 0))
-			if u.get("sk") != null and not mn: rr(ctx, bx - bw / 2, by + 6, bw * en / 100.0, 3, 1.5, Color("#ffd84a") if en >= 100 else Color("#7dd3fc"))
-			var st: Dictionary = u.st
-			ctx.textAlign = "center"
-			if bo: ctx.fillStyle = Color("#ffd0d8"); ctx.font = "bold 12px sans-serif"; ctx.fillText(J.str(DB.L(J.str(u.name))), bx, by - 4)
-			var air = J.num(st.get("air", 0)) > 0; var down = J.num(st.get("down", 0)) > 0
-			if air or down:
-				ctx.fillStyle = Color("#99ffff") if air else Color("#ffcc99"); ctx.font = "bold 11px sans-serif"
-				ctx.fillText(J.str(DB.L("嚇彈起" if air else "腳軟")), bx, by - (18.0 if bo else 4.0))
-			var ft = u.get("fearT")
-			if side1 and ft is Dictionary and J.num(ft.get("until", 0)) > T:
-				ctx.save(); ctx.font = "bold 11px sans-serif"; ctx.textAlign = "center"; ctx.lineWidth = 3; ctx.strokeStyle = Color(20 / 255.0, 0, 30 / 255.0, 0.8); ctx.fillStyle = Color("#e6c4ff")
-				var ty = by - (18.0 if bo else 6.0) - (13.0 if air or down else 0.0)
-				var tx = J.str(DB.L("失神")) + "・" + J.str(DB.L(J.str(J.mc(js("Rework"), "word", [ft.get("t")]))))
-				ctx.strokeText(tx, bx, ty); ctx.fillText(tx, bx, ty); ctx.restore()
+		if hp <= 0: continue
+		var P = pose_of(B, u); var y0 = uy(B, u); var side1 = J.num(u.side) != 0
+		var mn = J.t(u.get("minion")); var bo = J.t(u.get("boss"))
+		var bx = J.num(u.x) + P.ox * 0.4; var bw = 26.0 if mn else (64.0 if bo else 46.0); var by = y0 - (36.0 if mn else (92.0 if bo else 72.0))
+		rr(ctx, bx - bw / 2, by, bw, 5, 2, Color(0, 0, 0, 0.6))
+		rr(ctx, bx - bw / 2, by, bw * hp / J.num(u.maxhp), 5, 2, Color("#e84a5f") if side1 else Color("#4ade80"))
+		var en = J.num(u.get("energy", 0))
+		if u.get("sk") != null and not mn: rr(ctx, bx - bw / 2, by + 6, bw * en / 100.0, 3, 1.5, Color("#ffd84a") if en >= 100 else Color("#7dd3fc"))
+		var st: Dictionary = u.st
+		ctx.textAlign = "center"
+		if bo: ctx.fillStyle = Color("#ffd0d8"); ctx.font = "bold 12px sans-serif"; ctx.fillText(J.str(DB.L(J.str(u.name))), bx, by - 4)
+		var air = J.num(st.get("air", 0)) > 0; var down = J.num(st.get("down", 0)) > 0
+		if air or down:
+			ctx.fillStyle = Color("#99ffff") if air else Color("#ffcc99"); ctx.font = "bold 11px sans-serif"
+			ctx.fillText(J.str(DB.L("嚇彈起" if air else "腳軟")), bx, by - (18.0 if bo else 4.0))
+		var ft = u.get("fearT")
+		if side1 and ft is Dictionary and J.num(ft.get("until", 0)) > T:
+			ctx.save(); ctx.font = "bold 11px sans-serif"; ctx.textAlign = "center"; ctx.lineWidth = 3; ctx.strokeStyle = Color(20 / 255.0, 0, 30 / 255.0, 0.8); ctx.fillStyle = Color("#e6c4ff")
+			var ty = by - (18.0 if bo else 6.0) - (13.0 if air or down else 0.0)
+			var tx = J.str(DB.L("失神")) + "・" + J.str(DB.L(J.str(J.mc(js("Rework"), "word", [ft.get("t")]))))
+			ctx.strokeText(tx, bx, ty); ctx.fillText(tx, bx, ty); ctx.restore()
 	# 軍師／合體技蓄力
 	var ac = B.get("advCast")
 	if ac is Dictionary: draw_charge(ctx, T, 34, H * 0.36, 1, J.num(ac.t) / J.num(ac.dur), Color("#c8ffb0"), true)
@@ -132,7 +120,7 @@ static func draw(ctx: Ctx, B: Dictionary) -> void:
 	for p in B.get("proj", []): draw_proj(ctx, p)
 	var flashT = J.num(B.get("flashT", 0))
 	if flashT > 0: ctx.fillStyle = Color(1, 1, 1, minf(1.0, flashT * 1.5)); ctx.fillRect(-20, -20, 430, H + 40)
-	for f in fxs:
+	for f in B.fx:
 		var kd = J.str(f.get("kind", ""))
 		if kd == "spark": draw_spark(ctx, f)
 		elif kd == "slash": draw_slash(ctx, f)
