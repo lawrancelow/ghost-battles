@@ -318,8 +318,10 @@ func _process(dt: float) -> void:
 		var busy = J.t(J.mc(J.G.get("Story"), "busy", [])); var cov = J.G.get("covered")
 		if busy or (cov != null and J.t(J.cl(cov, null, []))): vis = false
 		else:
-			var doc = J.G.get("document")
-			if doc != null and J.mc(doc, "querySelector", ["#world.on"]) != null: vis = false
+			for id in ["world", "scare", "battle", "gstreet", "gyard", "stn-cv", "stt-cv"]:
+				var e = JSRun.by_id(id)
+				if e != null and (" " + J.str(J.gp(e, "className")) + " ").contains(" on "): vis = false; break
+			if get_tree().root.get_node_or_null("Main/ScRun") != null: vis = false
 	btn.visible = vis
 
 # ---------------- 任務掣＋面板 ----------------
