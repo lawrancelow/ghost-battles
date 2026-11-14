@@ -2,7 +2,6 @@
 # 轉譯全部模塊：ref（去圖版源碼）→ 套 patches.js → jsgd.js → godot/jsgen/*.gd
 set -e
 cd "$(dirname "$0")"
-# 需要：npm i acorn；源碼 ../ref（由 tools/extract_assets.py 生成嘅去圖版）
 mkdir -p /tmp/jsgd_src ../godot/jsgen
 node -e '
 const fs=require("fs"),P=require("./patches.js");

@@ -87,4 +87,21 @@ func _run() -> void:
 				var e2 = JSRun.query(s[1], null)
 				if e2: print("CSSALL ", s[1], " ", str(e2.props.get("_cs", {})).substr(0, 900))
 				if e2: print("CSS ", s[1], " ", e2.props.get("_cs", {}).keys().filter(func(k): return k.begins_with("back") or k == "display" or k == "opacity"), " bg=", J.str(e2.props.get("_cs", {}).get("background", "")).substr(0, 200), " bgi=", J.str(e2.props.get("_cs", {}).get("background-image", "")).substr(0, 120), " bgc=", e2.props.get("_cs", {}).get("background-color"))
+			"fps":
+				var f0 = Engine.get_process_frames(); var t0 = Time.get_ticks_msec(); await get_tree().create_timer(float(s[1])).timeout
+				print("FPS ", snapped((Engine.get_process_frames() - f0) * 1000.0 / (Time.get_ticks_msec() - t0), 0.1))
+			"keydown":
+				var ev = InputEventKey.new(); ev.keycode = OS.find_keycode_from_string(s[1]); ev.pressed = bool(s[2]); get_viewport().push_input(ev)
+			"elclick":
+				var ec = JSRun.query(s[1], null); print("ELCLICK ", s[1], " ", ec != null)
+				if ec: ec.fire("click")
+			"jsp":
+				var parts = String(s[1]).split("."); var o = J.G.get(parts[0])
+				for i in range(1, parts.size() - 1):
+					if J.gp(o, parts[i]) == null: J.sp(o, parts[i], {})
+					o = J.gp(o, parts[i])
+				J.sp(o, parts[parts.size() - 1], s[2]); print("JSP ", s[1])
+			"profile":
+				var t0 = Time.get_ticks_usec(); var fr0 = Engine.get_process_frames(); await get_tree().create_timer(float(s[1])).timeout
+				print("PROF frames=", Engine.get_process_frames() - fr0, " process_ms=", snapped(Performance.get_monitor(Performance.TIME_PROCESS) * 1000, 0.1), " fps=", Engine.get_frames_per_second())
 			"quit": get_tree().quit(); return

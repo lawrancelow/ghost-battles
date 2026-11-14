@@ -1,0 +1,4 @@
+[["wait",8],["import","/tmp/claude-0/save_code.txt"],["notitle"],["wait",2],["jsp","S.pt.introSeen",1],["jsp","S.pt.min",1300],
+["call","Patrol","openPrep"],["wait",3],["shot","/tmp/gp_prep.png"],
+["click",49,621],["wait",8],["shot","/tmp/gp_run0.png"],["profile",4],
+["keydown","D",true],["wait",3],["keydown","D",false],["profile",4],["shot","/tmp/gp_run1.png"],["quit"]]

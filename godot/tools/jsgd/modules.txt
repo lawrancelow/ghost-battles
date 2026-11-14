@@ -56,5 +56,8 @@ station_squad_art
 street
 sports
 policy
+patrol_assets
+patrol_ghosts
+patrol
 world
 tower
