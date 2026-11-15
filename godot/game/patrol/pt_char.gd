@@ -64,7 +64,7 @@ func _init(unit, r) -> void:
 		mode = "plain"
 	else:
 		mode = "none"; if H0 <= 0: H0 = 58.0
-	if G.safe_gfx and (mode == "limbs" or mode == "mesh"): mode = "plain"   # 安全畫面模式：整張原圖（已證實所有手機都畫得到）
+	if not G.skin_ok() and (mode == "limbs" or mode == "mesh"): mode = "plain"   # 安全畫面模式：整張原圖（已證實所有手機都畫得到）
 	if rig != null and rig is Dictionary: tweak = rig.get("tweak")
 	glow = PtDraw.new(); glow.fn = _draw_glow; var gm = CanvasItemMaterial.new(); gm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD; glow.material = gm; add_child(glow)
 	ch = PtDraw.new(); ch.fn = _draw_shadow; add_child(ch)

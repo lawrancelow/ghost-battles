@@ -392,6 +392,10 @@ func read_crumb() -> void:
 		safe_gfx = OS.has_environment("GB_SAFE_GFX"); return
 	var f = FileAccess.open(CRUMB, FileAccess.READ)
 	var safe_f = FileAccess.file_exists("user://safe_gfx")
+	if safe_f:
+		var sv = FileAccess.get_file_as_string("user://safe_gfx").strip_edges()
+		if sv != "manual" and sv != "auto:" + str(ProjectSettings.get_setting("application/config/version", "")):
+			DirAccess.remove_absolute("user://safe_gfx"); safe_f = false   # 新版本：自動開嘅安全模式重新試過
 	if f:
 		var st = f.get_line(); f.close()
 		if st.begins_with("probe:"):
@@ -405,11 +409,13 @@ func read_crumb() -> void:
 			last_crash = st
 			# 畫面相關步驟閃退 → 自動開安全畫面模式
 			if st in ["ui", "village", "start", "state", "resize", "refresh", "frame1", "frame30", "snd", "title"] or st.begins_with("show:") or st.begins_with("ng:") or st.begins_with("draw:"):
-				var w = FileAccess.open("user://safe_gfx", FileAccess.WRITE); if w: w.store_string("1"); w.close()
+				var w = FileAccess.open("user://safe_gfx", FileAccess.WRITE); if w: w.store_string("auto:" + str(ProjectSettings.get_setting("application/config/version", ""))); w.close()
 				safe_f = true
 	safe_gfx = safe_f or OS.has_environment("GB_SAFE_GFX")
+# 骨架角色（CPU 蒙皮）用唔用得：安全畫面模式或者開機暗測閃退過就唔用，改畫整張原圖
+func skin_ok() -> bool: return not safe_gfx and not gfx_bad.has("cpuskin2")
 func set_safe_gfx(on: bool) -> void:
 	safe_gfx = on
 	if on:
-		var w = FileAccess.open("user://safe_gfx", FileAccess.WRITE); if w: w.store_string("1"); w.close()
+		var w = FileAccess.open("user://safe_gfx", FileAccess.WRITE); if w: w.store_string("manual"); w.close()
 	else: DirAccess.remove_absolute("user://safe_gfx")

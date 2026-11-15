@@ -124,7 +124,7 @@ func _boot_js() -> void:
 # 顯示卡測試：逐樣試一次（只試一次，記錄喺 user://gfx_probe.txt）；試嘅時候閃退，下次就避開嗰樣
 func _gfx_probes() -> void:
 	var done = FileAccess.get_file_as_string("user://gfx_probe.txt") if FileAccess.file_exists("user://gfx_probe.txt") else ""
-	for p in ["grad", "replay", "bake"]:
+	for p in ["grad", "replay", "bake", "cpuskin2"]:
 		if done.contains(p + ";") or G.gfx_bad.has(p): continue
 		G.crumb("probe:" + p)
 		var n = PtDraw.new(); n.z_index = -100; add_child(n); move_child(n, 0)
@@ -144,6 +144,17 @@ func _gfx_probes() -> void:
 				var cx = Ctx.new(r2); cx.fillStyle = "#334455"; cx.fillRect(0, 0, 64, 64)
 				if Baker.host == null: Baker.host = self
 				Baker._bake(r2)
+			"cpuskin2":   # 真角色骨架（CPU 蒙皮）：同村民一樣嘅網格同畫法
+				PtGfx.init()
+				if PtChar.RIG.is_empty(): PtChar.setup_static()
+				var kk = "afu" if PtChar.RIG.has("afu") else (PtChar.RIG.keys()[0] if PtChar.RIG.size() > 0 else "")
+				var m = PtGfx.mesh_for(kk, kk, PtChar.RIG[kk].bones) if kk != "" else {}
+				if not m.is_empty():
+					var cs = CpuSkin.new(); cs.mesh = m.mesh; cs.texture = m.tex; n.add_child(cs)
+					var h = 80.0; var W = h / m.ar
+					cs.set_shader_parameter("bone", PtGfx.solve(m.bones, {"a1": 0.3}))
+					cs.set_shader_parameter("dims", Vector3(W, h, m.ar))
+					cs.set_shader_parameter("aff_a", Vector4(1, 0, 0, 1)); cs.set_shader_parameter("aff_o", Vector2(10, 10))
 		n.queue_redraw()
 		for i in 3: await RenderingServer.frame_post_draw
 		n.queue_free()

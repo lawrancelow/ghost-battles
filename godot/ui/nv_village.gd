@@ -192,8 +192,8 @@ func _sync_dynamic() -> void:
 		if it.get("kind") == "plaza" and plaza.try_item(it, y): continue
 		var n = _seg(); n.position = Vector2(0, y)
 		if it.get("kind") == "hero":
-			# 主角 JS 繪製較貴：隔幀重錄（30fps 動作），另一幀重用上幀錄像
-			hero_flip = not hero_flip
+			# 主角每幀重錄（以前隔幀，手機上動作變一半幀數，割稻好硬）
+			hero_flip = false
 			if hero_flip and n == hero_seg and n.has_meta("hy"):
 				n.position = Vector2(0, n.get_meta("hy")); n.visible = true
 				continue

@@ -69,7 +69,7 @@ func sync(ag: Dictionary, t: float, mute: bool) -> void:
 	mi.visible = true
 	if golf: golf.visible = false
 	_body(a)
-	if G.safe_gfx: _safe_body(a)
+	if not G.skin_ok(): _safe_body(a)
 	ag._z = o._z; ag._stars = o._stars
 	# 頭上的東西
 	var hy = ay - float(NvPlaza.CH.get(k, 50)) * s - (0.0 if NvPlaza.PSOLID.has(k) else 4.0)

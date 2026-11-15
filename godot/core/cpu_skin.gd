@@ -101,8 +101,8 @@ func _draw() -> void:
 			if cols[idx[t]].a > 0.0 or cols[idx[t + 1]].a > 0.0 or cols[idx[t + 2]].a > 0.0:
 				ii.push_back(idx[t]); ii.push_back(idx[t + 1]); ii.push_back(idx[t + 2])
 		if ii.is_empty(): return
-	else:
-		cols.resize(1); cols[0] = Color(fl, fl, fl, 1.0)
+	else:   # 每個頂點一個顏色（同 Ctx.drawTriangles 一樣；單一顏色嘅寫法喺部分 Adreno 會閃退）
+		cols.resize(pts.size()); cols.fill(Color(fl, fl, fl, 1.0))
 	RenderingServer.canvas_item_add_triangle_array(get_canvas_item(), ii, pts, cols, g.uv, PackedInt32Array(), PackedFloat32Array(), tex.get_rid())
 
 # 衣服換色：CPU 將原圖每點 rgb 乘顏色矩陣（同 shader：clamp(cm * rgb)），結果快取

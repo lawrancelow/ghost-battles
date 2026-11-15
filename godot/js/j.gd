@@ -340,6 +340,7 @@ static func construct(c, args: Array):
 	if typeof(c) == TYPE_CALLABLE:
 		var o2 = {}
 		var r = c.call(o2, args)
+		if typeof(r) == TYPE_TRANSFORM2D: return r   # new DOMMatrix(...)
 		return r if typeof(r) == TYPE_DICTIONARY else o2
 	return {}
 
@@ -427,6 +428,13 @@ static func mc(o, m, a: Array):
 					var p = a[0]; var v = tr * Vector2(num(gp(p, "x")), num(gp(p, "y")))
 					return {"x": v.x, "y": v.y}
 				"multiply": return tr * a[0] if a.size() and a[0] is Transform2D else tr
+				# DOMMatrix 介面（daily_hero.js 阿福日常動作用）：唔改原本，回傳新矩陣；rotate 用角度
+				"translate": return tr * Transform2D(0.0, Vector2(num(a[0]) if a.size() > 0 else 0.0, num(a[1]) if a.size() > 1 else 0.0))
+				"rotate": return tr * Transform2D(deg_to_rad(num(a[0]) if a.size() > 0 else 0.0), Vector2.ZERO)
+				"scale":
+					var sx = num(a[0]) if a.size() > 0 and a[0] != null else 1.0
+					var sy = num(a[1]) if a.size() > 1 and a[1] != null else sx
+					return tr * Transform2D(Vector2(sx, 0), Vector2(0, sy), Vector2.ZERO)
 			return null
 		TYPE_BOOL:
 			if mm == "toString": return J.str(o)
