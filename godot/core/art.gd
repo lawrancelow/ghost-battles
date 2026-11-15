@@ -186,6 +186,17 @@ func draw_char(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictiona
 
 func _draw_mesh(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary) -> void:
 	var solid = SOLID.has(type); var H: float = CHAR_H[type] * s; var t: float = o.t
+	# 平日動作（daily_*.js 嘅 DAILY[act]：伏桌瞓覺、開會、講電話、執嘢走……）：同 art.js drawMesh 一樣交俾佢畫，回傳 false 先照一般畫法
+	var act = o.get("act")
+	if act is String and act != "" and o.get("_daily", false):   # 叫嘅人要講明（回陽間 sc_npc.gd）；其他場景各自有原生版
+		var DA = J.G.get("DAILY")
+		if DA is Dictionary and DA.get(act) != null:
+			ctx.save()
+			if o.get("alpha") != null: ctx.globalAlpha = float(o.alpha)
+			var sh = func(_t, a): shadow(ctx, J.num(a[0]), y + 1 * s, s * (J.num(a[1]) if a.size() > 1 and J.t(a[1]) else (1.0 if solid else 0.8))); return null
+			var done = J.cl(DA[act], null, [ctx, {"type": type, "x": x, "y": y, "s": s, "H": H, "o": o, "faceRight": not o.get("flip", false), "solid": solid, "shadow": sh}])
+			ctx.restore()
+			if not (done is bool and done == false): return
 	var pose = o.get("pose")
 	ctx.save()
 	if o.get("alpha") != null: ctx.globalAlpha = float(o.alpha)

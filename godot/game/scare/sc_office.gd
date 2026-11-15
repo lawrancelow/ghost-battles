@@ -21,8 +21,23 @@ static func rnd(s: float) -> float: var x = sin(s * 127.1 + 311.7) * 43758.5453;
 
 static func N() -> Dictionary: return J.gp(J.G.get("OFFICE"), "_n")
 static func st() -> Dictionary: return J.cl(N().st, null, [])
-static func U(Sc, y: float) -> float: return _n(J.mc(Sc, "hh", [y])) * KEN_H
-static func P(Sc, x: float, y: float) -> Vector2: var p = J.mc(Sc, "pt", [x, y]); return Vector2(_n(p[0]), _n(p[1]))
+# 每幀開頭由 ScRun 算一次 bgScale（全景＋透視先用），之後 pt／hh 原生計（公式同 scare.js 一樣），慳返每次叫 JS
+static var FR = null
+static func frame_begin(Sc) -> void:
+	FR = null; Sc["_vw"] = null
+	var site = Sc.get("site")
+	if not (site is Dictionary) or not J.t(site.get("pano")) or not (site.get("persp") is Dictionary): return
+	var b = J.mc(Sc, "bgScale", [])
+	FR = [J.num(b.s), J.num(b.iw), J.num(b.ih), J.num(b.ox), J.num(b.oy), J.num(site.persp.c), J.num(site.persp.hz)]
+	Sc["_vw"] = J.num(Sc.get("W", 390)) / (FR[1] * FR[0])   # = viewW()：office.js 家具剔走畫面外用
+static func hh(Sc, y: float) -> float:
+	if FR != null: return FR[2] * FR[0] * (FR[5] * (y - FR[6]))
+	return _n(J.mc(Sc, "hh", [y]))
+static func pt(Sc, x: float, y: float) -> Vector2:
+	if FR != null: return Vector2(x * FR[1] * FR[0] + FR[3], y * FR[2] * FR[0] + FR[4])
+	var p = J.mc(Sc, "pt", [x, y]); return Vector2(_n(p[0]), _n(p[1]))
+static func U(Sc, y: float) -> float: return hh(Sc, y) * KEN_H
+static func P(Sc, x: float, y: float) -> Vector2: return pt(Sc, x, y)
 static func tex(k: String) -> Texture2D: return Spr.get_tex(k) if k != "" else null
 
 static func _img(ctx: Ctx, t: Texture2D, x: float, y: float, w: float, h: float) -> void:

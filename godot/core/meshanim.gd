@@ -86,6 +86,19 @@ func draw(ctx: Ctx, id: String, x: float, y: float, h: float, pose: Dictionary, 
 		pose = m
 	return draw_raw(ctx, id, x, y, h, pose, flip)
 
+func _sparse(C: Dictionary, nb: int) -> void:
+	var used = {}
+	for i in C.tris: used[i] = true
+	var vs = used.keys(); vs.sort()
+	var sv = PackedInt32Array(); var so = PackedInt32Array(); var sk = PackedInt32Array(); var sw = PackedFloat32Array()
+	for i in vs:
+		sv.push_back(i); so.push_back(sk.size())
+		var w: PackedFloat32Array = C.w[i]
+		for k in mini(nb, w.size()):
+			if w[k] >= 0.002: sk.push_back(k); sw.push_back(w[k])
+	so.push_back(sk.size())
+	C["sv"] = sv; C["so"] = so; C["sk"] = sk; C["sw"] = sw
+
 func draw_raw(ctx: Ctx, id: String, x: float, y: float, h: float, pose: Dictionary, flip: bool, rig_from := "") -> bool:
 	var tex = Spr.get_tex(id)
 	var rk = rig_from if rig_from != "" else id
@@ -97,20 +110,22 @@ func draw_raw(ctx: Ctx, id: String, x: float, y: float, h: float, pose: Dictiona
 	var R: Dictionary = C.R; var ar: float = C.ar
 	var W = h / ar
 	var T = _solve(R, pose); var bones: Array = R.bones
-	var cs: Array = []
-	for b in bones:
-		var t: Array = T[b[0]]; cs.append([cos(t[0]), sin(t[0]), t[1], t[2]])
-	var uv: PackedVector2Array = C.uv; var Wt: Array = C.w
+	var uv: PackedVector2Array = C.uv
+	if not C.has("sv"): _sparse(C, bones.size())
+	# 稀疏蒙皮：只計有畫到嘅頂點、只計權重 ≥ 0.002 嘅骨（同舊寫法一樣跳過細權重），結果一樣、快幾倍
+	var nb = bones.size(); var c0 = PackedFloat64Array(); c0.resize(nb); var c1 = c0.duplicate(); var c2 = c0.duplicate(); var c3 = c0.duplicate()
+	for k in nb:
+		var t: Array = T[bones[k][0]]; c0[k] = cos(t[0]); c1[k] = sin(t[0]); c2[k] = t[1]; c3[k] = t[2]
+	var sv: PackedInt32Array = C.sv; var so: PackedInt32Array = C.so; var sk: PackedInt32Array = C.sk; var sw: PackedFloat32Array = C.sw
 	var pts = PackedVector2Array(); pts.resize(uv.size())
-	for i in uv.size():
+	var hy = h / ar
+	for n in sv.size():
+		var i = sv[n]
 		var u = uv[i].x; var vy = uv[i].y * ar; var X = 0.0; var Y = 0.0
-		var w: PackedFloat32Array = Wt[i]
-		for k in bones.size():
-			var wk = w[k]
-			if wk < 0.002: continue
-			var q: Array = cs[k]
-			X += wk * (q[0] * u - q[1] * vy + q[2]); Y += wk * (q[1] * u + q[0] * vy + q[3])
-		pts[i] = Vector2(X * W, Y / ar * h)
+		for j in range(so[n], so[n + 1]):
+			var k = sk[j]; var wk = sw[j]
+			X += wk * (c0[k] * u - c1[k] * vy + c2[k]); Y += wk * (c1[k] * u + c0[k] * vy + c3[k])
+		pts[i] = Vector2(X * W, Y * hy)
 	ctx.save()
 	ctx.translate(x + float(pose.get("x", 0.0)) * W, y + float(pose.get("y", 0.0)) * h)
 	if flip: ctx.scale(-1, 1)

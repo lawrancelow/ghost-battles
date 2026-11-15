@@ -92,7 +92,7 @@ static func draw(ctx: Ctx, Sc: Dictionary, n: Dictionary, t: float) -> Dictionar
 	var vp: Array = J.mc(Sc, "visPos", [n])
 	var vx = _n(vp[0]); var vy = _n(vp[1])
 	if office: vx += _n(J.mc(OF, "kenOff", [n]))
-	var P = J.mc(Sc, "pt", [vx, vy]); var x = _n(P[0]); var y = _n(P[1]); var hh = _n(J.mc(Sc, "hh", [vy])); var d: Dictionary = n.d
+	var P = ScOffice.pt(Sc, vx, vy); var x = P.x; var y = P.y; var hh = ScOffice.hh(Sc, vy); var d: Dictionary = n.d
 	n["vX"] = vx; n["vY"] = vy
 	var o = pose(Sc, n); n["spd"] = o.spd
 	var right = (_n(vp[2]) > 0) if vp[2] != null else _n(n.get("dir"), 1) > 0
@@ -115,7 +115,7 @@ static func draw(ctx: Ctx, Sc: Dictionary, n: Dictionary, t: float) -> Dictionar
 	ctx.scale(o.sx, o.sy)
 	if d.get("tint") != null: ctx.filter = J.str(d.tint)
 	if rig:
-		var TW = J.G.get("TOWN"); var oo = {"t": _n(n.get("at")), "pose": o.pose, "pt": o.pt, "face": o.face, "flip": not right, "walk": o.walk, "shadow": false}
+		var TW = J.G.get("TOWN"); var oo = {"t": _n(n.get("at")), "pose": o.pose, "pt": o.pt, "face": o.face, "flip": not right, "walk": o.walk, "shadow": false, "_daily": true}
 		if TW != null:
 			var no = J.cl(TW.npcOpts, null, [n])
 			if no is Dictionary: oo.merge(no, true)

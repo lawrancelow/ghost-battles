@@ -26,7 +26,20 @@ module.exports = {
     ["      { // 眼：開＝望緊四周", "      if (this._nat && typeof __nat_scTag !== 'undefined') { __nat_scTag(ctx, this, n, x, by, t, sel); if (n.step && n.step.cue) this.drawCue(ctx, n, x, by, t); } else {\n      { // 眼：開＝望緊四周"],
     ["      if (n.d.daoshi && n.ds === 'ritual') {", "      }\n      if (n.d.daoshi && n.ds === 'ritual') {"],
     ["      const mark = n.fleeing ? '!!!'", "      const mark = this._nat && typeof __nat_scTag !== 'undefined' ? '' : n.fleeing ? '!!!'"],
+    // 線 D2：對白框原生畫（sc_fast.gd）；家具標記先睇喺唔喺畫面先至計 propOK（結果一樣，慳啲）
+    ["  drawBubble(ctx, text, x, y, ghost, age) {\n", "  drawBubble(ctx, text, x, y, ghost, age) { if (this._nat && typeof __nat_scBub !== 'undefined') return __nat_scBub(ctx, this, text, x, y, ghost, age);\n"],
+    ["      if (SCARE_PROPS[k].group || !this.propOK(k, this.sel)) continue;", "      if (this.site.pano && !this.onScreen(SCARE_PROPS[k].rect[0] + SCARE_PROPS[k].rect[2] / 2, 0)) continue;       if (SCARE_PROPS[k].group || !this.propOK(k, this.sel)) continue;"],
     ["    if (!this.active) return; this.active = false;", "    if (!this.active) return; this.active = false; if (this._nat && typeof __nat_scEnd !== 'undefined') __nat_scEnd(this);"],
+  ],
+  // 線 D2：大樓剖面（夜空＋遠處大廈燈）原生畫（game/scare/sc_fast.gd）
+  rooms: [
+    // 畫面外嘅會議枱、前台、後備椅唔畫（全景好闊）
+    ["    const out = []; if (!st) return out;", "    const out = []; if (!st) return out; const vis = (x) => !SC._nat || SC.onScreen(x, 0.6);"],
+    ["    const tb = tint('of_meet_table'); if (tb) {", "    const tb = tint('of_meet_table'); if (tb && vis(SPOT.meetTable[0])) {"],
+    ["      if (ch) out.push([ry - 0.006,", "      if (ch && vis(rx)) out.push([ry - 0.006,"],
+    ["      if (rc) out.push([ry + 0.02,", "      if (rc && vis(rx)) out.push([ry + 0.02,"],
+    ["    if (ch) for (const c of st.spare) { const y = c.y + c.oz; out.push(", "    if (ch) for (const c of st.spare) { const y = c.y + c.oz; if (!vis(c.x + c.ox)) continue; out.push("],
+    ["      if (b.oy > 0) { // 鏡頭拉遠", "      if (b.oy > 0 && SC._nat && typeof __nat_scSky !== 'undefined') __nat_scSky(ctx, SC, b.oy, b.s);\n      else if (b.oy > 0) { // 鏡頭拉遠"],
   ],
   // 線 D2：揀隊畫面（ui/scare_select/sc_select.gd）、偷看手機／電腦／茶水間視窗（game/scare/sc_ops.gd）原生化；規則照用 JS
   scare_squad: [
@@ -48,7 +61,7 @@ module.exports = {
     ['(ctx) => { const keep = STN; use(s); drawKenChair(ctx, null, t); use(keep); }]); });', "(ctx) => { if (SC._nat && typeof __nat_scItem !== 'undefined') return __nat_scItem(ctx, SC, s, t, 'kenchair'); const keep = STN; use(s); drawKenChair(ctx, null, t); use(keep); }]); });"],
     ['  function drawKen(ctx, n, t) {', "  function drawKen(ctx, n, t) { if (SC && SC._nat && typeof __nat_scKen !== 'undefined') return __nat_scKen(ctx, SC, n, t);"],
     // 線路 D：全景只畫鏡頭附近嘅家具（以前成層 12 個畫面闊嘅工位每幀都畫）
-    ['    for (const it of list) {', '    for (const it of list) { if (SC && SC._nat && SC.site && SC.site.pano && it.x != null && !SC.onScreen(it.x, 0.7)) continue;'],
+    ['    for (const it of list) {', '    for (const it of list) { if (SC && SC._vw && it.x != null && (it.x < (SC.camX || 0) - 0.7 || it.x > (SC.camX || 0) + SC._vw + 0.7)) continue;'],
   ],
   // 線 I：冥街夜市——<canvas> 交俾原生 game/minis/mini_stage.gd 直接畫（唔經錄製器）；角色冇平日動作嘅交俾原生 Art；規則、DOM 面板照舊
   ghoststreet: [

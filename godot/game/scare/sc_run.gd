@@ -84,13 +84,19 @@ func _cover(on: bool) -> void:
 			var n = main.get(nm)
 			if n is CanvasItem and n.visible:
 				n.visible = false; n.process_mode = Node.PROCESS_MODE_DISABLED; _hidden.append(n)
+		# 喺 ScRun 下面、俾佢成個蓋住嘅介面（村子頂欄、資源格……）：收埋唔使白畫（手機 GPU／軟件渲染都慳）
+		for c in main.get_children():   # 頂欄、資源格、底部導航、主線條（冇 script 嘅 Panel；故事、loading 等有自己 script／型別，唔郁）
+			if c.get_index() >= get_index() or c.get_script() != null or not (c is Panel or c is PanelContainer): continue
+			if c.visible and not _hidden.has(c): c.visible = false; _hidden.append(c)
 		if sce: sce.style["background"] = "transparent"
 		for id in ["#sc-top", "#sc-stage", "#sc-panel"]:
 			var e = _el(id)
 			if e: e.style["display"] = "none"
 	else:
 		for n in _hidden:
-			if is_instance_valid(n): n.visible = true; n.process_mode = Node.PROCESS_MODE_INHERIT
+			if not is_instance_valid(n): continue
+			n.visible = true
+			if n.process_mode == Node.PROCESS_MODE_DISABLED: n.process_mode = Node.PROCESS_MODE_INHERIT
 		_hidden.clear()
 		if sce: sce.style.erase("background")
 
@@ -321,14 +327,16 @@ func _on_quit() -> void:
 
 # ---------------- 畫面 ----------------
 func _draw_stage() -> void:
-	if not J.t(Sc.get("active")): return
+	if not J.t(Sc.get("active")) or OS.has_environment("GB_NOSTAGE"): return
 	var ctx = Ctx.new(stage)
 	Sc["_natCtx"] = ctx
 	var t0 = Time.get_ticks_usec()
 	var cp = OS.has_environment("GB_CTXPROF") and prof_n == 29
 	if cp: J.CTXPROF.clear(); J.CTXPROF_ON = true
 	if OS.has_environment("GB_PROF"): mark("pre")
+	ScOffice.frame_begin(Sc)
 	J.mc(Sc, "draw", [Time.get_ticks_msec() / 1000.0])
+	ScOffice.FR = null
 	if cp:
 		J.CTXPROF_ON = false; var ks = J.CTXPROF.keys().filter(func(k): return not k.begins_with("#"))
 		ks.sort_custom(func(a, b): return J.CTXPROF[a] > J.CTXPROF[b])

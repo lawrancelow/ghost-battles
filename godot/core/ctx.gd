@@ -505,9 +505,18 @@ func _draw_rec(rec: Recorder, el, a, b, c, d, e, f, g, h) -> void:
 func drawTriangles(tex: Texture2D, pts: PackedVector2Array, uvs: PackedVector2Array, idx: PackedInt32Array, tint := Color.WHITE) -> void:
 	var m = _mod() * tint
 	if m.a <= 0.001: return
+	if _clip != null:   # 有 clip（例如坐低嘅人：手臂再畫一次蓋過枱面）：只留中心喺 clip 入面嘅三角形（以前成個網格再畫一次）
+		var cr: Rect2 = _clip; var keep = PackedInt32Array()
+		for i in range(0, idx.size() - 2, 3):
+			var c = T * ((pts[idx[i]] + pts[idx[i + 1]] + pts[idx[i + 2]]) / 3.0)
+			if cr.has_point(c): keep.append(idx[i]); keep.append(idx[i + 1]); keep.append(idx[i + 2])
+		if keep.is_empty(): return
+		idx = keep
+	var cols = PackedColorArray(); cols.resize(pts.size()); cols.fill(m)
+	if not (ci is Recorder):   # 交俾 GPU 變換（以前逐點喺 GDScript 乘）
+		ci.draw_set_transform_matrix(T); _tris(idx, pts, cols, uvs, tex); ci.draw_set_transform_matrix(Transform2D.IDENTITY); return
 	var dev = PackedVector2Array(); dev.resize(pts.size())
 	for i in pts.size(): dev[i] = T * pts[i]
-	var cols = PackedColorArray(); cols.resize(pts.size()); cols.fill(m)
 	ci.draw_set_transform_matrix(Transform2D.IDENTITY)
 	_tris(idx, dev, cols, uvs, tex)
 
