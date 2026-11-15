@@ -7,6 +7,7 @@ static var host: Node = null
 
 static func request(r: Recorder) -> void:
 	if r.baking or r.baked != null: return
+	if G.gfx_bad.has("bake"): return   # 呢部機 SubViewport 拍照會閃退：照重播
 	if r.last_ver_seen != r.version: r.last_ver_seen = r.version; r.used_frames = 0; return
 	r.used_frames += 1
 	if r.used_frames < 3: return   # 連續幾幀都冇變先拍

@@ -16,6 +16,7 @@ var TIME_SCALE = 1.0
 var exp_acc = 0.0
 var story_busy = func() -> bool: return false   # 由 Story 接管
 var modal_open = func() -> bool: return false
+var gfx_bad := {}   # 顯示卡測試試到閃退嘅功能（例如 bake = SubViewport 拍照），之後避開
 var boot_agents_ok := false   # 開機逐樣顯示完先起村子廣場鬼
 var safe_gfx := false   # 安全畫面模式：上次開機喺畫面階段閃退 → 唔用自訂 shader
 var last_crash := ""     # 上次閃退停喺邊一步（顯示俾玩家／開發者）
@@ -391,6 +392,13 @@ func read_crumb() -> void:
 	var safe_f = FileAccess.file_exists("user://safe_gfx")
 	if f:
 		var st = f.get_line(); f.close()
+		if st.begins_with("probe:"):
+			# 顯示卡測試閃退：記低，下次避開，唔使彈救命畫面
+			var bad = FileAccess.get_file_as_string("user://gfx_bad.txt") if FileAccess.file_exists("user://gfx_bad.txt") else ""
+			bad += st.substr(6) + ";"; var wb = FileAccess.open("user://gfx_bad.txt", FileAccess.WRITE); wb.store_string(bad); wb.close()
+			st = ""
+		if FileAccess.file_exists("user://gfx_bad.txt"):
+			for b in FileAccess.get_file_as_string("user://gfx_bad.txt").split(";", false): gfx_bad[b] = true
 		if st != "" and st != "ok":
 			last_crash = st
 			# 畫面相關步驟閃退 → 自動開安全畫面模式

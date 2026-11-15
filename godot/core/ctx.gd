@@ -333,11 +333,8 @@ static func _grad_tex(g: Grad) -> Texture2D:
 	if k0 > 0.0: offs.insert(0, 0.0); cs.insert(0, cs[0])
 	gr.offsets = offs; gr.colors = cs
 	var tx
-	if g.radial:
-		tx = GradientTexture2D.new(); tx.gradient = gr; tx.width = 64; tx.height = 64
-		tx.fill = GradientTexture2D.FILL_RADIAL; tx.fill_from = Vector2(0.5, 0.5); tx.fill_to = Vector2(1.0, 0.5)
-	else:
-		tx = GradientTexture1D.new(); tx.gradient = gr; tx.width = 128
+	if g.radial: tx = GradTex.radial(gr, 64, 64)
+	else: tx = GradTex.linear(gr, 128, 2)
 	if _gtex.size() > 400: _gtex.clear()
 	_gtex[key] = tx
 	return tx

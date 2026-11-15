@@ -105,7 +105,36 @@ func _boot_js() -> void:
 	if boot_fail.size():
 		show_toast("開機有 %d 步出錯（%s），可以喺設定「錯誤記錄」睇詳情，截圖俾開發者。" % [boot_fail.size(), ", ".join(boot_fail)])
 
+# 顯示卡測試：逐樣試一次（只試一次，記錄喺 user://gfx_probe.txt）；試嘅時候閃退，下次就避開嗰樣
+func _gfx_probes() -> void:
+	var done = FileAccess.get_file_as_string("user://gfx_probe.txt") if FileAccess.file_exists("user://gfx_probe.txt") else ""
+	for p in ["grad", "replay", "bake"]:
+		if done.contains(p + ";") or G.gfx_bad.has(p): continue
+		G.crumb("probe:" + p)
+		var n = PtDraw.new(); n.z_index = -100; add_child(n); move_child(n, 0)
+		match p:
+			"grad":
+				n.fn = func(c):
+					var ctx = Ctx.new(c); var g = ctx.createLinearGradient(0, 0, 0, 100); g.addColorStop(0, "#202020"); g.addColorStop(1, "#000000")
+					ctx.fillStyle = g; ctx.fillRect(0, 0, 100, 100)
+					var r = ctx.createRadialGradient(50, 50, 0, 50, 50, 50); r.addColorStop(0, "rgba(255,255,255,.2)"); r.addColorStop(1, "rgba(255,255,255,0)")
+					ctx.fillStyle = r; ctx.fillRect(0, 0, 100, 100)
+			"replay":
+				var gl = J.cl(J.G.get("groundLayer"), null, [])
+				var rec = gl.rec if gl is El else null
+				n.fn = func(c): if rec: rec.replay(c, Transform2D(Vector2(0.1, 0), Vector2(0, 0.1), Vector2.ZERO))
+			"bake":
+				var r2 = Recorder.new(); r2.width = 64; r2.height = 64
+				var cx = Ctx.new(r2); cx.fillStyle = "#334455"; cx.fillRect(0, 0, 64, 64)
+				if Baker.host == null: Baker.host = self
+				Baker._bake(r2)
+		n.queue_redraw()
+		for i in 3: await RenderingServer.frame_post_draw
+		n.queue_free()
+		var f = FileAccess.open("user://gfx_probe.txt", FileAccess.WRITE); done += p + ";"; f.store_string(done); f.close()
+
 func _staged_reveal() -> void:
+	await _gfx_probes()
 	var top_items = []
 	for c in get_children():
 		if c != loading and c is CanvasItem and c.visible: top_items.append(c); c.visible = false
@@ -699,11 +728,10 @@ func _title_new(fresh: bool, bn: TextureButton, hint: Label) -> void:
 	if not fresh: restart_with(null, "pre"); return
 	_snd("gong"); _hide_title(); refresh(); phone_home("pre")
 
-func _vgrad(stops: Array) -> GradientTexture2D:
-	var gt = GradientTexture2D.new(); var gr = Gradient.new()
+func _vgrad(stops: Array) -> Texture2D:
+	var gr = Gradient.new()
 	gr.offsets = PackedFloat32Array(stops.map(func(x): return x[0])); gr.colors = PackedColorArray(stops.map(func(x): return x[1]))
-	gt.gradient = gr; gt.fill_from = Vector2(0, 0); gt.fill_to = Vector2(0, 1); gt.width = 4; gt.height = 128
-	return gt
+	return GradTex.vertical(gr, 4, 128)
 
 func _gray_mat() -> ShaderMaterial:
 	var sh = Shader.new(); sh.code = "shader_type canvas_item; void fragment(){ vec4 c = texture(TEXTURE, UV) * COLOR; float g = dot(c.rgb, vec3(0.299,0.587,0.114)); COLOR = vec4(mix(c.rgb, vec3(g), 0.85), c.a); }"
@@ -794,3 +822,5 @@ func restart_with(save, skip_title) -> void:
 func open_html_sheet(title: String, html: String) -> void:
 	open_sheet(title); _clear_body()
 	_p(JSBridge.html2bb(html), 14, UIKit.INKTXT)
+
+func t_dump_ground(path: String) -> void: village.t_dump_ground(path)

@@ -211,6 +211,8 @@ func _sync_dynamic() -> void:
 
 # ---------------- 地面、彼岸花、霧 ----------------
 func _draw_ground(c: CanvasItem) -> void:
+	# 地面係固定種子畫出嚟嘅，預先烘好做圖（唔使開機重播萬幾筆、唔使 SubViewport 拍照）
+	if ground_tex == null and ResourceLoader.exists("res://assets/img/village_ground.webp"): ground_tex = load("res://assets/img/village_ground.webp")
 	if ground_tex == null:
 		if ground_rec == null:
 			var gl = J.cl(J.G.get("groundLayer"), null, [])
@@ -393,3 +395,7 @@ func _furnace_glow(c: CanvasItem, x: float, y: float) -> void:
 	var w = 62.0; var h = w * im.get_height() / im.get_width()
 	var fx = x; var fy = y + 6 - h + h * 0.62
 	_glow(c, Transform2D(0, Vector2(0, -y)), fx, fy, 30, Color(1, 170 / 255.0, 60 / 255.0, 0.35 + sin(t * 7) * 0.12))
+
+func t_dump_ground(path: String) -> void:
+	if ground_tex: ground_tex.get_image().save_webp(path, false, 0.9); print("GROUND dumped ", ground_tex.get_size())
+	else: print("GROUND not baked")

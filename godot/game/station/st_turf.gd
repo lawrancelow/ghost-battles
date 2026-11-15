@@ -118,7 +118,7 @@ func _build() -> void:
 	top = Control.new(); top.anchor_right = 1; top.offset_bottom = 66; top.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(top)
 	var tg = TextureRect.new(); tg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); tg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var gr = Gradient.new(); gr.set_color(0, Color(0.03, 0.03, 0.047, 0.88)); gr.set_color(1, Color(0.03, 0.03, 0.047, 0.55))
-	var gt = GradientTexture2D.new(); gt.gradient = gr; gt.fill_from = Vector2(0, 0); gt.fill_to = Vector2(0, 1); gt.width = 4; gt.height = 32; tg.texture = gt; tg.stretch_mode = TextureRect.STRETCH_SCALE; tg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	var gt = GradTex.vertical(gr, 4, 32); tg.texture = gt; tg.stretch_mode = TextureRect.STRETCH_SCALE; tg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	top.add_child(tg)
 	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 8); hb.anchor_right = 1; hb.anchor_bottom = 1; hb.offset_left = 10; hb.offset_right = -10; hb.offset_top = 8; hb.offset_bottom = -4; top.add_child(hb)
 	var back = _mk_btn("◀ " + T("返街", "回街上"), Color("#6e1414"), Color("#2a0b0b"), Color("#f1e6d6"), 14)

@@ -27,9 +27,7 @@ static func _radial(stops: Array) -> Texture2D:
 	var g = Gradient.new(); var offs = PackedFloat32Array(); var cols = PackedColorArray()
 	for s in stops: offs.append(s[0]); cols.append(Color(1, 1, 1, s[1]))
 	g.offsets = offs; g.colors = cols
-	var t = GradientTexture2D.new(); t.gradient = g; t.fill = GradientTexture2D.FILL_RADIAL
-	t.fill_from = Vector2(0.5, 0.5); t.fill_to = Vector2(1.0, 0.5); t.width = 128; t.height = 128
-	return t
+	return GradTex.radial(g, 128, 128)
 
 static func font(w := 900) -> Font:
 	if not _font.has(w): _font[w] = UIKit.font("sans", w)
