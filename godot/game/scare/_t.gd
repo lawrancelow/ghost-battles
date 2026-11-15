@@ -61,3 +61,29 @@ func cnt(t):
 			by[key] = by.get(key, 0) + 1
 	var ks = by.keys(); ks.sort_custom(func(a, b): return by[a] > by[b])
 	print("[cnt] visible=", tot, " ", ks.slice(0, 8).map(func(k): return "%s=%d" % [k, by[k]]))
+func scn(t, name: String):
+	var f = {"patrol": func():
+			var S0 = J.G.get("S")
+			if S0 is Dictionary and S0.get("pt") is Dictionary: S0.pt["introSeen"] = 1
+			J.cl(J.G.get("__nat_patrol"), null, [0.0, 54.0]),
+		"battle": func(): J.mc(J.G.get("Battle"), "start", [0.0, 0.0]), "tower": func(): J.mc(J.G.get("Tower"), "open", []),
+		"street": func(): J.mc(J.G.get("Street"), "open", []), "gstreet": func(): J.mc(J.G.get("GhostStreet"), "open", []),
+		"gyard": func(): J.mc(J.G.get("Graveyard"), "open", []), "sports": func(): J.mc(J.G.get("Sports"), "open", []), "village": func(): pass,
+		"scare": func(): J.mc(J.G.get("Scare"), "start", ["office", ["afu", "eguiking", "toyol"]])}
+	f[name].call()
+	for k in 12:
+		await t.get_tree().create_timer(0.5).timeout
+		var st = t.get_tree().root.get_node("Main").get("story")
+		if st and st.get("cur") != null: st.skip_scene()
+	await t.get_tree().create_timer(2.0).timeout
+	t.get_viewport().get_texture().get_image().save_png("/tmp/d2_tour_%s.png" % name)
+	print("[tour] ", name)
+func t_village(t): await scn(t, "village")
+func t_patrol(t): await scn(t, "patrol")
+func t_battle(t): await scn(t, "battle")
+func t_tower(t): await scn(t, "tower")
+func t_street(t): await scn(t, "street")
+func t_gstreet(t): await scn(t, "gstreet")
+func t_gyard(t): await scn(t, "gyard")
+func t_sports(t): await scn(t, "sports")
+func t_scare(t): await scn(t, "scare")
