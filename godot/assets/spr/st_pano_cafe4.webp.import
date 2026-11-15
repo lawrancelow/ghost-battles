@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/st_pano_cafe4.webp-ab248a0209eb6c5434c61b0391
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.92
+compress/lossy_quality=0.80
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0

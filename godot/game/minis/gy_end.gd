@@ -16,7 +16,7 @@ static func hook(g) -> bool:
 	e.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	main.add_child(e)
 	var dom = main.get("dom")
-	if dom: main.move_child(e, dom.get_index() + 1)
+	if dom: main.move_child(e, (GyPanel.cur.get_index() if GyPanel.cur != null and is_instance_valid(GyPanel.cur) else dom.get_index()) + 1)
 	cur = e; e._build()
 	return true
 

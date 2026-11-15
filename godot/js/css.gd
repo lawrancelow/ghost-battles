@@ -318,18 +318,27 @@ static func _computed(el: El, parent_cs: Dictionary) -> Dictionary:
 	var cs = {}
 	for k in INHERIT:
 		if parent_cs.has(k): cs[k] = parent_cs[k]
-	var cand: Array = []
-	if el.id_ != "" and by_key.has("#" + el.id_): cand.append_array(by_key["#" + el.id_])
-	for c in el.classList.d:
-		if by_key.has("." + c): cand.append_array(by_key["." + c])
-	if by_key.has("t:" + el.tagName): cand.append_array(by_key["t:" + el.tagName])
-	if by_key.has("*"): cand.append_array(by_key["*"])
-	var hits = []
-	for r in cand:
-		if matches(el, r[0]): hits.append(r)
-	hits.sort_custom(func(a, b): return a[1] < b[1] or (a[1] == b[1] and a[2] < b[2]))
-	for r in hits:
-		for k in r[3]: cs[k] = r[3][k]
+	# 選擇器配對只同 DOM 結構／屬性有關：DOM 冇改（El.dom_ver）、樣式表冇加就用返上次配好嘅結果
+	var mc = el.props.get("_csm")
+	var merged: Dictionary
+	if mc is Array and mc[0] == El.dom_ver and mc[1] == rules.size():
+		merged = mc[2]
+	else:
+		var cand: Array = []
+		if el.id_ != "" and by_key.has("#" + el.id_): cand.append_array(by_key["#" + el.id_])
+		for c in el.classList.d:
+			if by_key.has("." + c): cand.append_array(by_key["." + c])
+		if by_key.has("t:" + el.tagName): cand.append_array(by_key["t:" + el.tagName])
+		if by_key.has("*"): cand.append_array(by_key["*"])
+		var hits = []
+		for r in cand:
+			if matches(el, r[0]): hits.append(r)
+		hits.sort_custom(func(a, b): return a[1] < b[1] or (a[1] == b[1] and a[2] < b[2]))
+		merged = {}
+		for r in hits:
+			for k in r[3]: merged[k] = r[3][k]
+		el.props["_csm"] = [El.dom_ver, rules.size(), merged]
+	for k in merged: cs[k] = merged[k]
 	# 行內樣式（HTML style= 或者 JS el.style.x = ...）
 	for k in el.style:
 		var v = el.style[k]

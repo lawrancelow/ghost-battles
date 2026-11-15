@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/bg_tw_shop.webp-88a1dd0d7cfa5ae39fae8fc8974cb
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.92
+compress/lossy_quality=0.85
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0

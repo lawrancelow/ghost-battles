@@ -32,3 +32,6 @@ for f in sorted(os.listdir(SRC)):
     open(OUT+'/../gbgd_ref/'+f,'w').write(s2)
 json.dump(man,open(OUT+'/assets/img_manifest.json','w'),ensure_ascii=False,indent=0)
 print(len(man),'images',total//1024,'KB')
+# 抽完自動去重（同 assets/spr 一樣嘅圖唔留兩份），重生 data/img_alias.json
+import subprocess
+subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)),'dedup_img.py'), OUT], check=True)

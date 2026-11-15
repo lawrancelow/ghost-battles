@@ -38,10 +38,11 @@ static func hook(o, cv_sel: String, root: String, method := "draw", canvas_sel :
 	if dom: main.move_child(r, dom.get_index())
 	all[root] = r; stack.append(r)
 	r._build()
+	if root == "#gyard": GyPanel.attach(o, r)   # 亂葬崗：頂欄／面板／觸控都原生（DOM 收埋）
 	return true
 
 static func end_hook(root := "") -> void:
-	if root == "" or root == "#gyard": GyEnd.close()
+	if root == "" or root == "#gyard": GyEnd.close(); GyPanel.close()
 	var keys = all.keys() if root == "" else [root]
 	for k in keys:
 		var r = all.get(k)
@@ -109,6 +110,13 @@ func _cover(on: bool) -> void:
 			else: e.style["background"] = _bg_saved[s]
 
 func _place() -> void:
+	if key == "#gyard" and GyPanel.cur != null and is_instance_valid(GyPanel.cur):
+		var gr = GyPanel.stage_rect(); var gp = GyPanel.cur.position + gr.position
+		if stage.position != gp: stage.position = gp
+		if stage.size != gr.size:
+			stage.size = gr.size
+			if gr.size.x > 0 and gr.size.y > 0 and obj.get("resize") != null: J.mc(obj, "resize", [])
+		return
 	var e = _el(sel)
 	if e == null: return
 	var r = e._js_getBoundingClientRect([])
