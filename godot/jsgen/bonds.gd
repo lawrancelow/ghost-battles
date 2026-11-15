@@ -4,7 +4,7 @@ extends RefCounted
 func run(env):
 	var this_ = null; var a = []
 	J.G["Bonds"] = J.cl(Callable(self, "_f1").bind(env), null, [])
-	J.cl(Callable(self, "_f79").bind(env), null, [])
+	J.cl(Callable(self, "_f90").bind(env), null, [])
 
 func _f10(this_, a: Array, env):
 	var v_g_52 = null
@@ -1013,6 +1013,80 @@ func _f78(this_, a: Array, env):
 	var _t267 = env["playFeud"]
 	return J.cl(_t267, null, [v_id_278, null, {"replay": true, "stage": (v_stage_279 if J.t(v_stage_279) else 1.0), "picks": ([v_first_280] if J.t(v_first_280) else [])}])
 
+func _f80(this_, a: Array, env):
+	var v_k_286 = null
+	v_k_286 = J.arg(a, 0)
+	var _t270 = J.gp(J.gp(env["b"], "rec"), v_k_286)
+	if J.t(_t270):
+		var _t269 = env["__p"]["owned"]
+		_t270 = J.cl(_t269, null, [v_k_286])
+	return _t270
+
+func _f81(this_, a: Array, env):
+	var v_k_287 = null
+	v_k_287 = J.arg(a, 0)
+	var _t272 = env["__p"]["gname"]
+	return {"k": v_k_287, "name": J.cl(_t272, null, [v_k_287])}
+
+func _f82(this_, a: Array, env):
+	var v_F_288 = null
+	v_F_288 = J.arg(a, 0)
+	var _t273 = J.gp(J.gp(env["b"], "feud"), J.gp(v_F_288, "id"))
+	return (J.cmp(J.gp(J.gp(J.gp(env["b"], "feud"), J.gp(v_F_288, "id")), "st"), 1.0, ">=") if J.t(_t273) else _t273)
+
+func _f83(this_, a: Array, env):
+	var v_F_289 = null
+	v_F_289 = J.arg(a, 0)
+	var _t276 = J.gp(v_F_289, "id")
+	var _t275 = env["__p"]["T"]
+	return {"id": _t276, "title": J.cl(_t275, null, [J.gp(v_F_289, "title")]), "end": (J.gp(env["__p"]["END_ZH"], J.gp(J.gp(J.gp(env["b"], "feud"), J.gp(v_F_289, "id")), "end")) if J.t(J.gp(J.gp(J.gp(env["b"], "feud"), J.gp(v_F_289, "id")), "end")) else "吵架中")}
+
+func _f79(this_, a: Array, env):
+	var v_rec_284 = null; var v_fds_285 = null
+	var _s139 = {"__p": env, "b": null}
+	_s139["b"] = J.cl(_s139["__p"]["st"], null, [])
+	if (not J.t(_s139["b"])):
+		return null
+	var _t268 = J.S_Object_("keys", [J.G.get("BOND_RECRUIT")])
+	var _t271 = J.mc(_t268, "filter", [Callable(self, "_f80").bind(_s139)])
+	v_rec_284 = J.mc(_t271, "map", [Callable(self, "_f81").bind(_s139)])
+	var _t274 = J.mc(J.G.get("BOND_FEUDS"), "filter", [Callable(self, "_f82").bind(_s139)])
+	v_fds_285 = J.mc(_t274, "map", [Callable(self, "_f83").bind(_s139)])
+	return {"rec": v_rec_284, "fds": v_fds_285, "total": J.len(J.G.get("BOND_FEUDS"))}
+
+func _f85(this_, a: Array, env):
+	var _t277 = env["__p"]["playRecruit"]
+	return J.cl(_t277, null, [env["k"]])
+
+func _f84(this_, a: Array, env):
+	var _s144 = {"__p": env, "k": null}
+	_s144["k"] = J.arg(a, 0)
+	J.F_setTimeout([Callable(self, "_f85").bind(_s144), 60.0])
+
+func _f89(this_, a: Array, env):
+	var _t281 = env["__p"]["playFeud"]
+	return J.cl(_t281, null, [env["id"], null, {"replay": true, "stage": 2.0, "picks": [J.gp(J.gp(env["f"], "picks"), 0.0)]}])
+
+func _f88(this_, a: Array, env):
+	var v_r_298 = null
+	v_r_298 = J.arg(a, 0)
+	var _t279 = J.cmp(J.gp(env["f"], "st"), 2.0, ">=")
+	var _t280 = (v_r_298 if _t279 else _t279)
+	if J.t(((not J.t(J.gp(v_r_298, "skipped"))) if J.t(_t280) else _t280)):
+		J.F_setTimeout([Callable(self, "_f89").bind(env), 300.0])
+
+func _f87(this_, a: Array, env):
+	var _t278 = env["__p"]["playFeud"]
+	return J.cl(_t278, null, [env["id"], Callable(self, "_f88").bind(env), {"replay": true, "stage": 1.0}])
+
+func _f86(this_, a: Array, env):
+	var v_b_296 = null
+	var _s146 = {"__p": env, "id": null, "f": null}
+	_s146["id"] = J.arg(a, 0)
+	v_b_296 = J.cl(_s146["__p"]["st"], null, [])
+	_s146["f"] = J.gp(J.gp(v_b_296, "feud"), _s146["id"])
+	J.F_setTimeout([Callable(self, "_f87").bind(_s146), 60.0])
+
 func _f1(this_, a: Array, env):
 	var v_init_41 = null; var v_demo_42 = null
 	var _s2 = {"__p": env, "ART3": null, "LOOK": null, "WRITTEN": null, "XWHO": null, "END_ZH": null, "GAP_ANY": null, "GAP_FEUD1": null, "GAP_FEUD2": null, "seen": null, "owned": null, "gname": null, "zh": null, "T": null, "art": null, "started": null, "mo": null, "st": null, "fs": null, "keyOf": null, "reactor": null, "conv": null, "castFor": null, "TAG": null, "BG": null, "playRecruit": null, "recruitNow": null, "OPENERS": null, "TO_BE": null, "endOf": null, "feudScene": null, "playFeud": null, "endToast": null, "feudReady": null, "tick": null, "teamPairs": null, "battleFx": null, "bondLine": null, "paintRoster": null, "storyHook": null}
@@ -1057,13 +1131,13 @@ func _f1(this_, a: Array, env):
 	_s2["OPENERS"] = [["旁白", "兩隻鬼對望，擺好架勢。", "兩隻鬼對望，擺好架勢。", null, {"A": "pose:strike", "B": "pose:strike"}, "shake"], ["旁白", "空氣突然靜咗。遠處有隻烏鴉，識趣咁飛走咗。", "空氣突然安靜下來。遠處有一隻烏鴉，識趣地飛走了。", null, {"A": "pose:strike", "B": "pose:strike"}, "shake"], ["旁白", "兩隻鬼同時出招——停喺半空，邊個都冇打落去。", "兩隻鬼同時出招——停在半空，誰都沒打下去。", null, {"A": "pose:strike", "B": "pose:strike"}, "shake,flash"]]
 	_s2["TO_BE"] = ["旁白", "（兩隻鬼約好：下次再嘈。）", "（兩隻鬼約好了：下次再吵。）"]
 	v_demo_42 = {"recruit": Callable(self, "_f77").bind(_s2), "feud": Callable(self, "_f78").bind(_s2)}
-	return {"st": _s2["st"], "init": v_init_41, "tick": _s2["tick"], "playRecruit": _s2["playRecruit"], "playFeud": _s2["playFeud"], "recruitNow": _s2["recruitNow"], "bondLine": _s2["bondLine"], "battleFx": _s2["battleFx"], "endOf": _s2["endOf"], "demo": v_demo_42, "list": J.G.get("BOND_FEUDS"), "recruits": J.G.get("BOND_RECRUIT")}
+	return {"_n": {"story": Callable(self, "_f79").bind(_s2), "rec": Callable(self, "_f84").bind(_s2), "feud": Callable(self, "_f86").bind(_s2)}, "st": _s2["st"], "init": v_init_41, "tick": _s2["tick"], "playRecruit": _s2["playRecruit"], "playFeud": _s2["playFeud"], "recruitNow": _s2["recruitNow"], "bondLine": _s2["bondLine"], "battleFx": _s2["battleFx"], "endOf": _s2["endOf"], "demo": v_demo_42, "list": J.G.get("BOND_FEUDS"), "recruits": J.G.get("BOND_RECRUIT")}
 
-func _f79(this_, a: Array, env):
-	var v_bondsBoot_283 = null; var v_e_284 = null
-	v_bondsBoot_283 = Callable(self, "_f79").bind(env)
-	var _t268 = J.seq(J.typeof_(J.G.get("S")), "undefined")
-	if (_t268 if _t268 else (not J.t(J.S_document_("querySelector", ["#sheet"])))):
-		J.F_setTimeout([v_bondsBoot_283, 300.0])
+func _f90(this_, a: Array, env):
+	var v_bondsBoot_301 = null; var v_e_302 = null
+	v_bondsBoot_301 = Callable(self, "_f90").bind(env)
+	var _t282 = J.seq(J.typeof_(J.G.get("S")), "undefined")
+	if (_t282 if _t282 else (not J.t(J.S_document_("querySelector", ["#sheet"])))):
+		J.F_setTimeout([v_bondsBoot_301, 300.0])
 		return null
 	J.mc(J.G.get("Bonds"), "init", [])

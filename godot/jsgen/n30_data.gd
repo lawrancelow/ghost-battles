@@ -415,29 +415,35 @@ func _f30(this_, a: Array, env):
 	var v_ids_105 = null; var v_got_106 = null; var v_h_107 = null; var v_k_110 = null; var v_own_112 = null; var v_d_113 = null
 	var _s37 = {"__p": env, "this": null}
 	_s37["this"] = this_
+	var _t104 = (not J.seq(J.typeof_(J.G.get("__nat_menu")), "undefined"))
+	if J.t(_t104):
+		var _t103 = J.G.get("__nat_menu")
+		_t104 = J.cl(_t103, null, ["codex"])
+	if J.t(_t104):
+		return null
 	v_ids_105 = J.mc(_s37["this"], "ids", [])
 	v_got_106 = J.len(J.mc(v_ids_105, "filter", [Callable(self, "_f31").bind(_s37)]))
 	v_h_107 = ("<p class=\"desc\">新鬼圖鑑：已收服 " + J.str(v_got_106) + "/" + J.str(J.len(v_ids_105)) + "。未收服的會寫低喺邊度出沒。</p>")
-	for _t103 in J.iter(["field", "road", "kampung", "banana", "night", "death"]):
+	for _t105 in J.iter(["field", "road", "kampung", "banana", "night", "death"]):
 		var _s39 = {"__p": _s37, "sid": null}
-		_s39["sid"] = _t103
-		var _t104 = J.add(v_h_107, ("<div class=\"ch-h\">" + J.str(J.gp(J.gp(J.G.get("N30_SITES"), _s39["sid"]), "name")) + "</div><div class=\"glist\">"))
-		v_h_107 = _t104
-		for _t105 in J.iter(J.mc(v_ids_105, "filter", [Callable(self, "_f32").bind(_s39)])):
-			v_k_110 = _t105
+		_s39["sid"] = _t105
+		var _t106 = J.add(v_h_107, ("<div class=\"ch-h\">" + J.str(J.gp(J.gp(J.G.get("N30_SITES"), _s39["sid"]), "name")) + "</div><div class=\"glist\">"))
+		v_h_107 = _t106
+		for _t107 in J.iter(J.mc(v_ids_105, "filter", [Callable(self, "_f32").bind(_s39)])):
+			v_k_110 = _t107
 			v_own_112 = J.mc(_s39["__p"]["this"], "owned", [v_k_110])
 			v_d_113 = J.gp(J.G.get("GHOSTS"), v_k_110)
-			var _t106 = J.add(v_h_107, ("<div class=\"gi " + ("" if J.t(v_own_112) else "dis") + "\"><canvas data-por=\"" + J.str(v_k_110) + "\" style=\"" + ("" if J.t(v_own_112) else "filter:brightness(.15)") + "\"></canvas><div><b>" + J.str((J.gp(v_d_113, "name") if J.t(v_own_112) else J.add(J.gp(v_d_113, "name"), "（未收服）"))) + "</b> <small>" + J.str(J.gp(v_d_113, "title")) + "</small><small class=\"tr\">" + J.str(J.gp(v_d_113, "lore")) + "</small><small>" + (("【" + J.str(J.gp(J.gp(J.G.get("SKILLS"), v_k_110), "name")) + "】" + J.str(J.gp(J.gp(J.G.get("SKILLS"), v_k_110), "desc"))) if J.t(v_own_112) else J.add("出沒：", J.mc(_s39["__p"]["this"], "where", [v_k_110]))) + "</small></div></div>"))
-			v_h_107 = _t106
-		var _t107 = J.add(v_h_107, "</div>")
-		v_h_107 = _t107
-	var _t108 = J.add(v_h_107, ("<button class=\"btn wide\" id=\"cxback\">返回名冊</button>"))
-	v_h_107 = _t108
+			var _t108 = J.add(v_h_107, ("<div class=\"gi " + ("" if J.t(v_own_112) else "dis") + "\"><canvas data-por=\"" + J.str(v_k_110) + "\" style=\"" + ("" if J.t(v_own_112) else "filter:brightness(.15)") + "\"></canvas><div><b>" + J.str((J.gp(v_d_113, "name") if J.t(v_own_112) else J.add(J.gp(v_d_113, "name"), "（未收服）"))) + "</b> <small>" + J.str(J.gp(v_d_113, "title")) + "</small><small class=\"tr\">" + J.str(J.gp(v_d_113, "lore")) + "</small><small>" + (("【" + J.str(J.gp(J.gp(J.G.get("SKILLS"), v_k_110), "name")) + "】" + J.str(J.gp(J.gp(J.G.get("SKILLS"), v_k_110), "desc"))) if J.t(v_own_112) else J.add("出沒：", J.mc(_s39["__p"]["this"], "where", [v_k_110]))) + "</small></div></div>"))
+			v_h_107 = _t108
+		var _t109 = J.add(v_h_107, "</div>")
+		v_h_107 = _t109
+	var _t110 = J.add(v_h_107, ("<button class=\"btn wide\" id=\"cxback\">返回名冊</button>"))
+	v_h_107 = _t110
 	J.mc(J.G.get("UI"), "sheet", ["新鬼圖鑑", v_h_107])
-	var _t109 = J.G.get("paintPortraits")
-	var _t110 = J.G.get("$")
-	J.cl(_t109, null, [J.cl(_t110, null, ["#sheet"])])
-	var _t111 = J.G.get("$")
-	var _t112 = J.cl(_t111, null, ["#cxback"])
-	var _t113 = Callable(self, "_f33").bind(_s37)
-	J.sp(_t112, "onclick", _t113)
+	var _t111 = J.G.get("paintPortraits")
+	var _t112 = J.G.get("$")
+	J.cl(_t111, null, [J.cl(_t112, null, ["#sheet"])])
+	var _t113 = J.G.get("$")
+	var _t114 = J.cl(_t113, null, ["#cxback"])
+	var _t115 = Callable(self, "_f33").bind(_s37)
+	J.sp(_t114, "onclick", _t115)

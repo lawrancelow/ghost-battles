@@ -4,6 +4,7 @@
 class_name Menus
 extends RefCounted
 
+const SAVE_KEY := "ghostBattles_v1"
 static var cur := ""          # 而家開緊邊個面板："bld:<id>" / "pick:<post>" / "roster" / "chest"
 static var arg_a := ""
 static var arg_b := ""
@@ -17,14 +18,26 @@ static func T(yue: String, zh: String) -> String: return zh if DB.lang != "yue" 
 static func hook(a: Array) -> bool:
 	var m = main()
 	if m == null or N() == null: return false
+	_ensure_pause(m)
 	var kind = J.str(a[0])
 	match kind:
 		"bld": open_bld(J.str(a[1]))
 		"pick": open_pick(J.str(a[1]), J.str(a[2]) if a.size() > 2 else "")
 		"roster": open_roster()
 		"chest": open_chest()
+		"codex": open_codex()
+		"story": open_story()
+		"pres": open_pres()
 		_: return false
 	return true
+
+# 面板開住（佢蓋住大半個村）就暫停村子原生繪畫同物件同步（約 7ms／格）；JS 嘅生產、任務照行
+static var _pause_hooked := false
+static func _ensure_pause(m) -> void:
+	if _pause_hooked or m.village == null: return
+	_pause_hooked = true
+	m.sheet.visibility_changed.connect(func():
+		if is_instance_valid(m.village): m.village.process_mode = Node.PROCESS_MODE_DISABLED if m.sheet.visible else Node.PROCESS_MODE_INHERIT)
 
 static func close_hook() -> void:
 	if cur == "": return
@@ -68,6 +81,7 @@ static func _btn(text: String, kind: String, enabled: bool, f: Callable, small :
 
 # 撳兩下先做（同網頁版 confirmInline 一樣）
 static func _confirm_btn(text: String, kind: String, msg: String, f: Callable, small := true) -> Button:
+	# 註：small=false 用喺闊掣
 	var b = UIKit.btn(text, kind, small); b.focus_mode = Control.FOCUS_NONE
 	var armed = [0]
 	b.pressed.connect(func():
@@ -333,6 +347,143 @@ static func _render_chest(force: bool) -> void:
 		hb.add_child(_btn("全開", "", n > 1, func(): jn("chestOpen", [k, true]); _render_chest(true), true))
 		_body().add_child(hb); _body().add_child(UIKit.hsep())
 
+# ---------------- 新鬼圖鑑（含野鬼出沒挑戰入口）----------------
+static func open_codex() -> void:
+	var d = jn("codex")
+	_begin("新鬼圖鑑", "codex", func(): pass)
+	_clear()
+	_p("新鬼圖鑑：已收服 %d/%d。未收服的會寫低喺邊度出沒。" % [int(J.num(d.got)), int(J.num(d.total))], 14)
+	if not J.t(d.wild): _p("[color=#9c2219]打完第一章，各處開始有野鬼出沒，打贏就可以收服。[/color]", 13)
+	for site in d.sites:
+		var h = UIKit.label(J.str(site.name), 16, UIKit.CINNABAR2, "serif", 900); _body().add_child(h)
+		for g in site.list:
+			var own = J.t(g.own); var k = J.str(g.k)
+			var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 8)
+			var po = _por(k, 52); if not own: po.get_child(0).modulate = Color(0.15, 0.15, 0.15)
+			po.size_flags_vertical = Control.SIZE_SHRINK_BEGIN; hb.add_child(po)
+			var r = _rich("[font_size=15][b]%s[/b][/font_size] %s\n[color=#6e5838]%s[/color]\n%s" % [J.str(g.name) + ("" if own else "（未收服）"), J.str(g.title), bb(g.lore), J.str(g.skill)], 12.5, UIKit.INKDIM)
+			r.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hb.add_child(r)
+			if J.t(g.fight):
+				var lvok = J.t(g.lvOk)
+				var fb = _btn("再戰" if own else ("收服" if lvok else "Lv%d" % int(J.num(g.req))), "" if own else "gold", lvok, func(): close_hook(); J.mc(J.G.get("N30W"), "fight", [k]), true)
+				fb.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hb.add_child(fb)
+			_body().add_child(hb); _body().add_child(UIKit.hsep())
+	var bk = _btn("返回名冊", "", true, func(): open_roster()); bk.custom_minimum_size = Vector2(0, 40); _body().add_child(bk)
+
+# ---------------- 劇情回顧／設定 ----------------
+static func _wide(text: String, kind: String, enabled: bool, f: Callable) -> Button:
+	var b = _btn(text, kind, enabled, f); b.custom_minimum_size = Vector2(0, 40); _body().add_child(b); return b
+static func _h4(t: String) -> void:
+	_body().add_child(UIKit.label(t, 16, UIKit.CINNABAR2, "serif", 900))
+static func _sa(a: String, x = null): return J.mc(J.gp(J.G.get("UI"), "_n"), "_storyAct", [a, x])
+
+static func open_story() -> void:
+	var d = J.mc(J.gp(J.G.get("UI"), "_n"), "_story", [])
+	var m = main()
+	_begin("劇情", "story", func(): pass)
+	_clear()
+	_p("看過的劇情，可以在這裡重溫。", 14)
+	for e in d.scenes:
+		var i = int(J.num(e.i)); var ok = J.t(e.ok)
+		_wide(J.str(e.name) if ok else "？？？", "" if ok else "ghost", ok, func(): close_hook(); _sa("scene", i))
+	_h4("開麥之夜・陰間脫口秀"); _p("村裡的鬼，入了村就能上台。", 13)
+	for e in d.standup:
+		var i = int(J.num(e.i)); var ok = J.t(e.ok)
+		_wide(("%s　%s" % [J.str(e.who), J.str(e.title)]) if ok else "？？？（%s）" % J.str(e.hint), "" if ok else "ghost", ok, func(): close_hook(); _sa("stand", i))
+	var bo = d.get("bonds")
+	if bo != null:
+		_h4("收服劇情・冤家"); _p("收服名鬼後會上演入村劇情；有些鬼天生不和，日後會吵起來（%d/%d）。" % [bo.fds.size(), int(J.num(bo.total))], 13)
+		for r in bo.rec:
+			var k = J.str(r.k); _wide("%s入村" % J.str(r.name), "", true, func(): close_hook(); _sa("brec", k))
+		for f in bo.fds:
+			var id = J.str(f.id); _wide("冤家：%s（%s）" % [J.str(f.title), J.str(f.end)], "", true, func(): close_hook(); _sa("bfeud", id))
+		if bo.rec.size() + bo.fds.size() == 0: _p("還沒有。去收服幾隻名鬼吧。", 13)
+	var sk = d.get("skits")
+	if sk != null:
+		_h4("陰間日常"); _p("在村子裡玩，偶爾會上演一段。看過的可以在這裡重溫（%d/%d）。" % [sk.list.size(), int(J.num(sk.total))], 13)
+		for e in sk.list:
+			var id = J.str(e.id); _wide(J.str(e.title), "", true, func(): close_hook(); _sa("skit", id))
+		if sk.list.size() == 0: _p("還沒看過。在村子裡多玩一會兒。", 13)
+	var su = d.get("su")
+	if su != null:
+		_h4("冥街夜市・棟篤笑"); _p("在冥街夜市看過的節目，可以在這裡重溫。", 13)
+		for e in su:
+			var id = J.str(e.id); var ok = J.t(e.seen)
+			_wide(("%s　%s" % [J.str(e.who), J.str(e.title)]) if ok else "？？？（%s）" % J.str(e.hint), "" if ok else "ghost", ok, func(): close_hook(); _sa("su", id))
+	_body().add_child(UIKit.hsep())
+	_wide("看手機", "", true, func(): close_hook(); _sa("phone"))
+	var sb = _wide("聲音：" + ("開" if Snd.is_on() else "關"), "", true, func(): pass)
+	sb.pressed.connect(func(): sb.text = "聲音：" + ("開" if Snd.toggle() else "關"))
+	var lb = _wide("", "", true, func(): pass)
+	var lab = func(): lb.text = "對白：" + ("中文（點擊切換為粵語）" if DB.lang == "zh" else "粵語（點擊切換為中文）")
+	lab.call(); lb.pressed.connect(func(): DB.set_lang("yue" if DB.lang == "zh" else "zh"); J.mc(J.G.get("LANG"), "set", [DB.lang]); lab.call())
+	_wide("備份存檔（複製存檔碼）", "", true, func():
+		var code = J.str(_sa("export")); DisplayServer.clipboard_set(code); m.show_toast("存檔碼已複製，貼去記事本或者 WhatsApp 自己收好"))
+	_wide("導入存檔碼", "", true, func(): m.open_import())
+	var rs = d.get("restore")
+	if rs != null:
+		var k = J.str(rs.k)
+		var rb = _confirm_btn("恢復備份存檔（主公 %d 級）" % int(J.num(rs.lv)), "gold", "再按一次確定恢復", func():
+			var v = J.str(_sa("restore", k))
+			if JSRun.ls.has(SAVE_KEY): JSRun.ls[SAVE_KEY + "_bak"] = JSRun.ls[SAVE_KEY]
+			JSRun.ls[SAVE_KEY] = v; JSRun.flush_ls(); JSRun.skip_title = true; JSRun.reset_world(); m.get_tree().call_deferred("reload_current_scene"), false)
+		rb.custom_minimum_size = Vector2(0, 40); _body().add_child(rb)
+	var lgb = _wide("錯誤記錄（有問題時截圖俾開發者）", "ghost", true, func(): pass)
+	lgb.pressed.connect(func():
+		var lt = UIKit.label(m.log_tail(40), 10, UIKit.INKTXT); lt.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; _body().add_child(lt)
+		DisplayServer.clipboard_set(m.log_tail(200)); m.show_toast("記錄已複製，可以貼去 WhatsApp 俾開發者"))
+	var del = _confirm_btn("重新開始（刪除存檔）", "ghost", "再按一次確定刪檔", func():
+		if JSRun.ls.has(SAVE_KEY): JSRun.ls[SAVE_KEY + "_del"] = JSRun.ls[SAVE_KEY]
+		m.restart_with(null, true), false)
+	del.custom_minimum_size = Vector2(0, 40); _body().add_child(del)
+	_p("[font_size=11]Godot 版 %s[/font_size]" % ProjectSettings.get_setting("application/config/version", "dev"), 11)
+
+# ---------------- 合約與存在感 ----------------
+static func open_pres() -> void:
+	_begin("合約與存在感", "pres", func(): _render_pres(false))
+	_render_pres(true)
+
+static func _render_pres(force: bool) -> void:
+	if cur != "pres": return
+	var d = J.mc(J.gp(J.G.get("Presence"), "_n"), "panel", [])
+	if not _changed(d) and not force: return
+	_keep_scroll(func(): _draw_pres(d))
+
+static func _draw_pres(d) -> void:
+	_clear()
+	var st = J.str(d.state)
+	if st == "none": _p("打完第一章後，龐總會來跟你簽試用期合約。", 14)
+	else:
+		_p("職級：[b]%s[/b]%s" % [J.str(d.rank), "（年度考核）" if J.t(d.top) else ""], 14)
+		if st == "active":
+			var kpi = J.num(d.kpi); var tg = maxf(1, J.num(d.target))
+			_p("KPI %d／%d" % [int(kpi), int(J.num(d.target))], 14)
+			var bar = ProgressBar.new(); bar.max_value = 1; bar.value = minf(1, kpi / tg); bar.show_percentage = false; bar.custom_minimum_size = Vector2(0, 10)
+			bar.add_theme_stylebox_override("background", UIKit.sb(Color(0, 0, 0, 0.18), 5)); bar.add_theme_stylebox_override("fill", UIKit.sb(Color("#d9a441"), 5)); _body().add_child(bar)
+			_p("剩下 [b]%.1f[/b] 日" % J.num(d.left), 14)
+		else: _p("[color=#c0392b][b]淡化危機[/b]：%.1f 日內回陽間完成一晚（一星或以上），阿福就會被記起。不會遊戲結束。[/color]" % J.num(d.crisis), 14)
+		var nx = d.get("next")
+		_p(("下一級：[b]%s[/b]　解鎖：%s" % [J.str(nx.name), J.str(nx.unlock)]) if nx != null else "已經是最高職級。每期過關有花紅。", 14)
+		_p("KPI 怎樣算：每晚回陽間，每顆星 10 分；傳說熱度每級 5 分（最多 25）；有驚嚇值 5 分；被道士請走扣 5 分。另外陽間地盤每日收租（每 3 個地盤 +1），奪回被搶的地盤 +4。", 13)
+	_h4("村裡的存在感")
+	_p("鬼要有人記得才存在。每天自然流失 %s；回陽間一晚全村 +%d～%d，出動的鬼更多。上台講棟篤笑、打贏仗、在陰間日常出場也有少少。" % [J.str(d.decay), int(J.num(d.ripple)), int(J.num(d.rippleMax))], 13)
+	if d.get("grace") != null: _p("新功能保護期：還有 %s 日不會流失。" % J.str(d.grace), 13)
+	_p("上供品：用 %d 個壽包替一隻鬼上供，存在感 +%d（每隻鬼每日一次）。壽包 %s" % [int(J.num(d.offer.buns)), int(J.num(d.offer.add)), J.str(d.buns)], 13)
+	var fade = J.num(d.fade); var warn = J.num(d.warn)
+	for g in d.list:
+		var v = J.num(g.v); var nb = clampi(int(round(v / 10.0)), 0, 10)
+		var col = "#6ec27a" if v > fade else ("#e0b44a" if v > warn else "#e0604a")
+		var badge = ""
+		if g.get("days") != null: badge = "　[color=#c0392b][b]魂飛魄散倒數 %d 日[/b][/color]" % int(J.num(g.days))
+		elif v <= warn: badge = "　[color=#c0392b][b]⚠ 存在感不足[/b][/color]"
+		elif v < fade: badge = "　[color=#9a7a3a]變淡中[/color]"
+		var txt = "%s\n[font_size=12]%d [color=%s]%s[/color][color=#00000030]%s[/color]%s[/font_size]" % [J.str(g.name), int(v), col, "▮".repeat(nb), "▮".repeat(10 - nb), badge]
+		var bs = []
+		if J.t(g.canOffer):
+			var id = J.str(g.id); var done = J.t(g.done)
+			bs.append(_btn("已上供" if done else "上供", "" if done else "gold", not done, func(): J.mc(J.gp(J.G.get("Presence"), "_n"), "offer", [id]); _render_pres(true), true))
+		_row(txt, bs)
+
 # 箱仔圖示（對應 style.css .chest .cb）
 class ChestIcon extends Control:
 	var k := "g"
@@ -398,3 +549,16 @@ static func t_cmp(tester = null) -> void:
 			await tree.process_frame; await tree.process_frame
 			print("TC %s %s %.1fms" % [mode, kind[0], (Time.get_ticks_usec() - t0) / 1000.0])
 		J.G["__nat_menu"] = keep
+static func t_ops2(_x = null) -> void:
+	var S = J.G.get("S"); var m = main()
+	print("T2 village paused=", m.village.process_mode == Node.PROCESS_MODE_DISABLED, " sheet=", m.sheet.visible)
+	var d = J.mc(J.gp(J.G.get("Presence"), "_n"), "panel", [])
+	var b0 = J.num(S.res.buns)
+	for g in d.list:
+		if J.t(g.canOffer) and not J.t(g.done):
+			var t0 = Time.get_ticks_usec(); J.mc(J.gp(J.G.get("Presence"), "_n"), "offer", [J.str(g.id)]); _render_pres(true)
+			print("T2 offer %s %.1fms buns %d->%d" % [J.str(g.name), (Time.get_ticks_usec() - t0) / 1000.0, b0, J.num(S.res.buns)]); break
+	for k in ["codex", "story", "pres"]:
+		var t1 = Time.get_ticks_usec(); hook([k]); print("T2 open %s %.1fms" % [k, (Time.get_ticks_usec() - t1) / 1000.0])
+	var on0 = J.t(_sa("snd")); var on1 = J.t(_sa("snd")); print("T2 snd toggle ", on0, "->", on1)
+	print("T2 export len=", J.str(_sa("export")).length())
