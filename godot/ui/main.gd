@@ -70,6 +70,9 @@ func _boot_js() -> void:
 		G.last_crash = ""
 		if str(SelfTest.S.res.get("boot", "")) == "閃退": G.safe_gfx = true   # 開機本身都閃退：用安全模式先行得落去
 		selftest = SelfTest.new(); selftest.build(self)
+		if str(SelfTest.S.res.get("boot", "")) == "閃退兩次":
+			# 安全模式都開唔到：唔再試，直接出報告
+			selftest._finish(); return
 		await selftest.run_pre()
 		JSRun.ls[SAVE_KEY] = SelfTest.test_save_json()
 		if not SelfTest.S.res.has("boot"): SelfTest.begin("boot")

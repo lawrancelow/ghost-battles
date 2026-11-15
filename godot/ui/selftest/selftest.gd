@@ -39,7 +39,8 @@ static func on_boot() -> void:
 	if OS.has_environment("GB_TEST") and not OS.has_environment("GB_SELFTEST"): S = {}; return
 	if not active() and not FileAccess.file_exists("user://selftest_done_" + ver()): start(false)
 	if active() and str(S.get("cur", "")) != "":
-		S.res[S.cur] = "閃退"; S.cur = ""; save_state()
+		var prev = str(S.res.get(S.cur, ""))
+		S.res[S.cur] = "閃退兩次" if prev.begins_with("閃退") else "閃退"; S.cur = ""; save_state()
 
 static func start(manual: bool) -> void:
 	S = {"active": true, "ver": ver(), "res": {}, "cur": "", "manual": manual, "t0": Time.get_unix_time_from_system()}
