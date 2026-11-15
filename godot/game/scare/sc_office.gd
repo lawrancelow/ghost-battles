@@ -83,8 +83,36 @@ static func mon_halo(ctx: Ctx, s: String, L: float, T: float, w: float, h: float
 	var c = mon_light(s, t)
 	if c == null: return
 	var cx = L + w * 0.5; var cy = T + h * 0.36; var R = maxf(w, h * 0.75) * 0.8
-	ctx.save(); var g = ctx.createRadialGradient(cx, cy, R * 0.4, cx, cy, R); g.addColorStop(0, _rgba(c, 0.9 * c[3])); g.addColorStop(1, _rgba(c, 0))
-	ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, cy, R, R * 0.85, 0, 0, TAU); ctx.fill(); ctx.restore()
+	_glow(ctx, _halo_tex(), Color(c[0] / 255.0, c[1] / 255.0, c[2] / 255.0, 0.9 * c[3]), Rect2(cx - R, cy - R * 0.85, R * 2, R * 1.7))
+
+# 螢幕光暈、枱面反光、檯燈光：本來每幀用漸變三角形砌（逐格算色），而家預先烘好一張白色貼圖，畫嗰陣染色＋透明度
+# 圖入面已經包埋原本嘅形狀（橢圓裁邊、圓形漸變），所以畫出嚟同原本一樣
+static var _tx := {}
+static func _bake(key: String, fn: Callable, n := 64) -> Texture2D:
+	if _tx.has(key): return _tx[key]
+	var img = Image.create(n, n, false, Image.FORMAT_RGBA8)
+	for y in n:
+		for x in n:
+			var X = ((x + 0.5) / n - 0.5) * 2; var Y = ((y + 0.5) / n - 0.5) * 2
+			img.set_pixel(x, y, Color(1, 1, 1, clampf(fn.call(X, Y), 0, 1)))
+	var tx = ImageTexture.create_from_image(img); _tx[key] = tx; return tx
+# 螢幕光暈：橢圓（R × 0.85R）入面，圓形漸變（0.4R 開始淡，R 冇晒）
+static func _halo_tex() -> Texture2D:
+	return _bake("halo", func(X: float, Y: float) -> float:
+		if X * X + Y * Y > 1: return 0.0
+		var d = sqrt(X * X + Y * 0.85 * Y * 0.85); return 1.0 if d <= 0.4 else 1 - (d - 0.4) / 0.6)
+# 枱面反光：橢圓（0.32u × 0.12u）入面，圓形漸變（半徑 0.32u）
+static func _spill_tex() -> Texture2D:
+	return _bake("spill", func(X: float, Y: float) -> float:
+		if X * X + Y * Y > 1: return 0.0
+		return 1 - sqrt(X * X + pow(Y * 0.12 / 0.32, 2)))
+# 方形範圍嘅圓形漸變（中心 → 半徑）
+static func _round_tex() -> Texture2D:
+	return _bake("round", func(X: float, Y: float) -> float: return maxf(0.0, 1 - sqrt(X * X + Y * Y)))
+static func _glow(ctx: Ctx, tx: Texture2D, col: Color, r: Rect2) -> void:
+	var m: Color = ctx._a(col)
+	if m.a <= 0.001: return
+	ctx.ci.draw_set_transform_matrix(ctx.T); ctx.ci.draw_texture_rect(tx, r, false, m); ctx.ci.draw_set_transform_matrix(Transform2D.IDENTITY)
 
 # ---------------- 家具 ----------------
 static func draw_item(ctx: Ctx, Sc, it: Dictionary, t: float, mode := "") -> void:
@@ -115,8 +143,7 @@ static func draw_item(ctx: Ctx, Sc, it: Dictionary, t: float, mode := "") -> voi
 	if it.get("stn") != null: _desk_fx(ctx, it, L, T, w, h, u)
 	if _b(it.get("glow")):
 		var gx = L + w * 0.47; var gy = T + h * 0.05; var r = w * 0.55
-		var g = ctx.createRadialGradient(gx, gy, 0, gx, gy, r); g.addColorStop(0, Color(120 / 255.0, 170 / 255.0, 1, 0.22 + 0.03 * sin(t * 2 + _n(it.get("ph"))))); g.addColorStop(1, Color(120 / 255.0, 170 / 255.0, 1, 0))
-		ctx.fillStyle = g; ctx.fillRect(gx - r, gy - r, r * 2, r * 2)
+		_glow(ctx, _round_tex(), Color(120 / 255.0, 170 / 255.0, 1, 0.22 + 0.03 * sin(t * 2 + _n(it.get("ph")))), Rect2(gx - r, gy - r, r * 2, r * 2))
 	ctx.restore()
 
 static func _desk_spill(ctx: Ctx, it: Dictionary, L: float, T: float, w: float, h: float, u: float, t: float) -> void:
@@ -128,8 +155,8 @@ static func _desk_spill(ctx: Ctx, it: Dictionary, L: float, T: float, w: float, 
 	var c = mon_light(mon_state(m), t)
 	if c == null: return
 	var x = L + _n(m.u) * w; var y = T + _n(m.v) * h
-	ctx.save(); var g = ctx.createRadialGradient(x + u * 0.12, y - u * 0.02, 0, x + u * 0.12, y - u * 0.02, u * 0.32)
-	g.addColorStop(0, _rgba(c, 0.22 * c[3])); g.addColorStop(1, _rgba(c, 0)); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x + u * 0.12, y - u * 0.02, u * 0.32, u * 0.12, -0.3, 0, TAU); ctx.fill(); ctx.restore()
+	ctx.save(); ctx.translate(x + u * 0.12, y - u * 0.02); ctx.rotate(-0.3)
+	_glow(ctx, _spill_tex(), _rgba(c, 0.22 * c[3]), Rect2(-u * 0.32, -u * 0.12, u * 0.64, u * 0.24)); ctx.restore()
 
 static func _kid(ctx: Ctx, S: Dictionary, c: Dictionary, L: float, T: float, w: float, h: float, u: float, t: float) -> void:
 	var fal = c.get("falling")
@@ -147,8 +174,11 @@ static func _kid(ctx: Ctx, S: Dictionary, c: Dictionary, L: float, T: float, w: 
 	var ch = _n(c.h) * u; var cw = 0.47 * u if mon else ch * iw / ih; var chh = cw * ih / iw if mon else ch
 	var x = L + _n(c.u) * w; var y = T + _n(c.v) * h
 	if c.get("on") != null:
-		for m in par.kids:
-			if J.str(m.get("id")) == J.str(c.on): x = L + _n(m.u) * w + (_n(c.u) - 0.5) * 0.47 * u; y = T + _n(m.v) * h - (1 - _n(c.v)) * 0.47 * u * 0.98
+		var m = c.get("_onK")   # 擺喺邊部螢幕上面：搵一次記住（以前每幀逐件掃）
+		if not (m is Dictionary):
+			for q in par.kids:
+				if J.str(q.get("id")) == J.str(c.on): m = q; c["_onK"] = q
+		if m is Dictionary: x = L + _n(m.u) * w + (_n(c.u) - 0.5) * 0.47 * u; y = T + _n(m.v) * h - (1 - _n(c.v)) * 0.47 * u * 0.98
 	ctx.save(); ctx.globalAlpha *= a; ctx.translate(x, y)
 	var r = _n(c.get("rot"))
 	if _b(c.get("paper")): r += sin(t * 9 + _n(c.get("ph"))) * 0.06 * _n(S.flutter)
@@ -169,8 +199,7 @@ static func _lamp_fx(ctx: Ctx, S: Dictionary, w: float, h: float, u: float, t: f
 	var Ls = S.lamp; var on = false if _b(N().STATIONS.it.get("offline")) else ((sin(t * 31) + sin(t * 13) > 0.3) if _n(Ls.flick) > 0 else true)
 	var bx = (0.88 - 0.78) * w; var by = -h * (1 - 0.40)
 	if on:
-		ctx.save(); var g = ctx.createRadialGradient(bx, by + h * 0.25, 0, bx, by + h * 0.25, u * 0.55); g.addColorStop(0, Color(1, 200 / 255.0, 110 / 255.0, 0.38)); g.addColorStop(1, Color(1, 200 / 255.0, 110 / 255.0, 0))
-		ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bx, by + h * 0.25, u * 0.55, 0, TAU); ctx.fill(); ctx.restore()
+		var r = u * 0.55; _glow(ctx, _round_tex(), Color(1, 200 / 255.0, 110 / 255.0, 0.38), Rect2(bx - r, by + h * 0.25 - r, r * 2, r * 2))
 	else:
 		ctx.save(); ctx.fillStyle = Color(20 / 255.0, 14 / 255.0, 30 / 255.0, 0.75); ctx.beginPath(); ctx.ellipse(bx + w * 0.02, by + h * 0.02, w * 0.12, h * 0.07, -0.5, 0, TAU); ctx.fill(); ctx.restore()
 
@@ -305,7 +334,7 @@ static func draw_ken(ctx: Ctx, Sc, n: Dictionary, t: float) -> Dictionary:
 		if not clip_arms and key == "npc_ken_sit_coffee": _steam(ctx, -Sd[0] * W + W * 0.28, -Sd[1] * Hh + Hh * 0.27, u, t)
 		if ml != null and mode != "jump":
 			var gx = -Sd[0] * W + W * _n(STN.face[0]); var gy = -Sd[1] * Hh + Hh * _n(STN.face[1]); var R = u * 0.42; var a0 = 0.42 * ml[3]
-			var g = ctx.createRadialGradient(gx, gy, 0, gx, gy, R); g.addColorStop(0, _rgba(ml, a0)); g.addColorStop(1, _rgba(ml, 0)); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(gx, gy, R, 0, TAU); ctx.fill()
+			_glow(ctx, _round_tex(), _rgba(ml, a0), Rect2(gx - R, gy - R, R * 2, R * 2))
 		ctx.restore()
 	body.call(false)
 	if desk is Dictionary: draw_item(ctx, Sc, desk, t, "base")

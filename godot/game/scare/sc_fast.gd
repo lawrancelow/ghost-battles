@@ -154,3 +154,25 @@ static func om_spare(ctx: Ctx, Sc, ch, c: Dictionary, chairs: float) -> void:
 		var a = minf(1.0, chairs)
 		if a > 0.01:
 			ctx.save(); ctx.globalAlpha *= minf(1, a); ctx.font = "900 %dpx sans-serif" % int(round(u * 0.1)); ctx.textAlign = "center"; ctx.lineWidth = 3; ctx.strokeStyle = "#1a1020"; ctx.strokeText("吱——", p.x, p.y - h * 1.05); ctx.fillStyle = "#fff3d0"; ctx.fillText("吱——", p.x, p.y - h * 1.05); ctx.restore()
+
+# 開局預熱：每個人可能做嘅平日／辦公室動作（DAILY）都喺離屏畫一次，等網格（例如 npc_guard__bodyN）第一次建立嘅幾十 ms 唔好喺遊戲中途卡一下
+static func prewarm(Sc: Dictionary) -> void:
+	ScMis.prewarm()   # 小晴、美美骨架抄過嚟原生（下面平日動作 npc_it 都要用）
+	var TW = J.G.get("TOWN"); var DA = J.G.get("DAILY")
+	if TW == null or not (DA is Dictionary): return
+	var rec = Recorder.new(); var ctx = Ctx.new(rec)
+	var t0 = Time.get_ticks_usec(); var n_act = 0
+	for n in Sc.npcs:
+		var spr = J.str(n.d.spr); var acts = {}
+		var L = J.gp(TW.LIST, spr)
+		if L is Array:
+			for e in L: acts[J.str(e[0])] = true
+		var A = J.gp(TW.ACT, spr)
+		if A is Dictionary:
+			for k in A: acts[J.str(A[k])] = true
+		for act in acts:
+			if DA.get(act) == null: continue
+			for at in [0.5, 2.0]:
+				Art.draw_char(ctx, spr, 0, 0, 1.0, {"t": 1.0, "act": act, "at": at, "adur": 4.0, "aw": 1.0, "shadow": false, "_daily": true})
+			n_act += 1
+	if OS.has_environment("GB_PROF"): print("[scare] prewarm %d acts %.1fms" % [n_act, (Time.get_ticks_usec() - t0) / 1000.0])

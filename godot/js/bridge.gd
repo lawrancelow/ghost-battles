@@ -54,6 +54,8 @@ static func install_natives(host: Node) -> void:
 	G["__nat_scTag"] = func(_t, a): ScTag.draw(a[0], a[1], a[2], J.num(a[3]), J.num(a[4]), J.num(a[5]), a[6]); return null
 	G["__nat_scSky"] = func(_t, a): ScFast.sky(a[0], a[1], J.num(a[2]), J.num(a[3])); return null
 	G["__nat_scBub"] = func(_t, a): ScFast.bubble(a[0], a[1], J.str(a[2]), J.num(a[3]), J.num(a[4]), J.t(a[5]), a[6] if a.size() > 6 else null); return null
+	G["__nat_scMarks"] = func(_t, a): ScFast.prop_marks(a[0], a[1], J.num(a[2])); return null
+	G["__nat_scTeam"] = func(_t, a): ScFast.team(a[0], a[1], J.num(a[2])); return null
 	G["__nat_om"] = func(_t, a):
 		match J.str(a[0]):
 			"meet": ScFast.om_meet(a[1], a[2], a[3], J.num(a[4]), J.num(a[5]), J.num(a[6]), J.num(a[7]))

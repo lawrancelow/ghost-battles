@@ -66,6 +66,7 @@ static func hook(sc) -> bool:
 	sc["_panning"] = func(_t, _a): return r._drag != null and r._drag.moved
 	r._build()
 	r._cover(true)
+	ScFast.prewarm.call_deferred(sc)   # 開局講故事嗰陣先建好動作網格
 	return true
 
 static func size_of() -> Array:

@@ -21,7 +21,7 @@ module.exports = {
     ["    const r = $('#sc-cvs').getBoundingClientRect(), mx", "    const r = this._nat ? { left:0, top:0 } : $('#sc-cvs').getBoundingClientRect(), mx"],
     ["    const c = $('#sc-cvs'); if (!c) return; const ctx = c.getContext('2d'); ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);", "    if (this._nat && !this._natCtx) return; const c = this._natCtx ? null : $('#sc-cvs'); if (!this._natCtx && !c) return; const ctx = this._natCtx || c.getContext('2d'); ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);"],
     ["    $('#sc-clock').textContent = ", "    if (this._nat) return;\n    $('#sc-clock').textContent = "],
-    ["  drawNpc(ctx, n, t) {", "  drawNpc(ctx, n, t) { if (this._nat && typeof __nat_scNpc !== 'undefined' && !(this.office() && ((OFFICE.seated(n) && !n.out) || n.d.k === 'mis'))) { const r = __nat_scNpc(ctx, this, n, t); return { x:r.x, top:r.top }; }"],
+    ["  drawNpc(ctx, n, t) {", "  drawNpc(ctx, n, t) { if (this._nat && typeof __nat_scNpc !== 'undefined' && !(this.office() && (OFFICE.seated(n) && !n.out))) { const r = __nat_scNpc(ctx, this, n, t); return { x:r.x, top:r.top }; }"],
     // 線 D2：名牌（眼、恐懼條、名、膠囊、？！）原生畫（game/scare/sc_tag.gd）
     ["      { // 眼：開＝望緊四周", "      if (this._nat && typeof __nat_scTag !== 'undefined') { __nat_scTag(ctx, this, n, x, by, t, sel); if (n.step && n.step.cue) this.drawCue(ctx, n, x, by, t); } else {\n      { // 眼：開＝望緊四周"],
     ["      if (n.d.daoshi && n.ds === 'ritual') {", "      }\n      if (n.d.daoshi && n.ds === 'ritual') {"],
@@ -32,6 +32,12 @@ module.exports = {
     ["  propMarks(ctx, t) {", "  propMarks(ctx, t) { if (this._nat && typeof __nat_scMarks !== 'undefined') return __nat_scMarks(ctx, this, t);"],
     ["  drawTeam(ctx, t) {", "  drawTeam(ctx, t) { if (this._nat && typeof __nat_scTeam !== 'undefined') return __nat_scTeam(ctx, this, t);"],
     ["    if (!this.active) return; this.active = false;", "    if (!this.active) return; this.active = false; if (this._nat && typeof __nat_scEnd !== 'undefined') __nat_scEnd(this);"],
+  ],
+  // 線 D2：保安飲茶嘅 IK 記住結果
+  daily_town: [
+    ["  function guardSip(S) {", "  const IKC = {}; // 線 D2：IK 結果只同左右（fs）同圖比例有關，計一次就記住（原生每幀暴力搜 2500 次要 120ms）\n  function guardSip(S) {"],
+    ["    let best = [0, 0], be = 1e9;\n    for (let a1 = 0; a1 <= 2.2; a1 += 0.05)", "    const ikK = S.fs + '|' + (S.W / S.H).toFixed(5); let best = IKC[ikK] ? IKC[ikK].slice() : [0, 0], be = IKC[ikK] ? -1 : 1e9;\n    if (be > 0) for (let a1 = 0; a1 <= 2.2; a1 += 0.05)"],
+    ["    const A = k * up;\n    guardDraw(S, { arm:best[0] * A,", "    IKC[ikK] = best.slice(); const A = k * up;\n    guardDraw(S, { arm:best[0] * A,"],
   ],
   // 線 D2：大樓剖面（夜空＋遠處大廈燈）原生畫（game/scare/sc_fast.gd）
   rooms: [

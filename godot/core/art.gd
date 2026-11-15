@@ -190,7 +190,13 @@ func _draw_mesh(ctx: Ctx, type: String, x: float, y: float, s: float, o: Diction
 	var act = o.get("act")
 	if act is String and act != "" and o.get("_daily", false):   # 叫嘅人要講明（回陽間 sc_npc.gd）；其他場景各自有原生版
 		var DA = J.G.get("DAILY")
-		if DA is Dictionary and DA.get(act) != null:
+		if ScDaily.has(act):   # 回陽間辦公室嗰批動作已經移植做原生（game/scare/sc_daily.gd）
+			ctx.save()
+			if o.get("alpha") != null: ctx.globalAlpha = float(o.alpha)
+			var ok = ScDaily.draw(ctx, act, {"type": type, "x": x, "y": y, "s": s, "H": H, "o": o, "faceRight": not o.get("flip", false), "solid": solid})
+			ctx.restore()
+			if ok: return
+		elif DA is Dictionary and DA.get(act) != null:
 			ctx.save()
 			if o.get("alpha") != null: ctx.globalAlpha = float(o.alpha)
 			var sh = func(_t, a): shadow(ctx, J.num(a[0]), y + 1 * s, s * (J.num(a[1]) if a.size() > 1 and J.t(a[1]) else (1.0 if solid else 0.8))); return null

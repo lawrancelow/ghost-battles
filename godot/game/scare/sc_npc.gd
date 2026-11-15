@@ -1,5 +1,5 @@
 # 回陽間：路人（企／行／逃跑）嘅原生畫法＝scare.js drawNpc + npcPose + drawNpcSprite + npcFx 嘅逐行移植
-# 坐喺工位（OFFICE.drawKen）同美美（OFFICE.drawMis）仍然由 JS 畫
+# 坐喺工位（OFFICE.drawKen）仍然由 JS 叫；美美（OFFICE.drawMis）移咗去 sc_mis.gd
 class_name ScNpc
 extends RefCounted
 
@@ -114,12 +114,15 @@ static func draw(ctx: Ctx, Sc: Dictionary, n: Dictionary, t: float) -> Dictionar
 	if o.rot: ctx.rotate(o.rot * (1 if right else -1))
 	ctx.scale(o.sx, o.sy)
 	if d.get("tint") != null: ctx.filter = J.str(d.tint)
-	if rig:
+	if J.str(d.k) == "mis" and office and ScMis.draw(ctx, Sc, n, o, hh, right, t): pass   # 美美：自己幾張原圖（office.js drawMis）
+	elif rig:
 		var TW = J.G.get("TOWN"); var oo = {"t": _n(n.get("at")), "pose": o.pose, "pt": o.pt, "face": o.face, "flip": not right, "walk": o.walk, "shadow": false, "_daily": true}
 		if TW != null:
 			var no = J.cl(TW.npcOpts, null, [n])
 			if no is Dictionary: oo.merge(no, true)
+		var _t0 = Time.get_ticks_usec()
 		Art.draw_char(ctx, spr, 0, 0, hh / NPC_UNIT, oo)
+		if OS.has_environment("GB_PROF") and Time.get_ticks_usec() - _t0 > 15000: print("[slow] ", spr, " %.1fms " % ((Time.get_ticks_usec() - _t0) / 1000.0), oo.get("pose"), " act=", oo.get("act"), " at=", oo.get("at"))
 	else: _sprite(ctx, n, o, hh, right)
 	ctx.filter = "none"; ctx.restore()
 	if _b(d.get("mop")) and o.pose == "mop" and randf() < 0.05:
