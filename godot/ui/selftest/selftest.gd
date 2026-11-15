@@ -16,7 +16,9 @@ const PRE := [
 	["subvp", "離屏拍照"], ["sh_gray", "灰階效果"], ["sh_sprite", "角色效果"], ["sh_hue", "變色效果"], ["sh_hue_mix", "混色效果"],
 	["sh_dark", "黑夜效果"], ["sh_mesh", "骨架動畫效果"], ["audio", "聲音"], ["file", "存檔讀寫"]]
 const POST := [
-	["boot", "載入遊戲"], ["ground", "村子地面（重畫）"], ["village", "村子"], ["world", "陰間地圖"], ["patrol", "夜班巡陰"],
+	["boot", "載入遊戲"], ["ground", "村子地面（重畫）"],
+	["m_real", "真角色網格×1"], ["m_many", "真角色網格×24"], ["m_cloth", "網格衣服換色"], ["village", "村子（安全模式）"], ["village_mesh", "村子（正常畫面）"],
+	["world", "陰間地圖"], ["patrol", "夜班巡陰"], ["patrol_mesh", "夜班巡陰（正常畫面）"],
 	["scare", "回陽間・夜班嚇人"], ["battle", "主線戰鬥"], ["tower", "樓裡有鬼"], ["street", "陽間站崗"],
 	["gstreet", "冥街夜市"], ["gyard", "亂葬崗"], ["sports", "運動會"]]
 
@@ -226,8 +228,34 @@ func _mode(id: String, main: Node) -> String:
 			var n = PtDraw.new(); n.fn = func(c): gl.rec.replay(c, Transform2D(Vector2(0.5, 0), Vector2(0, 0.5), Vector2.ZERO)); main.add_child(n)
 			await _wait(1.0); n.queue_free()
 		"village": await _wait(4.0)
+		"village_mesh":
+			G.safe_gfx = false; await _wait(5.0)
+		"m_real", "m_many", "m_cloth":
+			PtGfx.init()
+			if PtChar.RIG.is_empty(): PtChar.setup_static()
+			var keys = PtChar.RIG.keys().filter(func(k): return PtGfx.tex(k) != null)
+			if keys.is_empty(): modulate.a = 1; return "冇角色骨架資料"
+			var n = 1 if id != "m_many" else mini(24, keys.size())
+			var nodes = []
+			for i in n:
+				var k = keys[i % keys.size()] if id == "m_many" else ("afu" if keys.has("afu") else keys[0])
+				var m = PtGfx.mesh_for(k, k, PtChar.RIG[k].bones)
+				if m.is_empty(): continue
+				var mat = ShaderMaterial.new(); mat.shader = PtGfx.SH_MESH
+				var h = 90.0; var W = h / m.ar
+				var A = Transform2D(0, Vector2(40 + (i % 6) * 60, 300 + int(i / 6) * 110)) * Transform2D(0, Vector2(-W / 2, -h))
+				mat.set_shader_parameter("bone", PtGfx.solve(m.bones, {"a1": 0.3}))
+				mat.set_shader_parameter("dims", Vector3(W, h, m.ar))
+				mat.set_shader_parameter("aff_a", Vector4(A.x.x, A.x.y, A.y.x, A.y.y))
+				mat.set_shader_parameter("aff_o", A.origin)
+				if id == "m_cloth":
+					mat.set_shader_parameter("mode", 1.0); mat.set_shader_parameter("cm", Basis(Vector3(0.5, 0.2, 0.1), Vector3(0.1, 0.6, 0.1), Vector3(0.1, 0.1, 0.4)))
+				var mi = MeshInstance2D.new(); mi.mesh = m.mesh; mi.texture = m.tex; mi.material = mat; main.add_child(mi); nodes.append(mi)
+			await _wait(1.5)
+			for x in nodes: x.queue_free()
 		"world": J.mc(J.G.get("World"), "open", []); await _wait(3.0)
-		"patrol":
+		"patrol", "patrol_mesh":
+			if id == "patrol_mesh": G.safe_gfx = false
 			var S0 = J.G.get("S")
 			if S0 is Dictionary and S0.get("pt") is Dictionary: S0.pt["introSeen"] = 1
 			J.cl(J.G.get("__nat_patrol"), null, [0.0, 54.0]); await _wait(5.0)
