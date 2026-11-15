@@ -385,6 +385,8 @@ const CRUMB := "user://boot_crumb.txt"
 func crumb(stage: String) -> void:
 	var f = FileAccess.open(CRUMB, FileAccess.WRITE)
 	if f: f.store_string(stage + "\n" + str(Time.get_unix_time_from_system())); f.flush(); f.close()
+func crumb_now() -> String:
+	return FileAccess.get_file_as_string(CRUMB).split("\n")[0] if FileAccess.file_exists(CRUMB) else ""
 func read_crumb() -> void:
 	if OS.has_environment("GB_TEST") and not OS.has_environment("GB_CRUMB_TEST"):   # 測試會中途 quit，唔當閃退
 		safe_gfx = OS.has_environment("GB_SAFE_GFX"); return
@@ -402,7 +404,7 @@ func read_crumb() -> void:
 		if st != "" and st != "ok":
 			last_crash = st
 			# 畫面相關步驟閃退 → 自動開安全畫面模式
-			if st in ["ui", "village", "start", "state", "resize", "refresh", "frame1", "frame30", "snd", "title"] or st.begins_with("show:"):
+			if st in ["ui", "village", "start", "state", "resize", "refresh", "frame1", "frame30", "snd", "title"] or st.begins_with("show:") or st.begins_with("ng:") or st.begins_with("draw:"):
 				var w = FileAccess.open("user://safe_gfx", FileAccess.WRITE); if w: w.store_string("1"); w.close()
 				safe_f = true
 	safe_gfx = safe_f or OS.has_environment("GB_SAFE_GFX")

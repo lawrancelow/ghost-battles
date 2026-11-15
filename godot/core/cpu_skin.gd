@@ -72,8 +72,12 @@ func _skin(g: Dictionary) -> void:
 		pts[i] = Vector2(aa.x * lx + aa.z * ly + ao.x, aa.y * lx + aa.w * ly + ao.y)
 	stat_ms += (Time.get_ticks_usec() - t0) / 1000.0; stat_n += 1
 
+static var _first := true
 func _draw() -> void:
 	if mesh == null or texture == null: return
+	if _first:   # 第一次 CPU 蒙皮落畫面：留記號，閃退下次會自動轉安全畫面
+		_first = false; G.crumb("draw:cpuskin")
+		RenderingServer.frame_post_draw.connect(func(): G.crumb("draw:cpuskin_ok"), CONNECT_ONE_SHOT)
 	var g = _geo_of(mesh)
 	var idx: PackedInt32Array = g.idx
 	if idx.is_empty(): return

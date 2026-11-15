@@ -113,7 +113,7 @@ func _boot_js() -> void:
 	if selftest != null:
 		if str(SelfTest.S.get("cur", "")) == "boot": SelfTest.done("boot", "OK")
 		selftest.run_post(self); return
-	get_tree().create_timer(8.0).timeout.connect(func(): G.crumb("ok"))
+	get_tree().create_timer(8.0).timeout.connect(func(): if G.crumb_now() == "frame30": G.crumb("ok"))   # 只清開機記號，唔好蓋過之後（新遊戲等）嘅記號
 	if G.last_crash != "" and G.safe_gfx:
 		show_toast("上次開機喺「%s」出事，而家用緊安全畫面模式（角色冇骨架動畫）。可以喺設定入面切換。" % G.last_crash)
 	var lt = log_tail(400); var nerr = lt.count("SCRIPT ERROR")
@@ -746,8 +746,14 @@ func _title_cont(fresh: bool) -> void:
 func _title_new(fresh: bool, bn: TextureButton, hint: Label) -> void:
 	if not fresh and not bn.has_meta("armed"):
 		bn.set_meta("armed", 1); hint.text = "會刪掉現在的存檔。再點一次「開始新遊戲」確定。"; return
+	G.crumb("ng:click")
 	if not fresh: restart_with(null, "pre"); return
-	_snd("gong"); _hide_title(); refresh(); phone_home("pre")
+	G.crumb("ng:sound"); _snd("gong")
+	G.crumb("ng:hide_title"); _hide_title()
+	G.crumb("ng:refresh"); refresh()
+	G.crumb("ng:phone"); phone_home("pre")
+	await RenderingServer.frame_post_draw; await RenderingServer.frame_post_draw
+	G.crumb("ng:phone_shown")
 
 func _vgrad(stops: Array) -> Texture2D:
 	var gr = Gradient.new()
@@ -779,6 +785,7 @@ func _phone_flag(on: bool) -> void:
 	if p is Dictionary: p["on"] = on
 
 func _phone_enter(ph: String) -> void:
+	G.crumb("ng:enter_" + ph)
 	phone_close()
 	if ph == "pre":
 		for id in ["prologue_chat", "prologue_narr", "prologue_road", "prologue_sys"]: story.queue(id)

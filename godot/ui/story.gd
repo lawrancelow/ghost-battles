@@ -58,6 +58,7 @@ func _clear() -> void:
 var wa: WA = null
 
 func _build(sc: Dictionary) -> void:
+	G.crumb("ng:story_" + str(cur.id if cur != null else ""))
 	_clear()
 	var dim = ColorRect.new(); dim.color = Color(0.04, 0.03, 0.05, 0.72); dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); dim.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(dim)
 	var style: String = sc.get("style", "talk")

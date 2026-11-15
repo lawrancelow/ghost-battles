@@ -34,7 +34,7 @@ func _init(p, kk: String) -> void:
 	turn = Node2D.new(); add_child(turn)
 	sh = _pd(sh_ops); turn.add_child(sh)
 	back = _pd(back_ops); turn.add_child(back)
-	mi = CpuSkin.new(); mat = mi   # 一律 CPU 蒙皮：唔再用骨架 shader（部分手機驅動會閃退）
+	mi = CpuSkin.new(); mat = mi   # CPU 蒙皮：唔再用骨架 shader（部分手機驅動會閃退）；安全畫面模式直接畫原圖
 	turn.add_child(mi)
 	front = _pd(front_ops); turn.add_child(front)
 	after = _pd(after_ops); turn.add_child(after)
@@ -69,6 +69,7 @@ func sync(ag: Dictionary, t: float, mute: bool) -> void:
 	mi.visible = true
 	if golf: golf.visible = false
 	_body(a)
+	if G.safe_gfx: _safe_body(a)
 	ag._z = o._z; ag._stars = o._stars
 	# 頭上的東西
 	var hy = ay - float(NvPlaza.CH.get(k, 50)) * s - (0.0 if NvPlaza.PSOLID.has(k) else 4.0)
@@ -146,6 +147,16 @@ func _draw_m(a: Dictionary, P: Dictionary, lift: float, shK: float) -> void:
 	_mesh(a.x, a.y - _float_y(a) - lift, a.H, P, a.faceRight)
 
 # ---------------- body ----------------
+# 安全畫面模式：唔用骨架 shader，直接畫原圖（冇身體動畫）
+func _safe_body(a: Dictionary) -> void:
+	mi.visible = false
+	var tex = PtGfx.tex(k)
+	if tex == null: return
+	var H: float = a.H; var w = H * tex.get_width() / tex.get_height(); var fl = 1.0 if a.faceRight else -1.0
+	back_ops.append(func(ctx):
+		var c: CanvasItem = ctx.ci
+		c.draw_set_transform(Vector2.ZERO, 0, Vector2(fl, 1)); c.draw_texture_rect(tex, Rect2(-w / 2, -H, w, H), false); c.draw_set_transform_matrix(Transform2D.IDENTITY))
+
 func _body(a: Dictionary) -> void:
 	var o: Dictionary = a.o; var type: String = a.type; var at: float = o.at; var t: float = o.t; var fwd = 1.0 if a.faceRight else -1.0
 	var s: float = a.s; var H: float = a.H; var pl: Dictionary = o.pl
