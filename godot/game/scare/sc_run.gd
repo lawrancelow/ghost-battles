@@ -2,7 +2,7 @@
 #  - 規則／分數／人物 AI：照用 scare.js（Scare.step、hit、useGhost、useProp……），數值一模一樣，存檔 S.scare 同網頁版互通
 #  - 畫面：原生喺 _draw 直接叫 Scare.draw()（Ctx 直接畫落節點，唔經錄製器；角色由原生 Art 畫）
 #  - 介面：頂欄、小地圖、拖鏡頭、人物卡、出招列全部原生；DOM 介面收起（以前每幀排版 ~100ms）
-#  - 偷看手機／電腦／茶水間嘅彈出視窗（scare_ops.js）仍然用 DOM：彈出時先開返 DOM，期間遊戲本身係暫停
+#  - 偷看手機／電腦／茶水間嘅彈出視窗：原生（sc_ops.gd）；_check_modal 保留做後備（萬一有 DOM 彈窗）
 class_name ScRun
 extends Control
 
@@ -35,6 +35,7 @@ var _hidden: Array = []
 var _drag = null
 var _quit_arm := 0.0
 var _modal := false
+var ops_layer = null
 var _t0 := 0
 
 static func js(n: String): return J.G.get(n)
@@ -298,6 +299,7 @@ func _process2(dt: float) -> void:
 		if _quit_arm <= 0: quit_b.text = L("收工")
 	_update_dock()
 	if _target_sig() != _tgt_sig: _rebuild_target()
+	if ops_layer != null and not J.t(Sc.get("paused")): ScOps.close_ui(self)
 	_check_modal()
 
 # 手機／電腦彈出視窗（DOM）：開咗就臨時顯示返 DOM
@@ -325,6 +327,7 @@ func _draw_stage() -> void:
 	var t0 = Time.get_ticks_usec()
 	var cp = OS.has_environment("GB_CTXPROF") and prof_n == 29
 	if cp: J.CTXPROF.clear(); J.CTXPROF_ON = true
+	if OS.has_environment("GB_PROF"): mark("pre")
 	J.mc(Sc, "draw", [Time.get_ticks_msec() / 1000.0])
 	if cp:
 		J.CTXPROF_ON = false; var ks = J.CTXPROF.keys().filter(func(k): return not k.begins_with("#"))
@@ -427,4 +430,9 @@ static func t_act(i: int) -> void:
 		3: S["mana"] = 100.0; J.mc(S, "useGhost", [S.team[2], ken])
 		4: J.mc(S, "finish", [false])
 		5: S["sel"] = ken; cur._rebuild_target()
+		6: S["sel"] = ken; J.cl(js("ScareOps").openPhone, null, [S, ken])
+		7: J.cl(js("ScareOps").openPhone, null, [S, ken, "photo"])
+		8: J.cl(js("ScareOps").compose, null, [S, ken])
+		9: S["mana"] = 100.0; J.cl(js("ScareOps").act, null, [S, ken, js("ScareOps").OPS.ken.msgs[1], "msg"])
+		10: S["sel"] = ken; J.cl(js("ScareOps").openPC, null, [S, ken])
 	print("t_act ", i, " kpi=", S.kpi, " ken.fear=", ken.fear, " t=", S.get("t"), " clock=", cur.clock_l.text if cur else "")

@@ -22,7 +22,23 @@ module.exports = {
     ["    const c = $('#sc-cvs'); if (!c) return; const ctx = c.getContext('2d'); ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);", "    if (this._nat && !this._natCtx) return; const c = this._natCtx ? null : $('#sc-cvs'); if (!this._natCtx && !c) return; const ctx = this._natCtx || c.getContext('2d'); ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);"],
     ["    $('#sc-clock').textContent = ", "    if (this._nat) return;\n    $('#sc-clock').textContent = "],
     ["  drawNpc(ctx, n, t) {", "  drawNpc(ctx, n, t) { if (this._nat && typeof __nat_scNpc !== 'undefined' && !(this.office() && ((OFFICE.seated(n) && !n.out) || n.d.k === 'mis'))) { const r = __nat_scNpc(ctx, this, n, t); return { x:r.x, top:r.top }; }"],
+    // 線 D2：名牌（眼、恐懼條、名、膠囊、？！）原生畫（game/scare/sc_tag.gd）
+    ["      { // 眼：開＝望緊四周", "      if (this._nat && typeof __nat_scTag !== 'undefined') { __nat_scTag(ctx, this, n, x, by, t, sel); if (n.step && n.step.cue) this.drawCue(ctx, n, x, by, t); } else {\n      { // 眼：開＝望緊四周"],
+    ["      if (n.d.daoshi && n.ds === 'ritual') {", "      }\n      if (n.d.daoshi && n.ds === 'ritual') {"],
+    ["      const mark = n.fleeing ? '!!!'", "      const mark = this._nat && typeof __nat_scTag !== 'undefined' ? '' : n.fleeing ? '!!!'"],
     ["    if (!this.active) return; this.active = false;", "    if (!this.active) return; this.active = false; if (this._nat && typeof __nat_scEnd !== 'undefined') __nat_scEnd(this);"],
+  ],
+  // 線 D2：揀隊畫面（ui/scare_select/sc_select.gd）、偷看手機／電腦／茶水間視窗（game/scare/sc_ops.gd）原生化；規則照用 JS
+  scare_squad: [
+    ['  function open(siteId) {\n', "  function open(siteId) { if (typeof __nat_scSel !== 'undefined' && __nat_scSel(siteId)) return;\n"],
+    ['  return { SIG, open, night,', '  return { _n:{ owned, maxSq, CN }, SIG, open, night,'],
+  ],
+  scare_ops: [
+    ['    const msgs = O.msgs || [];\n', "    const msgs = O.msgs || [];\n    if (typeof __nat_scOps !== 'undefined' && __nat_scOps('phone', Sc, n, tab, got)) { Sc.paused = true; if (got.length && !Sc.headless) Sc.renderTarget(); return; }\n"],
+    ['  function compose(Sc, n) {\n', "  function compose(Sc, n) { if (typeof __nat_scOps !== 'undefined' && __nat_scOps('msg', Sc, n)) { Sc.paused = true; return; }\n"],
+    ['  function openPC(Sc, n) {\n', "  function openPC(Sc, n) { if (typeof __nat_scOps !== 'undefined' && __nat_scOps('pc', Sc, n)) { Sc.paused = true; return; }\n"],
+    ['  function openPantry(Sc, n) {\n', "  function openPantry(Sc, n) { if (typeof __nat_scOps !== 'undefined' && __nat_scOps('pantry', Sc, n)) { Sc.paused = true; return; }\n"],
+    ['  return { OPS, PANTRY, ctx,', '  return { TAB, INTEL_NAME, cdOf, close, OPS, PANTRY, ctx,'],
   ],
   office: [
     // 線路 D：家具、工位交俾原生（game/scare/sc_office.gd）；office.js 仍然負責狀態（tick）

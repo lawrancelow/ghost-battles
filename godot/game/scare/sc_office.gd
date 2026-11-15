@@ -280,9 +280,12 @@ static func draw_ken(ctx: Ctx, Sc, n: Dictionary, t: float) -> Dictionary:
 		if clip_arms:
 			var A = STN.arms; ctx.beginPath(); ctx.rect(-Sd[0] * W + _n(A[0]) * W, -Sd[1] * Hh + _n(A[1]) * Hh, _n(A[2]) * W, _n(A[3]) * Hh); ctx.clip()
 		if mesh and key == J.str(STN.base):
-			var MA = J.G.get("MeshAnim")
-			if not J.gp(MA, "RIG").has(key): J.gp(MA, "RIG")[key] = {"bones": STN.bones}
-			J.mc(MA, "draw", [ctx, key, -(Sd[0] - 0.5) * W, (1 - Sd[1]) * Hh, Hh, pose, false])
+			# 原生網格（core/meshanim.gd）；冇圖先交返 JS
+			if not MeshAnim.RIG.has(key): MeshAnim.RIG[key] = {"bones": _bones(STN.bones)}
+			if not MeshAnim.draw(ctx, key, -(Sd[0] - 0.5) * W, (1 - Sd[1]) * Hh, Hh, pose, false):
+				var MA = J.G.get("MeshAnim")
+				if not J.gp(MA, "RIG").has(key): J.gp(MA, "RIG")[key] = {"bones": STN.bones}
+				J.mc(MA, "draw", [ctx, key, -(Sd[0] - 0.5) * W, (1 - Sd[1]) * Hh, Hh, pose, false])
 		else: ctx.drawImage(im, -Sd[0] * W, -Sd[1] * Hh, W, Hh)
 		if not clip_arms and key == "npc_ken_sit_coffee": _steam(ctx, -Sd[0] * W + W * 0.28, -Sd[1] * Hh + Hh * 0.27, u, t)
 		if ml != null and mode != "jump":
@@ -300,6 +303,14 @@ static func draw_ken(ctx: Ctx, Sc, n: Dictionary, t: float) -> Dictionary:
 			var q = fmod(a * 0.6 + i * 0.5, 1.0); text(ctx, x - u * (0.05 - 0.1 * q) + i * u * 0.08, y - u * (0.9 + 0.2 * q), "♫" if i else "♪", u * 0.12, sin(q * PI) * ss(a / 0.5))
 	if mode == "sit" and act == "neck" and f < 25: text(ctx, x - u * 0.7, y - u * 0.8, "喀", u * 0.11, bump(a, 1.2, 1.35, 1.7))
 	return {"x": x - u * 0.22, "top": y - lift * u - SIT_H * u * (1.0 if key == J.str(STN.get("stretch")) else 0.98), "H": SIT_H * u}
+
+static func _bones(B) -> Array:
+	var out = []
+	for b in B:
+		var r = []
+		for i in b.size(): r.append(b[i] if i < 2 else float(J.num(b[i])))
+		out.append(r)
+	return out
 
 static func _steam(ctx: Ctx, x: float, y: float, u: float, t: float) -> void:
 	ctx.save(); ctx.lineCap = "round"

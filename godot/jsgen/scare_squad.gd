@@ -1343,8 +1343,8 @@ func _f36(this_, a: Array, env):
 func _f38(this_, a: Array, env):
 	var v_d_305 = null
 	v_d_305 = J.arg(a, 0)
-	var _t412 = J.gp(v_d_305, "weak")
-	return J.mc(_t412, "includes", [env["t"]])
+	var _t414 = J.gp(v_d_305, "weak")
+	return J.mc(_t414, "includes", [env["t"]])
 
 func _f37(this_, a: Array, env):
 	var _s135 = {"__p": env, "t": null}
@@ -1354,8 +1354,8 @@ func _f37(this_, a: Array, env):
 func _f40(this_, a: Array, env):
 	var v_d_307 = null
 	v_d_307 = J.arg(a, 0)
-	var _t413 = J.gp(v_d_307, "immune")
-	return J.mc(_t413, "includes", [env["t"]])
+	var _t415 = J.gp(v_d_307, "immune")
+	return J.mc(_t415, "includes", [env["t"]])
 
 func _f39(this_, a: Array, env):
 	var _s137 = {"__p": env, "t": null}
@@ -1365,36 +1365,36 @@ func _f39(this_, a: Array, env):
 func _f43(this_, a: Array, env):
 	var v_t_314 = null
 	v_t_314 = J.arg(a, 0)
-	var _t426 = J.gp(env["d"], "hide")
-	var _t427 = (_t426 if J.t(_t426) else [])
-	var _t431 = J.mc(_t427, "includes", [v_t_314])
-	if J.t(_t431):
-		var _t428 = J.gp(J.G.get("Scare"), "known")
-		var _t429 = J.gp((_t428 if J.t(_t428) else {}), J.gp(env["d"], "k"))
-		var _t430 = (_t429 if J.t(_t429) else J.new_("Set", []))
-		_t431 = (not J.t(J.mc(_t430, "has", [v_t_314])))
-	return ("？" if J.t(_t431) else J.gp(J.G.get("FEAR_WORD"), v_t_314))
+	var _t428 = J.gp(env["d"], "hide")
+	var _t429 = (_t428 if J.t(_t428) else [])
+	var _t433 = J.mc(_t429, "includes", [v_t_314])
+	if J.t(_t433):
+		var _t430 = J.gp(J.G.get("Scare"), "known")
+		var _t431 = J.gp((_t430 if J.t(_t430) else {}), J.gp(env["d"], "k"))
+		var _t432 = (_t431 if J.t(_t431) else J.new_("Set", []))
+		_t433 = (not J.t(J.mc(_t432, "has", [v_t_314])))
+	return ("？" if J.t(_t433) else J.gp(J.G.get("FEAR_WORD"), v_t_314))
 
 func _f42(this_, a: Array, env):
 	var _s140 = {"__p": env, "d": null}
 	_s140["d"] = J.arg(a, 0)
-	var _t433 = J.gp(_s140["d"], "name")
-	var _t425 = J.gp(_s140["d"], "weak")
-	var _t432 = J.mc(_t425, "map", [Callable(self, "_f43").bind(_s140)])
-	return ("<span><b>" + J.str(_t433) + "</b> 怕 " + J.str(J.mc(_t432, "join", ["、"])) + "</span>")
+	var _t435 = J.gp(_s140["d"], "name")
+	var _t427 = J.gp(_s140["d"], "weak")
+	var _t434 = J.mc(_t427, "map", [Callable(self, "_f43").bind(_s140)])
+	return ("<span><b>" + J.str(_t435) + "</b> 怕 " + J.str(J.mc(_t434, "join", ["、"])) + "</span>")
 
 func _f45(this_, a: Array, env):
 	var v_s_321 = null; var v_t_322 = null
 	v_s_321 = J.arg(a, 0)
 	v_t_322 = J.arg(a, 1)
-	var _t437 = env["__p"]["weakCount"]
-	return J.add(v_s_321, J.cl(_t437, null, [v_t_322]))
+	var _t439 = env["__p"]["weakCount"]
+	return J.add(v_s_321, J.cl(_t439, null, [v_t_322]))
 
 func _f46(this_, a: Array, env):
 	var v_t_323 = null
 	v_t_323 = J.arg(a, 0)
-	var _t438 = env["__p"]["immCount"]
-	return J.cmp(J.cl(_t438, null, [v_t_323]), 0.0, ">")
+	var _t440 = env["__p"]["immCount"]
+	return J.cmp(J.cl(_t440, null, [v_t_323]), 0.0, ">")
 
 func _f47(this_, a: Array, env):
 	var v_x_324 = null
@@ -1411,41 +1411,41 @@ func _f44(this_, a: Array, env):
 	v_k_315 = J.arg(a, 0)
 	v_fixed_316 = J.arg(a, 1)
 	v_g_317 = J.gp(J.G.get("SCARE_GHOSTS"), v_k_315)
-	var _t436 = J.gp(v_g_317, "types")
-	v_ts_318 = (_t436 if J.t(_t436) else [J.gp(v_g_317, "type")])
+	var _t438 = J.gp(v_g_317, "types")
+	v_ts_318 = (_t438 if J.t(_t438) else [J.gp(v_g_317, "type")])
 	v_w_319 = J.mc(v_ts_318, "reduce", [Callable(self, "_f45").bind(env), 0.0])
-	var _t439 = J.mc(v_ts_318, "every", [Callable(self, "_f46").bind(env)])
-	v_im_320 = (J.seq(v_w_319, 0.0) if J.t(_t439) else _t439)
-	var _t442 = ("on" if J.t((v_fixed_316 if J.t(v_fixed_316) else J.mc(env["__p"]["chosen"], "includes", [v_k_315]))) else "")
-	var _t443 = ("good" if J.cmp(v_w_319, 2.0, ">=") else ("bad" if J.t(v_im_320) else ""))
-	var _t444 = ("disabled" if J.t(v_fixed_316) else "")
-	var _t445 = J.gp(v_g_317, "name")
-	var _t446 = J.gp(v_g_317, "skill")
-	var _t440 = env["__p"]["__p"]["Lx"]
-	var _t441 = env["__p"]["__p"]["T"]
-	var _t449 = J.cl(_t440, null, [J.cl(_t441, null, ["鬼力", "鬼力"])])
-	var _t448 = null
+	var _t441 = J.mc(v_ts_318, "every", [Callable(self, "_f46").bind(env)])
+	v_im_320 = (J.seq(v_w_319, 0.0) if J.t(_t441) else _t441)
+	var _t444 = ("on" if J.t((v_fixed_316 if J.t(v_fixed_316) else J.mc(env["__p"]["chosen"], "includes", [v_k_315]))) else "")
+	var _t445 = ("good" if J.cmp(v_w_319, 2.0, ">=") else ("bad" if J.t(v_im_320) else ""))
+	var _t446 = ("disabled" if J.t(v_fixed_316) else "")
+	var _t447 = J.gp(v_g_317, "name")
+	var _t448 = J.gp(v_g_317, "skill")
+	var _t442 = env["__p"]["__p"]["Lx"]
+	var _t443 = env["__p"]["__p"]["T"]
+	var _t451 = J.cl(_t442, null, [J.cl(_t443, null, ["鬼力", "鬼力"])])
+	var _t450 = null
 	if J.seq(v_k_315, "afu"):
-		var _t447 = J.gp(J.G.get("S"), "ghosts")
-		_t448 = J.mc(J.G.get("GP"), "pow", [J.mc(_t447, "find", [Callable(self, "_f47").bind(env)])])
+		var _t449 = J.gp(J.G.get("S"), "ghosts")
+		_t450 = J.mc(J.G.get("GP"), "pow", [J.mc(_t449, "find", [Callable(self, "_f47").bind(env)])])
 	else:
-		_t448 = J.mc(J.G.get("GP"), "kindPow", [v_k_315])
-	var _t450 = env["__p"]["__p"]["Lx"]
-	var _t451 = env["__p"]["__p"]["T"]
-	var _t453 = J.cl(_t450, null, [J.cl(_t451, null, ["驚嚇", "驚嚇"])])
-	var _t452 = (1.0 + (0.35 * J.sub(J.mc(J.G.get("Scare"), "gpq", [v_k_315]), 1.0)))
-	var _t455 = J.mc(_t452, "toFixed", [2.0])
-	var _t454 = J.mc(v_ts_318, "map", [Callable(self, "_f48").bind(env)])
-	var _t457 = J.mc(_t454, "join", ["／"])
-	var _t458 = ("・全場" if J.t(J.gp(v_g_317, "aoe")) else "")
-	var _t456 = J.gp(v_g_317, "cost")
-	return ("<button class=\"sq-g " + _t442 + " " + _t443 + "\" data-k=\"" + J.str(v_k_315) + "\" " + _t444 + "><canvas data-por=\"" + J.str(v_k_315) + "\"></canvas><b>" + J.str(_t445) + "</b><small>" + J.str(_t446) + "</small><small class=\"gp-sub\">" + J.str(_t449) + " " + J.str(_t448) + "<br>" + J.str(_t453) + " ×" + J.str(_t455) + "</small><i>" + J.str(_t457) + _t458 + "・" + J.str((_t456 if J.t(_t456) else 35.0)) + "</i>" + (("<em>" + J.str(v_w_319) + "人怕</em>") if J.t(v_w_319) else "") + "</button>")
+		_t450 = J.mc(J.G.get("GP"), "kindPow", [v_k_315])
+	var _t452 = env["__p"]["__p"]["Lx"]
+	var _t453 = env["__p"]["__p"]["T"]
+	var _t455 = J.cl(_t452, null, [J.cl(_t453, null, ["驚嚇", "驚嚇"])])
+	var _t454 = (1.0 + (0.35 * J.sub(J.mc(J.G.get("Scare"), "gpq", [v_k_315]), 1.0)))
+	var _t457 = J.mc(_t454, "toFixed", [2.0])
+	var _t456 = J.mc(v_ts_318, "map", [Callable(self, "_f48").bind(env)])
+	var _t459 = J.mc(_t456, "join", ["／"])
+	var _t460 = ("・全場" if J.t(J.gp(v_g_317, "aoe")) else "")
+	var _t458 = J.gp(v_g_317, "cost")
+	return ("<button class=\"sq-g " + _t444 + " " + _t445 + "\" data-k=\"" + J.str(v_k_315) + "\" " + _t446 + "><canvas data-por=\"" + J.str(v_k_315) + "\"></canvas><b>" + J.str(_t447) + "</b><small>" + J.str(_t448) + "</small><small class=\"gp-sub\">" + J.str(_t451) + " " + J.str(_t450) + "<br>" + J.str(_t455) + " ×" + J.str(_t457) + "</small><i>" + J.str(_t459) + _t460 + "・" + J.str((_t458 if J.t(_t458) else 35.0)) + "</i>" + (("<em>" + J.str(v_w_319) + "人怕</em>") if J.t(v_w_319) else "") + "</button>")
 
 func _f49(this_, a: Array, env):
 	var v_k_326 = null
 	v_k_326 = J.arg(a, 0)
-	var _t460 = env["card"]
-	return J.cl(_t460, null, [v_k_326])
+	var _t462 = env["card"]
+	return J.cl(_t462, null, [v_k_326])
 
 func _f50(this_, a: Array, env):
 	var v_k_327 = null
@@ -1455,40 +1455,40 @@ func _f50(this_, a: Array, env):
 func _f41(this_, a: Array, env):
 	var v_best_308 = null; var v_st_309 = null; var v_lg_310 = null; var v_h_311 = null
 	var _s139 = {"__p": env, "card": null}
-	var _t414 = J.gp(J.G.get("S"), "scare")
-	var _t415 = (J.gp(J.gp(J.gp(J.G.get("S"), "scare"), "best"), _s139["__p"]["siteId"]) if J.t(_t414) else _t414)
-	v_best_308 = (_t415 if J.t(_t415) else 0.0)
+	var _t416 = J.gp(J.G.get("S"), "scare")
+	var _t417 = (J.gp(J.gp(J.gp(J.G.get("S"), "scare"), "best"), _s139["__p"]["siteId"]) if J.t(_t416) else _t416)
+	v_best_308 = (_t417 if J.t(_t417) else 0.0)
 	v_st_309 = J.mc(J.G.get("Scare"), "starsOf", [_s139["__p"]["siteId"], v_best_308])
-	var _t416 = _s139["__p"]["__p"]["legend"]
-	v_lg_310 = J.cl(_t416, null, [_s139["__p"]["siteId"]])
-	var _t419 = J.gp(_s139["__p"]["site"], "name")
-	var _t417 = _s139["__p"]["__p"]["Lf"]
-	var _t418 = _s139["__p"]["__p"]["T"]
-	v_h_311 = ("<p class=\"desc\">" + J.str(_t419) + "。" + J.str(J.cl(_t417, null, [J.cl(_t418, null, ["揀今晚帶邊幾隻鬼：招式啱佢哋怕嘅嘢，先嚇得到人。阿福一定去，另外最多帶{n}隻。", "選今晚帶哪幾隻鬼：招式對上他們怕的東西，才嚇得到人。阿福一定去，另外最多帶{n}隻。"]), {"n": J.gp(_s139["__p"]["__p"]["CN"], J.cl(_s139["__p"]["__p"]["maxSq"], null, []))}])) + "</p>")
-	var _t422 = J.mc("★", "repeat", [v_st_309])
-	var _t423 = J.mc("☆", "repeat", [J.sub(3.0, v_st_309)])
-	var _t420 = _s139["__p"]["__p"]["Lx"]
-	var _t421 = _s139["__p"]["__p"]["T"]
-	var _t424 = J.add(v_h_311, ("<p class=\"desc\">最高紀錄：" + J.str(v_best_308) + "　" + J.str(_t422) + J.str(_t423) + "　｜　" + J.str(J.cl(_t420, null, [J.cl(_t421, null, ["都市傳說", "都市傳說"])])) + " Lv" + J.str(J.gp(v_lg_310, "lv")) + "「" + J.str(J.gp(v_lg_310, "name")) + "」</p>"))
-	v_h_311 = _t424
-	var _t434 = J.mc(_s139["__p"]["npcs"], "map", [Callable(self, "_f42").bind(_s139)])
-	var _t435 = J.add(v_h_311, ("<div class=\"sq-who\">" + J.str(J.mc(_t434, "join", [""])) + "</div>"))
-	v_h_311 = _t435
+	var _t418 = _s139["__p"]["__p"]["legend"]
+	v_lg_310 = J.cl(_t418, null, [_s139["__p"]["siteId"]])
+	var _t421 = J.gp(_s139["__p"]["site"], "name")
+	var _t419 = _s139["__p"]["__p"]["Lf"]
+	var _t420 = _s139["__p"]["__p"]["T"]
+	v_h_311 = ("<p class=\"desc\">" + J.str(_t421) + "。" + J.str(J.cl(_t419, null, [J.cl(_t420, null, ["揀今晚帶邊幾隻鬼：招式啱佢哋怕嘅嘢，先嚇得到人。阿福一定去，另外最多帶{n}隻。", "選今晚帶哪幾隻鬼：招式對上他們怕的東西，才嚇得到人。阿福一定去，另外最多帶{n}隻。"]), {"n": J.gp(_s139["__p"]["__p"]["CN"], J.cl(_s139["__p"]["__p"]["maxSq"], null, []))}])) + "</p>")
+	var _t424 = J.mc("★", "repeat", [v_st_309])
+	var _t425 = J.mc("☆", "repeat", [J.sub(3.0, v_st_309)])
+	var _t422 = _s139["__p"]["__p"]["Lx"]
+	var _t423 = _s139["__p"]["__p"]["T"]
+	var _t426 = J.add(v_h_311, ("<p class=\"desc\">最高紀錄：" + J.str(v_best_308) + "　" + J.str(_t424) + J.str(_t425) + "　｜　" + J.str(J.cl(_t422, null, [J.cl(_t423, null, ["都市傳說", "都市傳說"])])) + " Lv" + J.str(J.gp(v_lg_310, "lv")) + "「" + J.str(J.gp(v_lg_310, "name")) + "」</p>"))
+	v_h_311 = _t426
+	var _t436 = J.mc(_s139["__p"]["npcs"], "map", [Callable(self, "_f42").bind(_s139)])
+	var _t437 = J.add(v_h_311, ("<div class=\"sq-who\">" + J.str(J.mc(_t436, "join", [""])) + "</div>"))
+	v_h_311 = _t437
 	_s139["card"] = Callable(self, "_f44").bind(_s139)
-	var _t459 = _s139["card"]
-	var _t462 = J.cl(_t459, null, ["afu", true])
-	var _t461 = J.mc(_s139["__p"]["opts"], "map", [Callable(self, "_f49").bind(_s139)])
-	var _t463 = J.add(v_h_311, ("<div class=\"sq-grid\">" + J.str(_t462) + J.str(J.mc(_t461, "join", [""])) + "</div>"))
-	v_h_311 = _t463
-	var _t464 = _s139["__p"]["__p"]["Lx"]
-	var _t465 = _s139["__p"]["__p"]["T"]
-	var _t468 = J.cl(_t464, null, [J.cl(_t465, null, ["已揀", "已選"])])
-	var _t469 = J.len(_s139["__p"]["chosen"])
-	var _t470 = J.cl(_s139["__p"]["__p"]["maxSq"], null, [])
-	var _t466 = J.mc(_s139["__p"]["chosen"], "map", [Callable(self, "_f50").bind(_s139)])
-	var _t467 = J.mc(_t466, "join", ["、"])
-	var _t471 = J.add(v_h_311, ("<p class=\"desc\">" + J.str(_t468) + " " + J.str(_t469) + "/" + J.str(_t470) + "：" + J.str((_t467 if J.t(_t467) else "—")) + "</p>" + J.str((J.mc(J.G.get("Rework"), "kitHTML", []) if (not J.seq(J.typeof_(J.G.get("Rework")), "undefined")) else "")) + "<button class=\"btn gold wide\" id=\"sc-go\">出發，回陽間</button>"))
-	v_h_311 = _t471
+	var _t461 = _s139["card"]
+	var _t464 = J.cl(_t461, null, ["afu", true])
+	var _t463 = J.mc(_s139["__p"]["opts"], "map", [Callable(self, "_f49").bind(_s139)])
+	var _t465 = J.add(v_h_311, ("<div class=\"sq-grid\">" + J.str(_t464) + J.str(J.mc(_t463, "join", [""])) + "</div>"))
+	v_h_311 = _t465
+	var _t466 = _s139["__p"]["__p"]["Lx"]
+	var _t467 = _s139["__p"]["__p"]["T"]
+	var _t470 = J.cl(_t466, null, [J.cl(_t467, null, ["已揀", "已選"])])
+	var _t471 = J.len(_s139["__p"]["chosen"])
+	var _t472 = J.cl(_s139["__p"]["__p"]["maxSq"], null, [])
+	var _t468 = J.mc(_s139["__p"]["chosen"], "map", [Callable(self, "_f50").bind(_s139)])
+	var _t469 = J.mc(_t468, "join", ["、"])
+	var _t473 = J.add(v_h_311, ("<p class=\"desc\">" + J.str(_t470) + " " + J.str(_t471) + "/" + J.str(_t472) + "：" + J.str((_t469 if J.t(_t469) else "—")) + "</p>" + J.str((J.mc(J.G.get("Rework"), "kitHTML", []) if (not J.seq(J.typeof_(J.G.get("Rework")), "undefined")) else "")) + "<button class=\"btn gold wide\" id=\"sc-go\">出發，回陽間</button>"))
+	v_h_311 = _t473
 	return v_h_311
 
 func _f53(this_, a: Array, env):
@@ -1500,61 +1500,67 @@ func _f53(this_, a: Array, env):
 		if J.cmp(J.len(env["__p"]["chosen"]), J.cl(env["__p"]["__p"]["maxSq"], null, []), "<"):
 			J.mc(env["__p"]["chosen"], "push", [v_k_329])
 		else:
-			var _t479 = env["__p"]["__p"]["Lf"]
-			var _t480 = env["__p"]["__p"]["T"]
-			J.mc(J.G.get("Fx"), "toast", [J.cl(_t479, null, [J.cl(_t480, null, ["最多帶{n}隻", "最多帶{n}隻"]), {"n": J.gp(env["__p"]["__p"]["CN"], J.cl(env["__p"]["__p"]["maxSq"], null, []))}])])
+			var _t481 = env["__p"]["__p"]["Lf"]
+			var _t482 = env["__p"]["__p"]["T"]
+			J.mc(J.G.get("Fx"), "toast", [J.cl(_t481, null, [J.cl(_t482, null, ["最多帶{n}隻", "最多帶{n}隻"]), {"n": J.gp(env["__p"]["__p"]["CN"], J.cl(env["__p"]["__p"]["maxSq"], null, []))}])])
 			return null
-	var _t481 = J.G.get("$")
-	v_sc_330 = J.gp(J.cl(_t481, null, ["#sheet .sh-body"]), "scrollTop")
-	var _t482 = J.G.get("$")
-	var _t483 = J.cl(_t482, null, ["#sheet .sh-body"])
-	var _t484 = J.cl(env["__p"]["render"], null, [])
-	J.sp(_t483, "innerHTML", _t484)
-	var _t485 = J.G.get("$")
-	var _t486 = J.cl(_t485, null, ["#sheet .sh-body"])
-	J.sp(_t486, "scrollTop", v_sc_330)
+	var _t483 = J.G.get("$")
+	v_sc_330 = J.gp(J.cl(_t483, null, ["#sheet .sh-body"]), "scrollTop")
+	var _t484 = J.G.get("$")
+	var _t485 = J.cl(_t484, null, ["#sheet .sh-body"])
+	var _t486 = J.cl(env["__p"]["render"], null, [])
+	J.sp(_t485, "innerHTML", _t486)
+	var _t487 = J.G.get("$")
+	var _t488 = J.cl(_t487, null, ["#sheet .sh-body"])
+	J.sp(_t488, "scrollTop", v_sc_330)
 	J.cl(env["__p"]["bind"], null, [])
 
 func _f52(this_, a: Array, env):
 	var _s150 = {"__p": env, "b": null}
 	_s150["b"] = J.arg(a, 0)
-	var _t478 = _s150["b"]
-	var _t487 = Callable(self, "_f53").bind(_s150)
-	J.sp(_t478, "onclick", _t487)
-	return _t487
+	var _t480 = _s150["b"]
+	var _t489 = Callable(self, "_f53").bind(_s150)
+	J.sp(_t480, "onclick", _t489)
+	return _t489
 
 func _f54(this_, a: Array, env):
 	J.mc(env["__p"]["squad"], "set", [env["chosen"]])
 	J.mc(J.G.get("UI"), "close", [])
-	var _t491 = env["siteId"]
-	var _t490 = ["afu"]
-	J.mc(J.G.get("Scare"), "start", [_t491, J.mc(_t490, "concat", [J.mc(env["__p"]["squad"], "get", [])])])
+	var _t493 = env["siteId"]
+	var _t492 = ["afu"]
+	J.mc(J.G.get("Scare"), "start", [_t493, J.mc(_t492, "concat", [J.mc(env["__p"]["squad"], "get", [])])])
 
 func _f51(this_, a: Array, env):
-	var _t472 = J.G.get("paintPortraits")
-	var _t473 = J.G.get("$")
-	J.cl(_t472, null, [J.cl(_t473, null, ["#sheet"])])
-	if (not J.seq(J.typeof_(J.G.get("Rework")), "undefined")):
-		var _t474 = J.G.get("$")
-		J.mc(J.G.get("Rework"), "bindKit", [J.cl(_t474, null, ["#sheet"])])
+	var _t474 = J.G.get("paintPortraits")
 	var _t475 = J.G.get("$")
-	var _t476 = J.cl(_t475, null, ["#sheet"])
-	var _t477 = J.mc(_t476, "querySelectorAll", [".sq-g:not([disabled])"])
-	J.mc(_t477, "forEach", [Callable(self, "_f52").bind(env)])
-	var _t488 = J.G.get("$")
-	var _t489 = J.cl(_t488, null, ["#sc-go"])
-	var _t492 = Callable(self, "_f54").bind(env)
-	J.sp(_t489, "onclick", _t492)
+	J.cl(_t474, null, [J.cl(_t475, null, ["#sheet"])])
+	if (not J.seq(J.typeof_(J.G.get("Rework")), "undefined")):
+		var _t476 = J.G.get("$")
+		J.mc(J.G.get("Rework"), "bindKit", [J.cl(_t476, null, ["#sheet"])])
+	var _t477 = J.G.get("$")
+	var _t478 = J.cl(_t477, null, ["#sheet"])
+	var _t479 = J.mc(_t478, "querySelectorAll", [".sq-g:not([disabled])"])
+	J.mc(_t479, "forEach", [Callable(self, "_f52").bind(env)])
+	var _t490 = J.G.get("$")
+	var _t491 = J.cl(_t490, null, ["#sc-go"])
+	var _t494 = Callable(self, "_f54").bind(env)
+	J.sp(_t491, "onclick", _t494)
 
 func _f35(this_, a: Array, env):
 	var _s133 = {"__p": env, "siteId": null, "site": null, "opts": null, "chosen": null, "npcs": null, "weakCount": null, "immCount": null, "render": null, "bind": null}
 	_s133["siteId"] = J.arg(a, 0)
+	var _t412 = (not J.seq(J.typeof_(J.G.get("__nat_scSel")), "undefined"))
+	if J.t(_t412):
+		var _t411 = J.G.get("__nat_scSel")
+		_t412 = J.cl(_t411, null, [_s133["siteId"]])
+	if J.t(_t412):
+		return null
 	J.mc(J.G.get("Scare"), "migrate", [])
 	_s133["site"] = J.gp(J.G.get("SCARE_SITES"), _s133["siteId"])
 	_s133["opts"] = J.cl(_s133["__p"]["owned"], null, [])
 	_s133["chosen"] = J.mc(J.mc(_s133["__p"]["squad"], "get", []), "slice", [])
-	var _t411 = J.gp(_s133["site"], "npcs")
-	_s133["npcs"] = J.mc(_t411, "filter", [Callable(self, "_f36").bind(_s133)])
+	var _t413 = J.gp(_s133["site"], "npcs")
+	_s133["npcs"] = J.mc(_t413, "filter", [Callable(self, "_f36").bind(_s133)])
 	_s133["weakCount"] = Callable(self, "_f37").bind(_s133)
 	_s133["immCount"] = Callable(self, "_f39").bind(_s133)
 	_s133["render"] = Callable(self, "_f41").bind(_s133)
@@ -1566,55 +1572,55 @@ func _f2(this_, a: Array, env):
 	var v_yue_28 = null; var v_zh_29 = null
 	v_yue_28 = J.arg(a, 0)
 	v_zh_29 = J.arg(a, 1)
-	var _t493 = (not J.seq(J.typeof_(J.G.get("LANG")), "undefined"))
-	if J.t((v_zh_29 if _t493 else _t493)):
+	var _t495 = (not J.seq(J.typeof_(J.G.get("LANG")), "undefined"))
+	if J.t((v_zh_29 if _t495 else _t495)):
 		J.mc(J.G.get("LANG"), "add", [{J.key(v_yue_28): v_zh_29}])
 	return v_yue_28
 
 func _f3(this_, a: Array, env):
 	var v_s_30 = null
 	v_s_30 = J.arg(a, 0)
-	var _t495 = null
+	var _t497 = null
 	if J.seq(J.typeof_(J.G.get("L")), "function"):
-		var _t494 = J.G.get("L")
-		_t495 = J.cl(_t494, null, [v_s_30])
+		var _t496 = J.G.get("L")
+		_t497 = J.cl(_t496, null, [v_s_30])
 	else:
-		_t495 = v_s_30
-	return _t495
+		_t497 = v_s_30
+	return _t497
 
 func _f4(this_, a: Array, env):
 	var v_s_31 = null; var v_v_32 = null; var v_r_33 = null; var v_k_34 = null
 	v_s_31 = J.arg(a, 0)
 	v_v_32 = J.arg(a, 1)
-	var _t496 = env["Lx"]
-	v_r_33 = J.cl(_t496, null, [v_s_31])
-	for _t497 in J.keys((v_v_32 if J.t(v_v_32) else {})):
-		v_k_34 = _t497
-		var _t498 = J.mc(v_r_33, "split", [(J.add("{", v_k_34) + "}")])
-		var _t499 = J.mc(_t498, "join", [J.gp(v_v_32, v_k_34)])
-		v_r_33 = _t499
+	var _t498 = env["Lx"]
+	v_r_33 = J.cl(_t498, null, [v_s_31])
+	for _t499 in J.keys((v_v_32 if J.t(v_v_32) else {})):
+		v_k_34 = _t499
+		var _t500 = J.mc(v_r_33, "split", [(J.add("{", v_k_34) + "}")])
+		var _t501 = J.mc(_t500, "join", [J.gp(v_v_32, v_k_34)])
+		v_r_33 = _t501
 	return v_r_33
 
 func _f5(this_, a: Array, env):
 	return J.S_Object_("keys", [J.G.get("SCARE_GHOSTS")])
 
 func _f6(this_, a: Array, env):
-	var _t527 = env["MAXSQ_BASE"]
-	var _t526 = (not J.seq(J.typeof_(J.G.get("Presence")), "undefined"))
-	return J.add(_t527, (J.mc(J.G.get("Presence"), "perk", ["squad"]) if J.t((J.gp(J.G.get("Presence"), "perk") if _t526 else _t526)) else 0.0))
+	var _t529 = env["MAXSQ_BASE"]
+	var _t528 = (not J.seq(J.typeof_(J.G.get("Presence")), "undefined"))
+	return J.add(_t529, (J.mc(J.G.get("Presence"), "perk", ["squad"]) if J.t((J.gp(J.G.get("Presence"), "perk") if _t528 else _t528)) else 0.0))
 
 func _f7(this_, a: Array, env):
 	var v_ks_48 = null; var v_g_49 = null
-	var _t528 = J.seq(J.typeof_(J.G.get("S")), "undefined")
-	var _t529 = (_t528 if _t528 else (not J.t(J.G.get("S"))))
-	if (_t529 if _t529 else (not J.t(J.gp(J.G.get("S"), "ghosts")))):
+	var _t530 = J.seq(J.typeof_(J.G.get("S")), "undefined")
+	var _t531 = (_t530 if _t530 else (not J.t(J.G.get("S"))))
+	if (_t531 if _t531 else (not J.t(J.gp(J.G.get("S"), "ghosts")))):
 		return []
 	v_ks_48 = []
-	for _t530 in J.iter(J.gp(J.G.get("S"), "ghosts")):
-		v_g_49 = _t530
-		var _t531 = (not J.seq(J.gp(v_g_49, "k"), "afu"))
-		var _t532 = (J.gp(J.G.get("SCARE_GHOSTS"), J.gp(v_g_49, "k")) if _t531 else _t531)
-		if J.t(((not J.t(J.mc(v_ks_48, "includes", [J.gp(v_g_49, "k")]))) if J.t(_t532) else _t532)):
+	for _t532 in J.iter(J.gp(J.G.get("S"), "ghosts")):
+		v_g_49 = _t532
+		var _t533 = (not J.seq(J.gp(v_g_49, "k"), "afu"))
+		var _t534 = (J.gp(J.G.get("SCARE_GHOSTS"), J.gp(v_g_49, "k")) if _t533 else _t533)
+		if J.t(((not J.t(J.mc(v_ks_48, "includes", [J.gp(v_g_49, "k")]))) if J.t(_t534) else _t534)):
 			J.mc(v_ks_48, "push", [J.gp(v_g_49, "k")])
 	return v_ks_48
 
@@ -1632,20 +1638,20 @@ func _f8(this_, a: Array, env):
 	var v_s_53 = null
 	var _s13 = {"__p": env, "o": null}
 	_s13["o"] = J.cl(_s13["__p"]["owned"], null, [])
-	var _t533 = (not J.seq(J.typeof_(J.G.get("S")), "undefined"))
-	var _t534 = (J.G.get("S") if _t533 else _t533)
-	var _t535 = (J.gp(J.G.get("S"), "scareSquad") if J.t(_t534) else _t534)
-	v_s_53 = (_t535 if J.t(_t535) else null)
+	var _t535 = (not J.seq(J.typeof_(J.G.get("S")), "undefined"))
+	var _t536 = (J.G.get("S") if _t535 else _t535)
+	var _t537 = (J.gp(J.G.get("S"), "scareSquad") if J.t(_t536) else _t536)
+	v_s_53 = (_t537 if J.t(_t537) else null)
 	if (not J.t(v_s_53)):
-		var _t536 = ["tianhua", "pontianak"]
-		var _t537 = J.mc(_t536, "filter", [Callable(self, "_f9").bind(_s13)])
-		v_s_53 = _t537
-	var _t538 = J.mc(v_s_53, "filter", [Callable(self, "_f10").bind(_s13)])
-	var _t539 = J.mc(_t538, "slice", [0.0, J.cl(_s13["__p"]["maxSq"], null, [])])
-	v_s_53 = _t539
+		var _t538 = ["tianhua", "pontianak"]
+		var _t539 = J.mc(_t538, "filter", [Callable(self, "_f9").bind(_s13)])
+		v_s_53 = _t539
+	var _t540 = J.mc(v_s_53, "filter", [Callable(self, "_f10").bind(_s13)])
+	var _t541 = J.mc(_t540, "slice", [0.0, J.cl(_s13["__p"]["maxSq"], null, [])])
+	v_s_53 = _t541
 	if (not J.t(J.len(v_s_53))):
-		var _t540 = J.mc(_s13["o"], "slice", [0.0, 2.0])
-		v_s_53 = _t540
+		var _t542 = J.mc(_s13["o"], "slice", [0.0, 2.0])
+		v_s_53 = _t542
 	return v_s_53
 
 func _f12(this_, a: Array, env):
@@ -1653,85 +1659,85 @@ func _f12(this_, a: Array, env):
 	v_k_60 = J.arg(a, 0)
 	v_i_61 = J.arg(a, 1)
 	v_a_62 = J.arg(a, 2)
-	var _t544 = (not J.seq(v_k_60, "afu"))
-	var _t545 = (J.mc(env["o"], "includes", [v_k_60]) if _t544 else _t544)
-	return (J.seq(J.mc(v_a_62, "indexOf", [v_k_60]), v_i_61) if J.t(_t545) else _t545)
+	var _t546 = (not J.seq(v_k_60, "afu"))
+	var _t547 = (J.mc(env["o"], "includes", [v_k_60]) if _t546 else _t546)
+	return (J.seq(J.mc(v_a_62, "indexOf", [v_k_60]), v_i_61) if J.t(_t547) else _t547)
 
 func _f11(this_, a: Array, env):
 	var v_ids_58 = null
 	var _s16 = {"__p": env, "o": null}
 	v_ids_58 = J.arg(a, 0)
-	var _t541 = J.seq(J.typeof_(J.G.get("S")), "undefined")
-	if (_t541 if _t541 else (not J.t(J.G.get("S")))):
+	var _t543 = J.seq(J.typeof_(J.G.get("S")), "undefined")
+	if (_t543 if _t543 else (not J.t(J.G.get("S")))):
 		return []
 	_s16["o"] = J.cl(_s16["__p"]["owned"], null, [])
-	var _t542 = J.G.get("S")
-	var _t543 = (v_ids_58 if J.t(v_ids_58) else [])
-	var _t546 = J.mc(_t543, "filter", [Callable(self, "_f12").bind(_s16)])
-	var _t547 = J.mc(_t546, "slice", [0.0, J.cl(_s16["__p"]["maxSq"], null, [])])
-	J.sp(_t542, "scareSquad", _t547)
+	var _t544 = J.G.get("S")
+	var _t545 = (v_ids_58 if J.t(v_ids_58) else [])
+	var _t548 = J.mc(_t545, "filter", [Callable(self, "_f12").bind(_s16)])
+	var _t549 = J.mc(_t548, "slice", [0.0, J.cl(_s16["__p"]["maxSq"], null, [])])
+	J.sp(_t544, "scareSquad", _t549)
 	if J.seq(J.typeof_(J.G.get("save")), "function"):
 		J.cl(J.G.get("save"), null, [])
 	return J.mc(J.gp(J.G.get("S"), "scareSquad"), "slice", [])
 
 func _f13(this_, a: Array, env):
-	var _t548 = ["afu"]
-	return J.mc(_t548, "concat", [J.mc(this_, "get", [])])
+	var _t550 = ["afu"]
+	return J.mc(_t550, "concat", [J.mc(this_, "get", [])])
 
 func _f15(this_, a: Array, env):
 	var v_weak_70 = null
 	v_weak_70 = J.arg(a, 0)
-	var _t565 = env["T"]
-	var _t567 = J.cl(_t565, null, ["靈探KOL・Kiki", "靈探KOL・Kiki"])
-	var _t566 = env["T"]
-	var _t579 = J.cl(_t566, null, ["追鬼直播主・二十萬訂閱", "追鬼直播主・二十萬訂閱"])
-	var _t580 = [J.mc(J.G.get("OFFMAP"), "M", [0.4]), 0.88, "film"]
-	var _t581 = [7.0, 11.0]
-	var _t569 = J.gp(J.gp(J.G.get("OFFMAP"), "SPOT"), "micro")
-	var _t570 = [5.0, 8.0]
+	var _t567 = env["T"]
+	var _t569 = J.cl(_t567, null, ["靈探KOL・Kiki", "靈探KOL・Kiki"])
 	var _t568 = env["T"]
-	var _t574 = ["pantry", 2.0, _t569, _t570, J.cl(_t568, null, ["呢度係茶水間，聽講微波爐會自己叮……", "這裡是茶水間，聽說微波爐會自己叮……"])]
-	var _t572 = J.gp(J.gp(J.G.get("OFFMAP"), "SPOT"), "seat2")
-	var _t573 = [5.0, 8.0]
-	var _t571 = env["T"]
-	var _t578 = ["meeting", 2.0, _t572, _t573, J.cl(_t571, null, ["會議室冇人，我哋入去睇睇。", "會議室沒人，我們進去看看。"])]
-	var _t576 = J.gp(J.gp(J.G.get("OFFMAP"), "SPOT"), "bossVisit")
-	var _t577 = [5.0, 8.0]
-	var _t575 = env["T"]
-	var _t587 = [_t574, _t578, ["boss", 1.5, _t576, _t577, J.cl(_t575, null, ["老細房，噓……", "老闆房，噓……"])]]
-	var _t582 = env["T"]
-	var _t584 = J.cl(_t582, null, ["大家記得 like 同 share！", "大家記得按讚分享！"])
-	var _t583 = env["T"]
-	var _t586 = J.cl(_t583, null, ["（對住手機）你哋聽唔聽到？", "（對著手機）你們聽到嗎？"])
+	var _t581 = J.cl(_t568, null, ["追鬼直播主・二十萬訂閱", "追鬼直播主・二十萬訂閱"])
+	var _t582 = [J.mc(J.G.get("OFFMAP"), "M", [0.4]), 0.88, "film"]
+	var _t583 = [7.0, 11.0]
+	var _t571 = J.gp(J.gp(J.G.get("OFFMAP"), "SPOT"), "micro")
+	var _t572 = [5.0, 8.0]
+	var _t570 = env["T"]
+	var _t576 = ["pantry", 2.0, _t571, _t572, J.cl(_t570, null, ["呢度係茶水間，聽講微波爐會自己叮……", "這裡是茶水間，聽說微波爐會自己叮……"])]
+	var _t574 = J.gp(J.gp(J.G.get("OFFMAP"), "SPOT"), "seat2")
+	var _t575 = [5.0, 8.0]
+	var _t573 = env["T"]
+	var _t580 = ["meeting", 2.0, _t574, _t575, J.cl(_t573, null, ["會議室冇人，我哋入去睇睇。", "會議室沒人，我們進去看看。"])]
+	var _t578 = J.gp(J.gp(J.G.get("OFFMAP"), "SPOT"), "bossVisit")
+	var _t579 = [5.0, 8.0]
+	var _t577 = env["T"]
+	var _t589 = [_t576, _t580, ["boss", 1.5, _t578, _t579, J.cl(_t577, null, ["老細房，噓……", "老闆房，噓……"])]]
+	var _t584 = env["T"]
+	var _t586 = J.cl(_t584, null, ["大家記得 like 同 share！", "大家記得按讚分享！"])
 	var _t585 = env["T"]
-	var _t605 = {"work": [_t584, _t586, J.cl(_t585, null, ["留言話見到嘢？邊度邊度？", "留言說看到東西？哪裡哪裡？"])]}
-	var _t606 = [v_weak_70]
-	var _t607 = ["light", "cold", "breath"]
-	var _t608 = [[J.mc(J.G.get("OFFMAP"), "M", [0.4]), 0.88, 6.0, "film"]]
-	var _t588 = env["T"]
-	var _t592 = J.cl(_t588, null, ["（對住鏡頭）呢啲效果做得唔錯喎。", "（對著鏡頭）這效果做得不錯嘛。"])
-	var _t589 = env["T"]
-	var _t591 = J.cl(_t589, null, ["應該係光暗問題。", "應該是光線問題。"])
+	var _t588 = J.cl(_t585, null, ["（對住手機）你哋聽唔聽到？", "（對著手機）你們聽到嗎？"])
+	var _t587 = env["T"]
+	var _t607 = {"work": [_t586, _t588, J.cl(_t587, null, ["留言話見到嘢？邊度邊度？", "留言說看到東西？哪裡哪裡？"])]}
+	var _t608 = [v_weak_70]
+	var _t609 = ["light", "cold", "breath"]
+	var _t610 = [[J.mc(J.G.get("OFFMAP"), "M", [0.4]), 0.88, 6.0, "film"]]
 	var _t590 = env["T"]
-	var _t594 = [_t591, J.cl(_t590, null, ["呢條片一定爆！", "這條片一定爆！"])]
-	var _t593 = env["T"]
-	var _t598 = [J.cl(_t593, null, ["等陣……你哋見唔見到？！", "等等……你們看到了嗎？！"])]
+	var _t594 = J.cl(_t590, null, ["（對住鏡頭）呢啲效果做得唔錯喎。", "（對著鏡頭）這效果做得不錯嘛。"])
+	var _t591 = env["T"]
+	var _t593 = J.cl(_t591, null, ["應該係光暗問題。", "應該是光線問題。"])
+	var _t592 = env["T"]
+	var _t596 = [_t593, J.cl(_t592, null, ["呢條片一定爆！", "這條片一定爆！"])]
 	var _t595 = env["T"]
-	var _t597 = J.cl(_t595, null, ["有嘢！真係有嘢！", "有東西！真的有東西！"])
-	var _t596 = env["T"]
-	var _t600 = [_t597, J.cl(_t596, null, ["（手機都跌埋）", "（手機都掉了）"])]
-	var _t599 = env["T"]
-	var _t602 = J.cl(_t599, null, ["（直播畫面突然雪花）", "（直播畫面突然雪花）"])
+	var _t600 = [J.cl(_t595, null, ["等陣……你哋見唔見到？！", "等等……你們看到了嗎？！"])]
+	var _t597 = env["T"]
+	var _t599 = J.cl(_t597, null, ["有嘢！真係有嘢！", "有東西！真的有東西！"])
+	var _t598 = env["T"]
+	var _t602 = [_t599, J.cl(_t598, null, ["（手機都跌埋）", "（手機都掉了）"])]
 	var _t601 = env["T"]
-	var _t604 = J.cl(_t601, null, ["直播完——！走——！", "直播結束——！快走——！"])
+	var _t604 = J.cl(_t601, null, ["（直播畫面突然雪花）", "（直播畫面突然雪花）"])
 	var _t603 = env["T"]
-	var _t614 = {"immune": _t592, "rational": _t594, "prime": _t598, "hit": _t600, "weak": _t602, "shout": _t604, "flee": J.cl(_t603, null, ["Kiki 一路尖叫一路直播衝入電梯，條片一晚三百萬 view。", "Kiki 一路尖叫一路直播衝進電梯，影片一晚三百萬觀看。"])}
-	var _t609 = env["T"]
-	var _t611 = ["Kiki", "23:50", J.cl(_t609, null, ["今晚探二十三樓！留言話見到咩就講！", "今晚探二十三樓！看到什麼就留言！"])]
-	var _t610 = env["T"]
-	var _t613 = ["觀眾", "00:12", J.cl(_t610, null, ["後面！後面！", "後面！後面！"])]
+	var _t606 = J.cl(_t603, null, ["直播完——！走——！", "直播結束——！快走——！"])
+	var _t605 = env["T"]
+	var _t616 = {"immune": _t594, "rational": _t596, "prime": _t600, "hit": _t602, "weak": _t604, "shout": _t606, "flee": J.cl(_t605, null, ["Kiki 一路尖叫一路直播衝入電梯，條片一晚三百萬 view。", "Kiki 一路尖叫一路直播衝進電梯，影片一晚三百萬觀看。"])}
+	var _t611 = env["T"]
+	var _t613 = ["Kiki", "23:50", J.cl(_t611, null, ["今晚探二十三樓！留言話見到咩就講！", "今晚探二十三樓！看到什麼就留言！"])]
 	var _t612 = env["T"]
-	return {"k": "kol", "name": _t567, "role": _t579, "spr": "npc_it", "tint": "hue-rotate(155deg) saturate(1.25)", "speed": 0.07, "influencer": true, "phone": true, "post": _t580, "work": _t581, "trips": _t587, "lines": _t605, "calm": 4.0, "weak": _t606, "immune": _t607, "karma": 0.0, "route": _t608, "say": _t614, "chat": [_t611, _t613, ["Kiki", "00:13", J.cl(_t612, null, ["邊度？！", "哪裡？！"])]]}
+	var _t615 = ["觀眾", "00:12", J.cl(_t612, null, ["後面！後面！", "後面！後面！"])]
+	var _t614 = env["T"]
+	return {"k": "kol", "name": _t569, "role": _t581, "spr": "npc_it", "tint": "hue-rotate(155deg) saturate(1.25)", "speed": 0.07, "influencer": true, "phone": true, "post": _t582, "work": _t583, "trips": _t589, "lines": _t607, "calm": 4.0, "weak": _t608, "immune": _t609, "karma": 0.0, "route": _t610, "say": _t616, "chat": [_t613, _t615, ["Kiki", "00:13", J.cl(_t614, null, ["邊度？！", "哪裡？！"])]]}
 
 func _f1(this_, a: Array, env):
 	var v_SIG_5 = null; var v_TIERV_6 = null; var v_ALL_7 = null; var v_night_19 = null; var v_onHit_20 = null; var v_tick_22 = null; var v_draw_24 = null; var v_sigFx_25 = null; var v_finish_26 = null; var v_open_27 = null; var v_k_35 = null; var v_ty_36 = null; var v_fx_37 = null; var v_col_38 = null; var v_skill_39 = null; var v_yue_40 = null; var v_zh_41 = null; var v_aoe_42 = null; var v_tier_43 = null; var v_base_44 = null; var v_cost_45 = null; var v_types_46 = null; var v_name_47 = null
@@ -1752,48 +1758,48 @@ func _f1(this_, a: Array, env):
 	_s2["Lf"] = Callable(self, "_f4").bind(_s2)
 	v_SIG_5 = {"toyol": ["sound", "coins", "#f0d060", "偷散紙", "（櫃桶啲散紙自己跳出嚟，叮叮噹噹）", "（抽屜的零錢自己跳出來，叮叮噹噹）"], "pocong": ["shadow", "shadow", "#e8e8f0", "布包跳", "（白布包喺佢後面一跳、一跳咁經過）", "（白布包在他身後一跳、一跳地經過）"], "mengpo": ["breath", "smoke", "#cfe8d8", "孟婆湯", "（佢杯茶變咗一碗冒煙嘅湯：「飲啦，飲完乜都唔記得。」）", "（他的茶變成一碗冒煙的湯：「喝吧，喝完什麼都忘了。」）"], "baiwu": ["face", "tongue", "#ffffff", "一見生財", "（長舌由天花垂落嚟：「一見生財～」）", "（長舌從天花板垂下：「一見生財～」）"], "heiwu": ["sound", "bones", "#9aa0b8", "鐵鏈拖地", "（背後傳嚟鐵鏈拖地聲：噹啷——噹啷——）", "（背後傳來鐵鏈拖地聲：噹啷——噹啷——）"], "n30_qionggui": ["paper", "coins", "#e8dcc0", "借錢單", "（一張張欠單飛埋嚟：「借我十蚊……」）", "（一張張欠單飛過來：「借我十塊……」）"], "n30_danxiao": ["sound", "scream", "#ffd0d0", "自己先嚇親", "（隻鬼自己先嗌：「呀——！有人呀！」）", "（那隻鬼自己先尖叫：「啊——！有人啊！」）"], "n30_maoshi": ["sound", "thump", "#d8c8a8", "跌爛嘢", "（成疊文件夾「乒乒乓乓」跌落地）", "（一疊文件夾「乒乒乓乓」掉到地上）"], "n30_yangui": ["breath", "smoke", "#b0b0b0", "二手煙", "（無端端一陣煙味，耳邊有人咳：咳咳咳）", "（突然一陣煙味，耳邊有人咳：咳咳咳）"], "n30_jiugui": ["breath", "smoke", "#e8a0a0", "一陣酒氣", "（耳邊一陣酒氣：「飲多杯啦……」）", "（耳邊一陣酒氣：「再喝一杯嘛……」）"], "n30_dugui": ["sound", "coins", "#ffe080", "擲骰仔", "（枱面骰仔自己轉：「大！大！大！」）", "（桌上骰子自己轉：「大！大！大！」）"], "n30_guhangui": ["light", "dark", "#202030", "熄燈慳電", "（「咁嘥電！」佢頭頂盞燈「啪」一聲熄咗）", "（「這麼浪費電！」他頭上的燈「啪」一聲熄了）"], "n30_taozhai": ["phone", "phone", "#ff9a7a", "追數電話", "（電話響：「你仲欠我三萬蚊……」）", "（電話響：「你還欠我三萬塊……」）"], "n30_diaosi": ["face", "tongue", "#ff6a7a", "長舌", "（一條長舌由天花垂到佢面前）", "（一條長舌從天花板垂到他面前）"], "n30_wutou": ["face", "copier", "#e0f0ff", "影印個頭", "（影印機玻璃上面，印咗個頭出嚟）", "（影印機玻璃上，印出了一個頭）"], "n30_changgui": ["sound", "whisper", "#c0d0ff", "叫你過去", "（有人輕輕叫佢個名：「過嚟呀……」）", "（有人輕輕叫他的名字：「過來呀……」）"], "n30_guixinniang": ["face", "veil", "#ff4a5a", "紅蓋頭", "（一塊紅蓋頭飄落佢個頭度）", "（一塊紅蓋頭飄落在他頭上）"], "n30_baigujing": ["face", "bones", "#f0ecd8", "杯中白骨", "（佢杯茶浮起一隻手指骨）", "（他的茶裡浮起一節指骨）"], "n30_shanxiao": ["sound", "thump", "#a08060", "單腳跳", "（天花板：咚、咚、咚，有人單腳跳）", "（天花板：咚、咚、咚，有人單腳跳）"], "n30_yecha": ["face", "flash", "#60e0a0", "青面獠牙", "（螢幕反光入面，多咗塊青面獠牙）", "（螢幕倒影裡，多了一張青面獠牙）"], "n30_hanba": ["light", "heat", "#ff8040", "大旱", "（冷氣停咗，佢周圍熱到冒煙）", "（冷氣停了，他周圍熱得冒煙）"], "n30_pelesit": ["sound", "whisper", "#b0e070", "蟋蟀叫", "（耳邊「唧唧唧」，越嚟越近）", "（耳邊「唧唧唧」，越來越近）"], "n30_polong": ["shadow", "smoke", "#a070d0", "樽入面有嘢", "（佢個水樽入面，有樣嘢郁咗一下）", "（他的水瓶裡，有東西動了一下）"], "n30_jenglot": ["face", "hair", "#3a2a20", "長指甲", "（鍵盤罅隙伸出幾隻長指甲）", "（鍵盤縫裡伸出幾根長指甲）"], "n30_hantugalah": ["shadow", "shadow", "#101018", "竹竿影", "（佢後面一條好高好高嘅影）", "（他身後一條很高很高的影子）"], "n30_jerangkung": ["sound", "bones", "#e8e0c8", "骨頭聲", "（咔、咔、咔，好似有人喺度郁骨）", "（咔、咔、咔，像有人在活動骨頭）"], "n30_bunian": ["sound", "whisper", "#a0f0c0", "隱形人傾偈", "（空嘅位傳出有人傾偈同笑聲）", "（空位置傳來有人聊天和笑聲）"], "n30_hanturaya": ["shadow", "shadow", "#000000", "影大咗兩倍", "（佢個影突然大咗兩倍，仲識自己郁）", "（他的影子突然大了兩倍，還會自己動）"], "n30_genderuwo": ["breath", "smoke", "#806048", "毛手", "（後頸俾一隻毛手掃咗一下）", "（後頸被一隻毛手掃了一下）"], "n30_phiam": ["breath", "smoke", "#7080a0", "壓胸口", "（胸口突然好重，透唔到氣）", "（胸口突然好重，喘不過氣）"], "n30_churel": ["shadow", "prints", "#c0a0ff", "倒轉腳印", "（地上一行濕腳印，腳趾向後）", "（地上一行濕腳印，腳趾朝後）"], "n30_tikbalang": ["sound", "thump", "#c09060", "馬蹄聲", "（走廊傳嚟馬蹄聲：躂躂、躂躂）", "（走廊傳來馬蹄聲：噠噠、噠噠）"], "n30_maenak": ["phone", "phone", "#ffb0d0", "鬼妻來電", "（電話：「老公，幾時返屋企呀……」）", "（電話：「老公，什麼時候回家呀……」）"], "n30_aswang": ["shadow", "shadow", "#302040", "影變大鳥", "（佢個影變咗一隻大鳥，拍一拍翼）", "（他的影子變成一隻大鳥，拍了拍翅膀）"], "n30_vetala": ["face", "hair", "#90a0b0", "倒吊", "（一個人倒吊喺佢面前，望住佢笑）", "（一個人倒吊在他面前，看著他笑）"], "n30_banshee": ["sound", "scream", "#d0e0ff", "報喪", "（窗外一聲好長好長嘅尖叫）", "（窗外一聲好長好長的尖叫）", true], "n30_kasaobake": ["shadow", "shadow", "#704030", "單腳傘", "（一把舊遮自己喺佢身邊跳過）", "（一把舊傘自己在他身邊跳過）"], "n30_chochin": ["light", "flash", "#ffa040", "燈籠口", "（檯燈變咗個開大口嘅燈籠）", "（檯燈變成一個張大嘴的燈籠）"], "n30_kappa": ["cold", "drip", "#80c0ff", "天花漏水", "（天花一滴一滴凍水滴落佢頭頂）", "（天花板一滴一滴冰水滴到他頭上）"], "n30_nopperabo": ["face", "screen", "#ffffff", "冇面", "（佢手機自拍鏡頭入面，佢自己冇咗塊面）", "（他手機自拍鏡頭裡，他自己沒有臉）"], "n30_rokurokubi": ["face", "hair", "#2a2020", "長頸", "（屏風後面伸出一條好長好長嘅頸）", "（屏風後面伸出一條很長很長的脖子）"], "n30_kuchisake": ["paper", "snip", "#e0e0e0", "較剪自己剪", "（枱上把較剪自己「咔嚓、咔嚓」）", "（桌上的剪刀自己「咔嚓、咔嚓」）"], "n30_yukionna": ["cold", "frost", "#d0f0ff", "凍咖啡", "（佢杯咖啡一秒結冰）", "（他的咖啡一秒結冰）"], "n30_hannya": ["face", "flash", "#ff6060", "般若面", "（玻璃反光：一塊長角嘅面）", "（玻璃反光：一張長角的臉）"], "n30_gashadokuro": ["shadow", "shadow", "#e8e0d0", "巨型骷髏手", "（窗外一隻巨型骷髏手慢慢掃過）", "（窗外一隻巨大的骷髏手慢慢掃過）"], "n30_zipai": ["phone", "screen", "#80d0ff", "自拍多個人", "（佢部手機自己開咗自拍，背後多咗個人）", "（他的手機自己開了自拍，背後多了一個人）"], "n30_xiaosi": ["sound", "laugh", "#ffe080", "罐頭笑聲", "（附近傳出罐頭笑聲：「哈哈哈哈哈」）", "（附近傳出罐頭笑聲：「哈哈哈哈哈」）"], "n30_yesi": ["sound", "pop", "#ffffff", "彈湯圓", "（微波爐「噗」一聲，彈咗粒湯圓出嚟）", "（微波爐「噗」一聲，彈出一顆湯圓）"], "n30_shidu": ["breath", "smoke", "#a0d070", "餿飯盒", "（雪櫃傳出一陣餿味）", "（冰箱傳出一陣餿味）"], "n30_daji": ["light|phone", "screen", "#ff5050", "GAME OVER", "（電腦突然彈出 GAME OVER：「再嚟一局？」）", "（電腦突然跳出 GAME OVER：「再來一局？」）"], "n30_xiasi": ["face", "flash", "#ffffff", "突然大叫", "（一塊驚到變形嘅面彈出嚟：「哇！」）", "（一張嚇到變形的臉彈出來：「哇！」）"], "n30_chehuo": ["light", "flash", "#fff8c0", "車頭燈", "（一對車頭燈喺走廊照過嚟）", "（一對車頭燈從走廊照過來）"], "n30_yezi": ["sound", "thump", "#a07040", "跌椰子", "（「咚！」天花跌咗粒椰子落嚟）", "（「咚！」天花板掉下一顆椰子）"], "n30_liulian": ["breath", "smoke", "#e0d060", "榴槤味", "（成間房突然一陣榴槤味）", "（整個房間突然一陣榴槤味）"], "n30_zhongshu": ["light", "heat", "#ff6030", "熱浪", "（佢周圍熱到冒煙，燈都閃埋）", "（他周圍熱得冒煙，燈也在閃）"], "n30_chengsi": ["sound", "pop", "#ffd0a0", "打嗝", "（一個好大嘅嗝喺佢耳邊：嗝——）", "（一個很大的嗝在他耳邊：嗝——）"], "n30_shedu": ["shadow", "shadow", "#304020", "蛇影", "（地上條電線好似蛇咁郁咗一下）", "（地上的電線像蛇一樣動了一下）"], "n30_diansi": ["light", "spark", "#80e0ff", "插蘇火花", "（拖板「啪」一聲噴火花）", "（插座「啪」一聲噴出火花）"], "n30_dongsi": ["cold", "frost", "#c0e8ff", "螢幕結霜", "（佢個螢幕結晒霜）", "（他的螢幕結滿了霜）"], "n30_leipi": ["light", "flash", "#ffffff", "閃電", "（窗外一下閃電，照到佢後面有人）", "（窗外一道閃電，照出他身後有人）"], "n30_xiangcai": ["paper", "snip", "#f0e8d0", "扁人", "（一張扁扁嘅「人」由門罅滑咗入嚟）", "（一張扁扁的「人」從門縫滑了進來）"], "youhun": ["breath", "smoke", "#c8d8ff", "飄過", "（一陣涼風由佢身邊飄過）", "（一陣涼風從他身邊飄過）"], "zhiren": ["paper", "snip", "#f0e0c0", "紙人企起身", "（枱面張紙自己摺咗個紙人企起身）", "（桌上的紙自己摺成一個紙人站起來）"], "egui": ["sound", "pop", "#ffd080", "偷食", "（佢個飯盒自己「咔嚓咔嚓」開咗）", "（他的飯盒自己「咔嚓咔嚓」打開了）"], "xiaogui": ["sound", "laugh", "#ffc0c0", "細路笑聲", "（枱底傳出細路仔笑聲：「嘻嘻」）", "（桌底傳出小孩笑聲：「嘻嘻」）"], "zombie": ["shadow", "thump", "#80a080", "一跳一跳", "（玻璃門外：一跳、一跳、一跳）", "（玻璃門外：一跳、一跳、一跳）"], "shuigui": ["cold", "drip", "#60a0d0", "濕腳印", "（地上一行濕腳印，凍冰冰）", "（地上一行濕腳印，冰冰涼涼）"]}
 	v_TIERV_6 = {"1": [30.0, 30.0], "2": [34.0, 35.0], "3": [38.0, 40.0]}
-	for _t500 in J.keys(v_SIG_5):
-		v_k_35 = _t500
-		var _t501 = J.gp(v_SIG_5, v_k_35)
-		var _t502 = J.gp(_t501, 0.0)
-		v_ty_36 = _t502
-		var _t503 = J.gp(_t501, 1.0)
-		v_fx_37 = _t503
-		var _t504 = J.gp(_t501, 2.0)
-		v_col_38 = _t504
-		var _t505 = J.gp(_t501, 3.0)
-		v_skill_39 = _t505
-		var _t506 = J.gp(_t501, 4.0)
-		v_yue_40 = _t506
-		var _t507 = J.gp(_t501, 5.0)
-		v_zh_41 = _t507
-		var _t508 = J.gp(_t501, 6.0)
-		v_aoe_42 = _t508
-		var _t509 = J.mc(v_k_35, "startsWith", ["n30_"])
-		var _t510 = ((not J.seq(J.typeof_(J.G.get("N30_G")), "undefined")) if J.t(_t509) else _t509)
-		v_tier_43 = (J.gp(J.gp(J.G.get("N30_G"), v_k_35), "t") if J.t((J.gp(J.G.get("N30_G"), v_k_35) if J.t(_t510) else _t510)) else (0.0 if J.has((J.G.get("FODDER") if (not J.seq(J.typeof_(J.G.get("FODDER")), "undefined")) else {}), v_k_35) else 2.0))
-		var _t511 = (J.gp(v_TIERV_6, v_tier_43) if J.t(v_tier_43) else [26.0, 28.0])
-		var _t512 = J.gp(_t511, 0.0)
-		v_base_44 = _t512
-		var _t513 = J.gp(_t511, 1.0)
-		v_cost_45 = _t513
+	for _t502 in J.keys(v_SIG_5):
+		v_k_35 = _t502
+		var _t503 = J.gp(v_SIG_5, v_k_35)
+		var _t504 = J.gp(_t503, 0.0)
+		v_ty_36 = _t504
+		var _t505 = J.gp(_t503, 1.0)
+		v_fx_37 = _t505
+		var _t506 = J.gp(_t503, 2.0)
+		v_col_38 = _t506
+		var _t507 = J.gp(_t503, 3.0)
+		v_skill_39 = _t507
+		var _t508 = J.gp(_t503, 4.0)
+		v_yue_40 = _t508
+		var _t509 = J.gp(_t503, 5.0)
+		v_zh_41 = _t509
+		var _t510 = J.gp(_t503, 6.0)
+		v_aoe_42 = _t510
+		var _t511 = J.mc(v_k_35, "startsWith", ["n30_"])
+		var _t512 = ((not J.seq(J.typeof_(J.G.get("N30_G")), "undefined")) if J.t(_t511) else _t511)
+		v_tier_43 = (J.gp(J.gp(J.G.get("N30_G"), v_k_35), "t") if J.t((J.gp(J.G.get("N30_G"), v_k_35) if J.t(_t512) else _t512)) else (0.0 if J.has((J.G.get("FODDER") if (not J.seq(J.typeof_(J.G.get("FODDER")), "undefined")) else {}), v_k_35) else 2.0))
+		var _t513 = (J.gp(v_TIERV_6, v_tier_43) if J.t(v_tier_43) else [26.0, 28.0])
+		var _t514 = J.gp(_t513, 0.0)
+		v_base_44 = _t514
+		var _t515 = J.gp(_t513, 1.0)
+		v_cost_45 = _t515
 		v_types_46 = J.mc(v_ty_36, "split", ["|"])
-		var _t514 = (not J.seq(J.typeof_(J.G.get("GHOSTS")), "undefined"))
-		var _t515 = (J.gp(J.G.get("GHOSTS"), v_k_35) if _t514 else _t514)
-		var _t518 = (J.gp(J.gp(J.G.get("GHOSTS"), v_k_35), "name") if J.t(_t515) else _t515)
-		if not J.t(_t518):
-			var _t516 = (not J.seq(J.typeof_(J.G.get("FODDER")), "undefined"))
-			var _t517 = (J.gp(J.G.get("FODDER"), v_k_35) if _t516 else _t516)
-			_t518 = (J.gp(J.gp(J.G.get("FODDER"), v_k_35), "name") if J.t(_t517) else _t517)
-		v_name_47 = (_t518 if J.t(_t518) else v_k_35)
-		var _t519 = J.G.get("SCARE_GHOSTS")
-		var _t521 = J.gp(v_types_46, 0.0)
-		var _t522 = (v_types_46 if (J.len(v_types_46) > 1.0) else null)
-		var _t523 = (15.0 if J.t(v_aoe_42) else v_base_44)
-		var _t524 = (34.0 if J.t(v_aoe_42) else v_cost_45)
-		var _t520 = _s2["T"]
-		var _t525 = {"name": v_name_47, "skill": v_skill_39, "type": _t521, "types": _t522, "base": _t523, "cost": _t524, "line": J.cl(_t520, null, [v_yue_40, v_zh_41]), "aoe": (not (not J.t(v_aoe_42))), "fx": v_fx_37, "col": v_col_38, "fxText": v_skill_39}
-		J.sp(_t519, v_k_35, _t525)
+		var _t516 = (not J.seq(J.typeof_(J.G.get("GHOSTS")), "undefined"))
+		var _t517 = (J.gp(J.G.get("GHOSTS"), v_k_35) if _t516 else _t516)
+		var _t520 = (J.gp(J.gp(J.G.get("GHOSTS"), v_k_35), "name") if J.t(_t517) else _t517)
+		if not J.t(_t520):
+			var _t518 = (not J.seq(J.typeof_(J.G.get("FODDER")), "undefined"))
+			var _t519 = (J.gp(J.G.get("FODDER"), v_k_35) if _t518 else _t518)
+			_t520 = (J.gp(J.gp(J.G.get("FODDER"), v_k_35), "name") if J.t(_t519) else _t519)
+		v_name_47 = (_t520 if J.t(_t520) else v_k_35)
+		var _t521 = J.G.get("SCARE_GHOSTS")
+		var _t523 = J.gp(v_types_46, 0.0)
+		var _t524 = (v_types_46 if (J.len(v_types_46) > 1.0) else null)
+		var _t525 = (15.0 if J.t(v_aoe_42) else v_base_44)
+		var _t526 = (34.0 if J.t(v_aoe_42) else v_cost_45)
+		var _t522 = _s2["T"]
+		var _t527 = {"name": v_name_47, "skill": v_skill_39, "type": _t523, "types": _t524, "base": _t525, "cost": _t526, "line": J.cl(_t522, null, [v_yue_40, v_zh_41]), "aoe": (not (not J.t(v_aoe_42))), "fx": v_fx_37, "col": v_col_38, "fxText": v_skill_39}
+		J.sp(_t521, v_k_35, _t527)
 	v_ALL_7 = Callable(self, "_f5").bind(_s2)
 	_s2["CN"] = ["零", "一", "兩", "三", "四", "五", "六"]
 	_s2["MAXSQ_BASE"] = 3.0
@@ -1801,29 +1807,29 @@ func _f1(this_, a: Array, env):
 	_s2["owned"] = Callable(self, "_f7").bind(_s2)
 	_s2["squad"] = {"options": _s2["owned"], "get": Callable(self, "_f8").bind(_s2), "set": Callable(self, "_f11").bind(_s2), "team": Callable(self, "_f13").bind(_s2)}
 	_s2["LV"] = [0.0, 40.0, 110.0, 220.0, 380.0]
-	var _t549 = _s2["T"]
-	var _t551 = J.cl(_t549, null, ["二十三樓有鬼", "二十三樓有鬼"])
-	var _t550 = _s2["T"]
-	var _t553 = J.cl(_t550, null, ["公司群組傳開", "公司群組傳開"])
+	var _t551 = _s2["T"]
+	var _t553 = J.cl(_t551, null, ["二十三樓有鬼", "二十三樓有鬼"])
 	var _t552 = _s2["T"]
-	var _t555 = J.cl(_t552, null, ["網上瘋傳", "網上瘋傳"])
+	var _t555 = J.cl(_t552, null, ["公司群組傳開", "公司群組傳開"])
 	var _t554 = _s2["T"]
-	var _t557 = J.cl(_t554, null, ["上咗新聞", "上了新聞"])
+	var _t557 = J.cl(_t554, null, ["網上瘋傳", "網上瘋傳"])
 	var _t556 = _s2["T"]
-	_s2["LVNAME"] = [_t551, _t553, _t555, _t557, J.cl(_t556, null, ["全城都市傳說", "全城都市傳說"])]
+	var _t559 = J.cl(_t556, null, ["上咗新聞", "上了新聞"])
 	var _t558 = _s2["T"]
-	var _t560 = J.cl(_t558, null, ["員工一開工已經心緒不寧", "員工一上班就心神不寧"])
-	var _t559 = _s2["T"]
-	var _t562 = J.cl(_t559, null, ["靈探 KOL 上嚟直播捉鬼", "靈探 KOL 上來直播抓鬼"])
+	_s2["LVNAME"] = [_t553, _t555, _t557, _t559, J.cl(_t558, null, ["全城都市傳說", "全城都市傳說"])]
+	var _t560 = _s2["T"]
+	var _t562 = J.cl(_t560, null, ["員工一開工已經心緒不寧", "員工一上班就心神不寧"])
 	var _t561 = _s2["T"]
-	var _t564 = J.cl(_t561, null, ["道士早啲到", "道士會早點到"])
+	var _t564 = J.cl(_t561, null, ["靈探 KOL 上嚟直播捉鬼", "靈探 KOL 上來直播抓鬼"])
 	var _t563 = _s2["T"]
-	_s2["LVTWIST"] = [null, _t560, _t562, _t564, J.cl(_t563, null, ["全城注目：熱度加兩成", "全城注目：熱度加兩成"])]
+	var _t566 = J.cl(_t563, null, ["道士早啲到", "道士會早點到"])
+	var _t565 = _s2["T"]
+	_s2["LVTWIST"] = [null, _t562, _t564, _t566, J.cl(_t565, null, ["全城注目：熱度加兩成", "全城注目：熱度加兩成"])]
 	_s2["KOL"] = Callable(self, "_f15").bind(_s2)
-	var _t615 = J.G.get("Scare")
-	var _t616 = _s2["squad"]
-	J.sp(_t615, "squad", _t616)
 	var _t617 = J.G.get("Scare")
-	var _t618 = _s2["legend"]
-	J.sp(_t617, "legend", _t618)
-	return {"SIG": v_SIG_5, "open": v_open_27, "night": v_night_19, "tick": v_tick_22, "onHit": v_onHit_20, "draw": v_draw_24, "sigFx": v_sigFx_25, "finish": v_finish_26, "legend": _s2["legend"], "squad": _s2["squad"], "KOL": _s2["KOL"]}
+	var _t618 = _s2["squad"]
+	J.sp(_t617, "squad", _t618)
+	var _t619 = J.G.get("Scare")
+	var _t620 = _s2["legend"]
+	J.sp(_t619, "legend", _t620)
+	return {"_n": {"owned": _s2["owned"], "maxSq": _s2["maxSq"], "CN": _s2["CN"]}, "SIG": v_SIG_5, "open": v_open_27, "night": v_night_19, "tick": v_tick_22, "onHit": v_onHit_20, "draw": v_draw_24, "sigFx": v_sigFx_25, "finish": v_finish_26, "legend": _s2["legend"], "squad": _s2["squad"], "KOL": _s2["KOL"]}

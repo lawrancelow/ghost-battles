@@ -142,20 +142,20 @@ func _f20(this_, a: Array, env):
 	return ("<button class=\"" + ("on" if J.seq(v_k_80, env["tab"]) else "") + "\" data-tab=\"" + J.str(v_k_80) + "\">" + J.str(J.gp(env["__p"]["TAB"], v_k_80)) + "</button>")
 
 func _f22(this_, a: Array, env):
-	var _t61 = env["__p"]["__p"]["openPhone"]
-	return J.cl(_t61, null, [env["__p"]["Sc"], env["__p"]["n"], J.gp(J.gp(env["b"], "dataset"), "tab")])
+	var _t65 = env["__p"]["__p"]["openPhone"]
+	return J.cl(_t65, null, [env["__p"]["Sc"], env["__p"]["n"], J.gp(J.gp(env["b"], "dataset"), "tab")])
 
 func _f21(this_, a: Array, env):
-	var _s26 = {"__p": env, "b": null}
-	_s26["b"] = J.arg(a, 0)
-	var _t60 = _s26["b"]
-	var _t62 = Callable(self, "_f22").bind(_s26)
-	J.sp(_t60, "onclick", _t62)
-	return _t62
+	var _s27 = {"__p": env, "b": null}
+	_s27["b"] = J.arg(a, 0)
+	var _t64 = _s27["b"]
+	var _t66 = Callable(self, "_f22").bind(_s27)
+	J.sp(_t64, "onclick", _t66)
+	return _t66
 
 func _f23(this_, a: Array, env):
-	var _t63 = env["__p"]["compose"]
-	return J.cl(_t63, null, [env["Sc"], env["n"]])
+	var _t67 = env["__p"]["compose"]
+	return J.cl(_t67, null, [env["Sc"], env["n"]])
 
 func _f12(this_, a: Array, env):
 	var v_O_62 = null; var v_A_63 = null; var v_body_68 = null; var v_msgs_69 = null; var v_p_70 = null; var v_s_71 = null
@@ -209,20 +209,31 @@ func _f12(this_, a: Array, env):
 		v_body_68 = _t52
 	var _t53 = J.gp(v_O_62, "msgs")
 	v_msgs_69 = (_t53 if J.t(_t53) else [])
-	var _t54 = _s13["__p"]["modal"]
-	var _t58 = _s13["Sc"]
-	var _t57 = J.gp(J.gp(_s13["n"], "d"), "name")
-	var _t55 = J.S_Object_("keys", [_s13["__p"]["TAB"]])
-	var _t56 = J.mc(_t55, "map", [Callable(self, "_f20").bind(_s13)])
-	v_p_70 = J.cl(_t54, null, [_t58, ("<div class=\"sc-ph-h\">" + J.str(_t57) + " 的手機<button data-x>✕</button></div>\n      <div class=\"so-tabs\">" + J.str(J.mc(_t56, "join", [""])) + "</div>\n      <div class=\"sc-ph-b\">" + J.str(v_body_68) + "</div>\n      " + (("<div class=\"so-got\">得到情報：" + J.str(J.mc(_s13["got"], "join", ["、"])) + "</div>") if J.t(J.len(_s13["got"])) else "") + "\n      <div class=\"sc-ph-f\">" + (("<button class=\"btn gold wide\" data-send>傳訊息嚇他</button>") if J.t(J.len(v_msgs_69)) else "") + "<small>看手機時，時間是停的。</small></div>"), "sc-ph so-phone"])
-	var _t59 = J.mc(v_p_70, "querySelectorAll", ["[data-tab]"])
-	J.mc(_t59, "forEach", [Callable(self, "_f21").bind(_s13)])
+	var _t55 = (not J.seq(J.typeof_(J.G.get("__nat_scOps")), "undefined"))
+	if J.t(_t55):
+		var _t54 = J.G.get("__nat_scOps")
+		_t55 = J.cl(_t54, null, ["phone", _s13["Sc"], _s13["n"], _s13["tab"], _s13["got"]])
+	if J.t(_t55):
+		var _t56 = _s13["Sc"]
+		J.sp(_t56, "paused", true)
+		var _t57 = J.len(_s13["got"])
+		if J.t(((not J.t(J.gp(_s13["Sc"], "headless"))) if J.t(_t57) else _t57)):
+			J.mc(_s13["Sc"], "renderTarget", [])
+		return null
+	var _t58 = _s13["__p"]["modal"]
+	var _t62 = _s13["Sc"]
+	var _t61 = J.gp(J.gp(_s13["n"], "d"), "name")
+	var _t59 = J.S_Object_("keys", [_s13["__p"]["TAB"]])
+	var _t60 = J.mc(_t59, "map", [Callable(self, "_f20").bind(_s13)])
+	v_p_70 = J.cl(_t58, null, [_t62, ("<div class=\"sc-ph-h\">" + J.str(_t61) + " 的手機<button data-x>✕</button></div>\n      <div class=\"so-tabs\">" + J.str(J.mc(_t60, "join", [""])) + "</div>\n      <div class=\"sc-ph-b\">" + J.str(v_body_68) + "</div>\n      " + (("<div class=\"so-got\">得到情報：" + J.str(J.mc(_s13["got"], "join", ["、"])) + "</div>") if J.t(J.len(_s13["got"])) else "") + "\n      <div class=\"sc-ph-f\">" + (("<button class=\"btn gold wide\" data-send>傳訊息嚇他</button>") if J.t(J.len(v_msgs_69)) else "") + "<small>看手機時，時間是停的。</small></div>"), "sc-ph so-phone"])
+	var _t63 = J.mc(v_p_70, "querySelectorAll", ["[data-tab]"])
+	J.mc(_t63, "forEach", [Callable(self, "_f21").bind(_s13)])
 	v_s_71 = J.mc(v_p_70, "querySelector", ["[data-send]"])
 	if J.t(v_s_71):
-		var _t64 = Callable(self, "_f23").bind(_s13)
-		J.sp(v_s_71, "onclick", _t64)
-	var _t65 = J.len(_s13["got"])
-	if J.t(((not J.t(J.gp(_s13["Sc"], "headless"))) if J.t(_t65) else _t65)):
+		var _t68 = Callable(self, "_f23").bind(_s13)
+		J.sp(v_s_71, "onclick", _t68)
+	var _t69 = J.len(_s13["got"])
+	if J.t(((not J.t(J.gp(_s13["Sc"], "headless"))) if J.t(_t69) else _t69)):
 		J.mc(_s13["Sc"], "renderTarget", [])
 
 func _f24(this_, a: Array, env):
@@ -231,61 +242,69 @@ func _f24(this_, a: Array, env):
 	v_n_85 = J.arg(a, 1)
 	v_o_86 = J.arg(a, 2)
 	v_locked_87 = J.arg(a, 3)
-	var _t66 = env["cdOf"]
-	v_cd_88 = J.cl(_t66, null, [v_Sc_84, v_n_85, J.gp(v_o_86, "id")])
+	var _t70 = env["cdOf"]
+	v_cd_88 = J.cl(_t70, null, [v_Sc_84, v_n_85, J.gp(v_o_86, "id")])
 	v_poor_89 = J.cmp(J.gp(v_Sc_84, "mana"), J.gp(v_o_86, "cost"), "<")
-	var _t71 = ("lock" if J.t(v_locked_87) else "")
-	var _t72 = ("dim" if J.t((v_cd_88 if J.t(v_cd_88) else v_poor_89)) else "")
-	var _t73 = J.gp(v_o_86, "id")
-	var _t74 = ("disabled" if J.t((v_locked_87 if J.t(v_locked_87) else v_cd_88)) else "")
-	var _t75 = (("<b>" + J.str(J.gp(v_o_86, "who")) + "</b>") if J.t(J.gp(v_o_86, "who")) else "")
-	var _t76 = J.gp(v_o_86, "text")
-	var _t70 = null
+	var _t75 = ("lock" if J.t(v_locked_87) else "")
+	var _t76 = ("dim" if J.t((v_cd_88 if J.t(v_cd_88) else v_poor_89)) else "")
+	var _t77 = J.gp(v_o_86, "id")
+	var _t78 = ("disabled" if J.t((v_locked_87 if J.t(v_locked_87) else v_cd_88)) else "")
+	var _t79 = (("<b>" + J.str(J.gp(v_o_86, "who")) + "</b>") if J.t(J.gp(v_o_86, "who")) else "")
+	var _t80 = J.gp(v_o_86, "text")
+	var _t74 = null
 	if J.t(v_locked_87):
-		_t70 = ("需要情報：" + J.str(J.gp(env["INTEL_NAME"], J.gp(v_o_86, "need"))) + "（先看他的手機）")
+		_t74 = ("需要情報：" + J.str(J.gp(env["INTEL_NAME"], J.gp(v_o_86, "need"))) + "（先看他的手機）")
 	else:
-		var _t69 = null
+		var _t73 = null
 		if J.t(v_cd_88):
-			_t69 = ("冷卻 " + J.str(ceil(J.num(v_cd_88))) + " 秒")
+			_t73 = ("冷卻 " + J.str(ceil(J.num(v_cd_88))) + " 秒")
 		else:
-			var _t68 = J.gp(v_o_86, "cost")
-			var _t67 = J.gp(v_o_86, "trap")
-			_t69 = ("陰氣 " + J.str(_t68) + ("" if J.t((_t67 if J.t(_t67) else J.gp(v_o_86, "warm"))) else ("・算「" + J.str(J.gp(J.G.get("FEAR_WORD"), J.gp(v_o_86, "type"))) + "」")))
-		_t70 = _t69
-	return ("<button class=\"so-op " + _t71 + " " + _t72 + "\" data-o=\"" + J.str(_t73) + "\" " + _t74 + ">\n      " + _t75 + "<span>" + J.str(_t76) + "</span><small>" + _t70 + "</small></button>")
+			var _t72 = J.gp(v_o_86, "cost")
+			var _t71 = J.gp(v_o_86, "trap")
+			_t73 = ("陰氣 " + J.str(_t72) + ("" if J.t((_t71 if J.t(_t71) else J.gp(v_o_86, "warm"))) else ("・算「" + J.str(J.gp(J.G.get("FEAR_WORD"), J.gp(v_o_86, "type"))) + "」")))
+		_t74 = _t73
+	return ("<button class=\"so-op " + _t75 + " " + _t76 + "\" data-o=\"" + J.str(_t77) + "\" " + _t78 + ">\n      " + _t79 + "<span>" + J.str(_t80) + "</span><small>" + _t74 + "</small></button>")
 
 func _f26(this_, a: Array, env):
 	var v_o_97 = null
 	v_o_97 = J.arg(a, 0)
-	var _t80 = env["__p"]["optRow"]
-	var _t82 = env["Sc"]
-	var _t83 = env["n"]
-	var _t81 = J.gp(v_o_97, "need")
-	return J.cl(_t80, null, [_t82, _t83, v_o_97, ((not J.t(J.mc(env["I"], "has", [J.gp(v_o_97, "need")]))) if J.t(_t81) else _t81)])
+	var _t87 = env["__p"]["optRow"]
+	var _t89 = env["Sc"]
+	var _t90 = env["n"]
+	var _t88 = J.gp(v_o_97, "need")
+	return J.cl(_t87, null, [_t89, _t90, v_o_97, ((not J.t(J.mc(env["I"], "has", [J.gp(v_o_97, "need")]))) if J.t(_t88) else _t88)])
 
 func _f27(this_, a: Array, env):
-	var _t88 = env["__p"]["openPhone"]
-	return J.cl(_t88, null, [env["Sc"], env["n"]])
+	var _t95 = env["__p"]["openPhone"]
+	return J.cl(_t95, null, [env["Sc"], env["n"]])
 
 func _f25(this_, a: Array, env):
 	var v_O_94 = null; var v_p_96 = null
-	var _s30 = {"__p": env, "Sc": null, "n": null, "I": null}
-	_s30["Sc"] = J.arg(a, 0)
-	_s30["n"] = J.arg(a, 1)
-	v_O_94 = J.gp(_s30["__p"]["OPS"], J.gp(J.gp(_s30["n"], "d"), "k"))
-	var _t77 = _s30["__p"]["intel"]
-	_s30["I"] = J.cl(_t77, null, [_s30["Sc"], J.gp(J.gp(_s30["n"], "d"), "k")])
-	var _t78 = _s30["__p"]["modal"]
-	var _t86 = _s30["Sc"]
-	var _t85 = J.gp(J.gp(_s30["n"], "d"), "name")
-	var _t79 = J.gp(v_O_94, "msgs")
-	var _t84 = J.mc(_t79, "map", [Callable(self, "_f26").bind(_s30)])
-	v_p_96 = J.cl(_t78, null, [_t86, ("<div class=\"sc-ph-h\">傳訊息給 " + J.str(_t85) + "<button data-x>✕</button></div><div class=\"sc-ph-b so-list\"><p class=\"so-hint\">選冒充誰、傳什麼。對準他怕的、用上情報，嚇得最狠；選錯了可能反效果。</p>" + J.str(J.mc(_t84, "join", [""])) + "</div><div class=\"sc-ph-f\"><button class=\"btn sm\" data-back>返回手機</button></div>"), "sc-ph so-phone"])
-	var _t87 = J.mc(v_p_96, "querySelector", ["[data-back]"])
-	var _t89 = Callable(self, "_f27").bind(_s30)
-	J.sp(_t87, "onclick", _t89)
-	var _t90 = _s30["__p"]["bindOps"]
-	J.cl(_t90, null, [_s30["Sc"], _s30["n"], v_p_96, J.gp(v_O_94, "msgs"), "msg"])
+	var _s31 = {"__p": env, "Sc": null, "n": null, "I": null}
+	_s31["Sc"] = J.arg(a, 0)
+	_s31["n"] = J.arg(a, 1)
+	var _t82 = (not J.seq(J.typeof_(J.G.get("__nat_scOps")), "undefined"))
+	if J.t(_t82):
+		var _t81 = J.G.get("__nat_scOps")
+		_t82 = J.cl(_t81, null, ["msg", _s31["Sc"], _s31["n"]])
+	if J.t(_t82):
+		var _t83 = _s31["Sc"]
+		J.sp(_t83, "paused", true)
+		return null
+	v_O_94 = J.gp(_s31["__p"]["OPS"], J.gp(J.gp(_s31["n"], "d"), "k"))
+	var _t84 = _s31["__p"]["intel"]
+	_s31["I"] = J.cl(_t84, null, [_s31["Sc"], J.gp(J.gp(_s31["n"], "d"), "k")])
+	var _t85 = _s31["__p"]["modal"]
+	var _t93 = _s31["Sc"]
+	var _t92 = J.gp(J.gp(_s31["n"], "d"), "name")
+	var _t86 = J.gp(v_O_94, "msgs")
+	var _t91 = J.mc(_t86, "map", [Callable(self, "_f26").bind(_s31)])
+	v_p_96 = J.cl(_t85, null, [_t93, ("<div class=\"sc-ph-h\">傳訊息給 " + J.str(_t92) + "<button data-x>✕</button></div><div class=\"sc-ph-b so-list\"><p class=\"so-hint\">選冒充誰、傳什麼。對準他怕的、用上情報，嚇得最狠；選錯了可能反效果。</p>" + J.str(J.mc(_t91, "join", [""])) + "</div><div class=\"sc-ph-f\"><button class=\"btn sm\" data-back>返回手機</button></div>"), "sc-ph so-phone"])
+	var _t94 = J.mc(v_p_96, "querySelector", ["[data-back]"])
+	var _t96 = Callable(self, "_f27").bind(_s31)
+	J.sp(_t94, "onclick", _t96)
+	var _t97 = _s31["__p"]["bindOps"]
+	J.cl(_t97, null, [_s31["Sc"], _s31["n"], v_p_96, J.gp(v_O_94, "msgs"), "msg"])
 
 func _f29(this_, a: Array, env):
 	var v_l_104 = null
@@ -295,46 +314,62 @@ func _f29(this_, a: Array, env):
 func _f30(this_, a: Array, env):
 	var v_o_105 = null
 	v_o_105 = J.arg(a, 0)
-	var _t97 = env["__p"]["optRow"]
-	return J.cl(_t97, null, [env["Sc"], env["n"], v_o_105])
+	var _t107 = env["__p"]["optRow"]
+	return J.cl(_t107, null, [env["Sc"], env["n"], v_o_105])
 
 func _f28(this_, a: Array, env):
 	var v_P_102 = null; var v_p_103 = null
-	var _s33 = {"__p": env, "Sc": null, "n": null}
-	_s33["Sc"] = J.arg(a, 0)
-	_s33["n"] = J.arg(a, 1)
-	v_P_102 = J.gp(J.gp(_s33["__p"]["OPS"], J.gp(J.gp(_s33["n"], "d"), "k")), "pc")
-	var _t91 = _s33["__p"]["modal"]
-	var _t100 = _s33["Sc"]
-	var _t94 = J.gp(J.gp(_s33["n"], "d"), "name")
-	var _t95 = J.gp(v_P_102, "title")
-	var _t92 = J.gp(v_P_102, "lines")
-	var _t93 = J.mc(_t92, "map", [Callable(self, "_f29").bind(_s33)])
-	var _t99 = J.mc(_t93, "join", [""])
-	var _t96 = J.gp(v_P_102, "ops")
-	var _t98 = J.mc(_t96, "map", [Callable(self, "_f30").bind(_s33)])
-	v_p_103 = J.cl(_t91, null, [_t100, ("<div class=\"so-mon\"><div class=\"so-mh\">" + J.str(_t94) + " 的電腦<button data-x>✕</button></div><div class=\"so-scr\"><b>" + J.str(_t95) + "</b>" + J.str(_t99) + "</div></div><div class=\"so-list\">" + J.str(J.mc(_t98, "join", [""])) + "</div>"), "so-pc"])
-	var _t101 = _s33["__p"]["bindOps"]
-	J.cl(_t101, null, [_s33["Sc"], _s33["n"], v_p_103, J.gp(v_P_102, "ops"), "pc"])
+	var _s35 = {"__p": env, "Sc": null, "n": null}
+	_s35["Sc"] = J.arg(a, 0)
+	_s35["n"] = J.arg(a, 1)
+	var _t99 = (not J.seq(J.typeof_(J.G.get("__nat_scOps")), "undefined"))
+	if J.t(_t99):
+		var _t98 = J.G.get("__nat_scOps")
+		_t99 = J.cl(_t98, null, ["pc", _s35["Sc"], _s35["n"]])
+	if J.t(_t99):
+		var _t100 = _s35["Sc"]
+		J.sp(_t100, "paused", true)
+		return null
+	v_P_102 = J.gp(J.gp(_s35["__p"]["OPS"], J.gp(J.gp(_s35["n"], "d"), "k")), "pc")
+	var _t101 = _s35["__p"]["modal"]
+	var _t110 = _s35["Sc"]
+	var _t104 = J.gp(J.gp(_s35["n"], "d"), "name")
+	var _t105 = J.gp(v_P_102, "title")
+	var _t102 = J.gp(v_P_102, "lines")
+	var _t103 = J.mc(_t102, "map", [Callable(self, "_f29").bind(_s35)])
+	var _t109 = J.mc(_t103, "join", [""])
+	var _t106 = J.gp(v_P_102, "ops")
+	var _t108 = J.mc(_t106, "map", [Callable(self, "_f30").bind(_s35)])
+	v_p_103 = J.cl(_t101, null, [_t110, ("<div class=\"so-mon\"><div class=\"so-mh\">" + J.str(_t104) + " 的電腦<button data-x>✕</button></div><div class=\"so-scr\"><b>" + J.str(_t105) + "</b>" + J.str(_t109) + "</div></div><div class=\"so-list\">" + J.str(J.mc(_t108, "join", [""])) + "</div>"), "so-pc"])
+	var _t111 = _s35["__p"]["bindOps"]
+	J.cl(_t111, null, [_s35["Sc"], _s35["n"], v_p_103, J.gp(v_P_102, "ops"), "pc"])
 
 func _f32(this_, a: Array, env):
 	var v_o_111 = null
 	v_o_111 = J.arg(a, 0)
-	var _t103 = env["__p"]["optRow"]
-	return J.cl(_t103, null, [env["Sc"], env["n"], v_o_111])
+	var _t116 = env["__p"]["optRow"]
+	return J.cl(_t116, null, [env["Sc"], env["n"], v_o_111])
 
 func _f31(this_, a: Array, env):
 	var v_p_110 = null
-	var _s36 = {"__p": env, "Sc": null, "n": null}
-	_s36["Sc"] = J.arg(a, 0)
-	_s36["n"] = J.arg(a, 1)
-	var _t102 = _s36["__p"]["modal"]
-	var _t106 = _s36["Sc"]
-	var _t105 = J.gp(J.gp(_s36["n"], "d"), "name")
-	var _t104 = J.mc(_s36["__p"]["PANTRY"], "map", [Callable(self, "_f32").bind(_s36)])
-	v_p_110 = J.cl(_t102, null, [_t106, ("<div class=\"so-mh\">茶水間・" + J.str(_t105) + "<button data-x>✕</button></div><div class=\"so-list\"><p class=\"so-hint\">他在茶水間。選一樣他怕的。</p>" + J.str(J.mc(_t104, "join", [""])) + "</div>"), "so-pc"])
-	var _t107 = _s36["__p"]["bindOps"]
-	J.cl(_t107, null, [_s36["Sc"], _s36["n"], v_p_110, _s36["__p"]["PANTRY"], "pantry"])
+	var _s39 = {"__p": env, "Sc": null, "n": null}
+	_s39["Sc"] = J.arg(a, 0)
+	_s39["n"] = J.arg(a, 1)
+	var _t113 = (not J.seq(J.typeof_(J.G.get("__nat_scOps")), "undefined"))
+	if J.t(_t113):
+		var _t112 = J.G.get("__nat_scOps")
+		_t113 = J.cl(_t112, null, ["pantry", _s39["Sc"], _s39["n"]])
+	if J.t(_t113):
+		var _t114 = _s39["Sc"]
+		J.sp(_t114, "paused", true)
+		return null
+	var _t115 = _s39["__p"]["modal"]
+	var _t119 = _s39["Sc"]
+	var _t118 = J.gp(J.gp(_s39["n"], "d"), "name")
+	var _t117 = J.mc(_s39["__p"]["PANTRY"], "map", [Callable(self, "_f32").bind(_s39)])
+	v_p_110 = J.cl(_t115, null, [_t119, ("<div class=\"so-mh\">茶水間・" + J.str(_t118) + "<button data-x>✕</button></div><div class=\"so-list\"><p class=\"so-hint\">他在茶水間。選一樣他怕的。</p>" + J.str(J.mc(_t117, "join", [""])) + "</div>"), "so-pc"])
+	var _t120 = _s39["__p"]["bindOps"]
+	J.cl(_t120, null, [_s39["Sc"], _s39["n"], v_p_110, _s39["__p"]["PANTRY"], "pantry"])
 
 func _f36(this_, a: Array, env):
 	var v_x_121 = null
@@ -345,117 +380,117 @@ func _f35(this_, a: Array, env):
 	var v_o_120 = null
 	v_o_120 = J.mc(env["__p"]["list"], "find", [Callable(self, "_f36").bind(env)])
 	if J.t(v_o_120):
-		var _t110 = env["__p"]["__p"]["act"]
-		J.cl(_t110, null, [env["__p"]["Sc"], env["__p"]["n"], v_o_120, env["__p"]["kind"]])
+		var _t123 = env["__p"]["__p"]["act"]
+		J.cl(_t123, null, [env["__p"]["Sc"], env["__p"]["n"], v_o_120, env["__p"]["kind"]])
 
 func _f34(this_, a: Array, env):
-	var _s39 = {"__p": env, "b": null}
-	_s39["b"] = J.arg(a, 0)
-	var _t109 = _s39["b"]
-	var _t111 = Callable(self, "_f35").bind(_s39)
-	J.sp(_t109, "onclick", _t111)
-	return _t111
+	var _s43 = {"__p": env, "b": null}
+	_s43["b"] = J.arg(a, 0)
+	var _t122 = _s43["b"]
+	var _t124 = Callable(self, "_f35").bind(_s43)
+	J.sp(_t122, "onclick", _t124)
+	return _t124
 
 func _f33(this_, a: Array, env):
 	var v_p_116 = null
-	var _s38 = {"__p": env, "Sc": null, "n": null, "list": null, "kind": null}
-	_s38["Sc"] = J.arg(a, 0)
-	_s38["n"] = J.arg(a, 1)
+	var _s42 = {"__p": env, "Sc": null, "n": null, "list": null, "kind": null}
+	_s42["Sc"] = J.arg(a, 0)
+	_s42["n"] = J.arg(a, 1)
 	v_p_116 = J.arg(a, 2)
-	_s38["list"] = J.arg(a, 3)
-	_s38["kind"] = J.arg(a, 4)
-	var _t108 = J.mc(v_p_116, "querySelectorAll", ["[data-o]"])
-	J.mc(_t108, "forEach", [Callable(self, "_f34").bind(_s38)])
+	_s42["list"] = J.arg(a, 3)
+	_s42["kind"] = J.arg(a, 4)
+	var _t121 = J.mc(v_p_116, "querySelectorAll", ["[data-o]"])
+	J.mc(_t121, "forEach", [Callable(self, "_f34").bind(_s42)])
 
 func _f38(this_, a: Array, env):
-	var _t141 = J.gp(env["Sc"], "active")
-	if J.t(((not J.t(J.gp(env["n"], "gone"))) if J.t(_t141) else _t141)):
-		var _t142 = env["n"]
-		J.sp(_t142, "bubT", 0.0)
-		var _t144 = env["n"]
-		var _t143 = env["__p"]["Lx"]
-		J.mc(env["Sc"], "bubble", [_t144, J.cl(_t143, null, [J.gp(env["o"], "say")]), 2.8])
+	var _t154 = J.gp(env["Sc"], "active")
+	if J.t(((not J.t(J.gp(env["n"], "gone"))) if J.t(_t154) else _t154)):
+		var _t155 = env["n"]
+		J.sp(_t155, "bubT", 0.0)
+		var _t157 = env["n"]
+		var _t156 = env["__p"]["Lx"]
+		J.mc(env["Sc"], "bubble", [_t157, J.cl(_t156, null, [J.gp(env["o"], "say")]), 2.8])
 
 func _f37(this_, a: Array, env):
 	var v_kind_127 = null; var v_tag_128 = null; var v_personal_129 = null; var v_e_130 = null; var v_e_131 = null; var v_say_132 = null
-	var _s42 = {"__p": env, "Sc": null, "n": null, "o": null}
-	_s42["Sc"] = J.arg(a, 0)
-	_s42["n"] = J.arg(a, 1)
-	_s42["o"] = J.arg(a, 2)
+	var _s46 = {"__p": env, "Sc": null, "n": null, "o": null}
+	_s46["Sc"] = J.arg(a, 0)
+	_s46["n"] = J.arg(a, 1)
+	_s46["o"] = J.arg(a, 2)
 	v_kind_127 = J.arg(a, 3)
-	if J.cmp(J.gp(_s42["Sc"], "mana"), J.gp(_s42["o"], "cost"), "<"):
-		J.mc(_s42["Sc"], "toast", ["陰氣不夠，等一下"])
+	if J.cmp(J.gp(_s46["Sc"], "mana"), J.gp(_s46["o"], "cost"), "<"):
+		J.mc(_s46["Sc"], "toast", ["陰氣不夠，等一下"])
 		return null
-	var _t112 = _s42["__p"]["cdOf"]
-	if J.cmp(J.cl(_t112, null, [_s42["Sc"], _s42["n"], J.gp(_s42["o"], "id")]), 0.0, ">"):
+	var _t125 = _s46["__p"]["cdOf"]
+	if J.cmp(J.cl(_t125, null, [_s46["Sc"], _s46["n"], J.gp(_s46["o"], "id")]), 0.0, ">"):
 		return null
-	var _t113 = _s42["__p"]["close"]
-	J.cl(_t113, null, [_s42["Sc"]])
-	var _t114 = J.gp(_s42["n"], "gone")
-	var _t115 = (_t114 if J.t(_t114) else J.gp(_s42["n"], "out"))
-	if J.t((_t115 if J.t(_t115) else J.gp(_s42["n"], "fleeing"))):
-		J.mc(_s42["Sc"], "toast", [(J.str(J.gp(J.gp(_s42["n"], "d"), "name")) + "不在")])
+	var _t126 = _s46["__p"]["close"]
+	J.cl(_t126, null, [_s46["Sc"]])
+	var _t127 = J.gp(_s46["n"], "gone")
+	var _t128 = (_t127 if J.t(_t127) else J.gp(_s46["n"], "out"))
+	if J.t((_t128 if J.t(_t128) else J.gp(_s46["n"], "fleeing"))):
+		J.mc(_s46["Sc"], "toast", [(J.str(J.gp(J.gp(_s46["n"], "d"), "name")) + "不在")])
 		return null
-	var _t116 = _s42["Sc"]
-	var _t117 = J.sub(J.gp(_t116, "mana"), J.gp(_s42["o"], "cost"))
-	J.sp(_t116, "mana", _t117)
-	var _t118 = _s42["Sc"]
-	var _t119 = J.gp(_s42["Sc"], "_opcd")
-	var _t120 = (_t119 if J.t(_t119) else {})
-	J.sp(_t118, "_opcd", _t120)
-	var _t121 = J.gp(_s42["Sc"], "_opcd")
-	var _t122 = J.add(J.gp(J.gp(_s42["n"], "d"), "k"), J.gp(_s42["o"], "id"))
-	var _t123 = J.add(J.gp(_s42["Sc"], "t"), _s42["__p"]["CD"])
-	J.sp(_t121, _t122, _t123)
-	if (not J.t(J.gp(_s42["Sc"], "headless"))):
+	var _t129 = _s46["Sc"]
+	var _t130 = J.sub(J.gp(_t129, "mana"), J.gp(_s46["o"], "cost"))
+	J.sp(_t129, "mana", _t130)
+	var _t131 = _s46["Sc"]
+	var _t132 = J.gp(_s46["Sc"], "_opcd")
+	var _t133 = (_t132 if J.t(_t132) else {})
+	J.sp(_t131, "_opcd", _t133)
+	var _t134 = J.gp(_s46["Sc"], "_opcd")
+	var _t135 = J.add(J.gp(J.gp(_s46["n"], "d"), "k"), J.gp(_s46["o"], "id"))
+	var _t136 = J.add(J.gp(_s46["Sc"], "t"), _s46["__p"]["CD"])
+	J.sp(_t134, _t135, _t136)
+	if (not J.t(J.gp(_s46["Sc"], "headless"))):
 		J.mc(J.G.get("Sound"), "play", [("click" if J.seq(v_kind_127, "msg") else ("paper" if J.seq(v_kind_127, "pc") else "whoosh"))])
-		var _t124 = J.gp(_s42["Sc"], "fx")
-		J.mc(_t124, "push", [{"kind": ("phone" if J.seq(v_kind_127, "msg") else "breath"), "life": 1.6, "max": 1.6, "n": _s42["n"]}])
-	v_tag_128 = (("📱 " + J.str(J.gp(_s42["o"], "who")) + "：" + J.str(J.gp(_s42["o"], "text"))) if J.seq(v_kind_127, "msg") else J.gp(_s42["o"], "text"))
-	J.mc(_s42["Sc"], "float", [J.gp(_s42["n"], "x"), J.sub(J.gp(_s42["n"], "y"), 0.3), (J.add(J.mc(v_tag_128, "slice", [0.0, 25.0]), "…") if (J.len(v_tag_128) > 26.0) else v_tag_128), "#e8d8ff", 2.0])
-	var _t125 = J.gp(_s42["o"], "fx")
-	var _t126 = ((not J.seq(J.typeof_(J.G.get("Pantry")), "undefined")) if J.t(_t125) else _t125)
-	if J.t(((not J.t(J.gp(_s42["Sc"], "headless"))) if J.t(_t126) else _t126)):
-		J.mc(J.G.get("Pantry"), "fx", [J.gp(_s42["o"], "fx"), _s42["n"]])
-	if J.t(J.gp(_s42["o"], "trap")):
-		var _t127 = _s42["n"]
-		var _t128 = J.max_([0.0, J.sub(J.gp(_s42["n"], "fear"), 20.0)])
-		J.sp(_t127, "fear", _t128)
-		var _t129 = _s42["n"]
-		J.sp(_t129, "combo", 0.0)
-		var _t131 = _s42["n"]
-		var _t130 = _s42["__p"]["Lx"]
-		J.mc(_s42["Sc"], "bubble", [_t131, J.cl(_t130, null, [J.gp(_s42["o"], "say")]), 2.6])
-		J.mc(_s42["Sc"], "float", [J.gp(_s42["n"], "x"), J.sub(J.gp(_s42["n"], "y"), 0.34), ("反效果：" + J.str(J.gp(_s42["o"], "why"))), "#ff9a8a", 2.0])
+		var _t137 = J.gp(_s46["Sc"], "fx")
+		J.mc(_t137, "push", [{"kind": ("phone" if J.seq(v_kind_127, "msg") else "breath"), "life": 1.6, "max": 1.6, "n": _s46["n"]}])
+	v_tag_128 = (("📱 " + J.str(J.gp(_s46["o"], "who")) + "：" + J.str(J.gp(_s46["o"], "text"))) if J.seq(v_kind_127, "msg") else J.gp(_s46["o"], "text"))
+	J.mc(_s46["Sc"], "float", [J.gp(_s46["n"], "x"), J.sub(J.gp(_s46["n"], "y"), 0.3), (J.add(J.mc(v_tag_128, "slice", [0.0, 25.0]), "…") if (J.len(v_tag_128) > 26.0) else v_tag_128), "#e8d8ff", 2.0])
+	var _t138 = J.gp(_s46["o"], "fx")
+	var _t139 = ((not J.seq(J.typeof_(J.G.get("Pantry")), "undefined")) if J.t(_t138) else _t138)
+	if J.t(((not J.t(J.gp(_s46["Sc"], "headless"))) if J.t(_t139) else _t139)):
+		J.mc(J.G.get("Pantry"), "fx", [J.gp(_s46["o"], "fx"), _s46["n"]])
+	if J.t(J.gp(_s46["o"], "trap")):
+		var _t140 = _s46["n"]
+		var _t141 = J.max_([0.0, J.sub(J.gp(_s46["n"], "fear"), 20.0)])
+		J.sp(_t140, "fear", _t141)
+		var _t142 = _s46["n"]
+		J.sp(_t142, "combo", 0.0)
+		var _t144 = _s46["n"]
+		var _t143 = _s46["__p"]["Lx"]
+		J.mc(_s46["Sc"], "bubble", [_t144, J.cl(_t143, null, [J.gp(_s46["o"], "say")]), 2.6])
+		J.mc(_s46["Sc"], "float", [J.gp(_s46["n"], "x"), J.sub(J.gp(_s46["n"], "y"), 0.34), ("反效果：" + J.str(J.gp(_s46["o"], "why"))), "#ff9a8a", 2.0])
 		return null
-	if J.t(J.gp(_s42["o"], "warm")):
-		var _t132 = _s42["n"]
-		var _t133 = J.max_([0.0, J.sub(J.gp(_s42["n"], "fear"), 10.0)])
-		J.sp(_t132, "fear", _t133)
-		var _t135 = _s42["n"]
-		var _t134 = _s42["__p"]["Lx"]
-		J.mc(_s42["Sc"], "bubble", [_t135, J.cl(_t134, null, [J.gp(_s42["o"], "say")]), 2.8])
-		J.mc(_s42["Sc"], "addKarma", [J.gp(_s42["n"], "d"), 1.0, (J.str(J.gp(J.gp(_s42["n"], "d"), "name")) + "：" + J.str(J.gp(_s42["o"], "why")))])
-		J.mc(_s42["Sc"], "float", [J.gp(_s42["n"], "x"), J.sub(J.gp(_s42["n"], "y"), 0.34), "陰德 +1", "#a8f0b0", 2.0])
+	if J.t(J.gp(_s46["o"], "warm")):
+		var _t145 = _s46["n"]
+		var _t146 = J.max_([0.0, J.sub(J.gp(_s46["n"], "fear"), 10.0)])
+		J.sp(_t145, "fear", _t146)
+		var _t148 = _s46["n"]
+		var _t147 = _s46["__p"]["Lx"]
+		J.mc(_s46["Sc"], "bubble", [_t148, J.cl(_t147, null, [J.gp(_s46["o"], "say")]), 2.8])
+		J.mc(_s46["Sc"], "addKarma", [J.gp(_s46["n"], "d"), 1.0, (J.str(J.gp(J.gp(_s46["n"], "d"), "name")) + "：" + J.str(J.gp(_s46["o"], "why")))])
+		J.mc(_s46["Sc"], "float", [J.gp(_s46["n"], "x"), J.sub(J.gp(_s46["n"], "y"), 0.34), "陰德 +1", "#a8f0b0", 2.0])
 		return null
-	v_personal_129 = (not (not J.t(J.gp(_s42["o"], "need"))))
-	var _t136 = _s42["Sc"]
-	J.sp(_t136, "_src", null)
-	var _t137 = _s42["Sc"]
-	J.sp(_t137, "_dl", 0.0)
-	var _t138 = _s42["Sc"]
-	J.sp(_t138, "_vis", false)
-	J.mc(_s42["Sc"], "hit", [_s42["n"], J.gp(_s42["o"], "type"), J.round(J.num(J.mul(J.gp(_s42["o"], "base"), (1.4 if J.t(v_personal_129) else 1.0)))), J.gp(_s42["o"], "tier"), null, true])
-	if J.t(((not J.t(J.gp(_s42["Sc"], "headless"))) if J.t(v_personal_129) else v_personal_129)):
-		J.mc(_s42["Sc"], "float", [J.gp(_s42["n"], "x"), J.sub(J.gp(_s42["n"], "y"), 0.38), "用上情報：正中要害", "#ffd84a", 1.8])
-	var _t140 = J.gp(_s42["o"], "say")
-	if J.t(_t140):
-		var _t139 = J.gp(J.gp(_s42["n"], "d"), "immune")
-		_t140 = (not J.t(J.mc(_t139, "includes", [J.gp(_s42["o"], "type")])))
-	if J.t(_t140):
-		v_say_132 = Callable(self, "_f38").bind(_s42)
+	v_personal_129 = (not (not J.t(J.gp(_s46["o"], "need"))))
+	var _t149 = _s46["Sc"]
+	J.sp(_t149, "_src", null)
+	var _t150 = _s46["Sc"]
+	J.sp(_t150, "_dl", 0.0)
+	var _t151 = _s46["Sc"]
+	J.sp(_t151, "_vis", false)
+	J.mc(_s46["Sc"], "hit", [_s46["n"], J.gp(_s46["o"], "type"), J.round(J.num(J.mul(J.gp(_s46["o"], "base"), (1.4 if J.t(v_personal_129) else 1.0)))), J.gp(_s46["o"], "tier"), null, true])
+	if J.t(((not J.t(J.gp(_s46["Sc"], "headless"))) if J.t(v_personal_129) else v_personal_129)):
+		J.mc(_s46["Sc"], "float", [J.gp(_s46["n"], "x"), J.sub(J.gp(_s46["n"], "y"), 0.38), "用上情報：正中要害", "#ffd84a", 1.8])
+	var _t153 = J.gp(_s46["o"], "say")
+	if J.t(_t153):
+		var _t152 = J.gp(J.gp(_s46["n"], "d"), "immune")
+		_t153 = (not J.t(J.mc(_t152, "includes", [J.gp(_s46["o"], "type")])))
+	if J.t(_t153):
+		v_say_132 = Callable(self, "_f38").bind(_s46)
 		J.cl(v_say_132, null, [])
-		if (not J.t(J.gp(_s42["Sc"], "headless"))):
+		if (not J.t(J.gp(_s46["Sc"], "headless"))):
 			J.F_setTimeout([v_say_132, 1100.0])
 
 func _f41(this_, a: Array, env):
@@ -467,78 +502,78 @@ func _f43(this_, a: Array, env):
 	var v_k_145 = null
 	v_k_145 = J.gp(J.gp(env["b"], "dataset"), "op")
 	if J.seq(v_k_145, "phone"):
-		var _t154 = env["__p"]["__p"]["__p"]["__p"]["openPhone"]
-		J.cl(_t154, null, [env["__p"]["__p"]["this"], env["__p"]["n"]])
+		var _t167 = env["__p"]["__p"]["__p"]["__p"]["openPhone"]
+		J.cl(_t167, null, [env["__p"]["__p"]["this"], env["__p"]["n"]])
 	else:
 		if J.seq(v_k_145, "pc"):
-			var _t155 = env["__p"]["__p"]["__p"]["__p"]["openPC"]
-			J.cl(_t155, null, [env["__p"]["__p"]["this"], env["__p"]["n"]])
+			var _t168 = env["__p"]["__p"]["__p"]["__p"]["openPC"]
+			J.cl(_t168, null, [env["__p"]["__p"]["this"], env["__p"]["n"]])
 		else:
-			var _t156 = env["__p"]["__p"]["__p"]["__p"]["openPantry"]
-			J.cl(_t156, null, [env["__p"]["__p"]["this"], env["__p"]["n"]])
+			var _t169 = env["__p"]["__p"]["__p"]["__p"]["openPantry"]
+			J.cl(_t169, null, [env["__p"]["__p"]["this"], env["__p"]["n"]])
 
 func _f42(this_, a: Array, env):
-	var _s62 = {"__p": env, "b": null}
-	_s62["b"] = J.arg(a, 0)
-	var _t153 = _s62["b"]
-	var _t157 = Callable(self, "_f43").bind(_s62)
-	J.sp(_t153, "onclick", _t157)
-	return _t157
+	var _s66 = {"__p": env, "b": null}
+	_s66["b"] = J.arg(a, 0)
+	var _t166 = _s66["b"]
+	var _t170 = Callable(self, "_f43").bind(_s66)
+	J.sp(_t166, "onclick", _t170)
+	return _t170
 
 func _f40(this_, a: Array, env):
 	var v_r_139 = null; var v_who_141 = null; var v_box_142 = null; var v_e_146 = null
-	var _s59 = {"__p": env, "this": null}
-	_s59["this"] = this_
-	v_r_139 = J.mc(_s59["__p"]["ort"], "apply", [_s59["this"], a])
-	var _s60 = {"__p": _s59, "n": null}
-	var _t146 = J.gp(_s60["__p"]["this"], "sel")
-	var _t147 = ((not J.t(J.gp(J.gp(_s60["__p"]["this"], "sel"), "gone"))) if J.t(_t146) else _t146)
-	_s60["n"] = (J.gp(_s60["__p"]["this"], "sel") if J.t(((not J.t(J.gp(J.gp(_s60["__p"]["this"], "sel"), "fleeing"))) if J.t(_t147) else _t147)) else null)
-	if (not J.t(_s60["n"])):
+	var _s63 = {"__p": env, "this": null}
+	_s63["this"] = this_
+	v_r_139 = J.mc(_s63["__p"]["ort"], "apply", [_s63["this"], a])
+	var _s64 = {"__p": _s63, "n": null}
+	var _t159 = J.gp(_s64["__p"]["this"], "sel")
+	var _t160 = ((not J.t(J.gp(J.gp(_s64["__p"]["this"], "sel"), "gone"))) if J.t(_t159) else _t159)
+	_s64["n"] = (J.gp(_s64["__p"]["this"], "sel") if J.t(((not J.t(J.gp(J.gp(_s64["__p"]["this"], "sel"), "fleeing"))) if J.t(_t160) else _t160)) else null)
+	if (not J.t(_s64["n"])):
 		return v_r_139
-	var _t148 = J.G.get("$")
-	v_who_141 = J.cl(_t148, null, ["#sc-target .sc-who"])
+	var _t161 = J.G.get("$")
+	v_who_141 = J.cl(_t161, null, ["#sc-target .sc-who"])
 	if (not J.t(v_who_141)):
 		return v_r_139
-	var _t149 = J.mc(v_who_141, "querySelectorAll", ["#sc-peek,#sc-wa"])
-	J.mc(_t149, "forEach", [Callable(self, "_f41").bind(_s60)])
+	var _t162 = J.mc(v_who_141, "querySelectorAll", ["#sc-peek,#sc-wa"])
+	J.mc(_t162, "forEach", [Callable(self, "_f41").bind(_s64)])
 	v_box_142 = J.S_document_("createElement", ["span"])
 	J.sp(v_box_142, "className", "so-btns")
-	var _t150 = _s60["__p"]["__p"]["__p"]["buttons"]
-	var _t151 = J.cl(_t150, null, [_s60["__p"]["this"], _s60["n"]])
-	J.sp(v_box_142, "innerHTML", _t151)
+	var _t163 = _s64["__p"]["__p"]["__p"]["buttons"]
+	var _t164 = J.cl(_t163, null, [_s64["__p"]["this"], _s64["n"]])
+	J.sp(v_box_142, "innerHTML", _t164)
 	J.mc(v_who_141, "insertBefore", [v_box_142, J.mc(v_who_141, "querySelector", ["#sc-br"])])
-	var _t152 = J.mc(v_box_142, "querySelectorAll", ["[data-op]"])
-	J.mc(_t152, "forEach", [Callable(self, "_f42").bind(_s60)])
-	var _t158 = _s60["__p"]["this"]
-	var _t159 = _s60["__p"]["__p"]["__p"]["ctx"]
-	var _t160 = J.S_JSON_("stringify", [J.cl(_t159, null, [_s60["__p"]["this"], _s60["n"]])])
-	J.sp(_t158, "_opCtx", _t160)
+	var _t165 = J.mc(v_box_142, "querySelectorAll", ["[data-op]"])
+	J.mc(_t165, "forEach", [Callable(self, "_f42").bind(_s64)])
+	var _t171 = _s64["__p"]["this"]
+	var _t172 = _s64["__p"]["__p"]["__p"]["ctx"]
+	var _t173 = J.S_JSON_("stringify", [J.cl(_t172, null, [_s64["__p"]["this"], _s64["n"]])])
+	J.sp(_t171, "_opCtx", _t173)
 	return v_r_139
 
 func _f44(this_, a: Array, env):
 	var v_r_149 = null; var v_n_150 = null; var v_e_151 = null
 	v_r_149 = J.mc(env["ohud"], "apply", [this_, a])
 	v_n_150 = J.gp(this_, "sel")
-	var _t163 = ((not J.t(J.gp(v_n_150, "gone"))) if J.t(v_n_150) else v_n_150)
-	var _t165 = ((not J.t(J.gp(this_, "paused"))) if J.t(_t163) else _t163)
-	if J.t(_t165):
-		var _t164 = env["__p"]["ctx"]
-		_t165 = (not J.seq(J.S_JSON_("stringify", [J.cl(_t164, null, [this_, v_n_150])]), J.gp(this_, "_opCtx")))
-	if J.t(_t165):
+	var _t176 = ((not J.t(J.gp(v_n_150, "gone"))) if J.t(v_n_150) else v_n_150)
+	var _t178 = ((not J.t(J.gp(this_, "paused"))) if J.t(_t176) else _t176)
+	if J.t(_t178):
+		var _t177 = env["__p"]["ctx"]
+		_t178 = (not J.seq(J.S_JSON_("stringify", [J.cl(_t177, null, [this_, v_n_150])]), J.gp(this_, "_opCtx")))
+	if J.t(_t178):
 		J.mc(this_, "renderTarget", [])
 	return v_r_149
 
 func _f39(this_, a: Array, env):
-	var _s58 = {"__p": env, "ort": null, "ohud": null}
-	_s58["ort"] = J.gp(J.G.get("Scare"), "renderTarget")
-	var _t145 = J.G.get("Scare")
-	var _t161 = Callable(self, "_f40").bind(_s58)
-	J.sp(_t145, "renderTarget", _t161)
-	_s58["ohud"] = J.gp(J.G.get("Scare"), "hud")
-	var _t162 = J.G.get("Scare")
-	var _t166 = Callable(self, "_f44").bind(_s58)
-	J.sp(_t162, "hud", _t166)
+	var _s62 = {"__p": env, "ort": null, "ohud": null}
+	_s62["ort"] = J.gp(J.G.get("Scare"), "renderTarget")
+	var _t158 = J.G.get("Scare")
+	var _t174 = Callable(self, "_f40").bind(_s62)
+	J.sp(_t158, "renderTarget", _t174)
+	_s62["ohud"] = J.gp(J.G.get("Scare"), "hud")
+	var _t175 = J.G.get("Scare")
+	var _t179 = Callable(self, "_f44").bind(_s62)
+	J.sp(_t175, "hud", _t179)
 
 func _f2(this_, a: Array, env):
 	var v_yue_23 = null; var v_zh_24 = null
@@ -551,44 +586,44 @@ func _f2(this_, a: Array, env):
 func _f3(this_, a: Array, env):
 	var v_s_25 = null
 	v_s_25 = J.arg(a, 0)
-	var _t168 = null
+	var _t181 = null
 	if J.seq(J.typeof_(J.G.get("L")), "function"):
-		var _t167 = J.G.get("L")
-		_t168 = J.cl(_t167, null, [v_s_25])
+		var _t180 = J.G.get("L")
+		_t181 = J.cl(_t180, null, [v_s_25])
 	else:
-		_t168 = v_s_25
-	return _t168
+		_t181 = v_s_25
+	return _t181
 
 func _f4(this_, a: Array, env):
 	var v_Sc_26 = null; var v_k_27 = null
 	v_Sc_26 = J.arg(a, 0)
 	v_k_27 = J.arg(a, 1)
-	var _t169 = J.gp(v_Sc_26, "_intel")
-	var _t170 = (_t169 if J.t(_t169) else {})
-	J.sp(v_Sc_26, "_intel", _t170)
-	var _t171 = J.gp(v_Sc_26, "_intel")
-	var _t172 = J.gp(J.gp(v_Sc_26, "_intel"), v_k_27)
-	var _t173 = (_t172 if J.t(_t172) else J.new_("Set", []))
-	J.sp(_t171, v_k_27, _t173)
-	return _t173
+	var _t182 = J.gp(v_Sc_26, "_intel")
+	var _t183 = (_t182 if J.t(_t182) else {})
+	J.sp(v_Sc_26, "_intel", _t183)
+	var _t184 = J.gp(v_Sc_26, "_intel")
+	var _t185 = J.gp(J.gp(v_Sc_26, "_intel"), v_k_27)
+	var _t186 = (_t185 if J.t(_t185) else J.new_("Set", []))
+	J.sp(_t184, v_k_27, _t186)
+	return _t186
 
 func _f5(this_, a: Array, env):
 	var v_Sc_28 = null; var v_n_29 = null; var v_id_30 = null
 	v_Sc_28 = J.arg(a, 0)
 	v_n_29 = J.arg(a, 1)
 	v_id_30 = J.arg(a, 2)
-	var _t174 = J.gp(v_Sc_28, "_opcd")
-	var _t175 = (_t174 if J.t(_t174) else {})
-	J.sp(v_Sc_28, "_opcd", _t175)
-	var _t176 = J.gp(J.gp(v_Sc_28, "_opcd"), J.add(J.gp(J.gp(v_n_29, "d"), "k"), v_id_30))
-	var _t177 = J.gp(J.gp(v_Sc_28, "_opcd"), J.add(J.gp(J.gp(v_n_29, "d"), "k"), v_id_30))
-	return J.max_([0.0, J.sub((_t177 if J.t(_t177) else 0.0), J.gp(v_Sc_28, "t"))])
+	var _t187 = J.gp(v_Sc_28, "_opcd")
+	var _t188 = (_t187 if J.t(_t187) else {})
+	J.sp(v_Sc_28, "_opcd", _t188)
+	var _t189 = J.gp(J.gp(v_Sc_28, "_opcd"), J.add(J.gp(J.gp(v_n_29, "d"), "k"), v_id_30))
+	var _t190 = J.gp(J.gp(v_Sc_28, "_opcd"), J.add(J.gp(J.gp(v_n_29, "d"), "k"), v_id_30))
+	return J.max_([0.0, J.sub((_t190 if J.t(_t190) else 0.0), J.gp(v_Sc_28, "t"))])
 
 func _f45(this_, a: Array, env):
 	var v_boot_154 = null; var v_e_155 = null
 	v_boot_154 = Callable(self, "_f45").bind(env)
-	var _t178 = J.seq(J.typeof_(J.G.get("Scare")), "undefined")
-	if (_t178 if _t178 else (not J.t(J.gp(J.G.get("Scare"), "renderTarget")))):
+	var _t191 = J.seq(J.typeof_(J.G.get("Scare")), "undefined")
+	if (_t191 if _t191 else (not J.t(J.gp(J.G.get("Scare"), "renderTarget")))):
 		J.F_setTimeout([v_boot_154, 200.0])
 		return null
 	J.cl(env["init"], null, [])
@@ -618,4 +653,4 @@ func _f1(this_, a: Array, env):
 	_s2["intel"] = Callable(self, "_f4").bind(_s2)
 	_s2["cdOf"] = Callable(self, "_f5").bind(_s2)
 	J.cl(Callable(self, "_f45").bind(_s2), null, [])
-	return {"OPS": _s2["OPS"], "PANTRY": _s2["PANTRY"], "ctx": _s2["ctx"], "openPhone": _s2["openPhone"], "openPC": _s2["openPC"], "openPantry": _s2["openPantry"], "compose": _s2["compose"], "act": _s2["act"], "intel": _s2["intel"]}
+	return {"TAB": _s2["TAB"], "INTEL_NAME": _s2["INTEL_NAME"], "cdOf": _s2["cdOf"], "close": _s2["close"], "OPS": _s2["OPS"], "PANTRY": _s2["PANTRY"], "ctx": _s2["ctx"], "openPhone": _s2["openPhone"], "openPC": _s2["openPC"], "openPantry": _s2["openPantry"], "compose": _s2["compose"], "act": _s2["act"], "intel": _s2["intel"]}
