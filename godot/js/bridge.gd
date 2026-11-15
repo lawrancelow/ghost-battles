@@ -62,6 +62,7 @@ static func install_natives(host: Node) -> void:
 	G["__nat_miniSize"] = func(_t, a): return MiniStage.size_of(J.str(a[0]) if a.size() > 0 else "")
 	G["__nat_gyEnd"] = func(_t, a): return GyEnd.hook(a[0])
 	G["__nat_miniEnd"] = func(_t, a): MiniStage.end_hook(J.str(a[0]) if a.size() > 0 else ""); return null
+	G["__nat_chip"] = func(_t, a): VChips.set_chip(J.str(a[0]), J.str(a[1]), J.str(a[2]) if a.size() > 2 else ""); return null
 	G["__nat_gsDraw"] = func(_t, a): GsDraw.draw(a[0], a[1], J.num(a[2])); return null
 	G["__nat_drawChar"] = func(_t, a): Art.draw_char(a[0], J.str(a[1]), J.num(a[2]), J.num(a[3]), J.num(a[4]), (a[5] as Dictionary).duplicate() if a.size() > 5 and a[5] is Dictionary else {}); return null
 	G["__nat_meshDraw"] = func(_t, a): return MeshAnim.draw_js(a[0], J.str(a[1]), a[2], J.num(a[3]), J.num(a[4]), J.num(a[5]), a[6] if a[6] is Dictionary else {}, J.t(a[7]))

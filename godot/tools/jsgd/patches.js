@@ -80,9 +80,9 @@ module.exports = {
   meshanim: [
     ['function drawRaw(ctx, id, x, y, h, pose, flip) {', 'function drawRaw(ctx, id, x, y, h, pose, flip) { return __nat_meshDraw(ctx, id, RIG[id], x, y, h, pose, flip);'],
   ],
-  // 線路 A：村子每幀畫面交俾 Godot 原生（ui/nv_village.gd）；JS 只出「物件清單」（打工鬼、廣場鬼、阿福嘅畫法閉包）
   // 線路 H：合約與存在感、劇情頁冤家資料交俾原生 ui/menus
   presence: [
+    ["    let el = document.getElementById('pres-chip'); const c = cst();\n", "    let el = document.getElementById('pres-chip'); const c = cst();\n    if (typeof __nat_chip !== 'undefined') { if (el) el.remove(); if (c.state === 'none') { __nat_chip('pres', '', ''); return; } const now = clock(); const warnN = S.ghosts.filter(g => !isAfu(g) && val(g) <= TUNE.WARN).length; const h = c.state === 'crisis' ? `<b>淡化危機</b>　剩 ${Math.max(0, (c.crisis.end - now) / DAY).toFixed(1)} 日` : `<b>${PRES_RANKS[c.rank].name}</b>　KPI ${c.kpi}/${c.target}　剩 ${Math.max(0, (c.end - now) / DAY).toFixed(1)} 日${warnN ? `<br>⚠ ${warnN} 隻鬼存在感不足` : ''}`; __nat_chip('pres', h, c.state === 'crisis' ? 'cr' : ''); return; }\n"],
     ["  return { TUNE, st, cst, val, add, perk, alphaOf,", "  return {\n  _n:{\n    panel() {\n      const c = cst(), now = clock(), o = { state:c.state };\n      if (c.state !== 'none') {\n        o.rank = PRES_RANKS[c.rank].name; o.top = c.rank >= PRES_RANKS.length - 1;\n        if (c.state === 'active') { o.kpi = c.kpi; o.target = c.target; o.left = Math.max(0, (c.end - now) / DAY); }\n        else o.crisis = Math.max(0, (c.crisis.end - now) / DAY);\n        const nx = PRES_RANKS[c.rank + 1]; o.next = nx ? { name:nx.name, unlock:nx.unlock } : null;\n      }\n      const p = st(); o.decay = (TUNE.DECAY * perk('decay')).toFixed(1); o.ripple = TUNE.RIPPLE; o.rippleMax = TUNE.RIPPLE + TUNE.RIPPLE_STAR * 3 + perk('ripple');\n      o.grace = clock() < p.grace ? ((p.grace - clock()) / DAY).toFixed(1) : null;\n      o.offer = OFFER; o.buns = fmt(S.res.buns);\n      const od = p.offered || {}, today = gday(clock());\n      o.list = S.ghosts.slice().sort((a, b) => val(a) - val(b)).map(g => ({ id:g.id, name:g.name, v:Math.round(val(g)), days:daysLeft(g), canOffer:!isAfu(g) && val(g) < 100, done:od[g.id] === today }));\n      o.fade = TUNE.FADE; o.warn = TUNE.WARN;\n      return o;\n    },\n    offer(id) { offer(id); },\n  },\n  TUNE, st, cst, val, add, perk, alphaOf,"],
     ["  function openPanel() { try { UI.sheet('合約與存在感'", "  function openPanel() { if (typeof __nat_menu !== 'undefined' && __nat_menu('pres')) return; try { UI.sheet('合約與存在感'"],
   ],
@@ -101,6 +101,11 @@ module.exports = {
     ["    tickFlow(dt);\n    placeBubble();\n    raf = requestAnimationFrame(frame);", "    tickFlow(dt);\n    placeBubble();\n    if (!__nat) raf = requestAnimationFrame(frame);"],
     ["    last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);\n    if (sc.mode === 'standup')", "    last = performance.now(); cancelAnimationFrame(raf);\n    __nat = null; if (typeof __nat_mini !== 'undefined') { const o = { _nd:() => { if (!sc) return; const keep = ctx; ctx = o._natCtx; try { frame(performance.now()); } finally { ctx = keep; } } }; if (__nat_mini(o, '#gtheater', '#gtheater', '_nd')) __nat = o; }\n    if (!__nat) raf = requestAnimationFrame(frame);\n    if (sc.mode === 'standup')"],
     ["    if (!sc) return; const s = sc; sc = null; cancelAnimationFrame(raf);", "    if (!sc) return; const s = sc; sc = null; cancelAnimationFrame(raf); if (__nat) { __nat = null; __nat_miniEnd('#gtheater'); }"],
+  ],
+  // 線路 A：村子每幀畫面交俾 Godot 原生（ui/nv_village.gd）；JS 只出「物件清單」（打工鬼、廣場鬼、阿福嘅畫法閉包）
+  // 線 I：村子角落 KPI 小牌交俾原生（ui/minis/vchips.gd），唔再每秒改 DOM
+  rivals: [
+    ["    if (!rows.length) { if (el) el.remove(); return; }", "    if (typeof __nat_chip !== 'undefined') { if (el) el.remove(); __nat_chip('antag', rows.join('<br>'), ''); return; }\n    if (!rows.length) { if (el) el.remove(); return; }"],
   ],
   game: [
     // 線路 H：村子面板（建築、派人、名冊、箱子）交俾原生 ui/menus/menus.gd

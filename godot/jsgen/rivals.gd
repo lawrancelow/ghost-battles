@@ -962,8 +962,8 @@ func _f102(this_, a: Array, env):
 	J.F_setInterval([Callable(self, "_f104").bind(_s149), 1000.0])
 
 func _f106(this_, a: Array, env):
-	var _t297 = env["toast"]
-	return J.cl(_t297, null, ["龐總 KPI：時限內達標有獎勵，未達標有輕微懲罰。時限只計算你在村子裡遊玩的時間。<br>謠言：8 分鐘後自行消散。"])
+	var _t298 = env["toast"]
+	return J.cl(_t298, null, ["龐總 KPI：時限內達標有獎勵，未達標有輕微懲罰。時限只計算你在村子裡遊玩的時間。<br>謠言：8 分鐘後自行消散。"])
 
 func _f105(this_, a: Array, env):
 	var v_wrap_277 = null; var v_el_278 = null; var v_a_279 = null; var v_rows_280 = null; var v_h_281 = null; var v_p_282 = null
@@ -991,17 +991,23 @@ func _f105(this_, a: Array, env):
 	if J.t((J.cmp(J.gp(J.gp(v_a_279, "boss"), "slowUntil"), J.cl(env["now"], null, []), ">") if J.t(v_a_279) else v_a_279)):
 		var _t295 = env["mins"]
 		J.mc(v_rows_280, "push", [("<b>懲罰</b> 全村工作速度 −15%　" + J.str(J.cl(_t295, null, [J.sub(J.gp(J.gp(v_a_279, "boss"), "slowUntil"), J.cl(env["now"], null, []))])) + " 分鐘")])
+	if (not J.seq(J.typeof_(J.G.get("__nat_chip")), "undefined")):
+		if J.t(v_el_278):
+			J.mc(v_el_278, "remove", [])
+		var _t296 = J.G.get("__nat_chip")
+		J.cl(_t296, null, ["antag", J.mc(v_rows_280, "join", ["<br>"]), ""])
+		return null
 	if (not J.t(J.len(v_rows_280))):
 		if J.t(v_el_278):
 			J.mc(v_el_278, "remove", [])
 		return null
 	if (not J.t(v_el_278)):
-		var _t296 = J.S_document_("createElement", ["div"])
-		v_el_278 = _t296
+		var _t297 = J.S_document_("createElement", ["div"])
+		v_el_278 = _t297
 		J.sp(v_el_278, "id", "antag-chip")
 		J.mc(v_wrap_277, "appendChild", [v_el_278])
-		var _t298 = Callable(self, "_f106").bind(env)
-		J.sp(v_el_278, "onclick", _t298)
+		var _t299 = Callable(self, "_f106").bind(env)
+		J.sp(v_el_278, "onclick", _t299)
 	v_h_281 = J.mc(v_rows_280, "join", ["<br>"])
 	if (not J.seq(J.gp(v_el_278, "innerHTML"), v_h_281)):
 		J.sp(v_el_278, "innerHTML", v_h_281)
@@ -1010,40 +1016,40 @@ func _f109(this_, a: Array, env):
 	return 0.9
 
 func _f110(this_, a: Array, env):
-	var _t307 = J.num(env["i"])
-	env["i"] = _t307 + 1.0
-	return (0.1 if J.seq(_t307, 0.0) else 0.5)
+	var _t308 = J.num(env["i"])
+	env["i"] = _t308 + 1.0
+	return (0.1 if J.seq(_t308, 0.0) else 0.5)
 
 func _f108(this_, a: Array, env):
 	var v_kind_289 = null; var v_a_290 = null; var v_o_291 = null; var v_o_292 = null; var v_T_294 = null
 	v_kind_289 = J.arg(a, 0)
 	v_a_290 = J.cl(env["st"], null, [])
 	if J.seq(v_kind_289, "boss"):
-		var _t299 = J.gp(v_a_290, "boss")
-		J.sp(_t299, "task", null)
-		var _t300 = J.gp(v_a_290, "n")
-		J.sp(_t300, "absurd", 0.0)
+		var _t300 = J.gp(v_a_290, "boss")
+		J.sp(_t300, "task", null)
+		var _t301 = J.gp(v_a_290, "n")
+		J.sp(_t301, "absurd", 0.0)
 		v_o_291 = J.gp(J.G.get("Math"), "random")
-		var _t301 = J.G.get("Math")
-		var _t302 = Callable(self, "_f109").bind(env)
-		J.sp(_t301, "random", _t302)
+		var _t302 = J.G.get("Math")
+		var _t303 = Callable(self, "_f109").bind(env)
+		J.sp(_t302, "random", _t303)
 		J.cl(env["bossVisit"], null, [])
-		var _t303 = J.G.get("Math")
-		J.sp(_t303, "random", v_o_291)
+		var _t304 = J.G.get("Math")
+		J.sp(_t304, "random", v_o_291)
 	else:
 		if J.seq(v_kind_289, "absurd"):
-			var _s167 = {"__p": env, "i": null}
-			var _t304 = J.gp(v_a_290, "boss")
-			var _t305 = J.max_([1.0, J.gp(J.gp(v_a_290, "boss"), "visits")])
-			J.sp(_t304, "visits", _t305)
+			var _s168 = {"__p": env, "i": null}
+			var _t305 = J.gp(v_a_290, "boss")
+			var _t306 = J.max_([1.0, J.gp(J.gp(v_a_290, "boss"), "visits")])
+			J.sp(_t305, "visits", _t306)
 			v_o_292 = J.gp(J.G.get("Math"), "random")
-			_s167["i"] = 0.0
-			var _t306 = J.G.get("Math")
-			var _t308 = Callable(self, "_f110").bind(_s167)
-			J.sp(_t306, "random", _t308)
-			J.cl(_s167["__p"]["bossVisit"], null, [])
-			var _t309 = J.G.get("Math")
-			J.sp(_t309, "random", v_o_292)
+			_s168["i"] = 0.0
+			var _t307 = J.G.get("Math")
+			var _t309 = Callable(self, "_f110").bind(_s168)
+			J.sp(_t307, "random", _t309)
+			J.cl(_s168["__p"]["bossVisit"], null, [])
+			var _t310 = J.G.get("Math")
+			J.sp(_t310, "random", v_o_292)
 		else:
 			if J.seq(v_kind_289, "group"):
 				J.cl(env["bossGroup"], null, [])
@@ -1051,47 +1057,47 @@ func _f108(this_, a: Array, env):
 				if J.seq(v_kind_289, "review"):
 					if (not J.t(J.gp(J.gp(v_a_290, "boss"), "task"))):
 						v_T_294 = J.gp(env["TASKS"], "chop")
-						var _t310 = J.gp(v_a_290, "boss")
-						var _t311 = {"k": "chop", "n": 3.0, "base": J.sub(J.mc(v_T_294, "val", []), 1.0), "due": J.gp(v_a_290, "clock"), "set": J.gp(v_a_290, "clock"), "what": J.gp(v_T_294, "what"), "unit": J.gp(v_T_294, "unit")}
-						J.sp(_t310, "task", _t311)
+						var _t311 = J.gp(v_a_290, "boss")
+						var _t312 = {"k": "chop", "n": 3.0, "base": J.sub(J.mc(v_T_294, "val", []), 1.0), "due": J.gp(v_a_290, "clock"), "set": J.gp(v_a_290, "clock"), "what": J.gp(v_T_294, "what"), "unit": J.gp(v_T_294, "unit")}
+						J.sp(_t311, "task", _t312)
 					J.cl(env["bossReview"], null, [])
 				else:
 					if J.seq(v_kind_289, "theft"):
-						var _t312 = J.gp(v_a_290, "rival")
-						var _t313 = {"what": "砍倒 3 棵槐樹"}
-						J.sp(_t312, "pend", _t313)
+						var _t313 = J.gp(v_a_290, "rival")
+						var _t314 = {"what": "砍倒 3 棵槐樹"}
+						J.sp(_t313, "pend", _t314)
 						J.cl(env["rivalTheft"], null, [])
 					else:
 						if J.seq(v_kind_289, "gossip"):
-							var _t314 = J.gp(v_a_290, "rival")
-							J.sp(_t314, "met", true)
+							var _t315 = J.gp(v_a_290, "rival")
+							J.sp(_t315, "met", true)
 							if (not J.t(J.cl(env["rivalGossip"], null, []))):
-								var _t315 = env["toast"]
-								J.cl(_t315, null, ["要先派一隻鬼到崗位工作，Bryan 才有造謠對象。"])
+								var _t316 = env["toast"]
+								J.cl(_t316, null, ["要先派一隻鬼到崗位工作，Bryan 才有造謠對象。"])
 						else:
 							if J.seq(v_kind_289, "showdown"):
-								var _t316 = J.gp(v_a_290, "rival")
-								J.sp(_t316, "met", true)
+								var _t317 = J.gp(v_a_290, "rival")
+								J.sp(_t317, "met", true)
 								J.cl(env["rivalShowdown"], null, [])
 							else:
 								if J.t((J.seq(J.mc(v_kind_289, "indexOf", ["hr:"]), 0.0) if J.t(v_kind_289) else v_kind_289)):
-									var _t317 = env["hrEvent"]
-									J.cl(_t317, null, [J.mc(v_kind_289, "slice", [3.0])])
+									var _t318 = env["hrEvent"]
+									J.cl(_t318, null, [J.mc(v_kind_289, "slice", [3.0])])
 
 func _f2(this_, a: Array, env):
 	var v_k_49 = null
 	v_k_49 = J.arg(a, 0)
-	var _t319 = (not J.seq(J.typeof_(J.G.get("sprOk")), "function"))
-	if not J.t(_t319):
-		var _t318 = J.G.get("sprOk")
-		_t319 = J.cl(_t318, null, [v_k_49])
-	return _t319
+	var _t320 = (not J.seq(J.typeof_(J.G.get("sprOk")), "function"))
+	if not J.t(_t320):
+		var _t319 = J.G.get("sprOk")
+		_t320 = J.cl(_t319, null, [v_k_49])
+	return _t320
 
 func _f3(this_, a: Array, env):
 	var v_id_50 = null
 	v_id_50 = J.arg(a, 0)
-	var _t320 = (J.gp(J.G.get("S"), "seen") if J.t(J.G.get("S")) else J.G.get("S"))
-	return (not (not J.t((J.gp(J.gp(J.G.get("S"), "seen"), v_id_50) if J.t(_t320) else _t320))))
+	var _t321 = (J.gp(J.G.get("S"), "seen") if J.t(J.G.get("S")) else J.G.get("S"))
+	return (not (not J.t((J.gp(J.gp(J.G.get("S"), "seen"), v_id_50) if J.t(_t321) else _t321))))
 
 func _f6(this_, a: Array, env):
 	return J.S_Date_("now", [])
@@ -1110,31 +1116,31 @@ func _f17(this_, a: Array, env):
 	var v_r_92 = null; var v_a_93 = null; var v_g_95 = null; var v_p_97 = null; var v_wo_98 = null; var v_k_99 = null; var v_k_100 = null
 	var _s29 = {"__p": env, "ru": null}
 	v_r_92 = J.mc(_s29["__p"]["orig"], "apply", [this_, a])
-	var _t321 = (not J.seq(J.typeof_(J.G.get("S")), "undefined"))
-	var _t322 = (J.G.get("S") if _t321 else _t321)
-	v_a_93 = (J.gp(J.G.get("S"), "antag") if J.t(_t322) else _t322)
+	var _t322 = (not J.seq(J.typeof_(J.G.get("S")), "undefined"))
+	var _t323 = (J.G.get("S") if _t322 else _t322)
+	v_a_93 = (J.gp(J.G.get("S"), "antag") if J.t(_t323) else _t323)
 	if (not J.t(v_a_93)):
 		return v_r_92
-	var _t323 = J.gp(v_a_93, "rival")
-	_s29["ru"] = (J.gp(J.gp(v_a_93, "rival"), "rumor") if J.t(_t323) else _t323)
+	var _t324 = J.gp(v_a_93, "rival")
+	_s29["ru"] = (J.gp(J.gp(v_a_93, "rival"), "rumor") if J.t(_t324) else _t324)
 	if J.t((J.cmp(J.gp(_s29["ru"], "until"), J.cl(_s29["__p"]["__p"]["now"], null, []), ">") if J.t(_s29["ru"]) else _s29["ru"])):
-		var _t324 = J.gp(J.G.get("S"), "ghosts")
-		v_g_95 = J.mc(_t324, "find", [Callable(self, "_f18").bind(_s29)])
+		var _t325 = J.gp(J.G.get("S"), "ghosts")
+		v_g_95 = J.mc(_t325, "find", [Callable(self, "_f18").bind(_s29)])
 		if J.t((J.gp(v_g_95, "post") if J.t(v_g_95) else v_g_95)):
 			v_p_97 = J.gp(v_g_95, "post")
 			J.sp(v_g_95, "post", null)
 			v_wo_98 = J.mc(_s29["__p"]["orig"], "apply", [this_, a])
 			J.sp(v_g_95, "post", v_p_97)
-			for _t325 in J.keys(v_r_92):
-				v_k_99 = _t325
-				var _t326 = J.add(J.gp(v_wo_98, v_k_99), (0.5 * J.sub(J.gp(v_r_92, v_k_99), J.gp(v_wo_98, v_k_99))))
-				J.sp(v_r_92, v_k_99, _t326)
-	var _t327 = J.gp(v_a_93, "boss")
-	if J.t((J.cmp(J.gp(J.gp(v_a_93, "boss"), "slowUntil"), J.cl(_s29["__p"]["__p"]["now"], null, []), ">") if J.t(_t327) else _t327)):
-		for _t328 in J.keys(v_r_92):
-			v_k_100 = _t328
-			var _t329 = J.mul(J.gp(v_r_92, v_k_100), 0.85)
-			J.sp(v_r_92, v_k_100, _t329)
+			for _t326 in J.keys(v_r_92):
+				v_k_99 = _t326
+				var _t327 = J.add(J.gp(v_wo_98, v_k_99), (0.5 * J.sub(J.gp(v_r_92, v_k_99), J.gp(v_wo_98, v_k_99))))
+				J.sp(v_r_92, v_k_99, _t327)
+	var _t328 = J.gp(v_a_93, "boss")
+	if J.t((J.cmp(J.gp(J.gp(v_a_93, "boss"), "slowUntil"), J.cl(_s29["__p"]["__p"]["now"], null, []), ">") if J.t(_t328) else _t328)):
+		for _t329 in J.keys(v_r_92):
+			v_k_100 = _t329
+			var _t330 = J.mul(J.gp(v_r_92, v_k_100), 0.85)
+			J.sp(v_r_92, v_k_100, _t330)
 	return v_r_92
 
 func _f20(this_, a: Array, env):
@@ -1150,8 +1156,8 @@ func _f23(this_, a: Array, env):
 	var v_n_109 = null; var v_m_110 = null
 	v_n_109 = J.arg(a, 0)
 	v_m_110 = J.arg(a, 1)
-	var _t330 = J.G.get("Lf")
-	return [["龐總", J.cl(_t330, null, ["今次 KPI：{m} 分鐘之內，你親手斬 {n} 棵槐樹。唔准叫人幫，我要睇到你把斧頭有熱情。", {"n": v_n_109, "m": v_m_110}])], ["阿福", "斧頭點會有熱情？"], ["龐總", "所以先要你補返。"]]
+	var _t331 = J.G.get("Lf")
+	return [["龐總", J.cl(_t331, null, ["今次 KPI：{m} 分鐘之內，你親手斬 {n} 棵槐樹。唔准叫人幫，我要睇到你把斧頭有熱情。", {"n": v_n_109, "m": v_m_110}])], ["阿福", "斧頭點會有熱情？"], ["龐總", "所以先要你補返。"]]
 
 func _f24(this_, a: Array, env):
 	return true
@@ -1166,8 +1172,8 @@ func _f27(this_, a: Array, env):
 	var v_n_111 = null; var v_m_112 = null
 	v_n_111 = J.arg(a, 0)
 	v_m_112 = J.arg(a, 1)
-	var _t331 = J.G.get("Lf")
-	return [["龐總", J.cl(_t331, null, ["{m} 分鐘之內，割 {n} 次糯米。糯米係本季戰略物資：殭屍好驚，投資者好鍾意。", {"n": v_n_111, "m": v_m_112}])], ["阿福", "投資者係邊個？"], ["龐總", "你唔使知。你淨係要知，佢哋唔開心。"]]
+	var _t332 = J.G.get("Lf")
+	return [["龐總", J.cl(_t332, null, ["{m} 分鐘之內，割 {n} 次糯米。糯米係本季戰略物資：殭屍好驚，投資者好鍾意。", {"n": v_n_111, "m": v_m_112}])], ["阿福", "投資者係邊個？"], ["龐總", "你唔使知。你淨係要知，佢哋唔開心。"]]
 
 func _f28(this_, a: Array, env):
 	return J.cmp(J.gp(J.gp(J.G.get("S"), "bld"), "bun"), 0.0, ">")
@@ -1182,8 +1188,8 @@ func _f31(this_, a: Array, env):
 	var v_n_113 = null; var v_m_114 = null
 	v_n_113 = J.arg(a, 0)
 	v_m_114 = J.arg(a, 1)
-	var _t332 = J.G.get("Lf")
-	return [["龐總", J.cl(_t332, null, ["{m} 分鐘之內，你親手包 {n} 次壽包。", {"n": v_n_113, "m": v_m_114}])], ["阿福", "包子鋪有鬼包㗎。"], ["龐總", "佢哋包嘅係佢哋嘅 KPI。你包嘅，先係你嘅。"]]
+	var _t333 = J.G.get("Lf")
+	return [["龐總", J.cl(_t333, null, ["{m} 分鐘之內，你親手包 {n} 次壽包。", {"n": v_n_113, "m": v_m_114}])], ["阿福", "包子鋪有鬼包㗎。"], ["龐總", "佢哋包嘅係佢哋嘅 KPI。你包嘅，先係你嘅。"]]
 
 func _f32(this_, a: Array, env):
 	return J.cmp(J.gp(J.gp(J.G.get("S"), "bld"), "plank"), 0.0, ">")
@@ -1198,8 +1204,8 @@ func _f35(this_, a: Array, env):
 	var v_n_115 = null; var v_m_116 = null
 	v_n_115 = J.arg(a, 0)
 	v_m_116 = J.arg(a, 1)
-	var _t333 = J.G.get("Lf")
-	return [["龐總", J.cl(_t333, null, ["{m} 分鐘之內，你親手做 {n} 次棺材板。", {"n": v_n_115, "m": v_m_116}])], ["阿福", "點解要我親手做？"], ["龐總", "棺材係我哋嘅核心產品。客戶一世人只用一次，所以唔准有第二次機會。"]]
+	var _t334 = J.G.get("Lf")
+	return [["龐總", J.cl(_t334, null, ["{m} 分鐘之內，你親手做 {n} 次棺材板。", {"n": v_n_115, "m": v_m_116}])], ["阿福", "點解要我親手做？"], ["龐總", "棺材係我哋嘅核心產品。客戶一世人只用一次，所以唔准有第二次機會。"]]
 
 func _f36(this_, a: Array, env):
 	return J.cmp(J.gp(J.gp(J.G.get("S"), "bld"), "bun"), 0.0, ">")
@@ -1214,8 +1220,8 @@ func _f39(this_, a: Array, env):
 	var v_n_117 = null; var v_m_118 = null
 	v_n_117 = J.arg(a, 0)
 	v_m_118 = J.arg(a, 1)
-	var _t334 = J.G.get("Lf")
-	return [["龐總", J.cl(_t334, null, ["我下次嚟嘅時候，倉入面要有 {n} 個壽包。少一個，我都會知。", {"n": v_n_117}])], ["阿福", "你點會知？"], ["龐總", "（拍一拍部平板）佢話我知。"]]
+	var _t335 = J.G.get("Lf")
+	return [["龐總", J.cl(_t335, null, ["我下次嚟嘅時候，倉入面要有 {n} 個壽包。少一個，我都會知。", {"n": v_n_117}])], ["阿福", "你點會知？"], ["龐總", "（拍一拍部平板）佢話我知。"]]
 
 func _f40(this_, a: Array, env):
 	return 1.0
@@ -1236,60 +1242,60 @@ func _f82(this_, a: Array, env):
 	J.sp(v_h_226, "warn", J.num(J.gp(v_h_226, "warn")) + 1.0)
 	if J.cmp(J.gp(v_h_226, "warn"), 3.0, ">="):
 		J.sp(v_h_226, "warn", 0.0)
-		var _t336 = floor(J.num(J.gp(J.gp(J.G.get("S"), "res"), "coins")))
-		var _t335 = J.G.get("rwd")
-		var _t338 = floor(J.num(J.gp(J.gp(J.G.get("S"), "res"), "coins")))
-		var _t337 = J.G.get("rwd")
-		v_c_227 = J.min_([_t338, J.cl(_t337, null, [12.0])])
-		var _t339 = J.gp(J.G.get("S"), "res")
-		var _t340 = J.sub(J.gp(_t339, "coins"), v_c_227)
-		J.sp(_t339, "coins", _t340)
+		var _t337 = floor(J.num(J.gp(J.gp(J.G.get("S"), "res"), "coins")))
+		var _t336 = J.G.get("rwd")
+		var _t339 = floor(J.num(J.gp(J.gp(J.G.get("S"), "res"), "coins")))
+		var _t338 = J.G.get("rwd")
+		v_c_227 = J.min_([_t339, J.cl(_t338, null, [12.0])])
+		var _t340 = J.gp(J.G.get("S"), "res")
+		var _t341 = J.sub(J.gp(_t340, "coins"), v_c_227)
+		J.sp(_t340, "coins", _t341)
 		return J.mc(v_lines_225, "concat", [[["冼小姐", "恭喜你～集齊三封警告信，可以換一個大過！"], ["旁白", ("記大過：冥幣 −" + J.str(v_c_227) + "。警告信歸零。")]]])
 	return J.mc(v_lines_225, "concat", [[["旁白", ("警告信 +1（集滿三封記大過）。目前：" + J.str(J.gp(v_h_226, "warn")) + " 封。")]]])
 
 func _f83(this_, a: Array, env):
-	var _t341 = J.G.get("rwd")
-	return {"coins": J.cl(_t341, null, [15.0])}
+	var _t342 = J.G.get("rwd")
+	return {"coins": J.cl(_t342, null, [15.0])}
 
 func _f84(this_, a: Array, env):
-	var _t342 = J.G.get("rwd")
-	return {"exp": J.cl(_t342, null, [8.0])}
-
-func _f85(this_, a: Array, env):
 	var _t343 = J.G.get("rwd")
 	return {"exp": J.cl(_t343, null, [8.0])}
 
-func _f86(this_, a: Array, env):
+func _f85(this_, a: Array, env):
 	var _t344 = J.G.get("rwd")
-	return {"exp": J.cl(_t344, null, [10.0])}
+	return {"exp": J.cl(_t344, null, [8.0])}
+
+func _f86(this_, a: Array, env):
+	var _t345 = J.G.get("rwd")
+	return {"exp": J.cl(_t345, null, [10.0])}
 
 func _f87(this_, a: Array, env):
-	var _t345 = J.G.get("rwd")
-	return {"buns": J.cl(_t345, null, [15.0])}
+	var _t346 = J.G.get("rwd")
+	return {"buns": J.cl(_t346, null, [15.0])}
 
 func _f88(this_, a: Array, env):
-	var _t346 = J.G.get("rwd")
-	return {"coins": J.cl(_t346, null, [12.0])}
+	var _t347 = J.G.get("rwd")
+	return {"coins": J.cl(_t347, null, [12.0])}
 
 func _f89(this_, a: Array, env):
-	var _t347 = J.G.get("rwd")
-	return {"coins": J.cl(_t347, null, [15.0])}
+	var _t348 = J.G.get("rwd")
+	return {"coins": J.cl(_t348, null, [15.0])}
 
 func _f90(this_, a: Array, env):
-	var _t348 = J.G.get("rwd")
-	return {"exp": J.cl(_t348, null, [8.0])}
+	var _t349 = J.G.get("rwd")
+	return {"exp": J.cl(_t349, null, [8.0])}
 
 func _f91(this_, a: Array, env):
-	var _t349 = J.G.get("rwd")
-	return {"coins": J.cl(_t349, null, [18.0])}
+	var _t350 = J.G.get("rwd")
+	return {"coins": J.cl(_t350, null, [18.0])}
 
 func _f107(this_, a: Array, env):
 	var v_css_285 = null; var v_s_286 = null
 	v_css_285 = Callable(self, "_f107").bind(env)
 	v_s_286 = J.S_document_("createElement", ["style"])
 	J.sp(v_s_286, "textContent", "#antag-chip{position:absolute;left:8px;bottom:8px;z-index:4;max-width:78%;padding:6px 10px;background:rgba(20,12,22,.86);color:#f3e6c8;font-size:13.5px;line-height:1.5;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(243,214,138,.45)}#antag-chip b{color:#ff8a6a;margin-right:4px}")
-	var _t350 = J.gp(J.G.get("document"), "head")
-	J.mc(_t350, "appendChild", [v_s_286])
+	var _t351 = J.gp(J.G.get("document"), "head")
+	J.mc(_t351, "appendChild", [v_s_286])
 
 func _f1(this_, a: Array, env):
 	var v_NM_3 = null; var v_stageOpen_18 = null; var v_tick_44 = null; var v_init_46 = null; var v_demo_48 = null

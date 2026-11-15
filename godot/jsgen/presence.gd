@@ -4,7 +4,7 @@ extends RefCounted
 func run(env):
 	var this_ = null; var a = []
 	J.G["Presence"] = J.cl(Callable(self, "_f1").bind(env), null, [])
-	J.cl(Callable(self, "_f116").bind(env), null, [])
+	J.cl(Callable(self, "_f117").bind(env), null, [])
 
 func _f7(this_, a: Array, env):
 	var v_p_67 = null
@@ -1216,389 +1216,423 @@ func _f78(this_, a: Array, env):
 	J.mc(_t375, "forEach", [Callable(self, "_f79").bind(_s188)])
 
 func _f82(this_, a: Array, env):
-	var v_g_341 = null
-	v_g_341 = J.arg(a, 0)
-	var _t385 = env["isAfu"]
-	var _t387 = (not J.t(J.cl(_t385, null, [v_g_341])))
-	if J.t(_t387):
-		var _t386 = env["val"]
-		_t387 = J.cmp(J.cl(_t386, null, [v_g_341]), J.gp(env["TUNE"], "WARN"), "<=")
-	return _t387
+	var v_g_343 = null
+	v_g_343 = J.arg(a, 0)
+	var _t383 = env["isAfu"]
+	var _t385 = (not J.t(J.cl(_t383, null, [v_g_343])))
+	if J.t(_t385):
+		var _t384 = env["val"]
+		_t385 = J.cmp(J.cl(_t384, null, [v_g_343]), J.gp(env["TUNE"], "WARN"), "<=")
+	return _t385
+
+func _f83(this_, a: Array, env):
+	var v_g_345 = null
+	v_g_345 = J.arg(a, 0)
+	var _t397 = env["isAfu"]
+	var _t399 = (not J.t(J.cl(_t397, null, [v_g_345])))
+	if J.t(_t399):
+		var _t398 = env["val"]
+		_t399 = J.cmp(J.cl(_t398, null, [v_g_345]), J.gp(env["TUNE"], "WARN"), "<=")
+	return _t399
 
 func _f81(this_, a: Array, env):
-	var v_wrap_334 = null; var v_el_335 = null; var v_c_336 = null; var v_now_337 = null; var v_warnN_338 = null; var v_h_339 = null; var v_s_340 = null
+	var v_wrap_334 = null; var v_el_335 = null; var v_c_336 = null; var v_now_337 = null; var v_warnN_338 = null; var v_h_339 = null; var v_now_340 = null; var v_warnN_341 = null; var v_h_342 = null; var v_s_344 = null
 	v_wrap_334 = J.S_document_("getElementById", ["stagewrap"])
 	var _t380 = (not J.t(v_wrap_334))
 	if (_t380 if _t380 else (not J.t(J.cl(env["S_"], null, [])))):
 		return null
 	v_el_335 = J.S_document_("getElementById", ["pres-chip"])
 	v_c_336 = J.cl(env["cst"], null, [])
+	if (not J.seq(J.typeof_(J.G.get("__nat_chip")), "undefined")):
+		if J.t(v_el_335):
+			J.mc(v_el_335, "remove", [])
+		if J.seq(J.gp(v_c_336, "state"), "none"):
+			var _t381 = J.G.get("__nat_chip")
+			J.cl(_t381, null, ["pres", "", ""])
+			return null
+		v_now_340 = J.cl(env["clock"], null, [])
+		var _t382 = J.gp(J.G.get("S"), "ghosts")
+		v_warnN_341 = J.len(J.mc(_t382, "filter", [Callable(self, "_f82").bind(env)]))
+		var _t391 = null
+		if J.seq(J.gp(v_c_336, "state"), "crisis"):
+			var _t386 = J.max_([0.0, J.div(J.sub(J.gp(J.gp(v_c_336, "crisis"), "end"), v_now_340), env["DAY"])])
+			_t391 = ("<b>淡化危機</b>　剩 " + J.str(J.mc(_t386, "toFixed", [1.0])) + " 日")
+		else:
+			var _t388 = J.gp(J.gp(J.G.get("PRES_RANKS"), J.gp(v_c_336, "rank")), "name")
+			var _t389 = J.gp(v_c_336, "kpi")
+			var _t390 = J.gp(v_c_336, "target")
+			var _t387 = J.max_([0.0, J.div(J.sub(J.gp(v_c_336, "end"), v_now_340), env["DAY"])])
+			_t391 = ("<b>" + J.str(_t388) + "</b>　KPI " + J.str(_t389) + "/" + J.str(_t390) + "　剩 " + J.str(J.mc(_t387, "toFixed", [1.0])) + " 日" + (("<br>⚠ " + J.str(v_warnN_341) + " 隻鬼存在感不足") if J.t(v_warnN_341) else ""))
+		v_h_342 = _t391
+		var _t392 = J.G.get("__nat_chip")
+		J.cl(_t392, null, ["pres", v_h_342, ("cr" if J.seq(J.gp(v_c_336, "state"), "crisis") else "")])
+		return null
 	if J.seq(J.gp(v_c_336, "state"), "none"):
 		if J.t(v_el_335):
 			J.mc(v_el_335, "remove", [])
 		return null
 	if (not J.t(v_el_335)):
-		var _t381 = J.S_document_("createElement", ["div"])
-		v_el_335 = _t381
+		var _t393 = J.S_document_("createElement", ["div"])
+		v_el_335 = _t393
 		J.sp(v_el_335, "id", "pres-chip")
 		J.mc(v_wrap_334, "appendChild", [v_el_335])
-		var _t382 = env["openPanel"]
-		J.sp(v_el_335, "onclick", _t382)
-		v_s_340 = J.S_document_("createElement", ["style"])
-		J.sp(v_s_340, "textContent", "#pres-chip{position:absolute;right:8px;bottom:8px;z-index:4;padding:6px 10px;background:rgba(20,12,22,.86);color:#f3e6c8;font-size:13px;line-height:1.45;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(243,214,138,.45);cursor:pointer;text-align:right}#pres-chip.cr{box-shadow:inset 0 0 0 1.5px #e0604a;color:#ffb4a0}")
-		var _t383 = J.gp(J.G.get("document"), "head")
-		J.mc(_t383, "appendChild", [v_s_340])
+		var _t394 = env["openPanel"]
+		J.sp(v_el_335, "onclick", _t394)
+		v_s_344 = J.S_document_("createElement", ["style"])
+		J.sp(v_s_344, "textContent", "#pres-chip{position:absolute;right:8px;bottom:8px;z-index:4;padding:6px 10px;background:rgba(20,12,22,.86);color:#f3e6c8;font-size:13px;line-height:1.45;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(243,214,138,.45);cursor:pointer;text-align:right}#pres-chip.cr{box-shadow:inset 0 0 0 1.5px #e0604a;color:#ffb4a0}")
+		var _t395 = J.gp(J.G.get("document"), "head")
+		J.mc(_t395, "appendChild", [v_s_344])
 	v_now_337 = J.cl(env["clock"], null, [])
-	var _t384 = J.gp(J.G.get("S"), "ghosts")
-	v_warnN_338 = J.len(J.mc(_t384, "filter", [Callable(self, "_f82").bind(env)]))
-	var _t393 = null
+	var _t396 = J.gp(J.G.get("S"), "ghosts")
+	v_warnN_338 = J.len(J.mc(_t396, "filter", [Callable(self, "_f83").bind(env)]))
+	var _t405 = null
 	if J.seq(J.gp(v_c_336, "state"), "crisis"):
-		var _t388 = J.max_([0.0, J.div(J.sub(J.gp(J.gp(v_c_336, "crisis"), "end"), v_now_337), env["DAY"])])
-		_t393 = ("<b>淡化危機</b>　剩 " + J.str(J.mc(_t388, "toFixed", [1.0])) + " 日")
+		var _t400 = J.max_([0.0, J.div(J.sub(J.gp(J.gp(v_c_336, "crisis"), "end"), v_now_337), env["DAY"])])
+		_t405 = ("<b>淡化危機</b>　剩 " + J.str(J.mc(_t400, "toFixed", [1.0])) + " 日")
 	else:
-		var _t390 = J.gp(J.gp(J.G.get("PRES_RANKS"), J.gp(v_c_336, "rank")), "name")
-		var _t391 = J.gp(v_c_336, "kpi")
-		var _t392 = J.gp(v_c_336, "target")
-		var _t389 = J.max_([0.0, J.div(J.sub(J.gp(v_c_336, "end"), v_now_337), env["DAY"])])
-		_t393 = ("<b>" + J.str(_t390) + "</b>　KPI " + J.str(_t391) + "/" + J.str(_t392) + "　剩 " + J.str(J.mc(_t389, "toFixed", [1.0])) + " 日" + (("<br>⚠ " + J.str(v_warnN_338) + " 隻鬼存在感不足") if J.t(v_warnN_338) else ""))
-	v_h_339 = _t393
+		var _t402 = J.gp(J.gp(J.G.get("PRES_RANKS"), J.gp(v_c_336, "rank")), "name")
+		var _t403 = J.gp(v_c_336, "kpi")
+		var _t404 = J.gp(v_c_336, "target")
+		var _t401 = J.max_([0.0, J.div(J.sub(J.gp(v_c_336, "end"), v_now_337), env["DAY"])])
+		_t405 = ("<b>" + J.str(_t402) + "</b>　KPI " + J.str(_t403) + "/" + J.str(_t404) + "　剩 " + J.str(J.mc(_t401, "toFixed", [1.0])) + " 日" + (("<br>⚠ " + J.str(v_warnN_338) + " 隻鬼存在感不足") if J.t(v_warnN_338) else ""))
+	v_h_339 = _t405
 	if (not J.seq(J.gp(v_el_335, "innerHTML"), v_h_339)):
 		J.sp(v_el_335, "innerHTML", v_h_339)
-	var _t394 = ("cr" if J.seq(J.gp(v_c_336, "state"), "crisis") else "")
-	J.sp(v_el_335, "className", _t394)
+	var _t406 = ("cr" if J.seq(J.gp(v_c_336, "state"), "crisis") else "")
+	J.sp(v_el_335, "className", _t406)
 
-func _f83(this_, a: Array, env):
-	var v_s_344 = null
-	var _t395 = (not J.t(J.cl(env["S_"], null, [])))
-	if (_t395 if _t395 else (not J.t(J.gp(J.G.get("S"), "ghosts")))):
+func _f84(this_, a: Array, env):
+	var v_s_348 = null
+	var _t407 = (not J.t(J.cl(env["S_"], null, [])))
+	if (_t407 if _t407 else (not J.t(J.gp(J.G.get("S"), "ghosts")))):
 		return null
 	J.cl(env["update"], null, [])
 	J.cl(env["contractTick"], null, [])
 	J.cl(env["hud"], null, [])
 	if J.cmp(env["sceneGap"], 0.0, ">"):
-		var _t396 = J.sub(env["sceneGap"], 2.0)
-		env["sceneGap"] = _t396
+		var _t408 = J.sub(env["sceneGap"], 2.0)
+		env["sceneGap"] = _t408
 		return null
-	var _t397 = J.len(env["scenes"])
-	if J.t((J.cl(env["quiet"], null, []) if J.t(_t397) else _t397)):
-		v_s_344 = J.mc(env["scenes"], "shift", [])
-		var _t398 = env["runScene"]
-		J.cl(_t398, null, [v_s_344])
-
-func _f85(this_, a: Array, env):
-	var v_e_348 = null; var v_err_349 = null
-	v_e_348 = J.arg(a, 0)
-	var _t399 = env["__p"]["nightEnd"]
-	var _t400 = J.gp(v_e_348, "detail")
-	J.cl(_t399, null, [(_t400 if J.t(_t400) else {})])
-
-func _f87(this_, a: Array, env):
-	var v_z_361 = null
-	v_z_361 = J.arg(a, 0)
-	return J.seq(J.gp(v_z_361, "id"), J.gp(env["o"], "wkey"))
+	var _t409 = J.len(env["scenes"])
+	if J.t((J.cl(env["quiet"], null, []) if J.t(_t409) else _t409)):
+		v_s_348 = J.mc(env["scenes"], "shift", [])
+		var _t410 = env["runScene"]
+		J.cl(_t410, null, [v_s_348])
 
 func _f86(this_, a: Array, env):
-	var v_ctx_353 = null; var v_k_354 = null; var v_x_355 = null; var v_y_356 = null; var v_s_357 = null; var v_g_359 = null; var v_m_360 = null
-	var _s205 = {"__p": env, "o": null}
-	v_ctx_353 = J.arg(a, 0)
-	v_k_354 = J.arg(a, 1)
-	v_x_355 = J.arg(a, 2)
-	v_y_356 = J.arg(a, 3)
-	v_s_357 = J.arg(a, 4)
-	_s205["o"] = J.arg(a, 5)
-	var _t403 = (not J.t(_s205["__p"]["__p"]["__p"]["inPlaza"]))
-	var _t404 = (J.cl(_s205["__p"]["__p"]["__p"]["S_"], null, []) if _t403 else _t403)
-	if J.t((J.gp(J.G.get("S"), "presence") if J.t(_t404) else _t404)):
-		var _t407 = null
-		if J.t(((not J.leq(J.gp(_s205["o"], "wkey"), null)) if J.t(_s205["o"]) else _s205["o"])):
-			var _t405 = J.gp(J.G.get("S"), "ghosts")
-			_t407 = J.mc(_t405, "find", [Callable(self, "_f87").bind(_s205)])
-		else:
-			var _t406 = _s205["__p"]["__p"]["__p"]["gOfKey"]
-			_t407 = J.cl(_t406, null, [v_k_354])
-		v_g_359 = _t407
-		var _t409 = null
-		if J.t(v_g_359):
-			var _t408 = _s205["__p"]["__p"]["__p"]["alphaOf"]
-			_t409 = J.cl(_t408, null, [v_g_359])
-		else:
-			_t409 = 1.0
-		v_m_360 = _t409
-		if J.cmp(v_m_360, 1.0, "<"):
-			var _t410 = J.S_Object_("assign", [{}, (_s205["o"] if J.t(_s205["o"]) else {})])
-			_s205["o"] = _t410
-			var _t411 = _s205["o"]
-			var _t412 = J.mul((J.gp(_s205["o"], "alpha") if (not J.leq(J.gp(_s205["o"], "alpha"), null)) else J.gp(v_ctx_353, "globalAlpha")), v_m_360)
-			J.sp(_t411, "alpha", _t412)
-	return J.mc(_s205["__p"]["od"], "call", [this_, v_ctx_353, v_k_354, v_x_355, v_y_356, v_s_357, _s205["o"]])
+	var v_e_352 = null; var v_err_353 = null
+	v_e_352 = J.arg(a, 0)
+	var _t411 = env["__p"]["nightEnd"]
+	var _t412 = J.gp(v_e_352, "detail")
+	J.cl(_t411, null, [(_t412 if J.t(_t412) else {})])
 
-func _f90(this_, a: Array, env):
-	var v_m_380 = null
-	var _t417 = env["__p"]["__p"]["__p"]["__p"]["alphaOf"]
-	v_m_380 = J.cl(_t417, null, [env["g"]])
+func _f88(this_, a: Array, env):
+	var v_z_365 = null
+	v_z_365 = J.arg(a, 0)
+	return J.seq(J.gp(v_z_365, "id"), J.gp(env["o"], "wkey"))
+
+func _f87(this_, a: Array, env):
+	var v_ctx_357 = null; var v_k_358 = null; var v_x_359 = null; var v_y_360 = null; var v_s_361 = null; var v_g_363 = null; var v_m_364 = null
+	var _s208 = {"__p": env, "o": null}
+	v_ctx_357 = J.arg(a, 0)
+	v_k_358 = J.arg(a, 1)
+	v_x_359 = J.arg(a, 2)
+	v_y_360 = J.arg(a, 3)
+	v_s_361 = J.arg(a, 4)
+	_s208["o"] = J.arg(a, 5)
+	var _t415 = (not J.t(_s208["__p"]["__p"]["__p"]["inPlaza"]))
+	var _t416 = (J.cl(_s208["__p"]["__p"]["__p"]["S_"], null, []) if _t415 else _t415)
+	if J.t((J.gp(J.G.get("S"), "presence") if J.t(_t416) else _t416)):
+		var _t419 = null
+		if J.t(((not J.leq(J.gp(_s208["o"], "wkey"), null)) if J.t(_s208["o"]) else _s208["o"])):
+			var _t417 = J.gp(J.G.get("S"), "ghosts")
+			_t419 = J.mc(_t417, "find", [Callable(self, "_f88").bind(_s208)])
+		else:
+			var _t418 = _s208["__p"]["__p"]["__p"]["gOfKey"]
+			_t419 = J.cl(_t418, null, [v_k_358])
+		v_g_363 = _t419
+		var _t421 = null
+		if J.t(v_g_363):
+			var _t420 = _s208["__p"]["__p"]["__p"]["alphaOf"]
+			_t421 = J.cl(_t420, null, [v_g_363])
+		else:
+			_t421 = 1.0
+		v_m_364 = _t421
+		if J.cmp(v_m_364, 1.0, "<"):
+			var _t422 = J.S_Object_("assign", [{}, (_s208["o"] if J.t(_s208["o"]) else {})])
+			_s208["o"] = _t422
+			var _t423 = _s208["o"]
+			var _t424 = J.mul((J.gp(_s208["o"], "alpha") if (not J.leq(J.gp(_s208["o"], "alpha"), null)) else J.gp(v_ctx_357, "globalAlpha")), v_m_364)
+			J.sp(_t423, "alpha", _t424)
+	return J.mc(_s208["__p"]["od"], "call", [this_, v_ctx_357, v_k_358, v_x_359, v_y_360, v_s_361, _s208["o"]])
+
+func _f91(this_, a: Array, env):
+	var v_m_384 = null
+	var _t429 = env["__p"]["__p"]["__p"]["__p"]["alphaOf"]
+	v_m_384 = J.cl(_t429, null, [env["g"]])
 	env["__p"]["__p"]["__p"]["__p"]["inPlaza"] = true
 	J.mc(env["__p"]["ctx"], "save", [])
-	var _t418 = env["__p"]["ctx"]
-	var _t419 = J.mul(J.gp(_t418, "globalAlpha"), v_m_380)
-	J.sp(_t418, "globalAlpha", _t419)
+	var _t430 = env["__p"]["ctx"]
+	var _t431 = J.mul(J.gp(_t430, "globalAlpha"), v_m_384)
+	J.sp(_t430, "globalAlpha", _t431)
 	J.cl(env["f"], null, [])
 	J.mc(env["__p"]["ctx"], "restore", [])
 	env["__p"]["__p"]["__p"]["__p"]["inPlaza"] = false
 
+func _f90(this_, a: Array, env):
+	var v_it_380 = null; var v_j_381 = null
+	var _s214 = {"__p": env, "g": null, "f": null}
+	v_it_380 = J.arg(a, 0)
+	v_j_381 = J.arg(a, 1)
+	var _t428 = J.gp(_s214["__p"]["nv"], v_j_381)
+	_s214["g"] = (J.gp(J.gp(_s214["__p"]["nv"], v_j_381), "g") if J.t(_t428) else _t428)
+	_s214["f"] = J.gp(v_it_380, "f")
+	var _t432 = Callable(self, "_f91").bind(_s214)
+	J.sp(v_it_380, "f", _t432)
+
 func _f89(this_, a: Array, env):
-	var v_it_376 = null; var v_j_377 = null
-	var _s211 = {"__p": env, "g": null, "f": null}
-	v_it_376 = J.arg(a, 0)
-	v_j_377 = J.arg(a, 1)
-	var _t416 = J.gp(_s211["__p"]["nv"], v_j_377)
-	_s211["g"] = (J.gp(J.gp(_s211["__p"]["nv"], v_j_377), "g") if J.t(_t416) else _t416)
-	_s211["f"] = J.gp(v_it_376, "f")
-	var _t420 = Callable(self, "_f90").bind(_s211)
-	J.sp(v_it_376, "f", _t420)
-
-func _f88(this_, a: Array, env):
-	var v_V_365 = null; var v_idle_366 = null; var v_items_367 = null; var v_vis_368 = null; var v_t_370 = null; var v_i0_371 = null; var v_v0_372 = null; var v_r_373 = null; var v_ag_375 = null
-	var _s210 = {"__p": env, "ctx": null, "nv": null}
-	v_V_365 = J.arg(a, 0)
-	v_idle_366 = J.arg(a, 1)
-	v_items_367 = J.arg(a, 2)
-	v_vis_368 = J.arg(a, 3)
-	_s210["ctx"] = J.arg(a, 4)
-	v_t_370 = J.arg(a, 5)
-	v_i0_371 = J.len(v_items_367)
-	v_v0_372 = J.len(v_vis_368)
-	v_r_373 = J.mc(_s210["__p"]["of"], "apply", [this_, a])
-	_s210["nv"] = J.mc(v_vis_368, "slice", [v_v0_372])
-	v_ag_375 = J.mc(v_items_367, "slice", [(J.len(v_items_367) - J.len(_s210["nv"]))])
-	if (J.sub(J.len(v_items_367), v_i0_371) >= J.len(_s210["nv"])):
-		J.mc(v_ag_375, "forEach", [Callable(self, "_f89").bind(_s210)])
-	return v_r_373
-
-func _f92(this_, a: Array, env):
-	var v_x_387 = null
-	v_x_387 = J.arg(a, 0)
-	return J.seq(J.gp(v_x_387, "id"), J.gp(env["b"], "id"))
-
-func _f91(this_, a: Array, env):
-	var v_r_384 = null; var v_g_386 = null; var v_d_388 = null; var v_pool_389 = null; var v_l_390 = null; var v_e_391 = null
-	v_r_384 = J.mc(env["ou"], "apply", [this_, a])
-	var _s217 = {"__p": env, "b": null}
-	_s217["b"] = J.gp(this_, "bubble")
-	if J.t(((not J.seq(_s217["b"], _s217["__p"]["__p"]["__p"]["lastBub"])) if J.t(_s217["b"]) else _s217["b"])):
-		_s217["__p"]["__p"]["__p"]["lastBub"] = _s217["b"]
-		var _t426 = null
-		if J.t(J.gp(_s217["b"], "hero")):
-			var _t424 = J.gp(J.G.get("S"), "ghosts")
-			_t426 = J.mc(_t424, "find", [_s217["__p"]["__p"]["__p"]["isAfu"]])
-		else:
-			var _t425 = J.gp(J.G.get("S"), "ghosts")
-			_t426 = J.mc(_t425, "find", [Callable(self, "_f92").bind(_s217)])
-		v_g_386 = _t426
-		var _t428 = v_g_386
-		if J.t(_t428):
-			var _t427 = _s217["__p"]["__p"]["__p"]["isAfu"]
-			_t428 = (not J.t(J.cl(_t427, null, [v_g_386])))
-		var _t430 = _t428
-		if J.t(_t430):
-			var _t429 = _s217["__p"]["__p"]["__p"]["val"]
-			_t430 = J.cmp(J.cl(_t429, null, [v_g_386]), J.gp(_s217["__p"]["__p"]["__p"]["TUNE"], "WARN"), "<=")
-		var _t431 = (J.cmp(J.gp(_s217["b"], "t"), 0.2, "<") if J.t(_t430) else _t430)
-		if J.t(((randf() < 0.6) if J.t(_t431) else _t431)):
-			var _t432 = _s217["__p"]["__p"]["__p"]["daysLeft"]
-			v_d_388 = J.cl(_t432, null, [v_g_386])
-			v_pool_389 = (J.G.get("PRES_COUNT") if (not J.leq(v_d_388, null)) else J.G.get("PRES_WORRY"))
-			var _t433 = _s217["__p"]["__p"]["__p"]["rnd"]
-			v_l_390 = J.cl(_t433, null, [v_pool_389])
-			var _t434 = _s217["b"]
-			var _t435 = (J.gp(v_l_390, 1.0) if J.t(J.cl(_s217["__p"]["__p"]["__p"]["zh"], null, [])) else J.gp(v_l_390, 0.0))
-			var _t436 = J.mc(_t435, "split", ["{n}"])
-			var _t437 = J.mc(_t436, "join", [J.gp(v_g_386, "name")])
-			var _t438 = J.mc(_t437, "split", ["{d}"])
-			var _t439 = J.mc(_t438, "join", [(v_d_388 if (not J.leq(v_d_388, null)) else "")])
-			J.sp(_t434, "text", _t439)
-	return v_r_384
+	var v_V_369 = null; var v_idle_370 = null; var v_items_371 = null; var v_vis_372 = null; var v_t_374 = null; var v_i0_375 = null; var v_v0_376 = null; var v_r_377 = null; var v_ag_379 = null
+	var _s213 = {"__p": env, "ctx": null, "nv": null}
+	v_V_369 = J.arg(a, 0)
+	v_idle_370 = J.arg(a, 1)
+	v_items_371 = J.arg(a, 2)
+	v_vis_372 = J.arg(a, 3)
+	_s213["ctx"] = J.arg(a, 4)
+	v_t_374 = J.arg(a, 5)
+	v_i0_375 = J.len(v_items_371)
+	v_v0_376 = J.len(v_vis_372)
+	v_r_377 = J.mc(_s213["__p"]["of"], "apply", [this_, a])
+	_s213["nv"] = J.mc(v_vis_372, "slice", [v_v0_376])
+	v_ag_379 = J.mc(v_items_371, "slice", [(J.len(v_items_371) - J.len(_s213["nv"]))])
+	if (J.sub(J.len(v_items_371), v_i0_375) >= J.len(_s213["nv"])):
+		J.mc(v_ag_379, "forEach", [Callable(self, "_f90").bind(_s213)])
+	return v_r_377
 
 func _f93(this_, a: Array, env):
-	var v_g_395 = null; var v_u_396 = null; var v_m_397 = null; var v_hm_398 = null; var v_e_399 = null
-	v_g_395 = J.arg(a, 0)
-	v_u_396 = J.mc(env["om"], "apply", [this_, a])
-	var _t442 = env["__p"]["__p"]["statMult"]
-	var _t444 = J.cl(_t442, null, [v_g_395])
-	var _t443 = env["__p"]["__p"]["perk"]
-	v_m_397 = J.mul(_t444, J.cl(_t443, null, ["atk"]))
-	var _t445 = J.mul(J.gp(v_u_396, "atk"), v_m_397)
-	J.sp(v_u_396, "atk", _t445)
-	var _t446 = env["__p"]["__p"]["statMult"]
-	v_hm_398 = J.cl(_t446, null, [v_g_395])
-	var _t447 = J.mul(J.gp(v_u_396, "hp"), v_hm_398)
-	J.sp(v_u_396, "hp", _t447)
-	var _t448 = J.mul(J.gp(v_u_396, "maxhp"), v_hm_398)
-	J.sp(v_u_396, "maxhp", _t448)
-	return v_u_396
+	var v_x_391 = null
+	v_x_391 = J.arg(a, 0)
+	return J.seq(J.gp(v_x_391, "id"), J.gp(env["b"], "id"))
 
-func _f95(this_, a: Array, env):
-	var v_u_404 = null
-	v_u_404 = J.arg(a, 0)
-	var _t453 = J.seq(J.gp(v_u_404, "side"), 0.0)
-	return (J.gp(v_u_404, "gid") if _t453 else _t453)
-
-func _f97(this_, a: Array, env):
-	var v_g_406 = null
-	v_g_406 = J.arg(a, 0)
-	return J.seq(J.gp(v_g_406, "id"), J.gp(env["u"], "gid"))
-
-func _f96(this_, a: Array, env):
-	var _s233 = {"__p": env, "u": null}
-	_s233["u"] = J.arg(a, 0)
-	var _t455 = _s233["__p"]["__p"]["__p"]["add"]
-	var _t456 = J.gp(J.G.get("S"), "ghosts")
-	return J.cl(_t455, null, [J.mc(_t456, "find", [Callable(self, "_f97").bind(_s233)]), J.gp(_s233["__p"]["__p"]["__p"]["TUNE"], "WIN")])
+func _f92(this_, a: Array, env):
+	var v_r_388 = null; var v_g_390 = null; var v_d_392 = null; var v_pool_393 = null; var v_l_394 = null; var v_e_395 = null
+	v_r_388 = J.mc(env["ou"], "apply", [this_, a])
+	var _s220 = {"__p": env, "b": null}
+	_s220["b"] = J.gp(this_, "bubble")
+	if J.t(((not J.seq(_s220["b"], _s220["__p"]["__p"]["__p"]["lastBub"])) if J.t(_s220["b"]) else _s220["b"])):
+		_s220["__p"]["__p"]["__p"]["lastBub"] = _s220["b"]
+		var _t438 = null
+		if J.t(J.gp(_s220["b"], "hero")):
+			var _t436 = J.gp(J.G.get("S"), "ghosts")
+			_t438 = J.mc(_t436, "find", [_s220["__p"]["__p"]["__p"]["isAfu"]])
+		else:
+			var _t437 = J.gp(J.G.get("S"), "ghosts")
+			_t438 = J.mc(_t437, "find", [Callable(self, "_f93").bind(_s220)])
+		v_g_390 = _t438
+		var _t440 = v_g_390
+		if J.t(_t440):
+			var _t439 = _s220["__p"]["__p"]["__p"]["isAfu"]
+			_t440 = (not J.t(J.cl(_t439, null, [v_g_390])))
+		var _t442 = _t440
+		if J.t(_t442):
+			var _t441 = _s220["__p"]["__p"]["__p"]["val"]
+			_t442 = J.cmp(J.cl(_t441, null, [v_g_390]), J.gp(_s220["__p"]["__p"]["__p"]["TUNE"], "WARN"), "<=")
+		var _t443 = (J.cmp(J.gp(_s220["b"], "t"), 0.2, "<") if J.t(_t442) else _t442)
+		if J.t(((randf() < 0.6) if J.t(_t443) else _t443)):
+			var _t444 = _s220["__p"]["__p"]["__p"]["daysLeft"]
+			v_d_392 = J.cl(_t444, null, [v_g_390])
+			v_pool_393 = (J.G.get("PRES_COUNT") if (not J.leq(v_d_392, null)) else J.G.get("PRES_WORRY"))
+			var _t445 = _s220["__p"]["__p"]["__p"]["rnd"]
+			v_l_394 = J.cl(_t445, null, [v_pool_393])
+			var _t446 = _s220["b"]
+			var _t447 = (J.gp(v_l_394, 1.0) if J.t(J.cl(_s220["__p"]["__p"]["__p"]["zh"], null, [])) else J.gp(v_l_394, 0.0))
+			var _t448 = J.mc(_t447, "split", ["{n}"])
+			var _t449 = J.mc(_t448, "join", [J.gp(v_g_390, "name")])
+			var _t450 = J.mc(_t449, "split", ["{d}"])
+			var _t451 = J.mc(_t450, "join", [(v_d_392 if (not J.leq(v_d_392, null)) else "")])
+			J.sp(_t446, "text", _t451)
+	return v_r_388
 
 func _f94(this_, a: Array, env):
-	var v_win_403 = null; var v_e_407 = null
-	v_win_403 = J.arg(a, 0)
-	if J.t(((not J.t(J.gp(this_, "result"))) if J.t(v_win_403) else v_win_403)):
-		var _t451 = J.gp(this_, "units")
-		var _t452 = (_t451 if J.t(_t451) else [])
-		var _t454 = J.mc(_t452, "filter", [Callable(self, "_f95").bind(env)])
-		J.mc(_t454, "forEach", [Callable(self, "_f96").bind(env)])
-	return J.mc(env["of"], "apply", [this_, a])
+	var v_g_399 = null; var v_u_400 = null; var v_m_401 = null; var v_hm_402 = null; var v_e_403 = null
+	v_g_399 = J.arg(a, 0)
+	v_u_400 = J.mc(env["om"], "apply", [this_, a])
+	var _t454 = env["__p"]["__p"]["statMult"]
+	var _t456 = J.cl(_t454, null, [v_g_399])
+	var _t455 = env["__p"]["__p"]["perk"]
+	v_m_401 = J.mul(_t456, J.cl(_t455, null, ["atk"]))
+	var _t457 = J.mul(J.gp(v_u_400, "atk"), v_m_401)
+	J.sp(v_u_400, "atk", _t457)
+	var _t458 = env["__p"]["__p"]["statMult"]
+	v_hm_402 = J.cl(_t458, null, [v_g_399])
+	var _t459 = J.mul(J.gp(v_u_400, "hp"), v_hm_402)
+	J.sp(v_u_400, "hp", _t459)
+	var _t460 = J.mul(J.gp(v_u_400, "maxhp"), v_hm_402)
+	J.sp(v_u_400, "maxhp", _t460)
+	return v_u_400
 
-func _f99(this_, a: Array, env):
-	var v_x_414 = null
-	v_x_414 = J.arg(a, 0)
-	return J.seq(J.gp(v_x_414, "id"), env["__p"]["id"])
-
-func _f100(this_, a: Array, env):
-	var v_g_415 = null
-	v_g_415 = J.arg(a, 0)
-	return J.seq(J.gp(v_g_415, "k"), J.gp(env["b"], "k"))
+func _f96(this_, a: Array, env):
+	var v_u_408 = null
+	v_u_408 = J.arg(a, 0)
+	var _t465 = J.seq(J.gp(v_u_408, "side"), 0.0)
+	return (J.gp(v_u_408, "gid") if _t465 else _t465)
 
 func _f98(this_, a: Array, env):
-	var v_opt_412 = null; var v_e_416 = null
-	var _s238 = {"__p": env, "id": null}
-	_s238["id"] = J.arg(a, 0)
-	v_opt_412 = J.arg(a, 1)
-	var _s239 = {"__p": _s238, "b": null}
-	var _t460 = J.gp(J.G.get("Standup"), "list")
-	var _t461 = (_t460 if J.t(_t460) else [])
-	_s239["b"] = J.mc(_t461, "find", [Callable(self, "_f99").bind(_s239)])
-	if J.t(((not J.t((J.gp(v_opt_412, "replay") if J.t(v_opt_412) else v_opt_412))) if J.t(_s239["b"]) else _s239["b"])):
-		var _t462 = _s239["__p"]["__p"]["__p"]["__p"]["add"]
-		var _t463 = J.gp(J.G.get("S"), "ghosts")
-		J.cl(_t462, null, [J.mc(_t463, "find", [Callable(self, "_f100").bind(_s239)]), J.gp(_s239["__p"]["__p"]["__p"]["__p"]["TUNE"], "STANDUP")])
-	return J.mc(_s238["__p"]["op"], "apply", [this_, a])
+	var v_g_410 = null
+	v_g_410 = J.arg(a, 0)
+	return J.seq(J.gp(v_g_410, "id"), J.gp(env["u"], "gid"))
 
-func _f103(this_, a: Array, env):
-	var v_x_423 = null
-	v_x_423 = J.arg(a, 0)
-	var _t470 = J.seq(J.gp(v_x_423, "k"), J.gp(env["c"], 1.0))
-	return (J.seq(J.gp(v_x_423, "q"), "名") if _t470 else _t470)
+func _f97(this_, a: Array, env):
+	var _s236 = {"__p": env, "u": null}
+	_s236["u"] = J.arg(a, 0)
+	var _t467 = _s236["__p"]["__p"]["__p"]["add"]
+	var _t468 = J.gp(J.G.get("S"), "ghosts")
+	return J.cl(_t467, null, [J.mc(_t468, "find", [Callable(self, "_f98").bind(_s236)]), J.gp(_s236["__p"]["__p"]["__p"]["TUNE"], "WIN")])
 
-func _f102(this_, a: Array, env):
-	var v_g_422 = null
-	var _s247 = {"__p": env, "c": null}
-	_s247["c"] = J.arg(a, 0)
-	var _t469 = J.gp(J.G.get("S"), "ghosts")
-	v_g_422 = J.mc(_t469, "find", [Callable(self, "_f103").bind(_s247)])
-	if J.t(v_g_422):
-		var _t471 = _s247["__p"]["__p"]["__p"]["add"]
-		J.cl(_t471, null, [v_g_422, J.gp(_s247["__p"]["__p"]["__p"]["TUNE"], "SKIT")])
+func _f95(this_, a: Array, env):
+	var v_win_407 = null; var v_e_411 = null
+	v_win_407 = J.arg(a, 0)
+	if J.t(((not J.t(J.gp(this_, "result"))) if J.t(v_win_407) else v_win_407)):
+		var _t463 = J.gp(this_, "units")
+		var _t464 = (_t463 if J.t(_t463) else [])
+		var _t466 = J.mc(_t464, "filter", [Callable(self, "_f96").bind(env)])
+		J.mc(_t466, "forEach", [Callable(self, "_f97").bind(env)])
+	return J.mc(env["of"], "apply", [this_, a])
+
+func _f100(this_, a: Array, env):
+	var v_x_418 = null
+	v_x_418 = J.arg(a, 0)
+	return J.seq(J.gp(v_x_418, "id"), env["__p"]["id"])
 
 func _f101(this_, a: Array, env):
-	var v_sc_420 = null; var v_e_424 = null
-	v_sc_420 = J.arg(a, 0)
-	if J.t((J.seq(J.gp(v_sc_420, "tag"), "陰間日常") if J.t(v_sc_420) else v_sc_420)):
-		var _t467 = J.gp(v_sc_420, "cast")
-		var _t468 = (_t467 if J.t(_t467) else [])
-		J.mc(_t468, "forEach", [Callable(self, "_f102").bind(env)])
-	return J.mc(env["op"], "apply", [this_, a])
+	var v_g_419 = null
+	v_g_419 = J.arg(a, 0)
+	return J.seq(J.gp(v_g_419, "k"), J.gp(env["b"], "k"))
+
+func _f99(this_, a: Array, env):
+	var v_opt_416 = null; var v_e_420 = null
+	var _s241 = {"__p": env, "id": null}
+	_s241["id"] = J.arg(a, 0)
+	v_opt_416 = J.arg(a, 1)
+	var _s242 = {"__p": _s241, "b": null}
+	var _t472 = J.gp(J.G.get("Standup"), "list")
+	var _t473 = (_t472 if J.t(_t472) else [])
+	_s242["b"] = J.mc(_t473, "find", [Callable(self, "_f100").bind(_s242)])
+	if J.t(((not J.t((J.gp(v_opt_416, "replay") if J.t(v_opt_416) else v_opt_416))) if J.t(_s242["b"]) else _s242["b"])):
+		var _t474 = _s242["__p"]["__p"]["__p"]["__p"]["add"]
+		var _t475 = J.gp(J.G.get("S"), "ghosts")
+		J.cl(_t474, null, [J.mc(_t475, "find", [Callable(self, "_f101").bind(_s242)]), J.gp(_s242["__p"]["__p"]["__p"]["__p"]["TUNE"], "STANDUP")])
+	return J.mc(_s241["__p"]["op"], "apply", [this_, a])
 
 func _f104(this_, a: Array, env):
+	var v_x_427 = null
+	v_x_427 = J.arg(a, 0)
+	var _t482 = J.seq(J.gp(v_x_427, "k"), J.gp(env["c"], 1.0))
+	return (J.seq(J.gp(v_x_427, "q"), "名") if _t482 else _t482)
+
+func _f103(this_, a: Array, env):
+	var v_g_426 = null
+	var _s250 = {"__p": env, "c": null}
+	_s250["c"] = J.arg(a, 0)
+	var _t481 = J.gp(J.G.get("S"), "ghosts")
+	v_g_426 = J.mc(_t481, "find", [Callable(self, "_f104").bind(_s250)])
+	if J.t(v_g_426):
+		var _t483 = _s250["__p"]["__p"]["__p"]["add"]
+		J.cl(_t483, null, [v_g_426, J.gp(_s250["__p"]["__p"]["__p"]["TUNE"], "SKIT")])
+
+func _f102(this_, a: Array, env):
+	var v_sc_424 = null; var v_e_428 = null
+	v_sc_424 = J.arg(a, 0)
+	if J.t((J.seq(J.gp(v_sc_424, "tag"), "陰間日常") if J.t(v_sc_424) else v_sc_424)):
+		var _t479 = J.gp(v_sc_424, "cast")
+		var _t480 = (_t479 if J.t(_t479) else [])
+		J.mc(_t480, "forEach", [Callable(self, "_f103").bind(env)])
+	return J.mc(env["op"], "apply", [this_, a])
+
+func _f105(this_, a: Array, env):
 	if J.t(J.mc(env["sh"], "querySelector", [".gcard,[data-act=recruit]"])):
 		J.cl(env["__p"]["paintSheet"], null, [])
 
-func _f84(this_, a: Array, env):
-	var _s199 = {"__p": env, "sh": null}
-	if J.t(_s199["__p"]["started"]):
+func _f85(this_, a: Array, env):
+	var _s202 = {"__p": env, "sh": null}
+	if J.t(_s202["__p"]["started"]):
 		return null
-	_s199["__p"]["started"] = true
-	J.cl(_s199["__p"]["st"], null, [])
-	J.cl(_s199["__p"]["cst"], null, [])
-	J.S_window_("addEventListener", ["gb:nightEnd", Callable(self, "_f85").bind(_s199)])
-	var _t401 = (not J.seq(J.typeof_(J.G.get("ART")), "undefined"))
-	if J.t((J.gp(J.G.get("ART"), "drawChar") if _t401 else _t401)):
-		var _s204 = {"__p": _s199, "od": null}
-		_s204["od"] = J.gp(J.G.get("ART"), "drawChar")
-		var _t402 = J.G.get("ART")
-		var _t413 = Callable(self, "_f86").bind(_s204)
-		J.sp(_t402, "drawChar", _t413)
-	var _t414 = (not J.seq(J.typeof_(J.G.get("PlazaLife")), "undefined"))
-	if J.t((J.gp(J.G.get("PlazaLife"), "frame") if _t414 else _t414)):
-		var _s209 = {"__p": _s199, "of": null}
-		_s209["of"] = J.gp(J.G.get("PlazaLife"), "frame")
-		var _t415 = J.G.get("PlazaLife")
-		var _t421 = Callable(self, "_f88").bind(_s209)
-		J.sp(_t415, "frame", _t421)
-	var _t422 = (not J.seq(J.typeof_(J.G.get("Village")), "undefined"))
-	if J.t((J.gp(J.G.get("Village"), "update") if _t422 else _t422)):
-		var _s215 = {"__p": _s199, "ou": null}
-		_s215["ou"] = J.gp(J.G.get("Village"), "update")
-		var _t423 = J.G.get("Village")
-		var _t440 = Callable(self, "_f91").bind(_s215)
-		J.sp(_t423, "update", _t440)
+	_s202["__p"]["started"] = true
+	J.cl(_s202["__p"]["st"], null, [])
+	J.cl(_s202["__p"]["cst"], null, [])
+	J.S_window_("addEventListener", ["gb:nightEnd", Callable(self, "_f86").bind(_s202)])
+	var _t413 = (not J.seq(J.typeof_(J.G.get("ART")), "undefined"))
+	if J.t((J.gp(J.G.get("ART"), "drawChar") if _t413 else _t413)):
+		var _s207 = {"__p": _s202, "od": null}
+		_s207["od"] = J.gp(J.G.get("ART"), "drawChar")
+		var _t414 = J.G.get("ART")
+		var _t425 = Callable(self, "_f87").bind(_s207)
+		J.sp(_t414, "drawChar", _t425)
+	var _t426 = (not J.seq(J.typeof_(J.G.get("PlazaLife")), "undefined"))
+	if J.t((J.gp(J.G.get("PlazaLife"), "frame") if _t426 else _t426)):
+		var _s212 = {"__p": _s202, "of": null}
+		_s212["of"] = J.gp(J.G.get("PlazaLife"), "frame")
+		var _t427 = J.G.get("PlazaLife")
+		var _t433 = Callable(self, "_f89").bind(_s212)
+		J.sp(_t427, "frame", _t433)
+	var _t434 = (not J.seq(J.typeof_(J.G.get("Village")), "undefined"))
+	if J.t((J.gp(J.G.get("Village"), "update") if _t434 else _t434)):
+		var _s218 = {"__p": _s202, "ou": null}
+		_s218["ou"] = J.gp(J.G.get("Village"), "update")
+		var _t435 = J.G.get("Village")
+		var _t452 = Callable(self, "_f92").bind(_s218)
+		J.sp(_t435, "update", _t452)
 	if (not J.seq(J.typeof_(J.G.get("Battle")), "undefined")):
 		if J.t(J.gp(J.G.get("Battle"), "mkGhostUnit")):
-			var _s224 = {"__p": _s199, "om": null}
-			_s224["om"] = J.gp(J.G.get("Battle"), "mkGhostUnit")
-			var _t441 = J.G.get("Battle")
-			var _t449 = Callable(self, "_f93").bind(_s224)
-			J.sp(_t441, "mkGhostUnit", _t449)
+			var _s227 = {"__p": _s202, "om": null}
+			_s227["om"] = J.gp(J.G.get("Battle"), "mkGhostUnit")
+			var _t453 = J.G.get("Battle")
+			var _t461 = Callable(self, "_f94").bind(_s227)
+			J.sp(_t453, "mkGhostUnit", _t461)
 		if J.t(J.gp(J.G.get("Battle"), "finish")):
-			var _s229 = {"__p": _s199, "of": null}
-			_s229["of"] = J.gp(J.G.get("Battle"), "finish")
-			var _t450 = J.G.get("Battle")
-			var _t457 = Callable(self, "_f94").bind(_s229)
-			J.sp(_t450, "finish", _t457)
-	var _t458 = (not J.seq(J.typeof_(J.G.get("Standup")), "undefined"))
-	if J.t((J.gp(J.G.get("Standup"), "play") if _t458 else _t458)):
-		var _s237 = {"__p": _s199, "op": null}
-		_s237["op"] = J.gp(J.G.get("Standup"), "play")
-		var _t459 = J.G.get("Standup")
-		var _t464 = Callable(self, "_f98").bind(_s237)
-		J.sp(_t459, "play", _t464)
-	var _t465 = (not J.seq(J.typeof_(J.G.get("Theater")), "undefined"))
-	if J.t((J.gp(J.G.get("Theater"), "play") if _t465 else _t465)):
-		var _s244 = {"__p": _s199, "op": null}
-		_s244["op"] = J.gp(J.G.get("Theater"), "play")
-		var _t466 = J.G.get("Theater")
-		var _t472 = Callable(self, "_f101").bind(_s244)
-		J.sp(_t466, "play", _t472)
-	_s199["sh"] = J.S_document_("querySelector", ["#sheet"])
-	if J.t(((not J.seq(J.typeof_(J.G.get("MutationObserver")), "undefined")) if J.t(_s199["sh"]) else _s199["sh"])):
-		var _t473 = J.new_("MutationObserver", [Callable(self, "_f104").bind(_s199)])
-		J.mc(_t473, "observe", [_s199["sh"], {"childList": true, "subtree": true}])
-	J.F_setInterval([_s199["__p"]["tick"], 2000.0])
-	J.cl(_s199["__p"]["tick"], null, [])
+			var _s232 = {"__p": _s202, "of": null}
+			_s232["of"] = J.gp(J.G.get("Battle"), "finish")
+			var _t462 = J.G.get("Battle")
+			var _t469 = Callable(self, "_f95").bind(_s232)
+			J.sp(_t462, "finish", _t469)
+	var _t470 = (not J.seq(J.typeof_(J.G.get("Standup")), "undefined"))
+	if J.t((J.gp(J.G.get("Standup"), "play") if _t470 else _t470)):
+		var _s240 = {"__p": _s202, "op": null}
+		_s240["op"] = J.gp(J.G.get("Standup"), "play")
+		var _t471 = J.G.get("Standup")
+		var _t476 = Callable(self, "_f99").bind(_s240)
+		J.sp(_t471, "play", _t476)
+	var _t477 = (not J.seq(J.typeof_(J.G.get("Theater")), "undefined"))
+	if J.t((J.gp(J.G.get("Theater"), "play") if _t477 else _t477)):
+		var _s247 = {"__p": _s202, "op": null}
+		_s247["op"] = J.gp(J.G.get("Theater"), "play")
+		var _t478 = J.G.get("Theater")
+		var _t484 = Callable(self, "_f102").bind(_s247)
+		J.sp(_t478, "play", _t484)
+	_s202["sh"] = J.S_document_("querySelector", ["#sheet"])
+	if J.t(((not J.seq(J.typeof_(J.G.get("MutationObserver")), "undefined")) if J.t(_s202["sh"]) else _s202["sh"])):
+		var _t485 = J.new_("MutationObserver", [Callable(self, "_f105").bind(_s202)])
+		J.mc(_t485, "observe", [_s202["sh"], {"childList": true, "subtree": true}])
+	J.F_setInterval([_s202["__p"]["tick"], 2000.0])
+	J.cl(_s202["__p"]["tick"], null, [])
 
 func _f2(this_, a: Array, env):
 	return (J.G.get("S") if (not J.seq(J.typeof_(J.G.get("S")), "undefined")) else null)
 
 func _f3(this_, a: Array, env):
-	var _t474 = J.seq(J.typeof_(J.G.get("LANG")), "undefined")
-	return (_t474 if _t474 else (not J.seq(J.gp(J.G.get("LANG"), "cur"), "yue")))
+	var _t486 = J.seq(J.typeof_(J.G.get("LANG")), "undefined")
+	return (_t486 if _t486 else (not J.seq(J.gp(J.G.get("LANG"), "cur"), "yue")))
 
 func _f4(this_, a: Array, env):
 	var v_l_62 = null
 	v_l_62 = J.arg(a, 0)
-	var _t475 = J.cl(env["zh"], null, [])
-	return (J.gp(v_l_62, 2.0) if J.t((_t475 if J.t(_t475) else J.gp(env["WRITTEN"], J.gp(v_l_62, 0.0)))) else J.gp(v_l_62, 1.0))
+	var _t487 = J.cl(env["zh"], null, [])
+	return (J.gp(v_l_62, 2.0) if J.t((_t487 if J.t(_t487) else J.gp(env["WRITTEN"], J.gp(v_l_62, 0.0)))) else J.gp(v_l_62, 1.0))
 
 func _f5(this_, a: Array, env):
 	var v_id_63 = null
 	v_id_63 = J.arg(a, 0)
-	var _t476 = (J.gp(J.G.get("S"), "seen") if J.t(J.G.get("S")) else J.G.get("S"))
-	return (not (not J.t((J.gp(J.gp(J.G.get("S"), "seen"), v_id_63) if J.t(_t476) else _t476))))
+	var _t488 = (J.gp(J.G.get("S"), "seen") if J.t(J.G.get("S")) else J.G.get("S"))
+	return (not (not J.t((J.gp(J.gp(J.G.get("S"), "seen"), v_id_63) if J.t(_t488) else _t488))))
 
 func _f6(this_, a: Array, env):
 	var v_a_64 = null
@@ -1618,139 +1652,139 @@ func _f29(this_, a: Array, env):
 func _f28(this_, a: Array, env):
 	var _s61 = {"__p": env, "k": null}
 	_s61["k"] = J.arg(a, 0)
-	var _t477 = J.seq(_s61["__p"]["cur"], _s61["k"])
-	return (_t477 if _t477 else J.mc(_s61["__p"]["scenes"], "some", [Callable(self, "_f29").bind(_s61)]))
+	var _t489 = J.seq(_s61["__p"]["cur"], _s61["k"])
+	return (_t489 if _t489 else J.mc(_s61["__p"]["scenes"], "some", [Callable(self, "_f29").bind(_s61)]))
 
-func _f105(this_, a: Array, env):
-	var v_n_427 = null; var v_p_428 = null
-	v_n_427 = J.arg(a, 0)
-	v_p_428 = J.cl(env["st"], null, [])
-	var _t478 = J.add(J.gp(v_p_428, "skew"), J.mul(v_n_427, env["DAY"]))
-	J.sp(v_p_428, "skew", _t478)
+func _f106(this_, a: Array, env):
+	var v_n_431 = null; var v_p_432 = null
+	v_n_431 = J.arg(a, 0)
+	v_p_432 = J.cl(env["st"], null, [])
+	var _t490 = J.add(J.gp(v_p_432, "skew"), J.mul(v_n_431, env["DAY"]))
+	J.sp(v_p_432, "skew", _t490)
 	J.cl(env["update"], null, [])
 	J.cl(env["contractTick"], null, [])
 	J.cl(env["hud"], null, [])
 
-func _f106(this_, a: Array, env):
-	var v_g_431 = null; var v_v_432 = null
-	v_g_431 = J.arg(a, 0)
-	v_v_432 = J.arg(a, 1)
-	var _t479 = env["set"]
-	J.cl(_t479, null, [v_g_431, v_v_432])
-
 func _f107(this_, a: Array, env):
-	return env["scenes"]
+	var v_g_435 = null; var v_v_436 = null
+	v_g_435 = J.arg(a, 0)
+	v_v_436 = J.arg(a, 1)
+	var _t491 = env["set"]
+	J.cl(_t491, null, [v_g_435, v_v_436])
 
 func _f108(this_, a: Array, env):
-	if J.t(J.len(env["scenes"])):
-		var _t480 = env["runScene"]
-		J.cl(_t480, null, [J.mc(env["scenes"], "shift", [])])
+	return env["scenes"]
 
 func _f109(this_, a: Array, env):
-	var v_kind_437 = null; var v_extra_438 = null
-	v_kind_437 = J.arg(a, 0)
-	v_extra_438 = J.arg(a, 1)
-	var _t481 = env["runScene"]
-	J.cl(_t481, null, [J.S_Object_("assign", [{"kind": v_kind_437}, (v_extra_438 if J.t(v_extra_438) else {})])])
+	if J.t(J.len(env["scenes"])):
+		var _t492 = env["runScene"]
+		J.cl(_t492, null, [J.mc(env["scenes"], "shift", [])])
 
 func _f110(this_, a: Array, env):
-	var _t482 = env["newPeriod"]
-	J.cl(_t482, null, [3.0])
-
-func _f112(this_, a: Array, env):
-	var v_a_450 = null; var v_b_451 = null
-	v_a_450 = J.arg(a, 0)
-	v_b_451 = J.arg(a, 1)
-	var _t506 = env["__p"]["val"]
-	var _t508 = J.cl(_t506, null, [v_a_450])
-	var _t507 = env["__p"]["val"]
-	return J.sub(_t508, J.cl(_t507, null, [v_b_451]))
-
-func _f113(this_, a: Array, env):
-	var v_g_452 = null
-	v_g_452 = J.arg(a, 0)
-	var _t511 = J.gp(v_g_452, "id")
-	var _t512 = J.gp(v_g_452, "name")
-	var _t510 = env["__p"]["val"]
-	var _t514 = J.round(J.num(J.cl(_t510, null, [v_g_452])))
-	var _t513 = env["__p"]["daysLeft"]
-	var _t518 = J.cl(_t513, null, [v_g_452])
-	var _t515 = env["__p"]["isAfu"]
-	var _t517 = (not J.t(J.cl(_t515, null, [v_g_452])))
-	if J.t(_t517):
-		var _t516 = env["__p"]["val"]
-		_t517 = J.cmp(J.cl(_t516, null, [v_g_452]), 100.0, "<")
-	return {"id": _t511, "name": _t512, "v": _t514, "days": _t518, "canOffer": _t517, "done": J.seq(J.gp(env["od"], J.gp(v_g_452, "id")), env["today"])}
+	var v_kind_441 = null; var v_extra_442 = null
+	v_kind_441 = J.arg(a, 0)
+	v_extra_442 = J.arg(a, 1)
+	var _t493 = env["runScene"]
+	J.cl(_t493, null, [J.S_Object_("assign", [{"kind": v_kind_441}, (v_extra_442 if J.t(v_extra_442) else {})])])
 
 func _f111(this_, a: Array, env):
-	var v_c_443 = null; var v_now_444 = null; var v_o_445 = null; var v_p_446 = null; var v_nx_449 = null
-	var _s258 = {"__p": env, "od": null, "today": null}
-	v_c_443 = J.cl(_s258["__p"]["cst"], null, [])
-	v_now_444 = J.cl(_s258["__p"]["clock"], null, [])
-	v_o_445 = {"state": J.gp(v_c_443, "state")}
-	if (not J.seq(J.gp(v_c_443, "state"), "none")):
-		var _t483 = J.gp(J.gp(J.G.get("PRES_RANKS"), J.gp(v_c_443, "rank")), "name")
-		J.sp(v_o_445, "rank", _t483)
-		var _t484 = J.cmp(J.gp(v_c_443, "rank"), (J.len(J.G.get("PRES_RANKS")) - 1.0), ">=")
-		J.sp(v_o_445, "top", _t484)
-		if J.seq(J.gp(v_c_443, "state"), "active"):
-			var _t485 = J.gp(v_c_443, "kpi")
-			J.sp(v_o_445, "kpi", _t485)
-			var _t486 = J.gp(v_c_443, "target")
-			J.sp(v_o_445, "target", _t486)
-			var _t487 = J.max_([0.0, J.div(J.sub(J.gp(v_c_443, "end"), v_now_444), _s258["__p"]["DAY"])])
-			J.sp(v_o_445, "left", _t487)
-		else:
-			var _t488 = J.max_([0.0, J.div(J.sub(J.gp(J.gp(v_c_443, "crisis"), "end"), v_now_444), _s258["__p"]["DAY"])])
-			J.sp(v_o_445, "crisis", _t488)
-		v_nx_449 = J.gp(J.G.get("PRES_RANKS"), J.add(J.gp(v_c_443, "rank"), 1.0))
-		var _t489 = ({"name": J.gp(v_nx_449, "name"), "unlock": J.gp(v_nx_449, "unlock")} if J.t(v_nx_449) else null)
-		J.sp(v_o_445, "next", _t489)
-	v_p_446 = J.cl(_s258["__p"]["st"], null, [])
-	var _t491 = J.gp(_s258["__p"]["TUNE"], "DECAY")
-	var _t490 = _s258["__p"]["perk"]
-	var _t492 = J.mul(_t491, J.cl(_t490, null, ["decay"]))
-	var _t493 = J.mc(_t492, "toFixed", [1.0])
-	J.sp(v_o_445, "decay", _t493)
-	var _t494 = J.gp(_s258["__p"]["TUNE"], "RIPPLE")
-	J.sp(v_o_445, "ripple", _t494)
-	var _t496 = J.add(J.gp(_s258["__p"]["TUNE"], "RIPPLE"), J.mul(J.gp(_s258["__p"]["TUNE"], "RIPPLE_STAR"), 3.0))
-	var _t495 = _s258["__p"]["perk"]
-	var _t497 = J.add(_t496, J.cl(_t495, null, ["ripple"]))
-	J.sp(v_o_445, "rippleMax", _t497)
-	var _t499 = null
-	if J.cmp(J.cl(_s258["__p"]["clock"], null, []), J.gp(v_p_446, "grace"), "<"):
-		var _t498 = J.div(J.sub(J.gp(v_p_446, "grace"), J.cl(_s258["__p"]["clock"], null, [])), _s258["__p"]["DAY"])
-		_t499 = J.mc(_t498, "toFixed", [1.0])
-	else:
-		_t499 = null
-	J.sp(v_o_445, "grace", _t499)
-	var _t500 = _s258["__p"]["OFFER"]
-	J.sp(v_o_445, "offer", _t500)
-	var _t501 = J.G.get("fmt")
-	var _t502 = J.cl(_t501, null, [J.gp(J.gp(J.G.get("S"), "res"), "buns")])
-	J.sp(v_o_445, "buns", _t502)
-	var _t503 = J.gp(v_p_446, "offered")
-	_s258["od"] = (_t503 if J.t(_t503) else {})
-	var _t504 = _s258["__p"]["gday"]
-	_s258["today"] = J.cl(_t504, null, [J.cl(_s258["__p"]["clock"], null, [])])
-	var _t505 = J.mc(J.gp(J.G.get("S"), "ghosts"), "slice", [])
-	var _t509 = J.mc(_t505, "sort", [Callable(self, "_f112").bind(_s258)])
-	var _t519 = J.mc(_t509, "map", [Callable(self, "_f113").bind(_s258)])
-	J.sp(v_o_445, "list", _t519)
-	var _t520 = J.gp(_s258["__p"]["TUNE"], "FADE")
-	J.sp(v_o_445, "fade", _t520)
-	var _t521 = J.gp(_s258["__p"]["TUNE"], "WARN")
-	J.sp(v_o_445, "warn", _t521)
-	return v_o_445
+	var _t494 = env["newPeriod"]
+	J.cl(_t494, null, [3.0])
+
+func _f113(this_, a: Array, env):
+	var v_a_454 = null; var v_b_455 = null
+	v_a_454 = J.arg(a, 0)
+	v_b_455 = J.arg(a, 1)
+	var _t518 = env["__p"]["val"]
+	var _t520 = J.cl(_t518, null, [v_a_454])
+	var _t519 = env["__p"]["val"]
+	return J.sub(_t520, J.cl(_t519, null, [v_b_455]))
 
 func _f114(this_, a: Array, env):
-	var v_id_455 = null
-	v_id_455 = J.arg(a, 0)
-	var _t522 = env["offer"]
-	J.cl(_t522, null, [v_id_455])
+	var v_g_456 = null
+	v_g_456 = J.arg(a, 0)
+	var _t523 = J.gp(v_g_456, "id")
+	var _t524 = J.gp(v_g_456, "name")
+	var _t522 = env["__p"]["val"]
+	var _t526 = J.round(J.num(J.cl(_t522, null, [v_g_456])))
+	var _t525 = env["__p"]["daysLeft"]
+	var _t530 = J.cl(_t525, null, [v_g_456])
+	var _t527 = env["__p"]["isAfu"]
+	var _t529 = (not J.t(J.cl(_t527, null, [v_g_456])))
+	if J.t(_t529):
+		var _t528 = env["__p"]["val"]
+		_t529 = J.cmp(J.cl(_t528, null, [v_g_456]), 100.0, "<")
+	return {"id": _t523, "name": _t524, "v": _t526, "days": _t530, "canOffer": _t529, "done": J.seq(J.gp(env["od"], J.gp(v_g_456, "id")), env["today"])}
+
+func _f112(this_, a: Array, env):
+	var v_c_447 = null; var v_now_448 = null; var v_o_449 = null; var v_p_450 = null; var v_nx_453 = null
+	var _s261 = {"__p": env, "od": null, "today": null}
+	v_c_447 = J.cl(_s261["__p"]["cst"], null, [])
+	v_now_448 = J.cl(_s261["__p"]["clock"], null, [])
+	v_o_449 = {"state": J.gp(v_c_447, "state")}
+	if (not J.seq(J.gp(v_c_447, "state"), "none")):
+		var _t495 = J.gp(J.gp(J.G.get("PRES_RANKS"), J.gp(v_c_447, "rank")), "name")
+		J.sp(v_o_449, "rank", _t495)
+		var _t496 = J.cmp(J.gp(v_c_447, "rank"), (J.len(J.G.get("PRES_RANKS")) - 1.0), ">=")
+		J.sp(v_o_449, "top", _t496)
+		if J.seq(J.gp(v_c_447, "state"), "active"):
+			var _t497 = J.gp(v_c_447, "kpi")
+			J.sp(v_o_449, "kpi", _t497)
+			var _t498 = J.gp(v_c_447, "target")
+			J.sp(v_o_449, "target", _t498)
+			var _t499 = J.max_([0.0, J.div(J.sub(J.gp(v_c_447, "end"), v_now_448), _s261["__p"]["DAY"])])
+			J.sp(v_o_449, "left", _t499)
+		else:
+			var _t500 = J.max_([0.0, J.div(J.sub(J.gp(J.gp(v_c_447, "crisis"), "end"), v_now_448), _s261["__p"]["DAY"])])
+			J.sp(v_o_449, "crisis", _t500)
+		v_nx_453 = J.gp(J.G.get("PRES_RANKS"), J.add(J.gp(v_c_447, "rank"), 1.0))
+		var _t501 = ({"name": J.gp(v_nx_453, "name"), "unlock": J.gp(v_nx_453, "unlock")} if J.t(v_nx_453) else null)
+		J.sp(v_o_449, "next", _t501)
+	v_p_450 = J.cl(_s261["__p"]["st"], null, [])
+	var _t503 = J.gp(_s261["__p"]["TUNE"], "DECAY")
+	var _t502 = _s261["__p"]["perk"]
+	var _t504 = J.mul(_t503, J.cl(_t502, null, ["decay"]))
+	var _t505 = J.mc(_t504, "toFixed", [1.0])
+	J.sp(v_o_449, "decay", _t505)
+	var _t506 = J.gp(_s261["__p"]["TUNE"], "RIPPLE")
+	J.sp(v_o_449, "ripple", _t506)
+	var _t508 = J.add(J.gp(_s261["__p"]["TUNE"], "RIPPLE"), J.mul(J.gp(_s261["__p"]["TUNE"], "RIPPLE_STAR"), 3.0))
+	var _t507 = _s261["__p"]["perk"]
+	var _t509 = J.add(_t508, J.cl(_t507, null, ["ripple"]))
+	J.sp(v_o_449, "rippleMax", _t509)
+	var _t511 = null
+	if J.cmp(J.cl(_s261["__p"]["clock"], null, []), J.gp(v_p_450, "grace"), "<"):
+		var _t510 = J.div(J.sub(J.gp(v_p_450, "grace"), J.cl(_s261["__p"]["clock"], null, [])), _s261["__p"]["DAY"])
+		_t511 = J.mc(_t510, "toFixed", [1.0])
+	else:
+		_t511 = null
+	J.sp(v_o_449, "grace", _t511)
+	var _t512 = _s261["__p"]["OFFER"]
+	J.sp(v_o_449, "offer", _t512)
+	var _t513 = J.G.get("fmt")
+	var _t514 = J.cl(_t513, null, [J.gp(J.gp(J.G.get("S"), "res"), "buns")])
+	J.sp(v_o_449, "buns", _t514)
+	var _t515 = J.gp(v_p_450, "offered")
+	_s261["od"] = (_t515 if J.t(_t515) else {})
+	var _t516 = _s261["__p"]["gday"]
+	_s261["today"] = J.cl(_t516, null, [J.cl(_s261["__p"]["clock"], null, [])])
+	var _t517 = J.mc(J.gp(J.G.get("S"), "ghosts"), "slice", [])
+	var _t521 = J.mc(_t517, "sort", [Callable(self, "_f113").bind(_s261)])
+	var _t531 = J.mc(_t521, "map", [Callable(self, "_f114").bind(_s261)])
+	J.sp(v_o_449, "list", _t531)
+	var _t532 = J.gp(_s261["__p"]["TUNE"], "FADE")
+	J.sp(v_o_449, "fade", _t532)
+	var _t533 = J.gp(_s261["__p"]["TUNE"], "WARN")
+	J.sp(v_o_449, "warn", _t533)
+	return v_o_449
 
 func _f115(this_, a: Array, env):
+	var v_id_459 = null
+	v_id_459 = J.arg(a, 0)
+	var _t534 = env["offer"]
+	J.cl(_t534, null, [v_id_459])
+
+func _f116(this_, a: Array, env):
 	return env["playing"]
 
 func _f1(this_, a: Array, env):
@@ -1792,8 +1826,8 @@ func _f1(this_, a: Array, env):
 	_s2["openPanel"] = Callable(self, "_f77").bind(_s2)
 	_s2["bindPanel"] = Callable(self, "_f78").bind(_s2)
 	_s2["hud"] = Callable(self, "_f81").bind(_s2)
-	_s2["tick"] = Callable(self, "_f83").bind(_s2)
-	v_init_60 = Callable(self, "_f84").bind(_s2)
+	_s2["tick"] = Callable(self, "_f84").bind(_s2)
+	v_init_60 = Callable(self, "_f85").bind(_s2)
 	_s2["DAY"] = 86400000.0
 	_s2["HOUR"] = 3600000.0
 	_s2["TUNE"] = {"DECAY": 4.0, "GRACE": 7.0, "FADE": 60.0, "LOWSTAT": 50.0, "WARN": 25.0, "COUNT": 12.0, "CD_DAYS": 3.0, "AFU_FLOOR": 35.0, "OFFLINE_FLOOR": 13.0, "RIPPLE": 6.0, "RIPPLE_STAR": 3.0, "SQUAD": 18.0, "SQUAD_SCARE": 4.0, "SQUAD_CAP": 45.0, "LEGEND": 2.0, "DAILY_LEGEND": 4.0, "WIN": 2.0, "STANDUP": 8.0, "SKIT": 3.0}
@@ -1815,16 +1849,16 @@ func _f1(this_, a: Array, env):
 	_s2["ART3"] = {"阿福": "afu", "冼小姐": "npc_hr", "龐總": "npc_kpiboss", "Bryan": "npc_rival"}
 	_s2["LOOK"] = {"龐總": {"base": "ag:inspect", "talk": "ag:tap"}, "Bryan": {"base": "ag:spin", "talk": "ag:dribble"}, "冼小姐": {"base": "ag:clip", "talk": "ag:glasses"}}
 	_s2["OFFER"] = {"buns": 30.0, "add": 12.0}
-	v_dev_61 = {"days": Callable(self, "_f105").bind(_s2), "set": Callable(self, "_f106").bind(_s2), "scenes": Callable(self, "_f107").bind(_s2), "run": Callable(self, "_f108").bind(_s2), "play": Callable(self, "_f109").bind(_s2), "issue": Callable(self, "_f110").bind(_s2), "newPeriod": _s2["newPeriod"], "vanish": _s2["vanish"], "resummon": _s2["resummon"]}
-	return {"_n": {"panel": Callable(self, "_f111").bind(_s2), "offer": Callable(self, "_f114").bind(_s2)}, "TUNE": _s2["TUNE"], "st": _s2["st"], "cst": _s2["cst"], "val": _s2["val"], "add": _s2["add"], "perk": _s2["perk"], "alphaOf": _s2["alphaOf"], "statMult": _s2["statMult"], "nightEnd": _s2["nightEnd"], "kpiOf": _s2["kpiOf"], "update": _s2["update"], "contractTick": _s2["contractTick"], "daysLeft": _s2["daysLeft"], "openPanel": _s2["openPanel"], "panelHTML": _s2["panelHTML"], "hud": _s2["hud"], "init": v_init_60, "tick": _s2["tick"], "dev": v_dev_61, "__getters": {"playing": Callable(self, "_f115").bind(_s2)}}
+	v_dev_61 = {"days": Callable(self, "_f106").bind(_s2), "set": Callable(self, "_f107").bind(_s2), "scenes": Callable(self, "_f108").bind(_s2), "run": Callable(self, "_f109").bind(_s2), "play": Callable(self, "_f110").bind(_s2), "issue": Callable(self, "_f111").bind(_s2), "newPeriod": _s2["newPeriod"], "vanish": _s2["vanish"], "resummon": _s2["resummon"]}
+	return {"_n": {"panel": Callable(self, "_f112").bind(_s2), "offer": Callable(self, "_f115").bind(_s2)}, "TUNE": _s2["TUNE"], "st": _s2["st"], "cst": _s2["cst"], "val": _s2["val"], "add": _s2["add"], "perk": _s2["perk"], "alphaOf": _s2["alphaOf"], "statMult": _s2["statMult"], "nightEnd": _s2["nightEnd"], "kpiOf": _s2["kpiOf"], "update": _s2["update"], "contractTick": _s2["contractTick"], "daysLeft": _s2["daysLeft"], "openPanel": _s2["openPanel"], "panelHTML": _s2["panelHTML"], "hud": _s2["hud"], "init": v_init_60, "tick": _s2["tick"], "dev": v_dev_61, "__getters": {"playing": Callable(self, "_f116").bind(_s2)}}
 
-func _f116(this_, a: Array, env):
-	var v_presenceBoot_460 = null; var v_e_461 = null
-	v_presenceBoot_460 = Callable(self, "_f116").bind(env)
-	var _t523 = J.seq(J.typeof_(J.G.get("S")), "undefined")
-	var _t524 = (_t523 if _t523 else (not J.t(J.G.get("S"))))
-	var _t525 = (_t524 if _t524 else J.seq(J.typeof_(J.G.get("Village")), "undefined"))
-	if (_t525 if _t525 else (not J.t(J.S_document_("querySelector", ["#sheet"])))):
-		J.F_setTimeout([v_presenceBoot_460, 300.0])
+func _f117(this_, a: Array, env):
+	var v_presenceBoot_464 = null; var v_e_465 = null
+	v_presenceBoot_464 = Callable(self, "_f117").bind(env)
+	var _t535 = J.seq(J.typeof_(J.G.get("S")), "undefined")
+	var _t536 = (_t535 if _t535 else (not J.t(J.G.get("S"))))
+	var _t537 = (_t536 if _t536 else J.seq(J.typeof_(J.G.get("Village")), "undefined"))
+	if (_t537 if _t537 else (not J.t(J.S_document_("querySelector", ["#sheet"])))):
+		J.F_setTimeout([v_presenceBoot_464, 300.0])
 		return null
 	J.mc(J.G.get("Presence"), "init", [])
