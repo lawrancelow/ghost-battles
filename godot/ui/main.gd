@@ -61,12 +61,19 @@ func _boot_js() -> void:
 	var bar_bg = ColorRect.new(); bar_bg.color = Color("#3a2e26"); bar_bg.anchor_left = 0.15; bar_bg.anchor_right = 0.85; bar_bg.anchor_top = 0.87; bar_bg.anchor_bottom = 0.87; bar_bg.offset_bottom = 6; loading.add_child(bar_bg)
 	var bar = ColorRect.new(); bar.color = Color("#c2362b"); bar.size = Vector2(0, 6); bar_bg.add_child(bar)
 	await get_tree().process_frame
+	# 上次開機有冇卡死？（就算主線程死循環，呢個檔都會留低卡喺邊一步）
+	var prev = _stage_get()
+	if prev != "" and prev != "ready":
+		var choice = await _boot_rescue(loading, prev)
+		if choice == "fresh": _set_aside_save()
+	_stage("load")
 	var t0 = Time.get_ticks_msec(); boot_full_t = t0 + 70000   # 載模塊階段：90 秒都未完先出記錄
 	JSBridge.install_natives(JSRun)
 	JSRun.boot_dom("res://web/shell.html")
 	dom = Control.new(); dom.set_script(load("res://ui/dom_view.gd")); add_child(dom); move_child(dom, sheet.get_index())
 	var names = FileAccess.get_file_as_string("res://jsgen/modules.txt").split("\n", false)
 	for i in names.size():
+		if i % 8 == 0: _stage("mod:" + names[i])
 		JSRun.load_modules([names[i]])
 		bar.size.x = bar_bg.size.x * float(i + 1) / names.size()
 		await get_tree().process_frame
@@ -82,6 +89,9 @@ func _boot_js() -> void:
 	loading.queue_free(); loading = null
 	_boot_step("snd", func(): Snd.warm())
 	print("[boot] ready ", Time.get_ticks_msec() - t0, "ms")
+	_stage("first_draw")   # 第一幀畫村子都可能出事：畫完幾幀先算開機成功
+	for _i in 4: await get_tree().process_frame
+	_stage("ready")
 	var lt = log_tail(400); var nerr = lt.count("SCRIPT ERROR")
 	if nerr > 0: boot_fail.append("%d 個腳本錯誤" % nerr)
 	if boot_fail.size():
@@ -89,7 +99,54 @@ func _boot_js() -> void:
 
 var boot_fail: Array = []
 var _step_ok := false
+const STAGE_F := "user://boot_stage.txt"
+func _stage(st: String) -> void:
+	var f = FileAccess.open(STAGE_F, FileAccess.WRITE)
+	if f: f.store_string(st); f.flush()
+func _stage_get() -> String:
+	var f = FileAccess.open(STAGE_F, FileAccess.READ)
+	return f.get_as_text().strip_edges() if f else ""
+
+# 上一次嘅記錄檔（Godot 開機會將舊 godot.log 改名加日期）
+static func prev_log_tail(n := 40) -> String:
+	var d = DirAccess.open("user://logs")
+	if d == null: return "（冇舊記錄）"
+	var fs = Array(d.get_files()).filter(func(x): return x.ends_with(".log") and x != "godot.log")
+	if fs.is_empty(): return "（冇舊記錄）"
+	fs.sort()
+	var f = FileAccess.open("user://logs/" + fs[-1], FileAccess.READ)
+	if f == null: return "（讀唔到舊記錄）"
+	var lines = f.get_as_text().split("\n")
+	return "\n".join(lines.slice(maxi(0, lines.size() - n)))
+
+# 救命畫面：顯示上次卡喺邊、舊記錄；可以照常開或者暫時用新存檔（舊存檔保留，唔會刪）
+func _boot_rescue(host: Control, prev: String) -> String:
+	var box = PanelContainer.new(); box.anchor_right = 1; box.anchor_bottom = 1; box.offset_left = 10; box.offset_right = -10; box.offset_top = 30; box.offset_bottom = -30
+	var st = StyleBoxFlat.new(); st.bg_color = Color(0.07, 0.05, 0.08, 0.93); st.set_corner_radius_all(8); st.set_content_margin_all(10); box.add_theme_stylebox_override("panel", st)
+	host.add_child(box)
+	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 8); box.add_child(vb)
+	var h = Label.new(); h.text = "上次開遊戲卡咗喺「%s」呢一步。\n請截圖呢版俾開發者，然後揀點開：" % prev
+	h.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; h.add_theme_font_size_override("font_size", 14); h.add_theme_color_override("font_color", Color("#ffe2c8")); vb.add_child(h)
+	var lg = Label.new(); lg.text = prev_log_tail(36); lg.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; lg.add_theme_font_size_override("font_size", 8)
+	lg.add_theme_color_override("font_color", Color("#c8b8a8")); lg.size_flags_vertical = Control.SIZE_EXPAND_FILL; lg.clip_text = true; vb.add_child(lg)
+	DisplayServer.clipboard_set("stage=" + prev + "\n" + prev_log_tail(200))
+	var b1 = Button.new(); b1.text = "照常開遊戲"; b1.custom_minimum_size = Vector2(0, 44); vb.add_child(b1)
+	var b2 = Button.new(); b2.text = "暫時用新存檔試開（舊存檔會保留，唔會刪）"; b2.custom_minimum_size = Vector2(0, 44); vb.add_child(b2)
+	var res = [""]
+	b1.pressed.connect(func(): res[0] = "normal")
+	b2.pressed.connect(func(): res[0] = "fresh")
+	while res[0] == "": await get_tree().process_frame
+	box.queue_free()
+	return res[0]
+
+func _set_aside_save() -> void:
+	var src = "user://localStorage.json"
+	if FileAccess.file_exists(src):
+		DirAccess.rename_absolute(src, "user://localStorage_kept_%d.json" % int(Time.get_unix_time_from_system()))
+	JSRun.ls = {}
+
 func _boot_step(name: String, f: Callable) -> void:
+	_stage(name)
 	_step_ok = false
 	_boot_run(f)
 	if not _step_ok: boot_fail.append(name); push_error("[boot] step failed: " + name)

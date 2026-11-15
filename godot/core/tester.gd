@@ -16,11 +16,13 @@ func main() -> Node: return get_tree().root.get_node_or_null("Main")
 
 func _run() -> void:
 	await get_tree().process_frame
-	while main() == null or main().get("loading") != null or J.G.get("S") == null:
+	var early = steps.size() > 0 and steps[0][0] == "early"   # 開機畫面測試：唔等入遊戲
+	while not early and (main() == null or main().get("loading") != null or J.G.get("S") == null):
 		await get_tree().create_timer(0.2).timeout
 	for s in steps:
 		var cmd: String = s[0]
 		match cmd:
+			"early": pass
 			"wait": await get_tree().create_timer(float(s[1])).timeout
 			"frames":
 				for i in int(s[1]): await get_tree().process_frame

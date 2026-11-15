@@ -277,14 +277,20 @@ func _f14(this_, a: Array, env):
 	J.sp(_t71, "onclick", _t73)
 	if J.t(J.gp(J.G.get("window"), "Policy")):
 		J.mc(J.G.get("Policy"), "maybe", [])
+	if (not J.seq(J.typeof_(J.G.get("__nat_world")), "undefined")):
+		var _t74 = J.G.get("__nat_world")
+		J.cl(_t74, null, [true])
 
 func _f31(this_, a: Array, env):
 	var v_el_32 = null
-	var _t74 = J.G.get("$")
-	v_el_32 = J.cl(_t74, null, ["#world"])
+	if (not J.seq(J.typeof_(J.G.get("__nat_world")), "undefined")):
+		var _t75 = J.G.get("__nat_world")
+		J.cl(_t75, null, [false])
+	var _t76 = J.G.get("$")
+	v_el_32 = J.cl(_t76, null, ["#world"])
 	if J.t(v_el_32):
-		var _t75 = J.gp(v_el_32, "classList")
-		J.mc(_t75, "remove", ["on"])
+		var _t77 = J.gp(v_el_32, "classList")
+		J.mc(_t77, "remove", ["on"])
 		J.sp(v_el_32, "innerHTML", "")
 	if J.t(J.gp(J.G.get("UI"), "refresh")):
 		J.mc(J.G.get("UI"), "refresh", [])
