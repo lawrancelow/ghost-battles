@@ -29,6 +29,8 @@ module.exports = {
     // 線 D2：對白框原生畫（sc_fast.gd）；家具標記先睇喺唔喺畫面先至計 propOK（結果一樣，慳啲）
     ["  drawBubble(ctx, text, x, y, ghost, age) {\n", "  drawBubble(ctx, text, x, y, ghost, age) { if (this._nat && typeof __nat_scBub !== 'undefined') return __nat_scBub(ctx, this, text, x, y, ghost, age);\n"],
     ["      if (SCARE_PROPS[k].group || !this.propOK(k, this.sel)) continue;", "      if (this.site.pano && !this.onScreen(SCARE_PROPS[k].rect[0] + SCARE_PROPS[k].rect[2] / 2, 0)) continue;       if (SCARE_PROPS[k].group || !this.propOK(k, this.sel)) continue;"],
+    ["  propMarks(ctx, t) {", "  propMarks(ctx, t) { if (this._nat && typeof __nat_scMarks !== 'undefined') return __nat_scMarks(ctx, this, t);"],
+    ["  drawTeam(ctx, t) {", "  drawTeam(ctx, t) { if (this._nat && typeof __nat_scTeam !== 'undefined') return __nat_scTeam(ctx, this, t);"],
     ["    if (!this.active) return; this.active = false;", "    if (!this.active) return; this.active = false; if (this._nat && typeof __nat_scEnd !== 'undefined') __nat_scEnd(this);"],
   ],
   // 線 D2：大樓剖面（夜空＋遠處大廈燈）原生畫（game/scare/sc_fast.gd）
@@ -40,6 +42,14 @@ module.exports = {
     ["      if (rc) out.push([ry + 0.02,", "      if (rc && vis(rx)) out.push([ry + 0.02,"],
     ["    if (ch) for (const c of st.spare) { const y = c.y + c.oz; out.push(", "    if (ch) for (const c of st.spare) { const y = c.y + c.oz; if (!vis(c.x + c.ox)) continue; out.push("],
     ["      if (b.oy > 0) { // 鏡頭拉遠", "      if (b.oy > 0 && SC._nat && typeof __nat_scSky !== 'undefined') __nat_scSky(ctx, SC, b.oy, b.s);\n      else if (b.oy > 0) { // 鏡頭拉遠"],
+    // 線 D2：會議枱、前台、後備椅原生畫（sc_fast.gd om_*）
+    ["out.push([my, (ctx) => { const b = SC.bgScale(),", "out.push([my, (ctx) => (SC._nat && typeof __nat_om !== 'undefined') ? __nat_om('meet', ctx, SC, tb, mx, my, SH, MT_K) : (() => { const b = SC.bgScale(),"],
+    ["ctx.drawImage(tb, x - w / 2, y - h, w, h); ctx.restore(); }]); }", "ctx.drawImage(tb, x - w / 2, y - h, w, h); ctx.restore(); })()]); }"],
+    ["      if (ch && vis(rx)) out.push([ry - 0.006, (ctx) => { const u = U(ry),", "      if (ch && vis(rx)) out.push([ry - 0.006, (ctx) => (SC._nat && typeof __nat_om !== 'undefined') ? __nat_om('rchair', ctx, SC, ch, rx, ry) : (() => { const u = U(ry),"],
+    ["ctx.drawImage(ch, -w / 2, -h, w, h); ctx.restore(); }]);\n      if (rc", "ctx.drawImage(ch, -w / 2, -h, w, h); ctx.restore(); })()]);\n      if (rc"],
+    ["      if (rc && vis(rx)) out.push([ry + 0.02, (ctx) => { const g = geo();", "      if (rc && vis(rx)) out.push([ry + 0.02, (ctx) => (SC._nat && typeof __nat_om !== 'undefined') ? __nat_om('rdesk', ctx, SC, rc, mon, rx, ry) : (() => { const g = geo();"],
+    ["ctx.fillText('接待處', bx + bw / 2, by + bh * 0.55); ctx.restore(); }]);", "ctx.fillText('接待處', bx + bw / 2, by + bh * 0.55); ctx.restore(); })()]);"],
+    ["if (!vis(c.x + c.ox)) continue; out.push([y, (ctx) => { const [x, yy]", "if (!vis(c.x + c.ox)) continue; out.push([y, (ctx) => { if (SC._nat && typeof __nat_om !== 'undefined') return __nat_om('spare', ctx, SC, ch, c, st.chairs); const [x, yy]"],
   ],
   // 線 D2：揀隊畫面（ui/scare_select/sc_select.gd）、偷看手機／電腦／茶水間視窗（game/scare/sc_ops.gd）原生化；規則照用 JS
   scare_squad: [

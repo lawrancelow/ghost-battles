@@ -109,8 +109,19 @@ func draw_raw(ctx: Ctx, id: String, x: float, y: float, h: float, pose: Dictiona
 		_cache[id + "|" + rk] = C
 	var R: Dictionary = C.R; var ar: float = C.ar
 	var W = h / ar
-	var T = _solve(R, pose); var bones: Array = R.bones
+	var bones: Array = R.bones
 	var uv: PackedVector2Array = C.uv
+	var pts = PackedVector2Array()
+	if C.get("_lh", -1.0) == h and C.get("_lp") == pose:   # 同一幀同一個姿勢再畫（例如坐低嘅人：手臂再畫一次）：用返上次蒙皮結果
+		pts = C._lpts
+	else:
+		pts = _skin(C, R, pose, h, ar, W, bones, uv)
+		C["_lh"] = h; C["_lp"] = pose.duplicate(); C["_lpts"] = pts
+	_emit(ctx, tex, C, pts, uv, x, y, h, W, pose, flip)
+	return true
+
+func _skin(C: Dictionary, R: Dictionary, pose: Dictionary, h: float, ar: float, W: float, bones: Array, uv: PackedVector2Array) -> PackedVector2Array:
+	var T = _solve(R, pose)
 	if not C.has("sv"): _sparse(C, bones.size())
 	# 稀疏蒙皮：只計有畫到嘅頂點、只計權重 ≥ 0.002 嘅骨（同舊寫法一樣跳過細權重），結果一樣、快幾倍
 	var nb = bones.size(); var c0 = PackedFloat64Array(); c0.resize(nb); var c1 = c0.duplicate(); var c2 = c0.duplicate(); var c3 = c0.duplicate()
@@ -126,6 +137,9 @@ func draw_raw(ctx: Ctx, id: String, x: float, y: float, h: float, pose: Dictiona
 			var k = sk[j]; var wk = sw[j]
 			X += wk * (c0[k] * u - c1[k] * vy + c2[k]); Y += wk * (c1[k] * u + c0[k] * vy + c3[k])
 		pts[i] = Vector2(X * W, Y * hy)
+	return pts
+
+func _emit(ctx: Ctx, tex: Texture2D, C: Dictionary, pts: PackedVector2Array, uv: PackedVector2Array, x: float, y: float, h: float, W: float, pose: Dictionary, flip: bool) -> void:
 	ctx.save()
 	ctx.translate(x + float(pose.get("x", 0.0)) * W, y + float(pose.get("y", 0.0)) * h)
 	if flip: ctx.scale(-1, 1)
@@ -135,7 +149,6 @@ func draw_raw(ctx: Ctx, id: String, x: float, y: float, h: float, pose: Dictiona
 	ctx.scale(float(pose.get("sx", 1.0)), float(pose.get("sy", 1.0))); ctx.translate(-W / 2, -h)
 	ctx.drawTriangles(tex, pts, uv, C.tris)
 	ctx.restore()
-	return true
 
 # 拆咗手嘅身體：沿用原角色骨架（去掉手臂骨），畫喺原點，原圖方向
 func draw_body(ctx: Ctx, rig_id: String, img_key: String, h: float, pose: Dictionary) -> bool:

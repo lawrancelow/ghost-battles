@@ -46,6 +46,8 @@ static func mark(k: String) -> void:
 	var now = Time.get_ticks_usec()
 	if _mk_prev != "": _mk[_mk_prev] = _mk.get(_mk_prev, 0) + now - _mk_last
 	_mk_prev = k; _mk_last = now
+static var _acc := {}
+static func acc(k: String, t0: int) -> void: _acc[k] = _acc.get(k, 0) + Time.get_ticks_usec() - t0
 static func L(s) -> String: return J.str(DB.L(J.str(s)))
 
 # ---------------- 開局（scare.js start 尾叫） ----------------
@@ -350,6 +352,7 @@ func _draw_stage() -> void:
 		if prof_n >= 30:
 			print("[scare] js_timers=%.1fms " % (JSRun.prof_timer / 30000.0)); JSRun.prof_timer = 0
 			print("[scare] draw=%.1fms proc=%.1fms " % [prof_d / 30000.0, prof_p / 30000.0], ", ".join(_mk.keys().map(func(k): return "%s=%.1f" % [k, _mk[k] / 30000.0])))
+			if _acc.size(): print("[acc] ", ", ".join(_acc.keys().map(func(k): return "%s=%.2f" % [k, _acc[k] / 30000.0]))); _acc.clear()
 			prof_d = 0; prof_p = 0; prof_n = 0; _mk.clear()
 
 func _unit() -> float:
