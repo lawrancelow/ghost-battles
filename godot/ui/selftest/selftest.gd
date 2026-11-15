@@ -17,8 +17,8 @@ const PRE := [
 	["sh_dark", "黑夜效果"], ["sh_mesh", "骨架動畫效果"], ["audio", "聲音"], ["file", "存檔讀寫"]]
 const POST := [
 	["boot", "載入遊戲"], ["ground", "村子地面（重畫）"],
-	["m_real", "真角色網格×1"], ["m_many", "真角色網格×24"], ["m_cloth", "網格衣服換色"], ["village", "村子（安全模式）"], ["village_mesh", "村子（正常畫面）"],
-	["world", "陰間地圖"], ["patrol", "夜班巡陰"], ["patrol_mesh", "夜班巡陰（正常畫面）"],
+	["m_real", "真角色網格×1"], ["m_many", "真角色網格×24"], ["m_cloth", "網格衣服換色"], ["village", "村子"],
+	["world", "陰間地圖"], ["patrol", "夜班巡陰"],
 	["scare", "回陽間・夜班嚇人"], ["battle", "主線戰鬥"], ["tower", "樓裡有鬼"], ["street", "陽間站崗"],
 	["gstreet", "冥街夜市"], ["gyard", "亂葬崗"], ["sports", "運動會"]]
 
@@ -39,7 +39,11 @@ static func ver() -> String: return str(ProjectSettings.get_setting("application
 static func on_boot() -> void:
 	load_state()
 	if OS.has_environment("GB_TEST") and not OS.has_environment("GB_SELFTEST"): S = {}; return
-	if not active() and not FileAccess.file_exists("user://selftest_done_" + ver()): start(false)
+	# 舊版本留低未跑完嘅自檢：清走，還原玩家存檔（自檢唔再自動跑，只喺設定手動開）
+	if active() and str(S.get("ver", "")) != ver():
+		if FileAccess.file_exists(BAK): DirAccess.copy_absolute(BAK, LS); DirAccess.remove_absolute(BAK)
+		S = {}; save_state(); return
+	if OS.has_environment("GB_SELFTEST") and not active(): start(false)
 	if active() and str(S.get("cur", "")) != "":
 		var prev = str(S.res.get(S.cur, ""))
 		S.res[S.cur] = "閃退兩次" if prev.begins_with("閃退") else "閃退"; S.cur = ""; save_state()
@@ -241,7 +245,7 @@ func _mode(id: String, main: Node) -> String:
 				var k = keys[i % keys.size()] if id == "m_many" else ("afu" if keys.has("afu") else keys[0])
 				var m = PtGfx.mesh_for(k, k, PtChar.RIG[k].bones)
 				if m.is_empty(): continue
-				var mat = ShaderMaterial.new(); mat.shader = PtGfx.SH_MESH
+				var mi = CpuSkin.new(); var mat = mi
 				var h = 90.0; var W = h / m.ar
 				var A = Transform2D(0, Vector2(40 + (i % 6) * 60, 300 + int(i / 6) * 110)) * Transform2D(0, Vector2(-W / 2, -h))
 				mat.set_shader_parameter("bone", PtGfx.solve(m.bones, {"a1": 0.3}))
@@ -250,7 +254,7 @@ func _mode(id: String, main: Node) -> String:
 				mat.set_shader_parameter("aff_o", A.origin)
 				if id == "m_cloth":
 					mat.set_shader_parameter("mode", 1.0); mat.set_shader_parameter("cm", Basis(Vector3(0.5, 0.2, 0.1), Vector3(0.1, 0.6, 0.1), Vector3(0.1, 0.1, 0.4)))
-				var mi = MeshInstance2D.new(); mi.mesh = m.mesh; mi.texture = m.tex; mi.material = mat; main.add_child(mi); nodes.append(mi)
+				mi.mesh = m.mesh; mi.texture = m.tex; main.add_child(mi); nodes.append(mi)
 			await _wait(1.5)
 			for x in nodes: x.queue_free()
 		"world": J.mc(J.G.get("World"), "open", []); await _wait(3.0)

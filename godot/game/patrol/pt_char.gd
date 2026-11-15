@@ -1,5 +1,5 @@
 # 夜班巡陰（原生）：一隻角色嘅畫法（取代 ART.drawChar ＋ patrol.js drawUnit）
-# 原圖網格變形交俾 GPU（pt_mesh.gdshader）；拆手揮武器（limbs）、衣服換色、工作證、裝備武器、血條名牌
+# 原圖網格變形用 CPU 蒙皮（CpuSkin）；拆手揮武器（limbs）、衣服換色、工作證、裝備武器、血條名牌
 class_name PtChar
 extends Node2D
 
@@ -24,14 +24,14 @@ var solid := false
 var glow: PtDraw
 var ch: PtDraw
 var back: PtDraw
-var body_mi: MeshInstance2D
+var body_mi: Node2D            # MeshInstance2D（GPU shader）或 CpuSkin（安全畫面模式）
 var body_sp: PtDraw
 var front: PtDraw
-var cloth_mi: MeshInstance2D
+var cloth_mi: Node2D
 var gear: PtDraw
 var over: PtDraw
-var mat: ShaderMaterial
-var cloth_mat: ShaderMaterial
+var mat                        # ShaderMaterial 或 CpuSkin（同一個介面：set_shader_parameter）
+var cloth_mat
 var M: Dictionary = {}         # 身體網格
 var MF: Dictionary = {}        # 完整（冇拆手）網格：limbs 角色喺 hurt／die／down 時用
 var tex_plain: Texture2D
@@ -64,7 +64,6 @@ func _init(unit, r) -> void:
 		mode = "plain"
 	else:
 		mode = "none"; if H0 <= 0: H0 = 58.0
-	if G.safe_gfx and (mode == "limbs" or mode == "mesh"): mode = "plain"   # 安全畫面模式：唔用骨架 shader
 	if rig != null and rig is Dictionary: tweak = rig.get("tweak")
 	glow = PtDraw.new(); glow.fn = _draw_glow; var gm = CanvasItemMaterial.new(); gm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD; glow.material = gm; add_child(glow)
 	ch = PtDraw.new(); ch.fn = _draw_shadow; add_child(ch)
@@ -72,8 +71,7 @@ func _init(unit, r) -> void:
 	back.fn = func(n): _draw_items(n, back_items)
 	mat = ShaderMaterial.new()
 	if mode == "limbs" or mode == "mesh":
-		mat.shader = PtGfx.SH_MESH
-		body_mi = MeshInstance2D.new(); body_mi.material = mat; ch.add_child(body_mi)
+		body_mi = CpuSkin.new(); mat = body_mi; ch.add_child(body_mi)   # 一律 CPU 蒙皮：唔再用骨架 shader（部分手機驅動會閃退）
 		if mode == "limbs":
 			var bb = []
 			for b in rig.bones: if b[0] != "armF" and b[0] != "axe": bb.append(b)
@@ -124,8 +122,8 @@ func sync(oo: Dictionary) -> void:
 	# 衣服
 	if o.cloth != null and mode != "plain" and mode != "none" and pose != "down" and not o.dying:
 		if cloth_mi == null:
-			cloth_mat = ShaderMaterial.new(); cloth_mat.shader = PtGfx.SH_MESH; cloth_mat.set_shader_parameter("mode", 1.0)
-			cloth_mi = MeshInstance2D.new(); cloth_mi.material = cloth_mat; ch.add_child(cloth_mi); ch.move_child(cloth_mi, front.get_index() + 1)
+			cloth_mi = CpuSkin.new(); cloth_mi.src = body_mi; cloth_mat = cloth_mi; cloth_mat.set_shader_parameter("mode", 1.0)
+			ch.add_child(cloth_mi); ch.move_child(cloth_mi, front.get_index() + 1)
 			cloth_mi.mesh = body_mi.mesh; cloth_mi.texture = body_mi.texture
 		cloth_mi.visible = true
 		cloth_mi.mesh = body_mi.mesh; cloth_mi.texture = body_mi.texture
