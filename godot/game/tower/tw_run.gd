@@ -13,6 +13,11 @@ const LW := 390.0           # 邏輯闊度（同網頁版手機一樣）
 var NT: Dictionary          # window.__twNat：{w, h, s, ctx, cab}
 var s := 1.0
 var stage: Control
+var hud: Control
+var hvp: SubViewport
+var hud_tex: TextureRect
+var _hsig = null
+var _hud_called := false
 var cab: Control
 var lpanel: Control
 var lblock: Control
@@ -25,6 +30,8 @@ var _lpress := ""
 var _lpress_t := 0
 var _mk := {}
 var _mk1 := []
+var _mkc := {}
+var _mkc_last := 0
 var _mk_last := 0
 var prof_d := 0
 var prof_n := 0
@@ -33,7 +40,24 @@ static func js(n: String): return J.G.get(n)
 static func TWX(): return J.G.get("TWX")
 
 # ---------------- tower.js open()/close() 叫 ----------------
+# 樓裡有鬼其餘原生函數喺開樓時先登記（唔再改共用 bridge.gd）
+static func register() -> void:
+	var G = J.G
+	if not G.has("__twNatL"): G["__twNatL"] = true
+	G["__nat_twRes"] = func(_t, a): return TwLogic.res_tick(a[0], J.num(a[1]), J.num(a[2]), J.num(a[3]))
+	G["__nat_twRes2"] = func(_t, a): return TwLogic.res2(a[0], J.num(a[1]), J.num(a[2]), J.num(a[3]), a[4])
+	G["__nat_twLit"] = func(_t, a): return TwLogic.lit(a[0], J.num(a[1]))
+	for k in TwDraw2.natives().keys(): G[k] = TwDraw2.natives()[k]
+	# HUD 快取：HUD 畫喺獨立節點，簽名（時辰、警覺、能量、按鈕狀態…）有變先重畫
+	G["__twHudN"] = func(_t, _a):
+		if cur == null or cur.hud == null: return false
+		cur._hud_called = true
+		var sig = cur._hud_sig()
+		if cur._hsig == null or sig != cur._hsig: cur._hsig = sig; cur.hud.queue_redraw(); cur.hvp.render_target_update_mode = SubViewport.UPDATE_ONCE
+		return true
+
 static func hook(on: bool) -> bool:
+	register()
 	var main = Engine.get_main_loop().root.get_node_or_null("Main")
 	if main == null: return false
 	if not on:
@@ -69,6 +93,12 @@ func _build() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stage = Control.new(); stage.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); stage.mouse_filter = Control.MOUSE_FILTER_STOP
 	stage.draw.connect(_draw_stage); stage.gui_input.connect(_stage_input); add_child(stage)
+	# HUD 畫入 SubViewport（簽名有變先重畫一次），平時只係畫一張貼圖：GPU 每幀少幾百個 draw call
+	hvp = SubViewport.new(); hvp.transparent_bg = true; hvp.disable_3d = true; hvp.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	hvp.gui_disable_input = true; add_child(hvp)
+	hud = Control.new(); hud.mouse_filter = Control.MOUSE_FILTER_IGNORE; hud.draw.connect(_draw_hud); hvp.add_child(hud)
+	hud_tex = TextureRect.new(); hud_tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); hud_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud_tex.texture = hvp.get_texture(); hud_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; hud_tex.stretch_mode = TextureRect.STRETCH_SCALE; add_child(hud_tex)
 	cab = Control.new(); cab.mouse_filter = Control.MOUSE_FILTER_STOP; cab.visible = false; cab.clip_contents = true
 	cab.draw.connect(_draw_cab); add_child(cab)
 	lblock = Control.new(); lblock.mouse_filter = Control.MOUSE_FILTER_STOP; lblock.visible = false; add_child(lblock)
@@ -82,6 +112,7 @@ func _build() -> void:
 func _fit() -> void:
 	var w = maxf(1.0, size.x); var h = maxf(1.0, size.y)
 	s = w / LW
+	if hvp: hvp.size = Vector2i(int(w), int(h)); hud.size = Vector2(w, h); _hsig = null
 	NT = {"w": LW, "h": h / s, "s": s, "ctx": null, "cab": null}
 	J.G["__twNat"] = NT
 	var X = TWX()
@@ -106,56 +137,99 @@ func _covering() -> bool:
 func _draw_stage() -> void:
 	var X = TWX()
 	if X == null: return
+	if OS.has_environment("GB_TWBLANK"): return
 	var t0 = Time.get_ticks_usec()
 	var ctx = Ctx.new(stage)
 	NT["ctx"] = ctx
 	if OS.has_environment("GB_TWMARK"):
 		_mk_last = Time.get_ticks_usec()
-		if prof_n == 29: _mk1.clear()
 		J.G["__twMark"] = func(_t, a):
-			var now = Time.get_ticks_usec(); var k = J.str(a[0]); _mk[k] = _mk.get(k, 0) + now - _mk_last
-			if prof_n == 29: _mk1.append("%s=%.1f" % [k, (now - _mk_last) / 1000.0])
-			_mk_last = now
+			var now = Time.get_ticks_usec(); var k = J.str(a[0])
+			if k != "pre": _mk[k] = _mk.get(k, 0) + now - _mk_last
+			if J.CTXPROF_ON:
+				var c = 0
+				for kk in J.CTXPROF: if kk.begins_with("#"): c += J.CTXPROF[kk]
+				_mkc[k] = c - _mkc_last; _mkc_last = c
+			_mk_last = Time.get_ticks_usec()
 	var cp = OS.has_environment("GB_CTXPROF") and prof_n == 29
-	if cp: J.CTXPROF.clear(); J.CTXPROF_ON = true
+	if cp: J.CTXPROF.clear(); J.CTXPROF_ON = true; _mkc.clear(); _mkc_last = 0
+	_hud_called = false
 	if _covering(): J.mc(_unit(), "drawN", [ctx])
 	else: J.cl(X.draw, null, [ctx])
+	if hud_tex.visible != _hud_called: hud_tex.visible = _hud_called; _hsig = null
 	if cp:
 		J.CTXPROF_ON = false; var ks = J.CTXPROF.keys().filter(func(k): return not k.begins_with("#"))
 		ks.sort_custom(func(a, b): return J.CTXPROF[a] > J.CTXPROF[b])
 		var tot = 0
 		for k in ks: tot += J.CTXPROF[k]
+		print("[ctxn] ", _mkc)
 		print("[ctx] total=%.1fms " % (tot / 1000.0), ", ".join(ks.slice(0, 14).map(func(k): return "%s %.1f(%d)" % [k, J.CTXPROF[k] / 1000.0, J.CTXPROF["#" + k]])))
 	NT["ctx"] = null
 	if OS.has_environment("GB_TWMARK"): _mk["hud+"] = _mk.get("hud+", 0) + Time.get_ticks_usec() - _mk_last
 	if OS.has_environment("GB_PROF"):
 		prof_d += Time.get_ticks_usec() - t0; prof_n += 1
 		if prof_n >= 30:
-			print("[tower] draw=%.1fms js_timers=%.1fms" % [prof_d / 30000.0, JSRun.prof_timer / 30000.0]); JSRun.prof_timer = 0
-			print("[twmark1] ", ", ".join(_mk1))
+			print("[tower] draw=%.1fms js_timers=%.1fms dc=%d prims=%d objs=%d" % [prof_d / 30000.0, JSRun.prof_timer / 30000.0, Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)]); JSRun.prof_timer = 0
 			if _mk.size(): print("[twmark] ", ", ".join(_mk.keys().map(func(k): return "%s=%.1f" % [k, _mk[k] / 30000.0]))); _mk.clear()
 			prof_d = 0; prof_n = 0
+
+# HUD 簽名：drawHUD 用到嘅所有會變嘅值（量化到像素），一樣就唔使重畫
+func _hud_sig() -> Array:
+	var X = TWX(); var G = J.cl(X.G, null, []); var v = J.cl(X.hudV, null, [])
+	var PHT = J.num(v[0]); var VW = J.num(v[1])
+	var gt = J.num(G.t); var gate = G.get("gate"); var keys = G.get("keys", {})
+	var a = [gate != null and gate is Dictionary, ceili(30.0 - J.num(gate.t)) if gate is Dictionary else -1, J.num(G.phase), floori(minf(1.0, gt / (PHT * 3.0)) * (VW - 24.0)),
+		G.get("wave"), G.get("alert"), G.get("fear"), (G.bag as Array).size(), G.get("dolls"), keys.get("key"), keys.get("key2"), J.t(G.get("carry")), (G.story as Array).size(),
+		J.str(G.get("toast")) if J.num(G.get("toastT")) > 0 else "", G.get("active"), J.t(G.get("gpHas")), G.get("ult") != null, J.t(G.get("choice")) or J.t(G.get("showStory")) or J.t(G.get("over"))]
+	a.append_array(v.slice(1))
+	var gi = int(J.num(G.active)); var gh: Array = G.gh
+	for i in gh.size():
+		var o = gh[i]; var en = J.num(o.get("energy")); var home = J.t(o.get("home"))
+		a.append_array([roundi(en * 0.52), home, J.t(o.get("out")), o.get("caught"), o.get("pow"), J.t(o.get("trainee")), roundi(gt * 15.0) if en >= 100 and not home else 0])
+		if i == gi: a.append_array([ceili(J.num(o.get("invCd"))) if J.num(o.get("invCd")) > 0 else 0, en >= 100])
+	if a[17]: a.append(gt)
+	return a
+
+func _draw_hud() -> void:
+	var X = TWX()
+	if X == null or not _hud_called: return
+	if OS.has_environment("GB_TWNOHUD"): return
+	var t0 = Time.get_ticks_usec()
+	var ctx = Ctx.new(hud)
+	J.cl(X.hudDraw, null, [ctx])
+	if OS.has_environment("GB_TWMARK"): _mk["HUDDRAW"] = _mk.get("HUDDRAW", 0) + Time.get_ticks_usec() - t0; _mk["HUDN"] = _mk.get("HUDN", 0) + 1000
 
 # ---------------- 輸入 ----------------
 var _pid := 1
 func _ev(p: Vector2) -> Dictionary:
 	var q = p / s
-	return {"nx": q.x, "ny": q.y, "clientX": q.x, "clientY": q.y, "pointerId": float(_pid), "isPrimary": true, "button": 0.0,
+	return {"nx": q.x, "ny": q.y, "clientX": q.x, "clientY": q.y, "pointerId": float(_pid), "isPrimary": _pid == 1, "button": 0.0,
 		"stopPropagation": func(_t, _a): pass, "preventDefault": func(_t, _a): pass}
 
+# 手機：多點觸控直接轉做 pointerId（tower.js 本身有雙指縮放，用 pts／pinch）；滑鼠（電腦）照舊
+#  觸控模擬出嚟嘅滑鼠事件（device == -1）唔再轉，免得同一隻手指送兩次
 func _stage_input(ev: InputEvent) -> void:
-	var kind := ""; var p := Vector2.ZERO
-	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
+	var kind := ""; var p := Vector2.ZERO; var pid := 1
+	if ev is InputEventScreenTouch:
+		p = ev.position; kind = "PD" if ev.pressed else "PU"; pid = ev.index + 1; _touch = true
+	elif ev is InputEventScreenDrag:
+		p = ev.position; kind = "PM"; pid = ev.index + 1; _touch = true
+	elif ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
+		if _touch or ev.device == -1: return
 		p = ev.position; kind = "PD" if ev.pressed else "PU"
 	elif ev is InputEventMouseMotion and _down:
+		if _touch or ev.device == -1: return
 		p = ev.position; kind = "PM"
 	else: return
-	if kind == "PD": _down = true; _tip_off()
-	if kind == "PU": _down = false
+	if kind == "PD" and pid == 1: _down = true; _tip_off()
+	if kind == "PU" and pid == 1: _down = false
 	var pre = "__twU" if _covering() else "__tw"
 	var f = J.G.get(pre + kind)
+	_pid = pid
 	if f != null: J.cl(f, null, [_ev(p)])
+	_pid = 1
 	accept_event()
+var _touch := false
 
 # ---------------- 龐總提示（policy.js #pol-tip，DOM 收埋咗，原生照畫） ----------------
 var tip: Button
@@ -370,3 +444,65 @@ static func t_touch(x: float, y: float) -> void:
 	var p = Vector2(x, y) * cur.s
 	var d = InputEventMouseButton.new(); d.button_index = MOUSE_BUTTON_LEFT; d.pressed = true; d.position = p; cur._stage_input(d)
 	var u = InputEventMouseButton.new(); u.button_index = MOUSE_BUTTON_LEFT; u.pressed = false; u.position = p; cur._stage_input(u)
+static func t_counts() -> void:
+	var G = _G()
+	print("TWCNT res=", G.res.size(), " units=", G.units.size(), " edges=", G.edges.size(), " nodes=", G.nodes.size(), " guards=", G.guards.size(), " parts=", G.parts.size(), " traces=", (G.get("traces", []) as Array).size(), " cprops=", (G.get("cprops", []) as Array).size())
+# 對拍：同一種子，JS 原版 vs 原生版各跑 n 幀，比較狀態雜湊
+static func t_ab(n: int = 3000, dt: float = 0.05, mode: int = 0) -> void:
+	var X = TWX()
+	if cur: cur._mk.clear(); cur._mk_last = Time.get_ticks_usec()
+	if mode == 1:
+		for k in 2:
+			J.G["__twNatL"] = false; J.cl(X.sim, null, [12345.0, float(n), dt]); var hA = J.str(J.cl(X.hash, null, []))
+			J.G["__twNatL"] = false; J.cl(X.sim, null, [12345.0, float(n), dt]); var hB = J.str(J.cl(X.hash, null, []))
+			print("TWAB js-vs-js same=", hA == hB)
+			if hA != hB:
+				var a = hA.split("|"); var b = hB.split("|")
+				for i in mini(a.size(), b.size()):
+					if a[i] != b[i]: print("TWAB diff @", i, " ", a[i], " vs ", b[i]); break
+		return
+	for sd in [12345.0, 777.0]:
+		J.G["__twNatL"] = false
+		var ms0 = J.cl(X.sim, null, [sd, float(n), dt]); var h0 = J.str(J.cl(X.hash, null, []))
+		J.G["__twNatL"] = true
+		print("TWDBG win=", J.gp(J.G.get("window"), "__twNatL"), " f=", J.G.get("__nat_twRes2") != null)
+		var ms1 = J.cl(X.sim, null, [sd, float(n), dt]); var h1 = J.str(J.cl(X.hash, null, []))
+		print("TWAB seed=%d js=%sms nat=%sms same=%s len=%d" % [int(sd), J.str(ms0), J.str(ms1), h0 == h1, h0.length()])
+		print("TWPT ", TwLogic.PT, " n=", n); TwLogic.PT.clear()
+		if cur and cur._mk.size(): print("TWABMK ", ", ".join(cur._mk.keys().map(func(k): return "%s=%.2f" % [k, cur._mk[k] / 1000.0 / (2.0 * n)]))); cur._mk.clear()
+		if h0 != h1:
+			var a = h0.split("|"); var b = h1.split("|")
+			for i in mini(a.size(), b.size()):
+				if a[i] != b[i]: print("TWAB diff @", i, " ", a[i], " vs ", b[i]); break
+	J.G["__twNatL"] = true
+static func t_timers() -> void:
+	var h = J.host
+	var raf = 0; var iv = 0
+	for t in h.timers:
+		if t.get("dead", false): continue
+		if t.raf: raf += 1
+		else: iv += 1
+	print("TWTIMERS raf=", raf, " other=", iv, " total=", h.timers.size())
+# 測試：模擬雙指縮放（兩隻手指由相距 80 拉開到 200）
+static func t_pinch() -> void:
+	if cur == null: return
+	var c = Vector2(200, 450)
+	print("TWPINCH z0=", J.cl(TWX().camz, null, []))
+	var mk = func(i, pos, pressed):
+		var e = InputEventScreenTouch.new(); e.index = i; e.position = pos; e.pressed = pressed; return e
+	var dr = func(i, pos):
+		var e = InputEventScreenDrag.new(); e.index = i; e.position = pos; return e
+	cur._stage_input(mk.call(0, c - Vector2(40, 0), true)); cur._stage_input(mk.call(1, c + Vector2(40, 0), true))
+	for k in 6:
+		var d = 40 + k * 12
+		cur._stage_input(dr.call(0, c - Vector2(d, 0))); cur._stage_input(dr.call(1, c + Vector2(d, 0)))
+	cur._stage_input(mk.call(1, c + Vector2(100, 0), false)); cur._stage_input(mk.call(0, c - Vector2(100, 0), false))
+	print("TWPINCH z1=", J.cl(TWX().camz, null, []))
+# 測試：用遊戲本身 update() 快進成晚（每步 0.05 秒），再由天台陰門收工
+static func t_night(sec: float = 200.0) -> void:
+	var X = TWX(); var t0 = Time.get_ticks_msec()
+	var gt = J.cl(X.step, null, [float(int(sec / 0.05)), 0.05])
+	var G = J.cl(X.G, null, [])
+	print("TWNIGHT t=", gt, " phase=", G.phase, " fear=", G.fear, " alert=", G.alert, " over=", G.get("over") != null, " ms=", Time.get_ticks_msec() - t0)
+static func t_end(w: String = "gate") -> void:
+	J.cl(TWX().endN, null, [w]); var G = J.cl(TWX().G, null, []); print("TWEND over=", G.get("over"))
