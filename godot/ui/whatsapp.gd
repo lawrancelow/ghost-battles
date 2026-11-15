@@ -1,4 +1,4 @@
-# 仿 WhatsApp（深色模式）：主列表、對話紀錄、劇情即時對話
+# 仿 ApaKhabar（深色模式）：主列表、對話紀錄、劇情即時對話
 # 剔號：已傳送 ✓（灰）→ 已送達 ✓✓（灰）→ 已讀 ✓✓（藍）；對方「正在輸入…」；未讀數字、綠色時間、「N 則未讀訊息」分隔
 class_name WA
 extends Control
@@ -125,7 +125,7 @@ static func draw_ticks(ci: CanvasItem, o: Vector2, two: bool, col: Color) -> voi
 	else:
 		ci.draw_polyline(PackedVector2Array([o + Vector2(2.5, 6), o + Vector2(5.6, 9.2), o + Vector2(12.2, 1.6)]), col, 1.5, true)
 
-# 對話氣泡：文字自行排版，時間（同剔號）貼喺最後一行右下角，好似真 WhatsApp
+# 對話氣泡：文字自行排版，時間（同剔號）貼喺最後一行右下角，好似真 ApaKhabar
 class Bubble extends Control:
 	var kind = "them"; var who = ""; var text = ""; var time = ""; var tick = 0; var tail = true
 	var tick_col = WA.META
@@ -320,7 +320,7 @@ func show_home(ph: String) -> void:
 	# 頂欄
 	var top = HBoxContainer.new(); top.add_theme_constant_override("separation", 18)
 	var tm = MarginContainer.new(); _margins(tm, 16, 10, 16, 8); tm.add_child(top); view.add_child(tm)
-	var ttl = lab("WhatsApp", 23, TXT, 700); top.add_child(ttl)
+	var ttl = lab("ApaKhabar", 23, TXT, 700); top.add_child(ttl)
 	if not _pre():
 		var hell = PanelContainer.new(); hell.add_theme_stylebox_override("panel", UIKit.sb(Color("#c2362b"), 3, Color(0, 0, 0, 0), 0, Vector4(6, 1, 6, 1)))
 		hell.add_child(lab("陰間版", 11, Color.WHITE, 900)); hell.rotation = deg_to_rad(-6); hell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -340,7 +340,7 @@ func show_home(ph: String) -> void:
 	var search = PanelContainer.new(); search.add_theme_stylebox_override("panel", UIKit.sb(THEM, 22, Color(0, 0, 0, 0), 0, Vector4(14, 9, 14, 9)))
 	search.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var shb = HBoxContainer.new(); shb.add_theme_constant_override("separation", 12); search.add_child(shb)
-	shb.add_child(icon_rect("search", SUB, 19)); shb.add_child(lab("在 WhatsApp 中搜尋…", 15, SUB))
+	shb.add_child(icon_rect("search", SUB, 19)); shb.add_child(lab("在 ApaKhabar 中搜尋…", 15, SUB))
 	sm.add_child(search)
 	# 篩選
 	var cm = MarginContainer.new(); _margins(cm, 14, 0, 14, 6); view.add_child(cm)
@@ -699,7 +699,7 @@ func _build_chat(title: String, av, sub: String, story: bool, time := "", batt :
 	var lk = HBoxContainer.new(); lk.add_theme_constant_override("separation", 4)
 	var lock = PanelContainer.new(); lock.add_theme_stylebox_override("panel", UIKit.sb(MID, 8, Color(0, 0, 0, 0), 0, Vector4(10, 6, 10, 6)))
 	lock.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var ltx = lab("🔒 " + ("訊息和通話皆已端對端加密。對話以外的人（包括 WhatsApp）都無法讀取或收聽。" if _pre() else "訊息已陰陽兩界加密。活人無法讀取，閻王都唔得。"), 12, Color("#ffd279"))
+	var ltx = lab("🔒 " + ("訊息和通話皆已端對端加密。對話以外的人（包括 ApaKhabar）都無法讀取或收聽。" if _pre() else "訊息已陰陽兩界加密。活人無法讀取，閻王都唔得。"), 12, Color("#ffd279"))
 	ltx.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; ltx.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; ltx.custom_minimum_size.x = 290
 	lock.add_child(ltx); body.add_child(lock)
 	var gap = Control.new(); gap.custom_minimum_size.y = 4; gap.mouse_filter = Control.MOUSE_FILTER_IGNORE; body.add_child(gap)

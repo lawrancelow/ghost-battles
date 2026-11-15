@@ -1218,7 +1218,7 @@ func _f33(this_, a: Array, env):
 	_s126["trick"] = (J.gp(J.gp(J.G.get("SCARE_GHOSTS"), J.gp(v_b_279, "ghost")), "skill") if J.t((J.gp(J.G.get("SCARE_GHOSTS"), J.gp(v_b_279, "ghost")) if J.t(v_b_279) else v_b_279)) else "")
 	_s126["views"] = J.div(J.round(J.num(J.mul(J.add(J.gp(v_after_275, "heat"), 20.0), (3.0 + J.mul(J.gp(v_after_275, "lv"), 4.0))))), 10.0)
 	var _t333 = _s126["__p"]["T"]
-	var _t335 = J.cl(_t333, null, ["WhatsApp・公司 OT 群", "WhatsApp・公司加班群"])
+	var _t335 = J.cl(_t333, null, ["ApaKhabar・公司 OT 群", "ApaKhabar・公司加班群"])
 	var _t334 = _s126["__p"]["T"]
 	var _t337 = J.cl(_t334, null, ["{who}話喺{room}見到嘢，冇人信佢（笑）", "{who}說在{room}看到東西，沒人信他（笑）"])
 	var _t336 = _s126["__p"]["T"]

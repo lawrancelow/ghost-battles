@@ -4674,7 +4674,7 @@ func _f237(this_, a: Array, env):
 	J.S_location_("reload", [])
 
 func _f239(this_, a: Array, env):
-	return J.mc(J.G.get("Fx"), "toast", ["存檔碼已複製，貼去記事本或者 WhatsApp 自己收好"])
+	return J.mc(J.G.get("Fx"), "toast", ["存檔碼已複製，貼去記事本或者 ApaKhabar 自己收好"])
 
 func _f240(this_, a: Array, env):
 	var _t1250 = J.G.get("$")

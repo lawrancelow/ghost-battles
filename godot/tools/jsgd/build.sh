@@ -8,6 +8,7 @@ const fs=require("fs"),P=require("./patches.js");
 for(const m of fs.readFileSync("modules.txt","utf8").split("\n").filter(Boolean)){
   let s=fs.readFileSync("../ref/"+m+".js","utf8");
   for(const [a,b] of (P[m]||[])){ if(!s.includes(a)){console.error("PATCH MISS",m,a.slice(0,50));process.exit(1);} s=s.split(a).join(b); }
+  for(const [a,b] of [["WhatsApp", "ApaKhabar"], ["TikTok", "GoyangGoyang"], ["Hey Google", "Hei Cari"], ["叫 Google", "叫 Cari"], ["iPhome", "iFom"], ["iPhone", "iFon"], ["Netflix", "Tonton"], ["Spotify", "Dengar"], ["吃麥當勞", "吃漢堡包"], ["食麥當勞", "食漢堡包"], ["麥當勞", "漢堡包店"], ["個 Excel ", "個試算表"], ["個 Excel", "個試算表"], ["幫 Excel ", "幫試算表"], ["幫 Excel", "幫試算表"], [" Grab", " Tumpang"]]) s=s.split(a).join(b);   // 紅線：唔用真實品牌／平台名（改馬來文同義詞）
   fs.writeFileSync("/tmp/jsgd_src/"+m+".js",s);
 }'
 fails=0

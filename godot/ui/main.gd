@@ -674,7 +674,7 @@ func open_story() -> void:
 	var ex = UIKit.btn("備份存檔（複製存檔碼）"); sheet_body.add_child(ex)
 	var ta = TextEdit.new(); ta.custom_minimum_size = Vector2(0, 90); ta.placeholder_text = "貼上存檔碼（網頁版的存檔碼也可以）"; ta.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	ta.add_theme_font_override("font", UIKit.font("sans", 400)); ta.add_theme_font_size_override("font_size", 13)
-	ex.pressed.connect(func(): G.save(); var code = G.enc(G.S); DisplayServer.clipboard_set(code); ta.text = code; show_toast("存檔碼已複製，貼去記事本或者 WhatsApp 自己收好"))
+	ex.pressed.connect(func(): G.save(); var code = G.enc(G.S); DisplayServer.clipboard_set(code); ta.text = code; show_toast("存檔碼已複製，貼去記事本或者聊天軟件自己收好"))
 	var im = UIKit.btn("導入存檔碼", "gold"); sheet_body.add_child(ta); sheet_body.add_child(im)
 	im.pressed.connect(func():
 		var o = G.dec(ta.text if ta.text.strip_edges() != "" else DisplayServer.clipboard_get())

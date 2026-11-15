@@ -55,7 +55,7 @@ func _f6(this_, a: Array, env):
 	J.mc(v_out_30, "push", [{"id": "kpi", "name": ("陰司好好系統" if J.t(J.gp(J.G.get("S"), "ended")) else "陰司 KPI 系統"), "av": "sys", "time": J.cl(J.G.get("nowHM"), null, []), "unread": 1.0, "pin": true, "main": true, "prev": ("親，今天沒有 KPI，想來就來。" if J.t(J.gp(J.G.get("S"), "ended")) else "親，鬼怪們都在等你上班哦～")}])
 	v_mm_31 = [["媽", "頭七", "阿福，頭七了。媽給你燒了一個傭人，叫小紙，你別欺負人家。"]]
 	if J.t(J.cl(v_sn_29, null, ["gift_phone"])):
-		J.mc(v_mm_31, "push", [["媽", "清明前", "手機收到了嗎？店家說下面也能用 WhatsApp。"], ["媽", "清明前", "媽不知道你看不看得到，就當媽自言自語吧。"]])
+		J.mc(v_mm_31, "push", [["媽", "清明前", "手機收到了嗎？店家說下面也能用 ApaKhabar。"], ["媽", "清明前", "媽不知道你看不看得到，就當媽自言自語吧。"]])
 	if J.t(J.cl(v_sn_29, null, ["ch3_end"])):
 		J.mc(v_mm_31, "push", [["媽", "中元前", "媽幫你看了一塊新的地，坐北向南，前面有樹，風水第一流。"], ["媽", "中元前", "負責的人說前面是垃圾場。媽跟他講：那叫聚財。"]])
 	if J.t(J.cl(v_sn_29, null, ["gift_car"])):
@@ -154,7 +154,7 @@ func _f10(this_, a: Array, env):
 	_s13["list"] = (J.G.get("CHATS_PRE") if J.t(v_pre_45) else J.cl(J.G.get("chatsPost"), null, []))
 	v_time_47 = ("02:13" if J.t(v_pre_45) else J.cl(J.G.get("nowHM"), null, []))
 	var _t7 = J.G.get("waStatus")
-	v_h_48 = ("<div class=\"wa\">" + J.str(J.cl(_t7, null, [v_time_47, ("3%" if J.t(v_pre_45) else "∞"), v_pre_45])) + "\n      <div class=\"wa-top\"><b>WhatsApp</b>" + ("" if J.t(v_pre_45) else "<i class=\"hell\">陰間版</i>") + "<button class=\"wa-snd\" aria-label=\"聲音\">" + ("🔊" if J.t(J.mc(J.G.get("Sound"), "isOn", [])) else "🔇") + "</button><span class=\"ic\">" + J.str(J.gp(J.G.get("ICON"), "cam")) + "</span><span class=\"ic\">" + J.str(J.gp(J.G.get("ICON"), "dots")) + "</span></div>\n      <div class=\"wa-search\">在 WhatsApp 中搜尋…</div>\n      <div class=\"wa-chips\"><span class=\"on\">全部</span><span>未讀 " + J.str(J.len(J.mc(_s13["list"], "filter", [Callable(self, "_f11").bind(_s13)]))) + "</span><span>群組</span></div>\n      <div class=\"wa-list\">")
+	v_h_48 = ("<div class=\"wa\">" + J.str(J.cl(_t7, null, [v_time_47, ("3%" if J.t(v_pre_45) else "∞"), v_pre_45])) + "\n      <div class=\"wa-top\"><b>ApaKhabar</b>" + ("" if J.t(v_pre_45) else "<i class=\"hell\">陰間版</i>") + "<button class=\"wa-snd\" aria-label=\"聲音\">" + ("🔊" if J.t(J.mc(J.G.get("Sound"), "isOn", [])) else "🔇") + "</button><span class=\"ic\">" + J.str(J.gp(J.G.get("ICON"), "cam")) + "</span><span class=\"ic\">" + J.str(J.gp(J.G.get("ICON"), "dots")) + "</span></div>\n      <div class=\"wa-search\">在 ApaKhabar 中搜尋…</div>\n      <div class=\"wa-chips\"><span class=\"on\">全部</span><span>未讀 " + J.str(J.len(J.mc(_s13["list"], "filter", [Callable(self, "_f11").bind(_s13)]))) + "</span><span>群組</span></div>\n      <div class=\"wa-list\">")
 	for _t8 in J.iter(_s13["list"]):
 		v_c_50 = _t8
 		var _t10 = ("main" if J.t(J.gp(v_c_50, "main")) else "")

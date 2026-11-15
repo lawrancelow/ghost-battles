@@ -418,7 +418,7 @@ static func open_story() -> void:
 	var lab = func(): lb.text = "對白：" + ("中文（點擊切換為粵語）" if DB.lang == "zh" else "粵語（點擊切換為中文）")
 	lab.call(); lb.pressed.connect(func(): DB.set_lang("yue" if DB.lang == "zh" else "zh"); J.mc(J.G.get("LANG"), "set", [DB.lang]); lab.call())
 	_wide("備份存檔（複製存檔碼）", "", true, func():
-		var code = J.str(_sa("export")); DisplayServer.clipboard_set(code); m.show_toast("存檔碼已複製，貼去記事本或者 WhatsApp 自己收好"))
+		var code = J.str(_sa("export")); DisplayServer.clipboard_set(code); m.show_toast("存檔碼已複製，貼去記事本或者聊天軟件自己收好"))
 	_wide("導入存檔碼", "", true, func(): m.open_import())
 	var rs = d.get("restore")
 	if rs != null:
