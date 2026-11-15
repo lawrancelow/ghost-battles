@@ -98,6 +98,15 @@ func _show_dom(on: bool) -> void:
 	dom.visible = on; dom.process_mode = Node.PROCESS_MODE_INHERIT if on else Node.PROCESS_MODE_DISABLED
 
 
+# 結算框原生化（#b-result：讀 El 樹砌控件，掣照叫 JS onclick）
+func _result_card() -> void:
+	var rb = _el("#b-result")
+	if rb == null: _show_dom(true); return
+	var c = NvDomCard.new(); c.name = "BtResult"; add_child(c)
+	c.backdrop = 0.35
+	c.alive_fn = func(): return rb.classList.d.has("on")
+	c.open(rb)
+
 # ---------------- 版面 ----------------
 func _build() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -253,7 +262,9 @@ func _process(dt: float) -> void:
 	var __t = Time.get_ticks_usec(); _sync_world(); prof_s += Time.get_ticks_usec() - __t
 	if B.get("result") != null:
 		if not _result_shown:
-			_result_shown = true; _show_dom(true)
+			_result_shown = true
+			if OS.has_environment("GB_RESDOM"): _show_dom(true)
+			else: _result_card()
 			for x in [top, cards]: x.modulate.a = 0.45
 		return
 	var left = maxf(0.0, ceil(J.num(B.get("timeLimit", 90)) - J.num(B.get("t", 0))))

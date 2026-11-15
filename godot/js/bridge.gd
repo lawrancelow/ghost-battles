@@ -50,7 +50,7 @@ static func install_natives(host: Node) -> void:
 			_: ScOffice.draw_item(a[0], a[1], a[2], J.num(a[3]))
 		return null
 	G["__nat_scKen"] = func(_t, a): return ScOffice.draw_ken(a[0], a[1], a[2], J.num(a[3]))
-	G["__nat_scEnd"] = func(_t, a): ScRun.end_hook(a[0]); return null
+	G["__nat_scEnd"] = func(_t, a): ScRun.end_hook(a[0]); NvDomCard.scare_end.call_deferred(); return null
 	G["__nat_scTag"] = func(_t, a): ScTag.draw(a[0], a[1], a[2], J.num(a[3]), J.num(a[4]), J.num(a[5]), a[6]); return null
 	G["__nat_scSel"] = func(_t, a): return ScSelect.hook(a[0])
 	G["__nat_scOps"] = func(_t, a): return ScOps.hook(a)
@@ -58,6 +58,7 @@ static func install_natives(host: Node) -> void:
 	G["__nat_btSize"] = func(_t, a): return BtRun.size_of()
 	G["__nat_btSelect"] = func(_t, a): return BtSelect.hook(a)
 	G["__nat_stStreet"] = func(_t, a): return StStreet.hook()
+	G["__nat_stOn"] = func(_t, a): return NvPolTip.station_on()
 	G["__nat_stStreetEnd"] = func(_t, a): StStreet.end_hook(); return null
 	G["__nat_turf"] = func(_t, a): return StTurf.hook(a[0])
 	G["__nat_turfEnd"] = func(_t, a): StTurf.end_hook(a[0]); return null

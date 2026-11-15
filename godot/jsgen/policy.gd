@@ -4,9 +4,9 @@ extends RefCounted
 func run(env):
 	var this_ = null; var a = []
 	J.G["Policy"] = J.cl(Callable(self, "_f1").bind(env), null, [])
-	var _t59 = J.G.get("window")
-	var _t60 = J.G.get("Policy")
-	J.sp(_t59, "Policy", _t60)
+	var _t63 = J.G.get("window")
+	var _t64 = J.G.get("Policy")
+	J.sp(_t63, "Policy", _t64)
 
 func _f4(this_, a: Array, env):
 	var v_k_22 = null; var v_e_23 = null
@@ -32,35 +32,35 @@ func _f5(this_, a: Array, env):
 
 func _f9(this_, a: Array, env):
 	var v_w_52 = null; var v_t_53 = null; var v_bd_54 = null; var v_bt_55 = null; var v_bh_56 = null; var v_above_57 = null
-	var _t10 = J.gp(env["lines"], env["i"])
-	var _t11 = J.gp(_t10, 0.0)
-	v_w_52 = _t11
-	var _t12 = J.gp(_t10, 1.0)
-	v_t_53 = _t12
-	var _t13 = J.mc(env["box"], "querySelector", ["b"])
-	J.sp(_t13, "textContent", v_w_52)
-	var _t14 = J.mc(env["box"], "querySelector", ["span"])
-	var _t16 = null
+	var _t11 = J.gp(env["lines"], env["i"])
+	var _t12 = J.gp(_t11, 0.0)
+	v_w_52 = _t12
+	var _t13 = J.gp(_t11, 1.0)
+	v_t_53 = _t13
+	var _t14 = J.mc(env["box"], "querySelector", ["b"])
+	J.sp(_t14, "textContent", v_w_52)
+	var _t15 = J.mc(env["box"], "querySelector", ["span"])
+	var _t17 = null
 	if J.seq(J.typeof_(J.G.get("L")), "function"):
-		var _t15 = J.G.get("L")
-		_t16 = J.cl(_t15, null, [v_t_53])
+		var _t16 = J.G.get("L")
+		_t17 = J.cl(_t16, null, [v_t_53])
 	else:
-		_t16 = v_t_53
-	J.sp(_t14, "textContent", _t16)
+		_t17 = v_t_53
+	J.sp(_t15, "textContent", _t17)
 	v_bd_54 = J.mc(env["wm"], "querySelector", [".wm-board"])
 	v_bt_55 = (J.sub(J.gp(J.mc(v_bd_54, "getBoundingClientRect", []), "top"), J.gp(env["hr"], "top")) if J.t(v_bd_54) else (J.sub(env["y"], env["pad"]) - 30.0))
 	v_bh_56 = J.gp(env["box"], "offsetHeight")
 	v_above_57 = (J.sub(J.min_([v_bt_55, (J.sub(env["y"], env["pad"]) - 20.0)]), v_bh_56) - 8.0)
 	if J.cmp(v_above_57, 56.0, ">="):
-		var _t17 = J.gp(env["box"], "style")
-		var _t18 = J.add(v_above_57, "px")
-		J.sp(_t17, "top", _t18)
-		var _t19 = J.gp(env["box"], "style")
-		J.sp(_t19, "bottom", "")
-	else:
+		var _t18 = J.gp(env["box"], "style")
+		var _t19 = J.add(v_above_57, "px")
+		J.sp(_t18, "top", _t19)
 		var _t20 = J.gp(env["box"], "style")
-		var _t21 = J.add(J.add(J.add(J.add(env["y"], J.gp(env["r"], "height")), env["pad"]), 12.0), "px")
-		J.sp(_t20, "top", _t21)
+		J.sp(_t20, "bottom", "")
+	else:
+		var _t21 = J.gp(env["box"], "style")
+		var _t22 = J.add(J.add(J.add(J.add(env["y"], J.gp(env["r"], "height")), env["pad"]), 12.0), "px")
+		J.sp(_t21, "top", _t22)
 
 func _f10(this_, a: Array, env):
 	var v_e_58 = null
@@ -98,23 +98,25 @@ func _f8(this_, a: Array, env):
 	_s12["ov"] = _t6
 	var _t7 = _s12["ov"]
 	J.sp(_t7, "id", "pol-ov")
+	var _t8 = J.gp(_s12["ov"], "dataset")
+	J.sp(_t8, "card", v_id_35)
 	J.mc(v_host_40, "appendChild", [_s12["ov"]])
 	_s12["hr"] = J.mc(_s12["ov"], "getBoundingClientRect", [])
 	_s12["r"] = J.mc(v_card_39, "getBoundingClientRect", [])
 	v_x_44 = J.sub(J.gp(_s12["r"], "left"), J.gp(_s12["hr"], "left"))
 	_s12["y"] = J.sub(J.gp(_s12["r"], "top"), J.gp(_s12["hr"], "top"))
 	_s12["pad"] = 5.0
-	var _t8 = _s12["ov"]
-	var _t9 = ("<i class=\"pol-ring\" style=\"left:" + J.str(J.sub(v_x_44, _s12["pad"])) + "px;top:" + J.str(J.sub(_s12["y"], _s12["pad"])) + "px;width:" + J.str(J.add(J.gp(_s12["r"], "width"), J.mul(_s12["pad"], 2.0))) + "px;height:" + J.str(J.add(J.gp(_s12["r"], "height"), J.mul(_s12["pad"], 2.0))) + "px\"></i>\n      <i class=\"pol-arr\" style=\"left:" + J.str(J.add(v_x_44, J.div(J.gp(_s12["r"], "width"), 2.0))) + "px;top:" + J.str((J.sub(_s12["y"], _s12["pad"]) - 14.0)) + "px\"></i><div class=\"pol-box\"><b></b><span></span><small>撳一下繼續 ▸</small></div>")
-	J.sp(_t8, "innerHTML", _t9)
+	var _t9 = _s12["ov"]
+	var _t10 = ("<i class=\"pol-ring\" style=\"left:" + J.str(J.sub(v_x_44, _s12["pad"])) + "px;top:" + J.str(J.sub(_s12["y"], _s12["pad"])) + "px;width:" + J.str(J.add(J.gp(_s12["r"], "width"), J.mul(_s12["pad"], 2.0))) + "px;height:" + J.str(J.add(J.gp(_s12["r"], "height"), J.mul(_s12["pad"], 2.0))) + "px\"></i>\n      <i class=\"pol-arr\" style=\"left:" + J.str(J.add(v_x_44, J.div(J.gp(_s12["r"], "width"), 2.0))) + "px;top:" + J.str((J.sub(_s12["y"], _s12["pad"]) - 14.0)) + "px\"></i><div class=\"pol-box\"><b></b><span></span><small>撳一下繼續 ▸</small></div>")
+	J.sp(_t9, "innerHTML", _t10)
 	_s12["box"] = J.mc(_s12["ov"], "querySelector", [".pol-box"])
 	_s12["i"] = 0.0
 	_s12["show"] = Callable(self, "_f9").bind(_s12)
 	J.cl(_s12["show"], null, [])
 	_s12["t0"] = J.S_performance_("now", [])
-	var _t22 = _s12["ov"]
-	var _t23 = Callable(self, "_f10").bind(_s12)
-	J.sp(_t22, "onclick", _t23)
+	var _t23 = _s12["ov"]
+	var _t24 = Callable(self, "_f10").bind(_s12)
+	J.sp(_t23, "onclick", _t24)
 
 func _f12(this_, a: Array, env):
 	env["__p"]["busy"] = false
@@ -123,22 +125,22 @@ func _f13(this_, a: Array, env):
 	return (not (not J.t(J.S_document_("querySelector", ["#world .wm-card[data-id=\"tower\"]"]))))
 
 func _f17(this_, a: Array, env):
-	var _t28 = env["__p"]["stage"]
-	return J.cl(_t28, null, ["KPI", env["__p"]["C"], env["end"]])
+	var _t29 = env["__p"]["stage"]
+	return J.cl(_t29, null, ["KPI", env["__p"]["C"], env["end"]])
 
 func _f16(this_, a: Array, env):
-	var _t27 = env["__p"]["point"]
-	return J.cl(_t27, null, ["tower", env["__p"]["B_MAP"], Callable(self, "_f17").bind(env)])
+	var _t28 = env["__p"]["point"]
+	return J.cl(_t28, null, ["tower", env["__p"]["B_MAP"], Callable(self, "_f17").bind(env)])
 
 func _f15(this_, a: Array, env):
 	var v_b_63 = null
 	v_b_63 = (J.mc(env["__p"]["B"], "concat", [[["龐總", "地圖上面有張新卡，自己搵。"]]]) if J.t(J.cl(env["hasTower"], null, [])) else env["__p"]["B"])
-	var _t26 = env["__p"]["stage"]
-	J.cl(_t26, null, ["《陽間業務拓展計劃》", v_b_63, Callable(self, "_f16").bind(env)])
+	var _t27 = env["__p"]["stage"]
+	J.cl(_t27, null, ["《陽間業務拓展計劃》", v_b_63, Callable(self, "_f16").bind(env)])
 
 func _f14(this_, a: Array, env):
-	var _t25 = env["__p"]["point"]
-	return J.cl(_t25, null, ["station", env["__p"]["A_MAP"], Callable(self, "_f15").bind(env)])
+	var _t26 = env["__p"]["point"]
+	return J.cl(_t26, null, ["station", env["__p"]["A_MAP"], Callable(self, "_f15").bind(env)])
 
 func _f11(this_, a: Array, env):
 	var _s22 = {"__p": env, "end": null, "hasTower": null}
@@ -147,40 +149,40 @@ func _f11(this_, a: Array, env):
 	_s22["__p"]["busy"] = true
 	_s22["end"] = Callable(self, "_f12").bind(_s22)
 	_s22["hasTower"] = Callable(self, "_f13").bind(_s22)
-	var _t24 = _s22["__p"]["stage"]
-	J.cl(_t24, null, ["新政策發佈會", _s22["__p"]["A"], Callable(self, "_f14").bind(_s22)])
+	var _t25 = _s22["__p"]["stage"]
+	J.cl(_t25, null, ["新政策發佈會", _s22["__p"]["A"], Callable(self, "_f14").bind(_s22)])
 
 func _f19(this_, a: Array, env):
-	var _t34 = J.S_document_("querySelector", ["#world.on"])
-	if J.t(((not J.t(J.gp(J.G.get("Theater"), "on"))) if J.t(_t34) else _t34)):
+	var _t35 = J.S_document_("querySelector", ["#world.on"])
+	if J.t(((not J.t(J.gp(J.G.get("Theater"), "on"))) if J.t(_t35) else _t35)):
 		J.cl(env["announce"], null, [])
 
 func _f18(this_, a: Array, env):
 	var v_e_66 = null
-	var _t29 = J.seq(J.typeof_(J.G.get("S")), "undefined")
-	var _t30 = (_t29 if _t29 else (not J.t(J.G.get("S"))))
-	if (_t30 if _t30 else (not J.t(J.gp(J.G.get("S"), "seen")))):
+	var _t30 = J.seq(J.typeof_(J.G.get("S")), "undefined")
+	var _t31 = (_t30 if _t30 else (not J.t(J.G.get("S"))))
+	if (_t31 if _t31 else (not J.t(J.gp(J.G.get("S"), "seen")))):
 		return null
-	var _t31 = J.gp(J.gp(J.G.get("S"), "seen"), "ch1_end")
-	var _t32 = (not J.t((_t31 if J.t(_t31) else J.gp(J.G.get("window"), "STN_TEST"))))
-	if J.t((_t32 if _t32 else J.gp(J.gp(J.G.get("S"), "seen"), "policy_v1"))):
+	var _t32 = J.gp(J.gp(J.G.get("S"), "seen"), "ch1_end")
+	var _t33 = (not J.t((_t32 if J.t(_t32) else J.gp(J.G.get("window"), "STN_TEST"))))
+	if J.t((_t33 if _t33 else J.gp(J.gp(J.G.get("S"), "seen"), "policy_v1"))):
 		return null
-	var _t33 = env["mark"]
-	J.cl(_t33, null, ["policy_v1"])
+	var _t34 = env["mark"]
+	J.cl(_t34, null, ["policy_v1"])
 	J.F_setTimeout([Callable(self, "_f19").bind(env), 600.0])
 
 func _f22(this_, a: Array, env):
-	var _t42 = env["el"]
-	var _t43 = ("<b>龐總（" + J.str(J.add(env["i"], 1.0)) + "/" + J.str(J.len(env["__p"]["tips"])) + "）</b><span></span><small>撳一下" + ("下一句" if J.cmp(J.add(env["i"], 1.0), J.len(env["__p"]["tips"]), "<") else "收埋") + " ▸</small>")
-	J.sp(_t42, "innerHTML", _t43)
-	var _t44 = J.mc(env["el"], "querySelector", ["span"])
-	var _t46 = null
+	var _t43 = env["el"]
+	var _t44 = ("<b>龐總（" + J.str(J.add(env["i"], 1.0)) + "/" + J.str(J.len(env["__p"]["tips"])) + "）</b><span></span><small>撳一下" + ("下一句" if J.cmp(J.add(env["i"], 1.0), J.len(env["__p"]["tips"]), "<") else "收埋") + " ▸</small>")
+	J.sp(_t43, "innerHTML", _t44)
+	var _t45 = J.mc(env["el"], "querySelector", ["span"])
+	var _t47 = null
 	if J.seq(J.typeof_(J.G.get("L")), "function"):
-		var _t45 = J.G.get("L")
-		_t46 = J.cl(_t45, null, [J.gp(env["__p"]["tips"], env["i"])])
+		var _t46 = J.G.get("L")
+		_t47 = J.cl(_t46, null, [J.gp(env["__p"]["tips"], env["i"])])
 	else:
-		_t46 = J.gp(env["__p"]["tips"], env["i"])
-	J.sp(_t44, "textContent", _t46)
+		_t47 = J.gp(env["__p"]["tips"], env["i"])
+	J.sp(_t45, "textContent", _t47)
 
 func _f23(this_, a: Array, env):
 	var v_e_78 = null
@@ -197,8 +199,8 @@ func _f23(this_, a: Array, env):
 func _f24(this_, a: Array, env):
 	var v_ev_79 = null
 	v_ev_79 = J.arg(a, 0)
-	var _t49 = J.gp(J.G.get("document"), "body")
-	if (not J.t(J.mc(_t49, "contains", [env["el"]]))):
+	var _t50 = J.gp(J.G.get("document"), "body")
+	if (not J.t(J.mc(_t50, "contains", [env["el"]]))):
 		J.S_document_("removeEventListener", ["pointerdown", env["off"], true])
 		return null
 	if (not J.t(J.mc(env["el"], "contains", [J.gp(v_ev_79, "target")]))):
@@ -207,17 +209,22 @@ func _f24(this_, a: Array, env):
 
 func _f25(this_, a: Array, env):
 	var v_r_80 = null; var v_vis_81 = null
-	var _t50 = J.gp(J.G.get("document"), "body")
-	if (not J.t(J.mc(_t50, "contains", [env["el"]]))):
+	var _t51 = J.gp(J.G.get("document"), "body")
+	if (not J.t(J.mc(_t51, "contains", [env["el"]]))):
 		J.F_clearInterval([env["wt"]])
 		return null
-	var _t51 = J.gp(env["ROOTS"], env["__p"]["__p"]["mode"])
-	v_r_80 = J.S_document_("querySelector", [(_t51 if J.t(_t51) else "#none")])
-	var _t53 = v_r_80
-	if J.t(_t53):
-		var _t52 = J.gp(v_r_80, "classList")
-		_t53 = J.mc(_t52, "contains", ["on"])
-	v_vis_81 = ((not J.seq(J.gp(J.F_getComputedStyle([v_r_80]), "display"), "none")) if J.t(_t53) else _t53)
+	var _t52 = J.gp(env["ROOTS"], env["__p"]["__p"]["mode"])
+	v_r_80 = J.S_document_("querySelector", [(_t52 if J.t(_t52) else "#none")])
+	var _t53 = J.seq(env["__p"]["__p"]["mode"], "station")
+	var _t54 = ((not J.seq(J.typeof_(J.G.get("__nat_stOn")), "undefined")) if _t53 else _t53)
+	var _t57 = (J.cl(J.G.get("__nat_stOn"), null, []) if _t54 else _t54)
+	if not J.t(_t57):
+		var _t56 = v_r_80
+		if J.t(_t56):
+			var _t55 = J.gp(v_r_80, "classList")
+			_t56 = J.mc(_t55, "contains", ["on"])
+		_t57 = ((not J.seq(J.gp(J.F_getComputedStyle([v_r_80]), "display"), "none")) if J.t(_t56) else _t56)
+	v_vis_81 = _t57
 	if (not J.t(v_vis_81)):
 		J.mc(env["el"], "remove", [])
 		J.F_clearInterval([env["wt"]])
@@ -227,20 +234,20 @@ func _f21(this_, a: Array, env):
 	_s36["el"] = J.S_document_("getElementById", ["pol-tip"])
 	if J.t(_s36["el"]):
 		J.mc(_s36["el"], "remove", [])
-	var _t38 = J.S_document_("createElement", ["div"])
-	_s36["el"] = _t38
-	var _t39 = _s36["el"]
-	J.sp(_t39, "id", "pol-tip")
+	var _t39 = J.S_document_("createElement", ["div"])
+	_s36["el"] = _t39
 	var _t40 = _s36["el"]
-	J.sp(_t40, "className", "pol-box")
-	var _t41 = J.gp(J.G.get("document"), "body")
-	J.mc(_t41, "appendChild", [_s36["el"]])
+	J.sp(_t40, "id", "pol-tip")
+	var _t41 = _s36["el"]
+	J.sp(_t41, "className", "pol-box")
+	var _t42 = J.gp(J.G.get("document"), "body")
+	J.mc(_t42, "appendChild", [_s36["el"]])
 	_s36["i"] = 0.0
 	_s36["show"] = Callable(self, "_f22").bind(_s36)
 	J.cl(_s36["show"], null, [])
-	var _t47 = _s36["el"]
-	var _t48 = Callable(self, "_f23").bind(_s36)
-	J.sp(_t47, "onclick", _t48)
+	var _t48 = _s36["el"]
+	var _t49 = Callable(self, "_f23").bind(_s36)
+	J.sp(_t48, "onclick", _t49)
 	_s36["off"] = Callable(self, "_f24").bind(_s36)
 	J.S_document_("addEventListener", ["pointerdown", _s36["off"], true])
 	_s36["ROOTS"] = {"station": "#st-street", "tower": "#tw-root"}
@@ -253,14 +260,14 @@ func _f20(this_, a: Array, env):
 	var _s35 = {"__p": _s34, "tips": null}
 	v_k_70 = J.add("policy_", _s35["__p"]["mode"])
 	_s35["tips"] = J.gp(_s35["__p"]["__p"]["TIPS"], _s35["__p"]["mode"])
-	var _t36 = (not J.t(_s35["tips"]))
-	if not J.t(_t36):
-		var _t35 = _s35["__p"]["__p"]["seen"]
-		_t36 = J.cl(_t35, null, [v_k_70])
-	if J.t(_t36):
+	var _t37 = (not J.t(_s35["tips"]))
+	if not J.t(_t37):
+		var _t36 = _s35["__p"]["__p"]["seen"]
+		_t37 = J.cl(_t36, null, [v_k_70])
+	if J.t(_t37):
 		return null
-	var _t37 = _s35["__p"]["__p"]["mark"]
-	J.cl(_t37, null, [v_k_70])
+	var _t38 = _s35["__p"]["__p"]["mark"]
+	J.cl(_t38, null, [v_k_70])
 	J.F_setTimeout([Callable(self, "_f21").bind(_s35), 500.0])
 
 func _f2(this_, a: Array, env):
@@ -269,10 +276,10 @@ func _f2(this_, a: Array, env):
 func _f3(this_, a: Array, env):
 	var v_k_19 = null
 	v_k_19 = J.arg(a, 0)
-	var _t54 = (not J.seq(J.typeof_(J.G.get("S")), "undefined"))
-	var _t55 = (J.G.get("S") if _t54 else _t54)
-	var _t56 = (J.gp(J.G.get("S"), "seen") if J.t(_t55) else _t55)
-	return (not (not J.t((J.gp(J.gp(J.G.get("S"), "seen"), v_k_19) if J.t(_t56) else _t56))))
+	var _t58 = (not J.seq(J.typeof_(J.G.get("S")), "undefined"))
+	var _t59 = (J.G.get("S") if _t58 else _t58)
+	var _t60 = (J.gp(J.G.get("S"), "seen") if J.t(_t59) else _t59)
+	return (not (not J.t((J.gp(J.gp(J.G.get("S"), "seen"), v_k_19) if J.t(_t60) else _t60))))
 
 func _f7(this_, a: Array, env):
 	var v_css_31 = null; var v_s_32 = null
@@ -281,10 +288,10 @@ func _f7(this_, a: Array, env):
 		return null
 	v_s_32 = J.S_document_("createElement", ["style"])
 	J.sp(v_s_32, "id", "pol-css")
-	var _t57 = ("\n.wm-pol{margin-left:auto;flex:none;padding:6px 10px;border-radius:10px;border:2px solid #6b3b1f;background:rgba(248,232,196,.95);color:#3a2212;font-family:inherit;font-size:14px;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.45);white-space:nowrap}\n#pol-ov{position:absolute;inset:0;z-index:50;background:rgba(10,8,14,.25)}\n#pol-ov .pol-ring{position:absolute;border-radius:18px;pointer-events:none;box-shadow:0 0 0 3px #ffd36a,0 0 18px 6px rgba(255,200,90,.85);animation:polPulse 1.1s ease-in-out infinite}\n@keyframes polPulse{50%{box-shadow:0 0 0 3px #fff1b8,0 0 28px 10px rgba(255,210,110,.95)}}\n#pol-ov .pol-arr{position:absolute;width:0;height:0;margin-left:-10px;border:10px solid transparent;border-top:13px solid #ffd36a;border-bottom:0;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6));pointer-events:none;animation:polBob .8s ease-in-out infinite}\n@keyframes polBob{50%{transform:translateY(6px)}}\n.pol-box{position:absolute;left:16px;right:16px;padding:10px 14px 12px;background:#f6ecd2;color:#2a1a10;border-radius:14px;box-shadow:0 0 0 2px #3a2a1a,0 6px 16px rgba(0,0,0,.55);font-size:18px;line-height:1.5;font-weight:700;overflow-wrap:anywhere}\n.pol-box b{display:block;font-family:var(--serif);font-size:14px;font-weight:900;color:var(--cinnabar,#b0302a);margin-bottom:2px;letter-spacing:1px}\n.pol-box small{display:block;text-align:right;font-size:12px;font-weight:400;color:#8a6a4a;margin-top:2px}\n#pol-tip{position:fixed;z-index:100050;bottom:calc(env(safe-area-inset-bottom) + 10px);font-size:16px;padding:8px 12px 9px;background:rgba(246,236,210,.96);cursor:pointer}\n")
-	J.sp(v_s_32, "textContent", _t57)
-	var _t58 = J.gp(J.G.get("document"), "head")
-	J.mc(_t58, "appendChild", [v_s_32])
+	var _t61 = ("\n.wm-pol{margin-left:auto;flex:none;padding:6px 10px;border-radius:10px;border:2px solid #6b3b1f;background:rgba(248,232,196,.95);color:#3a2212;font-family:inherit;font-size:14px;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.45);white-space:nowrap}\n#pol-ov{position:absolute;inset:0;z-index:50;background:rgba(10,8,14,.25)}\n#pol-ov .pol-ring{position:absolute;border-radius:18px;pointer-events:none;box-shadow:0 0 0 3px #ffd36a,0 0 18px 6px rgba(255,200,90,.85);animation:polPulse 1.1s ease-in-out infinite}\n@keyframes polPulse{50%{box-shadow:0 0 0 3px #fff1b8,0 0 28px 10px rgba(255,210,110,.95)}}\n#pol-ov .pol-arr{position:absolute;width:0;height:0;margin-left:-10px;border:10px solid transparent;border-top:13px solid #ffd36a;border-bottom:0;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6));pointer-events:none;animation:polBob .8s ease-in-out infinite}\n@keyframes polBob{50%{transform:translateY(6px)}}\n.pol-box{position:absolute;left:16px;right:16px;padding:10px 14px 12px;background:#f6ecd2;color:#2a1a10;border-radius:14px;box-shadow:0 0 0 2px #3a2a1a,0 6px 16px rgba(0,0,0,.55);font-size:18px;line-height:1.5;font-weight:700;overflow-wrap:anywhere}\n.pol-box b{display:block;font-family:var(--serif);font-size:14px;font-weight:900;color:var(--cinnabar,#b0302a);margin-bottom:2px;letter-spacing:1px}\n.pol-box small{display:block;text-align:right;font-size:12px;font-weight:400;color:#8a6a4a;margin-top:2px}\n#pol-tip{position:fixed;z-index:100050;bottom:calc(env(safe-area-inset-bottom) + 10px);font-size:16px;padding:8px 12px 9px;background:rgba(246,236,210,.96);cursor:pointer}\n")
+	J.sp(v_s_32, "textContent", _t61)
+	var _t62 = J.gp(J.G.get("document"), "head")
+	J.mc(_t62, "appendChild", [v_s_32])
 
 func _f1(this_, a: Array, env):
 	var v_maybe_17 = null; var v_firstEnter_18 = null

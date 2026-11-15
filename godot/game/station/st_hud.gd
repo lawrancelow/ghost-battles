@@ -203,3 +203,31 @@ static func _draw_jar(c: CanvasItem, Tf: Dictionary, W: float, H: float, U: floa
 
 static func _quad(a: Vector2, b: Vector2, d: Vector2, k: float) -> Vector2:
 	return a.lerp(b, k).lerp(b.lerp(d, k), k)
+
+# ---------------- Turf.drawUlt（大招開場：壓暗＋橫幅特寫，逐句照 street.js）----------------
+static func draw_ult(c: CanvasItem, Tf: Dictionary, Wd: float, Hd: float) -> void:
+	var U = Tf.get("ult")
+	if not (U is Dictionary): return
+	var k = J.num(U.get("t", 0.0))
+	if k >= 1.3: return
+	var a = k / 0.15 if k < 0.15 else (1.0 - (k - 1.0) / 0.3 if k > 1.0 else 1.0)
+	c.draw_rect(Rect2(0, 0, Wd, Hd), Color(0, 0, 0, 0.55 * a))
+	var slide = minf(1.0, k / 0.25); var y0 = Hd * 0.36; var bh = Hd * 0.2; var bx = -Wd + Wd * (1.0 - pow(1.0 - slide, 3))
+	var poly = PackedVector2Array([Vector2(bx, y0), Vector2(bx + Wd, y0 - 16), Vector2(bx + Wd, y0 + bh - 16), Vector2(bx, y0 + bh)])
+	c.draw_colored_polygon(poly, Color(0x12 / 255.0, 0x06 / 255.0, 0x1c / 255.0, a))
+	var pl = poly.duplicate(); pl.append(poly[0])
+	c.draw_polyline(pl, Color(0xc0 / 255.0, 0x84 / 255.0, 1.0, a), 3.0, true)
+	# 頭像：同 ART.portrait 一樣由原圖頂部裁正方形（畫喺 4%～96% 範圍）
+	var r = Art.portrait_region(J.str(U.get("k", "")))
+	if r.size():
+		var S = bh + 20; var px = bx + 8; var py = y0 - 22
+		c.draw_texture_rect_region(r[0], Rect2(px + S * 0.04, py + S * 0.04, S * 0.92, S * 0.92), r[1], Color(1, 1, 1, a))
+	var tx = bx + bh + 36; var nm = J.str(U.get("name", ""))
+	var fser = UIKit.font("serif", 900); var fs = int(round(bh * 0.3))
+	while fs > 14 and fser.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > Wd - (tx - bx) - 14: fs -= 2
+	c.draw_string_outline(fser, Vector2(tx, y0 + bh * 0.5), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 5, Color(0x2a / 255.0, 0x0a / 255.0, 0x30 / 255.0, a))
+	c.draw_string(fser, Vector2(tx, y0 + bh * 0.5), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1.0, 0xe9 / 255.0, 0xb0 / 255.0, a))
+	var sub = J.str(U.get("gname", "")) + "・大招"
+	var fsan = UIKit.font("sans", 700); var fs2 = int(round(bh * 0.14))
+	while fs2 > 10 and fsan.get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2).x > Wd - (tx - bx) - 14: fs2 -= 1
+	c.draw_string(fsan, Vector2(tx, y0 + bh * 0.78), sub, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2, Color(0xd9 / 255.0, 0xc3 / 255.0, 1.0, a))

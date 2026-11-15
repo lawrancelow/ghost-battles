@@ -44,6 +44,11 @@ static func hook(on: bool) -> bool:
 	return true
 
 func _teardown() -> void:
+	if _wd_hide:
+		var wel = _el("#world")
+		if wel != null:
+			if _wd_saved == null: wel.style.erase("display")
+			else: wel.style["display"] = _wd_saved
 	_cover(false)
 	if cur == self: cur = null
 	queue_free()
@@ -253,13 +258,29 @@ func _process(dt: float) -> void:
 		_toast_t -= dt
 		if _toast_t <= 0: toast_l.visible = false
 	var th = js("Theater")
-	var dom_need = (th != null and J.t(J.gp(th, "on"))) or _el("#pol-ov") != null or _el("#dlg.on") != null
+	# 小劇場（Theater）播緊：佢嘅原生畫布喺成個 DOM 下面、根節點透明，所以要收埋 DOM 嘅 #world，唔係會透出舊地圖
+	var th_on = th != null and J.t(J.gp(th, "on"))
+	if th_on != _wd_hide:
+		var wel = _el("#world")
+		if wel != null:
+			_wd_hide = th_on
+			if th_on: _wd_saved = wel.style.get("display"); wel.style["display"] = "none"
+			elif _wd_saved == null: wel.style.erase("display")
+			else: wel.style["display"] = _wd_saved
+	# 新政策指卡（#pol-ov）：原生畫（NvPolOv）；GB_POLDOM=1 用返 DOM
+	var ov = _el("#pol-ov")
+	if ov != null and not OS.has_environment("GB_POLDOM"):
+		NvPolOv.ensure(self, ov); ov = null
+	var dom_need = (th != null and J.t(J.gp(th, "on"))) or ov != null or _el("#dlg.on") != null
 	if dom_need != _dom_mode:
 		_dom_mode = dom_need
 		visible = not dom_need
 		var dom = get_parent().get("dom")
 		if dom: dom.visible = dom_need; dom.process_mode = Node.PROCESS_MODE_INHERIT if dom_need else Node.PROCESS_MODE_DISABLED
 		mouse_filter = Control.MOUSE_FILTER_IGNORE if dom_need else Control.MOUSE_FILTER_STOP
+
+var _wd_hide := false
+var _wd_saved = null
 
 static func t_pick(id: String) -> void:
 	if cur != null: cur._t0 = 0; cur._pick(id)

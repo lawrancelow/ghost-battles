@@ -226,6 +226,12 @@ module.exports = {
     ["    G.guards.forEach(function(s){ var H=HUM[s.kind], HHt=", "    if (!window.__twNat||!__nat_twGuardD(ctx,G,CULL)) G.guards.forEach(function(s){ var H=HUM[s.kind], HHt="],
   ],
   // 線 E3：陰間地圖原生化（ui/world_map/wm_run.gd）；JS 照砌 DOM（新政策發佈會要用），原生蓋住
+  // 線 F3：新政策發佈會指卡（#pol-ov）原生畫（ui/nv_pol_ov.gd），要知指緊邊張卡
+  policy: [
+    ["ov.id = 'pol-ov'; host.appendChild(ov);", "ov.id = 'pol-ov'; ov.dataset.card = id; host.appendChild(ov);"],
+    // 原生站崗冇 #st-street DOM：問原生畫面仲開唔開（順手喺嗰度掛原生提示框）
+    ["const vis = r && r.classList.contains('on')", "const vis = (mode === 'station' && typeof __nat_stOn !== 'undefined' && __nat_stOn()) || r && r.classList.contains('on')"],
+  ],
   world: [
     ["    window.Policy && Policy.maybe();\n  },", "    window.Policy && Policy.maybe();\n    if (typeof __nat_world !== 'undefined') __nat_world(true);\n  },"],
     ["  close() { const el = $('#world');", "  close() { if (typeof __nat_world !== 'undefined') __nat_world(false); const el = $('#world');"],

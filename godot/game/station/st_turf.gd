@@ -256,7 +256,10 @@ func _check_modal() -> void:
 			if pick_panel != null and is_instance_valid(pick_panel): pick_panel.queue_free()
 			pick_panel = StDomPanel.new(); add_child(pick_panel); pick_panel.setup(pk, Tf, "pick")
 		pk = null
-	var on = pk != null or _el("#pol-tip") != null
+	# 龐總提示（#pol-tip）：原生（NvPolTip）；GB_PICKDOM=1 用返 DOM
+	var tp = _el("#pol-tip")
+	if tp != null and not OS.has_environment("GB_PICKDOM"): NvPolTip.ensure(self); tp = null
+	var on = pk != null or tp != null
 	if on == _modal: return
 	_modal = on
 	var dom = get_parent().get("dom")
@@ -316,7 +319,9 @@ func _draw_stage() -> void:
 	if OS.has_environment("GB_JSDRAW"): J.mc(Tf, "draw", [])
 	else: StDraw.draw(ctx, Tf)   # 原生移植 Turf.draw()
 	var t1 = Time.get_ticks_usec()
-	if Tf.get("ult") != null: J.mc(Tf, "drawUlt", [])
+	if Tf.get("ult") != null:
+		if OS.has_environment("GB_JSULT"): J.mc(Tf, "drawUlt", [])
+		else: StHud.draw_ult(stage, Tf, stage.size.x, stage.size.y)   # 原生移植 drawUlt
 	if OS.has_environment("GB_SUBPROF") and prof_n == 20 and _fno > 150:
 		var out = []
 		for m in ["drawLongBg", "drawProps", "drawTraces", "drawObsFx", "drawSpecial", "drawCaps"]:

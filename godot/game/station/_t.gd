@@ -87,3 +87,32 @@ func o_cafe(t) -> void: open_id(t, "cafe")
 func o_bus(t) -> void: open_id(t, "bus")
 func o_market(t) -> void: open_id(t, "market")
 func o_flat(t) -> void: open_id(t, "flat")
+func ult(_t) -> void:
+	var tf = J.G.get("Street").Turf
+	var k = "xiaozhi"
+	for p in tf.sd.posts: if p is Dictionary and p.get("g") != null:
+		var g = J.cl(J.G.get("ghost"), null, [p.g]) if J.G.get("ghost") is Callable else null
+		if g is Dictionary: k = J.str(g.get("k", k)); break
+	tf["ult"] = {"t": 0.0, "i": -1, "pos": [0.5, 0.5], "k": k, "name": "紙人大軍", "gname": "測試鬼", "pw": 1, "pm": 1, "done": true, "fx": [], "dur": 3.0}
+	print("ULT k=", k)
+func bwin(_t) -> void:
+	J.mc(J.G.get("Battle"), "finish", [true])
+func blose(_t) -> void:
+	J.mc(J.G.get("Battle"), "finish", [false])
+func wild(_t) -> void:
+	var N = J.G.get("N30W")
+	for k in J.mc(N, "ids", []):
+		if not J.t(J.mc(N, "owned", [k])) and J.t(J.mc(N, "open", [k])):
+			print("WILD ", k); J.mc(N, "fight", [k]); return
+	var ids = J.mc(N, "ids", [])
+	print("WILD again ", ids[0]); J.mc(N, "fight", [ids[0]])
+func scend(_t) -> void:
+	J.mc(J.G.get("Scare"), "finish", [false])
+func tipq(_t) -> void:
+	var e = JSRun.by_id("pol-tip")
+	var r = J.cl(J.G.get("$"), null, ["#st-street"])
+	if r: print("STREET cls=", J.gp(r, "className"), " disp=", r.style.get("display"), " cs=", J.gp(J.cl(J.G.get("getComputedStyle"), null, [r]), "display") if J.G.get("getComputedStyle") else "?")
+	print("TIPQ el=", e != null, " seen=", J.gp(J.gp(J.G.get("S"), "seen"), "policy_station"), " txt=", J.gp(e, "textContent") if e else "")
+func tipn(_t) -> void:
+	for n in Engine.get_main_loop().root.find_children("*", "NvPolTip", true, false): print("TIPN ", n.get_path(), " vis=", n.visible, " txt=", n.text.substr(0, 30))
+	tipq(_t)
