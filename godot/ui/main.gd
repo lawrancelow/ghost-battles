@@ -64,9 +64,19 @@ func _boot_js() -> void:
 	# 開機麵包屑（user://boot_crumb.txt，每步寫入）：上次未到「ok」就係閃退／卡死 → 救命畫面
 	#   畫面階段出事會自動開安全畫面模式（G.read_crumb）
 	G.read_crumb()
+	# 全面自檢（新版第一次開會自動跑；閃退重開會自動繼續）
+	SelfTest.on_boot()
+	if SelfTest.active():
+		G.last_crash = ""
+		if str(SelfTest.S.res.get("boot", "")) == "閃退": G.safe_gfx = true   # 開機本身都閃退：用安全模式先行得落去
+		selftest = SelfTest.new(); selftest.build(self)
+		await selftest.run_pre()
+		JSRun.ls[SAVE_KEY] = SelfTest.test_save_json()
+		if not SelfTest.S.res.has("boot"): SelfTest.begin("boot")
 	if G.last_crash != "":
 		var choice = await _boot_rescue(loading, G.last_crash)
 		if choice == "fresh": _set_aside_save()
+		elif choice == "selftest": SelfTest.start(true); JSRun.reset_world(); get_tree().call_deferred("reload_current_scene"); return
 		elif choice == "safe": G.set_safe_gfx(true)
 	G.crumb("modules")
 	var t0 = Time.get_ticks_msec(); boot_full_t = t0 + 70000   # 載模塊階段：90 秒都未完先出記錄
@@ -97,6 +107,9 @@ func _boot_js() -> void:
 	G.crumb("frame1"); await RenderingServer.frame_post_draw
 	for i in 30: await get_tree().process_frame
 	G.crumb("frame30"); await RenderingServer.frame_post_draw
+	if selftest != null:
+		if str(SelfTest.S.get("cur", "")) == "boot": SelfTest.done("boot", "OK")
+		selftest.run_post(self); return
 	get_tree().create_timer(8.0).timeout.connect(func(): G.crumb("ok"))
 	if G.last_crash != "" and G.safe_gfx:
 		show_toast("上次開機喺「%s」出事，而家用緊安全畫面模式（角色冇骨架動畫）。可以喺設定入面切換。" % G.last_crash)
@@ -168,6 +181,7 @@ func _staged_reveal() -> void:
 	G.crumb("show:agents"); G.boot_agents_ok = true
 	for i in 3: await RenderingServer.frame_post_draw
 
+var selftest: SelfTest = null
 var boot_fail: Array = []
 var _step_ok := false
 # 上一次嘅記錄檔（Godot 開機會將舊 godot.log 改名加日期）
@@ -197,7 +211,9 @@ func _boot_rescue(host: Control, prev: String) -> String:
 	var b3 = Button.new(); b3.text = "用安全畫面模式開（角色冇骨架動畫）"; b3.custom_minimum_size = Vector2(0, 44); vb.add_child(b3)
 	b3.visible = not G.safe_gfx
 	var b2 = Button.new(); b2.text = "暫時用新存檔試開（舊存檔會保留，唔會刪）"; b2.custom_minimum_size = Vector2(0, 44); vb.add_child(b2)
+	var b4 = Button.new(); b4.text = "全面自檢（約 3–5 分鐘，出報告俾開發者）"; b4.custom_minimum_size = Vector2(0, 44); vb.add_child(b4)
 	var res = [""]
+	b4.pressed.connect(func(): res[0] = "selftest")
 	b1.pressed.connect(func(): res[0] = "normal")
 	b2.pressed.connect(func(): res[0] = "fresh")
 	b3.pressed.connect(func(): res[0] = "safe")
@@ -664,6 +680,8 @@ func open_story() -> void:
 		import_save(ta.text if ta.text.strip_edges() != "" else DisplayServer.clipboard_get()))
 	var sgb = UIKit.btn("安全畫面模式：" + ("開" if G.safe_gfx else "關") + "（閃退時用，重開遊戲生效）", "ghost"); sheet_body.add_child(sgb)
 	sgb.pressed.connect(func(): G.set_safe_gfx(not G.safe_gfx); sgb.text = "安全畫面模式：" + ("開" if G.safe_gfx else "關") + "（閃退時用，重開遊戲生效）")
+	var stb = UIKit.btn("全面自檢（約 3–5 分鐘，出報告俾開發者）", "ghost"); sheet_body.add_child(stb)
+	stb.pressed.connect(func(): SelfTest.start(true); JSRun.reset_world(); get_tree().call_deferred("reload_current_scene"))
 	var lgb = UIKit.btn("錯誤記錄（有問題時截圖俾開發者）", "ghost"); sheet_body.add_child(lgb)
 	lgb.pressed.connect(func():
 		var lt = UIKit.label(log_tail(40), 10, UIKit.INKTXT); lt.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; sheet_body.add_child(lt)

@@ -431,6 +431,7 @@ static func open_story() -> void:
 	var sgt = func(): return "安全畫面模式：" + ("開" if G.safe_gfx else "關") + "（閃退時用，重開遊戲生效）"
 	var sgb = _wide(sgt.call(), "ghost", true, func(): pass)
 	sgb.pressed.connect(func(): G.set_safe_gfx(not G.safe_gfx); sgb.text = sgt.call())
+	_wide("全面自檢（約 3–5 分鐘，出報告俾開發者）", "ghost", true, func(): SelfTest.start(true); JSRun.reset_world(); m.get_tree().call_deferred("reload_current_scene"))
 	var lgb = _wide("錯誤記錄（有問題時截圖俾開發者）", "ghost", true, func(): pass)
 	lgb.pressed.connect(func():
 		var lt = UIKit.label(m.log_tail(40), 10, UIKit.INKTXT); lt.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; _body().add_child(lt)
