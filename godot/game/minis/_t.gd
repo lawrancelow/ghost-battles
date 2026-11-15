@@ -11,3 +11,8 @@ func gy_wrong(_t) -> void:
 	J.mc(G, "submit", [])
 	print("TGY wrong correct=", J.mc(G, "correct", []), " tries=", G.tries)
 func gy_sel(_t) -> void: print("TSEL ", J.G.Graveyard.get("sel"))
+func st_dbg(_t) -> void:
+	for k in MiniStage.all:
+		var r = MiniStage.all[k]
+		print("TSEL ", k, " vis=", r.visible, " susp=", r._suspended, " stage=", r.stage.position, r.stage.size, " active=", r.obj.get("active"), " disp=", r._el(r.root_sel).style.get("display") if r._el(r.root_sel) else "noel", " W=", r.obj.get("W"), " H=", r.obj.get("H"), " vh=", r.obj.get("vh"))
+	print("TSEL stack=", MiniStage.stack.size())

@@ -36,12 +36,13 @@ module.exports = {
   ],
   // 線 I：冥街夜市——<canvas> 交俾原生 game/minis/mini_stage.gd 直接畫（唔經錄製器）；角色冇平日動作嘅交俾原生 Art；規則、DOM 面板照舊
   ghoststreet: [
+    ["const r = box.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);\n    c.width = r.width * dpr;", "const r = this._nat ? (() => { const z = __nat_miniSize('#gstreet'); return { width:z[0], height:z[1] }; })() : box.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);\n    c.width = r.width * dpr;"],
     ["const GhostStreet = {", "const __gsDC = (c, k, x, y, s, o) => (GhostStreet._nat && !(o && o.act) && typeof __nat_drawChar !== 'undefined') ? __nat_drawChar(c, k, x, y, s, o || {}) : ART['drawChar'](c, k, x, y, s, o);\nconst GhostStreet = {"],
     ["ART.drawChar(", "__gsDC("],
     ["    this.last = performance.now(); requestAnimationFrame((n) => this.frame(n));\n    if (!s.seen.street)", "    this._nat = typeof __nat_mini !== 'undefined' && __nat_mini(this, '#gs-stage', '#gstreet', 'draw', '#gs-cvs');\n    this.last = performance.now(); requestAnimationFrame((n) => this.frame(n));\n    if (!s.seen.street)"],
     ["    this.step(dt); this.draw(now / 1000);", "    this.step(dt); if (!this._nat) this.draw(now / 1000);"],
     ["    const c = $('#gs-cvs'); if (!c) return; const ctx = c.getContext('2d'); ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);", "    if (this._nat && this._natCtx && typeof __nat_gsDraw !== 'undefined') { __nat_gsDraw(this._natCtx, this, t); return; } if (this._nat && !this._natCtx) return; const c = this._natCtx ? null : $('#gs-cvs'); if (!this._natCtx && !c) return; const ctx = this._natCtx || c.getContext('2d'); const dp = this._natCtx ? 1 : this.dpr; ctx.setTransform(dp, 0, 0, dp, 0, 0);"],
-    ["    if (!this.active) return; this.active = false;\n    $('#gstreet')", "    if (!this.active) return; this.active = false; if (this._nat && typeof __nat_miniEnd !== 'undefined') { __nat_miniEnd(); this._nat = false; }\n    $('#gstreet')"],
+    ["    if (!this.active) return; this.active = false;\n    $('#gstreet')", "    if (!this.active) return; this.active = false; if (this._nat && typeof __nat_miniEnd !== 'undefined') { __nat_miniEnd('#gstreet'); this._nat = false; }\n    $('#gstreet')"],
   ],
   // 線 I：亂葬崗——<canvas> 交俾原生 game/minis/mini_stage.gd 直接畫；魂同阿福交俾原生 Art；規則、DOM 面板照舊
   graveyard: [
@@ -53,12 +54,12 @@ module.exports = {
     ["    const tok = this._tok = {}; this.last = performance.now();", "    this._nat = typeof __nat_mini !== 'undefined' && __nat_mini(this, '#gy-stage', '#gyard', '_nd', '', '#gy-panel');\n    const tok = this._tok = {}; this.last = performance.now();"],
     ["    this.step(dt); this.draw(this.t);", "    this.step(dt); if (!this._nat) this.draw(this.t);"],
     ["    const c = $('#gy-cvs'); if (!c) return; const ctx = c.getContext('2d'); ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);", "    if (this._nat && !this._natCtx) return; const c = this._natCtx ? null : $('#gy-cvs'); if (!this._natCtx && !c) return; const ctx = this._natCtx || c.getContext('2d'); const dp = this._natCtx ? 1 : this.dpr; ctx.setTransform(dp, 0, 0, dp, 0, 0);"],
-    ["  resize() {\n    const c = $('#gy-cvs'), box = $('#gy-stage').getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);", "  resize() {\n    const c = $('#gy-cvs'), box = this._nat ? (() => { const r = __nat_miniSize(); return { width:r[0], height:r[1] }; })() : $('#gy-stage').getBoundingClientRect(), dpr = this._nat ? 1 : Math.min(2, window.devicePixelRatio || 1);"],
+    ["  resize() {\n    const c = $('#gy-cvs'), box = $('#gy-stage').getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);", "  resize() {\n    const c = $('#gy-cvs'), box = this._nat ? (() => { const r = __nat_miniSize('#gyard'); return { width:r[0], height:r[1] }; })() : $('#gy-stage').getBoundingClientRect(), dpr = this._nat ? 1 : Math.min(2, window.devicePixelRatio || 1);"],
     // 結算卡交俾原生 game/minis/gy_end.gd（DOM 卡片 overflow:auto 喺 Godot 會字疊字）
     ["    $('#gy-end').classList.add('on');", "    this._endRows = this.p.souls.map((s, i) => { const g = this.p.graves[s.grave], wrong = this.souls[i].place !== s.grave; return { tag:s.tag, col:GY_COLORS[i], a:`${g.name}・${g.job}・${g.birth}–${g.death}`, b:ok ? `「${GY_JOBS[g.job].last}」` : `${wrong ? '其實睡在' : '睡在'}${GY_SPOTS[g.spot].name}那座${wrong ? '' : '，你擺對了'}` }; }); this._endInfo = { title, word, stay, got };\n    if (!(this._nat && typeof __nat_gyEnd !== 'undefined' && __nat_gyEnd(this))) $('#gy-end').classList.add('on');"],
     ["    $('#gy-back').onclick = () => {", "    $('#gy-back').onclick = this._endBack = () => {"],
     ["    $('#gy-next').onclick = () => {", "    $('#gy-next').onclick = this._endNext = () => {"],
-    ["  close() {\n    this.active = false; this._tok = null;", "  close() {\n    this.active = false; this._tok = null; if (this._nat && typeof __nat_miniEnd !== 'undefined') { __nat_miniEnd(); this._nat = false; }"],
+    ["  close() {\n    this.active = false; this._tok = null;", "  close() {\n    this.active = false; this._tok = null; if (this._nat && typeof __nat_miniEnd !== 'undefined') { __nat_miniEnd('#gyard'); this._nat = false; }"],
   ],
   // 線 I：運動會——<canvas> 交俾原生 game/minis/mini_stage.gd 直接畫；角色交俾原生 Art（Bryan 原畫仍用 JS Antag）
   sports: [
@@ -66,7 +67,7 @@ module.exports = {
     ["const r = G.cv.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1);", "const r = G.cv.getBoundingClientRect(), d = G._nat ? 1 : Math.min(2, window.devicePixelRatio || 1);"],
     ["    draw(); requestAnimationFrame(frame);", "    if (!G._nat) draw(); requestAnimationFrame(frame);"],
     ["    const c = G.ctx, H = G.H; c.setTransform(G.k, 0, 0, G.k, 0, 0);", "    if (G._nat && !G._natCtx) return; const c = G._natCtx || G.ctx, H = G.H; c.setTransform(G.k, 0, 0, G.k, 0, 0);"],
-    ["  function close() { G = null;", "  function close() { if (G && G._nat && typeof __nat_miniEnd !== 'undefined') __nat_miniEnd(); G = null;"],
+    ["  function close() { G = null;", "  function close() { if (G && G._nat && typeof __nat_miniEnd !== 'undefined') __nat_miniEnd('#sports'); G = null;"],
     ["  function char(c, k, x, y, s, o) { try { ART.drawChar(c, k, x, y, s,", "  function char(c, k, x, y, s, o) { try { (G && G._nat && typeof __nat_drawChar !== 'undefined' ? __nat_drawChar : ART.drawChar)(c, k, x, y, s,"],
   ],
   patrol: [
@@ -92,6 +93,14 @@ module.exports = {
   // 線路 H：新鬼圖鑑交俾原生 ui/menus
   n30_data: [
     ["  openCodex() {", "  openCodex() { if (typeof __nat_menu !== 'undefined' && __nat_menu('codex')) return;"],
+  ],
+  // 線 I：小劇場（短劇／棟篤笑）——Theater 嘅 <canvas> 交俾原生 game/minis/mini_stage.gd：原生每幀叫一次 frame()（ctx 換成原生），唔再 rAF
+  skits: [
+    ["const Theater = (() => {", "const Theater = (() => {\n  let __nat = null;"],
+    ["  function resize() {\n    const r = el.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);", "  function resize() {\n    const r = el.getBoundingClientRect(); dpr = __nat ? 1 : Math.min(2, window.devicePixelRatio || 1);"],
+    ["    tickFlow(dt);\n    placeBubble();\n    raf = requestAnimationFrame(frame);", "    tickFlow(dt);\n    placeBubble();\n    if (!__nat) raf = requestAnimationFrame(frame);"],
+    ["    last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);\n    if (sc.mode === 'standup')", "    last = performance.now(); cancelAnimationFrame(raf);\n    __nat = null; if (typeof __nat_mini !== 'undefined') { const o = { _nd:() => { if (!sc) return; const keep = ctx; ctx = o._natCtx; try { frame(performance.now()); } finally { ctx = keep; } } }; if (__nat_mini(o, '#gtheater', '#gtheater', '_nd')) __nat = o; }\n    if (!__nat) raf = requestAnimationFrame(frame);\n    if (sc.mode === 'standup')"],
+    ["    if (!sc) return; const s = sc; sc = null; cancelAnimationFrame(raf);", "    if (!sc) return; const s = sc; sc = null; cancelAnimationFrame(raf); if (__nat) { __nat = null; __nat_miniEnd('#gtheater'); }"],
   ],
   game: [
     // 線路 H：村子面板（建築、派人、名冊、箱子）交俾原生 ui/menus/menus.gd

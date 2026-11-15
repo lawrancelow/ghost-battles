@@ -315,13 +315,14 @@ func _f30(this_, a: Array, env):
 	var v_e_114 = null; var v_e_115 = null
 	var _t95 = (J.gp(env["G"], "_nat") if J.t(env["G"]) else env["G"])
 	if J.t(((not J.seq(J.typeof_(J.G.get("__nat_miniEnd")), "undefined")) if J.t(_t95) else _t95)):
-		J.cl(J.G.get("__nat_miniEnd"), null, [])
+		var _t96 = J.G.get("__nat_miniEnd")
+		J.cl(_t96, null, ["#sports"])
 	env["G"] = null
-	var _t96 = J.G.get("$")
-	v_e_114 = J.cl(_t96, null, ["#sports"])
+	var _t97 = J.G.get("$")
+	v_e_114 = J.cl(_t97, null, ["#sports"])
 	if J.t(v_e_114):
-		var _t97 = J.gp(v_e_114, "classList")
-		J.mc(_t97, "remove", ["on"])
+		var _t98 = J.gp(v_e_114, "classList")
+		J.mc(_t98, "remove", ["on"])
 		J.sp(v_e_114, "innerHTML", "")
 	J.mc(J.G.get("Sound"), "setMode", ["village"])
 	J.cl(env["open"], null, [])
@@ -330,8 +331,8 @@ func _f32(this_, a: Array, env):
 	var v_x_120 = null; var v_i_121 = null
 	v_x_120 = J.arg(a, 0)
 	v_i_121 = J.arg(a, 1)
-	var _t99 = J.gp(v_x_120, 2.0)
-	return ("<button class=\"btn " + J.str((_t99 if J.t(_t99) else "gold")) + " sp-b\" data-i=\"" + J.str(v_i_121) + "\">" + J.str(J.gp(v_x_120, 0.0)) + "</button>")
+	var _t100 = J.gp(v_x_120, 2.0)
+	return ("<button class=\"btn " + J.str((_t100 if J.t(_t100) else "gold")) + " sp-b\" data-i=\"" + J.str(v_i_121) + "\">" + J.str(J.gp(v_x_120, 0.0)) + "</button>")
 
 func _f34(this_, a: Array, env):
 	var v_e_123 = null; var v_f_124 = null
@@ -350,23 +351,23 @@ func _f31(this_, a: Array, env):
 	var v_b_119 = null
 	var _s42 = {"__p": env, "list": null}
 	_s42["list"] = J.arg(a, 0)
-	var _t98 = J.G.get("$")
-	v_b_119 = J.cl(_t98, null, ["#sp-btns"])
-	var _t100 = J.mc(_s42["list"], "map", [Callable(self, "_f32").bind(_s42)])
-	var _t101 = J.mc(_t100, "join", [""])
-	J.sp(v_b_119, "innerHTML", _t101)
-	var _t102 = J.mc(v_b_119, "querySelectorAll", [".sp-b"])
-	J.mc(_t102, "forEach", [Callable(self, "_f33").bind(_s42)])
+	var _t99 = J.G.get("$")
+	v_b_119 = J.cl(_t99, null, ["#sp-btns"])
+	var _t101 = J.mc(_s42["list"], "map", [Callable(self, "_f32").bind(_s42)])
+	var _t102 = J.mc(_t101, "join", [""])
+	J.sp(v_b_119, "innerHTML", _t102)
+	var _t103 = J.mc(v_b_119, "querySelectorAll", [".sp-b"])
+	J.mc(_t103, "forEach", [Callable(self, "_f33").bind(_s42)])
 
 func _f35(this_, a: Array, env):
 	var v_m_127 = null; var v_t_128 = null
 	v_m_127 = J.arg(a, 0)
 	v_t_128 = J.arg(a, 1)
-	var _t103 = env["G"]
-	J.sp(_t103, "msg", v_m_127)
 	var _t104 = env["G"]
-	var _t105 = (v_t_128 if J.t(v_t_128) else 1.2)
-	J.sp(_t104, "msgT", _t105)
+	J.sp(_t104, "msg", v_m_127)
+	var _t105 = env["G"]
+	var _t106 = (v_t_128 if J.t(v_t_128) else 1.2)
+	J.sp(_t105, "msgT", _t106)
 
 func _f37(this_, a: Array, env):
 	var v_f_134 = null
@@ -379,83 +380,83 @@ func _f36(this_, a: Array, env):
 	if (not J.t(env["G"])):
 		return null
 	v_dt_132 = J.min_([0.05, J.div(J.sub(v_now_131, J.gp(env["G"], "last")), 1000.0)])
-	var _t106 = env["G"]
-	J.sp(_t106, "last", v_now_131)
 	var _t107 = env["G"]
-	var _t108 = J.add(J.gp(_t107, "t"), v_dt_132)
-	J.sp(_t107, "t", _t108)
+	J.sp(_t107, "last", v_now_131)
+	var _t108 = env["G"]
+	var _t109 = J.add(J.gp(_t108, "t"), v_dt_132)
+	J.sp(_t108, "t", _t109)
 	if J.cmp(J.gp(env["G"], "msgT"), 0.0, ">"):
-		var _t109 = env["G"]
-		var _t110 = J.sub(J.gp(_t109, "msgT"), v_dt_132)
-		J.sp(_t109, "msgT", _t110)
+		var _t110 = env["G"]
+		var _t111 = J.sub(J.gp(_t110, "msgT"), v_dt_132)
+		J.sp(_t110, "msgT", _t111)
 	if J.seq(J.gp(env["G"], "phase"), "intro"):
-		var _t111 = env["G"]
-		var _t112 = J.sub(J.gp(_t111, "introT"), v_dt_132)
-		J.sp(_t111, "introT", _t112)
+		var _t112 = env["G"]
+		var _t113 = J.sub(J.gp(_t112, "introT"), v_dt_132)
+		J.sp(_t112, "introT", _t113)
 		if J.cmp(J.gp(env["G"], "introT"), 0.0, "<="):
-			var _t113 = env["G"]
-			J.sp(_t113, "phase", "play")
-	var _t114 = J.seq(J.gp(env["G"], "phase"), "play")
-	if J.t((J.gp(env["G"], "tick") if _t114 else _t114)):
+			var _t114 = env["G"]
+			J.sp(_t114, "phase", "play")
+	var _t115 = J.seq(J.gp(env["G"], "phase"), "play")
+	if J.t((J.gp(env["G"], "tick") if _t115 else _t115)):
 		J.mc(env["G"], "tick", [v_dt_132])
-	for _t115 in J.iter(J.gp(env["G"], "fx")):
-		v_f_133 = _t115
-		var _t116 = J.add(J.gp(v_f_133, "t"), v_dt_132)
-		J.sp(v_f_133, "t", _t116)
-	var _t117 = env["G"]
-	var _t118 = J.gp(env["G"], "fx")
-	var _t119 = J.mc(_t118, "filter", [Callable(self, "_f37").bind(env)])
-	J.sp(_t117, "fx", _t119)
+	for _t116 in J.iter(J.gp(env["G"], "fx")):
+		v_f_133 = _t116
+		var _t117 = J.add(J.gp(v_f_133, "t"), v_dt_132)
+		J.sp(v_f_133, "t", _t117)
+	var _t118 = env["G"]
+	var _t119 = J.gp(env["G"], "fx")
+	var _t120 = J.mc(_t119, "filter", [Callable(self, "_f37").bind(env)])
+	J.sp(_t118, "fx", _t120)
 	if (not J.t(J.gp(env["G"], "_nat"))):
 		J.cl(env["draw"], null, [])
 	J.F_requestAnimationFrame([env["frame"]])
 
 func _f38(this_, a: Array, env):
 	var v_c_137 = null; var v_H_138 = null; var v_hud_139 = null; var v_f_140 = null; var v_q_141 = null
-	var _t120 = J.gp(env["G"], "_nat")
-	if J.t(((not J.t(J.gp(env["G"], "_natCtx"))) if J.t(_t120) else _t120)):
+	var _t121 = J.gp(env["G"], "_nat")
+	if J.t(((not J.t(J.gp(env["G"], "_natCtx"))) if J.t(_t121) else _t121)):
 		return null
-	var _t121 = J.gp(env["G"], "_natCtx")
-	v_c_137 = (_t121 if J.t(_t121) else J.gp(env["G"], "ctx"))
+	var _t122 = J.gp(env["G"], "_natCtx")
+	v_c_137 = (_t122 if J.t(_t122) else J.gp(env["G"], "ctx"))
 	v_H_138 = J.gp(env["G"], "H")
 	J.mc(v_c_137, "setTransform", [J.gp(env["G"], "k"), 0.0, 0.0, J.gp(env["G"], "k"), 0.0, 0.0])
 	J.mc(v_c_137, "clearRect", [0.0, 0.0, 390.0, v_H_138])
-	var _t122 = env["has"]
-	var _t123 = J.cl(_t122, null, [J.G.get("SCENE")])
-	if (not J.t((J.mc(J.G.get("SCENE"), "drawBg", [v_c_137, 390.0, v_H_138, J.gp(J.gp(env["G"], "E"), "bg")]) if J.t(_t123) else _t123))):
+	var _t123 = env["has"]
+	var _t124 = J.cl(_t123, null, [J.G.get("SCENE")])
+	if (not J.t((J.mc(J.G.get("SCENE"), "drawBg", [v_c_137, 390.0, v_H_138, J.gp(J.gp(env["G"], "E"), "bg")]) if J.t(_t124) else _t124))):
 		J.sp(v_c_137, "fillStyle", "#1c1820")
 		J.mc(v_c_137, "fillRect", [0.0, 0.0, 390.0, v_H_138])
 	J.sp(v_c_137, "fillStyle", "rgba(10,8,16,.35)")
 	J.mc(v_c_137, "fillRect", [0.0, 0.0, 390.0, v_H_138])
 	J.mc(env["G"], "draw", [v_c_137, v_H_138])
-	for _t124 in J.iter(J.gp(env["G"], "fx")):
-		v_f_140 = _t124
+	for _t125 in J.iter(J.gp(env["G"], "fx")):
+		v_f_140 = _t125
 		v_q_141 = J.div(J.gp(v_f_140, "t"), J.gp(v_f_140, "life"))
 		J.mc(v_c_137, "save", [])
-		var _t125 = J.sub(1.0, v_q_141)
-		J.sp(v_c_137, "globalAlpha", _t125)
-		var _t126 = J.gp(v_f_140, "size")
-		var _t127 = ("bold " + J.str((_t126 if J.t(_t126) else 18.0)) + "px \"PingFang TC\",\"Noto Sans TC\",sans-serif")
-		J.sp(v_c_137, "font", _t127)
+		var _t126 = J.sub(1.0, v_q_141)
+		J.sp(v_c_137, "globalAlpha", _t126)
+		var _t127 = J.gp(v_f_140, "size")
+		var _t128 = ("bold " + J.str((_t127 if J.t(_t127) else 18.0)) + "px \"PingFang TC\",\"Noto Sans TC\",sans-serif")
+		J.sp(v_c_137, "font", _t128)
 		J.sp(v_c_137, "textAlign", "center")
 		J.sp(v_c_137, "lineWidth", 4.0)
 		J.sp(v_c_137, "strokeStyle", "rgba(0,0,0,.75)")
-		var _t128 = J.gp(v_f_140, "col")
-		var _t129 = (_t128 if J.t(_t128) else "#fff")
-		J.sp(v_c_137, "fillStyle", _t129)
+		var _t129 = J.gp(v_f_140, "col")
+		var _t130 = (_t129 if J.t(_t129) else "#fff")
+		J.sp(v_c_137, "fillStyle", _t130)
 		J.mc(v_c_137, "strokeText", [J.gp(v_f_140, "text"), J.gp(v_f_140, "x"), J.sub(J.gp(v_f_140, "y"), J.mul(v_q_141, 26.0))])
 		J.mc(v_c_137, "fillText", [J.gp(v_f_140, "text"), J.gp(v_f_140, "x"), J.sub(J.gp(v_f_140, "y"), J.mul(v_q_141, 26.0))])
 		J.mc(v_c_137, "restore", [])
 	if J.seq(J.gp(env["G"], "phase"), "intro"):
-		var _t130 = env["banner"]
-		var _t132 = J.gp(J.gp(env["G"], "E"), "name")
-		var _t131 = env["Lx"]
-		J.cl(_t130, null, [v_c_137, v_H_138, _t132, J.cl(_t131, null, [J.gp(env["BRYAN"], J.gp(env["G"], "id"))])])
-	var _t133 = J.cmp(J.gp(env["G"], "msgT"), 0.0, ">")
-	if J.t((J.gp(env["G"], "msg") if _t133 else _t133)):
+		var _t131 = env["banner"]
+		var _t133 = J.gp(J.gp(env["G"], "E"), "name")
+		var _t132 = env["Lx"]
+		J.cl(_t131, null, [v_c_137, v_H_138, _t133, J.cl(_t132, null, [J.gp(env["BRYAN"], J.gp(env["G"], "id"))])])
+	var _t134 = J.cmp(J.gp(env["G"], "msgT"), 0.0, ">")
+	if J.t((J.gp(env["G"], "msg") if _t134 else _t134)):
 		J.mc(v_c_137, "save", [])
-		var _t134 = "bold 22px \"PingFang TC\",\"Noto Sans TC\",sans-serif"
-		J.sp(v_c_137, "font", _t134)
+		var _t135 = "bold 22px \"PingFang TC\",\"Noto Sans TC\",sans-serif"
+		J.sp(v_c_137, "font", _t135)
 		J.sp(v_c_137, "textAlign", "center")
 		J.sp(v_c_137, "lineWidth", 5.0)
 		J.sp(v_c_137, "strokeStyle", "rgba(0,0,0,.8)")
@@ -463,11 +464,11 @@ func _f38(this_, a: Array, env):
 		J.mc(v_c_137, "strokeText", [J.gp(env["G"], "msg"), 195.0, J.mul(v_H_138, 0.2)])
 		J.mc(v_c_137, "fillText", [J.gp(env["G"], "msg"), 195.0, J.mul(v_H_138, 0.2)])
 		J.mc(v_c_137, "restore", [])
-	var _t135 = J.G.get("$")
-	v_hud_139 = J.cl(_t135, null, ["#sp-hud"])
+	var _t136 = J.G.get("$")
+	v_hud_139 = J.cl(_t136, null, ["#sp-hud"])
 	if J.t((J.gp(env["G"], "hud") if J.t(v_hud_139) else v_hud_139)):
-		var _t136 = J.mc(env["G"], "hud", [])
-		J.sp(v_hud_139, "textContent", _t136)
+		var _t137 = J.mc(env["G"], "hud", [])
+		J.sp(v_hud_139, "textContent", _t137)
 
 func _f39(this_, a: Array, env):
 	var v_c_144 = null; var v_H_145 = null; var v_a_146 = null; var v_b_147 = null
@@ -480,14 +481,14 @@ func _f39(this_, a: Array, env):
 	J.mc(v_c_144, "fillRect", [0.0, J.mul(v_H_145, 0.32), 390.0, 92.0])
 	J.sp(v_c_144, "textAlign", "center")
 	J.sp(v_c_144, "fillStyle", "#ffd84a")
-	var _t137 = "bold 26px \"PingFang TC\",\"Noto Sans TC\",sans-serif"
-	J.sp(v_c_144, "font", _t137)
+	var _t138 = "bold 26px \"PingFang TC\",\"Noto Sans TC\",sans-serif"
+	J.sp(v_c_144, "font", _t138)
 	J.mc(v_c_144, "fillText", [v_a_146, 195.0, (J.mul(v_H_145, 0.32) + 38.0)])
 	J.sp(v_c_144, "fillStyle", "#eee")
-	var _t138 = "14px \"PingFang TC\",\"Noto Sans TC\",sans-serif"
-	J.sp(v_c_144, "font", _t138)
-	var _t139 = env["wrap"]
-	J.cl(_t139, null, [v_c_144, v_b_147, 195.0, (J.mul(v_H_145, 0.32) + 66.0), 350.0, 18.0])
+	var _t139 = "14px \"PingFang TC\",\"Noto Sans TC\",sans-serif"
+	J.sp(v_c_144, "font", _t139)
+	var _t140 = env["wrap"]
+	J.cl(_t140, null, [v_c_144, v_b_147, 195.0, (J.mul(v_H_145, 0.32) + 66.0), 350.0, 18.0])
 	J.mc(v_c_144, "restore", [])
 
 func _f40(this_, a: Array, env):
@@ -500,16 +501,16 @@ func _f40(this_, a: Array, env):
 	v_lh_155 = J.arg(a, 5)
 	v_line_156 = ""
 	v_yy_157 = v_y_153
-	for _t140 in J.iter(v_s_151):
-		v_ch_158 = _t140
+	for _t141 in J.iter(v_s_151):
+		v_ch_158 = _t141
 		if J.cmp(J.gp(J.mc(v_c_150, "measureText", [J.add(v_line_156, v_ch_158)]), "width"), v_w_154, ">"):
 			J.mc(v_c_150, "fillText", [v_line_156, v_x_152, v_yy_157])
 			v_line_156 = v_ch_158
-			var _t141 = J.add(v_yy_157, v_lh_155)
-			v_yy_157 = _t141
+			var _t142 = J.add(v_yy_157, v_lh_155)
+			v_yy_157 = _t142
 		else:
-			var _t142 = J.add(v_line_156, v_ch_158)
-			v_line_156 = _t142
+			var _t143 = J.add(v_line_156, v_ch_158)
+			v_line_156 = _t143
 	J.mc(v_c_150, "fillText", [v_line_156, v_x_152, v_yy_157])
 
 func _f41(this_, a: Array, env):
@@ -519,8 +520,8 @@ func _f41(this_, a: Array, env):
 	v_y_163 = J.arg(a, 2)
 	v_col_164 = J.arg(a, 3)
 	v_size_165 = J.arg(a, 4)
-	var _t143 = J.gp(env["G"], "fx")
-	J.mc(_t143, "push", [{"text": v_text_161, "x": v_x_162, "y": v_y_163, "col": v_col_164, "size": v_size_165, "t": 0.0, "life": 0.9}])
+	var _t144 = J.gp(env["G"], "fx")
+	J.mc(_t144, "push", [{"text": v_text_161, "x": v_x_162, "y": v_y_163, "col": v_col_164, "size": v_size_165, "t": 0.0, "life": 0.9}])
 
 func _f42(this_, a: Array, env):
 	var v_c_168 = null; var v_k_169 = null; var v_x_170 = null; var v_y_171 = null; var v_s_172 = null; var v_o_173 = null; var v_e_174 = null
@@ -530,9 +531,9 @@ func _f42(this_, a: Array, env):
 	v_y_171 = J.arg(a, 3)
 	v_s_172 = J.arg(a, 4)
 	v_o_173 = J.arg(a, 5)
-	var _t144 = (J.gp(env["G"], "_nat") if J.t(env["G"]) else env["G"])
-	var _t145 = (J.G.get("__nat_drawChar") if J.t(((not J.seq(J.typeof_(J.G.get("__nat_drawChar")), "undefined")) if J.t(_t144) else _t144)) else J.gp(J.G.get("ART"), "drawChar"))
-	J.cl(_t145, null, [v_c_168, v_k_169, v_x_170, v_y_171, v_s_172, J.S_Object_("assign", [{"t": J.gp(env["G"], "t")}, (v_o_173 if J.t(v_o_173) else {})])])
+	var _t145 = (J.gp(env["G"], "_nat") if J.t(env["G"]) else env["G"])
+	var _t146 = (J.G.get("__nat_drawChar") if J.t(((not J.seq(J.typeof_(J.G.get("__nat_drawChar")), "undefined")) if J.t(_t145) else _t145)) else J.gp(J.G.get("ART"), "drawChar"))
+	J.cl(_t146, null, [v_c_168, v_k_169, v_x_170, v_y_171, v_s_172, J.S_Object_("assign", [{"t": J.gp(env["G"], "t")}, (v_o_173 if J.t(v_o_173) else {})])])
 
 func _f43(this_, a: Array, env):
 	var v_c_177 = null; var v_x_178 = null; var v_y_179 = null; var v_h_180 = null; var v_state_181 = null; var v_o_182 = null; var v_e_183 = null
@@ -545,8 +546,8 @@ func _f43(this_, a: Array, env):
 	J.mc(J.G.get("Antag"), "draw", [v_c_177, "npc_rival", v_x_178, v_y_179, v_h_180, (v_state_181 if J.t(v_state_181) else "idle"), J.gp(env["G"], "t"), J.S_Object_("assign", [{"shadow": false, "time": J.gp(env["G"], "t")}, (v_o_182 if J.t(v_o_182) else {})])])
 
 func _f45(this_, a: Array, env):
-	var _t188 = env["__p"]["start"]
-	return J.cl(_t188, null, [env["id"]])
+	var _t189 = env["__p"]["start"]
+	return J.cl(_t189, null, [env["id"]])
 
 func _f46(this_, a: Array, env):
 	return J.cl(env["__p"]["close"], null, [])
@@ -558,115 +559,115 @@ func _f44(this_, a: Array, env):
 	v_line_187 = J.arg(a, 1)
 	if J.t(J.gp(_s70["__p"]["G"], "done")):
 		return null
-	var _t146 = _s70["__p"]["G"]
-	J.sp(_t146, "done", true)
 	var _t147 = _s70["__p"]["G"]
-	J.sp(_t147, "phase", "end")
+	J.sp(_t147, "done", true)
+	var _t148 = _s70["__p"]["G"]
+	J.sp(_t148, "phase", "end")
 	v_s_188 = J.cl(_s70["__p"]["st"], null, [])
 	_s70["id"] = J.gp(_s70["__p"]["G"], "id")
 	v_today_190 = J.cl(_s70["__p"]["gday"], null, [])
-	var _t148 = J.gp(v_s_188, "plays")
-	var _t149 = J.add((_t148 if J.t(_t148) else 0.0), 1.0)
-	J.sp(v_s_188, "plays", _t149)
+	var _t149 = J.gp(v_s_188, "plays")
+	var _t150 = J.add((_t149 if J.t(_t149) else 0.0), 1.0)
+	J.sp(v_s_188, "plays", _t150)
 	v_win_191 = null
 	v_rec_192 = ""
 	if J.seq(_s70["id"], "tug"):
-		var _t150 = J.cmp(v_v_186, 0.0, ">")
-		v_win_191 = _t150
-		var _t151 = J.gp(v_s_188, "best")
-		var _t152 = J.gp(J.gp(v_s_188, "best"), "tug")
-		var _t153 = J.add((_t152 if J.t(_t152) else 0.0), (1.0 if J.t(v_win_191) else 0.0))
-		J.sp(_t151, "tug", _t153)
+		var _t151 = J.cmp(v_v_186, 0.0, ">")
+		v_win_191 = _t151
+		var _t152 = J.gp(v_s_188, "best")
+		var _t153 = J.gp(J.gp(v_s_188, "best"), "tug")
+		var _t154 = J.add((_t153 if J.t(_t153) else 0.0), (1.0 if J.t(v_win_191) else 0.0))
+		J.sp(_t152, "tug", _t154)
 	else:
-		var _t157 = (not J.leq(v_v_186, null))
-		if J.t(_t157):
-			var _t154 = _s70["__p"]["better"]
-			var _t156 = _s70["id"]
-			var _t155 = _s70["__p"]["target"]
-			_t157 = J.cl(_t154, null, [_t156, v_v_186, J.cl(_t155, null, [_s70["id"]])])
-		v_win_191 = _t157
-		var _t160 = (not J.leq(v_v_186, null))
-		if J.t(_t160):
-			var _t159 = J.leq(J.gp(J.gp(v_s_188, "best"), _s70["id"]), null)
-			if not J.t(_t159):
-				var _t158 = _s70["__p"]["better"]
-				_t159 = J.cl(_t158, null, [_s70["id"], v_v_186, J.gp(J.gp(v_s_188, "best"), _s70["id"])])
-			_t160 = _t159
-		if J.t(_t160):
-			var _t161 = J.gp(v_s_188, "best")
-			var _t162 = _s70["id"]
-			J.sp(_t161, _t162, v_v_186)
+		var _t158 = (not J.leq(v_v_186, null))
+		if J.t(_t158):
+			var _t155 = _s70["__p"]["better"]
+			var _t157 = _s70["id"]
+			var _t156 = _s70["__p"]["target"]
+			_t158 = J.cl(_t155, null, [_t157, v_v_186, J.cl(_t156, null, [_s70["id"]])])
+		v_win_191 = _t158
+		var _t161 = (not J.leq(v_v_186, null))
+		if J.t(_t161):
+			var _t160 = J.leq(J.gp(J.gp(v_s_188, "best"), _s70["id"]), null)
+			if not J.t(_t160):
+				var _t159 = _s70["__p"]["better"]
+				_t160 = J.cl(_t159, null, [_s70["id"], v_v_186, J.gp(J.gp(v_s_188, "best"), _s70["id"])])
+			_t161 = _t160
+		if J.t(_t161):
+			var _t162 = J.gp(v_s_188, "best")
+			var _t163 = _s70["id"]
+			J.sp(_t162, _t163, v_v_186)
 			v_rec_192 = "　<b>個人新紀錄！</b>"
 	v_rw_193 = ""
 	if J.t(((not J.seq(J.gp(J.gp(v_s_188, "won"), _s70["id"]), v_today_190)) if J.t(v_win_191) else v_win_191)):
-		var _t163 = J.gp(v_s_188, "won")
-		var _t164 = _s70["id"]
-		J.sp(_t163, _t164, v_today_190)
-		var _t165 = _s70["__p"]["has"]
-		if J.t(J.cl(_t165, null, [J.G.get("Presence")])):
+		var _t164 = J.gp(v_s_188, "won")
+		var _t165 = _s70["id"]
+		J.sp(_t164, _t165, v_today_190)
+		var _t166 = _s70["__p"]["has"]
+		if J.t(J.cl(_t166, null, [J.G.get("Presence")])):
 			if J.t(J.gp(J.gp(_s70["__p"]["G"], "a"), "g")):
 				J.mc(J.G.get("Presence"), "add", [J.gp(J.gp(_s70["__p"]["G"], "a"), "g"), 12.0])
-			for _t166 in J.iter(J.gp(J.G.get("S"), "ghosts")):
-				v_g_198 = _t166
+			for _t167 in J.iter(J.gp(J.G.get("S"), "ghosts")):
+				v_g_198 = _t167
 				if (not J.seq(v_g_198, J.gp(J.gp(_s70["__p"]["G"], "a"), "g"))):
 					J.mc(J.G.get("Presence"), "add", [v_g_198, 3.0])
-		var _t167 = J.gp(J.G.get("S"), "contract")
-		if J.t((J.seq(J.gp(J.gp(J.G.get("S"), "contract"), "state"), "active") if J.t(_t167) else _t167)):
-			var _t168 = J.gp(J.G.get("S"), "contract")
-			var _t169 = J.add(J.gp(_t168, "kpi"), 2.0)
-			J.sp(_t168, "kpi", _t169)
-		var _t170 = J.G.get("give")
-		v_got_197 = J.cl(_t170, null, [{"coins": 60.0}])
-		var _t172 = J.gp(J.gp(_s70["__p"]["G"], "a"), "name")
-		var _t171 = J.gp(J.G.get("S"), "contract")
-		var _t173 = ("<p class=\"desc\">" + J.str(_t172) + " 存在感 +12，全村 +3" + ("，合約 KPI +2" if J.t((J.seq(J.gp(J.gp(J.G.get("S"), "contract"), "state"), "active") if J.t(_t171) else _t171)) else "") + "，" + J.str(v_got_197) + "</p>")
-		v_rw_193 = _t173
+		var _t168 = J.gp(J.G.get("S"), "contract")
+		if J.t((J.seq(J.gp(J.gp(J.G.get("S"), "contract"), "state"), "active") if J.t(_t168) else _t168)):
+			var _t169 = J.gp(J.G.get("S"), "contract")
+			var _t170 = J.add(J.gp(_t169, "kpi"), 2.0)
+			J.sp(_t169, "kpi", _t170)
+		var _t171 = J.G.get("give")
+		v_got_197 = J.cl(_t171, null, [{"coins": 60.0}])
+		var _t173 = J.gp(J.gp(_s70["__p"]["G"], "a"), "name")
+		var _t172 = J.gp(J.G.get("S"), "contract")
+		var _t174 = ("<p class=\"desc\">" + J.str(_t173) + " 存在感 +12，全村 +3" + ("，合約 KPI +2" if J.t((J.seq(J.gp(J.gp(J.G.get("S"), "contract"), "state"), "active") if J.t(_t172) else _t172)) else "") + "，" + J.str(v_got_197) + "</p>")
+		v_rw_193 = _t174
 	else:
 		if J.t(v_win_191):
 			v_rw_193 = "<p class=\"desc\">今日已經領過獎，這場算練習。</p>"
 	J.cl(J.G.get("save"), null, [])
-	var _t176 = null
+	var _t177 = null
 	if J.seq(_s70["id"], "tug"):
-		_t176 = ("贏了！" if J.t(v_win_191) else "輸了")
+		_t177 = ("贏了！" if J.t(v_win_191) else "輸了")
 	else:
-		var _t175 = null
+		var _t176 = null
 		if J.leq(v_v_186, null):
-			_t175 = "犯規"
+			_t176 = "犯規"
 		else:
-			var _t174 = _s70["__p"]["fmtV"]
-			_t175 = J.cl(_t174, null, [_s70["id"], v_v_186])
-		_t176 = _t175
-	v_res_194 = _t176
-	var _t180 = null
+			var _t175 = _s70["__p"]["fmtV"]
+			_t176 = J.cl(_t175, null, [_s70["id"], v_v_186])
+		_t177 = _t176
+	v_res_194 = _t177
+	var _t181 = null
 	if J.seq(_s70["id"], "tug"):
-		_t180 = ""
+		_t181 = ""
 	else:
-		var _t177 = _s70["__p"]["fmtV"]
-		var _t179 = _s70["id"]
-		var _t178 = _s70["__p"]["target"]
-		_t180 = ("<p class=\"desc\">Bryan 今日紀錄：" + J.str(J.cl(_t177, null, [_t179, J.cl(_t178, null, [_s70["id"]])])) + J.str(v_rec_192) + "</p>")
-	v_vs_195 = _t180
-	var _t181 = J.G.get("$")
-	v_p_196 = J.cl(_t181, null, ["#sp-panel"])
+		var _t178 = _s70["__p"]["fmtV"]
+		var _t180 = _s70["id"]
+		var _t179 = _s70["__p"]["target"]
+		_t181 = ("<p class=\"desc\">Bryan 今日紀錄：" + J.str(J.cl(_t178, null, [_t180, J.cl(_t179, null, [_s70["id"]])])) + J.str(v_rec_192) + "</p>")
+	v_vs_195 = _t181
+	var _t182 = J.G.get("$")
+	v_p_196 = J.cl(_t182, null, ["#sp-panel"])
 	if (not J.t(v_p_196)):
 		return null
-	var _t184 = ("贏了 Bryan！" if J.t(v_win_191) else ("被轆轤首拉過去了" if J.seq(_s70["id"], "tug") else "輸給 Bryan"))
-	var _t183 = null
+	var _t185 = ("贏了 Bryan！" if J.t(v_win_191) else ("被轆轤首拉過去了" if J.seq(_s70["id"], "tug") else "輸給 Bryan"))
+	var _t184 = null
 	if J.t(v_line_187):
-		var _t182 = _s70["__p"]["Lx"]
-		_t183 = ("<p class=\"desc\"><i>" + J.str(J.cl(_t182, null, [v_line_187])) + "</i></p>")
+		var _t183 = _s70["__p"]["Lx"]
+		_t184 = ("<p class=\"desc\"><i>" + J.str(J.cl(_t183, null, [v_line_187])) + "</i></p>")
 	else:
-		_t183 = ""
-	var _t185 = ("<div class=\"sp-end\"><h3>" + _t184 + "</h3><p class=\"sp-big\">" + J.str(v_res_194) + "</p>" + _t183 + J.str(v_vs_195) + J.str(v_rw_193) + "<div class=\"sp-endb\"><button class=\"btn\" id=\"sp-again\">再來一次</button><button class=\"btn gold\" id=\"sp-back\">回運動會</button></div></div>")
-	J.sp(v_p_196, "innerHTML", _t185)
-	var _t186 = J.G.get("$")
-	var _t187 = J.cl(_t186, null, ["#sp-again"])
-	var _t189 = Callable(self, "_f45").bind(_s70)
-	J.sp(_t187, "onclick", _t189)
-	var _t190 = J.G.get("$")
-	var _t191 = J.cl(_t190, null, ["#sp-back"])
-	var _t192 = Callable(self, "_f46").bind(_s70)
-	J.sp(_t191, "onclick", _t192)
+		_t184 = ""
+	var _t186 = ("<div class=\"sp-end\"><h3>" + _t185 + "</h3><p class=\"sp-big\">" + J.str(v_res_194) + "</p>" + _t184 + J.str(v_vs_195) + J.str(v_rw_193) + "<div class=\"sp-endb\"><button class=\"btn\" id=\"sp-again\">再來一次</button><button class=\"btn gold\" id=\"sp-back\">回運動會</button></div></div>")
+	J.sp(v_p_196, "innerHTML", _t186)
+	var _t187 = J.G.get("$")
+	var _t188 = J.cl(_t187, null, ["#sp-again"])
+	var _t190 = Callable(self, "_f45").bind(_s70)
+	J.sp(_t188, "onclick", _t190)
+	var _t191 = J.G.get("$")
+	var _t192 = J.cl(_t191, null, ["#sp-back"])
+	var _t193 = Callable(self, "_f46").bind(_s70)
+	J.sp(_t192, "onclick", _t193)
 
 func _f2(this_, a: Array, env):
 	var v_yue_37 = null; var v_zh_38 = null
@@ -689,13 +690,13 @@ func _f4(this_, a: Array, env):
 func _f5(this_, a: Array, env):
 	var v_x_40 = null
 	v_x_40 = J.arg(a, 0)
-	var _t201 = null
+	var _t202 = null
 	if J.seq(J.typeof_(J.G.get("L")), "function"):
-		var _t200 = J.G.get("L")
-		_t201 = J.cl(_t200, null, [v_x_40])
+		var _t201 = J.G.get("L")
+		_t202 = J.cl(_t201, null, [v_x_40])
 	else:
-		_t201 = v_x_40
-	return _t201
+		_t202 = v_x_40
+	return _t202
 
 func _f15(this_, a: Array, env):
 	var v_id_70 = null; var v_v_71 = null
@@ -713,56 +714,56 @@ func _f50(this_, a: Array, env):
 	return J.add(v_s_206, v_v_207)
 
 func _f49(this_, a: Array, env):
-	var _t208 = null
+	var _t209 = null
 	if J.t(J.len(J.gp(env["G"], "acc"))):
-		var _t207 = J.gp(env["G"], "acc")
-		_t208 = J.div(J.mc(_t207, "reduce", [Callable(self, "_f50").bind(env), 0.0]), J.len(J.gp(env["G"], "acc")))
+		var _t208 = J.gp(env["G"], "acc")
+		_t209 = J.div(J.mc(_t208, "reduce", [Callable(self, "_f50").bind(env), 0.0]), J.len(J.gp(env["G"], "acc")))
 	else:
-		_t208 = 0.0
-	return _t208
+		_t209 = 0.0
+	return _t209
 
 func _f51(this_, a: Array, env):
 	var v_land_208 = null; var v_early_209 = null; var v_d_210 = null; var v_i_211 = null; var v_q_212 = null
-	var _t209 = J.gp(env["G"], "fly")
-	if J.t((_t209 if J.t(_t209) else J.cmp(J.gp(env["G"], "hop"), env["HOPS"], ">="))):
+	var _t210 = J.gp(env["G"], "fly")
+	if J.t((_t210 if J.t(_t210) else J.cmp(J.gp(env["G"], "hop"), env["HOPS"], ">="))):
 		J.cl(env["takeoff"], null, [])
 		return null
 	v_land_208 = J.sub(env["T"], J.gp(env["G"], "hopT"))
 	v_early_209 = J.gp(env["G"], "hopT")
 	v_d_210 = J.min_([v_land_208, v_early_209])
 	v_i_211 = (J.gp(env["G"], "hop") if J.cmp(v_land_208, v_early_209, "<") else J.sub(J.gp(env["G"], "hop"), 1.0))
-	var _t210 = J.cmp(v_i_211, 0.0, "<")
-	if J.t((_t210 if _t210 else J.gp(J.gp(env["G"], "tapped"), v_i_211))):
+	var _t211 = J.cmp(v_i_211, 0.0, "<")
+	if J.t((_t211 if _t211 else J.gp(J.gp(env["G"], "tapped"), v_i_211))):
 		return null
-	var _t211 = J.gp(env["G"], "tapped")
-	J.sp(_t211, v_i_211, 1.0)
+	var _t212 = J.gp(env["G"], "tapped")
+	J.sp(_t212, v_i_211, 1.0)
 	v_q_212 = (1.0 if J.cmp(v_d_210, 0.09, "<") else (0.7 if J.cmp(v_d_210, 0.17, "<") else 0.15))
-	var _t212 = J.gp(env["G"], "acc")
-	J.mc(_t212, "push", [v_q_212])
-	var _t213 = env["__p"]["pop"]
-	var _t216 = ("好節奏！" if J.seq(v_q_212, 1.0) else ("還可以" if J.cmp(v_q_212, 0.5, ">") else "亂跳"))
-	var _t215 = J.gp(env["G"], "x")
-	var _t214 = J.gp(env["G"], "cam")
-	J.cl(_t213, null, [_t216, J.sub(_t215, (_t214 if J.t(_t214) else 0.0)), J.mul(J.gp(env["G"], "H"), 0.42), ("#ffd84a" if J.seq(v_q_212, 1.0) else "#ddd"), 16.0])
+	var _t213 = J.gp(env["G"], "acc")
+	J.mc(_t213, "push", [v_q_212])
+	var _t214 = env["__p"]["pop"]
+	var _t217 = ("好節奏！" if J.seq(v_q_212, 1.0) else ("還可以" if J.cmp(v_q_212, 0.5, ">") else "亂跳"))
+	var _t216 = J.gp(env["G"], "x")
+	var _t215 = J.gp(env["G"], "cam")
+	J.cl(_t214, null, [_t217, J.sub(_t216, (_t215 if J.t(_t215) else 0.0)), J.mul(J.gp(env["G"], "H"), 0.42), ("#ffd84a" if J.seq(v_q_212, 1.0) else "#ddd"), 16.0])
 
 func _f52(this_, a: Array, env):
 	var v_gap_213 = null; var v_sp_214 = null; var v_dist_215 = null
-	var _t217 = J.gp(env["G"], "fly")
-	if J.t((_t217 if J.t(_t217) else J.cmp(J.gp(env["G"], "hop"), env["HOPS"], "<"))):
+	var _t218 = J.gp(env["G"], "fly")
+	if J.t((_t218 if J.t(_t218) else J.cmp(J.gp(env["G"], "hop"), env["HOPS"], "<"))):
 		return null
 	v_gap_213 = J.div(J.sub(J.gp(env["G"], "lineX"), J.gp(env["G"], "x")), env["PX"])
 	v_sp_214 = (0.6 + J.mul(0.4, J.cl(env["avg"], null, [])))
 	if J.cmp(v_gap_213, 0.0, "<"):
-		var _t218 = env["G"]
-		var _t219 = {"t": 0.0, "dist": 0.0, "foul": true}
-		J.sp(_t218, "fly", _t219)
-		var _t220 = env["__p"]["say"]
-		J.cl(_t220, null, ["踩線犯規！", 1.6])
+		var _t219 = env["G"]
+		var _t220 = {"t": 0.0, "dist": 0.0, "foul": true}
+		J.sp(_t219, "fly", _t220)
+		var _t221 = env["__p"]["say"]
+		J.cl(_t221, null, ["踩線犯規！", 1.6])
 		return null
 	v_dist_215 = J.max_([0.5, (J.mul(J.mul(v_sp_214, 7.6), J.gp(env["G"], "gpf")) - J.mul(v_gap_213, 1.2))])
-	var _t221 = env["G"]
-	var _t222 = {"t": 0.0, "dist": v_dist_215, "x0": J.gp(env["G"], "x"), "foul": false}
-	J.sp(_t221, "fly", _t222)
+	var _t222 = env["G"]
+	var _t223 = {"t": 0.0, "dist": v_dist_215, "x0": J.gp(env["G"], "x"), "foul": false}
+	J.sp(_t222, "fly", _t223)
 
 func _f53(this_, a: Array, env):
 	return J.cl(env["tapHop"], null, [])
@@ -775,65 +776,65 @@ func _f55(this_, a: Array, env):
 	var v_dt_216 = null
 	v_dt_216 = J.arg(a, 0)
 	if J.t(J.gp(env["G"], "fly")):
-		var _t227 = J.gp(env["G"], "fly")
-		var _t228 = J.add(J.gp(_t227, "t"), v_dt_216)
-		J.sp(_t227, "t", _t228)
-		var _t229 = J.cmp(J.gp(J.gp(env["G"], "fly"), "t"), (1.2 if J.t(J.gp(J.gp(env["G"], "fly"), "foul")) else 1.4), ">")
-		if ((not J.t(J.gp(env["G"], "done"))) if _t229 else _t229):
-			var _t230 = env["__p"]["finish"]
-			var _t232 = null
+		var _t228 = J.gp(env["G"], "fly")
+		var _t229 = J.add(J.gp(_t228, "t"), v_dt_216)
+		J.sp(_t228, "t", _t229)
+		var _t230 = J.cmp(J.gp(J.gp(env["G"], "fly"), "t"), (1.2 if J.t(J.gp(J.gp(env["G"], "fly"), "foul")) else 1.4), ">")
+		if ((not J.t(J.gp(env["G"], "done"))) if _t230 else _t230):
+			var _t231 = env["__p"]["finish"]
+			var _t233 = null
 			if J.t(J.gp(J.gp(env["G"], "fly"), "foul")):
-				_t232 = null
+				_t233 = null
 			else:
-				var _t231 = J.gp(J.gp(env["G"], "fly"), "dist")
-				_t232 = J.num(J.mc(_t231, "toFixed", [2.0]))
-			var _t239 = null
+				var _t232 = J.gp(J.gp(env["G"], "fly"), "dist")
+				_t233 = J.num(J.mc(_t232, "toFixed", [2.0]))
+			var _t240 = null
 			if J.t(J.gp(J.gp(env["G"], "fly"), "foul")):
-				var _t233 = env["__p"]["D"]
-				_t239 = J.cl(_t233, null, ["殭屍跳過咗龍，腳尖踩到白線。裁判（一隻雜鬼）舉紅旗。", "殭屍跳過了頭，腳尖踩到白線。裁判（一隻雜鬼）舉紅旗。"])
+				var _t234 = env["__p"]["D"]
+				_t240 = J.cl(_t234, null, ["殭屍跳過咗龍，腳尖踩到白線。裁判（一隻雜鬼）舉紅旗。", "殭屍跳過了頭，腳尖踩到白線。裁判（一隻雜鬼）舉紅旗。"])
 			else:
-				var _t235 = J.gp(J.gp(env["G"], "fly"), "dist")
-				var _t234 = env["__p"]["target"]
-				var _t238 = null
-				if J.cmp(_t235, J.cl(_t234, null, ["jump"]), ">"):
-					var _t236 = env["__p"]["D"]
-					_t238 = J.cl(_t236, null, ["落地姿勢：成條棍咁插落沙池。裁判俾滿分。", "落地姿勢：直挺挺插進沙池。裁判給滿分。"])
-				else:
+				var _t236 = J.gp(J.gp(env["G"], "fly"), "dist")
+				var _t235 = env["__p"]["target"]
+				var _t239 = null
+				if J.cmp(_t236, J.cl(_t235, null, ["jump"]), ">"):
 					var _t237 = env["__p"]["D"]
-					_t238 = J.cl(_t237, null, ["膝頭太直，起跳差少少。", "膝蓋太直，起跳時差一點點。"])
-				_t239 = _t238
-			J.cl(_t230, null, [_t232, _t239])
+					_t239 = J.cl(_t237, null, ["落地姿勢：成條棍咁插落沙池。裁判俾滿分。", "落地姿勢：直挺挺插進沙池。裁判給滿分。"])
+				else:
+					var _t238 = env["__p"]["D"]
+					_t239 = J.cl(_t238, null, ["膝頭太直，起跳差少少。", "膝蓋太直，起跳時差一點點。"])
+				_t240 = _t239
+			J.cl(_t231, null, [_t233, _t240])
 		return null
 	if J.cmp(J.gp(env["G"], "hop"), env["HOPS"], "<"):
-		var _t240 = env["G"]
-		var _t241 = J.add(J.gp(_t240, "hopT"), J.mul(v_dt_216, (0.85 + J.mul(0.3, J.gp(env["G"], "speed")))))
-		J.sp(_t240, "hopT", _t241)
+		var _t241 = env["G"]
+		var _t242 = J.add(J.gp(_t241, "hopT"), J.mul(v_dt_216, (0.85 + J.mul(0.3, J.gp(env["G"], "speed")))))
+		J.sp(_t241, "hopT", _t242)
 		if J.cmp(J.gp(env["G"], "hopT"), env["T"], ">="):
-			var _t242 = env["G"]
-			var _t243 = J.sub(J.gp(_t242, "hopT"), env["T"])
-			J.sp(_t242, "hopT", _t243)
-			var _t244 = env["G"]
-			J.sp(_t244, "hop", J.num(J.gp(_t244, "hop")) + 1.0)
+			var _t243 = env["G"]
+			var _t244 = J.sub(J.gp(_t243, "hopT"), env["T"])
+			J.sp(_t243, "hopT", _t244)
+			var _t245 = env["G"]
+			J.sp(_t245, "hop", J.num(J.gp(_t245, "hop")) + 1.0)
 			if (not J.t(J.gp(J.gp(env["G"], "tapped"), J.sub(J.gp(env["G"], "hop"), 1.0)))):
-				var _t245 = J.gp(env["G"], "acc")
-				J.mc(_t245, "push", [0.0])
-			var _t246 = env["G"]
-			var _t247 = (0.6 + J.mul(0.4, J.cl(env["avg"], null, [])))
-			J.sp(_t246, "speed", _t247)
-		var _t248 = env["G"]
-		var _t249 = (40.0 + J.mul(J.add(J.gp(env["G"], "hop"), J.div(J.gp(env["G"], "hopT"), env["T"])), 48.0))
-		J.sp(_t248, "x", _t249)
+				var _t246 = J.gp(env["G"], "acc")
+				J.mc(_t246, "push", [0.0])
+			var _t247 = env["G"]
+			var _t248 = (0.6 + J.mul(0.4, J.cl(env["avg"], null, [])))
+			J.sp(_t247, "speed", _t248)
+		var _t249 = env["G"]
+		var _t250 = (40.0 + J.mul(J.add(J.gp(env["G"], "hop"), J.div(J.gp(env["G"], "hopT"), env["T"])), 48.0))
+		J.sp(_t249, "x", _t250)
 	else:
-		var _t250 = env["G"]
-		var _t251 = J.add(J.gp(_t250, "x"), (J.mul(v_dt_216, 70.0) * (0.8 + J.mul(0.5, J.gp(env["G"], "speed")))))
-		J.sp(_t250, "x", _t251)
-		var _t252 = J.cmp(J.gp(env["G"], "x"), J.add(J.gp(env["G"], "lineX"), 40.0), ">")
-		if ((not J.t(J.gp(env["G"], "fly"))) if _t252 else _t252):
-			var _t253 = env["G"]
-			var _t254 = {"t": 0.0, "dist": 0.0, "foul": true}
-			J.sp(_t253, "fly", _t254)
-			var _t255 = env["__p"]["say"]
-			J.cl(_t255, null, ["踩線犯規！", 1.6])
+		var _t251 = env["G"]
+		var _t252 = J.add(J.gp(_t251, "x"), (J.mul(v_dt_216, 70.0) * (0.8 + J.mul(0.5, J.gp(env["G"], "speed")))))
+		J.sp(_t251, "x", _t252)
+		var _t253 = J.cmp(J.gp(env["G"], "x"), J.add(J.gp(env["G"], "lineX"), 40.0), ">")
+		if ((not J.t(J.gp(env["G"], "fly"))) if _t253 else _t253):
+			var _t254 = env["G"]
+			var _t255 = {"t": 0.0, "dist": 0.0, "foul": true}
+			J.sp(_t254, "fly", _t255)
+			var _t256 = env["__p"]["say"]
+			J.cl(_t256, null, ["踩線犯規！", 1.6])
 
 func _f56(this_, a: Array, env):
 	var v_c_217 = null; var v_H_218 = null; var v_gy_219 = null; var v_SC_220 = null; var v_fx_221 = null; var v_cam_222 = null; var v_bx_223 = null; var v_x_224 = null; var v_y_225 = null; var v_pose_226 = null; var v_pt_227 = null; var v_m_228 = null; var v_x_229 = null; var v_p_230 = null; var v_p_231 = null; var v_p_232 = null; var v_r_233 = null; var v_t_234 = null
@@ -841,11 +842,11 @@ func _f56(this_, a: Array, env):
 	v_H_218 = J.arg(a, 1)
 	v_gy_219 = J.mul(v_H_218, 0.66)
 	v_SC_220 = 1.6
-	var _t258 = J.gp(env["G"], "fly")
-	v_fx_221 = (J.add(J.gp(env["G"], "lineX"), (J.mul(J.gp(J.gp(env["G"], "fly"), "dist"), env["PX"]) * J.min_([1.0, J.div(J.gp(J.gp(env["G"], "fly"), "t"), 0.9)]))) if J.t(((not J.t(J.gp(J.gp(env["G"], "fly"), "foul"))) if J.t(_t258) else _t258)) else J.gp(env["G"], "x"))
+	var _t259 = J.gp(env["G"], "fly")
+	v_fx_221 = (J.add(J.gp(env["G"], "lineX"), (J.mul(J.gp(J.gp(env["G"], "fly"), "dist"), env["PX"]) * J.min_([1.0, J.div(J.gp(J.gp(env["G"], "fly"), "t"), 0.9)]))) if J.t(((not J.t(J.gp(J.gp(env["G"], "fly"), "foul"))) if J.t(_t259) else _t259)) else J.gp(env["G"], "x"))
 	v_cam_222 = J.max_([0.0, J.min_([J.sub(J.add(J.gp(env["G"], "lineX"), J.mul(9.5, env["PX"])), 390.0), J.sub(v_fx_221, 150.0)])])
-	var _t259 = env["G"]
-	J.sp(_t259, "cam", v_cam_222)
+	var _t260 = env["G"]
+	J.sp(_t260, "cam", v_cam_222)
 	J.mc(v_c_217, "save", [])
 	J.mc(v_c_217, "translate", [(-J.num(v_cam_222)), 0.0])
 	J.sp(v_c_217, "fillStyle", "rgba(140,90,60,.6)")
@@ -864,9 +865,9 @@ func _f56(this_, a: Array, env):
 		J.mc(v_c_217, "fillRect", [v_x_229, J.add(v_gy_219, 18.0), 1.5, 7.0])
 		J.mc(v_c_217, "fillText", [J.add(v_m_228, "米"), v_x_229, J.add(v_gy_219, 38.0)])
 		v_m_228 = J.num(v_m_228) + 1.0
-	var _t261 = J.gp(env["G"], "lineX")
-	var _t260 = env["__p"]["target"]
-	v_bx_223 = J.add(_t261, J.mul(J.cl(_t260, null, ["jump"]), env["PX"]))
+	var _t262 = J.gp(env["G"], "lineX")
+	var _t261 = env["__p"]["target"]
+	v_bx_223 = J.add(_t262, J.mul(J.cl(_t261, null, ["jump"]), env["PX"]))
 	J.sp(v_c_217, "fillStyle", "#c0392b")
 	J.mc(v_c_217, "fillRect", [v_bx_223, J.sub(v_gy_219, 44.0), 3.0, 44.0])
 	J.mc(v_c_217, "fillRect", [J.add(v_bx_223, 3.0), J.sub(v_gy_219, 44.0), 30.0, 16.0])
@@ -878,41 +879,41 @@ func _f56(this_, a: Array, env):
 	v_y_225 = v_gy_219
 	v_pose_226 = null
 	v_pt_227 = 0.0
-	var _t262 = J.gp(env["G"], "fly")
-	if J.t(((not J.t(J.gp(J.gp(env["G"], "fly"), "foul"))) if J.t(_t262) else _t262)):
+	var _t263 = J.gp(env["G"], "fly")
+	if J.t(((not J.t(J.gp(J.gp(env["G"], "fly"), "foul"))) if J.t(_t263) else _t263)):
 		v_p_230 = J.min_([1.0, J.div(J.gp(J.gp(env["G"], "fly"), "t"), 0.9)])
 		v_x_224 = v_fx_221
-		var _t263 = J.sub(v_gy_219, (sin(J.num(J.mul(v_p_230, PI))) * 110.0))
-		v_y_225 = _t263
-		var _t264 = ("air" if J.cmp(v_p_230, 1.0, "<") else null)
-		v_pose_226 = _t264
+		var _t264 = J.sub(v_gy_219, (sin(J.num(J.mul(v_p_230, PI))) * 110.0))
+		v_y_225 = _t264
+		var _t265 = ("air" if J.cmp(v_p_230, 1.0, "<") else null)
+		v_pose_226 = _t265
 		v_pt_227 = v_p_230
 	else:
-		var _t265 = (not J.t(J.gp(env["G"], "fly")))
-		if (J.cmp(J.gp(env["G"], "hop"), env["HOPS"], "<") if _t265 else _t265):
+		var _t266 = (not J.t(J.gp(env["G"], "fly")))
+		if (J.cmp(J.gp(env["G"], "hop"), env["HOPS"], "<") if _t266 else _t266):
 			v_p_231 = J.div(J.gp(env["G"], "hopT"), env["T"])
-			var _t266 = J.sub(v_gy_219, (sin(J.num(J.mul(v_p_231, PI))) * 34.0))
-			v_y_225 = _t266
-	var _t267 = (not J.t(J.gp(env["G"], "fly")))
-	if (J.cmp(J.gp(env["G"], "hop"), env["HOPS"], "<") if _t267 else _t267):
+			var _t267 = J.sub(v_gy_219, (sin(J.num(J.mul(v_p_231, PI))) * 34.0))
+			v_y_225 = _t267
+	var _t268 = (not J.t(J.gp(env["G"], "fly")))
+	if (J.cmp(J.gp(env["G"], "hop"), env["HOPS"], "<") if _t268 else _t268):
 		v_p_232 = J.div(J.gp(env["G"], "hopT"), env["T"])
 		v_r_233 = (10.0 + (J.sub(1.0, v_p_232) * 34.0))
-		var _t268 = ("#ffd84a" if J.cmp(v_p_232, 0.75, ">") else "rgba(255,255,255,.55)")
-		J.sp(v_c_217, "strokeStyle", _t268)
+		var _t269 = ("#ffd84a" if J.cmp(v_p_232, 0.75, ">") else "rgba(255,255,255,.55)")
+		J.sp(v_c_217, "strokeStyle", _t269)
 		J.sp(v_c_217, "lineWidth", 3.0)
 		J.mc(v_c_217, "beginPath", [])
 		J.mc(v_c_217, "ellipse", [J.gp(env["G"], "x"), J.add(v_gy_219, 4.0), v_r_233, J.mul(v_r_233, 0.32), 0.0, 0.0, (PI * 2.0)])
 		J.mc(v_c_217, "stroke", [])
-	var _t269 = env["__p"]["char"]
-	J.cl(_t269, null, [v_c_217, J.gp(J.gp(env["G"], "a"), "k"), v_x_224, v_y_225, v_SC_220, {"pose": v_pose_226, "pt": v_pt_227, "shadow": false}])
-	var _t270 = J.gp(env["G"], "fly")
-	var _t271 = ((not J.t(J.gp(J.gp(env["G"], "fly"), "foul"))) if J.t(_t270) else _t270)
-	if J.t((J.cmp(J.gp(J.gp(env["G"], "fly"), "t"), 0.9, ">") if J.t(_t271) else _t271)):
+	var _t270 = env["__p"]["char"]
+	J.cl(_t270, null, [v_c_217, J.gp(J.gp(env["G"], "a"), "k"), v_x_224, v_y_225, v_SC_220, {"pose": v_pose_226, "pt": v_pt_227, "shadow": false}])
+	var _t271 = J.gp(env["G"], "fly")
+	var _t272 = ((not J.t(J.gp(J.gp(env["G"], "fly"), "foul"))) if J.t(_t271) else _t271)
+	if J.t((J.cmp(J.gp(J.gp(env["G"], "fly"), "t"), 0.9, ">") if J.t(_t272) else _t272)):
 		J.sp(v_c_217, "fillStyle", "#ffd84a")
 		J.mc(v_c_217, "fillRect", [J.sub(v_fx_221, 1.0), J.sub(v_gy_219, 6.0), 3.0, 22.0])
 	J.mc(v_c_217, "restore", [])
-	var _t272 = (not J.t(J.gp(env["G"], "fly")))
-	if (J.cmp(J.gp(env["G"], "hop"), env["HOPS"], ">=") if _t272 else _t272):
+	var _t273 = (not J.t(J.gp(env["G"], "fly")))
+	if (J.cmp(J.gp(env["G"], "hop"), env["HOPS"], ">=") if _t273 else _t273):
 		J.mc(v_c_217, "save", [])
 		J.sp(v_c_217, "font", "bold 24px sans-serif")
 		J.sp(v_c_217, "textAlign", "center")
@@ -922,17 +923,17 @@ func _f56(this_, a: Array, env):
 		J.mc(v_c_217, "strokeText", ["起跳！", 195.0, J.mul(v_H_218, 0.3)])
 		J.mc(v_c_217, "fillText", ["起跳！", 195.0, J.mul(v_H_218, 0.3)])
 		J.mc(v_c_217, "restore", [])
-	var _t273 = J.gp(env["G"], "fly")
-	var _t274 = ((not J.t(J.gp(J.gp(env["G"], "fly"), "foul"))) if J.t(_t273) else _t273)
-	if J.t((J.cmp(J.gp(J.gp(env["G"], "fly"), "t"), 0.9, ">") if J.t(_t274) else _t274)):
+	var _t274 = J.gp(env["G"], "fly")
+	var _t275 = ((not J.t(J.gp(J.gp(env["G"], "fly"), "foul"))) if J.t(_t274) else _t274)
+	if J.t((J.cmp(J.gp(J.gp(env["G"], "fly"), "t"), 0.9, ">") if J.t(_t275) else _t275)):
 		J.mc(v_c_217, "save", [])
 		J.sp(v_c_217, "font", "bold 30px sans-serif")
 		J.sp(v_c_217, "textAlign", "center")
 		J.sp(v_c_217, "lineWidth", 6.0)
 		J.sp(v_c_217, "strokeStyle", "#000")
 		J.sp(v_c_217, "fillStyle", "#fff")
-		var _t275 = J.gp(J.gp(env["G"], "fly"), "dist")
-		v_t_234 = J.add(J.mc(_t275, "toFixed", [2.0]), " 米")
+		var _t276 = J.gp(J.gp(env["G"], "fly"), "dist")
+		v_t_234 = J.add(J.mc(_t276, "toFixed", [2.0]), " 米")
 		J.mc(v_c_217, "strokeText", [v_t_234, 195.0, J.mul(v_H_218, 0.3)])
 		J.mc(v_c_217, "fillText", [v_t_234, 195.0, J.mul(v_H_218, 0.3)])
 		J.mc(v_c_217, "restore", [])
@@ -944,26 +945,26 @@ func _f47(this_, a: Array, env):
 	_s79["HOPS"] = 6.0
 	_s79["PX"] = 30.0
 	J.S_Object_("assign", [_s79["G"], {"x": 40.0, "hop": 0.0, "hopT": 0.0, "acc": [], "speed": 0.6, "line": 0.0, "fly": null, "tapped": {}, "lineX": 0.0, "cam": 0.0}])
-	var _t203 = _s79["G"]
-	var _t204 = ((40.0 + J.mul(_s79["HOPS"], 48.0)) + 40.0)
-	J.sp(_t203, "lineX", _t204)
-	var _t205 = _s79["G"]
-	var _t206 = Callable(self, "_f48").bind(_s79)
-	J.sp(_t205, "hud", _t206)
+	var _t204 = _s79["G"]
+	var _t205 = ((40.0 + J.mul(_s79["HOPS"], 48.0)) + 40.0)
+	J.sp(_t204, "lineX", _t205)
+	var _t206 = _s79["G"]
+	var _t207 = Callable(self, "_f48").bind(_s79)
+	J.sp(_t206, "hud", _t207)
 	_s79["avg"] = Callable(self, "_f49").bind(_s79)
 	_s79["tapHop"] = Callable(self, "_f51").bind(_s79)
 	_s79["takeoff"] = Callable(self, "_f52").bind(_s79)
-	var _t223 = _s79["__p"]["btns"]
-	J.cl(_t223, null, [[["跳", Callable(self, "_f53").bind(_s79)]]])
-	var _t224 = _s79["G"]
-	var _t225 = Callable(self, "_f54").bind(_s79)
-	J.sp(_t224, "down", _t225)
-	var _t226 = _s79["G"]
-	var _t256 = Callable(self, "_f55").bind(_s79)
-	J.sp(_t226, "tick", _t256)
-	var _t257 = _s79["G"]
-	var _t276 = Callable(self, "_f56").bind(_s79)
-	J.sp(_t257, "draw", _t276)
+	var _t224 = _s79["__p"]["btns"]
+	J.cl(_t224, null, [[["跳", Callable(self, "_f53").bind(_s79)]]])
+	var _t225 = _s79["G"]
+	var _t226 = Callable(self, "_f54").bind(_s79)
+	J.sp(_t225, "down", _t226)
+	var _t227 = _s79["G"]
+	var _t257 = Callable(self, "_f55").bind(_s79)
+	J.sp(_t227, "tick", _t257)
+	var _t258 = _s79["G"]
+	var _t277 = Callable(self, "_f56").bind(_s79)
+	J.sp(_t258, "draw", _t277)
 
 func _f58(this_, a: Array, env):
 	return ("剩 " + J.str(J.max_([0.0, ceil(J.num(J.gp(env["G"], "time")))])) + " 秒")
@@ -972,20 +973,20 @@ func _f59(this_, a: Array, env):
 	if J.t(J.gp(env["G"], "done")):
 		return null
 	if J.cmp(J.gp(env["G"], "taut"), 0.0, ">"):
-		var _t281 = env["G"]
-		var _t282 = J.sub(J.gp(_t281, "p"), 0.07)
-		J.sp(_t281, "p", _t282)
-		var _t283 = env["G"]
-		J.sp(_t283, "slip", 0.5)
-		var _t284 = env["__p"]["pop"]
-		J.cl(_t284, null, ["舌頭打滑！", 120.0, J.mul(J.gp(env["G"], "H"), 0.42), "#ff8080", 16.0])
+		var _t282 = env["G"]
+		var _t283 = J.sub(J.gp(_t282, "p"), 0.07)
+		J.sp(_t282, "p", _t283)
+		var _t284 = env["G"]
+		J.sp(_t284, "slip", 0.5)
+		var _t285 = env["__p"]["pop"]
+		J.cl(_t285, null, ["舌頭打滑！", 120.0, J.mul(J.gp(env["G"], "H"), 0.42), "#ff8080", 16.0])
 		return null
-	var _t285 = env["G"]
-	var _t286 = J.add(J.gp(_t285, "p"), J.mul(0.032, J.gp(env["G"], "gpf")))
-	J.sp(_t285, "p", _t286)
+	var _t286 = env["G"]
+	var _t287 = J.add(J.gp(_t286, "p"), J.mul(0.032, J.gp(env["G"], "gpf")))
+	J.sp(_t286, "p", _t287)
 	if (randf() < 0.25):
-		var _t287 = env["__p"]["pop"]
-		J.cl(_t287, null, ["拉！", (90.0 + (randf() * 40.0)), J.mul(J.gp(env["G"], "H"), 0.46), "#ffe8a0", 14.0])
+		var _t288 = env["__p"]["pop"]
+		J.cl(_t288, null, ["拉！", (90.0 + (randf() * 40.0)), J.mul(J.gp(env["G"], "H"), 0.46), "#ffe8a0", 14.0])
 
 func _f60(this_, a: Array, env):
 	if J.seq(J.gp(env["G"], "phase"), "play"):
@@ -996,50 +997,50 @@ func _f61(this_, a: Array, env):
 	v_dt_237 = J.arg(a, 0)
 	if J.t(J.gp(env["G"], "done")):
 		return null
-	var _t292 = env["G"]
-	var _t293 = J.sub(J.gp(_t292, "time"), v_dt_237)
-	J.sp(_t292, "time", _t293)
-	var _t294 = env["G"]
-	var _t295 = J.max_([0.0, J.sub(J.gp(env["G"], "slip"), v_dt_237)])
-	J.sp(_t294, "slip", _t295)
+	var _t293 = env["G"]
+	var _t294 = J.sub(J.gp(_t293, "time"), v_dt_237)
+	J.sp(_t293, "time", _t294)
+	var _t295 = env["G"]
+	var _t296 = J.max_([0.0, J.sub(J.gp(env["G"], "slip"), v_dt_237)])
+	J.sp(_t295, "slip", _t296)
 	v_surge_238 = (0.22 if (sin(J.num(J.mul(J.gp(env["G"], "t"), 1.3))) > 0.85) else 0.0)
-	var _t296 = env["G"]
-	var _t297 = J.sub(J.gp(_t296, "p"), J.mul(v_dt_237, J.add(J.add(J.gp(env["G"], "ai"), v_surge_238), (J.max_([0.0, J.sub(J.gp(env["G"], "t"), 8.0)]) * 0.004))))
-	J.sp(_t296, "p", _t297)
-	var _t298 = env["G"]
-	var _t299 = J.sub(J.gp(_t298, "tautT"), v_dt_237)
-	J.sp(_t298, "tautT", _t299)
+	var _t297 = env["G"]
+	var _t298 = J.sub(J.gp(_t297, "p"), J.mul(v_dt_237, J.add(J.add(J.gp(env["G"], "ai"), v_surge_238), (J.max_([0.0, J.sub(J.gp(env["G"], "t"), 8.0)]) * 0.004))))
+	J.sp(_t297, "p", _t298)
+	var _t299 = env["G"]
+	var _t300 = J.sub(J.gp(_t299, "tautT"), v_dt_237)
+	J.sp(_t299, "tautT", _t300)
 	if J.cmp(J.gp(env["G"], "tautT"), 0.0, "<="):
-		var _t300 = env["G"]
-		J.sp(_t300, "taut", 0.85)
 		var _t301 = env["G"]
-		var _t302 = (1.8 + (randf() * 1.8))
-		J.sp(_t301, "tautT", _t302)
+		J.sp(_t301, "taut", 0.85)
+		var _t302 = env["G"]
+		var _t303 = (1.8 + (randf() * 1.8))
+		J.sp(_t302, "tautT", _t303)
 	if J.cmp(J.gp(env["G"], "taut"), 0.0, ">"):
-		var _t303 = env["G"]
-		var _t304 = J.sub(J.gp(_t303, "taut"), v_dt_237)
-		J.sp(_t303, "taut", _t304)
+		var _t304 = env["G"]
+		var _t305 = J.sub(J.gp(_t304, "taut"), v_dt_237)
+		J.sp(_t304, "taut", _t305)
 	if J.cmp(J.gp(env["G"], "p"), 1.0, ">="):
-		var _t305 = env["__p"]["finish"]
-		var _t306 = env["__p"]["D"]
-		J.cl(_t305, null, [1.0, J.cl(_t306, null, ["轆轤首條頸拉到打咗個結。佢話下年再嚟。", "轆轤首的脖子被拉到打了個結。她說明年再來。"])])
+		var _t306 = env["__p"]["finish"]
+		var _t307 = env["__p"]["D"]
+		J.cl(_t306, null, [1.0, J.cl(_t307, null, ["轆轤首條頸拉到打咗個結。佢話下年再嚟。", "轆轤首的脖子被拉到打了個結。她說明年再來。"])])
 	else:
 		if J.cmp(J.gp(env["G"], "p"), (-1.0), "<="):
-			var _t307 = env["__p"]["finish"]
-			var _t308 = env["__p"]["D"]
-			J.cl(_t307, null, [0.0, J.cl(_t308, null, ["條脷被拉咗過對面，要行過去執返。", "舌頭被拉到對面，要走過去撿回來。"])])
+			var _t308 = env["__p"]["finish"]
+			var _t309 = env["__p"]["D"]
+			J.cl(_t308, null, [0.0, J.cl(_t309, null, ["條脷被拉咗過對面，要行過去執返。", "舌頭被拉到對面，要走過去撿回來。"])])
 		else:
 			if J.cmp(J.gp(env["G"], "time"), 0.0, "<="):
-				var _t309 = env["__p"]["finish"]
-				var _t313 = (1.0 if J.cmp(J.gp(env["G"], "p"), 0.0, ">") else 0.0)
-				var _t312 = null
+				var _t310 = env["__p"]["finish"]
+				var _t314 = (1.0 if J.cmp(J.gp(env["G"], "p"), 0.0, ">") else 0.0)
+				var _t313 = null
 				if J.cmp(J.gp(env["G"], "p"), 0.0, ">"):
-					var _t310 = env["__p"]["D"]
-					_t312 = J.cl(_t310, null, ["夠鐘，面旗喺你嗰邊。險勝。", "時間到，旗子在你這邊。險勝。"])
-				else:
 					var _t311 = env["__p"]["D"]
-					_t312 = J.cl(_t311, null, ["夠鐘，面旗喺對面。差少少。", "時間到，旗子在對面。差一點。"])
-				J.cl(_t309, null, [_t313, _t312])
+					_t313 = J.cl(_t311, null, ["夠鐘，面旗喺你嗰邊。險勝。", "時間到，旗子在你這邊。險勝。"])
+				else:
+					var _t312 = env["__p"]["D"]
+					_t313 = J.cl(_t312, null, ["夠鐘，面旗喺對面。差少少。", "時間到，旗子在對面。差一點。"])
+				J.cl(_t310, null, [_t314, _t313])
 
 func _f62(this_, a: Array, env):
 	var v_c_239 = null; var v_H_240 = null; var v_gy_241 = null; var v_cx_242 = null; var v_ry_243 = null; var v_LH_244 = null; var v_RH_245 = null; var v_ropeCol_246 = null; var v_tx_247 = null
@@ -1048,12 +1049,12 @@ func _f62(this_, a: Array, env):
 	v_gy_241 = J.mul(v_H_240, 0.68)
 	v_cx_242 = (195.0 + J.mul(J.gp(env["G"], "p"), 100.0))
 	v_ry_243 = J.sub(v_gy_241, 66.0)
-	var _t316 = (not J.seq(J.typeof_(J.G.get("CHAR_H")), "undefined"))
-	var _t317 = (J.gp(J.G.get("CHAR_H"), J.gp(J.gp(env["G"], "a"), "k")) if _t316 else _t316)
-	v_LH_244 = J.mul((_t317 if J.t(_t317) else 56.0), 1.6)
-	var _t318 = (not J.seq(J.typeof_(J.G.get("CHAR_H")), "undefined"))
-	var _t319 = (J.gp(J.G.get("CHAR_H"), J.gp(J.gp(env["G"], "E"), "foe")) if _t318 else _t318)
-	v_RH_245 = J.mul((_t319 if J.t(_t319) else 56.0), 1.6)
+	var _t317 = (not J.seq(J.typeof_(J.G.get("CHAR_H")), "undefined"))
+	var _t318 = (J.gp(J.G.get("CHAR_H"), J.gp(J.gp(env["G"], "a"), "k")) if _t317 else _t317)
+	v_LH_244 = J.mul((_t318 if J.t(_t318) else 56.0), 1.6)
+	var _t319 = (not J.seq(J.typeof_(J.G.get("CHAR_H")), "undefined"))
+	var _t320 = (J.gp(J.G.get("CHAR_H"), J.gp(J.gp(env["G"], "E"), "foe")) if _t319 else _t319)
+	v_RH_245 = J.mul((_t320 if J.t(_t320) else 56.0), 1.6)
 	J.sp(v_c_239, "fillStyle", "rgba(255,255,255,.75)")
 	J.mc(v_c_239, "fillRect", [94.0, J.sub(v_ry_243, 24.0), 3.0, 40.0])
 	J.mc(v_c_239, "fillRect", [293.0, J.sub(v_ry_243, 24.0), 3.0, 40.0])
@@ -1061,8 +1062,8 @@ func _f62(this_, a: Array, env):
 	J.mc(v_c_239, "fillRect", [194.0, J.sub(v_ry_243, 18.0), 2.0, 34.0])
 	v_ropeCol_246 = ("#ff4040" if J.cmp(J.gp(env["G"], "taut"), 0.0, ">") else ("#c0392b" if J.seq(J.gp(J.gp(env["G"], "a"), "k"), "afu") else "#d86a7a"))
 	J.sp(v_c_239, "strokeStyle", v_ropeCol_246)
-	var _t320 = (6.0 if J.cmp(J.gp(env["G"], "taut"), 0.0, ">") else 5.0)
-	J.sp(v_c_239, "lineWidth", _t320)
+	var _t321 = (6.0 if J.cmp(J.gp(env["G"], "taut"), 0.0, ">") else 5.0)
+	J.sp(v_c_239, "lineWidth", _t321)
 	J.mc(v_c_239, "beginPath", [])
 	J.mc(v_c_239, "moveTo", [70.0, J.sub(v_gy_241, J.mul(v_LH_244, 0.62))])
 	J.mc(v_c_239, "quadraticCurveTo", [J.sub(v_cx_242, 50.0), J.add(J.add(v_ry_243, 8.0), (sin(J.num(J.mul(J.gp(env["G"], "t"), 9.0))) * (1.0 if J.cmp(J.gp(env["G"], "taut"), 0.0, ">") else 4.0))), v_cx_242, v_ry_243])
@@ -1082,10 +1083,10 @@ func _f62(this_, a: Array, env):
 	J.mc(v_c_239, "fill", [])
 	J.sp(v_c_239, "fillStyle", "#5a3a1a")
 	J.mc(v_c_239, "fillRect", [J.sub(v_cx_242, 1.0), J.sub(v_ry_243, 32.0), 2.0, 32.0])
-	var _t321 = env["__p"]["char"]
-	J.cl(_t321, null, [v_c_239, J.gp(J.gp(env["G"], "a"), "k"), 58.0, v_gy_241, 1.6, {"pose": ("hurt" if J.cmp(J.gp(env["G"], "slip"), 0.0, ">") else null), "pt": 0.5, "shadow": false, "rot": ((-0.15) - (0.0 if J.cmp(J.gp(env["G"], "taut"), 0.0, ">") else 0.05))}])
 	var _t322 = env["__p"]["char"]
-	J.cl(_t322, null, [v_c_239, J.gp(J.gp(env["G"], "E"), "foe"), 338.0, v_gy_241, 1.6, {"flip": true, "shadow": false, "rot": 0.15}])
+	J.cl(_t322, null, [v_c_239, J.gp(J.gp(env["G"], "a"), "k"), 58.0, v_gy_241, 1.6, {"pose": ("hurt" if J.cmp(J.gp(env["G"], "slip"), 0.0, ">") else null), "pt": 0.5, "shadow": false, "rot": ((-0.15) - (0.0 if J.cmp(J.gp(env["G"], "taut"), 0.0, ">") else 0.05))}])
+	var _t323 = env["__p"]["char"]
+	J.cl(_t323, null, [v_c_239, J.gp(J.gp(env["G"], "E"), "foe"), 338.0, v_gy_241, 1.6, {"flip": true, "shadow": false, "rot": 0.15}])
 	if J.cmp(J.gp(env["G"], "taut"), 0.0, ">"):
 		J.mc(v_c_239, "save", [])
 		J.sp(v_c_239, "font", "bold 20px sans-serif")
@@ -1093,8 +1094,8 @@ func _f62(this_, a: Array, env):
 		J.sp(v_c_239, "fillStyle", "#ff6060")
 		J.sp(v_c_239, "lineWidth", 4.0)
 		J.sp(v_c_239, "strokeStyle", "#000")
-		var _t323 = env["__p"]["Lx"]
-		v_tx_247 = J.cl(_t323, null, [env["__p"]["TAUT"]])
+		var _t324 = env["__p"]["Lx"]
+		v_tx_247 = J.cl(_t324, null, [env["__p"]["TAUT"]])
 		J.mc(v_c_239, "strokeText", [v_tx_247, 195.0, J.mul(v_H_240, 0.3)])
 		J.mc(v_c_239, "fillText", [v_tx_247, 195.0, J.mul(v_H_240, 0.3)])
 		J.mc(v_c_239, "restore", [])
@@ -1103,21 +1104,21 @@ func _f57(this_, a: Array, env):
 	var _s105 = {"__p": env, "G": null, "pull": null}
 	_s105["G"] = J.arg(a, 0)
 	J.S_Object_("assign", [_s105["G"], {"p": 0.0, "ai": 0.12, "taut": 0.0, "tautT": 2.2, "time": 30.0, "slip": 0.0}])
-	var _t279 = _s105["G"]
-	var _t280 = Callable(self, "_f58").bind(_s105)
-	J.sp(_t279, "hud", _t280)
+	var _t280 = _s105["G"]
+	var _t281 = Callable(self, "_f58").bind(_s105)
+	J.sp(_t280, "hud", _t281)
 	_s105["pull"] = Callable(self, "_f59").bind(_s105)
-	var _t288 = _s105["__p"]["btns"]
-	J.cl(_t288, null, [[["拉", _s105["pull"]]]])
-	var _t289 = _s105["G"]
-	var _t290 = Callable(self, "_f60").bind(_s105)
-	J.sp(_t289, "down", _t290)
-	var _t291 = _s105["G"]
-	var _t314 = Callable(self, "_f61").bind(_s105)
-	J.sp(_t291, "tick", _t314)
-	var _t315 = _s105["G"]
-	var _t324 = Callable(self, "_f62").bind(_s105)
-	J.sp(_t315, "draw", _t324)
+	var _t289 = _s105["__p"]["btns"]
+	J.cl(_t289, null, [[["拉", _s105["pull"]]]])
+	var _t290 = _s105["G"]
+	var _t291 = Callable(self, "_f60").bind(_s105)
+	J.sp(_t290, "down", _t291)
+	var _t292 = _s105["G"]
+	var _t315 = Callable(self, "_f61").bind(_s105)
+	J.sp(_t292, "tick", _t315)
+	var _t316 = _s105["G"]
+	var _t325 = Callable(self, "_f62").bind(_s105)
+	J.sp(_t316, "draw", _t325)
 
 func _f64(this_, a: Array, env):
 	return (J.str(floor(J.num(J.gp(env["G"], "time")))) + " 秒")
@@ -1125,105 +1126,105 @@ func _f64(this_, a: Array, env):
 func _f65(this_, a: Array, env):
 	var v_p_249 = null
 	v_p_249 = J.arg(a, 0)
-	var _t334 = (not J.seq(J.gp(env["G"], "phase"), "play"))
-	if J.t((_t334 if _t334 else J.gp(env["G"], "fall"))):
+	var _t335 = (not J.seq(J.gp(env["G"], "phase"), "play"))
+	if J.t((_t335 if _t335 else J.gp(env["G"], "fall"))):
 		return null
-	var _t335 = env["G"]
-	J.sp(_t335, "hold", true)
 	var _t336 = env["G"]
-	var _t337 = J.gp(v_p_249, "x")
-	J.sp(_t336, "fx0", _t337)
-	var _t338 = env["G"]
-	J.sp(_t338, "dx", 0.0)
+	J.sp(_t336, "hold", true)
+	var _t337 = env["G"]
+	var _t338 = J.gp(v_p_249, "x")
+	J.sp(_t337, "fx0", _t338)
+	var _t339 = env["G"]
+	J.sp(_t339, "dx", 0.0)
 
 func _f66(this_, a: Array, env):
 	var v_p_250 = null
 	v_p_250 = J.arg(a, 0)
-	var _t341 = J.gp(env["G"], "hold")
-	if J.t(((not J.leq(J.gp(env["G"], "fx0"), null)) if J.t(_t341) else _t341)):
-		var _t342 = env["G"]
-		var _t343 = J.div(J.sub(J.gp(v_p_250, "x"), J.gp(env["G"], "fx0")), 90.0)
-		J.sp(_t342, "dx", _t343)
+	var _t342 = J.gp(env["G"], "hold")
+	if J.t(((not J.leq(J.gp(env["G"], "fx0"), null)) if J.t(_t342) else _t342)):
+		var _t343 = env["G"]
+		var _t344 = J.div(J.sub(J.gp(v_p_250, "x"), J.gp(env["G"], "fx0")), 90.0)
+		J.sp(_t343, "dx", _t344)
 
 func _f67(this_, a: Array, env):
-	var _t346 = J.gp(env["G"], "hold")
-	var _t347 = ((not J.t(J.gp(env["G"], "done"))) if J.t(_t346) else _t346)
-	var _t348 = ((not J.t(J.gp(env["G"], "fall"))) if J.t(_t347) else _t347)
-	if J.t((J.cmp(J.gp(env["G"], "time"), 0.3, ">") if J.t(_t348) else _t348)):
-		var _t349 = env["G"]
-		var _t350 = {"t": 0.0}
-		J.sp(_t349, "fall", _t350)
-		var _t351 = env["__p"]["say"]
-		J.cl(_t351, null, ["放手了！", 1.4])
-	var _t352 = env["G"]
-	J.sp(_t352, "hold", false)
+	var _t347 = J.gp(env["G"], "hold")
+	var _t348 = ((not J.t(J.gp(env["G"], "done"))) if J.t(_t347) else _t347)
+	var _t349 = ((not J.t(J.gp(env["G"], "fall"))) if J.t(_t348) else _t348)
+	if J.t((J.cmp(J.gp(env["G"], "time"), 0.3, ">") if J.t(_t349) else _t349)):
+		var _t350 = env["G"]
+		var _t351 = {"t": 0.0}
+		J.sp(_t350, "fall", _t351)
+		var _t352 = env["__p"]["say"]
+		J.cl(_t352, null, ["放手了！", 1.4])
+	var _t353 = env["G"]
+	J.sp(_t353, "hold", false)
 
 func _f68(this_, a: Array, env):
 	var v_dt_251 = null; var v_lv_252 = null; var v_f_253 = null
 	v_dt_251 = J.arg(a, 0)
 	if J.t(J.gp(env["G"], "fall")):
-		var _t355 = J.gp(env["G"], "fall")
-		var _t356 = J.add(J.gp(_t355, "t"), v_dt_251)
-		J.sp(_t355, "t", _t356)
-		var _t357 = J.cmp(J.gp(J.gp(env["G"], "fall"), "t"), 1.0, ">")
-		if ((not J.t(J.gp(env["G"], "done"))) if _t357 else _t357):
-			var _t358 = env["__p"]["finish"]
-			var _t359 = J.gp(env["G"], "time")
-			var _t365 = J.num(J.mc(_t359, "toFixed", [1.0]))
-			var _t361 = J.gp(env["G"], "time")
-			var _t360 = env["__p"]["target"]
-			var _t364 = null
-			if J.cmp(_t361, J.cl(_t360, null, ["hang"]), ">"):
-				var _t362 = env["__p"]["D"]
-				_t364 = J.cl(_t362, null, ["跌落嚟嗰陣，啱啱壓住 Bryan 塊紀錄牌。", "掉下來的時候，剛好壓住 Bryan 的紀錄牌。"])
-			else:
+		var _t356 = J.gp(env["G"], "fall")
+		var _t357 = J.add(J.gp(_t356, "t"), v_dt_251)
+		J.sp(_t356, "t", _t357)
+		var _t358 = J.cmp(J.gp(J.gp(env["G"], "fall"), "t"), 1.0, ">")
+		if ((not J.t(J.gp(env["G"], "done"))) if _t358 else _t358):
+			var _t359 = env["__p"]["finish"]
+			var _t360 = J.gp(env["G"], "time")
+			var _t366 = J.num(J.mc(_t360, "toFixed", [1.0]))
+			var _t362 = J.gp(env["G"], "time")
+			var _t361 = env["__p"]["target"]
+			var _t365 = null
+			if J.cmp(_t362, J.cl(_t361, null, ["hang"]), ">"):
 				var _t363 = env["__p"]["D"]
-				_t364 = J.cl(_t363, null, ["落地。清潔安娣：「又係你，日日都跌落嚟。」", "落地。清潔安娣：「又是你，每天都掉下來。」"])
-			J.cl(_t358, null, [_t365, _t364])
+				_t365 = J.cl(_t363, null, ["跌落嚟嗰陣，啱啱壓住 Bryan 塊紀錄牌。", "掉下來的時候，剛好壓住 Bryan 的紀錄牌。"])
+			else:
+				var _t364 = env["__p"]["D"]
+				_t365 = J.cl(_t364, null, ["落地。清潔安娣：「又係你，日日都跌落嚟。」", "落地。清潔安娣：「又是你，每天都掉下來。」"])
+			J.cl(_t359, null, [_t366, _t365])
 		return null
 	if (not J.t(J.gp(env["G"], "hold"))):
 		return null
-	var _t366 = env["G"]
-	var _t367 = J.add(J.gp(_t366, "time"), v_dt_251)
-	J.sp(_t366, "time", _t367)
+	var _t367 = env["G"]
+	var _t368 = J.add(J.gp(_t367, "time"), v_dt_251)
+	J.sp(_t367, "time", _t368)
 	v_lv_252 = (1.0 + J.div(J.gp(env["G"], "time"), 20.0))
-	var _t368 = env["G"]
-	var _t369 = J.sub(J.gp(_t368, "evT"), v_dt_251)
-	J.sp(_t368, "evT", _t369)
+	var _t369 = env["G"]
+	var _t370 = J.sub(J.gp(_t369, "evT"), v_dt_251)
+	J.sp(_t369, "evT", _t370)
 	if J.cmp(J.gp(env["G"], "evT"), 0.0, "<="):
-		var _t370 = env["G"]
-		var _t371 = {"k": ("fan" if (randf() < 0.5) else "broom"), "t": 0.0, "dir": ((-1.0) if (randf() < 0.5) else 1.0)}
-		J.sp(_t370, "ev", _t371)
-		var _t372 = env["G"]
-		var _t373 = (3.0 + J.div((randf() * 3.0), v_lv_252))
-		J.sp(_t372, "evT", _t373)
-		var _t374 = env["__p"]["pop"]
-		J.cl(_t374, null, [("風扇開了！" if J.seq(J.gp(J.gp(env["G"], "ev"), "k"), "fan") else "安娣的掃把！"), 195.0, J.mul(J.gp(env["G"], "H"), 0.62), "#ffe8a0", 16.0])
+		var _t371 = env["G"]
+		var _t372 = {"k": ("fan" if (randf() < 0.5) else "broom"), "t": 0.0, "dir": ((-1.0) if (randf() < 0.5) else 1.0)}
+		J.sp(_t371, "ev", _t372)
+		var _t373 = env["G"]
+		var _t374 = (3.0 + J.div((randf() * 3.0), v_lv_252))
+		J.sp(_t373, "evT", _t374)
+		var _t375 = env["__p"]["pop"]
+		J.cl(_t375, null, [("風扇開了！" if J.seq(J.gp(J.gp(env["G"], "ev"), "k"), "fan") else "安娣的掃把！"), 195.0, J.mul(J.gp(env["G"], "H"), 0.62), "#ffe8a0", 16.0])
 	v_f_253 = (J.mul((sin(J.num(J.mul(J.gp(env["G"], "t"), 1.7))) * 0.35), v_lv_252) + J.mul((sin(J.num((J.mul(J.gp(env["G"], "t"), 0.63) + 1.0))) * 0.25), v_lv_252))
 	if J.t(J.gp(env["G"], "ev")):
-		var _t375 = J.gp(env["G"], "ev")
-		var _t376 = J.add(J.gp(_t375, "t"), v_dt_251)
-		J.sp(_t375, "t", _t376)
-		var _t377 = J.add(v_f_253, (J.mul(J.mul(J.gp(J.gp(env["G"], "ev"), "dir"), (1.1 if J.seq(J.gp(J.gp(env["G"], "ev"), "k"), "fan") else 2.2)), v_lv_252) * (J.max_([0.0, (1.0 - (absf(J.num(J.sub(J.gp(J.gp(env["G"], "ev"), "t"), 0.4))) * 3.0))]) if J.seq(J.gp(J.gp(env["G"], "ev"), "k"), "broom") else 1.0)))
-		v_f_253 = _t377
+		var _t376 = J.gp(env["G"], "ev")
+		var _t377 = J.add(J.gp(_t376, "t"), v_dt_251)
+		J.sp(_t376, "t", _t377)
+		var _t378 = J.add(v_f_253, (J.mul(J.mul(J.gp(J.gp(env["G"], "ev"), "dir"), (1.1 if J.seq(J.gp(J.gp(env["G"], "ev"), "k"), "fan") else 2.2)), v_lv_252) * (J.max_([0.0, (1.0 - (absf(J.num(J.sub(J.gp(J.gp(env["G"], "ev"), "t"), 0.4))) * 3.0))]) if J.seq(J.gp(J.gp(env["G"], "ev"), "k"), "broom") else 1.0)))
+		v_f_253 = _t378
 		if J.cmp(J.gp(J.gp(env["G"], "ev"), "t"), (1.8 if J.seq(J.gp(J.gp(env["G"], "ev"), "k"), "fan") else 0.9), ">"):
-			var _t378 = env["G"]
-			J.sp(_t378, "ev", null)
-	var _t379 = env["G"]
-	var _t380 = J.add(J.gp(_t379, "v"), J.mul((J.sub(v_f_253, J.mul(J.gp(env["G"], "dx"), 2.6)) - J.mul(J.gp(env["G"], "sw"), 0.6)), v_dt_251))
-	J.sp(_t379, "v", _t380)
-	var _t381 = env["G"]
-	var _t382 = J.mul(J.gp(_t381, "v"), 0.985)
-	J.sp(_t381, "v", _t382)
-	var _t383 = env["G"]
-	var _t384 = J.add(J.gp(_t383, "sw"), (J.mul(J.gp(env["G"], "v"), v_dt_251) * 1.6))
-	J.sp(_t383, "sw", _t384)
+			var _t379 = env["G"]
+			J.sp(_t379, "ev", null)
+	var _t380 = env["G"]
+	var _t381 = J.add(J.gp(_t380, "v"), J.mul((J.sub(v_f_253, J.mul(J.gp(env["G"], "dx"), 2.6)) - J.mul(J.gp(env["G"], "sw"), 0.6)), v_dt_251))
+	J.sp(_t380, "v", _t381)
+	var _t382 = env["G"]
+	var _t383 = J.mul(J.gp(_t382, "v"), 0.985)
+	J.sp(_t382, "v", _t383)
+	var _t384 = env["G"]
+	var _t385 = J.add(J.gp(_t384, "sw"), (J.mul(J.gp(env["G"], "v"), v_dt_251) * 1.6))
+	J.sp(_t384, "sw", _t385)
 	if (absf(J.num(J.gp(env["G"], "sw"))) > 1.0):
-		var _t385 = env["G"]
-		var _t386 = {"t": 0.0}
-		J.sp(_t385, "fall", _t386)
-		var _t387 = env["__p"]["say"]
-		J.cl(_t387, null, ["甩下來了！", 1.4])
+		var _t386 = env["G"]
+		var _t387 = {"t": 0.0}
+		J.sp(_t386, "fall", _t387)
+		var _t388 = env["__p"]["say"]
+		J.cl(_t388, null, ["甩下來了！", 1.4])
 
 func _f69(this_, a: Array, env):
 	var v_c_254 = null; var v_H_255 = null; var v_cy_256 = null; var v_ang_257 = null; var v_fy_258 = null; var v_x_259 = null; var v_i_260 = null; var v_x_261 = null
@@ -1237,34 +1238,34 @@ func _f69(this_, a: Array, env):
 	while true:
 		if not J.cmp(v_x_259, 390.0, "<"): break
 		J.mc(v_c_254, "fillRect", [v_x_259, J.sub(v_cy_256, 2.0), 46.0, 2.0])
-		var _t390 = J.add(v_x_259, 48.0)
-		v_x_259 = _t390
+		var _t391 = J.add(v_x_259, 48.0)
+		v_x_259 = _t391
 	J.sp(v_c_254, "fillStyle", "rgba(0,0,0,.5)")
 	J.mc(v_c_254, "fillRect", [95.0, J.mul(v_H_255, 0.84), 200.0, 10.0])
 	J.sp(v_c_254, "fillStyle", "rgba(120,220,120,.6)")
 	J.mc(v_c_254, "fillRect", [165.0, J.mul(v_H_255, 0.84), 60.0, 10.0])
-	var _t391 = ("#ff5050" if (absf(J.num(J.gp(env["G"], "sw"))) > 0.7) else "#ffd84a")
-	J.sp(v_c_254, "fillStyle", _t391)
+	var _t392 = ("#ff5050" if (absf(J.num(J.gp(env["G"], "sw"))) > 0.7) else "#ffd84a")
+	J.sp(v_c_254, "fillStyle", _t392)
 	J.mc(v_c_254, "fillRect", [((195.0 + J.mul(J.gp(env["G"], "sw"), 100.0)) - 3.0), (J.mul(v_H_255, 0.84) - 4.0), 6.0, 18.0])
 	v_ang_257 = J.mul(J.gp(env["G"], "sw"), 0.6)
 	v_fy_258 = (J.min_([J.mul(v_H_255, 0.72), J.add(v_cy_256, (J.mul(J.gp(J.gp(env["G"], "fall"), "t"), J.gp(J.gp(env["G"], "fall"), "t")) * 900.0))]) if J.t(J.gp(env["G"], "fall")) else v_cy_256)
 	J.mc(v_c_254, "save", [])
 	J.mc(v_c_254, "translate", [195.0, v_fy_258])
 	J.mc(v_c_254, "rotate", [J.add(PI, v_ang_257)])
-	var _t392 = env["__p"]["char"]
-	J.cl(_t392, null, [v_c_254, J.gp(J.gp(env["G"], "a"), "k"), 0.0, 0.0, 2.0, {"shadow": false, "pose": ("hurt" if J.t(J.gp(env["G"], "fall")) else null), "pt": 0.5}])
+	var _t393 = env["__p"]["char"]
+	J.cl(_t393, null, [v_c_254, J.gp(J.gp(env["G"], "a"), "k"), 0.0, 0.0, 2.0, {"shadow": false, "pose": ("hurt" if J.t(J.gp(env["G"], "fall")) else null), "pt": 0.5}])
 	J.mc(v_c_254, "restore", [])
-	var _t393 = (not J.t(J.gp(env["G"], "hold")))
-	var _t394 = ((not J.t(J.gp(env["G"], "fall"))) if _t393 else _t393)
-	if (J.seq(J.gp(env["G"], "phase"), "play") if _t394 else _t394):
+	var _t394 = (not J.t(J.gp(env["G"], "hold")))
+	var _t395 = ((not J.t(J.gp(env["G"], "fall"))) if _t394 else _t394)
+	if (J.seq(J.gp(env["G"], "phase"), "play") if _t395 else _t395):
 		J.mc(v_c_254, "save", [])
 		J.sp(v_c_254, "font", "bold 18px sans-serif")
 		J.sp(v_c_254, "textAlign", "center")
 		J.sp(v_c_254, "fillStyle", "#fff")
 		J.mc(v_c_254, "fillText", ["按住畫面抓實天花板", 195.0, J.mul(v_H_255, 0.55)])
 		J.mc(v_c_254, "restore", [])
-	var _t395 = J.gp(env["G"], "ev")
-	if J.t((J.seq(J.gp(J.gp(env["G"], "ev"), "k"), "fan") if J.t(_t395) else _t395)):
+	var _t396 = J.gp(env["G"], "ev")
+	if J.t((J.seq(J.gp(J.gp(env["G"], "ev"), "k"), "fan") if J.t(_t396) else _t396)):
 		J.mc(v_c_254, "save", [])
 		J.mc(v_c_254, "translate", [(370.0 if J.cmp(J.gp(J.gp(env["G"], "ev"), "dir"), 0.0, "<") else 20.0), J.mul(v_H_255, 0.4)])
 		J.mc(v_c_254, "rotate", [J.mul(J.gp(env["G"], "t"), 20.0)])
@@ -1280,8 +1281,8 @@ func _f69(this_, a: Array, env):
 			J.mc(v_c_254, "stroke", [])
 			v_i_260 = J.num(v_i_260) + 1.0
 		J.mc(v_c_254, "restore", [])
-	var _t396 = J.gp(env["G"], "ev")
-	if J.t((J.seq(J.gp(J.gp(env["G"], "ev"), "k"), "broom") if J.t(_t396) else _t396)):
+	var _t397 = J.gp(env["G"], "ev")
+	if J.t((J.seq(J.gp(J.gp(env["G"], "ev"), "k"), "broom") if J.t(_t397) else _t397)):
 		v_x_261 = (195.0 - J.mul(J.gp(J.gp(env["G"], "ev"), "dir"), (160.0 - J.mul(J.gp(J.gp(env["G"], "ev"), "t"), 300.0))))
 		J.mc(v_c_254, "save", [])
 		J.sp(v_c_254, "strokeStyle", "#8a6a3a")
@@ -1297,43 +1298,43 @@ func _f69(this_, a: Array, env):
 	J.sp(v_c_254, "font", "12px sans-serif")
 	J.sp(v_c_254, "textAlign", "right")
 	J.sp(v_c_254, "fillStyle", "#ffd0c0")
-	var _t397 = env["__p"]["target"]
-	J.mc(v_c_254, "fillText", [("Bryan：" + J.str(J.cl(_t397, null, ["hang"])) + " 秒"), 380.0, J.mul(v_H_255, 0.82)])
+	var _t398 = env["__p"]["target"]
+	J.mc(v_c_254, "fillText", [("Bryan：" + J.str(J.cl(_t398, null, ["hang"])) + " 秒"), 380.0, J.mul(v_H_255, 0.82)])
 	J.mc(v_c_254, "restore", [])
 
 func _f63(this_, a: Array, env):
 	var _s114 = {"__p": env, "G": null}
 	_s114["G"] = J.arg(a, 0)
 	J.S_Object_("assign", [_s114["G"], {"hold": false, "sw": 0.0, "v": 0.0, "fx0": null, "time": 0.0, "push": 0.0, "evT": 4.0, "ev": null, "fall": null}])
-	var _t327 = _s114["G"]
-	var _t328 = Callable(self, "_f64").bind(_s114)
-	J.sp(_t327, "hud", _t328)
-	var _t329 = _s114["__p"]["btns"]
-	J.cl(_t329, null, [[]])
-	var _t330 = J.G.get("$")
-	var _t331 = J.cl(_t330, null, ["#sp-btns"])
-	var _t332 = "<p class=\"sp-tip\">按住畫面開始，左右拖動保持平衡</p>"
-	J.sp(_t331, "innerHTML", _t332)
-	var _t333 = _s114["G"]
-	var _t339 = Callable(self, "_f65").bind(_s114)
-	J.sp(_t333, "down", _t339)
-	var _t340 = _s114["G"]
-	var _t344 = Callable(self, "_f66").bind(_s114)
-	J.sp(_t340, "move", _t344)
-	var _t345 = _s114["G"]
-	var _t353 = Callable(self, "_f67").bind(_s114)
-	J.sp(_t345, "up", _t353)
-	var _t354 = _s114["G"]
-	var _t388 = Callable(self, "_f68").bind(_s114)
-	J.sp(_t354, "tick", _t388)
-	var _t389 = _s114["G"]
-	var _t398 = Callable(self, "_f69").bind(_s114)
-	J.sp(_t389, "draw", _t398)
+	var _t328 = _s114["G"]
+	var _t329 = Callable(self, "_f64").bind(_s114)
+	J.sp(_t328, "hud", _t329)
+	var _t330 = _s114["__p"]["btns"]
+	J.cl(_t330, null, [[]])
+	var _t331 = J.G.get("$")
+	var _t332 = J.cl(_t331, null, ["#sp-btns"])
+	var _t333 = "<p class=\"sp-tip\">按住畫面開始，左右拖動保持平衡</p>"
+	J.sp(_t332, "innerHTML", _t333)
+	var _t334 = _s114["G"]
+	var _t340 = Callable(self, "_f65").bind(_s114)
+	J.sp(_t334, "down", _t340)
+	var _t341 = _s114["G"]
+	var _t345 = Callable(self, "_f66").bind(_s114)
+	J.sp(_t341, "move", _t345)
+	var _t346 = _s114["G"]
+	var _t354 = Callable(self, "_f67").bind(_s114)
+	J.sp(_t346, "up", _t354)
+	var _t355 = _s114["G"]
+	var _t389 = Callable(self, "_f68").bind(_s114)
+	J.sp(_t355, "tick", _t389)
+	var _t390 = _s114["G"]
+	var _t399 = Callable(self, "_f69").bind(_s114)
+	J.sp(_t390, "draw", _t399)
 
 func _f71(this_, a: Array, env):
-	var _t403 = J.min_([50.0, floor(J.num(J.gp(env["G"], "dist")))])
-	var _t402 = J.gp(env["G"], "time")
-	return (J.str(_t403) + "／50 米　" + J.str(J.mc(_t402, "toFixed", [1.0])) + " 秒")
+	var _t404 = J.min_([50.0, floor(J.num(J.gp(env["G"], "dist")))])
+	var _t403 = J.gp(env["G"], "time")
+	return (J.str(_t404) + "／50 米　" + J.str(J.mc(_t403, "toFixed", [1.0])) + " 秒")
 
 func _f72(this_, a: Array, env):
 	var v_side_264 = null; var v_gap_265 = null; var v_same_266 = null; var v_power_267 = null; var v_kick_268 = null
@@ -1341,98 +1342,98 @@ func _f72(this_, a: Array, env):
 	if J.t(J.gp(env["G"], "finished")):
 		return null
 	v_gap_265 = J.sub(J.gp(env["G"], "t"), J.gp(env["G"], "lastT"))
-	var _t405 = env["G"]
-	var _t406 = J.gp(env["G"], "t")
-	J.sp(_t405, "lastT", _t406)
+	var _t406 = env["G"]
+	var _t407 = J.gp(env["G"], "t")
+	J.sp(_t406, "lastT", _t407)
 	v_same_266 = J.seq(v_side_264, J.gp(env["G"], "lastSide"))
-	var _t407 = env["G"]
-	J.sp(_t407, "lastSide", v_side_264)
 	var _t408 = env["G"]
-	J.sp(_t408, "stroke", 0.35)
-	v_power_267 = (1.0 if J.cmp(J.gp(env["G"], "water"), 0.25, ">") else 0.45)
+	J.sp(_t408, "lastSide", v_side_264)
 	var _t409 = env["G"]
-	var _t410 = J.add(J.gp(_t409, "vel"), J.mul((J.mul((0.5 if J.t(v_same_266) else 2.1), v_power_267) * (0.6 if J.cmp(v_gap_265, 0.22, "<") else 1.0)), J.gp(env["G"], "gpf")))
-	J.sp(_t409, "vel", _t410)
+	J.sp(_t409, "stroke", 0.35)
+	v_power_267 = (1.0 if J.cmp(J.gp(env["G"], "water"), 0.25, ">") else 0.45)
+	var _t410 = env["G"]
+	var _t411 = J.add(J.gp(_t410, "vel"), J.mul((J.mul((0.5 if J.t(v_same_266) else 2.1), v_power_267) * (0.6 if J.cmp(v_gap_265, 0.22, "<") else 1.0)), J.gp(env["G"], "gpf")))
+	J.sp(_t410, "vel", _t411)
 	v_kick_268 = (0.9 if J.t(v_same_266) else 0.35)
 	if J.cmp(v_gap_265, 0.22, "<"):
-		var _t411 = J.add(v_kick_268, 0.6)
-		v_kick_268 = _t411
-	var _t412 = env["G"]
-	var _t413 = J.add(J.gp(_t412, "sv"), J.mul(v_side_264, v_kick_268))
-	J.sp(_t412, "sv", _t413)
+		var _t412 = J.add(v_kick_268, 0.6)
+		v_kick_268 = _t412
+	var _t413 = env["G"]
+	var _t414 = J.add(J.gp(_t413, "sv"), J.mul(v_side_264, v_kick_268))
+	J.sp(_t413, "sv", _t414)
 	if J.t(v_same_266):
-		var _t414 = env["__p"]["pop"]
-		J.cl(_t414, null, ["同一邊！", (195.0 + J.mul(v_side_264, 70.0)), J.mul(J.gp(env["G"], "H"), 0.38), "#ffb0a0", 14.0])
+		var _t415 = env["__p"]["pop"]
+		J.cl(_t415, null, ["同一邊！", (195.0 + J.mul(v_side_264, 70.0)), J.mul(J.gp(env["G"], "H"), 0.38), "#ffb0a0", 14.0])
 
 func _f73(this_, a: Array, env):
-	var _t416 = env["stroke"]
-	return J.cl(_t416, null, [(-1.0)])
+	var _t417 = env["stroke"]
+	return J.cl(_t417, null, [(-1.0)])
 
 func _f74(this_, a: Array, env):
-	var _t417 = env["stroke"]
-	return J.cl(_t417, null, [1.0])
+	var _t418 = env["stroke"]
+	return J.cl(_t418, null, [1.0])
 
 func _f75(this_, a: Array, env):
 	var v_dt_269 = null; var v_loss_270 = null
 	v_dt_269 = J.arg(a, 0)
 	if J.t(J.gp(env["G"], "finished")):
 		return null
-	var _t421 = env["G"]
-	var _t422 = J.add(J.gp(_t421, "time"), v_dt_269)
-	J.sp(_t421, "time", _t422)
-	var _t423 = env["G"]
-	var _t424 = J.max_([0.0, J.sub(J.gp(env["G"], "stroke"), v_dt_269)])
-	J.sp(_t423, "stroke", _t424)
-	var _t425 = env["G"]
-	var _t426 = J.mul(J.gp(_t425, "vel"), pow(J.num(0.35), J.num(v_dt_269)))
-	J.sp(_t425, "vel", _t426)
-	var _t427 = env["G"]
-	var _t428 = J.add(J.gp(_t427, "dist"), (J.mul(J.gp(env["G"], "vel"), v_dt_269) * 0.5))
-	J.sp(_t427, "dist", _t428)
-	var _t429 = env["G"]
-	var _t430 = J.add(J.gp(_t429, "sv"), J.mul(((-J.num(J.gp(env["G"], "slosh"))) * 14.0), v_dt_269))
-	J.sp(_t429, "sv", _t430)
-	var _t431 = env["G"]
-	var _t432 = J.mul(J.gp(_t431, "sv"), pow(J.num(0.4), J.num(v_dt_269)))
-	J.sp(_t431, "sv", _t432)
-	var _t433 = env["G"]
-	var _t434 = J.add(J.gp(_t433, "slosh"), (J.mul(J.gp(env["G"], "sv"), v_dt_269) * 3.0))
-	J.sp(_t433, "slosh", _t434)
+	var _t422 = env["G"]
+	var _t423 = J.add(J.gp(_t422, "time"), v_dt_269)
+	J.sp(_t422, "time", _t423)
+	var _t424 = env["G"]
+	var _t425 = J.max_([0.0, J.sub(J.gp(env["G"], "stroke"), v_dt_269)])
+	J.sp(_t424, "stroke", _t425)
+	var _t426 = env["G"]
+	var _t427 = J.mul(J.gp(_t426, "vel"), pow(J.num(0.35), J.num(v_dt_269)))
+	J.sp(_t426, "vel", _t427)
+	var _t428 = env["G"]
+	var _t429 = J.add(J.gp(_t428, "dist"), (J.mul(J.gp(env["G"], "vel"), v_dt_269) * 0.5))
+	J.sp(_t428, "dist", _t429)
+	var _t430 = env["G"]
+	var _t431 = J.add(J.gp(_t430, "sv"), J.mul(((-J.num(J.gp(env["G"], "slosh"))) * 14.0), v_dt_269))
+	J.sp(_t430, "sv", _t431)
+	var _t432 = env["G"]
+	var _t433 = J.mul(J.gp(_t432, "sv"), pow(J.num(0.4), J.num(v_dt_269)))
+	J.sp(_t432, "sv", _t433)
+	var _t434 = env["G"]
+	var _t435 = J.add(J.gp(_t434, "slosh"), (J.mul(J.gp(env["G"], "sv"), v_dt_269) * 3.0))
+	J.sp(_t434, "slosh", _t435)
 	if (absf(J.num(J.gp(env["G"], "slosh"))) > 0.55):
 		v_loss_270 = (J.mul((absf(J.num(J.gp(env["G"], "slosh"))) - 0.55), v_dt_269) * 0.9)
-		var _t435 = env["G"]
-		var _t436 = J.max_([0.0, J.sub(J.gp(env["G"], "water"), v_loss_270)])
-		J.sp(_t435, "water", _t436)
+		var _t436 = env["G"]
+		var _t437 = J.max_([0.0, J.sub(J.gp(env["G"], "water"), v_loss_270)])
+		J.sp(_t436, "water", _t437)
 		if (randf() < J.mul(v_dt_269, 6.0)):
-			var _t437 = env["__p"]["pop"]
-			J.cl(_t437, null, ["水灑了！", 195.0, J.mul(J.gp(env["G"], "H"), 0.33), "#9fd8ff", 13.0])
+			var _t438 = env["__p"]["pop"]
+			J.cl(_t438, null, ["水灑了！", 195.0, J.mul(J.gp(env["G"], "H"), 0.33), "#9fd8ff", 13.0])
 	if J.cmp(J.gp(env["G"], "dist"), 50.0, ">="):
-		var _t438 = env["G"]
-		J.sp(_t438, "finished", true)
-		var _t439 = env["__p"]["finish"]
-		var _t440 = J.gp(env["G"], "time")
-		var _t446 = J.num(J.mc(_t440, "toFixed", [1.0]))
-		var _t445 = null
+		var _t439 = env["G"]
+		J.sp(_t439, "finished", true)
+		var _t440 = env["__p"]["finish"]
+		var _t441 = J.gp(env["G"], "time")
+		var _t447 = J.num(J.mc(_t441, "toFixed", [1.0]))
+		var _t446 = null
 		if J.cmp(J.gp(env["G"], "water"), 0.6, ">"):
-			var _t441 = env["__p"]["D"]
-			_t445 = J.cl(_t441, null, ["游完，頭頂碟水仲有大半。河童協會頒發「穩陣獎」。", "游完，頭頂碟水還有大半。河童協會頒發「穩健獎」。"])
+			var _t442 = env["__p"]["D"]
+			_t446 = J.cl(_t442, null, ["游完，頭頂碟水仲有大半。河童協會頒發「穩陣獎」。", "游完，頭頂碟水還有大半。河童協會頒發「穩健獎」。"])
 		else:
-			var _t444 = null
+			var _t445 = null
 			if J.cmp(J.gp(env["G"], "water"), 0.25, ">"):
-				var _t442 = env["__p"]["D"]
-				_t444 = J.cl(_t442, null, ["游完，碟水剩返一半，個頭有啲暈。", "游完了，碟裡的水剩一半，頭有點暈。"])
-			else:
 				var _t443 = env["__p"]["D"]
-				_t444 = J.cl(_t443, null, ["碟水乾晒，最後幾米係爬上岸。", "碟水全乾了，最後幾米是爬上岸的。"])
-			_t445 = _t444
-		J.cl(_t439, null, [_t446, _t445])
-	var _t447 = J.cmp(J.gp(env["G"], "time"), 60.0, ">")
-	if ((not J.t(J.gp(env["G"], "finished"))) if _t447 else _t447):
-		var _t448 = env["G"]
-		J.sp(_t448, "finished", true)
-		var _t449 = env["__p"]["finish"]
-		var _t450 = env["__p"]["D"]
-		J.cl(_t449, null, [null, J.cl(_t450, null, ["一分鐘都未游完。救生員（一隻水鬼）將你撈咗上岸。", "一分鐘都沒游完。救生員（一隻水鬼）把你撈上岸。"])])
+				_t445 = J.cl(_t443, null, ["游完，碟水剩返一半，個頭有啲暈。", "游完了，碟裡的水剩一半，頭有點暈。"])
+			else:
+				var _t444 = env["__p"]["D"]
+				_t445 = J.cl(_t444, null, ["碟水乾晒，最後幾米係爬上岸。", "碟水全乾了，最後幾米是爬上岸的。"])
+			_t446 = _t445
+		J.cl(_t440, null, [_t447, _t446])
+	var _t448 = J.cmp(J.gp(env["G"], "time"), 60.0, ">")
+	if ((not J.t(J.gp(env["G"], "finished"))) if _t448 else _t448):
+		var _t449 = env["G"]
+		J.sp(_t449, "finished", true)
+		var _t450 = env["__p"]["finish"]
+		var _t451 = env["__p"]["D"]
+		J.cl(_t450, null, [null, J.cl(_t451, null, ["一分鐘都未游完。救生員（一隻水鬼）將你撈咗上岸。", "一分鐘都沒游完。救生員（一隻水鬼）把你撈上岸。"])])
 
 func _f76(this_, a: Array, env):
 	var v_c_271 = null; var v_H_272 = null; var v_top_273 = null; var v_bot_274 = null; var v_off_275 = null; var v_bd_276 = null; var v_bx_277 = null; var v_y_278 = null; var v_lean_279 = null; var v_SC_280 = null; var v_HH_281 = null; var v_fx_282 = null; var v_i_283 = null; var v_y_284 = null; var v_x_285 = null; var v_x_286 = null; var v_q_287 = null
@@ -1452,8 +1453,8 @@ func _f76(this_, a: Array, env):
 		while true:
 			if not J.cmp(v_x_285, 390.0, "<="): break
 			J.mc(v_c_271, "lineTo", [v_x_285, J.add(v_y_284, (sin(J.num(J.add((J.mul(v_x_285, 0.05) + J.mul(J.gp(env["G"], "t"), 2.0)), v_i_283))) * 2.0))])
-			var _t453 = J.add(v_x_285, 12.0)
-			v_x_285 = _t453
+			var _t454 = J.add(v_x_285, 12.0)
+			v_x_285 = _t454
 		J.mc(v_c_271, "stroke", [])
 		v_i_283 = J.num(v_i_283) + 1.0
 	v_off_275 = J.mod(J.mul(J.gp(env["G"], "dist"), 24.0), 48.0)
@@ -1465,23 +1466,23 @@ func _f76(this_, a: Array, env):
 		J.mc(v_c_271, "arc", [v_x_286, J.add(v_top_273, 4.0), 4.0, 0.0, (PI * 2.0)])
 		J.mc(v_c_271, "arc", [J.add(v_x_286, 24.0), J.sub(v_bot_274, 4.0), 4.0, 0.0, (PI * 2.0)])
 		J.mc(v_c_271, "fill", [])
-		var _t454 = J.add(v_x_286, 48.0)
-		v_x_286 = _t454
-	var _t456 = J.gp(env["G"], "time")
-	var _t455 = env["__p"]["target"]
-	var _t458 = J.gp(env["G"], "time")
-	var _t457 = env["__p"]["target"]
-	v_bd_276 = J.min_([50.0, (J.div(_t458, J.cl(_t457, null, ["swim"])) * 50.0)])
+		var _t455 = J.add(v_x_286, 48.0)
+		v_x_286 = _t455
+	var _t457 = J.gp(env["G"], "time")
+	var _t456 = env["__p"]["target"]
+	var _t459 = J.gp(env["G"], "time")
+	var _t458 = env["__p"]["target"]
+	v_bd_276 = J.min_([50.0, (J.div(_t459, J.cl(_t458, null, ["swim"])) * 50.0)])
 	v_bx_277 = (150.0 + (J.sub(v_bd_276, J.gp(env["G"], "dist")) * 24.0))
-	var _t459 = J.cmp(v_bx_277, (-40.0), ">")
-	if (J.cmp(v_bx_277, 430.0, "<") if _t459 else _t459):
+	var _t460 = J.cmp(v_bx_277, (-40.0), ">")
+	if (J.cmp(v_bx_277, 430.0, "<") if _t460 else _t460):
 		J.mc(v_c_271, "save", [])
 		J.sp(v_c_271, "globalAlpha", 0.5)
 		J.mc(v_c_271, "beginPath", [])
 		J.mc(v_c_271, "rect", [0.0, 0.0, 390.0, J.add(v_top_273, 30.0)])
 		J.mc(v_c_271, "clip", [])
-		var _t460 = env["__p"]["bryan"]
-		J.cl(_t460, null, [v_c_271, v_bx_277, J.add(v_top_273, 60.0), 96.0, "walk", {"faceRight": true}])
+		var _t461 = env["__p"]["bryan"]
+		J.cl(_t461, null, [v_c_271, v_bx_277, J.add(v_top_273, 60.0), 96.0, "walk", {"faceRight": true}])
 		J.mc(v_c_271, "restore", [])
 		J.mc(v_c_271, "save", [])
 		J.sp(v_c_271, "font", "bold 11px sans-serif")
@@ -1492,9 +1493,9 @@ func _f76(this_, a: Array, env):
 	v_y_278 = ((J.div(J.add(v_top_273, v_bot_274), 2.0) + 40.0) + (sin(J.num(J.mul(J.gp(env["G"], "t"), 7.0))) * (3.0 if J.cmp(J.gp(env["G"], "vel"), 0.5, ">") else 1.5)))
 	v_lean_279 = J.min_([0.35, J.mul(J.gp(env["G"], "vel"), 0.05)])
 	v_SC_280 = 1.5
-	var _t461 = (not J.seq(J.typeof_(J.G.get("CHAR_H")), "undefined"))
-	var _t462 = (J.gp(J.G.get("CHAR_H"), J.gp(J.gp(env["G"], "a"), "k")) if _t461 else _t461)
-	v_HH_281 = ((J.mul((_t462 if J.t(_t462) else 56.0), v_SC_280) + J.mul(4.0, v_SC_280)) - 7.0)
+	var _t462 = (not J.seq(J.typeof_(J.G.get("CHAR_H")), "undefined"))
+	var _t463 = (J.gp(J.G.get("CHAR_H"), J.gp(J.gp(env["G"], "a"), "k")) if _t462 else _t462)
+	v_HH_281 = ((J.mul((_t463 if J.t(_t463) else 56.0), v_SC_280) + J.mul(4.0, v_SC_280)) - 7.0)
 	J.mc(v_c_271, "save", [])
 	J.mc(v_c_271, "beginPath", [])
 	J.mc(v_c_271, "rect", [0.0, 0.0, 390.0, J.sub(v_y_278, 22.0)])
@@ -1502,8 +1503,8 @@ func _f76(this_, a: Array, env):
 	J.mc(v_c_271, "save", [])
 	J.mc(v_c_271, "translate", [150.0, v_y_278])
 	J.mc(v_c_271, "rotate", [v_lean_279])
-	var _t463 = env["__p"]["char"]
-	J.cl(_t463, null, [v_c_271, J.gp(J.gp(env["G"], "a"), "k"), 0.0, 0.0, v_SC_280, {"shadow": false, "walk": J.cmp(J.gp(env["G"], "vel"), 0.5, ">")}])
+	var _t464 = env["__p"]["char"]
+	J.cl(_t464, null, [v_c_271, J.gp(J.gp(env["G"], "a"), "k"), 0.0, 0.0, v_SC_280, {"shadow": false, "walk": J.cmp(J.gp(env["G"], "vel"), 0.5, ">")}])
 	J.mc(v_c_271, "translate", [0.0, (-J.num(v_HH_281))])
 	J.mc(v_c_271, "rotate", [J.mul(J.gp(env["G"], "slosh"), 0.6)])
 	J.sp(v_c_271, "fillStyle", "#c8c0a8")
@@ -1524,16 +1525,16 @@ func _f76(this_, a: Array, env):
 	J.mc(v_c_271, "fillRect", [0.0, J.sub(v_y_278, 22.0), 390.0, (J.sub(v_bot_274, v_y_278) + 22.0)])
 	if J.cmp(J.gp(env["G"], "stroke"), 0.0, ">"):
 		v_q_287 = (1.0 - J.div(J.gp(env["G"], "stroke"), 0.35))
-		var _t464 = ("rgba(255,255,255," + J.str((0.7 * J.sub(1.0, v_q_287))) + ")")
-		J.sp(v_c_271, "strokeStyle", _t464)
+		var _t465 = ("rgba(255,255,255," + J.str((0.7 * J.sub(1.0, v_q_287))) + ")")
+		J.sp(v_c_271, "strokeStyle", _t465)
 		J.sp(v_c_271, "lineWidth", 2.0)
 		J.mc(v_c_271, "beginPath", [])
 		J.mc(v_c_271, "ellipse", [(150.0 + J.mul(J.gp(env["G"], "lastSide"), 30.0)), J.sub(v_y_278, 20.0), (12.0 + J.mul(v_q_287, 22.0)), (4.0 + J.mul(v_q_287, 6.0)), 0.0, 0.0, (PI * 2.0)])
 		J.mc(v_c_271, "stroke", [])
 	J.sp(v_c_271, "fillStyle", "rgba(0,0,0,.5)")
 	J.mc(v_c_271, "fillRect", [20.0, J.mul(v_H_272, 0.86), 120.0, 9.0])
-	var _t465 = ("#7fd0ff" if J.cmp(J.gp(env["G"], "water"), 0.25, ">") else "#ff7070")
-	J.sp(v_c_271, "fillStyle", _t465)
+	var _t466 = ("#7fd0ff" if J.cmp(J.gp(env["G"], "water"), 0.25, ">") else "#ff7070")
+	J.sp(v_c_271, "fillStyle", _t466)
 	J.mc(v_c_271, "fillRect", [20.0, J.mul(v_H_272, 0.86), J.mul(120.0, J.gp(env["G"], "water")), 9.0])
 	J.sp(v_c_271, "fillStyle", "#fff")
 	J.sp(v_c_271, "font", "11px sans-serif")
@@ -1548,21 +1549,21 @@ func _f70(this_, a: Array, env):
 	var _s133 = {"__p": env, "G": null, "stroke": null}
 	_s133["G"] = J.arg(a, 0)
 	J.S_Object_("assign", [_s133["G"], {"dist": 0.0, "vel": 0.0, "water": 1.0, "slosh": 0.0, "sv": 0.0, "lastSide": 0.0, "lastT": (-9.0), "time": 0.0, "finished": false, "stroke": 0.0}])
-	var _t401 = _s133["G"]
-	var _t404 = Callable(self, "_f71").bind(_s133)
-	J.sp(_t401, "hud", _t404)
+	var _t402 = _s133["G"]
+	var _t405 = Callable(self, "_f71").bind(_s133)
+	J.sp(_t402, "hud", _t405)
 	_s133["stroke"] = Callable(self, "_f72").bind(_s133)
-	var _t415 = _s133["__p"]["btns"]
-	J.cl(_t415, null, [[["左划", Callable(self, "_f73").bind(_s133), ""], ["右划", Callable(self, "_f74").bind(_s133), ""]]])
-	var _t418 = _s133["G"]
-	var _t419 = _s133["stroke"]
-	J.sp(_t418, "stroke_", _t419)
-	var _t420 = _s133["G"]
-	var _t451 = Callable(self, "_f75").bind(_s133)
-	J.sp(_t420, "tick", _t451)
-	var _t452 = _s133["G"]
-	var _t466 = Callable(self, "_f76").bind(_s133)
-	J.sp(_t452, "draw", _t466)
+	var _t416 = _s133["__p"]["btns"]
+	J.cl(_t416, null, [[["左划", Callable(self, "_f73").bind(_s133), ""], ["右划", Callable(self, "_f74").bind(_s133), ""]]])
+	var _t419 = _s133["G"]
+	var _t420 = _s133["stroke"]
+	J.sp(_t419, "stroke_", _t420)
+	var _t421 = _s133["G"]
+	var _t452 = Callable(self, "_f75").bind(_s133)
+	J.sp(_t421, "tick", _t452)
+	var _t453 = _s133["G"]
+	var _t467 = Callable(self, "_f76").bind(_s133)
+	J.sp(_t453, "draw", _t467)
 
 func _f77(this_, a: Array, env):
 	return env["G"]
@@ -1598,29 +1599,29 @@ func _f1(this_, a: Array, env):
 	_s2["EV"] = {"jump": {"name": "殭屍跳遠", "who": "laojiang", "bg": "field", "unit": "米", "hi": true, "rule": "膝蓋不能彎，只能一跳一跳助跑。著地那一下點「跳」，節奏越準越快；最後在白線前點「起跳」，越貼線越遠，踩線犯規。", "sub": "阿福頂上：他膝蓋可以彎，所以要自己忍住。"}, "tug": {"name": "舌頭對脖子拔河", "who": "n30_diaosi", "foe": "n30_rokurokubi", "bg": "kampung", "unit": "", "hi": true, "rule": "狂點「拉」把繩拉過來。繩子變紅就是繃緊了，這時候還拉，舌頭會打滑倒退。把旗拉到你這邊的線就贏。", "sub": "吊死鬼不在，阿福用領帶頂上。"}, "hang": {"name": "天花板倒掛耐力賽", "who": "tianhua", "bg": "hq", "unit": "秒", "hi": true, "rule": "按住畫面才抓得住天花板，放手就掉下來。左右拖動手指，把搖擺拉回中間；風扇和掃把會來搞你。", "sub": "天花姐不在，阿福倒掛（領帶垂下來了）。"}, "swim": {"name": "河童游泳", "who": "n30_kappa", "bg": "banana", "unit": "秒", "hi": false, "rule": "左右輪流划水向前游。划得太急、同一邊連划，頭頂碟裡的水會晃出去；水乾了河童就沒力。游完 50 米，越快越好。", "sub": "河童不在，阿福頂著一碟水游。"}}
 	_s2["ORDER"] = ["jump", "tug", "hang", "swim"]
 	_s2["TAUT"] = J.cl(Callable(self, "_f3").bind(_s2), null, [])
-	var _t193 = _s2["D"]
-	var _t195 = J.cl(_t193, null, ["Bryan：「我籃球跳投出身，跳遠？小意思。」", "Bryan：「我打籃球跳投出身，跳遠？小意思。」"])
 	var _t194 = _s2["D"]
-	var _t197 = J.cl(_t194, null, ["轆轤首：「我條頸三米長，你有幾長？」", "轆轤首：「我的脖子三米長，你有多長？」"])
-	var _t196 = _s2["D"]
-	var _t199 = J.cl(_t196, null, ["Bryan：「倒掛？我喺公司掛名都掛咗三年。」", "Bryan：「倒掛？我在公司掛名都掛了三年。」"])
-	var _t198 = _s2["D"]
-	_s2["BRYAN"] = {"jump": _t195, "tug": _t197, "hang": _t199, "swim": J.cl(_t198, null, ["Bryan：「我游水唔使碟，因為我頭頂冇嘢。等陣，唔係咁講……」", "Bryan：「我游泳不用碟子，因為我頭上沒東西。等等，不是這樣說……」"])}
+	var _t196 = J.cl(_t194, null, ["Bryan：「我籃球跳投出身，跳遠？小意思。」", "Bryan：「我打籃球跳投出身，跳遠？小意思。」"])
+	var _t195 = _s2["D"]
+	var _t198 = J.cl(_t195, null, ["轆轤首：「我條頸三米長，你有幾長？」", "轆轤首：「我的脖子三米長，你有多長？」"])
+	var _t197 = _s2["D"]
+	var _t200 = J.cl(_t197, null, ["Bryan：「倒掛？我喺公司掛名都掛咗三年。」", "Bryan：「倒掛？我在公司掛名都掛了三年。」"])
+	var _t199 = _s2["D"]
+	_s2["BRYAN"] = {"jump": _t196, "tug": _t198, "hang": _t200, "swim": J.cl(_t199, null, ["Bryan：「我游水唔使碟，因為我頭頂冇嘢。等陣，唔係咁講……」", "Bryan：「我游泳不用碟子，因為我頭上沒東西。等等，不是這樣說……」"])}
 	_s2["has"] = Callable(self, "_f4").bind(_s2)
 	_s2["Lx"] = Callable(self, "_f5").bind(_s2)
 	_s2["fmtV"] = Callable(self, "_f15").bind(_s2)
 	_s2["G"] = null
 	_s2["INIT"] = {}
-	var _t202 = _s2["INIT"]
-	var _t277 = Callable(self, "_f47").bind(_s2)
-	J.sp(_t202, "jump", _t277)
-	var _t278 = _s2["INIT"]
-	var _t325 = Callable(self, "_f57").bind(_s2)
-	J.sp(_t278, "tug", _t325)
-	var _t326 = _s2["INIT"]
-	var _t399 = Callable(self, "_f63").bind(_s2)
-	J.sp(_t326, "hang", _t399)
-	var _t400 = _s2["INIT"]
-	var _t467 = Callable(self, "_f70").bind(_s2)
-	J.sp(_t400, "swim", _t467)
+	var _t203 = _s2["INIT"]
+	var _t278 = Callable(self, "_f47").bind(_s2)
+	J.sp(_t203, "jump", _t278)
+	var _t279 = _s2["INIT"]
+	var _t326 = Callable(self, "_f57").bind(_s2)
+	J.sp(_t279, "tug", _t326)
+	var _t327 = _s2["INIT"]
+	var _t400 = Callable(self, "_f63").bind(_s2)
+	J.sp(_t327, "hang", _t400)
+	var _t401 = _s2["INIT"]
+	var _t468 = Callable(self, "_f70").bind(_s2)
+	J.sp(_t401, "swim", _t468)
 	return {"open": _s2["open"], "start": _s2["start"], "EV": _s2["EV"], "target": _s2["target"], "st": _s2["st"], "athlete": _s2["athlete"], "_g": Callable(self, "_f77").bind(_s2)}
