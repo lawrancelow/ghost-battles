@@ -32,6 +32,7 @@ static func end_hook() -> void:
 	cur = null
 
 func _close_now() -> void:
+	name = "StStreet_closing"   # 即刻讓名，新開嗰個先叫得返 StStreet（任務掣靠個名判斷）
 	_cover(false); queue_free()
 	if cur == self: cur = null
 

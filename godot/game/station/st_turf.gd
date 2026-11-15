@@ -61,6 +61,7 @@ static func end_hook(_tf) -> void:
 	cur = null
 
 func _end() -> void:
+	name = "StTurf_closing"
 	_cover(false); queue_free()
 	if cur == self: cur = null
 
@@ -194,7 +195,7 @@ func _process(_dt: float) -> void:
 	_sync_vw()
 	var fno = int(J.num(Tf.get("_fno", 0)))
 	if fno != _fno: _fno = fno; stage.queue_redraw()
-	if fno % 3 == 0 or _sig.is_empty(): _hud()
+	if fno % 6 == 1 or _sig.is_empty(): _hud()
 	_check_modal()
 	_check_note()
 
@@ -245,8 +246,17 @@ static func _plain(h: String) -> String:
 	return JSBridge.html2bb(h).replace("[b]", "").replace("[/b]", "").replace("[i]", "").replace("[/i]", "")
 
 # 揀設備等全屏彈出框（DOM）：開咗先顯示 DOM
+var pick_panel: StDomPanel = null
+var post_panel: StDomPanel = null
 func _check_modal() -> void:
-	var on = _el("#stt-pick") != null or _el("#pol-tip") != null
+	# 揀設備／有名鬼：原生（讀 DOM El 樹砌控件，掣照叫 JS onclick）；GB_PICKDOM=1 用返 DOM
+	var pk = _el("#stt-pick")
+	if pk != null and not OS.has_environment("GB_PICKDOM"):
+		if pick_panel == null or not is_instance_valid(pick_panel) or pick_panel.el != pk:
+			if pick_panel != null and is_instance_valid(pick_panel): pick_panel.queue_free()
+			pick_panel = StDomPanel.new(); add_child(pick_panel); pick_panel.setup(pk, Tf, "pick")
+		pk = null
+	var on = pk != null or _el("#pol-tip") != null
 	if on == _modal: return
 	_modal = on
 	var dom = get_parent().get("dom")
@@ -256,7 +266,13 @@ func _check_modal() -> void:
 
 func _check_note() -> void:
 	var id = ""; var e = null
-	for k in ["#gp-warn", "#sq-post", "#sq-warn"]:
+	# 網紅組帖文：原生（頭像、截圖、like 數跟 JS 跳）
+	var sp = _el("#sq-post")
+	if sp != null and not OS.has_environment("GB_PICKDOM"):
+		if post_panel == null or not is_instance_valid(post_panel) or post_panel.el != sp:
+			if post_panel != null and is_instance_valid(post_panel): post_panel.queue_free()
+			post_panel = StDomPanel.new(); add_child(post_panel); post_panel.setup(sp, Tf, "post")
+	for k in ["#gp-warn", "#sq-warn"] + ([] if sp != null and not OS.has_environment("GB_PICKDOM") else ["#sq-post"]):
 		e = _el(k)
 		if e != null and not (" " + J.str(e.get("className")) + " ").contains(" out "): id = k; break
 	if id == "":
@@ -286,6 +302,7 @@ var prof_d := 0
 var prof_n := 0
 func _draw_stage() -> void:
 	if not J.t(Tf.get("on")): return
+	if OS.has_environment("GB_NODRAW"): return
 	var ctx = Ctx.new(stage)
 	var keep = Tf.get("c")
 	Tf["c"] = ctx
@@ -296,7 +313,8 @@ func _draw_stage() -> void:
 	var t0 = Time.get_ticks_usec()
 	var cp = OS.has_environment("GB_CTXPROF") and prof_n == 20 and _fno > 150
 	if cp: J.CTXPROF.clear(); J.CTXPROF_ON = true
-	J.mc(Tf, "draw", [])
+	if OS.has_environment("GB_JSDRAW"): J.mc(Tf, "draw", [])
+	else: StDraw.draw(ctx, Tf)   # 原生移植 Turf.draw()
 	var t1 = Time.get_ticks_usec()
 	if Tf.get("ult") != null: J.mc(Tf, "drawUlt", [])
 	if OS.has_environment("GB_SUBPROF") and prof_n == 20 and _fno > 150:

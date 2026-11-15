@@ -28,7 +28,7 @@ func fast(_t) -> void:
 static var acc := {}
 func wrap(_t) -> void:
 	var tf = J.G.get("Street").Turf
-	for m in ["tick", "devTick", "roleTick", "walkerFx", "traitTick", "traceTick", "bossTick", "queueTick", "obsTick", "specialTick", "wp", "alive", "hit", "dist", "sqWalk", "bump", "reroute", "wseg", "fire", "puzzleTick", "los", "rdist", "fgCover", "ambush", "rect", "staffMul", "stats"]:
+	for m in ["frame", "hud", "tick", "devTick", "roleTick", "walkerFx", "traitTick", "traceTick", "bossTick", "queueTick", "obsTick", "specialTick", "wp", "alive", "hit", "dist", "sqWalk", "bump", "reroute", "wseg", "fire", "puzzleTick", "los", "rdist", "fgCover", "ambush", "rect", "staffMul", "stats"]:
 		var orig = tf.get(m)
 		if not (orig is Callable): print("nowrap ", m); continue
 		var mm = m
@@ -62,3 +62,28 @@ func wrapd(_t) -> void:
 				var k = acc.get(mm, [0, 0]); k[0] += Time.get_ticks_usec() - q0; k[1] += 1; acc[mm] = k
 				return r
 	acc.clear()
+func wdbg(_t) -> void:
+	var tf = J.G.get("Street").Turf
+	StDraw.N = J.G.get("Street")._n
+	for w in tf.walkers:
+		var spr = J.str(w.get("spr"))
+		print("W spr=", spr, " ok=", StDraw.char_ok(spr), " js=", J.cl(StDraw.N.CHAR_H_OK, null, [spr]), " tex=", Spr.get_tex(spr), " foe=", w.get("foe"), " t=", w.get("t"), " gone=", w.get("gone"))
+func post(_t) -> void:
+	var tf = J.G.get("Street").Turf
+	var sq = {"kind": "influencer", "mem": []}
+	var shot = J.mc(tf, "sqShot", [[0.5, 0.6], true, sq])
+	print("POST shot=", shot, " cv=", tf.get("_sqShotCv") != null)
+	J.mc(tf, "sqPost", [sq, true, false, shot, "舊公司 二十三樓"])
+func open_id(_t, id) -> void:
+	var tf = J.G.get("Street").Turf
+	if J.t(tf.get("on")): J.mc(tf, "close", [])
+	J.mc(tf, "open", [id])
+func boss(_t) -> void:
+	var tf = J.G.get("Street").Turf
+	var g = J.G.get("S").ghosts.filter(func(x): return J.str(x.k) == "eguiking")
+	if g.size(): tf.sd.bosses = [g[0].id]; print("BOSS on")
+func o_office(t) -> void: open_id(t, "office")
+func o_cafe(t) -> void: open_id(t, "cafe")
+func o_bus(t) -> void: open_id(t, "bus")
+func o_market(t) -> void: open_id(t, "market")
+func o_flat(t) -> void: open_id(t, "flat")

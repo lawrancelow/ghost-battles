@@ -134,10 +134,12 @@ module.exports = {
     ["      this.buildMode = false; this.resize(); this.buildPath();", "      this.buildMode = false; this._nat = typeof __nat_turf !== 'undefined' && !!__nat_turf(this); this.resize(); this.buildPath();"],
     ["    close() { this.on = false; cancelAnimationFrame(this.raf);", "    close() { this.on = false; cancelAnimationFrame(this.raf); if (this._nat && typeof __nat_turfEnd !== 'undefined') __nat_turfEnd(this); this._nat = false;"],
     ["      this.cv.width = Wd * dpr; this.cv.height = Hd * dpr; this.cv.style.width = Wd + 'px'; this.cv.style.height = Hd + 'px'; this.c.setTransform(dpr, 0, 0, dpr, 0, 0);", "      if (!this._nat) { this.cv.width = Wd * dpr; this.cv.height = Hd * dpr; this.cv.style.width = Wd + 'px'; this.cv.style.height = Hd + 'px'; this.c.setTransform(dpr, 0, 0, dpr, 0, 0); }"],
-    ["this.draw(); if (this.ult) this.drawUlt(); this.drawMy(); this.hud();", "if (this._nat) { this._fno = (this._fno || 0) + 1; if (this._fno % 3 === 0) this.hud(); return; } this.draw(); if (this.ult) this.drawUlt(); this.drawMy(); this.hud();"],
+    ["this.draw(); if (this.ult) this.drawUlt(); this.drawMy(); this.hud();", "if (this._nat) { this._fno = (this._fno || 0) + 1; if (this._fno % 6 === 0) this.hud(); return; } this.draw(); if (this.ult) this.drawUlt(); this.drawMy(); this.hud();"],
     ["const coinEl = $('#stt-coin'), cr = coinEl ?", "const coinEl = this._nat ? null : $('#stt-coin'), cr = this._nat && this._natCoin ? this._natCoin : coinEl ?"],
     ["const r = this.cv.getBoundingClientRect(), [x, y] = this.toScene(", "const r = this._nat ? { left:0, top:0 } : this.cv.getBoundingClientRect(), [x, y] = this.toScene("],
-    ["  return { TUNE, open:openStreet, close:closeStreet, Turf,", "  return { _n:{ RESERVED, GATE, devTotalRate, occOf, devRate }, TUNE, open:openStreet, close:closeStreet, Turf,"],
+    // 線 F2：網紅組截圖 toDataURL 喺 Godot 冇得用 → 原生模式將畫布交俾 Tf._sqShotCv，<img src="nat">
+    ["        return o.toDataURL('image/jpeg', 0.82); } catch (e) { return ''; } },", "        if (this._nat) { this._sqShotCv = o; return 'nat'; } return o.toDataURL('image/jpeg', 0.82); } catch (e) { return ''; } },"],
+    ["  return { TUNE, open:openStreet, close:closeStreet, Turf,", "  return { _n:{ RESERVED, GATE, devTotalRate, occOf, devRate, DEV, KIND, CELL, PX, PPL, ghost, gType, CHAR_H_OK, WAL }, TUNE, open:openStreet, close:closeStreet, Turf,"],
   ],
   // 線路 G：樓裡有鬼——原生外殼（game/tower/tw_run.gd）：主畫布、電梯世界層、入屋畫布由原生喺 _draw 直接叫 JS draw（唔經錄製器、唔經 DOM）；電梯面板原生；規則全部照舊
   tower: [
