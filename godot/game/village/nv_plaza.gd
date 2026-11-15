@@ -63,7 +63,9 @@ func end_frame() -> void:
 			continue
 		var id = J.str(ag.id)
 		var na: NvAgent = nodes.get(id)
-		if na == null: na = NvAgent.new(self, k); vv.ysort.add_child(na); nodes[id] = na
+		if na == null:
+			if not G.boot_agents_ok: continue   # 開機逐樣顯示期間先唔起廣場鬼（方便分辨邊樣令手機閃退）
+			na = NvAgent.new(self, k); vv.ysort.add_child(na); nodes[id] = na
 		used[id] = 1
 		na.visible = true
 		if nat_sp: na.sync_special(ag, t, mute)

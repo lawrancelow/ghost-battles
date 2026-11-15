@@ -88,6 +88,8 @@ func _boot_js() -> void:
 	_boot_step("state", func(): G.S = J.G["S"]; G.js_mode = true)
 	_boot_step("resize", func(): J.mc(J.G.get("Village"), "resize", []))
 	_boot_step("refresh", func(): refresh())
+	# 逐樣顯示：每樣畫完一幀先開下一樣；手機驅動喺第一次畫某樣嘢時閃退，麵包屑就會講係邊樣（show:xxx）
+	await _staged_reveal()
 	loading.queue_free(); loading = null
 	_boot_step("snd", func(): Snd.warm())
 	print("[boot] ready ", Time.get_ticks_msec() - t0, "ms")
@@ -102,6 +104,40 @@ func _boot_js() -> void:
 	if nerr > 0: boot_fail.append("%d 個腳本錯誤" % nerr)
 	if boot_fail.size():
 		show_toast("開機有 %d 步出錯（%s），可以喺設定「錯誤記錄」睇詳情，截圖俾開發者。" % [boot_fail.size(), ", ".join(boot_fail)])
+
+func _staged_reveal() -> void:
+	var top_items = []
+	for c in get_children():
+		if c != loading and c is CanvasItem and c.visible: top_items.append(c); c.visible = false
+	var w = village.get("world")
+	var w_items = []
+	if w is Node2D:
+		for c in w.get_children():
+			if c is CanvasItem and c.visible: w_items.append(c); c.visible = false
+	for c in top_items:
+		G.crumb("show:" + str(c.name)); c.visible = true
+		await RenderingServer.frame_post_draw
+		if c == village and w is Node2D:
+			for k in w_items:
+				if k is Node2D and k.y_sort_enabled:
+					# y 排序層：按種類分批開（擺設、地段、角色…）
+					var groups := {}
+					for g in k.get_children():
+						if g is CanvasItem and g.visible:
+							var key = g.get_class() + ":" + str(g.get("tag") if g.get("tag") != null else g.name).substr(0, 3)
+							if not groups.has(key): groups[key] = []
+							groups[key].append(g); g.visible = false
+					G.crumb("show:village/" + str(k.name)); k.visible = true
+					await RenderingServer.frame_post_draw
+					for key in groups:
+						G.crumb("show:village/" + str(k.name) + "/" + key)
+						for g in groups[key]: g.visible = true
+						await RenderingServer.frame_post_draw
+				else:
+					G.crumb("show:village/" + str(k.name) + ":" + str(k.get("tag") if k.get("tag") != null else "")); k.visible = true
+					await RenderingServer.frame_post_draw
+	G.crumb("show:agents"); G.boot_agents_ok = true
+	for i in 3: await RenderingServer.frame_post_draw
 
 var boot_fail: Array = []
 var _step_ok := false

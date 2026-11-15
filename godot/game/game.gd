@@ -16,6 +16,7 @@ var TIME_SCALE = 1.0
 var exp_acc = 0.0
 var story_busy = func() -> bool: return false   # 由 Story 接管
 var modal_open = func() -> bool: return false
+var boot_agents_ok := false   # 開機逐樣顯示完先起村子廣場鬼
 var safe_gfx := false   # 安全畫面模式：上次開機喺畫面階段閃退 → 唔用自訂 shader
 var last_crash := ""     # 上次閃退停喺邊一步（顯示俾玩家／開發者）
 var js_mode := false   # true = 遊戲邏輯由轉譯版 JS 跑，呢度只做轉駁
@@ -393,7 +394,7 @@ func read_crumb() -> void:
 		if st != "" and st != "ok":
 			last_crash = st
 			# 畫面相關步驟閃退 → 自動開安全畫面模式
-			if st in ["ui", "village", "start", "state", "resize", "refresh", "frame1", "frame30", "snd", "title"]:
+			if st in ["ui", "village", "start", "state", "resize", "refresh", "frame1", "frame30", "snd", "title"] or st.begins_with("show:"):
 				var w = FileAccess.open("user://safe_gfx", FileAccess.WRITE); if w: w.store_string("1"); w.close()
 				safe_f = true
 	safe_gfx = safe_f or OS.has_environment("GB_SAFE_GFX")
