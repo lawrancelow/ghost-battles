@@ -88,6 +88,7 @@ func clear_timer(id) -> void:
 	for t in timers:
 		if t.id == n: t.dead = true
 func _process(dt: float) -> void:
+	Audit.tick()
 	frame_t += dt
 	var due = []
 	for t in timers:

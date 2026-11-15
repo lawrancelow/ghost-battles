@@ -79,7 +79,7 @@ func _build() -> void:
 	mapbox = Control.new(); mapbox.custom_minimum_size = Vector2(0, 600); mapbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL; mapbox.clip_contents = true; col.add_child(mapbox)
 	map_tex = TextureRect.new(); map_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; map_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED; map_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var tex = Spr.get_tex("bg_worldmap2")
-	if tex == null: tex = load("res://assets/img/world_assets/worldmap2.webp")
+	if tex == null: tex = load(ImgAlias.resolve("res://assets/img/world_assets/worldmap2.webp"))
 	map_tex.texture = tex; mapbox.add_child(map_tex)
 	var fx = Control.new(); fx.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); fx.mouse_filter = Control.MOUSE_FILTER_IGNORE; fx.draw.connect(func(): _draw_fx(fx)); mapbox.add_child(fx); glows.append(fx)
 	# 去處

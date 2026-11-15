@@ -30,11 +30,31 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
+var _skip_n := 0
+var _last_ver := -1
+var _last_sz := Vector2.ZERO
 func _process(_dt: float) -> void:
 	vw = size.x; vh = size.y
 	J.G["__vw"] = vw; J.G["__vh"] = vh
-	_layout_all()
+	# 冇乜嘢顯示（例如喺村子）而 DOM 冇改動：唔使每幀重排（約 5ms）；最多隔 6 幀照排一次（兜底 style 直接改）
+	_skip_n += 1
+	if El.dom_ver == _last_ver and _skip_n < (6 if boxes.size() <= 24 else 3) and Vector2(vw, vh) == _last_sz and _style_sig() == _last_sig: return
+	if Audit.on: Audit.add("dom.ver_delta=%d" % mini(El.dom_ver - _last_ver, 99), 0)
+	_skip_n = 0; _last_ver = El.dom_ver; _last_sz = Vector2(vw, vh)
+	_seen.clear()
+	if Audit.on and is_visible_in_tree():
+		var u = Time.get_ticks_usec(); _layout_all(); Audit.add("dom._layout", Time.get_ticks_usec() - u)
+	else: _layout_all()
+	_last_sig = _style_sig()
 	queue_redraw()
+
+# JS 直接改 el.style.xxx（動畫）唔會經 El._set，所以逐個上次排過嘅元素對一次 style 嘅 hash
+var _seen: Array = []
+var _last_sig := 0
+func _style_sig() -> int:
+	var h := 0
+	for e in _seen: h = (h * 31 + (e.style.hash() if e.style is Dictionary else 0)) & 0x7fffffffffff
+	return h
 
 func _has_point(p: Vector2) -> bool:
 	return _hit(p) != null
@@ -64,6 +84,7 @@ func _fs(cs: Dictionary) -> float:
 # 回傳佔用嘅高度（block 流用）
 func _layout(el: El, pcs: Dictionary, cb: Rect2, pcb_pos: Rect2, depth: int, x: float, y: float, avail_w: float, alpha: float, xf: Transform2D) -> Vector2:
 	if el.tagName == "#TEXT" or el.tagName == "SVG" or el.tagName == "SCRIPT" or el.tagName == "STYLE": return Vector2.ZERO
+	_seen.append(el)
 	var cs = (el.props["_pcs"].duplicate() if el.props.has("_pcs") else Css.computed(el, pcs))
 	el.props["_cs"] = cs
 	if cs.get("display", "") == "none" or (el.props.get("hidden") != null and J.t(el.props.get("hidden"))): return Vector2.ZERO
@@ -424,9 +445,37 @@ func _layout_item(k: El, pcs: Dictionary, avail: float, cb_pos: Rect2, depth: in
 
 # 文字排版：回傳 [lines, w, h]
 func _text_layout(el: El, cs: Dictionary, maxw: float, override_text = null) -> Array:
+	if Audit.on:
+		var u = Time.get_ticks_usec(); var r = _text_layout1(el, cs, maxw, override_text); Audit.add("dom.text", Time.get_ticks_usec() - u); return r
+	return _text_layout1(el, cs, maxw, override_text)
+func _text_layout1(el: El, cs: Dictionary, maxw: float, override_text = null) -> Array:
 	var runs = []   # [text, cs]
 	if override_text != null: runs.append([override_text, cs])
 	else: _collect_runs(el, cs, runs)
+	# 快取：同一段字、同樣字型同闊度 → 直接用返上次排好嘅結果（唔使逐個字量）
+	var ckey = str(maxw) + "|" + J.str(cs.get("text-align", "left")) + "|" + J.str(cs.get("line-height", "1.45"))
+	for r in runs:
+		var rc: Dictionary = r[1]
+		ckey += "|" + r[0] + "\u0001" + J.str(rc.get("font-size", "")) + J.str(rc.get("font-weight", "")) + J.str(rc.get("font-family", "")) + J.str(rc.get("color", ""))
+	var hit = _tl_cache.get(ckey)
+	if hit != null: return hit
+	var res = _text_layout2(runs, cs, maxw)
+	if _tl_cache.size() > 3000: _tl_cache.clear()
+	_tl_cache[ckey] = res
+	return res
+
+static var _tl_cache := {}
+static var _cw := {}
+static func _char_w(font: Font, ch: String, fs: int) -> float:
+	var k = str(font.get_instance_id()) + ":" + str(fs) + ":" + ch
+	var w = _cw.get(k)
+	if w == null:
+		w = font.get_string_size(ch, 0, -1, fs).x
+		if _cw.size() > 20000: _cw.clear()
+		_cw[k] = w
+	return w
+
+func _text_layout2(runs: Array, cs: Dictionary, maxw: float) -> Array:
 	var lines = []; var x = 0.0; var y = 0.0; var line_h = 0.0; var wmax = 0.0
 	var align: String = cs.get("text-align", "left")
 	var cur_line = []
@@ -449,7 +498,7 @@ func _text_layout(el: El, cs: Dictionary, maxw: float, override_text = null) -> 
 			if ch == "\n":
 				cur_line.append([seg, x - font.get_string_size(seg, 0, -1, int(fs)).x, font, int(fs), col]); _flush_line(lines, cur_line, x, y, maxw, align)
 				wmax = maxf(wmax, x); y += maxf(line_h, lh); x = 0; line_h = 0; cur_line = []; seg = ""; continue
-			var cw = font.get_string_size(ch, 0, -1, int(fs)).x
+			var cw = _char_w(font, ch, int(fs))
 			if x + cw > maxw + 0.5 and x > 0:
 				cur_line.append([seg, x - font.get_string_size(seg, 0, -1, int(fs)).x, font, int(fs), col])
 				_flush_line(lines, cur_line, x, y, maxw, align)
@@ -491,6 +540,10 @@ func _weight(cs: Dictionary) -> int:
 
 # ---------------- 畫 ----------------
 func _draw() -> void:
+	if Audit.on:
+		var u = Time.get_ticks_usec(); _draw2(); Audit.add("dom._draw boxes" + str(snappedi(boxes.size(), 10)), Time.get_ticks_usec() - u); return
+	_draw2()
+func _draw2() -> void:
 	var order = range(boxes.size())
 	order.sort_custom(func(a, b):
 		var ka: Array = boxes[a].zkey; var kb: Array = boxes[b].zkey
@@ -653,7 +706,7 @@ func _split_shadow(s: String) -> Array:
 var _texc := {}
 func _tex(path: String) -> Texture2D:
 	if not path.begins_with("res://"): return null
-	if not _texc.has(path): _texc[path] = load(path)
+	if not _texc.has(path): _texc[path] = load(ImgAlias.resolve(path))
 	return _texc[path]
 
 # ---------------- 輸入 ----------------

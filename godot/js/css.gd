@@ -311,6 +311,10 @@ static func pseudo(el: El, kind: String, host_cs: Dictionary):
 	return cs
 
 static func computed(el: El, parent_cs: Dictionary) -> Dictionary:
+	if Audit.on:
+		var u = Time.get_ticks_usec(); var r = _computed(el, parent_cs); Audit.add("css.computed", Time.get_ticks_usec() - u); return r
+	return _computed(el, parent_cs)
+static func _computed(el: El, parent_cs: Dictionary) -> Dictionary:
 	var cs = {}
 	for k in INHERIT:
 		if parent_cs.has(k): cs[k] = parent_cs[k]

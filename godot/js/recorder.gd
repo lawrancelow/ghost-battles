@@ -32,6 +32,11 @@ func rec(other: Recorder, M: Transform2D, alpha: float) -> void: _nf(); cmds.app
 
 # 重播到 ci；M = 錄製座標 → ci 本地座标；alpha 乘入所有顏色
 func replay(ci: CanvasItem, M := Transform2D.IDENTITY, alpha := 1.0, depth := 0) -> void:
+	if Audit.on and depth == 0:
+		var u = Time.get_ticks_usec(); _replay(ci, M, alpha, depth)
+		Audit.add("rec.replay:" + str(ci.get_class()) + ":" + str(ci.get("tag") if ci.get("tag") != null else ci.name).substr(0, 12) + " cmds" + str(snappedi(cmds.size(), 100)), Time.get_ticks_usec() - u); return
+	_replay(ci, M, alpha, depth)
+func _replay(ci: CanvasItem, M := Transform2D.IDENTITY, alpha := 1.0, depth := 0) -> void:
 	var cur = Transform2D.IDENTITY
 	var rid = ci.get_canvas_item()
 	ci.draw_set_transform_matrix(M)
