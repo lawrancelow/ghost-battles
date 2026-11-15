@@ -428,6 +428,9 @@ static func open_story() -> void:
 			if JSRun.ls.has(SAVE_KEY): JSRun.ls[SAVE_KEY + "_bak"] = JSRun.ls[SAVE_KEY]
 			JSRun.ls[SAVE_KEY] = v; JSRun.flush_ls(); JSRun.skip_title = true; JSRun.reset_world(); m.get_tree().call_deferred("reload_current_scene"), false)
 		rb.custom_minimum_size = Vector2(0, 40); _body().add_child(rb)
+	var sgt = func(): return "安全畫面模式：" + ("開" if G.safe_gfx else "關") + "（閃退時用，重開遊戲生效）"
+	var sgb = _wide(sgt.call(), "ghost", true, func(): pass)
+	sgb.pressed.connect(func(): G.set_safe_gfx(not G.safe_gfx); sgb.text = sgt.call())
 	var lgb = _wide("錯誤記錄（有問題時截圖俾開發者）", "ghost", true, func(): pass)
 	lgb.pressed.connect(func():
 		var lt = UIKit.label(m.log_tail(40), 10, UIKit.INKTXT); lt.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; _body().add_child(lt)

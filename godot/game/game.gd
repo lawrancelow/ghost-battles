@@ -16,6 +16,8 @@ var TIME_SCALE = 1.0
 var exp_acc = 0.0
 var story_busy = func() -> bool: return false   # 由 Story 接管
 var modal_open = func() -> bool: return false
+var safe_gfx := false   # 安全畫面模式：上次開機喺畫面階段閃退 → 唔用自訂 shader
+var last_crash := ""     # 上次閃退停喺邊一步（顯示俾玩家／開發者）
 var js_mode := false   # true = 遊戲邏輯由轉譯版 JS 跑，呢度只做轉駁
 func jcall(n: String, a: Array = []): return J.cl(J.G.get(n), null, a)
 func jm(o: String, m: String, a: Array = []): return J.mc(J.G.get(o), m, a)
@@ -374,3 +376,29 @@ func offline_gain() -> void:
 	S.last = now_ms()
 	if parts.size():
 		story_req.emit({"style": "sys", "lines": [["系統", "親，你離開了 %d 小時 %d 分鐘。鬼怪們沒有偷懶哦～（最多計 8 小時）" % [int(sec / 3600), int(fmod(sec, 3600) / 60)]], ["旁白", "離線收益：" + "，".join(parts)]]}, Callable())
+
+
+# ---------------- 開機麵包屑（閃退診斷） ----------------
+const CRUMB := "user://boot_crumb.txt"
+func crumb(stage: String) -> void:
+	var f = FileAccess.open(CRUMB, FileAccess.WRITE)
+	if f: f.store_string(stage + "\n" + str(Time.get_unix_time_from_system())); f.flush(); f.close()
+func read_crumb() -> void:
+	if OS.has_environment("GB_TEST") and not OS.has_environment("GB_CRUMB_TEST"):   # 測試會中途 quit，唔當閃退
+		safe_gfx = OS.has_environment("GB_SAFE_GFX"); return
+	var f = FileAccess.open(CRUMB, FileAccess.READ)
+	var safe_f = FileAccess.file_exists("user://safe_gfx")
+	if f:
+		var st = f.get_line(); f.close()
+		if st != "" and st != "ok":
+			last_crash = st
+			# 畫面相關步驟閃退 → 自動開安全畫面模式
+			if st in ["ui", "village", "start", "state", "resize", "refresh", "frame1", "frame30", "snd", "title"]:
+				var w = FileAccess.open("user://safe_gfx", FileAccess.WRITE); if w: w.store_string("1"); w.close()
+				safe_f = true
+	safe_gfx = safe_f or OS.has_environment("GB_SAFE_GFX")
+func set_safe_gfx(on: bool) -> void:
+	safe_gfx = on
+	if on:
+		var w = FileAccess.open("user://safe_gfx", FileAccess.WRITE); if w: w.store_string("1"); w.close()
+	else: DirAccess.remove_absolute("user://safe_gfx")

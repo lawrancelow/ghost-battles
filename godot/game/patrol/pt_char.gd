@@ -64,6 +64,7 @@ func _init(unit, r) -> void:
 		mode = "plain"
 	else:
 		mode = "none"; if H0 <= 0: H0 = 58.0
+	if G.safe_gfx and (mode == "limbs" or mode == "mesh"): mode = "plain"   # 安全畫面模式：唔用骨架 shader
 	if rig != null and rig is Dictionary: tweak = rig.get("tweak")
 	glow = PtDraw.new(); glow.fn = _draw_glow; var gm = CanvasItemMaterial.new(); gm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD; glow.material = gm; add_child(glow)
 	ch = PtDraw.new(); ch.fn = _draw_shadow; add_child(ch)
@@ -81,7 +82,7 @@ func _init(unit, r) -> void:
 		if mode == "limbs" and PtGfx.tex(k) != null: MF = PtGfx.mesh_for(k, k, rig.bones)
 	else:
 		mat.shader = PtGfx.SH_SPR
-		body_sp = PtDraw.new(); body_sp.fn = _draw_plain; body_sp.material = mat; ch.add_child(body_sp)
+		body_sp = PtDraw.new(); body_sp.fn = _draw_plain; body_sp.material = null if G.safe_gfx else mat; ch.add_child(body_sp)
 		tex_plain = PtGfx.tex(k)
 	front = PtDraw.new(); ch.add_child(front)
 	front.fn = func(n): _draw_items(n, front_items)
@@ -123,7 +124,7 @@ func sync(oo: Dictionary) -> void:
 	# 衣服
 	if o.cloth != null and mode != "plain" and mode != "none" and pose != "down" and not o.dying:
 		if cloth_mi == null:
-			cloth_mat = ShaderMaterial.new(); cloth_mat.shader = PtGfx.SH_MESH; cloth_mat.set_shader_parameter("mode", 1)
+			cloth_mat = ShaderMaterial.new(); cloth_mat.shader = PtGfx.SH_MESH; cloth_mat.set_shader_parameter("mode", 1.0)
 			cloth_mi = MeshInstance2D.new(); cloth_mi.material = cloth_mat; ch.add_child(cloth_mi); ch.move_child(cloth_mi, front.get_index() + 1)
 			cloth_mi.mesh = body_mi.mesh; cloth_mi.texture = body_mi.texture
 		cloth_mi.visible = true
