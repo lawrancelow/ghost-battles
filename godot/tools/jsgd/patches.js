@@ -108,6 +108,9 @@ module.exports = {
   ],
   // 線 I：運動會——<canvas> 交俾原生 game/minis/mini_stage.gd 直接畫；角色交俾原生 Art（Bryan 原畫仍用 JS Antag）
   sports: [
+    // 選項目面板原生化：Menus.open_sports 讀 Sports._n.panel() 自己畫，撳參賽叫 Sports._n.go(id)
+    ["  function open() {\n    const s = st(), today = gday();", "  function open() {\n    if (typeof __nat_menu !== 'undefined' && __nat_menu('sports')) return;\n    const s = st(), today = gday();"],
+    ["  return { open, start, EV, target, st, athlete, _g:() => G };", "  const _n = { panel() { const s = st(), today = gday(); return { list: ORDER.map(id => { const E = EV[id], a = athlete(id), best = s.best[id]; return { id, name:E.name, k:a.k, who:a.name, sub:!!a.sub, goal: id === 'tug' ? `對手：${GHOSTS[E.foe] ? GHOSTS[E.foe].name : '轆轤首'}` : `Bryan 今日紀錄：${fmtV(id, target(id))}`, best: best != null ? (id === 'tug' ? best + ' 勝' : fmtV(id, best)) : null, won: s.won[id] === today }; }) }; }, go(id) { UI.close(); start(id); } };\n  return { open, start, EV, target, st, athlete, _n, _g:() => G };"],
     ["    const cv = $('#sp-cvs'); G.cv = cv; G.ctx = cv.getContext('2d');", "    const cv = $('#sp-cvs'); G.cv = cv; G.ctx = cv.getContext('2d'); G._nd = () => { if (G) draw(); }; G._nat = typeof __nat_mini !== 'undefined' && __nat_mini(G, '#sp-cvs', '#sports', '_nd');"],
     ["const r = G.cv.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1);", "const r = G.cv.getBoundingClientRect(), d = G._nat ? 1 : Math.min(2, window.devicePixelRatio || 1);"],
     ["    draw(); requestAnimationFrame(frame);", "    if (!G._nat) draw(); requestAnimationFrame(frame);"],

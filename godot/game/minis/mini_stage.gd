@@ -39,10 +39,13 @@ static func hook(o, cv_sel: String, root: String, method := "draw", canvas_sel :
 	all[root] = r; stack.append(r)
 	r._build()
 	if root == "#gyard": GyPanel.attach(o, r)   # 亂葬崗：頂欄／面板／觸控都原生（DOM 收埋）
+	else: NatPanel.attach_for(root, o, r)       # 冥街／運動會（GsPanel／SpPanel）
+	if NatPanel.get_for(root) != null: r._place()
 	return true
 
 static func end_hook(root := "") -> void:
 	if root == "" or root == "#gyard": GyEnd.close(); GyPanel.close()
+	NatPanel.close_key(root)
 	var keys = all.keys() if root == "" else [root]
 	for k in keys:
 		var r = all.get(k)
@@ -116,6 +119,14 @@ func _place() -> void:
 		if stage.size != gr.size:
 			stage.size = gr.size
 			if gr.size.x > 0 and gr.size.y > 0 and obj.get("resize") != null: J.mc(obj, "resize", [])
+		return
+	var np = NatPanel.get_for(key)
+	if np != null:
+		var nr = np.stage_rect(); var npos = np.position + nr.position
+		if stage.position != npos: stage.position = npos
+		if stage.size != nr.size:
+			stage.size = nr.size
+			if nr.size.x > 0 and nr.size.y > 0 and obj.get("resize") != null: J.mc(obj, "resize", [])
 		return
 	var e = _el(sel)
 	if e == null: return

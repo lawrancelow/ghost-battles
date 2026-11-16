@@ -28,6 +28,7 @@ static func hook(a: Array) -> bool:
 		"codex": open_codex()
 		"story": open_story()
 		"pres": open_pres()
+		"sports": open_sports()
 		_: return false
 	return true
 
@@ -443,6 +444,38 @@ static func open_story() -> void:
 	_p("[font_size=11]Godot 版 %s[/font_size]" % ProjectSettings.get_setting("application/config/version", "dev"), 11)
 
 # ---------------- 合約與存在感 ----------------
+# 陰間運動會：揀項目（資料由 Sports._n.panel()，撳參賽 Sports._n.go(id)）
+static func open_sports() -> void:
+	_begin("陰間運動會", "sports", func(): _render_sports(false))
+	_render_sports(true)
+
+static func _render_sports(force: bool) -> void:
+	if cur != "sports": return
+	var d = J.mc(J.gp(J.G.get("Sports"), "_n"), "panel", [])
+	if not _changed(d) and not force: return
+	_keep_scroll(func(): _draw_sports(d))
+
+static func _draw_sports(d) -> void:
+	_clear()
+	_p(J.str(DB.L("陰間運動會：靠鬼自己的怪癖比賽。每項每日第一次贏過 Bryan 的紀錄，出賽的鬼存在感 +12、全村 +3、合約 KPI +2、冥幣 60。")), 13)
+	for e in d.list:
+		var won = J.t(e.won)
+		var card = PanelContainer.new()
+		card.add_theme_stylebox_override("panel", UIKit.sb(Color(1, 1, 1, 0.35), 10, Color(0, 0, 0, 0), 0, Vector4(8, 8, 8, 8)))
+		if won: card.modulate.a = 0.85
+		var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 10); card.add_child(hb)
+		var por = _por(J.str(e.k), 52); por.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hb.add_child(por)
+		var who = J.str(e.who) + ("（替補）" if J.t(e.sub) else "")
+		var best = ("你的最佳：" + J.str(e.best)) if e.get("best") != null else "未參賽"
+		var tx = "[font_size=15][b]%s[/b][/font_size]\n[font_size=12]%s\n%s%s[/font_size]" % [J.str(DB.L(J.str(e.name))), J.str(DB.L("出賽：" + who + "　" + J.str(e.goal))), J.str(DB.L(best)),
+			("　[color=#3a7a2a][b]" + J.str(DB.L("今日已贏")) + "[/b][/color]") if won else ""]
+		var r = _rich(tx, 12, UIKit.INKTXT); r.size_flags_horizontal = Control.SIZE_EXPAND_FILL; r.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hb.add_child(r)
+		var id = J.str(e.id)
+		var b = _btn(J.str(DB.L("再玩" if won else "參賽")), "" if won else "gold", true, func(): J.mc(J.gp(J.G.get("Sports"), "_n"), "go", [id]), true)
+		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hb.add_child(b)
+		_body().add_child(card)
+		var gap = Control.new(); gap.custom_minimum_size.y = 4; _body().add_child(gap)
+
 static func open_pres() -> void:
 	_begin("合約與存在感", "pres", func(): _render_pres(false))
 	_render_pres(true)

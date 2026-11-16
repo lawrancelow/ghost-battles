@@ -38,7 +38,7 @@ func _process(_dt: float) -> void:
 	J.G["__vw"] = vw; J.G["__vh"] = vh
 	# 冇乜嘢顯示（例如喺村子）而 DOM 冇改動：唔使每幀重排（約 5ms）；最多隔 6 幀照排一次（兜底 style 直接改）
 	_skip_n += 1
-	if El.dom_ver == _last_ver and _skip_n < (6 if boxes.size() <= 24 else 3) and Vector2(vw, vh) == _last_sz and _style_sig() == _last_sig: return
+	if El.dom_ver == _last_ver and _skip_n < (20 if boxes.size() <= 24 else 3) and Vector2(vw, vh) == _last_sz and _style_sig() == _last_sig: return
 	if Audit.on: Audit.add("dom.ver_delta=%d" % mini(El.dom_ver - _last_ver, 99), 0)
 	_skip_n = 0; _last_ver = El.dom_ver; _last_sz = Vector2(vw, vh)
 	_seen.clear()

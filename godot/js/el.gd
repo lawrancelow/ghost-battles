@@ -17,7 +17,7 @@ var id_ = ""
 static var dom_ver := 0   # 任何 DOM 結構／屬性改動都 +1（dom_view 冇改就唔使每幀重排）
 
 func _init(tag := "div") -> void:
-	tagName = tag.to_upper(); classList = ElClass.new()
+	tagName = tag.to_upper(); classList = ElClass.new(); classList.owner = weakref(self)
 	if tagName == "CANVAS": rec = Recorder.new()
 
 func js_tex() -> Texture2D: return tex
@@ -61,8 +61,18 @@ func _get(p: StringName):
 	if props.has(String(p)): return props[String(p)]
 	return null
 
+# 喺 display:none 嘅區塊入面改嘢（例如原生介面收埋咗嘅 DOM 每幀寫分數）唔使觸發整頁重排
+func hidden_tree() -> bool:
+	var e = self
+	while e is El:
+		if e.style is Dictionary and e.style.get("display") == "none": return true
+		e = e.parentNode
+	return false
+func bump() -> void:
+	if not hidden_tree(): dom_ver += 1
+
 func _set(p: StringName, v) -> bool:
-	dom_ver += 1
+	bump()
 	match p:
 		&"width":
 			if rec: rec.width = J.num(v); rec.clear()
@@ -103,27 +113,27 @@ func _js_getContext(_a: Array):
 		ctx2d = Ctx.new(rec); ctx2d.canvas = self
 	return ctx2d
 func _js_appendChild(a: Array):
-	dom_ver += 1
+	bump()
 	var c = a[0]
 	if c is El:
 		c.parentNode = self; children.append(c)
 		if c.tagName == "STYLE": Css.add_text(c._text())
 	return c
 func _js_append(a: Array) -> void:
-	dom_ver += 1
+	bump()
 	for c in a: _js_appendChild([c])
 func _js_prepend(a: Array) -> void:
-	dom_ver += 1
+	bump()
 	for c in a:
 		if c is El: c.parentNode = self; children.push_front(c)
 func _js_insertBefore(a: Array): return _js_appendChild([a[0]])
-func _js_removeChild(a: Array): dom_ver += 1; children.erase(a[0]); return a[0]
+func _js_removeChild(a: Array): bump(); children.erase(a[0]); return a[0]
 func _js_remove(_a: Array) -> void:
-	dom_ver += 1
+	bump()
 	if parentNode is El: parentNode.children.erase(self)
 	parentNode = null
 	if J.host: J.host.el_removed(self)
-func _js_replaceChildren(a: Array) -> void: dom_ver += 1; children.clear(); _js_append(a)
+func _js_replaceChildren(a: Array) -> void: bump(); children.clear(); _js_append(a)
 func _js_querySelector(a: Array): return J.host.query(J.str(a[0]), self) if J.host else null
 func _js_querySelectorAll(a: Array) -> Array: return J.host.query_all(J.str(a[0]), self) if J.host else []
 func _js_getElementsByTagName(_a: Array) -> Array: return []
@@ -139,7 +149,7 @@ func _text() -> String:
 	for c in children: o += c._text()
 	return o
 func _js_insertAdjacentHTML(a: Array) -> void:
-	dom_ver += 1
+	bump()
 	var tmp = El.new("div"); Html.parse_into(tmp, J.str(a[1]))
 	var where = J.str(a[0])
 	for c in tmp.children:
@@ -168,13 +178,13 @@ func _js_select(_a: Array) -> void: pass
 func _js_scrollIntoView(_a: Array) -> void: pass
 func _js_scrollTo(_a: Array) -> void: pass
 func _js_setAttribute(a: Array) -> void:
-	dom_ver += 1
+	bump()
 	var k = J.str(a[0])
 	if k == "class": _set(&"className", a[1])
 	elif k.begins_with("data-"): dataset[k.substr(5)] = J.str(a[1])
 	else: props[k] = a[1]
 func _js_getAttribute(a: Array): return props.get(J.str(a[0]))
-func _js_removeAttribute(a: Array) -> void: dom_ver += 1; props.erase(J.str(a[0]))
+func _js_removeAttribute(a: Array) -> void: bump(); props.erase(J.str(a[0]))
 func _js_hasAttribute(a: Array) -> bool: return props.has(J.str(a[0]))
 func _js_getBoundingClientRect(_a: Array) -> Dictionary:
 	if props.has("_rect"): return props["_rect"]
