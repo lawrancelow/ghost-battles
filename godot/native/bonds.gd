@@ -26,7 +26,7 @@ static func _g(n: String): return J.G.get(n)
 static func _S(): return _g("S")
 static func _rec(): var r = _g("BOND_RECRUIT"); return r if r is Dictionary else {}
 static func _feuds() -> Array: var f = _g("BOND_FEUDS"); return f if f is Array else []
-static func _later(ms: float, f: Callable) -> void: J.cl(_g("setTimeout"), null, [func(_t, _a): f.call(); return null, ms])
+static func _later(ms: float, f: Callable) -> void: J.F_setTimeout([func(_t, _a): f.call(); return null, ms])
 static func _toast(m: String) -> void: J.mc(_g("Fx"), "toast", [m])
 static func _save() -> void: J.cl(_g("save"), null, [])
 
@@ -318,7 +318,7 @@ static func bond_line(k) -> String:
 	return "　".join(out)
 
 static func paint_roster() -> void:
-	var doc = _g("document"); var sh = J.mc(doc, "querySelector", ["#sheet"])
+	var doc = _g("document"); var sh = J.S_document_("querySelector", ["#sheet"])
 	if not J.t(sh): return
 	for c in J.iter(J.mc(sh, "querySelectorAll", [".gcard"])):
 		if J.t(J.mc(c, "querySelector", [".bondln"])): continue
@@ -326,7 +326,7 @@ static func paint_roster() -> void:
 		if not J.t(cv) or not J.t(main): continue
 		var t = bond_line(J.gp(J.gp(cv, "dataset"), "por"))
 		if t == "": continue
-		var e = J.mc(doc, "createElement", ["small"]); J.sp(e, "className", "tr bondln"); J.sp(J.gp(e, "style"), "color", "#ffb4a0"); J.sp(e, "textContent", t); J.mc(main, "appendChild", [e])
+		var e = J.S_document_("createElement", ["small"]); J.sp(e, "className", "tr bondln"); J.sp(J.gp(e, "style"), "color", "#ffb4a0"); J.sp(e, "textContent", t); J.mc(main, "appendChild", [e])
 
 # ---------- 重溫 ----------
 static func _replay_feud(id: String, f) -> void:
@@ -338,7 +338,7 @@ static func _replay_feud(id: String, f) -> void:
 
 static func story_hook() -> void:
 	var doc = _g("document")
-	var body = J.mc(doc, "querySelector", ["#sheet .sh-body"])
+	var body = J.S_document_("querySelector", ["#sheet .sh-body"])
 	var hr = J.mc(body, "querySelector", ["hr"]) if J.t(body) else null
 	if not J.t(hr): return
 	var b = st()
@@ -349,7 +349,7 @@ static func story_hook() -> void:
 	for F in _feuds():
 		var f = b.feud.get(J.str(F.id))
 		if J.t(f) and J.num(f.get("st")) >= 1: fds.append(F)
-	var div = J.mc(doc, "createElement", ["div"])
+	var div = J.S_document_("createElement", ["div"])
 	var h = "<h4 class=\"stand-h\">收服劇情・冤家</h4><p class=\"desc\">收服名鬼後會上演入村劇情；有些鬼天生不和，日後會吵起來（%d/%d）。</p><div class=\"slist\">" % [fds.size(), _feuds().size()]
 	for k in rec: h += "<button class=\"btn wide\" data-brec=\"%s\">%s入村</button>" % [k, gname(k)]
 	for F in fds:
@@ -411,7 +411,7 @@ static func init() -> void:
 			var r = J.cl(os, this_, a)
 			story_hook()
 			return r)
-	var sh = J.mc(_g("document"), "querySelector", ["#sheet"])
+	var sh = J.S_document_("querySelector", ["#sheet"])
 	if J.t(sh) and J.typeof_(_g("MutationObserver")) != "undefined":
 		mo = J.new_("MutationObserver", [func(_t, _a):
 			if J.t(J.mc(sh, "querySelector", [".gcard"])): paint_roster()
@@ -419,7 +419,7 @@ static func init() -> void:
 		J.mc(mo, "observe", [sh, {"childList": true, "subtree": true}])
 
 static func _boot() -> void:
-	if not J.t(_S()) and _S() == null or not J.t(J.mc(_g("document"), "querySelector", ["#sheet"])):
+	if not J.t(_S()) and _S() == null or not J.t(J.S_document_("querySelector", ["#sheet"])):
 		_later(300.0, func(): _boot()); return
 	init()
 

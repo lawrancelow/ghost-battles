@@ -140,3 +140,22 @@ func pres_c(_t) -> void:
 	_p("mk", [g.k, J.mc(P, "val", [g]), J.mc(P, "statMult", [g]), J.mc(P, "perk", ["atk"]), u.atk, u.hp, J.mc(J.G.GP, "drillMul", [g.k]), J.mc(J.G.F, "stat", [g, 2.0])])
 	var c = J.mc(P, "cst", [])
 	_p("state", [c.state, c.rank])
+
+func dbg(_t) -> void:
+	var cb = J.G.Battle.get("mkGhostUnit")
+	_p("mk_cb", [str(cb), str(J.G.Battle.get("finish")), str(J.G.Village.get("update")), str(J.G.Theater.get("play"))])
+	var sc = load("res://native/presence.gd")
+	_p("started", [sc.started, sc.TU.size()])
+
+func wraps(_t) -> void:
+	var o = {}
+	o["Battle.mkGhostUnit"] = str(J.G.Battle.get("mkGhostUnit")); o["Battle.finish"] = str(J.G.Battle.get("finish")); o["Battle.hit"] = str(J.G.Battle.get("hit"))
+	o["Village.update"] = str(J.G.Village.get("update")); o["Theater.play"] = str(J.G.Theater.get("play")); o["Rivals.tick"] = str(J.G.Rivals.get("tick"))
+	o["joinGhost"] = str(J.G.get("joinGhost")); o["UI.openStory"] = str(J.G.UI.get("openStory")); o["GS.battleBuffs"] = str(J.G.GhostStreet.get("battleBuffs"))
+	o["Scare.start"] = str(J.G.Scare.get("start")); o["ART.drawChar"] = str(J.G.ART.get("drawChar"))
+	_p("wraps", o)
+	var res = []
+	for m in ["rework", "bonds", "presence"]:
+		var sc = load("res://native/%s.gd" % m)
+		res.append([m, sc.started])
+	_p("started", res)

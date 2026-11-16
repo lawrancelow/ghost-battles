@@ -138,16 +138,16 @@ static func go_village(before) -> void:
 		if St.get("close") != null: J.mc(St, "close", [])
 	var W = _g("World")
 	var doc = _g("document")
-	if W is Dictionary and W.get("close") != null and J.t(J.mc(doc, "querySelector", ["#world.on"])): J.mc(W, "close", [])
+	if W is Dictionary and W.get("close") != null and J.t(J.S_document_("querySelector", ["#world.on"])): J.mc(W, "close", [])
 	var UI = _g("UI")
 	if UI is Dictionary:
 		J.mc(UI, "close", [])
 		if UI.get("refresh") != null: J.mc(UI, "refresh", [])
-		J.cl(_g("setTimeout"), null, [func(_t, _a): J.mc(UI, "openRoster", []), 60.0])
+		J.F_setTimeout([func(_t, _a): J.mc(UI, "openRoster", []), 60.0])
 
 static func bind_back(root, before) -> void:
-	var r = root if J.t(root) else _g("document")
-	for b in J.iter(J.mc(r, "querySelectorAll", [".gp-back"])):
+	var els = J.mc(root, "querySelectorAll", [".gp-back"]) if J.t(root) else J.S_document_("querySelectorAll", [".gp-back"])
+	for b in J.iter(els):
 		J.sp(b, "onclick", func(_t, a):
 			if a.size() > 0 and a[0] is Dictionary and a[0].get("stopPropagation") != null: J.cl(a[0].stopPropagation, a[0], [])
 			go_village(before))

@@ -80,11 +80,11 @@ static var busy := false
 
 static func _g(n: String): return J.G.get(n)
 static func _doc(): return _g("document")
-static func _byid(id: String): return J.mc(_doc(), "getElementById", [id])
+static func _byid(id: String): return J.S_document_("getElementById", [id])
 static func _tr(t: String) -> String:
 	var Lf = _g("L")
 	return J.str(J.cl(Lf, null, [t])) if J.typeof_(Lf) == "function" else t
-static func _later(ms: float, f: Callable) -> void: J.cl(_g("setTimeout"), null, [func(_t, _a): f.call(); return null, ms])
+static func _later(ms: float, f: Callable) -> void: J.F_setTimeout([func(_t, _a): f.call(); return null, ms])
 static func _click() -> void:
 	var Snd = _g("Sound")
 	if J.t(J.gp(Snd, "play")): J.mc(Snd, "play", ["click"])
@@ -118,7 +118,7 @@ static func point(id: String, lines: Array, cb: Callable) -> void:
 	if not J.t(host): host = J.gp(_doc(), "body")
 	var ov = _byid("pol-ov")
 	if J.t(ov): J.mc(ov, "remove", [])
-	ov = J.mc(_doc(), "createElement", ["div"]); J.sp(ov, "id", "pol-ov"); J.sp(J.gp(ov, "dataset"), "card", id); J.mc(host, "appendChild", [ov])
+	ov = J.S_document_("createElement", ["div"]); J.sp(ov, "id", "pol-ov"); J.sp(J.gp(ov, "dataset"), "card", id); J.mc(host, "appendChild", [ov])
 	var hr = J.mc(ov, "getBoundingClientRect", []); var r = J.mc(card, "getBoundingClientRect", [])
 	var x = J.num(J.gp(r, "left")) - J.num(J.gp(hr, "left")); var y = J.num(J.gp(r, "top")) - J.num(J.gp(hr, "top")); var pad = 5.0
 	var rw = J.num(J.gp(r, "width")); var rh = J.num(J.gp(r, "height"))
@@ -136,10 +136,10 @@ static func point(id: String, lines: Array, cb: Callable) -> void:
 		if above >= 56: J.sp(J.gp(box, "style"), "top", J.str(above) + "px"); J.sp(J.gp(box, "style"), "bottom", "")
 		else: J.sp(J.gp(box, "style"), "top", J.str(y + rh + pad + 12) + "px")
 	show.call()
-	var t0 = J.num(J.mc(_g("performance"), "now", []))
+	var t0 = J.num(J.S_performance_("now", []))
 	J.sp(ov, "onclick", func(_t, a):
 		_stop(a)
-		if J.num(J.mc(_g("performance"), "now", [])) - t0 < 350: return null
+		if J.num(J.S_performance_("now", [])) - t0 < 350: return null
 		_click()
 		st.i += 1
 		if st.i < lines.size(): show.call()
@@ -150,7 +150,7 @@ static func announce() -> void:
 	if busy or _g("Theater") == null: return
 	busy = true
 	var end = func(): busy = false
-	var has_tower = func(): return J.t(J.mc(_doc(), "querySelector", ["#world .wm-card[data-id=\"tower\"]"]))
+	var has_tower = func(): return J.t(J.S_document_("querySelector", ["#world .wm-card[data-id=\"tower\"]"]))
 	stage("新政策發佈會", _lines(A), func(): point("station", _lines(A_MAP), func():
 		var b = _lines(B)
 		if has_tower.call(): b.append(["龐總", "地圖上面有張新卡，自己搵。"])
@@ -163,7 +163,7 @@ static func maybe() -> void:
 	if not (J.t(J.gp(sn, "ch1_end")) or J.t(J.gp(_g("window"), "STN_TEST"))) or J.t(J.gp(sn, "policy_v1")): return
 	mark("policy_v1")
 	_later(600.0, func():
-		if J.t(J.mc(_doc(), "querySelector", ["#world.on"])) and not J.t(J.gp(_g("Theater"), "on")): announce())
+		if J.t(J.S_document_("querySelector", ["#world.on"])) and not J.t(J.gp(_g("Theater"), "on")): announce())
 
 # ---------- 第一次入玩法：底部細框 ----------
 static func first_enter(mode) -> void:
@@ -174,7 +174,7 @@ static func first_enter(mode) -> void:
 	_later(500.0, func():
 		var el = _byid("pol-tip")
 		if J.t(el): J.mc(el, "remove", [])
-		el = J.mc(_doc(), "createElement", ["div"]); J.sp(el, "id", "pol-tip"); J.sp(el, "className", "pol-box")
+		el = J.S_document_("createElement", ["div"]); J.sp(el, "id", "pol-tip"); J.sp(el, "className", "pol-box")
 		var body = J.gp(_doc(), "body")
 		J.mc(body, "appendChild", [el])
 		var st = {"i": 0}
@@ -192,25 +192,25 @@ static func first_enter(mode) -> void:
 		var off_ref = {}
 		var off = func(_t, a):
 			var ev = J.arg(a, 0)
-			if not J.t(J.mc(body, "contains", [el])): J.mc(_doc(), "removeEventListener", ["pointerdown", off_ref.f, true]); return null
-			if not J.t(J.mc(el, "contains", [J.gp(ev, "target")])): J.mc(el, "remove", []); J.mc(_doc(), "removeEventListener", ["pointerdown", off_ref.f, true])
+			if not J.t(J.mc(body, "contains", [el])): J.S_document_("removeEventListener", ["pointerdown", off_ref.f, true]); return null
+			if not J.t(J.mc(el, "contains", [J.gp(ev, "target")])): J.mc(el, "remove", []); J.S_document_("removeEventListener", ["pointerdown", off_ref.f, true])
 			return null
 		off_ref["f"] = off
-		J.mc(_doc(), "addEventListener", ["pointerdown", off, true])
+		J.S_document_("addEventListener", ["pointerdown", off, true])
 		# 離開咗嗰個玩法（畫面收埋）就即刻收起提示；原生站崗冇 #st-street DOM，問原生畫面仲開唔開
 		var wt_ref = {}
-		wt_ref["id"] = J.cl(_g("setInterval"), null, [func(_t, _a):
-			if not J.t(J.mc(body, "contains", [el])): J.cl(_g("clearInterval"), null, [wt_ref.id]); return null
-			var r = J.mc(_doc(), "querySelector", [ROOTS.get(m, "#none")])
+		wt_ref["id"] = J.F_setInterval([func(_t, _a):
+			if not J.t(J.mc(body, "contains", [el])): J.F_clearInterval([wt_ref.id]); return null
+			var r = J.S_document_("querySelector", [ROOTS.get(m, "#none")])
 			var nst = _g("__nat_stOn")
-			var vis = (m == "station" and nst != null and J.t(J.cl(nst, null, []))) or (J.t(r) and J.t(J.mc(J.gp(r, "classList"), "contains", ["on"])) and J.str(J.gp(J.cl(_g("getComputedStyle"), null, [r]), "display")) != "none")
-			if not vis: J.mc(el, "remove", []); J.cl(_g("clearInterval"), null, [wt_ref.id])
+			var vis = (m == "station" and nst != null and J.t(J.cl(nst, null, []))) or (J.t(r) and J.t(J.mc(J.gp(r, "classList"), "contains", ["on"])) and J.str(J.gp(J.F_getComputedStyle([r]), "display")) != "none")
+			if not vis: J.mc(el, "remove", []); J.F_clearInterval([wt_ref.id])
 			return null, 400.0]))
 
 func run(_env) -> void:
 	busy = false
 	if not J.t(_byid("pol-css")):
-		var s = J.mc(_doc(), "createElement", ["style"]); J.sp(s, "id", "pol-css"); J.sp(s, "textContent", CSS)
+		var s = J.S_document_("createElement", ["style"]); J.sp(s, "id", "pol-css"); J.sp(s, "textContent", CSS)
 		J.mc(J.gp(_doc(), "head"), "appendChild", [s])
 	var P = {
 		"announce": func(_t, _a): announce(); return null,

@@ -37,3 +37,12 @@ config/use_custom_user_dir=true
 config/custom_user_dir_name="gbt_L2_<時間戳>"
 ```
 用戶資料就會喺 `~/.local/share/gbt_L2_<時間戳>/`，全新、唔使刪。全面自檢結果睇嗰度嘅 selftest.json。
+
+## 注意：瀏覽器內建函數唔喺 J.G（2026-11-16 L2 發現）
+`J.G.get("setTimeout")`、`J.G.get("setInterval")` 係 null，`J.cl(null, ...)` 會靜靜咁乜都唔做——計時器、模塊開機重試（boot）全部失效，唔會報錯。
+`document` 嘅方法亦唔好用 `J.mc(J.G.document, ...)`（搵唔到 `#sheet` 等）。照轉譯版寫法：
+- `setTimeout(f, ms)` → `J.F_setTimeout([f, ms])`；`setInterval` → `J.F_setInterval`；`clearInterval/clearTimeout` → `J.F_clearInterval([id])`／`J.F_clearTimeout`
+- `document.querySelector(...)` 等方法 → `J.S_document_("querySelector", [...])`；屬性（`document.body`、`.head`）照用 `J.gp(J.G.get("document"), "body")`
+- `window.addEventListener` → `J.S_window_("addEventListener", [...])`；`performance.now()` → `J.S_performance_("now", [])`；`getComputedStyle(x)` → `J.F_getComputedStyle([x])`
+- 自訂全局函數（save、canPay、ghostById…）照用 `J.cl(J.G.get("save"), null, [...])`
+對照工具（native_xcheck）只比函數輸出，捉唔到呢類錯；要加探針確認包裝（wrapper）真係裝咗、計時器真係行到。

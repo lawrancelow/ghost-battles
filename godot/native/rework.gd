@@ -321,13 +321,13 @@ static func init() -> void:
 		pcd = J.gp(this_, "pcd"); var kit = J.gp(this_, "kit")
 		if J.t(kit) and J.t(J.gp(kit, "props")) and J.t(pcd) and J.num(J.gp(pcd, k)) > 0 and J.gp(pcd, k) != before: J.sp(pcd, k, J.num(J.gp(pcd, k)) * 0.5)
 		return r
-	J.cl(_g("setInterval"), null, [func(_t, _a): turf_tick(); return null, 5000.0])
+	J.F_setInterval([func(_t, _a): turf_tick(); return null, 5000.0])
 	turf_tick()
 
 static func _boot() -> void:
 	var S = _g("S"); var B = _g("Battle"); var Sc = _g("Scare")
 	if not J.t(S) or B == null or B.get("hit") == null or Sc == null:
-		J.cl(_g("setTimeout"), null, [func(_t, _a): _boot(); return null, 300.0]); return
+		J.F_setTimeout([func(_t, _a): _boot(); return null, 300.0]); return
 	init()
 
 func run(_env) -> void:
