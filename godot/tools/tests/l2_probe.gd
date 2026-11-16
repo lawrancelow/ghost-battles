@@ -159,3 +159,133 @@ func wraps(_t) -> void:
 		var sc = load("res://native/%s.gd" % m)
 		res.append([m, sc.started])
 	_p("started", res)
+
+# ---- 細模塊批次：guide、audio、scene、phone、special ----
+static func _rec_ctx():
+	var r = Recorder.new()
+	return [r, Ctx.new(r, Transform2D.IDENTITY)]
+static func _ops(r) -> Array:
+	var kinds = {}
+	for c in r.cmds: kinds[c[0]] = kinds.get(c[0], 0) + 1
+	return [r.cmds.size(), kinds]
+
+func small(_t) -> void:
+	var S = J.G.S
+	# guide
+	var Q = J.G.QUESTS; var qs = []
+	for q in Q: qs.append([q.get("t"), q.get("s"), q.get("place")])
+	_q("quests", qs)
+	_q("scenes_q", [J.G.SCENES.get("q_street"), J.G.SCENES.get("q_yard")])
+	_q("guide", [J.mc(J.G.Guide, "anyDot", []), S.get("visit"), S.get("wmSeen"), S.get("qv"), S.get("qi")])
+	var dots = {}
+	for sp in J.iter(J.gp(J.G.World, "SPOTS")): dots[J.gp(sp, "id")] = J.mc(J.G.Guide, "dot", [J.gp(sp, "id")])
+	_q("dots", dots)
+	var keep = [S.get("qv"), S.get("qi")]
+	S["qv"] = 1.0; S["qi"] = 12.0; J.mc(J.G.Guide, "migrate", [false]); _q("migrate", [S.qv, S.qi])
+	S["qv"] = keep[0]; S["qi"] = keep[1]
+	var r = _rec_ctx(); J.mc(J.G.Guide, "drawGateDot", [r[1], 10.0, 20.0, 1.5]); _q("gatedot_ops", _ops(r[0]))
+	# audio
+	_q("sound", [J.G.Sound.keys(), J.mc(J.G.Sound, "isOn", [])])
+	# phone
+	_q("chats_pre", J.G.CHATS_PRE)
+	_q("chats_post", J.cl(J.G.chatsPost, null, []))
+	_q("icon", J.G.ICON)
+	_q("tick", [J.cl(J.G.TICK, null, [true, true]), J.cl(J.G.TICK, null, [false, false])])
+	_q("wastat", [J.cl(J.G.waStatus, null, ["02:13", "3%", true]), J.cl(J.G.waStatus, null, ["11:00", "∞", false])])
+	_q("waav", J.cl(J.G.waAvatar, null, [["媽", "#b06a5a"], 50.0]))
+	_q("phone_keys", J.G.Phone.keys())
+	# scene：每樣嘢畫入錄製器，比指令數
+	var A = J.G.ART; var out = {}
+	for b in ["house", "gate", "plank", "bun", "wood", "rice", "store", "home", "camp", "altar", "furnace"]:
+		r = _rec_ctx(); J.mc(A, "drawBuilding", [r[1], b, 100.0, 200.0, 3.0, 1.2, true]); out["b_" + b] = _ops(r[0])
+	r = _rec_ctx(); J.mc(A, "drawGate", [r[1], 100.0, 200.0, 1.0]); out["gate"] = _ops(r[0])
+	for hp in [0.0, 5.0]:
+		for sh in [false, true]:
+			for idx in [0.0, 1.0]:
+				r = _rec_ctx(); J.mc(A, "drawTree", [r[1], 100.0, 200.0, hp, 1.3, sh, true, idx]); out["tree_%s_%s_%s" % [hp, sh, idx]] = _ops(r[0])
+	for rp in [true, false]:
+		r = _rec_ctx(); J.mc(A, "drawPaddy", [r[1], 50.0, 60.0, rp, 1.0, 0.0]); out["paddy_%s" % rp] = _ops(r[0])
+	for k in ["scarecrow", "grave", "post", "banana", "zzz"]:
+		r = _rec_ctx(); J.mc(A, "drawDecor", [r[1], k, 50.0, 60.0, 1.0]); out["decor_" + k] = _ops(r[0])
+	for pc in [true, false]:
+		r = _rec_ctx(); J.mc(A, "drawCrow", [r[1], 50.0, 60.0, 1.0, 0.3, -1.0, pc]); out["crow_%s" % pc] = _ops(r[0])
+	for bg in ["village", "hq", "field", "nope"]:
+		r = _rec_ctx(); out["bg_" + bg] = [J.mc(J.G.SCENE, "drawBg", [r[1], 390.0, 700.0, bg]), _ops(r[0])]
+	_q("scene", out)
+	# special
+	var sp = {}
+	for k in ["penanggal", "pocong", "toyol", "afu"]: sp["has_" + k] = J.mc(J.G.SPECIAL, "has", [k])
+	for k in ["penanggal", "pocong", "toyol"]:
+		for o in [{"t": 1.0}, {"t": 2.0, "walk": true}, {"t": 0.5, "pose": "strike", "pt": 0.5}, {"t": 0.5, "pose": "hurt", "pt": 0.3}]:
+			r = _rec_ctx(); J.mc(J.G.SPECIAL, "draw", [r[1], k, 100.0, 200.0, 1.0, o]); sp["%s_%s" % [k, JSON.stringify(o)]] = _ops(r[0])
+	_q("special", sp)
+
+# ---- game 第一段：同一進程，原生 vs 轉譯版（native/game.gd 存咗 ORIG）----
+var gok := 0
+var gbad := 0
+func _gcmp(name: String, a, b) -> void:
+	var x = JSON.stringify(_r(a)); var y = JSON.stringify(_r(b))
+	if x == y: gok += 1
+	else:
+		gbad += 1
+		if gbad <= 25: print("[gdiff] %s nat=%s tr=%s" % [name, x.substr(0, 300), y.substr(0, 300)])
+# 喺 S 嘅深拷貝上各跑一次，比結果同 S
+func _gstate(name: String, f_nat: Callable, f_tr: Callable) -> void:
+	var S0 = J.G.S; var acc0 = J.G.get("expAcc")
+	var s1 = S0.duplicate(true); J.G["S"] = s1; J.G["expAcc"] = acc0; var r1 = f_nat.call()
+	var s2 = S0.duplicate(true); J.G["S"] = s2; J.G["expAcc"] = acc0; var r2 = f_tr.call()
+	J.G["S"] = S0; J.G["expAcc"] = acc0
+	_gcmp(name + ":ret", r1, r2); _gcmp(name + ":S", s1, s2)
+
+func game1(_t) -> void:
+	var NG = load("res://native/game.gd"); var O = NG.ORIG; var G = J.G
+	var F = G.F; var OF = O.F; var S = G.S
+	for n in [0, 5, 9999, 10000, 12345.6, 999999, 1000000, 2.5e7]: _gcmp("fmt", J.cl(G.fmt, null, [float(n)]), J.cl(O.fmt, null, [float(n)]))
+	var ns1 = J.cl(G.newState, null, []); var ns2 = J.cl(O.newState, null, []); ns1.erase("last"); ns2.erase("last"); _gcmp("newState", ns1, ns2)
+	for lv in range(1, 22): _gcmp("expNeed", J.cl(F.expNeed, null, [float(lv)]), J.cl(OF.expNeed, null, [float(lv)])); _gcmp("lvCost", J.cl(F.lvCost, null, [float(lv)]), J.cl(OF.lvCost, null, [float(lv)]))
+	for f in ["ghostCap", "builderDiscount", "cap", "troopCap", "rosterCap", "walk", "chopTime", "furnaceCoins", "recruitCost"]: _gcmp("F." + f, J.cl(F[f], null, []), J.cl(OF[f], null, []))
+	for g in S.ghosts:
+		_gcmp("glv", J.cl(F.glv, null, [g]), J.cl(OF.glv, null, [g]))
+		for i in 3: _gcmp("stat", J.cl(F.stat, null, [g, float(i)]), J.cl(OF.stat, null, [g, float(i)]))
+		_gcmp("gdef", J.cl(G.gdef, null, [g]), J.cl(O.gdef, null, [g]))
+		_gcmp("ghostById", J.cl(G.ghostById, null, [g.id]), J.cl(O.ghostById, null, [g.id]))
+	_gcmp("ghostById_x", J.cl(G.ghostById, null, ["zz"]), J.cl(O.ghostById, null, ["zz"]))
+	for b in J.G.BLD_ORDER:
+		_gcmp("bldMax", J.cl(F.bldMax, null, [b]), J.cl(OF.bldMax, null, [b]))
+		_gcmp("bldUnlocked", J.cl(G.bldUnlocked, null, [b]), J.cl(O.bldUnlocked, null, [b]))
+		for lv in [1.0, 4.0, 13.0]: _gcmp("upCost", J.cl(F.upCost, null, [b, lv]), J.cl(OF.upCost, null, [b, lv]))
+		_gcmp("mult", J.cl(F.mult, null, [b]), J.cl(OF.mult, null, [b]))
+	for p in J.G.POSTS: _gcmp("slots", J.cl(F.slots, null, [p]), J.cl(OF.slots, null, [p])); _gcmp("workersAt", J.cl(G.workersAt, null, [p]), J.cl(O.workersAt, null, [p]))
+	for c in ["g", "b", "p"]: _gcmp("chestGain", J.cl(F.chestGain, null, [c]), J.cl(OF.chestGain, null, [c]))
+	_gcmp("fodderCount", J.cl(G.fodderCount, null, []), J.cl(O.fodderCount, null, []))
+	_gcmp("furnaceReady", J.cl(G.furnaceReady, null, []), J.cl(O.furnaceReady, null, []))
+	_gcmp("rates", J.cl(G.ratesPerMin, null, []), J.cl(O.ratesPerMin, null, []))
+	for c in [{"planks": 10.0}, {"planks": 1e9, "coins": 5.0}, {"wood": 0.0, "coins": 123456.0}]:
+		_gcmp("canPay", J.cl(G.canPay, null, [c]), J.cl(O.canPay, null, [c])); _gcmp("costText", J.cl(G.costText, null, [c]), J.cl(O.costText, null, [c]))
+	for st in J.G.STANDUP: _gcmp("standOk", J.cl(G.standOk, null, [st]), J.cl(O.standOk, null, [st]))
+	var Q = G.Quest; var OQ = O.Quest
+	for q in J.G.QUESTS: _gcmp("q.progress", J.mc(Q, "progress", [q]), J.cl(OQ.progress, Q, [q]))
+	_gcmp("q.cur", J.mc(Q, "cur", []), J.cl(OQ.cur, Q, []))
+	# 改 S 嘅函數：深拷貝各跑
+	for dt in [1.0, 60.0, 3600.0]:
+		_gstate("produce%s" % dt, func(): J.cl(G.produce, null, [dt]); return J.G.expAcc, func(): J.cl(O.produce, null, [dt]); return J.G.expAcc)
+	_gstate("produce_loop", func():
+		for i in 480: J.cl(G.produce, null, [60.0])
+		return J.G.expAcc, func():
+		for i in 480: J.cl(O.produce, null, [60.0])
+		return J.G.expAcc)
+	_gstate("pay", func(): J.cl(G.pay, null, [{"planks": 3.0, "coins": 7.0}]); return null, func(): J.cl(O.pay, null, [{"planks": 3.0, "coins": 7.0}]); return null)
+	_gstate("give", func(): return J.cl(G.give, null, [{"exp": 50.0, "coins": 12345.0, "chest": "p", "troops": 3.0}]), func(): return J.cl(O.give, null, [{"exp": 50.0, "coins": 12345.0, "chest": "p", "troops": 3.0}]))
+	_gstate("gainExp", func(): J.cl(G.gainExp, null, [50000.0]); return null, func(): J.cl(O.gainExp, null, [50000.0]); return null)
+	# joinGhost／recruitFodder／Quest.complete 之後俾其他模塊包咗：直接比原生函數本身
+	_gstate("joinGhost", func(): NG.join_ghost("mengpo"); NG.join_ghost("afu"); return null, func(): J.cl(O.joinGhost, null, ["mengpo"]); J.cl(O.joinGhost, null, ["afu"]); return null)
+	_gstate("offline", func(): J.G.S["last"] = J.now() - 5 * 3600 * 1000.0; J.cl(G.offlineGain, null, []); J.G.S["last"] = 0.0; return null,
+		func(): J.G.S["last"] = J.now() - 5 * 3600 * 1000.0; J.cl(O.offlineGain, null, []); J.G.S["last"] = 0.0; return null)
+	# 隨機嘅：固定種子各跑
+	_gstate("recruit", func(): seed(42); var g = NG.recruit_fodder(false); return g, func(): seed(42); var g = J.cl(O.recruitFodder, null, [false]); return g)
+	# Quest.complete（改 qi、給獎勵）
+	_gstate("q.complete", func(): NG.q_complete(Q); return null, func(): J.cl(OQ.complete, Q, []); return null)
+	print("[game1] ok=%d bad=%d" % [gok, gbad])
+
+func sp_stage(_t) -> void:
+	J.mc(J.G.Theater, "play", [{"tag": "測試", "title": "三隻拆唔開嘅鬼", "bg": "village", "cast": [["Toyol", "toyol"], ["Pocong", "pocong"], ["Penanggal", "penanggal"]], "lines": [["Toyol", "測試網格變形：三隻鬼同台。"], ["Pocong", "跳下跳下。"], ["Penanggal", "飛頭。"]]}])
