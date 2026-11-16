@@ -182,6 +182,7 @@ func query(sel: String, root):
 		return _q(host_el, rest) if rest[0] != "." and rest[0] != "[" and rest[0] != ":" else (host_el if Css.sel_matches(host_el, sel) else null)
 	return r
 func _q(base: El, sel: String):
+	if base == null: return null   # 同 JS 一樣：$("#冇呢個 x") 回 null，唔好報錯
 	for c in base.children:
 		if c is El and c.tagName != "#TEXT":
 			if Css.sel_matches(c, sel): return c
