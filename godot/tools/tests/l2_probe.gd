@@ -228,7 +228,11 @@ func _gcmp(name: String, a, b) -> void:
 	if x == y: gok += 1
 	else:
 		gbad += 1
-		if gbad <= 25: print("[gdiff] %s nat=%s tr=%s" % [name, x.substr(0, 300), y.substr(0, 300)])
+		if gbad <= 25:
+			var i = 0
+			while i < mini(x.length(), y.length()) and x[i] == y[i]: i += 1
+			var st = maxi(0, i - 120)
+			print("[gdiff] %s @%d nat=…%s tr=…%s" % [name, i, x.substr(st, 260), y.substr(st, 260)])
 # 喺 S 嘅深拷貝上各跑一次，比結果同 S
 func _gstate(name: String, f_nat: Callable, f_tr: Callable) -> void:
 	var S0 = J.G.S; var acc0 = J.G.get("expAcc")
@@ -289,3 +293,128 @@ func game1(_t) -> void:
 
 func sp_stage(_t) -> void:
 	J.mc(J.G.Theater, "play", [{"tag": "測試", "title": "三隻拆唔開嘅鬼", "bg": "village", "cast": [["Toyol", "toyol"], ["Pocong", "pocong"], ["Penanggal", "penanggal"]], "lines": [["Toyol", "測試網格變形：三隻鬼同台。"], ["Pocong", "跳下跳下。"], ["Penanggal", "飛頭。"]]}])
+
+# ---- game 第二段：Village ----
+const VM := ["setCam", "focus", "hitTest", "tap", "walkTo", "craft", "update", "doAct", "heroPose", "impact", "updateParts", "scatterCrows", "pickChatter", "workerSpots", "questTarget", "collect"]
+func _vcopy(native: bool) -> Dictionary:
+	var NG = load("res://native/game.gd"); var V = J.G.Village
+	var c = {}
+	# 只深拷貝會變嘅狀態（Village 入面有循環引用，整個 duplicate(true) 會爆）
+	for k in V: c[k] = V[k]
+	for k in ["hero", "floats", "crows", "feathers", "parts", "bubble", "chatUsed", "workerPhase"]:
+		if V.get(k) is Dictionary or V.get(k) is Array: c[k] = V[k].duplicate(true)
+	for n in VM:
+		if native: c[n] = _bind_nat(n, c)
+		else: c[n] = NG.ORIG["V." + n]
+	return c
+func _bind_nat(n: String, c: Dictionary) -> Callable:
+	var NG = load("res://native/game.gd")
+	match n:
+		"update": return func(t, a): NG.v_update(t, J.num(J.arg(a, 0))); return null
+		"doAct": return func(t, a): NG.v_do_act(t, J.num(J.arg(a, 0))); return null
+		"updateParts": return func(t, a): NG.v_update_parts(t, J.num(J.arg(a, 0)), J.arg(a, 1)); return null
+		"impact": return func(t, a): NG.v_impact(t, J.num(J.arg(a, 0)), J.num(J.arg(a, 1)), J.str(J.arg(a, 2)), J.arg(a, 3)); return null
+		"scatterCrows": return func(t, a): NG.v_scatter_crows(t, int(J.num(J.arg(a, 0)))); return null
+		"pickChatter": return func(t, _a): NG.v_pick_chatter(t); return null
+		"walkTo": return func(t, a): NG.v_walk_to(t, J.num(J.arg(a, 0)), J.num(J.arg(a, 1)), J.arg(a, 2)); return null
+		"craft": return func(t, a): NG.v_craft(t, J.arg(a, 0), J.arg(a, 1)); return null
+		"tap": return func(t, a): NG.v_tap(t, J.num(J.arg(a, 0)), J.num(J.arg(a, 1))); return null
+		"hitTest": return func(_t, a): return NG.v_hit_test(J.num(J.arg(a, 0)), J.num(J.arg(a, 1)))
+		"heroPose": return func(t, _a): return NG.v_hero_pose(t)
+		"setCam": return func(t, a): NG.v_set_cam(t, J.num(J.arg(a, 0))); return null
+		"focus": return func(t, a): NG.v_focus(t, J.num(J.arg(a, 0)), J.num(J.arg(a, 1))); return null
+		"workerSpots": return func(_t, _a): return NG.v_worker_spots()
+		"questTarget": return func(_t, _a): return NG.v_quest_target()
+		"collect": return func(t, a): return NG.v_collect(t, J.arg(a, 0))
+	return Callable()
+static func _vstate(v: Dictionary) -> Dictionary:
+	var o = {}
+	for k in ["hero", "floats", "crows", "feathers", "parts", "t", "camY", "hitstop", "shk", "proudT", "_pp"]: o[k] = v.get(k)
+	return o   # 碎碎念（bubble／chatT／chatUsed）受其他模塊冷却狀態影響，另外用 _chat_unit 單獨比
+# 同一劇本：S、Village 各一份拷貝，原生／轉譯各跑，比 S 同 Village 狀態
+func _vsim(name: String, script: Callable) -> void:
+	var S0 = J.G.S; var acc0 = J.G.get("expAcc"); var res = []
+	var V0 = J.G.Village; var HD0 = J.G.get("HeroDaily"); var LP0 = (J.G.Fx.lastPraise as Dictionary).duplicate(true)
+	var SND0 = J.G.Sound; J.G["Sound"] = {"play": func(_t, _a): return null, "setMode": func(_t, _a): return null}   # 聲音有時間節流同隨機音高，唔比
+	# 劇情、介面係全局狀態（任務完成會排劇情；Story.busy／UI.modalOpen 影響碎碎念）：兩邊都用同一個空替身
+	var ST0 = J.G.Story; var UI0 = J.G.UI
+	var nop = func(_t, _a): return null
+	var fal = func(_t, _a): return false
+	J.G["Story"] = {"busy": fal, "queue": nop, "play": nop}
+	var ui_stub = (UI0 as Dictionary).duplicate(); for k in ["modalOpen"]: ui_stub[k] = fal
+	for k in ["refresh", "openBuilding", "open", "close", "toast"]: ui_stub[k] = nop
+	J.G["UI"] = ui_stub
+	for native in [false, true]:   # 轉譯版行先（同上次相反），排除先後次序影響
+		var s = S0.duplicate(true); J.G["S"] = s; J.G["expAcc"] = acc0
+		var v = _vcopy(native); seed(7)
+		J.G.Fx["lastPraise"] = LP0.duplicate(true)   # Fx.praise 記住上次揀嘅句，會影響隨機數消耗
+		J.G["Village"] = v          # Fx.float 等寫入 Village.floats：指向今次嘅拷貝
+		J.G["HeroDaily"] = null     # 阿福日常排程有自己嘅狀態同隨機數（L5 模塊），唔喺今次比較範圍
+		var r = script.call(v)
+		J.G["Village"] = V0
+		res.append([r, _vstate(v), s])
+	J.G["S"] = S0; J.G["expAcc"] = acc0; J.G["HeroDaily"] = HD0; J.G["Sound"] = SND0; J.G["Story"] = ST0; J.G["UI"] = UI0
+	_gcmp(name + ":ret", res[1][0], res[0][0]); _gcmp(name + ":V", res[1][1], res[0][1]); _gcmp(name + ":S", res[1][2], res[0][2])
+
+func game2(_t) -> void:
+	gok = 0; gbad = 0
+	var NG = load("res://native/game.gd"); var O = NG.ORIG; var Q = J.G.Quest
+	# 上次 q.complete 嘅差異：今次轉譯版行先
+	var S0 = J.G.S
+	var s2 = S0.duplicate(true); J.G["S"] = s2; J.cl(O.Quest.complete, Q, [])
+	var s1 = S0.duplicate(true); J.G["S"] = s1; NG.q_complete(Q)
+	J.G["S"] = S0; s1.erase("chat"); s2.erase("chat"); _gcmp("q.complete(tr-first,no chat)", s1, s2)
+	# 純函數
+	var V = J.G.Village
+	for x in range(0, 391, 13):
+		for y in range(100, 1130, 17): _gcmp("hitTest", NG.v_hit_test(float(x), float(y)), J.cl(O["V.hitTest"], V, [float(x), float(y)]))
+	_gcmp("workerSpots", NG.v_worker_spots(), J.cl(O["V.workerSpots"], V, []))
+	_gcmp("questTarget", NG.v_quest_target(), J.cl(O["V.questTarget"], V, []))
+	_gcmp("heroPose", NG.v_hero_pose(V), J.cl(O["V.heroPose"], V, []))
+	# 模擬：砍樹（第一棵）、割稻、批量做棺材板、做壽包、走路
+	_vsim("chop", func(v):
+		J.G.S.trees[0] = 3.0; J.mc(v, "walkTo", [58.0, 406.0, {"kind": "tree", "i": 0.0}])
+		for i in 400: J.mc(v, "update", [0.05])
+		return J.mc(v, "heroPose", []))
+	_vsim("paddy", func(v):
+		J.G.S.paddy[2] = 1.0; J.mc(v, "walkTo", [218.0, 466.0, {"kind": "paddy", "i": 2.0}])
+		for i in 300: J.mc(v, "update", [0.033])
+		return J.mc(v, "heroPose", []))
+	_vsim("craft_plank", func(v):
+		J.G.S.res["wood"] = 30.0; J.mc(v, "craft", ["plank", 5.0])
+		for i in 600: J.mc(v, "update", [0.05])
+		return J.G.S.res.planks)
+	_vsim("craft_bun_short", func(v):
+		J.G.S.res["rice"] = 9.0; J.mc(v, "craft", ["bun", 4.0])
+		for i in 600: J.mc(v, "update", [0.05])
+		return J.G.S.res.buns)
+	_vsim("craft_none", func(v): J.G.S.res["rice"] = 2.0; J.mc(v, "craft", ["bun", 1.0]); return null)
+	_vsim("walk_cam", func(v):
+		J.mc(v, "walkTo", [380.0, 1100.0, null]); J.mc(v, "setCam", [5000.0]); var c1 = v.camY; J.mc(v, "focus", [0.0, 200.0])
+		for i in 200: J.mc(v, "update", [0.05])
+		return [c1, v.camY])
+	_vsim("crows", func(v):
+		J.mc(v, "scatterCrows", [3.0]); J.mc(v, "impact", [100.0, 200.0, "dough", 0.4]); J.mc(v, "impact", [100.0, 200.0, "rice", null])
+		for i in 30: J.mc(v, "update", [0.05])
+		return null)
+	_vsim("tap", func(v):
+		for p in [[60.0, 400.0], [250.0, 410.0], [195.0, 300.0], [200.0, 700.0], [338.0, 250.0]]: J.mc(v, "tap", p)
+		return null)
+	# 碎碎念單元：同一狀態、同一種子，原生同轉譯各揀 40 次
+	var V1 = J.G.Village; var ST0 = J.G.Story; J.G["Story"] = {"busy": func(_t, _a): return false}
+	var UI0 = J.G.UI; var uis = (UI0 as Dictionary).duplicate(); uis["modalOpen"] = func(_t, _a): return false; J.G["UI"] = uis
+	if not (V1.get("vis") is Array) or V1.vis.is_empty(): V1["vis"] = []
+	if V1.vis.is_empty():
+		var i = 0
+		for g in J.G.S.ghosts: V1.vis.append({"g": g, "x": 100.0 + i * 20, "y": 500.0 + i * 30}); i += 1
+	var picks = []
+	for native in [false, true]:
+		var c = V1.duplicate(); c["chatUsed"] = {}; c["bubble"] = null; seed(11); var out = []
+		for i in 40:
+			if native: NG.v_pick_chatter(c)
+			else: J.cl(O["V.pickChatter"], c, [])
+			out.append(c.get("bubble")); c["bubble"] = null
+		picks.append(out)
+	J.G["Story"] = ST0; J.G["UI"] = UI0
+	_gcmp("pickChatter x40", picks[1], picks[0])
+	print("[game2] ok=%d bad=%d" % [gok, gbad])
