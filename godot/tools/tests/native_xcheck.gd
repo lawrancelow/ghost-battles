@@ -363,6 +363,80 @@ func ghoststreet(_t) -> void:
 	J.G["S"] = keepS; J.G["GhostStreet"] = live
 	_report()
 
+# ---- L3：樓裡有鬼 第一段（電梯 LiftSys）：同一關同一種子，轉譯版 LIFT vs 原生 LIFT 各行一次劇本，逐段比狀態 ----
+func _tw_env() -> Dictionary: return (J.gp(J.G.Tower, "close") as Callable).get_bound_arguments()[0]
+
+func _tl_snap(L, f: int) -> Dictionary:
+	var st = J.mc(L, "state", [])
+	if st is Dictionary:
+		st = st.duplicate(true)
+		for k in ["dfx", "stops"]: var a = st[k]; a.sort(); st[k] = a
+		st.erase("err")
+	var X = J.G.TWX; var G = J.cl(X.G, null, [])
+	var g = G.gh[int(J.num(G.active))]
+	return {"f": f, "st": st, "ui": J.mc(L, "ui", []), "hash": J.str(J.cl(X.hash, null, [])), "g": [g.x, g.y, g.node, g.get("inv"), g.get("energy")], "fear": G.get("fear"), "r": randf()}
+
+func _tl_run(L, sd: float, lid_f: int) -> Array:
+	var env = _tw_env(); env["LIFT"] = L; J.sp(J.G.window, "LIFT", L); J.G.TWX["lift"] = L
+	seed(int(sd) * 7 + 1)
+	J.mc(J.G.TW, "ng", [sd, "flat"])
+	var X = J.G.TWX; var G = J.cl(X.G, null, [])
+	var g = G.gh[int(J.num(G.active))]
+	var out = []; var dt = 0.05
+	for f in 1600:
+		match f:
+			5: J.mc(L, "debugRider", ["res", 3.0, 1.0])
+			6: J.mc(L, "debugRider", ["guard", 2.0, 5.0])
+			7: J.mc(L, "debugRider", ["res", 5.0, 1.0])
+			20:
+				var lid = ""
+				for k in G.nodes:
+					var nd = G.nodes[k]
+					if J.str(nd.kind) == "lift" and int(J.num(nd.f)) == lid_f: lid = k
+				var nd2 = G.nodes[lid]; g.node = lid; g.to = null; g.auto = null; g.x = nd2.x; g.y = nd2.y
+				out.append({"act": J.mc(L, "action", [g, null])})
+				out.append({"enter": J.mc(L, "enter", [g])})
+			21: out.append({"enter2": J.mc(L, "enter", [g])})
+			22: out.append({"enter3": J.mc(L, "enter", [g])})
+		if f > 22 and f % 40 == 0 and f < 1300:
+			var ts = ["dark", "btns", "mirror", "over", "stuck", "door"]
+			var k = ts[(f / 40) % 6]
+			out.append({"f": f, "can": J.mc(L, "canTrick", [k]), "tr": J.mc(L, "trick", [k])})
+		if f % 90 == 45: J.mc(L, "press", [float((f / 90) % 9)])
+		if f % 170 == 100: J.mc(L, "open", [])
+		if f % 170 == 140: J.mc(L, "close", [])
+		if f == 1350 or f == 1400 or f == 1450: out.append({"exit": J.mc(L, "exit", [])})
+		if f == 1500: out.append({"sw": J.mc(L, "scareWaiting", [g])})
+		J.cl(X.step, null, [1.0, dt])
+		J.mc(L, "step", [dt])
+		if f % 20 == 0: out.append(_tl_snap(L, f))
+	return out
+
+func tower_lift(_t) -> void:
+	mod = "tower_lift"
+	J.mc(J.G.Tower, "open", [])
+	var env = _tw_env(); var Lt = env["LIFT"]
+	var A = (J.gp(Lt, "step") as Callable).get_bound_arguments()[0]["A"]
+	var Ln = load("res://native/tower_lift.gd").make(A)
+	J.sp(Lt, "manual", true); J.sp(Ln, "manual", true)
+	for k in ["lab"]: check("LIFT", Ln, Lt, "lab", [0.0]); check("LIFT", Ln, Lt, "lab", [1.0]); check("LIFT", Ln, Lt, "lab", [7.0])
+	for cs in [[12345.0, 4], [777.0, 1], [2024.0, 7]]:
+		var a = _tl_run(Lt, cs[0], cs[1]); var b = _tl_run(Ln, cs[0], cs[1])
+		var nb = 0
+		for i in mini(a.size(), b.size()):
+			if _near(_norm(a[i]), _norm(b[i])): ok += 1
+			else:
+				bad += 1; nb += 1
+				if nb <= 4:
+					for k in a[i]:
+						if not _near(_norm(a[i][k]), _norm(b[i].get(k))): print("[xcheck-diff] lift seed%s #%d %s\n tr =%s\n nat=%s" % [cs[0], i, k, JSON.stringify(_norm(a[i][k])).substr(0, 700), JSON.stringify(_norm(b[i].get(k))).substr(0, 700)])
+		if a.size() != b.size(): bad += 1; print("[xcheck-diff] lift size ", a.size(), " ", b.size())
+		var last = a[-1]
+		print("[xcheck-info] lift seed%s snaps=%d st=%s riders=%d log=%s" % [cs[0], a.size(), last.st.st if last.st is Dictionary else "-", (last.st.riders as Array).size() if last.st is Dictionary else -1, str(last.st.log).substr(0, 200) if last.st is Dictionary else ""])
+	env["LIFT"] = Lt; J.sp(J.G.window, "LIFT", Lt); J.G.TWX["lift"] = Lt; J.sp(Lt, "manual", false)
+	J.mc(J.G.Tower, "close", [])
+	_report()
+
 func run_named(t, name: String) -> void: call(name, t)
 
 # ---- L4：資料模塊指紋（GB_NONAT=1 同原生各跑一次，比 /tmp/L4/fp_*.json）----
