@@ -93,3 +93,34 @@ func tower(_t) -> void:
 		print("[xcheck-info] tower %s seed%s snaps=%d fear=%s alert=%s phase=%s story=%s over=%s" % [cs[1], cs[0], a.size(), L.fear, L.alert, L.phase, str(L.story), JSON.stringify(L.over).substr(0, 160)])
 	J.G["S"] = S0
 	_report()
+
+# ---- L3：陽間街 street 第一段（CrUI）：同一組參數，原生 vs 轉譯各畫入 Recorder，逐條指令比 ----
+func street_crui(_t) -> void:
+	mod = "street_crui"
+	var X5 = load("res://tools/tests/xc_l5.gd")
+	var tr = load_trans("street", ["CrUI"]).CrUI
+	var nat = load("res://native/street.gd").mk_crui()
+	var cases = []
+	for o in [null, {}, {"col": "red"}, {"col": "rust", "fill": "rgba(70,36,16,0.95)", "U": 1.5, "seed": 11.0}, {"col": "12,34,56", "seed": 0.0, "U": 0.7}]:
+		for r in [[10.0, 20.0, 120.0, 40.0], [0.0, 0.0, 46.0, 9.0], [33.3, 7.7, 300.0, 180.0]]:
+			cases.append(["panel", [r[0], r[1], r[2], r[3], o]])
+	for k in [-0.2, 0.0, 0.35, 1.0, 1.7]:
+		for cc in [["#6d5690", "#c06a2c", 1.0], ["#ff0000", null, null], ["#123456", "", 2.0]]:
+			cases.append(["bar", [12.0, 30.0, 200.0, 8.0, k, cc[0], cc[1], cc[2]]])
+	for o in [null, {"font": "900 13px sans-serif", "align": "center", "col": "#f3d58a"}, {"lw": 0.0}, {"lw": 5.0, "align": "right"}]:
+		for s in ["測試 12/40", 42.0]: cases.append(["text", [s, 50.0, 60.0, o]])
+	for r in [[5.0, 5.0, 80.0, 30.0, 3.0, 2.2], [0.0, 0.0, 10.0, 10.0, 0.0, 0.0]]: cases.append(["rough", r])
+	for cs in cases:
+		var fn = cs[0]; var args = cs[1]
+		var a = X5.rec_sig(func(c): return J.mc(tr, fn, [c] + args.duplicate(true)))
+		var b = X5.rec_sig(func(c): return J.mc(nat, fn, [c] + args.duplicate(true)))
+		if a == b: ok += 1
+		else:
+			bad += 1
+			if bad <= 6:
+				var i = 0
+				while i < mini(a.size(), b.size()) and a[i] == b[i]: i += 1
+				print("[xcheck-diff] CrUI.%s(%s) n=%d/%d @%d\n tr =%s\n nat=%s" % [fn, JSON.stringify(args).substr(0, 100), a.size(), b.size(), i, a[i].substr(0, 200) if i < a.size() else "-", b[i].substr(0, 200) if i < b.size() else "-"])
+	if JSON.stringify(J.gp(tr, "COL")) == JSON.stringify(J.gp(nat, "COL")): ok += 1
+	else: bad += 1; print("[xcheck-diff] CrUI.COL")
+	_report()
