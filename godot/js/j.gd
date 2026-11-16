@@ -148,7 +148,9 @@ static func math(m: String, a: Array):
 		"cosh": return cosh(num(a[0]))
 		"tanh": return tanh(num(a[0]))
 		"fround": return num(a[0])
-		"imul": return float(i32(i32(a[0]) * i32(a[1])))
+		"imul":   # 乘積直接用整數截 32 位（舊寫法先轉浮點，大過 2^53 會甩精度，同網頁版唔一樣）
+			var p: int = (i32(a[0]) * i32(a[1])) & 0xFFFFFFFF
+			return float(p - 0x100000000 if p >= 0x80000000 else p)
 	push_warning("Math." + m); return 0.0
 static func nop(_v) -> void: pass
 static func throw_(v) -> void: push_warning("JS throw: %s" % J.str(v))
