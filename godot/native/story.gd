@@ -35,7 +35,11 @@ static func apply_v2() -> void:
 	# 中文對照：入 DB（原生劇情框）同 JS LANG
 	ZH2 = v2.get("zh", {})
 	var dz = D.get("LANG_ZH")
-	if dz is Dictionary: for k in ZH2: dz[k] = ZH2[k]
+	if dz is Dictionary:
+		for k in dz.keys():   # 被替換嘅粵語原句：新句都要有中文
+			var k2 = sub(k)
+			if k2 != k and not ZH2.has(k2): ZH2[k2] = sub(dz[k])
+		for k in ZH2: dz[k] = ZH2[k]
 
 func run(_env) -> void:
 	apply_v2()

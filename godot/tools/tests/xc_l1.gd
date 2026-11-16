@@ -84,7 +84,7 @@ func l1(_t) -> void:
 					var orig = ts[id].lines.map(func(l): return l[1])
 					var diff = 0
 					for s in shown: if not orig.has(s): diff += 1
-					var allow = {"prologue_road": 1, "ch3_intro2": 3, "ch6_boss": 3}.get(id, 0)
+					var allow = {"prologue_road": 1, "ch3_intro2": 3, "ch6_boss": 4}.get(id, 0)
 					eq("SCENES.%s zh-shown changed lines" % id, diff, allow)
 				else: eq("SCENES." + id, ns.get(id), ts[id])
 		elif k == "SCENE_ORDER":

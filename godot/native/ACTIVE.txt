@@ -26,3 +26,6 @@ ghoststreet
 policy
 bonds
 presence
+chatter
+standup
+skits
