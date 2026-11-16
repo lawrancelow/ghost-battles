@@ -275,3 +275,202 @@ func l4_rooms_show(_t) -> void:
 	J.sp(Sc, "camX", 1.2); J.sp(Sc, "follow", false); J.sp(Sc, "userPan", 999.0)
 	for k in ["tv", "speaker", "chairs"]: J.cl(J.G.OFFMAP.onProp, J.G.OFFMAP, [k, J.iter(J.gp(Sc, "npcs"))[0], "meeting"])
 	print("[xcheck] rooms_show")
+
+# ---------------- L4：office（要開 GB_NAT_EXTRA=office；SC._nat=true，即係 Godot 真正行嘅路）----------------
+const OF_F := ["id", "x", "y", "z", "uy", "rot", "vr", "hide", "falling", "ox", "oz", "sw", "vs", "vx", "vz", "puddle", "flown"]
+func _of_state(X, npcs: Array) -> String:
+	var N = J.gp(X, "_n"); var o = {}
+	o["st"] = J.cl(J.gp(N, "st"), null, [])
+	var its = J.cl(J.gp(N, "items"), null, []); var io = []
+	for k in its:
+		var it = its[k]; var d = {}
+		for f in OF_F: d[f] = J.gp(it, f)
+		io.append(d)
+	o["items"] = io
+	var S = J.gp(N, "STATIONS"); var so = {}
+	for k in ["ken", "it"]: var s = S[k]; so[k] = {"K": J.gp(s, "K"), "mon": J.gp(s, "monSt"), "off": J.gp(s, "offline")}
+	o["stn"] = so
+	var dr = []
+	for d in J.iter(J.cl(J.gp(N, "drops"), null, [])): dr.append([J.gp(d, "u"), J.gp(d, "v"), J.gp(d, "ox"), J.gp(d, "z"), J.gp(d, "life"), J.gp(d, "land")])
+	o["drops"] = dr
+	var nn = []
+	for n in npcs:
+		nn.append({"mis": J.gp(n, "mis"), "off": J.cl(J.gp(X, "kenOff"), null, [n]), "seat": J.cl(J.gp(X, "seated"), null, [n]), "z": J.cl(J.gp(X, "kenZ"), null, [n])})
+	o["npc"] = nn
+	var rr = []
+	for id in ["cabinet", "binder1", "kmug", "lamp", "copier", "water", "achair", "kmon", "imon", "fan", "ws2", "wsm3"]: rr.append(J.cl(J.gp(X, "rectOf"), null, [id]))
+	o["rect"] = rr
+	o["K"] = [J.cl(J.gp(X, "K"), null, []), J.cl(J.gp(X, "K"), null, ["it"])]
+	return J.to_json(o)
+
+func _of_run(X, tag: String) -> Array:
+	var Sc = J.G.Scare; J.G["OFFICE"] = X
+	var w = J.G.get("window"); if w != null: J.sp(w, "OFFICE", X)
+	var npcs = J.iter(J.gp(Sc, "npcs"))
+	var keep = []
+	for n in npcs: keep.append([J.gp(n, "x"), J.gp(n, "y"), J.gp(n, "act"), J.gp(n, "fear"), J.gp(n, "rx"), J.gp(n, "mis"), J.gp(n, "fleeing"), J.gp(n, "gone")])
+	seed(4321)
+	J.cl(J.gp(X, "init"), X, [Sc]); J.sp(Sc, "_nat", true)
+	var S = J.gp(J.gp(X, "_n"), "STATIONS")
+	var ken = null; var itn = null; var mis = null
+	for n in npcs:
+		J.sp(n, "mis", null); J.sp(n, "rx", null); J.sp(n, "fear", 0.0); J.sp(n, "fleeing", false); J.sp(n, "gone", false)
+		var k = J.str(J.gp(J.gp(n, "d"), "k"))
+		if k == "ken": ken = n
+		elif k == "it": itn = n
+		elif k == "mis": mis = n
+	for pr in [[ken, "ken"], [itn, "it"]]:
+		if pr[0] != null: var se = J.gp(S[pr[1]], "seat"); J.sp(pr[0], "x", J.gp(se, "x")); J.sp(pr[0], "y", J.gp(se, "y")); J.sp(pr[0], "act", "work")
+	if mis != null:
+		var SP = J.gp(J.gp(J.G.OFFMAP, "SPOT"), "copier"); J.sp(mis, "x", J.num(SP[0]) + 0.16); J.sp(mis, "y", J.num(SP[1]) + 0.05); J.sp(mis, "act", "idle")
+	if tag == "nat": print("[xcheck] office npcs ken=%s it=%s mis=%s n=%d" % [ken != null, itn != null, mis != null, npcs.size()])
+	var cx = J.num(J.gp(J.gp(S.ken, "seat"), "x"))
+	var plan = {20: ["prop", "lamp"], 45: ["prop", "ac"], 60: ["scare", 0.3], 80: ["prop", "water"], 100: ["prop", "printer"], 140: ["fear", 60.0], 150: ["scare", 0.9], 175: ["prop", "drop"], 210: ["prop", "chair"], 230: ["calm"], 260: ["prop", "lights"],
+		300: ["elev"], 320: ["off", true], 340: ["walk"], 380: ["back"], 400: ["rx", "startle"], 430: ["off", false], 450: ["scare", 1.1], 470: ["rxend"], 520: ["prop", "drop"], 560: ["prop", "chair"]}
+	var cams = [0.0, 0.6, 1.2, 2.0, 3.5, 5.5, 8.5]
+	var out = []; var dt = 1.0 / 30
+	for f in 640:
+		if plan.has(f):
+			var a = plan[f]
+			match a[0]:
+				"prop": J.cl(J.gp(X, "onProp"), null, [a[1]])
+				"scare": J.cl(J.gp(X, "onScare"), null, [cx, J.num(J.gp(J.gp(S.ken, "seat"), "y")), a[1]])
+				"fear": for n in [ken, itn, mis]: if n != null: J.sp(n, "fear", a[1])
+				"calm": for n in [ken, itn, mis]: if n != null: J.sp(n, "fear", 0.0)
+				"elev": J.cl(J.gp(X, "elevator"), null, [])
+				"off": J.cl(J.gp(X, "offline"), null, ["ken", a[1]])
+				"walk": for n in [ken, mis]: if n != null: J.sp(n, "act", "walk"); J.sp(n, "x", J.num(J.gp(n, "x")) + 0.05)
+				"back":
+					if ken != null: var se2 = J.gp(S.ken, "seat"); J.sp(ken, "x", J.gp(se2, "x")); J.sp(ken, "y", J.gp(se2, "y")); J.sp(ken, "act", "work")
+					if mis != null: J.sp(mis, "act", "idle")
+				"rx": for n in [ken, itn, mis]: if n != null: J.sp(n, "rx", {"k": a[1], "t": 0.1, "src": cx + 0.3})
+				"rxend": for n in [ken, itn, mis]: if n != null: J.sp(n, "rx", null)
+		J.sp(Sc, "t", f * dt)
+		for n in npcs: J.cl(J.gp(X, "kenTick"), null, [n, dt])
+		J.cl(J.gp(X, "tick"), null, [dt])
+		if f % 10 == 0:
+			J.sp(Sc, "camX", cams[(f / 10) % cams.size()])
+			var cc = new_ctx(); var ctx = cc[1]
+			J.cl(J.gp(X, "drawBack"), null, [ctx, f * dt])
+			J.cl(J.gp(X, "drawFloor"), null, [ctx, f * dt])
+			var zs = []
+			for d in J.iter(J.cl(J.gp(X, "drawables"), null, [f * dt])): zs.append("%.5f" % J.num(d[0])); J.cl(d[1], null, [ctx])
+			for n in [ken, itn]: if n != null: J.cl(J.gp(X, "drawKen"), null, [ctx, n, f * dt])
+			# drawMis：Godot 唔會叫（美美行 __nat_scNpc→ScMis），轉譯版係 JS 畫法，唔比
+			J.cl(J.gp(X, "drawDark"), null, [ctx, f * dt])
+			ctx.save(); J.cl(J.gp(X, "clipWindow"), null, [ctx]); ctx.restore()
+			out.append("f%d S=%s z=%s rec=%s" % [f, _of_state(X, npcs), ",".join(zs), ser_rec(cc[0].js_rec())])
+	for i in npcs.size():
+		var n = npcs[i]; var kp = keep[i]
+		for j in 8: J.sp(n, ["x", "y", "act", "fear", "rx", "mis", "fleeing", "gone"][j], kp[j])
+	return out
+
+func l4_office(_t) -> void:
+	mod = "office"
+	var Sc = J.G.Scare
+	J.mc(Sc, "start", ["office", ["afu", "eguiking", "toyol"]])
+	var On = J.G.OFFICE
+	var Ot = load_trans("office", ["OFFICE"]).OFFICE
+	for k in ["AC", "WIN", "CLOCK", "SEAT"]: _sc_cmp("data " + k, J.to_json(J.gp(On, k)), J.to_json(J.gp(Ot, k)))
+	var a = _of_run(On, "nat"); var b = _of_run(Ot, "tr"); var c = _of_run(On, "nat2")
+	var selfd = 0
+	for i in a.size(): if a[i] != c[i]: selfd += 1
+	print("[xcheck] office nat-vs-nat diffs=", selfd)
+	J.G["OFFICE"] = On; var w = J.G.get("window"); if w != null: J.sp(w, "OFFICE", On)
+	for i in a.size(): _sc_cmp("office " + a[i].substr(0, 5), a[i], b[i])
+	J.cl(J.gp(On, "init"), On, [Sc])
+	print("[xcheck] office frames=%d reclen=%d" % [a.size(), a[a.size() / 2].length()])
+	_report()
+
+# ---------------- L4：scare_squad（要開 GB_NAT_EXTRA=scare_squad）----------------
+func _sq_night(Sc) -> String:
+	var N = J.gp(Sc, "night"); var o = {}
+	if J.t(N):
+		for k in N: o[k] = J.iter(N[k]) if k == "types" or k == "tricks" else N[k]
+	var B = J.gp(Sc, "bryan"); var bo = null
+	if J.t(B):
+		bo = {}
+		for k in B: if k != "R" and k != "tgt": bo[k] = B[k]
+		bo["tgt"] = J.gp(J.gp(B.get("tgt"), "d"), "k") if J.t(B.get("tgt")) else null
+	var ns = []
+	for n in J.iter(J.gp(Sc, "npcs")): ns.append([J.gp(J.gp(n, "d"), "k"), J.gp(n, "x"), J.gp(n, "y"), J.gp(n, "fear"), J.gp(n, "peak"), J.gp(n, "shaken"), J.gp(n, "lookUp"), J.gp(n, "fleeing"), J.gp(n, "mocked")])
+	return J.to_json({"N": o, "B": bo, "npcs": ns, "kpi": J.gp(Sc, "kpi"), "dao": [J.gp(Sc, "daoAt"), J.gp(Sc, "daoDelay")]})
+
+func _sq_run(X, heat: float, seed_: float, force) -> Array:
+	var Sc = J.G.Scare; var S = J.G.S; J.G["ScareX"] = X
+	var w = J.G.get("window"); if w != null: J.sp(w, "ScareX", X)
+	J.sp(S, "legend", {"office": {"heat": heat, "nights": 2.0}})
+	J.sp(Sc, "forceBryan", force)
+	seed(int(seed_))
+	J.mc(Sc, "start", ["office", ["afu", "eguiking", "toyol"], true, seed_])
+	var out = ["start " + _sq_night(Sc)]
+	var dt = 1.0 / 30; var t0 = J.num(J.gp(Sc, "t"))
+	var npcs = J.iter(J.gp(Sc, "npcs"))
+	var sigs = ["frost", "copier", "pop", "screen", "spark", "snip", "drip", "laugh", "smoke", "shadow", "coins", "hair", "veil", "tongue", "bones", "thump", "flash", "heat", "phone", "whisper", "scream", "prints", "dark"]
+	for f in 2700:
+		J.sp(Sc, "t", t0 + f * dt)
+		J.cl(J.gp(X, "tick"), null, [Sc, dt])
+		if f % 150 == 75 and npcs.size():
+			var n = npcs[(f / 150) % npcs.size()]
+			J.sp(n, "fear", J.num(J.gp(n, "fear")) + 12)
+			J.cl(J.gp(X, "onHit"), null, [Sc, n, {"type": ["light", "sound", "face", "cold"][f % 4], "pts": 12.0 if f % 300 else 0.0, "gain": 5.0, "clean": true, "mk": float(f % 3), "alone": f % 2 == 1, "seen": false, "burst": false, "tier": 1.0, "ghost": ["afu", "toyol", "eguiking"][f % 3]}])
+		if f % 30 == 0:
+			var B = J.gp(Sc, "bryan")
+			if J.t(B): J.sp(Sc, "camX", maxf(0.0, J.num(B.x) - 0.5))
+			var cc = new_ctx(); var ctx = cc[1]
+			J.cl(J.gp(X, "draw"), null, [Sc, ctx, f * dt])
+			if f % 120 == 0 and npcs.size():
+				var n2 = npcs[0]; J.sp(Sc, "camX", maxf(0.0, J.num(J.gp(n2, "x")) - 0.5))
+				var sg = sigs[(f / 120) % sigs.size()]
+				for k in [0.05, 0.3, 0.6, 0.9]:
+					seed(f + int(k * 100))
+					J.cl(J.gp(X, "sigFx"), null, [Sc, ctx, {"n": n2, "sig": sg, "col": "#80d0ff", "ghost": ["n30_daji", "n30_nopperabo", "n30_pelesit", "toyol"][f % 4], "sigText": "測試"}, f * dt, k])
+			out.append("f%d %s rec=%s" % [f, _sq_night(Sc), ser_rec(cc[0].js_rec())])
+	var ev = []
+	var html = J.cl(J.gp(X, "finish"), null, [Sc, 2.0, false])
+	out.append("finish " + J.str(html) + " S=" + J.to_json(J.gp(S, "legend")))
+	out.append("finish2 " + J.str(J.cl(J.gp(X, "finish"), null, [Sc, 1.0, true])) + " S=" + J.to_json(J.gp(S, "legend")))
+	return out
+
+func l4_squad(_t) -> void:
+	mod = "scare_squad"
+	var Sc = J.G.Scare; var S = J.G.S
+	var Xn = J.G.ScareX; var SGn = J.to_json(J.G.SCARE_GHOSTS)
+	var keep_sq = J.gp(Sc, "squad"); var keep_lg = J.gp(Sc, "legend")
+	var Xt = load_trans("scare_squad", ["ScareX"]).ScareX
+	_sc_cmp("SCARE_GHOSTS", SGn, J.to_json(J.G.SCARE_GHOSTS))
+	var Xsq_t = J.gp(Sc, "squad"); J.sp(Sc, "squad", keep_sq); J.sp(Sc, "legend", keep_lg)
+	_sc_cmp("SIG", J.to_json(J.gp(Xn, "SIG")), J.to_json(J.gp(Xt, "SIG")))
+	var keep_legend = J.gp(S, "legend"); var keep_ssq = J.gp(S, "scareSquad")
+	# 傳說、隊伍、KOL
+	for heat in [0.0, 39.0, 40.0, 109.0, 150.0, 220.0, 379.0, 380.0, 999.0]:
+		J.sp(S, "legend", {"office": {"heat": heat, "nights": 3.0}})
+		for loc in ["office", null, "other"]:
+			_sc_cmp("legend %s %s" % [heat, loc], J.to_json(J.cl(J.gp(Xn, "legend"), null, [loc])), J.to_json(J.cl(J.gp(Xt, "legend"), null, [loc])))
+	for ids in [null, [], ["tianhua"], ["afu", "toyol", "toyol", "eguiking", "pontianak", "xx", "tianhua"], ["eguiking"]]:
+		var r = []
+		for X2 in [[Xn, keep_sq], [Xt, Xsq_t]]:
+			J.sp(S, "scareSquad", keep_ssq)
+			var q = J.gp(X2[0], "squad")
+			r.append(J.to_json([J.mc(q, "set", [ids]), J.mc(q, "get", []), J.mc(q, "team", []), J.mc(q, "options", []), J.gp(S, "scareSquad"), J.cl(J.gp(J.gp(X2[0], "_n"), "maxSq"), null, []), J.cl(J.gp(J.gp(X2[0], "_n"), "owned"), null, [])]))
+		_sc_cmp("squad %s" % [ids], r[0], r[1])
+	J.sp(S, "scareSquad", keep_ssq)
+	for wk in ["sound", "face"]: _sc_cmp("KOL " + wk, J.to_json(J.cl(J.gp(Xn, "KOL"), null, [wk])), J.to_json(J.cl(J.gp(Xt, "KOL"), null, [wk])))
+	# 夜晚：唔同傳說等級、Bryan 有冇
+	for cfg in [[0.0, 11.0, true], [150.0, 23.0, true], [250.0, 37.0, null], [400.0, 5.0, true], [60.0, 8.0, false]]:
+		var a = _sq_run(Xn, cfg[0], cfg[1], cfg[2]); var b = _sq_run(Xt, cfg[0], cfg[1], cfg[2])
+		for i in a.size(): _sc_cmp("night%s %s" % [cfg, a[i].substr(0, 8)], a[i], b[i])
+		print("[xcheck] squad cfg=%s lines=%d last=%s" % [cfg, a.size(), a[a.size() - 3].substr(0, 300)])
+	J.G["ScareX"] = Xn; var w = J.G.get("window"); if w != null: J.sp(w, "ScareX", Xn)
+	J.sp(S, "legend", keep_legend); J.sp(Sc, "forceBryan", null)
+	_report()
+
+# 實玩：帶隊出更（揀隊→出發→出招→收工）
+func l4_sel(_t) -> void:
+	J.mc(J.G.Scare, "open", ["office"]); print("[xcheck] sel opened")
+func l4_endnight(_t) -> void:
+	var Sc = J.G.Scare; J.sp(Sc, "t", 179.0); J.sp(Sc, "forceBryan", null)
+	print("[xcheck] night=", _sq_night(Sc).substr(0, 400))
+func l4_after(_t) -> void:
+	var Sc = J.G.Scare
+	print("[xcheck] after active=", J.gp(Sc, "active"), " legendHTML=", J.str(J.gp(Sc, "_legendHTML")).substr(0, 300), " S.legend=", J.to_json(J.gp(J.G.S, "legend")))

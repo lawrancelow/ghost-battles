@@ -47,3 +47,4 @@ puppet
 tower
 tower_lift
 tower_unit
+scare_squad
