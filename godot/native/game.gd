@@ -1,8 +1,8 @@
 # 原生改寫自 game.js（遊戲核心：狀態、經濟、村子、介面）——分段進行
-# 做法：先跑轉譯版（jsgen/game.gd）建好全部全局，再逐段換成原生版本；全部段落完成之後先唔再載轉譯版。
+# 全部原生，唔再載轉譯版（jsgen/game.gd）；只有對照測試（GB_L2_ORIG=1）先載轉譯版做比較。
 #   第一段（呢度）：數值公式 F、存檔 newState/save/load、經濟 ratesPerMin/produce、資源 canPay/pay/costText/give、
 #                  升級 gainExp/onLevelUp、收鬼 joinGhost/recruitFodder、任務 Quest、離線收益 offlineGain、雜項（fmt、bldUnlocked…）
-#   之後：Village、Story、UI、JossFx、loop/startGame 同 patches.js 嘅補丁部分
+#   第二段：村子邏輯；第三段：Fx/JossFx/Story/paintBg/groundLayer/drawLily/村子繪畫；第四段：UI＋補丁（__nat_menu、UI._n）；第五段：loop/startGame/全局常數
 # 規矩：其他模塊會包（wrap）嘅函數（ratesPerMin、joinGhost、Quest.complete…）一律經 J.G／J.mc 叫，包裝先會生效
 extends RefCounted
 
@@ -642,14 +642,987 @@ static func install_seg2() -> void:
 	V["questTarget"] = func(_t, _a): return v_quest_target()
 	V["collect"] = func(t, a): return v_collect(t if t != null else V, J.arg(a, 0))
 
+# ================= 第三段：特效、劇情、背景、村子繪畫（Fx / JossFx / Story / paintBg / groundLayer / drawLily / Village 畫面）=================
+# Godot 入面：Fx.toast/banner/praise 同 JossFx.play 會俾 bridge.connect_ui 換成原生介面；Story 成個俾 ui/story.gd 取代。
+# 呢度照樣保留 JS 版本嘅行為（DOM 替身上面做），bench／測試／未接介面時一樣行得。
+static func m(o, k: String, a: Array = []): return J.mc(o, k, a)
+static func p(o, k: String, v) -> void: J.sp(o, k, v)
+static func _c(name: String, a: Array = []): return J.cl(_g(name), null, a)
+static func _q(sel: String): return J.S_document_("querySelector", [sel])
+static func _qa(sel: String) -> Array: return J.iter(J.S_document_("querySelectorAll", [sel]))
+static func _cls(el, op: String, a: Array): return J.mc(J.gp(el, "classList"), op, a)
+static func _art(k: String, a: Array): return J.mc(_g("ART"), k, a)
+static func _has(n: String) -> bool: return J.G.get(n) != null
+const PI2 := PI * 2
+
+# JS Array.prototype.sort（穩定排序）：cmp 回傳數字
+static func stable_sort(arr: Array, cmp: Callable) -> Array:
+	var idx = []
+	for i in arr.size(): idx.append(i)
+	idx.sort_custom(func(i, j):
+		var c = J.num(cmp.call(arr[i], arr[j]))
+		return c < 0 or (c == 0 and i < j))
+	var out = []
+	for i in idx: out.append(arr[i])
+	return out
+
+# ---------------- Fx ----------------
+static func fx_float(x, y, text, col) -> void:
+	(_V().floats as Array).append({"x": x, "y": y, "text": text, "col": col if J.t(col) else "#fff", "t": 0.0, "life": 1.6})
+static func fx_toast(html) -> void:
+	var box = _q("#toasts")
+	while J.num(J.gp(J.gp(box, "children"), "length")) >= 3: m(J.gp(box, "firstChild"), "remove")
+	var d = J.S_document_("createElement", ["div"]); p(d, "className", "toast"); p(d, "innerHTML", html)
+	m(_q("#toasts"), "appendChild", [d])
+	J.F_setTimeout([func(_t, _a): _cls(d, "add", ["out"]); return null, 2600.0])
+	J.F_setTimeout([func(_t, _a): m(d, "remove"); return null, 3200.0])
+static func fx_banner(text) -> void:
+	var d = _q("#banner"); p(d, "textContent", text); _cls(d, "remove", ["show"]); J.gp(d, "offsetWidth"); _cls(d, "add", ["show"])
+static func fx_praise(this_, kind) -> void:
+	var S = _S(); var k = J.str(kind)
+	var pool = _g("PRAISE_KIND") if J.t(S.get("ended")) else (_g("PRAISE_CHOP") if k == "chop" else (_g("PRAISE_RICE") if k == "rice" else _g("PRAISE_CRAFT")))
+	var lp = this_.lastPraise; var i = 0
+	while true:
+		i = int(floor(randf() * pool.size()))
+		if not (pool.size() > 1 and lp.has(k) and float(i) == J.num(lp[k])): break
+	lp[k] = float(i)
+	var d = _q("#praise"); p(d, "innerHTML", "<canvas></canvas><span>%s</span>" % J.str(pool[i]))
+	var c = m(d, "querySelector", ["canvas"]); var ic = _art("sysIcon", [30.0])
+	p(c, "width", J.gp(ic, "width")); p(c, "height", J.gp(ic, "height")); p(J.gp(c, "style"), "width", "30px"); p(J.gp(c, "style"), "height", "30px")
+	m(m(c, "getContext", ["2d"]), "drawImage", [ic, 0.0, 0.0])
+	_cls(d, "remove", ["show"]); J.gp(d, "offsetWidth"); _cls(d, "add", ["show"]); _snd("praise")
+	if J.num(S.lv) >= 3 and randf() < 0.04:
+		S.chests["g"] = J.num(S.chests.g) + 1; _fx("toast", ["系統太滿意了，掉落一個<b>綠箱</b>！"])
+
+# ---------------- JossFx（化寶爐：金銀紙滿屏）----------------
+static func joss_play(this_) -> void:
+	if J.t(this_.get("raf")):
+		J.F_cancelAnimationFrame([this_.raf])
+		if J.t(this_.get("cv")): m(this_.cv, "remove")
+	var win = _g("window")
+	var dpr = minf(2, J.num(J.gp(win, "devicePixelRatio")) if J.t(J.gp(win, "devicePixelRatio")) else 1.0)
+	var vw = J.num(J.gp(win, "innerWidth")); var vh = J.num(J.gp(win, "innerHeight"))
+	var cv = J.S_document_("createElement", ["canvas"]); p(cv, "id", "jossfx"); p(cv, "width", J.round(vw * dpr)); p(cv, "height", J.round(vh * dpr))
+	p(J.gp(cv, "style"), "cssText", "position:fixed;left:0;top:0;width:%spx;height:%spx;pointer-events:none;z-index:65" % [J.str(vw), J.str(vh)])
+	m(J.gp(J.G.get("document"), "body"), "appendChild", [cv]); this_["cv"] = cv; var x = m(cv, "getContext", ["2d"])
+	var ox = vw * 0.8; var oy = vh * 0.55
+	var V = _V(); var r = m(V.cvs, "getBoundingClientRect") if V.get("cvs") != null else null
+	if r != null:
+		var fp = _g("POS").furnace
+		ox = J.num(J.gp(r, "left")) + J.num(fp[0]) * J.num(V.scale); oy = J.num(J.gp(r, "top")) + (J.num(fp[1]) - 40 - J.num(V.camY)) * J.num(V.scale)
+	ox = maxf(30, minf(vw - 30, ox)); oy = maxf(vh * 0.25, minf(vh * 0.8, oy))
+	var N = 140 if vw < 500 else 170; var P = []; var sz = maxf(vw, vh) / 844
+	for i in N:
+		var burst = i < N * 0.55; var gold = randf() < 0.6; var w = (16 + randf() * 12) * sz
+		var pp = {"gold": gold, "w": w, "h": w * (0.72 + randf() * 0.14), "rot": randf() * 6.3, "vr": (randf() - 0.5) * 7, "fl": randf() * 6.3, "vf": 4 + randf() * 8, "sw": randf() * 6.3, "vs": 1.5 + randf() * 2.5, "delay": 0.0}
+		if burst:
+			var ang = -PI / 2 + (randf() - 0.5) * 1.9; var sp = (420 + randf() * 520) * sz
+			pp.x = ox; pp.y = oy; pp.vx = cos(ang) * sp; pp.vy = sin(ang) * sp; pp.delay = randf() * 0.3
+		else:
+			pp.x = randf() * vw; pp.y = -30 - randf() * vh * 0.25; pp.vx = (randf() - 0.5) * 60; pp.vy = 320 + randf() * 160; pp.delay = randf() * 0.5
+		pp.term = 300 + randf() * 160
+		P.append(pp)
+	var S2 = []
+	for i in 46: S2.append({"x": ox + (randf() - 0.5) * 60, "y": oy, "vx": (randf() - 0.5) * 500 * sz, "vy": -(200 + randf() * 700) * sz, "life": 0.6 + randf() * 0.9, "t": 0.0, "d": randf() * 0.5})
+	var T = 2.8; var now0 = J.num(J.S_performance_("now", [])); var st = {"t0": now0, "last": now0}
+	var paper = func(pp, a):
+		var w = pp.w; var h = pp.h; var sx = cos(pp.fl)
+		m(x, "save"); m(x, "translate", [pp.x, pp.y]); m(x, "rotate", [pp.rot]); m(x, "scale", [sx, 1.0]); p(x, "globalAlpha", a)
+		var back = sx < 0; var shade = 0.75 + 0.25 * absf(sx)
+		if pp.gold:
+			p(x, "fillStyle", "rgb(%d,%d,%d)" % ([int(190 * shade), int(140 * shade), int(50 * shade)] if back else [int(236 * shade), int(188 * shade), int(70 * shade)])); m(x, "fillRect", [-w / 2, -h / 2, w, h])
+			p(x, "strokeStyle", "rgba(140,80,10,.7)"); p(x, "lineWidth", 1.0); m(x, "strokeRect", [-w / 2 + 1.5, -h / 2 + 1.5, w - 3, h - 3])
+			if not back:
+				var q = h * 0.42; p(x, "fillStyle", "#c8281c"); m(x, "fillRect", [-q / 2, -q / 2, q, q]); p(x, "fillStyle", "rgba(255,220,120,.85)"); m(x, "fillRect", [-q / 5, -q / 5, q * 0.4, q * 0.4])
+		else:
+			p(x, "fillStyle", "rgb(%d,%d,%d)" % ([int(170 * shade), int(172 * shade), int(178 * shade)] if back else [int(226 * shade), int(228 * shade), int(234 * shade)])); m(x, "fillRect", [-w / 2, -h / 2, w, h])
+			p(x, "strokeStyle", "rgba(90,95,110,.6)"); p(x, "lineWidth", 1.0); m(x, "strokeRect", [-w / 2 + 1.5, -h / 2 + 1.5, w - 3, h - 3])
+			if not back:
+				var q = h * 0.42; p(x, "fillStyle", "#7d828f"); m(x, "fillRect", [-q / 2, -q / 2, q, q])
+		m(x, "restore")
+	var step = {}
+	step["f"] = func(_t, a):
+		var now = J.num(J.arg(a, 0))
+		var el = (now - st.t0) / 1000; var dt = minf(0.05, (now - st.last) / 1000); st.last = now
+		m(x, "setTransform", [dpr, 0.0, 0.0, dpr, 0.0, 0.0]); m(x, "clearRect", [0.0, 0.0, vw, vh])
+		var fade = maxf(0, (T - el) / 0.6) if el > T - 0.6 else 1.0
+		if el < 0.5:
+			var g = m(x, "createRadialGradient", [ox, oy, 0.0, ox, oy, 160 * sz]); m(g, "addColorStop", [0.0, "rgba(255,200,90,%s)" % J.str(0.55 * (1 - el / 0.5))]); m(g, "addColorStop", [1.0, "rgba(255,120,30,0)"])
+			p(x, "fillStyle", g); m(x, "fillRect", [0.0, 0.0, vw, vh])
+		for pp in P:
+			if el < pp.delay: continue
+			pp.vx *= pow(0.35, dt); pp.vy += 520 * sz * dt; var term = (pp.term if J.t(pp.term) else 250.0) * sz
+			if pp.vy > term: pp.vy += (term - pp.vy) * minf(1, dt * 4)
+			pp.sw += pp.vs * dt; pp.x += (pp.vx + sin(pp.sw) * 70 * sz) * dt; pp.y += pp.vy * dt; pp.rot += pp.vr * dt; pp.fl += pp.vf * dt
+			if pp.y < vh + 40: paper.call(pp, fade)
+		p(x, "globalCompositeOperation", "lighter")
+		for s in S2:
+			if el < s.d: continue
+			s.t += dt
+			if s.t > s.life: continue
+			s.vy += 600 * sz * dt; s.x += s.vx * dt; s.y += s.vy * dt; var k = 1 - s.t / s.life; var rr = 2 + 3 * k
+			p(x, "globalAlpha", k); p(x, "fillStyle", "#fff2b0"); m(x, "beginPath"); m(x, "moveTo", [s.x, s.y - rr * 2]); m(x, "lineTo", [s.x + rr * 0.5, s.y]); m(x, "lineTo", [s.x, s.y + rr * 2]); m(x, "lineTo", [s.x - rr * 0.5, s.y]); m(x, "closePath"); m(x, "fill")
+			m(x, "fillRect", [s.x - rr * 2, s.y - 0.6, rr * 4, 1.2])
+		p(x, "globalCompositeOperation", "source-over"); p(x, "globalAlpha", 1.0)
+		if el < T: this_["raf"] = J.F_requestAnimationFrame([step.f])
+		else: m(cv, "remove"); this_["cv"] = null; this_["raf"] = 0.0
+		return null
+	this_["raf"] = J.F_requestAnimationFrame([step.f])
+
+# ---------------- Story（劇情播放器）----------------
+# Godot 開機時 bridge.connect_ui 會成個換成 ui/story.gd；呢度只留佇列介面（busy/queue/next/skipScene），未接介面前 queue 落嘅場景會保留
+static func make_story() -> Dictionary:
+	var st = {"q": [], "cur": null, "li": 0.0, "typing": false, "shown": "", "timer": null, "cb": null, "actors": []}
+	st["busy"] = func(t, _a):
+		var o = t if t != null else st
+		return J.t(o.cur) or (o.q as Array).size() > 0
+	st["queue"] = func(t, a):
+		var o = t if t != null else st
+		(o.q as Array).append({"sc": J.arg(a, 0), "cb": J.arg(a, 1)})
+		if not J.t(o.cur): J.mc(o, "next", [])
+		return null
+	st["next"] = func(t, _a):
+		var o = t if t != null else st
+		if (o.q as Array).is_empty(): o["cur"] = null; return null
+		var it = (o.q as Array).pop_front(); o["cur"] = it.sc; o["cb"] = it.cb; o["li"] = 0.0
+		return null
+	st["skipScene"] = func(t, _a):
+		var o = t if t != null else st
+		var cb = o.cb; o["cur"] = null; o["cb"] = null
+		if cb != null: J.cl(cb, null, [])
+		J.mc(o, "next", [])
+		return null
+	return st
+
+# ---------------- 背景（劇情／戰鬥共用）----------------
+const SKY := {"village": ["#121016", "#24222a"], "road": ["#1a0f22", "#3a1a2a"], "field": ["#0f1a1a", "#26332a"], "kampung": ["#0c1420", "#1f2a33"], "banana": ["#0a140f", "#1c2e22"], "hq": ["#0e0e1a", "#26263c"], "office": ["#141420", "#2c2c3a"]}
+static func paint_bg(ctx, w: float, h: float, bg, _t = null) -> void:
+	if J.t(J.mc(_g("SCENE"), "drawBg", [ctx, w, h, bg])): return
+	var b = J.str(bg)
+	var sky = SKY.get(b, ["#120f22", "#2a2440"])
+	var g = m(ctx, "createLinearGradient", [0.0, 0.0, 0.0, h]); m(g, "addColorStop", [0.0, sky[0]]); m(g, "addColorStop", [1.0, sky[1]]); p(ctx, "fillStyle", g); m(ctx, "fillRect", [0.0, 0.0, w, h])
+	_art("el", [ctx, w * 0.78, h * 0.13, 28.0, 28.0, "rgba(240,230,200,.85)"]); _art("el", [ctx, w * 0.78 + 8, h * 0.13 - 4, 26.0, 26.0, sky[0]])
+	var gy = h * 0.66
+	p(ctx, "fillStyle", "rgba(0,0,0,.35)")
+	if b == "banana":
+		for i in 6:
+			var x = i * w / 5; m(ctx, "fillRect", [x - 4, gy - 170, 8.0, 170.0])
+			for k in 5:
+				m(ctx, "save"); m(ctx, "translate", [x, gy - 170]); m(ctx, "rotate", [-1.2 + k * 0.6]); _art("el", [ctx, 40.0, 0.0, 44.0, 10.0, "rgba(10,30,18,.8)"]); m(ctx, "restore")
+	elif b == "kampung":
+		for i in 4:
+			var x = 20 + i * w / 3.6; m(ctx, "fillRect", [x, gy - 90, 90.0, 50.0])
+			m(ctx, "beginPath"); m(ctx, "moveTo", [x - 10, gy - 88]); m(ctx, "lineTo", [x + 45, gy - 130]); m(ctx, "lineTo", [x + 100, gy - 88]); m(ctx, "fill")
+			for k in 4: m(ctx, "fillRect", [x + k * 28, gy - 40, 5.0, 40.0])
+	elif b == "hq" or b == "office":
+		for i in 5:
+			var x = i * w / 4.5; var hh = 160.0 + (i % 3) * 70
+			m(ctx, "fillRect", [x, gy - hh, 70.0, hh]); p(ctx, "fillStyle", "rgba(255,220,120,.18)")
+			for a in 6:
+				for bb in 3:
+					if (a * 3 + bb + i) % 4: m(ctx, "fillRect", [x + 8 + bb * 20, gy - hh + 12 + a * 22, 10.0, 12.0])
+			p(ctx, "fillStyle", "rgba(0,0,0,.35)")
+		if b == "office": p(ctx, "fillStyle", "rgba(30,24,20,.9)"); m(ctx, "fillRect", [0.0, gy - 10, w, 30.0])
+	elif b == "road":
+		p(ctx, "fillStyle", "rgba(120,40,60,.25)"); m(ctx, "beginPath"); m(ctx, "moveTo", [w * 0.42, gy - 160]); m(ctx, "lineTo", [w * 0.58, gy - 160]); m(ctx, "lineTo", [w, gy]); m(ctx, "lineTo", [0.0, gy]); m(ctx, "fill")
+		for i in 14:
+			var x = fmod(i * 71.0, w); var y = gy - 20 - (i * 37) % 120
+			p(ctx, "strokeStyle", "rgba(230,50,70,.6)"); p(ctx, "lineWidth", 1.5)
+			for k in 6:
+				var a = k / 6.0 * PI * 2; m(ctx, "beginPath"); m(ctx, "moveTo", [x, y]); m(ctx, "lineTo", [x + cos(a) * 7, y + sin(a) * 7]); m(ctx, "stroke")
+	else:
+		for i in 7:
+			var x = i * w / 6; _art("el", [ctx, x, gy - 60, 40.0, 50.0, "rgba(10,20,20,.6)"]); p(ctx, "fillStyle", "rgba(10,20,20,.6)"); m(ctx, "fillRect", [x - 4, gy - 30, 8.0, 30.0])
+	p(ctx, "fillStyle", "rgba(10,8,18,.55)"); m(ctx, "fillRect", [0.0, gy, w, h - gy])
+	var mg = m(ctx, "createLinearGradient", [0.0, gy - 40, 0.0, gy + 20]); m(mg, "addColorStop", [0.0, "rgba(180,170,230,0)"]); m(mg, "addColorStop", [1.0, "rgba(180,170,230,.12)"]); p(ctx, "fillStyle", mg); m(ctx, "fillRect", [0.0, gy - 40, w, 60.0])
+
+# ---------------- 村子地面（靜態圖層，只畫一次）----------------
+static func ground_layer():
+	if J.G.get("_ground") != null: return J.G["_ground"]
+	var W = VW; var WH = VWH
+	var k = 2.0; var c = J.S_document_("createElement", ["canvas"]); p(c, "width", W * k); p(c, "height", WH * k); var x = m(c, "getContext", ["2d"]); m(x, "scale", [k, k])
+	var sd = {"s": 7}
+	var R = func() -> float:
+		sd.s = (int(sd.s) * 16807) % 2147483647
+		return float(sd.s) / 2147483647.0
+	var gr = m(x, "createLinearGradient", [0.0, 0.0, 0.0, WH]); m(gr, "addColorStop", [0.0, "#140f12"]); m(gr, "addColorStop", [0.13, "#211b19"]); m(gr, "addColorStop", [0.5, "#26201b"]); m(gr, "addColorStop", [1.0, "#221d1a"])
+	p(x, "fillStyle", gr); m(x, "fillRect", [0.0, 0.0, W, WH])
+	var hr = m(x, "createLinearGradient", [0.0, 0.0, 0.0, 160.0]); m(hr, "addColorStop", [0.0, "rgba(110,30,30,.55)"]); m(hr, "addColorStop", [1.0, "rgba(70,30,30,0)"])
+	p(x, "fillStyle", hr); m(x, "beginPath"); m(x, "moveTo", [160.0, 0.0]); m(x, "lineTo", [230.0, 0.0]); m(x, "lineTo", [246.0, 160.0]); m(x, "lineTo", [144.0, 160.0]); m(x, "fill")
+	for i in 700:
+		var px = R.call() * W; var py = 140 + R.call() * (WH - 140); var r = 2 + R.call() * 9
+		p(x, "fillStyle", "rgba(255,240,210,.025)" if R.call() < 0.5 else "rgba(0,0,0,.12)"); m(x, "beginPath"); m(x, "ellipse", [px, py, r * 1.6, r, 0.0, 0.0, 6.3]); m(x, "fill")
+	p(x, "fillStyle", "rgba(20,30,22,.55)"); m(x, "beginPath"); m(x, "ellipse", [100.0, 455.0, 110.0, 92.0, 0.0, 0.0, 6.3]); m(x, "fill")
+	var leaf = ["#3a3a20", "#4a3a1c", "#2e3a26"]
+	for i in 90:
+		var a = R.call() * 6.3; var d = R.call(); p(x, "fillStyle", leaf[i % 3]); m(x, "beginPath")
+		var ex = 100 + cos(a) * 100 * d; var ey = 455 + sin(a) * 80 * d
+		m(x, "ellipse", [ex, ey, 2.2, 1.2, R.call() * 3, 0.0, 6.3]); m(x, "fill")
+	p(x, "fillStyle", "#18221f"); m(x, "fillRect", [222.0, 388.0, 154.0, 146.0])
+	p(x, "fillStyle", "rgba(70,100,95,.18)")
+	for i in 3: m(x, "fillRect", [222.0, 388.0 + i * 50 + 34, 154.0, 4.0])
+	p(x, "strokeStyle", "#3a3a2c"); p(x, "lineWidth", 3.0); m(x, "strokeRect", [222.0, 388.0, 154.0, 146.0])
+	var POS = _g("POS")
+	for id in J.keys(POS):
+		if J.str(id) == "gate": continue
+		var bp = POS[id]; var bw = 80.0 if J.str(id) == "house" else (30.0 if J.str(id) == "furnace" else 56.0)
+		p(x, "fillStyle", "rgba(60,48,36,.35)"); m(x, "beginPath"); m(x, "ellipse", [J.num(bp[0]), J.num(bp[1]) - 4, bw, 16.0, 0.0, 0.0, 6.3]); m(x, "fill")
+	var slabc = ["#3c3a3e", "#36363a", "#413e40"]
+	var slab = func(sx: float, sy: float, w: float, h: float):
+		var j = (R.call() - 0.5) * 2; p(x, "fillStyle", slabc[int(floor(R.call() * 3))]); m(x, "beginPath"); m(x, "roundRect", [sx + j, sy, w - 2, h - 2, 3.0]); m(x, "fill")
+		p(x, "fillStyle", "rgba(255,255,255,.05)"); m(x, "fillRect", [sx + j + 2, sy + 1, w - 6, 1.5]); p(x, "fillStyle", "rgba(0,0,0,.35)"); m(x, "fillRect", [sx + j, sy + h - 3, w - 2, 1.5])
+	var y = 150.0
+	while y < WH:
+		var off = 0.0 if fmod(y / 18.0, 2.0) != 0.0 else 12.0
+		slab.call(172 - off / 2, y, 24 + off / 2, 18.0); slab.call(196 + (0.0 if off else -6.0), y, 24 - (0.0 if off else -6.0), 18.0)
+		y += 18
+	for ry in [678.0, 932.0]:
+		var xx = 0.0
+		while xx < W:
+			if not (xx > 160 and xx < 222): slab.call(xx, ry, 22.0, 11.0); slab.call(xx + 11, ry + 11, 22.0, 11.0)
+			xx += 22
+	var tuft = func(tx: float, ty: float):
+		p(x, "strokeStyle", "#34463a" if R.call() < 0.5 else "#3e5040"); p(x, "lineWidth", 1.3)
+		for kk in range(-2, 3):
+			m(x, "beginPath"); m(x, "moveTo", [tx + kk * 1.6, ty])
+			var ex = tx + kk * 3 + (R.call() - 0.5) * 2; var ey = ty - 6 - R.call() * 4
+			m(x, "quadraticCurveTo", [tx + kk * 2.2, ty - 4, ex, ey]); m(x, "stroke")
+	for i in 220:
+		var tx = R.call() * W; var ty = 150 + R.call() * (WH - 150)
+		if tx > 160 and tx < 230: continue
+		if tx > 218 and ty > 384 and ty < 538: continue
+		if absf(ty - 690) < 16 or absf(ty - 942) < 16: continue
+		tuft.call(tx, ty)
+	var vg = m(x, "createLinearGradient", [0.0, 0.0, W, 0.0]); m(vg, "addColorStop", [0.0, "rgba(0,0,0,.35)"]); m(vg, "addColorStop", [0.12, "rgba(0,0,0,0)"]); m(vg, "addColorStop", [0.88, "rgba(0,0,0,0)"]); m(vg, "addColorStop", [1.0, "rgba(0,0,0,.35)"])
+	var sc = ["rgba(120,92,62,.16)", "rgba(70,56,40,.22)", "rgba(150,120,80,.10)", "rgba(60,80,58,.14)", "rgba(20,14,10,.22)"]
+	p(x, "lineCap", "round")
+	for i in 16000:
+		var px = R.call() * W; var py = 120 + R.call() * (WH - 120); var ln = 3 + R.call() * 7; var a = -0.6 + (R.call() - 0.5) * 0.35
+		p(x, "strokeStyle", sc[int(floor(R.call() * sc.size()))]); p(x, "lineWidth", 0.6 + R.call() * 1.1)
+		m(x, "beginPath"); m(x, "moveTo", [px, py]); m(x, "lineTo", [px + cos(a) * ln, py + sin(a) * ln]); m(x, "stroke")
+	for i in 5000:
+		p(x, "fillStyle", "rgba(235,220,190,.07)" if R.call() < 0.6 else "rgba(0,0,0,.18)")
+		var fx = R.call() * W; var fy = R.call() * WH; var fw = 0.5 + R.call() * 0.9; var fh = 0.5 + R.call() * 0.9
+		m(x, "fillRect", [fx, fy, fw, fh])
+	p(x, "fillStyle", vg); m(x, "fillRect", [0.0, 0.0, W, WH])
+	J.G["_ground"] = c; return c
+
+static func draw_lily(ctx, x: float, y: float, t: float) -> void:
+	p(ctx, "strokeStyle", "#3a5a32"); p(ctx, "lineWidth", 1.2); m(ctx, "beginPath"); m(ctx, "moveTo", [x, y + 12]); m(ctx, "lineTo", [x, y + 2]); m(ctx, "stroke")
+	p(ctx, "strokeStyle", "rgba(214,40,52,.9)"); p(ctx, "lineWidth", 1.5); p(ctx, "lineCap", "round")
+	for k in 6:
+		var a = k / 6.0 * PI * 2 + sin(t * 0.6) * 0.15
+		m(ctx, "beginPath"); m(ctx, "moveTo", [x, y]); m(ctx, "quadraticCurveTo", [x + cos(a) * 4, y + sin(a) * 4 - 3, x + cos(a) * 7, y + sin(a) * 6 - 4]); m(ctx, "stroke")
+	p(ctx, "fillStyle", "#ff6060"); m(ctx, "beginPath"); m(ctx, "arc", [x, y, 1.6, 0.0, 6.3]); m(ctx, "fill")
+
+# ---------------- Village：畫布、尺寸、觸控、繪畫 ----------------
+static func v_init(this_) -> void:
+	this_["cvs"] = _q("#village"); this_["ctx"] = m(this_.cvs, "getContext", ["2d"])
+	m(this_, "resize")
+	m(_g("window"), "addEventListener", ["resize", func(_t, _a): m(this_, "resize"); return null])
+	var c = this_.cvs
+	var down = func(_t, a):
+		var pt = m(this_, "pt", [J.arg(a, 0)]); this_["drag"] = {"y0": J.gp(pt, "cy"), "cam": this_.camY, "moved": false, "x": J.gp(pt, "cx"), "y": J.gp(pt, "cy")}; return null
+	var move = func(_t, a):
+		if not J.t(this_.get("drag")): return null
+		var e = J.arg(a, 0); var pt = m(this_, "pt", [e]); var dy = J.num(J.gp(pt, "cy")) - J.num(this_.drag.y0)
+		if absf(dy) > 8: this_.drag["moved"] = true
+		if J.t(this_.drag.moved): m(this_, "setCam", [J.num(this_.drag.cam) - dy])
+		m(e, "preventDefault"); return null
+	var up = func(_t, _a):
+		if not J.t(this_.get("drag")): return null
+		var d = this_.drag; this_["drag"] = null
+		if not J.t(d.moved): m(this_, "tap", [d.x, J.num(d.y) + J.num(this_.camY)])
+		return null
+	m(c, "addEventListener", ["pointerdown", down]); m(c, "addEventListener", ["pointermove", move, {"passive": false}]); m(_g("window"), "addEventListener", ["pointerup", up])
+	m(c, "addEventListener", ["wheel", func(_t, a):
+		var e = J.arg(a, 0); m(this_, "setCam", [J.num(this_.camY) + J.num(J.gp(e, "deltaY")) * 0.6]); m(e, "preventDefault"); return null, {"passive": false}])
+	this_["camY"] = 180.0
+static func v_resize(this_) -> void:
+	var r = m(this_.cvs, "getBoundingClientRect"); var win = _g("window")
+	this_["dpr"] = minf(2, J.num(J.gp(win, "devicePixelRatio")) if J.t(J.gp(win, "devicePixelRatio")) else 1.0)
+	this_["w"] = J.gp(r, "width"); this_["h"] = J.gp(r, "height"); p(this_.cvs, "width", J.num(J.gp(r, "width")) * this_.dpr); p(this_.cvs, "height", J.num(J.gp(r, "height")) * this_.dpr)
+	this_["scale"] = J.num(this_.w) / VW; m(this_, "setCam", [this_.camY])
+static func v_pt(this_, e) -> Dictionary:
+	var r = m(this_.cvs, "getBoundingClientRect")
+	return {"cx": (J.num(J.gp(e, "clientX")) - J.num(J.gp(r, "left"))) / J.num(this_.scale), "cy": (J.num(J.gp(e, "clientY")) - J.num(J.gp(r, "top"))) / J.num(this_.scale)}
+
+const PART_IM := {"spark": "fx_spark", "chip": "fx_chips", "dust": "fx_dust", "dough": "fx_dough", "grain": "fx_dough"}
+static func v_draw_parts(this_, ctx) -> void:
+	var parts = this_.get("parts")
+	if parts == null: parts = []
+	for pp in J.iter(parts):
+		var f = J.num(pp.t) / J.num(pp.life); m(ctx, "save"); p(ctx, "globalAlpha", maxf(0, 1 - f * f)); m(ctx, "translate", [pp.x, pp.y]); m(ctx, "rotate", [pp.r])
+		var k = J.str(pp.k); var im = PART_IM.get(k)
+		if k == "grain": p(ctx, "fillStyle", "#e9cf7a"); m(ctx, "fillRect", [-1.5, -3.0, 3.0, 6.0])
+		elif im != null and _has("sprOk") and J.t(_c("sprOk", [im])):
+			var I = J.gp(_g("SPR"), im); var sc = J.num(pp.s) * ((1 + f * 0.8) if k == "spark" else ((1 + f * 1.5) if k == "dust" else 1.0))
+			var nw = J.num(J.gp(I, "naturalWidth")); var nh = J.num(J.gp(I, "naturalHeight"))
+			m(ctx, "drawImage", [I, -nw * sc / 2, -nh * sc / 2, nw * sc, nh * sc])
+		m(ctx, "restore")
+
+static func v_draw(this_) -> void:
+	var ctx = this_.ctx; var t = J.num(this_.t); var S = _S(); var ART = _g("ART"); var POS = _g("POS")
+	var sk = J.num(this_.get("shk")) if J.t(this_.get("shk")) else 0.0; var kx = (randf() - 0.5) * sk; var ky = (randf() - 0.5) * sk
+	var ds = J.num(this_.dpr) * J.num(this_.scale)
+	m(ctx, "setTransform", [ds, 0.0, 0.0, ds, kx * ds, (ky - J.num(this_.camY)) * ds])
+	m(ctx, "drawImage", [_c("groundLayer"), 0.0, 0.0, VW, VWH])
+	for i in 9:
+		var fx = float((i * 47 + 20) % 390); var fy = 24.0 + (i * 31) % 112; _c("drawLily", [ctx, fx, fy, t + i])
+	for i in 6:
+		var mx = fmod(t * 8 + i * 90, VW + 200) - 100; var my = 160.0 + i * 170
+		var mg = m(ctx, "createRadialGradient", [mx, my, 5.0, mx, my, 90.0]); m(mg, "addColorStop", [0.0, "rgba(200,210,200,.06)"]); m(mg, "addColorStop", [1.0, "rgba(200,210,200,0)"]); p(ctx, "fillStyle", mg); m(ctx, "fillRect", [mx - 90, my - 90, 180.0, 180.0])
+	var items = []
+	var gp_ = POS.gate
+	items.append({"y": gp_[1], "f": func(_t, _a): return J.mc(ART, "drawGate", [ctx, gp_[0], gp_[1], t])})
+	var BLD = _g("BUILDINGS")
+	for id in J.iter(_g("BLD_ORDER")):
+		var xy = POS[id]; var lv = S.bld.get(id); var bid = id
+		if J.t(lv): items.append({"y": xy[1], "f": func(_t, _a): return J.mc(ART, "drawBuilding", [ctx, bid, xy[0], xy[1], lv, t, _c("furnaceReady") if J.str(bid) == "furnace" else null])})
+		elif J.t(_c("bldUnlocked", [id])): items.append({"y": xy[1], "f": func(_t, _a): return J.mc(ART, "drawSite", [ctx, xy[0], xy[1], J.gp(BLD[bid], "name")])})
+	for dd in J.iter(_g("DECOR")):
+		var d = dd
+		items.append({"y": d[2], "f": func(_t, _a): return J.mc(ART, "drawDecor", [ctx, d[0], d[1], d[2], t])})
+	var TP = J.iter(_g("TREE_POS"))
+	for i in TP.size():
+		var xy = TP[i]; var ii = i
+		items.append({"y": xy[1], "f": func(_t, _a):
+			var act = this_.hero.get("act"); var shake = act
+			if J.t(act):
+				shake = false
+				if J.str(act.get("kind")) == "tree" and J.num(act.get("i")) == ii and J.num(act.get("shake")) > 0:
+					act["shake"] = J.num(act.shake) - 1.0 / 60; shake = J.num(act.shake) > 0
+			return J.mc(ART, "drawTree", [ctx, xy[0], xy[1], S.trees[ii], t, shake, J.num(S.trees[ii]) == 3, float(ii)])})
+	var PP = J.iter(_g("PADDY_POS"))
+	for i in PP.size():
+		var xy = PP[i]; var ii = i
+		items.append({"y": J.num(xy[1]) - 10, "f": func(_t, _a): return J.mc(ART, "drawPaddy", [ctx, xy[0], xy[1], S.paddy[ii], t, float(ii)])})
+	var spots = J.iter(J.mc(this_, "workerSpots", [])); var vis = []; this_["vis"] = vis
+	for s in spots: vis.append({"g": J.gp(s, "g"), "x": J.gp(s, "x"), "y": J.gp(s, "y")})
+	var work_info = {"furnace": [J.num(POS.furnace[0]), J.num(POS.furnace[1]) - 22] if J.t(S.bld.get("furnace")) else null}
+	for s in spots:
+		var ss = s
+		items.append({"y": J.gp(s, "y"), "f": func(_t, _a):
+			var WK = _g("WORK")
+			if WK != null: return J.mc(WK, "drawWorker", [ctx, ss, t, 0.62, work_info])
+			return J.mc(ART, "drawChar", [ctx, J.gp(J.gp(ss, "g"), "k"), J.gp(ss, "x"), J.gp(ss, "y"), 0.62, {"t": t + J.num(J.gp(ss, "ph")), "work": true, "flip": J.gp(ss, "flip"), "tamed": true, "untied": true}])})
+	var idle = []
+	for g in S.ghosts: if not J.t(g.get("post")) and J.str(g.k) != "afu": idle.append(g)
+	var PL = _g("PlazaLife")
+	if PL != null: J.mc(PL, "frame", [this_, idle, items, vis, ctx, t])
+	else:
+		for i in idle.size():
+			var g = idle[i]; var a = t * 0.25 + i * 1.7; var x = 195 + cos(a) * (60 + (i % 3) * 18); var y = 400 + 130 + sin(a * 1.3) * 18 + (i % 3) * 8; var fl = sin(a) > 0; var ti = t + i
+			vis.append({"g": g, "x": x, "y": y})
+			items.append({"y": y, "f": func(_t, _a): return J.mc(ART, "drawChar", [ctx, g.k, x, y, 0.58, {"t": ti, "walk": true, "flip": fl, "tamed": true, "untied": true}])})
+	var H = this_.hero
+	vis.append({"g": S.ghosts[0], "x": H.x, "y": H.y, "hero": true})
+	var hp = J.mc(this_, "heroPose", []); var HD = _g("HeroDaily"); var hd = J.mc(HD, "opts", [this_]) if HD != null else null
+	items.append({"y": H.y, "f": func(_t, _a):
+		var o = {"t": t, "walk": H.get("walking"), "work": J.t(H.get("act")), "flip": J.num(H.dir) < 0, "mood": "happy" if J.t(S.get("ended")) else null, "pose": hp[0], "pt": hp[1]}
+		if J.t(hd): J.assign(o, [hd])
+		return J.mc(ART, "drawChar", [ctx, "afu", H.x, H.y, 0.72, o])})
+	for it in stable_sort(items, func(a, b): return J.num(J.gp(a, "y")) - J.num(J.gp(b, "y"))): J.cl(J.gp(it, "f"), null, [])
+	for f in J.iter(this_.feathers):
+		m(ctx, "save"); p(ctx, "globalAlpha", maxf(0, 1 - J.num(f.t) / J.num(f.life))); m(ctx, "translate", [f.x, f.y]); m(ctx, "rotate", [sin(J.num(f.rot)) * 0.8])
+		J.mc(ART, "el", [ctx, 0.0, 0.0, 1.4, 4.0, "#14111a", "#5a5068", 0.5]); m(ctx, "restore")
+	J.mc(this_, "drawParts", [ctx])
+	for c in J.iter(this_.crows):
+		p(ctx, "globalAlpha", minf(1, (J.num(c.life) - J.num(c.t)) / 0.6)); J.mc(ART, "drawCrow", [ctx, c.x, c.y, c.s, c.ph, c.vx, false]); p(ctx, "globalAlpha", 1.0)
+	if J.t(this_.get("bubble")): J.mc(this_, "drawBubble", [ctx])
+	J.mc(this_, "drawPointer", [ctx, t])
+	for f in J.iter(this_.floats):
+		var fy = J.num(f.y) - J.num(f.t) * 26
+		p(ctx, "globalAlpha", maxf(0, 1 - J.num(f.t) / J.num(f.life))); p(ctx, "font", "bold 14px \"PingFang TC\",\"Noto Sans TC\",sans-serif"); p(ctx, "textAlign", "center")
+		p(ctx, "lineWidth", 3.5); p(ctx, "strokeStyle", "rgba(10,6,20,.9)"); m(ctx, "strokeText", [f.text, f.x, fy]); p(ctx, "fillStyle", f.col); m(ctx, "fillText", [f.text, f.x, fy]); p(ctx, "globalAlpha", 1.0)
+
+static func v_draw_bubble(this_, ctx) -> void:
+	var b = this_.bubble; var v = null
+	for o in J.iter(this_.vis):
+		var ok = J.t(J.gp(o, "hero")) if J.t(J.gp(b, "hero")) else (J.str(J.gp(J.gp(o, "g"), "id")) == J.str(J.gp(b, "id")) and not J.t(J.gp(o, "hero")))
+		if ok: v = o; break
+	if v == null: this_["bubble"] = null; return
+	var bt = J.num(b.t); var a = minf(minf(1, bt * 5), (4.6 - bt) * 3); m(ctx, "save"); p(ctx, "globalAlpha", maxf(0, a))
+	p(ctx, "font", "600 12.5px \"PingFang TC\",\"Noto Sans TC\",sans-serif")
+	var maxW = 168.0; var lines = []; var cur = ""
+	for ch in J.str(b.text):
+		if J.num(J.gp(m(ctx, "measureText", [cur + ch]), "width")) > maxW: lines.append(cur); cur = ch
+		else: cur += ch
+	if cur != "": lines.append(cur)
+	var mw = -INF
+	for l in lines: mw = maxf(mw, J.num(J.gp(m(ctx, "measureText", [l]), "width")))
+	var w = mw + 16; var h = lines.size() * 17.0 + 10
+	var vx = J.num(v.x); var vy = J.num(v.y)
+	var bx = maxf(6, minf(VW - w - 6, vx - w / 2)); var by = vy - 62 - h
+	_art("rr", [ctx, bx, by, w, h, 4.0, "#ecd9a4", "#5a4030", 1.2])
+	_art("poly", [ctx, [vx - 5, by + h - 0.5, vx + 5, by + h - 0.5, vx, by + h + 7], "#ecd9a4"])
+	p(ctx, "strokeStyle", "#5a4030"); p(ctx, "lineWidth", 1.2); m(ctx, "beginPath"); m(ctx, "moveTo", [vx - 5, by + h]); m(ctx, "lineTo", [vx, by + h + 7]); m(ctx, "lineTo", [vx + 5, by + h]); m(ctx, "stroke")
+	p(ctx, "fillStyle", "#2b1d12"); p(ctx, "textAlign", "left"); p(ctx, "textBaseline", "top")
+	for i in lines.size(): m(ctx, "fillText", [lines[i], bx + 8, by + 6 + i * 17])
+	m(ctx, "restore")
+
+static func v_draw_pointer(this_, ctx, t: float) -> void:
+	var pq = J.mc(this_, "questTarget", [])
+	if not J.t(pq) or J.str(J.gp(_g("UI"), "tab")) != "village": return
+	var vh = J.num(this_.h) / J.num(this_.scale); var x = J.num(pq[0]); var y = J.num(pq[1]); var POS = _g("POS")
+	var ty = y - (128.0 if J.num(POS.house[0]) == x and J.num(POS.house[1]) == y else 78.0) + sin(t * 5) * 5
+	var top = J.num(this_.camY) + 8; var bot = J.num(this_.camY) + vh - 12
+	var rot = 0.0
+	if ty < top: ty = top + 14; rot = PI
+	elif ty > bot: ty = bot - 14; rot = 0.0
+	m(ctx, "save"); m(ctx, "translate", [x, ty]); m(ctx, "rotate", [rot])
+	_art("poly", [ctx, [-9.0, -14.0, 9.0, -14.0, 9.0, -2.0, 15.0, -2.0, 0.0, 12.0, -15.0, -2.0, -9.0, -2.0], "#ffd84a", "#3a2400", 2.0]); m(ctx, "restore")
+
+
+# ================= 第四段：介面（UI）＋補丁（__nat_menu 原生面板、UI._n 資料／動作 API）=================
+# Godot 入面村子面板全部由 ui/menus 原生畫（__nat_menu），呢度出資料同執行動作，規則同原本 click handler 一模一樣。
+# 舊 DOM 面板（建築／派人／名冊／箱子／劇情嘅 HTML）只喺冇原生面板時先用：淨係開返張空白 sheet（Godot 唔會行到）。
+static func _ui() -> Dictionary: return J.G.get("UI")
+static func _tofix(x) -> String: return JStr.num_call(J.num(x), "toFixed", [1.0])
+static func _nat_menu(a: Array) -> bool: return _has("__nat_menu") and J.t(J.cl(_g("__nat_menu"), null, a))
+static func _nat_close() -> void: if _has("__nat_menuClose"): J.cl(_g("__nat_menuClose"), null, [])
+static func _L(s): return J.cl(_g("L"), null, [s]) if _has("L") else s
+static func _left(cd: float, at) -> float: return maxf(0, cd - (J.now() - J.num(at)) * J.num(_g("TIME_SCALE")) / 1000)
+
+static func post_label(pp) -> String:
+	var ps = J.str(pp); var P = _g("POSTS")
+	if pp != null and P.has(ps): return "打工：" + J.str(P[ps].name)
+	if ps == "street" or ps.begins_with("boss:"): return "陽間站崗中"
+	if ps.begins_with("tower"): return "樓裡有鬼出更中"
+	return "出外工作中"
+static func sync_snd() -> void:
+	var b = _q("#sndtop")
+	if J.t(b):
+		var on = J.t(J.mc(_g("Sound"), "isOn", []))
+		p(b, "textContent", "🔊" if on else "🔇"); _cls(b, "toggle", ["off", not on])
+static func confirm_inline(btn, msg) -> bool:
+	var ds = J.gp(btn, "dataset")
+	if J.t(J.gp(ds, "armed")): return true
+	J.sp(ds, "armed", 1.0); var o = J.gp(btn, "innerHTML"); p(btn, "innerHTML", msg)
+	J.F_setTimeout([func(_t, _a): J.del(J.gp(btn, "dataset"), "armed"); p(btn, "innerHTML", o); return null, 2500.0])
+	return false
+static func paint_portraits(root) -> void:
+	for c in J.iter(m(root, "querySelectorAll", ["canvas[data-por]"])):
+		var ds = J.gp(c, "dataset")
+		if J.t(J.gp(ds, "done")): continue
+		J.sp(ds, "done", 1.0); var pr = _art("portrait", [J.gp(ds, "por"), 64.0, {"tamed": true, "untied": true}])
+		p(c, "width", J.gp(pr, "width")); p(c, "height", J.gp(pr, "height")); m(m(c, "getContext", ["2d"]), "drawImage", [pr, 0.0, 0.0])
+
+static func ui_modal_open() -> bool: return J.t(_cls(_q("#sheet"), "contains", ["on"])) or J.t(_cls(_q("#battle"), "contains", ["on"]))
+static func ui_refresh(this_) -> void:
+	var S = _S()
+	if not J.t(S): return
+	var F = _g("F")
+	p(_q("#lv"), "textContent", S.lv)
+	var need = J.num(J.mc(F, "expNeed", [S.lv]))
+	p(J.gp(_q("#expbar i"), "style"), "width", J.add(100.0 if J.num(S.lv) >= 20 else minf(100, J.num(S.exp) / need * 100), "%"))
+	p(_q("#exptxt"), "textContent", "好評 MAX" if J.num(S.lv) >= 20 else "好評 %s/%s" % [_c("fmt", [S.exp]), _c("fmt", [need])])
+	var cap = J.num(J.mc(F, "cap", []))
+	for k in ["wood", "rice", "planks", "buns"]:
+		var e = _q("#r-" + k); p(e, "textContent", _c("fmt", [S.res[k]])); _cls(J.gp(e, "parentElement"), "toggle", ["full", J.num(S.res[k]) >= cap - 0.5])
+	p(_q("#r-coins"), "textContent", _c("fmt", [S.res.coins])); p(_q("#r-troops"), "textContent", _c("fmt", [S.res.troops]))
+	var Q = _g("Quest"); var q = J.mc(Q, "cur", []); var qb = _q("#quest")
+	if J.t(q):
+		var ab = J.mc(Q, "progress", [q]); var a = J.num(ab[0]); var b = J.num(ab[1])
+		p(qb, "innerHTML", "<b>主線</b><span>%s</span><em>%s/%s</em>" % [J.str(J.gp(q, "text")), J.str(minf(a, b)), J.str(b)]); _cls(qb, "toggle", ["done", a >= b])
+	else: p(qb, "innerHTML", "<b>主線</b><span>%s</span>" % ("第一季完。村子由你慢慢經營。" if J.t(S.get("ended")) else "—"))
+	var ch = J.num(S.chests.g) + J.num(S.chests.b) + J.num(S.chests.p)
+	p(_q("#nav [data-t=chest] i"), "textContent", ch if ch else ""); p(J.gp(_q("#nav [data-t=chest] i"), "style"), "display", "" if ch else "none")
+	for b in _qa("#nav button"):
+		var on = null
+		if J.t(q):
+			var bt = J.str(J.gp(J.gp(b, "dataset"), "t")); var go = J.str(J.gp(q, "go"))
+			on = (go == "roster" and bt == "roster") or (go == "gate" and bt == "battle")
+		_cls(b, "toggle", ["pulse", on])
+	if J.t(this_.get("sheetRefresh")) and J.t(_cls(_q("#sheet"), "contains", ["on"])): J.cl(this_.sheetRefresh, this_, [])
+static func ui_nav_on(t: String) -> void:
+	for b in _qa("#nav button"): _cls(b, "toggle", ["on", J.str(J.gp(J.gp(b, "dataset"), "t")) == t])
+static func ui_open(this_, t) -> void:
+	var ts = J.str(t)
+	if ts == "village": m(this_, "close"); return
+	if ts == "roster": m(this_, "openRoster")
+	if ts == "battle": m(this_, "openBattleSelect")
+	if ts == "chest": m(this_, "openChests")
+	if ts == "story": m(this_, "openStory")
+	ui_nav_on(ts)
+static func ui_sheet(this_, title, html, refresher) -> void:
+	_nat_close()
+	var sh = _q("#sheet"); _cls(sh, "add", ["on"])
+	if not J.t(_cls(sh, "contains", ["was"])): _snd("paper")
+	_cls(sh, "add", ["was"])
+	p(m(sh, "querySelector", [".sh-title"]), "textContent", title); p(m(sh, "querySelector", [".sh-body"]), "innerHTML", html); this_["sheetRefresh"] = refresher if J.t(refresher) else null
+static func ui_close(this_) -> void:
+	_nat_close(); _cls(_q("#sheet"), "remove", ["on", "was"]); this_["sheetRefresh"] = null; ui_nav_on("village")
+
+static func ui_bld_effect(id) -> String:
+	var S = _S(); var F = _g("F"); var r = _c("ratesPerMin"); var sid = J.str(id)
+	var L = func(a: String) -> String: return "<div class=\"eff\">%s</div>" % a
+	var fm = func(k): return J.str(J.mc(F, k, []))
+	match sid:
+		"house": return L.call("其他建築最高可升到 Lv %s" % J.str(S.bld.house))
+		"wood": return L.call("每崗產量 ×%s　崗位 %s　目前 槐木 +%s/分" % [_tofix(J.mc(F, "mult", ["wood"])), J.str(J.mc(F, "slots", ["wood"])), _tofix(r.wood)])
+		"rice": return L.call("每崗產量 ×%s　崗位 %s　目前 糯米 +%s/分" % [_tofix(J.mc(F, "mult", ["rice"])), J.str(J.mc(F, "slots", ["rice"])), _tofix(r.rice)])
+		"plank": return L.call("崗位 %s　目前 棺材板 +%s/分（耗槐木 %s/分）<br>藍箱可開出 棺材板 %s" % [J.str(J.mc(F, "slots", ["plank"])), _tofix(r.planks), _tofix(r.woodUse), J.str(J.gp(J.mc(F, "chestGain", ["b"]), "planks"))])
+		"bun": return L.call("崗位 %s　目前 壽包 +%s/分（耗糯米 %s/分）<br>綠箱可開出 壽包 %s" % [J.str(J.mc(F, "slots", ["bun"])), _tofix(r.buns), _tofix(r.riceUse), J.str(J.gp(J.mc(F, "chestGain", ["g"]), "buns"))])
+		"store": return L.call("槐木、糯米、棺材板、壽包 存放上限：%s" % _c("fmt", [J.mc(F, "cap", [])]))
+		"home": return L.call("雜鬼名額 %s　遊魂自願當陰兵 +%s/分　陰兵上限 %s" % [fm.call("rosterCap"), _tofix(r.troops), _c("fmt", [J.mc(F, "troopCap", [])])])
+		"camp":
+			var ws = J.iter(_c("workersAt", ["camp"]))
+			var h = L.call("練習速度 ×%s　崗位 %s　耗壽包 %s/分<br>嚇功越高：回陽間招式更嚇人、更省陰氣；戰鬥嚇法更痛。" % [_tofix(J.mc(F, "mult", ["camp"])), J.str(J.mc(F, "slots", ["camp"])), _tofix(r.bunUse)])
+			if ws.size():
+				var RW = _g("Rework"); var parts = []
+				for g in ws:
+					var lv = J.mc(RW, "drillLv", [g.k]); var nx = J.mc(RW, "drillNext", [g.k])
+					parts.append("%s 嚇功 Lv%s%s" % [J.str(g.name), J.str(lv), ("（%s/%s）" % [J.str(floor(J.num(J.mc(RW, "drillXp", [g.k])))), J.str(nx)]) if J.t(nx) else "（滿）"])
+				h += "<br>" + "　".join(parts)
+			return h
+	return ""
+static func ui_post_stat_txt(g, post) -> String:
+	var s = J.num(_g("POSTS")[J.str(post)].stat); var F = _g("F")
+	return "%s %s" % [J.str(_g("STAT_NAMES")[int(s)]), J.str(J.mc(F, "stat", [g, s]))] if s >= 0 else "等級 %s" % J.str(J.mc(F, "glv", [g]))
+
+static func ui_open_building(this_, id) -> void:
+	if _nat_menu(["bld", id]): return
+	m(this_, "sheet", [J.gp(_g("BUILDINGS")[J.str(id)], "name"), "<p class=\"desc\">%s</p>" % J.str(J.gp(_g("BUILDINGS")[J.str(id)], "desc")), null])
+static func ui_pick_worker(this_, post, back) -> void:
+	if _nat_menu(["pick", post, back]): return
+	m(this_, "sheet", ["派人：" + J.str(_g("POSTS")[J.str(post)].name), "", null])
+static func ui_open_roster(this_) -> void:
+	if _nat_menu(["roster"]): return
+	m(this_, "sheet", ["鬼怪名冊", "", null]); this_["sheetRefresh"] = null
+static func ui_open_chests(this_) -> void:
+	if _nat_menu(["chest"]): return
+	m(this_, "sheet", ["箱子", "<p class=\"desc\">小提示：箱子不會過期。先把對應的建築升高，再開，收穫更多。</p>", null])
+static func ui_open_story(this_) -> void:
+	if _nat_menu(["story"]):
+		var sb = _q("#sheet .sh-body")
+		if J.t(sb): p(sb, "innerHTML", "")
+		return
+	m(this_, "sheet", ["劇情", "<p class=\"desc\">看過的劇情，可以在這裡重溫。</p>", null])
+static func ui_open_battle_select() -> void:
+	if _has("Patrol"): J.mc(_g("Patrol"), "openPrep", [])
+	else: J.mc(_g("Battle"), "openSelect", [])
+
+# ---------------- UI._n：原生面板資料同動作 ----------------
+static func _pool_names() -> String:
+	var FD = _g("FODDER"); var S = _S(); var out = []
+	for k in J.keys(FD):
+		var u = J.gp(FD[k], "unlock")
+		if not J.t(u) or J.t(S.cleared.get(J.str(u))): out.append(J.str(FD[k].name))
+	return "、".join(out)
+static func n_bld(id) -> Dictionary:
+	var S = _S(); var F = _g("F"); var sid = J.str(id); var b = _g("BUILDINGS")[sid]; var lv = J.num(S.bld.get(sid)) if J.t(S.bld.get(sid)) else 0.0
+	var FL = _g("FLAVOR")
+	var o = {"id": id, "name": b.name, "flavor": FL[sid] if FL.has(sid) and J.t(FL[sid]) else "", "desc": b.desc, "lv": lv, "house": S.bld.house}
+	if not lv:
+		o["unlocked"] = J.t(_c("bldUnlocked", [id])); o["cost"] = _c("costText", [b.build]); o["canBuild"] = _c("canPay", [b.build]); return o
+	var rx = RegEx.create_from_string("</?div[^>]*>")
+	o["effect"] = rx.sub(J.str(J.mc(_ui(), "bldEffect", [id])), "", true)
+	o["max"] = J.mc(F, "bldMax", [id])
+	if lv < J.num(o.max):
+		var c = J.mc(F, "upCost", [id, lv]); o["upCost"] = _c("costText", [c]); o["canUp"] = _c("canPay", [c])
+		var bd = J.num(J.mc(F, "builderDiscount", [])); o["disc"] = J.round(bd * 100) if bd else 0.0
+	if sid == "plank" or sid == "bun":
+		var src = "wood" if sid == "plank" else "rice"
+		o["craft"] = {"src": _g("RES_NAMES")[src], "have": S.res[src], "can": floor(J.num(S.res[src]) / 4), "label": "槐木 → 2 棺材板" if sid == "plank" else "糯米 → 2 壽包"}
+	if sid == "furnace": o["furnace"] = {"left": _left(J.num(F.furnaceCD), S.furnaceAt), "coins": J.mc(F, "furnaceCoins", [])}
+	if sid == "altar":
+		var c = J.mc(F, "recruitCost", []); var fc = J.num(_c("fodderCount")); var rc = J.num(J.mc(F, "rosterCap", []))
+		o["altar"] = {"cost": _c("costText", [c]), "can": J.t(_c("canPay", [c])) and fc < rc, "cnt": fc, "cap": rc, "pool": _pool_names()}
+		if _has("Presence"):
+			var pst = J.mc(_g("Presence"), "st", [])
+			if J.t(pst) and J.t(J.gp(pst, "gone")) and J.iter(J.gp(pst, "gone")).size():
+				var gl = []
+				for x in J.iter(J.gp(pst, "gone")): gl.append({"name": J.gp(x, "name"), "lv": J.gp(x, "lv")})
+				o.altar["gone"] = gl
+	if sid == "house" and J.num(S.lv) >= 12:
+		var iq = 0.0
+		for g in S.ghosts: iq += J.num(J.mc(F, "stat", [g, 1.0]))
+		var left = _left(J.num(F.feastCD), S.feastAt)
+		o["feast"] = {"iq": iq, "need": F.feastNeed, "left": left, "can": J.num(S.res.buns) >= 300 and iq >= J.num(F.feastNeed) and left <= 0}
+	o["posts"] = []
+	var P = _g("POSTS")
+	for pp in J.iter(b.posts):
+		var PD = P[J.str(pp)]; var n = J.num(J.mc(F, "slots", [pp]))
+		if not n: continue
+		var lock = ["wood", "rice", "plank", "bun", "camp", "store", "boss"].has(J.str(pp)) and J.num(S.lv) < 4
+		var ws = J.iter(_c("workersAt", [pp])); var sl = []
+		for i in int(n):
+			var g = ws[i] if i < ws.size() else null
+			sl.append({"id": g.id, "k": g.k, "name": g.name, "lv": J.mc(F, "glv", [g]), "stat": J.mc(_ui(), "postStatTxt", [g, pp])} if g != null else null)
+		o.posts.append({"post": pp, "name": PD.name, "desc": PD.desc, "lock": lock, "slots": sl})
+	return o
+static func n_bld_act(id, a, arg):
+	var S = _S(); var F = _g("F"); var sid = J.str(id); var act = J.str(a); var B = _g("BUILDINGS")[sid]; var UI = _ui()
+	if act == "build":
+		if not J.t(_c("canPay", [B.build])): return null
+		_snd("build"); _c("pay", [B.build]); S.bld[sid] = 1.0; _c("gainExp", [15.0]); _fx("banner", ["%s 建好了！" % J.str(B.name)]); J.mc(_g("Quest"), "check", [])
+	if act == "up":
+		var c = J.mc(F, "upCost", [id, S.bld[sid]])
+		if not J.t(_c("canPay", [c])) or J.num(S.bld[sid]) >= J.num(J.mc(F, "bldMax", [id])): return null
+		_snd("build"); _c("pay", [c]); S.bld[sid] = J.num(S.bld[sid]) + 1; _c("gainExp", [10 + 8 * J.num(S.bld[sid])]); _fx("banner", ["%s 升到 Lv %s" % [J.str(B.name), J.str(S.bld[sid])]]); J.mc(_g("Quest"), "check", [])
+	if act == "craft":
+		m(UI, "close"); J.mc(_V(), "craft", [id, J.num(arg) if J.t(J.num(arg)) else 1.0]); return "close"
+	if act == "burn":
+		if not J.t(_c("furnaceReady")): return null
+		_snd("coin"); J.mc(_g("JossFx"), "play", []); S["furnaceAt"] = J.now(); var c = J.num(J.mc(F, "furnaceCoins", [])); S.res["coins"] = J.num(S.res.coins) + c; _fx("toast", ["化寶爐燒出 <b>冥幣 %s</b>" % J.str(c)])
+	if act == "recruit":
+		if not J.t(_c("canPay", [J.mc(F, "recruitCost", [])])) or J.num(_c("fodderCount")) >= J.num(J.mc(F, "rosterCap", [])): return null
+		_snd("whoosh"); _c("pay", [J.mc(F, "recruitCost", [])]); var g = _c("recruitFodder", [false]); S.cnt["recruit"] = J.num(S.cnt.recruit) + 1; _fx("toast", ["招來了 <b>%s</b>（%s）" % [J.str(g.name), J.str(g.q)]]); J.mc(_g("Quest"), "check", [])
+	if act == "feast":
+		_snd("gong"); S.res["buns"] = J.num(S.res.buns) - 300; S["feastAt"] = J.now(); S.cnt["feast"] = J.num(S.cnt.feast) + 1; _c("gainExp", [150.0])
+		if J.num(_c("fodderCount")) < J.num(J.mc(F, "rosterCap", [])):
+			var g = _c("recruitFodder", [true]); _fx("toast", ["盂蘭宴請來了稀客 <b>%s</b>（紫）！好評 +150" % J.str(g.name)])
+		else:
+			S.chests["p"] = J.num(S.chests.p) + 1; _fx("toast", ["盂蘭宴賓客滿座，可惜村裡住不下了。客人留下一個<b>紫箱</b>就走了。好評 +150"])
+		J.mc(_g("Quest"), "check", [])
+	if act == "unassign":
+		var g = _c("ghostById", [arg])
+		if J.t(g): g["post"] = null
+	if act == "regone":
+		var g = J.mc(J.gp(_g("Presence"), "dev"), "resummon", [J.num(arg)]) if _has("Presence") else null
+		if J.t(g): _c("save"); m(UI, "close"); m(UI, "refresh"); return "close"
+	_c("save"); m(UI, "refresh")
+	return null
+static func _pick_list(post) -> Array:
+	var S = _S(); var F = _g("F"); var ps = J.str(post); var s = J.num(_g("POSTS")[ps].stat); var GH = _g("GHOSTS")
+	var val = func(g) -> float: return J.num(J.mc(F, "stat", [g, s])) if s >= 0 else J.num(J.mc(F, "glv", [g]))
+	var fbd = func(g) -> float:
+		var d = GH.get(J.str(g.k)); var fb = J.gp(d, "forbid") if d != null else null
+		return 1.0 if fb != null and J.iter(fb).has(ps) else 0.0
+	var list = []
+	for g in S.ghosts: if J.str(g.k) != "afu" and not (g.get("post") != null and J.str(g.post) == ps): list.append(g)
+	return stable_sort(list, func(a, b):
+		var c = fbd.call(a) - fbd.call(b)
+		if c: return c
+		c = val.call(b) - val.call(a)
+		if c: return c
+		return J.num(J.mc(F, "glv", [b])) - J.num(J.mc(F, "glv", [a])))
+static func n_pick(post) -> Dictionary:
+	var F = _g("F"); var ps = J.str(post); var PD = _g("POSTS")[ps]; var s = J.num(PD.stat); var SN = _g("STAT_NAMES"); var GH = _g("GHOSTS")
+	var out = []
+	for g in _pick_list(post):
+		var d = GH.get(J.str(g.k)); var fb = J.gp(d, "forbid") if d != null else null; var isfb = fb != null and J.iter(fb).has(ps)
+		var oth = []
+		for i in [0, 1, 2]: if float(i) != s: oth.append(J.str(SN[i]) + J.str(J.mc(F, "stat", [g, float(i)])))
+		out.append({"id": g.id, "k": g.k, "name": g.name, "q": g.q, "key": J.mc(F, "stat", [g, s]) if s >= 0 else J.mc(F, "glv", [g]), "lv": J.mc(F, "glv", [g]), "other": " ".join(oth), "where": post_label(g.post).trim_prefix("打工：") if J.t(g.get("post")) else "閒著", "fb": isfb})
+	return {"name": PD.name, "stat": SN[int(s)] if s >= 0 else "等級", "list": out}
+static func n_pick_do(post, gid) -> void:
+	var g = _c("ghostById", [gid])
+	if not J.t(g): return
+	var ws = J.iter(_c("workersAt", [post]))
+	if ws.size() >= J.num(J.mc(_g("F"), "slots", [post])): ws[0]["post"] = null
+	g["post"] = post; J.mc(_g("Quest"), "check", []); _c("save"); m(_ui(), "refresh")
+static func n_roster() -> Dictionary:
+	var S = _S(); var F = _g("F"); var GH = _g("GHOSTS"); var SK = _g("SKILLS"); var GP = _g("GP")
+	var o = {"cap": J.mc(F, "ghostCap", []), "fcnt": _c("fodderCount"), "rcap": J.mc(F, "rosterCap", []), "buns": _c("fmt", [S.res.buns]), "list": []}
+	if _has("N30W"):
+		var N = _g("N30W"); var ids = J.iter(J.mc(N, "ids", [])); var n = 0
+		for k in ids: if J.t(J.mc(N, "owned", [k])): n += 1
+		o["codex"] = "%d/%d" % [n, ids.size()]
+	var order = stable_sort(S.ghosts.duplicate(), func(a, b):
+		if J.str(a.k) == "afu": return -1.0
+		if J.str(b.k) == "afu": return 1.0
+		var c = (0.0 if J.str(a.q) == "名" else 1.0) - (0.0 if J.str(b.q) == "名" else 1.0)
+		if c: return c
+		return J.num(J.mc(F, "glv", [b])) - J.num(J.mc(F, "glv", [a])))
+	var cap = J.num(J.mc(F, "ghostCap", []))
+	for g in order:
+		var lv = J.num(J.mc(F, "glv", [g])); var cost = J.mc(F, "lvCost", [lv]); var d = _c("gdef", [g]); var sk = SK.get(J.str(g.k)); var gd = GH.get(J.str(g.k))
+		var gp_now = J.mc(GP, "pow", [g]); var gp_next = null
+		if J.str(g.k) != "afu" and lv < cap:
+			var o2 = g.lv; g["lv"] = J.num(o2) + 1; gp_next = J.mc(GP, "pow", [g]); g["lv"] = o2
+		var tag = "出陣" if J.iter(S.team).has(g.id) else ("軍師" if S.get("adviser") != null and J.str(S.adviser) == J.str(g.id) else "")
+		var e = {"id": g.id, "k": g.k, "name": g.name, "q": g.q, "lv": lv, "tag": tag, "title": J.gp(gd, "title") if gd != null else "", "st": [J.mc(F, "stat", [g, 0.0]), J.mc(F, "stat", [g, 1.0]), J.mc(F, "stat", [g, 2.0])], "ranged": J.str(J.gp(d, "range")) == "ranged", "gp": gp_now, "gpNext": gp_next,
+			"drill": J.mc(_g("Rework"), "drillLv", [g.k]) if _has("Rework") else null, "sk": J.gp(sk, "name") if J.t(sk) else "", "skd": J.gp(sk, "desc") if J.t(sk) else "", "trait": _L(J.gp(gd, "trait")) if gd != null else "", "lore": J.gp(gd, "lore") if gd != null and J.t(J.gp(gd, "lore")) else "",
+			"where": post_label(g.post) if J.t(g.get("post")) else ("主公本人" if J.str(g.k) == "afu" else "閒著"), "afu": J.str(g.k) == "afu", "maxed": lv >= cap, "cost": cost, "canUp": J.num(S.res.buns) >= J.num(cost), "canRel": J.str(g.q) != "名" and J.str(g.q) != "主", "extra": [], "alpha": 1.0, "gold": false}
+		if _has("Chatter") and (J.str(g.q) == "藍" or J.str(g.q) == "紫"):
+			var CH = _g("Chatter"); var ar = J.mc(CH, "archOf", [g])
+			if J.t(ar): e.extra.append(["#7a4a9a", "性格：%s　「%s」" % [J.str(J.gp(ar, "label")), J.str(J.mc(CH, "sample", [g])) if J.t(J.gp(CH, "sample")) else ""]])
+		if _has("Presence"):
+			var PR = _g("Presence"); var v = J.num(J.mc(PR, "val", [g])); var dl = J.mc(PR, "daysLeft", [g])
+			e["pres"] = J.round(v); e["presDays"] = dl; e["alpha"] = J.mc(PR, "alphaOf", [g]); e["gold"] = J.str(g.k) == "afu" and J.num(J.gp(J.mc(PR, "cst", []), "rank")) >= 5
+		if _has("Bonds"):
+			var bt = J.mc(_g("Bonds"), "bondLine", [g.k])
+			if J.t(bt): e.extra.append(["#c0603a", bt])
+		o.list.append(e)
+	return o
+static func n_roster_act(a, id) -> void:
+	var S = _S(); var F = _g("F"); var g = _c("ghostById", [id])
+	if not J.t(g): return
+	if J.str(a) == "up":
+		var c = J.num(J.mc(F, "lvCost", [g.lv]))
+		if J.num(S.res.buns) < c or J.num(J.mc(F, "glv", [g])) >= J.num(J.mc(F, "ghostCap", [])): return
+		S.res["buns"] = J.num(S.res.buns) - c; g["spent"] = J.num(g.spent) + c; g["lv"] = J.num(g.lv) + 1; _c("gainExp", [2.0]); J.mc(_g("Quest"), "check", []); _c("save"); m(_ui(), "refresh")
+	if J.str(a) == "rel":
+		var back = floor(J.num(g.spent) * 0.6); S.res["buns"] = J.num(S.res.buns) + back
+		S["ghosts"] = S.ghosts.filter(func(x): return not is_same(x, g))
+		S["team"] = S.team.map(func(x): return null if x != null and J.str(x) == J.str(g.id) else x)
+		if S.get("adviser") != null and J.str(S.adviser) == J.str(g.id): S["adviser"] = null
+		_fx("toast", ["%s 去投胎了。退回 壽包 %s" % [J.str(g.name), J.str(back)]]); _c("save"); m(_ui(), "refresh")
+static func n_chests() -> Array:
+	var S = _S(); var F = _g("F")
+	return [{"k": "g", "name": "綠箱", "n": S.chests.g, "d": "開出 壽包 %s（隨包子鋪等級提升）" % J.str(J.gp(J.mc(F, "chestGain", ["g"]), "buns"))},
+		{"k": "b", "name": "藍箱", "n": S.chests.b, "d": "開出 棺材板 %s（隨棺材鋪等級提升）" % J.str(J.gp(J.mc(F, "chestGain", ["b"]), "planks"))},
+		{"k": "p", "name": "紫箱", "n": S.chests.p, "d": "開出 冥幣 %s（隨鬼宅等級提升）" % J.str(J.gp(J.mc(F, "chestGain", ["p"]), "coins"))}]
+static func n_chest_open(k, all) -> void:
+	var S = _S(); var ks = J.str(k); var n = J.num(S.chests[ks]) if J.t(all) else minf(1, J.num(S.chests[ks]))
+	if not n: return
+	var tot = {}
+	for i in int(n):
+		var g = J.mc(_g("F"), "chestGain", [ks])
+		for r in J.keys(g): tot[r] = (J.num(tot[r]) if tot.has(r) else 0.0) + J.num(g[r])
+	_snd("chest"); S.chests[ks] = J.num(S.chests[ks]) - n; S.cnt["chest"] = J.num(S.cnt.chest) + n; _fx("toast", ["開箱：" + J.str(_c("give", [tot]))]); _c("save"); m(_ui(), "refresh")
+static func _best_backup():
+	var S = _S(); var best = null; var key = J.str(_g("SAVE_KEY"))
+	for k in ["_hi", "_bak", "_del"]:
+		var raw = J.S_localStorage_("getItem", [key + k]); var ob = JSON.parse_string(J.str(raw)) if J.t(raw) else null
+		if ob is Dictionary and (J.num(ob.get("lv")) if J.t(ob.get("lv")) else 1.0) > (J.num(S.get("lv")) if J.t(S.get("lv")) else 1.0) and (best == null or J.num(ob.get("lv")) > J.num(best.lv)): best = {"k": k, "lv": ob.get("lv")}
+	return best
+static func n_story() -> Dictionary:
+	var S = _S(); var scenes = []; var su = []; var i = 0
+	for e in J.iter(_g("SCENE_ORDER")):
+		var ok = false
+		for id in J.iter(e[1]): if J.t(S.seen.get(J.str(id))): ok = true; break
+		scenes.append({"i": float(i), "name": e[0], "ok": ok}); i += 1
+	i = 0
+	for st in J.iter(_g("STANDUP")):
+		su.append({"i": float(i), "ok": stand_ok(st), "who": J.gp(st, "who"), "title": J.gp(st, "title"), "hint": J.gp(st, "hint")}); i += 1
+	var o = {"scenes": scenes, "standup": su, "snd": J.mc(_g("Sound"), "isOn", [])}
+	if _has("Bonds") and J.t(J.gp(_g("Bonds"), "_n")): o["bonds"] = J.mc(J.gp(_g("Bonds"), "_n"), "story", [])
+	if _has("Skits"):
+		var SK = _g("Skits"); var s = J.mc(SK, "st", []); var lst = []; var all = J.iter(J.gp(SK, "list"))
+		for k in all: if J.t(J.gp(J.gp(s, "seen"), J.str(J.gp(k, "id")))): lst.append({"id": J.gp(k, "id"), "title": _L(J.gp(k, "title"))})
+		o["skits"] = {"list": lst, "total": float(all.size())}
+	if _has("Standup"):
+		var SU = _g("Standup"); var s = J.mc(SU, "st", [])
+		if not J.t(s): s = {"seen": {}}
+		var l2 = []
+		for b in J.iter(J.gp(SU, "list")): l2.append({"id": J.gp(b, "id"), "seen": J.t(J.gp(J.gp(s, "seen"), J.str(J.gp(b, "id")))), "who": J.gp(b, "who"), "title": _L(J.gp(b, "title")), "hint": "到冥街夜市觀看" if J.t(J.mc(SU, "ok", [b])) else J.gp(b, "hint")})
+		o["su"] = l2
+	o["restore"] = _best_backup()
+	return o
+static func n_story_act(a, x):
+	var S = _S(); var UI = _ui(); var act = J.str(a)
+	if act == "scene":
+		m(UI, "close")
+		for id in J.iter(_g("SCENE_ORDER")[int(J.num(x))][1]): if J.t(S.seen.get(J.str(id))): J.mc(_g("Story"), "queue", [id])
+	if act == "stand":
+		m(UI, "close"); var st = _g("STANDUP")[int(J.num(x))]; var lines = J.iter(J.gp(st, "lines")).duplicate(); lines.append(["旁白", J.gp(st, "end")])
+		J.mc(_g("Story"), "queue", [{"style": "talk", "bg": J.gp(st, "bg"), "mic": true, "title": J.gp(st, "title"), "lines": lines}])
+	if act == "brec": m(UI, "close"); J.mc(J.gp(_g("Bonds"), "_n"), "rec", [x])
+	if act == "bfeud": m(UI, "close"); J.mc(J.gp(_g("Bonds"), "_n"), "feud", [x])
+	if act == "skit": m(UI, "close"); J.F_setTimeout([func(_t, _a): J.mc(_g("Skits"), "play", [x, true]); return null, 60.0])
+	if act == "su": m(UI, "close"); J.F_setTimeout([func(_t, _a): J.mc(_g("Standup"), "play", [x, {"replay": true}]); return null, 60.0])
+	if act == "phone": m(UI, "close"); J.mc(_g("Phone"), "home", ["post"])
+	if act == "snd":
+		var on = J.mc(_g("Sound"), "toggle", []); J.cl(_g("syncSnd"), null, []); return on
+	if act == "export": _c("save"); return J.mc(_g("Web"), "enc", [S])
+	if act == "restore": return J.S_localStorage_("getItem", [J.str(_g("SAVE_KEY")) + J.str(x)])
+	return null
+static func n_codex() -> Dictionary:
+	var S = _S(); var N = _g("N30W"); var ids = J.iter(J.mc(N, "ids", [])); var road = []
+	var rr = J.mc(N, "roadToday", [])
+	if rr != null: road = J.iter(rr)
+	var got = 0
+	for k in ids: if J.t(J.mc(N, "owned", [k])): got += 1
+	var wild = J.t(S.cleared.get("1-3"))
+	var o = {"got": float(got), "total": float(ids.size()), "wild": wild, "lv": S.lv, "sites": []}
+	var SITES = _g("N30_SITES"); var NG = _g("N30_G"); var TIER = _g("N30_TIER"); var GH = _g("GHOSTS"); var SK = _g("SKILLS")
+	for sid in ["field", "road", "kampung", "banana", "night", "death"]:
+		var lst = []
+		for k in ids:
+			if J.str(J.gp(NG[J.str(k)], "at")) != sid: continue
+			var d = GH[J.str(k)]; var own = J.mc(N, "owned", [k]); var g = NG[J.str(k)]; var T = TIER[J.str(J.gp(g, "t"))]
+			var fight = false
+			if sid != "night":
+				var op = J.mc(N, "open", [k])
+				if not J.t(op): fight = op
+				elif sid != "death" or road.has(k): fight = wild
+			lst.append({"k": k, "own": own, "name": J.gp(d, "name"), "title": J.gp(d, "title"), "lore": J.gp(d, "lore"), "skill": ("【%s】%s" % [J.str(J.gp(SK[J.str(k)], "name")), J.str(J.gp(SK[J.str(k)], "desc"))]) if J.t(own) else "出沒：" + J.str(J.mc(N, "where", [k])), "fight": fight, "req": J.gp(T, "req"), "lvOk": J.num(S.lv) >= J.num(J.gp(T, "req"))})
+		o.sites.append({"name": J.gp(SITES[sid], "name"), "list": lst})
+	return o
+
+static func make_ui() -> Dictionary:
+	var UI = {"tab": "village"}
+	UI["modalOpen"] = func(_t, _a): return ui_modal_open()
+	UI["refresh"] = func(t, _a): ui_refresh(t if t != null else UI); return null
+	UI["open"] = func(t, a): ui_open(t if t != null else UI, J.arg(a, 0)); return null
+	UI["sheet"] = func(t, a): ui_sheet(t if t != null else UI, J.arg(a, 0), J.arg(a, 1), J.arg(a, 2)); return null
+	UI["close"] = func(t, _a): ui_close(t if t != null else UI); return null
+	UI["openBuilding"] = func(t, a): ui_open_building(t if t != null else UI, J.arg(a, 0)); return null
+	UI["bldEffect"] = func(_t, a): return ui_bld_effect(J.arg(a, 0))
+	UI["postStatTxt"] = func(_t, a): return ui_post_stat_txt(J.arg(a, 0), J.arg(a, 1))
+	UI["pickWorker"] = func(t, a): ui_pick_worker(t if t != null else UI, J.arg(a, 0), J.arg(a, 1)); return null
+	UI["openRoster"] = func(t, _a): ui_open_roster(t if t != null else UI); return null
+	UI["openChests"] = func(t, _a): ui_open_chests(t if t != null else UI); return null
+	UI["openStory"] = func(t, _a): ui_open_story(t if t != null else UI); return null
+	UI["openBattleSelect"] = func(_t, _a): ui_open_battle_select(); return null
+	UI["_n"] = {
+		"bld": func(_t, a): return n_bld(J.arg(a, 0)),
+		"bldAct": func(_t, a): return n_bld_act(J.arg(a, 0), J.arg(a, 1), J.arg(a, 2)),
+		"pick": func(_t, a): return n_pick(J.arg(a, 0)),
+		"pickDo": func(_t, a): n_pick_do(J.arg(a, 0), J.arg(a, 1)); return null,
+		"roster": func(_t, _a): return n_roster(),
+		"rosterAct": func(_t, a): n_roster_act(J.arg(a, 0), J.arg(a, 1)); return null,
+		"chests": func(_t, _a): return n_chests(),
+		"_story": func(_t, _a): return n_story(),
+		"_storyAct": func(_t, a): return n_story_act(J.arg(a, 0), J.arg(a, 1)),
+		"codex": func(_t, _a): return n_codex(),
+		"chestOpen": func(_t, a): n_chest_open(J.arg(a, 0), J.arg(a, 1)); return null,
+	}
+	return UI
+
+
+# ================= 第五段：主迴圈、開機、全局常數（loop / covered / start / startGame）=================
+const FRAME_MS := 1000.0 / 30 - 2
+const RES_NAMES := {"wood": "槐木", "rice": "糯米", "planks": "棺材板", "buns": "壽包", "coins": "冥幣", "troops": "陰兵"}
+const SPEAKER_ART := {"阿福": "afu", "小紙": "xiaozhi", "白無常": "baiwu", "黑無常": "heiwu", "黑白無常": "baiwu", "黃總": "huang", "餓鬼王": "eguiking", "餓鬼": "egui", "Toyol": "toyol", "老殭": "laojiang", "Pontianak": "pontianak", "Pocong": "pocong", "Penanggal": "penanggal", "孟婆": "mengpo", "遊魂阿強": "youhun", "天花姐": "tianhua"}
+const RES_HELP := {
+	"槐木": "槐木：主公親手砍樹，或派鬼怪去<b>伐木場</b>伐木。",
+	"糯米": "糯米：主公親手收割，或派鬼怪去<b>糯米田</b>割稻。",
+	"棺材板": "棺材板：在<b>棺材鋪</b>把 2 槐木做成 1 板（力量高的鬼做得快）。藍箱也會開出。用來建造和升級建築。",
+	"壽包": "壽包：在<b>包子鋪</b>把 2 糯米包成 1 個（智力高的鬼包得快）。綠箱也會開出。用來升級鬼怪、練陰兵。",
+	"冥幣": "冥幣：打關卡、開紫箱、燒<b>化寶爐</b>。Toyol 管倉庫時也會「撿到」冥幣。",
+	"陰兵": "陰兵：村裡的遊魂見你有地盤，自願加入。<b>民宅</b>越高級來得越快、上限越高。夜班巡陰時每 25 個跟一隊（最多 4 隊），倒下的會扣掉。",
+}
+
+static func covered() -> bool:
+	for n in ["Patrol", "Scare", "Graveyard", "GhostStreet"]:
+		if _has(n) and J.t(J.gp(_g(n), "active")): return true
+	if _has("Sports"):
+		var SP = _g("Sports")
+		if J.t(J.gp(SP, "_g")) and J.t(J.mc(SP, "_g", [])): return true
+	return false
+
+static func loop(now: float) -> void:
+	J.F_requestAnimationFrame([_g("loop")])
+	if now - J.num(_g("lastT")) < FRAME_MS: return
+	var dt = minf(0.1, (now - J.num(_g("lastT"))) / 1000); J.G["lastT"] = now
+	var ts = J.num(_g("TIME_SCALE")); var B = _g("Battle")
+	if not J.t(J.gp(B, "active")):
+		_c("produce", [dt * ts]); J.mc(_V(), "update", [dt])
+		if not J.t(_c("covered")) and not _has("__nat_village"): J.mc(_V(), "draw", [])
+	else:
+		_c("produce", [dt * ts]); J.mc(B, "update", [dt]); J.mc(B, "draw", [])
+	J.G["uiT"] = J.num(_g("uiT")) + dt
+	if J.num(_g("uiT")) > 0.5: J.G["uiT"] = 0.0; m(_ui(), "refresh"); J.mc(_g("Quest"), "check", [])
+	J.G["saveT"] = J.num(_g("saveT")) + dt
+	if J.num(_g("saveT")) > 5: J.G["saveT"] = 0.0; _c("save")
+
+static func start_game() -> void:
+	var S = _c("load")
+	var fresh = not J.t(S)
+	if not J.t(S): S = _c("newState")
+	J.G["S"] = S
+	var d = _c("newState")
+	for k in d: if not (S as Dictionary).has(k): S[k] = d[k]
+	if _has("Guide"): J.mc(_g("Guide"), "migrate", [fresh])
+	J.mc(_V(), "init", []); J.mc(_g("Battle"), "init", [])
+	for b in _qa("#nav button"):
+		var bb = b
+		p(b, "onclick", func(_t, _a):
+			_snd("click")
+			if J.str(J.gp(J.gp(bb, "dataset"), "t")) == "battle" and _has("World"): m(_ui(), "close"); J.mc(_g("World"), "open", []); return null
+			m(_ui(), "open", [J.gp(J.gp(bb, "dataset"), "t")]); return null)
+	p(_q("#sndtop"), "onclick", func(_t, _a): J.mc(_g("Sound"), "toggle", []); _c("syncSnd"); return null); _c("syncSnd")
+	p(_q("#sheet .sh-close"), "onclick", func(_t, _a): m(_ui(), "close"); return null)
+	for el in _qa("#resbox .rs"):
+		var ee = el
+		p(el, "onclick", func(_t, _a):
+			var ti = J.str(J.gp(ee, "title"))
+			_fx("toast", [J.str(RES_HELP.get(ti)) + ("<br>（建好民宅，遊魂才會來）" if ti == "陰兵" and not J.t(_S().bld.get("home")) else "")]); return null)
+	p(_q("#quest"), "onclick", func(_t, _a):
+		var pq = J.mc(_V(), "questTarget", []); var q = J.mc(_g("Quest"), "cur", [])
+		if J.t(q) and J.str(J.gp(q, "go")) == "roster": m(_ui(), "open", ["roster"]); return null
+		if J.t(q) and J.str(J.gp(q, "go")) == "gate" and J.str(J.gp(J.mc(_g("Quest"), "cur", []), "t")) == "stage": m(_ui(), "open", ["battle"]); return null
+		if J.t(pq): m(_ui(), "close"); J.mc(_V(), "focus", [pq[0], pq[1]])
+		return null)
+	var search = J.str(J.gp(_g("location"), "search"))
+	if not (J.t(_g("DEBUG")) and search.contains("nophone")): J.mc(_g("Title"), "show", [fresh])
+	m(_ui(), "refresh"); J.F_requestAnimationFrame([_g("loop")])
+	m(_g("window"), "addEventListener", ["beforeunload", _g("save")])
+	J.S_document_("addEventListener", ["visibilitychange", func(_t, _a):
+		if J.t(J.gp(J.G.get("document"), "hidden")): _c("save")
+		elif J.t(_S()) and not J.t(J.gp(_g("Phone"), "on")): _c("offlineGain")
+		return null])
+
+# 村子物件：資料欄位＋方法（第二段邏輯、第三段繪畫）
+static func make_village() -> Dictionary:
+	return {"cvs": null, "ctx": null, "camY": 0.0, "w": 390.0, "h": 600.0, "dpr": 1.0, "scale": 1.0, "t": 0.0,
+		"hero": {"x": 195.0, "y": 350.0, "tx": 195.0, "ty": 350.0, "dir": 1.0, "act": null, "actT": 0.0, "target": null},
+		"floats": [], "crows": [], "feathers": [], "drag": null, "workerPhase": {}, "vis": [], "bubble": null, "chatT": 6.0, "chatUsed": {}}
+
+static func install_seg3() -> void:
+	var G = J.G
+	for n in ["Fx", "JossFx", "Story"]: ORIG[n] = G.get(n)
+	for n in ["paintBg", "groundLayer", "drawLily", "postLabel", "syncSnd", "confirmInline", "paintPortraits", "covered", "loop", "start", "startGame"]: ORIG[n] = G.get(n)
+	var V: Dictionary = G["Village"]
+	for n in ["init", "resize", "pt", "draw", "drawParts", "drawBubble", "drawPointer"]: ORIG["V." + n] = V.get(n)
+	V["init"] = func(t, _a): v_init(t if t != null else V); return null
+	V["resize"] = func(t, _a): v_resize(t if t != null else V); return null
+	V["pt"] = func(t, a): return v_pt(t if t != null else V, J.arg(a, 0))
+	V["draw"] = func(t, _a): v_draw(t if t != null else V); return null
+	V["drawParts"] = func(t, a): v_draw_parts(t if t != null else V, J.arg(a, 0)); return null
+	V["drawBubble"] = func(t, a): v_draw_bubble(t if t != null else V, J.arg(a, 0)); return null
+	V["drawPointer"] = func(t, a): v_draw_pointer(t if t != null else V, J.arg(a, 0), J.num(J.arg(a, 1))); return null
+	var FX = {"lastPraise": {}}
+	FX["float"] = func(_t, a): fx_float(J.arg(a, 0), J.arg(a, 1), J.arg(a, 2), J.arg(a, 3)); return null
+	FX["toast"] = func(_t, a): fx_toast(J.arg(a, 0)); return null
+	FX["banner"] = func(_t, a): fx_banner(J.arg(a, 0)); return null
+	FX["praise"] = func(t, a): fx_praise(t if t != null else FX, J.arg(a, 0)); return null
+	G["Fx"] = FX
+	var JF = {}
+	JF["play"] = func(t, _a): joss_play(t if t != null else JF); return null
+	G["JossFx"] = JF
+	G["Story"] = make_story()
+	G["paintBg"] = func(_t, a): paint_bg(J.arg(a, 0), J.num(J.arg(a, 1)), J.num(J.arg(a, 2)), J.arg(a, 3), J.arg(a, 4)); return null
+	G["groundLayer"] = func(_t, _a): return ground_layer()
+	G["drawLily"] = func(_t, a): draw_lily(J.arg(a, 0), J.num(J.arg(a, 1)), J.num(J.arg(a, 2)), J.num(J.arg(a, 3))); return null
+	G["postLabel"] = func(_t, a): return post_label(J.arg(a, 0))
+	G["syncSnd"] = func(_t, _a): sync_snd(); return null
+	G["confirmInline"] = func(_t, a): return confirm_inline(J.arg(a, 0), J.arg(a, 1))
+	G["paintPortraits"] = func(_t, a): paint_portraits(J.arg(a, 0)); return null
+	ORIG["UI"] = G.get("UI")
+	G["UI"] = make_ui()
+	G["covered"] = func(_t, _a): return covered()
+	G["loop"] = func(_t, a): loop(J.num(J.arg(a, 0))); return null
+	G["start"] = func(_t, _a): return null    # 補丁：Godot 由 ui/main.gd 直接叫 startGame
+	G["startGame"] = func(_t, _a): start_game(); return null
+
+# ---------------- 安裝 ----------------
+# 全部原生；只有對照測試（GB_L2_ORIG=1）先另外載轉譯版，記低 ORIG 嚟比較
+static func set_globals() -> void:
+	var G = J.G
+	G["$"] = func(_t, a): return J.S_document_("querySelector", [J.arg(a, 0)])
+	G["RES_NAMES"] = RES_NAMES.duplicate(true); G["SPEAKER_ART"] = SPEAKER_ART.duplicate(true); G["SAVE_KEY"] = "ghostBattles_v1"
+	G["DEBUG"] = J.str(J.gp(G.get("location"), "search")).contains("debug")
+	G["S"] = null; G["TIME_SCALE"] = 1.0; G["expAcc"] = 0.0
+	G["W"] = VW; G["WH"] = VWH
+	G["POS"] = {"gate": [195.0, 118.0], "house": [195.0, 300.0], "furnace": [338.0, 258.0], "wood": [92.0, 612.0], "rice": [298.0, 612.0], "plank": [95.0, 752.0], "bun": [295.0, 752.0], "store": [195.0, 872.0], "home": [92.0, 1000.0], "camp": [300.0, 1000.0], "altar": [195.0, 1092.0]}
+	var dec = []
+	for e in [["webTL", 223, 389], ["webTR", 375, 389], ["scarecrow", 293, 488], ["willo", 258, 438], ["willo", 350, 498], ["willo", 300, 404], ["post", 160, 180], ["post", 230, 180], ["post", 160, 690], ["post", 230, 690], ["post", 160, 945], ["post", 230, 945], ["grave", 26, 840], ["grave", 58, 858], ["grave", 362, 850], ["banana", 372, 560], ["banana", 18, 610], ["banana", 372, 930], ["banana", 20, 1060], ["offer", 150, 320], ["offer", 240, 320], ["grave", 360, 1080], ["offer", 290, 880]]:
+		dec.append([e[0], float(e[1]), float(e[2])])
+	G["DECOR"] = dec
+	G["TREE_POS"] = [[38.0, 402.0], [92.0, 392.0], [146.0, 404.0], [62.0, 452.0], [118.0, 448.0], [168.0, 458.0], [40.0, 506.0], [100.0, 512.0]]
+	G["PADDY_POS"] = [[248.0, 412.0], [338.0, 412.0], [248.0, 462.0], [338.0, 462.0], [248.0, 512.0], [338.0, 512.0]]
+	G["FRAME_MS"] = FRAME_MS; G["lastT"] = J.S_performance_("now", []); G["saveT"] = 0.0; G["uiT"] = 0.0; G["_ground"] = null
+	G["F"] = {}; G["Quest"] = {}; G["Village"] = make_village()
+	for n in ["fmt", "newState", "save", "load", "fodderCount", "workersAt", "ghostById", "gdef", "ratesPerMin", "produce", "canPay", "pay", "costText", "give", "gainExp", "onLevelUp", "joinGhost", "recruitFodder", "bldUnlocked", "furnaceReady", "standOk", "offlineGain"]:
+		G[n] = null
+
 # ---------------- 安裝 ----------------
 static func _fn(f: Callable) -> Callable: return f
 func run(env) -> void:
-	# 未改寫嘅部分：照用轉譯版（模塊實例要留住）
-	_trans = load("res://jsgen/game.gd").new()
-	_trans.run(env)
 	var G = J.G
-	ORIG = {"F": (G["F"] as Dictionary).duplicate(), "Quest": (G["Quest"] as Dictionary).duplicate()}
+	if OS.has_environment("GB_L2_ORIG"):
+		# 對照測試：先跑轉譯版（jsgen/game.gd），記低原本函數（ORIG），再逐樣換成原生
+		_trans = load("res://jsgen/game.gd").new()
+		_trans.run(env)
+		ORIG = {"F": (G["F"] as Dictionary).duplicate(), "Quest": (G["Quest"] as Dictionary).duplicate()}
+	else:
+		ORIG = {}
+		set_globals()
 	for n in ["fmt", "newState", "save", "load", "fodderCount", "workersAt", "ghostById", "gdef", "ratesPerMin", "produce", "canPay", "pay", "costText", "give", "gainExp", "onLevelUp", "joinGhost", "recruitFodder", "bldUnlocked", "furnaceReady", "standOk", "offlineGain"]:
 		ORIG[n] = G.get(n)
 	G["fmt"] = func(_t, a): return fmt(J.arg(a, 0))
@@ -701,3 +1674,4 @@ func run(env) -> void:
 	G["standOk"] = func(_t, a): return stand_ok(J.arg(a, 0))
 	G["offlineGain"] = func(_t, _a): offline_gain(); return null
 	install_seg2()
+	install_seg3()

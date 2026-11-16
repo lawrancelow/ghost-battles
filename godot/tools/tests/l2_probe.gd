@@ -223,8 +223,11 @@ func small(_t) -> void:
 # ---- game 第一段：同一進程，原生 vs 轉譯版（native/game.gd 存咗 ORIG）----
 var gok := 0
 var gbad := 0
+var gnorm := false   # true：時間戳（Date.now，13 位數）當成一樣
 func _gcmp(name: String, a, b) -> void:
 	var x = JSON.stringify(_r(a)); var y = JSON.stringify(_r(b))
+	if gnorm:
+		var rx = RegEx.create_from_string("\\d{13}(\\.\\d+)?"); x = rx.sub(x, "T", true); y = rx.sub(y, "T", true)
 	if x == y: gok += 1
 	else:
 		gbad += 1
@@ -418,3 +421,120 @@ func game2(_t) -> void:
 	J.G["Story"] = ST0; J.G["UI"] = UI0
 	_gcmp("pickChatter x40", picks[1], picks[0])
 	print("[game2] ok=%d bad=%d" % [gok, gbad])
+
+# ---- L2 第三至五段：繪畫指令、介面資料／動作、雜項（要 GB_L2_ORIG=1 先有轉譯版 ORIG）----
+static func _ser(r) -> String: return load("res://tools/tests/xc_l4.gd").ser_rec(r)
+func _draw_cmp(name: String, f_nat: Callable, f_tr: Callable) -> void:
+	var a = _rec_ctx(); var b = _rec_ctx()
+	seed(11); f_nat.call(a[1]); seed(11); f_tr.call(b[1])
+	_gcmp(name, _ser(a[0]), _ser(b[0]))
+func _vcopy3(native: bool) -> Dictionary:
+	var NG = load("res://native/game.gd"); var V = J.G.Village
+	var c = {}
+	for k in V: c[k] = V[k]
+	for k in ["hero", "floats", "crows", "feathers", "parts", "bubble", "chatUsed", "workerPhase"]:
+		if V.get(k) is Dictionary or V.get(k) is Array: c[k] = V[k].duplicate(true)
+	if not native:
+		for n in ["draw", "drawParts", "drawBubble", "drawPointer", "workerSpots", "heroPose", "questTarget"]: c[n] = NG.ORIG["V." + n]
+	else:
+		c["draw"] = func(t, _a): NG.v_draw(t); return null
+		c["drawParts"] = func(t, a): NG.v_draw_parts(t, a[0]); return null
+		c["drawBubble"] = func(t, a): NG.v_draw_bubble(t, a[0]); return null
+		c["drawPointer"] = func(t, a): NG.v_draw_pointer(t, a[0], J.num(a[1])); return null
+	return c
+func game3(_t) -> void:
+	gok = 0; gbad = 0; gnorm = true
+	var NG = load("res://native/game.gd"); var O = NG.ORIG; var G = J.G
+	if O.get("paintBg") == null: print("[probe] game3 needs GB_L2_ORIG=1"); return
+	# 背景
+	for bg in ["village", "road", "field", "kampung", "banana", "hq", "office", "xx"]:
+		_draw_cmp("paintBg:" + bg, func(c): NG.paint_bg(c, 390.0, 844.0, bg, 1.5), func(c): J.cl(O.paintBg, null, [c, 390.0, 844.0, bg, 1.5]))
+	for i in 4: _draw_cmp("lily%d" % i, func(c): NG.draw_lily(c, 30.0 + i * 40, 50.0, 0.7 * i), func(c): J.cl(O.drawLily, null, [c, 30.0 + i * 40, 50.0, 0.7 * i]))
+	# 地面圖層（16000 筆蠟筆紋）
+	var g0 = G.get("_ground"); G["_ground"] = null
+	var gt = J.cl(O.groundLayer, null, []); G["_ground"] = null
+	var gn = NG.ground_layer(); G["_ground"] = g0
+	var st = _ser(gt.js_rec()); var sn = _ser(gn.js_rec())
+	_gcmp("groundLayer", [sn.length(), sn.md5_text()], [st.length(), st.md5_text()]); print("[probe] ground cmds=", gn.js_rec().cmds.size())
+	# 村子成幅畫（樹搖、浮字、烏鴉、粒子、泡泡、指引箭頭）
+	var V0 = G.Village; var HD0 = G.get("HeroDaily"); G["HeroDaily"] = null; var PL0 = G.get("PlazaLife"); G["PlazaLife"] = null   # 廣場生活有自己狀態（另一模塊），唔喺比較範圍
+	V0.floats.append({"x": 120.0, "y": 300.0, "text": "+4 槐木", "col": "#cfe", "t": 0.3, "life": 1.6})
+	V0.hero["act"] = {"kind": "tree", "i": 2.0, "shake": 0.2}
+	V0["bubble"] = {"hero": true, "id": "afu", "text": "今日又係劈柴嘅一日，劈完柴就去食壽包", "t": 1.0}
+	V0["parts"] = [{"k": "grain", "x": 200.0, "y": 400.0, "t": 0.2, "life": 0.8, "r": 0.4, "s": 1.0}, {"k": "spark", "x": 210.0, "y": 410.0, "t": 0.1, "life": 0.6, "r": 0.1, "s": 0.8}, {"k": "dust", "x": 190.0, "y": 420.0, "t": 0.3, "life": 0.9, "r": 0.0, "s": 1.2}]
+	V0.crows.append({"x": 100.0, "y": 200.0, "s": 1.0, "ph": 0.3, "vx": 40.0, "t": 0.2, "life": 2.0})
+	V0.feathers.append({"x": 110.0, "y": 210.0, "rot": 0.5, "t": 0.1, "life": 1.0})
+	V0["shk"] = 3.0
+	for tab in ["village", "roster"]:
+		G.UI["tab"] = tab
+		var outs = []
+		for native in [false, true]:
+			var v = _vcopy3(native); var r = _rec_ctx(); v["ctx"] = r[1]; G["Village"] = v; seed(5)
+			J.mc(v, "draw", []); G["Village"] = V0
+			outs.append([_ser(r[0]), v.hero.act])
+		_gcmp("Village.draw:" + tab, [outs[1][0].md5_text(), outs[1][0].length(), outs[1][1]], [outs[0][0].md5_text(), outs[0][0].length(), outs[0][1]])
+		if outs[1][0] != outs[0][0]:
+			var x = outs[1][0]; var y = outs[0][0]; var i = 0
+			while i < mini(x.length(), y.length()) and x[i] == y[i]: i += 1
+			print("[gdiff] draw @%d nat=…%s\n tr=…%s" % [i, x.substr(maxi(0, i - 200), 400), y.substr(maxi(0, i - 200), 400)])
+	G.UI["tab"] = "village"
+	V0.floats.clear(); V0.hero["act"] = null; V0["bubble"] = null; V0["parts"] = []; V0["shk"] = 0.0; V0.crows.clear(); V0.feathers.clear()
+	G["HeroDaily"] = HD0; G["PlazaLife"] = PL0
+	# Fx.float
+	var f0 = V0.floats.size(); J.cl(O.Fx.float, O.Fx, [10.0, 20.0, "x", null]); var a1 = V0.floats.pop_back()
+	NG.fx_float(10.0, 20.0, "x", null); var a2 = V0.floats.pop_back(); _gcmp("Fx.float", a2, a1)
+	# 雜項
+	for pl in [null, "wood", "boss", "street", "boss:地盤", "tower3", "zzz"]: _gcmp("postLabel:%s" % pl, NG.post_label(pl), J.cl(O.postLabel, null, [pl]))
+	_gcmp("covered", NG.covered(), J.t(J.cl(O.covered, null, [])))
+	# 介面資料（UI._n）：同一個 S，原生同轉譯各出一次
+	var UO = O.UI; var NO = J.gp(UO, "_n"); var NN = J.gp(G.UI, "_n")
+	for id in J.iter(G.BLD_ORDER):
+		_gcmp("bldEffect:" + J.str(id), NG.ui_bld_effect(id), J.mc(UO, "bldEffect", [id]))
+		_gcmp("_n.bld:" + J.str(id), NG.n_bld(id), J.mc(NO, "bld", [id]))
+	for pst in J.keys(G.POSTS): _gcmp("_n.pick:" + J.str(pst), NG.n_pick(pst), J.mc(NO, "pick", [pst]))
+	seed(3); var rn = NG.n_roster(); seed(3); _gcmp("_n.roster", rn, J.mc(NO, "roster", []))
+	_gcmp("_n.chests", NG.n_chests(), J.mc(NO, "chests", []))
+	_gcmp("_n._story", NG.n_story(), J.mc(NO, "_story", []))
+	_gcmp("_n.codex", NG.n_codex(), J.mc(NO, "codex", []))
+	for g in J.G.S.ghosts: _gcmp("postStatTxt:" + J.str(g.id), NG.ui_post_stat_txt(g, "wood"), J.mc(UO, "postStatTxt", [g, "wood"]))
+	# 介面動作：喺 S 拷貝上各做一次
+	var S = G.S
+	S.res["coins"] = 99999.0; S.res["buns"] = 9999.0; S.res["planks"] = 9999.0; S.res["wood"] = 400.0; S.res["rice"] = 400.0; S.chests["g"] = 3.0; S.chests["b"] = 2.0; S.chests["p"] = 1.0; S["furnaceAt"] = 0.0
+	for id in J.iter(G.BLD_ORDER):
+		for a in ["build", "up", "burn", "recruit"]:
+			_gstate("bldAct:%s:%s" % [J.str(id), a], func(): seed(9); return NG.n_bld_act(id, a, null), func(): seed(9); return J.mc(NO, "bldAct", [id, a, null]))
+	var ids = []
+	for g in S.ghosts: ids.append(g.id)
+	for gid in ids:
+		_gstate("pickDo:" + J.str(gid), func(): NG.n_pick_do("wood", gid); return null, func(): J.mc(NO, "pickDo", ["wood", gid]); return null)
+		_gstate("rosterUp:" + J.str(gid), func(): NG.n_roster_act("up", gid); return null, func(): J.mc(NO, "rosterAct", ["up", gid]); return null)
+		_gstate("rosterRel:" + J.str(gid), func(): NG.n_roster_act("rel", gid); return null, func(): J.mc(NO, "rosterAct", ["rel", gid]); return null)
+		_gstate("unassign:" + J.str(gid), func(): return NG.n_bld_act("wood", "unassign", gid), func(): return J.mc(NO, "bldAct", ["wood", "unassign", gid]))
+	for k in ["g", "b", "p"]:
+		for all in [false, true]: _gstate("chestOpen:%s:%s" % [k, all], func(): NG.n_chest_open(k, all); return null, func(): J.mc(NO, "chestOpen", [k, all]); return null)
+	_gstate("feast", func(): return NG.n_bld_act("house", "feast", null), func(): return J.mc(NO, "bldAct", ["house", "feast", null]))
+	_gstate("storyAct:export", func(): return NG.n_story_act("export", null), func(): return J.mc(NO, "_storyAct", ["export", null]))
+	_gstate("storyAct:restore", func(): return NG.n_story_act("restore", "_bak"), func(): return J.mc(NO, "_storyAct", ["restore", "_bak"]))
+	# 介面刷新（DOM 替身上嘅文字）
+	var dom = func():
+		var o = {}
+		for sel in ["#lv", "#exptxt", "#r-wood", "#r-rice", "#r-planks", "#r-buns", "#r-coins", "#r-troops"]: o[sel] = J.gp(J.S_document_("querySelector", [sel]), "textContent")
+		o["quest"] = J.gp(J.S_document_("querySelector", ["#quest"]), "innerHTML"); o["bar"] = J.gp(J.gp(J.S_document_("querySelector", ["#expbar i"]), "style"), "width")
+		o["chest"] = J.gp(J.S_document_("querySelector", ["#nav [data-t=chest] i"]), "textContent")
+		return o
+	J.cl(J.gp(UO, "refresh"), UO, []); var d1 = dom.call(); NG.ui_refresh(G.UI); var d2 = dom.call(); _gcmp("UI.refresh", d2, d1)
+	_gcmp("modalOpen", NG.ui_modal_open(), J.t(J.mc(UO, "modalOpen", [])))
+	print("[probe] game3 ok=%d bad=%d" % [gok, gbad]); gnorm = false
+
+# ---- 實玩：開各個村子面板（截圖用）、記生產 ----
+func p_res(_t) -> void: _p("res", [J.G.S.res, J.G.S.lv, J.G.S.qi, J.G.Village.camY, J.G.UI.tab])
+func p_bld(_t) -> void: J.mc(J.G.UI, "openBuilding", ["wood"])
+func p_bld2(_t) -> void: J.mc(J.G.UI, "openBuilding", ["plank"])
+func p_roster(_t) -> void: J.mc(J.G.UI, "open", ["roster"])
+func p_chest(_t) -> void: J.G.S.chests["g"] = J.num(J.G.S.chests.g) + 2; J.mc(J.G.UI, "open", ["chest"])
+func p_chest_open(_t) -> void: J.mc(J.gp(J.G.UI, "_n"), "chestOpen", ["g", false]); _p("chests", J.G.S.chests)
+func p_story(_t) -> void: J.mc(J.G.UI, "open", ["story"])
+func p_close(_t) -> void: J.mc(J.G.UI, "close", [])
+func p_nat(_t) -> void:
+	var NG = load("res://native/game.gd")
+	_p("nat", {"trans": NG._trans != null, "orig": NG.ORIG.size(), "ui_n": J.gp(J.G.UI, "_n") != null, "story_q": J.G.Story.has("__getters")})
