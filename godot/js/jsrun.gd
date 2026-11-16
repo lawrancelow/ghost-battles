@@ -223,6 +223,24 @@ func reset_world() -> void:
 # 原生改寫：res://native/<模塊>.gd 存在就用佢代替轉譯版（介面同樣係 run(env)、設返同一個 J.G 全局）
 # GB_NONAT=1 全部用轉譯版；GB_NONAT_<模塊>=1 單一模塊用轉譯版（對照測試用）
 static var native_used: Array = []
+# 轉譯器 bug：moves_chain.js 喺 IIFE 入面嘅 class M 俾轉譯做全局 J.G["M"]，閉包變數 M 一直係 null，
+# MoveKit 所有 new M() 都變空物件（bm／at／pt 全部回 null：Bryan 個波、n30 招式等畫唔啱）。
+# 載入後即刻補返：MoveKit.M 同所有函數綁住嘅作用域字典（Dictionary 係引用）。之後載入嘅模塊（moves_beast、n30_moves）攞到嘅就係正確 M。
+static func _fix_movekit() -> void:
+	var K = J.G.get("MoveKit"); var Mc = J.G.get("M")
+	if not (K is Dictionary) or not (Mc is Dictionary) or K.get("M") != null: return
+	K["M"] = Mc
+	var envs = []
+	for k in K:
+		var f = K[k]
+		if f is Callable:
+			for b in f.get_bound_arguments():
+				if b is Dictionary and b.has("M") and b["M"] == null and not envs.has(b): envs.append(b)
+	for f in [Mc.get("ctor")] + (Mc.proto.values() if Mc.get("proto") is Dictionary else []):
+		if f is Callable:
+			for b in f.get_bound_arguments():
+				if b is Dictionary and b.has("M") and b["M"] == null and not envs.has(b): envs.append(b)
+	for e in envs: e["M"] = Mc
 # 只有驗證過（列喺 native/ACTIVE.txt）嘅原生模塊先生效；寫緊嘅喺測試時用 GB_NAT_EXTRA=a,b 臨時加入
 static var _active = null
 static func _nat_on(n: String) -> bool:
@@ -247,3 +265,4 @@ func load_modules(names: Array) -> void:
 		if scr == null or not scr.can_instantiate(): push_error("模塊編譯失敗 " + n); continue
 		var m = scr.new(); modules.append(m)
 		m.run(null)
+		if n == "moves_chain": _fix_movekit()
