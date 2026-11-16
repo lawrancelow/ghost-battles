@@ -33,3 +33,8 @@ limbs
 meshanim
 n30_data
 n30_rigs
+guide
+audio
+scene
+phone
+special
