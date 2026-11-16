@@ -44,3 +44,6 @@ office
 rivals
 npc_antag
 puppet
+tower
+tower_lift
+tower_unit

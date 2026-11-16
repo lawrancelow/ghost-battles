@@ -804,7 +804,7 @@ func drawGhost(V: Dictionary) -> void:
 			var k = t / OMEN; c.fillStyle = {"eking": "rgba(210,90,40,", "toyol": "rgba(120,220,140,", "tianhua": "rgba(110,190,255,"}.get(gk, "undefined") + J.str(0.3 * k) + ")"; c.beginPath(); c.arc(q.x, by - h * 0.5, h * 0.6 * (0.6 + 0.4 * k), 0, 7); c.fill(); sy = 1 - 0.08 * k
 		else: ox = J.num(S.gdir) * 30 * V.s * sin(minf(1.0, (t - OMEN) / 0.3) * PI)
 	if J.num(S.stun) > 0: txt("一、二、三……", q.x, by - h - 10, 14, "#b8f0a0")
-	c.save(); c.shadowColor = "rgba(140,255,200,0.85)"; c.shadowBlur = 4 if lit else 14; sprite(key, q.x + ox, by + oy, h, {"flip": J.num(S.gdir) < 0, "alpha": al, "rot": rot, "sy": sy}); c.restore()
+	c.save(); sprite(key, q.x + ox, by + oy, h, {"flip": J.num(S.gdir) < 0, "alpha": al, "rot": rot, "sy": sy}); c.restore()
 	c.fillStyle = "rgba(110,255,190,0.35)"; c.beginPath(); c.ellipse(q.x, q.y, 30 * V.s + 8, 7, 0, 0, 7); c.fill()
 	if not lit and J.num(S.invT) <= 0: txt("黑暗中", q.x, q.y + 16, 11, "#a9c79a")
 	elif lit and J.num(S.invT) <= 0: txt("現形！燈著咗", q.x, q.y + 16, 12, "#e48a78")

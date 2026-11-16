@@ -819,9 +819,9 @@ func drawCab() -> void:
 	c.fillStyle = "#111"; c.fillRect(ix, iy, 76, ih); c.strokeStyle = "#777"; c.lineWidth = 1.5; c.strokeRect(ix, iy, 76, ih)
 	var stuck = J.str(S.st) == "stuck" or J.str(S.st) == "stuckMove" or J.str(S.st) == "unstick"; var ovr = J.num(S.fx.over) > 0
 	c.font = "bold 20px \"Courier New\",monospace"; c.textAlign = "center"; c.fillStyle = ("#ff3b2f" if int(floor(t * 6)) % 2 else "#5a1410") if ovr else "#ffa030"
-	c.shadowColor = c.fillStyle; c.shadowBlur = 8
+	# 網頁 canvas 嘅 shadow 光暈：Ctx 冇呢樣（轉譯版經 J.sp 都係冇效果），唔畫
 	var dirc = "▲" if J.num(S.dir) > 0 and mv else ("▼" if J.num(S.dir) < 0 and mv else " ")
-	c.fillText("OVER" if ovr else ("- -" if stuck else dirc + lab(cabF())), W / 2, iy + 19); c.shadowBlur = 0
+	c.fillText("OVER" if ovr else ("- -" if stuck else dirc + lab(cabF())), W / 2, iy + 19)
 	var g = ghost(); var slots = [W * 0.13, W * 0.87, W * 0.3, W * 0.7]
 	for i in inn.size():
 		var o = inn[i]; var x = slots[i % 4]; var cower = J.str(o.mood) == "cower"; var hh = H * (0.5 if cower else 0.78); var shk = sin(t * 40 + i) * 1.8 if cower or J.str(o.mood) == "bolt" else 0.0
