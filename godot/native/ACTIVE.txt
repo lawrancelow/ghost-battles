@@ -38,3 +38,5 @@ audio
 scene
 phone
 special
+pantry
+rooms

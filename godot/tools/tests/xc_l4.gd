@@ -118,3 +118,160 @@ func l4_scphone(_t) -> void:
 	var Sc = J.G.Scare; var n = J.iter(J.gp(Sc, "npcs"))[0]
 	J.sp(Sc, "sel", n); J.cl(J.G.ScareOps.openPhone, null, [Sc, n, "msg"])
 	print("[xcheck] phone paused=", J.gp(Sc, "paused"), " intel=", J.iter(J.cl(J.G.ScareOps.intel, null, [Sc, J.gp(J.gp(n, "d"), "k")])))
+
+# ---------------- L4：畫布指令序列化（比原生／轉譯畫出嚟嘅嘢）----------------
+static func ser_rec(r, depth := 0) -> String:
+	if r == null: return "null"
+	var out = PackedStringArray()
+	for c in r.cmds: out.append(ser_v(c, depth))
+	return "[" + ";".join(out) + "]"
+static func ser_v(v, depth := 0) -> String:
+	if v is Array:
+		var a = PackedStringArray(); for x in v: a.append(ser_v(x, depth))
+		return "(" + ",".join(a) + ")"
+	if v is Recorder: return "R" + (ser_rec(v, depth + 1) if depth < 4 else "…")
+	if v is Texture2D: return "T%dx%d%s" % [v.get_width(), v.get_height(), v.resource_path]
+	if v is Font: return "F"
+	if v is float: return "%.5f" % v
+	if v is Vector2: return "V(%.4f,%.4f)" % [v.x, v.y]
+	if v is Rect2: return "Q(%.4f,%.4f,%.4f,%.4f)" % [v.position.x, v.position.y, v.size.x, v.size.y]
+	if v is Color: return "C(%.4f,%.4f,%.4f,%.4f)" % [v.r, v.g, v.b, v.a]
+	if v is PackedVector2Array:
+		var a2 = PackedStringArray(); for x in v: a2.append("%.3f,%.3f" % [x.x, x.y])
+		return "P[" + " ".join(a2) + "]"
+	return str(v)
+
+static func new_ctx() -> Array:
+	var cv = J.S_document_("createElement", ["canvas"]); J.sp(cv, "width", 450.0); J.sp(cv, "height", 975.0)
+	return [cv, J.mc(cv, "getContext", ["2d"])]
+
+# ---------------- L4：pantry ----------------
+const OM_KEYS := ["drawBack", "drawables", "tick", "onProp", "init"]
+func _om_get() -> Dictionary:
+	var OM = J.G.OFFMAP; var d = {}
+	for k in OM_KEYS: d[k] = J.gp(OM, k)
+	return d
+func _om_set(d: Dictionary) -> void:
+	for k in OM_KEYS: J.sp(J.G.OFFMAP, k, d[k])
+
+func _pt_run(W: Dictionary, P) -> Array:
+	var Sc = J.G.Scare; var OM = J.G.OFFMAP; _om_set(W)
+	seed(555)
+	for n in J.iter(J.gp(Sc, "npcs")): J.sp(n, "_pu", null)
+	J.cl(OM.init, OM, [Sc])
+	J.sp(Sc, "camX", 5.75); J.sp(Sc, "_nat", false)   # 用 JS 畫法（唔經原生 __nat_* 鈎），先錄得到
+	var npcs = J.iter(J.gp(Sc, "npcs")); var n0 = npcs[0]; var n1 = npcs[1] if npcs.size() > 1 else npcs[0]
+	var SP = J.gp(OM, "SPOT"); var keep = [J.gp(n1, "x"), J.gp(n1, "y"), J.gp(n1, "act")]
+	J.sp(n1, "x", J.gp(SP, "coffee")[0]); J.sp(n1, "y", J.gp(SP, "coffee")[1]); J.sp(n1, "act", "idle")
+	var plan = {0: ["fx", "micro"], 10: ["fx", "coffee"], 20: ["fx", "fridgeloop"], 32: ["fx", "water"], 45: ["fx", "vend"], 70: ["fx", "snack"], 95: ["fx", "fridge"], 130: ["use", "water"], 150: ["use", "micro"], 170: ["prop", "kettle"], 180: ["prop", "vend"], 200: ["prop", "fridge"]}
+	var out = []; var dt = 1.0 / 30
+	for f in 420:
+		if plan.has(f):
+			var a = plan[f]
+			if a[0] == "prop": J.cl(OM.onProp, OM, [a[1], n0, "pantry"])
+			else: J.cl(J.gp(P, a[0]), null, [a[1], n0])
+		J.sp(Sc, "t", f * dt)
+		J.cl(OM.tick, OM, [dt])
+		if f % 6 == 0:
+			var cc = new_ctx(); var ctx = cc[1]
+			if f == 0: print("[xcheck] dbg cv=", cc[0], " ctx=", ctx)
+			J.cl(OM.drawBack, OM, [ctx, f * dt])
+			var ds = J.cl(OM.drawables, OM, [])
+			var zs = []
+			for d in ds: zs.append(J.str(d[0])); J.cl(d[1], null, [ctx])
+			var pu = []
+			for n in npcs: pu.append(J.to_json(J.gp(n, "_pu")))
+			out.append("f%d st=%s z=%s pu=%s rec=%s" % [f, J.to_json(J.cl(J.gp(P, "state"), null, [])), ",".join(zs), ",".join(pu), ser_rec(cc[0].js_rec() if cc[0] != null else null)])
+	J.sp(n1, "x", keep[0]); J.sp(n1, "y", keep[1]); J.sp(n1, "act", keep[2])
+	return out
+
+func l4_pantry(_t) -> void:
+	mod = "pantry"
+	var Sc = J.G.Scare
+	J.mc(Sc, "start", ["office", ["afu", "eguiking", "toyol"]])
+	var W_nat = _om_get(); var Pn = J.G.Pantry
+	_om_set(Pn._orig)
+	var Pt = load_trans("pantry", ["Pantry"]).Pantry
+	var W_tr = _om_get(); _om_set(W_nat)
+	var a = _pt_run(W_nat, Pn); var b = _pt_run(W_tr, Pt)
+	for i in a.size(): _sc_cmp("pantry " + a[i].substr(0, 5), a[i], b[i])
+	_om_set(W_nat)
+	print("[xcheck] pantry frames=%d reclen=%d" % [a.size(), a[a.size() / 2].length()])
+	_report()
+
+static func _dom_ser(e) -> String:
+	if e == null: return "null"
+	var kids = PackedStringArray()
+	for c in e.children: kids.append(_dom_ser(c))
+	return "<%s id=%s cls=%s st=%s txt=%s>%s</>" % [e.tagName, e.id_, ",".join(e.classList.d.keys()), JSON.stringify(e.style), J.str(e.props.get("textContent", "")), "".join(kids)]
+
+# ---------------- L4：rooms（要開 GB_NAT_EXTRA=rooms,pantry）----------------
+func _rm_run(O: Dictionary, F: Dictionary) -> Array:
+	# O：OFFMAP（資料／小函數）；F：未經 pantry 包嘅 init/tick/onProp/drawBack/drawables + drawOver
+	var Sc = J.G.Scare; var out = []
+	seed(777)
+	J.cl(F.init, O, [Sc]); J.sp(Sc, "_nat", false)
+	var npcs = J.iter(J.gp(Sc, "npcs")); var n0 = npcs[0]
+	var plan = {0: ["micro", "main"], 5: ["fridge", "pantry"], 12: ["vend", "pantry"], 20: ["kettle", "pantry"], 30: ["tv", "meeting"], 40: ["speaker", "meeting"], 50: ["chairs", "meeting"], 60: ["golf", "boss"], 70: ["bchair", "boss"], 80: ["trophy", "boss"], 90: ["lights", "main"], 150: ["ac", "pantry"], 200: ["chairs", null], 230: ["lights", null]}
+	var cams = [0.0, 1.5, 3.0, 4.5, 5.8, 7.5, 9.0]
+	var dt = 1.0 / 30
+	for f in 480:
+		if plan.has(f): J.cl(F.onProp, O, [plan[f][0], (n0 if f != 200 else null), plan[f][1]])
+		J.sp(Sc, "t", f * dt)
+		J.cl(F.tick, O, [dt])
+		if f % 8 == 0:
+			J.sp(Sc, "camX", cams[(f / 8) % cams.size()])
+			var cc = new_ctx(); var ctx = cc[1]
+			J.cl(F.drawBack, O, [ctx, f * dt])
+			var zs = []
+			for d in J.cl(F.drawables, O, []): zs.append(J.str(d[0])); J.cl(d[1], null, [ctx])
+			J.cl(F.drawOver, O, [ctx, f * dt])
+			out.append("f%d z=%s rec=%s" % [f, ",".join(zs), ser_rec(cc[0].js_rec())])
+	return out
+
+func l4_rooms(_t) -> void:
+	mod = "rooms"
+	var Sc = J.G.Scare
+	J.mc(Sc, "start", ["office", ["afu", "eguiking", "toyol"]])
+	var On = J.G.OFFMAP; var Po = J.G.Pantry._orig
+	var Ot = load_trans("rooms", ["OFFMAP"]).OFFMAP
+	# 資料同小函數
+	for k in ["PXU", "WW", "SW", "SH", "SEAM", "WALLS", "WALLW", "PILLAR", "ROOMS", "OX", "SPOT", "LANE", "PATROL", "A", "WINMAIN", "ELEV"]:
+		_sc_cmp("data " + k, J.to_json(J.gp(On, k)), J.to_json(J.gp(Ot, k)))
+	_sc_cmp("RM keys", str(J.keys(J.gp(On, "RM"))), str(J.keys(J.gp(Ot, "RM"))))
+	for k in J.keys(J.gp(Ot, "RM")): _sc_cmp("RM " + k, J.to_json(J.gp(J.gp(On, "RM"), k)), J.to_json(J.gp(J.gp(Ot, "RM"), k)))
+	for x in [-1.0, 0.0, 0.5, 1.3, 2.2, 3.9, 5.0, 6.1, 7.7, 9.5, 10.3, 12.0]:
+		for f in ["M", "MY", "px", "npx", "py", "Ru"]: _sc_cmp("%s(%s)" % [f, x], J.to_json(J.cl(J.gp(On, f), null, [x])), J.to_json(J.cl(J.gp(Ot, f), null, [x])))
+		_sc_cmp("roomAt(%s)" % x, J.to_json(J.gp(J.cl(J.gp(On, "roomAt"), null, [x]), "k")), J.to_json(J.gp(J.cl(J.gp(Ot, "roomAt"), null, [x]), "k")))
+	for v in [0.0, 100.0, 1506.0, 2000.0, 2600.0, 3000.0, 4458.0, 5000.0, 6000.0, 9000.0]: _sc_cmp("Rp(%s)" % v, J.to_json(J.cl(J.gp(On, "Rp"), null, [v])), J.to_json(J.cl(J.gp(Ot, "Rp"), null, [v])))
+	_sc_cmp("R", J.to_json(J.cl(J.gp(On, "R"), null, [[100.0, 200.0, 300.0, 400.0]])), J.to_json(J.cl(J.gp(Ot, "R"), null, [[100.0, 200.0, 300.0, 400.0]])))
+	_sc_cmp("mapHTML", J.str(J.cl(J.gp(On, "mapHTML"), null, [])), J.str(J.cl(J.gp(Ot, "mapHTML"), null, [])))
+	# 畫＋狀態
+	var Fn = {"init": Po.init, "tick": Po.tick, "onProp": Po.onProp, "drawBack": Po.drawBack, "drawables": Po.drawables, "drawOver": J.gp(On, "drawOver")}
+	var Ft = {"init": J.gp(Ot, "init"), "tick": J.gp(Ot, "tick"), "onProp": J.gp(Ot, "onProp"), "drawBack": J.gp(Ot, "drawBack"), "drawables": J.gp(Ot, "drawables"), "drawOver": J.gp(Ot, "drawOver")}
+	var a = _rm_run(On, Fn); var b = _rm_run(Ot, Ft)
+	for i in a.size(): _sc_cmp("rooms " + a[i].substr(0, 5), a[i], b[i])
+	# 小地圖：同一個 DOM，各跑一次比 #sc-map
+	J.sp(Sc, "_nat", true)
+	for side in [["nat", On], ["tr", Ot]]:
+		var mp = J.S_document_("getElementById", ["scm-dots"])
+		if mp != null: J.sp(mp, "innerHTML", "")
+		J.sp(Sc, "_dots", {})
+		J.cl(J.gp(side[1], "mapTick"), null, [Sc])
+		var html = _dom_ser(J.S_document_("getElementById", ["sc-map"]))
+		if side[0] == "nat": a = [html]
+		else: _sc_cmp("mapTick", a[0], html)
+	print("[xcheck] rooms frames=%d reclen=%d" % [b.size(), b[b.size() / 2].length()])
+	_report()
+
+# 實玩截圖用：夜班嚇人，鏡頭去茶水間，觸發幾樣電器
+func l4_pantry_show(_t) -> void:
+	var Sc = J.G.Scare; var n = J.iter(J.gp(Sc, "npcs"))[0]
+	J.sp(Sc, "camX", 5.75); J.sp(Sc, "follow", false); J.sp(Sc, "userPan", 999.0)
+	J.cl(J.G.Pantry.fx, null, ["fridgeloop", n]); J.cl(J.G.Pantry.fx, null, ["vend", n]); J.cl(J.G.Pantry.fx, null, ["micro", n]); J.cl(J.G.Pantry.fx, null, ["water", n])
+	print("[xcheck] pantry_show state=", J.to_json(J.cl(J.G.Pantry.state, null, [])))
+func l4_rooms_show(_t) -> void:
+	var Sc = J.G.Scare
+	J.sp(Sc, "camX", 1.2); J.sp(Sc, "follow", false); J.sp(Sc, "userPan", 999.0)
+	for k in ["tv", "speaker", "chairs"]: J.cl(J.G.OFFMAP.onProp, J.G.OFFMAP, [k, J.iter(J.gp(Sc, "npcs"))[0], "meeting"])
+	print("[xcheck] rooms_show")

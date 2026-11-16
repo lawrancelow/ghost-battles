@@ -41,3 +41,9 @@ func dump_ops(_t) -> void:
 	LANG["add"] = orig
 	var SO = J.G.ScareOps; J.G["ScareOps"] = keep
 	_w("scare_ops", {"OPS": SO.OPS, "PANTRY": SO.PANTRY, "TAB": SO.TAB, "INTEL_NAME": SO.INTEL_NAME, "ZH": zh})
+
+# rooms：OFFMAP 嘅固定資料（座標表）→ /tmp/L4_dump/nat/rooms.json
+func dump_rooms(_t) -> void:
+	var O = J.G.OFFMAP; var d = {}
+	for k in ["PXU", "WW", "SW", "SH", "SEAM", "WALLS", "WALLW", "PILLAR", "ROOMS", "OX", "SPOT", "LANE", "PATROL", "A", "WINMAIN", "ELEV"]: d[k] = J.gp(O, k)
+	_w("rooms", d)
