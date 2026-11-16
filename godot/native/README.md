@@ -29,3 +29,11 @@
 - 驗證完（對照 bad=0、實玩截圖、自檢 34 項）：喺 git lock 入面把模塊名加入 ACTIVE.txt 同埋 commit 你嘅檔。
 - 純資料模塊統一用 `native/_datamod.gd`（`data/nat/<模塊>.json`，工具 `tools/tests/dump_datamod.gd`）。
 - 測試副本：唔好喺副本刪檔（會要權限），用 GB_NAT_EXTRA 揀要測嘅模塊就得。
+
+## 測試唔使刪資料夾（避免要權限）
+每次要乾淨用戶資料：喺自己測試副本嘅 project.godot `[application]` 加（每次換個新名）：
+```
+config/use_custom_user_dir=true
+config/custom_user_dir_name="gbt_L2_<時間戳>"
+```
+用戶資料就會喺 `~/.local/share/gbt_L2_<時間戳>/`，全新、唔使刪。全面自檢結果睇嗰度嘅 selftest.json。
