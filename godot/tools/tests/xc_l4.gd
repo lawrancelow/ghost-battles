@@ -474,3 +474,93 @@ func l4_endnight(_t) -> void:
 func l4_after(_t) -> void:
 	var Sc = J.G.Scare
 	print("[xcheck] after active=", J.gp(Sc, "active"), " legendHTML=", J.str(J.gp(Sc, "_legendHTML")).substr(0, 300), " S.legend=", J.to_json(J.gp(J.G.S, "legend")))
+
+# ---------------- L4：scare 分段（native/scare.gd；GB_NAT_EXTRA=scare）----------------
+static func _ks(v) -> String:
+	if v is Array:
+		var o = []
+		for x in v: o.append(J.gp(J.gp(x, "d"), "k") if x is Dictionary and x.has("d") else x)
+		return J.to_json(o)
+	if v is Dictionary and v.has("k") and v.has("x0"): return "room:" + J.str(v.k)
+	return J.to_json(v)
+func _sx(Sc, NS, m: String, args: Array, label := "") -> void:
+	var f_n = Sc[m]; var f_t = NS.ORIG[m]
+	var a = _ks(J.cl(f_n, Sc, args.duplicate())); var b = _ks(J.cl(f_t, Sc, args.duplicate()))
+	_sc_cmp(m + label, a, b)
+func _sx_rng(Sc, NS, m: String, n, args: Array) -> void:
+	var s0 = J.gp(n, "_seed")
+	var a = _ks(J.cl(Sc[m], Sc, args)); var s1 = J.gp(n, "_seed"); J.sp(n, "_seed", s0)
+	var b = _ks(J.cl(NS.ORIG[m], Sc, args)); var s2 = J.gp(n, "_seed")
+	_sc_cmp(m, a + J.str(s1), b + J.str(s2))
+func _sc_state(Sc) -> String:
+	var ns = []
+	for n in J.iter(J.gp(Sc, "npcs")):
+		var o = {}
+		for k in ["x", "y", "act", "fear", "peak", "dir", "wait", "wi", "gone", "out", "fleeing", "leaving", "shaken", "lookUp", "lookCD", "_seed", "bub", "li", "napAt"]: o[k] = J.gp(n, k)
+		var st = J.gp(n, "step")
+		if J.t(st): o["step"] = [J.gp(st, "x"), J.gp(st, "y"), J.gp(st, "act"), J.gp(st, "arrived"), J.gp(st, "wait")]
+		ns.append(o)
+	return J.to_json({"t": J.gp(Sc, "t"), "kpi": J.gp(Sc, "kpi"), "mana": J.gp(Sc, "mana"), "expo": J.gp(Sc, "expo"), "npcs": ns})
+func _scare_battery(Sc, NS) -> void:
+	var npcs = J.iter(J.gp(Sc, "npcs")); var props = J.keys(J.G.SCARE_PROPS)
+	for m in ["viewW", "camRoom", "bgScale", "persp", "bgAR", "office", "groupRoom", "exitPt"]: _sx(Sc, NS, m, [])
+	for x in [-0.3, 0.0, 0.45, 1.2, 2.5, 3.9, 5.1, 6.6, 8.0, 9.9, 11.5]:
+		_sx(Sc, NS, "clampCam", [x]); _sx(Sc, NS, "onScreen", [x, null]); _sx(Sc, NS, "onScreen", [x, 0.1]); _sx(Sc, NS, "inDoor", [x])
+		for y in [0.5, 0.62, 0.8, 0.95]: _sx(Sc, NS, "pt", [x, y]); _sx(Sc, NS, "hh", [y]); _sx(Sc, NS, "hhF", [y]); _sx(Sc, NS, "depth", [y])
+	for k in J.keys(J.G.SCARE_GHOSTS):
+		_sx(Sc, NS, "gpq", [k])
+		for n in npcs: _sx(Sc, NS, "ghostType", [k, n])
+		_sx(Sc, NS, "ghostType", [k, null])
+	for n in npcs:
+		for m in ["roomOf", "present", "sitting", "tagExt", "headsDown", "watching", "witnesses", "hearers", "workOf"]: _sx(Sc, NS, m, [n])
+		_sx(Sc, NS, "viaElev", [n, J.gp(n, "x"), J.gp(n, "y")])
+		for tx in [0.3, 2.0, 4.5, 7.0, 10.0]: _sx(Sc, NS, "walkBlocked", [n, tx]); _sx(Sc, NS, "busy", [n, tx]); _sx(Sc, NS, "freeSpot", [n, tx, 0.75])
+		for m2 in npcs: _sx(Sc, NS, "sees", [m2, n]); _sx(Sc, NS, "sameRoom", [m2, n]); _sx(Sc, NS, "inBeam", [m2, J.num(J.gp(n, "x")) + 0.1, J.gp(n, "y")])
+		for k in props: _sx(Sc, NS, "propOK", [k, n])
+		_sx(Sc, NS, "inGroup", [n, "main"]); _sx(Sc, NS, "inGroup", [n, null])
+		if J.gp(n, "_seed") != null: _sx_rng(Sc, NS, "rng", n, [n]); _sx_rng(Sc, NS, "U", n, [n, 2.0, 9.0]); _sx_rng(Sc, NS, "rnd", n, [n])
+	for k in props: _sx(Sc, NS, "propOK", [k, null])
+
+func l4_scare1(_t) -> void:
+	mod = "scare1"
+	var NS = load("res://native/scare.gd")
+	var Sc = J.G.Scare; var S = J.G.S
+	# 星星
+	var keep = J.gp(S, "scare")
+	for st in [{"fv": 2.0, "best": {"office": 900.0}}, {"fv": 2.0, "best": {"office": 1700.0}}, {"fv": 1.0, "best": {"office": 300.0}}, {"fv": 1.0, "best": {"office": 900.0}}, {"best": {"office": 100.0}}, {"fv": 3.0, "best": {"office": 1400.0}}]:
+		var r = []
+		for f in [Sc.starsOf, NS.ORIG.starsOf]:
+			J.sp(S, "scare", st.duplicate(true)); var v = J.cl(f, Sc, ["office", 1290.0]); r.append(J.to_json([v, J.gp(S, "scare")]))
+		_sc_cmp("starsOf", r[0], r[1])
+	J.sp(S, "scare", keep)
+	for v in [0.0, 1099.0, 1100.0, 1300.0, 1480.0, 5000.0]: _sx(Sc, NS, "starsOf", ["office", v])
+	# 一晚（headless）：逐段比
+	for sd in [11.0, 4242.0]:
+		J.mc(Sc, "start", ["office", ["afu", "eguiking", "toyol"], true, sd])
+		var dt = 1.0 / 30
+		for f in 5400:
+			J.mc(Sc, "step", [dt])
+			if not J.t(J.gp(Sc, "active")): break
+			if f % 300 == 7:
+				for hl in [true, false]:
+					J.sp(Sc, "headless", hl)
+					for cx in [0.0, 3.3, 7.7]: J.sp(Sc, "camX", cx); _scare_battery(Sc, NS)
+				J.sp(Sc, "headless", true)
+		print("[xcheck] scare1 seed=%s t=%s ok=%d bad=%d" % [sd, J.gp(Sc, "t"), ok, bad])
+	# 成晚決定性：原生 vs 轉譯
+	var runs = []
+	for side in ["nat", "tr"]:
+		var keepM = {}
+		if side == "tr": for k in NS.ORIG: keepM[k] = Sc[k]; Sc[k] = NS.ORIG[k]
+		seed(99); J.mc(Sc, "start", ["office", ["afu", "eguiking", "toyol"], true, 777.0])
+		var out = []
+		for f in 5400:
+			J.mc(Sc, "step", [1.0 / 30])
+			if f % 60 == 0: out.append(_sc_state(Sc))
+			if not J.t(J.gp(Sc, "active")): break
+		out.append(_sc_state(Sc)); runs.append(out)
+		if side == "tr": for k in keepM: Sc[k] = keepM[k]
+	_sc_cmp("night len", str(runs[0].size()), str(runs[1].size()))
+	for i in mini(runs[0].size(), runs[1].size()): _sc_cmp("night f%d" % (i * 60), runs[0][i], runs[1][i])
+	J.sp(Sc, "active", false)
+	_report()
