@@ -540,12 +540,15 @@ static func S_String_(m: String, a: Array):
 		return s
 	if m == "fromCodePoint": return String.chr(int(num(a[0])))
 	return null
-static func now() -> float: return Time.get_unix_time_from_system() * 1000.0
+# 對照測試用假時鐘：>= 0 時 Date.now() 回 test_clock、performance.now() 回 test_perf（毫秒）
+static var test_clock := -1.0
+static var test_perf := -1.0
+static func now() -> float: return test_clock if test_clock >= 0 else Time.get_unix_time_from_system() * 1000.0
 static func S_Date_(m: String, _a: Array):
 	if m == "now": return now()
 	return null
 static func S_performance_(m: String, _a: Array):
-	if m == "now": return Time.get_ticks_usec() / 1000.0
+	if m == "now": return test_perf if test_perf >= 0 else Time.get_ticks_usec() / 1000.0
 	return 0.0
 static func S_console_(m: String, a: Array):
 	if m == "error" or m == "warn": push_warning("JS console.%s: %s" % [m, " ".join(a.map(func(x): return J.str(x)))])
