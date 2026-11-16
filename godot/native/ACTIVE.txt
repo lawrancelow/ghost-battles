@@ -8,3 +8,7 @@ moves
 limbdata
 rigs
 rework
+lang
+lang_zh
+chatter_data
+story
