@@ -53,12 +53,26 @@ func weapon_of(type: String, wid = null) -> Variant:
 	if id != null and WP.has(id) and Spr.ok(WP[id].img): return WP[id]
 	return null
 
-func _draw_weapon(ctx: Ctx, c: Dictionary, wp: Dictionary, H: float, _bend: float) -> Transform2D:
+func _draw_weapon(ctx: Ctx, c: Dictionary, wp: Dictionary, H: float, bend: float) -> Transform2D:
 	var im = Spr.get_tex(wp.img); var ww: float = wp.w * H; var wh: float = wp.h * H
 	var tx: float = (wp.tip[0] - wp.grip[0]) * ww; var ty: float = (wp.tip[1] - wp.grip[1]) * wh
-	ctx.rotate((float(c.hold) - float(wp.ang)) * D)
-	ctx.drawImage(im, -wp.grip[0] * ww, -wp.grip[1] * wh, ww, wh)
-	ctx.translate(tx, ty)
+	var n := int(J.num(wp.get("flex"))) if wp.get("flex") != null else 0
+	if n == 0 or bend == 0.0:
+		ctx.rotate((float(c.hold) - float(wp.ang)) * D)
+		ctx.drawImage(im, -wp.grip[0] * ww, -wp.grip[1] * wh, ww, wh)
+		ctx.translate(tx, ty)
+		return ctx.getTransform()
+	# 軟武器（例如鐵鏈）：沿軸切 n 段，每段多彎 bend/n 度
+	var ln = Vector2(tx, ty).length(); var seg = ln / n; var big = maxf(ww, wh) * 2; var ov = seg * 0.15
+	ctx.rotate(float(c.hold) * D)
+	for i in n:
+		if i > 0: ctx.translate(0, -seg * i); ctx.rotate(bend / n * D); ctx.translate(0, seg * i)
+		var y0 = big if i == 0 else -seg * i + ov
+		var y1 = -big if i == n - 1 else -seg * (i + 1) - ov
+		ctx.save(); ctx.beginPath(); ctx.rect(-big, y1, big * 2, y0 - y1); ctx.clip()
+		ctx.save(); ctx.rotate(-float(wp.ang) * D); ctx.drawImage(im, -wp.grip[0] * ww, -wp.grip[1] * wh, ww, wh); ctx.restore()
+		ctx.restore()
+	ctx.translate(0, -ln)
 	return ctx.getTransform()
 
 func draw(ctx: Ctx, type: String, x: float, y: float, H: float, o: Dictionary, faceRight: bool, mesh_pose: Dictionary) -> Variant:
@@ -88,15 +102,18 @@ func draw(ctx: Ctx, type: String, x: float, y: float, H: float, o: Dictionary, f
 	var lx: float = px + (lift * c.lift[0] + s.hx) * W; var ly: float = py - (lift * c.lift[1] + s.hy) * H
 	var hk: float = float(c.hk) if c.get("hk") != null else 1.0
 	var ath: float = (s.th + th_add) * hk; var wth: float = (s.th + th_add) - ath
+	var tip_m = [null]   # 武器尖／空手拳頭位置（畀殘影、命中特效用）
 	var wpn = func() -> void:
 		if wp == null: return
 		ctx.save(); ctx.translate(lx, ly); ctx.rotate(ath * D)
 		if nr: ctx.scale(-1, 1)
 		ctx.translate((c.grip[0] - c.pivot[0]) * W, (c.grip[1] - c.pivot[1]) * H); ctx.rotate(wth * D * (-1.0 if nr else 1.0))
-		_draw_weapon(ctx, c, wp, H, s.bend); ctx.restore()
+		tip_m[0] = _draw_weapon(ctx, c, wp, H, s.bend); ctx.restore()
 	var draw_arm = func() -> void:
 		ctx.save(); ctx.translate(lx, ly); ctx.rotate(ath * D)
 		if nr: ctx.scale(-1, 1)
+		if wp == null and c.get("tip") != null:
+			ctx.save(); ctx.translate((c.tip[0] - c.pivot[0]) * W, (c.tip[1] - c.pivot[1]) * H); tip_m[0] = ctx.getTransform(); ctx.restore()
 		ctx.drawImage(arm, -c.pivot[0] * W, -c.pivot[1] * H, W, H)
 		ctx.restore()
 	var behind: bool = s.th > float(c.behind) or (c.get("behindLo") != null and s.th < float(c.behindLo))
@@ -105,9 +122,13 @@ func draw(ctx: Ctx, type: String, x: float, y: float, H: float, o: Dictionary, f
 	if w_behind: wpn.call()
 	if behind: draw_arm.call()
 	if nr: ctx.save(); ctx.scale(-1, 1)
-	MeshAnim.draw_body(ctx, type, type + "__body", H, mp)
+	# 同 limbs.js 一樣經全局 MeshAnim.drawBody（JS 嗰份 RIG；DB 入面嘅 RIG 係舊資料）
+	var JM = J.G.get("MeshAnim")
+	if JM is Dictionary and JM.get("drawBody") != null: J.mc(JM, "drawBody", [ctx, type, type + "__body", H, mp])
+	else: MeshAnim.draw_body(ctx, type, type + "__body", H, mp)
 	if nr: ctx.restore()
 	if not w_behind: wpn.call()
 	if not behind: draw_arm.call()
 	ctx.restore()
+	if tip_m[0] != null: return {"x": tip_m[0].origin.x, "y": tip_m[0].origin.y}
 	return null
