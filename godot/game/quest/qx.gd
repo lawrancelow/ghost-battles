@@ -318,7 +318,7 @@ func _process(dt: float) -> void:
 		var busy = J.t(J.mc(J.G.get("Story"), "busy", [])); var cov = J.G.get("covered")
 		if busy or (cov != null and J.t(J.cl(cov, null, []))): vis = false
 		else:
-			for id in ["world", "scare", "battle", "gstreet", "gyard", "sports", "stn-cv", "stt-cv", "tw-root"]:
+			for id in ["world", "scare", "battle", "gstreet", "gyard", "sports", "stn-cv", "stt-cv", "tw-root", "gtheater", "su-pick"]:
 				var e = JSRun.by_id(id)
 				if e != null and (" " + J.str(J.gp(e, "className")) + " ").contains(" on "): vis = false; break
 			if get_tree().root.get_node_or_null("Main/ScRun") != null: vis = false
