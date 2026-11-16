@@ -40,3 +40,4 @@ phone
 special
 pantry
 rooms
+office
