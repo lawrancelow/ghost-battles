@@ -209,6 +209,160 @@ func sports(_t) -> void:
 	J.G["S"] = keepS; J.G["Sports"] = live
 	_report()
 
+static func _norm(x):
+	if x is Dictionary:
+		var o = {}
+		var ks = x.keys(); ks.sort()
+		for k in ks:
+			if x[k] != null: o[str(k)] = _norm(x[k])
+		return o
+	if x is Array:
+		var o = []
+		for v in x: o.append(_norm(v))
+		return o
+	if x is int: return float(x)
+	return x
+
+func graveyard(_t) -> void:
+	mod = "graveyard"
+	var live = J.G.Graveyard; var liveG = J.G.GY_GEN
+	var tr = load_trans("graveyard", ["Graveyard", "GY_GEN"])
+	var nm = load("res://native/graveyard.gd").new(); _keep_alive.append(nm); nm.run(null)
+	var nat = {"Graveyard": J.G.Graveyard, "GY_GEN": J.G.GY_GEN}
+	J.G["Graveyard"] = live; J.G["GY_GEN"] = liveG
+	# 隨機數串
+	for sd in [0.0, 1.0, 12345.0, 2e9, 4294967295.0, 4294967296.0 + 7]:
+		var a = J.mc(nat.GY_GEN, "rng", [sd]); var b = J.mc(tr.GY_GEN, "rng", [sd]); var sa = []; var sb = []
+		for k in 50: sa.append(J.cl(a, null, [])); sb.append(J.cl(b, null, []))
+		if same(sa, sb): ok += 1
+		else: bad += 1; print("[xcheck-diff] rng(%s) nat=%s tr=%s" % [sd, str(sa.slice(0, 3)), str(sb.slice(0, 3))])
+	for nt in [1, 2, 3, 5, 8, 12]: check("GY_GEN", nat.GY_GEN, tr.GY_GEN, "levelOf", [float(nt)])
+	# 生成：每晚多個種子，整份題目要一樣
+	var cnt = 0
+	for nt in range(1, 13):
+		for k in 6:
+			var sd = float(1 + ((nt * 7349 + k * 104729) * 2654435761) % 2000000000)
+			var a = J.mc(nat.GY_GEN, "gen", [float(nt), sd]); var b = J.mc(tr.GY_GEN, "gen", [float(nt), sd])
+			var x = JSON.stringify(_norm(a)); var y = JSON.stringify(_norm(b)); cnt += 1
+			if x == y: ok += 1
+			else:
+				bad += 1
+				if bad <= 6: print("[xcheck-diff] gen(%d,%s)\n nat=%s\n tr =%s" % [nt, sd, x.substr(0, 600), y.substr(0, 600)])
+			if k == 0:
+				# 驗證器：用轉譯版題目，兩邊 solve 同 card 結果一樣
+				var n = b.souls.size(); var cl = []
+				for s in b.souls: cl += s.clues
+				check("GY_GEN", nat.GY_GEN, tr.GY_GEN, "solve", [float(n), b.graves, cl, 0.0])
+				check("GY_GEN", nat.GY_GEN, tr.GY_GEN, "card", [b.graves[0]])
+	print("[xcheck-info] graveyard gen cases=%d" % cnt)
+	_report()
+
+# 深比較，浮點容許 1e-9 相對誤差（JS Math.hypot 同 sqrt 末位可能唔同）
+static func _near(a, b) -> bool:
+	if (a is float or a is int) and (b is float or b is int): return absf(float(a) - float(b)) <= 1e-9 * maxf(1.0, absf(float(a)))
+	if a is Dictionary and b is Dictionary:
+		if a.size() != b.size(): return false
+		for k in a:
+			if not b.has(k) or not _near(a[k], b[k]): return false
+		return true
+	if a is Array and b is Array:
+		if a.size() != b.size(): return false
+		for i in a.size():
+			if not _near(a[i], b[i]): return false
+		return true
+	return typeof(a) == typeof(b) and a == b
+
+func _gs_click(sel: String, idx := 0) -> bool:
+	var p = J.cl(J.G.get("$"), null, ["#gs-panel"])
+	if p == null: return false
+	var bs = J.iter(J.mc(p, "querySelectorAll", [sel]))
+	var n = 0
+	for b in bs:
+		if J.t(J.gp(b, "disabled")): continue
+		if n == idx:
+			var f = J.gp(b, "onclick")
+			if f != null: J.cl(f, b, []); return true
+		n += 1
+	return false
+
+func _gs_snap(G, f: int) -> Dictionary:
+	var A = J.gp(G, "afu"); var ws = []
+	for w in J.iter(J.gp(G, "walkers")): ws.append([J.gp(w, "x"), J.gp(w, "y"), J.gp(w, "bubT"), J.gp(w, "bub"), J.gp(w, "look"), J.gp(w, "bump")])
+	var ks = []
+	var KP = J.gp(G, "keepers")
+	for k in ["paper", "haggle", "exch", "food"]: var kp = J.gp(KP, k); ks.append([J.gp(kp, "pose"), J.gp(kp, "bub"), J.gp(kp, "bubT"), J.gp(kp, "greet")])
+	var panel = J.str(J.gp(J.cl(J.G.get("$"), null, ["#gs-panel"]), "innerHTML"))
+	return {"f": f, "afu": [J.gp(A, "x"), J.gp(A, "y"), J.gp(A, "dir"), J.gp(A, "pose")], "cam": J.gp(G, "cam"), "vh": J.gp(G, "vh"), "view": _norm(J.gp(G, "view")), "ws": ws, "ks": ks,
+		"np": J.iter(J.gp(G, "parts")).size(), "fl": _norm(J.gp(G, "floats")), "street": _norm(J.G.S.get("street")), "coins": J.G.S.res.coins, "troops": J.G.S.res.get("troops"), "panel": panel, "ate": J.gp(G, "ate"), "kick": J.gp(G, "kick")}
+
+func _gs_sim(G, seed_n: int, S0: Dictionary) -> Array:
+	J.G["S"] = S0.duplicate(true)
+	J.G.S.res["coins"] = 3000.0
+	if not (J.G.S.get("street") is Dictionary): J.G.S["street"] = {}
+	J.G.S.street["seen"] = {"street": 1}; J.G.S.street.erase("hag"); J.G.S.street["fx"] = {}; J.G.S.street["meal"] = null; J.G.S.street["stock"] = {"n": 0, "cost": 0}; J.G.S.street.erase("alleyLast")
+	var keep = {}
+	for k in ["__nat_mini", "requestAnimationFrame", "N30W"]: keep[k] = J.G.get(k); J.G[k] = null
+	seed(seed_n)
+	J.mc(G, "open", [])
+	J.sp(G, "W", 390.0); J.sp(G, "H", 760.0)
+	var out = []
+	var plan = {10: ["go", "paper"], 200: ["click", ".gs-buy"], 220: ["go", "haggle"], 400: ["click", ".gs-item"], 405: ["offer", 30.0], 410: ["offer", 70.0], 415: ["offer", 120.0], 420: ["click", "#gs-x"],
+		430: ["go", "exch"], 600: ["trade", 10.0], 605: ["trade", -1.0], 610: ["go", "food"], 780: ["click", ".gs-eat"], 800: ["go", "alley"], 990: ["click", ".gs-al"], 1000: ["walk", 0.3]}
+	for f in 1100:
+		if plan.has(f):
+			var a = plan[f]
+			match a[0]:
+				"go": J.mc(G, "goStall", [a[1]])
+				"click":
+					if a[1] == "#gs-x": var x = J.cl(J.G.get("$"), null, ["#gs-x"]); if x != null: J.cl(J.gp(x, "onclick"), x, [])
+					else: _gs_click(a[1])
+				"offer": J.mc(G, "offer", [a[1]])
+				"trade": J.mc(G, "trade", [a[1]])
+				"walk": J.mc(G, "walkTo", [a[1], 0.85])
+		J.mc(G, "step", [1.0 / 30])
+		if f % 50 == 0 or plan.has(f): out.append(_gs_snap(G, f))
+	J.mc(G, "close", [])
+	for k in keep: J.G[k] = keep[k]
+	return out
+
+func ghoststreet(_t) -> void:
+	mod = "ghoststreet"
+	var live = J.G.GhostStreet; var keepS = J.G.S; var S0 = keepS.duplicate(true)
+	var tr = load_trans("ghoststreet", ["GhostStreet"]).GhostStreet
+	var nm = load("res://native/ghoststreet.gd").new(); _keep_alive.append(nm); nm.run(null); var nat = J.G.GhostStreet
+	J.G["GhostStreet"] = live
+	for d in [20000.0, 20405.0, 20771.0, 21000.0]: check("GhostStreet", nat, tr, "price", [d])
+	for k in ["walk", "work", "hp", "x"]: check("GhostStreet", nat, tr, "mul", [k])
+	check("GhostStreet", nat, tr, "bonus", ["mana"])
+	check("GhostStreet", nat, tr, "todayItems", [])
+	for it in J.G.GS_ITEMS: check("GhostStreet", nat, tr, "floorOf", [it]); check("GhostStreet", nat, tr, "askOf", [it])
+	for nv in [0.0, 1.0, 620155.0, -5.0, 3e9]:
+		var x = J.cl(J.G.gsRnd, null, [nv]); var y = J.cl(load_trans("ghoststreet", ["gsRnd"]).gsRnd, null, [nv])
+		if same(x, y): ok += 1
+		else: bad += 1; print("[xcheck-diff] gsRnd(%s) nat=%s tr=%s" % [nv, x, y])
+	# battleBuffs
+	for meal in ["mala", "bkt", "teh", null]:
+		var r = []
+		for G in [nat, tr]:
+			J.G["S"] = S0.duplicate(true); if not (J.G.S.get("street") is Dictionary): J.G.S["street"] = {}
+			J.G.S.street["meal"] = meal; J.G.S.street["fx"] = {"chair": true}
+			var us = [{"side": 0, "hp": 100.0, "maxhp": 100.0, "atk": 10.0, "energy": 70.0}, {"side": 0, "hp": 50.0, "maxhp": 50.0, "atk": 5.0, "minion": true}, {"side": 1, "hp": 80.0, "maxhp": 80.0, "atk": 9.0}]
+			var nm2 = J.mc(G, "battleBuffs", [us]); r.append([nm2, us, J.G.S.street.get("meal")])
+		if same(r[0], r[1]): ok += 1
+		else: bad += 1; print("[xcheck-diff] battleBuffs(%s) nat=%s tr=%s" % [meal, str(r[0]), str(r[1])])
+	for sd in [3, 4]:
+		var a = _gs_sim(nat, sd, S0); var b = _gs_sim(tr, sd, S0)
+		for i in a.size():
+			if _near(_norm(a[i]), _norm(b[i])): ok += 1
+			else:
+				bad += 1
+				if bad <= 12:
+					for k in a[i]:
+						if not _near(_norm(a[i][k]), _norm(b[i].get(k))): print("[xcheck-diff] gs seed%d f=%s %s\n nat=%s\n tr =%s" % [sd, a[i].f, k, JSON.stringify(_norm(a[i][k])).substr(0, 500), JSON.stringify(_norm(b[i].get(k))).substr(0, 500)])
+		print("[xcheck-info] gs seed%d snaps=%d coins=%s view=%s" % [sd, a.size(), a[-1].coins, str(a[-1].view)])
+	J.G["S"] = keepS; J.G["GhostStreet"] = live
+	_report()
+
 func run_named(t, name: String) -> void: call(name, t)
 
 # ---- L4：資料模塊指紋（GB_NONAT=1 同原生各跑一次，比 /tmp/L4/fp_*.json）----

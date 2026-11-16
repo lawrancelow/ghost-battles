@@ -18,3 +18,8 @@ station_squad_art
 patrol_assets
 patrol_ghosts
 scare_ops
+battle
+world
+sports
+graveyard
+ghoststreet
