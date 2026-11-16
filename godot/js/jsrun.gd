@@ -219,9 +219,16 @@ func reset_world() -> void:
 	J.G.clear(); doc = DocObj.new(); _init_globals()
 
 # ---------------- 模塊 ----------------
+# 原生改寫：res://native/<模塊>.gd 存在就用佢代替轉譯版（介面同樣係 run(env)、設返同一個 J.G 全局）
+# GB_NONAT=1 全部用轉譯版；GB_NONAT_<模塊>=1 單一模塊用轉譯版（對照測試用）
+static var native_used: Array = []
 func load_modules(names: Array) -> void:
+	native_used.clear()
 	for n in names:
 		var p = "res://jsgen/%s.gd" % n
+		var pn = "res://native/%s.gd" % n
+		if ResourceLoader.exists(pn) and not OS.has_environment("GB_NONAT") and not OS.has_environment("GB_NONAT_" + n):
+			p = pn; native_used.append(n)
 		if not ResourceLoader.exists(p): push_warning("缺模塊 " + n); continue
 		var scr: GDScript = load(p)
 		if scr == null or not scr.can_instantiate(): push_error("模塊編譯失敗 " + n); continue
