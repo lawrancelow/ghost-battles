@@ -49,3 +49,5 @@ tower_lift
 tower_unit
 scare_squad
 game
+station_foes
+station
