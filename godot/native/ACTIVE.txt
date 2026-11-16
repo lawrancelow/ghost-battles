@@ -12,3 +12,9 @@ lang
 lang_zh
 chatter_data
 story
+station_fg
+station_props
+station_squad_art
+patrol_assets
+patrol_ghosts
+scare_ops
