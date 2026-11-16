@@ -43,7 +43,7 @@ const SU_BITS = [
   ['先講草船借箭。諸葛亮用草船擋箭，箭自己送上門。你哋開會，將實習生推去坐最前面——老細啲箭，全部射落佢度。', 'L'],
   ['散會之後，實習生成身插滿箭。你哋執返啲箭，拎去寫自己份報告。呢個，就叫「借」。', 'L'],
   ['再講空城計。城門大開，城入面冇兵，嚇退敵軍。你哋老細年年都用：「今年公司好困難，冇花紅。」', 'l'],
-  ['城門口，泊住架新保時捷。', { h:'窮鬼', t:'咁點樣破佢條計？', back:'破唔到。城係佢嘅，架車都係佢嘅。', r:'L' }],
+  ['城門口，泊住架新跑車。', { h:'窮鬼', t:'咁點樣破佢條計？', back:'破唔到。城係佢嘅，架車都係佢嘅。', r:'L' }],
   ['最勁係諸葛亮嗰句：「鞠躬盡瘁，死而後已。」你哋老細最鍾意裱起佢，掛喺會議室。', 'l'],
   ['本官研究咗兩百年，終於明白：死而後已——要等老細死咗，你先可以「已」。', 'L'],
   ['所以本官一直企喺度等。等咗兩百年，老細未死，大清死咗。', 'L'],
@@ -174,7 +174,7 @@ xo_ch3b: { style:'chat', title:'媽', av:['媽','#8a5a6a'], lines:[
   ['阿福','21:13|我生前佢一個月都唔打一次電話俾我'],
   ['媽','21:13|佢而家好掛住你㗎'],
   ['媽','21:14|佢叫你下期再報'],
-  ['媽','21:15|仲有，你封 PTPTN 信寄咗返屋企，我燒埋落去俾你喇'],
+  ['媽','21:15|仲有，你封學債信寄咗返屋企，我燒埋落去俾你喇'],
   ['阿福','21:15|媽，唔使咁孝順'],
 ]},
 xo_ch4: { style:'talk', bg:'village', lines:[
@@ -190,7 +190,7 @@ xo_ch4: { style:'talk', bg:'village', lines:[
   ['Hantu Galah','（又高咗一截）……邊個叫佢望㗎！'],
 ]},
 xo_ch5: { style:'talk', bg:'kampung', lines:[
-  ['旁白','紙紮法拉利剛落地，就有一隻戴著破頭盔的鬼走過來，繞著車轉了三圈。'],
+  ['旁白','紙紮跑車剛落地，就有一隻戴著破頭盔的鬼走過來，繞著車轉了三圈。'],
   ['車禍鬼','先生，關於呢架車，我作出幾點跟進。'],
   ['阿福','你係？'],
   ['車禍鬼','我係車禍鬼。一九八六年喺大道出事，暫時死咗。'],
@@ -214,7 +214,7 @@ xo_ch6: { style:'talk', bg:'hq', lines:[
   ['旁白','四隻鬼爬了四十四層樓梯。'],
 ]},
 };
-const XO_AFTER = { prologue_road:['xo_origin'], gift_xiaozhi2:['xo_paper'], ch1_end:['xo_ch1'], gift_phone:['xo_ch2'], ch3_end:['xo_ch3', 'xo_ch3b'], ch4_intro2:['xo_ch4'], gift_car:['xo_ch5'], ch6_intro2:['xo_ch6'] };
+const XO_AFTER = { prologue_road:['xo_origin'], gift_xiaozhi2:['xo_paper'], ch1_end:['xo_ch1'], gift_phone:['xo_ch2'], ch3_end:['xo_ch3', 'xo_ch3b'], ch4_intro2:['xo_ch4'], gift_car:['xo_ch5'], ch6_intro2:['xo_ch6'], epilogue:['c6_after'] };
 const XO_SPEAKERS = { '倀鬼':'n30_changgui', 'Hantu Galah':'n30_hantugalah', '車禍鬼':'n30_chehuo', '牛頭':'niutou', '馬面':'mamian' };
 (function installXO() {
   if (typeof SCENES === 'undefined') return;
