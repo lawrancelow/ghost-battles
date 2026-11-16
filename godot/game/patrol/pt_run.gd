@@ -389,7 +389,7 @@ func spawn_guards(si: int) -> void:
 	var stg = CHAPTERS[ci].stages[si]; var gp = MAP.guard_pos(si); var arr = []
 	var en: Array = stg.en; var i = 0
 	for k in en:
-		var boss = k == stg.boss
+		var boss = k == stg.get("boss")
 		var e = foe(k, J.num(stg.p), {"hp": 3.6 if boss else 2.2, "atk": 1.3 if boss else 1.1}, {"guard": si, "boss": boss})
 		var a = (i - (en.size() - 1) / 2.0) * 0.9; e.x = gp.x + sin(a) * 70; e.y = gp.y - cos(a) * 20 + (-10 if boss else 0); e.hx = e.x; e.hy = e.y
 		e.s = 0.78 if boss else 0.55; e.name = J.str(ENEMY_T.get(k, [0, 0, k])[2]); arr.append(e); _add_foe(e); i += 1

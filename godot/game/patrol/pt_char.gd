@@ -42,6 +42,12 @@ var gear_items: Array = []
 var o: Dictionary = {}
 var cur_mesh := ""
 var tweak = null
+# 專屬招式（MOVES）、反派原畫（RIG.custom，例如 Bryan）、特殊鬼（toyol／penanggal／pocong）：
+# 改用同主線戰鬥一樣嘅 Ctx 畫法（BtDraw.draw_char → BtMoves 原生，未移植先叫 JS）
+const ATK_P := {"windup": 1, "strike": 1, "follow": 1, "recover": 1}
+var mv: PtDraw = null
+var ctx_always := false
+var _mv_o := {}
 
 static func setup_static() -> void:
 	var ART = J.G.get("ART"); var MA = J.G.get("MeshAnim")
@@ -66,6 +72,7 @@ func _init(unit, r) -> void:
 		mode = "none"; if H0 <= 0: H0 = 58.0
 	if not G.skin_ok() and (mode == "limbs" or mode == "mesh"): mode = "plain"   # 安全畫面模式：整張原圖（已證實所有手機都畫得到）
 	if rig != null and rig is Dictionary: tweak = rig.get("tweak")
+	ctx_always = Art.SPECIAL_T.has(k) or (rig is Dictionary and rig.get("custom") != null)
 	glow = PtDraw.new(); glow.fn = _draw_glow; var gm = CanvasItemMaterial.new(); gm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD; glow.material = gm; add_child(glow)
 	ch = PtDraw.new(); ch.fn = _draw_shadow; add_child(ch)
 	back = PtDraw.new(); ch.add_child(back)
@@ -105,6 +112,7 @@ func sync(oo: Dictionary) -> void:
 	mat.set_shader_parameter("flash", o.flash)
 	back_items.clear(); front_items.clear(); gear_items.clear()
 	var pose = o.pose
+	if _sync_ctx(pose): return
 	var yfloat = 0.0 if solid else (3 + sin(t * 2.4) * 2) * s
 	var used_limbs = false
 	if mode == "limbs" and LIMB_POSES.has(pose):
@@ -137,6 +145,29 @@ func sync(oo: Dictionary) -> void:
 	if o.badge != null and o.rot == 0.0 and pose != "down" and not o.dying: _badge(s, t)
 	if o.wtex != null and pose != "down" and not o.dying: _gear_weapon(s, t, pose, o.pt, o.rot)
 	back.queue_redraw(); front.queue_redraw(); gear.queue_redraw(); ch.queue_redraw(); glow.queue_redraw(); over.queue_redraw()
+
+# 出招／特殊鬼：收起網格同衣服，交俾 Ctx 畫；返嚟普通狀態就還原
+func _sync_ctx(pose) -> bool:
+	var use = not o.dying and pose != "down" and pose != "air" and (ctx_always or (ATK_P.has(pose) and BtMoves.has(k)))
+	if not use:
+		if mv != null and mv.visible:
+			mv.visible = false
+			if body_mi: body_mi.visible = true
+			if body_sp: body_sp.visible = true
+		return false
+	if mv == null:
+		mv = PtDraw.new(); mv.fn = _draw_mv; ch.add_child(mv); ch.move_child(mv, front.get_index())
+	mv.visible = true
+	if body_mi: body_mi.visible = false
+	if body_sp: body_sp.visible = false
+	if cloth_mi: cloth_mi.visible = false
+	back_items.clear(); front_items.clear(); gear_items.clear()
+	_mv_o = {"pose": pose, "pt": o.pt, "flip": o.flip, "t": o.t, "walk": o.walk, "enemy": o.enemy, "tamed": o.get("tamed", false), "untied": o.get("untied", false)}
+	mv.queue_redraw(); back.queue_redraw(); front.queue_redraw(); gear.queue_redraw(); ch.queue_redraw(); glow.queue_redraw(); over.queue_redraw()
+	return true
+
+func _draw_mv(n: CanvasItem) -> void:
+	BtDraw.draw_char(Ctx.new(n), k, 0.0, 0.0, o.s, _mv_o.duplicate())
 
 func _pose_extra(pose: String, t: float, p: float) -> Dictionary:
 	var base = MeshAnim.idle(t * 0.3 if pose == "down" else t)
