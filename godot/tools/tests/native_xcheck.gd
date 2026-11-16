@@ -437,6 +437,84 @@ func tower_lift(_t) -> void:
 	J.mc(J.G.Tower, "close", [])
 	_report()
 
+# ---- L3：樓裡有鬼 第二段（入屋 UnitSys）：同一關同一種子，轉譯版 UNIT vs 原生 UNIT 各行一次劇本 ----
+func _tu_snap(U, f: int) -> Dictionary:
+	var X = J.G.TWX; var G = J.cl(X.G, null, [])
+	var g = G.gh[int(J.num(G.active))]
+	var st = J.mc(U, "state", [])
+	# dark：轉譯版 S.dark.map(Math.round) 會將 (v,i,arr) 全部傳畀 Math.round → 出 null（轉譯版嘅怪癖，只係測試介面），唔比
+	if st is Dictionary: st = st.duplicate(true); st.erase("err"); st.erase("dark")
+	var ius = []
+	for un in G.units: ius.append(un.get("iu"))
+	return JSON.parse_string(JSON.stringify({"f": f, "st": st, "on": J.mc(U, "on", []), "hash": J.str(J.cl(X.hash, null, [])), "g": [g.x, g.y, g.node, g.get("inv"), g.get("energy"), g.get("inUnit") != null], "fear": G.get("fear"), "alert": G.get("alert"), "bag": G.get("bag"), "iu": ius, "r": randf()}))
+
+func _tu_enter(U, G, g, skip: int):
+	var n = 0
+	for un in G.units:
+		if J.t(J.mc(U, "canEnter", [g, un])):
+			if n == skip: return J.mc(U, "enterFromDoor", [g, un])
+			n += 1
+	return "none"
+
+func _tu_run(U, sd: float) -> Array:
+	var env = _tw_env(); env["UNIT"] = U; J.sp(J.G.window, "UNIT", U); J.G.TWX["unit"] = U
+	seed(int(sd) * 5 + 3)
+	J.mc(J.G.TW, "ng", [sd, "flat"])
+	J.mc(U, "step", [0.0])   # 新一局：先清走上一局嘅室內狀態
+	var X = J.G.TWX; var G = J.cl(X.G, null, [])
+	var g = G.gh[int(J.num(G.active))]
+	print("[xcheck-info] unit run start bag=%d t=%s" % [(G.bag as Array).size(), G.t])
+	var out = []; var dt = 0.05
+	for f in 2400:
+		match f:
+			10: out.append({"enter": _tu_enter(U, G, g, 0)})
+			900: out.append({"enter2": _tu_enter(U, G, g, 1)})
+			1700: out.append({"enter3": _tu_enter(U, G, g, 2)})
+			1600: out.append({"exit": J.mc(U, "exit", ["door"])})
+			850: out.append({"exit": J.mc(U, "exit", ["door"])})
+		var S = J.mc(U, "_S", [])
+		if S != null:
+			var nsp = (S.spots as Array).size()
+			if f % 37 == 0 and nsp: out.append({"f": f, "trig": J.mc(U, "trig", [float((f / 37) % nsp)])})
+			if f % 53 == 0: out.append({"f": f, "scare": J.mc(U, "scare", [null])})
+			if f % 97 == 0: J.mc(U, "press", ["inv"])
+			if f % 61 == 0: J.mc(U, "press", ["ctx"])
+			# 撳畫面：兩邊都經 __twUPD/__twUPU 唔方便對拍（轉譯版冇 U.tap），由實玩覆蓋
+			if f % 113 == 0 and (S.search as Array).size(): var sp = S.search[(f / 113) % (S.search as Array).size()]; J.mc(U, "setGX", [sp.x])
+			if f == 1300: J.mc(U, "setAlert", [100.0])
+		J.cl(X.step, null, [1.0, dt])
+		J.mc(U, "step", [dt])
+		var S2 = J.mc(U, "_S", [])
+		if f % 20 == 0: out.append(_tu_snap(U, f))
+	return out
+
+func tower_unit(_t) -> void:
+	mod = "tower_unit"
+	J.mc(J.G.Tower, "open", [])
+	var env = _tw_env(); var Ut = env["UNIT"]
+	var A = (J.gp(Ut, "step") as Callable).get_bound_arguments()[0]["A"]
+	var Un = load("res://native/tower_unit.gd").make(A, false)
+	J.sp(Ut, "manual", true); J.sp(Un, "manual", true)
+	for cs in [12345.0, 777.0, 2024.0]:
+		var a = _tu_run(Ut, cs); var b = _tu_run(Un, cs)
+		var nb = 0
+		for i in mini(a.size(), b.size()):
+			if _near(_norm(a[i]), _norm(b[i])): ok += 1
+			else:
+				bad += 1; nb += 1
+				if nb <= 4:
+					for k in a[i]:
+						if not _near(_norm(a[i][k]), _norm(b[i].get(k))): print("[xcheck-diff] unit seed%s #%d %s\n tr =%s\n nat=%s" % [cs, i, k, JSON.stringify(_norm(a[i][k])).substr(0, 900), JSON.stringify(_norm(b[i].get(k))).substr(0, 900)])
+		if a.size() != b.size(): bad += 1; print("[xcheck-diff] unit size ", a.size(), " ", b.size())
+		var ent = []
+		for x in a: if x is Dictionary and (x.has("enter") or x.has("enter2") or x.has("enter3") or x.has("exit")): ent.append(x)
+		var lastst = null
+		for x in a: if x is Dictionary and x.get("st") is Dictionary: lastst = x.st
+		print("[xcheck-info] unit seed%s snaps=%d ent=%s last=%s" % [cs, a.size(), str(ent), str(lastst).substr(0, 300)])
+	env["UNIT"] = Ut; J.sp(J.G.window, "UNIT", Ut); J.G.TWX["unit"] = Ut; J.sp(Ut, "manual", false)
+	J.mc(J.G.Tower, "close", [])
+	_report()
+
 func run_named(t, name: String) -> void: call(name, t)
 
 # ---- L4：資料模塊指紋（GB_NONAT=1 同原生各跑一次，比 /tmp/L4/fp_*.json）----
