@@ -1,0 +1,9 @@
+# 已驗證（對照 bad=0、實玩、自檢）嘅原生模塊；一行一個。未列嘅照用 jsgen 轉譯版
+gpower
+data
+presence_data
+bonds_data
+daily
+moves
+limbdata
+rigs

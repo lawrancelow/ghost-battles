@@ -222,12 +222,24 @@ func reset_world() -> void:
 # 原生改寫：res://native/<模塊>.gd 存在就用佢代替轉譯版（介面同樣係 run(env)、設返同一個 J.G 全局）
 # GB_NONAT=1 全部用轉譯版；GB_NONAT_<模塊>=1 單一模塊用轉譯版（對照測試用）
 static var native_used: Array = []
+# 只有驗證過（列喺 native/ACTIVE.txt）嘅原生模塊先生效；寫緊嘅喺測試時用 GB_NAT_EXTRA=a,b 臨時加入
+static var _active = null
+static func _nat_on(n: String) -> bool:
+	if _active == null:
+		_active = {}
+		var f = FileAccess.open("res://native/ACTIVE.txt", FileAccess.READ)
+		if f:
+			for l in f.get_as_text().split("\n"):
+				var t = l.strip_edges()
+				if t != "" and not t.begins_with("#"): _active[t] = true
+		for t in OS.get_environment("GB_NAT_EXTRA").split(",", false): _active[t.strip_edges()] = true
+	return _active.has(n)
 func load_modules(names: Array) -> void:
 	native_used.clear()
 	for n in names:
 		var p = "res://jsgen/%s.gd" % n
 		var pn = "res://native/%s.gd" % n
-		if ResourceLoader.exists(pn) and not OS.has_environment("GB_NONAT") and not OS.has_environment("GB_NONAT_" + n):
+		if _nat_on(n) and ResourceLoader.exists(pn) and not OS.has_environment("GB_NONAT") and not OS.has_environment("GB_NONAT_" + n):
 			p = pn; native_used.append(n)
 		if not ResourceLoader.exists(p): push_warning("缺模塊 " + n); continue
 		var scr: GDScript = load(p)

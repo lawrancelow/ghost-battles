@@ -22,3 +22,10 @@
 3. 全面自檢（`GB_SELFTEST=1`）34 項全過先提交。
 - 測試喺自己嘅副本（`/tmp/<線>/godot`，複製 `.godot` 快取），Godot 一次只開一個：`flock /tmp/godot.lock`。
 - 提交：`flock /tmp/git.lock` 入面 `git add` 自己嘅檔即刻 commit。
+
+## 啟用名單（重要）
+- 只有列喺 `native/ACTIVE.txt` 嘅模塊先會生效；寫緊、未驗證嘅檔可以放喺 `native/`，唔會影響其他線。
+- 測試自己寫緊嘅模塊：`GB_NAT_EXTRA=mod1,mod2`（逗號分隔）臨時加入。
+- 驗證完（對照 bad=0、實玩截圖、自檢 34 項）：喺 git lock 入面把模塊名加入 ACTIVE.txt 同埋 commit 你嘅檔。
+- 純資料模塊統一用 `native/_datamod.gd`（`data/nat/<模塊>.json`，工具 `tools/tests/dump_datamod.gd`）。
+- 測試副本：唔好喺副本刪檔（會要權限），用 GB_NAT_EXTRA 揀要測嘅模塊就得。

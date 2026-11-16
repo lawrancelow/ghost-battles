@@ -158,7 +158,9 @@ func _gfx_probes() -> void:
 		n.queue_redraw()
 		for i in 3: await RenderingServer.frame_post_draw
 		n.queue_free()
-		var f = FileAccess.open("user://gfx_probe.txt", FileAccess.WRITE); done += p + ";"; f.store_string(done); f.close()
+		done += p + ";"
+		var f = FileAccess.open("user://gfx_probe.txt", FileAccess.WRITE)
+		if f: f.store_string(done); f.close()
 
 func _staged_reveal() -> void:
 	await _gfx_probes()
