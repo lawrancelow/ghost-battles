@@ -10,6 +10,20 @@ const Rivals = (() => {
   const GAP = 360, REVIEW_GAP = 45;
   const art = (k) => typeof sprOk !== 'function' || sprOk(k);
   const seen = (id) => !!(S && S.seen && S.seen[id]);
+  // 故事聖經 v2：主線巡陰 beats（Godot 任務系統 S.sq.beat_<id>）播過，首次到訪改用「之前見過」開場；網頁版冇 S.sq 就照舊
+  const beatDone = (id) => !!(S && S.sq && S.sq['beat_' + id]);
+  const BOSS_MET = [['旁白', '龐總又飄進村子。平板上那條紅線，比上次又跌深了一截。'], ['龐總', '阿福。上次巡陰定落嘅 KPI，我記住。今日我唔係針對你，我係針對你嘅數字。']];
+  const BRYAN_MET = [['旁白', '籃球拍地的聲音，從村口一路傳進來。'], ['阿福', '……又係你。'],
+    ['Bryan', '兄弟！上次槐林邊一別，我日日都掛住你——掛住你嘅功勞。'],
+    ['阿福', '（細細聲）生前佢坐我隔籬。我做嘅 report，佢 present。死咗都冇變。']];
+  const HR_MET = [['旁白', '冼小姐又飄進村子，文件夾比上次厚了一倍。'], ['冼小姐', '親愛嘅同事～上次你話唔知要交出差申請表。今日正式通知：落魄村由今日起，全面納入集團員工手冊管理。'], ['冼小姐', '溫馨提示：手冊仍然係三千頁。上次冇睇，今次都唔係藉口。']];
+  try { if (typeof LANG !== 'undefined') LANG.add({
+    '阿福。上次巡陰定落嘅 KPI，我記住。今日我唔係針對你，我係針對你嘅數字。': '阿福。上次巡陰定下的 KPI，我記著。今天我不是針對你，我是針對你的數字。',
+    '……又係你。': '……又是你。',
+    '兄弟！上次槐林邊一別，我日日都掛住你——掛住你嘅功勞。': '兄弟！上次槐林邊一別，我天天都想著你——想著你的功勞。',
+    '（細細聲）生前佢坐我隔籬。我做嘅 report，佢 present。死咗都冇變。': '（小聲）生前他坐我隔壁。我做的 report，他來 present。死了也沒變。',
+    '親愛嘅同事～上次你話唔知要交出差申請表。今日正式通知：落魄村由今日起，全面納入集團員工手冊管理。': '親愛的同事～上次你說不知道要交出差申請表。今天正式通知：落魄村從今天起，全面納入集團員工手冊管理。',
+    '溫馨提示：手冊仍然係三千頁。上次冇睇，今次都唔係藉口。': '溫馨提示：手冊還是三千頁。上次沒看，這次也不是藉口。' }); } catch (e) {}
   const R = Math.random;
   function st() {
     if (typeof S === 'undefined' || !S) return null;
@@ -99,7 +113,7 @@ const Rivals = (() => {
   function bossVisit() {
     const a = st(), b = a.boss, first = !b.visits; b.visits++;
     const cast = [['阿福', 'afu'], ['龐總', ART.boss]];
-    const open = first ? [['旁白', '一隻矮矮胖胖、頭髮梳得發亮的鬼，拿著一部平板飄進村子。平板上，一條紅線一路向下。'], ['龐總', '阿福。我係地府集團營運總監，龐總。我唔係針對你，我係針對你嘅數字。']] : [['龐總', rot('bossOpen', BOSS_OPEN)]];
+    const open = first ? (beatDone('c1_kpi') ? BOSS_MET.map(x => x.slice()) : [['旁白', '一隻矮矮胖胖、頭髮梳得發亮的鬼，拿著一部平板飄進村子。平板上，一條紅線一路向下。'], ['龐總', '阿福。我係地府集團營運總監，龐總。我唔係針對你，我係針對你嘅數字。']]) : [['龐總', rot('bossOpen', BOSS_OPEN)]];
     if (!first && R() < 0.3) { // 荒謬要求：揀得聰明就避開，仲有獎
       const d = rot('absurd', ABSURD), smartIsA = R() < 0.5;
       const smart = { label:d.smart, lines:[['阿福', L(d.smart).replace(/[「」]/g, '')]].concat(d.dodge), on:() => { const t = give({ coins:rwd(18) }); return [['旁白', `阿福躲過了。${t}`]]; } };
@@ -149,6 +163,7 @@ const Rivals = (() => {
   const BRYAN_RUN = ['好，好，今次當我傳失波。', '你哋玩得咁認真，冇 team spirit 㗎。', '我去熱吓身先，你哋繼續。'];
   function smartest() { let best = null, v = -1; for (const g of S.ghosts) { if (g.k === 'afu') continue; const x = F.stat(g, 1); if (x > v) { v = x; best = g; } } return best ? { g:best, v } : null; }
   function rivalIntro() { const a = st(); if (a.rival.met) return []; a.rival.met = true;
+    if (beatDone('c1_bryan')) return BRYAN_MET.map(x => x.slice());
     return [['旁白', '一隻高高瘦瘦、留著銀灰色平頭的鬼，一邊拍著籃球一邊飄過來。'], ['阿福', '……Bryan？你點會喺度？'],
       ['Bryan', '兄弟！好耐冇見！上個月公司籃球賽，我入咗個 slam dunk，太興奮，就落咗嚟。'], ['Bryan', '而家我喺地府集團做業務拓展。我哋又係同事喇！'],
       ['阿福', '（細細聲）生前佢坐我隔籬。我做嘅 report，佢 present。']]; }
@@ -252,7 +267,7 @@ const Rivals = (() => {
     let e = force ? HR_EV.find(x => x.id === force) : null;
     if (!e) { const fresh = pool.filter(x => !h.done[x.id]); if (!fresh.length) h.done = {}; const p2 = fresh.length ? fresh : pool; e = p2[Math.floor(R() * p2.length)]; }
     h.done[e.id] = 1;
-    const intro = h.met ? [] : HR_INTRO; h.met = true;
+    const intro = h.met ? [] : (beatDone('c2_hr') ? HR_MET : HR_INTRO); h.met = true;
     const cast = [['阿福', 'afu'], ['冼小姐', ART.hr]]; if (e.team) cast.push(['Bryan', ART.rival]);
     const mk = (o) => o && { label:o.label + (o.cost ? `（壽包 ${rwd(o.cost.buns)}）` : ''), disabled:o.cost ? S.res.buns < rwd(o.cost.buns) : false, lines:o.lines, on:() => {
       let out = [];

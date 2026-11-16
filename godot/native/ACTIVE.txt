@@ -41,3 +41,6 @@ special
 pantry
 rooms
 office
+rivals
+npc_antag
+puppet
