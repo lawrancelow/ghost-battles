@@ -84,6 +84,7 @@ function analyze(node, scope) {
     case 'CatchClause': { const b = new Scope('block', scope, scope.fn); node._s = b; if (node.param) patNames(node.param).forEach(x => declare(b, x, 'let')); if (node.param) walkPat(node.param, b); rec(node.body, b); return; }
     case 'SwitchStatement': { rec(node.discriminant, scope); const b = new Scope('block', scope, scope.fn); node._s = b; node.cases.forEach(c => blockDecls(c.consequent, b)); node.cases.forEach(c => { if (c.test) rec(c.test, b); c.consequent.forEach(s => rec(s, b)); }); return; }
     case 'ClassDeclaration': case 'ClassExpression': {
+      if (node.type === 'ClassDeclaration' && node.id) ref(node.id, scope);   // class 名要綁返作用域（唔係就寫咗去 J.G 全局，閉包入面 new M() 攞到 null）
       if (node.superClass) rec(node.superClass, scope);
       node.body.body.forEach(m => { if (m.computed) rec(m.key, scope); rec(m.value, scope); }); return;
     }

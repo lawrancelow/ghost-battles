@@ -605,7 +605,7 @@ func _f1(this_, a: Array, env):
 	v_seg_9 = Callable(self, "_f10").bind(_s2)
 	v_lerp_10 = Callable(self, "_f11").bind(_s2)
 	_s2["rnd"] = Callable(self, "_f12").bind(_s2)
-	J.G["M"] = {"__class": true, "ctor": Callable(self, "_f20").bind(_s2), "proto": {"clone": Callable(self, "_f21").bind(_s2), "mul": Callable(self, "_f22").bind(_s2), "t": Callable(self, "_f23").bind(_s2), "r": Callable(self, "_f24").bind(_s2), "s": Callable(self, "_f25").bind(_s2), "pt": Callable(self, "_f26").bind(_s2), "set": Callable(self, "_f27").bind(_s2)}}
+	_s2["M"] = {"__class": true, "ctor": Callable(self, "_f20").bind(_s2), "proto": {"clone": Callable(self, "_f21").bind(_s2), "mul": Callable(self, "_f22").bind(_s2), "t": Callable(self, "_f23").bind(_s2), "r": Callable(self, "_f24").bind(_s2), "s": Callable(self, "_f25").bind(_s2), "pt": Callable(self, "_f26").bind(_s2), "set": Callable(self, "_f27").bind(_s2)}}
 	_s2["ok"] = Callable(self, "_f28").bind(_s2)
 	v_ip_19 = Callable(self, "_f31").bind(_s2)
 	_s2["KEEP"] = {"y": 1.0, "sx": 1.0, "sy": 1.0}
