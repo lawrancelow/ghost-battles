@@ -258,7 +258,7 @@ static func open_() -> void:
 	var tok = {}; Q["_tok"] = tok; _raf(tok)
 	if not J.t(s.seen.get("street")):
 		s.seen["street"] = 1.0
-		J.cl(_g("setTimeout"), null, [func(_t = null, _a = null): say(Q.walkers[0], "新來的？這裡是下班後的陰間，慢慢逛。", 4), 700.0])
+		J.F_setTimeout([func(_t = null, _a = null): say(Q.walkers[0], "新來的？這裡是下班後的陰間，慢慢逛。", 4), 700.0])
 	_save()
 
 static func _raf(tok) -> void:

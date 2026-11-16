@@ -225,7 +225,7 @@ static func init_hooks() -> void:
 		var who = _q("#sc-target .sc-who")
 		if not J.t(who): return r
 		for b in J.iter(J.mc(who, "querySelectorAll", ["#sc-peek,#sc-wa"])): J.mc(b, "remove", [])   # 舊嘅偷看／傳訊息由新手機取代
-		var box = J.mc(_g("document"), "createElement", ["span"]); J.sp(box, "className", "so-btns"); J.sp(box, "innerHTML", buttons(this_, n))
+		var box = J.S_document_("createElement", ["span"]); J.sp(box, "className", "so-btns"); J.sp(box, "innerHTML", buttons(this_, n))
 		J.mc(who, "insertBefore", [box, J.mc(who, "querySelector", ["#sc-br"])])
 		for b in J.iter(J.mc(box, "querySelectorAll", ["[data-op]"])):
 			J.sp(b, "onclick", func(_t, _a):

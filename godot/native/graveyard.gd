@@ -474,7 +474,7 @@ static func hint(text: String, sec := 6.0) -> void:
 	J.sp(h, "innerHTML", "<span>%s</span><button aria-label=\"關閉\">✕</button>" % text); J.mc(J.gp(h, "classList"), "add", ["on"])
 	J.sp(J.mc(h, "querySelector", ["button"]), "onclick", func(_t = null, _a = null): J.mc(J.gp(h, "classList"), "remove", ["on"]))
 	J.cl(_g("clearTimeout"), null, [Y.get("_ht")])
-	Y["_ht"] = J.cl(_g("setTimeout"), null, [func(_t = null, _a = null): J.mc(J.gp(h, "classList"), "remove", ["on"]), sec * 1000.0])
+	Y["_ht"] = J.F_setTimeout([func(_t = null, _a = null): J.mc(J.gp(h, "classList"), "remove", ["on"]), sec * 1000.0])
 
 static func resize() -> void:
 	var c = _el("#gy-cvs"); var bw: float; var bh: float; var dpr = 1.0
@@ -597,7 +597,7 @@ static func submit() -> void:
 	_snd("lose")
 	if J.num(Y.tries) >= 2:
 		Y["phase"] = "fail"; say("還是不對……只有 %d 個擺對了。天快亮了。" % k, 3)
-		J.cl(_g("setTimeout"), null, [func(_t = null, _a = null): finish(false, k), 1900.0])
+		J.F_setTimeout([func(_t = null, _a = null): finish(false, k), 1900.0])
 	else:
 		say("他們不肯躺下。只有 %d 個擺對了。" % k, 4.5); hint("只有 %d 個擺對了（不告訴你是哪幾個）。還有一次機會。" % k, 8)
 	render_panel()
@@ -607,12 +607,11 @@ static func say(text: String, sec := 3.0) -> void: Y["bub"] = {"text": text, "li
 static func rest() -> void:
 	Y["phase"] = "rest"; Y["restT"] = 0.0; Y["sel"] = null
 	_snd("gong")
-	var st = _g("setTimeout")
-	J.cl(st, null, [func(_t = null, _a = null): _snd("crow", -0.4), 900.0]); J.cl(st, null, [func(_t = null, _a = null): _snd("crow", 0.3), 1400.0])
+	J.F_setTimeout([func(_t = null, _a = null): _snd("crow", -0.4), 900.0]); J.F_setTimeout([func(_t = null, _a = null): _snd("crow", 0.3), 1400.0])
 	for i in 6: Y.crows.append({"x": 0.08 + randf() * 0.2, "y": 0.12 + randf() * 0.12, "vx": 0.16 + randf() * 0.12, "vy": -0.05 - randf() * 0.06, "ph": randf() * 6, "s": 0.9 + randf() * 0.5, "delay": 0.8 + i * 0.18, "life": 4.0})
 	say("都對了。去吧，下班了。", 3)
 	render_panel()
-	J.cl(st, null, [func(_t = null, _a = null): finish(true, Y.souls.size()), 3600.0])
+	J.F_setTimeout([func(_t = null, _a = null): finish(true, Y.souls.size()), 3600.0])
 
 static func finish(ok: bool, k: int) -> void:
 	if not J.t(Y.active) or J.str(Y.phase) == "end": return
