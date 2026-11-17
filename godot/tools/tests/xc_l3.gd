@@ -372,6 +372,16 @@ static func _wst(w):
 	if w.get("mate") is Dictionary and w.mate.get("sq") != null: pass
 	if w.get("mate") is Dictionary: var m = w.mate.duplicate(); m.erase("mate"); o["mate_"] = m
 	return o
+static func _bst(bs) -> Array:
+	var o = []
+	for b in J.iter(bs):
+		var c = b.duplicate(); c["g"] = J.gp(b.g, "id"); c["tg"] = J.gp(b.get("tg"), "n"); c.erase("hitSet")
+		if b.get("sx") is Dictionary:
+			var sx = b.sx.duplicate(); var ls = []
+			for w in J.iter(sx.get("list", [])): ls.append(J.gp(w, "n"))
+			sx["list"] = ls; c["sx"] = sx
+		o.append(c)
+	return o
 static func _qst(q):
 	var o = q.duplicate(); var ls = []
 	for w in J.iter(q.get("list", [])): ls.append(_wst(w))
@@ -470,6 +480,7 @@ func street_t4c(_t) -> void:
 func street_t4d(_t) -> void: _t4tick("street_t4d", ["TF_4B", "TF_4C", "TF_4D"])
 func street_t4e(_t) -> void: _t4tick("street_t4e", ["TF_4B", "TF_4C", "TF_4D", "TF_4E"])
 func street_t4f(_t) -> void: _t4tick("street_t4f", ["TF_4B", "TF_4C", "TF_4D", "TF_4E", "TF_4F"])
+func street_t4g(_t) -> void: _t4tick("street_t4g", ["TF_4B", "TF_4C", "TF_4D", "TF_4E", "TF_4F", "TF_4G"])
 func _t4tick(mn: String, gn: Array) -> void:
 	mod = mn
 	var N = load("res://native/street.gd"); N.load_data()
@@ -477,7 +488,7 @@ func _t4tick(mn: String, gn: Array) -> void:
 	for sid in ["office", "bus", "flat"]:
 		var pr = _tf_pair(trT, N, sid, 3.0); var A = pr[0]; var B = pr[1]; var tg = sid
 		for gk in gn:
-			var grp = {"TF_4B": N.TF_4B, "TF_4C": N.TF_4C, "TF_4D": N.TF_4D, "TF_4E": N.TF_4E, "TF_4F": N.TF_4F}[gk]
+			var grp = {"TF_4B": N.TF_4B, "TF_4C": N.TF_4C, "TF_4D": N.TF_4D, "TF_4E": N.TF_4E, "TF_4F": N.TF_4F, "TF_4G": N.TF_4G}[gk]
 			for k in grp: B[k] = N.turf_methods(grp)[k]
 		var def = null
 		for d in N.D.SITES:
@@ -486,6 +497,9 @@ func _t4tick(mn: String, gn: Array) -> void:
 			X["def"] = def; X["walkers"] = []; X["fx"] = []; X["parts"] = []; X["dfx"] = []; X["shots"] = []; X["eliteT"] = 2.0; X["rateAcc"] = 0.0; X["rateT"] = 55.0; X["bosses"] = []
 			X.sd["wal"] = 600.0; X.sd["coins"] = 0.0; X.sd["hot"] = 0.0; X.sd["scared"] = 0.0; X.sd["leaked"] = 0.0; X.sd["panic"] = 3.0
 			X["q"] = {"st": "gap", "t": 3.0, "n": 0.0, "made": 0.0, "list": []}; X["sqPlan"] = null; X["waveNo"] = 0.0; X["sqCD"] = 1.0
+			var bids = []
+			for g in J.iter(J.G.S.ghosts).slice(0, 4): bids.append(g.id)
+			X.sd["bosses"] = bids; X.sd["bEn"] = {}
 			J.mc(X, "buildPath", [])
 			var i = 0
 			for p in X.sd.posts:
@@ -501,6 +515,6 @@ func _t4tick(mn: String, gn: Array) -> void:
 				J.mc(X, "addTrace", [tk[0], tk[1], 0.5, 400.0, 30.0, {"by": "t"}])
 		for st in 240:
 			trT["sd"] = A.sd; seed(5000 + st); J.mc(A, "tick", [0.05]); seed(5000 + st); J.mc(B, "tick", [0.05])
-			if st % 10 == 9 or st < 5: _eq(tg + " tick %d" % st, [_tstate(A), A.shots, _qst(A.q), A.shake], [_tstate(B), B.shots, _qst(B.q), B.shake])
+			if st % 10 == 9 or st < 5: _eq(tg + " tick %d" % st, [_tstate(A), A.shots, _qst(A.q), A.shake, _bst(A.bosses), A.get("bg")], [_tstate(B), B.shots, _qst(B.q), B.shake, _bst(B.bosses), B.get("bg")])
 		print("[xcheck-info] %s %s walkers=%d scared=%s leaked=%s" % [mn, sid, A.walkers.size(), A.sd.scared, A.sd.leaked])
 	_report()

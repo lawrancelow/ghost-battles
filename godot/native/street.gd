@@ -450,7 +450,9 @@ static func T(yue, zh) -> String:
 	if Wn != null and J.t(J.gp(Wn, "L")): return J.str(J.S_window_("L", [y]))
 	return y
 static func now_ms() -> float: return J.num(J.S_Date_("now", []))
-static func pick(a: Array): return a[int(floor(randf() * a.size()))]
+static func pick(a: Array):
+	var r = randf()
+	return a[int(floor(r * a.size()))] if a.size() else null
 static func load_data() -> void:
 	if D.size(): return
 	var f = FileAccess.open("res://data/nat/street.json", FileAccess.READ)
@@ -1726,6 +1728,225 @@ static func tf_walkerFx(Tf, w, dt) -> bool:
 	return false
 const TF_4F := {"lore": 1, "cap": 4, "act": 4, "react": 2, "bump": 2, "reroute": 1, "addTrace": 6, "segDist": 3, "chainFall": 1, "traceTick": 1, "traitTick": 2, "walkerFx": 2}
 
+# 4g：有名鬼（Boss）巡邏／預兆／出手
+static func tf_bpos(Tf, B) -> Array:
+	var NS = J.gp(J.gp(Tf, "lay"), "nodes"); var A = J.gp(NS, B.a); var C = J.gp(NS, B.b)
+	if not J.t(C): C = A
+	var k = J.num(B.k); return [J.num(A[0]) + (J.num(C[0]) - J.num(A[0])) * k, J.num(A[1]) + (J.num(C[1]) - J.num(A[1])) * k]
+static func _bad0(k: String) -> bool: return k.ends_with("E") or k.ends_with("X") or k.contains("c_") or k.contains("~")
+static func tf_bossTick(Tf, dt) -> void:
+	dt = J.num(dt); var sd = J.gp(Tf, "sd"); var L = J.gp(Tf, "lay"); var PX = J.num(D.PX); var E = J.gp(L, "edges")
+	var ids = []
+	for id in J.iter(_or(J.gp(sd, "bosses"), [])):
+		if J.t(ghost(id)): ids.append(id)
+	J.sp(sd, "bosses", ids)
+	if not J.t(J.gp(sd, "bEn")): J.sp(sd, "bEn", {})
+	var BS = J.gp(Tf, "bosses")
+	for id in ids:
+		var has_b = false
+		for b in J.iter(BS):
+			if J.seq(J.gp(b.g, "id"), id): has_b = true; break
+		if has_b: continue
+		var g = ghost(id); var ks0 = []
+		for k in J.keys(J.gp(L, "nodes")):
+			var ks = J.str(k)
+			if ks.length() and ks[0] == "0" and not _bad0(ks): ks0.append(k)
+		var mid = ks0[int(floor(ks0.size() * 0.6))] if int(floor(ks0.size() * 0.6)) < ks0.size() else "0E"
+		var used = []
+		for q in J.iter(BS): used.append(q.a)
+		var a0 = null
+		for k in ks0.slice(int(floor(ks0.size() * 0.45))):
+			var inu = false
+			for u in used:
+				if J.seq(u, k): inu = true; break
+			if not inu and J.len(_or(J.gp(E, k), [])) > 0: a0 = k; break
+		if a0 == null: a0 = mid
+		var eg = J.gp(E, a0)
+		if not J.t(eg): eg = J.gp(E, "0E")
+		var bb = pick(J.iter(eg)); var cd = Rr(2, 4)
+		BS.append({"g": g, "a": a0, "b": bb, "k": 0.5, "dir": 1.0, "cd": cd, "stay": 0.0, "en": _or(J.gp(J.gp(sd, "bEn"), id), 0.0), "fx": null, "hitSet": null})
+	var keep = []
+	for b in J.iter(BS):
+		for id in ids:
+			if J.seq(J.gp(b.g, "id"), id): keep.append(b); break
+	J.sp(Tf, "bosses", keep); BS = keep
+	if BS.size():
+		var s = 0.0
+		for b in BS: s += _grow(b.g)
+		J.sp(Tf, "bg", s / BS.size())
+	else: J.sp(Tf, "bg", 1.0)
+	for B in BS:
+		B["sealed"] = J.mc(G("StnFoes"), "isSealed", [B]) if has("StnFoes") else 0.0
+		if J.num(B.sealed) > 0: continue
+		var HD = J.gp(L, "hide"); var hid = J.t(J.mc(HD, "has", [J.str(B.a) + ">" + J.str(B.b)])) or J.t(J.mc(HD, "has", [J.str(B.b) + ">" + J.str(B.a)])); B["hid"] = hid
+		if J.num(B.stay) > 0:
+			B["stay"] = J.num(B.stay) - dt; B["pt"] = J.num(B.get("pt")) + dt
+			if J.seq(B.get("ph"), "omen") and J.num(B.pt) >= 1.3:
+				B["ph"] = "strike"; B["pt"] = 0.0; tf_loreStrike(Tf, B); B["fx"] = {"t": 0.0, "k": "_", "at": tf_bpos(Tf, B), "tg": J.gp(J.gp(B, "sx"), "tp")}
+			elif J.seq(B.get("ph"), "strike") and J.num(B.pt) >= 1.2: B["ph"] = "rest"; B["pt"] = 0.0
+			if J.t(B.get("fx")):
+				B.fx["t"] = J.num(B.fx.t) + dt
+				if J.num(B.fx.t) > 1.1: B["fx"] = null
+			if J.num(B.stay) <= 0: B["stay"] = 0.0; B["cd"] = bossCD(B.g); B["ph"] = null; B["fx"] = null
+			continue
+		tf_bstep(Tf, B, 100 * PX * (4.0 if hid else 1.0) * dt)
+		B["cd"] = J.num(B.cd) - dt
+		if J.num(B.cd) > 0 or B.hid: continue
+		var pos = tf_bpos(Tf, B); var LN = tf_lore(Tf, B.g.k); var near = []
+		for w in J.iter(J.gp(Tf, "walkers")):
+			if tf_alive(Tf, w) and tf_dist(tf_wp(Tf, w), pos) <= J.num(LN.r) * PX: near.append(w)
+		if near.is_empty(): continue
+		B["stay"] = 6.0; B["ph"] = "omen"; B["pt"] = 0.0; B["tg"] = near[0]; tf_loreOmen(Tf, B); B["en"] = minf(100.0, J.num(B.en) + 14); J.sp(J.gp(sd, "bEn"), B.g.id, B.en); J.mc(Tf, "focusOn", [pos[0], pos[1]])
+		LN = tf_lore(Tf, B.g.k); tf_float(Tf, pos[0], pos[1] - 0.13, J.str(B.g.name) + "・" + T(LN.n[0], LN.n[1]), "#e6c8ff")
+static func _noOut(a) -> Array:
+	var o = []
+	for n in J.iter(_or(a, [])):
+		if not J.seq(n, "OUT"): o.append(n)
+	return o
+static func tf_bstep(Tf, B, step) -> void:
+	step = J.num(step); var L = J.gp(Tf, "lay"); var NS = J.gp(L, "nodes"); var E = J.gp(L, "edges"); var PR = J.gp(L, "preds"); var guard = 0
+	while step > 0 and guard < 8:
+		guard += 1
+		var A = J.gp(NS, B.a); var C = J.gp(NS, B.b); var ln = tf_dist(A, C)
+		if ln == 0: ln = 1e-6
+		var left = (1 - J.num(B.k)) * ln
+		if step < left: B["k"] = J.num(B.k) + step / ln; return
+		step -= left; B["k"] = 0.0; var cur = B.b; var nx
+		if J.num(B.dir) > 0:
+			nx = _noOut(J.gp(E, cur))
+			if nx.is_empty(): B["dir"] = -1.0; nx = J.iter(_or(J.gp(PR, cur), []))
+		else:
+			nx = J.iter(_or(J.gp(PR, cur), []))
+			if nx.is_empty(): B["dir"] = 1.0; nx = _noOut(J.gp(E, cur))
+		B["a"] = cur; var pk = pick(nx); B["b"] = pk if J.t(pk) else cur
+static func tf_bossSkill(Tf, B, K, dt) -> void:
+	dt = J.num(dt); var g = B.g; var base = bossDmg(g); var PX = J.num(D.PX); var sd = J.gp(Tf, "sd")
+	if J.t(J.gp(K, "dash")): tf_bstep(Tf, B, 300 * PX / J.num(K.last) * dt)
+	var pos = tf_bpos(Tf, B); var R0 = (80.0 if J.t(J.gp(K, "dash")) else J.num(K.r)) * PX
+	for w in J.iter(J.gp(Tf, "walkers")):
+		if not tf_alive(Tf, w) or J.t(J.mc(B.hitSet, "has", [w])) or tf_dist(tf_wp(Tf, w), pos) > R0: continue
+		if J.t(J.gp(K, "single")) and J.num(J.gp(B.hitSet, "size")) >= 1: break
+		J.mc(B.hitSet, "add", [w])
+		if J.t(B.get("fx")): B.fx["tg"] = tf_wp(Tf, w).duplicate()
+		if J.t(J.gp(K, "push")): w["t"] = maxf(0.01, J.num(w.t) - J.num(D.CELL))
+		if J.t(J.gp(K, "coin")) and not J.t(J.gp(w, "el")):
+			var cn = J.num(K.coin); _walAdd(Tf, cn); J.sp(sd, "coins", J.num(J.gp(sd, "coins")) + cn); var xy = tf_wp(Tf, w)
+			J.gp(Tf, "parts").append({"kind": "coin", "x": xy[0], "y": J.num(xy[1]) - 0.05, "life": 1.0, "k": 0.0}); tf_float(Tf, xy[0], J.num(xy[1]) - 0.1, T("偷到 " + J.str(K.coin), "偷到 " + J.str(K.coin)), "#ffd45a")
+		if J.t(J.gp(K, "block")): w["block"] = K.block; w["papers"] = K.block
+		tf_hit(Tf, w, base * J.num(K.dmg), {"force": true, "fright": 0.0 if J.t(J.gp(K, "block")) else _or(J.gp(K, "fright"), 2.0)})
+static func tf_loreOmen(Tf, B) -> void:
+	var k = J.str(B.g.k); var L = tf_lore(Tf, k); var pos = tf_bpos(Tf, B); var tg = B.get("tg"); var tp = tf_wp(Tf, tg) if J.t(tg) else pos; var PX = J.num(D.PX)
+	B["om"] = {"t": 0.0, "tp": tp.duplicate()}
+	J.mc(Tf, "snd", [L.snd[0]])
+	tf_cap(Tf, T(L.cap[0], L.cap[0]), (J.num(pos[0]) + J.num(tp[0])) / 2, minf(J.num(pos[1]), J.num(tp[1])) - 0.1, {"font": J.gp(L, "font"), "col": "#d8e4ff", "style": "grow" if k == "pontianak" else ("drip" if k == "tianhua" else "wobble"), "life": 1.4})
+	var near = []
+	for w in J.iter(J.gp(Tf, "walkers")):
+		if tf_alive(Tf, w) and tf_dist(tf_wp(Tf, w), pos) < J.num(L.r) * PX * 1.3: near.append(w)
+	if k == "laojiang":
+		for w in near:
+			if randf() < 0.4: w["breath"] = 3.2; tf_act(Tf, w, "tremble", 3.2, null); w["say"] = {"s": T("屏住呼吸……", "屏住呼吸……"), "t": 2.0}
+	else:
+		for w in near.slice(0, 2): w["say"] = {"s": _pk([["咩聲嚟㗎？", "什麼聲音？"], ["好似有啲嘢……", "好像有東西……"], ["你有冇聞到？", "你有沒有聞到？"]]), "t": 1.2}
+	if k == "n30_qionggui": B.om["note"] = [J.num(tp[0]) + 0.06, J.num(tp[1]) + 0.02]
+static func _later(ms: float, f: Callable) -> void: J.F_setTimeout([func(_t, _a): f.call(); return null, ms])
+static func tf_loreStrike(Tf, B) -> void:
+	var g = B.g; var k = J.str(g.k); var L = tf_lore(Tf, k); var base = bossDmg(g) * J.num(L.dmg); var pos = tf_bpos(Tf, B); var PX = J.num(D.PX); var CELL = J.num(D.CELL); var sd = J.gp(Tf, "sd")
+	var nd = []
+	for w in J.iter(J.gp(Tf, "walkers")):
+		if tf_alive(Tf, w):
+			var d = tf_dist(tf_wp(Tf, w), pos)
+			if d < J.num(L.r) * PX: nd.append([w, d])
+	var near = []
+	for a in _ssort(nd, func(a): return a[1]): near.append(a[0])
+	var hit = func(w, m, o): tf_hit(Tf, w, base * (J.num(m) if J.t(m) else 1.0), _asgn({"force": true}, o))
+	J.mc(Tf, "snd", [L.snd[1]]); J.sp(Tf, "tint", {"col": L.col, "t": 1.2}); J.sp(Tf, "shake", 0.3)
+	var tg = near[0] if near.size() else null; var om = B.get("om")
+	var tp = tf_wp(Tf, tg) if J.t(tg) else (om.tp if J.t(om) else pos)
+	B["sx"] = {"t": 0.0, "tp": tp.duplicate(), "from": pos.duplicate(), "list": []}
+	tf_cap(Tf, T(L.cap[1], L.cap[1]), tp[0], J.num(tp[1]) - 0.16, {"font": J.gp(L, "font"), "col": "#fff0f6", "style": "shake", "size": 18.0}); var trAt = tp
+	var sw = "eguiking" if is_same(L, J.gp(J.gp(Tf, "LORE"), "eguiking")) else k
+	match sw:
+		"tianhua":
+			if J.t(tg): tg["lift"] = {"t": 0.0, "dur": 2.0, "h": 95.0}; hit.call(tg, 1.0, {"fright": 0.0}); B.sx["list"] = [tg]
+			for w in near.slice(1, 3): tf_react(Tf, w, "head")
+		"pontianak":
+			var line = _ssort(near.slice(0, 5), func(w): return J.num(tf_wp(Tf, w)[0])); B.sx["list"] = line
+			B.sx["a"] = tf_wp(Tf, line[0]) if line.size() else tp; B.sx["b"] = tf_wp(Tf, line[line.size() - 1]) if line.size() else tp
+			for j in line.size():
+				var w = line[j]; hit.call(w, 1.0, {"fright": 1.5}); var kd = "scream" if j % 2 else "fall"
+				_later(200.0 + j * 90, func(): tf_react(Tf, w, kd))
+			trAt = [(J.num(B.sx.a[0]) + J.num(B.sx.b[0])) / 2, (J.num(B.sx.a[1]) + J.num(B.sx.b[1])) / 2]
+		"eguiking":
+			for w in near.slice(0, 3):
+				hit.call(w, 1.0, {"fright": 2.0}); tf_act(Tf, w, "startle", 2.2, null); w["say"] = {"s": T("我嘅叉燒包呢？！", "我的叉燒包呢？！"), "t": 1.6}
+				if not J.t(J.gp(w, "el")): _walAdd(Tf, 3.0); J.sp(sd, "coins", J.num(J.gp(sd, "coins")) + 3)
+			B.sx["list"] = near.slice(0, 3)
+		"laojiang":
+			var cand = []
+			for w in near:
+				if not (J.num(J.gp(w, "breath")) > 0): cand.append(w)
+			var srt = _ssort(cand, func(w): return -J.num(w.spd)); var tgt = srt[0] if srt.size() else null
+			if J.t(tgt):
+				var p2 = tf_wp(Tf, tgt); B.sx["tp"] = p2; B.sx["list"] = [tgt]
+				for w in near:
+					if J.num(J.gp(w, "breath")) > 0: w["say"] = {"s": T("（唔敢唞氣）", "（不敢喘氣）"), "t": 1.5}; continue
+					var d = tf_segDist(Tf, tf_wp(Tf, w), pos, p2)
+					if d < 70 * PX: hit.call(w, 1.0 if is_same(w, tgt) else 0.6, {"fright": 0.0}); w["fly"] = {"t": 0.0, "dur": 0.8, "dx": (1.0 if J.num(p2[0]) > J.num(pos[0]) else -1.0) * 0.06}
+				trAt = p2
+		"toyol":
+			var two = near.slice(0, 2)
+			for j in two.size():
+				var w = two[j]; hit.call(w, 1.0, {"fright": 0.0})
+				if not J.t(J.gp(w, "el")): _walAdd(Tf, 6.0); J.sp(sd, "coins", J.num(J.gp(sd, "coins")) + 6)
+				w["chase"] = {"t": 0.0, "dur": 2.6, "ph": j * 2.0}; w["say"] = {"s": T("喂！我個銀包！", "喂！我的錢包！"), "t": 1.5}
+			B.sx["list"] = two
+		"xiaozhi":
+			var c0 = tf_wp(Tf, tg) if J.t(tg) else pos; var cage = []
+			for w in J.iter(J.gp(Tf, "walkers")):
+				if tf_alive(Tf, w) and tf_dist(tf_wp(Tf, w), c0) < 90 * PX: cage.append(w)
+			for w in cage: w["block"] = 2.6; hit.call(w, 1.0, {"fright": 0.0}); tf_act(Tf, w, pick(["tremble", "cower"]), 2.6, null)
+			B.sx["c"] = c0; B.sx["list"] = cage
+		"pocong":
+			var y0 = J.num(tp[1]); var row = []
+			for w in near:
+				if absf(J.num(tf_wp(Tf, w)[1]) - y0) * 1.5 < 80 * PX: row.append(w)
+			B.sx["y0"] = y0; B.sx["list"] = row
+			for w in row:
+				hit.call(w, 1.0, {"fright": 1.2})
+				if tf_reroute(Tf, w): w["say"] = {"s": T("呢邊唔行得！行第二條路！", "這邊不能走！走另一條！"), "t": 1.6}
+				else: tf_react(Tf, w, "flee")
+		"penanggal":
+			var c0 = tf_wp(Tf, tg) if J.t(tg) else pos; B.sx["c"] = c0; var ring = []
+			for w in J.iter(J.gp(Tf, "walkers")):
+				if tf_alive(Tf, w) and tf_dist(tf_wp(Tf, w), c0) < 120 * PX: ring.append(w)
+			for w in ring: hit.call(w, 1.0, {"fright": 1.5}); tf_react(Tf, w, null)
+			B.sx["list"] = ring; trAt = c0
+		"mengpo":
+			for w in near.slice(0, 3):
+				hit.call(w, 1.0, {"fright": 0.0}); w["spin"] = 1.3; tf_act(Tf, w, "idle", 1.3, null); w["amnesia"] = 9.0
+				_later(1300.0, func(): w["back"] = CELL * 2; w["say"] = {"s": T("我去邊度㗎？", "我要去哪裡？"), "t": 1.6})
+			B.sx["list"] = near.slice(0, 3)
+		"n30_yukionna":
+			var dir = atan2((J.num(tp[1]) - J.num(pos[1])) * 1.5, J.num(tp[0]) - J.num(pos[0])); B.sx["dir"] = dir; var cone = []
+			for w in J.iter(J.gp(Tf, "walkers")):
+				if not tf_alive(Tf, w): continue
+				var p2 = tf_wp(Tf, w); var d = tf_dist(p2, pos); var a = atan2((J.num(p2[1]) - J.num(pos[1])) * 1.5, J.num(p2[0]) - J.num(pos[0]))
+				if d < 210 * PX and absf(fmod(a - dir + 9.42, 6.283) - 3.14) < 0.6: cone.append(w)
+			for w in cone: hit.call(w, 1.0, {"fright": 0.0}); w["frost"] = 2.5; tf_act(Tf, w, "tremble", 2.2, null)
+			B.sx["list"] = cone; trAt = [J.num(pos[0]) + cos(dir) * 120 * PX, J.num(pos[1]) + sin(dir) * 120 * PX / 1.5]
+		"n30_qionggui":
+			if J.t(tg): tf_act(Tf, tg, "cower", 2.4, null); hit.call(tg, 1.0, {"fright": 0.0}); tg["say"] = {"s": T("咦？張銀紙變咗冥鏹！", "咦？鈔票變成冥紙了！"), "t": 1.8}; B.sx["list"] = [tg]
+			trAt = om.note if (J.t(om) and J.t(J.gp(om, "note"))) else tp
+		"n30_guhangui":
+			if J.t(tg): hit.call(tg, 1.0, {"fright": 0.0}); tf_act(Tf, tg, "tremble", 3.0, null); tg["say"] = {"s": T("我……我個銀包……", "我……我的錢包……"), "t": 2.4}; B.sx["list"] = [tg]
+		"n30_taozhai":
+			if J.t(tg): hit.call(tg, 1.0, {"fright": 0.0}); tg["back"] = CELL * 3; tg["say"] = {"s": T("我冇錢呀！！", "我沒錢啊！！"), "t": 1.6}; B.sx["list"] = [tg]
+		_:
+			for w in near.slice(0, 3): hit.call(w, 1.0, {"fright": 2.0}); tf_react(Tf, w, null)
+			B.sx["list"] = near.slice(0, 3)
+	var tr = L.tr; tf_addTrace(Tf, tr.k, trAt[0], trAt[1], tr.r, tr.life, {"by": k})
+const TF_4G := {"bpos": 1, "bossTick": 1, "bstep": 2, "bossSkill": 3, "loreOmen": 1, "loreStrike": 1}
+
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -1755,5 +1976,5 @@ func run(_env) -> void:
 	load_data()
 	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F)
+	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)
