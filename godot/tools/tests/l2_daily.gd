@@ -72,7 +72,9 @@ func plaza(_t) -> void:
 	var S0 = J.G.S; var saveS = {"bld": {"wood": 1.0}}
 	var NF = int(OS.get_environment("GB_L2_PF")) if OS.has_environment("GB_L2_PF") else 900
 	var outs = []
+	var ghosts0 = ghosts.duplicate(true)
 	for native in [true, false]:
+		ghosts = ghosts0.duplicate(true)   # 每邊用同一份初始名單（之前 remove_at/append 污染咗第二邊）
 		_daily_set(dn.keys(), dn if native else dt_)
 		var SPn = load("res://native/special.gd")   # 特別鬼（Toyol 等）有按 key 嘅狀態，兩邊各自由零開始
 		SPn.states.clear(); SPn.uid = 0; SPn.epoch = 0; SPn.last_call = 0.0; SPn.last_clean = 0.0; SPn.frame_id += 1000   # GC 係固定 40 格暫存，唔好清；frame_id 跳號令舊格失效
