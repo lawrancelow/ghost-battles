@@ -82,6 +82,10 @@ func _sched(HD) -> Array:
 
 func run(_t) -> void:
 	ok = 0; bad = 0
+	# 轉譯版 bug：`S = Math.sin`（別名、唔係呼叫）冇被換成原生，J.G.Math 係空 → S() 回 null，阿福冇晒呼吸／飄動。
+	# 網頁有飄動，原生同網頁一致；比對時俾轉譯參考版一個真 Math.sin，先係同網頁比。
+	var _msin_had = J.G.Math.has("sin")
+	J.G.Math["sin"] = func(_tt, aa): return sin(J.num(J.arg(aa, 0)))
 	var NH = load("res://native/daily_hero.gd")
 	var dn = _hero_daily(); var HDn = J.G.HeroDaily
 	var tr = load("res://jsgen/daily_hero.gd").new(); keep.append(tr); tr.run(null)
@@ -117,3 +121,4 @@ func run(_t) -> void:
 	# 還原原生
 	NH.new().run(null)
 	print("[xcheck] daily_hero ok=%d bad=%d" % [ok, bad])
+	if not _msin_had: J.G.Math.erase("sin")
