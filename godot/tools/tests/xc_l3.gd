@@ -374,7 +374,9 @@ static func _tstate(X) -> Dictionary:
 	for e in J.iter(X.get("dfx", [])): df.append([e.k, e.t, e.dur, e.seed, J.gp(e.w, "n")])
 	var ws = []
 	for w in J.iter(X.walkers): ws.append(_wst(w))
-	return {"sd": X.sd, "fx": X.fx, "parts": X.parts, "dfx": df, "ws": ws, "rate": X.get("rateAcc")}
+	var trs = []
+	for r in J.iter(X.get("traces", [])): var o = r.duplicate(); o.erase("seen"); trs.append(o)
+	return {"sd": X.sd, "fx": X.fx, "parts": X.parts, "dfx": df, "ws": ws, "rate": X.get("rateAcc"), "traces": trs, "caps": X.get("caps"), "tint": X.get("tint")}
 func street_t4b(_t) -> void:
 	mod = "street_t4b"
 	var N = load("res://native/street.gd"); N.load_data()
@@ -486,7 +488,10 @@ func _t4tick(mn: String, gn: Array) -> void:
 		for r in 10:
 			seed(700 + r); var wa = J.mc(A, "newWalker", [null]); seed(700 + r); var wb = J.mc(B, "newWalker", [null])
 			wa.t = r * 0.05; wb.t = wa.t; A.walkers.append(wa); B.walkers.append(wb)
-		for X in [A, B]: X.shots.append({"t": 0.0, "dur": 0.4, "to": [0.6, 0.5], "eff": 0.3, "atk": 25.0})
+		for X in [A, B]:
+			X.shots.append({"t": 0.0, "dur": 0.4, "to": [0.6, 0.5], "eff": 0.3, "atk": 25.0}); X["traces"] = []; X["caps"] = []
+			for tk in [["hair", 0.4], ["ice", 0.45], ["coins", 0.9], ["notes", 0.95], ["shadow", 1.3], ["cloth", 1.6], ["ring", 1.9], ["soup", 2.2], ["debt", 2.3], ["claw", 2.6]]:
+				J.mc(X, "addTrace", [tk[0], tk[1], 0.5, 400.0, 30.0, {"by": "t"}])
 		for st in 240:
 			trT["sd"] = A.sd; seed(5000 + st); J.mc(A, "tick", [0.05]); seed(5000 + st); J.mc(B, "tick", [0.05])
 			if st % 10 == 9 or st < 5: _eq(tg + " tick %d" % st, [_tstate(A), A.shots, A.q, A.shake], [_tstate(B), B.shots, B.q, B.shake])

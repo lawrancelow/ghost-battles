@@ -1537,7 +1537,10 @@ static func tf_cap(Tf, text, x, y, o) -> void:
 	if not J.t(J.gp(Tf, "caps")): J.sp(Tf, "caps", [])
 	J.gp(Tf, "caps").append(_asgn({"text": text, "x": x, "y": y, "t": 0.0, "life": 1.4, "size": 15.0, "col": "#f4e8ff", "font": "serif", "style": "pop"}, o))
 static func tf_act(_Tf, w, pose, t, o) -> void: w["act"] = _asgn({"pose": pose, "t": t, "hold": true, "rot": 0.0}, o)
-static func _pk(a: Array): var o = []; for s in a: o.append(T(s[0], s[1])); return pick(o)
+static func _pk(a: Array):
+	var o = []
+	for s in a: o.append(T(s[0], s[1]))
+	return pick(o)
 static func tf_react(Tf, w, kind) -> void:
 	tf_wp(Tf, w); var K = kind if J.t(kind) else pick(["scream", "kneel", "head", "fall", "flee"])
 	if K == "scream": tf_act(Tf, w, "startle", 1.2, null); w["say"] = {"s": _pk([["呀————！", "啊————！"], ["有鬼呀！！", "有鬼啊！！"], ["救命！！", "救命！！"]]), "t": 1.3}
