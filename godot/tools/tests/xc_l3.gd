@@ -551,3 +551,36 @@ func street_t4i(_t) -> void:
 			seed(600 + st); J.mc(A, "tick", [0.05]); seed(600 + st); J.mc(B, "tick", [0.05])
 		_eq("ult " + k + " +tick", _tstate(A), _tstate(B))
 	_report()
+
+# ---- L3：street 4j（介面層繪畫：Recorder 對照）----
+func _drq(tg: String, X5, A, B, f: String, args: Array = []) -> void:
+	seed(5); var a = _sig(X5, func(c): A["c"] = c; return J.mc(A, f, args)); seed(5); var b = _sig(X5, func(c): B["c"] = c; return J.mc(B, f, args))
+	if a == b: ok += 1
+	else:
+		bad += 1
+		if bad <= 25:
+			var i = 0
+			while i < mini(a.size(), b.size()) and a[i] == b[i]: i += 1
+			print("[xcheck-diff] %s %s #%d/%d\n web=%s\n nat=%s" % [tg, f, i, a.size(), a[i] if i < a.size() else "-", b[i] if i < b.size() else "-"])
+func street_t4j(_t) -> void:
+	mod = "street_t4j"
+	var mk = math_fix(); var X5 = load("res://tools/tests/xc_l5.gd")
+	var N = load("res://native/street.gd"); N.load_data()
+	var tr = _st_trans().Street; var trT = J.gp(tr, "Turf")
+	J.test_perf = 123456.0
+	for sid in ["office", "bus"]:
+		var pr = _tf_pair(trT, N, sid, 3.0); var A = pr[0]; var B = pr[1]
+		for grp in [N.TF_4B, N.TF_4J]:
+			for m in grp: B[m] = N.turf_methods(grp)[m]
+		for X in [A, B]:
+			X["walkers"] = []; X["bosses"] = []; X["scr"] = {"x": 0.0, "y": 0.0, "w": 390.0, "h": 844.0}; X.sd["jar"] = 17.0; X["tapFx"] = {"x": 100.0, "y": 300.0, "t": 0.1}; X["moveFrom"] = 2.0
+			J.mc(X, "buildPath", [])
+		trT["sd"] = A.sd
+		for r in 5:
+			seed(70 + r); var wa = J.mc(A, "newWalker", [null]); seed(70 + r); var wb = J.mc(B, "newWalker", [null]); wa.t = 0.1 + r * 0.1; wb.t = wa.t; A.walkers.append(wa); B.walkers.append(wb)
+		for st0 in [{"st": "form", "t": 0.3, "n": 5.0, "made": 2.0}, {"st": "ready", "t": 41.5, "n": 4.0, "made": 4.0}, {"st": "gap", "t": 3.0, "n": 0.0, "made": 0.0}]:
+			A["q"] = st0.duplicate(); A.q["list"] = A.walkers.slice(0, int(st0.made)); B["q"] = st0.duplicate(); B.q["list"] = B.walkers.slice(0, int(st0.made))
+			for f in ["drawTopBar", "drawJar", "drawMini", "drawMy"]: _drq(sid + " " + st0.st, X5, A, B, f)
+	J.test_perf = -1.0
+	J.G["Math"] = mk.keep
+	_report()

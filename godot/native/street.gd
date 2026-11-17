@@ -2108,6 +2108,89 @@ static func tf_ultNew(Tf, U) -> bool:
 	return false
 const TF_4I := {"startUlt": 1, "ultApply": 1, "ultNew": 1}
 
+# 4j：介面層（頂部建設度條、收集罐、小地圖、門外排隊、嚇人力）
+static func _px(n: float) -> String: return J.str(n) + "px"
+static func _scr(Tf):
+	var s = J.gp(Tf, "scr")
+	return s if J.t(s) else {"x": 0.0, "y": 0.0, "w": _iw(), "h": _ih()}
+static func tf_drawTopBar(Tf) -> void:
+	var c = J.gp(Tf, "c"); var sc = J.gp(Tf, "scr"); var U = J.num(sc.w) / 390.0; var bd = tf_build(Tf)
+	cr_bar(c, 110 * U, 50 * U, J.num(sc.w) - 220 * U, 8 * U, bd / 100.0, "#6d5690", "#c06a2c", U)
+static func tf_drawJar(Tf) -> void:
+	var c = J.gp(Tf, "c"); var sc = J.gp(Tf, "scr"); var U = J.num(sc.w) / 390.0; var n = fmod(J.num(J.gp(J.gp(Tf, "sd"), "jar")), 40.0); var cx = J.num(sc.w) / 2; var cy = J.num(sc.h) - 76 * U; var t = _pnow() / 1000.0
+	c.save()
+	c.fillStyle = "rgba(10,12,16,0.8)"; c.beginPath(); c.ellipse(cx, cy + 22 * U, 30 * U, 7 * U, 0, 0, 7); c.fill()
+	c.strokeStyle = "rgba(200,220,230,0.8)"; c.lineWidth = 2; c.fillStyle = "rgba(120,160,190,0.18)"; c.beginPath(); c.moveTo(cx - 20 * U, cy - 18 * U); c.lineTo(cx - 24 * U, cy + 18 * U); c.quadraticCurveTo(cx, cy + 28 * U, cx + 24 * U, cy + 18 * U); c.lineTo(cx + 20 * U, cy - 18 * U); c.closePath(); c.fill(); c.stroke()
+	var lv = n / 40.0; c.fillStyle = "rgba(170,140,255,0.65)"; c.beginPath(); c.moveTo(cx - 23 * U, cy + 18 * U - lv * 34 * U); c.lineTo(cx + 23 * U, cy + 18 * U - lv * 34 * U); c.lineTo(cx + 23 * U, cy + 18 * U); c.quadraticCurveTo(cx, cy + 27 * U, cx - 23 * U, cy + 18 * U); c.fill()
+	for j in int(minf(6.0, n)):
+		c.fillStyle = "rgba(230,220,255,0.8)"; c.beginPath(); c.arc(cx - 12 * U + (j % 3) * 12 * U, cy + 10 * U - floorf(j / 3.0) * 9 * U + sin(t * 3 + j) * 2, 2.5 * U, 0, 7); c.fill()
+	cr_panel(c, cx - 23 * U, cy - 26 * U, 46 * U, 9 * U, {"col": "rust", "fill": "rgba(70,36,16,0.95)", "U": U, "seed": 11.0})
+	cr_text(c, J.str(n) + "/40", cx, cy + 4 * U, {"font": "900 " + _px(13 * U) + " sans-serif", "align": "center", "col": "#f3d58a"}); c.restore()
+static func tf_drawMini(Tf) -> void:
+	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); var sc = _scr(Tf); var L = J.gp(Tf, "lay"); var U = J.num(sc.w) / 390.0
+	if not J.t(L) or not J.t(J.gp(L, "worldW")): return
+	var WW = J.num(L.worldW); var mw = minf(J.num(sc.w) - 120 * U, 52 * U * WW); var mh = mw / WW * 1.5; var mx = 8 * U; var my = 70 * U; J.sp(Tf, "miniBox", [mx, my, mw, mh])
+	var sx = mw / WW; var sy = mh / J.num(L.worldH); c.save(); cr_panel(c, mx - 5, my - 5, mw + 10, mh + 10, {"col": "bone", "fill": "rgba(14,9,12,0.86)", "U": U, "seed": 21.0})
+	var PN = J.iter(L.panels)
+	for r in PN.size():
+		if r >= J.num(L.nv): continue
+		c.fillStyle = "rgba(110,100,80,0.45)" if r < J.num(L.unlocked) else "rgba(40,40,40,0.7)"; c.fillRect(mx + r * sx + 1, my, sx - 2, mh)
+	c.strokeStyle = "rgba(230,200,120,0.4)"; c.lineWidth = 1; var NS = J.gp(L, "nodes"); var E = J.gp(L, "edges")
+	for a in J.keys(E):
+		for z in J.iter(J.gp(E, a)):
+			var A = J.gp(NS, a); var B = J.gp(NS, z)
+			if not J.t(A) or not J.t(B): continue
+			c.beginPath(); c.moveTo(mx + J.num(A[0]) * sx, my + J.num(A[1]) * sy); c.lineTo(mx + J.num(B[0]) * sx, my + J.num(B[1]) * sy); c.stroke()
+	for w in J.iter(J.gp(Tf, "walkers")):
+		if not J.t(J.gp(w, "gone")) and J.num(w.t) > 0:
+			var xy = tf_wp(Tf, w); c.fillStyle = "#ff9a5a" if J.t(J.gp(w, "el")) else "#8fd3ff"; c.fillRect(mx + J.num(xy[0]) * sx - 1.5, my + J.num(xy[1]) * sy - 1.5, 3, 3)
+	for B in J.iter(_or(J.gp(Tf, "bosses"), [])):
+		var xy = tf_bpos(Tf, B); c.fillStyle = "#c084ff"; c.beginPath(); c.arc(mx + xy[0] * sx, my + xy[1] * sy, 3, 0, 7); c.fill()
+	var C = J.gp(Tf, "cam"); var hx = (_iw() / 2) / (J.num(b.w) * J.num(C.z)); var hy = (_ih() / 2) / (J.num(b.h) * J.num(C.z))
+	c.strokeStyle = "#ffe9a0"; c.lineWidth = 1.5; c.strokeRect(mx + (J.num(C.x) - hx) * sx, my + (J.num(C.y) - hy) * sy, 2 * hx * sx, 2 * hy * sy)
+	c.restore()
+static func tf_drawMy(Tf) -> void:
+	J.mc(Tf, "drawMini", [])
+	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "scr") if J.t(J.gp(Tf, "scr")) else J.gp(Tf, "box"); var U = J.num(b.w) / 390.0; var te = J.gp(st(), "tapE"); var e = 100.0 if te == null else J.num(te)
+	J.mc(Tf, "drawTopBar", []); J.mc(Tf, "drawJar", [])
+	var q = J.gp(Tf, "q"); var bx = J.num(b.x); var by = J.num(b.y); var bw0 = J.num(b.w); var bh0 = J.num(b.h)
+	if J.t(q) and not J.seq(q.st, "gap") and J.t(J.gp(q, "list")) and J.len(q.list) > 0:
+		var ls = J.iter(q.list); var n = J.num(q.n) if J.num(J.gp(q, "n")) != 0 else float(ls.size())
+		var bw = minf(bw0 / 2 - 38 * U, 26 * U * n + 70 * U); var bx0 = bx + 8 * U; var by0 = bh0 - 104 * U; var qs = minf(26 * U, (bw - 26 * U) / maxf(1.0, n - 0.4))
+		var rdy = J.seq(q.st, "ready")
+		cr_panel(c, bx0, by0, bw, 46 * U, {"col": "gold" if rdy else "violet", "U": U, "seed": 31.0})
+		c.font = "bold " + _px(11 * U) + " sans-serif"; c.textAlign = "left"; c.fillStyle = "#eadbbf"; c.lineWidth = 3; c.strokeStyle = "#000"
+		var s1 = ""
+		if rdy:
+			var tc = J.str(ceilf(J.num(q.t))); s1 = T("生人將至・" + tc + "秒後入場", "生人將至・" + tc + "秒後入場")
+		else:
+			var ms = J.str(q.made) + "/" + J.str(n); s1 = T("生人將至 " + ms, "生人將至 " + ms)
+		c.strokeText(s1, bx0 + 8 * U, by0 + 14 * U); c.fillText(s1, bx0 + 8 * U, by0 + 13 * U)
+		if rdy: cr_bar(c, bx0 + 6 * U, by0 + 40 * U, bw - 12 * U, 4 * U, 1 - J.num(q.t) / 90.0, "#d9a441", "#c06a2c", U)
+		var tt = _pnow() / 1000.0; var NU = J.num(G("NPC_UNIT")) if has("NPC_UNIT") else 69.0
+		for j in ls.size():
+			var w = ls[j]; var fx = bx0 + 16 * U + j * qs; var fy = by0 + 41 * U
+			c.fillStyle = "rgba(0,0,0,0.4)"; c.beginPath(); c.ellipse(fx, fy, 8 * U, 2.5 * U, 0, 0, 7); c.fill()
+			if CHAR_H_OK(J.gp(w, "spr")) and has("ART"): J.mc(G("ART"), "drawChar", [c, w.spr, fx, fy, 26 * U / NU, {"t": tt + J.num(J.gp(w, "seed")), "pose": "idle", "shadow": false}])
+			if J.t(J.gp(w, "el")): c.fillStyle = w.el.tag; c.beginPath(); c.arc(fx + 7 * U, fy - 26 * U, 3 * U, 0, 7); c.fill()
+		for j in range(ls.size(), int(n)):
+			c.strokeStyle = "rgba(200,190,170,0.35)"; c.setLineDash([3, 3]); c.beginPath(); c.ellipse(bx0 + 16 * U + j * qs, by0 + 30 * U, 7 * U, 10 * U, 0, 0, 7); c.stroke(); c.setLineDash([])
+	var x = bx + bw0 - 150 * U; var y = bh0 - 54 * U; cr_bar(c, x, y, 140 * U, 8 * U, e / 100.0, "#8f1f1f", "#b3372c", U)
+	c.font = "bold " + _px(10.5 * U) + " sans-serif"; c.textAlign = "left"; c.fillStyle = "#eadbbf"; c.lineWidth = 3.5; c.strokeStyle = "#000"
+	var es = J.str(e); var s = T("嚇人力 " + es + "/100（撳路人）", "嚇人力 " + es + "/100（點路人）"); c.strokeText(s, x, y - 4 * U); c.fillText(s, x, y - 4 * U)
+	var f = J.gp(Tf, "tapFx")
+	if J.t(f):
+		f["t"] = J.num(f.t) + 1 / 30.0; var a = maxf(0.0, 1 - J.num(f.t) / 0.5)
+		c.fillStyle = "rgba(170,10,30," + J.str(a) + ")"
+		for j in 5:
+			var a2 = -0.9 + j * 0.45; c.beginPath(); c.ellipse(J.num(f.x) + sin(a2) * 16 * U, J.num(f.y) - cos(a2) * 18 * U, 4 * U, 9 * U, a2, 0, 7); c.fill()
+		c.beginPath(); c.ellipse(J.num(f.x), J.num(f.y) + 6 * U, 13 * U, 11 * U, 0, 0, 7); c.fill()
+		if J.num(f.t) > 0.5: J.sp(Tf, "tapFx", null)
+	if J.gp(Tf, "moveFrom") != null:
+		c.font = "900 " + _px(13 * U) + " sans-serif"; c.textAlign = "center"; c.fillStyle = "#ffe9a0"; var mtx = T("移位：撳另一個同類同大小嘅格（互換）", "移位：點另一個同類同大小的格（互換）")
+		c.strokeText(mtx, bx + bw0 / 2, by + 40 * U); c.fillText(mtx, bx + bw0 / 2, by + 40 * U)
+const TF_4J := {"drawTopBar": 0, "drawJar": 0, "drawMini": 0, "drawMy": 0}
+
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -2137,5 +2220,5 @@ func run(_env) -> void:
 	load_data()
 	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I)
+	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I); tf_install(J.gp(SQ, "Turf"), TF_4J)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)
