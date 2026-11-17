@@ -2927,6 +2927,83 @@ static func _drawPost(Tf, X, s, i) -> void:
 		c.fillRect(x - 16 * U, y + 14 * U, 32 * U * hpK, 4 * U)
 const TF_4N := {"draw": 0}
 
+# 4o：塔防命中特效 drawDfx
+static func _sm(q: float) -> float: return 0.0 if q <= 0 else (1.0 if q >= 1 else q * q * (3 - 2 * q))
+static func tf_drawDfx(Tf, U, hh, t) -> void:
+	var c = J.gp(Tf, "c"); U = J.num(U); hh = J.num(hh); t = J.num(t); var keep = []
+	for e in J.iter(_or(J.gp(Tf, "dfx"), [])):
+		if J.num(e.t) < J.num(e.dur): keep.append(e)
+	J.sp(Tf, "dfx", keep)
+	for e in keep:
+		var w = e.w; var wp0 = tf_wp(Tf, w); var xy = _P(Tf, wp0[0], wp0[1]); var x = xy[0]; var y = xy[1]; var k = J.num(e.t) / J.num(e.dur); var fa = 1.0 if k < 0.8 else (1 - k) / 0.2; var sd = J.num(e.seed); var ek = J.str(e.k)
+		c.save(); c.globalAlpha = maxf(0.0, fa)
+		if ek == "trap" and J.t(fx_vx("vfx_hand_crack")):
+			var im = fx_vx("vfx_hand_crack"); var up = minf(1.0, k / 0.22); var bo = (1 + 2.2 * pow(up - 1, 3) * 1.0 + 1.2 * pow(up - 1, 2)) if up < 1 else 1.0; var grip = sin(J.num(e.t) * 26) * 0.025 if (k > 0.25 and k < 0.8) else 0.0; var H2 = hh * 0.72
+			c.fillStyle = "rgba(20,8,8," + _a(0.5 * fa) + ")"; c.beginPath(); c.ellipse(x, y + hh * 0.02, hh * 0.36, hh * 0.1, 0, 0, 7); c.fill()
+			fx_vxDraw(c, im, x + hh * 0.05, y + hh * 0.1, H2 * maxf(0.05, bo), {"alpha": minf(1.0, up * 2), "rot": grip, "sx": 1 + grip})
+			if k < 0.3:
+				for j in 6:
+					var a2 = j * 1.05 + sd; var d2 = k / 0.3 * hh * 0.5; c.fillStyle = "rgba(120,110,105," + _a(1 - k / 0.3) + ")"; c.fillRect(x + cos(a2) * d2, y - absf(sin(a2)) * d2 * 0.8, 3 * U, 3 * U)
+			c.restore(); continue
+		if ek == "puzzle" and J.t(fx_vx("vfx_mist_ring")):
+			var im = fx_vx("vfx_mist_ring"); var fi = minf(1.0, k / 0.18); var br = 1 + sin(t * 2.4 + sd) * 0.06; var Dd = hh * 1.45 * br; var nh = J.num(im.naturalHeight) / J.num(im.naturalWidth)
+			c.globalAlpha = maxf(0.0, minf(fi, fa)) * 0.92; c.save(); c.translate(x, y - hh * 0.1); c.scale(1, 0.56); c.rotate(t * 0.7 + sd); c.drawImage(im, -Dd / 2, -Dd / 2 * nh, Dd, Dd * nh); c.restore()
+			c.globalAlpha = maxf(0.0, minf(fi, fa)) * 0.35; c.save(); c.translate(x, y - hh * 0.55); c.scale(1, 0.75); c.rotate(-t * 0.5 + sd); c.drawImage(im, -Dd * 0.4, -Dd * 0.4, Dd * 0.8, Dd * 0.8); c.restore()
+			c.globalAlpha = maxf(0.0, minf(fi, fa)); c.fillStyle = "#e4c8ff"; c.font = "900 " + _px(12 * U) + " sans-serif"; c.textAlign = "center"; c.lineWidth = 3; c.strokeStyle = "#1a0a2a"; var qx = x + sin(t * 6) * hh * 0.3; c.strokeText("？", qx, y - hh * 1.25); c.fillText("？", qx, y - hh * 1.25)
+			c.restore(); continue
+		if ek == "slow" and J.t(fx_vx("vfx_water_hands")):
+			var im = fx_vx("vfx_water_hands"); var fi = _sm(minf(1.0, k / 0.2)); var H2 = hh * 0.8 * (0.85 + 0.15 * fi)
+			fx_vxDraw(c, im, x, y + H2 * 0.32, H2, {"alpha": minf(fi, fa) * 0.95, "sy": 0.9 + sin(t * 5 + sd) * 0.05, "sx": 1 + sin(t * 3 + sd) * 0.03})
+			c.restore(); continue
+		if ek == "aura" and J.t(fx_vx("vfx_frost")):
+			var im = fx_vx("vfx_frost"); var ex = _sm(minf(1.0, k / 0.35)); var H2 = hh * (0.45 + 0.55 * ex)
+			fx_vxDraw(c, im, x, y - hh * 0.5, H2, {"ay": 0.5, "alpha": (k / 0.12 if k < 0.12 else 1.0) * (1 - _sm(maxf(0.0, (k - 0.45) / 0.55))) * 0.78, "rot": (fmod(sd, 1.0) - 0.5) * 0.4 + k * 0.5})
+			c.restore(); continue
+		if ek == "scare" and J.t(fx_vx("vfx_ghost_rise")):
+			var side = 1.0 if fmod(sd, 2.0) < 1 else -1.0; var gx = x + side * hh * 0.5
+			if k > 0.3:
+				var k2 = (k - 0.3) / 0.7; var r = hh * (0.3 + k2 * 1.4); c.strokeStyle = "rgba(255,150,46," + _a(1 - k2) + ")"; c.lineWidth = 4 * (1 - k2) + 1; c.beginPath(); c.ellipse(x, y - hh * 0.4, r, r * 0.6, 0, 0, 7); c.stroke()
+			fx_shadeArt(c, gx, y + hh * 0.04, hh * 1.05, {"t": t, "alpha": 1.0, "flip": side < 0}, minf(1.0, k * 1.05))
+			if k > 0.3:
+				var k2 = (k - 0.3) / 0.7; var sc = k2 / 0.15 * 1.4 if k2 < 0.15 else 1.4 - minf(0.4, (k2 - 0.15) * 2)
+				c.translate(x - side * hh * 0.1, y - hh * 1.45 - k2 * hh * 0.3); c.rotate(-0.12); c.scale(sc, sc); c.font = "900 " + _px(20 * U) + " sans-serif"; c.textAlign = "center"; c.lineWidth = 5; c.strokeStyle = "#2a0e00"; c.strokeText(T("嘩！", "哇！"), 0, 0); c.fillStyle = "#ffb040"; c.fillText(T("嘩！", "哇！"), 0, 0)
+			c.restore(); continue
+		if ek == "trap":
+			var rise = minf(1.0, k * 4); c.fillStyle = "rgba(70,10,10,0.55)"; c.beginPath(); c.ellipse(x, y, hh * 0.42, hh * 0.12, 0, 0, 7); c.fill(); c.strokeStyle = "rgba(255,80,60,0.8)"; c.lineWidth = 1.5
+			for j in 5:
+				var a = j * 1.26 + sd; c.beginPath(); c.moveTo(x, y); c.lineTo(x + cos(a) * hh * 0.42, y + sin(a) * hh * 0.12); c.stroke()
+			for sdd in [-1.0, 1.0]:
+				var hx = x + sdd * hh * 0.16; var top = y - hh * 0.32 * rise; var grip = sin(J.num(e.t) * 14) * 0.1; c.strokeStyle = "rgba(150,170,140,0.95)"; c.lineCap = "round"; c.lineWidth = hh * 0.07; c.beginPath(); c.moveTo(hx, y + hh * 0.02); c.lineTo(hx - sdd * hh * 0.05, top); c.stroke(); c.lineWidth = hh * 0.025
+				for f in range(-1, 2):
+					c.beginPath(); c.moveTo(hx - sdd * hh * 0.05, top); c.lineTo(hx - sdd * hh * (0.05 + 0.08) + f * hh * 0.04, top - hh * (0.07 - grip * 0.3)); c.stroke()
+		elif ek == "puzzle":
+			for j in 4:
+				var a = t * 4 + j * 1.57 + sd; var gx = x + cos(a) * hh * 0.45; var gy = y - hh * 0.35 + sin(a) * hh * 0.16; var g = c.createRadialGradient(gx, gy, 1, gx, gy, hh * 0.28); g.addColorStop(0, "rgba(170,100,255,0.45)"); g.addColorStop(1, "rgba(170,100,255,0)"); c.fillStyle = g; c.beginPath(); c.arc(gx, gy, hh * 0.28, 0, 7); c.fill()
+			c.strokeStyle = "rgba(200,150,255,0.8)"; c.lineWidth = 2; c.beginPath(); c.ellipse(x, y - hh * 0.05, hh * 0.5, hh * 0.15, 0, t * 5, t * 5 + 4.2); c.stroke(); c.fillStyle = "#e4c8ff"; c.font = "900 " + _px(12 * U) + " sans-serif"; c.textAlign = "center"; c.fillText("？", x + sin(t * 6) * hh * 0.3, y - hh * 1.25)
+		elif ek == "slow":
+			for j in 3:
+				var ph = fmod(k + j / 3.0, 1.0); c.strokeStyle = "rgba(40,200,190," + _a(0.8 * (1 - ph)) + ")"; c.lineWidth = 2; c.beginPath(); c.ellipse(x, y, hh * (0.15 + ph * 0.5), hh * (0.05 + ph * 0.16), 0, 0, 7); c.stroke()
+			c.fillStyle = "rgba(5,20,25,0.5)"; c.beginPath(); c.ellipse(x, y, hh * 0.3, hh * 0.09, 0, 0, 7); c.fill()
+			for j in 3:
+				c.fillStyle = "rgba(30,60,60,0.8)"; c.beginPath(); c.arc(x + (j - 1) * hh * 0.12, y - absf(sin(t * 5 + j)) * hh * 0.12, hh * 0.03, 0, 7); c.fill()
+		elif ek == "scare":
+			var r = hh * (0.3 + k * 1.6); c.strokeStyle = "rgba(255,150,46," + _a(1 - k) + ")"; c.lineWidth = 5 * (1 - k) + 1; c.beginPath(); c.ellipse(x, y - hh * 0.4, r, r * 0.6, 0, 0, 7); c.stroke(); c.strokeStyle = "rgba(255,240,200," + _a(0.7 * (1 - k)) + ")"; c.lineWidth = 1.5; c.beginPath(); c.ellipse(x, y - hh * 0.4, r * 0.8, r * 0.48, 0, 0, 7); c.stroke()
+			for j in 8:
+				var a = j * 0.785 + sd; var r1 = r * 0.7; var r2 = r * 1.05; c.beginPath(); c.moveTo(x + cos(a) * r1, y - hh * 0.4 + sin(a) * r1 * 0.6); c.lineTo(x + cos(a) * r2, y - hh * 0.4 + sin(a) * r2 * 0.6); c.stroke()
+			var sc = k / 0.15 * 1.4 if k < 0.15 else 1.4 - minf(0.4, (k - 0.15) * 2); c.translate(x + hh * 0.1, y - hh * 1.5 - k * hh * 0.3); c.rotate(-0.12); c.scale(sc, sc); c.font = "900 " + _px(20 * U) + " sans-serif"; c.textAlign = "center"; c.lineWidth = 5; c.strokeStyle = "#2a0e00"; c.strokeText(T("嘩！", "哇！"), 0, 0); c.fillStyle = "#ffb040"; c.fillText(T("嘩！", "哇！"), 0, 0)
+		elif ek == "aura":
+			var g = c.createRadialGradient(x, y - hh * 0.6, 1, x, y - hh * 0.6, hh * 0.7); g.addColorStop(0, "rgba(200,235,255," + _a(0.4 * (1 - k)) + ")"); g.addColorStop(1, "rgba(200,235,255,0)"); c.fillStyle = g; c.beginPath(); c.arc(x, y - hh * 0.6, hh * 0.7, 0, 7); c.fill()
+			c.strokeStyle = "rgba(225,245,255,0.95)"; c.lineWidth = 1.2
+			for j in 6:
+				var fx0 = x + sin(sd + j * 2.1) * hh * 0.45; var fy = y - hh * (1.1 - k * 0.9) + j * hh * 0.06; var r = hh * 0.05
+				for m in 3:
+					var a = m * 1.047 + t; c.beginPath(); c.moveTo(fx0 - cos(a) * r, fy - sin(a) * r); c.lineTo(fx0 + cos(a) * r, fy + sin(a) * r); c.stroke()
+		elif ek == "throw":
+			for j in 9:
+				var a = j * 0.7 + sd; var d = k * hh * (0.5 + (j % 3) * 0.25); c.save(); c.translate(x + cos(a) * d, y - hh * 0.3 + sin(a) * d * 0.5 - sin(k * 3.14) * hh * 0.4 + k * k * hh * 0.3); c.rotate(a + k * 8); c.fillStyle = "#f0e6d0" if j % 3 else "#3a5a9a"; c.beginPath(); c.moveTo(0, -hh * 0.05); c.lineTo(hh * 0.05, hh * 0.03); c.lineTo(-hh * 0.04, hh * 0.04); c.closePath(); c.fill(); c.restore()
+		c.restore()
+const TF_4O := {"drawDfx": 3}
+
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -2956,5 +3033,5 @@ func run(_env) -> void:
 	load_data()
 	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I); tf_install(J.gp(SQ, "Turf"), TF_4J); tf_install(J.gp(SQ, "Turf"), TF_4K); tf_install(J.gp(SQ, "Turf"), TF_4L); tf_install(J.gp(SQ, "Turf"), TF_4M); tf_install(J.gp(SQ, "Turf"), TF_4N)
+	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I); tf_install(J.gp(SQ, "Turf"), TF_4J); tf_install(J.gp(SQ, "Turf"), TF_4K); tf_install(J.gp(SQ, "Turf"), TF_4L); tf_install(J.gp(SQ, "Turf"), TF_4M); tf_install(J.gp(SQ, "Turf"), TF_4N); tf_install(J.gp(SQ, "Turf"), TF_4O)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)
