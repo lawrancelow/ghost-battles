@@ -496,11 +496,15 @@ func _sc_state(Sc) -> String:
 	var ns = []
 	for n in J.iter(J.gp(Sc, "npcs")):
 		var o = {}
-		for k in ["x", "y", "act", "fear", "peak", "dir", "wait", "wi", "gone", "out", "fleeing", "leaving", "shaken", "lookUp", "lookCD", "_seed", "bub", "li", "napAt"]: o[k] = J.gp(n, k)
+		for k in ["x", "y", "act", "fear", "peak", "dir", "wait", "wi", "gone", "out", "fleeing", "leaving", "shaken", "lookUp", "lookCD", "_seed", "bub", "bubT", "li", "napAt", "ds", "prog", "rT", "tour", "mocked", "combo", "comboT", "hab", "wl", "glance", "look", "outT", "inWait", "left", "viaDone", "uneasy", "spot"]: o[k] = J.gp(n, k)
+		var cl = J.gp(n, "call")
+		if J.t(cl): o["call"] = [J.gp(cl, "x"), J.gp(cl, "act"), J.gp(cl, "delay"), J.gp(cl, "hold")]
+		var ev = J.gp(n, "ev")
+		if J.t(ev): o["ev"] = J.to_json(ev)
 		var st = J.gp(n, "step")
 		if J.t(st): o["step"] = [J.gp(st, "x"), J.gp(st, "y"), J.gp(st, "act"), J.gp(st, "arrived"), J.gp(st, "wait")]
 		ns.append(o)
-	return J.to_json({"t": J.gp(Sc, "t"), "kpi": J.gp(Sc, "kpi"), "mana": J.gp(Sc, "mana"), "expo": J.gp(Sc, "expo"), "npcs": ns})
+	return J.to_json({"t": J.gp(Sc, "t"), "kpi": J.gp(Sc, "kpi"), "mana": J.gp(Sc, "mana"), "expo": J.gp(Sc, "expo"), "alert": J.gp(Sc, "alert"), "daoCall": J.gp(Sc, "daoCall"), "daoIn": J.gp(Sc, "daoIn"), "expelled": J.gp(Sc, "expelled"), "expoRoom": J.gp(Sc, "expoRoom"), "door": J.gp(Sc, "door"), "meetT": J.gp(Sc, "meetT"), "callT": J.gp(Sc, "callT"), "known": J.to_json(J.gp(Sc, "known")), "cd": J.gp(Sc, "cd"), "pcd": J.gp(Sc, "pcd"), "hab": J.gp(Sc, "_hab"), "karma": J.gp(Sc, "karma"), "night": J.gp(Sc, "night") != null, "npcs": ns})
 func _scare_battery(Sc, NS) -> void:
 	var npcs = J.iter(J.gp(Sc, "npcs")); var props = J.keys(J.G.SCARE_PROPS)
 	for m in ["viewW", "camRoom", "bgScale", "persp", "bgAR", "office", "groupRoom", "exitPt"]: _sx(Sc, NS, m, [])
@@ -548,19 +552,142 @@ func l4_scare1(_t) -> void:
 				J.sp(Sc, "headless", true)
 		print("[xcheck] scare1 seed=%s t=%s ok=%d bad=%d" % [sd, J.gp(Sc, "t"), ok, bad])
 	# 成晚決定性：原生 vs 轉譯
-	var runs = []
+	for cfg in [[777.0, false], [31.0, true], [5150.0, true]]:
+		var runs = []
+		for side in ["nat", "tr"]:
+			var keepM = {}
+			for k in NS.ORIG: keepM[k] = Sc[k]; Sc[k] = NS.ORIG[k] if side == "tr" else NS.NAT[k]
+			for k in ["meetT", "callT", "callWho", "expoRoom", "_hab"]: J.sp(Sc, k, null)
+			seed(99); J.mc(Sc, "start", ["office", ["afu", "eguiking", "toyol"], true, cfg[0]])
+			var out = []
+			for f in 5400:
+				if cfg[1]:
+					var ns = J.iter(J.gp(Sc, "npcs"))
+					if f % 400 == 200: var m = ns[(f / 400) % ns.size()]; J.sp(m, "fear", 62.0); J.sp(m, "peak", 62.0)
+					if f == 1500: J.mc(Sc, "expose", [80.0, ns[1]])
+					if f == 2600: J.sp(ns[2], "fleeing", true)
+					if f == 3000: J.mc(Sc, "jumpy", [null, null]); J.mc(Sc, "wakeGuard", [ns[0]])
+					if f % 90 == 45:
+						J.sp(Sc, "mana", 100.0)
+						var who = ns[(f / 90) % ns.size()]; J.sp(Sc, "sel", who)
+						var acts = J.keys(J.G.SCARE_PROPS) + ["@phone", "@breath", "#afu", "#eguiking", "#toyol"]
+						var ac = J.str(acts[(f / 90) % acts.size()])
+						if ac == "@phone": J.mc(Sc, "usePhone", [who])
+						elif ac == "@breath": J.mc(Sc, "useBreath", [who])
+						elif ac.begins_with("#"): J.sp(J.gp(Sc, "cd"), ac.substr(1), 0.0); J.mc(Sc, "useGhost", [ac.substr(1), who])
+						else: J.sp(J.gp(Sc, "pcd") if J.t(J.gp(Sc, "pcd")) else {}, ac, 0.0); J.mc(Sc, "useProp", [ac, who])
+				J.mc(Sc, "step", [1.0 / 30])
+				if f % 60 == 0: out.append(_sc_state(Sc))
+				if not J.t(J.gp(Sc, "active")): break
+			out.append(_sc_state(Sc)); runs.append(out)
+			for k in keepM: Sc[k] = keepM[k]
+		_sc_cmp("night len", str(runs[0].size()), str(runs[1].size()))
+		for i in mini(runs[0].size(), runs[1].size()): _sc_cmp("night%s f%d" % [cfg[0], i * 60], runs[0][i], runs[1][i])
+		print("[xcheck] scare night cfg=%s frames=%d last=%s" % [cfg, runs[0].size(), runs[0][runs[0].size() - 1].substr(0, 300)])
+	# 第四段：提示字、粒子、人物卡（非 headless）
+	J.mc(Sc, "start", ["office", ["afu", "eguiking", "toyol"], true, 5.0])
+	for st in 300: J.mc(Sc, "step", [1.0 / 30])
+	var res = []
 	for side in ["nat", "tr"]:
-		var keepM = {}
-		if side == "tr": for k in NS.ORIG: keepM[k] = Sc[k]; Sc[k] = NS.ORIG[k]
-		seed(99); J.mc(Sc, "start", ["office", ["afu", "eguiking", "toyol"], true, 777.0])
-		var out = []
-		for f in 5400:
-			J.mc(Sc, "step", [1.0 / 30])
-			if f % 60 == 0: out.append(_sc_state(Sc))
-			if not J.t(J.gp(Sc, "active")): break
-		out.append(_sc_state(Sc)); runs.append(out)
-		if side == "tr": for k in keepM: Sc[k] = keepM[k]
-	_sc_cmp("night len", str(runs[0].size()), str(runs[1].size()))
-	for i in mini(runs[0].size(), runs[1].size()): _sc_cmp("night f%d" % (i * 60), runs[0][i], runs[1][i])
+		var FN = NS.NAT if side == "nat" else NS.ORIG
+		J.sp(Sc, "headless", false); J.sp(Sc, "fq", []); J.sp(Sc, "floats", []); J.sp(Sc, "parts", []); seed(7)
+		var o = []
+		for i in 6: J.cl(FN["float"], Sc, [0.1, 0.2, "f%d" % i, "#fff", 0.5 + i * 0.3]); J.cl(FN["floatTick"], Sc, [0.4])
+		J.cl(FN["toast"], Sc, ["hi"]); J.cl(FN["floatOld"], Sc, [0.3, 0.4, "old", "#000", null])
+		for i in 20: J.cl(FN["floatTick"], Sc, [0.25]); o.append(J.to_json([J.gp(Sc, "fq"), J.gp(Sc, "floats")]))
+		var ns = J.iter(J.gp(Sc, "npcs"))
+		for n in ns:
+			o.append(J.str(J.cl(FN["profile"], Sc, [n]))); J.sp(n, "fleeT", null); J.cl(FN["dust"], Sc, [n])
+		for k in ["printer", "ac", "water", "lamp"]:
+			J.cl(FN["propParts"], Sc, [k, J.gp(J.G.SCARE_PROPS, k), null]); J.cl(FN["propParts"], Sc, [k, J.gp(J.G.SCARE_PROPS, k), ns[0]])
+		o.append(J.to_json(J.gp(Sc, "parts")))
+		J.sp(Sc, "headless", true); res.append(o)
+	for i in res[0].size(): _sc_cmp("ui%d" % i, res[0][i], res[1][i])
+	# 第五段：動畫狀態
+	var keepT = J.G.get("TOWN"); var keepO = J.G.get("OFFICE")
+	var ns2 = J.iter(J.gp(Sc, "npcs"))
+	for idx in ns2.size():
+		var base = ns2[idx]
+		for fear in [0.0, 30.0, 60.0, 90.0]:
+			for rk in [null, "flinch", "startle", "weakjump", "burst", "rational", "numb", "sip", "catch", "chill"]:
+				for rt in [-0.2, 0.05, 0.3, 0.6, 1.0, 1.2, 1.7, 2.0, 2.5]:
+					var outs = []
+					for side in ["nat", "tr"]:
+						var FN = NS.NAT if side == "nat" else NS.ORIG
+						var n = base.duplicate(); n["fear"] = fear; n["hab"] = {"light": 1.6} if fear == 30.0 else {}
+						n["rx"] = {"k": rk, "t": rt, "dur": 2.6 if rk == "burst" else 1.0, "src": 1.5, "big": fear > 50} if rk != null else null
+						n["at"] = rt * 3; n["shaken"] = 1.0 if fear >= 60 else 0.0
+						if fear == 90.0 and rt > 1: n["fleeing"] = true; n["fleeT"] = J.num(J.gp(Sc, "t")) - rt; n["fleeHold"] = 0.9; n["trail"] = [[J.num(J.gp(Sc, "t")) - 2, 1.0, 0.7], [J.num(J.gp(Sc, "t")) - 1, 1.2, 0.75], [J.num(J.gp(Sc, "t")), 1.5, 0.8]]
+						J.sp(Sc, "headless", false); J.sp(Sc, "parts", []); seed(int(fear * 10 + rt * 100) + idx)
+						var o = [J.to_json(J.cl(FN["npcPose"], Sc, [n])), J.to_json(J.cl(FN["visPos"], Sc, [n])), J.to_json(J.cl(FN["rigOK"], Sc, [J.gp(J.gp(n, "d"), "spr")]))]
+						J.G["TOWN"] = null; J.G["OFFICE"] = null
+						J.cl(FN["animNpc"], Sc, [n, 0.1]); J.cl(FN["react"], Sc, [n, "flinch" if rt < 1 else "burst", {"delay": 0.1, "src": 2.0}]); J.cl(FN["animNpc"], Sc, [n, 0.2])
+						if J.t(n.get("rx")): J.cl(FN["onReact"], Sc, [n])
+						J.G["TOWN"] = keepT; J.G["OFFICE"] = keepO
+						var st = {}
+						for kk in ["rx", "at", "lv", "markPop", "goose", "hair", "shock", "scream", "barHit", "trail"]: st[kk] = n.get(kk)
+						o.append(J.to_json(st)); o.append(J.to_json(J.gp(Sc, "parts")))
+						J.sp(Sc, "headless", true); outs.append("|".join(o))
+					_sc_cmp("anim %d %s %s %s" % [idx, fear, rk, rt], outs[0], outs[1])
 	J.sp(Sc, "active", false)
 	_report()
+
+# 第六段：畫面（夜班一晚：headless 跑規則，每 45 格用原生／轉譯各畫一次比錄落嘅指令）
+const SC_DRAW_KEYS := ["_bubR", "_tagR", "_bubLast", "_nTag", "_edge", "_bubOK"]
+func _sd_snap(Sc) -> Array:
+	var s = {}
+	for k in SC_DRAW_KEYS: s[k] = J.gp(Sc, k)
+	s["parts"] = J.iter(J.gp(Sc, "parts")).duplicate(true)
+	var ns = []
+	for n in J.iter(J.gp(Sc, "npcs")): ns.append([n.get("vX"), n.get("vY"), n.get("spd")])
+	return [s, ns]
+func _sd_restore(Sc, sn: Array) -> void:
+	for k in sn[0]:
+		var v = sn[0][k]
+		J.sp(Sc, k, v.duplicate(true) if v is Array else v)
+	var ns = J.iter(J.gp(Sc, "npcs"))
+	for i in mini(ns.size(), sn[1].size()): ns[i]["vX"] = sn[1][i][0]; ns[i]["vY"] = sn[1][i][1]; ns[i]["spd"] = sn[1][i][2]
+func l4_scare_draw(_t) -> void:
+	mod = "scare_draw"
+	var NS = load("res://native/scare.gd"); var Sc = J.G.Scare
+	for cfg in [[false, 21.0], [true, 21.0], [false, 909.0]]:
+		J.mc(Sc, "start", ["office", ["afu", "eguiking", "toyol", "pontianak", "tianhua", "penanggal", "laojiang"], true, cfg[1]])
+		J.sp(Sc, "team", ["afu", "eguiking", "toyol", "pontianak", "tianhua", "penanggal", "laojiang"])
+		for k in J.iter(J.gp(Sc, "team")): J.sp(J.gp(Sc, "cd"), k, 0.0)
+		J.sp(Sc, "W", 450.0); J.sp(Sc, "H", 780.0); J.sp(Sc, "dpr", 1.0); J.sp(Sc, "camX", 0.0)
+		J.sp(Sc, "headless", false); J.cl(J.gp(J.G.OFFMAP, "init"), J.G.OFFMAP, [Sc]); J.mc(J.G.OFFICE, "init", [Sc]); J.sp(Sc, "headless", true)
+		var ns = J.iter(J.gp(Sc, "npcs")); var dt = 1.0 / 30
+		var ghosts = ["afu", "eguiking", "toyol", "pontianak", "tianhua", "penanggal", "laojiang"]
+		for f in 4800:
+			if f % 70 == 20:
+				J.sp(Sc, "mana", 100.0); var who = ns[(f / 70) % ns.size()]; J.sp(Sc, "sel", who)
+				var gk = ghosts[(f / 70) % ghosts.size()]; J.sp(J.gp(Sc, "cd"), gk, 0.0)
+				if f % 140 == 20: J.mc(Sc, "useGhost", [gk, who])
+				else: J.mc(Sc, "useBreath" if f % 280 == 90 else "usePhone", [who])
+			if f == 1500: J.mc(Sc, "expose", [80.0, ns[1]])
+			if f % 400 == 200: J.sp(ns[(f / 400) % ns.size()], "fear", 70.0)
+			J.mc(Sc, "step", [dt])
+			if not J.t(J.gp(Sc, "active")): break
+			if f % 45 == 0:
+				J.sp(Sc, "camX", fmod(f * 0.003, 9.0)); J.sp(Sc, "_nat", cfg[0])
+				var recs = []; var sn = _sd_snap(Sc)
+				for side in ["nat", "tr"]:
+					var FN = NS.NAT if side == "nat" else NS.ORIG; var keep = {}
+					for k in NS.ORIG: keep[k] = Sc[k]; Sc[k] = FN[k]
+					_sd_restore(Sc, sn); seed(f + 5)
+					var cc = new_ctx(); J.sp(Sc, "_natCtx", cc[1]); J.sp(Sc, "headless", false)
+					J.cl(Sc["draw"], Sc, [f * dt])
+					J.sp(Sc, "headless", true); J.sp(Sc, "_natCtx", null)
+					var st = {}
+					for k in ["_bubR", "_tagR", "_bubLast", "_nTag"]: st[k] = J.gp(Sc, k)
+					st["edge"] = J.gp(Sc, "_edge") != null; st["parts"] = J.iter(J.gp(Sc, "parts")).size()
+					var vv = []
+					for n in ns: vv.append([n.get("vX"), n.get("vY"), n.get("spd")])
+					recs.append("st=%s v=%s rec=%s" % [J.to_json(st), J.to_json(vv), ser_rec(cc[0].js_rec())])
+					for k in keep: Sc[k] = keep[k]
+				_sc_cmp("draw nat=%s f%d" % [cfg[0], f], recs[0], recs[1])
+		print("[xcheck] scare_draw cfg=%s t=%s ok=%d bad=%d reclen=%d" % [cfg, J.gp(Sc, "t"), ok, bad, 0])
+	J.sp(Sc, "active", false); J.sp(Sc, "_nat", false)
+	_report()
+func l4_fast(_t) -> void:
+	J.sp(J.G.Scare, "timeScale", 6.0); print("[xcheck] fast natives=", JSRun.native_used.has("scare"))

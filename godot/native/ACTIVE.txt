@@ -52,3 +52,4 @@ game
 station_foes
 station
 patrol
+scare
