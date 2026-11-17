@@ -1947,6 +1947,77 @@ static func tf_loreStrike(Tf, B) -> void:
 	var tr = L.tr; tf_addTrace(Tf, tr.k, trAt[0], trAt[1], tr.r, tr.life, {"by": k})
 const TF_4G := {"bpos": 1, "bossTick": 1, "bstep": 2, "bossSkill": 3, "loreOmen": 1, "loreStrike": 1}
 
+# 4h：障礙物、伏擊、入場、驚嚇盒、牆位、打唔過提示判定
+static func tf_obsTick(Tf, dt) -> void:
+	dt = J.num(dt); var PX = J.num(D.PX)
+	for o in J.iter(_or(J.gp(J.gp(Tf, "lay"), "obs"), [])):
+		var ot = J.str(J.gp(o, "t"))
+		if ot == "e":
+			o["sp"] = (Rr(2, 5) if J.gp(o, "sp") == null else J.num(o.sp)) - dt
+			if J.num(J.gp(o, "spark")) > 0: o["spark"] = J.num(o.spark) - dt
+			if J.num(o.sp) <= 0:
+				o["sp"] = Rr(3.5, 6); o["spark"] = 0.4; var c = [(J.num(o.x0) + J.num(o.x1)) / 2, (J.num(o.y0) + J.num(o.y1)) / 2]; var hs = []
+				for w in J.iter(J.gp(Tf, "walkers")):
+					if tf_alive(Tf, w) and tf_dist(tf_wp(Tf, w), c) < 95 * PX: hs.append(w)
+				for w in hs:
+					w["fear"] = 1.0; w["back"] = J.num(D.CELL) * 0.7; tf_hit(Tf, w, J.num(w.max) * 0.03, {"force": true, "aura": 1.0})
+					w["say"] = {"s": _pk([["嘩！電線爆火花！", "哇！電線冒火花！"], ["好危險，行返轉頭！", "好危險，往回走！"]]), "t": 1.2}
+		elif ot == "p":
+			var c = [(J.num(o.x0) + J.num(o.x1)) / 2, (J.num(o.y0) + J.num(o.y1)) / 2]; var rr = maxf(J.num(o.x1) - J.num(o.x0), (J.num(o.y1) - J.num(o.y0)) * 1.5) * 0.6
+			if not J.t(J.gp(o, "seen")): o["seen"] = J.new_("Set", [])
+			for w in J.iter(J.gp(Tf, "walkers")):
+				if not tf_alive(Tf, w) or tf_dist(tf_wp(Tf, w), c) > rr: continue
+				w["slowM"] = minf(J.num(w.slowM) if J.num(J.gp(w, "slowT")) > 0 else 1.0, 0.7); w["slowT"] = 0.3
+				if not J.t(J.mc(o.seen, "has", [w])):
+					J.mc(o.seen, "add", [w])
+					if randf() < (0.5 if J.num(J.gp(w, "fear")) > 0 else 0.12): tf_act(Tf, w, "cower", 1.2, {"rot": 1.1}); w["say"] = {"s": T("哎呀，跣親！", "哎呀，滑倒了！"), "t": 1.0}
+static func tf_ambush(Tf, i):
+	var L2 = J.gp(Tf, "lay")
+	if not J.t(J.gp(L2, "_amb")): J.sp(L2, "_amb", {})
+	var key = J.str(i) + ":" + J.str(J.gp(L2, "nv")); var cv = J.gp(L2._amb, key)
+	if cv != null: return cv
+	var s = J.gp(J.gp(L2, "posts"), J.num(i)); var q = tf_rect(Tf, s); var hold = J.mc(Tf, "fgHold", [s]); var occ = false
+	for F in J.iter(J.mc(Tf, "fgList", [])):
+		if is_same(F, hold) or not J.t(J.gp(F, "hide")): continue
+		if J.num(F.x1) > J.num(q[0]) + 0.01 and J.num(F.x0) < J.num(q[2]) - 0.01 and J.num(F.y1) > J.num(q[3]) and J.num(F.y1) - J.num(q[3]) < 0.14 and J.num(F.y0) < J.num(q[3]) + 0.06: occ = true; break
+	J.sp(L2._amb, key, occ); return occ
+static func tf_enter(Tf, _manual) -> void:
+	if not tf_release(Tf, true): _toast(T("下一組生人仲未到", "下一組生人還沒到") if J.seq(J.gp(J.gp(Tf, "q"), "st"), "gap") else T("將至嗰組未到齊", "將至那組還沒到齊"))
+static func tf_useBox(Tf) -> void:
+	var s = st(); var bx = J.gp(s, "box")
+	if (1.0 if bx == null else J.num(bx)) < 1:
+		var m = ceilf((20 * 60000 - (now_ms() - J.num(J.gp(s, "boxAt")))) / 60000.0); _toast(T("驚嚇盒用咗，" + J.str(m) + " 分鐘後回復", "驚嚇盒已用，" + J.str(m) + " 分鐘後回復")); return
+	var C = J.gp(Tf, "cam"); var vis = []
+	for w in J.iter(J.gp(Tf, "walkers")):
+		if not tf_alive(Tf, w): continue
+		var xy = tf_wp(Tf, w)
+		if absf(J.num(xy[0]) - J.num(C.x)) <= 0.5 / J.num(C.z) and absf(J.num(xy[1]) - J.num(C.y)) <= 0.5 / J.num(C.z): vis.append(w)
+	J.sp(s, "box", 0.0); J.sp(s, "boxAt", now_ms()); J.sp(Tf, "flash", 0.18); J.sp(Tf, "shake", 0.5)
+	for w in vis: tf_hit(Tf, w, w.max, {"force": true})
+	var ns = J.str(vis.size()); _toast(T("驚嚇盒！畫面入面 " + ns + " 個人全部嚇走", "驚嚇盒！畫面裡 " + ns + " 個人全部嚇跑")); save_()
+static func tf_wallFar(Tf, spot) -> bool:
+	var L = J.gp(Tf, "lay"); var chk = (300.0 if J.num(J.gp(spot, "s")) == 2 else 250.0) * J.num(D.PX); var NS = J.gp(L, "nodes"); var E = J.gp(L, "edges")
+	for a in J.keys(E):
+		for z in J.iter(J.gp(E, a)):
+			var A = J.gp(NS, a); var B = J.gp(NS, z)
+			if not J.t(A) or not J.t(B): continue
+			for i in 11:
+				var p = [J.num(A[0]) + (J.num(B[0]) - J.num(A[0])) * i / 10.0, J.num(A[1]) + (J.num(B[1]) - J.num(A[1])) * i / 10.0]
+				if tf_rdist(Tf, p, spot) <= chk and tf_los(Tf, [spot.x, spot.y], p): return false
+	return true
+static func tf_gpCheck(Tf, oc) -> void:
+	var nw = _pnow()
+	if not J.t(J.gp(Tf, "_gpT")): J.sp(Tf, "_gpT", {})
+	if oc != null and J.num(oc) < J.num(D.OCC_LINE) and J.len(_or(J.gp(J.gp(Tf, "sd"), "occH"), [])) >= J.num(D.OCC_MIN):
+		var pc = J.str(J.round(J.num(oc) * 100)); J.mc(Tf, "gpWarn", ["occ", T("佔領度得 " + pc + "%，跌咗落 50% 以下", "佔領度只有 " + pc + "%，跌到 50% 以下"), nw])
+	var bs = J.iter(_or(J.gp(Tf, "bosses"), []))
+	if bs.size():
+		var all = true
+		for B in bs:
+			if not (J.num(J.gp(B, "sealed")) > 0): all = false; break
+		if all: J.mc(Tf, "gpWarn", ["seal", T("有名鬼全部俾道士封咗", "有名鬼全部被道士封印"), nw])
+const TF_4H := {"obsTick": 1, "ambush": 1, "enter": 1, "useBox": 0, "wallFar": 1, "gpCheck": 1}
+
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -1976,5 +2047,5 @@ func run(_env) -> void:
 	load_data()
 	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G)
+	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)

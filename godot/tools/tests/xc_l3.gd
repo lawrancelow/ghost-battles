@@ -481,6 +481,7 @@ func street_t4d(_t) -> void: _t4tick("street_t4d", ["TF_4B", "TF_4C", "TF_4D"])
 func street_t4e(_t) -> void: _t4tick("street_t4e", ["TF_4B", "TF_4C", "TF_4D", "TF_4E"])
 func street_t4f(_t) -> void: _t4tick("street_t4f", ["TF_4B", "TF_4C", "TF_4D", "TF_4E", "TF_4F"])
 func street_t4g(_t) -> void: _t4tick("street_t4g", ["TF_4B", "TF_4C", "TF_4D", "TF_4E", "TF_4F", "TF_4G"])
+func street_t4h(_t) -> void: _t4tick("street_t4h", ["TF_4B", "TF_4C", "TF_4D", "TF_4E", "TF_4F", "TF_4G", "TF_4H"])
 func _t4tick(mn: String, gn: Array) -> void:
 	mod = mn
 	var N = load("res://native/street.gd"); N.load_data()
@@ -488,7 +489,7 @@ func _t4tick(mn: String, gn: Array) -> void:
 	for sid in ["office", "bus", "flat"]:
 		var pr = _tf_pair(trT, N, sid, 3.0); var A = pr[0]; var B = pr[1]; var tg = sid
 		for gk in gn:
-			var grp = {"TF_4B": N.TF_4B, "TF_4C": N.TF_4C, "TF_4D": N.TF_4D, "TF_4E": N.TF_4E, "TF_4F": N.TF_4F, "TF_4G": N.TF_4G}[gk]
+			var grp = {"TF_4B": N.TF_4B, "TF_4C": N.TF_4C, "TF_4D": N.TF_4D, "TF_4E": N.TF_4E, "TF_4F": N.TF_4F, "TF_4G": N.TF_4G, "TF_4H": N.TF_4H}[gk]
 			for k in grp: B[k] = N.turf_methods(grp)[k]
 		var def = null
 		for d in N.D.SITES:
