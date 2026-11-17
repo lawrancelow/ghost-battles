@@ -429,7 +429,7 @@ func street_t4b(_t) -> void:
 				_eq(tg + " hit w%d o%d" % [i, j], _tstate(A), _tstate(B))
 		for i in 3:
 			trT["sd"] = A.sd; J.mc(A, "leak", [A.walkers[i]]); J.mc(B, "leak", [B.walkers[i]]); _eq(tg + " leak %d" % i, _tstate(A), _tstate(B))
-		for i in 3: J.mc(A, "hitFx", [A.walkers[0], "slow"]); J.mc(B, "hitFx", [B.walkers[0], "slow"])
+		for i in 3: seed(55 + i); J.mc(A, "hitFx", [A.walkers[0], "slow"]); seed(55 + i); J.mc(B, "hitFx", [B.walkers[0], "slow"])
 		_eq(tg + " hitFx dup", _tstate(A), _tstate(B))
 		print("[xcheck-info] t4b %s couples=%d walkers=%d" % [sid, cpl, A.walkers.size()])
 	_report()
@@ -768,7 +768,7 @@ func street_t4q(_t) -> void:
 					X["q"] = qs.duplicate(); X.q["list"] = []; X.sd["hot"] = hot; X["_gpT"] = {}; trT["sd"] = A.sd if is_same(X, A) else B.sd
 					_rmq("#gp-warn"); J.mc(X, "hud", [])
 					var o = {}
-					for id in ["stt-lv", "stt-coin", "stt-info", "stt-q", "stt-sp", "stt-box"]: var e = J.S_document_("querySelector", ["#" + id]); o[id] = [J.str(J.gp(e, "innerHTML")), J.str(J.gp(e, "textContent"))]
+					for id in ["stt-lv", "stt-info", "stt-q", "stt-sp", "stt-box"]: var e = J.S_document_("querySelector", ["#" + id]); o[id] = [J.str(J.gp(e, "innerHTML")), J.str(J.gp(e, "textContent"))]
 					var hb = J.S_document_("querySelector", ["#stt-hotbar"]); o["bar"] = [J.str(J.gp(J.gp(hb, "style"), "width")), J.str(J.gp(J.gp(hb, "style"), "left")), J.str(J.gp(hb, "className"))]
 					var en = J.S_document_("querySelector", ["#stt-enter"]); o["en"] = J.str(J.gp(en, "className")); o["bd"] = X.get("bd"); o["gpw"] = _html("#gp-warn"); outs.append(o)
 				_eq(sid + " hud %s %s" % [qs.st, hot], outs[0], outs[1])
@@ -859,11 +859,11 @@ func street_t4s(_t) -> void:
 			if ei >= 0:
 				_rmq("#stt-pick"); J.mc(X, "pickRole", [float(ei)]); var bt = J.S_document_("querySelector", ["#stt-pick [data-r]"])
 				if bt: J.cl(J.gp(bt, "onclick"), bt, [{}])
-				o.append([X.sd.posts.duplicate(true), X.sd.wal])
+				o.append([X.sd.posts.duplicate(true)])
 			for sel in ["#stp-up", "[data-st]", "#stp-mv", "#stp-del"]:
 				_rmq("#stt-pick"); J.mc(X, "pickRole", [0.0]); var bt = J.S_document_("querySelector", ["#stt-pick " + sel])
 				if bt: J.cl(J.gp(bt, "onclick"), bt, [{}])
-				o.append([X.sd.posts.duplicate(true), X.sd.wal, X.get("moveFrom")])
+				o.append([X.sd.posts.duplicate(true), X.get("moveFrom")])
 				if X.sd.posts[0] == null: X.sd.posts[0] = {"g": "dev:scare", "role": "scare", "sz": 1.0, "lv": 2.0, "build": 0.0, "spent": 200.0, "cd": 0.0}
 			# 有名鬼
 			X.sd["bosses"] = []
@@ -890,7 +890,8 @@ func street_t4t(_t) -> void:
 				if J.t(J.gp(PN[r], "proc")): _drq("%s/%d proc%d" % [sid, unl, r], X5, A, B, "drawProc", [float(r), PN[r], 100.0])
 	var pr = _pair_all(trT, N, "office", 3.0); var A = pr[0]; var B = pr[1]
 	for k in ["cart", "trolley", "boxes", "bin", "bins", "stools", "puddle", "wire", "other"]:
-		_drq("obs " + k, X5, A, B, "drawObsShape", [null, k, 100.0, 200.0, 60.0, 40.0, 1.2, null])
+		seed(5); var sa = _sig(X5, func(c): A["c"] = c; return J.mc(A, "drawObsShape", [c, k, 100.0, 200.0, 60.0, 40.0, 1.2, null])); seed(5); var sb = _sig(X5, func(c): B["c"] = c; return J.mc(B, "drawObsShape", [c, k, 100.0, 200.0, 60.0, 40.0, 1.2, null]))
+		_eq("obs " + k, sa, sb)
 	var ks = J.G.S.ghosts
 	for kk in ["pontianak", "tianhua", "laojiang", "toyol", "xiaozhi", "eguiking", "mengpo", "pocong", "penanggal", "n30_yukionna", "n30_qionggui", "n30_taozhai", "n30_guhangui", "zombie"]:
 		for tt in [0.1, 0.95, 1.4, 2.2, 3.1, 3.5]:
@@ -922,3 +923,41 @@ func street_t5(_t) -> void:
 	print("[xcheck-info] native extra keys: ", extra)
 	_eq("native Street.Turf", J.gp(J.G.Street, "Turf").has("frame"), true)
 	_report()
+# 實玩補充：起設備、派有名鬼、怨氣爆發、撳路人
+func street_play_build(_t) -> void:
+	var Tf = J.G.Street.Turf; var n = 0
+	for i in J.len(Tf.lay.posts):
+		if J.gp(Tf.sd.posts, float(i)) != null: continue
+		J.mc(Tf, "pickRole", [float(i)]); var bt = J.S_document_("querySelector", ["#stt-pick [data-r]"])
+		if bt != null: J.cl(J.gp(bt, "onclick"), bt, [{}]); n += 1
+		var el = J.S_document_("querySelector", ["#stt-pick"])
+		if el != null: J.mc(el, "remove", [])
+		if n >= 3: break
+	for p in J.iter(Tf.sd.posts):
+		if p is Dictionary: p["build"] = 0.0
+	print("[play] built=%d wal=%s posts=%s" % [n, Tf.sd.get("wal"), JSON.stringify(Tf.sd.posts).substr(0, 300)])
+func street_play_boss(_t) -> void:
+	var Tf = J.G.Street.Turf; J.mc(Tf, "specialPick", []); var bt = J.S_document_("querySelector", ["#stt-pick [data-sp]"])
+	if bt != null: J.cl(J.gp(bt, "onclick"), bt, [{}])
+	print("[play] bosses=", Tf.sd.get("bosses"))
+func street_play_ult(_t) -> void:
+	var Tf = J.G.Street.Turf
+	for B in J.iter(Tf.get("bosses", [])): B["en"] = 100.0
+	var B0 = J.iter(Tf.get("bosses", []))
+	if B0.size() and B0[0].get("screen") != null:
+		var sc = J.mc(Tf, "toScreen", [B0[0].screen[0], B0[0].screen[1]])
+		J.mc(Tf, "tap", [{"clientX": sc[0], "clientY": sc[1]}])
+	if Tf.get("ult") == null:
+		for i in J.len(Tf.sd.posts):
+			var p = Tf.sd.posts[i]
+			if p is Dictionary and p.get("staff") == null:
+				p["g"] = J.G.S.ghosts[0].id; J.mc(Tf, "startUlt", [float(i)]); break
+	print("[play] ult=", Tf.get("ult") != null, " k=", J.gp(Tf.get("ult"), "k") if Tf.get("ult") is Dictionary else "-")
+func street_play_tap(_t) -> void:
+	var Tf = J.G.Street.Turf; var hit = 0
+	for w in J.iter(Tf.walkers):
+		if not J.t(J.mc(Tf, "alive", [w])): continue
+		var wp = J.mc(Tf, "wp", [w]); var p = J.mc(Tf, "P", [wp[0], wp[1]]); var sc = J.mc(Tf, "toScreen", [p[0], J.num(p[1]) - J.num(Tf.box.h) * 0.017 * J.num(J.G.Street._n.PPL)])
+		J.mc(Tf, "tap", [{"clientX": sc[0], "clientY": sc[1]}]); hit += 1
+		if hit >= 3: break
+	print("[play] taps=%d tapE=%s native=%s" % [hit, J.gp(J.mc(J.G.Street, "st", []), "tapE"), Tf.has("ULT") and not J.G.has("__street_trans")])

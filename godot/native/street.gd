@@ -2260,12 +2260,12 @@ static func tf_drawTraces(Tf) -> void:
 		elif kd == "ring":
 			c.strokeStyle = "rgba(140,255,120," + _a(0.5 + 0.3 * sin(t * 8)) + ")"
 			c.lineWidth = 3
-			c.shadowColor = "#7f6"
-			c.shadowBlur = 10
+			J.sp(c, "shadowColor", "#7f6")
+			J.sp(c, "shadowBlur", 10)
 			c.beginPath()
 			c.ellipse(x, y, R0, R0 / 1.5, 0, 0, 7)
 			c.stroke()
-			c.shadowBlur = 0
+			J.sp(c, "shadowBlur", 0)
 		elif kd == "soup":
 			c.fillStyle = "rgba(200,140,60,0.35)"; c.beginPath(); c.ellipse(x, y, R0 * 0.6, R0 * 0.35, 0, 0, 7); c.fill()
 			for j in 4:
@@ -2381,7 +2381,7 @@ static func tf_drawProp(Tf, o) -> void:
 	if _nw(im) <= 0:
 		J.mc(Tf, "drawObsShape", [c, o.k, x0, y0, w, h, U, J.gp(J.G.get("Math"), "random")])
 		return
-	var dw = w * 1.25; var dh = dw * J.num(J.gp(im, "naturalHeight")) / J.num(im.naturalWidth); var flat = J.seq(J.gp(o, "t"), "p") or J.seq(J.gp(o, "t"), "e")
+	var dw = w * 1.25; var dh = dw * J.num(J.gp(im, "naturalHeight")) / J.num(J.gp(im, "naturalWidth")); var flat = J.seq(J.gp(o, "t"), "p") or J.seq(J.gp(o, "t"), "e")
 	if not flat:
 		c.fillStyle = "rgba(0,0,0,0.35)"
 		c.beginPath()
@@ -2459,7 +2459,7 @@ static func _pbfoe(spr) -> bool:
 	return s.begins_with("pb_") or s.begins_with("foe_")
 static func tf_drawSprite(Tf, im, w, H, pose, t, flip, react, U) -> void:
 	var c = J.gp(Tf, "c"); H = J.num(H); t = J.num(t); U = J.num(U); react = J.num(react); flip = J.t(flip); pose = J.str(pose)
-	var iw = J.num(im.naturalWidth); var ih = J.num(J.gp(im, "naturalHeight")); var ww = H * iw / ih; var sdv = J.num(J.gp(w, "seed")); var ph = t * (J.num(w.spd) / J.num(D.PX) / 45) + sdv
+	var iw = J.num(J.gp(im, "naturalWidth")); var ih = J.num(J.gp(im, "naturalHeight")); var ww = H * iw / ih; var sdv = J.num(J.gp(w, "seed")); var ph = t * (J.num(w.spd) / J.num(D.PX) / 45) + sdv
 	var dy = 0.0; var rot = 0.0; var sx = 1.0; var sy = 1.0; var dx = 0.0
 	if pose == "move": dy = -absf(sin(ph * 3.2)) * 3.2 * U; rot = sin(ph * 3.2) * 0.045; sy = 1 - absf(sin(ph * 3.2)) * 0.02
 	elif pose == "run": dy = -absf(sin(ph * 5.5)) * 5 * U; rot = 0.16 + sin(ph * 5.5) * 0.06
@@ -2867,10 +2867,10 @@ static func _drawPost(Tf, X, s, i) -> void:
 	if J.num(J.gp(p, "build")) > 0: return
 	var dim = _spr("dv_" + J.str(p.role) + "_" + J.str(_or(J.gp(p, "sz"), 1.0))) if J.t(J.gp(p, "role")) else null; var dimOk = _nw(dim) > 0
 	if dimOk:
-		var q = tf_rect(Tf, s); var dw = (J.num(q[2]) - J.num(q[0])) * J.num(b.w) * 1.25; var dh = dw * J.num(J.gp(dim, "naturalHeight")) / J.num(dim.naturalWidth); var by = J.num(b.y) + J.num(q[3]) * J.num(b.h) + 4 * U
+		var q = tf_rect(Tf, s); var dw = (J.num(q[2]) - J.num(q[0])) * J.num(b.w) * 1.25; var dh = dw * J.num(J.gp(dim, "naturalHeight")) / J.num(J.gp(dim, "naturalWidth")); var by = J.num(b.y) + J.num(q[3]) * J.num(b.h) + 4 * U
 		var sh = (1 + sin(t * 40) * 0.03) if (J.gp(p, "anim") != null or J.t(J.gp(p, "win"))) else 1.0
 		c.save(); c.translate(x, by); c.scale(sh, sh)
-		if J.gp(p, "staff") != null: c.shadowColor = "#ffd45a" if J.t(J.gp(J.mc(Tf, "staffMul", [p]), "named")) else "#9ef0b0"; c.shadowBlur = 14
+		if J.gp(p, "staff") != null: J.sp(c, "shadowColor", "#ffd45a" if J.t(J.gp(J.mc(Tf, "staffMul", [p]), "named")) else "#9ef0b0"); J.sp(c, "shadowBlur", 14)
 		var kst = tf_devK(Tf, p) if (J.gp(p, "staff") != null and J.t(ghost(p.staff))) else null
 		_fxDraw(c, dim, p.role, _or(J.gp(p, "sz"), 1.0), -dw / 2, -dh, dw, dh, t, i, {"p": fx_emerge(p, t), "k": kst, "sc": base * 0.95}); c.restore()
 	var ftp = _P(Tf, fx.tx, fx.ty) if J.t(fx) else null
@@ -2906,7 +2906,7 @@ static func _drawPost(Tf, X, s, i) -> void:
 		var th = _spr("tianhua_hang")
 		if dimOk: pass
 		elif J.seq(g.k, "tianhua") and _nw(th) > 0:
-			var H2 = hh * 2.2; var W2 = H2 * J.num(th.naturalWidth) / J.num(J.gp(th, "naturalHeight")); var drop = sin(minf(1.0, k * 2.5) * PI / 2) * (1 - maxf(0.0, k - 0.8) * 5)
+			var H2 = hh * 2.2; var W2 = H2 * J.num(J.gp(th, "naturalWidth")) / J.num(J.gp(th, "naturalHeight")); var drop = sin(minf(1.0, k * 2.5) * PI / 2) * (1 - maxf(0.0, k - 0.8) * 5)
 			c.save(); c.globalAlpha = maxf(0.0, al); c.translate(tx, y - H2 * 0.4 + drop * (ftp[1] - y + H2 * 0.15) - H2 * 0.6); c.rotate(sin(t * 7) * 0.08); c.drawImage(th, -W2 / 2, 0, W2, H2); c.restore()
 		else: _ghostDraw(c, g.k, gx, gy, sc, {"t": t, "pose": pose, "pt": pt, "atk": hit > 0.4, "alpha": maxf(0.0, al), "flip": flip, "rot": rot})
 		if ft == "sound": c.restore()
@@ -2948,7 +2948,7 @@ static func tf_drawDfx(Tf, U, hh, t) -> void:
 					var a2 = j * 1.05 + sd; var d2 = k / 0.3 * hh * 0.5; c.fillStyle = "rgba(120,110,105," + _a(1 - k / 0.3) + ")"; c.fillRect(x + cos(a2) * d2, y - absf(sin(a2)) * d2 * 0.8, 3 * U, 3 * U)
 			c.restore(); continue
 		if ek == "puzzle" and J.t(fx_vx("vfx_mist_ring")):
-			var im = fx_vx("vfx_mist_ring"); var fi = minf(1.0, k / 0.18); var br = 1 + sin(t * 2.4 + sd) * 0.06; var Dd = hh * 1.45 * br; var nh = J.num(J.gp(im, "naturalHeight")) / J.num(im.naturalWidth)
+			var im = fx_vx("vfx_mist_ring"); var fi = minf(1.0, k / 0.18); var br = 1 + sin(t * 2.4 + sd) * 0.06; var Dd = hh * 1.45 * br; var nh = J.num(J.gp(im, "naturalHeight")) / J.num(J.gp(im, "naturalWidth"))
 			c.globalAlpha = maxf(0.0, minf(fi, fa)) * 0.92; c.save(); c.translate(x, y - hh * 0.1); c.scale(1, 0.56); c.rotate(t * 0.7 + sd); c.drawImage(im, -Dd / 2, -Dd / 2 * nh, Dd, Dd * nh); c.restore()
 			c.globalAlpha = maxf(0.0, minf(fi, fa)) * 0.35; c.save(); c.translate(x, y - hh * 0.55); c.scale(1, 0.75); c.rotate(-t * 0.5 + sd); c.drawImage(im, -Dd * 0.4, -Dd * 0.4, Dd * 0.8, Dd * 0.8); c.restore()
 			c.globalAlpha = maxf(0.0, minf(fi, fa)); c.fillStyle = "#e4c8ff"; c.font = "900 " + _px(12 * U) + " sans-serif"; c.textAlign = "center"; c.lineWidth = 3; c.strokeStyle = "#1a0a2a"; var qx = x + sin(t * 6) * hh * 0.3; c.strokeText("？", qx, y - hh * 1.25); c.fillText("？", qx, y - hh * 1.25)
@@ -3075,7 +3075,7 @@ static func tf_drawLoreFx(Tf, B, x, y, hh):
 					c.beginPath(); c.moveTo(wx - 16 * U + j * 4 * U, byy); c.quadraticCurveTo(wx + sin(t * 5 + j) * 14 * U, (byy + wy + lf) / 2, wx - 6 * U + j * 1.5 * U, wy + lf - hh * 0.8); c.stroke()
 			var im = _spr("tianhua_hang")
 			if _nw(im) > 0:
-				var H2 = hh * 2.4; var W2 = H2 * J.num(im.naturalWidth) / J.num(J.gp(im, "naturalHeight")); var drop = sin(minf(1.0, q * 2.5) * PI / 2)
+				var H2 = hh * 2.4; var W2 = H2 * J.num(J.gp(im, "naturalWidth")) / J.num(J.gp(im, "naturalHeight")); var drop = sin(minf(1.0, q * 2.5) * PI / 2)
 				c.save(); c.translate(tx, byy - H2 + drop * (ty - hh * 1.9 - byy + H2 * 0.4)); c.rotate(sin(t * 6) * 0.06); c.drawImage(im, -W2 / 2, 0, W2, H2); c.restore(); o = {"gx": x, "gy": y, "alpha": 0.01}
 			else: o = {"gx": tx, "gy": ty - hh * 1.6, "rot": PI, "alpha": 0.95}
 		elif kk == "pontianak" and J.t(J.gp(sx, "a")):
@@ -3106,12 +3106,12 @@ static func tf_drawLoreFx(Tf, B, x, y, hh):
 			var ys = _P(Tf, 0, sx.y0)[1]; var e = q; o = {"gx": fx0 + (tx + 90 * U - fx0) * e, "gy": ys - absf(sin(e * PI * 4)) * 20 * U, "rot": e * 6.28}; c.fillStyle = "rgba(250,250,245,0.18)"; c.fillRect(minf(fx0, o.gx), ys - 30 * U, absf(o.gx - fx0), 36 * U)
 		elif kk == "penanggal" and J.t(J.gp(sx, "c")):
 			var cxy = _P(Tf, sx.c[0], sx.c[1]); var cx = cxy[0]; var cy = cxy[1]; var a0 = q * 6.283 * 1.2; var R1 = 120 * PX * bw
-			c.strokeStyle = "rgba(160,255,120,0.75)"; c.lineWidth = 3; c.shadowColor = "#8f6"; c.shadowBlur = 12; c.beginPath()
+			c.strokeStyle = "rgba(160,255,120,0.75)"; c.lineWidth = 3; J.sp(c, "shadowColor", "#8f6"); J.sp(c, "shadowBlur", 12); c.beginPath()
 			for j in 31:
 				var aa = a0 * j / 30.0
 				if j: c.lineTo(cx + cos(aa) * R1, cy - 30 * U + sin(aa) * R1 / 1.5)
 				else: c.moveTo(cx + R1, cy - 30 * U)
-			c.stroke(); c.shadowBlur = 0; o = {"gx": cx + cos(a0) * R1, "gy": cy - 30 * U + sin(a0) * R1 / 1.5 + hh * 0.5, "rot": a0}
+			c.stroke(); J.sp(c, "shadowBlur", 0); o = {"gx": cx + cos(a0) * R1, "gy": cy - 30 * U + sin(a0) * R1 / 1.5 + hh * 0.5, "rot": a0}
 		elif kk == "mengpo":
 			for w in SL:
 				var wxy = _wpP(Tf, w); var wx = wxy[0]; var wy = wxy[1]; c.fillStyle = "#7a4a2a"; c.beginPath(); c.ellipse(wx + 10 * U, wy - hh * 0.55, 8 * U, 3.5 * U, 0, 0, 7); c.fill(); c.fillStyle = "rgba(255,220,150,0.9)"; c.font = "bold " + _px(10 * U) + " serif"; c.textAlign = "center"; c.fillText("？", wx + sin(t * 6) * 8 * U, wy - hh * 1.3)
