@@ -362,3 +362,52 @@ func street_t4a(_t) -> void:
 			var pts = [{"p": [0.0, 0.5], "k": "0E"}, {"p": [0.2, 0.5], "k": "0a"}, {"p": [0.2, 0.5], "k": "0b"}, {"p": [0.4, 0.6], "k": "0~in", "hide": true}, {"p": [1.0, 0.6], "k": "OUT"}]
 			var wa2 = {"t": 0.0, "j": 0.01}; var wb2 = {"t": 0.0, "j": 0.01}; J.mc(A, "mkRoute", [wa2, pts]); J.mc(B, "mkRoute", [wb2, pts]); _eq(tg + " mkRoute pts", wa2, wb2)
 	_report()
+
+# ---- L3：street 4b（路人生成／命中／嚇走／漏人）----
+static func _wst(w):
+	if not (w is Dictionary): return w
+	var o = w.duplicate(); o.erase("mate")
+	if w.get("mate") is Dictionary: var m = w.mate.duplicate(); m.erase("mate"); o["mate_"] = m
+	return o
+static func _tstate(X) -> Dictionary:
+	var df = []
+	for e in J.iter(X.get("dfx", [])): df.append([e.k, e.t, e.dur, e.seed, J.gp(e.w, "n")])
+	var ws = []
+	for w in J.iter(X.walkers): ws.append(_wst(w))
+	return {"sd": X.sd, "fx": X.fx, "parts": X.parts, "dfx": df, "ws": ws, "rate": X.get("rateAcc")}
+func street_t4b(_t) -> void:
+	mod = "street_t4b"
+	var N = load("res://native/street.gd"); N.load_data()
+	var tr = _st_trans().Street; var trT = J.gp(tr, "Turf")
+	for sid in ["office", "bus", "flat"]:
+		var pr = _tf_pair(trT, N, sid, 3.0); var A = pr[0]; var B = pr[1]; var tg = sid
+		for k in N.TF_4B: B[k] = N.turf_methods(N.TF_4B)[k]
+		var def = null
+		for d in N.D.SITES:
+			if J.str(d.id) == sid: def = d
+		for X in [A, B]:
+			X["def"] = def; X["walkers"] = []; X["fx"] = []; X["parts"] = []; X["dfx"] = []; X["rateAcc"] = 0.0; X.sd["wal"] = 600.0; X.sd["scared"] = 0.0; X.sd["leaked"] = 0.0; X.sd["coins"] = 0.0; X.sd["hot"] = 0.0; X.sd["jar"] = 38.0
+			J.mc(X, "buildPath", [])
+		trT["sd"] = A.sd
+		var cpl = 0
+		for r in 40:
+			seed(500 + r); var wa = J.mc(A, "newWalker", [null]); seed(500 + r); var wb = J.mc(B, "newWalker", [null])
+			_eq(tg + " newWalker %d" % r, _wst(wa), _wst(wb))
+			if J.str(wa.get("tr")) == "couple": cpl += 1
+			if r < 12: wa.t = 0.05 + r * 0.04; wb.t = wa.t; A.walkers.append(wa); B.walkers.append(wb)
+		for e in N.D.ELITE.slice(0, 4):
+			seed(77); var wa = J.mc(A, "newWalker", [e.id]); seed(77); var wb = J.mc(B, "newWalker", [e.id]); _eq(tg + " elite " + J.str(e.id), _wst(wa), _wst(wb))
+			wa.t = 0.3; wb.t = 0.3; A.walkers.append(wa); B.walkers.append(wb)
+		var OS = [{}, {"aura": true}, {"force": true}, {"src": "trap", "fright": true}, {"src": "scare", "fear": true, "fright": 1.5}, {"src": "aura", "aura": true}, {"src": "throw"}]
+		for i in A.walkers.size():
+			for j in OS.size():
+				var dm = 9.0 + i * 7 + j * 31
+				trT["sd"] = A.sd; seed(900 + i * 10 + j); J.mc(A, "hit", [A.walkers[i], dm, OS[j].duplicate()])
+				seed(900 + i * 10 + j); J.mc(B, "hit", [B.walkers[i], dm, OS[j].duplicate()])
+				_eq(tg + " hit w%d o%d" % [i, j], _tstate(A), _tstate(B))
+		for i in 3:
+			trT["sd"] = A.sd; J.mc(A, "leak", [A.walkers[i]]); J.mc(B, "leak", [B.walkers[i]]); _eq(tg + " leak %d" % i, _tstate(A), _tstate(B))
+		for i in 3: J.mc(A, "hitFx", [A.walkers[0], "slow"]); J.mc(B, "hitFx", [B.walkers[0], "slow"])
+		_eq(tg + " hitFx dup", _tstate(A), _tstate(B))
+		print("[xcheck-info] t4b %s couples=%d walkers=%d" % [sid, cpl, A.walkers.size()])
+	_report()

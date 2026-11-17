@@ -992,6 +992,126 @@ static func tf_staffMul(T, p):
 static func tf_devK(_T, p):
 	var g = ghost(J.gp(p, "staff")) if J.gp(p, "staff") != null else null
 	return J.gp(g, "k") if J.t(g) else J.gp(J.gp(D.DEV, J.gp(p, "role")), "k")
+# 4b：路人生成／命中／嚇走／漏人
+static func _pnow() -> float: return J.num(J.S_performance_("now", []))
+static func _walAdd(Tf, v: float) -> void:
+	var sd = J.gp(Tf, "sd")
+	if J.t(sd): J.sp(sd, "wal", maxf(0.0, J.round((J.num(J.gp(sd, "wal")) if J.t(J.gp(sd, "wal")) else 0.0) + v)))
+static func _toast(m) -> void: if has("Fx"): J.mc(G("Fx"), "toast", [m])
+static func _walkInit(w) -> void:
+	w["t"] = 0.0; w["stay"] = 0.0; w["block"] = 0.0; w["fear"] = 0.0; w["slowM"] = 1.0; w["slowT"] = 0.0; w["hist"] = []; w["seed"] = randf() * 9
+static func tf_newWalker(Tf, eliteId):
+	var sd = J.gp(Tf, "sd"); var w: Dictionary; var PX = J.num(D.PX)
+	if J.t(eliteId):
+		var E = null
+		for e in D.ELITE:
+			if J.seq(J.gp(e, "id"), eliteId): E = e; break
+		var d = J.num(J.gp(sd, "lv")); var hp = J.round(J.num(E.hp) * hpP(d) * tf_mod(Tf) * 1.25)
+		w = {"el": E, "crew": {"n": T(E.n, E.zh), "tag": J.gp(E, "tag")}, "spr": J.gp(E, "spr")}
+		w["n"] = T(E.n, E.zh); w["hp"] = hp; w["max"] = hp; w["d"] = d; w["spd"] = J.num(E.spd) * PX * 1.8; w["award"] = J.gp(E, "award")
+	else:
+		var tw = 0.0
+		for q in D.PEOPLE: tw += J.num(q.w)
+		tw *= randf(); var p = null
+		for q in D.PEOPLE:
+			tw -= J.num(q.w)
+			if tw <= 0: p = q; break
+		if p == null: p = D.PEOPLE[0]
+		var r = randf() * 80; var fl = -3.0 if r < 15 else (-2.0 if r < 25 else (-1.0 if r < 32 else 0.0))
+		var d = maxf(1.0, J.num(J.gp(sd, "lv")) + fl)
+		var hp = J.round(Rr(75, 100) * J.num(p.hp) * hpP(d) * tf_mod(Tf) * 1.25 * (0.8 if J.num(J.gp(sd, "panic")) > 0 else 1.0))
+		w = {"p": p, "spr": J.gp(p, "spr"), "tint": J.gp(p, "tint"), "n": T(p.n, p.zh), "hp": hp, "max": hp, "d": d}
+		w["spd"] = Rr(100, 110) * J.num(p.spd) * PX * 1.8; w["award"] = 13.0; w["tr"] = J.gp(p, "trait"); w["tT"] = Rr(2, 6)
+		if J.seq(J.gp(p, "trait"), "couple"):
+			var hp2 = J.round(hp * Rr(0.85, 1.15)); var PA = D.PARTNER
+			w["mate"] = {"p": p, "spr": J.gp(PA, "spr"), "tint": J.gp(PA, "tint"), "n": T(PA.n, PA.zh), "hp": hp2, "max": hp2, "d": d, "spd": w.spd, "award": 13.0, "tr": "couple", "tT": 9.0}
+	_walkInit(w)
+	J.mc(Tf, "mkRoute", [w, null])
+	if J.t(w.get("mate")):
+		var m = w.mate; _walkInit(m); var sg = []
+		for g in J.iter(w.segs): var g2 = g.duplicate(); g2["ax"] = J.num(g.ax) + 0.02; g2["bx"] = J.num(g.bx) + 0.02; sg.append(g2)
+		m["segs"] = sg; m["len"] = w.len; m["mate"] = w; m["j"] = w.get("j")
+	return w
+static func tf_float(Tf, x, y, s, col) -> void: J.gp(Tf, "fx").append({"x": x, "y": y, "s": s, "col": col, "t": 0.0})
+const DFX_DUR := {"trap": 1.4, "puzzle": 1.0, "slow": 1.0, "scare": 1.25, "aura": 1.1, "throw": 0.6}
+static func tf_hitFx(Tf, w, k) -> void:
+	if not J.t(J.gp(Tf, "dfx")): J.sp(Tf, "dfx", [])
+	var L = J.gp(Tf, "dfx"); var lim = 0.7 if (k == "aura" or k == "slow" or k == "puzzle") else 0.25
+	for e in L:
+		if is_same(e.w, w) and J.seq(e.k, k) and J.num(e.t) < lim: return
+	if L.size() > 70: L.pop_front()
+	L.append({"k": k, "w": w, "t": 0.0, "dur": DFX_DUR.get(J.str(k), 0.8), "seed": randf() * 9})
+static func _buf(w, b: String) -> bool: return J.t(J.gp(w, "el")) and J.seq(J.gp(J.gp(w, "el"), "buf"), b)
+static func tf_hit(Tf, w, dmg, o) -> void:
+	o = o if J.t(o) else {}; dmg = J.num(dmg)
+	if J.t(J.gp(w, "gone")) or J.num(J.gp(w, "hp")) <= 0: return
+	var pos = tf_wp(Tf, w); var x = J.num(pos[0]); var y = J.num(pos[1]); var PX = J.num(D.PX); var ws = J.iter(J.gp(Tf, "walkers"))
+	if not J.t(J.gp(o, "force")) and _buf(w, "dodge") and randf() < 0.3:
+		if not J.t(J.gp(o, "aura")): tf_float(Tf, x, y - 0.06, T("閃避", "閃避"), "#9cf")
+		return
+	if not J.t(J.gp(o, "force")):
+		if _buf(w, "tough"): dmg *= 0.7
+		var au = _buf(w, "aura")
+		if not au:
+			for q in ws:
+				if not is_same(q, w) and _buf(q, "aura") and tf_alive(Tf, q) and tf_dist(tf_wp(Tf, q), [x, y]) < 200 * PX: au = true; break
+		if au: dmg *= 0.85
+	if J.num(J.gp(w, "target")) > 0: dmg *= 1.5
+	var tr = J.gp(w, "tr")
+	if J.t(J.gp(o, "aura")):
+		if J.seq(tr, "runner"): dmg *= 0.5
+		elif J.seq(tr, "phone") or J.seq(tr, "walkdel"): dmg *= 0.75
+	if J.t(J.gp(o, "aura")) or J.t(J.gp(o, "force")):
+		for q in ws:
+			if J.seq(J.gp(q, "tr"), "durian") and tf_alive(Tf, q) and tf_dist(tf_wp(Tf, q), [x, y]) < 120 * PX: dmg *= 0.7; break
+	if J.seq(tr, "drunk") and J.t(J.gp(o, "fright")): o = o.duplicate(); o["fright"] = 0.0
+	var SQT = D.SQ_TUNE
+	if J.t(J.gp(w, "sq")) and not J.t(J.gp(o, "force")) and J.num(SQT.armor) > 0: dmg = maxf(dmg * 0.25, dmg - J.num(w.max) * J.num(SQT.armor))
+	if J.t(J.gp(w, "sq")) and J.num(J.gp(w, "film")) > 0 and (J.seq(J.gp(o, "src"), "aura") or (J.t(J.gp(o, "aura")) and not J.t(J.gp(o, "force")))):
+		if not J.t(J.gp(w, "filmSay")) or _pnow() - J.num(w.filmSay) > 2500:
+			w["filmSay"] = _pnow(); tf_float(Tf, x, y - 0.07, T("拍緊片，唔覺凍！", "拍緊片，不覺得冷！"), "#ffb0d0")
+		return
+	if has("StnFoes"): dmg = J.num(J.mc(G("StnFoes"), "onHit", [w, dmg, o, Tf]))
+	w["hp"] = J.num(w.hp) - dmg
+	if not J.t(J.gp(o, "aura")) or J.num(w.hp) <= 0: w["react"] = 0.6; J.mc(Tf, "say", [w, false])
+	if not J.t(J.gp(o, "aura")): tf_float(Tf, x, y - 0.06, "-" + J.str(J.round(dmg)), "#ffd45a" if J.t(J.gp(o, "force")) else "#fff")
+	if J.t(J.gp(o, "fear")): w["fear"] = 0.5
+	if J.t(J.gp(o, "src")): tf_hitFx(Tf, w, J.gp(o, "src"))
+	var fr = J.gp(o, "fright")
+	if J.t(fr) and J.num(w.hp) > 0 and not (J.num(J.gp(w, "stay")) > 0): w["stay"] = 2.0 if (fr is bool) else fr
+	if J.num(w.hp) <= 0: tf_scared(Tf, w)
+static func tf_scared(Tf, w) -> void:
+	var sd = J.gp(Tf, "sd"); var pos = tf_wp(Tf, w); w["gone"] = "run"; w["runT"] = 0.0
+	var hs = J.iter(J.gp(w, "hist")); var tail = hs.slice(maxi(0, hs.size() - 5)); tail.reverse(); w["runPath"] = [pos] + tail
+	J.mc(Tf, "say", [w, true]); var parts = J.gp(Tf, "parts")
+	for j in 5: parts.append({"kind": "coin", "x": J.num(pos[0]) + Rr(-0.03, 0.03), "y": J.num(pos[1]) - 0.05, "life": 0.9 + j * 0.08, "k": -j * 0.08})
+	var cap = tf_incomeCap(Tf); var wd = J.num(J.gp(w, "d"))
+	var coin = floorf(J.num(w.award) * coP(cap if wd > cap else minf(J.num(sd.lv), cap)) * 1.15 * (0.8 if J.num(J.gp(sd, "badPress")) > 0 else 1.0))
+	J.sp(sd, "scared", J.num(J.gp(sd, "scared")) + 1); occPush(sd, 1); J.sp(sd, "jar", J.num(J.gp(sd, "jar")) + 1)
+	if fmod(J.num(sd.jar), 40.0) == 0:
+		var bonus = tf_unit(Tf) * 20; _walAdd(Tf, bonus); _toast(T("收集罐滿咗！冥幣 +" + J.str(bonus), "收集罐滿了！冥幣 +" + J.str(bonus)))
+	_walAdd(Tf, coin); J.sp(sd, "coins", J.num(J.gp(sd, "coins")) + coin); J.sp(Tf, "rateAcc", J.num(J.gp(Tf, "rateAcc")) + coin)
+	tf_float(Tf, pos[0], J.num(pos[1]) - 0.09, T("嚇走！冥幣+" + J.str(coin), "嚇跑！冥幣+" + J.str(coin)), "#7dffb0")
+	var m = addHot(sd, J.num(D.HOT.add), J.gp(Tf, "def")); if m != "": _toast(m)
+	var tr = J.gp(w, "tr")
+	if J.seq(tr, "couple") and J.t(J.gp(w, "mate")) and tf_alive(Tf, w.mate):
+		var mt = w.mate; tf_hit(Tf, mt, J.num(mt.max) * 0.45, {"force": true})
+		if not J.t(J.gp(mt, "gone")): mt["back"] = J.num(D.CELL) * 2.5; mt["say"] = {"s": T("等埋我呀！", "等等我啊！"), "t": 1.4}
+	if J.seq(tr, "groceries"):
+		J.mc(Tf, "addTrace", ["veg", pos[0], pos[1], 80.0, 7.0, {"by": "auntie"}]); J.mc(Tf, "cap", [T("啲餸跌晒落地！", "菜全掉在地上！"), pos[0], J.num(pos[1]) - 0.14, {"col": "#b8f0a0", "size": 13.0, "style": "pop", "font": "sans-serif"}])
+	if J.seq(tr, "rider"): J.mc(Tf, "addTrace", ["bowl", pos[0], pos[1], 90.0, 6.0, {"by": "rider"}])
+	if J.seq(tr, "walkdel"):
+		J.mc(Tf, "addTrace", ["bowl", pos[0], pos[1], 90.0, 6.0, {"by": "rider"}]); J.mc(Tf, "cap", [T("份外賣跌咗落地！", "外送掉在地上了！"), pos[0], J.num(pos[1]) - 0.14, {"col": "#ffd0a0", "size": 13.0, "style": "pop", "font": "sans-serif"}])
+	if J.t(J.gp(w, "sq")): J.mc(Tf, "sqMember", [w, "run"])
+static func tf_leak(Tf, w) -> void:
+	var sd = J.gp(Tf, "sd"); J.sp(sd, "leaked", J.num(J.gp(sd, "leaked")) + 1); occPush(sd, 0); J.sp(sd, "leakAcc", J.num(J.gp(sd, "leakAcc")) + 1)
+	if J.num(sd.leakAcc) >= 4: J.sp(sd, "leakAcc", 0.0); J.sp(sd, "modCur", maxf(0.9, J.num(_or(J.gp(sd, "modCur"), 0.9)) - 0.06))
+	var m = addHot(sd, J.num(D.HOT.leak), J.gp(Tf, "def")); var L = J.gp(Tf, "lay"); var nd = J.gp(J.gp(L, "nodes"), J.gp(L, "last"))
+	tf_float(Tf, J.num(nd[0]) - 0.08, J.num(nd[1]) - 0.04, T("漏咗一個…名氣 −18", "漏掉一個…名氣 −18"), "#ff8a8a")
+	if m != "": _toast(m); J.mc(Tf, "gpWarn", ["drop", T("漏人太多，路人膽量跌咗級", "漏掉太多人，路人膽量降級了")])
+	if J.t(J.gp(w, "sq")): J.mc(Tf, "sqMember", [w, "out"])
+const TF_4B := {"newWalker": 1, "float": 4, "hitFx": 2, "hit": 3, "scared": 1, "leak": 1}
+
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -1021,5 +1141,5 @@ func run(_env) -> void:
 	load_data()
 	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A)
+	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)
