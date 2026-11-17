@@ -14,7 +14,7 @@ for a in "$@"; do case "$a" in --selftest) SELFTEST=1;; --pck-only) PCK=1;; esac
 REPO=/home/claude/ghost-battles
 GD=/opt/godot/Godot_v4.3-stable_linux.x86_64
 CACHE=/home/claude/gbgd/godot/.godot
-OUT=/tmp/beta
+OUT="${BETA_OUT:-/tmp/beta}"   # 多條線同時打包要各自指定，唔係會互相刪資料夾
 rm -rf "$OUT" && mkdir -p "$OUT/build"
 (cd "$REPO" && git archive HEAD godot | tar -x -C "$OUT")
 cp -r "$CACHE" "$OUT/godot/"
