@@ -6,12 +6,14 @@ extends RefCounted
 var ok := 0
 var bad := 0
 var keep := []
+var tally := {}
 
 static func _ser(r) -> String: return load("res://tools/tests/xc_l4.gd").ser_rec(r)
 func _cmp(name: String, x: String, y: String) -> void:
 	if x == y: ok += 1; return
 	bad += 1
-	if bad <= 12:
+	var an = (name.split("] ")[1] if "] " in name else name).get_slice(" ", 1).get_slice("@", 0); tally[an] = tally.get(an, 0) + 1
+	if bad <= 6:
 		var i = 0
 		while i < mini(x.length(), y.length()) and x[i] == y[i]: i += 1
 		var st = maxi(0, i - 200)
@@ -86,6 +88,9 @@ func run(_t) -> void:
 	# 網頁有飄動，原生同網頁一致；比對時俾轉譯參考版一個真 Math.sin，先係同網頁比。
 	var _msin_had = J.G.Math.has("sin")
 	J.G.Math["sin"] = func(_tt, aa): return sin(J.num(J.arg(aa, 0)))
+	# 轉譯版另一個缺口：冇 DOMPoint → new DOMPoint(x,y) 變 {}，meshPt（嘴／眼淚／汗）全部縮返去腳底原點。補返先同網頁比。
+	var _dp_had = J.G.has("DOMPoint")
+	if not _dp_had: J.G["DOMPoint"] = func(o, aa): o["x"] = J.num(J.arg(aa, 0)); o["y"] = J.num(J.arg(aa, 1)); return null
 	var NH = load("res://native/daily_hero.gd")
 	var dn = _hero_daily(); var HDn = J.G.HeroDaily
 	var tr = load("res://jsgen/daily_hero.gd").new(); keep.append(tr); tr.run(null)
@@ -102,7 +107,7 @@ func run(_t) -> void:
 		var nb0 = bad
 		if A.size() != B.size(): bad += 1; print("[hdiff] size %d %d" % [A.size(), B.size()])
 		for i in mini(A.size(), B.size()): _cmp("case%s f%d %s" % [str(cs), i, A[i].substr(0, 30)], A[i], B[i])
-		print("[xchero] draw case=%s frames=%d bad=%d" % [str(cs), A.size(), bad - nb0])
+		print("[xchero] draw case=%s frames=%d bad=%d tally=%s" % [str(cs), A.size(), bad - nb0, str(tally)]); tally = {}
 	# 排程
 	NH.reset(); var HDn2 = J.G.HeroDaily
 	# reset 換咗 Q／LEN：重新登記一次原生介面
@@ -122,3 +127,4 @@ func run(_t) -> void:
 	NH.new().run(null)
 	print("[xcheck] daily_hero ok=%d bad=%d" % [ok, bad])
 	if not _msin_had: J.G.Math.erase("sin")
+	if not _dp_had: J.G.erase("DOMPoint")
