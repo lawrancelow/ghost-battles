@@ -2191,6 +2191,125 @@ static func tf_drawMy(Tf) -> void:
 		c.strokeText(mtx, bx + bw0 / 2, by + 40 * U); c.fillText(mtx, bx + bw0 / 2, by + 40 * U)
 const TF_4J := {"drawTopBar": 0, "drawJar": 0, "drawMini": 0, "drawMy": 0}
 
+# 4k：餘痕、字幕繪畫
+static func _P(Tf, x, y) -> Array: var b = J.gp(Tf, "box"); return [J.num(b.x) + J.num(x) * J.num(b.w), J.num(b.y) + J.num(y) * J.num(b.h)]
+static func _a(v: float) -> String: return J.str(v)
+static func tf_drawTraces(Tf) -> void:
+	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); var U = J.num(b.w) / 840.0; var t = _pnow() / 1000.0
+	for r in J.iter(_or(J.gp(Tf, "traces"), [])):
+		var xy = _P(Tf, r.x, r.y); var x = xy[0]; var y = xy[1]; var R0 = J.num(r.r) * J.num(b.w); var a = minf(1.0, (J.num(r.life) - J.num(r.t)) / 1.2) * minf(1.0, J.num(r.t) * 3)
+		c.save(); c.globalAlpha = a; var kd = J.str(r.kind)
+		if kd == "hair":
+			c.strokeStyle = "rgba(20,20,26,0.85)"; c.lineWidth = 1.6
+			for j in 26:
+				var a0 = j * 2.4; var rr = R0 * (0.3 + 0.7 * ((j * 37) % 10) / 10.0); var x0 = x + cos(a0) * rr; var y0 = y + sin(a0) * rr / 1.5
+				c.beginPath(); c.moveTo(x0, y0); c.bezierCurveTo(x0 + 10 * U, y0 + sin(t + j) * 4 * U, x0 + 18 * U, y0 - 6 * U, x0 + 28 * U, y0 + 3 * U); c.stroke()
+			c.fillStyle = "rgba(90,130,160,0.25)"; c.beginPath(); c.ellipse(x, y, R0, R0 / 1.5, 0, 0, 7); c.fill()
+		elif kd == "ice":
+			var g = c.createRadialGradient(x, y, 2, x, y, R0); g.addColorStop(0, "rgba(220,245,255,0.55)"); g.addColorStop(1, "rgba(150,210,255,0.08)"); c.fillStyle = g; c.beginPath(); c.ellipse(x, y, R0, R0 / 1.5, 0, 0, 7); c.fill()
+			c.strokeStyle = "rgba(255,255,255,0.7)"; c.lineWidth = 1
+			for j in 10:
+				var a0 = j * 0.63
+				c.beginPath()
+				c.moveTo(x, y)
+				c.lineTo(x + cos(a0) * R0 * 0.9, y + sin(a0) * R0 * 0.6)
+				c.stroke()
+		elif kd == "shadow":
+			if has("ART"): J.mc(G("ART"), "drawChar", [c, _or(J.gp(r, "by"), "pontianak"), x + sin(t * 1.3) * 8 * U, y - 40 * U, J.num(b.h) * 0.1 / 60, {"t": t, "pose": "idle", "alpha": 0.25 + 0.15 * sin(t * 5), "shadow": false}])
+		elif kd == "bowl":
+			var rx = x + sin(t * 2.2) * 26 * U; c.fillStyle = "#d9d2c2"; c.beginPath(); c.ellipse(rx, y, 11 * U, 6 * U, sin(t * 6) * 0.5, 0, 3.14); c.fill(); c.strokeStyle = "#6a5a40"; c.lineWidth = 1.5; c.stroke()
+			c.fillStyle = "rgba(255,255,255,0.4)"; c.font = _px(9 * U) + " sans-serif"; c.textAlign = "center"; c.fillText(T("（空碗轆緊）", "（空碗在滾）"), rx, y - 12 * U)
+		elif kd == "claw":
+			c.strokeStyle = "rgba(30,10,10,0.8)"; c.lineWidth = 3
+			for j in 4:
+				c.beginPath()
+				c.moveTo(x - 24 * U + j * 12 * U, y - 10 * U)
+				c.lineTo(x - 14 * U + j * 12 * U, y + 12 * U)
+				c.stroke()
+			for j in 4:
+				var rr = fmod(t * 0.6 + j * 0.25, 1.0); c.fillStyle = "rgba(10,30,15," + _a(0.45 * (1 - rr)) + ")"; c.beginPath(); c.arc(x + sin(j * 2 + t) * 14 * U, y - rr * 50 * U, (8 + rr * 10) * U, 0, 7); c.fill()
+		elif kd == "coins" or kd == "notes":
+			for j in 9:
+				var xx = x + cos(j * 2.1) * R0 * 0.7; var yy = y + sin(j * 2.1) * R0 * 0.45
+				if kd == "coins":
+					c.fillStyle = "#ffd45a"
+					c.strokeStyle = "#7a4a10"
+					c.lineWidth = 1
+					c.beginPath()
+					c.ellipse(xx, yy, 5 * U * absf(cos(t * 3 + j)) + 1.5, 4 * U, 0, 0, 7)
+					c.fill()
+					c.stroke()
+				else:
+					c.save()
+					c.translate(xx, yy)
+					c.rotate(j)
+					c.fillStyle = "#7fae6a" if j % 2 else "#c9b26a"
+					c.fillRect(-9 * U, -4 * U, 18 * U, 8 * U)
+					c.strokeStyle = "#3a4a20"
+					c.strokeRect(-9 * U, -4 * U, 18 * U, 8 * U)
+					c.restore()
+		elif kd == "paper":
+			for j in 14:
+				var xx = x + cos(j * 1.7) * R0 * 0.8; var yy = y + sin(j * 1.7) * R0 * 0.5
+				c.save(); c.translate(xx, yy); c.rotate(j * 0.9); c.fillStyle = "#efe7cf" if j % 3 else "#d8b450"; c.fillRect(-6 * U, -4 * U, 12 * U, 8 * U); c.fillStyle = "#b02020"; c.fillRect(-2 * U, -2 * U, 4 * U, 4 * U); c.restore()
+		elif kd == "cloth":
+			c.fillStyle = "rgba(245,245,240," + _a(0.25 + 0.25 * absf(sin(t * 7))) + ")"
+			c.beginPath()
+			c.ellipse(x, y - 24 * U, 10 * U, 26 * U, 0, 0, 7)
+			c.fill()
+		elif kd == "ring":
+			c.strokeStyle = "rgba(140,255,120," + _a(0.5 + 0.3 * sin(t * 8)) + ")"
+			c.lineWidth = 3
+			c.shadowColor = "#7f6"
+			c.shadowBlur = 10
+			c.beginPath()
+			c.ellipse(x, y, R0, R0 / 1.5, 0, 0, 7)
+			c.stroke()
+			c.shadowBlur = 0
+		elif kd == "soup":
+			c.fillStyle = "rgba(200,140,60,0.35)"; c.beginPath(); c.ellipse(x, y, R0 * 0.6, R0 * 0.35, 0, 0, 7); c.fill()
+			for j in 4:
+				var rr = fmod(t * 0.5 + j * 0.25, 1.0); c.strokeStyle = "rgba(255,240,220," + _a(0.5 * (1 - rr)) + ")"; c.lineWidth = 2; c.beginPath(); c.moveTo(x - 10 * U + j * 7 * U, y - rr * 40 * U)
+				c.quadraticCurveTo(x + sin(t * 3 + j) * 8 * U, y - rr * 40 * U - 10 * U, x - 6 * U + j * 7 * U, y - rr * 40 * U - 20 * U); c.stroke()
+		elif kd == "debt":
+			c.save(); c.translate(x, y - 30 * U); c.rotate(sin(t * 4) * 0.15); c.fillStyle = "#f1e4c8"; c.fillRect(-16 * U, -20 * U, 32 * U, 40 * U); c.fillStyle = "#b01010"; c.font = "900 " + _px(12 * U) + " sans-serif"; c.textAlign = "center"
+			c.fillText(T("還錢", "還錢"), 0, -2 * U); c.fillText("！", 0, 13 * U); c.restore()
+		elif kd == "veg":
+			for j in 10:
+				var xx = x + cos(j * 2.3) * R0 * 0.7; var yy = y + sin(j * 2.3) * R0 * 0.45
+				if j % 3:
+					c.fillStyle = "#5aa04a" if j % 2 else "#7cc060"
+					c.beginPath()
+					c.ellipse(xx, yy, 7 * U, 3 * U, j, 0, 7)
+					c.fill()
+				else:
+					c.fillStyle = "#f0a030"
+					c.beginPath()
+					c.arc(xx, yy, 4 * U, 0, 7)
+					c.fill()
+		elif kd == "clink":
+			c.fillStyle = "rgba(255,230,140,0.85)"
+			c.font = "bold " + _px(10 * U) + " sans-serif"
+			c.textAlign = "center"
+			c.fillText(T("叮……叮……", "叮……叮……"), x + sin(t * 2) * 10 * U, y - 30 * U - fmod(t * 20, 20.0) * U)
+		c.restore()
+static func tf_drawCaps(Tf) -> void:
+	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); var U = J.num(b.w) / 840.0
+	for q in J.iter(_or(J.gp(Tf, "caps"), [])):
+		var xy = _P(Tf, q.x, q.y); var x = xy[0]; var y = xy[1]; var k = J.num(q.t) / J.num(q.life); var a = k / 0.15 if k < 0.15 else ((1 - k) / 0.2 if k > 0.8 else 1.0)
+		var s = J.num(q.size) * U; var dx = 0.0; var dy = 0.0; var stl = J.str(q.style)
+		if stl == "grow": s *= 0.5 + k * 1.4
+		elif stl == "shake":
+			dx = (randf() - 0.5) * 5 * U
+			dy = (randf() - 0.5) * 4 * U
+			s *= 1 + ((0.15 - k) * 4 if k < 0.15 else 0.0)
+		elif stl == "drip": dy = k * 16 * U
+		elif stl == "wobble": dx = sin(k * 20) * 4 * U
+		else: dy = -k * 20 * U
+		c.save(); c.globalAlpha = maxf(0.0, a); c.font = "900 " + _px(s) + " " + J.str(q.font); c.textAlign = "center"; c.lineWidth = 4; c.strokeStyle = "rgba(10,0,15,0.9)"
+		c.strokeText(q.text, x + dx, y + dy); c.fillStyle = q.col; c.fillText(q.text, x + dx, y + dy); c.restore()
+const TF_4K := {"drawTraces": 0, "drawCaps": 0}
+
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -2220,5 +2339,5 @@ func run(_env) -> void:
 	load_data()
 	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I); tf_install(J.gp(SQ, "Turf"), TF_4J)
+	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I); tf_install(J.gp(SQ, "Turf"), TF_4J); tf_install(J.gp(SQ, "Turf"), TF_4K)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)

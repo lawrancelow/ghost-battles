@@ -584,3 +584,27 @@ func street_t4j(_t) -> void:
 	J.test_perf = -1.0
 	J.G["Math"] = mk.keep
 	_report()
+func street_t4k(_t) -> void:
+	mod = "street_t4k"
+	var mk = math_fix(); var X5 = load("res://tools/tests/xc_l5.gd")
+	var N = load("res://native/street.gd"); N.load_data()
+	var tr = _st_trans().Street; var trT = J.gp(tr, "Turf")
+	var pr = _tf_pair(trT, N, "office", 3.0); var A = pr[0]; var B = pr[1]
+	for m in N.TF_4K: B[m] = N.turf_methods(N.TF_4K)[m]
+	for X in [A, B]:
+		X["traces"] = []; X["caps"] = []
+		var i = 0
+		for kd in ["hair", "ice", "shadow", "bowl", "claw", "coins", "notes", "paper", "cloth", "ring", "soup", "debt", "veg", "clink"]:
+			J.mc(X, "addTrace", [kd, 0.3 + i * 0.2, 0.5 + (i % 3) * 0.05, 80.0, 6.0, {"by": "pontianak"}]); i += 1
+		i = 0
+		for stl in ["grow", "shake", "drip", "wobble", "pop"]:
+			J.mc(X, "cap", ["字幕" + stl, 0.4 + i * 0.3, 0.45, {"style": stl, "font": "serif", "size": 16.0}]); i += 1
+	for tt in [0.05, 0.3, 0.9, 1.3, 5.5]:
+		J.test_perf = 77000.0 + tt * 1000
+		for X in [A, B]:
+			for r in X.traces: r.t = tt
+			for q in X.caps: q.t = tt * 0.25
+		_drq("t=%s" % tt, X5, A, B, "drawTraces"); _drq("t=%s" % tt, X5, A, B, "drawCaps")
+	J.test_perf = -1.0
+	J.G["Math"] = mk.keep
+	_report()
