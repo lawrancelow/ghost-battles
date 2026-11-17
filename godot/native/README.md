@@ -46,3 +46,6 @@ config/custom_user_dir_name="gbt_L2_<時間戳>"
 - `window.addEventListener` → `J.S_window_("addEventListener", [...])`；`performance.now()` → `J.S_performance_("now", [])`；`getComputedStyle(x)` → `J.F_getComputedStyle([x])`
 - 自訂全局函數（save、canPay、ghostById…）照用 `J.cl(J.G.get("save"), null, [...])`
 對照工具（native_xcheck）只比函數輸出，捉唔到呢類錯；要加探針確認包裝（wrapper）真係裝咗、計時器真係行到。
+
+## 紅線：品牌名
+原生模塊唔經 build.sh 嘅品牌替換。寫字串時直接用替換後嘅名（WhatsApp→ApaKhabar、TikTok→GoyangGoyang、Grab→Tumpang、Google→Cari、iPhone→iFon、Netflix→Tonton、Spotify→Dengar、麥當勞→漢堡包、Excel→試算表、法拉利／保時捷→跑車、Waze→導航、Touch 'n Go→儲值卡、RapidKL→輕快鐵、PTPTN→學債）。提交前 grep 一次。
