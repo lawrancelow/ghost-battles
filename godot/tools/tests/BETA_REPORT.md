@@ -7,7 +7,32 @@
 - 結果：見下（待填）。
 
 ## 2. 全遊戲一條龍（tools/tests/full_run.json）
-待填。
+跑法：HEAD 6001cc0 乾淨副本、乾淨用戶資料（冇存檔）、Xvfb 450×975、GL Compatibility（CPU 軟件渲染，幀率只作相對參考，手機會唔同）。
+全程 277 秒跑完，冇卡死、冇黑畫面、冇閃退；存檔→重開→讀檔正常（save_check lv=18 ghosts=7）。截圖 /tmp/L4b/run1/full_<段>.png（同 /tmp/full_<段>.png）。
+
+| 段 | 幀率 | 截圖檢查 | 問題 |
+|---|---|---|---|
+| phone（新遊戲→ApaKhabar） | 37.6 | 正常 | — |
+| prologue 序章 | 48.8 | 正常 | — |
+| village_task 村子任務 | 50.9 | 正常 | — |
+| import_save / village_save | 37.2 | 正常 | — |
+| battle 戰鬥 | 33.9 | 「首次通關」正常 | — |
+| world 地圖 | 57.0 | 正常 | — |
+| patrol 夜巡 | 23.4 | 正常 | 幀率偏低（軟件渲染） |
+| scare_night 夜班嚇人 | 20.6 | 正常 | 幀率最低一段，手機要留意 |
+| squad_select 帶隊出更 | 31.6 | **成版空白** | 見問題 1（已修） |
+| tower 樓裡有鬼 | 30.0 | 正常 | — |
+| street 陽間街（未原生） | 41.7 | 地圖正常 | 只記錄，唔改 |
+| gstreet 冥街夜市 | 25.3 | 正常 | — |
+| gyard 亂葬崗 | 26.7 | 正常 | — |
+| sports 運動會 | 47.2 | 正常 | — |
+| theater 地府劇場 | 43.0 | 正常 | — |
+
+### 問題
+1. **帶隊出更版面空白**（`ui/scare_select/sc_select.gd:43` site 係 Nil）：`ScareX.open` 收到搵唔到嘅場地（測試傳 null）就成版空白，只得標題。遊戲內正常入口都會傳場地，但保險起見已加後備：搵唔到就用第一個場地。測試亦改為傳真場地。
+2. **測試腳本假錯（已修）**：第一次跑報 4666 個 SCRIPT ERROR（sc_run.gd:66 `_drag`、native/game.gd:16 `_S`、bridge.gd:138 `busy`、tower.gd:1298 `parts`…），全部係測試重開場景前冇 `JSRun.reset_world()`，舊場景嘅閉包繼續跑。遊戲本身所有重開（main.restart_with、匯入存檔、自檢）都有呼叫，所以唔係玩家會遇到嘅問題。修正後只剩問題 1 一個錯。
+3. **環境注意**：伺服器重啟後 Xvfb 冇咗，要用 `xvfb-run`；複製嘅 .godot 快取舊過 HEAD（缺 CpuSkin、JossFxN class_name）會令 main.gd 載入失敗兼卡住——跑測試前要先 `--headless --import`（build_beta.sh 已有呢步）。
+4. 結束時 Godot 報貼圖／RID 洩漏（退出時先出現，唔影響遊戲中）。
 
 ## 3. 新遊戲流程喺手機上嘅高風險呼叫（Fold4／Adreno 730 首次開新遊戲閃退）
 新遊戲流程：標題 → `_title_new` → `_hide_title` → `refresh()` → `phone_home("pre")`（ApaKhabar）→ 序章劇情 → 村子。

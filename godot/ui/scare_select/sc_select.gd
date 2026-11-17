@@ -21,6 +21,10 @@ static func hook(site_id) -> bool:
 	var m = main()
 	if m == null or not m.has_method("open_sheet"): return false
 	_site = J.str(site_id)
+	var sites = js("SCARE_SITES")
+	if sites is Dictionary and not sites.has(_site):   # 搵唔到場地（例如 null）就用第一個，免得成版空白
+		if sites.is_empty(): return false
+		_site = J.str(sites.keys()[0])
 	J.mc(js("Scare"), "migrate", [])
 	_chosen = []
 	for k in J.mc(js("ScareX").squad, "get", []): _chosen.append(J.str(k))

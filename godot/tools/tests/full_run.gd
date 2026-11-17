@@ -35,6 +35,7 @@ func _end(t, name: String):
 func _reload(t):
 	var sv = J.G.get("save")
 	if sv != null: J.cl(sv, null, [])
+	JSRun.reset_world()   # 同遊戲內重開一樣（main.restart_with）；唔清會留低舊場景嘅閉包，報幾千個假錯
 	t.get_tree().reload_current_scene()
 	for i in 60:
 		await _w(t, 0.5)
@@ -97,7 +98,7 @@ func all(t):
 		J.mc(J.G.get("Scare"), "start", ["office", ["afu", "eguiking", "toyol"]]), 20.0)
 	await _reload(t)
 	await _stage(t, "squad_select", func():
-		J.mc(J.G.get("ScareX"), "open", [null]), 3.0)
+		J.mc(J.G.get("ScareX"), "open", [J.G.get("SCARE_SITES").keys()[0]]), 3.0)
 	await _reload(t)
 	await _stage(t, "tower", func():
 		l3.tw_open(t); await _w(t, 2.0); await _skip_story(t, 4); l3.tw_start(t), 10.0)
