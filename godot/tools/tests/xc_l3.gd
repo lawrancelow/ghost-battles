@@ -458,19 +458,22 @@ func street_t4c(_t) -> void:
 	_report()
 
 # ---- L3：street 4d（tick 每格邏輯，連轉譯版 devTick／queueTick／bossTick 一齊行）----
-func street_t4d(_t) -> void:
-	mod = "street_t4d"
+func street_t4d(_t) -> void: _t4tick("street_t4d", ["TF_4B", "TF_4C", "TF_4D"])
+func street_t4e(_t) -> void: _t4tick("street_t4e", ["TF_4B", "TF_4C", "TF_4D", "TF_4E"])
+func _t4tick(mn: String, gn: Array) -> void:
+	mod = mn
 	var N = load("res://native/street.gd"); N.load_data()
 	var tr = _st_trans().Street; var trT = J.gp(tr, "Turf")
 	for sid in ["office", "bus", "flat"]:
 		var pr = _tf_pair(trT, N, sid, 3.0); var A = pr[0]; var B = pr[1]; var tg = sid
-		for grp in [N.TF_4B, N.TF_4C, N.TF_4D]:
+		for gk in gn:
+			var grp = N.get(gk)
 			for k in grp: B[k] = N.turf_methods(grp)[k]
 		var def = null
 		for d in N.D.SITES:
 			if J.str(d.id) == sid: def = d
 		for X in [A, B]:
-			X["def"] = def; X["walkers"] = []; X["fx"] = []; X["parts"] = []; X["dfx"] = []; X["shots"] = []; X["rateAcc"] = 0.0; X["rateT"] = 55.0; X["bosses"] = []
+			X["def"] = def; X["walkers"] = []; X["fx"] = []; X["parts"] = []; X["dfx"] = []; X["shots"] = []; X["eliteT"] = 2.0; X["rateAcc"] = 0.0; X["rateT"] = 55.0; X["bosses"] = []
 			X.sd["wal"] = 600.0; X.sd["coins"] = 0.0; X.sd["hot"] = 0.0; X.sd["scared"] = 0.0; X.sd["leaked"] = 0.0; X.sd["panic"] = 3.0
 			X["q"] = {"st": "gap", "t": 3.0, "n": 0.0, "made": 0.0, "list": []}; X["sqPlan"] = null; X["waveNo"] = 0.0; X["sqCD"] = 1.0
 			J.mc(X, "buildPath", [])
@@ -486,5 +489,5 @@ func street_t4d(_t) -> void:
 		for st in 240:
 			trT["sd"] = A.sd; seed(5000 + st); J.mc(A, "tick", [0.05]); seed(5000 + st); J.mc(B, "tick", [0.05])
 			if st % 10 == 9 or st < 5: _eq(tg + " tick %d" % st, [_tstate(A), A.shots, A.q, A.shake], [_tstate(B), B.shots, B.q, B.shake])
-		print("[xcheck-info] t4d %s walkers=%d scared=%s leaked=%s" % [sid, A.walkers.size(), A.sd.scared, A.sd.leaked])
+		print("[xcheck-info] %s %s walkers=%d scared=%s leaked=%s" % [mn, sid, A.walkers.size(), A.sd.scared, A.sd.leaked])
 	_report()

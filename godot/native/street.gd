@@ -1346,6 +1346,183 @@ static func tf_tick(Tf, dt) -> void:
 		var r0 = J.gp(s0, "rate"); J.sp(s0, "rate", J.num(r0) * 0.6 + J.num(J.gp(Tf, "rateAcc")) * 0.4 if J.t(r0) else J.gp(Tf, "rateAcc")); J.sp(Tf, "rateAcc", 0.0); J.sp(Tf, "rateT", 0.0); J.sp(s0, "last", now_ms()); save_()
 const TF_4D := {"tick": 1}
 
+# 4e：排隊／放行／裝置循環（devTick、fire、鬼打牆 puzzleTick）／視線 los
+static func tf_los(Tf, a, b2) -> bool:
+	for o in J.iter(_or(J.gp(J.gp(Tf, "lay"), "obs"), [])):
+		if not J.seq(J.gp(o, "t"), "s"): continue
+		var r = [J.num(o.x0) + 0.01, J.num(o.y0) + 0.008, J.num(o.x1) - 0.01, J.num(o.y1) - 0.008]
+		for i in range(1, 12):
+			var k = i / 12.0; var x = J.num(a[0]) + (J.num(b2[0]) - J.num(a[0])) * k; var y = J.num(a[1]) + (J.num(b2[1]) - J.num(a[1])) * k
+			if x > r[0] and x < r[2] and y > r[1] and y < r[3]: return false
+	return true
+static func tf_queueTick(Tf, dt) -> void:
+	dt = J.num(dt); var q = J.gp(Tf, "q"); var sd = J.gp(Tf, "sd"); var n = 3 + minf(3.0, J.num(sd.unlocked) - 1)
+	var stt = J.str(q.st)
+	if stt == "gap":
+		q["t"] = J.num(q.t) - dt
+		if J.num(q.t) <= 0:
+			q["st"] = "form"; q["n"] = n; q["made"] = 0.0; q["t"] = 0.0; q["list"] = []
+			var plan = J.gp(Tf, "sqPlan")
+			if J.t(plan) and J.num(J.gp(Tf, "waveNo")) + 1 >= J.num(plan.wave):
+				var sq = tf_sqMake(Tf, plan.kind); J.sp(Tf, "sqPlan", null); q["list"] = sq.mem.duplicate(); q["n"] = float(q.list.size()); q["made"] = q.n; q["sq"] = sq; q["st"] = "ready"; q["t"] = 90.0
+				var S0 = D.SQUAD[J.str(sq.kind)]
+				J.mc(Tf, "sqBanner", [T(J.str(S0.n[0]) + "到咗門口！", J.str(S0.n[1]) + "到門口了！"), T("撳「進入」放佢哋入嚟，或者等 90 秒", "點「進入」放他們進來，或等 90 秒"), S0.tag])
+	elif stt == "form":
+		q["t"] = J.num(q.t) - dt
+		if J.num(q.t) <= 0 and J.num(q.made) < J.num(q.n):
+			q["t"] = 0.5; q["made"] = J.num(q.made) + 1; var el = null
+			if J.num(J.gp(Tf, "eliteT")) <= 0:
+				var ok = []
+				for e in D.ELITE:
+					if J.num(J.gp(sd, "scared")) >= J.num(e.rep): ok.append(e)
+				if ok.size(): el = pick(ok).id; J.sp(Tf, "eliteT", Rr(75, 125))
+			var nw = tf_newWalker(Tf, el)
+			if not J.t(el) and has("StnFoes"):
+				var fid = J.mc(G("StnFoes"), "roll", [sd.lv, q])
+				if J.t(fid): J.mc(G("StnFoes"), "decorate", [nw, fid])
+			q.list.append(nw)
+			if J.t(nw.get("mate")) and J.num(q.made) < J.num(q.n): q["made"] = J.num(q.made) + 1; q.list.append(nw.mate)
+		if J.num(q.made) >= J.num(q.n) and J.num(q.t) <= 0: q["st"] = "ready"; q["t"] = 90.0
+	elif stt == "ready":
+		q["t"] = J.num(q.t) - dt
+		if J.num(q.t) <= 0: tf_release(Tf, false)
+	J.sp(Tf, "eliteT", J.num(J.gp(Tf, "eliteT")) - dt)
+static func tf_release(Tf, manual) -> bool:
+	var q = J.gp(Tf, "q"); var stt = J.str(q.st)
+	if stt != "ready" and not (J.t(manual) and stt == "form" and J.num(q.made) > 0): return false
+	var tt = 0.0; var ls = J.iter(q.list); var W = J.gp(Tf, "walkers")
+	for i in ls.size():
+		var w = ls[i]
+		if J.seq(J.gp(w, "tr"), "couple") and J.t(J.gp(w, "mate")) and i > 0 and is_same(ls[i - 1], w.mate): w["t"] = J.num(ls[i - 1].t) - 0.025
+		else: tt -= 0.07; w["t"] = tt
+		W.append(w)
+	var n = ls.size(); var sd = J.gp(Tf, "sd"); J.sp(sd, "modCur", minf(1.05, J.num(_or(J.gp(sd, "modCur"), 0.9)) + 0.01)); var E = J.gp(J.gp(J.gp(Tf, "lay"), "nodes"), "0E")
+	var ns = J.str(n)
+	tf_float(Tf, J.num(E[0]) + 0.15, J.num(E[1]) - 0.2, T("放咗 " + ns + " 個人入嚟！", "放了 " + ns + " 個人進來！") if J.t(manual) else T("等足 90 秒，" + ns + " 個人自己行入嚟", "等滿 90 秒，" + ns + " 個人自己走進來"), "#ffe9b0")
+	q["st"] = "gap"; q["t"] = 8.0; q["list"] = []; q["made"] = 0.0; q["sq"] = null; tf_sqWaveDone(Tf); J.mc(Tf, "focusOn", [E[0], J.num(E[1]) - 0.3]); return true
+static func _foeMul(p) -> float: return J.num(J.mc(G("StnFoes"), "devMul", [p])) if has("StnFoes") else 1.0
+static func _pfx(Tf, p, type, tp, aura := false) -> Dictionary:
+	var o = {"t": 0.0, "v": 0.0 if randf() < 0.5 else 1.0, "type": type, "k": tf_devK(Tf, p), "tx": tp[0], "ty": tp[1]}
+	if aura: o["aura"] = true
+	return o
+static func tf_devTick(Tf, i, p, dt) -> void:
+	dt = J.num(dt)
+	if J.num(J.gp(p, "stun")) > 0: p["stun"] = J.num(p.stun) - dt; return
+	if has("StnFoes") and J.t(J.mc(G("StnFoes"), "blocks", [p])): return
+	var PX = J.num(D.PX); var CELL = J.num(D.CELL); var Dv = J.gp(D.DEV, p.role); var S0 = _devL(p.role, J.gp(p, "sz")); var lvi = J.num(_or(J.gp(p, "lv"), 1.0))
+	var L0 = J.gp(J.gp(S0, "lv"), lvi - 1); var M = J.mc(Tf, "staffMul", [p]); var spot = J.gp(J.gp(J.gp(Tf, "lay"), "posts"), J.num(i)); var role = J.str(p.role)
+	var amb = (role == "scare" or role == "trap") and J.t(J.mc(Tf, "ambush", [i]))
+	var rd = func(w): return tf_rdist(Tf, tf_wp(Tf, w), spot)
+	var live = []
+	for w in J.iter(J.gp(Tf, "walkers")):
+		if tf_alive(Tf, w): live.append(w)
+	var atk = J.num(L0[2]) * J.num(M.atk) * (1.3 if amb else 1.0) * _foeMul(p); var reload = J.num(L0[3]) * J.num(M.cd)
+	if role == "puzzle": tf_puzzleTick(Tf, i, p, L0, S0, live, rd, atk, M, dt); return
+	if role == "slow":
+		var R1 = J.num(J.gp(J.gp(S0, "area"), lvi - 1)) * CELL * 0.85; var on = []
+		for w in live:
+			if rd.call(w) <= R1: on.append(w)
+		for w in on: w["slowM"] = minf(J.num(w.slowM) if J.num(J.gp(w, "slowT")) > 0 else 1.0, 1 - J.num(L0[5]) * _foeMul(p)); w["slowT"] = 0.5; w["frost"] = 0.4
+		p["auraOn"] = 0.6 if on.size() else J.gp(p, "auraOn")
+		p["cd"] = J.num(J.gp(p, "cd")) + dt
+		if on.size() and J.num(p.cd) >= reload:
+			p["cd"] = 0.0
+			for w in on: tf_hit(Tf, w, atk, {"fear": 1.0, "src": "slow"})
+			if not J.t(J.gp(p, "fx")): p["fx"] = _pfx(Tf, p, "light", tf_wp(Tf, on[0]), true)
+		return
+	if J.t(J.gp(p, "win")):
+		p.win["t"] = J.num(p.win.t) - dt; var eff = J.num(S0.eff) * PX
+		for w in live:
+			if not J.t(J.mc(p.win.hit, "has", [w])) and rd.call(w) <= eff:
+				J.mc(p.win.hit, "add", [w]); tf_hit(Tf, w, atk, {"fear": 1.0, "aura": 1.0, "src": "aura"} if role == "aura" else {"fright": true, "src": p.role})
+		if J.num(p.win.t) <= 0: p["win"] = null; p["cd"] = 0.0
+		return
+	if J.gp(p, "anim") != null:
+		p["anim"] = J.num(p.anim) - dt
+		if J.num(p.anim) <= 0:
+			p["anim"] = null
+			if role == "throw": tf_fire(Tf, i, p, atk, S0, live); p["cd"] = 0.0
+			else: p["win"] = {"t": maxf(1.0, J.num(S0.dl)) / 60.0, "hit": J.new_("Set", [])}
+		return
+	p["cd"] = J.num(J.gp(p, "cd")) + dt
+	if J.num(p.cd) < reload: return
+	var chk = J.num(S0.check) * PX; var inC = []
+	for w in live:
+		if rd.call(w) <= chk and ((role != "scare" and role != "throw") or tf_los(Tf, [spot.x, spot.y], tf_wp(Tf, w))): inC.append(w)
+	if inC.is_empty():
+		if role == "scare":
+			for w in live:
+				if rd.call(w) <= chk: p["blind"] = 0.5; break
+		return
+	p["anim"] = J.num(S0.dd) / 60.0; var tg = _ssort(inC, func(w): return -J.num(w.t))[0]; var tp = tf_wp(Tf, tg)
+	if role == "aura":
+		p["auraOn"] = 1.0; p["flo"] = J.num(J.gp(p, "flo")) - reload
+		if J.num(p.flo) <= 0 and not J.t(J.gp(p, "fx")): p["flo"] = Rr(3.5, 5.5); p["fx"] = _pfx(Tf, p, "cold", tp, true)
+		return
+	p["fx"] = _pfx(Tf, p, J.gp(Dv, "kind"), tp)
+	if amb: tf_float(Tf, spot.x, J.num(spot.y) - 0.1, T("埋伏！驚嚇 ×1.3", "埋伏！驚嚇 ×1.3"), "#ffb060")
+	if role != "throw": J.mc(Tf, "focusOn", [spot.x, spot.y])
+	if role == "scare": J.sp(Tf, "shake", 0.28); J.sp(Tf, "flash", 0.18)
+static func tf_fire(Tf, i, p, atk, S0, live) -> void:
+	var spot = J.gp(J.gp(J.gp(Tf, "lay"), "posts"), J.num(i)); var seen = []; var walking = []
+	for w in live:
+		if tf_los(Tf, [spot.x, spot.y], tf_wp(Tf, w)): seen.append(w)
+	for w in seen:
+		if not (J.num(J.gp(w, "stay")) > 0) and not (J.num(J.gp(w, "block")) > 0): walking.append(w)
+	var src = walking if walking.size() else seen
+	if src.is_empty(): randf(); return
+	var tg = pick(src)
+	var to = tf_wp(Tf, tg, 100 * J.num(D.PX))
+	J.gp(Tf, "shots").append({"from": [spot.x, J.num(spot.y) - 0.05], "to": to, "t": 0.0, "dur": 0.55, "eff": J.num(S0.eff) * J.num(D.PX), "atk": atk})
+	p["fx"] = _pfx(Tf, p, "paper", tf_wp(Tf, tg))
+const PZ_SAY := [["又行返嚟呢度？", "又走回這裡？"], ["出口喺邊呀？", "出口在哪啊？"], ["明明行緊直路……", "明明走著直路……"], ["我哋係咪兜緊圈？", "我們是不是在繞圈？"]]
+static func tf_puzzleTick(Tf, i, p, L0, S0, live, rd, atk, M, dt) -> void:
+	var spot = J.gp(J.gp(J.gp(Tf, "lay"), "posts"), J.num(i)); var mx = J.num(L0[1]) * J.num(M.hp); var fi = J.num(i)
+	if J.gp(p, "ph") == null: p["ph"] = mx
+	var chk = J.num(S0.check) * J.num(D.PX); var inR = []
+	for w in live:
+		if rd.call(w) <= chk: inR.append(w)
+	if J.num(J.gp(p, "solved")) > 0:
+		p["solved"] = J.num(p.solved) - dt
+		for w in inR:
+			var pz = J.gp(w, "pzIn")
+			if not J.seq(J.gp(w, "pzSkip"), fi) and (not J.t(pz) or not J.seq(J.gp(pz, "i"), fi)): w["pzIn"] = {"i": fi, "t": w.t}
+		for w in live:
+			if J.seq(J.gp(w, "pzSkip"), fi) and rd.call(w) > chk: w["pzSkip"] = null
+		if J.num(p.solved) <= 0:
+			p["solved"] = 0.0; p["ph"] = mx; var n = 0
+			for w in live:
+				var pz = J.gp(w, "pzIn")
+				if J.t(pz) and J.seq(J.gp(pz, "i"), fi):
+					if rd.call(w) <= chk: w["t"] = pz.t; w["block"] = 0.3; w["pulled"] = 1.2; n += 1
+					w["pzIn"] = null
+			var ns = J.str(n)
+			tf_float(Tf, spot.x, J.num(spot.y) - 0.07, T("鬼打牆重新圍返！" + ns + " 個人又兜返轉頭", "鬼打牆重新圍起！" + ns + " 個人又繞回頭") if n else T("鬼打牆重新圍返！", "鬼打牆重新圍起！"), "#c084ff")
+		return
+	if inR.is_empty(): return
+	for w in inR:
+		w["block"] = 0.15; w["puz"] = fi; w["fear"] = 0.5; w["lost"] = 0.3
+		if not J.t(J.gp(w, "say")) and randf() < 0.01:
+			var opts = []
+			for s in PZ_SAY: opts.append(T(s[0], s[1]))
+			w["say"] = {"s": pick(opts), "t": 1.4}
+	var LS = J.num(_or(J.gp(L0, 6.0), 1.0)); var sm = 0.0
+	for w in inR:
+		var d = J.num(w.d); var d2 = d if d <= LS else LS + ceilf((d - LS) * 0.45)
+		sm += (J.num(w.el.atk) if J.t(J.gp(w, "el")) else 10.0) * hpP(d2)
+	var avg = sm / inR.size()
+	p["ph"] = J.num(p.ph) - avg * sqrt(inR.size()) * dt; p["crack"] = 0.2
+	p["cd"] = J.num(J.gp(p, "cd")) + dt
+	if J.num(p.cd) >= J.num(L0[3]) * J.num(M.cd):
+		p["cd"] = 0.0
+		for w in inR: tf_hit(Tf, w, atk, {"fear": 1.0, "aura": 1.0, "src": "puzzle"})
+		if not J.t(J.gp(p, "fx")): p["fx"] = _pfx(Tf, p, "phone", tf_wp(Tf, inR[0]))
+	if J.num(p.ph) <= 0:
+		p["ph"] = 0.0; p["solved"] = L0[4]
+		for w in inR: w["block"] = 0.0; w["puz"] = null; w["pzSkip"] = fi
+		var ns = J.str(inR.size()); tf_float(Tf, spot.x, J.num(spot.y) - 0.07, T("鬼打牆畀 " + ns + " 個人合力衝破！", "鬼打牆被 " + ns + " 個人合力衝破！"), "#9cf")
+const TF_4E := {"los": 2, "queueTick": 1, "release": 1, "devTick": 3, "fire": 5, "puzzleTick": 9}
+
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -1375,5 +1552,5 @@ func run(_env) -> void:
 	load_data()
 	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D)
+	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)
