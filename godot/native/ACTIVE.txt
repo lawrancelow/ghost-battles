@@ -51,3 +51,4 @@ scare_squad
 game
 station_foes
 station
+patrol
