@@ -460,6 +460,7 @@ func street_t4c(_t) -> void:
 # ---- L3：street 4d（tick 每格邏輯，連轉譯版 devTick／queueTick／bossTick 一齊行）----
 func street_t4d(_t) -> void: _t4tick("street_t4d", ["TF_4B", "TF_4C", "TF_4D"])
 func street_t4e(_t) -> void: _t4tick("street_t4e", ["TF_4B", "TF_4C", "TF_4D", "TF_4E"])
+func street_t4f(_t) -> void: _t4tick("street_t4f", ["TF_4B", "TF_4C", "TF_4D", "TF_4E", "TF_4F"])
 func _t4tick(mn: String, gn: Array) -> void:
 	mod = mn
 	var N = load("res://native/street.gd"); N.load_data()
@@ -467,7 +468,7 @@ func _t4tick(mn: String, gn: Array) -> void:
 	for sid in ["office", "bus", "flat"]:
 		var pr = _tf_pair(trT, N, sid, 3.0); var A = pr[0]; var B = pr[1]; var tg = sid
 		for gk in gn:
-			var grp = {"TF_4B": N.TF_4B, "TF_4C": N.TF_4C, "TF_4D": N.TF_4D, "TF_4E": N.TF_4E}[gk]
+			var grp = {"TF_4B": N.TF_4B, "TF_4C": N.TF_4C, "TF_4D": N.TF_4D, "TF_4E": N.TF_4E, "TF_4F": N.TF_4F}[gk]
 			for k in grp: B[k] = N.turf_methods(grp)[k]
 		var def = null
 		for d in N.D.SITES:

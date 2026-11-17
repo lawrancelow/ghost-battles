@@ -1523,6 +1523,206 @@ static func tf_puzzleTick(Tf, i, p, L0, S0, live, rd, atk, M, dt) -> void:
 		var ns = J.str(inR.size()); tf_float(Tf, spot.x, J.num(spot.y) - 0.07, T("鬼打牆畀 " + ns + " 個人合力衝破！", "鬼打牆被 " + ns + " 個人合力衝破！"), "#9cf")
 const TF_4E := {"los": 2, "queueTick": 1, "release": 1, "devTick": 3, "fire": 5, "puzzleTick": 9}
 
+# 4f：反應／字幕／痕跡／連環跌／路人特性
+static func _bossD(Tf) -> float: return J.num(D.BOSS_DMG) * J.num(_or(J.gp(Tf, "bg"), 1.0))
+static func _asgn(base: Dictionary, o) -> Dictionary:
+	if o is Dictionary:
+		for k in o: base[k] = o[k]
+	return base
+static func tf_lore(Tf, k):
+	var LO = J.gp(Tf, "LORE"); var L = J.gp(LO, k)
+	if not J.t(L): L = J.gp(LO, "_")
+	return J.gp(LO, L.same) if J.t(J.gp(L, "same")) else L
+static func tf_cap(Tf, text, x, y, o) -> void:
+	if not J.t(J.gp(Tf, "caps")): J.sp(Tf, "caps", [])
+	J.gp(Tf, "caps").append(_asgn({"text": text, "x": x, "y": y, "t": 0.0, "life": 1.4, "size": 15.0, "col": "#f4e8ff", "font": "serif", "style": "pop"}, o))
+static func tf_act(_Tf, w, pose, t, o) -> void: w["act"] = _asgn({"pose": pose, "t": t, "hold": true, "rot": 0.0}, o)
+static func _pk(a: Array): var o = []; for s in a: o.append(T(s[0], s[1])); return pick(o)
+static func tf_react(Tf, w, kind) -> void:
+	tf_wp(Tf, w); var K = kind if J.t(kind) else pick(["scream", "kneel", "head", "fall", "flee"])
+	if K == "scream": tf_act(Tf, w, "startle", 1.2, null); w["say"] = {"s": _pk([["呀————！", "啊————！"], ["有鬼呀！！", "有鬼啊！！"], ["救命！！", "救命！！"]]), "t": 1.3}
+	elif K == "kneel": tf_act(Tf, w, "cower", 1.6, null); w["say"] = {"s": _pk([["唔好搞我……", "不要搞我……"], ["對唔住對唔住……", "對不起對不起……"]]), "t": 1.4}
+	elif K == "head": tf_act(Tf, w, "tremble", 1.5, null); w["say"] = {"s": _pk([["我乜都睇唔到……", "我什麼都看不到……"], ["唔好望唔好望……", "別看別看……"]]), "t": 1.3}
+	elif K == "fall": tf_act(Tf, w, "cower", 1.4, {"rot": (-1.0 if randf() < 0.5 else 1.0) * 1.2}); w["say"] = {"s": T("哎呀！", "哎呀！"), "t": 1.0}
+	else: w["back"] = J.num(D.CELL) * 1.5; w["say"] = {"s": _pk([["走呀！！", "快跑！！"], ["我唔行喇！", "我不走了！"]]), "t": 1.2}
+static func tf_bump(Tf, w0, rad) -> void:
+	var R0 = (J.num(rad) if J.t(rad) else 50.0) * J.num(D.PX)
+	for o in J.iter(J.gp(Tf, "walkers")):
+		if not is_same(o, w0) and tf_alive(Tf, o) and not J.t(J.gp(o, "act")) and tf_dist(tf_wp(Tf, o), tf_wp(Tf, w0)) < R0:
+			tf_act(Tf, o, "startle", 0.6, {"rot": 0.35}); o["say"] = {"s": _pk([["咪推呀！", "別推啊！"], ["做咩撞我！", "幹嘛撞我！"]]), "t": 0.9}
+static func tf_reroute(Tf, w) -> bool:
+	var L = J.gp(Tf, "lay"); var sg = tf_wseg(Tf, w); var E = J.gp(L, "edges")
+	if not J.t(sg) or not J.t(J.gp(sg, "k")) or not J.t(J.gp(E, sg.k)): return false
+	var pos = tf_wp(Tf, w); var nx = J.iter(J.gp(E, sg.k)); var cur = J.gp(sg, "nk"); var alt = []
+	for n in nx:
+		if not J.seq(n, cur): alt.append(n)
+	var K2 = pick(alt) if alt.size() else null
+	if not J.t(K2): return false
+	var NS = J.gp(L, "nodes"); var pts = [{"p": pos, "k": "@"}, {"p": J.gp(NS, sg.k), "k": sg.k}]; var k = K2; var g = 0; var prev = sg.k
+	while J.t(k) and g < 160:
+		g += 1
+		pts.append({"p": J.gp(NS, k), "k": k, "hide": J.t(J.mc(J.gp(L, "hide"), "has", [J.str(prev) + ">" + J.str(k)]))})
+		var n2 = J.gp(E, k)
+		if not J.t(n2) or J.len(n2) == 0: break
+		prev = k; k = pick(J.iter(n2))
+	tf_mkRoute(Tf, w, pts); w["t"] = 0.001; return true
+static func tf_addTrace(Tf, kind, x, y, r, life, o) -> void:
+	if not J.t(J.gp(Tf, "traces")): J.sp(Tf, "traces", [])
+	J.gp(Tf, "traces").append(_asgn({"kind": kind, "x": x, "y": y, "r": J.num(r) * J.num(D.PX), "life": life, "t": 0.0, "seen": J.new_("Set", [])}, o))
+static func tf_segDist(_Tf, p, a, b) -> float:
+	var ax = J.num(a[0]); var ay = J.num(a[1]) * 1.5; var bx = J.num(b[0]); var by = J.num(b[1]) * 1.5; var px = J.num(p[0]); var py = J.num(p[1]) * 1.5
+	var dx = bx - ax; var dy = by - ay; var l = dx * dx + dy * dy
+	if l == 0: l = 1e-9
+	var t = maxf(0.0, minf(1.0, ((px - ax) * dx + (py - ay) * dy) / l)); return _hyp(px - ax - dx * t, py - ay - dy * t)
+static func tf_chainFall(Tf, w0) -> void:
+	var cur = w0; var done = [w0]; var n = 0; var PX = J.num(D.PX)
+	for i in 4:
+		var p0 = tf_wp(Tf, cur); var cs = []
+		for o in J.iter(J.gp(Tf, "walkers")):
+			if not tf_alive(Tf, o): continue
+			var dn = false
+			for d in done:
+				if is_same(d, o): dn = true; break
+			if dn: continue
+			var dd = tf_dist(tf_wp(Tf, o), p0)
+			if dd < 90 * PX: cs.append([o, dd])
+		if cs.is_empty(): break
+		var o = _ssort(cs, func(a): return a[1])[0][0]; done.append(o); n += 1
+		o["cb3c"] = 1.0; tf_act(Tf, o, "cower", 1.6 + i * 0.2, {"rot": (-1.0 if i % 2 else 1.0) * 1.25}); tf_hit(Tf, o, _bossD(Tf) * 0.2, {"force": true, "aura": 1.0})
+		o["say"] = {"s": _pk([["哎呀！", "哎呀！"], ["咪推呀！", "別推啊！"], ["撞到我喇！", "撞到我了！"]]), "t": 1.2}; cur = o
+	if n >= 2:
+		var xy = tf_wp(Tf, w0); var ns = J.str(n); tf_cap(Tf, T("連環跌 ×" + ns + "！", "連環跌倒 ×" + ns + "！"), xy[0], J.num(xy[1]) - 0.16, {"col": "#ffb0b0", "style": "pop", "size": 16.0})
+static func tf_traceTick(Tf, dt) -> void:
+	dt = J.num(dt); var TR = []; var CELL = J.num(D.CELL); var BD = J.num(D.BOSS_DMG); var bg = J.num(_or(J.gp(Tf, "bg"), 1.0))
+	for r in J.iter(_or(J.gp(Tf, "traces"), [])):
+		r["t"] = J.num(r.t) + dt
+		if J.num(r.t) < J.num(r.life): TR.append(r)
+	J.sp(Tf, "traces", TR)
+	for w in J.iter(J.gp(Tf, "walkers")):
+		if not tf_alive(Tf, w): continue
+		var p = tf_wp(Tf, w); var on = []; var ks = {}
+		for r in TR:
+			if tf_dist(p, [r.x, r.y]) < J.num(r.r): on.append(r)
+		for r in on: ks[J.str(r.kind)] = true
+		if on.size():
+			for r in TR:
+				if tf_dist(p, [r.x, r.y]) < J.num(r.r) + 0.12: ks[J.str(r.kind)] = true
+		if on.is_empty(): continue
+		var x = p[0]; var y = J.num(p[1])
+		if ks.has("hair") and ks.has("ice") and not J.t(J.gp(w, "cb1")):
+			w["cb1"] = 1.0; tf_act(Tf, w, "cower", 2.6, {"rot": 1.3}); tf_hit(Tf, w, BD * bg * 0.6, {"force": true})
+			tf_cap(Tf, T("冰髮！跣到四腳朝天！", "冰髮！滑倒在地！"), x, y - 0.1, {"col": "#bfe8ff", "style": "shake", "size": 17.0, "font": "serif"}); J.sp(Tf, "tint", {"col": "rgba(150,210,255,0.25)", "t": 0.8}); continue
+		if ks.has("coins") and ks.has("notes") and not J.t(J.gp(w, "cb2")):
+			w["cb2"] = 1.0; tf_act(Tf, w, "cower", 3.5, null); w["target"] = 5.0; w["say"] = {"s": T("有錢執呀！", "有錢撿啊！"), "t": 1.5}
+			tf_cap(Tf, T("成班人蹲低執錢！（受嚇 ×1.5）", "一群人蹲下撿錢！（受驚 ×1.5）"), x, y - 0.12, {"col": "#ffe08a", "style": "pop", "size": 15.0}); continue
+		if ks.has("debt") and J.num(J.gp(w, "amnesia")) > 0 and not (J.num(J.gp(w, "back")) > 0) and not (J.num(J.gp(w, "dbCd")) > 0):
+			w["dbCd"] = 1.6; w["cb3"] = J.num(J.gp(w, "cb3")) + 1; w["back"] = CELL * 1.6; tf_bump(Tf, w, 55.0)
+			w["say"] = {"s": _pk([["咦？我行過嚟咩？", "咦？我走過來了嗎？"], ["又係你！", "又是你！"]]), "t": 1.2}; tf_hit(Tf, w, BD * 0.25, {"force": true, "aura": 1.0}); tf_chainFall(Tf, w)
+			tf_cap(Tf, T("窄口嚟回撞！", "窄口來回撞！"), x, y - 0.1, {"col": "#ff9a9a", "style": "shake", "size": 15.0}); continue
+		for r in on:
+			var kd = J.str(r.kind)
+			if J.t(J.mc(r.seen, "has", [w])):
+				if kd in ["hair", "ice", "paper", "clink", "veg"]:
+					w["slowM"] = minf(J.num(w.slowM) if J.num(J.gp(w, "slowT")) > 0 else 1.0, 0.6 if (kd == "paper" or kd == "veg") else 0.5); w["slowT"] = 0.3
+					if kd == "clink": w["fear"] = 0.5
+				continue
+			J.mc(r.seen, "add", [w])
+			if kd == "veg":
+				if randf() < 0.3: tf_act(Tf, w, "cower", 1.2, {"rot": 1.1}); w["say"] = {"s": T("踩親啲菜心！", "踩到菜心了！"), "t": 1.0}
+			elif kd == "hair":
+				if randf() < 0.45: tf_act(Tf, w, "cower", 1.3, {"rot": 1.1}); w["say"] = {"s": T("啲頭髮好滑！", "頭髮好滑！"), "t": 1.0}
+			elif kd == "ice":
+				if randf() < 0.45: tf_act(Tf, w, "cower", 1.3, {"rot": -1.1}); w["frost"] = 1.2
+			elif kd == "shadow": w["back"] = CELL * 1.2; w["say"] = {"s": _pk([["頭先嗰個白影係咩？", "剛剛那個白影是什麼？"], ["我唔過去喇……", "我不過去了……"]]), "t": 1.4}
+			elif kd == "bowl": tf_act(Tf, w, "idle", 1.6, null); w["say"] = {"s": T("邊個個碗喺度轆？", "誰的碗在滾？"), "t": 1.3}
+			elif kd == "claw": w["fear"] = 1.5; tf_hit(Tf, w, BD * bg * 0.15, {"force": true, "aura": 1.0})
+			elif kd == "coins" or kd == "notes": tf_act(Tf, w, "cower", 1.6, null); w["say"] = {"s": T("跌咗啲散紙！", "掉了零錢！") if kd == "coins" else T("有張銀紙！", "有張鈔票！"), "t": 1.2}
+			elif kd == "cloth":
+				if tf_reroute(Tf, w): w["say"] = {"s": T("嗰邊有白布……行第二條路", "那邊有白布……走另一條"), "t": 1.4}
+			elif kd == "ring": tf_hit(Tf, w, BD * bg * 0.35, {"force": true, "fright": 1.0}); tf_react(Tf, w, "scream")
+			elif kd == "soup": w["amnesia"] = 6.0; w["back"] = CELL; w["say"] = {"s": T("我頭先想去邊？", "我剛剛要去哪？"), "t": 1.3}
+			elif kd == "debt": w["back"] = CELL * 1.2; tf_bump(Tf, w, 50.0); w["say"] = {"s": T("唔好搵我！", "別找我！"), "t": 1.2}
+			elif kd == "clink": w["fear"] = 1.0; w["say"] = {"s": T("邊個喺度數錢？", "誰在數錢？"), "t": 1.2}
+	var ck = []
+	for q in J.iter(_or(J.gp(Tf, "caps"), [])):
+		q["t"] = J.num(q.t) + dt
+		if J.num(q.t) < J.num(q.life): ck.append(q)
+	J.sp(Tf, "caps", ck)
+	var tn = J.gp(Tf, "tint")
+	if J.t(tn):
+		tn["t"] = J.num(tn.t) - dt
+		if J.num(tn.t) <= 0: J.sp(Tf, "tint", null)
+static func _postXY(Tf, i): var s = J.gp(J.gp(J.gp(Tf, "lay"), "posts"), float(i)); return [s.x, s.y]
+static func tf_traitTick(Tf, w, dt) -> void:
+	dt = J.num(dt); w["tT"] = J.num(J.gp(w, "tT")) - dt; var p0 = tf_wp(Tf, w); var PX = J.num(D.PX); var tr = J.str(J.gp(w, "tr")); var SP = J.iter(J.gp(J.gp(Tf, "sd"), "posts")); var tT = J.num(w.tT)
+	if tr == "torch" and tT <= 0:
+		w["tT"] = 6.0; var best = -1; var bd = 1e9
+		for i in SP.size():
+			var p = SP[i]
+			if not J.t(p) or not J.t(J.gp(p, "role")) or J.num(J.gp(p, "build")) > 0: continue
+			var sp = _postXY(Tf, i); var d = tf_dist(p0, sp)
+			if d < 200 * PX and d < bd and tf_los(Tf, p0, sp): bd = d; best = i
+		if best >= 0:
+			var p = SP[best]; p["stun"] = 2.5; w["beam"] = {"i": float(best), "t": 1.0}
+			w["say"] = {"s": _pk([["邊個喺度？照下先！", "誰在那？先照一下！"], ["出嚟！我見到你喇！", "出來！我看到你了！"]]), "t": 1.4}
+			var sp = _postXY(Tf, best); tf_cap(Tf, T("電筒照住！設備停 2.5 秒", "手電筒照住！設備停 2.5 秒"), sp[0], J.num(sp[1]) - 0.1, {"col": "#fff3b0", "size": 12.0, "style": "pop", "font": "sans-serif"})
+	elif tr == "calm" and tT <= 0:
+		w["tT"] = 1.0
+		for q in J.iter(J.gp(Tf, "walkers")):
+			if not is_same(q, w) and tf_alive(Tf, q) and tf_dist(tf_wp(Tf, q), p0) < 120 * PX:
+				q["hp"] = minf(J.num(q.max), J.num(q.hp) + J.num(q.max) * 0.02)
+				if J.num(J.gp(q, "stay")) > 0.6: q["stay"] = J.num(q.stay) - 0.5
+				q["calmFx"] = 0.6
+	elif tr == "photo" and tT <= 0:
+		w["tT"] = Rr(5, 9); tf_act(Tf, w, "idle", 1.5, null); w["flash"] = 0.25; w["say"] = {"s": T("影張相先！", "先拍張照！"), "t": 1.2}
+		for i in SP.size():
+			var p = SP[i]
+			if J.t(p) and J.t(J.gp(p, "role")) and tf_dist(p0, _postXY(Tf, i)) < 150 * PX: p["stun"] = maxf(J.num(J.gp(p, "stun")), 1.0)
+	elif tr == "emf" and tT <= 0:
+		w["tT"] = Rr(7, 10); var near = false
+		for i in SP.size():
+			var p = SP[i]
+			if J.t(p) and J.t(J.gp(p, "role")) and not (J.num(J.gp(p, "build")) > 0) and tf_dist(p0, _postXY(Tf, i)) < 160 * PX: near = true
+		if near:
+			tf_act(Tf, w, "idle", 1.4, null); tf_float(Tf, p0[0], J.num(p0[1]) - 0.09, T("嗶嗶嗶——", "嗶嗶嗶——"), "#9ef07a")
+			w["say"] = {"s": _pk([["讀數爆錶！就喺呢度！", "讀數爆表！就在這裡！"], ["等等，我量多次先！", "等等，我再量一次！"]]), "t": 1.3}
+	elif tr == "drunk" and tT <= 0:
+		w["tT"] = Rr(3, 6)
+		if randf() < 0.45: w["back"] = J.num(D.CELL) * 0.7; w["say"] = {"s": _pk([["嗝～行錯路……", "嗝～走錯路……"], ["再飲多杯……", "再喝一杯……"]]), "t": 1.2}
+	elif tr == "couple" and J.t(J.gp(w, "mate")) and tT <= 0:
+		w["tT"] = Rr(6, 10)
+		if randf() < 0.5: var re = J.iter(J.gp(w.p, "re")); var a = pick(re); var b = pick(re); w["say"] = {"s": T(a[0], b[1]), "t": 1.2}
+	if J.t(J.gp(w, "beam")):
+		w.beam["t"] = J.num(w.beam.t) - dt
+		if J.num(w.beam.t) <= 0: w["beam"] = null
+	if J.num(J.gp(w, "flash")) > 0: w["flash"] = J.num(w.flash) - dt
+	if J.num(J.gp(w, "calmFx")) > 0: w["calmFx"] = J.num(w.calmFx) - dt
+static func tf_walkerFx(Tf, w, dt) -> bool:
+	dt = J.num(dt)
+	if J.t(J.gp(w, "tr")) and tf_alive(Tf, w): tf_traitTick(Tf, w, dt)
+	for f in ["amnesia", "target", "breath", "dbCd"]:
+		if J.num(J.gp(w, f)) > 0: w[f] = J.num(w[f]) - dt
+	if J.t(J.gp(w, "lift")):
+		w.lift["t"] = J.num(w.lift.t) + dt
+		if J.num(w.lift.t) >= J.num(w.lift.dur):
+			w["lift"] = null; tf_act(Tf, w, "cower", 1.2, {"rot": 1.2}); tf_hit(Tf, w, _bossD(Tf) * 0.3, {"force": true, "fright": 1.0}); w["say"] = {"s": T("呀——！", "啊——！"), "t": 1.0}
+		return true
+	if J.t(J.gp(w, "fly")):
+		w.fly["t"] = J.num(w.fly.t) + dt
+		if J.num(w.fly.t) >= J.num(w.fly.dur): w["fly"] = null; tf_act(Tf, w, "cower", 1.3, {"rot": 1.3}); w["say"] = {"s": T("痛呀……", "好痛……"), "t": 1.0}
+		return true
+	if J.t(J.gp(w, "chase")):
+		w.chase["t"] = J.num(w.chase.t) + dt
+		if randf() < dt * 3: tf_bump(Tf, w, 45.0)
+		if J.num(w.chase.t) >= J.num(w.chase.dur): w["chase"] = null
+		return true
+	if J.t(J.gp(w, "act")):
+		w.act["t"] = J.num(w.act.t) - dt
+		if J.num(w.act.t) <= 0: w["act"] = null
+		elif J.t(w.act.hold): return true
+	return false
+const TF_4F := {"lore": 1, "cap": 4, "act": 4, "react": 2, "bump": 2, "reroute": 1, "addTrace": 6, "segDist": 3, "chainFall": 1, "traceTick": 1, "traitTick": 2, "walkerFx": 2}
+
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -1552,5 +1752,5 @@ func run(_env) -> void:
 	load_data()
 	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E)
+	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)
