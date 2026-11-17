@@ -22,7 +22,7 @@ static func _setup_table() -> void:
 	FN["xiaogui"] = mv_xiaogui
 	FN["laojiang"] = mv_jiangshi
 	FN["zombie"] = mv_jiangshi
-	for tb in [BtMoves2.table(), BtN30a.table(), BtN30b.table(), BtN30c.table(), BtN30d.table()]:
+	for tb in [BtMoves2.table(), preload("res://game/battle/bt_moves3.gd").table(), BtN30a.table(), BtN30b.table(), BtN30c.table(), BtN30d.table()]:
 		for k in tb: FN[k] = tb[k]
 
 static func has(k: String) -> bool:
@@ -42,7 +42,7 @@ static func draw(ctx: Ctx, k: String, x: float, y: float, s: float, o: Dictionar
 	if o.get("alpha") != null: ctx.globalAlpha = float(o.alpha)
 	var done = FN[k].call(ctx, a)
 	ctx.restore()
-	if done == false: Art.draw_char(ctx, k, x, y, s, o.duplicate())
+	if done == false: Art.draw_char_after_moves(ctx, k, x, y, s, o.duplicate())   # 唔接手：照 art.js 由 MOVES 之後繼續（唔再入 MOVES）
 	return true
 
 # ---------------- 數學 ----------------
@@ -125,10 +125,16 @@ static func pose(K: Dictionary, extra = null, idleK = null) -> Dictionary:
 			var v = float(extra[k])
 			z[k] = (float(z.get(k, 0.0)) + v if k == "y" else v) if KEEP.has(k) else float(z.get(k, 0.0)) + (v if K.nr else -v)
 	return z
+# 畫身體：同網頁版一樣經全局 MeshAnim.drawBody（網頁骨架；core MeshAnim 嘅 DB 骨架係舊資料，會偏 2px 左右）
+static func mesh_body(ctx: Ctx, rig_id: String, key: String, h: float, mp: Dictionary) -> void:
+	var JM = J.G.get("MeshAnim")
+	if JM is Dictionary and JM.get("drawBody") != null: J.mc(JM, "drawBody", [ctx, rig_id, key, h, mp])
+	else: MeshAnim.draw_body(ctx, rig_id, key, h, mp)
+
 static func body(ctx: Ctx, K: Dictionary, m: Transform2D, mp: Dictionary, key := "") -> void:
 	ctx.save(); mset(ctx, m)
 	if not K.nr: ctx.scale(-1, 1)
-	MeshAnim.draw_body(ctx, K.id, key if key != "" else K.id + "__body", K.H, mp); ctx.restore()
+	mesh_body(ctx, K.id, key if key != "" else K.id + "__body", K.H, mp); ctx.restore()
 static func piece(ctx: Ctx, K: Dictionary, key: String, m: Transform2D, pu: float, pv: float, alpha = null) -> void:
 	var tex = Spr.get_tex(key) if ok(key) else null
 	if tex == null: return

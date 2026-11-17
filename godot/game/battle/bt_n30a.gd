@@ -276,7 +276,7 @@ static func dugui(ctx: Ctx, a: Dictionary) -> bool:
 		if al <= 0: continue
 		ctx.save(); ctx.globalAlpha *= al; ctx.translate(x, y); ctx.rotate(0.5 + i * 0.3 if stick else q * 20 + i); var w = 0.07 * H; var h = 0.1 * H
 		ctx.fillStyle = Color("#fbf6ea"); ctx.strokeStyle = Color("#3a2a2a"); ctx.lineWidth = w * 0.1; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, w * 0.15); ctx.fill(); ctx.stroke()
-		ctx.fillStyle = Color("#222222") if i == 1 else Color("#c8202a"); ctx.font = "900 %dpx sans-serif" % maxi(1, int(h * 0.55)); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("♠" if i == 1 else "♥", 0, 0); ctx.restore()
+		ctx.fillStyle = Color("#222222") if i == 1 else Color("#c8202a"); ctx.font = "900 " + J.str(h * 0.55) + "px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("♠" if i == 1 else "♥", 0, 0); ctx.restore()
 	var p = t - TC
 	if p >= 0 and p < 0.13: burst(ctx, T.x, T.y, 0.3 * th, 1 - p / 0.13, "#fff0b0", 151, 9)
 	pop(ctx, S, T.x, T.y - 0.35 * th, "梭哈！", 0.22 * th, "#ffd84a", TC, 0.32)

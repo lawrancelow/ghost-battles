@@ -79,7 +79,7 @@ static func body(ctx: Ctx, S: Dictionary, m: Transform2D, mp: Dictionary, key :=
 	if alpha != null: ctx.globalAlpha *= float(alpha)
 	var k = key if key != "" else S.id
 	if not MeshAnim.RIG.has(k): MeshAnim.RIG[k] = MeshAnim.RIG[S.id]
-	MeshAnim.draw_body(ctx, S.id, k, S.H, mp); ctx.restore()
+	BtMoves.mesh_body(ctx, S.id, k, S.H, mp); ctx.restore()
 static func whole(ctx: Ctx, S: Dictionary, f: Dictionary, key := "", idleK = null) -> void:
 	body(ctx, S, bm(S, f), pose(S, f, idleK), key, f.get("a"))
 static func ip(S: Dictionary, u: float, v: float) -> Vector2: return Vector2((1.0 if S.nr else -1.0) * (u - 0.5) * S.W, (v - 1) * S.H)
@@ -136,7 +136,7 @@ static func txt(ctx: Ctx, S: Dictionary, x: float, y: float, s: String, size: fl
 	ctx.save(); ctx.translate(x, y); ctx.scale(S.fw, 1)
 	if rot != 0.0: ctx.rotate(rot)
 	if al != null: ctx.globalAlpha *= cl(float(al))
-	ctx.font = "900 %dpx sans-serif" % maxi(1, int(round(size))); ctx.textAlign = "center"; ctx.textBaseline = "middle"
+	ctx.font = "900 " + J.str(size) + "px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"
 	ctx.lineJoin = "round"; ctx.lineWidth = maxf(2, size * 0.22); ctx.strokeStyle = Color(26 / 255.0, 20 / 255.0, 38 / 255.0, 0.92); ctx.strokeText(s, 0, 0)
 	ctx.fillStyle = col if col != null else Color("#fff3d6"); ctx.fillText(s, 0, 0); ctx.restore()
 static func pop(ctx: Ctx, S: Dictionary, x: float, y: float, s: String, size: float, col, t0: float, dur: float) -> void:

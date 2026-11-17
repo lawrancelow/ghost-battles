@@ -65,7 +65,7 @@ static func small_text(ctx: Ctx, a: Dictionary, x: float, y: float, txt: String,
 	if alpha <= 0: return
 	upright_begin(ctx, a, x, y)
 	ctx.globalAlpha *= alpha; ctx.rotate(sin(t * 23) * 0.06 - 0.08)
-	ctx.font = "900 %dpx sans-serif" % int(size); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round"
+	ctx.font = "900 " + J.str(size) + "px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round"
 	ctx.strokeStyle = Color("#2a1a22"); ctx.lineWidth = size * 0.28; ctx.strokeText(txt, 0, 0)
 	ctx.fillStyle = Color("#fff3e8"); ctx.fillText(txt, 0, 0)
 	ctx.restore()
@@ -198,7 +198,7 @@ static func mv_shuigui(ctx: Ctx, a: Dictionary) -> bool:
 		ctx.save(); ctx.beginPath(); ctx.rect(-H * 3, -H * 4, H * 6, H * 4 + H * 0.01); ctx.clip()
 		var dy = float_y(a) * (1 - sink) + sink * H * 1.02; var lean = 0.12 * sink if g < 0.6 else -0.1 * sink
 		ctx.translate(0, dy); ctx.scale(-1, 1)
-		MeshAnim.draw_body(ctx, "shuigui", "shuigui", H, pz(t, {"body": lean, "head": -0.1 * sink, "armB": -0.5 * sink, "armF": 0.4 * sink, "hairL": 0.3 * sink, "hairR": -0.3 * sink, "sy": 1 + 0.06 * sink, "sx": 1 - 0.04 * sink}))
+		BtMoves.mesh_body(ctx, "shuigui", "shuigui", H, pz(t, {"body": lean, "head": -0.1 * sink, "armB": -0.5 * sink, "armF": 0.4 * sink, "hairL": 0.3 * sink, "hairR": -0.3 * sink, "sy": 1 + 0.06 * sink, "sx": 1 - 0.04 * sink}))
 		ctx.restore()
 		if g > 0.74:
 			for i in 6:
@@ -287,7 +287,7 @@ static func mv_pontianak(ctx: Ctx, a: Dictionary) -> bool:
 		ribbon(ctx, img, s.src, iw * 0.06, sg, func(i): var u = float(from + i) / maxi(1, n - 1); return s.w * (0.95 - 0.5 * u) * (0.75 + u * 5 if u < 0.05 else 1.0), H / ih * 1.3,
 			func(i): return s.dep[from + i] if from + i < s.dep.size() else 1.0)
 	for s in strands: draw_strand.call(s, 0, mini(s.pts.size() - 1, 6))
-	ctx.save(); ctx.translate(ox, oy); MeshAnim.draw_body(ctx, "pontianak", "pontianak", H, ps); ctx.restore()
+	ctx.save(); ctx.translate(ox, oy); BtMoves.mesh_body(ctx, "pontianak", "pontianak", H, ps); ctx.restore()
 	for s in strands: draw_strand.call(s, mini(s.pts.size() - 1, 6), s.pts.size() - 1)
 	var sk = bump(g, 0.2, 0.36, 0.7)
 	if sk > 0:
@@ -329,7 +329,7 @@ static func mv_tianhua(ctx: Ctx, a: Dictionary) -> bool:
 	if hy != null: a_shadow(ctx, a, a.x + (-1.0 if a.faceRight else 1.0) * ax, 0.5)
 	begin(ctx, a)
 	if gy != null:
-		ctx.save(); ctx.translate(0, gy + float_y(a)); MeshAnim.draw_body(ctx, "tianhua", "tianhua", H, pz(t, ps)); ctx.restore()
+		ctx.save(); ctx.translate(0, gy + float_y(a)); BtMoves.mesh_body(ctx, "tianhua", "tianhua", H, pz(t, ps)); ctx.restore()
 		if g > 0.14 and g < 0.34: streaks(ctx, 0, gy - H * 0.2, gy + H * 1.2, H * 0.5, 7, seg(g, 0.14, 0.2) * (1 - seg(g, 0.3, 0.34)), 5)
 		if g > 0.8 and g < 0.92: streaks(ctx, 0, gy - H * 1.6, gy - H * 0.9, H * 0.5, 6, 0.8, 9)
 		dust(ctx, 0, 0, H * 0.6, seg(g, 0.15, 0.4), 8, 3.3)

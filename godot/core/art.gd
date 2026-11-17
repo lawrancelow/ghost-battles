@@ -164,97 +164,296 @@ func draw_lily(ctx: Ctx, x: float, y: float, t: float) -> void:
 	ctx.lineCap = "butt"
 	ctx.fillStyle = "#ff6060"; ctx.beginPath(); ctx.arc(x, y, 1.6, 0, 6.3); ctx.fill()
 
-# ---------------- 角色 ----------------
-const LIMB_POSES := {"idle": 1, "move": 1, "walk": 1, "run": 1, "windup": 1, "strike": 1, "follow": 1, "recover": 1, "chop": 1, "hammer": 1, "proud": 1}
+# ---------------- 角色（照 art.js drawChar／drawMesh／drawPuppet／drawSprite）----------------
+# 角色高度／實體表：JS 嗰邊（native/art.gd 或轉譯版 ART）嘅 CHAR_H／SOLID 會俾 n30_rigs、npc_antag 等模塊加嘢，以佢為準
+const LIMB_POSES := {"": 1, "idle": 1, "move": 1, "walk": 1, "run": 1, "windup": 1, "strike": 1, "follow": 1, "recover": 1, "chop": 1, "hammer": 1, "proud": 1}
+const MOVE_POSES := {"windup": 1, "strike": 1, "follow": 1, "recover": 1}
+const PUPPET_ANIM := {"walk": 1, "run": 1, "startle": 1, "cower": 1, "tremble": 1, "phone": 1, "look": 1, "mop": 1, "faint": 1, "sip": 1, "stand": 1, "hold": 1, "shrug": 1, "windup": 1, "strike": 1, "recover": 1, "hurt": 1, "cast": 1, "die": 1, "chop": 1, "hammer": 1, "knead": 1, "reap": 1, "proud": 1}
 
 func spr_key(type: String) -> String: return "afu_body" if type == "afu" else type
 func has_spr(type: String) -> bool: return char_h(type) > 0 and PtGfx.tex(spr_key(type)) != null
-# 原生表冇嘅角色（n30、巡陰新鬼、npc_*）：用 JS ART.CHAR_H 嘅高度
-func char_h(type: String) -> float:
-	if CHAR_H.has(type): return CHAR_H[type]
+func _jart(k: String):
 	var A = J.G.get("ART")
-	if A != null:
-		var h = J.gp(A, "CHAR_H")
-		if h is Dictionary and h.has(type): return J.num(h[type])
-	return 0.0
+	return J.gp(A, k) if A != null else null
+func char_h(type: String) -> float:
+	var h = _jart("CHAR_H")   # JS 表優先；原生另加嘅（巡陰 npc_kiln 等，JS 冇）用本地表
+	if h is Dictionary and h.has(type) and J.t(h[type]): return J.num(h[type])
+	return float(CHAR_H.get(type, 0))
+func is_solid(type: String) -> bool:
+	if SOLID.has(type): return true
+	var so = _jart("SOLID")
+	return so is Dictionary and J.t(so.get(type))
+func _special_has(type: String) -> bool:
+	var SP = J.G.get("SPECIAL")
+	return SP != null and J.t(J.mc(SP, "has", [type]))
+func _ma(): return J.G.get("MeshAnim")
+func _ma_has(type: String) -> bool:
+	var M = _ma()
+	return M != null and J.t(J.mc(M, "has", [type]))
+static func _ot(o: Dictionary) -> float: return J.num(o.get("t")) if J.t(o.get("t")) else 0.0
+static func _pz(o: Dictionary) -> String: return J.str(o.pose) if o.get("pose") != null else ""
 
-func draw_char(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary = {}) -> void:
-	if not o.has("t"): o.t = 0.0
-	if CHAR_H.has(type) and MeshAnim.has(type) and not (SPECIAL_T.has(type) and has_spr(type)) and not o.get("noMesh", false):
-		_draw_mesh(ctx, type, x, y, s, o); return
+# js = true：照網頁版，有 o.act 就交俾 DAILY（JS ART.drawChar 叫）；原生場景要講明 o._daily
+func draw_char(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary = {}, js := false) -> void:
+	o["t"] = _ot(o)
+	if char_h(type) > 0 and _ma_has(type) and not _special_has(type) and not J.t(o.get("noMesh")):
+		_draw_mesh(ctx, type, x, y, s, o, js, false); return
+	var PU = J.G.get("Puppet")
+	if PU != null and J.t(J.mc(PU, "has", [type])) and not J.t(o.get("noPuppet")):
+		ctx.save()
+		if o.get("alpha") != null: ctx.globalAlpha = J.num(o.alpha)
+		if J.t(o.get("rot")): ctx.translate(x, y - 15 * s); ctx.rotate(J.num(o.rot)); ctx.translate(-x, -(y - 15 * s))
+		_draw_puppet(ctx, type, x, y, s, o); ctx.restore(); return
 	_draw_plain(ctx, type, x, y, s, o)
 
-func _draw_mesh(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary) -> void:
-	var solid = SOLID.has(type); var H: float = CHAR_H[type] * s; var t: float = o.t
-	# 平日動作（daily_*.js 嘅 DAILY[act]：伏桌瞓覺、開會、講電話、執嘢走……）：同 art.js drawMesh 一樣交俾佢畫，回傳 false 先照一般畫法
+# MOVES 交返 false 之後（BtMoves 叫）：由 custom／Limbs／網格繼續畫，唔再入 MOVES
+func draw_char_after_moves(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary) -> void:
+	o["t"] = _ot(o)
+	if char_h(type) > 0 and _ma_has(type) and not _special_has(type) and not J.t(o.get("noMesh")): _draw_mesh(ctx, type, x, y, s, o, false, true)
+	else: draw_char(ctx, type, x, y, s, o)
+
+func _arg(type: String, x: float, y: float, s: float, H: float, o: Dictionary, solid: bool, ctx: Ctx) -> Dictionary:
+	var sh = func(_t, a):
+		var k = J.arg(a, 1)
+		shadow(ctx, J.num(J.arg(a, 0)), y + 1 * s, s * (J.num(k) if J.t(k) else (1.0 if solid else 0.8))); return null
+	return {"type": type, "x": x, "y": y, "s": s, "H": H, "o": o, "faceRight": not J.t(o.get("flip")), "solid": solid, "shadow": sh}
+
+func _hand(ctx: Ctx, fn, a: Dictionary, o: Dictionary) -> bool:
+	ctx.save()
+	if o.get("alpha") != null: ctx.globalAlpha = J.num(o.alpha)
+	var done = J.cl(fn, null, [ctx, a])
+	ctx.restore()
+	return not (done is bool and done == false)
+
+func _draw_mesh(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary, js: bool, skip_moves: bool) -> void:
+	var solid = is_solid(type); var H: float = char_h(type) * s; var t: float = o.t
+	var pose = _pz(o)
+	# 平日動作（DAILY[act]）：回傳 false 先照一般畫法
 	var act = o.get("act")
-	if act is String and act != "" and o.get("_daily", false):   # 叫嘅人要講明（回陽間 sc_npc.gd）；其他場景各自有原生版
-		var DA = J.G.get("DAILY")
-		if ScDaily.has(act):   # 回陽間辦公室嗰批動作已經移植做原生（game/scare/sc_daily.gd）
+	if J.t(act) and (js or J.t(o.get("_daily"))):
+		act = J.str(act)
+		if not js and ScDaily.has(act):   # 回陽間辦公室嗰批動作（原生 game/scare/sc_daily.gd）
 			ctx.save()
 			if o.get("alpha") != null: ctx.globalAlpha = float(o.alpha)
 			var ok = ScDaily.draw(ctx, act, {"type": type, "x": x, "y": y, "s": s, "H": H, "o": o, "faceRight": not o.get("flip", false), "solid": solid})
 			ctx.restore()
 			if ok: return
-		elif DA is Dictionary and DA.get(act) != null:
-			ctx.save()
-			if o.get("alpha") != null: ctx.globalAlpha = float(o.alpha)
-			var sh = func(_t, a): shadow(ctx, J.num(a[0]), y + 1 * s, s * (J.num(a[1]) if a.size() > 1 and J.t(a[1]) else (1.0 if solid else 0.8))); return null
-			var done = J.cl(DA[act], null, [ctx, {"type": type, "x": x, "y": y, "s": s, "H": H, "o": o, "faceRight": not o.get("flip", false), "solid": solid, "shadow": sh}])
-			ctx.restore()
-			if not (done is bool and done == false): return
-	var pose = o.get("pose")
-	ctx.save()
-	if o.get("alpha") != null: ctx.globalAlpha = float(o.alpha)
-	if Limbs.has(type) and (pose == null or LIMB_POSES.has(pose)) and not o.get("hurt", false):
-		var walking: bool = o.get("walk", false) or pose == "move" or pose == "walk" or pose == "run"
-		var mp: Dictionary = MeshAnim.walk(t) if walking else MeshAnim.idle(t)
-		if o.get("shadow", true) != false:
+		else:
+			var DA = J.G.get("DAILY")
+			if DA is Dictionary and J.t(DA.get(act)) and _hand(ctx, DA[act], _arg(type, x, y, s, H, o, solid, ctx), o): return
+	# 專屬招式（MOVES[type]）
+	if not skip_moves and MOVE_POSES.has(pose):
+		var MV = J.G.get("MOVES")
+		if MV is Dictionary and J.t(MV.get(type)) and _hand(ctx, MV[type], _arg(type, x, y, s, H, o, solid, ctx), o): return
+	var R = J.gp(J.gp(_ma(), "RIG"), type)
+	if R is Dictionary and J.t(R.get("custom")) and _hand(ctx, R.custom, _arg(type, x, y, s, H, o, solid, ctx), o): return
+	var A = J.gp(_ma(), "ANIM")
+	var fy = y - (0.0 if solid else (3 + sin(t * 2.4) * 2) * s)
+	var LB = J.G.get("Limbs")
+	if LB != null and J.t(J.mc(LB, "has", [type])) and LIMB_POSES.has(pose) and not J.t(o.get("hurt")):
+		var walking = J.t(o.get("walk")) or pose == "move" or pose == "walk" or pose == "run"
+		var mp = J.cl(A.walk if walking else A.idle, null, [t])
+		ctx.save()
+		if o.get("alpha") != null: ctx.globalAlpha = J.num(o.alpha)
+		if not (o.get("shadow") is bool and o.shadow == false):
 			ctx.save()
 			if not solid: ctx.globalAlpha *= 0.55
 			shadow(ctx, x, y + 1 * s, s * (1.0 if solid else 0.8)); ctx.restore()
-		Limbs.draw(ctx, type, x, y - (0.0 if solid else (3 + sin(t * 2.4) * 2) * s), H, o, not o.get("flip", false), mp)
-		ctx.restore(); return
-	var pz = MeshAnim.pose_for(type, o)
-	var JR = J.gp(J.gp(J.G.get("MeshAnim"), "RIG"), type)   # n30 走路／待機方式（n30_rigs.js RIG.tweak）
-	if JR is Dictionary and JR.get("tweak") is Callable: J.cl(JR.tweak, null, [pz, o])
-	var R: Dictionary = MeshAnim.RIG[type]
-	if R.get("hop", false) and (o.get("walk", false) or o.get("enemy", false) or pose == "move"): pz.y = float(pz.get("y", 0)) - absf(sin(t * 5)) * 0.09
-	if o.get("shadow", true) != false:
+		var tip = J.mc(LB, "draw", [ctx, type, x, fy, H, o, not J.t(o.get("flip")), mp])
+		ctx.restore()
+		if J.t(o.get("tipOut")): J.sp(o.tipOut, "p", tip)
+		return
+	var pz = mesh_pose(A, type, o)
+	if R is Dictionary and J.t(R.get("tweak")): J.cl(R.tweak, null, [pz, o])
+	if R is Dictionary and J.t(R.get("hop")) and (J.t(o.get("walk")) or J.t(o.get("enemy")) or pose == "move"): pz["y"] = (J.num(pz.y) if J.t(pz.get("y")) else 0.0) - absf(sin(t * 5)) * 0.09
+	ctx.save()
+	if o.get("alpha") != null: ctx.globalAlpha = J.num(o.alpha)
+	if not (o.get("shadow") is bool and o.shadow == false):
 		ctx.save()
 		if not solid: ctx.globalAlpha *= 0.55
 		shadow(ctx, x, y + 1 * s, s * (1.0 if solid else 0.8)); ctx.restore()
-	MeshAnim.draw(ctx, type, x, y - (0.0 if solid else (3 + sin(t * 2.4) * 2) * s), H, pz, not o.get("flip", false))
+	J.mc(_ma(), "draw", [ctx, type, x, fy, H, pz, not J.t(o.get("flip"))])
 	ctx.restore()
 
-# 冇骨架嘅角色：整張圖做呼吸／走路搖擺（art.js drawSprite），鬼就浮起
+# art.js meshPose：動作名 → 骨頭姿勢（用 JS 嗰邊嘅 MeshAnim.ANIM）
+func mesh_pose(A, type: String, o: Dictionary) -> Dictionary:
+	var t: float = o.t; var p = clampf(J.num(o.get("pt")) if J.t(o.get("pt")) else 0.0, 0, 1)
+	var f = func(k: String, args: Array): return J.cl(J.gp(A, k), null, args)
+	var pose = _pz(o)
+	match pose:
+		"windup", "strike", "follow", "recover", "cast", "die", "air", "down": return f.call(pose, [p, t, type])
+		"faint": return f.call("die", [p, t])
+		"hurt": return f.call("hurtP", [p, t])
+		"scared", "startle", "tremble", "cower": return f.call("scared", [t])
+		"chop", "hammer":
+			var q = p if pose == "chop" else fmod(p * 2, 1.0)
+			return f.call("windup", [q / 0.72, t, type]) if q < 0.72 else f.call("strike", [(q - 0.72) / 0.28, t, type])
+		"reap": return f.call("strike", [absf(sin(p * PI * 3)), t, type])
+		"knead":
+			var z = f.call("idle", [t]); z["body"] = 0.15 + sin(p * PI * 4) * 0.05; z["y"] = (J.num(z.y) if J.t(z.get("y")) else 0.0) + absf(sin(p * PI * 4)) * 0.02; z["armF"] = 0.3; z["armB"] = -0.3; return z
+		"proud":
+			var z2 = f.call("idle", [t]); z2["head"] = -0.12; z2["body"] = -0.05; return z2
+		"run", "move", "walk": return f.call("walk", [t * (1.8 if pose == "run" else 1.0)])
+	if J.t(o.get("hurt")): return f.call("hurtP", [0.3, t])
+	if J.t(o.get("atk")): return f.call("strike", [0.6, t, type])
+	if J.t(o.get("walk")): return f.call("walk", [t])
+	return f.call("idle", [t])
+
+# art.js drawPuppet（木偶分件；PUPPET_ON 關咗時唔會行到）
+func _draw_puppet(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary) -> void:
+	var PU = J.G.Puppet; var A = J.gp(PU, "ANIMS"); var pose = _pz(o)
+	var name = pose if pose != "" and J.t(J.gp(A, pose)) else ("move" if J.t(o.get("walk")) else "idle")
+	if not J.t(J.mc(PU, "armed", [type])) and J.t(J.gp(A, name + "C")): name = name + "C"
+	if J.t(o.get("hurt")) and J.t(J.gp(A, "hurt")): name = "hurt"
+	var R = J.gp(J.gp(PU, "RIGS"), type); var human = R != null and J.t(J.gp(R, "lF"))
+	if human and name == "idle": name = "stand"
+	if human and name == "move": name = "walk"
+	var T1 = {"idle": 1, "move": 1, "walk": 1, "run": 1, "look": 1, "mop": 1, "sip": 1, "stand": 1, "hold": 1}
+	var pz = J.cl(J.gp(A, name), null, [o.t] if T1.has(name) else [J.num(o.get("pt")) if J.t(o.get("pt")) else 0.0, o.t])
+	if J.t(o.get("face")): pz["hk"] = o.face
+	if J.t(o.get("weapon")):
+		pz["wpn"] = o.weapon
+		if not J.t(pz.get("tool")) and type == "afu": pz["tool"] = "_W"; pz["tr"] = -(J.num(pz.get("aF")) + J.num(pz.get("eF"))) + 0.25
+	if J.t(o.get("cloth")): pz["cloth"] = o.cloth
+	if J.t(o.get("badge")): pz["badge"] = o.badge
+	if not J.t(pz.get("tool")) and type != "afu" and not human and J.t(J.mc(PU, "armed", [type])): pz["tool"] = "_W"; pz["tr"] = -(J.num(pz.get("aF")) + J.num(pz.get("eF"))) + 0.15
+	if not PUPPET_ANIM.has(name) and J.t(o.get("atk")): pz["aF"] = 1.6; pz["eF"] = 0.1
+	if HOP.has(type) and (name == "idle" or name == "move"):
+		pz["aF"] = 1.5; pz["eF"] = 0.05; pz["aB"] = 1.4; pz["eB"] = 0.05; pz["lean"] = 0
+		if name == "move" or J.t(o.get("enemy")): pz["dy"] = -absf(sin(o.t * 5)) * 7
+	var sol = is_solid(type)
+	if not (o.get("shadow") is bool and o.shadow == false): shadow(ctx, x, y + 1 * s, s * (1.0 if sol else 0.8))
+	J.mc(PU, "draw", [ctx, type, x, y - (0.0 if sol else (3 + sin(o.t * 2.4) * 2) * s), char_h(type) * s * 1.08, pz, not J.t(o.get("flip"))])
+
+# 冇骨架嘅角色：整張圖（drawSprite）或者程序畫法（DRAW）；鬼就浮起，下半身漸隱
 const TIE := {"x0": 618, "x1": 946, "y0": 462, "y1": 648, "ow": 953}
+var last_fade_raw: Recorder = null   # 對照用：漸隱之前嘅原始指令
 func _draw_plain(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary) -> void:
-	if not has_spr(type):
-		shadow(ctx, x, y + s, s); el(ctx, x, y - 20 * s, 12 * s, 18 * s, "rgba(220,230,240,.8)", OUT, 1.2); return
-	var ghost = not SOLID.has(type)
+	var spr = has_spr(type)
+	var f = func(c: Ctx, xx: float, yy: float) -> void:
+		if spr: _draw_sprite(c, type, xx, yy, s, o)
+		else: _draw_youhun(c, xx, yy, s, o)
+	var ghost = not is_solid(type)
 	ctx.save()
-	if o.get("alpha") != null: ctx.globalAlpha = float(o.alpha)
-	if o.get("shadow", true) != false:
+	if o.get("alpha") != null: ctx.globalAlpha = J.num(o.alpha)
+	if not (o.get("shadow") is bool and o.shadow == false):
 		if ghost: ctx.save(); ctx.globalAlpha *= 0.55; shadow(ctx, x, y + 1 * s, s * 0.8); ctx.restore()
 		else: shadow(ctx, x, y + 1 * s, s)
-	if o.get("flip", false): ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0)
-	if o.get("rot") != null: ctx.translate(x, y - 15 * s); ctx.rotate(float(o.rot)); ctx.translate(-x, -(y - 15 * s))
-	var yy = y if not ghost else y - (3 + sin(float(o.t) * 2.4) * 2) * s
-	_draw_sprite(ctx, type, x, yy, s, o)
+	if J.t(o.get("flip")): ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0)
+	if J.t(o.get("rot")): ctx.translate(x, y - 15 * s); ctx.rotate(J.num(o.rot)); ctx.translate(-x, -(y - 15 * s))
+	if not ghost: f.call(ctx, x, y); ctx.restore(); return
+	# 飄浮：網頁版先畫入暫存畫布再用 destination-out 漸層擦淡下半身；Godot 冇呢種混合 → 錄低再按高度逐點乘透明度（效果一樣）
+	var fy = y - (3 + sin(o.t * 2.4) * 2) * s
+	var raw = Recorder.new(); var bc = Ctx.new(raw); bc.font = ctx.font
+	f.call(bc, x, fy)
+	last_fade_raw = raw
+	var st = [[0.0, 0.0], [0.6, 0.22], [1.0, 0.55]] if spr else [[0.0, 0.0], [0.55, 0.55], [1.0, 0.92]]
+	var faded = fade_rec(raw, fy - 13 * s, fy + 6 * s, fy + 17 * s, st)
+	if ctx.ci is Recorder: ctx.ci.rec(faded, ctx.T, ctx.globalAlpha)
+	else: faded.replay(ctx.ci, ctx.T, ctx.globalAlpha); ctx.ci.draw_set_transform_matrix(Transform2D.IDENTITY)
 	ctx.restore()
 
+# 垂直漸隱遮罩：y∈[g0, r1] 之間按漸層（g0→g1，stops = [位置, 擦走嘅透明度]）乘 (1-a)；之外不變
+static func _fade_a(Y: float, g0: float, g1: float, r1: float, st: Array) -> float:
+	if Y < g0 or Y > r1: return 1.0
+	var p = clampf((Y - g0) / maxf(0.0001, g1 - g0), 0, 1)
+	for i in range(1, st.size()):
+		if p <= st[i][0]:
+			var q = (p - st[i - 1][0]) / maxf(0.0001, st[i][0] - st[i - 1][0])
+			return 1.0 - (st[i - 1][1] + (st[i][1] - st[i - 1][1]) * q)
+	return 1.0 - st[-1][1]
+
+static func fade_rec(raw: Recorder, g0: float, g1: float, r1: float, st: Array) -> Recorder:
+	var out = Recorder.new(); var cur = Transform2D.IDENTITY
+	var ys = [g0, r1]
+	for e in st: ys.append(g0 + (g1 - g0) * e[0])
+	for c in raw.cmds:
+		match c[0]:
+			0: cur = c[1]; out.cmds.append(c)
+			5, 6:
+				var tex: Texture2D = c[1]; var r: Rect2 = c[2]; var m: Color = c[4] if c[0] == 6 else c[3]
+				var src: Rect2 = c[3] if c[0] == 6 else Rect2(0, 0, tex.get_width(), tex.get_height())
+				var tw = float(tex.get_width()); var th = float(tex.get_height())
+				# 喺遮罩範圍入面嘅高度切成橫條（每條頂底各自計透明度；漸層分段點都落喺切線上）
+				var ylo = minf((cur * r.position).y, (cur * (r.position + r.size)).y); var yhi = maxf((cur * r.position).y, (cur * (r.position + r.size)).y)
+				if yhi < g0 or ylo > r1: out.cmds.append(c); continue
+				var vs = [0.0, 1.0]
+				var n = clampi(int(ceil(absf(yhi - ylo) / 2.0)), 1, 24)
+				for i in range(1, n): vs.append(float(i) / n)
+				var inv = cur.affine_inverse()
+				for Yc in ys:
+					var lp = inv * Vector2((cur * r.position).x, Yc)
+					var v = (lp.y - r.position.y) / maxf(0.0001, r.size.y)
+					if v > 0 and v < 1: vs.append(v)
+				vs.sort()
+				var pts = PackedVector2Array(); var uvs = PackedVector2Array(); var cols = PackedColorArray(); var idx = PackedInt32Array()
+				for v in vs:
+					for u in [0.0, 1.0]:
+						var lp2 = r.position + Vector2(u * r.size.x, v * r.size.y); var wp = cur * lp2
+						pts.append(wp); uvs.append(Vector2((src.position.x + u * src.size.x) / tw, (src.position.y + v * src.size.y) / th))
+						var cc = m; cc.a *= _fade_a(wp.y, g0, g1, r1, st); cols.append(cc)
+				for i in range(vs.size() - 1):
+					var b0 = i * 2
+					idx.append_array([b0, b0 + 1, b0 + 3, b0, b0 + 3, b0 + 2])
+				out.cmds.append([0, Transform2D.IDENTITY]); out.cmds.append([10, idx, pts, cols, uvs, tex]); out.cmds.append([0, cur])
+			10:
+				var cols2: PackedColorArray = (c[3] as PackedColorArray).duplicate(); var pts2: PackedVector2Array = c[2]
+				for i in cols2.size(): cols2[i].a *= _fade_a((cur * pts2[i]).y, g0, g1, r1, st)
+				out.cmds.append([10, c[1], pts2, cols2, c[4], c[5]])
+			4:
+				var pp: PackedVector2Array = c[1]; var cen = Vector2.ZERO
+				for q in pp: cen += q
+				cen /= maxf(1, pp.size()); var c4: Color = c[2]; c4.a *= _fade_a((cur * cen).y, g0, g1, r1, st)
+				out.cmds.append([4, pp, c4])
+			_: out.cmds.append(c)
+	return out
+
 func _draw_sprite(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary) -> void:
-	var key = spr_key(type); var img = PtGfx.tex(key); var iw = img.get_width(); var ih = img.get_height()
-	var t: float = o.get("t", 0.0); var H: float = char_h(type) * s; var Wd = H * iw / ih
+	if _special_has(type): J.mc(J.G.SPECIAL, "draw", [ctx, type, x, y, s, o]); return
+	var key = spr_key(type); var img = PtGfx.tex(key); var iw = float(img.get_width()); var ih = float(img.get_height())
+	var t: float = o.t; var H: float = char_h(type) * s; var Wd = H * iw / ih
 	var sy = 1 + sin(t * 2.2) * 0.02; var sx = 1 - (sy - 1) * 0.5; var r = 0.0; var dy = 0.0
-	if o.get("walk", false): r += sin(t * 9) * 0.07; dy -= absf(sin(t * 9)) * 1.5 * s
-	if o.get("work", false): r += sin(t * 12) * 0.12
-	if HOP.has(type) and (o.get("walk", false) or o.get("enemy", false)): dy -= absf(sin(t * 5)) * 5 * s
-	if o.get("atk", false): sx *= 1.08; sy *= 1.08
+	if J.t(o.get("walk")): r += sin(t * 9) * 0.07; dy -= absf(sin(t * 9)) * 1.5 * s
+	if J.t(o.get("work")): r += sin(t * 12) * 0.12
+	if HOP.has(type) and (J.t(o.get("walk")) or J.t(o.get("enemy"))): dy -= absf(sin(t * 5)) * 5 * s
+	if J.t(o.get("atk")): sx *= 1.08; sy *= 1.08
 	ctx.save(); ctx.translate(x, y + dy); ctx.rotate(r); ctx.scale(sx, sy)
 	ctx.drawImage(img, -Wd / 2, -H, Wd, H)
+	var tie = PtGfx.tex("afu_tie") if type == "afu" else null
+	if tie != null:   # 阿福領帶：分成直條，像在風裡飄
+		var tw = float(tie.get_width()); var p = tw / TIE.ow; var kx = Wd / tw; var ky = H / float(tie.get_height())
+		var sx0 = TIE.x0 * p; var sx1 = minf(tw, TIE.x1 * p); var sy0 = TIE.y0 * p; var sh = (TIE.y1 - TIE.y0) * p
+		var ln = sx1 - sx0; var step = maxf(1, 2 * p); var amp = H * 0.032
+		var cx = sx0
+		while cx < sx1:
+			var d = (cx - sx0) / p; var fr = (cx - sx0) / ln
+			var off = sin(t * 6 - d * 0.016) * amp * pow(fr, 1.3) + sin(t * 2.7) * amp * 0.45 * fr
+			var w = minf(step, sx1 - cx)
+			ctx.drawImage(tie, cx, sy0, w, sh, -Wd / 2 + cx * kx, -H + sy0 * ky + off, w * kx + 0.6, sh * ky)
+			cx += step
 	ctx.restore()
+
+# DRAW.youhun（冇素材時嘅後備畫法；網頁版 DRAW[type] || DRAW.youhun，其他程序畫法有素材就唔會用到）
+func _draw_youhun(ctx: Ctx, x: float, y: float, s: float, o: Dictionary) -> void:
+	var t: float = o.t; var hy = y - 26 * s - sin(t * 3) * 2 * s
+	ctx.globalAlpha *= 0.88
+	var gy = y - sin(t * 3) * 2 * s
+	ctx.beginPath(); ctx.moveTo(x - 9 * s, gy - 16 * s)
+	ctx.quadraticCurveTo(x - 10 * s, gy - 4 * s, x - 4 * s + sin(t * 4) * 2 * s, gy)
+	ctx.quadraticCurveTo(x, gy - 5 * s, x + 4 * s + sin(t * 4 + 1) * 2 * s, gy + 1 * s)
+	ctx.quadraticCurveTo(x + 10 * s, gy - 4 * s, x + 9 * s, gy - 16 * s); ctx.closePath()
+	ctx.fillStyle = "#dfeaff"; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.5 * s; ctx.stroke()
+	el(ctx, x, hy, 12 * s, 12 * s, "#e9f1ff", OUT, 1.6 * s)
+	var dx = 5 * s; var ey = hy + 1 * s + 1 * s
+	if J.t(o.get("enemy")):
+		el(ctx, x - dx, ey + 0.5 * s, 1.7 * s, 1.9 * s, OUT); el(ctx, x + dx, ey + 0.5 * s, 1.7 * s, 1.9 * s, OUT)
+		ctx.strokeStyle = OUT; ctx.lineWidth = 1.5 * s; ctx.beginPath()
+		ctx.moveTo(x - dx - 3 * s, ey - 3.5 * s); ctx.lineTo(x - dx + 2.5 * s, ey - 1.8 * s)
+		ctx.moveTo(x + dx + 3 * s, ey - 3.5 * s); ctx.lineTo(x + dx - 2.5 * s, ey - 1.8 * s); ctx.stroke()
+	else: el(ctx, x - dx, ey, 1.5 * s, 1.8 * s, OUT); el(ctx, x + dx, ey, 1.5 * s, 1.8 * s, OUT)
+	ctx.strokeStyle = OUT; ctx.lineWidth = 1.2 * s
+	el(ctx, x, hy + 7 * s, 2.2 * s, 1.8 * s, "#5a1020")
+	el(ctx, x + 10 * s, hy - 10 * s, 2 * s, 3 * s, "rgba(160,230,255,.8)")
 
 # 頭像（UI 用）：由原圖頂部裁一個正方形
 const PCROP := {"baiwu": [0.30, 0.95], "heiwu": [0.30, 0.95], "penanggal": [0.02, 0.85], "eguiking": [0.0, 0.8], "huang": [0.0, 0.8], "niutou": [0.04, 0.82], "mamian": [0.04, 0.82], "afu": [0.0, 0.72], "tree": [0, 1]}
