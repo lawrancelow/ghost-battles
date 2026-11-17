@@ -60,3 +60,4 @@ moves_spirit
 n30_moves
 n30_daily
 daily_town
+daily_hero

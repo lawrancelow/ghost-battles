@@ -30,7 +30,7 @@ func stand(_t) -> void:
 	var h = J.gp(_V(), "hero"); print("[l1shot] stand act=", J.gp(h, "act"), " walking=", J.gp(h, "walking"), " daily=", J.mc(J.G.HeroDaily, "opts", [_V()]))
 
 func state(_t) -> void:
-	var h = J.gp(_V(), "hero"); print("[l1shot] state act=", J.gp(h, "act"), " walking=", J.gp(h, "walking"), " xy=", _hero(), " daily=", J.mc(J.G.HeroDaily, "opts", [_V()]), " nat=", load("res://native/daily_hero.gd").Q.get("cur"))
+	var h = J.gp(_V(), "hero"); print("[l1shot] cam=", J.gp(_V(), "camY"), " sc=", J.gp(_V(), "scale"), " state act=", J.gp(h, "act"), " walking=", J.gp(h, "walking"), " xy=", _hero(), " daily=", J.mc(J.G.HeroDaily, "opts", [_V()]), " nat=", load("res://native/daily_hero.gd").Q.get("cur"))
 
 func wcheck(_t) -> void:
 	var s = load("res://native/daily_work.gd")
