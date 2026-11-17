@@ -18,6 +18,7 @@ static func request(r: Recorder) -> void:
 static func _bake(r: Recorder) -> void:
 	var vp = SubViewport.new()
 	var w = clampi(int(r.width), 1, 4096); var h = clampi(int(r.height), 1, 4096)
+	if OS.has_environment("GB_BAKELOG"): print("[bake] %dx%d cmds=%d crumb=%s" % [w, h, r.cmds.size(), G.crumb_now()])
 	vp.size = Vector2i(w, h); vp.transparent_bg = true; vp.render_target_update_mode = SubViewport.UPDATE_ONCE
 	var n = Node2D.new()
 	var ver = r.version
