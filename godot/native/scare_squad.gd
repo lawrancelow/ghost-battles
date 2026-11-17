@@ -406,7 +406,7 @@ static func finish(Sc, stars, quit) -> String:
 	var trick = J.gp(J.gp(SG, b.ghost), "skill") if J.t(b) and J.t(J.gp(SG, b.ghost)) else ""
 	var views = jround((n_(after.heat) + 20) * (3 + after.lv * 4)) / 10
 	var P = [
-		["WhatsApp・公司 OT 群", "{who}話喺{room}見到嘢，冇人信佢（笑）", "三個人已讀"],
+		["ApaKhabar・公司 OT 群", "{who}話喺{room}見到嘢，冇人信佢（笑）", "三個人已讀"],
 		["連登・靈異台", "【真人真事】我公司二十三樓半夜{trick}", "{v} 千人睇過"],
 		["Threads・熱門", "#二十三樓有鬼　{who}嘅反應笑死，但係……後面嗰個係咩？", "{v} 萬瀏覽"],
 		["晚間新聞", "【獨家】商廈二十三樓夜半怪事頻生　員工：「{trick}，唔係講笑」", "記者現場直擊"],
