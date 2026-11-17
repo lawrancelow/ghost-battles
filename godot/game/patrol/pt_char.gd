@@ -129,7 +129,7 @@ func sync(oo: Dictionary) -> void:
 			_mesh_draw(m, 0.0, -yfloat, H, pz, not o.flip)
 	if mode == "plain" or mode == "none": body_sp.queue_redraw()
 	# 衣服
-	if o.cloth != null and mode != "plain" and mode != "none" and pose != "down" and not o.dying:
+	if o.cloth != null and G.cloth_ok() and mode != "plain" and mode != "none" and pose != "down" and not o.dying:
 		if cloth_mi == null:
 			cloth_mi = CpuSkin.new(); cloth_mi.src = body_mi; cloth_mat = cloth_mi; cloth_mat.set_shader_parameter("mode", 1.0)
 			ch.add_child(cloth_mi); ch.move_child(cloth_mi, front.get_index() + 1)

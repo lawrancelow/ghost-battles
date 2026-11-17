@@ -398,6 +398,11 @@ func read_crumb() -> void:
 			DirAccess.remove_absolute("user://safe_gfx"); safe_f = false   # 新版本：自動開嘅安全模式重新試過
 	if f:
 		var st = f.get_line(); f.close()
+		if st.begins_with("bake:"):
+			# 烘圖（SubViewport 讀返 GPU）途中閃退：以後呢部機唔烘圖（照重播），唔使彈救命畫面
+			var bb = FileAccess.get_file_as_string("user://gfx_bad.txt") if FileAccess.file_exists("user://gfx_bad.txt") else ""
+			bb += "bake;"; var wbb = FileAccess.open("user://gfx_bad.txt", FileAccess.WRITE); wbb.store_string(bb); wbb.close()
+			st = ""
 		if st.begins_with("probe:"):
 			# 顯示卡測試閃退：記低，下次避開，唔使彈救命畫面
 			var bad = FileAccess.get_file_as_string("user://gfx_bad.txt") if FileAccess.file_exists("user://gfx_bad.txt") else ""
@@ -414,6 +419,8 @@ func read_crumb() -> void:
 	safe_gfx = safe_f or OS.has_environment("GB_SAFE_GFX")
 # 骨架角色（CPU 蒙皮）用唔用得：安全畫面模式或者開機暗測閃退過就唔用，改畫整張原圖
 func skin_ok() -> bool: return not safe_gfx and not gfx_bad.has("cpuskin2")
+# 衣服換色層（CpuSkin mode 1）：開機暗測 cpuskin_cloth 閃退過就唔畫衣服層
+func cloth_ok() -> bool: return skin_ok() and not gfx_bad.has("cpuskin_cloth")
 func set_safe_gfx(on: bool) -> void:
 	safe_gfx = on
 	if on:

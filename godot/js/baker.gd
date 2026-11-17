@@ -4,6 +4,7 @@ extends RefCounted
 
 static var queue: Array = []
 static var host: Node = null
+static var busy := false   # 同一時間只烘一張，每張之間隔一幀（手機 GPU 讀返 framebuffer 唔好疊埋做）
 
 static func request(r: Recorder) -> void:
 	if r.baking or r.baked != null: return
@@ -16,8 +17,15 @@ static func request(r: Recorder) -> void:
 	_bake(r)
 
 static func _bake(r: Recorder) -> void:
+	while busy:
+		await host.get_tree().process_frame
+	if G.gfx_bad.has("bake"): r.baking = false; return
+	busy = true
 	var vp = SubViewport.new()
 	var w = clampi(int(r.width), 1, 4096); var h = clampi(int(r.height), 1, 4096)
+	# 閃退記號：烘緊邊個尺寸；烘完還原（中途冇其他記號先還原）
+	var prev = G.crumb_now(); var mine = "bake:%dx%d" % [w, h]
+	G.crumb(mine)
 	if OS.has_environment("GB_BAKELOG"): print("[bake] %dx%d cmds=%d crumb=%s" % [w, h, r.cmds.size(), G.crumb_now()])
 	vp.size = Vector2i(w, h); vp.transparent_bg = true; vp.render_target_update_mode = SubViewport.UPDATE_ONCE
 	var n = Node2D.new()
@@ -31,3 +39,6 @@ static func _bake(r: Recorder) -> void:
 		if img: r.baked = ImageTexture.create_from_image(img)
 	r.baking = false
 	vp.queue_free()
+	if G.crumb_now() == mine: G.crumb(prev)
+	await host.get_tree().process_frame   # 隔一幀先烘下一張
+	busy = false

@@ -124,7 +124,7 @@ func _boot_js() -> void:
 # 顯示卡測試：逐樣試一次（只試一次，記錄喺 user://gfx_probe.txt）；試嘅時候閃退，下次就避開嗰樣
 func _gfx_probes() -> void:
 	var done = FileAccess.get_file_as_string("user://gfx_probe.txt") if FileAccess.file_exists("user://gfx_probe.txt") else ""
-	for p in ["grad", "replay", "bake", "cpuskin2"]:
+	for p in ["grad", "replay", "bake", "cpuskin2", "cpuskin_cloth"]:
 		if done.contains(p + ";") or G.gfx_bad.has(p): continue
 		G.crumb("probe:" + p)
 		var n = PtDraw.new(); n.z_index = -100; add_child(n); move_child(n, 0)
@@ -155,6 +155,20 @@ func _gfx_probes() -> void:
 					cs.set_shader_parameter("bone", PtGfx.solve(m.bones, {"a1": 0.3}))
 					cs.set_shader_parameter("dims", Vector3(W, h, m.ar))
 					cs.set_shader_parameter("aff_a", Vector4(1, 0, 0, 1)); cs.set_shader_parameter("aff_o", Vector2(10, 10))
+			"cpuskin_cloth":   # 衣服換色層：身體層 + mode 1（同巡陰角色衣服一樣）
+				PtGfx.init()
+				if PtChar.RIG.is_empty(): PtChar.setup_static()
+				var kc = "afu" if PtChar.RIG.has("afu") else (PtChar.RIG.keys()[0] if PtChar.RIG.size() > 0 else "")
+				var mc = PtGfx.mesh_for(kc, kc, PtChar.RIG[kc].bones) if kc != "" else {}
+				if not mc.is_empty():
+					var hc = 80.0; var Wc = hc / mc.ar
+					var body = CpuSkin.new(); body.mesh = mc.mesh; body.texture = mc.tex; n.add_child(body)
+					var cl = CpuSkin.new(); cl.src = body; cl.mesh = mc.mesh; cl.texture = mc.tex; n.add_child(cl)
+					for c in [body, cl]:
+						c.set_shader_parameter("bone", PtGfx.solve(mc.bones, {"a1": 0.3}))
+						c.set_shader_parameter("dims", Vector3(Wc, hc, mc.ar))
+						c.set_shader_parameter("aff_a", Vector4(1, 0, 0, 1)); c.set_shader_parameter("aff_o", Vector2(10, 10))
+					cl.set_shader_parameter("mode", 1.0); cl.set_shader_parameter("cm", Basis(Vector3(0.9, 0.1, 0.1), Vector3(0.1, 0.5, 0.1), Vector3(0.1, 0.1, 0.4)))
 		n.queue_redraw()
 		for i in 3: await RenderingServer.frame_post_draw
 		n.queue_free()
