@@ -4,7 +4,11 @@
 - 用法：`BETA_OUT=/tmp/<自己資料夾> bash godot/tools/build_beta.sh <版本名> <版本號> [--selftest]`
   - 一定要設 BETA_OUT：兩條線同時用預設 /tmp/beta 會互相 rm -rf（已發生過一次，自檢途中資料夾被刪）。
 - 0.8.9（code 23）測試建置：剔走 55 個 jsgen 模塊；保留 jsgen：scare、moves_chain、n30_moves（原生版仍會載入）。
-- 結果：見下（待填）。
+- 結果（HEAD 2968cb1，`BETA_OUT=/tmp/L4b/beta … 0.8.9 23 --selftest`）：
+  - 剔走 59 個 jsgen；匯出冇錯；**自檢 34 項全過**。
+  - APK **89.6MB**（v0.8.3 約 90MB，差唔多；大頭係 libgodot_android.so 65MB，解壓後共 150MB）。
+  - 開機時間（電腦軟件渲染）：首次冷開機 9.5–12.8 秒（含開機探測），之後重開約 1.6–2.1 秒（modules 約 0.8–0.9 秒）。手機要以實機為準。
+  - 檔案：/tmp/L4b/beta/build/GhostBattles.apk（亦複製到 /mnt/user-data/outputs/GhostBattles_v0.8.9.apk）。呢個係測試包，唔係正式交付版；未包含之後 street／daily_work／daily_plaza 嘅改動。
 
 ## 2. 全遊戲一條龍（tools/tests/full_run.json）
 跑法：HEAD 6001cc0 乾淨副本、乾淨用戶資料（冇存檔）、Xvfb 450×975、GL Compatibility（CPU 軟件渲染，幀率只作相對參考，手機會唔同）。
