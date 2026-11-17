@@ -191,6 +191,7 @@ static func mv_shuigui(ctx: Ctx, a: Dictionary) -> bool:
 	var myP = bump(g, 0.0, 0.12, 1.0) * (1 - seg(g, 0.9, 1) if g > 0.9 else 1.0)
 	var tp = eo(seg(g, 0.16, 0.42)) if g < 0.7 else 1 - eio(seg(g, 0.72, 0.96))
 	var rise = back_out(seg(g, 0.40, HIT)) if g < HIT else 1.0; var pull = eio(seg(g, 0.53, 0.76))
+	o["vic"] = {"sink": pull * (1 - seg(g, 0.8, 0.98)) * 0.32, "shake": bump(g, HIT, 0.5, 0.62)}
 	if sink < 0.95: a_shadow(ctx, a, a.x, 0.8 * (1 - sink))
 	begin(ctx, a)
 	puddle(ctx, 0, 0, H * 0.27 * eo(cl(myP * 1.6)), 1, t, 1.3)
@@ -231,6 +232,7 @@ static func mv_shuigui(ctx: Ctx, a: Dictionary) -> bool:
 		splash(ctx, tx, ty, Ht * 0.6, seg(g, 0.56, 0.8), 9, 12.9, 0.7)
 		for i in 3: drip(ctx, tx + Ht * (0.06 + 0.06 * i), ty - Ht * 0.45 * up, Ht * 0.45 * up / 1.4, fmod((g - 0.45) * 3.5 + i / 3.0, 1.0), i + 20, Ht * 0.016)
 	ctx.restore()
+	if g >= HIT and g < HIT + 0.02: o["hitP"] = [world_x(a, F.x + Ht * 0.08), a.y + F.y - Ht * 0.22]
 	return true
 
 # Pontianak：長髮纏——三束長髮甩出去，捲住對手勒緊；佢尖叫住向前飄
@@ -252,6 +254,7 @@ static func mv_pontianak(ctx: Ctx, a: Dictionary) -> bool:
 	var P = func(fx: float, fy: float) -> Vector2: return Vector2(ox + (fx - 0.5) * W, oy - H + fy * H)
 	var ext = eo(seg(g, 0.37, HIT)) if g < HIT else (1.0 if g < 0.64 else 1 - eio(seg(g, 0.64, 0.92)))
 	var sq = bump(g, HIT, 0.52, 0.66)
+	o["vic"] = {"sq": sq, "shake": sq}
 	var strands = []
 	if ext > 0.01:
 		var C = Vector2(F.x, F.y); var rx0 = Ht * 0.2 * (1 - 0.2 * sq)
@@ -299,12 +302,14 @@ static func mv_pontianak(ctx: Ctx, a: Dictionary) -> bool:
 				var an = PI + (j / 16.0 - 0.5) * 1.5; var rr = r * (1 + 0.012 * sin(j * 1.3 + t * 40)); pts.append(Vector2(m.x + cos(an) * rr, m.y + sin(an) * rr))
 			ctx.save(); ctx.globalAlpha *= sk * minf(1, (1 - q) * 1.6); crayon_line(ctx, pts, maxf(2, H * 0.024), Color("#f4f8ff"), Color(40 / 255.0, 24 / 255.0, 70 / 255.0, 0.7)); ctx.restore()
 	ctx.restore()
+	if g >= HIT and g < HIT + 0.02: o["hitP"] = [world_x(a, F.x + Ht * 0.1), a.y + F.y - Ht * 0.6]
 	return true
 
 # 天花姐：扶腰「哎喲」→ 蹬上天花板 → 倒掛由對手頭上垂落嚟一爪 → 縮返上去 → 跌返原位
 static func mv_tianhua(ctx: Ctx, a: Dictionary) -> bool:
 	if not BtMoves.ok("tianhua") or not BtMoves.ok("tianhua_hang"): return false
 	var o: Dictionary = a.o; var H: float = a.H; var t = J.num(o.get("t", 0)); var g = prog(o); var F = foe(a, 1.9); var Ht: float = F.h
+	o["vic"] = {"shake": bump(g, HIT, 0.5, 0.6)}
 	var hang = Spr.get_tex("tianhua_hang"); var hh = H * 645 / 577.0; var hw = hh * hang.get_width() / hang.get_height()
 	var OUT = H * 5
 	var gy = null; var ps = null; var ouch = 0.0
@@ -352,6 +357,7 @@ static func mv_tianhua(ctx: Ctx, a: Dictionary) -> bool:
 			for i in range(-1, 2): slash(ctx, cx + Ht * (0.08 + i * 0.055), cy - Ht * 0.12, cx + Ht * (0.08 + i * 0.055) + (Ht * (-0.1)) * grow, cy - Ht * 0.12 + Ht * 0.3 * grow, Ht * 0.014)
 			ctx.restore()
 	ctx.restore()
+	if g >= HIT and g < HIT + 0.02: o["hitP"] = [world_x(a, F.x), a.y + F.y - Ht * 0.8]
 	return true
 
 # 黑無常：鎖魂鏈（moves_chain.js）
