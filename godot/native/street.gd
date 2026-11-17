@@ -3004,6 +3004,178 @@ static func tf_drawDfx(Tf, U, hh, t) -> void:
 		c.restore()
 const TF_4O := {"drawDfx": 3}
 
+# 4p：有名鬼繪畫（drawSpecial）＋預兆／出手特效（drawLoreFx）
+static func _wpP(Tf, w) -> Array:
+	var q = tf_wp(Tf, w)
+	return _P(Tf, q[0], q[1])
+static func tf_drawLoreFx(Tf, B, x, y, hh):
+	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); var U = J.num(b.w) / 840.0; var t = _pnow() / 1000.0; x = J.num(x); y = J.num(y); hh = J.num(hh); var PX = J.num(D.PX)
+	var bxx = J.num(b.x); var byy = J.num(b.y); var bw = J.num(b.w)
+	var k = J.str(B.g.k); var LO = J.gp(J.gp(Tf, "LORE"), k); var kk = J.str(LO.same) if (J.t(LO) and J.t(J.gp(LO, "same"))) else k; var o = null
+	var om = B.get("om")
+	if J.seq(B.get("ph"), "omen") and J.t(om):
+		var q = minf(1.0, J.num(B.pt) / 1.3); var txy = _P(Tf, om.tp[0], om.tp[1]); var tx = txy[0]; var ty = txy[1]
+		if kk == "tianhua":
+			for j in 5:
+				var d = fmod(t * 1.3 + j * 0.2, 1.0); c.fillStyle = "rgba(160,200,230,0.85)"; c.beginPath(); c.ellipse(tx - 20 * U + j * 10 * U, byy + (ty - byy) * d, 2 * U, 4 * U, 0, 0, 7); c.fill()
+			c.fillStyle = "rgba(70,100,130," + _a(0.35 * q) + ")"; c.beginPath(); c.ellipse(tx, ty, 40 * U * q, 14 * U * q, 0, 0, 7); c.fill()
+		elif kk == "pontianak":
+			for j in 8:
+				var d = fmod(t * 0.4 + j * 0.13, 1.0); c.save(); c.translate(bxx + bw * d, ty - 60 * U + sin(t * 2 + j) * 40 * U); c.rotate(t * 2 + j); c.fillStyle = "rgba(255,248,230,0.85)"
+				for p in 5:
+					c.rotate(1.256); c.beginPath(); c.ellipse(0, 4 * U, 2.5 * U, 5 * U, 0, 0, 7); c.fill()
+				c.fillStyle = "#f6d36b"; c.beginPath(); c.arc(0, 0, 1.6 * U, 0, 7); c.fill(); c.restore()
+		elif kk == "eguiking":
+			var bp = tf_bpos(Tf, B)
+			for w in J.iter(J.gp(Tf, "walkers")):
+				if not (tf_alive(Tf, w) and tf_dist(tf_wp(Tf, w), bp) < 0.3): continue
+				var wxy = _wpP(Tf, w); var wx = wxy[0]; var wy = wxy[1]; c.fillStyle = "rgba(255,230,200,0.9)"; c.font = "bold " + _px(10 * U) + " sans-serif"; c.textAlign = "center"; c.fillText(T("咕嚕", "咕嚕"), wx, wy - hh * 1.2 - sin(t * 5) * 4 * U)
+				c.strokeStyle = "rgba(255,200,140,0.5)"; c.lineWidth = 2; c.beginPath(); c.moveTo(wx, wy - hh * 0.6); c.quadraticCurveTo((wx + x) / 2, wy - hh * 1.5 + sin(t * 3) * 10 * U, x, y - hh * 0.8); c.stroke()
+		elif kk == "laojiang":
+			c.save(); c.translate(x + 20 * U, y - hh * 1.2); c.rotate(sin(t * 9) * 0.5); c.fillStyle = "#e8c840"; c.fillRect(-7 * U, -16 * U, 14 * U, 30 * U); c.strokeStyle = "#a01010"; c.lineWidth = 1.5
+			for j in 4:
+				c.beginPath(); c.moveTo(-4 * U, -12 * U + j * 7 * U); c.lineTo(4 * U, -9 * U + j * 7 * U); c.stroke()
+			c.restore()
+		elif kk == "toyol":
+			for j in int(floor(q * 10)):
+				var fx0 = x + (tx - x) * j / 10.0 + (5.0 if j % 2 else -5.0) * U; var fy = y + (ty - y) * j / 10.0; c.fillStyle = "rgba(40,30,20,0.7)"; c.beginPath(); c.ellipse(fx0, fy, 3 * U, 4.5 * U, 0, 0, 7); c.fill()
+		elif kk == "xiaozhi":
+			for j in 16:
+				var a0 = t * 3 + j * 0.39; var rr = (20 + j * 3) * U; c.save(); c.translate(tx + cos(a0) * rr, ty - 20 * U + sin(a0) * rr * 0.4 - j * 2 * U); c.rotate(a0); c.fillStyle = "rgba(80,70,60,0.7)" if j % 2 else "rgba(230,210,150,0.85)"; c.fillRect(-4 * U, -3 * U, 8 * U, 6 * U); c.restore()
+		elif kk == "pocong":
+			if sin(t * 17) > 0.3: c.fillStyle = "rgba(250,250,245,0.8)"; c.beginPath(); c.ellipse(tx + 40 * U, ty - 26 * U, 10 * U, 28 * U, 0, 0, 7); c.fill()
+		elif kk == "penanggal":
+			for j in 6:
+				var g = c.createRadialGradient(tx + sin(t + j) * 40 * U, ty - 20 * U, 2, tx + sin(t + j) * 40 * U, ty - 20 * U, 40 * U); g.addColorStop(0, "rgba(150,220,90," + _a(0.25 * q) + ")"); g.addColorStop(1, "rgba(150,220,90,0)"); c.fillStyle = g; c.fillRect(tx - 90 * U, ty - 70 * U, 180 * U, 100 * U)
+		elif kk == "mengpo":
+			c.fillStyle = "#7a4a2a"; c.beginPath(); c.ellipse(x + 18 * U, y - hh * 0.6, 9 * U, 4 * U, 0, 0, 7); c.fill()
+			for j in 3:
+				var rr = fmod(t * 0.7 + j * 0.33, 1.0); c.strokeStyle = "rgba(255,240,220," + _a(0.7 * (1 - rr)) + ")"; c.lineWidth = 2; c.beginPath(); c.moveTo(x + 15 * U + j * 3 * U, y - hh * 0.7 - rr * 30 * U)
+				c.quadraticCurveTo(x + 22 * U + sin(t * 4 + j) * 6 * U, y - hh * 0.7 - rr * 30 * U - 8 * U, x + 15 * U, y - hh * 0.7 - rr * 30 * U - 16 * U); c.stroke()
+		elif kk == "n30_yukionna":
+			c.fillStyle = "rgba(220,240,255," + _a(0.4 * q) + ")"; c.beginPath(); c.ellipse(x, y, 90 * U * q, 34 * U * q, 0, 0, 7); c.fill(); c.strokeStyle = "rgba(255,255,255," + _a(0.7 * q) + ")"; c.lineWidth = 1
+			for j in 12:
+				var a0 = j * 0.52; c.beginPath(); c.moveTo(x, y); c.lineTo(x + cos(a0) * 90 * U * q, y + sin(a0) * 34 * U * q); c.stroke()
+		elif kk == "n30_qionggui" and J.t(J.gp(om, "note")):
+			var nxy = _P(Tf, om.note[0], om.note[1]); var nx = nxy[0]; var ny = nxy[1]; c.save(); c.translate(nx, ny); c.rotate(0.3); c.fillStyle = "#7fae6a"; c.fillRect(-12 * U, -5 * U, 24 * U, 10 * U); c.strokeStyle = "#2a3a10"; c.strokeRect(-12 * U, -5 * U, 24 * U, 10 * U); c.restore()
+			var s = 0.5 + 0.5 * sin(t * 8); c.fillStyle = "rgba(255,255,220," + _a(s) + ")"; c.beginPath(); c.arc(nx + 8 * U, ny - 4 * U, 3 * U, 0, 7); c.fill()
+		elif kk == "n30_guhangui": c.fillStyle = "rgba(255,220,120,0.9)"; c.font = "bold " + _px(11 * U) + " sans-serif"; c.textAlign = "center"; c.fillText(T("叮……", "叮……"), x + 24 * U, y - hh * 1.1 - fmod(t * 30, 18.0) * U)
+		elif kk == "n30_taozhai":
+			c.save(); c.translate(tx, ty - 50 * U - (1 - q) * 40 * U); c.rotate(sin(t * 6) * 0.3); c.fillStyle = "#f1e4c8"; c.fillRect(-14 * U, -18 * U, 28 * U, 36 * U); c.fillStyle = "#b01010"; c.font = "900 " + _px(11 * U) + " sans-serif"; c.textAlign = "center"; c.fillText(T("追債", "追債"), 0, 2 * U); c.restore()
+	var sx = B.get("sx")
+	if J.seq(B.get("ph"), "strike") and J.t(sx):
+		var q = minf(1.0, J.num(B.pt) / 1.1); var txy = _P(Tf, sx.tp[0], sx.tp[1]); var tx = txy[0]; var ty = txy[1]; var fxy = _P(Tf, sx.from[0], sx.from[1]); var fx0 = fxy[0]; var fy = fxy[1]
+		var SL = J.iter(_or(J.gp(sx, "list"), []))
+		if kk == "tianhua":
+			for w in SL:
+				var wxy = _wpP(Tf, w); var wx = wxy[0]; var wy = wxy[1]; var lf = tf_wOff(Tf, w, U)[1] if J.t(J.gp(w, "lift")) else 0.0; c.strokeStyle = "rgba(15,15,20,0.9)"; c.lineWidth = 2
+				for j in 9:
+					c.beginPath(); c.moveTo(wx - 16 * U + j * 4 * U, byy); c.quadraticCurveTo(wx + sin(t * 5 + j) * 14 * U, (byy + wy + lf) / 2, wx - 6 * U + j * 1.5 * U, wy + lf - hh * 0.8); c.stroke()
+			var im = _spr("tianhua_hang")
+			if _nw(im) > 0:
+				var H2 = hh * 2.4; var W2 = H2 * J.num(im.naturalWidth) / J.num(im.naturalHeight); var drop = sin(minf(1.0, q * 2.5) * PI / 2)
+				c.save(); c.translate(tx, byy - H2 + drop * (ty - hh * 1.9 - byy + H2 * 0.4)); c.rotate(sin(t * 6) * 0.06); c.drawImage(im, -W2 / 2, 0, W2, H2); c.restore(); o = {"gx": x, "gy": y, "alpha": 0.01}
+			else: o = {"gx": tx, "gy": ty - hh * 1.6, "rot": PI, "alpha": 0.95}
+		elif kk == "pontianak" and J.t(J.gp(sx, "a")):
+			var axy = _P(Tf, sx.a[0], sx.a[1]); var bxy = _P(Tf, sx.b[0], sx.b[1]); var ax = axy[0]; var ay = axy[1]; var e = minf(1.0, q * 1.4); var gx = ax + (bxy[0] - ax) * e; var gy = ay + (bxy[1] - ay) * e - sin(e * PI) * 30 * U - (1 - e) * 80 * U
+			c.strokeStyle = "rgba(255,240,250,0.8)"; c.lineWidth = 2
+			for j in 3:
+				c.beginPath(); c.moveTo(ax, ay - hh * 0.5 + j * 6 * U); c.lineTo(gx, gy - hh * 0.4 + j * 6 * U); c.stroke()
+			o = {"gx": gx, "gy": gy, "rot": -0.5}
+		elif kk == "eguiking":
+			for w in SL:
+				var wxy = _wpP(Tf, w); var wx = wxy[0]; var wy = wxy[1]; var e = sin(minf(1.0, q * 1.6) * PI); var hx = x + (wx - x) * e; var hy = y - hh * 0.9 + (wy - hh * 0.5 - (y - hh * 0.9)) * e
+				c.strokeStyle = "#5a2010"; c.lineWidth = 5 * U; c.beginPath(); c.moveTo(x, y - hh * 0.9); c.quadraticCurveTo((x + hx) / 2, minf(y, hy) - 40 * U, hx, hy); c.stroke(); c.strokeStyle = "#a04a30"; c.lineWidth = 2 * U; c.stroke(); c.fillStyle = "#e8c070"; c.beginPath(); c.arc(hx, hy, 5 * U, 0, 7); c.fill()
+		elif kk == "laojiang":
+			var e = q / 0.6 if q < 0.6 else 1 - (q - 0.6) / 0.4; o = {"gx": fx0 + (tx - fx0) * e, "gy": fy + (ty - fy) * e - absf(sin(e * PI * 3)) * 34 * U}
+			for w in J.iter(J.gp(Tf, "walkers")):
+				if J.num(J.gp(w, "breath")) > 0 and tf_alive(Tf, w):
+					var wxy = _wpP(Tf, w); var wx = wxy[0]; var wy = wxy[1]; c.strokeStyle = "rgba(255,255,255,0.6)"; c.lineWidth = 2; c.strokeRect(wx - 14 * U, wy - hh - 4 * U, 28 * U, hh + 8 * U); c.fillStyle = "#fff"; c.font = "bold " + _px(9 * U) + " sans-serif"; c.textAlign = "center"; c.fillText(T("定格", "定格"), wx, wy - hh - 8 * U)
+		elif kk == "toyol":
+			var w = SL[0] if SL.size() else null
+			if J.t(w): var wxy = _wpP(Tf, w); var of = tf_wOff(Tf, w, U); o = {"gx": wxy[0] + of[0] + sin(t * 6) * 30 * U, "gy": wxy[1] + of[1] + cos(t * 5) * 14 * U}
+		elif kk == "xiaozhi" and J.t(J.gp(sx, "c")):
+			var cxy = _P(Tf, sx.c[0], sx.c[1])
+			for j in 6:
+				var a0 = j * 1.047; var px = cxy[0] + cos(a0) * 46 * U; var py = cxy[1] + sin(a0) * 20 * U; var up = minf(1.0, q * 2 - j * 0.1)
+				if up <= 0: continue
+				c.save(); c.translate(px, py); c.scale(1, up); _ghostDraw(c, "xiaozhi", 0.0, 0.0, 0.45 * U, {"t": t + j, "pose": "idle", "alpha": 0.9, "flip": cos(a0) > 0}); c.restore()
+		elif kk == "pocong":
+			var ys = _P(Tf, 0, sx.y0)[1]; var e = q; o = {"gx": fx0 + (tx + 90 * U - fx0) * e, "gy": ys - absf(sin(e * PI * 4)) * 20 * U, "rot": e * 6.28}; c.fillStyle = "rgba(250,250,245,0.18)"; c.fillRect(minf(fx0, o.gx), ys - 30 * U, absf(o.gx - fx0), 36 * U)
+		elif kk == "penanggal" and J.t(J.gp(sx, "c")):
+			var cxy = _P(Tf, sx.c[0], sx.c[1]); var cx = cxy[0]; var cy = cxy[1]; var a0 = q * 6.283 * 1.2; var R1 = 120 * PX * bw
+			c.strokeStyle = "rgba(160,255,120,0.75)"; c.lineWidth = 3; c.shadowColor = "#8f6"; c.shadowBlur = 12; c.beginPath()
+			for j in 31:
+				var aa = a0 * j / 30.0
+				if j: c.lineTo(cx + cos(aa) * R1, cy - 30 * U + sin(aa) * R1 / 1.5)
+				else: c.moveTo(cx + R1, cy - 30 * U)
+			c.stroke(); c.shadowBlur = 0; o = {"gx": cx + cos(a0) * R1, "gy": cy - 30 * U + sin(a0) * R1 / 1.5 + hh * 0.5, "rot": a0}
+		elif kk == "mengpo":
+			for w in SL:
+				var wxy = _wpP(Tf, w); var wx = wxy[0]; var wy = wxy[1]; c.fillStyle = "#7a4a2a"; c.beginPath(); c.ellipse(wx + 10 * U, wy - hh * 0.55, 8 * U, 3.5 * U, 0, 0, 7); c.fill(); c.fillStyle = "rgba(255,220,150,0.9)"; c.font = "bold " + _px(10 * U) + " serif"; c.textAlign = "center"; c.fillText("？", wx + sin(t * 6) * 8 * U, wy - hh * 1.3)
+		elif kk == "n30_yukionna" and J.gp(sx, "dir") != null:
+			var d = J.num(sx.dir); var R1 = 210 * PX * bw * minf(1.0, q * 2); c.fillStyle = "rgba(200,235,255,0.35)"; c.beginPath(); c.moveTo(x, y - hh * 0.5); c.arc(x, y - hh * 0.5, R1, d - 0.6, d + 0.6); c.closePath(); c.fill()
+			for j in 14:
+				var a0 = d - 0.6 + j * 0.09; var rr = R1 * fmod(t * 2 + j * 0.13, 1.0); c.fillStyle = "rgba(255,255,255,0.8)"; c.beginPath(); c.arc(x + cos(a0) * rr, y - hh * 0.5 + sin(a0) * rr, 2 * U, 0, 7); c.fill()
+		elif kk == "n30_qionggui":
+			for w in SL:
+				var wxy = _wpP(Tf, w); var wx = wxy[0]; var wy = wxy[1]; var e = minf(1.0, q * 2); c.strokeStyle = "rgba(40,30,30,0.9)"; c.lineWidth = 4 * U; c.beginPath(); c.moveTo(wx + 30 * U, wy + 4 * U); c.lineTo(wx + 30 * U - 22 * U * e, wy - hh * 0.3); c.stroke()
+				c.save(); c.translate(wx + 6 * U, wy - 2 * U); c.rotate(0.2); c.fillStyle = "#d8b450" if q > 0.5 else "#7fae6a"; c.fillRect(-12 * U, -5 * U, 24 * U, 10 * U); c.fillStyle = "#b02020"
+				if q > 0.5: c.fillRect(-3 * U, -3 * U, 6 * U, 6 * U)
+				c.restore()
+		elif kk == "n30_guhangui":
+			var NA = [["一蚊", "兩蚊", "三蚊", "四蚊"], ["一塊", "兩塊", "三塊", "四塊"]]
+			for w in SL:
+				var wxy = _wpP(Tf, w); var wx = wxy[0]; var wy = wxy[1]; var e = minf(1.0, q * 1.5); c.fillStyle = "#5a3a20"; c.fillRect(wx + (x - wx) * e - 8 * U, wy - hh * 0.6 + (y - hh * 0.6 - (wy - hh * 0.6)) * e - 5 * U, 16 * U, 10 * U)
+				var ix = int(floor(t * 3)) % 4; c.fillStyle = "#ffe9a0"; c.font = "bold " + _px(10 * U) + " sans-serif"; c.textAlign = "center"; c.fillText(T(NA[0][ix], NA[1][ix]), wx + 18 * U, wy - hh * 1.05)
+		elif kk == "n30_taozhai":
+			var w = SL[0] if SL.size() else null
+			if J.t(w):
+				var wxy = _wpP(Tf, w); var wx = wxy[0]; var wy = wxy[1]; o = {"gx": wx + (fx0 - wx) * 0.3 + 26 * U, "gy": wy, "rot": sin(t * 10) * 0.08}
+				c.fillStyle = "#ff6a6a"; c.font = "900 " + _px(14 * U) + " sans-serif"; c.textAlign = "center"; c.fillText(T("還錢！", "還錢！"), wx + 30 * U, wy - hh * 1.2)
+	return o
+static func tf_drawSpecial(Tf) -> void:
+	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); var t = _pnow() / 1000.0; var hh = J.num(b.h) * 0.042; var PX = J.num(D.PX); var bw = J.num(b.w); var NS = J.gp(J.gp(Tf, "lay"), "nodes")
+	for B in J.iter(_or(J.gp(Tf, "bosses"), [])):
+		if J.t(B.get("hid")): continue
+		var F = B.get("fx"); var pos = tf_bpos(Tf, B); var xy = _P(Tf, pos[0], pos[1]); var x = xy[0]; var y = xy[1]; var A = J.gp(NS, B.a); var C = J.gp(NS, B.b)
+		if not J.t(C): C = A
+		var flip = (J.num(C[0]) - J.num(A[0])) < -0.001; var sc = hh * 1.35 / 60
+		c.save(); c.fillStyle = "rgba(160,110,255,0.25)"; c.beginPath(); c.ellipse(x, y, hh * 0.35, hh * 0.1, 0, 0, 7); c.fill(); c.restore()
+		var LN = tf_lore(Tf, B.g.k)
+		if J.seq(B.get("ph"), "omen"): var rr = J.num(LN.r) * PX * bw; c.strokeStyle = "rgba(200,150,255,0.35)"; c.setLineDash([4, 6]); c.lineWidth = 2; c.beginPath(); c.ellipse(x, y, rr, rr / 1.5, 0, 0, 7); c.stroke(); c.setLineDash([])
+		var pose = "move"; var pt = 0.0; var rot = 0.0; var gx = x; var gy = y; var alpha = 0.92; var LO = tf_drawLoreFx(Tf, B, x, y, hh)
+		if J.t(LO):
+			gx = J.num(LO.gx); gy = J.num(LO.gy); rot = J.num(LO.get("rot", 0.0))
+			if J.t(LO.get("alpha")): alpha = J.num(LO.alpha)
+		if J.seq(B.get("ph"), "omen"): alpha = 0.55 + 0.3 * sin(t * 6); pose = "idle"
+		if J.t(F):
+			var k = minf(1.0, J.num(F.t) / 0.9); var txy = _P(Tf, F.tg[0], F.tg[1]); var tx = txy[0]; var ty = txy[1]; pose = "windup" if k < 0.3 else "strike"; pt = k / 0.3 if k < 0.3 else minf(1.0, (k - 0.3) * 2); var fk = J.str(F.k)
+			if fk == "eguiking" or fk == "egui" or fk == "penanggal": var e = sin(minf(1.0, k * 1.5) * PI); gx = x + (tx - x) * e * 0.8; gy = y + (ty - y) * e * 0.8
+			if fk == "pontianak":
+				for j in 3:
+					var rr = fmod(k * 1.5 + j * 0.25, 1.0); c.strokeStyle = "rgba(255,170,220," + _a(0.8 * (1 - rr)) + ")"; c.lineWidth = 4; c.beginPath(); c.arc(x, y - hh * 0.5, rr * 220 * PX * bw, 0, 7); c.stroke()
+			if fk == "tianhua":
+				c.strokeStyle = "rgba(160,150,170,0.7)"; c.lineWidth = 2
+				for j in 14:
+					var xx = tx - 40 + j * 6; var ln = minf(1.0, k * 2) * (ty - J.num(b.y) + 10); c.beginPath(); c.moveTo(xx, b.y); c.quadraticCurveTo(xx + sin(t * 3 + j) * 10, J.num(b.y) + ln * 0.6, xx, J.num(b.y) + ln); c.stroke()
+			if fk == "laojiang": gy -= absf(sin(k * PI * 4)) * 24
+			if fk == "eguiking" and k > 0.3 and k < 0.7:
+				c.fillStyle = "#2a0306"; c.beginPath(); c.ellipse(tx, ty - hh * 0.5, 26, 20, 0, 0, 7); c.fill(); c.fillStyle = "#efe6cf"
+				for j in 5:
+					c.beginPath(); c.moveTo(tx - 20 + j * 10, ty - hh * 0.5 - 18); c.lineTo(tx - 15 + j * 10, ty - hh * 0.5 - 6); c.lineTo(tx - 10 + j * 10, ty - hh * 0.5 - 18); c.fill()
+			if fk == "xiaozhi":
+				for j in 4:
+					var a2 = j * 1.57 + t; _ghostDraw(c, "xiaozhi", tx + cos(a2) * 26, ty + sin(a2) * 10, 0.45 * (bw / 840.0), {"t": t + j, "pose": "idle", "alpha": 0.8 * (1 - k * 0.6), "flip": cos(a2) > 0})
+			if fk == "toyol": gx = x + (tx - x) * sin(k * PI); gy = y + (ty - y) * sin(k * PI) - absf(sin(k * 12)) * 10; pose = "move"
+		var sty = J.num(B.stay) > 0
+		_ghostDraw(c, B.g.k, gx, gy, sc, {"t": t, "walk": not J.t(F) and not sty, "pose": "idle" if (sty and not J.t(F) and not J.seq(B.get("ph"), "omen")) else pose, "pt": pt, "atk": J.t(F), "alpha": alpha, "flip": flip, "rot": rot})
+		var en = J.num(B.get("en", 0.0)); c.strokeStyle = "rgba(0,0,0,0.6)"; c.lineWidth = 5; c.beginPath(); c.arc(x, y + 14, 10, 0, 7); c.stroke(); c.strokeStyle = "#ffd45a" if en >= 100 else "#c084ff"; c.lineWidth = 3; c.beginPath(); c.arc(x, y + 14, 10, -1.57, -1.57 + 6.283 * en / 100); c.stroke()
+		c.font = "bold " + _px(11 * bw / 840.0) + " sans-serif"; c.textAlign = "center"; c.lineWidth = 3; c.strokeStyle = "#000"
+		var lab = J.str(B.g.name) + (T("・撳放大招！", "・點放大招！") if en >= 100 else (("・" + T(LN.n[0], LN.n[1])) if sty else "")); c.strokeText(lab, x, y - hh * 1.45); c.fillStyle = "#ffe9a0" if en >= 100 else "#e6c8ff"; c.fillText(lab, x, y - hh * 1.45)
+		B["screen"] = [x, y - hh * 0.5]
+const TF_4P := {"drawLoreFx": 4, "drawSpecial": 0}
+
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -3033,5 +3205,5 @@ func run(_env) -> void:
 	load_data()
 	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I); tf_install(J.gp(SQ, "Turf"), TF_4J); tf_install(J.gp(SQ, "Turf"), TF_4K); tf_install(J.gp(SQ, "Turf"), TF_4L); tf_install(J.gp(SQ, "Turf"), TF_4M); tf_install(J.gp(SQ, "Turf"), TF_4N); tf_install(J.gp(SQ, "Turf"), TF_4O)
+	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I); tf_install(J.gp(SQ, "Turf"), TF_4J); tf_install(J.gp(SQ, "Turf"), TF_4K); tf_install(J.gp(SQ, "Turf"), TF_4L); tf_install(J.gp(SQ, "Turf"), TF_4M); tf_install(J.gp(SQ, "Turf"), TF_4N); tf_install(J.gp(SQ, "Turf"), TF_4O); tf_install(J.gp(SQ, "Turf"), TF_4P)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)
