@@ -367,8 +367,15 @@ func street_t4a(_t) -> void:
 static func _wst(w):
 	if not (w is Dictionary): return w
 	var o = w.duplicate(); o.erase("mate")
+	if w.get("sq") is Dictionary: o.erase("sq"); o["sq_"] = [w.sq.kind, w.sq.scared, w.sq.leaked, w.sq.done]
+	o.erase("sqRole")
+	if w.get("mate") is Dictionary and w.mate.get("sq") != null: pass
 	if w.get("mate") is Dictionary: var m = w.mate.duplicate(); m.erase("mate"); o["mate_"] = m
 	return o
+static func _qst(q):
+	var o = q.duplicate(); var ls = []
+	for w in J.iter(q.get("list", [])): ls.append(_wst(w))
+	o["list"] = ls; o.erase("sq"); return o
 static func _tstate(X) -> Dictionary:
 	var df = []
 	for e in J.iter(X.get("dfx", [])): df.append([e.k, e.t, e.dur, e.seed, J.gp(e.w, "n")])
@@ -494,6 +501,6 @@ func _t4tick(mn: String, gn: Array) -> void:
 				J.mc(X, "addTrace", [tk[0], tk[1], 0.5, 400.0, 30.0, {"by": "t"}])
 		for st in 240:
 			trT["sd"] = A.sd; seed(5000 + st); J.mc(A, "tick", [0.05]); seed(5000 + st); J.mc(B, "tick", [0.05])
-			if st % 10 == 9 or st < 5: _eq(tg + " tick %d" % st, [_tstate(A), A.shots, A.q, A.shake], [_tstate(B), B.shots, B.q, B.shake])
+			if st % 10 == 9 or st < 5: _eq(tg + " tick %d" % st, [_tstate(A), A.shots, _qst(A.q), A.shake], [_tstate(B), B.shots, _qst(B.q), B.shake])
 		print("[xcheck-info] %s %s walkers=%d scared=%s leaked=%s" % [mn, sid, A.walkers.size(), A.sd.scared, A.sd.leaked])
 	_report()
