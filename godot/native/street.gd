@@ -2318,9 +2318,11 @@ static func _nw(im) -> float: return J.num(J.gp(im, "naturalWidth")) if J.t(im) 
 static func tf_drawLongBg(Tf) -> void:
 	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); var L2 = J.gp(Tf, "lay"); var t = _pnow() / 1000.0; var bxx = J.num(b.x); var byy = J.num(b.y); var bw0 = J.num(b.w); var bh0 = J.num(b.h); var U = bw0 / 840.0; var sd = J.gp(Tf, "sd")
 	J.sp(Tf, "gates", []); var PN = J.iter(L2.panels); var ROOMG = J.gp(D.DATA4, "rooms"); var UNL = J.num(L2.unlocked)
+	var NT = J.t(J.gp(Tf, "_nat")); var vx0 = J.num(tf_toScene(Tf, 0.0, 0.0)[0]) if NT else -1e9; var vx1 = J.num(tf_toScene(Tf, _iw(), 0.0)[0]) if NT else 1e9
 	for r in PN.size():
 		if r >= J.num(L2.nv): continue
 		var P = PN[r]; var x = bxx + r * bw0; var nm = J.gp(J.gp(L2, "names"), float(r))
+		if x + bw0 < vx0 or x > vx1: continue
 		if J.t(J.gp(P, "proc")): J.mc(Tf, "drawProc", [float(r), P, x])
 		else:
 			var bgk = J.gp(P, "bg")
@@ -2713,7 +2715,7 @@ static func tf_draw(Tf) -> void:
 			if j: c.lineTo(px, py)
 			else: c.moveTo(px, py)
 		c.stroke()
-	var coinEl = _q("#stt-coin"); var cr = J.mc(coinEl, "getBoundingClientRect", []) if J.t(coinEl) else {"left": Wd - 60, "top": 20.0, "width": 40.0, "height": 20.0}
+	var NT = J.t(J.gp(Tf, "_nat")); var coinEl = null if NT else _q("#stt-coin"); var cr = J.gp(Tf, "_natCoin") if NT and J.t(J.gp(Tf, "_natCoin")) else (J.mc(coinEl, "getBoundingClientRect", []) if J.t(coinEl) else {"left": Wd - 60, "top": 20.0, "width": 40.0, "height": 20.0})
 	var ccx = J.num(cr.left) + J.num(cr.width) / 2; var ccy = J.num(cr.top) + J.num(cr.height) / 2
 	for q in J.iter(J.gp(Tf, "parts")):
 		var kd = J.str(J.gp(q, "kind"))
@@ -3176,6 +3178,1053 @@ static func tf_drawSpecial(Tf) -> void:
 		B["screen"] = [x, y - hh * 0.5]
 const TF_4P := {"drawLoreFx": 4, "drawSpecial": 0}
 
+# 4q：數值文字 statTxt、音效 snd、鬼力 gpHave／gpWarn、鐵閘 tryGate、前景件 fgList／fgAt／fgCover／fgHold、物件圖 propImg、踩場橫幅 sqBanner、pickFor、（舊版未用）roleTick／specialTick、HUD hud
+static func _fx2(v) -> String: return J.str(J.mc(J.num(v), "toFixed", [2.0]))
+static func tf_statTxt(_Tf, role, sz, lv) -> Array:
+	var S0 = J.gp(J.gp(D.DEV, role), sz); var L0 = J.gp(J.gp(S0, "lv"), J.num(lv) - 1)
+	var s = func(v): return J.str(v) + T("秒", "秒")
+	var r = J.str(role)
+	if r == "slow": return [[T("卡到陰・行慢", "卡到陰・行慢"), J.str(J.round(J.num(L0[5]) * 100)) + "%"], [T("範圍", "範圍"), J.str(J.gp(J.gp(S0, "area"), J.num(lv) - 1)) + T("格", "格")], [T("驚嚇值", "驚嚇值"), L0[2]]]
+	if r == "puzzle": return [[T("鬼打牆強度", "鬼打牆強度"), L0[1]], [T("重新圍返", "重新圍起"), s.call(L0[4])], [T("驚嚇值", "驚嚇值"), L0[2]]]
+	if r == "aura": return [[T("驚嚇值", "驚嚇值"), L0[2]], [T("驚嚇頻率", "驚嚇頻率"), s.call(L0[3])], [T("範圍", "範圍"), J.gp(S0, "eff")]]
+	return [[T("驚嚇值", "驚嚇值"), L0[2]], [T("回靈速度", "回靈速度"), s.call(L0[3])], [T("範圍", "範圍"), T("全房", "全房") if r == "throw" else J.str(J.gp(S0, "check")) + "/" + J.str(J.gp(S0, "eff"))]]
+static func tf_snd(_Tf, n) -> void:
+	if has("Sound") and J.t(J.gp(G("Sound"), "play")): J.mc(G("Sound"), "play", [n])
+static func tf_gpHave(Tf):
+	var sd = J.gp(Tf, "sd"); var ids = J.iter(_or(J.gp(sd, "bosses"), [])).duplicate()
+	for p in J.iter(_or(J.gp(sd, "posts"), [])):
+		if J.t(p) and J.gp(p, "staff") != null: ids.append(J.gp(p, "staff"))
+	var list = []
+	for id in ids:
+		var g = ghost(id)
+		if J.t(g) and not J.t(J.gp(g, "dev")): list.append(g)
+	return J.mc(G("GP"), "avg", [list]) if list.size() else J.mc(G("GP"), "top", [3.0])
+static func tf_gpWarn(Tf, why, txt, nw) -> void:
+	nw = J.num(nw) if J.t(nw) else _pnow()
+	if not J.t(J.gp(Tf, "_gpT")): J.sp(Tf, "_gpT", {})
+	var last = J.gp(Tf._gpT, why)
+	if J.t(last) and nw - J.num(last) < 120000: return
+	J.sp(Tf._gpT, why, nw)
+	var root = _q("#st-turf")
+	if not J.t(root): return
+	var el = _q("#gp-warn")
+	if J.t(el): J.mc(el, "remove", [])
+	el = J.S_document_("createElement", ["div"]); J.sp(el, "id", "gp-warn"); J.sp(el, "className", "gp-warn")
+	var GP = G("GP"); var have = tf_gpHave(Tf); var need = J.mc(GP, "turfNeed", [J.gp(J.gp(Tf, "sd"), "lv")]); var low = J.cmp(have, need, "<")
+	J.sp(el, "innerHTML", "<button class=\"gp-x\" aria-label=\"close\">×</button><b>" + J.str(txt) + "</b>" + J.str(J.mc(GP, "failHTML", [have, need, "" if low else T("鬼力夠喇：試下升級設備、換位，或者派多隻鬼加持。", "鬼力夠了：試試升級設備、換位置，或多派一隻鬼加持。")])))
+	J.mc(root, "appendChild", [el]); J.mc(GP, "bindBack", [el])
+	J.sp(J.mc(el, "querySelector", [".gp-x"]), "onclick", func(_t = null, a = null):
+		var e = J.arg(a, 0) if a is Array else a
+		if J.t(e): J.mc(e, "stopPropagation", [])
+		J.mc(el, "remove", []))
+	J.sp(Tf, "gpLast", why)
+	J.F_clearTimeout([J.gp(Tf, "_gpHide")])
+	J.sp(Tf, "_gpHide", J.F_setTimeout([func(_t, _a):
+		if J.t(J.gp(el, "parentNode")): J.mc(el, "remove", [])
+		return null, 12000.0]))
+static func tf_tryGate(Tf, x, y) -> bool:
+	var b = J.gp(Tf, "box"); x = J.num(x); y = J.num(y)
+	for g in J.iter(_or(J.gp(Tf, "gates"), [])):
+		var gx = J.num(b.x) + J.num(g.x) * J.num(b.w); var gy = J.num(b.y) + J.num(g.y) * J.num(b.h)
+		if x >= gx and x <= gx + J.num(g.w) * J.num(b.w) and y >= gy and y <= gy + J.num(g.h) * J.num(b.h):
+			if not J.t(g.ok): _toast(T("惡名、建設度、冥幣三樣都要夠先開到鐵閘", "惡名、建設度、冥幣三項都要達標才能開鐵閘")); return true
+			_walAdd(Tf, -J.num(J.gp(g.need, "coin"))); var sd = J.gp(Tf, "sd"); J.sp(sd, "unlocked", J.num(g.r) + 1); var def = J.gp(Tf, "def")
+			J.sp(Tf, "lay", longLay(J.gp(def, "long"), J.gp(sd, "unlocked"), J.gp(def, "rn"), J.gp(def, "id"))); J.mc(Tf, "fixPosts", []); J.mc(Tf, "buildPath", []); J.sp(Tf, "_cc", {})
+			_toast(T("生人入口擴闊咗！新一間房開放：每組多一個人、裝置等級上限 +2。", "生人入口擴闊了！新房間開放：每組多一個人、裝置等級上限 +2。")); save_(); return true
+	return false
+static func tf_fgList(Tf):
+	var L2 = J.gp(Tf, "lay"); var def = J.gp(Tf, "def"); var sid = J.gp(def, "id") if J.t(def) else null
+	if J.t(J.gp(L2, "_fg")) and J.seq(J.gp(L2, "_fgN"), J.gp(L2, "nv")): return L2._fg
+	J.sp(L2, "_fgN", J.gp(L2, "nv")); J.sp(L2, "_fg", [])
+	if not has("STN_FG") or not J.t(J.gp(G("STN_FG"), sid)): return L2._fg
+	var FW = J.num(G("STN_FG_W")); var FH = J.num(G("STN_FG_H")); var nv = J.num(L2.nv); var un = J.num(L2.unlocked); var r = 0
+	while r < nv and r < un + 1:
+		for it in J.iter(J.cl(G("STN_FG_list"), null, [sid, float(r)])):
+			L2._fg.append({"it": it, "r": float(r), "x0": r + J.num(it.x) / FW, "x1": r + (J.num(it.x) + J.num(it.w)) / FW, "y0": J.num(it.y) / FH, "y1": J.num(it.baseY) / FH, "fy": J.num(it.baseY) / FH, "hide": J.t(J.gp(it, "hide"))})
+		r += 1
+	return L2._fg
+static func tf_fgAt(_Tf, F, fx, fy) -> bool:
+	if not J.t(J.gp(F, "_a")):
+		var im = J.cl(G("STN_FG_img"), null, [F.it])
+		if not J.t(J.gp(im, "complete")) or _nw(im) <= 0: return false
+		var cv = J.S_document_("createElement", ["canvas"]); J.sp(cv, "width", J.gp(im, "naturalWidth")); J.sp(cv, "height", J.gp(im, "naturalHeight")); var x = J.mc(cv, "getContext", ["2d"]); J.mc(x, "drawImage", [im, 0.0, 0.0])
+		J.sp(F, "_a", {"d": J.gp(J.mc(x, "getImageData", [0.0, 0.0, J.gp(cv, "width"), J.gp(cv, "height")]), "data"), "w": J.num(J.gp(cv, "width")), "h": J.num(J.gp(cv, "height"))})
+	var A = F._a; var it = F.it; var Aw = J.num(A.w); var Ah = J.num(A.h)
+	var px = floorf(((J.num(fx) - J.num(F.r)) * J.num(G("STN_FG_W")) - J.num(it.x)) / J.num(it.w) * Aw); var py = floorf((J.num(fy) * J.num(G("STN_FG_H")) - J.num(it.y)) / J.num(it.h) * Ah)
+	return px >= 0 and py >= 0 and px < Aw and py < Ah and J.num(J.gp(A.d, (py * Aw + px) * 4 + 3)) > 110
+static func tf_fgCover(Tf, fx, fy):
+	fx = J.num(fx); fy = J.num(fy); var PPL = J.num(D.PPL)
+	for F in J.iter(J.mc(Tf, "fgList", [])):
+		if fy >= J.num(F.fy) or fx < J.num(F.x0) or fx > J.num(F.x1) or fy < J.num(F.y0): continue
+		var n = 0
+		for dy in [0.008, 0.02, 0.032]:
+			if J.t(J.mc(Tf, "fgAt", [F, fx, fy - dy * PPL])): n += 1
+		if n: return F
+	return null
+static func tf_fgHold(Tf, s):
+	var sx = J.num(s.x); var sy = J.num(s.y)
+	for F in J.iter(J.mc(Tf, "fgList", [])):
+		if sx >= J.num(F.x0) and sx <= J.num(F.x1) and sy >= J.num(F.y0) - 0.02 and sy <= J.num(F.y1) + 0.02: return F
+	return null
+const PROP_ALT := {"cart": "trolley", "motorbike": "moto", "cone": "cones", "durianbox": "durian", "pot": "plant"}
+static func tf_propImg(Tf, k):
+	if not J.t(J.gp(Tf, "_pi")): J.sp(Tf, "_pi", {})
+	var c0 = J.gp(Tf._pi, k)
+	if J.t(c0): return c0
+	var SP = J.gp(G("window"), "STN_PROPS")
+	if J.t(SP):
+		var P = J.gp(SP, k)
+		if not J.t(P) and PROP_ALT.has(J.str(k)): P = J.gp(SP, PROP_ALT[J.str(k)])
+		if J.t(P) and J.t(J.gp(P, "src")):
+			var im = J.new_("Image", []); J.sp(im, "src", P.src); J.sp(Tf._pi, k, im); return im
+	var r = _spr("pr_" + J.str(k)) if has("SPR") else false
+	J.sp(Tf._pi, k, r); return r
+static func tf_sqBanner(_Tf, big, small, col) -> void:
+	var el0 = _q("#st-turf")
+	if not J.t(el0): return
+	var el = _q("#sq-warn")
+	if J.t(el): J.mc(el, "remove", [])
+	el = J.S_document_("createElement", ["div"]); J.sp(el, "id", "sq-warn"); J.sp(el, "className", "cr-panel sq-warn")
+	J.sp(el, "innerHTML", "<b style=\"color:" + J.str(col) + "\">" + J.str(big) + "</b><small>" + J.str(small) + "</small>"); J.mc(el0, "appendChild", [el])
+	J.sp(el, "onclick", func(_t = null, _a = null): J.mc(el, "remove", []))
+	_later(3200.0, func():
+		if J.t(J.gp(el, "isConnected")): J.mc(J.gp(el, "classList"), "add", ["out"]); _later(300.0, func(): J.mc(el, "remove", [])))
+static func tf_pickFor(Tf, i): return J.mc(Tf, "pickRole", [i])
+# 舊版（原作已唔再呼叫）：保留做對照
+static func tf_roleTick(Tf, i, p, g, dt) -> void:
+	dt = J.num(dt); var R0 = J.gp(D.ROLE, J.gp(p, "role")); var L0 = J.gp(J.gp(D.LV, J.str(J.gp(R0, "lv"))), J.num(_or(J.gp(p, "lv"), 1.0)) - 1)
+	var L = J.gp(Tf, "lay"); var Gd = J.gp(L, "grid"); var cw = J.num(J.gp(Gd, "cw")) if J.t(Gd) else ((150.0 / 1080.0) if J.t(J.gp(L, "long")) else 0.94 / 7.2); var u = cw / 150.0
+	var spot = J.gp(L.posts, J.num(i)); var pos = [J.num(spot.x), J.num(spot.y)]
+	var live = []
+	for w in J.iter(J.gp(Tf, "walkers")):
+		if not J.t(J.gp(w, "gone")) and J.num(w.t) > 0: live.append(w)
+	var d = func(w): return tf_dist(tf_wp(Tf, w), pos)
+	var cds = J.gp(Tf, "cds"); var ii = int(J.num(i))
+	var cdA = func(v): J.sp(cds, float(ii), J.num(J.gp(cds, float(ii))) + v)
+	var cdG = func(): return J.num(J.gp(cds, float(ii)))
+	if J.num(J.gp(p, "hp")) < J.num(J.gp(p, "max")): p["hp"] = minf(J.num(p.max), J.num(p.hp) + 2.5 * dt)
+	var mkfx = func(type, tg, aura):
+		var xy = tf_wp(Tf, tg); var o = {"t": 0.0, "v": 0.0 if randf() < 0.5 else 1.0, "type": type, "k": g.k, "tx": xy[0], "ty": xy[1]}
+		if aura: o["aura"] = true
+		return o
+	if J.t(J.gp(R0, "puzzle")):
+		if J.gp(p, "ph") == null: p["ph"] = L0[1]
+		if J.num(J.gp(p, "solved")) > 0:
+			p["solved"] = J.num(p.solved) - dt
+			if J.num(p.solved) <= 0: p["ph"] = L0[1]
+			return
+		var on = []
+		for w in live:
+			if d.call(w) < cw * 0.75: on.append(w)
+		p["idle"] = 0.0 if on.size() else J.num(J.gp(p, "idle")) + dt
+		if J.num(p.idle) > 12: p["ph"] = L0[1]
+		for w in on: w["block"] = 0.25; w["puz"] = true; p["ph"] = J.num(p.ph) - 10 * dt
+		cdA.call(-dt)
+		if on.size() and cdG.call() <= 0:
+			J.sp(cds, float(ii), L0[3])
+			for w in on: tf_hit(Tf, w, L0[2], g)
+			p["en"] = minf(100.0, J.num(J.gp(p, "en")) + 6)
+			if not J.t(J.gp(p, "fx")): p["fx"] = mkfx.call("phone", on[0], false)
+		if J.num(p.ph) <= 0:
+			p["solved"] = L0[4]
+			for w in on: w["block"] = 0.0; w["puz"] = false
+			tf_float(Tf, spot.x, J.num(spot.y) - 0.05, T("鬼打牆畀人衝破咗！", "鬼打牆被衝破了！"), "#9cf")
+		return
+	if J.t(J.gp(R0, "slowK")):
+		var on = []
+		for w in live:
+			if d.call(w) < J.num(R0.eff) * u: on.append(w)
+		for w in on: w["slow"] = 0.3; w["slowK"] = 1 - J.num(L0[5]); w["frost"] = 0.4
+		cdA.call(-dt)
+		if on.size() and cdG.call() <= 0:
+			J.sp(cds, float(ii), L0[3])
+			for w in on: tf_hit(Tf, w, L0[2], g)
+			p["en"] = minf(100.0, J.num(J.gp(p, "en")) + 8)
+			if not J.t(J.gp(p, "fx")): p["fx"] = mkfx.call("light", on[0], true)
+		return
+	cdA.call(-dt)
+	if cdG.call() > 0: return
+	var inCheck = []
+	for w in live:
+		if d.call(w) < J.num(R0.check) * u: inCheck.append(w)
+	if not inCheck.size(): return
+	if J.t(J.gp(R0, "shot")):
+		var tg = pick(inCheck); J.sp(cds, float(ii), L0[3]); p["en"] = minf(100.0, J.num(J.gp(p, "en")) + 10); p["fx"] = mkfx.call("paper", tg, false)
+		J.gp(Tf, "shots").append({"from": [pos[0], pos[1] - 0.05], "w": tg, "g": g, "type": null, "P": L0[2], "t": -0.3, "aoe": J.num(R0.eff) * u}); return
+	var tgts = []
+	for w in live:
+		if d.call(w) < J.num(R0.eff) * u: tgts.append(w)
+	J.sp(cds, float(ii), L0[3])
+	if J.t(J.gp(R0, "aura")):
+		for w in tgts: tf_hit(Tf, w, L0[2], g)
+		p["auraOn"] = 0.6; p["en"] = minf(100.0, J.num(J.gp(p, "en")) + 1.2); p["flo"] = J.num(J.gp(p, "flo")) - J.num(L0[3])
+		if J.num(p.flo) <= 0 and not J.t(J.gp(p, "fx")): p["flo"] = Rr(3.5, 5.5); p["fx"] = mkfx.call("cold", tgts[0], true)
+		return
+	tf_focusOn(Tf, pos[0], pos[1]); p["en"] = minf(100.0, J.num(J.gp(p, "en")) + 14)
+	inCheck.sort_custom(func(a, b): return J.num(b.t) < J.num(a.t))
+	var tg = inCheck[0]; p["fx"] = mkfx.call(J.gp(R0, "kind"), tg, false)
+	if J.seq(J.gp(R0, "kind"), "face"): J.sp(Tf, "shake", 0.28); J.sp(Tf, "flash", 0.18)
+	for w in tgts: tf_hit(Tf, w, L0[2], g)
+static func tf_specialTick(Tf, dt) -> void:
+	dt = J.num(dt); var sd = J.gp(Tf, "sd")
+	if J.gp(sd, "special") == null: J.sp(Tf, "special", null); return
+	var g = ghost(sd.special)
+	if not J.t(g): J.sp(sd, "special", null); return
+	var ln = J.num(J.gp(Tf, "len")); var SP = J.gp(Tf, "special")
+	if not J.t(SP): SP = {"g": g, "t": ln * 0.25, "dir": 1.0, "cd": 3.0, "en": J.num(J.gp(sd, "spEn")), "fx": null}; J.sp(Tf, "special", SP)
+	SP["g"] = g; var live = []
+	for w in J.iter(J.gp(Tf, "walkers")):
+		if not J.t(J.gp(w, "gone")) and J.num(w.t) > 0: live.append(w)
+	var me = tf_at(Tf, J.num(SP.t)); var near = []
+	for w in live: near.append([w, tf_dist(tf_wp(Tf, w), me)])
+	near.sort_custom(func(a, z): return a[1] < z[1])
+	if not J.t(SP.fx):
+		SP["t"] = J.num(SP.t) + J.num(SP.dir) * 0.05 * dt * (0.3 if near.size() and near[0][1] < 0.25 else 1.0)
+		if J.num(SP.t) > ln * 0.92: SP["dir"] = -1.0
+		if J.num(SP.t) < 0.05: SP["dir"] = 1.0
+	SP["cd"] = J.num(SP.cd) - dt
+	if J.t(SP.fx):
+		SP.fx["t"] = J.num(SP.fx.t) + dt
+		if J.num(SP.fx.t) > 1.2: SP["fx"] = null
+	if J.num(SP.cd) > 0 or not near.size() or near[0][1] > 0.4: return
+	SP["cd"] = 5.0; var P = J.num(power(g)) * 3.2; var k = J.str(g.k)
+	var tg0 = tf_wp(Tf, near[0][0]); var F = {"t": 0.0, "k": k, "at": me.duplicate(), "tg": [tg0[0], tg0[1]]}; SP["fx"] = F
+	SP["en"] = minf(100.0, J.num(SP.en) + 14); J.sp(sd, "spEn", SP.en); tf_focusOn(Tf, me[0], me[1])
+	var nearR = func(r: float, n: int) -> Array:
+		var o = []
+		for x in near:
+			if x[1] < r: o.append(x[0])
+		return o.slice(0, n) if n > 0 else o
+	if k == "tianhua":
+		for w in nearR.call(0.3, 3): w["block"] = 1.8; w["hair"] = 1.8; tf_hit(Tf, w, P * 1.1, g)
+	elif k == "pontianak":
+		for w in nearR.call(0.3, 0): tf_hit(Tf, w, P * 0.9, g); w["t"] = maxf(0.01, J.num(w.t) - 0.06)
+	elif k == "eguiking" or k == "egui": tf_hit(Tf, near[0][0], P * 2.6, g)
+	elif k == "laojiang":
+		var t0 = J.num(SP.t); SP["t"] = minf(ln * 0.92, J.num(SP.t) + 0.3); F["from"] = tf_at(Tf, t0)
+		for w in live:
+			var pw = tf_wp(Tf, w); var q = 0.0
+			while q <= 1.0:
+				if tf_dist(pw, tf_at(Tf, t0 + 0.3 * q)) < 0.09: tf_hit(Tf, w, P * 1.4, g); break
+				q += 0.1
+	elif k == "toyol":
+		for w in nearR.call(0.3, 0):
+			if not J.t(J.gp(w, "crew")):
+				_walAdd(Tf, 5.0); var xy = tf_wp(Tf, w); J.gp(Tf, "parts").append({"kind": "coin", "x": xy[0], "y": J.num(xy[1]) - 0.05, "life": 1.0, "k": 0.0})
+			tf_hit(Tf, w, P * 0.4, g)
+	elif k == "xiaozhi":
+		for w in nearR.call(0.3, 4): w["block"] = 2.0; w["papers"] = 2.0; tf_hit(Tf, w, P * 0.6, g)
+	else: tf_hit(Tf, near[0][0], P * 1.5, g)
+static func tf_hud(Tf) -> void:
+	var sd = J.gp(Tf, "sd"); var def = J.gp(Tf, "def"); var HOT = D.HOT; var need = J.num(HOT.up) * (J.num(HOT.overMul) if J.num(sd.lv) >= J.num(def.cap) else 1.0); var s0 = st()
+	var lv = _q("#stt-lv"); var coin = _q("#stt-coin"); var bar = _q("#stt-hotbar"); var info = _q("#stt-info")
+	if not J.t(lv): return
+	var bd = tf_build(Tf); J.sp(Tf, "bd", bd)
+	var oc0 = occOf(sd); var dr0 = devRate(sd); var OL = J.num(D.OCC_LINE)
+	var ocC = "#cfc4b0" if oc0 == null else ("#7dffb0" if J.num(oc0) >= OL else "#ff8a7a"); var ocS = "--" if oc0 == null else J.str(J.round(J.num(oc0) * 100)) + "%"
+	J.sp(lv, "innerHTML", T("主題建設度", "主題建設度") + " <b>" + J.str(bd) + "%</b>　" + T("路人膽量", "路人膽量") + " <b>Lv" + J.str(sd.lv) + "</b><br>" + T("單位收益", "單位收益") + " <b>" + J.str(tf_unit(Tf)) + "</b>　" + T("佔領度", "佔領度") + " <b style=\"color:" + ocC + "\">" + ocS + "</b>" + (("<br><span style=\"color:#ffd45a\">" + T("村莊發展", "村莊發展") + " +" + J.str(dr0) + "/" + T("分", "分") + "</span>") if J.num(dr0) > 0 else ""))
+	var q = J.gp(Tf, "q"); var qe = _q("#stt-q"); var en = _q("#stt-enter"); var qst = J.str(q.st)
+	if J.t(qe):
+		var ct = J.str(ceilf(J.num(q.t))); var mn = J.str(q.made) + "/" + J.str(q.n)
+		J.sp(qe, "textContent", T("下一組 " + ct + " 秒", "下一組 " + ct + " 秒") if qst == "gap" else (T("將至 " + mn, "將至 " + mn) if qst == "form" else T(J.str(q.n) + " 人・" + ct + " 秒自動入", J.str(q.n) + " 人・" + ct + " 秒自動進")))
+	if J.t(en):
+		J.mc(J.gp(en, "classList"), "toggle", ["autoon", qst == "ready"]); J.mc(J.gp(en, "style"), "setProperty", ["--qk", J.mc(1 - J.num(q.t) / 90.0, "toFixed", [3.0]) if qst == "ready" else 0.0])
+	var spb = _q("#stt-sp")
+	if J.t(spb):
+		var on = []
+		for id in J.iter(_or(J.gp(sd, "bosses"), [])):
+			var g = ghost(id)
+			if J.t(g): on.append(J.str(g.name))
+		var nms = "、".join(on)
+		J.sp(spb, "innerHTML", T("有名鬼<br><b>本圖已上場：" + nms + "</b>", "有名鬼<br><b>本圖已上場：" + nms + "</b>") if on.size() else T("有名鬼<br><b>派佢上場</b>", "有名鬼<br><b>派牠上場</b>"))
+	var bx = _q("#stt-box")
+	if J.t(bx):
+		var n = 1.0 if J.gp(s0, "box") == null else J.num(s0.box)
+		if n >= 1: J.sp(bx, "innerHTML", T("驚嚇盒<br><b>1/1</b>", "驚嚇盒<br><b>1/1</b>"))
+		else:
+			var m = J.str(ceilf((20 * 60000 - (now_ms() - J.num(J.gp(s0, "boxAt")))) / 60000.0)); J.sp(bx, "innerHTML", T("驚嚇盒<br><b>" + m + "分</b>", "驚嚇盒<br><b>" + m + "分</b>"))
+		J.sp(bx, "disabled", n < 1)
+	J.sp(coin, "textContent", T("本關冥幣", "本關冥幣") + " " + J.str(floorf(J.num(J.gp(sd, "wal")))))
+	var oc = occOf(sd); var dr = devRate(sd); var ocT
+	if oc == null:
+		var cnt = J.str(J.len(_or(J.gp(sd, "occH"), []))) + "/" + J.str(D.OCC_MIN); ocT = T("佔領度 計緊（" + cnt + "）", "佔領度 統計中（" + cnt + "）")
+	else:
+		var drs = J.str(dr)
+		ocT = T("佔領度", "佔領度") + " <b style=\"color:" + ("#7dffb0" if J.num(oc) >= OL else "#ff8a7a") + "\">" + J.str(J.round(J.num(oc) * 100)) + "%</b>" + (T("・村莊發展 +" + drs + "/分", "・村莊發展 +" + drs + "/分") if J.num(dr) > 0 else (T("・起咗設備先有發展收入", "・建了設備才有發展收入") if J.num(oc) >= OL else T("・過 50% 村莊先有發展收入", "・超過 50% 村莊才有發展收入")))
+	var hot = J.num(sd.hot); var k = hot / need if hot >= 0 else hot / -J.num(HOT.down); var bs = J.gp(bar, "style")
+	J.sp(bs, "width", J.str(absf(k) * 50) + "%"); J.sp(bs, "left", "50%" if k >= 0 else J.str(50 + k * 50) + "%"); J.sp(bar, "className", "up" if k >= 0 else "down")
+	var hv = tf_gpHave(Tf); var nd = J.mc(G("GP"), "turfNeed", [sd.lv])
+	J.sp(info, "innerHTML", "<span>" + ocT + "</span><span>" + T("傳說名氣", "傳說名氣") + " " + J.str(J.round(hot)) + "/" + J.str(need) + "</span><span>" + T("惡名", "惡名") + " " + J.str(sd.scared) + "</span><span>" + T("漏人", "漏人") + " " + J.str(sd.leaked) + "</span><span>" + T("膽量補正", "膽量補正") + " ×" + _fx2(tf_mod(Tf)) + "</span>" + "<span class=\"gp-hud " + ("gp-low" if J.cmp(hv, nd, "<") else "gp-ok") + "\">" + T("鬼力", "鬼力") + " <b>" + J.str(hv) + "</b>／" + T("建議", "建議") + " " + J.str(nd) + "</span>")
+	tf_gpCheck(Tf, oc)
+const TF_4Q := {"statTxt": 3, "snd": 1, "gpHave": 0, "gpWarn": 3, "tryGate": 2, "fgList": 0, "fgAt": 3, "fgCover": 2, "fgHold": 1, "propImg": 1, "sqBanner": 3, "pickFor": 1, "roleTick": 5, "specialTick": 1, "hud": 0}
+# 4r：開／關地盤 open／close、resize、每幀 frame、輸入 bindInput／tap、網紅組帖文 sqShot／sqPost（含 Godot 原生外殼補丁：_nat、_fno、_sqShotCv）
+static func _raf(f: Callable): return J.F_requestAnimationFrame([func(_t, aa): f.call(J.arg(aa, 0)); return null])
+static func tf_open(Tf, id, _room = null) -> void:
+	var def = null
+	for d in D.SITES:
+		if J.seq(d.id, id): def = d; break
+	if def == null: return
+	J.sp(Tf, "room", 0.0); J.sp(Tf, "def", def); var sd = site(id); J.sp(Tf, "sd", sd)
+	if J.gp(sd, "wal") == null:
+		sd["wal"] = 600.0; _later(400.0, func(): _toast(T("本關開張資金：冥幣 +600（只可以喺呢個地盤用，唔帶得走）。嚇走路人會賺返本關冥幣，留住慢慢起設備、升級。佔領度過 50%，村莊就會有發展收入！", "本關開張資金：冥幣 +600（只能在這個地盤用，帶不走）。嚇跑路人會賺回本關冥幣，存起來慢慢建設、升級。佔領度超過 50%，村莊就會有發展收入！")))
+	if not J.seq(J.gp(sd, "pv"), 6.0): sd["pv"] = 6.0; sd["posts"] = []; sd["unlocked"] = 2.0
+	sd["unlocked"] = maxf(2.0, J.num(_or(J.gp(sd, "unlocked"), 2.0)))
+	if J.gp(sd, "modCur") == null: sd["modCur"] = 0.9
+	sd["bosses"] = _or(J.gp(sd, "bosses"), [])
+	if J.gp(sd, "special") != null:
+		if not J.t(J.mc(sd.bosses, "includes", [sd.special])): sd.bosses.append(sd.special)
+		sd["special"] = null
+	J.sp(Tf, "lay", longLay(J.gp(def, "long"), sd.unlocked, J.gp(def, "rn"), def.id)); J.mc(Tf, "fixPosts", [])
+	if J.typeof_(G("STN_FG_preload")) == "function": J.cl(G("STN_FG_preload"), null, [def.id])
+	var blt = []
+	for p in J.iter(sd.posts):
+		if J.t(p) and J.t(J.gp(p, "role")): blt.append(p)
+	var mx = 0.0; var sm = 0.0
+	for p in blt: var l = J.num(_or(J.gp(p, "lv"), 1.0)); mx = maxf(mx, l); sm += l
+	J.sp(Tf, "modMax", sm / mx if blt.size() else 1.0)
+	J.sp(Tf, "bosses", []); J.sp(Tf, "walkers", [])
+	if has("StnFoes"): J.mc(G("StnFoes"), "reset", [])
+	for k in ["dfx", "fx", "shots", "parts"]: J.sp(Tf, k, [])
+	J.sp(Tf, "sqPlan", null); J.sp(Tf, "waveNo", 0.0); J.sp(Tf, "sqCD", 1.0); J.sp(Tf, "slowmo", 0.0); J.sp(Tf, "blown", null); J.sp(Tf, "shake", 0.0); J.sp(Tf, "flash", 0.0); J.sp(Tf, "rateAcc", 0.0); J.sp(Tf, "rateT", 0.0); J.sp(Tf, "moveFrom", null)
+	J.sp(Tf, "q", {"st": "gap", "t": 3.0, "n": 0.0, "made": 0.0, "list": []}); J.sp(Tf, "eliteT", Rr(75, 125)); J.sp(Tf, "eliteNext", null)
+	var el = _q("#st-turf")
+	if not J.t(el): el = J.S_document_("createElement", ["section"]); J.sp(el, "id", "st-turf"); J.mc(J.gp(G("document"), "body"), "appendChild", [el])
+	J.sp(el, "innerHTML", "<canvas id=\"stt-cv\"></canvas><div class=\"stt-top\"><button id=\"stt-back\">◀ " + T("返街", "回街上") + "</button><div class=\"stt-name\"><b>" + T(def.n, def.zh) + "</b><small id=\"stt-lv\"></small></div><span id=\"stt-coin\"></span></div>"
+		+ "<button class=\"stt-enter\" id=\"stt-enter\"><b>▲</b>" + T("進入", "進入") + "<small id=\"stt-q\"></small></button><button class=\"stt-next\" id=\"stt-next\" style=\"display:none\"></button><button class=\"stt-sp\" id=\"stt-sp\"></button><button class=\"stt-box\" id=\"stt-box\"></button><div class=\"stt-zoom\"><button id=\"stt-zin\" title=\"放大／縮細\">🔍</button></div><button class=\"stt-build\" id=\"stt-build\">" + T("建造", "建造") + "</button><div class=\"stt-hot\"><i id=\"stt-hotbar\"></i><em></em></div><div class=\"stt-info\" id=\"stt-info\"></div>")
+	J.mc(J.gp(el, "classList"), "add", ["on"]); J.mc(J.gp(J.gp(G("document"), "body"), "classList"), "add", ["st-on"]); J.sp(Tf, "on", true)
+	var cv = _q("#stt-cv"); J.sp(Tf, "cv", cv); J.sp(Tf, "c", J.mc(cv, "getContext", ["2d"]))
+	J.sp(_q("#stt-back"), "onclick", func(_t = null, _a = null): J.mc(Tf, "close", []))
+	J.sp(_q("#stt-enter"), "onclick", func(_t = null, _a = null): J.mc(Tf, "enter", [true]))
+	J.sp(_q("#stt-sp"), "onclick", func(_t = null, _a = null): J.mc(Tf, "specialPick", []))
+	J.sp(_q("#stt-box"), "onclick", func(_t = null, _a = null): J.mc(Tf, "useBox", []))
+	J.sp(Tf, "cam", null); J.mc(Tf, "camStep", []); var C = Tf.cam; C["z"] = 1.0; C["x"] = 0.5; C["tx"] = 0.5; C["y"] = 1.5; C["ty"] = 1.5; J.mc(Tf, "bindInput", [])
+	J.sp(Tf, "buildMode", false); J.sp(Tf, "_nat", has("__nat_turf") and J.t(J.cl(G("__nat_turf"), null, [Tf])))
+	J.mc(Tf, "resize", []); J.mc(Tf, "buildPath", []); J.sp(Tf, "intro", {"t": 0.0}); J.sp(Tf, "last", _pnow())
+	J.sp(Tf, "raf", _raf(func(t): J.mc(Tf, "frame", [t])))
+	if has("Sound") and J.t(J.gp(G("Sound"), "play")): J.mc(G("Sound"), "play", ["click"])
+static func tf_close(Tf) -> void:
+	J.sp(Tf, "on", false); J.F_cancelAnimationFrame([J.gp(Tf, "raf")])
+	if J.t(J.gp(Tf, "_nat")) and has("__nat_turfEnd"): J.cl(G("__nat_turfEnd"), null, [Tf])
+	J.sp(Tf, "_nat", false)
+	var el = _q("#st-turf")
+	if J.t(el): J.mc(J.gp(el, "classList"), "remove", ["on"]); J.sp(el, "innerHTML", "")
+	var p = _q("#stt-pick")
+	if J.t(p): J.mc(p, "remove", [])
+	save_(); openStreet()
+static func tf_resize(Tf) -> void:
+	var dpr = minf(2.0, J.num(_or(J.gp(G("window"), "devicePixelRatio"), 1.0))); var Wd = _iw(); var Hd = _ih()
+	if not J.t(J.gp(Tf, "_nat")):
+		var cv = J.gp(Tf, "cv"); J.sp(cv, "width", Wd * dpr); J.sp(cv, "height", Hd * dpr); J.sp(J.gp(cv, "style"), "width", J.str(Wd) + "px"); J.sp(J.gp(cv, "style"), "height", J.str(Hd) + "px"); J.mc(J.gp(Tf, "c"), "setTransform", [dpr, 0.0, 0.0, dpr, 0.0, 0.0])
+	var h = Hd * 1.8; var w = h / 1.5; J.sp(Tf, "box", {"x": (Wd - w) / 2, "y": (Hd - h) / 2, "w": w, "h": h})
+	J.sp(Tf, "scr", {"x": 0.0, "y": 0.0, "w": Wd, "h": Hd})
+	var hb = J.S_document_("querySelector", [".stt-hot"]); var inf = _q("#stt-info"); var en = _q("#stt-enter")
+	if J.t(hb): J.sp(J.gp(hb, "style"), "top", J.str(Hd - 10) + "px"); J.sp(J.gp(hb, "style"), "bottom", "auto")
+	if J.t(inf): J.sp(J.gp(inf, "style"), "top", J.str(Hd - 40) + "px"); J.sp(J.gp(inf, "style"), "bottom", "auto")
+	if J.t(en): J.sp(J.gp(en, "style"), "top", J.str(Hd - 196) + "px"); J.sp(J.gp(en, "style"), "bottom", "auto")
+static func tf_frame(Tf, t) -> void:
+	if not J.t(J.gp(Tf, "on")): return
+	J.sp(Tf, "raf", _raf(func(x): J.mc(Tf, "frame", [x])))
+	t = J.num(t); var dt = minf(0.1, (t - J.num(J.gp(Tf, "last"))) / 1000.0)
+	if dt < 1.0 / 31: return
+	J.sp(Tf, "last", t)
+	var U2 = J.gp(Tf, "ult")
+	if J.t(U2):
+		U2["t"] = J.num(U2.t) + dt
+		if J.num(U2.t) >= J.num(_or(J.gp(U2, "at"), 0.9)) and not J.t(J.gp(U2, "done")): U2["done"] = true; J.mc(Tf, "ultApply", [U2])
+		if J.num(U2.t) > J.num(_or(J.gp(U2, "dur"), 2.6)): J.sp(Tf, "ult", null)
+	var my = J.gp(Tf, "my"); J.sp(Tf, "my", minf(100.0, (100.0 if my == null else J.num(my)) + 5 * dt))
+	var tdt = dt
+	if J.t(U2) and J.num(U2.t) < 0.9: tdt = dt * 0.2
+	elif J.num(J.gp(Tf, "slowmo")) > 0: J.sp(Tf, "slowmo", J.num(Tf.slowmo) - dt); tdt = dt * 0.25
+	J.mc(Tf, "tick", [tdt])
+	if J.t(J.gp(Tf, "_nat")):
+		J.sp(Tf, "_fno", J.num(J.gp(Tf, "_fno")) + 1)
+		if fmod(J.num(Tf._fno), 6.0) == 0: J.mc(Tf, "hud", [])
+		return
+	J.mc(Tf, "draw", [])
+	if J.t(J.gp(Tf, "ult")): J.mc(Tf, "drawUlt", [])
+	J.mc(Tf, "drawMy", []); J.mc(Tf, "hud", [])
+static func _ev(a): return J.arg(a, 0) if a is Array else a
+static func tf_bindInput(Tf) -> void:
+	var cv = J.gp(Tf, "cv"); var S = {"pts": {}, "moved": false, "start": null, "pinch0": 0.0, "z0": 1.0}
+	var vals = func() -> Array: return S.pts.values()
+	J.sp(cv, "onpointerdown", func(_t = null, a = null):
+		var e = _ev(a)
+		if J.t(J.gp(cv, "setPointerCapture")): J.mc(cv, "setPointerCapture", [J.gp(e, "pointerId")])
+		S.pts[J.gp(e, "pointerId")] = [J.num(e.clientX), J.num(e.clientY)]; S.moved = false; var C = J.gp(Tf, "cam"); S.start = [J.num(e.clientX), J.num(e.clientY), J.num(C.x), J.num(C.y)]
+		if S.pts.size() == 2:
+			var v = vals.call(); S.pinch0 = _hyp(v[0][0] - v[1][0], v[0][1] - v[1][1]); S.z0 = J.num(C.z))
+	J.sp(cv, "onpointermove", func(_t = null, a = null):
+		var e = _ev(a)
+		if not S.pts.has(J.gp(e, "pointerId")): return
+		S.pts[J.gp(e, "pointerId")] = [J.num(e.clientX), J.num(e.clientY)]; var C = J.gp(Tf, "cam")
+		if S.pts.size() == 2:
+			var v = vals.call(); var d = _hyp(v[0][0] - v[1][0], v[0][1] - v[1][1]); C["z"] = S.z0 * d / maxf(1.0, S.pinch0); S.moved = true; C["user"] = _pnow(); J.mc(Tf, "camClamp", []); return
+		var dx = J.num(e.clientX) - S.start[0]; var dy = J.num(e.clientY) - S.start[1]
+		if _hyp(dx, dy) > 8: S.moved = true
+		if S.moved:
+			var b = J.gp(Tf, "box"); var nx = S.start[2] - dx / (J.num(b.w) * J.num(C.z)); var ny = S.start[3] - dy / (J.num(b.h) * J.num(C.z))
+			C["x"] = nx; C["tx"] = nx; C["y"] = ny; C["ty"] = ny; C["user"] = _pnow(); J.mc(Tf, "camClamp", []))
+	var up = func(_t = null, a = null):
+		var e = _ev(a); var was = S.pts.has(J.gp(e, "pointerId")); S.pts.erase(J.gp(e, "pointerId"))
+		if was and not S.moved and S.pts.size() == 0: J.mc(Tf, "tap", [e])
+	J.sp(cv, "onpointerup", up); J.sp(cv, "onpointercancel", func(_t = null, a = null): S.pts.erase(J.gp(_ev(a), "pointerId")))
+	var zi = _q("#stt-zin")
+	if J.t(zi):
+		J.sp(zi, "onclick", func(_t = null, _a = null):
+			J.sp(Tf, "intro", null); var C = J.gp(Tf, "cam"); var zf = J.num(J.mc(Tf, "zFit", []))
+			C["z"] = zf if J.num(C.z) > zf + 0.02 else 1.0; C["user"] = _pnow(); J.mc(Tf, "camClamp", [])
+			J.mc(J.gp(zi, "classList"), "toggle", ["on", J.num(C.z) <= J.num(J.mc(Tf, "zFit", [])) + 0.02]))
+	var bb = _q("#stt-build")
+	if J.t(bb):
+		J.sp(bb, "onclick", func(_t = null, _a = null):
+			var on = not J.t(J.gp(Tf, "buildMode")); J.sp(Tf, "buildMode", on); J.mc(J.gp(bb, "classList"), "toggle", ["on", on]); J.sp(bb, "textContent", T("完成", "完成") if on else T("建造", "建造"))
+			if on: _toast(T("建造模式：撳發光嘅格起設備（紫＝牆邊凹位，橙＝地台）", "建造模式：點發光的格建設備（紫＝牆邊凹位，橙＝地台）")))
+static func tf_tap(Tf, e) -> void:
+	var r = {"left": 0.0, "top": 0.0} if J.t(J.gp(Tf, "_nat")) else J.mc(J.gp(Tf, "cv"), "getBoundingClientRect", [])
+	var px0 = J.num(e.clientX) - J.num(r.left); var py0 = J.num(e.clientY) - J.num(r.top); var xy = tf_toScene(Tf, px0, py0); var x = xy[0]; var y = xy[1]; var b = J.gp(Tf, "box"); var L = J.gp(Tf, "lay")
+	var MB = J.gp(Tf, "miniBox")
+	if J.t(MB):
+		var mx = J.num(MB[0]); var my = J.num(MB[1]); var mw = J.num(MB[2]); var mh = J.num(MB[3])
+		if px0 >= mx - 3 and px0 <= mx + mw + 3 and py0 >= my - 3 and py0 <= my + mh + 3:
+			var C = J.gp(Tf, "cam"); J.sp(Tf, "intro", null); var cx = (px0 - mx) / mw * J.num(L.worldW); var cy = (py0 - my) / mh * J.num(L.worldH)
+			C["x"] = cx; C["tx"] = cx; C["y"] = cy; C["ty"] = cy; C["user"] = _pnow(); J.mc(Tf, "camClamp", []); return
+	var i = -1; var PS = J.iter(L.posts)
+	for k in PS.size():
+		var q = tf_rect(Tf, PS[k])
+		if x >= J.num(b.x) + J.num(q[0]) * J.num(b.w) and x <= J.num(b.x) + J.num(q[2]) * J.num(b.w) and y >= J.num(b.y) + J.num(q[1]) * J.num(b.h) and y <= J.num(b.y) + J.num(q[3]) * J.num(b.h): i = k; break
+	var sd = J.gp(Tf, "sd")
+	if J.gp(Tf, "moveFrom") != null:
+		var a = int(J.num(Tf.moveFrom)); J.sp(Tf, "moveFrom", null)
+		if i < 0 or i == a: _toast(T("取消移位", "取消移位")); return
+		var A = PS[a]; var B = PS[i]
+		if not J.seq(J.gp(A, "h"), J.gp(B, "h")) or J.num(_or(J.gp(A, "s"), 1.0)) != J.num(_or(J.gp(B, "s"), 1.0)): _toast(T("要同類（牆／路）同大小嘅格先可以互換", "要同類（牆／路）同大小的格才能互換")); return
+		var t0 = sd.posts[a]; sd.posts[a] = sd.posts[i]; sd.posts[i] = t0
+		for kk in [a, i]:
+			var p = sd.posts[kk]
+			if J.t(p): p["win"] = null; p["anim"] = null; p["ph"] = null; p["solved"] = 0.0
+		_toast(T("互換咗位置", "已互換位置")); save_(); return
+	if J.t(J.mc(Tf, "tryGate", [x, y])): return
+	for B in J.iter(_or(J.gp(Tf, "bosses"), [])):
+		var scn = J.gp(B, "screen")
+		if J.t(scn) and _hyp(J.num(scn[0]) - x, J.num(scn[1]) - y) < J.num(b.w) * 0.09:
+			if J.num(B.en) >= 100 and not J.t(J.gp(Tf, "ult")):
+				B["en"] = 0.0; J.sp(J.gp(sd, "bEn"), J.gp(B.g, "id"), 0.0); var g = B.g; var pos = tf_bpos(Tf, B); var nm = J.gp(J.gp(Tf, "ULT"), g.k)
+				if not J.t(nm): nm = [J.str(g.name) + "・怨氣爆發", J.str(g.name) + "・怨氣爆發"]
+				tf_focusOn(Tf, pos[0], pos[1])
+				var U = {"t": 0.0, "i": -1.0, "pos": pos, "k": g.k, "name": T(nm[0], nm[1]), "gname": g.name, "pw": power(g), "pm": J.mc(G("GP"), "grow", [g]), "done": false, "fx": []}
+				var ex = J.gp(J.gp(Tf, "ULTT"), g.k)
+				if J.t(ex):
+					for kk in ex: U[kk] = ex[kk]
+				J.sp(Tf, "ult", U); J.sp(Tf, "shake", 0.5)
+			else:
+				var pc = J.str(J.round(J.num(B.en))); _toast(T(J.str(B.g.name) + "：能量 " + pc + "%（出招一次 +14）", J.str(B.g.name) + "：能量 " + pc + "%（出招一次 +14）"))
+			return
+	if i >= 0 and (J.t(J.gp(Tf, "buildMode")) or (J.t(J.gp(sd.posts, float(i))) and J.t(J.gp(sd.posts[i], "role")))): J.mc(Tf, "pickRole", [float(i)]); return
+	var hh = J.num(b.h) * 0.034 * J.num(D.PPL); var best = null; var bd = 1e9
+	for w in J.iter(J.gp(Tf, "walkers")):
+		if not tf_alive(Tf, w): continue
+		var wp = tf_wp(Tf, w); var sp = tf_P(Tf, J.num(wp[0]), J.num(wp[1])); var d = _hyp(J.num(sp[0]) - x, J.num(sp[1]) - hh * 0.5 - y)
+		if d < bd: bd = d; best = w
+	if J.t(best) and bd < hh * 0.9:
+		var s0 = st()
+		if J.gp(s0, "tapE") == null: s0["tapE"] = 100.0
+		if J.num(s0.tapE) < 1:
+			var bp = tf_wp(Tf, best); tf_float(Tf, bp[0], bp[1], T("嚇人力用晒", "嚇人力用完了"), "#aaa"); return
+		if J.num(s0.tapE) >= 100: s0["tapAt"] = now_ms()
+		s0["tapE"] = J.num(s0.tapE) - 1; var sc2 = tf_toScreen(Tf, x, y); J.sp(Tf, "tapFx", {"x": sc2[0], "y": sc2[1], "t": 0.0})
+		tf_hit(Tf, best, ceilf(J.num(best.max) * 0.01), {"force": true})
+		if has("Sound") and J.t(J.gp(G("Sound"), "play")): J.mc(G("Sound"), "play", ["click"])
+static func tf_sqShot(Tf, pos, win, sq):
+	var L = J.gp(Tf, "lay"); var r = int(maxf(0.0, minf(J.num(L.nv) - 1, floorf(J.num(pos[0]))))); var P0 = J.gp(L.panels, float(r)); var ROOMG = J.gp(D.DATA4, "rooms")
+	var bgk = null
+	if J.t(P0):
+		bgk = J.gp(P0, "bg")
+		if not J.t(bgk):
+			var RG = J.gp(ROOMG, J.gp(P0, "room")); bgk = J.gp(RG, "bg") if J.t(RG) else null
+	var bg = _spr(bgk) if has("SPR") else null
+	var o = J.S_document_("createElement", ["canvas"]); J.sp(o, "width", 240.0); J.sp(o, "height", 170.0); var x = J.mc(o, "getContext", ["2d"])
+	var BW = _nw(bg) if _nw(bg) > 0 else 768.0; var BH = J.num(bg.naturalHeight) if _nw(bg) > 0 else 1152.0
+	var cw = 0.36 * BW; var ch = cw * 170 / 240; var cx = (J.num(pos[0]) - r) * BW; var cy = (J.num(pos[1]) - 0.025) * BH
+	var x0 = maxf(0.0, minf(BW - cw, cx - cw / 2)); var y0 = maxf(0.0, minf(BH - ch, cy - ch / 2)); var k = 240 / cw
+	x.fillStyle = "#120c10"; x.fillRect(0, 0, 240, 170)
+	if J.t(win): x.translate(120, 85); x.rotate(-0.07); x.scale(1.08, 1.08); x.translate(-120, -85)
+	if _nw(bg) > 0:
+		x.filter = "blur(1.6px) brightness(0.75) contrast(1.25)" if J.t(win) else "brightness(1.15) saturate(0.9)"; x.drawImage(bg, x0, y0, cw, ch, 0, 0, 240, 170); x.filter = "none"
+	var toC = func(q): return [((J.num(q[0]) - r) * BW - x0) * k, (J.num(q[1]) * BH - y0) * k]
+	var hP = 0.042 * BH * 0.92 * k * J.num(D.PPL)
+	if J.t(win):
+		var gq = toC.call([J.num(pos[0]) + 0.04, J.num(pos[1]) - 0.01]); x.save(); x.filter = "blur(2px)"; x.globalAlpha = 0.75; J.mc(G("DevFx"), "shade", [x, gq[0], gq[1], hP * 1.6, {"t": 1.0, "alpha": 0.85, "reach": 0.6}]); x.restore()
+	var j = 0
+	for m in J.iter(_or(J.gp(sq, "mem"), [])):
+		var im = _spr(J.gp(m, "spr")) if has("SPR") else null
+		if _nw(im) <= 0: j += 1; continue
+		var q = [J.num(pos[0]) - 0.02 * j, J.num(pos[1])] if J.seq(J.gp(m, "gone"), "out") else tf_wp(Tf, m)
+		if absf(J.num(q[0]) - J.num(pos[0])) > 0.25: q = [J.num(pos[0]) - 0.03 * (j + 1), J.num(pos[1]) + 0.01 * j]
+		var mq = toC.call(q); var ww = hP * _nw(im) / J.num(im.naturalHeight)
+		x.save()
+		if J.t(win): x.filter = "blur(1.2px)"; x.translate(mq[0], mq[1]); x.rotate((j - 1) * 0.15); x.drawImage(im, -ww / 2, -hP, ww, hP)
+		else: x.drawImage(im, mq[0] - ww / 2, mq[1] - hP, ww, hP)
+		x.restore(); j += 1
+	x.setTransform(1, 0, 0, 1, 0, 0)
+	if J.t(win):
+		var gq = toC.call([J.num(pos[0]) + 0.04, J.num(pos[1]) - 0.03]); x.strokeStyle = "#ff2a2a"; x.lineWidth = 3; x.beginPath(); x.ellipse(gq[0], gq[1] - hP * 0.4, hP * 0.75, hP * 0.95, -0.2, 0, 6.2); x.stroke()
+		x.font = "900 17px sans-serif"; x.textAlign = "center"; x.lineWidth = 4; x.strokeStyle = "#000"; x.fillStyle = "#ff3b2f"; var tx = maxf(56.0, minf(184.0, J.num(gq[0])))
+		x.strokeText(T("呢度有嘢！", "這裡有東西！"), tx, 158); x.fillText(T("呢度有嘢！", "這裡有東西！"), tx, 158); x.fillStyle = "rgba(255,255,255,0.14)"; x.fillRect(0, 0, 240, 170)
+	else:
+		x.font = "900 13px sans-serif"; x.fillStyle = "rgba(255,255,255,0.85)"; x.textAlign = "right"; x.fillText(T("打卡 ✓", "打卡 ✓"), 232, 162)
+	if J.t(J.gp(Tf, "_nat")): J.sp(Tf, "_sqShotCv", o); return "nat"
+	return J.str(J.mc(o, "toDataURL", ["image/jpeg", 0.82]))
+static func tf_sqPost(Tf, sq, win, smooth, shot, siteN) -> void:
+	var S0 = J.gp(D.SQUAD, J.str(J.gp(sq, "kind"))); var el0 = _q("#st-turf")
+	if not J.t(el0): return
+	var el = _q("#sq-post")
+	if J.t(el): J.mc(el, "remove", [])
+	win = J.t(win); smooth = J.t(smooth)
+	var ac = pick(J.iter(S0.acct)); var tx = pick(J.iter(S0.win if win else S0.lose)); var txt = T(tx[0], tx[1]).replace("{s}", J.str(siteN).replace(" ", "").replace("\t", "").replace("\n", "")); var plat = T("陰聞", "陰聞") if win else T("夜遊誌", "夜遊誌")
+	var likes = J.round(Rr(12000, 86000)) if win else J.round(Rr(3000, 26000)); var shares = J.round(likes * Rr(0.08, 0.2))
+	el = J.S_document_("createElement", ["div"]); J.sp(el, "id", "sq-post"); J.sp(el, "className", "cr-panel sq-post " + ("win" if win else "lose"))
+	var stamp = ("<em class=\"sq-stamp\">" + T("被拆穿！", "被拆穿！") + "</em>") if smooth else (("<em class=\"sq-stamp hot\">" + T("嚇爆！", "嚇爆！") + "</em>") if win else "")
+	var eff = T("傳說名氣大升・路人膽細咗", "傳說名氣大升・路人變膽小") if win else (T("傳說名氣 −10・收益下降", "傳說名氣 −10・收益下降") if smooth else T("傳說名氣 −6・收益下降", "傳說名氣 −6・收益下降"))
+	J.sp(el, "innerHTML", "<div class=\"sq-h\"><canvas width=\"44\" height=\"44\"></canvas><div><b>" + J.str(ac) + "</b><small>" + plat + "・" + T("啱啱", "剛剛") + "</small></div>" + stamp + "</div>\n        <p>" + txt + "</p>" + (("<img src=\"" + J.str(shot) + "\" alt=\"\">") if J.t(shot) else "") + "<div class=\"sq-f\"><span>♥ <i data-n=\"" + J.str(likes) + "\">0</i></span><span>⤴ <i data-n=\"" + J.str(shares) + "\">0</i></span><span class=\"sq-eff\">" + eff + "</span></div><small class=\"sq-x\">" + T("撳一下收起", "點一下收起") + "</small>")
+	J.mc(el0, "appendChild", [el])
+	var im = _spr(J.gp(S0.members[0], "spr")) if has("SPR") else null; var cv = J.mc(el, "querySelector", ["canvas"])
+	if J.t(cv):
+		var x = J.mc(cv, "getContext", ["2d"])
+		if J.t(x):
+			x.fillStyle = "#1a1014"; x.fillRect(0, 0, 44, 44)
+			if _nw(im) > 0: x.drawImage(im, _nw(im) * 0.1, 0, _nw(im) * 0.8, _nw(im) * 0.8, 0, 0, 44, 44)
+	var t0 = _pnow(); var nums = J.iter(J.mc(el, "querySelectorAll", ["i[data-n]"])); var upd = {}
+	upd["f"] = func():
+		var k = minf(1.0, (_pnow() - t0) / 1500.0); var e2 = 1 - pow(1 - k, 3)
+		for n2 in nums:
+			var v = J.round(J.num(J.gp(J.gp(n2, "dataset"), "n")) * e2)
+			J.sp(n2, "textContent", (J.str(J.mc(v / 10000.0, "toFixed", [1.0])) + T("萬", "萬")) if v >= 10000 else J.str(v))
+		if k < 1 and J.t(J.gp(el, "isConnected")): _raf(func(_x): upd.f.call())
+	upd.f.call()
+	var close = func(_t = null, _a = null):
+		J.mc(J.gp(el, "classList"), "add", ["out"]); _later(300.0, func(): J.mc(el, "remove", []))
+	J.sp(el, "onclick", close)
+	_later(4200.0, func():
+		if J.t(J.gp(el, "isConnected")): close.call())
+const TF_4R := {"open": 2, "close": 0, "resize": 0, "frame": 1, "bindInput": 0, "tap": 1, "sqShot": 3, "sqPost": 5}
+
+# 4s：揀設備／升級／加持選單 pickRole、有名鬼上場選單 specialPick（DOM）
+static func _el_close(el, born: float) -> void:
+	J.sp(el, "onclick", func(_t = null, a = null):
+		if _pnow() - born < 500: return
+		var e = _ev(a)
+		if J.t(e) and is_same(J.gp(e, "target"), el): J.mc(el, "remove", []))
+static func _pk_canvases(el) -> void:
+	for cv in J.iter(J.mc(el, "querySelectorAll", ["canvas[data-pk]"])):
+		var ds = J.gp(cv, "dataset"); var dv = _spr(J.gp(ds, "dv")) if (J.t(J.gp(ds, "dv")) and has("SPR")) else null
+		J.sp(cv, "width", 80.0); J.sp(cv, "height", 80.0); var x = J.mc(cv, "getContext", ["2d"])
+		if not J.t(x): continue
+		if _nw(dv) > 0:
+			var nw = _nw(dv); var nh = J.num(dv.naturalHeight); var k = 76 / maxf(nw, nh); J.mc(x, "drawImage", [dv, 40 - nw * k / 2, 40 - nh * k / 2, nw * k, nh * k])
+		elif has("ART"):
+			var im = J.mc(G("ART"), "portrait", [J.gp(ds, "pk"), 80.0])
+			if J.t(im): J.mc(x, "drawImage", [im, 0.0, 0.0, 80.0, 80.0])
+static func _ghostDs(s):
+	var g = ghost(J.num(s))
+	return g if J.t(g) else ghost(s)
+static func tf_pickRole(Tf, i) -> void:
+	J.sp(Tf, "selPost", i); J.sp(Tf, "selAt", _pnow())
+	var ii = int(J.num(i)); var sd = J.gp(Tf, "sd"); var p = J.gp(sd.posts, float(ii)); var spot = J.gp(J.gp(Tf, "lay").posts, float(ii)); var sz = J.num(_or(J.gp(spot, "s"), 1.0)); var cap = tf_lvCap(Tf)
+	var el = _q("#stt-pick")
+	if not J.t(el): el = J.S_document_("createElement", ["div"]); J.sp(el, "id", "stt-pick"); J.mc(J.gp(G("document"), "body"), "appendChild", [el])
+	var close = func(): J.mc(el, "remove", [])
+	var coins = floorf(J.num(J.gp(sd, "wal"))); var szT = T("2格", "2格") if sz == 2 else T("1格", "1格")
+	var SPECIAL = J.iter(J.gp(Tf, "SPECIAL"))
+	if J.t(p) and J.t(J.gp(p, "role")):
+		var Dv = J.gp(D.DEV, p.role); var lv = J.num(_or(J.gp(p, "lv"), 1.0)); var a = tf_statTxt(Tf, p.role, sz, lv); var nx = tf_statTxt(Tf, p.role, sz, lv + 1) if lv < cap else null; var cost = J.num(tf_upCost(Tf, p)); var stf = ghost(p.staff) if J.gp(p, "staff") != null else null
+		var c1 = []; var c2 = []
+		for g in freeGhosts():
+			if SPECIAL.has(J.gp(g, "k")): c1.append(g); continue
+			for t in typesOf(J.gp(g, "k")):
+				if J.seq(J.gp(D.ROLE_OF, J.str(t)), p.role): c2.append(g); break
+		var cand = (c1 + c2).slice(0, 6); var nmS = J.gp(J.gp(Dv, "n"), sz)
+		var h = "<div class=\"stp-card1\"><div class=\"stp-top\"><canvas data-pk=\"" + J.str(tf_devK(Tf, p)) + "\"></canvas><div><b>" + T(nmS[0], nmS[1]) + "</b><small>" + J.str(spot.n) + "・" + szT + "・Lv" + J.str(lv) + (T("（已到上限）", "（已達上限）") if lv >= cap else "") + "</small><i>" + T(Dv.desc[0], Dv.desc[1]) + "</i></div></div>"
+		for j in a.size(): h += "<p>" + J.str(a[j][0]) + "：" + J.str(a[j][1]) + ((" → <em>" + J.str(nx[j][1]) + "</em>") if nx != null else "") + "</p>"
+		var stS
+		if J.t(stf):
+			var M = tf_staffMul(Tf, p); stS = J.str(stf.name) + ("★" if J.t(J.gp(M, "named")) else "") + "（" + T("鬼力", "鬼力") + " " + J.str(J.gp(M, "pw")) + "：" + staffTxt(M) + "）"
+		else: stS = T("未有（同類型雜鬼或者任何有名鬼都得；鬼力愈高，加持愈勁）", "未有（同類型雜鬼或任何有名鬼都可以；鬼力越高，加持越強）")
+		h += "<p>" + T("勵鬼加持", "勵鬼加持") + "：" + stS + "</p>"
+		h += "<p class=\"gp-note\">" + T("加持效果跟鬼力：返村升級隻鬼、練嚇功，呢度即刻勁啲。", "加持效果跟鬼力：回村升級鬼、練嚇功，這裡立即變強。") + "</p>"
+		var upT
+		if nx != null:
+			var lack = J.str(cost - coins); upT = T("冥幣唔夠（仲差 " + lack + "）", "冥幣不足（還差 " + lack + "）") if coins < cost else T("升級", "升級") + "　💴 " + J.str(cost)
+		else:
+			var cs = J.str(cap); upT = T("已滿級", "已滿級") if lv >= 5 else T("上限 Lv" + cs + "（開下一間房 +2）", "上限 Lv" + cs + "（開下一間房 +2）")
+		h += "<div class=\"stp-row\"><button class=\"stp-buy\" id=\"stp-up\" " + ("disabled" if (nx == null or coins < cost or J.num(J.gp(p, "build")) > 0) else "") + ">" + upT + "</button></div>"
+		var spS = J.str(J.gp(p, "spent"))
+		h += "<div class=\"stp-row\"><button id=\"stp-mv\">" + T("移位", "移位") + "</button><button id=\"stp-del\">" + T("拆走（退返 " + spS + "）", "拆除（退回 " + spS + "）") + "</button></div>"
+		h += "<div class=\"stp-row stp-staff\">"
+		if J.t(stf):
+			var sn = J.str(stf.name); h += "<button data-st=\"off\">" + T("叫 " + sn + " 唔使加持", "讓 " + sn + " 停止加持") + "</button>"
+		else:
+			var bs = ""
+			for g in cand:
+				var M = staffOf(g, SPECIAL.has(J.gp(g, "k")))
+				bs += "<button data-st=\"" + J.str(g.id) + "\">" + T("叫", "叫") + " " + J.str(g.name) + " " + T("加持", "加持") + ("★" if J.t(M.named) else "") + "<small class=\"gp-sub\">" + T("鬼力", "鬼力") + " <b>" + J.str(M.pw) + "</b><br>" + T("驚嚇", "驚嚇") + " ×" + _fx2(M.atk) + "<br>" + T("回靈", "回靈") + " ×" + _fx2(M.cd) + "</small></button>"
+			h += bs if bs != "" else "<small>" + T("冇得閒嘅鬼可以加持", "沒有空閒的鬼可以加持") + "</small>"
+		h += "</div><div class=\"stp-row\"><button id=\"stp-x\">" + T("關閉", "關閉") + "</button></div></div>"
+		J.sp(el, "innerHTML", h)
+		J.sp(J.mc(el, "querySelector", ["#stp-up"]), "onclick", func(_t = null, _a = null):
+			if nx == null or J.num(J.gp(sd, "wal")) < cost: return
+			_walAdd(Tf, -cost); p["lv"] = lv + 1; p["spent"] = J.num(J.gp(p, "spent")) + cost; p["ph"] = null; p["build"] = 3.0; close.call(); save_(); _toast(T("招魂中…（升級）", "招魂中…（升級）")))
+		J.sp(J.mc(el, "querySelector", ["#stp-del"]), "onclick", func(_t = null, _a = null):
+			_walAdd(Tf, J.num(J.gp(p, "spent")))
+			if J.t(stf): stf["post"] = null
+			sd.posts[ii] = null; close.call(); save_(); var s2 = J.str(J.gp(p, "spent")); _toast(T("拆咗，退返冥幣 " + s2, "已拆除，退回冥幣 " + s2)))
+		J.sp(J.mc(el, "querySelector", ["#stp-mv"]), "onclick", func(_t = null, _a = null): J.sp(Tf, "moveFrom", float(ii)); close.call())
+		for bt in J.iter(J.mc(el, "querySelectorAll", ["[data-st]"])):
+			J.sp(bt, "onclick", func(_t = null, _a = null):
+				var ds = J.str(J.gp(J.gp(bt, "dataset"), "st"))
+				if ds == "off":
+					if J.t(stf): stf["post"] = null
+					p["staff"] = null
+				else:
+					var g = _ghostDs(ds)
+					if not J.t(g): return
+					if J.t(stf): stf["post"] = null
+					p["staff"] = g.id; g["post"] = "street"; var gn = J.str(g.name)
+					_toast(T(gn + " 為「" + T(nmS[0], nmS[1]) + "」勵鬼加持！", gn + " 為「" + J.str(nmS[1]) + "」勵鬼加持！"))
+				close.call(); save_())
+	else:
+		var roles = J.iter(D.WALL_ROLES if J.t(J.gp(spot, "h")) else D.ROAD_ROLES); var far = J.t(J.gp(spot, "h")) and tf_wallFar(Tf, spot)
+		var HEX = J.gp(G("DevFx"), "HEX")
+		var ICO = {"trap": T("鬼拉腳", "鬼拉腳"), "puzzle": T("鬼打牆", "鬼打牆"), "slow": T("卡到陰", "卡到陰"), "scare": T("驚嚇", "驚嚇"), "aura": T("氛圍", "氛圍"), "throw": T("投擲", "投擲")}
+		var h = "<div class=\"stp-card2\"><div class=\"stp-h\">" + J.str(spot.n) + "・" + szT + "<small>" + (T("牆崗：只可以放 驚嚇／氛圍／投擲", "牆崗：只能放 驚嚇／氛圍／投擲") if J.t(J.gp(spot, "h")) else T("路崗：只可以放 鬼拉腳／鬼打牆／卡到陰", "路崗：只能放 鬼拉腳／鬼打牆／卡到陰")) + (T("・2格槽只放得落2格裝置", "・2格槽只放得下2格裝置") if sz == 2 else "") + (T("<br>呢格離條路遠，驚嚇搆唔到人，建議放氛圍或者投擲", "<br>這格離路遠，驚嚇碰不到人，建議放氛圍或投擲") if far else "") + "</small></div><div class=\"stp-two stp-three\">"
+		for r in roles:
+			var Dv = J.gp(D.DEV, r); var pr = J.num(J.gp(J.gp(J.gp(Dv, sz), "lv"), 0.0)[0]); var st2 = tf_statTxt(Tf, r, sz, 1.0); var hx = J.str(J.gp(HEX, r)); var nmS = J.gp(J.gp(Dv, "n"), sz)
+			h += "<div class=\"stp-opt\"><div class=\"stp-frame\" style=\"border-color:" + hx + ";box-shadow:0 0 10px " + hx + "88,inset 0 0 8px " + hx + "55\"><canvas data-pk=\"" + J.str(Dv.k) + "\" data-dv=\"dv_" + J.str(r) + "_" + J.str(sz) + "\"></canvas></div><b>" + T(nmS[0], nmS[1]) + "</b><span class=\"stp-ico\" style=\"background:" + hx + ";color:#160c1e;font-weight:900\">" + J.str(ICO.get(J.str(r), "undefined")) + "</span>"
+			for q in st2: h += "<small>" + J.str(q[0]) + "：" + J.str(q[1]) + "</small>"
+			var lack = J.str(pr - coins)
+			h += "<button class=\"stp-buy\" data-r=\"" + J.str(r) + "\" data-pr=\"" + J.str(pr) + "\" " + ("disabled" if coins < pr else "") + ">" + (T("差 " + lack + " 冥幣", "差 " + lack + " 冥幣") if coins < pr else "💴 " + J.str(pr)) + "</button></div>"
+		h += "</div><button id=\"stp-x\" class=\"stp-x\">" + T("關閉", "關閉") + "</button></div>"
+		J.sp(el, "innerHTML", h)
+		for btn in J.iter(J.mc(el, "querySelectorAll", ["[data-r]"])):
+			J.sp(btn, "onclick", func(_t = null, _a = null):
+				var ds = J.gp(btn, "dataset"); var r = J.str(J.gp(ds, "r")); var pr = J.num(J.gp(ds, "pr"))
+				if J.num(J.gp(sd, "wal")) < pr: return
+				_walAdd(Tf, -pr); sd.posts[ii] = {"g": "dev:" + r, "role": r, "sz": sz, "lv": 1.0, "build": 5.0, "spent": pr, "cd": 0.0}; close.call(); save_()
+				var nmS = J.gp(J.gp(J.gp(D.DEV, r), "n"), sz); _toast(T("開工建造：" + T(nmS[0], nmS[1]) + "（5秒）", "開始建造：" + J.str(nmS[1]) + "（5秒）")))
+	_pk_canvases(el)
+	var x = J.mc(el, "querySelector", ["#stp-x"])
+	if J.t(x): J.sp(x, "onclick", func(_t = null, _a = null): close.call())
+	_el_close(el, _pnow())
+static func tf_specialPick(Tf) -> void:
+	var sd = J.gp(Tf, "sd"); var on = []; var SPECIAL = J.iter(J.gp(Tf, "SPECIAL"))
+	for id in J.iter(_or(J.gp(sd, "bosses"), [])):
+		var g = ghost(id)
+		if J.t(g): on.append(g)
+	var isOn = func(g) -> bool:
+		for o in on:
+			if J.seq(o.id, g.id): return true
+		return false
+	var list = []
+	for g in J.iter(J.gp(S_(), "ghosts")):
+		if SPECIAL.has(J.gp(g, "k")) and (not J.t(J.gp(g, "post")) or isOn.call(g)): list.append(g)
+	var el = _q("#stt-pick")
+	if not J.t(el): el = J.S_document_("createElement", ["div"]); J.sp(el, "id", "stt-pick"); J.mc(J.gp(G("document"), "body"), "appendChild", [el])
+	var onN = []
+	for g in on: onN.append(J.str(g.name))
+	var ons = "、".join(onN); var BM = J.str(D.BOSS_MAX)
+	var h = "<div class=\"stp-card2\"><div class=\"stp-h\">" + T("有名鬼（每隻獨一無二）", "有名鬼（每隻獨一無二）") + "<small>" + (T("本圖已上場：" + ons, "本圖已上場：" + ons) if on.size() else T("唔使佔格，會喺1號房出現，沿成條路來回巡邏；附近有人就停低放招。", "不用佔格，會在1號房出現，沿整條路來回巡邏；附近有人就停下放招。")) + "<br>" + T("每張地圖最多 " + BM + " 隻；一隻鬼同一時間只可以喺一個地盤。", "每張地圖最多 " + BM + " 隻；一隻鬼同一時間只能在一個地盤。") + "</small></div><div class=\"stp-two stp-three\">"
+	for g in list:
+		var o = isOn.call(g); var LO = tf_lore(Tf, g.k); var Kn = J.gp(LO, "n"); var Kr = J.str(J.gp(LO, "r")); var cd = J.str(J.mc(bossCD(g), "toFixed", [1.0]))
+		h += "<div class=\"stp-opt " + ("on" if o else "") + "\"><div class=\"stp-frame\"><canvas data-pk=\"" + J.str(g.k) + "\"></canvas></div><b>" + J.str(g.name) + "</b><span class=\"stp-ico\">" + T(Kn[0], Kn[1]) + "</span><small>" + T("範圍 " + Kr + "・停低 6 秒・冷卻 " + cd + " 秒", "範圍 " + Kr + "・停下 6 秒・冷卻 " + cd + " 秒") + "</small><small class=\"gp-sub\">" + T("鬼力", "鬼力") + " <b>" + J.str(J.mc(G("GP"), "pow", [g])) + "</b>・" + T("出招", "出招") + " " + J.str(J.round(bossDmg(g) * J.num(_or(J.gp(LO, "dmg"), 1.0)))) + "</small><button class=\"stp-buy\" data-sp=\"" + J.str(g.id) + "\" " + ("disabled" if (not o and on.size() >= J.num(D.BOSS_MAX)) else "") + ">" + (T("收工", "收工") if o else T("派佢上場", "派牠上場")) + "</button></div>"
+	h += "</div><button id=\"stp-x\" class=\"stp-x\">" + T("關閉", "關閉") + "</button></div>"
+	J.sp(el, "innerHTML", h)
+	for cv in J.iter(J.mc(el, "querySelectorAll", ["canvas[data-pk]"])):
+		if not has("ART"): break
+		var im = J.mc(G("ART"), "portrait", [J.gp(J.gp(cv, "dataset"), "pk"), 80.0]); J.sp(cv, "width", 80.0); J.sp(cv, "height", 80.0)
+		var x = J.mc(cv, "getContext", ["2d"])
+		if J.t(x) and J.t(im): J.mc(x, "drawImage", [im, 0.0, 0.0, 80.0, 80.0])
+	for b2 in J.iter(J.mc(el, "querySelectorAll", ["[data-sp]"])):
+		J.sp(b2, "onclick", func(_t = null, _a = null):
+			var g = _ghostDs(J.gp(J.gp(b2, "dataset"), "sp"))
+			if not J.t(g): return
+			if J.t(J.mc(sd.bosses, "includes", [g.id])):
+				var nb = []
+				for x in J.iter(sd.bosses):
+					if not J.seq(x, g.id): nb.append(x)
+				sd["bosses"] = nb; g["post"] = null; var gn = J.str(g.name); _toast(T(gn + " 收工", gn + " 收工"))
+			elif J.len(sd.bosses) < J.num(D.BOSS_MAX):
+				sd.bosses.append(g.id); g["post"] = "boss:" + J.str(J.gp(J.gp(Tf, "def"), "id")); var gn = J.str(g.name); _toast(T("本圖已上場：" + gn, "本圖已上場：" + gn))
+			J.mc(el, "remove", []); save_())
+	J.sp(J.mc(el, "querySelector", ["#stp-x"]), "onclick", func(_t = null, _a = null): J.mc(el, "remove", []))
+	_el_close(el, _pnow())
+const TF_4S := {"pickRole": 1, "specialPick": 0}
+
+# 4t：程序屏 drawProc、蠟筆障礙物 drawObsShape、大招畫面 drawUlt／drawUltScene／drawMouth／drawUltNew
+static func _rgba(r, g, b, a) -> String: return "rgba(" + J.str(r) + "," + J.str(g) + "," + J.str(b) + "," + J.str(a) + ")"
+static func tf_drawProc(Tf, r, P, x) -> void:
+	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); var W = int(J.round(J.num(b.w))); var H = int(J.round(J.num(b.h))); r = int(J.num(r))
+	var key = "p" + str(r) + "|" + str(W) + "|" + str(H) + "|" + J.str(J.gp(J.gp(Tf, "def"), "id"))
+	if not J.t(J.gp(Tf, "_cc")): J.sp(Tf, "_cc", {})
+	var cv = J.gp(Tf._cc, key)
+	if not J.t(cv):
+		cv = J.S_document_("createElement", ["canvas"]); J.sp(cv, "width", float(W)); J.sp(cv, "height", float(H)); var g = J.mc(cv, "getContext", ["2d"])
+		var sp = J.gp(P, "_sp") if J.t(J.gp(P, "_sp")) else procSpec(P)
+		var R = {"s": (r + 3) * 7919 + W}
+		var rnd = func() -> float: R.s = (int(R.s) * 9301 + 49297) % 233280; return R.s / 233280.0
+		var U = W / 560.0; var base = [42.0, 44.0, 40.0]
+		var pr = J.gp(J.gp(Tf, "lay").panels, float(r - 1)) if r >= 1 else null
+		if J.t(pr) and has("SPR"):
+			var bgk = J.gp(pr, "bg")
+			if not J.t(bgk):
+				var RG = J.gp(J.gp(D.DATA4, "rooms"), J.gp(pr, "room")); bgk = J.gp(RG, "bg") if J.t(RG) else null
+			var im = _spr(bgk)
+			if _nw(im) > 0:
+				var sc = J.S_document_("createElement", ["canvas"]); J.sp(sc, "width", 8.0); J.sp(sc, "height", 12.0); var sg = J.mc(sc, "getContext", ["2d"]); J.mc(sg, "drawImage", [im, 0.0, 0.0, 8.0, 12.0])
+				var dd = J.gp(J.mc(sg, "getImageData", [0.0, 0.0, 8.0, 12.0]), "data"); var a = [0.0, 0.0, 0.0]; var n = 0; var i = 0; var L = J.len(dd)
+				while i < L: a[0] += J.num(J.gp(dd, i)); a[1] += J.num(J.gp(dd, i + 1)); a[2] += J.num(J.gp(dd, i + 2)); n += 1; i += 4
+				if n > 0: base = [maxf(18.0, minf(90.0, a[0] / n * 0.8)), maxf(18.0, minf(90.0, a[1] / n * 0.8)), maxf(18.0, minf(90.0, a[2] / n * 0.8))]
+		var col = func(k: float, al = null) -> String: return _rgba(J.round(base[0] * k), J.round(base[1] * k), J.round(base[2] * k), 1.0 if al == null else al)
+		g.fillStyle = col.call(0.42); g.fillRect(0, 0, W, H); g.strokeStyle = col.call(0.28, 0.8); g.lineWidth = 1
+		var y = 0.0
+		while y < H:
+			g.beginPath(); g.moveTo(0, y); g.lineTo(W, y + (rnd.call() - 0.5) * 2); g.stroke()
+			var xx = fmod(y / (12 * U), 2.0) * 14 * U
+			while xx < W:
+				g.beginPath(); g.moveTo(xx, y); g.lineTo(xx, y + 12 * U); g.stroke(); xx += 28 * U
+			y += 12 * U
+		for k in 3000:
+			var xx = rnd.call() * W; var yy = rnd.call() * H; var Ln = (4 + rnd.call() * 8) * U; g.strokeStyle = col.call(1.5, 0.1) if rnd.call() < 0.4 else col.call(0.25, 0.15); g.lineWidth = 0.8; g.beginPath(); g.moveTo(xx, yy); g.lineTo(xx + Ln * 0.7, yy - Ln * 0.7); g.stroke()
+		for k in 8:
+			var xx = rnd.call() * W; var gr = g.createLinearGradient(0, 0, 0, H * 0.3); gr.addColorStop(0, "rgba(110,50,20,0.35)"); gr.addColorStop(1, "rgba(110,50,20,0)"); g.fillStyle = gr; g.fillRect(xx, rnd.call() * H * 0.6, (3 + rnd.call() * 6) * U, H * 0.3)
+		for R2 in J.iter(sp.F):
+			var x0 = J.num(R2[0]) * W; var y0 = J.num(R2[1]) * H; var w = (J.num(R2[2]) - J.num(R2[0])) * W; var h = (J.num(R2[3]) - J.num(R2[1])) * H; g.fillStyle = "rgba(0,0,0,0.5)"; g.fillRect(x0 - 3, y0 - 3, w + 6, h + 6)
+		for R2 in J.iter(sp.F):
+			var x0 = J.num(R2[0]) * W; var y0 = J.num(R2[1]) * H; var w = (J.num(R2[2]) - J.num(R2[0])) * W; var h = (J.num(R2[3]) - J.num(R2[1])) * H; var ts = 24 * U
+			g.save(); g.beginPath(); g.rect(x0, y0, w, h); g.clip()
+			var yy = y0
+			while yy < y0 + h:
+				var xx = x0 - fmod(yy / ts, 2.0) * ts * 0.5
+				while xx < x0 + w:
+					g.fillStyle = col.call(1.75 + rnd.call() * 0.45); g.fillRect(xx + 1, yy + 1, ts - 2, ts - 2); xx += ts
+				yy += ts
+			var kk = 0.0
+			while kk < w * h / 60:
+				var xx = x0 + rnd.call() * w; var y2 = y0 + rnd.call() * h; var Ln = (4 + rnd.call() * 8) * U; g.strokeStyle = col.call(1.9, 0.12) if rnd.call() < 0.45 else col.call(0.3, 0.15); g.lineWidth = 0.7; g.beginPath(); g.moveTo(xx, y2); g.lineTo(xx + Ln * 0.7, y2 - Ln * 0.7); g.stroke(); kk += 1
+			for k in 4:
+				var xx = x0 + rnd.call() * w; var y2 = y0 + rnd.call() * h; var rr = (14 + rnd.call() * 30) * U; var gr = g.createRadialGradient(xx, y2, 1, xx, y2, rr); gr.addColorStop(0, "rgba(10,8,5,0.35)"); gr.addColorStop(1, "rgba(10,8,5,0)"); g.fillStyle = gr; g.beginPath(); g.ellipse(xx, y2, rr, rr * 0.6, 0, 0, 7); g.fill()
+			g.restore()
+		for S2 in J.iter(sp.S):
+			var x0 = J.num(S2[0]) * W; var y0 = J.num(S2[1]) * H; var w = (J.num(S2[2]) - J.num(S2[0])) * W; var h = (J.num(S2[3]) - J.num(S2[1])) * H
+			g.fillStyle = "#26292a"; g.fillRect(x0, y0, w, h); g.strokeStyle = "#000"; g.lineWidth = 2; g.strokeRect(x0, y0, w, h); g.fillStyle = "#3a3e3f"; g.fillRect(x0 + 4, y0 + 4, w - 8, h * 0.35)
+			for j in 8:
+				g.fillStyle = ["#c84a3a", "#e8c040", "#5ac06a"][j % 3]; g.beginPath(); g.arc(x0 + 12 * U + j * (w - 24 * U) / 7, y0 + h * 0.62, 3 * U, 0, 7); g.fill()
+			g.fillStyle = "rgba(120,220,200,0.35)"; g.fillRect(x0 + w * 0.15, y0 + h * 0.08, w * 0.7, h * 0.22)
+		for k in 3:
+			var lx = (0.3 + k * 0.2) * W; var ly = 0.29 * H; g.fillStyle = "rgba(220,235,220,0.8)"; g.fillRect(lx - 14 * U, ly - 2, 28 * U, 4 * U)
+			var lg = g.createRadialGradient(lx, ly + 30 * U, 4, lx, ly + 30 * U, 120 * U); lg.addColorStop(0, "rgba(210,235,215,0.2)"); lg.addColorStop(1, "rgba(210,235,215,0)"); g.fillStyle = lg; g.fillRect(lx - 120 * U, ly - 20 * U, 240 * U, 240 * U)
+		for dl in [[0.0, J.num(J.gp(P, "dL"))], [1.0, J.num(J.gp(P, "dR"))]]:
+			g.fillStyle = "rgba(255,214,120,0.25)"; g.fillRect(dl[0] * W - 6 * U, dl[1] * H - 32 * U, 12 * U, 64 * U)
+		var vg = g.createRadialGradient(W / 2.0, H / 2.0, minf(W, H) * 0.3, W / 2.0, H / 2.0, maxf(W, H) * 0.65); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,0.45)"); g.fillStyle = vg; g.fillRect(0, 0, W, H)
+		J.sp(Tf._cc, key, cv)
+	c.drawImage(cv, J.num(x), J.num(b.y), J.num(b.w), J.num(b.h))
+static func _obox(g, bx, by, bw, bh, col) -> void:
+	g.fillStyle = col; g.fillRect(bx, by, bw, bh); g.strokeStyle = "rgba(0,0,0,0.55)"; g.lineWidth = 1.5; g.strokeRect(bx, by, bw, bh); g.strokeStyle = "rgba(255,240,200,0.15)"; g.beginPath(); g.moveTo(bx + 2, by + 3); g.lineTo(bx + bw - 3, by + 3); g.stroke()
+static func tf_drawObsShape(_Tf, g, k, x, y, w, h, U, _rnd) -> void:
+	x = J.num(x); y = J.num(y); w = J.num(w); h = J.num(h); U = J.num(U); k = J.str(k); var cx = x + w / 2; var cy = y + h / 2
+	g.fillStyle = "rgba(0,0,0,0.35)"; g.beginPath(); g.ellipse(cx, y + h, w * 0.55, h * 0.22, 0, 0, 7)
+	if k != "puddle" and k != "wire": g.fill()
+	if k == "cart" or k == "trolley":
+		g.save(); g.strokeStyle = "#8a8f92"; g.lineWidth = 3 * U; g.strokeRect(x + 2, y + h * 0.35, w - 4, h * 0.5); g.beginPath(); g.moveTo(x + w - 2, y + h * 0.35); g.lineTo(x + w + 6 * U, y + h * 0.1); g.stroke()
+		for wx in [x + 6 * U, x + w - 6 * U]: g.fillStyle = "#222"; g.beginPath(); g.arc(wx, y + h * 0.92, 4 * U, 0, 7); g.fill()
+		if k == "cart": _obox(g, x + 4, y + h * 0.05, w * 0.45, h * 0.32, "#8a6a42"); _obox(g, x + w * 0.45, y + h * 0.12, w * 0.45, h * 0.25, "#9a7a4e")
+		else:
+			for j in 4: _obox(g, x + 4 + j * 3, y + h * (0.05 + j * 0.06), w - 8, h * 0.06, "#6a7a8a")
+		g.restore()
+	elif k == "boxes":
+		_obox(g, x, y + h * 0.3, w * 0.55, h * 0.7, "#8b6b3e"); _obox(g, x + w * 0.45, y + h * 0.45, w * 0.55, h * 0.55, "#9a7b4b"); _obox(g, x + w * 0.15, y, w * 0.5, h * 0.35, "#7d5f36")
+		g.strokeStyle = "rgba(40,25,10,0.6)"; g.beginPath(); g.moveTo(x + w * 0.27, y + h * 0.3); g.lineTo(x + w * 0.27, y + h); g.stroke()
+	elif k == "bin" or k == "bins":
+		var n = 2 if k == "bins" else 1
+		for j in n:
+			var bx = x + j * w / n; var bw = w / n - 3; _obox(g, bx + 2, y + h * 0.2, bw - 2, h * 0.8, "#2f5a3a" if j else "#3a6a44"); g.fillStyle = "#244a2e"; g.fillRect(bx, y + h * 0.1, bw + 2, h * 0.16)
+			g.fillStyle = "rgba(20,20,20,0.7)"; g.beginPath(); g.ellipse(bx + bw * 0.5, y + h * 0.08, bw * 0.3, h * 0.08, 0, 0, 7); g.fill()
+	elif k == "stools":
+		for j in 3:
+			var sx = x + j * w / 3
+			for q in 3:
+				g.fillStyle = "#a8322c" if j == 1 else "#2c5aa0"; g.fillRect(sx + 2, y + h * (0.55 - q * 0.18), w / 3 - 4, h * 0.14); g.strokeStyle = "rgba(0,0,0,0.5)"; g.strokeRect(sx + 2, y + h * (0.55 - q * 0.18), w / 3 - 4, h * 0.14)
+			g.fillStyle = "#7a2420" if j == 1 else "#1f4278"; g.fillRect(sx + 4, y + h * 0.7, 3, h * 0.3); g.fillRect(sx + w / 3 - 7, y + h * 0.7, 3, h * 0.3)
+	elif k == "puddle":
+		var gr = g.createRadialGradient(cx, cy, 2, cx, cy, w * 0.6); gr.addColorStop(0, "rgba(120,150,170,0.55)"); gr.addColorStop(1, "rgba(60,80,100,0.15)"); g.fillStyle = gr; g.beginPath(); g.ellipse(cx, cy, w * 0.55, h * 0.7, 0, 0, 7); g.fill()
+		g.strokeStyle = "rgba(200,220,235,0.35)"; g.lineWidth = 1; g.beginPath(); g.ellipse(cx - w * 0.1, cy - h * 0.1, w * 0.2, h * 0.15, 0, 0, 3); g.stroke()
+	elif k == "wire":
+		g.strokeStyle = "#111"; g.lineWidth = 2.5 * U; g.beginPath(); g.moveTo(cx - w * 0.6, y - h * 2.2); g.quadraticCurveTo(cx + w * 0.2, y - h * 0.6, cx, cy); g.stroke()
+		g.fillStyle = "#c8a040"; g.fillRect(cx - 2, cy - 2, 4, 6); g.fillStyle = "rgba(255,220,90,0.25)"; g.beginPath(); g.arc(cx, cy, 10 * U, 0, 7); g.fill()
+static func _ULTP(Tf, U) -> Array:
+	var p = J.gp(U, "pos")
+	if J.t(p): return tf_P(Tf, J.num(p[0]), J.num(p[1]))
+	var s = J.gp(J.gp(Tf, "lay").posts, J.num(U.i)); return tf_P(Tf, J.num(s.x), J.num(s.y))
+static func tf_drawUltScene(Tf) -> void:
+	var U = J.gp(Tf, "ult"); var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); var t = _pnow() / 1000.0; var k = J.num(U.t); var bx = J.num(b.x); var by = J.num(b.y); var bw = J.num(b.w); var bh = J.num(b.h)
+	if J.t(J.mc(Tf, "drawUltNew", [U, (k - J.num(_or(J.gp(U, "at"), 0.9))) / 1.7])): return
+	var uk = J.str(U.k)
+	if uk == "laojiang" and k >= 0.9:
+		var e = minf(1.0, (k - 0.9) / 1.4); var pos = tf_at(Tf, e * J.num(Tf.len)); var xy = tf_P(Tf, pos[0], pos[1]); var hop = absf(sin(e * PI * 9))
+		for w in J.iter(J.gp(Tf, "walkers")):
+			if not J.t(J.gp(w, "gone")) and J.num(w.t) > 0 and tf_dist(tf_wp(Tf, w), pos) < 0.09: tf_hit(Tf, w, w.max, null)
+		stDC(c, "laojiang", xy[0], xy[1] - hop * 30, bh * 0.1 / 58, {"t": t, "walk": true, "pose": "move", "alpha": 0.95, "flip": false, "shadow": false})
+	if k >= 0.9:
+		var q = (k - 0.9) / 1.7
+		if uk == "tianhua":
+			c.strokeStyle = "rgba(150,140,160,0.55)"; c.lineWidth = 2.5
+			for j in 46:
+				var x = bx + (j / 45.0) * bw; var len = bh * minf(1.0, q * 2.2) * (0.6 + 0.4 * sin(j * 7.3))
+				c.beginPath(); c.moveTo(x, by); c.bezierCurveTo(x + sin(t * 2 + j) * 14, by + len * 0.4, x - sin(t * 1.7 + j) * 14, by + len * 0.7, x + sin(j) * 8, by + len); c.stroke()
+		if uk == "pontianak":
+			for j in 4:
+				var rr = fmod(q * 2 + j * 0.25, 1.0); var xy = _ULTP(Tf, U); c.strokeStyle = "rgba(255,170,220," + J.str(0.9 * (1 - rr)) + ")"; c.lineWidth = 6; c.beginPath(); c.arc(xy[0], xy[1], rr * bh, 0, 7); c.stroke()
+		if J.t(J.gp(U, "mouth")): J.mc(Tf, "drawMouth", [U, q, t])
+		if uk == "toyol":
+			for j in 8:
+				var x = bx + bw * (0.5 + 0.45 * sin(t * 3 + j * 1.7)); var y = by + bh * (0.5 + 0.4 * cos(t * 2.3 + j * 2.1))
+				stDC(c, "toyol", x, y, bh * 0.05 / 46, {"t": t + j, "walk": true, "pose": "move", "alpha": 0.9 * (1 - maxf(0.0, q - 0.8) * 5), "flip": cos(t * 3 + j * 1.7) < 0, "shadow": false})
+		if uk == "xiaozhi" or uk == "zhiren":
+			for w in J.iter(J.gp(Tf, "walkers")):
+				if J.num(J.gp(w, "papers")) > 0 and not J.t(J.gp(w, "gone")):
+					w["papers"] = J.num(w.papers) - 1.0 / 30; var wp = tf_wp(Tf, w); var xy = tf_P(Tf, wp[0], wp[1])
+					for j in 4:
+						var a2 = j * 1.57 + t; stDC(c, "xiaozhi", xy[0] + cos(a2) * 26, xy[1] + sin(a2) * 10, 0.45, {"t": t + j, "pose": "idle", "alpha": 0.85, "flip": cos(a2) > 0, "shadow": false})
+		if not ["tianhua", "pontianak", "toyol", "laojiang", "xiaozhi", "zhiren", "eguiking", "egui"].has(uk):
+			var xy = _ULTP(Tf, U); c.strokeStyle = "rgba(200,150,255," + J.str(1 - q) + ")"; c.lineWidth = 10; c.beginPath(); c.arc(xy[0], xy[1], q * bh * 1.2, 0, 7); c.stroke()
+const MOUTH_SEQ := [[0.0, 0], [0.17, 1], [0.24, 2], [0.62, 2], [0.66, 1], [0.7, 2], [0.74, 1], [0.78, 0], [1.01, 0]]
+static func tf_drawMouth(Tf, U, q, t) -> void:
+	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); q = J.num(q); t = J.num(t); var mxy = tf_P(Tf, J.num(U.mouth[0]), J.num(U.mouth[1])); var IM = []
+	for i in [1, 2, 3]: IM.append(_spr("egui_mouth_" + str(i)) if has("SPR") else null)
+	for im in IM:
+		if _nw(im) <= 0: return
+	var cam = J.gp(Tf, "cam"); var zc = J.num(cam.z) if J.t(cam) and J.t(J.gp(cam, "z")) else 1.0; var k0 = minf(_iw() * 0.78, 330.0) / zc / _nw(IM[2]); var cx = mxy[0]; var cy = mxy[1] - J.num(b.h) * 0.12
+	var fi = 0; var nx = 0; var m = 0.0
+	for j in MOUTH_SEQ.size() - 1:
+		var A = MOUTH_SEQ[j]; var B = MOUTH_SEQ[j + 1]
+		if q >= A[0] and q < B[0]:
+			fi = A[1]; nx = B[1]; var span = B[0] - A[0]; var left = B[0] - q; var mn = minf(0.025, span)
+			m = (1 - left / mn) if (nx != fi and left < mn) else 0.0
+	var appear = minf(1.0, q / 0.1); var ap = 1 - pow(1 - appear, 3); var fade = maxf(0.0, 1 - (q - 0.9) / 0.1) if q > 0.9 else 1.0; var sc = (0.55 + 0.45 * ap) * ((1 - (q - 0.86) * 0.6) if q > 0.86 else 1.0)
+	var chew = q >= 0.62 and q < 0.78; var open = q >= 0.24 and q < 0.62
+	if q < 0.86 and q > 0.17: J.sp(Tf, "shake", maxf(J.num(J.gp(Tf, "shake")), 0.22 if chew else 0.1))
+	var sx = 0.0; var sy = 0.0
+	if chew: sx = (randf() - 0.5) * 8; sy = sin(q * 140) * 6
+	c.save(); c.globalAlpha = ap * fade
+	var RG = _nw(IM[2]) * k0 * 0.9; var gr = c.createRadialGradient(cx, cy, 10, cx, cy, RG); gr.addColorStop(0, "rgba(90,255,120," + J.str(0.35 if open else 0.2) + ")"); gr.addColorStop(1, "rgba(40,120,60,0)"); c.fillStyle = gr; c.beginPath(); c.arc(cx, cy, RG, 0, 7); c.fill()
+	var drawF = func(i: int, al: float) -> void:
+		if al <= 0.01: return
+		var im = IM[i]; var w = _nw(im) * k0 * sc; var h = J.num(im.naturalHeight) * k0 * sc
+		c.save(); c.globalAlpha *= al; c.translate(cx + sx, cy + sy); c.drawImage(im, -w / 2, -h / 2, w, h)
+		if i == 2:
+			var vx = (0.53 - 0.5) * w; var vy = (0.56 - 0.5) * h; var rx = w * 0.25; var ry = h * 0.19
+			c.save(); c.beginPath(); c.ellipse(vx, vy, rx, ry, 0, 0, 7); c.clip(); c.translate(vx, vy); c.rotate(-t * 3.2); c.scale(1.08, 1.08); c.translate(-vx, -vy); c.globalAlpha *= 0.85; c.drawImage(im, -w / 2, -h / 2, w, h); c.restore()
+			var g2 = c.createRadialGradient(vx, vy, 2, vx, vy, rx); g2.addColorStop(0, "rgba(0,0,0,0.85)"); g2.addColorStop(0.5, "rgba(10,40,15,0.25)"); g2.addColorStop(1, "rgba(0,0,0,0)"); c.fillStyle = g2; c.beginPath(); c.ellipse(vx, vy, rx, ry, 0, 0, 7); c.fill()
+		c.restore()
+	drawF.call(fi, 1 - m); drawF.call(nx, m)
+	var im3 = IM[2]; var vxs = cx + sx + 0.03 * _nw(im3) * k0 * sc; var vys = cy + sy + 0.06 * J.num(im3.naturalHeight) * k0 * sc; U["mouthXY"] = [vxs, vys]
+	if open:
+		var qq = (q - 0.24) / 0.38
+		for j in 26:
+			var d = fmod(t * 0.9 + j / 26.0, 1.0); var a2 = j * 2.4 + d * 7; var rr = RG * 1.3 * (1 - d); c.fillStyle = "rgba(150,255,160," + J.str(0.55 * d) + ")"; c.beginPath(); c.arc(vxs + cos(a2) * rr, vys + sin(a2) * rr * 0.75, 2 + 2 * d, 0, 7); c.fill()
+		for j in 5:
+			var e = minf(1.0, maxf(0.0, qq * 1.4 - j * 0.12))
+			if e <= 0 or e >= 1: continue
+			var a2 = j * 1.3 + e * 9; var rr = RG * 1.2 * (1 - e * e); var px = vxs + cos(a2) * rr; var py = vys + sin(a2) * rr * 0.75; var s2 = (1 - e) * 1.2 + 0.2
+			c.save(); c.translate(px, py); c.rotate(e * 14 + j); c.scale(s2, s2)
+			if j % 2:
+				c.fillStyle = "#efe6cc"; c.strokeStyle = "#2e4a86"; c.lineWidth = 2; c.beginPath(); c.ellipse(0, 0, 16, 9, 0, 0, PI); c.closePath(); c.fill(); c.stroke(); c.fillStyle = "#d8ccb0"; c.beginPath(); c.ellipse(0, 0, 16, 4.5, 0, 0, 7); c.fill(); c.stroke()
+			else:
+				c.strokeStyle = "#a0662a"; c.lineWidth = 3; c.beginPath(); c.moveTo(-18, -3); c.lineTo(18, 3); c.moveTo(-18, 4); c.lineTo(18, 9); c.stroke()
+			c.restore()
+	var hh = J.num(b.h) * 0.042 * J.num(D.PPL)
+	for w in J.iter(J.gp(Tf, "walkers")):
+		if not J.seq(J.gp(w, "gone"), "suck") or not J.t(J.gp(w, "suckFrom")): continue
+		var e = minf(1.0, J.num(w.suckT) / 1.0)
+		if e >= 0.98: continue
+		var e2 = e * e; var axy = tf_P(Tf, J.num(w.suckFrom[0]), J.num(w.suckFrom[1])); var r2 = 1 - e2; var an = e * PI * 3; var dx = axy[0] - vxs; var dy = axy[1] - vys
+		var px = vxs + (dx * cos(an) - dy * sin(an)) * r2; var py = vys + (dx * sin(an) + dy * cos(an)) * r2 * 0.8; var s2 = maxf(0.08, 1 - e * 0.9)
+		c.save(); c.globalAlpha = minf(1.0, (1 - e) * 4); c.translate(px, py); c.rotate(e * 9); c.scale(s2, s2); var im = _spr(J.gp(w, "spr")) if has("SPR") else null
+		if _nw(im) > 0 and not CHAR_H_OK(J.gp(w, "spr")):
+			var H = hh * 0.95; var ww = H * _nw(im) / J.num(im.naturalHeight); c.drawImage(im, -ww / 2, -H * 0.6, ww, H)
+		else: stDC(c, J.gp(w, "spr"), 0.0, hh * 0.4, hh / 69, {"t": t, "pose": "startle", "shadow": false})
+		c.restore()
+	if q > 0.8:
+		var bq = (q - 0.8) / 0.2
+		for j in 7:
+			var r0 = 18 + bq * (40 + j * 8); var ox = (j - 3) * 14 + sin(t * 3 + j) * 6; var oy = -bq * (70 + j * 12) - 10
+			var g3 = c.createRadialGradient(cx + ox, cy + oy, 2, cx + ox, cy + oy, r0); g3.addColorStop(0, "rgba(140,230,120," + J.str(0.5 * (1 - bq)) + ")"); g3.addColorStop(1, "rgba(80,160,80,0)"); c.fillStyle = g3; c.beginPath(); c.arc(cx + ox, cy + oy, r0, 0, 7); c.fill()
+		if q < 0.95:
+			c.font = "900 " + J.str(J.round(RG * 0.16)) + "px serif"; c.textAlign = "center"; c.lineWidth = 5; c.strokeStyle = "#0c1a0c"; c.fillStyle = "#b8f5a0"
+			c.strokeText(T("嗝——", "嗝——"), cx + RG * 0.4, cy - RG * 0.55 - bq * 30); c.fillText(T("嗝——", "嗝——"), cx + RG * 0.4, cy - RG * 0.55 - bq * 30)
+	c.restore()
+static func tf_drawUlt(Tf) -> void:
+	var U = J.gp(Tf, "ult"); var c = J.gp(Tf, "c"); var Wd = _iw(); var Hd = _ih(); var k = J.num(U.t)
+	if k < 1.3:
+		var a = k / 0.15 if k < 0.15 else (1 - (k - 1.0) / 0.3 if k > 1.0 else 1.0)
+		c.fillStyle = "rgba(0,0,0," + J.str(0.55 * a) + ")"; c.fillRect(0, 0, Wd, Hd)
+		var slide = minf(1.0, k / 0.25); var y0 = Hd * 0.36; var bh = Hd * 0.2; var bx = -Wd + Wd * (1 - pow(1 - slide, 3))
+		c.save(); c.globalAlpha = a; c.fillStyle = "#12061c"; c.beginPath(); c.moveTo(bx, y0); c.lineTo(bx + Wd, y0 - 16); c.lineTo(bx + Wd, y0 + bh - 16); c.lineTo(bx, y0 + bh); c.fill()
+		c.strokeStyle = "#c084ff"; c.lineWidth = 3; c.stroke()
+		if has("ART"):
+			var pc = J.mc(G("ART"), "portrait", [U.k, 160.0])
+			if J.t(pc): c.drawImage(pc, bx + 8, y0 - 22, bh + 20, bh + 20)
+		var tx = bx + bh + 36; var nm = J.str(U.name); var fs = J.round(bh * 0.3); c.font = "900 " + J.str(fs) + "px serif"
+		while fs > 14 and J.num(J.gp(c.measureText(nm), "width")) > Wd - (tx - bx) - 14: fs -= 2; c.font = "900 " + J.str(fs) + "px serif"
+		c.fillStyle = "#ffe9b0"; c.textAlign = "left"; c.lineWidth = 5; c.strokeStyle = "#2a0a30"
+		c.strokeText(nm, tx, y0 + bh * 0.5); c.fillText(nm, tx, y0 + bh * 0.5)
+		var sub = J.str(U.gname) + T("・大招", "・大招"); var fs2 = J.round(bh * 0.14); c.font = "bold " + J.str(fs2) + "px sans-serif"
+		while fs2 > 10 and J.num(J.gp(c.measureText(sub), "width")) > Wd - (tx - bx) - 14: fs2 -= 1; c.font = "bold " + J.str(fs2) + "px sans-serif"
+		c.fillStyle = "#d9c3ff"; c.fillText(sub, tx, y0 + bh * 0.78); c.restore()
+static func tf_drawUltNew(Tf, U, q) -> bool:
+	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); var bx = J.num(b.x); var by = J.num(b.y); var bw = J.num(b.w); var bh = J.num(b.h); var U2 = bw / 840.0; var t = _pnow() / 1000.0; var k = J.str(U.k); var at = J.num(_or(J.gp(U, "at"), 0.9)); q = J.num(q)
+	var cam = J.gp(Tf, "cam"); var ut = J.num(U.t)
+	var cx = bx + J.num(cam.x) * bw if J.t(cam) else bx + bw / 2; var cy = by + J.num(cam.y) * bh if J.t(cam) else by + bh / 2
+	if k == "pontianak":
+		var s = ut; c.fillStyle = "rgba(0,0,0," + J.str(minf(0.6, (s - 0.9) * 0.8)) + ")"; c.fillRect(bx - bw * 4, by - bh, bw * 12, bh * 3)
+		var stage = 0 if s < 1.7 else (1 if s < 2.4 else 2); var txt = ["嘻……", "嘻嘻嘻……", "嘻嘻嘻嘻！！"][stage]; var sz = [12, 26, 54][stage]
+		if s < 3.0:
+			c.save(); c.font = "900 " + J.str(sz * U2) + "px serif"; c.textAlign = "center"; c.fillStyle = "rgba(255,200,230," + J.str(0.5 + stage * 0.25) + ")"; c.lineWidth = 5; c.strokeStyle = "#1a0010"; var jx = (randf() - 0.5) * 10 if stage == 2 else 0.0
+			c.strokeText(T(txt, txt), cx + jx, cy - 40 * U2 + (2 - stage) * -60 * U2); c.fillText(T(txt, txt), cx + jx, cy - 40 * U2 + (2 - stage) * -60 * U2); c.restore()
+		if s >= 3.0:
+			var rr = (s - 3.0) / 0.8
+			for j in 3: c.strokeStyle = "rgba(255,170,220," + J.str((1 - rr) * 0.9) + ")"; c.lineWidth = 8 - j * 2; c.beginPath(); c.arc(cx, cy, (rr + j * 0.1) * bh, 0, 7); c.stroke()
+		return true
+	if ut < at: return true
+	var vz = J.num(cam.z) if J.t(cam) else 1.0; var vw = bw / vz; var vh = bh / vz; var PX = J.num(D.PX); var BD = J.num(D.BOSS_DMG) * J.num(_or(J.gp(U, "pm"), 1.0))
+	if k == "pocong":
+		var k2 = ut - at; var vic = J.iter(_or(J.gp(U, "vic"), [])); var rows = [0.3, 0.5, 0.7]
+		for r in 3:
+			var ry = rows[r]; var yy = cy - vh / 2 + ry * vh; var side = 1 if r % 2 else -1
+			for j in 6:
+				var e = minf(1.0, maxf(0.0, (k2 - r * 0.25 - j * 0.05) / 0.6)); var tx = cx - vw * 0.42 + j * vw * 0.168; var sx = cx - vw / 2 - 40 if side < 0 else cx + vw / 2 + 40; var x = sx + (tx - sx) * e
+				var hop = absf(sin((k2 * 5 + j * 0.7 + r) * PI)) * (26 if e < 1 else 10) * U2
+				stDC(c, "pocong", x, yy - hop, bh * 0.075 / 60, {"t": t + j + r, "pose": "idle", "alpha": 0.95, "shadow": false, "rot": side * 0.25 if e < 1 else 0.0})
+			if k2 > r * 0.25 + 0.7:
+				c.fillStyle = "rgba(245,245,238,0.12)"; c.fillRect(cx - vw / 2, yy - 50 * U2, vw, 56 * U2); c.font = "900 " + J.str(12 * U2) + "px serif"; c.textAlign = "center"; c.fillStyle = "rgba(255,255,250,0.8)"; c.fillText(T("（封路）", "（封路）"), cx + vw * 0.45 - 30 * U2, yy - 52 * U2)
+		if k2 > 0.8 and not J.t(J.gp(U, "say1")):
+			U["say1"] = 1.0; var L = [T("前面封咗路！", "前面封路了！"), T("又係白布……", "又是白布……"), T("點過去呀？", "怎麼過去？"), T("行返轉頭！", "往回走！")]
+			var vv = vic.slice(0, 4)
+			for j in vv.size(): vv[j]["say"] = {"s": L[j], "t": 2.0}
+		return true
+	if k == "penanggal":
+		var vic = []
+		for w in J.iter(_or(J.gp(U, "vic"), [])):
+			if not J.t(J.gp(w, "gone")): vic.append(w)
+		var k2 = minf(1.0, (ut - at) / 2.4); var pts = [[cx - vw * 0.48, cy - vh * 0.3]]
+		for w in vic: var wp = tf_wp(Tf, w); var xy = tf_P(Tf, wp[0], wp[1]); pts.append([xy[0], xy[1] - bh * 0.07])
+		pts.append_array([[cx + vw * 0.48, cy - vh * 0.35], [cx, cy - vh * 0.45], [cx - vw * 0.48, cy - vh * 0.3]])
+		var seg = (pts.size() - 1) * k2; var i0 = mini(pts.size() - 2, int(floorf(seg))); var f = seg - i0; var hx = pts[i0][0] + (pts[i0 + 1][0] - pts[i0][0]) * f; var hy = pts[i0][1] + (pts[i0 + 1][1] - pts[i0][1]) * f
+		var tr = J.iter(_or(J.gp(U, "trail"), [])).duplicate(); tr.append([hx, hy]); U["trail"] = tr.slice(maxi(0, tr.size() - 26))
+		var T2 = U.trail
+		c.save(); c.lineCap = "round"
+		for j in range(1, T2.size()):
+			var a2 = float(j) / T2.size(); c.strokeStyle = "rgba(120,10,20," + J.str(0.8 * a2) + ")"; c.lineWidth = (2 + 7 * a2) * U2; c.beginPath(); c.moveTo(T2[j - 1][0], T2[j - 1][1] + sin(t * 9 + j) * 4); c.lineTo(T2[j][0], T2[j][1] + sin(t * 9 + j + 1) * 4); c.stroke()
+			c.strokeStyle = "rgba(170,255,130," + J.str(0.35 * a2) + ")"; c.lineWidth = 2 * U2; c.stroke()
+		c.restore()
+		stDC(c, "penanggal", hx, hy + bh * 0.06, bh * 0.09 / 60, {"t": t, "pose": "strike", "pt": 1.0, "atk": true, "alpha": 0.97, "flip": pts[i0 + 1][0] < pts[i0][0], "shadow": false})
+		for j in vic.size():
+			if j + 1 <= seg and J.num(J.gp(U, "hitI")) <= j:
+				U["hitI"] = float(j + 1); var w = vic[j]
+				if tf_alive(Tf, w):
+					tf_hit(Tf, w, BD * 8, {"force": true, "fright": 1.5}); tf_react(Tf, w, pick(["scream", "fall", "head"])); var p2 = tf_wp(Tf, w); tf_addTrace(Tf, "ring", p2[0], p2[1], 70.0, 3.0, {"by": "penanggal"})
+					tf_cap(Tf, T("嘶——", "嘶——"), p2[0], J.num(p2[1]) - 0.12, {"style": "shake", "col": "#c8ffb0", "size": 14.0, "life": 0.8})
+		return true
+	if k == "mengpo":
+		var k2 = ut - at; var tilt = minf(1.0, k2 / 0.5); var bxx = cx - vw * 0.3; var byy = cy - vh * 0.42; var ln = J.num(Tf.len)
+		c.save(); c.translate(bxx, byy); c.rotate(tilt * 1.2); c.fillStyle = "#6a3a1e"; c.beginPath(); c.ellipse(0, 0, 34 * U2, 14 * U2, 0, 0, 3.14); c.fill(); c.fillStyle = "#d89a4a"; c.beginPath(); c.ellipse(0, 0, 34 * U2, 8 * U2, 0, 0, 7); c.fill(); c.restore()
+		var rv = maxf(0.0, minf(1.0, (k2 - 0.3) / 1.4)); U["river"] = rv
+		if rv > 0:
+			c.save(); c.lineCap = "round"; c.lineJoin = "round"; var n = 60; c.beginPath(); c.moveTo(bxx + 20 * U2, byy + 10 * U2)
+			var j = 0
+			while j <= n * rv:
+				var ap = tf_at(Tf, ln * j / n); var xy = tf_P(Tf, ap[0], ap[1]); c.lineTo(xy[0] + sin(j * 0.7 + t * 2) * 6 * U2, xy[1]); j += 1
+			c.strokeStyle = "rgba(200,130,50,0.55)"; c.lineWidth = 46 * U2; c.stroke(); c.strokeStyle = "rgba(255,220,160,0.35)"; c.lineWidth = 14 * U2; c.stroke(); c.restore()
+			for jj in 14:
+				var ap = tf_at(Tf, ln * ((jj / 14.0) * rv)); var xy = tf_P(Tf, ap[0], ap[1]); var x = xy[0]; var y = xy[1]; var rr = fmod(t * 0.6 + jj * 0.13, 1.0)
+				c.strokeStyle = "rgba(255,240,220," + J.str(0.5 * (1 - rr)) + ")"; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y - rr * 40 * U2); c.quadraticCurveTo(x + 8 * U2, y - rr * 40 * U2 - 10 * U2, x, y - rr * 40 * U2 - 20 * U2); c.stroke()
+		for w in J.iter(_or(J.gp(U, "vic"), [])):
+			if not tf_alive(Tf, w) or J.t(J.gp(w, "_river")): continue
+			var near = false; var p2 = tf_wp(Tf, w); var j = 0
+			while j <= 60 * rv:
+				if tf_dist(tf_at(Tf, ln * j / 60.0), p2) < 70 * PX: near = true; break
+				j += 2
+			if near:
+				w["_river"] = 1.0; w["spin"] = 2.2; w["amnesia"] = 10.0; tf_act(Tf, w, "idle", 2.2, null); tf_hit(Tf, w, BD * 5, {"force": true})
+				w["say"] = {"s": pick([T("我……我係邊個？", "我……我是誰？"), T("我要去邊度？", "我要去哪？"), T("呢度係邊？", "這是哪裡？")]), "t": 2.0}
+				_later(2200.0, func(): w["back"] = J.num(D.CELL) * 2.5)
+		return true
+	if k == "toyol":
+		var k2 = ut - at; var vic = J.iter(_or(J.gp(U, "vic"), [])); var gx = cx - vw / 2 + vw * minf(1.2, k2 / 1.0)
+		if k2 < 1.2:
+			c.strokeStyle = "rgba(230,230,210,0.5)"; c.lineWidth = 2
+			for j in 22:
+				var yy = cy - vh / 2 + (j / 22.0) * vh; var len = 60 + (j * 37 % 80); c.beginPath(); c.moveTo(gx - len * U2 - (j * 23 % 50), yy); c.quadraticCurveTo(gx - len * U2 * 0.5, yy - 8, gx - (j * 23 % 50), yy); c.stroke()
+		for j in vic.size():
+			var w = vic[j]
+			if J.t(J.gp(w, "gone")): continue
+			var wp = tf_wp(Tf, w); var wxy = tf_P(Tf, wp[0], wp[1]); var wx = wxy[0]; var wy = wxy[1]
+			if gx >= wx and not J.t(J.gp(w, "_gust")):
+				w["_gust"] = 1.0; tf_act(Tf, w, "startle", 1.2, null); w["say"] = {"s": pick([T("我部電話呢？", "我的手機呢？"), T("個袋飛咗！", "包包飛走了！"), T("我串魚蛋！", "我的魚蛋！")]), "t": 1.4}
+				if not J.t(J.gp(w, "el")): _walAdd(Tf, 4.0)
+			if J.t(J.gp(w, "_gust")):
+				var e = minf(1.0, (k2 - (wx - (cx - vw / 2)) / vw) / 0.8)
+				if e < 1:
+					var ix = wx + e * vw * 0.4; var iy = wy - bh * 0.08 - sin(e * PI) * 50 * U2; var kd = j % 4
+					c.save(); c.translate(ix, iy); c.rotate(e * 8)
+					if kd == 0: c.fillStyle = "#222"; c.fillRect(-4 * U2, -7 * U2, 8 * U2, 14 * U2); c.fillStyle = "#7cc8ff"; c.fillRect(-3 * U2, -5 * U2, 6 * U2, 9 * U2)
+					elif kd == 1: c.fillStyle = "#a0522d"; c.fillRect(-8 * U2, -5 * U2, 16 * U2, 11 * U2); c.strokeStyle = "#5a2a10"; c.lineWidth = 2; c.beginPath(); c.arc(0, -5 * U2, 5 * U2, 3.14, 0); c.stroke()
+					elif kd == 2:
+						c.strokeStyle = "#8a6a3a"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(-9 * U2, 0); c.lineTo(9 * U2, 0); c.stroke(); c.fillStyle = "#f0d070"
+						for q2 in 3: c.beginPath(); c.arc(-5 * U2 + q2 * 5 * U2, 0, 3 * U2, 0, 7); c.fill()
+					else: c.fillStyle = "#7fae6a"; c.fillRect(-9 * U2, -4 * U2, 18 * U2, 8 * U2)
+					c.restore()
+		for j in 3:
+			var e = minf(1.0, k2 / 1.2); var x = cx - vw / 2 + vw * e + (j - 1) * 30 * U2; var y = cy + (j - 1) * vh * 0.2
+			stDC(c, "toyol", x, y, bh * 0.06 / 46, {"t": t + j, "walk": true, "pose": "move", "alpha": 0.9, "shadow": false})
+		if k2 > 1.4:
+			var e = minf(1.0, (k2 - 1.4) / 0.6)
+			for j in 30:
+				var a0 = j * 0.7; var rr = e * vh * 0.4 * ((j * 13 % 10) / 10.0 + 0.3); var x = cx + cos(a0) * rr; var y = cy + sin(a0) * rr * 0.7 - sin(e * PI) * 40 * U2
+				c.fillStyle = "#ffd45a"; c.strokeStyle = "#7a4a10"; c.lineWidth = 1; c.beginPath(); c.ellipse(x, y, 5 * U2 * absf(cos(t * 6 + j)) + 1.5, 5 * U2, 0, 0, 7); c.fill(); c.stroke()
+			if not J.t(J.gp(U, "coinDone")):
+				U["coinDone"] = 1.0; tf_cap(Tf, T("撒錢喇！", "撒錢啦！"), (cx - bx) / bw, (cy - by) / bh - 0.2, {"style": "shake", "col": "#ffe08a", "size": 20.0, "font": "sans-serif"})
+				for w in vic:
+					if not tf_alive(Tf, w): continue
+					var p2 = tf_wp(Tf, w); tf_addTrace(Tf, "coins", p2[0], p2[1], 90.0, 6.0, {"by": "toyol"}); tf_act(Tf, w, "cower", 3.0, null); w["target"] = 6.0; tf_hit(Tf, w, BD * 4, {"force": true}); w["say"] = null
+		return true
+	if k == "n30_yukionna":
+		var g = c.createRadialGradient(cx, cy, vh * 0.1, cx, cy, vh * 0.8); g.addColorStop(0, "rgba(200,235,255,0.1)"); g.addColorStop(1, "rgba(220,245,255," + J.str(0.55 * minf(1.0, q * 2)) + ")"); c.fillStyle = g; c.fillRect(cx - vw / 2, cy - vh / 2, vw, vh)
+		for j in 40:
+			var xx = cx - vw / 2 + ((j * 53) % 100) / 100.0 * vw; var yy = cy - vh / 2 + fmod(t * 0.2 + j * 0.037, 1.0) * vh; c.fillStyle = "rgba(255,255,255,0.85)"; c.beginPath(); c.arc(xx, yy, 2.2, 0, 7); c.fill()
+		return true
+	if k == "n30_qionggui" or k == "n30_taozhai" or k == "n30_guhangui":
+		for j in 26:
+			var xx = cx - vw / 2 + ((j * 37) % 100) / 100.0 * vw; var yy = cy - vh / 2 + fmod(q * 1.2 + j * 0.041, 1.1) * vh
+			c.save(); c.translate(xx, yy); c.rotate(t * 3 + j)
+			if k == "n30_taozhai": c.fillStyle = "#f1e4c8"; c.fillRect(-9, -12, 18, 24); c.fillStyle = "#b01010"; c.font = "900 10px sans-serif"; c.textAlign = "center"; c.fillText("債", 0, 4)
+			elif k == "n30_qionggui": c.fillStyle = "#7fae6a" if j % 2 else "#d8b450"; c.fillRect(-12, -5, 24, 10)
+			else: c.fillStyle = "#ffd45a"; c.beginPath(); c.ellipse(0, 0, 6 * absf(cos(t * 5 + j)) + 1, 6, 0, 0, 7); c.fill()
+			c.restore()
+		return true
+	if k == "laojiang":
+		var e0 = minf(1.0, (ut - at) / 2.0)
+		for j in 6:
+			var e = e0 - j * 0.05
+			if e <= 0 or e >= 1: continue
+			var pos = tf_at(Tf, e * J.num(Tf.len)); var xy = tf_P(Tf, pos[0], pos[1]); var hop = absf(sin(e * PI * 12))
+			for w in J.iter(J.gp(Tf, "walkers")):
+				if tf_alive(Tf, w) and tf_dist(tf_wp(Tf, w), pos) < 0.09:
+					if J.num(J.gp(w, "breath")) > 0: continue
+					tf_hit(Tf, w, w.max, {"force": true})
+			stDC(c, "laojiang", xy[0], xy[1] - hop * 30, bh * 0.1 / 58, {"t": t + j * 0.1, "walk": true, "pose": "move", "alpha": 0.95 - j * 0.08, "flip": false, "shadow": false})
+		return true
+	return false
+const TF_4T := {"drawProc": 3, "drawObsShape": 8, "drawUltScene": 0, "drawMouth": 3, "drawUlt": 0, "drawUltNew": 2}
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -3194,16 +4243,26 @@ static func tf_install(Tf, group: Dictionary) -> void:
 	for k in M: J.sp(Tf, k, M[k])
 	if group == TF_4A: J.sp(Tf, "dist", func(_this, a): return tf_dist(J.arg(a, 0), J.arg(a, 1)))
 
+const TF_ALL := ["TF_4A", "TF_4B", "TF_4C", "TF_4D", "TF_4E", "TF_4F", "TF_4G", "TF_4H", "TF_4I", "TF_4J", "TF_4K", "TF_4L", "TF_4M", "TF_4N", "TF_4O", "TF_4P", "TF_4Q", "TF_4R", "TF_4S", "TF_4T"]
+static func tf_groups() -> Array:
+	var S = load("res://native/street.gd"); var out = []
+	for n in TF_ALL: out.append(S.get(n))
+	return out
+# 第五段：Turf 物件本身原生（欄位＋ULT／SPECIAL／SKILL／LORE／ULTT 數據由 street.json 讀）
+static func mk_turf() -> Dictionary:
+	var Tf = {"on": false, "def": null, "sd": null, "cv": null, "c": null, "raf": 0.0, "last": 0.0, "walkers": [], "fx": [], "shots": [], "spawn": 0.0, "crewT": 0.0, "len": 0.0, "segs": [], "box": null, "cds": [], "rateAcc": 0.0, "rateT": 0.0}
+	for k in D.TURF: Tf[k] = D.TURF[k].duplicate(true)
+	for g in tf_groups(): tf_install(Tf, g)
+	return Tf
+
 func run(_env) -> void:
-	# 未完成段落：暫時用轉譯版
-	var tr = (load("res://jsgen/street.gd") as GDScript).new(); _tr_keep.append(tr); tr.run(null)
-	# 已完成段落：原生覆蓋
 	J.G["__stDC"] = func(_t, a): stDC(J.arg(a, 0), J.arg(a, 1), J.arg(a, 2), J.arg(a, 3), J.arg(a, 4), J.arg(a, 5)); return null
 	J.G["CrUI"] = mk_crui()
 	J.G["DevFx"] = mk_devfx()
-	# 第三段：Street 匯出物件原生（Turf 未改寫：暫時用轉譯版 Turf；轉譯版自己嘅 devTick 計時器照行，用 devT 時間戳，唔會重複計）
 	load_data()
-	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
+	SQ = mk_street(mk_turf())
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I); tf_install(J.gp(SQ, "Turf"), TF_4J); tf_install(J.gp(SQ, "Turf"), TF_4K); tf_install(J.gp(SQ, "Turf"), TF_4L); tf_install(J.gp(SQ, "Turf"), TF_4M); tf_install(J.gp(SQ, "Turf"), TF_4N); tf_install(J.gp(SQ, "Turf"), TF_4O); tf_install(J.gp(SQ, "Turf"), TF_4P)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)
+	# 原作：開機 4 秒補計一次發展收入，之後每分鐘計一次
+	J.F_setTimeout([func(_t, _a): devTick(true); return null, 4000.0])
+	J.F_setInterval([func(_t, _a): devTick(false); return null, 60000.0])
