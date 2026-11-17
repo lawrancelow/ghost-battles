@@ -74,6 +74,8 @@ func plaza(_t) -> void:
 	var outs = []
 	for native in [true, false]:
 		_daily_set(dn.keys(), dn if native else dt_)
+		var SPn = load("res://native/special.gd")   # 特別鬼（Toyol 等）有按 key 嘅狀態，兩邊各自由零開始
+		SPn.states.clear(); SPn.uid = 0; SPn.epoch = 0; SPn.last_call = 0.0; SPn.last_clean = 0.0; SPn.frame_id += 1000   # GC 係固定 40 格暫存，唔好清；frame_id 跳號令舊格失效
 		NP.test_r0 = true   # 轉譯版 R = Math.random 係空值（轉譯錯誤），原生對照時都用 0
 		J.G["S"] = saveS
 		seed(42)

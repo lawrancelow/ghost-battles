@@ -878,7 +878,9 @@ static func draw_agent(ctx, ag: Dictionary, t: float, opt) -> void:
 	if J.t(J.cl(J.gp(_ma(), "has"), null, [k])) and not (SP != null and J.t(J.mc(SP, "has", [k]))):
 		var o = {"t": T, "act": act, "at": ag.eatT if act == "plaza_eat" else ag.at, "w": ag.w, "wph": ag.wph, "hp": ag.hp, "run": cl(J.num(ag.w)) if J.t(J.gp(style, "run")) else 0.0, "sniff": J.gp(style, "sniff"), "sneak": J.gp(style, "sneak"), "stiff": J.gp(style, "stiff"), "pl": ag.pl, "flip": not J.t(ag.face), "tamed": true, "untied": true}
 		J.mc(_g("ART"), "drawChar", [ctx, k, x, ag.y, SC, o])
-		ag["_z"] = z0(o.get("_z")); ag["_stars"] = z0(o.get("_stars")); ag["_zpos"] = o.get("_zpos")
+		ag["_z"] = z0(o.get("_z")); ag["_stars"] = z0(o.get("_stars"))
+		if o.get("_zpos") != null: ag["_zpos"] = o._zpos
+		else: ag.erase("_zpos")   # JS 設 undefined＝冇呢個鍵
 	else: draw_special(ctx, ag, T)
 	ctx.restore()
 	# 頭頂嘅嘢
