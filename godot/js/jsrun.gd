@@ -254,12 +254,13 @@ static func _nat_on(n: String) -> bool:
 		for t in OS.get_environment("GB_NAT_EXTRA").split(",", false): _active[t.strip_edges()] = true
 	return _active.has(n)
 func load_modules(names: Array) -> void:
-	native_used.clear()
+	pass   # 唔清：tower 會再叫 load_modules，清咗就漏報之前載入嘅原生模塊
 	for n in names:
 		var p = "res://jsgen/%s.gd" % n
 		var pn = "res://native/%s.gd" % n
 		if _nat_on(n) and ResourceLoader.exists(pn) and not OS.has_environment("GB_NONAT") and not OS.has_environment("GB_NONAT_" + n):
-			p = pn; native_used.append(n)
+			p = pn
+			if not native_used.has(n): native_used.append(n)
 		if not ResourceLoader.exists(p): push_warning("缺模塊 " + n); continue
 		var scr: GDScript = load(p)
 		if scr == null or not scr.can_instantiate(): push_error("模塊編譯失敗 " + n); continue
