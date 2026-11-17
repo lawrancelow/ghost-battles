@@ -1,4 +1,4 @@
-# 原生改寫自 phone.js（仿 WhatsApp 手機：生前／陰間版聊天列表、聊天畫面、封面）
+# 原生改寫自 phone.js（仿 ApaKhabar 手機：生前／陰間版聊天列表、聊天畫面、封面）
 # 介面同轉譯版一樣：ICON、TICK、waAvatar、waStatus、nowHM、CHATS_PRE、chatsPost、Phone、Title
 # 固定數據（ICON、CHATS_PRE）喺 data/nat/phone.json（由原 JS 直接輸出）
 # 註：js/bridge.gd connect_ui 之後會將 Title 同 Phone.home/close/enter 換成原生 ui/whatsapp.gd；呢度保留網頁版行為做後備
@@ -33,7 +33,7 @@ static func chats_post() -> Array:
 		"prev": "親，今天沒有 KPI，想來就來。" if ended else "親，鬼怪們都在等你上班哦～"})
 	# 媽
 	var mm = [["媽", "頭七", "阿福，頭七了。媽給你燒了一個傭人，叫小紙，你別欺負人家。"]]
-	if sn.call("gift_phone"): mm.append_array([["媽", "清明前", "手機收到了嗎？店家說下面也能用 WhatsApp。"], ["媽", "清明前", "媽不知道你看不看得到，就當媽自言自語吧。"]])
+	if sn.call("gift_phone"): mm.append_array([["媽", "清明前", "手機收到了嗎？店家說下面也能用 ApaKhabar。"], ["媽", "清明前", "媽不知道你看不看得到，就當媽自言自語吧。"]])
 	if sn.call("ch3_end"): mm.append_array([["媽", "中元前", "媽幫你看了一塊新的地，坐北向南，前面有樹，風水第一流。"], ["媽", "中元前", "負責的人說前面是垃圾場。媽跟他講：那叫聚財。"]])
 	if sn.call("gift_car"): mm.append(["媽", "中元節", "車也燒給你了，你開慢點。生前你那麼急，現在慢慢來。"])
 	if sn.call("epilogue"): mm.append_array([["媽", "清明", "媽給你燒了一張假條。這次你一定要放。"], ["我", "清明", "媽，我不忙了。"], ["媽", "清明", "……阿福？"]])
@@ -82,7 +82,7 @@ static func ph_home(phase) -> void:
 	var time = "02:13" if pre else now_hm()
 	var unread = 0
 	for c in list: if J.t(c.get("unread")): unread += 1
-	var h = "<div class=\"wa\">%s\n      <div class=\"wa-top\"><b>WhatsApp</b>%s<button class=\"wa-snd\" aria-label=\"聲音\">%s</button><span class=\"ic\">%s</span><span class=\"ic\">%s</span></div>\n      <div class=\"wa-search\">在 WhatsApp 中搜尋…</div>\n      <div class=\"wa-chips\"><span class=\"on\">全部</span><span>未讀 %d</span><span>群組</span></div>\n      <div class=\"wa-list\">" % [wa_status(time, "3%" if pre else "∞", pre), "" if pre else "<i class=\"hell\">陰間版</i>", "🔊" if J.t(_snd("isOn")) else "🔇", ICON.cam, ICON.dots, unread]
+	var h = "<div class=\"wa\">%s\n      <div class=\"wa-top\"><b>ApaKhabar</b>%s<button class=\"wa-snd\" aria-label=\"聲音\">%s</button><span class=\"ic\">%s</span><span class=\"ic\">%s</span></div>\n      <div class=\"wa-search\">在 ApaKhabar 中搜尋…</div>\n      <div class=\"wa-chips\"><span class=\"on\">全部</span><span>未讀 %d</span><span>群組</span></div>\n      <div class=\"wa-list\">" % [wa_status(time, "3%" if pre else "∞", pre), "" if pre else "<i class=\"hell\">陰間版</i>", "🔊" if J.t(_snd("isOn")) else "🔇", ICON.cam, ICON.dots, unread]
 	for c in list:
 		h += "<div class=\"wa-row %s\" data-id=\"%s\">%s\n        <div class=\"wr-mid\"><div class=\"wr-l1\"><b>%s</b><small class=\"%s\">%s</small></div>\n        <div class=\"wr-l2\"><span>%s%s</span>%s%s%s</div></div></div>" % ["main" if J.t(c.get("main")) else "", J.str(c.id), wa_avatar(c.av, 50), J.str(c.name), "g" if J.t(c.get("unread")) else "", J.str(c.time),
 			(tick(true, true) + " ") if J.t(c.get("mine")) else "", J.str(c.prev), ("<i class=\"pin\">%s</i>" % ICON.pin) if J.t(c.get("pin")) else "", ("<i class=\"mut\">%s</i>" % ICON.mute) if J.t(c.get("mute")) else "", ("<em>%s</em>" % J.str(c.unread)) if J.t(c.get("unread")) else ""]
