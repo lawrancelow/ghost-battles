@@ -62,3 +62,4 @@ n30_daily
 daily_town
 daily_hero
 daily_work
+daily_plaza
