@@ -206,17 +206,20 @@ func street_devfx(_t) -> void:
 
 # ---- L3：street 第三段（資料、佈局、路網、名氣、佔領度）----
 # 參考答案由網頁版 street.js 喺 node 計（tools/tests/ref/street_s3_ref.js → ref/street_s3.json）；轉譯版只係匯出咗嘅先比得
-static func _cln(x):
+const _DROP := {"sayAt": 1, "cheerF": 1, "filmSay": 1, "wal": 1, "_gpT": 1}
+static func _cln(x, dp: int = 0):
 	if x is Callable or x is Object: return null
+	if dp > 24: return "<deep>"
 	if x is Dictionary:
 		var o = {}
 		for k in x:
-			var v = _cln(x[k])
+			if _DROP.has(k): continue
+			var v = _cln(x[k], dp + 1)
 			if v != null: o[k] = v
 		return o
 	if x is Array:
 		var o = []
-		for v in x: o.append(_cln(v))
+		for v in x: o.append(_cln(v, dp + 1))
 		return o
 	return x
 static func _nr(a, b) -> bool:
