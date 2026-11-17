@@ -84,7 +84,7 @@ func plaza(_t) -> void:
 		var V = {"plaza": null, "hero": {"x": 195.0, "y": 640.0, "walking": true}, "bubble": null}
 		var st_h = []; var dr_h = []; var t = 100.0
 		for f in NF:
-			t += 1.0 / 30
+			t += 1.0 / 30; J.test_perf = 100000.0 + f * 1000.0 / 30   # 特別鬼彈簧用 performance.now：兩邊用同一假時鐘
 			V.hero["x"] = 195 + sin(t * 0.3) * 150; V.hero["walking"] = (f / 60) % 2 == 0
 			if f == 300: ghosts.remove_at(3)   # 有鬼被派去打工：離開廣場
 			if f == 500: ghosts.append({"id": "pzN", "k": "heiwu", "name": "heiwu", "q": "藍", "lv": 1.0, "st": [30.0, 30.0, 30.0], "post": null, "spent": 0.0})
@@ -98,6 +98,7 @@ func plaza(_t) -> void:
 				st_h.append(_ser_w(V.plaza))
 		outs.append([st_h, dr_h])
 	J.G["S"] = S0
+	J.test_perf = -1.0
 	NP.test_r0 = false
 	_daily_set(dn.keys(), dn)
 	var nst = outs[0][0]; var tst = outs[1][0]; var ndr = outs[0][1]; var tdr = outs[1][1]
