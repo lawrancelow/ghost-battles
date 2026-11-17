@@ -86,12 +86,12 @@ echo "包內容檢查：通過"
 
 # 用同一套篩選匯出 pck，喺電腦用「包入面嘅檔」跑全遊戲一條龍（唔係用專案資料夾）
 if [ -z "$NOPKGTEST" ]; then
-	# 測試用 pck：同 APK 一樣嘅篩選，只係保留 tools/（一條龍測試腳本喺入面）
-	cp export_presets.cfg "$OUT/build/presets.bak"
-	sed -i 's#exclude_filter="tools/\*,#exclude_filter="#' export_presets.cfg
+	# 測試用 pck：同 APK 一樣嘅篩選（tools/ 有 .gdignore 唔會入包，測試腳本另外抄出嚟用絕對路徑載）
 	flock /tmp/godot.lock timeout 900 "$GD" --headless --path . --export-pack Linux "$OUT/build/pkgtest.pck" > "$OUT/build/export_pck.log" 2>&1
-	cp "$OUT/build/presets.bak" export_presets.cfg
-	PT="$OUT/pkgrun"; rm -rf "$PT"; mkdir -p "$PT/xdg"; cp tools/tests/full_run.json "$PT/full.json"
+	PT="$OUT/pkgrun"; rm -rf "$PT"; mkdir -p "$PT/xdg" "$PT/t"
+	cp tools/tests/full_run.gd tools/tests/l3_play.gd tools/tests/l1_pt_play.gd "$PT/t/"
+	sed -i "s#res://tools/tests/#$PT/t/#g" "$PT"/t/*.gd
+	echo "[[\"wait\",3],[\"gdrun\",\"$PT/t/full_run.gd\",\"all\"],[\"quit\"]]" > "$PT/full.json"
 	(cd "$PT" && flock /tmp/godot.lock env XDG_DATA_HOME="$PT/xdg" GB_TEST="$PT/full.json" timeout 600 xvfb-run -a -s '-screen 0 450x975x24' "$GD" --main-pack "$OUT/build/pkgtest.pck" --rendering-driver opengl3 > "$OUT/build/pkgrun.log" 2>&1) || true
 	SE=$(grep -c 'SCRIPT ERROR' "$OUT/build/pkgrun.log")
 	grep -q '\[full\] done' "$OUT/build/pkgrun.log" && DONE=1 || DONE=0
