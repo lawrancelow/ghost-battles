@@ -411,3 +411,48 @@ func street_t4b(_t) -> void:
 		_eq(tg + " hitFx dup", _tstate(A), _tstate(B))
 		print("[xcheck-info] t4b %s couples=%d walkers=%d" % [sid, cpl, A.walkers.size()])
 	_report()
+
+# ---- L3：street 4c（特殊路人組）----
+static func _sqst(sq) -> Dictionary:
+	var ms = []
+	for w in J.iter(sq.mem): var o = _wst(w); o.erase("sq"); o.erase("sqRole"); ms.append(o)
+	var o2 = sq.duplicate(); o2.erase("mem"); o2["mem_"] = ms; return o2
+func street_t4c(_t) -> void:
+	mod = "street_t4c"
+	var N = load("res://native/street.gd"); N.load_data()
+	var tr = _st_trans().Street; var trT = J.gp(tr, "Turf")
+	for sid in ["office", "bus", "flat"]:
+		var pr = _tf_pair(trT, N, sid, 3.0); var A = pr[0]; var B = pr[1]; var tg = sid
+		for grp in [N.TF_4B, N.TF_4C]:
+			for k in grp: B[k] = N.turf_methods(grp)[k]
+		var def = null
+		for d in N.D.SITES:
+			if J.str(d.id) == sid: def = d
+		for X in [A, B]:
+			X["def"] = def; X["walkers"] = []; X["fx"] = []; X["parts"] = []; X["dfx"] = []; X["rateAcc"] = 0.0; X.sd["wal"] = 600.0; X.sd["coins"] = 0.0; X.sd["hot"] = 0.0; X.sd["lv"] = 12.0
+			X["sqPlan"] = null; X["waveNo"] = 0.0; X["sqCD"] = 1.0
+			J.mc(X, "buildPath", [])
+			for p in X.sd.posts:
+				if p is Dictionary: p["cd"] = 99.0
+		trT["sd"] = A.sd
+		for r in 8:
+			seed(300 + r); J.mc(A, "sqWaveDone", []); seed(300 + r); J.mc(B, "sqWaveDone", [])
+			_eq(tg + " sqWaveDone %d" % r, [A.waveNo, A.sqPlan, A.sqCD], [B.waveNo, B.sqPlan, B.sqCD])
+			if r == 4: A.sqPlan = null; B.sqPlan = null; A.sqCD = 0.0; B.sqCD = 0.0
+		for kind in N.D.SQUAD:
+			seed(41); var qa = J.mc(A, "sqMake", [kind]); seed(41); var qb = J.mc(B, "sqMake", [kind])
+			_eq(tg + " sqMake " + kind, _sqst(qa), _sqst(qb))
+			A.walkers = qa.mem.duplicate(); B.walkers = qb.mem.duplicate()
+			for i in qa.mem.size(): qa.mem[i].t = 0.02 + i * 0.03; qb.mem[i].t = qa.mem[i].t; qa.mem[i].hp = qa.mem[i].max * 0.5; qb.mem[i].hp = qa.mem[i].hp
+			for st in 40:
+				for i in qa.mem.size():
+					seed(st * 10 + i); var ra = J.mc(A, "sqWalk", [qa.mem[i], 0.1]); seed(st * 10 + i); var rb = J.mc(B, "sqWalk", [qb.mem[i], 0.1])
+					_eq(tg + " sqWalk %s s%d m%d ret" % [kind, st, i], ra, rb)
+					qa.mem[i].t += 0.01; qb.mem[i].t += 0.01
+				if st % 8 == 0: _eq(tg + " sqWalk %s s%d" % [kind, st], [_sqst(qa), A.fx], [_sqst(qb), B.fx])
+			for i in qa.mem.size():
+				var how = "run" if i % 2 == 0 else "out"
+				if kind.length() % 2 == 0: how = "out" if i > 0 else "run"
+				trT["sd"] = A.sd; seed(9 + i); J.mc(A, "sqMember", [qa.mem[i], how]); seed(9 + i); J.mc(B, "sqMember", [qb.mem[i], how])
+			_eq(tg + " sqEnd " + kind, [_sqst(qa), A.sd, A.fx, A.get("slowmo"), A.get("flash")], [_sqst(qb), B.sd, B.fx, B.get("slowmo"), B.get("flash")])
+	_report()
