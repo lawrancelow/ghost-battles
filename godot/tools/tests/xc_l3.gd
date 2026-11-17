@@ -765,7 +765,7 @@ func street_t4q(_t) -> void:
 			for hot in [5.0, -4.0]:
 				var outs = []
 				for X in [A, B]:
-					X["q"] = qs.duplicate(); X.q["list"] = []; X.sd["hot"] = hot; X["_gpT"] = {}; trT["sd"] = A.sd if X == A else B.sd
+					X["q"] = qs.duplicate(); X.q["list"] = []; X.sd["hot"] = hot; X["_gpT"] = {}; trT["sd"] = A.sd if is_same(X, A) else B.sd
 					_rmq("#gp-warn"); J.mc(X, "hud", [])
 					var o = {}
 					for id in ["stt-lv", "stt-coin", "stt-info", "stt-q", "stt-sp", "stt-box"]: var e = J.S_document_("querySelector", ["#" + id]); o[id] = [J.str(J.gp(e, "innerHTML")), J.str(J.gp(e, "textContent"))]
@@ -799,7 +799,7 @@ func street_t4r(_t) -> void:
 	var tr = _st_trans().Street; var trT = J.gp(tr, "Turf")
 	var keep = {}
 	for k in ["__nat_turf", "__nat_turfEnd", "__nat_stStreet", "__nat_stStreetEnd"]: keep[k] = J.G.get(k); J.G.erase(k)
-	var S = J.G.S; var ks = J.gp(S, "stnPosts")
+	var kw = [J.G.get("innerWidth"), J.G.get("innerHeight")]; J.G["innerWidth"] = 390.0; J.G["innerHeight"] = 844.0
 	for sid in ["office", "bus", "flat"]:
 		var pr = _pair_all(trT, N, sid, 3.0); var A = pr[0]; var B = pr[1]
 		var snap = J.G.S.duplicate(true); var outs = []; var sts = []
@@ -807,7 +807,7 @@ func street_t4r(_t) -> void:
 			J.G["S"] = snap.duplicate(true); trT["sd"] = null
 			X["intro"] = null; X["cam"] = null; seed(4242); J.test_perf = 70000.0
 			J.mc(X, "open", [sid])
-			if X == A: trT["sd"] = A.sd
+			if is_same(X, A): trT["sd"] = A.sd
 			outs.append([_html("#st-turf"), _tfs(X)])
 			# frame：推幾格
 			var t0 = J.num(X.last)
@@ -835,6 +835,7 @@ func street_t4r(_t) -> void:
 		for i in sts[0].size(): _eq(sid + " open/frame/tap #%d" % i, sts[0][i], sts[1][i])
 		J.G["S"] = snap
 	for k in keep: J.G[k] = keep[k]
+	J.G["innerWidth"] = kw[0]; J.G["innerHeight"] = kw[1]
 	J.G["Math"] = mk.keep
 	_report()
 func street_t4s(_t) -> void:
@@ -846,7 +847,7 @@ func street_t4s(_t) -> void:
 		var pr = _pair_all(trT, N, sid, 3.0); var A = pr[0]; var B = pr[1]
 		var snap = J.G.S.duplicate(true); var res = []
 		for X in [A, B]:
-			J.G["S"] = snap.duplicate(true); var sd0 = X.sd.duplicate(true); X["sd"] = sd0; trT["sd"] = sd0 if X == A else trT.sd
+			J.G["S"] = snap.duplicate(true); var sd0 = X.sd.duplicate(true); X["sd"] = sd0; trT["sd"] = sd0 if is_same(X, A) else trT.sd
 			X.sd.posts[0] = {"g": "dev:scare", "role": "scare", "sz": 1.0, "lv": 2.0, "build": 0.0, "spent": 200.0, "cd": 0.0, "staff": J.G.S.ghosts[2].id}
 			var o = []
 			for i in J.len(X.lay.posts):

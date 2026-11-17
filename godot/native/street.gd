@@ -2381,7 +2381,7 @@ static func tf_drawProp(Tf, o) -> void:
 	if _nw(im) <= 0:
 		J.mc(Tf, "drawObsShape", [c, o.k, x0, y0, w, h, U, J.gp(J.G.get("Math"), "random")])
 		return
-	var dw = w * 1.25; var dh = dw * J.num(im.naturalHeight) / J.num(im.naturalWidth); var flat = J.seq(J.gp(o, "t"), "p") or J.seq(J.gp(o, "t"), "e")
+	var dw = w * 1.25; var dh = dw * J.num(J.gp(im, "naturalHeight")) / J.num(im.naturalWidth); var flat = J.seq(J.gp(o, "t"), "p") or J.seq(J.gp(o, "t"), "e")
 	if not flat:
 		c.fillStyle = "rgba(0,0,0,0.35)"
 		c.beginPath()
@@ -2459,7 +2459,7 @@ static func _pbfoe(spr) -> bool:
 	return s.begins_with("pb_") or s.begins_with("foe_")
 static func tf_drawSprite(Tf, im, w, H, pose, t, flip, react, U) -> void:
 	var c = J.gp(Tf, "c"); H = J.num(H); t = J.num(t); U = J.num(U); react = J.num(react); flip = J.t(flip); pose = J.str(pose)
-	var iw = J.num(im.naturalWidth); var ih = J.num(im.naturalHeight); var ww = H * iw / ih; var sdv = J.num(J.gp(w, "seed")); var ph = t * (J.num(w.spd) / J.num(D.PX) / 45) + sdv
+	var iw = J.num(im.naturalWidth); var ih = J.num(J.gp(im, "naturalHeight")); var ww = H * iw / ih; var sdv = J.num(J.gp(w, "seed")); var ph = t * (J.num(w.spd) / J.num(D.PX) / 45) + sdv
 	var dy = 0.0; var rot = 0.0; var sx = 1.0; var sy = 1.0; var dx = 0.0
 	if pose == "move": dy = -absf(sin(ph * 3.2)) * 3.2 * U; rot = sin(ph * 3.2) * 0.045; sy = 1 - absf(sin(ph * 3.2)) * 0.02
 	elif pose == "run": dy = -absf(sin(ph * 5.5)) * 5 * U; rot = 0.16 + sin(ph * 5.5) * 0.06
@@ -2867,7 +2867,7 @@ static func _drawPost(Tf, X, s, i) -> void:
 	if J.num(J.gp(p, "build")) > 0: return
 	var dim = _spr("dv_" + J.str(p.role) + "_" + J.str(_or(J.gp(p, "sz"), 1.0))) if J.t(J.gp(p, "role")) else null; var dimOk = _nw(dim) > 0
 	if dimOk:
-		var q = tf_rect(Tf, s); var dw = (J.num(q[2]) - J.num(q[0])) * J.num(b.w) * 1.25; var dh = dw * J.num(dim.naturalHeight) / J.num(dim.naturalWidth); var by = J.num(b.y) + J.num(q[3]) * J.num(b.h) + 4 * U
+		var q = tf_rect(Tf, s); var dw = (J.num(q[2]) - J.num(q[0])) * J.num(b.w) * 1.25; var dh = dw * J.num(J.gp(dim, "naturalHeight")) / J.num(dim.naturalWidth); var by = J.num(b.y) + J.num(q[3]) * J.num(b.h) + 4 * U
 		var sh = (1 + sin(t * 40) * 0.03) if (J.gp(p, "anim") != null or J.t(J.gp(p, "win"))) else 1.0
 		c.save(); c.translate(x, by); c.scale(sh, sh)
 		if J.gp(p, "staff") != null: c.shadowColor = "#ffd45a" if J.t(J.gp(J.mc(Tf, "staffMul", [p]), "named")) else "#9ef0b0"; c.shadowBlur = 14
@@ -2906,7 +2906,7 @@ static func _drawPost(Tf, X, s, i) -> void:
 		var th = _spr("tianhua_hang")
 		if dimOk: pass
 		elif J.seq(g.k, "tianhua") and _nw(th) > 0:
-			var H2 = hh * 2.2; var W2 = H2 * J.num(th.naturalWidth) / J.num(th.naturalHeight); var drop = sin(minf(1.0, k * 2.5) * PI / 2) * (1 - maxf(0.0, k - 0.8) * 5)
+			var H2 = hh * 2.2; var W2 = H2 * J.num(th.naturalWidth) / J.num(J.gp(th, "naturalHeight")); var drop = sin(minf(1.0, k * 2.5) * PI / 2) * (1 - maxf(0.0, k - 0.8) * 5)
 			c.save(); c.globalAlpha = maxf(0.0, al); c.translate(tx, y - H2 * 0.4 + drop * (ftp[1] - y + H2 * 0.15) - H2 * 0.6); c.rotate(sin(t * 7) * 0.08); c.drawImage(th, -W2 / 2, 0, W2, H2); c.restore()
 		else: _ghostDraw(c, g.k, gx, gy, sc, {"t": t, "pose": pose, "pt": pt, "atk": hit > 0.4, "alpha": maxf(0.0, al), "flip": flip, "rot": rot})
 		if ft == "sound": c.restore()
@@ -2948,7 +2948,7 @@ static func tf_drawDfx(Tf, U, hh, t) -> void:
 					var a2 = j * 1.05 + sd; var d2 = k / 0.3 * hh * 0.5; c.fillStyle = "rgba(120,110,105," + _a(1 - k / 0.3) + ")"; c.fillRect(x + cos(a2) * d2, y - absf(sin(a2)) * d2 * 0.8, 3 * U, 3 * U)
 			c.restore(); continue
 		if ek == "puzzle" and J.t(fx_vx("vfx_mist_ring")):
-			var im = fx_vx("vfx_mist_ring"); var fi = minf(1.0, k / 0.18); var br = 1 + sin(t * 2.4 + sd) * 0.06; var Dd = hh * 1.45 * br; var nh = J.num(im.naturalHeight) / J.num(im.naturalWidth)
+			var im = fx_vx("vfx_mist_ring"); var fi = minf(1.0, k / 0.18); var br = 1 + sin(t * 2.4 + sd) * 0.06; var Dd = hh * 1.45 * br; var nh = J.num(J.gp(im, "naturalHeight")) / J.num(im.naturalWidth)
 			c.globalAlpha = maxf(0.0, minf(fi, fa)) * 0.92; c.save(); c.translate(x, y - hh * 0.1); c.scale(1, 0.56); c.rotate(t * 0.7 + sd); c.drawImage(im, -Dd / 2, -Dd / 2 * nh, Dd, Dd * nh); c.restore()
 			c.globalAlpha = maxf(0.0, minf(fi, fa)) * 0.35; c.save(); c.translate(x, y - hh * 0.55); c.scale(1, 0.75); c.rotate(-t * 0.5 + sd); c.drawImage(im, -Dd * 0.4, -Dd * 0.4, Dd * 0.8, Dd * 0.8); c.restore()
 			c.globalAlpha = maxf(0.0, minf(fi, fa)); c.fillStyle = "#e4c8ff"; c.font = "900 " + _px(12 * U) + " sans-serif"; c.textAlign = "center"; c.lineWidth = 3; c.strokeStyle = "#1a0a2a"; var qx = x + sin(t * 6) * hh * 0.3; c.strokeText("？", qx, y - hh * 1.25); c.fillText("？", qx, y - hh * 1.25)
@@ -3075,7 +3075,7 @@ static func tf_drawLoreFx(Tf, B, x, y, hh):
 					c.beginPath(); c.moveTo(wx - 16 * U + j * 4 * U, byy); c.quadraticCurveTo(wx + sin(t * 5 + j) * 14 * U, (byy + wy + lf) / 2, wx - 6 * U + j * 1.5 * U, wy + lf - hh * 0.8); c.stroke()
 			var im = _spr("tianhua_hang")
 			if _nw(im) > 0:
-				var H2 = hh * 2.4; var W2 = H2 * J.num(im.naturalWidth) / J.num(im.naturalHeight); var drop = sin(minf(1.0, q * 2.5) * PI / 2)
+				var H2 = hh * 2.4; var W2 = H2 * J.num(im.naturalWidth) / J.num(J.gp(im, "naturalHeight")); var drop = sin(minf(1.0, q * 2.5) * PI / 2)
 				c.save(); c.translate(tx, byy - H2 + drop * (ty - hh * 1.9 - byy + H2 * 0.4)); c.rotate(sin(t * 6) * 0.06); c.drawImage(im, -W2 / 2, 0, W2, H2); c.restore(); o = {"gx": x, "gy": y, "alpha": 0.01}
 			else: o = {"gx": tx, "gy": ty - hh * 1.6, "rot": PI, "alpha": 0.95}
 		elif kk == "pontianak" and J.t(J.gp(sx, "a")):
@@ -3456,7 +3456,7 @@ static func tf_hud(Tf) -> void:
 	var hv = tf_gpHave(Tf); var nd = J.mc(G("GP"), "turfNeed", [sd.lv])
 	J.sp(info, "innerHTML", "<span>" + ocT + "</span><span>" + T("傳說名氣", "傳說名氣") + " " + J.str(J.round(hot)) + "/" + J.str(need) + "</span><span>" + T("惡名", "惡名") + " " + J.str(sd.scared) + "</span><span>" + T("漏人", "漏人") + " " + J.str(sd.leaked) + "</span><span>" + T("膽量補正", "膽量補正") + " ×" + _fx2(tf_mod(Tf)) + "</span>" + "<span class=\"gp-hud " + ("gp-low" if J.cmp(hv, nd, "<") else "gp-ok") + "\">" + T("鬼力", "鬼力") + " <b>" + J.str(hv) + "</b>／" + T("建議", "建議") + " " + J.str(nd) + "</span>")
 	tf_gpCheck(Tf, oc)
-const TF_4Q := {"statTxt": 3, "snd": 1, "gpHave": 0, "gpWarn": 3, "tryGate": 2, "fgList": 0, "fgAt": 3, "fgCover": 2, "fgHold": 1, "propImg": 1, "sqBanner": 3, "pickFor": 1, "roleTick": 5, "specialTick": 1, "hud": 0}
+const TF_4Q := {"statTxt": 3, "snd": 1, "gpHave": 0, "gpWarn": 3, "tryGate": 2, "fgList": 0, "fgAt": 3, "fgCover": 2, "fgHold": 1, "propImg": 1, "sqBanner": 3, "pickFor": 1, "roleTick": 4, "specialTick": 1, "hud": 0}
 # 4r：開／關地盤 open／close、resize、每幀 frame、輸入 bindInput／tap、網紅組帖文 sqShot／sqPost（含 Godot 原生外殼補丁：_nat、_fno、_sqShotCv）
 static func _raf(f: Callable): return J.F_requestAnimationFrame([func(_t, aa): f.call(J.arg(aa, 0)); return null])
 static func tf_open(Tf, id, _room = null) -> void:
@@ -3644,7 +3644,7 @@ static func tf_sqShot(Tf, pos, win, sq):
 			var RG = J.gp(ROOMG, J.gp(P0, "room")); bgk = J.gp(RG, "bg") if J.t(RG) else null
 	var bg = _spr(bgk) if has("SPR") else null
 	var o = J.S_document_("createElement", ["canvas"]); J.sp(o, "width", 240.0); J.sp(o, "height", 170.0); var x = J.mc(o, "getContext", ["2d"])
-	var BW = _nw(bg) if _nw(bg) > 0 else 768.0; var BH = J.num(bg.naturalHeight) if _nw(bg) > 0 else 1152.0
+	var BW = _nw(bg) if _nw(bg) > 0 else 768.0; var BH = J.num(J.gp(bg, "naturalHeight")) if _nw(bg) > 0 else 1152.0
 	var cw = 0.36 * BW; var ch = cw * 170 / 240; var cx = (J.num(pos[0]) - r) * BW; var cy = (J.num(pos[1]) - 0.025) * BH
 	var x0 = maxf(0.0, minf(BW - cw, cx - cw / 2)); var y0 = maxf(0.0, minf(BH - ch, cy - ch / 2)); var k = 240 / cw
 	x.fillStyle = "#120c10"; x.fillRect(0, 0, 240, 170)
@@ -3661,7 +3661,7 @@ static func tf_sqShot(Tf, pos, win, sq):
 		if _nw(im) <= 0: j += 1; continue
 		var q = [J.num(pos[0]) - 0.02 * j, J.num(pos[1])] if J.seq(J.gp(m, "gone"), "out") else tf_wp(Tf, m)
 		if absf(J.num(q[0]) - J.num(pos[0])) > 0.25: q = [J.num(pos[0]) - 0.03 * (j + 1), J.num(pos[1]) + 0.01 * j]
-		var mq = toC.call(q); var ww = hP * _nw(im) / J.num(im.naturalHeight)
+		var mq = toC.call(q); var ww = hP * _nw(im) / J.num(J.gp(im, "naturalHeight"))
 		x.save()
 		if J.t(win): x.filter = "blur(1.2px)"; x.translate(mq[0], mq[1]); x.rotate((j - 1) * 0.15); x.drawImage(im, -ww / 2, -hP, ww, hP)
 		else: x.drawImage(im, mq[0] - ww / 2, mq[1] - hP, ww, hP)
@@ -3721,7 +3721,7 @@ static func _pk_canvases(el) -> void:
 		J.sp(cv, "width", 80.0); J.sp(cv, "height", 80.0); var x = J.mc(cv, "getContext", ["2d"])
 		if not J.t(x): continue
 		if _nw(dv) > 0:
-			var nw = _nw(dv); var nh = J.num(dv.naturalHeight); var k = 76 / maxf(nw, nh); J.mc(x, "drawImage", [dv, 40 - nw * k / 2, 40 - nh * k / 2, nw * k, nh * k])
+			var nw = _nw(dv); var nh = J.num(J.gp(dv, "naturalHeight")); var k = 76 / maxf(nw, nh); J.mc(x, "drawImage", [dv, 40 - nw * k / 2, 40 - nh * k / 2, nw * k, nh * k])
 		elif has("ART"):
 			var im = J.mc(G("ART"), "portrait", [J.gp(ds, "pk"), 80.0])
 			if J.t(im): J.mc(x, "drawImage", [im, 0.0, 0.0, 80.0, 80.0])
@@ -3776,20 +3776,20 @@ static func tf_pickRole(Tf, i) -> void:
 			_walAdd(Tf, -cost); p["lv"] = lv + 1; p["spent"] = J.num(J.gp(p, "spent")) + cost; p["ph"] = null; p["build"] = 3.0; close.call(); save_(); _toast(T("招魂中…（升級）", "招魂中…（升級）")))
 		J.sp(J.mc(el, "querySelector", ["#stp-del"]), "onclick", func(_t = null, _a = null):
 			_walAdd(Tf, J.num(J.gp(p, "spent")))
-			if J.t(stf): stf["post"] = null
+			if J.t(stf): J.sp(stf, "post", null)
 			sd.posts[ii] = null; close.call(); save_(); var s2 = J.str(J.gp(p, "spent")); _toast(T("拆咗，退返冥幣 " + s2, "已拆除，退回冥幣 " + s2)))
 		J.sp(J.mc(el, "querySelector", ["#stp-mv"]), "onclick", func(_t = null, _a = null): J.sp(Tf, "moveFrom", float(ii)); close.call())
 		for bt in J.iter(J.mc(el, "querySelectorAll", ["[data-st]"])):
 			J.sp(bt, "onclick", func(_t = null, _a = null):
 				var ds = J.str(J.gp(J.gp(bt, "dataset"), "st"))
 				if ds == "off":
-					if J.t(stf): stf["post"] = null
+					if J.t(stf): J.sp(stf, "post", null)
 					p["staff"] = null
 				else:
 					var g = _ghostDs(ds)
 					if not J.t(g): return
-					if J.t(stf): stf["post"] = null
-					p["staff"] = g.id; g["post"] = "street"; var gn = J.str(g.name)
+					if J.t(stf): J.sp(stf, "post", null)
+					p["staff"] = g.id; J.sp(g, "post", "street"); var gn = J.str(g.name)
 					_toast(T(gn + " 為「" + T(nmS[0], nmS[1]) + "」勵鬼加持！", gn + " 為「" + J.str(nmS[1]) + "」勵鬼加持！"))
 				close.call(); save_())
 	else:
@@ -3851,9 +3851,9 @@ static func tf_specialPick(Tf) -> void:
 				var nb = []
 				for x in J.iter(sd.bosses):
 					if not J.seq(x, g.id): nb.append(x)
-				sd["bosses"] = nb; g["post"] = null; var gn = J.str(g.name); _toast(T(gn + " 收工", gn + " 收工"))
+				sd["bosses"] = nb; J.sp(g, "post", null); var gn = J.str(g.name); _toast(T(gn + " 收工", gn + " 收工"))
 			elif J.len(sd.bosses) < J.num(D.BOSS_MAX):
-				sd.bosses.append(g.id); g["post"] = "boss:" + J.str(J.gp(J.gp(Tf, "def"), "id")); var gn = J.str(g.name); _toast(T("本圖已上場：" + gn, "本圖已上場：" + gn))
+				sd.bosses.append(g.id); J.sp(g, "post", "boss:" + J.str(J.gp(J.gp(Tf, "def"), "id"))); var gn = J.str(g.name); _toast(T("本圖已上場：" + gn, "本圖已上場：" + gn))
 			J.mc(el, "remove", []); save_())
 	J.sp(J.mc(el, "querySelector", ["#stp-x"]), "onclick", func(_t = null, _a = null): J.mc(el, "remove", []))
 	_el_close(el, _pnow())
@@ -4018,7 +4018,7 @@ static func tf_drawMouth(Tf, U, q, t) -> void:
 	var RG = _nw(IM[2]) * k0 * 0.9; var gr = c.createRadialGradient(cx, cy, 10, cx, cy, RG); gr.addColorStop(0, "rgba(90,255,120," + J.str(0.35 if open else 0.2) + ")"); gr.addColorStop(1, "rgba(40,120,60,0)"); c.fillStyle = gr; c.beginPath(); c.arc(cx, cy, RG, 0, 7); c.fill()
 	var drawF = func(i: int, al: float) -> void:
 		if al <= 0.01: return
-		var im = IM[i]; var w = _nw(im) * k0 * sc; var h = J.num(im.naturalHeight) * k0 * sc
+		var im = IM[i]; var w = _nw(im) * k0 * sc; var h = J.num(J.gp(im, "naturalHeight")) * k0 * sc
 		c.save(); c.globalAlpha *= al; c.translate(cx + sx, cy + sy); c.drawImage(im, -w / 2, -h / 2, w, h)
 		if i == 2:
 			var vx = (0.53 - 0.5) * w; var vy = (0.56 - 0.5) * h; var rx = w * 0.25; var ry = h * 0.19
@@ -4026,7 +4026,7 @@ static func tf_drawMouth(Tf, U, q, t) -> void:
 			var g2 = c.createRadialGradient(vx, vy, 2, vx, vy, rx); g2.addColorStop(0, "rgba(0,0,0,0.85)"); g2.addColorStop(0.5, "rgba(10,40,15,0.25)"); g2.addColorStop(1, "rgba(0,0,0,0)"); c.fillStyle = g2; c.beginPath(); c.ellipse(vx, vy, rx, ry, 0, 0, 7); c.fill()
 		c.restore()
 	drawF.call(fi, 1 - m); drawF.call(nx, m)
-	var im3 = IM[2]; var vxs = cx + sx + 0.03 * _nw(im3) * k0 * sc; var vys = cy + sy + 0.06 * J.num(im3.naturalHeight) * k0 * sc; U["mouthXY"] = [vxs, vys]
+	var im3 = IM[2]; var vxs = cx + sx + 0.03 * _nw(im3) * k0 * sc; var vys = cy + sy + 0.06 * J.num(J.gp(im3, "naturalHeight")) * k0 * sc; U["mouthXY"] = [vxs, vys]
 	if open:
 		var qq = (q - 0.24) / 0.38
 		for j in 26:
@@ -4050,7 +4050,7 @@ static func tf_drawMouth(Tf, U, q, t) -> void:
 		var px = vxs + (dx * cos(an) - dy * sin(an)) * r2; var py = vys + (dx * sin(an) + dy * cos(an)) * r2 * 0.8; var s2 = maxf(0.08, 1 - e * 0.9)
 		c.save(); c.globalAlpha = minf(1.0, (1 - e) * 4); c.translate(px, py); c.rotate(e * 9); c.scale(s2, s2); var im = _spr(J.gp(w, "spr")) if has("SPR") else null
 		if _nw(im) > 0 and not CHAR_H_OK(J.gp(w, "spr")):
-			var H = hh * 0.95; var ww = H * _nw(im) / J.num(im.naturalHeight); c.drawImage(im, -ww / 2, -H * 0.6, ww, H)
+			var H = hh * 0.95; var ww = H * _nw(im) / J.num(J.gp(im, "naturalHeight")); c.drawImage(im, -ww / 2, -H * 0.6, ww, H)
 		else: stDC(c, J.gp(w, "spr"), 0.0, hh * 0.4, hh / 69, {"t": t, "pose": "startle", "shadow": false})
 		c.restore()
 	if q > 0.8:
