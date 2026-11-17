@@ -2411,6 +2411,124 @@ static func tf_drawFg(Tf, F) -> void:
 	c.save(); c.filter = "brightness(0.92) saturate(0.9)"; c.drawImage(im, J.num(b.x) + J.num(F.r) * J.num(b.w) + J.num(it.x) * k, J.num(b.y) + J.num(it.y) * k, J.num(it.w) * k, J.num(it.h) * k); c.restore()
 const TF_4L := {"drawLongBg": 0, "drawProp": 1, "drawProps": 0, "drawObsFx": 0, "drawFg": 1}
 
+# 4m：路人對白 say、位移 wOff、路人圖 drawSprite、配件 drawAcc／drawSqAcc
+const SAY_CREW := [["邪魔外道，退散！", "邪魔外道，退散！"], ["邊個喺度搞鬼？", "誰在這裡搞鬼？"], ["家人們睇下，真係有嘢呀！", "家人們看，真的有東西！"]]
+const SAY_BIG := [["有鬼呀——！", "有鬼啊——！"], ["我唔玩喇！", "我不玩了！"], ["阿媽救命！", "媽媽救命！"], ["走呀走呀！", "快跑快跑！"], ["我以後唔夜返喇！", "我以後不晚歸了！"]]
+const SAY_SM := [["哇呀！", "哇啊！"], ["咩嚟㗎？", "什麼東西？"], ["唔好嚇我…", "不要嚇我…"], ["頭先係咪有嘢？", "剛剛是不是有東西？"], ["咦？好凍…", "咦？好冷…"]]
+static func tf_say(Tf, w, big) -> void:
+	var nw = _pnow(); big = J.t(big)
+	if J.t(J.gp(w, "say")) or (not big and nw - J.num(J.gp(w, "sayAt")) < 1800): return
+	w["sayAt"] = nw; var POOL
+	if J.t(J.gp(w, "crew")): POOL = SAY_CREW
+	elif J.t(J.gp(w, "p")) and J.t(J.gp(w.p, "big")) and randf() < 0.6: POOL = J.iter(w.p.big if big else w.p.re)
+	else: POOL = SAY_BIG if big else SAY_SM
+	var used = {}
+	for x in J.iter(J.gp(Tf, "walkers")):
+		if J.t(J.gp(x, "say")): used[J.str(x.say.s)] = true
+	var opts = []
+	for q in POOL:
+		if not used.has(T(q[0], q[1])): opts.append(q)
+	if opts.is_empty(): return
+	var q = pick(opts); w["say"] = {"s": T(q[0], q[1]), "t": 1.4 if big else 1.1}
+static func tf_wOff(Tf, w, U) -> Array:
+	U = J.num(U); var ox = 0.0; var oy = 0.0; var rot = 0.0; var t = _pnow() / 1000.0; var sdv = J.num(J.gp(w, "seed"))
+	if J.num(J.gp(w, "lost")) > 0: w["lost"] = J.num(w.lost) - 1 / 30.0; var a = t * 2.4 + sdv; ox += cos(a) * 14 * U; oy += sin(a) * 6 * U
+	var lf = J.gp(w, "lift")
+	if J.t(lf):
+		var k = J.num(lf.t) / J.num(lf.dur); var up = k / 0.25 if k < 0.25 else (maxf(0.0, 1 - (k - 0.9) / 0.1) if k > 0.9 else 1.0)
+		oy = -J.num(lf.h) * U * up; ox = sin(t * 9) * 4 * U * up; rot = sin(t * 7) * 0.25 * up + PI * up * 0.9
+	var fl = J.gp(w, "fly")
+	if J.t(fl):
+		var k = J.num(fl.t) / J.num(fl.dur)
+		ox = J.num(fl.dx) * J.num(J.gp(Tf, "box").w) * k
+		oy = -sin(k * PI) * 60 * U
+		rot = k * 4
+	var ch = J.gp(w, "chase")
+	if J.t(ch):
+		var k = J.num(ch.t) / J.num(ch.dur)
+		var e = sin(k * PI)
+		ox = sin(t * 2.6 + J.num(ch.ph)) * 70 * U * e
+		oy = cos(t * 3.1 + J.num(ch.ph)) * 30 * U * e
+	if J.t(J.gp(w, "act")) and J.t(J.gp(w.act, "rot")): rot += J.num(w.act.rot)
+	if J.seq(J.gp(w, "tr"), "drunk") and not J.t(J.gp(w, "gone")): ox += sin(t * 1.7 + sdv) * 9 * U; rot += sin(t * 1.3 + sdv) * 0.12
+	return [ox, oy, rot]
+static func _pbfoe(spr) -> bool:
+	var s = J.str(spr)
+	return s.begins_with("pb_") or s.begins_with("foe_")
+static func tf_drawSprite(Tf, im, w, H, pose, t, flip, react, U) -> void:
+	var c = J.gp(Tf, "c"); H = J.num(H); t = J.num(t); U = J.num(U); react = J.num(react); flip = J.t(flip); pose = J.str(pose)
+	var iw = J.num(im.naturalWidth); var ih = J.num(im.naturalHeight); var ww = H * iw / ih; var sdv = J.num(J.gp(w, "seed")); var ph = t * (J.num(w.spd) / J.num(D.PX) / 45) + sdv
+	var dy = 0.0; var rot = 0.0; var sx = 1.0; var sy = 1.0; var dx = 0.0
+	if pose == "move": dy = -absf(sin(ph * 3.2)) * 3.2 * U; rot = sin(ph * 3.2) * 0.045; sy = 1 - absf(sin(ph * 3.2)) * 0.02
+	elif pose == "run": dy = -absf(sin(ph * 5.5)) * 5 * U; rot = 0.16 + sin(ph * 5.5) * 0.06
+	elif pose == "startle": var k = react if react > 0 else 0.5; dy = -sin(k * PI) * H * 0.14; sx = 1.04; sy = 1.06; dx = (randf() - 0.5) * 3
+	elif pose == "cower": sy = 0.82; sx = 1.08; rot = 0.1
+	elif pose == "tremble": dx = (randf() - 0.5) * 4 * U; sy = 0.96
+	elif pose == "idle": sy = 1 + sin(t * 2 + sdv) * 0.012
+	if J.seq(J.gp(w, "tr"), "drunk") and pose == "move": rot += sin(t * 1.3 + sdv) * 0.08
+	c.save(); c.translate(dx, dy); c.rotate(-rot if flip else rot); c.scale((-1.0 if flip else 1.0) * sx, sy)
+	var NL = G("STN_AB_NOLEG")
+	if (pose == "move" or pose == "run") and _pbfoe(w.spr) and not (J.typeof_(NL) != "undefined" and J.t(J.gp(NL, w.spr))):
+		var lt = 0.76; var f2 = 5.5 if pose == "run" else 3.2; var sw = sin(ph * f2); var A = (0.08 if pose == "run" else 0.055) * H
+		for pr in [[1.0, -1.0], [0.0, 1.0]]:
+			var sd2 = pr[0]; var s2 = pr[1]; var lift = maxf(0.0, s2 * sw) * A
+			c.drawImage(im, sd2 * iw / 2, ih * lt, iw / 2, ih * (1 - lt), -ww / 2 + sd2 * ww / 2 + s2 * sw * ww * 0.035, -H + H * lt - lift, ww / 2 + 0.5, H * (1 - lt))
+		c.drawImage(im, 0, 0, iw, ih * lt + 1, -ww / 2, -H, ww, H * lt + H / ih)
+	else: c.drawImage(im, -ww / 2, -H, ww, H)
+	c.restore()
+	if J.seq(J.gp(w, "tr"), "torch") and not J.t(J.gp(w, "beam")) and not J.t(J.gp(w, "gone")):
+		var fs = -1.0 if flip else 1.0; var bx = fs * ww * 0.3; c.fillStyle = "rgba(255,240,170,0.16)"; c.beginPath(); c.moveTo(bx, -H * 0.45); c.lineTo(bx + fs * H * 0.7, -H * 0.6); c.lineTo(bx + fs * H * 0.7, -H * 0.2); c.closePath(); c.fill()
+static func tf_drawAcc(Tf, w, hh, t, U) -> void:
+	var c = J.gp(Tf, "c"); hh = J.num(hh); t = J.num(t); U = J.num(U); var a = J.str(J.gp(w.p, "acc")) if J.t(J.gp(w, "p")) else ""
+	if J.seq(J.gp(w, "gone"), "suck"): return
+	c.save(); c.lineWidth = 1.5; c.strokeStyle = "rgba(0,0,0,0.6)"
+	if a == "bag":
+		c.fillStyle = "#d23a2a"; c.fillRect(hh * 0.12, -hh * 0.42, hh * 0.18, hh * 0.2); c.strokeRect(hh * 0.12, -hh * 0.42, hh * 0.18, hh * 0.2); c.fillStyle = "#6ab04c"; c.beginPath(); c.ellipse(hh * 0.2, -hh * 0.44, hh * 0.07, hh * 0.04, 0.4, 0, 7); c.fill()
+	elif a == "headband":
+		c.fillStyle = "#ff5a5a"; c.fillRect(-hh * 0.13, -hh * 0.9, hh * 0.26, hh * 0.04); c.fillStyle = "rgba(180,220,255,0.7)"
+		for j in 2:
+			c.beginPath(); c.arc(hh * 0.15 + j * 4, -hh * 0.85 + sin(t * 6 + j) * 2, 1.6, 0, 7); c.fill()
+	elif a == "helmet":
+		c.fillStyle = "#ff8a1a"; c.beginPath(); c.arc(0, -hh * 0.86, hh * 0.15, 3.3, 6.1); c.fill(); c.stroke(); c.fillStyle = "#e83a6a"; c.fillRect(-hh * 0.32, -hh * 0.62, hh * 0.2, hh * 0.22); c.strokeRect(-hh * 0.32, -hh * 0.62, hh * 0.2, hh * 0.22)
+	elif a == "phone":
+		c.fillStyle = "#111"; c.fillRect(hh * 0.12, -hh * 0.55, hh * 0.07, hh * 0.12); c.fillStyle = "rgba(255,255,220,0.25)"; c.beginPath(); c.moveTo(hh * 0.18, -hh * 0.5); c.lineTo(hh * 0.6, -hh * 0.75); c.lineTo(hh * 0.6, -hh * 0.25); c.closePath(); c.fill()
+	elif a == "nursecap":
+		c.fillStyle = "#f4f4f4"; c.fillRect(-hh * 0.1, -hh * 0.98, hh * 0.2, hh * 0.07); c.strokeRect(-hh * 0.1, -hh * 0.98, hh * 0.2, hh * 0.07); c.fillStyle = "#d02020"; c.fillRect(-hh * 0.015, -hh * 0.97, hh * 0.03, hh * 0.05); c.fillRect(-hh * 0.035, -hh * 0.955, hh * 0.07, hh * 0.02)
+	elif a == "backpack":
+		c.fillStyle = "#3a6ab0"; c.fillRect(-hh * 0.28, -hh * 0.72, hh * 0.18, hh * 0.32); c.strokeRect(-hh * 0.28, -hh * 0.72, hh * 0.18, hh * 0.32); c.fillStyle = "#e8c040"; c.fillRect(-hh * 0.27, -hh * 0.5, hh * 0.16, hh * 0.04)
+	elif a == "durian":
+		c.fillStyle = "#9aa83a"; c.beginPath(); c.arc(hh * 0.22, -hh * 0.4, hh * 0.09, 0, 7); c.fill(); c.strokeStyle = "#5a6a1a"
+		for j in 8:
+			var an = j * 0.785; c.beginPath(); c.moveTo(hh * 0.22 + cos(an) * hh * 0.09, -hh * 0.4 + sin(an) * hh * 0.09); c.lineTo(hh * 0.22 + cos(an) * hh * 0.12, -hh * 0.4 + sin(an) * hh * 0.12); c.stroke()
+		c.strokeStyle = "rgba(200,210,120,0.35)"
+		for j in 3:
+			c.beginPath(); c.moveTo(hh * (0.2 + j * 0.05), -hh * 0.55 - j * 3); c.quadraticCurveTo(hh * (0.25 + j * 0.05), -hh * 0.7 + sin(t * 3 + j) * 3, hh * (0.2 + j * 0.05), -hh * 0.85); c.stroke()
+	elif a == "torch":
+		c.fillStyle = "#222"; c.fillRect(hh * 0.12, -hh * 0.52, hh * 0.14, hh * 0.05)
+		if not J.t(J.gp(w, "beam")): c.fillStyle = "rgba(255,250,200,0.18)"; c.beginPath(); c.moveTo(hh * 0.26, -hh * 0.5); c.lineTo(hh * 0.8, -hh * 0.65); c.lineTo(hh * 0.8, -hh * 0.3); c.closePath(); c.fill()
+	elif a == "heart":
+		c.fillStyle = "#ff6a9a"; var hy = -hh * 1.05 + sin(t * 3) * 2; c.beginPath(); c.arc(-3, hy, 3.2, 0, 7); c.arc(3, hy, 3.2, 0, 7); c.fill(); c.beginPath(); c.moveTo(-6, hy + 1); c.lineTo(0, hy + 7); c.lineTo(6, hy + 1); c.fill()
+	elif a == "bottle":
+		c.save(); c.translate(hh * 0.2, -hh * 0.42); c.rotate(0.5 + sin(t * 2) * 0.2); c.fillStyle = "#2a7a3a"; c.fillRect(-3, -10, 6, 14); c.fillRect(-1.5, -14, 3, 5); c.restore()
+	elif a == "tie":
+		c.fillStyle = "#c83a3a"; c.beginPath(); c.moveTo(0, -hh * 0.72); c.lineTo(-hh * 0.03, -hh * 0.55); c.lineTo(0, -hh * 0.5); c.lineTo(hh * 0.03, -hh * 0.55); c.closePath(); c.fill()
+	if J.num(J.gp(w, "flash")) > 0: c.fillStyle = "rgba(255,255,255," + _a(J.num(w.flash) / 0.25 * 0.8) + ")"; c.beginPath(); c.arc(hh * 0.2, -hh * 0.6, hh * 0.35, 0, 7); c.fill()
+	if J.num(J.gp(w, "calmFx")) > 0: c.fillStyle = "rgba(120,240,150," + _a(J.num(w.calmFx)) + ")"; c.font = "bold " + _px(10 * U) + " sans-serif"; c.textAlign = "center"; c.fillText("＋", 0, -hh * 1.1)
+	c.restore()
+	if J.t(J.gp(w, "p")) and not J.seq(J.gp(w.p, "id"), "office") and not J.t(J.gp(w, "crew")) and not J.t(J.gp(w, "gone")):
+		c.save(); var cam = J.gp(Tf, "cam"); var cz = J.num(J.gp(cam, "z")) if J.t(cam) else 0.0; var zf = 1 / (cz if cz != 0 else 1.0); var fs = 11 * zf
+		c.font = _px(fs) + " sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; var tw = J.num(J.gp(c.measureText(w.n), "width")) + 8 * zf; var ty = 8 * zf
+		c.fillStyle = "rgba(10,6,8,0.45)"; c.fillRect(-tw / 2, ty - fs * 0.6, tw, fs * 1.2); c.fillStyle = "rgba(234,219,191,0.9)"; c.fillText(w.n, 0, ty); c.restore()
+static func tf_drawSqAcc(Tf, w, hh, t) -> void:
+	var c = J.gp(Tf, "c"); hh = J.num(hh); t = J.num(t)
+	if not J.t(J.gp(w, "sqAcc")): return
+	c.save(); c.lineWidth = 1.5
+	if J.num(J.gp(w, "film")) > 0 and not J.t(J.gp(w, "gone")):
+		c.fillStyle = "#ff2a2a" if int(floor(t * 3)) % 2 else "#7a1010"; c.beginPath(); c.arc(-hh * 0.22, -hh * 1.12, hh * 0.04, 0, 7); c.fill()
+		c.font = "bold " + _px(hh * 0.14) + " sans-serif"; c.fillStyle = "#ffd0d0"; c.textAlign = "left"; c.fillText("REC", -hh * 0.16, -hh * 1.08)
+	c.fillStyle = D.SQUAD[J.str(w.sq.kind)].tag if J.t(J.gp(w, "sq")) else "#fff"; c.beginPath(); c.moveTo(-hh * 0.08, -hh * 1.32); c.lineTo(hh * 0.08, -hh * 1.32); c.lineTo(0, -hh * 1.22); c.closePath(); c.fill(); c.restore()
+const TF_4M := {"say": 2, "wOff": 2, "drawSprite": 8, "drawAcc": 4, "drawSqAcc": 3}
+
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -2440,5 +2558,5 @@ func run(_env) -> void:
 	load_data()
 	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I); tf_install(J.gp(SQ, "Turf"), TF_4J); tf_install(J.gp(SQ, "Turf"), TF_4K); tf_install(J.gp(SQ, "Turf"), TF_4L)
+	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I); tf_install(J.gp(SQ, "Turf"), TF_4J); tf_install(J.gp(SQ, "Turf"), TF_4K); tf_install(J.gp(SQ, "Turf"), TF_4L); tf_install(J.gp(SQ, "Turf"), TF_4M)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)
