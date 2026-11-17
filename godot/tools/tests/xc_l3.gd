@@ -536,6 +536,7 @@ func street_t4i(_t) -> void:
 			for m in grp: B[m] = N.turf_methods(grp)[m]
 		for X in [A, B]:
 			X["def"] = N.D.SITES[0]; X["walkers"] = []; X["fx"] = []; X["parts"] = []; X["dfx"] = []; X["shots"] = []; X["traces"] = []; X["caps"] = []; X.sd["wal"] = 600.0; X.sd["coins"] = 0.0; X.sd["hot"] = 0.0
+			X["q"] = {"st": "gap", "t": 999.0, "n": 0.0, "made": 0.0, "list": []}; X["eliteT"] = 99.0; X["bosses"] = []; X["rateT"] = 0.0; X["rateAcc"] = 0.0; X["sqPlan"] = null
 			J.mc(X, "buildPath", [])
 		trT["sd"] = A.sd
 		for r in 9:
