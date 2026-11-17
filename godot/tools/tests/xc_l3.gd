@@ -124,3 +124,80 @@ func street_crui(_t) -> void:
 	if JSON.stringify(J.gp(tr, "COL")) == JSON.stringify(J.gp(nat, "COL")): ok += 1
 	else: bad += 1; print("[xcheck-diff] CrUI.COL")
 	_report()
+
+# Recorder 指令簽名：物件（漸變等）用 class+instance id，兩邊一定唔同 → 拎走 id 只比類型
+static var _rid: RegEx = null
+static func _sig(X5, fn: Callable) -> Array:
+	if _rid == null: _rid = RegEx.new(); _rid.compile("([A-Za-z]+)-?[0-9]{5,}")
+	var out = []
+	for s in X5.rec_sig(fn): out.append(_rid.sub(s, "$1", true))
+	return out
+
+# ---- L3：street 第二段（DevFx）：每個類型×大細×時間×現身進度，原生 vs 轉譯各畫入 Recorder 比 ----
+# 轉譯版 J.G.Math 係空 {}：street.js 嘅 const sn = Math.sin 等別名變 null（網頁版正常）。對照時補返，令轉譯版等同網頁版
+static func math_fix() -> Dictionary:
+	var keep = J.G.get("Math")
+	J.G["Math"] = {"sin": func(_t, a): return sin(J.num(a[0])), "cos": func(_t, a): return cos(J.num(a[0])), "abs": func(_t, a): return absf(J.num(a[0])),
+		"sqrt": func(_t, a): return sqrt(J.num(a[0])), "floor": func(_t, a): return floorf(J.num(a[0])), "round": func(_t, a): return floorf(J.num(a[0]) + 0.5),
+		"min": func(_t, a): var m = INF; for v in a: m = minf(m, J.num(v)); return m, "max": func(_t, a): var m = -INF; for v in a: m = maxf(m, J.num(v)); return m,
+		"atan2": func(_t, a): return atan2(J.num(a[0]), J.num(a[1])), "hypot": func(_t, a): return Vector2(J.num(a[0]), J.num(a[1])).length(),
+		"random": func(_t, _a): return randf(), "pow": func(_t, a): return pow(J.num(a[0]), J.num(a[1])), "PI": PI}
+	return {"keep": keep}
+
+func street_devfx(_t) -> void:
+	mod = "street_devfx"
+	var mk = math_fix()
+	var X5 = load("res://tools/tests/xc_l5.gd")
+	var tr = load_trans("street", ["DevFx"]).DevFx
+	var nat = load("res://native/street.gd").mk_devfx()
+	for k in ["COL", "HEX", "KEY", "DUR"]:
+		if JSON.stringify(J.gp(tr, k)) == JSON.stringify(J.gp(nat, k)): ok += 1
+		else: bad += 1; print("[xcheck-diff] DevFx.", k)
+	var SPR = J.G.SPR; var nb = 0
+	var roles = ["trap", "puzzle", "slow", "scare", "aura", "throw", "nope"]
+	for role in roles:
+		for sz in [1.0, 2.0]:
+			var im = J.gp(SPR, "dv_%s_%d" % [role, int(sz)])
+			if im == null: im = J.gp(SPR, "dv_trap_1")
+			for t in [0.0, 1.37, 5.5, 12.91, 33.3]:
+				for E in [null, {"p": null, "k": null, "sc": 1.0}, {"p": 0.05, "k": null, "sc": 1.2}, {"p": 0.2, "k": null, "sc": 1.0}, {"p": 0.4, "k": null, "sc": 0.8}, {"p": 0.55, "k": null, "sc": 1.0}, {"p": 0.8, "k": null, "sc": 1.0}, {"p": 0.97, "k": null, "sc": 1.0}, {"p": 0.5, "k": "afu", "sc": 1.0}]:
+					var args = [im, role, sz, -40.0, -90.0, 80.0, 90.0, t, 3.0, E]
+					seed(int(t * 100) + 7); var a = _sig(X5, func(c): return J.mc(tr, "draw", [c] + args))
+					seed(int(t * 100) + 7); var b = _sig(X5, func(c): return J.mc(nat, "draw", [c] + args))
+					if a == b: ok += 1
+					else:
+						bad += 1; nb += 1
+						if nb <= 8:
+							var i = 0
+							while i < mini(a.size(), b.size()) and a[i] == b[i]: i += 1
+							var sa = a[i] if i < a.size() else "-"; var sb = b[i] if i < b.size() else "-"; var q = 0
+							while q < mini(sa.length(), sb.length()) and sa[q] == sb[q]: q += 1
+							print("[xcheck-diff] DevFx.draw %s sz%d t=%s E=%s n=%d/%d @%d ch%d\n tr =%s\n nat=%s" % [role, sz, t, JSON.stringify(E), a.size(), b.size(), i, q, sa.substr(maxi(0, q - 60), 200), sb.substr(maxi(0, q - 60), 200)])
+			for t in [0.0, 2.2, 7.7]:
+				for trig in [0.0, 0.5, 1.0]:
+					var args2 = [role, 10.0, 20.0, 60.0, 50.0, t, 2.0, trig, 1.5]
+					var a2 = _sig(X5, func(c): return J.mc(tr, "frame", [c] + args2)); var b2 = _sig(X5, func(c): return J.mc(nat, "frame", [c] + args2))
+					if a2 == b2: ok += 1
+					else: bad += 1; print("[xcheck-diff] DevFx.frame ", role, " ", t, " ", trig)
+	# emerge／trigOf：同一串 fx 變化
+	var pa = {"fx": null}; var pb = {"fx": null}
+	for i in 40:
+		var t = i * 0.13
+		if i % 9 == 2: pa["fx"] = "f%d" % i; pb["fx"] = "f%d" % i
+		if i == 20: pa["win"] = true; pb["win"] = true
+		if i == 30: pa["anim"] = 1.0; pb["anim"] = 1.0
+		var x1 = [J.mc(tr, "emerge", [pa, t]), J.mc(tr, "trigOf", [pa, t + 0.01])]; var x2 = [J.mc(nat, "emerge", [pb, t]), J.mc(nat, "trigOf", [pb, t + 0.01])]
+		if _near(_norm(x1), _norm(x2)): ok += 1
+		else: bad += 1; print("[xcheck-diff] emerge/trigOf i=%d tr=%s nat=%s" % [i, str(x1), str(x2)])
+	J.G["Math"] = mk.keep
+	for o in [{"alpha": 0.7, "t": 1.0}, {"rot": 0.3, "flip": true, "reach": 0.6, "t": 4.0}, {}]:
+		for f in ["shade"]:
+			var a3 = _sig(X5, func(c): return J.mc(tr, f, [c, 5.0, 100.0, 80.0, o])); var b3 = _sig(X5, func(c): return J.mc(nat, f, [c, 5.0, 100.0, 80.0, o]))
+			if a3 == b3: ok += 1
+			else:
+				bad += 1; var i3 = 0
+				while a3[i3] == b3[i3]: i3 += 1
+				var q3 = 0
+				while a3[i3][q3] == b3[i3][q3]: q3 += 1
+				print("[xcheck-diff] DevFx.shade %s @%d ch%d\n tr =%s\n nat=%s" % [o, i3, q3, a3[i3].substr(maxi(0, q3 - 60), 200), b3[i3].substr(maxi(0, q3 - 60), 200)])
+	_report()
