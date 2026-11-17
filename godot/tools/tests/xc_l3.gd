@@ -467,7 +467,7 @@ func _t4tick(mn: String, gn: Array) -> void:
 	for sid in ["office", "bus", "flat"]:
 		var pr = _tf_pair(trT, N, sid, 3.0); var A = pr[0]; var B = pr[1]; var tg = sid
 		for gk in gn:
-			var grp = N.get(gk)
+			var grp = {"TF_4B": N.TF_4B, "TF_4C": N.TF_4C, "TF_4D": N.TF_4D, "TF_4E": N.TF_4E}[gk]
 			for k in grp: B[k] = N.turf_methods(grp)[k]
 		var def = null
 		for d in N.D.SITES:
