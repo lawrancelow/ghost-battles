@@ -2018,6 +2018,96 @@ static func tf_gpCheck(Tf, oc) -> void:
 		if all: J.mc(Tf, "gpWarn", ["seal", T("有名鬼全部俾道士封咗", "有名鬼全部被道士封印"), nw])
 const TF_4H := {"obsTick": 1, "ambush": 1, "enter": 1, "useBox": 0, "wallFar": 1, "gpCheck": 1}
 
+# 4i：怨氣爆發（ULT）邏輯；畫面（drawUlt／drawUltNew／drawMouth）仍用轉譯版
+static func _live(Tf) -> Array:
+	var o = []
+	for w in J.iter(J.gp(Tf, "walkers")):
+		if tf_alive(Tf, w): o.append(w)
+	return o
+static func tf_startUlt(Tf, i) -> void:
+	var p = J.gp(J.gp(J.gp(Tf, "sd"), "posts"), J.num(i)); var g = ghost(J.gp(p, "g"))
+	if not J.t(g): return
+	p["en"] = 0.0; var nm = J.gp(J.gp(Tf, "ULT"), g.k)
+	if not J.t(nm): var s = J.str(g.name) + "・怨氣爆發"; nm = [s, s]
+	var sp = J.gp(J.gp(J.gp(Tf, "lay"), "posts"), J.num(i)); J.mc(Tf, "focusOn", [sp.x, sp.y])
+	if J.t(J.gp(Tf, "cam")): J.sp(Tf.cam, "user", 0.0)
+	J.sp(Tf, "ult", {"t": 0.0, "i": i, "k": g.k, "name": T(nm[0], nm[1]), "gname": g.name, "pw": power(g), "pm": _grow(g), "done": false, "fx": []}); J.sp(Tf, "shake", 0.5)
+	J.mc(Tf, "snd", ["scare"])
+static func tf_ultApply(Tf, U) -> void:
+	var live = _live(Tf); var P = J.num(D.BOSS_DMG) * J.num(_or(J.gp(U, "pm"), 1.0))
+	var me = {"x": U.pos[0], "y": U.pos[1]} if J.t(J.gp(U, "pos")) else J.gp(J.gp(J.gp(Tf, "lay"), "posts"), J.num(U.i))
+	J.sp(Tf, "shake", 0.6); J.sp(Tf, "flash", 0.18)
+	if tf_ultNew(Tf, U): return
+	var k = J.str(U.k)
+	match k:
+		"tianhua": pass
+		"pontianak":
+			for w in live: tf_hit(Tf, w, P * 10, null); w["t"] = maxf(0.01, J.num(w.t) - 0.12)
+		"eguiking", "egui":
+			var mx = maxf(0.25, minf(0.75, J.num(me.x))); var my = maxf(0.35, minf(0.8, J.num(me.y) + 0.15)); U["mouth"] = [mx, my]; var near = []
+			for w in live:
+				if tf_dist(tf_wp(Tf, w), U.mouth) < 0.55 and not J.t(J.gp(w, "crew")): near.append(w)
+			for w in near.slice(0, 6): w["suckFrom"] = tf_wp(Tf, w); w["hp"] = 0.0; tf_scared(Tf, w); w["gone"] = "suck"; w["suckT"] = 0.0; w["suckTo"] = [mx, my - 0.17]
+			for j in 3: tf_addTrace(Tf, "bowl", mx - 0.12 + j * 0.12, my + 0.05, 110.0, 6.0, {"by": "eguiking"})
+		"toyol":
+			var sd = J.gp(Tf, "sd")
+			for w in live:
+				if not J.t(J.gp(w, "crew")):
+					var c2 = tf_unit(Tf); _walAdd(Tf, c2); J.sp(sd, "coins", J.num(J.gp(sd, "coins")) + c2); var xy = tf_wp(Tf, w)
+					for j in 3: J.gp(Tf, "parts").append({"kind": "coin", "x": xy[0], "y": J.num(xy[1]) - 0.05, "life": 1 + j * 0.1, "k": -j * 0.1})
+				if J.num(w.hp) < J.num(w.max) * 0.6: tf_hit(Tf, w, J.num(w.hp) + 1, null)
+				else: w["react"] = 0.6
+		"laojiang": U["hop"] = 0.0
+		"xiaozhi", "zhiren":
+			for w in live: tf_hit(Tf, w, P * 7, null); w["block"] = 2.5; w["papers"] = 2.5
+		_:
+			for w in live: tf_hit(Tf, w, P * 8, null)
+static func tf_ultNew(Tf, U) -> bool:
+	var live = _live(Tf); var P = J.num(D.BOSS_DMG) * J.num(_or(J.gp(U, "pm"), 1.0)); var CELL = J.num(D.CELL); var k = J.str(U.k)
+	var trf = func(kind, r, life):
+		for w in live:
+			var p = tf_wp(Tf, w); tf_addTrace(Tf, kind, p[0], p[1], r, life, {"by": U.k})
+	match k:
+		"tianhua":
+			for w in live: w["lift"] = {"t": 0.0, "dur": 2.0, "h": 80 + randf() * 40}
+			var f2 = func():
+				for w in live:
+					if tf_alive(Tf, w): tf_hit(Tf, w, P * 6, {"force": true, "fright": 2.5})
+			_later(2100.0, f2)
+			trf.call("hair", 90.0, 7.0); return true
+		"pontianak":
+			for w in live: tf_react(Tf, w, pick(["scream", "kneel", "fall", "flee"])); tf_hit(Tf, w, P * 10, {"force": true})
+			trf.call("shadow", 80.0, 5.0); return true
+		"eguiking", "egui": return false
+		"toyol": U["vic"] = live.duplicate(); U["gust"] = 0.0; return true
+		"pocong":
+			U["vic"] = live.duplicate()
+			for w in live: w["block"] = 2.6; tf_act(Tf, w, pick(["startle", "cower", "tremble"]), 2.4, null); tf_hit(Tf, w, P * 6, {"force": true})
+			var f3 = func():
+				for w in live:
+					if tf_alive(Tf, w) and not tf_reroute(Tf, w): w["back"] = CELL * 2
+			_later(2400.0, f3)
+			trf.call("cloth", 80.0, 5.0); return true
+		"penanggal": U["vic"] = _ssort(live, func(w): return J.num(tf_wp(Tf, w)[0])); U["hitI"] = 0.0; return true
+		"mengpo": U["vic"] = live.duplicate(); U["river"] = 0.0; return true
+		"n30_yukionna":
+			for w in live: w["frost"] = 3.0; tf_act(Tf, w, "tremble", 3.0, null); tf_hit(Tf, w, P * 8, {"force": true})
+			trf.call("ice", 100.0, 8.0); return true
+		"n30_qionggui":
+			for w in live: tf_act(Tf, w, "cower", 3.2, null); w["target"] = 6.0; tf_hit(Tf, w, P * 6, {"force": true})
+			trf.call("notes", 90.0, 7.0); return true
+		"n30_guhangui":
+			for w in live:
+				tf_act(Tf, w, "tremble", 3.0, null)
+				if not J.t(J.gp(w, "el")): _walAdd(Tf, 2.0)
+				tf_hit(Tf, w, P * 7, {"force": true})
+			trf.call("clink", 90.0, 5.0); return true
+		"n30_taozhai":
+			for w in live: w["back"] = CELL * 3; tf_bump(Tf, w, 60.0); tf_hit(Tf, w, P * 7, {"force": true})
+			trf.call("debt", 80.0, 6.0); return true
+	return false
+const TF_4I := {"startUlt": 1, "ultApply": 1, "ultNew": 1}
+
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -2047,5 +2137,5 @@ func run(_env) -> void:
 	load_data()
 	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H)
+	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)

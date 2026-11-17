@@ -519,3 +519,31 @@ func _t4tick(mn: String, gn: Array) -> void:
 			if st % 10 == 9 or st < 5: _eq(tg + " tick %d" % st, [_tstate(A), A.shots, _qst(A.q), A.shake, _bst(A.bosses), A.get("bg")], [_tstate(B), B.shots, _qst(B.q), B.shake, _bst(B.bosses), B.get("bg")])
 		print("[xcheck-info] %s %s walkers=%d scared=%s leaked=%s" % [mn, sid, A.walkers.size(), A.sd.scared, A.sd.leaked])
 	_report()
+
+# ---- L3：street 4i（怨氣爆發 ultApply／ultNew）----
+static func _ust(U) -> Dictionary:
+	var o = U.duplicate(); var v = []
+	for w in J.iter(U.get("vic", [])): v.append(J.gp(w, "n"))
+	o["vic"] = v; return o
+func street_t4i(_t) -> void:
+	mod = "street_t4i"
+	var N = load("res://native/street.gd"); N.load_data()
+	var tr = _st_trans().Street; var trT = J.gp(tr, "Turf")
+	var GR = [N.TF_4B, N.TF_4C, N.TF_4D, N.TF_4E, N.TF_4F, N.TF_4G, N.TF_4H, N.TF_4I]
+	for k in ["tianhua", "pontianak", "eguiking", "egui", "toyol", "laojiang", "xiaozhi", "zhiren", "pocong", "penanggal", "mengpo", "n30_yukionna", "n30_qionggui", "n30_guhangui", "n30_taozhai", "zzz"]:
+		var pr = _tf_pair(trT, N, "office", 3.0); var A = pr[0]; var B = pr[1]
+		for grp in GR:
+			for m in grp: B[m] = N.turf_methods(grp)[m]
+		for X in [A, B]:
+			X["def"] = N.D.SITES[0]; X["walkers"] = []; X["fx"] = []; X["parts"] = []; X["dfx"] = []; X["shots"] = []; X["traces"] = []; X["caps"] = []; X.sd["wal"] = 600.0; X.sd["coins"] = 0.0; X.sd["hot"] = 0.0
+			J.mc(X, "buildPath", [])
+		trT["sd"] = A.sd
+		for r in 9:
+			seed(70 + r); var wa = J.mc(A, "newWalker", [null]); seed(70 + r); var wb = J.mc(B, "newWalker", [null]); wa.t = 0.05 + r * 0.06; wb.t = wa.t; A.walkers.append(wa); B.walkers.append(wb)
+		var Ua = {"t": 1.0, "i": 0.0, "k": k, "pm": 1.3, "done": true, "fx": []}; var Ub = Ua.duplicate(true)
+		seed(31); J.mc(A, "ultApply", [Ua]); seed(31); J.mc(B, "ultApply", [Ub])
+		_eq("ult " + k, [_tstate(A), _ust(Ua), A.shake, A.flash], [_tstate(B), _ust(Ub), B.shake, B.flash])
+		for st in 30:
+			seed(600 + st); J.mc(A, "tick", [0.05]); seed(600 + st); J.mc(B, "tick", [0.05])
+		_eq("ult " + k + " +tick", _tstate(A), _tstate(B))
+	_report()
