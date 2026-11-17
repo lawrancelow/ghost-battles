@@ -1242,6 +1242,110 @@ static func tf_sqEnd(Tf, sq, last) -> void:
 	J.F_setTimeout([func(_t, _a): J.mc(Tf, "sqPost", [sq, win, smooth, shot, siteN]); return null, 900.0 if win else 300.0])
 const TF_4C := {"sqWaveDone": 0, "sqMake": 1, "sqWalk": 2, "sqMember": 2, "sqEnd": 2}
 
+# 4d：每格邏輯 tick（裝置循環 devTick／排隊／Boss／痕跡／障礙／路人特效仍經方法表呼叫）
+static func tf_tick(Tf, dt) -> void:
+	dt = J.num(dt); var sd = J.gp(Tf, "sd"); var L = J.gp(Tf, "lay"); var LP = J.gp(L, "posts"); var parts = J.gp(Tf, "parts"); var SP = J.iter(J.gp(sd, "posts"))
+	J.mc(Tf, "queueTick", [dt])
+	for i in SP.size():
+		var p = SP[i]
+		if J.t(p) and J.num(J.gp(p, "build")) > 0:
+			p["build"] = J.num(p.build) - dt
+			if randf() < dt * 8:
+				var P0 = J.gp(LP, float(i)); var x = J.num(P0.x) + Rr(-0.04, 0.04); var y = J.num(P0.y) + Rr(-0.02, 0.03); var vx = Rr(-0.03, 0.03); var vy = Rr(-0.08, -0.03)
+				parts.append({"x": x, "y": y, "vx": vx, "vy": vy, "life": 0.9, "kind": "smoke"})
+			if J.num(p.build) <= 0: p["build"] = 0.0; _toast(T("建造完成！", "建造完成！"))
+	J.mc(Tf, "bossTick", [dt]); J.mc(Tf, "traceTick", [dt]); J.mc(Tf, "obsTick", [dt])
+	if has("StnFoes"): J.mc(G("StnFoes"), "update", [dt, Tf])
+	SP = J.iter(J.gp(sd, "posts"))
+	for i in SP.size():
+		var p = SP[i]
+		if J.t(p) and J.t(J.gp(p, "role")) and not (J.num(J.gp(p, "build")) > 0) and J.t(J.gp(LP, float(i))): J.sp(Tf, "_foeRole", p.role); J.mc(Tf, "devTick", [float(i), p, dt])
+	J.sp(Tf, "_foeRole", "throw")
+	var keep = []
+	for s in J.iter(J.gp(Tf, "shots")):
+		s["t"] = J.num(s.t) + dt / J.num(s.dur)
+		if J.num(s.t) >= 1:
+			var hs = []
+			for w in J.iter(J.gp(Tf, "walkers")):
+				if tf_alive(Tf, w) and tf_dist(tf_wp(Tf, w), s.to) <= J.num(s.eff): hs.append(w)
+			for w in hs: tf_hit(Tf, w, s.atk, {"src": "throw"})
+			for j in 10:
+				var vx = Rr(-0.18, 0.18); var vy = Rr(-0.3, -0.06); parts.append({"x": s.to[0], "y": J.num(s.to[1]) - 0.03, "vx": vx, "vy": vy, "life": 0.7, "kind": "shard"})
+		else: keep.append(s)
+	J.sp(Tf, "shots", keep)
+	for p in J.iter(J.gp(sd, "posts")):
+		if J.t(p) and J.t(J.gp(p, "fx")):
+			p.fx["t"] = J.num(p.fx.t) + dt
+			if J.num(p.fx.t) > 1.1: p["fx"] = null
+	for p in J.iter(J.gp(sd, "posts")):
+		if J.t(p) and J.num(J.gp(p, "auraOn")) > 0: p["auraOn"] = J.num(p.auraOn) - dt
+	for e in J.iter(_or(J.gp(Tf, "dfx"), [])): e["t"] = J.num(e.t) + dt
+	if J.num(J.gp(sd, "panic")) > 0: J.sp(sd, "panic", J.num(sd.panic) - dt)
+	if J.num(J.gp(sd, "badPress")) > 0: J.sp(sd, "badPress", J.num(sd.badPress) - dt)
+	var pk = []
+	for q in J.iter(parts):
+		q["life"] = J.num(q.life) - dt
+		if J.seq(J.gp(q, "kind"), "coin"): q["k"] = minf(1.0, J.num(J.gp(q, "k")) + dt * 1.4)
+		else: q["x"] = J.num(q.x) + J.num(q.vx) * dt; q["y"] = J.num(q.y) + J.num(q.vy) * dt; q["vy"] = J.num(q.vy) + 0.35 * dt
+		if J.num(q.life) > 0: pk.append(q)
+	J.sp(Tf, "parts", pk); parts = pk
+	for w in J.iter(J.gp(Tf, "walkers")):
+		if J.num(J.gp(w, "react")) > 0: w["react"] = J.num(w.react) - dt
+		if J.num(J.gp(w, "frost")) > 0: w["frost"] = J.num(w.frost) - dt
+		if J.num(J.gp(w, "fear")) > 0: w["fear"] = J.num(w.fear) - dt
+		if J.t(J.gp(w, "say")):
+			w.say["t"] = J.num(w.say.t) - dt
+			if J.num(w.say.t) <= 0: w["say"] = null
+	J.sp(Tf, "shake", maxf(0.0, J.num(J.gp(Tf, "shake")) - dt)); J.sp(Tf, "flash", maxf(0.0, J.num(J.gp(Tf, "flash")) - dt))
+	if randf() < dt * 3:
+		var SP2 = J.iter(J.gp(sd, "posts")); var q = -1
+		for i in SP2.size():
+			if J.t(SP2[i]) and J.num(J.gp(SP2[i], "auraOn")) > 0: q = i; break
+		if q >= 0:
+			var P0 = J.gp(LP, float(q)); var x = J.num(P0.x) + Rr(-0.1, 0.1); var y = J.num(P0.y) + Rr(-0.02, 0.1); var vx = Rr(-0.04, 0.04); var vy = Rr(-0.05, -0.01)
+			parts.append({"x": x, "y": y, "vx": vx, "vy": vy, "life": 1.4, "kind": "mist"})
+	var CELL = J.num(D.CELL)
+	for w in J.iter(J.gp(Tf, "walkers")):
+		var gone = J.gp(w, "gone")
+		if J.seq(gone, "suck"): w["suckT"] = J.num(J.gp(w, "suckT")) + dt; continue
+		if J.seq(gone, "run"): w["runT"] = J.num(J.gp(w, "runT")) + dt; continue
+		if J.t(J.gp(w, "sq")) and tf_sqWalk(Tf, w, dt): continue
+		if J.t(J.mc(Tf, "walkerFx", [w, dt])): continue
+		if J.num(J.gp(w, "spin")) > 0: w["spin"] = J.num(w.spin) - dt; continue
+		if J.num(J.gp(w, "stay")) > 0: w["stay"] = J.num(w.stay) - dt; continue
+		if J.num(J.gp(w, "block")) > 0: w["block"] = J.num(w.block) - dt; continue
+		if J.num(J.gp(w, "back")) > 0:
+			var sb = J.num(w.spd) * 1.3 * dt; w["t"] = maxf(0.01, J.num(w.t) - sb); w["back"] = J.num(w.back) - sb; w["rev"] = 0.3; continue
+		if J.num(J.gp(w, "rev")) > 0: w["rev"] = J.num(w.rev) - dt
+		var sg = tf_wseg(Tf, w); var hide = J.t(sg) and J.t(J.gp(sg, "hide"))
+		var sp = J.num(w.spd) * (4.0 if hide else 1.0) * (J.num(w.slowM) if J.num(J.gp(w, "slowT")) > 0 else 1.0) * J.num(_or(J.gp(w, "rushM"), 1.0))
+		w["slowT"] = J.num(J.gp(w, "slowT")) - dt
+		if J.num(w.slowT) <= 0: w["slowM"] = 1.0
+		w["t"] = J.num(w.t) + sp * dt
+		if J.num(w.t) > 0 and not hide:
+			var pos = tf_wp(Tf, w); var h = J.gp(w, "hist"); var lp = h[h.size() - 1] if h.size() else null
+			if not J.t(lp) or tf_dist(lp, pos) >= CELL:
+				h.append(pos)
+				if h.size() > 6: h.pop_front()
+		if J.num(w.t) >= J.num(w.len): w["gone"] = "out"; tf_leak(Tf, w)
+	J.sp(Tf, "_foeRole", null); var wk = []
+	for w in J.iter(J.gp(Tf, "walkers")):
+		var g = J.gp(w, "gone")
+		if not (J.seq(g, "out") or (J.seq(g, "run") and J.num(J.gp(w, "runT")) > 2.0) or (J.seq(g, "suck") and J.num(J.gp(w, "suckT")) > 1.1)): wk.append(w)
+	J.sp(Tf, "walkers", wk); var fk = []
+	for f in J.iter(J.gp(Tf, "fx")):
+		f["t"] = J.num(f.t) + dt
+		if J.num(f.t) < 1.2: fk.append(f)
+	J.sp(Tf, "fx", fk)
+	var s0 = st(); var nw = now_ms()
+	if J.num(J.gp(s0, "box")) < 1 and nw - J.num(J.gp(s0, "boxAt")) >= 20 * 60000: J.sp(s0, "box", 1.0)
+	if J.gp(s0, "tapE") == null: J.sp(s0, "tapE", 100.0)
+	if J.num(J.gp(s0, "tapE")) < 100 and nw - J.num(J.gp(s0, "tapAt")) >= 300000: J.sp(s0, "tapE", J.num(s0.tapE) + 1); J.sp(s0, "tapAt", now_ms())
+	J.sp(Tf, "rateT", J.num(J.gp(Tf, "rateT")) + dt)
+	if J.num(Tf.rateT) >= 60:
+		var r0 = J.gp(s0, "rate"); J.sp(s0, "rate", J.num(r0) * 0.6 + J.num(J.gp(Tf, "rateAcc")) * 0.4 if J.t(r0) else J.gp(Tf, "rateAcc")); J.sp(Tf, "rateAcc", 0.0); J.sp(Tf, "rateT", 0.0); J.sp(s0, "last", now_ms()); save_()
+const TF_4D := {"tick": 1}
+
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -1271,5 +1375,5 @@ func run(_env) -> void:
 	load_data()
 	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C)
+	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)
