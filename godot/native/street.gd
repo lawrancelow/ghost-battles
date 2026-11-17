@@ -2529,6 +2529,404 @@ static func tf_drawSqAcc(Tf, w, hh, t) -> void:
 	c.fillStyle = D.SQUAD[J.str(w.sq.kind)].tag if J.t(J.gp(w, "sq")) else "#fff"; c.beginPath(); c.moveTo(-hh * 0.08, -hh * 1.32); c.lineTo(hh * 0.08, -hh * 1.32); c.lineTo(0, -hh * 1.22); c.closePath(); c.fill(); c.restore()
 const TF_4M := {"say": 2, "wOff": 2, "drawSprite": 8, "drawAcc": 4, "drawSqAcc": 3}
 
+# 4n：主畫面 draw（範圍圈、建造格、設備、路人、崗位鬼、深度排序、拋物、粒子、浮字、閃光）
+static func _ghostDraw(c, k, x, y, sc, o) -> void:
+	if not has("ART"): return
+	var o2 = {"shadow": false}; _asgn(o2, o); J.mc(G("ART"), "drawChar", [c, k, x, y, sc, o2])
+static func _fxDraw(c, im, role, sz, x, y, w, h, t, i, E) -> void: fx_draw(c, im, role, sz, J.num(x), J.num(y), J.num(w), J.num(h), J.num(t), J.num(i), E)
+static func tf_draw(Tf) -> void:
+	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); var Wd = _iw(); var Hd = _ih(); var t = _pnow() / 1000.0; var L = J.gp(Tf, "lay"); var def = J.gp(Tf, "def")
+	var bx = J.num(b.x); var by = J.num(b.y); var bw = J.num(b.w); var bh = J.num(b.h); var PX = J.num(D.PX); var CELL = J.num(D.CELL)
+	c.fillStyle = "#0d0a14"; c.fillRect(0, 0, Wd, Hd)
+	c.save(); c.beginPath(); c.rect(bx, by, bw, bh); c.clip()
+	var shk = J.num(J.gp(Tf, "shake"))
+	if shk > 0:
+		var r1 = randf()
+		var r2 = randf()
+		c.translate((r1 - 0.5) * 10 * shk / 0.28, (r2 - 0.5) * 8 * shk / 0.28)
+	J.mc(Tf, "camStep", []); var cam = J.gp(Tf, "cam"); c.translate(bx + bw / 2, by + bh / 2); c.scale(cam.z, cam.z); c.translate(-(bx + J.num(cam.x) * bw), -(by + J.num(cam.y) * bh))
+	var lng = J.t(J.gp(L, "long"))
+	if lng: J.mc(Tf, "drawLongBg", [])
+	var bg = _spr(J.gp(L, "bg")) if not lng else null
+	if _nw(bg) > 0:
+		var hue = J.gp(def, "hue"); c.save(); c.filter = ("brightness(0.92) saturate(0.9)" if not J.t(hue) else "brightness(0.62) saturate(0.7) contrast(1.1)") + ((" hue-rotate(" + J.str(hue) + "deg)") if J.t(hue) else ""); c.drawImage(bg, bx, by, bw, bh); c.restore()
+	if not lng:
+		c.fillStyle = "rgba(20,40,40,0.12)" if not J.t(J.gp(def, "hue")) else "rgba(30,50,110,0.22)"; c.fillRect(bx, by, bw, bh)
+		var vg = c.createRadialGradient(bx + bw / 2, by + bh * 0.5, bw * 0.25, bx + bw / 2, by + bh * 0.5, bh * 0.62); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(5,0,15,0.78)"); c.fillStyle = vg; c.fillRect(bx, by, bw, bh)
+	var sd = J.gp(Tf, "sd"); var U = bw / 840.0; J.sp(Tf, "_bub", 0.0); var SP = J.iter(J.gp(sd, "posts")); var LP = J.iter(J.gp(L, "posts")); var bm = J.t(J.gp(Tf, "buildMode"))
+	for i in LP.size():
+		var s = LP[i]; var p = SP[i] if i < SP.size() else null
+		if not J.t(p) or not J.t(J.gp(p, "role")) or J.num(J.gp(p, "build")) > 0: continue
+		var role = J.str(p.role); var S0 = _devL(p.role, J.gp(p, "sz")); var xy = _P(Tf, s.x, s.y); var x = xy[0]; var y = xy[1]; var lvi = J.num(_or(J.gp(p, "lv"), 1.0))
+		var rr0 = 0.0
+		if role == "throw": rr0 = 0.0
+		elif role == "slow": rr0 = J.num(J.gp(J.gp(S0, "area"), lvi - 1)) * CELL * 0.85
+		else: rr0 = J.num(J.gp(S0, "eff" if role == "aura" else "check")) * PX
+		var rr = rr0 + CELL * (0.8 if J.num(J.gp(p, "sz")) == 2 else 0.5)
+		if rr == 0: continue
+		if (role == "aura" or role == "slow") and J.num(J.gp(p, "auraOn")) > 0:
+			var rg = c.createRadialGradient(x, y, 4, x, y, rr * bw); rg.addColorStop(0, "rgba(110,170,255,0.26)" if role == "slow" else "rgba(170,220,255,0.2)"); rg.addColorStop(1, "rgba(120,160,255,0)"); c.fillStyle = rg; c.beginPath(); c.ellipse(x, y, rr * bw, rr * bw / 1.5, 0, 0, 7); c.fill()
+		if J.t(J.gp(p, "win")) and role != "aura":
+			var re = (J.num(S0.eff) * PX + CELL * 0.5) * bw; var k = 1 - J.num(p.win.t) / (maxf(1.0, J.num(S0.dl)) / 60.0); c.strokeStyle = "rgba(255,120,90," + _a(0.7 * (1 - k)) + ")"; c.lineWidth = 3; c.beginPath(); c.ellipse(x, y, re * (0.6 + 0.4 * k), re * (0.6 + 0.4 * k) / 1.5, 0, 0, 7); c.stroke()
+		if bm or (J.seq(J.gp(Tf, "selPost"), float(i)) and _pnow() - J.num(J.gp(Tf, "selAt")) < 6000):
+			var cl = J.str(FX_COL.get(role, "")); var ra = rr * bw; c.fillStyle = "rgba(" + cl + ",0.1)"; c.strokeStyle = "rgba(" + cl + "," + _a(0.75 + 0.2 * sin(t * 4)) + ")"; c.lineWidth = 2.5; c.beginPath(); c.ellipse(x, y, ra, ra / 1.5, 0, 0, 7); c.fill(); c.stroke()
+			c.font = "bold " + _px(10 * U) + " sans-serif"; c.textAlign = "center"; c.fillStyle = "rgb(" + cl + ")"; c.fillText(T("射程", "射程"), x, y + ra / 1.5 - 4 * U)
+		c.strokeStyle = "rgba(190,160,255,0.16)"; c.setLineDash([3, 6]); c.lineWidth = 1.5; c.beginPath(); c.ellipse(x, y, rr * bw, rr * bw / 1.5, 0, t * 0.3, t * 0.3 + 6.283); c.stroke(); c.setLineDash([])
+	var GR = J.gp(L, "grid")
+	if J.t(GR):
+		for yy in 10:
+			for xx in 6:
+				var tt = J.num(J.mc(GR, "ty", [float(xx), float(yy)])); var px = bx + (J.num(GR.x0) + xx * J.num(GR.cw)) * bw; var py = by + (J.num(GR.y0) + yy * J.num(GR.ch)) * bh
+				if tt == 3 or tt == 4:
+					c.strokeStyle = "rgba(200,220,210,0.10)"
+					c.lineWidth = 1
+					c.strokeRect(px + 1, py + 1, J.num(GR.cw) * bw - 2, J.num(GR.ch) * bh - 2)
+	var mvF = J.gp(Tf, "moveFrom"); var walV = J.num(J.gp(sd, "wal"))
+	for i in LP.size():
+		var s = LP[i]; var p = SP[i] if i < SP.size() else null; var xy = _P(Tf, s.x, s.y); var x = xy[0]; var y = xy[1]; var q = tf_rect(Tf, s)
+		var x0 = bx + J.num(q[0]) * bw + 2; var y0 = by + J.num(q[1]) * bh + 2; var cw = (J.num(q[2]) - J.num(q[0])) * bw - 4; var ch = (J.num(q[3]) - J.num(q[1])) * bh - 4; var col = [168, 104, 200] if J.t(J.gp(s, "h")) else [214, 138, 58]; var cs = minf(cw, ch)
+		if mvF != null:
+			var A = LP[int(J.num(mvF))]
+			if i != int(J.num(mvF)) and J.seq(J.gp(A, "h"), J.gp(s, "h")) and J.num(_or(J.gp(A, "s"), 1.0)) == J.num(_or(J.gp(s, "s"), 1.0)): c.strokeStyle = "rgba(255,233,160," + _a(0.5 + 0.5 * sin(t * 6)) + ")"; c.lineWidth = 4; c.strokeRect(x0 - 3, y0 - 3, cw + 6, ch + 6)
+		if not J.t(p) or not J.t(J.gp(p, "role")):
+			if not bm: continue
+			var pu = 0.8 + 0.2 * sin(t * 2.5 + i); c.fillStyle = "rgba(" + str(col[0]) + "," + str(col[1]) + "," + str(col[2]) + "," + _a(0.62 * pu) + ")"; c.fillRect(x0, y0, cw, ch); c.setLineDash([6, 4]); c.strokeStyle = "rgba(255,240,210,0.9)"; c.lineWidth = 2; c.strokeRect(x0 + 2, y0 + 2, cw - 4, ch - 4); c.setLineDash([])
+			c.fillStyle = "#fff6e6"; c.textAlign = "center"; c.font = "900 " + _px(cs * 0.42) + " sans-serif"; c.lineWidth = 3; c.strokeStyle = "rgba(60,30,10,0.8)"; c.strokeText("+", x, y + cs * 0.08); c.fillText("+", x, y + cs * 0.08); c.font = "bold " + _px(cs * 0.2) + " sans-serif"
+			var lb = (T("2格・", "2格・") if J.num(J.gp(s, "s")) == 2 else "") + T("建造", "建造"); c.strokeText(lb, x, y + cs * 0.38); c.fillText(lb, x, y + cs * 0.38); continue
+		var role = J.str(p.role); var built = not (J.num(J.gp(p, "build")) > 0)
+		if built:
+			fx_frame(c, role, x0, y0, cw, ch, t, i, fx_trigOf(p, t), U)
+			if (role == "scare" or role == "trap") and J.t(tf_ambush(Tf, float(i))):
+				c.font = "bold " + _px(9 * U) + " sans-serif"; c.textAlign = "left"; c.lineWidth = 3; c.strokeStyle = "#000"; c.fillStyle = "#ffb060"; c.strokeText(T("埋伏", "埋伏"), x0 + 2 * U, y0 + 10 * U); c.fillText(T("埋伏", "埋伏"), x0 + 2 * U, y0 + 10 * U)
+		elif bm:
+			c.strokeStyle = "rgba(" + str(col[0]) + "," + str(col[1]) + "," + str(col[2]) + ",0.6)"
+			c.lineWidth = 2
+			c.strokeRect(x0, y0, cw, ch)
+		else:
+			c.fillStyle = "rgba(60,40,80,0.35)" if J.t(J.gp(s, "h")) else "rgba(80,60,30,0.35)"
+			c.beginPath()
+			c.ellipse(x, y + ch * 0.32, cw * 0.5, ch * 0.22, 0, 0, 7)
+			c.fill()
+		var cap = tf_lvCap(Tf); var lv = J.num(_or(J.gp(p, "lv"), 1.0)); var mx2 = lv >= 5; var lab = "MAX" if mx2 else "Lv" + J.str(lv); var ly = y0 - 34 * U
+		c.font = "900 " + _px(11 * U) + " sans-serif"; c.textAlign = "center"; c.lineWidth = 3; c.strokeStyle = "#000"; c.fillStyle = "#ffd45a" if mx2 else ("#f0c080" if lv >= cap else "#ffe9b0"); c.strokeText(lab, x, ly); c.fillText(lab, x, ly)
+		var M = J.mc(Tf, "staffMul", [p])
+		if not built:
+			var k = 1 - J.num(p.build) / (3.0 if lv > 1 else 5.0); c.fillStyle = "rgba(0,0,0,0.6)"; c.fillRect(x0, y0 - 14 * U, cw, 9 * U); c.fillStyle = "#7fd38f"; c.fillRect(x0, y0 - 14 * U, cw * maxf(0.0, k), 9 * U)
+			c.fillStyle = "#fff"; c.font = "bold " + _px(10 * U) + " sans-serif"; c.textAlign = "left"; c.fillText(T("招魂中…", "招魂中…"), x0, y0 - 18 * U)
+		elif role == "puzzle" and J.gp(p, "ph") != null:
+			var L0 = J.gp(J.gp(_devL("puzzle", J.gp(p, "sz")), "lv"), lv - 1); var mx = J.num(L0[1]) * J.num(M.hp); var sv = J.num(J.gp(p, "solved")); var kk = (1 - sv / J.num(L0[4])) if sv > 0 else maxf(0.0, J.num(p.ph)) / mx
+			c.fillStyle = "rgba(0,0,0,0.7)"; c.fillRect(x0, y0 + ch - 9 * U, cw, 7 * U); c.fillStyle = "#6a6a7a" if sv > 0 else "#c084ff"; c.fillRect(x0, y0 + ch - 9 * U, cw * kk, 7 * U)
+			c.font = "bold " + _px(10 * U) + " sans-serif"; c.textAlign = "center"; c.fillStyle = "#bbb" if sv > 0 else "#f0dcff"; c.lineWidth = 3; c.strokeStyle = "#000"
+			var cs2 = J.str(ceilf(sv)); var tx2 = T("重置 " + cs2 + "秒", "重置 " + cs2 + "秒") if sv > 0 else J.str(maxf(0.0, J.round(J.num(p.ph)))) + "/" + J.str(J.round(mx)); c.strokeText(tx2, x, y0 + ch - 12 * U); c.fillText(tx2, x, y0 + ch - 12 * U)
+		elif role != "aura" and role != "slow" and not J.t(J.gp(p, "win")) and J.gp(p, "anim") == null:
+			var L0 = J.gp(J.gp(_devL(p.role, J.gp(p, "sz")), "lv"), lv - 1); var k = minf(1.0, J.num(J.gp(p, "cd")) / (J.num(L0[3]) * J.num(M.cd)))
+			if k < 1:
+				c.fillStyle = "rgba(0,0,0,0.6)"
+				c.fillRect(x0, y0 + ch - 6 * U, cw, 4 * U)
+				c.fillStyle = "#e8c070"
+				c.fillRect(x0, y0 + ch - 6 * U, cw * k, 4 * U)
+		if bm:
+			c.fillStyle = "rgba(20,20,24,0.8)"
+			c.fillRect(x0, y0 - 2, 30 * U, 14 * U)
+			c.fillStyle = "#ffe9b0"
+			c.font = "bold " + _px(10 * U) + " sans-serif"
+			c.textAlign = "left"
+			c.fillText("Lv" + J.str(lv), x0 + 3 * U, y0 + 9 * U)
+		if J.gp(p, "staff") != null:
+			var nm2 = J.t(J.gp(M, "named")); c.strokeStyle = ("rgba(255,212,90," + _a(0.6 + 0.3 * sin(t * 4)) + ")") if nm2 else "rgba(158,240,176,0.7)"; c.lineWidth = 3; c.strokeRect(x0 - 2, y0 - 2, cw + 4, ch + 4)
+			c.fillStyle = "#ffd45a" if nm2 else "#9ef0b0"; c.font = "bold " + _px(9 * U) + " sans-serif"; c.textAlign = "right"; c.fillText(T("加持", "加持") + ("★" if nm2 else ""), x0 + cw - 2, y0 + ch - 3); c.textAlign = "left"
+		if J.num(J.gp(p, "blind")) > 0:
+			p["blind"] = J.num(p.blind) - 1 / 30.0; c.fillStyle = "rgba(0,0,0,0.6)"; c.fillRect(x0, y0 + ch * 0.35, cw, 14 * U); c.fillStyle = "#ffb0a0"; c.font = "bold " + _px(9.5 * U) + " sans-serif"; c.textAlign = "center"; c.fillText(T("視線被擋", "視線被擋"), x0 + cw / 2, y0 + ch * 0.35 + 10.5 * U); c.textAlign = "left"
+		if J.num(J.gp(p, "stun")) > 0:
+			c.fillStyle = "rgba(255,250,200,0.35)"; c.fillRect(x0, y0, cw, ch); c.fillStyle = "#fff3b0"; c.font = "bold " + _px(9.5 * U) + " sans-serif"; c.textAlign = "center"; c.fillText(T("被照住", "被照住"), x0 + cw / 2, y0 + ch * 0.6); c.textAlign = "left"
+		var uc = tf_upCost(Tf, p)
+		if walV >= J.num(uc) and built:
+			c.fillStyle = "#e8303a"
+			c.beginPath()
+			c.arc(x0 + cw - 4 * U, y0 + 2 * U, 5 * U, 0, 7)
+			c.fill()
+			c.strokeStyle = "#fff"
+			c.lineWidth = 1.5
+			c.stroke()
+	J.mc(Tf, "drawProps", []); J.mc(Tf, "drawTraces", []); J.mc(Tf, "drawObsFx", [])
+	var NU = J.num(G("NPC_UNIT")) if has("NPC_UNIT") else 69.0; var hh = bh * 0.042; var hhP = hh * J.num(D.PPL)
+	var ult = J.gp(Tf, "ult"); var list = []
+	for w in J.iter(J.gp(Tf, "walkers")):
+		var gone = J.gp(w, "gone")
+		if not (J.num(w.t) >= 0 and (J.t(gone) or not J.t(J.gp(tf_wseg(Tf, w), "hide"))) and not (J.seq(gone, "suck") and J.t(ult) and J.t(J.gp(ult, "mouth")))): continue
+		var wp0 = tf_wp(Tf, w); var xy = _P(Tf, wp0[0], wp0[1]); var x = xy[0]; var y = xy[1]
+		if J.seq(gone, "suck"):
+			var e = minf(1.0, J.num(w.suckT) / 1.0); var e2 = e * e; var a0 = _P(Tf, w.suckFrom[0], w.suckFrom[1]); var mxy = J.gp(ult, "mouthXY") if J.t(ult) else null
+			var t2 = mxy if J.t(mxy) else _P(Tf, w.suckTo[0], w.suckTo[1]); var tx2 = J.num(t2[0]); var ty2 = J.num(t2[1]); var r2 = 1 - e2; var an = e * PI * 3; var dx = a0[0] - tx2; var dy = a0[1] - ty2
+			x = tx2 + (dx * cos(an) - dy * sin(an)) * r2; y = ty2 + (dx * sin(an) + dy * cos(an)) * r2 * 0.8
+		if not J.t(gone):
+			var of = tf_wOff(Tf, w, U)
+			x += of[0]
+			y += of[1]
+			w["_rot"] = of[2]
+		else: w["_rot"] = 0.0
+		list.append([y, w, x])
+	list = _ssort(list, func(a): return a[0])
+	var ctx = {"c": c, "b": b, "U": U, "t": t, "hhP": hhP, "hh": hh, "NU": NU, "sd": sd}
+	var items = []
+	for it in list: items.append([it[0], 0, it[1], it[2]])
+	for i in LP.size():
+		var s = LP[i]; var p = SP[i] if i < SP.size() else null
+		if not J.t(p) or J.gp(p, "g") == null: continue
+		var hd = J.mc(Tf, "fgHold", [s]); var yA = (by + J.num(tf_rect(Tf, s)[3]) * bh) if J.t(J.gp(p, "role")) else _P(Tf, s.x, s.y)[1]
+		items.append([maxf(yA, (by + J.num(hd.fy) * bh + 0.5) if J.t(hd) else 0.0), 1, s, i])
+	for o in J.iter(_or(J.gp(L, "obs"), [])):
+		if J.t(J.gp(o, "prop")) and not J.seq(J.gp(o, "t"), "p") and not J.seq(J.gp(o, "t"), "e"): items.append([by + J.num(o.y1) * bh, 2, o])
+	for F in J.iter(J.mc(Tf, "fgList", [])): items.append([by + J.num(F.fy) * bh, 3, F])
+	items = _ssort2(items)
+	var hidW = []
+	for it in items:
+		if it[1] == 0 and not J.t(J.gp(it[2], "gone")) and J.t(J.mc(Tf, "fgCover", [(J.num(it[3]) - bx) / bw, (J.num(it[0]) - by) / bh])): it.append(1); hidW.append(it)
+	for it in items:
+		if it[1] == 0: _drawW(Tf, ctx, it[0], it[2], it[3], "body" if it.size() > 4 else "")
+		elif it[1] == 1: _drawPost(Tf, ctx, it[2], it[3])
+		elif it[1] == 2: J.mc(Tf, "drawProp", [it[2]])
+		else: J.mc(Tf, "drawFg", [it[2]])
+	for it in hidW: _drawW(Tf, ctx, it[0], it[2], it[3], "ghost")
+	if has("StnFoes"): J.mc(G("StnFoes"), "draw", [c, Tf])
+	for w in J.iter(J.gp(Tf, "walkers")):
+		if J.t(J.gp(w, "beam")) and not J.t(J.gp(w, "gone")):
+			var sp = J.gp(J.gp(L, "posts"), w.beam.i)
+			if not J.t(sp): continue
+			var wp1 = tf_wp(Tf, w); var a1 = _P(Tf, wp1[0], wp1[1]); var b1 = _P(Tf, sp.x, sp.y); var g2 = c.createLinearGradient(a1[0], a1[1] - hh * 0.5, b1[0], b1[1])
+			g2.addColorStop(0, "rgba(255,250,200,0.75)"); g2.addColorStop(1, "rgba(255,250,200,0.1)"); c.fillStyle = g2; c.beginPath(); c.moveTo(a1[0], a1[1] - hh * 0.5); c.lineTo(b1[0] - 22 * U, b1[1] - 14 * U); c.lineTo(b1[0] + 22 * U, b1[1] + 14 * U); c.closePath(); c.fill()
+	J.mc(Tf, "drawSpecial", [])
+	J.mc(Tf, "drawDfx", [U, hhP, t])
+	var Bl = J.gp(Tf, "blown")
+	if J.t(Bl):
+		Bl["t"] = J.num(Bl.t) + 1 / 30.0; var bxy = _P(Tf, Bl.x, Bl.y)
+		if J.t(J.gp(Bl, "k")): _ghostDraw(c, Bl.k, bxy[0] + J.num(Bl.t) * 120 * U, bxy[1] - J.num(Bl.t) * 160 * U, hh / 60 * (1 - J.num(Bl.t) * 0.5), {"t": t, "pose": "startle", "alpha": maxf(0.0, 1 - J.num(Bl.t)), "rot": J.num(Bl.t) * 6, "flip": false})
+		if J.num(Bl.t) > 1: J.sp(Tf, "blown", null)
+	for s2 in J.iter(J.gp(Tf, "shots")):
+		if J.num(s2.t) < 0: continue
+		var a1 = _P(Tf, s2.from[0], s2.from[1]); var b1 = _P(Tf, s2.to[0], s2.to[1]); var k = J.num(s2.t); var ax = a1[0]; var ay = a1[1]; var bx1 = b1[0]; var by1 = b1[1]
+		c.save(); c.translate(ax + (bx1 - ax) * k, ay + (by1 - ay) * k - sin(k * 3.14) * (90.0 if J.t(J.gp(s2, "hi")) else 50.0) * U); c.rotate(k * 10); c.fillStyle = "#efe5cc"; c.strokeStyle = "#2e4a86"; c.lineWidth = 1.5
+		c.beginPath(); c.ellipse(0, 0, 9 * U, 5 * U, 0, 0, PI); c.closePath(); c.fill(); c.stroke(); c.beginPath(); c.ellipse(0, 0, 9 * U, 2.4 * U, 0, 0, 7); c.fillStyle = "#d8ccb0"; c.fill(); c.stroke(); c.restore()
+		c.strokeStyle = "rgba(242,234,210,0.25)"; c.lineWidth = 2; c.beginPath()
+		for j in 9:
+			var kk = k * j / 8.0; var px = ax + (bx1 - ax) * kk; var py = ay + (by1 - ay) * kk - sin(kk * 3.14) * 50 * U
+			if j: c.lineTo(px, py)
+			else: c.moveTo(px, py)
+		c.stroke()
+	var coinEl = _q("#stt-coin"); var cr = J.mc(coinEl, "getBoundingClientRect", []) if J.t(coinEl) else {"left": Wd - 60, "top": 20.0, "width": 40.0, "height": 20.0}
+	var ccx = J.num(cr.left) + J.num(cr.width) / 2; var ccy = J.num(cr.top) + J.num(cr.height) / 2
+	for q in J.iter(J.gp(Tf, "parts")):
+		var kd = J.str(J.gp(q, "kind"))
+		if kd == "coin": continue
+		var pxy = _P(Tf, q.x, q.y); var px = pxy[0]; var py = pxy[1]; var al = minf(1.0, J.num(q.life))
+		if kd == "mist":
+			var rg = c.createRadialGradient(px, py, 1, px, py, 18 * U); rg.addColorStop(0, "rgba(200,225,255," + _a(0.25 * al) + ")"); rg.addColorStop(1, "rgba(200,225,255,0)"); c.fillStyle = rg; c.beginPath(); c.arc(px, py, 18 * U, 0, 7); c.fill()
+		elif kd == "smoke":
+			var rg = c.createRadialGradient(px, py, 1, px, py, 16 * U); rg.addColorStop(0, "rgba(235,235,235," + _a(0.55 * al) + ")"); rg.addColorStop(1, "rgba(235,235,235,0)"); c.fillStyle = rg; c.beginPath(); c.arc(px, py, 16 * U, 0, 7); c.fill()
+		elif kd == "shard":
+			c.save(); c.translate(px, py); c.rotate(J.num(q.life) * 12 + J.num(q.x) * 90); c.fillStyle = "rgba(" + ("60,90,160" if fmod(J.num(q.x) * 1e4, 3.0) < 1 else "240,232,212") + "," + _a(al) + ")"
+			c.beginPath(); c.moveTo(0, -4 * U); c.lineTo(4 * U, 3 * U); c.lineTo(-3 * U, 3 * U); c.closePath(); c.fill(); c.restore()
+		elif kd == "soul": c.fillStyle = "rgba(190,170,255," + _a(al) + ")"; c.beginPath(); c.arc(px, py, 3 * U, 0, 7); c.fill()
+		else:
+			c.fillStyle = "rgba(242,234,210," + _a(al) + ")"
+			c.fillRect(px - 3 * U, py - 2 * U, 6 * U, 4 * U)
+	c.textAlign = "center"
+	for f in J.iter(J.gp(Tf, "fx")):
+		var fxy = _P(Tf, f.x, f.y); c.globalAlpha = maxf(0.0, 1 - J.num(f.t) / 1.2); c.font = "bold " + _px(15 * U) + " sans-serif"; c.lineWidth = 4; c.strokeStyle = "#1a0f08"; c.strokeText(f.s, fxy[0], fxy[1] - J.num(f.t) * 30); c.fillStyle = f.col; c.fillText(f.s, fxy[0], fxy[1] - J.num(f.t) * 30)
+	if J.t(J.gp(Tf, "ult")): J.mc(Tf, "drawUltScene", [])
+	J.mc(Tf, "drawCaps", [])
+	c.globalAlpha = 1; c.restore()
+	var tn = J.gp(Tf, "tint")
+	if J.t(tn):
+		c.fillStyle = tn.col
+		c.globalAlpha = minf(1.0, J.num(tn.t) / 0.4)
+		c.fillRect(0, 0, Wd, Hd)
+		c.globalAlpha = 1
+	for q in J.iter(J.gp(Tf, "parts")):
+		if not J.seq(J.gp(q, "kind"), "coin") or J.num(J.gp(q, "k")) < 0: continue
+		var pxy = _P(Tf, q.x, q.y); var sxy = tf_toScreen(Tf, pxy[0], pxy[1]); var sx = J.num(sxy[0]); var sy = J.num(sxy[1]); var kq = J.num(q.k); var e = kq * kq
+		var px = sx + (ccx - sx) * e; var py = sy + (ccy - sy) * e - sin(kq * PI) * 60 * U; c.fillStyle = "#ffd45a"; c.strokeStyle = "#7a4a10"; c.lineWidth = 1.5; c.beginPath(); c.ellipse(px, py, 6 * U * absf(cos(t * 9 + J.num(q.x) * 50)) + 1, 6 * U, 0, 0, 7); c.fill(); c.stroke()
+	var fl = J.num(J.gp(Tf, "flash"))
+	if fl > 0:
+		c.fillStyle = "rgba(255,255,255," + _a(fl / 0.18 * 0.55) + ")"
+		c.fillRect(0, 0, Wd, Hd)
+static func _ssort2(items: Array) -> Array:
+	var o = items.duplicate()
+	for i in range(1, o.size()):
+		var v = o[i]; var j = i - 1
+		while j >= 0 and (J.num(o[j][0]) > J.num(v[0]) or (J.num(o[j][0]) == J.num(v[0]) and o[j][1] > v[1])): o[j + 1] = o[j]; j -= 1
+		o[j + 1] = v
+	return o
+static func _drawW(Tf, X, y0, w, x0, mode: String) -> void:
+	var c = X.c; var b = X.b; var U = X.U; var t = X.t; var hh = X.hhP; var NU = X.NU
+	var x = J.num(x0); var y = J.num(y0); var a = 1.0; var gone = J.gp(w, "gone"); var run = J.seq(gone, "run"); var suck = J.seq(gone, "suck")
+	if run: a = 1.0 if J.num(w.runT) < 1.5 else maxf(0.0, 1 - (J.num(w.runT) - 1.5) / 0.5)
+	var ssc = maxf(0.05, 1 - J.num(w.suckT)) if suck else 1.0
+	var react = J.num(w.react) / 0.6 if J.num(J.gp(w, "react")) > 0 else 0.0; var lift = sin(react * PI) * hh * 0.35; var spin = J.num(J.gp(w, "spin")) > 0
+	var right = false
+	if run:
+		var rp = J.gp(w, "runPath"); right = ((J.num(rp[1][0]) - J.num(rp[0][0])) if (J.t(rp) and J.len(rp) > 1) else 0.0) < 0
+	else: right = (J.num(tf_wp(Tf, w, 0.01)[0]) - J.num(tf_wp(Tf, w)[0])) >= 0
+	var gh2 = mode == "ghost"; c.save(); c.globalAlpha = a * (0.34 if gh2 else 1.0)
+	if not gh2:
+		c.fillStyle = "rgba(0,0,0,0.4)"
+		c.beginPath()
+		c.ellipse(x, y, hh * 0.24, hh * 0.06, 0, 0, 7)
+		c.fill()
+	if not gh2 and J.num(J.gp(w, "frost")) > 0:
+		c.strokeStyle = "rgba(140,200,255,0.9)"; c.lineWidth = 2
+		for j in 3:
+			c.beginPath(); c.ellipse(x, y - hh * (0.2 + j * 0.25), hh * 0.3, hh * 0.07, 0, t * 2 + j, t * 2 + j + 4.5); c.stroke()
+	if spin:
+		for j in 4:
+			var ang = t * 3 + j * 1.57; var rx = x + cos(ang) * hh * 0.7; var ry = y - hh * 0.4 + sin(ang) * hh * 0.25; c.fillStyle = "rgba(120,80,170,0.35)"; c.fillRect(rx - hh * 0.12, ry - hh * 0.45, hh * 0.24, hh * 0.7)
+	c.translate(x + ((randf() - 0.5) * 3 if react != 0 else 0.0), y - lift)
+	if suck:
+		c.scale(ssc, ssc)
+		c.rotate(J.num(w.suckT) * 8)
+	if spin: c.scale(1.0 if cos(t * 9) >= 0 else -1.0, 1)
+	if J.num(J.gp(w, "_rot")) != 0: c.translate(0, -hh * 0.4); c.rotate(w._rot); c.translate(0, hh * 0.4)
+	if J.num(J.gp(w, "hair")) > 0 and not gh2: w["hair"] = J.num(w.hair) - 1 / 30.0
+	if run and J.gp(w, "fall") == null: w["fall"] = randf() < 0.35
+	var falling = run and J.t(J.gp(w, "fall")) and J.num(w.runT) < 0.45
+	var pose = ""
+	if suck: pose = "startle"
+	elif falling: pose = "cower"
+	elif run: pose = "run"
+	elif react > 0:
+		if not J.t(J.gp(w, "weak2")): w["weak2"] = "tremble" if randf() < 0.4 else "startle"
+		pose = J.str(w.weak2)
+	elif J.t(J.gp(w, "act")): pose = J.str(w.act.pose)
+	elif J.t(J.gp(w, "lift")) or J.t(J.gp(w, "fly")): pose = "startle"
+	elif J.t(J.gp(w, "chase")): pose = "run"
+	elif J.num(J.gp(w, "stay")) > 0: pose = "startle"
+	elif J.num(J.gp(w, "block")) > 0: pose = "cower"
+	elif J.num(J.gp(w, "back")) > 0: pose = "run"
+	elif J.num(J.gp(w, "fear")) > 0: pose = "tremble"
+	else: pose = "move"
+	var face = "t" if (run or react > 0) else ("n" if J.seq(gone, "out") else null)
+	if J.t(J.gp(w, "tint")): c.filter = w.tint
+	if gh2: c.filter = "brightness(0) invert(1) sepia(1) hue-rotate(150deg) saturate(4)"
+	var flp = right if (run or J.num(J.gp(w, "back")) > 0 or J.num(J.gp(w, "rev")) > 0) else not right
+	var ok = J.t(J.gp(w, "foe")) and has("StnFoes") and J.t(J.mc(G("StnFoes"), "drawBody", [c, w, hh, t, {"flip": flp}]))
+	if not ok and has("ART") and CHAR_H_OK(J.gp(w, "spr")):
+		if not J.t(J.gp(w, "seed")): w["seed"] = randf() * 9
+		var hold = J.t(J.gp(w, "act")) and J.t(J.gp(w.act, "hold"))
+		J.mc(G("ART"), "drawChar", [c, w.spr, 0.0, 0.0, hh / NU, {"t": t + J.num(w.seed), "pose": pose, "pt": (1 - react) if react != 0 else 0.0, "face": face, "walk": react == 0 and not (J.num(J.gp(w, "stay")) > 0) and not (J.num(J.gp(w, "block")) > 0) and not hold, "flip": flp, "shadow": false}]); ok = true
+	if not ok:
+		var im = _spr(J.gp(w, "spr"))
+		if _nw(im) > 0: tf_drawSprite(Tf, im, w, hh * (0.92 if _pbfoe(w.spr) else 1.06), pose, t, flp, react, U)
+	c.filter = "none"; c.globalAlpha = a; J.mc(Tf, "drawAcc", [w, hh, t, U])
+	if J.t(J.gp(w, "sqAcc")): J.mc(Tf, "drawSqAcc", [w, hh, t])
+	c.restore()
+	if mode == "body": return
+	c.save(); c.globalAlpha = a
+	var crew = J.gp(w, "crew")
+	if J.t(crew):
+		c.font = "bold " + _px(11 * U) + " sans-serif"; c.textAlign = "center"; c.lineWidth = 3; c.strokeStyle = "#000"; c.strokeText(w.n, x, y - hh - 16 * U); c.fillStyle = crew.tag; c.fillText(w.n, x, y - hh - 16 * U)
+		var af = J.gp(w, "atkFx")
+		if J.t(af):
+			var P0 = J.gp(J.gp(J.gp(Tf, "lay"), "posts"), af.i); var pxy = _P(Tf, P0.x, P0.y); var px = pxy[0]; var py = pxy[1]; var k = 1 - J.num(af.t) / 0.6; var cn = J.str(crew.n)
+			if cn == "天師":
+				for j in 3:
+					var rr = fmod(k * 1.2 + j * 0.3, 1.0); c.strokeStyle = "rgba(255,210,90," + _a(1 - rr) + ")"; c.lineWidth = 3; c.beginPath(); c.arc(x + hh * 0.25, y - hh * 0.8, rr * 40 * U, -1, 1); c.stroke()
+				c.fillStyle = "#ffd45a"; c.font = "bold " + _px(12 * U) + " sans-serif"; c.fillText("叮鈴！", x + 18 * U, y - hh * 1.05)
+			else:
+				var g2 = c.createLinearGradient(x, y - hh * 0.6, px, py); g2.addColorStop(0, "rgba(255,250,200,0.7)" if cn == "保安" else "rgba(255,255,255,0.85)"); g2.addColorStop(1, "rgba(255,255,220,0)"); c.fillStyle = g2
+				c.beginPath(); c.moveTo(x, y - hh * 0.6); c.lineTo(px - 18 * U, py - 10 * U); c.lineTo(px + 18 * U, py + 10 * U); c.closePath(); c.fill()
+				if cn != "保安" and k < 0.3:
+					c.fillStyle = "rgba(255,255,255,0.7)"; c.beginPath(); c.arc(x + 10 * U, y - hh * 0.7, 12 * U, 0, 7); c.fill(); c.fillStyle = "#ff4d6a"; c.font = "bold " + _px(10 * U) + " sans-serif"; c.fillText("● LIVE", x, y - hh * 1.15)
+	if not J.t(gone):
+		var bw = hh * 0.4; c.fillStyle = "rgba(0,0,0,0.65)"; c.fillRect(x - bw / 2, y - hh - 7 * U, bw, 4 * U); c.fillStyle = "#ff8a5a" if J.t(crew) else "#6ec3ff"; c.fillRect(x - bw / 2, y - hh - 7 * U, bw * maxf(0.0, J.num(w.hp) / J.num(w.max)), 4 * U)
+	if react <= 0: w["weak2"] = null
+	if J.num(J.gp(w, "pulled")) > 0:
+		w["pulled"] = J.num(w.pulled) - 1 / 30.0; c.strokeStyle = "rgba(192,132,255," + _a(J.num(w.pulled)) + ")"; c.lineWidth = 3
+		for j in 2:
+			c.beginPath(); c.arc(x, y - hh * 0.5, (14 + j * 9) * U, t * 5 + j, t * 5 + j + 4.5); c.stroke()
+	if (react > 0 or J.num(J.gp(w, "stay")) > 0) and not J.t(crew):
+		c.fillStyle = "#ffe14a"; c.font = "900 " + _px(18 * U) + " sans-serif"; c.textAlign = "center"; c.lineWidth = 4; c.strokeStyle = "#2a1006"; c.strokeText("!", x + hh * 0.32, y - hh - 14 * U - lift); c.fillText("!", x + hh * 0.32, y - hh - 14 * U - lift)
+	if J.t(J.gp(w, "say")):
+		J.sp(Tf, "_bub", J.num(J.gp(Tf, "_bub")) + 1)
+		if J.num(Tf._bub) <= 3:
+			var s2 = w.say.s; c.font = "bold " + _px(12 * U) + " sans-serif"; var tw = J.num(J.gp(c.measureText(J.str(s2)), "width")) + 12 * U; var bx = maxf(J.num(b.x) + 4, minf(J.num(b.x) + J.num(b.w) - tw - 4, x - tw / 2)); var by = y - hh - 40 * U - lift
+			c.fillStyle = "rgba(255,250,235,0.95)"; c.strokeStyle = "#3a2212"; c.lineWidth = 2; c.beginPath(); c.roundRect(bx, by, tw, 20 * U, 8 * U); c.fill(); c.stroke()
+			c.fillStyle = "#3a2212"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(s2, bx + 6 * U, by + 10 * U); c.textBaseline = "alphabetic"
+	c.restore()
+const PLINE := {"pontianak": "嘻——嘻——", "eguiking": "開飯喇！", "toyol": "嘻嘻，錢錢～", "tianhua": "……", "laojiang": "嗚——", "xiaozhi": "沙沙沙…"}
+static func _drawPost(Tf, X, s, i) -> void:
+	var c = X.c; var b = X.b; var U = X.U; var t = X.t; var hh = X.hh; var sd = X.sd
+	var p = J.gp(J.gp(sd, "posts"), float(i))
+	if not J.t(p) or J.gp(p, "g") == null: return
+	var g = ghost(p.g)
+	if not J.t(g): return
+	if J.t(J.gp(p, "role")): g = g.duplicate(); g["k"] = tf_devK(Tf, p)
+	var typ = J.gp(J.gp(D.DEV, p.role), "kind") if J.t(J.gp(p, "role")) else gType(g); var K = J.gp(D.KIND, typ); var xy = _P(Tf, s.x, s.y); var x = xy[0]; var y = xy[1]
+	var base = hh * 1.3 / 60 * 1.45 * (1.3 if J.num(J.gp(p, "sz")) == 2 else 1.0); var fx = J.gp(p, "fx")
+	if J.num(J.gp(p, "build")) > 0: return
+	var dim = _spr("dv_" + J.str(p.role) + "_" + J.str(_or(J.gp(p, "sz"), 1.0))) if J.t(J.gp(p, "role")) else null; var dimOk = _nw(dim) > 0
+	if dimOk:
+		var q = tf_rect(Tf, s); var dw = (J.num(q[2]) - J.num(q[0])) * J.num(b.w) * 1.25; var dh = dw * J.num(dim.naturalHeight) / J.num(dim.naturalWidth); var by = J.num(b.y) + J.num(q[3]) * J.num(b.h) + 4 * U
+		var sh = (1 + sin(t * 40) * 0.03) if (J.gp(p, "anim") != null or J.t(J.gp(p, "win"))) else 1.0
+		c.save(); c.translate(x, by); c.scale(sh, sh)
+		if J.gp(p, "staff") != null: c.shadowColor = "#ffd45a" if J.t(J.gp(J.mc(Tf, "staffMul", [p]), "named")) else "#9ef0b0"; c.shadowBlur = 14
+		var kst = tf_devK(Tf, p) if (J.gp(p, "staff") != null and J.t(ghost(p.staff))) else null
+		_fxDraw(c, dim, p.role, _or(J.gp(p, "sz"), 1.0), -dw / 2, -dh, dw, dh, t, i, {"p": fx_emerge(p, t), "k": kst, "sc": base * 0.95}); c.restore()
+	var ftp = _P(Tf, fx.tx, fx.ty) if J.t(fx) else null
+	var tx = ftp[0] if J.t(fx) else x; var flip = (tx < x) if J.t(fx) else (sin(t * 0.4 + i) < 0)
+	var gx = x; var gy = y + 10 * U; var sc = base; var al = 0.62 + 0.14 * sin(t * 1.6 + i); var pose = "idle"; var pt = 0.0; var rot = sin(t * 1.3 + i) * 0.04
+	if J.t(J.gp(s, "h")): gy += sin(t * 1.5 + i) * 3 * U
+	else: sc *= 1 + sin(t * 2 + i) * 0.02
+	if J.num(J.gp(p, "hurt")) > 0: p["hurt"] = J.num(p.hurt) - 1 / 30.0; gx += (randf() - 0.5) * 6 * U
+	var role = J.str(J.gp(p, "role"))
+	if not dimOk and (role == "aura" or role == "slow") and J.num(J.gp(p, "auraOn")) > 0:
+		al = 0.75; pose = "cast"; pt = fmod(t * 0.8, 1.0); gx += sin(t * 2.2 + i) * 8 * U
+		for j in range(1, 4): _ghostDraw(c, g.k, gx - sin(t * 2.2 + i - j * 0.25) * 8 * U * j * 0.6, gy, sc, {"t": t, "pose": pose, "pt": pt, "alpha": 0.12 / j, "flip": flip})
+	if J.t(fx):
+		var k = minf(1.0, J.num(fx.t) / 0.9); var hit = k / 0.25 if k < 0.25 else 1 - (k - 0.25) / 0.75; al = 0.95 * (1 - maxf(0.0, k - 0.8) * 4); pose = "windup" if k < 0.25 else "strike"; pt = k / 0.25 if k < 0.25 else minf(1.0, (k - 0.25) * 2)
+		var dx = tx - x; var dy = ftp[1] - y; var ft = J.str(J.gp(fx, "type")); var fv = J.t(J.gp(fx, "v"))
+		if J.t(J.gp(fx, "aura")):
+			if fv:
+				gx += dx * hit * 0.7
+				gy += dy * hit * 0.7
+				rot = sin(t * 9) * 0.2
+			else:
+				sc *= 1 + hit * 0.35
+				rot = hit * 0.6 * sin(k * 12)
+			pose = "cast"
+		elif ft == "sound" and fv: gy -= (1 - minf(1.0, k * 3)) * 70 * U; rot = (1 - minf(1.0, k * 3)) * 3; sc *= 1 + hit * 0.2; c.save()
+		elif ft == "sound": gy += (1 - minf(1.0, k * 3)) * 26 * U; sc *= 1 + hit * 0.25; c.save(); c.beginPath(); c.rect(x - 80 * U, y - 160 * U, 160 * U, 160 * U + 12 * U); c.clip()
+		elif (ft == "face" or ft == "shadow") and fv: gx = tx + (1.0 if flip else -1.0) * 18 * U; gy = ftp[1] + 4 * U; sc *= 0.4 + hit * 1.1; al *= minf(1.0, k * 5); rot = sin(t * 30) * 0.05 * hit
+		elif ft == "face" or ft == "shadow": gx += dx * hit * 0.55; gy += dy * hit * 0.55; sc *= 1 + hit * 0.9; rot = (-1.0 if flip else 1.0) * hit * 0.15
+		elif ft == "phone" and fv: pose = "cast"; var sp = k * 2 if k < 0.5 else 1.0; gx = x + dx * sp; gy = y + 10 * U + dy * sp; rot = sp * 6.28; al *= 0.4 + 0.6 * absf(cos(k * 9))
+		elif ft == "phone": pose = "cast"
+		elif ft == "paper": pose = "windup" if k < 0.3 else "cast"
+		if J.seq(g.k, "toyol"): var e3 = sin(k * PI); gx = x + dx * e3; gy = y + 10 * U + dy * e3 - (absf(sin(k * PI * 4)) * 20 * U if fv else 0.0); pose = "move"
+		var th = _spr("tianhua_hang")
+		if dimOk: pass
+		elif J.seq(g.k, "tianhua") and _nw(th) > 0:
+			var H2 = hh * 2.2; var W2 = H2 * J.num(th.naturalWidth) / J.num(th.naturalHeight); var drop = sin(minf(1.0, k * 2.5) * PI / 2) * (1 - maxf(0.0, k - 0.8) * 5)
+			c.save(); c.globalAlpha = maxf(0.0, al); c.translate(tx, y - H2 * 0.4 + drop * (ftp[1] - y + H2 * 0.15) - H2 * 0.6); c.rotate(sin(t * 7) * 0.08); c.drawImage(th, -W2 / 2, 0, W2, H2); c.restore()
+		else: _ghostDraw(c, g.k, gx, gy, sc, {"t": t, "pose": pose, "pt": pt, "atk": hit > 0.4, "alpha": maxf(0.0, al), "flip": flip, "rot": rot})
+		if ft == "sound": c.restore()
+		if ft == "sound" and k > 0.2 and k < 0.8:
+			var rr = (k - 0.2) / 0.6; c.strokeStyle = "rgba(255,220,120," + _a(1 - rr) + ")"; c.lineWidth = 4; c.beginPath(); c.ellipse(x, y + 6 * U, J.num(K.r) * J.num(b.w) * rr, J.num(K.r) * J.num(b.w) * rr * 0.45, 0, 0, 7); c.stroke()
+		if ft == "phone" and k < 0.9:
+			c.strokeStyle = "rgba(160,110,220," + _a(0.7 - k * 0.6) + ")"; c.lineWidth = 3
+			for j in 5:
+				var ang = j * 1.256 + t; c.beginPath(); c.moveTo(tx + cos(ang) * 22 * U, ftp[1] - 30 * U + sin(ang) * 10 * U); c.lineTo(tx + cos(ang) * 30 * U, ftp[1] - 60 * U + sin(ang) * 12 * U); c.stroke()
+		var LINE = PLINE.get(J.str(g.k))
+		if LINE != null and k > 0.15 and k < 0.85:
+			c.font = "900 " + _px(13 * U) + " serif"; c.textAlign = "center"; c.fillStyle = "rgba(255,215,235,0.95)"; c.lineWidth = 3; c.strokeStyle = "#1a0010"; var lx = maxf(J.num(b.x) + 50 * U, minf(J.num(b.x) + J.num(b.w) - 50 * U, gx))
+			c.strokeText(T(LINE, LINE), lx, gy - hh * 1.5); c.fillText(T(LINE, LINE), lx, gy - hh * 1.5)
+	elif not dimOk: _ghostDraw(c, g.k, gx, gy - (hh * 0.4 if J.t(dim) else 0.0), sc, {"t": t, "pose": pose, "pt": pt, "alpha": al * (0.6 if J.t(dim) else 1.0), "flip": flip, "rot": rot})
+	var hpK = 1.0 if J.t(J.gp(p, "role")) else maxf(0.0, J.num(p.hp)) / J.num(p.max)
+	if hpK < 0.999:
+		c.fillStyle = "rgba(0,0,0,0.6)"
+		c.fillRect(x - 16 * U, y + 14 * U, 32 * U, 4 * U)
+		c.fillStyle = "#a8f0a8" if hpK > 0.4 else "#ff7a6a"
+		c.fillRect(x - 16 * U, y + 14 * U, 32 * U * hpK, 4 * U)
+const TF_4N := {"draw": 0}
+
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -2558,5 +2956,5 @@ func run(_env) -> void:
 	load_data()
 	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I); tf_install(J.gp(SQ, "Turf"), TF_4J); tf_install(J.gp(SQ, "Turf"), TF_4K); tf_install(J.gp(SQ, "Turf"), TF_4L); tf_install(J.gp(SQ, "Turf"), TF_4M)
+	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I); tf_install(J.gp(SQ, "Turf"), TF_4J); tf_install(J.gp(SQ, "Turf"), TF_4K); tf_install(J.gp(SQ, "Turf"), TF_4L); tf_install(J.gp(SQ, "Turf"), TF_4M); tf_install(J.gp(SQ, "Turf"), TF_4N)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)

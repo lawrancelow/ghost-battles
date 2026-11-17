@@ -632,3 +632,41 @@ func street_t4l(_t) -> void:
 	J.test_perf = -1.0
 	J.G["Math"] = mk.keep
 	_report()
+
+# ---- L3：street 4n（主畫面 draw：成個地盤畫面 Recorder 對照，連 tick 推進）----
+func street_t4n(_t) -> void:
+	mod = "street_t4n"
+	var mk = math_fix(); var X5 = load("res://tools/tests/xc_l5.gd")
+	var N = load("res://native/street.gd"); N.load_data()
+	var tr = _st_trans().Street; var trT = J.gp(tr, "Turf")
+	var GR = [N.TF_4B, N.TF_4C, N.TF_4D, N.TF_4E, N.TF_4F, N.TF_4G, N.TF_4H, N.TF_4I, N.TF_4J, N.TF_4K, N.TF_4L, N.TF_4M, N.TF_4N]
+	for sid in ["office", "bus", "flat"]:
+		var pr = _tf_pair(trT, N, sid, 3.0); var A = pr[0]; var B = pr[1]
+		for grp in GR:
+			for m in grp: B[m] = N.turf_methods(grp)[m]
+		var def = null
+		for d in N.D.SITES:
+			if J.str(d.id) == sid: def = d
+		for X in [A, B]:
+			X["def"] = def; X["walkers"] = []; X["fx"] = []; X["parts"] = []; X["dfx"] = []; X["shots"] = []; X["traces"] = []; X["caps"] = []; X["rateAcc"] = 0.0; X["rateT"] = 0.0
+			X.sd["wal"] = 600.0; X.sd["coins"] = 0.0; X.sd["hot"] = 0.0; X.sd["scared"] = 0.0; X.sd["leaked"] = 0.0
+			X["q"] = {"st": "gap", "t": 0.5, "n": 0.0, "made": 0.0, "list": []}; X["sqPlan"] = null; X["waveNo"] = 0.0; X["sqCD"] = 1.0; X["eliteT"] = 2.0
+			var bids = []
+			for g in J.iter(J.G.S.ghosts).slice(0, 3): bids.append(g.id)
+			X.sd["bosses"] = bids; X.sd["bEn"] = {}; X["bosses"] = []
+			X["scr"] = {"x": 0.0, "y": 0.0, "w": 390.0, "h": 844.0}
+			var i = 0
+			for p in X.sd.posts:
+				if p is Dictionary: p["g"] = J.G.S.ghosts[i % 5].id; p["cd"] = 0.0
+				i += 1
+			J.mc(X, "buildPath", [])
+		trT["sd"] = A.sd
+		for st in 400:
+			J.test_perf = 90000.0 + st * 50.0
+			trT["sd"] = A.sd; seed(8000 + st); J.mc(A, "tick", [0.05]); seed(8000 + st); J.mc(B, "tick", [0.05])
+			if st % 40 == 39:
+				_drq(sid + " s%d" % st, X5, A, B, "draw"); _drq(sid + " s%d" % st, X5, A, B, "drawMy")
+				_eq(sid + " s%d state" % st, _tstate(A), _tstate(B))
+	J.test_perf = -1.0
+	J.G["Math"] = mk.keep
+	_report()
