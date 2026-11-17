@@ -608,3 +608,27 @@ func street_t4k(_t) -> void:
 	J.test_perf = -1.0
 	J.G["Math"] = mk.keep
 	_report()
+func street_t4l(_t) -> void:
+	mod = "street_t4l"
+	var mk = math_fix(); var X5 = load("res://tools/tests/xc_l5.gd")
+	var N = load("res://native/street.gd"); N.load_data()
+	var tr = _st_trans().Street; var trT = J.gp(tr, "Turf")
+	for sid in ["office", "bus", "flat", "market"]:
+		for unl in [2.0, 3.0]:
+			var pr = _tf_pair(trT, N, sid, unl); var A = pr[0]; var B = pr[1]
+			for m in N.TF_4L: B[m] = N.turf_methods(N.TF_4L)[m]
+			var def = null
+			for d in N.D.SITES:
+				if J.str(d.id) == sid: def = d
+			if def == null: def = N.D.SITES[0]
+			for X in [A, B]:
+				X["def"] = def; X.sd["scared"] = 40.0; X.sd["wal"] = 900.0; X["_cc"] = {}
+				for o in J.iter(X.lay.get("obs", [])): o["spark"] = 0.3
+			trT["sd"] = A.sd
+			for tt in [0.1, 2.7]:
+				J.test_perf = 50000.0 + tt * 1000
+				for f in ["drawLongBg", "drawProps", "drawObsFx"]: _drq("%s/%d t%s" % [sid, unl, tt], X5, A, B, f)
+				_eq("%s/%d gates" % [sid, unl], A.get("gates"), B.get("gates"))
+	J.test_perf = -1.0
+	J.G["Math"] = mk.keep
+	_report()

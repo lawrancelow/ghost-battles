@@ -2310,6 +2310,107 @@ static func tf_drawCaps(Tf) -> void:
 		c.strokeText(q.text, x + dx, y + dy); c.fillStyle = q.col; c.fillText(q.text, x + dx, y + dy); c.restore()
 const TF_4K := {"drawTraces": 0, "drawCaps": 0}
 
+# 4l：長卷背景（鐵閘、樓梯、入口箭咀）、障礙物圖、障礙動態、前景件；程序屏 drawProc／propImg／fgAt 仍經方法表
+static func _spr(k):
+	var S = G("SPR")
+	return J.gp(S, k) if J.t(S) and k != null else null
+static func _nw(im) -> float: return J.num(J.gp(im, "naturalWidth")) if J.t(im) else 0.0
+static func tf_drawLongBg(Tf) -> void:
+	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); var L2 = J.gp(Tf, "lay"); var t = _pnow() / 1000.0; var bxx = J.num(b.x); var byy = J.num(b.y); var bw0 = J.num(b.w); var bh0 = J.num(b.h); var U = bw0 / 840.0; var sd = J.gp(Tf, "sd")
+	J.sp(Tf, "gates", []); var PN = J.iter(L2.panels); var ROOMG = J.gp(D.DATA4, "rooms"); var UNL = J.num(L2.unlocked)
+	for r in PN.size():
+		if r >= J.num(L2.nv): continue
+		var P = PN[r]; var x = bxx + r * bw0; var nm = J.gp(J.gp(L2, "names"), float(r))
+		if J.t(J.gp(P, "proc")): J.mc(Tf, "drawProc", [float(r), P, x])
+		else:
+			var bgk = J.gp(P, "bg")
+			if not J.t(bgk):
+				var RG = J.gp(ROOMG, J.gp(P, "room"))
+				bgk = J.gp(RG, "bg") if J.t(RG) else null
+			var im = _spr(bgk)
+			if _nw(im) > 0:
+				c.save()
+				c.filter = "brightness(0.92) saturate(0.9)"
+				c.drawImage(im, x, byy, bw0, bh0)
+				c.restore()
+		c.font = "bold " + _px(13 * U) + " sans-serif"; c.textAlign = "left"; c.lineWidth = 3; c.strokeStyle = "rgba(0,0,0,0.8)"
+		var lab = T("第", "第") + J.str(r + 1) + T("屏", "屏") + "・" + T(nm[0], nm[1]); c.strokeText(lab, x + 8, byy + bh0 * 0.115); c.fillStyle = "rgba(232,220,200,0.92)"; c.fillText(lab, x + 8, byy + bh0 * 0.115)
+		if r >= UNL:
+			c.fillStyle = "rgba(5,6,8,0.82)"; c.fillRect(x, byy, bw0, bh0)
+			c.strokeStyle = "rgba(120,125,130,0.75)"; c.lineWidth = 4
+			var xx = x + 10
+			while xx < x + bw0:
+				c.beginPath(); c.moveTo(xx, byy + bh0 * 0.08); c.lineTo(xx, byy + bh0 * 0.92); c.stroke(); xx += 22
+			var yy = 0.15
+			while yy < 0.9:
+				c.beginPath(); c.moveTo(x + 6, byy + bh0 * yy); c.lineTo(x + bw0 - 6, byy + bh0 * yy); c.stroke(); yy += 0.1
+			var UL = D.UNLOCK; var need = UL[r] if r < UL.size() and J.t(UL[r]) else UL[UL.size() - 1]; var bd = tf_build(Tf)
+			var okR = J.num(J.gp(sd, "scared")) >= J.num(need.rep); var okB = bd >= J.num(need.bd); var okC = J.num(J.gp(sd, "wal")) >= J.num(need.coin); var ok = okR and okB and okC
+			var bw = minf(bw0 * 0.6, 330 * U); var bh = 132 * U; var bx = x + 16 * U; var by = byy + bh0 * 0.42
+			c.fillStyle = "rgba(110,20,20,0.96)" if ok else "rgba(26,28,32,0.96)"; c.fillRect(bx, by, bw, bh); c.strokeStyle = "#ffd45a" if ok else "#666"; c.lineWidth = 3; c.strokeRect(bx, by, bw, bh)
+			c.fillStyle = "#f1e6d6"; c.textAlign = "center"; c.font = "900 " + _px(15 * U) + " sans-serif"; c.fillText(T(nm[0], nm[1]) + T("（鐵閘鎖住）", "（鐵閘鎖住）"), bx + bw / 2, by + 24 * U)
+			c.font = "bold " + _px(12 * U) + " sans-serif"
+			var sr = J.str(J.gp(sd, "scared")) + "/" + J.str(need.rep); var sb = J.str(bd) + "%/" + J.str(need.bd) + "%"; var scn = J.str(need.coin)
+			var rows = [[okR, T("惡名（嚇走人數）" + sr, "惡名（嚇跑人數）" + sr)], [okB, T("主題建設度 " + sb, "主題建設度 " + sb)], [okC, T("擴闊生人入口：冥幣 " + scn, "擴闊生人入口：冥幣 " + scn)]]
+			for j in 3:
+				c.fillStyle = "#9ef0b0" if rows[j][0] else "#b9b2a6"
+				c.fillText(("✓" if rows[j][0] else "✗") + " " + rows[j][1], bx + bw / 2, by + (50 + j * 22) * U)
+			c.fillStyle = "#ffe9a0" if ok else "#888"; c.font = "900 " + _px(13 * U) + " sans-serif"
+			c.fillText(((T("撳呢度開鐵閘！", "點這裡開鐵閘！") if ok else T("三樣齊晒先開到", "三項都達成才能開")) if r == UNL else T("要先開上一屏", "需先開上一屏")), bx + bw / 2, by + 122 * U)
+			if r == UNL: J.gp(Tf, "gates").append({"r": float(r), "need": need, "ok": ok, "x": (bx - bxx) / bw0, "y": (by - byy) / bh0, "w": bw / bw0, "h": bh / bh0})
+	for S2 in J.iter(_or(J.gp(L2, "stairs"), [])):
+		var x = bxx + J.num(S2.x) * bw0; var y0 = byy + minf(J.num(S2.y0), J.num(S2.y1)) * bh0 - 26 * U; var y1 = byy + maxf(J.num(S2.y0), J.num(S2.y1)) * bh0 + 26 * U; var w = 0.05 * bw0
+		c.fillStyle = "#1b1c1d"; c.fillRect(x - w, y0, w * 2, y1 - y0); c.strokeStyle = "#4a4c4a"; c.lineWidth = 2
+		var yy = y0 + 6
+		while yy < y1:
+			c.beginPath(); c.moveTo(x - w + 3, yy); c.lineTo(x + w - 3, yy); c.stroke(); yy += 9 * U
+		c.strokeStyle = "#6a6a60"; c.lineWidth = 3; c.beginPath(); c.moveTo(x - w, y0); c.lineTo(x - w, y1); c.moveTo(x + w, y0); c.lineTo(x + w, y1); c.stroke()
+	var E0 = J.gp(J.gp(L2, "nodes"), "0E")
+	if J.t(E0):
+		var exy = _P(Tf, E0[0], E0[1]); var ex = exy[0]; var ey = exy[1]; var pu = 0.6 + 0.4 * sin(t * 4); var up = J.num(E0[1]) > 0.95
+		c.save(); c.translate(ex, ey - (30 * U if up else 0.0))
+		if not up: c.rotate(-PI / 2)
+		c.fillStyle = "rgba(255,212,90," + _a(pu) + ")"; c.beginPath(); c.moveTo(0, -22 * U); c.lineTo(14 * U, 0); c.lineTo(5 * U, 0); c.lineTo(5 * U, 16 * U); c.lineTo(-5 * U, 16 * U); c.lineTo(-5 * U, 0); c.lineTo(-14 * U, 0); c.closePath(); c.fill(); c.restore()
+		c.font = "900 " + _px(12 * U) + " sans-serif"; c.textAlign = "center"; c.fillStyle = "#ffe9a0"; c.lineWidth = 3; c.strokeStyle = "#000"
+		var lx = ex + (0.0 if up else 30 * U); var ly = ey - (58 * U if up else 0.0); c.strokeText(T("入口", "入口"), lx, ly); c.fillText(T("入口", "入口"), lx, ly)
+static func tf_drawProp(Tf, o) -> void:
+	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); var U = J.num(b.w) / 840.0; var im = J.mc(Tf, "propImg", [o.k])
+	var x0 = J.num(b.x) + J.num(o.x0) * J.num(b.w); var y0 = J.num(b.y) + J.num(o.y0) * J.num(b.h); var w = (J.num(o.x1) - J.num(o.x0)) * J.num(b.w); var h = (J.num(o.y1) - J.num(o.y0)) * J.num(b.h)
+	if _nw(im) <= 0:
+		J.mc(Tf, "drawObsShape", [c, o.k, x0, y0, w, h, U, J.gp(J.G.get("Math"), "random")])
+		return
+	var dw = w * 1.25; var dh = dw * J.num(im.naturalHeight) / J.num(im.naturalWidth); var flat = J.seq(J.gp(o, "t"), "p") or J.seq(J.gp(o, "t"), "e")
+	if not flat:
+		c.fillStyle = "rgba(0,0,0,0.35)"
+		c.beginPath()
+		c.ellipse(x0 + w / 2, y0 + h, w * 0.55, h * 0.3, 0, 0, 7)
+		c.fill()
+	c.drawImage(im, x0 + w / 2 - dw / 2, (y0 + h / 2 - dh / 2) if flat else (y0 + h - dh), dw, dh)
+static func tf_drawProps(Tf) -> void:
+	for o in J.iter(_or(J.gp(J.gp(Tf, "lay"), "obs"), [])):
+		if not J.t(J.gp(o, "prop")) or not (J.seq(J.gp(o, "t"), "p") or J.seq(J.gp(o, "t"), "e")): continue
+		J.mc(Tf, "drawProp", [o])
+static func tf_drawObsFx(Tf) -> void:
+	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); var t = _pnow() / 1000.0; var U = J.num(b.w) / 840.0
+	for o in J.iter(_or(J.gp(J.gp(Tf, "lay"), "obs"), [])):
+		var ot = J.str(J.gp(o, "t"))
+		if ot != "e" and ot != "p": continue
+		var cx = J.num(b.x) + (J.num(o.x0) + J.num(o.x1)) / 2 * J.num(b.w); var cy = J.num(b.y) + (J.num(o.y0) + J.num(o.y1)) / 2 * J.num(b.h)
+		if ot == "e" and J.num(J.gp(o, "spark")) > 0:
+			for j in 9:
+				var a = j * 0.7 + t * 9; var r = (8 + randf() * 22) * U; c.strokeStyle = "rgba(255," + J.str(200 + j * 5) + ",120," + _a(J.num(o.spark) / 0.4) + ")"; c.lineWidth = 1.5
+				c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + cos(a) * r, cy + sin(a) * r); c.stroke()
+			c.fillStyle = "rgba(255,250,200," + _a(0.5 * J.num(o.spark) / 0.4) + ")"; c.beginPath(); c.arc(cx, cy, 18 * U, 0, 7); c.fill()
+		if ot == "p":
+			c.strokeStyle = "rgba(210,230,245," + _a(0.15 + 0.1 * sin(t * 2 + cx)) + ")"; c.lineWidth = 1; c.beginPath()
+			c.ellipse(cx, cy, (J.num(o.x1) - J.num(o.x0)) * J.num(b.w) * 0.3 * (1 + 0.2 * sin(t * 1.5)), (J.num(o.y1) - J.num(o.y0)) * J.num(b.h) * 0.3, 0, 0, 7); c.stroke()
+static func tf_drawFg(Tf, F) -> void:
+	var im = J.cl(G("STN_FG_img"), null, [F.it])
+	if not J.t(J.gp(im, "complete")) or _nw(im) <= 0: return
+	var c = J.gp(Tf, "c"); var b = J.gp(Tf, "box"); var k = J.num(b.w) / J.num(G("STN_FG_W")); var it = F.it
+	c.save(); c.filter = "brightness(0.92) saturate(0.9)"; c.drawImage(im, J.num(b.x) + J.num(F.r) * J.num(b.w) + J.num(it.x) * k, J.num(b.y) + J.num(it.y) * k, J.num(it.w) * k, J.num(it.h) * k); c.restore()
+const TF_4L := {"drawLongBg": 0, "drawProp": 1, "drawProps": 0, "drawObsFx": 0, "drawFg": 1}
+
 static func _m(f: Callable, n: int) -> Callable:
 	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
 	return func(this_, a: Array):
@@ -2339,5 +2440,5 @@ func run(_env) -> void:
 	load_data()
 	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
 	J.G["Street"] = SQ
-	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I); tf_install(J.gp(SQ, "Turf"), TF_4J); tf_install(J.gp(SQ, "Turf"), TF_4K)
+	tf_install(J.gp(SQ, "Turf"), TF_4A); tf_install(J.gp(SQ, "Turf"), TF_4B); tf_install(J.gp(SQ, "Turf"), TF_4C); tf_install(J.gp(SQ, "Turf"), TF_4D); tf_install(J.gp(SQ, "Turf"), TF_4E); tf_install(J.gp(SQ, "Turf"), TF_4F); tf_install(J.gp(SQ, "Turf"), TF_4G); tf_install(J.gp(SQ, "Turf"), TF_4H); tf_install(J.gp(SQ, "Turf"), TF_4I); tf_install(J.gp(SQ, "Turf"), TF_4J); tf_install(J.gp(SQ, "Turf"), TF_4K); tf_install(J.gp(SQ, "Turf"), TF_4L)
 	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)
