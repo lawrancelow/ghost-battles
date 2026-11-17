@@ -98,7 +98,7 @@ func tower(_t) -> void:
 func street_crui(_t) -> void:
 	mod = "street_crui"
 	var X5 = load("res://tools/tests/xc_l5.gd")
-	var tr = load_trans("street", ["CrUI"]).CrUI
+	var tr = _st_trans().CrUI
 	var nat = load("res://native/street.gd").mk_crui()
 	var cases = []
 	for o in [null, {}, {"col": "red"}, {"col": "rust", "fill": "rgba(70,36,16,0.95)", "U": 1.5, "seed": 11.0}, {"col": "12,34,56", "seed": 0.0, "U": 0.7}]:
@@ -135,6 +135,8 @@ static func _sig(X5, fn: Callable) -> Array:
 
 # ---- L3：street 第二段（DevFx）：每個類型×大細×時間×現身進度，原生 vs 轉譯各畫入 Recorder 比 ----
 # 轉譯版 J.G.Math 係空 {}：street.js 嘅 const sn = Math.sin 等別名變 null（網頁版正常）。對照時補返，令轉譯版等同網頁版
+# 轉譯版 street 一次過設好幾個全局：全部還原，唔好蓋咗原生
+static func _st_trans() -> Dictionary: return load_trans("street", ["Street", "CrUI", "DevFx", "__stDC"])
 static func math_fix() -> Dictionary:
 	var keep = J.G.get("Math")
 	J.G["Math"] = {"sin": func(_t, a): return sin(J.num(a[0])), "cos": func(_t, a): return cos(J.num(a[0])), "abs": func(_t, a): return absf(J.num(a[0])),
@@ -148,7 +150,7 @@ func street_devfx(_t) -> void:
 	mod = "street_devfx"
 	var mk = math_fix()
 	var X5 = load("res://tools/tests/xc_l5.gd")
-	var tr = load_trans("street", ["DevFx"]).DevFx
+	var tr = _st_trans().DevFx
 	var nat = load("res://native/street.gd").mk_devfx()
 	for k in ["COL", "HEX", "KEY", "DUR"]:
 		if JSON.stringify(J.gp(tr, k)) == JSON.stringify(J.gp(nat, k)): ok += 1
@@ -200,4 +202,163 @@ func street_devfx(_t) -> void:
 				var q3 = 0
 				while a3[i3][q3] == b3[i3][q3]: q3 += 1
 				print("[xcheck-diff] DevFx.shade %s @%d ch%d\n tr =%s\n nat=%s" % [o, i3, q3, a3[i3].substr(maxi(0, q3 - 60), 200), b3[i3].substr(maxi(0, q3 - 60), 200)])
+	_report()
+
+# ---- L3：street 第三段（資料、佈局、路網、名氣、佔領度）----
+# 參考答案由網頁版 street.js 喺 node 計（tools/tests/ref/street_s3_ref.js → ref/street_s3.json）；轉譯版只係匯出咗嘅先比得
+static func _cln(x):
+	if x is Callable or x is Object: return null
+	if x is Dictionary:
+		var o = {}
+		for k in x:
+			var v = _cln(x[k])
+			if v != null: o[k] = v
+		return o
+	if x is Array:
+		var o = []
+		for v in x: o.append(_cln(v))
+		return o
+	return x
+static func _nr(a, b) -> bool:
+	if (a is float or a is int) and (b is float or b is int):
+		if float(a) == float(b): return true
+		return absf(float(a) - float(b)) <= 1e-9 * maxf(1.0, absf(float(a)))
+	if a is Dictionary and b is Dictionary:
+		if a.size() != b.size(): return false
+		for k in a:
+			if not b.has(k) or not _nr(a[k], b[k]): return false
+		return true
+	if a is Array and b is Array:
+		if a.size() != b.size(): return false
+		for i in a.size():
+			if not _nr(a[i], b[i]): return false
+		return true
+	return a == b
+func _eq(tag: String, a, b) -> void:
+	var x = _norm(_cln(a)); var y = _norm(_cln(b))
+	if _nr(x, y): ok += 1
+	else:
+		bad += 1
+		if bad <= 25:
+			var p = JSON.stringify(x); var q = JSON.stringify(y); var i = 0
+			while i < mini(p.length(), q.length()) and p[i] == q[i]: i += 1
+			print("[xcheck-diff] %s @%d\n web=…%s\n nat=…%s" % [tag, i, p.substr(maxi(0, i - 100), 220), q.substr(maxi(0, i - 100), 220)])
+func street_s3(_t) -> void:
+	mod = "street_s3"
+	var N = load("res://native/street.gd"); N.load_data()
+	var R = JSON.parse_string(FileAccess.get_file_as_string("res://tools/tests/ref/street_s3.json"))
+	for c in R.hpMul: _eq("hpMul %s" % c[0], c[1], N.hpMul(c[0]))
+	for c in R.coinOf: _eq("coinOf %s" % str(c), c[2], N.coinOf(c[0], c[1]))
+	for c in R.hpP: _eq("hpP %s" % c[0], c[1], N.hpP(c[0]))
+	for c in R.coP: _eq("coP %s" % c[0], c[1], N.coP(c[0]))
+	var gp0 = J.G.get("GP")
+	J.G["GP"] = {"grow": func(_t, a): return a[0].q, "mul": func(_t, a): return a[0].m, "pow": func(_t, a): return a[0].p}
+	for c in R.boss:
+		if c[0] == null: _eq("boss null", c.slice(1), [N.bossK(null), N.bossDmg(null), N.bossCD(null)]); continue
+		var g = {"q": c[0], "m": c[0] * 1.7, "p": c[0] * 100}
+		_eq("boss %s" % c[0], c.slice(1), [N.bossK(g), N.bossDmg(g), N.bossCD(g), N.staffOf(g, false), N.staffOf(g, true)])
+	J.G["GP"] = gp0
+	_eq("grid g1", R.grid.g1, N.gridLay("g1")); _eq("grid g2", R.grid.g2, N.gridLay("g2"))
+	var lo = [[{"lay": "bus"}, null], [{"rooms": [{"lay": "cafe"}, {"lay": "g1"}]}, 1.0], [{"rooms": [{"lay": "cafe"}]}, 3.0], [{}, 0.0]]
+	for i in lo.size(): _eq("layOf %d" % i, R.layOf[i], N.layOf(lo[i][0], lo[i][1]))
+	var ty = J.gp(J.gp(N.gridLay("g1"), "grid"), "ty")
+	_eq("grid.ty", [2.0, 1.0, 0.0], [J.cl(ty, null, [3.0, 1.0]), J.cl(ty, null, [0.0, 0.0]), J.cl(ty, null, [-1.0, 2.0])])
+	for c in R.long:
+		var L = N.longLay(null, c[1], [["A", "a"], ["B", "b"]] if c[1] == 2.0 else null, c[0])
+		_eq("longLay %s %s" % [c[0], c[1]], c[2], L)
+		# 路線：每步都喺 edges 入面、由 0E 去到 OUT
+		var pts = N.route(L); var okr = pts.size() > 1 and pts[0].k == "0E" and pts[pts.size() - 1].k == "OUT"
+		for i in range(1, pts.size()): okr = okr and L.edges[pts[i - 1].k].has(pts[i].k)
+		if okr: ok += 1
+		else: bad += 1; print("[xcheck-diff] route %s %s" % [c[0], c[1]])
+	for c in R.proc:
+		var sp = N.procSpec({"proc": 1.0, "dL": c[0], "dR": c[1]}); _eq("procSpec %s" % str(c.slice(0, 2)), c[2], sp)
+		var blk = sp.S.duplicate()
+		for o in sp.props: if o.t == "s": blk.append([o.x0, o.y0, o.x1, o.y1])
+		_eq("floorGraph %s" % str(c.slice(0, 2)), c[3], N.floorGraph(sp.F, blk, c[0], c[1], null))
+	for h in R.hot:
+		var sd = {"lv": 1.0, "maxLv": 1.0, "hot": 0.0, "combo": 0.0}; var i = 0
+		for e in h[1]:
+			var m = N.addHot(sd, e[0], {"cap": h[0]})
+			_eq("addHot cap%s #%d" % [h[0], i], [e[1] != "", e[2], e[3], e[4], e[5]], [m != "", sd.lv, sd.maxLv, sd.hot, sd.combo]); i += 1
+	var sd2 = {"posts": [{"role": "trap"}], "maxLv": 3.0}
+	for i in R.occ.size() - 1:
+		var e = R.occ[i]; N.occPush(sd2, e[0]); _eq("occ #%d" % i, e.slice(1), [N.occOf(sd2), N.devRate(sd2), sd2.occH.size()])
+	var eL = R.occ[R.occ.size() - 1]; _eq("devRate 冇崗", eL, [N.devRate({"occH": sd2.occH, "posts": []}), N.devRate({"occH": sd2.occH, "posts": [null, {}]})])
+	_eq("bsk", R.bsk, [N.bsk("tianhua"), N.bsk("egui"), N.bsk("zzz")])
+	# 匯出物件：原生 vs 轉譯版
+	var tr = _st_trans().Street; var nat = J.G.Street
+	for k in ["TUNE", "HOT", "SITES", "KIND"]: _eq("Street." + k, J.gp(tr, k), J.gp(nat, k))
+	for k in ["RESERVED", "GATE", "DEV", "KIND", "CELL", "PX", "PPL"]: _eq("_n." + k, J.gp(J.gp(tr, "_n"), k), J.gp(J.gp(nat, "_n"), k))
+	for lv in [0.0, 1.0, 9.5, 10.0, 23.0, 24.0, 37.0, 50.0, 64.0]: _eq("tr hpMul %s" % lv, J.mc(tr, "hpMul", [lv]), J.mc(nat, "hpMul", [lv]))
+	for c in [[1.0, 24.0], [30.0, 24.0], [9.0, 5.0]]: _eq("tr coinOf", J.mc(tr, "coinOf", c), J.mc(nat, "coinOf", c))
+	var S = J.G.S; var keep = J.gp(S, "stnPosts")
+	J.sp(S, "stnPosts", null); var a1 = J.mc(tr, "st", []); var a1s = JSON.stringify(_norm(a1)).length()
+	J.sp(S, "stnPosts", null); var b1 = J.mc(nat, "st", []); _eq("st 新", [a1.keys(), J.gp(a1, "sites")], [b1.keys(), J.gp(b1, "sites")])
+	_eq("site", J.mc(tr, "site", ["bus", 2.0]), J.mc(nat, "site", ["bus", 2.0])); _eq("site keys", J.keys(J.gp(J.mc(tr, "st", []), "sites")), J.keys(J.gp(J.mc(nat, "st", []), "sites")))
+	var occA = {"occH": [1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0], "posts": [{"role": "aura"}], "maxLv": 7.0}
+	for f in ["occOf", "devRate"]: _eq("_n." + f, J.mc(J.gp(tr, "_n"), f, [occA]), J.mc(J.gp(nat, "_n"), f, [occA]))
+	for gid in ["dev:trap", "dev:aura"]: _eq("_n.ghost " + gid, J.mc(J.gp(tr, "_n"), "ghost", [gid]), J.mc(J.gp(nat, "_n"), "ghost", [gid]))
+	for g in J.iter(J.gp(S, "ghosts")).slice(0, 12):
+		_eq("_n.gType " + J.str(J.gp(g, "k")), J.mc(J.gp(tr, "_n"), "gType", [g]), J.mc(J.gp(nat, "_n"), "gType", [g]))
+		_eq("_n.ghost id", J.mc(J.gp(tr, "_n"), "ghost", [J.gp(g, "id")]), J.mc(J.gp(nat, "_n"), "ghost", [J.gp(g, "id")]))
+	for k in ["tianhua", "afu", "xiaogui", "zzz"]: _eq("_n.CHAR_H_OK " + k, J.mc(J.gp(tr, "_n"), "CHAR_H_OK", [k]), J.mc(J.gp(nat, "_n"), "CHAR_H_OK", [k]))
+	J.sp(S, "stnPosts", keep)
+	_report()
+
+# ---- L3：street 第四段 4a（Turf 幾何／路線／鏡頭／經濟）：轉譯版 Turf 方法 vs 原生方法，同一狀態、同一種子 ----
+func _tf_pair(tr_turf, N, sid: String, unl: float) -> Array:
+	var A = tr_turf.duplicate(); var B = tr_turf.duplicate()
+	for X in [A, B]:
+		var sd = {"lv": 7.0, "maxLv": 9.0, "unlocked": unl, "modCur": 0.97, "posts": [], "bosses": []}
+		var L = N.longLay(null, unl, null, sid)
+		for i in int(J.len(L.posts)):
+			if i % 3 == 0: sd.posts.append({"role": ["trap", "scare", "slow", "aura", "throw", "puzzle"][i % 6], "lv": float(1 + i % 5), "staff": ("dev:aura" if i % 4 == 0 else null), "build": (1.0 if i == 6 else 0.0)})
+			elif i % 3 == 1: sd.posts.append(null)
+		X["sd"] = sd; X["lay"] = L; X["box"] = {"x": -100.0, "y": -300.0, "w": 1000.0, "h": 1500.0}; X["cam"] = {"z": 1.2, "x": 0.7, "y": 0.4, "tx": 1.3, "ty": 0.5, "user": 0.0, "focus": [1.1, 0.45]}
+		X["SPECIAL"] = ["tianhua", "pontianak"]; X["modMax"] = 1.3; X["intro"] = null
+	for k in N.TF_4A: B[k] = N.turf_methods(N.TF_4A)[k]
+	B["dist"] = func(_this, a): return N.tf_dist(J.arg(a, 0), J.arg(a, 1))
+	return [A, B]
+func _tfeq(tag: String, A, B, f: String, args: Array, sd: int = 0) -> void:
+	seed(sd + 11); var x = J.mc(A, f, args.duplicate(true)); seed(sd + 11); var y = J.mc(B, f, args.duplicate(true))
+	_eq(tag + " " + f, x, y)
+func street_t4a(_t) -> void:
+	mod = "street_t4a"
+	var N = load("res://native/street.gd"); N.load_data()
+	var tr = _st_trans().Street; var trT = J.gp(tr, "Turf")
+	for sid in ["office", "bus", "flat"]:
+		for unl in [2.0, 3.0, 4.0]:
+			var pr = _tf_pair(trT, N, sid, unl); var A = pr[0]; var B = pr[1]; var tg = "%s/%d" % [sid, unl]
+			for f in ["lvCap", "incomeCap", "mod", "unit", "build", "zFit"]: _tfeq(tg, A, B, f, [])
+			_tfeq(tg, A, B, "fixPosts", []); _eq(tg + " fixPosts sd", A.sd, B.sd)
+			_tfeq(tg, A, B, "buildPath", []); _eq(tg + " buildPath", [A.segs, A.len, A.lay.path], [B.segs, B.len, B.lay.path])
+			for t in [0.0, 0.3, 1.7, 3.9, 99.0]: _tfeq(tg + " t=%s" % t, A, B, "at", [t])
+			for i in J.len(A.lay.posts):
+				var sp = A.lay.posts[i]; var pp = A.sd.posts[i] if i < A.sd.posts.size() else null
+				_tfeq(tg + " #%d" % i, A, B, "rect", [sp]); _tfeq(tg + " #%d" % i, A, B, "rdist", [[1.2, 0.5], sp]); _tfeq(tg + " #%d" % i, A, B, "rdist", [[J.num(sp.x) + 0.01, J.num(sp.y)], sp])
+				if pp != null:
+					for f in ["upCost", "staffMul", "devK"]: _tfeq(tg + " #%d" % i, A, B, f, [pp])
+			for sw in [{"s": 2.0}, {"s": 2.0, "d": 1.0}, {"s": 1.0, "d": 1.0}]: var sp2 = {"x": 0.5, "y": 0.5}; sp2.merge(sw); _tfeq(tg, A, B, "rect", [sp2])
+			for g in J.iter(J.G.S.ghosts).slice(0, 6):
+				for sp in [{"h": 1.0}, {"h": 0.0}]:
+					for lv in [1.0, 3.0]: _tfeq(tg + " " + J.str(g.k), A, B, "stats", [g, sp, lv])
+			for z in [0.3, 1.0, 2.0]:
+				A.cam.z = z; B.cam.z = z; A.cam.x = 3.7; B.cam.x = 3.7; _tfeq(tg + " z=%s" % z, A, B, "camClamp", []); _eq(tg + " cam", A.cam, B.cam)
+				for xy in [[0.0, 0.0], [300.0, 700.0]]: _tfeq(tg, A, B, "toScreen", xy); _tfeq(tg, A, B, "toScene", xy)
+			A.cam.user = -1e9; B.cam.user = -1e9
+			for i in 5: _tfeq(tg, A, B, "camStep", []); _eq(tg + " camStep cam", A.cam, B.cam)
+			_tfeq(tg, A, B, "focusOn", [0.4, 0.6]); _eq(tg + " focus", A.cam, B.cam)
+			# 路人路線：同一種子 mkRoute，再沿路取位
+			for r in 6:
+				var wa = {"t": 0.0}; var wb = {"t": 0.0}
+				seed(100 + r); J.mc(A, "mkRoute", [wa, null]); seed(100 + r); J.mc(B, "mkRoute", [wb, null]); _eq(tg + " mkRoute %d" % r, wa, wb)
+				for t in [-0.1, 0.0, 0.25, 0.9, 2.5, 50.0]:
+					wa.t = t; wb.t = t
+					for f in ["wp", "wseg", "alive"]: _tfeq(tg + " r%d t%s" % [r, t], A, B, f, [wa])
+					_tfeq(tg + " r%d t%s" % [r, t], A, B, "wp", [wa, 0.2])
+				wa["gone"] = "run"; wb["gone"] = "run"; var rp = [[0.1, 0.5], [0.3, 0.55], [0.32, 0.9]]; wa["runPath"] = rp; wb["runPath"] = rp.duplicate(true); wa["spd"] = 0.05; wb["spd"] = 0.05
+				for rt in [0.0, 0.6, 1.4, 3.0]: wa.runT = rt; wb.runT = rt; _tfeq(tg + " run %s" % rt, A, B, "wp", [wa]); _tfeq(tg + " run", A, B, "runPos", [wa])
+			var pts = [{"p": [0.0, 0.5], "k": "0E"}, {"p": [0.2, 0.5], "k": "0a"}, {"p": [0.2, 0.5], "k": "0b"}, {"p": [0.4, 0.6], "k": "0~in", "hide": true}, {"p": [1.0, 0.6], "k": "OUT"}]
+			var wa2 = {"t": 0.0, "j": 0.01}; var wb2 = {"t": 0.0, "j": 0.01}; J.mc(A, "mkRoute", [wa2, pts]); J.mc(B, "mkRoute", [wb2, pts]); _eq(tg + " mkRoute pts", wa2, wb2)
 	_report()

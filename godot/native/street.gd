@@ -3,8 +3,8 @@
 # 再用原生版逐段覆蓋（轉譯版入面叫 CrUI／DevFx 都係經 J.G 搵，所以覆蓋咗即刻生效），每段對照過先做下一段；
 # 全部段落完成之後先拎走轉譯版、加入 ACTIVE.txt。
 #   第一段：__stDC、CrUI（蠟筆面板／進度條／手寫字）  ✓
-#   第二段：DevFx（設備色框、待機動畫、鬼影現身）  ← 而家
-#   第三段：Street 資料、地盤／路線、離線收益 ← 而家
+#   第二段：DevFx（設備色框、待機動畫、鬼影現身）  ✓（對照 803/0）
+#   第三段：Street 資料、地盤／路線、名氣、離線收益、地圖 ← 而家
 #   第四段：Turf（地盤場景、路人、Bryan 一夥、建設）
 extends RefCounted
 
@@ -433,6 +433,583 @@ static func mk_devfx() -> Dictionary:
 		"vxDraw": func(_t, a): fx_vxDraw(J.arg(a, 0), J.arg(a, 1), J.num(J.arg(a, 2)), J.num(J.arg(a, 3)), J.num(J.arg(a, 4)), J.arg(a, 5)); return null,
 	}
 
+# ---------------- 第三段：Street 資料、地盤／路線、名氣、離線收益 ----------------
+# 數據（KIND、DEV、SQUAD、ELITE、BSK、LAYOUT、OG、ROLE、DATA4、PANO、PEOPLE、CREW、SITES…）由 data/nat/street.json 讀
+# （由 street.js 第 257–592 行嘅字面常數用 node 輸出；改原 JS 之後要重新輸出）。
+# 行為跟 tools/jsgd/patches.js 打過補丁嘅版本（__nat_stStreet／__nat_stStreetEnd、_n 匯出）。
+static var D: Dictionary = {}
+static var SQ: Dictionary = {}       # Street 匯出物件（Turf 未改寫之前用轉譯版）
+static var _added: Dictionary = {}
+static func G(n: String): return J.G.get(n)
+static func has(n: String) -> bool: return J.typeof_(J.G.get(n)) != "undefined"
+static func S_(): return J.G.get("S")
+static func T(yue, zh) -> String:
+	var y = J.str(yue)
+	if has("LANG") and not _added.has(y): J.mc(G("LANG"), "add", [{y: zh}]); _added[y] = true
+	var Wn = G("window")
+	if Wn != null and J.t(J.gp(Wn, "L")): return J.str(J.S_window_("L", [y]))
+	return y
+static func now_ms() -> float: return J.num(J.S_Date_("now", []))
+static func pick(a: Array): return a[int(floor(randf() * a.size()))]
+static func load_data() -> void:
+	if D.size(): return
+	var f = FileAccess.open("res://data/nat/street.json", FileAccess.READ)
+	D = JSON.parse_string(f.get_as_text())
+
+static func hpMul(lv: float) -> float:
+	var P = [[1.0, 1.0], [10.0, 2.55], [24.0, 11.6], [50.0, 198.0]]
+	for i in P.size() - 1:
+		if lv <= P[i + 1][0]:
+			var a = P[i][0]; var va = P[i][1]; var b = P[i + 1][0]; var vb = P[i + 1][1]
+			return va * pow(vb / va, (lv - a) / (b - a))
+	return 198.0 * pow(1.12, lv - 50)
+static func coinOf(lv: float, cap: float) -> float:
+	return J.round(13 * pow(1.035, (cap + (lv - cap) * J.num(D.HOT.overRwd) if lv > cap else lv) - 1))
+static func _tbl(A: Array, d: float, gr: float) -> float:
+	if d < A.size(): return J.num(J.gp(A, maxf(1.0, d)))
+	return J.num(A[A.size() - 1]) * pow(gr, d - A.size() + 1)
+static func hpP(d: float) -> float: return _tbl(D.HPP, d, 1.096)
+static func coP(d: float) -> float: return _tbl(D.COP, d, 1.035)
+static func bsk(k): var b = D.BSK.get(J.str(k)); return b if b != null else D.BSK["_"]
+static func _grow(g) -> float: return J.num(J.mc(G("GP"), "grow", [g])) if J.t(g) else 1.0
+static func bossK(g) -> float:
+	var q = _grow(g); return 1 + 4.5 * (q - 1) if q <= 4.0 / 3 else 2.5 + 2 * (q - 4.0 / 3)
+static func bossDmg(g) -> float: return J.num(D.BOSS_DMG) * bossK(g)
+static func bossCD(g) -> float: return J.num(D.BOSS_CD) / sqrt(_grow(g))
+static func staffOf(g, named) -> Dictionary:
+	var m = J.num(J.mc(G("GP"), "mul", [g])); var nm = 1.15 if J.t(named) else 1.0; var a = 1 + 0.3 * pow(m, 1.5)
+	return {"atk": a * nm, "hp": a * nm, "cd": pow(0.9, m) * (0.89 if J.t(named) else 1.0), "named": 1.0 if J.t(named) else 0.0, "m": m, "pw": J.mc(G("GP"), "pow", [g])}
+static func staffTxt(M) -> String:
+	var s = "驚嚇 ×" + J.str(J.mc(J.gp(M, "atk"), "toFixed", [2.0])) + "・回靈 ×" + J.str(J.mc(J.gp(M, "cd"), "toFixed", [2.0]))
+	return T(s, s)
+
+# ---- 地盤佈局 ----
+static func layGet(k):
+	var ks = J.str(k)
+	return gridLay(ks) if J.t(D.OG.get(ks)) else D.LAYOUT.get(ks)
+static func layOf(def, room):
+	var rs = J.gp(def, "rooms"); var ri = room if J.t(room) else 0.0
+	var k = J.gp(J.gp(rs, ri), "lay") if (J.t(rs) and J.t(J.gp(rs, ri))) else J.gp(def, "lay")
+	return layGet(k if J.t(k) else "lobby")
+static func gridLay(key: String):
+	var Gd = D.OG[key]
+	if J.t(Gd.get("lay")): return Gd.lay
+	var cw = 1.0 / 6; var ch = 0.1; var x0 = 0.0; var y0 = 0.0
+	var at = func(cx: float, cy: float) -> Array: return [x0 + (cx + 0.5) * cw, y0 + (cy + 0.5) * ch]
+	var data: String = Gd.data
+	var ty = func(cx: float, cy: float) -> float: return 0.0 if (cx < 0 or cy < 0 or cx > 5 or cy > 9) else float(data[int(cy) * 6 + int(cx)].to_int())
+	var walk = func(cx, cy) -> bool: var v = ty.call(cx, cy); return v == 3.0 or v == 4.0
+	var sx = J.num(Gd.start[0]); var sy = J.num(Gd.start[1]); var ex = J.num(Gd.exit[0]); var ey = J.num(Gd.exit[1])
+	var kf = func(x, y) -> String: return J.str(x) + "," + J.str(y)
+	var prev = {}; var q = [[sx, sy]]; prev[kf.call(sx, sy)] = null
+	while q.size():
+		var c0 = q.pop_front(); var x = c0[0]; var y = c0[1]
+		if x == ex and y == ey: break
+		for dd in [[0, -1], [1, 0], [0, 1], [-1, 0]]:
+			var nx = x + dd[0]; var ny = y + dd[1]
+			if walk.call(nx, ny) and not prev.has(kf.call(nx, ny)): prev[kf.call(nx, ny)] = [x, y]; q.append([nx, ny])
+	var cells = []; var c = [ex, ey]
+	while c != null: cells.push_front(c); c = prev.get(kf.call(c[0], c[1]))
+	var path = []
+	for cc in cells: path.append(at.call(cc[0], cc[1]))
+	var s0 = at.call(sx + J.num(Gd.start[2]) * 0.9, sy + J.num(Gd.start[3]) * 0.9); var e0 = at.call(ex + J.num(Gd.exit[2]) * 0.9, ey + J.num(Gd.exit[3]) * 0.9)
+	path.push_front(s0); path.append(e0)
+	var posts = []; var ni = 0
+	for y in 10:
+		for x in 6:
+			var t = ty.call(x, y)
+			if t == 2.0 or t == 4.0:
+				var pp = at.call(x, y); ni += 1
+				posts.append({"x": pp[0], "y": pp[1], "h": 1.0 if t == 2.0 else 0.0, "n": ("牆位" if t == 2.0 else "路位") + str(ni), "cell": [float(x), float(y)]})
+	Gd["lay"] = {"bg": Gd.bg, "path": path, "posts": posts, "grid": {"cw": cw, "ch": ch, "x0": x0, "y0": y0, "ty": func(_t, a): return ty.call(J.num(J.arg(a, 0)), J.num(J.arg(a, 1)))}, "max": Gd.max}
+	return Gd.lay
+
+static func _d2(a, b) -> float: var dx = J.num(a[0]) - J.num(b[0]); var dy = (J.num(a[1]) - J.num(b[1])) * 1.5; return sqrt(dx * dx + dy * dy)
+# 穩定排序（JS Array.sort 係穩定嘅；Godot sort_custom 唔係）
+static func _ssort(a: Array, key: Callable) -> Array:
+	var o = a.duplicate()
+	for i in range(1, o.size()):
+		var v = o[i]; var kv = key.call(v); var j = i - 1
+		while j >= 0 and key.call(o[j]) > kv: o[j + 1] = o[j]; j -= 1
+		o[j + 1] = v
+	return o
+static func floorGraph(F: Array, block: Array, dL: float, dR: float, entry) -> Dictionary:
+	var gx = 0.055; var gy = 0.0367
+	var B2 = []
+	for r in block: B2.append([J.num(r[0]) - 0.035, J.num(r[1]) - 0.025, J.num(r[2]) + 0.035, J.num(r[3]) + 0.025])
+	var inF = func(x: float, y: float) -> bool:
+		var inn = false
+		for r in F:
+			if x >= J.num(r[0]) and x <= J.num(r[2]) and y >= J.num(r[1]) and y <= J.num(r[3]): inn = true; break
+		if not inn: return false
+		for r in B2:
+			if x > r[0] and x < r[2] and y > r[1] and y < r[3]: return false
+		return true
+	var nodes = {}; var adj = {}
+	var i = 0
+	while (i + 0.5) * gx < 1:
+		var j = 0
+		while (j + 0.5) * gy < 1:
+			var x = (i + 0.5) * gx; var y = (j + 0.5) * gy
+			if inF.call(x, y): nodes["g%d_%d" % [i, j]] = [x, y]
+			j += 1
+		i += 1
+	nodes["E"] = entry if J.t(entry) else [0.0, dL]; nodes["X"] = [1.0, dR]
+	var ks = nodes.keys()
+	for a in ks: adj[a] = []
+	for ii in ks.size():
+		for jj in range(ii + 1, ks.size()):
+			var a = ks[ii]; var b = ks[jj]; var A = nodes[a]; var B = nodes[b]; var door = a == "E" or a == "X" or b == "E" or b == "X"; var dd = _d2(A, B)
+			if dd < (0.075 if door else 0.079) and (door or inF.call((J.num(A[0]) + J.num(B[0])) / 2, (J.num(A[1]) + J.num(B[1])) / 2)): adj[a].append(b); adj[b].append(a)
+	var dist = {"X": 0.0}; var q = ["X"]
+	while q.size():
+		q = _ssort(q, func(k): return dist[k])
+		var a = q.pop_front()
+		for b in adj[a]:
+			var nd = dist[a] + _d2(nodes[a], nodes[b])
+			if not dist.has(b) or nd < dist[b] - 1e-9: dist[b] = nd; q.append(b)
+	var edges = {}
+	for a in ks:
+		if a == "X" or not dist.has(a): continue
+		var nx = []
+		for b in adj[a]:
+			if dist.has(b) and dist[b] < dist[a] - 0.025: nx.append(b)
+		nx = _ssort(nx, func(k): return dist[k])
+		if nx.size(): edges[a] = [nx[0]] + nx if nx.size() > 1 else nx
+	var seen = {"E": true}; var stk = ["E"]
+	while stk.size():
+		var a = stk.pop_back()
+		for b in edges.get(a, []):
+			if not seen.has(b): seen[b] = true; stk.append(b)
+	for k in ks:
+		if not seen.has(k): nodes.erase(k); edges.erase(k)
+	return {"nodes": nodes, "edges": edges, "dist": dist}
+static func procSpec(P) -> Dictionary:
+	var dL = J.num(J.gp(P, "dL")); var dR = J.num(J.gp(P, "dR")); var a = minf(dL, 0.5); var b = maxf(dL, 0.5); var c = minf(dR, 0.5); var d = maxf(dR, 0.5)
+	var F = [[0.0, dL - 0.07, 0.32, dL + 0.07], [0.18, a - 0.07, 0.32, b + 0.07], [0.18, 0.26, 0.82, 0.74], [0.68, c - 0.07, 0.82, d + 0.07], [0.68, dR - 0.07, 1.0, dR + 0.07]]
+	var Sd = [[0.40, 0.43, 0.60, 0.57]]
+	var props = [{"k": "boxes", "t": "s", "x0": 0.24, "y0": 0.62, "x1": 0.32, "y1": 0.67}, {"k": "puddle", "t": "p", "x0": 0.70, "y0": 0.48, "x1": 0.78, "y1": 0.52}, {"k": "wire", "t": "e", "x0": 0.72, "y0": 0.29, "x1": 0.78, "y1": 0.32}, {"k": "cart", "t": "s", "x0": 0.66, "y0": 0.64, "x1": 0.75, "y1": 0.69}]
+	var slots = [{"n": "上牆燈箱", "x": 0.38, "y": 0.235, "h": 1.0, "s": 1.0}, {"n": "上牆喉管", "x": 0.62, "y": 0.235, "h": 1.0, "s": 1.0}, {"n": "下牆凹位", "x": 0.5, "y": 0.765, "h": 1.0, "s": 2.0}, {"n": "控制台", "x": 0.5, "y": 0.5, "h": 1.0, "s": 2.0},
+		{"n": "上通道", "x": 0.5, "y": 0.345, "h": 0.0, "s": 1.0}, {"n": "下通道", "x": 0.5, "y": 0.655, "h": 0.0, "s": 1.0}, {"n": "入口走廊", "x": 0.12, "y": dL, "h": 0.0, "s": 1.0}, {"n": "出口走廊", "x": 0.9, "y": dR, "h": 0.0, "s": 1.0}]
+	var obs = [{"k": "console", "t": "w", "x0": Sd[0][0], "y0": Sd[0][1], "x1": Sd[0][2], "y1": Sd[0][3]}]
+	return {"F": F, "S": Sd, "props": props, "slots": slots, "obs": obs}
+static func _asg(base: Dictionary, srcs: Array) -> Dictionary:
+	for o in srcs:
+		if o is Dictionary: for k in o: base[k] = o[k]
+	return base
+static func longLay(_rooms, unlocked, rn, sid):
+	var PP: Array = D.PANO.get(J.str(sid), D.PANO.flat); var n = PP.size(); var u = int(minf(n, J.num(unlocked)))
+	var posts = []; var nodes = {}; var edges = {}; var hide = J.new_("Set", []); var obs = []; var stairs = []; var tm = 0.0
+	var ROOMG = D.DATA4.rooms
+	for r in PP.size():
+		var P = PP[r]; var N; var Ed; var P0; var O0; var PR0
+		if J.t(J.gp(P, "proc")) or J.t(J.gp(P, "floors")):
+			var sp
+			if J.t(J.gp(P, "proc")): sp = procSpec(P)
+			else:
+				var sol = J.gp(P, "solids") if J.t(J.gp(P, "solids")) else []; var ob2 = []
+				for s2 in sol: ob2.append({"k": "wall", "t": "w", "x0": s2[0], "y0": s2[1], "x1": s2[2], "y1": s2[3]})
+				sp = {"F": P.floors, "S": sol, "props": J.gp(P, "props") if J.t(J.gp(P, "props")) else [], "slots": J.gp(P, "slots") if J.t(J.gp(P, "slots")) else [], "obs": ob2}
+			var blk = sp.S.duplicate()
+			for o in sp.props:
+				if J.str(J.gp(o, "t")) == "s": blk.append([o.x0, o.y0, o.x1, o.y1])
+			var g = floorGraph(sp.F, blk, J.num(J.gp(P, "dL")), J.num(J.gp(P, "dR")), J.gp(P, "entry")); N = g.nodes; Ed = g.edges; P0 = sp.slots; O0 = sp.obs; PR0 = sp.props; P["_sp"] = sp
+		else:
+			var R0 = ROOMG[J.str(P.room)]; N = R0.nodes; Ed = R0.edges; P0 = R0.posts; O0 = R0.get("obs", []) if J.t(R0.get("obs")) else []; PR0 = R0.get("props") if J.t(R0.get("props")) else []
+		tm += P0.size()
+		if r >= u: continue
+		var rs = str(r)
+		for k in N: nodes[rs + k] = [J.num(N[k][0]) + r, N[k][1]]
+		for k in Ed:
+			var to = []
+			for t in Ed[k]: to.append(rs + J.str(t))
+			edges[rs + k] = to
+		for pp in P0: posts.append(_asg({"s": 1.0, "d": 0.0}, [pp, {"x": J.num(pp.x) + r, "room": float(r), "kind": "niche" if J.t(J.gp(pp, "h")) else "pad"}]))
+		for o in O0: obs.append(_asg({}, [o, {"x0": J.num(o.x0) + r, "x1": J.num(o.x1) + r, "room": float(r), "bg": 1.0}]))
+		for o in PR0: obs.append(_asg({}, [o, {"x0": J.num(o.x0) + r, "x1": J.num(o.x1) + r, "room": float(r), "prop": 1.0}]))
+		if r > 0:
+			var xa = nodes[str(r - 1) + "X"]; var eb = nodes[rs + "E"]
+			if absf(J.num(xa[1]) - J.num(eb[1])) > 0.02:
+				nodes[rs + "~a"] = [r - 0.02, xa[1]]; nodes[rs + "~b"] = [r + 0.02, eb[1]]; edges[str(r - 1) + "X"] = [rs + "~a"]; edges[rs + "~a"] = [rs + "~b"]; edges[rs + "~b"] = [rs + "E"]
+				stairs.append({"x": float(r), "y0": xa[1], "y1": eb[1]})
+			else: edges[str(r - 1) + "X"] = [rs + "E"]
+	var last = str(u - 1) + "X"; nodes["OUT"] = [J.num(nodes[last][0]) + 0.03, nodes[last][1]]; edges[last] = ["OUT"]
+	var preds = {}
+	for a in edges:
+		for b in edges[a]:
+			if not preds.has(b): preds[b] = []
+			preds[b].append(a)
+	var nv = minf(n, u + 1); var names = []; var rooms = []
+	for r in PP.size():
+		var P = PP[r]; var nm = J.gp(P, "n")
+		if not J.t(nm) and J.t(rn): nm = J.gp(rn, r)
+		if not J.t(nm) and J.t(J.gp(P, "room")) and ROOMG.has(J.str(P.room)): nm = ROOMG[J.str(P.room)].get("n")
+		names.append(nm if J.t(nm) else ["", ""])
+		rooms.append(P.room if J.t(J.gp(P, "room")) else "~" + str(r))
+	return {"long": true, "pano": true, "panels": PP, "rooms": rooms, "unlocked": float(u), "posts": posts, "nodes": nodes, "edges": edges, "preds": preds, "hide": hide, "obs": obs, "corrs": [], "stairs": stairs, "start": "0E", "last": last, "worldW": nv, "worldH": 1.0, "nv": nv, "rx": func(_t, a): return J.arg(a, 0), "tm": tm, "names": names}
+# NextSet 等概率隨機（同一點寫兩次 = 加權）
+static func route(L) -> Array:
+	var pts = []; var k = J.gp(L, "start"); var prev = null; var g = 0
+	while J.t(k) and g < 600:
+		g += 1
+		pts.append({"p": J.gp(J.gp(L, "nodes"), k), "k": k, "hide": J.t(prev) and J.t(J.mc(J.gp(L, "hide"), "has", [J.str(prev) + ">" + J.str(k)]))})
+		var nx = J.gp(J.gp(L, "edges"), k)
+		if not J.t(nx) or J.len(nx) == 0: break
+		prev = k; k = pick(nx)
+	return pts
+
+# ---- 存檔／鬼 ----
+static func st():
+	var S = S_()
+	if not J.t(J.gp(S, "stnPosts")):
+		var sst = J.gp(S, "street")
+		if J.t(sst) and J.t(J.gp(sst, "sites")):
+			var l = J.gp(sst, "last"); var rt = J.gp(sst, "rate")
+			J.sp(S, "stnPosts", {"sites": J.gp(sst, "sites"), "last": l if J.t(l) else now_ms(), "rate": rt if J.t(rt) else 0.0})
+		else: J.sp(S, "stnPosts", {"sites": {}, "last": now_ms(), "rate": 0.0})
+	return J.gp(S, "stnPosts")
+static func site(id, room = null):
+	var key = J.str(id) + "#" + J.str(room) if J.t(room) else J.str(id); var sites = J.gp(st(), "sites")
+	if not J.t(J.gp(sites, key)): J.sp(sites, key, {"lv": 1.0, "maxLv": 1.0, "hot": 0.0, "combo": 0.0, "scared": 0.0, "leaked": 0.0, "coins": 0.0, "posts": [], "unlocked": 1.0, "lost": 0.0, "bosses": [], "modCur": 0.9})
+	return J.gp(sites, key)
+static func CHAR_H_OK(k) -> bool:
+	var ART = G("ART")
+	if J.t(J.gp(ART, "hasRig")) and J.t(J.mc(ART, "hasRig", [k])): return true
+	return has("Puppet") and J.t(J.mc(G("Puppet"), "has", [k]))
+static func ghost(id):
+	if typeof(id) == TYPE_STRING and id.begins_with("dev:"):
+		var r = id.substr(4); return {"id": id, "k": D.DEVK.get(r), "name": T(D.DEVN[r][0], D.DEVN[r][1]), "dev": r}
+	for g in J.iter(J.gp(S_(), "ghosts")):
+		if J.seq(J.gp(g, "id"), id): return g
+	return null
+static func typesOf(k) -> Array:
+	if has("Rework"):
+		var t = J.mc(G("Rework"), "typesOf", [k])
+		if J.t(t) and J.len(t) > 0: return J.iter(t)
+	var SG = G("SCARE_GHOSTS"); var g = J.gp(SG, k) if has("SCARE_GHOSTS") else null
+	if J.t(g): return J.iter(J.gp(g, "types")) if J.t(J.gp(g, "types")) else [J.gp(g, "type")]
+	return [D.W.keys()[(J.str(k).length() * 7) % 8]]
+static func gType(g) -> String:
+	for t in typesOf(J.gp(g, "k")):
+		if J.t(D.KIND.get(J.str(t))): return J.str(t)
+	return "shadow"
+static func power(g) -> float:
+	var v = J.num(J.mc(G("Station"), "power", [g])) if has("Station") else 40.0
+	return v if (is_finite(v) and v > 0) else 40.0
+static func freeGhosts() -> Array:
+	var nw = now_ms(); var out = []
+	for g in J.iter(J.gp(S_(), "ghosts")):
+		if J.str(J.gp(g, "k")) != "afu" and not J.t(J.gp(g, "post")) and not J.cmp(J.gp(g, "tiredUntil"), nw, ">"): out.append(g)
+	return out
+static func save_() -> void: if has("save"): J.cl(G("save"), null, [])
+
+# ---- 名氣 ----
+static func addHot(sd, v: float, def) -> String:
+	var HOT = D.HOT
+	if v > 0:
+		J.sp(sd, "combo", J.num(J.gp(sd, "combo")) + 1)
+		var cb = J.num(J.gp(sd, "combo"))
+		if cb > HOT.comboStart: J.sp(sd, "hot", J.num(J.gp(sd, "hot")) + minf(fmod(cb - HOT.comboStart, 3) + 1, HOT.comboMax))
+	else: J.sp(sd, "combo", 0.0)
+	J.sp(sd, "hot", J.num(J.gp(sd, "hot")) + v)
+	var need = HOT.up * (HOT.overMul if J.num(J.gp(sd, "lv")) >= J.num(J.gp(def, "cap")) else 1.0); var msg = ""
+	if J.num(J.gp(sd, "hot")) >= need:
+		J.sp(sd, "lv", J.num(J.gp(sd, "lv")) + 1); J.sp(sd, "maxLv", maxf(J.num(J.gp(sd, "maxLv")), J.num(J.gp(sd, "lv")))); J.sp(sd, "hot", 0.0)
+		var lv = J.str(J.gp(sd, "lv")); msg = T("傳說愈傳愈勁！路人難度升到 Lv" + lv, "傳說越傳越廣！路人難度升到 Lv" + lv)
+	if J.num(J.gp(sd, "hot")) <= HOT.down:
+		var lv0 = J.num(J.gp(sd, "lv"))
+		if lv0 > 1 and lv0 > J.num(J.gp(sd, "maxLv")) - HOT.minGap:
+			J.sp(sd, "lv", lv0 - 1); J.sp(sd, "hot", HOT.downStart); var lv = J.str(J.gp(sd, "lv"))
+			msg = T("漏人太多，傳說冷咗，難度跌返 Lv" + lv, "漏掉太多人，傳說冷了，難度降回 Lv" + lv)
+		else: J.sp(sd, "hot", HOT.down)
+	return msg
+
+# ---- 陽間街地圖（Godot 由原生外殼 game/station/st_street.gd 畫；DOM 版留低對照）----
+static func _q(sel: String): return J.cl(G("$"), null, [sel])
+static func openStreet() -> void:
+	var Wn = G("window")
+	if J.t(J.gp(Wn, "Policy")) and J.t(J.gp(G("Policy"), "firstEnter")): J.mc(G("Policy"), "firstEnter", ["station"])
+	offline()
+	if has("__nat_stStreet") and J.t(J.cl(G("__nat_stStreet"), null, [])): return
+	var el = _q("#st-street")
+	if not J.t(el):
+		el = J.S_document_("createElement", ["section"]); J.sp(el, "id", "st-street"); J.mc(J.gp(G("document"), "body"), "appendChild", [el])
+	var src = J.gp(G("SPR_SRC"), "st_street") if has("SPR_SRC") else null
+	if not J.t(src): src = ""
+	var h = "<div class=\"sts-top\"><button class=\"sts-back\" id=\"sts-back\">◀ " + T("返陰間", "回陰間") + "</button><b>" + T("陽間街・站崗", "陽間街・站崗") + "</b><span>" + T("村莊發展收入", "村莊發展收入") + " +" + J.str(devTotalRate()) + "/" + T("分", "分") + "</span></div>"
+	var GP = G("GP"); var myGP = J.mc(GP, "top", [3.0])
+	h += "<div class=\"sts-gp\">" + T("你最強三隻鬼平均", "你最強三隻鬼平均") + " " + J.str(J.mc(GP, "tag", [myGP, 0.0])) + "　<small>" + T("紅字＝鬼力未夠，返村升級先", "紅字＝鬼力不足，先回村升級") + "</small></div>"
+	h += "<div class=\"sts-map\" style=\"background-image:url('" + J.str(src) + "')\">"
+	for d in D.SITES:
+		var sd = site(d.id); var held = 0; var lost = 0
+		for p in J.iter(J.gp(sd, "posts")):
+			if J.t(p) and J.gp(p, "g") != null: held += 1
+			if J.t(p) and J.t(J.gp(p, "b")): lost += 1
+		var sub
+		if held or J.t(J.gp(sd, "scared")): sub = "Lv" + J.str(J.gp(sd, "lv")) + "・" + T("嚇走", "嚇走") + J.str(J.gp(sd, "scared")) + ("・<i>" + T("Bryan 佔", "Bryan 佔") + str(lost) + "</i>" if lost else "")
+		else: sub = T("未有鬼站崗", "還沒有鬼站崗")
+		var nd = J.mc(GP, "turfNeed", [J.gp(sd, "lv")]); var lowN = J.cmp(myGP, nd, "<")
+		h += "<button class=\"sts-plate " + ("" if J.t(d.real) else "wip") + " " + ("war" if lost else "") + "\" data-site=\"" + J.str(d.id) + "\" style=\"left:" + J.str(J.num(d.x) * 100) + "%;top:" + J.str(J.num(d.y) * 100) + "%\"><b>" + T(d.n, d.zh) + "</b><small>" + J.str(sub) + "</small><small class=\"gp-need " + ("gp-low" if lowN else "gp-ok") + "\">" + T("建議鬼力", "建議鬼力") + " " + J.str(nd) + "</small></button>"
+	for xy in D.RESERVED:
+		h += "<button class=\"sts-plate res\" data-res=\"1\" style=\"left:" + J.str(J.num(xy[0]) * 100) + "%;top:" + J.str(J.num(xy[1]) * 100) + "%\"><b>" + T("保留地", "保留地") + "</b><small>" + T("敬請期待", "敬請期待") + "</small></button>"
+	h += "<button class=\"sts-plate gate\" id=\"sts-gate\" style=\"left:" + J.str(J.num(D.GATE[0]) * 100) + "%;top:" + J.str(J.num(D.GATE[1]) * 100) + "%\"><b>" + T("返村", "回村") + "</b></button></div>"
+	h += "<p class=\"sts-tip\">" + T("撳地盤入去派鬼站崗。嚇得愈多，傳說愈響，路人就愈難嚇；頂得住就係穩定收入。", "點地盤進去派鬼站崗。嚇得越多，傳說越響，路人就越難嚇；撐得住就是穩定收入。") + "</p>"
+	J.sp(el, "innerHTML", h); J.mc(J.gp(el, "classList"), "add", ["on"]); J.mc(J.gp(J.gp(G("document"), "body"), "classList"), "add", ["st-on"])
+	var t0 = J.num(J.S_performance_("now", [])); var gc = func() -> bool: return J.num(J.S_performance_("now", [])) - t0 < 450
+	for b in J.iter(J.mc(el, "querySelectorAll", [".sts-plate[data-site]"])):
+		J.sp(b, "onclick", func(_t = null, _a = null): if not gc.call(): J.mc(J.gp(SQ, "Turf"), "open", [J.gp(J.gp(b, "dataset"), "site")]))
+	for b in J.iter(J.mc(el, "querySelectorAll", [".sts-plate[data-res]"])):
+		J.sp(b, "onclick", func(_t = null, _a = null): J.mc(G("Fx"), "toast", [T("呢塊地仲未開發，遲啲再嚟", "這塊地還沒開發，晚點再來")]))
+	J.sp(_q("#sts-back"), "onclick", func(_t = null, _a = null):
+		if gc.call(): return
+		closeStreet()
+		if has("World"): J.mc(G("World"), "open", []))
+	J.sp(_q("#sts-gate"), "onclick", func(_t = null, _a = null): if not gc.call(): closeStreet())
+static func closeStreet() -> void:
+	if has("__nat_stStreetEnd"): J.cl(G("__nat_stStreetEnd"), null, [])
+	var el = _q("#st-street")
+	if J.t(el): J.mc(J.gp(el, "classList"), "remove", ["on"]); J.sp(el, "innerHTML", "")
+	J.mc(J.gp(J.gp(G("document"), "body"), "classList"), "remove", ["st-on"])
+	save_()
+	if has("UI") and J.t(J.gp(G("UI"), "refresh")): J.mc(G("UI"), "refresh", [])
+
+# ---- 本關冥幣（sd.wal，經 Turf.sd）＋村莊發展收入（佔領度 ≥50%）----
+static func _tsd():
+	var Tf = J.gp(SQ, "Turf"); return J.gp(Tf, "sd") if J.t(Tf) else null
+static func mk_wal() -> Dictionary:
+	return {"__getters": {"v": func(_t, _a): var sd = _tsd(); return (J.num(J.gp(sd, "wal")) if J.t(J.gp(sd, "wal")) else 0.0) if J.t(sd) else 0.0},
+		"__setters": {"v": func(_t, a): var sd = _tsd(); if J.t(sd): J.sp(sd, "wal", maxf(0.0, J.round(J.num(J.arg(a, 0))))); return null}}
+static func occOf(sd):
+	var h = J.gp(sd, "occH") if J.t(sd) else null
+	if not J.t(h) or J.len(h) < J.num(D.OCC_MIN): return null
+	var a = 0.0
+	for x in J.iter(h): a += J.num(x)
+	return a / J.len(h)
+static func occPush(sd, v) -> void:
+	if not J.t(J.gp(sd, "occH")): J.sp(sd, "occH", [])
+	var h = J.gp(sd, "occH"); h.append(1.0 if J.t(v) else 0.0)
+	var N = int(D.OCC_N)
+	if h.size() > N:
+		var cut = h.size() - N
+		for i in cut: h.pop_front()
+static func devRate(sd) -> float:
+	var o = occOf(sd)
+	if o == null or o < J.num(D.OCC_LINE): return 0.0
+	var any = false
+	for p in J.iter(J.gp(sd, "posts")):
+		if J.t(p) and J.t(J.gp(p, "role")): any = true; break
+	if not any: return 0.0
+	var ml = J.gp(sd, "maxLv")
+	return maxf(1.0, J.round((4 + 3 * (J.num(ml) if J.t(ml) else 1.0)) * (0.5 + o)))
+static func devTotalRate() -> float:
+	var sites = J.gp(st(), "sites"); var r = 0.0
+	for k in J.keys(sites): r += devRate(J.gp(sites, k))
+	return r
+static func devTick(showToast) -> float:
+	var s = st(); var nw = now_ms()
+	if not J.t(J.gp(s, "devT")): J.sp(s, "devT", nw); return 0.0
+	var mins = minf(480.0, (nw - J.num(J.gp(s, "devT"))) / 60000.0)
+	if mins < 1: return 0.0
+	var got = 0.0; var sites = J.gp(s, "sites")
+	for k in J.keys(sites):
+		var sd = J.gp(sites, k); var r = devRate(sd)
+		if r > 0:
+			var g = floorf(r * mins); J.sp(sd, "devGot", (J.num(J.gp(sd, "devGot")) if J.t(J.gp(sd, "devGot")) else 0.0) + g); got += g
+	J.sp(s, "devT", nw)
+	if got > 0:
+		var res = J.gp(S_(), "res"); var c0 = J.gp(res, "coins"); J.sp(res, "coins", (J.num(c0) if J.t(c0) else 0.0) + got)
+		var ds = J.gp(s, "devSum"); J.sp(s, "devSum", (J.num(ds) if J.t(ds) else 0.0) + got)
+		if J.t(showToast) or mins >= 3:
+			var m = "地盤發展收入：村莊冥幣 +" + J.str(got) + "（" + J.str(J.round(mins)) + " 分鐘）"
+			if has("Fx"): J.mc(G("Fx"), "toast", [T(m, m)])
+		if has("UI") and J.t(J.gp(G("UI"), "refresh")) and not J.t(J.gp(J.gp(SQ, "Turf"), "on")): J.mc(G("UI"), "refresh", [])
+		save_()
+	return got
+static func offline() -> void: J.sp(st(), "last", now_ms()); devTick(true); save_()
+static func mk_street(Turf) -> Dictionary:
+	var _n = {"RESERVED": D.RESERVED, "GATE": D.GATE, "devTotalRate": func(_t, _a): return devTotalRate(), "occOf": func(_t, a): return occOf(J.arg(a, 0)),
+		"devRate": func(_t, a): return devRate(J.arg(a, 0)), "DEV": D.DEV, "KIND": D.KIND, "CELL": D.CELL, "PX": D.PX, "PPL": D.PPL,
+		"ghost": func(_t, a): return ghost(J.arg(a, 0)), "gType": func(_t, a): return gType(J.arg(a, 0)), "CHAR_H_OK": func(_t, a): return CHAR_H_OK(J.arg(a, 0)), "WAL": mk_wal()}
+	return {"_n": _n, "TUNE": D.TUNE, "open": func(_t, _a): openStreet(); return null, "close": func(_t, _a): closeStreet(); return null, "Turf": Turf,
+		"site": func(_t, a): return site(J.arg(a, 0), J.arg(a, 1)), "st": func(_t, _a): return st(), "hpMul": func(_t, a): return hpMul(J.num(J.arg(a, 0))),
+		"coinOf": func(_t, a): return coinOf(J.num(J.arg(a, 0)), J.num(J.arg(a, 1))), "addHot": func(_t, a): return addHot(J.arg(a, 0), J.num(J.arg(a, 1)), J.arg(a, 2)),
+		"HOT": D.HOT, "SITES": D.SITES, "KIND": D.KIND}
+
+# ---------------- 第四段：Turf（逐組方法覆蓋喺轉譯版 Turf 物件上；this＝Turf 字典）----------------
+# 4a：幾何／路線／鏡頭／經濟小工具
+static func _or(v, d): return v if J.t(v) else d
+static func Rr(a: float, b: float) -> float: return a + randf() * (b - a)
+static func _iw() -> float: return J.num(J.G.get("innerWidth"))
+static func _ih() -> float: return J.num(J.G.get("innerHeight"))
+static func _hyp(x: float, y: float) -> float: return sqrt(x * x + y * y)
+static func _devL(role, sz): return J.gp(J.gp(D.DEV, role), _or(sz, 1.0))
+static func tf_P(T, x: float, y: float) -> Array:
+	var b = J.gp(T, "box"); return [J.num(J.gp(b, "x")) + x * J.num(J.gp(b, "w")), J.num(J.gp(b, "y")) + y * J.num(J.gp(b, "h"))]
+static func tf_buildPath(T) -> void:
+	var segs = []; J.sp(T, "segs", segs); var Ln = 0.0; var lay = J.gp(T, "lay")
+	if J.t(J.gp(lay, "long")):
+		var pts = []; var k = J.gp(lay, "start"); var gd = 0
+		while J.t(k) and gd < 80:
+			gd += 1; pts.append(J.gp(J.gp(lay, "nodes"), k)); var nx = J.gp(J.gp(lay, "edges"), k); k = J.gp(nx, 0.0) if J.t(nx) else nx
+		J.sp(lay, "path", pts)
+	var PA = J.gp(lay, "path")
+	for i in J.len(PA) - 1:
+		var A = J.gp(PA, i); var B = J.gp(PA, i + 1); var ax = J.num(A[0]); var ay = J.num(A[1]); var bx = J.num(B[0]); var by = J.num(B[1]); var d = _hyp(bx - ax, (by - ay) * 1.5)
+		segs.append({"ax": ax, "ay": ay, "bx": bx, "by": by, "d": d, "s": Ln}); Ln += d
+	J.sp(T, "len", Ln)
+static func tf_at(T, t: float) -> Array:
+	var segs = J.gp(T, "segs")
+	for g in segs:
+		if t <= g.s + g.d: var k = (t - g.s) / g.d; return [g.ax + (g.bx - g.ax) * k, g.ay + (g.by - g.ay) * k]
+	var z = segs[segs.size() - 1]; return [z.bx, z.by]
+static func tf_dist(a, b) -> float: return _hyp(J.num(J.gp(a, 0.0)) - J.num(J.gp(b, 0.0)), (J.num(J.gp(a, 1.0)) - J.num(J.gp(b, 1.0))) * 1.5)
+static func tf_mkRoute(T, w, pts0):
+	var pts = pts0 if J.t(pts0) else route(J.gp(T, "lay"))
+	var j
+	if J.gp(w, "j") != null: j = J.num(J.gp(w, "j"))
+	else: j = Rr(-0.02, 0.02); J.sp(w, "j", j)
+	var segs = []; J.sp(w, "segs", segs); var L0 = 0.0
+	var Jf = func(q) -> Array:
+		var k = J.str(J.gp(q, "k")); var pp = J.gp(q, "p")
+		if k.contains("~in") or k.contains("OUT") or k.contains("@"): return [J.num(J.gp(pp, 0.0)), J.num(J.gp(pp, 1.0))]
+		return [J.num(J.gp(pp, 0.0)) + j, J.num(J.gp(pp, 1.0)) + j * 0.6]
+	var n = J.len(pts)
+	for i in n - 1:
+		var A = Jf.call(J.gp(pts, i)); var B = Jf.call(J.gp(pts, i + 1)); var d = _hyp(B[0] - A[0], (B[1] - A[1]) * 1.5)
+		if d == 0: d = 1e-6
+		var q1 = J.gp(pts, i + 1); var q2 = J.gp(pts, i + 2) if i + 2 < n else null
+		segs.append({"ax": A[0], "ay": A[1], "bx": B[0], "by": B[1], "d": d, "s": L0, "hide": J.gp(q1, "hide"), "k": J.gp(q1, "k"), "nk": J.gp(q2, "k") if J.t(q2) else null}); L0 += d
+	J.sp(w, "len", L0); return w
+static func tf_wp(T, w, dt = null) -> Array:
+	if J.seq(J.gp(w, "gone"), "run") and J.t(J.gp(w, "runPath")): return J.mc(T, "runPos", [w])
+	var t = J.num(J.gp(w, "t")) + (J.num(dt) if J.t(dt) else 0.0); var S2 = J.gp(w, "segs"); if not J.t(S2): S2 = J.gp(T, "segs")
+	for g in J.iter(S2):
+		if t <= J.num(J.gp(g, "s")) + J.num(J.gp(g, "d")):
+			var k = maxf(0.0, (t - J.num(J.gp(g, "s"))) / J.num(J.gp(g, "d"))); var ax = J.num(J.gp(g, "ax")); var ay = J.num(J.gp(g, "ay"))
+			return [ax + (J.num(J.gp(g, "bx")) - ax) * k, ay + (J.num(J.gp(g, "by")) - ay) * k]
+	var z = J.gp(S2, J.len(S2) - 1); return [J.gp(z, "bx"), J.gp(z, "by")]
+static func tf_camStep(T) -> void:
+	var C = J.gp(T, "cam")
+	if not J.t(C): C = {"z": 1.5, "x": 0.5, "y": 0.6, "tx": 0.5, "ty": 0.6, "user": 0.0}; J.sp(T, "cam", C)
+	var nw = J.num(J.S_performance_("now", [])); var I = J.gp(T, "intro"); var L = J.gp(T, "lay")
+	if J.t(I) and J.t(L) and J.t(J.gp(L, "nodes")):
+		var lt = J.gp(I, "lt"); J.sp(I, "t", J.num(J.gp(I, "t")) + minf(0.05, (nw - (J.num(lt) if J.t(lt) else nw)) / 1000)); J.sp(I, "lt", nw)
+		if J.cmp(J.gp(C, "user"), J.gp(I, "u0"), ">") and J.t(J.gp(I, "u0")): J.sp(T, "intro", null)
+		else:
+			J.sp(I, "u0", _or(J.gp(I, "u0"), _or(J.gp(C, "user"), 1.0)))
+			var nodes = J.gp(L, "nodes"); var pts = [J.gp(nodes, "0E"), J.gp(nodes, J.gp(L, "last")), J.gp(nodes, "0E")]
+			var k = minf(1.0, J.num(J.gp(I, "t")) / 8); var sg = 0 if k < 0.55 else 1; var f = (k - 0.55) / 0.45 if sg else k / 0.55; var e = f * f * (3 - 2 * f); var A = pts[sg]; var B = pts[sg + 1]
+			J.sp(C, "z", 1.0); var cx = J.num(A[0]) + (J.num(B[0]) - J.num(A[0])) * e; var cy = J.num(A[1]) + (J.num(B[1]) - J.num(A[1])) * e
+			J.sp(C, "x", cx); J.sp(C, "tx", cx); J.sp(C, "y", cy); J.sp(C, "ty", cy); J.mc(T, "camClamp", [])
+			if k >= 1: J.sp(T, "intro", null); J.sp(C, "user", nw)
+			return
+	if nw - J.num(J.gp(C, "user")) > 3500 and J.t(J.gp(C, "focus")): J.sp(C, "tx", J.gp(J.gp(C, "focus"), 0.0)); J.sp(C, "ty", J.gp(J.gp(C, "focus"), 1.0))
+	var kk = 0.08; J.sp(C, "x", J.num(J.gp(C, "x")) + (J.num(J.gp(C, "tx")) - J.num(J.gp(C, "x"))) * kk); J.sp(C, "y", J.num(J.gp(C, "y")) + (J.num(J.gp(C, "ty")) - J.num(J.gp(C, "y"))) * kk); J.mc(T, "camClamp", [])
+static func _box(T):
+	var b = J.gp(T, "box"); return b if J.t(b) else {"w": _ih() * 1.2, "h": _ih() * 1.8}
+static func _wwh(T) -> Array:
+	var L = J.gp(T, "lay"); var WW = J.gp(L, "worldW") if J.t(L) else null; var WH = J.gp(L, "worldH") if J.t(L) else null
+	return [J.num(WW) if J.t(WW) else 1.0, J.num(WH) if J.t(WH) else 1.0]
+static func tf_zFit(T) -> float:
+	var b = _box(T); var w2 = _wwh(T); return minf(1.0, minf(_iw() / (w2[0] * J.num(J.gp(b, "w"))), _ih() / (w2[1] * J.num(J.gp(b, "h")))))
+static func tf_camClamp(T) -> void:
+	var C = J.gp(T, "cam"); var b = _box(T); var zf = J.num(J.mc(T, "zFit", [])); J.sp(C, "z", maxf(zf, minf(1.5, J.num(J.gp(C, "z")))))
+	var z = J.num(J.gp(C, "z")); var hx = (_iw() / 2) / (J.num(J.gp(b, "w")) * z); var hy = (_ih() / 2) / (J.num(J.gp(b, "h")) * z); var w2 = _wwh(T)
+	var cl = func(v, h: float, M: float) -> float: return M / 2 if h * 2 >= M else maxf(h, minf(M - h, J.num(v)))
+	J.sp(C, "x", cl.call(J.gp(C, "x"), hx, w2[0])); J.sp(C, "tx", cl.call(J.gp(C, "tx"), hx, w2[0])); J.sp(C, "y", cl.call(J.gp(C, "y"), hy, w2[1])); J.sp(C, "ty", cl.call(J.gp(C, "ty"), hy, w2[1]))
+static func _cam(T):
+	var C = J.gp(T, "cam"); return C if J.t(C) else {"z": 1.0, "x": 0.5, "y": 0.5}
+static func tf_toScreen(T, px: float, py: float) -> Array:
+	var C = _cam(T); var b = J.gp(T, "box"); var bx = J.num(J.gp(b, "x")); var by = J.num(J.gp(b, "y")); var bw = J.num(J.gp(b, "w")); var bh = J.num(J.gp(b, "h")); var z = J.num(J.gp(C, "z"))
+	return [bx + bw / 2 + (px - (bx + J.num(J.gp(C, "x")) * bw)) * z, by + bh / 2 + (py - (by + J.num(J.gp(C, "y")) * bh)) * z]
+static func tf_toScene(T, sx: float, sy: float) -> Array:
+	var C = _cam(T); var b = J.gp(T, "box"); var bx = J.num(J.gp(b, "x")); var by = J.num(J.gp(b, "y")); var bw = J.num(J.gp(b, "w")); var bh = J.num(J.gp(b, "h")); var z = J.num(J.gp(C, "z"))
+	return [(sx - bx - bw / 2) / z + bx + J.num(J.gp(C, "x")) * bw, (sy - by - bh / 2) / z + by + J.num(J.gp(C, "y")) * bh]
+static func tf_focusOn(T, x, y) -> void:
+	if not J.t(J.gp(T, "cam")): J.mc(T, "camStep", [])
+	J.sp(J.gp(T, "cam"), "focus", [x, y])
+static func tf_upCost(T, p) -> float:
+	var lvs = J.gp(_devL(J.gp(p, "role"), J.gp(p, "sz")), "lv"); var lv = J.num(_or(J.gp(p, "lv"), 1.0)); var nx = J.gp(lvs, lv)
+	return J.num(J.gp(nx, 0.0)) if (J.t(nx) and lv < J.num(J.mc(T, "lvCap", []))) else INF
+static func tf_stats(_T, g, spot, lv: float) -> Dictionary:
+	var ty = gType(g); var K = D.KIND[ty]; var h = J.t(J.gp(spot, "h"))
+	var fit = 1.2 if ((J.t(K.get("ground")) and not h) or (J.t(K.get("high")) and h)) else 1.0
+	var v = power(g) * J.num(K.mul) * fit * J.num(D.TUNE.dmg) * (1 + 0.25 * (lv - 1))
+	return {"ty": ty, "K": K, "scare": J.round(v), "cd": J.mc(J.num(K.cd) * pow(0.92, lv - 1), "toFixed", [2.0])}
+static func tf_fixPosts(T) -> void:
+	var sd = J.gp(T, "sd"); var LP = J.gp(J.gp(T, "lay"), "posts"); var posts = J.gp(sd, "posts")
+	while J.len(posts) < J.len(LP): posts.append(null)
+	var out = []
+	for i in posts.size():
+		var p = posts[i]
+		if J.t(p) and J.t(J.gp(p, "role")) and J.t(J.gp(LP, i)):
+			var s1 = _or(J.gp(J.gp(LP, i), "s"), 1.0)
+			J.sp(p, "sz", s1); J.sp(p, "spent", _or(J.gp(p, "spent"), J.gp(J.gp(J.gp(_devL(J.gp(p, "role"), s1), "lv"), 0.0), 0.0))); out.append(p)
+		else: out.append(p if (J.t(p) and J.t(J.gp(p, "role"))) else null)
+	J.sp(sd, "posts", out)
+static func tf_lvCap(T) -> float: return 3.0 + (2.0 if J.num(J.gp(J.gp(T, "sd"), "unlocked")) >= 3 else 0.0)
+static func tf_incomeCap(T) -> float: var RM = D.ROOM_MAXLV; return J.num(RM[int(minf(RM.size(), J.num(J.gp(J.gp(T, "sd"), "unlocked")))) - 1])
+static func tf_mod(T) -> float: return maxf(0.9, minf(1.05, J.num(_or(J.gp(J.gp(T, "sd"), "modCur"), 0.9)))) * J.num(_or(J.gp(T, "modMax"), 1.0))
+static func tf_unit(T) -> float: return floorf(13 * coP(minf(J.num(J.gp(J.gp(T, "sd"), "lv")), J.num(J.mc(T, "incomeCap", [])))) * 1.15)
+static func tf_build(T) -> float:
+	var sd = J.gp(T, "sd"); var TM = J.num(J.gp(J.gp(T, "lay"), "tm")); var blt = []
+	for p in J.iter(J.gp(sd, "posts")):
+		if J.t(p) and J.t(J.gp(p, "role")) and not (J.cmp(J.gp(p, "build"), 0.0, ">") and J.num(_or(J.gp(p, "lv"), 1.0)) == 1): blt.append(p)
+	var up = 0.0; var stf = 0
+	for p in blt:
+		up += (J.num(_or(J.gp(p, "lv"), 1.0)) - 1) * 0.875
+		if J.gp(p, "staff") != null: stf += 1
+	var v = (blt.size() * 1.5 + up) / (5 * TM) * 0.6 + stf / TM * 0.4
+	var bs = J.gp(sd, "bosses")
+	if J.t(bs) and J.len(bs) > 0:
+		var g = ghost(J.gp(bs, 0.0)); v += 0.1 + minf(0.15, ((J.num(J.mc(G("GP"), "grow", [g])) if J.t(g) else 1.0) - 1) * 0.2)
+	return J.round(v * 1000) / 10
+static func tf_rect(_T, spot) -> Array:
+	var s2 = J.seq(J.gp(spot, "s"), 2.0); var dd = J.t(J.gp(spot, "d")); var CELL = J.num(D.CELL)
+	var w = CELL * (2.0 if s2 and not dd else 1.0); var h = CELL * (2.0 if s2 and dd else 1.0) / 1.5; var x = J.num(J.gp(spot, "x")); var y = J.num(J.gp(spot, "y"))
+	return [x - w / 2, y - h / 2, x + w / 2, y + h / 2]
+static func tf_rdist(T, pt, spot) -> float:
+	var r = J.mc(T, "rect", [spot]); var px = J.num(J.gp(pt, 0.0)); var py = J.num(J.gp(pt, 1.0))
+	var dx = maxf(maxf(J.num(r[0]) - px, 0.0), px - J.num(r[2])); var dy = maxf(maxf(J.num(r[1]) - py, 0.0), py - J.num(r[3])); return _hyp(dx, dy * 1.5)
+static func tf_wseg(_T, w):
+	var t = maxf(0.0, J.num(J.gp(w, "t"))); var segs = J.gp(w, "segs")
+	for g in J.iter(segs):
+		if t <= J.num(J.gp(g, "s")) + J.num(J.gp(g, "d")): return g
+	return J.gp(segs, J.len(segs) - 1)
+static func tf_runPos(T, w) -> Array:
+	var P0 = J.gp(w, "runPath"); var left = minf(J.num(J.gp(w, "runT")), 1.5) * J.num(J.gp(w, "spd")) * 1.8; var n = J.len(P0)
+	for i in n - 1:
+		var A = J.gp(P0, i); var B = J.gp(P0, i + 1); var d = tf_dist(A, B)
+		if left <= d:
+			var k = left / d; return [J.num(A[0]) + (J.num(B[0]) - J.num(A[0])) * k, J.num(A[1]) + (J.num(B[1]) - J.num(A[1])) * k]
+		left -= d
+	return J.gp(P0, n - 1).duplicate()
+static func tf_alive(T, w) -> bool: return not J.t(J.gp(w, "gone")) and J.num(J.gp(w, "t")) > 0 and not J.t(J.gp(J.mc(T, "wseg", [w]), "hide"))
+static func tf_staffMul(T, p):
+	var g = ghost(J.gp(p, "staff")) if J.gp(p, "staff") != null else null
+	if not J.t(g): return {"atk": 1.0, "cd": 1.0, "hp": 1.0}
+	return staffOf(g, J.t(J.mc(J.gp(T, "SPECIAL"), "includes", [J.gp(g, "k")])))
+static func tf_devK(_T, p):
+	var g = ghost(J.gp(p, "staff")) if J.gp(p, "staff") != null else null
+	return J.gp(g, "k") if J.t(g) else J.gp(J.gp(D.DEV, J.gp(p, "role")), "k")
+static func _m(f: Callable, n: int) -> Callable:
+	# 包成 JS 方法：f(this, a0, a1…)；參數唔夠補 null
+	return func(this_, a: Array):
+		var args = [this_]
+		for i in n: args.append(a[i] if i < a.size() else null)
+		return f.callv(args)
+const TF_4A := {"P": 2, "buildPath": 0, "at": 1, "mkRoute": 2, "wp": 2, "camStep": 0, "zFit": 0, "camClamp": 0, "toScreen": 2, "toScene": 2, "focusOn": 2,
+	"upCost": 1, "stats": 3, "fixPosts": 0, "lvCap": 0, "incomeCap": 0, "mod": 0, "unit": 0, "build": 0, "rect": 1, "rdist": 2, "wseg": 1, "runPos": 1, "alive": 1, "staffMul": 1, "devK": 1}
+static func turf_methods(group: Dictionary) -> Dictionary:
+	var out = {}
+	for k in group: out[k] = _m(Callable(load("res://native/street.gd"), "tf_" + k), group[k])
+	out.erase("dist")
+	return out
+static func tf_install(Tf, group: Dictionary) -> void:
+	var M = turf_methods(group)
+	for k in M: J.sp(Tf, k, M[k])
+	if group == TF_4A: J.sp(Tf, "dist", func(_this, a): return tf_dist(J.arg(a, 0), J.arg(a, 1)))
+
 func run(_env) -> void:
 	# 未完成段落：暫時用轉譯版
 	var tr = (load("res://jsgen/street.gd") as GDScript).new(); _tr_keep.append(tr); tr.run(null)
@@ -440,3 +1017,9 @@ func run(_env) -> void:
 	J.G["__stDC"] = func(_t, a): stDC(J.arg(a, 0), J.arg(a, 1), J.arg(a, 2), J.arg(a, 3), J.arg(a, 4), J.arg(a, 5)); return null
 	J.G["CrUI"] = mk_crui()
 	J.G["DevFx"] = mk_devfx()
+	# 第三段：Street 匯出物件原生（Turf 未改寫：暫時用轉譯版 Turf；轉譯版自己嘅 devTick 計時器照行，用 devT 時間戳，唔會重複計）
+	load_data()
+	SQ = mk_street(J.gp(J.G.get("Street"), "Turf"))
+	J.G["Street"] = SQ
+	tf_install(J.gp(SQ, "Turf"), TF_4A)
+	if J.G.get("window") != null and J.gp(J.G.window, "Street") != null: J.sp(J.G.window, "Street", SQ)
