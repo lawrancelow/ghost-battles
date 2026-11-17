@@ -69,6 +69,36 @@ if [ $PCK = 1 ]; then
 fi
 flock /tmp/godot.lock timeout 900 "$GD" --headless --path . --export-debug Android "$OUT/build/GhostBattles.apk" > "$OUT/build/export.log" 2>&1
 ls -la "$OUT/build/GhostBattles.apk"
+
+# 包內容檢查：ACTIVE.txt 一定要入包，否則手機上全部原生模塊都唔會啟用（v0.9.0 嘅事故）
+L=$(unzip -l "$OUT/build/GhostBattles.apk" | awk '{print $4}')
+MISS=0
+echo "$L" | grep -qx 'assets/native/ACTIVE.txt' || { echo "包內缺 native/ACTIVE.txt"; MISS=1; }
+for m in $(grep -oE '[a-z0-9_]+' jsgen/modules.txt); do
+	if grep -v '^#' native/ACTIVE.txt | sed 's/[[:space:]]//g' | grep -qx "$m"; then
+		echo "$L" | grep -qx "assets/native/$m.gd" || { echo "包內缺 native/$m.gd"; MISS=1; }
+	else
+		echo "$L" | grep -qx "assets/jsgen/$m.gd" || { echo "包內缺 jsgen/$m.gd"; MISS=1; }
+	fi
+done
+[ $MISS = 0 ] || { echo "包內容檢查唔過，唔交付"; exit 1; }
+echo "包內容檢查：通過"
+
+# 用同一套篩選匯出 pck，喺電腦用「包入面嘅檔」跑全遊戲一條龍（唔係用專案資料夾）
+if [ -z "$NOPKGTEST" ]; then
+	# 測試用 pck：同 APK 一樣嘅篩選，只係保留 tools/（一條龍測試腳本喺入面）
+	cp export_presets.cfg "$OUT/build/presets.bak"
+	sed -i 's#exclude_filter="tools/\*,#exclude_filter="#' export_presets.cfg
+	flock /tmp/godot.lock timeout 900 "$GD" --headless --path . --export-pack Linux "$OUT/build/pkgtest.pck" > "$OUT/build/export_pck.log" 2>&1
+	cp "$OUT/build/presets.bak" export_presets.cfg
+	PT="$OUT/pkgrun"; rm -rf "$PT"; mkdir -p "$PT/xdg"; cp tools/tests/full_run.json "$PT/full.json"
+	(cd "$PT" && flock /tmp/godot.lock env XDG_DATA_HOME="$PT/xdg" GB_TEST="$PT/full.json" timeout 600 xvfb-run -a -s '-screen 0 450x975x24' "$GD" --main-pack "$OUT/build/pkgtest.pck" --rendering-driver opengl3 > "$OUT/build/pkgrun.log" 2>&1) || true
+	SE=$(grep -c 'SCRIPT ERROR' "$OUT/build/pkgrun.log")
+	grep -q '\[full\] done' "$OUT/build/pkgrun.log" && DONE=1 || DONE=0
+	grep -E '\[full\] (done|save_check)' "$OUT/build/pkgrun.log"
+	echo "包內一條龍：腳本錯誤 $SE，完成=$DONE"
+	[ "$SE" = 0 ] && [ $DONE = 1 ] || { echo "包內一條龍唔過，唔交付"; exit 1; }
+fi
 mkdir -p /mnt/user-data/outputs
 cp "$OUT/build/GhostBattles.apk" "/mnt/user-data/outputs/GhostBattles_v$VER.apk"
 echo "完成：/mnt/user-data/outputs/GhostBattles_v$VER.apk"
