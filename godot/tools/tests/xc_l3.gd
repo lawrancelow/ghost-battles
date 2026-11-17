@@ -670,3 +670,18 @@ func street_t4n(_t) -> void:
 	J.test_perf = -1.0
 	J.G["Math"] = mk.keep
 	_report()
+
+# ---- L3：實玩（陽間街 → 地盤）：用實際遊戲物件開街、開地盤、推人入場；之後由 tester 等幾秒再截圖 ----
+func street_play_street(_t) -> void:
+	J.mc(J.G.Street, "open", []); print("[play] street open native=", J.G.Street.get("Turf") != null)
+func street_play_turf(_t) -> void:
+	J.mc(J.G.Street, "close", [])
+	var Tf = J.G.Street.Turf; J.mc(Tf, "open", ["office"])
+	Tf.q.t = 0.1; print("[play] turf open on=", Tf.on, " posts=", J.len(Tf.lay.posts))
+func street_play_enter(_t) -> void:
+	var Tf = J.G.Street.Turf; J.mc(Tf, "enter", [true]); print("[play] enter q=", Tf.q.st, " walkers=", Tf.walkers.size())
+func street_play_stat(_t) -> void:
+	var Tf = J.G.Street.Turf
+	print("[play] stat on=%s walkers=%d scared=%s leaked=%s wal=%s q=%s parts=%d fx=%d" % [Tf.on, Tf.walkers.size(), Tf.sd.get("scared"), Tf.sd.get("leaked"), Tf.sd.get("wal"), Tf.q.st, Tf.parts.size(), Tf.fx.size()])
+func street_play_close(_t) -> void:
+	J.mc(J.G.Street.Turf, "close", []); print("[play] closed")
