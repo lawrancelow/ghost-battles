@@ -35,3 +35,19 @@ func state(_t) -> void:
 func wcheck(_t) -> void:
 	var s = load("res://native/daily_work.gd")
 	print("[l1shot] daily_work load=", s != null and s.can_instantiate())
+
+func wstate(_t) -> void:
+	var W = J.G.get("WORK"); var ST = J.gp(W, "STATE"); var o = []
+	if ST is Dictionary:
+		for k in ST: o.append("%s:%s/%s" % [k, ST[k].k, ST[k].act])
+	print("[l1shot] work native=", load("res://native/daily_work.gd").STATE == ST, " n=", o.size(), " ", o)
+
+func assign(_t) -> void:
+	var posts = ["wood", "rice", "plank", "bun", "store", "boss", "camp", "wood", "rice", "plank", "bun", "camp", "rice", "wood"]
+	var i = 0; var seen = {}; var o = []
+	for g in G.S.ghosts:
+		if J.str(g.k) == "afu" or seen.has(J.str(g.k)): continue
+		seen[J.str(g.k)] = true
+		if i >= posts.size(): break
+		g["post"] = posts[i]; o.append("%s→%s" % [g.k, posts[i]]); i += 1
+	print("[l1shot] assign ", o)
