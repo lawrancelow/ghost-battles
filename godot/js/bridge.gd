@@ -160,4 +160,4 @@ static func connect_ui(main) -> void:
 		ui["close"] = func(_t, a):
 			J.cl(orig_close, ui, a); main._nav_on("village"); return null
 	var joss = G.get("JossFx")
-	if joss is Dictionary: joss["play"] = func(_t, a): return null
+	if joss is Dictionary: joss["play"] = func(_t, a): JossFxN.play(main); return null   # 化寶爐金銀紙：原生特效（ui/joss_fx.gd）
