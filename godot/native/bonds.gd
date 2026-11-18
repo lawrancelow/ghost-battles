@@ -46,8 +46,8 @@ static func zh() -> bool:
 	var LANG = _g("LANG")
 	return LANG == null or J.str(J.gp(LANG, "cur")) != "yue"
 static func T(p):
-	if p is Array: return (p[1] if p.size() > 1 and p[1] != null else p[0]) if zh() else p[0]
-	return p
+	if p is Array: return DB.N((p[1] if p.size() > 1 and p[1] != null else p[0]) if zh() else p[0])
+	return DB.N(p)
 static func art(k) -> bool:
 	var f = _g("sprOk")
 	return J.typeof_(f) != "function" or J.t(J.cl(f, null, [k]))

@@ -44,6 +44,7 @@ func new_state() -> Dictionary:
 		"seen": {}, "chests": {"g": 0, "b": 0, "p": 0}, "furnaceAt": 0, "feastAt": 0, "last": now_ms(), "ended": false,
 		"trees": [3, 3, 3, 3, 3, 3, 3, 3], "treeRegrow": [0, 0, 0, 0, 0, 0, 0, 0], "paddy": [1, 1, 1, 1, 1, 1], "paddyRegrow": [0, 0, 0, 0, 0, 0],
 		"uid": 1, "prod": {}, "visit": {}, "wmSeen": {}, "qv": 2,
+		"hero": {"name": "阿福", "full": "陳大福", "en": "Kelvin", "sex": "m", "set": false},   # 主角名／性別（DB.N 顯示時替換）
 	}
 
 # ---------------- 存檔 ----------------

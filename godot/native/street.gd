@@ -447,8 +447,8 @@ static func T(yue, zh) -> String:
 	var y = J.str(yue)
 	if has("LANG") and not _added.has(y): J.mc(G("LANG"), "add", [{y: zh}]); _added[y] = true
 	var Wn = G("window")
-	if Wn != null and J.t(J.gp(Wn, "L")): return J.str(J.S_window_("L", [y]))
-	return y
+	if Wn != null and J.t(J.gp(Wn, "L")): return J.str(DB.N(J.str(J.S_window_("L", [y]))))
+	return J.str(DB.N(y))
 static func now_ms() -> float: return J.num(J.S_Date_("now", []))
 static func pick(a: Array):
 	var r = randf()

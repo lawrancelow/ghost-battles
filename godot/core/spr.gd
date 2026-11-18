@@ -11,7 +11,31 @@ func _ready() -> void:
 func ok(k: String) -> bool:
 	return _man.has(k)
 
+# 女主角（S.hero.sex == "f"）換圖：afu → afuf、afu_xxx → afuf_xxx、rg_afu_xxx → rg_afuf_xxx（afu__axe 之類一樣）
+# 有對應 afuf 版圖先換，冇就照用阿福張圖。女主選項開唔開放：fem_ok()（＝ ok("afuf")）
+static func fem_key(k: String) -> String:
+	if k == "afu": return "afuf"
+	if k.begins_with("afu_"): return "afuf" + k.substr(3)
+	if k.begins_with("rg_afu_"): return "rg_afuf_" + k.substr(7)
+	return k
+
+func fem_ok() -> bool: return _man.has("afuf")
+
+func key_for(k: String) -> String:
+	if not k.contains("afu"): return k
+	if not DB.hero_female(): return k
+	var fk = fem_key(k)
+	return fk if fk != k and _man.has(fk) else k
+
+# JS 圖（SPR／SPR_SRC 經 El.src 載）：res://assets/spr/afu_body.webp → 有 afuf_body 就用佢嘅路徑
+func fem_src(path: String) -> String:
+	if not DB.hero_female(): return path
+	var k = path.get_file().get_basename()
+	var fk = key_for(k)
+	return str(_man[fk]) if fk != k else path
+
 func get_tex(k: String) -> Texture2D:
+	k = key_for(k)
 	if _tex.has(k): return _tex[k]
 	if not _man.has(k): return null
 	var t: Texture2D = load(_man[k])

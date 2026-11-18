@@ -6,15 +6,17 @@ static var cur := "zh"
 static var ZH := {}
 static var subs: Array = []
 
+# 查完對照表（粵語原句做 key）先經 DB.N() 換主角名／女版句
 static func L(s):
-	if typeof(s) != TYPE_STRING or cur != "zh": return s
+	if typeof(s) != TYPE_STRING: return s
+	if cur != "zh": return DB.N(s)
 	var t = ZH.get(s)
-	return t if t != null and J.str(t) != "" else s
+	return DB.N(t if t != null and J.str(t) != "" else s)
 
 static func Lf(s, v):
 	var r = L(s)
 	if J.t(v):
-		for k in J.keys(v): r = J.str(r).replace("{" + J.str(k) + "}", J.str(J.gp(v, k)))
+		for k in J.keys(v): r = J.str(r).replace("{" + J.str(k) + "}", J.str(DB.N(J.str(J.gp(v, k)))))
 	return r
 
 static func set_lang(v) -> void:

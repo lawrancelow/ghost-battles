@@ -2070,7 +2070,7 @@ func draw_over(n: CanvasItem, u: PtU, o: Dictionary) -> void:
 		if u.sk != null and u.side == 0 and not u.leader: n.draw_rect(Rect2(-bw / 2, top + 4, bw * minf(1, u.energy / 100.0), 2), Color("#ffd84a") if u.energy >= 100 else Color("#7dd3fc"))
 		if u.role == "crew" and u.g != null and J.num(u.g.get("fat", 0)) >= 70: n.draw_string(fnt, Vector2(bw / 2 + 1, top + 8), "累", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#ff9a5a"))
 	if named or u.leader:
-		var txt = "阿福" if u.leader else (("%s・%s" % [u.kname, u.name]) if u.kname != "" else (("釘子戶・%s" % u.name) if u.elite else u.name))
+		var txt = DB.N("阿福") if u.leader else (("%s・%s" % [u.kname, u.name]) if u.kname != "" else (("釘子戶・%s" % u.name) if u.elite else u.name))
 		var col = Color("#ffe9a0") if u.leader else (Color("#ffb0ff") if u.elite else (Color("#ff9a9a") if u.bryan else Color("#ffd0d8")))
 		var fs = 13 if u.boss else 11
 		var sw = fnt.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x

@@ -104,7 +104,7 @@ func _place_bottom() -> void:
 		p.reset_size(); p.size.x = w - 20; p.position = Vector2(10, h - 96 - p.size.y)
 
 func _lbl(t: String, sz: float, col: Color, kind := "sans", wt := 400) -> Label:
-	var l = UIKit.label(t, int(sz), col, kind, wt); l.mouse_filter = Control.MOUSE_FILTER_IGNORE; return l
+	var l = UIKit.label(DB.N(t), int(sz), col, kind, wt); l.mouse_filter = Control.MOUSE_FILTER_IGNORE; return l
 
 func _ghost_btn(t: String) -> Button:
 	var b = Button.new(); b.text = t; b.add_theme_font_override("font", UIKit.font("sans", 900)); b.add_theme_font_size_override("font_size", 13)

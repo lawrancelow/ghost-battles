@@ -46,8 +46,8 @@ static func T(yue: String, zh: String) -> String:
 		if J.typeof_(LG) != "undefined" and J.t(J.gp(LG, "add")): J.mc(LG, "add", [{yue: zh}])
 		_added[yue] = true
 	var Wn = J.G.get("window")
-	if J.typeof_(Wn) != "undefined" and J.t(J.gp(Wn, "L")): return J.str(J.S_window_("L", [yue]))
-	return yue
+	if J.typeof_(Wn) != "undefined" and J.t(J.gp(Wn, "L")): return J.str(DB.N(J.str(J.S_window_("L", [yue]))))
+	return DB.N(yue)
 static func now() -> float:
 	return n(J.S_performance_("now", []) if J.typeof_(J.G.get("performance")) != "undefined" else J.S_Date_("now", [])) / 1000.0
 static func has_same(arr, x) -> bool:

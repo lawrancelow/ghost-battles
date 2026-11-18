@@ -56,7 +56,7 @@ static func icon_rect(name: String, col: Color, px := 22) -> TextureRect:
 
 static func F(w := 400) -> Font: return UIKit.font("sans", w)
 static func lab(t: String, sz := 15, col := TXT, w := 400) -> Label:
-	var l = UIKit.label(t, sz, col, "sans", w); l.mouse_filter = Control.MOUSE_FILTER_IGNORE; return l
+	var l = UIKit.label(DB.N(t), sz, col, "sans", w); l.mouse_filter = Control.MOUSE_FILTER_IGNORE; return l
 static func now_hm() -> String:
 	var d = Time.get_time_dict_from_system(); return "%02d:%02d" % [d.hour, d.minute]
 static func name_col(n: String) -> Color: return Color(NAMECOLS[abs(n.hash()) % NAMECOLS.size()])
@@ -127,12 +127,12 @@ static func draw_ticks(ci: CanvasItem, o: Vector2, two: bool, col: Color) -> voi
 
 # 對話氣泡：文字自行排版，時間（同剔號）貼喺最後一行右下角，好似真 ApaKhabar
 class Bubble extends Control:
-	var kind = "them"; var who = ""; var text = ""; var time = ""; var tick = 0; var tail = true
+	var kind = "them"; var who = ""; var who_raw = ""; var text = ""; var time = ""; var tick = 0; var tail = true
 	var tick_col = WA.META
 	var para: TextParagraph; var maxw = 296.0; var inline_meta = true
 	const PL = 9.0; const PR = 9.0; const PT = 6.0; const PB = 8.0; const FS = 15; const LH = 21.0
 	func _init(k: String, w: String, t: String, tm: String, tk := 0, tl := true, mw := 296.0) -> void:
-		kind = k; who = w; text = t; time = tm; tick = tk; tail = tl; maxw = mw
+		kind = k; who_raw = w; who = DB.N(w); text = DB.N(t); time = tm; tick = tk; tail = tl; maxw = mw
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		size_flags_horizontal = Control.SIZE_SHRINK_END if k == "me" else (Control.SIZE_SHRINK_CENTER if k == "mid" else Control.SIZE_SHRINK_BEGIN)
 		if tick == 3: tick_col = WA.BLUE
@@ -188,7 +188,7 @@ class Bubble extends Control:
 			draw_colored_polygon(PackedVector2Array([Vector2(1, top), Vector2(-8, top), Vector2(1, top + 10)]), bgc)
 		var y = top + (5.0 if kind == "mid" else PT)
 		if who != "" and kind == "them":
-			draw_string(WA.F(600), Vector2(PL, y + 13), who, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, WA.name_col(who)); y += 18
+			draw_string(WA.F(600), Vector2(PL, y + 13), who, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, WA.name_col(who_raw)); y += 18
 		var lh = 18.0 if kind == "mid" else LH
 		var col = WA.SUB if kind == "mid" else WA.TXT
 		for i in para.get_line_count():
@@ -557,7 +557,7 @@ func _chat_line(who: String, text: String, tm: String) -> void:
 		return
 	var arrive = func():
 		_cancel()
-		sub_lbl.text = group if group != "" else "在線上"; sub_lbl.add_theme_color_override("font_color", SUB)
+		sub_lbl.text = DB.N(group) if group != "" else "在線上"; sub_lbl.add_theme_color_override("font_color", SUB)
 		if last_mine != null: last_mine.set_tick(3); last_mine = null
 		_add(Bubble.new("them", who if group != "" else "", text, tm, 0, chat_prev_who != who, _maxw()), true)
 		chat_prev_who = who
@@ -565,7 +565,7 @@ func _chat_line(who: String, text: String, tm: String) -> void:
 		_after(minf(1.8, 0.7 + text.length() * 0.022), _next_line)
 		fast = func(): _cancel(); _next_line()
 	if li == 0: arrive.call(); return
-	sub_lbl.text = (who + " 正在輸入…") if group != "" else "正在輸入…"; sub_lbl.add_theme_color_override("font_color", GREEN)
+	sub_lbl.text = (DB.N(who) + " 正在輸入…") if group != "" else "正在輸入…"; sub_lbl.add_theme_color_override("font_color", GREEN)
 	_after(minf(1.6, 0.45 + text.length() * 0.03), arrive)
 	fast = arrive
 
@@ -699,7 +699,7 @@ func _build_chat(title: String, av, sub: String, story: bool, time := "", batt :
 	var lk = HBoxContainer.new(); lk.add_theme_constant_override("separation", 4)
 	var lock = PanelContainer.new(); lock.add_theme_stylebox_override("panel", UIKit.sb(MID, 8, Color(0, 0, 0, 0), 0, Vector4(10, 6, 10, 6)))
 	lock.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var ltx = lab("🔒 " + ("訊息和通話皆已端對端加密。對話以外的人（包括 ApaKhabar）都無法讀取或收聽。" if _pre() else "訊息已陰陽兩界加密。活人無法讀取，閻王都唔得。"), 12, Color("#ffd279"))
+	var ltx = lab("🔒 " + ("訊息和通話皆已端對端加密。對話以外的人（包括 ApaKhabar）都無法讀取或收聽。" if _pre() else ("訊息已陰陽兩界加密。活人無法讀取，集團主席都唔得。" if DB.lang == "yue" else "訊息已陰陽兩界加密。活人無法讀取，集團主席也不行。")), 12, Color("#ffd279"))
 	ltx.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; ltx.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; ltx.custom_minimum_size.x = 290
 	lock.add_child(ltx); body.add_child(lock)
 	var gap = Control.new(); gap.custom_minimum_size.y = 4; gap.mouse_filter = Control.MOUSE_FILTER_IGNORE; body.add_child(gap)

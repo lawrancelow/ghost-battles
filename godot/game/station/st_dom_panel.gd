@@ -18,7 +18,7 @@ const INK := Color("#f1e6d6")
 const DIM := Color("#bfb3a2")
 const GOLD := Color("#ffd27a")
 
-static func T(y: String, z: String) -> String: return y if DB.lang == "yue" else z
+static func T(y: String, z: String) -> String: return DB.N(y if DB.lang == "yue" else z)
 
 func setup(root_el, tf, mode: String) -> void:
 	el = root_el; Tf = tf; _born = Time.get_ticks_msec()

@@ -11,7 +11,7 @@ var mapr: TextureRect
 var plates: Array = []   # [Button, fx, fy]
 
 static func js(n: String): return J.G.get(n)
-static func T(y: String, z: String) -> String: return y if DB.lang == "yue" else z
+static func T(y: String, z: String) -> String: return DB.N(y if DB.lang == "yue" else z)
 
 static func hook() -> bool:
 	var main = Engine.get_main_loop().root.get_node_or_null("Main")

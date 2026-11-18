@@ -13,7 +13,7 @@ static func n(v) -> float:
 	if v is float: return v
 	if v is int: return float(v)
 	return J.num(v)
-static func T(y: String, z: String) -> String: return y if DB.lang == "yue" else z
+static func T(y: String, z: String) -> String: return DB.N(y if DB.lang == "yue" else z)
 static func js(k: String): return J.G.get(k)
 static func rgba(r: float, g: float, b: float, a: float) -> Color: return Color(r / 255.0, g / 255.0, b / 255.0, clampf(a, 0, 1))
 

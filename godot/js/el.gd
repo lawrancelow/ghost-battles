@@ -83,7 +83,7 @@ func _set(p: StringName, v) -> bool:
 		&"src":
 			props["src"] = v
 			var s = J.str(v)
-			if s.begins_with("res://"): tex = load(ImgAlias.resolve(s))
+			if s.begins_with("res://"): tex = load(ImgAlias.resolve(Spr.fem_src(s) if s.contains("afu") else s))   # 女主：有 afuf 版圖就用
 			if tex != null and J.host: J.host.fire_later(self, "onload")
 			elif J.host: J.host.fire_later(self, "onerror")
 			return true
@@ -96,11 +96,11 @@ func _set(p: StringName, v) -> bool:
 			for c in J.str(v).split(" ", false): classList.d[c] = true
 			return true
 		&"innerHTML":
-			props["innerHTML"] = v; Html.parse_into(self, J.str(v) if v != null else ""); return true
+			props["innerHTML"] = v; Html.parse_into(self, DB.N(J.str(v)) if v != null else ""); return true   # DB.N：主角名／女版句（顯示時換）
 		&"textContent", &"innerText":
 			if tagName == "STYLE": Css.add_text(J.str(v))
 			children.clear()
-			var t = El.new("#text"); t.props["textContent"] = J.str(v) if v != null else ""; t.parentNode = self; children.append(t)
+			var t = El.new("#text"); t.props["textContent"] = (J.str(v) if tagName == "STYLE" else DB.N(J.str(v))) if v != null else ""; t.parentNode = self; children.append(t)
 			return true
 		&"outerHTML": return true
 	props[String(p)] = v
@@ -150,7 +150,7 @@ func _text() -> String:
 	return o
 func _js_insertAdjacentHTML(a: Array) -> void:
 	bump()
-	var tmp = El.new("div"); Html.parse_into(tmp, J.str(a[1]))
+	var tmp = El.new("div"); Html.parse_into(tmp, DB.N(J.str(a[1])))
 	var where = J.str(a[0])
 	for c in tmp.children:
 		c.parentNode = self

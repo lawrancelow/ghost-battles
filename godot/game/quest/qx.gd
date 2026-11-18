@@ -59,7 +59,7 @@ func S():
 	return s if s is Dictionary else null
 
 func T(a: Array) -> String:
-	return a[0] if DB.lang == "yue" else a[1]
+	return DB.N(a[0] if DB.lang == "yue" else a[1])
 
 # ---------------- 計量 ----------------
 func cnt(k: String) -> float:

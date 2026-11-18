@@ -71,7 +71,7 @@ static func owned(k: String):
 static func athlete(id: String) -> Dictionary:
 	var E = EV[id]; var g = owned(E.who)
 	if g != null: return {"k": E.who, "g": g, "name": g.name, "sub": false}
-	return {"k": "afu", "g": owned("afu"), "name": "阿福", "sub": true}
+	return {"k": "afu", "g": owned("afu"), "name": DB.N("阿福"), "sub": true}
 
 static func fmt_v(id: String, v) -> String:
 	if id == "tug": return ""
