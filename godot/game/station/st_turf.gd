@@ -38,7 +38,7 @@ var _pinch = null
 var _sig := {}
 
 static func js(n: String): return J.G.get(n)
-static func T(y: String, z: String) -> String: return y if DB.lang == "yue" else z
+static func T(y: String, z: String) -> String: return DB.N(y if DB.lang == "yue" else z)
 
 static func hook(tf) -> bool:
 	if not (tf is Dictionary): return false

@@ -105,7 +105,7 @@ func _build(sc: Dictionary) -> void:
 		syswin.anchor_left = 0.05; syswin.anchor_right = 0.95; syswin.anchor_top = 0.5; syswin.anchor_bottom = 0.5; syswin.offset_top = -90; syswin.offset_bottom = 90
 		syswin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(syswin)
-		var hl = UIKit.label("陰司 KPI 系統" if style == "sys" else str(sc.get("title", "")), 18, Color("#6ff0d0") if style == "sys" else UIKit.GOLD2, "serif", 900)
+		var hl = UIKit.label("陰司 KPI 系統" if style == "sys" else DB.N(str(sc.get("title", ""))), 18, Color("#6ff0d0") if style == "sys" else UIKit.GOLD2, "serif", 900)
 		hl.position = Vector2(14, 10); syswin.add_child(hl)
 		sysscroll = ScrollContainer.new(); sysscroll.anchor_right = 1; sysscroll.anchor_bottom = 1; sysscroll.offset_left = 14; sysscroll.offset_top = 44; sysscroll.offset_right = -14; sysscroll.offset_bottom = -14
 		sysscroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; sysscroll.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -123,7 +123,7 @@ func _show_line() -> void:
 	var ln: Array = sc.lines[li]; var who: String = ln[0]; var text: String = DB.L(str(ln[1]))
 	full_text = text; shown = 0; typing = true; type_acc = 0.0
 	if talkbox != null:
-		nm.get_parent().visible = who != "旁白"; nm.text = who
+		nm.get_parent().visible = who != "旁白"; nm.text = DB.N(who)   # 只換顯示；SPEAKER_ART 照用原講者名
 		var art = "sys" if who == "系統" else DB.D.SPEAKER_ART.get(who)
 		pt.visible = art != null
 		tx.offset_left = 108 if art != null else 18
@@ -138,8 +138,8 @@ func _show_line() -> void:
 	else:
 		var row = UIKit.rich("", 16, Color("#d8fff4") if sc.get("style") == "sys" else Color("#f0e2c8"))
 		var pre = ""
-		if sc.get("style") == "sys": pre = "[b][color=#6ff0d0]【系統】[/color][/b]" if who == "系統" else ("" if who == "旁白" else "[b]%s：[/b]" % who)
-		else: pre = "" if who == "旁白" or who == "內文" else "[b]%s：[/b]" % who
+		if sc.get("style") == "sys": pre = "[b][color=#6ff0d0]【系統】[/color][/b]" if who == "系統" else ("" if who == "旁白" else "[b]%s：[/b]" % DB.N(who))
+		else: pre = "" if who == "旁白" or who == "內文" else "[b]%s：[/b]" % DB.N(who)
 		row.set_meta("pre", pre); sysbody.add_child(row)
 		cur_line_label = null; _sysrow = row
 		if who == "旁白": row.add_theme_color_override("default_color", Color("#c8c0b0"))

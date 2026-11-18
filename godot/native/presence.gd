@@ -36,7 +36,7 @@ static func _rnd(a: Array): return a[int(floor(randf() * a.size()))]
 static func zh() -> bool:
 	var LANG = _g("LANG")
 	return LANG == null or J.str(J.gp(LANG, "cur")) != "yue"
-static func T(l: Array): return l[2] if zh() or WRITTEN.has(J.str(l[0])) else l[1]
+static func T(l: Array): return DB.N(l[2] if zh() or WRITTEN.has(J.str(l[0])) else l[1])
 static func seen(id: String) -> bool:
 	var S = _S()
 	return S != null and J.t(S.get("seen")) and J.t(S.seen.get(id))

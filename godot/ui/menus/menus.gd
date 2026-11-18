@@ -13,7 +13,7 @@ static var sig := ""          # 上次畫嘅資料簽名：冇變就唔重畫（
 static func main() -> Control: return Engine.get_main_loop().root.get_node_or_null("Main")
 static func N(): return J.gp(J.G.get("UI"), "_n")
 static func jn(m: String, a := []): return J.mc(N(), m, a)
-static func T(yue: String, zh: String) -> String: return zh if DB.lang != "yue" else yue
+static func T(yue: String, zh: String) -> String: return DB.N(zh if DB.lang != "yue" else yue)
 
 static func hook(a: Array) -> bool:
 	var m = main()
@@ -63,11 +63,11 @@ static func _clear() -> void:
 	for c in b.get_children(): b.remove_child(c); c.queue_free()
 
 static func _p(bb: String, size := 14.0, col := UIKit.INKDIM, kind := "sans") -> RichTextLabel:
-	var r = UIKit.rich(bb, size, col, kind); _body().add_child(r); return r
+	var r = UIKit.rich(DB.N(bb), size, col, kind); _body().add_child(r); return r
 
 static func _row(text_bb: String, buttons: Array, parent: Control = null) -> HBoxContainer:
 	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 10)
-	var r = UIKit.rich(text_bb, 14, UIKit.INKTXT); r.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hb.add_child(r)
+	var r = UIKit.rich(DB.N(text_bb), 14, UIKit.INKTXT); r.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hb.add_child(r)
 	var bx = HBoxContainer.new(); bx.add_theme_constant_override("separation", 4); bx.alignment = BoxContainer.ALIGNMENT_END
 	for b in buttons: bx.add_child(b)
 	hb.add_child(bx)

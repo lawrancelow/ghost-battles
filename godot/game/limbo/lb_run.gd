@@ -54,7 +54,7 @@ var held := {}                 # 掣 → 觸控編號
 var hold_t := 0.0              # 情境掣／回店撳住幾耐
 var hold_k := ""
 
-func T(a) -> String: return a[0] if DB.lang == "yue" else a[1]
+func T(a) -> String: return DB.N(a[0] if DB.lang == "yue" else a[1])
 
 # ---------------- 開／收 ----------------
 static func start() -> bool:

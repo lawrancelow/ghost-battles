@@ -70,7 +70,7 @@ static func text(c: CanvasItem, s: String, x: float, y: float, size: float, col:
 	c.draw_string_outline(f, Vector2(px, y), s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, o, Color(8 / 255.0, 4 / 255.0, 6 / 255.0, 0.95))
 	c.draw_string(f, Vector2(px, y), s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
 
-static func T(y: String, z: String) -> String: return y if DB.lang == "yue" else z
+static func T(y: String, z: String) -> String: return DB.N(y if DB.lang == "yue" else z)
 
 # ---------------- Turf.drawMy ----------------
 static func draw_my(c: CanvasItem, ctx: Ctx, Tf: Dictionary) -> void:

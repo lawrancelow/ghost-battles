@@ -37,6 +37,7 @@ static func new_state() -> Dictionary:
 		"seen": {}, "chests": {"g": 0.0, "b": 0.0, "p": 0.0}, "furnaceAt": 0.0, "feastAt": 0.0, "last": J.now(), "ended": false,
 		"trees": [3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0], "treeRegrow": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "paddy": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0], "paddyRegrow": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
 		"uid": 1.0, "prod": {},
+		"hero": {"name": "阿福", "full": "陳大福", "en": "Kelvin", "sex": "m", "set": false},   # 主角名／性別（DB.N 顯示時替換）
 	}
 
 static func save() -> void:
