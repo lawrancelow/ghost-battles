@@ -410,7 +410,7 @@ func read_crumb() -> void:
 			st = ""
 		if FileAccess.file_exists("user://gfx_bad.txt"):
 			for b in FileAccess.get_file_as_string("user://gfx_bad.txt").split(";", false): gfx_bad[b] = true
-		if st != "" and st != "ok":
+		if st != "" and st != "ok" and st != "bg":
 			last_crash = st
 			# 畫面相關步驟閃退 → 自動開安全畫面模式
 			if st in ["ui", "village", "start", "state", "resize", "refresh", "frame1", "frame30", "snd", "title"] or st.begins_with("show:") or st.begins_with("ng:") or st.begins_with("draw:"):

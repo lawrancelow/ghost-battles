@@ -278,7 +278,7 @@ func _process_js_state() -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_APPLICATION_FOCUS_OUT:
-		if loading == null: G.crumb("ok")   # 正常離開／切出去唔當閃退
+		G.crumb("ok" if loading == null else "bg")   # 正常離開／切出去唔當閃退；載入途中切出去（之後被系統收咗）記「bg」，下次唔彈救命畫面
 		G.save()
 		JSRun.flush_ls()   # 即刻寫落磁碟：切出去之後 Android 唔再跑幀，等下一幀先寫就會冇咗（被系統收咗就冇存到）
 		if what == NOTIFICATION_WM_CLOSE_REQUEST: get_tree().quit()

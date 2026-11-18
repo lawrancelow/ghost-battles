@@ -57,6 +57,8 @@ var fog_h := 0
 var fog_dirty := true
 var crew_buff := {}
 var spots: Array = []
+var shop_sp = null   # 甘榜村口雜貨店（PtShop）
+var shop_n: PtDraw = null
 var near: Array = []
 var near_t := 0.0
 var last_ter := -1
@@ -219,6 +221,10 @@ func begin(c: int, z0: int) -> void:
 	_build_view()
 	reveal_around(lx, ly)
 	spots = MAP.spots
+	shop_sp = PtShop.find(self)
+	if shop_sp != null:
+		shop_n = PtDraw.new(); shop_n.position = PtShop.pos(shop_sp); shop_n.fn = func(c): PtShop.draw(c, self, t)
+		ysort.add_child(shop_n)
 	Snd.set_mode("battle")
 	if has_g("Guide"): jm("Guide", "visit", ["battle"])
 	hud.refresh_leads()
@@ -1468,7 +1474,10 @@ func _gui_input(ev: InputEvent) -> void:
 	if ended: return
 	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
 		if ev.pressed: joy = {"x0": ev.position.x, "y0": ev.position.y, "x": ev.position.x, "y": ev.position.y}
-		else: joy = null
+		else:
+			if joy != null and shop_sp != null and Vector2(ev.position.x - joy.x0, ev.position.y - joy.y0).length() < 14:
+				PtShop.tap(self, Vector2(ev.position.x / sc + cx, ev.position.y / sc + cy))
+			joy = null
 		accept_event()
 	elif ev is InputEventMouseMotion and joy != null:
 		joy.x = ev.position.x; joy.y = ev.position.y; accept_event()
@@ -1562,6 +1571,10 @@ func _render() -> void:
 		else: n = PtDraw.new(); ysort.add_child(n)
 		var pp = p; n.position = Vector2(p.x, p.y); n.visible = true; n.queue_redraw(); prop_live[p] = n
 		n.fn = func(c): _draw_prop(c, pp)
+	if shop_n != null:
+		var sp2 = shop_n.position
+		shop_n.visible = sp2.x > cx - 160 and sp2.x < cx + vw + 160 and sp2.y > cy - 60 and sp2.y < cy + vh + 200
+		if shop_n.visible: shop_n.queue_redraw(); lights.append([sp2.x, sp2.y - 60, 190.0, 0.85, Color8(255, 196, 120)])
 	var i = 0
 	var rs = reg_st()
 	i = 0
