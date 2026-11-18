@@ -187,7 +187,7 @@ static func _draw_bld(id: String, d) -> void:
 	var fe = d.get("feast")
 	if fe != null:
 		var left2 = J.num(fe.left)
-		_row("盂蘭宴：壽包 300\n[font_size=12]全村智力總和 %d/%d%s[/font_size]" % [int(J.num(fe.iq)), int(J.num(fe.need)), "　冷卻 %d 分" % int(ceil(left2 / 60)) if left2 > 0 else ""], [_btn("擺宴", "gold", J.t(fe.can), func(): _act_bld(id, "feast"))])
+		_row("鬼節宴：壽包 300\n[font_size=12]全村智力總和 %d/%d%s[/font_size]" % [int(J.num(fe.iq)), int(J.num(fe.need)), "　冷卻 %d 分" % int(ceil(left2 / 60)) if left2 > 0 else ""], [_btn("擺宴", "gold", J.t(fe.can), func(): _act_bld(id, "feast"))])
 	for p in d.posts:
 		_post_ui(id, p)
 

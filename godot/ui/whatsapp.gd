@@ -501,7 +501,7 @@ var _tok = 0
 
 func start_scene(sc: Dictionary, id: String, done: Callable, skip: Callable) -> void:
 	sc_ = sc; sid = id; on_done = done; on_skip = skip
-	var pro = id == "prologue_chat"
+	var pro = id.begins_with("prologue_chat")
 	phase = "pre" if pro else "post"
 	var group = str(sc.get("group", ""))
 	_build_chat(DB.L(str(sc.get("title", ""))), sc.get("av", ["?", "#555"]), group if group != "" else "在線上", true, "02:13" if pro else now_hm(), "3%" if pro else "∞", pro)

@@ -187,7 +187,7 @@ func refresh_leads() -> void:
 				for f in run.foes: if f.hp > 0: fl.append(f)
 				var tg = run.nearest(uu, fl, 300)
 				if tg != null and uu.act == null: run.start_attack(uu, tg, true)
-			else: run.jm("Fx", "toast", ["%s：符未滿" % uu.name]))
+			else: run.jm("Fx", "toast", ["%s：嚇氣未滿" % uu.name]))
 		leads_box.add_child(b); lead_btns[uu] = [b, dr, pt]
 
 # ---------------- 每幀 ----------------

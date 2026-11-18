@@ -545,10 +545,10 @@ func _render_building(id: String) -> void:
 		var iq = 0
 		for g in S.ghosts: iq += G.stat(g, 1)
 		var left2 = maxf(0, G.feastCD - (G.now_ms() - float(S.feastAt)) * G.TIME_SCALE / 1000)
-		_row("盂蘭宴：壽包 300\n[font_size=12]全村智力總和 %d/%d%s[/font_size]" % [iq, G.feastNeed, ("　冷卻 %d 分" % int(ceil(left2 / 60))) if left2 > 0 else ""], [_act(UIKit.btn("擺宴", "gold"), func():
+		_row("鬼節宴：壽包 300\n[font_size=12]全村智力總和 %d/%d%s[/font_size]" % [iq, G.feastNeed, ("　冷卻 %d 分" % int(ceil(left2 / 60))) if left2 > 0 else ""], [_act(UIKit.btn("擺宴", "gold"), func():
 			S.res.buns = float(S.res.buns) - 300; S.feastAt = G.now_ms(); S.cnt.feast = int(S.cnt.feast) + 1; G.gainExp(150)
-			if G.fodderCount() < G.rosterCap(): var g2 = G.recruitFodder(true); show_toast("盂蘭宴請來了稀客 [b]%s[/b]（紫）！好評 +150" % g2.name)
-			else: S.chests.p = int(S.chests.p) + 1; show_toast("盂蘭宴賓客滿座，可惜村裡住不下了。客人留下一個[b]紫箱[/b]就走了。好評 +150")
+			if G.fodderCount() < G.rosterCap(): var g2 = G.recruitFodder(true); show_toast("鬼節宴請來了稀客 [b]%s[/b]（紫）！好評 +150" % g2.name)
+			else: S.chests.p = int(S.chests.p) + 1; show_toast("鬼節宴賓客滿座，可惜村裡住不下了。客人留下一個[b]紫箱[/b]就走了。好評 +150")
 			G.quest_check(); re.call(), float(S.res.buns) >= 300 and iq >= G.feastNeed and left2 <= 0)])
 	for post in b.posts: _post_ui(post, id)
 

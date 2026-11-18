@@ -1273,9 +1273,9 @@ static func n_bld_act(id, a, arg):
 	if act == "feast":
 		_snd("gong"); S.res["buns"] = J.num(S.res.buns) - 300; S["feastAt"] = J.now(); S.cnt["feast"] = J.num(S.cnt.feast) + 1; _c("gainExp", [150.0])
 		if J.num(_c("fodderCount")) < J.num(J.mc(F, "rosterCap", [])):
-			var g = _c("recruitFodder", [true]); _fx("toast", ["盂蘭宴請來了稀客 <b>%s</b>（紫）！好評 +150" % J.str(g.name)])
+			var g = _c("recruitFodder", [true]); _fx("toast", ["鬼節宴請來了稀客 <b>%s</b>（紫）！好評 +150" % J.str(g.name)])
 		else:
-			S.chests["p"] = J.num(S.chests.p) + 1; _fx("toast", ["盂蘭宴賓客滿座，可惜村裡住不下了。客人留下一個<b>紫箱</b>就走了。好評 +150"])
+			S.chests["p"] = J.num(S.chests.p) + 1; _fx("toast", ["鬼節宴賓客滿座，可惜村裡住不下了。客人留下一個<b>紫箱</b>就走了。好評 +150"])
 		J.mc(_g("Quest"), "check", [])
 	if act == "unassign":
 		var g = _c("ghostById", [arg])
