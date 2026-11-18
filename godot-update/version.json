@@ -2,16 +2,30 @@
  "base": {
   "0.9.5": {
    "android": {
+    "ver": 2,
+    "file": "p_095_android_2.pck",
+    "md5": "c54c064133e2318b12ee0a4286e967c7",
+    "size": 11372864
+   },
+   "linux": {
+    "ver": 2,
+    "file": "p_095_linux_2.pck",
+    "md5": "c54c064133e2318b12ee0a4286e967c7",
+    "size": 11372864
+   }
+  },
+  "0.9.1": {
+   "android": {
     "ver": 1,
-    "file": "p_095_android_1.pck",
-    "md5": "43ffa995ace07877b9a168903d51915b",
-    "size": 11351936
+    "file": "p_091_android_1.pck",
+    "md5": "5c646e19337751a073c108c243dbeefb",
+    "size": 11396320
    },
    "linux": {
     "ver": 1,
-    "file": "p_095_linux_1.pck",
-    "md5": "43ffa995ace07877b9a168903d51915b",
-    "size": 11351936
+    "file": "p_091_linux_1.pck",
+    "md5": "5c646e19337751a073c108c243dbeefb",
+    "size": 11396320
    }
   }
  }
