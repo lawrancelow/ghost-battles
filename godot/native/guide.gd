@@ -65,16 +65,22 @@ func run(_env) -> void:
 		["阿福", "……有冇得加班？"],
 		["小紙", "冇！今晚唔准加班。行，我帶你去。"],
 	]}
-	SC["q_yard"] = {"style": "talk", "bg": "village", "title": "無名墳", "lines": [
-		["小紙", "少爺，打贏餓鬼王之後，村外面多咗啲鬼喺度徘徊。"],
-		["阿福", "又係搶包？"],
-		["小紙", "唔係。佢哋喺亂葬崗搵唔返自己個墳，瞓唔到。"],
-		["阿福", "搵唔返自己個墳……咁點算？"],
-		["小紙", "睇墓碑、聽佢哋講，幫佢哋一個個對返落去。出村口，地圖上嗰個「亂葬崗」。"],
-	]}
+	# 亂葬崗暫時封存：同一個位改做「陰陽交界」
+	var qy = [
+		["小紙", ["少爺，村口雜貨店伯搵你。佢話條村有啲人，卡咗喺嗰一晚。", "少爺，村口雜貨店伯找你。他說村裡有些人，卡在了那一晚。"]],
+		["阿福", ["邊一晚？", "哪一晚？"]],
+		["小紙", ["發大水嗰晚。佢哋唔知自己出咗事，仲喺度做緊嗰晚做緊嘅嘢。", "發大水那晚。他們不知道自己出了事，還在做那晚正在做的事。"]],
+		["小紙", ["仲有啲嘢想捉佢哋落去。出村口，地圖上嗰個「陰陽交界」。", "還有些東西想抓他們下去。出村口，地圖上那個「陰陽交界」。"]],
+	]
+	var qz = {}; var ql = []
+	for l in qy: qz[l[1][0]] = l[1][1]; ql.append([l[0], l[1][0]])
+	if J.G.get("LANG") != null: J.mc(J.G.get("LANG"), "add", [qz])
+	if not DB.D.has("LANG_ZH"): DB.D.LANG_ZH = {}
+	DB.D.LANG_ZH.merge(qz, true)
+	SC["q_yard"] = {"style": "talk", "bg": "village", "title": "陰陽交界", "lines": ql}
 	var ADD = [
 		{"after": "1-2", "q": {"t": "visit", "place": "street", "text": "下班後去冥街夜市逛逛", "go": "gate", "r": {"exp": 40.0, "coins": 60.0}, "onStart": ["q_street"]}},
-		{"after": "1-3", "q": {"t": "visit", "place": "yard", "text": "去亂葬崗找無名墳", "go": "gate", "r": {"exp": 60.0, "coins": 80.0}, "onStart": ["q_yard"]}},
+		{"after": "1-3", "q": {"t": "visit", "place": "yard", "text": "去陰陽交界救人", "go": "gate", "r": {"exp": 60.0, "coins": 80.0}, "onStart": ["q_yard"]}},
 	]
 	var Q: Array = _g("QUESTS")
 	at = []

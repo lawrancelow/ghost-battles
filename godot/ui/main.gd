@@ -716,7 +716,7 @@ func open_story() -> void:
 	var lgb = UIKit.btn("錯誤記錄（有問題時截圖俾開發者）", "ghost"); sheet_body.add_child(lgb)
 	lgb.pressed.connect(func():
 		var lt = UIKit.label(log_tail(40), 10, UIKit.INKTXT); lt.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; sheet_body.add_child(lt)
-		DisplayServer.clipboard_set(log_tail(200)); show_toast("記錄已複製，可以貼去 WhatsApp 俾開發者"))
+		DisplayServer.clipboard_set(log_tail(200)); show_toast("記錄已複製，可以貼去訊息俾開發者"))
 	var rs = UIKit.btn("重新開始（刪除存檔）", "ghost"); sheet_body.add_child(rs)
 	rs.pressed.connect(func():
 		if not rs.has_meta("armed"): rs.set_meta("armed", 1); rs.text = "再按一次確定刪檔"; return
