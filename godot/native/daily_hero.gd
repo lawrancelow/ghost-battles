@@ -629,6 +629,7 @@ static func act(name: String, a: Dictionary, at: float, t: float) -> Dictionary:
 
 # ---------------- 登記到 DAILY ----------------
 static func drawAct(name: String, ctx, a) -> bool:
+	if DB.hero_female(): return false   # 女主未有斧頭骨架動畫，用一般立繪
 	if not ok("afu__body") or not ok("afu__arm") or not (ok("afu__axe") or ok("afu__wpn")) or J.str(J.gp(a, "type")) != "afu" or _g("LIMBS_DATA") == null: return false
 	if not (ctx is Ctx) or not (a is Dictionary): return false
 	var o = a.o; var t = J.num(J.gp(o, "t")) if J.t(J.gp(o, "t")) else 0.0; var at = J.num(J.gp(o, "at")) if J.t(J.gp(o, "at")) else 0.0; var m = mem(a)
