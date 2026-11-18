@@ -35,6 +35,7 @@ static func font(w := 900) -> Font:
 
 # 角色／特效貼圖：Spr（蠟筆原畫）→ 巡陰素材（patrol_assets）
 static func tex(k: String) -> Texture2D:
+	k = Spr.key_for(k)   # 女主換圖：快取都按換咗嘅鍵分開
 	if _tex.has(k): return _tex[k]
 	var t: Texture2D = null
 	if Spr.ok(k): t = Spr.get_tex(k)

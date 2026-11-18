@@ -188,6 +188,7 @@ func _special_has(type: String) -> bool:
 	return SP != null and J.t(J.mc(SP, "has", [type]))
 func _ma(): return J.G.get("MeshAnim")
 func _ma_has(type: String) -> bool:
+	if type == "afu" and DB.hero_female(): return false   # 女主冇網格骨架，用一般立繪（afuf_body）
 	var M = _ma()
 	return M != null and J.t(J.mc(M, "has", [type]))
 static func _ot(o: Dictionary) -> float: return J.num(o.get("t")) if J.t(o.get("t")) else 0.0
