@@ -1,0 +1,42 @@
+{
+  "_doc": "分村＋補給網設定表（D 線）。一晚＝NIGHT_MIN 分鐘現實時間；每 CONVOY_EVERY 晚出一班車，出車後 CONVOY_EVERY 晚送到。所有公式見 game/garrison/garrison.gd 頂部註解。",
+  "NIGHT_MIN": 20,
+  "CONVOY_EVERY": 3,
+  "OFFLINE_H": 8,
+  "TICK_SEC": 5,
+  "STOCK_NIGHTS": 5,
+  "START_NIGHTS": 5,
+  "MAX_LV": 20,
+  "MILESTONE": [[5, 1.5, "熟手"], [10, 1.5, "老手"], [15, 1.5, "師傅"], [20, 1.5, "老字號"]],
+  "LV_MUL": 0.3,
+  "HELP": [[1, 1], [6, 2], [11, 3]],
+  "ROLE": {"mgr": 1.5, "help": 1.0},
+  "HOME": {"own": 1.3, "boss": 1.5},
+  "GLV_K": 0.03,
+  "STALLS": [
+    {"id": "bun",   "name": "壽包檔", "stat": 1, "base": 25, "desc": ["招呼過路鬼食壽包，收冥幣（睇智力）", "招呼過路鬼吃壽包，收冥幣（看智力）"]},
+    {"id": "rest",  "name": "歇腳檔", "stat": 0, "base": 20, "desc": ["俾過路鬼瞓棺材歇腳，收冥幣（睇力量）", "讓過路鬼睡棺材歇腳，收冥幣（看力量）"]},
+    {"id": "guard", "name": "守夜檔", "stat": 2, "base": 0,  "desc": ["守住存糧，唔俾孤魂偷（睇武力）", "守住存糧，不讓孤魂偷（看武力）"]}
+  ],
+  "STORE": {"base": 300, "mapMul": 0.6, "perLv": 0.5},
+  "THEFT": {"rate": 0.08, "need": 120, "mapMul": 1.6},
+  "UP": {"planks": [15, 1.6], "coins": [20, 1.7], "mapMul": 0.4},
+  "CONVOY": {"base": 600, "perTroop": 6, "troopMax": 500, "carMul": 2, "carSeen": "gift_car", "pocongSeen": "ch5_pocong"},
+  "HOME_SHARE": 0.4,
+  "TO_RES": 0.3,
+  "TO_RES_NOFRONT": 1.0,
+  "URGENT": {"perItem": 2},
+  "STARVE": [
+    {"inc": 0.85, "atk": -0.15, "name": ["餓住返工", "餓著上班"]},
+    {"inc": 0.5,  "atk": -0.15, "name": ["熄咗半條街燈", "熄了半條街燈"]},
+    {"inc": 0.0,  "atk": -0.15, "name": ["熄燈", "熄燈"]}
+  ],
+  "MAPS": [
+    {"ci": 0, "name": "槐林荒村", "post": "槐林分村", "bg": "field",   "yield": {"planks": 20},               "upkeep": null,                            "incMul": 1.0},
+    {"ci": 1, "name": "甘榜夜路", "post": "甘榜分村", "bg": "kampung", "yield": {"buns": 30},                 "upkeep": {"buns": 120, "planks": 80},    "incMul": 1.6},
+    {"ci": 2, "name": "南下古道", "post": "古道分村", "bg": "road",    "yield": {"planks": 45},               "upkeep": {"buns": 280, "planks": 200},   "incMul": 2.5},
+    {"ci": 3, "name": "河口蕉園", "post": "蕉園分村", "bg": "banana",  "yield": {"buns": 70},                 "upkeep": {"buns": 560, "planks": 400},   "incMul": 4.0},
+    {"ci": 4, "name": "橫死路口", "post": "路口分村", "bg": "estate",  "yield": {"buns": 50, "planks": 50},   "upkeep": {"buns": 950, "planks": 680},   "incMul": 6.5},
+    {"ci": 5, "name": "地府集團", "post": "集團分村", "bg": "hq",      "yield": {"coins": 400},               "upkeep": {"buns": 1500, "planks": 1100}, "incMul": 10.0}
+  ]
+}
