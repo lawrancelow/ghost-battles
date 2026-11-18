@@ -759,6 +759,12 @@ func _show_title(fresh: bool) -> void:
 	var bc: TextureButton = mk.call("btn_cont", fresh)
 	var hint = UIKit.label("還沒有存檔" if fresh else "", 13, Color("#e8dcc4")); hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; hint.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; hint.custom_minimum_size = Vector2(0, 18)
 	hint.add_theme_color_override("font_shadow_color", Color.BLACK); hint.add_theme_constant_override("shadow_offset_y", 1); vb.add_child(hint)
+	# 由網頁版搬進度過嚟：標題畫面就有入口，唔使先玩開場
+	var bi = Button.new(); bi.text = "導入網頁版存檔"; bi.flat = true; bi.focus_mode = Control.FOCUS_NONE; bi.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	bi.custom_minimum_size = Vector2(220, 40); bi.add_theme_font_size_override("font_size", 16)
+	for st in ["font_color", "font_hover_color", "font_pressed_color"]: bi.add_theme_color_override(st, Color("#f0d48a"))
+	bi.add_theme_color_override("font_outline_color", Color.BLACK); bi.add_theme_constant_override("outline_size", 4)
+	bi.pressed.connect(open_import); vb.add_child(bi)
 	# 版本號（測試員報問題時用）：右下角細字，唔遮內容
 	var vl = UIKit.label(Boot.label(), 11, Color(1, 1, 1, 0.45)); vl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	vl.anchor_left = 1; vl.anchor_right = 1; vl.anchor_top = 1; vl.anchor_bottom = 1; vl.offset_left = -200; vl.offset_right = -8; vl.offset_top = -20; vl.offset_bottom = -4
@@ -768,7 +774,13 @@ func _show_title(fresh: bool) -> void:
 
 func _title_cont(fresh: bool) -> void:
 	if fresh: return
-	_snd("gong"); _hide_title(); phone_home("post")   # 網頁版：繼續遊戲 → 手機（陰間版 WhatsApp）→ 主對話 → 結算離線收益
+	# 新遊戲開頭途中閃退／中斷：存檔仲係 1 級、乜都未有、未睇過開場 → 繼續就由開場接返，唔好直接入咗個空村
+	var S = G.S; var ph = "post"
+	if S is Dictionary and int(J.num(S.get("lv", 1))) <= 1:
+		var seen = S.get("seen", {}); var tot = 0.0
+		for v in (S.get("res", {}) as Dictionary).values(): tot += J.num(v)
+		if tot <= 0 and not (seen is Dictionary and (seen.has("prologue_sys") or seen.has("prologue_road"))): ph = "pre"
+	_snd("gong"); _hide_title(); phone_home(ph)   # 網頁版：繼續遊戲 → 手機（陰間版 WhatsApp）→ 主對話 → 結算離線收益
 
 func _title_new(fresh: bool, bn: TextureButton, hint: Label) -> void:
 	if not fresh and not bn.has_meta("armed"):
@@ -838,13 +850,13 @@ func open_import() -> void:
 	ov.add_child(pn)
 	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 10); pn.add_child(vb)
 	vb.add_child(UIKit.label("導入存檔碼", 18, UIKit.INKTXT, "serif", 700))
-	var tip = UIKit.label("喺網頁版「劇情」頁底撳「備份存檔（複製存檔碼）」，再返嚟貼落下面。", 13, UIKit.INKTXT); tip.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; vb.add_child(tip)
+	var tip = UIKit.label("在網頁版「劇情」頁最上面按「搬去正式版：備份存檔」，存檔碼會自動複製，再回來貼在下面。", 13, UIKit.INKTXT); tip.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; vb.add_child(tip)
 	var te = TextEdit.new(); te.custom_minimum_size = Vector2(0, 150); te.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	te.placeholder_text = "長按貼上存檔碼"; te.add_theme_font_size_override("font_size", 12); vb.add_child(te)
 	var info = UIKit.label("", 14, Color("#9a2a1e"), "sans", 700); info.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; vb.add_child(info)
 	var check = func():
 		var o = G.dec(te.text)
-		info.text = ("讀到：主公 %d 級存檔。撳「換成呢個進度」即刻轉。" % int(J.num(o.get("lv", 1)))) if o != null else ("存檔碼讀唔到，檢查吓有冇貼齊" if te.text.strip_edges() != "" else "")
+		info.text = ("讀到：主公 %d 級存檔。按「換成這個進度」馬上轉過來。" % int(J.num(o.get("lv", 1)))) if o != null else ("存檔碼讀不到，檢查一下有沒有貼完整" if te.text.strip_edges() != "" else "")
 		return o
 	te.text_changed.connect(func(): check.call())
 	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 8); vb.add_child(hb)
@@ -854,14 +866,14 @@ func open_import() -> void:
 		b.pressed.connect(f); hb.add_child(b); return b
 	mk.call("貼上", func(): te.text = DisplayServer.clipboard_get(); check.call())
 	mk.call("取消", func(): ov.queue_free())
-	mk.call("換成呢個進度", func():
+	mk.call("換成這個進度", func():
 		if check.call() != null: ov.queue_free(); import_save(te.text))
 	if DisplayServer.clipboard_has() and G.dec(DisplayServer.clipboard_get()) != null:
 		te.text = DisplayServer.clipboard_get(); check.call()
 
 func import_save(code: String) -> bool:
 	var o = G.dec(code)
-	if o == null: show_toast("存檔碼讀唔到，檢查吓有冇貼齊"); return false
+	if o == null: show_toast("存檔碼讀不到，檢查一下有沒有貼完整"); return false
 	o.last = G.now_ms()
 	restart_with(o, true); return true
 
