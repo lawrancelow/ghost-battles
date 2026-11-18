@@ -727,7 +727,7 @@ func open_story() -> void:
 func _show_title(fresh: bool) -> void:
 	if JSRun.skip_title:
 		var v = JSRun.skip_title; JSRun.skip_title = false
-		if v is String and v == "pre": call_deferred("phone_home", "pre")
+		if v is String and v == "pre": call_deferred("start_opening")
 		return
 	title_ov = Control.new(); title_ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); title_ov.mouse_filter = Control.MOUSE_FILTER_STOP; add_child(title_ov)
 	var bg = ColorRect.new(); bg.color = Color("#2e2422"); bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); title_ov.add_child(bg)
@@ -776,12 +776,10 @@ func _show_title(fresh: bool) -> void:
 func _title_cont(fresh: bool) -> void:
 	if fresh: return
 	# 新遊戲開頭途中閃退／中斷：存檔仲係 1 級、乜都未有、未睇過開場 → 繼續就由開場接返，唔好直接入咗個空村
-	var S = G.S; var ph = "post"
-	if S is Dictionary and int(J.num(S.get("lv", 1))) <= 1:
-		var seen = S.get("seen", {}); var tot = 0.0
-		for v in (S.get("res", {}) as Dictionary).values(): tot += J.num(v)
-		if tot <= 0 and not (seen is Dictionary and (seen.has("prologue_sys") or seen.has("prologue_road"))): ph = "pre"
-	_snd("gong"); _hide_title(); phone_home(ph)   # 網頁版：繼續遊戲 → 手機（陰間版 WhatsApp）→ 主對話 → 結算離線收益
+	# 判斷（name_card.gd opening_unfinished）：1 級、冇資源、未睇 prologue_sys；改咗名或者睇過新開場任何一場都算「未完」
+	if NameCardGD.opening_unfinished(G.S):
+		_snd("gong"); _hide_title(); start_opening(); return
+	_snd("gong"); _hide_title(); phone_home("post")   # 網頁版：繼續遊戲 → 手機（陰間版 WhatsApp）→ 主對話 → 結算離線收益
 
 func _title_new(fresh: bool, bn: TextureButton, hint: Label) -> void:
 	if not fresh and not bn.has_meta("armed"):
@@ -791,9 +789,27 @@ func _title_new(fresh: bool, bn: TextureButton, hint: Label) -> void:
 	G.crumb("ng:sound"); _snd("gong")
 	G.crumb("ng:hide_title"); _hide_title()
 	G.crumb("ng:refresh"); refresh()
-	G.crumb("ng:phone"); phone_home("pre")
+	G.crumb("ng:opening"); start_opening()
 	await RenderingServer.frame_post_draw; await RenderingServer.frame_post_draw
-	G.crumb("ng:phone_shown")
+	G.crumb("ng:opening_shown")
+
+# 頭七回魂夜開場：未改名 → 手機重新開機（改名＋揀頭像）→ 02:13 手機 → 開場劇情（data/story_v2.json "opening"）
+const NameCardGD = preload("res://ui/name_card.gd")
+func start_opening() -> void:
+	if not NameCardGD.hero_set(G.S):
+		var s = J.G.get("Sound")
+		if s is Dictionary: J.mc(s, "setMode", ["office"])
+		var nc = NameCardGD.new(); nc.on_done = _opening_go
+		add_child(nc); move_child(nc, get_child_count() - 1)
+		return
+	_opening_go()
+
+func _opening_go() -> void:
+	var i = NameCardGD.resume_index(G.S)
+	if i <= 0: phone_home("pre"); return
+	# 中途斷咗：由播到一半嗰場接返，唔使再由手機開始
+	refresh()
+	for id in NameCardGD.opening(G.S).slice(i): story.queue(id)
 
 func _vgrad(stops: Array) -> Texture2D:
 	var gr = Gradient.new()
@@ -811,10 +827,17 @@ func phone_home(ph: String) -> void:
 		phone = WA.new(); add_child(phone)
 		phone.on_enter = _phone_enter
 	move_child(phone, get_child_count() - 1)
+	if ph == "pre": _pre_chats()
 	phone.show_home(ph)
 	_phone_flag(true)
 	var s = J.G.get("Sound")
 	if s is Dictionary: J.mc(s, "setMode", ["office" if ph == "pre" else "story"])
+
+# 女主生前手機（大學群組）；男主用返原本 CHATS_PRE（第一次記低原本嗰份）
+func _pre_chats() -> void:
+	if not J.G.has("CHATS_PRE_M"): J.G["CHATS_PRE_M"] = J.G.get("CHATS_PRE")
+	var PG = load("res://native/phone.gd")
+	J.G["CHATS_PRE"] = PG.chats_pre_f() if PG.is_female(G.S) else J.G.get("CHATS_PRE_M")
 
 func phone_close() -> void:
 	if phone: phone.queue_free(); phone = null
@@ -828,7 +851,7 @@ func _phone_enter(ph: String) -> void:
 	G.crumb("ng:enter_" + ph)
 	phone_close()
 	if ph == "pre":
-		for id in ["prologue_chat", "prologue_narr", "prologue_road", "prologue_sys"]: story.queue(id)
+		for id in NameCardGD.opening(G.S): story.queue(id)
 	else:
 		G.offline_gain()
 		var s = J.G.get("Sound")
@@ -892,3 +915,12 @@ func open_html_sheet(title: String, html: String) -> void:
 	_p(JSBridge.html2bb(html), 14, UIKit.INKTXT)
 
 func t_dump_ground(path: String) -> void: village.t_dump_ground(path)
+
+# 測試用（GB_TEST 腳本 ["call","main",...]）：開場劇情跳場／跳行／報告
+func t_story_skip() -> void: story.skip_scene()
+func t_story_goto(i) -> void:
+	if story.cur == null or story.wa != null: return
+	story.li = clampi(int(i), 0, story.cur.sc.lines.size() - 1); story._show_line()
+func t_story_adv(n = 1) -> void:
+	for k in int(n): story.advance()
+func t_story_id() -> void: print("STORY ", (story.cur.id if story.cur != null else "<none>"), " li=", story.li, " q=", story.q.size())

@@ -41,24 +41,13 @@ static func chats_post() -> Array:
 	var mom_n = 0
 	for m in mm: if m[0] == "媽": mom_n += 1
 	out.append({"id": "mom2", "name": "媽", "av": ["媽", "#b06a5a"], "time": last[1], "unread": 0.0 if sn.call("epilogue") else float(mom_n), "prev": last[2], "mine": last[0] == "我", "msgs": mm, "hold": "" if sn.call("epilogue") else "（訊息傳不出去：對方在陽間）"})
+	if is_female(S): return _post_f(out, sn)
 	# 黃總
 	var bm = [["黃總", "02:47", "好？句號呢？"], ["黃總", "09:12", "阿福？董事會開始了。"], ["黃總", "09:40", "阿福你人呢？"], ["黃總", "下午 3:03", "HR 說你過世了。節哀。"], ["黃總", "下午 3:04", "PPT 誰接手？密碼是什麼？"]]
 	if sn.call("ch6_end"): bm.append_array([["黃總", "最近", "阿福，我在村裡學包包子。"], ["黃總", "最近", "很難。我包了一百個，孟婆說九十九個不合格。"], ["黃總", "最近", "剩下那一個是我自己。"]])
 	var bl = bm[bm.size() - 1]
 	out.append({"id": "boss2", "name": "黃總", "av": ["黃", "#5a6a7a"], "time": bl[1], "unread": 3.0 if sn.call("ch6_end") else 2.0, "prev": bl[2], "msgs": bm, "hold": "（你已離職，無法回覆此對話）"})
-	# 村民群
-	if sn.call("ch2_intro"):
-		var gm = [["小紙", "早上", "今天的壽包誰偷吃了？少了三個。"], ["餓鬼王", "早上", "不是我，我的喉嚨只能一次吞一粒米。"]]
-		if sn.call("ch2_end"): gm.append_array([["Toyol", "早上", "也不是我！我只偷錢，不偷吃的！"], ["小紙", "早上", "……你剛剛承認了什麼？"]])
-		if sn.call("ch3_end"): gm.append_array([["老殭", "中午", "本官昨夜跳去人間，看見有人在跳廣場舞。"], ["老殭", "中午", "他們跳得比本官還僵硬。"]])
-		if sn.call("ch4_end"): gm.append_array([["Pontianak", "晚上", "誰把我的香蕉拿去做香蕉煎餅了？"], ["餓鬼王", "晚上", "……好吃。"]])
-		if sn.call("ch5_end"): gm.append_array([["Penanggal", "半夜", "提醒大家：倉庫那缸醋是我的，不是調味料。誰再拿去沾餃子，我就飛過去。"], ["Pocong", "半夜", "（舉手）"]])
-		if sn.call("ch6_mengpo"): gm.append(["孟婆", "半夜", "今晚湯底換了，喝了不會忘事，只會忘記熱量。"])
-		var gl = gm[gm.size() - 1]
-		out.append({"id": "vg", "name": "落魄村村民群", "av": ["群", "#3f6a5a"], "time": gl[1], "unread": float(gm.size()), "mute": true, "prev": gl[0] + "：" + gl[2], "sub": "小紙、餓鬼王、你…", "msgs": gm})
-	if sn.call("ch6_end"):
-		out.append({"id": "opt", "name": "落魄村優化小組", "av": ["優", "#7a4a3a"], "time": "00:00", "unread": 2.0, "mute": true, "prev": "黃總：不要給我藉口。", "sub": "黃總、你…",
-			"msgs": [["黃總", "23:58", "明天早上，大家提早半個小時出來。"], ["黃總", "23:59", "KPI：每隻鬼每天嚇三個人。"], ["小紙", "00:00", "黃總，我們是鬼，早上不能出來的。"], ["黃總", "00:00", "不要給我藉口。"]], "hold": "（已讀。你決定不回。）"})
+	for c in chats_post_village(sn): out.append(c)
 	out.append({"id": "ins2", "name": "保險經紀 阿明", "av": ["明", "#3a6a8a"], "time": "上個月", "unread": 2.0, "prev": "那份人壽保險……現在買還來得及嗎？",
 		"msgs": [["我", "很久以前", "不用了，我還年輕。"], ["阿明", "上個月", "陳先生，聽說您走了，節哀。"], ["阿明", "上個月", "那份人壽保險……現在買還來得及嗎？"]]})
 	out.append({"id": "land2", "name": "房東 Mr. Lim", "av": ["林", "#5a5a5a"], "time": "上個月", "unread": 2.0, "prev": "Deposit 不還了。",
@@ -73,12 +62,68 @@ static func chats_post() -> Array:
 		"msgs": [["康健診所", "3 星期前", "陳先生，您的體檢報告出來了，請盡快回來見醫生。"], ["康健診所", "上個月", "因為您一直沒回來複診，報告已經寄到府上：建議您多休息。"]]})
 	return out
 
+static func chats_post_village(sn: Callable) -> Array:
+	var vo = []
+	# 村民群
+	if sn.call("ch2_intro"):
+		var gm = [["小紙", "早上", "今天的壽包誰偷吃了？少了三個。"], ["餓鬼王", "早上", "不是我，我的喉嚨只能一次吞一粒米。"]]
+		if sn.call("ch2_end"): gm.append_array([["Toyol", "早上", "也不是我！我只偷錢，不偷吃的！"], ["小紙", "早上", "……你剛剛承認了什麼？"]])
+		if sn.call("ch3_end"): gm.append_array([["老殭", "中午", "本官昨夜跳去人間，看見有人在跳廣場舞。"], ["老殭", "中午", "他們跳得比本官還僵硬。"]])
+		if sn.call("ch4_end"): gm.append_array([["Pontianak", "晚上", "誰把我的香蕉拿去做香蕉煎餅了？"], ["餓鬼王", "晚上", "……好吃。"]])
+		if sn.call("ch5_end"): gm.append_array([["Penanggal", "半夜", "提醒大家：倉庫那缸醋是我的，不是調味料。誰再拿去沾餃子，我就飛過去。"], ["Pocong", "半夜", "（舉手）"]])
+		if sn.call("ch6_mengpo"): gm.append(["孟婆", "半夜", "今晚湯底換了，喝了不會忘事，只會忘記熱量。"])
+		var gl = gm[gm.size() - 1]
+		vo.append({"id": "vg", "name": "落魄村村民群", "av": ["群", "#3f6a5a"], "time": gl[1], "unread": float(gm.size()), "mute": true, "prev": gl[0] + "：" + gl[2], "sub": "小紙、餓鬼王、你…", "msgs": gm})
+	if sn.call("ch6_end"):
+		vo.append({"id": "opt", "name": "落魄村優化小組", "av": ["優", "#7a4a3a"], "time": "00:00", "unread": 2.0, "mute": true, "prev": "黃總：不要給我藉口。", "sub": "黃總、你…",
+			"msgs": [["黃總", "23:58", "明天早上，大家提早半個小時出來。"], ["黃總", "23:59", "KPI：每隻鬼每天嚇三個人。"], ["小紙", "00:00", "黃總，我們是鬼，早上不能出來的。"], ["黃總", "00:00", "不要給我藉口。"]], "hold": "（已讀。你決定不回。）"})
+	return vo
+
+# ---------------- 女主（四眼妹，第一期鎖住；揀咗女主先用）----------------
+# 女主生前同黃總、Bryan 冇交集：生前嘅手機係大學期末分組功課群組，冇公司、房東、健身、保險
+static func is_female(S) -> bool:
+	var h = J.gp(S, "hero") if S != null else null
+	return h is Dictionary and str(h.get("sex", "m")) == "f"
+
+static func chats_pre_f() -> Array:
+	return [
+		{"id": "grp", "name": "期末 project 死線組", "av": ["組", "#4a6a5a"], "time": "02:13", "unread": 1.0, "prev": "各位，明早九點交 report，做到哪了？", "main": true},
+		{"id": "momf", "name": "媽", "av": ["媽", "#b06a5a"], "time": "星期日", "unread": 2.0, "prev": "阿福，那考完呢？",
+			"msgs": [["媽", "星期三 19:02", "阿福，最近天天下大雨，出門記得帶傘。"], ["我", "星期三 23:40", "嗯"], ["媽", "星期五 20:15", "你爸說想你了。他不會說，但我知道。"], ["媽", "星期五 20:16", "這個月回來吃飯嗎？"],
+				["我", "星期六 01:22", "要溫書，考完試再回來"], ["媽", "星期日 18:30", "媽煲了你最愛的蓮藕湯，給你留了一碗。"], ["媽", "星期日 21:04", "阿福，那考完呢？"]], "hold": "（你打算溫完這一章再回）"},
+		{"id": "hall", "name": "宿舍 C 座住客群", "av": ["宿", "#5a5a7a"], "time": "01:30", "unread": 12.0, "mute": true, "prev": "舍監：請把洗衣機裡的衣服拿走。", "sub": "舍監、住客…",
+			"msgs": [["舍監", "00:40", "提提大家：考試週自修室通宵開放，回宿舍請刷卡。"], ["舍監", "01:30", "請把洗衣機裡的衣服拿走。"]]},
+		{"id": "lib", "name": "大學圖書館", "av": ["圖", "#3a6a5a"], "time": "昨天", "prev": "您借閱的書已逾期 3 天。",
+			"msgs": [["大學圖書館", "昨天 09:00", "您借閱的《高等微積分（第三版）》已逾期 3 天，請盡快歸還。"]]},
+		{"id": "food", "name": "外賣 Abang Ali", "av": ["A", "#8a6a2a"], "time": "21:47", "prev": "Boss, makanan saya letak depan pintu ya 🙏",
+			"msgs": [["Abang Ali", "21:46", "Boss, dah sampai. Tekan loceng takde orang."], ["Abang Ali", "21:47", "Boss, makanan saya letak depan pintu ya 🙏"]]},
+		{"id": "clinicf", "name": "大學醫療中心", "av": ["醫", "#4a7a8a"], "time": "3 星期前", "prev": "建議您減少用眼，早點休息。",
+			"msgs": [["大學醫療中心", "3 星期前", "陳同學，您的視力檢查結果出來了：近視再加深 150 度。"], ["大學醫療中心", "3 星期前", "建議您減少用眼，早點休息。"]]},
+	]
+
+static func _post_f(out: Array, sn: Callable) -> Array:
+	# 期末群組：佢個「好。」一直傳送中；之後群組照常交咗份 report
+	var gm = [["+60 11-2093 4471", "02:47", "學霸順便排版，謝啦！"], ["+60 12-418 7730", "09:05", "學霸你人呢？要交了"], ["+60 16-552 0913", "下午 3:10", "……聽說學霸走了。"], ["+60 12-418 7730", "下午 3:12", "Report 我們交了，你的名字有寫上去。"]]
+	out.append({"id": "grp2", "name": "期末 project 死線組", "av": ["組", "#4a6a5a"], "time": "下午 3:12", "unread": 4.0, "prev": gm[3][2], "sub": "組員 3 人、你", "msgs": gm, "hold": "（你已退出此群組）"})
+	if sn.call("ch6_end"):
+		var bm = [["黃總", "最近", "阿福，我在村裡學包包子。"], ["黃總", "最近", "很難。我包了一百個，孟婆說九十九個不合格。"], ["黃總", "最近", "剩下那一個是我自己。"]]
+		out.append({"id": "boss2", "name": "黃總", "av": ["黃", "#5a6a7a"], "time": "最近", "unread": 3.0, "prev": bm[2][2], "msgs": bm})
+	# 村民群、優化小組：同男主一樣（陰間嘅事，同生前身份無關）
+	for c in chats_post_village(sn): out.append(c)
+	out.append({"id": "food2", "name": "外賣 Abang Ali", "av": ["A", "#8a6a2a"], "time": "上個月", "prev": "Boss, makanan masih depan pintu… dah berkulat 😅",
+		"msgs": [["Abang Ali", "21:47", "Boss, makanan saya letak depan pintu ya 🙏"], ["Abang Ali", "三天後", "Boss, makanan masih depan pintu… dah berkulat 😅"], ["Abang Ali", "三天後", "Tapi tolong bagi 5 bintang ya boss 🙏"]]})
+	out.append({"id": "tel", "name": "地府電訊", "av": ["冥", "#6a3a3a"], "time": "每月一號", "prev": "您的「永生無限」月租計劃已自動續約。",
+		"msgs": [["地府電訊", "每月一號", "您的「永生無限」月租計劃已自動續約：每月 100 億冥幣，請家屬按時焚燒。"], ["地府電訊", "每月一號", "溫馨提示：陽間來電一律轉接至語音信箱。"]]})
+	out.append({"id": "lib2", "name": "大學圖書館", "av": ["圖", "#3a6a5a"], "time": "上個月", "prev": "逾期罰款已轉交家屬處理。",
+		"msgs": [["大學圖書館", "上個月", "您借閱的《高等微積分（第三版）》已逾期 30 天。"], ["大學圖書館", "上個月", "收到您家人的通知，節哀。逾期罰款已轉交家屬處理。"]]})
+	return out
+
 # ---------------- 手機畫面（網頁版後備） ----------------
 static var PH: Dictionary = {}
 static func ph_home(phase) -> void:
 	PH["on"] = true; PH["phase"] = phase
 	var el = _q("#phone"); J.sp(el, "className", "on")
-	var pre = J.str(phase) == "pre"; var list = CHATS_PRE if pre else chats_post()
+	var pre = J.str(phase) == "pre"; var list = (chats_pre_f() if is_female(_g("S")) else CHATS_PRE) if pre else chats_post()
 	var time = "02:13" if pre else now_hm()
 	var unread = 0
 	for c in list: if J.t(c.get("unread")): unread += 1
@@ -123,7 +168,9 @@ static func ph_enter() -> void:
 	var pre = J.str(PH.get("phase")) == "pre"
 	J.mc(PH, "close", [])
 	if pre:
-		for id in ["prologue_chat", "prologue_narr", "prologue_road", "prologue_sys"]: J.mc(_g("Story"), "queue", [id])
+		# 開場列表同原生版共用一份（data/story_v2.json "opening"，經 ui/name_card.gd 讀）
+		var S0 = J.G.get("S")
+		for id in load("res://ui/name_card.gd").opening(S0 if S0 is Dictionary else null): J.mc(_g("Story"), "queue", [id])
 	else: J.cl(_g("offlineGain"), null, []); _snd("setMode", ["village"])
 
 static func ph_close() -> void:
