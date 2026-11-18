@@ -88,6 +88,14 @@ const GIFT := {"buns": 30.0, "rice": 30.0}
 
 static func talk(run) -> void:
 	var e = _q(); var lines: Array = []
+	# 每次出巡第一次同伯伯傾：重溫支線「賒數簿」嘅故事（開頭；完成咗就連結尾），之後先講近況
+	if e != null and not run.get_meta("shop_story", false):
+		run.set_meta("shop_story", true)
+		var x = QX.sdef(QID)
+		if x.get("start") != null:
+			var sc = x.start.duplicate(); sc.title = "支線・" + QX.T(x.title); QX._story(sc)
+		if J.t(e.get("done")) and x.get("end") != null:
+			var se = x.end.duplicate(); se.title = "支線・" + QX.T(x.title) + "（結局）"; QX._story(se)
 	if e == null:
 		lines = [_ln("後生仔，咁夜仲行嚟行去？入嚟坐吓，鋪頭照開。", "年輕人，這麼晚還走來走去？進來坐一下，店照常開。")]
 	elif not J.t(e.get("done")):
