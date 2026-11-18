@@ -60,7 +60,7 @@ func _exits() -> Array:
 	r.append(["StHud.T", StHud.T("阿福少爺", "阿福少爺")])
 	r.append(["StDomPanel.T", StDomPanel.T("阿福少爺", "阿福少爺")])
 	r.append(["QX.T", QX.T(["阿福少爺", "阿福少爺"])])
-	var lb = LbRun.new(); r.append(["LbRun.T", lb.T(["阿福少爺", "阿福少爺"])]); lb.free()
+	var lb = load("res://game/limbo/lb_run.gd").new(); r.append(["LbRun.T", lb.T(["阿福少爺", "阿福少爺"])]); lb.free()
 	r.append(["presence.T", J.str(load("res://native/presence.gd").T(["x", "阿福少爺", "阿福少爺"]))])
 	r.append(["bonds.T", J.str(load("res://native/bonds.gd").T(["阿福少爺", "阿福少爺"]))])
 	r.append(["street.T", J.str(load("res://native/street.gd").T("阿福少爺xa1", "阿福少爺xa1"))])

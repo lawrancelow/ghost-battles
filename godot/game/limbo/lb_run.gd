@@ -1,9 +1,9 @@
 # 陰陽交界（樣板）：阿福一個人入交界——搜刮、打拖魂者、救卡住嘅靈魂、天光前返雜貨店
 # 操作：左邊拖＝行；右下：打（撳住連打）、擲樽、衝、電筒；情境掣（講／搜／拎／轉閘／開店）；回店（撳住 3 秒）
-class_name LbRun
+# （冇 class_name：熱更新規矩；用 load("res://game/limbo/lb_run.gd") 叫）
 extends Control
 
-static var cur: LbRun = null
+static var cur = null
 
 const D = preload("res://game/limbo/lb_data.gd")
 const C := 64.0
@@ -61,7 +61,7 @@ static func start() -> bool:
 	var main = Engine.get_main_loop().root.get_node_or_null("Main")
 	if main == null: return false
 	if cur != null and is_instance_valid(cur): cur.queue_free()
-	var r = LbRun.new(); r.name = "LbRun"
+	var r = load("res://game/limbo/lb_run.gd").new(); r.name = "LbRun"
 	r.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	main.add_child(r)
 	var sh = main.get("sheet")

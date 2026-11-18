@@ -57,6 +57,7 @@ var fog_h := 0
 var fog_dirty := true
 var crew_buff := {}
 var spots: Array = []
+const PtShop = preload("res://game/patrol/pt_shop.gd")
 var shop_sp = null   # 甘榜村口雜貨店（PtShop）
 var shop_n: PtDraw = null
 var near: Array = []

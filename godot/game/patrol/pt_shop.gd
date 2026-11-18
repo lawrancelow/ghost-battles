@@ -1,7 +1,7 @@
 # 巡陰地圖：甘榜「村口雜貨店」（第 1 區地標 1）——店舖＋雜貨店伯，可以撳佢傾偈
 # 支線「賒數簿」（c2_shop）：未完成 → 佢講現時要做乜同進度；完成之後 → 每日可以喺佢度賒一份貨（寫入賒數簿）
 # 圖：店舖用 store（村子倉庫同款木舖），人物用 npc_shop（劇情入面嘅雜貨店伯）
-class_name PtShop
+# （冇 class_name：熱更新規矩；pt_run 用 preload 叫）
 extends RefCounted
 
 const CI := 1          # 甘榜

@@ -1,7 +1,7 @@
 # 陰陽交界（樣板）：資料——地圖、靈魂、武器、拖魂者、打造
 # 第一區「甘榜・大水夜」：時間停喺出事嗰晚，水位會一直漲
 # 所有對白：[粵語, 中文]
-class_name LbData
+# （冇 class_name：熱更新規矩）
 extends RefCounted
 
 const CELL := 64.0

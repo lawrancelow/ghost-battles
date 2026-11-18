@@ -21,7 +21,7 @@ static func spots() -> Array:
 		{"id": "battle", "x": 0.2, "y": 0.68, "lx": 0.25, "ly": 0.745, "name": "夜班巡陰", "sub": "帶部門巡陰間",
 			"go": func(_t, _a): return J.mc(_g("Patrol"), "openPrep", []) if _has("Patrol") else J.mc(_g("UI"), "open", ["battle"])},
 		{"id": "yard", "x": 0.76, "y": 0.7, "lx": 0.79, "ly": 0.745, "name": "陰陽交界", "sub": "生死之間",
-			"go": func(_t, _a): return LbRun.start()},
+			"go": func(_t, _a): return load("res://game/limbo/lb_run.gd").start()},
 		{"id": "street", "x": 0.22, "y": 0.53, "lx": 0.25, "ly": 0.565, "name": "冥街夜市", "sub": "下班後的陰間",
 			"go": func(_t, _a): return J.mc(_g("GhostStreet"), "open", []),
 			"ready": func(_t, _a): return _has("GhostStreet")},
