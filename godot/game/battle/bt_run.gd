@@ -141,12 +141,12 @@ func _build() -> void:
 		var c = BtChar.new(u, B); layer.add_child(c); chars.append(c)
 	stage.resized.connect(func(): if J.t(B.get("active")): J.mc(B, "resize", []))
 	# 提示
-	hint_l = UIKit.label(L("符滿了就點。先用敵人怕的嚇法嚇到他「失神」，再接另一種他怕的，就是「連嚇」。"), 12.5, Color(0.86, 0.8, 0.72, 0.75))
+	hint_l = UIKit.label(L("嚇氣滿了就點。先用敵人怕的嚇法嚇到他「失神」，再接另一種他怕的，就是「連嚇」。"), 12.5, Color(0.86, 0.8, 0.72, 0.75))
 	hint_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; hint_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; hint_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	var hbg = Panel.new(); var hs = StyleBoxFlat.new(); hs.bg_color = Color("#151119"); hbg.add_theme_stylebox_override("panel", hs)
 	hbg.anchor_top = 1; hbg.anchor_right = 1; hbg.anchor_bottom = 1; hbg.offset_top = -(CARD_H + 36 + 18 + safe_bot); hbg.offset_bottom = -(CARD_H + 18 + safe_bot); hbg.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(hbg)
 	hint_l.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); hint_l.offset_left = 10; hint_l.offset_right = -10; hbg.add_child(hint_l)
-	# 黃符技能卡
+	# 嚇氣卡（技能卡）
 	var cbg = Panel.new(); var cs = StyleBoxFlat.new(); cs.bg_color = Color("#221512"); cs.border_color = Color("#5a2e22"); cs.border_width_top = 2
 	cbg.add_theme_stylebox_override("panel", cs); cbg.anchor_top = 1; cbg.anchor_right = 1; cbg.anchor_bottom = 1; cbg.offset_top = -(CARD_H + 18 + safe_bot); cbg.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(cbg)
 	cards = HBoxContainer.new(); cards.add_theme_constant_override("separation", 6)
@@ -218,11 +218,11 @@ func _mk_card(u: Dictionary, kind: String) -> void:
 	nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS; nm.mouse_filter = Control.MOUSE_FILTER_IGNORE; vb.add_child(nm)
 	var sm = UIKit.label(t2, 11, Color("#6a4a20")); sm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; sm.clip_text = true
 	sm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS; sm.mouse_filter = Control.MOUSE_FILTER_IGNORE; vb.add_child(sm)
-	# 「敕」印（滿符）
-	var seal = Label.new(); seal.text = "敕"; seal.add_theme_font_override("font", UIKit.font("serif", 900)); seal.add_theme_font_size_override("font_size", 13)
+	# 收工印（嚇氣滿）
+	var seal = Label.new(); seal.text = "收工"; seal.add_theme_font_override("font", UIKit.font("serif", 900)); seal.add_theme_font_size_override("font_size", 12)
 	seal.add_theme_color_override("font_color", Color.WHITE); seal.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; seal.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	var sbx = UIKit.sb(Color("#c8372d"), 2); seal.add_theme_stylebox_override("normal", sbx)
-	seal.anchor_left = 1; seal.anchor_right = 1; seal.offset_left = -22; seal.offset_right = -3; seal.offset_top = 3; seal.offset_bottom = 22; seal.rotation = 0.14; seal.pivot_offset = Vector2(9.5, 9.5)
+	seal.anchor_left = 1; seal.anchor_right = 1; seal.offset_left = -34; seal.offset_right = -3; seal.offset_top = 3; seal.offset_bottom = 22; seal.rotation = 0.14; seal.pivot_offset = Vector2(15.5, 9.5)
 	seal.mouse_filter = Control.MOUSE_FILTER_IGNORE; seal.visible = false; box.add_child(seal)
 	var uu = u; var kk = kind
 	box.gui_input.connect(func(ev):
@@ -329,7 +329,7 @@ static func t_bt(i: int) -> void:
 	if cur == null: print("t_bt: no battle"); return
 	var b = cur.B
 	match i:
-		0: # 全部英雄滿符
+		0: # 全部英雄嚇氣滿
 			for u in b.units: if J.num(u.side) == 0 and u.get("sk") != null: u["energy"] = 100.0
 		1: b["auto"] = true; cur._sync_btns()
 		2: b["speed"] = 2.0; cur._sync_btns()

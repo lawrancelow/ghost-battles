@@ -187,10 +187,12 @@ func _region_card(ci: int) -> Control:
 	var bgc = Color(1, 0.96, 0.85, 0.75) if open else Color(0.85, 0.8, 0.68, 0.45)
 	pc.add_theme_stylebox_override("panel", UIKit.sb(bgc, 6, RED if cur else LINE, 2 if cur else 1, Vector4(12, 9, 12, 10)))
 	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 6); pc.add_child(vb)
-	var name := "第%s區・%s" % [CN[ci], J.str(J.gp(ch, "name"))]
+	var mi = m(M, "mapInfo", [ci]) if J.gp(M, "mapInfo") != null else {}
+	if not (mi is Dictionary): mi = {}
+	var name := "%s・%s" % [J.str(mi.name), J.str(J.gp(ch, "name"))] if mi.has("name") else "第%s區・%s" % [CN[ci], J.str(J.gp(ch, "name"))]
 	if not open:
 		var lh = HBoxContainer.new(); vb.add_child(lh)
-		var li = UIKit.rich("[b]%s[/b]\n[font_size=13]打完上一區總監才開放[/font_size]" % name, 16, Color(INK, 0.55)); li.size_flags_horizontal = Control.SIZE_EXPAND_FILL; lh.add_child(li)
+		var li = UIKit.rich("[b]%s[/b]\n[font_size=14]%s[/font_size]" % [name, T("打完上一張地圖嘅總監先開放", "打完上一張地圖的總監才開放")], 17, Color(INK, 0.55)); li.size_flags_horizontal = Control.SIZE_EXPAND_FILL; lh.add_child(li)
 		var lk = UIKit.label("🔒", 16, Color(INK, 0.5)); lk.size_flags_vertical = Control.SIZE_SHRINK_CENTER; lh.add_child(lk)
 		return pc
 	m(M, "setMir", [ci]); m(M, "mkFaci")
@@ -200,7 +202,7 @@ func _region_card(ci: int) -> Control:
 	var stg = stages[min(2, n)]; var need = J.str(m(g("GP"), "stageNeed", [stg, m(M, "sidOf", [ci, min(2, n)])]))
 	var req = J.str(J.gp(stages[0], "req"))
 	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 8); vb.add_child(hb)
-	var info = UIKit.rich("[b]%s[/b]\n[font_size=13]地頭 %d/9　地標 %d/%d　主線 %d/3　%s %s　需主公 Lv%s[/font_size]" % [name, kn, lmn, lmt, n, T("建議鬼力", "建議鬼力"), need, req], 16, INK)
+	var info = UIKit.rich("[b]%s[/b]\n[font_size=14]地頭 %d/9　地標 %d/%d　主線 %d/3　%s %s　需主公 Lv%s[/font_size]" % [name, kn, lmn, lmt, n, T("建議鬼力", "建議鬼力"), need, req], 17, INK)
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hb.add_child(info)
 	var fl = VBoxContainer.new(); fl.add_theme_constant_override("separation", 4); fl.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hb.add_child(fl)
 	var faci: Array = m(M, "faci"); var tn = J.gp(J.gp(M, "TNAME"), ci)
@@ -211,7 +213,38 @@ func _region_card(ci: int) -> Control:
 		var lab = "出發" if z == st0 else "%s站" % J.str(J.gp(tn, m(M, "terOf", [z])))
 		var cci = ci; var zz = z
 		fl.add_child(_btn(lab, "gold" if (cur and z == st0) else "", true, func(): go(cci, zz)))
+	# 分村（D 線 Garrison autoload；未有就唔顯示）
+	var gnode = get_tree().root.get_node_or_null("Garrison") if is_inside_tree() else null
+	if gnode != null:
+		var gok = (not gnode.has_method("is_open")) or J.t(gnode.call("is_open", ci))
+		var gci = ci
+		var gb = _btn(T("分村", "分村"), "", true, func(): _open_garrison(gci), gok)
+		if not gok: gb.tooltip_text = T("打通呢張地圖先開到分村", "打通這張地圖才能開分村")
+		fl.add_child(gb)
+	if mi.has("name"): _map_lines(vb, mi)
 	return pc
+
+func _open_garrison(ci: int) -> void:
+	var gn = get_tree().root.get_node_or_null("Garrison")
+	if gn == null: return
+	close(); gn.call("open", ci)
+
+# 地圖卡：簡介、通關獎勵、隱藏 ?/2
+func _map_lines(vb: VBoxContainer, mi: Dictionary) -> void:
+	var sep = ColorRect.new(); sep.color = Color(LINE, 0.6); sep.custom_minimum_size = Vector2(0, 1); vb.add_child(sep)
+	vb.add_child(UIKit.rich(_N("[color=#6e5838]%s[/color]\n%s" % [J.str(mi.env), J.str(mi.intro)]), 15, INK))
+	var boss = "、".join(mi.get("boss", []))
+	var ok = J.t(mi.get("eqGot"))
+	var tag = "[bgcolor=#2e7d4f][color=#fff] %s [/color][/bgcolor]" % T("已得", "已得") if ok else "[bgcolor=#8a7a5a][color=#fff] %s [/color][/bgcolor]" % T("未得", "未得")
+	vb.add_child(UIKit.rich(_N("[b]%s[/b]　%s\n%s ＋ %s" % [T("通關獎勵", "通關獎勵"), tag, boss, J.str(mi.eq)]), 16, INK))
+	var hl = "[b]%s %d/%d[/b]" % [T("隱藏", "隱藏"), int(J.num(mi.hn)), int(J.num(mi.ht))]
+	for h in mi.get("hidden", []):
+		var kind = T("鬼", "鬼") if J.str(h.kind) == "hg" else T("裝備", "裝備")
+		if J.t(h.got): hl += "\n[color=#2e7d4f]✓[/color] %s：[b]%s[/b]" % [kind, J.str(h.name)]
+		else: hl += "\n？ %s：？？？　[color=#6e5838]%s[/color]" % [kind, J.str(h.hint)]
+	vb.add_child(UIKit.rich(_N(hl), 16, INK))
+
+func _N(s: String) -> String: return J.str(DB.call("N", s)) if DB.has_method("N") else s
 
 func go(ci: int, z: float) -> void:
 	close()
@@ -284,7 +317,8 @@ func _gear_back() -> void:
 func _icon(it) -> Control:
 	if J.str(J.gp(it, "slot")) != "wea": return null
 	var GM = gmenu(); var FK: Array = J.gp(GM, "FK")
-	var name = J.str(J.gp(J.gp(J.gp(GM, "WIMG"), int(J.num(J.gp(it, "c")))), FK.find(J.gp(it, "f"))))
+	var name = J.str(m(GM, "imgOf", [it])) if J.gp(GM, "imgOf") != null else J.str(J.gp(J.gp(J.gp(GM, "WIMG"), int(J.num(J.gp(it, "c")))), FK.find(J.gp(it, "f"))))
+	if name == "": return null
 	var tex = _tex("res://assets/img/patrol_assets/%s.webp" % name)
 	if tex == null: return null
 	var tr = TextureRect.new(); tr.texture = tex; tr.custom_minimum_size = Vector2(42, 56); tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -323,6 +357,10 @@ func _item_card(it, who: Array, mine: bool) -> Control:
 	var ic = _icon(it); if ic: hb.add_child(ic)
 	var w = J.cl(g("ghostById"), null, [J.gp(it, "who")])
 	var txt = "[color=%s][b]%s[/b][/color]  [i]Lv%s[/i]\n[font_size=13]%s[/font_size]\n[font_size=13]%s[/font_size]" % [fcol(J.str(J.gp(it, "f"))), J.str(m(GM, "nameOf", [it])), J.str(J.gp(it, "lv")), J.str(m(GM, "effText", [it])), ("佩戴：" + J.str(J.gp(w, "name"))) if w != null else "未戴"]
+	if J.gp(GM, "isUnique") != null and J.t(m(GM, "isUnique", [it])):
+		txt = txt.replace("[/b][/color]  [i]Lv", "[/b][/color]  [bgcolor=#7a2a1c][color=#fff] %s [/color][/bgcolor]  [i]Lv" % T("唯一", "唯一"))
+		var d = J.str(m(GM, "descOf", [it]))
+		if d != "": txt += "\n[font_size=13][color=#6e5838]%s[/color][/font_size]" % d
 	var info = UIKit.rich(txt, 16, INK); info.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hb.add_child(info)
 	var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 8); vb.add_child(row)
 	var ob = OptionButton.new(); ob.add_theme_font_size_override("font_size", 15); ob.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -356,7 +394,7 @@ func _craft_card(it: Dictionary, open: bool) -> Control:
 	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 8); vb.add_child(hb)
 	var ic = _icon(it); if ic: ic.modulate = Color(1, 1, 1, 1 if open else 0.45); hb.add_child(ic)
 	var c = int(it.c); var f = J.str(it.f)
-	var info = UIKit.rich("[color=%s][b]%s[/b][/color]  [i]第%s區[/i]\n[font_size=13]%s[/font_size]" % [fcol(f), J.str(m(GM, "nameOf", [it])), CN[c], J.str(m(GM, "effText", [it]))], 16, INK if open else Color(INK, 0.55))
+	var info = UIKit.rich("[color=%s][b]%s[/b][/color]  [i]%s[/i]\n[font_size=13]%s[/font_size]" % [fcol(f), J.str(m(GM, "nameOf", [it])), J.str(m(GM, "mapName", [c])) if J.gp(GM, "mapName") != null else "第%s區" % CN[c], J.str(m(GM, "effText", [it]))], 16, INK if open else Color(INK, 0.55))
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hb.add_child(info)
 	if not open:
 		vb.add_child(UIKit.rich("[font_size=13]巡到這區才解鎖[/font_size]", 13, DIM)); return pc
