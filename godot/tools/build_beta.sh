@@ -93,7 +93,7 @@ if [ -z "$NOPKGTEST" ]; then
 	sed -i "s#res://tools/tests/#$PT/t/#g" "$PT"/t/*.gd
 	echo "[[\"wait\",3],[\"gdrun\",\"$PT/t/full_run.gd\",\"all\"],[\"quit\"]]" > "$PT/full.json"
 	(cd "$PT" && flock /tmp/godot.lock env XDG_DATA_HOME="$PT/xdg" GB_TEST="$PT/full.json" timeout 600 xvfb-run -a -s '-screen 0 450x975x24' "$GD" --main-pack "$OUT/build/pkgtest.pck" --rendering-driver opengl3 > "$OUT/build/pkgrun.log" 2>&1) || true
-	SE=$(grep -c 'SCRIPT ERROR' "$OUT/build/pkgrun.log")
+	SE=$(grep -c "SCRIPT ERROR" "$OUT/build/pkgrun.log" || true)
 	grep -q '\[full\] done' "$OUT/build/pkgrun.log" && DONE=1 || DONE=0
 	grep -E '\[full\] (done|save_check)' "$OUT/build/pkgrun.log"
 	echo "包內一條龍：腳本錯誤 $SE，完成=$DONE"
