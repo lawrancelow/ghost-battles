@@ -1,1 +1,18 @@
-{"base": {}}
+{
+ "base": {
+  "0.9.5": {
+   "android": {
+    "ver": 1,
+    "file": "p_095_android_1.pck",
+    "md5": "43ffa995ace07877b9a168903d51915b",
+    "size": 11351936
+   },
+   "linux": {
+    "ver": 1,
+    "file": "p_095_linux_1.pck",
+    "md5": "43ffa995ace07877b9a168903d51915b",
+    "size": 11351936
+   }
+  }
+ }
+}
