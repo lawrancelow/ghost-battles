@@ -10,9 +10,18 @@ var _t := 0.0
 var _hr_said := false
 
 func _ready() -> void:
+	_add_garrison.call_deferred()
 	var f = FileAccess.open("res://data/quests.json", FileAccess.READ)
 	if f: D = JSON.parse_string(f.get_as_text())
 	set_process(true)
+
+# 分村（Garrison）：熱更新唔可以加 autoload，所以由 QX 開機時掛去 /root/Garrison（效果同 autoload 一樣）
+func _add_garrison() -> void:
+	var root = get_tree().root
+	if root.get_node_or_null("Garrison") != null: return
+	var sc = load("res://game/garrison/garrison.gd")
+	if sc == null: return
+	var g = sc.new(); g.name = "Garrison"; root.add_child(g)
 
 const SPK := {"龐總": "npc_kpiboss", "冼小姐": "npc_hr", "Bryan": "npc_rival", "窮鬼": "n30_qionggui", "討債鬼": "n30_taozhai", "孤寒鬼": "n30_guhangui", "推磨鬼": "pg_tuimo", "賭鬼": "n30_dugui", "Pelesit": "n30_pelesit", "Polong": "n30_polong", "Hantu Raya": "n30_hanturaya", "Jenglot": "n30_jenglot", "老殭": "laojiang", "無頭鬼": "n30_wutou", "被賣鬼": "pg_songding", "白骨精": "n30_baigujing", "山魈": "n30_shanxiao", "Mae Nak": "n30_maenak", "前女友鬼": "pg_ex", "Churel": "n30_churel", "Tikbalang": "n30_tikbalang", "Pontianak": "pontianak", "自拍跌死鬼": "n30_zipai", "二房東": "pg_landlady", "中暑鬼": "n30_zhongshu", "車禍鬼": "n30_chehuo", "打機猝死鬼": "n30_daji", "唐傘妖": "n30_kasaobake", "聻": "pg_ji", "無臉鬼": "n30_nopperabo", "般若": "n30_hannya", "轆轤首": "n30_rokurokubi", "Pocong": "pocong", "窰工鬼": "npc_kiln", "收據鬼": "npc_receipt", "趕屍匠": "npc_driver", "擺渡鬼": "npc_ferry", "雜貨店伯": "npc_shop", "割膠鬼": "npc_rubber", "漁夫鬼": "npc_fisher", "苦力鬼": "npc_dock", "宵夜檔老闆": "npc_stall", "售票員鬼": "npc_ticket", "DJ": "npc_dj", "客棧掌櫃鬼": "npc_inn", "榴槤鬼": "n30_liulian", "婆婆鬼": "npc_granny", "伯伯鬼": "npc_grandpa", "總部員工鬼": "npc_hq", "投胎辦職員": "npc_clerk"}
 var _spk_done := false
