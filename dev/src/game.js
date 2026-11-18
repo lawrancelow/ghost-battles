@@ -911,7 +911,7 @@ const UI = {
   },
   // --- 劇情回顧 ---
   openStory() {
-    let h = '<p class="desc">看過的劇情，可以在這裡重溫。</p><div class="slist">';
+    let h = '<button class="btn wide gold" id="movebtn">搬去正式版：備份存檔</button><div id="movebox" hidden><p class="desc">存檔碼已複製。打開正式版（手機 App）→ 標題畫面按「導入網頁版存檔」→ 長按貼上 → 確定。複製不到的話，按「下載備份檔」，再打開檔案複製全部內容。</p><textarea id="moveta" rows="4" readonly style="width:100%;font-size:12px"></textarea><button class="btn wide" id="movecopy">再複製一次</button><button class="btn wide" id="movedl">下載備份檔</button></div><hr><p class="desc">看過的劇情，可以在這裡重溫。</p><div class="slist">';
     SCENE_ORDER.forEach(([name, ids], i) => { const ok = ids.some(id => S.seen[id]); h += `<button class="btn wide ${ok ? '' : 'ghost'}" data-sc="${i}" ${ok ? '' : 'disabled'}>${ok ? name : '？？？'}</button>`; });
     h += '</div><h4 class="stand-h">開麥之夜・陰間脫口秀</h4><p class="desc">村裡的鬼，入了村就能上台。</p><div class="slist">';
     STANDUP.forEach((st, i) => { const ok = standOk(st); h += `<button class="btn wide ${ok ? '' : 'ghost'}" data-st="${i}" ${ok ? '' : 'disabled'}>${ok ? `<small>${st.who}</small>　${st.title}` : '？？？（' + st.hint + '）'}</button>`; });
@@ -924,6 +924,11 @@ const UI = {
     $('#sndbtn').onclick = (e) => { const on = Sound.toggle(); e.target.textContent = '聲音：' + (on ? '開' : '關'); syncSnd(); };
     $('#resetbtn').onclick = (e) => { if (!confirmInline(e.target, '再按一次確定刪檔')) return; try { localStorage.setItem(SAVE_KEY + '_del', localStorage.getItem(SAVE_KEY) || ''); } catch (er) {} localStorage.removeItem(SAVE_KEY); location.reload(); };
     $('#expbtn').onclick = () => { save(); const code = Web.enc(S); const done = () => Fx.toast('存檔碼已複製，貼去記事本或者 WhatsApp 自己收好'); try { navigator.clipboard.writeText(code).then(done, () => { $('#impbox').hidden = false; $('#impta').value = code; $('#impta').select(); Fx.toast('自己長按複製呢段存檔碼'); }); } catch (er) { $('#impbox').hidden = false; $('#impta').value = code; } };
+    { const mv = () => { save(); const code = Web.enc(S); $('#movebox').hidden = false; const ta = $('#moveta'); ta.value = code; ta.select(); return code; };
+      const cp = (code) => { try { navigator.clipboard.writeText(code).then(() => Fx.toast('存檔碼已複製，去正式版貼上'), () => Fx.toast('自動複製失敗：長按上面的存檔碼複製，或按「下載備份檔」')); } catch (er) { Fx.toast('長按上面的存檔碼複製，或按「下載備份檔」'); } };
+      $('#movebtn').onclick = () => cp(mv());
+      $('#movecopy').onclick = () => cp(mv());
+      $('#movedl').onclick = () => { const code = mv(); try { const d = new Date(), p2 = n => String(n).padStart(2, '0'); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([code], { type: 'text/plain' })); a.download = `GhostBattles_save_lv${S.lv || 1}_${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}.txt`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); Fx.toast('備份檔已下載'); } catch (er) { Fx.toast('下載不到：長按上面的存檔碼複製'); } }; }
     $('#impbtn').onclick = () => { $('#impbox').hidden = false; $('#impta').value = ''; $('#impta').focus(); };
     $('#impgo').onclick = (e) => { let o = null; try { o = Web.dec($('#impta').value.trim().replace(/^.*#save=/, '')); } catch (er) {} if (!o || !o.res) { Fx.toast('存檔碼讀唔到，檢查吓有冇貼齊'); return; } if (!confirmInline(e.target, `再按一次：換成主公 ${o.lv || 1} 級嘅存檔`)) return; try { localStorage.setItem(SAVE_KEY + '_bak', localStorage.getItem(SAVE_KEY) || ''); window.removeEventListener('beforeunload', save); o.last = Date.now(); localStorage.setItem(SAVE_KEY, JSON.stringify(o)); window.__NOSAVE = 1; } catch (er) {} location.reload(); };
     const rb = $('#restorebtn'); if (rb) rb.onclick = (e) => { if (!confirmInline(e.target, '再按一次確定恢復')) return; try { const k = SAVE_KEY + rb.dataset.k; const v = localStorage.getItem(k); localStorage.setItem(SAVE_KEY + '_bak', localStorage.getItem(SAVE_KEY) || ''); window.removeEventListener('beforeunload', save); localStorage.setItem(SAVE_KEY, v); window.__NOSAVE = 1; } catch (er) {} location.reload(); };
