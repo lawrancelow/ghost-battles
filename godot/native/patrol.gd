@@ -172,8 +172,10 @@ static func menu_obj() -> Dictionary:
 		"sidOf": func(_t, a): return sid_of(J.arg(a, 0), J.arg(a, 1)), "startZ": func(_t, a): return start_z(J.arg(a, 0)), "mkFaci": func(_t, _a): mk_faci(); return null,
 		"faci": func(_t, _a): return FACI, "TNAME": D.TNAME, "LMNAME": D.LMNAME, "terOf": func(_t, a): return ter_of(J.arg(a, 0)), "restRecover": func(_t, _a): rest_recover(); return null,
 		"start": func(_t, a): start(J.arg(a, 0), J.arg(a, 1)); return null, "intro": func(_t, a): intro(J.arg(a, 0)); return null, "facOf": func(_t, a): return fac_of(J.arg(a, 0)),
-		"FAC": FAC, "setMir": func(_t, a): MIR = int(n(J.arg(a, 0))) % 2 == 1; return null}
+		"FAC": FAC, "setMir": func(_t, a): MIR = int(n(J.arg(a, 0))) % 2 == 1; return null,
+		"mapInfo": func(_t, a): return map_info(int(n(J.arg(a, 0)))), "mapCheck": func(_t, _a): return map_check_all(false)}
 static func open_prep() -> void:
+	map_check_all(false)
 	if has("__nat_patrolMenu"):
 		P["_menu"] = menu_obj()
 		if t_(J.cl(G("__nat_patrolMenu"), null, ["prep"])): return
@@ -217,7 +219,7 @@ static func prep_html() -> String:
 		for f in FACI: if J.seq(f.t, "station") and (f.z == st0 or t_(J.gp(g(r, "sta"), f.z))): stas.append(f)
 		var kn = J.keys(g(r, "kings")).size() + nn; var lmn = J.keys(g(r, "lm") if t_(g(r, "lm")) else {}).size()
 		var si2 = mini(2, nn)
-		h += "<div class=\"pt-reg " + ("" if open else "locked") + " " + ("cur" if cur else "") + "\"><div><b>第" + CN[ci] + "區・" + s_(g(ch, "name")) + "</b><small>" + (("地頭 " + s_(kn) + "/9　地標 " + s_(lmn) + "/" + s_(D.LMNAME[ci].size()) + "　主線 " + s_(nn) + "/3　" + s_(J.mc(GP, "T", ["建議鬼力", "建議鬼力"])) + " " + s_(J.mc(GP, "stageNeed", [J.gp(stages, float(si2)), sid_of(ci, si2)])) + "　需主公 Lv" + s_(g(J.gp(stages, 0.0), "req"))) if open else "打完上一區總監才開放") + "</small></div>"
+		h += "<div class=\"pt-reg " + ("" if open else "locked") + " " + ("cur" if cur else "") + "\"><div><b>" + map_name(ci) + "・" + s_(g(ch, "name")) + "</b><small>" + (("地頭 " + s_(kn) + "/9　地標 " + s_(lmn) + "/" + s_(D.LMNAME[ci].size()) + "　主線 " + s_(nn) + "/3　" + s_(J.mc(GP, "T", ["建議鬼力", "建議鬼力"])) + " " + s_(J.mc(GP, "stageNeed", [J.gp(stages, float(si2)), sid_of(ci, si2)])) + "　需主公 Lv" + s_(g(J.gp(stages, 0.0), "req"))) if open else "打完上一區總監才開放") + "</small></div>"
 		if open:
 			h += "<div class=\"pt-go\">"
 			for f in stas: h += "<button class=\"btn sm " + ("gold" if cur and f.z == st0 else "") + "\" data-go=\"" + s_(ci) + "," + s_(f.z) + "\">" + ("出發" if f.z == st0 else s_(D.TNAME[ci][int(ter_of(f.z))]) + "站") + "</button>"
@@ -269,7 +271,7 @@ static func start(ci, z) -> void:
 	for id in J.iter(g(ch, "intro")): if not t_(J.gp(seen, id)): any = true
 	for id in J.iter(g(ch, "intro")): if not t_(J.gp(seen, id)): J.mc(G("Story"), "queue", [id])
 	var go = func(_t = null, _a = null): begin(ci, z); return null
-	if any: J.mc(G("Story"), "queue", [{"style": "narr", "lines": [["旁白", "第" + CN[int(n(ci))] + "區・" + s_(g(ch, "name"))]]}, go])
+	if any: J.mc(G("Story"), "queue", [{"style": "narr", "lines": [["旁白", map_name(int(n(ci))) + "・" + s_(g(ch, "name"))]]}, go])
 	else: go.call()
 static func begin(ci, z0) -> void:
 	if has("__nat_patrol") and t_(J.cl(G("__nat_patrol"), null, [ci, z0])): return
@@ -303,6 +305,127 @@ static func tr_call(name: String, a: Array, dflt):
 	if _tr == null: return dflt
 	return J.mc(_trx.Patrol, name, a)
 
+
+# ======================= 地圖制（第一期）=======================
+# data/nat/maps.json：6 張地圖（ci 0–5 ＝ patrol 區域）。通關送固有裝備（刻名版），隱藏鬼／隱藏裝備靠確定性條件。
+# 已發記錄：S.pt.reg[ci].rw = {"boss":1, "eq":1, "he":1, "hg":1}
+static var MAPS: Array = []
+static var _mc_busy := false
+static func _N(s: String) -> String: return s_(DB.call("N", s)) if DB.has_method("N") else s
+static func map_def(ci: int) -> Dictionary: return MAPS[ci] if ci >= 0 and ci < MAPS.size() else {}
+static func map_name(ci: int) -> String:
+	var M = map_def(ci)
+	if M.is_empty(): return "第" + CN[clampi(ci, 0, 5)] + "區"
+	return T(s_(M.name[0]), s_(M.name[1]))
+static func rw_of(ci: int) -> Dictionary:
+	var r = reg_st(float(ci))
+	if not (g(r, "rw") is Dictionary): J.sp(r, "rw", {})
+	return g(r, "rw")
+static func _has_num_key(d, v) -> bool:
+	if not (d is Dictionary): return false
+	for k in d.keys():
+		if J.num(k) == n(v) and t_(d[k]): return true
+	return false
+static func _owned(k: String) -> bool:
+	for gh in J.iter(g(S_(), "ghosts")): if J.seq(g(gh, "k"), k): return true
+	return false
+static func cond_ok(c: Dictionary) -> bool:
+	var ci = int(n(c.get("ci", 0)))
+	match s_(c.get("t")):
+		"lm": return _has_num_key(g(reg_st(float(ci)), "lm"), c.id)
+		"lmall":
+			var lm = g(reg_st(float(ci)), "lm"); var cnt = 0
+			if lm is Dictionary:
+				for k in lm.keys(): if t_(lm[k]): cnt += 1
+			return cnt >= D.LMNAME[ci].size()
+		"king": return _has_num_key(g(reg_st(float(ci)), "kings"), c.tile)
+		"clear": return t_(J.gp(g(S_(), "cleared"), s_(c.sid)))
+		"rw": return t_(rw_of(ci).get(s_(c.k)))
+		"own": return _owned(s_(c.k))
+	return false
+static func conds_ok(arr) -> bool:
+	if not (arr is Array) or arr.is_empty(): return false
+	for c in arr: if not cond_ok(c): return false
+	return true
+static func cleared_map(ci: int) -> bool: return t_(J.gp(g(S_(), "cleared"), sid_of(float(ci), 2.0)))
+static func has_unique(uid: String) -> bool:
+	for it in J.iter(g(gst(), "items")): if J.seq(g(it, "u"), uid): return true
+	return false
+static func give_unique(uid: String):
+	var UT = D.GEAR.get("UNIQUE", {})
+	if not UT.has(uid) or has_unique(uid): return null
+	var U = UT[uid]; var s = gst(); var id = n(g(s, "uid")); J.sp(s, "uid", id + 1)
+	var it = {"id": "e" + s_(id), "slot": s_(U.slot), "c": float(n(U.c)), "f": s_(U.f), "lv": 1.0, "who": null, "u": uid}
+	J.mc(g(s, "items"), "push", [it])
+	return it
+static func _ghost_name(k: String) -> String:
+	var d = J.gp(G("GHOSTS"), k)
+	return s_(g(d, "name")) if t_(d) else k
+static func _lines(story) -> Array:
+	var out = []
+	if story is Array:
+		for l in story: out.append([s_(l[0]), T(s_(l[1]), s_(l[2]))])
+	return out
+# 檢查一張地圖；回傳 {"msgs": [...], "lines": [...]}
+static func map_check(ci: int) -> Dictionary:
+	var out = {"msgs": [], "lines": []}
+	var M = map_def(ci)
+	if M.is_empty() or not t_(S_()) or not t_(g(S_(), "ghosts")): return out
+	var rw = rw_of(ci); var mn = map_name(ci)
+	if cleared_map(ci):
+		if not t_(rw.get("boss")): rw["boss"] = 1.0
+		if not t_(rw.get("eq")) and M.get("eq") is Dictionary:
+			var uid = s_(M.eq.u); give_unique(uid); rw["eq"] = 1.0
+			out.msgs.append(T("【%s】通關獎勵：<b>%s</b>", "【%s】通關獎勵：<b>%s</b>") % [mn, s_(D.GEAR.UNIQUE[uid].n)])
+	var he = M.get("he"); var hg = M.get("hg")
+	if he is Dictionary and not t_(rw.get("he")) and conds_ok(he.get("cond")):
+		var uid2 = s_(he.u); give_unique(uid2); rw["he"] = 1.0
+		out.msgs.append(T("【%s】隱藏裝備：<b>%s</b>", "【%s】隱藏裝備：<b>%s</b>") % [mn, s_(D.GEAR.UNIQUE[uid2].n)])
+		out.lines += _lines(he.get("story"))
+	if hg is Dictionary and not t_(rw.get("hg")) and conds_ok(hg.get("cond")):
+		var k = s_(hg.k); rw["hg"] = 1.0
+		out.lines += _lines(hg.get("story"))
+		if not _owned(k) and t_(J.gp(G("GHOSTS"), k)):
+			J.cl(G("joinGhost"), null, [k])
+			out.msgs.append(T("【%s】隱藏鬼：<b>%s</b> 跟你返村", "【%s】隱藏鬼：<b>%s</b> 跟你回村") % [mn, _ghost_name(k)])
+		else:
+			var ch = g(S_(), "chests")
+			if t_(ch): J.sp(ch, "p", n(g(ch, "p")) + 1)
+			out.msgs.append(T("【%s】隱藏鬼：<b>%s</b>（已經喺村，送你紫箱 ×1）", "【%s】隱藏鬼：<b>%s</b>（已經在村裡，送你紫箱 ×1）") % [mn, _ghost_name(k)])
+	return out
+# 全部地圖檢查一次；quiet＝開機補發（只出一個 toast，唔播劇情）
+static func map_check_all(quiet := false) -> Array:
+	if _mc_busy or not has("S") or not t_(S_()) or not t_(g(S_(), "ghosts")): return []
+	_mc_busy = true
+	var msgs = []; var lines = []
+	for ci in MAPS.size():
+		var r = map_check(ci); msgs += r.msgs; lines += r.lines
+	_mc_busy = false
+	if msgs.is_empty(): return msgs
+	save()
+	if has("Fx"): J.mc(G("Fx"), "toast", [_N(("<br>".join(msgs)) if not quiet else T("補發地圖獎勵：", "補發地圖獎勵：") + "<br>" + "<br>".join(msgs))])
+	if not quiet and lines.size() and has("Story"): J.mc(G("Story"), "queue", [{"style": "narr", "lines": lines}])
+	if has("UI"): J.mc(G("UI"), "refresh", [])
+	return msgs
+# 地圖卡用：名、環境、簡介、通關獎勵、隱藏 ?/2
+static func map_info(ci: int) -> Dictionary:
+	var M = map_def(ci)
+	if M.is_empty(): return {}
+	var rw = rw_of(ci); var boss = []
+	for k in M.get("boss", []): boss.append(_ghost_name(s_(k)))
+	var eqn = s_(D.GEAR.UNIQUE[s_(M.eq.u)].n) if M.get("eq") is Dictionary else ""
+	var hid = []
+	for key in ["hg", "he"]:
+		var h = M.get(key)
+		if not (h is Dictionary): continue
+		var got = t_(rw.get(key))
+		var nm = _ghost_name(s_(h.k)) if key == "hg" else s_(D.GEAR.UNIQUE[s_(h.u)].n)
+		hid.append({"kind": key, "got": got, "name": nm, "hint": T(s_(h.hint[0]), s_(h.hint[1]))})
+	var hn = 0
+	for h in hid: if h.got: hn += 1
+	return {"name": T(s_(M.name[0]), s_(M.name[1])), "ch": s_(M.get("ch", "")), "env": T(s_(M.env[0]), s_(M.env[1])), "intro": T(s_(M.intro[0]), s_(M.intro[1])),
+		"boss": boss, "eq": eqn, "cleared": cleared_map(ci), "eqGot": t_(rw.get("eq")), "hidden": hid, "hn": hn, "ht": hid.size()}
+
 # ======================= Gear =======================
 static func gst():
 	var S = S_()
@@ -317,16 +440,39 @@ static func fki(f) -> int: return D.GEAR.FK.find(s_(f))
 static func weapon_of(gh):
 	for it in held(gh):
 		if J.seq(g(it, "slot"), "wea"):
-			var c = int(n(g(it, "c"))); var i = fki(g(it, "f")); var sty = D.GEAR.WSTY[c][i]
-			return {"it": it, "img": D.GEAR.WIMG[c][i], "sty": sty, "S": D.GEAR.STY[sty], "lvMul": 1 + 0.04 * (n(g(it, "lv")) - 1)}
+			var c = int(n(g(it, "c"))); var i = fki(g(it, "f")); var sty = D.GEAR.WSTY[c][i]; var img = D.GEAR.WIMG[c][i]
+			var U = uq(it)
+			if U != null:
+				if s_(U.get("sty", "")) != "": sty = s_(U.sty)
+				if s_(U.get("img", "")) != "": img = s_(U.img)
+			return {"it": it, "img": img, "sty": sty, "S": D.GEAR.STY[sty], "lvMul": 1 + 0.04 * (n(g(it, "lv")) - 1)}
 	return null
 static func _slot_of(gh, sl: String):
 	for it in held(gh): if J.seq(g(it, "slot"), sl): return it
 	return null
+# 唯一裝備（地圖固有／隱藏）：物品有 u 欄 → 查 GEAR.UNIQUE
+static func uq(it):
+	var u = g(it, "u")
+	if not t_(u): return null
+	var UT = D.GEAR.get("UNIQUE", {})
+	return UT.get(s_(u))
+static func img_of(it) -> String:
+	var U = uq(it)
+	if U != null and s_(U.get("img", "")) != "": return s_(U.img)
+	if not J.seq(g(it, "slot"), "wea"): return ""
+	return s_(D.GEAR.WIMG[int(n(g(it, "c")))][fki(g(it, "f"))])
+static func desc_of(it) -> String:
+	var U = uq(it)
+	if U == null or not (U.get("d") is Array): return ""
+	return T(s_(U.d[0]), s_(U.d[1]))
 static func name_of(it) -> String:
+	var U = uq(it)
+	if U != null: return s_(U.n)
 	var l = D.GEAR.NAMES[s_(g(it, "slot"))][int(n(g(it, "c")))]
 	return s_(l[0]) + "・" + s_(FAC[s_(g(it, "f"))].name) if J.seq(g(it, "slot"), "acc") else s_(l[fki(g(it, "f"))])
-static func pct(it) -> float: return jround((5 + 5 * n(g(it, "c"))) * (1 + 0.15 * (n(g(it, "lv")) - 1)))
+static func pct(it) -> float:
+	var U = uq(it); var mul = n(U.get("mul", 1.0)) if U != null else 1.0
+	return jround((5 + 5 * n(g(it, "c"))) * (1 + 0.15 * (n(g(it, "lv")) - 1)) * mul)
 static func craft_cost(c, f) -> Dictionary:
 	var k = n(c) + 1
 	return {"r": {"coins": jround(150 * pow(k, 1.7)), "planks": jround(40 * pow(k, 1.5))}, "mat": {s_(f): jround(12 * pow(k, 1.4))}}
@@ -370,19 +516,23 @@ static func crew_buff() -> Dictionary:
 static func eff_text(it) -> String:
 	var p = pct(it); var f = s_(FAC[s_(g(it, "f"))].name); var sl = s_(g(it, "slot"))
 	if sl == "wea":
-		var S2 = D.GEAR.STY[D.GEAR.WSTY[int(n(g(it, "c")))][fki(g(it, "f"))]]
+		var sk = D.GEAR.WSTY[int(n(g(it, "c")))][fki(g(it, "f"))]; var U = uq(it)
+		if U != null and s_(U.get("sty", "")) != "": sk = s_(U.sty)
+		var S2 = D.GEAR.STY[sk]
 		return "攻擊 +" + s_(p) + "%・" + s_(S2.n) + "：" + s_(S2.d)
 	if sl == "arm": return "血 +" + s_(jround(p * 1.2)) + "%・" + f + "組員血 +" + s_(jround(p * 0.5)) + "%"
 	return f + "組員攻擊 +" + s_(jround(p * 0.6)) + "%・自己攻擊 +" + s_(jround(p * 0.3)) + "%"
 static func icon(it) -> String:
 	if not J.seq(g(it, "slot"), "wea"): return ""
-	var src = J.gp(G("PT_IMG_SRC"), D.GEAR.WIMG[int(n(g(it, "c")))][fki(g(it, "f"))]) if has("PT_IMG_SRC") else false
+	var src = J.gp(G("PT_IMG_SRC"), img_of(it)) if has("PT_IMG_SRC") else false
 	return "<img class=\"gr-ic\" src=\"" + s_(src) + "\" alt=\"\">" if t_(src) else ""
 static func gmenu_obj() -> Dictionary:
 	return {"st": func(_t, _a): return gst(), "nameOf": func(_t, a): return name_of(J.arg(a, 0)), "effText": func(_t, a): return eff_text(J.arg(a, 0)),
 		"craftCost": func(_t, a): return craft_cost(J.arg(a, 0), J.arg(a, 1)), "upCost": func(_t, a): return up_cost(J.arg(a, 0)),
 		"canPayAll": func(_t, a): return can_pay_all(J.arg(a, 0)), "payAll": func(_t, a): pay_all(J.arg(a, 0)); return null,
-		"held": func(_t, a): return held(J.arg(a, 0)), "FK": D.GEAR.FK, "WIMG": D.GEAR.WIMG, "SLOTS": D.GEAR.SLOTS}
+		"held": func(_t, a): return held(J.arg(a, 0)), "FK": D.GEAR.FK, "WIMG": D.GEAR.WIMG, "SLOTS": D.GEAR.SLOTS,
+		"imgOf": func(_t, a): return img_of(J.arg(a, 0)), "descOf": func(_t, a): return desc_of(J.arg(a, 0)), "isUnique": func(_t, a): return uq(J.arg(a, 0)) != null,
+		"mapName": func(_t, a): return map_name(int(n(J.arg(a, 0))))}
 static func gear_open(b) -> void:
 	if has("__nat_patrolMenu"):
 		GE["_menu"] = gmenu_obj()
@@ -415,7 +565,7 @@ static func gear_render() -> void:
 		var open = region_open(float(c))
 		for f in D.GEAR.FK:
 			var it = {"slot": g_tab, "c": float(c), "f": f, "lv": 1.0}; var cc = craft_cost(float(c), f)
-			h += "<div class=\"gr-it " + ("" if open else "dis") + "\"><div class=\"gr-n\">" + icon(it) + "<b style=\"color:" + s_(FAC[f].col) + "\">" + name_of(it) + "</b> <i>第" + CN[c] + "區</i><small>" + eff_text(it) + "</small></div><div class=\"gr-b\">" + (("<button class=\"btn sm\" data-mk=\"" + s_(c) + "," + f + "\" " + ("" if can_pay_all(cc) else "disabled") + ">打造<small>" + cost_html(cc) + "</small></button>") if open else "<small>巡到這區才解鎖</small>") + "</div></div>"
+			h += "<div class=\"gr-it " + ("" if open else "dis") + "\"><div class=\"gr-n\">" + icon(it) + "<b style=\"color:" + s_(FAC[f].col) + "\">" + name_of(it) + "</b> <i>" + map_name(c) + "</i><small>" + eff_text(it) + "</small></div><div class=\"gr-b\">" + (("<button class=\"btn sm\" data-mk=\"" + s_(c) + "," + f + "\" " + ("" if can_pay_all(cc) else "disabled") + ">打造<small>" + cost_html(cc) + "</small></button>") if open else "<small>巡到這區才解鎖</small>") + "</div></div>"
 	h += "</div><button class=\"btn wide\" id=\"gr-back\">返回</button>"
 	J.mc(G("UI"), "sheet", ["裝備房", h])
 	var root = q("#sheet")
@@ -467,7 +617,10 @@ func run(_env) -> void:
 		"leads": func(_t, _a): return leads(), "restRecover": func(_t, _a): rest_recover(); return null, "facOf": func(_t, a): return fac_of(J.arg(a, 0)),
 		"phase": func(_t, a): return phase(J.arg(a, 0)), "elitesOf": func(_t, a): return elites_of(J.arg(a, 0)), "fodOf": func(_t, a): return fod_of(J.arg(a, 0)),
 		"pageGhosts": func(_t, a): return page_ghosts(J.arg(a, 0)), "emit": func(_t, a): emit(J.arg(a, 0), J.arg(a, 1)); return null,
-		"setActive": func(_t, a): active = J.t(J.arg(a, 0)); return null, "T": func(_t, a): return T(J.str(J.arg(a, 0)), J.str(J.arg(a, 1)))})
+		"setActive": func(_t, a):
+			active = J.t(J.arg(a, 0))
+			if not active: J.F_setTimeout([func(_t2, _a2): map_check_all(false); return null, 400.0])
+			return null, "T": func(_t, a): return T(J.str(J.arg(a, 0)), J.str(J.arg(a, 1)))})
 	P = {"_nat": nat,
 		"open": func(_t, _a): open_prep(); return null, "openPrep": func(_t, _a): open_prep(); return null, "close": func(_t, _a): close(); return null,
 		"FAC": FAC, "facOf": func(_t, a): return fac_of(J.arg(a, 0)), "st": func(_t, _a): return st(), "regionOpen": func(_t, a): return region_open(J.arg(a, 0)),
@@ -486,3 +639,11 @@ func run(_env) -> void:
 		"SLOTS": D.GEAR.SLOTS, "weaponOf": func(_t, a): return weapon_of(J.arg(a, 0)), "armorOf": func(_t, a): return _slot_of(J.arg(a, 0), "arm"), "badgeOf": func(_t, a): return _slot_of(J.arg(a, 0), "acc"),
 		"STY": D.GEAR.STY, "WIMG": D.GEAR.WIMG}
 	J.G["Gear"] = GE
+	MAPS = []
+	if FileAccess.file_exists("res://data/nat/maps.json"):
+		var mf = JSON.parse_string(FileAccess.get_file_as_string("res://data/nat/maps.json"))
+		if mf is Dictionary and mf.get("MAPS") is Array: MAPS = mf.MAPS
+	for e in ["king", "secret", "page", "cache", "discover"]:
+		on_(e, func(_t, _a): map_check_all(false); return null)
+	# 舊存檔開機補發一次（條件已達成但未發）
+	J.F_setTimeout([func(_t, _a): map_check_all(true); return null, 6000.0])

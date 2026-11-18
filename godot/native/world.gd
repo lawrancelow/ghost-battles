@@ -36,6 +36,10 @@ static func spots() -> Array:
 			"go": func(_t, _a): return J.mc(_g("Tower"), "open", []),
 			"ready": func(_t, _a): return _has("Tower"),
 			"need": func(_t, _a): return _seen("ch1_end") or _win("STN_TEST"), "lock": "打完第一章才開放"},
+		# 亂葬崗：獨立玩法（唔屬地圖制），用第 1 個保留地位置
+		{"id": "gyard", "x": 0.78, "y": 0.27, "lx": 0.80, "ly": 0.325, "name": "亂葬崗", "sub": "無名墳",
+			"go": func(_t, _a): return J.mc(_g("Graveyard"), "open", []),
+			"ready": func(_t, _a): return _has("Graveyard")},
 	]
 
 static func open_() -> void:
@@ -68,10 +72,10 @@ func run(_env) -> void:
 	var W = {
 		"YARD_READY": true,
 		"SPOTS": spots(),
-		"RESERVED": 3.0,
-		"ICON": {"battle": "巡", "yard": "界", "street": "市", "scare": "嚇", "station": "崗"},
-		"DESC": {"battle": "帶住部門巡陰間：遊魂可以送去投胎，亦可以遞合約收編。主線關卡嘅主管同總監都喺度。", "yard": "條村停咗喺發大水嗰晚。救返卡住嘅人，唔好俾佢哋俾拖走。", "street": "收工後嘅陰間夜市，食嘢、行街、見老友。", "station": "喺陽間地盤擺鬼站崗，嚇走路過嘅人。", "scare": "返去陽間返夜班，一間間辦公室嚇過去。", "tower": "揀一棟樓，由地下嚇到天台，天光前返陰間。"},
-		"RES_SPOTS": [{"x": 0.78, "y": 0.27, "lx": 0.80, "ly": 0.325}, {"x": 0.50, "y": 0.06, "lx": 0.50, "ly": 0.135}, {"x": 0.15, "y": 0.07, "lx": 0.15, "ly": 0.135}],
+		"RESERVED": 2.0,
+		"ICON": {"battle": "巡", "yard": "界", "street": "市", "scare": "嚇", "station": "崗", "gyard": "墳"},
+		"DESC": {"battle": "帶住部門巡陰間：遊魂可以送去投胎，亦可以遞合約收編。主線關卡嘅主管同總監都喺度。", "yard": "條村停咗喺發大水嗰晚。救返卡住嘅人，唔好俾佢哋俾拖走。", "street": "收工後嘅陰間夜市，食嘢、行街、見老友。", "station": "喺陽間地盤擺鬼站崗，嚇走路過嘅人。", "scare": "返去陽間返夜班，一間間辦公室嚇過去。", "tower": "揀一棟樓，由地下嚇到天台，天光前返陰間。", "gyard": "無名墳一排排，聽清楚邊個講大話。"},
+		"RES_SPOTS": [{"x": 0.50, "y": 0.06, "lx": 0.50, "ly": 0.135}, {"x": 0.15, "y": 0.07, "lx": 0.15, "ly": 0.135}],
 		"open": func(_t, _a): open_(); return null,
 		"close": func(_t, _a): close_(); return null,
 	}
