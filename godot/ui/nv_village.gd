@@ -437,28 +437,22 @@ func _ext_base_col() -> Color:
 				_ext_col = Color(acc.r / n, acc.g / n, acc.b / n, 1)
 	return _ext_col
 
-# 地面：同舊村子接駁（頂部漸變）、中間石板路、草、兩邊暗啲
+# [village2] 地面：預烘嘅拓展區地面（ground_painter ext 模式，同一套筆觸，底紋相位、石板路格線都由 WH 接落去）→ 冇接縫、冇色差
+#   以前：用村子底一行取平均色鋪純色＋程序草（同上面泥地差好遠，睇落係「一大塊深色」）
+var ext_tex: Texture2D
+const EXT_H := 1600.0
 func _draw_ext_ground(c: CanvasItem) -> void:
 	var wh = CB.world_h()
 	if wh <= WH: return
-	var base = _ext_base_col(); var top = WH - 24.0
-	c.draw_rect(Rect2(0, WH, W, wh - WH + 40), base)
-	for k in 12:
-		c.draw_rect(Rect2(0, top + k * 2, W, 2), Color(base, (k + 1) / 12.0))
-	var rng = RandomNumberGenerator.new(); rng.seed = 7123
-	var y = WH + 6.0
-	while y < wh + 20:   # 石板路
-		var sw = 30.0 + rng.randf() * 10; var sx = 195 - sw / 2 + rng.randf_range(-4, 4)
-		c.draw_rect(Rect2(sx, y, sw, 20), Color("#3d3836")); c.draw_rect(Rect2(sx + 2, y + 2, sw - 4, 3), Color(1, 1, 1, 0.05))
-		y += 24
-	for k in int((wh - WH) / 9):   # 草
-		var gx = rng.randf() * W; var gy = WH + rng.randf() * (wh - WH)
-		if absf(gx - 195) < 28: continue
-		var gc = Color("#3c4a2c") if rng.randf() < 0.6 else Color("#4a3e2c")
-		for j in 3: c.draw_line(Vector2(gx + j * 2 - 2, gy), Vector2(gx + j * 3 - 3 + rng.randf_range(-1, 1), gy - 5 - rng.randf() * 4), gc, 1.2)
-	for k in 6:   # 兩邊暗角
-		c.draw_rect(Rect2(0, WH, 6 + k * 4, wh - WH + 40), Color(0, 0, 0, 0.05))
-		c.draw_rect(Rect2(W - 6 - k * 4, WH, 6 + k * 4, wh - WH + 40), Color(0, 0, 0, 0.05))
+	if ext_tex == null and ResourceLoader.exists("res://assets/img/village_ground_ext.webp"): ext_tex = load("res://assets/img/village_ground_ext.webp")
+	if ext_tex == null:
+		c.draw_rect(Rect2(0, WH, W, wh - WH + 40), _ext_base_col()); return
+	var y = WH
+	var i = 0
+	while y < wh + 40 and i < 6:   # 超過一張高就再鋪（翻轉接縫）
+		if i % 2 == 0: c.draw_texture_rect(ext_tex, Rect2(0, y, W, EXT_H), false)
+		else: c.draw_texture_rect(ext_tex, Rect2(0, y + EXT_H, W, -EXT_H), false)
+		y += EXT_H; i += 1
 
 func _sync_chain() -> void:
 	var sh = CB.shown()

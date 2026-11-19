@@ -77,6 +77,7 @@ var embed_top := 0.0          # HUD 頂（畫面座標，主線任務條下面�
 var hud_on := true
 var hud_k := 1.0              # HUD 淡入淡出
 var embed_draw = null         # Callable(ctx, vy0, vy1)：嵌入層額外畫（挑夫鬼、留位）
+var embed_ground = null       # [village2] Callable(ctx, vy0, vy1)：地面畫完之後（接駁原村子地面嘅漸變帶）
 
 func _ready() -> void:
 	_rng.seed = 7
@@ -449,6 +450,7 @@ func _draw_stage() -> void:
 	var vy0 = cam - top_pad - 10.0; var vy1 = cam - top_pad + H + 10.0     # 鏡頭內（世界 y）
 	ctx.save(); ctx.translate(0, top_pad - cam)
 	_draw_ground(ctx, vy0, vy1)
+	if embed and embed_ground != null: embed_ground.call(ctx, vy0, vy1)   # [village2]
 	var fk = _fold_k()
 	var walking = anim != null and not anim.done and anim.t >= A_FOLD - 0.2
 	# 圍欄外孤魂＋圍欄（地圖頂）

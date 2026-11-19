@@ -35,6 +35,7 @@ func _ready() -> void:
 	sc = Control.new(); sc.set_script(load(MV_SCENE)); sc.name = "MvScene"
 	sc.embed = true; sc.hide_host = false
 	sc.embed_draw = _draw_extra
+	sc.embed_ground = _draw_join   # [village2] 大排檔區底 → 原村子地面：漸變接駁（冇接縫、冇黑帶）
 	sc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	village.add_child(sc)   # 加喺 world 後面 → 畫喺村子上面
 	sc.setup(main)
@@ -176,6 +177,25 @@ func _draw_extra(ctx, vy0: float, vy1: float, items: Array) -> void:
 		var a = clampf(float(p.s) / 40.0, 0.0, 1.0)   # 喺村子石板路慢慢現身
 		var pp = p
 		items.append([pos.y, func(): _draw_porter(ctx, pp, pos, nx.x < pos.x, a)])
+
+# [village2] 大排檔區最底 JOIN_H 高：將原村子地面頂（y 0..JOIN_H）上下反轉鋪上去，由上而下慢慢實，
+#   去到分界（大排檔世界 y = EH ＝ 村子 y 0）就同村子地面第一行一模一樣 → 冇接縫
+const JOIN_H := 90.0
+func _draw_join(ctx, vy0: float, vy1: float) -> void:
+	var E = eh()
+	if vy1 < E - JOIN_H or vy0 > E: return
+	var gt = village.get("ground_tex") if village != null else null
+	if not (gt is Texture2D): return
+	var k = gt.get_height() / 1130.0
+	ctx.save(); ctx.translate(0, E); ctx.scale(1, -1)
+	var n = 18; var d = JOIN_H / n
+	for j in n:
+		var v = j * d
+		var f = 1.0 - (v + d * 0.5) / JOIN_H
+		ctx.globalAlpha = f * f * (3.0 - 2.0 * f)
+		ctx.drawImage(gt, 0, v * k, gt.get_width(), d * k, 0, v, 390, d + 0.6)
+	ctx.globalAlpha = 1.0
+	ctx.restore()
 
 func _draw_spare(ctx, x: float, y: float) -> void:
 	ctx.save()
