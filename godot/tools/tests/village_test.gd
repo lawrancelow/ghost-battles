@@ -56,7 +56,7 @@ func all(t) -> void:
 	# ---------- 0. 資料 ----------
 	_chk("chain.json 有拓展建築", CB.new_blds().size() > 0, CB.new_blds().size())
 	_chk("舊建築對照（wood/rice/plank/bun）", CB.of_old("wood") != "" and CB.of_old("bun") != "")
-	_chk("POSTS 已登記拓展崗位", J.G.POSTS.has(CB.new_blds()[0]))
+	_chk("POSTS／BUILDINGS 已登記拓展建築", J.G.POSTS.has(CB.new_blds()[0]) and J.G.BUILDINGS.has(CB.new_blds()[0]))
 	_chk("包裝已裝（tap／bld）", is_same(J.G.Village.get("tap"), J.G.Village.get("__cb_tap_w")) and is_same(N().get("bld"), N().get("__cb_bld_w")))
 
 	# ---------- 1. 解鎖條件 ----------

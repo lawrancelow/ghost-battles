@@ -308,7 +308,12 @@ static func _fx(m: String, a: Array) -> void:
 	var fx = J.G.get("Fx")
 	if fx != null: J.mc(fx, m, a)
 
+# 登記 POSTS（派人面板）同 BUILDINGS（其他模塊查名用；建築卡／起建築由呢度包裝處理，唔行舊 bldAct）
 static func reg_posts() -> void:
+	var BD = J.G.get("BUILDINGS")
+	if BD is Dictionary:
+		for b in new_blds():
+			if not BD.has(b): BD[b] = {"name": bname(b), "desc": recipe_bb(b), "build": {}, "posts": [b], "chain": true}
 	var PO = J.G.get("POSTS")
 	if not (PO is Dictionary): return
 	for b in new_blds():
