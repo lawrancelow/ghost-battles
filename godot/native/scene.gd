@@ -27,6 +27,14 @@ static func put(ctx, im, x: float, y: float, w: float, h: float = 0.0) -> Dictio
 	c(ctx, "drawImage", [im, x - w / 2, y - h, w, h])
 	return {"x": x - w / 2, "y": y - h, "w": w, "h": h}
 
+# [villageart] 新畫風：舊圖壓暗（JS 畫布只支援 brightness 濾鏡，用調色嘅平均亮度）
+const VS = preload("res://game/village_style.gd")
+static func vput(ctx, key: String, im, x: float, y: float, w: float, h: float = 0.0) -> Dictionary:
+	var tc: Color = VS.tint_for(key)
+	if tc == Color.WHITE: return put(ctx, im, x, y, w, h)
+	c(ctx, "save"); s(ctx, "filter", "brightness(%.3f)" % ((tc.r + tc.g + tc.b) / 3.0))
+	var r = put(ctx, im, x, y, w, h); c(ctx, "restore"); return r
+
 static func lv_badge(ctx, x: float, y: float, lv) -> void:
 	c(ctx, "save"); c(ctx, "translate", [x, y]); c(ctx, "rotate", [0.12])
 	J.mc(_g("ART"), "rr", [ctx, -1.0, -8.0, 22.0, 16.0, 2.0, "#c2362b", "#f0c8b4", 1.0])
@@ -76,7 +84,7 @@ func run(_env) -> void:
 		var ctx = _a(a, 0); var id = J.str(_a(a, 1)); var x = J.num(_a(a, 2)); var y = J.num(_a(a, 3)); var lv = _a(a, 4); var t = J.num(_a(a, 5)); var extra = _a(a, 6)
 		var im = img(id)
 		if im == null: return J.cl(o_building, this_, a)
-		J.mc(ART, "el", [ctx, x, y + 1, BW[id] * 0.44, 7.0, "rgba(0,0,0,.28)"])
+		J.mc(ART, "el", [ctx, x, y + 1, BW[id] * 0.44, 7.0, "rgba(10,2,8,.34)"])   # [villageart]
 		var r = put(ctx, im, x, y + 6, BW[id])
 		var bd = J.gp(_g("BUILDINGS"), id)   # 唔喺 BUILDINGS（例如 gate）：網頁版會出錯，轉譯版當空名照畫；呢度跟轉譯版
 		var name = J.str(J.gp(bd, "name")) if J.t(bd) else ""
@@ -90,7 +98,7 @@ func run(_env) -> void:
 		var ctx = _a(a, 0); var x = J.num(_a(a, 1)); var y = J.num(_a(a, 2)); var t = _a(a, 3)
 		var im = img("gate")
 		if im == null: return J.cl(o_gate, this_, a)
-		var r = put(ctx, im, x, y + 6, BW.gate); plaque_text(ctx, r, PLAQUE.gate, "出村", 0.0)
+		var r = vput(ctx, "gate", im, x, y + 6, BW.gate); plaque_text(ctx, r, PLAQUE.gate, "出村", 0.0)
 		var Gd = _g("Guide")
 		if Gd != null: J.mc(Gd, "drawGateDot", [ctx, r.x + r.w * 0.78, r.y + r.h * 0.52, t])  # 有新地方未去過：紅點
 		return null
@@ -100,7 +108,7 @@ func run(_env) -> void:
 		if hp <= 0:
 			var stp = img("stump")
 			if stp == null: return J.cl(o_tree, this_, a)
-			put(ctx, stp, x, y + 3, 38.0); return null
+			vput(ctx, "stump", stp, x, y + 3, 38.0); return null
 		var bare = img("tree_bare"); var full = img("tree")
 		if full == null and bare == null: return J.cl(o_tree, this_, a)
 		var sx = sin(t * 60) * 2.2 if shake else 0.0; var H = 80.0 + (idx % 3) * 4
@@ -109,7 +117,7 @@ func run(_env) -> void:
 		if shake: c(ctx, "translate", [x, y]); c(ctx, "rotate", [sin(t * 60) * 0.02]); c(ctx, "translate", [-x, -y])
 		var tree = bare if bare != null else full; var flip = idx % 2 == 1
 		if flip: c(ctx, "translate", [x, 0.0]); c(ctx, "scale", [-1.0, 1.0]); c(ctx, "translate", [-x, 0.0])
-		var r = put(ctx, tree, x + sx, y + 4, 0.0, H)
+		var r = vput(ctx, "tree_bare", tree, x + sx, y + 4, 0.0, H)
 		c(ctx, "restore")
 		if bare != null and perched:
 			var cs = img("crowsit")
@@ -122,17 +130,17 @@ func run(_env) -> void:
 		var ctx = _a(a, 0); var x = J.num(_a(a, 1)); var y = J.num(_a(a, 2)); var ripe = J.t(_a(a, 3))
 		var ripe_im = img("paddy"); var cut = img("paddy_cut")
 		if ripe_im == null: return J.cl(o_paddy, this_, a)
-		if ripe: put(ctx, ripe_im, x, y + 9, 56.0); return null
-		if cut != null: put(ctx, cut, x, y + 9, 56.0); return null
+		if ripe: vput(ctx, "paddy", ripe_im, x, y + 9, 56.0); return null
+		if cut != null: vput(ctx, "paddy_cut", cut, x, y + 9, 56.0); return null
 		c(ctx, "save"); s(ctx, "globalAlpha", 0.55); s(ctx, "filter", "brightness(.55) saturate(.4)"); put(ctx, ripe_im, x, y + 9, 56.0, 34.0); c(ctx, "restore")
 		return null
 	ART["drawDecor"] = func(this_, a):
 		var ctx = _a(a, 0); var kind = J.str(_a(a, 1)); var x = J.num(_a(a, 2)); var y = J.num(_a(a, 3)); var t = J.num(_a(a, 4))
 		var d = DECO.get(kind); var im = img(d[0]) if d != null else null
 		if im == null: return J.cl(o_decor, this_, a)
-		if kind == "banana": c(ctx, "save"); c(ctx, "translate", [x, y]); c(ctx, "rotate", [sin(t * 0.8 + x) * 0.02]); put(ctx, im, 0.0, 2.0, d[1], d[2]); c(ctx, "restore"); return null
-		if kind == "scarecrow": c(ctx, "save"); c(ctx, "translate", [x, y]); c(ctx, "rotate", [sin(t * 0.9) * 0.03]); put(ctx, im, 0.0, 4.0, d[1], d[2]); c(ctx, "restore"); return null
-		put(ctx, im, x, y + 3, d[1], d[2])
+		if kind == "banana": c(ctx, "save"); c(ctx, "translate", [x, y]); c(ctx, "rotate", [sin(t * 0.8 + x) * 0.02]); vput(ctx, d[0], im, 0.0, 2.0, d[1], d[2]); c(ctx, "restore"); return null
+		if kind == "scarecrow": c(ctx, "save"); c(ctx, "translate", [x, y]); c(ctx, "rotate", [sin(t * 0.9) * 0.03]); vput(ctx, d[0], im, 0.0, 4.0, d[1], d[2]); c(ctx, "restore"); return null
+		vput(ctx, d[0], im, x, y + 3, d[1], d[2])
 		if kind == "post":
 			var al = 0.22 + sin(t * 2 + x) * 0.06
 			_glow(ctx, x + 6, y - 30, 1.0, 18.0, "255,236,190", al, x - 14, y - 50, 40.0, 40.0)
