@@ -1040,3 +1040,14 @@ static func play_busy(e: Dictionary) -> bool:
 	# 玩法線嘅「定時做貨姿勢」（knead／hammer／chop／reap）同動作線按台做貨重複：保留動作線（有原圖工具）
 	if e.has("sid") and e.get("act") is Dictionary and str(e.act.get("k", "")) in ["knead", "hammer", "chop", "reap"] and not J.t(e.get("doze")): return false
 	return e.get("act") is Dictionary or tp == "fake" or J.t(e.get("doze")) or J.t(e.get("dash")) or (tp == "haggle" and J.t(e.get("prompt")))
+
+# 挑夫鬼（mv_embed._draw_porter 掛鈎）：種族步法＋擔住嘢腳步重
+func porter(sc, ctx: Ctx, p: Dictionary, pos: Vector2, flip: bool, a: float, t: float) -> bool:
+	var k = str(p.k)
+	var o = {"t": t, "walk": true, "flip": flip, "tamed": true, "alpha": 0.95 * a}
+	var tf = {}
+	var gfx = _gait(k, {"pos": pos}, {"wt": t}, o, tf, t, 0.85)
+	if str(p.get("mid", "")) != "": tf["sy"] = float(tf.get("sy", 1.0)) * (0.96 + absf(sin(t * 9.0)) * 0.02)
+	body(ctx, k, pos.x, pos.y, 0.85, o, tf)
+	_mark(k, "porter")
+	return true
