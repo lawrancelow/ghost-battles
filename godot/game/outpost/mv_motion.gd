@@ -478,8 +478,9 @@ func _gait(k: String, e: Dictionary, m: Dictionary, o: Dictionary, tf: Dictionar
 		"stomp":
 			tf["sy"] = 1.0 - absf(sin(t * 4.5)) * 0.04
 			if fmod(w, 0.7) < 0.05: fx.append(["dust"])
-		"trot":
+		"trot":   # Tikbalang／倀鬼：小跑，蹄起塵
 			tf["dy"] = -absf(sin(t * 8.0)) * 3.0
+			if fmod(w, 0.5) < 0.04: fx.append(["dust"])
 		"rattle":
 			tf["dx"] = sin(t * 41.0) * 1.2; tf["r"] = sin(t * 23.0) * 0.05
 		"tall":
@@ -509,7 +510,7 @@ func _gait(k: String, e: Dictionary, m: Dictionary, o: Dictionary, tf: Dictionar
 			o["alpha"] = float(o.get("alpha", 0.95)) * (0.3 + 0.7 * absf(cos(t * 1.4)))
 		"catwalk":   # 白骨精：扭腰行貓步
 			tf["r"] = sin(t * 4.5) * 0.09; tf["dx"] = sin(t * 4.5) * 2.0; tf["sy"] = 1.0 + absf(sin(t * 9.0)) * 0.02
-		"sleepy":   # 半瞓半醒：行得慢、頭一沉一沉
+		"sleepy":   # Phi Am／中暑鬼：半瞓半醒，行得慢、頭一沉一沉
 			o["t"] = float(o.get("t", 0.0)) * 0.6; tf["r"] = 0.06 + maxf(0.0, sin(t * 1.3)) * 0.1; tf["sy"] = 0.97
 			if fmod(t, 3.0) < 0.05: fx.append(["zz"])
 		"selfie":   # 自拍鬼：一路彈一路影，閃光
