@@ -269,7 +269,7 @@ func offline_rate() -> float:   # 每秒
 		var w = nworkers(sid)
 		if w <= 0: continue
 		var l = lv(sid)
-		r += w * MD.out(sid, l) * MD.val(sid, l, c) / (MD.tm(sid, l) + MD.CARRY_S)
+		r += w * MD.out(sid, l) * MD.val(sid, l, c) / (MD.tm(sid, l) + MD.carry_s(c, sid))
 	return r
 func offline_gain(ms: float) -> Dictionary:
 	var m = st()
@@ -278,7 +278,7 @@ func offline_gain(ms: float) -> Dictionary:
 	for sid in m.st:
 		if not unlocked(sid) or nworkers(sid) <= 0: continue
 		var l = lv(sid)
-		var v = nworkers(sid) * MD.out(sid, l) * MD.val(sid, l, c) / (MD.tm(sid, l) + MD.CARRY_S) * secs
+		var v = nworkers(sid) * MD.out(sid, l) * MD.val(sid, l, c) / (MD.tm(sid, l) + MD.carry_s(c, sid)) * secs
 		rows.append([sid, v]); tot += v
 	tot = floor(tot)
 	if tot > 0.0: add_coins(tot); m.earned = J.num(m.get("earned")) + tot
@@ -290,47 +290,46 @@ func check_away() -> Dictionary:   # 返嚟：由上次記低嘅時間計
 	if ms < 60000.0: m.last = now(); return {}
 	return offline_gain(ms)
 
-# ================= 版面 =================
-# top = 內容頂（主畫面頂欄下面），bot = 內容底
-func relayout(top: float, bot: float) -> void:
-	var o = {"top": top, "bot": bot}
-	o.fence_y = top + 204.0
+# ================= 版面（世界座標：大地圖，由 MD.layout(ci) 讀） =================
+var QP := PackedVector2Array()   # 客人排隊線
+var QLEN := 0.0
+var PATHS := {}                  # sid → 搬貨路線
+func relayout(_top := 0.0, _bot := 0.0) -> void:
+	var c = ci() if SS() != null else 0
+	var Ly = MD.layout(c)
+	var o = {"w": float(Ly.get("w", 390)), "h": float(Ly.h)}
+	o.fence_y = float(Ly.get("fence_y", 150))
 	o.guard_y = o.fence_y + 26.0
-	o.foe_y0 = top + 120.0; o.foe_y1 = o.fence_y - 12.0
-	o.counter_y = top + 350.0          # 櫃台底（客人企嘅高度）
-	o.counter_x0 = 14.0; o.counter_x1 = 196.0
-	o.serve = Vector2(230.0, o.counter_y + 2.0)
-	o.st_top = top + 392.0
+	o.foe_y0 = 70.0; o.foe_y1 = o.fence_y - 12.0
+	var cp = MD.v2(Ly.counter)
+	o.counter = cp; o.counter_y = cp.y; o.counter_x0 = cp.x - 92.0; o.counter_x1 = cp.x + 92.0
+	o.house = MD.v2(Ly.get("house", [cp.x - 14, cp.y - 68]))
+	o.serve = MD.v2(Ly.serve)
+	var rd = []
+	for q in Ly.road: rd.append(MD.v2(q))
+	o.road = rd
 	L = o
-	_place_stations()
+	QP = MD.queue_poly(c); QLEN = MD.poly_len(QP)
+	PATHS.clear(); SPOS.clear()
+	for sid in MD.stations(c):
+		SPOS[sid] = MD.st_xy(c, sid); PATHS[sid] = MD.st_path(c, sid)
 	for w in workers: w.home = slot_pos(w.sid, int(w.slot))
 	_sync_key = ""
-func queue_pos(i: int) -> Vector2: return L.serve + Vector2(44.0 * i, 0)
-func drop_pos(gid: String) -> Vector2:
-	var gs = goods_list(); var i = maxi(0, gs.find(gid)); var n = maxi(1, gs.size())
-	var x = lerpf(L.counter_x0 + 30.0, L.counter_x1 - 26.0, (i + 0.5) / n) if n > 1 else (L.counter_x0 + L.counter_x1) / 2.0
-	return Vector2(x, L.counter_y + 40.0)
+func queue_s(i: int) -> float: return 46.0 * i
+func queue_pos(i: int) -> Vector2: return MD.poly_at(QP, queue_s(i))
+func drop_pos(_gid := "") -> Vector2: return MD.drop_xy(ci())
 func counter_slot(gid: String) -> Vector2:   # 櫃台面疊貨位
-	var p = drop_pos(gid); return Vector2(p.x, L.counter_y - 34.0)
+	var gs = goods_list(); var i = maxi(0, gs.find(gid)); var n = maxi(1, gs.size())
+	var x = lerpf(L.counter_x0 + 26.0, L.counter_x1 - 26.0, (i + 0.5) / n)
+	return Vector2(x, L.counter_y - 44.0)
 var SPOS := {}
-func _place_stations() -> void:
-	SPOS.clear()
-	var ids = MD.stations(ci()) if SS() != null else []
-	var n = ids.size(); if n == 0: return
-	var cols = 2 if n <= 4 else 3
-	var rows = int(ceil(float(n) / cols))
-	var rh = (L.bot - L.st_top) / rows
-	for i in n:
-		var r = i / cols; var cidx = i % cols
-		var in_row = mini(cols, n - r * cols)
-		var cw = FW / cols
-		var x = (FW - cw * in_row) / 2.0 + cw * (cidx + 0.5)
-		SPOS[ids[i]] = Vector2(x, L.st_top + rh * (r + 1) - 72.0)
+func _place_stations() -> void: relayout()
 func st_pos(sid: String) -> Vector2: return SPOS.get(sid, Vector2(195, 600))
 func slot_pos(sid: String, i: int) -> Vector2:
-	var p = st_pos(sid); var off = [Vector2(-38, 22), Vector2(8, 26), Vector2(50, 22)]
-	return p + off[i % 3] + Vector2(0, 0 if i < 3 else 8)
-func guard_home(i: int) -> Vector2: return Vector2(236.0 + 62.0 * i, L.guard_y)
+	var p = st_pos(sid); var off = [Vector2(-40, 26), Vector2(6, 32), Vector2(50, 26)]
+	return p + off[i % 3]
+func guard_home(i: int) -> Vector2: return Vector2(80.0 + 115.0 * i, L.guard_y)
+func view_cull(p: Vector2) -> bool: return true
 
 func goods_list() -> Array:
 	var o = []
@@ -380,7 +379,7 @@ func sync() -> void:
 			var gh = ghost(arr[i])
 			var hp = slot_pos(sid, i)
 			workers.append({"gid": arr[i], "k": J.str(J.gp(gh, "k")), "name": J.str(J.gp(gh, "name")), "sid": sid, "slot": i, "st": "work", "prog": rng.randf() * 0.3,
-				"pos": hp, "home": hp, "carry": 0, "t": 0.0, "ph": rng.randf() * 10.0})
+				"pos": hp, "home": hp, "carry": 0, "t": 0.0, "s": 0.0, "ph": rng.randf() * 10.0})
 	var gk = []
 	for g in guards:
 		if int(g.slot) < m.guards.size() and J.seq(m.guards[int(g.slot)], g.gid): gk.append(g)
@@ -419,28 +418,45 @@ func _put_counter(gid: String, n: int) -> int:
 func _step_workers(dt: float, sp: float) -> void:
 	for w in workers:
 		var sid: String = w.sid; var gid = str(MD.st_def(sid).get("good", ""))
+		var P: PackedVector2Array = PATHS.get(sid, PackedVector2Array())
+		var plen = MD.poly_len(P)
 		match w.st:
 			"work":
 				if not _move(w, w.home, dt): continue
 				# 台面有手做剩嘅貨：先搬走
 				if pile_n(sid) > 0 and w.prog <= 0.0:
 					var n = mini(pile_n(sid), MD.out(sid, lv(sid)) * 2)
-					st().pile[sid] = float(pile_n(sid) - n); w.carry = n; w.st = "go"; continue
+					st().pile[sid] = float(pile_n(sid) - n); w.carry = n; _go(w); continue
 				w.prog += dt * sp / MD.tm(sid, lv(sid))
 				if w.prog >= 1.0:
-					w.prog = 0.0; w.carry = MD.out(sid, lv(sid)); w.st = "go"
+					w.prog = 0.0; w.carry = MD.out(sid, lv(sid)); _go(w)
 					ev.append({"k": "made", "sid": sid, "n": w.carry, "pos": w.home})
+			"to_path":   # 由企位行去台前（路線起點）
+				if _move(w, P[0] if P.size() else w.home, dt, MD.WALK_W): w.st = "go"; w.s = 0.0
 			"go":
-				if _move(w, drop_pos(gid) + Vector2((int(w.slot) - 1) * 10.0, 0), dt):
+				w.s = minf(plen, float(w.s) + MD.WALK_W * dt)
+				_along(w, P, w.s)
+				if w.s >= plen:
+					w.t = float(w.get("t", 0.0)) + dt
+					if w.t < MD.PICK_S * 0.5: continue
 					var put = _put_counter(gid, int(w.carry))
 					if put > 0:
 						w.carry -= put
 						ev.append({"k": "deliver", "gid": gid, "n": put, "pos": w.pos})
-					if w.carry <= 0: w.st = "back"
+					if w.carry <= 0: w.st = "back"; w.t = 0.0; w.erase("wait")
 					else: w["wait"] = true
 			"back":
-				w.erase("wait")
-				if _move(w, w.home, dt): w.st = "work"; w.prog = 0.0
+				w.s = maxf(0.0, float(w.s) - MD.WALK_W * dt)
+				_along(w, P, w.s)
+				if w.s <= 0.0: w.st = "home"
+			"home":
+				if _move(w, w.home, dt, MD.WALK_W): w.st = "work"; w.prog = 0.0
+func _go(w: Dictionary) -> void: w.st = "to_path"; w.t = 0.0
+func _along(e: Dictionary, P: PackedVector2Array, sv: float) -> void:
+	var np = MD.poly_at(P, sv)
+	var d = np - e.pos
+	if d.length() > 0.01: e["flip"] = d.x < 0; e["walk"] = true
+	e.pos = np
 
 func _step_manual(dt: float, sp: float) -> void:
 	for sid in mk.keys():
@@ -477,16 +493,19 @@ func _step_custs(dt: float) -> void:
 	for c in custs: if c.st != "out": order.append(c)
 	for i in order.size():
 		var c = order[i]; c.slot = i
-		var tgt = queue_pos(i)
+		var ts = queue_s(i)
 		match c.st:
 			"in", "queue":
-				# 由右邊行入：先到隊尾高度再橫行
-				if _move(c, tgt, dt, 90.0):
+				# 由入口沿路行入嚟（排隊線上嘅弧長 s 慢慢減到自己個位）
+				c.s = maxf(ts, float(c.s) - 90.0 * dt)
+				_along(c, QP, c.s)
+				if c.s <= ts + 0.01:
+					c["walk"] = false
 					c.st = "serve" if i == 0 else "queue"
 					if i == 0: c.take = 0.3
 			"serve":
 				if i != 0: c.st = "queue"; continue
-				c.flip = true
+				c.flip = true; c["walk"] = false
 				c.take -= dt
 				c.wait = float(c.get("wait", 0.0)) + dt
 				if c.wait > PATIENCE:   # 等太耐：有攞到嘅就俾嗰啲錢走人，冇就嬲嬲走
@@ -507,7 +526,9 @@ func _step_custs(dt: float) -> void:
 					if all_ok: _pay(c)
 	for c in custs.duplicate():
 		if c.st == "out":
-			if _move(c, Vector2(FW + 50.0, L.counter_y + 30.0), dt, 110.0): custs.erase(c)
+			c.s = float(c.s) + 110.0 * dt
+			_along(c, QP, c.s)
+			if c.s >= QLEN: custs.erase(c)
 
 func spawn_cust() -> bool:
 	var av = avail_goods(); if av.is_empty(): return false
@@ -528,7 +549,7 @@ func spawn_cust() -> bool:
 		var g = ok[rng.randi() % ok.size()]; ok.erase(g)
 		wants[g] = 1 + rng.randi() % qmax
 	var c = {"cid": str(pick[0].id), "k": str(pick[0].get("art", "youhun")), "wants": wants, "got": {}, "st": "in", "slot": 99, "take": 0.3,
-		"pos": Vector2(FW + 40.0, L.counter_y + 2.0), "ph": rng.randf() * 10.0, "flip": true, "lines": pick[0].get("lines", []), "vip": J.t(pick[0].get("vip"))}
+		"s": QLEN, "pos": MD.poly_at(QP, QLEN), "ph": rng.randf() * 10.0, "flip": true, "lines": pick[0].get("lines", []), "vip": J.t(pick[0].get("vip"))}
 	custs.append(c)
 	return true
 

@@ -7,13 +7,13 @@ OUT = sys.argv[1]
 # 每張圖嘅數值倍數（冥幣係全遊戲共用，後面張圖要跟得上）
 F = [1, 6, 36, 216, 1300, 7800]
 # 第 j 個台嘅底數（price, base_time, base_out, unlock, up0）
-# 第 5、6 個台開檔價 2026-11-19 引擎線按 tools/outpost_sim.py（引擎實際公式）調低：600000→300000、7500000→4000000（單個目標唔超過約 40 分鐘）
+# 第 5、6 個台開檔價 2026-11-19 引擎線按 tools/outpost_sim.py（引擎實際公式）調低：600000→200000、7500000→4000000（大地圖搬貨要行路，配合 WALK_W 220；單個目標唔超過約 45 分鐘）；第一張圖「賣 300 件棺材板床」改 150
 TIER = [
     (4,     3, 1, 0,        40),
     (20,    4, 1, 300,      150),
     (100,   5, 1, 4000,     600),
     (500,   6, 1, 50000,    2500),
-    (2500,  8, 1, 300000,   9400),
+    (2500,  8, 1, 200000,   9400),
     (12000, 10, 1, 4000000, 36000),
 ]
 MILES = [10, 25, 50, 75, 100]
@@ -323,7 +323,7 @@ MOVE = [
 # 每張圖目標：(類型, 台序號或貨序號, 數量)。unlock/level/hire 用台序號；sell 用貨（=同序號台嘅貨）
 GT = [
  [("level", 0, 5), ("sell", 1, 30), ("level", 1, 10), ("unlock", 3, 1), ("hire", 0, 2),
-  ("level", 2, 15), ("unlock", 4, 1), ("sell", 4, 300), ("level", 3, 40), ("boss", 0, 1)],
+  ("level", 2, 15), ("unlock", 4, 1), ("sell", 4, 150), ("level", 3, 40), ("boss", 0, 1)],
  [("level", 0, 5), ("unlock", 1, 1), ("sell", 0, 400), ("unlock", 2, 1), ("hire", 1, 2),
   ("unlock", 3, 1), ("level", 2, 25), ("unlock", 4, 1), ("level", 4, 25), ("boss", 0, 1)],
  [("level", 0, 5), ("unlock", 1, 1), ("unlock", 2, 1), ("sell", 2, 150), ("hire", 2, 2),
@@ -431,6 +431,11 @@ STRINGS = {
 
 data = {"GOODS": GOODS, "STATIONS": STATIONS, "CUSTOMERS": CUSTOMERS, "MAPS": MAPS,
         "FOE_LINES": FOE_LINES, "STRINGS": STRINGS}
+# 大地圖版面＋生產台動態（引擎線，tools/outpost_layout.py）
+import os as _os
+sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+import outpost_layout
+outpost_layout.apply(data)
 with open(OUT, "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, indent=1)
 print("ok", len(GOODS), len(STATIONS), len(CUSTOMERS))

@@ -8,7 +8,8 @@
   單價   val = price × (1 + 0.1×(lv−1)) × 2^里程碑數       （引擎 MD.val）
   產量   out = base_out + floor((lv−1)/10)；時間 tm = base_time ÷ (1 + 0.02×(lv−1))
   升級   cost1 = ceil(up_cost0 × up_mul^(lv−1))；解鎖 = unlock_cost；請夥計 = 免費（派自己嘅鬼），但鬼數有限 GHOSTS[ci]
-  供應   每個員工每秒 out ÷ (tm + CARRY)；冇員工嘅台當 0（假設玩家唔撳）
+  供應   每個員工每秒 out ÷ (tm + carry)；carry = 2 × 搬貨路線長 ÷ 240 + 0.6（路線由 MAPS[].layout 計，同引擎 MD.carry_s 一樣）
+         冇員工嘅台當 0（假設玩家唔撳）
   需求   客人每 SPAWN 秒一個；要 1 種貨（30% 要 2 種），由「有人做緊」嘅貨平均揀；每種要 1..qmax 件，qmax = clamp(2 + 已服務/10, 2, 6)
          每種貨賣出 = min(供應, 需求份額)；等太耐（15 秒）會走 → 冇貨嘅份額當冇咗
   玩法   跟目標順序做：要解鎖／升級就儲錢；儲緊錢嗰陣如果某個升級回本快過「等夠錢」就順手升
@@ -17,7 +18,19 @@
 import json, os, sys, math
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CARRY = 3.0
+WALK_W = 240.0
+PICK_S = 0.6
+def carry_s(L, sid):
+    e = L["st"][sid]; rd = L["road"]; j = L["j"]; ri = e[2]
+    pts = [(e[0], e[1] + 30)]
+    i = ri
+    while True:
+        pts.append(tuple(rd[i]))
+        if i == j: break
+        i += -1 if ri >= j else 1
+    pts.append((L["counter"][0], L["counter"][1] - 30))
+    d = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(pts, pts[1:]))
+    return 2.0 * d / WALK_W + PICK_S
 SPAWN = 3.1
 BOSS_SEC = 480
 GHOSTS = [3, 5, 7, 9, 11, 13]      # 去到第 ci 張圖時，玩家大約有幾多隻鬼可以派
@@ -37,6 +50,7 @@ def main():
         ci = m["ci"]
         if zero: cash = 0.0
         sids = m["stations"]
+        CAR = {s: carry_s(m["layout"], s) for s in sids}
         st = {s: {"lv": 1, "w": 0, "on": S[s]["unlock_cost"] <= 0} for s in sids}
         sold = {}
         served = [0.0]
@@ -76,7 +90,7 @@ def main():
             r = 0.0; sale = {}
             for s in act:
                 lv = st[s]["lv"] + (1 if lvchg == s else 0)
-                sup = st[s]["w"] * out(s, lv) / (tm(s, lv) + CARRY)
+                sup = st[s]["w"] * out(s, lv) / (tm(s, lv) + CAR[s])
                 q = min(sup, dem / len(act))
                 sale[S[s]["good"]] = q
                 r += q * val(s, lv)

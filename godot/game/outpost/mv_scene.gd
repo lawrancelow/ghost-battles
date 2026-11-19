@@ -7,6 +7,7 @@ extends Control
 
 const MD = preload("res://game/outpost/mv_data.gd")
 const SIM = preload("res://game/outpost/mv_sim.gd")
+const FX = preload("res://game/outpost/mv_fx.gd")
 const FW := 390.0
 const GOLD := Color("#f3d68a")
 const INK := Color("#2b1d12")
@@ -50,6 +51,17 @@ var _line_t := 6.0
 var _rng := RandomNumberGenerator.new()
 var _btns := {}            # 畫出嚟嘅掣：名 → Rect2
 var _shown := false
+# 鏡頭（大地圖直向拖動）：世界 y → 畫面 y = 世界 y − cam + top_pad
+var cam := 0.0
+var cam_v := 0.0
+var cam_tgt = null
+var _press = null           # 撳落：{"p","cam","t","drag"}
+var _wbtns := {}            # 世界座標嘅掣
+var bg_tex: Texture2D = null
+var amb := {"g": [], "f": [], "tg": 2.0, "tf": 5.0}   # 環境：背景遊魂、飛過嘅烏鴉／紙錢
+const HUD_H := 90.0
+const AMB_GHOSTS := 2
+const AMB_FLY := 3
 
 func _ready() -> void:
 	_rng.seed = 7
@@ -63,7 +75,7 @@ func on_show() -> void:
 	_build(); visible = true; _shown = true
 	_hide_host(true)
 	sim.reg_post(); sim.st(); sim.validate(); sim.reset_live(); sim.sync()
-	_set_bg(); _layout(); _prefill()
+	_set_bg(); _layout(); cam_home(); _prefill()
 	coin_show = sim.coins()
 	var r = sim.check_away()
 	if r.has("coins") and float(r.coins) > 0.0: _show_card(r)
@@ -142,18 +154,45 @@ func _layout() -> void:
 		var my = get_global_rect(); var mr = main.get_global_rect()
 		top_pad = maxf(0.0, (mr.position.y + th - my.position.y) / k)
 		bot_pad = maxf(0.0, (my.end.y - (mr.end.y - nh)) / k)
-	sim.relayout(top_pad, H - bot_pad)
+	sim.relayout()
+	_clamp_cam(true)
 	if sheet.visible: _place_sheet()
+
+func view_h() -> float: return H - top_pad - bot_pad
+func w2s(p: Vector2) -> Vector2: return Vector2(p.x, p.y - cam + top_pad)
+func s2w(p: Vector2) -> Vector2: return Vector2(p.x, p.y + cam - top_pad)
+func cam_min() -> float: return -HUD_H * 0.6
+func cam_max() -> float: return maxf(cam_min(), float(sim.L.get("h", 844)) - view_h())
+func _clamp_cam(hard := false) -> void:
+	var lo = cam_min(); var hi = cam_max()
+	if sheet != null and sheet.visible: lo -= 260.0; hi += 420.0   # 開住升級條：可以拉過界，等個台唔俾遮住
+	if hard: cam = clampf(cam, lo, hi)
+	elif cam < lo or cam > hi:
+		cam = lerpf(cam, clampf(cam, lo, hi), 0.25); cam_v = 0.0
+func focus(wy: float, screen_y: float) -> void:   # 將世界 y 移去畫面 screen_y
+	cam_tgt = wy + top_pad - screen_y
+func _step_cam(dt: float) -> void:
+	if _press != null and _press.drag: return
+	if cam_tgt != null:
+		cam = lerpf(cam, float(cam_tgt), minf(1.0, dt * 7.0)); cam_v = 0.0
+		if absf(cam - float(cam_tgt)) < 0.5: cam = float(cam_tgt); cam_tgt = null
+	elif absf(cam_v) > 1.0:
+		cam += cam_v * dt; cam_v *= pow(0.04, dt)    # 慣性
+	else: cam_v = 0.0
+	_clamp_cam()
+func cam_home() -> void:   # 開場：鏡頭對住櫃台
+	cam = float(sim.L.counter_y) - view_h() * 0.62; cam_tgt = null; cam_v = 0.0; _clamp_cam(true)
 
 func _set_bg() -> void:
 	var b = str(MD.map_def(sim.ci()).get("bg", "village"))
 	var key = b if b.begins_with("bg_") else "bg_" + b
-	bg.texture = Spr.get_tex(key) if Spr.ok(key) else Spr.get_tex("bg_village")
+	bg_tex = Spr.get_tex(key) if Spr.ok(key) else Spr.get_tex("bg_village")
+	bg.texture = null; bg.visible = false
 
 func _prefill() -> void:   # 開場唔使等：先排兩個客、出兩隻孤魂
 	for i in 2: sim.spawn_cust()
 	var j = 0
-	for c in sim.custs: c.pos = sim.queue_pos(j); j += 1
+	for c in sim.custs: c.s = sim.queue_s(j); c.pos = sim.queue_pos(j); j += 1
 	sim.spawn_foe()
 
 func _save() -> void:
@@ -167,6 +206,8 @@ func _process(dt: float) -> void:
 	t += dt
 	if anim != null: _step_anim(dt)
 	else: sim.step(dt)
+	_step_cam(dt)
+	_step_amb(dt)
 	_eat_events()
 	_step_fx(dt)
 	# HUD 冥幣追真數（飛緊嘅錢到咗先跳）
@@ -184,13 +225,13 @@ func _process(dt: float) -> void:
 	stage.queue_redraw(); over.queue_redraw()
 
 func _eat_events() -> void:
-	var hud_coin = Vector2(FW - 70, sim.L.top + 68)
+	var hud_coin = Vector2(FW - 70, top_pad + 68)
 	for e in sim.ev:
 		match e.k:
 			"pay":
 				var amt = float(e.amt)
 				var n = clampi(3 + int(log(maxf(1.0, amt)) / log(10.0)), 3, 8)
-				for i in n: _coin(e.pos + Vector2(_rng.randf_range(-14, 14), _rng.randf_range(-6, 6)), hud_coin, 0.6 + i * 0.06, amt / n)
+				for i in n: _coin(w2s(e.pos) + Vector2(_rng.randf_range(-14, 14), _rng.randf_range(-6, 6)), hud_coin, 0.6 + i * 0.06, amt / n)
 				_float(e.pos + Vector2(0, -6), "+" + MD.fmt(amt), GOLD, 26 if amt >= 1000 else 22, 1.6)
 				if _rng.randf() < 0.6: _snd("coin")
 			"leave":
@@ -211,7 +252,7 @@ func _eat_events() -> void:
 				if _rng.randf() < 0.4: _snd("scare")
 			"kill":
 				_burst(e.pos, Color("#9fc8ff"), 14)
-				for i in 3: _coin(e.pos + Vector2(_rng.randf_range(-10, 10), 0), hud_coin, 0.6 + i * 0.08, float(e.coins) / 3.0)
+				for i in 3: _coin(w2s(e.pos) + Vector2(_rng.randf_range(-10, 10), 0), hud_coin, 0.6 + i * 0.08, float(e.coins) / 3.0)
 				_float(e.pos + Vector2(0, -16), "+" + MD.fmt(e.coins), GOLD, 20, 1.3)
 				_snd("coin")
 			"bang":
@@ -236,10 +277,10 @@ func _eat_events() -> void:
 				_snd("build")
 			"claim":
 				_banner_set(MD.S("goal_a", "目標完成", "目標完成"), "+" + MD.fmt(e.coins) + " " + MD.S("coin", "冥幣", "冥幣"), 2.2)
-				for i in 6: _coin(Vector2(190, sim.L.top + 26), hud_coin, 0.5 + i * 0.07, float(e.coins) / 6.0)
+				for i in 6: _coin(Vector2(190, top_pad + 26), hud_coin, 0.5 + i * 0.07, float(e.coins) / 6.0)
 				_snd("chest")
 			"boost":
-				_float(Vector2(195, sim.L.top + 150), MD.S("inc_on", "收益 ×2 開咗！", "收益 ×2 開啟！") if e.kind == "inc" else MD.S("spd_on", "加速 ×2 開咗！", "加速 ×2 開啟！"), Color("#9fe39a"), 20, 1.6)
+				_float(s2w(Vector2(195, top_pad + 150)), MD.S("inc_on", "收益 ×2 開咗！", "收益 ×2 開啟！") if e.kind == "inc" else MD.S("spd_on", "加速 ×2 開咗！", "加速 ×2 開啟！"), Color("#9fe39a"), 20, 1.6)
 				_snd("levelUp")
 	sim.ev.clear()
 
@@ -307,8 +348,8 @@ func _step_anim(dt: float) -> void:
 		_banner_set(MD.S("arrive", "抵達", "抵達"), MD.T(MD.map_def(sim.ci()).get("name")), 2.6)
 		_prefill()
 func _after_move(fresh := true) -> void:
-	sim.reset_live(); sim.st(); sim.sync(); _set_bg(); _layout()
-	parts.clear(); bubbles.clear(); shake.clear()
+	sim.reset_live(); sim.st(); sim.sync(); _set_bg(); _layout(); cam_home()
+	parts.clear(); bubbles.clear(); shake.clear(); amb.g.clear(); amb.f.clear()
 	_save()
 	if fresh: _prefill()
 func _move_line() -> String:
@@ -324,58 +365,222 @@ func _draw_stage() -> void:
 	if sim == null or sim.st() == null or sim.L.is_empty(): return
 	var ctx = Ctx.new(stage)
 	var L = sim.L
-	_btns.clear()
-	# 上下壓暗：頂欄／圍欄外（暗啲）＋檔口區（暖光）
-	var g0 = ctx.createLinearGradient(0, L.top, 0, L.fence_y + 10)
-	g0.addColorStop(0, "rgba(8,6,14,.78)"); g0.addColorStop(1, "rgba(20,26,40,.25)")
-	ctx.fillStyle = g0; ctx.fillRect(0, L.top, FW, L.fence_y + 10 - L.top)
-	var g1 = ctx.createLinearGradient(0, L.st_top - 30, 0, L.bot)
-	g1.addColorStop(0, "rgba(30,18,10,.0)"); g1.addColorStop(1, "rgba(30,18,10,.45)")
-	ctx.fillStyle = g1; ctx.fillRect(0, L.st_top - 30, FW, L.bot - L.st_top + 30)
+	_btns.clear(); _wbtns.clear()
+	var vy0 = cam - top_pad - 10.0; var vy1 = cam - top_pad + H + 10.0     # 鏡頭內（世界 y）
+	ctx.save(); ctx.translate(0, top_pad - cam)
+	_draw_ground(ctx, vy0, vy1)
 	var fk = _fold_k()
 	var walking = anim != null and not anim.done and anim.t >= A_FOLD - 0.2
-	# 圍欄外孤魂
+	# 圍欄外孤魂＋圍欄（地圖頂）
+	if vy0 < L.fence_y + 80.0:
+		var fo = sim.foes.duplicate(); fo.sort_custom(func(a, b): return a.pos.y < b.pos.y)
+		for f in fo: _draw_foe(ctx, f)
+		_draw_fence(ctx)
+		if not walking:
+			for g in sim.guards: _draw_guard(ctx, g)
+			_draw_guard_slots(ctx)
+	_draw_amb_ghosts(ctx, vy0, vy1)
+	# 佈景＋台＋人：按 y 排（只畫鏡頭內）
 	var items = []
-	for f in sim.foes:
-		var ff = f
-		items.append([f.pos.y, func(): _draw_foe(ctx, ff)])
-	items.sort_custom(func(a, b): return a[0] < b[0])
-	for it in items: it[1].call()
-	_draw_fence(ctx)
-	# 紙紮大屋＋櫃台（摺晒就唔畫）
-	if fk > 0.04:
-		_draw_house(ctx, fk)
-		_draw_counter(ctx, fk)
-	# 守夜（企喺圍欄內，畫喺大屋前面）
-	if not walking:
-		for g in sim.guards: _draw_guard(ctx, g)
-		_draw_guard_slots(ctx)
-	# 客人（隊尾先畫）＋生產台＋員工（按 y 排）
-	items = []
+	var Ly = MD.layout(sim.ci())
+	for d in Ly.get("decor", []):
+		var dy = float(d.y)
+		if str(d.k) in ["stream", "bridge", "fogbank"]: continue
+		if dy < vy0 - 20.0 or dy - 160.0 > vy1: continue
+		var dd = d
+		items.append([dy, func(): _draw_decor(ctx, dd)])
+	if fk > 0.04 and L.counter_y + 40.0 > vy0 and L.counter_y - 220.0 < vy1:
+		items.append([L.house.y, func(): _draw_house(ctx, fk)])
+		items.append([L.counter_y, func(): _draw_counter(ctx, fk)])
 	if not walking:
 		for c in sim.custs:
+			if c.pos.y < vy0 - 20.0 or c.pos.y - 160.0 > vy1: continue
 			var cc = c
 			items.append([c.pos.y + c.slot * 0.01, func(): _draw_cust(ctx, cc)])
-	for sid in MD.stations(sim.ci()):
-		if fk <= 0.04: break
-		var s2 = sid
-		items.append([sim.st_pos(sid).y - 30.0, func(): _draw_station(ctx, s2, fk)])
+	if fk > 0.04:
+		for sid in MD.stations(sim.ci()):
+			var sp = sim.st_pos(sid)
+			if sp.y + 90.0 < vy0 or sp.y - 160.0 > vy1: continue
+			var s2 = sid
+			items.append([sp.y - 30.0, func(): _draw_station(ctx, s2, fk)])
 	if not walking:
 		for w in sim.workers:
+			if w.pos.y < vy0 - 20.0 or w.pos.y - 120.0 > vy1: continue
 			var ww = w
 			items.append([w.pos.y, func(): _draw_worker(ctx, ww)])
 	items.sort_custom(func(a, b): return a[0] < b[0])
 	for it in items: it[1].call()
+	if walking: _draw_proc(ctx)
 	if not walking:
-		for c in sim.custs: if c.st != "out": _draw_want(ctx, c)
-	_draw_parts(ctx)
+		for c in sim.custs: if c.st != "out" and c.pos.y > vy0 and c.pos.y - 200.0 < vy1: _draw_want(ctx, c)
+	_draw_fog(ctx, vy0, vy1)
+	_draw_amb_fly(ctx)
+	_draw_parts(ctx, true)
 	for f in floats:
 		var a = clampf(1.0 - (f.t / f.life - 0.6) / 0.4, 0.0, 1.0)
 		var sc = 1.0 + 0.3 * maxf(0.0, 1.0 - f.t / 0.15)
 		ctx.globalAlpha = a; _txt(ctx, f.text, f.p.x, f.p.y, int(f.s * sc), f.c, "center", 900, 5); ctx.globalAlpha = 1.0
 	_brects.clear()
 	for b in bubbles: _draw_bubble(ctx, b)
+	ctx.restore()
+	_draw_parts(ctx, false)
 	_draw_hud(ctx)
+
+# ---------------- 地面：背景圖直向鋪（隔塊反轉接縫）＋路＋小河＋橋 ----------------
+func _draw_ground(ctx: Ctx, vy0: float, vy1: float) -> void:
+	var L = sim.L
+	ctx.fillStyle = "#1a1620"; ctx.fillRect(0, vy0, FW, vy1 - vy0)
+	if bg_tex != null:
+		# 頂：成張背景（天、遠景）；下面：用背景下半截（地面）一節節鋪，隔節左右反轉
+		var iw = float(bg_tex.get_width()); var ih = float(bg_tex.get_height())
+		var th = FW * ih / iw
+		if vy0 < th: ctx.drawImage(bg_tex, 0, 0, FW, th)
+		var sy0 = ih * 0.58; var sh = ih * 0.38; var stp = FW * sh / iw
+		var i0 = maxi(0, int(floor((vy0 - th) / stp))); var i1 = int(floor((vy1 - th) / stp))
+		for i in range(i0, i1 + 1):
+			var y = th - 30.0 + i * stp
+			if y + stp < vy0 or y > vy1: continue
+			if i % 2 == 0: ctx.drawImage(bg_tex, 0, sy0, iw, sh, 0, y, FW, stp + 1)
+			else:
+				ctx.save(); ctx.translate(FW, 0); ctx.scale(-1, 1); ctx.drawImage(bg_tex, 0, sy0, iw, sh, 0, y, FW, stp + 1); ctx.restore()
+	ctx.fillStyle = "rgba(12,8,20,.32)"; ctx.fillRect(0, vy0, FW, vy1 - vy0)
+	var Ly = MD.layout(sim.ci())
+	for d in Ly.get("decor", []):
+		if str(d.k) == "stream" and absf(float(d.y) - (vy0 + vy1) / 2.0) < (vy1 - vy0): _draw_stream(ctx, float(d.y))
+	# 村道
+	var rd = L.road
+	for pass_i in 2:
+		ctx.strokeStyle = "rgba(40,28,20,.55)" if pass_i == 0 else "rgba(150,120,85,.55)"
+		ctx.lineWidth = 50.0 if pass_i == 0 else 40.0; ctx.lineJoin = "round"
+		ctx.beginPath(); ctx.moveTo(rd[0].x, rd[0].y)
+		for i in range(1, rd.size()): ctx.lineTo(rd[i].x, rd[i].y)
+		ctx.stroke()
+	ctx.fillStyle = "rgba(90,70,50,.5)"   # 路上石仔
+	for i in range(1, rd.size()):
+		var a = rd[i - 1]; var b = rd[i]
+		if maxf(a.y, b.y) < vy0 or minf(a.y, b.y) > vy1: continue
+		var n = int(a.distance_to(b) / 26.0)
+		for k2 in n:
+			var q = a.lerp(b, (k2 + 0.5) / maxf(1, n)) + Vector2(sin(k2 * 7.1 + i) * 12.0, 0)
+			Art.el(ctx, q.x, q.y, 3.0, 2.0, "rgba(70,55,40,.55)")
+	for d in Ly.get("decor", []):
+		if str(d.k) == "bridge" and absf(float(d.y) - (vy0 + vy1) / 2.0) < (vy1 - vy0): _draw_bridge(ctx, float(d.x), float(d.y))
+
+func _draw_stream(ctx: Ctx, y: float) -> void:
+	ctx.fillStyle = "rgba(30,50,70,.75)"; ctx.fillRect(0, y - 20, FW, 40)
+	ctx.strokeStyle = "rgba(160,200,230,.35)"; ctx.lineWidth = 1.5
+	for i in 7:
+		var x = fmod(i * 61.0 + t * 18.0, FW + 40.0) - 20.0; var yy = y - 10 + (i % 3) * 9
+		ctx.beginPath(); ctx.moveTo(x, yy); ctx.quadraticCurveTo(x + 10, yy - 3, x + 20, yy); ctx.stroke()
+	ctx.fillStyle = "rgba(60,90,60,.5)"; ctx.fillRect(0, y - 23, FW, 4); ctx.fillRect(0, y + 19, FW, 4)
+func _draw_bridge(ctx: Ctx, x: float, y: float) -> void:
+	Art.rr(ctx, x - 36, y - 26, 72, 52, 4, "#7a5a38", "#3a2410", 2)
+	for i in 6: Art.rr(ctx, x - 34, y - 24 + i * 8.6, 68, 6, 1, "#9a7448")
+	ctx.strokeStyle = "#4a3018"; ctx.lineWidth = 3
+	for sx in [-36.0, 36.0]:
+		ctx.beginPath(); ctx.moveTo(x + sx, y - 30); ctx.lineTo(x + sx, y + 30); ctx.stroke()
+		for k2 in 3: Art.rr(ctx, x + sx - 3, y - 30 + k2 * 28, 6, 8, 1, "#5a3a20")
+	_lantern_at(ctx, Vector2(x - 36, y - 32), 0.8, 1.3)
+
+# ---------------- 佈景 ----------------
+const DECOR_W := {"tree": 120.0, "tree_bare": 110.0, "stump": 50.0, "scarecrow": 64.0, "paddy": 70.0, "banana": 110.0, "lamppost": 44.0,
+	"street_lanternR": 30.0, "street_lanternW": 30.0, "pr_boxes": 52.0, "pr_cart": 60.0, "pr_pot": 46.0, "pr_stools": 44.0, "pr_cone": 26.0,
+	"pr_motorbike": 72.0, "pr_bin": 36.0, "pr_puddle": 60.0, "pr_sign": 40.0, "pr_durianbox": 50.0, "pr_wire": 70.0, "of_plant": 40.0, "of_water": 34.0, "of_cabinet": 44.0}
+func _draw_decor(ctx: Ctx, d: Dictionary) -> void:
+	var k2 = str(d.k); var x = float(d.x); var y = float(d.y); var sc = float(d.get("s", 1.0)); var ph = x * 0.37 + y * 0.11
+	match k2:
+		"grass": _grass(ctx, x, y, sc, ph)
+		"rock":
+			Art.el(ctx, x, y - 6 * sc, 14 * sc, 9 * sc, "#4a4650", "#2a2630", 1.2); Art.el(ctx, x - 4 * sc, y - 9 * sc, 5 * sc, 3 * sc, "rgba(140,140,150,.4)")
+		"lantern": _lantern_post(ctx, x, y, sc, ph)
+		_:
+			if not _has(k2): return
+			var w = DECOR_W.get(k2, 60.0) * sc
+			ctx.save()
+			if k2 in ["tree", "tree_bare", "banana", "paddy"]:   # 樹同草：輕輕擺
+				ctx.translate(x, y); ctx.transform(1, 0, sin(t * 0.9 + ph) * 0.025, 1, 0, 0); ctx.translate(-x, -y)
+			if J.t(d.get("f")): ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0)
+			Art.el(ctx, x, y, w * 0.32, w * 0.07, "rgba(0,0,0,.3)")
+			var r = Art.put(ctx, k2, x, y + 2, w)
+			ctx.restore()
+			if k2 in ["lamppost", "street_lanternR", "street_lanternW"]:   # 燈：閃
+				var fl = 0.75 + 0.25 * sin(t * 7.0 + ph) * sin(t * 2.3 + ph)
+				var gp = Vector2(x, r.position.y + r.size.y * 0.18)
+				Art.el(ctx, gp.x, gp.y, 26 * fl, 26 * fl, "rgba(255,190,110,.13)"); Art.el(ctx, gp.x, gp.y, 12 * fl, 12 * fl, "rgba(255,210,140,.22)")
+func _grass(ctx: Ctx, x: float, y: float, sc: float, ph: float) -> void:
+	ctx.strokeStyle = "rgba(90,120,70,.85)"; ctx.lineWidth = 2
+	for i in 5:
+		var bx = x - 10 * sc + i * 5 * sc; var sw = sin(t * 1.8 + ph + i * 0.6) * 4.0 * sc
+		ctx.beginPath(); ctx.moveTo(bx, y); ctx.quadraticCurveTo(bx + sw * 0.4, y - 8 * sc, bx + sw, y - (14 + (i % 2) * 5) * sc); ctx.stroke()
+func _lantern_post(ctx: Ctx, x: float, y: float, sc: float, ph: float) -> void:
+	ctx.strokeStyle = "#3a2a1a"; ctx.lineWidth = 3
+	ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 56 * sc); ctx.lineTo(x + 18 * sc, y - 56 * sc); ctx.stroke()
+	_lantern_at(ctx, Vector2(x + 18 * sc, y - 56 * sc), sc, ph)
+func _lantern_at(ctx: Ctx, top: Vector2, sc: float, ph: float) -> void:
+	var a = sin(t * 1.6 + ph) * 0.18
+	var c = top + Vector2(sin(a) * 12 * sc, cos(a) * 12 * sc)
+	ctx.strokeStyle = "#2a1a10"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(top.x, top.y); ctx.lineTo(c.x, c.y); ctx.stroke()
+	var fl = 0.7 + 0.3 * sin(t * 8.0 + ph * 3.0) * sin(t * 3.1 + ph)
+	Art.el(ctx, c.x, c.y + 8 * sc, 22 * sc * fl, 22 * sc * fl, "rgba(255,150,80,.14)")
+	Art.el(ctx, c.x, c.y + 8 * sc, 7 * sc, 9 * sc, "#d8452e", "#5a1a10", 1.2)
+	Art.rr(ctx, c.x - 4 * sc, c.y - 1 * sc, 8 * sc, 3 * sc, 1, "#f0c060"); Art.rr(ctx, c.x - 4 * sc, c.y + 16 * sc, 8 * sc, 3 * sc, 1, "#f0c060")
+
+# ---------------- 霧（慢慢飄） ----------------
+func _draw_fog(ctx: Ctx, vy0: float, vy1: float) -> void:
+	var Ly = MD.layout(sim.ci())
+	for d in Ly.get("decor", []):
+		if str(d.k) != "fogbank": continue
+		var y = float(d.y)
+		if y < vy0 - 120.0 or y > vy1 + 120.0: continue
+		var sc = float(d.get("s", 1.0))
+		for i in 3:
+			var x = fmod(float(d.x) + t * (9.0 + i * 4.0) + i * 140.0, FW + 300.0) - 150.0
+			Art.el(ctx, x, y + i * 26.0 - 20.0, 150 * sc, 34 * sc, "rgba(190,200,220,.07)")
+			Art.el(ctx, x + 40, y + i * 26.0 - 24.0, 90 * sc, 20 * sc, "rgba(200,210,230,.06)")
+
+# ---------------- 環境：背景遊魂、烏鴉、紙錢 ----------------
+func _step_amb(dt: float) -> void:
+	var vy0 = cam - top_pad + HUD_H; var vh = view_h() - HUD_H
+	amb.tg -= dt
+	if amb.tg <= 0.0:
+		amb.tg = _rng.randf_range(6.0, 12.0)
+		if amb.g.size() < AMB_GHOSTS:
+			var l2r = _rng.randf() < 0.5
+			amb.g.append({"x": -40.0 if l2r else FW + 40.0, "y": vy0 + _rng.randf_range(0.2, 0.8) * vh, "v": (22.0 if l2r else -22.0) * _rng.randf_range(0.7, 1.3), "ph": _rng.randf() * 9.0})
+	amb.tf -= dt
+	if amb.tf <= 0.0:
+		amb.tf = _rng.randf_range(7.0, 15.0)
+		if amb.f.size() < AMB_FLY:
+			if _rng.randf() < 0.45:
+				var l2r2 = _rng.randf() < 0.5
+				amb.f.append({"k": "crow", "x": -30.0 if l2r2 else FW + 30.0, "y": vy0 + _rng.randf_range(0.05, 0.4) * vh, "vx": (90.0 if l2r2 else -90.0), "vy": _rng.randf_range(-10, 6), "ph": 0.0})
+			else:
+				for i in 4: amb.f.append({"k": "paper", "x": _rng.randf_range(20, FW - 20), "y": vy0 - 10.0 - i * 30.0, "vx": _rng.randf_range(-12, 12), "vy": _rng.randf_range(26, 40), "ph": _rng.randf() * 9.0})
+	for g in amb.g.duplicate():
+		g.x += g.v * dt
+		if g.x < -60.0 or g.x > FW + 60.0: amb.g.erase(g)
+	for f in amb.f.duplicate():
+		f.x += f.vx * dt; f.y += f.vy * dt; f.ph += dt
+		if f.x < -60.0 or f.x > FW + 60.0 or f.y > vy0 + vh + 40.0: amb.f.erase(f)
+func _draw_amb_ghosts(ctx: Ctx, vy0: float, vy1: float) -> void:
+	for g in amb.g:
+		if g.y < vy0 or g.y > vy1: continue
+		Art.draw_char(ctx, "youhun", g.x, g.y + sin(t * 1.4 + g.ph) * 8.0, CS * 0.75, {"t": t + g.ph, "flip": g.v < 0, "alpha": 0.22, "noShadow": true})
+func _draw_amb_fly(ctx: Ctx) -> void:
+	for f in amb.f:
+		if f.k == "crow":
+			if _has("crowfly"):
+				ctx.save(); ctx.translate(f.x, f.y)
+				if f.vx < 0: ctx.scale(-1, 1)
+				ctx.scale(1.0, 0.75 + 0.25 * sin(f.ph * 12.0))
+				Art.put(ctx, "crowfly", 0, 10, 40); ctx.restore()
+			else:
+				ctx.strokeStyle = "#141018"; ctx.lineWidth = 2.5; var w2 = sin(f.ph * 12.0) * 6.0
+				ctx.beginPath(); ctx.moveTo(f.x - 10, f.y - w2); ctx.lineTo(f.x, f.y); ctx.lineTo(f.x + 10, f.y - w2); ctx.stroke()
+		else:
+			ctx.save(); ctx.translate(f.x + sin(f.ph * 2.0) * 10.0, f.y); ctx.rotate(sin(f.ph * 3.0) * 0.8)
+			Art.rr(ctx, -6, -4 * absf(cos(f.ph * 4.0)) - 0.5, 12, 8 * absf(cos(f.ph * 4.0)) + 1, 1, "rgba(230,200,120,.75)", "rgba(120,80,20,.7)", 0.8)
+			ctx.restore()
 
 func _draw_over() -> void:
 	if sim == null or sim.st() == null or sim.L.is_empty(): return
@@ -393,7 +598,7 @@ func _draw_fence(ctx: Ctx) -> void:
 		for i in int(ceil(FW / FENCE_TW)) + 1:
 			var sh = sin(t * 40.0) * 2.5 if shake.has(i) else 0.0
 			Art.put(ctx, "mvs_fence", i * FENCE_TW + FENCE_TW / 2.0 - 6.0 + sh, y + 10.0, FENCE_TW + 4.0)
-		_map_label(ctx); return
+		return
 	for i in 16:
 		var x = i * 26.0 + 8.0
 		var sh = sin(t * 40.0) * 2.5 if shake.has(i) else 0.0
@@ -401,10 +606,9 @@ func _draw_fence(ctx: Ctx) -> void:
 		Art.el(ctx, x + sh, y - 22, 2.5, 2.5, "#8a2a1e")
 	ctx.fillStyle = "#b8a070"; ctx.fillRect(0, y - 24, FW, 5); ctx.fillRect(0, y - 6, FW, 5)
 	ctx.fillStyle = "rgba(60,40,20,.6)"; ctx.fillRect(0, y - 19, FW, 1.5); ctx.fillRect(0, y - 1, FW, 1.5)
-	_map_label(ctx)
-func _map_label(ctx: Ctx) -> void:
+func _map_label(ctx: Ctx) -> void:   # 畫面座標（HUD 下面）
 	var md = MD.map_def(sim.ci())
-	_txt(ctx, "%s  %d/%d" % [MD.T(md.get("name")), sim.ci() + 1, MD.maps_n()], 10, sim.L.top + 104, 15, Color("#e8dcc4"), "left", 900, 4, "serif")
+	_txt(ctx, "%s  %d/%d" % [MD.T(md.get("name")), sim.ci() + 1, MD.maps_n()], 10, top_pad + HUD_H + 14, 15, Color("#e8dcc4"), "left", 900, 4, "serif")
 
 func _draw_foe(ctx: Ctx, f: Dictionary) -> void:
 	var a = 0.92
@@ -432,7 +636,7 @@ func _draw_guard_slots(ctx: Ctx) -> void:
 		if gs[i] != null: continue
 		var p = sim.guard_home(i)
 		_plus(ctx, p, i == 0)
-		_btns["guard:%d" % i] = Rect2(p.x - 22, p.y - 40, 44, 50)
+		_wbtns["guard:%d" % i] = Rect2(p.x - 22, p.y - 40, 44, 50)
 		if i == 0 and sim.guards.is_empty(): _txt(ctx, MD.S("need_guard", "派鬼守夜", "派鬼守夜"), p.x, p.y + 12, 14, Color("#ffd27a"), "center", 900, 4)
 
 func _plus(ctx: Ctx, p: Vector2, hot: bool) -> void:
@@ -449,7 +653,7 @@ func _house_key() -> String:
 func _draw_house(ctx: Ctx, fk: float) -> void:
 	if anim != null and not anim.done and anim.t > A_FOLD: return   # 已經摺埋抬走
 	var L = sim.L
-	var cx = 106.0; var by = L.counter_y - 40.0
+	var cx = float(L.house.x); var by = float(L.house.y)
 	ctx.save(); ctx.translate(cx, by); ctx.scale(lerpf(0.5, 1.0, fk), fk); ctx.translate(-cx, -by)
 	ctx.globalAlpha = 0.95
 	Art.put(ctx, _house_key(), cx, by, 168.0)
@@ -504,7 +708,7 @@ func _st_key(sid: String) -> String:
 	if _has(a): return a
 	var fb = ST_FALLBACK.get(a, "")
 	return fb if _has(fb) else ""
-func _st_w() -> float: return 104.0 if MD.stations(sim.ci()).size() <= 4 else 92.0
+func _st_w() -> float: return 128.0
 
 func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 	var p = sim.st_pos(sid); var w = _st_w()
@@ -514,11 +718,17 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 	if sel_on: Art.el(ctx, p.x, p.y + 2, w * 0.62, 16, "rgba(243,214,138,.32)")
 	Art.el(ctx, p.x, p.y + 2, w * 0.5, 10, "rgba(0,0,0,.35)")
 	if not un: ctx.globalAlpha = 0.4
+	var an = MD.st_def(sid).get("anim", {}); var on = un and _producing(sid); var ph = p.x * 0.05
+	if not (an is Dictionary): an = {}
+	ctx.save()
+	if un and an.size(): FX.pre(ctx, an, p + Vector2(0, 4), t, on, ph)
 	var key = _st_key(sid); var r: Rect2
 	if key != "": r = Art.put(ctx, key, p.x, p.y + 4, w)
 	else: r = _proc_station(ctx, sid, p, w)
+	if un and an.size(): FX.post(ctx, an, r, t, on, ph)
+	ctx.restore()
 	ctx.globalAlpha = 1.0
-	_btns["st:" + sid] = Rect2(p.x - w / 2, r.position.y, w, p.y + 8 - r.position.y)
+	_wbtns["st:" + sid] = Rect2(p.x - w / 2, r.position.y, w, p.y + 8 - r.position.y)
 	if un:
 		# 台面貨（手做剩低／員工做緊）
 		var pn = sim.pile_n(sid); var gid = str(MD.st_def(sid).get("good", ""))
@@ -536,11 +746,11 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 			if ws[i] == null:
 				var sp = sim.slot_pos(sid, i)
 				if not walking_now(): _plus(ctx, sp, i == 0 and not manned)
-				_btns["slot:%s:%d" % [sid, i]] = Rect2(sp.x - 20, sp.y - 40, 40, 46)
+				_wbtns["slot:%s:%d" % [sid, i]] = Rect2(sp.x - 20, sp.y - 40, 40, 46)
 	ctx.restore()
 	# 名牌：名＋等級＋里程碑星
 	if fk > 0.5:
-		var ny = p.y + 34.0
+		var ny = p.y + 42.0
 		var name = MD.T(MD.st_def(sid).get("n"))
 		var cw = _cell_w() - 8.0
 		if un:
@@ -565,11 +775,9 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 			Art.rr(ctx, p.x - bw / 2, ny + 8, bw, 28, 8, "#bb3427" if ok else "#4a3a30", "#f2a080" if ok else "#7a6050", 1.5)
 			_coin_ic(ctx, p.x - bw / 2 + 16, ny + 22, 8.0)
 			_txt(ctx, MD.S("unlock_btn", "解鎖 %s", "解鎖 %s") % MD.fmt(cost), p.x + 8, ny + 22, 15, Color("#fff3e0") if ok else Color("#b8a898"), "center", 900, 0)
-			_btns["unl:" + sid] = Rect2(p.x - bw / 2, ny + 4, bw, 36)
+			_wbtns["unl:" + sid] = Rect2(p.x - bw / 2, ny + 4, bw, 36)
 
-func _cell_w() -> float:
-	var n = MD.stations(sim.ci()).size()
-	return FW / (2.0 if n <= 4 else 3.0)
+func _cell_w() -> float: return 176.0   # 名牌最闊（大地圖台與台之間有位）
 # 收窄字：先 15→14px，再唔夠就截尾加「…」
 func _fit(ctx: Ctx, s: String, maxw: float, sz: int) -> Array:
 	for z in [sz, 14]:
@@ -578,6 +786,11 @@ func _fit(ctx: Ctx, s: String, maxw: float, sz: int) -> Array:
 	var t2 = s
 	while t2.length() > 2 and ctx.measureText(t2 + "…").width > maxw: t2 = t2.substr(0, t2.length() - 1)
 	return [t2 + "…", 14]
+func _producing(sid: String) -> bool:   # 有人做緊／手做緊 → 播生產動態
+	if float(sim.mk.get(sid, -1.0)) >= 0.0: return true
+	for w in sim.workers:
+		if w.sid == sid and w.st == "work" and not w.get("walk", false) and w.prog > 0.0: return true
+	return false
 func walking_now() -> bool: return anim != null and not anim.done
 
 func _proc_station(ctx: Ctx, sid: String, p: Vector2, w: float) -> Rect2:   # 冇圖：紙紮攤檔
@@ -598,7 +811,7 @@ func _ring(ctx: Ctx, c: Vector2, r: float, prog: float, manned: bool, pile: int,
 		var tx = MD.S("collect", "收", "收") if pile > 0 else (MD.S("make", "做", "做") if prog < 0.0 else "")
 		if tx != "": _txt(ctx, tx, c.x, c.y + 1, 17, GOLD, "center", 900, 3)
 		if pile > 0: _txt(ctx, "×%d" % pile, c.x, c.y + r + 12, 14, Color.WHITE, "center", 900, 4)
-		_btns["ring:" + sid] = Rect2(c.x - r - 10, c.y - r - 10, (r + 10) * 2, (r + 10) * 2)
+		_wbtns["ring:" + sid] = Rect2(c.x - r - 10, c.y - r - 10, (r + 10) * 2, (r + 10) * 2)
 	else:
 		_icon(ctx, str(MD.st_def(sid).get("good", "")), c.x, c.y + 9, 20.0)
 
@@ -640,8 +853,9 @@ func _draw_worker(ctx: Ctx, w: Dictionary) -> void:
 		if w.carry > 1: _txt(ctx, "×%d" % int(w.carry), w.pos.x + 22, by - 8, 14, Color.WHITE, "center", 900, 4)
 		if w.get("wait", false): _txt(ctx, MD.S("full", "櫃台滿", "櫃台滿"), w.pos.x, by - 34, 14, Color("#ffb0a0"), "center", 900, 4)
 
-func _draw_parts(ctx: Ctx) -> void:
+func _draw_parts(ctx: Ctx, world: bool) -> void:   # 冥幣飛去頂部係畫面座標；其他喺世界
 	for p in parts:
+		if (p.k == "coin") == world: continue
 		var u = clampf(p.t / p.life, 0, 1)
 		match p.k:
 			"coin":
@@ -660,8 +874,9 @@ func _draw_parts(ctx: Ctx) -> void:
 
 # ---------------- 頂部 HUD ----------------
 func _draw_hud(ctx: Ctx) -> void:
-	var y0 = sim.L.top
-	ctx.fillStyle = "rgba(10,6,14,.55)"; ctx.fillRect(0, y0, FW, 90)
+	var y0 = top_pad
+	ctx.fillStyle = "rgba(10,6,14,.62)"; ctx.fillRect(0, y0, FW, HUD_H)
+	_map_label(ctx)
 	# 目標條
 	var gi = sim.cur_goal(); var G = MD.goals(sim.ci())
 	Art.rr(ctx, 8, y0 + 6, FW - 16, 46, 10, "rgba(250,244,228,.95)", "#5e4a30", 2)
@@ -752,7 +967,8 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 	var w = 0.0
 	for l in lines: w = maxf(w, ctx.measureText(l).width)
 	w += 20.0; var h = lines.size() * 20.0 + 12.0 + (18.0 if b.who != "" else 0.0)
-	var x = clampf(b.p.x, 6.0, FW - w - 6.0); var y = clampf(b.p.y - h, sim.L.top + 94.0, H - h - 10.0)
+	var wtop = cam + HUD_H + 4.0; var wbot = cam + view_h() - h - 10.0
+	var x = clampf(b.p.x, 6.0, FW - w - 6.0); var y = clampf(b.p.y - h, wtop, maxf(wtop, wbot))
 	for k2 in 6:
 		var hit = false
 		for r in _brects:
@@ -771,7 +987,7 @@ func _draw_banner(ctx: Ctx) -> void:
 	var b = banner; var u = b.t / b.life
 	var a = clampf(minf(b.t / 0.2, (b.life - b.t) / 0.4), 0, 1)
 	var sc = 1.0 + 0.35 * maxf(0.0, 1.0 - b.t / 0.25)
-	var cy = sim.L.top + 300.0
+	var cy = top_pad + 300.0
 	ctx.save(); ctx.globalAlpha = a
 	ctx.fillStyle = "rgba(10,6,14,.72)"; ctx.fillRect(0, cy - 75, FW, 150)
 	var g = ctx.createRadialGradient(195, cy, 10, 195, cy, 200); g.addColorStop(0, "rgba(255,210,120,.35)"); g.addColorStop(1, "rgba(255,210,120,0)")
@@ -819,35 +1035,9 @@ func _draw_card(ctx: Ctx) -> void:
 func _draw_anim(ctx: Ctx) -> void:
 	var a = anim; var tt = float(a.t)
 	if not a.done and tt >= A_FOLD - 0.2 and tt < A_SWAP:
-		# 抬住摺埋咗嘅紙紮屋，隊伍行出右邊
-		var u = clampf((tt - A_FOLD + 0.2) / (A_WALK - A_FOLD + 0.2), 0, 1)
-		var bx = lerpf(110.0, FW + 220.0, u * u * 0.4 + u * 0.6)
-		var by = sim.L.counter_y + 10.0
-		var bob = sin(tt * 12.0) * 3.0
-		var crew = []
-		for w in sim.workers: crew.append(str(w.k))
-		for g in sim.guards: crew.append(str(g.k))
-		while crew.size() < 4: crew.append(["zhiren", "youhun", "zombie", "xiaogui"][crew.size()])
-		# 摺埋嘅屋：一捆紙
-		for i in 4:
-			var cx = bx - 54 + i * 36.0
-			Art.draw_char(ctx, crew[i], cx, by + (i % 2) * 6.0, CS * 0.85, {"t": tt + i, "walk": true, "tamed": true})
-		ctx.save(); ctx.translate(bx, by - 70 + bob); ctx.rotate(sin(tt * 3.0) * 0.04)
-		if _has("mvs_house_fold"): Art.put(ctx, "mvs_house_fold", 0, 30, 190)
-		else:
-			Art.rr(ctx, -80, -18, 160, 32, 6, "#e8d2a0", "#5a3a1a", 2)
-			for i in 7: Art.rr(ctx, -72 + i * 21, -14, 12, 24, 2, "#c0392b" if i % 2 == 0 else "#f2c060")
-			ctx.fillStyle = "#3a2410"; ctx.fillRect(-82, -4, 164, 3)
-		ctx.restore()
-		if not _has("mvs_house_fold"):
-			ctx.strokeStyle = "#5a3a1a"; ctx.lineWidth = 3
-			ctx.beginPath(); ctx.moveTo(bx - 100, by - 52 + bob); ctx.lineTo(bx + 100, by - 52 + bob); ctx.stroke()
-		# 其餘隊伍跟尾
-		for i in range(4, crew.size()):
-			Art.draw_char(ctx, crew[i], bx - 90 - (i - 3) * 36.0, by + 40, CS * 0.8, {"t": tt + i, "walk": true, "tamed": true})
 		ctx.font = "900 17px sans-serif"
 		var ls = _wrap(ctx, str(a.line), 350.0)
-		for li in ls.size(): _txt(ctx, ls[li], 195, sim.L.top + 136 + li * 24.0, 17, GOLD, "center", 900, 5)
+		for li in ls.size(): _txt(ctx, ls[li], 195, top_pad + HUD_H + 46 + li * 24.0, 17, GOLD, "center", 900, 5)
 	# 轉黑／淡入
 	var dark = 0.0
 	if tt >= A_WALK - 0.2 and tt < A_SWAP: dark = clampf((tt - (A_WALK - 0.2)) / (A_SWAP - A_WALK + 0.2), 0, 1)
@@ -861,6 +1051,31 @@ func _draw_anim(ctx: Ctx) -> void:
 			ctx.globalAlpha = 1.0
 
 # 文字：描邊＋填色（夾返入畫面，唔爆格）
+# 拔營隊伍（世界座標）：抬住摺埋嘅紙紮屋沿路行出入口
+func _draw_proc(ctx: Ctx) -> void:
+	var tt = float(anim.t)
+	var u = clampf((tt - A_FOLD + 0.2) / (A_WALK - A_FOLD + 0.2), 0, 1)
+	var ql = sim.QLEN + 120.0
+	var s0 = lerpf(-60.0, ql, u * u * 0.4 + u * 0.6)
+	var bp = MD.poly_at(sim.QP, s0)
+	var bob = sin(tt * 12.0) * 3.0
+	var crew = []
+	for w in sim.workers: crew.append(str(w.k))
+	for g in sim.guards: crew.append(str(g.k))
+	while crew.size() < 4: crew.append(["zhiren", "youhun", "zombie", "egui"][crew.size()])
+	for i in 4:
+		var q = MD.poly_at(sim.QP, s0 - 30.0 + i * 20.0) + Vector2((i % 2) * 24.0 - 12.0, 0)
+		Art.draw_char(ctx, crew[i], q.x, q.y, CS * 0.85, {"t": tt + i, "walk": true, "tamed": true})
+	ctx.save(); ctx.translate(bp.x, bp.y - 70 + bob); ctx.rotate(sin(tt * 3.0) * 0.04)
+	if _has("mvs_house_fold"): Art.put(ctx, "mvs_house_fold", 0, 30, 170)
+	else:
+		Art.rr(ctx, -80, -18, 160, 32, 6, "#e8d2a0", "#5a3a1a", 2)
+		for i in 7: Art.rr(ctx, -72 + i * 21, -14, 12, 24, 2, "#c0392b" if i % 2 == 0 else "#f2c060")
+	ctx.restore()
+	for i in range(4, crew.size()):
+		var q2 = MD.poly_at(sim.QP, s0 - 60.0 - (i - 3) * 34.0)
+		Art.draw_char(ctx, crew[i], q2.x, q2.y, CS * 0.8, {"t": tt + i, "walk": true, "tamed": true})
+
 func _txt(ctx: Ctx, s: String, x: float, y: float, sz: int, col: Color, align := "center", w := 900, outline := 4, fam := "sans-serif") -> void:
 	ctx.font = "%d %dpx %s" % [w, sz, fam]; ctx.textAlign = align; ctx.textBaseline = "middle"
 	var tw = ctx.measureText(s).width
@@ -874,8 +1089,24 @@ func _txt(ctx: Ctx, s: String, x: float, y: float, sz: int, col: Color, align :=
 
 # ================= 撳 =================
 func _stage_input(ev: InputEvent) -> void:
-	if not (ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT): return
-	tap(ev.position)
+	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
+		if ev.pressed:
+			_press = {"p": ev.position, "cam": cam, "t": t, "drag": false, "last": ev.position.y, "lt": t}
+			cam_v = 0.0; cam_tgt = null
+		elif _press != null:
+			if not _press.drag: tap(ev.position)
+			_press = null
+	elif ev is InputEventMouseMotion and _press != null:
+		var dy = ev.position.y - _press.p.y
+		if not _press.drag and absf(dy) > 9.0 and card == null and anim == null and _press.p.y > top_pad + HUD_H: _press.drag = true
+		if _press.drag:
+			cam = _press.cam - dy
+			var dtm = maxf(0.001, t - _press.lt)
+			cam_v = lerpf(cam_v, -(ev.position.y - _press.last) / dtm, 0.5)
+			_press.last = ev.position.y; _press.lt = t
+			_clamp_cam()
+	elif ev is InputEventScreenDrag:
+		pass
 
 func _hit(name: String, p: Vector2) -> bool: return _btns.has(name) and _btns[name].has_point(p)
 func tap(p: Vector2) -> void:
@@ -889,12 +1120,13 @@ func tap(p: Vector2) -> void:
 	if _hit("move", p): move_next(); return
 	for kind in ["inc", "spd"]:
 		if _hit("boost:" + kind, p):
-			if not sim.use_boost(kind): _float(p + Vector2(0, 30), MD.S("cd", "冷卻緊", "冷卻中"), Color("#ffb0a0"), 15)
+			if not sim.use_boost(kind): _float(s2w(p + Vector2(0, 30)), MD.S("cd", "冷卻緊", "冷卻中"), Color("#ffb0a0"), 15)
 			return
-	if p.y < sim.L.top + 90.0: return
+	if p.y < top_pad + HUD_H: return
+	var sp = p; p = s2w(p)   # 以下世界座標
 	if sim.tap_foe(p): return
-	for key in _btns.keys():
-		if not _btns[key].has_point(p): continue
+	for key in _wbtns.keys():
+		if not _wbtns[key].has_point(p): continue
 		var a = key.split(":")
 		match a[0]:
 			"ring":
@@ -908,8 +1140,8 @@ func tap(p: Vector2) -> void:
 				return
 			"slot": _open_picker(a[1], int(a[2])); return
 			"guard": _open_picker("guard", int(a[1])); return
-	for key in _btns.keys():
-		if key.begins_with("st:") and _btns[key].has_point(p):
+	for key in _wbtns.keys():
+		if key.begins_with("st:") and _wbtns[key].has_point(p):
 			var sid = key.substr(3)
 			if sim.unlocked(sid): open_sheet(sid)
 			return
@@ -919,6 +1151,8 @@ func tap(p: Vector2) -> void:
 var _up_btns := []
 func open_sheet(sid: String) -> void:
 	sel = sid; sheet.visible = true; _snd("click"); _fill_sheet()
+	focus(sim.st_pos(sid).y, top_pad + HUD_H + 150.0)   # 個台移去升級條上面
+func focus_station(sid: String) -> void: focus(sim.st_pos(sid).y, top_pad + view_h() * 0.55)
 func close_sheet() -> void:
 	sel = ""
 	if sheet != null: sheet.visible = false

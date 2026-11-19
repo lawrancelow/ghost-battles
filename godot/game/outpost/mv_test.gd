@@ -27,6 +27,19 @@ func _nm(sid, lv) -> int:
 func _val(sid, lv) -> float: return float(D.GOODS[_sd(sid).good].price) * (1.0 + 0.1 * (lv - 1)) * pow(2, _nm(sid, lv))
 func _out(sid, lv) -> int: return int(_sd(sid).base_out) + int((lv - 1) / 10)
 func _tm(sid, lv) -> float: return float(_sd(sid).base_time) / (1.0 + 0.02 * (lv - 1))
+# 搬貨來回時間（獨立計）：台前 → road[ri] → … → road[j] → 櫃台後，÷ 240 × 2 + 0.6
+func _carry(ci: int, sid) -> float:
+	var Ly = D.MAPS[ci].layout; var e = Ly.st[sid]; var rd = Ly.road; var j = int(Ly.j); var ri = int(e[2])
+	var pts = [Vector2(e[0], e[1] + 30)]
+	var i = ri
+	while true:
+		pts.append(Vector2(rd[i][0], rd[i][1]))
+		if i == j: break
+		i += -1 if ri >= j else 1
+	pts.append(Vector2(Ly.counter[0], Ly.counter[1] - 30))
+	var d = 0.0
+	for k in range(1, pts.size()): d += pts[k - 1].distance_to(pts[k])
+	return 2.0 * d / 240.0 + 0.6
 func _c1(sid, lv) -> float: return ceil(float(_sd(sid).up_cost0) * pow(float(_sd(sid).up_mul), lv - 1))
 
 const TG := [["t_mv1", "zhiren", "紙人阿一", "藍", 6.0], ["t_mv2", "youhun", "遊魂阿二", "藍", 4.0], ["t_mv3", "zombie", "殭屍阿三", "藍", 8.0],
@@ -119,7 +132,10 @@ func logic(_t) -> void:
 	var carry = 0
 	for w in sim.workers: carry += int(w.carry)
 	_p("  做咗 %d 件、交櫃台 %d、客人攞 %d、付錢 %d 次、等到嬲走 %d、搬緊 %d、櫃台剩 %d" % [made, deliv, took, pays, leaves, carry, sim.counter_n(gA)])
-	_chk("員工做貨（>= 10 件）", 1.0 if made >= 10 else 0.0, 1.0)
+	var exp_made = 120.0 / (_tm(A, 1) + _carry(0, A))
+	_p("  搬貨來回 %.2f 秒（路線長 %.0f px）；預計做 %.1f 件" % [_carry(0, A), (_carry(0, A) - 0.6) * 80.0, exp_made])
+	_chk("員工做貨數 ≈ 120 ÷ (做貨時間 + 搬貨來回)（±2）", float(made), exp_made, 2.0 / maxf(1.0, exp_made))
+	_chk("MD.carry_s = 獨立計", MD.carry_s(0, A), _carry(0, A))
 	_chk("貨品守恆：做 = 交 + 搬緊", float(made), float(deliv + carry))
 	_chk("貨品守恆：交 + 手做 = 攞 + 櫃台剩", float(deliv + man), float(took + sim.counter_n(gA)))
 	_chk("冥幣增加 = Σ 客人付錢", sim.coins() - c0, paid, 1e-9)
@@ -253,7 +269,7 @@ func logic(_t) -> void:
 	sim.assign(A1, 0, "t_mv1"); sim.assign(A1, 1, "t_mv2")
 	sim.st().st[A1].lv = 12.0
 	S.res["coins"] = float(_sd(B1).unlock_cost); sim.unlock(B1); sim.assign(B1, 0, "t_mv3"); sim.st().st[B1].lv = 26.0
-	var ve = 2.0 * _out(A1, 12) * _val(A1, 12) / (_tm(A1, 12) + 3.0) + 1.0 * _out(B1, 26) * _val(B1, 26) / (_tm(B1, 26) + 3.0)
+	var ve = 2.0 * _out(A1, 12) * _val(A1, 12) / (_tm(A1, 12) + _carry(1, A1)) + 1.0 * _out(B1, 26) * _val(B1, 26) / (_tm(B1, 26) + _carry(1, B1))
 	_chk("離線每秒", sim.offline_rate(), ve)
 	S.res["coins"] = 0.0
 	var r = sim.offline_gain(3600000.0)
@@ -326,6 +342,11 @@ func _goto_map(sim, c: int, nun: int, lvs: Array) -> void:   # 測試用：直�
 	sim.assign("guard", 0, TG[TG.size() - 1][0])
 	sc._after_move(true)
 
+func _cam(y: float) -> void:   # 鏡頭去世界 y（畫面頂）
+	sc.cam = y; sc.cam_tgt = null; sc.cam_v = 0.0; sc._clamp_cam(true)
+func _cam_bottom() -> void: _cam(sc.cam_max())
+func _cam_top() -> void: _cam(sc.cam_min())
+
 func shots(tt) -> void:
 	DirAccess.make_dir_recursive_absolute(OUT)
 	_setup(); var S = _S()
@@ -338,7 +359,7 @@ func shots(tt) -> void:
 	sc.setup(m)
 	var sim = sc.sim
 	sim.st()
-	var ids = _sids(0); var A = ids[0]; var A2 = ids[1]; var B = _locked(0)[0]
+	var ids = _sids(0); var A = ids[0]; var A2 = ids[1]; var A3 = ids[2]
 	S.mv.st[A].lv = 9.0; S.mv.st[A2].lv = 4.0
 	S.res["coins"] = 2600.0
 	sim.assign(A, 0, "t_mv1"); sim.assign(A, 1, "t_mv4"); sim.assign(A2, 0, "t_mv2")
@@ -347,40 +368,68 @@ func shots(tt) -> void:
 	sc.on_show()
 	for i in 3: sim.spawn_cust()
 	for i in 3: sim.spawn_foe()
-	await _wait(9.0)
+	sim.tap_station(A3)   # 冇員工：手做緊（播動態）
+	await _wait(8.0)
 	var ok_carry = false
-	for i in 40:
-		for w in sim.workers: if w.st == "go" and w.carry > 0 and w.pos.y < sim.st_pos(w.sid).y - 60: ok_carry = true
+	for i in 50:
+		for w in sim.workers: if w.st == "go" and w.carry > 0 and w.s > 60.0: ok_carry = true
 		if ok_carry: break
 		await _wait(0.1)
-	await _shot("01_overview_carry")
-	sim.foes.clear()
+	await _shot("01_map0_entrance_carry")
+	# 拖動（模擬手指）：由下拖上，有慣性
+	var c0 = sc.cam
+	_drag(sc, Vector2(200, 300), Vector2(200, 600))
+	_chk("手指向下拖 300px：鏡頭向上 300（cam −300）", sc.cam, c0 - 300.0, 0.002)
+	var c1 = sc.cam
+	await _wait(0.8)
+	_chk("放手後有慣性：鏡頭繼續向上滑（再郁 > 20px）", 1.0 if sc.cam < c1 - 20.0 else 0.0, 1.0)
+	await _shot("02_map0_drag_mid")
+	_cam_top(); sim.foes.clear()
 	for i in 3:
 		sim.spawn_foe(); var f = sim.foes[-1]
-		f.pos = Vector2(150 + i * 80, sim.L.fence_y - 8); f.st = "bang"; f.t = 0.0
-	await _wait(1.1)
-	await _shot("02_fence_fight")
-	sc.open_sheet(A); await _wait(0.5)
-	await _shot("03_upgrade_sheet")
+		f.pos = Vector2(110 + i * 90, sim.L.fence_y - 8); f.st = "bang"; f.t = 0.0
+	sim.tap_station(A3)
+	await _wait(1.2)
+	await _shot("03_map0_top_fence_fight")
+	# 撳台 → 鏡頭移過去，升級條唔遮住
+	sc.open_sheet(A); await _wait(0.9)
+	var sy = sc.w2s(sim.st_pos(A)).y
+	_p("升級條：台底畫面 y = %.0f、升級條頂 = %.0f → %s" % [sy + 56.0, sc.sheet.position.y, "冇遮" if sy + 56.0 <= sc.sheet.position.y + 4.0 else "<<< 遮住"])
+	await _shot("04_upgrade_sheet_focus")
 	S.res["coins"] = MD.cost_n(A, sim.lv(A), sim.up_n_for(A, "mile")) + 100.0
 	sc._do_up(A, "mile"); await _wait(0.45)
-	await _shot("04_milestone")
+	await _shot("05_milestone")
 	sc.close_sheet()
 	sc._open_picker(A2, 1); await _wait(0.4)
-	await _shot("05_picker")
+	await _shot("06_picker")
 	sc._close_picker()
-	# 目標：做到一個可以領
 	var gi = sim.cur_goal(); var g = D.MAPS[0].goals[gi]
 	if g.t == "level": S.mv.st[str(g.k)].lv = float(g.n)
 	elif g.t == "sell": S.mv.sold[str(g.k)] = float(g.n)
 	await _wait(0.6)
-	await _shot("06_goal_done")
 	sim.claim(gi); await _wait(0.5)
 	await _shot("07_goal_claim")
-	# 全部目標＋Boss → 拔營
+	# 全圖開晒、全部有人做：兩張全景（下半、上半），睇晒 5 個台嘅動態
+	_goto_map(sim, 0, 5, [12, 26, 9, 51, 3])
+	for i in 3: sim.spawn_cust()
+	await _wait(5.0); _cam_bottom(); await _wait(0.6)
+	await _shot("08_map0_all_bottom")
+	_cam(sim.st_pos(ids[3]).y - 200.0); await _wait(0.6)
+	await _shot("09_map0_all_mid")
+	_cam_top(); await _wait(0.6)
+	await _shot("10_map0_all_top")
+	# 其他 5 張圖：每張兩張全景（全部開晒、有人做）
+	for c in range(1, 6):
+		var n = D.MAPS[c].stations.size()
+		_goto_map(sim, c, n, [5, 14, 26, 11, 40, 2])
+		for i in 3: sim.spawn_cust()
+		await _wait(4.0); _cam_bottom(); await _wait(0.5)
+		await _shot("%02d_map%d_bottom" % [9 + c * 2, c])
+		_cam(sim.st_pos(_sids(c)[n - 2]).y - 220.0); await _wait(0.5)
+		await _shot("%02d_map%d_top" % [10 + c * 2, c])
+	# 拔營（第一張圖做齊）
+	_goto_map(sim, 0, 5, [12, 26, 9, 51, 3])
 	S.cleared["1-3"] = true; S.res["coins"] = 1e9
-	for sid in ids:
-		sim.unlock(sid)
 	var G = D.MAPS[0].goals
 	for i in G.size():
 		var gg = G[i]
@@ -389,37 +438,69 @@ func shots(tt) -> void:
 		elif gg.t == "hire":
 			for j in int(gg.n): sim.assign(str(gg.k), j, TG[j + 3][0])
 	for i in G.size(): sim.claim(sim.cur_goal())
-	await _wait(2.8)
-	await _shot("08_can_move")
+	sc.cam_home(); await _wait(2.5)
+	await _shot("22_can_move")
 	sc.move_next()
-	await _wait(0.7); await _shot("09_move_fold")
-	await _wait(1.6); await _shot("10_move_walk")
-	await _wait(2.4); await _shot("11_move_arrive")
-	await _wait(3.5); await _shot("12_new_map")
-	# 離線收益卡
+	await _wait(0.7); await _shot("23_move_fold")
+	await _wait(1.6); await _shot("24_move_walk")
+	await _wait(2.4); await _shot("25_move_arrive")
+	await _wait(3.5); await _shot("26_new_map")
 	var A1 = _sids(1)[0]
 	sim.assign(A1, 0, "t_mv5"); sim.st().st[A1].lv = 15.0
 	sc.on_hide(); S.mv.last = J.now() - 3.0 * 3600000.0
 	sc.on_show(); await _wait(0.8)
-	await _shot("13_offline_card")
+	await _shot("27_offline_card")
 	sc.tap(Vector2(195, 500)); await _wait(0.4)
 	sim.use_boost("inc"); sim.use_boost("spd"); await _wait(1.0)
-	await _shot("14_boosts")
+	await _shot("28_boosts")
 	sim.assign(A1, 0, null); sim.st().pile[A1] = 3.0
 	await _wait(0.5)
-	await _shot("15_manual_pile")
-	# 6 個台嘅圖（3 欄）：第 4 張（頭 4 個開咗）同第 6 張（全開）
-	_goto_map(sim, 3, 4, [27, 12, 8, 3])
-	for i in 3: sim.spawn_cust()
-	await _wait(6.0); await _shot("16_map3_6stations")
-	_goto_map(sim, 5, 6, [100, 76, 51, 26, 11, 1])
-	for i in 3: sim.spawn_cust()
-	await _wait(6.0); await _shot("17_map5_all_open")
-	sc.open_sheet(_sids(5)[5]); await _wait(0.5)
-	await _shot("18_map5_sheet_long_name")
-	sc.close_sheet()
+	await _shot("29_manual_pile")
+	await _fx_sheet(sim)
 	sc.on_hide(); sc.queue_free()
 	_p("shots done")
+
+# 33 個台嘅生產動態：每個台鏡頭對正、強制「做緊」，影兩個時間點，拼成一張對照表
+func _fx_sheet(sim) -> void:
+	var TW = 190; var TH = 230; var cols = 6
+	var all = []
+	for c in D.MAPS.size():
+		for sid in _sids(c): all.append([c, sid])
+	var rows = int(ceil(all.size() / float(cols / 2)))
+	var atlas = Image.create(TW * cols, TH * rows, false, Image.FORMAT_RGBA8)
+	var cur = -1
+	for i in all.size():
+		var c = all[i][0]; var sid = all[i][1]
+		if c != cur:
+			_goto_map(sim, c, 99, [12]); cur = c
+			sim.custs.clear(); sim.foes.clear()
+			for sd in _sids(c):
+				for j in 3: sim.assign(sd, j, null)
+			sim.paused = true
+		var p = sim.st_pos(sid)
+		_cam(p.y - 420.0)
+		for sd in _sids(c): sim.mk[sd] = 0.3
+		for k in 2:
+			await _wait(0.35 + k * 0.4)
+			await RenderingServer.frame_post_draw
+			var img = Engine.get_main_loop().root.get_viewport().get_texture().get_image()
+			img.convert(Image.FORMAT_RGBA8)
+			var sp = sc.w2s(p)
+			var rx = clampi(int(sp.x - TW / 2.0), 0, img.get_width() - TW); var ry = clampi(int(sp.y - 170), 0, img.get_height() - TH)
+			var tile = i * 2 + k
+			atlas.blit_rect(img, Rect2i(rx, ry, TW, TH), Vector2i((tile % cols) * TW, (tile / cols) * TH))
+	sim.paused = false
+	atlas.save_png(OUT + "30_fx_all_stations.png"); _p("SHOT " + OUT + "30_fx_all_stations.png（%d 台 × 2 格）" % all.size())
+
+func _drag(s0, a: Vector2, b: Vector2) -> void:
+	var e = InputEventMouseButton.new(); e.button_index = MOUSE_BUTTON_LEFT; e.pressed = true; e.position = a
+	s0._stage_input(e)
+	for i in 6:
+		s0.t += 0.016
+		var mm = InputEventMouseMotion.new(); mm.position = a.lerp(b, (i + 1) / 6.0); mm.button_mask = MOUSE_BUTTON_MASK_LEFT
+		s0._stage_input(mm)
+	var e2 = InputEventMouseButton.new(); e2.button_index = MOUSE_BUTTON_LEFT; e2.pressed = false; e2.position = b
+	s0._stage_input(e2)
 
 # 效能：場景自己嘅成本（模擬每格、畫每格），同村子畫面對比
 func perf(tt) -> void:
