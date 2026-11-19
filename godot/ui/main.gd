@@ -487,12 +487,12 @@ func _mv_apply() -> void:
 		mv_host.add_child(mv_back)
 		MVB.set_scene(mv_view)
 		print("[mv] scene ", path)
+	if mv_view != null: mv_view.on_hide()   # 先還原場景收埋過嘅嘢，再按開關設定（否則還原會蓋過）
 	mv_host.visible = on
 	village.visible = not on
+	village.process_mode = Node.PROCESS_MODE_INHERIT
 	quest_bar.visible = true
-	if mv_view != null:
-		if on and tab == "village": mv_view.on_show()
-		else: mv_view.on_hide()
+	if mv_view != null and on and tab == "village": mv_view.on_show()
 	_qx_btn_vis()
 
 # 移動村畫面有自己嘅目標條，右下角「任務」浮動掣會遮住升級條：喺移動村分頁收埋

@@ -1296,3 +1296,23 @@ func _snd(n: String) -> void:
 	if s != null: s.play(n)
 func _pick(a: Array):
 	return a[_rng.randi() % a.size()] if a.size() else ["", ""]
+
+# ---------------- 整合／測試用（同整合線假場景同名嘅 API）----------------
+func sids() -> Array: return MD.stations(ci())
+func ent(sid: String) -> Dictionary: return sim.sst(sid)
+func sdef(sid: String) -> Dictionary: return MD.st_def(sid)
+func up_cost(sid: String) -> float: return MD.cost1(sid, sim.lv(sid))
+func _pay_unlock(sid: String, cost: float) -> void:
+	if sim.coins() < cost: sim.add_coins(cost - sim.coins())
+	sim.unlock(sid)
+func _pay_up(sid: String, cost: float) -> void:
+	if sim.coins() < cost: sim.add_coins(cost - sim.coins())
+	sim.upgrade(sid, 1)
+func _hire(sid: String) -> bool:
+	var w: Array = sim.sst(sid).workers
+	var slot = w.find(null)
+	if slot < 0: return false
+	for gh in sim.pick_list():
+		if not J.t(J.gp(gh, "post")): return sim.assign(sid, slot, J.gp(gh, "id"))
+	return false
+func income_ps() -> float: return sim.offline_rate()

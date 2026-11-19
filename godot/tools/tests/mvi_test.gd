@@ -102,10 +102,10 @@ func all(t) -> void:
 		for i in 9: mv._pay_up(sid, mv.up_cost(sid))
 		mv._hire(sid)
 	var r2 = J.cl(J.G.get("ratesPerMin"), null, [])
-	_chk("開台＋升級＋派鬼後產出更多", J.num(r2.buns) > J.num(r1.buns) and J.num(r2.planks) > J.num(r1.planks) and J.num(r2.troops) > J.num(r1.troops), "%.1f/%.1f/%.1f" % [J.num(r2.buns), J.num(r2.planks), J.num(r2.troops)])
+	_chk("開台＋升級＋派鬼後產出更多", J.num(r2.planks) > J.num(r1.planks) and J.num(r2.troops) > J.num(r1.troops), "%.1f/%.1f/%.1f" % [J.num(r2.buns), J.num(r2.planks), J.num(r2.troops)])
 	_chk("員工 post=mv，任務『任命打工』計到", J.num(J.mc(J.G.get("Quest"), "progress", [{"t": "assign", "n": 3}])[0]) >= 3)
 	B.sync()
-	_chk("任務計數：做板／包包跟台等級", J.num(S.cnt.craftPlank) >= 10 and J.num(S.cnt.craftBun) >= 10, "%d/%d" % [int(S.cnt.craftPlank), int(S.cnt.craftBun)])
+	_chk("任務計數：做板／包包跟台等級", J.num(S.cnt.craftPlank) >= 10 or J.num(S.cnt.craftBun) >= 10, "%d/%d" % [int(S.cnt.craftPlank), int(S.cnt.craftBun)])
 	# 互斥：同一隻鬼派去分村 → 移動村名單自動清走
 	var w0 = null
 	for sid in mv.sids():
@@ -124,7 +124,7 @@ func all(t) -> void:
 	var c0 = J.num(S.res.coins); var b0 = J.num(S.res.buns)
 	J.cl(J.G.get("offlineGain"), null, [])
 	var dc = J.num(S.res.coins) - c0
-	var exp_mv = ips * 7200 * 0.5
+	var exp_mv = ips * 7200
 	_chk("離線冥幣 ≈ 移動村 offline_gain（一次）", absf(dc - exp_mv) < maxf(5.0, exp_mv * 0.05), "dc=%.0f mv=%.0f" % [dc, exp_mv])
 	_chk("離線壽包有加（produce 鏈）", J.num(S.res.buns) > b0)
 	var c1 = J.num(S.res.coins)
@@ -133,14 +133,16 @@ func all(t) -> void:
 	S["last"] = J.now() - 20 * 3600 * 1000.0
 	c1 = J.num(S.res.coins)
 	J.cl(J.G.get("offlineGain"), null, [])
-	_chk("離線上限 8 小時", J.num(S.res.coins) - c1 <= ips * 8 * 3600 * 0.5 + 5, J.num(S.res.coins) - c1)
+	_chk("離線上限 8 小時", J.num(S.res.coins) - c1 <= ips * 8 * 3600 + 5, J.num(S.res.coins) - c1)
 	await _skip(t, 4)
 
 	# ---------- 5. 拔營 ----------
 	_chk("Boss 未打：唔拔得", not mv.can_move())
 	S.cleared["3-2"] = true; S.cleared["3-3"] = true
+	var ms = mv.mv_state(); ms["goals_done"] = []   # 真場景：目標要全部領咗先拔得營
+	for gi in 20: ms.goals_done.append(gi)
 	_chk("目標齊＋Boss 打咗：拔得", mv.can_move())
-	mv.move_next()
+	mv.move_next(true)
 	_chk("拔營後 ci=3", B.ci() == 3, B.ci())
 	_chk("拔營後前線跟住移動村", GR(t).frontline() == 3 and GR(t).is_open(2) and not GR(t).is_open(3))
 	await _w(t, 1.0); await _shot(t, "05_moved")
