@@ -57,7 +57,7 @@ func all(t) -> void:
 	_chk("chain.json 有拓展建築", CB.new_blds().size() > 0, CB.new_blds().size())
 	_chk("舊建築對照（wood/rice/plank/bun）", CB.of_old("wood") != "" and CB.of_old("bun") != "")
 	_chk("POSTS 已登記拓展崗位", J.G.POSTS.has(CB.new_blds()[0]))
-	_chk("包裝已裝（tap／bld／produce）", is_same(J.G.Village.get("tap"), J.G.Village.get("__cb_tap_w")) and is_same(N().get("bld"), N().get("__cb_bld_w")) and is_same(J.G.get("produce"), J.G.get("__cb_prod_w")))
+	_chk("包裝已裝（tap／bld）", is_same(J.G.Village.get("tap"), J.G.Village.get("__cb_tap_w")) and is_same(N().get("bld"), N().get("__cb_bld_w")))
 
 	# ---------- 1. 解鎖條件 ----------
 	S["cleared"] = {}
@@ -229,8 +229,7 @@ func all(t) -> void:
 	_chk("返大排檔", m.mv_host.visible and not m.village.visible)
 
 	# ---------- 10. 冇 chain.json 都唔壞 ----------
-	var keep = M._D
-	M._D = {"MATS": {}, "GATHER": {}, "WORKSHOPS": {}, "RECIPES": {}, "GEAR": {}, "BATTLE_ITEMS": {}, "STRINGS": {}, "CARRY": []}
+	M.use_file("res://data/nat/__no_chain__.json")
 	CB.reset()
 	_chk("冇資料：冇拓展建築", CB.new_blds().is_empty() and CB.shown().is_empty() and CB.world_h() == 1130.0)
 	var cw = J.mc(N(), "bld", ["wood"])
@@ -239,7 +238,7 @@ func all(t) -> void:
 	_chk("冇資料：produce 照行", true)
 	J.mc(J.G.Village, "tap", [195.0, 1300.0])
 	_chk("冇資料：舊 tap 照行", true)
-	M._D = keep; CB.reset()
+	M.use_file(""); CB.reset()
 
 	# ---------- 11. 舊存檔 ----------
 	var o = JSON.parse_string(FileAccess.get_file_as_string("res://data/selftest_save.json"))

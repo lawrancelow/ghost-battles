@@ -4,7 +4,7 @@
 # 資料：data/nat/chain.json 嘅 GATHER／WORKSHOPS（經 mat.gd 讀）。old 有填嘅係舊建築（伐木場／糯米田／棺材鋪／包子鋪），
 #       其餘係「拓展建築」。冇 chain.json → 冇拓展建築，所有包裝原封不動行舊嘢。
 # 介面（同引擎線 chain_eco.gd 一致）：建築鍵 = 崗位鍵 = bid；等級 S.bld[bid]（0／冇 = 未起）；鬼 post = bid。
-# 產量：有 chain_eco.gd（引擎線）就用佢（CE.rates／CE.produce 由 produce() 叫）；冇就用呢度嘅後備（同一條公式）。
+# 產量：全部用引擎線 chain_eco.gd（CE.rates；CE.produce 已喺 native produce() 尾叫，離線自動跟）——呢度唔計產出。
 # 解鎖：unlock.ci —— 移動村去到嗰張圖（S.mv.ci）或者舊進度打通到嗰張圖之後；起建築扣 unlock.cost（mat.gd）。
 # 升級：費用 = 起建築費 × 0.6 × 等級^1.45（冇起建築費就用棺材板）＋ 冥幣；上限 = 鬼宅（紙紮大屋）等級，同舊建築一樣。
 # 崗位：同舊公式 min(4, 1 + floor((等級 − 1) ÷ 3))；POSTS[bid] 自動登記（派人面板用）。
@@ -12,7 +12,7 @@
 extends RefCounted
 
 const M = preload("res://game/outpost/mat.gd")
-const CE_PATH := "res://game/outpost/chain_eco.gd"
+const CE = preload("res://game/outpost/chain_eco.gd")
 const OLD_WH := 1130.0
 const FENCE_Y := 1168.0
 const ROW0 := 1290.0
@@ -21,8 +21,6 @@ const COL_X := [95.0, 295.0]
 const ICONISH := ["mvi_", "op_", "n30_", "furnace__", "mi_", "of_"]   # 呢啲係道具圖示，唔當建築圖用
 
 static var _ix = null          # {"D": 字典身份, "defs": {bid: def+kind}, "new": [bid 排好], "old": {old: bid}}
-static var _ce = null
-static var _ce_ok := false
 
 # ---------------- 基本 ----------------
 static func S():
@@ -33,12 +31,6 @@ static func L(yue: String, zhs: String) -> String: return zhs if zh() else yue
 static func T(a) -> String:
 	if a is Array and a.size() >= 2: return str(a[1]) if zh() else str(a[0])
 	return str(a) if a != null else ""
-static func CE():
-	if not _ce_ok:
-		_ce_ok = true
-		_ce = load(CE_PATH) if ResourceLoader.exists(CE_PATH) else null
-	return _ce
-
 static func _index() -> Dictionary:
 	var D = M.D()
 	if _ix != null and is_same(_ix.D, D): return _ix
@@ -91,16 +83,9 @@ static func main_out(bid: String) -> String:
 	return str(o.keys()[0]) if o.size() else ""
 
 # ---------------- 解鎖、等級、費用 ----------------
-static func frontier() -> int:
-	var s = S(); var c = 0
-	if s == null: return 0
-	if s.get("mv") is Dictionary: c = int(J.num(s.mv.get("ci", 0)))
-	var cl = s.get("cleared")
-	if cl is Dictionary:
-		for i in 12: if J.t(cl.get("%d-3" % (i + 1))): c = maxi(c, i + 1)
-	return c
-static func need_ci(bid: String) -> int: return _uci(def(bid))
-static func unlocked(bid: String) -> bool: return frontier() >= need_ci(bid)
+static func frontier() -> int: return CE.frontier()
+static func need_ci(bid: String) -> int: return CE.need_ci(bid)
+static func unlocked(bid: String) -> bool: return CE.unlocked(bid)
 static func lv(bid: String) -> int:
 	var s = S()
 	if s == null or not (s.get("bld") is Dictionary): return 0
@@ -110,10 +95,7 @@ static func house() -> int:
 	var s = S()
 	return maxi(1, int(J.num(s.bld.get("house", 1)))) if s != null and s.get("bld") is Dictionary else 1
 static func max_lv(bid: String) -> int: return maxi(1, house())
-static func build_cost(bid: String) -> Dictionary:
-	var u = def(bid).get("unlock", {})
-	var c = u.get("cost", {}) if u is Dictionary else {}
-	return c if c is Dictionary else {}
+static func build_cost(bid: String) -> Dictionary: return CE.mat_cost(bid)
 static func up_cost(bid: String, at_lv: int) -> Dictionary:
 	var base = build_cost(bid); var o = {}
 	var f = 0.6 * pow(float(maxi(1, at_lv)), 1.45)
@@ -196,74 +178,18 @@ static func _glv(g) -> float:
 static func mult(bid: String) -> float: return 1.0 + 0.3 * (maxf(1.0, float(lv(bid))) - 1.0)
 # 每分鐘：{"w":員工數, "out":{mid:每分}, "in":{mid:每分}}（舊建築唔計，交返舊公式）
 static func rates(bid: String) -> Dictionary:
-	var ce = CE()
-	if ce != null:
-		var r = ce.rates().get(bid)
-		return r if r is Dictionary else {"w": 0, "out": {}, "in": {}}
-	return _rates_own().get(bid, {"w": 0, "out": {}, "in": {}})
-static func _rates_own() -> Dictionary:
-	var o = {}; var s = S()
-	if s == null: return o
-	var nb = new_blds()
-	if nb.is_empty(): return o
-	for g in J.iter(s.get("ghosts")):
-		var p = J.gp(g, "post")
-		if not (p is String) or not (p in nb) or lv(p) <= 0: continue
-		var bid: String = p; var d = def(bid)
-		if not o.has(bid): o[bid] = {"w": 0, "out": {}, "in": {}}
-		var e = o[bid]; e.w += 1
-		var gl = _glv(g)
-		if d.kind == "gather":
-			var mid = str(d.get("out", ""))
-			e.out[mid] = J.num(e.out.get(mid)) + J.num(d.get("rate", 0)) * (1.0 + 0.07 * (gl - 1.0)) * mult(bid)
-		else:
-			var cpm = 60.0 / maxf(1.0, J.num(d.get("time", 30))) * (1.0 + 0.02 * (gl - 1.0)) * mult(bid)
-			for m in outs(bid): e.out[m] = J.num(e.out.get(m)) + J.num(outs(bid)[m]) * cpm
-			for m in ins(bid): e["in"][m] = J.num(e["in"].get(m)) + J.num(ins(bid)[m]) * cpm
-	return o
-static func _cap(mid: String) -> float:
-	var c = J.num(M.def(mid).get("cap", 0))
-	if c > 0: return c
-	var F = J.G.get("F")
-	var fc = J.num(J.mc(F, "cap", [])) if F != null else 0.0
-	return fc if fc > 0 else 999999999.0
-static func _add_capped(mid: String, n: float) -> float:
-	if n <= 0: return M.add(mid, n)
-	return M.add(mid, minf(n, maxf(0.0, _cap(mid) - M.amt(mid))))
-# 後備產出（引擎線 chain_eco.gd 未合併先用；有佢就唔行，免得計兩次）
-static func produce_fallback(dt: float) -> void:
-	if CE() != null or dt <= 0: return
-	var R = _rates_own(); var mm = dt / 60.0
-	for bid in R:
-		if kind(bid) != "gather": continue
-		for mid in R[bid].out: _add_capped(mid, J.num(R[bid].out[mid]) * mm)
-	for bid in R:
-		if kind(bid) != "shop": continue
-		var e = R[bid]; var k = 1.0
-		for mid in e["in"]:
-			var need = J.num(e["in"][mid]) * mm
-			if need > 0: k = minf(k, M.amt(mid) / need)
-		for mid in e.out:
-			var mk = J.num(e.out[mid]) * mm
-			if mk > 0: k = minf(k, maxf(0.0, _cap(mid) - M.amt(mid)) / mk)
-		k = clampf(k, 0.0, 1.0)
-		if k <= 0.0: continue
-		for mid in e["in"]: M.add(mid, -J.num(e["in"][mid]) * mm * k)
-		for mid in e.out: _add_capped(mid, J.num(e.out[mid]) * mm * k)
-static func starved(bid: String) -> Array:
-	var e = rates(bid); var o = []
-	for mid in e.get("in", {}):
-		if M.amt(mid) < J.num(e["in"][mid]) / 60.0: o.append(mid)
-	return o
+	var r = CE.rates().get(bid)
+	return r if r is Dictionary else {"w": 0, "out": {}, "in": {}}
+static func starved(bid: String) -> Array: return CE.starved(bid)
 # 後院畫面用：一次過計晒 {bid: "work"／"starve"／"idle"}
 static func work_states() -> Dictionary:
-	var ce = CE(); var R = ce.rates() if ce != null else _rates_own(); var o = {}
+	var R = CE.rates(); var o = {}
 	for bid in R:
 		var e = R[bid]; var st = "work"
 		for mid in e.get("in", {}):
 			if M.amt(mid) < J.num(e["in"][mid]) / 60.0: st = "starve"
 		for mid in e.get("out", {}):
-			if M.amt(mid) >= _cap(mid) - 0.5: st = "starve" if st == "starve" else "full"
+			if M.room(mid) < 0.5: st = "starve" if st == "starve" else "full"
 		o[bid] = st if st != "full" else "idle"
 	return o
 static func working(bid: String) -> bool:
@@ -342,9 +268,9 @@ static func old_effect(id: String, html: bool) -> String:
 			return L("用料：%s ×2 → %s ×1%s崗位 %d　目前 %s +%.1f/分（食 %s %.1f/分）%s藍箱可開出 %s %d", "用料：%s ×2 → %s ×1%s崗位 %d　目前 %s +%.1f/分（耗 %s %.1f/分）%s藍箱可開出 %s %d") % [mw, mp, nl, sl, mp, J.num(r.get("planks")), mw, J.num(r.get("woodUse")), nl, mp, int(J.num(J.gp(cg, "planks")))]
 		"bun":
 			if mb == "": return ""
-			var bao = J.num(r.get("bao")) if r.has("bao") else J.num(r.get("buns"))
+			var bao = J.num(r.get("bao")); var bu = J.num(r.get("baoUse"))
 			var sb = M.name("m_shoubao") if M.has_def("m_shoubao") else "壽包"
-			return L("用料：%s ×2 → %s ×1%s崗位 %d　目前 %s +%.1f/分（食 %s %.1f/分）%s%s 送去移動村「嘆氣蒸籠」先蒸成%s", "用料：%s ×2 → %s ×1%s崗位 %d　目前 %s +%.1f/分（耗 %s %.1f/分）%s%s 送去移動村「嘆氣蒸籠」才蒸成%s") % [mr, mb, nl, sl, mb, bao, mr, J.num(r.get("riceUse")), nl, mb, sb]
+			return L("用料：%s ×2 → %s ×1%s崗位 %d　目前 %s +%.1f/分（食 %s %.1f/分）%s%s 送去移動村「嘆氣蒸籠」先蒸成%s", "用料：%s ×2 → %s ×1%s崗位 %d　目前 %s +%.1f/分（耗 %s %.1f/分）%s%s 送去移動村「嘆氣蒸籠」才蒸成%s") % [mr, mb, nl, sl, mb, bao, mr, bu, nl, mb, sb]
 	return ""
 
 # ---------------- 建築卡（menus.gd 嘅資料格式）----------------
@@ -448,7 +374,6 @@ static func install() -> void:
 	var N = J.gp(UI, "_n") if UI != null else null
 	if N is Dictionary and not is_same(N.get("__cb_bld_w"), N.get("bld")): _wrap_menu(N)
 	if UI is Dictionary and UI.get("bldEffect") != null and not is_same(UI.get("__cb_eff_w"), UI.get("bldEffect")): _wrap_effect(UI)
-	if G.get("produce") != null and not is_same(G.get("__cb_prod_w"), G.get("produce")): _wrap_produce(G)
 	reg_posts()
 
 static func _wrap_village(V: Dictionary) -> void:
@@ -502,14 +427,6 @@ static func _wrap_effect(UI: Dictionary) -> void:
 		var e = old_effect(id, true)
 		return e if e != "" else J.cl(o, t, a)
 	UI["bldEffect"] = f; UI["__cb_eff_w"] = f
-
-static func _wrap_produce(G: Dictionary) -> void:
-	var o = G.get("produce")
-	var f = func(t, a):
-		var r = J.cl(o, t, a)
-		produce_fallback(J.num(J.arg(a, 0)))
-		return r
-	G["produce"] = f; G["__cb_prod_w"] = f
 
 # ---------------- 移動村模式：後院面板＋入後院睇 ----------------
 # main.gd 後院面板（open_backyard）掛鈎叫：列出拓展建築＋「入後院」掣

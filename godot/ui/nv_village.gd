@@ -570,12 +570,14 @@ func _work_fx(ctx: Ctx, bid: String, x: float, y: float, top: float, col: Color,
 			var px = x - 34 + k * 17 + sin(t * 2 + k * 1.7) * 4
 			Art.el(ctx, px, y - 10 - ph * 46, 2.6, 2.6, c2)
 		ctx.globalAlpha = 1
-		# 轉動嘅小風車／轆轤（採集嘅「機器」）
-		ctx.save(); ctx.translate(x + 44, y - 22); ctx.rotate(t * 2.4)
-		for k in 4:
-			ctx.rotate(PI / 2); Art.rr(ctx, -1.5, 0, 3, 12, 1, "#8a6a44", "#2a1a0e", 0.8)
-		ctx.restore()
-		Art.el(ctx, x + 44, y - 22, 3, 3, "#3a2818")
+		if not has_img:   # 後備細屋：門口一個轉緊嘅木轆（採集嘅「機器」）
+			var wx = x + 46; var wy = y - 20
+			Art.el(ctx, wx, wy, 11, 11, null, "#5a4030", 2.2)
+			ctx.save(); ctx.translate(wx, wy); ctx.rotate(t * 2.4)
+			for k in 4:
+				ctx.rotate(PI / 2); Art.rr(ctx, -1, 0, 2, 10, 1, "#8a6a44")
+			ctx.restore()
+			Art.el(ctx, wx, wy, 2.5, 2.5, "#3a2818")
 
 func _site(ctx: Ctx, bid: String, x: float, y: float, un: bool) -> void:
 	var nm = CB.bname(bid)
