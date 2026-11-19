@@ -67,6 +67,7 @@ var _wbtn := {}        # 世界掣（世界座標）：key → [Rect2, 物件]
 var card = null        # 彈出卡：{"k":"order","i":n} 或 {"k":"sign"}
 var _clash_t := {}     # 嗌交計時
 var _sc = null         # 畫面（只係攞鏡頭範圍畫紙錢雨用）
+var label_rects: Array = []   # 事件名（世界座標），對白框避開
 var cur_ci := 0         # 而家地圖（每格更新；脾氣對白揀每張圖嘅講法）
 var off := false       # 測試用：成套關咗（所有掛鈎回中性值）
 static var test_off := false   # 測試用：所有 sim 實例一齊關（例如 mv_bridge 自己開嘅 sim）
@@ -467,7 +468,7 @@ func eat(sc) -> void:
 func draw_world(sc, ctx, vy0: float, vy1: float) -> void:
 	_sc = sc
 	var sim = sc.sim
-	_wbtn.clear()
+	_wbtn.clear(); label_rects.clear()
 	var tn = tide(sim)
 	if tn[0]:   # 夜潮：暗紫紅
 		var a = 0.24 * clampf(minf(TIDE_NIGHT - float(tn[1]), float(tn[1])) / 4.0, 0.0, 1.0)
@@ -485,6 +486,13 @@ func draw_world(sc, ctx, vy0: float, vy1: float) -> void:
 		sc._txt(ctx, tg, w.pos.x - 16.0, w.pos.y - 70.0, 14, col, "center", 900, 3)
 	CU.draw_world(self, sc, ctx, vy0, vy1)
 	EV.draw_world(self, sc, ctx, vy0, vy1)
+
+# 對白框要避開嘅位（世界座標）：事件名＋右上「生產鏈」掣（mv_scene._draw_stage 畫對白框前叫）
+func avoid_rects(sc) -> Array:
+	var o = label_rects.duplicate()
+	var cp = sc.get("_cb_pos"); var cs = sc.get("_cb_sz")
+	if cp is Vector2 and cs is Vector2 and cs != Vector2.ZERO: o.append(Rect2(sc.s2w(cp), cs).grow(4))
+	return o
 
 # 客人要貨氣泡上面嘅脾氣牌（mv_scene._draw_want 尾叫）
 func draw_tag(sc, ctx, c: Dictionary, x: float, y: float, w: float, _h: float) -> void: CU.draw_tag(self, sc, ctx, c, x, y, w)

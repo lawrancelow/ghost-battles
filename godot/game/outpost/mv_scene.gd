@@ -173,7 +173,9 @@ func world_h() -> float: return maxf(float(sim.L.get("h", 844)), camp.bottom()) 
 #   邊個位冇遮住台名牌／台／營地建築就用邊個（而家用緊嘅位冇遮就唔郁，避免閃）
 var _plates: Array = []
 var _cb_pos = null
+var _cb_sz := Vector2.ZERO   # [play]
 func chain_btn_pos(sz: Vector2) -> Vector2:
+	_cb_sz = sz   # [play] 記低掣大細（對白框要避開）
 	var y0 = (float(sim.war.hud_y(self)) if sim != null and sim.war != null else top_pad + HUD_H) + 48.0
 	var cands = [Vector2(FW - sz.x - 8.0, y0), Vector2(8.0, y0)]
 	for k in range(1, 4): cands.append_array([Vector2(FW - sz.x - 8.0, y0 + 110.0 * k), Vector2(8.0, y0 + 110.0 * k)])
@@ -472,6 +474,7 @@ func _draw_stage() -> void:
 		var sc = 1.0 + 0.3 * maxf(0.0, 1.0 - f.t / 0.15)
 		ctx.globalAlpha = a; _txt(ctx, f.text, f.p.x, f.p.y, int(f.s * sc), f.c, "center", 900, 5); ctx.globalAlpha = 1.0
 	_brects.clear()
+	_brects.append_array(sim.plus.avoid_rects(self))   # [play] 對白框避開事件名同右上「生產鏈」掣
 	for b in bubbles: _draw_bubble(ctx, b)
 	ctx.restore()
 	_draw_parts(ctx, false)
@@ -787,12 +790,19 @@ func _draw_counter(ctx: Ctx, fk: float) -> void:
 		for i in 6: Art.rr(ctx, x0 + 10 + i * 30, y - 14, 18, 18, 3, "rgba(255,210,120,.12)", "rgba(242,192,96,.5)", 1)
 		_txt(ctx, MD.S("counter", "陰間大排檔", "陰間大排檔"), (x0 + x1) / 2.0, y - 4, 15, GOLD, "center", 900, 3, "serif")
 	# 櫃台面疊貨
-	for gid in sim.goods_list():
+	# [play] 貨種多、格太窄（< 34px）：每格只疊細堆，唔逐格寫數，改喺櫃台中間寫一個「×總數」（免得數字黐埋爆格）
+	var gl = sim.goods_list(); var tight = (x1 - x0 - 52.0) / maxf(1.0, gl.size()) < 34.0; var tot = 0
+	for gid in gl:
 		var n = sim.counter_n(gid); if n <= 0: continue
+		tot += n
 		var p = sim.counter_slot(gid)
-		var vis = mini(n, 5)
-		for i in vis: _icon(ctx, gid, p.x + (i % 2) * 6.0 - 3.0, p.y - i * 6.0, 26.0)
-		_txt(ctx, "%d" % n, p.x + 16, p.y + 6, 15, Color.WHITE, "center", 900, 4)
+		var vis = mini(n, 3 if tight else 5)
+		for i in vis: _icon(ctx, gid, p.x + (i % 2) * 4.0 - 2.0, p.y - i * 6.0, 22.0 if tight else 26.0)
+		if not tight: _txt(ctx, "%d" % n, p.x + 16, p.y + 6, 15, Color.WHITE, "center", 900, 4)
+	if tight and tot > 0:
+		var lb = "×%s" % MD.fmt(tot); ctx.font = "900 15px sans-serif"; var lw = ctx.measureText(lb).width + 16.0
+		Art.rr(ctx, (x0 + x1) / 2.0 - lw / 2.0, y - 11, lw, 22, 8, "rgba(20,10,8,.85)", "#f2c060", 1.5)
+		_txt(ctx, lb, (x0 + x1) / 2.0, y, 15, Color.WHITE, "center", 900, 0)
 	ctx.restore()
 
 # ---------------- 客人 ----------------

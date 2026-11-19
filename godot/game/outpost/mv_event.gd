@@ -479,6 +479,8 @@ static func draw_world(P, sc, ctx, vy0: float, vy1: float) -> void:
 	ctx.restore()
 	var nm = ev_name(P, sim, e); var tp = ev_tap(P, sim, e)
 	sc._txt(ctx, nm, p.x, p.y - r - 26.0, 15, Color("#ffd27a"), "center", 900, 4)
+	ctx.font = "900 15px sans-serif"; var nw = maxf(ctx.measureText(nm).width, ctx.measureText(tp).width + 30.0) + 12.0
+	P.label_rects.append(Rect2(clampf(p.x - nw / 2.0, 0.0, 390.0 - nw), p.y - r - 38.0, nw, 42.0))   # 對白框要避開
 	sc._txt(ctx, tp + " %d" % int(ceil(maxf(0.0, float(e.life) - float(e.t)))), p.x, p.y - r - 8.0, 14, Color("#fff3e0"), "center", 900, 4)
 	P._wbtn["e_" + k] = [Rect2(p.x - 46.0, p.y - r - 40.0, 92.0, r * 2.0 + 44.0), e]
 
