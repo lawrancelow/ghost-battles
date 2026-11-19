@@ -129,7 +129,7 @@ def main():
         st = m.get("stations", [])
         lo = 3 if ci == 0 else 4
         own = [s for s in st if ci == 0 or s not in CARRY]   # [chain-data] 隨村台（chain.json CARRY）每張圖都有，唔計
-        if not (lo <= len(own) <= 6): E(tag + " 生產台數 %d 唔喺 %d–6" % (len(own), lo))   # [chain-data]
+        if not (lo <= len(own) <= 7): E(tag + " 生產台數 %d 唔喺 %d–7" % (len(own), lo))   # [chain-data] [idle] 第 5、6 張圖 7 個台
         for sid in st:
             if sid not in S: E(tag + " 台 %s 唔存在" % sid)
             if sid in seen_sid and sid not in CARRY: E(tag + " 台 %s 喺第二張圖用過" % sid)   # [chain-data]

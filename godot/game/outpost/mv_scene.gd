@@ -9,6 +9,7 @@ const MD = preload("res://game/outpost/mv_data.gd")
 const SIM = preload("res://game/outpost/mv_sim.gd")
 const FX = preload("res://game/outpost/mv_fx.gd")
 const M = preload("res://game/outpost/mat.gd")   # [chain]
+const IDL = preload("res://game/outpost/mv_idle.gd")   # [idle]
 const FW := 390.0
 const GOLD := Color("#f3d68a")
 const INK := Color("#2b1d12")
@@ -886,7 +887,8 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 			for i in tot: _star(ctx, x0 + lw + 12.0 + i * 13.0, ny + 20, 6.0, i < nm)
 		else:
 			var cost = float(MD.st_def(sid).get("unlock_cost", 0))
-			var ok = sim.coins() >= cost
+			var ureq = IDL.unlock_req(sim, sid)   # [idle] 解鎖鏈：上一個台未到 Lv10 → 顯示條件、唔畀撳
+			var ok = sim.coins() >= cost and ureq[0]
 			_lock(ctx, Vector2(p.x, p.y - 46))
 			_plates.append(Rect2(p.x - cw / 2, ny - 16, cw, 56))   # [camp]
 			var ft2 = _fit(ctx, name, cw, 15)
@@ -894,7 +896,10 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 			var bw = minf(112.0, cw)
 			Art.rr(ctx, p.x - bw / 2, ny + 8, bw, 28, 8, "#bb3427" if ok else "#4a3a30", "#f2a080" if ok else "#7a6050", 1.5)
 			_coin_ic(ctx, p.x - bw / 2 + 16, ny + 22, 8.0)
-			_txt(ctx, MD.S("unlock_btn", "解鎖 %s", "解鎖 %s") % MD.fmt(cost), p.x + 8, ny + 22, 15, Color("#fff3e0") if ok else Color("#b8a898"), "center", 900, 0)
+			if not ureq[0]:   # [idle]
+				var rq = _fit(ctx, MD.S("unl_req", "%s 到 Lv%d", "%s 到 Lv%d") % [MD.T(MD.st_def(ureq[1]).get("n")), ureq[2]], bw - 8.0, 14)
+				_txt(ctx, rq[0], p.x, ny + 22, rq[1], Color("#d8c8b0"), "center", 900, 0)
+			else: _txt(ctx, MD.S("unlock_btn", "解鎖 %s", "解鎖 %s") % MD.fmt(cost), p.x + 8, ny + 22, 15, Color("#fff3e0") if ok else Color("#b8a898"), "center", 900, 0)
 			_wbtns["unl:" + sid] = Rect2(p.x - bw / 2, ny + 4, bw, 36)
 
 func _cell_w() -> float: return 176.0   # 名牌最闊（大地圖台與台之間有位）
@@ -1265,6 +1270,9 @@ func tap(p: Vector2) -> void:
 				return
 			"unl":
 				if sim.unlock(a[1]): _save()
+				elif not IDL.unlock_req(sim, a[1])[0]:   # [idle]
+					var rq2 = IDL.unlock_req(sim, a[1])
+					_float(p + Vector2(0, -30), MD.S("unl_need", "要 %s 升到 Lv%d 先解鎖到", "要 %s 升到 Lv%d 才能解鎖") % [MD.T(MD.st_def(rq2[1]).get("n")), rq2[2]], Color("#ffb0a0"), 15); _snd("click")
 				else: _float(p + Vector2(0, -30), MD.S("no_coin", "冥幣唔夠", "冥幣不夠"), Color("#ffb0a0"), 16); _snd("click")
 				return
 			"campa", "campc": camp.tap(a[0], a[1]); _snd("click"); return   # [camp]
@@ -1301,6 +1309,7 @@ func _fill_sheet() -> void:
 	var h = HBoxContainer.new(); h.add_theme_constant_override("separation", 8); sheet_box.add_child(h)
 	h.add_child(_lbl(MD.T(sd.get("n")), 22, INK, "serif", 900))
 	h.add_child(_lbl("Lv %d" % int(l), 20, RED, "sans", 900))
+	h.add_child(_lbl("★".repeat(MD.stars(sid, l)) + "☆".repeat(MD.miles(sid).size() - MD.stars(sid, l)), 16, Color("#b8860b"), "sans", 900))   # [idle] 品質星
 	var sp = Control.new(); sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL; sp.mouse_filter = Control.MOUSE_FILTER_IGNORE; h.add_child(sp)
 	var cb = UIKit.btn("✕", "ghost", true); cb.custom_minimum_size = Vector2(42, 40); cb.focus_mode = Control.FOCUS_NONE; cb.pressed.connect(close_sheet); h.add_child(cb)
 	var how = _lbl(MD.T(sd.get("how", "")), 14, DIMC, "sans", 700); how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; how.custom_minimum_size = Vector2(350, 0); sheet_box.add_child(how)
@@ -1313,10 +1322,7 @@ func _fill_sheet() -> void:
 	grid.add_child(_lbl(MD.S("s_tm", "做貨時間", "製作時間"), 15, DIMC)); grid.add_child(_lbl(arrow.call("%.1f秒" % MD.tm(sid, l), "%.1f秒" % MD.tm(sid, nx)), 16, INK, "sans", 900))
 	grid.add_child(_lbl(MD.S("s_val", "每件賣", "每件售價"), 15, DIMC)); grid.add_child(_lbl(arrow.call(_v(MD.val(sid, l, c)), _v(MD.val(sid, nx, c))), 16, INK, "sans", 900))
 	grid.add_child(_lbl(MD.S("s_w", "員工", "員工"), 15, DIMC)); grid.add_child(_lbl("%d／%d" % [sim.nworkers(sid), MD.slots(sid)], 16, INK, "sans", 900))
-	var nm = MD.next_mile(sid, l)
-	if nm > 0:
-		var ml = _lbl(MD.S("s_mile", "升到 Lv%d：收益 ×2（里程碑 %d／%d）", "升到 Lv%d：收益 ×2（里程碑 %d／%d）") % [nm, MD.nm(sid, l) + 1, MD.miles(sid).size()], 15, Color("#9c2219"), "sans", 900)
-		ml.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; ml.custom_minimum_size = Vector2(350, 0); sheet_box.add_child(ml)
+	_idle_rows(sid)   # [idle] 里程碑效果／累計產量／品質星／領班／解鎖下一台
 	# 員工位
 	var sr = HBoxContainer.new(); sr.add_theme_constant_override("separation", 6); sheet_box.add_child(sr)
 	var ws = sim.sst(sid).workers
@@ -1409,7 +1415,42 @@ func _starve_txt(miss) -> String:
 
 func _v(x: float) -> String: return MD.fmt(x) if x >= 100.0 else ("%.1f" % x).trim_suffix(".0")
 
+# [idle] 資料卡：下個里程碑效果、累計產量進度、門檻提示、領班位、解鎖下一台條件
+var _idle_lbls: Array = []
+func _wl(t0: String, sz: int, col: Color) -> Label:
+	var x = _lbl(t0, sz, col, "sans", 900); x.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; x.custom_minimum_size = Vector2(350, 0)
+	return x
+func _idle_rows(sid: String) -> void:
+	_idle_lbls.clear()
+	var l = sim.lv(sid); var nm = MD.next_mile(sid, l)
+	if nm > 0:
+		var i = MD.mile_idx(sid, nm)
+		sheet_box.add_child(_wl(MD.S("s_mile2", "升到 Lv%d：%s＋品質 ★%d（里程碑 %d／%d）", "升到 Lv%d：%s＋品質 ★%d（里程碑 %d／%d）") % [nm, IDL.mile_txt(sid, i), MD.stars(sid, l) + 1, i + 1, MD.miles(sid).size()], 15, Color("#9c2219")))
+		var pl = _wl("", 14, DIMC); sheet_box.add_child(pl); _idle_lbls.append(["gate", pl])
+		var pb = ProgressBar.new(); pb.custom_minimum_size = Vector2(350, 12); pb.show_percentage = false; pb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		sheet_box.add_child(pb); _idle_lbls.append(["bar", pb])
+	var fr = HBoxContainer.new(); fr.add_theme_constant_override("separation", 6); sheet_box.add_child(fr)
+	var fl = _lbl(MD.S("fore_t", "領班", "領班"), 15, DIMC, "sans", 900); fr.add_child(fl)
+	fr.add_child(_slot_btn("fore:" + sid, 0, IDL.fore(sim, sid)))
+	var fd = _lbl(MD.S("fore_on", "自動開工、自動收錢，做貨快 25%", "自動開工、自動收錢，做貨快 25%") if IDL.has_fore(sim, sid) else MD.S("fore_off", "冇領班：冇員工要自己撳台開工收貨", "沒有領班：沒員工要自己點台開工收貨"), 14, DIMC, "sans", 700)
+	fd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; fd.size_flags_horizontal = Control.SIZE_EXPAND_FILL; fr.add_child(fd)
+	var nx = IDL.next_of(sim.ci(), sid)
+	if nx != "" and not sim.unlocked(nx):
+		var ok = l >= IDL.UNLOCK_LV
+		sheet_box.add_child(_wl((MD.S("nx_ok", "已可解鎖下一台：%s", "已可解鎖下一台：%s") % MD.T(MD.st_def(nx).get("n"))) if ok else (MD.S("nx_req", "升到 Lv%d 解鎖下一台：%s", "升到 Lv%d 解鎖下一台：%s") % [IDL.UNLOCK_LV, MD.T(MD.st_def(nx).get("n"))]), 14, GREEN if ok else DIMC))
+	_refresh_idle()
+func _refresh_idle() -> void:
+	if sel == "": return
+	var g = IDL.gate_block(sim, sel); var nm = MD.next_mile(sel, sim.lv(sel))
+	var need = float(MD.gate(sel, nm)) if nm > 0 else 0.0; var have = IDL.made_n(sim, sel)
+	for e in _idle_lbls:
+		if not is_instance_valid(e[1]): continue
+		if e[0] == "gate":
+			if int(g[0]) > 0: e[1].text = MD.S("gate_need", "再產 %s 件先可以升到 Lv%d（累計 %s／%s）", "再產 %s 件才能升到 Lv%d（累計 %s／%s）") % [MD.fmt(g[2]), int(g[0]), MD.fmt(have), MD.fmt(g[1])]; e[1].add_theme_color_override("font_color", RED)
+			else: e[1].text = MD.S("gate_ok", "累計產量 %s／%s：夠數，可以升", "累計產量 %s／%s：夠數，可以升") % [MD.fmt(have), MD.fmt(need)]; e[1].add_theme_color_override("font_color", GREEN)
+		elif e[0] == "bar": e[1].max_value = maxf(1.0, need); e[1].value = minf(have, need)
 func _refresh_sheet_btns() -> void:
+	_refresh_idle()   # [idle]
 	if sel == "": return
 	for e in _up_btns:
 		var b: Button = e[0]
@@ -1419,6 +1460,7 @@ func _refresh_sheet_btns() -> void:
 		var head = MD.S("up_n", "升 %d 級", "升 %d 級") % n
 		if e[1] == "mile": head = MD.S("up_mile", "升到 Lv%d", "升到 Lv%d") % int(sim.lv(sel) + n)
 		b.text = "%s\n%s %s" % [head, MD.S("coin", "冥幣", "冥幣"), MD.fmt(cost)]
+		if n <= 0 and int(IDL.gate_block(sim, sel)[0]) > 0: b.text = MD.S("up_gate", "產量未夠\n再產 %s 件", "產量未夠\n再產 %s 件") % MD.fmt(IDL.gate_block(sim, sel)[2])   # [idle]
 		b.disabled = n <= 0 or sim.coins() < cost
 
 func _do_up(sid: String, mode: String) -> void:
@@ -1451,10 +1493,12 @@ func _open_picker(list: String, i: int) -> void:
 	var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 8); pn.add_child(v)
 	var h = HBoxContainer.new(); v.add_child(h)
 	var what = MD.S("guard_job", "守圍欄", "守圍欄") if list == "guard" else MD.T(MD.st_def(list).get("n"))
+	if list.begins_with("fore:"): what = MD.S("fore_job", "%s 領班", "%s 領班") % MD.T(MD.st_def(list.substr(5)).get("n"))   # [idle]
 	var tl = _lbl(MD.S("pick_t", "派鬼：%s", "派鬼：%s") % what, 20, INK, "sans", 900)
 	tl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; h.add_child(tl)
 	var cb = UIKit.btn("✕", "ghost", true); cb.custom_minimum_size = Vector2(44, 44); cb.pressed.connect(_close_picker); h.add_child(cb)
 	var arr = sim.st().guards if list == "guard" else sim.sst(list).workers
+	if list.begins_with("fore:"): arr = IDL.fore_arr(sim, list.substr(5))   # [idle]
 	var cur = arr[i] if i < arr.size() else null
 	if cur != null and sim.ghost(cur) != null:
 		var rb = UIKit.btn(MD.S("unpick", "撤走 %s", "撤走 %s") % J.str(J.gp(sim.ghost(cur), "name")), "", false); rb.custom_minimum_size = Vector2(0, 46)

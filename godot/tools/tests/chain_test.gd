@@ -162,6 +162,8 @@ func mv() -> void:
 	var D_ = "st_douhua"
 	sim.st().st[D_].unlocked = false
 	_chk("壽包（冇上層台用）：一半入倉 [2,2]", sim.split(A, 4) == [2, 2], sim.split(A, 4))
+	var pv_ = load("res://game/outpost/mv_idle.gd").prev_of(sim.ci(), D_)   # [idle] 解鎖鏈：上一個台先到 Lv10（測試資料 CARRY 唔同）
+	if pv_ != "": sim.st().st[pv_].lv = maxf(10.0, sim.lv(pv_))
 	S.res["coins"] = 1e9; sim.unlock(D_)
 	S.res["buns"] = 0.0
 	_chk("豆花台解鎖（用壽包）：上層要料優先 → 全入倉 [4,0]", sim.split(A, 4) == [4, 0], sim.split(A, 4))

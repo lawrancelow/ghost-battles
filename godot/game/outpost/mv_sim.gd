@@ -21,6 +21,7 @@ const BUF_MIN := 5.0
 const ITEM_KEEP := 10.0
 const ROUTES := ["auto", "stock", "sell"]
 const MVW = preload("res://game/outpost/mv_war.gd")   # [war]
+const IDL = preload("res://game/outpost/mv_idle.gd")   # [idle] Idle Outpost 式升級（解鎖鏈／累計產量門檻／品質星／領班）
 const FW := 390.0
 const WALK := 120.0
 const FOE_MAX := 5
@@ -40,6 +41,7 @@ var foe_t := 2.0
 var paused := false
 var _sync_key := ""
 var war = MVW.new()   # [war] 義勇軍／鬼潮／影響力（邏輯全部喺 mv_war.gd）
+var idle := {}   # [idle] 即時狀態（領班自動撳台計時）
 
 func _init() -> void:
 	rng.seed = 20261119
@@ -62,15 +64,18 @@ func st():
 	for k in ["goals_done", "guards"]: if not (m.get(k) is Array): m[k] = []
 	while m.guards.size() < MD.GUARD_SLOTS: m.guards.append(null)
 	if m.get("last") == null: m["last"] = now()
+	IDL.migrate(m)   # [idle] 舊存檔：補 made_n／領班位
 	var c = ci_of(m)
 	for sid in MD.stations(c):
 		if not (m.st.get(sid) is Dictionary):
-			m.st[sid] = {"lv": 1.0, "unlocked": float(MD.st_def(sid).get("unlock_cost", 0)) <= 0.0, "workers": []}
+			m.st[sid] = {"lv": 1.0, "unlocked": float(MD.st_def(sid).get("unlock_cost", 0)) <= 0.0, "workers": [], "made_n": 0.0, "fore": [null]}   # [idle] made_n／fore
 			var cs = m.carry_st.get(sid)   # [chain] 隨村台：跟大屋抬過嚟，等級／解鎖照舊
 			if MD.is_carry(sid) and cs is Dictionary:
 				m.st[sid].lv = maxf(1.0, J.num(cs.get("lv", 1))); m.st[sid].unlocked = J.t(cs.get("unlocked")) or J.t(m.st[sid].unlocked)
+				m.st[sid].made_n = J.num(cs.get("made_n"))   # [idle] 累計產量跟大屋走
 		var e = m.st[sid]
 		if not (e.get("workers") is Array): e["workers"] = []
+		if not (e.get("fore") is Array) or e.fore.is_empty(): e["fore"] = [null]   # [idle]
 		while e.workers.size() < MD.slots(sid): e.workers.append(null)
 	return m
 func ci_of(m) -> int: return clampi(int(J.num(m.get("ci"))), 0, maxi(0, MD.maps_n() - 1))
@@ -125,6 +130,7 @@ func validate() -> void:
 	var seen = {}
 	var lists = []
 	for sid in m.st: lists.append(m.st[sid].workers)
+	for sid in m.st: if m.st[sid].get("fore") is Array: lists.append(m.st[sid].fore)   # [idle] 領班
 	lists.append(m.guards)
 	for p in lists:
 		for i in p.size():
@@ -165,6 +171,8 @@ func _release(gid) -> void:   # 由其他崗位調走
 	for sid in m.st:
 		var w = m.st[sid].workers
 		for i in w.size(): if J.seq(w[i], gid): w[i] = null
+		var fa = m.st[sid].get("fore")   # [idle]
+		if fa is Array: for i in fa.size(): if J.seq(fa[i], gid): fa[i] = null
 	for i in m.guards.size(): if J.seq(m.guards[i], gid): m.guards[i] = null
 	J.sp(gh, "post", null)
 
@@ -172,8 +180,10 @@ func _release(gid) -> void:   # 由其他崗位調走
 func assign(list: String, slot: int, gid) -> bool:
 	var m = st()
 	var arr: Array = m.guards if list == "guard" else (sst(list).workers if m.st.has(list) else [])
+	var lsid = list   # [idle] "fore:<sid>" = 領班位
+	if list.begins_with("fore:"): lsid = list.substr(5); arr = IDL.fore_arr(self, lsid)
 	if slot < 0 or slot >= arr.size(): return false
-	if list != "guard" and not unlocked(list): return false
+	if list != "guard" and not unlocked(lsid): return false
 	if gid != null:
 		var gh = ghost(gid)
 		if gh == null or J.seq(J.gp(gh, "k"), "afu"): return false
@@ -193,6 +203,7 @@ func assign(list: String, slot: int, gid) -> bool:
 # ================= 升級／解鎖 =================
 func unlock(sid: String) -> bool:
 	if unlocked(sid): return false
+	if not IDL.unlock_req(self, sid)[0]: return false   # [idle] 解鎖鏈：上一個台要到 Lv10
 	var c = float(MD.st_def(sid).get("unlock_cost", 0))
 	if coins() < c: return false
 	add_coins(-c); sst(sid).unlocked = true; _sync_key = ""
@@ -204,17 +215,18 @@ func up_n_for(sid: String, mode: String) -> int:   # mode: "1"／"10"／"mile"
 	if mode == "10": n = 10
 	elif mode == "mile":
 		var nm = MD.next_mile(sid, l); n = (nm - int(l)) if nm > 0 else 1
-	return clampi(n, 0, mx - int(l))
+	return clampi(n, 0, mini(mx, IDL.cap_lv(self, sid)) - int(l))   # [idle] 累計產量未夠：升到里程碑前一級為止
 func upgrade(sid: String, n: int) -> int:
 	if not unlocked(sid) or n <= 0: return 0
-	var l0 = lv(sid); n = mini(n, MD.max_lv(sid) - int(l0))
+	var l0 = lv(sid); n = mini(n, mini(MD.max_lv(sid), IDL.cap_lv(self, sid)) - int(l0))   # [idle] 門檻
 	if n <= 0: return 0
 	var c = MD.cost_n(sid, l0, n)
 	if coins() < c: return 0
 	add_coins(-c); sst(sid).lv = l0 + n
 	var nm0 = MD.nm(sid, l0); var nm1 = MD.nm(sid, l0 + n)
 	ev.append({"k": "up", "sid": sid, "from": l0, "to": l0 + n})
-	if nm1 > nm0: ev.append({"k": "mile", "sid": sid, "x": pow(2.0, nm1 - nm0), "lv": l0 + n})
+	if nm1 > nm0: ev.append({"k": "mile", "sid": sid, "x": pow(2.0, nm1 - nm0), "lv": l0 + n, "stars": nm1,   # [idle] 速度／售價 ×2＋品質星
+		"spd": MD.ns(sid, l0 + n) - MD.ns(sid, l0), "val": MD.nv(sid, l0 + n) - MD.nv(sid, l0)})
 	return n
 
 # ================= 目標 =================
@@ -269,9 +281,9 @@ func move_next() -> bool:
 	for sid in m.st: if J.t(m.st[sid].unlocked): rec[sid] = J.num(m.st[sid].lv)
 	m.done[str(c)] = rec
 	for sid in m.st:   # [chain] 隨村台跟住走
-		if MD.is_carry(sid): m.carry_st[sid] = {"lv": J.num(m.st[sid].lv), "unlocked": J.t(m.st[sid].unlocked)}
+		if MD.is_carry(sid): m.carry_st[sid] = {"lv": J.num(m.st[sid].lv), "unlocked": J.t(m.st[sid].unlocked), "made_n": J.num(m.st[sid].get("made_n"))}   # [idle] made_n
 	for sid in m.st:
-		for gid in m.st[sid].workers:
+		for gid in m.st[sid].workers + (m.st[sid].get("fore") if m.st[sid].get("fore") is Array else []):   # [idle] 領班一齊放
 			if gid != null and ghost(gid) != null and J.seq(J.gp(ghost(gid), "post"), "mv"): J.sp(ghost(gid), "post", null)
 	for gid in m.guards:
 		if gid != null and ghost(gid) != null and J.seq(J.gp(ghost(gid), "post"), "mv"): J.sp(ghost(gid), "post", null)
@@ -346,6 +358,7 @@ func _made(sid: String, n: int) -> void:   # 記數（任務「做壽包」= 嘆
 	var mid = M.rout(sid)
 	var key = mid if mid != "" else str(MD.st_def(sid).get("good", ""))
 	st().made[key] = J.num(st().made.get(key)) + float(n)
+	IDL.add_made(self, sid, float(n))   # [idle] 累計產量
 func _stock(sid: String, k: int, pos: Vector2) -> void:
 	if k <= 0: return
 	var mid = M.rout(sid)
@@ -360,14 +373,14 @@ func offline_rate() -> float:   # 每秒（估算：有料當全速、全部出�
 	var c = ci(); var r = 0.0
 	for sid in st().st:
 		if not unlocked(sid): continue
-		var w = nworkers(sid)
+		var ow = IDL.off_w(self, sid); var w = ow[0]   # [idle] 領班：×1.25；只得領班 = 唔使搬貨嘅手做
 		if w <= 0 or missing(sid).size() > 0: continue
 		var l = lv(sid)
-		r += w * MD.out(sid, l) * MD.val(sid, l, c) / (MD.tm(sid, l) + MD.carry_s(c, sid))
+		r += w * MD.out(sid, l) * MD.val(sid, l, c) / (MD.tm(sid, l) + (MD.carry_s(c, sid) if ow[1] else 0.0))
 	return r
 func _order() -> Array:   # 低層先
 	var o = []
-	for sid in st().st: if unlocked(sid) and nworkers(sid) > 0: o.append(sid)
+	for sid in st().st: if unlocked(sid) and (nworkers(sid) > 0 or IDL.has_fore(self, sid)): o.append(sid)   # [idle] 領班
 	o.sort_custom(func(a, b):
 		var ta = M.tier(M.rout(a)) if M.rout(a) != "" else 99
 		var tb = M.tier(M.rout(b)) if M.rout(b) != "" else 99
@@ -379,9 +392,9 @@ func offline_step(secs: float, acc: Dictionary) -> void:
 	var c = ci()
 	for sid in _order():
 		if war.blocked(self, sid): continue   # [war] 畀孤魂霸咗嘅檔停工
-		var l = lv(sid); var w = nworkers(sid); var n1 = MD.out(sid, l)
+		var ow = IDL.off_w(self, sid); var l = lv(sid); var w = ow[0]; var n1 = MD.out(sid, l)   # [idle] 領班
 		var sp = split(sid, n1)
-		var sell_f = float(sp[1]) / maxf(1.0, n1)
+		var sell_f = float(sp[1]) / maxf(1.0, n1) if ow[1] else 0.0
 		var cyc = w * secs / (MD.tm(sid, l) + sell_f * MD.carry_s(c, sid))
 		var nd = need(sid, cyc * n1); var k = 1.0
 		for mid in nd: if nd[mid] > 0.0: k = minf(k, M.amt(mid) / nd[mid])
@@ -404,6 +417,7 @@ func offline_step(secs: float, acc: Dictionary) -> void:
 		acc.rows[sid] = J.num(acc.rows.get(sid)) + v
 		var key = mid_o if mid_o != "" else str(MD.st_def(sid).get("good", ""))
 		st().made[key] = J.num(st().made.get(key)) + items
+		IDL.add_made(self, sid, items)   # [idle]
 func offline_acc() -> Dictionary: return {"coins": 0.0, "rows": {}, "mats": {}}
 func offline_gain(ms: float) -> Dictionary:
 	var m = st()
@@ -539,6 +553,7 @@ func step(dt: float) -> void:
 	var sp = spd_mul()
 	_step_workers(dt, sp)
 	_step_manual(dt, sp)
+	IDL.step(self, dt)   # [idle] 領班自動收錢／開工
 	_step_custs(dt)
 	_step_foes(dt)
 	_step_guards(dt)
@@ -573,7 +588,7 @@ func _step_workers(dt: float, sp: float) -> void:
 					var nd = need(sid)
 					if not M.take(nd): w["starve"] = true; continue
 					w["paid"] = nd; w["starve"] = false
-				w.prog += dt * sp / MD.tm(sid, lv(sid))
+				w.prog += dt * sp * IDL.eff(self, sid) / MD.tm(sid, lv(sid))   # [idle] 領班 ×1.25
 				if w.prog >= 1.0:
 					var n = MD.out(sid, lv(sid))
 					w.prog = 0.0; w.erase("paid"); _made(sid, n)
@@ -611,7 +626,7 @@ func _along(e: Dictionary, P: PackedVector2Array, sv: float) -> void:
 func _step_manual(dt: float, sp: float) -> void:
 	for sid in mk.keys():
 		if float(mk[sid]) < 0.0: continue
-		mk[sid] = float(mk[sid]) + dt * sp / MD.tm(sid, lv(sid))
+		mk[sid] = float(mk[sid]) + dt * sp * IDL.eff(self, sid) / MD.tm(sid, lv(sid))   # [idle]
 		if mk[sid] >= 1.0:
 			mk[sid] = -1.0
 			var n = MD.out(sid, lv(sid)); _made(sid, n)
@@ -667,7 +682,7 @@ func _step_custs(dt: float) -> void:
 				c.flip = true; c["walk"] = false
 				c.take -= dt
 				c.wait = float(c.get("wait", 0.0)) + dt
-				if c.wait > PATIENCE:   # 等太耐：有攞到嘅就俾嗰啲錢走人，冇就嬲嬲走
+				if c.wait > PATIENCE + IDL.PAT_STAR * _cust_stars(c):   # [idle] 品質星：客人肯等耐啲； 等太耐：有攞到嘅就俾嗰啲錢走人，冇就嬲嬲走
 					if _got_n(c) > 0: _pay(c)
 					else: c.st = "out"; ev.append({"k": "leave", "pos": c.pos + Vector2(0, -60)})
 					continue
@@ -689,6 +704,12 @@ func _step_custs(dt: float) -> void:
 			_along(c, QP, c.s)
 			if c.s >= QLEN: custs.erase(c)
 
+func _cust_stars(c: Dictionary) -> float:   # [idle] 客人要嘅貨裡面最高品質星
+	var b = 0
+	for g in c.wants:
+		var s = sid_of(str(g))
+		if s != "": b = maxi(b, MD.stars(s, lv(s)))
+	return float(b)
 func spawn_cust() -> bool:
 	var av = avail_goods(); if av.is_empty(): return false
 	var cands = []

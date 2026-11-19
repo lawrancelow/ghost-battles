@@ -208,6 +208,7 @@ R = {
  "st_paoche":        ({"m_newspaper": 1, "m_pulp": 1, "m_ifon": 2}, 2, 4),
  "st_shougongcu":    ({"m_rice": 1, "m_shoubao": 2}, 2, 4),
  "st_xifei":         ({"m_paoche": 1, "m_mingbiao": 1}, 1, 5),
+ "st_baogu":         ({"m_rice": 1, "m_shougongcu": 1, "m_paoche": 1}, 2, 5),   # [idle] 第 5 張圖第 7 台
  # ci5 地府集團
  "st_mengpotang":    ({"m_wellwater": 1, "m_rice": 1}, 2, 3),
  "st_xizhuang":      ({"m_zhishan": 1, "m_ink": 1}, 3, 4),
@@ -215,6 +216,7 @@ R = {
  "st_biaoge":        ({"m_paper": 1, "m_ink": 1, "m_mengpotang": 2}, 2, 4),
  "st_jiabandeng":    ({"m_biaoge": 1, "m_strip": 1}, 1, 5),
  "st_tangyi":        ({"m_plank": 1, "m_zhiku": 1, "m_xizhuang": 1}, 1, 5),
+ "st_daka":          ({"m_biaoge": 1, "m_xizhuang": 1}, 1, 5),   # [idle] 第 6 張圖第 7 台
 }
 ST, GO = OP["STATIONS"], OP["GOODS"]
 for sid, (i, n, tier) in R.items():

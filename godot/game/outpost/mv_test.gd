@@ -5,6 +5,7 @@ extends RefCounted
 
 const SIM = preload("res://game/outpost/mv_sim.gd")
 const MD = preload("res://game/outpost/mv_data.gd")
+const IDL = preload("res://game/outpost/mv_idle.gd")   # [idle]
 const OUT := "/tmp/mv/shots2/"
 var D: Dictionary
 var bad := 0
@@ -24,9 +25,17 @@ func _nm(sid, lv) -> int:
 	var n = 0
 	for m in _sd(sid).miles: if lv >= m: n += 1
 	return n
-func _val(sid, lv) -> float: return float(D.GOODS[_sd(sid).good].price) * (1.0 + 0.1 * (lv - 1)) * pow(2, _nm(sid, lv))
+# [idle] 里程碑輪流：第 i 個（按等級排）雙數 = 速度 ×2、單數 = 售價 ×2；每個 +1 品質星（售價 +20%／粒）
+func _nk(sid, lv, odd: bool) -> int:
+	var a = []
+	for m in _sd(sid).miles: a.append(int(m))
+	a.sort()
+	var n = 0
+	for i in a.size(): if lv >= a[i] and (i % 2 == 1) == odd: n += 1
+	return n
+func _val(sid, lv) -> float: return float(D.GOODS[_sd(sid).good].price) * (1.0 + 0.1 * (lv - 1)) * pow(2, _nk(sid, lv, true)) * (1.0 + 0.2 * _nm(sid, lv))
 func _out(sid, lv) -> int: return int(_sd(sid).base_out) + int((lv - 1) / 10)
-func _tm(sid, lv) -> float: return float(_sd(sid).base_time) / (1.0 + 0.02 * (lv - 1))
+func _tm(sid, lv) -> float: return float(_sd(sid).base_time) / (1.0 + 0.02 * (lv - 1)) / pow(2, _nk(sid, lv, false))   # [idle]
 # 搬貨來回時間（獨立計）：台前 → road[ri] → … → road[j] → 櫃台後，÷ 240 × 2 + 0.6
 func _carry(ci: int, sid) -> float:
 	var Ly = D.MAPS[ci].layout; var e = Ly.st[sid]; var rd = Ly.road; var j = int(Ly.j); var ri = int(e[2])
@@ -104,7 +113,9 @@ func logic(_t) -> void:
 	var s10 = 0.0
 	for i in 10: s10 += _c1(A, 1 + i)
 	_chk("%s 升 10 級總費" % A, MD.cost_n(A, 1, 10), s10)
-	_chk("Lv10 里程碑：單價 = Lv9 × (1.9/1.8) × 2", MD.val(A, 10, 0), MD.val(A, 9, 0) * 1.9 / 1.8 * 2.0)
+	_chk("Lv10 里程碑（速度 ×2）：單價 = Lv9 × (1.9/1.8) × 1.2（★1）", MD.val(A, 10, 0), MD.val(A, 9, 0) * 1.9 / 1.8 * 1.2)   # [idle]
+	_chk("Lv10 里程碑（速度 ×2）：做貨時間 = Lv9 × (1.16/1.18) ÷ 2", MD.tm(A, 10), MD.tm(A, 9) * 1.16 / 1.18 / 2.0)
+	_chk("Lv25 里程碑（售價 ×2）：單價 = Lv24 × (3.4/3.3) × 2 × 1.4/1.2", MD.val(A, 25, 0), MD.val(A, 24, 0) * 3.4 / 3.3 * 2.0 * 1.4 / 1.2)
 	_p("  縮寫：%s %s %s %s %s %s" % [MD.fmt(999), MD.fmt(12345), MD.fmt(2.5e6), MD.fmt(3.21e9), MD.fmt(7.7e12), MD.fmt(-15000)])
 	var fmt_ok = MD.fmt(12345) == "12.3K" and MD.fmt(2.5e6) == "2.5M" and MD.fmt(3.21e9) == "3.2B" and MD.fmt(7.7e12) == "7.7T" and MD.fmt(999) == "999"
 	_chk("K/M/B/T 縮寫", 1.0 if fmt_ok else 0.0, 1.0)
@@ -155,6 +166,7 @@ func logic(_t) -> void:
 
 	_p("===== 5. 升級費用＋里程碑 ×2 =====")
 	S.res["coins"] = 1e9
+	sim.st().st[A]["made_n"] = 1e9   # [idle] 累計產量門檻另見 tools/tests/idle_test.gd
 	var cb = sim.coins(); var lv0 = sim.lv(A)
 	sim.upgrade(A, 1)
 	_chk("升 1 級：扣 cost1(Lv%d)" % int(lv0), cb - sim.coins(), _c1(A, lv0))
@@ -168,10 +180,10 @@ func logic(_t) -> void:
 	for e in sim.ev: if e.k == "mile": mile_ev = e.x
 	_chk("Lv10 出里程碑事件 ×2", mile_ev, 2.0)
 	_chk("升 10 掣：升 10 級", float(sim.up_n_for(A, "10")), 10.0)
-	S.res["coins"] = 1e15
+	S.res["coins"] = 1e20   # [idle] 最高級 200
 	sim.upgrade(A, 200)
 	_chk("封頂 Lv%d" % MD.max_lv(A), sim.lv(A), float(MD.max_lv(A)))
-	_chk("封頂：里程碑倍數 2^%d" % _sd(A).miles.size(), MD.mile_mul(A, sim.lv(A)), pow(2, _sd(A).miles.size()))
+	_chk("封頂：售價里程碑倍數 2^%d" % _nk(A, sim.lv(A), true), MD.mile_mul(A, sim.lv(A)), pow(2, _nk(A, sim.lv(A), true)))   # [idle]
 	_chk("封頂再升：0 級", float(sim.upgrade(A, 1)), 0.0)
 	sim.st().st[A].lv = 1.0
 
@@ -187,11 +199,13 @@ func logic(_t) -> void:
 		elif not sim.goal_done(i):
 			match str(g.t):
 				"unlock":
+					var pv = IDL.prev_of(0, k)   # [idle] 解鎖鏈：上一個台先到 Lv10
+					if pv != "" and sim.lv(pv) < 10.0: sim.st().st[pv].lv = 10.0
 					S.res["coins"] = float(_sd(k).unlock_cost); sim.unlock(k)
 					_chk("解鎖 %s 用晒 %s" % [k, str(_sd(k).unlock_cost)], sim.coins(), 0.0)
 				"level":
 					if not sim.unlocked(k): S.res["coins"] = 1e15; sim.unlock(k)
-					sim.st().st[k].lv = gn - 1.0
+					sim.st().st[k].lv = gn - 1.0; sim.st().st[k]["made_n"] = 1e9   # [idle]
 					_chk("%s 差 1 級：未完成" % k, 1.0 if sim.goal_done(i) else 0.0, 0.0)
 					S.res["coins"] = _c1(k, gn - 1.0); sim.upgrade(k, 1)
 				"sell":
@@ -281,6 +295,8 @@ func logic(_t) -> void:
 	_p("===== 10. 離線（最多 8 小時，按有員工嘅台） =====")
 	sim.assign(A1, 0, "t_mv1"); sim.assign(A1, 1, "t_mv2")
 	sim.st().st[A1].lv = 12.0
+	var pb1 = IDL.prev_of(1, B1)   # [idle] 解鎖鏈
+	if pb1 != "": sim.st().st[pb1].lv = maxf(10.0, sim.lv(pb1))
 	S.res["coins"] = float(_sd(B1).unlock_cost); sim.unlock(B1); sim.assign(B1, 0, "t_mv3"); sim.st().st[B1].lv = 26.0
 	var ve = 2.0 * _out(A1, 12) * _val(A1, 12) / (_tm(A1, 12) + _carry(1, A1)) + 1.0 * _out(B1, 26) * _val(B1, 26) / (_tm(B1, 26) + _carry(1, B1))
 	_chk("離線每秒", sim.offline_rate(), ve)
@@ -528,6 +544,7 @@ func perf(tt) -> void:
 	S.res["coins"] = 1e6
 	var i = 0
 	for sid in _sids(0):
+		sim.st().st[sid].lv = 10.0   # [idle] 解鎖鏈
 		sim.unlock(sid); sim.assign(sid, 0, TG[i][0]); i += 1
 	sim.assign("guard", 0, "t_mv6")
 	sc.on_show()
