@@ -81,6 +81,9 @@ func _drive(sim, b: Dictionary) -> void:
 		"boss_next":
 			var G = MD.goals(sim.ci())
 			for i in G.size(): if str(G[i].get("t")) != "boss" and not sim.goal_claimed(i): sim.st().goals_done.append(float(i))
+		"all_done":
+			for i in MD.goals(sim.ci()).size(): if not sim.goal_claimed(i): sim.st().goals_done.append(float(i))
+			_S().cleared["%d-3" % (sim.ci() + 1)] = true
 		"inf_below": MVW.ws().inf[str(sim.ci())] = n - 1.0
 		"wave": MVW.ws().wn[str(sim.ci())] = n
 
@@ -98,6 +101,7 @@ func _wait_boot(t):
 	await _w(t, 1.5)
 
 func _logic(t) -> void:
+	STY.auto_on = true
 	await _wait_boot(t)
 	var m = _main(t)
 	if m != null and m.has_method("_hide_title"): m._hide_title()
@@ -135,7 +139,10 @@ func _logic(t) -> void:
 			_chk("圖%d %s（%s）：觸發一次" % [c + 1, id, wt], cnt == 1, cnt)
 			_tick(st, sc, 6)
 			_chk("圖%d %s：唔重播" % [c + 1, id], st.played.count(id) == 1 and STY.is_seen(id))
-		_chk("圖%d：有拔營 beat" % (c + 1), moves.size() >= 1)
+		var has_end = false
+		for b in bl: if str(b.when.t) == "all_done": has_end = true
+		_chk("圖%d：有拔營 beat（最後一張圖：all_done 收尾）" % (c + 1), moves.size() >= 1 or (has_end and c == MD.maps_n() - 1))
+		_S().cleared = {}
 		# 拔營 beat 時序
 		for b in moves:
 			var id2 = str(b.id)
@@ -155,6 +162,44 @@ func _logic(t) -> void:
 			if str(scn.style) == "talk" and scn.has("bg") and not Spr.ok("bg_" + str(scn.bg)): good = false
 			for who in b.get("art", {}): if not DB.D.SPEAKER_ART.has(who): good = false
 			_chk("圖%d %s：scene 格式（%s）" % [c + 1, str(b.id), scn.style], good)
+	# ---------- _doc 其他觸發（資料暫時未用到）：level／inf_below／wave／goal／all_done／need.after ----------
+	var c0 = 0
+	var s0 = MD.stations(c0)[0]
+	var syn = [
+		{"id": "syn_a", "when": {"t": "open"}, "scene": {"style": "talk", "lines": [["旁白", "甲", "甲"]]}},
+		{"id": "syn_level", "when": {"t": "level", "k": s0, "n": 7}, "need": {"after": ["syn_a"]}, "scene": {"style": "talk", "lines": [["旁白", "乙", "乙"]]}},
+		{"id": "syn_inf", "when": {"t": "inf_below", "n": 30}, "scene": {"style": "talk", "lines": [["旁白", "丙", "丙"]]}},
+		{"id": "syn_wave", "when": {"t": "wave", "n": 2}, "scene": {"style": "talk", "lines": [["旁白", "丁", "丁"]]}},
+		{"id": "syn_goal", "when": {"t": "goal", "i": 1}, "scene": {"style": "talk", "lines": [["旁白", "戊", "戊"]]}},
+		{"id": "syn_after", "when": {"t": "open"}, "need": {"after": ["syn_goal"]}, "scene": {"style": "talk", "lines": [["旁白", "己", "己"]]}},
+		{"id": "syn_end", "when": {"t": "all_done"}, "scene": {"style": "talk", "lines": [["旁白", "庚", "庚"]]}}]
+	var keep_b = STY.map_story(c0).beats
+	STY.map_story(c0)["beats"] = syn
+	_reset_map(sim, c0)
+	var rs = _mk(sim); var sts = rs[0]; var scs = rs[1]
+	MVW.ws().inf[str(c0)] = 60.0
+	_tick(sts, scs)
+	_chk("其他觸發：開頭只播 open", sts.played == ["syn_a"], sts.played)
+	sim.sst(s0).lv = 6.0; _tick(sts, scs); _chk("level：Lv6 < 7 唔播", not sts.played.has("syn_level"))
+	sim.sst(s0).lv = 7.0; _tick(sts, scs); _chk("level：Lv7 播", sts.played.has("syn_level"))
+	MVW.ws().inf[str(c0)] = 30.0; _tick(sts, scs); _chk("inf_below：影響力 30 唔播", not sts.played.has("syn_inf"))
+	MVW.ws().inf[str(c0)] = 29.0; _tick(sts, scs); _chk("inf_below：影響力 29 播", sts.played.has("syn_inf"))
+	MVW.ws().wn[str(c0)] = 1.0; _tick(sts, scs); _chk("wave：打完第 1 波唔播", not sts.played.has("syn_wave"))
+	sim.war.start_wave(sim); _tick(sts, scs); _chk("wave：第 2 波開始播", sts.played.has("syn_wave"))
+	sim.war.wave = null
+	_chk("need.after：前置未播唔播", not sts.played.has("syn_after"))
+	sim.st().goals_done.append(1.0); _tick(sts, scs)
+	_chk("goal：第 2 個目標完成播；need.after 跟住播", sts.played.has("syn_goal") and sts.played.has("syn_after") and sts.played.find("syn_after") > sts.played.find("syn_goal"))
+	for i in MD.goals(c0).size(): if not sim.goal_claimed(i): sim.st().goals_done.append(float(i))
+	_tick(sts, scs); _chk("all_done：目標全領、Boss 未打唔播", not sts.played.has("syn_end"))
+	_S().cleared["%d-3" % (c0 + 1)] = true
+	_tick(sts, scs); _chk("all_done：Boss 已打低播", sts.played.has("syn_end"))
+	_S().cleared = {}
+	STY.map_story(c0)["beats"] = keep_b
+	STY.auto_on = false
+	var rq = _mk(sim); _reset_map(sim, c0); _tick(rq[0], rq[1])
+	_chk("auto_on 關（其他線測試）：唔自動播、拔營唔阻", rq[0].played.is_empty() and not rq[0].before_move(rq[1], false))
+	STY.auto_on = true
 	# ---------- Boss 已打低：boss_alive beat 跳過 ----------
 	for ms in maps:
 		var c = int(ms.ci)
@@ -351,6 +396,7 @@ func _shot(t, name: String):
 	t.get_viewport().get_texture().get_image().save_png(SHOTS + name + ".png"); _p("shot " + name)
 
 func _shots(t) -> void:
+	STY.auto_on = true
 	DirAccess.make_dir_recursive_absolute(SHOTS)
 	await _wait_boot(t)
 	var m = _main(t)

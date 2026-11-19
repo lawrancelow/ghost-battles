@@ -2,7 +2,7 @@
 #   - beats：每張圖（ci）一串小故事，每個 beat 一世播一次（S.mv.story_seen[id] = 1 播咗／2 跳過）；
 #     只喺 S.mv.ci == 呢張圖 ci 先檢查；主對話（劇情佇列、手機、標題、載入、自檢、彈窗）全部冇嘢先播；
 #     同一刻多個達成 → 按陣列次序逐個播（一個播完再等下一格）。
-#     when.t：open／unlock k／level k n／sold k('*'或貨 id) n／goal i／boss_next／inf_below n／wave n／move
+#     when.t：open／unlock k／level k n／sold k('*'或貨 id) n／goal i／boss_next／all_done／inf_below n／wave n／move
 #     need：after [id...]（要先播過）、boss_alive（Boss 已打低 → 記做跳過）
 #   - move beat：撳拔營之後、拔營動畫之前播（mv_scene.move_next 掛鈎），播完先開始動畫。
 #   - 客人氣泡：outpost.json CUSTOMERS[].say {q 排隊, buy 買到, wait 等太耐, vol 變義勇軍}；冇 say 就用 lines／預設句；
@@ -24,6 +24,9 @@ const ROAM_P := 0.5            # 遊魂撞圍欄出氣泡嘅機會
 const WAVE_CH := 18            # 鬼潮預告飄字一行最多幾個字（17px × 18 ≈ 306px，畫面 390）
 
 static var _D = null
+# 自動播 beat 開關：自動化測試（GB_TEST，其他線嘅測試會直接撳村子／截圖）預設關，免得 beat 蓋住畫面、擋住撳；
+# 真玩（冇 GB_TEST）同自檢（GB_SELFTEST：main.selftest 期間本身唔播）照開。storyhook_test 自己打開。
+static var auto_on := not OS.has_environment("GB_TEST")
 
 var play_fn: Callable = Callable()   # 測試用：代替劇情播放器 func(scene: Dictionary, cb: Callable)
 var busy_fn: Callable = Callable()   # 測試用：代替「主對話忙唔忙」
@@ -99,6 +102,11 @@ static func boss_next(sim) -> bool:
 		if not goal_ok(sim, i): return false
 	return true
 
+# 全部目標已領＋Boss 已打低（同 mv_sim.can_move() 一樣，不過唔理有冇下一張圖；最後一張圖收尾用）
+static func all_done(sim) -> bool:
+	for i in MD.goals(sim.ci()).size(): if not sim.goal_claimed(i): return false
+	return sim.boss_ok(sim.ci())
+
 # when 條件（move 唔喺度判斷：由 before_move 叫）
 static func when_ok(sim, b: Dictionary) -> bool:
 	var w = b.get("when", {})
@@ -111,6 +119,7 @@ static func when_ok(sim, b: Dictionary) -> bool:
 		"sold": return sold_n(sim, k) >= n
 		"goal": return goal_ok(sim, int(w.get("i", w.get("n", 0))))
 		"boss_next": return boss_next(sim)
+		"all_done": return all_done(sim)
 		"inf_below": return MVW.inf(sim.ci()) < n
 		"wave": return MVW.wave_n(sim.ci()) + (1.0 if sim.war != null and sim.war.get("wave") != null else 0.0) >= n
 	return false
@@ -214,6 +223,7 @@ func tick(sc, dt: float) -> void:
 	_ct -= dt
 	if _ct > 0.0: return
 	_ct = CHECK_DT
+	if not auto_on: return
 	if pending_move or not viewing(sc) or main_busy(sc): return
 	var b = next_beat(sc.sim)
 	if not b.is_empty(): play(sc, b)
@@ -221,6 +231,7 @@ func tick(sc, dt: float) -> void:
 # 拔營掣（mv_scene.move_next 開頭）：有 move beat 未播 → 先播，播完再拔營；回 true＝而家唔好郁
 func before_move(sc, instant := false) -> bool:
 	if pending_move: return true
+	if not auto_on: return false
 	var b = next_beat(sc.sim, "move")
 	if b.is_empty(): return false
 	if instant:   # 冇動畫（程式叫）：照播，唔阻
