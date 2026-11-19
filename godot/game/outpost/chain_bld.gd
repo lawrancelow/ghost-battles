@@ -270,7 +270,7 @@ static func old_effect(id: String, html: bool) -> String:
 			if mb == "": return ""
 			var bao = J.num(r.get("bao")); var bu = J.num(r.get("baoUse"))
 			var sb = M.name("m_shoubao") if M.has_def("m_shoubao") else "壽包"
-			return L("用料：%s ×2 → %s ×1%s崗位 %d　目前 %s +%.1f/分（食 %s %.1f/分）%s%s 送去移動村「嘆氣蒸籠」先蒸成%s", "用料：%s ×2 → %s ×1%s崗位 %d　目前 %s +%.1f/分（耗 %s %.1f/分）%s%s 送去移動村「嘆氣蒸籠」才蒸成%s") % [mr, mb, nl, sl, mb, bao, mr, bu, nl, mb, sb]
+			return L("用料：%s ×1 → %s ×2%s崗位 %d　目前 %s +%.1f/分（食 %s %.1f/分）%s%s 送去移動村「嘆氣蒸籠」先蒸成%s", "用料：%s ×1 → %s ×2%s崗位 %d　目前 %s +%.1f/分（耗 %s %.1f/分）%s%s 送去移動村「嘆氣蒸籠」才蒸成%s") % [mr, mb, nl, sl, mb, bao, mr, bu, nl, mb, sb]
 	return ""
 
 # ---------------- 建築卡（menus.gd 嘅資料格式）----------------
