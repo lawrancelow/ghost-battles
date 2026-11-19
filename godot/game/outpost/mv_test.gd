@@ -272,7 +272,10 @@ func logic(_t) -> void:
 	var A1 = _free(1)[0]; var B1 = _locked(1)[0]
 	_chk("新圖：%s Lv1 已解鎖" % A1, (sim.lv(A1) if sim.unlocked(A1) else -1.0), 1.0)
 	_chk("新圖：%s 未解鎖" % B1, 1.0 if sim.unlocked(B1) else 0.0, 0.0)
-	_chk("新圖：冇舊台", 1.0 if sim.st().st.has(A) else 0.0, 0.0)
+	var OLD = A   # [chain] 隨村台（CARRY）會跟住走，揀第一個唔係隨村台嘅舊台嚟驗
+	for sid in _sids(0): if not MD.is_carry(sid): OLD = sid; break
+	_chk("新圖：冇舊台（%s）" % OLD, 1.0 if sim.st().st.has(OLD) else 0.0, 0.0)
+	_chk("新圖：隨村台 %s 跟住走" % A, 1.0 if (not MD.is_carry(A)) or sim.st().st.has(A) else 0.0, 1.0)
 	_chk("新圖未做目標：can_move = false", 1.0 if sim.can_move() else 0.0, 0.0)
 
 	_p("===== 10. 離線（最多 8 小時，按有員工嘅台） =====")

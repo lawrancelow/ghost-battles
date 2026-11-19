@@ -85,14 +85,14 @@ func eco() -> void:
 	S.bld["g_bamboo"] = 1.0
 	_g("t_ch2").post = "g_bamboo"   # lv 11
 	var R = CE.rates()
-	var exp_r = 6.0 * (1.0 + 0.07 * 10.0) * 1.0
-	_chk("陰竹 每分鐘 = rate×(1+0.07×(lv−1))×mult", _near(J.num(R.g_bamboo.out.m_bamboo), exp_r), R.g_bamboo.out)
+	var exp_r = 6.0
+	_chk("陰竹 每分鐘 = rate×(1+0.15×(建築Lv−1))（Lv1 = rate）", _near(J.num(R.g_bamboo.out.m_bamboo), exp_r), R.g_bamboo.out)
 	_produce(60.0)
 	_chk("1 分鐘：陰竹入 S.mat", _near(M.amt("m_bamboo"), exp_r, 1e-3), M.amt("m_bamboo"))
 	S.bld["g_bamboo"] = 0.0
 	_chk("未起（Lv0）：唔計", not CE.rates().has("g_bamboo"))
 	S.bld["g_bamboo"] = 3.0
-	_chk("Lv3：mult 1.6", _near(J.num(CE.rates().g_bamboo.out.m_bamboo), exp_r * 1.6))
+	_chk("建築 Lv3：×1.3", _near(J.num(CE.rates().g_bamboo.out.m_bamboo), exp_r * 1.3))
 	S.mat["m_bamboo"] = 495.0; _produce(60.0)
 	_chk("上限 MATS.cap = 500", _near(M.amt("m_bamboo"), 500.0), M.amt("m_bamboo"))
 
@@ -102,6 +102,9 @@ func eco() -> void:
 	S.mat["m_bamboo"] = 100.0; S.mat["m_paper"] = 0.0
 	var cpm = 60.0 / 20.0
 	_chk("紙寮 每分鐘 3 次（食 6 竹出 3 紙）", _near(J.num(CE.rates().w_paper.out.m_paper), cpm) and _near(J.num(CE.rates().w_paper["in"].m_bamboo), 2.0 * cpm))
+	S.bld["w_paper"] = 3.0
+	_chk("加工 Lv3：每批 time ÷ 1.2 → 每分鐘 3.6 次", _near(J.num(CE.rates().w_paper.out.m_paper), 3.6))
+	S.bld["w_paper"] = 1.0
 	_produce(60.0)
 	_chk("1 分鐘：紙 +3、竹 −6", _near(M.amt("m_paper"), 3.0, 1e-3) and _near(M.amt("m_bamboo"), 94.0, 1e-3), "%.2f/%.2f" % [M.amt("m_paper"), M.amt("m_bamboo")])
 	S.mat["m_bamboo"] = 2.0; S.mat["m_paper"] = 0.0; _produce(60.0)
@@ -280,3 +283,62 @@ func real_data() -> void:
 	_chk("一致性（%d 個問題）" % probs.size(), probs.is_empty(), "；".join(probs.slice(0, 8)))
 	_chk("壽包只由隨村台出", M.makers("m_shoubao").all(func(x): return x.k == "st" and M.carry().has(x.id)), M.makers("m_shoubao"))
 	_chk("普通包子由包子鋪出（old=bun）", M.makers("m_bao").any(func(x): return x.id == M.bld_of_old("bun")), M.makers("m_bao"))
+
+# ================= 截圖（[["wait",3],["notitle"],["gdrun","res://tools/tests/chain_test.gd","shots"],["quit"]]） =================
+const OUT := "/tmp/chain/shots/"
+var sc = null
+func _shot(name: String) -> void:
+	var st = Engine.get_main_loop().root.get_node("Main").story
+	for i in 10:
+		if st.cur == null: break
+		st.skip_scene(); await Engine.get_main_loop().process_frame
+	await Engine.get_main_loop().process_frame
+	await RenderingServer.frame_post_draw
+	Engine.get_main_loop().root.get_viewport().get_texture().get_image().save_png(OUT + name + ".png"); _p("SHOT " + OUT + name + ".png")
+func _wait(s: float) -> void: await Engine.get_main_loop().create_timer(s).timeout
+func shots(tt) -> void:
+	DirAccess.make_dir_recursive_absolute(OUT)
+	M.use_file(""); MD.reload()
+	var S = _S()
+	J.test_clock = -1.0
+	S.erase("mv"); S["mat"] = {}
+	for t in TG: if _g(t[0]) == null: S.ghosts.append({"id": t[0], "k": t[1], "name": t[2], "q": "藍", "lv": t[3], "st": [30.0, 30.0, 30.0], "post": null, "spent": 0.0})
+	var m = tt.main()
+	sc = m.mv_view   # 用主畫面真嘅移動村
+	if sc == null: _p("冇 mv_view"); return
+	sc.on_hide()
+	var sim = sc.sim; sim.st()
+	S.res["buns"] = 3.0; S.mat["m_paper"] = 40.0; S.mat["m_wellwater"] = 30.0; S.mat["m_bao"] = 0.0
+	sim.assign("st_shoubao", 0, "t_ch1")          # 冇普通包子 → 斷料
+	sim.assign("st_zhishan", 0, "t_ch2"); sim.assign("st_douhua", 0, "t_ch3")
+	S.res["coins"] = 500.0
+	sc.on_show()
+	await _wait(5.0)
+	sc.focus_station("st_shoubao"); await _wait(1.0)
+	await _shot("01_starve_station")
+	sc.open_sheet("st_shoubao"); await _wait(1.0)
+	await _shot("02_card_steamer_starve")
+	sc.close_sheet()
+	sc.open_sheet("st_douhua"); await _wait(1.0)
+	await _shot("03_card_douhua")
+	sc.close_sheet()
+	S.mat["m_bao"] = 30.0; await _wait(6.0)
+	sc.focus_station("st_shoubao"); await _wait(1.0)
+	await _shot("04_resumed_stock")
+	sc.open_sheet("st_nuomici"); await _wait(0.2)
+	if not sc.sheet.visible:
+		S.res["coins"] = 1e7; sim.unlock("st_nuomici"); sc.open_sheet("st_nuomici")
+	await _wait(1.0)
+	await _shot("05_card_nuomici")
+	sc.close_sheet()
+	# 第 2 張圖：隨村台位
+	for sid in sim.st().st:
+		for j in 3: sim.assign(sid, j, null)
+	S.mv.ci = 1.0; S.mv.st = {}; S.mv.counter = {}; S.mv.pile = {}
+	sim.reset_live(); sim.st(); sc._after_move(true)
+	await _wait(1.0)
+	sc.focus_station("st_shoubao"); await _wait(1.2)
+	await _shot("06_map1_carry")
+	sc.open_sheet("st_zhishan"); await _wait(1.0)
+	await _shot("07_card_zhishan_map1")
+	sc.close_sheet()

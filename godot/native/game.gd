@@ -131,7 +131,11 @@ static func rates_per_min() -> Dictionary:
 			"wood": r.wood += (9 + 0.7 * lv) * mult("wood")
 			"rice": r.rice += (9 + 0.7 * lv) * mult("rice")
 			"plank": var o = (2.5 + stat(g, 0) * 0.05) * mult("plank"); r.planks += o; r.woodUse += o * 2
-			"bun": var o = (2.5 + stat(g, 1) * 0.05) * mult("bun"); r["bao"] = J.num(r.get("bao")) + o; r.riceUse += o * 2; r["baoUse"] = J.num(r.get("baoUse")) + o * 2   # [chain] 包子鋪出普通包子 m_bao（唔再直接出壽包）
+			"bun":   # [chain] 包子鋪出普通包子 m_bao（唔再直接出壽包）：速度照舊公式（每分鐘 o 批），每批用料／出貨跟 chain.json（冇就 2 糯米 → 1 包）
+				var o = (2.5 + stat(g, 1) * 0.05) * mult("bun"); var bb = CM.bld(CM.bld_of_old("bun"))
+				var ri = J.num(J.gp(bb.get("in", {}), "m_rice")) if bb.get("in") is Dictionary and bb["in"].has("m_rice") else 2.0
+				var bo = J.num(J.gp(bb.get("out", {}), "m_bao")) if bb.get("out") is Dictionary and bb["out"].has("m_bao") else 1.0
+				r["bao"] = J.num(r.get("bao")) + o * bo; r.riceUse += o * ri; r["baoUse"] = J.num(r.get("baoUse")) + o * ri
 			"camp":   # 嚇人訓練班：練嚇功（rework）
 				var o = (2 + stat(g, 2) * 0.04) * mult("camp")
 				r["drill"] = J.num(r.get("drill")) + o; r.bunUse += o * 0.6

@@ -1,6 +1,6 @@
 {
  "GOODS": {
-  "g_shoubao": {
+  "m_shoubao": {
    "n": [
     "壽包",
     "壽包"
@@ -8,7 +8,7 @@
    "icon": "mvi_bun",
    "price": 4
   },
-  "g_zhishan": {
+  "m_zhishan": {
    "n": [
     "紙衫",
     "紙衣"
@@ -16,7 +16,7 @@
    "icon": "mvi_shirt",
    "price": 20
   },
-  "g_douhua": {
+  "m_douhua": {
    "n": [
     "井底豆腐花",
     "井底豆花"
@@ -24,7 +24,7 @@
    "icon": "mvi_douhua",
    "price": 100
   },
-  "g_nuomici": {
+  "m_nuomici": {
    "n": [
     "糯米糍",
     "糯米糍"
@@ -32,7 +32,7 @@
    "icon": "mvi_nuomici",
    "price": 500
   },
-  "g_guancaichuang": {
+  "m_guancaichuang": {
    "n": [
     "棺材板床",
     "棺材板床"
@@ -40,7 +40,7 @@
    "icon": "mvi_coffin",
    "price": 2500
   },
-  "g_yeketan": {
+  "m_yeketan": {
    "n": [
     "椰殼炭",
     "椰殼炭"
@@ -48,7 +48,7 @@
    "icon": "mvi_charcoal",
    "price": 24
   },
-  "g_tuoxie": {
+  "m_tuoxie": {
    "n": [
     "膠拖鞋",
     "膠拖鞋"
@@ -56,7 +56,7 @@
    "icon": "mvi_slipper",
    "price": 120
   },
-  "g_zhulong": {
+  "m_zhulong": {
    "n": [
     "竹蒸籠",
     "竹蒸籠"
@@ -64,7 +64,7 @@
    "icon": "mvi_bamboo",
    "price": 600
   },
-  "g_liulian": {
+  "m_liulian": {
    "n": [
     "榴槤",
     "榴槤"
@@ -72,7 +72,7 @@
    "icon": "mvi_durian",
    "price": 3000
   },
-  "g_yejiangfan": {
+  "m_yejiangfan": {
    "n": [
     "椰漿飯",
     "椰漿飯"
@@ -80,7 +80,7 @@
    "icon": "mvi_coconutrice",
    "price": 15000
   },
-  "g_caoxie": {
+  "m_caoxie": {
    "n": [
     "草鞋",
     "草鞋"
@@ -88,7 +88,7 @@
    "icon": "mvi_straw",
    "price": 144
   },
-  "g_wucha": {
+  "m_wucha": {
    "n": [
     "霧谷茶",
     "霧谷茶"
@@ -96,15 +96,15 @@
    "icon": "mvi_tea",
    "price": 720
   },
-  "g_jiuban": {
+  "m_jiuban": {
    "n": [
-    "二手棺材板",
-    "二手棺材板"
+    "二手棺材板盾",
+    "二手棺材板盾"
    ],
    "icon": "mvi_plank",
    "price": 3600
   },
-  "g_huajiao": {
+  "m_huajiao": {
    "n": [
     "紙紮花轎",
     "紙紮花轎"
@@ -112,7 +112,7 @@
    "icon": "mvi_sedan",
    "price": 18000
   },
-  "g_xunren": {
+  "m_xunren": {
    "n": [
     "尋人啟事",
     "尋人啟事"
@@ -120,15 +120,15 @@
    "icon": "mvi_notice",
    "price": 90000
   },
-  "g_jiaoye": {
+  "m_jiaoye": {
    "n": [
-    "蕉葉",
-    "蕉葉"
+    "蕉葉糯米卷",
+    "蕉葉糯米卷"
    ],
    "icon": "mvi_leaf",
    "price": 864
   },
-  "g_xianyu": {
+  "m_xianyu": {
    "n": [
     "鹹魚",
     "鹹魚"
@@ -136,7 +136,7 @@
    "icon": "mvi_saltfish",
    "price": 4320
   },
-  "g_ningmengcha": {
+  "m_ningmengcha": {
    "n": [
     "凍檸茶",
     "凍檸茶"
@@ -144,7 +144,7 @@
    "icon": "mvi_lemontea",
    "price": 21600
   },
-  "g_duihuan": {
+  "m_duihuan": {
    "n": [
     "冥鏹匯兌",
     "冥鏹匯兌"
@@ -152,7 +152,7 @@
    "icon": "mvi_money",
    "price": 108000
   },
-  "g_jiushengquan": {
+  "m_jiushengquan": {
    "n": [
     "紙紮救生圈",
     "紙紮救生圈"
@@ -160,7 +160,7 @@
    "icon": "mvi_float",
    "price": 540000
   },
-  "g_chuanpiao": {
+  "m_chuanpiao": {
    "n": [
     "紙紮船飛",
     "紙紮船票"
@@ -168,7 +168,7 @@
    "icon": "mvi_ticket",
    "price": 2592000
   },
-  "g_waimai": {
+  "m_waimai": {
    "n": [
     "紙紮外賣",
     "紙紮外賣"
@@ -176,7 +176,7 @@
    "icon": "mvi_takeaway",
    "price": 5200
   },
-  "g_ifon": {
+  "m_ifon": {
    "n": [
     "紙紮手機 iFon",
     "紙紮手機 iFon"
@@ -184,7 +184,7 @@
    "icon": "mvi_phone",
    "price": 26000
   },
-  "g_mingbiao": {
+  "m_mingbiao": {
    "n": [
     "紙紮手錶",
     "紙紮手錶"
@@ -192,7 +192,7 @@
    "icon": "mvi_watch",
    "price": 130000
   },
-  "g_paoche": {
+  "m_paoche": {
    "n": [
     "紙紮跑車",
     "紙紮跑車"
@@ -200,7 +200,7 @@
    "icon": "mvi_car",
    "price": 650000
   },
-  "g_shougongcu": {
+  "m_shougongcu": {
    "n": [
     "收工醋",
     "收工醋"
@@ -208,7 +208,7 @@
    "icon": "mvi_vinegar",
    "price": 3250000
   },
-  "g_xifei": {
+  "m_xifei": {
    "n": [
     "午夜場戲飛",
     "午夜場電影票"
@@ -216,7 +216,7 @@
    "icon": "mvi_movieticket",
    "price": 15600000
   },
-  "g_mengpotang": {
+  "m_mengpotang": {
    "n": [
     "孟婆湯（走甜少冰）",
     "孟婆湯（去糖少冰）"
@@ -224,7 +224,7 @@
    "icon": "mvi_soup",
    "price": 31200
   },
-  "g_xizhuang": {
+  "m_xizhuang": {
    "n": [
     "紙西裝",
     "紙西裝"
@@ -232,7 +232,7 @@
    "icon": "mvi_suit",
    "price": 156000
   },
-  "g_zhiku": {
+  "m_zhiku": {
    "n": [
     "紙褲",
     "紙褲"
@@ -240,7 +240,7 @@
    "icon": "mvi_pants",
    "price": 780000
   },
-  "g_biaoge": {
+  "m_biaoge": {
    "n": [
     "一式三份表格",
     "一式三份表格"
@@ -248,15 +248,15 @@
    "icon": "mvi_form",
    "price": 3900000
   },
-  "g_jiabandeng": {
+  "m_jiabandeng": {
    "n": [
-    "加班燈",
-    "加班燈"
+    "加班頭燈",
+    "加班頭燈"
    ],
    "icon": "mvi_lamp",
    "price": 19500000
   },
-  "g_tangyi": {
+  "m_tangyi": {
    "n": [
     "紙紮躺椅",
     "紙紮躺椅"
@@ -272,10 +272,10 @@
     "嘆氣蒸籠"
    ],
    "art": "mvs_steamer",
-   "good": "g_shoubao",
+   "good": "m_shoubao",
    "how": [
-    "吊死鬼用條長脷搓麵，蒸籠底一班孤魂齊齊嘆氣，嗰啲氣就係蒸氣。",
-    "吊死鬼用他那條長舌頭揉麵，蒸籠底下一群孤魂一起嘆氣，那口氣就是蒸氣。"
+    "普通包子放入蒸籠，吊死鬼用條長脷逐個搓圓；蒸籠底一班孤魂齊齊嘆氣，嗰啲氣就係蒸氣。",
+    "普通包子放進蒸籠，吊死鬼用他那條長舌頭一個個揉圓；蒸籠底下一群孤魂一起嘆氣，那口氣就是蒸氣。"
    ],
    "base_time": 3,
    "base_out": 1,
@@ -314,10 +314,10 @@
     "補丁紙衫攤"
    ],
    "art": "mvs_tailor",
-   "good": "g_zhishan",
+   "good": "m_zhishan",
    "how": [
-    "窮鬼將冥鏹一張張剪開黐埋，件件都有補丁，佢堅持話係設計。",
-    "窮鬼把冥鏹一張張剪開黏起來，每件都有補丁，他堅持說那是設計。"
+    "窮鬼將一張竹紙剪開做兩件，件件都有補丁，佢堅持話係設計。",
+    "窮鬼把一張竹紙剪成兩件，每件都有補丁，他堅持說那是設計。"
    ],
    "base_time": 4,
    "base_out": 1,
@@ -356,10 +356,10 @@
     "枯井豆花"
    ],
    "art": "mvs_well",
-   "good": "g_douhua",
+   "good": "m_douhua",
    "how": [
-    "枯井明明乾咗廿年，個桶吊上嚟都係滿嘅豆漿——唔好問井底係邊個磨。",
-    "枯井明明乾了二十年，桶吊上來卻總是滿滿的豆漿——別問井底是誰在磨。"
+    "一桶枯井水吊落井底，吊上嚟就變兩碗豆漿——唔好問井底係邊個磨。",
+    "一桶枯井水吊到井底，吊上來就變成兩碗豆漿——別問井底是誰在磨。"
    ],
    "base_time": 5,
    "base_out": 1,
@@ -398,10 +398,10 @@
     "自轉石磨"
    ],
    "art": "mvs_mill",
-   "good": "g_nuomici",
+   "good": "m_nuomici",
    "how": [
-    "後巷盤石磨自己轉，推磨嗰個你睇唔到，但每粒出爐佢都會問：「好唔好食？」",
-    "後巷的石磨自己在轉，推磨的那位你看不見，但每出一顆他都會問：「好不好吃？」"
+    "後巷盤石磨自己轉，磨糯米包住由壽包挖出嚟嘅蓮蓉；推磨嗰個你睇唔到，但每粒出爐佢都會問：「好唔好食？」",
+    "後巷的石磨自己在轉，磨好的糯米包住從壽包挖出來的蓮蓉；推磨的那位你看不見，但每出一顆他都會問：「好不好吃？」"
    ],
    "base_time": 6,
    "base_out": 1,
@@ -440,10 +440,10 @@
     "磚窯棺材板床"
    ],
    "art": "mvs_kiln",
-   "good": "g_guancaichuang",
+   "good": "m_guancaichuang",
    "how": [
-    "老磚窰嘅火係餓鬼肚餓嗰陣嘅怨氣，烘乾槐木刨成床；負責試瞓嘅係上一手客。",
-    "老磚窯的火是餓鬼肚子餓時的怨氣，把槐木烘乾刨成床；負責試睡的是上一位客人。"
+    "老磚窰嘅火係餓鬼肚餓嗰陣嘅怨氣，烘乾棺材板拼成床，再鋪件紙衫做床單；負責試瞓嘅係上一手客。",
+    "老磚窯的火是餓鬼肚子餓時的怨氣，把棺材板烘乾拼成床，再鋪一件紙衣當床單；負責試睡的是上一位客人。"
    ],
    "base_time": 8,
    "base_out": 1,
@@ -482,10 +482,10 @@
     "椰殼炭爐"
    ],
    "art": "mvs_charcoal",
-   "good": "g_yeketan",
+   "good": "m_yeketan",
    "how": [
-    "椰子砸死鬼親手揀殼，佢話由樹頂跌落嚟嗰個最好燒——佢記得個重量。",
-    "椰子砸死鬼親手挑殼，他說從樹頂掉下來的那顆最好燒——他記得那個重量。"
+    "椰子砸死鬼親手揀殼，一個殼燒兩舊炭；佢話由樹頂跌落嚟嗰個最好燒——佢記得個重量。",
+    "椰子砸死鬼親手挑殼，一個殼燒兩塊炭；他說從樹頂掉下來的那顆最好燒——他記得那個重量。"
    ],
    "base_time": 3,
    "base_out": 1,
@@ -524,10 +524,10 @@
     "割膠拖鞋廠"
    ],
    "art": "mvs_rubber",
-   "good": "g_tuoxie",
+   "good": "m_tuoxie",
    "how": [
-    "雞啼前割膠，Genderuwo 收埋成條村嘅拖鞋全部喺度，熔咗再倒過，所以隻隻都係單隻。",
-    "雞啼前割膠，Genderuwo 藏起來的全村拖鞋都在這裡，熔掉重新倒模，所以每隻都只有單隻。"
+    "生膠片熔咗倒落 Genderuwo 收埋嗰堆拖鞋模度，一塊出兩隻，不過隻隻都係單隻。",
+    "生膠片熔掉，倒進 Genderuwo 藏起來的那堆拖鞋模裡，一片出兩隻，不過每隻都只有單隻。"
    ],
    "base_time": 4,
    "base_out": 1,
@@ -566,10 +566,10 @@
     "會動的竹蒸籠"
    ],
    "art": "mvs_bamboo",
-   "good": "g_zhulong",
+   "good": "m_zhulong",
    "how": [
-    "竹係半夜自己郁嗰啲晾衫竹，捉落嚟織；佢哋織好咗都仲郁，啲包會自己反身。",
-    "竹子是半夜自己會動的那些晾衣竹，抓下來編；編好了它們還在動，包子會自己翻身。"
+    "竹篾係半夜自己郁嗰啲晾衫竹，椰殼炭烘乾再織；織好咗都仲郁，啲包會自己反身——啲鬼仲鍾意戴喺頭做頭盔。",
+    "竹篾是半夜自己會動的那些晾衣竹，用椰殼炭烘乾再編；編好了它們還在動，包子會自己翻身——鬼們還愛把它戴在頭上當頭盔。"
    ],
    "base_time": 5,
    "base_out": 1,
@@ -608,10 +608,10 @@
     "樹下等榴槤"
    ],
    "art": "mvs_durian",
-   "good": "g_liulian",
+   "good": "m_liulian",
    "how": [
-    "榴槤砸死鬼企喺樹下等，跌啱佢個頭嗰個先算一級貨。",
-    "榴槤砸死鬼站在樹下等，砸中他頭的那顆才算一級貨。"
+    "榴槤砸死鬼企喺樹下，掟隻膠拖鞋上去，跌啱佢個頭嗰個先算一級貨；隻拖鞋就從此冇咗。",
+    "榴槤砸死鬼站在樹下，把一隻膠拖鞋扔上去，砸中他頭的那顆才算一級貨；那隻拖鞋從此就不見了。"
    ],
    "base_time": 6,
    "base_out": 1,
@@ -650,10 +650,10 @@
     "稻田邊椰漿飯"
    ],
    "art": "mvs_ricepot",
-   "good": "g_yejiangfan",
+   "good": "m_yejiangfan",
    "how": [
-    "稻田邊個鍋冇人睇都自己滾，飯熟嗰下成塊田啲禾會一齊彎腰。",
-    "稻田邊那口鍋沒人看著也自己滾，飯熟的那一刻整片田的稻子會一起彎腰。"
+    "椰漿同糯米落鍋，兩舊椰殼炭慢火煮兩碟；飯熟嗰下成塊田啲禾會一齊彎腰。",
+    "椰漿和糯米下鍋，兩塊椰殼炭慢火煮出兩盤；飯熟的那一刻整片田的稻子會一起彎腰。"
    ],
    "base_time": 8,
    "base_out": 1,
@@ -692,10 +692,10 @@
     "單腳草鞋攤"
    ],
    "art": "mvs_straw",
-   "good": "g_caoxie",
+   "good": "m_caoxie",
    "how": [
-    "山魈得一隻腳，所以每對草鞋佢只肯織一隻，另一隻要你自己諗辦法。",
-    "山魈只有一隻腳，所以每雙草鞋他只肯編一隻，另一隻請你自己想辦法。"
+    "山魈用一條草繩織兩隻草鞋，不過佢得一隻腳，所以兩隻都係左腳。",
+    "山魈用一條草繩編兩隻草鞋，不過他只有一隻腳，所以兩隻都是左腳。"
    ],
    "base_time": 3,
    "base_out": 1,
@@ -734,10 +734,10 @@
     "霧谷茶寮"
    ],
    "art": "mvs_teahouse",
-   "good": "g_wucha",
+   "good": "m_wucha",
    "how": [
-    "將霧谷啲霧收埋落茶壺，沖出嚟嘅茶飲完會唔記得自己行到邊。",
-    "把霧谷的霧收進茶壺，沖出來的茶喝完會忘了自己走到哪裡。"
+    "霧谷茶葉加枯井水，再將霧谷啲霧收埋落茶壺；沖出嚟嘅茶飲完會唔記得自己行到邊。",
+    "霧谷茶葉加枯井水，再把霧谷的霧收進茶壺；沖出來的茶喝完會忘了自己走到哪裡。"
    ],
    "base_time": 4,
    "base_out": 1,
@@ -776,10 +776,10 @@
     "義莊二手板"
    ],
    "art": "mvs_coffin",
-   "good": "g_jiuban",
+   "good": "m_jiuban",
    "how": [
-    "義莊後院啲舊棺材板，旱魃行過一轉就曬乾晒，連木蟲都唔敢住。",
-    "義莊後院的舊棺材板，旱魃走過一趟就全曬乾了，連木蟲都不敢住。"
+    "義莊後院啲舊棺材板，旱魃行過一轉就曬乾晒，釘返個柄就係盾——連木蟲都唔敢住。",
+    "義莊後院的舊棺材板，旱魃走過一趟就全曬乾了，釘上把手就是盾牌——連木蟲都不敢住。"
    ],
    "base_time": 5,
    "base_out": 1,
@@ -818,10 +818,10 @@
     "二樓紙紮花轎"
    ],
    "art": "mvs_huajiao",
-   "good": "g_huajiao",
+   "good": "m_huajiao",
    "how": [
-    "鬼新娘喺客棧二樓一針一線咁紮，紮好一頂就望一陣窗外，再拆返重紮。",
-    "鬼新娘在客棧二樓一針一線地紮，紮好一頂就望一會兒窗外，再拆掉重紮。"
+    "鬼新娘喺客棧二樓用二手棺材板做轎底、草繩紮骨、紙衫剪花；紮好一頂就望一陣窗外，再拆返重紮。",
+    "鬼新娘在客棧二樓用二手棺材板做轎底、草繩紮骨架、紙衣剪成花；紮好一頂就望一會兒窗外，再拆掉重紮。"
    ],
    "base_time": 6,
    "base_out": 1,
@@ -860,10 +860,10 @@
     "驛站尋人啟事"
    ],
    "art": "mvs_notice",
-   "good": "g_xunren",
+   "good": "m_xunren",
    "how": [
-    "專貼喺殭屍額頭；畫像照住屍隊逐隻畫，畫得太似，佢哋自己睇完都唔認得自己。",
-    "專貼在殭屍額頭上；畫像照著屍隊一隻隻畫，畫得太像，他們自己看了反而認不出自己。"
+    "用霧谷茶做墨，喺竹紙上照住屍隊逐隻畫；畫得太似，佢哋自己睇完都唔認得自己。",
+    "用霧谷茶當墨，在竹紙上照著屍隊一隻隻畫；畫得太像，他們自己看了反而認不出自己。"
    ],
    "base_time": 8,
    "base_out": 1,
@@ -902,10 +902,10 @@
     "夜捲蕉葉"
    ],
    "art": "mvs_banana",
-   "good": "g_jiaoye",
+   "good": "m_jiaoye",
    "how": [
-    "香蕉園啲蕉葉半夜自己捲埋；趁大樹下嗰位唔喺度先好去剪。",
-    "香蕉園的蕉葉半夜會自己捲起來；要趁大樹下那位不在才好去剪。"
+    "蕉葉半夜自己捲埋，塞把糯米入去佢就捲得更實，一張捲兩條；要趁大樹下嗰位唔喺度先好去烤。",
+    "蕉葉半夜會自己捲起來，塞一把糯米進去它就捲得更緊，一張捲兩條；要趁大樹下那位不在才好去烤。"
    ],
    "base_time": 3,
    "base_out": 1,
@@ -944,10 +944,10 @@
     "碟頂鹹魚"
    ],
    "art": "mvs_fish",
-   "good": "g_xianyu",
+   "good": "m_xianyu",
    "how": [
-    "河童頭頂個碟落鹽，條魚擺上去曬一晚就鹹；記得成日幫佢淋水，碟一乾佢就冇力。",
-    "河童頭頂的盤子撒鹽，魚放上去曬一晚就鹹了；記得常幫他澆水，盤子一乾他就沒力。"
+    "河口魚擺上河童頭頂個碟，碟入面本身有鹽，曬一晚就鹹；記得成日幫佢淋水，碟一乾佢就冇力。",
+    "河口魚放到河童頭頂的盤子上，盤裡本來就有鹽，曬一晚就鹹了；記得常幫他澆水，盤子一乾他就沒力。"
    ],
    "base_time": 4,
    "base_out": 1,
@@ -986,10 +986,10 @@
     "長臂凍檸茶"
    ],
    "art": "mvs_lemon",
-   "good": "g_ningmengcha",
+   "good": "m_ningmengcha",
    "how": [
-    "檸檬跌咗落高腳屋底，Mae Nak 隻手伸長兩丈執返上嚟，所以杯杯都係啱啱執嘅。",
-    "檸檬掉到高腳屋底下，Mae Nak 把手伸長兩丈撿上來，所以每杯都是剛撿的。"
+    "霧谷茶葉沖枯井水；檸檬跌咗落高腳屋底，Mae Nak 隻手伸長兩丈執返上嚟，所以杯杯都係啱啱執嘅。",
+    "霧谷茶葉沖枯井水；檸檬掉到高腳屋底下，Mae Nak 把手伸長兩丈撿上來，所以每杯都是剛撿的。"
    ],
    "base_time": 5,
    "base_out": 1,
@@ -1028,10 +1028,10 @@
     "倒吊冥鏹匯兌"
    ],
    "art": "mvs_exchange",
-   "good": "g_duihuan",
+   "good": "m_duihuan",
    "how": [
-    "Vetala 倒吊喺紅樹林度計匯率，倒住睇，所以成日計反咗——今晚你着數。",
-    "Vetala 倒掛在紅樹林裡算匯率，倒著看，所以常常算反——今晚算你賺到。"
+    "Vetala 倒吊喺紅樹林，用竹紙印鈔、兩條鹹魚做秤砣計匯率；倒住睇，所以成日計反咗——今晚你着數。",
+    "Vetala 倒掛在紅樹林裡，用竹紙印鈔、兩條鹹魚當秤砣算匯率；倒著看，所以常常算反——今晚算你賺到。"
    ],
    "base_time": 6,
    "base_out": 1,
@@ -1070,10 +1070,10 @@
     "水底吹救生圈"
    ],
    "art": "mvs_float",
-   "good": "g_jiushengquan",
+   "good": "m_jiushengquan",
    "how": [
-    "用浸過水嘅紙紮吹脹；吹氣嗰個喺水底，你睇唔到佢，淨係聽到佢講「放心，唔會沉」。",
-    "用泡過水的紙紮吹脹；吹氣的那位在水底，你看不見他，只聽到他說「放心，不會沉」。"
+    "一塊生膠片包竹紙吹得兩個；吹氣嗰個喺水底，每吹一個要飲杯凍檸茶先夠氣，你淨係聽到佢講「放心，唔會沉」。",
+    "一片生膠片包住竹紙能吹兩個；吹氣的那位在水底，每吹一個要喝一杯凍檸茶才夠力氣，你只聽到他說「放心，不會沉」。"
    ],
    "base_time": 8,
    "base_out": 1,
@@ -1112,10 +1112,10 @@
     "碼頭盡頭船票"
    ],
    "art": "mvs_pier",
-   "good": "g_chuanpiao",
+   "good": "m_chuanpiao",
    "how": [
-    "Banshee 一路喊一路寫，寫到「回程」嗰格就停咗筆。",
-    "Banshee 一邊哭一邊寫，寫到「回程」那一格就停了筆。"
+    "要一份冥鏹匯兌加一個救生圈先肯出飛；Banshee 一路喊一路寫，寫到「回程」嗰格就停咗筆。",
+    "要一份冥鏹匯兌加一個救生圈才肯開票；Banshee 一邊哭一邊寫，寫到「回程」那一格就停了筆。"
    ],
    "base_time": 10,
    "base_out": 1,
@@ -1154,10 +1154,10 @@
     "從不停車的外賣"
    ],
    "art": "mvs_delivery",
-   "good": "g_waimai",
+   "good": "m_waimai",
    "how": [
-    "車禍鬼送，綠燈都未轉佢已經到——因為佢根本冇停過。",
-    "車禍鬼送，綠燈還沒亮他就到了——因為他根本沒停過。"
+    "一團報紙漿搓兩個外賣盒，每盒塞個普通包子，車禍鬼送；綠燈都未轉佢已經到——因為佢根本冇停過。",
+    "一團報紙漿捏兩個外賣盒，每盒塞一個普通包子，由車禍鬼送；綠燈還沒亮他就到了——因為他根本沒停過。"
    ],
    "base_time": 3,
    "base_out": 1,
@@ -1196,10 +1196,10 @@
     "紙紮電器檯"
    ],
    "art": "mvs_phone",
-   "good": "g_ifon",
+   "good": "m_ifon",
    "how": [
-    "電死鬼一揸就叉滿電，屏幕嗰隻眼係出廠設定，熄唔到。",
-    "電死鬼一握就充滿電，螢幕上那隻眼是出廠設定，關不掉。"
+    "報紙漿倒模，一團出兩部；電死鬼一揸就叉滿電，屏幕嗰隻眼係出廠設定，熄唔到。",
+    "報紙漿倒模，一團做兩支；電死鬼一握就充滿電，螢幕上那隻眼是出廠設定，關不掉。"
    ],
    "base_time": 4,
    "base_out": 1,
@@ -1238,10 +1238,10 @@
     "停擺錶攤"
    ],
    "art": "mvs_watch",
-   "good": "g_mingbiao",
+   "good": "m_mingbiao",
    "how": [
-    "指針用中暑鬼食剩嘅雪條棍削，隻隻停喺下晝三點——佢排隊排到嗰陣。",
-    "指針用中暑鬼吃剩的冰棒棍削成，每隻都停在下午三點——他排隊排到的那一刻。"
+    "拆開紙紮外賣個盒做錶面，竹篾削指針；隻隻停喺下晝三點——中暑鬼排隊排到嗰陣。",
+    "拆開紙紮外賣的盒子做錶面，竹篾削成指針；每隻都停在下午三點——中暑鬼排隊排到的那一刻。"
    ],
    "base_time": 5,
    "base_out": 1,
@@ -1280,10 +1280,10 @@
     "橋底紙紮車房"
    ],
    "art": "mvs_garage",
-   "good": "g_paoche",
+   "good": "m_paoche",
    "how": [
-    "舊報紙捲車身，頭條仲係十年前嗰單意外；引擎聲係橋底一班遊魂齊齊扮「嗚——」。",
-    "舊報紙捲成車身，頭條還是十年前那宗意外；引擎聲是橋底一群遊魂一起學「嗚——」。"
+    "舊報紙捲車身、報紙漿補窿，車頭插部 iFon 做獨眼車燈；頭條仲係十年前嗰單意外，引擎聲係橋底一班遊魂齊齊扮「嗚——」。",
+    "舊報紙捲成車身、報紙漿補洞，車頭插一支 iFon 當獨眼車燈；頭條還是十年前那宗意外，引擎聲是橋底一群遊魂一起學「嗚——」。"
    ],
    "base_time": 6,
    "base_out": 1,
@@ -1322,10 +1322,10 @@
     "收工醋缸"
    ],
    "art": "mvs_vinegar",
-   "good": "g_shougongcu",
+   "good": "m_shougongcu",
    "how": [
-    "Penanggal 收工浸完個頭嗰缸醋，隔三次渣先入樽，佢話多咗份滄桑味。",
-    "Penanggal 下班泡過頭的那缸醋，濾三次渣才裝瓶，她說多了一份滄桑味。"
+    "Penanggal 收工浸完個頭嗰缸醋，每樽用一個壽包做醋種；隔三次渣先入樽，佢話多咗份滄桑味。",
+    "Penanggal 下班泡過頭的那缸醋，每瓶用一個壽包做醋種；濾三次渣才裝瓶，她說多了一份滄桑味。"
    ],
    "base_time": 8,
    "base_out": 1,
@@ -1364,10 +1364,10 @@
     "舊戲院午夜場"
    ],
    "art": "mvs_cinema",
-   "good": "g_xifei",
+   "good": "m_xifei",
    "how": [
-    "座位表永遠滿，入到去得你一個——其他位係留畀之前未睇完嗰啲。",
-    "座位表永遠是滿的，進去卻只有你一個——其他位子是留給之前沒看完的那些。"
+    "揸紙紮跑車去、戴住停咗嘅紙紮手錶先入得場；座位表永遠滿，入到去得你一個——其他位係留畀之前未睇完嗰啲。",
+    "開著紙紮跑車去、戴著停擺的紙紮手錶才進得了場；座位表永遠是滿的，進去卻只有你一個——其他位子是留給之前沒看完的那些。"
    ],
    "base_time": 10,
    "base_out": 1,
@@ -1406,10 +1406,10 @@
     "茶水間孟婆湯"
    ],
    "art": "mvs_soup",
-   "good": "g_mengpotang",
+   "good": "m_mengpotang",
    "how": [
-    "湯底煲咗一千年；走甜即係走晒生前啲甜，少冰即係少啲記性，冰由雪女呵出嚟。",
-    "湯底熬了一千年；去糖就是去掉生前的甜，少冰就是少一點記性，冰是雪女呵出來的。"
+    "枯井水煲糯米做湯底，煲咗一千年；走甜即係走晒生前啲甜，少冰即係少啲記性，冰由雪女呵出嚟。",
+    "枯井水熬糯米做湯底，熬了一千年；去糖就是去掉生前的甜，少冰就是少一點記性，冰是雪女呵出來的。"
    ],
    "base_time": 3,
    "base_out": 1,
@@ -1448,10 +1448,10 @@
     "影印紙西裝"
    ],
    "art": "mvs_copier",
-   "good": "g_xizhuang",
+   "good": "m_xizhuang",
    "how": [
-    "影印機一印就係一套，唔使度身——入得集團，個個都係同一個身形。",
-    "影印機一印就是一套，不用量身——進了集團，每個人都是同一個身形。"
+    "將一件紙衫擺上影印機做原稿，加墨一印就三套，唔使度身——入得集團，個個都係同一個身形。",
+    "把一件紙衣放上影印機當原稿，加墨一印就是三套，不用量身——進了集團，每個人都是同一個身形。"
    ],
    "base_time": 4,
    "base_out": 1,
@@ -1490,10 +1490,10 @@
     "單褲管紙褲"
    ],
    "art": "mvs_umbrella",
-   "good": "g_zhiku",
+   "good": "m_zhiku",
    "how": [
-    "唐傘妖單腳跳嚟跳去試身，佢話：「一條褲管夠喇，多出嗰條係浪費。」",
-    "唐傘妖單腳跳來跳去試穿，他說：「一條褲管就夠了，多出來那條是浪費。」"
+    "唐傘妖將紙衫倒轉，兩隻袖加件身剪開就係三條單褲管紙褲；佢話：「一條褲管夠喇，多出嗰條係浪費。」",
+    "唐傘妖把紙衣倒過來，兩隻袖子加衣身剪開就是三條單褲管紙褲；他說：「一條褲管就夠了，多出來那條是浪費。」"
    ],
    "base_time": 5,
    "base_out": 1,
@@ -1532,10 +1532,10 @@
     "結霜表格室"
    ],
    "art": "mvs_files",
-   "good": "g_biaoge",
+   "good": "m_biaoge",
    "how": [
-    "冼小姐蓋印蓋到手軟，凍死鬼喺檔案室做冷氣，每張表一印出嚟就結霜。",
-    "冼小姐蓋章蓋到手軟，凍死鬼在檔案室當冷氣，每張表一印出來就結霜。"
+    "竹紙印墨一式三份；填之前要飲啖孟婆湯，填完唔記得填過，所以永遠要再填；凍死鬼喺檔案室做冷氣，張張一印出嚟就結霜。",
+    "竹紙印墨一式三份；填表前要喝一口孟婆湯，填完就忘了填過，所以永遠要再填；凍死鬼在檔案室當冷氣，每張一印出來就結霜。"
    ],
    "base_time": 6,
    "base_out": 1,
@@ -1574,10 +1574,10 @@
     "值班室加班燈"
    ],
    "art": "mvs_lamp",
-   "good": "g_jiabandeng",
+   "good": "m_jiabandeng",
    "how": [
-    "提燈妖把口就係燈，你同佢講一句「今晚 OT」，佢就光多一格。",
-    "提燈妖的嘴就是燈，你跟他說一句「今晚加班」，他就亮一格。"
+    "燈罩用竹篾紮骨，燈芯係一份一式三份表格；提燈妖食一份表就光多一格，戴喺頭照到天光。",
+    "燈罩用竹篾紮骨架，燈芯是一份一式三份表格；提燈妖吃一份表就亮一格，戴在頭上照到天亮。"
    ],
    "base_time": 8,
    "base_out": 1,
@@ -1616,10 +1616,10 @@
     "頂樓棺材板躺椅"
    ],
    "art": "mvs_lounge",
-   "good": "g_tangyi",
+   "good": "m_tangyi",
    "how": [
-    "用棺材板拆出嚟，你點較都好，一挨落去就自動彈返去「瞓直」嗰格。",
-    "用棺材板拆出來，不管你怎麼調，一靠下去就自動彈回「躺平」那一格。"
+    "棺材板做底、紙西裝做椅背、紙褲做扶手；你點較都好，一挨落去就自動彈返去「瞓直」嗰格。",
+    "棺材板做底、紙西裝做椅背、紙褲做扶手；不管你怎麼調，一靠下去就自動彈回「躺平」那一格。"
    ],
    "base_time": 10,
    "base_out": 1,
@@ -1658,8 +1658,8 @@
    "id": "c0_taozhai",
    "art": "n30_taozhai",
    "wants": [
-    "g_shoubao",
-    "g_zhishan"
+    "m_shoubao",
+    "m_zhishan"
    ],
    "lines": [
     [
@@ -1677,7 +1677,7 @@
    "id": "c0_guhan",
    "art": "n30_guhangui",
    "wants": [
-    "g_douhua"
+    "m_douhua"
    ],
    "lines": [
     [
@@ -1699,8 +1699,8 @@
    "id": "c0_dugui",
    "art": "n30_dugui",
    "wants": [
-    "g_zhishan",
-    "g_guancaichuang"
+    "m_zhishan",
+    "m_guancaichuang"
    ],
    "lines": [
     [
@@ -1718,8 +1718,8 @@
    "id": "c0_maoshi",
    "art": "n30_maoshi",
    "wants": [
-    "g_nuomici",
-    "g_douhua"
+    "m_nuomici",
+    "m_douhua"
    ],
    "lines": [
     [
@@ -1737,7 +1737,7 @@
    "id": "c0_yangui",
    "art": "n30_yangui",
    "wants": [
-    "g_shoubao"
+    "m_shoubao"
    ],
    "lines": [
     [
@@ -1755,8 +1755,8 @@
    "id": "c0_jiugui",
    "art": "n30_jiugui",
    "wants": [
-    "g_douhua",
-    "g_nuomici"
+    "m_douhua",
+    "m_nuomici"
    ],
    "lines": [
     [
@@ -1774,8 +1774,8 @@
    "id": "c0_chengsi",
    "art": "n30_chengsi",
    "wants": [
-    "g_shoubao",
-    "g_nuomici"
+    "m_shoubao",
+    "m_nuomici"
    ],
    "lines": [
     [
@@ -1793,7 +1793,7 @@
    "id": "c0_yesi",
    "art": "n30_yesi",
    "wants": [
-    "g_nuomici"
+    "m_nuomici"
    ],
    "lines": [
     [
@@ -1811,7 +1811,7 @@
    "id": "c0_egui",
    "art": "egui",
    "wants": [
-    "g_shoubao"
+    "m_shoubao"
    ],
    "lines": [
     [
@@ -1829,8 +1829,8 @@
    "id": "c0_baiwu_vip",
    "art": "baiwu",
    "wants": [
-    "g_guancaichuang",
-    "g_zhishan"
+    "m_guancaichuang",
+    "m_zhishan"
    ],
    "lines": [
     [
@@ -1848,7 +1848,7 @@
    "id": "c1_pelesit",
    "art": "n30_pelesit",
    "wants": [
-    "g_yejiangfan"
+    "m_yejiangfan"
    ],
    "lines": [
     [
@@ -1866,8 +1866,8 @@
    "id": "c1_polong",
    "art": "n30_polong",
    "wants": [
-    "g_zhulong",
-    "g_yeketan"
+    "m_zhulong",
+    "m_yeketan"
    ],
    "lines": [
     [
@@ -1885,7 +1885,7 @@
    "id": "c1_jenglot",
    "art": "n30_jenglot",
    "wants": [
-    "g_tuoxie"
+    "m_tuoxie"
    ],
    "lines": [
     [
@@ -1903,8 +1903,8 @@
    "id": "c1_hanturaya",
    "art": "n30_hanturaya",
    "wants": [
-    "g_liulian",
-    "g_yejiangfan"
+    "m_liulian",
+    "m_yejiangfan"
    ],
    "lines": [
     [
@@ -1922,8 +1922,8 @@
    "id": "c1_galah",
    "art": "n30_hantugalah",
    "wants": [
-    "g_liulian",
-    "g_zhulong"
+    "m_liulian",
+    "m_zhulong"
    ],
    "lines": [
     [
@@ -1941,8 +1941,8 @@
    "id": "c1_youhun",
    "art": "youhun",
    "wants": [
-    "g_yeketan",
-    "g_tuoxie"
+    "m_yeketan",
+    "m_tuoxie"
    ],
    "lines": [
     [
@@ -1960,9 +1960,9 @@
    "id": "c1_bunian_vip",
    "art": "n30_bunian",
    "wants": [
-    "g_yejiangfan",
-    "g_liulian",
-    "g_zhulong"
+    "m_yejiangfan",
+    "m_liulian",
+    "m_zhulong"
    ],
    "lines": [
     [
@@ -1980,8 +1980,8 @@
    "id": "c2_wutou",
    "art": "n30_wutou",
    "wants": [
-    "g_caoxie",
-    "g_wucha"
+    "m_caoxie",
+    "m_wucha"
    ],
    "lines": [
     [
@@ -1999,8 +1999,8 @@
    "id": "c2_baigujing",
    "art": "n30_baigujing",
    "wants": [
-    "g_huajiao",
-    "g_wucha"
+    "m_huajiao",
+    "m_wucha"
    ],
    "lines": [
     [
@@ -2018,8 +2018,8 @@
    "id": "c2_leipi",
    "art": "n30_leipi",
    "wants": [
-    "g_caoxie",
-    "g_jiuban"
+    "m_caoxie",
+    "m_jiuban"
    ],
    "lines": [
     [
@@ -2037,8 +2037,8 @@
    "id": "c2_shedu",
    "art": "n30_shedu",
    "wants": [
-    "g_jiuban",
-    "g_xunren"
+    "m_jiuban",
+    "m_xunren"
    ],
    "lines": [
     [
@@ -2056,8 +2056,8 @@
    "id": "c2_songding",
    "art": "pg_songding",
    "wants": [
-    "g_xunren",
-    "g_caoxie"
+    "m_xunren",
+    "m_caoxie"
    ],
    "lines": [
     [
@@ -2075,8 +2075,8 @@
    "id": "c2_zombie",
    "art": "zombie",
    "wants": [
-    "g_jiuban",
-    "g_wucha"
+    "m_jiuban",
+    "m_wucha"
    ],
    "lines": [
     [
@@ -2094,9 +2094,9 @@
    "id": "c2_niutou_vip",
    "art": "niutou",
    "wants": [
-    "g_huajiao",
-    "g_jiuban",
-    "g_xunren"
+    "m_huajiao",
+    "m_jiuban",
+    "m_xunren"
    ],
    "lines": [
     [
@@ -2114,8 +2114,8 @@
    "id": "c3_phiam",
    "art": "n30_phiam",
    "wants": [
-    "g_ningmengcha",
-    "g_jiaoye"
+    "m_ningmengcha",
+    "m_jiaoye"
    ],
    "lines": [
     [
@@ -2133,8 +2133,8 @@
    "id": "c3_churel",
    "art": "n30_churel",
    "wants": [
-    "g_jiushengquan",
-    "g_xianyu"
+    "m_jiushengquan",
+    "m_xianyu"
    ],
    "lines": [
     [
@@ -2152,8 +2152,8 @@
    "id": "c3_tikbalang",
    "art": "n30_tikbalang",
    "wants": [
-    "g_chuanpiao",
-    "g_xianyu"
+    "m_chuanpiao",
+    "m_xianyu"
    ],
    "lines": [
     [
@@ -2171,8 +2171,8 @@
    "id": "c3_zipai",
    "art": "n30_zipai",
    "wants": [
-    "g_jiaoye",
-    "g_ningmengcha"
+    "m_jiaoye",
+    "m_ningmengcha"
    ],
    "lines": [
     [
@@ -2190,8 +2190,8 @@
    "id": "c3_xiangcai",
    "art": "n30_xiangcai",
    "wants": [
-    "g_duihuan",
-    "g_jiaoye"
+    "m_duihuan",
+    "m_jiaoye"
    ],
    "lines": [
     [
@@ -2199,8 +2199,8 @@
      "不用開門，我從門縫進來換錢。"
     ],
     [
-     "張蕉葉同我差唔多厚，我想要幾張做被。",
-     "那張蕉葉跟我差不多厚，我想要幾張當被子。"
+     "蕉葉糯米卷扁扁哋，同我差唔多厚，我食啱啱好。",
+     "蕉葉糯米卷扁扁的，跟我差不多厚，我吃剛剛好。"
     ]
    ],
    "vip": false
@@ -2209,8 +2209,8 @@
    "id": "c3_zhiren",
    "art": "zhiren",
    "wants": [
-    "g_jiushengquan",
-    "g_duihuan"
+    "m_jiushengquan",
+    "m_duihuan"
    ],
    "lines": [
     [
@@ -2228,8 +2228,8 @@
    "id": "c3_heiwu_vip",
    "art": "heiwu",
    "wants": [
-    "g_chuanpiao",
-    "g_duihuan"
+    "m_chuanpiao",
+    "m_duihuan"
    ],
    "lines": [
     [
@@ -2247,8 +2247,8 @@
    "id": "c4_shidu",
    "art": "n30_shidu",
    "wants": [
-    "g_waimai",
-    "g_shougongcu"
+    "m_waimai",
+    "m_shougongcu"
    ],
    "lines": [
     [
@@ -2266,8 +2266,8 @@
    "id": "c4_xiaosi",
    "art": "n30_xiaosi",
    "wants": [
-    "g_xifei",
-    "g_mingbiao"
+    "m_xifei",
+    "m_mingbiao"
    ],
    "lines": [
     [
@@ -2285,8 +2285,8 @@
    "id": "c4_xiasi",
    "art": "n30_xiasi",
    "wants": [
-    "g_xifei",
-    "g_waimai"
+    "m_xifei",
+    "m_waimai"
    ],
    "lines": [
     [
@@ -2304,8 +2304,8 @@
    "id": "c4_landlady",
    "art": "pg_landlady",
    "wants": [
-    "g_paoche",
-    "g_mingbiao"
+    "m_paoche",
+    "m_mingbiao"
    ],
    "lines": [
     [
@@ -2323,8 +2323,8 @@
    "id": "c4_daji",
    "art": "n30_daji",
    "wants": [
-    "g_ifon",
-    "g_waimai"
+    "m_ifon",
+    "m_waimai"
    ],
    "lines": [
     [
@@ -2342,8 +2342,8 @@
    "id": "c4_zhiren",
    "art": "zhiren",
    "wants": [
-    "g_paoche",
-    "g_ifon"
+    "m_paoche",
+    "m_ifon"
    ],
    "lines": [
     [
@@ -2361,9 +2361,9 @@
    "id": "c4_ex_vip",
    "art": "pg_ex",
    "wants": [
-    "g_ifon",
-    "g_xifei",
-    "g_paoche"
+    "m_ifon",
+    "m_xifei",
+    "m_paoche"
    ],
    "lines": [
     [
@@ -2385,8 +2385,8 @@
    "id": "c5_nopperabo",
    "art": "n30_nopperabo",
    "wants": [
-    "g_xizhuang",
-    "g_biaoge"
+    "m_xizhuang",
+    "m_biaoge"
    ],
    "lines": [
     [
@@ -2404,8 +2404,8 @@
    "id": "c5_rokuro",
    "art": "n30_rokurokubi",
    "wants": [
-    "g_jiabandeng",
-    "g_zhiku"
+    "m_jiabandeng",
+    "m_zhiku"
    ],
    "lines": [
     [
@@ -2423,8 +2423,8 @@
    "id": "c5_ji",
    "art": "pg_ji",
    "wants": [
-    "g_mengpotang",
-    "g_biaoge"
+    "m_mengpotang",
+    "m_biaoge"
    ],
    "lines": [
     [
@@ -2442,13 +2442,13 @@
    "id": "c5_diansi",
    "art": "n30_diansi",
    "wants": [
-    "g_jiabandeng",
-    "g_tangyi"
+    "m_jiabandeng",
+    "m_tangyi"
    ],
    "lines": [
     [
-     "加班燈插唔插電㗎？插蘇喺邊？",
-     "加班燈要插電嗎？插座在哪？"
+     "個加班頭燈插唔插電㗎？插蘇喺邊？",
+     "這個加班頭燈要插電嗎？插座在哪？"
     ],
     [
      "張躺椅有冇鐵框？有就唔好俾我坐。",
@@ -2461,8 +2461,8 @@
    "id": "c5_dongsi",
    "art": "n30_dongsi",
    "wants": [
-    "g_mengpotang",
-    "g_zhiku"
+    "m_mengpotang",
+    "m_zhiku"
    ],
    "lines": [
     [
@@ -2480,8 +2480,8 @@
    "id": "c5_youhun",
    "art": "youhun",
    "wants": [
-    "g_xizhuang",
-    "g_mengpotang"
+    "m_xizhuang",
+    "m_mengpotang"
    ],
    "lines": [
     [
@@ -2499,9 +2499,9 @@
    "id": "c5_mamian_vip",
    "art": "mamian",
    "wants": [
-    "g_tangyi",
-    "g_xizhuang",
-    "g_biaoge"
+    "m_tangyi",
+    "m_xizhuang",
+    "m_biaoge"
    ],
    "lines": [
     [
@@ -2558,7 +2558,7 @@
     },
     {
      "t": "sell",
-     "k": "g_zhishan",
+     "k": "m_zhishan",
      "n": 30,
      "txt": [
       "賣出 30 件紙衫",
@@ -2630,7 +2630,7 @@
     },
     {
      "t": "sell",
-     "k": "g_guancaichuang",
+     "k": "m_guancaichuang",
      "n": 150,
      "txt": [
       "賣出 150 件棺材板床",
@@ -2979,7 +2979,9 @@
     "st_tuoxie",
     "st_zhulong",
     "st_liulian",
-    "st_yejiangfan"
+    "st_yejiangfan",
+    "st_shoubao",
+    "st_zhishan"
    ],
    "customers": [
     "c1_pelesit",
@@ -3017,7 +3019,7 @@
     },
     {
      "t": "sell",
-     "k": "g_yeketan",
+     "k": "m_yeketan",
      "n": 400,
      "txt": [
       "賣出 400 件椰殼炭",
@@ -3128,51 +3130,59 @@
    ],
    "layout": {
     "w": 390,
-    "h": 2080,
+    "h": 2620,
     "fence_y": 230,
     "counter": [
      118,
-     1830
+     2370
     ],
     "house": [
      104,
-     1762
+     2302
     ],
     "serve": [
      236,
-     1848
+     2388
     ],
     "road": [
      [
       292,
-      2110
+      2650
      ],
      [
       262,
-      1940
+      2480
      ],
      [
       240,
-      1812
+      2352
      ],
      [
       238,
-      1546
+      2086
      ],
      [
       241,
-      1276
+      1816
      ],
      [
       181,
-      1006
+      1546
      ],
      [
       140,
-      736
+      1276
      ],
      [
       174,
+      1006
+     ],
+     [
+      237,
+      736
+     ],
+     [
+      242,
       466
      ],
      [
@@ -3184,216 +3194,226 @@
     "st": {
      "st_yeketan": [
       298,
-      1510,
+      2050,
       3
      ],
      "st_tuoxie": [
       129,
-      1240,
+      1780,
       4
      ],
      "st_zhulong": [
       293,
-      970,
+      1510,
       5
      ],
      "st_liulian": [
       92,
-      700,
+      1240,
       6
      ],
      "st_yejiangfan": [
       286,
-      430,
+      970,
       7
+     ],
+     "st_shoubao": [
+      125,
+      700,
+      8
+     ],
+     "st_zhishan": [
+      298,
+      430,
+      9
      ]
     },
     "decor": [
      {
-      "k": "grass",
-      "x": 358,
-      "y": 322,
-      "s": 0.91,
-      "f": false
-     },
-     {
-      "k": "pr_stools",
-      "x": 114,
-      "y": 393,
-      "s": 0.64,
+      "k": "street_lanternR",
+      "x": 80,
+      "y": 518,
+      "s": 0.65,
       "f": false
      },
      {
       "k": "rock",
-      "x": 45,
-      "y": 430,
-      "s": 0.94,
-      "f": true
-     },
-     {
-      "k": "pr_stools",
-      "x": 60,
-      "y": 524,
-      "s": 0.67,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 34,
-      "y": 572,
-      "s": 1.0,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 304,
-      "y": 616,
-      "s": 1.06,
-      "f": true
-     },
-     {
-      "k": "paddy",
-      "x": 303,
-      "y": 665,
-      "s": 0.74,
-      "f": true
-     },
-     {
-      "k": "paddy",
-      "x": 264,
-      "y": 715,
-      "s": 0.68,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 368,
-      "y": 799,
-      "s": 0.95,
-      "f": true
-     },
-     {
-      "k": "tree",
-      "x": 101,
-      "y": 1032,
-      "s": 0.87,
-      "f": false
-     },
-     {
-      "k": "grass",
-      "x": 278,
-      "y": 1156,
-      "s": 0.86,
-      "f": false
-     },
-     {
-      "k": "rock",
-      "x": 314,
-      "y": 1207,
-      "s": 0.99,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 321,
-      "y": 1382,
-      "s": 0.95,
-      "f": false
-     },
-     {
-      "k": "rock",
-      "x": 108,
-      "y": 1518,
-      "s": 1.11,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 37,
-      "y": 1606,
+      "x": 31,
+      "y": 587,
       "s": 0.93,
       "f": true
      },
      {
       "k": "paddy",
-      "x": 89,
-      "y": 1623,
-      "s": 0.69,
-      "f": false
-     },
-     {
-      "k": "grass",
-      "x": 141,
-      "y": 1630,
-      "s": 0.95,
-      "f": false
-     },
-     {
-      "k": "grass",
-      "x": 297,
-      "y": 1676,
-      "s": 0.9,
+      "x": 264,
+      "y": 846,
+      "s": 0.68,
       "f": true
      },
      {
-      "k": "pr_stools",
-      "x": 354,
-      "y": 1700,
-      "s": 0.63,
+      "k": "grass",
+      "x": 132,
+      "y": 906,
+      "s": 0.94,
+      "f": true
+     },
+     {
+      "k": "paddy",
+      "x": 122,
+      "y": 974,
+      "s": 0.85,
+      "f": false
+     },
+     {
+      "k": "banana",
+      "x": 18,
+      "y": 1056,
+      "s": 0.89,
       "f": false
      },
      {
       "k": "lantern",
-      "x": 352,
-      "y": 1916,
-      "s": 0.97,
-      "f": false
-     },
-     {
-      "k": "paddy",
-      "x": 203,
-      "y": 1940,
-      "s": 0.8,
+      "x": 93,
+      "y": 1122,
+      "s": 0.85,
       "f": false
      },
      {
       "k": "rock",
-      "x": 124,
-      "y": 1942,
-      "s": 0.89,
+      "x": 263,
+      "y": 1141,
+      "s": 1.08,
       "f": true
      },
      {
       "k": "grass",
+      "x": 293,
+      "y": 1182,
+      "s": 0.87,
+      "f": true
+     },
+     {
+      "k": "grass",
+      "x": 348,
+      "y": 1246,
+      "s": 0.89,
+      "f": true
+     },
+     {
+      "k": "paddy",
+      "x": 201,
+      "y": 1342,
+      "s": 0.73,
+      "f": true
+     },
+     {
+      "k": "grass",
+      "x": 86,
+      "y": 1463,
+      "s": 1.02,
+      "f": false
+     },
+     {
+      "k": "grass",
+      "x": 130,
+      "y": 1629,
+      "s": 1.05,
+      "f": true
+     },
+     {
+      "k": "grass",
+      "x": 331,
+      "y": 1711,
+      "s": 1.05,
+      "f": true
+     },
+     {
+      "k": "street_lanternR",
+      "x": 365,
+      "y": 1804,
+      "s": 0.6,
+      "f": false
+     },
+     {
+      "k": "tree",
+      "x": 313,
+      "y": 1872,
+      "s": 0.83,
+      "f": false
+     },
+     {
+      "k": "rock",
+      "x": 108,
+      "y": 1897,
+      "s": 1.11,
+      "f": true
+     },
+     {
+      "k": "rock",
+      "x": 49,
+      "y": 1986,
+      "s": 0.95,
+      "f": true
+     },
+     {
+      "k": "grass",
+      "x": 147,
+      "y": 2082,
+      "s": 1.06,
+      "f": true
+     },
+     {
+      "k": "grass",
+      "x": 70,
+      "y": 2175,
+      "s": 0.93,
+      "f": true
+     },
+     {
+      "k": "lantern",
+      "x": 338,
+      "y": 2347,
+      "s": 0.95,
+      "f": true
+     },
+     {
+      "k": "lantern",
+      "x": 352,
+      "y": 2417,
+      "s": 0.97,
+      "f": false
+     },
+     {
+      "k": "grass",
       "x": 44,
-      "y": 1952,
+      "y": 2465,
       "s": 0.87,
       "f": false
      },
      {
       "k": "rock",
       "x": 147,
-      "y": 1997,
+      "y": 2523,
       "s": 1.12,
       "f": false
      },
      {
       "k": "fogbank",
-      "x": 19,
-      "y": 416,
-      "s": 1.2
+      "x": 41,
+      "y": 524,
+      "s": 0.94
      },
      {
       "k": "fogbank",
-      "x": 259,
-      "y": 1040,
-      "s": 0.91
+      "x": 45,
+      "y": 1310,
+      "s": 1.09
      },
      {
       "k": "fogbank",
-      "x": 90,
-      "y": 1664,
-      "s": 1.08
+      "x": 69,
+      "y": 2096,
+      "s": 1.03
      }
     ]
    }
@@ -3410,7 +3430,9 @@
     "st_wucha",
     "st_jiuban",
     "st_huajiao",
-    "st_xunren"
+    "st_xunren",
+    "st_shoubao",
+    "st_zhishan"
    ],
    "customers": [
     "c2_wutou",
@@ -3460,11 +3482,11 @@
     },
     {
      "t": "sell",
-     "k": "g_jiuban",
+     "k": "m_jiuban",
      "n": 150,
      "txt": [
-      "賣出 150 件二手棺材板",
-      "售出 150 件二手棺材板"
+      "賣出 150 件二手棺材板盾",
+      "售出 150 件二手棺材板盾"
      ],
      "reward": {
       "coins": 10800
@@ -3559,51 +3581,59 @@
    ],
    "layout": {
     "w": 390,
-    "h": 2080,
+    "h": 2620,
     "fence_y": 230,
     "counter": [
      118,
-     1830
+     2370
     ],
     "house": [
      104,
-     1762
+     2302
     ],
     "serve": [
      236,
-     1848
+     2388
     ],
     "road": [
      [
       292,
-      2110
+      2650
      ],
      [
       262,
-      1940
+      2480
      ],
      [
       240,
-      1812
+      2352
      ],
      [
       249,
-      1546
+      2086
      ],
      [
       200,
-      1276
+      1816
      ],
      [
       145,
-      1006
+      1546
      ],
      [
       158,
-      736
+      1276
      ],
      [
       222,
+      1006
+     ],
+     [
+      249,
+      736
+     ],
+     [
+      202,
       466
      ],
      [
@@ -3615,228 +3645,238 @@
     "st": {
      "st_caoxie": [
       298,
-      1510,
+      2050,
       3
      ],
      "st_wucha": [
       92,
-      1240,
+      1780,
       4
      ],
      "st_jiuban": [
       257,
-      970,
+      1510,
       5
      ],
      "st_huajiao": [
       92,
-      700,
+      1240,
       6
      ],
      "st_xunren": [
       298,
-      430,
+      970,
       7
+     ],
+     "st_shoubao": [
+      137,
+      700,
+      8
+     ],
+     "st_zhishan": [
+      298,
+      430,
+      9
      ]
     },
     "decor": [
      {
-      "k": "lamppost",
-      "x": 352,
-      "y": 316,
-      "s": 0.87,
+      "k": "grass",
+      "x": 141,
+      "y": 296,
+      "s": 0.86,
       "f": true
      },
      {
-      "k": "rock",
-      "x": 85,
-      "y": 334,
-      "s": 0.89,
+      "k": "grass",
+      "x": 342,
+      "y": 308,
+      "s": 0.98,
       "f": false
      },
      {
-      "k": "lantern",
-      "x": 107,
-      "y": 436,
-      "s": 1.04,
+      "k": "pr_cart",
+      "x": 77,
+      "y": 461,
+      "s": 0.62,
+      "f": false
+     },
+     {
+      "k": "stump",
+      "x": 278,
+      "y": 551,
+      "s": 0.84,
+      "f": false
+     },
+     {
+      "k": "grass",
+      "x": 17,
+      "y": 729,
+      "s": 0.96,
+      "f": false
+     },
+     {
+      "k": "grass",
+      "x": 27,
+      "y": 784,
+      "s": 1.09,
       "f": true
      },
      {
-      "k": "rock",
-      "x": 15,
-      "y": 545,
-      "s": 0.88,
+      "k": "grass",
+      "x": 333,
+      "y": 803,
+      "s": 0.93,
       "f": true
      },
      {
       "k": "pr_cart",
-      "x": 248,
-      "y": 670,
-      "s": 0.65,
+      "x": 183,
+      "y": 849,
+      "s": 0.6,
+      "f": true
+     },
+     {
+      "k": "stump",
+      "x": 89,
+      "y": 974,
+      "s": 0.79,
+      "f": true
+     },
+     {
+      "k": "pr_cart",
+      "x": 25,
+      "y": 995,
+      "s": 0.53,
       "f": false
      },
      {
-      "k": "tree",
-      "x": 375,
-      "y": 801,
-      "s": 0.96,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 88,
-      "y": 856,
-      "s": 1.11,
+      "k": "pr_cart",
+      "x": 28,
+      "y": 1052,
+      "s": 0.53,
       "f": true
      },
      {
       "k": "stump",
-      "x": 361,
-      "y": 876,
-      "s": 0.75,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 76,
-      "y": 923,
-      "s": 0.97,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 76,
-      "y": 992,
-      "s": 1.13,
-      "f": true
-     },
-     {
-      "k": "stump",
-      "x": 56,
-      "y": 1078,
+      "x": 16,
+      "y": 1106,
       "s": 0.8,
       "f": false
      },
      {
       "k": "grass",
-      "x": 112,
-      "y": 1106,
-      "s": 0.98,
+      "x": 76,
+      "y": 1118,
+      "s": 0.97,
       "f": true
      },
      {
-      "k": "stream",
-      "x": 195,
-      "y": 1159,
-      "s": 1
-     },
-     {
-      "k": "bridge",
-      "x": 176,
-      "y": 1159,
-      "s": 1
-     },
-     {
       "k": "lamppost",
-      "x": 297,
-      "y": 1260,
-      "s": 0.84,
+      "x": 331,
+      "y": 1258,
+      "s": 0.68,
       "f": false
      },
      {
-      "k": "lantern",
-      "x": 371,
-      "y": 1336,
-      "s": 1.06,
+      "k": "tree_bare",
+      "x": 373,
+      "y": 1346,
+      "s": 0.9,
       "f": true
      },
      {
       "k": "pr_cart",
-      "x": 268,
-      "y": 1357,
-      "s": 0.62,
-      "f": true
+      "x": 310,
+      "y": 1406,
+      "s": 0.6,
+      "f": false
      },
      {
-      "k": "grass",
-      "x": 330,
-      "y": 1381,
-      "s": 0.92,
+      "k": "stream",
+      "x": 195,
+      "y": 1456,
+      "s": 1
+     },
+     {
+      "k": "bridge",
+      "x": 149,
+      "y": 1456,
+      "s": 1
+     },
+     {
+      "k": "stump",
+      "x": 74,
+      "y": 1535,
+      "s": 0.75,
+      "f": false
+     },
+     {
+      "k": "pr_cart",
+      "x": 327,
+      "y": 1751,
+      "s": 0.58,
       "f": true
      },
      {
       "k": "stump",
-      "x": 181,
-      "y": 1491,
-      "s": 0.91,
+      "x": 287,
+      "y": 1906,
+      "s": 0.87,
       "f": false
      },
      {
       "k": "stump",
       "x": 115,
-      "y": 1574,
+      "y": 1970,
       "s": 0.91,
       "f": true
      },
      {
-      "k": "pr_cart",
-      "x": 170,
-      "y": 1624,
-      "s": 0.66,
-      "f": false
-     },
-     {
-      "k": "tree",
-      "x": 53,
-      "y": 1644,
-      "s": 0.98,
+      "k": "tree_bare",
+      "x": 44,
+      "y": 2098,
+      "s": 0.85,
       "f": true
      },
      {
-      "k": "lamppost",
-      "x": 298,
-      "y": 1796,
-      "s": 0.83,
+      "k": "stump",
+      "x": 103,
+      "y": 2139,
+      "s": 0.73,
+      "f": true
+     },
+     {
+      "k": "rock",
+      "x": 141,
+      "y": 2196,
+      "s": 1.15,
       "f": true
      },
      {
       "k": "lamppost",
       "x": 374,
-      "y": 1858,
+      "y": 2342,
       "s": 0.72,
       "f": false
      },
      {
-      "k": "grass",
-      "x": 77,
-      "y": 1933,
-      "s": 1.09,
-      "f": true
-     },
-     {
-      "k": "tree_bare",
-      "x": 372,
-      "y": 2026,
-      "s": 0.9,
-      "f": true
+      "k": "fogbank",
+      "x": 275,
+      "y": 524,
+      "s": 1.07
      },
      {
       "k": "fogbank",
-      "x": 129,
-      "y": 416,
-      "s": 0.87
+      "x": 46,
+      "y": 1310,
+      "s": 1.18
      },
      {
       "k": "fogbank",
-      "x": 264,
-      "y": 1040,
-      "s": 0.84
-     },
-     {
-      "k": "fogbank",
-      "x": 24,
-      "y": 1664,
-      "s": 1.12
+      "x": 268,
+      "y": 2096,
+      "s": 1.03
      }
     ]
    }
@@ -3854,7 +3894,9 @@
     "st_ningmeng",
     "st_duihuan",
     "st_jiushengquan",
-    "st_chuanpiao"
+    "st_chuanpiao",
+    "st_shoubao",
+    "st_zhishan"
    ],
    "customers": [
     "c3_phiam",
@@ -4003,55 +4045,63 @@
    ],
    "layout": {
     "w": 390,
-    "h": 2350,
+    "h": 2890,
     "fence_y": 230,
     "counter": [
      118,
-     2100
+     2640
     ],
     "house": [
      104,
-     2032
+     2572
     ],
     "serve": [
      236,
-     2118
+     2658
     ],
     "road": [
      [
       292,
-      2380
+      2920
      ],
      [
       262,
-      2210
+      2750
      ],
      [
       240,
-      2082
+      2622
      ],
      [
       219,
-      1816
+      2356
      ],
      [
       155,
-      1546
+      2086
      ],
      [
       146,
-      1276
+      1816
      ],
      [
       204,
-      1006
+      1546
      ],
      [
       249,
-      736
+      1276
      ],
      [
       220,
+      1006
+     ],
+     [
+      157,
+      736
+     ],
+     [
+      146,
       466
      ],
      [
@@ -4063,233 +4113,243 @@
     "st": {
      "st_jiaoye": [
       298,
-      1780,
+      2320,
       3
      ],
      "st_xianyu": [
       92,
-      1510,
+      2050,
       4
      ],
      "st_ningmeng": [
       258,
-      1240,
+      1780,
       5
      ],
      "st_duihuan": [
       92,
-      970,
+      1510,
       6
      ],
      "st_jiushengquan": [
       298,
-      700,
+      1240,
       7
      ],
      "st_chuanpiao": [
       108,
-      430,
+      970,
       8
+     ],
+     "st_shoubao": [
+      269,
+      700,
+      9
+     ],
+     "st_zhishan": [
+      92,
+      430,
+      10
      ]
     },
     "decor": [
      {
-      "k": "lantern",
-      "x": 273,
-      "y": 337,
-      "s": 1.04,
+      "k": "grass",
+      "x": 84,
+      "y": 298,
+      "s": 1.12,
       "f": false
-     },
-     {
-      "k": "pr_durianbox",
-      "x": 78,
-      "y": 577,
-      "s": 0.51,
-      "f": true
-     },
-     {
-      "k": "lantern",
-      "x": 374,
-      "y": 605,
-      "s": 1.1,
-      "f": true
      },
      {
       "k": "pr_boxes",
-      "x": 63,
-      "y": 627,
-      "s": 0.64,
-      "f": true
-     },
-     {
-      "k": "rock",
-      "x": 145,
-      "y": 748,
-      "s": 1.01,
-      "f": false
-     },
-     {
-      "k": "pr_puddle",
-      "x": 119,
-      "y": 810,
-      "s": 0.7,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 359,
-      "y": 858,
-      "s": 1.09,
-      "f": true
-     },
-     {
-      "k": "rock",
-      "x": 274,
-      "y": 898,
-      "s": 0.95,
-      "f": false
-     },
-     {
-      "k": "grass",
-      "x": 363,
-      "y": 1058,
-      "s": 0.91,
+      "x": 323,
+      "y": 319,
+      "s": 0.61,
       "f": false
      },
      {
       "k": "banana",
-      "x": 265,
-      "y": 1080,
-      "s": 1.26,
+      "x": 334,
+      "y": 588,
+      "s": 1.17,
+      "f": false
+     },
+     {
+      "k": "lantern",
+      "x": 59,
+      "y": 744,
+      "s": 0.94,
+      "f": false
+     },
+     {
+      "k": "pr_durianbox",
+      "x": 330,
+      "y": 825,
+      "s": 0.68,
+      "f": false
+     },
+     {
+      "k": "pr_durianbox",
+      "x": 66,
+      "y": 840,
+      "s": 0.66,
+      "f": true
+     },
+     {
+      "k": "grass",
+      "x": 267,
+      "y": 845,
+      "s": 1.05,
+      "f": false
+     },
+     {
+      "k": "pr_durianbox",
+      "x": 346,
+      "y": 1034,
+      "s": 0.51,
+      "f": true
+     },
+     {
+      "k": "grass",
+      "x": 84,
+      "y": 1186,
+      "s": 1.12,
+      "f": true
+     },
+     {
+      "k": "pr_puddle",
+      "x": 109,
+      "y": 1310,
+      "s": 0.69,
+      "f": true
+     },
+     {
+      "k": "pr_durianbox",
+      "x": 20,
+      "y": 1350,
+      "s": 0.59,
       "f": true
      },
      {
       "k": "stream",
       "x": 195,
-      "y": 1172,
+      "y": 1416,
       "s": 1
      },
      {
       "k": "bridge",
-      "x": 168,
-      "y": 1172,
+      "x": 226,
+      "y": 1416,
       "s": 1
      },
      {
-      "k": "rock",
-      "x": 91,
-      "y": 1292,
-      "s": 0.93,
+      "k": "banana",
+      "x": 270,
+      "y": 1585,
+      "s": 0.87,
       "f": true
      },
      {
-      "k": "grass",
-      "x": 15,
-      "y": 1410,
-      "s": 1.01,
-      "f": true
-     },
-     {
-      "k": "pr_puddle",
-      "x": 294,
-      "y": 1499,
-      "s": 0.65,
+      "k": "pr_boxes",
+      "x": 47,
+      "y": 1730,
+      "s": 0.6,
       "f": true
      },
      {
       "k": "pr_boxes",
       "x": 305,
-      "y": 1559,
+      "y": 1898,
       "s": 0.59,
       "f": false
      },
      {
-      "k": "rock",
-      "x": 333,
-      "y": 1670,
-      "s": 1.13,
+      "k": "banana",
+      "x": 366,
+      "y": 2045,
+      "s": 0.84,
+      "f": true
+     },
+     {
+      "k": "pr_boxes",
+      "x": 359,
+      "y": 2167,
+      "s": 0.52,
       "f": false
-     },
-     {
-      "k": "pr_durianbox",
-      "x": 20,
-      "y": 1728,
-      "s": 0.57,
-      "f": true
-     },
-     {
-      "k": "pr_puddle",
-      "x": 154,
-      "y": 1813,
-      "s": 0.61,
-      "f": true
      },
      {
       "k": "grass",
       "x": 121,
-      "y": 1865,
+      "y": 2286,
       "s": 1.11,
       "f": true
      },
      {
-      "k": "lantern",
-      "x": 295,
-      "y": 2036,
-      "s": 1.14,
-      "f": false
+      "k": "banana",
+      "x": 130,
+      "y": 2433,
+      "s": 0.94,
+      "f": true
      },
      {
       "k": "pr_durianbox",
       "x": 356,
-      "y": 2150,
+      "y": 2647,
       "s": 0.63,
       "f": true
      },
      {
-      "k": "rock",
-      "x": 354,
-      "y": 2231,
-      "s": 1.03,
-      "f": false
-     },
-     {
       "k": "grass",
-      "x": 42,
-      "y": 2239,
-      "s": 0.88,
-      "f": true
+      "x": 343,
+      "y": 2712,
+      "s": 0.92,
+      "f": false
      },
      {
       "k": "rock",
       "x": 197,
-      "y": 2260,
+      "y": 2787,
       "s": 1.05,
       "f": true
      },
      {
       "k": "grass",
+      "x": 40,
+      "y": 2794,
+      "s": 1.0,
+      "f": false
+     },
+     {
+      "k": "lantern",
+      "x": 373,
+      "y": 2806,
+      "s": 0.87,
+      "f": false
+     },
+     {
+      "k": "grass",
       "x": 184,
-      "y": 2308,
+      "y": 2848,
       "s": 1.05,
       "f": false
      },
      {
       "k": "fogbank",
-      "x": 329,
-      "y": 470,
-      "s": 1.05
+      "x": 213,
+      "y": 578,
+      "s": 0.85
      },
      {
       "k": "fogbank",
-      "x": 186,
-      "y": 1175,
-      "s": 0.83
+      "x": 351,
+      "y": 1445,
+      "s": 1.24
      },
      {
       "k": "fogbank",
-      "x": 120,
-      "y": 1880,
-      "s": 1.26
+      "x": 181,
+      "y": 2312,
+      "s": 0.81
      }
     ]
    }
@@ -4307,7 +4367,9 @@
     "st_mingbiao",
     "st_paoche",
     "st_shougongcu",
-    "st_xifei"
+    "st_xifei",
+    "st_shoubao",
+    "st_zhishan"
    ],
    "customers": [
     "c4_shidu",
@@ -4357,7 +4419,7 @@
     },
     {
      "t": "sell",
-     "k": "g_ifon",
+     "k": "m_ifon",
      "n": 200,
      "txt": [
       "賣出 200 件紙紮手機 iFon",
@@ -4460,55 +4522,63 @@
    ],
    "layout": {
     "w": 390,
-    "h": 2350,
+    "h": 2890,
     "fence_y": 230,
     "counter": [
      118,
-     2100
+     2640
     ],
     "house": [
      104,
-     2032
+     2572
     ],
     "serve": [
      236,
-     2118
+     2658
     ],
     "road": [
      [
       292,
-      2380
+      2920
      ],
      [
       262,
-      2210
+      2750
      ],
      [
       240,
-      2082
+      2622
      ],
      [
       171,
-      1816
+      2356
      ],
      [
       141,
-      1546
+      2086
      ],
      [
       185,
-      1276
+      1816
      ],
      [
       243,
-      1006
+      1546
      ],
      [
       235,
-      736
+      1276
      ],
      [
       172,
+      1006
+     ],
+     [
+      140,
+      736
+     ],
+     [
+      183,
       466
      ],
      [
@@ -4520,221 +4590,231 @@
     "st": {
      "st_waimai": [
       283,
-      1780,
+      2320,
       3
      ],
      "st_ifon": [
       92,
-      1510,
+      2050,
       4
      ],
      "st_mingbiao": [
       297,
-      1240,
+      1780,
       5
      ],
      "st_paoche": [
       131,
-      970,
+      1510,
       6
      ],
      "st_shougongcu": [
       298,
-      700,
+      1240,
       7
      ],
      "st_xifei": [
       92,
-      430,
+      970,
       8
+     ],
+     "st_shoubao": [
+      252,
+      700,
+      9
+     ],
+     "st_zhishan": [
+      92,
+      430,
+      10
      ]
     },
     "decor": [
      {
-      "k": "rock",
-      "x": 350,
-      "y": 364,
-      "s": 0.93,
-      "f": false
-     },
-     {
-      "k": "pr_bin",
-      "x": 295,
-      "y": 405,
-      "s": 0.68,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 256,
-      "y": 513,
-      "s": 1.12,
-      "f": true
-     },
-     {
-      "k": "pr_sign",
-      "x": 28,
-      "y": 555,
-      "s": 0.67,
-      "f": false
-     },
-     {
       "k": "pr_motorbike",
-      "x": 45,
-      "y": 686,
-      "s": 0.52,
-      "f": true
-     },
-     {
-      "k": "pr_cone",
-      "x": 131,
-      "y": 723,
-      "s": 0.51,
-      "f": true
-     },
-     {
-      "k": "pr_bin",
-      "x": 73,
-      "y": 771,
-      "s": 0.56,
-      "f": false
-     },
-     {
-      "k": "pr_sign",
-      "x": 183,
-      "y": 859,
-      "s": 0.52,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 335,
-      "y": 1037,
-      "s": 0.97,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 108,
-      "y": 1141,
-      "s": 0.97,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 30,
-      "y": 1197,
-      "s": 1.05,
-      "f": false
-     },
-     {
-      "k": "pr_sign",
-      "x": 122,
-      "y": 1320,
-      "s": 0.65,
-      "f": false
-     },
-     {
-      "k": "pr_cone",
-      "x": 326,
-      "y": 1388,
-      "s": 0.52,
-      "f": true
-     },
-     {
-      "k": "pr_sign",
-      "x": 376,
-      "y": 1458,
-      "s": 0.63,
-      "f": true
-     },
-     {
-      "k": "pr_sign",
-      "x": 280,
-      "y": 1481,
-      "s": 0.65,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 328,
-      "y": 1532,
-      "s": 1.06,
-      "f": true
-     },
-     {
-      "k": "pr_motorbike",
-      "x": 279,
-      "y": 1632,
-      "s": 0.62,
-      "f": false
-     },
-     {
-      "k": "pr_motorbike",
-      "x": 20,
-      "y": 1663,
-      "s": 0.52,
+      "x": 312,
+      "y": 419,
+      "s": 0.55,
       "f": false
      },
      {
       "k": "street_lanternW",
-      "x": 25,
-      "y": 1777,
-      "s": 0.62,
-      "f": false
-     },
-     {
-      "k": "lamppost",
-      "x": 103,
-      "y": 1811,
-      "s": 0.82,
+      "x": 250,
+      "y": 548,
+      "s": 0.74,
       "f": true
      },
      {
-      "k": "lamppost",
-      "x": 94,
-      "y": 1886,
-      "s": 0.98,
+      "k": "pr_bin",
+      "x": 356,
+      "y": 638,
+      "s": 0.54,
       "f": false
      },
      {
       "k": "pr_motorbike",
-      "x": 190,
-      "y": 2198,
+      "x": 86,
+      "y": 806,
       "s": 0.67,
       "f": true
      },
      {
+      "k": "lamppost",
+      "x": 36,
+      "y": 861,
+      "s": 0.87,
+      "f": true
+     },
+     {
       "k": "pr_motorbike",
-      "x": 317,
-      "y": 2199,
-      "s": 0.61,
+      "x": 270,
+      "y": 918,
+      "s": 0.63,
+      "f": false
+     },
+     {
+      "k": "pr_sign",
+      "x": 331,
+      "y": 934,
+      "s": 0.58,
       "f": false
      },
      {
       "k": "pr_sign",
       "x": 60,
-      "y": 2233,
+      "y": 1081,
+      "s": 0.63,
+      "f": true
+     },
+     {
+      "k": "grass",
+      "x": 102,
+      "y": 1212,
+      "s": 1.03,
+      "f": false
+     },
+     {
+      "k": "pr_wire",
+      "x": 31,
+      "y": 1297,
+      "s": 0.77,
+      "f": false
+     },
+     {
+      "k": "lamppost",
+      "x": 125,
+      "y": 1321,
+      "s": 0.84,
+      "f": true
+     },
+     {
+      "k": "pr_wire",
+      "x": 291,
+      "y": 1397,
+      "s": 0.62,
+      "f": false
+     },
+     {
+      "k": "pr_bin",
+      "x": 319,
+      "y": 1437,
+      "s": 0.52,
+      "f": true
+     },
+     {
+      "k": "pr_cone",
+      "x": 151,
+      "y": 1671,
+      "s": 0.43,
+      "f": false
+     },
+     {
+      "k": "grass",
+      "x": 49,
+      "y": 1736,
+      "s": 1.04,
+      "f": false
+     },
+     {
+      "k": "grass",
+      "x": 76,
+      "y": 1916,
+      "s": 1.13,
+      "f": true
+     },
+     {
+      "k": "grass",
+      "x": 367,
+      "y": 1987,
+      "s": 1.08,
+      "f": true
+     },
+     {
+      "k": "pr_wire",
+      "x": 366,
+      "y": 2205,
+      "s": 0.64,
+      "f": false
+     },
+     {
+      "k": "lamppost",
+      "x": 94,
+      "y": 2312,
+      "s": 0.98,
+      "f": false
+     },
+     {
+      "k": "pr_cone",
+      "x": 96,
+      "y": 2499,
+      "s": 0.45,
+      "f": false
+     },
+     {
+      "k": "rock",
+      "x": 323,
+      "y": 2648,
+      "s": 1.05,
+      "f": true
+     },
+     {
+      "k": "pr_sign",
+      "x": 60,
+      "y": 2752,
       "s": 0.54,
       "f": false
      },
      {
-      "k": "fogbank",
-      "x": 360,
-      "y": 470,
-      "s": 0.89
+      "k": "pr_bin",
+      "x": 116,
+      "y": 2803,
+      "s": 0.65,
+      "f": false
+     },
+     {
+      "k": "pr_sign",
+      "x": 68,
+      "y": 2842,
+      "s": 0.58,
+      "f": false
      },
      {
       "k": "fogbank",
-      "x": 303,
-      "y": 1175,
-      "s": 0.96
+      "x": 192,
+      "y": 578,
+      "s": 0.94
      },
      {
       "k": "fogbank",
-      "x": 166,
-      "y": 1880,
-      "s": 1.27
+      "x": 171,
+      "y": 1445,
+      "s": 1.19
+     },
+     {
+      "k": "fogbank",
+      "x": 12,
+      "y": 2312,
+      "s": 0.85
      }
     ]
    }
@@ -4752,7 +4832,9 @@
     "st_zhiku",
     "st_biaoge",
     "st_jiabandeng",
-    "st_tangyi"
+    "st_tangyi",
+    "st_shoubao",
+    "st_zhishan"
    ],
    "customers": [
     "c5_nopperabo",
@@ -4901,55 +4983,63 @@
    ],
    "layout": {
     "w": 390,
-    "h": 2350,
+    "h": 2890,
     "fence_y": 230,
     "counter": [
      118,
-     2100
+     2640
     ],
     "house": [
      104,
-     2032
+     2572
     ],
     "serve": [
      236,
-     2118
+     2658
     ],
     "road": [
      [
       292,
-      2380
+      2920
      ],
      [
       262,
-      2210
+      2750
      ],
      [
       240,
-      2082
+      2622
      ],
      [
       141,
-      1816
+      2356
      ],
      [
       167,
-      1546
+      2086
      ],
      [
       231,
-      1276
+      1816
      ],
      [
       246,
-      1006
+      1546
      ],
      [
       191,
-      736
+      1276
      ],
      [
       142,
+      1006
+     ],
+     [
+      165,
+      736
+     ],
+     [
+      230,
       466
      ],
      [
@@ -4961,221 +5051,231 @@
     "st": {
      "st_mengpotang": [
       253,
-      1780,
+      2320,
       3
      ],
      "st_xizhuang": [
       92,
-      1510,
+      2050,
       4
      ],
      "st_zhiku": [
       298,
-      1240,
+      1780,
       5
      ],
      "st_biaoge": [
       134,
-      970,
+      1510,
       6
      ],
      "st_jiabandeng": [
       298,
-      700,
+      1240,
       7
      ],
      "st_tangyi": [
       92,
-      430,
+      970,
       8
+     ],
+     "st_shoubao": [
+      277,
+      700,
+      9
+     ],
+     "st_zhishan": [
+      118,
+      430,
+      10
      ]
     },
     "decor": [
      {
-      "k": "pr_boxes",
-      "x": 77,
-      "y": 305,
-      "s": 0.69,
-      "f": false
-     },
-     {
       "k": "of_cabinet",
-      "x": 361,
-      "y": 313,
-      "s": 0.59,
+      "x": 302,
+      "y": 404,
+      "s": 0.67,
       "f": true
      },
      {
-      "k": "pr_bin",
-      "x": 300,
-      "y": 345,
-      "s": 0.56,
-      "f": true
-     },
-     {
-      "k": "rock",
-      "x": 243,
-      "y": 377,
-      "s": 0.96,
+      "k": "lamppost",
+      "x": 362,
+      "y": 446,
+      "s": 0.85,
       "f": false
      },
      {
       "k": "pr_bin",
       "x": 276,
-      "y": 443,
+      "y": 484,
       "s": 0.56,
-      "f": false
-     },
-     {
-      "k": "lamppost",
-      "x": 243,
-      "y": 580,
-      "s": 0.85,
       "f": false
      },
      {
       "k": "of_cabinet",
       "x": 41,
-      "y": 698,
+      "y": 807,
       "s": 0.57,
-      "f": false
-     },
-     {
-      "k": "pr_boxes",
-      "x": 41,
-      "y": 796,
-      "s": 0.66,
-      "f": true
-     },
-     {
-      "k": "grass",
-      "x": 160,
-      "y": 820,
-      "s": 1.13,
-      "f": false
-     },
-     {
-      "k": "of_water",
-      "x": 300,
-      "y": 897,
-      "s": 0.56,
       "f": false
      },
      {
       "k": "rock",
-      "x": 16,
-      "y": 1013,
-      "s": 0.95,
-      "f": true
-     },
-     {
-      "k": "lamppost",
-      "x": 306,
-      "y": 1078,
-      "s": 0.86,
-      "f": true
-     },
-     {
-      "k": "of_cabinet",
-      "x": 138,
-      "y": 1269,
-      "s": 0.57,
+      "x": 357,
+      "y": 851,
+      "s": 1.08,
       "f": true
      },
      {
       "k": "of_plant",
+      "x": 30,
+      "y": 854,
+      "s": 0.63,
+      "f": false
+     },
+     {
+      "k": "pr_bin",
+      "x": 289,
+      "y": 903,
+      "s": 0.5,
+      "f": true
+     },
+     {
+      "k": "lantern",
+      "x": 296,
+      "y": 1017,
+      "s": 0.99,
+      "f": false
+     },
+     {
+      "k": "of_plant",
+      "x": 213,
+      "y": 1018,
+      "s": 0.66,
+      "f": false
+     },
+     {
+      "k": "of_water",
+      "x": 46,
+      "y": 1124,
+      "s": 0.53,
+      "f": false
+     },
+     {
+      "k": "rock",
+      "x": 117,
+      "y": 1153,
+      "s": 0.97,
+      "f": false
+     },
+     {
+      "k": "of_plant",
+      "x": 54,
+      "y": 1285,
+      "s": 0.6,
+      "f": false
+     },
+     {
+      "k": "of_plant",
       "x": 25,
-      "y": 1308,
+      "y": 1581,
       "s": 0.54,
       "f": true
      },
      {
-      "k": "pr_boxes",
-      "x": 131,
-      "y": 1399,
-      "s": 0.62,
-      "f": true
+      "k": "of_cabinet",
+      "x": 314,
+      "y": 1644,
+      "s": 0.59,
+      "f": false
      },
      {
       "k": "of_cabinet",
-      "x": 283,
-      "y": 1618,
-      "s": 0.62,
+      "x": 16,
+      "y": 1646,
+      "s": 0.54,
+      "f": true
+     },
+     {
+      "k": "of_plant",
+      "x": 120,
+      "y": 1924,
+      "s": 0.65,
+      "f": false
+     },
+     {
+      "k": "of_water",
+      "x": 272,
+      "y": 1953,
+      "s": 0.67,
       "f": false
      },
      {
       "k": "rock",
       "x": 375,
-      "y": 1645,
+      "y": 2008,
       "s": 1.09,
       "f": true
      },
      {
-      "k": "pr_bin",
-      "x": 207,
-      "y": 1663,
-      "s": 0.51,
+      "k": "grass",
+      "x": 342,
+      "y": 2093,
+      "s": 1.03,
       "f": true
-     },
-     {
-      "k": "lamppost",
-      "x": 79,
-      "y": 1898,
-      "s": 0.88,
-      "f": true
-     },
-     {
-      "k": "of_plant",
-      "x": 258,
-      "y": 1954,
-      "s": 0.52,
-      "f": false
      },
      {
       "k": "grass",
       "x": 311,
-      "y": 1981,
+      "y": 2433,
       "s": 0.96,
       "f": false
      },
      {
-      "k": "pr_boxes",
-      "x": 354,
-      "y": 2102,
-      "s": 0.55,
+      "k": "of_cabinet",
+      "x": 302,
+      "y": 2504,
+      "s": 0.53,
+      "f": false
+     },
+     {
+      "k": "of_water",
+      "x": 80,
+      "y": 2747,
+      "s": 0.57,
+      "f": true
+     },
+     {
+      "k": "of_water",
+      "x": 91,
+      "y": 2806,
+      "s": 0.56,
       "f": false
      },
      {
       "k": "of_plant",
-      "x": 71,
-      "y": 2201,
-      "s": 0.62,
-      "f": true
-     },
-     {
-      "k": "rock",
-      "x": 332,
-      "y": 2280,
-      "s": 1.0,
+      "x": 143,
+      "y": 2846,
+      "s": 0.63,
       "f": true
      },
      {
       "k": "fogbank",
-      "x": 228,
-      "y": 470,
-      "s": 1.22
+      "x": 105,
+      "y": 578,
+      "s": 1.12
      },
      {
       "k": "fogbank",
-      "x": 173,
-      "y": 1175,
-      "s": 1.15
+      "x": 3,
+      "y": 1445,
+      "s": 0.89
      },
      {
       "k": "fogbank",
-      "x": 39,
-      "y": 1880,
-      "s": 0.92
+      "x": 269,
+      "y": 2312,
+      "s": 1.29
      }
     ]
    }

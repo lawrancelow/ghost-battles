@@ -9,9 +9,9 @@
 #   CE.recipe_txt(bid)／produce_txt(bid)／unlocked(bid)／need_ci(bid)／mat_cost(bid)：顯示同解鎖用
 #  - old 有填（wood/rice/plank/bun）＝ 舊建築：照用舊公式（native/game.gd），包子鋪改咗出普通包子 m_bao。
 #
-# 公式（lv = 鬼等級，mult = 1 + 0.3 × (建築等級 − 1)，同舊建築一樣）：
-#   採集：每隻鬼每分鐘 = rate × (1 + 0.07 × (lv − 1)) × mult
-#   加工：每隻鬼每分鐘做 (60 ÷ time) × (1 + 0.02 × (lv − 1)) × mult 次；每次食 in、出 out
+# 公式（照 chain.json RULES；L = 建築等級，最少 1）：
+#   採集：每隻鬼每分鐘 = rate × (1 + 0.15 × (L − 1))
+#   加工：每隻鬼每批 time ÷ (1 + 0.10 × (L − 1)) 秒；每批食 in、出 out
 #         原料唔夠就按比例做（同舊 produce 一樣）；出貨倉滿就停（唔會食咗料冇貨）
 #   上限：新材料跟 MATS.cap，冇填就跟後院倉庫上限（mat.gd cap()）
 extends RefCounted
@@ -94,8 +94,6 @@ static func lv(bid: String) -> float:
 static func _glv(g) -> float:
 	var F = J.G.get("F")
 	return J.num(J.mc(F, "glv", [g])) if F != null else J.num(J.gp(g, "lv"))
-static func _mult(k: String) -> float:
-	var s = S(); return 1.0 + 0.3 * (maxf(1.0, J.num(s.bld.get(k, 1))) - 1.0)
 # 每分鐘（拓展建築）：{bid: {"w":員工數, "out":{mid:每分}, "in":{mid:每分}}}
 static func rates() -> Dictionary:
 	var s = S(); var o = {}
@@ -109,12 +107,12 @@ static func rates() -> Dictionary:
 		if not (s.get("bld") is Dictionary) or J.num(s.bld.get(p, 0)) <= 0: continue
 		if not o.has(bid): o[bid] = {"w": 0, "out": {}, "in": {}}
 		var e = o[bid]; e.w += 1
-		var gl = _glv(g)
+		var L = maxf(1.0, J.num(s.bld.get(p, 1)))
 		if d.get("kind") == "gather":
 			var mid = str(d.get("out", ""))
-			e.out[mid] = J.num(e.out.get(mid)) + J.num(d.get("rate", 0)) * (1.0 + 0.07 * (gl - 1.0)) * _mult(p)
+			e.out[mid] = J.num(e.out.get(mid)) + J.num(d.get("rate", 0)) * (1.0 + 0.15 * (L - 1.0))
 		else:
-			var cpm = 60.0 / maxf(1.0, J.num(d.get("time", 30))) * (1.0 + 0.02 * (gl - 1.0)) * _mult(p)
+			var cpm = 60.0 / (maxf(0.1, J.num(d.get("time", 30))) / (1.0 + 0.10 * (L - 1.0)))
 			for m in M.bout(bid): e.out[m] = J.num(e.out.get(m)) + J.num(M.bout(bid)[m]) * cpm
 			for m in M.bin(bid): e["in"][m] = J.num(e["in"].get(m)) + J.num(M.bin(bid)[m]) * cpm
 	return o

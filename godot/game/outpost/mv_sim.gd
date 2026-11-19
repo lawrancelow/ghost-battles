@@ -475,7 +475,7 @@ func avail_goods() -> Array:   # 客人可以要嘅貨：有人做緊／櫃台�
 			var g = str(MD.st_def(sid).get("good", ""))
 			if g == "" or o.has(g): continue
 			o.append(g)
-			if nworkers(sid) > 0 or counter_n(g) > 0 or pile_n(sid) > 0 or float(mk.get(sid, -1.0)) >= 0.0: act.append(g)
+			if (nworkers(sid) > 0 and not starving(sid)) or counter_n(g) > 0 or pile_n(sid) > 0 or float(mk.get(sid, -1.0)) >= 0.0: act.append(g)   # [chain] 斷料嘅台唔招客
 	return act if act.size() else o
 func sid_of(gid: String) -> String:
 	for sid in MD.stations(ci()):
