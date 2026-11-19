@@ -131,6 +131,7 @@ func _cnt(evs: Array, k: String, sid := "") -> int:
 	return n
 func _sim():
 	var sim = SIM.new(); sim.reg_post(); sim.st(); sim.relayout(102.0, 786.0)
+	sim.plus.off = true; sim.plus.test_off = true   # [play] 呢度驗原公式（玩法線加成：羈絆、脾氣、事件，另見 tools/tests/play_test.gd）
 	return sim
 
 func mv() -> void:

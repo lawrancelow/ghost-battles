@@ -74,6 +74,7 @@ func logic(_t) -> void:
 	_saved = _S().duplicate(true)
 	_setup()
 	var sim = SIM.new(); sim.reg_post(); sim.st(); sim.relayout(102.0, 786.0)
+	sim.plus.off = true   # [play] 呢度驗原公式（玩法線加成：羈絆、脾氣、事件，另見 tools/tests/play_test.gd）
 	var CH = IDL.chain(0)
 	var A = CH[0]; var B = CH[1]; var C = CH[2]
 	_p("第一張圖解鎖鏈：%s；隨村台 %s" % [str(CH), str(load("res://game/outpost/mat.gd").carry())])
