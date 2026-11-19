@@ -188,7 +188,9 @@ func world_h() -> float: return maxf(float(sim.L.get("h", 844)), camp.bottom()) 
 #   邊個位冇遮住台名牌／台／營地建築就用邊個（而家用緊嘅位冇遮就唔郁，避免閃）
 var _plates: Array = []
 var _cb_pos = null
+var _cb_sz := Vector2.ZERO   # [play]
 func chain_btn_pos(sz: Vector2) -> Vector2:
+	_cb_sz = sz   # [play] 記低掣大細（對白框要避開）
 	var y0 = (float(sim.war.hud_y(self)) if sim != null and sim.war != null else top_pad + HUD_H) + 48.0
 	var cands = [Vector2(FW - sz.x - 8.0, y0), Vector2(8.0, y0)]
 	for k in range(1, 4): cands.append_array([Vector2(FW - sz.x - 8.0, y0 + 110.0 * k), Vector2(8.0, y0 + 110.0 * k)])
@@ -285,6 +287,7 @@ func _process(dt: float) -> void:
 func _eat_events() -> void:
 	var hud_coin = Vector2(FW - 70, top_pad + 68)
 	sim.war.eat(self)   # [war]
+	sim.plus.eat(self)   # [play]
 	for e in sim.ev:
 		match e.k:
 			"pay":
@@ -483,6 +486,7 @@ func _draw_stage() -> void:
 	items.sort_custom(func(a, b): return a[0] < b[0])
 	for it in items: it[1].call()
 	sim.war.draw_world(self, ctx, vy0, vy1)   # [war] 義勇軍＋霸檔標記
+	sim.plus.draw_world(self, ctx, vy0, vy1)   # [play] 夜色、事件記認、決定掣
 	if walking: _draw_proc(ctx)
 	if not walking:
 		for c in sim.custs: if c.st != "out" and c.pos.y > vy0 and c.pos.y - 200.0 < vy1: _draw_want(ctx, c)
@@ -497,6 +501,7 @@ func _draw_stage() -> void:
 	if embed:   # [unify] 對白框避開台名牌、台
 		for q in _plates: _brects.append(q.grow(2))
 		for kk in _wbtns: if kk.begins_with("st:"): _brects.append(_wbtns[kk])
+	_brects.append_array(sim.plus.avoid_rects(self))   # [play] 對白框避開事件名同右上「生產鏈」掣
 	for b in bubbles: _draw_bubble(ctx, b)
 	if embed and anim != null:   # [unify] 拔營：大排檔區＋村外區淡出、換圖、淡入（原村子唔變）
 		var fa = clampf(1.0 - absf(float(anim.t) - A_SWAP) / 1.8, 0.0, 1.0)
@@ -830,18 +835,26 @@ func _draw_counter(ctx: Ctx, fk: float) -> void:
 		for i in 6: Art.rr(ctx, x0 + 10 + i * 30, y - 14, 18, 18, 3, "rgba(255,210,120,.12)", "rgba(242,192,96,.5)", 1)
 		_txt(ctx, MD.S("counter", "陰間大排檔", "陰間大排檔"), (x0 + x1) / 2.0, y - 4, 15, GOLD, "center", 900, 3, "serif")
 	# 櫃台面疊貨
-	for gid in sim.goods_list():
+	# [play] 貨種多、格太窄（< 34px）：每格只疊細堆，唔逐格寫數，改喺櫃台中間寫一個「×總數」（免得數字黐埋爆格）
+	var gl = sim.goods_list(); var tight = (x1 - x0 - 52.0) / maxf(1.0, gl.size()) < 34.0; var tot = 0
+	for gid in gl:
 		var n = sim.counter_n(gid); if n <= 0: continue
+		tot += n
 		var p = sim.counter_slot(gid)
-		var vis = mini(n, 5)
-		for i in vis: _icon(ctx, gid, p.x + (i % 2) * 6.0 - 3.0, p.y - i * 6.0, 26.0)
-		_txt(ctx, "%d" % n, p.x + 16, p.y + 6, 15, Color.WHITE, "center", 900, 4)
+		var vis = mini(n, 3 if tight else 5)
+		for i in vis: _icon(ctx, gid, p.x + (i % 2) * 4.0 - 2.0, p.y - i * 6.0, 22.0 if tight else 26.0)
+		if not tight: _txt(ctx, "%d" % n, p.x + 16, p.y + 6, 15, Color.WHITE, "center", 900, 4)
+	if tight and tot > 0:
+		var lb = "×%s" % MD.fmt(tot); ctx.font = "900 15px sans-serif"; var lw = ctx.measureText(lb).width + 16.0
+		Art.rr(ctx, (x0 + x1) / 2.0 - lw / 2.0, y - 11, lw, 22, 8, "rgba(20,10,8,.85)", "#f2c060", 1.5)
+		_txt(ctx, lb, (x0 + x1) / 2.0, y, 15, Color.WHITE, "center", 900, 0)
 	ctx.restore()
 
 # ---------------- 客人 ----------------
 func _draw_cust(ctx: Ctx, c: Dictionary) -> void:
 	var o = {"t": t + c.ph, "walk": c.get("walk", false), "flip": c.get("flip", true), "alpha": 0.95}
-	if mot == null or not mot.cust(self, ctx, c): Art.draw_char(ctx, str(c.k), c.pos.x, c.pos.y, CS, o)   # [motion]
+	if not sim.plus.act_draw(self, ctx, c, CS, o):   # [play] 事件動作優先
+		if mot == null or not mot.cust(self, ctx, c): Art.draw_char(ctx, str(c.k), c.pos.x, c.pos.y, CS, o)   # [motion] 冇事件：種族專屬動作
 	if c.st == "out" and (mot == null or mot.happy(c)):   # [motion] 嬲走唔出 ♪
 		_txt(ctx, "♪", c.pos.x + 16, c.pos.y - 72 + sin(t * 6.0) * 3.0, 16, Color("#ffd27a"), "center", 900, 3)
 
@@ -860,6 +873,7 @@ func _draw_want(ctx: Ctx, c: Dictionary) -> void:   # 頭頂氣泡：貨品圖�
 		if r[1] <= 0: _txt(ctx, "✓", x + 46, yy + 13, 18, GREEN, "center", 900, 0)
 		else: _txt(ctx, "×%d" % r[1], x + 46, yy + 13, 16, INK, "center", 900, 0)
 		yy += 28.0
+	sim.plus.draw_tag(self, ctx, c, x, y, w, h)   # [play] 脾氣牌
 
 # ---------------- 生產台 ----------------
 func _st_key(sid: String) -> String:
@@ -1028,10 +1042,10 @@ func _icon(ctx: Ctx, gid: String, x: float, y: float, sz: float) -> void:
 	_txt(ctx, nm.substr(nm.length() - 1, 1) if nm.length() else "?", x, y - sz / 2, maxi(14, int(sz * 0.6)), Color("#fff6e0"), "center", 900, 2)
 
 func _draw_worker(ctx: Ctx, w: Dictionary) -> void:
-	if mot != null and mot.worker(self, ctx, w): return   # [motion]
+	if mot != null and not mot.play_busy(w) and mot.worker(self, ctx, w): return   # [motion] 玩法線事件動作（偷食、打瞌睡……）優先
 	var o = {"t": t + w.ph, "tamed": true, "shadow": true, "walk": w.get("walk", false), "flip": w.get("flip", false)}
 	if w.st == "work" and not w.get("walk", false): o["work"] = true; o["flip"] = int(w.slot) % 2 == 1
-	Art.draw_char(ctx, str(w.k), w.pos.x, w.pos.y, CS * 0.9, o)
+	if not sim.plus.act_draw(self, ctx, w, CS * 0.9, o): Art.draw_char(ctx, str(w.k), w.pos.x, w.pos.y, CS * 0.9, o)   # [play] 特別動作
 	if w.carry > 0:
 		var gid = str(MD.st_def(w.sid).get("good", ""))
 		var by = w.pos.y - 66.0 + sin(t * 10.0 + w.ph) * 1.5
@@ -1115,6 +1129,7 @@ func _draw_hud(ctx: Ctx) -> void:
 		elif gi >= 0 and str(G[gi].get("t")) == "boss" and not sim.boss_ok(sim.ci(), str(G[gi].get("k", ""))):
 			_txt(ctx, MD.S("need_boss", "要先打低主線 Boss", "要先打倒主線 Boss") + MD.S("need_boss2", "（去巡陰）", "（去巡陰）"), 195, y0 + 128, 15, Color("#ffb0a0"), "center", 900, 4)
 	sim.war.draw_hud(self, ctx)   # [war] 影響力條、義勇軍數、鬼潮、告急、出征掣
+	sim.plus.draw_hud(self, ctx)   # [play] 左下小卡（夜潮／大單／招牌／匯率）＋彈出卡
 
 # [unify] 嵌入模式精簡 HUD（主線任務條收埋，併入第一行）：
 #   第一行（40）：左半＝主線任務（撳落去＝原本任務條）；右半＝呢張圖目標（做齊變「領獎」）
@@ -1382,6 +1397,7 @@ func tap(p: Vector2) -> void:
 		if _hit("boost:" + kind, p):
 			if not sim.use_boost(kind): _float(s2w(p + Vector2(0, 30)), MD.S("cd", "冷卻緊", "冷卻中"), Color("#ffb0a0"), 15)
 			return
+	if sim.plus.tap(self, p): return   # [play]
 	if sim.war.tap(self, p): return   # [war] 出征掣／頭目
 	if p.y < top_pad + (EHUD_H if embed else HUD_H) and (not embed or hud_on): return
 	var sp = p; p = s2w(p)   # 以下世界座標
@@ -1451,6 +1467,7 @@ func _fill_sheet() -> void:
 	grid.add_child(_lbl(MD.S("s_val", "每件賣", "每件售價"), 15, DIMC)); grid.add_child(_lbl(arrow.call(_v(MD.val(sid, l, c)), _v(MD.val(sid, nx, c))), 16, INK, "sans", 900))
 	grid.add_child(_lbl(MD.S("s_w", "員工", "員工"), 15, DIMC)); grid.add_child(_lbl("%d／%d" % [sim.nworkers(sid), MD.slots(sid)], 16, INK, "sans", 900))
 	_idle_rows(sid)   # [idle] 里程碑效果／累計產量／品質星／領班／解鎖下一台
+	sim.plus.sheet_rows(self, sid)   # [play] 夥計羈絆
 	# 員工位
 	var sr = HBoxContainer.new(); sr.add_theme_constant_override("separation", 6); sheet_box.add_child(sr)
 	var ws = sim.sst(sid).workers

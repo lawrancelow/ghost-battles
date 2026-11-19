@@ -96,6 +96,7 @@ func _locked(ci: int) -> Array:
 func logic(_t) -> void:
 	_setup(); var S = _S()
 	var sim = SIM.new(); sim.reg_post(); sim.st(); sim.relayout(102.0, 786.0)
+	sim.plus.off = true   # [play] 呢度驗原公式（玩法線加成：羈絆、脾氣、事件，另見 tools/tests/play_test.gd）
 	var A = _free(0)[0]; var gA = str(_sd(A).good); var B = _locked(0)[0]
 	_p("資料：%d 張圖、%d 台；第一張圖免費台 %s，第一個要解鎖 %s" % [D.MAPS.size(), D.STATIONS.size(), str(_free(0)), B])
 	_p("===== 1. 公式（獨立計 vs mv_data；全部台） =====")

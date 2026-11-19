@@ -1005,3 +1005,10 @@ func vol(sc, ctx: Ctx, r: Dictionary, x: float, y: float, s: float, o: Dictionar
 # 客人走嗰陣頭頂出唔出 ♪（嬲走就唔出）
 func happy(c: Dictionary) -> bool:
 	return str(_mo(c).get("re", "")) != "angry" and int(_mo(c).get("got", 0)) > 0
+
+# 玩法線（mv_plus.act_draw）有事件動作緊：讓佢畫（同 act_draw 嘅條件一致）
+static func play_busy(e: Dictionary) -> bool:
+	var tp = str(e.get("tp", ""))
+	# 玩法線嘅「定時做貨姿勢」（knead／hammer／chop／reap）同動作線按台做貨重複：保留動作線（有原圖工具）
+	if e.has("sid") and e.get("act") is Dictionary and str(e.act.get("k", "")) in ["knead", "hammer", "chop", "reap"] and not J.t(e.get("doze")): return false
+	return e.get("act") is Dictionary or tp == "fake" or J.t(e.get("doze")) or J.t(e.get("dash")) or (tp == "haggle" and J.t(e.get("prompt")))

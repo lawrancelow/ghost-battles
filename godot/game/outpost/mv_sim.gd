@@ -22,6 +22,7 @@ const ITEM_KEEP := 10.0
 const ROUTES := ["auto", "stock", "sell"]
 const MVW = preload("res://game/outpost/mv_war.gd")   # [war]
 const IDL = preload("res://game/outpost/mv_idle.gd")   # [idle] Idle Outpost 式升級（解鎖鏈／累計產量門檻／品質星／領班）
+const MVP = preload("res://game/outpost/mv_plus.gd")   # [play] 鬼客脾氣／委託單／詭異事件／羈絆／夜潮／招牌菜
 const FW := 390.0
 const WALK := 120.0
 const FOE_MAX := 5
@@ -42,6 +43,7 @@ var paused := false
 var _sync_key := ""
 var war = MVW.new()   # [war] 義勇軍／鬼潮／影響力（邏輯全部喺 mv_war.gd）
 var idle := {}   # [idle] 即時狀態（領班自動撳台計時）
+var plus = MVP.new()   # [play]
 
 func _init() -> void:
 	rng.seed = 20261119
@@ -288,6 +290,7 @@ func move_next() -> bool:
 	for gid in m.guards:
 		if gid != null and ghost(gid) != null and J.seq(J.gp(ghost(gid), "post"), "mv"): J.sp(ghost(gid), "post", null)
 	war.on_move(self, c)   # [war]
+	plus.on_move(self, c)   # [play]
 	m.ci = float(c + 1); m.st = {}; m.goals_done = []; m.sold = {}; m.pile = {}; m.counter = {}; m.guards = []
 	reset_live(); st()
 	ev.append({"k": "moved", "from": c, "to": c + 1})
@@ -299,6 +302,7 @@ func reset_live() -> void:
 	workers.clear(); custs.clear(); foes.clear(); guards.clear(); mk.clear(); mk_starve.clear(); _sync_key = ""
 	spawn_t = 0.6; foe_t = 1.5
 	war.reset_live()   # [war]
+	plus.reset_live()   # [play]
 
 # ================= [chain] 生產鏈：用料、斷料、分流 =================
 func need(sid: String, n := -1.0) -> Dictionary:   # 做 n 件（預設一轉 = out(lv)）要幾多料
@@ -376,7 +380,7 @@ func offline_rate() -> float:   # 每秒（估算：有料當全速、全部出�
 		var ow = IDL.off_w(self, sid); var w = ow[0]   # [idle] 領班：×1.25；只得領班 = 唔使搬貨嘅手做
 		if w <= 0 or missing(sid).size() > 0: continue
 		var l = lv(sid)
-		r += w * MD.out(sid, l) * MD.val(sid, l, c) / (MD.tm(sid, l) + (MD.carry_s(c, sid) if ow[1] else 0.0))
+		r += w * MD.out(sid, l) * MD.val(sid, l, c) / (MD.tm(sid, l) + (MD.carry_s(c, sid) if ow[1] else 0.0)) * plus.off_mul(self, sid)   # [play] 羈絆
 	return r
 func _order() -> Array:   # 低層先
 	var o = []
@@ -395,7 +399,7 @@ func offline_step(secs: float, acc: Dictionary) -> void:
 		var ow = IDL.off_w(self, sid); var l = lv(sid); var w = ow[0]; var n1 = MD.out(sid, l)   # [idle] 領班
 		var sp = split(sid, n1)
 		var sell_f = float(sp[1]) / maxf(1.0, n1) if ow[1] else 0.0
-		var cyc = w * secs / (MD.tm(sid, l) + sell_f * MD.carry_s(c, sid))
+		var cyc = w * secs / (MD.tm(sid, l) + sell_f * MD.carry_s(c, sid)) * plus.off_mul(self, sid)   # [play] 羈絆
 		var nd = need(sid, cyc * n1); var k = 1.0
 		for mid in nd: if nd[mid] > 0.0: k = minf(k, M.amt(mid) / nd[mid])
 		k = clampf(k, 0.0, 1.0)
@@ -565,6 +569,7 @@ func step(dt: float) -> void:
 	_step_foes(dt)
 	_step_guards(dt)
 	war.step(self, dt)   # [war]
+	plus.step(self, dt)   # [play]
 
 func _move(e: Dictionary, to: Vector2, dt: float, spd := WALK) -> bool:
 	var d = to - e.pos
@@ -595,7 +600,7 @@ func _step_workers(dt: float, sp: float) -> void:
 					var nd = need(sid)
 					if not M.take(nd): w["starve"] = true; continue
 					w["paid"] = nd; w["starve"] = false
-				w.prog += dt * sp * IDL.eff(self, sid) / MD.tm(sid, lv(sid))   # [idle] 領班 ×1.25
+				w.prog += dt * sp * IDL.eff(self, sid) * plus.wmul(self, w) / MD.tm(sid, lv(sid))   # [idle] 領班 ×1.25  [play] 羈絆／瞌眼瞓／借領班
 				if w.prog >= 1.0:
 					var n = MD.out(sid, lv(sid))
 					w.prog = 0.0; w.erase("paid"); _made(sid, n)
@@ -633,7 +638,7 @@ func _along(e: Dictionary, P: PackedVector2Array, sv: float) -> void:
 func _step_manual(dt: float, sp: float) -> void:
 	for sid in mk.keys():
 		if float(mk[sid]) < 0.0: continue
-		mk[sid] = float(mk[sid]) + dt * sp * IDL.eff(self, sid) / MD.tm(sid, lv(sid))   # [idle]
+		mk[sid] = float(mk[sid]) + dt * sp * IDL.eff(self, sid) * plus.smul(self, sid) / MD.tm(sid, lv(sid))   # [idle]  [play] 借領班
 		if mk[sid] >= 1.0:
 			mk[sid] = -1.0
 			var n = MD.out(sid, lv(sid)); _made(sid, n)
@@ -669,6 +674,7 @@ func _step_custs(dt: float) -> void:
 	if spawn_t <= 0.0:
 		spawn_t = rng.randf_range(2.2, 4.0) * (2.0 if fence_pressure() >= 2 else 1.0)
 		spawn_t /= war.freq_mul(self)   # [war]
+		spawn_t /= plus.freq_mul(self)   # [play] 夜潮
 		if waiting < MD.QUEUE_MAX: spawn_cust()
 	var order = []
 	for c in custs: if c.st != "out": order.append(c)
@@ -693,11 +699,11 @@ func _step_custs(dt: float) -> void:
 				c.flip = true; c["walk"] = false
 				c.take -= dt
 				c.wait = float(c.get("wait", 0.0)) + dt
-				if c.wait > PATIENCE + IDL.PAT_STAR * _cust_stars(c):   # [idle] 品質星：客人肯等耐啲； 等太耐：有攞到嘅就俾嗰啲錢走人，冇就嬲嬲走
+				if c.wait > PATIENCE + IDL.PAT_STAR * _cust_stars(c) + plus.pat_add(c):   # [play]   # [idle] 品質星：客人肯等耐啲； 等太耐：有攞到嘅就俾嗰啲錢走人，冇就嬲嬲走
 					if _got_n(c) > 0: _pay(c)
 					else: c.st = "out"; ev.append({"k": "leave", "pos": c.pos + Vector2(0, -60)})
 					continue
-				if c.take <= 0.0:
+				if c.take <= 0.0 and not plus.hold_take(self):   # [play] 囤貨
 					c.take = 0.16
 					var all_ok = true
 					for g in c.wants:
@@ -708,7 +714,7 @@ func _step_custs(dt: float) -> void:
 							st().counter[g] = float(counter_n(g) - 1); c.got[g] = int(c.got.get(g, 0)) + 1; c.wait = 0.0
 							ev.append({"k": "take", "gid": g, "from": counter_slot(g), "to": c.pos + Vector2(0, -40)})
 							break
-					if all_ok: _pay(c)
+					if all_ok and not plus.hold_pay(self, c): _pay(c)   # [play] 講價／挑剔等決定
 	for c in custs.duplicate():
 		if c.st == "out":
 			c.s = float(c.s) + 110.0 * dt
@@ -745,6 +751,7 @@ func spawn_cust() -> bool:
 	if QP2.size() > 1 and rng.randf() < 0.5:   # [unify] 一半客人由左邊入
 		c["side"] = 1; c.s = QLEN2; c.pos = MD.poly_at(QP2, QLEN2); c.flip = false
 	custs.append(c)
+	plus.on_spawn(self, c)   # [play] 脾氣
 	return true
 
 func _got_n(c: Dictionary) -> int:
@@ -760,6 +767,7 @@ func cust_value(c: Dictionary) -> float:   # 按實際攞到嘅件數計（收�
 func _pay(c: Dictionary) -> void:
 	var amt = cust_value(c)
 	amt *= war.pay_mul(self, c)   # [war]
+	amt *= plus.pay_mul(self, c)   # [play]
 	add_coins(amt)
 	var m = st()
 	for g in c.got: m.sold[g] = J.num(m.sold.get(g)) + float(c.got[g])
@@ -767,6 +775,7 @@ func _pay(c: Dictionary) -> void:
 	c.st = "out"
 	ev.append({"k": "pay", "amt": amt, "pos": c.pos + Vector2(0, -60), "cid": c.cid})
 	war.on_paid(self, c)   # [war]
+	plus.on_paid(self, c, amt)   # [play]
 
 # ---------------- 圍欄孤魂 ----------------
 func fence_pressure() -> int:
@@ -779,7 +788,7 @@ func _step_foes(dt: float) -> void:
 	var alive = 0
 	for f in foes: if f.st != "die": alive += 1
 	if foe_t <= 0.0:
-		foe_t = rng.randf_range(3.0, 6.5)
+		foe_t = rng.randf_range(3.0, 6.5) / plus.foe_mul(self)   # [play] 夜潮
 		if alive < FOE_MAX: spawn_foe()
 	for f in foes.duplicate():
 		f.t += dt
@@ -809,11 +818,12 @@ func spawn_foe() -> bool:
 
 func hit_foe(f: Dictionary, dmg: float, by: String) -> void:
 	if f.st == "die": return
+	dmg *= plus.dmg_mul(self, f)   # [play] 招牌菜 Boss 弱點
 	f.hp -= dmg; f["hurt"] = 0.25
 	ev.append({"k": "hit", "pos": f.pos + Vector2(0, -30), "dmg": dmg, "by": by})
 	if f.hp <= 0.0:
 		f.st = "die"; f.t = 0.0
-		var cc = MD.foe_coin(ci()); add_coins(cc)
+		var cc = MD.foe_coin(ci()) * plus.kill_mul(self); add_coins(cc)   # [play] 夜潮
 		ev.append({"k": "kill", "pos": f.pos + Vector2(0, -40), "coins": cc})
 func tap_foe(p: Vector2) -> bool:
 	for f in foes:

@@ -1,0 +1,1191 @@
+{
+ "STATIONS": {
+  "st_shoubao": {
+   "fit": [
+    "egui",
+    "eguiking",
+    "mengpo"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "knead"
+  },
+  "st_zhishan": {
+   "fit": [
+    "zhiren",
+    "xiaozhi"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "chop"
+  },
+  "st_douhua": {
+   "fit": [
+    "shuigui",
+    "mengpo"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "knead"
+  },
+  "st_nuomici": {
+   "fit": [
+    "zombie",
+    "pocong"
+   ],
+   "bad": [
+    [
+     "laojiang",
+     [
+      "怕糯米，一埋位就腳軟",
+      "怕糯米，一上崗就腿軟"
+     ]
+    ]
+   ],
+   "stat": 0,
+   "work": "hammer"
+  },
+  "st_guancaichuang": {
+   "fit": [
+    "laojiang",
+    "zombie"
+   ],
+   "bad": [],
+   "stat": 0,
+   "work": "hammer"
+  },
+  "st_denglong": {
+   "fit": [
+    "zhiren",
+    "pontianak"
+   ],
+   "bad": [
+    [
+     "xiaozhi",
+     [
+      "怕火，掂到燈芯就縮手",
+      "怕火，碰到燈芯就縮手"
+     ]
+    ]
+   ],
+   "stat": 1,
+   "work": "chop"
+  },
+  "st_tiaodan": {
+   "fit": [
+    "youhun",
+    "heiwu"
+   ],
+   "bad": [],
+   "stat": 0,
+   "work": "knead"
+  },
+  "st_yeketan": {
+   "fit": [
+    "xiaogui",
+    "toyol"
+   ],
+   "bad": [
+    [
+     "xiaozhi",
+     [
+      "怕火，炭爐一熱就想走",
+      "怕火，炭爐一熱就想跑"
+     ]
+    ]
+   ],
+   "stat": 0,
+   "work": "hammer"
+  },
+  "st_tuoxie": {
+   "fit": [
+    "zhiren",
+    "jenglot"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "chop"
+  },
+  "st_zhulong": {
+   "fit": [
+    "egui",
+    "mengpo"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "knead"
+  },
+  "st_liulian": {
+   "fit": [
+    "pontianak",
+    "penanggal"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "reap"
+  },
+  "st_yejiangfan": {
+   "fit": [
+    "mengpo",
+    "egui"
+   ],
+   "bad": [
+    [
+     "laojiang",
+     [
+      "怕糯米，椰漿飯都唔敢掂",
+      "怕糯米，椰漿飯也不敢碰"
+     ]
+    ]
+   ],
+   "stat": 1,
+   "work": "knead"
+  },
+  "st_caoxie": {
+   "fit": [
+    "zombie",
+    "xiaogui"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "chop"
+  },
+  "st_wucha": {
+   "fit": [
+    "mengpo",
+    "shuigui"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "knead"
+  },
+  "st_jiuban": {
+   "fit": [
+    "laojiang",
+    "zombie"
+   ],
+   "bad": [],
+   "stat": 0,
+   "work": "hammer"
+  },
+  "st_huajiao": {
+   "fit": [
+    "zhiren",
+    "xiaozhi"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "hammer"
+  },
+  "st_xunren": {
+   "fit": [
+    "baiwu",
+    "heiwu"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "chop"
+  },
+  "st_ganlu": {
+   "fit": [
+    "pocong",
+    "zombie"
+   ],
+   "bad": [],
+   "stat": 0,
+   "work": "knead"
+  },
+  "st_jiaoye": {
+   "fit": [
+    "egui",
+    "mengpo"
+   ],
+   "bad": [
+    [
+     "laojiang",
+     [
+      "怕糯米，蕉葉包住都怕",
+      "怕糯米，蕉葉包著也怕"
+     ]
+    ]
+   ],
+   "stat": 1,
+   "work": "knead"
+  },
+  "st_xianyu": {
+   "fit": [
+    "shuigui"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "chop"
+  },
+  "st_ningmeng": {
+   "fit": [
+    "shuigui",
+    "tianhua"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "knead"
+  },
+  "st_duihuan": {
+   "fit": [
+    "toyol"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "chop"
+  },
+  "st_jiushengquan": {
+   "fit": [
+    "shuigui"
+   ],
+   "bad": [],
+   "stat": 0,
+   "work": "hammer"
+  },
+  "st_chuanpiao": {
+   "fit": [
+    "heiwu",
+    "baiwu"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "chop"
+  },
+  "st_waimai": {
+   "fit": [
+    "youhun",
+    "xiaogui"
+   ],
+   "bad": [],
+   "stat": 0,
+   "work": "knead"
+  },
+  "st_ifon": {
+   "fit": [
+    "zhiren",
+    "toyol"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "chop"
+  },
+  "st_mingbiao": {
+   "fit": [
+    "xiaogui"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "chop"
+  },
+  "st_paoche": {
+   "fit": [
+    "zhiren",
+    "zombie"
+   ],
+   "bad": [],
+   "stat": 0,
+   "work": "hammer"
+  },
+  "st_shougongcu": {
+   "fit": [
+    "penanggal"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "knead"
+  },
+  "st_xifei": {
+   "fit": [
+    "pontianak",
+    "youhun"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "chop"
+  },
+  "st_baogu": {
+   "fit": [
+    "egui",
+    "eguiking"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "knead"
+  },
+  "st_mengpotang": {
+   "fit": [
+    "mengpo"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "knead"
+  },
+  "st_xizhuang": {
+   "fit": [
+    "zhiren",
+    "baiwu"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "chop"
+  },
+  "st_zhiku": {
+   "fit": [
+    "zhiren"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "chop"
+  },
+  "st_biaoge": {
+   "fit": [
+    "baiwu",
+    "heiwu"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "chop"
+  },
+  "st_jiabandeng": {
+   "fit": [
+    "youhun"
+   ],
+   "bad": [
+    [
+     "pontianak",
+     [
+      "唔上夜班，見到加班燈就頭痛",
+      "不上夜班，看到加班燈就頭痛"
+     ]
+    ]
+   ],
+   "stat": 0,
+   "work": "hammer"
+  },
+  "st_tangyi": {
+   "fit": [
+    "laojiang"
+   ],
+   "bad": [],
+   "stat": 0,
+   "work": "hammer"
+  },
+  "st_daka": {
+   "fit": [
+    "toyol",
+    "xiaogui"
+   ],
+   "bad": [],
+   "stat": 1,
+   "work": "chop"
+  }
+ },
+ "PAIRS": [
+  {
+   "a": "baiwu",
+   "b": "heiwu",
+   "mul": 1.15,
+   "line": [
+    "黑白配，一個講一個做",
+    "黑白配，一個說一個做"
+   ]
+  },
+  {
+   "a": "zhiren",
+   "b": "xiaozhi",
+   "mul": 1.15,
+   "line": [
+    "紙紮孖寶，摺得特別快",
+    "紙紮雙寶，摺得特別快"
+   ]
+  },
+  {
+   "a": "zombie",
+   "b": "laojiang",
+   "mul": 1.15,
+   "line": [
+    "跳跳組，同一個節奏",
+    "跳跳組，同一個節奏"
+   ]
+  },
+  {
+   "a": "pocong",
+   "b": "zombie",
+   "mul": 1.15,
+   "line": [
+    "跳跳組，同一個節奏",
+    "跳跳組，同一個節奏"
+   ]
+  },
+  {
+   "a": "mengpo",
+   "b": "xiaozhi",
+   "mul": 1.15,
+   "line": [
+    "師徒同檔，手勢有傳承",
+    "師徒同攤，手藝有傳承"
+   ]
+  },
+  {
+   "a": "pontianak",
+   "b": "penanggal",
+   "mul": 1.15,
+   "line": [
+    "南洋姊妹，有偈傾",
+    "南洋姊妹，有話聊"
+   ]
+  }
+ ],
+ "CLASH": [
+  {
+   "a": "egui",
+   "b": "egui",
+   "food": true,
+   "mul": 0.75,
+   "line": [
+    "搶食！你食多咗一啖！",
+    "搶食！你多吃了一口！"
+   ]
+  },
+  {
+   "a": "egui",
+   "b": "eguiking",
+   "food": true,
+   "mul": 0.75,
+   "line": [
+    "大佬，嗰個包係我嘅！",
+    "老大，那個包是我的！"
+   ]
+  },
+  {
+   "a": "toyol",
+   "b": "eguiking",
+   "mul": 0.75,
+   "line": [
+    "搶工資：佢要包，我要錢，個錢箱點分？",
+    "搶工資：他要包，我要錢，錢箱怎麼分？"
+   ]
+  },
+  {
+   "a": "zombie",
+   "b": "shuigui",
+   "mul": 0.75,
+   "line": [
+    "你啲水滴到我身上呀！",
+    "你的水滴到我身上了！"
+   ]
+  }
+ ],
+ "BOND_LINES": {
+  "fit": [
+   "啱手！+20%",
+   "上手！+20%"
+  ],
+  "bad": [
+   "唔啱位 −30%",
+   "不對位 −30%"
+  ],
+  "pair": [
+   "合拍 +15%",
+   "合拍 +15%"
+  ],
+  "clash": [
+   "嗌交 −25%",
+   "吵架 −25%"
+  ],
+  "night": [
+   "唔上夜班 −50%",
+   "不上夜班 −50%"
+  ]
+ },
+ "TEMPERS": {
+  "haggle": {
+   "tag": [
+    "講價",
+    "講價"
+   ],
+   "lines": [
+    [
+     "兩碗當一碗半計得唔得？",
+     "兩碗當一碗半算行不行？"
+    ],
+    [
+     "我死咗好多年，一早冇錢㗎喇",
+     "我死了好多年，早就沒錢了"
+    ],
+    [
+     "平啲啦，下世幫襯你",
+     "便宜點吧，下輩子再光顧"
+    ]
+   ]
+  },
+  "cut": {
+   "tag": [
+    "插隊",
+    "插隊"
+   ],
+   "lines": [
+    [
+     "唔該借借，我趕住投胎！",
+     "借過借過，我趕著投胎！"
+    ],
+    [
+     "我淨係問嘢㗎咋（企咗落嚟）",
+     "我只是問問而已（站了下來）"
+    ]
+   ]
+  },
+  "dash": {
+   "tag": [
+    "鬼祟",
+    "鬼祟"
+   ],
+   "lines": [
+    [
+     "記住數先！",
+     "先記帳！"
+    ],
+    [
+     "下世還你！",
+     "下輩子還你！"
+    ],
+    [
+     "我出去攞錢……",
+     "我出去拿錢……"
+    ]
+   ]
+  },
+  "picky": {
+   "tag": [
+    "挑剔",
+    "挑剔"
+   ],
+   "lines": [
+    [
+     "呢件貨色……咁嘅手勢？",
+     "這件貨色……這種手藝？"
+    ],
+    [
+     "我生前食開好嘢㗎",
+     "我生前吃慣好東西的"
+    ]
+   ],
+   "ok": [
+    [
+     "識貨！呢個先係手勢！",
+     "識貨！這才是手藝！"
+    ],
+    [
+     "唔錯，下次再嚟",
+     "不錯，下次再來"
+    ]
+   ]
+  },
+  "reg": {
+   "tag": [
+    "熟客",
+    "熟客"
+   ],
+   "lines": [
+    [
+     "老闆，照舊！",
+     "老闆，老樣子！"
+    ],
+    [
+     "我帶埋朋友嚟呀！",
+     "我帶朋友來了！"
+    ]
+   ]
+  },
+  "fake": {
+   "tag": [
+    "？",
+    "？"
+   ],
+   "lines": [
+    [
+     "（冇聲出）",
+     "（不出聲）"
+    ]
+   ]
+  },
+  "caught": [
+   [
+    "我……我嚟俾錢㗎咋！",
+    "我……我是來給錢的！"
+   ],
+   [
+    "唔好報串！我俾、我俾！",
+    "別囂張！我給、我給！"
+   ]
+  ]
+ },
+ "EVENTS": {
+  "self": {
+   "n": [
+    "子時自己開工",
+    "子時自己開工"
+   ],
+   "tap": [
+    "撳佢收貨",
+    "點擊收貨"
+   ]
+  },
+  "rate_up": {
+   "n": [
+    "冥鏹匯率升！",
+    "冥鏹匯率升！"
+   ],
+   "tap": [
+    "趁機加價",
+    "趁機加價"
+   ]
+  },
+  "rate_down": {
+   "n": [
+    "冥鏹匯率跌！",
+    "冥鏹匯率跌！"
+   ],
+   "tap": [
+    "囤住先",
+    "先囤著"
+   ]
+  },
+  "fake": {
+   "n": [
+    "有孤魂扮客排隊",
+    "有孤魂扮客排隊"
+   ],
+   "tap": [
+    "撳佢現形",
+    "點擊現形"
+   ]
+  },
+  "rain": {
+   "n": [
+    "紙錢雨！",
+    "紙錢雨！"
+   ],
+   "tap": [
+    "快啲執",
+    "快撿"
+   ]
+  },
+  "doze": {
+   "n": [
+    "夥計瞌眼瞓",
+    "夥計打瞌睡"
+   ],
+   "tap": [
+    "拍醒佢",
+    "拍醒他"
+   ]
+  },
+  "parcel": {
+   "n": [
+    "陽間包裹寄錯地址",
+    "陽間包裹寄錯地址"
+   ],
+   "tap": [
+    "收件",
+    "收件"
+   ]
+  }
+ },
+ "MAPS": [
+  {
+   "ci": 0,
+   "tempers": {
+    "none": 69,
+    "haggle": 7,
+    "cut": 6,
+    "dash": 5,
+    "picky": 6
+   },
+   "order_rw": [
+    "mat",
+    "gear",
+    "fore",
+    "tix",
+    "inf"
+   ],
+   "special": {
+    "n": [
+     "棺材自己開蓋",
+     "棺材自己開蓋"
+    ],
+    "line": [
+     "瞓咗成百年，張床都爛晒……有冇新嘅賣？",
+     "睡了上百年，床都爛了……有新的賣嗎？"
+    ],
+    "tap": [
+     "做佢生意",
+     "做他生意"
+    ],
+    "art": "n30_yangui",
+    "goods": [
+     "m_guancaichuang",
+     "m_nuomici",
+     "m_douhua"
+    ],
+    "qty": 5,
+    "mul": 2.0,
+    "group": 1
+   },
+   "sign": {
+    "n": [
+     "落魄宵夜套餐",
+     "落魄宵夜套餐"
+    ],
+    "parts": {
+     "m_shoubao": 4,
+     "m_douhua": 2,
+     "m_nuomici": 1
+    },
+    "weak": [
+     "餓鬼王聞到宵夜味，打到一半會分心",
+     "餓鬼王聞到宵夜香，打到一半會分心"
+    ]
+   },
+   "lines": {
+    "haggle": [
+     [
+      "我喺槐樹吊咗三十年，畀個街坊價啦",
+      "我在槐樹上吊了三十年，給個街坊價吧"
+     ],
+     [
+      "條村都冇人，你賣畀邊個？平啲啦",
+      "整條村都沒人，你賣給誰？便宜點吧"
+     ]
+    ],
+    "dash": [
+     [
+      "我去村口攞錢，即刻返",
+      "我去村口拿錢，馬上回來"
+     ]
+    ],
+    "picky": [
+     [
+      "井水豆腐花要夠滑，唔滑我跳返落井",
+      "井水豆花要夠滑，不滑我跳回井裡"
+     ]
+    ]
+   }
+  },
+  {
+   "ci": 1,
+   "tempers": {
+    "none": 67,
+    "haggle": 8,
+    "cut": 6,
+    "dash": 6,
+    "picky": 6
+   },
+   "order_rw": [
+    "gear",
+    "mat",
+    "tix",
+    "fore",
+    "inf"
+   ],
+   "special": {
+    "n": [
+     "Polong 個樽碌咗出嚟",
+     "Polong 的瓶子滾了出來"
+    ],
+    "line": [
+     "多謝你執返個樽！我叫埋屋企人嚟幫襯！",
+     "謝謝你撿回瓶子！我叫家人來光顧！"
+    ],
+    "tap": [
+     "執返個樽",
+     "撿回瓶子"
+    ],
+    "art": "n30_polong",
+    "goods": [
+     "m_zhulong",
+     "m_yeketan",
+     "m_tuoxie"
+    ],
+    "qty": 8,
+    "mul": 1.6,
+    "group": 3
+   },
+   "sign": {
+    "n": [
+     "甘榜夜宵包",
+     "甘榜夜宵包"
+    ],
+    "parts": {
+     "m_yejiangfan": 1,
+     "m_yeketan": 2,
+     "m_zhulong": 1
+    },
+    "weak": [
+     "Toyol 見到椰漿飯會停手數錢",
+     "Toyol 看到椰漿飯會停手數錢"
+    ]
+   },
+   "lines": {
+    "haggle": [
+     [
+      "Boss，平啲啦，大家甘榜仔",
+      "老闆，便宜點吧，大家都是甘榜人"
+     ],
+     [
+      "榴槤都要講價啦，何況係你啲嘢",
+      "榴槤都要講價，何況是你的東西"
+     ]
+    ],
+    "dash": [
+     [
+      "我去樹頭攞錢，你等陣",
+      "我去樹下拿錢，你等一下"
+     ]
+    ],
+    "picky": [
+     [
+      "椰漿飯唔夠香，我阿嫲都會喊返轉頭",
+      "椰漿飯不夠香，我奶奶都會哭著回來"
+     ]
+    ],
+    "cut": [
+     [
+      "我細細粒，企前少少冇人見㗎",
+      "我小小一個，站前一點沒人看到的"
+     ]
+    ]
+   }
+  },
+  {
+   "ci": 2,
+   "tempers": {
+    "none": 66,
+    "haggle": 7,
+    "cut": 8,
+    "dash": 6,
+    "picky": 7
+   },
+   "order_rw": [
+    "mat",
+    "fore",
+    "gear",
+    "inf",
+    "tix"
+   ],
+   "special": {
+    "n": [
+     "殭屍隊跳過",
+     "殭屍隊跳過"
+    ],
+    "line": [
+     "（跳）一人……一對……草鞋……（跳）",
+     "（跳）一人……一雙……草鞋……（跳）"
+    ],
+    "tap": [
+     "叫停佢哋",
+     "叫住他們"
+    ],
+    "art": "zombie",
+    "goods": [
+     "m_caoxie",
+     "m_wucha",
+     "m_ganlu"
+    ],
+    "qty": 8,
+    "mul": 1.5,
+    "group": 4
+   },
+   "sign": {
+    "n": [
+     "古道行腳飯",
+     "古道行腳飯"
+    ],
+    "parts": {
+     "m_caoxie": 2,
+     "m_wucha": 2,
+     "m_xunren": 1
+    },
+    "weak": [
+     "老殭睇到尋人啟事會企定認人",
+     "老殭看到尋人啟事會站著認人"
+    ]
+   },
+   "lines": {
+    "haggle": [
+     [
+      "行咗成條古道，對腳都冇晒，平啲啦",
+      "走了整條古道，腳都沒了，便宜點吧"
+     ]
+    ],
+    "dash": [
+     [
+      "趕路！趕路！（跳走）",
+      "趕路！趕路！（跳走）"
+     ]
+    ],
+    "picky": [
+     [
+      "茶要霧谷頭嗰棵，唔係我飲得出",
+      "茶要霧谷頭那棵，不是我喝得出來"
+     ]
+    ],
+    "cut": [
+     [
+      "我哋殭屍跳得快，排前少少好合理",
+      "我們殭屍跳得快，排前一點很合理"
+     ]
+    ]
+   }
+  },
+  {
+   "ci": 3,
+   "tempers": {
+    "none": 66,
+    "haggle": 8,
+    "cut": 6,
+    "dash": 7,
+    "picky": 7
+   },
+   "order_rw": [
+    "gear",
+    "tix",
+    "mat",
+    "inf",
+    "fore"
+   ],
+   "special": {
+    "n": [
+     "水鬼上岸飲凍檸茶",
+     "水鬼上岸喝凍檸茶"
+    ],
+    "line": [
+     "岸上熱到死……我已經死咗，咁都熱",
+     "岸上熱死了……我已經死了，還是熱"
+    ],
+    "tap": [
+     "請佢飲杯",
+     "請他喝一杯"
+    ],
+    "art": "shuigui",
+    "goods": [
+     "m_ningmengcha",
+     "m_xianyu",
+     "m_jiaoye"
+    ],
+    "qty": 6,
+    "mul": 1.7,
+    "group": 2
+   },
+   "sign": {
+    "n": [
+     "河口蕉葉席",
+     "河口蕉葉席"
+    ],
+    "parts": {
+     "m_jiaoye": 3,
+     "m_xianyu": 1,
+     "m_ningmengcha": 1
+    },
+    "weak": [
+     "Pontianak 聞到鹹魚味會掩鼻",
+     "Pontianak 聞到鹹魚味會掩鼻"
+    ]
+   },
+   "lines": {
+    "haggle": [
+     [
+      "我喺河底撈咗成晚先撈到幾個錢，平啲啦",
+      "我在河底撈了整晚才撈到幾個錢，便宜點吧"
+     ]
+    ],
+    "dash": [
+     [
+      "我落水攞錢……（冇再上嚟）",
+      "我下水拿錢……（沒再上來）"
+     ]
+    ],
+    "picky": [
+     [
+      "鹹魚要夠鹹，唔夠鹹我自己泡多陣",
+      "鹹魚要夠鹹，不夠鹹我自己再泡一會"
+     ]
+    ]
+   }
+  },
+  {
+   "ci": 4,
+   "tempers": {
+    "none": 64,
+    "haggle": 8,
+    "cut": 8,
+    "dash": 7,
+    "picky": 7
+   },
+   "order_rw": [
+    "gear",
+    "mat",
+    "fore",
+    "tix",
+    "inf"
+   ],
+   "special": {
+    "n": [
+     "午夜場散場",
+     "午夜場散場"
+    ],
+    "line": [
+     "套戲好驚，要食啲嘢壓吓驚",
+     "那部戲好嚇人，要吃點東西壓壓驚"
+    ],
+    "tap": [
+     "招呼佢哋",
+     "招呼他們"
+    ],
+    "art": "n30_xiaosi",
+    "goods": [
+     "m_waimai",
+     "m_baogu",
+     "m_ifon"
+    ],
+    "qty": 10,
+    "mul": 1.5,
+    "group": 3
+   },
+   "sign": {
+    "n": [
+     "午夜場套餐",
+     "午夜場套餐"
+    ],
+    "parts": {
+     "m_waimai": 2,
+     "m_xifei": 1,
+     "m_baogu": 1
+    },
+    "weak": [
+     "Penanggal 睇戲睇到入神",
+     "Penanggal 看戲看得入神"
+    ]
+   },
+   "lines": {
+    "haggle": [
+     [
+      "呢度係橫死路口，大家都死得唔好彩，平啲啦",
+      "這裡是橫死路口，大家都死得不走運，便宜點吧"
+     ],
+     [
+      "我外賣仔嚟，識計數㗎",
+      "我送外賣的，懂算數的"
+     ]
+    ],
+    "dash": [
+     [
+      "我趕住送下一單！",
+      "我趕著送下一單！"
+     ]
+    ],
+    "picky": [
+     [
+      "戲飛要中間位，唔係我唔睇",
+      "戲票要中間位，不然我不看"
+     ]
+    ],
+    "cut": [
+     [
+      "唔好意思，我趕返去撞車嗰度報到",
+      "不好意思，我趕回撞車那裡報到"
+     ]
+    ]
+   }
+  },
+  {
+   "ci": 5,
+   "tempers": {
+    "none": 63,
+    "haggle": 9,
+    "cut": 8,
+    "dash": 6,
+    "picky": 8
+   },
+   "order_rw": [
+    "gear",
+    "fore",
+    "mat",
+    "tix",
+    "inf"
+   ],
+   "special": {
+    "n": [
+     "全層 OT 叫外賣",
+     "整層加班叫外賣"
+    ],
+    "line": [
+     "今晚又要通頂，孟婆湯十碗，走甜少冰",
+     "今晚又要通宵，孟婆湯十碗，去糖少冰"
+    ],
+    "tap": [
+     "接單",
+     "接單"
+    ],
+    "art": "n30_rokurokubi",
+    "goods": [
+     "m_mengpotang",
+     "m_xizhuang",
+     "m_biaoge"
+    ],
+    "qty": 10,
+    "mul": 1.6,
+    "group": 2
+   },
+   "sign": {
+    "n": [
+     "加班宵夜",
+     "加班宵夜"
+    ],
+    "parts": {
+     "m_mengpotang": 2,
+     "m_biaoge": 1,
+     "m_jiabandeng": 1
+    },
+    "weak": [
+     "孟婆收到表格要先蓋印",
+     "孟婆收到表格要先蓋章"
+    ]
+   },
+   "lines": {
+    "haggle": [
+     [
+      "公司報銷有上限，可唔可以開張大啲嘅單？",
+      "公司報銷有上限，可以開張大一點的單嗎？"
+     ],
+     [
+      "我做咗三百年都未升職，平啲啦",
+      "我做了三百年都沒升職，便宜點吧"
+     ]
+    ],
+    "dash": [
+     [
+      "我返公司攞錢……下個財政年度",
+      "我回公司拿錢……下個財政年度"
+     ]
+    ],
+    "picky": [
+     [
+      "表格要一式三份，少一份我唔收",
+      "表格要一式三份，少一份我不收"
+     ]
+    ],
+    "cut": [
+     [
+      "我趕住開會，讓一讓",
+      "我趕著開會，讓一讓"
+     ]
+    ]
+   }
+  }
+ ],
+ "STRINGS": {}
+}
