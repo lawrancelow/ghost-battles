@@ -893,11 +893,11 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 			_plates.append(Rect2(p.x - cw / 2, ny - 16, cw, 56))   # [camp]
 			var ft2 = _fit(ctx, name, cw, 15)
 			_txt(ctx, ft2[0], p.x, ny - 4, ft2[1], Color("#f0e2c8"), "center", 900, 4)
-			var bw = minf(112.0, cw)
+			var bw = minf(112.0 if ureq[0] else cw, cw)   # [idle] 解鎖條件字長啲：用成格闊
 			Art.rr(ctx, p.x - bw / 2, ny + 8, bw, 28, 8, "#bb3427" if ok else "#4a3a30", "#f2a080" if ok else "#7a6050", 1.5)
-			_coin_ic(ctx, p.x - bw / 2 + 16, ny + 22, 8.0)
+			if ureq[0]: _coin_ic(ctx, p.x - bw / 2 + 16, ny + 22, 8.0)   # [idle]
 			if not ureq[0]:   # [idle]
-				var rq = _fit(ctx, MD.S("unl_req", "%s 到 Lv%d", "%s 到 Lv%d") % [MD.T(MD.st_def(ureq[1]).get("n")), ureq[2]], bw - 8.0, 14)
+				var rq = _fit(ctx, MD.S("unl_req", "要%s Lv%d", "需%s Lv%d") % [MD.T(MD.st_def(ureq[1]).get("n")), ureq[2]], bw - 8.0, 14)
 				_txt(ctx, rq[0], p.x, ny + 22, rq[1], Color("#d8c8b0"), "center", 900, 0)
 			else: _txt(ctx, MD.S("unlock_btn", "解鎖 %s", "解鎖 %s") % MD.fmt(cost), p.x + 8, ny + 22, 15, Color("#fff3e0") if ok else Color("#b8a898"), "center", 900, 0)
 			_wbtns["unl:" + sid] = Rect2(p.x - bw / 2, ny + 4, bw, 36)
@@ -1428,6 +1428,7 @@ func _idle_rows(sid: String) -> void:
 		sheet_box.add_child(_wl(MD.S("s_mile2", "升到 Lv%d：%s＋品質 ★%d（里程碑 %d／%d）", "升到 Lv%d：%s＋品質 ★%d（里程碑 %d／%d）") % [nm, IDL.mile_txt(sid, i), MD.stars(sid, l) + 1, i + 1, MD.miles(sid).size()], 15, Color("#9c2219")))
 		var pl = _wl("", 14, DIMC); sheet_box.add_child(pl); _idle_lbls.append(["gate", pl])
 		var pb = ProgressBar.new(); pb.custom_minimum_size = Vector2(350, 12); pb.show_percentage = false; pb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pb.add_theme_stylebox_override("background", UIKit.sb(Color(0.3, 0.2, 0.08, 0.18), 6, LINE, 1)); pb.add_theme_stylebox_override("fill", UIKit.sb(Color("#c8902a"), 6, Color("#c8902a"), 0))
 		sheet_box.add_child(pb); _idle_lbls.append(["bar", pb])
 	var fr = HBoxContainer.new(); fr.add_theme_constant_override("separation", 6); sheet_box.add_child(fr)
 	var fl = _lbl(MD.S("fore_t", "領班", "領班"), 15, DIMC, "sans", 900); fr.add_child(fl)
