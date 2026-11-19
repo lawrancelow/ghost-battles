@@ -26,21 +26,7 @@ func _init() -> void:
 	# 換咗新安裝包：舊補丁作廢
 	if str(st.get("base", "")) != base:
 		_clear(); st = {}
-	var url = OS.get_environment("GB_UPDATE_URL") if OS.get_environment("GB_UPDATE_URL") != "" else DEFAULT_URL
-	var t0 = Time.get_ticks_msec()
-	var info = _get_json(url + "?t=%d" % int(Time.get_unix_time_from_system()), CHECK_MS)
-	if info is Dictionary:
-		var e = info.get("base", {}).get(base, {}).get(plat)
-		if e is Dictionary and int(e.get("ver", 0)) > int(st.get("ver", 0)):
-			var size = int(e.get("size", 0))
-			if size <= BLOCK_DL_MAX:
-				var ok = _download(url.get_base_dir() + "/" + str(e.file), e, BLOCK_DL_MS)
-				if ok: st = _state()
-				else: _bg_entry = [url.get_base_dir() + "/" + str(e.file), e]
-			else: _bg_entry = [url.get_base_dir() + "/" + str(e.file), e]
-		status = "checked %dms" % (Time.get_ticks_msec() - t0)
-	else:
-		status = "offline"
+	status = "later"
 	# 載入補丁
 	var f = str(st.get("file", ""))
 	if f != "" and FileAccess.file_exists(DIR + "/" + f):
@@ -51,10 +37,43 @@ func _init() -> void:
 	print("[boot] base=", base, " plat=", plat, " content=", content_ver, " ", status)
 
 func _ready() -> void:
-	if _bg_entry != null: _bg_download.call_deferred()
+	# 開機階段（_init）Android 嘅 TLS 未準備好（SSL module failed to initialize），
+	# 所以改為遊戲起動之後先喺背景查更新；落好補丁，下次開遊戲生效。
+	if status == "off": return
+	_check_later.call_deferred(2.0)
+
+func _check_later(delay: float) -> void:
+	await get_tree().create_timer(delay).timeout
+	_bg_check()
+
+var _tries := 0
+func _bg_check() -> void:
+	_tries += 1
+	var url = OS.get_environment("GB_UPDATE_URL") if OS.get_environment("GB_UPDATE_URL") != "" else DEFAULT_URL
+	var h = HTTPRequest.new(); h.timeout = 15.0; add_child(h)
+	h.request_completed.connect(func(result, code, _hd, body):
+		h.queue_free()
+		var info = JSON.parse_string(body.get_string_from_utf8()) if result == HTTPRequest.RESULT_SUCCESS and code == 200 else null
+		if not (info is Dictionary):
+			status = "offline"
+			print("[boot] check failed result=", result, " code=", code)
+			if _tries < 6: _check_later(60.0 * _tries)
+			return
+		var e = info.get("base", {}).get(base, {}).get(plat)
+		var st = _state()
+		if e is Dictionary and int(e.get("ver", 0)) > int(st.get("ver", 0)):
+			_bg_entry = [url.get_base_dir() + "/" + str(e.file), e]
+			status = "downloading"
+			_bg_download()
+		else:
+			status = "latest"
+		print("[boot] check ok status=", status))
+	h.request(url + "?t=%d" % int(Time.get_unix_time_from_system()))
 
 func label() -> String:
-	return "v%s%s" % [base, ("・更新 %d" % content_ver) if content_ver > 0 else ""]
+	var t = "v%s%s" % [base, ("・更新 %d" % content_ver) if content_ver > 0 else ""]
+	if status == "pending": t += "（新更新已下載，重開遊戲生效）"
+	return t
 
 # ---------------- 狀態檔 ----------------
 func _state() -> Dictionary:
@@ -145,5 +164,8 @@ func _bg_download() -> void:
 	h.request_completed.connect(func(result, code, _hd, _b):
 		if result == HTTPRequest.RESULT_SUCCESS and code == 200 and _accept(DIR + "/download.tmp", _bg_entry[1]):
 			status = "pending"   # 下次開遊戲生效
+			print("[boot] patch downloaded, pending")
+		else:
+			print("[boot] download failed result=", result, " code=", code)
 		h.queue_free())
 	h.request(_bg_entry[0])
