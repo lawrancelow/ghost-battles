@@ -31,13 +31,21 @@ func shadow(ctx: Ctx, x: float, y: float, s: float) -> void:
 	el(ctx, x, y, 14 * s, 4 * s, "rgba(0,0,0,.35)")
 
 # ---------------- scene.js：以底邊中心畫一張圖 ----------------
+const VS = preload("res://game/village_style.gd")   # [villageart] 新畫風調色
+var tint := Color.WHITE   # [villageart] put() 用嘅調色（只喺村子樹／稻田／擺設／出村門設）
 func put(ctx: Ctx, key: String, x: float, y: float, w: float, h := 0.0) -> Rect2:
 	var im = Spr.get_tex(key)
 	if im == null: return Rect2()
 	if h == 0.0: h = w * im.get_height() / im.get_width()
 	if w == 0.0: w = h * im.get_width() / im.get_height()
+	if tint != Color.WHITE:   # [villageart]
+		var m = ctx._mod() * tint
+		if m.a > 0.001: ctx.ci.draw_set_transform_matrix(ctx.T); ctx.ci.draw_texture_rect(im, Rect2(x - w / 2, y - h, w, h), false, m); ctx.ci.draw_set_transform_matrix(Transform2D.IDENTITY)
+		return Rect2(x - w / 2, y - h, w, h)
 	ctx.drawImage(im, x - w / 2, y - h, w, h)
 	return Rect2(x - w / 2, y - h, w, h)
+func vput(ctx: Ctx, key: String, x: float, y: float, w: float, h := 0.0) -> Rect2:   # [villageart] 調色版 put
+	tint = VS.tint_for(key); var r = put(ctx, key, x, y, w, h); tint = Color.WHITE; return r
 
 const BW := {"house": 150, "gate": 124, "plank": 106, "bun": 106, "wood": 108, "rice": 108, "store": 112, "home": 104, "camp": 108, "altar": 104, "furnace": 62}
 const PLAQUE := {"house": [0.47, 0.49, 0.24], "gate": [0.50, 0.36, 0.30], "plank": [0.44, 0.36, 0.32], "store": [0.48, 0.43, 0.33], "wood": [0.40, 0.36, 0.26]}
@@ -64,7 +72,7 @@ func sign_board(ctx: Ctx, x: float, y: float, text: String, lv) -> void:
 	if lv: lv_badge(ctx, x + w / 2 - 1, y - 23, lv)
 
 func draw_building(ctx: Ctx, id: String, x: float, y: float, lv, t: float, extra = null) -> void:
-	el(ctx, x, y + 1, BW[id] * 0.44, 7, "rgba(0,0,0,.28)")
+	el(ctx, x, y + 1, BW[id] * 0.44, 7, "rgba(10,2,8,.34)")   # [villageart] 冇淺色地台，深紫黑影
 	var r = put(ctx, id, x, y + 6, BW[id])
 	var bname: String = DB.D.BUILDINGS[id].name
 	if PLAQUE.has(id): plaque_text(ctx, r, PLAQUE[id], bname, lv)
@@ -75,7 +83,7 @@ func draw_building(ctx: Ctx, id: String, x: float, y: float, lv, t: float, extra
 		ctx.fillStyle = g; ctx.fillRect(fx - 30, fy - 30, 60, 60)
 
 func draw_gate(ctx: Ctx, x: float, y: float, _t: float) -> void:
-	var r = put(ctx, "gate", x, y + 6, BW.gate); plaque_text(ctx, r, PLAQUE.gate, "出村", 0)
+	var r = vput(ctx, "gate", x, y + 6, BW.gate); plaque_text(ctx, r, PLAQUE.gate, "出村", 0)
 
 func draw_site(ctx: Ctx, x: float, y: float, name: String) -> void:
 	ctx.save(); ctx.font = "700 12px \"PingFang TC\",\"Noto Sans TC\",sans-serif"; var w = maxf(64, ctx.measureText(name).width + 22)
@@ -89,23 +97,24 @@ func draw_site(ctx: Ctx, x: float, y: float, name: String) -> void:
 
 const PERCH := [[-0.22, 0.40, 1], [0.24, 0.30, -1]]
 func draw_tree(ctx: Ctx, x: float, y: float, hp: int, t: float, shake: bool, perched: bool, idx: int) -> void:
-	if hp <= 0: put(ctx, "stump", x, y + 3, 38); return
+	if hp <= 0: vput(ctx, "stump", x, y + 3, 38); return
 	var sx = sin(t * 60) * 2.2 if shake else 0.0; var H = 80.0 + (idx % 3) * 4
 	el(ctx, x, y + 2, 20, 5, "rgba(0,0,0,.35)")
 	ctx.save()
 	if shake: ctx.translate(x, y); ctx.rotate(sin(t * 60) * 0.02); ctx.translate(-x, -y)
 	var key = "tree_bare" if Spr.ok("tree_bare") else "tree"; var flip = idx % 2 == 1
 	if flip: ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0)
-	var r = put(ctx, key, x + sx, y + 4, 0, H)
+	var r = vput(ctx, key, x + sx, y + 4, 0, H)
 	ctx.restore()
+	VS.tree_extra(ctx, x + sx, y, r, flip, t)   # [villageart] 樹洞臉／手指枝暗影
 	if key == "tree_bare" and perched and Spr.ok("crowsit"):
 		for p in PERCH:
 			var cx: float = x + r.size.x * p[0] * (-1 if flip else 1) + sx; var cy: float = r.position.y + r.size.y * p[1]
-			ctx.save(); ctx.translate(cx, cy); ctx.scale(p[2] * (-1 if flip else 1), 1); put(ctx, "crowsit", 0, 0, 13); ctx.restore()
+			ctx.save(); ctx.translate(cx, cy); ctx.scale(p[2] * (-1 if flip else 1), 1); vput(ctx, "crowsit", 0, 0, 13); ctx.restore()
 
 func draw_paddy(ctx: Ctx, x: float, y: float, ripe, _t: float, _i: int) -> void:
-	if ripe: put(ctx, "paddy", x, y + 9, 56); return
-	if Spr.ok("paddy_cut"): put(ctx, "paddy_cut", x, y + 9, 56); return
+	if ripe: vput(ctx, "paddy", x, y + 9, 56); return
+	if Spr.ok("paddy_cut"): vput(ctx, "paddy_cut", x, y + 9, 56); return
 	ctx.save(); ctx.globalAlpha = 0.55; ctx.filter = "brightness(.55) saturate(.4)"; put(ctx, "paddy", x, y + 9, 56, 34); ctx.restore()
 
 func draw_web(ctx: Ctx, cx: float, cy: float, r: float, a0: float, a1: float, alpha := 0.38) -> void:
@@ -125,17 +134,17 @@ func draw_web(ctx: Ctx, cx: float, cy: float, r: float, a0: float, a1: float, al
 
 func draw_willo(ctx: Ctx, x: float, y: float, t: float) -> void:
 	var fy = y + sin(t * 1.6 + x) * 5; var a = 0.5 + sin(t * 3 + x) * 0.25
-	var g = ctx.createRadialGradient(x, fy, 1, x, fy, 14); g.addColorStop(0, "rgba(140,220,255,%s)" % a); g.addColorStop(1, "rgba(140,220,255,0)")
+	var g = ctx.createRadialGradient(x, fy, 1, x, fy, 14); g.addColorStop(0, "rgba(110,230,180,%s)" % a); g.addColorStop(1, "rgba(110,230,180,0)")   # [villageart] 病態青綠
 	ctx.fillStyle = g; ctx.fillRect(x - 14, fy - 14, 28, 28)
-	ctx.beginPath(); ctx.moveTo(x - 3, fy + 2); ctx.quadraticCurveTo(x - 3, fy - 5, x + sin(t * 5) * 1.5, fy - 9); ctx.quadraticCurveTo(x + 3, fy - 5, x + 3, fy + 2); ctx.arc(x, fy + 2, 3, 0, PI); ctx.fillStyle = "rgba(190,240,255,%s)" % (a + 0.2); ctx.fill()
+	ctx.beginPath(); ctx.moveTo(x - 3, fy + 2); ctx.quadraticCurveTo(x - 3, fy - 5, x + sin(t * 5) * 1.5, fy - 9); ctx.quadraticCurveTo(x + 3, fy - 5, x + 3, fy + 2); ctx.arc(x, fy + 2, 3, 0, PI); ctx.fillStyle = "rgba(170,250,210,%s)" % (a + 0.2); ctx.fill()
 
 const DECO := {"scarecrow": ["scarecrow", 0, 62], "grave": ["grave", 26, 0], "post": ["lamppost", 0, 46], "banana": ["banana", 0, 64]}
 func draw_decor(ctx: Ctx, kind: String, x: float, y: float, t: float) -> void:
 	if DECO.has(kind) and Spr.ok(DECO[kind][0]):
 		var d: Array = DECO[kind]
-		if kind == "banana": ctx.save(); ctx.translate(x, y); ctx.rotate(sin(t * 0.8 + x) * 0.02); put(ctx, d[0], 0, 2, d[1], d[2]); ctx.restore(); return
-		if kind == "scarecrow": ctx.save(); ctx.translate(x, y); ctx.rotate(sin(t * 0.9) * 0.03); put(ctx, d[0], 0, 4, d[1], d[2]); ctx.restore(); return
-		put(ctx, d[0], x, y + 3, d[1], d[2])
+		if kind == "banana": ctx.save(); ctx.translate(x, y); ctx.rotate(sin(t * 0.8 + x) * 0.02); vput(ctx, d[0], 0, 2, d[1], d[2]); ctx.restore(); return
+		if kind == "scarecrow": ctx.save(); ctx.translate(x, y); ctx.rotate(sin(t * 0.9) * 0.03); vput(ctx, d[0], 0, 4, d[1], d[2]); ctx.restore(); return
+		vput(ctx, d[0], x, y + 3, d[1], d[2])
 		if kind == "post":
 			var a = 0.22 + sin(t * 2 + x) * 0.06; var g = ctx.createRadialGradient(x + 6, y - 30, 1, x + 6, y - 30, 18)
 			g.addColorStop(0, "rgba(255,236,190,%s)" % a); g.addColorStop(1, "rgba(255,236,190,0)"); ctx.fillStyle = g; ctx.fillRect(x - 14, y - 50, 40, 40)
@@ -144,10 +153,16 @@ func draw_decor(ctx: Ctx, kind: String, x: float, y: float, t: float) -> void:
 		"willo": draw_willo(ctx, x, y, t)
 		"webTL": draw_web(ctx, x, y, 30, 0, PI / 2, 0.32)
 		"webTR": draw_web(ctx, x, y, 30, PI / 2, PI, 0.32)
-		"offer":
-			rr(ctx, x - 9, y - 6, 18, 6, 1, "#7a3a2a", OUT, 1)
-			for k in range(-1, 2): rr(ctx, x + k * 4 - 0.6, y - 16, 1.2, 10, 0.5, "#c8a050"); el(ctx, x + k * 4, y - 16, 1.2, 1.2, "#ff8040")
-			ctx.strokeStyle = "rgba(220,220,240,.25)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y - 17); ctx.quadraticCurveTo(x + 4 + sin(t * 2) * 3, y - 26, x, y - 34); ctx.stroke()
+		"offer":   # [villageart] 原本係香爐插香（紅線：唔准香燭）→ 改做矮石燈（位置不變，冇點擊）
+			el(ctx, x, y - 1, 10, 3, "rgba(10,2,8,.45)")
+			rr(ctx, x - 8, y - 5, 16, 5, 1, "#3a3436", "#141016", 1)          # 底座
+			rr(ctx, x - 2.5, y - 12, 5, 7, 0.5, "#454044", "#141016", 0.8)     # 柱
+			rr(ctx, x - 6, y - 21, 12, 9, 1, "#3e383c", "#141016", 1)          # 燈箱
+			var a = 0.55 + sin(t * 1.7 + x) * 0.12
+			rr(ctx, x - 3, y - 19, 6, 5, 0.5, "rgba(150,240,190,%s)" % a)      # 病態青綠微光
+			poly(ctx, [x - 9, y - 21, x + 9, y - 21, x + 5, y - 26, x - 5, y - 26], "#2e292c", "#141016", 1)   # 石帽
+			el(ctx, x, y - 27, 2, 1.5, "#2e292c", "#141016", 0.8)
+			ctx.strokeStyle = "rgba(14,8,12,.6)"; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.moveTo(x - 5, y - 4); ctx.lineTo(x - 2, y - 2); ctx.lineTo(x + 1, y - 4); ctx.stroke()   # 裂紋
 
 func draw_crow(ctx: Ctx, x: float, y: float, s: float, ph: float, dir: float, perched: bool) -> void:
 	var key = "crowsit" if perched else "crowfly"; var im = Spr.get_tex(key)

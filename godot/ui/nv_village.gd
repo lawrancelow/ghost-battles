@@ -7,6 +7,7 @@ extends "res://ui/js_canvas_view.gd"
 const W := 390.0
 const WH := 1130.0
 const CB = preload("res://game/outpost/chain_bld.gd")   # 後院拓展建築（生產鏈）
+const VS = preload("res://game/village_style.gd")   # [villageart] 新畫風：血霧／夜色／調色
 
 var V: Dictionary
 var world: Node2D
@@ -58,6 +59,7 @@ func _build() -> void:
 		var m = get_tree().root.get_node_or_null("Main")
 		if m: CB.hide_yard(m))
 	add_child(yard_back)
+	VS.attach(self)   # [villageart]
 
 # ---------------- 每幀 ----------------
 func _process(_dt: float) -> void:
@@ -343,7 +345,7 @@ func _put(c: CanvasItem, key: String, X: Transform2D, x: float, y: float, w: flo
 	if im == null: return
 	if h == 0.0: h = w * im.get_height() / im.get_width()
 	if w == 0.0: w = h * im.get_width() / im.get_height()
-	c.draw_set_transform_matrix(X); c.draw_texture_rect(im, Rect2(x - w / 2, y - h, w, h), false); c.draw_set_transform_matrix(Transform2D.IDENTITY)
+	c.draw_set_transform_matrix(X); c.draw_texture_rect(im, Rect2(x - w / 2, y - h, w, h), false, VS.tint_for(key)); c.draw_set_transform_matrix(Transform2D.IDENTITY)   # [villageart] 調色
 
 func _glow(c: CanvasItem, X: Transform2D, x: float, y: float, r: float, col: Color) -> void:
 	PtGfx.init(); c.draw_set_transform_matrix(X); c.draw_texture_rect(PtGfx.RAD, Rect2(x - r, y - r, r * 2, r * 2), false, col); c.draw_set_transform_matrix(Transform2D.IDENTITY)
@@ -361,9 +363,9 @@ func _decor(ctx: Ctx, kind: String, x: float, y: float) -> void:
 				_glow(c, B, x + 6, y - 30, 18, Color(1, 236 / 255.0, 190 / 255.0, 0.22 + sin(t * 2 + x) * 0.06)); return
 		"willo":
 			var fy = y + sin(t * 1.6 + x) * 5; var a = 0.5 + sin(t * 3 + x) * 0.25
-			_glow(c, B, x, fy, 14, Color(140 / 255.0, 220 / 255.0, 1, a))
+			_glow(c, B, x, fy, 14, Color(110 / 255.0, 230 / 255.0, 180 / 255.0, a))   # [villageart] 病態青綠
 			ctx.beginPath(); ctx.moveTo(x - 3, fy + 2); ctx.quadraticCurveTo(x - 3, fy - 5, x + sin(t * 5) * 1.5, fy - 9); ctx.quadraticCurveTo(x + 3, fy - 5, x + 3, fy + 2); ctx.arc(x, fy + 2, 3, 0, PI)
-			ctx.fillStyle = Color(190 / 255.0, 240 / 255.0, 1, a + 0.2); ctx.fill(); return
+			ctx.fillStyle = Color(170 / 255.0, 250 / 255.0, 210 / 255.0, a + 0.2); ctx.fill(); return   # [villageart]
 	Art.draw_decor(ctx, kind, x, y, t)
 
 const EXTRA := [["vil_board", 56.0, 268.0, 74.0], ["vil_rebirth", 62.0, 1116.0, 84.0]]
