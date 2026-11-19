@@ -339,7 +339,10 @@ func _build_village() -> void:
 			if q and q.go == "roster": open_roster(); return
 			if mv_on():
 				if q and (q.get("t") == "stage" or q.get("go") == "gate"): close_sheet(); J.mc(J.G.get("World"), "open", []); return
-				close_sheet(); _nav_on("village"); return
+				close_sheet(); _nav_on("village")
+				var cg = {"tree": "wood", "paddy": "rice"}.get(str(q.get("go")), str(q.get("go"))) if q else ""   # [camp] 營地建築任務：鏡頭移去嗰間
+				if mv_view != null and mv_view.has_method("focus_camp") and cg != "": mv_view.focus_camp(cg)
+				return
 			var p = J.mc(J.G.get("Village"), "questTarget", [])
 			if p: close_sheet(); J.mc(J.G.get("Village"), "focus", [p[0], p[1]]))
 
@@ -526,7 +529,7 @@ func _mv_tick() -> void:
 # 後院：舊村子建築（招魂台、化寶爐、鬼宅鬼節宴、嚇人訓練班、倉庫…）照用得；等級由移動村進度帶動（只升唔跌），亦可以照舊用棺材板升
 func open_backyard() -> void:
 	open_sheet("後院（舊村子設施）", func(): pass); _clear_body()
-	_p("紙紮大屋後面仲有啲舊設施。佢哋嘅等級會跟住移動村進度自動升（只升唔跌），亦可以照舊用棺材板同冥幣升。")
+	_p("原本條村嘅建築已經搬咗入大地圖底嘅「營地」（紙紮大屋後面，拔營一齊抬走），喺大地圖直接撳就用得；呢度係清單捷徑。佢哋嘅等級會跟住移動村進度自動升（只升唔跌），亦可以照舊用棺材板同冥幣升。" if DB.lang == "yue" else "原本村子的建築已經搬進大地圖底部的「營地」（紙紮大屋後面，拔營一起搬走），在大地圖直接點就能用；這裡是清單捷徑。它們的等級會跟著移動村進度自動升（只升不降），也可以照舊用棺材板和冥幣升級。")   # [camp]
 	var S = G.S; var D = DB.D
 	for id in D.BLD_ORDER:
 		var lv = int(S.bld.get(id, 0)); var bid: String = id

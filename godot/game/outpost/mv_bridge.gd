@@ -116,7 +116,7 @@ static func intro_lines() -> Array:
 	]
 	if moved.size() > 0:
 		l.append(["系統", T("你打通咗嘅地圖（%s）當已經拔營，留低嘅檔已經變咗分村。" % "、".join(moved), "你打通了的地圖（%s）視為已拔營，留下的攤位已變成分村。" % "、".join(moved))])
-	l.append(["旁白", T("槐木、糯米由後院採集；棺材鋪出棺材板、包子鋪出普通包子；普通包子送去大屋隨身嘅「嘆氣蒸籠」先蒸得成壽包。撳右上角「後院」打理建築。", "槐木、糯米由後院採集；棺材鋪出棺材板、包子鋪出普通包子；普通包子送去大屋隨身的「嘆氣蒸籠」才蒸得成壽包。按右上角「後院」打理建築。")])   # [chain]
+	l.append(["旁白", T("槐木、糯米由營地採集；棺材鋪出棺材板、包子鋪出普通包子；普通包子送去大屋隨身嘅「嘆氣蒸籠」先蒸得成壽包。原本條村嘅建築全部喺大地圖底嘅「營地」（向下拉就見），跟大屋一齊搬。", "槐木、糯米由營地採集；棺材鋪出棺材板、包子鋪出普通包子；普通包子送去大屋隨身的「嘆氣蒸籠」才蒸得成壽包。原本村子的建築全部在大地圖底部的「營地」（往下拉就看到），跟大屋一起搬。")])   # [chain] [camp]
 	return l
 
 static func map_name(c: int) -> String:
@@ -202,9 +202,9 @@ const QTXT := {
 	"craftBun": ["用嘆氣蒸籠蒸出 %d 個壽包（普通包子 → 壽包）", "用嘆氣蒸籠蒸出 %d 個壽包（普通包子 → 壽包）"],
 }
 const BTXT := {
-	"bun": ["後院起包子鋪（出普通包子）", "後院建造包子鋪（出普通包子）"],
+	"bun": ["營地起包子鋪（出普通包子）", "營地建造包子鋪（出普通包子）"],   # [camp] 後院 → 營地
 	"store": ["拔營一次或各台合共 20 級", "拔營一次或各台合計 20 級"],
-	"altar": ["打低餓鬼王（後院招魂台）", "打倒餓鬼王（後院招魂台）"], "furnace": ["升到 6 級（後院化寶爐）", "升到 6 級（後院化寶爐）"],
+	"altar": ["打低餓鬼王（營地招魂台）", "打倒餓鬼王（營地招魂台）"], "furnace": ["升到 6 級（營地化寶爐）", "升到 6 級（營地化寶爐）"],   # [camp]
 }
 static func quest_disp(_q, p: Array) -> Array: return p   # 進度照舊（後院建築係真等級）
 
@@ -219,8 +219,8 @@ static func quest_text(q) -> String:
 		var b = str(q.get("b", ""))
 		if b == "house": return T("紙紮大屋擴建到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))), "紙紮大屋擴建到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))))
 		if b == "store": return T("大屋倉庫擴到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))), "大屋倉庫擴到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))))
-	if t in ["chop", "rice", "craftPlank", "build", "bLevel"]: return T("後院：", "後院：") + txt
-	if t == "assign": return T("派 %d 隻鬼去打工（後院或者生產台）" % int(J.num(q.get("n", 1))), "派 %d 隻鬼去打工（後院或者生產台）" % int(J.num(q.get("n", 1))))
+	if t in ["chop", "rice", "craftPlank", "build", "bLevel"]: return T("營地：", "營地：") + txt   # [camp] 原本村子嘅建築喺大地圖底「營地」
+	if t == "assign": return T("派 %d 隻鬼去打工（營地或者生產台）" % int(J.num(q.get("n", 1))), "派 %d 隻鬼去打工（營地或者生產台）" % int(J.num(q.get("n", 1))))   # [camp]
 	return txt
 
 # ---------------- 5. 員工互斥 ----------------

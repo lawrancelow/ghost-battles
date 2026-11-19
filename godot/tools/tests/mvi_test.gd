@@ -174,7 +174,7 @@ func all(t) -> void:
 	# 任務文字
 	var qs = J.G.get("QUESTS")
 	_chk("任務文字（建造棺材鋪）有移動村版", B.quest_text(qs[2]) != str(qs[2].text), B.quest_text(qs[2]))
-	_chk("任務文字（砍樹）指去後院", B.quest_text(qs[0]).contains("後院"), B.quest_text(qs[0]))
+	_chk("任務文字（砍樹）指去營地", B.quest_text(qs[0]).contains("營地"), B.quest_text(qs[0]))   # [camp] 後院 → 營地
 	_chk("任務文字（包壽包）= 嘆氣蒸籠", B.quest_text(qs[5]).contains("嘆氣蒸籠"), B.quest_text(qs[5]))
 	J.cl(J.G.get("save"), null, [])
 	_p("RESULT ok=%d bad=%d" % [ok, bad])

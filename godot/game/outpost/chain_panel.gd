@@ -198,6 +198,7 @@ func _place_btn() -> void:
 	var tp = float(scene.get("top_pad")) if scene.get("top_pad") != null else 0.0
 	var hh = float(scene.get("HUD_H")) if scene.get("HUD_H") != null else 90.0
 	position = Vector2(FW - size.x - 8.0, tp + hh + 6.0)
+	if scene.has_method("chain_btn_pos"): position = scene.chain_btn_pos(size)   # [camp] 避開影響力條同台名牌
 	visible = scene.get("anim") == null and scene.get("card") == null and (panel == null or not is_instance_valid(panel))
 func _btn_input(ev: InputEvent) -> void:
 	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed and Rect2(Vector2.ZERO, size).has_point(ev.position):

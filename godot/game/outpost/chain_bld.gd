@@ -440,7 +440,7 @@ static func backyard_ui(main) -> void:
 	var nb = new_blds()
 	if nb.is_empty(): return
 	var body = main.sheet_body
-	var go = UIKit.btn(L("入後院睇吓（拓展建築）", "進後院看看（拓展建築）"), "gold"); go.add_theme_font_size_override("font_size", 15)
+	var go = UIKit.btn(L("去營地睇吓（大地圖底）", "去營地看看（大地圖底部）") if J.t(S().get("mv_on")) else L("入後院睇吓（拓展建築）", "進後院看看（拓展建築）"), "gold"); go.add_theme_font_size_override("font_size", 15)   # [camp]
 	go.pressed.connect(func(): show_yard(main))
 	body.add_child(go)
 	body.add_child(UIKit.rich("[b]%s[/b]" % L("後院拓展建築（一級原料／二級半成品）", "後院拓展建築（一級原料／二級半成品）"), 15, UIKit.INKTXT, "serif"))
@@ -461,6 +461,10 @@ static var yard_on := false
 static func show_yard(main) -> void:
 	install()
 	main.close_sheet()
+	var mvv = main.get("mv_view")   # [camp] 移動村模式：後院已經搬咗入大地圖營地 → 鏡頭移去營地
+	if mvv != null and is_instance_valid(mvv) and mvv.has_method("cam_camp") and J.t(S().get("mv_on")):
+		if str(main.get("tab")) != "village" and main.has_method("_nav_on"): main._nav_on("village")
+		mvv.cam_camp(); return
 	if main.get("mv_view") != null: main.mv_view.on_hide()
 	main.mv_host.visible = false
 	main.village.visible = true; main.village.process_mode = Node.PROCESS_MODE_INHERIT

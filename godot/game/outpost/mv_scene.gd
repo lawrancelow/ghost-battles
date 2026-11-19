@@ -63,6 +63,7 @@ var amb := {"g": [], "f": [], "tg": 2.0, "tf": 5.0}   # 環境：背景遊魂、
 const HUD_H := 90.0
 const AMB_GHOSTS := 2
 const AMB_FLY := 3
+var camp = null   # [camp] 營地（原本村子嘅建築，喺地圖底）：game/outpost/mv_camp.gd
 
 func _ready() -> void:
 	_rng.seed = 7
@@ -124,6 +125,7 @@ func offline_gain(ms: float) -> Dictionary:
 func _build() -> void:
 	if frame != null: return
 	sim = SIM.new()
+	camp = load("res://game/outpost/mv_camp.gd").new(); camp.sc = self   # [camp]
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); mouse_filter = Control.MOUSE_FILTER_STOP
 	clip_contents = true
 	bg = TextureRect.new(); bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -164,7 +166,40 @@ func view_h() -> float: return H - top_pad - bot_pad
 func w2s(p: Vector2) -> Vector2: return Vector2(p.x, p.y - cam + top_pad)
 func s2w(p: Vector2) -> Vector2: return Vector2(p.x, p.y + cam - top_pad)
 func cam_min() -> float: return -HUD_H * 0.6
-func cam_max() -> float: return maxf(cam_min(), float(sim.L.get("h", 844)) - view_h())
+func cam_max() -> float: return maxf(cam_min(), world_h() - view_h())
+func world_h() -> float: return maxf(float(sim.L.get("h", 844)), camp.bottom()) if camp != null and sim.st() != null else float(sim.L.get("h", 844))   # [camp] 地圖底加營地
+# [camp] 頂部「生產鏈」掣（chain_panel.gd）擺位：影響力條下面，先試右邊、再試左邊、再試右邊低啲；
+#   邊個位冇遮住台名牌／台／營地建築就用邊個（而家用緊嘅位冇遮就唔郁，避免閃）
+var _plates: Array = []
+var _cb_pos = null
+func chain_btn_pos(sz: Vector2) -> Vector2:
+	var y0 = (float(sim.war.hud_y(self)) if sim != null and sim.war != null else top_pad + HUD_H) + 48.0
+	var cands = [Vector2(FW - sz.x - 8.0, y0), Vector2(8.0, y0)]
+	for k in range(1, 4): cands.append_array([Vector2(FW - sz.x - 8.0, y0 + 110.0 * k), Vector2(8.0, y0 + 110.0 * k)])
+	var best = cands[0]; var best_a = INF
+	if _cb_pos != null:   # 而家個位排第一
+		for c in cands: if c.is_equal_approx(_cb_pos): cands.erase(c); cands.push_front(_cb_pos); break
+	for c in cands:
+		var a = _cover(Rect2(s2w(c), sz).grow(4))
+		if a <= 0.0: _cb_pos = c; return c
+		if a < best_a: best_a = a; best = c
+	_cb_pos = best
+	return best
+func _cover(r: Rect2) -> float:
+	var a = 0.0
+	for q in _plates: a += r.intersection(q).get_area() * 3.0
+	for k in _wbtns:
+		if k.begins_with("st:") or k.begins_with("camp") or k.begins_with("unl:"): a += r.intersection(_wbtns[k]).get_area()
+	return a
+func cam_camp() -> void:   # [camp] 鏡頭移去營地
+	close_sheet(); _close_picker(); cam_v = 0.0
+	cam_tgt = clampf(camp.top() - HUD_H - 6.0, cam_min(), cam_max())
+func focus_camp(id: String) -> bool:   # [camp] 鏡頭移去營地某間建築（主線任務條撳落去用）
+	var it = camp.item(id)
+	if it == null: return false
+	close_sheet(); _close_picker(); cam_v = 0.0
+	cam_tgt = clampf(float(it.y) - view_h() * 0.6, cam_min(), cam_max())
+	return true
 func _clamp_cam(hard := false) -> void:
 	var lo = cam_min(); var hi = cam_max()
 	if sheet != null and sheet.visible: lo -= 260.0; hi += 420.0   # 開住升級條：可以拉過界，等個台唔俾遮住
@@ -210,6 +245,7 @@ func _process(dt: float) -> void:
 	else: sim.step(dt)
 	_step_cam(dt)
 	_step_amb(dt)
+	camp.step(dt)   # [camp]
 	_eat_events()
 	_step_fx(dt)
 	# HUD 冥幣追真數（飛緊嘅錢到咗先跳）
@@ -265,6 +301,8 @@ func _eat_events() -> void:
 				_snd("coin")
 			"bang":
 				shake[_fence_i(e.pos.x)] = 0.4
+				if fence_art():   # [camp] 柵欄喺背景圖：撞擊點出塵＋碎木
+					_burst(e.pos + Vector2(0, 6), Color("#b8a888"), 5); _burst(e.pos, Color("#7a5634"), 4)
 				if _rng.randf() < 0.5: _bubble(e.pos + Vector2(-60, -64), MD.T(_pick(MD.D().FOE_LINES)), MD.S("foe", "孤魂", "孤魂"), 2.4)
 			"rattle":
 				shake[_fence_i(e.x)] = 0.3
@@ -356,7 +394,7 @@ func _step_anim(dt: float) -> void:
 		_banner_set(MD.S("arrive", "抵達", "抵達"), MD.T(MD.map_def(sim.ci()).get("name")), 2.6)
 		_prefill()
 func _after_move(fresh := true) -> void:
-	sim.reset_live(); sim.st(); sim.sync(); _set_bg(); _layout(); cam_home()
+	sim.reset_live(); sim.st(); sim.sync(); camp.invalidate(); _set_bg(); _layout(); cam_home()   # [camp] invalidate
 	parts.clear(); bubbles.clear(); shake.clear(); amb.g.clear(); amb.f.clear()
 	_save()
 	if fresh: _prefill()
@@ -373,7 +411,7 @@ func _draw_stage() -> void:
 	if sim == null or sim.st() == null or sim.L.is_empty(): return
 	var ctx = Ctx.new(stage)
 	var L = sim.L
-	_btns.clear(); _wbtns.clear()
+	_btns.clear(); _wbtns.clear(); _plates.clear()
 	var vy0 = cam - top_pad - 10.0; var vy1 = cam - top_pad + H + 10.0     # 鏡頭內（世界 y）
 	ctx.save(); ctx.translate(0, top_pad - cam)
 	_draw_ground(ctx, vy0, vy1)
@@ -383,7 +421,7 @@ func _draw_stage() -> void:
 	if vy0 < L.fence_y + 80.0:
 		var fo = sim.foes.duplicate(); fo.sort_custom(func(a, b): return a.pos.y < b.pos.y)
 		for f in fo: _draw_foe(ctx, f)
-		_draw_fence(ctx)
+		if not fence_art(): _draw_fence(ctx)   # [camp] fence_art：柵欄喺背景圖
 		if not walking:
 			for g in sim.guards: _draw_guard(ctx, g)
 			_draw_guard_slots(ctx)
@@ -397,6 +435,7 @@ func _draw_stage() -> void:
 		if dy < vy0 - 20.0 or dy - 160.0 > vy1: continue
 		var dd = d
 		items.append([dy, func(): _draw_decor(ctx, dd)])
+	camp.add_items(ctx, items, vy0, vy1, fk, walking)   # [camp] 營地建築
 	if fk > 0.04 and L.counter_y + 40.0 > vy0 and L.counter_y - 220.0 < vy1:
 		items.append([L.house.y, func(): _draw_house(ctx, fk)])
 		items.append([L.counter_y, func(): _draw_counter(ctx, fk)])
@@ -439,6 +478,7 @@ func _draw_stage() -> void:
 func _draw_ground(ctx: Ctx, vy0: float, vy1: float) -> void:
 	var L = sim.L
 	ctx.fillStyle = "#1a1620"; ctx.fillRect(0, vy0, FW, vy1 - vy0)
+	if _draw_tiles(ctx, vy0, vy1): return   # [camp] 新手繪背景（MAPS[ci].bg_tiles）：路、河、橋都喺圖入面，唔再程序畫
 	if bg_tex != null:
 		# 頂：成張背景（天、遠景）；下面：用背景下半截（地面）一節節鋪，隔節左右反轉
 		var iw = float(bg_tex.get_width()); var ih = float(bg_tex.get_height())
@@ -474,6 +514,69 @@ func _draw_ground(ctx: Ctx, vy0: float, vy1: float) -> void:
 			Art.el(ctx, q.x, q.y, 3.0, 2.0, "rgba(70,55,40,.55)")
 	for d in Ly.get("decor", []):
 		if str(d.k) == "bridge" and absf(float(d.y) - (vy0 + vy1) / 2.0) < (vy1 - vy0): _draw_bridge(ctx, float(d.x), float(d.y))
+	_draw_camp_road(ctx, vy0, vy1)   # [camp]
+
+# [camp] 營地泥路（layout.camp.road）：比村道窄少少
+func _draw_camp_road(ctx: Ctx, vy0: float, vy1: float) -> void:
+	var P = camp.road()
+	if P.size() < 2 or P[P.size() - 1].y < vy0 or P[0].y > vy1: return
+	for pass_i in 2:
+		ctx.strokeStyle = "rgba(40,28,20,.5)" if pass_i == 0 else "rgba(140,110,78,.5)"
+		ctx.lineWidth = 34.0 if pass_i == 0 else 26.0; ctx.lineJoin = "round"; ctx.lineCap = "round"
+		ctx.beginPath(); ctx.moveTo(P[0].x, P[0].y)
+		for i in range(1, P.size() - 1):   # 彎路：折點中間用二次曲線
+			var m = (P[i] + P[i + 1]) / 2.0
+			ctx.quadraticCurveTo(P[i].x, P[i].y, m.x, m.y)
+		ctx.lineTo(P[P.size() - 1].x, P[P.size() - 1].y)
+		ctx.stroke()
+	ctx.lineCap = "butt"
+
+# [camp] 新背景：MAPS[ci].bg_tiles = ["圖鍵1","圖鍵2","圖鍵3"]，每塊縮到 390 闊，按次序直向疊；
+#   接縫：下一塊頂部 BG_SEAM px 疊落上一塊度，逐步淡入。地圖長過全部圖：由第 2 塊起循環（第 1 塊係村外荒野＋柵欄）。
+#   有任何一個圖鍵未有圖 → 回 false（照舊鋪法）。
+const BG_SEAM := 60.0
+var _tiles_ci := -1
+var _tiles: Array = []
+func _bg_tiles() -> Array:
+	if _tiles_ci == sim.ci(): return _tiles
+	_tiles_ci = sim.ci(); _tiles = []
+	var keys = MD.map_def(sim.ci()).get("bg_tiles", [])
+	if not (keys is Array) or keys.is_empty(): return _tiles
+	var o = []
+	for k in keys:
+		var key = str(k)
+		if not _has(key): return _tiles
+		o.append(Spr.get_tex(key))
+	_tiles = o
+	return _tiles
+func tile_rects() -> Array:   # [[tex, y, h], ...]（世界座標，蓋晒 world_h()）
+	var T = _bg_tiles(); var o = []
+	if T.is_empty(): return o
+	var y = 0.0; var i = 0; var wh = world_h() + 40.0
+	while y < wh and i < 200:
+		var ti = i if i < T.size() else (1 + (i - 1) % maxi(1, T.size() - 1) if T.size() > 1 else 0)
+		var tx: Texture2D = T[ti]
+		var th = FW * tx.get_height() / maxf(1.0, tx.get_width())
+		o.append([tx, y, th])
+		y += th - BG_SEAM; i += 1
+	return o
+func _draw_tiles(ctx: Ctx, vy0: float, vy1: float) -> bool:
+	var R = tile_rects()
+	if R.is_empty(): return false
+	for i in R.size():
+		var tx: Texture2D = R[i][0]; var y: float = R[i][1]; var th: float = R[i][2]
+		if y > vy1 or y + th < vy0: continue
+		var iw = float(tx.get_width()); var ih = float(tx.get_height()); var k2 = ih / th
+		if i == 0: ctx.drawImage(tx, 0, y, FW, th); continue
+		var n = 12; var sh = BG_SEAM / n   # 接縫淡入
+		for j in n:
+			ctx.globalAlpha = (j + 1.0) / (n + 1.0)
+			ctx.drawImage(tx, 0, j * sh * k2, iw, sh * k2, 0, y + j * sh, FW, sh + 0.5)
+		ctx.globalAlpha = 1.0
+		ctx.drawImage(tx, 0, BG_SEAM * k2, iw, ih - BG_SEAM * k2, 0, y + BG_SEAM, FW, th - BG_SEAM)
+	ctx.fillStyle = "rgba(12,8,20,.16)"; ctx.fillRect(0, vy0, FW, vy1 - vy0)
+	return true
+func fence_art() -> bool: return J.t(MD.layout(sim.ci()).get("fence_art"))   # [camp] 柵欄畫咗喺背景圖
 
 func _draw_stream(ctx: Ctx, y: float) -> void:
 	ctx.fillStyle = "rgba(30,50,70,.75)"; ctx.fillRect(0, y - 20, FW, 40)
@@ -772,6 +875,7 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 			var ft = _fit(ctx, name, cw - 12.0, 15)
 			ctx.font = "900 %dpx sans-serif" % ft[1]; var tw = ctx.measureText(ft[0]).width + 14
 			Art.rr(ctx, p.x - tw / 2, ny - 11, tw, 22, 6, "rgba(30,18,12,.82)", "#b89a52", 1)
+			_plates.append(Rect2(p.x - tw / 2, ny - 11, tw, 42))   # [camp] 名牌位（生產鏈掣避開）
 			_txt(ctx, ft[0], p.x, ny, ft[1], Color("#f6e6c0"), "center", 900, 0)
 			# 第二行：Lv＋里程碑星
 			var nm = MD.nm(sid, sim.lv(sid)); var tot = MD.miles(sid).size()
@@ -784,6 +888,7 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 			var cost = float(MD.st_def(sid).get("unlock_cost", 0))
 			var ok = sim.coins() >= cost
 			_lock(ctx, Vector2(p.x, p.y - 46))
+			_plates.append(Rect2(p.x - cw / 2, ny - 16, cw, 56))   # [camp]
 			var ft2 = _fit(ctx, name, cw, 15)
 			_txt(ctx, ft2[0], p.x, ny - 4, ft2[1], Color("#f0e2c8"), "center", 900, 4)
 			var bw = minf(112.0, cw)
@@ -990,6 +1095,7 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 	for l in lines: w = maxf(w, ctx.measureText(l).width)
 	w += 20.0; var h = lines.size() * 20.0 + 12.0 + (18.0 if b.who != "" else 0.0)
 	var wtop = cam + HUD_H + 4.0; var wbot = cam + view_h() - h - 10.0
+	if sim.war != null: wtop = maxf(wtop, cam - top_pad + float(sim.war.hud_y(self)) + 46.0)   # [camp] 對白框唔好俾影響力條遮住
 	var x = clampf(b.p.x, 6.0, FW - w - 6.0); var y = clampf(b.p.y - h, wtop, maxf(wtop, wbot))
 	for k2 in 6:
 		var hit = false
@@ -1161,6 +1267,7 @@ func tap(p: Vector2) -> void:
 				if sim.unlock(a[1]): _save()
 				else: _float(p + Vector2(0, -30), MD.S("no_coin", "冥幣唔夠", "冥幣不夠"), Color("#ffb0a0"), 16); _snd("click")
 				return
+			"campa", "campc": camp.tap(a[0], a[1]); _snd("click"); return   # [camp]
 			"slot": _open_picker(a[1], int(a[2])); return
 			"guard": _open_picker("guard", int(a[1])); return
 	for key in _wbtns.keys():

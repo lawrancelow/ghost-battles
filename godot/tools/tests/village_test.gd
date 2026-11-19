@@ -223,7 +223,8 @@ func all(t) -> void:
 	m.sheet_scroll.scroll_vertical = 100000; await _w(t, 0.3)
 	await _shot(t, "07_backyard_sheet")
 	CB.show_yard(m); await _calm(t, false); await _w(t, 1.0)
-	_chk("入後院：舊村子畫面出、移動村收", m.village.visible and not m.mv_host.visible and m.village.yard_back.visible)
+	# [camp] 移動村模式：後院已經搬入大地圖「營地」→「去營地睇吓」＝鏡頭移去營地（唔再轉舊村子畫面）
+	_chk("去營地：留喺移動村、鏡頭去營地", m.mv_host.visible and not m.village.visible and m.mv_view.cam >= m.mv_view.camp.top() - 400.0, "%d/%d" % [int(m.mv_view.cam), int(m.mv_view.camp.top())])
 	await _shot(t, "08_yard_from_mv")
 	CB.hide_yard(m); await _w(t, 0.6)
 	_chk("返大排檔", m.mv_host.visible and not m.village.visible)

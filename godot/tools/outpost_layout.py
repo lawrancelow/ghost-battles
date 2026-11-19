@@ -5,7 +5,9 @@
     "road":[[x,y],...]  由入口（road[0]，地圖底）一路上到頂；"j": 櫃台路口係 road 第幾點,
     "st": {sid:[x,y,ri]}  台底中位置、ri＝接 road 第幾點（員工搬貨路線：台前 → road[ri] → … → road[j] → 櫃台後）,
     "decor":[{"k":種類,"x","y","s":大細倍數,"f":左右反}...]   種類：現有圖鍵（tree、lamppost…）或者程序畫（grass、rock、lantern、stream、bridge、fogbank）
+    "camp_y": 營地頂（= h；營地喺地圖底、紙紮大屋後面，排法由 game/outpost/mv_camp.gd 計，每張圖一樣）
   }
+  [camp] 2026-11-19：客人入口（road[0]）改由右邊入（唔再由地圖底入），地圖底留俾「營地」（原本村子嘅建築）。
   STATIONS[].anim = {"fx":[動態名,...], "pts":[[u,v],...]（台圖入面嘅相對位置 0–1，v 由頂計）, "c":"#顏色"}
 引擎：game/outpost/mv_data.gd（讀）、mv_fx.gd（畫動態）。
 """
@@ -72,15 +74,19 @@ def _road_x(ci, i):
 def layout(ci, sids):
     n = len(sids)
     h = TOP + STEP * (n - 1) + FIRST
-    road = [[292, h + 30], [262, h - 140], [240, h - 268]]
+    road = [[404, h - 36], [262, h - 140], [240, h - 268]]   # [camp] 入口喺右邊
     j = 2
     st = {}
+    jr = random.Random(5150 + ci * 37)
     for i, sid in enumerate(sids):
         y = h - FIRST - i * STEP
         rx = _road_x(ci, i)
         road.append([round(rx), round(y + 36)])
         side = 1 if i % 2 == 0 else -1    # 第一個台喺右邊（左邊係紙紮大屋）
-        x = max(92, min(298, rx + side * 112))
+        jx = jr.uniform(-22, 22); jy = jr.uniform(-26, 26)   # [camp] 村莊感：台前後左右錯落（固定種子）
+        x = max(92, min(298, rx + side * 112 + jx))
+        y = y + jy
+        road[-1] = [round(rx + jx * 0.4), round(y + 36)]
         st[sid] = [round(x), round(y), 3 + i]
     road.append([195, FENCE_Y + 20])   # 到圍欄
     rnd = random.Random(20261119 + ci)
@@ -105,6 +111,10 @@ def layout(ci, sids):
     th = THEME.get(ci, THEME[0])
     tries = 0
     counter = [118, h - 250]
+    camp = camp_layout(ci, h, road, st, counter)   # [camp] 營地（原本村子嘅建築）
+    def camp_hit(x, y, tall):
+        r = [x - 16, y - (90 if tall else 24), x + 16, y + 6]
+        return any(_ov(r, f, 6) for f in camp["_fp"]) or _near_path(camp["road"], x, y, 34)
     while len([d for d in decor if d["k"] not in ("stream", "bridge")]) < 24 and tries < 4000:
         tries += 1
         y = rnd.uniform(FENCE_Y + 60, h - 40)
@@ -118,12 +128,144 @@ def layout(ci, sids):
         if any(math.hypot(x - p[0], y - p[1]) < 115 for p in st.values()): continue
         if abs(x - counter[0]) < 170 and counter[1] - 140 < y < counter[1] + (200 if tall else 90): continue
         if any(math.hypot(x - d["x"], y - d["y"]) < (70 if tall else 48) for d in decor): continue
+        if camp_hit(x, y, tall): continue   # [camp]
         decor.append({"k": k, "x": round(x), "y": round(y), "s": round(s * rnd.uniform(0.85, 1.15), 2), "f": rnd.random() < 0.5})
+    decor.extend(camp.pop("_decor"))   # [camp] 營地夾樹、石、草叢
+    camp.pop("_fp")
     decor.sort(key=lambda d: d["y"])
     for i in range(3):
         decor.append({"k": "fogbank", "x": round(rnd.uniform(0, W)), "y": round(h * (0.2 + 0.3 * i)), "s": round(rnd.uniform(0.8, 1.3), 2)})
     return {"w": W, "h": h, "fence_y": FENCE_Y, "counter": counter, "house": [104, h - 318], "serve": [236, h - 232],
-            "road": road, "j": j, "st": st, "decor": decor}
+            "road": road, "j": j, "st": st, "decor": decor, "camp_y": h, "camp": camp, "fence_art": False}
+
+# ================= [camp] 營地：原本村子嘅建築（舊十間＋後院拓展建築），喺紙紮大屋後面沿住彎路散落 =================
+# layout.camp = {"top": 營地頂, "bottom": 全部建築起晒嘅營地底, "sign": [x, y] 營地木牌（底中）,
+#                "road": [[x, y], ...] 營地泥路（由櫃台側邊落去）, "slots": {建築鍵: [x, y, s]}（建築底中、大細倍數）}
+#   建築鍵：舊建築 = BLD_ORDER 鍵（wood、rice、plank…）；拓展建築 = chain.json 嘅 bid（b_well…）。
+#   畫面（game/outpost/mv_camp.gd）只畫已起／已解鎖／下一張圖預告嘅；冇 slot 嘅（新加建築）自動排喺最底。
+#   唔疊：每間建築佔位（圖＋頂上牌＋門口打工鬼＋名牌）互相唔撞，唔撞櫃台、紙紮大屋、排隊線、營地泥路、木牌。
+CAMP_OLD = ["wood", "rice", "plank", "bun", "store", "house", "home", "camp", "altar", "furnace"]
+CAMP_BW = {"house": 112, "furnace": 66}
+CAMP_RATIO = {"house": 0.96, "wood": 0.92, "rice": 0.95, "plank": 0.93, "bun": 0.87, "store": 0.96, "home": 0.96, "camp": 0.94, "altar": 0.97, "furnace": 1.14}
+IMG_MAXH = 96
+CAMP_W = 100            # 建築圖闊（大細倍數 s 再乘）
+def _camp_ids():
+    import json, os
+    p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "nat", "chain.json")
+    ids = []
+    try:
+        d = json.load(open(p, encoding="utf-8"))
+        o = 0; rows = []
+        for kk, kind in (("GATHER", 0), ("WORKSHOPS", 1)):
+            for b, e in d.get(kk, {}).items():
+                if not e.get("old"): rows.append((int(e.get("unlock", {}).get("ci", 0)), kind, o, b))
+                o += 1
+        rows.sort()
+        ids = [r[3] for r in rows]
+    except Exception:
+        pass
+    return CAMP_OLD + ids
+def _ov(a, b, m=0):
+    return a[0] - m < b[2] and b[0] - m < a[2] and a[1] - m < b[3] and b[1] - m < a[3]
+def _seg_d(px, py, a, b):
+    ax, ay = a; bx, by = b; dx = bx - ax; dy = by - ay
+    L = dx * dx + dy * dy
+    u = 0 if L == 0 else max(0, min(1, ((px - ax) * dx + (py - ay) * dy) / L))
+    return math.hypot(px - (ax + u * dx), py - (ay + u * dy))
+def _near_path(P, x, y, d):
+    return any(_seg_d(x, y, a, b) < d for a, b in zip(P, P[1:]))
+def _rect_path(r, P, d):   # 矩形同路（闊 d）有冇撞
+    for a, b in zip(P, P[1:]):
+        for k in range(9):
+            u = k / 8.0; x = a[0] + (b[0] - a[0]) * u; y = a[1] + (b[1] - a[1]) * u
+            if r[0] - d < x < r[2] + d and r[1] - d < y < r[3] + d: return True
+    return False
+_NAMES = None
+def _name_len(bid):   # 名牌闊要計埋（同 mv_camp.gd _plate_w 一致：字數 × 15 + 46，60–120）
+    global _NAMES
+    if _NAMES is None:
+        import json, os
+        root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "nat")
+        _NAMES = {}
+        try:
+            for k, e in json.load(open(os.path.join(root, "data.json"), encoding="utf-8")).get("BUILDINGS", {}).items(): _NAMES[k] = len(e.get("name", ""))
+            d = json.load(open(os.path.join(root, "chain.json"), encoding="utf-8"))
+            for kk in ("GATHER", "WORKSHOPS"):
+                for k, e in d.get(kk, {}).items(): _NAMES[k] = max(len(e["n"][0]), len(e["n"][1]))
+        except Exception:
+            pass
+    return _NAMES.get(bid, 5)
+def camp_fp(bid, x, y, s):   # 建築佔位（世界座標 [x0, y0, x1, y1]）
+    w = CAMP_BW.get(bid, CAMP_W) * s
+    hh = w * CAMP_RATIO.get(bid, 0.833)
+    if hh > IMG_MAXH * s: hh = IMG_MAXH * s
+    pw = min(120, max(60, _name_len(bid) * 15 + 46))
+    hw = max(w / 2, 52, pw / 2 + 2)
+    return [x - hw, y + 6 - hh - 10, x + hw, y + 52]
+def camp_layout(ci, h, road, st, counter):
+    rnd = random.Random(880000 + ci * 131)
+    top = h - 170
+    # 營地泥路：由櫃台左下角開始，彎彎曲曲落去
+    path = [[150, h - 214], [118, h - 120]]
+    y = h - 120; k = 0
+    while y < h + 3200:
+        y += rnd.uniform(190, 250); k += 1
+        path.append([round(195 + 105 * math.sin(k * 0.8 + ci * 1.3) + rnd.uniform(-14, 14)), round(y)])
+    sign = [round(path[1][0] + 70), h - 132]
+    # 唔准撞：櫃台、紙紮大屋、排隊線（serve → road[1] → road[0]，客人高 90）、木牌、最底嗰個台
+    queue = [[236, h - 232]] + [road[1], road[0]]
+    ex = [[counter[0] - 100, counter[1] - 70, counter[0] + 100, counter[1] + 24],
+          [104 - 90, h - 318 - 150, 104 + 90, h - 318 + 8],
+          [sign[0] - 70, sign[1] - 76, sign[0] + 70, sign[1] + 30]]
+    for p in st.values(): ex.append([p[0] - 90, p[1] - 150, p[0] + 90, p[1] + 70])
+    def bad(r):
+        if r[0] < 2 or r[2] > W - 2: return True
+        if any(_ov(r, e, 6) for e in ex): return True
+        for a, b in zip(queue, queue[1:]):
+            for kk in range(9):
+                u = kk / 8.0; qx = a[0] + (b[0] - a[0]) * u; qy = a[1] + (b[1] - a[1]) * u
+                if r[0] - 26 < qx < r[2] + 26 and r[1] - 6 < qy < r[3] + 100: return True   # 客人企喺線上，身高約 90
+        return _rect_path(r, path, 12)
+    slots = {}; fps = []
+    cur = h - 60
+    for bid in _camp_ids():
+        for rounds in range(30):
+            cands = []
+            for tries in range(1500):
+                yy = rnd.uniform(h - 80, cur + 260)
+                px = None
+                for a, b in zip(path, path[1:]):
+                    if a[1] <= yy <= b[1]: px = a[0] + (b[0] - a[0]) * (yy - a[1]) / max(1, b[1] - a[1])
+                if px is None: continue
+                side = -1 if rnd.random() < 0.5 else 1
+                x = px + side * rnd.uniform(66, 250)
+                sc = round(rnd.uniform(0.9, 1.08), 2)
+                r = camp_fp(bid, x, yy, sc)
+                if bad(r) or any(_ov(r, f, 10) for f in fps): continue
+                cands.append((yy + rnd.uniform(0, 50), x, yy, sc, r))
+                if len(cands) >= 40: break
+            if cands:
+                cands.sort(key=lambda c: c[0])
+                _, x, yy, sc, r = cands[0]
+                slots[bid] = [round(x), round(yy), sc]; fps.append(r)
+                cur = max(cur, yy)
+                break
+            cur += 60
+    bottom = max(v[1] for v in slots.values()) + 110
+    path = [p for p in path if p[1] < bottom + 60]
+    # 夾啲樹、石、草叢、燈（唔撞建築佔位、泥路、木牌）
+    th = THEME.get(ci, THEME[0]); dec = []
+    for tries in range(3000):
+        if len(dec) >= int((bottom - top) / 55): break
+        x = rnd.uniform(14, W - 14); yy = rnd.uniform(h - 40, bottom)
+        kd, s0 = th[rnd.randrange(len(th))]
+        tall = kd in TALL
+        r = [x - (30 if tall else 14), yy - (110 if tall else 26), x + (30 if tall else 14), yy + 6]
+        if any(_ov(r, f, 4) for f in fps) or any(_ov(r, e, 0) for e in ex[2:3]): continue
+        if _rect_path(r, path, 16): continue
+        if any(math.hypot(x - d["x"], yy - d["y"]) < (64 if tall else 40) for d in dec): continue
+        dec.append({"k": kd, "x": round(x), "y": round(yy), "s": round(s0 * rnd.uniform(0.85, 1.1), 2), "f": rnd.random() < 0.5})
+    return {"top": top, "bottom": round(bottom), "sign": sign, "road": path, "slots": slots, "_decor": dec, "_fp": fps + [ex[2]]}
 
 def apply(data):
     for m in data["MAPS"]:
