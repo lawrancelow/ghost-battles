@@ -34,6 +34,17 @@ func _alpha_stats(tex: Texture2D) -> Dictionary:
 				if c.r8 > 0x3a or c.g8 > 0x06 or c.b8 > 0x07: out += 1   # 超出色板（最亮 #3a0607）
 	return {"max": mx, "mean": sum / maxf(1, n), "n": n, "r": sr / maxf(1, cn), "g": sg / maxf(1, cn), "b": sb / maxf(1, cn), "out": out}
 
+# 收埋 root 底下所有遊戲畫面（CanvasItem／CanvasLayer；純 Node 就睇佢下一層），回收埋咗嘅節點俾測完還原
+func _quiet(t) -> Array:
+	var out = []
+	var stack = t.get_tree().root.get_children()
+	while stack.size():
+		var n = stack.pop_back()
+		if n is CanvasItem or n is CanvasLayer:
+			if n.visible: n.visible = false; out.append(n)
+		elif not (n is Window): stack.append_array(n.get_children())
+	return out
+
 func all(t) -> void: await _run(t, true)
 func logic(t) -> void: await _run(t, false)
 
@@ -74,6 +85,10 @@ func _run(t, shots: bool) -> void:
 	_chk("顏色喺老闆色板（極暗紅，冇超過 #3a0607 嘅點）", sf.out == 0 and sbk.out == 0 and sf.r > sf.g * 3.0 and sf.r < 0.16, "R%.3f G%.3f B%.3f out=%d/%d" % [sf.r, sf.g, sf.b, sf.out, sbk.out])
 
 	# ---------- 4. 畫面外唔畫、通用 CanvasItem、唔擋點擊 ----------
+	# 隔開遊戲本身：合一地圖嘅村子（village_style，vil:*）同大排檔（mv_scene，pd:*）每幀都用同一個 MIST 畫霧，
+	# gen_n／culled／cache 係全域計數 → 第 4、5 節要數「本測試自己」整咗幾多份，就要先收埋遊戲畫面（測完還原）。
+	var hid = _quiet(t)
+	await _frames(t, 2)
 	var layer = CanvasLayer.new(); layer.layer = 100
 	t.get_tree().root.add_child(layer)
 	var btn = Button.new(); btn.position = Vector2(150, 400); btn.size = Vector2(150, 80); btn.text = "TAP"
@@ -141,6 +156,8 @@ func _run(t, shots: bool) -> void:
 	_p("對照：熄霧 %.1f fps／開霧 %.1f fps" % [fps_off, fps_on])
 	_chk("快取生效：90 幀重畫冇再整", MI.gen_n == gw and MI.cache.size() == 40, "gen %d→%d cache=%d" % [gw, MI.gen_n, MI.cache.size()])
 	ph.queue_free()
+	for n in hid: n.visible = true
+	await _frames(t, 2)
 
 	# ---------- 6. 截圖 ----------
 	if shots:

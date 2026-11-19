@@ -426,11 +426,14 @@ func _shots(t) -> void:
 	m.story.advance(); await _w(t, 0.1); m.story.advance(); await _w(t, 0.3)   # 第 2 句
 	m.story.advance(); await _w(t, 0.1); m.story.advance(); await _w(t, 0.3)   # 第 3 句（小紙）
 	await _shot(t, "02_open_beat_l3")
+	# 等其他 beat 唔好彈出嚟（截氣泡、拔營時序）：要喺跳走開場 beat「之前」標晒已播。
+	# 之前係跳完先標：開場播完隔 GAP(1.2)+CHECK_DT(≤0.5) 秒，tick 會自動播下一個（全部檔已解鎖 → mv0_mill），
+	# 跳嘅迴圈（8×0.2 秒）長過定短過呢段時間純粹睇幀率；機器慢時 mv0_mill 喺迴圈尾先入隊、冇被跳走，
+	# 一路播到下面拔營時序，skip_scene 跳走嘅係佢而唔係 move beat → 拔營動畫唔開（合併後畫面重咗，幾乎次次中）。
+	for b in STY.beats(0): if str(b.when.t) != "move": STY.mark(str(b.id))
 	for i in 8:
 		if m.story.cur != null: m.story.skip_scene()
 		await _w(t, 0.2)
-	# 等其他 beat 唔好彈出嚟（截氣泡）
-	for b in STY.beats(0): if str(b.when.t) != "move": STY.mark(str(b.id))
 	sc._prefill(); await _w(t, 5.0)
 	# 客人四種氣泡
 	var cs = []
@@ -477,11 +480,13 @@ func _shots(t) -> void:
 	var cl0 = S.cleared.get("1-3")
 	S.cleared["1-3"] = true
 	_chk("真場景：可以拔營", sc.can_move())
+	_chk("真場景：拔營前冇其他劇情播緊", m.story.cur == null and m.story.q.is_empty() and not sc.story._playing)
 	var r = sc.move_next()
 	await _w(t, 0.5)
-	var mb = ""
-	for b in STY.beats(0): if str(b.when.t) == "move": mb = str(b.id)
-	_chk("真場景：撳拔營 → 播 move beat、動畫未開始", r and m.story.cur != null and sc.anim == null and STY.is_seen(mb) and sc.story.pending_move)
+	var mb = ""; var mbt = ""
+	for b in STY.beats(0): if str(b.when.t) == "move": mb = str(b.id); mbt = str(STY.build_scene(b).get("title", ""))
+	var cur_t = str(m.story.cur.sc.get("title", "")) if m.story.cur != null else ""
+	_chk("真場景：撳拔營 → 播 move beat、動畫未開始", r and m.story.cur != null and cur_t == mbt and sc.anim == null and STY.is_seen(mb) and sc.story.pending_move)
 	await _w(t, 0.3); m.story.advance(); await _w(t, 0.3)
 	await _shot(t, "06_move_beat")
 	sc.move_next()

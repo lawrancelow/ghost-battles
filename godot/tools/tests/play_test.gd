@@ -176,12 +176,16 @@ func logic(_t) -> void:
 	sim.custs.clear(); sim.st().counter = {G: 10.0}
 	var hc = {"cid": "c0_guhan", "k": "n30_guhangui", "wants": {G: 1}, "got": {}, "st": "serve", "slot": 0, "take": 0.0, "s": 0.0, "pos": sim.queue_pos(0), "ph": 4.0, "flip": true, "tp": "haggle"}
 	sim.custs.append(hc); sim.spawn_t = 999.0
+	# 隔開戰鬥線：圍欄外孤魂撞夠 PRESS 秒會偷櫃台貨（每偷一次影響力 −1），6 秒內影響力一變，付錢嗰刻嘅 M(inf) 就同驗算嗰刻唔同
+	# （實測：付錢時 inf=55 → 96.67，驗算時 inf=54 → 96.00）。開新手保護（t0=0）= 唔偷、唔扣，驗算先穩；完咗還原。
+	var _t0 = MVW.ws().get("t0"); MVW.ws().t0 = 0.0
 	c0 = sim.coins()
 	_run(sim, 2.0)
 	_ok("講價：收齊貨等緊玩家（未付錢）", hc.st == "serve" and J.t(hc.get("prompt")) and sim.coins() == c0)
 	_run(sim, 4.0)
 	_ok("5 秒冇決定：當唔減，收足錢", hc.st == "out" and str(hc.get("dec")) == "timeout")
 	_chk("冇決定：收足價", sim.coins() - c0, _base(sim, G, 1))
+	MVW.ws().t0 = _t0
 
 	_p("===== 4. 鬼員工羈絆 =====")
 	sim.custs.clear()
