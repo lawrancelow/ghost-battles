@@ -2,16 +2,16 @@
  "base": {
   "0.9.5": {
    "android": {
-    "ver": 2,
-    "file": "p_095_android_2.pck",
-    "md5": "c54c064133e2318b12ee0a4286e967c7",
-    "size": 11372864
+    "ver": 3,
+    "file": "p_095_android_3.pck",
+    "md5": "1838fb107886720b4f0a34d6ec6475df",
+    "size": 11457760
    },
    "linux": {
-    "ver": 2,
-    "file": "p_095_linux_2.pck",
-    "md5": "c54c064133e2318b12ee0a4286e967c7",
-    "size": 11372864
+    "ver": 3,
+    "file": "p_095_linux_3.pck",
+    "md5": "1838fb107886720b4f0a34d6ec6475df",
+    "size": 11457760
    }
   },
   "0.9.1": {
@@ -26,6 +26,20 @@
     "file": "p_091_linux_1.pck",
     "md5": "5c646e19337751a073c108c243dbeefb",
     "size": 11396320
+   }
+  },
+  "0.10.0": {
+   "android": {
+    "ver": 1,
+    "file": "p_0100_android_1.pck",
+    "md5": "73cbd2419f20ab3851ac630cc94839de",
+    "size": 8678208
+   },
+   "linux": {
+    "ver": 1,
+    "file": "p_0100_linux_1.pck",
+    "md5": "73cbd2419f20ab3851ac630cc94839de",
+    "size": 8678208
    }
   }
  }
