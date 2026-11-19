@@ -1,0 +1,38 @@
+{
+ "_note": "引擎線自用細 fixture（設計線 chain.json 未出之前開工用；chain_test.gd 都用佢做固定資料）",
+ "MATS": {
+  "m_wood": {"n": ["槐木", "槐木"], "tier": 1, "icon": "mi_wood", "price": 1, "res": "wood", "how": ["伐木場斬槐樹", "伐木場砍槐樹"]},
+  "m_rice": {"n": ["糯米", "糯米"], "tier": 1, "icon": "mi_rice", "price": 1, "res": "rice", "how": ["糯米田割稻", "糯米田割稻"]},
+  "m_bamboo": {"n": ["陰竹", "陰竹"], "tier": 1, "icon": "mi_bamboo", "price": 2, "res": "", "how": ["竹林斬竹", "竹林砍竹"], "cap": 500},
+  "m_plank": {"n": ["棺材板", "棺材板"], "tier": 2, "icon": "mi_plank", "price": 3, "res": "planks", "how": ["棺材鋪：2 槐木 → 1 板", "棺材鋪：2 槐木 → 1 板"]},
+  "m_bao": {"n": ["普通包子", "普通包子"], "tier": 2, "icon": "mi_bao", "price": 3, "res": "", "how": ["包子鋪：2 糯米 → 1 包", "包子鋪：2 糯米 → 1 包"]},
+  "m_paper": {"n": ["紙", "紙"], "tier": 2, "icon": "mi_paper", "price": 4, "res": "", "how": ["紙寮：2 陰竹 → 1 紙", "紙寮：2 陰竹 → 1 紙"]},
+  "m_shoubao": {"n": ["壽包", "壽包"], "tier": 3, "icon": "mvi_bun", "price": 8, "res": "buns", "how": ["嘆氣蒸籠：普通包子蒸成壽包", "嘆氣蒸籠：普通包子蒸成壽包"]},
+  "m_zhishan": {"n": ["紙衫", "紙衫"], "tier": 3, "icon": "mi_zhishan", "price": 12, "res": "", "how": ["紙衫檔：用紙剪", "紙衫檔：用紙剪"]},
+  "m_nuomici": {"n": ["糯米糍", "糯米糍"], "tier": 3, "icon": "mi_nuomici", "price": 10, "res": "", "how": ["包子加糯米", "包子加糯米"]},
+  "m_douhua": {"n": ["嘆氣豆花", "嘆氣豆花"], "tier": 4, "icon": "mi_douhua", "price": 30, "res": "", "how": ["壽包＋紙", "壽包＋紙"]},
+  "m_guancai": {"n": ["棺材床", "棺材床"], "tier": 4, "icon": "mi_guancai", "price": 40, "res": "", "how": ["棺材板＋紙衫", "棺材板＋紙衫"]}
+ },
+ "GATHER": {
+  "g_wood": {"n": ["伐木場", "伐木場"], "art": "wood", "out": "m_wood", "rate": 9, "unlock": {"ci": 0, "cost": {}}, "old": "wood", "how": ["斬槐樹", "砍槐樹"]},
+  "g_rice": {"n": ["糯米田", "糯米田"], "art": "rice", "out": "m_rice", "rate": 9, "unlock": {"ci": 0, "cost": {}}, "old": "rice", "how": ["割稻", "割稻"]},
+  "g_bamboo": {"n": ["陰竹林", "陰竹林"], "art": "bld_bamboo", "out": "m_bamboo", "rate": 6, "unlock": {"ci": 0, "cost": {"m_plank": 20}}, "old": "", "how": ["斬落嚟嘅竹會喊", "砍下來的竹會哭"]},
+  "g_far": {"n": ["遠方墳場", "遠方墳場"], "art": "bld_far", "out": "m_bamboo", "rate": 5, "unlock": {"ci": 3, "cost": {"m_plank": 50}}, "old": "", "how": ["未解鎖測試用", "未解鎖測試用"]}
+ },
+ "WORKSHOPS": {
+  "w_plank": {"n": ["棺材鋪", "棺材鋪"], "art": "plank", "in": {"m_wood": 2}, "out": {"m_plank": 1}, "time": 24, "unlock": {"ci": 0, "cost": {}}, "old": "plank", "how": ["", ""]},
+  "w_bao": {"n": ["包子鋪", "包子鋪"], "art": "bun", "in": {"m_rice": 2}, "out": {"m_bao": 1}, "time": 24, "unlock": {"ci": 0, "cost": {}}, "old": "bun", "how": ["", ""]},
+  "w_paper": {"n": ["紙寮", "紙寮"], "art": "bld_paper", "in": {"m_bamboo": 2}, "out": {"m_paper": 1}, "time": 20, "unlock": {"ci": 0, "cost": {"m_plank": 30}}, "old": "", "how": ["竹漿撈成紙", "竹漿撈成紙"]}
+ },
+ "RECIPES": {
+  "st_shoubao": {"in": {"m_bao": 2}, "out": "m_shoubao", "n": 1},
+  "st_zhishan": {"in": {"m_paper": 2}, "out": "m_zhishan", "n": 1},
+  "st_nuomici": {"in": {"m_bao": 1, "m_rice": 2}, "out": "m_nuomici", "n": 1},
+  "st_douhua": {"in": {"m_shoubao": 1, "m_paper": 1}, "out": "m_douhua", "n": 1},
+  "st_guancaichuang": {"in": {"m_plank": 3, "m_zhishan": 1}, "out": "m_guancai", "n": 1}
+ },
+ "CARRY": ["st_shoubao"],
+ "GEAR": {"m_guancai": {"slot": "shield", "atk": 0, "def": 5, "hp": 20}},
+ "BATTLE_ITEMS": {"m_douhua": {"eff": "heal", "v": 30, "desc": ["回氣", "回氣"]}},
+ "STRINGS": {}
+}

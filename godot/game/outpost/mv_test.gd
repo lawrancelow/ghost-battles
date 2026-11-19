@@ -55,6 +55,16 @@ func _setup() -> void:
 	for gh in S.ghosts: if not str(gh.get("id")).begins_with("t_mv"): keep.append(gh)
 	S["ghosts"] = keep
 	for t in TG: S.ghosts.append({"id": t[0], "k": t[1], "name": t[2], "q": t[3], "lv": t[4], "st": [30.0, 30.0, 30.0], "post": null, "spent": 0.0})
+	# [chain] 呢個測試驗舊公式（賣貨／搬貨／離線）：材料庫塞滿、所有台設「全部出售」，生產鏈唔影響數；生產鏈另見 tools/tests/chain_test.gd
+	var CM = load("res://game/outpost/mat.gd"); CM.reload()
+	S["mat"] = {}
+	for mid in CM.all_ids():
+		var rk = CM.res_key(str(mid))
+		if rk != "": S.res[rk] = 1e9
+		else: S.mat[str(mid)] = 1e9
+	var rt = {}
+	for sid in D.STATIONS: rt[sid] = "sell"
+	S["mv"] = {"route": rt}
 
 func _run(sim, secs: float, dt := 0.05) -> Array:
 	var evs = []
