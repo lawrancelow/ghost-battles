@@ -1,0 +1,56 @@
+{
+ "_note": "chainui 面板線測試用假資料（設計線 chain.json 未出時用）。格式照 CHAIN_CONTRACT.md。",
+ "MATS": {
+  "m_wood": {"n": ["槐木", "槐木"], "tier": 1, "icon": "mi_wood", "price": 1, "res": "wood", "how": ["伐木場斬落嚟嘅槐樹", "伐木場砍下來的槐樹"]},
+  "m_rice": {"n": ["糯米", "糯米"], "tier": 1, "icon": "mi_rice", "price": 1, "res": "rice", "how": ["糯米田收落嚟", "糯米田收下來的"]},
+  "m_bamboo": {"n": ["後山竹", "後山竹"], "tier": 1, "icon": "mvi_bamboo", "price": 1, "res": "", "how": ["後山竹林斬竹", "後山竹林砍竹"], "cap": 500},
+  "m_wellwater": {"n": ["枯井水", "枯井水"], "tier": 1, "icon": "mi_well", "price": 1, "res": "", "how": ["枯井吊上嚟嘅半桶水", "枯井吊上來的半桶水"]},
+  "m_coconut": {"n": ["椰子", "椰子"], "tier": 1, "icon": "mi_coconut", "price": 2, "res": "", "how": ["椰林跌落嚟", "椰林掉下來的"]},
+  "m_plank": {"n": ["棺材板", "棺材板"], "tier": 2, "icon": "mi_plank", "price": 3, "res": "planks", "how": ["棺材鋪：2 槐木 → 1 板", "棺材鋪：2 槐木 → 1 板"]},
+  "m_bao": {"n": ["普通包子", "普通包子"], "tier": 2, "icon": "mi_bao", "price": 3, "res": "", "how": ["包子鋪：2 糯米 → 1 包", "包子鋪：2 糯米 → 1 包"]},
+  "m_paper": {"n": ["竹紙", "竹紙"], "tier": 2, "icon": "mi_paper", "price": 4, "res": "", "how": ["紙寮：竹漿撈成紙", "紙寮：竹漿撈成紙"]},
+  "m_coconutmilk": {"n": ["椰漿", "椰漿"], "tier": 2, "icon": "mi_coconutmilk", "price": 6, "res": "", "how": ["椰殼鋪：搾椰漿", "椰殼鋪：榨椰漿"]},
+  "m_shoubao": {"n": ["壽包", "壽包"], "tier": 3, "icon": "mvi_bun", "price": 8, "res": "buns", "how": ["嘆氣蒸籠：普通包子蒸成壽包", "嘆氣蒸籠：普通包子蒸成壽包"]},
+  "m_zhishan": {"n": ["紙衫", "紙衣"], "tier": 3, "icon": "mvi_shirt", "price": 20, "res": "", "how": ["裁縫鬼用竹紙剪", "裁縫鬼用竹紙剪"]},
+  "m_douhua": {"n": ["井底豆腐花", "井底豆花"], "tier": 3, "icon": "mvi_douhua", "price": 30, "res": "", "how": ["枯井水撞普通包子", "枯井水加普通包子"]},
+  "m_yeketan": {"n": ["椰殼炭", "椰殼炭"], "tier": 3, "icon": "mvi_charcoal", "price": 24, "res": "", "how": ["椰子燒成炭", "椰子燒成炭"]},
+  "m_nuomici": {"n": ["糯米糍", "糯米糍"], "tier": 4, "icon": "mvi_nuomici", "price": 120, "res": "", "how": ["壽包搓埋糯米", "壽包揉進糯米"]},
+  "m_tuoxie": {"n": ["膠拖鞋", "膠拖鞋"], "tier": 4, "icon": "mvi_slipper", "price": 150, "res": "", "how": ["紙衫鞋面＋椰漿膠底", "紙衣鞋面＋椰漿膠底"]},
+  "m_zhulong": {"n": ["竹蒸籠", "竹蒸籠"], "tier": 4, "icon": "mvi_bamboo", "price": 180, "res": "", "how": ["竹紙糊籠，豆腐花做膠", "竹紙糊籠，豆花當膠"]},
+  "m_guancaichuang": {"n": ["棺材板床", "棺材板床"], "tier": 5, "icon": "mvi_coffin", "price": 900, "res": "", "how": ["棺材板拼床，鋪紙衫做被", "棺材板拼床，鋪紙衣當被"]},
+  "m_liulian": {"n": ["榴槤", "榴槤"], "tier": 5, "icon": "mvi_durian", "price": 1500, "res": "", "how": ["著住拖鞋坐喺樹下等", "穿著拖鞋坐在樹下等"]}
+ },
+ "GATHER": {
+  "b_wood": {"n": ["伐木場", "伐木場"], "art": "wood", "out": "m_wood", "rate": 12, "unlock": {"ci": 0, "cost": {}}, "old": "wood", "how": ["鬼斧斬樹", "鬼斧砍樹"]},
+  "b_rice": {"n": ["糯米田", "糯米田"], "art": "rice", "out": "m_rice", "rate": 12, "unlock": {"ci": 0, "cost": {}}, "old": "rice", "how": ["稻草人收割", "稻草人收割"]},
+  "b_bamboo": {"n": ["後山竹林", "後山竹林"], "art": "mvs_bamboo", "out": "m_bamboo", "rate": 12, "unlock": {"ci": 0, "cost": {"m_wood": 40}}, "old": "", "how": ["唔好應竹林叫你", "別回應竹林叫你"]},
+  "b_well": {"n": ["枯井轆轤", "枯井轆轤"], "art": "pr_well", "out": "m_wellwater", "rate": 14, "unlock": {"ci": 0, "cost": {"m_wood": 30}}, "old": "", "how": ["搖轆轤數拍子", "搖轆轤數拍子"]},
+  "b_coco": {"n": ["椰林", "椰林"], "art": "n30_yezi__coconut", "out": "m_coconut", "rate": 10, "unlock": {"ci": 1, "cost": {"m_plank": 30}}, "old": "", "how": ["企喺椰樹下等", "站在椰樹下等"]}
+ },
+ "WORKSHOPS": {
+  "w_plank": {"n": ["棺材鋪", "棺材鋪"], "art": "plank", "in": {"m_wood": 2}, "out": {"m_plank": 1}, "time": 24, "unlock": {"ci": 0, "cost": {}}, "old": "plank", "how": ["", ""]},
+  "w_bao": {"n": ["包子鋪", "包子鋪"], "art": "bun", "in": {"m_rice": 2}, "out": {"m_bao": 1}, "time": 24, "unlock": {"ci": 0, "cost": {}}, "old": "bun", "how": ["", ""]},
+  "w_paper": {"n": ["紙寮", "紙寮"], "art": "bld_paper", "in": {"m_bamboo": 2}, "out": {"m_paper": 1}, "time": 20, "unlock": {"ci": 0, "cost": {"m_plank": 30}}, "old": "", "how": ["竹漿撈成紙", "竹漿撈成紙"]},
+  "w_coconut": {"n": ["椰殼鋪", "椰殼鋪"], "art": "bld_coco", "in": {"m_coconut": 2}, "out": {"m_coconutmilk": 1}, "time": 30, "unlock": {"ci": 1, "cost": {"m_plank": 40}}, "old": "", "how": ["搾椰漿", "榨椰漿"]}
+ },
+ "RECIPES": {
+  "st_shoubao": {"in": {"m_bao": 2}, "out": "m_shoubao", "n": 1},
+  "st_zhishan": {"in": {"m_paper": 2}, "out": "m_zhishan", "n": 1},
+  "st_douhua": {"in": {"m_wellwater": 2, "m_bao": 1}, "out": "m_douhua", "n": 1},
+  "st_nuomici": {"in": {"m_shoubao": 1, "m_rice": 3}, "out": "m_nuomici", "n": 1},
+  "st_guancaichuang": {"in": {"m_plank": 4, "m_nuomici": 1, "m_zhishan": 1}, "out": "m_guancaichuang", "n": 1},
+  "st_yeketan": {"in": {"m_coconut": 2}, "out": "m_yeketan", "n": 1},
+  "st_tuoxie": {"in": {"m_zhishan": 1, "m_coconutmilk": 2}, "out": "m_tuoxie", "n": 1},
+  "st_zhulong": {"in": {"m_paper": 2, "m_douhua": 1}, "out": "m_zhulong", "n": 1},
+  "st_liulian": {"in": {"m_tuoxie": 1, "m_zhulong": 1, "m_yeketan": 2}, "out": "m_liulian", "n": 1}
+ },
+ "CARRY": ["st_shoubao"],
+ "GEAR": {
+  "m_zhishan": {"slot": "body", "atk": 0, "def": 3, "hp": 10},
+  "m_tuoxie": {"slot": "legs", "atk": 1, "def": 2, "hp": 5}
+ },
+ "BATTLE_ITEMS": {
+  "m_yeketan": {"eff": "burn", "v": 20, "desc": ["掟落地燒成一圈，孤魂行過會焫親", "丟在地上燒成一圈，孤魂走過會燙到"]}
+ },
+ "STRINGS": {}
+}
