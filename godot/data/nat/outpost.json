@@ -1,0 +1,66 @@
+{
+ "_note": "引擎線臨時開發用（2 張圖）；正式內容由設計線覆蓋。格式見 MV_CONTRACT.md",
+ "GOODS": {
+  "g_bun":   {"n": ["長脷壽包", "長舌壽包"], "icon": "mvi_bun", "price": 4},
+  "g_suit":  {"n": ["紙紮西裝", "紙紮西裝"], "icon": "mvi_suit", "price": 12},
+  "g_soup":  {"n": ["嘆氣靚湯", "嘆氣靚湯"], "icon": "mvi_soup", "price": 30},
+  "g_coffin":{"n": ["摺凳棺材", "摺凳棺材"], "icon": "mvi_coffin", "price": 80},
+  "g_pants": {"n": ["紙褲", "紙褲"], "icon": "mvi_pants", "price": 60},
+  "g_phone": {"n": ["紙紮手機", "紙紮手機"], "icon": "mvi_phone", "price": 150},
+  "g_car":   {"n": ["紙紮跑車", "紙紮跑車"], "icon": "mvi_car", "price": 420}
+ },
+ "STATIONS": {
+  "s_steamer": {"n": ["長脷蒸籠", "長舌蒸籠"], "art": "mvs_steamer", "good": "g_bun", "how": ["吊死鬼用條長脷搓麵，越搓越韌。", "吊死鬼用長舌頭揉麵，越揉越有嚼勁。"],
+     "base_time": 3, "base_out": 1, "unlock_cost": 0, "up_cost0": 8, "up_mul": 1.12, "worker_slots": 3, "miles": [10, 25, 50, 75, 100]},
+  "s_tailor":  {"n": ["冥鏹裁縫", "冥鏹裁縫"], "art": "mvs_tailor", "good": "g_suit", "how": ["裁縫鬼用冥鏹剪布，度身唔使尺——佢冇身。", "裁縫鬼用紙錢剪布，量身不用尺——他沒有身。"],
+     "base_time": 5, "base_out": 1, "unlock_cost": 120, "up_cost0": 40, "up_mul": 1.13, "worker_slots": 3, "miles": [10, 25, 50, 75, 100]},
+  "s_soup":    {"n": ["嘆氣湯煲", "嘆氣湯煲"], "art": "mvs_soup", "good": "g_soup", "how": ["孤魂對住煲湯嘆一啖氣，水就滾。", "孤魂對著湯鍋嘆一口氣，水就滾了。"],
+     "base_time": 7, "base_out": 1, "unlock_cost": 900, "up_cost0": 160, "up_mul": 1.14, "worker_slots": 3, "miles": [10, 25, 50, 75, 100]},
+  "s_coffin":  {"n": ["摺凳棺材", "摺凳棺材"], "art": "mvs_coffin", "good": "g_coffin", "how": ["殭屍跳上跳落，順便幫棺材板打釘。", "殭屍跳上跳下，順便替棺材板釘釘子。"],
+     "base_time": 9, "base_out": 1, "unlock_cost": 5000, "up_cost0": 700, "up_mul": 1.15, "worker_slots": 3, "miles": [10, 25, 50, 75, 100]},
+  "s_pants":   {"n": ["紙褲裁縫", "紙褲裁縫"], "art": "mvs_tailor", "good": "g_pants", "how": ["縫褲唔使針，水鬼用濕頭髮穿過去。", "縫褲子不用針，水鬼用濕頭髮穿過去。"],
+     "base_time": 5, "base_out": 1, "unlock_cost": 0, "up_cost0": 60, "up_mul": 1.12, "worker_slots": 3, "miles": [10, 25, 50, 75, 100]},
+  "s_phone":   {"n": ["紙紮手機舖", "紙紮手機鋪"], "art": "mvs_phone", "good": "g_phone", "how": ["手機冇訊號？陰間本來就冇訊號。", "手機沒訊號？陰間本來就沒訊號。"],
+     "base_time": 8, "base_out": 1, "unlock_cost": 2000, "up_cost0": 300, "up_mul": 1.13, "worker_slots": 3, "miles": [10, 25, 50, 75, 100]},
+  "s_garage":  {"n": ["紙紮車房", "紙紮車行"], "art": "mvs_garage", "good": "g_car", "how": ["引擎聲靠殭屍喺入面嗌「轟轟」。", "引擎聲靠殭屍在裡面喊「轟轟」。"],
+     "base_time": 12, "base_out": 1, "unlock_cost": 15000, "up_cost0": 2000, "up_mul": 1.15, "worker_slots": 3, "miles": [10, 25, 50, 75, 100]}
+ },
+ "CUSTOMERS": [
+  {"id": "c_youhun", "art": "youhun", "wants": ["g_bun", "g_suit", "g_soup", "g_pants", "g_phone"], "lines": [["有冇大碼？我死咗之後腫咗。", "有沒有大碼？我死了之後腫了。"], ["快啲啦，我趕住去陰間見工。", "快點，我趕著去陰間面試。"]], "vip": false},
+  {"id": "c_egui", "art": "egui", "wants": ["g_bun", "g_soup", "g_coffin"], "lines": [["壽包有冇買十送一？", "壽包有沒有買十送一？"], ["我淨係睇吓……其實我想食晒。", "我只是看看……其實我想全吃了。"]], "vip": false},
+  {"id": "c_zhiren", "art": "zhiren", "wants": ["g_suit", "g_pants", "g_car"], "lines": [["西裝要防水，我好驚落雨。", "西裝要防水，我很怕下雨。"]], "vip": false},
+  {"id": "c_zombie", "art": "zombie", "wants": ["g_coffin", "g_bun", "g_car"], "lines": [["棺材要有摺凳功能，方便我出街坐。", "棺材要能摺成凳子，方便我出門坐。"]], "vip": false},
+  {"id": "c_shuigui", "art": "shuigui", "wants": ["g_soup", "g_pants", "g_phone"], "lines": [["個湯唔好太多水，我飲夠喇。", "湯別太多水，我喝夠了。"]], "vip": false},
+  {"id": "c_xiaogui", "art": "xiaogui", "wants": ["g_bun", "g_phone"], "lines": [["我幫阿媽買嘢，佢叫我唔好同陌生鬼講嘢。", "我替媽媽買東西，她叫我別跟陌生鬼說話。"]], "vip": false}
+ ],
+ "MAPS": [
+  {"ci": 0, "name": ["槐林荒村", "槐林荒村"], "bg": "field", "stations": ["s_steamer", "s_tailor", "s_soup", "s_coffin"], "customers": ["c_youhun", "c_egui", "c_zhiren", "c_zombie"],
+   "goals": [
+    {"t": "hire", "k": "s_steamer", "n": 1, "txt": ["派隻鬼去蒸籠開工", "派一隻鬼去蒸籠開工"], "reward": {"coins": 50}},
+    {"t": "unlock", "k": "s_tailor", "n": 1, "txt": ["解鎖冥鏹裁縫", "解鎖冥鏹裁縫"], "reward": {"coins": 100}},
+    {"t": "level", "k": "s_steamer", "n": 10, "txt": ["長脷蒸籠升到 10 級", "長舌蒸籠升到 10 級"], "reward": {"coins": 200}},
+    {"t": "sell", "k": "g_suit", "n": 20, "txt": ["賣出 20 套紙紮西裝", "賣出 20 套紙紮西裝"], "reward": {"coins": 400}},
+    {"t": "unlock", "k": "s_soup", "n": 1, "txt": ["解鎖嘆氣湯煲", "解鎖嘆氣湯煲"], "reward": {"coins": 800}},
+    {"t": "boss", "k": "eguiking", "n": 1, "txt": ["巡陰打低餓鬼王", "巡陰打倒餓鬼王"], "reward": {"coins": 1500}}
+   ],
+   "fence_foes": ["youhun", "egui", "zombie"],
+   "move_line": [["收檔！紙紮屋摺埋，下一站甘榜。", "收攤！紙紮屋摺起來，下一站甘榜。"]]},
+  {"ci": 1, "name": ["甘榜夜路", "甘榜夜路"], "bg": "kampung", "stations": ["s_pants", "s_phone", "s_garage"], "customers": ["c_youhun", "c_shuigui", "c_xiaogui", "c_zhiren"],
+   "goals": [
+    {"t": "hire", "k": "s_pants", "n": 2, "txt": ["紙褲裁縫請兩隻鬼", "紙褲裁縫請兩隻鬼"], "reward": {"coins": 300}},
+    {"t": "unlock", "k": "s_phone", "n": 1, "txt": ["解鎖紙紮手機舖", "解鎖紙紮手機鋪"], "reward": {"coins": 800}},
+    {"t": "sell", "k": "g_phone", "n": 30, "txt": ["賣出 30 部紙紮手機", "賣出 30 部紙紮手機"], "reward": {"coins": 2000}},
+    {"t": "boss", "k": "toyol", "n": 1, "txt": ["巡陰打低 Toyol", "巡陰打倒 Toyol"], "reward": {"coins": 5000}}
+   ],
+   "fence_foes": ["shuigui", "xiaogui", "youhun"],
+   "move_line": [["甘榜收工，紙紮屋又要搬喇。", "甘榜收工，紙紮屋又要搬了。"]]}
+ ],
+ "FOE_LINES": [["開門啦！我聞到壽包味！", "開門啊！我聞到壽包味！"], ["我冇錢，但係我有怨氣！", "我沒錢，但我有怨氣！"], ["俾我入去排隊啦，我唔打尖！", "讓我進去排隊吧，我不插隊！"], ["呢度係我嘅地頭！……以前係。", "這裡是我的地盤！……以前是。"]],
+ "STRINGS": {
+  "move_btn": ["拔營！", "拔營！"],
+  "need_boss": ["要先打低主線 Boss", "要先打倒主線 Boss"],
+  "offline_t": ["你唔喺度嘅時候", "你不在的時候"],
+  "speed": ["加速", "加速"],
+  "income": ["收益", "收益"]
+ }
+}

@@ -1,0 +1,614 @@
+# 移動村：狀態（S.mv）＋即時模擬（員工做貨→搬貨→櫃台→客人收齊付錢；圍欄孤魂；目標；拔營；離線）
+# 冇畫嘢：畫面（mv_scene.gd）每格叫 step(dt)，再讀 workers／custs／foes／guards 畫；特效靠 ev（事件）通知畫面。
+# headless 測試可以直接 new 一個嚟跑（唔使開場景）。
+extends RefCounted
+
+const MD = preload("res://game/outpost/mv_data.gd")
+const FW := 390.0
+const WALK := 120.0
+const FOE_MAX := 5
+const MOVABLE_POSTS := ["mv", "garrison", "wood", "rice", "plank", "bun", "store", "boss", "camp", "station"]
+
+var rng := RandomNumberGenerator.new()
+var L := {}                 # 版面（relayout 計）
+var workers: Array = []     # {gid,k,sid,slot,st,prog,pos,home,carry,t}
+var custs: Array = []       # {cid,k,wants,got,st,pos,slot,t,ph,take}
+var foes: Array = []        # {k,pos,hp,mx,st,t,tgt,ph}
+var guards: Array = []      # {gid,k,pos,slot,cd,tgt,atk}
+var mk := {}                # 手動做貨進度：sid → 0..1（-1＝冇做）
+var ev: Array = []          # 事件（畫面攞嚟出特效）
+var spawn_t := 1.0
+var foe_t := 2.0
+var paused := false
+var _sync_key := ""
+
+func _init() -> void:
+	rng.seed = 20261119
+	relayout(102.0, 844.0 - 58.0)
+
+# ================= 狀態 =================
+func SS():
+	var s = J.G.get("S")
+	return s if s is Dictionary else null
+func now() -> float: return J.now()
+
+func st():
+	var s = SS()
+	if s == null: return null
+	if not (s.get("mv") is Dictionary):
+		s["mv"] = {"v": 1.0, "ci": 0.0, "st": {}, "goals_done": [], "sold": {}, "done": {}, "guards": [], "last": now(),
+			"boost": {"inc_end": 0.0, "inc_cd": 0.0, "spd_end": 0.0, "spd_cd": 0.0}, "pile": {}, "counter": {}, "earned": 0.0, "served": 0.0}
+	var m = s.mv
+	for k in ["st", "sold", "done", "boost", "pile", "counter"]: if not (m.get(k) is Dictionary): m[k] = {}
+	for k in ["goals_done", "guards"]: if not (m.get(k) is Array): m[k] = []
+	while m.guards.size() < MD.GUARD_SLOTS: m.guards.append(null)
+	if m.get("last") == null: m["last"] = now()
+	var c = ci_of(m)
+	for sid in MD.stations(c):
+		if not (m.st.get(sid) is Dictionary):
+			m.st[sid] = {"lv": 1.0, "unlocked": float(MD.st_def(sid).get("unlock_cost", 0)) <= 0.0, "workers": []}
+		var e = m.st[sid]
+		if not (e.get("workers") is Array): e["workers"] = []
+		while e.workers.size() < MD.slots(sid): e.workers.append(null)
+	return m
+func ci_of(m) -> int: return clampi(int(J.num(m.get("ci"))), 0, maxi(0, MD.maps_n() - 1))
+func ci() -> int:
+	var m = st()
+	return ci_of(m) if m != null else 0
+func sst(sid: String) -> Dictionary: return st().st[sid]
+func lv(sid: String) -> float: return J.num(sst(sid).lv)
+func unlocked(sid: String) -> bool: return J.t(sst(sid).unlocked)
+func coins() -> float: return J.num(SS().res.get("coins"))
+func add_coins(v: float) -> void: SS().res["coins"] = coins() + v
+func nworkers(sid: String) -> int:
+	var n = 0
+	for g in sst(sid).workers: if g != null: n += 1
+	return n
+
+func inc_on() -> bool: return now() < J.num(st().boost.get("inc_end"))
+func spd_on() -> bool: return now() < J.num(st().boost.get("spd_end"))
+func inc_mul() -> float: return 2.0 if inc_on() else 1.0
+func spd_mul() -> float: return 2.0 if spd_on() else 1.0
+func boost_left(kind: String) -> float: return maxf(0.0, (J.num(st().boost.get(kind + "_end")) - now()) / 1000.0)
+func boost_cd(kind: String) -> float: return maxf(0.0, (J.num(st().boost.get(kind + "_cd")) - now()) / 1000.0)
+func use_boost(kind: String) -> bool:
+	if boost_cd(kind) > 0.0: return false
+	var B = MD.BOOST_INC if kind == "inc" else MD.BOOST_SPD
+	st().boost[kind + "_end"] = now() + B.dur * 1000.0
+	st().boost[kind + "_cd"] = now() + B.cd * 1000.0
+	ev.append({"k": "boost", "kind": kind})
+	return true
+
+# ================= 鬼（同村子崗位、站崗、巡陰、分村互斥：gh.post = "mv"） =================
+func ghost(id):
+	var s = SS()
+	if s == null or id == null: return null
+	for gh in J.iter(s.get("ghosts")): if J.seq(J.gp(gh, "id"), id): return gh
+	return null
+func glv(gh) -> float:
+	var F = J.G.get("F")
+	return J.num(J.mc(F, "glv", [gh])) if F != null else J.num(J.gp(gh, "lv"))
+func reg_post() -> void:
+	var PO = J.G.get("POSTS")
+	if PO is Dictionary and not PO.has("mv"):
+		PO["mv"] = {"name": "移動村開工", "bld": null, "stat": 0.0, "desc": "喺出殯巡遊大排檔做貨／守圍欄"}
+# 存檔一致：格入面嘅鬼要 post == "mv"；post == "mv" 但冇格嘅鬼放返自由
+func validate() -> void:
+	var m = st(); if m == null: return
+	var seen = {}
+	var lists = []
+	for sid in m.st: lists.append(m.st[sid].workers)
+	lists.append(m.guards)
+	for p in lists:
+		for i in p.size():
+			var gid = p[i]
+			if gid == null: continue
+			var gh = ghost(gid); var key = J.str(gid)
+			if gh == null or not J.seq(J.gp(gh, "post"), "mv") or seen.has(key): p[i] = null; continue
+			seen[key] = true
+	for gh in J.iter(SS().get("ghosts")):
+		if J.seq(J.gp(gh, "post"), "mv") and not seen.has(J.str(J.gp(gh, "id"))): J.sp(gh, "post", null)
+
+func pick_list() -> Array:
+	var out = []; var t0 = now()
+	for gh in J.iter(SS().get("ghosts")):
+		if J.seq(J.gp(gh, "k"), "afu") or J.num(J.gp(gh, "tiredUntil")) > t0: continue
+		var p = J.gp(gh, "post")
+		if J.t(p) and not (J.str(p) in MOVABLE_POSTS): continue    # 樓裡有鬼出更等：唔郁
+		out.append(gh)
+	out.sort_custom(func(a, b):
+		var fa = 0 if not J.t(J.gp(a, "post")) else (1 if not J.seq(J.gp(a, "post"), "mv") else 2)
+		var fb = 0 if not J.t(J.gp(b, "post")) else (1 if not J.seq(J.gp(b, "post"), "mv") else 2)
+		if fa != fb: return fa < fb
+		return glv(a) > glv(b))
+	return out
+
+func _release(gid) -> void:   # 由其他崗位調走
+	var gh = ghost(gid); if gh == null: return
+	var p = J.str(J.gp(gh, "post"))
+	if p == "garrison":
+		var GR = Engine.get_main_loop().root.get_node_or_null("Garrison") if Engine.get_main_loop() != null else null
+		if GR != null and GR.st() != null:
+			for c2 in GR.maps_n():
+				var m2 = GR.ms(c2)
+				for s2 in m2.posts:
+					var p2 = m2.posts[s2]
+					for i in p2.size(): if J.seq(p2[i], gid): p2[i] = null
+	var m = st()
+	for sid in m.st:
+		var w = m.st[sid].workers
+		for i in w.size(): if J.seq(w[i], gid): w[i] = null
+	for i in m.guards.size(): if J.seq(m.guards[i], gid): m.guards[i] = null
+	J.sp(gh, "post", null)
+
+# list: "guard" 或者 sid
+func assign(list: String, slot: int, gid) -> bool:
+	var m = st()
+	var arr: Array = m.guards if list == "guard" else (sst(list).workers if m.st.has(list) else [])
+	if slot < 0 or slot >= arr.size(): return false
+	if list != "guard" and not unlocked(list): return false
+	if gid != null:
+		var gh = ghost(gid)
+		if gh == null or J.seq(J.gp(gh, "k"), "afu"): return false
+		var p = J.gp(gh, "post")
+		if J.t(p) and not (J.str(p) in MOVABLE_POSTS): return false
+	var old = arr[slot]
+	if old != null:
+		var og = ghost(old)
+		if og != null and J.seq(J.gp(og, "post"), "mv"): J.sp(og, "post", null)
+		arr[slot] = null
+	if gid != null:
+		_release(gid)
+		J.sp(ghost(gid), "post", "mv"); arr[slot] = J.gp(ghost(gid), "id")
+	_sync_key = ""
+	return true
+
+# ================= 升級／解鎖 =================
+func unlock(sid: String) -> bool:
+	if unlocked(sid): return false
+	var c = float(MD.st_def(sid).get("unlock_cost", 0))
+	if coins() < c: return false
+	add_coins(-c); sst(sid).unlocked = true; _sync_key = ""
+	ev.append({"k": "unlock", "sid": sid})
+	return true
+func up_n_for(sid: String, mode: String) -> int:   # mode: "1"／"10"／"mile"
+	var l = lv(sid); var mx = MD.max_lv(sid)
+	var n = 1
+	if mode == "10": n = 10
+	elif mode == "mile":
+		var nm = MD.next_mile(sid, l); n = (nm - int(l)) if nm > 0 else 1
+	return clampi(n, 0, mx - int(l))
+func upgrade(sid: String, n: int) -> int:
+	if not unlocked(sid) or n <= 0: return 0
+	var l0 = lv(sid); n = mini(n, MD.max_lv(sid) - int(l0))
+	if n <= 0: return 0
+	var c = MD.cost_n(sid, l0, n)
+	if coins() < c: return 0
+	add_coins(-c); sst(sid).lv = l0 + n
+	var nm0 = MD.nm(sid, l0); var nm1 = MD.nm(sid, l0 + n)
+	ev.append({"k": "up", "sid": sid, "from": l0, "to": l0 + n})
+	if nm1 > nm0: ev.append({"k": "mile", "sid": sid, "x": pow(2.0, nm1 - nm0), "lv": l0 + n})
+	return n
+
+# ================= 目標 =================
+func boss_ok(c: int, k := "") -> bool:
+	var cl = SS().get("cleared")
+	if not (cl is Dictionary): return false
+	if k != "" and k.contains("-") and J.t(cl.get(k)): return true
+	return J.t(cl.get("%d-3" % (c + 1)))
+func goal_prog(i: int) -> Array:   # [而家, 要幾多]
+	var c = ci(); var G = MD.goals(c)
+	if i < 0 or i >= G.size(): return [0, 1]
+	var g = G[i]; var k = str(g.get("k", "")); var n = float(g.get("n", 1)); var cur = 0.0
+	match str(g.get("t")):
+		"unlock": cur = 1.0 if st().st.has(k) and unlocked(k) else 0.0; n = 1.0
+		"level": cur = lv(k) if st().st.has(k) else 0.0
+		"sell": cur = J.num(st().sold.get(k))
+		"hire":
+			if st().st.has(k): cur = nworkers(k)
+			else:
+				for sid in st().st: cur += nworkers(sid)
+		"boss": cur = 1.0 if boss_ok(c, k) else 0.0; n = 1.0
+	return [minf(cur, n), n]
+func goal_done(i: int) -> bool:
+	var p = goal_prog(i); return p[0] >= p[1]
+func goal_claimed(i: int) -> bool:
+	for x in st().goals_done: if int(J.num(x)) == i: return true
+	return false
+func cur_goal() -> int:
+	var G = MD.goals(ci())
+	for i in G.size(): if not goal_claimed(i): return i
+	return -1
+func claim(i: int) -> bool:
+	if i < 0 or goal_claimed(i) or not goal_done(i): return false
+	st().goals_done.append(float(i))
+	var r = MD.goals(ci())[i].get("reward", {})
+	var cc = float(r.get("coins", 0)) if r is Dictionary else 0.0
+	if cc > 0.0: add_coins(cc)
+	ev.append({"k": "claim", "i": i, "coins": cc})
+	return true
+func goals_claimed_n() -> int: return st().goals_done.size()
+func can_move() -> bool:
+	var c = ci()
+	if c + 1 >= MD.maps_n(): return false
+	for i in MD.goals(c).size(): if not goal_claimed(i): return false
+	return boss_ok(c)
+
+# 拔營：記低呢張圖嘅台等級（俾分村用），放返所有鬼，下一張圖由零開始
+func move_next() -> bool:
+	if not can_move(): return false
+	var m = st(); var c = ci()
+	var rec = {}
+	for sid in m.st: if J.t(m.st[sid].unlocked): rec[sid] = J.num(m.st[sid].lv)
+	m.done[str(c)] = rec
+	for sid in m.st:
+		for gid in m.st[sid].workers:
+			if gid != null and ghost(gid) != null and J.seq(J.gp(ghost(gid), "post"), "mv"): J.sp(ghost(gid), "post", null)
+	for gid in m.guards:
+		if gid != null and ghost(gid) != null and J.seq(J.gp(ghost(gid), "post"), "mv"): J.sp(ghost(gid), "post", null)
+	m.ci = float(c + 1); m.st = {}; m.goals_done = []; m.sold = {}; m.pile = {}; m.counter = {}; m.guards = []
+	reset_live(); st()
+	ev.append({"k": "moved", "from": c, "to": c + 1})
+	return true
+
+func reset_live() -> void:
+	workers.clear(); custs.clear(); foes.clear(); guards.clear(); mk.clear(); _sync_key = ""
+	spawn_t = 0.6; foe_t = 1.5
+
+# ================= 離線 =================
+func offline_rate() -> float:   # 每秒
+	var c = ci(); var r = 0.0
+	for sid in st().st:
+		if not unlocked(sid): continue
+		var w = nworkers(sid)
+		if w <= 0: continue
+		var l = lv(sid)
+		r += w * MD.out(sid, l) * MD.val(sid, l, c) / (MD.tm(sid, l) + MD.CARRY_S)
+	return r
+func offline_gain(ms: float) -> Dictionary:
+	var m = st()
+	var secs = clampf(ms / 1000.0, 0.0, MD.OFFLINE_H * 3600.0)
+	var rows = []; var tot = 0.0; var c = ci()
+	for sid in m.st:
+		if not unlocked(sid) or nworkers(sid) <= 0: continue
+		var l = lv(sid)
+		var v = nworkers(sid) * MD.out(sid, l) * MD.val(sid, l, c) / (MD.tm(sid, l) + MD.CARRY_S) * secs
+		rows.append([sid, v]); tot += v
+	tot = floor(tot)
+	if tot > 0.0: add_coins(tot); m.earned = J.num(m.get("earned")) + tot
+	m.last = now()
+	return {"coins": tot, "secs": secs, "capped": ms / 1000.0 > MD.OFFLINE_H * 3600.0, "rows": rows}
+func check_away() -> Dictionary:   # 返嚟：由上次記低嘅時間計
+	var m = st(); if m == null: return {}
+	var ms = now() - J.num(m.get("last"))
+	if ms < 60000.0: m.last = now(); return {}
+	return offline_gain(ms)
+
+# ================= 版面 =================
+# top = 內容頂（主畫面頂欄下面），bot = 內容底
+func relayout(top: float, bot: float) -> void:
+	var o = {"top": top, "bot": bot}
+	o.fence_y = top + 204.0
+	o.guard_y = o.fence_y + 26.0
+	o.foe_y0 = top + 120.0; o.foe_y1 = o.fence_y - 12.0
+	o.counter_y = top + 350.0          # 櫃台底（客人企嘅高度）
+	o.counter_x0 = 14.0; o.counter_x1 = 196.0
+	o.serve = Vector2(230.0, o.counter_y + 2.0)
+	o.st_top = top + 392.0
+	L = o
+	_place_stations()
+	for w in workers: w.home = slot_pos(w.sid, int(w.slot))
+	_sync_key = ""
+func queue_pos(i: int) -> Vector2: return L.serve + Vector2(44.0 * i, 0)
+func drop_pos(gid: String) -> Vector2:
+	var gs = goods_list(); var i = maxi(0, gs.find(gid)); var n = maxi(1, gs.size())
+	var x = lerpf(L.counter_x0 + 30.0, L.counter_x1 - 26.0, (i + 0.5) / n) if n > 1 else (L.counter_x0 + L.counter_x1) / 2.0
+	return Vector2(x, L.counter_y + 40.0)
+func counter_slot(gid: String) -> Vector2:   # 櫃台面疊貨位
+	var p = drop_pos(gid); return Vector2(p.x, L.counter_y - 34.0)
+var SPOS := {}
+func _place_stations() -> void:
+	SPOS.clear()
+	var ids = MD.stations(ci()) if SS() != null else []
+	var n = ids.size(); if n == 0: return
+	var cols = 2 if n <= 4 else 3
+	var rows = int(ceil(float(n) / cols))
+	var rh = (L.bot - L.st_top) / rows
+	for i in n:
+		var r = i / cols; var cidx = i % cols
+		var in_row = mini(cols, n - r * cols)
+		var cw = FW / cols
+		var x = (FW - cw * in_row) / 2.0 + cw * (cidx + 0.5)
+		SPOS[ids[i]] = Vector2(x, L.st_top + rh * (r + 1) - 72.0)
+func st_pos(sid: String) -> Vector2: return SPOS.get(sid, Vector2(195, 600))
+func slot_pos(sid: String, i: int) -> Vector2:
+	var p = st_pos(sid); var off = [Vector2(-38, 22), Vector2(8, 26), Vector2(50, 22)]
+	return p + off[i % 3] + Vector2(0, 0 if i < 3 else 8)
+func guard_home(i: int) -> Vector2: return Vector2(236.0 + 62.0 * i, L.guard_y)
+
+func goods_list() -> Array:
+	var o = []
+	for sid in MD.stations(ci()):
+		var g = str(MD.st_def(sid).get("good", ""))
+		if g != "" and not o.has(g): o.append(g)
+	return o
+func avail_goods() -> Array:
+	var o = []
+	for sid in MD.stations(ci()):
+		if unlocked(sid):
+			var g = str(MD.st_def(sid).get("good", ""))
+			if g != "" and not o.has(g): o.append(g)
+	return o
+func sid_of(gid: String) -> String:
+	for sid in MD.stations(ci()):
+		if str(MD.st_def(sid).get("good", "")) == gid and unlocked(sid): return sid
+	for sid in MD.stations(ci()): if str(MD.st_def(sid).get("good", "")) == gid: return sid
+	return ""
+func counter_n(gid: String) -> int: return int(J.num(st().counter.get(gid)))
+func pile_n(sid: String) -> int: return int(J.num(st().pile.get(sid)))
+func pile_cap(sid: String) -> int: return MD.out(sid, lv(sid)) * 5
+
+# ================= 實體同步（派鬼／撤走之後） =================
+func sync() -> void:
+	var m = st(); var key = ""
+	for sid in m.st: key += sid + str(m.st[sid].workers) + str(m.st[sid].unlocked)
+	key += str(m.guards) + str(ci())
+	if key == _sync_key: return
+	_sync_key = key
+	_place_stations()
+	var keep = []
+	for w in workers:
+		var arr = m.st[w.sid].workers if m.st.has(w.sid) else []
+		if int(w.slot) < arr.size() and J.seq(arr[int(w.slot)], w.gid): keep.append(w)
+		elif w.carry > 0: _put_counter(str(MD.st_def(w.sid).get("good", "")), int(w.carry))   # 搬緊嘅貨唔好蒸發
+	workers = keep
+	for sid in m.st:
+		var arr = m.st[sid].workers
+		for i in arr.size():
+			if arr[i] == null: continue
+			var found = false
+			for w in workers: if w.sid == sid and int(w.slot) == i: found = true
+			if found: continue
+			var gh = ghost(arr[i])
+			var hp = slot_pos(sid, i)
+			workers.append({"gid": arr[i], "k": J.str(J.gp(gh, "k")), "name": J.str(J.gp(gh, "name")), "sid": sid, "slot": i, "st": "work", "prog": rng.randf() * 0.3,
+				"pos": hp, "home": hp, "carry": 0, "t": 0.0, "ph": rng.randf() * 10.0})
+	var gk = []
+	for g in guards:
+		if int(g.slot) < m.guards.size() and J.seq(m.guards[int(g.slot)], g.gid): gk.append(g)
+	guards = gk
+	for i in m.guards.size():
+		if m.guards[i] == null: continue
+		var found = false
+		for g in guards: if int(g.slot) == i: found = true
+		if found: continue
+		var gh = ghost(m.guards[i])
+		guards.append({"gid": m.guards[i], "k": J.str(J.gp(gh, "k")), "name": J.str(J.gp(gh, "name")), "slot": i, "pos": guard_home(i), "cd": 0.0, "tgt": null, "atk": 0.0,
+			"dps": MD.guard_dps(glv(gh)), "ph": rng.randf() * 10.0})
+
+# ================= 每格 =================
+func step(dt: float) -> void:
+	if paused or st() == null: return
+	sync()
+	var sp = spd_mul()
+	_step_workers(dt, sp)
+	_step_manual(dt, sp)
+	_step_custs(dt)
+	_step_foes(dt)
+	_step_guards(dt)
+
+func _move(e: Dictionary, to: Vector2, dt: float, spd := WALK) -> bool:
+	var d = to - e.pos
+	if d.length() <= spd * dt: e.pos = to; e["walk"] = false; return true
+	e.pos += d.normalized() * spd * dt; e["walk"] = true; e["flip"] = d.x < 0
+	return false
+
+func _put_counter(gid: String, n: int) -> int:
+	var c = counter_n(gid); var put = mini(n, MD.COUNTER_CAP - c)
+	if put > 0: st().counter[gid] = float(c + put)
+	return put
+
+func _step_workers(dt: float, sp: float) -> void:
+	for w in workers:
+		var sid: String = w.sid; var gid = str(MD.st_def(sid).get("good", ""))
+		match w.st:
+			"work":
+				if not _move(w, w.home, dt): continue
+				# 台面有手做剩嘅貨：先搬走
+				if pile_n(sid) > 0 and w.prog <= 0.0:
+					var n = mini(pile_n(sid), MD.out(sid, lv(sid)) * 2)
+					st().pile[sid] = float(pile_n(sid) - n); w.carry = n; w.st = "go"; continue
+				w.prog += dt * sp / MD.tm(sid, lv(sid))
+				if w.prog >= 1.0:
+					w.prog = 0.0; w.carry = MD.out(sid, lv(sid)); w.st = "go"
+					ev.append({"k": "made", "sid": sid, "n": w.carry, "pos": w.home})
+			"go":
+				if _move(w, drop_pos(gid) + Vector2((int(w.slot) - 1) * 10.0, 0), dt):
+					var put = _put_counter(gid, int(w.carry))
+					if put > 0:
+						w.carry -= put
+						ev.append({"k": "deliver", "gid": gid, "n": put, "pos": w.pos})
+					if w.carry <= 0: w.st = "back"
+					else: w["wait"] = true
+			"back":
+				w.erase("wait")
+				if _move(w, w.home, dt): w.st = "work"; w.prog = 0.0
+
+func _step_manual(dt: float, sp: float) -> void:
+	for sid in mk.keys():
+		if float(mk[sid]) < 0.0: continue
+		mk[sid] = float(mk[sid]) + dt * sp / MD.tm(sid, lv(sid))
+		if mk[sid] >= 1.0:
+			mk[sid] = -1.0
+			st().pile[sid] = float(mini(pile_cap(sid), pile_n(sid) + MD.out(sid, lv(sid))))
+			ev.append({"k": "made", "sid": sid, "n": MD.out(sid, lv(sid)), "pos": st_pos(sid)})
+
+# 撳台面：有貨＝收去櫃台；冇貨＝開始做一轉
+func tap_station(sid: String) -> String:
+	if not unlocked(sid): return ""
+	if pile_n(sid) > 0:
+		var gid = str(MD.st_def(sid).get("good", ""))
+		var put = _put_counter(gid, pile_n(sid))
+		if put <= 0: return "full"
+		st().pile[sid] = float(pile_n(sid) - put)
+		ev.append({"k": "collect", "sid": sid, "gid": gid, "n": put, "pos": st_pos(sid)})
+		return "collect"
+	if float(mk.get(sid, -1.0)) >= 0.0: return "busy"
+	mk[sid] = 0.0
+	return "make"
+
+# ---------------- 客人 ----------------
+func _step_custs(dt: float) -> void:
+	var waiting = 0
+	for c in custs: if c.st != "out": waiting += 1
+	spawn_t -= dt
+	if spawn_t <= 0.0:
+		spawn_t = rng.randf_range(2.2, 4.0) * (2.0 if fence_pressure() >= 2 else 1.0)
+		if waiting < MD.QUEUE_MAX: spawn_cust()
+	var order = []
+	for c in custs: if c.st != "out": order.append(c)
+	for i in order.size():
+		var c = order[i]; c.slot = i
+		var tgt = queue_pos(i)
+		match c.st:
+			"in", "queue":
+				# 由右邊行入：先到隊尾高度再橫行
+				if _move(c, tgt, dt, 90.0):
+					c.st = "serve" if i == 0 else "queue"
+					if i == 0: c.take = 0.3
+			"serve":
+				if i != 0: c.st = "queue"; continue
+				c.flip = true
+				c.take -= dt
+				if c.take <= 0.0:
+					c.take = 0.16
+					var all_ok = true
+					for g in c.wants:
+						var need = int(c.wants[g]) - int(c.got.get(g, 0))
+						if need <= 0: continue
+						all_ok = false
+						if counter_n(g) > 0:
+							st().counter[g] = float(counter_n(g) - 1); c.got[g] = int(c.got.get(g, 0)) + 1
+							ev.append({"k": "take", "gid": g, "from": counter_slot(g), "to": c.pos + Vector2(0, -40)})
+							break
+					if all_ok: _pay(c)
+	for c in custs.duplicate():
+		if c.st == "out":
+			if _move(c, Vector2(FW + 50.0, L.counter_y + 30.0), dt, 110.0): custs.erase(c)
+
+func spawn_cust() -> bool:
+	var av = avail_goods(); if av.is_empty(): return false
+	var cands = []
+	for cid in MD.map_def(ci()).get("customers", []):
+		var cd = MD.cust_def(str(cid)); if cd.is_empty(): continue
+		var ok = []
+		for g in cd.get("wants", []): if av.has(str(g)): ok.append(str(g))
+		if ok.size(): cands.append([cd, ok])
+	if cands.is_empty(): return false
+	var pick = cands[rng.randi() % cands.size()]
+	var ok: Array = pick[1].duplicate()
+	var ng = 2 if ok.size() >= 2 and rng.randf() < 0.3 else 1
+	var wants = {}
+	var served = J.num(st().get("served"))
+	var qmax = clampi(2 + int(served / 10.0), 2, 6)
+	for j in ng:
+		var g = ok[rng.randi() % ok.size()]; ok.erase(g)
+		wants[g] = 1 + rng.randi() % qmax
+	var c = {"cid": str(pick[0].id), "k": str(pick[0].get("art", "youhun")), "wants": wants, "got": {}, "st": "in", "slot": 99, "take": 0.3,
+		"pos": Vector2(FW + 40.0, L.counter_y + 2.0), "ph": rng.randf() * 10.0, "flip": true, "lines": pick[0].get("lines", []), "vip": J.t(pick[0].get("vip"))}
+	custs.append(c)
+	return true
+
+func cust_value(c: Dictionary) -> float:
+	var amt = 0.0; var cc = ci()
+	for g in c.wants:
+		var sid = sid_of(g)
+		if sid != "": amt += float(c.wants[g]) * MD.val(sid, lv(sid), cc)
+	return amt * inc_mul()
+func _pay(c: Dictionary) -> void:
+	var amt = cust_value(c)
+	add_coins(amt)
+	var m = st()
+	for g in c.wants: m.sold[g] = J.num(m.sold.get(g)) + float(c.wants[g])
+	m.earned = J.num(m.get("earned")) + amt; m.served = J.num(m.get("served")) + 1.0
+	c.st = "out"
+	ev.append({"k": "pay", "amt": amt, "pos": c.pos + Vector2(0, -60), "cid": c.cid})
+
+# ---------------- 圍欄孤魂 ----------------
+func fence_pressure() -> int:
+	var n = 0
+	for f in foes: if f.st == "bang": n += 1
+	return n
+func _step_foes(dt: float) -> void:
+	var c = ci()
+	foe_t -= dt
+	var alive = 0
+	for f in foes: if f.st != "die": alive += 1
+	if foe_t <= 0.0:
+		foe_t = rng.randf_range(3.0, 6.5)
+		if alive < FOE_MAX: spawn_foe()
+	for f in foes.duplicate():
+		f.t += dt
+		match f.st:
+			"roam":
+				if _move(f, f.tgt, dt, 40.0):
+					if f.t > f.get("calm", 3.0): f.st = "charge"; f.tgt = Vector2(clampf(f.pos.x, 24, FW - 24), L.fence_y - 8.0); f.t = 0.0
+					else: f.tgt = Vector2(rng.randf_range(24, FW - 24), rng.randf_range(L.foe_y0, L.foe_y1 - 30))
+			"charge":
+				if _move(f, f.tgt, dt, 95.0): f.st = "bang"; f.t = 0.0; ev.append({"k": "bang", "pos": f.pos})
+			"bang":
+				f["bob"] = sin(f.t * 18.0) * 3.0
+				if fmod(f.t, 0.6) < dt: ev.append({"k": "rattle", "x": f.pos.x})
+				if f.t > 7.0: f.st = "roam"; f.t = 0.0; f.calm = rng.randf_range(3, 6); f.tgt = Vector2(f.pos.x + rng.randf_range(-60, 60), L.foe_y0 + 20)
+			"die":
+				if f.t > 0.7: foes.erase(f)
+
+func spawn_foe() -> bool:
+	var ks = MD.map_def(ci()).get("fence_foes", ["youhun"])
+	if not (ks is Array) or ks.is_empty(): ks = ["youhun"]
+	var left = rng.randf() < 0.5
+	var y = rng.randf_range(L.foe_y0 + 10, L.foe_y1 - 30)
+	var hp = MD.foe_hp(ci())
+	foes.append({"k": str(ks[rng.randi() % ks.size()]), "pos": Vector2(-30.0 if left else FW + 30.0, y), "hp": hp, "mx": hp, "st": "roam", "t": 0.0, "calm": rng.randf_range(1.5, 4.0),
+		"tgt": Vector2(rng.randf_range(40, FW - 40), y), "ph": rng.randf() * 10.0, "flip": not left})
+	return true
+
+func hit_foe(f: Dictionary, dmg: float, by: String) -> void:
+	if f.st == "die": return
+	f.hp -= dmg; f["hurt"] = 0.25
+	ev.append({"k": "hit", "pos": f.pos + Vector2(0, -30), "dmg": dmg, "by": by})
+	if f.hp <= 0.0:
+		f.st = "die"; f.t = 0.0
+		var cc = MD.foe_coin(ci()); add_coins(cc)
+		ev.append({"k": "kill", "pos": f.pos + Vector2(0, -40), "coins": cc})
+func tap_foe(p: Vector2) -> bool:
+	for f in foes:
+		if f.st != "die" and p.distance_to(f.pos + Vector2(0, -28)) < 34.0: hit_foe(f, MD.TAP_DMG, "tap"); return true
+	return false
+
+func _step_guards(dt: float) -> void:
+	for f in foes:
+		if f.has("hurt"):
+			f.hurt -= dt
+			if f.hurt <= 0: f.erase("hurt")
+	for g in guards:
+		g.atk = maxf(0.0, g.atk - dt); g.cd -= dt
+		var tgt = g.tgt
+		if tgt == null or not (tgt in foes) or tgt.st == "die":
+			tgt = null; var best = 1e9
+			for f in foes:
+				if f.st == "die" or f.pos.y < L.fence_y - 90.0: continue
+				var taken = false
+				for g2 in guards: if g2 != g and g2.tgt == f: taken = true
+				var d = absf(f.pos.x - g.pos.x) + (60.0 if taken else 0.0) + (0.0 if f.st == "bang" else 40.0)
+				if d < best: best = d; tgt = f
+			g.tgt = tgt
+		if tgt == null:
+			_move(g, guard_home(int(g.slot)), dt, 70.0)
+			continue
+		var want = Vector2(clampf(tgt.pos.x + (-22.0 if tgt.pos.x > g.pos.x else 22.0), 20, FW - 20), L.guard_y)
+		if _move(g, want, dt, 110.0) or absf(tgt.pos.x - g.pos.x) < 30.0:
+			g.flip = tgt.pos.x < g.pos.x
+			if g.cd <= 0.0 and tgt.pos.y >= L.fence_y - 90.0:
+				g.cd = 0.5; g.atk = 0.25
+				hit_foe(tgt, g.dps * 0.5, "guard")
