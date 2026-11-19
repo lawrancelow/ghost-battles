@@ -229,6 +229,7 @@ static func card_desc(bid: String) -> String:
 			o.append("[color=#c2362b]" + L("斷料！等緊：%s", "缺料！等待：%s") % "、".join(nm) + "[/color]")
 		var mo = main_out(bid)
 		o.append(L("存貨：%s %s　每崗產量 ×%.1f　崗位 %d", "庫存：%s %s　每崗產量 ×%.1f　崗位 %d") % [M.name(mo), _q(floor(M.amt(mo))), mult(bid), slots(bid)])
+		o.append(L("一定要派鬼先有產出；每隻鬼嘅產能睇佢嘅「%s」（30 點 = 1 份）", "必須派鬼才有產出；每隻鬼的產能看牠的「%s」（30 點 = 1 份）") % [["力", "智", "武"][CE.stat_i(bid)]])   # 老闆定案
 	else:
 		var u = need_ci(bid)
 		if not unlocked(bid): o.append("[color=#c2362b]" + L("村子去到 %s（第 %d 張圖）先起得", "村子抵達 %s（第 %d 張地圖）才能建造") % [map_name(u), u + 1] + "[/color]")

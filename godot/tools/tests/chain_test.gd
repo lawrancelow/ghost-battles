@@ -85,8 +85,8 @@ func eco() -> void:
 	S.bld["g_bamboo"] = 1.0
 	_g("t_ch2").post = "g_bamboo"   # lv 11
 	var R = CE.rates()
-	var exp_r = 6.0 * (1.0 + CE.BASE_W)   # 1 隻鬼 + 冇鬼都有嘅半份基本產量
-	_chk("陰竹 每分鐘 = rate×(1+0.15×(建築Lv−1))×(鬼數+0.5)", _near(J.num(R.g_bamboo.out.m_bamboo), exp_r), R.g_bamboo.out)
+	var exp_r = 6.0 * CE.worker_f(_g("t_ch2"), "g_bamboo")   # 每隻鬼產能 = 指定能力值 ÷ 30
+	_chk("陰竹 每分鐘 = rate×(1+0.15×(建築Lv−1))×能力值÷30", _near(J.num(R.g_bamboo.out.m_bamboo), exp_r), R.g_bamboo.out)
 	_produce(60.0)
 	_chk("1 分鐘：陰竹入 S.mat", _near(M.amt("m_bamboo"), exp_r, 1e-3), M.amt("m_bamboo"))
 	S.bld["g_bamboo"] = 0.0
@@ -97,18 +97,18 @@ func eco() -> void:
 	_chk("上限 MATS.cap = 500", _near(M.amt("m_bamboo"), 500.0), M.amt("m_bamboo"))
 
 	_g("t_ch2").post = null
-	_chk("冇派鬼：照有半份基本產量", _near(J.num(CE.rates().g_bamboo.out.m_bamboo), 6.0 * 1.3 * CE.BASE_W))
+	_chk("冇派鬼：冇產出（一定要派鬼）", not CE.rates().has("g_bamboo"))
 	S.bld["g_bamboo"] = 0.0
 	_p("===== 3. 拓展加工建築（紙寮：2 陰竹 → 1 紙；原料唔夠按比例） =====")
 	S.bld["w_paper"] = 1.0; _g("t_ch1").post = "w_paper"   # lv 1
 	S.mat["m_bamboo"] = 100.0; S.mat["m_paper"] = 0.0
-	var cpm = 60.0 / 20.0 * (1.0 + CE.BASE_W)
-	_chk("紙寮 每分鐘 4.5 次（1 鬼＋半份；食 9 竹出 4.5 紙）", _near(J.num(CE.rates().w_paper.out.m_paper), cpm) and _near(J.num(CE.rates().w_paper["in"].m_bamboo), 2.0 * cpm))
+	var wf1 = CE.worker_f(_g("t_ch1"), "w_paper"); var cpm = 60.0 / 20.0 * wf1
+	_chk("紙寮 每分鐘 3×能力倍數 次", _near(J.num(CE.rates().w_paper.out.m_paper), cpm) and _near(J.num(CE.rates().w_paper["in"].m_bamboo), 2.0 * cpm))
 	S.bld["w_paper"] = 3.0
-	_chk("加工 Lv3：每批 time ÷ 1.2 → 每分鐘 3.6 次", _near(J.num(CE.rates().w_paper.out.m_paper), 3.6 * (1.0 + CE.BASE_W)))
+	_chk("加工 Lv3：每批 time ÷ 1.2 → 每分鐘 3.6 次", _near(J.num(CE.rates().w_paper.out.m_paper), 3.6 * wf1))
 	S.bld["w_paper"] = 1.0
 	_produce(60.0)
-	_chk("1 分鐘：紙 +4.5、竹 −9", _near(M.amt("m_paper"), 4.5, 1e-3) and _near(M.amt("m_bamboo"), 91.0, 1e-3), "%.2f/%.2f" % [M.amt("m_paper"), M.amt("m_bamboo")])
+	_chk("1 分鐘：紙 +cpm、竹 −2cpm", _near(M.amt("m_paper"), cpm, 1e-3) and _near(M.amt("m_bamboo"), 100.0 - 2.0 * cpm, 1e-3), "%.2f/%.2f" % [M.amt("m_paper"), M.amt("m_bamboo")])
 	S.mat["m_bamboo"] = 2.0; S.mat["m_paper"] = 0.0; _produce(60.0)
 	_chk("得 2 竹：只做到 1 紙（按比例）", _near(M.amt("m_paper"), 1.0, 1e-3) and M.amt("m_bamboo") < 1e-3, "%.3f/%.3f" % [M.amt("m_paper"), M.amt("m_bamboo")])
 	_chk("斷料：starved = 缺 m_bamboo", CE.starved("w_paper") == ["m_bamboo"], CE.starved("w_paper"))

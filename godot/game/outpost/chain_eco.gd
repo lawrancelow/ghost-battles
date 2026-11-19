@@ -95,27 +95,35 @@ static func _glv(g) -> float:
 	var F = J.G.get("F")
 	return J.num(J.mc(F, "glv", [g])) if F != null else J.num(J.gp(g, "lv"))
 # 每分鐘（拓展建築）：{bid: {"w":員工數, "out":{mid:每分}, "in":{mid:每分}}}
-const BASE_W := 0.5
+const STAT_REF := 30.0   # 一般鬼能力值大約 30 ＝ 1 份產能
+const STAT_MIN := 0.2
+# 每間拓展建築睇邊項能力（0 力、1 智、2 武）；冇列明：採集睇力、加工睇智
+const BSTAT := {"b_well": 0, "b_bamboo": 0, "b_coco": 0, "b_latex": 1, "b_tea": 1, "b_straw": 0, "b_banana": 0, "b_fish": 2,
+	"b_newspaper": 0, "b_toner": 1, "b_paper": 1, "b_strip": 2, "b_cocomilk": 0, "b_rubbersheet": 0, "b_rope": 1, "b_pulp": 0, "b_ink": 1}
+static func stat_i(bid: String) -> int:
+	if BSTAT.has(bid): return int(BSTAT[bid])
+	return 0 if M.bld(bid).get("kind") == "gather" else 1
+static func worker_f(g, bid: String) -> float:
+	var F = J.G.get("F"); var i = stat_i(bid)
+	var v = J.num(J.mc(F, "stat", [g, float(i)])) if F != null else J.num(J.gp(g, "st")[i])
+	return maxf(STAT_MIN, v / STAT_REF)
 static func rates() -> Dictionary:
 	var s = S(); var o = {}
 	if s == null: return o
 	var nb = M.new_blds()
 	if nb.is_empty(): return o
-	# 每間已起嘅拓展建築：冇鬼都有 BASE_W（半個鬼）嘅基本產量；每派一隻鬼 +1（老闆定案：唔派鬼都有一半基本產量）
+	# 老闆定案：一定要派鬼先有產出；每隻鬼嘅產能 = 呢間建築指定嗰項能力值 ÷ STAT_REF（力／智／武，見 BSTAT）
 	var units = []
-	if s.get("bld") is Dictionary:
-		for bid in nb:
-			if J.num(s.bld.get(bid, 0)) > 0: units.append([str(bid), BASE_W, true])
 	for g in J.iter(s.get("ghosts")):
 		var p = J.gp(g, "post")
 		if not (p is String) or not (p in nb): continue
-		units.append([str(p), 1.0, false])
+		units.append([str(p), worker_f(g, str(p))])
 	for u in units:
 		var bid: String = u[0]; var d = M.bld(bid); var wf: float = u[1]; var p = bid
 		if not (s.get("bld") is Dictionary) or J.num(s.bld.get(p, 0)) <= 0: continue
 		if not o.has(bid): o[bid] = {"w": 0, "out": {}, "in": {}}
 		var e = o[bid]
-		if not u[2]: e.w += 1
+		e.w += 1
 		var L = maxf(1.0, J.num(s.bld.get(p, 1)))
 		if d.get("kind") == "gather":
 			var mid = str(d.get("out", ""))
