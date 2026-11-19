@@ -488,10 +488,12 @@ func _gait(k: String, e: Dictionary, m: Dictionary, o: Dictionary, tf: Dictionar
 			if fmod(w, 0.5) < 0.04: fx.append(["dust"])
 		"rattle":
 			tf["dx"] = sin(t * 41.0) * 1.2; tf["r"] = sin(t * 23.0) * 0.05
-		"tall":
+		"tall":   # Hantu Galah／轆轤首：高身慢擺；轆轤首行路條頸一伸一縮
 			tf["r"] = sin(t * 1.6) * 0.07
-		"brisk":
+			if k == "n30_rokurokubi": tf["sy"] = 1.0 + maxf(0.0, sin(t * 1.2)) * 0.07
+		"brisk":   # 無臉鬼（返工）／二房東：快步；無臉鬼間中「遲到喇！」
 			o["t"] = float(o.get("t", 0.0)) * 1.5; tf["r"] = 0.05
+			if k == "n30_nopperabo" and fmod(w, 5.0) < 0.04: fx.append(["say", "遲到喇！"])
 		"hunch":
 			tf["r"] = 0.14; tf["sy"] = 0.95
 		"bounce":
