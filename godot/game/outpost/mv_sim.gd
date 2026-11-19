@@ -431,6 +431,10 @@ func check_away() -> Dictionary:   # 返嚟：由上次記低嘅時間計
 var QP := PackedVector2Array()   # 客人排隊線
 var QLEN := 0.0
 var PATHS := {}                  # sid → 搬貨路線
+var QP2 := PackedVector2Array()  # [unify] 第二條排隊線（左邊入）
+var QLEN2 := 0.0
+func _qp(c: Dictionary) -> PackedVector2Array: return QP2 if c.get("side", 0) == 1 and QP2.size() > 1 else QP   # [unify]
+func _ql(c: Dictionary) -> float: return QLEN2 if c.get("side", 0) == 1 and QP2.size() > 1 else QLEN   # [unify]
 func relayout(_top := 0.0, _bot := 0.0) -> void:
 	var c = ci() if SS() != null else 0
 	var Ly = MD.layout(c)
@@ -447,6 +451,9 @@ func relayout(_top := 0.0, _bot := 0.0) -> void:
 	o.road = rd
 	L = o
 	QP = MD.queue_poly(c); QLEN = MD.poly_len(QP)
+	QP2 = PackedVector2Array()   # [unify] 左邊入口排隊線（合一地圖：客人由左右兩邊入）
+	for q in Ly.get("q2", []): QP2.append(MD.v2(q))
+	QLEN2 = MD.poly_len(QP2)
 	PATHS.clear(); SPOS.clear()
 	for sid in MD.stations(c):
 		SPOS[sid] = MD.st_xy(c, sid); PATHS[sid] = MD.st_path(c, sid)
@@ -650,14 +657,18 @@ func _step_custs(dt: float) -> void:
 		if waiting < MD.QUEUE_MAX: spawn_cust()
 	var order = []
 	for c in custs: if c.st != "out": order.append(c)
+	var side_n = [0, 0]   # [unify] 兩條排隊線各自計位（第 0 位＝收貨位，兩邊共用）
 	for i in order.size():
 		var c = order[i]; c.slot = i
-		var ts = queue_s(i)
+		var sd = int(c.get("side", 0)) if QP2.size() > 1 else 0
+		var qi = i
+		if i > 0: side_n[sd] += 1; qi = side_n[sd]
+		var ts = queue_s(qi)
 		match c.st:
 			"in", "queue":
 				# 由入口沿路行入嚟（排隊線上嘅弧長 s 慢慢減到自己個位）
 				c.s = maxf(ts, float(c.s) - 90.0 * dt)
-				_along(c, QP, c.s)
+				_along(c, _qp(c), c.s)
 				if c.s <= ts + 0.01:
 					c["walk"] = false
 					c.st = "serve" if i == 0 else "queue"
@@ -686,8 +697,8 @@ func _step_custs(dt: float) -> void:
 	for c in custs.duplicate():
 		if c.st == "out":
 			c.s = float(c.s) + 110.0 * dt
-			_along(c, QP, c.s)
-			if c.s >= QLEN: custs.erase(c)
+			_along(c, _qp(c), c.s)
+			if c.s >= _ql(c): custs.erase(c)
 
 func spawn_cust() -> bool:
 	var av = avail_goods(); if av.is_empty(): return false
@@ -710,6 +721,8 @@ func spawn_cust() -> bool:
 		wants[g] = 1 + rng.randi() % qmax
 	var c = {"cid": str(pick[0].id), "k": str(pick[0].get("art", "youhun")), "wants": wants, "got": {}, "st": "in", "slot": 99, "take": 0.3,
 		"s": QLEN, "pos": MD.poly_at(QP, QLEN), "ph": rng.randf() * 10.0, "flip": true, "lines": pick[0].get("lines", []), "vip": J.t(pick[0].get("vip"))}
+	if QP2.size() > 1 and rng.randf() < 0.5:   # [unify] 一半客人由左邊入
+		c["side"] = 1; c.s = QLEN2; c.pos = MD.poly_at(QP2, QLEN2); c.flip = false
 	custs.append(c)
 	return true
 

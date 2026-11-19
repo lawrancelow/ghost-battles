@@ -64,6 +64,14 @@ const HUD_H := 90.0
 const AMB_GHOSTS := 2
 const AMB_FLY := 3
 var camp = null   # [camp] 營地（原本村子嘅建築，喺地圖底）：game/outpost/mv_camp.gd
+# [unify] 嵌入模式（合一地圖）：由 game/outpost/mv_embed.gd 掛入村子畫面（ui/nv_village.gd），
+#   大排檔區世界 y 0..EH ＝ 村子 y -EH..0；鏡頭跟村子（embed 每格設 cam）；唔自己處理拖動／點擊（村子轉發 tap）；
+#   唔畫紙紮大屋、營地；HUD 只喺睇到大排檔區先出（hud_on）。
+var embed := false
+var embed_top := 0.0          # HUD 頂（畫面座標，主線任務條下面）
+var hud_on := true
+var hud_k := 1.0              # HUD 淡入淡出
+var embed_draw = null         # Callable(ctx, vy0, vy1)：嵌入層額外畫（挑夫鬼、留位）
 
 func _ready() -> void:
 	_rng.seed = 7
@@ -77,7 +85,9 @@ func on_show() -> void:
 	_build(); visible = true; _shown = true
 	_hide_host(true)
 	sim.reg_post(); sim.st(); sim.validate(); sim.reset_live(); sim.sync()
-	_set_bg(); _layout(); cam_home(); _prefill()
+	_set_bg(); _layout()
+	if not embed: cam_home()   # [unify] 嵌入：鏡頭跟村子
+	_prefill()
 	coin_show = sim.coins()
 	var r = sim.check_away()
 	if r.has("coins") and float(r.coins) > 0.0: _show_card(r)
@@ -125,14 +135,14 @@ func offline_gain(ms: float) -> Dictionary:
 func _build() -> void:
 	if frame != null: return
 	sim = SIM.new()
-	camp = load("res://game/outpost/mv_camp.gd").new(); camp.sc = self   # [camp]
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); mouse_filter = Control.MOUSE_FILTER_STOP
+	if not embed: camp = load("res://game/outpost/mv_camp.gd").new(); camp.sc = self   # [camp]（[unify] 嵌入模式取消營地）
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); mouse_filter = Control.MOUSE_FILTER_IGNORE if embed else Control.MOUSE_FILTER_STOP
 	clip_contents = true
 	bg = TextureRect.new(); bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED; bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bg.modulate = Color(0.7, 0.68, 0.76); add_child(bg)
 	frame = Control.new(); frame.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(frame)
-	stage = Control.new(); stage.mouse_filter = Control.MOUSE_FILTER_STOP; frame.add_child(stage)
+	stage = Control.new(); stage.mouse_filter = Control.MOUSE_FILTER_IGNORE if embed else Control.MOUSE_FILTER_STOP; frame.add_child(stage)
 	stage.draw.connect(_draw_stage); stage.gui_input.connect(_stage_input)
 	sheet = PanelContainer.new(); sheet.visible = false; sheet.mouse_filter = Control.MOUSE_FILTER_STOP
 	var s = UIKit.sb(PAPER, 14, LINE, 2, Vector4(14, 10, 14, 12)); s.corner_radius_bottom_left = 0; s.corner_radius_bottom_right = 0
@@ -158,6 +168,7 @@ func _layout() -> void:
 		var my = get_global_rect(); var mr = main.get_global_rect()
 		top_pad = maxf(0.0, (mr.position.y + th - my.position.y) / k)
 		bot_pad = maxf(0.0, (my.end.y - (mr.end.y - nh)) / k)
+	if embed: top_pad = embed_top / k; bot_pad = 0.0   # [unify]
 	sim.relayout()
 	_clamp_cam(true)
 	if sheet.visible: _place_sheet()
@@ -192,9 +203,11 @@ func _cover(r: Rect2) -> float:
 		if k.begins_with("st:") or k.begins_with("camp") or k.begins_with("unl:"): a += r.intersection(_wbtns[k]).get_area()
 	return a
 func cam_camp() -> void:   # [camp] 鏡頭移去營地
+	if camp == null: return   # [unify]
 	close_sheet(); _close_picker(); cam_v = 0.0
 	cam_tgt = clampf(camp.top() - HUD_H - 6.0, cam_min(), cam_max())
 func focus_camp(id: String) -> bool:   # [camp] 鏡頭移去營地某間建築（主線任務條撳落去用）
+	if camp == null: return false   # [unify]
 	var it = camp.item(id)
 	if it == null: return false
 	close_sheet(); _close_picker(); cam_v = 0.0
@@ -243,9 +256,10 @@ func _process(dt: float) -> void:
 	t += dt
 	if anim != null: _step_anim(dt)
 	else: sim.step(dt)
-	_step_cam(dt)
+	if not embed: _step_cam(dt)   # [unify]
+	else: hud_k = move_toward(hud_k, 1.0 if hud_on else 0.0, dt * 5.0)
 	_step_amb(dt)
-	camp.step(dt)   # [camp]
+	if camp != null: camp.step(dt)   # [camp]
 	_eat_events()
 	_step_fx(dt)
 	# HUD 冥幣追真數（飛緊嘅錢到咗先跳）
@@ -394,7 +408,10 @@ func _step_anim(dt: float) -> void:
 		_banner_set(MD.S("arrive", "抵達", "抵達"), MD.T(MD.map_def(sim.ci()).get("name")), 2.6)
 		_prefill()
 func _after_move(fresh := true) -> void:
-	sim.reset_live(); sim.st(); sim.sync(); camp.invalidate(); _set_bg(); _layout(); cam_home()   # [camp] invalidate
+	sim.reset_live(); sim.st(); sim.sync(); _tiles_ci = -1
+	if camp != null: camp.invalidate()   # [camp]
+	_set_bg(); _layout()
+	if not embed: cam_home()
 	parts.clear(); bubbles.clear(); shake.clear(); amb.g.clear(); amb.f.clear()
 	_save()
 	if fresh: _prefill()
@@ -435,9 +452,9 @@ func _draw_stage() -> void:
 		if dy < vy0 - 20.0 or dy - 160.0 > vy1: continue
 		var dd = d
 		items.append([dy, func(): _draw_decor(ctx, dd)])
-	camp.add_items(ctx, items, vy0, vy1, fk, walking)   # [camp] 營地建築
+	if camp != null: camp.add_items(ctx, items, vy0, vy1, fk, walking)   # [camp] 營地建築
 	if fk > 0.04 and L.counter_y + 40.0 > vy0 and L.counter_y - 220.0 < vy1:
-		items.append([L.house.y, func(): _draw_house(ctx, fk)])
+		if not embed: items.append([L.house.y, func(): _draw_house(ctx, fk)])   # [unify] 嵌入：紙紮大屋＝原版村子（出村門後面）
 		items.append([L.counter_y, func(): _draw_counter(ctx, fk)])
 	if not walking:
 		for c in sim.custs:
@@ -455,6 +472,7 @@ func _draw_stage() -> void:
 			if w.pos.y < vy0 - 20.0 or w.pos.y - 120.0 > vy1: continue
 			var ww = w
 			items.append([w.pos.y, func(): _draw_worker(ctx, ww)])
+	if embed and embed_draw != null: embed_draw.call(ctx, vy0, vy1, items)   # [unify] 留位、挑夫鬼（入 y 排序）
 	items.sort_custom(func(a, b): return a[0] < b[0])
 	for it in items: it[1].call()
 	sim.war.draw_world(self, ctx, vy0, vy1)   # [war] 義勇軍＋霸檔標記
@@ -470,13 +488,20 @@ func _draw_stage() -> void:
 		ctx.globalAlpha = a; _txt(ctx, f.text, f.p.x, f.p.y, int(f.s * sc), f.c, "center", 900, 5); ctx.globalAlpha = 1.0
 	_brects.clear()
 	for b in bubbles: _draw_bubble(ctx, b)
+	if embed and anim != null:   # [unify] 拔營：大排檔區＋村外區淡出、換圖、淡入（原村子唔變）
+		var fa = clampf(1.0 - absf(float(anim.t) - A_SWAP) / 1.8, 0.0, 1.0)
+		if fa > 0.0: ctx.fillStyle = "rgba(8,4,10,%.3f)" % fa; ctx.fillRect(0, maxf(vy0, -40.0), FW, minf(vy1, world_h()) - maxf(vy0, -40.0))
 	ctx.restore()
 	_draw_parts(ctx, false)
-	_draw_hud(ctx)
+	if not embed or hud_k > 0.01:   # [unify] 嵌入：睇到大排檔區先出 HUD
+		ctx.globalAlpha = hud_k if embed else 1.0
+		_draw_hud(ctx)
+		ctx.globalAlpha = 1.0
 
 # ---------------- 地面：背景圖直向鋪（隔塊反轉接縫）＋路＋小河＋橋 ----------------
 func _draw_ground(ctx: Ctx, vy0: float, vy1: float) -> void:
 	var L = sim.L
+	if embed: vy1 = minf(vy1, world_h())   # [unify] 嵌入：只畫大排檔區（下面係原村子）
 	ctx.fillStyle = "#1a1620"; ctx.fillRect(0, vy0, FW, vy1 - vy0)
 	if _draw_tiles(ctx, vy0, vy1): return   # [camp] 新手繪背景（MAPS[ci].bg_tiles）：路、河、橋都喺圖入面，唔再程序畫
 	if bg_tex != null:
@@ -518,6 +543,7 @@ func _draw_ground(ctx: Ctx, vy0: float, vy1: float) -> void:
 
 # [camp] 營地泥路（layout.camp.road）：比村道窄少少
 func _draw_camp_road(ctx: Ctx, vy0: float, vy1: float) -> void:
+	if camp == null: return   # [unify]
 	var P = camp.road()
 	if P.size() < 2 or P[P.size() - 1].y < vy0 or P[0].y > vy1: return
 	for pass_i in 2:
@@ -553,7 +579,7 @@ func tile_rects() -> Array:   # [[tex, y, h], ...]（世界座標，蓋晒 world
 	var T = _bg_tiles(); var o = []
 	if T.is_empty(): return o
 	var y = 0.0; var i = 0; var wh = world_h() + 40.0
-	while y < wh and i < 200:
+	while y < wh and i < 200 and not (embed and i >= T.size()):   # [unify] 嵌入：兩塊就夠
 		var ti = i if i < T.size() else (1 + (i - 1) % maxi(1, T.size() - 1) if T.size() > 1 else 0)
 		var tx: Texture2D = T[ti]
 		var th = FW * tx.get_height() / maxf(1.0, tx.get_width())
@@ -676,10 +702,11 @@ func _step_amb(dt: float) -> void:
 		if f.x < -60.0 or f.x > FW + 60.0 or f.y > vy0 + vh + 40.0: amb.f.erase(f)
 func _draw_amb_ghosts(ctx: Ctx, vy0: float, vy1: float) -> void:
 	for g in amb.g:
-		if g.y < vy0 or g.y > vy1: continue
+		if g.y < vy0 or g.y > vy1 or (embed and g.y > world_h() - 60.0): continue   # [unify]
 		Art.draw_char(ctx, "youhun", g.x, g.y + sin(t * 1.4 + g.ph) * 8.0, CS * 0.75, {"t": t + g.ph, "flip": g.v < 0, "alpha": 0.22, "noShadow": true})
 func _draw_amb_fly(ctx: Ctx) -> void:
 	for f in amb.f:
+		if embed and f.y > world_h() - 40.0: continue   # [unify]
 		if f.k == "crow":
 			if _has("crowfly"):
 				ctx.save(); ctx.translate(f.x, f.y)
@@ -821,7 +848,7 @@ func _st_key(sid: String) -> String:
 	if _has(a): return a
 	var fb = ST_FALLBACK.get(a, "")
 	return fb if _has(fb) else ""
-func _st_w() -> float: return 128.0
+func _st_w() -> float: return 112.0 if embed else 128.0   # [unify] 嵌入：一行左右兩個台
 
 func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 	var p = sim.st_pos(sid); var w = _st_w()
@@ -897,7 +924,7 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 			_txt(ctx, MD.S("unlock_btn", "解鎖 %s", "解鎖 %s") % MD.fmt(cost), p.x + 8, ny + 22, 15, Color("#fff3e0") if ok else Color("#b8a898"), "center", 900, 0)
 			_wbtns["unl:" + sid] = Rect2(p.x - bw / 2, ny + 4, bw, 36)
 
-func _cell_w() -> float: return 176.0   # 名牌最闊（大地圖台與台之間有位）
+func _cell_w() -> float: return 150.0 if embed else 176.0   # 名牌最闊（大地圖台與台之間有位）
 # 收窄字：先 15→14px，再唔夠就截尾加「…」
 func _fit(ctx: Ctx, s: String, maxw: float, sz: int) -> Array:
 	for z in [sz, 14]:
@@ -1096,6 +1123,10 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 	w += 20.0; var h = lines.size() * 20.0 + 12.0 + (18.0 if b.who != "" else 0.0)
 	var wtop = cam + HUD_H + 4.0; var wbot = cam + view_h() - h - 10.0
 	if sim.war != null: wtop = maxf(wtop, cam - top_pad + float(sim.war.hud_y(self)) + 46.0)   # [camp] 對白框唔好俾影響力條遮住
+	if embed:   # [unify] 嵌入：講嘢嘅人唔喺鏡頭（或者喺原村子）就唔出框；框唔好落到出村門下面
+		if b.p.y > world_h() or b.p.y < cam - top_pad or b.p.y > cam - top_pad + H: return
+		wbot = minf(wbot, world_h() - h - 4.0)
+		if not hud_on: wtop = cam - top_pad + 8.0
 	var x = clampf(b.p.x, 6.0, FW - w - 6.0); var y = clampf(b.p.y - h, wtop, maxf(wtop, wbot))
 	for k2 in 6:
 		var hit = false
@@ -1251,7 +1282,7 @@ func tap(p: Vector2) -> void:
 			if not sim.use_boost(kind): _float(s2w(p + Vector2(0, 30)), MD.S("cd", "冷卻緊", "冷卻中"), Color("#ffb0a0"), 15)
 			return
 	if sim.war.tap(self, p): return   # [war] 出征掣／頭目
-	if p.y < top_pad + HUD_H: return
+	if p.y < top_pad + HUD_H and (not embed or hud_on): return
 	var sp = p; p = s2w(p)   # 以下世界座標
 	if sim.tap_foe(p): return
 	for key in _wbtns.keys():
