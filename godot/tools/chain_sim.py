@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """生產鏈獨立驗算：每張圖模擬 30 分鐘，報告每個台嘅開工率、斷料比例、每分鐘收入。
 
-用法：python3 tools/chain_sim.py [--min 30] [--stock 0] [--quiet]
+用法：python3 tools/chain_sim.py [--min 30] [--stock 0] [--workers 3] [--quiet]
 
 讀 data/nat/chain.json（配方、村子建築）＋ data/nat/outpost.json（台時間、價錢、版面、客人）。
 公式同引擎一致（game/outpost/mv_data.gd）：
@@ -200,6 +200,8 @@ def main():
     minutes = float(args[args.index("--min") + 1]) if "--min" in args else 30.0
     stock0 = float(args[args.index("--stock") + 1]) if "--stock" in args else 0.0
     quiet = "--quiet" in args
+    global ST_W
+    if "--workers" in args: ST_W = int(args[args.index("--workers") + 1])
     C = json.load(open(P("data", "nat", "chain.json"), encoding="utf-8"))
     O = json.load(open(P("data", "nat", "outpost.json"), encoding="utf-8"))
     names = {sid: s["n"][1] for sid, s in O["STATIONS"].items()}
