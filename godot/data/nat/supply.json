@@ -26,6 +26,9 @@
   "TO_RES": 0.3,
   "TO_RES_NOFRONT": 1.0,
   "URGENT": {"perItem": 2},
+  "TILL": {"nights": 1.0},
+  "RAID": {"max": 4, "start": 0.75, "feed": 30, "feedMapMul": 0.5},
+  "CUST": {"svc": 5.0, "svcLv": 0.05, "svcStaff": 0.3, "svcMin": 1.2, "queue": 3},
   "STARVE": [
     {"inc": 0.85, "atk": -0.15, "name": ["餓住返工", "餓著上班"]},
     {"inc": 0.5,  "atk": -0.15, "name": ["熄咗半條街燈", "熄了半條街燈"]},

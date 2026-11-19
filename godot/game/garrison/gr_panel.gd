@@ -95,7 +95,7 @@ func refresh_live() -> void:
 func _night_ui() -> void:
 	var g = GR().st(); var nm = GR().night_ms()
 	var into = fmod(J.now() - J.num(g.t0), nm); var left = maxf(0.0, (nm - into) / 1000.0)
-	night_lbl.text = N(T("陰間第 %d 夜　下一夜：%d 分 %02d 秒", "陰間第 %d 夜　下一夜：%d 分 %02d 秒") % [int(J.num(g.done)), int(left / 60), int(fmod(left, 60))])
+	night_lbl.text = N(T("陰間第 %d 夜　下一夜：%d 分 %02d 秒", "陰間第 %d 夜　下一夜：%d 分 %02d 秒") % [int(J.num(g.done)) + 1, int(left / 60), int(fmod(left, 60))])
 	night_bar.value = into / nm
 
 func rebuild(keep := true) -> void:
