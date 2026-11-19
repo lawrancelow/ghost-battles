@@ -7,6 +7,7 @@ const MD = preload("res://game/outpost/mv_data.gd")
 const FW := 390.0
 const WALK := 120.0
 const FOE_MAX := 5
+const PATIENCE := 15.0     # 客人喺櫃台前等幾多秒冇貨就走
 const MOVABLE_POSTS := ["mv", "garrison", "wood", "rice", "plank", "bun", "store", "boss", "camp", "station"]
 
 var rng := RandomNumberGenerator.new()
@@ -55,7 +56,12 @@ func ci_of(m) -> int: return clampi(int(J.num(m.get("ci"))), 0, maxi(0, MD.maps_
 func ci() -> int:
 	var m = st()
 	return ci_of(m) if m != null else 0
-func sst(sid: String) -> Dictionary: return st().st[sid]
+const _NO_ST := {"lv": 0.0, "unlocked": false, "workers": []}
+func sst(sid: String) -> Dictionary:   # 唔存在嘅 sid：回一個空殼（唔報錯）
+	var m = st()
+	if m == null: return _NO_ST.duplicate(true)
+	var e = m.st.get(sid)
+	return e if e is Dictionary else _NO_ST.duplicate(true)
 func lv(sid: String) -> float: return J.num(sst(sid).lv)
 func unlocked(sid: String) -> bool: return J.t(sst(sid).unlocked)
 func coins() -> float: return J.num(SS().res.get("coins"))
@@ -332,13 +338,15 @@ func goods_list() -> Array:
 		var g = str(MD.st_def(sid).get("good", ""))
 		if g != "" and not o.has(g): o.append(g)
 	return o
-func avail_goods() -> Array:
-	var o = []
+func avail_goods() -> Array:   # 客人可以要嘅貨：有人做緊／櫃台有貨／台面有貨／手做緊嘅台優先；全部都冇就用所有已解鎖
+	var o = []; var act = []
 	for sid in MD.stations(ci()):
 		if unlocked(sid):
 			var g = str(MD.st_def(sid).get("good", ""))
-			if g != "" and not o.has(g): o.append(g)
-	return o
+			if g == "" or o.has(g): continue
+			o.append(g)
+			if nworkers(sid) > 0 or counter_n(g) > 0 or pile_n(sid) > 0 or float(mk.get(sid, -1.0)) >= 0.0: act.append(g)
+	return act if act.size() else o
 func sid_of(gid: String) -> String:
 	for sid in MD.stations(ci()):
 		if str(MD.st_def(sid).get("good", "")) == gid and unlocked(sid): return sid
@@ -480,6 +488,11 @@ func _step_custs(dt: float) -> void:
 				if i != 0: c.st = "queue"; continue
 				c.flip = true
 				c.take -= dt
+				c.wait = float(c.get("wait", 0.0)) + dt
+				if c.wait > PATIENCE:   # 等太耐：有攞到嘅就俾嗰啲錢走人，冇就嬲嬲走
+					if _got_n(c) > 0: _pay(c)
+					else: c.st = "out"; ev.append({"k": "leave", "pos": c.pos + Vector2(0, -60)})
+					continue
 				if c.take <= 0.0:
 					c.take = 0.16
 					var all_ok = true
@@ -488,7 +501,7 @@ func _step_custs(dt: float) -> void:
 						if need <= 0: continue
 						all_ok = false
 						if counter_n(g) > 0:
-							st().counter[g] = float(counter_n(g) - 1); c.got[g] = int(c.got.get(g, 0)) + 1
+							st().counter[g] = float(counter_n(g) - 1); c.got[g] = int(c.got.get(g, 0)) + 1; c.wait = 0.0
 							ev.append({"k": "take", "gid": g, "from": counter_slot(g), "to": c.pos + Vector2(0, -40)})
 							break
 					if all_ok: _pay(c)
@@ -519,17 +532,21 @@ func spawn_cust() -> bool:
 	custs.append(c)
 	return true
 
-func cust_value(c: Dictionary) -> float:
+func _got_n(c: Dictionary) -> int:
+	var n = 0
+	for g in c.got: n += int(c.got[g])
+	return n
+func cust_value(c: Dictionary) -> float:   # 按實際攞到嘅件數計（收齊＝要嘅數）
 	var amt = 0.0; var cc = ci()
-	for g in c.wants:
+	for g in c.got:
 		var sid = sid_of(g)
-		if sid != "": amt += float(c.wants[g]) * MD.val(sid, lv(sid), cc)
+		if sid != "": amt += float(c.got[g]) * MD.val(sid, lv(sid), cc)
 	return amt * inc_mul()
 func _pay(c: Dictionary) -> void:
 	var amt = cust_value(c)
 	add_coins(amt)
 	var m = st()
-	for g in c.wants: m.sold[g] = J.num(m.sold.get(g)) + float(c.wants[g])
+	for g in c.got: m.sold[g] = J.num(m.sold.get(g)) + float(c.got[g])
 	m.earned = J.num(m.get("earned")) + amt; m.served = J.num(m.get("served")) + 1.0
 	c.st = "out"
 	ev.append({"k": "pay", "amt": amt, "pos": c.pos + Vector2(0, -60), "cid": c.cid})

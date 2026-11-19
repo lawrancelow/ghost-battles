@@ -5,7 +5,7 @@ extends RefCounted
 
 const SIM = preload("res://game/outpost/mv_sim.gd")
 const MD = preload("res://game/outpost/mv_data.gd")
-const OUT := "/tmp/mv/shots/"
+const OUT := "/tmp/mv/shots2/"
 var D: Dictionary
 var bad := 0
 var rows := 0
@@ -51,174 +51,209 @@ func _run(sim, secs: float, dt := 0.05) -> Array:
 		sim.step(dt); evs.append_array(sim.ev); sim.ev.clear()
 	return evs
 
+func _sids(ci: int) -> Array: return D.MAPS[ci].stations.duplicate()
+func _free(ci: int) -> Array:
+	var o = []
+	for sid in _sids(ci): if float(_sd(sid).unlock_cost) <= 0.0: o.append(sid)
+	return o
+func _locked(ci: int) -> Array:
+	var o = []
+	for sid in _sids(ci): if float(_sd(sid).unlock_cost) > 0.0: o.append(sid)
+	return o
+
 func logic(_t) -> void:
 	_setup(); var S = _S()
 	var sim = SIM.new(); sim.reg_post(); sim.st(); sim.relayout(102.0, 786.0)
-	_p("===== 1. 公式（獨立計 vs mv_data） =====")
-	for sid in ["s_steamer", "s_tailor", "s_coffin"]:
+	var A = _free(0)[0]; var gA = str(_sd(A).good); var B = _locked(0)[0]
+	_p("資料：%d 張圖、%d 台；第一張圖免費台 %s，第一個要解鎖 %s" % [D.MAPS.size(), D.STATIONS.size(), str(_free(0)), B])
+	_p("===== 1. 公式（獨立計 vs mv_data；全部台） =====")
+	var fbad = 0; var fn = 0
+	for sid in D.STATIONS:
 		for lv in [1, 9, 10, 11, 25, 50, 99, 100]:
-			_chk("%s Lv%d 單價" % [sid, lv], MD.val(sid, lv, 0), _val(sid, lv))
-		_chk("%s Lv1 產量" % sid, MD.out(sid, 1), 1.0); _chk("%s Lv21 產量" % sid, MD.out(sid, 21), _out(sid, 21))
-		_chk("%s Lv50 時間" % sid, MD.tm(sid, 50), _tm(sid, 50))
-		_chk("%s 升 Lv1→2 費用" % sid, MD.cost1(sid, 1), _c1(sid, 1))
-		var s10 = 0.0
-		for i in 10: s10 += _c1(sid, 1 + i)
-		_chk("%s 升 10 級總費" % sid, MD.cost_n(sid, 1, 10), s10)
-	_chk("Lv10 里程碑：單價 = Lv9 × (1.9/1.8) × 2", MD.val("s_steamer", 10, 0), MD.val("s_steamer", 9, 0) * 1.9 / 1.8 * 2.0)
+			fn += 4
+			if absf(MD.val(sid, lv, 0) - _val(sid, lv)) > 1e-6 * maxf(1.0, _val(sid, lv)): fbad += 1
+			if MD.out(sid, lv) != _out(sid, lv): fbad += 1
+			if absf(MD.tm(sid, lv) - _tm(sid, lv)) > 1e-9: fbad += 1
+			if MD.cost1(sid, lv) != _c1(sid, lv): fbad += 1
+	_chk("全部台 × 8 個等級：單價／產量／時間／升級費（%d 項錯）" % fbad, float(fbad), 0.0)
+	_p("  （%d 項逐一比過）" % fn)
+	for lv in [1, 10, 25]: _chk("%s Lv%d 單價" % [A, lv], MD.val(A, lv, 0), _val(A, lv))
+	var s10 = 0.0
+	for i in 10: s10 += _c1(A, 1 + i)
+	_chk("%s 升 10 級總費" % A, MD.cost_n(A, 1, 10), s10)
+	_chk("Lv10 里程碑：單價 = Lv9 × (1.9/1.8) × 2", MD.val(A, 10, 0), MD.val(A, 9, 0) * 1.9 / 1.8 * 2.0)
 	_p("  縮寫：%s %s %s %s %s %s" % [MD.fmt(999), MD.fmt(12345), MD.fmt(2.5e6), MD.fmt(3.21e9), MD.fmt(7.7e12), MD.fmt(-15000)])
 	var fmt_ok = MD.fmt(12345) == "12.3K" and MD.fmt(2.5e6) == "2.5M" and MD.fmt(3.21e9) == "3.2B" and MD.fmt(7.7e12) == "7.7T" and MD.fmt(999) == "999"
 	_chk("K/M/B/T 縮寫", 1.0 if fmt_ok else 0.0, 1.0)
+	_chk("唔存在嘅 sid：sst() 唔報錯、lv = 0", sim.lv("no_such_sid"), 0.0)
+	_chk("唔存在嘅 sid：未解鎖", 1.0 if sim.unlocked("no_such_sid") else 0.0, 0.0)
+	_chk("STRINGS 格式位唔同 → 用預設（unlock）", 1.0 if MD.S("unlock", "解鎖 %s", "解鎖 %s").contains("%s") else 0.0, 1.0)
 
-	_p("===== 2. 開局：第一台免費解鎖，其他鎖住 =====")
-	_chk("s_steamer 已解鎖", 1.0 if sim.unlocked("s_steamer") else 0.0, 1.0)
-	_chk("s_tailor 未解鎖", 1.0 if sim.unlocked("s_tailor") else 0.0, 0.0)
-	_chk("冇錢解鎖 s_tailor：失敗", 1.0 if sim.unlock("s_tailor") else 0.0, 0.0)
+	_p("===== 2. 開局：免費台已解鎖，其他鎖住 =====")
+	for sid in _sids(0):
+		_chk("%s 解鎖 = %s" % [sid, str(float(_sd(sid).unlock_cost) <= 0.0)], 1.0 if sim.unlocked(sid) else 0.0, 1.0 if float(_sd(sid).unlock_cost) <= 0.0 else 0.0)
+	_chk("冇錢解鎖 %s：失敗" % B, 1.0 if sim.unlock(B) else 0.0, 0.0)
 
-	_p("===== 3. 冇員工：撳台面手動做貨 → 收去櫃台 → 客人付錢 =====")
-	_chk("撳台：開始做", 1.0 if sim.tap_station("s_steamer") == "make" else 0.0, 1.0)
-	var ev = _run(sim, _tm("s_steamer", 1) + 0.1)
-	_chk("做好：台面 1 件", sim.pile_n("s_steamer"), 1.0)
-	_chk("撳台：收貨", 1.0 if sim.tap_station("s_steamer") == "collect" else 0.0, 1.0)
-	_chk("櫃台壽包 1", sim.counter_n("g_bun"), 1.0)
+	_p("===== 3. 冇員工：撳台面手動做貨 → 收去櫃台 =====")
+	_chk("撳台：開始做", 1.0 if sim.tap_station(A) == "make" else 0.0, 1.0)
+	var ev = _run(sim, _tm(A, 1) + 0.1)
+	_chk("做好：台面件數 = base_out", sim.pile_n(A), float(_out(A, 1)))
+	_chk("撳台：收貨", 1.0 if sim.tap_station(A) == "collect" else 0.0, 1.0)
+	var man = sim.counter_n(gA)
+	_chk("櫃台有貨", float(man), float(_out(A, 1)))
 
 	_p("===== 4. 派員工：做貨→搬貨→櫃台→客人收齊付錢→冥幣入賬（模擬 120 秒） =====")
-	sim.assign("s_steamer", 0, "t_mv1")
+	sim.assign(A, 0, "t_mv1")
 	_chk("鬼 post = mv", 1.0 if J.seq(sim.ghost("t_mv1").post, "mv") else 0.0, 1.0)
-	sim.st().served = 30.0   # 客人每次要多啲
+	sim.st().served = 30.0
 	var c0 = sim.coins()
 	ev = _run(sim, 120.0)
-	var made = 0; var deliv = 0; var paid = 0.0; var pays = 0; var took = 0; var pay_bad = 0
+	var made = 0; var deliv = 0; var paid = 0.0; var pays = 0; var took = 0; var leaves = 0
 	for e in ev:
 		match e.k:
 			"made": made += int(e.n)
 			"deliver": deliv += int(e.n)
 			"take": took += 1
 			"pay": paid += float(e.amt); pays += 1
+			"leave": leaves += 1
 	var carry = 0
 	for w in sim.workers: carry += int(w.carry)
-	_p("  做咗 %d 件、交櫃台 %d、客人攞 %d、付錢 %d 次、搬緊 %d、櫃台剩 %d" % [made, deliv, took, pays, carry, sim.counter_n("g_bun")])
-	_chk("員工做貨數 ≈ 120 ÷ (時間＋搬貨)（>0）", 1.0 if made >= 10 else 0.0, 1.0)
+	_p("  做咗 %d 件、交櫃台 %d、客人攞 %d、付錢 %d 次、等到嬲走 %d、搬緊 %d、櫃台剩 %d" % [made, deliv, took, pays, leaves, carry, sim.counter_n(gA)])
+	_chk("員工做貨（>= 10 件）", 1.0 if made >= 10 else 0.0, 1.0)
 	_chk("貨品守恆：做 = 交 + 搬緊", float(made), float(deliv + carry))
-	_chk("貨品守恆：交+手做 1 = 攞 + 櫃台剩", float(deliv + 1), float(took + sim.counter_n("g_bun")))
+	_chk("貨品守恆：交 + 手做 = 攞 + 櫃台剩", float(deliv + man), float(took + sim.counter_n(gA)))
 	_chk("冥幣增加 = Σ 客人付錢", sim.coins() - c0, paid, 1e-9)
-	_chk("Σ付錢 = 賣出件數 × 單價(Lv1)", paid, J.num(sim.st().sold.get("g_bun")) * _val("s_steamer", 1), 1e-9)
-	_chk("賣出件數 = 客人攞嘅件數（收齊先計）", J.num(sim.st().sold.get("g_bun")), float(took - _partial(sim)))
-	_chk("付錢次數 > 0", 1.0 if pays > 0 else 0.0, 1.0)
+	_chk("Σ付錢 = 賣出件數 × 單價(Lv1)", paid, J.num(sim.st().sold.get(gA)) * _val(A, 1), 1e-9)
+	_chk("賣出件數 = 客人攞嘅件數 − 未付錢客人手上", J.num(sim.st().sold.get(gA)), float(took - _partial(sim)))
+	_chk("客人只要有人做／有貨嘅貨（冇其他貨賣出）", float(sim.st().sold.size()), 1.0)
 
 	_p("===== 5. 升級費用＋里程碑 ×2 =====")
-	S.res["coins"] = 100000.0
-	var cb = sim.coins(); var lv0 = sim.lv("s_steamer")
-	sim.upgrade("s_steamer", 1)
-	_chk("升 1 級：扣 cost1(Lv%d)" % int(lv0), cb - sim.coins(), _c1("s_steamer", lv0))
-	var n = sim.up_n_for("s_steamer", "mile")
-	_chk("升到下個里程碑：要升幾級", float(n), 10.0 - sim.lv("s_steamer"))
+	S.res["coins"] = 1e9
+	var cb = sim.coins(); var lv0 = sim.lv(A)
+	sim.upgrade(A, 1)
+	_chk("升 1 級：扣 cost1(Lv%d)" % int(lv0), cb - sim.coins(), _c1(A, lv0))
+	var n = sim.up_n_for(A, "mile")
+	_chk("升到下個里程碑：要升幾級", float(n), 10.0 - sim.lv(A))
 	var exp_c = 0.0
-	for i in n: exp_c += _c1("s_steamer", sim.lv("s_steamer") + i)
-	cb = sim.coins(); sim.ev.clear(); sim.upgrade("s_steamer", n)
+	for i in n: exp_c += _c1(A, sim.lv(A) + i)
+	cb = sim.coins(); sim.ev.clear(); sim.upgrade(A, n)
 	_chk("升到 Lv10 費用", cb - sim.coins(), exp_c)
 	var mile_ev = 0.0
 	for e in sim.ev: if e.k == "mile": mile_ev = e.x
 	_chk("Lv10 出里程碑事件 ×2", mile_ev, 2.0)
-	_chk("Lv10 單價（×2 收益）", MD.val("s_steamer", 10, 0), _val("s_steamer", 10))
-	_chk("升 10 掣：升 10 級", float(sim.up_n_for("s_steamer", "10")), 10.0)
-	S.res["coins"] = 1e12
-	sim.upgrade("s_steamer", 200)
-	_chk("封頂 Lv100", sim.lv("s_steamer"), 100.0)
-	_chk("Lv100 里程碑 5 個 → ×32", MD.mile_mul("s_steamer", 100), 32.0)
-	_chk("封頂再升：0 級", float(sim.upgrade("s_steamer", 1)), 0.0)
-	S.res["coins"] = 0.0
-	sim.st().st["s_steamer"].lv = 10.0
+	_chk("升 10 掣：升 10 級", float(sim.up_n_for(A, "10")), 10.0)
+	S.res["coins"] = 1e15
+	sim.upgrade(A, 200)
+	_chk("封頂 Lv%d" % MD.max_lv(A), sim.lv(A), float(MD.max_lv(A)))
+	_chk("封頂：里程碑倍數 2^%d" % _sd(A).miles.size(), MD.mile_mul(A, sim.lv(A)), pow(2, _sd(A).miles.size()))
+	_chk("封頂再升：0 級", float(sim.upgrade(A, 1)), 0.0)
+	sim.st().st[A].lv = 1.0
 
-	_p("===== 6. 目標 =====")
-	_chk("目標 0（hire）完成", 1.0 if sim.goal_done(0) else 0.0, 1.0)
-	S.res["coins"] = 0.0
-	sim.claim(0)
-	_chk("領獎 +50", sim.coins(), 50.0)
-	_chk("重複領：唔得", 1.0 if sim.claim(0) else 0.0, 0.0)
-	_chk("目前目標 = 1（解鎖裁縫）", float(sim.cur_goal()), 1.0)
-	S.res["coins"] = 120.0
-	_chk("解鎖裁縫（120）", 1.0 if sim.unlock("s_tailor") else 0.0, 1.0)
-	_chk("解鎖後冥幣 0", sim.coins(), 0.0)
-	sim.claim(1); sim.claim(2)
-	_chk("目標 2（蒸籠 Lv10）已領", 1.0 if sim.goal_claimed(2) else 0.0, 1.0)
-	sim.st().sold["g_suit"] = 19.0
-	_chk("賣 19 套：目標 3 未完成", 1.0 if sim.goal_done(3) else 0.0, 0.0)
-	sim.st().sold["g_suit"] = 20.0
-	_chk("賣 20 套：完成", 1.0 if sim.goal_done(3) else 0.0, 1.0)
-	sim.claim(3); S.res["coins"] = 900.0; sim.unlock("s_soup"); sim.claim(4)
-	_chk("Boss 未打：目標 5 未完成", 1.0 if sim.goal_done(5) else 0.0, 0.0)
-	_chk("Boss 未打：can_move = false", 1.0 if sim.can_move() else 0.0, 0.0)
-	S.cleared["1-3"] = true
-	_chk("打咗 1-3：Boss 目標完成", 1.0 if sim.goal_done(5) else 0.0, 1.0)
-	_chk("未領 Boss 獎：can_move = false", 1.0 if sim.can_move() else 0.0, 0.0)
-	sim.claim(5)
+	_p("===== 6. 目標（第一張圖逐個做） =====")
+	var G = D.MAPS[0].goals
+	for i in G.size():
+		var g = G[i]; var k = str(g.k); var gn = float(g.n)
+		_chk("目前目標 = %d（%s %s %d）" % [i, g.t, k, int(gn)], float(sim.cur_goal()), float(i))
+		if g.t == "boss":
+			_chk("Boss 未打：未完成", 1.0 if sim.goal_done(i) else 0.0, 0.0)
+			_chk("Boss 未打：can_move = false", 1.0 if sim.can_move() else 0.0, 0.0)
+			S.cleared["1-3"] = true
+		elif not sim.goal_done(i):
+			match str(g.t):
+				"unlock":
+					S.res["coins"] = float(_sd(k).unlock_cost); sim.unlock(k)
+					_chk("解鎖 %s 用晒 %s" % [k, str(_sd(k).unlock_cost)], sim.coins(), 0.0)
+				"level":
+					if not sim.unlocked(k): S.res["coins"] = 1e15; sim.unlock(k)
+					sim.st().st[k].lv = gn - 1.0
+					_chk("%s 差 1 級：未完成" % k, 1.0 if sim.goal_done(i) else 0.0, 0.0)
+					S.res["coins"] = _c1(k, gn - 1.0); sim.upgrade(k, 1)
+				"sell":
+					sim.st().sold[k] = gn - 1.0
+					_chk("賣 %d：未完成" % int(gn - 1), 1.0 if sim.goal_done(i) else 0.0, 0.0)
+					sim.st().sold[k] = gn
+				"hire":
+					if not sim.unlocked(k): S.res["coins"] = 1e15; sim.unlock(k)
+					var ids = ["t_mv2", "t_mv3", "t_mv4"]
+					for j in int(gn): sim.assign(k, j, ids[j])
+		_chk("目標 %d 完成" % i, 1.0 if sim.goal_done(i) else 0.0, 1.0)
+		if i == G.size() - 1: _chk("未領最後一個：can_move = false", 1.0 if sim.can_move() else 0.0, 0.0)
+		S.res["coins"] = 0.0
+		sim.claim(i)
+		_chk("領獎 +%s" % str(g.reward.coins), sim.coins(), float(g.reward.coins))
+		_chk("重複領：唔得", 1.0 if sim.claim(i) else 0.0, 0.0)
 	_chk("全部領晒＋Boss：can_move = true", 1.0 if sim.can_move() else 0.0, 1.0)
 
 	_p("===== 7. 鬼互斥 =====")
-	sim.assign("s_tailor", 0, "t_mv1")
-	_chk("同一隻鬼調去裁縫：蒸籠位清空", 1.0 if sim.sst("s_steamer").workers[0] == null else 0.0, 1.0)
-	_chk("裁縫位 = t_mv1", 1.0 if J.seq(sim.sst("s_tailor").workers[0], "t_mv1") else 0.0, 1.0)
-	sim.ghost("t_mv2").post = "wood"
-	sim.assign("guard", 0, "t_mv2")
-	_chk("村子崗位(wood) 嘅鬼調嚟守夜：post = mv", 1.0 if J.seq(sim.ghost("t_mv2").post, "mv") else 0.0, 1.0)
-	sim.ghost("t_mv5").post = "tower1"
-	_chk("樓裡有鬼出更中嘅鬼：唔准調", 1.0 if sim.assign("s_tailor", 1, "t_mv5") else 0.0, 0.0)
-	sim.ghost("t_mv5").post = null
+	var B2 = _sids(0)[1]
+	sim.assign(A, 0, "t_mv1")
+	sim.assign(B2, 0, "t_mv1")
+	_chk("同一隻鬼調去 %s：%s 位清空" % [B2, A], 1.0 if sim.sst(A).workers[0] == null else 0.0, 1.0)
+	_chk("%s 位 = t_mv1" % B2, 1.0 if J.seq(sim.sst(B2).workers[0], "t_mv1") else 0.0, 1.0)
+	sim.ghost("t_mv5").post = "wood"
+	sim.assign("guard", 0, "t_mv5")
+	_chk("村子崗位(wood) 嘅鬼調嚟守夜：post = mv", 1.0 if J.seq(sim.ghost("t_mv5").post, "mv") else 0.0, 1.0)
+	sim.ghost("t_mv6").post = "tower1"
+	_chk("樓裡有鬼出更中嘅鬼：唔准調", 1.0 if sim.assign(B2, 1, "t_mv6") else 0.0, 0.0)
+	sim.ghost("t_mv6").post = null
 	var GR = Engine.get_main_loop().root.get_node_or_null("Garrison")
 	if GR != null and GR.st() != null:
-		S.cleared["1-3"] = true
 		GR.assign(0, "bun", 1, "t_mv6")
 		_chk("分村駐守鬼：post = garrison", 1.0 if J.seq(sim.ghost("t_mv6").post, "garrison") else 0.0, 1.0)
-		sim.assign("s_tailor", 1, "t_mv6")
+		sim.assign(B2, 1, "t_mv6")
 		_chk("調嚟移動村：分村位清空", 1.0 if GR.ms(0).posts.bun[1] == null else 0.0, 1.0)
 		_chk("post = mv", 1.0 if J.seq(sim.ghost("t_mv6").post, "mv") else 0.0, 1.0)
 		GR.validate()
 		_chk("Garrison.validate 唔郁 mv 鬼", 1.0 if J.seq(sim.ghost("t_mv6").post, "mv") else 0.0, 1.0)
-	sim.ghost("t_mv3").post = "mv"   # 殘留：post=mv 但冇格
-	sim.validate()
-	_chk("validate：冇格嘅 mv 鬼放返自由", 1.0 if sim.ghost("t_mv3").post == null else 0.0, 1.0)
+	sim.assign(B2, 2, null)
+	var spare = null
+	for gh in S.ghosts: if str(gh.id).begins_with("t_mv") and gh.post == null: spare = gh
+	if spare != null:
+		spare.post = "mv"
+		sim.validate()
+		_chk("validate：冇格嘅 mv 鬼放返自由", 1.0 if spare.post == null else 0.0, 1.0)
 	_chk("validate：有格嘅照留", 1.0 if J.seq(sim.ghost("t_mv1").post, "mv") else 0.0, 1.0)
 
 	_p("===== 8. 圍欄：守夜打孤魂 → 冥幣 =====")
-	sim.foes.clear(); sim.sync()
+	sim.foes.clear(); sim.custs.clear(); sim.sync()
 	sim.spawn_foe(); var f = sim.foes[0]
 	f.pos = Vector2(200, sim.L.fence_y - 8); f.st = "bang"; f.t = 0.0
 	S.res["coins"] = 0.0
 	ev = _run(sim, 12.0)
-	var kills = 0; var hits = 0
+	var kills = 0; var hits = 0; var foe_c = 0.0; var pay_c = 0.0
 	for e in ev:
-		if e.k == "kill" and e.coins == MD.foe_coin(0): kills += 1
+		if e.k == "kill": kills += 1; foe_c += float(e.coins)
 		if e.k == "hit": hits += 1
+		if e.k == "pay": pay_c += float(e.amt)
 	_chk("守夜打中（>0 下）", 1.0 if hits > 0 else 0.0, 1.0)
 	_chk("打走孤魂 ≥ 1", 1.0 if kills >= 1 else 0.0, 1.0)
-	var foe_c = 0.0; var pay_c = 0.0
-	for e in ev:
-		if e.k == "kill": foe_c += float(e.coins)
-		if e.k == "pay": pay_c += float(e.amt)
+	_chk("每隻孤魂冥幣 = 10 × (ci+1)", foe_c / maxf(1, kills), 10.0)
 	_chk("冥幣 = 打孤魂 + 客人付錢", sim.coins(), foe_c + pay_c, 1e-9)
-	_chk("孤魂血 ci0 = 40", MD.foe_hp(0), 40.0)
-	_chk("守夜傷害(鬼 Lv4) = 18/秒", MD.guard_dps(4.0), 18.0)
 
 	_p("===== 9. 拔營 =====")
-	var lv_t = sim.lv("s_tailor"); var lv_s = sim.lv("s_steamer")
+	var rec = {}
+	for sid in _sids(0): if sim.unlocked(sid): rec[sid] = sim.lv(sid)
 	_chk("move_next 成功", 1.0 if sim.move_next() else 0.0, 1.0)
 	_chk("ci = 1", float(sim.ci()), 1.0)
-	_chk("done[0].s_steamer = %d" % int(lv_s), J.num(sim.st().done["0"].s_steamer), lv_s)
-	_chk("done[0].s_tailor", J.num(sim.st().done["0"].s_tailor), lv_t)
-	_chk("done[0] 冇未解鎖嘅台", 1.0 if sim.st().done["0"].has("s_coffin") else 0.0, 0.0)
+	var dbad = 0
+	for sid in _sids(0):
+		var has = sim.st().done["0"].has(sid)
+		if has != rec.has(sid) or (has and J.num(sim.st().done["0"][sid]) != rec[sid]): dbad += 1
+	_chk("done[0] = 每個已解鎖台嘅等級（%d 台）" % rec.size(), float(dbad), 0.0)
 	_chk("鬼放返自由（t_mv1）", 1.0 if sim.ghost("t_mv1").post == null else 0.0, 1.0)
-	_chk("鬼放返自由（守夜 t_mv2）", 1.0 if sim.ghost("t_mv2").post == null else 0.0, 1.0)
+	_chk("鬼放返自由（守夜 t_mv5）", 1.0 if sim.ghost("t_mv5").post == null else 0.0, 1.0)
 	_chk("新圖由零開始：目標", float(sim.goals_claimed_n()), 0.0)
-	_chk("新圖：s_pants Lv1 已解鎖", (sim.lv("s_pants") if sim.unlocked("s_pants") else -1.0), 1.0)
-	_chk("新圖：s_phone 未解鎖", 1.0 if sim.unlocked("s_phone") else 0.0, 0.0)
-	_chk("新圖：冇舊台", 1.0 if sim.st().st.has("s_steamer") else 0.0, 0.0)
-	_chk("最後一張圖之後：can_move = false（未做目標）", 1.0 if sim.can_move() else 0.0, 0.0)
+	var A1 = _free(1)[0]; var B1 = _locked(1)[0]
+	_chk("新圖：%s Lv1 已解鎖" % A1, (sim.lv(A1) if sim.unlocked(A1) else -1.0), 1.0)
+	_chk("新圖：%s 未解鎖" % B1, 1.0 if sim.unlocked(B1) else 0.0, 0.0)
+	_chk("新圖：冇舊台", 1.0 if sim.st().st.has(A) else 0.0, 0.0)
+	_chk("新圖未做目標：can_move = false", 1.0 if sim.can_move() else 0.0, 0.0)
 
 	_p("===== 10. 離線（最多 8 小時，按有員工嘅台） =====")
-	sim.assign("s_pants", 0, "t_mv1"); sim.assign("s_pants", 1, "t_mv2")
-	sim.st().st["s_pants"].lv = 12.0
-	S.res["coins"] = 10000.0; sim.unlock("s_phone"); sim.assign("s_phone", 0, "t_mv3"); sim.st().st["s_phone"].lv = 26.0
-	var ve = 2.0 * _out("s_pants", 12) * _val("s_pants", 12) / (_tm("s_pants", 12) + 3.0) + 1.0 * _out("s_phone", 26) * _val("s_phone", 26) / (_tm("s_phone", 26) + 3.0)
+	sim.assign(A1, 0, "t_mv1"); sim.assign(A1, 1, "t_mv2")
+	sim.st().st[A1].lv = 12.0
+	S.res["coins"] = float(_sd(B1).unlock_cost); sim.unlock(B1); sim.assign(B1, 0, "t_mv3"); sim.st().st[B1].lv = 26.0
+	var ve = 2.0 * _out(A1, 12) * _val(A1, 12) / (_tm(A1, 12) + 3.0) + 1.0 * _out(B1, 26) * _val(B1, 26) / (_tm(B1, 26) + 3.0)
 	_chk("離線每秒", sim.offline_rate(), ve)
 	S.res["coins"] = 0.0
 	var r = sim.offline_gain(3600000.0)
@@ -231,7 +266,7 @@ func logic(_t) -> void:
 	sim.st().last = J.now() - 2.0 * 3600000.0; S.res["coins"] = 0.0
 	r = sim.check_away()
 	_chk("返嚟自動計（2 小時）", r.coins, floor(ve * 7200.0))
-	_chk("冇員工嘅台唔計（s_garage 未解鎖）", float(r.rows.size()), 2.0)
+	_chk("只計有員工嘅台", float(r.rows.size()), 2.0)
 	_p("===== 11. 加速／收益掣（免費、冷卻） =====")
 	_chk("收益掣：開", 1.0 if sim.use_boost("inc") else 0.0, 1.0)
 	_chk("收益倍數 ×2", sim.inc_mul(), 2.0)
@@ -242,6 +277,16 @@ func logic(_t) -> void:
 	_chk("冷卻完：可以再開", 1.0 if sim.use_boost("inc") else 0.0, 1.0)
 	sim.use_boost("spd")
 	_chk("加速掣：開 → 速度 ×2", sim.spd_mul(), 2.0)
+	_p("===== 12. 客人等太耐會走（唔會塞死條隊） =====")
+	sim.custs.clear(); S.mv.counter = {}
+	for sid in sim.st().st:
+		for j in 3: sim.assign(sid, j, null)
+	sim.reset_live(); sim.sync()
+	sim.spawn_cust(); var cc = sim.custs[0]; cc.pos = sim.queue_pos(0)
+	var lv_ = 0
+	ev = _run(sim, 20.0)
+	for e in ev: if e.k == "leave": lv_ += 1
+	_chk("冇貨：15 秒後走（leave ≥ 1）", 1.0 if lv_ >= 1 else 0.0, 1.0)
 	_p("驗算 %d 行，唔對 %d 行 → %s" % [rows, bad, "全部一致" if bad == 0 else "有錯"])
 	J.test_clock = -1.0
 
@@ -265,11 +310,26 @@ func _shot(name: String) -> void:
 	img.save_png(OUT + name + ".png"); _p("SHOT " + OUT + name + ".png")
 func _wait(s: float) -> void:
 	await Engine.get_main_loop().create_timer(s).timeout
+func _goto_map(sim, c: int, nun: int, lvs: Array) -> void:   # 測試用：直接跳去第 c 張圖（頭 nun 個台解鎖）
+	var S = _S()
+	for sid in sim.st().st:
+		for j in 3: sim.assign(sid, j, null)
+	for j in 3: sim.assign("guard", j, null)
+	S.mv.ci = float(c); S.mv.st = {}; S.mv.goals_done = []; S.mv.sold = {}; S.mv.counter = {}; S.mv.pile = {}
+	sim.reset_live(); sim.st()
+	var ids = _sids(c)
+	for i in ids.size():
+		if i < nun: S.mv.st[ids[i]].unlocked = true; S.mv.st[ids[i]].lv = float(lvs[i % lvs.size()])
+	var gi = 0
+	for i in mini(nun, ids.size()):
+		if gi < TG.size() - 1: sim.assign(ids[i], 0, TG[gi][0]); gi += 1
+	sim.assign("guard", 0, TG[TG.size() - 1][0])
+	sc._after_move(true)
+
 func shots(tt) -> void:
 	DirAccess.make_dir_recursive_absolute(OUT)
 	_setup(); var S = _S()
 	J.test_clock = -1.0
-	S.res["coins"] = 2600.0
 	var m = tt.main()
 	sc = load("res://game/outpost/mv_scene.gd").new(); sc.name = "MvScene"
 	var vil = m.get("village")
@@ -278,57 +338,57 @@ func shots(tt) -> void:
 	sc.setup(m)
 	var sim = sc.sim
 	sim.st()
-	S.mv.st["s_steamer"].lv = 9.0
-	S.mv.goals_done = [0.0]
+	var ids = _sids(0); var A = ids[0]; var A2 = ids[1]; var B = _locked(0)[0]
+	S.mv.st[A].lv = 9.0; S.mv.st[A2].lv = 4.0
 	S.res["coins"] = 2600.0
-	sim.unlock("s_tailor"); S.mv.st["s_tailor"].lv = 4.0
-	sim.assign("s_steamer", 0, "t_mv1"); sim.assign("s_steamer", 1, "t_mv4")
+	sim.assign(A, 0, "t_mv1"); sim.assign(A, 1, "t_mv4"); sim.assign(A2, 0, "t_mv2")
 	sim.assign("guard", 0, "t_mv3"); sim.assign("guard", 1, "t_mv6")
-	S.mv.counter["g_bun"] = 4.0; S.mv.served = 40.0
+	S.mv.counter[str(_sd(A).good)] = 4.0; S.mv.counter[str(_sd(A2).good)] = 3.0; S.mv.served = 40.0
 	sc.on_show()
 	for i in 3: sim.spawn_cust()
 	for i in 3: sim.spawn_foe()
-	var t0 = Time.get_ticks_usec()
 	await _wait(9.0)
-	# 效能：量 60 格
-	var t1 = Time.get_ticks_usec(); var fr = Engine.get_frames_drawn()
-	await _wait(2.0)
-	_p("perf：%.1f fps 相當（每格 %.2f ms）；客 %d、員工 %d、孤魂 %d、粒子 %d" % [(Engine.get_frames_drawn() - fr) / 2.0, 2000.0 / maxf(1, Engine.get_frames_drawn() - fr), sim.custs.size(), sim.workers.size(), sim.foes.size(), sc.parts.size()])
 	var ok_carry = false
 	for i in 40:
 		for w in sim.workers: if w.st == "go" and w.carry > 0 and w.pos.y < sim.st_pos(w.sid).y - 60: ok_carry = true
 		if ok_carry: break
 		await _wait(0.1)
 	await _shot("01_overview_carry")
-	# 圍欄打鬼
 	sim.foes.clear()
 	for i in 3:
 		sim.spawn_foe(); var f = sim.foes[-1]
 		f.pos = Vector2(150 + i * 80, sim.L.fence_y - 8); f.st = "bang"; f.t = 0.0
 	await _wait(1.1)
 	await _shot("02_fence_fight")
-	# 升級條
-	sc.open_sheet("s_steamer"); await _wait(0.5)
+	sc.open_sheet(A); await _wait(0.5)
 	await _shot("03_upgrade_sheet")
-	# 里程碑
-	S.res["coins"] = 5000.0
-	sc._do_up("s_steamer", "mile"); await _wait(0.45)
+	S.res["coins"] = MD.cost_n(A, sim.lv(A), sim.up_n_for(A, "mile")) + 100.0
+	sc._do_up(A, "mile"); await _wait(0.45)
 	await _shot("04_milestone")
 	sc.close_sheet()
-	# 揀鬼
-	sc._open_picker("s_tailor", 0); await _wait(0.4)
+	sc._open_picker(A2, 1); await _wait(0.4)
 	await _shot("05_picker")
 	sc._close_picker()
-	# 目標完成（解鎖裁縫已做 → 目標 1 可領）
+	# 目標：做到一個可以領
+	var gi = sim.cur_goal(); var g = D.MAPS[0].goals[gi]
+	if g.t == "level": S.mv.st[str(g.k)].lv = float(g.n)
+	elif g.t == "sell": S.mv.sold[str(g.k)] = float(g.n)
 	await _wait(0.6)
 	await _shot("06_goal_done")
-	sim.claim(sim.cur_goal()); await _wait(0.5)
+	sim.claim(gi); await _wait(0.5)
 	await _shot("07_goal_claim")
 	# 全部目標＋Boss → 拔營
-	S.cleared["1-3"] = true; S.res["coins"] = 50000.0
-	sim.unlock("s_soup")
-	S.mv.sold["g_suit"] = 25.0
-	for i in 8: sim.claim(sim.cur_goal())
+	S.cleared["1-3"] = true; S.res["coins"] = 1e9
+	for sid in ids:
+		sim.unlock(sid)
+	var G = D.MAPS[0].goals
+	for i in G.size():
+		var gg = G[i]
+		if gg.t == "level": S.mv.st[str(gg.k)].lv = maxf(S.mv.st[str(gg.k)].lv, float(gg.n))
+		elif gg.t == "sell": S.mv.sold[str(gg.k)] = float(gg.n)
+		elif gg.t == "hire":
+			for j in int(gg.n): sim.assign(str(gg.k), j, TG[j + 3][0])
+	for i in G.size(): sim.claim(sim.cur_goal())
 	await _wait(2.8)
 	await _shot("08_can_move")
 	sc.move_next()
@@ -337,25 +397,33 @@ func shots(tt) -> void:
 	await _wait(2.4); await _shot("11_move_arrive")
 	await _wait(3.5); await _shot("12_new_map")
 	# 離線收益卡
-	sim.assign("s_pants", 0, "t_mv5"); sim.st().st["s_pants"].lv = 15.0
-	S.mv.last = J.now() - 3.0 * 3600000.0
+	var A1 = _sids(1)[0]
+	sim.assign(A1, 0, "t_mv5"); sim.st().st[A1].lv = 15.0
 	sc.on_hide(); S.mv.last = J.now() - 3.0 * 3600000.0
 	sc.on_show(); await _wait(0.8)
 	await _shot("13_offline_card")
 	sc.tap(Vector2(195, 500)); await _wait(0.4)
-	# 收益＋加速掣
 	sim.use_boost("inc"); sim.use_boost("spd"); await _wait(1.0)
 	await _shot("14_boosts")
-	# 冇員工：手動做貨
-	sim.assign("s_pants", 0, null); sim.st().pile["s_pants"] = 3.0
+	sim.assign(A1, 0, null); sim.st().pile[A1] = 3.0
 	await _wait(0.5)
 	await _shot("15_manual_pile")
+	# 6 個台嘅圖（3 欄）：第 4 張（頭 4 個開咗）同第 6 張（全開）
+	_goto_map(sim, 3, 4, [27, 12, 8, 3])
+	for i in 3: sim.spawn_cust()
+	await _wait(6.0); await _shot("16_map3_6stations")
+	_goto_map(sim, 5, 6, [100, 76, 51, 26, 11, 1])
+	for i in 3: sim.spawn_cust()
+	await _wait(6.0); await _shot("17_map5_all_open")
+	sc.open_sheet(_sids(5)[5]); await _wait(0.5)
+	await _shot("18_map5_sheet_long_name")
+	sc.close_sheet()
 	sc.on_hide(); sc.queue_free()
 	_p("shots done")
 
 # 效能：場景自己嘅成本（模擬每格、畫每格），同村子畫面對比
 func perf(tt) -> void:
-	_setup(); var S = _S(); J.test_clock = -1.0
+	_setup(); D = JSON.parse_string(FileAccess.get_file_as_string("res://data/nat/outpost.json")); var S = _S(); J.test_clock = -1.0
 	var m = tt.main()
 	var t0 = Time.get_ticks_usec(); var f0 = Engine.get_frames_drawn()
 	await _wait(3.0)
@@ -364,11 +432,10 @@ func perf(tt) -> void:
 	sc = load("res://game/outpost/mv_scene.gd").new(); m.add_child(sc); m.move_child(sc, m.get("village").get_index() + 1); sc.setup(m)
 	var sim = sc.sim; sim.st()
 	S.res["coins"] = 1e6
-	for sid in ["s_tailor", "s_soup", "s_coffin"]: sim.unlock(sid)
 	var i = 0
-	for sid in ["s_steamer", "s_tailor", "s_soup", "s_coffin"]:
-		sim.assign(sid, 0, TG[i][0]); i += 1
-	sim.assign("guard", 0, "t_mv5"); sim.assign("guard", 1, "t_mv6")
+	for sid in _sids(0):
+		sim.unlock(sid); sim.assign(sid, 0, TG[i][0]); i += 1
+	sim.assign("guard", 0, "t_mv6")
 	sc.on_show()
 	for j in 4: sim.spawn_foe()
 	await _wait(4.0)

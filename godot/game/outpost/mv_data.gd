@@ -57,8 +57,19 @@ static func T(a) -> String:
 	if a is Array and a.size() >= 2: return str(a[0]) if DB.lang == "yue" else str(a[1])
 	return str(a) if a != null else ""
 static func S(key: String, yue: String, zh: String) -> String:
+	var dflt = yue if DB.lang == "yue" else zh
 	var a = D().STRINGS.get(key)
-	return T(a) if a is Array else (yue if DB.lang == "yue" else zh)
+	if not (a is Array): return dflt
+	var s = T(a)
+	# 有格式位（%s／%d）嘅句：資料版格式位唔同就用預設，免得 % 報錯
+	if _fmt_sig(s) != _fmt_sig(dflt): return dflt
+	return s
+static func _fmt_sig(s: String) -> String:
+	var o = ""
+	var i = s.find("%")
+	while i >= 0 and i + 1 < s.length():
+		o += s[i + 1]; i = s.find("%", i + 2)
+	return o
 
 # ---------------- 公式 ----------------
 static func miles(sid: String) -> Array:

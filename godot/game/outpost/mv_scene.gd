@@ -146,7 +146,8 @@ func _layout() -> void:
 	if sheet.visible: _place_sheet()
 
 func _set_bg() -> void:
-	var key = "bg_" + str(MD.map_def(sim.ci()).get("bg", "village"))
+	var b = str(MD.map_def(sim.ci()).get("bg", "village"))
+	var key = b if b.begins_with("bg_") else "bg_" + b
 	bg.texture = Spr.get_tex(key) if Spr.ok(key) else Spr.get_tex("bg_village")
 
 func _prefill() -> void:   # 開場唔使等：先排兩個客、出兩隻孤魂
@@ -192,6 +193,8 @@ func _eat_events() -> void:
 				for i in n: _coin(e.pos + Vector2(_rng.randf_range(-14, 14), _rng.randf_range(-6, 6)), hud_coin, 0.6 + i * 0.06, amt / n)
 				_float(e.pos + Vector2(0, -6), "+" + MD.fmt(amt), GOLD, 26 if amt >= 1000 else 22, 1.6)
 				if _rng.randf() < 0.6: _snd("coin")
+			"leave":
+				_float(e.pos, MD.S("leave", "等到嬲，走人！", "等太久，走了！"), Color("#ffb0a0"), 15, 1.2)
 			"take":
 				_item(e.from, e.to, str(e.gid), 0.32)
 			"deliver":
@@ -212,10 +215,10 @@ func _eat_events() -> void:
 				_float(e.pos + Vector2(0, -16), "+" + MD.fmt(e.coins), GOLD, 20, 1.3)
 				_snd("coin")
 			"bang":
-				shake[int(e.pos.x / 26.0)] = 0.4
+				shake[_fence_i(e.pos.x)] = 0.4
 				if _rng.randf() < 0.5: _bubble(e.pos + Vector2(-60, -64), MD.T(_pick(MD.D().FOE_LINES)), MD.S("foe", "孤魂", "孤魂"), 2.4)
 			"rattle":
-				shake[int(e.x / 26.0)] = 0.3
+				shake[_fence_i(e.x)] = 0.3
 			"up":
 				var p = sim.st_pos(str(e.sid))
 				_burst(p + Vector2(0, -60), GOLD, 12)
@@ -240,6 +243,7 @@ func _eat_events() -> void:
 				_snd("levelUp")
 	sim.ev.clear()
 
+func _fence_i(x: float) -> int: return int(x / (FENCE_TW if _has("mvs_fence") else 26.0))
 func _random_line() -> void:
 	for c in sim.custs:
 		if c.st == "serve" and c.lines is Array and c.lines.size():
@@ -381,9 +385,15 @@ func _draw_over() -> void:
 	if card != null: _draw_card(ctx)
 
 # ---------------- 圍欄 ----------------
+const FENCE_TW := 130.0
 func _draw_fence(ctx: Ctx) -> void:
 	var y = sim.L.fence_y
 	Art.rr(ctx, 0, y - 2, FW, 14, 0, "rgba(0,0,0,.35)")
+	if _has("mvs_fence"):   # 美術圍欄：一節節鋪，撞欄嗰節會搖
+		for i in int(ceil(FW / FENCE_TW)) + 1:
+			var sh = sin(t * 40.0) * 2.5 if shake.has(i) else 0.0
+			Art.put(ctx, "mvs_fence", i * FENCE_TW + FENCE_TW / 2.0 - 6.0 + sh, y + 10.0, FENCE_TW + 4.0)
+		_map_label(ctx); return
 	for i in 16:
 		var x = i * 26.0 + 8.0
 		var sh = sin(t * 40.0) * 2.5 if shake.has(i) else 0.0
@@ -391,7 +401,8 @@ func _draw_fence(ctx: Ctx) -> void:
 		Art.el(ctx, x + sh, y - 22, 2.5, 2.5, "#8a2a1e")
 	ctx.fillStyle = "#b8a070"; ctx.fillRect(0, y - 24, FW, 5); ctx.fillRect(0, y - 6, FW, 5)
 	ctx.fillStyle = "rgba(60,40,20,.6)"; ctx.fillRect(0, y - 19, FW, 1.5); ctx.fillRect(0, y - 1, FW, 1.5)
-	# 地圖名
+	_map_label(ctx)
+func _map_label(ctx: Ctx) -> void:
 	var md = MD.map_def(sim.ci())
 	_txt(ctx, "%s  %d/%d" % [MD.T(md.get("name")), sim.ci() + 1, MD.maps_n()], 10, sim.L.top + 104, 15, Color("#e8dcc4"), "left", 900, 4, "serif")
 
@@ -432,12 +443,13 @@ func _plus(ctx: Ctx, p: Vector2, hot: bool) -> void:
 	ctx.restore()
 
 # ---------------- 紙紮大屋＋櫃台 ----------------
+func _has(key: String) -> bool: return key != "" and Spr.ok(key) and Spr.get_tex(key) != null   # 鍵喺登記但圖未匯入都當冇
 func _house_key() -> String:
-	return "mvs_house" if Spr.ok("mvs_house") else "house"
+	return "mvs_house" if _has("mvs_house") else "house"
 func _draw_house(ctx: Ctx, fk: float) -> void:
 	if anim != null and not anim.done and anim.t > A_FOLD: return   # 已經摺埋抬走
 	var L = sim.L
-	var cx = 106.0; var by = L.counter_y - 26.0
+	var cx = 106.0; var by = L.counter_y - 40.0
 	ctx.save(); ctx.translate(cx, by); ctx.scale(lerpf(0.5, 1.0, fk), fk); ctx.translate(-cx, -by)
 	ctx.globalAlpha = 0.95
 	Art.put(ctx, _house_key(), cx, by, 168.0)
@@ -447,7 +459,7 @@ func _draw_counter(ctx: Ctx, fk: float) -> void:
 	var L = sim.L
 	var x0 = L.counter_x0; var x1 = L.counter_x1; var y = L.counter_y
 	ctx.save(); ctx.translate((x0 + x1) / 2.0, y + 10); ctx.scale(1.0, maxf(0.05, fk)); ctx.translate(-(x0 + x1) / 2.0, -(y + 10))
-	if Spr.ok("mvs_counter"):
+	if _has("mvs_counter"):
 		Art.put(ctx, "mvs_counter", (x0 + x1) / 2.0, y + 14, x1 - x0 + 16)
 	else:
 		Art.rr(ctx, x0, y - 22, x1 - x0, 34, 4, "#7a2a1e", "#f2c060", 2)
@@ -489,9 +501,9 @@ func _draw_want(ctx: Ctx, c: Dictionary) -> void:   # 頭頂氣泡：貨品圖�
 # ---------------- 生產台 ----------------
 func _st_key(sid: String) -> String:
 	var a = str(MD.st_def(sid).get("art", ""))
-	if Spr.ok(a): return a
+	if _has(a): return a
 	var fb = ST_FALLBACK.get(a, "")
-	return fb if fb != "" and Spr.ok(fb) else ""
+	return fb if _has(fb) else ""
 func _st_w() -> float: return 104.0 if MD.stations(sim.ci()).size() <= 4 else 92.0
 
 func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
@@ -530,26 +542,42 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 	if fk > 0.5:
 		var ny = p.y + 34.0
 		var name = MD.T(MD.st_def(sid).get("n"))
+		var cw = _cell_w() - 8.0
 		if un:
-			var lvs = "Lv%d" % int(sim.lv(sid))
-			ctx.font = "900 15px sans-serif"; var tw = ctx.measureText(name + " " + lvs).width + 18
+			var ft = _fit(ctx, name, cw - 12.0, 15)
+			ctx.font = "900 %dpx sans-serif" % ft[1]; var tw = ctx.measureText(ft[0]).width + 14
 			Art.rr(ctx, p.x - tw / 2, ny - 11, tw, 22, 6, "rgba(30,18,12,.82)", "#b89a52", 1)
-			_txt(ctx, name + " " + lvs, p.x, ny, 15, Color("#f6e6c0"), "center", 900, 0)
+			_txt(ctx, ft[0], p.x, ny, ft[1], Color("#f6e6c0"), "center", 900, 0)
+			# 第二行：Lv＋里程碑星
 			var nm = MD.nm(sid, sim.lv(sid)); var tot = MD.miles(sid).size()
-			for i in tot:
-				var sx = p.x - (tot - 1) * 7.0 + i * 14.0
-				_star(ctx, sx, ny + 18, 6.0, i < nm)
+			var lvs = "Lv%d" % int(sim.lv(sid))
+			ctx.font = "900 14px sans-serif"; var lw = ctx.measureText(lvs).width
+			var rw = lw + 6.0 + tot * 13.0; var x0 = p.x - rw / 2.0
+			_txt(ctx, lvs, x0, ny + 20, 14, GOLD, "left", 900, 4)
+			for i in tot: _star(ctx, x0 + lw + 12.0 + i * 13.0, ny + 20, 6.0, i < nm)
 		else:
 			var cost = float(MD.st_def(sid).get("unlock_cost", 0))
 			var ok = sim.coins() >= cost
 			_lock(ctx, Vector2(p.x, p.y - 46))
-			_txt(ctx, name, p.x, ny - 4, 15, Color("#f0e2c8"), "center", 900, 4)
-			var bw = 108.0
+			var ft2 = _fit(ctx, name, cw, 15)
+			_txt(ctx, ft2[0], p.x, ny - 4, ft2[1], Color("#f0e2c8"), "center", 900, 4)
+			var bw = minf(112.0, cw)
 			Art.rr(ctx, p.x - bw / 2, ny + 8, bw, 28, 8, "#bb3427" if ok else "#4a3a30", "#f2a080" if ok else "#7a6050", 1.5)
 			_coin_ic(ctx, p.x - bw / 2 + 16, ny + 22, 8.0)
-			_txt(ctx, MD.S("unlock", "解鎖 %s", "解鎖 %s") % MD.fmt(cost), p.x + 8, ny + 22, 15, Color("#fff3e0") if ok else Color("#b8a898"), "center", 900, 0)
+			_txt(ctx, MD.S("unlock_btn", "解鎖 %s", "解鎖 %s") % MD.fmt(cost), p.x + 8, ny + 22, 15, Color("#fff3e0") if ok else Color("#b8a898"), "center", 900, 0)
 			_btns["unl:" + sid] = Rect2(p.x - bw / 2, ny + 4, bw, 36)
 
+func _cell_w() -> float:
+	var n = MD.stations(sim.ci()).size()
+	return FW / (2.0 if n <= 4 else 3.0)
+# 收窄字：先 15→14px，再唔夠就截尾加「…」
+func _fit(ctx: Ctx, s: String, maxw: float, sz: int) -> Array:
+	for z in [sz, 14]:
+		ctx.font = "900 %dpx sans-serif" % z
+		if ctx.measureText(s).width <= maxw: return [s, z]
+	var t2 = s
+	while t2.length() > 2 and ctx.measureText(t2 + "…").width > maxw: t2 = t2.substr(0, t2.length() - 1)
+	return [t2 + "…", 14]
 func walking_now() -> bool: return anim != null and not anim.done
 
 func _proc_station(ctx: Ctx, sid: String, p: Vector2, w: float) -> Rect2:   # 冇圖：紙紮攤檔
@@ -594,7 +622,7 @@ func _coin_ic(ctx: Ctx, x: float, y: float, r: float) -> void:
 # 貨品圖示（160×160 圖，冇就畫個色塊＋字）
 func _icon(ctx: Ctx, gid: String, x: float, y: float, sz: float) -> void:
 	var gd = MD.good_def(gid); var key = str(gd.get("icon", ""))
-	if key != "" and Spr.ok(key):
+	if _has(key):
 		Art.put(ctx, key, x, y, sz, sz); return
 	var gi = maxi(0, MD.D().GOODS.keys().find(gid))
 	Art.rr(ctx, x - sz / 2, y - sz, sz, sz, sz * 0.22, ICON_COL[gi % ICON_COL.size()], "#2a1a10", 1.5)
@@ -805,16 +833,21 @@ func _draw_anim(ctx: Ctx) -> void:
 			var cx = bx - 54 + i * 36.0
 			Art.draw_char(ctx, crew[i], cx, by + (i % 2) * 6.0, CS * 0.85, {"t": tt + i, "walk": true, "tamed": true})
 		ctx.save(); ctx.translate(bx, by - 70 + bob); ctx.rotate(sin(tt * 3.0) * 0.04)
-		Art.rr(ctx, -80, -18, 160, 32, 6, "#e8d2a0", "#5a3a1a", 2)
-		for i in 7: Art.rr(ctx, -72 + i * 21, -14, 12, 24, 2, "#c0392b" if i % 2 == 0 else "#f2c060")
-		ctx.fillStyle = "#3a2410"; ctx.fillRect(-82, -4, 164, 3)
+		if _has("mvs_house_fold"): Art.put(ctx, "mvs_house_fold", 0, 30, 190)
+		else:
+			Art.rr(ctx, -80, -18, 160, 32, 6, "#e8d2a0", "#5a3a1a", 2)
+			for i in 7: Art.rr(ctx, -72 + i * 21, -14, 12, 24, 2, "#c0392b" if i % 2 == 0 else "#f2c060")
+			ctx.fillStyle = "#3a2410"; ctx.fillRect(-82, -4, 164, 3)
 		ctx.restore()
-		ctx.strokeStyle = "#5a3a1a"; ctx.lineWidth = 3
-		ctx.beginPath(); ctx.moveTo(bx - 100, by - 52 + bob); ctx.lineTo(bx + 100, by - 52 + bob); ctx.stroke()
+		if not _has("mvs_house_fold"):
+			ctx.strokeStyle = "#5a3a1a"; ctx.lineWidth = 3
+			ctx.beginPath(); ctx.moveTo(bx - 100, by - 52 + bob); ctx.lineTo(bx + 100, by - 52 + bob); ctx.stroke()
 		# 其餘隊伍跟尾
 		for i in range(4, crew.size()):
 			Art.draw_char(ctx, crew[i], bx - 90 - (i - 3) * 36.0, by + 40, CS * 0.8, {"t": tt + i, "walk": true, "tamed": true})
-		_txt(ctx, a.line, 195, sim.L.top + 150, 18, GOLD, "center", 900, 5)
+		ctx.font = "900 17px sans-serif"
+		var ls = _wrap(ctx, str(a.line), 350.0)
+		for li in ls.size(): _txt(ctx, ls[li], 195, sim.L.top + 136 + li * 24.0, 17, GOLD, "center", 900, 5)
 	# 轉黑／淡入
 	var dark = 0.0
 	if tt >= A_WALK - 0.2 and tt < A_SWAP: dark = clampf((tt - (A_WALK - 0.2)) / (A_SWAP - A_WALK + 0.2), 0, 1)
