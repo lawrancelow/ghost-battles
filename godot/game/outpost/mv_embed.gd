@@ -1,0 +1,201 @@
+# [unify] 合一地圖：「村子」分頁＝一張直向連續地圖（UNIFIED_CONTRACT.md）
+#   村外惡鬼區＋柵欄＋大排檔區（mv_scene 嵌入模式，世界 0..EH）→ 出村門 → 原版村子（ui/nv_village.gd，唔變）→ 村尾拓展地。
+#   座標：大排檔區世界 y = 村子 y + EH；鏡頭只有一個（村子 JS Village.camY，可以拖到 -EH）。
+#   呢個節點（冇 class_name，熱更新規矩）掛喺村子畫面入面，做：
+#     1. 開 mv_scene（embed = true）蓋喺村子世界上面（只畫 y < 0 嗰段＋HUD）；
+#     2. 包 Village.setCam（准拖到最頂）同 Village.tap（y < 0／HUD → 轉俾大排檔區）；
+#     3. 每格同步鏡頭（mv_scene.cam = 村子 camY + EH + top_pad）、HUD 淡入淡出、升級條要求嘅鏡頭移動；
+#     4. 挑夫鬼：每隔一陣由村子經「出村」門挑貨上大排檔區（純畫面；冇料唔行）；
+#     5. 留位（layout.spare）：「待開檔」空地。
+extends Node
+
+const MV_SCENE := "res://game/outpost/mv_scene.gd"
+const CB = preload("res://game/outpost/chain_bld.gd")
+const MD = preload("res://game/outpost/mv_data.gd")
+const M = preload("res://game/outpost/mat.gd")
+const HUD_CAM := -40.0        # 村子 camY 細過呢個（睇到大排檔區）先出 HUD
+const GATE := Vector2(195, 118)
+
+var main = null
+var village: Control = null
+var sc: Control = null         # mv_scene（嵌入）
+var porters: Array = []        # {s, k, mid, back}
+var _pt := 3.0
+var _rng := RandomNumberGenerator.new()
+var _cam_anim = null           # 村子鏡頭目標（村子 y）
+
+static func attach(m, vil: Control) -> Node:
+	var e = load("res://game/outpost/mv_embed.gd").new(); e.name = "MvEmbed"
+	e.main = m; e.village = vil
+	vil.add_child(e)
+	return e
+
+func _ready() -> void:
+	_rng.seed = 4242
+	sc = Control.new(); sc.set_script(load(MV_SCENE)); sc.name = "MvScene"
+	sc.embed = true; sc.hide_host = false
+	sc.embed_draw = _draw_extra
+	sc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	village.add_child(sc)   # 加喺 world 後面 → 畫喺村子上面
+	sc.setup(main)
+	_update_top()
+
+func eh() -> float:
+	if sc == null or sc.sim == null or sc.sim.L.is_empty(): return 1110.0
+	return float(sc.sim.L.get("h", 1110.0))
+
+func vcam() -> float:
+	var V = J.G.get("Village")
+	return J.num(V.get("camY", 180.0)) if V is Dictionary else 180.0
+func set_vcam(y: float) -> void:
+	var V = J.G.get("Village")
+	if V is Dictionary: J.mc(V, "setCam", [y])
+
+func _update_top() -> void:
+	var qb = main.get("quest_bar") if main != null else null
+	var top = 0.0
+	if qb is Control and qb.visible: top = maxf(0.0, qb.get_global_rect().end.y - village.get_global_rect().position.y + 4.0)
+	if absf(top - float(sc.embed_top)) > 0.5: sc.embed_top = top; sc._layout()
+
+# ---------------- 包村子 JS（鏡頭範圍、點擊） ----------------
+func _install() -> void:
+	var V = J.G.get("Village")
+	if not (V is Dictionary): return
+	if V.get("__un_tap_w") != null and is_same(V.get("__un_tap_w"), V.get("tap")) and is_same(V.get("__cb_tap_w"), V.get("tap")): return
+	CB.install()   # 先俾後院線包（佢包完 __cb_tap_w = tap），再喺上面包一層
+	var o_tap = V.get("tap"); var o_cam = V.get("setCam")
+	var me_ref = weakref(self)
+	var tap = func(t, a):
+		var x = J.num(J.arg(a, 0)); var y = J.num(J.arg(a, 1))
+		var me = me_ref.get_ref()
+		if me != null and me.on_tap(x, y): return null
+		return J.cl(o_tap, t, a)
+	var cam = func(t, a):
+		var v = t if t != null else V
+		var r = J.cl(o_cam, v, a)
+		var me = me_ref.get_ref()
+		var top = -me.eh() - me.top_extra() if me != null and me.active() else 0.0
+		var vh = J.num(v.get("h", 600)) / maxf(0.01, J.num(v.get("scale", 1)))
+		var wh = maxf(1130.0, CB.world_h())
+		v["camY"] = clampf(J.num(J.arg(a, 0)), top, maxf(0.0, wh - vh))
+		return r
+	V["tap"] = tap; V["__un_tap_w"] = tap; V["__cb_tap_w"] = tap
+	V["setCam"] = cam
+
+# 鏡頭最頂可以再上啲：HUD 蓋住嘅高度，等柵欄外孤魂露出嚟
+func top_extra() -> float: return float(sc.EHUD_H) + 40.0 if sc != null else 0.0
+func active() -> bool: return sc != null and is_instance_valid(sc) and sc.visible
+
+# 村子世界座標 (x, y) 嘅一下撳：屬於大排檔區／HUD 就轉俾 mv_scene，回 true
+func on_tap(x: float, y: float) -> bool:
+	if not active() or sc.sim == null or sc.sim.st() == null: return false
+	var sp = Vector2(x, y - vcam())   # mv_scene 舞台座標（同村子一樣縮放）
+	var hud = sc.hud_on and sp.y < sc.top_pad + sc.EHUD_H
+	var wb = false
+	var w = sc.sim.war
+	if sc.hud_on and w != null and w.get("_btn") is Dictionary:
+		for k in w._btn:
+			var r = w._btn[k]
+			if r is Rect2 and r.grow(4).has_point(sp): wb = true
+	if sc.hud_on:
+		for k in sc._btns:
+			if sc._btns[k].has_point(sp): wb = true
+	if y < 0.0 or hud or wb or sc.card != null:
+		sc.tap(sp); return true
+	if sc.sheet.visible: sc.close_sheet()
+	return false
+
+# ---------------- 每格 ----------------
+func _process(dt: float) -> void:
+	if not active() or not village.is_visible_in_tree(): return
+	_install()
+	_update_top()
+	var cy = vcam()
+	sc.hud_on = cy < HUD_CAM or sc.sheet.visible or sc.anim != null
+	var qb = main.get("quest_bar") if main != null else null   # 精簡 HUD 已經包主線：任務條收埋
+	if qb is Control and qb.visible == sc.hud_on: qb.visible = not sc.hud_on
+	# 升級條／目標要求鏡頭移動（mv_scene.focus 設 cam_tgt，係 mv 鏡頭）→ 轉做村子鏡頭
+	if sc.cam_tgt != null:
+		_cam_anim = float(sc.cam_tgt) - eh() - sc.top_pad; sc.cam_tgt = null
+	if _cam_anim != null:
+		var ny = lerpf(cy, float(_cam_anim), minf(1.0, dt * 7.0))
+		if absf(ny - float(_cam_anim)) < 0.5: ny = float(_cam_anim); _cam_anim = null
+		set_vcam(ny); cy = vcam()
+	var V = J.G.get("Village")
+	if V is Dictionary and V.get("drag") != null and J.t(V.get("drag")): _cam_anim = null
+	sc.cam = cy + eh() + sc.top_pad
+	_step_porters(dt)
+
+# 鏡頭移去大排檔區（拔營、測試、主線任務用）
+func focus_outpost(frac := 0.5) -> void:
+	var vh = village.size.y / maxf(0.01, village.size.x / 390.0)
+	_cam_anim = -eh() + eh() * frac - vh * 0.5
+
+# ---------------- 挑夫鬼（純畫面） ----------------
+func _has_stock() -> bool:
+	var sim = sc.sim
+	for sid in MD.stations(sim.ci()):
+		if not sim.unlocked(sid): continue
+		for mid in sim.need(sid):
+			if float(M.amt(str(mid))) >= 1.0: return true
+	return false
+func _path() -> PackedVector2Array:
+	var E = eh(); var L = sc.sim.L
+	var dx = float(L.counter.x) + 70.0
+	return PackedVector2Array([Vector2(GATE.x + 8, E + 172), Vector2(GATE.x, E + GATE.y - 4), Vector2(GATE.x, E + 26), Vector2(dx + 34, E - 6), Vector2(dx, float(L.counter_y) - 24.0)])
+func _step_porters(dt: float) -> void:
+	if sc.sim == null or sc.sim.L.is_empty() or sc.anim != null: return
+	_pt -= dt
+	if _pt <= 0.0:
+		_pt = _rng.randf_range(6.0, 10.0)
+		if porters.size() < 2 and _has_stock():
+			var mids = []
+			for sid in MD.stations(sc.sim.ci()):
+				if sc.sim.unlocked(sid):
+					for mid in sc.sim.need(sid): if float(M.amt(str(mid))) >= 1.0: mids.append(str(mid))
+			porters.append({"s": 0.0, "k": ["youhun", "n30_jiugui", "egui"][_rng.randi() % 3], "mid": mids[_rng.randi() % mids.size()] if mids.size() else "", "back": false, "ph": _rng.randf() * 9.0})
+	var P = _path(); var L = MD.poly_len(P)
+	for p in porters.duplicate():
+		if not p.back:
+			p.s += 46.0 * dt
+			if p.s >= L: p.back = true; p.mid = ""
+		else:
+			p.s -= 58.0 * dt
+			if p.s <= 0.0: porters.erase(p)
+func porter_pos(p: Dictionary) -> Vector2: return MD.poly_at(_path(), float(p.s))
+
+func _draw_extra(ctx, vy0: float, vy1: float, items: Array) -> void:
+	var sim = sc.sim; var Ly = MD.layout(sim.ci())
+	for q in Ly.get("spare", []):   # 留位：「待開檔」
+		var x = float(q[0]); var y = float(q[1])
+		if y < vy0 - 40.0 or y - 120.0 > vy1: continue
+		items.append([y - 30.0, func(): _draw_spare(ctx, x, y)])
+	var P = _path()
+	for p in porters:
+		var pos = MD.poly_at(P, float(p.s)); var nx = MD.poly_at(P, float(p.s) + (2.0 if not p.back else -2.0))
+		var a = clampf(float(p.s) / 40.0, 0.0, 1.0)   # 喺村子石板路慢慢現身
+		var pp = p
+		items.append([pos.y, func(): _draw_porter(ctx, pp, pos, nx.x < pos.x, a)])
+
+func _draw_spare(ctx, x: float, y: float) -> void:
+	ctx.save()
+	Art.el(ctx, x, y - 4, 48, 14, "rgba(30,20,14,.35)")
+	ctx.setLineDash([5, 5]); ctx.strokeStyle = "rgba(236,217,164,.55)"; ctx.lineWidth = 2
+	ctx.beginPath(); ctx.ellipse(x, y - 4, 48, 14, 0, 0, TAU); ctx.stroke(); ctx.setLineDash([])
+	for k in 2: Art.rr(ctx, x - 30 + k * 52, y - 34, 6, 32, 1, "#4a3424", "#22160e", 1)
+	Art.rr(ctx, x - 34, y - 40, 68, 22, 3, "rgba(60,40,26,.92)", "#b89a52", 1.2)
+	sc._txt(ctx, MD.S("spare", "待開檔", "待開攤"), x, y - 29, 14, Color("#f0e2c8"), "center", 900, 0)
+	ctx.restore()
+
+func _draw_porter(ctx, p: Dictionary, pos: Vector2, flip: bool, a: float) -> void:
+	ctx.save(); ctx.globalAlpha = a
+	var t = float(sc.t) + float(p.ph)
+	Art.draw_char(ctx, str(p.k), pos.x, pos.y, 0.85, {"t": t, "walk": true, "flip": flip, "tamed": true, "alpha": 0.95 * a})
+	if str(p.mid) != "":   # 擔挑：一條竹＋兩籮貨
+		var by = pos.y - 62.0 + sin(t * 9.0) * 1.5
+		ctx.strokeStyle = "#8a6a3a"; ctx.lineWidth = 3
+		ctx.beginPath(); ctx.moveTo(pos.x - 26, by + 4); ctx.lineTo(pos.x + 26, by - 2); ctx.stroke()
+		for sx in [-24.0, 22.0]:
+			Art.rr(ctx, pos.x + sx - 9, by + 4, 18, 13, 3, "#6a4a2a", "#2a1a0e", 1)
+			sc._icon(ctx, str(p.mid), pos.x + sx, by + 8, 16.0)
+	ctx.restore()

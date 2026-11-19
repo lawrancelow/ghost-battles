@@ -112,7 +112,7 @@ func _static(key: String, y: float, sig, animated: bool, fn: Callable) -> void:
 	if n2.position.y != y: n2.position.y = y
 	if animated and (y < cam_y - 40 or y > cam_y + size.y / maxf(0.01, sc) + 140):
 		s.dirty = true; return  # 鏡頭外動畫唔重畫
-	if animated or s.sig != sig or s.get("dirty", false):
+	if animated or typeof(s.sig) != typeof(sig) or s.sig != sig or s.get("dirty", false):   # [unify] 地盤 "site" → 起好 [lv,…] 唔同型別
 		s.sig = sig; s.dirty = false
 		n2.queue_redraw()
 

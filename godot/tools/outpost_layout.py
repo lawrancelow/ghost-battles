@@ -267,9 +267,71 @@ def camp_layout(ci, h, road, st, counter):
         dec.append({"k": kd, "x": round(x), "y": round(yy), "s": round(s0 * rnd.uniform(0.85, 1.1), 2), "f": rnd.random() < 0.5})
     return {"top": top, "bottom": round(bottom), "sign": sign, "road": path, "slots": slots, "_decor": dec, "_fp": fps + [ex[2]]}
 
+# ================= [unify] 合一地圖：「村子」分頁頂段 =================
+# 村子分頁一張直向連續地圖：村外惡鬼區＋柵欄＋大排檔區（新背景 bgm<圖>_a／_b，世界 0..EH）→ 出村門 → 原版村子（唔變）。
+# 大排檔區世界 y = 村子 y + EH（村子 y = -EH..0）。台擺喺彎泥路兩邊空地；櫃台喺底（出村門上面）；客人由左右兩邊入；
+# 隨村台（嘆氣蒸籠、補丁紙衫攤）擺最底一行近出村門。台數固定：第 1–6 張圖 5、5、6、6、7、7（＋2 隨村台），
+# 資料唔夠嘅台位留空（layout.spare：「待開檔」）。
+EH = 1635               # 大排檔區總高（a＋b＋b 三塊 390×585，接縫 60；b 重複一次拉開台距）
+U_FENCE = 150           # 背景柵欄線
+U_ROWS = [1170, 955, 740, 525, 310]   # 台嘅行（由近櫃台起，第一個台最近櫃台；行距 220）
+U_CARRY_Y = 1375        # 隨村台嗰行
+U_TARGET = [5, 5, 6, 6, 7, 7]
+U_CARRY = ["st_shoubao", "st_zhishan"]
+U_COUNTER = [195, 1582]
+U_SERVE = [195, 1624]
+_ROADS = None
+def _roads():
+    global _ROADS
+    if _ROADS is None:
+        import json, os
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "unify_roads.json")
+        _ROADS = {int(k): v for k, v in json.load(open(p, encoding="utf-8")).items()}
+    return _ROADS
+def _rx(ci, y):
+    R = _roads()[ci]
+    best = min(R, key=lambda q: abs(q[1] - y))
+    return best[0]
+def unify_layout(ci, sids):
+    reg = [s for s in sids if s not in U_CARRY]
+    car = [s for s in U_CARRY if s in sids] or U_CARRY
+    # 台位：每行左右各一個（彎泥路兩邊），由近櫃台嗰行起
+    slots = []
+    for y in U_ROWS:
+        rx = _rx(ci, y)
+        lx = max(70, min(150, rx - 112)); rgt = min(320, max(240, rx + 112))
+        slots.append([round(lx), y]); slots.append([round(rgt), y])
+    # 路：road[0]＝右邊入口、road[1]＝右邊排隊位、road[2]＝櫃台路口（j），之後沿彎泥路一路上到柵欄
+    R = _roads()[ci]
+    up = [p for p in R if p[1] <= 1520 and p[1] % 40 == 0]
+    up.sort(key=lambda p: -p[1])
+    road = [[430, EH - 16], [300, EH - 6], [195, EH - 92]] + [[p[0], p[1]] for p in up] + [[_rx(ci, 160), U_FENCE + 14]]
+    j = 2
+    def ri_of(y):
+        best = 3; bd = 1e9
+        for i in range(3, len(road)):
+            d = abs(road[i][1] - (y + 30))
+            if d < bd: bd = d; best = i
+        return best
+    st = {}
+    for i, sid in enumerate(reg[:len(slots)]):
+        x, y = slots[i]
+        st[sid] = [x, y, ri_of(y)]
+    cpos = [[72, U_CARRY_Y], [318, U_CARRY_Y]]
+    for i, sid in enumerate(car[:2]):
+        x, y = cpos[i]
+        st[sid] = [x, y, ri_of(y) if i else 3]
+    tgt = U_TARGET[ci] if ci < len(U_TARGET) else 5
+    spare = [slots[i] for i in range(len(reg), min(tgt, len(slots)))]
+    q2 = [U_SERVE, [96, EH - 6], [-40, EH - 16]]   # 左邊入口嘅排隊線（收貨位 → 左邊）
+    return {"w": W, "h": EH, "fence_y": U_FENCE, "counter": U_COUNTER, "house": [195, EH + 70], "serve": U_SERVE,
+            "road": road, "j": j, "st": st, "decor": [], "fence_art": True, "unify": True, "eh": EH, "q2": q2,
+            "spare": spare, "target": tgt}
+
 def apply(data):
     for m in data["MAPS"]:
-        m["layout"] = layout(m["ci"], m["stations"])
+        m["layout"] = unify_layout(m["ci"], m["stations"])   # [unify] 合一地圖（舊 layout()／營地 camp_layout() 唔再用）
+        m["bg_tiles"] = ["bgm%d_a" % m["ci"], "bgm%d_b" % m["ci"], "bgm%d_b" % m["ci"]]
     for sid, s in data["STATIONS"].items():
         if sid in ANIM: s["anim"] = ANIM[sid]
     return data

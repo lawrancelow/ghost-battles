@@ -148,6 +148,8 @@ func _scene(tt) -> void:
 	if mv != null and is_instance_valid(mv) and mv.get_script() != null and mv.get_script().resource_path == "res://game/outpost/mv_scene.gd":
 		sc = mv; own = false   # 主畫面已經嵌咗移動村：直接用佢（唔好疊兩個場景）
 		sc.on_show(); sc.card = null
+		if sc.get("embed") == true:   # [unify] 合一地圖：鏡頭移去大排檔區（HUD／生產鏈掣先出）
+			J.mc(J.G.get("Village"), "setCam", [-600.0]); await _frames(30)
 		await _frames(3); return
 	own = true
 	sc = load("res://game/outpost/mv_scene.gd").new(); sc.name = "MvSceneCU"

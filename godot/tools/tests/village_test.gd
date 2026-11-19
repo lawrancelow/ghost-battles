@@ -222,12 +222,12 @@ func all(t) -> void:
 	m.open_backyard(); await _w(t, 0.6)
 	m.sheet_scroll.scroll_vertical = 100000; await _w(t, 0.3)
 	await _shot(t, "07_backyard_sheet")
-	CB.show_yard(m); await _calm(t, false); await _w(t, 1.0)
-	# [camp] 移動村模式：後院已經搬入大地圖「營地」→「去營地睇吓」＝鏡頭移去營地（唔再轉舊村子畫面）
-	_chk("去營地：留喺移動村、鏡頭去營地", m.mv_host.visible and not m.village.visible and m.mv_view.cam >= m.mv_view.camp.top() - 400.0, "%d/%d" % [int(m.mv_view.cam), int(m.mv_view.camp.top())])
-	await _shot(t, "08_yard_from_mv")
-	CB.hide_yard(m); await _w(t, 0.6)
-	_chk("返大排檔", m.mv_host.visible and not m.village.visible)
+	m.close_sheet()
+	# [unify] 合一地圖：營地取消、後院掣取消；村尾拓展地就喺原村子下面（同一張圖）
+	_chk("合一：村子畫面顯示、冇移動村全屏畫面", m.village.visible and not m.mv_host.visible and m.mv_view.camp == null)
+	J.mc(V, "setCam", [5000.0]); await _w(t, 0.6)
+	_chk("合一：拖到村尾拓展地", J.num(V.camY) > 1130.0 - 700.0, J.num(V.camY))
+	await _shot(t, "08_yard_unified")
 
 	# ---------- 10. 冇 chain.json 都唔壞 ----------
 	M.use_file("res://data/nat/__no_chain__.json")

@@ -11,6 +11,8 @@ const CBLD := preload("res://game/outpost/chain_bld.gd")   # [village] 後院拓
 var mv_host: Control
 var mv_view: Control = null
 var mv_back: Button
+var mv_embed: Node = null   # [unify] 合一地圖：村子分頁頂段嘅大排檔區（game/outpost/mv_embed.gd）
+const UNIFY := true          # [unify] 合一地圖（移動村獨立全屏畫面、後院掣、營地取消）
 var dom: Control
 var quest_bar: PanelContainer
 var quest_lbl: RichTextLabel
@@ -118,7 +120,9 @@ func _boot_js() -> void:
 	print("[boot] ready ", Time.get_ticks_msec() - t0, "ms")
 	# 首幾幀都畫到先算開機成功（Adreno 等驅動 shader 出事會喺第一次畫嘢時閃退）
 	G.crumb("frame1"); await RenderingServer.frame_post_draw
-	for i in 30: await get_tree().process_frame
+	for i in 30:
+		if not is_inside_tree(): return   # [unify] 開機後即刻導入存檔（重載）：舊 Main 已經離開場景樹
+		await get_tree().process_frame
 	G.crumb("frame30"); await RenderingServer.frame_post_draw
 	if selftest != null:
 		if str(SelfTest.S.get("cur", "")) == "boot": SelfTest.done("boot", "OK")
@@ -337,7 +341,7 @@ func _build_village() -> void:
 		if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
 			var q = G.quest_cur()
 			if q and q.go == "roster": open_roster(); return
-			if mv_on():
+			if mv_on() and not UNIFY:   # [unify] 合一地圖：原村子任務照舊（鏡頭去原村子建築）
 				if q and (q.get("t") == "stage" or q.get("go") == "gate"): close_sheet(); J.mc(J.G.get("World"), "open", []); return
 				close_sheet(); _nav_on("village")
 				var cg = {"tree": "wood", "paddy": "rice"}.get(str(q.get("go")), str(q.get("go"))) if q else ""   # [camp] 營地建築任務：鏡頭移去嗰間
@@ -470,7 +474,7 @@ func refresh() -> void:
 		var p = G.quest_progress(q)
 		var a = minf(float(p[0]), float(p[1]))
 		if mv_on(): p = MVB.quest_disp(q, p); a = minf(float(p[0]), float(p[1]))
-		quest_lbl.text = MVB.quest_text(q) if mv_on() else q.text; quest_prog.text = "%d/%d" % [int(a), int(p[1])]
+		quest_lbl.text = (_unify_qtext(MVB.quest_text(q)) if UNIFY else MVB.quest_text(q)) if mv_on() else q.text; quest_prog.text = "%d/%d" % [int(a), int(p[1])]
 		quest_prog.add_theme_color_override("font_color", Color("#2e6d3a") if float(p[0]) >= float(p[1]) else UIKit.CINNABAR2)
 	else: quest_lbl.text = "第一季完。村子由你慢慢經營。" if S.ended else "—"; quest_prog.text = ""
 	_mv_tick()
@@ -484,6 +488,7 @@ func mv_on() -> bool: return G.S is Dictionary and not G.S.is_empty() and J.t(G.
 
 # 按 S.mv_on 決定 home 分頁用邊個畫面（開機、切換開關、匯入存檔後叫）
 func _mv_apply() -> void:
+	if UNIFY: _unify_apply(); return   # [unify]
 	var on = mv_on()
 	if on and mv_view == null:
 		var path = MV_SCENE if ResourceLoader.exists(MV_SCENE) else MV_STUB
@@ -502,11 +507,31 @@ func _mv_apply() -> void:
 	if mv_view != null and on and tab == "village": mv_view.on_show()
 	_qx_btn_vis()
 
+# [unify] 任務字：原村子建築已經返晒原位，唔再講「營地」
+func _unify_qtext(s: String) -> String:
+	return s.trim_prefix("營地：").replace("營地或者生產台", "村子或者大排檔")
+
+# [unify] 合一地圖：村子分頁頂段嵌入大排檔區（原村子位置全部唔變）；mv_on 一律開（生產鏈／戰鬥／橋接層都靠佢）
+func _unify_apply() -> void:
+	var s0 = J.G.get("S")
+	if s0 is Dictionary and not s0.is_empty() and not J.t(s0.get("mv_on")): MVB.migrate(); s0["mv_on"] = true   # 舊存檔：一律開合一
+	if mv_embed == null:
+		mv_embed = load("res://game/outpost/mv_embed.gd").attach(self, village)
+		mv_view = mv_embed.sc
+		MVB.set_scene(mv_view)
+		print("[mv] unified embed")
+	mv_host.visible = false
+	village.visible = true; village.process_mode = Node.PROCESS_MODE_INHERIT
+	quest_bar.visible = true
+	if tab == "village": mv_view.on_show()
+	else: mv_view.on_hide()
+	_qx_btn_vis()
+
 # 移動村畫面有自己嘅目標條，右下角「任務」浮動掣會遮住升級條：喺移動村分頁收埋
 func _qx_btn_vis() -> void:
 	var q = get_node_or_null("/root/QX")
 	if q == null or not ("btn" in q) or q.btn == null or not is_instance_valid(q.btn): return
-	q.btn.visible = not (mv_view != null and mv_on() and tab == "village")
+	q.btn.visible = UNIFY or not (mv_view != null and mv_on() and tab == "village")   # [unify] 合一地圖：原村子照舊有任務掣
 
 func set_mv(on: bool) -> void:
 	if G.S.is_empty(): return
@@ -802,7 +827,7 @@ func open_story() -> void:
 		if o == null: show_toast("存檔碼讀唔到，檢查吓有冇貼齊"); return
 		if not im.has_meta("armed"): im.set_meta("armed", 1); im.text = "再按一次：換成主公 %d 級嘅存檔" % int(o.get("lv", 1)); return
 		import_save(ta.text if ta.text.strip_edges() != "" else DisplayServer.clipboard_get()))
-	var mvb = UIKit.btn("村子畫面：" + ("移動村（大排檔）" if mv_on() else "舊村子"), "ghost"); sheet_body.add_child(mvb)
+	var mvb = UIKit.btn("村子畫面：" + ("移動村（大排檔）" if mv_on() else "舊村子"), "ghost"); mvb.visible = not UNIFY; sheet_body.add_child(mvb)   # [unify] 合一地圖：唔再切換
 	mvb.pressed.connect(func(): set_mv(not mv_on()); mvb.text = "村子畫面：" + ("移動村（大排檔）" if mv_on() else "舊村子"))
 	var sgb = UIKit.btn("安全畫面模式：" + ("開" if G.safe_gfx else "關") + "（閃退時用，重開遊戲生效）", "ghost"); sheet_body.add_child(sgb)
 	sgb.pressed.connect(func(): G.set_safe_gfx(not G.safe_gfx); sgb.text = "安全畫面模式：" + ("開" if G.safe_gfx else "關") + "（閃退時用，重開遊戲生效）")

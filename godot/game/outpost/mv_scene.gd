@@ -10,6 +10,7 @@ const SIM = preload("res://game/outpost/mv_sim.gd")
 const FX = preload("res://game/outpost/mv_fx.gd")
 const M = preload("res://game/outpost/mat.gd")   # [chain]
 const IDL = preload("res://game/outpost/mv_idle.gd")   # [idle]
+const MIST = preload("res://game/outpost/mv_mist.gd")   # [unify] 血霧（mapart 線）：台、櫃台底
 const FW := 390.0
 const GOLD := Color("#f3d68a")
 const INK := Color("#2b1d12")
@@ -65,6 +66,14 @@ const HUD_H := 90.0
 const AMB_GHOSTS := 2
 const AMB_FLY := 3
 var camp = null   # [camp] 營地（原本村子嘅建築，喺地圖底）：game/outpost/mv_camp.gd
+# [unify] 嵌入模式（合一地圖）：由 game/outpost/mv_embed.gd 掛入村子畫面（ui/nv_village.gd），
+#   大排檔區世界 y 0..EH ＝ 村子 y -EH..0；鏡頭跟村子（embed 每格設 cam）；唔自己處理拖動／點擊（村子轉發 tap）；
+#   唔畫紙紮大屋、營地；HUD 只喺睇到大排檔區先出（hud_on）。
+var embed := false
+var embed_top := 0.0          # HUD 頂（畫面座標，主線任務條下面）
+var hud_on := true
+var hud_k := 1.0              # HUD 淡入淡出
+var embed_draw = null         # Callable(ctx, vy0, vy1)：嵌入層額外畫（挑夫鬼、留位）
 
 func _ready() -> void:
 	_rng.seed = 7
@@ -78,7 +87,9 @@ func on_show() -> void:
 	_build(); visible = true; _shown = true
 	_hide_host(true)
 	sim.reg_post(); sim.st(); sim.validate(); sim.reset_live(); sim.sync()
-	_set_bg(); _layout(); cam_home(); _prefill()
+	_set_bg(); _layout()
+	if not embed: cam_home()   # [unify] 嵌入：鏡頭跟村子
+	_prefill()
 	coin_show = sim.coins()
 	var r = sim.check_away()
 	if r.has("coins") and float(r.coins) > 0.0: _show_card(r)
@@ -126,14 +137,14 @@ func offline_gain(ms: float) -> Dictionary:
 func _build() -> void:
 	if frame != null: return
 	sim = SIM.new()
-	camp = load("res://game/outpost/mv_camp.gd").new(); camp.sc = self   # [camp]
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); mouse_filter = Control.MOUSE_FILTER_STOP
+	if not embed: camp = load("res://game/outpost/mv_camp.gd").new(); camp.sc = self   # [camp]（[unify] 嵌入模式取消營地）
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); mouse_filter = Control.MOUSE_FILTER_IGNORE if embed else Control.MOUSE_FILTER_STOP
 	clip_contents = true
 	bg = TextureRect.new(); bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED; bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bg.modulate = Color(0.7, 0.68, 0.76); add_child(bg)
 	frame = Control.new(); frame.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(frame)
-	stage = Control.new(); stage.mouse_filter = Control.MOUSE_FILTER_STOP; frame.add_child(stage)
+	stage = Control.new(); stage.mouse_filter = Control.MOUSE_FILTER_IGNORE if embed else Control.MOUSE_FILTER_STOP; frame.add_child(stage)
 	stage.draw.connect(_draw_stage); stage.gui_input.connect(_stage_input)
 	sheet = PanelContainer.new(); sheet.visible = false; sheet.mouse_filter = Control.MOUSE_FILTER_STOP
 	var s = UIKit.sb(PAPER, 14, LINE, 2, Vector4(14, 10, 14, 12)); s.corner_radius_bottom_left = 0; s.corner_radius_bottom_right = 0
@@ -159,6 +170,7 @@ func _layout() -> void:
 		var my = get_global_rect(); var mr = main.get_global_rect()
 		top_pad = maxf(0.0, (mr.position.y + th - my.position.y) / k)
 		bot_pad = maxf(0.0, (my.end.y - (mr.end.y - nh)) / k)
+	if embed: top_pad = embed_top / k; bot_pad = 0.0   # [unify]
 	sim.relayout()
 	_clamp_cam(true)
 	if sheet.visible: _place_sheet()
@@ -193,9 +205,11 @@ func _cover(r: Rect2) -> float:
 		if k.begins_with("st:") or k.begins_with("camp") or k.begins_with("unl:"): a += r.intersection(_wbtns[k]).get_area()
 	return a
 func cam_camp() -> void:   # [camp] 鏡頭移去營地
+	if camp == null: return   # [unify]
 	close_sheet(); _close_picker(); cam_v = 0.0
 	cam_tgt = clampf(camp.top() - HUD_H - 6.0, cam_min(), cam_max())
 func focus_camp(id: String) -> bool:   # [camp] 鏡頭移去營地某間建築（主線任務條撳落去用）
+	if camp == null: return false   # [unify]
 	var it = camp.item(id)
 	if it == null: return false
 	close_sheet(); _close_picker(); cam_v = 0.0
@@ -244,9 +258,10 @@ func _process(dt: float) -> void:
 	t += dt
 	if anim != null: _step_anim(dt)
 	else: sim.step(dt)
-	_step_cam(dt)
+	if not embed: _step_cam(dt)   # [unify]
+	else: hud_k = move_toward(hud_k, 1.0 if hud_on else 0.0, dt * 5.0)
 	_step_amb(dt)
-	camp.step(dt)   # [camp]
+	if camp != null: camp.step(dt)   # [camp]
 	_eat_events()
 	_step_fx(dt)
 	# HUD 冥幣追真數（飛緊嘅錢到咗先跳）
@@ -395,7 +410,10 @@ func _step_anim(dt: float) -> void:
 		_banner_set(MD.S("arrive", "抵達", "抵達"), MD.T(MD.map_def(sim.ci()).get("name")), 2.6)
 		_prefill()
 func _after_move(fresh := true) -> void:
-	sim.reset_live(); sim.st(); sim.sync(); camp.invalidate(); _set_bg(); _layout(); cam_home()   # [camp] invalidate
+	sim.reset_live(); sim.st(); sim.sync(); _tiles_ci = -1
+	if camp != null: camp.invalidate()   # [camp]
+	_set_bg(); _layout()
+	if not embed: cam_home()
 	parts.clear(); bubbles.clear(); shake.clear(); amb.g.clear(); amb.f.clear()
 	_save()
 	if fresh: _prefill()
@@ -436,9 +454,9 @@ func _draw_stage() -> void:
 		if dy < vy0 - 20.0 or dy - 160.0 > vy1: continue
 		var dd = d
 		items.append([dy, func(): _draw_decor(ctx, dd)])
-	camp.add_items(ctx, items, vy0, vy1, fk, walking)   # [camp] 營地建築
+	if camp != null: camp.add_items(ctx, items, vy0, vy1, fk, walking)   # [camp] 營地建築
 	if fk > 0.04 and L.counter_y + 40.0 > vy0 and L.counter_y - 220.0 < vy1:
-		items.append([L.house.y, func(): _draw_house(ctx, fk)])
+		if not embed: items.append([L.house.y, func(): _draw_house(ctx, fk)])   # [unify] 嵌入：紙紮大屋＝原版村子（出村門後面）
 		items.append([L.counter_y, func(): _draw_counter(ctx, fk)])
 	if not walking:
 		for c in sim.custs:
@@ -456,6 +474,7 @@ func _draw_stage() -> void:
 			if w.pos.y < vy0 - 20.0 or w.pos.y - 120.0 > vy1: continue
 			var ww = w
 			items.append([w.pos.y, func(): _draw_worker(ctx, ww)])
+	if embed and embed_draw != null: embed_draw.call(ctx, vy0, vy1, items)   # [unify] 留位、挑夫鬼（入 y 排序）
 	items.sort_custom(func(a, b): return a[0] < b[0])
 	for it in items: it[1].call()
 	sim.war.draw_world(self, ctx, vy0, vy1)   # [war] 義勇軍＋霸檔標記
@@ -470,14 +489,24 @@ func _draw_stage() -> void:
 		var sc = 1.0 + 0.3 * maxf(0.0, 1.0 - f.t / 0.15)
 		ctx.globalAlpha = a; _txt(ctx, f.text, f.p.x, f.p.y, int(f.s * sc), f.c, "center", 900, 5); ctx.globalAlpha = 1.0
 	_brects.clear()
+	if embed:   # [unify] 對白框避開台名牌、台
+		for q in _plates: _brects.append(q.grow(2))
+		for kk in _wbtns: if kk.begins_with("st:"): _brects.append(_wbtns[kk])
 	for b in bubbles: _draw_bubble(ctx, b)
+	if embed and anim != null:   # [unify] 拔營：大排檔區＋村外區淡出、換圖、淡入（原村子唔變）
+		var fa = clampf(1.0 - absf(float(anim.t) - A_SWAP) / 1.8, 0.0, 1.0)
+		if fa > 0.0: ctx.fillStyle = "rgba(8,4,10,%.3f)" % fa; ctx.fillRect(0, maxf(vy0, -40.0), FW, minf(vy1, world_h()) - maxf(vy0, -40.0))
 	ctx.restore()
 	_draw_parts(ctx, false)
-	_draw_hud(ctx)
+	if not embed or hud_k > 0.01:   # [unify] 嵌入：睇到大排檔區先出 HUD
+		ctx.globalAlpha = hud_k if embed else 1.0
+		_draw_hud(ctx)
+		ctx.globalAlpha = 1.0
 
 # ---------------- 地面：背景圖直向鋪（隔塊反轉接縫）＋路＋小河＋橋 ----------------
 func _draw_ground(ctx: Ctx, vy0: float, vy1: float) -> void:
 	var L = sim.L
+	if embed: vy1 = minf(vy1, world_h())   # [unify] 嵌入：只畫大排檔區（下面係原村子）
 	ctx.fillStyle = "#1a1620"; ctx.fillRect(0, vy0, FW, vy1 - vy0)
 	if _draw_tiles(ctx, vy0, vy1): return   # [camp] 新手繪背景（MAPS[ci].bg_tiles）：路、河、橋都喺圖入面，唔再程序畫
 	if bg_tex != null:
@@ -519,6 +548,7 @@ func _draw_ground(ctx: Ctx, vy0: float, vy1: float) -> void:
 
 # [camp] 營地泥路（layout.camp.road）：比村道窄少少
 func _draw_camp_road(ctx: Ctx, vy0: float, vy1: float) -> void:
+	if camp == null: return   # [unify]
 	var P = camp.road()
 	if P.size() < 2 or P[P.size() - 1].y < vy0 or P[0].y > vy1: return
 	for pass_i in 2:
@@ -554,7 +584,7 @@ func tile_rects() -> Array:   # [[tex, y, h], ...]（世界座標，蓋晒 world
 	var T = _bg_tiles(); var o = []
 	if T.is_empty(): return o
 	var y = 0.0; var i = 0; var wh = world_h() + 40.0
-	while y < wh and i < 200:
+	while y < wh and i < 200 and not (embed and i >= T.size()):   # [unify] 嵌入：兩塊就夠
 		var ti = i if i < T.size() else (1 + (i - 1) % maxi(1, T.size() - 1) if T.size() > 1 else 0)
 		var tx: Texture2D = T[ti]
 		var th = FW * tx.get_height() / maxf(1.0, tx.get_width())
@@ -677,10 +707,11 @@ func _step_amb(dt: float) -> void:
 		if f.x < -60.0 or f.x > FW + 60.0 or f.y > vy0 + vh + 40.0: amb.f.erase(f)
 func _draw_amb_ghosts(ctx: Ctx, vy0: float, vy1: float) -> void:
 	for g in amb.g:
-		if g.y < vy0 or g.y > vy1: continue
+		if g.y < vy0 or g.y > vy1 or (embed and g.y > world_h() - 60.0): continue   # [unify]
 		Art.draw_char(ctx, "youhun", g.x, g.y + sin(t * 1.4 + g.ph) * 8.0, CS * 0.75, {"t": t + g.ph, "flip": g.v < 0, "alpha": 0.22, "noShadow": true})
 func _draw_amb_fly(ctx: Ctx) -> void:
 	for f in amb.f:
+		if embed and f.y > world_h() - 40.0: continue   # [unify]
 		if f.k == "crow":
 			if _has("crowfly"):
 				ctx.save(); ctx.translate(f.x, f.y)
@@ -755,6 +786,11 @@ func _draw_guard_slots(ctx: Ctx) -> void:
 
 func _plus(ctx: Ctx, p: Vector2, hot: bool) -> void:
 	var pulse = 0.6 + 0.4 * sin(t * 3.0 + p.x)
+	if embed:   # [unify] 冇派鬼嘅空位：細啲、半透明
+		ctx.save(); ctx.globalAlpha = (0.55 if hot else 0.38) + 0.15 * pulse
+		Art.el(ctx, p.x, p.y - 12, 10, 10, "rgba(20,14,24,.5)", "#f3d68a" if hot else "#d8cdb6", 1.5)
+		_txt(ctx, "＋", p.x, p.y - 11, 14, Color("#f3d68a") if hot else Color("#efe6d2"), "center", 900, 0)
+		ctx.restore(); return
 	ctx.save(); ctx.globalAlpha = 0.6 + 0.35 * pulse
 	Art.el(ctx, p.x, p.y - 16, 15, 15, "rgba(20,14,24,.6)", "#f3d68a" if hot else "#d8cdb6", 2)
 	_txt(ctx, "＋", p.x, p.y - 15, 20, Color("#f3d68a") if hot else Color("#efe6d2"), "center", 900, 0)
@@ -778,7 +814,10 @@ func _draw_counter(ctx: Ctx, fk: float) -> void:
 	var x0 = L.counter_x0; var x1 = L.counter_x1; var y = L.counter_y
 	ctx.save(); ctx.translate((x0 + x1) / 2.0, y + 10); ctx.scale(1.0, maxf(0.05, fk)); ctx.translate(-(x0 + x1) / 2.0, -(y + 10))
 	if _has("mvs_counter"):
-		Art.put(ctx, "mvs_counter", (x0 + x1) / 2.0, y + 14, x1 - x0 + 16)
+		var ctex = Spr.get_tex("mvs_counter"); var cw = x1 - x0 + 16; var chh = cw * ctex.get_height() / maxf(1.0, ctex.get_width())
+		_mist(ctx, "pd:counter", Vector2((x0 + x1) / 2.0, y + 14), cw * 0.92, chh, false)   # [unify] 血霧
+		Art.put(ctx, "mvs_counter", (x0 + x1) / 2.0, y + 14, cw)
+		_mist(ctx, "pd:counter", Vector2((x0 + x1) / 2.0, y + 14), cw * 0.92, chh, true)
 	else:
 		Art.rr(ctx, x0, y - 22, x1 - x0, 34, 4, "#7a2a1e", "#f2c060", 2)
 		Art.rr(ctx, x0 - 6, y - 30, x1 - x0 + 12, 10, 3, "#e8d2a0", "#5a3a1a", 1.5)
@@ -822,7 +861,7 @@ func _st_key(sid: String) -> String:
 	if _has(a): return a
 	var fb = ST_FALLBACK.get(a, "")
 	return fb if _has(fb) else ""
-func _st_w() -> float: return 128.0
+func _st_w() -> float: return 112.0 if embed else 128.0   # [unify] 嵌入：一行左右兩個台
 
 func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 	var p = sim.st_pos(sid); var w = _st_w()
@@ -837,9 +876,12 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 	ctx.save()
 	if un and an.size(): FX.pre(ctx, an, p + Vector2(0, 4), t, on, ph)
 	var key = _st_key(sid); var r: Rect2
+	var mh = w * 200.0 / 240.0
+	if key != "" and un: _mist(ctx, "pd:" + sid, Vector2(p.x, p.y + 4), w * 0.92, mh, false)   # [unify] 血霧後層
 	if key != "": r = Art.put(ctx, key, p.x, p.y + 4, w)
 	else: r = _proc_station(ctx, sid, p, w)
 	if un and an.size(): FX.post(ctx, an, r, t, on, ph)
+	if key != "" and un: _mist(ctx, "pd:" + sid, Vector2(p.x, p.y + 4), w * 0.92, mh, true)   # [unify] 血霧前層
 	ctx.restore()
 	ctx.globalAlpha = 1.0
 	_wbtns["st:" + sid] = Rect2(p.x - w / 2, r.position.y, w, p.y + 8 - r.position.y)
@@ -902,7 +944,13 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 			else: _txt(ctx, MD.S("unlock_btn", "解鎖 %s", "解鎖 %s") % MD.fmt(cost), p.x + 8, ny + 22, 15, Color("#fff3e0") if ok else Color("#b8a898"), "center", 900, 0)
 			_wbtns["unl:" + sid] = Rect2(p.x - bw / 2, ny + 4, bw, 36)
 
-func _cell_w() -> float: return 176.0   # 名牌最闊（大地圖台與台之間有位）
+# [unify] 血霧：用 Ctx 而家嘅變換（鏡頭、摺埋動畫）畫
+func _mist(ctx: Ctx, key: String, base: Vector2, w: float, h: float, front: bool) -> void:
+	if not ResourceLoader.exists("res://game/outpost/mv_mist.gd"): return
+	ctx.ci.draw_set_transform_matrix(ctx.T)
+	MIST.draw(ctx.ci, key, base, w, h, Time.get_ticks_msec() / 1000.0, front)
+	ctx.ci.draw_set_transform_matrix(Transform2D.IDENTITY)
+func _cell_w() -> float: return 150.0 if embed else 176.0   # 名牌最闊（大地圖台與台之間有位）
 # 收窄字：先 15→14px，再唔夠就截尾加「…」
 func _fit(ctx: Ctx, s: String, maxw: float, sz: int) -> Array:
 	for z in [sz, 14]:
@@ -1005,6 +1053,7 @@ func _draw_parts(ctx: Ctx, world: bool) -> void:   # 冥幣飛去頂部係畫面
 
 # ---------------- 頂部 HUD ----------------
 func _draw_hud(ctx: Ctx) -> void:
+	if embed: _draw_hud_embed(ctx); return   # [unify]
 	var y0 = top_pad
 	ctx.fillStyle = "rgba(10,6,14,.62)"; ctx.fillRect(0, y0, FW, HUD_H)
 	_map_label(ctx)
@@ -1060,14 +1109,75 @@ func _draw_hud(ctx: Ctx) -> void:
 			_txt(ctx, MD.S("need_boss", "要先打低主線 Boss", "要先打倒主線 Boss") + MD.S("need_boss2", "（去巡陰）", "（去巡陰）"), 195, y0 + 128, 15, Color("#ffb0a0"), "center", 900, 4)
 	sim.war.draw_hud(self, ctx)   # [war] 影響力條、義勇軍數、鬼潮、告急、出征掣
 
-func _boost_btn(ctx: Ctx, kind: String, r: Rect2, label: String) -> void:
+# [unify] 嵌入模式精簡 HUD（主線任務條收埋，併入第一行）：
+#   第一行（40）：左半＝主線任務（撳落去＝原本任務條）；右半＝呢張圖目標（做齊變「領獎」）
+#   第二行（42）：左＝地圖名＋收益×2／加速（細掣）；右＝影響力條（戰鬥線 draw_hud，移上嚟同一行）
+const EHUD_H := 88.0
+func _draw_hud_embed(ctx: Ctx) -> void:
+	var y0 = top_pad
+	ctx.fillStyle = "rgba(10,6,14,.70)"; ctx.fillRect(0, y0, FW, EHUD_H)
+	# 主線（左半）
+	Art.rr(ctx, 6, y0 + 4, 186, 36, 8, "rgba(250,244,228,.95)", "#5e4a30", 1.5)
+	Art.rr(ctx, 10, y0 + 10, 34, 24, 3, "#b8322a")
+	_txt(ctx, "主線", 27, y0 + 22, 14, Color("#fbe6d6"), "center", 900, 0, "serif")
+	var qt = ""; var qp = ""
+	if main != null and is_instance_valid(main):
+		var ql = main.get("quest_lbl"); var qpl = main.get("quest_prog")
+		if ql != null and is_instance_valid(ql): qt = ql.get_parsed_text() if ql.has_method("get_parsed_text") else str(ql.text)
+		if qpl != null and is_instance_valid(qpl): qp = str(qpl.text)
+	ctx.font = "900 14px sans-serif"; var pw = ctx.measureText(qp).width
+	_txt(ctx, _fit(ctx, qt, 186 - 48 - pw - 10, 14)[0], 48, y0 + 22, 14, INK, "left", 900, 0)
+	_txt(ctx, qp, 186, y0 + 22, 14, RED, "right", 900, 0)
+	_btns["quest"] = Rect2(6, y0 + 4, 186, 36)
+	# 目標（右半）
+	var gi = sim.cur_goal(); var G = MD.goals(sim.ci())
+	var gx = 198.0; var gw = FW - gx - 6.0
+	Art.rr(ctx, gx, y0 + 4, gw, 36, 8, "rgba(250,244,228,.95)", "#5e4a30", 1.5)
+	if gi >= 0:
+		var g = G[gi]; var pr = sim.goal_prog(gi); var done = pr[0] >= pr[1]
+		_goal_icon(ctx, g, Vector2(gx + 16, y0 + 22))
+		if done:
+			var rw = g.get("reward", {}); var rc = float(rw.get("coins", 0)) if rw is Dictionary else 0.0
+			Art.rr(ctx, gx + 34, y0 + 7, gw - 38, 30, 8, "#3d7a3a", "#bff0a0", 2)
+			_txt(ctx, MD.S("claim", "領獎", "領獎") + (" +" + MD.fmt(rc) if rc > 0 else ""), gx + 34 + (gw - 38) / 2.0, y0 + 22, 15, Color("#fff8e0"), "center", 900, 2)
+			_btns["claim"] = Rect2(gx, y0, gw, 44)
+		else:
+			var cnt = "%s/%s" % [MD.fmt(pr[0]), MD.fmt(pr[1])]
+			ctx.font = "900 14px sans-serif"; var cw2 = ctx.measureText(cnt).width
+			var tx = _fit(ctx, MD.T(g.get("txt")), gw - 40 - cw2 - 8, 14)[0]
+			_txt(ctx, tx, gx + 32, y0 + 18, 14, INK, "left", 900, 0)
+			_txt(ctx, cnt, gx + gw - 6, y0 + 18, 14, DIMC, "right", 900, 0)
+			Art.rr(ctx, gx + 32, y0 + 30, gw - 40, 5, 3, "rgba(60,40,20,.25)")
+			Art.rr(ctx, gx + 32, y0 + 30, (gw - 40) * clampf(pr[0] / maxf(1.0, pr[1]), 0, 1), 5, 3, "#c0902a")
+	else:
+		_txt(ctx, MD.S("all_done", "呢度做齊喇！", "這裡全部完成！"), gx + gw / 2.0, y0 + 22, 14, GREEN, "center", 900, 0)
+	# 第二行：地圖名＋細掣
+	var md = MD.map_def(sim.ci())
+	_boost_btn(ctx, "inc", Rect2(6, y0 + 45, 84, 22), MD.S("income", "收益", "收益") + "×2", 14)
+	_boost_btn(ctx, "spd", Rect2(96, y0 + 45, 74, 22), MD.S("speed", "加速", "加速"), 14)
+	var nb = sim.war != null and sim.war.has_method("newbie") and sim.war.newbie()   # 新手保護字（戰鬥線）會出喺第二行左邊
+	if not nb: _txt(ctx, "%s %d/%d" % [MD.T(md.get("name")), sim.ci() + 1, MD.maps_n()], 8, y0 + 79, 14, Color("#e8dcc4"), "left", 900, 3, "serif")
+	if anim == null:
+		if sim.can_move():
+			var pulse2 = 1.0 + 0.05 * sin(t * 5.0)
+			var bw = 160.0 * pulse2; var by2 = y0 + EHUD_H + 6.0
+			Art.rr(ctx, 8, by2, bw, 44, 12, "#bb3427", "#ffd27a", 3)
+			_txt(ctx, MD.S("move_btn", "拔營！", "拔營！"), 8 + bw / 2.0, by2 + 22, 22, Color("#fff3e0"), "center", 900, 4, "serif")
+			_btns["move"] = Rect2(8, by2, bw, 44)
+		elif gi >= 0 and str(G[gi].get("t")) == "boss" and not sim.boss_ok(sim.ci(), str(G[gi].get("k", ""))):
+			_txt(ctx, MD.S("need_boss", "要先打低主線 Boss", "要先打倒主線 Boss"), 8, y0 + EHUD_H + 14, 14, Color("#ffb0a0"), "left", 900, 4)
+	# 影響力（戰鬥線）：佢排喺 top_pad + 90 下面 → 臨時上移，同第二行齊
+	var tp = top_pad; top_pad = tp - (90.0 - 44.0)
+	sim.war.draw_hud(self, ctx)
+	top_pad = tp
+func _boost_btn(ctx: Ctx, kind: String, r: Rect2, label: String, fs := 15) -> void:
 	var on = sim.boost_left(kind) > 0.0; var cd = sim.boost_cd(kind)
 	var col = "#3d7a3a" if on else ("#4a3a30" if cd > 0.0 else "#bb3427")
 	Art.rr(ctx, r.position.x, r.position.y, r.size.x, r.size.y, 8, col, "#f2d090" if not (cd > 0.0 and not on) else "#7a6050", 1.5)
 	var tx = label
 	if on: tx = label.substr(0, 2) + " " + _mmss(sim.boost_left(kind))
 	elif cd > 0.0: tx = _mmss(cd)
-	_txt(ctx, tx, r.position.x + r.size.x / 2.0, r.position.y + r.size.y / 2.0 + 1, 15, Color("#fff3e0") if (on or cd <= 0.0) else Color("#c8b8a8"), "center", 900, 2)
+	_txt(ctx, tx, r.position.x + r.size.x / 2.0, r.position.y + r.size.y / 2.0 + 1, fs, Color("#fff3e0") if (on or cd <= 0.0) else Color("#c8b8a8"), "center", 900, 2)
 	_btns["boost:" + kind] = r.grow(4)
 func _mmss(s: float) -> String: return "%d:%02d" % [int(s) / 60, int(s) % 60]
 
@@ -1101,6 +1211,10 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 	w += 20.0; var h = lines.size() * 20.0 + 12.0 + (18.0 if b.who != "" else 0.0)
 	var wtop = cam + HUD_H + 4.0; var wbot = cam + view_h() - h - 10.0
 	if sim.war != null: wtop = maxf(wtop, cam - top_pad + float(sim.war.hud_y(self)) + 46.0)   # [camp] 對白框唔好俾影響力條遮住
+	if embed:   # [unify] 嵌入：講嘢嘅人唔喺鏡頭（或者喺原村子）就唔出框；框唔好落到出村門下面
+		if b.p.y > world_h() or b.p.y < cam - top_pad or b.p.y > cam - top_pad + H: return
+		wbot = minf(wbot, world_h() - h - 4.0)
+		if not hud_on: wtop = cam - top_pad + 8.0
 	var x = clampf(b.p.x, 6.0, FW - w - 6.0); var y = clampf(b.p.y - h, wtop, maxf(wtop, wbot))
 	for k2 in 6:
 		var hit = false
@@ -1251,12 +1365,18 @@ func tap(p: Vector2) -> void:
 		if sim.claim(sim.cur_goal()): _save()
 		return
 	if _hit("move", p): move_next(); return
+	if embed and _hit("quest", p):   # [unify] 精簡 HUD 嘅主線 → 原本任務條
+		var qb = main.get("quest_bar") if main != null else null
+		if qb != null:
+			var ev = InputEventMouseButton.new(); ev.button_index = MOUSE_BUTTON_LEFT; ev.pressed = true
+			qb.gui_input.emit(ev)
+		return
 	for kind in ["inc", "spd"]:
 		if _hit("boost:" + kind, p):
 			if not sim.use_boost(kind): _float(s2w(p + Vector2(0, 30)), MD.S("cd", "冷卻緊", "冷卻中"), Color("#ffb0a0"), 15)
 			return
 	if sim.war.tap(self, p): return   # [war] 出征掣／頭目
-	if p.y < top_pad + HUD_H: return
+	if p.y < top_pad + (EHUD_H if embed else HUD_H) and (not embed or hud_on): return
 	var sp = p; p = s2w(p)   # 以下世界座標
 	if sim.tap_foe(p): return
 	for key in _wbtns.keys():
