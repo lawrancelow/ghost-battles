@@ -266,16 +266,26 @@ static func sync() -> void:
 
 # ---------------- 4. 任務文字（移動村版；只換顯示，唔郁劇情）----------------
 const QTXT := {
-	"chop": ["把棺材板工場升到 %d 級（抬棺鬼順手斬槐木）", "把棺材板工場升到 %d 級（抬棺鬼順手砍槐木）"],
+	"chop": ["棺材板工場升到 %d 級（斬槐木）", "棺材板工場升到 %d 級（砍槐木）"],
 	"craftPlank": ["把棺材板工場升到 %d 級", "把棺材板工場升到 %d 級"],
-	"rice": ["把蒸籠台升到 %d 級（順手收糯米）", "把蒸籠台升到 %d 級（順手收糯米）"],
+	"rice": ["蒸籠台升到 %d 級（收糯米）", "蒸籠台升到 %d 級（收糯米）"],
 	"craftBun": ["把蒸籠台升到 %d 級", "把蒸籠台升到 %d 級"],
 }
 const BTXT := {
-	"plank": ["開棺材板工場", "開棺材板工場"], "bun": ["開蒸籠台", "開蒸籠台"], "home": ["開守夜台（陰兵有地方企）", "開守夜台（陰兵有地方站）"],
-	"camp": ["開守夜台（主公 5 級後兼做嚇人訓練）", "開守夜台（主公 5 級後兼做嚇人訓練）"], "store": ["拔營一次或者各台合共升到 20 級（倉庫跟大屋擴建）", "拔營一次或各台合計升到 20 級（倉庫隨大屋擴建）"],
-	"altar": ["打低餓鬼王（招魂台喺後院自動起好）", "打倒餓鬼王（招魂台在後院自動建好）"], "furnace": ["升到 6 級（化寶爐喺後院自動起好）", "升到 6 級（化寶爐在後院自動建好）"],
+	"plank": ["開棺材板工場", "開棺材板工場"], "bun": ["開蒸籠台", "開蒸籠台"], "home": ["開守夜台（陰兵）", "開守夜台（陰兵）"],
+	"camp": ["開守夜台＋主公 5 級", "開守夜台＋主公 5 級"], "store": ["拔營一次或各台合共 20 級", "拔營一次或各台合計 20 級"],
+	"altar": ["打低餓鬼王（後院招魂台）", "打倒餓鬼王（後院招魂台）"], "furnace": ["升到 6 級（後院化寶爐）", "升到 6 級（後院化寶爐）"],
 }
+# 任務條顯示進度：bLevel（台對應嘅舊建築）顯示台等級／目標台等級；其他照舊
+static func quest_disp(q, p: Array) -> Array:
+	if not on() or not (q is Dictionary) or str(q.get("t", "")) != "bLevel": return p
+	var m = {"wood": ["planks", 10], "plank": ["planks", 10], "rice": ["buns", 10], "bun": ["buns", 10], "home": ["troops", 10], "camp": ["troops", 15]}
+	var b = str(q.get("b", ""))
+	if not m.has(b): return p
+	var tgt = maxi(1, int((J.num(q.get("n", 1)) - 1) * m[b][1]))
+	if J.num(p[0]) >= J.num(p[1]): return [tgt, tgt]
+	return [minf(role_lv(m[b][0]), tgt - 1), tgt]
+
 static func quest_text(q) -> String:
 	var txt = str(J.gp(q, "text"))
 	if not on() or not (q is Dictionary): return txt
@@ -289,9 +299,10 @@ static func quest_text(q) -> String:
 		if nm.has(b):
 			var n = int(J.num(q.get("n", 1)))
 			var lvn = maxi(1, int((n - 1) * nm[b][1]))
-			return T("把%s升到 %d 級（後院%s跟住升到 Lv%d）" % [nm[b][0], lvn, nm[b][2], n], "把%s升到 %d 級（後院%s隨之升到 Lv%d）" % [nm[b][0], lvn, nm[b][2], n])
-		if b == "house" or b == "store": return T("%s（拔營／各台升級令紙紮大屋擴建）" % txt, "%s（拔營／各台升級讓紙紮大屋擴建）" % txt)
-	if t == "assign": return T("%s（移動村生產台都算）" % txt, "%s（移動村生產台也算）" % txt)
+			return T("把%s升到 %d 級" % [nm[b][0], lvn], "把%s升到 %d 級" % [nm[b][0], lvn])
+		if b == "house": return T("紙紮大屋擴建到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))), "紙紮大屋擴建到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))))
+		if b == "store": return T("大屋倉庫擴到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))), "大屋倉庫擴到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))))
+	if t == "assign": return T("派 %d 隻鬼去生產台打工" % int(J.num(q.get("n", 1))), "派 %d 隻鬼去生產台打工" % int(J.num(q.get("n", 1))))
 	return txt
 
 # ---------------- 5. 員工互斥 ----------------

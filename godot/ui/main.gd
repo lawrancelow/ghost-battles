@@ -191,7 +191,7 @@ func _staged_reveal() -> void:
 		if c != loading and c is CanvasItem and c.visible: top_items.append(c); c.visible = false
 	var w = village.get("world")
 	var w_items = []
-	if w is Node2D:
+	if w is Node2D and village.visible:   # 移動村開住時舊村子收埋：唔好收佢啲子節點（否則轉返舊村子會一片黑）
 		for c in w.get_children():
 			if c is CanvasItem and c.visible: w_items.append(c); c.visible = false
 	for c in top_items:
@@ -335,7 +335,7 @@ func _build_village() -> void:
 			var q = G.quest_cur()
 			if q and q.go == "roster": open_roster(); return
 			if mv_on():
-				if q and q.get("t") == "stage": close_sheet(); J.mc(J.G.get("World"), "open", []); return
+				if q and (q.get("t") == "stage" or q.get("go") == "gate"): close_sheet(); J.mc(J.G.get("World"), "open", []); return
 				close_sheet(); _nav_on("village"); return
 			var p = J.mc(J.G.get("Village"), "questTarget", [])
 			if p: close_sheet(); J.mc(J.G.get("Village"), "focus", [p[0], p[1]]))
@@ -462,6 +462,7 @@ func refresh() -> void:
 	if q:
 		var p = G.quest_progress(q)
 		var a = minf(float(p[0]), float(p[1]))
+		if mv_on(): p = MVB.quest_disp(q, p); a = minf(float(p[0]), float(p[1]))
 		quest_lbl.text = MVB.quest_text(q) if mv_on() else q.text; quest_prog.text = "%d/%d" % [int(a), int(p[1])]
 		quest_prog.add_theme_color_override("font_color", Color("#2e6d3a") if float(p[0]) >= float(p[1]) else UIKit.CINNABAR2)
 	else: quest_lbl.text = "第一季完。村子由你慢慢經營。" if S.ended else "—"; quest_prog.text = ""

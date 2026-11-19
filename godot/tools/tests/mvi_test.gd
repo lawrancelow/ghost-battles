@@ -69,8 +69,14 @@ func all(t) -> void:
 	# 介紹（等標題／手機）
 	m._hide_title(); await _w(t, 1.5)
 	var st = m.get("story")
-	_chk("介紹已排／已顯示", int(J.num(S.get("mv_intro", 0))) == 2, S.get("mv_intro"))
-	await _w(t, 1.0); await _shot(t, "02_old_intro")
+	# 其他劇情（例如章節 onStart）播緊就等佢播完先輪到介紹：跳過其他劇情，等介紹出現
+	var seen_intro = false
+	for i in 30:
+		if int(J.num(S.get("mv_intro", 0))) == 2 and st.get("cur") != null and not seen_intro:
+			seen_intro = true; await _w(t, 0.8); await _shot(t, "02_old_intro"); break
+		if st.get("cur") != null: st.skip_scene()
+		await _w(t, 0.5)
+	_chk("介紹（等其他劇情播完）有彈", seen_intro and int(J.num(S.get("mv_intro", 0))) == 2, S.get("mv_intro"))
 	await _skip(t, 6)
 	await _shot(t, "03_old_home")
 	# 虛擬建築只升唔跌
@@ -142,6 +148,9 @@ func all(t) -> void:
 	# ---------- 6. 開關關咗用返舊村子 ----------
 	m.set_mv(false); await _w(t, 2.0)
 	_chk("開關關：舊村子畫面", m.village.visible and not m.mv_host.visible)
+	var wv = 0
+	for c in m.village.world.get_children(): if c.visible: wv += 1
+	_chk("開關關：舊村子有畫嘢（world 子節點可見）", wv >= 4, wv)
 	_chk("開關關：前線用返舊算法", GR(t).frontline() == B.front_by_progress(), GR(t).frontline())
 	var r3 = J.cl(J.G.get("ratesPerMin"), null, [])
 	_chk("開關關：冇移動村副產出", absf(J.num(r3.buns) - J.num(J.cl(J.G.get("__mv_rates_orig"), null, []).buns)) < 0.001)
