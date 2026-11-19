@@ -7,6 +7,7 @@
 extends RefCounted
 
 const FURNACE_CD := 300.0
+const JOSS = preload("res://game/joss/joss.gd")   # [joss] 化寶爐＝陽間包裹
 const FEAST_CD := 1200.0
 const FEAST_NEED := 350.0
 static var _trans = null
@@ -299,7 +300,7 @@ static func bld_unlocked(id) -> bool:
 static func furnace_ready():
 	var S = _S(); var f = S.bld.get("furnace")
 	if not J.t(f): return f
-	return J.now() - J.num(S.furnaceAt) >= FURNACE_CD * 1000 / J.num(_g("TIME_SCALE"))
+	return JOSS.ready()   # [joss] 有陽間包裹等收（舊：冷卻 5 分鐘燒冥幣）
 static func stand_ok(st) -> bool: return not J.t(J.gp(st, "need")) or J.t(_S().seen.get(J.str(J.gp(st, "need"))))
 
 static func offline_gain() -> void:
@@ -370,6 +371,7 @@ static func v_tap(this_, x: float, y: float) -> void:
 		if Wd != null: J.mc(Wd, "open", [])
 		else: J.mc(UI, "open", ["battle"])
 		return
+	if k == "bld" and J.str(h.id) == "furnace" and JOSS.count() > 0: load("res://game/joss/joss_ui.gd").open_next(); return   # [joss] 有包裹：撳爐直接收件
 	if k == "bld": J.mc(UI, "openBuilding", [h.id])
 
 static func v_walk_to(this_, x: float, y: float, target) -> void:
@@ -1226,7 +1228,7 @@ static func n_bld(id) -> Dictionary:
 	if sid == "plank" or sid == "bun":
 		var src = "wood" if sid == "plank" else "rice"
 		o["craft"] = {"src": _g("RES_NAMES")[src], "have": S.res[src], "can": floor(J.num(S.res[src]) / 4), "label": "槐木 → 2 棺材板" if sid == "plank" else "糯米 → 2 壽包"}
-	if sid == "furnace": o["furnace"] = {"left": _left(J.num(F.furnaceCD), S.furnaceAt), "coins": J.mc(F, "furnaceCoins", [])}
+	if sid == "furnace": o["furnace"] = JOSS.sig()   # [joss] 面板由 game/joss/joss_ui.gd 畫
 	if sid == "altar":
 		var c = J.mc(F, "recruitCost", []); var fc = J.num(_c("fodderCount")); var rc = J.num(J.mc(F, "rosterCap", []))
 		o["altar"] = {"cost": _c("costText", [c]), "can": J.t(_c("canPay", [c])) and fc < rc, "cnt": fc, "cap": rc, "pool": _pool_names()}
@@ -1264,9 +1266,8 @@ static func n_bld_act(id, a, arg):
 		_snd("build"); _c("pay", [c]); S.bld[sid] = J.num(S.bld[sid]) + 1; _c("gainExp", [10 + 8 * J.num(S.bld[sid])]); _fx("banner", ["%s 升到 Lv %s" % [J.str(B.name), J.str(S.bld[sid])]]); J.mc(_g("Quest"), "check", [])
 	if act == "craft":
 		m(UI, "close"); J.mc(_V(), "craft", [id, J.num(arg) if J.t(J.num(arg)) else 1.0]); return "close"
-	if act == "burn":
-		if not J.t(_c("furnaceReady")): return null
-		_snd("coin"); J.mc(_g("JossFx"), "play", []); S["furnaceAt"] = J.now(); var c = J.num(J.mc(F, "furnaceCoins", [])); S.res["coins"] = J.num(S.res.coins) + c; _fx("toast", ["化寶爐燒出 <b>冥幣 %s</b>" % J.str(c)])
+	if act == "burn":   # [joss] 唔再燒冥幣：開陽間包裹
+		load("res://game/joss/joss_ui.gd").open_next(); return "close"
 	if act == "recruit":
 		if not J.t(_c("canPay", [J.mc(F, "recruitCost", [])])) or J.num(_c("fodderCount")) >= J.num(J.mc(F, "rosterCap", [])): return null
 		_snd("whoosh"); _c("pay", [J.mc(F, "recruitCost", [])]); var g = _c("recruitFodder", [false]); S.cnt["recruit"] = J.num(S.cnt.recruit) + 1; _fx("toast", ["招來了 <b>%s</b>（%s）" % [J.str(g.name), J.str(g.q)]]); J.mc(_g("Quest"), "check", [])

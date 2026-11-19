@@ -309,7 +309,7 @@ func bldUnlocked(id: String) -> bool:
 				break
 	return true
 func furnaceReady() -> bool:
-	return float(S.bld.furnace) > 0 and now_ms() - float(S.furnaceAt) >= furnaceCD * 1000 / TIME_SCALE
+	return float(S.bld.furnace) > 0 and load("res://game/joss/joss.gd").count() > 0   # [joss] 有陽間包裹等收
 
 # ---------------- 任務 ----------------
 func quest_cur() -> Variant:

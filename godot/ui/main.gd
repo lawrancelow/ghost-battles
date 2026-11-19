@@ -319,6 +319,7 @@ func _build_village() -> void:
 	mv_back = UIKit.btn("後院", "", true); mv_back.add_theme_font_size_override("font_size", 14)
 	mv_back.anchor_left = 1; mv_back.anchor_right = 1; mv_back.offset_left = -70; mv_back.offset_right = -8; mv_back.offset_top = 6; mv_back.offset_bottom = 40
 	mv_back.pressed.connect(open_backyard)
+	load("res://game/joss/joss_ui.gd").attach(self, mv_back)   # [joss] 後院掣角標（青煙＋數字）＋新包裹提示
 	quest_bar = PanelContainer.new()
 	var s = UIKit.sb(UIKit.PAPER, 2, UIKit.PAPERLINE, 1, Vector4(7, 7, 12, 7)); s.shadow_color = Color(0, 0, 0, 0.35); s.shadow_size = 0; s.shadow_offset = Vector2(0, 3)
 	quest_bar.add_theme_stylebox_override("panel", s)
@@ -361,7 +362,7 @@ func _build_top() -> void:
 	var snd = UIKit.btn("聲", "", true); snd.anchor_left = 1; snd.anchor_right = 1; snd.offset_left = -35; snd.offset_right = -9; snd.offset_top = 6; snd.offset_bottom = 30; snd.add_theme_font_size_override("font_size", 12)
 	snd.text = "聲" if Snd.is_on() else "靜"
 	snd.pressed.connect(func(): snd.text = "聲" if Snd.toggle() else "靜"); top.add_child(snd)
-	var help = {"wood": "槐木：主公親手砍樹，或派鬼怪去[b]伐木場[/b]伐木。", "rice": "糯米：主公親手收割，或派鬼怪去[b]糯米田[/b]割稻。", "planks": "棺材板：在[b]棺材鋪[/b]把 2 槐木做成 1 板（力量高的鬼做得快）。藍箱也會開出。用來建造和升級建築。", "buns": "壽包：在[b]包子鋪[/b]把 2 糯米包成 1 個（智力高的鬼包得快）。綠箱也會開出。用來升級鬼怪、練陰兵。", "coins": "冥幣：打關卡、開紫箱、燒[b]化寶爐[/b]。Toyol 管倉庫時也會「撿到」冥幣。", "troops": "陰兵：村裡的遊魂見你有地盤，自願加入。[b]民宅[/b]越高級來得越快、上限越高。"}
+	var help = {"wood": "槐木：主公親手砍樹，或派鬼怪去[b]伐木場[/b]伐木。", "rice": "糯米：主公親手收割，或派鬼怪去[b]糯米田[/b]割稻。", "planks": "棺材板：在[b]棺材鋪[/b]把 2 槐木做成 1 板（力量高的鬼做得快）。藍箱也會開出。用來建造和升級建築。", "buns": "壽包：在[b]包子鋪[/b]把 2 糯米包成 1 個（智力高的鬼包得快）。綠箱也會開出。用來升級鬼怪、練陰兵。", "coins": "冥幣：打關卡、開紫箱、賣貨。Toyol 管倉庫時也會「撿到」冥幣。", "troops": "陰兵：村裡的遊魂見你有地盤，自願加入。[b]民宅[/b]越高級來得越快、上限越高。"}   # [joss] 化寶爐唔再燒冥幣
 	for k in ["wood", "rice", "planks", "buns", "coins", "troops"]:
 		var cell = PanelContainer.new(); cell.custom_minimum_size = Vector2(0, 26); cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var cs = StyleBoxFlat.new(); cs.bg_color = Color("#1f3c36"); cs.border_color = Color("#4f8076"); cs.set_border_width_all(1); cs.set_corner_radius_all(3)
@@ -380,7 +381,7 @@ func _build_top() -> void:
 		grid.add_child(cell)
 	top.resized.connect(func(): exp_bar.size.x = top.size.x - 76 - 116)
 
-const MV_HELP := {"wood": "槐木：[b]棺材板工場[/b]嘅抬棺鬼順手斬槐木（大部分即刻做成棺材板）。", "rice": "糯米：[b]蒸籠台[/b]順手收糯米（大部分即刻蒸成壽包）。", "planks": "棺材板：[b]棺材板工場[/b]出（2 槐木 → 1 板），紙紮大屋都會自己出少少。藍箱也會開出。用嚟升級後院建築、分村車隊。", "buns": "壽包：[b]蒸籠台[/b]出（2 糯米 → 1 包），紙紮大屋都會自己出少少。綠箱也會開出。用嚟升級鬼怪、派宵夜、練嚇功。", "coins": "冥幣：大排檔賣貨收錢、打關卡、開紫箱、燒化寶爐（後院）。", "troops": "陰兵：[b]守夜台[/b]出，台越高級、員工越多來得越快。夜班巡陰時每 25 個跟一隊。"}
+const MV_HELP := {"wood": "槐木：[b]棺材板工場[/b]嘅抬棺鬼順手斬槐木（大部分即刻做成棺材板）。", "rice": "糯米：[b]蒸籠台[/b]順手收糯米（大部分即刻蒸成壽包）。", "planks": "棺材板：[b]棺材板工場[/b]出（2 槐木 → 1 板），紙紮大屋都會自己出少少。藍箱也會開出。用嚟升級後院建築、分村車隊。", "buns": "壽包：[b]蒸籠台[/b]出（2 糯米 → 1 包），紙紮大屋都會自己出少少。綠箱也會開出。用嚟升級鬼怪、派宵夜、練嚇功。", "coins": "冥幣：大排檔賣貨收錢、打關卡、開紫箱。", "troops": "陰兵：[b]守夜台[/b]出，台越高級、員工越多來得越快。夜班巡陰時每 25 個跟一隊。"}   # [joss] 化寶爐唔再燒冥幣
 
 func _build_nav() -> void:
 	var nav = Panel.new(); nav.anchor_top = 1; nav.anchor_bottom = 1; nav.anchor_right = 1; nav.offset_top = -NAV_H
@@ -526,7 +527,8 @@ func open_backyard() -> void:
 	for id in D.BLD_ORDER:
 		var lv = int(S.bld.get(id, 0)); var bid: String = id
 		var b = _act(UIKit.btn("打開", "", true), func(): open_building(bid), lv > 0 or G.bldUnlocked(bid))
-		_row("[b]%s[/b]　%s" % [D.BUILDINGS[id].name, ("Lv %d" % lv) if lv > 0 else "未有"], [b])
+		var jn = load("res://game/joss/joss.gd").count() if id == "furnace" and lv > 0 else 0   # [joss]
+		_row("[b]%s[/b]　%s" % [D.BUILDINGS[id].name, ("Lv %d" % lv) if lv > 0 else "未有"] + ("　[color=#9c2219]有 %d 件陽間包裹[/color]" % jn if jn > 0 else ""), [b])   # [joss]
 	var sw = UIKit.btn("暫時用返舊村子畫面", "ghost"); sheet_body.add_child(sw)
 	sw.pressed.connect(func(): close_sheet(); set_mv(false); show_toast("已轉返舊村子畫面。喺「劇情」頁可以轉返移動村。"))
 
@@ -617,11 +619,7 @@ func _render_building(id: String) -> void:
 			var nn: int = n
 			bs.append(_act(UIKit.btn("做%d份" % n if n == 1 else "一次做%d份" % n, "", true), func(): close_sheet(); _nav_on("village"); J.mc(J.G.get("Village"), "craft", [id, nn]), can >= 1))
 		_row("親手做：每份 4 %s　好評 +1\n[font_size=12]現有%s %d，夠做 %d 份[/font_size]" % ["槐木 → 2 棺材板" if id == "plank" else "糯米 → 2 壽包", D.RES_NAMES[src], int(S.res[src]), can], bs)
-	if id == "furnace":
-		var left = maxf(0, G.furnaceCD - (G.now_ms() - float(S.furnaceAt)) * G.TIME_SCALE / 1000)
-		_row(("還要 %d 分鐘" % int(ceil(left / 60)) if left > 0 else "爐火正旺！") + "　可燒出 冥幣 %d" % G.furnaceCoins(), [_act(UIKit.btn("燒", "gold"), func():
-			if not G.furnaceReady(): return
-			S.furnaceAt = G.now_ms(); var c3 = G.furnaceCoins(); S.res.coins = float(S.res.coins) + c3; show_toast("化寶爐燒出 [b]冥幣 %d[/b]" % c3); re.call(), left <= 0)])
+	if id == "furnace": load("res://game/joss/joss_ui.gd").panel(sheet_body, func(): _render_building(id))   # [joss] 陽間包裹
 	if id == "altar":
 		var rc = G.recruitCost()
 		_row("招魂一次：%s\n[font_size=12]雜鬼名額 %d/%d（升級民宅增加；收服的名鬼不佔名額）[/font_size]" % [G.costText(rc), G.fodderCount(), G.rosterCap()], [_act(UIKit.btn("招魂", "gold"), func():

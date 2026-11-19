@@ -167,10 +167,7 @@ static func _draw_bld(id: String, d) -> void:
 		var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 4)
 		for b in bs: hb.add_child(b)
 		vb.add_child(hb); _body().add_child(vb); _body().add_child(UIKit.hsep())
-	var fu = d.get("furnace")
-	if fu != null:
-		var left = J.num(fu.left)
-		_row(("還要 %d 分鐘" % int(ceil(left / 60)) if left > 0 else "爐火正旺！") + "　可燒出 冥幣 %d" % int(J.num(fu.coins)), [_btn("燒", "gold", left <= 0, func(): _act_bld(id, "burn"))])
+	if d.get("furnace") != null: load("res://game/joss/joss_ui.gd").panel(_body(), func(): _render_bld(id, true))   # [joss] 陽間包裹
 	var al = d.get("altar")
 	if al != null:
 		_row("招魂一次：%s\n[font_size=12]雜鬼名額 %d/%d（升級民宅增加；收服的名鬼不佔名額）[/font_size]" % [bb(al.cost), int(J.num(al.cnt)), int(J.num(al.cap))], [_btn("招魂", "gold", J.t(al.can), func(): _act_bld(id, "recruit"))])
