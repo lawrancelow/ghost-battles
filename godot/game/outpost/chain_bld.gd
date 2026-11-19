@@ -13,6 +13,7 @@ extends RefCounted
 
 const M = preload("res://game/outpost/mat.gd")
 const CE = preload("res://game/outpost/chain_eco.gd")
+const VF = preload("res://game/village_fence.gd")   # [village2]
 const OLD_WH := 1130.0
 const FENCE_Y := 1168.0
 const ROW0 := 1290.0
@@ -405,6 +406,10 @@ static func _wrap_village(V: Dictionary) -> void:
 		var r = J.cl(o_walk, me, a)
 		var wh = world_h(); var y = J.num(J.arg(a, 1))
 		if wh > OLD_WH and y > OLD_WH - 10 and me.get("hero") is Dictionary: me.hero["ty"] = minf(wh - 10, y)
+		if me.get("hero") is Dictionary:   # [village2] 柵欄：阿福留喺村子嗰邊
+			var H = me.hero
+			var to = VF.clamp_to(Vector2(J.num(H.get("x")), J.num(H.get("y"))), Vector2(J.num(H.get("tx")), J.num(H.get("ty"))))
+			H["tx"] = to.x; H["ty"] = maxf(to.y, VF.Y + 24.0)
 		return r
 	var ws = func(t, a):
 		var r = J.cl(o_ws, t, a)

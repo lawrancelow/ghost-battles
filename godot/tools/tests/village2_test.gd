@@ -93,7 +93,7 @@ func shots0(t) -> void:
 	S.mv["ci"] = 2.0
 	await _calm(t)
 	_p("viewport %s village %s" % [t.get_viewport().get_texture().get_image().get_size(), m.village.get_global_rect()])
-	await long_shot(t, m, "quick_long")
+	_cam(-220.0); await _w(t, 1.0); await _shot(t, "q_gate")
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
 # 重烘地面：村子（780×2260）＋拓展區（780×3200，ext 模式，世界 y 1130 起）

@@ -8,6 +8,7 @@ const W := 390.0
 const WH := 1130.0
 const CB = preload("res://game/outpost/chain_bld.gd")   # 後院拓展建築（生產鏈）
 const VS = preload("res://game/village_style.gd")   # [villageart] 新畫風：血霧／夜色／調色
+const VF = preload("res://game/village_fence.gd")   # [village2] 出村門樓左右柵欄
 
 var V: Dictionary
 var world: Node2D
@@ -136,6 +137,7 @@ func _sync_statics() -> void:
 			var rx = gp[0] - bw / 2; var ry = gp[1] + 6 - h
 			var r = 7 + sin(t * 5) * 1.2
 			ctx.fillStyle = "#e8303a"; ctx.strokeStyle = "#fff3e0"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(rx + bw * 0.78, ry + h * 0.52, r, 0, 7); ctx.fill(); ctx.stroke())
+	_static("vfence", VF.Y - 1.0, 0, false, func(ctx): VF.draw(ctx, t))   # [village2] 柵欄（出村門 y 118 畫喺佢前面）
 	var bunl = J.G.get("bldUnlocked"); var BUILDINGS = J.G.get("BUILDINGS")
 	for id in J.G.get("BLD_ORDER"):
 		var p = POS[id]; var lv = S.bld.get(id, 0)
@@ -247,6 +249,7 @@ func _draw_lily(c: CanvasItem) -> void:
 	var ctx = Ctx.new(c)
 	for i in 9:
 		var fx = fmod(i * 47 + 20, W); var fy = 24 + fmod(i * 31, 112)
+		if absf(fy - VF.Y) < 22 and not VF.in_gap(fx): continue   # [village2] 柵欄位唔種花（唔好疊住柵欄）
 		if fy > cam_y - 20 and fy < cam_y + size.y / sc + 20: Art.draw_lily(ctx, fx, fy, t + i)
 
 func _draw_mist(c: CanvasItem) -> void:
