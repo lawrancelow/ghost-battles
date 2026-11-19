@@ -463,18 +463,23 @@ func _gait(k: String, e: Dictionary, m: Dictionary, o: Dictionary, tf: Dictionar
 		"drunk":
 			tf["r"] = sin(t * 2.3) * 0.15; tf["dx"] = sin(t * 1.7) * 5.0
 			if fmod(t, 2.6) < 0.05: fx.append(["hic"])
-		"sneak":
+		"sneak":   # 膽小鬼／嚇死鬼：躡手躡腳，一陣回頭驚
 			tf["sy"] = 0.9; tf["sx"] = 1.05; tf["r"] = 0.1
 			if fmod(w, 1.8) > 1.45: o["flip"] = not o.get("flip", false)
+			if k == "n30_xiasi" and fmod(w, 3.6) > 1.45 and fmod(w, 3.6) < 1.5: fx.append(["say", "！"])
 		"glance":   # 車禍鬼：行兩步、回頭望（打量後面有冇車）
 			if fmod(w, 1.9) > 1.5: o["flip"] = not o.get("flip", false); tf["r"] = -0.06
+			if fmod(w, 3.8) > 1.5 and fmod(w, 3.8) < 1.55: fx.append(["say", "叭叭？"])
 		"trip": pass
 		"moon":   # Churel：雙腳反轉——面向同行嘅方向相反
 			o["flip"] = not o.get("flip", false)
 		"waddle":
 			tf["r"] = sin(t * 6.0) * 0.1; tf["sx"] = 1.06; tf["sy"] = 0.97
-		"shuffle":
+		"shuffle":   # 餓鬼／窮鬼弓身拖步；食物中毒鬼：急住搵廁所，揼住個肚冒汗
 			tf["r"] = 0.12 + sin(t * 9.0) * 0.04; tf["sy"] = 0.94
+			if k == "n30_shidu":
+				o["t"] = float(o.get("t", 0.0)) * 1.6
+				if fmod(w, 0.9) < 0.04: fx.append(["sweatp"])
 		"stomp":
 			tf["sy"] = 1.0 - absf(sin(t * 4.5)) * 0.04
 			if fmod(w, 0.7) < 0.05: fx.append(["dust"])
@@ -530,6 +535,8 @@ func _gait_fx(sc, k: String, e: Dictionary, fx: Array) -> void:
 			"land": puff(e.pos.x, e.pos.y, "#8a7458", 3, 22.0, 0.45, 3.5)
 			"smoke": puff(e.pos.x, e.pos.y - 52.0, "#5a5a62", 1, 12.0, 1.0, 4.0)
 			"hic": ftxt(e.pos.x + 12.0, e.pos.y - 70.0, "嗝", "#ffb0a0", 0.9)
+			"say": ftxt(e.pos.x + 14.0, e.pos.y - 74.0, str(f[1]), "#ffd27a", 0.9)
+			"sweatp": drop(e.pos.x + 10.0, e.pos.y - 56.0, "rgba(160,215,255,.95)", 20.0)
 			"zapfx":
 				for i in 5: _add({"k": "spark", "x": e.pos.x + _rng.randf_range(-14, 14), "y": e.pos.y - _rng.randf_range(30, 64), "vx": _rng.randf_range(-40, 40), "vy": _rng.randf_range(-40, 0), "life": 0.3, "c": "#bfe8ff"})
 			"zz": ftxt(e.pos.x + 14.0, e.pos.y - 68.0, "z", "#c8d8ff", 1.0)
