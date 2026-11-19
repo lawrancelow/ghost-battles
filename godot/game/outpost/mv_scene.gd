@@ -11,6 +11,7 @@ const FX = preload("res://game/outpost/mv_fx.gd")
 const M = preload("res://game/outpost/mat.gd")   # [chain]
 const IDL = preload("res://game/outpost/mv_idle.gd")   # [idle]
 const MIST = preload("res://game/outpost/mv_mist.gd")   # [unify] 血霧（mapart 線）：台、櫃台底
+const MOT = preload("res://game/outpost/mv_motion.gd")   # [motion] 角色特別動作
 const FW := 390.0
 const GOLD := Color("#f3d68a")
 const INK := Color("#2b1d12")
@@ -66,6 +67,7 @@ const HUD_H := 90.0
 const AMB_GHOSTS := 2
 const AMB_FLY := 3
 var story = null   # [story] 劇本接駁（game/outpost/mv_story.gd）：beat、客人／惡鬼氣泡
+var mot = null   # [motion] 角色特別動作（mv_motion.gd）
 var camp = null   # [camp] 營地（原本村子嘅建築，喺地圖底）：game/outpost/mv_camp.gd
 # [unify] 嵌入模式（合一地圖）：由 game/outpost/mv_embed.gd 掛入村子畫面（ui/nv_village.gd），
 #   大排檔區世界 y 0..EH ＝ 村子 y -EH..0；鏡頭跟村子（embed 每格設 cam）；唔自己處理拖動／點擊（村子轉發 tap）；
@@ -140,6 +142,7 @@ func _build() -> void:
 	if frame != null: return
 	sim = SIM.new()
 	story = load("res://game/outpost/mv_story.gd").new()   # [story]
+	mot = MOT.new()   # [motion]
 	if not embed: camp = load("res://game/outpost/mv_camp.gd").new(); camp.sc = self   # [camp]（[unify] 嵌入模式取消營地）
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); mouse_filter = Control.MOUSE_FILTER_IGNORE if embed else Control.MOUSE_FILTER_STOP
 	clip_contents = true
@@ -188,7 +191,9 @@ func world_h() -> float: return maxf(float(sim.L.get("h", 844)), camp.bottom()) 
 #   邊個位冇遮住台名牌／台／營地建築就用邊個（而家用緊嘅位冇遮就唔郁，避免閃）
 var _plates: Array = []
 var _cb_pos = null
+var _cb_sz := Vector2.ZERO   # [play]
 func chain_btn_pos(sz: Vector2) -> Vector2:
+	_cb_sz = sz   # [play] 記低掣大細（對白框要避開）
 	var y0 = (float(sim.war.hud_y(self)) if sim != null and sim.war != null else top_pad + HUD_H) + 48.0
 	var cands = [Vector2(FW - sz.x - 8.0, y0), Vector2(8.0, y0)]
 	for k in range(1, 4): cands.append_array([Vector2(FW - sz.x - 8.0, y0 + 110.0 * k), Vector2(8.0, y0 + 110.0 * k)])
@@ -267,6 +272,7 @@ func _process(dt: float) -> void:
 	if camp != null: camp.step(dt)   # [camp]
 	if story != null and anim == null: story.tick(self, dt)   # [story]
 	_eat_events()
+	if mot != null: mot.step(self, dt)   # [motion]
 	_step_fx(dt)
 	# HUD 冥幣追真數（飛緊嘅錢到咗先跳）
 	var real = sim.coins()
@@ -484,6 +490,7 @@ func _draw_stage() -> void:
 			var ww = w
 			items.append([w.pos.y, func(): _draw_worker(ctx, ww)])
 	if embed and embed_draw != null: embed_draw.call(ctx, vy0, vy1, items)   # [unify] 留位、挑夫鬼（入 y 排序）
+	if mot != null and not walking: mot.add_items(self, ctx, items, vy0, vy1)   # [motion] 粒子、領班
 	items.sort_custom(func(a, b): return a[0] < b[0])
 	for it in items: it[1].call()
 	sim.war.draw_world(self, ctx, vy0, vy1)   # [war] 義勇軍＋霸檔標記
@@ -502,6 +509,7 @@ func _draw_stage() -> void:
 	if embed:   # [unify] 對白框避開台名牌、台
 		for q in _plates: _brects.append(q.grow(2))
 		for kk in _wbtns: if kk.begins_with("st:"): _brects.append(_wbtns[kk])
+	_brects.append_array(sim.plus.avoid_rects(self))   # [play] 對白框避開事件名同右上「生產鏈」掣
 	for b in bubbles: _draw_bubble(ctx, b)
 	if embed and anim != null:   # [unify] 拔營：大排檔區＋村外區淡出、換圖、淡入（原村子唔變）
 		var fa = clampf(1.0 - absf(float(anim.t) - A_SWAP) / 1.8, 0.0, 1.0)
@@ -766,6 +774,7 @@ func _map_label(ctx: Ctx) -> void:   # 畫面座標（HUD 下面）
 
 func _draw_foe(ctx: Ctx, f: Dictionary) -> void:
 	if f.get("boss", false): sim.war.draw_boss(self, ctx, f); return   # [war]
+	if mot != null and mot.foe(self, ctx, f): return   # [motion]
 	var a = 0.92
 	if f.st == "die": a = maxf(0.0, 0.92 - f.t * 1.3)
 	var y = f.pos.y + float(f.get("bob", 0.0)) + sin(t * 2.2 + f.ph) * 2.0
@@ -782,7 +791,7 @@ func _draw_foe(ctx: Ctx, f: Dictionary) -> void:
 func _draw_guard(ctx: Ctx, g: Dictionary) -> void:
 	var o = {"t": t + g.ph, "walk": g.get("walk", false), "flip": g.get("flip", false), "tamed": true, "shadow": true}
 	if g.atk > 0.0: o["atk"] = true
-	Art.draw_char(ctx, str(g.k), g.pos.x, g.pos.y, CS * 0.95, o)
+	if mot == null or not mot.guard(self, ctx, g, o): Art.draw_char(ctx, str(g.k), g.pos.x, g.pos.y, CS * 0.95, o)   # [motion]
 	_txt(ctx, MD.S("guard_tag", "守夜", "守夜"), g.pos.x, g.pos.y + 12, 14, Color("#ffd27a"), "center", 900, 4)
 
 func _draw_guard_slots(ctx: Ctx) -> void:
@@ -834,19 +843,27 @@ func _draw_counter(ctx: Ctx, fk: float) -> void:
 		for i in 6: Art.rr(ctx, x0 + 10 + i * 30, y - 14, 18, 18, 3, "rgba(255,210,120,.12)", "rgba(242,192,96,.5)", 1)
 		_txt(ctx, MD.S("counter", "陰間大排檔", "陰間大排檔"), (x0 + x1) / 2.0, y - 4, 15, GOLD, "center", 900, 3, "serif")
 	# 櫃台面疊貨
-	for gid in sim.goods_list():
+	# [play] 貨種多、格太窄（< 34px）：每格只疊細堆，唔逐格寫數，改喺櫃台中間寫一個「×總數」（免得數字黐埋爆格）
+	var gl = sim.goods_list(); var tight = (x1 - x0 - 52.0) / maxf(1.0, gl.size()) < 34.0; var tot = 0
+	for gid in gl:
 		var n = sim.counter_n(gid); if n <= 0: continue
+		tot += n
 		var p = sim.counter_slot(gid)
-		var vis = mini(n, 5)
-		for i in vis: _icon(ctx, gid, p.x + (i % 2) * 6.0 - 3.0, p.y - i * 6.0, 26.0)
-		_txt(ctx, "%d" % n, p.x + 16, p.y + 6, 15, Color.WHITE, "center", 900, 4)
+		var vis = mini(n, 3 if tight else 5)
+		for i in vis: _icon(ctx, gid, p.x + (i % 2) * 4.0 - 2.0, p.y - i * 6.0, 22.0 if tight else 26.0)
+		if not tight: _txt(ctx, "%d" % n, p.x + 16, p.y + 6, 15, Color.WHITE, "center", 900, 4)
+	if tight and tot > 0:
+		var lb = "×%s" % MD.fmt(tot); ctx.font = "900 15px sans-serif"; var lw = ctx.measureText(lb).width + 16.0
+		Art.rr(ctx, (x0 + x1) / 2.0 - lw / 2.0, y - 11, lw, 22, 8, "rgba(20,10,8,.85)", "#f2c060", 1.5)
+		_txt(ctx, lb, (x0 + x1) / 2.0, y, 15, Color.WHITE, "center", 900, 0)
 	ctx.restore()
 
 # ---------------- 客人 ----------------
 func _draw_cust(ctx: Ctx, c: Dictionary) -> void:
 	var o = {"t": t + c.ph, "walk": c.get("walk", false), "flip": c.get("flip", true), "alpha": 0.95}
-	if not sim.plus.act_draw(self, ctx, c, CS, o): Art.draw_char(ctx, str(c.k), c.pos.x, c.pos.y, CS, o)   # [play] 特別動作
-	if c.st == "out":
+	if not sim.plus.act_draw(self, ctx, c, CS, o):   # [play] 事件動作優先
+		if mot == null or not mot.cust(self, ctx, c): Art.draw_char(ctx, str(c.k), c.pos.x, c.pos.y, CS, o)   # [motion] 冇事件：種族專屬動作
+	if c.st == "out" and (mot == null or mot.happy(c)):   # [motion] 嬲走唔出 ♪
 		_txt(ctx, "♪", c.pos.x + 16, c.pos.y - 72 + sin(t * 6.0) * 3.0, 16, Color("#ffd27a"), "center", 900, 3)
 
 func _draw_want(ctx: Ctx, c: Dictionary) -> void:   # 頭頂氣泡：貨品圖示 × 仲要幾多
@@ -1033,6 +1050,7 @@ func _icon(ctx: Ctx, gid: String, x: float, y: float, sz: float) -> void:
 	_txt(ctx, nm.substr(nm.length() - 1, 1) if nm.length() else "?", x, y - sz / 2, maxi(14, int(sz * 0.6)), Color("#fff6e0"), "center", 900, 2)
 
 func _draw_worker(ctx: Ctx, w: Dictionary) -> void:
+	if mot != null and not mot.play_busy(w) and mot.worker(self, ctx, w): return   # [motion] 玩法線事件動作（偷食、打瞌睡……）優先
 	var o = {"t": t + w.ph, "tamed": true, "shadow": true, "walk": w.get("walk", false), "flip": w.get("flip", false)}
 	if w.st == "work" and not w.get("walk", false): o["work"] = true; o["flip"] = int(w.slot) % 2 == 1
 	if not sim.plus.act_draw(self, ctx, w, CS * 0.9, o): Art.draw_char(ctx, str(w.k), w.pos.x, w.pos.y, CS * 0.9, o)   # [play] 特別動作
@@ -1392,6 +1410,7 @@ func tap(p: Vector2) -> void:
 	if p.y < top_pad + (EHUD_H if embed else HUD_H) and (not embed or hud_on): return
 	var sp = p; p = s2w(p)   # 以下世界座標
 	if sim.tap_foe(p): return
+	if mot != null and mot.tap(self, p): return   # [motion] 撳醒瞓緊嘅領班
 	for key in _wbtns.keys():
 		if not _wbtns[key].has_point(p): continue
 		var a = key.split(":")
