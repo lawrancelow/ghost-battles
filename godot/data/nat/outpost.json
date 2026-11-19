@@ -101,7 +101,7 @@
     "二手棺材板盾",
     "二手棺材板盾"
    ],
-   "icon": "mvi_plank",
+   "icon": "mvi_plankshield",
    "price": 3600
   },
   "m_huajiao": {
@@ -125,7 +125,7 @@
     "蕉葉糯米卷",
     "蕉葉糯米卷"
    ],
-   "icon": "mvi_leaf",
+   "icon": "mvi_jiaoyejuan",
    "price": 864
   },
   "m_xianyu": {

@@ -270,6 +270,18 @@ RULES = {
 
 data = {"RULES": RULES, "MATS": MATS, "GATHER": GATHER, "WORKSHOPS": WORKSHOPS, "RECIPES": RECIPES, "CARRY": CARRY,
         "GEAR": GEAR, "BATTLE_ITEMS": BATTLE_ITEMS, "STRINGS": STRINGS}
+
+# [art] 主對話補圖（2026-11-19）：新材料圖示＋後院建築專屬圖
+ART_ICON = {"m_wellwater":"mvi_wellwater","m_bamboo":"mvi_bamboo_raw","m_coconut":"mvi_coconut","m_latex":"mvi_latex","m_tealeaf":"mvi_tealeaf",
+ "m_straw":"mvi_straw_raw","m_bananaleaf":"mvi_bananaleaf","m_fish":"mvi_fish","m_newspaper":"mvi_newspaper","m_toner":"mvi_toner","m_bao":"mvi_baozi",
+ "m_paper":"mvi_paper","m_strip":"mvi_strip","m_cocomilk":"mvi_cocomilk","m_rubbersheet":"mvi_rubbersheet","m_rope":"mvi_rope","m_pulp":"mvi_pulp","m_ink":"mvi_ink",
+ "m_jiaoye":"mvi_jiaoyejuan","m_jiuban":"mvi_plankshield"}
+for _m, _k in ART_ICON.items():
+    if _m in data.get("MATS", {}): data["MATS"][_m]["icon"] = _k
+for _sec in ("GATHER", "WORKSHOPS"):
+    for _b, _d in data.get(_sec, {}).items():
+        if _d.get("old"): continue
+        _d["art"] = "vb_" + _b[2:]
 with open(OUT, "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, indent=1)
 print("ok mats", len(MATS), "gather", len(GATHER), "ws", len(WORKSHOPS), "recipes", len(RECIPES), "carry", CARRY,

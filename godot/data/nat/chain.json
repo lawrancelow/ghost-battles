@@ -40,7 +40,7 @@
     "枯井水"
    ],
    "tier": 1,
-   "icon": "mvs_well",
+   "icon": "mvi_wellwater",
    "price": 0.5,
    "res": "",
    "how": [
@@ -55,7 +55,7 @@
     "後山竹"
    ],
    "tier": 1,
-   "icon": "mvi_bamboo",
+   "icon": "mvi_bamboo_raw",
    "price": 0.5,
    "res": "",
    "how": [
@@ -70,7 +70,7 @@
     "椰子"
    ],
    "tier": 1,
-   "icon": "n30_yezi__coconut",
+   "icon": "mvi_coconut",
    "price": 1,
    "res": "",
    "how": [
@@ -85,7 +85,7 @@
     "膠汁"
    ],
    "tier": 1,
-   "icon": "mvs_rubber",
+   "icon": "mvi_latex",
    "price": 1,
    "res": "",
    "how": [
@@ -100,7 +100,7 @@
     "霧谷茶葉"
    ],
    "tier": 1,
-   "icon": "mvi_tea",
+   "icon": "mvi_tealeaf",
    "price": 3,
    "res": "",
    "how": [
@@ -115,7 +115,7 @@
     "禾稈草"
    ],
    "tier": 1,
-   "icon": "mvi_straw",
+   "icon": "mvi_straw_raw",
    "price": 1,
    "res": "",
    "how": [
@@ -130,7 +130,7 @@
     "蕉葉"
    ],
    "tier": 1,
-   "icon": "mvi_leaf",
+   "icon": "mvi_bananaleaf",
    "price": 3,
    "res": "",
    "how": [
@@ -145,7 +145,7 @@
     "河口魚"
    ],
    "tier": 1,
-   "icon": "mvi_saltfish",
+   "icon": "mvi_fish",
    "price": 3,
    "res": "",
    "how": [
@@ -160,7 +160,7 @@
     "舊報紙"
    ],
    "tier": 1,
-   "icon": "furnace__paper",
+   "icon": "mvi_newspaper",
    "price": 3,
    "res": "",
    "how": [
@@ -175,7 +175,7 @@
     "碳粉"
    ],
    "tier": 1,
-   "icon": "of_cabinet",
+   "icon": "mvi_toner",
    "price": 4,
    "res": "",
    "how": [
@@ -204,7 +204,7 @@
     "普通包子"
    ],
    "tier": 2,
-   "icon": "bun",
+   "icon": "mvi_baozi",
    "price": 1.5,
    "res": "",
    "how": [
@@ -219,7 +219,7 @@
     "竹紙"
    ],
    "tier": 2,
-   "icon": "op_paper",
+   "icon": "mvi_paper",
    "price": 1.5,
    "res": "",
    "how": [
@@ -234,7 +234,7 @@
     "竹篾"
    ],
    "tier": 2,
-   "icon": "mvi_bamboo",
+   "icon": "mvi_strip",
    "price": 3,
    "res": "",
    "how": [
@@ -249,7 +249,7 @@
     "椰漿"
    ],
    "tier": 2,
-   "icon": "mvi_coconutrice",
+   "icon": "mvi_cocomilk",
    "price": 4,
    "res": "",
    "how": [
@@ -264,7 +264,7 @@
     "生膠片"
    ],
    "tier": 2,
-   "icon": "mvi_slipper",
+   "icon": "mvi_rubbersheet",
    "price": 4,
    "res": "",
    "how": [
@@ -279,7 +279,7 @@
     "草繩"
    ],
    "tier": 2,
-   "icon": "mvi_straw",
+   "icon": "mvi_rope",
    "price": 4,
    "res": "",
    "how": [
@@ -294,7 +294,7 @@
     "報紙漿"
    ],
    "tier": 2,
-   "icon": "furnace__stack",
+   "icon": "mvi_pulp",
    "price": 5,
    "res": "",
    "how": [
@@ -309,7 +309,7 @@
     "影印墨"
    ],
    "tier": 2,
-   "icon": "mvi_form",
+   "icon": "mvi_ink",
    "price": 6,
    "res": "",
    "how": [
@@ -504,7 +504,7 @@
     "二手棺材板盾"
    ],
    "tier": 3,
-   "icon": "mvi_plank",
+   "icon": "mvi_plankshield",
    "price": 3600,
    "res": "",
    "how": [
@@ -549,7 +549,7 @@
     "蕉葉糯米卷"
    ],
    "tier": 3,
-   "icon": "mvi_leaf",
+   "icon": "mvi_jiaoyejuan",
    "price": 864,
    "res": "",
    "how": [
@@ -856,7 +856,7 @@
     "枯井轆轤",
     "枯井轆轤"
    ],
-   "art": "pr_well",
+   "art": "vb_well",
    "out": "m_wellwater",
    "rate": 60,
    "unlock": {
@@ -876,7 +876,7 @@
     "後山竹林",
     "後山竹林"
    ],
-   "art": "mvs_bamboo",
+   "art": "vb_bamboo",
    "out": "m_bamboo",
    "rate": 30,
    "unlock": {
@@ -896,7 +896,7 @@
     "椰林",
     "椰林"
    ],
-   "art": "n30_yezi__coconut",
+   "art": "vb_coco",
    "out": "m_coconut",
    "rate": 40,
    "unlock": {
@@ -916,7 +916,7 @@
     "膠園",
     "膠園"
    ],
-   "art": "mvs_rubber",
+   "art": "vb_latex",
    "out": "m_latex",
    "rate": 20,
    "unlock": {
@@ -936,7 +936,7 @@
     "霧谷茶田",
     "霧谷茶田"
    ],
-   "art": "mvs_teahouse",
+   "art": "vb_tea",
    "out": "m_tealeaf",
    "rate": 20,
    "unlock": {
@@ -956,7 +956,7 @@
     "禾稈草堆",
     "禾稈草堆"
    ],
-   "art": "mvi_straw",
+   "art": "vb_straw",
    "out": "m_straw",
    "rate": 30,
    "unlock": {
@@ -976,7 +976,7 @@
     "蕉園",
     "蕉園"
    ],
-   "art": "mvs_banana",
+   "art": "vb_banana",
    "out": "m_bananaleaf",
    "rate": 20,
    "unlock": {
@@ -996,7 +996,7 @@
     "河口罾棚",
     "河口罾棚"
    ],
-   "art": "mvs_fish",
+   "art": "vb_fish",
    "out": "m_fish",
    "rate": 30,
    "unlock": {
@@ -1016,7 +1016,7 @@
     "橋底回收站",
     "橋底回收站"
    ],
-   "art": "pr_boxes",
+   "art": "vb_newspaper",
    "out": "m_newspaper",
    "rate": 30,
    "unlock": {
@@ -1036,7 +1036,7 @@
     "地庫碳粉房",
     "地庫碳粉房"
    ],
-   "art": "mvs_copier",
+   "art": "vb_toner",
    "out": "m_toner",
    "rate": 20,
    "unlock": {
@@ -1104,7 +1104,7 @@
     "紙寮",
     "紙寮"
    ],
-   "art": "op_paper",
+   "art": "vb_paper",
    "in": {
     "m_bamboo": 1,
     "m_wellwater": 1
@@ -1130,7 +1130,7 @@
     "破篾棚",
     "破篾棚"
    ],
-   "art": "mvs_bamboo",
+   "art": "vb_strip",
    "in": {
     "m_bamboo": 1
    },
@@ -1155,7 +1155,7 @@
     "刨椰寮",
     "刨椰寮"
    ],
-   "art": "mvs_ricepot",
+   "art": "vb_cocomilk",
    "in": {
     "m_coconut": 1
    },
@@ -1180,7 +1180,7 @@
     "膠片房",
     "膠片房"
    ],
-   "art": "mvs_rubber",
+   "art": "vb_rubbersheet",
    "in": {
     "m_latex": 1
    },
@@ -1205,7 +1205,7 @@
     "搓繩棚",
     "搓繩棚"
    ],
-   "art": "mvs_straw",
+   "art": "vb_rope",
    "in": {
     "m_straw": 2
    },
@@ -1230,7 +1230,7 @@
     "紙漿池",
     "紙漿池"
    ],
-   "art": "pr_puddle",
+   "art": "vb_pulp",
    "in": {
     "m_newspaper": 1,
     "m_wellwater": 1
@@ -1256,7 +1256,7 @@
     "碳粉墨房",
     "碳粉墨房"
    ],
-   "art": "mvs_files",
+   "art": "vb_ink",
    "in": {
     "m_toner": 1,
     "m_wellwater": 1
