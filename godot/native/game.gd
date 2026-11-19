@@ -6,6 +6,8 @@
 # 規矩：其他模塊會包（wrap）嘅函數（ratesPerMin、joinGhost、Quest.complete…）一律經 J.G／J.mc 叫，包裝先會生效
 extends RefCounted
 
+const CE = preload("res://game/outpost/chain_eco.gd")   # [chain] 拓展建築產量
+const CM = preload("res://game/outpost/mat.gd")           # [chain] 材料庫
 const FURNACE_CD := 300.0
 const FEAST_CD := 1200.0
 const FEAST_NEED := 350.0
@@ -129,7 +131,7 @@ static func rates_per_min() -> Dictionary:
 			"wood": r.wood += (9 + 0.7 * lv) * mult("wood")
 			"rice": r.rice += (9 + 0.7 * lv) * mult("rice")
 			"plank": var o = (2.5 + stat(g, 0) * 0.05) * mult("plank"); r.planks += o; r.woodUse += o * 2
-			"bun": var o = (2.5 + stat(g, 1) * 0.05) * mult("bun"); r.buns += o; r.riceUse += o * 2
+			"bun": var o = (2.5 + stat(g, 1) * 0.05) * mult("bun"); r["bao"] = J.num(r.get("bao")) + o; r.riceUse += o * 2; r["baoUse"] = J.num(r.get("baoUse")) + o * 2   # [chain] 包子鋪出普通包子 m_bao（唔再直接出壽包）
 			"camp":   # 嚇人訓練班：練嚇功（rework）
 				var o = (2 + stat(g, 2) * 0.04) * mult("camp")
 				r["drill"] = J.num(r.get("drill")) + o; r.bunUse += o * 0.6
@@ -149,9 +151,12 @@ static func produce(dt: float) -> void:
 	if rg.call("planks") != 0 and J.num(R.planks) < cp:
 		var need = rg.call("woodUse") * m; var k = minf(1, J.num(R.wood) / need) if need > 0 else 0.0
 		R["wood"] = J.num(R.wood) - need * k; R["planks"] = minf(cp, J.num(R.planks) + rg.call("planks") * m * k)
-	if rg.call("buns") != 0 and J.num(R.buns) < cp:
-		var need = rg.call("riceUse") * m; var k = minf(1, J.num(R.rice) / need) if need > 0 else 0.0
+	if rg.call("buns") != 0 and J.num(R.buns) < cp:   # 舊式（其他模塊加嘅壽包產出，食糯米）；包子鋪已改出 m_bao
+		var need = (rg.call("riceUse") - rg.call("baoUse")) * m; var k = minf(1, J.num(R.rice) / need) if need > 0 else 0.0
 		R["rice"] = J.num(R.rice) - need * k; R["buns"] = minf(cp, J.num(R.buns) + rg.call("buns") * m * k)
+	if rg.call("bao") != 0 and CM.amt("m_bao") < CM.cap("m_bao"):   # [chain] 包子鋪：2 糯米 → 1 普通包子
+		var need = rg.call("baoUse") * m; var k = minf(1, J.num(R.rice) / need) if need > 0 else 0.0
+		R["rice"] = J.num(R.rice) - need * k; CM.add_capped("m_bao", rg.call("bao") * m * k)
 	if rg.call("troops") != 0 and J.num(R.troops) < troop_cap(): R["troops"] = minf(troop_cap(), J.num(R.troops) + rg.call("troops") * m)
 	var by = J.gp(r, "drillBy")
 	if J.t(by):
@@ -161,6 +166,7 @@ static func produce(dt: float) -> void:
 		for e in J.iter(by):
 			var gk = J.str(e[0]); S.drill[gk] = J.num(S.drill.get(gk)) + J.num(e[1]) * m * k
 	R["coins"] = J.num(R.coins) + rg.call("coins") * m
+	CE.produce(dt)   # [chain] 拓展採集／加工建築（chain.json GATHER／WORKSHOPS，崗位鍵 = bid）
 	var acc = J.num(_g("expAcc")) + rg.call("exp") * m
 	J.G["expAcc"] = acc
 	if acc >= 1:
@@ -469,11 +475,13 @@ static func v_do_act(this_, dt: float) -> void:
 		if a.get("n") == null: a["n"] = 1.0; a["want"] = 1.0; a["done"] = 0.0
 		if a.get("dur") == null: a["dur"] = 0.9
 		if J.num(H.actT) >= J.num(a.dur):
-			var plank = J.str(a.bid) == "plank"; var src = "wood" if plank else "rice"; var out = "planks" if plank else "buns"
+			var plank = J.str(a.bid) == "plank"; var src = "wood" if plank else "rice"; var out = "planks" if plank else "bao"   # [chain] 包子鋪親手包 = 普通包子
 			if J.num(S.res[src]) < 4:
 				H["act"] = null
 				_float(H.x, J.num(H.y) - 60, ("%s用完了，做好 %s 份" % [J.str(RN[src]), J.str(a.done)]) if J.t(a.done) else "%s不夠（要 4）" % J.str(RN[src]), "#ff9a9a"); return
-			S.res[src] = J.num(S.res[src]) - 4; S.res[out] = J.num(S.res[out]) + 2
+			S.res[src] = J.num(S.res[src]) - 4
+			if plank: S.res[out] = J.num(S.res[out]) + 2
+			else: CM.add("m_bao", 2)   # [chain]
 			var ck = "craftPlank" if plank else "craftBun"; S.cnt[ck] = J.num(S.cnt.get(ck)) + 1; gain.call(1.0); _snd("craft")
 			a["done"] = J.num(a.done) + 1; a["n"] = J.num(a.n) - 1; qcheck.call()
 			var more = J.num(a.n) > 0 and J.num(S.res[src]) >= 4
@@ -1164,7 +1172,7 @@ static func ui_bld_effect(id) -> String:
 		"wood": return L.call("每崗產量 ×%s　崗位 %s　目前 槐木 +%s/分" % [_tofix(J.mc(F, "mult", ["wood"])), J.str(J.mc(F, "slots", ["wood"])), _tofix(r.wood)])
 		"rice": return L.call("每崗產量 ×%s　崗位 %s　目前 糯米 +%s/分" % [_tofix(J.mc(F, "mult", ["rice"])), J.str(J.mc(F, "slots", ["rice"])), _tofix(r.rice)])
 		"plank": return L.call("崗位 %s　目前 棺材板 +%s/分（耗槐木 %s/分）<br>藍箱可開出 棺材板 %s" % [J.str(J.mc(F, "slots", ["plank"])), _tofix(r.planks), _tofix(r.woodUse), J.str(J.gp(J.mc(F, "chestGain", ["b"]), "planks"))])
-		"bun": return L.call("崗位 %s　目前 壽包 +%s/分（耗糯米 %s/分）<br>綠箱可開出 壽包 %s" % [J.str(J.mc(F, "slots", ["bun"])), _tofix(r.buns), _tofix(r.riceUse), J.str(J.gp(J.mc(F, "chestGain", ["g"]), "buns"))])
+		"bun": return L.call("崗位 %s　目前 普通包子 +%s/分（耗糯米 %s/分）<br>普通包子送去移動村「嘆氣蒸籠」先蒸得成壽包<br>綠箱可開出 壽包 %s" % [J.str(J.mc(F, "slots", ["bun"])), _tofix(r.get("bao", 0.0)), _tofix(r.riceUse), J.str(J.gp(J.mc(F, "chestGain", ["g"]), "buns"))])   # [chain]
 		"store": return L.call("槐木、糯米、棺材板、壽包 存放上限：%s" % _c("fmt", [J.mc(F, "cap", [])]))
 		"home": return L.call("雜鬼名額 %s　遊魂自願當陰兵 +%s/分　陰兵上限 %s" % [fm.call("rosterCap"), _tofix(r.troops), _c("fmt", [J.mc(F, "troopCap", [])])])
 		"camp":
@@ -1225,7 +1233,7 @@ static func n_bld(id) -> Dictionary:
 		var bd = J.num(J.mc(F, "builderDiscount", [])); o["disc"] = J.round(bd * 100) if bd else 0.0
 	if sid == "plank" or sid == "bun":
 		var src = "wood" if sid == "plank" else "rice"
-		o["craft"] = {"src": _g("RES_NAMES")[src], "have": S.res[src], "can": floor(J.num(S.res[src]) / 4), "label": "槐木 → 2 棺材板" if sid == "plank" else "糯米 → 2 壽包"}
+		o["craft"] = {"src": _g("RES_NAMES")[src], "have": S.res[src], "can": floor(J.num(S.res[src]) / 4), "label": "槐木 → 2 棺材板" if sid == "plank" else "糯米 → 2 普通包子"}   # [chain]
 	if sid == "furnace": o["furnace"] = {"left": _left(J.num(F.furnaceCD), S.furnaceAt), "coins": J.mc(F, "furnaceCoins", [])}
 	if sid == "altar":
 		var c = J.mc(F, "recruitCost", []); var fc = J.num(_c("fodderCount")); var rc = J.num(J.mc(F, "rosterCap", []))
@@ -1477,7 +1485,7 @@ static func make_ui() -> Dictionary:
 
 # ================= 第五段：主迴圈、開機、全局常數（loop / covered / start / startGame）=================
 const FRAME_MS := 1000.0 / 30 - 2
-const RES_NAMES := {"wood": "槐木", "rice": "糯米", "planks": "棺材板", "buns": "壽包", "coins": "冥幣", "troops": "陰兵"}
+const RES_NAMES := {"wood": "槐木", "rice": "糯米", "planks": "棺材板", "buns": "壽包", "coins": "冥幣", "troops": "陰兵", "bao": "普通包子"}   # [chain] bao 只係顯示用（存喺 S.mat.m_bao）
 const SPEAKER_ART := {"阿福": "afu", "小紙": "xiaozhi", "白無常": "baiwu", "黑無常": "heiwu", "黑白無常": "baiwu", "黃總": "huang", "餓鬼王": "eguiking", "餓鬼": "egui", "Toyol": "toyol", "老殭": "laojiang", "Pontianak": "pontianak", "Pocong": "pocong", "Penanggal": "penanggal", "孟婆": "mengpo", "遊魂阿強": "youhun", "天花姐": "tianhua"}
 const RES_HELP := {
 	"槐木": "槐木：主公親手砍樹，或派鬼怪去<b>伐木場</b>伐木。",

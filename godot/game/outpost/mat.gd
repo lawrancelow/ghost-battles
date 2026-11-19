@@ -7,12 +7,18 @@ extends RefCounted
 
 const PATH := "res://data/nat/chain.json"
 static var _D = null
+static var _path := PATH      # [chain] 測試可以換資料檔（use_file）
+static var _IX = null         # [chain] 索引快取：邊個台／建築用乜、出乜
 
 static func D() -> Dictionary:
 	if _D == null: reload()
 	return _D
+static func use_file(p: String) -> void:   # [chain] 測試用：換資料檔（"" = 返正式檔）
+	_path = p if p != "" else PATH
+	reload()
 static func reload() -> void:
-	var f = FileAccess.open(PATH, FileAccess.READ)
+	_IX = null
+	var f = FileAccess.open(_path, FileAccess.READ)
 	var o = JSON.parse_string(f.get_as_text()) if f != null else null
 	_D = o if o is Dictionary else {}
 	for k in ["MATS", "GATHER", "WORKSHOPS", "RECIPES", "GEAR", "BATTLE_ITEMS", "STRINGS"]:
@@ -50,11 +56,24 @@ static func amt(mid: String) -> float:
 	if rk != "": return J.num((s.get("res", {}) as Dictionary).get(rk, 0)) if s.get("res") is Dictionary else 0.0
 	return J.num(_store(s).get(mid, 0))
 
-# 上限：舊資源跟舊倉庫上限由舊代碼管（呢度唔夾）；新材料用 cap()（引擎線可改公式）
+# 上限：舊資源跟舊倉庫上限由舊代碼管（add 唔夾）；新材料用 cap()：
+#   MATS.cap 有填 → 用佢；冇填 → 跟後院倉庫上限 F.cap()（同槐木／糯米一樣）；連 F 都冇（純測試）→ 無限
 static func cap(mid: String) -> float:
 	var c = J.num(def(mid).get("cap", 0))
-	if c <= 0: c = 999999999.0
-	return c
+	if c > 0: return c
+	return wh_cap(mid)
+static func wh_cap(mid := "") -> float:   # [chain] 後院倉庫上限（陰兵跟陰兵上限）
+	var F = J.G.get("F")
+	if F == null: return 999999999.0
+	if res_key(mid) == "troops": return J.num(J.mc(F, "troopCap", []))
+	var c = J.num(J.mc(F, "cap", []))
+	return c if c > 0 else 999999999.0
+# [chain] 生產用：連舊資源都夾上限（舊 produce 一樣唔會超過倉庫）；回實際加咗幾多
+static func add_capped(mid: String, n: float) -> float:
+	if n <= 0: return add(mid, n)
+	var room = maxf(0.0, cap(mid) - amt(mid))
+	return add(mid, minf(n, room))
+static func room(mid: String) -> float: return maxf(0.0, cap(mid) - amt(mid))
 
 static func add(mid: String, n: float) -> float:   # 回實際加咗幾多
 	var s = S()
@@ -81,3 +100,82 @@ static func take(cost: Dictionary) -> bool:
 	return true
 static func give(gain: Dictionary) -> void:
 	for k in gain: add(str(k), J.num(gain[k]))
+
+# ================= [chain] 生產鏈索引（引擎線） =================
+static func recipe(sid: String) -> Dictionary:
+	var r = D().RECIPES.get(sid)
+	return r if r is Dictionary else {}
+static func rin(sid: String) -> Dictionary:
+	var r = recipe(sid).get("in")
+	return r if r is Dictionary else {}
+static func rout(sid: String) -> String: return str(recipe(sid).get("out", ""))
+static func rn(sid: String) -> float: return maxf(1.0, J.num(recipe(sid).get("n", 1)))
+static func carry() -> Array:
+	var o = []
+	for s in D().CARRY: o.append(str(s))
+	return o
+static func is_gear(mid: String) -> bool: return D().GEAR.has(mid)
+static func is_item(mid: String) -> bool: return D().BATTLE_ITEMS.has(mid)
+# 後院建築：GATHER＋WORKSHOPS（bid → def，加 kind 欄 "gather"／"shop"）
+static func blds() -> Dictionary:
+	_ix()
+	return _IX.blds
+static func bld(bid: String) -> Dictionary: return blds().get(bid, {})
+static func bld_of_old(old: String) -> String:   # 舊建築鍵（wood/rice/plank/bun）→ chain bid
+	_ix()
+	return str(_IX.old.get(old, ""))
+static func new_blds() -> Array:   # 拓展建築（唔係舊建築）
+	var o = []
+	for b in blds():
+		if str(blds()[b].get("old", "")) == "": o.append(b)
+	return o
+static func bout(bid: String) -> Dictionary:   # 建築出乜：{mid: 每次件數}（採集：{out: rate}）
+	var d = bld(bid)
+	if d.get("kind") == "gather": return {str(d.get("out", "")): J.num(d.get("rate", 0))}
+	var o = d.get("out")
+	return o if o is Dictionary else {}
+static func bin(bid: String) -> Dictionary:
+	var o = bld(bid).get("in")
+	return o if o is Dictionary else {}
+# 邊個做 mid：[{"k":"gather"|"shop"|"st", "id":...}]
+static func makers(mid: String) -> Array:
+	_ix()
+	return _IX.makers.get(mid, [])
+# 邊個用 mid 做嘢：移動村台 sid（RECIPES）／後院加工建築 bid
+static func users(mid: String) -> Array:
+	_ix()
+	return _IX.users.get(mid, [])
+static func st_users(mid: String) -> Array:
+	var o = []
+	for u in users(mid): if u.k == "st": o.append(u.id)
+	return o
+static func _ix() -> void:
+	if _IX != null: return
+	var d = D(); var ix = {"blds": {}, "old": {}, "makers": {}, "users": {}}
+	for k in d.GATHER:
+		var e = d.GATHER[k]
+		if not (e is Dictionary): continue
+		var c = e.duplicate(); c["kind"] = "gather"; ix.blds[str(k)] = c
+		if str(e.get("old", "")) != "": ix.old[str(e.old)] = str(k)
+		_push(ix.makers, str(e.get("out", "")), {"k": "gather", "id": str(k)})
+	for k in d.WORKSHOPS:
+		var e = d.WORKSHOPS[k]
+		if not (e is Dictionary): continue
+		var c = e.duplicate(); c["kind"] = "shop"; ix.blds[str(k)] = c
+		if str(e.get("old", "")) != "": ix.old[str(e.old)] = str(k)
+		for m in (e.get("out", {}) if e.get("out") is Dictionary else {}): _push(ix.makers, str(m), {"k": "shop", "id": str(k)})
+		for m in (e.get("in", {}) if e.get("in") is Dictionary else {}): _push(ix.users, str(m), {"k": "shop", "id": str(k)})
+	for sid in d.RECIPES:
+		var r = d.RECIPES[sid]
+		if not (r is Dictionary): continue
+		_push(ix.makers, str(r.get("out", "")), {"k": "st", "id": str(sid)})
+		for m in (r.get("in", {}) if r.get("in") is Dictionary else {}): _push(ix.users, str(m), {"k": "st", "id": str(sid)})
+	_IX = ix
+static func _push(dct: Dictionary, k: String, v: Dictionary) -> void:
+	if k == "": return
+	if not dct.has(k): dct[k] = []
+	dct[k].append(v)
+# 數量字：整數就唔要小數
+static func qty(v: float) -> String:
+	if absf(v - round(v)) < 0.001: return str(int(round(v)))
+	return ("%.1f" % v)

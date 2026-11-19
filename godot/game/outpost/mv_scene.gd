@@ -8,6 +8,7 @@ extends Control
 const MD = preload("res://game/outpost/mv_data.gd")
 const SIM = preload("res://game/outpost/mv_sim.gd")
 const FX = preload("res://game/outpost/mv_fx.gd")
+const M = preload("res://game/outpost/mat.gd")   # [chain]
 const FW := 390.0
 const GOLD := Color("#f3d68a")
 const INK := Color("#2b1d12")
@@ -221,7 +222,7 @@ func _process(dt: float) -> void:
 	if _save_t > 2.0: _save_t = 0.0; sim.st().last = J.now()
 	_line_t -= dt
 	if _line_t <= 0.0: _line_t = _rng.randf_range(7.0, 12.0); _random_line()
-	if sheet.visible and sel != "" and fmod(t, 0.5) < dt: _refresh_sheet_btns()
+	if sheet.visible and sel != "" and fmod(t, 0.5) < dt: _refresh_sheet_btns(); _refresh_recipe()   # [chain]
 	stage.queue_redraw(); over.queue_redraw()
 
 func _eat_events() -> void:
@@ -245,6 +246,11 @@ func _eat_events() -> void:
 				_snd("click")
 			"made":
 				_float(e.pos + Vector2(0, -80), "+%d" % int(e.n), Color("#f0e2c8"), 15, 0.8)
+			"stock":   # [chain] 入倉：貨飛去紙紮大屋
+				for i in mini(int(e.n), 4): _item(e.pos + Vector2(_rng.randf_range(-16, 16), -40), sim.L.house + Vector2(0, -40), str(e.mid), 0.6 + i * 0.06)
+				_float(e.pos + Vector2(0, -100), MD.S("stocked", "入倉 +%d", "入倉 +%d") % int(e.n), Color("#9fd8ff"), 15, 1.0)
+			"starve":   # [chain]
+				_float(e.pos + Vector2(0, -110), _starve_txt(e.miss), Color("#ffb0a0"), 15, 1.4)
 			"hit":
 				_burst(e.pos, Color("#bfe0ff"), 5 if e.by == "guard" else 8)
 				_float(e.pos + Vector2(_rng.randf_range(-8, 8), -10), "-%d" % int(e.dmg), Color("#ffb0a0"), 16, 0.7)
@@ -740,6 +746,11 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 			prog = 0.0
 			for wk in sim.workers: if wk.sid == sid and wk.st == "work": prog = maxf(prog, wk.prog)
 		_ring(ctx, rp, 17.0, prog, manned, pn, sid)
+		if (manned or sim.mk_starve.has(sid)) and sim.missing(sid).size() > 0:   # [chain] 斷料牌
+			var st_t = _starve_txt(sim.missing(sid))
+			ctx.font = "900 14px sans-serif"; var sw = minf(ctx.measureText(st_t).width + 14.0, _cell_w())
+			Art.rr(ctx, p.x - sw / 2.0, r.position.y - 30, sw, 24, 7, "rgba(120,20,16,.9)", "#ffb0a0", 1.5)
+			_txt(ctx, _fit(ctx, st_t, sw - 10.0, 14)[0], p.x, r.position.y - 18, 14, Color("#fff0e0"), "center", 900, 0)
 		# 員工空位
 		var ws = sim.sst(sid).workers
 		for i in ws.size():
@@ -835,9 +846,15 @@ func _coin_ic(ctx: Ctx, x: float, y: float, r: float) -> void:
 # 貨品圖示（160×160 圖，冇就畫個色塊＋字）
 func _icon(ctx: Ctx, gid: String, x: float, y: float, sz: float) -> void:
 	var gd = MD.good_def(gid); var key = str(gd.get("icon", ""))
+	if gd.is_empty() and M.has_def(gid):   # [chain] 材料（唔喺 GOODS）：用 MATS 圖鍵，冇就用舊資源圖示
+		key = M.icon(gid); gd = {"n": M.def(gid).get("n", [gid, gid])}
+		if not _has(key) and M.res_key(gid) != "" and ResourceLoader.exists("res://assets/ui/i-%s.svg" % M.res_key(gid)):
+			ctx.ci.draw_set_transform_matrix(ctx.T)
+			ctx.ci.draw_texture_rect(load("res://assets/ui/i-%s.svg" % M.res_key(gid)), Rect2(x - sz / 2, y - sz, sz, sz), false)
+			ctx.ci.draw_set_transform_matrix(Transform2D.IDENTITY); return
 	if _has(key):
 		Art.put(ctx, key, x, y, sz, sz); return
-	var gi = maxi(0, MD.D().GOODS.keys().find(gid))
+	var gi = maxi(0, MD.D().GOODS.keys().find(gid)) if MD.D().GOODS.has(gid) else absi(hash(gid))
 	Art.rr(ctx, x - sz / 2, y - sz, sz, sz, sz * 0.22, ICON_COL[gi % ICON_COL.size()], "#2a1a10", 1.5)
 	var nm = MD.T(gd.get("n", ["?", "?"]))
 	_txt(ctx, nm.substr(nm.length() - 1, 1) if nm.length() else "?", x, y - sz / 2, maxi(14, int(sz * 0.6)), Color("#fff6e0"), "center", 900, 2)
@@ -1174,6 +1191,7 @@ func _fill_sheet() -> void:
 	var sp = Control.new(); sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL; sp.mouse_filter = Control.MOUSE_FILTER_IGNORE; h.add_child(sp)
 	var cb = UIKit.btn("✕", "ghost", true); cb.custom_minimum_size = Vector2(42, 40); cb.focus_mode = Control.FOCUS_NONE; cb.pressed.connect(close_sheet); h.add_child(cb)
 	var how = _lbl(MD.T(sd.get("how", "")), 14, DIMC, "sans", 700); how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; how.custom_minimum_size = Vector2(350, 0); sheet_box.add_child(how)
+	_recipe_row(sid)   # [chain] 用乜做 → 出乜
 	# 數值：而家 → 下一級
 	var nx = minf(mx, l + 1.0)
 	var grid = GridContainer.new(); grid.columns = 2; grid.add_theme_constant_override("h_separation", 14); grid.add_theme_constant_override("v_separation", 2); sheet_box.add_child(grid)
@@ -1205,6 +1223,76 @@ func _fill_sheet() -> void:
 	await get_tree().process_frame
 	if not is_instance_valid(sheet): return
 	_place_sheet()
+
+# [chain] 資料卡：用乜做（材料圖示＋每轉數量＋而家庫存）→ 出乜；分流掣（自動／全部入倉／全部出售）
+var _recipe_rows: Array = []
+func _recipe_row(sid: String) -> void:
+	_recipe_rows.clear()
+	var nd = sim.need(sid); var out_mid = M.rout(sid); var gid = str(MD.st_def(sid).get("good", ""))
+	var box = PanelContainer.new(); box.add_theme_stylebox_override("panel", UIKit.sb(Color(0.3, 0.2, 0.08, 0.1), 8, LINE, 1, Vector4(8, 4, 8, 4)))
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE; sheet_box.add_child(box)
+	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 4); hb.mouse_filter = Control.MOUSE_FILTER_IGNORE; box.add_child(hb)
+	if nd.is_empty(): hb.add_child(_lbl(MD.S("r_free", "唔使料", "不用材料"), 15, DIMC, "sans", 900))
+	var first = true
+	for mid in nd:
+		if not first: hb.add_child(_lbl("＋", 15, DIMC, "sans", 900))
+		first = false
+		hb.add_child(_mat_ic(mid, 34))
+		var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", -2); vb.mouse_filter = Control.MOUSE_FILTER_IGNORE; hb.add_child(vb)
+		vb.add_child(_lbl("%s ×%s" % [M.name(mid), M.qty(nd[mid])], 14, INK, "sans", 900))
+		var have = _lbl("", 14, GREEN, "sans", 700); vb.add_child(have)
+		_recipe_rows.append([have, mid, nd[mid]])
+	hb.add_child(_lbl("→", 18, RED, "sans", 900))
+	var oid = out_mid if out_mid != "" else gid
+	hb.add_child(_mat_ic(oid, 34))
+	var ov = VBoxContainer.new(); ov.add_theme_constant_override("separation", -2); ov.mouse_filter = Control.MOUSE_FILTER_IGNORE; hb.add_child(ov)
+	var onm = M.name(out_mid) if out_mid != "" else MD.T(MD.good_def(gid).get("n"))
+	ov.add_child(_lbl("%s ×%d" % [onm, MD.out(sid, sim.lv(sid))], 14, INK, "sans", 900))
+	if out_mid != "":
+		var oh = _lbl("", 14, DIMC, "sans", 700); ov.add_child(oh); _recipe_rows.append([oh, out_mid, -1.0])
+	# 分流
+	if out_mid != "":
+		var rr = HBoxContainer.new(); rr.add_theme_constant_override("separation", 6); sheet_box.add_child(rr)
+		var rl = _lbl(_route_txt(sid), 14, DIMC, "sans", 700); rl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; rl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; rr.add_child(rl)
+		var rb = UIKit.btn(_route_name(sim.route(sid)), "", true); rb.custom_minimum_size = Vector2(112, 40); rb.focus_mode = Control.FOCUS_NONE; rb.add_theme_font_size_override("font_size", 15)
+		rb.pressed.connect(func(): sim.next_route(sid); _save(); _snd("click"); _fill_sheet())
+		rr.add_child(rb)
+	_refresh_recipe()
+func _refresh_recipe() -> void:
+	for e in _recipe_rows:
+		if not is_instance_valid(e[0]): continue
+		var a = M.amt(e[1])
+		if e[2] < 0.0: e[0].text = MD.S("r_stock", "庫存 %s", "庫存 %s") % M.qty(floor(a))
+		else:
+			e[0].text = MD.S("r_have", "有 %s", "有 %s") % M.qty(floor(a))
+			e[0].add_theme_color_override("font_color", GREEN if a >= e[2] - 1e-6 else RED)
+func _route_name(r: String) -> String:
+	match r:
+		"stock": return MD.S("rt_stock", "全部入倉", "全部入倉")
+		"sell": return MD.S("rt_sell", "全部出售", "全部出售")
+	return MD.S("rt_auto", "自動分流", "自動分流")
+func _route_txt(sid: String) -> String:
+	var mid = M.rout(sid)
+	match sim.route(sid):
+		"stock": return MD.S("rtt_stock", "做好嘅貨全部入倉（倉滿先擺櫃台）", "做好的貨全部入倉（倉滿才擺櫃台）")
+		"sell": return MD.S("rtt_sell", "做好嘅貨全部擺櫃台賣", "做好的貨全部擺櫃台賣")
+	var users = sim.consumers(mid, sid)
+	if users.size():
+		var nm = []
+		for u in users.slice(0, 2): nm.append(MD.T(MD.st_def(u).get("n")))
+		return MD.S("rtt_up", "上層要料優先：%s 用緊，庫存未夠 %s 就入倉，夠咗先賣", "上層要料優先：%s 在用，庫存未夠 %s 就入倉，夠了才賣") % ["、".join(nm), M.qty(ceil(sim.buffer_of(mid, sid)))]
+	if mid == "m_shoubao": return MD.S("rtt_bun", "壽包係前線口糧：一半入倉、一半擺櫃台", "壽包是前線口糧：一半入倉、一半擺櫃台")
+	if M.is_item(mid): return MD.S("rtt_item", "戰鬥道具：庫存未夠 %d 件就入倉", "戰鬥道具：庫存未夠 %d 件就入倉") % int(sim.ITEM_KEEP)
+	return MD.S("rtt_sale", "冇台用呢樣貨：全部擺櫃台賣", "沒有台用這樣貨：全部擺櫃台賣")
+# 材料圖示（Control）
+func _mat_ic(mid: String, sz: float) -> Control:
+	var c = Control.new(); c.custom_minimum_size = Vector2(sz, sz); c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.draw.connect(func(): _icon(Ctx.new(c), mid, sz / 2.0, sz, sz))
+	return c
+func _starve_txt(miss) -> String:
+	var nm = []
+	for mid in (miss if miss is Array else []): nm.append(M.name(str(mid)))
+	return MD.S("starve", "斷料：缺 %s", "斷料：缺 %s") % "、".join(nm)
 
 func _v(x: float) -> String: return MD.fmt(x) if x >= 100.0 else ("%.1f" % x).trim_suffix(".0")
 
