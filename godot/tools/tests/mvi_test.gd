@@ -40,7 +40,7 @@ func all(t) -> void:
 	_chk("新存檔唔彈介紹", int(J.num(S.get("mv_intro", 0))) == 2)
 	_chk("新存檔 ci=0", B.ci() == 0, B.ci())
 	m._hide_title(); await _w(t, 1.0)
-	_chk("home 分頁 = 移動村", m.mv_host.visible and not m.village.visible)
+	_chk("home 分頁 = 合一地圖（村子＋大排檔區）", m.get("mv_embed") != null and m.village.visible)   # [unify]
 	_chk("前線 = 移動村所在", GR(t).frontline() == B.ci(), "%d/%d" % [GR(t).frontline(), B.ci()])
 	await _shot(t, "01_new_home")
 
@@ -157,17 +157,13 @@ func all(t) -> void:
 	_chk("拔營後前線跟住移動村", GR(t).frontline() == 3 and GR(t).is_open(2) and not GR(t).is_open(3))
 	await _w(t, 1.0); await _shot(t, "05_moved")
 
-	# ---------- 6. 開關關咗用返舊村子 ----------
-	m.set_mv(false); await _w(t, 2.0)
-	_chk("開關關：舊村子畫面", m.village.visible and not m.mv_host.visible)
+	# ---------- 6. [unify] 合一地圖：唔再有開關（set_mv(false) 都會開返合一），村子畫面一直顯示 ----------
+	m.set_mv(false); await _w(t, 1.0)
+	_chk("合一：關唔到（mv_on 照開）", B.on() and m.village.visible and not m.mv_host.visible)
 	var wv = 0
 	for c in m.village.world.get_children(): if c.visible: wv += 1
-	_chk("開關關：舊村子有畫嘢（world 子節點可見）", wv >= 4, wv)
-	_chk("開關關：前線用返舊算法", GR(t).frontline() == B.front_by_progress(), GR(t).frontline())
-	_chk("開關關：離線用返舊 offlineGain", not B.on())
-	await _shot(t, "06_old_village")
-	m.set_mv(true); await _w(t, 1.5)
-	_chk("開關開返", m.mv_host.visible and not m.village.visible)
+	_chk("合一：原村子有畫嘢（world 子節點可見）", wv >= 4, wv)
+	await _shot(t, "06_unified_village")
 	# 後院
 	m.open_backyard(); await _w(t, 1.0); await _shot(t, "07_backyard")
 	m.close_sheet()

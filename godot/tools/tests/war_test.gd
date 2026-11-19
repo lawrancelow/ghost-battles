@@ -148,7 +148,7 @@ func logic(_t) -> void:
 	_clear_live(sim); _setinf(60.0)
 	var wn0 = MVW.wave_n(0)
 	var n_exp = 3 + 0 + mini(3, int(wn0 / 2.0))
-	for v in w.vol: v.atk = 400.0; v.hp = v.mx   # 好打得
+	for v in w.vol: v.atk = 0.0; v.hp = v.mx   # [unify] 合一地圖柵欄較高、孤魂一出就近義勇軍：出齊先開打，唔係未點完數就打晒
 	w.wave_t = 0.05
 	var evw = _run(sim, 0.1 + 0.7 * n_exp + 0.1, 0.05)
 	var boss = null
@@ -156,6 +156,7 @@ func logic(_t) -> void:
 	_ok("最尾一隻係頭目", boss != null and sim.war.wave != null and sim.war.wave.q.is_empty())
 	if boss != null: _chk("頭目血 = 孤魂血 × 5", boss.mx, MD.foe_hp(0) * minf(2.5, 1.0 + 0.12 * wn0) * 5.0)
 	_chk("鬼潮出咗嘅孤魂數", float(sim.war.wave.foes.size()) if sim.war.wave != null else -1.0, float(n_exp))
+	for v in w.vol: v.atk = 400.0   # 好打得
 	evw.append_array(_run(sim, 58.0))
 	_chk("鬼潮隻數 = 3 + ci + min(3, wn/2)", _sum(evw, "war_wave", "n"), float(n_exp))
 	_chk("守贏事件", float(_cnt(evw, "war_won")), 1.0)

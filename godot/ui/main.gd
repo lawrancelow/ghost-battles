@@ -120,7 +120,9 @@ func _boot_js() -> void:
 	print("[boot] ready ", Time.get_ticks_msec() - t0, "ms")
 	# 首幾幀都畫到先算開機成功（Adreno 等驅動 shader 出事會喺第一次畫嘢時閃退）
 	G.crumb("frame1"); await RenderingServer.frame_post_draw
-	for i in 30: await get_tree().process_frame
+	for i in 30:
+		if not is_inside_tree(): return   # [unify] 開機後即刻導入存檔（重載）：舊 Main 已經離開場景樹
+		await get_tree().process_frame
 	G.crumb("frame30"); await RenderingServer.frame_post_draw
 	if selftest != null:
 		if str(SelfTest.S.get("cur", "")) == "boot": SelfTest.done("boot", "OK")
@@ -511,13 +513,14 @@ func _unify_qtext(s: String) -> String:
 
 # [unify] 合一地圖：村子分頁頂段嵌入大排檔區（原村子位置全部唔變）；mv_on 一律開（生產鏈／戰鬥／橋接層都靠佢）
 func _unify_apply() -> void:
-	if G.S is Dictionary and not G.S.is_empty() and not J.t(G.S.get("mv_on")): G.S["mv_on"] = true; MVB.migrate()
+	var s0 = J.G.get("S")
+	if s0 is Dictionary and not s0.is_empty() and not J.t(s0.get("mv_on")): MVB.migrate(); s0["mv_on"] = true   # 舊存檔：一律開合一
 	if mv_embed == null:
 		mv_embed = load("res://game/outpost/mv_embed.gd").attach(self, village)
 		mv_view = mv_embed.sc
 		MVB.set_scene(mv_view)
 		print("[mv] unified embed")
-	mv_host.visible = false; mv_back.visible = false
+	mv_host.visible = false
 	village.visible = true; village.process_mode = Node.PROCESS_MODE_INHERIT
 	quest_bar.visible = true
 	if tab == "village": mv_view.on_show()

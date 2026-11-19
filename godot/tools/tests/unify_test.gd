@@ -130,7 +130,7 @@ func _run(t, shots: bool, full: bool, only0 := false) -> void:
 		var inb = true
 		for r in rs: if r[1].position.x < -2 or r[1].end.x > 392 or r[1].position.y < float(Ly.fence_y) or r[1].end.y > E: inb = false
 		_chk("圖%d 台喺柵欄同出村門之間" % (c + 1), inb)
-		_chk("圖%d 背景兩塊＋柵欄畫入背景" % (c + 1), MD.map_def(c).get("bg_tiles", []).size() == 2 and J.t(Ly.get("fence_art")))
+		_chk("圖%d 背景兩塊＋柵欄畫入背景" % (c + 1), MD.map_def(c).get("bg_tiles", []).size() == 3 and J.t(Ly.get("fence_art")))
 		var q2 = Ly.get("q2", []); var qp = MD.queue_poly(c)
 		_chk("圖%d 客人由左右兩邊入" % (c + 1), q2.size() >= 2 and float(q2[q2.size() - 1][0]) < 0 and qp[qp.size() - 1].x > 390)
 	# ---------- 撳台開卡、撳出村門 ----------
@@ -185,11 +185,14 @@ func _run(t, shots: bool, full: bool, only0 := false) -> void:
 	_chk("有料 → 挑夫鬼出發", em.porters.size() > 0)
 	# ---------- 拔營只換上半 ----------
 	var pos_before = J.G.get("POS").duplicate(true)
-	var bld_before = S.bld.duplicate(true)
+	var tr_before = S.trees.duplicate(true); var pd_before = S.paddy.duplicate(true)
 	var ci_a = sc.sim.ci()
-	sc.sim.move_next(); sc._after_move(); await _w(t, 0.5)
-	_chk("拔營換圖", sc.sim.ci() == ci_a + 1 and sc._bg_tiles().size() == 2)
-	_chk("拔營：原村子唔變", str(J.G.get("POS")) == str(pos_before) and str(S.bld) == str(bld_before))
+	_goto_ci(sc, ci_a + 1); await _w(t, 0.5)   # 拔營（move_next 要目標做齊；呢度直接換圖）
+	_chk("拔營換圖（新背景 a＋b＋b）", sc.sim.ci() == ci_a + 1 and sc._bg_tiles().size() == 3 and sc._bg_tiles()[0] == Spr.get_tex("bgm%d_a" % (ci_a + 1)))
+	sc.anim = {"t": 4.0, "from": ci_a + 1, "done": true, "line": ""}; await _w(t, 0.2)
+	_chk("拔營動畫：大排檔區淡出（嵌入）", sc.embed and sc.hud_on)
+	sc.anim = null
+	_chk("拔營：原村子唔變（位置、樹、稻田）", str(J.G.get("POS")) == str(pos_before) and str(S.trees) == str(tr_before) and str(S.paddy) == str(pd_before))
 	_chk("拔營：唔郁鏡頭範圍", absf(em.eh() - E) < 1.0)
 	_goto_ci(sc, ci_a); await _w(t, 0.3)
 	# ---------- 舊存檔（mv_on 未設） ----------

@@ -272,14 +272,14 @@ def camp_layout(ci, h, road, st, counter):
 # 大排檔區世界 y = 村子 y + EH（村子 y = -EH..0）。台擺喺彎泥路兩邊空地；櫃台喺底（出村門上面）；客人由左右兩邊入；
 # 隨村台（嘆氣蒸籠、補丁紙衫攤）擺最底一行近出村門。台數固定：第 1–6 張圖 5、5、6、6、7、7（＋2 隨村台），
 # 資料唔夠嘅台位留空（layout.spare：「待開檔」）。
-EH = 1110               # 大排檔區總高（兩塊 390×585，接縫 60）
+EH = 1635               # 大排檔區總高（a＋b＋b 三塊 390×585，接縫 60；b 重複一次拉開台距）
 U_FENCE = 150           # 背景柵欄線
-U_ROWS = [780, 620, 460, 300]   # 台嘅行（由近櫃台起，第一個台最近櫃台）
-U_CARRY_Y = 925         # 隨村台嗰行
+U_ROWS = [1170, 955, 740, 525, 310]   # 台嘅行（由近櫃台起，第一個台最近櫃台；行距 220）
+U_CARRY_Y = 1375        # 隨村台嗰行
 U_TARGET = [5, 5, 6, 6, 7, 7]
 U_CARRY = ["st_shoubao", "st_zhishan"]
-U_COUNTER = [195, 1058]
-U_SERVE = [195, 1100]
+U_COUNTER = [195, 1582]
+U_SERVE = [195, 1624]
 _ROADS = None
 def _roads():
     global _ROADS
@@ -303,9 +303,9 @@ def unify_layout(ci, sids):
         slots.append([round(lx), y]); slots.append([round(rgt), y])
     # 路：road[0]＝右邊入口、road[1]＝右邊排隊位、road[2]＝櫃台路口（j），之後沿彎泥路一路上到柵欄
     R = _roads()[ci]
-    up = [p for p in R if p[1] <= 1000 and p[1] % 40 == 0]
+    up = [p for p in R if p[1] <= 1520 and p[1] % 40 == 0]
     up.sort(key=lambda p: -p[1])
-    road = [[430, 1094], [300, 1104], [195, 1018]] + [[p[0], p[1]] for p in up] + [[_rx(ci, 160), U_FENCE + 14]]
+    road = [[430, EH - 16], [300, EH - 6], [195, EH - 92]] + [[p[0], p[1]] for p in up] + [[_rx(ci, 160), U_FENCE + 14]]
     j = 2
     def ri_of(y):
         best = 3; bd = 1e9
@@ -323,7 +323,7 @@ def unify_layout(ci, sids):
         st[sid] = [x, y, ri_of(y) if i else 3]
     tgt = U_TARGET[ci] if ci < len(U_TARGET) else 5
     spare = [slots[i] for i in range(len(reg), min(tgt, len(slots)))]
-    q2 = [U_SERVE, [96, 1104], [-40, 1094]]   # 左邊入口嘅排隊線（收貨位 → 左邊）
+    q2 = [U_SERVE, [96, EH - 6], [-40, EH - 16]]   # 左邊入口嘅排隊線（收貨位 → 左邊）
     return {"w": W, "h": EH, "fence_y": U_FENCE, "counter": U_COUNTER, "house": [195, EH + 70], "serve": U_SERVE,
             "road": road, "j": j, "st": st, "decor": [], "fence_art": True, "unify": True, "eh": EH, "q2": q2,
             "spare": spare, "target": tgt}
@@ -331,7 +331,7 @@ def unify_layout(ci, sids):
 def apply(data):
     for m in data["MAPS"]:
         m["layout"] = unify_layout(m["ci"], m["stations"])   # [unify] 合一地圖（舊 layout()／營地 camp_layout() 唔再用）
-        m["bg_tiles"] = ["bgm%d_a" % m["ci"], "bgm%d_b" % m["ci"]]
+        m["bg_tiles"] = ["bgm%d_a" % m["ci"], "bgm%d_b" % m["ci"], "bgm%d_b" % m["ci"]]
     for sid, s in data["STATIONS"].items():
         if sid in ANIM: s["anim"] = ANIM[sid]
     return data

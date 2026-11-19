@@ -83,14 +83,14 @@ func _install() -> void:
 	V["setCam"] = cam
 
 # 鏡頭最頂可以再上啲：HUD 蓋住嘅高度，等柵欄外孤魂露出嚟
-func top_extra() -> float: return float(sc.top_pad) + float(sc.HUD_H) + 40.0 if sc != null else 0.0
+func top_extra() -> float: return float(sc.EHUD_H) + 40.0 if sc != null else 0.0
 func active() -> bool: return sc != null and is_instance_valid(sc) and sc.visible
 
 # 村子世界座標 (x, y) 嘅一下撳：屬於大排檔區／HUD 就轉俾 mv_scene，回 true
 func on_tap(x: float, y: float) -> bool:
 	if not active() or sc.sim == null or sc.sim.st() == null: return false
 	var sp = Vector2(x, y - vcam())   # mv_scene 舞台座標（同村子一樣縮放）
-	var hud = sc.hud_on and sp.y < sc.top_pad + sc.HUD_H
+	var hud = sc.hud_on and sp.y < sc.top_pad + sc.EHUD_H
 	var wb = false
 	var w = sc.sim.war
 	if sc.hud_on and w != null and w.get("_btn") is Dictionary:
@@ -112,6 +112,8 @@ func _process(dt: float) -> void:
 	_update_top()
 	var cy = vcam()
 	sc.hud_on = cy < HUD_CAM or sc.sheet.visible or sc.anim != null
+	var qb = main.get("quest_bar") if main != null else null   # 精簡 HUD 已經包主線：任務條收埋
+	if qb is Control and qb.visible == sc.hud_on: qb.visible = not sc.hud_on
 	# 升級條／目標要求鏡頭移動（mv_scene.focus 設 cam_tgt，係 mv 鏡頭）→ 轉做村子鏡頭
 	if sc.cam_tgt != null:
 		_cam_anim = float(sc.cam_tgt) - eh() - sc.top_pad; sc.cam_tgt = null
