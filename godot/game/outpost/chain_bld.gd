@@ -14,6 +14,7 @@ extends RefCounted
 const M = preload("res://game/outpost/mat.gd")
 const CE = preload("res://game/outpost/chain_eco.gd")
 const VF = preload("res://game/village_fence.gd")   # [village2]
+const CF = preload("res://game/outpost/chain_field.gd")   # [village2] 一級資源田（資源點）
 const OLD_WH := 1130.0
 const FENCE_Y := 1168.0
 const ROW0 := 1290.0
@@ -234,7 +235,10 @@ static func card_desc(bid: String) -> String:
 	else:
 		var u = need_ci(bid)
 		if not unlocked(bid): o.append("[color=#c2362b]" + L("村子去到 %s（第 %d 張圖）先起得", "村子抵達 %s（第 %d 張地圖）才能建造") % [map_name(u), u + 1] + "[/color]")
+		elif CF.is_field(bid): o.append(L("「開墾」之後先派得鬼自動採，等級越高崗位越多。", "「開墾」之後才能派鬼自動採，等級越高崗位越多。"))
 		else: o.append(L("起好之後派鬼嚟做，等級越高崗位越多。", "建好後派鬼來做，等級越高崗位越多。"))
+	if CF.is_field(bid):   # [village2] 資源田：親手採永遠得
+		o.insert(1, L("撳地上嘅資源點就可以親手%s（每次 +%d，採完 %d 秒再生）", "點地上的資源點就能親手%s（每次 +%d，採完 %d 秒再生）") % [T(CF.cfg(bid).verb), CF.yield_n(bid), int(CF.REGROW)])
 	var users = _users(main_out(bid))
 	if users != "": o.append(L("用途：%s", "用途：%s") % users)
 	return "\n".join(o)
@@ -282,6 +286,7 @@ static func card(bid: String) -> Dictionary:
 	if l <= 0:
 		var c = build_cost(bid)
 		o["unlocked"] = unlocked(bid); o["cost"] = cost_bb(c); o["canBuild"] = unlocked(bid) and can_pay(c)
+		if CF.is_field(bid): o["buildLbl"] = L("開墾", "開墾")   # [village2]
 		return o
 	o["effect"] = ""
 	o["max"] = float(max_lv(bid))
@@ -297,7 +302,7 @@ static func act(bid: String, a: String, arg) -> Variant:
 	match a:
 		"build":
 			if build(bid):
-				Snd.play("build"); _fx("banner", [L("%s 起好咗！", "%s 建好了！") % bname(bid)])
+				Snd.play("build"); _fx("banner", [(L("%s 開墾好咗！可以派鬼", "%s 開墾好了！可以派鬼") if CF.is_field(bid) else L("%s 起好咗！", "%s 建好了！")) % bname(bid)])
 		"up":
 			if upgrade(bid):
 				Snd.play("build"); _fx("banner", [L("%s 升到 Lv %d", "%s 升到 Lv %d") % [bname(bid), lv(bid)]])
@@ -328,16 +333,21 @@ static func shown() -> Array:
 	for b in new_blds():
 		if lv(b) > 0 or need_ci(b) <= f + 1: o.append(b)
 	return o
+# [village2] 擺位固定（CF.ANCHOR，唔再跟解鎖次序排兩行）：資源田回田名牌位置，加工建築回建築腳
 static func pos(bid: String) -> Vector2:
-	var i = shown().find(bid)
-	if i < 0: return Vector2(-999, -999)
-	return Vector2(COL_X[i % 2], ROW0 + ROW_H * floor(i / 2.0))
+	if not (bid in shown()): return Vector2(-999, -999)
+	if CF.is_field(bid): return CF.sign_pos(bid)
+	return CF.anchor(bid)
 static func world_h() -> float:
-	var n = shown().size()
-	if n == 0: return OLD_WH
-	return ROW0 + ROW_H * (ceil(n / 2.0) - 1) + 70.0
+	var sh = shown()
+	if sh.is_empty(): return OLD_WH
+	var m = 0.0
+	for b in sh: m = maxf(m, CF.anchor(b).y)
+	return m + 110.0
+# 加工建築（資源田由 CF.hit 處理）
 static func hit(x: float, y: float) -> String:
 	for b in shown():
+		if CF.is_field(b): continue
 		var p = pos(b)
 		if absf(x - p.x) < 56 and y > p.y - 96 and y < p.y + 34: return b
 	return ""
@@ -346,11 +356,12 @@ const SPOT := [[-58, 16, 0], [58, 16, 1], [-34, 34, 0], [34, 34, 1]]
 static func worker_spots() -> Array:
 	var o = []
 	for b in shown():
-		if lv(b) <= 0: continue
+		if lv(b) <= 0 or CF.is_field(b): continue
 		var p = pos(b); var ws = workers(b)
 		for i in ws.size():
 			var sp = SPOT[i % SPOT.size()]
 			o.append({"g": ws[i], "x": p.x + sp[0], "y": p.y + sp[1], "flip": sp[2] == 1, "ph": i * 0.7 + p.x * 0.01, "post": b})
+	o.append_array(CF.worker_spots())   # [village2] 資源田：鬼企喺資源點旁邊
 	return o
 
 # 材料顏色（後備屋頂／產品堆）
@@ -377,6 +388,9 @@ static func install() -> void:
 	var G = J.G
 	var V = G.get("Village")
 	if V is Dictionary and not is_same(V.get("__cb_tap_w"), V.get("tap")): _wrap_village(V)
+	if V is Dictionary and not is_same(V.get("__cf_act_w"), V.get("doAct")): _wrap_field(V)   # [village2]
+	var s0 = S()
+	if s0 != null and int(J.num(s0.get("cfield_v", 0))) < 1: CF.migrate(s0)
 	var UI = G.get("UI")
 	var N = J.gp(UI, "_n") if UI != null else null
 	if N is Dictionary and not is_same(N.get("__cb_bld_w"), N.get("bld")): _wrap_menu(N)
@@ -387,6 +401,13 @@ static func _wrap_village(V: Dictionary) -> void:
 	var o_tap = V.get("tap"); var o_cam = V.get("setCam"); var o_walk = V.get("walkTo"); var o_ws = V.get("workerSpots")
 	var tap = func(t, a):
 		var x = J.num(J.arg(a, 0)); var y = J.num(J.arg(a, 1))
+		var fh = CF.hit(x, y, shown())   # [village2] 資源田：名牌 → 卡；資源點 → 親手採
+		if fh != null:
+			var UI0 = J.G.get("UI")
+			if J.t(J.mc(J.G.get("Story"), "busy", [])) or J.t(J.mc(UI0, "modalOpen", [])): return null
+			if fh.kind == "sign": J.mc(UI0, "openBuilding", [fh.bid])
+			else: CF.tap_node(V, str(fh.bid), int(fh.i), x, y)
+			return null
 		var b = hit(x, y)
 		if b != "":
 			var UI = J.G.get("UI")
@@ -417,6 +438,26 @@ static func _wrap_village(V: Dictionary) -> void:
 		return r
 	V["tap"] = tap; V["__cb_tap_w"] = tap
 	V["setCam"] = cam; V["walkTo"] = walk; V["workerSpots"] = ws
+
+# [village2] 親手採資源點：包 doAct（act.kind == "cnode"）、heroPose、update（再生＋自動採彈數字）
+static func _wrap_field(V: Dictionary) -> void:
+	var o_act = V.get("doAct"); var o_pose = V.get("heroPose"); var o_up = V.get("update")
+	var da = func(t, a):
+		var me = t if t != null else V
+		var H = me.get("hero")
+		if H is Dictionary and H.get("act") is Dictionary and H.act.get("kind") == "cnode":
+			CF.do_act(me, J.num(J.arg(a, 0))); return null
+		return J.cl(o_act, t, a)
+	var hp = func(t, a):
+		var me = t if t != null else V
+		var p = CF.pose(me)
+		if p != null: return p
+		return J.cl(o_pose, t, a)
+	var up = func(t, a):
+		var r = J.cl(o_up, t, a)
+		CF.tick(minf(0.1, J.num(J.arg(a, 0))))
+		return r
+	V["doAct"] = da; V["__cf_act_w"] = da; V["heroPose"] = hp; V["update"] = up
 
 static func _wrap_menu(N: Dictionary) -> void:
 	var o_bld = N.get("bld"); var o_act = N.get("bldAct")

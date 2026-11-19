@@ -1325,6 +1325,7 @@ static func n_pick_do(post, gid) -> void:
 	var g = _c("ghostById", [gid])
 	if not J.t(g): return
 	var ws = J.iter(_c("workersAt", [post]))
+	if J.num(J.mc(_g("F"), "slots", [post])) <= 0: return   # [village2] 冇崗位（未開墾／未起）：唔派（以前 ws 空會出錯）
 	if ws.size() >= J.num(J.mc(_g("F"), "slots", [post])): ws[0]["post"] = null
 	g["post"] = post; J.mc(_g("Quest"), "check", []); _c("save"); m(_ui(), "refresh")
 static func n_roster() -> Dictionary:

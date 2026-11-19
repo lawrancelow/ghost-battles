@@ -463,9 +463,27 @@ func _sync_chain() -> void:
 	var ws = CB.work_states()
 	_static("cb_fence", CB.FENCE_Y, [DB.lang], false, func(ctx): _fence(ctx))
 	for b in sh:
+		if CB.CF.is_field(b): _sync_field(b); continue   # [village2] 資源田：一個個資源點＋田名牌
 		var p = CB.pos(b); var st = str(ws.get(b, "idle")); var lvv = CB.lv(b); var un = CB.unlocked(b)
 		var bb: String = b
 		_static("cb_" + b, p.y, [lvv, st, un, DB.lang], st == "work" or st == "starve", func(ctx): _chain_bld(ctx, bb, p.x, p.y, lvv, st, un))
+
+# [village2] 資源田：每個資源點一個靜態節點（y 排序，同槐樹一樣阿福／鬼可以企喺前後）
+func _sync_field(b: String) -> void:
+	var CF = CB.CF
+	var un = CB.unlocked(b); var lvv = CB.lv(b)
+	var vy0 = cam_y - 80.0; var vy1 = cam_y + size.y / maxf(0.01, sc) + 120.0
+	for nd in CF.nodes(b):
+		var i = int(nd.i)
+		var hpv = CF.hp(b, i) if un else -9
+		var g = CF.grow(b, i) if un else 1.0
+		var shk = CF.shake.has("%s:%d" % [b, i])
+		var anim = shk or (un and hpv <= 0) or (float(nd.y) > vy0 and float(nd.y) < vy1 and CF.cfg(b).plant)
+		var bb = b; var ndd = nd
+		_static("cn_%s_%d" % [b, i], float(nd.y), [hpv, snappedf(g, 0.05), un, shk], anim, func(ctx): CF.draw_node(ctx, bb, ndd, t, not un))
+	var sp = CF.sign_pos(b); var nw = CB.workers(b).size()
+	var b2 = b
+	_static("cs_" + b, sp.y, [lvv, un, nw, DB.lang], false, func(ctx): CF.draw_sign(ctx, b2, lvv, un, nw))
 
 func _txt(ctx: Ctx, s: String, x: float, y: float, col := "#f6e2b0", px := FONT_PX, outline := "rgba(30,16,8,.95)") -> void:
 	ctx.font = "900 %dpx %s" % [px, Art.SERIF]; ctx.textAlign = "center"; ctx.textBaseline = "middle"

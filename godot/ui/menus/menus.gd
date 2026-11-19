@@ -145,7 +145,7 @@ static func _draw_bld(id: String, d) -> void:
 	var lv = int(J.num(d.lv))
 	if lv == 0:
 		if not J.t(d.unlocked): _p("[color=#c2362b]尚未解鎖。[/color]")
-		else: _row("建造費用：" + bb(d.cost), [_btn("建造", "gold", J.t(d.canBuild), func(): _act_bld(id, "build"))])
+		else: _row(("%s費用：" % J.str(d.get("buildLbl")) if d.get("buildLbl") != null else "建造費用：") + bb(d.cost), [_btn(J.str(d.get("buildLbl")) if d.get("buildLbl") != null else "建造", "gold", J.t(d.canBuild), func(): _act_bld(id, "build"))])   # [village2] 資源田：「開墾」
 		return
 	_p("等級 [b][color=#9c2219]Lv %d[/color][/b]%s" % [lv, "" if id == "house" else "（上限 = 鬼宅等級 %d）" % int(J.num(d.house))], 15, UIKit.INKTXT)
 	var eff = bb(J.gp(d, "effect"))
