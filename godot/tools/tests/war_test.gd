@@ -284,6 +284,8 @@ func logic(_t) -> void:
 	MVW.resolve(true)
 	_ok("出征贏：復工", MVW.occ_sid() == "" and not MVW.alarm_on())
 	sim.st().counter = {}   # 停工前做定嘅貨塞滿櫃台（冇客），清走先睇到再做
+	var MM = preload("res://game/outpost/mat.gd")   # [integ] 生產鏈：上面離線結算食晒料，補返原料先睇復工
+	for mid in MM.rin(A): MM.add(str(mid), 500.0)
 	ev9 = _run(sim, 30.0)
 	made = 0
 	for e in ev9: if e.k == "made" and str(e.sid) == A: made += 1
