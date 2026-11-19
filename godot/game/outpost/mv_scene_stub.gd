@@ -48,7 +48,7 @@ func sids() -> Array:
 	if M is Array and c < M.size() and M[c].get("stations") is Array and M[c].stations.size() > 0: return M[c].stations
 	return FALLBACK.keys()
 func sdef(sid: String) -> Dictionary:
-	var d = B.station_def(sid)
+	var d = load("res://game/outpost/mv_data.gd").st_def(sid)
 	return d if not d.is_empty() else FALLBACK.get(sid, {"n": [sid, sid], "unlock_cost": 0, "up_cost0": 20, "up_mul": 1.12, "price": 3})
 func ent(sid: String) -> Dictionary:
 	var st = mv_state().st
@@ -120,7 +120,7 @@ func _render() -> void:
 	for sid in sids():
 		var d = sdef(sid); var e = ent(sid); var nm = str(d.n[0] if DB.lang == "yue" else d.n[1]) if d.get("n") is Array else sid
 		var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 6); box.add_child(hb)
-		var role = B.role_of(sid)
+		var role = ""   # [integ] bridge 已冇角色估算
 		var feeds = {"buns": "　→壽包", "planks": "　→棺材板", "troops": "　→陰兵"}.get(role, "")
 		hb.add_child(_lbl("%s Lv%d　員工 %d%s" % [nm, int(J.num(e.lv)), e.workers.size(), feeds], 15))
 		var sid2: String = sid
