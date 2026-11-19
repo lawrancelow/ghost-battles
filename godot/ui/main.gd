@@ -770,6 +770,9 @@ func _show_title(fresh: bool) -> void:
 	var vl = UIKit.label(Boot.label(), 11, Color(1, 1, 1, 0.45)); vl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	vl.anchor_left = 1; vl.anchor_right = 1; vl.anchor_top = 1; vl.anchor_bottom = 1; vl.offset_left = -200; vl.offset_right = -8; vl.offset_top = -20; vl.offset_bottom = -4
 	vl.mouse_filter = Control.MOUSE_FILTER_IGNORE; title_ov.add_child(vl)
+	vl.offset_left = -420; vl.autowrap_mode = TextServer.AUTOWRAP_OFF
+	var vt = Timer.new(); vt.wait_time = 1.0; vl.add_child(vt)   # 更新狀態即時顯示
+	vt.timeout.connect(func(): vl.text = Boot.label()); vt.start()
 	bc.pressed.connect(_title_cont.bind(fresh))
 	bn.pressed.connect(_title_new.bind(fresh, bn, hint))
 

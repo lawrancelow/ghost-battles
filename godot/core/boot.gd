@@ -47,15 +47,17 @@ func _check_later(delay: float) -> void:
 	_bg_check()
 
 var _tries := 0
+var _err := ""
 func _bg_check() -> void:
 	_tries += 1
+	status = "checking"
 	var url = OS.get_environment("GB_UPDATE_URL") if OS.get_environment("GB_UPDATE_URL") != "" else DEFAULT_URL
 	var h = HTTPRequest.new(); h.timeout = 15.0; add_child(h)
 	h.request_completed.connect(func(result, code, _hd, body):
 		h.queue_free()
 		var info = JSON.parse_string(body.get_string_from_utf8()) if result == HTTPRequest.RESULT_SUCCESS and code == 200 else null
 		if not (info is Dictionary):
-			status = "offline"
+			status = "offline"; _err = "%d/%d" % [result, code]
 			print("[boot] check failed result=", result, " code=", code)
 			if _tries < 6: _check_later(60.0 * _tries)
 			return
@@ -72,7 +74,13 @@ func _bg_check() -> void:
 
 func label() -> String:
 	var t = "v%s%s" % [base, ("・更新 %d" % content_ver) if content_ver > 0 else ""]
-	if status == "pending": t += "（新更新已下載，重開遊戲生效）"
+	match status:
+		"later", "checking": t += "・檢查更新中…"
+		"downloading": t += "・下載更新中…"
+		"pending": t += "・更新已下載，重開遊戲生效"
+		"latest": t += "・已是最新"
+		"offline": t += "・連唔到更新伺服器（%s）" % _err
+		"dlfail": t += "・更新下載失敗（%s）" % _err
 	return t
 
 # ---------------- 狀態檔 ----------------
@@ -166,6 +174,7 @@ func _bg_download() -> void:
 			status = "pending"   # 下次開遊戲生效
 			print("[boot] patch downloaded, pending")
 		else:
+			status = "dlfail"; _err = "%d/%d" % [result, code]
 			print("[boot] download failed result=", result, " code=", code)
 		h.queue_free())
 	h.request(_bg_entry[0])
