@@ -662,7 +662,7 @@ func _draw_vol(sc, ctx, r: Dictionary) -> void:
 	if r.has("atk_t"): o["atk"] = true
 	if r.has("hurt"): o["hurt"] = true
 	var p = r.pos; var s = CS * 0.9
-	Art.draw_char(ctx, str(r.d.k), p.x, p.y, s, o)
+	if sc.get("mot") == null or not sc.mot.vol(sc, ctx, r, p.x, p.y, s, o): Art.draw_char(ctx, str(r.d.k), p.x, p.y, s, o)   # [motion]
 	# 著住嘅紙紮裝備：顏色帶＋件貨細圖
 	var ms = main_slot(r.d.g); var col = SLOT_COL.get(ms[1], "#e05a8a")
 	var by = {"body": -30.0, "legs": -12.0, "head": -54.0, "hand": -26.0, "shield": -26.0}.get(ms[1], -30.0)
@@ -709,7 +709,7 @@ func draw_boss(sc, ctx, f: Dictionary) -> void:
 	if f.has("hurt"): o["hurt"] = true
 	if f.st == "bang": o["atk"] = true
 	Art.el(ctx, f.pos.x, y - 40, 48, 44, "rgba(255,120,100,.14)")
-	Art.draw_char(ctx, str(f.k), f.pos.x, y, CS * 1.45, o)
+	if sc.get("mot") == null or not sc.mot.boss(sc, ctx, f, f.pos.x, y, CS * 1.45, o): Art.draw_char(ctx, str(f.k), f.pos.x, y, CS * 1.45, o)   # [motion]
 	if f.st == "die": return
 	var w = 56.0
 	Art.rr(ctx, f.pos.x - w / 2 - 1, y - 96, w + 2, 8, 3, "rgba(0,0,0,.75)")
