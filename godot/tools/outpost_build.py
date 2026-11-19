@@ -141,7 +141,7 @@ for ci, row in enumerate(ST):
         price, bt, bo, unl, up0 = TIER[j]
         GOODS[gid] = {"n": [g1, g2], "icon": icon, "price": price * f}
         STATIONS[sid] = {"n": [n1, n2], "art": art, "good": gid, "how": [h1, h2],
-                         "base_time": bt, "base_out": bo,
+                         "base_time": bt, "base_out": 2 if sid in CARRY else bo,   # 隨村台每轉出 2 件（做料畀成條鏈，chain_sim.py 驗過）
                          "unlock_cost": 0 if j < FREE[ci] else int(round(unl * f * D[ci], -1)),
                          "up_cost0": int(round(up0 * f * (D[ci] if j else 1))), "up_mul": UPM,
                          "worker_slots": 3, "miles": MILES}

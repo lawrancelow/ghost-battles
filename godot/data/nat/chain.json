@@ -743,7 +743,7 @@
     "紙西裝",
     "紙西裝"
    ],
-   "tier": 3,
+   "tier": 4,
    "icon": "mvi_suit",
    "price": 156000,
    "res": "",
@@ -822,7 +822,7 @@
    ],
    "art": "wood",
    "out": "m_wood",
-   "rate": 12,
+   "rate": 20,
    "unlock": {
     "ci": 0,
     "cost": {}
@@ -840,7 +840,7 @@
    ],
    "art": "rice",
    "out": "m_rice",
-   "rate": 12,
+   "rate": 30,
    "unlock": {
     "ci": 0,
     "cost": {}
@@ -858,7 +858,7 @@
    ],
    "art": "pr_well",
    "out": "m_wellwater",
-   "rate": 14,
+   "rate": 60,
    "unlock": {
     "ci": 0,
     "cost": {
@@ -878,7 +878,7 @@
    ],
    "art": "mvs_bamboo",
    "out": "m_bamboo",
-   "rate": 12,
+   "rate": 30,
    "unlock": {
     "ci": 0,
     "cost": {
@@ -898,7 +898,7 @@
    ],
    "art": "n30_yezi__coconut",
    "out": "m_coconut",
-   "rate": 10,
+   "rate": 40,
    "unlock": {
     "ci": 1,
     "cost": {
@@ -918,7 +918,7 @@
    ],
    "art": "mvs_rubber",
    "out": "m_latex",
-   "rate": 10,
+   "rate": 20,
    "unlock": {
     "ci": 1,
     "cost": {
@@ -938,7 +938,7 @@
    ],
    "art": "mvs_teahouse",
    "out": "m_tealeaf",
-   "rate": 10,
+   "rate": 20,
    "unlock": {
     "ci": 2,
     "cost": {
@@ -958,7 +958,7 @@
    ],
    "art": "mvi_straw",
    "out": "m_straw",
-   "rate": 12,
+   "rate": 30,
    "unlock": {
     "ci": 2,
     "cost": {
@@ -978,7 +978,7 @@
    ],
    "art": "mvs_banana",
    "out": "m_bananaleaf",
-   "rate": 10,
+   "rate": 20,
    "unlock": {
     "ci": 3,
     "cost": {
@@ -998,7 +998,7 @@
    ],
    "art": "mvs_fish",
    "out": "m_fish",
-   "rate": 10,
+   "rate": 30,
    "unlock": {
     "ci": 3,
     "cost": {
@@ -1018,7 +1018,7 @@
    ],
    "art": "pr_boxes",
    "out": "m_newspaper",
-   "rate": 12,
+   "rate": 30,
    "unlock": {
     "ci": 4,
     "cost": {
@@ -1038,7 +1038,7 @@
    ],
    "art": "mvs_copier",
    "out": "m_toner",
-   "rate": 10,
+   "rate": 20,
    "unlock": {
     "ci": 5,
     "cost": {
@@ -1065,7 +1065,7 @@
    "out": {
     "m_plank": 1
    },
-   "time": 8,
+   "time": 3,
    "unlock": {
     "ci": 0,
     "cost": {}
@@ -1083,12 +1083,12 @@
    ],
    "art": "bun",
    "in": {
-    "m_rice": 2
+    "m_rice": 1
    },
    "out": {
-    "m_bao": 1
+    "m_bao": 2
    },
-   "time": 8,
+   "time": 3,
    "unlock": {
     "ci": 0,
     "cost": {}
@@ -1106,13 +1106,13 @@
    ],
    "art": "op_paper",
    "in": {
-    "m_bamboo": 2,
+    "m_bamboo": 1,
     "m_wellwater": 1
    },
    "out": {
     "m_paper": 2
    },
-   "time": 8,
+   "time": 4,
    "unlock": {
     "ci": 0,
     "cost": {
@@ -1137,7 +1137,7 @@
    "out": {
     "m_strip": 2
    },
-   "time": 6,
+   "time": 3,
    "unlock": {
     "ci": 1,
     "cost": {
@@ -1157,12 +1157,12 @@
    ],
    "art": "mvs_ricepot",
    "in": {
-    "m_coconut": 2
+    "m_coconut": 1
    },
    "out": {
-    "m_cocomilk": 1
+    "m_cocomilk": 2
    },
-   "time": 8,
+   "time": 4,
    "unlock": {
     "ci": 1,
     "cost": {
@@ -1182,12 +1182,12 @@
    ],
    "art": "mvs_rubber",
    "in": {
-    "m_latex": 2
+    "m_latex": 1
    },
    "out": {
     "m_rubbersheet": 1
    },
-   "time": 8,
+   "time": 4,
    "unlock": {
     "ci": 1,
     "cost": {
@@ -1210,9 +1210,9 @@
     "m_straw": 2
    },
    "out": {
-    "m_rope": 1
+    "m_rope": 2
    },
-   "time": 7,
+   "time": 3,
    "unlock": {
     "ci": 2,
     "cost": {
@@ -1232,13 +1232,13 @@
    ],
    "art": "pr_puddle",
    "in": {
-    "m_newspaper": 2,
+    "m_newspaper": 1,
     "m_wellwater": 1
    },
    "out": {
-    "m_pulp": 1
+    "m_pulp": 2
    },
-   "time": 8,
+   "time": 3,
    "unlock": {
     "ci": 4,
     "cost": {
@@ -1262,9 +1262,9 @@
     "m_wellwater": 1
    },
    "out": {
-    "m_ink": 1
+    "m_ink": 2
    },
-   "time": 8,
+   "time": 3,
    "unlock": {
     "ci": 5,
     "cost": {
@@ -1288,29 +1288,29 @@
   },
   "st_zhishan": {
    "in": {
-    "m_paper": 2
+    "m_paper": 1
    },
    "out": "m_zhishan",
-   "n": 1
+   "n": 2
   },
   "st_douhua": {
    "in": {
-    "m_wellwater": 2
+    "m_wellwater": 1
    },
    "out": "m_douhua",
-   "n": 1
+   "n": 2
   },
   "st_nuomici": {
    "in": {
-    "m_rice": 2,
-    "m_shoubao": 1
+    "m_rice": 1,
+    "m_shoubao": 2
    },
    "out": "m_nuomici",
-   "n": 1
+   "n": 2
   },
   "st_guancaichuang": {
    "in": {
-    "m_plank": 2,
+    "m_plank": 1,
     "m_zhishan": 1
    },
    "out": "m_guancaichuang",
@@ -1318,21 +1318,21 @@
   },
   "st_yeketan": {
    "in": {
-    "m_coconut": 2
+    "m_coconut": 1
    },
    "out": "m_yeketan",
-   "n": 1
+   "n": 2
   },
   "st_tuoxie": {
    "in": {
     "m_rubbersheet": 1
    },
    "out": "m_tuoxie",
-   "n": 1
+   "n": 2
   },
   "st_zhulong": {
    "in": {
-    "m_strip": 2,
+    "m_strip": 1,
     "m_yeketan": 1
    },
    "out": "m_zhulong",
@@ -1348,30 +1348,30 @@
   "st_yejiangfan": {
    "in": {
     "m_cocomilk": 1,
-    "m_rice": 2,
-    "m_yeketan": 1
+    "m_rice": 1,
+    "m_yeketan": 2
    },
    "out": "m_yejiangfan",
-   "n": 1
+   "n": 2
   },
   "st_caoxie": {
    "in": {
-    "m_rope": 2
+    "m_rope": 1
    },
    "out": "m_caoxie",
-   "n": 1
+   "n": 2
   },
   "st_wucha": {
    "in": {
-    "m_tealeaf": 2,
+    "m_tealeaf": 1,
     "m_wellwater": 1
    },
    "out": "m_wucha",
-   "n": 1
+   "n": 2
   },
   "st_jiuban": {
    "in": {
-    "m_plank": 2
+    "m_plank": 1
    },
    "out": "m_jiuban",
    "n": 1
@@ -1379,7 +1379,7 @@
   "st_huajiao": {
    "in": {
     "m_jiuban": 1,
-    "m_paper": 2,
+    "m_zhishan": 1,
     "m_rope": 1
    },
    "out": "m_huajiao",
@@ -1388,22 +1388,22 @@
   "st_xunren": {
    "in": {
     "m_paper": 1,
-    "m_wucha": 1
+    "m_wucha": 2
    },
    "out": "m_xunren",
-   "n": 1
+   "n": 2
   },
   "st_jiaoye": {
    "in": {
     "m_bananaleaf": 1,
-    "m_rice": 2
+    "m_rice": 1
    },
    "out": "m_jiaoye",
-   "n": 1
+   "n": 2
   },
   "st_xianyu": {
    "in": {
-    "m_fish": 2
+    "m_fish": 1
    },
    "out": "m_xianyu",
    "n": 1
@@ -1414,24 +1414,24 @@
     "m_wellwater": 1
    },
    "out": "m_ningmengcha",
-   "n": 1
+   "n": 2
   },
   "st_duihuan": {
    "in": {
-    "m_paper": 2,
-    "m_xianyu": 1
+    "m_paper": 1,
+    "m_xianyu": 2
    },
    "out": "m_duihuan",
-   "n": 1
+   "n": 2
   },
   "st_jiushengquan": {
    "in": {
     "m_rubbersheet": 1,
     "m_paper": 1,
-    "m_ningmengcha": 1
+    "m_ningmengcha": 2
    },
    "out": "m_jiushengquan",
-   "n": 1
+   "n": 2
   },
   "st_chuanpiao": {
    "in": {
@@ -1447,14 +1447,14 @@
     "m_bao": 2
    },
    "out": "m_waimai",
-   "n": 1
+   "n": 2
   },
   "st_ifon": {
    "in": {
-    "m_pulp": 2
+    "m_pulp": 1
    },
    "out": "m_ifon",
-   "n": 1
+   "n": 2
   },
   "st_mingbiao": {
    "in": {
@@ -1466,20 +1466,20 @@
   },
   "st_paoche": {
    "in": {
-    "m_pulp": 2,
-    "m_newspaper": 2,
-    "m_ifon": 1
+    "m_newspaper": 1,
+    "m_pulp": 1,
+    "m_ifon": 2
    },
    "out": "m_paoche",
-   "n": 1
+   "n": 2
   },
   "st_shougongcu": {
    "in": {
-    "m_rice": 2,
-    "m_waimai": 1
+    "m_rice": 1,
+    "m_shoubao": 2
    },
    "out": "m_shougongcu",
-   "n": 1
+   "n": 2
   },
   "st_xifei": {
    "in": {
@@ -1491,36 +1491,36 @@
   },
   "st_mengpotang": {
    "in": {
-    "m_wellwater": 2,
+    "m_wellwater": 1,
     "m_rice": 1
    },
    "out": "m_mengpotang",
-   "n": 1
+   "n": 2
   },
   "st_xizhuang": {
    "in": {
-    "m_paper": 2,
+    "m_zhishan": 1,
     "m_ink": 1
    },
    "out": "m_xizhuang",
-   "n": 1
+   "n": 3
   },
   "st_zhiku": {
    "in": {
-    "m_xizhuang": 1,
-    "m_paper": 1
+    "m_zhishan": 1,
+    "m_ink": 1
    },
    "out": "m_zhiku",
-   "n": 1
+   "n": 2
   },
   "st_biaoge": {
    "in": {
-    "m_paper": 3,
+    "m_paper": 1,
     "m_ink": 1,
-    "m_mengpotang": 1
+    "m_mengpotang": 2
    },
    "out": "m_biaoge",
-   "n": 1
+   "n": 2
   },
   "st_jiabandeng": {
    "in": {
@@ -1532,9 +1532,9 @@
   },
   "st_tangyi": {
    "in": {
-    "m_plank": 3,
+    "m_plank": 1,
     "m_zhiku": 1,
-    "m_biaoge": 1
+    "m_xizhuang": 1
    },
    "out": "m_tangyi",
    "n": 1
