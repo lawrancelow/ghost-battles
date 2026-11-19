@@ -116,6 +116,7 @@ func logic(_t) -> void:
 	T0 = floor(Time.get_unix_time_from_system() * 1000.0 / NMS) * NMS + 1000.0
 	J.test_clock = T0
 	S.erase("gar"); S["cleared"] = {"1-1": true, "1-2": true, "1-3": true}
+	S["mv_on"] = false   # 呢度驗舊（按通關）前線算法；移動村前線另有 tools/tests/mvi_test.gd 驗
 	S["seen"] = S.get("seen", {}); S.seen.erase("gift_car"); S.seen.erase("ch5_pocong")
 	S["res"] = {"wood": 0.0, "rice": 0.0, "planks": 3000.0, "buns": 1000.0, "coins": 5000.0, "troops": 100.0}
 	var keep = []
@@ -244,6 +245,7 @@ func shot_setup(_t) -> void:
 	GR = Engine.get_main_loop().root.get_node("Garrison")
 	var S = _S()
 	S["cleared"] = {"1-1": true, "1-2": true, "1-3": true, "2-1": true, "2-2": true, "2-3": true}
+	S["mv_on"] = false
 	S.res["planks"] = maxf(S.res.planks, 3000.0); S.res["coins"] = maxf(S.res.coins, 20000.0); S.res["troops"] = 150.0
 	if GR.ghost("t_egk") == null:
 		for t in TG: S.ghosts.append({"id": t[0], "k": t[1], "name": t[2], "q": t[3], "lv": t[4], "st": t[5].duplicate(), "post": null, "spent": 0.0})

@@ -219,7 +219,9 @@ func _region_card(ci: int) -> Control:
 		var gok = (not gnode.has_method("is_open")) or J.t(gnode.call("is_open", ci))
 		var gci = ci
 		var gb = _btn(T("分村", "分村"), "", true, func(): _open_garrison(gci), gok)
-		if not gok: gb.tooltip_text = T("打通呢張地圖先開到分村", "打通這張地圖才能開分村")
+		if not gok:
+			var mvm = gnode.has_method("mv_ci") and int(gnode.call("mv_ci")) >= 0
+			gb.tooltip_text = T("村子喺呢張圖拔營之後先開到分村", "村子在這張圖拔營之後才能開分村") if mvm else T("打通呢張地圖先開到分村", "打通這張地圖才能開分村")
 		fl.add_child(gb)
 	if mi.has("name"): _map_lines(vb, mi)
 	return pc
