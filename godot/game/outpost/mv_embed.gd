@@ -190,7 +190,7 @@ func _draw_spare(ctx, x: float, y: float) -> void:
 func _draw_porter(ctx, p: Dictionary, pos: Vector2, flip: bool, a: float) -> void:
 	ctx.save(); ctx.globalAlpha = a
 	var t = float(sc.t) + float(p.ph)
-	Art.draw_char(ctx, str(p.k), pos.x, pos.y, 0.85, {"t": t, "walk": true, "flip": flip, "tamed": true, "alpha": 0.95 * a})
+	if sc.get("mot") == null or not sc.mot.porter(sc, ctx, p, pos, flip, a, t): Art.draw_char(ctx, str(p.k), pos.x, pos.y, 0.85, {"t": t, "walk": true, "flip": flip, "tamed": true, "alpha": 0.95 * a})   # [motion] 挑夫步法
 	if str(p.mid) != "":   # 擔挑：一條竹＋兩籮貨
 		var by = pos.y - 62.0 + sin(t * 9.0) * 1.5
 		ctx.strokeStyle = "#8a6a3a"; ctx.lineWidth = 3

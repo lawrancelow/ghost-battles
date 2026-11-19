@@ -393,6 +393,9 @@ func _logic(t, shots: bool) -> void:
 			f["boss"] = true; f["_mo"] = null; f.erase("_mo"); f.st = "roam"; f.t = 0.0
 			for i in 20: mot.step(sc, 0.1); mot.boss(sc, ctx, f, f.pos.x, f.pos.y, 1.6, {"t": 0.0, "flip": false, "alpha": 0.95}); n_draw += 1
 			sim.foes.erase(f)
+	for pk in ["youhun", "n30_jiugui", "egui"]:
+		for i in 10: mot.porter(sc, ctx, {"k": pk, "mid": "m_bao", "ph": 1.0}, Vector2(195, 1000), i % 2 == 0, 1.0, i * 0.1)
+	_chk("挑夫鬼步法（幽魂飄、酒鬼醉步、餓鬼弓身）", (mot.seen.get("n30_jiugui", {}) as Dictionary).has("porter") and (mot.seen.get("n30_jiugui", {}) as Dictionary).has("gait_drunk"))
 	_chk("狀態切換全部畫過、冇報錯", n_draw > 1000, "畫咗 %d 次" % n_draw)
 	var cover = []
 	for k in types:
