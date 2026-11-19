@@ -6,6 +6,7 @@ var village: Control
 const MVB := preload("res://game/outpost/mv_bridge.gd")
 const MV_SCENE := "res://game/outpost/mv_scene.gd"            # 引擎線交貨
 const MV_STUB := "res://game/outpost/mv_scene_stub.gd"        # 整合線假場景（引擎未交貨時用）
+const CBLD := preload("res://game/outpost/chain_bld.gd")   # [village] 後院拓展建築
 var mv_host: Control
 var mv_view: Control = null
 var mv_back: Button
@@ -468,6 +469,7 @@ func refresh() -> void:
 		quest_prog.add_theme_color_override("font_color", Color("#2e6d3a") if float(p[0]) >= float(p[1]) else UIKit.CINNABAR2)
 	else: quest_lbl.text = "第一季完。村子由你慢慢經營。" if S.ended else "—"; quest_prog.text = ""
 	_mv_tick()
+	CBLD.install()   # [village] 後院拓展建築：包裝村子／建築卡／產出（已裝就即刻返）
 	var ch = int(S.chests.g) + int(S.chests.b) + int(S.chests.p)
 	chest_badge.text = str(ch) if ch else ""; chest_badge.visible = ch > 0
 	if sheet.visible and sheet_refresh.is_valid(): sheet_refresh.call()
@@ -527,6 +529,7 @@ func open_backyard() -> void:
 		var lv = int(S.bld.get(id, 0)); var bid: String = id
 		var b = _act(UIKit.btn("打開", "", true), func(): open_building(bid), lv > 0 or G.bldUnlocked(bid))
 		_row("[b]%s[/b]　%s" % [D.BUILDINGS[id].name, ("Lv %d" % lv) if lv > 0 else "未有"], [b])
+	CBLD.backyard_ui(self)   # [village] 後院拓展建築列表＋入後院睇
 	var sw = UIKit.btn("暫時用返舊村子畫面", "ghost"); sheet_body.add_child(sw)
 	sw.pressed.connect(func(): close_sheet(); set_mv(false); show_toast("已轉返舊村子畫面。喺「劇情」頁可以轉返移動村。"))
 
@@ -638,6 +641,8 @@ func _render_building(id: String) -> void:
 	for post in b.posts: _post_ui(post, id)
 
 func _bld_effect(id: String) -> String:
+	var ce = CBLD.old_effect(id, false)   # [village] 舊建築卡顯示新材料名
+	if ce != "": return ce
 	var r = G.ratesPerMin(); var S = G.S
 	match id:
 		"house": return "其他建築最高可升到 Lv %d" % int(S.bld.house)

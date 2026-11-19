@@ -6,10 +6,13 @@ extends "res://ui/js_canvas_view.gd"
 
 const W := 390.0
 const WH := 1130.0
+const CB = preload("res://game/outpost/chain_bld.gd")   # 後院拓展建築（生產鏈）
 
 var V: Dictionary
 var world: Node2D
 var ground: PtDraw
+var ext_ground: PtDraw       # 後院拓展地（WH 以下）
+var yard_back: Button        # 移動村模式入後院：「返大排檔」
 var lily: PtDraw
 var mist: PtDraw
 var ysort: Node2D
@@ -40,6 +43,7 @@ func _build() -> void:
 	clip_contents = true
 	world = Node2D.new(); add_child(world)
 	ground = PtDraw.new(); ground.tag = "ground"; ground.fn = _draw_ground; world.add_child(ground)
+	ext_ground = PtDraw.new(); ext_ground.tag = "extground"; ext_ground.fn = _draw_ext_ground; world.add_child(ext_ground)
 	lily = PtDraw.new(); lily.tag = "lily"; lily.fn = _draw_lily; world.add_child(lily)
 	ysort = Node2D.new(); ysort.y_sort_enabled = true; world.add_child(ysort)
 	mist = PtDraw.new(); mist.tag = "mist"; mist.fn = _draw_mist; world.add_child(mist)
@@ -47,12 +51,22 @@ func _build() -> void:
 	top_ui = PtDraw.new(); top_ui.tag = "topui"; top_ui.fn = _draw_top_ui; world.add_child(top_ui)
 	rec_ctx = Ctx.new(Recorder.new())
 	plaza = NvPlaza.new(self)
+	yard_back = UIKit.btn(CB.L("返大排檔", "回大排檔"), "gold", true); yard_back.add_theme_font_size_override("font_size", 15)
+	yard_back.anchor_left = 1; yard_back.anchor_right = 1; yard_back.offset_left = -112; yard_back.offset_right = -8; yard_back.offset_top = 58; yard_back.offset_bottom = 94
+	yard_back.visible = false; yard_back.focus_mode = Control.FOCUS_NONE
+	yard_back.pressed.connect(func():
+		var m = get_tree().root.get_node_or_null("Main")
+		if m: CB.hide_yard(m))
+	add_child(yard_back)
 
 # ---------------- 每幀 ----------------
 func _process(_dt: float) -> void:
 	if el == null or not visible or not is_visible_in_tree(): return
 	V = J.G.get("Village")
 	if V == null: return
+	CB.install()
+	var yb = CB.yard_on and J.t(J.G.S.get("mv_on"))
+	if yard_back.visible != yb: yard_back.visible = yb
 	var t0 = Time.get_ticks_usec()
 	sc = size.x / W
 	# JS 嘅點擊座標／鏡頭夾限靠 Village.scale、Village.h：尺寸變咗就叫佢 resize 對齊
@@ -67,6 +81,8 @@ func _process(_dt: float) -> void:
 	_sync_dynamic()
 	var t2 = Time.get_ticks_usec()
 	if ground_tex == null: ground.queue_redraw()
+	var ewh = CB.world_h()
+	if ewh != _ext_h: _ext_h = ewh; ext_ground.queue_redraw()
 	lily.queue_redraw(); mist.queue_redraw(); top_fx.queue_redraw(); top_ui.queue_redraw()
 	if OS.has_environment("GB_PROF"):
 		prof["static"] = prof.get("static", 0) + t1 - t0; prof["dyn"] = prof.get("dyn", 0) + t2 - t1; prof_n += 1
@@ -134,6 +150,7 @@ func _sync_statics() -> void:
 	for e in EXTRA:
 		var ek: String = e[0]; var ex: float = e[1]; var ey: float = e[2]; var ew: float = e[3]
 		_static("x_" + ek, ey, QX.has_new() if ek == "vil_board" else 0, true, func(ctx): _extra(ctx, ek, ex, ey, ew))
+	_sync_chain()
 	var i = 0
 	for d in J.G.get("DECOR"):
 		var kind = J.str(d[0]); var dx = J.num(d[1]); var dy = J.num(d[2])
@@ -399,3 +416,178 @@ func _furnace_glow(c: CanvasItem, x: float, y: float) -> void:
 func t_dump_ground(path: String) -> void:
 	if ground_tex: ground_tex.get_image().save_webp(path, false, 0.9); print("GROUND dumped ", ground_tex.get_size())
 	else: print("GROUND not baked")
+
+# ================= 後院拓展建築（生產鏈 T1／T2；資料喺 chain.json，邏輯喺 game/outpost/chain_bld.gd）=================
+var _ext_h := -1.0
+var _ext_col = null
+const FONT_PX := 14
+
+func _ext_base_col() -> Color:
+	if _ext_col == null:
+		_ext_col = Color("#221c19")
+		if ground_tex != null:
+			var im = ground_tex.get_image()
+			if im != null and not im.is_empty():
+				var acc = Color(0, 0, 0, 0); var n = 0
+				for k in 12:
+					var px = im.get_pixel(int(im.get_width() * (0.05 + 0.075 * k)) % im.get_width(), im.get_height() - 3); acc += px; n += 1
+				_ext_col = Color(acc.r / n, acc.g / n, acc.b / n, 1)
+	return _ext_col
+
+# 地面：同舊村子接駁（頂部漸變）、中間石板路、草、兩邊暗啲
+func _draw_ext_ground(c: CanvasItem) -> void:
+	var wh = CB.world_h()
+	if wh <= WH: return
+	var base = _ext_base_col(); var top = WH - 24.0
+	c.draw_rect(Rect2(0, WH, W, wh - WH + 40), base)
+	for k in 12:
+		c.draw_rect(Rect2(0, top + k * 2, W, 2), Color(base, (k + 1) / 12.0))
+	var rng = RandomNumberGenerator.new(); rng.seed = 7123
+	var y = WH + 6.0
+	while y < wh + 20:   # 石板路
+		var sw = 30.0 + rng.randf() * 10; var sx = 195 - sw / 2 + rng.randf_range(-4, 4)
+		c.draw_rect(Rect2(sx, y, sw, 20), Color("#3d3836")); c.draw_rect(Rect2(sx + 2, y + 2, sw - 4, 3), Color(1, 1, 1, 0.05))
+		y += 24
+	for k in int((wh - WH) / 9):   # 草
+		var gx = rng.randf() * W; var gy = WH + rng.randf() * (wh - WH)
+		if absf(gx - 195) < 28: continue
+		var gc = Color("#3c4a2c") if rng.randf() < 0.6 else Color("#4a3e2c")
+		for j in 3: c.draw_line(Vector2(gx + j * 2 - 2, gy), Vector2(gx + j * 3 - 3 + rng.randf_range(-1, 1), gy - 5 - rng.randf() * 4), gc, 1.2)
+	for k in 6:   # 兩邊暗角
+		c.draw_rect(Rect2(0, WH, 6 + k * 4, wh - WH + 40), Color(0, 0, 0, 0.05))
+		c.draw_rect(Rect2(W - 6 - k * 4, WH, 6 + k * 4, wh - WH + 40), Color(0, 0, 0, 0.05))
+
+func _sync_chain() -> void:
+	var sh = CB.shown()
+	if sh.is_empty(): return
+	var ws = CB.work_states()
+	_static("cb_fence", CB.FENCE_Y, [DB.lang], false, func(ctx): _fence(ctx))
+	for b in sh:
+		var p = CB.pos(b); var st = str(ws.get(b, "idle")); var lvv = CB.lv(b); var un = CB.unlocked(b)
+		var bb: String = b
+		_static("cb_" + b, p.y, [lvv, st, un, DB.lang], st == "work" or st == "starve", func(ctx): _chain_bld(ctx, bb, p.x, p.y, lvv, st, un))
+
+func _txt(ctx: Ctx, s: String, x: float, y: float, col := "#f6e2b0", px := FONT_PX, outline := "rgba(30,16,8,.95)") -> void:
+	ctx.font = "900 %dpx %s" % [px, Art.SERIF]; ctx.textAlign = "center"; ctx.textBaseline = "middle"
+	ctx.lineWidth = 3.0; ctx.strokeStyle = outline; ctx.lineJoin = "round"; ctx.strokeText(s, x, y); ctx.fillStyle = col; ctx.fillText(s, x, y)
+
+func _fence(ctx: Ctx) -> void:
+	var y = CB.FENCE_Y
+	ctx.save()
+	for x in range(8, 390, 22):
+		if x > 150 and x < 240: continue
+		Art.rr(ctx, x - 3, y - 26, 6, 28, 1, "#4a3424", "#22160e", 1)
+		Art.poly(ctx, [x - 3, y - 26, x + 3, y - 26, x, y - 31], "#4a3424")
+	for yy in [y - 20, y - 9]:
+		Art.rr(ctx, 4, yy, 150, 4, 1, "#5a4030"); Art.rr(ctx, 238, yy, 150, 4, 1, "#5a4030")
+	# 牌坊式木牌（唔係廟）：兩條柱＋橫匾
+	Art.rr(ctx, 146, y - 58, 6, 60, 1, "#3a2818", "#1a100a", 1); Art.rr(ctx, 238, y - 58, 6, 60, 1, "#3a2818", "#1a100a", 1)
+	ctx.font = "900 15px " + Art.SERIF
+	var t = CB.L("後院拓展地", "後院拓展地"); var tw = ctx.measureText(t).width + 22
+	Art.rr(ctx, 195 - tw / 2, y - 66, tw, 24, 2, "#7a5634", "#2a1a0e", 1.5)
+	_txt(ctx, t, 195, y - 53.5, "#f6e2b0", 15)
+	ctx.restore()
+
+func _chain_bld(ctx: Ctx, bid: String, x: float, y: float, lvv: int, st: String, un: bool) -> void:
+	var mid = CB.main_out(bid); var col = CB.mat_col(mid)
+	ctx.save()
+	if lvv <= 0:
+		_site(ctx, bid, x, y, un)
+		ctx.restore(); return
+	var tex = CB.art_tex(bid)
+	Art.el(ctx, x, y + 1, 48, 8, "rgba(0,0,0,.3)")
+	var roof_top = y - 74.0
+	if tex != null:
+		var bw = 106.0; var bh = bw * tex.get_height() / tex.get_width()
+		if bh > 96: bh = 96.0; bw = bh * tex.get_width() / tex.get_height()
+		ctx.drawImage(tex, x - bw / 2, y + 6 - bh, bw, bh); roof_top = y + 6 - bh
+	else: _hut(ctx, bid, x, y, col, st)
+	if st == "work": _work_fx(ctx, bid, x, y, roof_top, col, tex != null)
+	# 名牌（14px）＋等級
+	var nm = CB.bname(bid)
+	ctx.font = "900 %dpx %s" % [FONT_PX, Art.SERIF]
+	var w = ctx.measureText(nm).width + 16
+	Art.rr(ctx, x - w / 2, y + 6, w, 21, 2, "#7a5634", "#2a1a0e", 1.4)
+	ctx.fillStyle = "#" + col.to_html(false); ctx.fillRect(x - w / 2 + 2, y + 8, 4, 17)
+	_txt(ctx, nm, x + 2, y + 16.5)
+	Art.rr(ctx, x + w / 2 - 4, y - 2, 26, 18, 2, "#c2362b", "#f0c8b4", 1)
+	_txt(ctx, str(lvv), x + w / 2 + 9, y + 7, "#fff3e0", FONT_PX, "rgba(80,10,6,.9)")
+	if st == "starve":
+		var a = 0.75 + sin(t * 4) * 0.25
+		ctx.globalAlpha = a
+		var s2 = CB.L("斷料", "缺料"); var sw = 46.0
+		Art.rr(ctx, x - sw / 2, roof_top - 24, sw, 21, 3, "#c2362b", "#fff3e0", 1.2)
+		_txt(ctx, s2, x, roof_top - 13.5, "#fff3e0", FONT_PX, "rgba(80,10,6,.9)")
+		ctx.globalAlpha = 1
+	ctx.restore()
+
+# 後備：程序畫一間細屋（屋頂顏色跟出產材料）＋門口掛住產品圖示
+func _hut(ctx: Ctx, bid: String, x: float, y: float, col: Color, st: String) -> void:
+	var dark = col.darkened(0.45); var roof = Color("#5a3a26").lerp(col, 0.55)
+	var gather = CB.kind(bid) == "gather"
+	if not gather: Art.rr(ctx, x + 18, y - 84, 10, 20, 1, "#3a2e26", "#1a120c", 1)   # 煙囱
+	Art.rr(ctx, x - 38, y - 44, 76, 46, 2, "#4a3a2e", "#22160e", 1.4)
+	ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 1
+	for k in 3:
+		ctx.beginPath(); ctx.moveTo(x - 36, y - 32 + k * 11); ctx.lineTo(x + 36, y - 32 + k * 11); ctx.stroke()
+	Art.poly(ctx, [x - 50, y - 40, x + 50, y - 40, x + 36, y - 72, x - 36, y - 72], "#" + roof.to_html(false), "#" + dark.to_html(false), 1.6)
+	ctx.strokeStyle = "rgba(255,240,200,.18)"; ctx.lineWidth = 1.2
+	for k in 4:
+		ctx.beginPath(); ctx.moveTo(x - 44 + k * 4, y - 46 - k * 7); ctx.lineTo(x + 44 - k * 4, y - 46 - k * 7); ctx.stroke()
+	Art.rr(ctx, x - 9, y - 26, 18, 28, 1, "#1e1410")
+	var glow = 0.55 + (sin(t * 6 + x) * 0.2 if st == "work" else 0.0)
+	Art.rr(ctx, x + 15, y - 36, 15, 11, 1, "rgba(255,200,110,%.2f)" % (glow if st == "work" else 0.22), "#22160e", 1)
+	Art.rr(ctx, x - 30, y - 36, 15, 11, 1, "rgba(255,200,110,%.2f)" % (glow if st == "work" else 0.22), "#22160e", 1)
+	if gather:   # 門口一堆貨
+		for k in 3: Art.el(ctx, x - 50 + k * 7, y - 4 - (k % 2) * 4, 6, 5, "#" + col.to_html(false), "#" + dark.to_html(false), 1)
+	var ik = M_icon(bid)
+	if ik != null:
+		Art.el(ctx, x, y - 54, 12, 12, "#ecd9a4", "#5a4030", 1.2)
+		ctx.drawImage(ik, x - 10, y - 64, 20, 20)
+
+func M_icon(bid: String) -> Texture2D:
+	var mid = CB.main_out(bid)
+	var k = str(CB.M.icon(mid)) if mid != "" else ""
+	if k == "": return null
+	return Spr.get_tex(k) if Spr.ok(k) else PtGfx.tex(k)
+
+# 工作動畫：加工 → 煙囱出煙；採集 → 材料粒子一粒粒飄起；有圖嘅建築喺圖頂出
+func _work_fx(ctx: Ctx, bid: String, x: float, y: float, top: float, col: Color, has_img: bool) -> void:
+	var gather = CB.kind(bid) == "gather"
+	var sx = (x + 23.0) if not has_img else (x + 26.0); var sy = (y - 84.0) if not has_img else (top + 8.0)
+	if not gather:
+		for k in 4:
+			var ph = fmod(t * 0.6 + k * 0.25, 1.0)
+			var r = 4.0 + ph * 9.0
+			ctx.globalAlpha = 0.45 * (1.0 - ph)
+			Art.el(ctx, sx + sin(t * 1.5 + k) * 4 + ph * 8, sy - ph * 34, r, r * 0.8, "rgba(200,205,215,1)")
+		ctx.globalAlpha = 1
+	else:
+		var c2 = "#" + col.lightened(0.2).to_html(false)
+		for k in 5:
+			var ph = fmod(t * 0.45 + k * 0.2, 1.0)
+			ctx.globalAlpha = 0.85 * (1.0 - ph)
+			var px = x - 34 + k * 17 + sin(t * 2 + k * 1.7) * 4
+			Art.el(ctx, px, y - 10 - ph * 46, 2.6, 2.6, c2)
+		ctx.globalAlpha = 1
+		# 轉動嘅小風車／轆轤（採集嘅「機器」）
+		ctx.save(); ctx.translate(x + 44, y - 22); ctx.rotate(t * 2.4)
+		for k in 4:
+			ctx.rotate(PI / 2); Art.rr(ctx, -1.5, 0, 3, 12, 1, "#8a6a44", "#2a1a0e", 0.8)
+		ctx.restore()
+		Art.el(ctx, x + 44, y - 22, 3, 3, "#3a2818")
+
+func _site(ctx: Ctx, bid: String, x: float, y: float, un: bool) -> void:
+	var nm = CB.bname(bid)
+	ctx.font = "900 %dpx %s" % [FONT_PX, Art.SERIF]
+	var w = maxf(84, ctx.measureText(nm).width + 22)
+	Art.el(ctx, x, y - 6, w * 0.62, 11, "rgba(60,48,36,.45)")
+	ctx.setLineDash([3, 4]); ctx.strokeStyle = "rgba(236,217,164,.4)" if un else "rgba(160,150,140,.3)"; ctx.lineWidth = 1.2
+	ctx.beginPath(); ctx.ellipse(x, y - 6, w * 0.62, 13, 0, 0, TAU); ctx.stroke(); ctx.setLineDash([])
+	Art.rr(ctx, x - 1.5, y - 36, 3, 30, 1, "#5a4030")
+	ctx.globalAlpha = 1.0 if un else 0.72
+	Art.rr(ctx, x - w / 2, y - 60, w, 26, 2, "#ecd9a4", "#5a4030", 1.5)
+	ctx.fillStyle = "#2b1d12"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(nm, x, y - 46.5)
+	ctx.globalAlpha = 1
+	var sub = CB.L("待建", "待建") if un else CB.L("第 %d 張圖", "第 %d 張地圖") % (CB.need_ci(bid) + 1)
+	_txt(ctx, sub, x, y - 18, "#ff9a7a" if un else "#c8bca8")
