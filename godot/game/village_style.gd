@@ -12,13 +12,8 @@ const TINT := {
 	"lamppost": Color(0.70, 0.62, 0.60), "banana": Color(0.50, 0.54, 0.48), "grave": Color(0.52, 0.50, 0.56),
 	"scarecrow": Color(0.62, 0.55, 0.55), "gate": Color(0.66, 0.58, 0.60), "crowsit": Color(0.70, 0.66, 0.72),
 }
-# 血霧色板（老闆指定）：#200201 → #070000
-const MIST_A := Color(0x20 / 255.0, 0x02 / 255.0, 0x01 / 255.0)
-const MIST_B := Color(0x07 / 255.0, 0.0, 0.0)
-const MIST_W := {"house": 150.0, "furnace": 64.0}
 const NIGHT := Color(0.06, 0.02, 0.10, 0.16)
 
-static var _mist := {}       # id → [底霧, 霧團, 細絲]
 static var _vig: Texture2D
 
 static func tint_for(key: String) -> Color: return TINT.get(key, Color.WHITE)
@@ -26,8 +21,10 @@ static func tint_for(key: String) -> Color: return TINT.get(key, Color.WHITE)
 # ---------------- 掛鈎 ----------------
 static func attach(nv) -> void:
 	if nv.world == null or nv.world.has_node("va_mist"): return
-	var m = Layer.new(); m.name = "va_mist"; m.fn = func(c): draw_mist(c, nv)
-	nv.world.add_child(m); nv.world.move_child(m, nv.ysort.get_index())          # 地面之上、建築之下
+	var m = Layer.new(); m.name = "va_mist"; m.fn = func(c): draw_mist(c, nv, false)
+	nv.world.add_child(m); nv.world.move_child(m, nv.ysort.get_index())          # 後層：地面之上、建築之下
+	var mf = Layer.new(); mf.name = "va_mist_f"; mf.fn = func(c): draw_mist(c, nv, true)
+	nv.world.add_child(mf); nv.world.move_child(mf, nv.ysort.get_index() + 1)    # 前層：建築之上
 	var n = Layer.new(); n.name = "va_night"; n.fn = func(c): draw_night(c, nv)
 	nv.world.add_child(n); nv.world.move_child(n, nv.top_ui.get_index())         # 泡泡／浮字／箭頭之下
 
@@ -38,90 +35,27 @@ class Layer extends Node2D:
 	func _draw() -> void:
 		if fn.is_valid(): fn.call(self)
 
-# ---------------- 血霧 ----------------
-static func _hash(s: String) -> int:
-	var h := 2166136261
-	for ch in s.to_utf8_buffer(): h = ((h ^ ch) * 16777619) & 0x7fffffff
-	return h
-
-# 預先畫成貼圖：[0] 地上血漬底霧、[1] 飄動霧團（短蠟筆筆觸）、[2] 上升細絲
-static func mist_tex(id: String) -> Array:
-	if _mist.has(id): return _mist[id]
-	var rng = RandomNumberGenerator.new(); rng.seed = _hash(id)
-	var W := 128; var H := 48
-	var out = []
-	for layer in 3:
-		var a = PackedFloat32Array(); a.resize(W * H)
-		var tone = PackedFloat32Array(); tone.resize(W * H)
-		if layer < 2:
-			var blobs = 16 if layer == 0 else 9
-			for b in blobs:
-				var cx = W * 0.5 + rng.randf_range(-0.40, 0.40) * W; var cy = H * (0.62 if layer == 0 else 0.48) + rng.randf_range(-0.16, 0.16) * H
-				var rx = (rng.randf_range(16, 34) if layer == 0 else rng.randf_range(12, 24)) * 0.667; var ry = rx * rng.randf_range(0.32, 0.5)
-				var pk = rng.randf_range(0.55, 0.9) if layer == 0 else rng.randf_range(0.4, 0.7)
-				for y in range(maxi(0, int(cy - ry)), mini(H, int(cy + ry) + 1)):
-					for x in range(maxi(0, int(cx - rx)), mini(W, int(cx + rx) + 1)):
-						var d = Vector2((x - cx) / rx, (y - cy) / ry).length()
-						if d >= 1.0: continue
-						var v = pk * (1.0 - d * d)
-						var i = y * W + x; a[i] = 1.0 - (1.0 - a[i]) * (1.0 - v); tone[i] = maxf(tone[i], 1.0 - d)
-			# 短蠟筆筆觸（斜線，同地面排線同方向）
-			for s in (170 if layer == 0 else 90):
-				var sx = rng.randf() * W; var sy = H * 0.3 + rng.randf() * H * 0.65; var ln = rng.randf_range(2, 6); var ang = -0.6 + rng.randf_range(-0.2, 0.2)
-				var base = a[clampi(int(sy), 0, H - 1) * W + clampi(int(sx), 0, W - 1)]
-				if base < 0.08: continue
-				for k in int(ln):
-					var px = int(sx + cos(ang) * k); var py = int(sy + sin(ang) * k)
-					if px < 0 or px >= W or py < 0 or py >= H: continue
-					var i = py * W + px; a[i] = clampf(a[i] + rng.randf_range(0.12, 0.3), 0, 0.95); tone[i] = minf(1.0, tone[i] + 0.3)
-		else:
-			# 上升細絲：由底向上彎彎曲曲，越高越淡
-			for f in 7:
-				var x0 = W * 0.5 + rng.randf_range(-0.36, 0.36) * W; var ph = rng.randf() * TAU; var amp = rng.randf_range(1.5, 4)
-				for y in range(H - 6, 2, -1):
-					var fy = 1.0 - float(y) / H
-					var x = int(x0 + sin(ph + fy * 7.0) * amp * (0.4 + fy))
-					for dx in [-1, 0, 1]:
-						var px = x + dx
-						if px < 0 or px >= W: continue
-						var i = y * W + px; var v = (0.55 if dx == 0 else 0.22) * (1.0 - fy * 0.9)
-						a[i] = maxf(a[i], v); tone[i] = 0.7
-		# 邊緣淡出
-		var img = Image.create(W, H, false, Image.FORMAT_RGBA8)
-		for y in H:
-			for x in W:
-				var i = y * W + x
-				var ex = minf(1.0, minf(x, W - 1 - x) / 10.0) * minf(1.0, minf(y, H - 1 - y) / 5.0)
-				var c = MIST_B.lerp(MIST_A, clampf(tone[i] * 1.2, 0, 1))
-				img.set_pixel(x, y, Color(c, clampf(a[i] * ex, 0, 1)))
-		out.append(ImageTexture.create_from_image(img))
-	_mist[id] = out
-	return out
-
-static func draw_mist(c: CanvasItem, nv) -> void:
+# ---------------- 血霧：用通用版 game/outpost/mv_mist.gd（後層喺建築下、前層喺建築上）----------------
+const MIST = preload("res://game/outpost/mv_mist.gd")
+static func draw_mist(c: CanvasItem, nv, front: bool) -> void:
 	var S = J.G.get("S"); var POS = J.G.get("POS"); var order = J.G.get("BLD_ORDER")
 	if not (S is Dictionary) or POS == null or order == null: return
-	var t: float = nv.t; var top: float = nv.cam_y - 60; var bot: float = nv.cam_y + nv.size.y / maxf(0.01, nv.sc) + 60
-	var made := false   # 未快取嘅貼圖每幀最多畫一張（唔好一次過卡）
+	var BW: Dictionary = Art.BW
 	for id in order:
-		if not POS.has(id) or not J.t(S.bld.get(id, 0)): continue
-		var p = POS[id]; var x = J.num(p[0]); var y = J.num(p[1])
-		if y < top or y > bot: continue
-		if not _mist.has(id):
-			if made: continue
-			made = true
-		var tx = mist_tex(id); var w = MIST_W.get(id, 118.0); var h = w * 48.0 / 128.0
-		var ph = float(_hash(id) % 1000) * 0.01
-		# 底霧：唔郁，透明度慢慢起伏
-		c.draw_texture_rect(tx[0], Rect2(x - w / 2, y - h * 0.62 + 4, w, h), false, Color(1, 1, 1, 0.9 + sin(t * 0.7 + ph) * 0.08))
-		# 霧團：左右飄
-		var dx = sin(t * 0.45 + ph) * 5.0
-		c.draw_texture_rect(tx[1], Rect2(x - w / 2 + dx, y - h * 0.66 + 2, w, h), false, Color(1, 1, 1, 0.62 + sin(t * 0.9 + ph * 2) * 0.14))
-		c.draw_texture_rect(tx[1], Rect2(x + w / 2 - dx * 0.7, y - h * 0.6 + 4, -w * 0.9, h * 0.9), false, Color(1, 1, 1, 0.4 + cos(t * 0.8 + ph) * 0.12))
-		# 細絲：向上升，循環淡入淡出
-		for k in 2:
-			var f = fmod(t * 0.18 + ph + k * 0.5, 1.0)
-			c.draw_texture_rect(tx[2], Rect2(x - w / 2, y - h * 0.8 - f * 22.0, w, h), false, Color(1, 1, 1, sin(f * PI) * 0.75))
+		if not POS.has(id) or not J.t(S.bld.get(id, 0)) or not BW.has(id): continue
+		var im = Spr.get_tex(id)
+		if im == null: continue
+		var p = POS[id]; var w: float = BW[id]; var h = w * im.get_height() / im.get_width()
+		var base = Vector2(J.num(p[0]), J.num(p[1]) + 6.0 - h * 0.005)   # 新圖地面線約圖高 99.5%
+		var drawn = MIST.draw(c, "vil:" + id, base, w * 0.92, h, nv.t, front)
+		if front and drawn: _relabel(c, id, J.num(p[0]), J.num(p[1]), w, h, S.bld.get(id, 0))
+
+# 前層血霧會蓋住建築名牌／等級：喺霧上面再寫一次（同 Art.draw_building 一樣嘅位置），字唔會睇唔清
+static func _relabel(c: CanvasItem, id: String, x: float, y: float, w: float, h: float, lv) -> void:
+	var ctx = Ctx.new(c)
+	var bname: String = DB.D.BUILDINGS[id].name
+	if Art.PLAQUE.has(id): Art.plaque_text(ctx, Rect2(x - w / 2, y + 6 - h, w, h), Art.PLAQUE[id], bname, lv)
+	else: Art.sign_board(ctx, x + (0.0 if id == "furnace" else w * 0.30), y + 12, bname, lv)
 
 # ---------------- 夜色＋四角暗角（只蓋世界，唔蓋 UI 字）----------------
 static func vig_tex() -> Texture2D:

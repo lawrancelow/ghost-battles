@@ -153,10 +153,16 @@ func draw_decor(ctx: Ctx, kind: String, x: float, y: float, t: float) -> void:
 		"willo": draw_willo(ctx, x, y, t)
 		"webTL": draw_web(ctx, x, y, 30, 0, PI / 2, 0.32)
 		"webTR": draw_web(ctx, x, y, 30, PI / 2, PI, 0.32)
-		"offer":
-			rr(ctx, x - 9, y - 6, 18, 6, 1, "#7a3a2a", OUT, 1)
-			for k in range(-1, 2): rr(ctx, x + k * 4 - 0.6, y - 16, 1.2, 10, 0.5, "#c8a050"); el(ctx, x + k * 4, y - 16, 1.2, 1.2, "#ff8040")
-			ctx.strokeStyle = "rgba(220,220,240,.25)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y - 17); ctx.quadraticCurveTo(x + 4 + sin(t * 2) * 3, y - 26, x, y - 34); ctx.stroke()
+		"offer":   # [villageart] 原本係香爐插香（紅線：唔准香燭）→ 改做矮石燈（位置不變，冇點擊）
+			el(ctx, x, y - 1, 10, 3, "rgba(10,2,8,.45)")
+			rr(ctx, x - 8, y - 5, 16, 5, 1, "#3a3436", "#141016", 1)          # 底座
+			rr(ctx, x - 2.5, y - 12, 5, 7, 0.5, "#454044", "#141016", 0.8)     # 柱
+			rr(ctx, x - 6, y - 21, 12, 9, 1, "#3e383c", "#141016", 1)          # 燈箱
+			var a = 0.55 + sin(t * 1.7 + x) * 0.12
+			rr(ctx, x - 3, y - 19, 6, 5, 0.5, "rgba(150,240,190,%s)" % a)      # 病態青綠微光
+			poly(ctx, [x - 9, y - 21, x + 9, y - 21, x + 5, y - 26, x - 5, y - 26], "#2e292c", "#141016", 1)   # 石帽
+			el(ctx, x, y - 27, 2, 1.5, "#2e292c", "#141016", 0.8)
+			ctx.strokeStyle = "rgba(14,8,12,.6)"; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.moveTo(x - 5, y - 4); ctx.lineTo(x - 2, y - 2); ctx.lineTo(x + 1, y - 4); ctx.stroke()   # 裂紋
 
 func draw_crow(ctx: Ctx, x: float, y: float, s: float, ph: float, dir: float, perched: bool) -> void:
 	var key = "crowsit" if perched else "crowfly"; var im = Spr.get_tex(key)
