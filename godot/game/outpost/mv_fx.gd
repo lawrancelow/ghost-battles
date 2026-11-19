@@ -98,6 +98,10 @@ static func post(ctx: Ctx, an: Dictionary, r: Rect2, t: float, on: bool, ph: flo
 			"frost": _frost(ctx, p, r, t, c)
 			"stamp": _stamp(ctx, p, t)
 			"zzz": _zzz(ctx, p, t, c)
+			"smoke": _smoke(ctx, p, t)
+			"pendulum": _pendulum(ctx, p, t, c)
+			"paperout": _paperout(ctx, p, t, c)
+			"umbrella": _umbrella(ctx, p, t, c)
 
 static func _idle(ctx: Ctx, f: String, p: Vector2, r: Rect2, t: float, c: Color, ph: float) -> void:
 	# 冇生產：淨係少少待機（發光類微光，其他唔郁）
@@ -378,3 +382,33 @@ static func _zzz(ctx: Ctx, p: Vector2, t: float, c: Color) -> void:
 		ctx.font = "900 %dpx sans-serif" % int(14 + u * 6); ctx.textAlign = "center"; ctx.textBaseline = "middle"
 		ctx.lineWidth = 3; ctx.strokeStyle = "rgba(10,6,4,%s)" % str(snappedf(a, 0.01)); ctx.strokeText("z", p.x + u * 16, p.y - u * 26)
 		ctx.fillStyle = _rgba(c, a); ctx.fillText("z", p.x + u * 16, p.y - u * 26)
+static func _smoke(ctx: Ctx, p: Vector2, t: float) -> void:   # 磚窯煙：灰煙一團團升，越升越大越淡
+	for i in 4:
+		var u = _fr(t * 0.35 + i * 0.25)
+		var x = p.x + sin(u * 5.0 + i * 1.7) * 9.0 + u * 10.0
+		Art.el(ctx, x, p.y - u * 60.0, 7 + u * 14, 6 + u * 11, "rgba(90,85,95,%s)" % str(snappedf(0.55 * (1.0 - u), 0.01)))
+static func _pendulum(ctx: Ctx, p: Vector2, t: float, c: Color) -> void:   # 錶攤：懷錶吊住擺
+	var a = sin(t * 2.6) * 0.55
+	var e = p + Vector2(sin(a) * 26.0, cos(a) * 26.0)
+	ctx.strokeStyle = "#c8a040"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(e.x, e.y); ctx.stroke()
+	Art.el(ctx, e.x, e.y + 6, 8, 8, "#f8ecd0", "#a07820", 2)
+	ctx.strokeStyle = "#2a2020"; ctx.lineWidth = 1.4
+	ctx.beginPath(); ctx.moveTo(e.x, e.y + 6); ctx.lineTo(e.x + 4, e.y + 6); ctx.stroke()
+	ctx.beginPath(); ctx.moveTo(e.x, e.y + 6); ctx.lineTo(e.x, e.y + 1); ctx.stroke()
+	Art.el(ctx, e.x, e.y + 6, 13, 13, _rgba(c, 0.12))
+static func _paperout(ctx: Ctx, p: Vector2, t: float, c: Color) -> void:   # 影印機出紙：一張張滑出嚟疊埋
+	var u = _fr(t * 1.1)
+	for k in 3: Art.rr(ctx, p.x + 2, p.y + 12 - k * 2.5, 22, 3, 1, _rgba(c, 1.0), "#8a8a90", 0.6)
+	var x = p.x - 4 + u * 16.0; var y = p.y - 2 + u * 10.0
+	Art.rr(ctx, x, y, 20, 14 * (1.0 - u * 0.75), 1, _rgba(c, 1.0), "#8a8a90", 0.8)
+	ctx.strokeStyle = "rgba(60,60,80,.6)"; ctx.lineWidth = 1
+	for k in 2: ctx.beginPath(); ctx.moveTo(x + 3, y + 3 + k * 4); ctx.lineTo(x + 15, y + 3 + k * 4); ctx.stroke()
+static func _umbrella(ctx: Ctx, p: Vector2, t: float, c: Color) -> void:   # 紙傘轉
+	var a = t * 3.2
+	Art.el(ctx, p.x, p.y, 22, 9, _rgba(c, 0.85), "#5a1a10", 1.5)
+	ctx.strokeStyle = "#f0d8a0"; ctx.lineWidth = 1.4
+	for k in 6:
+		var an = a + k * TAU / 6.0
+		ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + cos(an) * 21.0, p.y + sin(an) * 8.0); ctx.stroke()
+	Art.el(ctx, p.x, p.y, 3, 2, "#3a1a10")
+	ctx.strokeStyle = "#5a3a20"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y + 26); ctx.stroke()

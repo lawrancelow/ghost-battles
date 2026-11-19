@@ -29,12 +29,13 @@ TALL = {"tree", "tree_bare", "banana", "lamppost", "lantern", "scarecrow", "stre
 STREAM = {0: 0.62, 2: 0.45, 3: 0.55}   # 有小河嘅圖：喺邊個高度（比例），條路過橋
 
 # 每個台嘅生產動態（全部唔同；pts 係台圖入面嘅相對位置）
+# 2026-11-19：花轎、影印紙西裝、單褲管紙褲、磚窯、躺椅、錶攤換咗專屬圖（mvs_huajiao／copier／umbrella／kiln／lounge／watch），動態跟新造型重做
 ANIM = {
  "st_shoubao":       {"fx": ["steam", "lid"],      "pts": [[0.45, 0.18], [0.45, 0.22]], "c": "#f2efe6"},
  "st_zhishan":       {"fx": ["snip", "scraps"],    "pts": [[0.62, 0.45], [0.5, 0.4]], "c": "#e8d8b0"},
  "st_douhua":        {"fx": ["bucket", "drip"],    "pts": [[0.5, 0.3], [0.5, 0.62]], "c": "#fbf6e8"},
  "st_nuomici":       {"fx": ["mill", "flow"],      "pts": [[0.5, 0.45], [0.72, 0.62]], "c": "#f4f1ea"},
- "st_guancaichuang": {"fx": ["saw", "chips"],      "pts": [[0.5, 0.4], [0.5, 0.45]], "c": "#c8955a"},
+ "st_guancaichuang": {"fx": ["flame", "smoke"],     "pts": [[0.5, 0.62], [0.5, 0.12]], "c": "#ff8a3a"},
  "st_yeketan":       {"fx": ["flame", "sparks"],   "pts": [[0.5, 0.55], [0.5, 0.4]], "c": "#ff9a3a"},
  "st_tuoxie":        {"fx": ["drip", "bob"],       "pts": [[0.35, 0.35], [0.5, 1.0]], "c": "#e0a040"},
  "st_zhulong":       {"fx": ["wiggle", "puff"],    "pts": [[0.5, 1.0], [0.5, 0.15]], "c": "#eef2e4"},
@@ -43,7 +44,7 @@ ANIM = {
  "st_caoxie":        {"fx": ["hop", "straw"],      "pts": [[0.5, 1.0], [0.5, 0.5]], "c": "#d8b860"},
  "st_wucha":         {"fx": ["mist", "glow"],      "pts": [[0.5, 0.4], [0.3, 0.3]], "c": "#cfd8e8"},
  "st_jiuban":        {"fx": ["heat", "stack"],     "pts": [[0.5, 0.3], [0.8, 0.85]], "c": "#a07040"},
- "st_huajiao":       {"fx": ["needle", "petals"],  "pts": [[0.55, 0.45], [0.5, 0.3]], "c": "#d83a3a"},
+ "st_huajiao":       {"fx": ["sway", "petals"],     "pts": [[0.5, 0.0], [0.5, 0.2]], "c": "#e84a5a"},
  "st_xunren":        {"fx": ["sheets", "slap"],    "pts": [[0.5, 0.2], [0.5, 0.4]], "c": "#f0e6c8"},
  "st_jiaoye":        {"fx": ["curl", "fireflies"], "pts": [[0.5, 0.35], [0.5, 0.3]], "c": "#a8e060"},
  "st_xianyu":        {"fx": ["fishswing", "salt"], "pts": [[0.5, 0.3], [0.5, 0.25]], "c": "#ffffff"},
@@ -53,16 +54,16 @@ ANIM = {
  "st_chuanpiao":     {"fx": ["ripple", "quill"],   "pts": [[0.5, 0.92], [0.55, 0.45]], "c": "#9ec8f0"},
  "st_waimai":        {"fx": ["wheel", "heat"],     "pts": [[0.3, 0.85], [0.6, 0.25]], "c": "#ffd080"},
  "st_ifon":          {"fx": ["zap", "eye"],        "pts": [[0.5, 0.3], [0.5, 0.45]], "c": "#a0e0ff"},
- "st_mingbiao":      {"fx": ["tick", "sticks"],    "pts": [[0.5, 0.4], [0.5, 0.3]], "c": "#f0e0c0"},
+ "st_mingbiao":      {"fx": ["pendulum", "tick"],  "pts": [[0.5, 0.2], [0.3, 0.55]], "c": "#f0e0c0"},
  "st_paoche":        {"fx": ["exhaust", "beam"],   "pts": [[0.15, 0.8], [0.85, 0.7]], "c": "#c0c0c8"},
  "st_shougongcu":    {"fx": ["bubbles", "bob"],    "pts": [[0.5, 0.3], [0.5, 1.0]], "c": "#b8e080"},
  "st_xifei":         {"fx": ["bulbs", "flicker"],  "pts": [[0.5, 0.15], [0.5, 0.45]], "c": "#ffe890"},
  "st_mengpotang":    {"fx": ["ladle", "chill"],    "pts": [[0.5, 0.35], [0.5, 0.25]], "c": "#d0f0ff"},
- "st_xizhuang":      {"fx": ["copier", "stack"],   "pts": [[0.5, 0.45], [0.82, 0.8]], "c": "#f4f4f4"},
- "st_zhiku":         {"fx": ["bounce", "snip"],    "pts": [[0.5, 1.0], [0.4, 0.5]], "c": "#e0e0e0"},
+ "st_xizhuang":      {"fx": ["copier", "paperout"], "pts": [[0.5, 0.35], [0.75, 0.5]], "c": "#f4f4f4"},
+ "st_zhiku":         {"fx": ["umbrella", "bounce"], "pts": [[0.5, 0.2], [0.5, 1.0]], "c": "#c83a3a"},
  "st_biaoge":        {"fx": ["frost", "stamp"],    "pts": [[0.5, 0.4], [0.5, 0.45]], "c": "#c8ecff"},
  "st_jiabandeng":    {"fx": ["glow", "stack"],     "pts": [[0.5, 0.3], [0.2, 0.85]], "c": "#ffe070"},
- "st_tangyi":        {"fx": ["rock", "zzz"],       "pts": [[0.5, 1.0], [0.6, 0.3]], "c": "#e8e0ff"},
+ "st_tangyi":        {"fx": ["rock", "zzz"],       "pts": [[0.5, 1.0], [0.55, 0.3]], "c": "#e8e0ff"},
 }
 
 def _road_x(ci, i):
