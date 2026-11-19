@@ -2,11 +2,15 @@
 # 資料：data/nat/outpost.json（格式見 MV_CONTRACT.md）。公式全部喺呢度，畫面／模擬／測試共用。
 #
 # 公式（lv = 生產台等級，sd = STATIONS[sid]）：
-#   里程碑數   nm(lv)      = sd.miles 入面 ≤ lv 嘅個數
-#   里程碑倍數 mile(lv)    = 2 ^ nm(lv)                                 （每過一個 miles ×2 收益）
+#   里程碑數   nm(lv)      = sd.miles 入面 ≤ lv 嘅個數 ＝ 品質星 ★ 數（# [idle]）
+#   [idle] 里程碑（Idle Outpost 式）：預設 miles = 10／25／50／100／150／200（最高 200 級）；第 i 個（0 起）效果輪流：
+#          i 雙數 = 「生產速度 ×2」、i 單數 = 「售價 ×2」；每過一個 +1 品質星（★，最多 6 粒）
+#          ns(lv) = 過咗幾多個「速度」里程碑；nv(lv) = 過咗幾多個「售價」里程碑
 #   每次產量   out(lv)     = base_out + floor((lv − 1) / 10)            （每 10 級多 1 件）
-#   做貨時間   tm(lv)      = base_time ÷ (1 + 0.02 × (lv − 1))          （加速中再 ÷ 2）
-#   單價       val(lv)     = GOODS[good].price × (1 + 0.1 × (lv − 1)) × mile(lv) × 地圖倍數(MAPS.mul，預設 1)
+#   做貨時間   tm(lv)      = base_time ÷ (1 + 0.02 × (lv − 1)) ÷ 2^ns(lv)    （加速中再 ÷ 2；有領班嘅員工再 ÷ 1.25，見 mv_idle.gd）
+#   單價       val(lv)     = GOODS[good].price × (1 + 0.1 × (lv − 1)) × 2^nv(lv) × (1 + 0.2 × 品質星) × 地圖倍數(MAPS.mul，預設 1)
+#   [idle] 累計產量門檻 gate(第 i 個里程碑) = 升到嗰級之前，呢個台（本圖＋隨村台跟住走）要累計做夠幾多件：
+#          round5( GATE[i] × 4 ÷ base_time )，最少 5（做貨慢嘅台要少啲）；台資料可以用 STATIONS[sid].gates 蓋過
 #   升一級     cost1(lv)   = ceil(up_cost0 × up_mul ^ (lv − 1))          （lv → lv+1）
 #   升 n 級    cost_n      = Σ cost1(lv … lv+n−1)；最高級 = miles 最大值
 #   客人付錢   = Σ 件數 × val(嗰種貨個台嘅等級) × 收益倍數（收益掣開咗 ×2）
@@ -78,8 +82,11 @@ static func _fmt_sig(s: String) -> String:
 	return o
 
 # ---------------- 公式 ----------------
+const MILES := [10, 25, 50, 100, 150, 200]   # [idle]
+const GATE := [10, 120, 500, 2000, 6000, 15000]   # [idle] 第 i 個里程碑嘅累計產量（base_time 4 秒嘅台；其他按 4 ÷ base_time 縮放）
+const Q_VAL := 0.2   # [idle] 每粒品質星售價 +20%（tools/idle_sim.py 調過）
 static func miles(sid: String) -> Array:
-	var m = st_def(sid).get("miles", [10, 25, 50, 75, 100])
+	var m = st_def(sid).get("miles", MILES)
 	return m if m is Array and m.size() > 0 else [100]
 static func max_lv(sid: String) -> int:
 	var mx = 1
@@ -89,17 +96,42 @@ static func nm(sid: String, lv: float) -> int:
 	var n = 0
 	for x in miles(sid): if lv >= float(x): n += 1
 	return n
-static func mile_mul(sid: String, lv: float) -> float: return pow(2.0, nm(sid, lv))
+static func mile_mul(sid: String, lv: float) -> float: return pow(2.0, nv(sid, lv))   # [idle] 只計「售價」里程碑
+# [idle] 里程碑效果：第 i 個（按等級排）雙數 = 速度、單數 = 售價
+static func sorted_miles(sid: String) -> Array:
+	var a = []
+	for x in miles(sid): a.append(int(x))
+	a.sort()
+	return a
+static func mile_kind(sid: String, i: int) -> String:
+	var fx = st_def(sid).get("mile_fx")
+	if fx is Array and i < fx.size(): return str(fx[i])
+	return "spd" if i % 2 == 0 else "val"
+static func mile_idx(sid: String, m: int) -> int: return sorted_miles(sid).find(m)
+static func _n_kind(sid: String, lv: float, kind: String) -> int:
+	var a = sorted_miles(sid); var n = 0
+	for i in a.size(): if lv >= float(a[i]) and mile_kind(sid, i) == kind: n += 1
+	return n
+static func ns(sid: String, lv: float) -> int: return _n_kind(sid, lv, "spd")
+static func nv(sid: String, lv: float) -> int: return _n_kind(sid, lv, "val")
+static func stars(sid: String, lv: float) -> int: return nm(sid, lv)
+static func gate(sid: String, m: int) -> int:   # 升到里程碑 m（等級）要嘅累計產量
+	var i = mile_idx(sid, m)
+	if i < 0: return 0
+	var gs = st_def(sid).get("gates")
+	if gs is Array and i < gs.size(): return int(gs[i])
+	var bt = maxf(0.5, float(st_def(sid).get("base_time", 4.0)))
+	return maxi(5, int(round(float(GATE[mini(i, GATE.size() - 1)]) * 4.0 / bt / 5.0)) * 5)
 static func next_mile(sid: String, lv: float) -> int:
 	var best = -1
 	for x in miles(sid):
 		if float(x) > lv and (best < 0 or int(x) < best): best = int(x)
 	return best
 static func out(sid: String, lv: float) -> int: return int(st_def(sid).get("base_out", 1)) + int(floor((lv - 1.0) / 10.0))
-static func tm(sid: String, lv: float) -> float: return float(st_def(sid).get("base_time", 5.0)) / (1.0 + 0.02 * (lv - 1.0))
+static func tm(sid: String, lv: float) -> float: return float(st_def(sid).get("base_time", 5.0)) / (1.0 + 0.02 * (lv - 1.0)) / pow(2.0, ns(sid, lv))   # [idle] ÷ 2^速度里程碑
 static func val(sid: String, lv: float, ci: int) -> float:
 	var g = good_def(str(st_def(sid).get("good", "")))
-	return float(g.get("price", 1.0)) * (1.0 + 0.1 * (lv - 1.0)) * mile_mul(sid, lv) * map_mul(ci)
+	return float(g.get("price", 1.0)) * (1.0 + 0.1 * (lv - 1.0)) * mile_mul(sid, lv) * (1.0 + Q_VAL * stars(sid, lv)) * map_mul(ci)   # [idle] 品質星
 static func cost1(sid: String, lv: float) -> float:
 	var sd = st_def(sid)
 	return ceil(float(sd.get("up_cost0", 10.0)) * pow(float(sd.get("up_mul", 1.12)), lv - 1.0))

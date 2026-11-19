@@ -129,7 +129,7 @@ def main():
         st = m.get("stations", [])
         lo = 3 if ci == 0 else 4
         own = [s for s in st if ci == 0 or s not in CARRY]   # [chain-data] 隨村台（chain.json CARRY）每張圖都有，唔計
-        if not (lo <= len(own) <= 6): E(tag + " 生產台數 %d 唔喺 %d–6" % (len(own), lo))   # [chain-data]
+        if not (lo <= len(own) <= 7): E(tag + " 生產台數 %d 唔喺 %d–7" % (len(own), lo))   # [chain-data] [idle] 第 5、6 張圖 7 個台
         for sid in st:
             if sid not in S: E(tag + " 台 %s 唔存在" % sid)
             if sid in seen_sid and sid not in CARRY: E(tag + " 台 %s 喺第二張圖用過" % sid)   # [chain-data]
@@ -139,7 +139,7 @@ def main():
         if not free: E(tag + " 冇開檔即有嘅台（unlock_cost 0）")
         if ci == 0 and len(free) != 3: E(tag + " 第一張圖要 3 個台起步，而家 %d" % len(free))
         cs = m.get("customers", [])
-        if not (6 <= len(cs) <= 10): E(tag + " 客人種數 %d 唔喺 6–10" % len(cs))
+        if not (6 <= len(cs) <= 11): E(tag + " 客人種數 %d 唔喺 6–11" % len(cs))   # [idle] 新台嘅客：第 1 張圖 11 種
         if not any(cmap.get(c, {}).get("vip") for c in cs): W(tag + " 冇 VIP")
         for c in cs:
             if c not in cmap: E(tag + " 客人 %s 唔存在" % c); continue
