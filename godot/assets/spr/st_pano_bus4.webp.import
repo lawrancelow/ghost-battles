@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/st_pano_bus4.webp-322665207de364b7ab9886e6c63
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.80
+compress/lossy_quality=0.8
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0

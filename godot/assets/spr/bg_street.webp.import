@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/bg_street.webp-ee8dc354b68dce22c81ea6c4580caf
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.80
+compress/lossy_quality=0.8
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0

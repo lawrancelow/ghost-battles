@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/st_pano_market1.webp-b8b49b6486b0923c56454be4
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.80
+compress/lossy_quality=0.8
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0

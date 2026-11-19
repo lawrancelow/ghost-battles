@@ -20,6 +20,7 @@ const BUF_CYCLES := 4.0
 const BUF_MIN := 5.0
 const ITEM_KEEP := 10.0
 const ROUTES := ["auto", "stock", "sell"]
+const MVW = preload("res://game/outpost/mv_war.gd")   # [war]
 const FW := 390.0
 const WALK := 120.0
 const FOE_MAX := 5
@@ -38,6 +39,7 @@ var spawn_t := 1.0
 var foe_t := 2.0
 var paused := false
 var _sync_key := ""
+var war = MVW.new()   # [war] 義勇軍／鬼潮／影響力（邏輯全部喺 mv_war.gd）
 
 func _init() -> void:
 	rng.seed = 20261119
@@ -273,6 +275,7 @@ func move_next() -> bool:
 			if gid != null and ghost(gid) != null and J.seq(J.gp(ghost(gid), "post"), "mv"): J.sp(ghost(gid), "post", null)
 	for gid in m.guards:
 		if gid != null and ghost(gid) != null and J.seq(J.gp(ghost(gid), "post"), "mv"): J.sp(ghost(gid), "post", null)
+	war.on_move(self, c)   # [war]
 	m.ci = float(c + 1); m.st = {}; m.goals_done = []; m.sold = {}; m.pile = {}; m.counter = {}; m.guards = []
 	reset_live(); st()
 	ev.append({"k": "moved", "from": c, "to": c + 1})
@@ -283,6 +286,7 @@ func reset_live() -> void:
 	for sid in mk: if float(mk[sid]) >= 0.0: M.give(need(sid))
 	workers.clear(); custs.clear(); foes.clear(); guards.clear(); mk.clear(); mk_starve.clear(); _sync_key = ""
 	spawn_t = 0.6; foe_t = 1.5
+	war.reset_live()   # [war]
 
 # ================= [chain] 生產鏈：用料、斷料、分流 =================
 func need(sid: String, n := -1.0) -> Dictionary:   # 做 n 件（預設一轉 = out(lv)）要幾多料
@@ -374,6 +378,7 @@ func _order() -> Array:   # 低層先
 func offline_step(secs: float, acc: Dictionary) -> void:
 	var c = ci()
 	for sid in _order():
+		if war.blocked(self, sid): continue   # [war] 畀孤魂霸咗嘅檔停工
 		var l = lv(sid); var w = nworkers(sid); var n1 = MD.out(sid, l)
 		var sp = split(sid, n1)
 		var sell_f = float(sp[1]) / maxf(1.0, n1)
@@ -410,6 +415,7 @@ func offline_gain(ms: float) -> Dictionary:
 func offline_finish(acc: Dictionary, secs: float, capped: bool) -> Dictionary:
 	var m = st()
 	var tot = floor(J.num(acc.coins))
+	tot = floor(tot * war.off_mul(self)); war.offline(self, secs)   # [war]
 	if tot > 0.0: add_coins(tot); m.earned = J.num(m.get("earned")) + tot
 	m.last = now()
 	var rows = []
@@ -536,6 +542,7 @@ func step(dt: float) -> void:
 	_step_custs(dt)
 	_step_foes(dt)
 	_step_guards(dt)
+	war.step(self, dt)   # [war]
 
 func _move(e: Dictionary, to: Vector2, dt: float, spd := WALK) -> bool:
 	var d = to - e.pos
@@ -551,6 +558,7 @@ func _put_counter(gid: String, n: int) -> int:
 func _step_workers(dt: float, sp: float) -> void:
 	for w in workers:
 		var sid: String = w.sid; var gid = str(MD.st_def(sid).get("good", ""))
+		if war.blocked(self, sid): w["walk"] = false; continue   # [war]
 		var P: PackedVector2Array = PATHS.get(sid, PackedVector2Array())
 		var plen = MD.poly_len(P)
 		match w.st:
@@ -615,6 +623,7 @@ func _step_manual(dt: float, sp: float) -> void:
 # 撳台面：有貨＝收去櫃台；冇貨＝開始做一轉
 func tap_station(sid: String) -> String:
 	if not unlocked(sid): return ""
+	if war.blocked(self, sid): return "occ"   # [war]
 	if pile_n(sid) > 0:
 		var gid = str(MD.st_def(sid).get("good", ""))
 		var put = _put_counter(gid, pile_n(sid))
@@ -637,6 +646,7 @@ func _step_custs(dt: float) -> void:
 	spawn_t -= dt
 	if spawn_t <= 0.0:
 		spawn_t = rng.randf_range(2.2, 4.0) * (2.0 if fence_pressure() >= 2 else 1.0)
+		spawn_t /= war.freq_mul(self)   # [war]
 		if waiting < MD.QUEUE_MAX: spawn_cust()
 	var order = []
 	for c in custs: if c.st != "out": order.append(c)
@@ -689,6 +699,7 @@ func spawn_cust() -> bool:
 		if ok.size(): cands.append([cd, ok])
 	if cands.is_empty(): return false
 	var pick = cands[rng.randi() % cands.size()]
+	pick = war.pick_cust(self, cands, pick)   # [war]
 	var ok: Array = pick[1].duplicate()
 	var ng = 2 if ok.size() >= 2 and rng.randf() < 0.3 else 1
 	var wants = {}
@@ -714,12 +725,14 @@ func cust_value(c: Dictionary) -> float:   # 按實際攞到嘅件數計（收�
 	return amt * inc_mul()
 func _pay(c: Dictionary) -> void:
 	var amt = cust_value(c)
+	amt *= war.pay_mul(self, c)   # [war]
 	add_coins(amt)
 	var m = st()
 	for g in c.got: m.sold[g] = J.num(m.sold.get(g)) + float(c.got[g])
 	m.earned = J.num(m.get("earned")) + amt; m.served = J.num(m.get("served")) + 1.0
 	c.st = "out"
 	ev.append({"k": "pay", "amt": amt, "pos": c.pos + Vector2(0, -60), "cid": c.cid})
+	war.on_paid(self, c)   # [war]
 
 # ---------------- 圍欄孤魂 ----------------
 func fence_pressure() -> int:

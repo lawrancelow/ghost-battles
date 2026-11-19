@@ -228,6 +228,7 @@ func _process(dt: float) -> void:
 
 func _eat_events() -> void:
 	var hud_coin = Vector2(FW - 70, top_pad + 68)
+	sim.war.eat(self)   # [war]
 	for e in sim.ev:
 		match e.k:
 			"pay":
@@ -417,6 +418,7 @@ func _draw_stage() -> void:
 			items.append([w.pos.y, func(): _draw_worker(ctx, ww)])
 	items.sort_custom(func(a, b): return a[0] < b[0])
 	for it in items: it[1].call()
+	sim.war.draw_world(self, ctx, vy0, vy1)   # [war] 義勇軍＋霸檔標記
 	if walking: _draw_proc(ctx)
 	if not walking:
 		for c in sim.custs: if c.st != "out" and c.pos.y > vy0 and c.pos.y - 200.0 < vy1: _draw_want(ctx, c)
@@ -618,6 +620,7 @@ func _map_label(ctx: Ctx) -> void:   # 畫面座標（HUD 下面）
 	_txt(ctx, "%s  %d/%d" % [MD.T(md.get("name")), sim.ci() + 1, MD.maps_n()], 10, top_pad + HUD_H + 14, 15, Color("#e8dcc4"), "left", 900, 4, "serif")
 
 func _draw_foe(ctx: Ctx, f: Dictionary) -> void:
+	if f.get("boss", false): sim.war.draw_boss(self, ctx, f); return   # [war]
 	var a = 0.92
 	if f.st == "die": a = maxf(0.0, 0.92 - f.t * 1.3)
 	var y = f.pos.y + float(f.get("bob", 0.0)) + sin(t * 2.2 + f.ph) * 2.0
@@ -945,6 +948,7 @@ func _draw_hud(ctx: Ctx) -> void:
 			_btns["move"] = Rect2(bx2, by2, bw, 50)
 		elif gi >= 0 and str(G[gi].get("t")) == "boss" and not sim.boss_ok(sim.ci(), str(G[gi].get("k", ""))):
 			_txt(ctx, MD.S("need_boss", "要先打低主線 Boss", "要先打倒主線 Boss") + MD.S("need_boss2", "（去巡陰）", "（去巡陰）"), 195, y0 + 128, 15, Color("#ffb0a0"), "center", 900, 4)
+	sim.war.draw_hud(self, ctx)   # [war] 影響力條、義勇軍數、鬼潮、告急、出征掣
 
 func _boost_btn(ctx: Ctx, kind: String, r: Rect2, label: String) -> void:
 	var on = sim.boost_left(kind) > 0.0; var cd = sim.boost_cd(kind)
@@ -1140,6 +1144,7 @@ func tap(p: Vector2) -> void:
 		if _hit("boost:" + kind, p):
 			if not sim.use_boost(kind): _float(s2w(p + Vector2(0, 30)), MD.S("cd", "冷卻緊", "冷卻中"), Color("#ffb0a0"), 15)
 			return
+	if sim.war.tap(self, p): return   # [war] 出征掣／頭目
 	if p.y < top_pad + HUD_H: return
 	var sp = p; p = s2w(p)   # 以下世界座標
 	if sim.tap_foe(p): return

@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/st_pano_flat2.webp-84b5bf1ac0ecf25aaab562e30a
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.80
+compress/lossy_quality=0.8
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
