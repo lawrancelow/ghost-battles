@@ -29,6 +29,8 @@ static func TD(P, k: String) -> Dictionary:
 	return d if d is Dictionary else {}
 static func line(P, k: String, f := "lines") -> String:
 	var a = TD(P, k).get(f, [])
+	var ml = P.map_d(int(P.cur_ci)).get("lines")   # 每張圖自己嘅講法（同通用嗰批一齊抽）
+	if f == "lines" and ml is Dictionary and ml.get(k) is Array: a = (a as Array) + ml[k]
 	return P.T(a[P.rng.randi() % a.size()]) if a is Array and a.size() else ""
 static func fam(P, sim, cid: String) -> float: return J.num(P.ps(sim).fam.get(cid))
 static func add_fam(P, sim, cid: String, d: float) -> void:

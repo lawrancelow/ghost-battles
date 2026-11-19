@@ -319,7 +319,7 @@ func logic(_t) -> void:
 				c0 = sim.coins(); var g5 = str(e.g); var n5 = sim.counter_n(g5)
 				EV.resolve(P, sim, e)
 				var sp = MVP.map_d(0).special
-				_chk("大客掃貨：件數 × 單價 × 倍數", sim.coins() - c0, float(mini(int(sp.n), n5)) * P.gval(sim, g5) * float(sp.mul))
+				_chk("大客掃貨：件數 × 單價 × 倍數", sim.coins() - c0, float(mini(int(sp.qty), n5)) * P.gval(sim, g5) * float(sp.mul))
 		_run(sim, 0.1)
 	# 預設計時
 	P.live.ev = null; pp.ev_t = 0.5
@@ -374,11 +374,54 @@ func logic(_t) -> void:
 		_p("  %s：20 分鐘收入 %s；事件 %d、大單 %d" % [mode, MD.fmt(s2.coins()), _cnt(ev2, "p_ev"), int(J.num(s2.plus.ps(s2).stats.get("ord_new")))])
 	_ok("開住唔撳 ≥ 關掉 × 0.92", res[1] >= res[0] * 0.92)
 
+	_p("===== 10. 逐張圖：專屬內容齊、做得到 =====")
+	for ci in MD.maps_n(): _map_check(ci)
+
 	for k in _S().keys(): if not _saved.has(k): _S().erase(k)
 	for k in _saved: _S()[k] = _saved[k]
 	MD.reload(); MVP.reload()
 	J.test_clock = -1.0
 	_p("RESULT play ok=%d bad=%d（共 %d 行）" % [rows - bad, bad, rows])
+
+func _map_check(ci: int) -> void:
+	_setup()
+	var sim = _sim(); sim.st().ci = float(ci); sim.st(); sim.relayout(102.0, 786.0)
+	var P = sim.plus
+	var nm = MD.T(MD.map_def(ci).name)
+	var goods = []
+	for sid in MD.stations(ci):
+		sim.st().st[sid].unlocked = true; sim.st().st[sid].lv = 12.0
+		goods.append(str(MD.st_def(sid).good))
+	var md = MVP.map_d(ci)
+	_ok("%s：play.json 有呢張圖" % nm, not md.is_empty())
+	var miss = 0
+	for sid in MD.stations(ci): if MVP.st_d(sid).is_empty(): miss += 1
+	_chk("%s：每個台都有羈絆資料（缺幾個）" % nm, float(miss), 0.0)
+	var sp_ok = true
+	for g in md.special.goods: if not (str(g) in goods): sp_ok = false
+	_ok("%s：大客要嘅貨全部喺呢張圖" % nm, sp_ok)
+	var sg_ok = true
+	for g in md.sign.parts: if not (str(g) in goods): sg_ok = false
+	_ok("%s：招牌菜用料全部喺呢張圖" % nm, sg_ok)
+	_ok("%s：脾氣對白有地圖講法" % nm, md.get("lines") is Dictionary and md.lines.size() >= 3)
+	for g in goods: sim.st().counter[g] = 30.0
+	_zero_goods()
+	EV.start_ev(P, sim, "special")
+	var c0 = sim.coins(); EV.resolve(P, sim, P.live.ev)
+	_ok("%s：大客「%s」掃到貨" % [nm, MD.T(md.special.n)], sim.coins() > c0)
+	_ok("%s：出到招牌菜「%s」" % [nm, MD.T(md.sign.n)], P.make_sign(sim) > 0.0)
+	var o = EV.make_order(P, sim); var og = true
+	for g in o.get("need", {}): if not (str(g) in goods): og = false
+	_ok("%s：大單要呢張圖嘅貨" % nm, not o.is_empty() and og)
+	# 派鬼跑 3 分鐘：唔出錯、有事件、有收入
+	var gi = 0
+	for sid in MD.stations(ci):
+		if gi < TG.size(): sim.assign(sid, 0, TG[gi][0]); gi += 1
+	P.ps(sim).ev_t = 5.0; P.ps(sim).orders.clear()
+	_S().res["coins"] = 0.0
+	var evs = _run(sim, 180.0, 0.1)
+	_ok("%s：跑 3 分鐘有收入、有事件" % nm, sim.coins() > 0.0 and _cnt(evs, "p_ev") >= 1)
+	_p("  %s：3 分鐘收入 %s、事件 %d、脾氣客 %d" % [nm, MD.fmt(sim.coins()), _cnt(evs, "p_ev"), int(J.num(P.ps(sim).stats.get("t_haggle")) + J.num(P.ps(sim).stats.get("t_cut")) + J.num(P.ps(sim).stats.get("t_dash")) + J.num(P.ps(sim).stats.get("t_picky")))])
 
 # ================= 截圖 =================
 var sc = null
@@ -394,6 +437,40 @@ func _shot(name: String) -> void:
 func _wait(s: float) -> void: await Engine.get_main_loop().create_timer(s).timeout
 func _cam(y: float) -> void: sc.cam = y; sc.cam_tgt = null; sc.cam_v = 0.0; sc._clamp_cam(true)
 func _camc() -> void: _cam(sc.sim.L.counter_y - sc.view_h() * 0.55)
+
+# 逐張圖：大客＋招牌卡（tt, 參數 "maps"）
+func maps(tt) -> void:
+	DirAccess.make_dir_recursive_absolute(OUT)
+	_saved = _S().duplicate(true)
+	var m = tt.main()
+	var mh = m.get("mv_host")
+	if mh is CanvasItem: mh.visible = false
+	for ci in MD.maps_n():
+		_setup(); var S = _S(); J.test_clock = -1.0
+		S.mv = {"ci": float(ci)}
+		sc = load("res://game/outpost/mv_scene.gd").new(); sc.name = "MvScenePlay%d" % ci
+		m.add_child(sc); var vil = m.get("village")
+		if vil != null: m.move_child(sc, vil.get_index() + 1)
+		sc.setup(m)
+		var sim = sc.sim; sim.st(); MVW.ws().t0 = 9999.0; sim.relayout()
+		var P = sim.plus
+		for sid in MD.stations(ci):
+			S.mv.st[sid].unlocked = true; S.mv.st[sid].lv = 12.0; S.mv.counter[str(MD.st_def(sid).good)] = 20.0
+		P.ps(sim).ev_t = 9999.0; P.ps(sim).ord_t = 9999.0
+		sc.on_show(); await _wait(1.0)
+		sim.custs.clear(); sim.spawn_t = 999.0
+		EV.start_ev(P, sim, "special")
+		_cam(float(P.live.ev.pos.y) - sc.view_h() * 0.5)
+		await _wait(2.6)
+		await _shot("m%d_special" % (ci + 1))
+		P.live.ev = null
+		P.card = {"k": "sign"}; await _wait(0.4)
+		await _shot("m%d_sign" % (ci + 1))
+		P.card = null
+		sc.on_hide(); sc.queue_free(); await _wait(0.3)
+	for k in _S().keys(): if not _saved.has(k): _S().erase(k)
+	for k in _saved: _S()[k] = _saved[k]
+	_p("MAPS DONE")
 
 func shots(tt) -> void:
 	DirAccess.make_dir_recursive_absolute(OUT)

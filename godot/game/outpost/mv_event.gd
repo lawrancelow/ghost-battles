@@ -218,7 +218,7 @@ static func resolve(P, sim, e: Dictionary) -> void:
 			var sp = P.map_d(sim.ci()).get("special", {})
 			var g = str(e.get("g", ""))
 			if sim.counter_n(g) <= 0: g = _spec_good(P, sim)
-			var n = mini(int(sp.get("n", 5)), sim.counter_n(g)) if g != "" else 0
+			var n = mini(int(sp.get("qty", 5)), sim.counter_n(g)) if g != "" else 0
 			if n > 0:
 				sim.st().counter[g] = float(sim.counter_n(g) - n)
 				var v = float(n) * P.gval(sim, g) * float(sp.get("mul", 1.5)) * sim.inc_mul()

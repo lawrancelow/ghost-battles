@@ -67,6 +67,7 @@ var _wbtn := {}        # 世界掣（世界座標）：key → [Rect2, 物件]
 var card = null        # 彈出卡：{"k":"order","i":n} 或 {"k":"sign"}
 var _clash_t := {}     # 嗌交計時
 var _sc = null         # 畫面（只係攞鏡頭範圍畫紙錢雨用）
+var cur_ci := 0         # 而家地圖（每格更新；脾氣對白揀每張圖嘅講法）
 var off := false       # 測試用：成套關咗（所有掛鈎回中性值）
 static var test_off := false   # 測試用：所有 sim 實例一齊關（例如 mv_bridge 自己開嘅 sim）
 
@@ -173,6 +174,7 @@ func reset_live() -> void:
 func step(sim, dt: float) -> void:
 	if off or test_off: return
 	var p = ps(sim); if p.is_empty(): return
+	cur_ci = sim.ci()
 	var was = is_night(sim)
 	p.tide_t = J.num(p.tide_t) + dt
 	var tn = tide(sim)
