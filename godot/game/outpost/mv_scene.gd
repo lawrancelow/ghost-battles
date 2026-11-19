@@ -136,6 +136,7 @@ func _build() -> void:
 	sheet.add_theme_stylebox_override("panel", s); sheet.custom_minimum_size = Vector2(FW, 0); frame.add_child(sheet)
 	sheet_box = VBoxContainer.new(); sheet_box.add_theme_constant_override("separation", 6); sheet.add_child(sheet_box)
 	over = Control.new(); over.mouse_filter = Control.MOUSE_FILTER_IGNORE; frame.add_child(over); over.draw.connect(_draw_over)
+	if ResourceLoader.exists("res://game/outpost/chain_panel.gd"): load("res://game/outpost/chain_panel.gd").attach(self)   # [chainui] 生產鏈掣＋面板
 	resized.connect(_layout)
 	set_process(false)
 	_layout()
