@@ -473,6 +473,23 @@ STRINGS = {
  "map_done": ["呢張圖搞掂晒", "本地圖全部完成"],
 }
 
+# [story] 劇本線：客人分類對白（排隊／買到／等太耐／變義勇軍）＋每關故事線（data/nat/mv_story.json）
+import os as _os
+sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+import mv_story_src as _ST
+for _c in CUSTOMERS:
+    _s = _ST.SAY.get(_c["id"])
+    if _s:
+        _c["say"] = {k: [list(p) for p in _s.get(k, [])] for k in ("q", "buy", "wait", "vol")}
+        _c["lines"] = _c["say"]["q"] + _c["say"]["buy"]   # 舊引擎櫃台氣泡：排隊＋買到
+_story = {"_doc": _ST.DOC, "v": 1, "MAPS": []}
+for _ci in range(6):
+    _m = _ST.MAPS.get(_ci)
+    if not _m: continue
+    _story["MAPS"].append({"ci": _ci, "name": MNAME[_ci], "beats": _m["beats"], "FOE": _m["FOE"]})
+with open(_os.path.join(_os.path.dirname(_os.path.abspath(OUT)), "mv_story.json"), "w", encoding="utf-8") as _f:
+    json.dump(_story, _f, ensure_ascii=False, indent=1)
+
 data = {"GOODS": GOODS, "STATIONS": STATIONS, "CUSTOMERS": CUSTOMERS, "MAPS": MAPS,
         "FOE_LINES": FOE_LINES, "STRINGS": STRINGS}
 # 大地圖版面＋生產台動態（引擎線，tools/outpost_layout.py）

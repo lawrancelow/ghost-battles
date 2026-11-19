@@ -112,7 +112,9 @@ def main():
         if c.get("art") in CHILD_ART: E("客人 %s 用咗兒童形象 %s" % (cid, c.get("art")))
         if not c.get("wants") or any(w not in G for w in c["wants"]): E("客人 %s wants 有唔存在嘅貨" % cid)
         ln = c.get("lines")
-        if not (isinstance(ln, list) and 2 <= len(ln) <= 3 and all(pair(x) for x in ln)): E("客人 %s lines 要 2–3 句粵＋中" % cid)
+        if not (isinstance(ln, list) and 2 <= len(ln) <= 8 and all(pair(x) for x in ln)): E("客人 %s lines 要 2–8 句粵＋中" % cid)   # [story] 劇本線：lines＝say.q＋say.buy，放寬到 8
+        sy = c.get("say")   # [story] 分類對白（詳細檢查喺 tools/story_check.py）
+        if sy is not None and not (isinstance(sy, dict) and all(isinstance(sy.get(k), list) and all(pair(x) for x in sy[k]) for k in ("q", "buy", "wait", "vol"))): E("客人 %s say 要有 q/buy/wait/vol 粵＋中" % cid)
         if not isinstance(c.get("vip"), bool): E("客人 %s vip 要 true/false" % cid)
 
     # MAPS
@@ -199,6 +201,7 @@ def main():
     # 全檔重複句（粵、中各自計；短介面字除外）
     allp = []
     for c in CU: allp += c.get("lines", [])
+    for c in CU: allp += [p for k in ("wait", "vol") for p in (c.get("say") or {}).get(k, [])]   # [story]
     for m in MP: allp += m.get("move_line", [])
     allp += d.get("FOE_LINES", [])
     allp += [s.get("how") for s in S.values()]
