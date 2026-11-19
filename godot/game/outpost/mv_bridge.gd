@@ -294,10 +294,10 @@ static func mv_offline() -> float:
 	var parts = []; var RN = J.G.get("RES_NAMES")
 	for k in ["wood", "rice", "planks", "buns", "troops", "coins"]:
 		var dd = floor(J.num(s.res.get(k)) - J.num(res0.get(k)))
-		if dd > 0: parts.append("%s +%s" % [J.str(RN.get(k)) if RN is Dictionary else k, str(int(dd))])
+		if dd > 0: parts.append("%s +%s" % [J.str(RN.get(k)) if RN is Dictionary else k, M.qty(floor(dd))])
 	for mid in s.mat:
 		var dm = floor(J.num(s.mat.get(mid)) - J.num(mat0.get(mid)))
-		if dm > 0: parts.append("%s +%s" % [M.name(str(mid)), str(int(dm))])
+		if dm > 0: parts.append("%s +%s" % [M.name(str(mid)), M.qty(floor(dm))])
 	var sc = scene()
 	if sc != null and sc.visible and float(r.coins) > 0.0 and sc.has_method("_show_card"): sc._show_card(r)
 	var st = J.G.get("Story")

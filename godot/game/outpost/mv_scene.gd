@@ -191,6 +191,7 @@ func world_h() -> float: return maxf(float(sim.L.get("h", 844)), camp.bottom()) 
 #   邊個位冇遮住台名牌／台／營地建築就用邊個（而家用緊嘅位冇遮就唔郁，避免閃）
 var _plates: Array = []
 var _cb_pos = null
+var _wrects: Array = []   # [polish4] 今格客人要貨氣泡（連脾氣牌）位，對白框避開
 var _cb_sz := Vector2.ZERO   # [play]
 func chain_btn_pos(sz: Vector2) -> Vector2:
 	_cb_sz = sz   # [play] 記低掣大細（對白框要避開）
@@ -211,6 +212,8 @@ func _cover(r: Rect2) -> float:
 	for q in _plates: a += r.intersection(q).get_area() * 3.0
 	for k in _wbtns:
 		if k.begins_with("st:") or k.begins_with("camp") or k.begins_with("unl:"): a += r.intersection(_wbtns[k]).get_area()
+	if sim != null and sim.plus != null:   # [polish4] 唔好遮住事件名（「棺材自己開蓋」嗰啲）
+		for q in sim.plus.label_rects: if q is Rect2: a += r.intersection(q).get_area() * 3.0
 	return a
 func cam_camp() -> void:   # [camp] 鏡頭移去營地
 	if camp == null: return   # [unify]
@@ -311,15 +314,15 @@ func _eat_events() -> void:
 				for i in mini(int(e.n), 6): _item(e.pos + Vector2(_rng.randf_range(-20, 20), -40), sim.counter_slot(str(e.gid)), str(e.gid), 0.45 + i * 0.05)
 				_snd("click")
 			"made":
-				_float(e.pos + Vector2(0, -80), "+%d" % int(e.n), Color("#f0e2c8"), 15, 0.8)
+				_float(e.pos + Vector2(0, -80), "+" + MD.fmt(e.n), Color("#f0e2c8"), 15, 0.8)
 			"stock":   # [chain] 入倉：貨飛去紙紮大屋
 				for i in mini(int(e.n), 4): _item(e.pos + Vector2(_rng.randf_range(-16, 16), -40), sim.L.house + Vector2(0, -40), str(e.mid), 0.6 + i * 0.06)
-				_float(e.pos + Vector2(0, -100), MD.S("stocked", "入倉 +%d", "入倉 +%d") % int(e.n), Color("#9fd8ff"), 15, 1.0)
+				_float(e.pos + Vector2(0, -100), MD.S("stocked", "入倉 +%s", "入倉 +%s") % MD.fmt(e.n), Color("#9fd8ff"), 15, 1.0)
 			"starve":   # [chain]
 				_float(e.pos + Vector2(0, -110), _starve_txt(e.miss), Color("#ffb0a0"), 15, 1.4)
 			"hit":
 				_burst(e.pos, Color("#bfe0ff"), 5 if e.by == "guard" else 8)
-				_float(e.pos + Vector2(_rng.randf_range(-8, 8), -10), "-%d" % int(e.dmg), Color("#ffb0a0"), 16, 0.7)
+				_float(e.pos + Vector2(_rng.randf_range(-8, 8), -10), "-" + MD.fmt(e.dmg), Color("#ffb0a0"), 16, 0.7)
 				parts.append({"k": "slash", "p": e.pos, "t": 0.0, "life": 0.22, "a": _rng.randf() * PI})
 				if _rng.randf() < 0.4: _snd("scare")
 			"kill":
@@ -385,6 +388,28 @@ func _burst(p: Vector2, col: Color, n: int) -> void:
 func _float(p: Vector2, tx: String, col: Color, sz := 16, life := 1.4) -> void:
 	if floats.size() >= MAX_FLOATS: floats.pop_front()
 	floats.append({"p": p, "text": tx, "c": col, "s": sz, "t": 0.0, "life": life})
+# [polish4] 飄字避開事件名（label_rects，世界座標）：撞到就打橫推出框外（推唔出就推上框頂），位移慢慢跟，唔會跳
+func _float_dodge(ctx: Ctx, f: Dictionary, lrs: Array) -> Vector2:
+	var cur: Vector2 = f.get("dd", Vector2.ZERO)
+	var tgt := Vector2.ZERO
+	if not lrs.is_empty():
+		ctx.font = "900 %dpx sans-serif" % int(f.s); var tw = ctx.measureText(str(f.text)).width + 8.0
+		var hh = float(f.s) + 6.0
+		for _i in 2:   # 推完再驗一次（兩個事件名相鄰）
+			var fr = Rect2(f.p.x + tgt.x - tw / 2.0, f.p.y + tgt.y - hh / 2.0, tw, hh)
+			for r in lrs:
+				if not (r is Rect2) or not fr.intersects(r): continue
+				var lx = r.position.x - tw / 2.0 - 2.0; var rx = r.end.x + tw / 2.0 + 2.0
+				var ok_l = lx - tw / 2.0 >= 2.0; var ok_r = rx + tw / 2.0 <= FW - 2.0
+				var cx = f.p.x + tgt.x
+				if ok_l and (not ok_r or cx - lx <= rx - cx): tgt.x = lx - f.p.x
+				elif ok_r: tgt.x = rx - f.p.x
+				else: tgt.y = r.position.y - hh / 2.0 - 2.0 - f.p.y
+				fr = Rect2(f.p.x + tgt.x - tw / 2.0, f.p.y + tgt.y - hh / 2.0, tw, hh)
+	if not f.has("dd"): cur = tgt   # 一出世已經撞：直接放喺框外
+	else: cur = cur.lerp(tgt, 0.25)
+	f["dd"] = cur
+	return cur
 func _bubble(p: Vector2, tx: String, who: String, life := 2.6) -> void:
 	if bubbles.size() >= 3: bubbles.pop_front()
 	bubbles.append({"p": p, "text": tx, "who": who, "t": 0.0, "life": life})
@@ -497,14 +522,18 @@ func _draw_stage() -> void:
 	sim.plus.draw_world(self, ctx, vy0, vy1)   # [play] 夜色、事件記認、決定掣
 	if walking: _draw_proc(ctx)
 	if not walking:
-		for c in sim.custs: if c.st != "out" and c.pos.y > vy0 and c.pos.y - 200.0 < vy1: _draw_want(ctx, c)
+		_wrects.clear()   # [polish4] 要貨氣泡由櫃台頭排起，撞到就推高
+		var qs = sim.custs.duplicate(); qs.sort_custom(func(a, b): return int(a.get("slot", 0)) < int(b.get("slot", 0)))
+		for c in qs: if c.st != "out" and c.pos.y > vy0 and c.pos.y - 200.0 < vy1: _draw_want(ctx, c)
 	_draw_fog(ctx, vy0, vy1)
 	_draw_amb_fly(ctx)
 	_draw_parts(ctx, true)
+	var lrs: Array = sim.plus.label_rects if sim.plus != null else []   # [polish4] 事件名位置（play 線記低）
 	for f in floats:
 		var a = clampf(1.0 - (f.t / f.life - 0.6) / 0.4, 0.0, 1.0)
 		var sc = 1.0 + 0.3 * maxf(0.0, 1.0 - f.t / 0.15)
-		ctx.globalAlpha = a; _txt(ctx, f.text, f.p.x, f.p.y, int(f.s * sc), f.c, "center", 900, 5); ctx.globalAlpha = 1.0
+		var fp: Vector2 = f.p + _float_dodge(ctx, f, lrs)
+		ctx.globalAlpha = a; _txt(ctx, f.text, fp.x, fp.y, int(f.s * sc), f.c, "center", 900, 5); ctx.globalAlpha = 1.0
 	_brects.clear()
 	if embed:   # [unify] 對白框避開台名牌、台
 		for q in _plates: _brects.append(q.grow(2))
@@ -851,7 +880,7 @@ func _draw_counter(ctx: Ctx, fk: float) -> void:
 		var p = sim.counter_slot(gid)
 		var vis = mini(n, 3 if tight else 5)
 		for i in vis: _icon(ctx, gid, p.x + (i % 2) * 4.0 - 2.0, p.y - i * 6.0, 22.0 if tight else 26.0)
-		if not tight: _txt(ctx, "%d" % n, p.x + 16, p.y + 6, 15, Color.WHITE, "center", 900, 4)
+		if not tight: _txt(ctx, MD.fmt(n), p.x + 16, p.y + 6, 15, Color.WHITE, "center", 900, 4)
 	if tight and tot > 0:
 		var lb = "×%s" % MD.fmt(tot); ctx.font = "900 15px sans-serif"; var lw = ctx.measureText(lb).width + 16.0
 		Art.rr(ctx, (x0 + x1) / 2.0 - lw / 2.0, y - 11, lw, 22, 8, "rgba(20,10,8,.85)", "#f2c060", 1.5)
@@ -873,13 +902,29 @@ func _draw_want(ctx: Ctx, c: Dictionary) -> void:   # 頭頂氣泡：貨品圖�
 		rows.append([g, left])
 	var h = rows.size() * 28.0 + 8.0; var w = 64.0
 	var x = clampf(c.pos.x - w / 2.0, 4, FW - w - 4); var y = c.pos.y - 74.0 - h - (40.0 if int(c.slot) % 2 == 1 else 0.0)
+	# [polish4] 同前面客人嘅氣泡（連脾氣牌）錯開：撞到就推高到佢上面
+	var th = 22.0 if sim.plus.has_tag(c) else 0.0
+	var y_nat = y
+	var obst: Array = _wrects + sim.plus.avoid_rects(self)   # 前面客人氣泡＋事件名＋「生產鏈」掣
+	for _k in 6:
+		var hit = false
+		for r in obst:
+			if r is Rect2 and r.intersects(Rect2(x, y - th, w, h + th).grow(1.0)): y = r.position.y - h - 4.0; hit = true
+		if not hit: break
+	_wrects.append(Rect2(x, y - th, w, h + th))
 	Art.rr(ctx, x, y, w, h, 8, "rgba(250,244,228,.95)", "#5e4a30", 1.5)
+	var seg = Rect2(c.pos.x - 1.0, y + h, 2.0, maxf(0.0, y_nat - y))
+	var seg_ok = true
+	for r in obst: if r is Rect2 and r.intersects(seg): seg_ok = false; break
+	if y < y_nat - 1.0 and seg_ok:   # 推高咗：細線連返個客（穿過事件名就唔畫）
+		ctx.strokeStyle = "rgba(250,244,228,.8)"; ctx.lineWidth = 2.0
+		ctx.beginPath(); ctx.moveTo(c.pos.x, y + h); ctx.lineTo(c.pos.x, y_nat + h); ctx.stroke()
 	Art.poly(ctx, [c.pos.x - 6, y + h - 1, c.pos.x + 6, y + h - 1, c.pos.x, y + h + 7], "rgba(250,244,228,.95)")
 	var yy = y + 4.0
 	for r in rows:
 		_icon(ctx, r[0], x + 17, yy + 24, 24.0)
 		if r[1] <= 0: _txt(ctx, "✓", x + 46, yy + 13, 18, GREEN, "center", 900, 0)
-		else: _txt(ctx, "×%d" % r[1], x + 46, yy + 13, 16, INK, "center", 900, 0)
+		else: _txt(ctx, "×" + MD.fmt(r[1]), x + 46, yy + 13, 16, INK, "center", 900, 0)
 		yy += 28.0
 	sim.plus.draw_tag(self, ctx, c, x, y, w, h)   # [play] 脾氣牌
 
@@ -1011,7 +1056,7 @@ func _ring(ctx: Ctx, c: Vector2, r: float, prog: float, manned: bool, pile: int,
 	if not manned:
 		var tx = MD.S("collect", "收", "收") if pile > 0 else (MD.S("make", "做", "做") if prog < 0.0 else "")
 		if tx != "": _txt(ctx, tx, c.x, c.y + 1, 17, GOLD, "center", 900, 3)
-		if pile > 0: _txt(ctx, "×%d" % pile, c.x, c.y + r + 12, 14, Color.WHITE, "center", 900, 4)
+		if pile > 0: _txt(ctx, "×" + MD.fmt(pile), c.x, c.y + r + 12, 14, Color.WHITE, "center", 900, 4)
 		_wbtns["ring:" + sid] = Rect2(c.x - r - 10, c.y - r - 10, (r + 10) * 2, (r + 10) * 2)
 	else:
 		_icon(ctx, str(MD.st_def(sid).get("good", "")), c.x, c.y + 9, 20.0)
@@ -1058,7 +1103,7 @@ func _draw_worker(ctx: Ctx, w: Dictionary) -> void:
 		var gid = str(MD.st_def(w.sid).get("good", ""))
 		var by = w.pos.y - 66.0 + sin(t * 10.0 + w.ph) * 1.5
 		for i in mini(int(w.carry), 3): _icon(ctx, gid, w.pos.x + i * 3.0, by - i * 7.0, 22.0)
-		if w.carry > 1: _txt(ctx, "×%d" % int(w.carry), w.pos.x + 22, by - 8, 14, Color.WHITE, "center", 900, 4)
+		if w.carry > 1: _txt(ctx, "×" + MD.fmt(w.carry), w.pos.x + 22, by - 8, 14, Color.WHITE, "center", 900, 4)
 		if w.get("wait", false): _txt(ctx, MD.S("full", "櫃台滿", "櫃台滿"), w.pos.x, by - 34, 14, Color("#ffb0a0"), "center", 900, 4)
 
 func _draw_parts(ctx: Ctx, world: bool) -> void:   # 冥幣飛去頂部係畫面座標；其他喺世界
@@ -1246,11 +1291,25 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 		wbot = minf(wbot, world_h() - h - 4.0)
 		if not hud_on: wtop = cam - top_pad + 8.0
 	var x = clampf(b.p.x, 6.0, FW - w - 6.0); var y = clampf(b.p.y - h, wtop, maxf(wtop, wbot))
-	for k2 in 6:
-		var hit = false
-		for r in _brects:
-			if r.intersects(Rect2(x, y, w, h).grow(3)): y = r.position.y + r.size.y + 6.0; hit = true
-		if not hit: break
+	# [polish4] 要避開：台名牌／事件名／其他對白框（_brects）＋客人要貨氣泡（_wrects）。
+	#   候選位＝原位、每個障礙物上面／下面；揀離原位最近又乜都唔撞嘅；全部都撞就照舊逐個推落去
+	var obs: Array = _brects + _wrects
+	var cands: Array = [y]
+	for r in obs: cands.append_array([r.position.y - h - 6.0, r.end.y + 6.0])
+	var y0 = y
+	cands.sort_custom(func(a, b2): return absf(a - y0) < absf(b2 - y0))
+	var found = false
+	for cy in cands:
+		if cy < wtop - 0.5 or cy > maxf(wtop, wbot) + 0.5: continue
+		var clash = false
+		for r in obs: if r.intersects(Rect2(x, cy, w, h).grow(3)): clash = true; break
+		if not clash: y = cy; found = true; break
+	if not found:
+		for k2 in 6:
+			var hit = false
+			for r in _brects:
+				if r.intersects(Rect2(x, y, w, h).grow(3)): y = r.position.y + r.size.y + 6.0; hit = true
+			if not hit: break
 	_brects.append(Rect2(x, y, w, h))
 	var a = clampf(minf(b.t / 0.15, (b.life - b.t) / 0.3), 0, 1)
 	ctx.save(); ctx.globalAlpha = a
@@ -1470,7 +1529,7 @@ func _fill_sheet() -> void:
 	var nx = minf(mx, l + 1.0)
 	var grid = GridContainer.new(); grid.columns = 2; grid.add_theme_constant_override("h_separation", 14); grid.add_theme_constant_override("v_separation", 2); sheet_box.add_child(grid)
 	var arrow = func(a: String, b: String) -> String: return a if l >= mx or a == b else "%s → %s" % [a, b]
-	grid.add_child(_lbl(MD.S("s_out", "每次產量", "每次產量"), 15, DIMC)); grid.add_child(_lbl(arrow.call("%d" % MD.out(sid, l), "%d" % MD.out(sid, nx)), 16, INK, "sans", 900))
+	grid.add_child(_lbl(MD.S("s_out", "每次產量", "每次產量"), 15, DIMC)); grid.add_child(_lbl(arrow.call(MD.fmt(MD.out(sid, l)), MD.fmt(MD.out(sid, nx))), 16, INK, "sans", 900))
 	grid.add_child(_lbl(MD.S("s_tm", "做貨時間", "製作時間"), 15, DIMC)); grid.add_child(_lbl(arrow.call("%.1f秒" % MD.tm(sid, l), "%.1f秒" % MD.tm(sid, nx)), 16, INK, "sans", 900))
 	grid.add_child(_lbl(MD.S("s_val", "每件賣", "每件售價"), 15, DIMC)); grid.add_child(_lbl(arrow.call(_v(MD.val(sid, l, c)), _v(MD.val(sid, nx, c))), 16, INK, "sans", 900))
 	grid.add_child(_lbl(MD.S("s_w", "員工", "員工"), 15, DIMC)); grid.add_child(_lbl("%d／%d" % [sim.nworkers(sid), MD.slots(sid)], 16, INK, "sans", 900))
@@ -1519,7 +1578,7 @@ func _recipe_row(sid: String) -> void:
 	hb.add_child(_mat_ic(oid, 34))
 	var ov = VBoxContainer.new(); ov.add_theme_constant_override("separation", -2); ov.mouse_filter = Control.MOUSE_FILTER_IGNORE; hb.add_child(ov)
 	var onm = M.name(out_mid) if out_mid != "" else MD.T(MD.good_def(gid).get("n"))
-	ov.add_child(_lbl("%s ×%d" % [onm, MD.out(sid, sim.lv(sid))], 14, INK, "sans", 900))
+	ov.add_child(_lbl("%s ×%s" % [onm, MD.fmt(MD.out(sid, sim.lv(sid)))], 14, INK, "sans", 900))
 	if out_mid != "":
 		var oh = _lbl("", 14, DIMC, "sans", 700); ov.add_child(oh); _recipe_rows.append([oh, out_mid, -1.0])
 	# 分流

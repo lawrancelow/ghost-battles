@@ -268,10 +268,14 @@ static func draw_world(P, sc, ctx, vy0: float, vy1: float) -> void:
 			sc._txt(ctx, P.S("dash_tag", "走數！撳佢", "賴帳！點他"), c.pos.x, c.pos.y - 92.0, int(16 * pul), Color("#ff8a7a"), "center", 900, 4)
 static func FW() -> float: return 390.0
 
+# [polish4] 脾氣牌字（冇牌回 ""）：draw_tag 同 mv_scene 排氣泡位都用
+static func tag_text(P, c: Dictionary) -> String:
+	var tp = str(c.get("tp", ""))
+	if tp in ["", "none"] or (tp == "dash" and J.t(c.get("prepaid"))) or (tp == "cut" and J.t(c.get("sent_back"))): return ""
+	return P.T(TD(P, tp).get("tag", ["", ""]))
 static func draw_tag(P, sc, ctx, c: Dictionary, x: float, y: float, w: float) -> void:
 	var tp = str(c.get("tp", ""))
-	if tp in ["", "none"] or (tp == "dash" and J.t(c.get("prepaid"))) or (tp == "cut" and J.t(c.get("sent_back"))): return
-	var tx = P.T(TD(P, tp).get("tag", ["", ""]))
+	var tx = tag_text(P, c)
 	if tx == "": return
 	var col = {"haggle": "#ffd27a", "cut": "#f2a080", "dash": "#ff8a7a", "picky": "#bfe0ff", "reg": "#ff9ac0", "fake": "#d8b0ff"}.get(tp, "#f0e2c8")
 	if tp == "picky" and c.get("star_need") is Dictionary:
@@ -292,5 +296,5 @@ static func eat(P, sc) -> void:
 				sc._bubble(e.pos + Vector2(-60, -70), str(e.line), P.S("dasher", "走數鬼", "賴帳鬼"), 2.0)
 				sc._snd("whoosh")
 			"p_fake_steal":
-				sc._float(e.pos, P.S("fake_steal", "孤魂扮客，拎咗 %d 件走！", "孤魂扮客，拿了 %d 件跑了！") % int(e.n), Color("#ffb0a0"), 16, 1.8)
+				sc._float(e.pos, P.S("fake_steal", "孤魂扮客，拎咗 %s 件走！", "孤魂扮客，拿了 %s 件跑了！") % MD.fmt(e.n), Color("#ffb0a0"), 16, 1.8)
 				sc._snd("scare")

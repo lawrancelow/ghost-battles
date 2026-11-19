@@ -200,6 +200,8 @@ func _place_btn() -> void:
 	position = Vector2(FW - size.x - 8.0, tp + hh + 6.0)
 	if scene.has_method("chain_btn_pos"): position = scene.chain_btn_pos(size)   # [camp] 避開影響力條同台名牌
 	visible = scene.get("anim") == null and scene.get("card") == null and (panel == null or not is_instance_valid(panel))
+	var sm = scene.get("sim")   # [polish4] 大單／招牌彈出卡開住：收埋，唔好壓住卡嘅掣
+	if visible and sm != null and sm.get("plus") != null and sm.plus.get("card") != null: visible = false
 	if scene.get("embed") == true and scene.get("hud_k") != null and float(scene.hud_k) < 0.5: visible = false   # [unify] 合一地圖：睇到大排檔區先出
 func _btn_input(ev: InputEvent) -> void:
 	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed and Rect2(Vector2.ZERO, size).has_point(ev.position):
