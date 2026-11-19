@@ -399,7 +399,9 @@ func _logic(t, shots: bool) -> void:
 		if not mot.seen.has(k) and types[k].begins_with("客"): cover.append(k)
 	_chk("每種客人都行過專屬動作（seen）", cover.is_empty(), cover)
 	var need = {"egui": ["drool", "re_chomp", "impatient"], "n30_maoshi": ["trip"], "n30_jiugui": ["gait_drunk"], "zhiren": ["foe_flutter", "foe_die", "foe_peek", "boss_intro"],
-		"youhun": ["foe_twist", "foe_hurt"], "pocong": ["w_carry", "w_drop", "w_starve"], "baiwu": ["gait_glide"], "n30_churel": ["gait_moon"], "n30_chehuo": ["gait_glance"], "shuigui": ["foe_crawl"]}
+		"youhun": ["foe_twist", "foe_hurt"], "pocong": ["w_carry", "w_drop", "w_starve"], "baiwu": ["gait_glide"], "n30_churel": ["gait_moon"], "n30_chehuo": ["gait_glance"], "shuigui": ["foe_crawl"],
+		"n30_bunian": ["gait_fade"], "n30_baigujing": ["gait_catwalk"], "n30_zipai": ["gait_selfie"], "n30_dongsi": ["gait_freeze"], "n30_wutou": ["gait_nodwalk"],
+		"n30_phiam": ["gait_sleepy"], "n30_diansi": ["gait_zap"], "n30_shanxiao": ["gait_hop1"], "n30_jerangkung": ["foe_rattle"], "n30_aswang": ["foe_flap"], "n30_kuchisake": ["foe_stalk"]}
 	for k in need:
 		var lack = []
 		for a in need[k]: if not (mot.seen.get(k, {}) as Dictionary).has(a): lack.append(a)
@@ -492,3 +494,14 @@ func bench3(t) -> void:
 		for c in cs: sim.custs.erase(c)
 
 func IDLx(): return load("res://game/outpost/mv_idle.gd")
+
+func gallery_1(t): await gallery(t, "1")
+func gallery_2(t): await gallery(t, "2")
+func gallery_3(t): await gallery(t, "3")
+func gallery_4(t): await gallery(t, "4")
+func gallery_5(t): await gallery(t, "5")
+func gallery2_1(t): await gallery2(t, "1")
+func gallery2_2(t): await gallery2(t, "2")
+func gallery2_3(t): await gallery2(t, "3")
+func gallery2_4(t): await gallery2(t, "4")
+func gallery2_5(t): await gallery2(t, "5")

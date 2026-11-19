@@ -19,7 +19,7 @@ const GAIT := {
 	"pocong": "hop", "zombie": "hop", "laojiang": "hop", "n30_pelesit": "hop", "n30_polong": "hop", "n30_shedu": "hop",
 	"n30_shanxiao": "hop1", "n30_kasaobake": "hop1",
 	"xiaozhi": "paper", "zhiren": "paper", "n30_xiangcai": "paper",
-	"youhun": "float", "shuigui": "float", "pontianak": "float", "n30_bunian": "float", "n30_hanturaya": "float", "n30_banshee": "float",
+	"youhun": "float", "shuigui": "float", "pontianak": "float", "n30_bunian": "fade", "n30_hanturaya": "float", "n30_banshee": "float",
 	"n30_yukionna": "float", "pg_ji": "float", "xiaogui": "float", "mengpo": "float", "tianhua": "float",
 	"baiwu": "glide", "heiwu": "glide", "n30_guixinniang": "glide",
 	"penanggal": "head", "n30_diaosi": "dangle",
@@ -27,9 +27,11 @@ const GAIT := {
 	"n30_chengsi": "waddle", "n30_yesi": "waddle", "eguiking": "waddle", "egui": "shuffle", "n30_shidu": "shuffle",
 	"niutou": "stomp", "mamian": "stomp", "n30_taozhai": "stomp", "n30_genderuwo": "stomp", "n30_yecha": "stomp", "n30_gashadokuro": "stomp",
 	"n30_tikbalang": "trot", "n30_jerangkung": "rattle", "n30_hantugalah": "tall", "n30_rokurokubi": "tall",
-	"n30_nopperabo": "brisk", "n30_daji": "hunch", "n30_xiaosi": "bounce", "toyol": "scamper", "n30_zipai": "bounce", "n30_dongsi": "shiver",
+	"n30_nopperabo": "brisk", "n30_daji": "hunch", "n30_xiaosi": "bounce", "toyol": "scamper", "n30_zipai": "selfie", "n30_dongsi": "freeze",
 	"n30_leipi": "smoke", "n30_diansi": "zap", "n30_aswang": "flap", "n30_vetala": "glide", "pg_ex": "sulk", "pg_landlady": "brisk", "pg_songding": "sneak",
-	"pg_tuimo": "hunch", "n30_qionggui": "shuffle", "n30_wutou": "walk", "n30_kuchisake": "glide", "n30_hannya": "stomp",
+	"pg_tuimo": "hunch", "n30_qionggui": "shuffle", "n30_wutou": "nodwalk", "n30_kuchisake": "glide", "n30_hannya": "stomp",
+	"n30_jenglot": "scamper", "n30_baigujing": "catwalk", "n30_phiam": "sleepy", "n30_kappa": "waddle", "n30_maenak": "glide", "n30_yezi": "sneak",
+	"n30_liulian": "walk", "n30_zhongshu": "sleepy", "n30_changgui": "trot",
 }
 # 原版鬼（有網格）用嘅廣場平日動作（DAILY['plaza_*']，原圖）
 const PLAZA := {
@@ -495,11 +497,29 @@ func _gait(k: String, e: Dictionary, m: Dictionary, o: Dictionary, tf: Dictionar
 		"smoke":
 			if fmod(w, 0.5) < 0.05: fx.append(["smoke"])
 		"zap":
-			if fmod(w, 1.4) < 0.12: tf["dx"] = sin(t * 80.0) * 2.0; tf["sy"] = 1.04
+			if fmod(w, 1.4) < 0.12:
+				tf["dx"] = sin(t * 80.0) * 2.0; tf["sy"] = 1.04
+				if fmod(w, 1.4) < 0.05: fx.append(["zapfx"])
 		"flap":
 			tf["dy"] = -4.0 - sin(t * 7.0) * 3.0; tf["gs"] = 0.8
 		"sulk":
 			tf["r"] = 0.08; tf["sy"] = 0.97
+		"fade":   # Orang Bunian：隱身族，行行下隱咗又現
+			o["walk"] = false; tf["dy"] = -5.0 - sin(t * 2.0) * 2.0; tf["gs"] = 0.8
+			o["alpha"] = float(o.get("alpha", 0.95)) * (0.3 + 0.7 * absf(cos(t * 1.4)))
+		"catwalk":   # 白骨精：扭腰行貓步
+			tf["r"] = sin(t * 4.5) * 0.09; tf["dx"] = sin(t * 4.5) * 2.0; tf["sy"] = 1.0 + absf(sin(t * 9.0)) * 0.02
+		"sleepy":   # 半瞓半醒：行得慢、頭一沉一沉
+			o["t"] = float(o.get("t", 0.0)) * 0.6; tf["r"] = 0.06 + maxf(0.0, sin(t * 1.3)) * 0.1; tf["sy"] = 0.97
+			if fmod(t, 3.0) < 0.05: fx.append(["zz"])
+		"selfie":   # 自拍鬼：一路彈一路影，閃光
+			tf["dy"] = -absf(sin(t * 7.0)) * 4.0
+			if fmod(w, 1.6) < 0.05: fx.append(["flash"])
+		"freeze":   # 凍死鬼：震、行過留雪花
+			tf["dx"] = sin(t * 47.0) * 1.0; tf["sy"] = 0.97
+			if fmod(w, 0.4) < 0.05: fx.append(["snow"])
+		"nodwalk":   # 無頭鬼：雙手捧頭行，個頭隨步點
+			tf["dy"] = -absf(sin(t * 6.0)) * 1.5; tf["r"] = sin(t * 3.0) * 0.03
 	return fx
 
 func _gait_fx(sc, k: String, e: Dictionary, fx: Array) -> void:
@@ -509,6 +529,14 @@ func _gait_fx(sc, k: String, e: Dictionary, fx: Array) -> void:
 			"land": puff(e.pos.x, e.pos.y, "#8a7458", 3, 22.0, 0.45, 3.5)
 			"smoke": puff(e.pos.x, e.pos.y - 52.0, "#5a5a62", 1, 12.0, 1.0, 4.0)
 			"hic": ftxt(e.pos.x + 12.0, e.pos.y - 70.0, "嗝", "#ffb0a0", 0.9)
+			"zapfx":
+				for i in 5: _add({"k": "spark", "x": e.pos.x + _rng.randf_range(-14, 14), "y": e.pos.y - _rng.randf_range(30, 64), "vx": _rng.randf_range(-40, 40), "vy": _rng.randf_range(-40, 0), "life": 0.3, "c": "#bfe8ff"})
+			"zz": ftxt(e.pos.x + 14.0, e.pos.y - 68.0, "z", "#c8d8ff", 1.0)
+			"flash":
+				for i in 4: _add({"k": "spark", "x": e.pos.x + 16.0 + _rng.randf_range(-5, 5), "y": e.pos.y - 70.0 + _rng.randf_range(-5, 5), "vx": _rng.randf_range(-30, 30), "vy": _rng.randf_range(-30, 10), "life": 0.35, "c": "#ffffff"})
+				ftxt(e.pos.x + 18.0, e.pos.y - 80.0, "咔嚓", "#ffffff", 0.7)
+			"snow":
+				_add({"k": "drop", "x": e.pos.x + _rng.randf_range(-10, 10), "y": e.pos.y - 40.0, "vx": _rng.randf_range(-10, 10), "vy": 0.0, "life": 1.0, "r": 2.0, "c": "#eaf6ff", "gy": e.pos.y + 2.0})
 
 # 客人：mv_scene._draw_cust 掛鈎（取代 Art.draw_char 嗰行）
 func cust(sc, ctx: Ctx, c: Dictionary) -> bool:
@@ -701,10 +729,10 @@ func worker(sc, ctx: Ctx, w: Dictionary) -> bool:
 			carry_dx = sin(sc.t * 4.5 + w.ph) * 2.0
 			_mark(k, "w_carry")
 		var g = profile(k).gait
-		if g in ["hop", "hop1", "float", "glide", "head", "paper", "dangle"]:
+		if g in ["hop", "hop1", "float", "glide", "head", "paper", "dangle", "fade", "catwalk", "nodwalk"]:
 			m["wt2"] = float(m.get("wt2", 0.0)) + 1.0 / 60.0
 			var mm = {"wt": sc.t * 1.0 + float(m.seed)}
-			fx += _gait(k, w, mm, o, tf, float(o.t), s)
+			var gfx = _gait(k, w, mm, o, tf, float(o.t), s); fx += gfx; _gait_fx(sc, k, w, gfx)
 			if carrying: carry_y += float(tf.get("dy", 0.0))
 	if not drawn: body(ctx, k, x, y, s, o, tf)
 	for f in fx:
@@ -948,7 +976,7 @@ func guard(sc, ctx: Ctx, g: Dictionary, o: Dictionary) -> bool:
 		tf["dx"] = fwd * 6.0 * sin(PI * q); tf["r"] = 0.12 * sin(PI * q)
 		_mark(k, "guard_hit")
 	elif g.get("walk", false):
-		fx += _gait(k, g, {"wt": sc.t + float(m.seed)}, o, tf, float(o.t), s)
+		var gfx = _gait(k, g, {"wt": sc.t + float(m.seed)}, o, tf, float(o.t), s); fx += gfx; _gait_fx(sc, k, g, gfx)
 	else:
 		tf["sy"] = 1.0 + sin(sc.t * 1.6 + float(m.seed)) * 0.015   # 企崗呼吸
 	body(ctx, k, g.pos.x, g.pos.y, s, o, tf)
@@ -981,7 +1009,7 @@ func vol(sc, ctx: Ctx, r: Dictionary, x: float, y: float, s: float, o: Dictionar
 		tf["dx"] = fwd * 7.0 * sin(PI * q2); tf["r"] = 0.14 * sin(PI * q2); tf["sx"] = 1.0 + 0.06 * sin(PI * q2)
 		_mark(k, "vol_hit")
 	elif r.get("walk", false):
-		fx += _gait(k, r, {"wt": sc.t + float(m.seed)}, o, tf, float(o.t), s)
+		var gfx = _gait(k, r, {"wt": sc.t + float(m.seed)}, o, tf, float(o.t), s); fx += gfx; _gait_fx(sc, k, r, gfx)
 		tf["r"] = float(tf.get("r", 0.0)) + 0.04   # 行軍：身向前
 	elif m.act == "salute":
 		_mark(k, "vol_salute")
