@@ -95,24 +95,33 @@ static func _glv(g) -> float:
 	var F = J.G.get("F")
 	return J.num(J.mc(F, "glv", [g])) if F != null else J.num(J.gp(g, "lv"))
 # 每分鐘（拓展建築）：{bid: {"w":員工數, "out":{mid:每分}, "in":{mid:每分}}}
+const BASE_W := 0.5
 static func rates() -> Dictionary:
 	var s = S(); var o = {}
 	if s == null: return o
 	var nb = M.new_blds()
 	if nb.is_empty(): return o
+	# 每間已起嘅拓展建築：冇鬼都有 BASE_W（半個鬼）嘅基本產量；每派一隻鬼 +1（老闆定案：唔派鬼都有一半基本產量）
+	var units = []
+	if s.get("bld") is Dictionary:
+		for bid in nb:
+			if J.num(s.bld.get(bid, 0)) > 0: units.append([str(bid), BASE_W, true])
 	for g in J.iter(s.get("ghosts")):
 		var p = J.gp(g, "post")
 		if not (p is String) or not (p in nb): continue
-		var bid: String = p; var d = M.bld(bid)
+		units.append([str(p), 1.0, false])
+	for u in units:
+		var bid: String = u[0]; var d = M.bld(bid); var wf: float = u[1]; var p = bid
 		if not (s.get("bld") is Dictionary) or J.num(s.bld.get(p, 0)) <= 0: continue
 		if not o.has(bid): o[bid] = {"w": 0, "out": {}, "in": {}}
-		var e = o[bid]; e.w += 1
+		var e = o[bid]
+		if not u[2]: e.w += 1
 		var L = maxf(1.0, J.num(s.bld.get(p, 1)))
 		if d.get("kind") == "gather":
 			var mid = str(d.get("out", ""))
-			e.out[mid] = J.num(e.out.get(mid)) + J.num(d.get("rate", 0)) * (1.0 + 0.15 * (L - 1.0))
+			e.out[mid] = J.num(e.out.get(mid)) + wf * J.num(d.get("rate", 0)) * (1.0 + 0.15 * (L - 1.0))
 		else:
-			var cpm = 60.0 / (maxf(0.1, J.num(d.get("time", 30))) / (1.0 + 0.10 * (L - 1.0)))
+			var cpm = wf * 60.0 / (maxf(0.1, J.num(d.get("time", 30))) / (1.0 + 0.10 * (L - 1.0)))
 			for m in M.bout(bid): e.out[m] = J.num(e.out.get(m)) + J.num(M.bout(bid)[m]) * cpm
 			for m in M.bin(bid): e["in"][m] = J.num(e["in"].get(m)) + J.num(M.bin(bid)[m]) * cpm
 	return o
