@@ -2,6 +2,13 @@
 extends Control
 
 var village: Control
+# 移動村（出殯巡遊大排檔）：S.mv_on 開咗就用佢做 home 分頁，舊村子畫面收埋（代碼保留，開關關咗照用）
+const MVB := preload("res://game/outpost/mv_bridge.gd")
+const MV_SCENE := "res://game/outpost/mv_scene.gd"            # 引擎線交貨
+const MV_STUB := "res://game/outpost/mv_scene_stub.gd"        # 整合線假場景（引擎未交貨時用）
+var mv_host: Control
+var mv_view: Control = null
+var mv_back: Button
 var dom: Control
 var quest_bar: PanelContainer
 var quest_lbl: RichTextLabel
@@ -99,6 +106,7 @@ func _boot_js() -> void:
 	_boot_step("village", func(): village.bind(JSRun.by_id("village")))
 	_boot_step("start", func(): J.cl(J.G.get("startGame"), null, []))
 	_boot_step("state", func(): G.S = J.G["S"]; G.js_mode = true)
+	_boot_step("mv", func(): MVB.install(); MVB.migrate(); _mv_apply())
 	_boot_step("resize", func(): J.mc(J.G.get("Village"), "resize", []))
 	_boot_step("refresh", func(): refresh())
 	# 逐樣顯示：每樣畫完一幀先開下一樣；手機驅動喺第一次畫某樣嘢時閃退，麵包屑就會講係邊樣（show:xxx）
@@ -305,6 +313,12 @@ func _build_village() -> void:
 	village = Control.new(); village.set_script(load("res://ui/nv_village.gd"))
 	village.anchor_right = 1; village.anchor_bottom = 1; village.offset_top = TOP_H; village.offset_bottom = -NAV_H
 	add_child(village)
+	mv_host = Control.new(); mv_host.name = "MvHost"; mv_host.visible = false
+	mv_host.anchor_right = 1; mv_host.anchor_bottom = 1; mv_host.offset_top = TOP_H + 50; mv_host.offset_bottom = -NAV_H
+	add_child(mv_host)
+	mv_back = UIKit.btn("後院", "", true); mv_back.add_theme_font_size_override("font_size", 14)
+	mv_back.anchor_left = 1; mv_back.anchor_right = 1; mv_back.offset_left = -70; mv_back.offset_right = -8; mv_back.offset_top = 6; mv_back.offset_bottom = 40
+	mv_back.pressed.connect(open_backyard)
 	quest_bar = PanelContainer.new()
 	var s = UIKit.sb(UIKit.PAPER, 2, UIKit.PAPERLINE, 1, Vector4(7, 7, 12, 7)); s.shadow_color = Color(0, 0, 0, 0.35); s.shadow_size = 0; s.shadow_offset = Vector2(0, 3)
 	quest_bar.add_theme_stylebox_override("panel", s)
@@ -320,6 +334,9 @@ func _build_village() -> void:
 		if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
 			var q = G.quest_cur()
 			if q and q.go == "roster": open_roster(); return
+			if mv_on():
+				if q and q.get("t") == "stage": close_sheet(); J.mc(J.G.get("World"), "open", []); return
+				close_sheet(); _nav_on("village"); return
 			var p = J.mc(J.G.get("Village"), "questTarget", [])
 			if p: close_sheet(); J.mc(J.G.get("Village"), "focus", [p[0], p[1]]))
 
@@ -357,9 +374,13 @@ func _build_top() -> void:
 		hb.add_child(v); res_lbl[k] = v; res_cell[k] = cs
 		var key: String = k
 		cell.gui_input.connect(func(e):
-			if e is InputEventMouseButton and e.pressed: show_toast(help[key] + ("\n（建好民宅，遊魂才會來）" if key == "troops" and float(G.S.bld.home) == 0 else "")))
+			if e is InputEventMouseButton and e.pressed:
+				if mv_on(): show_toast(MV_HELP[key]); return
+				show_toast(help[key] + ("\n（建好民宅，遊魂才會來）" if key == "troops" and float(G.S.bld.home) == 0 else "")))
 		grid.add_child(cell)
 	top.resized.connect(func(): exp_bar.size.x = top.size.x - 76 - 116)
+
+const MV_HELP := {"wood": "槐木：[b]棺材板工場[/b]嘅抬棺鬼順手斬槐木（大部分即刻做成棺材板）。", "rice": "糯米：[b]蒸籠台[/b]順手收糯米（大部分即刻蒸成壽包）。", "planks": "棺材板：[b]棺材板工場[/b]出（2 槐木 → 1 板），紙紮大屋都會自己出少少。藍箱也會開出。用嚟升級後院建築、分村車隊。", "buns": "壽包：[b]蒸籠台[/b]出（2 糯米 → 1 包），紙紮大屋都會自己出少少。綠箱也會開出。用嚟升級鬼怪、派宵夜、練嚇功。", "coins": "冥幣：大排檔賣貨收錢、打關卡、開紫箱、燒化寶爐（後院）。", "troops": "陰兵：[b]守夜台[/b]出，台越高級、員工越多來得越快。夜班巡陰時每 25 個跟一隊。"}
 
 func _build_nav() -> void:
 	var nav = Panel.new(); nav.anchor_top = 1; nav.anchor_bottom = 1; nav.anchor_right = 1; nav.offset_top = -NAV_H
@@ -383,6 +404,9 @@ func _build_nav() -> void:
 
 func _nav_on(t: String) -> void:
 	tab = t
+	if mv_view != null and mv_on():
+		if t == "village": mv_view.on_show()
+		else: mv_view.on_hide()
 	for k in nav_btns:
 		var on: bool = k == t
 		nav_btns[k][1].texture = load("res://assets/ui/n-%s%s.svg" % [k, "_on" if on else ("_main" if k == "battle" else "")])
@@ -438,12 +462,64 @@ func refresh() -> void:
 	if q:
 		var p = G.quest_progress(q)
 		var a = minf(float(p[0]), float(p[1]))
-		quest_lbl.text = q.text; quest_prog.text = "%d/%d" % [int(a), int(p[1])]
+		quest_lbl.text = MVB.quest_text(q) if mv_on() else q.text; quest_prog.text = "%d/%d" % [int(a), int(p[1])]
 		quest_prog.add_theme_color_override("font_color", Color("#2e6d3a") if float(p[0]) >= float(p[1]) else UIKit.CINNABAR2)
 	else: quest_lbl.text = "第一季完。村子由你慢慢經營。" if S.ended else "—"; quest_prog.text = ""
+	_mv_tick()
 	var ch = int(S.chests.g) + int(S.chests.b) + int(S.chests.p)
 	chest_badge.text = str(ch) if ch else ""; chest_badge.visible = ch > 0
 	if sheet.visible and sheet_refresh.is_valid(): sheet_refresh.call()
+
+# ---------------- 移動村 ----------------
+func mv_on() -> bool: return G.S is Dictionary and not G.S.is_empty() and J.t(G.S.get("mv_on"))
+
+# 按 S.mv_on 決定 home 分頁用邊個畫面（開機、切換開關、匯入存檔後叫）
+func _mv_apply() -> void:
+	var on = mv_on()
+	if on and mv_view == null:
+		var path = MV_SCENE if ResourceLoader.exists(MV_SCENE) else MV_STUB
+		mv_view = Control.new(); mv_view.set_script(load(path)); mv_view.name = "MvScene"
+		mv_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		mv_host.add_child(mv_view)
+		mv_view.setup(self)
+		mv_host.add_child(mv_back)
+		MVB.set_scene(mv_view)
+		print("[mv] scene ", path)
+	mv_host.visible = on
+	village.visible = not on
+	quest_bar.visible = true
+	if mv_view != null:
+		if on and tab == "village": mv_view.on_show()
+		else: mv_view.on_hide()
+
+func set_mv(on: bool) -> void:
+	if G.S.is_empty(): return
+	G.S["mv_on"] = on
+	if on: MVB.migrate()
+	MVB.sync(); _mv_apply(); G.save(); refresh()
+
+func _mv_tick() -> void:
+	if not mv_on(): return
+	MVB.tick()
+	# 舊存檔第一次入嚟：簡短介紹（等標題、手機、劇情、自檢都完先彈）
+	if MVB.intro_pending() and title_ov == null and phone == null and loading == null and selftest == null:
+		var st = J.G.get("Story")
+		if st is Dictionary and not J.t(J.mc(st, "busy", [])):
+			G.S["mv_intro"] = 2.0
+			J.mc(st, "queue", [{"style": "sys", "lines": MVB.intro_lines()}])
+			G.save()
+
+# 後院：舊村子建築（招魂台、化寶爐、鬼宅鬼節宴、嚇人訓練班、倉庫…）照用得；等級由移動村進度帶動（只升唔跌），亦可以照舊用棺材板升
+func open_backyard() -> void:
+	open_sheet("後院（舊村子設施）", func(): pass); _clear_body()
+	_p("紙紮大屋後面仲有啲舊設施。佢哋嘅等級會跟住移動村進度自動升（只升唔跌），亦可以照舊用棺材板同冥幣升。")
+	var S = G.S; var D = DB.D
+	for id in D.BLD_ORDER:
+		var lv = int(S.bld.get(id, 0)); var bid: String = id
+		var b = _act(UIKit.btn("打開", "", true), func(): open_building(bid), lv > 0 or G.bldUnlocked(bid))
+		_row("[b]%s[/b]　%s" % [D.BUILDINGS[id].name, ("Lv %d" % lv) if lv > 0 else "未有"], [b])
+	var sw = UIKit.btn("暫時用返舊村子畫面", "ghost"); sheet_body.add_child(sw)
+	sw.pressed.connect(func(): close_sheet(); set_mv(false); show_toast("已轉返舊村子畫面。喺「劇情」頁可以轉返移動村。"))
 
 # ---------------- 提示 ----------------
 func show_toast(bb: String) -> void:
@@ -709,6 +785,8 @@ func open_story() -> void:
 		if o == null: show_toast("存檔碼讀唔到，檢查吓有冇貼齊"); return
 		if not im.has_meta("armed"): im.set_meta("armed", 1); im.text = "再按一次：換成主公 %d 級嘅存檔" % int(o.get("lv", 1)); return
 		import_save(ta.text if ta.text.strip_edges() != "" else DisplayServer.clipboard_get()))
+	var mvb = UIKit.btn("村子畫面：" + ("移動村（大排檔）" if mv_on() else "舊村子"), "ghost"); sheet_body.add_child(mvb)
+	mvb.pressed.connect(func(): set_mv(not mv_on()); mvb.text = "村子畫面：" + ("移動村（大排檔）" if mv_on() else "舊村子"))
 	var sgb = UIKit.btn("安全畫面模式：" + ("開" if G.safe_gfx else "關") + "（閃退時用，重開遊戲生效）", "ghost"); sheet_body.add_child(sgb)
 	sgb.pressed.connect(func(): G.set_safe_gfx(not G.safe_gfx); sgb.text = "安全畫面模式：" + ("開" if G.safe_gfx else "關") + "（閃退時用，重開遊戲生效）")
 	var stb = UIKit.btn("全面自檢（約 3–5 分鐘，出報告俾開發者）", "ghost"); sheet_body.add_child(stb)

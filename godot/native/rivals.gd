@@ -198,6 +198,10 @@ static func stage_open() -> bool:
 	return false
 static func task_ok(k: String) -> bool:
 	var S = _S()
+	# 移動村（S.mv_on）：舊村子「親手斬樹／割稻／包包／做板」冇得做 → 龐總唔再派呢幾樣 KPI（對白照留，只改觸發）
+	if J.t(J.gp(S, "mv_on")):
+		if k in ["chop", "rice", "bun", "plank"]: return false
+		if k == "stock": return true   # 紙紮大屋保底都出壽包：永遠有一樣做得（避免 kinds 空）
 	match k:
 		"bun", "stock": return J.num(J.gp(J.gp(S, "bld"), "bun")) > 0
 		"plank": return J.num(J.gp(J.gp(S, "bld"), "plank")) > 0

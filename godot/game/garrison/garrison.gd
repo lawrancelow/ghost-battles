@@ -92,9 +92,16 @@ func map_def(ci: int) -> Dictionary: return D.MAPS[ci]
 func maps_n() -> int: return D.MAPS.size()
 
 # ---------------- 地圖狀態 ----------------
-func is_open(ci: int) -> bool:   # 嗰張圖通關未（巡陰區域第 3 關＝主線 Boss）
+# 移動村（S.mv_on）：村子喺 S.mv.ci；拔咗營嘅圖（ci < S.mv.ci）先係分村，前線 = 村子所在地圖
+func mv_ci() -> int:
+	var s = S()
+	if s == null or not J.t(s.get("mv_on")) or not (s.get("mv") is Dictionary): return -1
+	return clampi(int(J.num(s.mv.get("ci", 0))), 0, maps_n() - 1)
+func is_open(ci: int) -> bool:   # 嗰張圖通關未（巡陰區域第 3 關＝主線 Boss）；移動村：拔咗營未
 	var s = S()
 	if s == null or ci < 0 or ci >= maps_n(): return false
+	var mc = mv_ci()
+	if mc >= 0: return ci < mc
 	var cl = s.get("cleared")
 	return cl is Dictionary and J.t(cl.get("%d-3" % (ci + 1)))
 func region_open(ci: int) -> bool: return ci == 0 or is_open(ci - 1)
@@ -103,6 +110,8 @@ func open_maps() -> Array:
 	for ci in maps_n(): if is_open(ci): o.append(ci)
 	return o
 func frontline() -> int:
+	var mc = mv_ci()
+	if mc >= 0: return mc
 	for ci in maps_n():
 		if not is_open(ci): return ci if region_open(ci) else -1
 	return -1

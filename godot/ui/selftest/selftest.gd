@@ -17,7 +17,7 @@ const PRE := [
 	["sh_dark", "黑夜效果"], ["sh_mesh", "骨架動畫效果"], ["audio", "聲音"], ["file", "存檔讀寫"]]
 const POST := [
 	["boot", "載入遊戲"], ["ground", "村子地面（重畫）"],
-	["m_real", "真角色網格×1"], ["m_many", "真角色網格×24"], ["m_cloth", "網格衣服換色"], ["village", "村子"],
+	["m_real", "真角色網格×1"], ["m_many", "真角色網格×24"], ["m_cloth", "網格衣服換色"], ["village", "村子（移動村＋舊村子）"],
 	["world", "陰間地圖"], ["patrol", "夜班巡陰"],
 	["scare", "回陽間・夜班嚇人"], ["battle", "主線戰鬥"], ["tower", "樓裡有鬼"], ["street", "陽間站崗"],
 	["gstreet", "冥街夜市"], ["gyard", "亂葬崗"], ["sports", "運動會"]]
@@ -231,7 +231,18 @@ func _mode(id: String, main: Node) -> String:
 			if not (gl is El) or gl.rec == null: modulate.a = 1; return "冇地面記錄"
 			var n = PtDraw.new(); n.fn = func(c): gl.rec.replay(c, Transform2D(Vector2(0.5, 0), Vector2(0, 0.5), Vector2.ZERO)); main.add_child(n)
 			await _wait(1.0); n.queue_free()
-		"village": await _wait(4.0)
+		"village":
+			# 移動村（home 分頁）同舊村子畫面兩樣都測：移動村開住先測移動村，再轉舊村子，最後轉返
+			var was = main.mv_on() if main.has_method("mv_on") else false
+			if main.has_method("set_mv"):
+				main.set_mv(true); await _wait(2.5)
+				var mvv = main.get("mv_view")
+				if mvv == null or not mvv.is_visible_in_tree(): modulate.a = 1; return "移動村畫面開唔到"
+				for fn in ["mv_state", "ci", "can_move", "offline_gain"]:
+					if not mvv.has_method(fn): modulate.a = 1; return "移動村缺 API：" + fn
+				main.set_mv(false); await _wait(2.5)
+				main.set_mv(was)
+			else: await _wait(4.0)
 		"village_mesh":
 			G.safe_gfx = false; await _wait(5.0)
 		"m_real", "m_many", "m_cloth":
