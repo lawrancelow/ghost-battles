@@ -489,6 +489,14 @@ for _ci in range(6):
     _story["MAPS"].append({"ci": _ci, "name": MNAME[_ci], "beats": _m["beats"], "FOE": _m["FOE"]})
 with open(_os.path.join(_os.path.dirname(_os.path.abspath(OUT)), "mv_story.json"), "w", encoding="utf-8") as _f:
     json.dump(_story, _f, ensure_ascii=False, indent=1)
+# [story] 女主版：只增／改劇本線自己嘅句（data/fem.json，其他條目唔郁）
+_fp = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(OUT))), "fem.json")
+if getattr(_ST, "FEM", None) and _os.path.exists(_fp):
+    _fem = json.load(open(_fp, encoding="utf-8"))
+    if any(_fem.get(k) != v for k, v in _ST.FEM.items()):
+        _fem.update(_ST.FEM)
+        with open(_fp, "w", encoding="utf-8") as _f:
+            _f.write(json.dumps(_fem, ensure_ascii=False, indent=1))   # 原檔冇尾換行
 
 data = {"GOODS": GOODS, "STATIONS": STATIONS, "CUSTOMERS": CUSTOMERS, "MAPS": MAPS,
         "FOE_LINES": FOE_LINES, "STRINGS": STRINGS}

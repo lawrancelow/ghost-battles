@@ -45,6 +45,7 @@ BAN = banned() + EXTRA
 # 男性字眼（指主角先要女版；指其他角色嘅可以喺 OK_MALE 白名單）
 MALE = ["靚仔", "後生仔", "先生", "兄弟", "小伙子", "帥哥", "男仔", "哥哥", "少年", "男人", "男鬼", "細佬", "老公", "公子", "爺們"]
 HERO = ["阿福", "陳大福", "少爺", "Kelvin"]
+JOB = ["返工", "上班", "老細", "老闆話", "公司", "PPT", "加班", "辦公室", "同事", "開會", "打工"]
 
 def chars_in_font():
     try:
@@ -132,6 +133,9 @@ def main():
             for i, l in enumerate(ln):
                 if not (isinstance(l, list) and len(l) == 3 and all(isinstance(x, str) and x.strip() for x in l)): E(bt + " 第 %d 行要 [講者, 粵, 中]" % i); continue
                 texts.append((bt + " [%s]" % l[0], l[1], l[2])); nsl += 1
+                if l[0] == "阿福":   # 主角講自己生前（男版係打工仔，女版係大學生）要有女版
+                    for x in (l[1], l[2]):
+                        if any(j in x for j in JOB) and not fem.get(x): E(bt + " 阿福講生前工作但 fem.json 冇女版：%s" % x)
                 all_text.append((bt, l[0]))
                 if l[0] not in spk_art and l[0] not in art and l[0] not in ("旁白", "系統", "？？？", "抬棺鬼", "告示", "主播", "DJ"):
                     W(bt + " 講者「%s」冇圖（SPEAKER_ART／art 都冇）" % l[0])
