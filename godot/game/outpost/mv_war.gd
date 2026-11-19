@@ -230,7 +230,7 @@ func on_paid(sim, c: Dictionary) -> void:
 	sim.custs.erase(c)
 	var rt = _mk_rt(sim, d, c.pos)
 	vols.append(rt)
-	sim.ev.append({"k": "war_join", "pos": c.pos + Vector2(0, -60), "line": pick(L_JOIN, _rng), "gid": main_slot(g)[0]})
+	sim.ev.append({"k": "war_join", "pos": c.pos + Vector2(0, -60), "line": pick(L_JOIN, _rng), "gid": main_slot(g)[0], "cid": str(c.cid)})   # [story] cid：換客人 say.vol
 	_cap(sim)
 
 func _cap(sim) -> void:   # 超出上限：最弱嘅退休
@@ -629,7 +629,7 @@ func eat(sc) -> void:
 				sc._float(e.pos, T("war_scare", "孤魂嚇走咗客！", "孤魂嚇跑了客人！"), Color("#ffb0a0"), 16, 1.5)
 				sc._bubble(e.pos + Vector2(-60, -40), str(e.line), T("foe", "孤魂", "孤魂"), 2.0)
 			"war_warn":
-				sc._float(sc.s2w(Vector2(195, sc.top_pad + HUD_H + 90)), T("war_warn", "圍欄外面好嘈……鬼潮就嚟！", "圍欄外很吵……鬼潮快來了！"), Color("#ffd27a"), 17, 2.2)
+				if not e.has("said"): sc._float(sc.s2w(Vector2(195, sc.top_pad + HUD_H + 90)), T("war_warn", "圍欄外面好嘈……鬼潮就嚟！", "圍欄外很吵……鬼潮快來了！"), Color("#ffd27a"), 17, 2.2)   # [story] said：mv_story 已經出咗 FOE.wave
 			"war_wave":
 				sc._banner_set(T("war_wave_a", "鬼潮嚟喇！", "鬼潮來了！"), T("war_wave_b", "%d 隻孤魂衝圍欄", "%d 隻孤魂衝圍欄") % int(e.n), 2.4)
 				sc._snd("whoosh")

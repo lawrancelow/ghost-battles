@@ -695,7 +695,7 @@ func _step_custs(dt: float) -> void:
 				c.wait = float(c.get("wait", 0.0)) + dt
 				if c.wait > PATIENCE + IDL.PAT_STAR * _cust_stars(c):   # [idle] 品質星：客人肯等耐啲； 等太耐：有攞到嘅就俾嗰啲錢走人，冇就嬲嬲走
 					if _got_n(c) > 0: _pay(c)
-					else: c.st = "out"; ev.append({"k": "leave", "pos": c.pos + Vector2(0, -60)})
+					else: c.st = "out"; ev.append({"k": "leave", "pos": c.pos + Vector2(0, -60), "cid": c.cid})   # [story] cid：客人 say.wait
 					continue
 				if c.take <= 0.0:
 					c.take = 0.16

@@ -65,6 +65,7 @@ var amb := {"g": [], "f": [], "tg": 2.0, "tf": 5.0}   # 環境：背景遊魂、
 const HUD_H := 90.0
 const AMB_GHOSTS := 2
 const AMB_FLY := 3
+var story = null   # [story] 劇本接駁（game/outpost/mv_story.gd）：beat、客人／惡鬼氣泡
 var camp = null   # [camp] 營地（原本村子嘅建築，喺地圖底）：game/outpost/mv_camp.gd
 # [unify] 嵌入模式（合一地圖）：由 game/outpost/mv_embed.gd 掛入村子畫面（ui/nv_village.gd），
 #   大排檔區世界 y 0..EH ＝ 村子 y -EH..0；鏡頭跟村子（embed 每格設 cam）；唔自己處理拖動／點擊（村子轉發 tap）；
@@ -122,6 +123,7 @@ func ci() -> int: return sim.ci()
 func can_move() -> bool: return sim.can_move()
 func move_next(instant := false) -> bool:
 	if anim != null or not sim.can_move(): return false
+	if story != null and story.before_move(self, instant): return true   # [story] 拔營 beat：撳咗確定、動畫之前播，播完先郁
 	if instant:
 		var ok = sim.move_next(); _after_move(); return ok
 	close_sheet(); _close_picker()
@@ -137,6 +139,7 @@ func offline_gain(ms: float) -> Dictionary:
 func _build() -> void:
 	if frame != null: return
 	sim = SIM.new()
+	story = load("res://game/outpost/mv_story.gd").new()   # [story]
 	if not embed: camp = load("res://game/outpost/mv_camp.gd").new(); camp.sc = self   # [camp]（[unify] 嵌入模式取消營地）
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); mouse_filter = Control.MOUSE_FILTER_IGNORE if embed else Control.MOUSE_FILTER_STOP
 	clip_contents = true
@@ -262,6 +265,7 @@ func _process(dt: float) -> void:
 	else: hud_k = move_toward(hud_k, 1.0 if hud_on else 0.0, dt * 5.0)
 	_step_amb(dt)
 	if camp != null: camp.step(dt)   # [camp]
+	if story != null and anim == null: story.tick(self, dt)   # [story]
 	_eat_events()
 	_step_fx(dt)
 	# HUD 冥幣追真數（飛緊嘅錢到咗先跳）
@@ -280,6 +284,7 @@ func _process(dt: float) -> void:
 
 func _eat_events() -> void:
 	var hud_coin = Vector2(FW - 70, top_pad + 68)
+	if story != null: story.eat(self)   # [story] 先換句（客人 say／惡鬼 FOE），再俾 war 出
 	sim.war.eat(self)   # [war]
 	for e in sim.ev:
 		match e.k:
@@ -319,7 +324,9 @@ func _eat_events() -> void:
 				shake[_fence_i(e.pos.x)] = 0.4
 				if fence_art():   # [camp] 柵欄喺背景圖：撞擊點出塵＋碎木
 					_burst(e.pos + Vector2(0, 6), Color("#b8a888"), 5); _burst(e.pos, Color("#7a5634"), 4)
-				if _rng.randf() < 0.5: _bubble(e.pos + Vector2(-60, -64), MD.T(_pick(MD.D().FOE_LINES)), MD.S("foe", "孤魂", "孤魂"), 2.4)
+				if story != null:   # [story] 遊魂句（FOE.roam）：story.eat 揀咗先出
+					if e.has("line"): _bubble(e.pos + Vector2(-60, -64), str(e.line), MD.S("foe", "孤魂", "孤魂"), 2.4)
+				elif _rng.randf() < 0.5: _bubble(e.pos + Vector2(-60, -64), MD.T(_pick(MD.D().FOE_LINES)), MD.S("foe", "孤魂", "孤魂"), 2.4)
 			"rattle":
 				shake[_fence_i(e.x)] = 0.3
 			"up":
@@ -348,6 +355,7 @@ func _eat_events() -> void:
 
 func _fence_i(x: float) -> int: return int(x / (FENCE_TW if _has("mvs_fence") else 26.0))
 func _random_line() -> void:
+	if story != null: story.random_line(self); return   # [story] 排隊 q／等太耐 wait
 	for c in sim.custs:
 		if c.st == "serve" and c.lines is Array and c.lines.size():
 			_bubble(c.pos + Vector2(-90, -120), MD.T(c.lines[_rng.randi() % c.lines.size()]), MD.S("cust", "客人", "客人"), 2.8)
@@ -1199,7 +1207,7 @@ var _brects: Array = []
 func _wrap(ctx: Ctx, s: String, maxw: float) -> Array:
 	var out = []; var cur = ""
 	for ch in s:
-		if ctx.measureText(cur + ch).width > maxw and cur != "": out.append(cur); cur = ch
+		if ctx.measureText(cur + ch).width > maxw and cur != "" and not "，。、！？：；）」』…—,.!?".contains(ch): out.append(cur); cur = ch   # [story] 標點唔放行頭（掛喺上一行尾）
 		else: cur += ch
 	if cur != "": out.append(cur)
 	return out
