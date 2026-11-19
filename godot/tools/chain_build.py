@@ -182,6 +182,8 @@ R = {
  "st_douhua":        ({"m_wellwater": 1}, 2, 3),
  "st_nuomici":       ({"m_rice": 1, "m_shoubao": 2}, 2, 4),
  "st_guancaichuang": ({"m_plank": 1, "m_zhishan": 1}, 1, 4),
+ "st_denglong":      ({"m_paper": 1, "m_bamboo": 1}, 2, 3),   # [idle] 第 1 張圖新台
+ "st_tiaodan":       ({"m_douhua": 1, "m_denglong": 1}, 1, 4),   # [idle] 第 1 張圖新台
  # ci1 甘榜夜路
  "st_yeketan":       ({"m_coconut": 1}, 2, 3),
  "st_tuoxie":        ({"m_rubbersheet": 1}, 2, 3),
@@ -194,6 +196,7 @@ R = {
  "st_jiuban":        ({"m_plank": 1}, 1, 3),
  "st_huajiao":       ({"m_jiuban": 1, "m_zhishan": 1, "m_rope": 1}, 1, 4),
  "st_xunren":        ({"m_paper": 1, "m_wucha": 2}, 2, 4),
+ "st_ganlu":         ({"m_caoxie": 2, "m_wucha": 1}, 1, 4),   # [idle] 第 3 張圖新台
  # ci3 河口蕉園
  "st_jiaoye":        ({"m_bananaleaf": 1, "m_rice": 1}, 2, 3),
  "st_xianyu":        ({"m_fish": 1}, 1, 3),

@@ -128,8 +128,8 @@ func logic(_t) -> void:
 	sim.st().st[B].lv = 10.0
 	_ok("%s Lv10 → 解鎖到 %s" % [B, C], sim.unlock(C))
 	var cnt = [5, 5, 6, 6, 7, 7]; var cbad = 0
-	for ci in 6: if IDL.chain(ci).size() < 3: cbad += 1
-	_chk("每張圖解鎖鏈 ≥ 3 個台（錯幾張）", float(cbad), 0.0)
+	for ci in 6: if IDL.chain(ci).size() != cnt[ci]: cbad += 1
+	_chk("每張圖台數 = 合約 5／5／6／6／7／7（唔計隨村台；錯幾張）", float(cbad), 0.0)
 	_chk("第 5 張圖 7 個台", float(IDL.chain(4).size()), 7.0)
 	_chk("第 6 張圖 7 個台", float(IDL.chain(5).size()), 7.0)
 	for ci in 6: _p("  第 %d 張圖：鏈 %d 台（合約 %d）＋隨村 2" % [ci + 1, IDL.chain(ci).size(), cnt[ci]])

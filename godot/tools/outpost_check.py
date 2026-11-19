@@ -139,7 +139,7 @@ def main():
         if not free: E(tag + " 冇開檔即有嘅台（unlock_cost 0）")
         if ci == 0 and len(free) != 3: E(tag + " 第一張圖要 3 個台起步，而家 %d" % len(free))
         cs = m.get("customers", [])
-        if not (6 <= len(cs) <= 10): E(tag + " 客人種數 %d 唔喺 6–10" % len(cs))
+        if not (6 <= len(cs) <= 11): E(tag + " 客人種數 %d 唔喺 6–11" % len(cs))   # [idle] 新台嘅客：第 1 張圖 11 種
         if not any(cmap.get(c, {}).get("vip") for c in cs): W(tag + " 冇 VIP")
         for c in cs:
             if c not in cmap: E(tag + " 客人 %s 唔存在" % c); continue
