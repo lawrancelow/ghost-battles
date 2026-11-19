@@ -55,6 +55,16 @@ func _setup() -> void:
 	for gh in S.ghosts: if not str(gh.get("id")).begins_with("t_mv"): keep.append(gh)
 	S["ghosts"] = keep
 	for t in TG: S.ghosts.append({"id": t[0], "k": t[1], "name": t[2], "q": t[3], "lv": t[4], "st": [30.0, 30.0, 30.0], "post": null, "spent": 0.0})
+	# [chain] 呢個測試驗舊公式（賣貨／搬貨／離線）：材料庫塞滿、所有台設「全部出售」，生產鏈唔影響數；生產鏈另見 tools/tests/chain_test.gd
+	var CM = load("res://game/outpost/mat.gd"); CM.reload()
+	S["mat"] = {}
+	for mid in CM.all_ids():
+		var rk = CM.res_key(str(mid))
+		if rk != "": S.res[rk] = 1e9
+		else: S.mat[str(mid)] = 1e9
+	var rt = {}
+	for sid in D.STATIONS: rt[sid] = "sell"
+	S["mv"] = {"route": rt}
 
 func _run(sim, secs: float, dt := 0.05) -> Array:
 	var evs = []
@@ -262,7 +272,10 @@ func logic(_t) -> void:
 	var A1 = _free(1)[0]; var B1 = _locked(1)[0]
 	_chk("新圖：%s Lv1 已解鎖" % A1, (sim.lv(A1) if sim.unlocked(A1) else -1.0), 1.0)
 	_chk("新圖：%s 未解鎖" % B1, 1.0 if sim.unlocked(B1) else 0.0, 0.0)
-	_chk("新圖：冇舊台", 1.0 if sim.st().st.has(A) else 0.0, 0.0)
+	var OLD = A   # [chain] 隨村台（CARRY）會跟住走，揀第一個唔係隨村台嘅舊台嚟驗
+	for sid in _sids(0): if not MD.is_carry(sid): OLD = sid; break
+	_chk("新圖：冇舊台（%s）" % OLD, 1.0 if sim.st().st.has(OLD) else 0.0, 0.0)
+	_chk("新圖：隨村台 %s 跟住走" % A, 1.0 if (not MD.is_carry(A)) or sim.st().st.has(A) else 0.0, 1.0)
 	_chk("新圖未做目標：can_move = false", 1.0 if sim.can_move() else 0.0, 0.0)
 
 	_p("===== 10. 離線（最多 8 小時，按有員工嘅台） =====")

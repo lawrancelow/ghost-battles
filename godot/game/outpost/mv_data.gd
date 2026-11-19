@@ -16,6 +16,7 @@
 extends RefCounted
 
 const PATH := "res://data/nat/outpost.json"
+const CM = preload("res://game/outpost/mat.gd")   # [chain] 隨村台（CARRY）
 const CARRY_S := 3.0        # 離線計：每轉搬貨來回大約秒數
 const OFFLINE_H := 8.0
 const COUNTER_CAP := 40     # 櫃台每種貨最多疊幾件
@@ -51,7 +52,10 @@ static func cust_def(cid: String) -> Dictionary:
 static func stations(ci: int) -> Array:
 	var o = []
 	for s in map_def(ci).get("stations", []): if D().STATIONS.has(str(s)): o.append(str(s))
+	for s in CM.carry():   # [chain] 隨村台：每張圖都有（資料冇列入呢張圖都補返）
+		if D().STATIONS.has(s) and not o.has(s): o.append(s)
 	return o
+static func is_carry(sid: String) -> bool: return CM.carry().has(sid)   # [chain]
 static func goals(ci: int) -> Array: return map_def(ci).get("goals", [])
 static func map_mul(ci: int) -> float: return float(map_def(ci).get("mul", 1.0))
 
@@ -111,7 +115,36 @@ static func layout(ci: int) -> Dictionary:
 	if _LC.has(ci): return _LC[ci]
 	var L = map_def(ci).get("layout")
 	if not (L is Dictionary): L = _auto_layout(ci)
+	else: L = _fit_missing(L, ci)   # [chain]
 	_LC[ci] = L
+	return L
+# [chain] 版面冇預留位嘅台（例如隨村台）：喺圍欄下面開一條新帶，所有圍欄以下嘅嘢（台、路、櫃台、大屋、擺設）向下移，
+# 新台排喺新帶入面（左右交替），搬貨路線接去最頂嗰個路點。圍欄、最頂路點唔郁。
+static func _fit_missing(L0: Dictionary, ci: int) -> Dictionary:
+	var miss = []
+	for sid in stations(ci): if not (L0.get("st", {}) as Dictionary).has(sid): miss.append(sid)
+	if miss.is_empty(): return L0
+	var L = L0.duplicate(true)
+	var fy = float(L.get("fence_y", 230)); var cut = fy + 30.0; var dy = 270.0 * miss.size()
+	var sh = func(a): return [a[0], float(a[1]) + dy] + (a.slice(2) if a.size() > 2 else []) if float(a[1]) > cut else a
+	L.h = float(L.h) + dy
+	for k in ["counter", "house", "serve"]: if L.get(k) is Array: L[k] = sh.call(L[k])
+	var rd = []
+	for q in L.road: rd.append(sh.call(q))
+	L.road = rd
+	var st = {}
+	for sid in L.st: st[sid] = sh.call(L.st[sid])
+	var top = rd.size() - 1
+	for i in miss.size():
+		var y = cut + 230.0 + i * 270.0
+		st[miss[i]] = [298.0 if i % 2 == 0 else 92.0, y, float(top)]
+	L.st = st
+	var dc = []
+	for d in L.get("decor", []):
+		if d is Dictionary and float(d.get("y", 0)) > cut:
+			var d2 = d.duplicate(); d2.y = float(d.y) + dy; dc.append(d2)
+		else: dc.append(d)
+	L.decor = dc
 	return L
 static func _auto_layout(ci: int) -> Dictionary:   # 資料冇 layout：照 tools/outpost_layout.py 嘅排法
 	var ids = stations(ci); var n = ids.size()

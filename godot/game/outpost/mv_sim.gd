@@ -4,6 +4,22 @@
 extends RefCounted
 
 const MD = preload("res://game/outpost/mv_data.gd")
+const M = preload("res://game/outpost/mat.gd")   # [chain] 材料庫
+# [chain] 生產鏈：台做貨要按 chain.json RECIPES 由材料庫扣 in；冇料就停（斷料），有料自動復工。
+#   每轉（一次做 out(lv) 件）食 in × out(lv) ÷ RECIPES.n（即係 n 件要一份 in；升級多出嘅件數照比例食料）。
+#   開工嗰下先扣料（扣唔到就企喺台前等，顯示「斷料：缺 XX」）；鬼中途被調走，未做完嗰轉退返料。
+# [chain] 分流規則（每台可以喺資料卡揀：自動／全部入倉／全部出售；記喺 S.mv.route[sid]，跨地圖保留）：
+#   自動：① 上層要料優先——呢張圖有已解鎖嘅台用緊呢樣貨做原料，而材料庫存量 < 需求線
+#           （Σ 用料台每轉用量 × 員工數(最少 1) × BUF_CYCLES 轉，最少 BUF_MIN）→ 成轉入倉；
+#         ② 壽包（m_shoubao，前線命脈）→ 一半入倉（向上取整）、一半擺櫃台；
+#         ③ 戰鬥道具（BATTLE_ITEMS）→ 庫存未夠 ITEM_KEEP 件就入倉，夠咗擺櫃台；
+#         ④ 其他（包括裝備 GEAR，要賣畀鬼佢先會做義勇軍）→ 擺櫃台出售。
+#   櫃台嗰樣貨滿咗（COUNTER_CAP）而呢樣貨入得倉（有人用／壽包／道具）→ 改入倉，唔使員工企喺度等。
+#   入倉嘅貨即刻入庫（唔使搬去櫃台），員工即刻做下一轉；出售嘅照搬去櫃台。倉滿就全部擺櫃台。
+const BUF_CYCLES := 4.0
+const BUF_MIN := 5.0
+const ITEM_KEEP := 10.0
+const ROUTES := ["auto", "stock", "sell"]
 const FW := 390.0
 const WALK := 120.0
 const FOE_MAX := 5
@@ -40,7 +56,7 @@ func st():
 		s["mv"] = {"v": 1.0, "ci": 0.0, "st": {}, "goals_done": [], "sold": {}, "done": {}, "guards": [], "last": now(),
 			"boost": {"inc_end": 0.0, "inc_cd": 0.0, "spd_end": 0.0, "spd_cd": 0.0}, "pile": {}, "counter": {}, "earned": 0.0, "served": 0.0}
 	var m = s.mv
-	for k in ["st", "sold", "done", "boost", "pile", "counter"]: if not (m.get(k) is Dictionary): m[k] = {}
+	for k in ["st", "sold", "done", "boost", "pile", "counter", "route", "made", "carry_st"]: if not (m.get(k) is Dictionary): m[k] = {}   # [chain] route/made/carry_st
 	for k in ["goals_done", "guards"]: if not (m.get(k) is Array): m[k] = []
 	while m.guards.size() < MD.GUARD_SLOTS: m.guards.append(null)
 	if m.get("last") == null: m["last"] = now()
@@ -48,6 +64,9 @@ func st():
 	for sid in MD.stations(c):
 		if not (m.st.get(sid) is Dictionary):
 			m.st[sid] = {"lv": 1.0, "unlocked": float(MD.st_def(sid).get("unlock_cost", 0)) <= 0.0, "workers": []}
+			var cs = m.carry_st.get(sid)   # [chain] 隨村台：跟大屋抬過嚟，等級／解鎖照舊
+			if MD.is_carry(sid) and cs is Dictionary:
+				m.st[sid].lv = maxf(1.0, J.num(cs.get("lv", 1))); m.st[sid].unlocked = J.t(cs.get("unlocked")) or J.t(m.st[sid].unlocked)
 		var e = m.st[sid]
 		if not (e.get("workers") is Array): e["workers"] = []
 		while e.workers.size() < MD.slots(sid): e.workers.append(null)
@@ -247,6 +266,8 @@ func move_next() -> bool:
 	var rec = {}
 	for sid in m.st: if J.t(m.st[sid].unlocked): rec[sid] = J.num(m.st[sid].lv)
 	m.done[str(c)] = rec
+	for sid in m.st:   # [chain] 隨村台跟住走
+		if MD.is_carry(sid): m.carry_st[sid] = {"lv": J.num(m.st[sid].lv), "unlocked": J.t(m.st[sid].unlocked)}
 	for sid in m.st:
 		for gid in m.st[sid].workers:
 			if gid != null and ghost(gid) != null and J.seq(J.gp(ghost(gid), "post"), "mv"): J.sp(ghost(gid), "post", null)
@@ -258,32 +279,142 @@ func move_next() -> bool:
 	return true
 
 func reset_live() -> void:
-	workers.clear(); custs.clear(); foes.clear(); guards.clear(); mk.clear(); _sync_key = ""
+	for w in workers: if w.get("paid") is Dictionary: M.give(w.paid)   # [chain] 退返做到一半嗰轉
+	for sid in mk: if float(mk[sid]) >= 0.0: M.give(need(sid))
+	workers.clear(); custs.clear(); foes.clear(); guards.clear(); mk.clear(); mk_starve.clear(); _sync_key = ""
 	spawn_t = 0.6; foe_t = 1.5
 
+# ================= [chain] 生產鏈：用料、斷料、分流 =================
+func need(sid: String, n := -1.0) -> Dictionary:   # 做 n 件（預設一轉 = out(lv)）要幾多料
+	var ri = M.rin(sid)
+	if ri.is_empty(): return {}
+	if n < 0.0: n = float(MD.out(sid, lv(sid)))
+	var k = n / M.rn(sid); var o = {}
+	for mid in ri: o[str(mid)] = J.num(ri[mid]) * k
+	return o
+func missing(sid: String) -> Array:   # 而家缺邊啲料（一轉計）
+	var o = []
+	var nd = need(sid)
+	for mid in nd: if M.amt(mid) < nd[mid] - 1e-6: o.append(mid)
+	return o
+func starving(sid: String) -> bool:   # 有人做（或者手做緊）但冇料
+	for w in workers: if w.sid == sid and J.t(w.get("starve")): return true
+	return J.t(mk_starve.get(sid)) and missing(sid).size() > 0
+var mk_starve := {}
+func route(sid: String) -> String:
+	var r = str(st().route.get(sid, "auto"))
+	return r if r in ROUTES else "auto"
+func set_route(sid: String, r: String) -> void:
+	if r in ROUTES: st().route[sid] = r
+func next_route(sid: String) -> String:
+	var r = ROUTES[(ROUTES.find(route(sid)) + 1) % ROUTES.size()]
+	set_route(sid, r); return r
+# 呢張圖用 mid 做原料嘅已解鎖台
+func consumers(mid: String, except := "") -> Array:
+	var o = []
+	for sid in M.st_users(mid):
+		if sid != except and st().st.has(sid) and unlocked(sid): o.append(sid)
+	return o
+func buffer_of(mid: String, except := "") -> float:   # 需求線
+	var b = 0.0
+	for sid in consumers(mid, except):
+		b += J.num(need(sid).get(mid)) * maxf(1.0, nworkers(sid)) * BUF_CYCLES
+	return maxf(BUF_MIN, b) if b > 0.0 else 0.0
+func storeable(mid: String) -> bool:
+	return mid != "" and (M.users(mid).size() > 0 or mid == "m_shoubao" or M.is_item(mid))
+# 一轉 n 件：回 [入倉件數, 出售件數]（入倉已經夾咗倉位）
+func split(sid: String, n: int) -> Array:
+	var mid = M.rout(sid)
+	if mid == "" or n <= 0: return [0, n]
+	var r = route(sid); var k = 0
+	if r == "stock": k = n
+	elif r == "sell": k = 0
+	else:
+		var buf = buffer_of(mid, sid)
+		if buf > 0.0 and M.amt(mid) < buf: k = n
+		elif mid == "m_shoubao": k = int(ceil(n / 2.0))
+		elif M.is_item(mid) and M.amt(mid) < ITEM_KEEP: k = n
+		var gid = str(MD.st_def(sid).get("good", ""))
+		if k < n and storeable(mid) and counter_n(gid) >= MD.COUNTER_CAP: k = n
+	k = mini(k, int(floor(M.room(mid) + 1e-6)))
+	return [k, n - k]
+func _made(sid: String, n: int) -> void:   # 記數（任務「做壽包」= 嘆氣蒸籠產出數 → m.made.m_shoubao）
+	var mid = M.rout(sid)
+	var key = mid if mid != "" else str(MD.st_def(sid).get("good", ""))
+	st().made[key] = J.num(st().made.get(key)) + float(n)
+func _stock(sid: String, k: int, pos: Vector2) -> void:
+	if k <= 0: return
+	var mid = M.rout(sid)
+	M.add(mid, float(k))
+	ev.append({"k": "stock", "sid": sid, "mid": mid, "n": k, "pos": pos})
+
 # ================= 離線 =================
-func offline_rate() -> float:   # 每秒
+# [chain] 離線（同埋場景收埋咗嘅時間）：按生產鏈逐段計（每段 ≤ 60 秒）——低層台先做、即刻入倉畀上層用；
+#   每台每段：轉數 = 員工 × 秒 ÷ (做貨時間 + 出售比例 × 搬貨來回)，再按原料比例收細（冇料就冇得做）；
+#   出貨照分流規則：入倉入材料庫、出售件數 × 單價 = 冥幣（唔計加速／收益掣）。最多 OFFLINE_H 小時。
+func offline_rate() -> float:   # 每秒（估算：有料當全速、全部出售）
 	var c = ci(); var r = 0.0
 	for sid in st().st:
 		if not unlocked(sid): continue
 		var w = nworkers(sid)
-		if w <= 0: continue
+		if w <= 0 or missing(sid).size() > 0: continue
 		var l = lv(sid)
 		r += w * MD.out(sid, l) * MD.val(sid, l, c) / (MD.tm(sid, l) + MD.carry_s(c, sid))
 	return r
+func _order() -> Array:   # 低層先
+	var o = []
+	for sid in st().st: if unlocked(sid) and nworkers(sid) > 0: o.append(sid)
+	o.sort_custom(func(a, b):
+		var ta = M.tier(M.rout(a)) if M.rout(a) != "" else 99
+		var tb = M.tier(M.rout(b)) if M.rout(b) != "" else 99
+		if ta != tb: return ta < tb
+		return a < b)
+	return o
+# 推進 secs 秒（唔加冥幣入賬嘅細節由 acc 收集）；acc = {coins, rows:{sid: coins}, mats:{mid: +n}, made:{sid: n}}
+func offline_step(secs: float, acc: Dictionary) -> void:
+	var c = ci()
+	for sid in _order():
+		var l = lv(sid); var w = nworkers(sid); var n1 = MD.out(sid, l)
+		var sp = split(sid, n1)
+		var sell_f = float(sp[1]) / maxf(1.0, n1)
+		var cyc = w * secs / (MD.tm(sid, l) + sell_f * MD.carry_s(c, sid))
+		var nd = need(sid, cyc * n1); var k = 1.0
+		for mid in nd: if nd[mid] > 0.0: k = minf(k, M.amt(mid) / nd[mid])
+		k = clampf(k, 0.0, 1.0)
+		if k <= 0.0: continue
+		for mid in nd: M.add(mid, -nd[mid] * k)
+		var items = cyc * n1 * k
+		var mid_o = M.rout(sid); var put = 0.0
+		if mid_o != "":
+			var buf = buffer_of(mid_o, sid)
+			if route(sid) == "auto" and buf > 0.0 and M.amt(mid_o) < buf:
+				put = minf(items, buf - M.amt(mid_o))   # 上層要料：補到需求線為止（唔好成段時間都入倉）
+			else: put = items * float(sp[0]) / maxf(1.0, n1)
+			put = minf(put, M.room(mid_o))
+			if put > 0.0:
+				M.add(mid_o, put); acc.mats[mid_o] = J.num(acc.mats.get(mid_o)) + put
+		var sold = items - put
+		var v = sold * MD.val(sid, l, c)
+		acc.coins = J.num(acc.coins) + v
+		acc.rows[sid] = J.num(acc.rows.get(sid)) + v
+		var key = mid_o if mid_o != "" else str(MD.st_def(sid).get("good", ""))
+		st().made[key] = J.num(st().made.get(key)) + items
+func offline_acc() -> Dictionary: return {"coins": 0.0, "rows": {}, "mats": {}}
 func offline_gain(ms: float) -> Dictionary:
 	var m = st()
 	var secs = clampf(ms / 1000.0, 0.0, MD.OFFLINE_H * 3600.0)
-	var rows = []; var tot = 0.0; var c = ci()
-	for sid in m.st:
-		if not unlocked(sid) or nworkers(sid) <= 0: continue
-		var l = lv(sid)
-		var v = nworkers(sid) * MD.out(sid, l) * MD.val(sid, l, c) / (MD.tm(sid, l) + MD.carry_s(c, sid)) * secs
-		rows.append([sid, v]); tot += v
-	tot = floor(tot)
+	var acc = offline_acc(); var s = 0.0
+	while s < secs - 1e-6:
+		var d = minf(60.0, secs - s); offline_step(d, acc); s += d
+	return offline_finish(acc, secs, ms / 1000.0 > MD.OFFLINE_H * 3600.0)
+func offline_finish(acc: Dictionary, secs: float, capped: bool) -> Dictionary:
+	var m = st()
+	var tot = floor(J.num(acc.coins))
 	if tot > 0.0: add_coins(tot); m.earned = J.num(m.get("earned")) + tot
 	m.last = now()
-	return {"coins": tot, "secs": secs, "capped": ms / 1000.0 > MD.OFFLINE_H * 3600.0, "rows": rows}
+	var rows = []
+	for sid in acc.rows: rows.append([sid, acc.rows[sid]])
+	return {"coins": tot, "secs": secs, "capped": capped, "rows": rows, "mats": acc.mats}
 func check_away() -> Dictionary:   # 返嚟：由上次記低嘅時間計
 	var m = st(); if m == null: return {}
 	var ms = now() - J.num(m.get("last"))
@@ -344,7 +475,7 @@ func avail_goods() -> Array:   # 客人可以要嘅貨：有人做緊／櫃台�
 			var g = str(MD.st_def(sid).get("good", ""))
 			if g == "" or o.has(g): continue
 			o.append(g)
-			if nworkers(sid) > 0 or counter_n(g) > 0 or pile_n(sid) > 0 or float(mk.get(sid, -1.0)) >= 0.0: act.append(g)
+			if (nworkers(sid) > 0 and not starving(sid)) or counter_n(g) > 0 or pile_n(sid) > 0 or float(mk.get(sid, -1.0)) >= 0.0: act.append(g)   # [chain] 斷料嘅台唔招客
 	return act if act.size() else o
 func sid_of(gid: String) -> String:
 	for sid in MD.stations(ci()):
@@ -367,7 +498,9 @@ func sync() -> void:
 	for w in workers:
 		var arr = m.st[w.sid].workers if m.st.has(w.sid) else []
 		if int(w.slot) < arr.size() and J.seq(arr[int(w.slot)], w.gid): keep.append(w)
-		elif w.carry > 0: _put_counter(str(MD.st_def(w.sid).get("good", "")), int(w.carry))   # 搬緊嘅貨唔好蒸發
+		else:
+			if w.carry > 0: _put_counter(str(MD.st_def(w.sid).get("good", "")), int(w.carry))   # 搬緊嘅貨唔好蒸發
+			if w.get("paid") is Dictionary: M.give(w.paid)   # [chain] 未做完嗰轉：退返料
 	workers = keep
 	for sid in m.st:
 		var arr = m.st[sid].workers
@@ -427,10 +560,19 @@ func _step_workers(dt: float, sp: float) -> void:
 				if pile_n(sid) > 0 and w.prog <= 0.0:
 					var n = mini(pile_n(sid), MD.out(sid, lv(sid)) * 2)
 					st().pile[sid] = float(pile_n(sid) - n); w.carry = n; _go(w); continue
+				# [chain] 開工先扣料：扣唔到 = 斷料（企喺度等，有料自動復工）
+				if not (w.get("paid") is Dictionary):
+					var nd = need(sid)
+					if not M.take(nd): w["starve"] = true; continue
+					w["paid"] = nd; w["starve"] = false
 				w.prog += dt * sp / MD.tm(sid, lv(sid))
 				if w.prog >= 1.0:
-					w.prog = 0.0; w.carry = MD.out(sid, lv(sid)); _go(w)
-					ev.append({"k": "made", "sid": sid, "n": w.carry, "pos": w.home})
+					var n = MD.out(sid, lv(sid))
+					w.prog = 0.0; w.erase("paid"); _made(sid, n)
+					var sp2 = split(sid, n)   # [chain] 分流：入倉即刻入庫，出售先搬去櫃台
+					_stock(sid, sp2[0], w.home)
+					ev.append({"k": "made", "sid": sid, "n": n, "pos": w.home})
+					if sp2[1] > 0: w.carry = sp2[1]; _go(w)
 			"to_path":   # 由企位行去台前（路線起點）
 				if _move(w, P[0] if P.size() else w.home, dt, MD.WALK_W): w.st = "go"; w.s = 0.0
 			"go":
@@ -464,8 +606,11 @@ func _step_manual(dt: float, sp: float) -> void:
 		mk[sid] = float(mk[sid]) + dt * sp / MD.tm(sid, lv(sid))
 		if mk[sid] >= 1.0:
 			mk[sid] = -1.0
-			st().pile[sid] = float(mini(pile_cap(sid), pile_n(sid) + MD.out(sid, lv(sid))))
-			ev.append({"k": "made", "sid": sid, "n": MD.out(sid, lv(sid)), "pos": st_pos(sid)})
+			var n = MD.out(sid, lv(sid)); _made(sid, n)
+			var sp2 = split(sid, n)   # [chain]
+			_stock(sid, sp2[0], st_pos(sid))
+			st().pile[sid] = float(mini(pile_cap(sid), pile_n(sid) + sp2[1]))
+			ev.append({"k": "made", "sid": sid, "n": n, "pos": st_pos(sid)})
 
 # 撳台面：有貨＝收去櫃台；冇貨＝開始做一轉
 func tap_station(sid: String) -> String:
@@ -478,6 +623,10 @@ func tap_station(sid: String) -> String:
 		ev.append({"k": "collect", "sid": sid, "gid": gid, "n": put, "pos": st_pos(sid)})
 		return "collect"
 	if float(mk.get(sid, -1.0)) >= 0.0: return "busy"
+	if not M.take(need(sid)):   # [chain] 手做都要料
+		mk_starve[sid] = true; ev.append({"k": "starve", "sid": sid, "miss": missing(sid), "pos": st_pos(sid)})
+		return "starve"
+	mk_starve.erase(sid)
 	mk[sid] = 0.0
 	return "make"
 

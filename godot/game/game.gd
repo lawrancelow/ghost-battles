@@ -11,6 +11,8 @@ signal story_req(scene: Variant, cb: Callable)
 signal sound(name: String)
 
 const SAVE_PATH := "user://save.json"
+const CE = preload("res://game/outpost/chain_eco.gd")   # [chain]
+const CM = preload("res://game/outpost/mat.gd")         # [chain]
 var S: Dictionary = {}
 var TIME_SCALE = 1.0
 var exp_acc = 0.0
@@ -193,7 +195,7 @@ func ratesPerMin() -> Dictionary:
 			"plank":
 				var o = (2.5 + stat(g, 0) * 0.05) * mult("plank"); r.planks += o; r.woodUse += o * 2
 			"bun":
-				var o2 = (2.5 + stat(g, 1) * 0.05) * mult("bun"); r.buns += o2; r.riceUse += o2 * 2
+				var o2 = (2.5 + stat(g, 1) * 0.05) * mult("bun"); r["bao"] = float(r.get("bao", 0.0)) + o2; r.riceUse += o2 * 2; r["baoUse"] = float(r.get("baoUse", 0.0)) + o2 * 2   # [chain] 包子鋪出普通包子 m_bao
 			"camp":
 				var o3 = (2 + stat(g, 2) * 0.04) * mult("camp"); r.drill = r.get("drill", 0.0) + o3; r.bunUse += o3 * 0.6
 				if not r.has("drillBy"): r.drillBy = []
@@ -212,8 +214,11 @@ func produce(dt: float) -> void:
 		var need: float = r.woodUse * m; var k = minf(1, R.wood / need) if need > 0 else 0.0
 		R.wood -= need * k; R.planks = minf(c, R.planks + r.planks * m * k)
 	if r.buns and R.buns < c:
-		var need2: float = r.riceUse * m; var k2 = minf(1, R.rice / need2) if need2 > 0 else 0.0
+		var need2: float = (r.riceUse - float(r.get("baoUse", 0.0))) * m; var k2 = minf(1, R.rice / need2) if need2 > 0 else 0.0
 		R.rice -= need2 * k2; R.buns = minf(c, R.buns + r.buns * m * k2)
+	if r.get("bao", 0.0) and CM.amt("m_bao") < CM.cap("m_bao"):   # [chain]
+		var need5: float = r.baoUse * m; var k5 = minf(1, R.rice / need5) if need5 > 0 else 0.0
+		R.rice -= need5 * k5; CM.add_capped("m_bao", r.bao * m * k5)
 	if r.troops and R.troops < troopCap(): R.troops = minf(troopCap(), R.troops + r.troops * m)
 	if r.has("drillBy"):
 		var need3: float = r.bunUse * m; var k3 = minf(1, R.buns / need3) if need3 > 0 else 0.0
@@ -221,6 +226,7 @@ func produce(dt: float) -> void:
 		if not S.has("drill") or S.drill == null: S.drill = {}
 		for e in r.drillBy: S.drill[e[0]] = float(S.drill.get(e[0], 0.0)) + e[1] * m * k3
 	R.coins += r.coins * m
+	CE.produce(dt)   # [chain] 拓展採集／加工建築（崗位鍵 = bid）
 	exp_acc += r.exp * m
 	if exp_acc >= 1:
 		var e = floor(exp_acc); exp_acc -= e; gainExp(e, true)

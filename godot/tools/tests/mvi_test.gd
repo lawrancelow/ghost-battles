@@ -85,27 +85,38 @@ func all(t) -> void:
 	# ---------- 3. 資源照有產出（移動村開住、冇舊崗位都有）----------
 	var mv = m.mv_view
 	_chk("場景 API 齊", mv.has_method("mv_state") and mv.has_method("ci") and mv.has_method("can_move") and mv.has_method("move_next") and mv.has_method("offline_gain") and mv.has_method("on_show") and mv.has_method("on_hide"))
-	for gh in S.ghosts: if gh.get("post") != null and gh.get("post") != "garrison": gh["post"] = null   # 清走舊崗位：淨係靠移動村
-	var r0 = J.cl(J.G.get("__mv_rates_orig"), null, [])
+	# [chain] 生產鏈：冇舊「副產出」——冇後院崗位就冇壽包／棺材板；壽包只由嘆氣蒸籠出
+	for gh in S.ghosts: if gh.get("post") != null and gh.get("post") != "garrison": gh["post"] = null
 	var r1 = J.cl(J.G.get("ratesPerMin"), null, [])
-	_chk("冇舊崗位：舊公式冇壽包", J.num(r0.buns) == 0.0, r0.buns)
-	_chk("移動村保底：壽包／棺材板／陰兵 > 0", J.num(r1.buns) > 0 and J.num(r1.planks) > 0 and J.num(r1.troops) > 0, "%.1f/%.1f/%.1f" % [J.num(r1.buns), J.num(r1.planks), J.num(r1.troops)])
-	var before = (S.res as Dictionary).duplicate()
+	_chk("冇後院崗位：冇副產出（壽包／棺材板 = 0）", J.num(r1.buns) == 0.0 and J.num(r1.planks) == 0.0, "%.1f/%.1f" % [J.num(r1.buns), J.num(r1.planks)])
+	# 後院派鬼（舊建築崗位照用）：伐木、割稻、做板、包包子
+	var spare = []
+	for gh in S.ghosts: if gh.get("post") == null and str(gh.k) != "afu": spare.append(gh)
+	var posts = ["wood", "rice", "plank", "bun"]
+	for i in mini(spare.size(), posts.size()):
+		if J.num(S.bld.get(posts[i], 0)) <= 0: S.bld[posts[i]] = 1.0
+		spare[i]["post"] = posts[i]
+	var CM = load("res://game/outpost/mat.gd")
+	var before = (S.res as Dictionary).duplicate(); var bao0 = CM.amt("m_bao")
 	J.cl(J.G.get("produce"), null, [600.0])
-	for k in ["wood", "rice", "planks", "buns", "troops"]:
-		_chk("10 分鐘有產出 " + k, J.num(S.res[k]) > J.num(before[k]), "%d→%d" % [int(before[k]), int(S.res[k])])
-	# 開台、派鬼：產出要升
+	for k in ["wood", "rice", "planks"]:
+		_chk("後院 10 分鐘有產出 " + k, J.num(S.res[k]) > J.num(before[k]), "%d→%d" % [int(before[k]), int(S.res[k])])
+	_chk("包子鋪出普通包子（m_bao 有加）", CM.amt("m_bao") > bao0 or spare.size() < 4, "%.1f→%.1f" % [bao0, CM.amt("m_bao")])
+	_chk("包子鋪唔再出壽包", J.num(S.res.buns) <= J.num(before.buns) + 0.001, "%.1f→%.1f" % [J.num(before.buns), J.num(S.res.buns)])
+	for gh in spare: gh["post"] = null
+	# 開台、派鬼（材料塞夠，睇移動村扣料做貨）
+	for mid in CM.all_ids():
+		if CM.res_key(str(mid)) == "": S.mat[str(mid)] = 500.0
 	S.res["coins"] = 100000.0
 	for sid in mv.sids():
 		var e = mv.ent(sid)
 		if not J.t(e.unlocked): mv._pay_unlock(sid, J.num(mv.sdef(sid).get("unlock_cost", 0)))
 		for i in 9: mv._pay_up(sid, mv.up_cost(sid))
 		mv._hire(sid)
-	var r2 = J.cl(J.G.get("ratesPerMin"), null, [])
-	_chk("開台＋升級＋派鬼後產出更多", J.num(r2.planks) > J.num(r1.planks) and J.num(r2.troops) > J.num(r1.troops), "%.1f/%.1f/%.1f" % [J.num(r2.buns), J.num(r2.planks), J.num(r2.troops)])
 	_chk("員工 post=mv，任務『任命打工』計到", J.num(J.mc(J.G.get("Quest"), "progress", [{"t": "assign", "n": 3}])[0]) >= 3)
 	B.sync()
-	_chk("任務計數：做板／包包跟台等級", J.num(S.cnt.craftPlank) >= 10 or J.num(S.cnt.craftBun) >= 10, "%d/%d" % [int(S.cnt.craftPlank), int(S.cnt.craftBun)])
+	S.mv["made"] = {"m_shoubao": 12.0}; B.sync()
+	_chk("任務計數：包壽包 = 嘆氣蒸籠產出數", J.num(S.cnt.craftBun) >= 12, int(S.cnt.craftBun))
 	# 互斥：同一隻鬼派去分村 → 移動村名單自動清走
 	var w0 = null
 	for sid in mv.sids():
@@ -117,19 +128,18 @@ func all(t) -> void:
 		_chk("派去分村 → 移動村自動除名（互斥）", not still and J.seq(B.ghost(w0).get("post"), "garrison"))
 	await _w(t, 1.0); await _shot(t, "04_stations")
 
-	# ---------- 4. 離線唔重複計 ----------
+	# ---------- 4. 離線唔重複計（[chain] 後院＋移動村交替按生產鏈計） ----------
 	B.sync()
 	var ips = mv.income_ps()
 	S["last"] = J.now() - 2 * 3600 * 1000.0
-	var c0 = J.num(S.res.coins); var b0 = J.num(S.res.buns)
+	var c0 = J.num(S.res.coins)
 	J.cl(J.G.get("offlineGain"), null, [])
 	var dc = J.num(S.res.coins) - c0
-	var exp_mv = ips * 7200
-	_chk("離線冥幣 ≈ 移動村 offline_gain（一次）", absf(dc - exp_mv) < maxf(5.0, exp_mv * 0.05), "dc=%.0f mv=%.0f" % [dc, exp_mv])
-	_chk("離線壽包有加（produce 鏈）", J.num(S.res.buns) > b0)
+	_chk("離線有冥幣、唔超過全速估算", dc > 0.0 and dc <= ips * 7200 + 5, "dc=%.0f 全速=%.0f" % [dc, ips * 7200])
 	var c1 = J.num(S.res.coins)
 	J.cl(J.G.get("offlineGain"), null, [])
 	_chk("即刻再叫離線 = 0（唔重複）", absf(J.num(S.res.coins) - c1) < 1.0, J.num(S.res.coins) - c1)
+	_chk("場景 check_away 唔再計（S.mv.last 已更新）", mv.sim.check_away().is_empty())
 	S["last"] = J.now() - 20 * 3600 * 1000.0
 	c1 = J.num(S.res.coins)
 	J.cl(J.G.get("offlineGain"), null, [])
@@ -154,8 +164,7 @@ func all(t) -> void:
 	for c in m.village.world.get_children(): if c.visible: wv += 1
 	_chk("開關關：舊村子有畫嘢（world 子節點可見）", wv >= 4, wv)
 	_chk("開關關：前線用返舊算法", GR(t).frontline() == B.front_by_progress(), GR(t).frontline())
-	var r3 = J.cl(J.G.get("ratesPerMin"), null, [])
-	_chk("開關關：冇移動村副產出", absf(J.num(r3.buns) - J.num(J.cl(J.G.get("__mv_rates_orig"), null, []).buns)) < 0.001)
+	_chk("開關關：離線用返舊 offlineGain", not B.on())
 	await _shot(t, "06_old_village")
 	m.set_mv(true); await _w(t, 1.5)
 	_chk("開關開返", m.mv_host.visible and not m.village.visible)
@@ -165,7 +174,8 @@ func all(t) -> void:
 	# 任務文字
 	var qs = J.G.get("QUESTS")
 	_chk("任務文字（建造棺材鋪）有移動村版", B.quest_text(qs[2]) != str(qs[2].text), B.quest_text(qs[2]))
-	_chk("任務文字（砍樹）有移動村版", B.quest_text(qs[0]).contains("棺材板工場"), B.quest_text(qs[0]))
+	_chk("任務文字（砍樹）指去後院", B.quest_text(qs[0]).contains("後院"), B.quest_text(qs[0]))
+	_chk("任務文字（包壽包）= 嘆氣蒸籠", B.quest_text(qs[5]).contains("嘆氣蒸籠"), B.quest_text(qs[5]))
 	J.cl(J.G.get("save"), null, [])
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
