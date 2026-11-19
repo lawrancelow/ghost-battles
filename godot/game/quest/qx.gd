@@ -323,6 +323,7 @@ func _process(dt: float) -> void:
 			if not sq().has("goal_" + gl.id) and J.t(J.cl(N.regionOpen, null, [float(gl.ci)])) and metric(gl.m) >= float(gl.n): n += 1
 	dot.visible = n > 0; badge_n = n
 	var vis = main.get("title_ov") == null and get_tree().root.get_node_or_null("Main/PtRun") == null and main.get("tab") == "village"
+	if vis and main.has_method("mv_on") and main.mv_on() and main.get("mv_view") != null: vis = false   # 移動村有自己目標條，任務掣會遮住升級條
 	if vis:
 		var busy = J.t(J.mc(J.G.get("Story"), "busy", [])); var cov = J.G.get("covered")
 		if busy or (cov != null and J.t(J.cl(cov, null, []))): vis = false

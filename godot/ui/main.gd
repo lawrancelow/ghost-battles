@@ -407,6 +407,7 @@ func _nav_on(t: String) -> void:
 	if mv_view != null and mv_on():
 		if t == "village": mv_view.on_show()
 		else: mv_view.on_hide()
+	_qx_btn_vis()
 	for k in nav_btns:
 		var on: bool = k == t
 		nav_btns[k][1].texture = load("res://assets/ui/n-%s%s.svg" % [k, "_on" if on else ("_main" if k == "battle" else "")])
@@ -492,6 +493,13 @@ func _mv_apply() -> void:
 	if mv_view != null:
 		if on and tab == "village": mv_view.on_show()
 		else: mv_view.on_hide()
+	_qx_btn_vis()
+
+# 移動村畫面有自己嘅目標條，右下角「任務」浮動掣會遮住升級條：喺移動村分頁收埋
+func _qx_btn_vis() -> void:
+	var q = get_node_or_null("/root/QX")
+	if q == null or not ("btn" in q) or q.btn == null or not is_instance_valid(q.btn): return
+	q.btn.visible = not (mv_view != null and mv_on() and tab == "village")
 
 func set_mv(on: bool) -> void:
 	if G.S.is_empty(): return
