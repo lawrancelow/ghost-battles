@@ -55,6 +55,10 @@ def chars_in_font():
         W("讀唔到字型 cmap：%s" % e); return None
 
 def main():
+    global FEM_OK
+    try:
+        import mv_story_src; FEM_OK = set(getattr(mv_story_src, "FEM_OK", []))
+    except Exception: FEM_OK = set()
     op = load(OUTPOST); st = load(STORY); fem = load(os.path.join(ROOT, "data", "fem.json"))
     core = load(os.path.join(ROOT, "data", "core.json"))
     spk_art = core.get("SPEAKER_ART", {})
@@ -64,7 +68,7 @@ def main():
     cmap = chars_in_font()
     STYLES = {"chat", "notice", "talk", "mail", "radio", "letter", "report", "narr", "news", "sys"}
     BGS = {"hq", "road", "field", "banana", "kampung", "office", "village"}
-    TRIG = {"open", "unlock", "level", "sold", "inf_below", "wave", "goal", "boss_next", "move"}
+    TRIG = {"open", "unlock", "level", "sold", "inf_below", "wave", "goal", "boss_next", "move", "all_done"}
     all_text = []      # (出處, 句)
     seen_beat = set()
     stat = []
@@ -101,8 +105,10 @@ def main():
         beats = sm.get("beats", [])
         kinds = [b.get("when", {}).get("t") for b in beats]
         if kinds.count("open") != 1: E(tag + " 故事線要有 1 個 open（開檔開場），而家 %d" % kinds.count("open"))
-        if kinds.count("move") != 1: E(tag + " 故事線要有 1 個 move（拔營收尾），而家 %d" % kinds.count("move"))
-        mid = len(beats) - kinds.count("open") - kinds.count("move")
+        last = ci == len(op["MAPS"]) - 1   # 最後一張圖冇得拔營：收尾用 all_done
+        ck = "all_done" if last else "move"
+        if kinds.count(ck) != 1 or kinds.count("all_done" if not last else "move"): E(tag + " 故事線要有 1 個 %s 收尾" % ck)
+        mid = len(beats) - kinds.count("open") - kinds.count("move") - kinds.count("all_done")
         if not (2 <= mid <= 3): E(tag + " 中段事件要 2–3 個，而家 %d" % mid)
         here = []
         nsl = 0
@@ -133,6 +139,7 @@ def main():
             for i, l in enumerate(ln):
                 if not (isinstance(l, list) and len(l) == 3 and all(isinstance(x, str) and x.strip() for x in l)): E(bt + " 第 %d 行要 [講者, 粵, 中]" % i); continue
                 texts.append((bt + " [%s]" % l[0], l[1], l[2])); nsl += 1
+                if "阿福" in l[2] and "他" in l[2] and not fem.get(l[2]) and l[2] not in FEM_OK: E(bt + " 中文句同時有「阿福」同「他」，要喺 fem.json 補「她」版：%s" % l[2])
                 if l[0] == "阿福":   # 主角講自己生前（男版係打工仔，女版係大學生）要有女版
                     for x in (l[1], l[2]):
                         if any(j in x for j in JOB) and not fem.get(x): E(bt + " 阿福講生前工作但 fem.json 冇女版：%s" % x)
