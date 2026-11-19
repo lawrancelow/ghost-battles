@@ -64,6 +64,7 @@ def main():
         if a == "--extra-manifest" and i + 1 < len(args):
             extra.append(args[i + 1])
     d = load(P("data", "nat", "outpost.json"))
+    CARRY = set(load(P("data", "nat", "chain.json")).get("CARRY", [])) if os.path.exists(P("data", "nat", "chain.json")) else set()   # [chain-data]
     maps_src = load(P("data", "nat", "maps.json"))["MAPS"]
     have, ext = art_keys(extra)
     used_art = {}   # key -> 用途
@@ -127,10 +128,11 @@ def main():
         art(m.get("bg"), "背景 ci%s" % ci)
         st = m.get("stations", [])
         lo = 3 if ci == 0 else 4
-        if not (lo <= len(st) <= 6): E(tag + " 生產台數 %d 唔喺 %d–6" % (len(st), lo))
+        own = [s for s in st if ci == 0 or s not in CARRY]   # [chain-data] 隨村台（chain.json CARRY）每張圖都有，唔計
+        if not (lo <= len(own) <= 6): E(tag + " 生產台數 %d 唔喺 %d–6" % (len(own), lo))   # [chain-data]
         for sid in st:
             if sid not in S: E(tag + " 台 %s 唔存在" % sid)
-            if sid in seen_sid: E(tag + " 台 %s 喺第二張圖用過" % sid)
+            if sid in seen_sid and sid not in CARRY: E(tag + " 台 %s 喺第二張圖用過" % sid)   # [chain-data]
             seen_sid.add(sid)
         made = {S[s]["good"] for s in st if s in S}
         free = [s for s in st if s in S and S[s]["unlock_cost"] == 0]
