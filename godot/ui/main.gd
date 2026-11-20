@@ -553,6 +553,31 @@ func _mv_tick() -> void:
 			G.S["mv_intro"] = 2.0
 			J.mc(st, "queue", [{"style": "sys", "lines": MVB.intro_lines()}])
 			G.save()
+	_gift_tick()   # [gift]
+
+# [gift] 測試大禮包：存檔碼帶 S.gift（唔放入 res，否則開場會被當成「已完成」略過）；
+# 開場睇完（已改名、開場劇情完）先一次過派：res／mat（唔受倉庫上限）／chests，派完刪走 S.gift。
+func _gift_tick() -> void:
+	var g = G.S.get("gift")
+	if not (g is Dictionary): return
+	if title_ov != null or phone != null or loading != null or selftest != null: return
+	if not NameCardGD.hero_set(G.S) or NameCardGD.opening_unfinished(G.S): return
+	var st = J.G.get("Story")
+	if st is Dictionary and J.t(J.mc(st, "busy", [])): return
+	var MATm = load("res://game/outpost/mat.gd")
+	var r = g.get("res", {})
+	if r is Dictionary:
+		for k in r: G.S.res[k] = J.num(G.S.res.get(k, 0)) + J.num(r[k])
+	var m = g.get("mat", {})
+	if m is Dictionary:
+		var store = MATm._store(G.S)
+		for k in m: store[k] = J.num(store.get(k, 0)) + J.num(m[k])
+	var c = g.get("chests", {})
+	if c is Dictionary:
+		if not (G.S.get("chests") is Dictionary): G.S["chests"] = {"g": 0, "b": 0, "p": 0}
+		for k in c: G.S.chests[k] = J.num(G.S.chests.get(k, 0)) + J.num(c[k])
+	G.S.erase("gift"); G.save(); refresh()
+	show_toast(str(g.get("msg", "收到測試大禮包！")))
 
 # 後院：舊村子建築（招魂台、化寶爐、鬼宅鬼節宴、嚇人訓練班、倉庫…）照用得；等級由移動村進度帶動（只升唔跌），亦可以照舊用棺材板升
 func open_backyard() -> void:
@@ -1025,7 +1050,8 @@ func import_save(code: String) -> bool:
 	var o = G.dec(code)
 	if o == null: show_toast("存檔碼讀不到，檢查一下有沒有貼完整"); return false
 	o.last = G.now_ms()
-	restart_with(o, true); return true
+	# [gift] 匯入嘅係「全新開局」存檔（例如測試大禮包）：跳過標題後照播開場（改名卡＋頭七回魂夜）
+	restart_with(o, "pre" if NameCardGD.opening_unfinished(o) else true); return true
 
 func restart_with(save, skip_title) -> void:
 	if JSRun.ls.has(SAVE_KEY): JSRun.ls[SAVE_KEY + "_bak"] = JSRun.ls[SAVE_KEY]
