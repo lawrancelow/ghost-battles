@@ -3,31 +3,42 @@
 extends RefCounted
 
 const ZD = preload("res://game/zone/zone_data.gd")
-const INSET := 16.0
+const INSET := 22.0   # 夾入區內（樹林帶／石牆／河都喺區邊，唔好踩到）
 
 static func install(V: Dictionary) -> void:
 	if not is_same(V.get("__zn_ws_w"), V.get("workerSpots")): _wrap_spots(V)
-	if is_same(V.get("__zn_walk_w"), V.get("walkTo")) and is_same(V.get("__zn_up_w"), V.get("update")): return
-	var o_walk = V.get("walkTo"); var o_up = V.get("update")
+	if not is_same(V.get("__zn_walk_w"), V.get("walkTo")): _wrap_walk(V)
+	if not is_same(V.get("__zn_up_w"), V.get("update")): _wrap_up(V)
+static func _wrap_walk(V: Dictionary) -> void:
+	var o_walk = V.get("walkTo")
 	var walk = func(t, a):
 		var me = t if t != null else V
-		if not ZD.on(): return J.cl(o_walk, me, a)
+		if not ZD.on() or J.t(me.get("__zn_in")): return J.cl(o_walk, me, a)
 		var H = me.get("hero")
 		var dst = Vector2(J.num(J.arg(a, 0)), J.num(J.arg(a, 1))); var tg = J.arg(a, 2)
 		var from = Vector2(J.num(H.x), J.num(H.y))
 		var pts = route(from, dst)
 		var fin = pts.pop_back()
 		H["zq"] = pts; H["zt"] = tg; H["zf"] = [fin.x, fin.y]
-		if pts.is_empty(): return J.cl(o_walk, me, [fin.x, fin.y, tg])
-		var p0 = pts.pop_front(); H["zq"] = pts
-		return J.cl(o_walk, me, [p0.x, p0.y, null])
+		var p0 = fin if pts.is_empty() else pts.pop_front()
+		H["zq"] = pts
+		me["__zn_in"] = true   # 下面再有一層（重包咗）就唔好再排路
+		var r = J.cl(o_walk, me, [p0.x, p0.y, tg if pts.is_empty() and p0 == fin else null])
+		me["__zn_in"] = false
+		if p0 == fin: H.erase("zf")
+		return r
+	V["walkTo"] = walk; V["__zn_walk_w"] = walk
+static func _wrap_up(V: Dictionary) -> void:
+	var o_up = V.get("update")
 	var up = func(t, a):
 		var r = J.cl(o_up, t, a)
+		var o_walk = V.get("walkTo")   # 經最外層（有 __zn_in 就唔排路），其他包裝（柵欄夾限）照行
 		var me = t if t != null else V
 		var H = me.get("hero")
 		if ZD.on() and H is Dictionary and H.get("zf") is Array and H.get("act") == null and H.get("target") == null:
 			if Vector2(J.num(H.x), J.num(H.y)).distance_to(Vector2(J.num(H.tx), J.num(H.ty))) <= 2.5:
 				var q = H.get("zq") if H.get("zq") is Array else []
+				me["__zn_in"] = true
 				if q.size():
 					var p = q.pop_front()
 					J.cl(o_walk, me, [p.x, p.y, null]); H["zq"] = q
@@ -35,8 +46,9 @@ static func install(V: Dictionary) -> void:
 					var f = H.zf; var tg = H.get("zt"); H.erase("zf"); H["zt"] = null
 					if absf(J.num(H.tx) - float(f[0])) > 1.0 or absf(J.num(H.ty) - float(f[1])) > 1.0 or tg != null:
 						J.cl(o_walk, me, [float(f[0]), float(f[1]), tg])
+				me["__zn_in"] = false
 		return r
-	V["walkTo"] = walk; V["__zn_walk_w"] = walk; V["update"] = up; V["__zn_up_w"] = up
+	V["update"] = up; V["__zn_up_w"] = up
 
 # 阿福可以企嘅區：村子＋已佔領資源區（門洞當村子）
 static func region(p: Vector2) -> String:

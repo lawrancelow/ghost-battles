@@ -110,7 +110,7 @@ func _down(p: Vector2) -> void:
 	vel = Vector2.ZERO; tgt = null
 func _move(p: Vector2) -> void:
 	if _press == null: return
-	if not _press.moved and p.distance_to(_press.p) > TAP_SLOP: _press.moved = true; dragging = true; _press.last = p
+	if not _press.moved and p.distance_to(_press.p) > TAP_SLOP: _press.moved = true; dragging = true   # 由撳落點起計（唔食咗嗰段）
 	if not _press.moved: return
 	var d = p - _press.last
 	x -= d.x / z; y -= d.y / z; clamp_all()

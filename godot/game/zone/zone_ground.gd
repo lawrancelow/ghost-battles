@@ -46,7 +46,9 @@ func _draw() -> void:
 	draw_set_transform_matrix(X)
 	for z in M.zones:
 		var key = "wild" if str(z.type) == "wild" else str(z.id)
-		if tint.has(key): draw_rect(_rect(z.rect), tint[key])
+		if tint.has(key):   # [zone v4] 柔邊漸變（交界唔見硬邊）
+			var tc: Color = tint[key]; var n = 8
+			for k in n: draw_rect(_rect(z.rect).grow(28.0 - k * 8.0), Color(tc.r, tc.g, tc.b, tc.a / n * 1.6))
 	# 草
 	var tuft = func(tx: float, ty: float, big: bool) -> void:
 		var gc = ["#2c3628", "#36412f", "#283024", "#3c4434"]
@@ -134,12 +136,11 @@ func _draw() -> void:
 		draw_rect(Rect2(R() * W, R() * H, 0.5 + R() * 0.9, 0.5 + R() * 0.9), c2)
 	# 虛空：唔屬任何區（四角）→ 深紫黑，邊位淡出
 	draw_set_transform_matrix(X)
+	# 虛空（山岩懸崖底）：灰黑岩地，邊位慢慢暗落去（山岩、黑森林、濃霧由 zone_view 即時畫）
 	for v in _void(W, H):
 		var vr: Rect2 = v
-		draw_rect(vr, _c("#0c0812", 0.97))
-		for k in 3:
-			var g = 10.0 * (k + 1)
-			draw_rect(vr.grow(g), _c("#0c0812", 0.16), false, 10.0)
+		draw_rect(vr, _c("#1a1620", 0.80))
+		for k in 3: draw_rect(vr.grow(6.0 * (k + 1)), _c("#1a1620", 0.10))
 	draw_set_transform_matrix(Transform2D.IDENTITY)
 
 # 虛空矩形：全圖減去所有區（區外 14px 當牆位，唔算虛空）同走廊

@@ -49,29 +49,230 @@ static func _segs(a: Vector2, b: Vector2, ops: Array) -> Array:
 			st = -1
 	return o
 
-# ---------------- 下層：區底色、牆、門、野外擺設 ----------------
+# ---------------- 下層：地形阻隔（山岩懸崖／亂石山脊／木樁防線／樹林帶／石牆拱門／小河木橋）、野外擺設、未佔領門口路障 ----------------
+# 老闆 11:52：唔要一格格方框牆，全圖連續地形，區與區之間用地形／建造物隔開（zones.json barriers）。
+# 美術鍵（主對話生；未有圖就程序畫）：zb_rock1–3、zb_cliff、zb_stakes、zb_wall、zb_arch、zb_bridge
 static func draw_under(c: CanvasItem, nv) -> void:
 	if not ZD.on(): return
 	var ctx = Ctx.new(c)
 	var t: float = nv.t
-	var vr: Rect2 = nv.view_rect().grow(80)
-	var ops = openings()
+	var vr: Rect2 = nv.view_rect().grow(120)
+	var bs = ZD.cur().get("barriers", [])
+	for kind in ["river", "cliff", "ridge", "stakes", "forest", "stonewall"]:
+		for b in bs:
+			if str(b.k) == kind: _barrier(c, ctx, b, vr, t)
 	for z in ZD.zones():
-		var r = ZD.rect(z.rect)
-		if not r.intersects(vr): continue
-		if str(z.type) == "wild": _wild_decor(ctx, z, t)
-	for z in ZD.zones():
-		var r = ZD.rect(z.rect)
-		if not r.grow(20).intersects(vr): continue
-		var col = WALL_COL.get(str(z.type), "#3a3036")
-		var cs = [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]
-		for i in 4:
-			for sg in _segs(cs[i], cs[(i + 1) % 4], ops): _wall(ctx, sg[0], sg[1], col)
-	for z in ZD.of_type("res"):
-		if z.get("door") is Dictionary and ZD.rect(z.door.rect).intersects(vr): _door(ctx, ZD.rect(z.door.rect), ZD.owned(str(z.id)))
-	for z in ZD.of_type("wild"):
-		var r = ZD.rect(z.rect); var gx = float(z.gate.x); var gw = float(z.gate.get("w", 60))
-		if Rect2(gx - 40, r.end.y - 20, 80, 60).intersects(vr): _gate(ctx, gx, r.end.y, gw, t)
+		if str(z.type) == "wild" and ZD.rect(z.rect).intersects(vr): _wild_decor(ctx, z, t)
+	for z in ZD.of_type("res"):   # 未佔領：門洞／小徑／橋頭打橫幾條木閘
+		if z.get("door") is Dictionary and not ZD.owned(str(z.id)) and ZD.rect(z.door.rect).intersects(vr): _door(ctx, ZD.rect(z.door.rect), false)
+
+static var _geo := {}   # 程序地形快取（固定種子）
+# 呢點係咪喺阻隔物上面（碰撞：測試同行路檢查用；門洞／小徑／橋唔算）
+static func blocked(p: Vector2) -> bool:
+	for b in ZD.cur().get("barriers", []):
+		match str(b.k):
+			"ridge": if ZD.rect(b.rect).has_point(p): return true
+			"cliff":
+				for r in b.rects: if ZD.rect(r).has_point(p): return true
+			"forest", "stonewall":
+				if p.x >= float(b.x0) and p.x <= float(b.x1) and p.y >= float(b.y0) and p.y <= float(b.y1) and not (p.y >= float(b.gap[0]) and p.y <= float(b.gap[1])): return true
+			"river":
+				var br = b.get("bridge", [0, 0])
+				if absf(p.y - river_y(b, p.x)) < 12.0 and not (p.x >= float(br[0]) and p.x <= float(br[1])): return true
+			"stakes":
+				if p.y > float(b.y) - 34 and p.y < float(b.y) + 3 and p.x >= float(b.x0) and p.x <= float(b.x1):
+					var ing = false
+					for g in b.gaps: if p.x >= float(g[0]) and p.x <= float(g[1]): ing = true
+					if not ing: return true
+	return false
+static func _barrier(c: CanvasItem, ctx: Ctx, b: Dictionary, vr: Rect2, t: float) -> void:
+	match str(b.k):
+		"river": _river(c, ctx, b, vr, t)
+		"cliff":
+			for r in b.rects:
+				var rr = ZD.rect(r)
+				if rr.intersects(vr): _rock_field(c, "cliff:%s" % str(r), rr, vr, 4200.0, true, t)
+		"ridge":
+			var rr2 = ZD.rect(b.rect)
+			if rr2.intersects(vr): _rock_field(c, "ridge", rr2, vr, 800.0, false, t)
+		"stakes": _stakes(c, ctx, b, vr, t)
+		"forest": _forest(ctx, b, vr)
+		"stonewall": _stonewall(c, ctx, b, vr)
+
+# 貼圖（底部對齊、可以左右翻轉、可以只用一截 src＝[x0,y0,x1,y1] 比例）
+static func _sp(c: CanvasItem, key: String, x: float, y: float, w: float, flip := false, tint := Color.WHITE, src = null) -> void:
+	if not Spr.ok(key): return
+	var tx = Spr.get_tex(key)
+	var sr = Rect2(0, 0, tx.get_width(), tx.get_height())
+	if src is Array: sr = Rect2(tx.get_width() * src[0], tx.get_height() * src[1], tx.get_width() * (src[2] - src[0]), tx.get_height() * (src[3] - src[1]))
+	var h = w * sr.size.y / sr.size.x
+	if flip: c.draw_set_transform(Vector2(2.0 * x, 0), 0, Vector2(-1, 1))
+	c.draw_texture_rect_region(tx, Rect2(x - w / 2.0, y - h, w, h), sr, tint)
+	if flip: c.draw_set_transform_matrix(Transform2D.IDENTITY)
+
+# 山岩：大山岩（zb_rock1）＋細亂石（zb_rock2）；cliff 再加懸崖邊（zb_cliff）、黑森林（黑灌木 zb_bush＋暗枯樹）同濃霧
+#   冇圖：程序畫多邊形石
+static func _rock_field(c: CanvasItem, key: String, r: Rect2, vr: Rect2, per: float, cliff: bool, t: float) -> void:
+	if not _geo.has(key):
+		var rng = RandomNumberGenerator.new(); rng.seed = hash(key) & 0x7fffffff
+		var it = []
+		var n = int(r.get_area() / per)
+		for i in n:
+			var cx = rng.randf_range(r.position.x, r.end.x); var cy = rng.randf_range(r.position.y + 20, r.end.y + 6)
+			var big = rng.randf() < (0.55 if cliff else 0.6)
+			it.append({"k": "zb_rock1" if big else "zb_rock2", "x": cx, "y": cy, "w": (rng.randf_range(110, 150) if big else rng.randf_range(80, 110)) * (1.0 if cliff else 0.55), "f": rng.randf() < 0.5, "g": rng.randf_range(0.72, 0.9)})
+		if cliff:
+			var ed = []
+			if r.end.y < 1200 and r.end.y > 1000: ed.append(["b", r.end.y])     # 上面兩塊：底邊（資源區 A／B 頂）係懸崖邊
+			var x = r.position.x + 20
+			while x < r.end.x:
+				for e in ed: it.append({"k": "zb_cliff", "x": x + rng.randf_range(-8, 8), "y": float(e[1]) + 12, "w": rng.randf_range(120, 140), "f": rng.randf() < 0.5, "g": 0.85})
+				x += 110.0
+			# 黑森林：沿住靠近可行區嗰邊
+			var inner_x = r.end.x - 30.0 if r.position.x < 10 else r.position.x + 30.0
+			var y = r.position.y + 60
+			while y < r.end.y + 10:
+				it.append({"k": "zb_bush", "x": inner_x + rng.randf_range(-24, 24), "y": y, "w": rng.randf_range(90, 120), "f": rng.randf() < 0.5, "g": rng.randf_range(0.55, 0.7)})
+				y += rng.randf_range(70, 110)
+		it.sort_custom(func(a, b2): return a.y < b2.y)
+		_geo[key] = it
+	var sp = Spr.ok("zb_rock1")
+	for e in _geo[key]:
+		if e.x < vr.position.x - 80 or e.x > vr.end.x + 80 or e.y < vr.position.y or e.y - 140 > vr.end.y: continue
+		if sp: _sp(c, e.k, e.x, e.y, e.w, e.f, Color(e.g, e.g * 0.96, e.g * 1.02))
+		else: _proc_rock(c, Vector2(e.x, e.y - e.w * 0.25), e.w * 0.3)
+	if cliff:
+		PtGfx.init()
+		var n2 = int(r.get_area() / 22000.0) + 2
+		for i in n2:   # 濃霧：慢慢飄
+			var fx = r.position.x + fmod(i * 131.0 + t * (5.0 + (i % 3) * 2.0), r.size.x + 160.0) - 80.0
+			var fy = r.position.y + fmod(i * 197.0, maxf(1.0, r.size.y))
+			if not vr.grow(120).has_point(Vector2(fx, fy)): continue
+			c.draw_texture_rect(PtGfx.RAD, Rect2(fx - 130, fy - 80, 260, 160), false, Color(0.40, 0.34, 0.46, 0.26))
+static func _proc_rock(c: CanvasItem, cen: Vector2, rad: float) -> void:
+	var pts = PackedVector2Array()
+	for k in 8:
+		var a = k * PI / 4.0
+		pts.append(cen + Vector2(cos(a) * rad * (0.8 + 0.2 * sin(k * 2.1 + cen.x)), sin(a) * rad * 0.75))
+	var g = 0.2 + fmod(absf(cen.x * 0.13 + cen.y * 0.07), 0.08)
+	c.draw_colored_polygon(pts, Color(g, g - 0.015, g + 0.025))
+	var ol = pts.duplicate(); ol.append(pts[0]); c.draw_polyline(ol, Color(0.07, 0.05, 0.09), 1.6, true)
+	c.draw_polyline(PackedVector2Array([pts[5], pts[6], pts[7]]), Color(g + 0.12, g + 0.1, g + 0.14), 2.4, true)
+
+# 削尖木樁防線（zb_stakes 一段段拼，錯開、隨機縮放；兩道野外門留空）
+static func _stakes(c: CanvasItem, ctx: Ctx, b: Dictionary, vr: Rect2, t: float) -> void:
+	var y = float(b.y)
+	if y < vr.position.y - 80 or y - 80 > vr.end.y: return
+	var gaps = b.get("gaps", [])
+	var segs = []   # [x0, x1]
+	var x0 = float(b.x0)
+	for g in gaps: segs.append([x0, float(g[0])]); x0 = float(g[1])
+	segs.append([x0, float(b.x1)])
+	if Spr.ok("zb_stakes"):
+		for sg in segs:
+			var L = float(sg[1]) - float(sg[0]); var n = maxi(1, int(ceil(L / 78.0)))
+			var step = L / n
+			for i in n:
+				var cx = float(sg[0]) + step * (i + 0.5)
+				if cx < vr.position.x - 60 or cx > vr.end.x + 60: continue
+				var k = 0.85 + fmod(absf(cx * 0.731), 0.25)
+				_sp(c, "zb_stakes", cx, y + 8, (step + 14) * 1.02, int(cx / 37.0) % 2 == 1, Color(0.86, 0.8, 0.8), [0.0, 0.25 - (k - 0.85) * 0.2, 1.0, 1.0])
+	else:
+		for sg in segs:
+			var x = float(sg[0])
+			while x < float(sg[1]) - 4:
+				if x > vr.position.x - 20 and x < vr.end.x + 20:
+					var lean = sin(x * 0.37) * 1.5; var hh = 30.0 + fmod(x * 1.7, 8.0)
+					var pts = PackedVector2Array([Vector2(x + 1, y + 2), Vector2(x + 12, y + 2), Vector2(x + 12 + lean, y - hh + 8), Vector2(x + 6.5 + lean, y - hh), Vector2(x + 1 + lean, y - hh + 8)])
+					c.draw_colored_polygon(pts, Color("#5e4430"))
+					var ol = pts.duplicate(); ol.append(pts[0]); c.draw_polyline(ol, Color("#1e140c"), 1.3, true)
+				x += 13.0
+	for g in gaps: _gate(ctx, (float(g[0]) + float(g[1])) / 2.0, y - 8, float(g[1]) - float(g[0]), t)
+
+# 樹林帶（黑灌木 zb_bush＋竹＋槐樹，錯開疊住），中間一條小徑
+static func _forest(ctx: Ctx, b: Dictionary, vr: Rect2) -> void:
+	var key = "forest"
+	if not _geo.has(key):
+		var rng = RandomNumberGenerator.new(); rng.seed = 5151
+		var it = []
+		var y = float(b.y0) + 26.0
+		var kinds = ["zb_bush", "rn_bamboo", "tree", "zb_bush", "rn_bamboo"]
+		var i = 0
+		while y <= float(b.y1) + 8:
+			if not (y > float(b.gap[0]) - 4 and y < float(b.gap[1]) + 40):
+				var k = kinds[i % kinds.size()]
+				var w = {"zb_bush": rng.randf_range(70, 86), "rn_bamboo": rng.randf_range(50, 60), "tree": rng.randf_range(56, 64)}[k]
+				it.append([k, rng.randf_range(float(b.x0) + 14, float(b.x1) - 14), y, w, rng.randf() < 0.5])
+				i += 1
+			y += 24.0
+		it.sort_custom(func(a, b2): return a[2] < b2[2])
+		_geo[key] = it
+	var c = ctx.ci
+	for e in _geo[key]:
+		if float(e[2]) < vr.position.y or float(e[2]) - 90 > vr.end.y: continue
+		var tint = Color(0.62, 0.58, 0.6) if e[0] == "tree" else (Color(0.66, 0.7, 0.62) if e[0] == "rn_bamboo" else Color(0.8, 0.78, 0.8))
+		_sp(c, e[0], float(e[1]), float(e[2]), float(e[3]), e[4], tint)
+	var gy = (float(b.gap[0]) + float(b.gap[1])) / 2.0   # 小徑：踩實嘅泥
+	Art.el(ctx, (float(b.x0) + float(b.x1)) / 2.0, gy, (float(b.x1) - float(b.x0)) * 0.7, 22, "rgba(70,52,36,.4)")
+
+# 青苔舊石牆（zb_wall 截一段石塊，一節節直疊）＋拱門（zb_arch）
+static func _stonewall(c: CanvasItem, ctx: Ctx, b: Dictionary, vr: Rect2) -> void:
+	var x0 = float(b.x0); var x1 = float(b.x1); var cx = (x0 + x1) / 2.0
+	if x1 < vr.position.x - 40 or x0 > vr.end.x + 40: return
+	var gy0 = float(b.gap[0]); var gy1 = float(b.gap[1])
+	if Spr.ok("zb_wall"):
+		var y = float(b.y0) + 26.0; var i = 0
+		while y <= float(b.y1) + 4:
+			if not (y > gy0 - 2 and y < gy1 + 30) and y > vr.position.y - 10 and y - 60 < vr.end.y:
+				var u0 = [0.02, 0.30, 0.55][i % 3]
+				_sp(c, "zb_wall", cx + sin(y) * 1.5, y, 46.0, i % 2 == 1, Color(0.82, 0.8, 0.8), [u0, 0.42, u0 + 0.42, 1.0])
+			y += 20.0; i += 1
+		if Spr.ok("zb_arch"): _sp(c, "zb_arch", cx, gy1 + 22, 96.0, false, Color(0.85, 0.82, 0.82))
+		return
+	var y2 = float(b.y0); var row = 0
+	while y2 < float(b.y1):
+		var gap = y2 + 16 > gy0 and y2 < gy1
+		if not gap and y2 > vr.position.y - 20 and y2 < vr.end.y + 20:
+			var off = 0.0 if row % 2 == 0 else 7.0
+			var xx = x0 - off
+			while xx < x1:
+				var a0 = maxf(xx, x0); var a1 = minf(xx + 15, x1)
+				var g = 0.30 + fmod(absf(xx * 13.0 + y2 * 7.0), 9.0) / 100.0
+				c.draw_rect(Rect2(a0, y2, a1 - a0 - 1, 15), Color(g, g - 0.03, g - 0.05))
+				c.draw_rect(Rect2(a0, y2, a1 - a0 - 1, 15), Color(0.1, 0.08, 0.08), false, 1.0)
+				xx += 15.0
+		y2 += 16.0; row += 1
+	ctx.strokeStyle = "#6a625e"; ctx.lineWidth = 7
+	ctx.beginPath(); ctx.ellipse(cx, gy0 + 2, (x1 - x0) * 0.5 + 6, 18, 0, PI, TAU); ctx.stroke()
+
+# 暗色小河（兩端入山岩）＋破木橋
+static func river_y(b: Dictionary, x: float) -> float: return float(b.y) + float(b.get("amp", 7)) * sin(x / 70.0)
+static func _river(c: CanvasItem, ctx: Ctx, b: Dictionary, vr: Rect2, t: float) -> void:
+	var y0 = float(b.y)
+	if y0 < vr.position.y - 40 or y0 > vr.end.y + 40: return
+	var pts = PackedVector2Array()
+	var x = maxf(float(b.x0), vr.position.x - 20)
+	while x <= minf(float(b.x1), vr.end.x + 20): pts.append(Vector2(x, river_y(b, x))); x += 12.0
+	if pts.size() < 2: return
+	c.draw_polyline(pts, Color("#1a2418"), 30.0, true)   # 岸邊濕泥
+	c.draw_polyline(pts, Color("#101c28"), 22.0, true)
+	c.draw_polyline(pts, Color("#1c3442"), 14.0, true)
+	for i in pts.size() - 1:   # 水光：慢慢流
+		var ph = fmod(pts[i].x * 0.05 + t * 1.6, 6.0)
+		if ph < 1.2: c.draw_line(pts[i] + Vector2(0, -2), pts[i + 1] + Vector2(0, -2), Color(0.45, 0.62, 0.68, 0.5 * (1.2 - ph)), 1.6)
+	var br = b.get("bridge")
+	if br is Array:
+		var bx0 = float(br[0]); var bx1 = float(br[1]); var by = river_y(b, (bx0 + bx1) / 2.0)
+		if Spr.ok("zb_bridge"):
+			_sp(c, "zb_bridge", (bx0 + bx1) / 2.0, by + 34, (bx1 - bx0) * 2.0, false, Color(0.88, 0.85, 0.85))
+			return
+		Art.rr(ctx, bx0, by - 20, bx1 - bx0, 40, 2, "#6e5034", "#22160c", 1.6)
+		ctx.strokeStyle = "#3e2a18"; ctx.lineWidth = 1.2
+		var xx = bx0 + 6.0
+		while xx < bx1 - 2:
+			ctx.beginPath(); ctx.moveTo(xx, by - 19); ctx.lineTo(xx + sin(xx) * 1.5, by + 19); ctx.stroke(); xx += 8.0
+		Art.rr(ctx, bx0 + 22, by - 6, 9, 9, 1, "#1c3442")   # 爛咗一塊
+		for sx in [bx0 - 3.0, bx1 - 3.0]: Art.rr(ctx, sx, by - 26, 6, 52, 1.5, "#4a3424", "#1a100a", 1)
 
 static func _wall(ctx: Ctx, a: Vector2, b: Vector2, col: String) -> void:
 	var horiz = absf(a.y - b.y) < 0.5
@@ -158,7 +359,9 @@ static func _rgba(hex: String, a: float) -> String:
 	return "rgba(%d,%d,%d,%.2f)" % [int(c.r * 255), int(c.g * 255), int(c.b * 255), a]
 
 static func _fog(c: CanvasItem, ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float) -> void:
-	ctx.fillStyle = "rgba(6,3,10,.86)"; ctx.fillRect(r.position.x - 4, r.position.y - 4, r.size.x + 8, r.size.y + 8)
+	for k in 6:   # [zone v4] 柔邊：由外向內一層層加深（唔見硬邊）
+		var g = 30.0 - k * 8.0
+		c.draw_rect(r.grow(g), Color(0.024, 0.012, 0.04, 0.16 + (0.46 if k == 5 else 0.0)))
 	var n = int(clampf(r.get_area() / 9000.0, 8, 30))
 	for i in n:   # 飄緊嘅霧團
 		var fx = r.position.x + fmod(i * 97.0 + t * (6.0 + (i % 3) * 3.0), r.size.x + 120.0) - 60.0

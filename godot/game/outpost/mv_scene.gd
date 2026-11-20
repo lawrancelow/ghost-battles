@@ -197,8 +197,10 @@ func w2s(p: Vector2) -> Vector2:
 func s2w(p: Vector2) -> Vector2:
 	if zone: return p / float(zt.z) + Vector2(zt.x, zt.y)   # [zone]
 	return Vector2(p.x, p.y + cam - top_pad)
-func vx0() -> float: return float(zt.x) if zone else 0.0                       # [zone] 畫面可見世界 x 範圍
-func vx1() -> float: return float(zt.x) + FW / float(zt.z) if zone else FW
+func vx0() -> float: return 0.0                                                 # [zone] 世界字／氣泡夾邊：世界範圍（舊豎條 0..390）
+func vx1() -> float: return float(sim.L.get("w", FW)) if zone and sim != null else FW
+func view_x0() -> float: return float(zt.x) if zone else 0.0                    # [zone] 畫面可見世界 x 範圍
+func view_x1() -> float: return float(zt.x) + FW / float(zt.z) if zone else FW
 func cam_min() -> float: return -HUD_H * 0.6
 func cam_max() -> float: return maxf(cam_min(), world_h() - view_h())
 func world_h() -> float: return maxf(float(sim.L.get("h", 844)), camp.bottom()) if camp != null and sim.st() != null else float(sim.L.get("h", 844))   # [camp] 地圖底加營地
@@ -1417,10 +1419,10 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 	if sim.war != null: wtop = maxf(wtop, s2w(Vector2(0, float(sim.war.hud_y(self)) + 46.0)).y)   # [camp] 對白框唔好俾影響力條遮住
 	if embed:   # [unify] 嵌入：講嘢嘅人唔喺鏡頭（或者喺原村子）就唔出框；框唔好落到出村門下面
 		if b.p.y > world_h() or b.p.y < s2w(Vector2.ZERO).y or b.p.y > s2w(Vector2(0, H)).y: return
-		if zone and (b.p.x < vx0() or b.p.x > vx1()): return
+		if zone and (b.p.x < view_x0() or b.p.x > view_x1()): return
 		wbot = minf(wbot, world_h() - h - 4.0)
 		if not hud_on: wtop = s2w(Vector2(0, 8.0)).y
-	var X0 = vx0() + 6.0; var X1 = vx1() - w - 6.0   # [zone]
+	var X0 = view_x0() + 6.0; var X1 = view_x1() - w - 6.0   # [zone] 對白框夾喺畫面內
 	var x = clampf(b.p.x, X0, X1); var y = clampf(b.p.y - h, wtop, maxf(wtop, wbot))
 	# [polish4] 要避開：台名牌／事件名／其他對白框（_brects）＋客人要貨氣泡（_wrects）。
 	#   候選位＝原位、每個障礙物上面／下面；揀離原位最近又乜都唔撞嘅；全部都撞就照舊逐個推落去
