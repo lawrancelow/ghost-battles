@@ -12,6 +12,7 @@ const ZD = preload("res://game/zone/zone_data.gd")
 const ZV = preload("res://game/zone/zone_view.gd")
 # 可砍槐樹（Art.draw_tree 畫 tree_bare／tree、砍咗 stump）同可割稻田（paddy／paddy_cut）嘅圖
 const ART_KEYS := ["tree", "tree_bare", "stump", "paddy", "paddy_cut", "deco:tree", "deco:paddy"]
+const TREE_SHAPED := ["zp_deadtree", "zb_bush", "zt_cliffpine", "zt_banana", "zt_mangrove", "banana", "deco:banana"]   # 同 zone_build.py TREE_SHAPED
 var _shots_on := false
 
 func _p(m): print("[paddyfix] ", m)
@@ -108,6 +109,11 @@ func _level(t, m, c: int) -> void:
 		for e in kit: if str(e[0]) in ART_KEYS: badk.append(["void", e[0]])
 	for e in ZV._geo.get("forest", []): if str(e[0]) in ART_KEYS: badk.append(["forest", e[0]])
 	_chk(tag + "冇裝飾物用槐樹／稻田圖（似樹似田但撳唔到）", badk.is_empty(), badk)
+	var near = []
+	for pr in Z.village.get("props", []) + J.G.DECOR:
+		if not (str(pr[0]) in TREE_SHAPED): continue
+		for q in TP: if Vector2(J.num(pr[1]), J.num(pr[2])).distance_to(ZD.v2(q)) < 130.0: near.append([pr[0], pr[1], pr[2]]); break
+	_chk(tag + "槐樹林 130 內冇樹形裝飾（枯樹／灌木樹／松／香蕉樹）", near.is_empty(), near)
 	# 收割前截圖
 	for i in PP.size(): S.paddy[i] = 1.0; S.paddyRegrow[i] = 0.0
 	for i in TP.size(): S.trees[i] = 3.0; S.treeRegrow[i] = 0.0
