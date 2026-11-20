@@ -17,6 +17,14 @@
 #   - 客人氣泡：outpost.json CUSTOMERS[].say {q 排隊, buy 買到, wait 等太耐, vol 變義勇軍}；冇 say 就用 lines／預設句；
 #     同一個客人（cid）唔會連續講同一句；全部經 DB.N()（改名／女主）。
 #   - 惡鬼：FOE.head（鬼潮頭目出場）、FOE.roam（遊魂撞圍欄）、FOE.wave（鬼潮預告）；冇就用舊句。
+#   - [pace] 節奏（pace_on；GB_TEST 預設關，pace_test 自己開）：
+#     · 一次只播一幕：自動播（開場、分區佇列、大排檔 beat）播完一幕 → 「等」（S.mv.story_hold）：
+#       玩家做咗一件任務動作（主線 S.qi 前進、起／升建築、收成／採集、佔領／打王、大排檔攤位解鎖／升級）或者玩咗 HOLD_T 秒先放下一幕；
+#       村子嘅劇情（主劇情播放器，唔係本檔播）播完都一樣要等，唔會一幕接一幕。
+#       玩家自己撳出嚟嘅（boss_pre 開戰前、拔營 move）唔使等，即刻播；播完照樣「等」。
+#     · 分區介紹（zone_seen）只喺嗰區解霧（revealed）之後先播："reveal" 事件或者 revealed(zid) 變 true 就入佇列；霧未散嘅區唔播、唔記。
+#     · 佇列次序：玩家動作嘅回應（boss_win／zone_cap／factory／liberate）先，然後區介紹，最後大排檔 beat。
+#     · 舊存檔（S.mv.story_pace 未有）：之前嘅圖全部記做跳過；呢張圖已經有進度 → 狀態上已經過咗嘅 beat 全部默默記做跳過，唔會一次過補播。
 # 用法（mv_scene）：story = load("res://game/outpost/mv_story.gd").new()；_process → story.tick(self, dt)；
 #   _eat_events 開頭 → story.eat(self)；move_next → story.before_move(self, instant)。冇 class_name、冇 autoload。
 extends RefCounted
@@ -25,7 +33,9 @@ const MD = preload("res://game/outpost/mv_data.gd")
 const MVW = preload("res://game/outpost/mv_war.gd")
 const SIM = preload("res://game/outpost/mv_sim.gd")
 const ZD = preload("res://game/zone/zone_data.gd")
-const ZKINDS := ["map_enter", "zone_seen", "zone_cap", "boss_pre", "boss_win", "factory", "liberate"]
+const ZKINDS := ["map_enter", "zone_seen", "zone_cap", "boss_pre", "boss_win", "factory", "liberate", "reveal"]
+const ZREACT := ["boss_win", "zone_cap", "factory", "liberate"]   # [pace] 玩家動作嘅回應：佇列優先
+const HOLD_T := 60.0           # [pace] 播完一幕之後，最多等幾秒（遊戲時間）就放下一幕
 const PATH := "res://data/nat/mv_story.json"
 const CHECK_DT := 0.5          # 幾耐檢查一次觸發
 const GAP := 1.2               # 一個 beat 播完，隔幾秒先播下一個
@@ -39,6 +49,8 @@ static var _live = null   # 最近一個喺度 tick 嘅實例（weakref）：zon
 # 自動播 beat 開關：自動化測試（GB_TEST，其他線嘅測試會直接撳村子／截圖）預設關，免得 beat 蓋住畫面、擋住撳；
 # 真玩（冇 GB_TEST）同自檢（GB_SELFTEST：main.selftest 期間本身唔播）照開。storyhook_test 自己打開。
 static var auto_on := not OS.has_environment("GB_TEST")
+# [pace] 節奏開關（一幕一等、區介紹跟解霧、舊存檔默默記跳過）：真玩開；自動化測試預設關（其他線測試照舊），pace_test 自己打開
+static var pace_on := not OS.has_environment("GB_TEST")
 
 var play_fn: Callable = Callable()   # 測試用：代替劇情播放器 func(scene: Dictionary, cb: Callable)
 var busy_fn: Callable = Callable()   # 測試用：代替「主對話忙唔忙」
@@ -50,6 +62,8 @@ var _playing := false
 var _last := {}                      # cid／"foe:<kind>" → 上一句
 var _rng := RandomNumberGenerator.new()
 var _sc = null                       # 最近 tick 嘅場景（weakref）：zone_event 播 boss_pre 用
+var _ext := false                    # [pace] 主劇情播放器播緊唔係本檔嘅劇情（村子劇情）：播完要等
+var _hct := 0.0                      # [pace] 幾耐對一次任務動作
 
 func _init() -> void: _rng.randomize()
 
@@ -201,6 +215,7 @@ func play(sc, b: Dictionary, cb := Callable()) -> void:
 	var scene = build_scene(b)
 	var done = func():
 		_playing = false; _gap = GAP
+		hold_start(_sim_of(sc))   # [pace] 播完一幕：等玩家做嘢／等夠時間先播下一幕
 		if cb.is_valid(): cb.call()
 	if play_fn.is_valid(): play_fn.call(scene, done); return
 	var p = _player(sc)
@@ -240,12 +255,19 @@ func tick(sc, dt: float) -> void:
 	_live = weakref(self); _sc = weakref(sc)
 	_cust_wait(sc)
 	_foe_head(sc)
+	if auto_on and pace_on:
+		migrate(sc.sim)
+		_ext_watch(sc)
+		hold_tick(sc.sim, dt)
 	if _gap > 0.0: _gap -= dt; return
 	_ct -= dt
 	if _ct > 0.0: return
 	_ct = CHECK_DT
 	if not auto_on: return
 	if pending_move or main_busy(sc): return
+	if pace_on:
+		if held(): return
+		reveal_scan(sc.sim.ci())
 	if zviewing(sc):
 		var zb = next_zone(sc.sim)
 		if not zb.is_empty(): play(sc, zb); return
@@ -362,7 +384,11 @@ func zone_event(kind: String, id := "", cb := Callable()) -> bool:
 	var s = J.G.get("S")
 	var c = int(J.num(s.mv.get("ci", 0))) if s is Dictionary and s.get("mv") is Dictionary else ZD.ci()
 	var b = {}
-	if ZKINDS.has(kind): b = zone_beat(c, kind, norm_id(kind, str(id), c))
+	var k2 = "zone_seen" if kind == "reveal" else kind   # [pace] 解霧＝嗰區嘅介紹（zone_seen beat）入佇列
+	if k2 == "zone_seen" and pace_on and not ZD.revealed(str(id), c):   # [pace] 霧未散：唔播、唔記（解霧再嚟）
+		if cb.is_valid(): cb.call()
+		return false
+	if ZKINDS.has(kind): b = zone_beat(c, k2, norm_id(k2, str(id), c))
 	var bid = str(b.get("id", ""))
 	if b.is_empty() or is_seen(bid) or zskip(b, c):
 		if not b.is_empty() and not is_seen(bid): mark(bid, 2.0)
@@ -404,15 +430,150 @@ static func next_zone(sim) -> Dictionary:
 	if not eb.is_empty() and not is_seen(str(eb.id)):
 		return eb if ZD.on_for(c) else {}
 	var i = 0
+	var pick = -1; var best = 9
 	while i < q.size():
 		var b = beat(str(q[i]))
 		if b.is_empty() or is_seen(str(q[i])) or _beat_ci(str(q[i])) != c: q.remove_at(i); continue
 		if zskip(b, c): mark(str(q[i]), 2.0); q.remove_at(i); continue
 		var ns = need_st(sim, b)
 		if ns == 2: mark(str(q[i]), 2.0); q.remove_at(i); continue
-		if ns == 0: q.remove_at(i); return b
+		if ns == 0:
+			if not pace_on: q.remove_at(i); return b
+			if zready(b, c):   # [pace] 區介紹：霧未散就等；玩家動作嘅回應優先
+				var pr = 0 if ZREACT.has(str(b.when.get("kind"))) else 1
+				if pr < best: best = pr; pick = i
 		i += 1
+	if pick >= 0:
+		var pb = beat(str(q[pick])); q.remove_at(pick); return pb
 	return {}
+
+# ================= [pace] 節奏：一幕一等、區介紹跟解霧、舊存檔 =================
+# 分區 beat 而家播得未（zone_seen：嗰區要已解霧）
+static func zready(b: Dictionary, c: int) -> bool:
+	if str(b.when.get("kind")) == "zone_seen": return ZD.revealed(str(b.when.get("id", "")), c)
+	return true
+
+# 「等」狀態（存檔）：{"t": 仲要等幾秒, "sig": 開始等嗰陣嘅進度簽名}
+static func hold_d():
+	var m = _mv()
+	if m == null: return null
+	var h = m.get("story_hold")
+	return h if h is Dictionary else null
+static func held() -> bool:
+	var h = hold_d()
+	return h != null and J.num(h.get("t", 0)) > 0.0
+static func hold_clear() -> void:
+	var m = _mv()
+	if m != null: m.erase("story_hold")
+func hold_start(sim) -> void:
+	if not pace_on: return
+	var m = _mv()
+	if m == null: return
+	m["story_hold"] = {"t": HOLD_T, "sig": sig(sim)}
+	_hct = CHECK_DT
+# 每格：數時間（播緊劇情唔計）；每 CHECK_DT 對一次進度簽名，變咗（玩家做咗任務動作）→ 放
+func hold_tick(sim, dt: float) -> void:
+	var h = hold_d()
+	if h == null: return
+	if _playing or _ext: return
+	h["t"] = J.num(h.get("t", 0)) - dt
+	_hct -= dt
+	if _hct <= 0.0:
+		_hct = CHECK_DT
+		if sig(sim) != str(h.get("sig", "")): h["t"] = 0.0
+	if J.num(h.t) <= 0.0: hold_clear()
+static func _sum(d) -> float:
+	var t = 0.0
+	if d is Dictionary:
+		for k in d: t += J.num(d[k])
+	return t
+# 進度簽名：主線任務、建築等級、收成／採集／製作次數、通關、佔領、打王、大排檔攤位解鎖＋等級
+static func sig(sim) -> String:
+	var s = J.G.get("S")
+	if not (s is Dictionary): return ""
+	var a = [J.num(s.get("qi", 0)), _sum(s.get("bld")), _sum(s.get("cnt")), (s.cleared as Dictionary).size() if s.get("cleared") is Dictionary else 0]
+	var z = s.get("zone")
+	if z is Dictionary: a.append(JSON.stringify(z.get("own", {})).hash()); a.append(JSON.stringify(z.get("boss", {})).hash())
+	if sim != null and sim.st() != null and sim.st().get("st") is Dictionary:
+		var t = 0.0
+		for k in sim.st().st: t += sim.lv(str(k)) + (1.0 if sim.unlocked(str(k)) else 0.0)
+		a.append(t)
+	return str(a)
+func _sim_of(sc):
+	if sc == null or (sc is Object and not is_instance_valid(sc)): return null
+	return sc.get("sim") if sc is Object else null
+
+# 主劇情播放器播緊村子劇情（唔係本檔播）→ 播完都要等
+func _ext_watch(sc) -> void:
+	if _playing: return
+	var b = false
+	if busy_fn.is_valid(): b = bool(busy_fn.call())
+	else:
+		var p = _player(sc)
+		if p != null: b = p.busy()
+		else:
+			var st = J.G.get("Story")
+			if st is Dictionary: b = J.t(J.mc(st, "busy", []))
+	if b: _ext = true
+	elif _ext:
+		_ext = false
+		hold_start(sc.sim)
+
+# 解霧咗、未播、未入佇列嘅區介紹 → 入佇列（"reveal" 事件嘅後備：例如解霧嗰陣冇劇情實例）
+static func reveal_scan(c: int) -> void:
+	if not ZD.gate_on or not ZD.on_for(c): return
+	var q = zq()
+	for b in beats(c):
+		if not is_zone(b) or str(b.when.get("kind")) != "zone_seen": continue
+		var id = str(b.get("id", ""))
+		if is_seen(id) or q.has(id): continue
+		if not ZD.revealed(str(b.when.get("id", "")), c): continue
+		if zskip(b, c): mark(id, 2.0); continue
+		q.append(id)
+
+# 舊存檔（一個存檔做一次，S.mv.story_pace）：之前嘅圖全部記跳過；呢張圖狀態上已經過咗嘅 beat 默默記跳過
+# 「舊」＝已經過咗第 1 關，或者舊版已經播過劇情（story_seen 有嘢）；新開檔（未播過任何嘢）唔郁
+func migrate(sim) -> void:
+	var m = _mv()
+	if m == null or m.has("story_pace"): return
+	if sim == null or sim.st() == null: return
+	m["story_pace"] = 1.0
+	ZD.st()   # 先等分區／霧做埋佢嘅舊存檔遷移（第 1 關按條件默默解霧）
+	var c = sim.ci()
+	if c <= 0 and seen_d().is_empty(): return
+	var n = 0
+	for mp in D().MAPS:
+		if int(mp.get("ci", -1)) >= c: continue
+		for b in mp.get("beats", []):
+			var id = str(b.get("id", ""))
+			if id != "" and not is_seen(id): mark(id, 2.0); n += 1
+	var prog = sold_n(sim, "*") > 0.0
+	if ZD.on_for(c):
+		for z in ZD.of_type("res", c): if ZD.owned(str(z.id), c): prog = true
+		for z in ZD.of_type("wild", c): if ZD.boss_done(str(z.id), 0, c): prog = true
+	var eb = enter_beat(c)
+	if prog and not eb.is_empty() and not is_seen(str(eb.id)): mark(str(eb.id), 2.0); n += 1
+	for b in beats(c):
+		var id = str(b.get("id", ""))
+		if id == "" or is_seen(id): continue
+		var gone = false
+		if is_zone(b):
+			if not ZD.on_for(c): continue
+			var w = b.when
+			match str(w.get("kind", "")):
+				"zone_seen": gone = ZD.revealed(str(w.get("id", "")), c) or zskip(b, c)
+				"factory":
+					var zid = str(w.get("id", ""))
+					if ZD.owned(zid, c):
+						for bid in (ZD.zone(zid, c).get("shops", {}) as Dictionary): if ZD.shop_req(str(bid))[0]: gone = true
+				"map_enter": gone = false
+				_: gone = zstate_done(b) or zskip(b, c)
+		elif prog and str(b.get("when", {}).get("t", "")) != "move":
+			gone = when_ok(sim, b)
+		if gone: mark(id, 2.0); n += 1
+	var q = zq()
+	for j in range(q.size() - 1, -1, -1): if is_seen(str(q[j])): q.remove_at(j)
+	if n > 0: print("[mv_story] 舊存檔：默默記跳過 %d 幕" % n)
 
 # ================= 客人氣泡 =================
 static func say_pool(cid: String, kind: String) -> Array:
