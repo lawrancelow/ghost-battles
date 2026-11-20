@@ -120,10 +120,12 @@ func _logic(t) -> void:
 		_reset_map(sim, c)
 		var r = _mk(sim); var st = r[0]; var sc = r[1]
 		var bl = STY.beats(c)
+		for zb in bl: if STY.is_zone(zb): STY.mark(str(zb.id))   # [zstory] 分區 beat（開場、協調前置）由 zstory_test 測；呢度當已播
 		var moves = []
 		for b in bl:
 			var id = str(b.id); var wt = str(b.when.t)
 			if wt == "move": moves.append(b); continue
+			if wt == "zone": continue   # [zstory] 分區事件 beat：由 zstory_test 測
 			if wt != "open":
 				_tick(st, sc)
 				_chk("圖%d %s：條件未到唔播" % [c + 1, id], not st.played.has(id))
@@ -156,7 +158,7 @@ func _logic(t) -> void:
 		# scene 內容
 		for b in bl:
 			var scn = STY.build_scene(b)
-			var good = scn.lines.size() == b.scene.lines.size() and scn.lines.size() > 0
+			var good = scn.lines.size() <= b.scene.lines.size() and scn.lines.size() > 0   # [zstory] 有出場條件嘅句可能唔播
 			for l in scn.lines: if not (l is Array and l.size() == 2 and str(l[1]) != ""): good = false
 			if str(scn.style) == "chat" and not (scn.get("title") is String): good = false
 			if str(scn.style) == "talk" and scn.has("bg") and not Spr.ok("bg_" + str(scn.bg)): good = false
@@ -412,6 +414,7 @@ func _shots(t) -> void:
 	var S = _S()
 	sc.sim.st().ci = 0.0; sc._after_move()
 	sc.sim.st()["story_seen"] = {}
+	for b in STY.beats(0): if STY.is_zone(b): STY.mark(str(b.id))   # [zstory] 分區開場另外測（zstory_test），呢度淨係測大排檔 open
 	S.res.coins = 1e7
 	for sid in MD.stations(0): sc.sim.sst(sid).unlocked = true
 	# 鏡頭去大排檔區 → 開場 beat 自動播

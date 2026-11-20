@@ -112,10 +112,10 @@ func _build(sc: Dictionary) -> void:
 		syswin.add_child(sysscroll)
 		sysbody = VBoxContainer.new(); sysbody.size_flags_horizontal = Control.SIZE_EXPAND_FILL; sysbody.add_theme_constant_override("separation", 10)
 		sysscroll.add_child(sysbody)
-		tap_hint = UIKit.label("點擊繼續", 13, Color(1, 1, 1, 0.55)); tap_hint.position = Vector2(0, 0); tap_hint.size = Vector2(390, 20); tap_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tap_hint = UIKit.label("點擊繼續", 14, Color(1, 1, 1, 0.55)); tap_hint.position = Vector2(0, 0); tap_hint.size = Vector2(390, 20); tap_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		add_child(tap_hint)
 	var sk = UIKit.btn("跳過 ▸▸", "ghost", true); sk.anchor_left = 1; sk.anchor_right = 1; sk.offset_left = -96; sk.offset_top = 10; sk.offset_right = -10
-	sk.add_theme_color_override("font_color", Color("#e8dcc0"))
+	sk.add_theme_color_override("font_color", Color("#e8dcc0")); sk.add_theme_font_size_override("font_size", 14)
 	sk.pressed.connect(skip_scene); add_child(sk)
 
 func _show_line() -> void:
