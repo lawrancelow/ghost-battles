@@ -369,6 +369,9 @@ func zone_event(kind: String, id := "", cb := Callable()) -> bool:
 		if cb.is_valid(): cb.call()
 		return false
 	if cb.is_valid():   # boss_pre：即刻播，播完先開戰（開場未播就順手先播開場）
+		if not auto_on:   # 自動播關（GB_TEST 其他線測試）：唔播、唔記播過，即刻開戰——同 tick／before_move 一致，劇情唔擋測試
+			cb.call()
+			return false
 		var eb = enter_beat(c)
 		var sc = _sc.get_ref() if _sc != null else null
 		if not eb.is_empty() and not is_seen(str(eb.id)) and ZD.on_for(c): play(sc, eb)

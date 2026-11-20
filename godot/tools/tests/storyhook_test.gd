@@ -225,7 +225,7 @@ func _logic(t) -> void:
 	_reset_map(sim, 1)
 	var r3 = _mk(sim); _tick(r3[0], r3[1])
 	var only1 = true
-	for id in r3[0].played: if not str(id).begins_with("mv1_"): only1 = false
+	for id in r3[0].played: if STY._beat_ci(str(id)) != 1: only1 = false   # [integ6] 第 2 關合併 zone2 後係分區地圖：分區開場 zs1_* 都係 ci=1 嘅 beat
 	_chk("只播當前圖（ci=2）嘅 beat", only1 and r3[0].played.size() >= 1, r3[0].played)
 	# ---------- 舊存檔 ----------
 	var S0 = _S()
