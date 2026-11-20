@@ -74,7 +74,7 @@ func N(s: Variant) -> Variant:
 	if h.is_empty(): return s
 	var f = str(h.get("sex", "m")) == "f"
 	var nm = str(h.get("name", "阿福"))
-	if nm == "阿福" and not f: return s
+	if nm == "阿福" and not f and str(h.get("full", "")) in ["", "陳大福"] and str(h.get("en", "")) in ["", "Kelvin"]: return s   # [namefix] 只改全名／英文名都要換
 	if nm == "": nm = HERO_F.name if f else HERO_M.name
 	var full = str(h.get("full", "")); if full == "": full = nm
 	var en = str(h.get("en", "")); if en == "": en = nm

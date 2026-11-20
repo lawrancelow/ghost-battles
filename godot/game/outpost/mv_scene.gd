@@ -482,7 +482,7 @@ func _after_move(fresh := true) -> void:
 	if fresh: _prefill()
 func _move_line() -> String:
 	var ml = MD.map_def(sim.ci()).get("move_line", [])
-	return MD.T(ml[_rng.randi() % ml.size()]) if ml is Array and ml.size() else MD.S("move_btn", "拔營！", "拔營！")
+	return str(DB.N(MD.T(ml[_rng.randi() % ml.size()]))) if ml is Array and ml.size() else MD.S("move_btn", "拔營！", "拔營！")
 func _fold_k() -> float:   # 1 = 正常，0 = 摺晒
 	if anim == null: return 1.0
 	if anim.done: return 1.0
