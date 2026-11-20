@@ -496,10 +496,22 @@ func avoid_rects(sc) -> Array:
 
 # 客人要貨氣泡上面嘅脾氣牌（mv_scene._draw_want 尾叫）
 func draw_tag(sc, ctx, c: Dictionary, x: float, y: float, w: float, _h: float) -> void: CU.draw_tag(self, sc, ctx, c, x, y, w)
+func has_tag(c: Dictionary) -> bool: return CU.tag_text(self, c) != ""   # [polish4] 排氣泡位要預留脾氣牌高度
+func tag_txt(c: Dictionary) -> String:   # [polish4] 脾氣牌完整字（同 CU.draw_tag 一樣），量闊度用
+	var tx = CU.tag_text(self, c)
+	if tx == "": return ""
+	var tp = str(c.get("tp", ""))
+	if tp == "picky" and c.get("star_need") is Dictionary:
+		for g in c.star_need: tx += "★%d" % int(c.star_need[g])
+	if tp == "reg": tx += "♥"
+	if J.t(c.get("friend")) and tp != "reg": tx = S("friend", "朋友", "朋友") + "・" + tx
+	return tx
 
 # ================= 畫面：左下小卡＋彈出卡 =================
+var chip_x := 8.0   # [polish4] 小卡左邊（合一地圖：跟玩法掣）
+var chip_down := false   # [polish4] true＝由上向下疊（合一地圖由玩法掣向下展開）
 func _chip(sc, ctx, y: float, txt: String, col: String, key: String, pulse := false, w := 168.0) -> float:
-	var h = 34.0; var x = 8.0
+	var h = 34.0; var x = minf(chip_x, FW - w - 8.0)
 	var sz = 1.0 + (0.03 * sin(sc.t * 6.0) if pulse else 0.0)
 	Art.rr(ctx, x, y, w * sz, h, 9, "rgba(14,8,18,.82)", col, 1.6)
 	var tx = txt
@@ -507,15 +519,15 @@ func _chip(sc, ctx, y: float, txt: String, col: String, key: String, pulse := fa
 	while tx.length() > 3 and ctx.measureText(tx).width > w - 16.0: tx = tx.substr(0, tx.length() - 2) + "…"
 	sc._txt(ctx, tx, x + 10.0, y + h / 2.0, 15, Color(col), "left", 900, 0)
 	if key != "": _btn[key] = Rect2(x, y, w, h)
-	return y - h - 6.0
-func draw_hud(sc, ctx) -> void:
+	return y + h + 6.0 if chip_down else y - h - 6.0
+func draw_hud(sc, ctx, y_bot := -1.0) -> void:   # y_bot：最底一張小卡嘅頂（-1 = 畫面底；合一地圖讓開底部掣）
 	_sc = sc
 	_btn.clear()
 	var sim = sc.sim
 	if sc.anim != null or sc.card != null: return
 	var hide = sc.sheet != null and sc.sheet.visible or sc.picker != null
 	if not hide:
-		var y = sc.top_pad + sc.view_h() - 8.0 - 34.0
+		var y = y_bot if y_bot >= 0.0 else sc.top_pad + sc.view_h() - 8.0 - 34.0
 		var tn = tide(sim)
 		y = _chip(sc, ctx, y, (S("chip_night", "夜潮 %s", "夜潮 %s") if tn[0] else S("chip_day", "白晝 %s 後入夜", "白晝 %s 後入夜")) % sc._mmss(float(tn[1])), "#d8b0ff" if tn[0] else "#e8dcc4", "")
 		var od = ps(sim).orders
@@ -525,7 +537,7 @@ func draw_hud(sc, ctx) -> void:
 		var sd = sign_def(sim.ci())
 		if not sd.is_empty() and _sign_seen(sim):
 			var tier = sign_tier(sim, sim.ci())
-			y = _chip(sc, ctx, y, S("chip_sign", "招牌 %s%d份", "招牌 %s%d份") % ["★".repeat(tier), sign_n(sim, sim.ci())], "#9fe39a" if sign_ok(sim) else "#c8b898", "sign", sign_ok(sim))
+			y = _chip(sc, ctx, y, S("chip_sign", "招牌 %s%s份", "招牌 %s%s份") % ["★".repeat(tier), MD.fmt(sign_n(sim, sim.ci()))], "#9fe39a" if sign_ok(sim) else "#c8b898", "sign", sign_ok(sim))
 		if live.rate is Dictionary:
 			var r = float(live.rate.mul)
 			y = _chip(sc, ctx, y, S("chip_rate", "匯率 ×%.2f %s", "匯率 ×%.2f %s") % [r, sc._mmss(float(live.rate.left))], "#9fe39a" if r >= 1.0 else "#ff8a7a", "")
@@ -555,7 +567,7 @@ func _draw_card(sc, ctx) -> void:
 			var st = int(J.num((o.get("star", {}) as Dictionary).get(g)))
 			var stx = (" ★%d" % st) if st > 0 else ""
 			var ok_st = st <= 0 or MD.stars(sim.sid_of(str(g)), sim.lv(sim.sid_of(str(g)))) >= st
-			rows.append(["%s%s　%d／%d　（%s %d）" % [nm, stx, int(J.num(o.got.get(g))), int(J.num(o.need[g])), S("have", "有", "有"), int(have(sim, str(g)))], "#3d7a3a" if ok_st else "#9c2219", 15])
+			rows.append(["%s%s　%s／%s　（%s %s）" % [nm, stx, MD.fmt(J.num(o.got.get(g))), MD.fmt(J.num(o.need[g])), S("have", "有", "有"), MD.fmt(have(sim, str(g)))], "#3d7a3a" if ok_st else "#9c2219", 15])
 			if not ok_st: rows.append([S("ord_star", "要先升到 ★%d 先交得", "要先升到 ★%d 才能交") % st, "#9c2219", 14])
 		rows.append([S("ord_rw", "獎勵：%s 冥幣＋%s", "獎勵：%s 冥幣＋%s") % [MD.fmt(EV.order_coins(self, sim, o)), EV.rw_name(str(o.rw))], "#9c2219", 15])
 		rows.append([S("ord_left", "限時 %s（過咗影響力 −%d）", "限時 %s（過時影響力 −%d）") % [sc._mmss(J.num(o.left)), int(EV.ORD_FAIL_INF)], "#5e4a30", 14])
@@ -565,10 +577,10 @@ func _draw_card(sc, ctx) -> void:
 		title = S("sign_title", "招牌菜：%s", "招牌菜：%s") % T(sd.get("n"))
 		for g in sd.get("parts", {}):
 			var ok = have(sim, str(g)) >= float(sd.parts[g])
-			rows.append(["%s ×%d　（%s %d）" % [M.name(str(g)) if M.has_def(str(g)) else str(g), int(sd.parts[g]), S("have", "有", "有"), int(have(sim, str(g)))], "#3d7a3a" if ok else "#9c2219", 15])
+			rows.append(["%s ×%s　（%s %s）" % [M.name(str(g)) if M.has_def(str(g)) else str(g), MD.fmt(sd.parts[g]), S("have", "有", "有"), MD.fmt(have(sim, str(g)))], "#3d7a3a" if ok else "#9c2219", 15])
 		rows.append([S("sign_v", "出一份收 %s 冥幣（用料價 ×%.1f%s）", "出一份收 %s 冥幣（用料價 ×%.1f%s）") % [MD.fmt(sign_value(sim)), SIGN_MUL, S("sign_vn", "，夜潮再 ×1.3", "，夜潮再 ×1.3") if is_night(sim) else ""], "#9c2219", 15])
 		var tn = sign_tier(sim, sim.ci()); var nx = SIGN_TIERS[mini(tn, 2)]
-		rows.append([S("sign_n", "已出 %d 份；%s", "已出 %d 份；%s") % [sign_n(sim, sim.ci()), (S("sign_nx", "出夠 %d 份升%s", "出滿 %d 份升%s") % [nx, [S("t1", "銅牌", "銅牌"), S("t2", "銀牌", "銀牌"), S("t3", "金牌", "金牌")][mini(tn, 2)]]) if tn < 3 else S("sign_max", "金牌招牌！", "金牌招牌！")], "#5e4a30", 14])
+		rows.append([S("sign_n", "已出 %s 份；%s", "已出 %s 份；%s") % [MD.fmt(sign_n(sim, sim.ci())), (S("sign_nx", "出夠 %d 份升%s", "出滿 %d 份升%s") % [nx, [S("t1", "銅牌", "銅牌"), S("t2", "銀牌", "銀牌"), S("t3", "金牌", "金牌")][mini(tn, 2)]]) if tn < 3 else S("sign_max", "金牌招牌！", "金牌招牌！")], "#5e4a30", 14])
 		rows.append([S("sign_w", "銅牌：Boss 弱點——%s", "銅牌：Boss 弱點——%s") % T(sd.get("weak")), "#3d7a3a" if tn >= 1 else "#5e4a30", 14])
 		rows.append([S("sign_tip", "用料由櫃台同材料庫扣（分流揀「全部入倉」可以儲料）", "用料從櫃台和材料庫扣（分流選「全部入倉」可以存料）"), "#5e4a30", 14])
 		btns = [["make", S("make", "出招牌", "出招牌"), "#3d7a3a" if sign_ok(sim) else "#8a8070"], ["close", S("close", "關", "關"), "#5e4a30"]]

@@ -753,7 +753,7 @@ func worker(sc, ctx: Ctx, w: Dictionary) -> bool:
 		var gid = str(MD.st_def(w.sid).get("good", ""))
 		var by = y + carry_y + sin(sc.t * 10.0 + w.ph) * 1.5
 		for i in mini(int(w.carry), 3): sc._icon(ctx, gid, x + carry_dx + i * 3.0, by - i * 7.0, 22.0)
-		if w.carry > 1: sc._txt(ctx, "×%d" % int(w.carry), x + 22, by - 8, 14, Color.WHITE, "center", 900, 4)
+		if w.carry > 1: sc._txt(ctx, "×" + MD.fmt(w.carry), x + 22, by - 8, 14, Color.WHITE, "center", 900, 4)
 		if w.get("wait", false): sc._txt(ctx, MD.S("full", "櫃台滿", "櫃台滿"), x, by - 34, 14, Color("#ffb0a0"), "center", 900, 4)
 	perf_us += Time.get_ticks_usec() - t0
 	return true

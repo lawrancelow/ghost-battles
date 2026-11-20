@@ -244,7 +244,7 @@ static func give_mats(P, sim, k := 1.0) -> String:
 	for i in mini(2, pool.size()):
 		var mid = pool[P.rng.randi() % pool.size()]; pool.erase(mid)
 		var n = round(ORD_MAT * k * (1.0 + 0.5 * sim.ci()))
-		M.add(mid, n); o.append("%s +%d" % [M.name(mid), int(n)])
+		M.add(mid, n); o.append("%s +%s" % [M.name(mid), MD.fmt(n)])
 	return "、".join(o)
 
 # ================= 委託單 =================
@@ -327,7 +327,7 @@ static func rw_name(k: String) -> String:
 static func prog_txt(_P, _sim, o: Dictionary) -> String:
 	var a = 0; var b = 0
 	for g in o.need: a += int(J.num(o.got.get(g))); b += int(J.num(o.need[g]))
-	return "%d/%d" % [a, b]
+	return "%s/%s" % [MD.fmt(a), MD.fmt(b)]
 static func _star_met(sim, o: Dictionary, g: String) -> bool:
 	var st = int(J.num((o.get("star", {}) as Dictionary).get(g)))
 	if st <= 0: return true
@@ -352,7 +352,7 @@ static func give(P, sim, i: int) -> String:
 		if left <= 0 or not _star_met(sim, o, str(g)): continue
 		var n = P.take_goods(sim, str(g), left)
 		if n > 0: o.got[g] = J.num(o.got.get(g)) + n; moved += n
-	if moved > 0: sim.ev.append({"k": "p_float", "pos": sim.L.counter + Vector2(0, -120), "txt": P.S("given", "撥咗 %d 件入大單", "撥了 %d 件進大單") % moved, "col": "#ffd27a"})
+	if moved > 0: sim.ev.append({"k": "p_float", "pos": sim.L.counter + Vector2(0, -120), "txt": P.S("given", "撥咗 %s 件入大單", "撥了 %s 件進大單") % MD.fmt(moved), "col": "#ffd27a"})
 	for g in o.need: if J.num(o.got.get(g)) < J.num(o.need[g]): return "part" if moved > 0 else "none"
 	_complete(P, sim, o)
 	return "done"
@@ -478,10 +478,12 @@ static func draw_world(P, sc, ctx, vy0: float, vy1: float) -> void:
 	ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.stroke()
 	ctx.restore()
 	var nm = ev_name(P, sim, e); var tp = ev_tap(P, sim, e)
-	sc._txt(ctx, nm, p.x, p.y - r - 26.0, 15, Color("#ffd27a"), "center", 900, 4)
 	ctx.font = "900 15px sans-serif"; var nw = maxf(ctx.measureText(nm).width, ctx.measureText(tp).width + 30.0) + 12.0
-	P.label_rects.append(Rect2(clampf(p.x - nw / 2.0, 0.0, 390.0 - nw), p.y - r - 38.0, nw, 42.0))   # 對白框要避開
-	sc._txt(ctx, tp + " %d" % int(ceil(maxf(0.0, float(e.life) - float(e.t)))), p.x, p.y - r - 8.0, 14, Color("#fff3e0"), "center", 900, 4)
+	var lx = clampf(p.x - nw / 2.0, 0.0, 390.0 - nw)   # [polish4] 字同記低嘅框對齊（貼邊時唔再出框）
+	var tx = lx + nw / 2.0
+	sc._txt(ctx, nm, tx, p.y - r - 26.0, 15, Color("#ffd27a"), "center", 900, 4)
+	P.label_rects.append(Rect2(lx, p.y - r - 38.0, nw, 42.0))   # 對白框要避開
+	sc._txt(ctx, tp + " %d" % int(ceil(maxf(0.0, float(e.life) - float(e.t)))), tx, p.y - r - 8.0, 14, Color("#fff3e0"), "center", 900, 4)
 	P._wbtn["e_" + k] = [Rect2(p.x - 46.0, p.y - r - 40.0, 92.0, r * 2.0 + 44.0), e]
 
 static func eat(P, sc) -> void:

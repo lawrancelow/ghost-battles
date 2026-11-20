@@ -622,7 +622,7 @@ func eat(sc) -> void:
 				sc._bubble(e.pos + Vector2(-60, -40), str(e.line), T("war_vol", "義勇軍", "義勇軍"), 2.2)
 			"war_steal":
 				sc._item(e.from, e.to, str(e.gid), 0.6)
-				sc._float(e.pos, T("war_steal", "畀孤魂偷咗 %d 件！", "被孤魂偷了 %d 件！") % int(e.n), Color("#ffb0a0"), 16, 1.5)
+				sc._float(e.pos, T("war_steal", "畀孤魂偷咗 %s 件！", "被孤魂偷了 %s 件！") % MD.fmt(e.n), Color("#ffb0a0"), 16, 1.5)
 				sc._bubble(e.pos + Vector2(-60, -40), str(e.line), T("foe", "孤魂", "孤魂"), 2.0)
 				sc._snd("scare")
 			"war_scare":
@@ -747,7 +747,7 @@ func draw_hud(sc, ctx) -> void:
 	Art.rr(ctx, bx, y + 7, bl * v / 100.0, 10, 5, col)
 	for mk in [ALARM, 60.0]:   # 警戒線、正常線
 		ctx.fillStyle = "#ffd27a" if mk == ALARM else "rgba(255,255,255,.5)"; ctx.fillRect(bx + bl * mk / 100.0 - 1, y + 4, 2, 16)
-	sc._txt(ctx, "%d" % int(round(v)), x0 + bw - 8, y + 12, 15, Color(col), "right", 900, 3)
+	sc._txt(ctx, MD.fmt(round(v)), x0 + bw - 8, y + 12, 15, Color(col), "right", 900, 3)
 	# 第二行：義勇軍數＋鬼潮
 	var s2 = T("war_vols", "義勇軍 %d/%d", "義勇軍 %d/%d") % [w.vol.size(), VOL_MAX]
 	var s3 = ""

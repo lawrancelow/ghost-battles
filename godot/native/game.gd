@@ -25,6 +25,8 @@ static func _rnd() -> float: return randf()
 # ---------------- 雜項 ----------------
 static func fmt(n) -> String:
 	var x = floor(J.num(n))
+	if x >= 1e12: return JStr.num_call(x / 1e12, "toFixed", [1.0]) + "T"   # [polish4] B／T 縮寫
+	if x >= 1e9: return JStr.num_call(x / 1e9, "toFixed", [1.0]) + "B"
 	if x >= 1e6: return JStr.num_call(x / 1e6, "toFixed", [1.0]) + "M"
 	if x >= 1e4: return JStr.num_call(x / 1e3, "toFixed", [1.0]) + "K"
 	return J.str(x)

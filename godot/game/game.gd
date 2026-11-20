@@ -31,6 +31,8 @@ func D(n: String) -> Variant: return DB.D[n]
 
 static func fmt(n: float) -> String:
 	n = floor(n)
+	if n >= 1e12: return "%.1fT" % (n / 1e12)   # [polish4] 同大排檔 HUD（MD.fmt）一樣去到 B／T，唔再出 1000.0M
+	if n >= 1e9: return "%.1fB" % (n / 1e9)
 	if n >= 1e6: return "%.1fM" % (n / 1e6)
 	if n >= 1e4: return "%.1fK" % (n / 1e3)
 	return str(int(n))

@@ -651,7 +651,7 @@ func _render_building(id: String) -> void:
 		for n in [1, 5, 10]:
 			var nn: int = n
 			bs.append(_act(UIKit.btn("做%d份" % n if n == 1 else "一次做%d份" % n, "", true), func(): close_sheet(); _nav_on("village"); J.mc(J.G.get("Village"), "craft", [id, nn]), can >= 1))
-		_row("親手做：每份 4 %s　好評 +1\n[font_size=12]現有%s %d，夠做 %d 份[/font_size]" % ["槐木 → 2 棺材板" if id == "plank" else "糯米 → 2 壽包", D.RES_NAMES[src], int(S.res[src]), can], bs)
+		_row("親手做：每份 4 %s　好評 +1\n[font_size=12]現有%s %s，夠做 %s 份[/font_size]" % ["槐木 → 2 棺材板" if id == "plank" else "糯米 → 2 壽包", D.RES_NAMES[src], G.fmt(S.res[src]), G.fmt(can)], bs)
 	if id == "furnace": load("res://game/joss/joss_ui.gd").panel(sheet_body, func(): _render_building(id))   # [joss] 陽間包裹
 	if id == "altar":
 		var rc = G.recruitCost()
@@ -676,8 +676,8 @@ func _bld_effect(id: String) -> String:
 		"house": return "其他建築最高可升到 Lv %d" % int(S.bld.house)
 		"wood": return "每崗產量 ×%.1f　崗位 %d　目前 槐木 +%.1f/分" % [G.mult("wood"), G.slots("wood"), r.wood]
 		"rice": return "每崗產量 ×%.1f　崗位 %d　目前 糯米 +%.1f/分" % [G.mult("rice"), G.slots("rice"), r.rice]
-		"plank": return "崗位 %d　目前 棺材板 +%.1f/分（耗槐木 %.1f/分）\n藍箱可開出 棺材板 %d" % [G.slots("plank"), r.planks, r.woodUse, G.chestGain("b").planks]
-		"bun": return "崗位 %d　目前 壽包 +%.1f/分（耗糯米 %.1f/分）\n綠箱可開出 壽包 %d" % [G.slots("bun"), r.buns, r.riceUse, G.chestGain("g").buns]
+		"plank": return "崗位 %d　目前 棺材板 +%.1f/分（耗槐木 %.1f/分）\n藍箱可開出 棺材板 %s" % [G.slots("plank"), r.planks, r.woodUse, G.fmt(G.chestGain("b").planks)]
+		"bun": return "崗位 %d　目前 壽包 +%.1f/分（耗糯米 %.1f/分）\n綠箱可開出 壽包 %s" % [G.slots("bun"), r.buns, r.riceUse, G.fmt(G.chestGain("g").buns)]
 		"store": return "槐木、糯米、棺材板、壽包 存放上限：%s" % G.fmt(G.cap())
 		"home": return "雜鬼名額 %d　遊魂自願當陰兵 +%.1f/分　陰兵上限 %s" % [G.rosterCap(), r.troops, G.fmt(G.troopCap())]
 		"camp": return "練習速度 ×%.1f　崗位 %d　耗壽包 %.1f/分\n嚇功越高：回陽間招式更嚇人、更省陰氣；戰鬥嚇法更痛。" % [G.mult("camp"), G.slots("camp"), r.bunUse]
@@ -767,7 +767,7 @@ func _render_roster() -> void:
 		var act = VBoxContainer.new(); hb.add_child(act)
 		if g.k == "afu": act.add_child(UIKit.label("隨主公\n等級成長", 11, UIKit.INKDIM))
 		elif lv < G.ghostCap():
-			act.add_child(_act(UIKit.btn("升級\n壽包 %d" % cost, "gold", true), func():
+			act.add_child(_act(UIKit.btn("升級\n壽包 %s" % G.fmt(cost), "gold", true), func():
 				var c = G.lvCost(int(g.lv))
 				if float(S.res.buns) < c: return
 				S.res.buns = float(S.res.buns) - c; g.spent = float(g.spent) + c; g.lv = int(g.lv) + 1; G.gainExp(2); G.quest_check(); G.save(); refresh(); _render_roster(), float(S.res.buns) >= cost))
@@ -779,7 +779,7 @@ func _render_roster() -> void:
 				var back = int(floor(float(g.spent) * 0.6)); S.res.buns = float(S.res.buns) + back
 				S.ghosts.erase(g); S.team = S.team.map(func(x): return null if x == g.id else x)
 				if S.adviser == g.id: S.adviser = null
-				show_toast("%s 去投胎了。退回 壽包 %d" % [g.name, back]); G.save(); refresh(); _render_roster())
+				show_toast("%s 去投胎了。退回 壽包 %s" % [g.name, G.fmt(back)]); G.save(); refresh(); _render_roster())
 		sheet_body.add_child(pc)
 
 # --- 箱子 ---
@@ -790,7 +790,7 @@ func _render_chests() -> void:
 	_clear_body()
 	var S = G.S
 	_p("小提示：箱子不會過期。先把對應的建築升高，再開，收穫更多。")
-	for c in [["g", "綠箱", "開出 壽包 %d（隨包子鋪等級提升）" % G.chestGain("g").buns], ["b", "藍箱", "開出 棺材板 %d（隨棺材鋪等級提升）" % G.chestGain("b").planks], ["p", "紫箱", "開出 冥幣 %d（隨鬼宅等級提升）" % G.chestGain("p").coins]]:
+	for c in [["g", "綠箱", "開出 壽包 %s（隨包子鋪等級提升）" % G.fmt(G.chestGain("g").buns)], ["b", "藍箱", "開出 棺材板 %s（隨棺材鋪等級提升）" % G.fmt(G.chestGain("b").planks)], ["p", "紫箱", "開出 冥幣 %s（隨鬼宅等級提升）" % G.fmt(G.chestGain("p").coins)]]:
 		var k: String = c[0]; var have = int(S.chests[k])
 		var open_n = func(n: int) -> void:
 			var tot = {}
@@ -798,7 +798,7 @@ func _render_chests() -> void:
 				var gg = G.chestGain(k)
 				for r in gg: tot[r] = tot.get(r, 0) + gg[r]
 			S.chests[k] = int(S.chests[k]) - n; S.cnt.chest = int(S.cnt.chest) + n; show_toast("開箱：" + G.give(tot)); G.save(); refresh(); _render_chests()
-		_row("[b]%s ×%d[/b]\n[font_size=12]%s[/font_size]" % [c[1], have, c[2]], [_act(UIKit.btn("開 1", "gold", true), func(): open_n.call(1), have > 0), _act(UIKit.btn("全開", "", true), func(): open_n.call(int(S.chests[k])), have > 1)])
+		_row("[b]%s ×%s[/b]\n[font_size=12]%s[/font_size]" % [c[1], G.fmt(have), c[2]], [_act(UIKit.btn("開 1", "gold", true), func(): open_n.call(1), have > 0), _act(UIKit.btn("全開", "", true), func(): open_n.call(int(S.chests[k])), have > 1)])
 
 # --- 劇情／設定 ---
 func open_story() -> void:

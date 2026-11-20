@@ -177,5 +177,6 @@ static func _push(dct: Dictionary, k: String, v: Dictionary) -> void:
 	dct[k].append(v)
 # 數量字：整數就唔要小數
 static func qty(v: float) -> String:
+	if absf(v) >= 1e4: return load("res://game/outpost/mv_data.gd").fmt(v)   # [polish4] 大數統一縮寫（K／M／B／T，同 HUD）
 	if absf(v - round(v)) < 0.001: return str(int(round(v)))
 	return ("%.1f" % v)
