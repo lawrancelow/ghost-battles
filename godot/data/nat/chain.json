@@ -399,7 +399,7 @@
     "鬼火燈籠"
    ],
    "tier": 3,
-   "icon": "mvi_bun",
+   "icon": "mvi_denglong",
    "price": 6000,
    "res": "",
    "how": [
@@ -414,7 +414,7 @@
     "夜行豆花擔"
    ],
    "tier": 4,
-   "icon": "mvi_bun",
+   "icon": "mvi_tiaodan",
    "price": 15000,
    "res": "",
    "how": [
@@ -579,7 +579,7 @@
     "趕路包"
    ],
    "tier": 4,
-   "icon": "mvi_bun",
+   "icon": "mvi_ganlu",
    "price": 432000,
    "res": "",
    "how": [
@@ -774,7 +774,7 @@
     "醋溜爆米花"
    ],
    "tier": 5,
-   "icon": "mvi_vinegar",
+   "icon": "mvi_baogu",
    "price": 52000000,
    "res": "",
    "how": [
@@ -879,7 +879,7 @@
     "紙紮考勤卡"
    ],
    "tier": 5,
-   "icon": "mvi_form",
+   "icon": "mvi_daka",
    "price": 312000000,
    "res": "",
    "how": [
