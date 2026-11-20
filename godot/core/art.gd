@@ -47,8 +47,8 @@ func put(ctx: Ctx, key: String, x: float, y: float, w: float, h := 0.0) -> Rect2
 func vput(ctx: Ctx, key: String, x: float, y: float, w: float, h := 0.0) -> Rect2:   # [villageart] 調色版 put
 	tint = VS.tint_for(key); var r = put(ctx, key, x, y, w, h); tint = Color.WHITE; return r
 
-const BW := {"house": 150, "gate": 124, "plank": 106, "bun": 106, "wood": 108, "rice": 108, "store": 112, "home": 104, "camp": 108, "altar": 104, "furnace": 62}
-const PLAQUE := {"house": [0.47, 0.49, 0.24], "gate": [0.50, 0.36, 0.30], "plank": [0.44, 0.36, 0.32], "store": [0.48, 0.43, 0.33], "wood": [0.40, 0.36, 0.26]}
+const BW := {"house": 150, "gate": 150, "plank": 106, "bun": 106, "wood": 108, "rice": 108, "store": 112, "home": 104, "camp": 108, "altar": 104, "furnace": 62}
+const PLAQUE := {"house": [0.47, 0.49, 0.24], "gate": [0.50, 0.335, 0.34], "plank": [0.44, 0.36, 0.32], "store": [0.48, 0.43, 0.33], "wood": [0.40, 0.36, 0.26]}
 
 func lv_badge(ctx: Ctx, x: float, y: float, lv) -> void:
 	ctx.save(); ctx.translate(x, y); ctx.rotate(0.12)

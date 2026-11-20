@@ -14,26 +14,26 @@ const VS = preload("res://game/village_style.gd")
 
 # 拓展區擺位（村子世界座標）：資源田＝田中心；加工建築＝建築腳。左右兩邊、中間係石板路（x 172–220）
 const ANCHOR := {
-	"b_well": [84, 1286], "b_bamboo": [302, 1276], "b_paper": [100, 1450], "b_coco": [296, 1442],
-	"b_latex": [86, 1610], "b_strip": [298, 1620], "b_rubbersheet": [98, 1785], "b_cocomilk": [300, 1780],
-	"b_tea": [90, 1945], "b_straw": [300, 1950], "b_rope": [98, 2115], "b_banana": [294, 2110],
-	"b_fish": [90, 2275], "b_newspaper": [300, 2280], "b_pulp": [98, 2445], "b_toner": [298, 2440], "b_ink": [100, 2610]}
+	"b_well": [84, 1300], "b_bamboo": [302, 1292], "b_paper": [100, 1480], "b_coco": [296, 1478],
+	"b_latex": [86, 1660], "b_strip": [298, 1668], "b_rubbersheet": [98, 1845], "b_cocomilk": [300, 1840],
+	"b_tea": [90, 2020], "b_straw": [300, 2026], "b_rope": [98, 2200], "b_banana": [294, 2198],
+	"b_fish": [90, 2380], "b_newspaper": [300, 2386], "b_pulp": [98, 2560], "b_toner": [298, 2556], "b_ink": [100, 2740]}
 const ROW0 := 1286.0
-const ROW_H := 165.0
+const ROW_H := 180.0
 
 # 資源點樣式：art = 圖鍵（可以 crop = [x0,y0,x1,y1] 比例）；proc = 程序畫；w = 闊；n = 點數；
 #   act = 親手動作（chop 斬三下／reap 割／knead 搖、執）；plant = 植物（採完由細長大）；fx = 碎片
-const NODE := {
-	"b_well": {"art": "vb_well", "w": 66.0, "n": 3, "act": "knead", "plant": false, "fx": "dust", "verb": ["吊水", "吊水"]},
-	"b_bamboo": {"art": "vb_bamboo", "w": 64.0, "n": 5, "act": "chop", "plant": true, "fx": "wood", "verb": ["斬竹", "砍竹"]},
-	"b_coco": {"art": "vb_coco", "crop": [0.04, 0.0, 0.44, 0.97], "w": 54.0, "n": 4, "act": "chop", "plant": true, "fx": "wood", "verb": ["打椰", "打椰子"]},
-	"b_latex": {"art": "vb_latex", "crop": [0.03, 0.0, 0.50, 0.97], "w": 54.0, "n": 4, "act": "chop", "plant": true, "fx": "dough", "verb": ["割膠", "割膠"]},
-	"b_tea": {"proc": "tea", "w": 50.0, "n": 6, "act": "reap", "plant": true, "fx": "rice", "verb": ["採茶", "採茶"]},
-	"b_straw": {"art": "vb_straw", "crop": [0.06, 0.0, 0.62, 0.88], "w": 52.0, "n": 4, "act": "reap", "plant": true, "fx": "rice", "verb": ["紮禾稈", "紮稻草"]},
-	"b_banana": {"art": "banana", "w": 0.0, "h": 68.0, "n": 4, "act": "chop", "plant": true, "fx": "wood", "verb": ["剪蕉葉", "剪蕉葉"]},
-	"b_fish": {"art": "vb_fish", "w": 78.0, "n": 3, "act": "reap", "plant": false, "fx": "dust", "verb": ["起罾", "起網"]},
-	"b_newspaper": {"proc": "news", "w": 40.0, "n": 5, "act": "knead", "plant": false, "fx": "dust", "verb": ["執報紙", "撿報紙"]},
-	"b_toner": {"proc": "toner", "w": 32.0, "n": 4, "act": "knead", "plant": false, "fx": "dust", "verb": ["舀碳粉", "舀碳粉"]},
+const NODE := {   # 圖：rn_*（主對話生，透明底、底部對齊）
+	"b_well": {"art": "rn_well", "w": 58.0, "n": 3, "act": "knead", "plant": false, "fx": "dust", "verb": ["吊水", "吊水"]},
+	"b_bamboo": {"art": "rn_bamboo", "w": 58.0, "n": 4, "act": "chop", "plant": true, "fx": "wood", "verb": ["斬竹", "砍竹"]},
+	"b_coco": {"art": "rn_coco", "w": 66.0, "n": 4, "act": "chop", "plant": true, "fx": "wood", "verb": ["打椰", "打椰子"]},
+	"b_latex": {"art": "rn_latex", "w": 62.0, "n": 4, "act": "chop", "plant": true, "fx": "dough", "verb": ["割膠", "割膠"]},
+	"b_tea": {"art": "rn_tea", "w": 54.0, "n": 5, "act": "reap", "plant": true, "fx": "rice", "verb": ["採茶", "採茶"]},
+	"b_straw": {"art": "rn_straw", "w": 54.0, "n": 4, "act": "reap", "plant": true, "fx": "rice", "verb": ["紮禾稈", "紮稻草"]},
+	"b_banana": {"art": "rn_banana", "w": 62.0, "n": 4, "act": "chop", "plant": true, "fx": "wood", "verb": ["剪蕉葉", "剪蕉葉"]},
+	"b_fish": {"art": "rn_fish", "w": 70.0, "n": 3, "act": "reap", "plant": false, "fx": "dust", "verb": ["起罾", "起網"]},
+	"b_newspaper": {"art": "rn_newspaper", "w": 48.0, "n": 5, "act": "knead", "plant": false, "fx": "dust", "verb": ["執報紙", "撿報紙"]},
+	"b_toner": {"art": "rn_toner", "w": 50.0, "n": 4, "act": "knead", "plant": false, "fx": "dust", "verb": ["舀碳粉", "舀碳粉"]},
 }
 const DEF_NODE := {"proc": "pile", "w": 36.0, "n": 4, "act": "knead", "plant": false, "fx": "dust", "verb": ["採", "採"]}
 const REGROW := 24.0          # 再生秒數（槐樹 25、稻田 20）
@@ -85,7 +85,7 @@ static func nodes(bid: String) -> Array:
 		tries += 1
 		var a = rng.randf() * TAU; var r = sqrt(rng.randf())
 		var p = Vector2(c.x + cos(a) * rx * r, c.y - 8.0 + sin(a) * ry * r)
-		p.x = clampf(p.x, 26.0, 364.0)
+		p.x = clampf(p.x, 42.0, 348.0)
 		if p.x > 150 and p.x < 242: continue   # 唔好踩落石板路
 		if sign_rect(bid).grow(8).intersects(Rect2(p.x - 18, p.y - 44, 36, 48)): continue   # 唔好遮田名牌
 		var okp = true
@@ -324,7 +324,7 @@ static func draw_node(ctx: Ctx, bid: String, nd: Dictionary, t: float, lock: boo
 	var sh = shake.has("%s:%d" % [bid, i])
 	var plant = bool(cf.plant)
 	var k = s * (1.0 if rp or not plant else lerpf(0.42, 0.92, g))
-	var tint = Color(0.84, 0.78, 0.76) if bid != "b_banana" else VS.tint_for("banana").lightened(0.15)
+	var tint = Color(0.88, 0.84, 0.82)
 	if not rp: tint = tint.lerp(Color(0.30, 0.27, 0.30), 0.55 * (1.0 - g) + 0.25)
 	if lock: tint = Color(0.40, 0.38, 0.42, 0.55)
 	var w = node_w(bid) * k; var h = node_h(bid) * k

@@ -133,10 +133,10 @@ func _sync_statics() -> void:
 	_static("gate", gp[1], gdot, gdot, func(ctx):
 		Art.draw_gate(ctx, gp[0], gp[1], t)
 		if gdot:
-			var bw = 124.0; var im = Spr.get_tex("gate"); var h = bw * im.get_height() / im.get_width()
+			var bw = float(Art.BW.gate); var im = Spr.get_tex("gate"); var h = bw * im.get_height() / im.get_width()   # [village2] 新門樓圖
 			var rx = gp[0] - bw / 2; var ry = gp[1] + 6 - h
 			var r = 7 + sin(t * 5) * 1.2
-			ctx.fillStyle = "#e8303a"; ctx.strokeStyle = "#fff3e0"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(rx + bw * 0.78, ry + h * 0.52, r, 0, 7); ctx.fill(); ctx.stroke())
+			ctx.fillStyle = "#e8303a"; ctx.strokeStyle = "#fff3e0"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(rx + bw * 0.86, ry + h * 0.62, r, 0, 7); ctx.fill(); ctx.stroke())
 	_static("vfence", VF.Y - 1.0, 0, false, func(ctx): VF.draw(ctx, t))   # [village2] 柵欄（出村門 y 118 畫喺佢前面）
 	var bunl = J.G.get("bldUnlocked"); var BUILDINGS = J.G.get("BUILDINGS")
 	for id in J.G.get("BLD_ORDER"):
@@ -454,7 +454,8 @@ func _draw_ext_ground(c: CanvasItem) -> void:
 	var i = 0
 	while y < wh + 40 and i < 6:   # 超過一張高就再鋪（翻轉接縫）
 		if i % 2 == 0: c.draw_texture_rect(ext_tex, Rect2(0, y, W, EXT_H), false)
-		else: c.draw_texture_rect(ext_tex, Rect2(0, y + EXT_H, W, -EXT_H), false)
+		else:   # 上下反轉接駁（唔靠負高度矩形）
+			c.draw_set_transform(Vector2(0, y + EXT_H), 0, Vector2(1, -1)); c.draw_texture_rect(ext_tex, Rect2(0, 0, W, EXT_H), false); c.draw_set_transform_matrix(Transform2D.IDENTITY)
 		y += EXT_H; i += 1
 
 func _sync_chain() -> void:

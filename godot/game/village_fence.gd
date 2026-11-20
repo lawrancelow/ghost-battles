@@ -6,9 +6,9 @@ extends RefCounted
 
 const Y := 112.0              # 柵欄線（村子世界 y；出村門腳 118，門腳前少少）
 const GATE_X := 195.0
-const GAP := 30.0             # 門口通道半闊（門樓兩條柱入面）
-const SPAN_L := [0.0, 140.0]  # 左邊柵欄（去到門柱）
-const SPAN_R := [250.0, 390.0]
+const GAP := 24.0             # 門口通道半闊（新門樓圖 0.35–0.65 × 闊 150 ＝ 172–218，同石板路一樣闊）
+const SPAN_L := [0.0, 152.0]  # 左邊柵欄（去到門柱外邊：門樓圖 0.20 × 150）
+const SPAN_R := [238.0, 390.0]
 const KEY := "mvs_fence_n"
 const SEG_W := 84.0
 

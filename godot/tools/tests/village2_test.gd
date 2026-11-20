@@ -208,10 +208,12 @@ func logic(t, report := true) -> void:
 	_chk("資源田／名牌／加工建築互相唔疊", ov.is_empty(), ov)
 	var irr = 0; var tot = 0
 	for b in fs:
-		var ns = CF.nodes(b); var ys = {}; var xs = {}
-		for nd in ns: ys[int(float(nd.y) / 6)] = true; xs[int(float(nd.x) / 6)] = true
+		var ns = CF.nodes(b); var my = 0.0; var mx = 0.0
+		for nd in ns: my += float(nd.y) / ns.size(); mx += float(nd.x) / ns.size()
+		var sy = 0.0; var sx = 0.0
+		for nd in ns: sy += pow(float(nd.y) - my, 2) / ns.size(); sx += pow(float(nd.x) - mx, 2) / ns.size()
 		tot += 1
-		if ys.size() >= ns.size() - 1 and xs.size() >= ns.size() - 1: irr += 1
+		if sqrt(sy) > 6.0 and sqrt(sx) > 15.0: irr += 1
 	_chk("資源點唔排到好整齊（每塊田 x、y 都散）", irr == tot, "%d/%d" % [irr, tot])
 	_chk("世界加長到最後一個", CB.world_h() >= CF.anchor("b_ink").y + 60, CB.world_h())
 	# ---------- 親手採：斬（竹）----------
@@ -221,18 +223,21 @@ func logic(t, report := true) -> void:
 	var e = CF.st("b_bamboo"); var nd0 = CF.nodes("b_bamboo")[0]
 	e.hp[0] = float(CF.hits("b_bamboo")); e.rg[0] = 0.0
 	var mid = CF.out_mid("b_bamboo"); M.add(mid, -M.amt(mid))
-	_cam(float(nd0.y) - 300.0); await _w(t, 0.3)
+	_cam(float(nd0.y) - 300.0); _near(V, float(nd0.x), float(nd0.y)); await _w(t, 0.3)
 	J.mc(V, "tap", [float(nd0.x), float(nd0.y) - 20.0])
 	_chk("撳竹叢 → 阿福行過去", V.hero.get("target") is Dictionary and V.hero.target.get("kind") == "cnode", V.hero.get("target"))
+	var ti = int(J.num(V.hero.target.get("i", 0))) if V.hero.get("target") is Dictionary else 0
+	if ti != 0: nd0 = CF.nodes("b_bamboo")[ti]
+	var ii0 = ti
 	var saw_pose = [""]
 	var t0 = Time.get_ticks_msec()
 	while Time.get_ticks_msec() - t0 < 12000:
 		await _w(t, 0.05)
 		var hp = J.mc(V, "heroPose", [])
 		if hp is Array and hp[0] != null and str(hp[0]) != "proud": saw_pose[0] = str(hp[0])
-		if CF.hp("b_bamboo", 0) <= 0: break
+		if CF.hp("b_bamboo", ii0) <= 0: break
 	_chk("親手採有動作（斬）", saw_pose[0] == "chop", saw_pose[0])
-	_chk("斬三下採完 → 資源點冇咗", CF.hp("b_bamboo", 0) == 0)
+	_chk("斬三下採完 → 資源點冇咗", CF.hp("b_bamboo", ii0) == 0)
 	_chk("採到料（未開墾都得）", absf(M.amt(mid) - CF.yield_n("b_bamboo")) < 0.01, "%s %.1f" % [mid, M.amt(mid)])
 	var ft = false
 	for f in V.get("floats", []): if str(f.get("text", "")).contains(M.name(mid)): ft = true
@@ -240,12 +245,12 @@ func logic(t, report := true) -> void:
 	J.mc(V, "tap", [float(nd0.x), float(nd0.y) - 20.0]); await _w(t, 0.2)
 	_chk("未長返撳唔到", V.hero.get("target") == null or V.hero.target.get("kind") != "cnode")
 	# ---------- 再生 ----------
-	_chk("再生倒數 = %d 秒" % int(CF.REGROW), absf(J.num(e.rg[0]) - CF.REGROW) < 1.5, J.num(e.rg[0]))
-	e.rg[0] = 0.6
+	_chk("再生倒數 = %d 秒" % int(CF.REGROW), absf(J.num(e.rg[ii0]) - CF.REGROW) < 1.5, J.num(e.rg[ii0]))
+	e.rg[ii0] = 0.6
 	await _w(t, 1.2)
-	_chk("再生：時間到長返", CF.hp("b_bamboo", 0) == CF.hits("b_bamboo"))
+	_chk("再生：時間到長返", CF.hp("b_bamboo", ii0) == CF.hits("b_bamboo"))
 	# ---------- 親手採：搖（枯井）----------
-	var ndw = CF.nodes("b_well")[1]; CF.st("b_well").hp[1] = 1.0
+	var ndw = CF.nodes("b_well")[1]; CF.st("b_well").hp[1] = 1.0; _near(V, float(ndw.x), float(ndw.y))
 	var mw = CF.out_mid("b_well"); M.add(mw, -M.amt(mw))
 	J.mc(V, "tap", [float(ndw.x), float(ndw.y) - 20.0])
 	saw_pose[0] = ""
@@ -296,6 +301,7 @@ func logic(t, report := true) -> void:
 	# 親手採永遠得（派咗鬼都得）
 	e.hp[2] = float(CF.hits("b_bamboo"))
 	var before = M.amt(mid); var nd2 = CF.nodes("b_bamboo")[2]
+	_near(V, float(nd2.x), float(nd2.y)); await _w(t, 0.1)
 	J.mc(V, "tap", [float(nd2.x), float(nd2.y) - 20.0]); await _hero_go(t, V, 12.0)
 	_chk("派咗鬼都可以親手採", M.amt(mid) >= before + CF.yield_n("b_bamboo") - 0.01, "%.1f→%.1f" % [before, M.amt(mid)])
 	# 未解鎖嘅田（下一張圖）
@@ -434,7 +440,9 @@ func shots(t, booted := false) -> void:
 	await _calm(t)
 	var nb = m.get("prod_btn")
 	await long_shot(t, m, "01_long_full")
-	_cam(-200.0); await _w(t, 1.0); await _shot(t, "02_gate_fence")
+	m.mv_embed.porters.clear(); m.mv_embed._pt = 999.0
+	_cam(-120.0); await _w(t, 1.0); await _shot(t, "02_gate_fence")
+	m.mv_embed._pt = 3.0
 	_cam(250.0); await _w(t, 1.0); await _shot(t, "03_paddy")
 	_cam(1130.0 - 200.0); await _w(t, 1.0); await _shot(t, "04_ext_join")
 	# 親手採：竹（斬三下）連續幀

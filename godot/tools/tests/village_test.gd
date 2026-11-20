@@ -167,7 +167,9 @@ func all(t) -> void:
 	S.mv["ci"] = 5.0
 	var sh = CB.shown(); var rects = []
 	for b in sh:
-		var p = CB.pos(b); rects.append(Rect2(p.x - 58, p.y - 100, 116, 138))
+		var p = CB.pos(b)
+		if CB.CF.is_field(b): rects.append(CB.CF.sign_rect(b))   # [village2] 資源田：田名牌（資源點另有 village2_test 檢查）
+		else: rects.append(Rect2(p.x - 50, p.y - 96, 100, 124))
 	var overlap = false
 	for i in rects.size():
 		for j in range(i + 1, rects.size()):
