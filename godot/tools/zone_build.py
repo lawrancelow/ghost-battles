@@ -26,14 +26,14 @@ M0 = {
        {"id": "zb_paper", "n": ["紙人偶頭目", "紙人偶頭目"], "art": "zhiren", "stage": {"en": ["zhiren", "zhiren", "zhiren"], "boss": "zhiren", "p": 2}},
        # 守墓鬼：用老闆現有鬼怪 n30_jerangkung（馬來墳地骷髏鬼，喀喀響嘅骨頭；冇宗教元素），戰鬥顯示名改「亂葬崗守墓鬼」
        {"id": "zb_keeper", "n": ["亂葬崗守墓鬼", "亂葬崗守墓鬼"], "art": "n30_jerangkung", "rename": True, "stage": {"en": ["youhun", "n30_jerangkung", "youhun"], "boss": "n30_jerangkung", "p": 3}}],
-     "decor": [["tree_bare", 320, 300, 70], ["tree_bare", 430, 200, 70], ["tree_bare", 560, 320, 70], ["tree_bare", 610, 180, 70],
+     "decor": [["zp_deadtree", 320, 300, 70], ["zp_deadtree", 430, 200, 70], ["zp_deadtree", 560, 320, 70], ["zp_deadtree", 610, 180, 70],
                ["grave", 290, 380, 0], ["grave", 360, 150, 0], ["grave", 520, 390, 0], ["grave", 600, 260, 0]]},
     {"id": "w_pit", "type": "wild", "rect": [680, 0, 1110, 420], "n": ["野外區　餓鬼坑", "野外區　餓鬼坑"], "col": "#8a1c24",
      "gate": {"x": 895, "w": 60}, "boss_at": [900, 262], "pit": [900, 250, 80, 50],
      "bosses": [
        {"id": "zb_egui", "n": ["餓鬼頭目", "餓鬼頭目"], "art": "egui", "stage": {"en": ["egui", "egui", "egui"], "boss": "egui", "p": 2}},
        {"id": "zb_eguiking", "n": ["餓鬼王", "餓鬼王"], "art": "eguiking", "main": True, "chapter": [0, 2]}],
-     "decor": [["tree_bare", 740, 300, 70], ["tree_bare", 1060, 260, 70], ["tree_bare", 760, 160, 64]]},
+     "decor": [["zp_deadtree", 740, 300, 70], ["zp_deadtree", 1060, 260, 70], ["zp_deadtree", 760, 160, 64]]},
     {"id": "market", "type": "market", "rect": [230, 440, 1110, 1080], "n": ["開放區　陰間大排檔", "開放區　陰間大排檔"], "col": "#a8602a"},
     {"id": "village", "type": "village", "rect": [230, 1160, 1110, 1984], "n": ["中央村", "中央村"], "col": "#a8602a"},
     {"id": "A", "type": "res", "rect": [0, 1160, 220, 1984], "n": ["資源區 A　後山竹林", "資源區 A　後山竹林"], "col": "#3a5a32",
@@ -79,21 +79,23 @@ M0 = {
   "village": {
     "POS": {"gate": [670, 1152], "house": [392, 1790], "furnace": [516, 1772], "wood": [318, 1516], "rice": [800, 1520], "plank": [540, 1530],
             "bun": [1020, 1532], "store": [812, 1306], "home": [548, 1296], "camp": [990, 1946], "altar": [872, 1800]},
-    "TREE_POS": P((290, 1290), (345, 1280), (400, 1295), (310, 1345), (365, 1350), (420, 1360)),
-    "PADDY_POS": P((950, 1300), (1030, 1300), (950, 1360), (1030, 1360)),
+    # [fogfix] 老闆：中央村嘅槐樹／稻田全部都要砍得／割得 → 恢復 8 棵＋6 格（存檔 S.trees 8、S.paddy 6），唔再用同一張圖做裝飾
+    #   槐樹兩行（行距 84：撳樹範圍 y−72..y+8 唔重疊；棵距 55 ≥ 撳樹闊 48）；稻田 3 行 × 2（行距 60、列距 80）
+    "TREE_POS": P((285, 1278), (340, 1274), (395, 1280), (450, 1276), (300, 1362), (355, 1366), (410, 1360), (465, 1364)),
+    "PADDY_POS": P((950, 1240), (1030, 1240), (950, 1300), (1030, 1300), (950, 1360), (1030, 1360)),
     "DECOR": [["post", 628, 1230], ["post", 712, 1230], ["post", 628, 1650], ["post", 712, 1650], ["post", 628, 1900], ["post", 712, 1900],
               ["banana", 258, 1660], ["banana", 1086, 1640], ["scarecrow", 1086, 1360], ["grave", 1070, 1720], ["grave", 1092, 1745],
               ["willo", 470, 1420], ["willo", 760, 1440], ["willo", 960, 1700]],
     # 自然填充（zone_view 畫；唔擋路、唔撞建築）：[圖鍵或 proc:種類, x, y, 闊]
     "props": [
-      ["zb_bush", 262, 1215, 70], ["zb_rock2", 470, 1220, 64], ["tree", 905, 1222, 58], ["zb_bush", 1080, 1240, 64], ["proc:grass", 600, 1230, 0],
+      ["zb_bush", 262, 1215, 70], ["zb_rock2", 470, 1220, 64], ["zp_deadtree", 905, 1222, 58], ["zb_bush", 1080, 1240, 64], ["proc:grass", 600, 1230, 0],
       ["proc:barrel", 878, 1262, 0], ["store__crate", 896, 1300, 30], ["proc:grass", 720, 1410, 0], ["zb_rock2", 470, 1420, 54], ["proc:laundry", 600, 1430, 0],
-      ["proc:grass", 870, 1440, 0], ["tree", 1080, 1460, 56], ["zb_bush", 262, 1460, 60], ["n30_taozhai__bucket", 760, 1470, 26],
-      ["proc:grass", 260, 1640, 0], ["zb_rock2", 560, 1650, 50], ["proc:barrel", 760, 1660, 0], ["tree", 980, 1660, 58], ["proc:grass", 1060, 1700, 0],
-      ["zb_bush", 270, 1730, 62], ["proc:laundry", 960, 1760, 0], ["proc:grass", 560, 1860, 0], ["zb_rock2", 760, 1880, 48], ["tree", 270, 1890, 54],
+      ["proc:grass", 870, 1440, 0], ["zp_deadtree", 1080, 1460, 56], ["zb_bush", 262, 1460, 60], ["n30_taozhai__bucket", 760, 1470, 26],
+      ["proc:grass", 260, 1640, 0], ["zb_rock2", 560, 1650, 50], ["proc:barrel", 760, 1660, 0], ["zp_deadtree", 980, 1660, 58], ["proc:grass", 1060, 1700, 0],
+      ["zb_bush", 270, 1730, 62], ["proc:laundry", 960, 1760, 0], ["proc:grass", 560, 1860, 0], ["zb_rock2", 760, 1880, 48], ["zp_deadtree", 270, 1890, 54],
       ["proc:grass", 860, 1910, 0], ["zb_bush", 1080, 1880, 58], ["proc:grass", 520, 1960, 0], ["bun__basket", 1075, 1636, 26], ["pr_cart", 470, 1610, 56]],
     "EXTRA": [["vil_board", 330, 1948, 74], ["vil_rebirth", 445, 1952, 84]],
-    "spots": {"wood": [[262, 1330, 1], [448, 1322, 0], [322, 1386, 1], [256, 1372, 0]],
+    "spots": {"wood": [[262, 1322, 1], [490, 1322, 0], [330, 1404, 1], [262, 1404, 0]],
               "rice": [[908, 1332, 0], [1072, 1332, 1], [990, 1392, 0], [912, 1392, 1]],
               "plank": [[488, 1548, 0], [592, 1550, 1], [504, 1556, 0], [578, 1558, 1]],
               "bun": [[968, 1550, 0], [1072, 1548, 1], [982, 1556, 0], [1058, 1556, 1]],
@@ -124,7 +126,7 @@ M0 = {
 
 # ================= [zone v6] 中央村自然填充（老闆：每屏都要有內容，參考 Level1_Map_Art_v2 密度） =================
 #   1) 院落：每間建築兩側貼住擺矮竹籬、晾衫竹、柴堆、水缸、雞籠（冇活物）、菜圃、石磨、木桶、木箱
-#   2) 槐樹林外圍裝飾槐樹／灌木（唔可砍）；稻田外圍裝飾稻田＋田埂
+#   2) 槐樹林外圍：黑灌木＋暗枯樹（zb_bush／zp_deadtree，同可砍槐樹 tree 圖明顯唔同）；稻田外圍唔再擺裝飾稻田（[fogfix]）
 #   3) 小路兩邊路燈、雜草、碎石
 #   4) 填空：60×60 格掃描，周圍 70 內冇嘢就補雜草／碎石／灌木 → 冇大過約 120×120 嘅空地
 #   全部避開：建築圖、可砍槐樹、可割稻田、主路／小路、公告板、打工鬼企位、門洞路點
@@ -201,14 +203,12 @@ def _dress(M, look="l1", off=(0, 0), extra_blocks=()):
                 if put(kk, cx, cy, ww, foot=ww * 0.72, pad=0, lanes=False): placed += 1; break
     for (kk, cx, cy) in LK.get("misc", [("zp_veg", 880, 1230), ("zp_sacks", 1075, 1410), ("zp_mill", 470, 1440), ("zp_coop", 760, 1440), ("zp_mill", 760, 1660)]):
         put(kk, cx + ox, cy + oy, WID[kk], foot=WID[kk] * 0.8, pad=0)
-    # 2) 槐樹林外圍：裝飾槐樹／灌木
-    gx0, gy0, gx1, gy1 = 270 + ox, 1240 + oy, 440 + ox, 1365 + oy
+    # 2) 槐樹林外圍：黑灌木／暗枯樹（[fogfix] 唔用 tree 圖：玩家會以為砍得）
+    gx0, gy0, gx1, gy1 = 270 + ox, 1230 + oy, 480 + ox, 1380 + oy
     for i in range(16):
-        a = i / 16 * math.tau; x = (gx0 + gx1) / 2 + math.cos(a) * 118; y = (gy0 + gy1) / 2 + 30 + math.sin(a) * 82
-        put(LK.get("grove", "deco:tree") if i % 3 else "zb_bush", x, y, 58 if i % 3 else 60, foot=30)
-    # 稻田外圍：裝飾稻田（同一片田）＋田埂（地面畫）
-    for (x, y) in [(870, 1300), (870, 1360), (1110 - 40, 1300 - 60), (950, 1240), (1030, 1240), (870, 1240)]:
-        put("deco:paddy", x + ox, y + oy, 78, foot=70, pad=-6)
+        a = i / 16 * math.tau; x = (gx0 + gx1) / 2 + math.cos(a) * 138; y = (gy0 + gy1) / 2 + 26 + math.sin(a) * 92
+        put(LK.get("grove", "zp_deadtree") if i % 3 == 0 else "zb_bush", x, y, 62 if i % 3 == 0 else 60, foot=30)
+    # 稻田外圍：[fogfix] 唔再擺裝飾稻田（同可割稻田同一張 paddy 圖，玩家分唔到）；空位交俾第 4 步填雜草／灌木
     put(LK.get("scare", "deco:scarecrow"), 1090 + ox, 1420 + oy, 40, foot=24)
     # 3) 小路兩邊：路燈、雜草、碎石
     for pa in M["paths"]:
@@ -224,14 +224,14 @@ def _dress(M, look="l1", off=(0, 0), extra_blocks=()):
                 put("proc:grass", mx + nx * off * side, my + ny * off * side, 0, foot=20)
             if i % 2 == 0: put("zb_rock2", mx - nx * (off + 6) * side, my - ny * (off + 6) * side + 6, 34, foot=26)
     # 4) 填空：冇大過約 120×120 嘅空地
-    fill = LK.get("fill", ["zp_deadtree", "zp_deadtree", "proc:grass", "zb_bush", "deco:tree", "proc:flowers", "proc:grass", "zb_rock2"])
+    fill = LK.get("fill", ["zp_deadtree", "zp_deadtree", "proc:grass", "zb_bush", "zb_bush", "proc:flowers", "proc:grass", "zb_rock2"])
     for gy in range(int(VR[1]) + 24, int(VR[3]), 46):
         for gx in range(int(VR[0]) + 24, int(VR[2]), 46):
             cx, cy = gx + rnd.uniform(-14, 14), gy + rnd.uniform(-14, 14)
             near = any(abs(cx - (b[0] + b[2]) / 2) < (b[2] - b[0]) / 2 + 22 and abs(cy - (b[1] + b[3]) / 2) < (b[3] - b[1]) / 2 + 22 for b in blocks)
             if near: continue
             k = fill[rnd.randrange(len(fill))]
-            w = {"zb_rock2": rnd.uniform(40, 50), "zb_bush": rnd.uniform(56, 70), "deco:tree": rnd.uniform(54, 62), "zp_deadtree": rnd.uniform(58, 72)}.get(k, 0)
+            w = {"zb_rock2": rnd.uniform(40, 50), "zb_bush": rnd.uniform(56, 70), "zp_deadtree": rnd.uniform(58, 72)}.get(k, 0)
             if k in FILL_W: w = rnd.uniform(*FILL_W[k])
             put(k, cx, cy, w, foot=max(26, w * 0.55))
     V["props"] = props
@@ -255,7 +255,7 @@ YARD_LOOK = {
                   "house": ["zq_stonetable", "zq_lanternpost", "zp_fence", "zq_sandals"], "altar": ["zq_lanternpost", "zp_bench"],
                   "camp": ["zq_trough", "zq_sandals", "zp_bench"], "furnace": ["zp_jars"]},
          "misc": [("zq_trough", 880, 1230), ("zq_sandals", 1075, 1410), ("zp_mill", 470, 1440), ("zq_stonetable", 760, 1440), ("zq_lanternpost", 760, 1660)],
-         "fill": ["zb_rock2", "zb_rock2", "proc:grass", "zt_cliffpine", "zb_bush", "zq_sandals", "proc:pebbles", "zp_deadtree"], "grove": "deco:tree"},
+         "fill": ["zb_rock2", "zb_rock2", "proc:grass", "zt_cliffpine", "zb_bush", "zq_sandals", "proc:pebbles", "zp_deadtree"], "grove": "zt_cliffpine"},
   "l4": {"yard": {"home": ["zq_nets", "zq_baskets", "zp_jars", "zp_fence"], "store": ["zq_baskets", "zq_floats", "zp_sacks"],
                   "wood": ["zp_woodpile", "zq_floats", "zp_fence"], "plank": ["zp_woodpile", "zq_nets", "zp_fence"],
                   "rice": ["zp_sacks", "zq_baskets", "zp_fence"], "bun": ["zq_saltfish", "zp_stove", "zq_baskets"],
@@ -360,13 +360,13 @@ M1 = {
      "bosses": [_boss("zb_jerangkung", "Hantu Jerangkung 頭目", "n30_jerangkung", ["youhun", "n30_jerangkung", "youhun"], 5.5),
                 _boss("zb_pocong", "Pocong 頭目", "pocong", ["zhiren", "pocong", "zhiren"], 6.5)],
      "decor": [["grave", 1450, 180, 0], ["grave", 1720, 150, 0], ["grave", 1470, 450, 0], ["grave", 1740, 420, 0], ["grave", 1680, 250, 0],
-               ["tree_bare", 1440, 300, 74], ["tree_bare", 1760, 320, 70], ["zt_stilt", 1500, 120, 96], ["zt_banana", 1760, 500, 70], ["zt_banana", 1420, 500, 66]]},
+               ["zp_deadtree", 1440, 300, 74], ["zp_deadtree", 1760, 320, 70], ["zt_stilt", 1500, 120, 96], ["zt_banana", 1760, 500, 70], ["zt_banana", 1420, 500, 66]]},
     {"id": "w_rubber", "type": "wild", "rect": [1380, 1764, 1800, 2240], "n": ["野外區　廢膠廠", "野外區　廢膠廠"], "col": "#8a1c24",
      "gate": {"x": 1600, "w": 60, "y": 1750, "dir": -1}, "boss_at": [1590, 2070],
      "bosses": [_boss("zb_raya", "Hantu Raya", "n30_hanturaya", ["youhun", "n30_hanturaya", "egui"], 6.5, False),
                 {"id": "zb_toyol", "n": ["Toyol", "Toyol"], "art": "toyol", "main": True, "chapter": [1, 2]}],
-     "decor": [["vb_rubbersheet", 1460, 1900, 110], ["vb_latex", 1740, 2200, 100], ["rn_latex", 1720, 1880, 70], ["rn_latex", 1440, 2140, 66],
-               ["tree_bare", 1760, 2010, 70], ["zb_rock2", 1450, 2230, 70], ["zt_stilt", 1730, 2120, 0]]},
+     "decor": [["zt_stilt", 1460, 1900, 110], ["zq_latexcups", 1740, 2200, 70], ["zq_latexcups", 1720, 1880, 64], ["zb_rock2", 1440, 2140, 66],
+               ["zp_deadtree", 1760, 2010, 70], ["zb_rock2", 1450, 2230, 70], ["zt_stilt", 1730, 2120, 0]]},
     {"id": "market", "type": "market", "rect": [1380, 548, 1800, 1736], "n": ["開放區　陰間大排檔", "開放區　陰間大排檔"], "col": "#a8602a"},
     {"id": "village", "type": "village", "rect": [460, 760, 1340, 1584], "n": ["中央村", "中央村"], "col": "#a8602a"},
     {"id": "A", "type": "res", "rect": [460, 228, 1340, 640], "n": ["資源區 A　椰林", "資源區 A　椰林"], "col": "#3a5a32",
@@ -436,8 +436,8 @@ M2 = {
      "gate": {"x": 515, "w": 60, "y": 2416, "dir": -1}, "boss_at": [360, 2720],
      "bosses": [_boss("zb_changgui", "倀鬼頭目", "n30_changgui", ["zombie", "n30_changgui", "zombie"], 9.5),
                 {"id": "zb_laojiang", "n": ["老殭", "老殭"], "art": "laojiang", "main": True, "chapter": [2, 2]}],
-     "decor": [["tree_bare", 120, 2600, 74], ["tree_bare", 620, 2620, 70], ["zt_cliffpine", 90, 2860, 110], ["zt_pavilion", 560, 2880, 120],
-               ["grave", 220, 2820, 0], ["grave", 480, 2560, 0], ["tree_bare", 300, 2900, 70]]},
+     "decor": [["zp_deadtree", 120, 2600, 74], ["zp_deadtree", 620, 2620, 70], ["zt_cliffpine", 90, 2860, 110], ["zt_pavilion", 560, 2880, 120],
+               ["grave", 220, 2820, 0], ["grave", 480, 2560, 0], ["zp_deadtree", 300, 2900, 70]]},
     {"id": "w_gorge", "type": "wild", "rect": [762, 2440, 1480, 2920], "n": ["野外區　亂石峽", "野外區　亂石峽"], "col": "#8a1c24",
      "gate": {"x": 965, "w": 60, "y": 2416, "dir": -1}, "boss_at": [1120, 2720],
      "bosses": [_boss("zb_egui3", "餓鬼頭目", "egui", ["egui", "egui", "egui"], 10.0),
@@ -520,7 +520,7 @@ M3 = {
      "bosses": [_boss("zb_shuigui", "水鬼頭目", "shuigui", ["shuigui", "shuigui", "shuigui"], 13.5),
                 {"id": "zb_pontianak", "n": ["Pontianak", "Pontianak"], "art": "pontianak", "main": True, "chapter": [3, 2]}],
      "decor": [["zt_mangrove", 70, 160, 120], ["zt_mangrove", 410, 140, 130], ["zt_mangrove", 90, 520, 120], ["zt_mangrove", 420, 540, 110],
-               ["zt_reeds", 200, 580, 90], ["rn_banana", 330, 260, 70], ["tree_bare", 140, 330, 70]]},
+               ["zt_reeds", 200, 580, 90], ["zt_reeds", 330, 260, 80], ["zp_deadtree", 140, 330, 70]]},
     {"id": "w_wreck", "type": "wild", "rect": [0, 1680, 480, 2240], "n": ["野外區　沉船灘", "野外區　沉船灘"], "col": "#8a1c24",
      "gate": {"x": 240, "w": 56, "y": 1596, "dir": -1}, "boss_at": [240, 1990],
      "bosses": [_boss("zb_aswang", "Aswang", "n30_aswang", ["shuigui", "n30_aswang", "zombie"], 14.0, False),
@@ -592,7 +592,7 @@ ZFILL = {
       "C": ["zb_bush", "zt_banana", "proc:grass", "zb_rock2", "proc:grass"]},
   2: {"A": ["proc:grass", "zb_rock2", "zt_cliffpine", "proc:grass", "zq_lanternpost"], "B": ["zq_sandals", "zb_rock2", "proc:grass", "zp_deadtree", "proc:grass"],
       "C": ["zb_rock2", "proc:grass", "zq_trough", "proc:pebbles", "zq_stonetable"]},
-  3: {"A": ["zt_banana", "zt_reeds", "proc:grass", "zb_bush", "zt_banana"], "B": ["zt_reeds", "zq_floats", "zt_reeds", "zq_nets"],
+  3: {"A": ["zt_reeds", "zt_reeds", "proc:grass", "zb_bush", "zb_rock2"], "B": ["zt_reeds", "zq_floats", "zt_reeds", "zq_nets"],
       "C": ["zt_reeds", "zq_cocohusk", "zb_bush", "proc:grass", "zt_banana"]}}
 FW_ = {"zt_banana": (56, 70), "zb_bush": (60, 76), "zq_cocohusk": (52, 60), "zq_latexcups": (52, 60), "zb_rock2": (44, 56), "zt_cliffpine": (64, 80),
        "zq_lanternpost": (44, 50), "zq_sandals": (44, 52), "zp_deadtree": (56, 68), "zq_trough": (58, 66), "zq_stonetable": (58, 66), "zt_reeds": (54, 70),
@@ -645,6 +645,25 @@ def _events(M):
     ev.append({"kind": "liberate", "id": ""})
     return ev
 for _M in (M0, M1, M2, M3): _M["events"] = _events(_M)
+
+# ================= [fogfix] 出村門外跟主線逐步解霧（zone_data.gd cond_ok；報告列清楚等老闆確認） =================
+# 第 1 關：出村門外由開局起全部黑霧；每區喺「佢自己對應嗰個主線任務」完成先散（hint 由遊戲按任務名自動生成）
+#   quest_done：[t, key]，key＝任務嘅 b／s／n（D.QUESTS 搵；Guide 插入任務都唔影響）；舊存檔亦用狀態判斷（等級／S.cleared／S.bld）
+Q_REVEAL1 = {"market": ["level", "3"],        # 出村：「升到 3 級」完成 → 下一步主線「夜班巡陰：第一章 1-1」要出村門
+             "w_pit": ["stage", "1-1"],       # 餓鬼坑：「夜班巡陰：第一章 1-1」完成（之後 1-2、1-3「擊敗餓鬼王」）
+             "w_graves": ["stage", "1-2"],    # 亂葬崗：「夜班巡陰：第一章 1-2」完成
+             "A": ["bLevel", "wood"],         # 後山竹林：「把伐木場升到 2 級」完成
+             "B": ["stage", "1-3"],           # 枯井巷：「擊敗餓鬼王」完成
+             "C": ["build", "home"]}          # 荒田禾稈場：「建造民宅（增加雜鬼名額）」完成
+H_ENTER = ["睇完呢關開場劇情先開放", "看完這關開場劇情後開放"]
+def _reveal(M, first):
+    for z in M["zones"]:
+        t = z["type"]; zid = z["id"]
+        if first:
+            if zid in Q_REVEAL1: z["reveal"] = {"quest_done": Q_REVEAL1[zid]}
+        else:       # 第 2–4 關：拔營到埗 → 大排檔即開；野外區、資源區喺該關開場劇情（map_enter）後開
+            if t in ("wild", "res"): z["reveal"] = {"enter": True, "hint": H_ENTER}
+_reveal(M0, True); _reveal(M1, False); _reveal(M2, False); _reveal(M3, False)
 
 _dress(M0)
 

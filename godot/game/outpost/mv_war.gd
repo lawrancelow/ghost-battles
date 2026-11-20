@@ -290,6 +290,7 @@ func step(sim, dt: float) -> void:
 	_sim_ref = weakref(sim)
 	_sync(sim)
 	if battle_on(): return
+	if not load("res://game/zone/zone_data.gd").wild_open(): return   # [fogfix] 野外區未開放（黑霧）：鬼潮唔會由野外出
 	if sim.ci() == 0: w.t0 = J.num(w.t0) + dt
 	_step_wave(sim, w, dt)
 	_step_flee(sim, dt)
@@ -762,6 +763,7 @@ func draw_hud(sc, ctx) -> void:
 		var left = 0
 		for f in wave.foes: if f.st != "die" and f.st != "flee" and sim.foes.has(f): left += 1
 		s3 = T("war_wave_on", "鬼潮中 剩%d隻 %d秒", "鬼潮中 剩%d隻 %d秒") % [left + wave.q.size(), int(maxf(0.0, WAVE_TIME - wave.t))]
+	elif not load("res://game/zone/zone_data.gd").wild_open(): s3 = T("war_wave_off", "野外未開：冇鬼潮", "野外未開：沒有鬼潮")   # [fogfix]
 	else: s3 = T("war_wave_in", "鬼潮 %s", "鬼潮 %s") % sc._mmss(maxf(0.0, J.num(w.wave_t)))
 	sc._txt(ctx, s2, x0 + 8, y + 31, 14, Color("#bff0a0"), "left", 900, 0)
 	sc._txt(ctx, s3, x0 + bw - 8, y + 31, 14, Color("#ffd27a") if wave != null else Color("#d8ccb8"), "right", 900, 0)

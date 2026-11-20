@@ -857,7 +857,7 @@ func _step_foes(dt: float) -> void:
 	for f in foes: if f.st != "die": alive += 1
 	if foe_t <= 0.0:
 		foe_t = rng.randf_range(3.0, 6.5) / plus.foe_mul(self)   # [play] 夜潮
-		if alive < FOE_MAX: spawn_foe()
+		if alive < FOE_MAX and load("res://game/zone/zone_data.gd").wild_open(): spawn_foe()   # [fogfix] 野外區未開放：冇孤魂由野外出
 	for f in foes.duplicate():
 		f.t += dt
 		match f.st:

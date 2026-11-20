@@ -88,11 +88,13 @@ static func door_at(p: Vector2, c := -1) -> String:   # 撳中門洞（屬於邊
 static func st():
 	var s = S()
 	if s == null: return null
+	if not (s.get("trees") is Array) or s.trees.size() < 8 or not (s.get("paddy") is Array) or s.paddy.size() < 6: pad_fields(s)   # [fogfix]
 	if not (s.get("zone") is Dictionary): s["zone"] = {"v": 1.0, "own": {}, "boss": {}, "exp": null}
 	var z = s.zone
 	for k in ["own", "boss"]: if not (z.get(k) is Dictionary): z[k] = {}
 	if int(J.num(z.get("mig", 0))) < 1: _migrate(s, z)
 	if int(J.num(z.get("mig", 0))) < 2: _migrate2(s, z)
+	if int(J.num(z.get("mig", 0))) < 3: _migrate3(s, z)
 	return z
 static func _k(id: String, c := -1) -> String: return "%d:%s" % [ci() if c < 0 else c, id]
 static func owned(zid: String, c := -1) -> bool:
@@ -267,6 +269,7 @@ static func _mb(): return load("res://game/zone/zone_battle.gd")   # [mapbattle]
 static var NEWS: Array = []   # 戰鬥結果（畫面攞嚟出橫額）
 # main.gd／畫面每格叫：收戰鬥結果
 static func poll() -> Dictionary:
+	reveal_poll()   # [fogfix] 跟主線逐步解霧
 	var s = S()
 	if s == null or not (s.get("zone") is Dictionary) or not (s.zone.get("exp") is Dictionary): return {}
 	var B = J.G.get("Battle")
@@ -386,6 +389,7 @@ static func apply() -> void:
 		for k in v.POS: pos[k] = [float(v.POS[k][0]), float(v.POS[k][1])]
 		G["POS"] = pos
 		G["TREE_POS"] = _fa(v.TREE_POS); G["PADDY_POS"] = _fa(v.PADDY_POS)
+		pad_fields(G.get("S"), v.TREE_POS.size(), v.PADDY_POS.size())   # [fogfix] 舊存檔：樹／稻田格數唔夠就補
 		var dc = []
 		for d in v.DECOR: dc.append([str(d[0]), float(d[1]), float(d[2])])
 		G["DECOR"] = dc
@@ -402,6 +406,14 @@ static func apply() -> void:
 	var V = G.get("Village")
 	if V is Dictionary and V.get("plaza") is Dictionary:   # 廣場鬼：重新擺（舊位喺新圖外面）
 		V.erase("plaza")
+# [fogfix] 存檔 S.trees／S.paddy（＋Regrow）格數唔夠就補：新補嘅樹 3 血、稻田熟咗；已有嘅格（已砍／已割）照舊對應索引
+static func pad_fields(s, nt := 8, np := 6) -> void:
+	if not (s is Dictionary): return
+	nt = maxi(nt, 8); np = maxi(np, 6)
+	for kv in [["trees", nt, 3.0], ["treeRegrow", nt, 0.0], ["paddy", np, 1.0], ["paddyRegrow", np, 0.0]]:
+		if not (s.get(kv[0]) is Array): s[kv[0]] = []
+		var a: Array = s[kv[0]]
+		while a.size() < int(kv[1]): a.append(kv[2])
 static func _fa(a: Array) -> Array:
 	var o = []
 	for p in a:
@@ -474,11 +486,13 @@ static func watch(view: Rect2) -> void:
 	if not on(): return
 	_watch_t += 1
 	if _watch_t % 6 != 0: return
+	reveal_poll(true)
 	_ev_once("map_enter", "")
 	for z in zones():
 		var tp = str(z.get("type"))
 		if tp != "res" and tp != "wild": continue
 		var r = rect(z.rect); var a = r.intersection(view).get_area()
+		if not revealed(str(z.id)): continue   # [fogfix] 未解霧（未介紹）嘅區唔發 zone_seen
 		if view.has_point(r.get_center()) or a >= minf(r.get_area(), view.get_area()) * 0.3: _ev_once("zone_seen", str(z.id))
 	for z in of_type("res"):
 		if not owned(str(z.id)): continue
@@ -488,3 +502,135 @@ static func watch(view: Rect2) -> void:
 static func events(c := -1) -> Array:
 	var e = mdef(ci() if c < 0 else c).get("events", [])
 	return e if e is Array else []
+
+# ================= [fogfix] 跟主線逐步解霧（出村門外：大排檔／野外區／資源區） =================
+# zones.json 每區可以有 "reveal"：{條件, "hint": [粵, 中]}；冇 reveal ＝ 一開始就見到。條件（任何一個中就解）：
+#   "always": true                        一開始就開
+#   "bld": "<建築id>"                     村子嗰間建築起咗（等級 ≥ 1）
+#   "quest_done": ["<t>", "<b 或 s>"]      主線任務（D.QUESTS 搵 t＋b／s 嗰個）已完成（S.qi 過咗佢）
+#   "quest_at": ["<t>", "<b 或 s>"]        主線任務已經去到（S.qi ≥ 佢）；stage 類：S.cleared 有都算
+#   "enter": true                         呢關開場劇情（mv_story map_enter beat）播完／跳過（冇劇情線／自動播關 → 當播完）
+#   "with": "<zone id>"                   跟另一區一齊開
+# 解咗記入 S.zone.rev["<ci>:<zid>"]（唔會再蓋返）；解霧嗰刻：REVEALED 記時間（霧散動畫）＋ REV_NEWS（橫額）＋ ev("reveal", zid)（劇情線可以掛）。
+# 舊存檔（mig 3）：已經過咗嘅圖全開；而家喺第 2–4 關＝全開；而家喺第 1 關＝按條件即刻默默解（唔播動畫）。
+# 自動化測試（GB_TEST）預設唔閘（gate_on = false，其他線測試照舊睇到成張圖）；fogfix_test 自己打開。
+static var gate_on := not OS.has_environment("GB_TEST")
+static var REVEALED := {}   # "<ci>:<zid>" → 解霧嗰刻（Time.get_ticks_msec）
+static var REV_NEWS: Array = []   # 待出橫額：[zid, ci]
+static var _rev_t := 0
+static func _rev() -> Dictionary:
+	var z = st()
+	if z == null: return {}
+	if not (z.get("rev") is Dictionary): z["rev"] = {}
+	return z.rev
+static func revealed(zid: String, c := -1) -> bool:
+	if not gate_on or not on_for(ci() if c < 0 else c): return true
+	var z = zone(zid, c)
+	if z.is_empty() or str(z.get("type")) == "village" or not (z.get("reveal") is Dictionary): return true
+	return J.t(_rev().get(_k(zid, c)))
+static func wild_open(c := -1) -> bool:   # 有任何一個野外區已解霧（未有就冇鬼潮）
+	if not gate_on or not on_for(ci() if c < 0 else c): return true
+	for z in of_type("wild", c): if revealed(str(z.id), c): return true
+	return of_type("wild", c).is_empty()
+static func reveal_hint(zid: String, c := -1) -> String:
+	var r = zone(zid, c).get("reveal")
+	if r is Dictionary and r.get("quest_done") is Array:   # 按任務名自動生成：「完成主線任務「升到 3 級」後開放」
+		var q = _quest(str(r.quest_done[0]), str(r.quest_done[1]))
+		if not q.is_empty():
+			var tx = str(q.get("text", ""))
+			if str(zone(zid, c).get("type")) == "market": return L("出村門未開：完成主線任務「%s」先出得村", "出村門未開放：完成主線任務「%s」後才能出村") % tx
+			return L("完成主線任務「%s」後開放", "完成主線任務「%s」後開放") % tx
+	if r is Dictionary and r.get("hint") != null: return T(r.hint)
+	return L("呢度仲未開放，跟住主線任務行落去就會開", "這裡還沒開放，跟著主線任務走就會開放")
+static func _quest(t: String, key: String) -> Dictionary:
+	var i = _qidx(t, key)
+	var Q = J.G.get("QUESTS")
+	return Q[i] if i >= 0 and Q is Array and Q[i] is Dictionary else {}
+static func _qidx(t: String, key: String) -> int:
+	var Q = J.G.get("QUESTS")
+	if not (Q is Array): return -1
+	for i in Q.size():
+		var q = Q[i]
+		if q is Dictionary and str(q.get("t")) == t and (str(q.get("b", "")) == key or str(q.get("s", "")) == key or (q.get("n") != null and t == "level" and str(int(J.num(q.n))) == key)): return i
+	return -1
+static func _enter_done(c: int) -> bool:
+	var MS = _story()
+	if MS == null or hook != null: return true
+	if not MS.auto_on: return true
+	var eb = MS.enter_beat(c)
+	return eb.is_empty() or MS.is_seen(str(eb.get("id", "")))
+static func cond_ok(zid: String, c := -1) -> bool:
+	var z = zone(zid, c); var cc = ci() if c < 0 else c
+	var r = z.get("reveal")
+	if not (r is Dictionary): return true
+	var s = S()
+	if s == null: return false
+	if J.t(r.get("always")): return true
+	if r.get("bld") != null and J.num(s.bld.get(str(r.bld), 0)) >= 1: return true
+	var qi = int(J.num(s.get("qi", 0)))
+	if r.get("quest_done") is Array:
+		var t0 = str(r.quest_done[0]); var k0 = str(r.quest_done[1])
+		var i = _qidx(t0, k0)
+		if i >= 0 and qi > i: return true
+		var q = _quest(t0, k0)   # 舊存檔／任務次序唔同：按狀態判斷任務係咪已經做咗
+		match t0:
+			"level": if J.num(s.get("lv", 1)) >= float(k0) and qi > 0: return true
+			"stage": if s.get("cleared") is Dictionary and J.t(s.cleared.get(k0)): return true
+			"build": if J.num(s.bld.get(k0, 0)) >= 1: return true
+			"bLevel": if not q.is_empty() and J.num(s.bld.get(k0, 0)) >= J.num(q.get("n", 99)): return true
+	if r.get("quest_at") is Array:
+		var i2 = _qidx(str(r.quest_at[0]), str(r.quest_at[1]))
+		if i2 >= 0 and qi >= i2: return true
+		if str(r.quest_at[0]) == "stage" and s.get("cleared") is Dictionary and J.t(s.cleared.get(str(r.quest_at[1]))): return true
+	if J.t(r.get("enter")) and _enter_done(cc): return true
+	if r.get("with") != null and str(r.with) != zid and revealed(str(r.with), c): return true
+	return false
+# 解霧檢查（ZD.poll 每格、watch 每 6 格；quiet＝唔播動畫／橫額）
+static func reveal_poll(force := false, quiet := false) -> Array:
+	var out = []
+	if not gate_on or not on(): return out
+	_rev_t += 1
+	if not force and _rev_t % 10 != 0: return out
+	var rv = _rev()
+	var c = ci()
+	for _pass in 2:   # "with" 鏈：兩輪
+		for z in zones(c):
+			var zid = str(z.id)
+			if not (z.get("reveal") is Dictionary) or J.t(rv.get(_k(zid, c))): continue
+			if not cond_ok(zid, c): continue
+			rv[_k(zid, c)] = 1.0; out.append(zid)
+			if not quiet:
+				REVEALED[_k(zid, c)] = Time.get_ticks_msec()
+				REV_NEWS.append([zid, c])
+				ev("reveal", zid)
+	if out.size(): _save()
+	return out
+# 測試／除錯：成張圖即刻解
+static func reveal_all(c := -1, quiet := true) -> void:
+	var cc = ci() if c < 0 else c
+	var rv = _rev()
+	for z in zones(cc):
+		if z.get("reveal") is Dictionary and not J.t(rv.get(_k(str(z.id), cc))):
+			rv[_k(str(z.id), cc)] = 1.0
+			if not quiet: REVEALED[_k(str(z.id), cc)] = Time.get_ticks_msec(); REV_NEWS.append([str(z.id), cc])
+# 解霧動畫進度：0＝啱啱解、1＝散晒（未解／好耐之前解 → 1）
+static func reveal_k(zid: String, c := -1, dur := 1800.0) -> float:
+	var t0 = REVEALED.get(_k(zid, c))
+	if t0 == null: return 1.0
+	return clampf(float(Time.get_ticks_msec() - int(t0)) / dur, 0.0, 1.0)
+static func _migrate3(s: Dictionary, z: Dictionary) -> void:
+	z["mig"] = 3.0
+	if not (z.get("rev") is Dictionary): z["rev"] = {}
+	var cur = int(J.num(s.mv.get("ci", 0))) if s.get("mv") is Dictionary else 0
+	var old = int(J.num(s.get("qi", 0))) > 0 or J.num(s.get("lv", 1)) > 1 or (s.get("cleared") is Dictionary and (s.cleared as Dictionary).size() > 0)
+	for ck in D().maps:
+		var c = int(ck)
+		if c < cur or (c == cur and c > 0 and old):
+			for zz in zones(c):
+				if zz.get("reveal") is Dictionary: z.rev[_k(str(zz.id), c)] = 1.0
+	# 而家喺第 1 關：按條件默默解（進度已經過咗解鎖點嘅舊存檔即刻全開，唔播動畫）
+	if cur == 0 or not old:
+		for _p in 2:
+			for zz in zones(cur):
+				var zid = str(zz.id)
+				if zz.get("reveal") is Dictionary and not J.t(z.rev.get(_k(zid, cur))) and cond_ok(zid, cur): z.rev[_k(zid, cur)] = 1.0

@@ -289,7 +289,7 @@ func _process(dt: float) -> void:
 	dt = minf(dt, 0.1)
 	t += dt
 	if anim != null: _step_anim(dt)
-	else: sim.step(dt)
+	elif not (zone and not ZDs.revealed("market")): sim.step(dt)   # [fogfix] 大排檔未開放（黑霧）：唔開檔、冇客、冇鬼潮
 	if not embed: _step_cam(dt)   # [unify]
 	else:
 		hud_k = move_toward(hud_k, 1.0 if hud_on else 0.0, dt * 5.0)
@@ -511,6 +511,7 @@ func _draw_stage() -> void:
 		if embed and embed_ground != null: embed_ground.call(ctx, vy0, vy1)   # [village2]
 	var fk = _fold_k()
 	var walking = anim != null and not anim.done and anim.t >= A_FOLD - 0.2
+	var mk_hid = zone and not ZDs.revealed("market")   # [fogfix] 大排檔未開放：台、客、員工、氣泡唔畫（黑霧下面唔見細節）
 	# 圍欄外孤魂＋圍欄（地圖頂）
 	if zone or vy0 < L.fence_y + 80.0:   # [zone2] 分區地圖：野外區可以喺大排檔下面
 		var fo = sim.foes.duplicate(); fo.sort_custom(func(a, b): return a.pos.y < b.pos.y)
@@ -530,21 +531,21 @@ func _draw_stage() -> void:
 		var dd = d
 		items.append([dy, func(): _draw_decor(ctx, dd)])
 	if camp != null: camp.add_items(ctx, items, vy0, vy1, fk, walking)   # [camp] 營地建築
-	if fk > 0.04 and L.counter_y + 40.0 > vy0 and L.counter_y - 220.0 < vy1:
+	if fk > 0.04 and not mk_hid and L.counter_y + 40.0 > vy0 and L.counter_y - 220.0 < vy1:
 		if not embed: items.append([L.house.y, func(): _draw_house(ctx, fk)])   # [unify] 嵌入：紙紮大屋＝原版村子（出村門後面）
 		items.append([L.counter_y, func(): _draw_counter(ctx, fk)])
-	if not walking:
+	if not walking and not mk_hid:
 		for c in sim.custs:
 			if c.pos.y < vy0 - 20.0 or c.pos.y - 160.0 > vy1: continue
 			var cc = c
 			items.append([c.pos.y + c.slot * 0.01, func(): _draw_cust(ctx, cc)])
-	if fk > 0.04:
+	if fk > 0.04 and not mk_hid:
 		for sid in MD.stations(sim.ci()):
 			var sp = sim.st_pos(sid)
 			if sp.y + 90.0 < vy0 or sp.y - 160.0 > vy1: continue
 			var s2 = sid
 			items.append([sp.y - 30.0, func(): _draw_station(ctx, s2, fk)])
-	if not walking:
+	if not walking and not mk_hid:
 		for w in sim.workers:
 			if w.pos.y < vy0 - 20.0 or w.pos.y - 120.0 > vy1: continue
 			var ww = w
@@ -559,7 +560,7 @@ func _draw_stage() -> void:
 	if not walking:
 		_wrects.clear()   # [polish4] 要貨氣泡由櫃台頭排起，撞到就推高
 		var qs = sim.custs.duplicate(); qs.sort_custom(func(a, b): return int(a.get("slot", 0)) < int(b.get("slot", 0)))
-		if not _mbf():   # [mapbattle] 打緊仗：收埋要貨氣泡
+		if not _mbf() and not mk_hid:   # [mapbattle] 打緊仗：收埋要貨氣泡
 			for c in qs: if c.st != "out" and c.pos.y > vy0 and c.pos.y - 200.0 < vy1: _draw_want(ctx, c)
 	_draw_fog(ctx, vy0, vy1)
 	_draw_amb_fly(ctx)
@@ -576,8 +577,9 @@ func _draw_stage() -> void:
 		for kk in _wbtns: if kk.begins_with("st:"): _brects.append(_wbtns[kk])
 	_brects.append_array(sim.plus.avoid_rects(self))
 	if zone: _brects.append_array(load("res://game/zone/zone_taunt.gd").world_rects)   # [mapbattle] 閒談對白框避開王嘅叫囂泡泡   # [play] 對白框避開事件名同右上「生產鏈」掣
-	if not _mbf():   # [mapbattle] 打緊仗：收埋閒談對白框
+	if not _mbf() and not mk_hid:   # [mapbattle] 打緊仗：收埋閒談對白框
 		for b in bubbles: _draw_bubble(ctx, b)
+	if zone: load("res://game/zone/zone_view.gd").draw_gate_fog(stage, ctx, t, Rect2(float(zt.x) - 10.0, vy0, FW / maxf(0.01, float(zt.z)) + 20.0, vy1 - vy0))   # [fogfix] 出村門外未開放：黑霧蓋住台／客／孤魂
 	if embed and anim != null:   # [unify] 拔營：大排檔區＋村外區淡出、換圖、淡入（原村子唔變）
 		var fa = clampf(1.0 - absf(float(anim.t) - A_SWAP) / 1.8, 0.0, 1.0)
 		if fa > 0.0: ctx.fillStyle = "rgba(8,4,10,%.3f)" % fa; ctx.fillRect(0, maxf(vy0, -40.0), float(sim.L.get("w", FW)), minf(vy1, world_h()) - maxf(vy0, -40.0))

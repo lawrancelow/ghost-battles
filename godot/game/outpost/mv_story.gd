@@ -126,7 +126,7 @@ static func when_ok(sim, b: Dictionary) -> bool:
 	if not (w is Dictionary): return false
 	var k = str(w.get("k", "")); var n = float(w.get("n", 1))
 	match str(w.get("t", "")):
-		"open": return true
+		"open": return ZD.revealed("market")   # [fogfix] 大排檔未解霧：開檔劇情等解咗先播
 		"unlock": return sim.st().st.has(k) and sim.unlocked(k)
 		"level": return sim.st().st.has(k) and sim.lv(k) >= n
 		"sold": return sold_n(sim, k) >= n

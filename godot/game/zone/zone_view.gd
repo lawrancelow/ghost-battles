@@ -235,19 +235,20 @@ static func _stakes(c: CanvasItem, ctx: Ctx, b: Dictionary, vr: Rect2, t: float)
 				x += 13.0
 	for g in gaps: _gate(ctx, (float(g[0]) + float(g[1])) / 2.0, y - 8, float(g[1]) - float(g[0]), t)
 
-# 樹林帶（黑灌木 zb_bush＋竹＋槐樹，錯開疊住），中間一條小徑
+# 樹林帶（黑灌木 zb_bush＋暗枯樹 zp_deadtree，錯開疊住），中間一條小徑
+#   [fogfix] 唔再用 tree（可砍槐樹）同 rn_bamboo（A 區竹林資源點）圖：玩家會以為砍得／採得
 static func _forest(ctx: Ctx, b: Dictionary, vr: Rect2) -> void:
 	var key = "forest"
 	if not _geo.has(key):
 		var rng = RandomNumberGenerator.new(); rng.seed = 5151
 		var it = []
 		var y = float(b.y0) + 26.0
-		var kinds = ["zb_bush", "rn_bamboo", "tree", "zb_bush", "rn_bamboo"]
+		var kinds = ["zb_bush", "zp_deadtree", "zb_bush", "zb_bush", "zp_deadtree"]
 		var i = 0
 		while y <= float(b.y1) + 8:
 			if not (y > float(b.gap[0]) - 4 and y < float(b.gap[1]) + 40):
 				var k = kinds[i % kinds.size()]
-				var w = {"zb_bush": rng.randf_range(70, 86), "rn_bamboo": rng.randf_range(50, 60), "tree": rng.randf_range(56, 64)}[k]
+				var w = {"zb_bush": rng.randf_range(70, 86), "zp_deadtree": rng.randf_range(60, 70)}[k]
 				it.append([k, rng.randf_range(float(b.x0) + 14, float(b.x1) - 14), y, w, rng.randf() < 0.5])
 				i += 1
 			y += 24.0
@@ -256,7 +257,7 @@ static func _forest(ctx: Ctx, b: Dictionary, vr: Rect2) -> void:
 	var c = ctx.ci
 	for e in _geo[key]:
 		if float(e[2]) < vr.position.y or float(e[2]) - 90 > vr.end.y: continue
-		var tint = Color(0.62, 0.58, 0.6) if e[0] == "tree" else (Color(0.66, 0.7, 0.62) if e[0] == "rn_bamboo" else Color(0.8, 0.78, 0.8))
+		var tint = Color(0.66, 0.62, 0.62) if e[0] == "zp_deadtree" else Color(0.8, 0.78, 0.8)
 		_sp(c, e[0], float(e[1]), float(e[2]), float(e[3]), e[4], tint)
 	var gy = (float(b.gap[0]) + float(b.gap[1])) / 2.0   # 小徑：踩實嘅泥
 	Art.el(ctx, (float(b.x0) + float(b.x1)) / 2.0, gy, (float(b.x1) - float(b.x0)) * 0.7, 22, "rgba(70,52,36,.4)")
@@ -309,6 +310,7 @@ static func _stonewall(c: CanvasItem, ctx: Ctx, b: Dictionary, vr: Rect2) -> voi
 	ctx.beginPath(); ctx.ellipse(cx, gy0 + 2, (x1 - x0) * 0.5 + 6, 18, 0, PI, TAU); ctx.stroke()
 
 # 村子自然填充：雜草叢、碎石、黑灌木、樹、木桶、晾衫竹、籮、木頭車（zones.json village.props）
+const NOT_DECOR := ["tree", "tree_bare", "paddy", "paddy_cut"]   # [fogfix] 可砍槐樹／可割稻田嘅圖：只畫真嘢，唔做裝飾
 static func _all_props() -> Array:   # 村子院落＋資源區自然填充（[zone2]）
 	var o = ZD.cur().get("village", {}).get("props", []).duplicate()
 	for z in ZD.of_type("res"): o.append_array(z.get("props", []))
@@ -375,17 +377,17 @@ static func _props(c: CanvasItem, ctx: Ctx, vr: Rect2, t: float) -> void:
 						Art.el(ctx, fx2, fy2, 2, 2, ["#8a2a2a", "#c8c0b0", "#6a2a4a"][j % 3])
 		elif k.begins_with("deco:"):
 			match k.substr(5):
-				"tree": _sp(c, "tree", x, y, w, int(x) % 2 == 1, Color(0.5, 0.46, 0.5))
+				"tree": _sp(c, "zp_deadtree", x, y, w, int(x) % 2 == 1, Color(0.66, 0.62, 0.62))   # [fogfix] 舊資料：唔用可砍槐樹 tree 圖
 				"banana":
 					if Spr.ok("banana"): _sp(c, "banana", x, y + 4, w, int(x) % 2 == 1, Color(0.66, 0.7, 0.62))
-				"paddy":
-					if Spr.ok("paddy"): _sp(c, "paddy", x, y + 4, w, int(y) % 2 == 1, Color(0.6, 0.56, 0.48))
+				"paddy": pass   # [fogfix] 裝飾稻田已取消（同可割稻田同一張圖，玩家分唔到）
 				"scarecrow":
 					if Spr.ok("scarecrow"): _sp(c, "scarecrow", x, y + 4, w, false, Color(0.62, 0.55, 0.55))
 				"post":
 					if Spr.ok("lamppost"):
 						_sp(c, "lamppost", x, y + 3, 35.0, false, Color(0.7, 0.62, 0.6))
 						PtGfx.init(); c.draw_texture_rect(PtGfx.RAD, Rect2(x + 6 - 20, y - 30 - 20, 40, 40), false, Color(_lamp().r, _lamp().g, _lamp().b, 0.24 + sin(t * 2 + x) * 0.06))
+		elif k in NOT_DECOR: continue   # [fogfix] 互動物件嘅圖唔可以做裝飾
 		elif Spr.ok(k):
 			var tint = Color(0.62, 0.58, 0.6) if k == "tree" else (Color(0.86, 0.83, 0.83) if k.begins_with("zp_") or k.begins_with("zq_") else Color(0.78, 0.76, 0.78))
 			_sp(c, k, x, y, w, int(x) % 2 == 1, tint)
@@ -507,11 +509,18 @@ static func draw_over(c: CanvasItem, nv) -> void:
 	draw_atmo(c, nv)   # [zone2] 天氣／環境粒子
 	ZD.watch(nv.view_rect())   # [zone2] 劇情事件：第一次見到某區、二級廠解鎖、解放
 	var mbf = _mb().fighting()   # [mapbattle] 打緊仗：收埋區名牌、王進度、戰力字（黑霧照畫）
+	fog_log.clear()
 	for z in ZD.zones():
 		var r = ZD.rect(z.rect)
 		var tp = str(z.type)
+		var zid0 = str(z.id)
+		if tp == "res": _track_cap(zid0, ZD.owned(zid0))
+		if tp == "res" and ZD.owned(zid0) and r.intersects(vr):   # [fogfix] 啱啱佔領：黑霧散開（短動畫）
+			var dk = _cap_k(zid0)
+			if dk < 1.0: _fog_body(c, r, t, vr, 1.0 - _ease(dk), dk * 46.0)
+		if (tp == "market" or tp == "wild") and not ZD.revealed(zid0): continue   # [fogfix] 未開放：霧由大排檔層（draw_gate_fog）畫，唔畫王／名牌
 		if mbf:
-			if tp == "res" and not ZD.owned(str(z.id)) and not _mb().on_zone(str(z.id)) and r.intersects(vr): _fog_only(c, nv, z, r, t)
+			if tp == "res" and not ZD.owned(str(z.id)) and not _mb().on_zone(str(z.id)) and r.intersects(vr): _fog_only(c, nv, z, r, t, vr)
 			if tp == "wild" and not _mb().on_zone(str(z.id)) and r.intersects(vr):   # 其他野外區嘅王照企（冇牌）
 				var bi = ZD.boss_next(str(z.id))
 				if bi >= 0 and TA.boss_taunting(str(z.id)) == "":
@@ -519,9 +528,9 @@ static func draw_over(c: CanvasItem, nv) -> void:
 					Art.draw_char(ctx, str(bb.get("art", "youhun")), at.x, at.y + sin(t * 2.0) * 3.0, 1.05 if J.t(bb.get("main")) else 0.9, {"t": t, "flip": false})
 			continue
 		if tp == "res" and not ZD.owned(str(z.id)):
-			hits.append([r, "res", str(z.id)])
+			if ZD.revealed(zid0): hits.append([r, "res", str(z.id)])
 			if _mb().on_zone(str(z.id)): continue   # [mapbattle] 攻佔緊：黑霧散開，睇到戰場
-			if r.intersects(vr): _fog(c, ctx, nv, z, r, t)
+			if r.intersects(vr): _fog(c, ctx, nv, z, r, t, vr)
 			continue
 		if tp == "wild":
 			hits.append([r, "wild", str(z.id)])
@@ -540,35 +549,131 @@ static func _rgba(hex: String, a: float) -> String:
 	var c = Color(hex)
 	return "rgba(%d,%d,%d,%.2f)" % [int(c.r * 255), int(c.g * 255), int(c.b * 255), a]
 
-static func _fog(c: CanvasItem, ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float) -> void:
-	for k in 6:   # [zone v4] 柔邊：由外向內一層層加深（唔見硬邊）
-		var g = 30.0 - k * 8.0
-		c.draw_rect(r.grow(g), Color(0.024, 0.012, 0.04, 0.16 + (0.46 if k == 5 else 0.0)))
-	var n = int(clampf(r.get_area() / 9000.0, 8, 30))
-	for i in n:   # 飄緊嘅霧團
-		var fx = r.position.x + fmod(i * 97.0 + t * (6.0 + (i % 3) * 3.0), r.size.x + 120.0) - 60.0
-		var fy = r.position.y + fmod(i * 173.0, r.size.y)
-		var rr = 70.0 + (i % 4) * 24.0
-		var fg = _fogc().lerp(Color(0.55, 0.52, 0.62), 0.5)
-		c.draw_texture_rect(PtGfx.RAD, Rect2(fx - rr, fy - rr * 0.6, rr * 2, rr * 1.2), false, Color(fg.r, fg.g, fg.b, 0.10))
+# ---------------- [fogfix] 黑霧：近乎全黑（核心不透明度 fog_core_alpha() ≈ 0.89）、柔邊、霧邊慢慢飄 ----------------
+# 一層層由外向內加深（FOG_LAYERS 層 × FOG_LA）＋核心（FOG_CORE）；邊沿一圈柔霧團（PtGfx.RAD）慢慢郁；入面幾團淡灰霧絲飄過。
+# m＝濃度倍數（霧散動畫 1 → 0），spread＝向外散開幾多 px；xf＝畫布變換（大排檔層用 ctx.T）
+const FOG_COL := Color(0.018, 0.010, 0.026)
+const FOG_LAYERS := 5
+const FOG_LA := 0.22
+const FOG_CORE := 0.62
+static var fog_log: Array = []   # 測試：今格黑霧／鎖／戰力字畫嘅次序 [kind, zid]
+static func fog_core_alpha() -> float: return 1.0 - pow(1.0 - FOG_LA, FOG_LAYERS) * (1.0 - FOG_CORE)
+static func _ease(k: float) -> float: return smoothstep(0.0, 1.0, k)
+static func _fog_body(c: CanvasItem, r: Rect2, t: float, vr: Rect2, m := 1.0, spread := 0.0, xf = null) -> void:
+	if m <= 0.001: return
+	if xf != null: c.draw_set_transform_matrix(xf)
+	var ws = ZD.world_size()   # 貼住世界邊嘅邊：霧伸出界（唔好留一條淺色柔邊）
+	var l0 = 80.0 if r.position.x <= 1.0 else 0.0; var t0 = 80.0 if r.position.y <= 1.0 else 0.0
+	var r0 = 80.0 if r.end.x >= ws.x - 1.0 else 0.0; var b0 = 80.0 if r.end.y >= ws.y - 1.0 else 0.0
+	r = Rect2(r.position.x - l0, r.position.y - t0, r.size.x + l0 + r0, r.size.y + t0 + b0)
+	for k in FOG_LAYERS:
+		var g = 18.0 - k * 10.0 + spread
+		c.draw_rect(r.grow(g), Color(FOG_COL.r, FOG_COL.g, FOG_COL.b, FOG_LA * m))
+	c.draw_rect(r.grow(-22.0 + spread), Color(FOG_COL.r, FOG_COL.g, FOG_COL.b, FOG_CORE * m))
+	PtGfx.init()
+	var vv = vr.grow(120)
+	var per = [[r.position, Vector2(r.end.x, r.position.y), Vector2(0, -1)], [Vector2(r.position.x, r.end.y), r.end, Vector2(0, 1)],
+		[r.position, Vector2(r.position.x, r.end.y), Vector2(-1, 0)], [Vector2(r.end.x, r.position.y), r.end, Vector2(1, 0)]]
+	var i = 0
+	for e in per:   # 霧邊：一圈柔霧團慢慢飄（出入 ±8px）
+		var a: Vector2 = e[0]; var b: Vector2 = e[1]; var nrm: Vector2 = e[2]
+		var n = maxi(2, int(a.distance_to(b) / 58.0))
+		for j in n + 1:
+			i += 1
+			var p = a.lerp(b, float(j) / n) + nrm * (sin(t * 0.7 + i * 1.37) * 8.0 + spread * 1.4 + 4.0)
+			if not vv.has_point(p): continue
+			var rr = 44.0 + fmod(i * 13.0, 18.0)
+			c.draw_texture_rect(PtGfx.RAD, Rect2(p.x - rr, p.y - rr * 0.72, rr * 2.0, rr * 1.44), false, Color(FOG_COL.r, FOG_COL.g, FOG_COL.b, 0.5 * m))
+	var nn = int(clampf(r.get_area() / 26000.0, 4, 16))
+	var fg = _fogc().lerp(Color(0.5, 0.48, 0.56), 0.4)
+	for k2 in nn:   # 入面淡灰霧絲（好淡，唔會睇穿）
+		var fx = r.position.x + fmod(k2 * 97.0 + t * (5.0 + (k2 % 3) * 2.5), r.size.x + 120.0) - 60.0
+		var fy = r.position.y + fmod(k2 * 173.0 + 40.0, maxf(1.0, r.size.y))
+		if not vv.has_point(Vector2(fx, fy)): continue
+		var r2 = 70.0 + (k2 % 4) * 22.0
+		c.draw_texture_rect(PtGfx.RAD, Rect2(fx - r2, fy - r2 * 0.55, r2 * 2, r2 * 1.1), false, Color(fg.r, fg.g, fg.b, 0.045 * m))
+	if xf != null: c.draw_set_transform_matrix(Transform2D.IDENTITY)
+# 佔領嗰刻霧散：記低由未佔領變已佔領嘅時間（之前要真係有畫霧先播，舊存檔開機唔播）
+static var _own_prev := {}
+static var _cap_t := {}
+static func _track_cap(zid: String, own: bool) -> void:
+	var k = "%d:%s" % [ZD.ci(), zid]
+	var was = _own_prev.get(k)
+	if was == false and own: _cap_t[k] = Time.get_ticks_msec()
+	_own_prev[k] = own
+static func _cap_k(zid: String) -> float:
+	var t0 = _cap_t.get("%d:%s" % [ZD.ci(), zid])
+	if t0 == null: return 1.0
+	return clampf(float(Time.get_ticks_msec() - int(t0)) / 1500.0, 0.0, 1.0)
+
+static func _fog(c: CanvasItem, ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float, vr := Rect2()) -> void:
+	var zid = str(z.id)
+	_fog_body(c, r, t, vr if vr.has_area() else r)
+	fog_log.append(["fog", zid])
+	if not ZD.revealed(zid): return   # [fogfix] 未介紹：淨係黑霧（冇名牌、冇鎖、冇戰力）
+	var ra = ZD.reveal_k(zid)   # 啱啱介紹到：名牌／鎖／字淡入
+	ctx.globalAlpha = ra
 	var cx = r.get_center().x; var cy = r.get_center().y
 	var npx = _name_px(nv)
 	_plate(ctx, _name(nv, z), cx, r.position.y + npx * 1.4, npx, _rgba(str(z.get("col", "#3a3036")), 0.92))
 	var px = 16; var da = _det(nv)
 	var lk = maxf(26.0, npx * 1.4)
 	_lock(ctx, cx, cy - (lk * 1.4 if da > 0.0 else lk * 0.4), lk)
-	if da <= 0.0: return
-	ctx.globalAlpha = da
-	var need = ZD.need(str(z.id)); var pw = ZD.power()
+	fog_log.append(["lock", zid])
+	if da <= 0.0: ctx.globalAlpha = 1.0; return
+	ctx.globalAlpha = da * ra
+	var need = ZD.need(zid); var pw = ZD.power()
 	_txt(ctx, ZD.L("建議戰力 %d", "建議戰力 %d") % need, cx, cy + px * 0.4, px + 2, "#ffd27a")
 	_txt(ctx, ZD.L("你嘅陰兵戰力 %d", "你的陰兵戰力 %d") % pw, cx, cy + px * 2.0, px, "#9fe39a" if pw >= need else "#ff9a7a")
-	ctx.globalAlpha = da * (0.75 + 0.25 * sin(t * 3.0))
+	fog_log.append(["power", zid])
+	ctx.globalAlpha = da * ra * (0.75 + 0.25 * sin(t * 3.0))
 	_plate(ctx, ZD.L("撳我攻佔", "點我攻佔"), cx, cy + px * 3.8, px, "rgba(150,40,30,.95)")
+	fog_log.append(["btn", zid])
 	ctx.globalAlpha = 1.0
-static func _fog_only(c: CanvasItem, nv, z: Dictionary, r: Rect2, t: float) -> void:   # [mapbattle] 淨係霧（冇牌冇字）
-	for k in 6:
-		var g = 30.0 - k * 8.0
-		c.draw_rect(r.grow(g), Color(0.024, 0.012, 0.04, 0.16 + (0.46 if k == 5 else 0.0)))
+static func _fog_only(c: CanvasItem, _nv, z: Dictionary, r: Rect2, t: float, vr := Rect2()) -> void:   # [mapbattle] 淨係霧（冇牌冇字）
+	_fog_body(c, r, t, vr if vr.has_area() else r)
+	fog_log.append(["fog", str(z.id)])
+
+# [fogfix] 出村門外未開放（大排檔／野外區）嘅黑霧：大排檔層（mv_scene._draw_stage 尾，世界座標 ctx）畫，蓋住台／客／孤魂；
+#   霧上面一塊「未開放」牌＋點樣開（撳都會出提示）；解霧嗰刻霧散開（短動畫）
+static func draw_gate_fog(c: CanvasItem, ctx: Ctx, t: float, vr: Rect2) -> void:
+	if not ZD.on() or not ZD.gate_on: return
+	var nv = _nv()
+	for z in ZD.zones():
+		var tp = str(z.type)
+		if tp != "market" and tp != "wild": continue
+		var zid = str(z.id); var r = ZD.rect(z.rect)
+		if not r.grow(200).intersects(vr): continue
+		if ZD.revealed(zid):
+			var k = ZD.reveal_k(zid)
+			if k < 1.0: _fog_body(c, r, t, vr, 1.0 - _ease(k), k * 60.0, ctx.T)
+			continue
+		_fog_body(c, r, t, vr, 1.0, 0.0, ctx.T)
+		fog_log.append(["gfog", zid])
+		var px = 16
+		if nv != null: px = int(clampf(_name_px(nv), 16, 40))
+		var cx = r.get_center().x; var py = r.end.y - px * 3.2
+		var lb = ZD.L("未開放", "未開放")
+		if tp == "market":   # 出村門未開：牌掛喺出村門上面，講明要完成邊個主線任務
+			var gp = gate_pos(); cx = gp.x; py = gp.y - 128.0
+			lb = ZD.L("出村門未開", "出村門未開放")
+			fog_log.append(["gate_lock", zid])
+		_plate(ctx, lb, cx, py, px, "rgba(40,30,34,.94)", "#f0dcb8")
+		fog_log.append(["closed", zid])
+		var da = _det(nv) if nv != null else 1.0
+		if da > 0.0 or tp == "market":
+			ctx.globalAlpha = maxf(da, 1.0 if tp == "market" else 0.0)
+			_txt(ctx, ZD.reveal_hint(zid), cx, py + px * 1.5, maxi(14, int(px * 0.85)), "#ffe2a8")
+			ctx.globalAlpha = 1.0
+static func gate_pos() -> Vector2: return ZD.v2(ZD.cur().get("village", {}).get("POS", {}).get("gate", [0, 0]))
+static func gate_locked_hit(p: Vector2) -> bool:   # 撳中鎖住嘅出村門（大排檔未開）
+	if ZD.revealed("market"): return false
+	var g = gate_pos()
+	return Rect2(g.x - 80, g.y - 150, 160, 180).has_point(p)
+static func _nv():
+	var ml = Engine.get_main_loop()
+	var m = ml.root.get_node_or_null("Main") if ml is SceneTree else null
+	return m.get("village") if m != null else null
 static func _lock(ctx: Ctx, x: float, y: float, s: float) -> void:
 	ctx.strokeStyle = "#b8a070"; ctx.lineWidth = s * 0.16
 	ctx.beginPath(); ctx.arc(x, y - s * 0.15, s * 0.34, PI, TAU); ctx.lineTo(x + s * 0.34, y + s * 0.1); ctx.moveTo(x - s * 0.34, y - s * 0.15); ctx.lineTo(x - s * 0.34, y + s * 0.1); ctx.stroke()
@@ -616,8 +721,15 @@ static func tap(main, p: Vector2) -> bool:
 		if th[1] == "cap": open_capture(main, th[0])
 		else: open_boss(main, th[0])
 		return true
+	if gate_locked_hit(p):   # [fogfix] 出村門未開：講要完成邊個主線任務
+		if main != null and main.has_method("show_toast"): main.show_toast(ZD.reveal_hint("market"))
+		return true
+	var hz = ZD.zone_at(p)   # [fogfix] 未開放／未介紹嘅區：撳落去講要做咩先開
+	if hz != "" and not ZD.revealed(hz):
+		if main != null and main.has_method("show_toast"): main.show_toast(ZD.reveal_hint(hz))
+		return true
 	var zid = ZD.door_at(p)
-	if zid != "" and not ZD.owned(zid): open_capture(main, zid); return true
+	if zid != "" and not ZD.owned(zid) and ZD.revealed(zid): open_capture(main, zid); return true
 	for h in hits:
 		if not h[0].has_point(p): continue
 		if h[1] == "res": open_capture(main, h[2]); return true
@@ -698,6 +810,18 @@ static func _bname(b: String) -> String:
 
 # 戰鬥結果（main 每格叫）：出橫額
 static func eat_news(main) -> void:
+	if ZD.REV_NEWS.size():   # [fogfix] 解霧橫額（同一刻解幾區：合成一條）
+		var mk = []; var wl = []; var rs = []
+		while ZD.REV_NEWS.size():
+			var rv = ZD.REV_NEWS.pop_front()
+			var zz = ZD.zone(str(rv[0]), int(rv[1])); var tp = str(zz.get("type", ""))
+			var nm = ZD.T(zz.get("n", ["", ""])).split("　")[-1]
+			if tp == "market": mk.append(nm)
+			elif tp == "wild": wl.append(nm)
+			else: rs.append(nm)
+		if main != null:
+			var head = ZD.L("出村門外嘅路開咗！", "出村門外的路開了！") if mk.size() else (ZD.L("霧散咗！", "霧散了！") if wl.size() else ZD.L("發現新地方！", "發現新地方！"))
+			main.show_banner(head + "、".join(mk + wl + rs))
 	while ZD.NEWS.size():
 		var r = ZD.NEWS.pop_front()
 		if main == null: continue
@@ -733,7 +857,7 @@ static func _water() -> Array:
 
 # 四周天然邊界（void）：熱帶黑樹林（jungle）／峭壁崖石枯松（cliff）／紅樹林蘆葦泥灘（marsh）；固定種子
 const VOID_KIT := {
-	"jungle": [["zb_bush", 90, 120, 0.55], ["zt_banana", 80, 110, 0.6], ["zb_bush", 100, 130, 0.5], ["tree_bare", 80, 100, 0.5], ["zt_banana", 90, 120, 0.55]],
+	"jungle": [["zb_bush", 90, 120, 0.55], ["zt_banana", 80, 110, 0.6], ["zb_bush", 100, 130, 0.5], ["zp_deadtree", 80, 100, 0.5], ["zt_banana", 90, 120, 0.55]],
 	"cliff": [["zb_rock1", 110, 150, 0.7], ["zb_rock2", 80, 110, 0.72], ["zt_cliffpine", 100, 140, 0.7], ["zb_rock1", 120, 150, 0.66], ["zb_cliff", 120, 140, 0.7]],
 	"marsh": [["zt_mangrove", 110, 150, 0.6], ["zt_reeds", 80, 110, 0.66], ["zt_mangrove", 100, 140, 0.55], ["zt_reeds", 90, 120, 0.6], ["zb_bush", 80, 110, 0.5]]}
 static func _void(c: CanvasItem, b: Dictionary, vr: Rect2, t: float) -> void:

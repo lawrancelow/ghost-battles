@@ -157,7 +157,7 @@ func _zone_frame(dt: float) -> void:
 func zone_hud_vis() -> bool:
 	var c = village.zone_cam(); var vr = c.rect(); var a = 0.0
 	for z in ZD.zones():
-		if str(z.type) in ["market", "wild"]: a += ZD.rect(z.rect).intersection(vr).get_area()
+		if str(z.type) in ["market", "wild"] and ZD.revealed(str(z.id)): a += ZD.rect(z.rect).intersection(vr).get_area()   # [fogfix] 未開放（黑霧）唔計
 	return a >= vr.get_area() * 0.3
 # 畫面座標（村子 px）撳中大排檔 HUD／掣／卡 → 交俾 mv_scene，回 true
 func zone_hud_tap(p: Vector2) -> bool:

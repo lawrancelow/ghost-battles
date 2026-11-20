@@ -107,6 +107,7 @@ func _process(_dt: float) -> void:
 	var t2 = Time.get_ticks_usec()
 	if ground_tex == null: ground.queue_redraw()
 	if zone != _zone_was: _zone_was = zone; ground.queue_redraw(); lily.queue_redraw()   # [zone] 換模式：地面重畫
+	if zone and ZD.applied() != _zg_map: _zg_map = ZD.applied(); ground.queue_redraw()   # [fogfix] 換圖（拔營／讀檔）：地面重畫（之前會殘留上一關地面，蓋住稻田）
 	var ewh = CB.world_h()
 	if ewh != _ext_h: _ext_h = ewh; ext_ground.queue_redraw()
 	lily.queue_redraw(); mist.queue_redraw(); top_fx.queue_redraw(); top_ui.queue_redraw()
@@ -212,9 +213,13 @@ func _draw_static(c: CanvasItem, key: String) -> void:
 	var ctx = Ctx.new(c, Transform2D(0, Vector2(0, -c.position.y)))
 	s.fn.call(ctx)
 
+var _st_map := "~"
 func _sync_statics() -> void:
 	var S = J.G.S
 	for k in statics: statics[k].used = false
+	if ZD.applied() != _st_map:   # [fogfix] 換圖：所有靜態物件（樹、稻田、建築、擺設）重畫——之前狀態冇變就唔重畫，會留喺上一關嘅 x
+		_st_map = ZD.applied()
+		for k in statics: statics[k]["dirty"] = true
 	var POS = J.G.get("POS")
 	var gp = POS.gate
 	var gdot = J.t(J.mc(J.G.get("Guide"), "anyDot", [])) if J.G.get("Guide") != null else false
@@ -320,6 +325,7 @@ func _sync_dynamic() -> void:
 
 # ---------------- 地面、彼岸花、霧 ----------------
 var _zone_was := false
+var _zg_map := "~"
 var _zg_tex := {}   # [zone] 分區地面圖（上下兩半）
 func _zone_ground(c: CanvasItem) -> void:
 	var m = ZD.cur(); var key = str(m.get("ground", ""))
