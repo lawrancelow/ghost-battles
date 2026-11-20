@@ -255,7 +255,7 @@ static func draw_world(P, sc, ctx, vy0: float, vy1: float) -> void:
 		if c.pos.y < vy0 or c.pos.y - 200.0 > vy1: continue
 		if J.t(c.get("prompt")) and c.st == "serve":
 			var left = clampf(1.0 - (J.now() - J.num(c.get("pr_at", J.now()))) / PROMPT_MS, 0.0, 1.0)
-			var bx = clampf(c.pos.x - 172.0, 4.0, FW() - 92.0); var by = c.pos.y - 150.0
+			var bx = clampf(c.pos.x - 172.0, sc.vx0() + 4.0, sc.vx1() - 92.0); var by = c.pos.y - 150.0   # [zone]
 			var opts = [["c_hy", P.S("b_hy", "減兩成", "減兩成"), "#3d7a3a"], ["c_hn", P.S("b_hn", "唔減", "不減"), "#7a3a2a"]] if str(c.tp) == "haggle" else [["c_pt", P.S("b_pt", "請試食", "請試吃"), "#3d7a3a"]]
 			for i in opts.size():
 				var r = Rect2(bx, by + i * 44.0, 88.0, 38.0)
@@ -284,7 +284,7 @@ static func draw_tag(P, sc, ctx, c: Dictionary, x: float, y: float, w: float) ->
 	if J.t(c.get("friend")) and tp != "reg": tx = P.S("friend", "朋友", "朋友") + "・" + tx
 	ctx.font = "900 14px sans-serif"
 	var tw = ctx.measureText(tx).width + 12.0
-	var tx0 = clampf(x + w / 2.0 - tw / 2.0, 4.0, FW() - tw - 4.0)
+	var tx0 = clampf(x + w / 2.0 - tw / 2.0, sc.vx0() + 4.0, sc.vx1() - tw - 4.0)   # [zone]
 	Art.rr(ctx, tx0, y - 22.0, tw, 20.0, 6, "rgba(20,10,16,.88)", col, 1.2)
 	sc._txt(ctx, tx, tx0 + tw / 2.0, y - 12.0, 14, Color(col), "center", 900, 0)
 

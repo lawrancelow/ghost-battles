@@ -12,6 +12,8 @@ var mv_host: Control
 var mv_view: Control = null
 var mv_back: Button
 var mv_embed: Node = null   # [unify] 合一地圖：村子分頁頂段嘅大排檔區（game/outpost/mv_embed.gd）
+const ZDm := preload("res://game/zone/zone_data.gd")   # [zone] 分區地圖
+const ZVm := preload("res://game/zone/zone_view.gd")   # [zone]
 const UNIFY := true          # [unify] 合一地圖（移動村獨立全屏畫面、後院掣、營地取消）
 var dom: Control
 var quest_bar: PanelContainer
@@ -542,6 +544,7 @@ func set_mv(on: bool) -> void:
 func _mv_tick() -> void:
 	if not mv_on(): return
 	MVW.poll()   # [war]
+	ZDm.poll(); ZVm.eat_news(self)   # [zone] 攻佔／野外王戰鬥結果
 	MVB.tick()
 	# 舊存檔第一次入嚟：簡短介紹（等標題、手機、劇情、自檢都完先彈）
 	if MVB.intro_pending() and title_ov == null and phone == null and loading == null and selftest == null:

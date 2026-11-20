@@ -4,11 +4,16 @@
 #   擋：任何行路嘅嘢（阿福、廣場鬼、挑夫鬼、客人）由 a 行去 b，如果跨過柵欄線又唔喺門口 → 擋（blocks／clamp）
 extends RefCounted
 
-const Y := 112.0              # 柵欄線（村子世界 y；出村門腳 118，門腳前少少）
-const GATE_X := 195.0
-const GAP := 24.0             # 門口通道半闊（新門樓圖 0.35–0.65 × 闊 150 ＝ 172–218，同石板路一樣闊）
-const SPAN_L := [0.0, 152.0]  # 左邊柵欄（去到門柱外邊：門樓圖 0.20 × 150）
-const SPAN_R := [238.0, 390.0]
+static var Y := 112.0              # 柵欄線（村子世界 y；出村門腳 118，門腳前少少）
+static var GATE_X := 195.0
+static var GAP := 24.0             # 門口通道半闊（新門樓圖 0.35–0.65 × 闊 150 ＝ 172–218，同石板路一樣闊）
+static var SPAN_L := [0.0, 152.0]  # 左邊柵欄（去到門柱外邊：門樓圖 0.20 × 150）
+static var SPAN_R := [238.0, 390.0]
+# [zone] 分區地圖：柵欄位置由 zones.json village.fence 設（game/zone/zone_data.gd apply）
+static func set_cfg(y: float, gx: float, gap: float, spans: Array) -> void:
+	Y = y; GATE_X = gx; GAP = gap
+	SPAN_L = [float(spans[0][0]), float(spans[0][1])]; SPAN_R = [float(spans[1][0]), float(spans[1][1])]
+static func reset_cfg() -> void: set_cfg(112.0, 195.0, 24.0, [[0.0, 152.0], [238.0, 390.0]])
 const KEY := "mvs_fence_n"
 const SEG_W := 84.0
 

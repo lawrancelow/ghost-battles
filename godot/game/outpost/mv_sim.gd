@@ -24,6 +24,7 @@ const MVW = preload("res://game/outpost/mv_war.gd")   # [war]
 const IDL = preload("res://game/outpost/mv_idle.gd")   # [idle] Idle Outpost 式升級（解鎖鏈／累計產量門檻／品質星／領班）
 const MVP = preload("res://game/outpost/mv_plus.gd")   # [play] 鬼客脾氣／委託單／詭異事件／羈絆／夜潮／招牌菜
 const FW := 390.0
+const ZDm = preload("res://game/zone/zone_data.gd")   # [zone]
 const WALK := 120.0
 const FOE_MAX := 5
 const PATIENCE := 15.0     # 客人喺櫃台前等幾多秒冇貨就走
@@ -236,7 +237,9 @@ func boss_ok(c: int, k := "") -> bool:
 	var cl = SS().get("cleared")
 	if not (cl is Dictionary): return false
 	if k != "" and k.contains("-") and J.t(cl.get(k)): return true
-	return J.t(cl.get("%d-3" % (c + 1)))
+	var r = J.t(cl.get("%d-3" % (c + 1)))
+	if k == "" and ZDm.on_for(c): return r and ZDm.all_bosses_done(c)   # [zone] 分區地圖：全部野外王打低先算（拔營、all_done）
+	return r
 func goal_prog(i: int) -> Array:   # [而家, 要幾多]
 	var c = ci(); var G = MD.goals(c)
 	if i < 0 or i >= G.size(): return [0, 1]
@@ -460,6 +463,14 @@ func relayout(_top := 0.0, _bot := 0.0) -> void:
 	o.fence_y = float(Ly.get("fence_y", 150))
 	o.guard_y = o.fence_y + 26.0
 	o.foe_y0 = 70.0; o.foe_y1 = o.fence_y - 12.0
+	# [zone] 分區地圖：孤魂喺野外區遊蕩，衝野外門（唔係成條柵欄）；守夜企喺門口
+	o.gates = []; o.wild = []
+	for q in Ly.get("gates", []): o.gates.append(MD.v2(q))
+	if Ly.get("guard_slots") is Array: o.guard_slots = Ly.guard_slots
+	if Ly.get("vol_slots") is Array: o.vol_slots = Ly.vol_slots
+	if Ly.get("vol_mid") is Array: o.vol_mid = Ly.vol_mid
+	if J.t(Ly.get("zone")):
+		for z in ZDm.of_type("wild", c): o.wild.append(ZDm.rect(z.rect))
 	var cp = MD.v2(Ly.counter)
 	o.counter = cp; o.counter_y = cp.y; o.counter_x0 = cp.x - 92.0; o.counter_x1 = cp.x + 92.0
 	o.house = MD.v2(Ly.get("house", [cp.x - 14, cp.y - 68]))
@@ -490,7 +501,25 @@ func st_pos(sid: String) -> Vector2: return SPOS.get(sid, Vector2(195, 600))
 func slot_pos(sid: String, i: int) -> Vector2:
 	var p = st_pos(sid); var off = [Vector2(-40, 26), Vector2(6, 32), Vector2(50, 26)]
 	return p + off[i % 3]
-func guard_home(i: int) -> Vector2: return Vector2(80.0 + 115.0 * i, L.guard_y)
+func guard_home(i: int) -> Vector2:
+	if L.has("guard_slots") and i < L.guard_slots.size(): return MD.v2(L.guard_slots[i])   # [zone]
+	return Vector2(80.0 + 115.0 * i, L.guard_y)
+func ww() -> float: return float(L.get("w", FW))   # [zone] 世界闊（舊豎條 390）
+# [zone] 孤魂衝邊度：舊＝正前面柵欄；分區＝最近嘅野外門
+func fence_tgt(x: float) -> Vector2:
+	if L.get("gates") is Array and L.gates.size():
+		var best = L.gates[0]
+		for g in L.gates: if absf(g.x - x) < absf(best.x - x): best = g
+		return Vector2(best.x + rng.randf_range(-16, 16), L.fence_y - 8.0)
+	return Vector2(clampf(x, 24, FW - 24), L.fence_y - 8.0)
+func _wild_of(p: Vector2) -> Rect2:
+	for r in L.get("wild", []): if r.grow(30).has_point(p): return r
+	return L.wild[0] if L.get("wild", []).size() else Rect2(0, L.foe_y0, FW, L.foe_y1 - L.foe_y0)
+func foe_roam(p: Vector2) -> Vector2:   # 喺自己嗰區隨便行
+	if L.get("wild", []).size():
+		var r = _wild_of(p).grow(-40)
+		return Vector2(rng.randf_range(r.position.x, r.end.x), rng.randf_range(maxf(r.position.y, L.foe_y0), L.foe_y1 - 30))
+	return Vector2(rng.randf_range(24, FW - 24), rng.randf_range(L.foe_y0, L.foe_y1 - 30))
 func view_cull(p: Vector2) -> bool: return true
 
 func goods_list() -> Array:
@@ -795,14 +824,16 @@ func _step_foes(dt: float) -> void:
 		match f.st:
 			"roam":
 				if _move(f, f.tgt, dt, 40.0):
-					if f.t > f.get("calm", 3.0): f.st = "charge"; f.tgt = Vector2(clampf(f.pos.x, 24, FW - 24), L.fence_y - 8.0); f.t = 0.0
-					else: f.tgt = Vector2(rng.randf_range(24, FW - 24), rng.randf_range(L.foe_y0, L.foe_y1 - 30))
+					if f.t > f.get("calm", 3.0): f.st = "charge"; f.tgt = fence_tgt(f.pos.x); f.t = 0.0   # [zone]
+					else: f.tgt = foe_roam(f.pos)
 			"charge":
 				if _move(f, f.tgt, dt, 95.0): f.st = "bang"; f.t = 0.0; ev.append({"k": "bang", "pos": f.pos})
 			"bang":
 				f["bob"] = sin(f.t * 18.0) * 3.0
 				if fmod(f.t, 0.6) < dt: ev.append({"k": "rattle", "x": f.pos.x})
-				if f.t > 7.0: f.st = "roam"; f.t = 0.0; f.calm = rng.randf_range(3, 6); f.tgt = Vector2(f.pos.x + rng.randf_range(-60, 60), L.foe_y0 + 20)
+				if f.t > 7.0:
+					f.st = "roam"; f.t = 0.0; f.calm = rng.randf_range(3, 6); f.tgt = Vector2(f.pos.x + rng.randf_range(-60, 60), L.foe_y0 + 20)
+					if L.get("wild", []).size(): f.tgt = foe_roam(f.pos)   # [zone]
 			"die":
 				if f.t > 0.7: foes.erase(f)
 
@@ -812,8 +843,12 @@ func spawn_foe() -> bool:
 	var left = rng.randf() < 0.5
 	var y = rng.randf_range(L.foe_y0 + 10, L.foe_y1 - 30)
 	var hp = MD.foe_hp(ci())
-	foes.append({"k": str(ks[rng.randi() % ks.size()]), "pos": Vector2(-30.0 if left else FW + 30.0, y), "hp": hp, "mx": hp, "st": "roam", "t": 0.0, "calm": rng.randf_range(1.5, 4.0),
-		"tgt": Vector2(rng.randf_range(40, FW - 40), y), "ph": rng.randf() * 10.0, "flip": not left})
+	var p0 = Vector2(-30.0 if left else FW + 30.0, y); var t0 = Vector2(rng.randf_range(40, FW - 40), y)
+	if L.get("wild", []).size():   # [zone] 由野外區深處（頂）出
+		var wr: Rect2 = L.wild[rng.randi() % L.wild.size()]
+		p0 = Vector2(rng.randf_range(wr.position.x + 40, wr.end.x - 40), wr.position.y + 120.0); t0 = foe_roam(p0); left = t0.x > p0.x
+	foes.append({"k": str(ks[rng.randi() % ks.size()]), "pos": p0, "hp": hp, "mx": hp, "st": "roam", "t": 0.0, "calm": rng.randf_range(1.5, 4.0),
+		"tgt": t0, "ph": rng.randf() * 10.0, "flip": not left})
 	return true
 
 func hit_foe(f: Dictionary, dmg: float, by: String) -> void:
@@ -850,7 +885,7 @@ func _step_guards(dt: float) -> void:
 		if tgt == null:
 			_move(g, guard_home(int(g.slot)), dt, 70.0)
 			continue
-		var want = Vector2(clampf(tgt.pos.x + (-22.0 if tgt.pos.x > g.pos.x else 22.0), 20, FW - 20), L.guard_y)
+		var want = Vector2(clampf(tgt.pos.x + (-22.0 if tgt.pos.x > g.pos.x else 22.0), 20, ww() - 20), L.guard_y)   # [zone]
 		if _move(g, want, dt, 110.0) or absf(tgt.pos.x - g.pos.x) < 30.0:
 			g.flip = tgt.pos.x < g.pos.x
 			if g.cd <= 0.0 and tgt.pos.y >= L.fence_y - 90.0:

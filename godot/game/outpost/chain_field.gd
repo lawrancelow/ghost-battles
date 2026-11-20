@@ -11,6 +11,7 @@ extends RefCounted
 const M = preload("res://game/outpost/mat.gd")
 const CE = preload("res://game/outpost/chain_eco.gd")
 const VS = preload("res://game/village_style.gd")
+const ZD = preload("res://game/zone/zone_data.gd")   # [zone] 分區地圖：資源點、田名牌位置喺 zones.json
 
 # 拓展區擺位（村子世界座標）：資源田＝田中心；加工建築＝建築腳。左右兩邊、中間係石板路（x 172–220）
 const ANCHOR := {
@@ -64,6 +65,11 @@ static func yield_n(bid: String) -> int: return maxi(2, int(round(J.num(M.bld(bi
 
 # 擺位：固定（唔跟解鎖次序郁）；未列明嘅新建築排喺最後
 static func anchor(bid: String) -> Vector2:
+	if ZD.on():   # [zone]
+		var fd = ZD.field_def(bid)
+		if fd.has("sign"): return ZD.v2(fd.sign) + Vector2(0, -60)
+		var sd = ZD.shop_def(bid)
+		if sd.has("pos"): return ZD.v2(sd.pos)
 	if ANCHOR.has(bid): return Vector2(ANCHOR[bid][0], ANCHOR[bid][1])
 	var extra = []
 	for b in M.new_blds(): if not ANCHOR.has(str(b)): extra.append(str(b))
@@ -76,6 +82,12 @@ static var _nodes := {}
 # 資源點位置：田中心附近隨機散開（固定種子，唔整齊但每次一樣），互相唔太近；由後到前排
 static func nodes(bid: String) -> Array:
 	if _nodes.has(bid): return _nodes[bid]
+	if ZD.on() and ZD.field_def(bid).has("nodes"):   # [zone] 資源點固定位（zones.json）
+		var zo = []; var rz = RandomNumberGenerator.new(); rz.seed = hash(bid) & 0x7fffffff
+		var ps = ZD.field_def(bid).nodes.duplicate(); ps.sort_custom(func(a, b): return float(a[1]) < float(b[1]))
+		for i in ps.size(): zo.append({"x": float(ps[i][0]), "y": float(ps[i][1]), "s": 0.9 + rz.randf() * 0.16, "flip": rz.randf() < 0.5, "i": i})
+		_nodes[bid] = zo
+		return zo
 	var c = anchor(bid); var cf = cfg(bid); var n = int(cf.n)
 	var rng = RandomNumberGenerator.new(); rng.seed = hash(bid) & 0x7fffffff
 	var rx = 68.0; var ry = 38.0; var dmin = 42.0 if float(cf.w) >= 50 or cf.has("h") else 34.0
@@ -101,6 +113,7 @@ static func nodes(bid: String) -> Array:
 static func reset() -> void: _nodes.clear()
 # 田名牌（撳佢開資源田卡：開墾／升級／派鬼）：放喺近路嗰邊、田前面
 static func sign_pos(bid: String) -> Vector2:
+	if ZD.on() and ZD.field_def(bid).has("sign"): return ZD.v2(ZD.field_def(bid).sign)   # [zone]
 	var c = anchor(bid)
 	return Vector2(c.x + (50.0 if c.x < 195 else -50.0), c.y + 56.0)
 
@@ -123,7 +136,7 @@ static func ripe(bid: String, i: int) -> bool: return hp(bid, i) > 0
 static func grow(bid: String, i: int) -> float:
 	if ripe(bid, i): return 1.0
 	return clampf(1.0 - J.num(st(bid).rg[i]) / REGROW, 0.0, 1.0)
-static func usable(bid: String) -> bool: return CE.unlocked(bid)
+static func usable(bid: String) -> bool: return CE.unlocked(bid) and (not ZD.on() or ZD.bid_ok(bid))   # [zone] 資源區要先攻佔
 
 # 舊存檔遷移：已起嘅拓展採集建築（S.bld[bid]）＝ 資源田等級，鬼（post = bid）照留；只補資源點狀態
 static func migrate(s: Dictionary) -> void:

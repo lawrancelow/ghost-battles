@@ -15,6 +15,7 @@ const M = preload("res://game/outpost/mat.gd")
 const CE = preload("res://game/outpost/chain_eco.gd")
 const VF = preload("res://game/village_fence.gd")   # [village2]
 const CF = preload("res://game/outpost/chain_field.gd")   # [village2] 一級資源田（資源點）
+const ZD = preload("res://game/zone/zone_data.gd")   # [zone] 分區地圖
 const OLD_WH := 1130.0
 const FENCE_Y := 1168.0
 const ROW0 := 1290.0
@@ -146,6 +147,7 @@ static func workers(bid: String) -> Array:
 # ---------------- 動作 ----------------
 static func build(bid: String) -> bool:
 	if not is_new(bid) or lv(bid) > 0 or not unlocked(bid): return false
+	if ZD.on() and not ZD.bid_ok(bid): return false   # [zone] 資源區未佔領／加工廠嘅資源田未夠級
 	if not pay(build_cost(bid)): return false
 	S().bld[bid] = 1.0
 	_gain(15.0)
@@ -234,7 +236,9 @@ static func card_desc(bid: String) -> String:
 		o.append(L("一定要派鬼先有產出；每隻鬼嘅產能睇佢嘅「%s」（30 點 = 1 份）", "必須派鬼才有產出；每隻鬼的產能看牠的「%s」（30 點 = 1 份）") % [["力", "智", "武"][CE.stat_i(bid)]])   # 老闆定案
 	else:
 		var u = need_ci(bid)
-		if not unlocked(bid): o.append("[color=#c2362b]" + L("村子去到 %s（第 %d 張圖）先起得", "村子抵達 %s（第 %d 張地圖）才能建造") % [map_name(u), u + 1] + "[/color]")
+		var zl = zone_lock(bid)   # [zone]
+		if zl != "": o.append("[color=#c2362b]" + zl + "[/color]")
+		elif not unlocked(bid): o.append("[color=#c2362b]" + L("村子去到 %s（第 %d 張圖）先起得", "村子抵達 %s（第 %d 張地圖）才能建造") % [map_name(u), u + 1] + "[/color]")
 		elif CF.is_field(bid): o.append(L("「開墾」之後先派得鬼自動採，等級越高崗位越多。", "「開墾」之後才能派鬼自動採，等級越高崗位越多。"))
 		else: o.append(L("起好之後派鬼嚟做，等級越高崗位越多。", "建好後派鬼來做，等級越高崗位越多。"))
 	if CF.is_field(bid):   # [village2] 資源田：親手採永遠得
@@ -242,6 +246,15 @@ static func card_desc(bid: String) -> String:
 	var users = _users(main_out(bid))
 	if users != "": o.append(L("用途：%s", "用途：%s") % users)
 	return "\n".join(o)
+# [zone] 分區地圖嘅鎖（"" = 冇鎖）：資源區未佔領／加工廠要資源田升級
+static func zone_lock(bid: String) -> String:
+	if not ZD.on(): return ""
+	var zid = ZD.bid_zone(bid)
+	if zid == "": return ""
+	if not ZD.owned(zid): return L("要先攻佔「%s」", "要先攻佔「%s」") % ZD.T(ZD.zone(zid).n)
+	var rq = ZD.shop_req(bid)
+	if not rq[0]: return L("要「%s」升到 Lv%d 先起得（只可以起喺呢區）", "要「%s」升到 Lv%d 才能建（只能建在這區）") % [bname(rq[1]), rq[2]]
+	return ""
 # 呢樣料俾邊個用（後院加工／移動村台）
 static func _users(mid: String) -> String:
 	if mid == "": return ""
@@ -285,7 +298,7 @@ static func card(bid: String) -> Dictionary:
 	var o = {"id": bid, "name": bname(bid), "flavor": T(d.get("how", "")), "desc": card_desc(bid), "lv": float(l), "house": float(house())}
 	if l <= 0:
 		var c = build_cost(bid)
-		o["unlocked"] = unlocked(bid); o["cost"] = cost_bb(c); o["canBuild"] = unlocked(bid) and can_pay(c)
+		o["unlocked"] = unlocked(bid) and zone_lock(bid) == ""; o["cost"] = cost_bb(c); o["canBuild"] = o.unlocked and can_pay(c)   # [zone]
 		if CF.is_field(bid): o["buildLbl"] = L("開墾", "開墾")   # [village2]
 		return o
 	o["effect"] = ""
@@ -329,6 +342,10 @@ static func reg_posts() -> void:
 # ---------------- 後院擺位 ----------------
 # 後院顯示嘅拓展建築：已起、已解鎖、或者下一張圖就解鎖（預告）
 static func shown() -> Array:
+	if ZD.on():   # [zone] 分區地圖：只顯示呢張圖各資源區嘅資源田＋加工廠
+		var zo = []
+		for b in ZD.zone_bids(): if b in new_blds(): zo.append(b)
+		return zo
 	var f = frontier(); var o = []
 	for b in new_blds():
 		if lv(b) > 0 or need_ci(b) <= f + 1: o.append(b)
@@ -339,6 +356,7 @@ static func pos(bid: String) -> Vector2:
 	if CF.is_field(bid): return CF.sign_pos(bid)
 	return CF.anchor(bid)
 static func world_h() -> float:
+	if ZD.on(): return ZD.world_size().y   # [zone]
 	var sh = shown()
 	if sh.is_empty(): return OLD_WH
 	var m = 0.0

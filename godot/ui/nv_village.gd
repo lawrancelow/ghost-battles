@@ -9,6 +9,10 @@ const WH := 1130.0
 const CB = preload("res://game/outpost/chain_bld.gd")   # 後院拓展建築（生產鏈）
 const VS = preload("res://game/village_style.gd")   # [villageart] 新畫風：血霧／夜色／調色
 const VF = preload("res://game/village_fence.gd")   # [village2] 出村門樓左右柵欄
+const ZD = preload("res://game/zone/zone_data.gd")   # [zone] 分區地圖
+const ZV = preload("res://game/zone/zone_view.gd")   # [zone]
+const ZCAM = preload("res://game/zone/zone_cam.gd")   # [zone]
+const ZW = preload("res://game/zone/zone_walk.gd")   # [zone]
 
 var V: Dictionary
 var world: Node2D
@@ -28,6 +32,11 @@ var ground_rec = null
 var ground_tex: Texture2D
 var t := 0.0
 var cam_y := 0.0
+var cam_x := 0.0             # [zone] 分區地圖：鏡頭左邊（舊豎條永遠 0）
+var zc = null                # [zone] 分區地圖鏡頭（game/zone/zone_cam.gd）
+var zone := false            # [zone] 今格係咪分區地圖
+var zone_under: PtDraw       # [zone] 區牆、門、野外擺設
+var zone_over: PtDraw        # [zone] 黑霧、鎖、區名牌、王
 var sc := 1.0
 var shx := 0.0
 var shy := 0.0
@@ -47,8 +56,12 @@ func _build() -> void:
 	ground = PtDraw.new(); ground.tag = "ground"; ground.fn = _draw_ground; world.add_child(ground)
 	ext_ground = PtDraw.new(); ext_ground.tag = "extground"; ext_ground.fn = _draw_ext_ground; world.add_child(ext_ground)
 	lily = PtDraw.new(); lily.tag = "lily"; lily.fn = _draw_lily; world.add_child(lily)
+	zone_under = PtDraw.new(); zone_under.tag = "zunder"; world.add_child(zone_under)   # [zone]
+	zone_under.fn = func(c): ZV.draw_under(c, self)
 	ysort = Node2D.new(); ysort.y_sort_enabled = true; world.add_child(ysort)
 	mist = PtDraw.new(); mist.tag = "mist"; mist.fn = _draw_mist; world.add_child(mist)
+	zone_over = PtDraw.new(); zone_over.tag = "zover"; world.add_child(zone_over)   # [zone]
+	zone_over.fn = func(c): ZV.draw_over(c, self)
 	top_fx = PtDraw.new(); top_fx.tag = "topfx"; top_fx.fn = _draw_top_fx; world.add_child(top_fx)
 	top_ui = PtDraw.new(); top_ui.tag = "topui"; top_ui.fn = _draw_top_ui; world.add_child(top_ui)
 	rec_ctx = Ctx.new(Recorder.new())
@@ -67,26 +80,34 @@ func _process(_dt: float) -> void:
 	if el == null or not visible or not is_visible_in_tree(): return
 	V = J.G.get("Village")
 	if V == null: return
+	ZD.apply()   # [zone] 有 zones.json 定義嘅圖：村子座標換做分區地圖（冇就還原舊豎條）
+	zone = ZD.on()
 	CB.install()
 	var yb = CB.yard_on and J.t(J.G.S.get("mv_on"))
 	if yard_back.visible != yb: yard_back.visible = yb
 	var t0 = Time.get_ticks_usec()
-	sc = size.x / W
-	# JS 嘅點擊座標／鏡頭夾限靠 Village.scale、Village.h：尺寸變咗就叫佢 resize 對齊
-	if absf(J.num(V.get("scale", 0.0)) - sc) > 0.0005 or absf(J.num(V.get("h", 0.0)) - size.y) > 0.5: 
-		V["scale"] = sc; V["w"] = size.x; V["h"] = size.y; J.mc(V, "setCam", [J.num(V.get("camY", 0.0))])
+	if zone: _zone_cam_frame(_dt)   # [zone] 2D 鏡頭（上下左右＋縮放）
+	else:
+		cam_x = 0.0
+		sc = size.x / W
+		# JS 嘅點擊座標／鏡頭夾限靠 Village.scale、Village.h：尺寸變咗就叫佢 resize 對齊
+		if absf(J.num(V.get("scale", 0.0)) - sc) > 0.0005 or absf(J.num(V.get("h", 0.0)) - size.y) > 0.5: 
+			V["scale"] = sc; V["w"] = size.x; V["h"] = size.y; J.mc(V, "setCam", [J.num(V.get("camY", 0.0))])
 	t = J.num(V.get("t", 0.0)); cam_y = J.num(V.get("camY", 0.0))
 	var sk = J.num(V.get("shk", 0.0))
 	shx = (randf() - 0.5) * sk if sk > 0 else 0.0; shy = (randf() - 0.5) * sk if sk > 0 else 0.0
-	world.transform = Transform2D(Vector2(sc, 0), Vector2(0, sc), Vector2(shx * sc, (shy - cam_y) * sc))
+	world.transform = Transform2D(Vector2(sc, 0), Vector2(0, sc), Vector2((shx - cam_x) * sc, (shy - cam_y) * sc))
+	ext_ground.visible = not zone; zone_under.visible = zone; zone_over.visible = zone
 	_sync_statics()
 	var t1 = Time.get_ticks_usec()
 	_sync_dynamic()
 	var t2 = Time.get_ticks_usec()
 	if ground_tex == null: ground.queue_redraw()
+	if zone != _zone_was: _zone_was = zone; ground.queue_redraw(); lily.queue_redraw()   # [zone] 換模式：地面重畫
 	var ewh = CB.world_h()
 	if ewh != _ext_h: _ext_h = ewh; ext_ground.queue_redraw()
 	lily.queue_redraw(); mist.queue_redraw(); top_fx.queue_redraw(); top_ui.queue_redraw()
+	if zone: zone_under.queue_redraw(); zone_over.queue_redraw()
 	if OS.has_environment("GB_PROF"):
 		prof["static"] = prof.get("static", 0) + t1 - t0; prof["dyn"] = prof.get("dyn", 0) + t2 - t1; prof_n += 1
 		if prof_n >= 30:
@@ -101,7 +122,68 @@ func _process(_dt: float) -> void:
 func _draw() -> void: pass
 
 func view_rect() -> Rect2:
-	return Rect2(0, cam_y, W, size.y / sc)
+	return Rect2(cam_x, cam_y, size.x / sc if zone else W, size.y / sc)
+
+# ================= [zone] 分區地圖鏡頭 =================
+func _zone_em():
+	var m = get_tree().root.get_node_or_null("Main") if is_inside_tree() else null
+	return m.get("mv_embed") if m != null else null
+func _zone_top_px() -> float:   # 大排檔 HUD 蓋住嘅畫面高度（鏡頭頂可以拉過界咁多）
+	var em = _zone_em()
+	if em == null or em.sc == null: return 0.0
+	return float(em.sc.embed_top) + float(em.sc.EHUD_H) * float(em.sc.k)
+func zone_cam():
+	if zc == null:
+		zc = ZCAM.new()
+		zc.view = size; zc.world = ZD.world_size()
+		var home = ZD.v2(ZD.cur().get("cam", {}).get("home", [zc.world.x / 2, zc.world.y / 2]))
+		zc.z = size.x / 390.0; zc.clamp_all(); zc.center_on(home)
+	return zc
+func _zone_cam_frame(dt: float) -> void:
+	var c = zone_cam()
+	var ws = ZD.world_size()
+	if c.world != ws: c.world = ws; c.clamp_all()
+	if c.view != size and size.x > 0: c.view = size; c.clamp_all()
+	c.top_extra = _zone_top_px() / maxf(0.01, c.z)
+	c.step(minf(dt, 0.1))
+	sc = c.z; cam_x = c.x
+	V["scale"] = sc; V["w"] = size.x; V["h"] = size.y; V["camY"] = c.y
+	_zone_wrap()
+	ZW.install(V)
+# JS 嘅 setCam／focus：分區地圖改郁 2D 鏡頭（任務箭頭、測試、mv_embed 都經呢度）
+func _zone_wrap() -> void:
+	if V.get("__zn_cam_w") != null and is_same(V.get("__zn_cam_w"), V.get("setCam")): return
+	var o_cam = V.get("setCam"); var o_focus = V.get("focus")
+	var me = weakref(self)
+	var VV = V
+	var cam = func(t0, a):
+		var nv = me.get_ref()
+		if nv != null and nv.zone and nv.zc != null:
+			nv.zc.y = J.num(J.arg(a, 0)); nv.zc.tgt = null; nv.zc.clamp_all(); VV["camY"] = nv.zc.y
+			return null
+		return J.cl(o_cam, t0, a)
+	var foc = func(t0, a):
+		var nv = me.get_ref()
+		if nv != null and nv.zone and nv.zc != null:
+			nv.zc.center_on(Vector2(J.num(J.arg(a, 0)), J.num(J.arg(a, 1)))); VV["camY"] = nv.zc.y
+			return null
+		return J.cl(o_focus, t0, a)
+	V["setCam"] = cam; V["__zn_cam_w"] = cam; V["focus"] = foc
+func zone_s2w(p: Vector2) -> Vector2: return zone_cam().s2w(p)
+func zone_w2s(p: Vector2) -> Vector2: return zone_cam().w2s(p)
+# 撳一下（畫面座標）：HUD → 公告板 → 區（攻佔／王）→ 大排檔／野外 → 村子（JS Village.tap）
+func zone_tap(p: Vector2) -> void:
+	var m = get_tree().root.get_node_or_null("Main")
+	var em = _zone_em()
+	if em != null and em.zone_hud_tap(p): return
+	var w = zone_s2w(p)
+	var hit = extra_hit(p)
+	if hit != "": _extra_tap(hit); return
+	if ZV.tap(m, w): return
+	var zid = ZD.zone_at(w)
+	var tp = str(ZD.zone(zid).get("type", "")) if zid != "" else ""
+	if (tp == "market" or tp == "wild") and em != null: em.zone_world_tap(w); return
+	J.mc(V, "tap", [w.x, w.y])
 
 # ---------------- 靜態物件：原生 Art 畫，狀態冇變唔重畫 ----------------
 func _static(key: String, y: float, sig, animated: bool, fn: Callable) -> void:
@@ -151,7 +233,7 @@ func _sync_statics() -> void:
 			var nm = J.str(BUILDINGS[id].name)
 			_static("b_" + id, p[1], "site", false, func(ctx): Art.draw_site(ctx, p[0], p[1], nm))
 	# 原生新增：任務公告板（撳落去開任務面板）、投胎辦事處
-	for e in EXTRA:
+	for e in extras():
 		var ek: String = e[0]; var ex: float = e[1]; var ey: float = e[2]; var ew: float = e[3]
 		_static("x_" + ek, ey, QX.has_new() if ek == "vil_board" else 0, true, func(ctx): _extra(ctx, ek, ex, ey, ew))
 	_sync_chain()
@@ -231,7 +313,23 @@ func _sync_dynamic() -> void:
 		if segs[i].visible: segs[i].visible = false
 
 # ---------------- 地面、彼岸花、霧 ----------------
+var _zone_was := false
+var _zg_tex := {}   # [zone] 分區地面圖（上下兩半）
+func _zone_ground(c: CanvasItem) -> void:
+	var m = ZD.cur(); var key = str(m.get("ground", ""))
+	var W2 = float(m.w); var H2 = float(m.h)
+	if not _zg_tex.has(key):
+		var a = "res://assets/img/%s_a.webp" % key; var b = "res://assets/img/%s_b.webp" % key
+		_zg_tex[key] = [load(a), load(b)] if ResourceLoader.exists(a) and ResourceLoader.exists(b) else []
+	var tx = _zg_tex[key]
+	if tx.size() == 2:
+		c.draw_texture_rect(tx[0], Rect2(0, 0, W2, H2 / 2.0), false); c.draw_texture_rect(tx[1], Rect2(0, H2 / 2.0, W2, H2 / 2.0), false)
+		return
+	c.draw_rect(Rect2(0, 0, W2, H2), Color("#0c0812"))   # 後備：未烘地面圖
+	for z in ZD.zones(): c.draw_rect(ZD.rect(z.rect), Color("#3a2a20"))
+	for rd in m.get("roads", []): c.draw_rect(ZD.rect(rd), Color("#2b2729"))
 func _draw_ground(c: CanvasItem) -> void:
+	if zone: _zone_ground(c); return   # [zone]
 	# 地面係固定種子畫出嚟嘅，預先烘好做圖（唔使開機重播萬幾筆、唔使 SubViewport 拍照）
 	if ground_tex == null and ResourceLoader.exists("res://assets/img/village_ground.webp"): ground_tex = load("res://assets/img/village_ground.webp")
 	if ground_tex == null:
@@ -247,6 +345,14 @@ func _draw_ground(c: CanvasItem) -> void:
 
 func _draw_lily(c: CanvasItem) -> void:
 	var ctx = Ctx.new(c)
+	if zone:   # [zone] 彼岸花：開喺野外區同大排檔邊
+		var vr = view_rect().grow(20)
+		for z in ZD.of_type("wild"):
+			var r = ZD.rect(z.rect)
+			for i in 7:
+				var p = Vector2(r.position.x + 20 + fmod(i * 67.0, r.size.x - 40), r.position.y + 120 + fmod(i * 53.0, r.size.y - 150))
+				if vr.has_point(p): Art.draw_lily(ctx, p.x, p.y, t + i)
+		return
 	for i in 9:
 		var fx = fmod(i * 47 + 20, W); var fy = 24 + fmod(i * 31, 112)
 		if absf(fy - VF.Y) < 22 and not VF.in_gap(fx): continue   # [village2] 柵欄位唔種花（唔好疊住柵欄）
@@ -254,8 +360,10 @@ func _draw_lily(c: CanvasItem) -> void:
 
 func _draw_mist(c: CanvasItem) -> void:
 	PtGfx.init()
-	for i in 6:
-		var mx = fmod(t * 8 + i * 90, W + 200) - 100; var my = 160 + i * 170
+	var WW = W; var nm = 6
+	if zone: WW = ZD.world_size().x; nm = int(ZD.world_size().y / 170.0)   # [zone]
+	for i in nm:
+		var mx = fmod(t * 8 + i * 90 * WW / W, WW + 200) - 100; var my = 160 + i * 170
 		if my < cam_y - 100 or my > cam_y + size.y / sc + 100: continue
 		c.draw_texture_rect(PtGfx.RAD, Rect2(mx - 90, my - 90, 180, 180), false, Color(200 / 255.0, 210 / 255.0, 200 / 255.0, 0.06))
 
@@ -310,7 +418,8 @@ func _bubble(c: CanvasItem, fnt: Font, text: String, bt: float, vx: float, vy: f
 	var w = 0.0
 	for l in lines: w = maxf(w, fnt.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, int(fs)).x)
 	w += 16; var h = lines.size() * 17 + 10
-	var bx = clampf(vx - w / 2, 6, W - w - 6); var by = vy - 62 - h
+	var vr = view_rect()   # [zone] 夾喺畫面內（舊豎條：0..W）
+	var bx = clampf(vx - w / 2, vr.position.x + 6, vr.end.x - w - 6); var by = vy - 62 - h
 	var paper = Color("#ecd9a4", a); var line = Color("#5a4030", a)
 	var sb = StyleBoxFlat.new(); sb.bg_color = paper; sb.border_color = line; sb.set_border_width_all(1); sb.set_corner_radius_all(4); sb.anti_aliasing = true
 	c.draw_style_box(sb, Rect2(bx, by, w, h))
@@ -372,7 +481,14 @@ func _decor(ctx: Ctx, kind: String, x: float, y: float) -> void:
 	Art.draw_decor(ctx, kind, x, y, t)
 
 const EXTRA := [["vil_board", 56.0, 268.0, 74.0], ["vil_rebirth", 62.0, 1116.0, 84.0]]
+func extras() -> Array:   # [zone] 分區地圖：公告板／投胎辦事處搬去 zones.json 嘅位
+	if zone:
+		var o = []
+		for e in ZD.cur().village.get("EXTRA", []): o.append([str(e[0]), float(e[1]), float(e[2]), float(e[3])])
+		return o
+	return EXTRA
 func _decor_hidden(x: float, y: float) -> bool:
+	if zone: return false
 	return absf(x - 20) < 1 and absf(y - 1060) < 1   # 投胎辦事處位置原本有棵蕉樹
 
 func _extra(ctx: Ctx, k: String, x: float, y: float, w: float) -> void:
@@ -390,25 +506,31 @@ func _extra(ctx: Ctx, k: String, x: float, y: float, w: float) -> void:
 	c.draw_set_transform_matrix(Transform2D.IDENTITY)
 
 func extra_hit(p: Vector2) -> String:
-	var wp = Vector2(p.x / sc, p.y / sc + cam_y)
-	for e in EXTRA:
+	var wp = Vector2(p.x / sc + cam_x, p.y / sc + cam_y)
+	for e in extras():
 		var im = PtGfx.tex(e[0]); if im == null: continue
 		var w: float = e[3]; var h = w * im.get_height() / im.get_width()
 		if Rect2(e[1] - w / 2, e[2] - h, w, h).has_point(wp): return e[0]
 	return ""
 
 func _gui_input(ev: InputEvent) -> void:
+	if zone and zc != null:   # [zone] 分區地圖：鏡頭自己處理（拖動／兩指縮放／慣性），撳先分派
+		var r = zc.handle(ev)
+		if r.has("tap"): zone_tap(r.tap)
+		accept_event(); return
 	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
 		if ev.pressed: _down_p = ev.position
 		elif ev.position.distance_to(_down_p) < 10:
 			var hit = extra_hit(ev.position)
-			if hit == "vil_board": QX.open("main"); Snd.play("paper"); accept_event(); return
-			if hit == "vil_rebirth":
-				var zh = DB.lang != "yue"
-				var lines = [["投胎辦事處：今日輪候人數「好多」。請先拎籌。", "投胎辦事處：今日輪候人數「很多」。請先取號。"], ["投胎辦事處：第二志願「做貓」已經額滿。", "投胎辦事處：第二志願「做貓」已經額滿。"], ["投胎辦事處：在職員工唔可以投胎，請先辭職。", "投胎辦事處：在職員工不能投胎，請先辭職。"], ["投胎辦事處：午飯時間，請兩小時後再嚟。而家係凌晨三點。", "投胎辦事處：午飯時間，請兩小時後再來。現在是凌晨三點。"]]
-				var l = lines[randi() % lines.size()]
-				J.mc(J.G.get("Fx"), "toast", [l[1] if zh else l[0]]); Snd.play("paper"); accept_event(); return
+			if hit != "": _extra_tap(hit); accept_event(); return
 	super._gui_input(ev)
+func _extra_tap(hit: String) -> void:
+	if hit == "vil_board": QX.open("main"); Snd.play("paper"); return
+	if hit == "vil_rebirth":
+		var zh = DB.lang != "yue"
+		var lines = [["投胎辦事處：今日輪候人數「好多」。請先拎籌。", "投胎辦事處：今日輪候人數「很多」。請先取號。"], ["投胎辦事處：第二志願「做貓」已經額滿。", "投胎辦事處：第二志願「做貓」已經額滿。"], ["投胎辦事處：在職員工唔可以投胎，請先辭職。", "投胎辦事處：在職員工不能投胎，請先辭職。"], ["投胎辦事處：午飯時間，請兩小時後再嚟。而家係凌晨三點。", "投胎辦事處：午飯時間，請兩小時後再來。現在是凌晨三點。"]]
+		var l = lines[randi() % lines.size()]
+		J.mc(J.G.get("Fx"), "toast", [l[1] if zh else l[0]]); Snd.play("paper")
 var _down_p := Vector2.ZERO
 
 func _furnace_glow(c: CanvasItem, x: float, y: float) -> void:
@@ -611,4 +733,6 @@ func _site(ctx: Ctx, bid: String, x: float, y: float, un: bool) -> void:
 	ctx.fillStyle = "#2b1d12"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(nm, x, y - 46.5)
 	ctx.globalAlpha = 1
 	var sub = CB.L("待建", "待建") if un else CB.L("第 %d 張圖", "第 %d 張地圖") % (CB.need_ci(bid) + 1)
+	var zl = CB.zone_lock(bid)   # [zone] 加工廠未夠條件
+	if zl != "": sub = CB.L("未解鎖", "未解鎖")
 	_txt(ctx, sub, x, y - 18, "#ff9a7a" if un else "#c8bca8")

@@ -135,8 +135,8 @@ static func start_ev(P, sim, k: String) -> bool:
 		"parcel": e["pos"] = sim.L.counter + Vector2(70.0, 6.0)
 		"special":
 			var sp = P.map_d(sim.ci()).get("special", {})
-			e["g"] = _spec_good(P, sim); e["x"] = FW_ + 40.0
-			e["pos"] = Vector2(clampf(sim.L.counter.x + 180.0, 220.0, 340.0), sim.L.counter.y + 70.0)
+			e["g"] = _spec_good(P, sim); e["x"] = minf(sim.ww(), sim.L.counter.x + 420.0) + (40.0 if sim.ww() <= FW_ else 0.0)   # [zone]
+			e["pos"] = Vector2(clampf(sim.L.counter.x + 180.0, 220.0, sim.ww() - 50.0), sim.L.counter.y + 70.0)
 			e["n"] = int(sp.get("group", 1))
 	P.live.ev = e
 	sim.ev.append({"k": "p_ev", "name": ev_name(P, sim, e), "tap": ev_tap(P, sim, e), "pos": e.get("pos", sim.L.counter + Vector2(0, -120)), "kind": k})

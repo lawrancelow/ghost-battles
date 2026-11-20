@@ -1035,7 +1035,7 @@
    "out": "m_straw",
    "rate": 30,
    "unlock": {
-    "ci": 2,
+    "ci": 0,
     "cost": {
      "m_plank": 60
     }
@@ -1214,7 +1214,7 @@
    },
    "time": 3,
    "unlock": {
-    "ci": 1,
+    "ci": 0,
     "cost": {
      "m_plank": 40
     }
@@ -1289,7 +1289,7 @@
    },
    "time": 3,
    "unlock": {
-    "ci": 2,
+    "ci": 0,
     "cost": {
      "m_plank": 80
     }

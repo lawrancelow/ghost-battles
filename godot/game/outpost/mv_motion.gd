@@ -12,6 +12,7 @@ extends RefCounted
 const MD = preload("res://game/outpost/mv_data.gd")
 const SIM = preload("res://game/outpost/mv_sim.gd")
 const FW := 390.0
+var ww := 390.0   # [zone] 世界闊（step 每格由 sim 攞）
 const MAXP := 90
 
 # ---------------- 每種鬼嘅行路方式 ----------------
@@ -140,6 +141,7 @@ func ftxt(x: float, y: float, s: String, col: String, life := 1.2, sz := 15) -> 
 	_add({"k": "txt", "x": x, "y": y, "vx": 0.0, "vy": -18.0, "life": life, "s": s, "c": col, "sz": sz})
 
 func step(sc, dt: float) -> void:
+	if sc != null and sc.sim != null: ww = sc.sim.ww()   # [zone]
 	var t0 = Time.get_ticks_usec()
 	for p in parts.duplicate():
 		p.t += dt
@@ -226,7 +228,7 @@ func body(ctx: Ctx, k: String, x: float, y: float, s: float, o: Dictionary, tf: 
 	var fwd = -1.0 if o.get("flip", false) else 1.0
 	var dx = float(tf.get("dx", 0.0)); var dy = float(tf.get("dy", 0.0)); var r = float(tf.get("r", 0.0)) * fwd
 	var sx = float(tf.get("sx", 1.0)); var sy = float(tf.get("sy", 1.0))
-	x = clampf(x + dx, 16.0, FW - 16.0)
+	x = clampf(x + dx, 16.0, ww - 16.0)   # [zone]
 	if tf.has("gs"):   # 跳／飄：影留喺地面
 		o["shadow"] = false
 		var lift = clampf(-dy / 30.0, 0.0, 1.0)
@@ -777,8 +779,8 @@ func _fore_items(sc, ctx: Ctx, items: Array, vy0: float, vy1: float) -> void:
 		var gh = sim.ghost(gid)
 		if gh == null: continue
 		var sp = sim.st_pos(sid)
-		var side = 1.0 if sp.x < 195.0 else -1.0
-		var p = Vector2(clampf(sp.x + side * (sc._st_w() * 0.5 + 6.0), 22.0, FW - 22.0), sp.y + 4.0)
+		var side = 1.0 if sp.x < sim.ww() / 2.0 else -1.0   # [zone]
+		var p = Vector2(clampf(sp.x + side * (sc._st_w() * 0.5 + 6.0), 22.0, sim.ww() - 22.0), sp.y + 4.0)
 		fore_pos[sid] = p; live[sid] = true
 		if not fore_mo.has(sid): fore_mo[sid] = {"k": J.str(J.gp(gh, "k")), "st": "doze", "t": 0.0, "seed": randf() * 10.0, "flip": side > 0}
 		var fm = fore_mo[sid]; fm.k = J.str(J.gp(gh, "k")); fm.flip = side > 0

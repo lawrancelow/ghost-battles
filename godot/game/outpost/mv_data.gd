@@ -143,7 +143,9 @@ static func cost_n(sid: String, lv: float, n: int) -> float:
 const WALK_W := 240.0       # 員工搬貨行路速度（px/秒；鬼係飄嘅）
 const PICK_S := 0.6         # 每轉放貨／攞貨嘅停頓
 static var _LC := {}
+const ZD = preload("res://game/zone/zone_data.gd")   # [zone]
 static func layout(ci: int) -> Dictionary:
+	if ZD.on_for(ci): return ZD.mv_layout(ci)   # [zone] 分區地圖：大排檔 layout 喺 zones.json（同村子同一套世界座標）
 	if _LC.has(ci): return _LC[ci]
 	var L = map_def(ci).get("layout")
 	if not (L is Dictionary): L = _auto_layout(ci)
@@ -201,6 +203,11 @@ static func st_path(ci: int, sid: String) -> PackedVector2Array:
 	if e == null: return o
 	var road = Ly.road; var j = int(Ly.j); var ri = int(e[2]) if e.size() > 2 else j
 	o.append(v2(e) + Vector2(0, 30))
+	var PT = Ly.get("paths")   # [zone] 每個台自己嘅搬貨路
+	if PT is Dictionary and PT.get(sid) is Array:
+		for q in PT[sid]: o.append(v2(q))
+		o.append(drop_xy(ci))
+		return o
 	var step = -1 if ri >= j else 1
 	var i = ri
 	while true:

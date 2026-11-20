@@ -249,12 +249,18 @@ func _mk_rt(sim, d: Dictionary, from: Vector2) -> Dictionary:
 	return rt
 func _path_to_fence(sim, from: Vector2) -> PackedVector2Array:
 	var o = PackedVector2Array(); o.append(from)
+	if sim.L.get("vol_mid") is Array:   # [zone] 分區地圖：經大排檔中間路上野外門
+		for q in sim.L.vol_mid: if float(q[1]) < from.y: o.append(MD.v2(q))
+		return o
 	var rd = sim.L.get("road", []); var j = int(MD.layout(sim.ci()).get("j", 2))
 	for i in range(j, rd.size()):
 		if rd[i].y < from.y: o.append(rd[i])
 	o.append(Vector2(195, float(sim.L.fence_y) + 62.0))
 	return o
-func vol_home(sim, i: int) -> Vector2: return Vector2(36.0 + 45.0 * (i % VOL_MAX), float(sim.L.fence_y) + 62.0 + (8.0 if i % 2 else 0.0))
+func vol_home(sim, i: int) -> Vector2:
+	var vs = sim.L.get("vol_slots")
+	if vs is Array and vs.size(): return MD.v2(vs[i % vs.size()])   # [zone] 兩道野外門兩邊
+	return Vector2(36.0 + 45.0 * (i % VOL_MAX), float(sim.L.fence_y) + 62.0 + (8.0 if i % 2 else 0.0))
 
 func reset_live() -> void:
 	vols.clear(); wave = null; _warned = false
@@ -312,7 +318,7 @@ func _step_wave(sim, w: Dictionary, dt: float) -> void:
 			wave.qt = 0.7
 			_spawn_wave_foe(sim, wave.q.pop_front())
 	for f in wave.foes:
-		if f.st == "roam": f.st = "charge"; f.tgt = Vector2(clampf(f.pos.x, 24, FW - 24), sim.L.fence_y - 8.0); f.t = 0.0
+		if f.st == "roam": f.st = "charge"; f.tgt = sim.fence_tgt(f.pos.x); f.t = 0.0   # [zone] 野外門／柵欄
 	var alive = 0
 	for f in wave.foes: if f.st != "die" and f.st != "flee" and sim.foes.has(f): alive += 1
 	if wave.q.is_empty() and alive == 0: _end_wave(sim, w, true)
@@ -333,7 +339,7 @@ func _spawn_wave_foe(sim, boss: bool) -> void:
 	var ks = MD.map_def(ci).get("fence_foes", ["youhun"])
 	if boss and ks is Array and ks.size(): f.k = str(ks[ks.size() - 1])
 	f.hp = hp; f.mx = hp; f.st = "charge"; f.t = 0.0; f["wave"] = true
-	f.tgt = Vector2(clampf(_rng.randf_range(40, FW - 40), 24, FW - 24), sim.L.fence_y - 8.0)
+	f.tgt = sim.fence_tgt(_rng.randf_range(40, sim.ww() - 40))   # [zone]
 	if boss: f["boss"] = true; wave.boss = f
 	wave.foes.append(f)
 func _end_wave(sim, w: Dictionary, won: bool) -> void:
@@ -355,9 +361,9 @@ func _end_wave(sim, w: Dictionary, won: bool) -> void:
 func _step_flee(sim, dt: float) -> void:
 	for f in sim.foes.duplicate():
 		if f.st != "flee": continue
-		f.pos += Vector2(0, -80.0 * dt) + Vector2(-60.0 if f.pos.x < 195 else 60.0, 0) * dt
+		f.pos += Vector2(0, -80.0 * dt) + Vector2(-60.0 if f.pos.x < sim.ww() / 2.0 else 60.0, 0) * dt
 		f["walk"] = true
-		if f.pos.y < 20.0 or f.pos.x < -40.0 or f.pos.x > FW + 40.0: sim.foes.erase(f)
+		if f.pos.y < 20.0 or f.pos.x < -40.0 or f.pos.x > sim.ww() + 40.0: sim.foes.erase(f)
 
 # ---------------- 義勇軍 ----------------
 func _near_fence(sim, f) -> bool: return f.st != "die" and f.st != "flee" and f.pos.y >= sim.L.fence_y - 90.0
@@ -396,7 +402,7 @@ func _step_vols(sim, dt: float) -> void:
 					continue
 				r.st = "fight"
 				var side = -1.0 if (int(r.slot) % 2 == 0) else 1.0
-				var want = Vector2(clampf(tgt.pos.x + side * (18.0 + 6.0 * (int(r.slot) % 3)), 16, FW - 16), fy + 24.0 + (int(r.slot) % 2) * 8.0)
+				var want = Vector2(clampf(tgt.pos.x + side * (18.0 + 6.0 * (int(r.slot) % 3)), 16, sim.ww() - 16), fy + 24.0 + (int(r.slot) % 2) * 8.0)   # [zone]
 				r.walk = not _mv(r, want, dt, 110.0)
 				if absf(tgt.pos.x - r.pos.x) < 40.0 and absf(r.pos.y - want.y) < 6.0:
 					r.flip = tgt.pos.x < r.pos.x
@@ -695,7 +701,7 @@ func _draw_occ(sc, ctx, sim, sid: String) -> void:
 	var s1 = T("war_occ_tag", "畀孤魂霸咗", "被孤魂霸佔"); var s2 = T("war_occ_tag2", "出征打贏先復工", "出征打贏才復工")
 	ctx.font = "900 15px sans-serif"; var tw = maxf(ctx.measureText(s1).width, 0.0)
 	ctx.font = "900 14px sans-serif"; tw = maxf(tw, ctx.measureText(s2).width) + 16.0
-	var bx = clampf(p.x - tw / 2.0, 4.0, FW - tw - 4.0); var y = p.y + 74.0   # 名牌＋Lv 下面
+	var bx = clampf(p.x - tw / 2.0, sc.vx0() + 4.0, sc.vx1() - tw - 4.0); var y = p.y + 74.0   # 名牌＋Lv 下面（[zone] 夾喺可見範圍）
 	Art.rr(ctx, bx, y, tw, 42, 7, "rgba(60,10,8,.88)", "#ff8a7a", 1.5)
 	sc._txt(ctx, s1, bx + tw / 2.0, y + 13, 15, Color("#ffd8c8"), "center", 900, 0)
 	sc._txt(ctx, s2, bx + tw / 2.0, y + 30, 14, Color("#ffd27a"), "center", 900, 0)

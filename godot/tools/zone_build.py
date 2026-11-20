@@ -1,0 +1,94 @@
+# -*- coding: utf-8 -*-
+"""產生 godot/data/nat/zones.json（分區地圖：第 1 關 v3 定稿布局，座標以 /home/claude/ctx/layout3.py 為準）。
+用法：python3 tools/zone_build.py [out]
+格式（每張圖 maps["<ci>"]；冇定義嘅圖照用舊豎條布局）：
+  w,h：世界大細；ground：預烘地面圖鍵（assets/img/<key>_a.webp/_b.webp，上下兩半）
+  zones：[{id,type(wild|market|village|res),rect[x0,y0,x1,y1],n[粵,中],col,...}]
+    res：door{rect,in,out}、power（建議戰力）、loss（自動攻佔折損陰兵比例）、fields{bid:{nodes,sign}}、shops{bid:{pos,need{bid:lv}}}、stage（親自出征戰鬥）
+    wild：gate{x,w}、bosses[{id,n,stage 或 chapter[ci,si]，main}]、boss_at、decor
+  roads：石板路矩形；walls 由 zones 自動計（門洞留空）
+  village：POS／TREE_POS／PADDY_POS／DECOR／EXTRA／spots（打工鬼企位）／plaza（廣場鬼活動範圍）／fence（出村門柵欄）
+  market：mv_data.layout 格式（counter/serve/road/j/st/q2/fence_y）＋ paths（每台搬貨路）、gates、guard_slots、vol_slots、vol_mid、porter
+"""
+import json, os, sys
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "data", "nat", "zones.json")
+
+def P(*a): return [list(x) for x in a]
+
+M0 = {
+  "w": 1340, "h": 2410, "ground": "zone1_ground",
+  "cam": {"home": [670, 1420], "zoom": 1.0},
+  "zones": [
+    {"id": "w_graves", "type": "wild", "rect": [230, 0, 660, 420], "n": ["野外區　亂葬崗", "野外區　亂葬崗"], "col": "#8a1c24",
+     "gate": {"x": 445, "w": 60}, "boss_at": [445, 270],
+     "bosses": [
+       {"id": "zb_paper", "n": ["紙人偶頭目", "紙人偶頭目"], "art": "zhiren", "stage": {"en": ["zhiren", "zhiren", "zhiren"], "boss": "zhiren", "p": 2}},
+       {"id": "zb_keeper", "n": ["亂葬崗守墓鬼", "亂葬崗守墓鬼"], "art": "zombie", "borrow": True, "stage": {"en": ["youhun", "zombie", "youhun"], "boss": "zombie", "p": 3}}],
+     "decor": [["tree_bare", 320, 300, 70], ["tree_bare", 430, 200, 70], ["tree_bare", 560, 320, 70], ["tree_bare", 610, 180, 70],
+               ["grave", 290, 380, 0], ["grave", 360, 150, 0], ["grave", 520, 390, 0], ["grave", 600, 260, 0]]},
+    {"id": "w_pit", "type": "wild", "rect": [680, 0, 1110, 420], "n": ["野外區　餓鬼坑", "野外區　餓鬼坑"], "col": "#8a1c24",
+     "gate": {"x": 895, "w": 60}, "boss_at": [900, 262], "pit": [900, 250, 80, 50],
+     "bosses": [
+       {"id": "zb_egui", "n": ["餓鬼頭目", "餓鬼頭目"], "art": "egui", "stage": {"en": ["egui", "egui", "egui"], "boss": "egui", "p": 2}},
+       {"id": "zb_eguiking", "n": ["餓鬼王", "餓鬼王"], "art": "eguiking", "main": True, "chapter": [0, 2]}],
+     "decor": [["tree_bare", 740, 300, 70], ["tree_bare", 1060, 260, 70], ["tree_bare", 760, 160, 64]]},
+    {"id": "market", "type": "market", "rect": [230, 440, 1110, 1080], "n": ["開放區　陰間大排檔", "開放區　陰間大排檔"], "col": "#a8602a"},
+    {"id": "village", "type": "village", "rect": [230, 1160, 1110, 1984], "n": ["中央村", "中央村"], "col": "#a8602a"},
+    {"id": "A", "type": "res", "rect": [0, 1160, 220, 1984], "n": ["資源區 A　後山竹林", "資源區 A　後山竹林"], "col": "#3a5a32",
+     "door": {"rect": [215, 1545, 240, 1607], "in": [262, 1576], "out": [196, 1576]}, "power": 300, "loss": 0.3,
+     "fields": {"b_bamboo": {"nodes": P((60, 1360), (150, 1350), (95, 1430), (175, 1440)), "sign": [110, 1500]}},
+     "shops": {"b_strip": {"pos": [110, 1700], "need": {"b_bamboo": 3}}},
+     "stage": {"en": ["youhun", "youhun", "youhun"], "boss": "youhun", "p": 1.5}},
+    {"id": "B", "type": "res", "rect": [1120, 1160, 1340, 1984], "n": ["資源區 B　枯井巷", "資源區 B　枯井巷"], "col": "#2a4a5a",
+     "door": {"rect": [1100, 1545, 1125, 1607], "in": [1078, 1576], "out": [1144, 1576]}, "power": 600, "loss": 0.3,
+     "fields": {"b_well": {"nodes": P((1185, 1350), (1280, 1360), (1230, 1440)), "sign": [1230, 1500]}},
+     "shops": {"b_paper": {"pos": [1230, 1700], "need": {"b_well": 3}}},
+     "stage": {"en": ["egui", "youhun", "egui"], "boss": "egui", "p": 2.5}},
+    {"id": "C", "type": "res", "rect": [450, 2004, 890, 2404], "n": ["資源區 C　荒田禾稈場", "資源區 C　荒田禾稈場"], "col": "#6a5a2a",
+     "door": {"rect": [640, 1976, 700, 2004], "in": [670, 1962], "out": [670, 2026]}, "power": 1000, "loss": 0.3,
+     "fields": {"b_straw": {"nodes": P((530, 2190), (610, 2180), (550, 2250)), "sign": [570, 2320]}},
+     "shops": {"b_rope": {"pos": [790, 2240], "need": {"b_straw": 3}}},
+     "stage": {"en": ["zhiren", "egui", "zhiren"], "boss": "egui", "p": 3.5}},
+  ],
+  "roads": [[645, 1160, 695, 1984], [232, 1555, 1108, 1597], [645, 1080, 695, 1160], [196, 1555, 232, 1597], [1108, 1555, 1144, 1597], [645, 1984, 695, 2026]],
+  "village": {
+    "POS": {"gate": [670, 1152], "house": [400, 1790], "furnace": [520, 1780], "wood": [330, 1525], "rice": [810, 1525], "plank": [530, 1525],
+            "bun": [1010, 1525], "store": [800, 1300], "home": [560, 1300], "camp": [1000, 1950], "altar": [860, 1790]},
+    "TREE_POS": P((290, 1290), (345, 1280), (400, 1295), (310, 1345), (365, 1350), (420, 1360)),
+    "PADDY_POS": P((950, 1300), (1030, 1300), (950, 1360), (1030, 1360)),
+    "DECOR": [["post", 628, 1230], ["post", 712, 1230], ["post", 628, 1650], ["post", 712, 1650], ["post", 628, 1900], ["post", 712, 1900],
+              ["banana", 258, 1660], ["banana", 1086, 1640], ["scarecrow", 1086, 1360], ["grave", 1070, 1720], ["grave", 1092, 1745],
+              ["willo", 470, 1420], ["willo", 760, 1440], ["willo", 960, 1700]],
+    "EXTRA": [["vil_board", 330, 1948, 74], ["vil_rebirth", 445, 1952, 84]],
+    "spots": {"wood": [[262, 1330, 1], [448, 1322, 0], [322, 1386, 1], [256, 1372, 0]],
+              "rice": [[908, 1332, 0], [1072, 1332, 1], [990, 1392, 0], [912, 1392, 1]],
+              "plank": [[478, 1545, 0], [582, 1547, 1], [494, 1566, 0], [566, 1568, 1]],
+              "bun": [[958, 1547, 0], [1062, 1545, 1], [972, 1568, 0], [1048, 1568, 1]],
+              "store": [[752, 1318, 0]], "boss": [[468, 1808, 1]],
+              "camp": [[948, 1968, 0], [1052, 1968, 1], [968, 1976, 0], [1032, 1976, 1]]},
+    "plaza": {"ZA": [600, 740, 1600, 1740], "ZB": [300, 1050, 1600, 1640], "eave": [362, 1553, 1469],
+              "banana": [[1060, 1660, -1], [284, 1676, 1]], "bumps": [[640, 1660, -1], [700, 1660, 1], [600, 1700, -1], [740, 1700, 1]]},
+    "hero": [670, 1640],
+    "fence": {"y": 1146, "gate_x": 670, "gap": 24, "spans": [[230, 627], [713, 1110]]},
+  },
+  "market": {
+    "w": 1340, "h": 1080, "fence_y": 430, "counter": [670, 1000], "serve": [670, 1042], "house": [670, 1000],
+    "road": P((895, 436), (895, 540), (820, 760), (795, 960), (780, 1045), (670, 970)), "j": 5,
+    "q2": P((670, 1042), (560, 1045), (545, 960), (520, 760), (445, 540), (445, 436)),
+    "st": {"st_shoubao": [320, 690, 5], "st_zhishan": [560, 640, 5], "st_douhua": [780, 640, 5], "st_nuomici": [1020, 690, 5],
+           "st_guancaichuang": [400, 900, 5], "st_denglong": [670, 860, 5], "st_tiaodan": [940, 900, 5]},
+    "paths": {"st_shoubao": P((420, 780), (590, 780), (590, 960)), "st_zhishan": P((590, 740), (590, 960)),
+              "st_douhua": P((750, 740), (750, 960)), "st_nuomici": P((920, 780), (750, 780), (750, 960)),
+              "st_guancaichuang": P((480, 990), (600, 975)), "st_denglong": [], "st_tiaodan": P((860, 990), (740, 975))},
+    "gates": P((445, 430), (895, 430)),
+    "guard_slots": P((409, 466), (931, 466), (481, 466)),
+    "vol_slots": P((385, 478), (505, 478), (835, 478), (955, 478), (415, 500), (475, 500), (865, 500), (925, 500)),
+    "vol_mid": P((670, 740), (670, 500)),
+    "porter": P((670, 1260), (670, 1160), (670, 1092), (790, 1062), (790, 985), (690, 970)),
+    "decor": [], "spare": [], "fence_art": True, "unify": True, "zone": True,
+  },
+}
+D = {"v": 1, "maps": {"0": M0}}
+json.dump(D, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+print("wrote", OUT)

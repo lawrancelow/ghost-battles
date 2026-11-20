@@ -11,7 +11,8 @@ const FX = preload("res://game/outpost/mv_fx.gd")
 const M = preload("res://game/outpost/mat.gd")   # [chain]
 const IDL = preload("res://game/outpost/mv_idle.gd")   # [idle]
 const MIST = preload("res://game/outpost/mv_mist.gd")   # [unify] 血霧（mapart 線）：台、櫃台底
-const MOT = preload("res://game/outpost/mv_motion.gd")   # [motion] 角色特別動作
+const MOT = preload("res://game/outpost/mv_motion.gd")
+const ZDs = preload("res://game/zone/zone_data.gd")   # [zone]   # [motion] 角色特別動作
 const FW := 390.0
 const GOLD := Color("#f3d68a")
 const INK := Color("#2b1d12")
@@ -78,6 +79,13 @@ var hud_on := true
 var hud_k := 1.0              # HUD 淡入淡出
 var embed_draw = null         # Callable(ctx, vy0, vy1)：嵌入層額外畫（挑夫鬼、留位）
 var embed_ground = null       # [village2] Callable(ctx, vy0, vy1)：地面畫完之後（接駁原村子地面嘅漸變帶）
+# [zone] 分區地圖：大排檔世界＝分區地圖世界座標（同村子一樣）；鏡頭由村子（nv_village 2D 鏡頭）每格設 zt
+#   zt.z ＝ 舞台單位 ÷ 世界單位，zt.x／zt.y ＝ 畫面左上角嘅世界座標；唔畫自己嘅地面／柵欄（地面、區牆由村子畫）
+var zone := false
+var zt := {"z": 1.0, "x": 0.0, "y": 0.0}
+var zfocus = null             # [zone] focus() 要求鏡頭移動：[世界 y, 畫面 y, 世界 x]
+var _tx0 := 0.0               # [zone] 世界字夾邊（畫世界時 = 畫面可見範圍）
+var _tx1 := FW
 
 func _ready() -> void:
 	_rng.seed = 7
@@ -183,8 +191,14 @@ func _layout() -> void:
 	if sheet.visible: _place_sheet()
 
 func view_h() -> float: return H - top_pad - bot_pad
-func w2s(p: Vector2) -> Vector2: return Vector2(p.x, p.y - cam + top_pad)
-func s2w(p: Vector2) -> Vector2: return Vector2(p.x, p.y + cam - top_pad)
+func w2s(p: Vector2) -> Vector2:
+	if zone: return (p - Vector2(zt.x, zt.y)) * float(zt.z)   # [zone]
+	return Vector2(p.x, p.y - cam + top_pad)
+func s2w(p: Vector2) -> Vector2:
+	if zone: return p / float(zt.z) + Vector2(zt.x, zt.y)   # [zone]
+	return Vector2(p.x, p.y + cam - top_pad)
+func vx0() -> float: return float(zt.x) if zone else 0.0                       # [zone] 畫面可見世界 x 範圍
+func vx1() -> float: return float(zt.x) + FW / float(zt.z) if zone else FW
 func cam_min() -> float: return -HUD_H * 0.6
 func cam_max() -> float: return maxf(cam_min(), world_h() - view_h())
 func world_h() -> float: return maxf(float(sim.L.get("h", 844)), camp.bottom()) if camp != null and sim.st() != null else float(sim.L.get("h", 844))   # [camp] 地圖底加營地
@@ -236,7 +250,8 @@ func _clamp_cam(hard := false) -> void:
 	if hard: cam = clampf(cam, lo, hi)
 	elif cam < lo or cam > hi:
 		cam = lerpf(cam, clampf(cam, lo, hi), 0.25); cam_v = 0.0
-func focus(wy: float, screen_y: float) -> void:   # 將世界 y 移去畫面 screen_y
+func focus(wy: float, screen_y: float, wx := NAN) -> void:   # 將世界 y 移去畫面 screen_y
+	if zone: zfocus = [wy, screen_y, wx]; return   # [zone] 交俾村子 2D 鏡頭（mv_embed）
 	cam_tgt = wy + top_pad - screen_y
 func _step_cam(dt: float) -> void:
 	if _press != null and _press.drag: return
@@ -479,9 +494,15 @@ func _draw_stage() -> void:
 	_btns.clear(); _wbtns.clear(); _plates.clear()
 	if embed: sim.plus._btn.clear()   # [polish4] 合一地圖：HUD 收埋嗰陣唔留舊小卡掣
 	var vy0 = cam - top_pad - 10.0; var vy1 = cam - top_pad + H + 10.0     # 鏡頭內（世界 y）
-	ctx.save(); ctx.translate(0, top_pad - cam)
-	_draw_ground(ctx, vy0, vy1)
-	if embed and embed_ground != null: embed_ground.call(ctx, vy0, vy1)   # [village2]
+	ctx.save()
+	if zone:   # [zone] 2D 鏡頭；地面由村子畫
+		vy0 = float(zt.y) - 10.0; vy1 = float(zt.y) + H / float(zt.z) + 10.0
+		ctx.scale(float(zt.z), float(zt.z)); ctx.translate(-float(zt.x), -float(zt.y))
+		_tx0 = vx0(); _tx1 = vx1()
+	else:
+		ctx.translate(0, top_pad - cam)
+		_draw_ground(ctx, vy0, vy1)
+		if embed and embed_ground != null: embed_ground.call(ctx, vy0, vy1)   # [village2]
 	var fk = _fold_k()
 	var walking = anim != null and not anim.done and anim.t >= A_FOLD - 0.2
 	# 圍欄外孤魂＋圍欄（地圖頂）
@@ -550,8 +571,9 @@ func _draw_stage() -> void:
 	for b in bubbles: _draw_bubble(ctx, b)
 	if embed and anim != null:   # [unify] 拔營：大排檔區＋村外區淡出、換圖、淡入（原村子唔變）
 		var fa = clampf(1.0 - absf(float(anim.t) - A_SWAP) / 1.8, 0.0, 1.0)
-		if fa > 0.0: ctx.fillStyle = "rgba(8,4,10,%.3f)" % fa; ctx.fillRect(0, maxf(vy0, -40.0), FW, minf(vy1, world_h()) - maxf(vy0, -40.0))
+		if fa > 0.0: ctx.fillStyle = "rgba(8,4,10,%.3f)" % fa; ctx.fillRect(0, maxf(vy0, -40.0), float(sim.L.get("w", FW)), minf(vy1, world_h()) - maxf(vy0, -40.0))
 	ctx.restore()
+	_tx0 = 0.0; _tx1 = FW   # [zone] HUD 用畫面闊
 	_draw_parts(ctx, false)
 	if not embed or hud_k > 0.01:   # [unify] 嵌入：睇到大排檔區先出 HUD
 		ctx.globalAlpha = hud_k if embed else 1.0
@@ -738,6 +760,7 @@ func _draw_fog(ctx: Ctx, vy0: float, vy1: float) -> void:
 
 # ---------------- 環境：背景遊魂、烏鴉、紙錢 ----------------
 func _step_amb(dt: float) -> void:
+	if zone: amb.g.clear(); amb.f.clear(); return   # [zone] 分區地圖：唔出背景遊魂／烏鴉（佢哋由舊豎條兩邊飛入）
 	var vy0 = cam - top_pad + HUD_H; var vh = view_h() - HUD_H
 	amb.tg -= dt
 	if amb.tg <= 0.0:
@@ -909,7 +932,7 @@ func _draw_want(ctx: Ctx, c: Dictionary) -> void:   # 頭頂氣泡：貨品圖�
 		var left = int(c.wants[g]) - int(c.got.get(g, 0))
 		rows.append([g, left])
 	var h = rows.size() * 28.0 + 8.0; var w = 64.0
-	var x = clampf(c.pos.x - w / 2.0, 4, FW - w - 4); var y = c.pos.y - 74.0 - h - (40.0 if int(c.slot) % 2 == 1 else 0.0)
+	var x = clampf(c.pos.x - w / 2.0, vx0() + 4, vx1() - w - 4); var y = c.pos.y - 74.0 - h - (40.0 if int(c.slot) % 2 == 1 else 0.0)
 	# [polish4] 同前面客人嘅氣泡（連脾氣牌）、事件名、「生產鏈」掣錯開，盡量唔蓋台名牌：
 	#   候選位＝（原位／打橫移 ±24／±48）×（原高度／每個障礙物上面／下面），揀代價最細又唔撞嘅
 	var th = 0.0; var tgw = w
@@ -921,7 +944,7 @@ func _draw_want(ctx: Ctx, c: Dictionary) -> void:   # 頭頂氣泡：貨品圖�
 	var soft: Array = []   # 台名牌（盡量避）
 	for q in _plates: soft.append(q)
 	var y_lo = y_nat + (40.0 if int(c.slot) % 2 == 1 else 0.0)   # 最低去到冇錯開時嘅位（唔好遮個客）
-	var y_top = cam + (EHUD_H if embed else HUD_H) + 4.0   # 唔好鑽入頂部 HUD 下面
+	var y_top = s2w(Vector2(0, top_pad + (EHUD_H if embed else HUD_H) + 4.0)).y   # 唔好鑽入頂部 HUD 下面（[zone] 經 s2w）
 	var ys: Array = [y_nat, y_lo]
 	for r in obst + soft:
 		if r is Rect2: ys.append_array([r.position.y - h - 4.0, r.end.y + 4.0 + th])
@@ -932,7 +955,7 @@ func _draw_want(ctx: Ctx, c: Dictionary) -> void:   # 頭頂氣泡：貨品圖�
 		var rs: Array = obst + soft if pass_i == 0 else obst
 		var best = INF
 		for dx in [0.0, -24.0, 24.0, -48.0, 48.0]:
-			var cx = clampf(x_nat + dx, 4.0, FW - w - 4.0)
+			var cx = clampf(x_nat + dx, vx0() + 4.0, vx1() - w - 4.0)
 			for cy in ys:
 				if cy > y_lo + 0.5 or cy - th < y_top: continue
 				var cost = absf(cy - y_nat) + 1.5 * absf(cx - x_nat)
@@ -1280,6 +1303,9 @@ func _draw_hud_embed(ctx: Ctx) -> void:
 			_btns["move"] = Rect2(8, by2, bw, 44)
 		elif gi >= 0 and str(G[gi].get("t")) == "boss" and not sim.boss_ok(sim.ci(), str(G[gi].get("k", ""))):
 			_txt(ctx, MD.S("need_boss", "要先打低主線 Boss", "要先打倒主線 Boss"), 8, y0 + EHUD_H + 14, 14, Color("#ffb0a0"), "left", 900, 4)
+		elif zone and (gi < 0 or str(G[gi].get("t")) == "boss") and not ZDs.all_bosses_done(sim.ci()):   # [zone] 野外區啲王未打晒
+			var bc = ZDs.boss_count(sim.ci())
+			_txt(ctx, MD.S("need_zboss", "打低野外區全部王先拔得營", "擊敗野外區全部王才能拔營") + "（%d/%d）" % [bc[0], bc[1]], 8, y0 + EHUD_H + 14, 14, Color("#ffb0a0"), "left", 900, 4)
 	# 影響力（戰鬥線）：佢排喺 top_pad + 90 下面 → 臨時上移，同第二行齊
 	var tp = top_pad; top_pad = tp - (90.0 - 44.0)
 	sim.war.draw_hud(self, ctx)
@@ -1387,13 +1413,15 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 	var w = 0.0
 	for l in lines: w = maxf(w, ctx.measureText(l).width)
 	w += 20.0; var h = lines.size() * 20.0 + 12.0 + (18.0 if b.who != "" else 0.0)
-	var wtop = cam + HUD_H + 4.0; var wbot = cam + view_h() - h - 10.0
-	if sim.war != null: wtop = maxf(wtop, cam - top_pad + float(sim.war.hud_y(self)) + 46.0)   # [camp] 對白框唔好俾影響力條遮住
+	var wtop = s2w(Vector2(0, top_pad + HUD_H + 4.0)).y; var wbot = s2w(Vector2(0, top_pad + view_h())).y - h - 10.0   # [zone] 經 s2w
+	if sim.war != null: wtop = maxf(wtop, s2w(Vector2(0, float(sim.war.hud_y(self)) + 46.0)).y)   # [camp] 對白框唔好俾影響力條遮住
 	if embed:   # [unify] 嵌入：講嘢嘅人唔喺鏡頭（或者喺原村子）就唔出框；框唔好落到出村門下面
-		if b.p.y > world_h() or b.p.y < cam - top_pad or b.p.y > cam - top_pad + H: return
+		if b.p.y > world_h() or b.p.y < s2w(Vector2.ZERO).y or b.p.y > s2w(Vector2(0, H)).y: return
+		if zone and (b.p.x < vx0() or b.p.x > vx1()): return
 		wbot = minf(wbot, world_h() - h - 4.0)
-		if not hud_on: wtop = cam - top_pad + 8.0
-	var x = clampf(b.p.x, 6.0, FW - w - 6.0); var y = clampf(b.p.y - h, wtop, maxf(wtop, wbot))
+		if not hud_on: wtop = s2w(Vector2(0, 8.0)).y
+	var X0 = vx0() + 6.0; var X1 = vx1() - w - 6.0   # [zone]
+	var x = clampf(b.p.x, X0, X1); var y = clampf(b.p.y - h, wtop, maxf(wtop, wbot))
 	# [polish4] 要避開：台名牌／事件名／其他對白框（_brects）＋客人要貨氣泡（_wrects）。
 	#   候選位＝原位、每個障礙物上面／下面；揀離原位最近又乜都唔撞嘅；全部都撞就照舊逐個推落去
 	var obs: Array = _brects + _wrects
@@ -1401,7 +1429,7 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 	for r in obs: cands.append_array([r.position.y - h - 6.0, r.end.y + 6.0])
 	var y0 = y; var x0 = x
 	var found = false; var best = INF
-	for cx in [x0, 6.0, FW - w - 6.0]:   # 打橫都試：靠左／靠右
+	for cx in [x0, X0, X1]:   # 打橫都試：靠左／靠右
 		for cy in cands:
 			if cy < wtop - 0.5 or cy > maxf(wtop, wbot) + 0.5: continue
 			var cost = absf(cy - y0) + 0.5 * absf(cx - x0)
@@ -1411,7 +1439,7 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 			if not clash: best = cost; x = cx; y = cy; found = true
 	if not found:   # 冇完全唔撞嘅位：揀遮得最少嘅（遮要貨氣泡算重啲）
 		var least = INF
-		for cx in [x0, 6.0, FW - w - 6.0]:
+		for cx in [x0, X0, X1]:
 			for cy in cands:
 				if cy < wtop - 0.5 or cy > maxf(wtop, wbot) + 0.5: continue
 				var br = Rect2(cx, cy, w, h).grow(3)
@@ -1527,9 +1555,9 @@ func _txt(ctx: Ctx, s: String, x: float, y: float, sz: int, col: Color, align :=
 	ctx.font = "%d %dpx %s" % [w, sz, fam]; ctx.textAlign = align; ctx.textBaseline = "middle"
 	var tw = ctx.measureText(s).width
 	match align:
-		"center": x = clampf(x, tw / 2.0 + 4.0, FW - tw / 2.0 - 4.0)
-		"left": x = clampf(x, 4.0, FW - tw - 4.0)
-		"right": x = clampf(x, tw + 4.0, FW - 4.0)
+		"center": x = clampf(x, _tx0 + tw / 2.0 + 4.0, _tx1 - tw / 2.0 - 4.0)   # [zone] _tx0／_tx1：畫世界時係可見範圍
+		"left": x = clampf(x, _tx0 + 4.0, _tx1 - tw - 4.0)
+		"right": x = clampf(x, _tx0 + tw + 4.0, _tx1 - 4.0)
 	if outline > 0:
 		ctx.lineWidth = outline; ctx.strokeStyle = "rgba(10,6,4,.92)"; ctx.lineJoin = "round"; ctx.strokeText(s, x, y)
 	ctx.fillStyle = "#" + col.to_html(true); ctx.fillText(s, x, y)
@@ -1615,8 +1643,8 @@ func tap(p: Vector2) -> void:
 var _up_btns := []
 func open_sheet(sid: String) -> void:
 	sel = sid; sheet.visible = true; _snd("click"); _fill_sheet()
-	focus(sim.st_pos(sid).y, top_pad + HUD_H + 150.0)   # 個台移去升級條上面
-func focus_station(sid: String) -> void: focus(sim.st_pos(sid).y, top_pad + view_h() * 0.55)
+	focus(sim.st_pos(sid).y, top_pad + HUD_H + 150.0, sim.st_pos(sid).x)   # 個台移去升級條上面
+func focus_station(sid: String) -> void: focus(sim.st_pos(sid).y, top_pad + view_h() * 0.55, sim.st_pos(sid).x)
 func close_sheet() -> void:
 	sel = ""
 	if sheet != null: sheet.visible = false

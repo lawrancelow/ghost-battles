@@ -70,8 +70,7 @@ static func vig_tex() -> Texture2D:
 	return _vig
 
 static func draw_night(c: CanvasItem, nv) -> void:
-	var vh: float = nv.size.y / maxf(0.01, nv.sc); var y0: float = nv.cam_y - 4
-	var r = Rect2(-4, y0, 398.0, vh + 8)
+	var r: Rect2 = nv.view_rect().grow(4)   # [zone] 分區地圖：跟 2D 鏡頭
 	c.draw_texture_rect(vig_tex(), r, false)
 
 # ---------------- 槐樹：樹洞臉眼光、樹幹排線暗影、樹枝尾「手指」 ----------------

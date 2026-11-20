@@ -472,7 +472,7 @@ func draw_world(sc, ctx, vy0: float, vy1: float) -> void:
 	var tn = tide(sim)
 	if tn[0]:   # 夜潮：暗紫紅
 		var a = 0.24 * clampf(minf(TIDE_NIGHT - float(tn[1]), float(tn[1])) / 4.0, 0.0, 1.0)
-		ctx.fillStyle = "rgba(46,4,34,%.3f)" % a; ctx.fillRect(0, vy0, FW, vy1 - vy0)
+		ctx.fillStyle = "rgba(46,4,34,%.3f)" % a; ctx.fillRect(0, vy0, sim.ww(), vy1 - vy0)   # [zone]
 	# 羈絆頭牌
 	for w in sim.workers:
 		if w.pos.y < vy0 or w.pos.y - 100.0 > vy1: continue

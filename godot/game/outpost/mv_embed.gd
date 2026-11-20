@@ -13,6 +13,7 @@ const MV_SCENE := "res://game/outpost/mv_scene.gd"
 const CB = preload("res://game/outpost/chain_bld.gd")
 const MD = preload("res://game/outpost/mv_data.gd")
 const M = preload("res://game/outpost/mat.gd")
+const ZD = preload("res://game/zone/zone_data.gd")   # [zone] 分區地圖
 const HUD_CAM := -40.0        # 村子 camY 細過呢個（睇到大排檔區）先出 HUD
 const GATE := Vector2(195, 118)
 
@@ -90,6 +91,7 @@ func active() -> bool: return sc != null and is_instance_valid(sc) and sc.visibl
 # 村子世界座標 (x, y) 嘅一下撳：屬於大排檔區／HUD 就轉俾 mv_scene，回 true
 func on_tap(x: float, y: float) -> bool:
 	if not active() or sc.sim == null or sc.sim.st() == null: return false
+	if ZD.on(): return false   # [zone] 分區地圖：nv_village.zone_tap 已經分派咗
 	var sp = Vector2(x, y - vcam())   # mv_scene 舞台座標（同村子一樣縮放）
 	var hud = sc.hud_on and sp.y < sc.top_pad + sc.EHUD_H
 	var wb = false
@@ -111,6 +113,8 @@ func _process(dt: float) -> void:
 	if not active() or not village.is_visible_in_tree(): return
 	_install()
 	_update_top()
+	if ZD.on(): _zone_frame(dt); return   # [zone]
+	if sc.zone: sc.zone = false; sc._layout()
 	var cy = vcam()
 	sc.hud_on = cy < HUD_CAM or sc.sheet.visible or sc.anim != null
 	var qb = main.get("quest_bar") if main != null else null   # 精簡 HUD 已經包主線：任務條收埋
@@ -127,8 +131,57 @@ func _process(dt: float) -> void:
 	sc.cam = cy + eh() + sc.top_pad
 	_step_porters(dt)
 
+# ================= [zone] 分區地圖 =================
+func _zone_frame(dt: float) -> void:
+	var nv = village
+	if not nv.has_method("zone_cam") or nv.size.x <= 0: return
+	var c = nv.zone_cam()
+	if not sc.zone: sc.zone = true; sc._layout(); sc.sim.relayout(); sc.sim.sync()
+	sc.zt = {"z": c.z / maxf(0.01, sc.k), "x": c.x, "y": c.y}
+	sc.hud_on = zone_hud_vis() or sc.sheet.visible or sc.anim != null
+	var qb = main.get("quest_bar") if main != null else null
+	if qb is Control and qb.visible == sc.hud_on: qb.visible = not sc.hud_on
+	if sc.zfocus != null:   # 升級條／目標要求鏡頭移動 → 村子 2D 鏡頭
+		var f = sc.zfocus; sc.zfocus = null
+		var wx = float(f[2]) if not is_nan(float(f[2])) else c.x + c.vw() / 2.0
+		var top = float(f[0]) - float(f[1]) / float(sc.zt.z)
+		c.tgt = Vector2(wx - c.vw() / 2.0, top); c.vel = Vector2.ZERO
+	if sc.cam_tgt != null: sc.cam_tgt = null
+	_step_porters(dt)
+# 大排檔 HUD 出唔出：畫面有三成以上係大排檔／野外區
+func zone_hud_vis() -> bool:
+	var c = village.zone_cam(); var vr = c.rect(); var a = 0.0
+	for z in ZD.zones():
+		if str(z.type) in ["market", "wild"]: a += ZD.rect(z.rect).intersection(vr).get_area()
+	return a >= vr.get_area() * 0.3
+# 畫面座標（村子 px）撳中大排檔 HUD／掣／卡 → 交俾 mv_scene，回 true
+func zone_hud_tap(p: Vector2) -> bool:
+	if not active() or sc.sim == null or sc.sim.st() == null: return false
+	var fp = p / maxf(0.01, sc.k)
+	var hit = sc.card != null or sc.anim != null or (sc.sim.plus != null and sc.sim.plus.card != null)
+	if sc.hud_on and fp.y < sc.top_pad + sc.EHUD_H: hit = true
+	var w = sc.sim.war
+	if sc.hud_on and w != null and w.get("_btn") is Dictionary:
+		for k in w._btn:
+			var r = w._btn[k]
+			if r is Rect2 and r.grow(4).has_point(fp): hit = true
+	if sc.hud_on:
+		for k in sc._btns:
+			if sc._btns[k].has_point(fp): hit = true
+	if hit: sc.tap(fp); return true
+	var wp = village.zone_s2w(p); var zid = ZD.zone_at(wp)
+	if sc.sheet.visible and not (zid != "" and str(ZD.zone(zid).type) in ["market", "wild"]): sc.close_sheet()
+	return false
+# 世界座標撳大排檔／野外區（台、客、孤魂、空位）
+func zone_world_tap(wp: Vector2) -> void:
+	if not active() or sc.sim == null: return
+	sc.tap(sc.w2s(wp))
+
 # 鏡頭移去大排檔區（拔營、測試、主線任務用）
 func focus_outpost(frac := 0.5) -> void:
+	if ZD.on():   # [zone]
+		var mr = ZD.zrect("market"); var c = village.zone_cam()
+		c.glide_to(Vector2(mr.get_center().x, mr.position.y + mr.size.y * frac)); return
 	var vh = village.size.y / maxf(0.01, village.size.x / 390.0)
 	_cam_anim = -eh() + eh() * frac - vh * 0.5
 
@@ -141,6 +194,10 @@ func _has_stock() -> bool:
 			if float(M.amt(str(mid))) >= 1.0: return true
 	return false
 func _path() -> PackedVector2Array:
+	if ZD.on():   # [zone] 由村子石板路經出村門到櫃台後面
+		var o = PackedVector2Array()
+		for q in MD.layout(sc.sim.ci()).get("porter", []): o.append(MD.v2(q))
+		if o.size() >= 2: return o
 	var E = eh(); var L = sc.sim.L
 	var dx = float(L.counter.x) + 70.0
 	return PackedVector2Array([Vector2(GATE.x + 8, E + 172), Vector2(GATE.x, E + GATE.y - 4), Vector2(GATE.x, E + 26), Vector2(dx + 34, E - 6), Vector2(dx, float(L.counter_y) - 24.0)])
