@@ -5,6 +5,15 @@
 #     when.t：open／unlock k／level k n／sold k('*'或貨 id) n／goal i／boss_next／all_done／inf_below n／wave n／move
 #     need：after [id...]（要先播過）、boss_alive（Boss 已打低 → 記做跳過）
 #   - move beat：撳拔營之後、拔營動畫之前播（mv_scene.move_next 掛鈎），播完先開始動畫。
+#   - 分區地圖劇情（zstory）：when.t == "zone"，kind ∈ map_enter／zone_seen／zone_cap／boss_pre／boss_win／factory／liberate，id＝zones.json 區 id／王 id
+#     （factory 可以傳加工廠建築 id，會自動換成所屬資源區；boss_* 可以傳野外區 id，會換成該區而家／啱啱打嗰個王；
+#      when 有 z＋bi 嘅話，王 id 對唔上都可以靠「野外區＋第幾個王」對返）。
+#     map_enter：分區地圖開咗（ZD.on_for(ci)）就自己播，唔使等事件；未播之前，呢張圖其他 beat（包括大排檔 open）全部等。
+#     其他：分區線叫 zone_ev(kind, id[, cb])（static，搵唔到 mv_story 實例都得）或者實例 zone_event(kind, id[, cb])；
+#       冇 cb：記入 S.mv.story_zq（存檔），主對話空、唔喺戰鬥、冇彈出卡先逐個播；
+#       有 cb（boss_pre）：即刻排入劇情播放器，播完先 call cb（開戰）；冇 beat／播過 → 即刻 call cb。回 true＝cb 會遲啲先 call。
+#     舊存檔：已佔領嘅區唔播 zone_seen、已打低嘅王唔播 boss_pre；冇事件就唔補播（只有 map_enter 會補）。
+#     line 第 4 格（可選）＝出場條件："has:<鬼 k>"（S.ghosts 有）／"seen:<scene id 或 beat id>"，前面加 "!" 係相反；唔中就成句唔播。
 #   - 客人氣泡：outpost.json CUSTOMERS[].say {q 排隊, buy 買到, wait 等太耐, vol 變義勇軍}；冇 say 就用 lines／預設句；
 #     同一個客人（cid）唔會連續講同一句；全部經 DB.N()（改名／女主）。
 #   - 惡鬼：FOE.head（鬼潮頭目出場）、FOE.roam（遊魂撞圍欄）、FOE.wave（鬼潮預告）；冇就用舊句。
@@ -15,6 +24,8 @@ extends RefCounted
 const MD = preload("res://game/outpost/mv_data.gd")
 const MVW = preload("res://game/outpost/mv_war.gd")
 const SIM = preload("res://game/outpost/mv_sim.gd")
+const ZD = preload("res://game/zone/zone_data.gd")
+const ZKINDS := ["map_enter", "zone_seen", "zone_cap", "boss_pre", "boss_win", "factory", "liberate"]
 const PATH := "res://data/nat/mv_story.json"
 const CHECK_DT := 0.5          # 幾耐檢查一次觸發
 const GAP := 1.2               # 一個 beat 播完，隔幾秒先播下一個
@@ -24,6 +35,7 @@ const ROAM_P := 0.5            # 遊魂撞圍欄出氣泡嘅機會
 const WAVE_CH := 18            # 鬼潮預告飄字一行最多幾個字（17px × 18 ≈ 306px，畫面 390）
 
 static var _D = null
+static var _live = null   # 最近一個喺度 tick 嘅實例（weakref）：zone_ev 用
 # 自動播 beat 開關：自動化測試（GB_TEST，其他線嘅測試會直接撳村子／截圖）預設關，免得 beat 蓋住畫面、擋住撳；
 # 真玩（冇 GB_TEST）同自檢（GB_SELFTEST：main.selftest 期間本身唔播）照開。storyhook_test 自己打開。
 static var auto_on := not OS.has_environment("GB_TEST")
@@ -37,6 +49,7 @@ var _gap := 0.0
 var _playing := false
 var _last := {}                      # cid／"foe:<kind>" → 上一句
 var _rng := RandomNumberGenerator.new()
+var _sc = null                       # 最近 tick 嘅場景（weakref）：zone_event 播 boss_pre 用
 
 func _init() -> void: _rng.randomize()
 
@@ -131,15 +144,20 @@ static func need_st(sim, b: Dictionary) -> int:
 	if J.t(nd.get("boss_alive")) and not boss_alive(sim): return 2
 	var af = nd.get("after", [])
 	if af is Array:
-		for id in af: if not is_seen(str(id)): return 1
+		for id in af:
+			if is_seen(str(id)): continue
+			var zb = beat(str(id))
+			if not zb.is_empty() and is_zone(zb) and (not ZD.on_for(sim.ci()) or zstate_done(zb)): continue   # 分區地圖未開／狀態已經過咗：唔等
+			return 1
 	return 0
 
 # 而家第一個要播嘅 beat（會順手記低要跳過嘅）；冇就回 {}
 static func next_beat(sim, kind := "") -> Dictionary:
 	if sim == null or sim.st() == null: return {}
+	if kind != "move" and not enter_beat(sim.ci()).is_empty() and ZD.on_for(sim.ci()) and not is_seen(str(enter_beat(sim.ci()).id)): return {}   # 開場未播：其他等
 	for b in beats(sim.ci()):
 		var id = str(b.get("id", ""))
-		if id == "" or is_seen(id): continue
+		if id == "" or is_seen(id) or is_zone(b): continue
 		var is_move = str(b.get("when", {}).get("t", "")) == "move"
 		if (kind == "move") != is_move: continue
 		var ns = need_st(sim, b)
@@ -153,10 +171,12 @@ static func next_beat(sim, kind := "") -> Dictionary:
 static func build_scene(b: Dictionary) -> Dictionary:
 	var sc: Dictionary = (b.get("scene", {}) as Dictionary).duplicate(true)
 	if sc.get("title") is Array: sc["title"] = MD.T(sc.title)
+	if sc.get("group") is Array: sc["group"] = MD.T(sc.group)
 	var yue = DB.lang == "yue"
 	var ls = []
 	for l in sc.get("lines", []):
 		if not (l is Array) or l.is_empty(): continue
+		if l.size() >= 4 and not cond_ok(str(l[3])): continue
 		var tx = str(l[1]) if l.size() >= 2 else ""
 		if not yue and l.size() >= 3 and str(l[2]) != "": tx = str(l[2])
 		ls.append([str(l[0]), tx])
@@ -217,6 +237,7 @@ static func viewing(sc) -> bool:
 # 每格（mv_scene._process）
 func tick(sc, dt: float) -> void:
 	if sc == null or sc.sim == null or sc.sim.st() == null: return
+	_live = weakref(self); _sc = weakref(sc)
 	_cust_wait(sc)
 	_foe_head(sc)
 	if _gap > 0.0: _gap -= dt; return
@@ -224,7 +245,11 @@ func tick(sc, dt: float) -> void:
 	if _ct > 0.0: return
 	_ct = CHECK_DT
 	if not auto_on: return
-	if pending_move or not viewing(sc) or main_busy(sc): return
+	if pending_move or main_busy(sc): return
+	if zviewing(sc):
+		var zb = next_zone(sc.sim)
+		if not zb.is_empty(): play(sc, zb); return
+	if not viewing(sc): return
 	var b = next_beat(sc.sim)
 	if not b.is_empty(): play(sc, b)
 
@@ -241,6 +266,148 @@ func before_move(sc, instant := false) -> bool:
 		pending_move = false
 		if is_instance_valid(sc): sc.move_next(false))
 	return true
+
+# ================= 分區地圖劇情（zstory） =================
+static func is_zone(b: Dictionary) -> bool: return b.get("when") is Dictionary and str(b.when.get("t", "")) == "zone"
+static func enter_beat(ci: int) -> Dictionary:
+	for b in beats(ci): if is_zone(b) and str(b.when.get("kind")) == "map_enter": return b
+	return {}
+
+# 出場條件（line 第 4 格）
+static func cond_ok(c: String) -> bool:
+	if c == "": return true
+	var neg = c.begins_with("!")
+	if neg: c = c.substr(1)
+	var r = true
+	var s = J.G.get("S")
+	if c.begins_with("has:"):
+		r = false
+		if s is Dictionary:
+			for g in J.iter(s.get("ghosts")): if g is Dictionary and str(g.get("k", "")) == c.substr(4): r = true; break
+	elif c.begins_with("seen:"):
+		var k = c.substr(5)
+		r = is_seen(k) or (s is Dictionary and s.get("seen") is Dictionary and J.t(s.seen.get(k)))
+	return r != neg
+
+# 王 id → [野外區 id, 第幾個]（搵唔到回 ["", -1]）
+static func boss_pos(bid: String, c: int) -> Array:
+	for z in ZD.of_type("wild", c):
+		var bs = ZD.bosses(str(z.id), c)
+		for i in bs.size(): if str(bs[i].get("id", "")) == bid: return [str(z.id), i]
+	return ["", -1]
+
+# 事件 id 正規化：factory 建築 id → 資源區；boss_* 野外區 id → 王 id
+static func norm_id(kind: String, id: String, c: int) -> String:
+	if kind == "factory" and ZD.zone(id, c).is_empty():
+		var z = ZD.bid_zone(id, c)
+		if z != "": return z
+	if kind.begins_with("boss_") and str(ZD.zone(id, c).get("type", "")) == "wild":
+		var bs = ZD.bosses(id, c)
+		var i = ZD.boss_next(id, c)
+		if kind == "boss_win": i = (bs.size() if i < 0 else i) - 1
+		if i >= 0 and i < bs.size(): return str(bs[i].get("id", id))
+	return id
+
+# 搵對應 beat：when.id 對中；或者 when.z＋bi（王 id 改咗名都對得返）
+static func zone_beat(c: int, kind: String, id: String) -> Dictionary:
+	var bp = boss_pos(id, c) if kind.begins_with("boss_") else ["", -1]
+	for b in beats(c):
+		if not is_zone(b) or str(b.when.get("kind")) != kind: continue
+		var wid = str(b.when.get("id", ""))
+		if kind == "map_enter" or kind == "liberate": return b
+		if wid == id: return b
+		if bp[1] >= 0 and str(b.when.get("z", "")) == bp[0] and int(b.when.get("bi", -1)) == bp[1]: return b
+	return {}
+
+# 呢個 zone beat 喺存檔狀態上「已經過咗」？（舊存檔唔補播；need.after 唔使等）
+static func zstate_done(b: Dictionary) -> bool:
+	var w = b.get("when", {}); var c = _beat_ci(str(b.get("id", "")))
+	if c < 0 or ZD.mdef(c).is_empty(): return false
+	var id = str(w.get("id", ""))
+	match str(w.get("kind", "")):
+		"zone_cap": return ZD.owned(id, c)
+		"boss_win": return _boss_done(w, c)
+		"liberate": return ZD.all_bosses_done(c)
+	return false
+static func _boss_done(w: Dictionary, c: int) -> bool:
+	var bp = boss_pos(str(w.get("id", "")), c)
+	if bp[1] < 0: bp = [str(w.get("z", "")), int(w.get("bi", -1))]
+	return bp[1] >= 0 and ZD.boss_done(bp[0], bp[1], c)
+static func _beat_ci(id: String) -> int:
+	for m in D().MAPS:
+		for b in m.get("beats", []): if str(b.get("id")) == id: return int(m.get("ci", -1))
+	return -1
+
+# 舊存檔／重複：呢個事件而家唔應該播（記做跳過）
+static func zskip(b: Dictionary, c: int) -> bool:
+	var w = b.when; var id = str(w.get("id", ""))
+	match str(w.get("kind", "")):
+		"zone_seen": return str(ZD.zone(id, c).get("type", "")) == "res" and ZD.owned(id, c)
+		"boss_pre": return _boss_done(w, c)
+	return false
+
+static func zq() -> Array:
+	var m = _mv()
+	if m == null: return []
+	if not (m.get("story_zq") is Array): m["story_zq"] = []
+	return m.story_zq
+
+# 分區線叫（static）：有活實例就交佢；冇就照記佇列（boss_pre 都即刻播，用全域劇情佇列）
+static func zone_ev(kind: String, id := "", cb := Callable()) -> bool:
+	var me = _live.get_ref() if _live != null else null
+	if me == null: me = load("res://game/outpost/mv_story.gd").new()
+	return me.zone_event(kind, id, cb)
+
+func zone_event(kind: String, id := "", cb := Callable()) -> bool:
+	var s = J.G.get("S")
+	var c = int(J.num(s.mv.get("ci", 0))) if s is Dictionary and s.get("mv") is Dictionary else ZD.ci()
+	var b = {}
+	if ZKINDS.has(kind): b = zone_beat(c, kind, norm_id(kind, str(id), c))
+	var bid = str(b.get("id", ""))
+	if b.is_empty() or is_seen(bid) or zskip(b, c):
+		if not b.is_empty() and not is_seen(bid): mark(bid, 2.0)
+		if cb.is_valid(): cb.call()
+		return false
+	if cb.is_valid():   # boss_pre：即刻播，播完先開戰（開場未播就順手先播開場）
+		var eb = enter_beat(c)
+		var sc = _sc.get_ref() if _sc != null else null
+		if not eb.is_empty() and not is_seen(str(eb.id)) and ZD.on_for(c): play(sc, eb)
+		play(sc, b, cb)
+		return true
+	var q = zq()
+	if not q.has(bid): q.append(bid)
+	return true
+
+# 睇緊分區地圖？（唔理鏡頭喺邊；彈出卡、拔營動畫、戰鬥中都唔播）
+static func zviewing(sc) -> bool:
+	if sc == null or not sc.visible: return false
+	if sc.get("anim") != null or sc.get("card") != null or sc.get("picker") != null: return false
+	if sc.get("sheet") != null and sc.sheet.visible: return false
+	if MVW.battle_on(): return false
+	var m = sc.get("main")
+	if m != null and is_instance_valid(m):
+		var sh = m.get("sheet")
+		if sh is Control and sh.visible: return false
+	return true
+
+# 下一個要播嘅分區 beat：開場（分區地圖開咗就播）→ 佇列（按事件次序；唔係呢張圖嘅清走）
+static func next_zone(sim) -> Dictionary:
+	if sim == null or sim.st() == null: return {}
+	var c = sim.ci()
+	var eb = enter_beat(c)
+	if not eb.is_empty() and not is_seen(str(eb.id)):
+		return eb if ZD.on_for(c) else {}
+	var q = zq()
+	var i = 0
+	while i < q.size():
+		var b = beat(str(q[i]))
+		if b.is_empty() or is_seen(str(q[i])) or _beat_ci(str(q[i])) != c: q.remove_at(i); continue
+		if zskip(b, c): mark(str(q[i]), 2.0); q.remove_at(i); continue
+		var ns = need_st(sim, b)
+		if ns == 2: mark(str(q[i]), 2.0); q.remove_at(i); continue
+		if ns == 0: q.remove_at(i); return b
+		i += 1
+	return {}
 
 # ================= 客人氣泡 =================
 static func say_pool(cid: String, kind: String) -> Array:

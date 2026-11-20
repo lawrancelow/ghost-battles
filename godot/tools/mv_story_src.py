@@ -858,3 +858,16 @@ FEM_OK = [
  "第二晚，他又來，又問同一句。阿福又答「快到了」。後來茶寮的招牌上，多了一行小字：「問路，免費。」",   # 他＝過路鬼
  "阿福拿了一塊貨品牌，寫了幾個字，掛在他脖子上。",   # 他＝被賣鬼
 ]
+
+# ======================================================================
+# [zstory] 分區地圖劇情（tools/zone_story_src.py）：開場擺最前（未播之前大排檔 open 都等），過程 beat 擺最尾
+# ======================================================================
+import zone_story_src as _ZS
+for _ci, _zb in _ZS.ZBEATS.items():
+    _old = [b for b in MAPS[_ci]["beats"] if not (isinstance(b.get("when"), dict) and b["when"].get("t") == "zone")]
+    for _b in _old:   # 協調：舊大排檔 beat 要等某個分區 beat（例如 Hantu Raya 打低先入大排檔）
+        _w = _ZS.ZAFTER.get(_b["id"])
+        if _w and _w not in _b.setdefault("need", {}).setdefault("after", []): _b["need"]["after"].append(_w)
+    _ent = [b for b in _zb if b["when"]["kind"] == "map_enter"]
+    MAPS[_ci]["beats"] = _ent + _old + [b for b in _zb if b["when"]["kind"] != "map_enter"]
+FEM.update(_ZS.ZFEM)

@@ -12,6 +12,11 @@
   5. 紅線字（outpost_check.BANNED ＋ 本檔 EXTRA）
   6. 女主：有男性字眼嘅句要喺 data/fem.json 有女版（女版唔可以再有男性字眼）；客人氣泡唔經 DB.N()，所以客人句唔准直接叫「阿福／少爺／陳大福」
   7. 字型缺字：godot/fonts/sans_r.otf cmap
+  8. [zstory] 分區地圖劇情（第 1–4 關，tools/zone_story_src.py）：
+     每關 map_enter 1 個（用該章敘事形式、6–10 句）；每個資源區／野外區 zone_seen、每個資源區 zone_cap、每個王 boss_pre＋boss_win、
+     每個有加工廠嘅資源區 factory、liberate 1 個；過程 beat 2–5 句；id 對得上 zones.json（有定義嗰張圖）；
+     收編角色（餓鬼王／Toyol／老殭／Pontianak／天花姐）講嘢要有 has:／seen: 出場條件（佢自己嘅 boss_win 除外）；
+     line 第 4 格只可以係 has:／seen:（可加 !）；舊大排檔 beat 嘅 need.after 可以指向分區 beat。
 """
 import json, os, re, sys
 
@@ -43,7 +48,7 @@ EXTRA = ["老天爺", "天公", "神靈", "鬼神", "拜神", "拜山", "燒香"
 BAN = banned() + EXTRA
 
 # 男性字眼（指主角先要女版；指其他角色嘅可以喺 OK_MALE 白名單）
-MALE = ["靚仔", "後生仔", "先生", "兄弟", "小伙子", "帥哥", "男仔", "哥哥", "少年", "男人", "男鬼", "細佬", "老公", "公子", "爺們"]
+MALE = ["陳生", "陳先生", "靚仔", "後生仔", "先生", "兄弟", "小伙子", "帥哥", "男仔", "哥哥", "少年", "男人", "男鬼", "細佬", "老公", "公子", "爺們"]
 HERO = ["阿福", "陳大福", "少爺", "Kelvin"]
 JOB = ["返工", "上班", "老細", "老闆話", "公司", "PPT", "加班", "辦公室", "同事", "開會", "打工"]
 
@@ -54,10 +59,60 @@ def chars_in_font():
     except Exception as e:
         W("讀唔到字型 cmap：%s" % e); return None
 
+def zone_check(tag, ci, beats, ZS, zm):
+    zb = [b for b in beats if b.get("when", {}).get("t") == "zone"]
+    got = {}
+    for b in zb:
+        w = b["when"]; k = (w.get("kind"), w.get("id", ""))
+        if k in got: E(tag + " 分區事件重複：%s %s" % k)
+        got[k] = b
+    zi = ZS.ZIDS[ci]
+    need = [("map_enter", ""), ("liberate", "")]
+    for z in zi["res"]: need += [("zone_seen", z), ("zone_cap", z)]
+    for z in zi["factory"]: need.append(("factory", z))
+    for w, bs in zi["wild"].items():
+        need.append(("zone_seen", w))
+        for x in bs: need += [("boss_pre", x), ("boss_win", x)]
+    for k in need:
+        if k not in got: E(tag + " 分區事件冇 beat：%s %s" % k)
+    for k in got:
+        if k not in need: E(tag + " 分區 beat 唔喺 ZIDS：%s %s" % k)
+    if zm:   # zones.json 有呢張圖：id 要對得上
+        res = [z["id"] for z in zm.get("zones", []) if z.get("type") == "res"]
+        wild = {z["id"]: [x["id"] for x in z.get("bosses", [])] for z in zm.get("zones", []) if z.get("type") == "wild"}
+        fac = [z["id"] for z in zm.get("zones", []) if z.get("type") == "res" and z.get("shops")]
+        if sorted(res) != sorted(zi["res"]): E(tag + " 資源區 id 對唔上 zones.json：%s ≠ %s" % (zi["res"], res))
+        if sorted(fac) != sorted(zi["factory"]): E(tag + " 加工廠區對唔上 zones.json：%s ≠ %s" % (zi["factory"], fac))
+        if wild != zi["wild"]: E(tag + " 野外區／王 id 對唔上 zones.json：%s ≠ %s" % (zi["wild"], wild))
+    else: W(tag + " zones.json 未有呢張圖：分區 id 用緊佔位（ZIDS）")
+    ent = got.get(("map_enter", ""))
+    if ent:
+        if ent["scene"].get("style") != ZS.OPEN_STYLE[ci]: E(tag + " 開場敘事形式要係 %s" % ZS.OPEN_STYLE[ci])
+        n0 = len([l for l in ent["scene"]["lines"] if len(l) == 3])
+        if not (6 <= n0 <= 10) or len(ent["scene"]["lines"]) > 10: E(tag + " 開場要 6–10 句（而家無條件 %d／全部 %d）" % (n0, len(ent["scene"]["lines"])))
+    for b in zb:
+        w = b["when"]; ln = b["scene"].get("lines", [])
+        if w.get("kind") != "map_enter":
+            n0 = len([l for l in ln if len(l) == 3])
+            if n0 < 2 or len(ln) > 5 + (2 if w.get("kind") == "liberate" else 0): E(tag + " %s 過程劇情要 2–5 句（無條件 %d／全部 %d）" % (b["id"], n0, len(ln)))
+            if "zs%d_map_enter" % ci not in b.get("need", {}).get("after", []): E(tag + " %s 要 need.after 開場" % b["id"])
+        if w.get("kind", "").startswith("boss_"):
+            z, i = ZS._where(ci, w.get("id"))
+            if w.get("z") != z or w.get("bi") != i: E(tag + " %s 王位置 z/bi 錯" % b["id"])
+        own = None
+        if w.get("kind") == "boss_win":
+            for nm, k in ZS.RECRUIT.items():
+                if ZS.MAIN_BOSS.get(ci) == w.get("id") and k in str(w.get("id")): own = nm
+        for l in ln:
+            if not isinstance(l, list) or len(l) < 3: continue
+            if l[0] in ZS.RECRUIT and l[0] != own and (len(l) < 4 or not re.match(r"^(has|seen):", l[3])):
+                E(tag + " %s：「%s」出場前唔可以講嘢（要 has:／seen: 條件）：%s" % (b["id"], l[0], l[1]))
+
 def main():
     global FEM_OK
     try:
         import mv_story_src; FEM_OK = set(getattr(mv_story_src, "FEM_OK", []))
+        import zone_story_src; FEM_OK |= set(getattr(zone_story_src, "ZFEM_OK", []))
     except Exception: FEM_OK = set()
     op = load(OUTPOST); st = load(STORY); fem = load(os.path.join(ROOT, "data", "fem.json"))
     core = load(os.path.join(ROOT, "data", "core.json"))
@@ -68,7 +123,15 @@ def main():
     cmap = chars_in_font()
     STYLES = {"chat", "notice", "talk", "mail", "radio", "letter", "report", "narr", "news", "sys"}
     BGS = {"hq", "road", "field", "banana", "kampung", "office", "village"}
-    TRIG = {"open", "unlock", "level", "sold", "inf_below", "wave", "goal", "boss_next", "move", "all_done"}
+    TRIG = {"open", "unlock", "level", "sold", "inf_below", "wave", "goal", "boss_next", "move", "all_done", "zone"}
+    try:
+        import zone_story_src as ZS
+    except Exception as e:
+        ZS = None; E("讀唔到 zone_story_src：%s" % e)
+    zmaps = {}
+    try: zmaps = load(os.path.join(ROOT, "data", "nat", "zones.json")).get("maps", {})
+    except Exception as e: W("讀唔到 zones.json：%s" % e)
+    ids_all = {b.get("id") for sm in st.get("MAPS", []) for b in sm.get("beats", [])}
     all_text = []      # (出處, 句)
     seen_beat = set()
     stat = []
@@ -108,7 +171,7 @@ def main():
         last = ci == len(op["MAPS"]) - 1   # 最後一張圖冇得拔營：收尾用 all_done
         ck = "all_done" if last else "move"
         if kinds.count(ck) != 1 or kinds.count("all_done" if not last else "move"): E(tag + " 故事線要有 1 個 %s 收尾" % ck)
-        mid = len(beats) - kinds.count("open") - kinds.count("move") - kinds.count("all_done")
+        mid = len(beats) - kinds.count("open") - kinds.count("move") - kinds.count("all_done") - kinds.count("zone")
         if not (2 <= mid <= 3): E(tag + " 中段事件要 2–3 個，而家 %d" % mid)
         here = []
         nsl = 0
@@ -125,7 +188,7 @@ def main():
             if t == "goal" and not (isinstance(w.get("i"), int) and 0 <= w["i"] < len(m["goals"])): E(bt + " goal i 超出目標數")
             nd = b.get("need", {})
             for a in nd.get("after", []):
-                if a not in here: E(bt + " need.after %s 唔係前面嘅 beat" % a)
+                if a not in here and not (str(a).startswith("zs") and a in ids_all): E(bt + " need.after %s 唔係前面嘅 beat" % a)
             if t == "boss_next" and not nd.get("boss_alive"): W(bt + " boss_next 冇 need.boss_alive（主線已打低 Boss 會矛盾）")
             sc = b.get("scene", {})
             if sc.get("style") not in STYLES: E(bt + " style 唔識：%s" % sc.get("style"))
@@ -134,17 +197,18 @@ def main():
                 if not pair(sc["title"]): E(bt + " title 要粵＋中")
                 else: all_text.append((bt + " title", sc["title"][0])); all_text.append((bt + " title", sc["title"][1]))
             ln = sc.get("lines", [])
-            if len(ln) < 3: E(bt + " 對白少過 3 句")
+            if t != "zone" and len(ln) < 3: E(bt + " 對白少過 3 句")
             art = b.get("art", {})
             for i, l in enumerate(ln):
-                if not (isinstance(l, list) and len(l) == 3 and all(isinstance(x, str) and x.strip() for x in l)): E(bt + " 第 %d 行要 [講者, 粵, 中]" % i); continue
+                if not (isinstance(l, list) and len(l) in (3, 4) and all(isinstance(x, str) and x.strip() for x in l)): E(bt + " 第 %d 行要 [講者, 粵, 中(, 條件)]" % i); continue
+                if len(l) == 4 and not re.match(r"^!?(has|seen):[A-Za-z0-9_]+$", l[3]): E(bt + " 第 %d 行條件唔識：%s" % (i, l[3]))
                 texts.append((bt + " [%s]" % l[0], l[1], l[2])); nsl += 1
                 if "阿福" in l[2] and "他" in l[2] and not fem.get(l[2]) and l[2] not in FEM_OK: E(bt + " 中文句同時有「阿福」同「他」，要喺 fem.json 補「她」版：%s" % l[2])
                 if l[0] == "阿福":   # 主角講自己生前（男版係打工仔，女版係大學生）要有女版
                     for x in (l[1], l[2]):
-                        if any(j in x for j in JOB) and not fem.get(x): E(bt + " 阿福講生前工作但 fem.json 冇女版：%s" % x)
+                        if any(j in x for j in JOB) and not fem.get(x) and x not in FEM_OK: E(bt + " 阿福講生前工作但 fem.json 冇女版：%s" % x)
                 all_text.append((bt, l[0]))
-                if l[0] not in spk_art and l[0] not in art and l[0] not in ("旁白", "系統", "？？？", "抬棺鬼", "告示", "主播", "DJ"):
+                if l[0] not in spk_art and l[0] not in art and l[0] not in ("旁白", "系統", "？？？", "抬棺鬼", "告示", "主播", "DJ", "記者", "聽眾") and sc.get("style") == "talk":
                     W(bt + " 講者「%s」冇圖（SPEAKER_ART／art 都冇）" % l[0])
             for sp, k in art.items():
                 if k not in ghosts and k not in core.get("ENEMY_T", {}) and k not in spk_art.values(): W(bt + " art %s→%s 唔係已知鬼圖鍵" % (sp, k))
@@ -156,6 +220,8 @@ def main():
             if not (len(a) >= lo and all(pair(p) for p in a)): E(tag + " FOE.%s 至少 %d 句粵＋中" % (k, lo))
             for p in a:
                 if pair(p): texts.append(("惡鬼 %s" % k, p[0], p[1]))
+        # --- 8. 分區地圖劇情 ---
+        if ZS is not None and ci in ZS.ZIDS and ci in ZS.ZBEATS: zone_check(tag, ci, beats, ZS, zmaps.get(str(ci)))
         # --- 2. 同關重複 ---
         for lang in (1, 2):
             xs = [t[lang] for t in texts]
