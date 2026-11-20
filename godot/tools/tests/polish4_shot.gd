@@ -41,34 +41,7 @@ func all(tt) -> void:
 		await _wait(0.25)
 	if m.has_method("_nav_on"): m._nav_on("village")
 	await _wait(0.6)
-	# A. 獨立場景（全屏大排檔）：大單卡＋招牌卡＋左下小卡（嵌入模式冇畫 plus.draw_hud）
-	var vil0 = m.get("village")
-	for ci in MD.maps_n():
-		pt._setup(1000000000.0); var S0 = _S(); J.test_clock = -1.0
-		S0.mv = {"ci": float(ci)}
-		var s1 = load("res://game/outpost/mv_scene.gd").new(); s1.name = "MvP4_%d" % ci
-		m.add_child(s1)
-		if vil0 != null: m.move_child(s1, vil0.get_index() + 1)
-		s1.setup(m)
-		var sim1 = s1.sim; sim1.st(); MVW.ws().t0 = 9999.0; sim1.relayout()
-		var P1 = sim1.plus
-		for sid in MD.stations(ci):
-			S0.mv.st[sid].unlocked = true; S0.mv.st[sid].lv = 12.0; S0.mv.counter[str(MD.st_def(sid).good)] = 8.0
-		S0.res["coins"] = 1234567890.0
-		P1.ps(sim1).ev_t = 9999.0; P1.ps(sim1).ord_t = 9999.0
-		P1.ps(sim1).sign[str(ci)] = {"n": 1234567.0}
-		s1.on_show(); await _wait(0.8)
-		sim1.custs.clear(); sim1.spawn_t = 999.0
-		s1.cam = sim1.L.counter_y - s1.view_h() * 0.55; s1.cam_tgt = null; s1.cam_v = 0.0; s1._clamp_cam(true)
-		EV.make_order(P1, sim1); await _wait(2.8)   # 等「有大單！」橫幅過咗
-		await _shot("m%d_chips" % (ci + 1))
-		P1.card = {"k": "order", "i": 0}; await _wait(0.5)
-		await _shot("m%d_order_card" % (ci + 1))
-		P1.card = {"k": "sign"}; await _wait(0.5)
-		await _shot("m%d_sign_card" % (ci + 1))
-		P1.card = null
-		s1.on_hide(); s1.queue_free(); await _wait(0.3)
-	# B. 嵌入（合一地圖，正式玩法）：事件名＋飄字、客人氣泡
+	# 合一地圖（正式玩法）真場景
 	sc = m.mv_view; em = m.mv_embed
 	vh = m.village.size.y / (m.village.size.x / 390.0)
 	for ci in MD.maps_n():
@@ -84,6 +57,23 @@ func all(tt) -> void:
 		P.ps(sim).ev_t = 9999.0; P.ps(sim).ord_t = 9999.0
 		await _wait(0.6)
 		var tag = "m%d" % (ci + 1)
+		# 1. 左下小卡＋大單卡＋招牌卡（合一地圖真場景）
+		P.ps(sim).sign[str(ci)] = {"n": 1234567.0}
+		sim.custs.clear(); sim.spawn_t = 999.0
+		_cam(sim.L.counter_y)
+		EV.make_order(P, sim); await _wait(2.8)   # 等「有大單！」橫幅過咗
+		sc._pexp = 8.0; await _wait(0.3)   # 玩法掣展開
+		await _shot(tag + "_chips")
+		sc._pexp = 0.0
+		P.card = {"k": "order", "i": 0}; await _wait(0.5)
+		await _shot(tag + "_order_card")
+		P.card = {"k": "sign"}; await _wait(0.5)
+		await _shot(tag + "_sign_card")
+		P.card = null
+		# 1b. 鏡頭喺大排檔頂（睇台）：玩法掣收埋
+		_cam(float(sim.st_pos(str(ids[0])).y) + 60.0); await _wait(0.6)
+		await _shot(tag + "_chips_top")
+		P.ps(sim).orders.clear()
 		# 2. 事件名＋收錢／紙錢飄字（飄字起點故意放喺事件名度）
 		EV.start_ev(P, sim, "special")
 		var e = P.live.ev

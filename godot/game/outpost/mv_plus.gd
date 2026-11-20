@@ -497,10 +497,21 @@ func avoid_rects(sc) -> Array:
 # 客人要貨氣泡上面嘅脾氣牌（mv_scene._draw_want 尾叫）
 func draw_tag(sc, ctx, c: Dictionary, x: float, y: float, w: float, _h: float) -> void: CU.draw_tag(self, sc, ctx, c, x, y, w)
 func has_tag(c: Dictionary) -> bool: return CU.tag_text(self, c) != ""   # [polish4] 排氣泡位要預留脾氣牌高度
+func tag_txt(c: Dictionary) -> String:   # [polish4] 脾氣牌完整字（同 CU.draw_tag 一樣），量闊度用
+	var tx = CU.tag_text(self, c)
+	if tx == "": return ""
+	var tp = str(c.get("tp", ""))
+	if tp == "picky" and c.get("star_need") is Dictionary:
+		for g in c.star_need: tx += "★%d" % int(c.star_need[g])
+	if tp == "reg": tx += "♥"
+	if J.t(c.get("friend")) and tp != "reg": tx = S("friend", "朋友", "朋友") + "・" + tx
+	return tx
 
 # ================= 畫面：左下小卡＋彈出卡 =================
+var chip_x := 8.0   # [polish4] 小卡左邊（合一地圖：跟玩法掣）
+var chip_down := false   # [polish4] true＝由上向下疊（合一地圖由玩法掣向下展開）
 func _chip(sc, ctx, y: float, txt: String, col: String, key: String, pulse := false, w := 168.0) -> float:
-	var h = 34.0; var x = 8.0
+	var h = 34.0; var x = minf(chip_x, FW - w - 8.0)
 	var sz = 1.0 + (0.03 * sin(sc.t * 6.0) if pulse else 0.0)
 	Art.rr(ctx, x, y, w * sz, h, 9, "rgba(14,8,18,.82)", col, 1.6)
 	var tx = txt
@@ -508,15 +519,15 @@ func _chip(sc, ctx, y: float, txt: String, col: String, key: String, pulse := fa
 	while tx.length() > 3 and ctx.measureText(tx).width > w - 16.0: tx = tx.substr(0, tx.length() - 2) + "…"
 	sc._txt(ctx, tx, x + 10.0, y + h / 2.0, 15, Color(col), "left", 900, 0)
 	if key != "": _btn[key] = Rect2(x, y, w, h)
-	return y - h - 6.0
-func draw_hud(sc, ctx) -> void:
+	return y + h + 6.0 if chip_down else y - h - 6.0
+func draw_hud(sc, ctx, y_bot := -1.0) -> void:   # y_bot：最底一張小卡嘅頂（-1 = 畫面底；合一地圖讓開底部掣）
 	_sc = sc
 	_btn.clear()
 	var sim = sc.sim
 	if sc.anim != null or sc.card != null: return
 	var hide = sc.sheet != null and sc.sheet.visible or sc.picker != null
 	if not hide:
-		var y = sc.top_pad + sc.view_h() - 8.0 - 34.0
+		var y = y_bot if y_bot >= 0.0 else sc.top_pad + sc.view_h() - 8.0 - 34.0
 		var tn = tide(sim)
 		y = _chip(sc, ctx, y, (S("chip_night", "夜潮 %s", "夜潮 %s") if tn[0] else S("chip_day", "白晝 %s 後入夜", "白晝 %s 後入夜")) % sc._mmss(float(tn[1])), "#d8b0ff" if tn[0] else "#e8dcc4", "")
 		var od = ps(sim).orders

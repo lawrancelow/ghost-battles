@@ -195,6 +195,8 @@ func _run(t, shots: bool, full: bool, only0 := false) -> void:
 	_chk("拔營：原村子唔變（位置、樹、稻田）", str(J.G.get("POS")) == str(pos_before) and str(S.trees) == str(tr_before) and str(S.paddy) == str(pd_before))
 	_chk("拔營：唔郁鏡頭範圍", absf(em.eh() - E) < 1.0)
 	_goto_ci(sc, ci_a); await _w(t, 0.3)
+	# ---------- [polish4] 合一地圖：玩法線小卡 → 開卡 → 撥貨 → 關卡 ----------
+	await _plus_embed(t, m, sc, em)
 	# ---------- 舊存檔（mv_on 未設） ----------
 	var S2 = S.duplicate(true); S2.erase("mv_on"); S2.erase("mv")
 	J.G["S"] = S2
@@ -211,6 +213,73 @@ func _run(t, shots: bool, full: bool, only0 := false) -> void:
 		_goto_ci(sc, c0)
 	if full: await _fps(t, m)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func _tap_btn(sc, em, key: String) -> bool:   # 用村子世界座標撳（同真玩一樣經 mv_embed.on_tap）
+	if not sc._btns.has(key): return false
+	var c: Vector2 = sc._btns[key].get_center()
+	return em.on_tap(c.x, c.y + em.vcam())
+func _plus_embed(t, m, sc, em) -> void:
+	var EVc = load("res://game/outpost/mv_event.gd"); var Mc = load("res://game/outpost/mat.gd")
+	var sim = sc.sim; var P = sim.plus
+	for sid in MD.stations(sim.ci()): sim.sst(sid).unlocked = true
+	P.ps(sim).orders.clear(); P.ps(sim).ord_t = 9999.0; P.card = null
+	var vh = m.village.size.y / (m.village.size.x / 390.0)
+	# 鏡頭喺原村子：唔出小卡、撳唔到
+	_cam(300.0); await _w(t, 0.6)
+	var o = EVc.make_order(P, sim)
+	_chk("合一：有大單", o is Dictionary and not o.is_empty())
+	if not (o is Dictionary) or o.is_empty(): return
+	o["star"] = {}
+	await _w(t, 0.4)
+	_chk("合一：鏡頭喺原村子唔出玩法掣", not sc._btns.has("plus_pill") and not sc._btns.has("plus:ord:0"))
+	# 鏡頭去大排檔區：出玩法掣（收埋），撳一下展開
+	_cam(-em.eh() * 0.5 - vh * 0.5); await _w(t, 0.8)
+	_chk("合一：大排檔區出玩法掣（預設收埋）", sc._btns.has("plus_pill") and not sc._btns.has("plus:ord:0"))
+	if not sc._btns.has("plus_pill"): return
+	var pr: Rect2 = sc._btns["plus_pill"]
+	_chk("合一：玩法掣喺精簡 HUD 下面、唔撞「拔營！」", pr.position.y >= sc.top_pad + sc.EHUD_H and (not sc.sim.can_move() or pr.position.x >= 176.0), pr)
+	if sc._cb_pos is Vector2 and sc._cb_sz != Vector2.ZERO: _chk("合一：玩法掣唔撞「生產鏈」掣", not Rect2(sc._cb_pos, sc._cb_sz).intersects(pr), [sc._cb_pos, pr])
+	_tap_btn(sc, em, "plus_pill"); await _w(t, 0.3)
+	_chk("合一：撳玩法掣 → 展開小卡", sc._btns.has("plus:ord:0"), sc._btns.keys().filter(func(k): return str(k).begins_with("plus")))
+	if not sc._btns.has("plus:ord:0"): return
+	var r: Rect2 = sc._btns["plus:ord:0"]
+	_chk("合一：小卡喺玩法掣下面、唔落到原村子", r.position.y > pr.end.y - 4.0 and r.end.y <= sc.w2s(Vector2(0, sc.world_h())).y + 0.5, [pr, r])
+	# 一半貨：撥貨 → 部分，卡仲開住 → 關
+	for g in o.need:
+		sim.st().counter[str(g)] = 0.0
+		Mc.add(str(g), -Mc.amt(str(g))); Mc.add(str(g), floor(J.num(o.need[g]) / 2.0))
+	_chk("合一：撳大單小卡（經 mv_embed.on_tap）", _tap_btn(sc, em, "plus:ord:0"))
+	await _w(t, 0.3)
+	_chk("合一：開大單卡", P.card is Dictionary and str(P.card.k) == "order")
+	_chk("合一：卡開住有撥貨／關掣", sc._btns.has("plus:card:give") and sc._btns.has("plus:card:close"))
+	var got0 = 0.0
+	for g in o.got: got0 += J.num(o.got[g])
+	_tap_btn(sc, em, "plus:card:give"); await _w(t, 0.3)
+	var got1 = 0.0
+	for g in o.got: got1 += J.num(o.got[g])
+	_chk("合一：撥貨（一半）→ 已撥數增加、卡仲開", got1 > got0 and P.card != null, [got0, got1])
+	_tap_btn(sc, em, "plus:card:close"); await _w(t, 0.3)
+	_chk("合一：撳「關」→ 卡關", P.card == null)
+	# 夠貨：開卡 → 撥貨 → 完成（卡自動關、收錢）
+	for g in o.need: Mc.add(str(g), J.num(o.need[g]) * 2.0)
+	await _w(t, 0.2)
+	if not sc._btns.has("plus:ord:0"): _tap_btn(sc, em, "plus_pill"); await _w(t, 0.3)
+	_tap_btn(sc, em, "plus:ord:0"); await _w(t, 0.3)
+	_chk("合一：再開大單卡", P.card != null)
+	var c_before = sim.coins()
+	_tap_btn(sc, em, "plus:card:give"); await _w(t, 0.3)
+	_chk("合一：撥夠貨 → 大單完成、卡關、收錢", P.card == null and P.ps(sim).orders.is_empty() and sim.coins() > c_before, [sim.coins() - c_before])
+	# 招牌卡：撳卡外面＝關
+	if not sc._btns.has("plus:sign"): _tap_btn(sc, em, "plus_pill"); await _w(t, 0.3)
+	if sc._btns.has("plus:sign"):
+		_tap_btn(sc, em, "plus:sign"); await _w(t, 0.3)
+		_chk("合一：開招牌卡", P.card is Dictionary and str(P.card.k) == "sign")
+		var vy = sc.top_pad + 150.0
+		em.on_tap(195.0, vy + em.vcam()); await _w(t, 0.3)
+		_chk("合一：撳卡外 → 招牌卡關", P.card == null)
+	P.card = null
+	await _w(t, 9.0)
+	_chk("合一：玩法掣 8 秒冇撳自動收埋", not sc._btns.has("plus:sign") and not sc._btns.has("plus:ord:0"))
 
 func M_add_stock() -> void:
 	var M = load("res://game/outpost/mat.gd")
