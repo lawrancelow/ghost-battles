@@ -357,13 +357,13 @@ M1 = {
   "zones": [
     {"id": "w_kgrave", "type": "wild", "rect": [1380, 0, 1800, 520], "n": ["野外區　甘榜墳場", "野外區　甘榜墳場"], "col": "#8a1c24",
      "gate": {"x": 1600, "w": 60, "y": 534, "dir": 1}, "boss_at": [1590, 330],
-     "bosses": [_boss("zb_jerangkung", "Hantu Jerangkung 頭目", "n30_jerangkung", ["youhun", "n30_jerangkung", "xiaogui"], 5.5),
-                _boss("zb_pocong", "Pocong 頭目", "pocong", ["zhiren", "pocong", "xiaogui"], 6.5)],
+     "bosses": [_boss("zb_jerangkung", "Hantu Jerangkung 頭目", "n30_jerangkung", ["youhun", "n30_jerangkung", "youhun"], 5.5),
+                _boss("zb_pocong", "Pocong 頭目", "pocong", ["zhiren", "pocong", "zhiren"], 6.5)],
      "decor": [["grave", 1450, 180, 0], ["grave", 1720, 150, 0], ["grave", 1470, 450, 0], ["grave", 1740, 420, 0], ["grave", 1680, 250, 0],
                ["tree_bare", 1440, 300, 74], ["tree_bare", 1760, 320, 70], ["zt_stilt", 1500, 120, 96], ["zt_banana", 1760, 500, 70], ["zt_banana", 1420, 500, 66]]},
     {"id": "w_rubber", "type": "wild", "rect": [1380, 1764, 1800, 2240], "n": ["野外區　廢膠廠", "野外區　廢膠廠"], "col": "#8a1c24",
      "gate": {"x": 1600, "w": 60, "y": 1750, "dir": -1}, "boss_at": [1590, 2070],
-     "bosses": [_boss("zb_raya", "Hantu Raya", "n30_hanturaya", ["xiaogui", "n30_hanturaya", "xiaogui"], 6.5, False),
+     "bosses": [_boss("zb_raya", "Hantu Raya", "n30_hanturaya", ["youhun", "n30_hanturaya", "egui"], 6.5, False),
                 {"id": "zb_toyol", "n": ["Toyol", "Toyol"], "art": "toyol", "main": True, "chapter": [1, 2]}],
      "decor": [["vb_rubbersheet", 1460, 1900, 110], ["vb_latex", 1740, 2200, 100], ["rn_latex", 1720, 1880, 70], ["rn_latex", 1440, 2140, 66],
                ["tree_bare", 1760, 2010, 70], ["zb_rock2", 1450, 2230, 70], ["zt_stilt", 1730, 2120, 0]]},
@@ -373,17 +373,17 @@ M1 = {
      "door": {"rect": [868, 630, 932, 768], "in": [900, 794], "out": [900, 612], "vis": [866, 624, 934, 652]}, "power": 1500, "loss": 0.3,
      "fields": {"b_coco": {"nodes": [[600, 430], [720, 404], [840, 436], [680, 524]], "sign": [790, 600]}},
      "shops": {"b_cocomilk": {"pos": [1150, 560], "need": {"b_coco": 3}}},
-     "stage": {"en": ["xiaogui", "youhun", "xiaogui"], "boss": "xiaogui", "p": 5}},
+     "stage": {"en": ["zhiren", "youhun", "zhiren"], "boss": "youhun", "p": 5}},
     {"id": "B", "type": "res", "rect": [0, 760, 420, 1584], "n": ["資源區 B　膠園", "資源區 B　膠園"], "col": "#5a5a2a",
      "door": {"rect": [396, 1144, 474, 1208], "in": [492, 1176], "out": [376, 1176], "vis": [392, 1144, 420, 1208]}, "power": 2500, "loss": 0.3,
      "fields": {"b_latex": {"nodes": [[90, 990], [210, 960], [320, 1000], [150, 1090]], "sign": [270, 1110]}},
      "shops": {"b_rubbersheet": {"pos": [200, 1420], "need": {"b_latex": 3}}},
-     "stage": {"en": ["xiaogui", "egui", "xiaogui"], "boss": "egui", "p": 6}},
+     "stage": {"en": ["zhiren", "egui", "zhiren"], "boss": "egui", "p": 6}},
     {"id": "C", "type": "res", "rect": [460, 1700, 1340, 2172], "n": ["資源區 C　甘榜竹林", "資源區 C　甘榜竹林"], "col": "#3a5a32",
      "door": {"rect": [866, 1576, 934, 1712], "in": [900, 1558], "out": [900, 1732], "vis": [864, 1620, 936, 1668]}, "power": 3500, "loss": 0.3,
      "fields": {"b_bamboo": {"nodes": [[600, 1930], [700, 1905], [800, 1945], [660, 2020]], "sign": [770, 2080]}},
      "shops": {"b_strip": {"pos": [1150, 2010], "need": {"b_bamboo": 3}}},
-     "stage": {"en": ["xiaogui", "pocong", "xiaogui"], "boss": "pocong", "p": 7}},
+     "stage": {"en": ["zhiren", "pocong", "zhiren"], "boss": "pocong", "p": 7}},
   ],
   "barriers": [
     {"k": "void", "style": "jungle", "rects": [[0, 0, 452, 668], [452, 0, 1380, 214], [1344, 214, 1380, 668], [0, 1606, 452, 2240], [452, 2184, 1380, 2240], [1344, 1600, 1380, 2240]]},
@@ -455,7 +455,7 @@ M2 = {
      "door": {"rect": [700, 836, 1010, 906], "in": [740, 928], "out": [924, 830], "vis": [880, 846, 972, 878]}, "power": 6000, "loss": 0.3,
      "fields": {"b_straw": {"nodes": [[960, 470], [1070, 450], [1010, 560], [1130, 540]], "sign": [1060, 650]}},
      "shops": {"b_rope": {"pos": [1330, 580], "need": {"b_straw": 3}}},
-     "stage": {"en": ["zombie", "xiaogui", "zombie"], "boss": "zombie", "p": 10}},
+     "stage": {"en": ["zombie", "zhiren", "zombie"], "boss": "zombie", "p": 10}},
     {"id": "C", "type": "res", "rect": [0, 900, 280, 1724], "n": ["資源區 C　驛站古井", "資源區 C　驛站古井"], "col": "#2a4a5a",
      "door": {"rect": [262, 1284, 320, 1348], "in": [334, 1316], "out": [236, 1316], "vis": [272, 1284, 304, 1348]}, "power": 8000, "loss": 0.3,
      "fields": {"b_well": {"nodes": [[70, 1130], [190, 1150], [120, 1240]], "sign": [150, 1400]}},
@@ -649,5 +649,14 @@ for _M in (M0, M1, M2, M3): _M["events"] = _events(_M)
 _dress(M0)
 
 D = {"v": 1, "maps": {"0": M0, "1": M1, "2": M2, "3": M3}}
+# [mapbattle] 紅線：兒童形象（toyol、xiaogui）唔做圍欄／被打嘅雜兵、守區怪；Toyol 只可以係主線第 2 章主 Boss（chapter 原關卡）
+CHILD_ART = {"toyol", "xiaogui"}
+for _c, _m in D["maps"].items():
+    for _z in _m["zones"]:
+        _sts = [_z.get("stage")] + [b.get("stage") for b in _z.get("bosses", [])]
+        for _st in _sts:
+            if _st: assert not (set(_st["en"]) | {_st.get("boss")}) & CHILD_ART, ("兒童形象做咗雜兵／守區怪", _c, _z["id"], _st)
+        for _b in _z.get("bosses", []):
+            assert _b.get("art") not in CHILD_ART or _b.get("chapter"), ("兒童形象做咗王", _c, _b["id"])
 json.dump(D, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("wrote", OUT)

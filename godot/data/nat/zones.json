@@ -2332,7 +2332,7 @@
         "en": [
          "youhun",
          "n30_jerangkung",
-         "xiaogui"
+         "youhun"
         ],
         "boss": "n30_jerangkung",
         "p": 5.5
@@ -2350,7 +2350,7 @@
         "en": [
          "zhiren",
          "pocong",
-         "xiaogui"
+         "zhiren"
         ],
         "boss": "pocong",
         "p": 6.5
@@ -2455,9 +2455,9 @@
        "rename": false,
        "stage": {
         "en": [
-         "xiaogui",
+         "youhun",
          "n30_hanturaya",
-         "xiaogui"
+         "egui"
         ],
         "boss": "n30_hanturaya",
         "p": 6.5
@@ -2629,11 +2629,11 @@
      },
      "stage": {
       "en": [
-       "xiaogui",
+       "zhiren",
        "youhun",
-       "xiaogui"
+       "zhiren"
       ],
-      "boss": "xiaogui",
+      "boss": "youhun",
       "p": 5
      },
      "props": [
@@ -2842,9 +2842,9 @@
      },
      "stage": {
       "en": [
-       "xiaogui",
+       "zhiren",
        "egui",
-       "xiaogui"
+       "zhiren"
       ],
       "boss": "egui",
       "p": 6
@@ -3025,9 +3025,9 @@
      },
      "stage": {
       "en": [
-       "xiaogui",
+       "zhiren",
        "pocong",
-       "xiaogui"
+       "zhiren"
       ],
       "boss": "pocong",
       "p": 7
@@ -5607,7 +5607,7 @@
      "stage": {
       "en": [
        "zombie",
-       "xiaogui",
+       "zhiren",
        "zombie"
       ],
       "boss": "zombie",
