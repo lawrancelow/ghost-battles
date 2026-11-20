@@ -656,13 +656,16 @@ Q_REVEAL1 = {"market": ["level", "3"],        # 出村：「升到 3 級」完�
              "B": ["stage", "1-3"],           # 枯井巷：「擊敗餓鬼王」完成
              "C": ["build", "home"]}          # 荒田禾稈場：「建造民宅（增加雜鬼名額）」完成
 H_ENTER = ["睇完呢關開場劇情先開放", "看完這關開場劇情後開放"]
+# 第 2–4 關資源區：A＝大排檔開檔劇情（when.t open）播完；B＝第一個新檔劇情（unlock）；C＝賣貨劇情（sold）
+RES_BEAT = {"A": "open", "B": "unlock", "C": "sold"}
 def _reveal(M, first):
     for z in M["zones"]:
         t = z["type"]; zid = z["id"]
         if first:
             if zid in Q_REVEAL1: z["reveal"] = {"quest_done": Q_REVEAL1[zid]}
-        else:       # 第 2–4 關：拔營到埗 → 大排檔即開；野外區、資源區喺該關開場劇情（map_enter）後開
-            if t in ("wild", "res"): z["reveal"] = {"enter": True, "hint": H_ENTER}
+        else:       # 第 2–4 關：拔營到埗 → 大排檔即開；野外區喺該關開場劇情（map_enter）後開；資源區跟劇情逐個開
+            if t == "wild": z["reveal"] = {"enter": True, "hint": H_ENTER}
+            elif t == "res": z["reveal"] = {"beat_t": RES_BEAT[zid]}   # hint 由遊戲按劇情標題自動生成
 _reveal(M0, True); _reveal(M1, False); _reveal(M2, False); _reveal(M3, False)
 
 _dress(M0)
