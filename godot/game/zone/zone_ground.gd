@@ -141,25 +141,29 @@ func _draw() -> void:
 				if k == 0: x.moveTo(ccx + cos(a) * rr, ccy + sin(a) * rr)
 				else: x.lineTo(ccx + cos(a) * rr, ccy + sin(a) * rr)
 			x.stroke()
-	# 泥石路：踩實嘅泥（柔邊）＋主路中間散落石板／碎石
+	# 泥路：連續踩實泥（比地面淺一級、柔邊）＋車轍＋少量碎石（主路闊、小路窄）
 	draw_set_transform_matrix(X)
 	for e in _ps:
 		var q: Vector2 = e[0]; var hw: float = e[1]
-		draw_circle(q, hw + 8.0, _c("#1a120c", 0.06))   # 路邊深一級
-		draw_circle(q, hw, _c("#6a5038", 0.20 if e[2] == "main" else 0.17))   # 路面淺一級
-		draw_circle(q, hw * 0.6, _c("#7a5e42", 0.10))
-	var j = 0
+		draw_circle(q, hw + 9.0, _c("#1a120c", 0.035))   # 路邊深一級（柔）
 	for e in _ps:
-		j += 1
 		var q: Vector2 = e[0]; var hw: float = e[1]
+		draw_circle(q, hw + 2.0, _c("#5e4630", 0.10))
+		draw_circle(q, hw - 2.0, _c("#7a5c40", 0.11 if e[2] == "main" else 0.09))
+		draw_circle(q, hw * 0.55, _c("#8a6a4a", 0.05))
+	var j = 0
+	for i in _ps.size() - 1:   # 車轍（主路兩條）＋碎石
+		var e = _ps[i]; var e2 = _ps[i + 1]
+		if e[2] != e2[2] or e[0].distance_to(e2[0]) > 12.0: continue
+		var d = (e2[0] - e[0]).normalized(); var nrm = Vector2(-d.y, d.x)
 		if e[2] == "main":
-			if j % 3 != 0: continue
-			for k in 2:
-				var sx = q.x + (R() - 0.5) * hw * 1.3; var sy = q.y + (R() - 0.5) * 6
-				var w = 9 + R() * 9; var h = 6 + R() * 5
-				slab.call(sx - w / 2, sy - h / 2, w, h)
-		elif j % 5 == 0:
-			x.fillStyle = "rgba(40,32,30,.6)"; x.beginPath(); x.ellipse(q.x + (R() - 0.5) * hw, q.y + (R() - 0.5) * 4, 2 + R() * 2, 1.5 + R(), 0, 0, TAU); x.fill()
+			for sd in [-0.32, 0.32]:
+				var o = nrm * e[1] * sd
+				draw_line(e[0] + o, e2[0] + o, _c("#3a2a1c", 0.30), 2.2, true)
+		j += 1
+		if j % 4 == 0:
+			var gp = e[0] + nrm * (R() - 0.5) * e[1] * 1.4
+			draw_circle(gp, 1.2 + R() * 1.6, _c(["#4a4248", "#5a5052", "#3a3236"][j % 3], 0.85))
 	# 螺旋龜裂
 	for i in int(16 * area):
 		var sx2 = R() * W; var sy2 = 30 + R() * (H - 50)

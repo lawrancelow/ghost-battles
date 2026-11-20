@@ -155,33 +155,46 @@ def _dress(M):
     for sp in V["spots"].values():
         for q in sp: blocks.append((q[0] - 14, q[1] - 40, q[0] + 14, q[1] + 6))
     PS = _paths_samples(M)
-    def free(x0, y0, x1, y1, pad=0.0, roads=True):
+    def free(x0, y0, x1, y1, pad=0.0, roads=True, lanes=True):
         if x0 < VR[0] or x1 > VR[2] or y0 < VR[1] or y1 > VR[3]: return False
         for b in blocks:
             if x0 < b[2] + pad and x1 > b[0] - pad and y0 < b[3] + pad and y1 > b[1] - pad: return False
         if roads:
             for (px, py, hw, k) in PS:
+                if k != "main" and not lanes: continue
                 m = hw + (8 if k == "main" else 5)
                 if abs(px - (x0 + x1) / 2) < (x1 - x0) / 2 + m and abs(py - (y0 + y1) / 2) < (y1 - y0) / 2 + m * 0.7: return False
         return True
     props = []
-    def put(k, x, y, w, foot=None, pad=2.0, roads=True):
+    def put(k, x, y, w, foot=None, pad=2.0, roads=True, lanes=True):
         fw = foot or max(22.0, w * 0.7)
         r = (x - fw / 2, y - 16, x + fw / 2, y + 4)
-        if not free(*r, pad=pad, roads=roads): return False
+        if not free(*r, pad=pad, roads=roads, lanes=lanes): return False
         props.append([k, round(x), round(y), round(w)]); blocks.append(r); return True
-    # 1) 院落：貼住建築兩側
-    yard = ["proc:fence", "proc:laundry", "proc:woodpile", "proc:jar", "proc:coop", "proc:veg", "proc:mill", "proc:barrel", "store__crate"]
+    # 1) 院落：每間建築旁邊 2–4 件院落擺設（zp_*，畫闊 55–85），矮竹籬圍出小院
+    YARD = {"home": ["zp_laundry", "zp_jars", "zp_stove", "zp_fence"], "store": ["zp_sacks", "zp_cart", "zp_fence"],
+            "wood": ["zp_woodpile", "zp_cart", "zp_fence"], "plank": ["zp_woodpile", "zp_sacks", "zp_fence"],
+            "rice": ["zp_sacks", "zp_veg", "zp_fence"], "bun": ["zp_sacks", "zp_jars", "zp_stove"],
+            "house": ["zp_bench", "zp_jars", "zp_fence", "zp_laundry"], "altar": ["zp_bench", "zp_deadtree"],
+            "camp": ["zp_fence", "zp_sacks", "zp_bench"], "furnace": ["zp_jars"]}
+    WID = {"zp_fence": 78, "zp_laundry": 74, "zp_woodpile": 70, "zp_jars": 60, "zp_veg": 76, "zp_mill": 62, "zp_cart": 72, "zp_coop": 64,
+           "zp_sacks": 66, "zp_stove": 58, "zp_deadtree": 70, "zp_bench": 72}
     for k, (x, y) in V["POS"].items():
-        if k == "gate": continue
-        w = BW.get(k, 100)
-        cand = [(-w / 2 - 26, -6), (w / 2 + 26, -6), (-w / 2 - 20, 22), (w / 2 + 20, 22), (-w / 2 - 50, 8), (w / 2 + 50, 8), (0, 30)]
-        rnd.shuffle(cand); placed = 0
-        for (dx, dy) in cand:
-            kk = yard[rnd.randrange(len(yard))]
-            ww = {"proc:fence": 60, "proc:laundry": 64, "proc:veg": 56, "proc:coop": 40, "proc:woodpile": 44, "proc:mill": 34, "proc:jar": 24, "proc:barrel": 22, "store__crate": 30}[kk]
-            if put(kk, x + dx, y + dy, ww): placed += 1
-            if placed >= 3: break
+        if k not in YARD: continue
+        w = BW.get(k, 100); placed = 0
+        for kk in YARD[k]:
+            ww = WID[kk] * rnd.uniform(0.92, 1.08)
+            cand = []
+            for sgn in (-1, 1):
+                for dy in (-6, 18, 40, -34):
+                    cand.append((x + sgn * (w / 2 + ww / 2 - 4), y + dy))
+                    cand.append((x + sgn * (w / 2 + ww / 2 + 22), y + dy))
+            cand += [(x - ww * 0.6, y + 44), (x + ww * 0.6, y + 44)]
+            rnd.shuffle(cand)
+            for (cx, cy) in cand:
+                if put(kk, cx, cy, ww, foot=ww * 0.72, pad=0, lanes=False): placed += 1; break
+    for (kk, cx, cy) in [("zp_veg", 880, 1230), ("zp_sacks", 1075, 1410), ("zp_mill", 470, 1440), ("zp_coop", 760, 1440), ("zp_mill", 760, 1660)]:
+        put(kk, cx, cy, WID[kk], foot=WID[kk] * 0.8, pad=0)
     # 2) 槐樹林外圍：裝飾槐樹／灌木
     gx0, gy0, gx1, gy1 = 270, 1240, 440, 1365
     for i in range(16):
@@ -203,17 +216,17 @@ def _dress(M):
             off = pa["w"] / 2 + 16
             if not put("deco:post", mx + nx * off * side, my + ny * off * side, 30, foot=18):
                 put("proc:grass", mx + nx * off * side, my + ny * off * side, 0, foot=20)
-            put("zb_rock2", mx - nx * (off + 6) * side, my - ny * (off + 6) * side + 6, 36, foot=26)
+            if i % 2 == 0: put("zb_rock2", mx - nx * (off + 6) * side, my - ny * (off + 6) * side + 6, 34, foot=26)
     # 4) 填空：冇大過約 120×120 嘅空地
-    fill = ["proc:grass", "proc:grass", "zb_rock2", "zb_bush", "proc:pebbles", "deco:tree", "proc:flowers"]
+    fill = ["zp_deadtree", "zp_deadtree", "proc:grass", "zb_bush", "deco:tree", "proc:flowers", "proc:grass", "zb_rock2"]
     for gy in range(int(VR[1]) + 24, int(VR[3]), 46):
         for gx in range(int(VR[0]) + 24, int(VR[2]), 46):
             cx, cy = gx + rnd.uniform(-14, 14), gy + rnd.uniform(-14, 14)
             near = any(abs(cx - (b[0] + b[2]) / 2) < (b[2] - b[0]) / 2 + 22 and abs(cy - (b[1] + b[3]) / 2) < (b[3] - b[1]) / 2 + 22 for b in blocks)
             if near: continue
             k = fill[rnd.randrange(len(fill))]
-            w = {"zb_rock2": rnd.uniform(40, 54), "zb_bush": rnd.uniform(50, 64), "deco:tree": rnd.uniform(52, 60)}.get(k, 0)
-            put(k, cx, cy, w, foot=26)
+            w = {"zb_rock2": rnd.uniform(40, 50), "zb_bush": rnd.uniform(56, 70), "deco:tree": rnd.uniform(54, 62), "zp_deadtree": rnd.uniform(58, 72)}.get(k, 0)
+            put(k, cx, cy, w, foot=max(26, w * 0.55))
     V["props"] = props
 _dress(M0)
 

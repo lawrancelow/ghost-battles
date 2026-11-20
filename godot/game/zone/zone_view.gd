@@ -343,7 +343,7 @@ static func _props(c: CanvasItem, ctx: Ctx, vr: Rect2, t: float) -> void:
 						_sp(c, "lamppost", x, y + 3, 35.0, false, Color(0.7, 0.62, 0.6))
 						PtGfx.init(); c.draw_texture_rect(PtGfx.RAD, Rect2(x + 6 - 20, y - 30 - 20, 40, 40), false, Color(1, 0.92, 0.75, 0.22 + sin(t * 2 + x) * 0.06))
 		elif Spr.ok(k):
-			var tint = Color(0.62, 0.58, 0.6) if k == "tree" else Color(0.78, 0.76, 0.78)
+			var tint = Color(0.62, 0.58, 0.6) if k == "tree" else (Color(0.86, 0.83, 0.83) if k.begins_with("zp_") else Color(0.78, 0.76, 0.78))
 			_sp(c, k, x, y, w, int(x) % 2 == 1, tint)
 
 # 暗色小河（兩端入山岩）＋破木橋
