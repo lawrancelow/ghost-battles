@@ -489,6 +489,10 @@ func _fold_k() -> float:   # 1 = 正常，0 = 摺晒
 	return clampf(1.0 - anim.t / A_FOLD, 0.0, 1.0)
 
 # ================= 畫 =================
+static var _mb_s = null
+static func _mbf() -> bool:   # [mapbattle] 分區大地圖打緊仗（行軍／開打／結算）
+	if _mb_s == null: _mb_s = load("res://game/zone/zone_battle.gd")
+	return _mb_s.fighting()
 func _draw_stage() -> void:
 	if sim == null or sim.st() == null or sim.L.is_empty(): return
 	var ctx = Ctx.new(stage)
@@ -514,7 +518,7 @@ func _draw_stage() -> void:
 		if not fence_art(): _draw_fence(ctx)   # [camp] fence_art：柵欄喺背景圖
 		if not walking:
 			for g in sim.guards: _draw_guard(ctx, g)
-			_draw_guard_slots(ctx)
+			if not _mbf(): _draw_guard_slots(ctx)   # [mapbattle] 打緊仗：收埋「派鬼守夜」牌
 	_draw_amb_ghosts(ctx, vy0, vy1)
 	# 佈景＋台＋人：按 y 排（只畫鏡頭內）
 	var items = []
@@ -555,7 +559,8 @@ func _draw_stage() -> void:
 	if not walking:
 		_wrects.clear()   # [polish4] 要貨氣泡由櫃台頭排起，撞到就推高
 		var qs = sim.custs.duplicate(); qs.sort_custom(func(a, b): return int(a.get("slot", 0)) < int(b.get("slot", 0)))
-		for c in qs: if c.st != "out" and c.pos.y > vy0 and c.pos.y - 200.0 < vy1: _draw_want(ctx, c)
+		if not _mbf():   # [mapbattle] 打緊仗：收埋要貨氣泡
+			for c in qs: if c.st != "out" and c.pos.y > vy0 and c.pos.y - 200.0 < vy1: _draw_want(ctx, c)
 	_draw_fog(ctx, vy0, vy1)
 	_draw_amb_fly(ctx)
 	_draw_parts(ctx, true)
@@ -569,8 +574,10 @@ func _draw_stage() -> void:
 	if embed:   # [unify] 對白框避開台名牌、台
 		for q in _plates: _brects.append(q.grow(2))
 		for kk in _wbtns: if kk.begins_with("st:"): _brects.append(_wbtns[kk])
-	_brects.append_array(sim.plus.avoid_rects(self))   # [play] 對白框避開事件名同右上「生產鏈」掣
-	for b in bubbles: _draw_bubble(ctx, b)
+	_brects.append_array(sim.plus.avoid_rects(self))
+	if zone: _brects.append_array(load("res://game/zone/zone_taunt.gd").world_rects)   # [mapbattle] 閒談對白框避開王嘅叫囂泡泡   # [play] 對白框避開事件名同右上「生產鏈」掣
+	if not _mbf():   # [mapbattle] 打緊仗：收埋閒談對白框
+		for b in bubbles: _draw_bubble(ctx, b)
 	if embed and anim != null:   # [unify] 拔營：大排檔區＋村外區淡出、換圖、淡入（原村子唔變）
 		var fa = clampf(1.0 - absf(float(anim.t) - A_SWAP) / 1.8, 0.0, 1.0)
 		if fa > 0.0: ctx.fillStyle = "rgba(8,4,10,%.3f)" % fa; ctx.fillRect(0, maxf(vy0, -40.0), float(sim.L.get("w", FW)), minf(vy1, world_h()) - maxf(vy0, -40.0))
@@ -810,7 +817,7 @@ func _draw_over() -> void:
 	if sim == null or sim.st() == null or sim.L.is_empty(): return
 	var ctx = Ctx.new(over)
 	if anim != null: _draw_anim(ctx)
-	if banner != null: _draw_banner(ctx)
+	if banner != null and not _mbf(): _draw_banner(ctx)   # [mapbattle] 打緊仗唔出橫額
 	if card != null: _draw_card(ctx)
 
 # ---------------- 圍欄 ----------------

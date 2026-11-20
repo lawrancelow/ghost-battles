@@ -29,6 +29,9 @@ static var LOG: Array = []            # 測試用：[[key, which, text], …]
 static var hide_keys := {}            # 戰鬥中由 zone_battle 收埋嘅（王喺戰場上）
 static var hits: Array = []           # [[Rect2(世界), wild zid]] 撳中叫囂緊嘅王 → 開挑戰卡
 static var rng := RandomNumberGenerator.new()
+static var _top_min := 6.0
+static var _avoid: Array = []
+static var world_rects: Array = []   # 今格叫囂泡泡（世界座標）：大排檔閒談對白框會避開（mv_scene._brects）
 
 static func D() -> Dictionary:
 	if _D == null:
@@ -156,6 +159,10 @@ static func _dt() -> float:
 	var d = 0.0 if _ms == 0 else clampf((now - _ms) / 1000.0, 0.0, 0.25)
 	_ms = now
 	return d
+static var _mb_s = null
+static func _mbf() -> bool:
+	if _mb_s == null: _mb_s = load("res://game/zone/zone_battle.gd")
+	return _mb_s.fighting()
 static func _battle_on() -> bool:
 	var B = J.G.get("Battle")
 	return B is Dictionary and J.t(B.get("active"))
@@ -200,8 +207,15 @@ static func draw(c: CanvasItem, nv) -> void:
 		var cap = str(e.k) == "cap"
 		Art.draw_char(ctx, art_of(key), x, p.y, 0.8 if cap else 0.95, o)
 		hits.append([Rect2(p.x - 50, p.y - 110, 100, 150), str(e.z), str(e.k)])
-		# 再挑戰提示（畫面 14px）
-		_screen_txt(c, ZD.L("撳我再挑戰", "點我再挑戰") if not cap else ZD.L("撳我再攻佔", "點我再攻佔"), Vector2(p.x, p.y + 16), z, 14, Color("#ffd27a"))
+		# 再挑戰提示（畫面 14px）；打緊仗唔出
+		if not _mbf(): _screen_txt(c, ZD.L("撳我再挑戰", "點我再挑戰") if not cap else ZD.L("撳我再攻佔", "點我再攻佔"), Vector2(p.x, p.y + 16), z, 14, Color("#ffd27a"))
+	# 避開：大排檔 HUD（頂）、大排檔閒談對白框（mv_scene 上一格嘅 _drects，世界座標）
+	_top_min = 6.0; _avoid = []
+	var em = nv._zone_em() if nv.has_method("_zone_em") else null
+	if em != null and em.sc != null and is_instance_valid(em.sc):
+		var es = em.sc
+		if float(es.hud_k) > 0.3: _top_min = (float(es.embed_top) + float(es.EHUD_H) * float(es.k)) + 4.0 + 48.0   # HUD 下面仲有「招牌菜／生產鏈」掣一行
+	world_rects.clear()
 	for b in bubbles: _bubble(c, b, z, vr)
 
 static func _screen_txt(c: CanvasItem, s: String, wp: Vector2, z: float, px: int, col: Color) -> void:
@@ -222,8 +236,22 @@ static func bubble_rect(b: Dictionary, z: float, vr: Rect2) -> Rect2:
 	w += 22.0; var h = ls.size() * 21.0 + 14.0
 	var sp = (p - vr.position) * z + Vector2(0, -118.0 * z)   # 頭頂（世界 118 單位上面）
 	var x = clampf(sp.x - w / 2, 6.0, vr.size.x * z - w - 6.0)
-	var y = clampf(sp.y - h, 6.0, vr.size.y * z - h - 6.0)
-	return Rect2(x, y, w, h)
+	var y = clampf(sp.y - h, _top_min, maxf(_top_min, vr.size.y * z - h - 6.0))
+	var r = Rect2(x, y, w, h)
+	for a in _avoid:   # 撞到大排檔對白框：搬上／搬落（揀近啲、喺畫面內）
+		if r.intersects(a.grow(4)):
+			var up = a.position.y - h - 8.0; var dn = a.end.y + 8.0
+			r.position.y = up if up >= _top_min and absf(up - y) <= absf(dn - y) else dn
+	var lab = label_rect(str(b.key), z, vr)   # 唔好疊住「點我再挑戰」同王本身
+	if lab.size.x > 0 and r.intersects(lab.grow(4)):
+		var up = lab.position.y - h - 6.0
+		r.position.y = up if up >= 6.0 else lab.end.y + 6.0
+	return r
+# 「點我再挑戰」字＋王身（畫面座標）
+static func label_rect(key: String, z: float, vr: Rect2) -> Rect2:
+	if not on(key) or _mbf() or hide_keys.has(key): return Rect2()
+	var p = (spot(key) - vr.position) * z
+	return Rect2(p.x - 60.0, p.y - 100.0 * z, 120.0, 100.0 * z + 30.0)
 static func wrap_lines(s: String, f: Font, px: int, maxw: float) -> Array:
 	var out = []; var cur = ""
 	for ch in s:
@@ -235,6 +263,7 @@ static func _bubble(c: CanvasItem, b: Dictionary, z: float, vr: Rect2) -> void:
 	var p: Vector2 = b.fn.call() if b.has("fn") else b.p
 	if not vr.grow(60).has_point(p - Vector2(0, 50)): return
 	var r = bubble_rect(b, z, vr)
+	world_rects.append(Rect2(vr.position + r.position / z, r.size / z))
 	var a = clampf(minf(b.t / 0.15, (b.life - b.t) / 0.3), 0.0, 1.0)
 	var f = UIKit.font("sans", 700)
 	var ls = wrap_lines(str(b.text), f, 16, 220.0)

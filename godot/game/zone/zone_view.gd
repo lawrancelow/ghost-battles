@@ -506,14 +506,21 @@ static func draw_over(c: CanvasItem, nv) -> void:
 	PtGfx.init()
 	draw_atmo(c, nv)   # [zone2] 天氣／環境粒子
 	ZD.watch(nv.view_rect())   # [zone2] 劇情事件：第一次見到某區、二級廠解鎖、解放
+	var mbf = _mb().fighting()   # [mapbattle] 打緊仗：收埋區名牌、王進度、戰力字（黑霧照畫）
 	for z in ZD.zones():
 		var r = ZD.rect(z.rect)
 		var tp = str(z.type)
+		if mbf:
+			if tp == "res" and not ZD.owned(str(z.id)) and not _mb().on_zone(str(z.id)) and r.intersects(vr): _fog_only(c, nv, z, r, t)
+			if tp == "wild" and not _mb().on_zone(str(z.id)) and r.intersects(vr):   # 其他野外區嘅王照企（冇牌）
+				var bi = ZD.boss_next(str(z.id))
+				if bi >= 0 and TA.boss_taunting(str(z.id)) == "":
+					var bb = ZD.bosses(str(z.id))[bi]; var at = ZD.v2(z.get("boss_at", [r.get_center().x, r.get_center().y]))
+					Art.draw_char(ctx, str(bb.get("art", "youhun")), at.x, at.y + sin(t * 2.0) * 3.0, 1.05 if J.t(bb.get("main")) else 0.9, {"t": t, "flip": false})
+			continue
 		if tp == "res" and not ZD.owned(str(z.id)):
 			hits.append([r, "res", str(z.id)])
-			if _mb().on_zone(str(z.id)):   # [mapbattle] 攻佔緊：黑霧散開，睇到戰場
-				if r.intersects(vr): _plate(ctx, _name(nv, z), r.get_center().x, r.position.y + _name_px(nv) * 1.4, _name_px(nv), _rgba(str(z.get("col", "#3a3036")), 0.92))
-				continue
+			if _mb().on_zone(str(z.id)): continue   # [mapbattle] 攻佔緊：黑霧散開，睇到戰場
 			if r.intersects(vr): _fog(c, ctx, nv, z, r, t)
 			continue
 		if tp == "wild":
@@ -558,6 +565,10 @@ static func _fog(c: CanvasItem, ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float)
 	ctx.globalAlpha = da * (0.75 + 0.25 * sin(t * 3.0))
 	_plate(ctx, ZD.L("撳我攻佔", "點我攻佔"), cx, cy + px * 3.8, px, "rgba(150,40,30,.95)")
 	ctx.globalAlpha = 1.0
+static func _fog_only(c: CanvasItem, nv, z: Dictionary, r: Rect2, t: float) -> void:   # [mapbattle] 淨係霧（冇牌冇字）
+	for k in 6:
+		var g = 30.0 - k * 8.0
+		c.draw_rect(r.grow(g), Color(0.024, 0.012, 0.04, 0.16 + (0.46 if k == 5 else 0.0)))
 static func _lock(ctx: Ctx, x: float, y: float, s: float) -> void:
 	ctx.strokeStyle = "#b8a070"; ctx.lineWidth = s * 0.16
 	ctx.beginPath(); ctx.arc(x, y - s * 0.15, s * 0.34, PI, TAU); ctx.lineTo(x + s * 0.34, y + s * 0.1); ctx.moveTo(x - s * 0.34, y - s * 0.15); ctx.lineTo(x - s * 0.34, y + s * 0.1); ctx.stroke()

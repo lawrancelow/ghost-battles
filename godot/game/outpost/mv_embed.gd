@@ -140,7 +140,12 @@ func _zone_frame(dt: float) -> void:
 	sc.zt = {"z": c.z / maxf(0.01, sc.k), "x": c.x, "y": c.y}
 	sc.hud_on = zone_hud_vis() or sc.sheet.visible or sc.anim != null
 	var qb = main.get("quest_bar") if main != null else null
-	if qb is Control and qb.visible == sc.hud_on: qb.visible = not sc.hud_on
+	var mbf = load("res://game/zone/zone_battle.gd").fighting()   # [mapbattle] 打緊仗：收埋大排檔 HUD（招牌菜、生產鏈、影響力…）同任務條
+	if mbf:
+		sc.hud_on = false
+		if sc.sheet.visible: sc.close_sheet()
+		if qb is Control and qb.visible: qb.visible = false
+	elif qb is Control and qb.visible == sc.hud_on: qb.visible = not sc.hud_on
 	if sc.zfocus != null:   # 升級條／目標要求鏡頭移動 → 村子 2D 鏡頭
 		var f = sc.zfocus; sc.zfocus = null
 		var wx = float(f[2]) if not is_nan(float(f[2])) else c.x + c.vw() / 2.0

@@ -18,7 +18,7 @@ const ZD = preload("res://game/zone/zone_data.gd")
 const TA = preload("res://game/zone/zone_taunt.gd")
 const MD = preload("res://game/outpost/mv_data.gd")
 const H := 560.0              # 戰場高（battle 單位）：lane 間距 = H × 0.1（同舊戰鬥畫面差唔多）
-const S_MAX := 0.75           # battle 單位 → 世界單位（角色 1.32 × 0.75 ≈ 地圖上人物大細）
+const S_MAX := 1.0            # battle 單位 → 世界單位；開戰鏡頭拉近到角色大細同舊戰鬥畫面差唔多
 const MARCH := 150.0          # 行軍速度（世界單位／秒，× 加速）
 const GAP := 24.0             # 行軍隊形間距
 const PANEL_H := 156.0        # 底部卡片列高（畫面 px）
@@ -132,7 +132,7 @@ func _setup(v) -> void:
 	_hook_update()
 	# 鏡頭：拉近少少、對住隊伍
 	var c = nv.zone_cam()
-	c.z = clampf(nv.size.x / 400.0, c.z_min(), c.z_max()); c.clamp_all()
+	c.z = clampf(nv.size.x / 380.0 * (S_MAX / S if S < S_MAX else 1.0), c.z_min(), c.z_max()); c.clamp_all()   # 角色畫面大細 ≈ 舊戰鬥（1.32 × 畫面闊 ÷ 390）
 	follow = true
 	if tkey != "" and TA.on(tkey) and kind == "boss": TA.say(tkey, "rematch", Vector2.ZERO, _boss_pos_fn())
 	if tkey != "": TA.hide_keys[tkey] = true
@@ -597,7 +597,8 @@ func _camera(_dt: float) -> void:
 	if back_b != null: back_b.visible = not follow and phase != "back"
 	if not follow or phase == "back": return   # 收咗場：鏡頭交返玩家（隊伍自己行返村）
 	var F = _focus()
-	var top = float(nv._zone_top_px()) if nv.has_method("_zone_top_px") else 0.0
+	var em = nv._zone_em() if nv.has_method("_zone_em") else null
+	var top = float(em.sc.embed_top) if em != null and em.sc != null else 0.0   # 打緊仗：大排檔 HUD 收埋，只剩頂部資源列
 	var bot = PANEL_H if phase != "back" else 0.0
 	var sy = (top + (nv.size.y - bot)) * 0.5 + 40.0
 	c.tgt = Vector2(F.x - c.vw() / 2.0, F.y - sy / c.z)
