@@ -188,11 +188,14 @@ func _draw() -> void:
 	# [zone2] 石板：古道主路鋪青石板（第 3 關）
 	if float(G("slabs", 0.0)) > 0.0:
 		var k3 = 0
-		for e in _ps:
+		for e in _ps:   # 亂鋪青石板：路面隨機位、大細唔一，崩咗啲（唔排到成條路軌）
 			k3 += 1
-			if e[2] != "main" or k3 % 3 != 0: continue
-			var q: Vector2 = e[0]
-			slab.call(q.x - 13 + (R() - 0.5) * 6, q.y - 6, 18 + R() * 8, 11 + R() * 4)
+			if e[2] != "main" or k3 % 2 != 0: continue
+			var q: Vector2 = e[0]; var hw2: float = e[1]
+			for jj in 2:
+				if R() < 0.35: continue
+				var sw = 10 + R() * 12; var sh = 7 + R() * 6
+				slab.call(q.x + (R() - 0.5) * hw2 * 1.3 - sw / 2, q.y + (R() - 0.5) * hw2 * 0.9 - sh / 2, sw, sh)
 	# [zone2] 田／梯田等地面圖案（zones.json gfx）
 	for gf in M.get("gfx", []):
 		if str(gf.get("k")) == "terrace":
