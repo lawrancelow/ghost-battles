@@ -173,6 +173,12 @@ func _run(t, shots: bool, full: bool, only0 := false) -> void:
 	for i in 40:
 		await _w(t, 0.25)
 		for cu in sc.sim.custs: sides[int(cu.get("side", 0))] = true   # 十秒內出現過嘅客人（隨機左右，唔好只睇最後一刻）
+	if sides.size() < 2:   # 隊排滿咗冇新客：直接再出 16 個客睇左右（一半由左邊入，隨機）
+		var keep = sc.sim.custs.duplicate()
+		for i in 16:
+			sc.sim.custs.clear()
+			if sc.sim.spawn_cust(): sides[int(sc.sim.custs[0].get("side", 0))] = true
+		sc.sim.custs = keep
 	_chk("客人行排隊線（兩邊都有）", sc.sim.custs.size() > 0 and sides.size() == 2, "客 %d 邊 %s" % [sc.sim.custs.size(), sides.keys()])
 	var on_path = true
 	for cu in sc.sim.custs:

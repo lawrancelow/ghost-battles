@@ -22,7 +22,9 @@ static func _txt(ctx: Ctx, s: String, x: float, y: float, px: int, col := "#f6e2
 	ctx.font = "900 %dpx %s" % [px, Art.SERIF]; ctx.textAlign = "center"; ctx.textBaseline = "middle"
 	ctx.lineWidth = maxf(3.0, px * 0.22); ctx.strokeStyle = outline; ctx.lineJoin = "round"; ctx.strokeText(s, x, y)
 	ctx.fillStyle = col; ctx.fillText(s, x, y)
+static var plates: Array = []   # 今格畫咗嘅牌（測試：每區名牌只畫一個）
 static func _plate(ctx: Ctx, s: String, x: float, y: float, px: int, bg: String, fg := "#fff4e2") -> Rect2:
+	plates.append(s)
 	ctx.font = "900 %dpx %s" % [px, Art.SERIF]
 	var w = ctx.measureText(s).width + px * 1.1; var h = px * 1.55
 	Art.rr(ctx, x - w / 2, y - h / 2, w, h, px * 0.35, bg, "rgba(255,230,190,.55)", maxf(1.2, px * 0.08))
@@ -449,7 +451,7 @@ static func _wild_decor(ctx: Ctx, z: Dictionary, t: float) -> void:
 # ---------------- 上層：黑霧、鎖、區名牌、王 ----------------
 static var hits: Array = []      # [[Rect2, kind, zid]]（世界座標，畫嗰陣記低）
 static func draw_over(c: CanvasItem, nv) -> void:
-	hits.clear()
+	hits.clear(); plates.clear()
 	if not ZD.on(): return
 	var ctx = Ctx.new(c)
 	var t: float = nv.t

@@ -406,6 +406,15 @@ func _run(t, shots: bool) -> void:
 		for z in ZD.of_type("wild"): if ZD.rect(z.rect).grow(30).has_point(f.pos): inw = true
 		if not inw: foe_ok = false
 	_chk("孤魂喺野外區", foe_ok, sim.foes.size())
+	await names_check(t, m)
+	var kb = ZD.bosses("w_graves")[1]
+	_chk("守墓鬼用現有鬼怪素材（唔借殭屍兵）", str(kb.art) == "n30_jerangkung" and Spr.ok("n30_jerangkung") and J.G.ENEMY_T.has("n30_jerangkung"))
+	S.zone.boss["0:zb_paper"] = true; S.zone.boss.erase("0:zb_keeper")
+	var rk = ZD.start_battle("boss", "w_graves"); await _w(t, 1.0)
+	var bn = ""
+	for u in J.iter(J.G.Battle.units): if J.t(J.gp(u, "boss")): bn = J.str(u.name)
+	_chk("戰鬥入面王名＝亂葬崗守墓鬼", rk == "ok" and bn == "亂葬崗守墓鬼", bn)
+	await _finish_battle(t, false); ZD.poll()
 	if shots: await _shots(t, m)
 	# ================= 8. 第 2 張圖：舊豎條布局照用 =================
 	sim.st().ci = 1.0; sc._after_move(); await _w(t, 1.0)
@@ -415,6 +424,18 @@ func _run(t, shots: bool) -> void:
 	_chk("返第 1 張圖：再套分區", ZD.on() and nv.zone and J.num(J.G.POS.gate[1]) == 1152.0)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
+# 每區名牌只畫一個（全名／短名按縮放揀其一）；守墓鬼用現有 n30 鬼、戰鬥顯示名
+func names_check(t, m) -> void:
+	var nv = m.village; var c = nv.zone_cam()
+	for zz in [c.z_min(), nv.size.x / 390.0, nv.size.x / 300.0]:
+		c.z = zz; c.center_on(Vector2(670, 1990)); await _w(t, 0.3)
+		var dup = []
+		for z in ZD.zones():
+			var full = ZD.T(z.n); var short = full.split("　")[-1]
+			var n = 0
+			for s in ZV.plates: if s.begins_with(full) or s == short or s.begins_with(short + "（"): n += 1
+			if z.type != "market" and ZD.rect(z.rect).intersects(nv.view_rect()) and n != 1: dup.append("%s×%d" % [full, n])
+		_chk("縮放 %.2f：每區名牌只畫一個" % zz, dup.is_empty(), dup)
 func _shots(t, m) -> void:
 	var nv = m.village; var c = nv.zone_cam(); var S = J.G.S
 	c.vel = Vector2.ZERO

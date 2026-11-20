@@ -59,15 +59,15 @@
         "亂葬崗守墓鬼",
         "亂葬崗守墓鬼"
        ],
-       "art": "zombie",
-       "borrow": true,
+       "art": "n30_jerangkung",
+       "rename": true,
        "stage": {
         "en": [
          "youhun",
-         "zombie",
+         "n30_jerangkung",
          "youhun"
         ],
-        "boss": "zombie",
+        "boss": "n30_jerangkung",
         "p": 3
        }
       }

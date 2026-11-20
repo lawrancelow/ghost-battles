@@ -220,7 +220,16 @@ static func start_battle(kind: String, zid: String) -> String:
 	var sid2 = L("分區", "分區") + "·" + nm
 	st().exp = {"kind": kind, "ci": float(c), "id": zid, "bi": float(bi), "sid": sid2, "had": J.t(s.cleared.get(sid2))}
 	s.cleared[sid2] = true   # 當「再打」：唔出寶箱（同 mv_war 出征一樣）；結算後清返
+	var ET = J.G.get("ENEMY_T")   # 敵人表冇呢隻（例如 n30 鬼未登記）→ 用遊魂頂
+	if ET is Dictionary:
+		var en2 = []
+		for e in st0.en: en2.append(str(e) if ET.has(str(e)) else "youhun")
+		st0["en"] = en2
+		if not ET.has(str(st0.boss)): st0["boss"] = en2[en2.size() - 1]
 	J.mc(B, "start", [-1.0, -1.0, {"stage": st0, "bg": bg, "sid": sid2}])
+	if kind == "boss" and bi >= 0 and J.t(bosses(zid)[bi].get("rename")):   # 王喺戰鬥入面顯示呢度嘅名（例如「亂葬崗守墓鬼」）
+		for u in J.iter(B.get("units")):
+			if J.t(J.gp(u, "boss")): u["name"] = nm
 	return "ok"
 static var NEWS: Array = []   # 戰鬥結果（畫面攞嚟出橫額）
 # main.gd／畫面每格叫：收戰鬥結果

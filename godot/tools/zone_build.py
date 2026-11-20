@@ -24,7 +24,8 @@ M0 = {
      "gate": {"x": 445, "w": 60}, "boss_at": [445, 270],
      "bosses": [
        {"id": "zb_paper", "n": ["紙人偶頭目", "紙人偶頭目"], "art": "zhiren", "stage": {"en": ["zhiren", "zhiren", "zhiren"], "boss": "zhiren", "p": 2}},
-       {"id": "zb_keeper", "n": ["亂葬崗守墓鬼", "亂葬崗守墓鬼"], "art": "zombie", "borrow": True, "stage": {"en": ["youhun", "zombie", "youhun"], "boss": "zombie", "p": 3}}],
+       # 守墓鬼：用老闆現有鬼怪 n30_jerangkung（馬來墳地骷髏鬼，喀喀響嘅骨頭；冇宗教元素），戰鬥顯示名改「亂葬崗守墓鬼」
+       {"id": "zb_keeper", "n": ["亂葬崗守墓鬼", "亂葬崗守墓鬼"], "art": "n30_jerangkung", "rename": True, "stage": {"en": ["youhun", "n30_jerangkung", "youhun"], "boss": "n30_jerangkung", "p": 3}}],
      "decor": [["tree_bare", 320, 300, 70], ["tree_bare", 430, 200, 70], ["tree_bare", 560, 320, 70], ["tree_bare", 610, 180, 70],
                ["grave", 290, 380, 0], ["grave", 360, 150, 0], ["grave", 520, 390, 0], ["grave", 600, 260, 0]]},
     {"id": "w_pit", "type": "wild", "rect": [680, 0, 1110, 420], "n": ["野外區　餓鬼坑", "野外區　餓鬼坑"], "col": "#8a1c24",
