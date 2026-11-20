@@ -595,7 +595,7 @@ func _sync_chain() -> void:
 	var sh = CB.shown()
 	if sh.is_empty(): return
 	var ws = CB.work_states()
-	_static("cb_fence", CB.FENCE_Y, [DB.lang], false, func(ctx): _fence(ctx))
+	if not zone: _static("cb_fence", CB.FENCE_Y, [DB.lang], false, func(ctx): _fence(ctx))   # [zone2] 分區地圖冇「後院拓展地」舊柵欄（之前喺分區地圖都畫咗出嚟）
 	for b in sh:
 		if CB.CF.is_field(b): _sync_field(b); continue   # [village2] 資源田：一個個資源點＋田名牌
 		var p = CB.pos(b); var st = str(ws.get(b, "idle")); var lvv = CB.lv(b); var un = CB.unlocked(b)
