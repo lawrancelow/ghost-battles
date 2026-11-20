@@ -151,6 +151,7 @@ func all(t) -> void:
 	S.cleared["3-2"] = true; S.cleared["3-3"] = true
 	var ms = mv.mv_state(); ms["goals_done"] = []   # 真場景：目標要全部領咗先拔得營
 	for gi in 20: ms.goals_done.append(gi)
+	load("res://game/zone/zone_data.gd").mark_all_bosses(int(J.num(ms.ci)))   # [zone2] 第 3 關都係分區地圖：野外王全部打低先拔得營
 	_chk("目標齊＋Boss 打咗：拔得", mv.can_move())
 	mv.move_next(true)
 	_chk("拔營後 ci=3", B.ci() == 3, B.ci())

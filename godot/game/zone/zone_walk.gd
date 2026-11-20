@@ -24,6 +24,7 @@ static func _wrap_walk(V: Dictionary) -> void:
 		H["zq"] = pts
 		me["__zn_in"] = true   # 下面再有一層（重包咗）就唔好再排路
 		var r = J.cl(o_walk, me, [p0.x, p0.y, tg if pts.is_empty() and p0 == fin else null])
+		_unclamp(H, p0)
 		me["__zn_in"] = false
 		if p0 == fin: H.erase("zf")
 		return r
@@ -42,14 +43,20 @@ static func _wrap_up(V: Dictionary) -> void:
 				if q.size():
 					var p = q.pop_front()
 					J.cl(o_walk, me, [p.x, p.y, null]); H["zq"] = q
+					_unclamp(H, p)
 				else:
 					var f = H.zf; var tg = H.get("zt"); H.erase("zf"); H["zt"] = null
 					if absf(J.num(H.tx) - float(f[0])) > 1.0 or absf(J.num(H.ty) - float(f[1])) > 1.0 or tg != null:
 						J.cl(o_walk, me, [float(f[0]), float(f[1]), tg])
+						_unclamp(H, Vector2(float(f[0]), float(f[1])))
 				me["__zn_in"] = false
 		return r
 	V["update"] = up; V["__zn_up_w"] = up
 
+# [zone2] 原生 walkTo 將目標夾喺舊豎條（x ≤ 376、y ≤ 1120）：分區地圖用世界大細夾
+static func _unclamp(H: Dictionary, p: Vector2) -> void:
+	var ws = ZD.world_size()
+	H["tx"] = clampf(p.x, 14.0, ws.x - 14.0); H["ty"] = clampf(p.y, 20.0, ws.y - 10.0)
 # 阿福可以企嘅區：村子＋已佔領資源區（門洞當村子）
 static func region(p: Vector2) -> String:
 	for z in ZD.of_type("res"):

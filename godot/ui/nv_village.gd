@@ -34,6 +34,7 @@ var t := 0.0
 var cam_y := 0.0
 var cam_x := 0.0             # [zone] 分區地圖：鏡頭左邊（舊豎條永遠 0）
 var zc = null                # [zone] 分區地圖鏡頭（game/zone/zone_cam.gd）
+var _zc_map := ""            # [zone2] 鏡頭跟緊邊張圖
 var zone := false            # [zone] 今格係咪分區地圖
 var zone_under: PtDraw       # [zone] 區牆、門、野外擺設
 var zone_over: PtDraw        # [zone] 黑霧、鎖、區名牌、王
@@ -98,6 +99,8 @@ func _process(_dt: float) -> void:
 	shx = (randf() - 0.5) * sk if sk > 0 else 0.0; shy = (randf() - 0.5) * sk if sk > 0 else 0.0
 	world.transform = Transform2D(Vector2(sc, 0), Vector2(0, sc), Vector2((shx - cam_x) * sc, (shy - cam_y) * sc))
 	ext_ground.visible = not zone; zone_under.visible = zone; zone_over.visible = zone
+	var gm = ZV.grade() if zone else Color.WHITE   # [zone2] 每關色調：建築、人物、地形佈景（地面已經按關烘色）
+	if ysort.modulate != gm: ysort.modulate = gm; zone_under.modulate = gm.lerp(Color.WHITE, 0.35); lily.modulate = gm
 	_sync_statics()
 	var t1 = Time.get_ticks_usec()
 	_sync_dynamic()
@@ -143,6 +146,9 @@ func _zone_cam_frame(dt: float) -> void:
 	var c = zone_cam()
 	var ws = ZD.world_size()
 	if c.world != ws: c.world = ws; c.clamp_all()
+	if _zc_map != ZD.applied():   # [zone2] 換咗圖（拔營）：鏡頭返新圖嘅村子
+		_zc_map = ZD.applied(); c.tgt = null; c.vel = Vector2.ZERO
+		c.center_on(ZD.v2(ZD.cur().get("cam", {}).get("home", [ws.x / 2, ws.y / 2])))
 	if c.view != size and size.x > 0: c.view = size; c.clamp_all()
 	if absf(c.top_px - _zone_top_px()) > 0.5: c.top_px = _zone_top_px(); c.clamp_all()
 	c.step(minf(dt, 0.1))
@@ -365,7 +371,8 @@ func _draw_mist(c: CanvasItem) -> void:
 	for i in nm:
 		var mx = fmod(t * 8 + i * 90 * WW / W, WW + 200) - 100; var my = 160 + i * 170
 		if my < cam_y - 100 or my > cam_y + size.y / sc + 100: continue
-		c.draw_texture_rect(PtGfx.RAD, Rect2(mx - 90, my - 90, 180, 180), false, Color(200 / 255.0, 210 / 255.0, 200 / 255.0, 0.06))
+		var mc = ZV.mist_col() if zone else Color(200 / 255.0, 210 / 255.0, 200 / 255.0, 0.06)   # [zone2] 每關霧色
+		c.draw_texture_rect(PtGfx.RAD, Rect2(mx - 90, my - 90, 180, 180), false, mc)
 
 # ---------------- 烏鴉、羽毛、碎片 ----------------
 const PART_IMG := {"spark": "fx_spark", "chip": "fx_chips", "dust": "fx_dust", "dough": "fx_dough", "grain": "fx_dough"}

@@ -466,6 +466,8 @@ func relayout(_top := 0.0, _bot := 0.0) -> void:
 	# [zone] 分區地圖：孤魂喺野外區遊蕩，衝野外門（唔係成條柵欄）；守夜企喺門口
 	o.gates = []; o.wild = []
 	for q in Ly.get("gates", []): o.gates.append(MD.v2(q))
+	if Ly.get("gdir") is Array: o.gdir = Ly.gdir   # [zone2] 野外門方向：1＝野外喺門上面，-1＝野外喺門下面
+	if Ly.has("wh"): o.wh = float(Ly.wh)
 	if Ly.get("guard_slots") is Array: o.guard_slots = Ly.guard_slots
 	if Ly.get("vol_slots") is Array: o.vol_slots = Ly.vol_slots
 	if Ly.get("vol_mid") is Array: o.vol_mid = Ly.vol_mid
@@ -506,18 +508,55 @@ func guard_home(i: int) -> Vector2:
 	return Vector2(80.0 + 115.0 * i, L.guard_y)
 func ww() -> float: return float(L.get("w", FW))   # [zone] 世界闊（舊豎條 390）
 # [zone] 孤魂衝邊度：舊＝正前面柵欄；分區＝最近嘅野外門
-func fence_tgt(x: float) -> Vector2:
+func fence_tgt(x: float, y := NAN) -> Vector2:
 	if L.get("gates") is Array and L.gates.size():
+		if L.has("gdir"):   # [zone2] 最近嘅野外門（上／下都得）
+			var i = gate_i(Vector2(x, y if not is_nan(y) else L.gates[0].y))
+			if is_nan(y): i = _gate_x(x)
+			return Vector2(L.gates[i].x + rng.randf_range(-16, 16), L.gates[i].y - gate_d(i) * 8.0)
 		var best = L.gates[0]
 		for g in L.gates: if absf(g.x - x) < absf(best.x - x): best = g
 		return Vector2(best.x + rng.randf_range(-16, 16), L.fence_y - 8.0)
 	return Vector2(clampf(x, 24, FW - 24), L.fence_y - 8.0)
+# [zone2] 野外門（任何方向）：最近嗰道門、方向、「喺門口」、守夜／義勇軍企位
+func gate_i(p: Vector2) -> int:
+	var bi = 0; var bd = INF
+	for i in L.gates.size():
+		var d = L.gates[i].distance_squared_to(p)
+		if d < bd: bd = d; bi = i
+	return bi
+func _gate_x(x: float) -> int:
+	var bi = 0
+	for i in L.gates.size(): if absf(L.gates[i].x - x) < absf(L.gates[bi].x - x): bi = i
+	return bi
+func gate_d(i: int) -> float:
+	var gd = L.get("gdir")
+	return float(gd[i]) if gd is Array and i < gd.size() else 1.0
+func at_fence(p: Vector2, m := 90.0) -> bool:   # 孤魂衝到門口（大排檔嗰邊 m 以內或者已經入咗）
+	if L.has("gdir") and L.gates.size():
+		var i = gate_i(p)
+		return (p.y - L.gates[i].y) * gate_d(i) >= -m
+	return p.y >= L.fence_y - m
+func inside_d(p: Vector2, ref: Vector2) -> float:   # p 喺 ref 最近嗰道門大排檔嗰邊幾遠
+	if L.has("gdir") and L.gates.size():
+		var i = gate_i(ref)
+		return (p.y - L.gates[i].y) * gate_d(i)
+	return p.y - L.fence_y
+func guard_line(ref: Vector2, off: float) -> float:   # 打 ref 呢隻孤魂要企嘅 y
+	if L.has("gdir") and L.gates.size():
+		var i = gate_i(ref)
+		return L.gates[i].y + gate_d(i) * off
+	return L.fence_y + off
+func flee_dir(p: Vector2) -> float:   # 逃走方向（-1 向上、1 向下）
+	if L.has("gdir") and L.gates.size(): return -gate_d(gate_i(p))
+	return -1.0
 func _wild_of(p: Vector2) -> Rect2:
 	for r in L.get("wild", []): if r.grow(30).has_point(p): return r
 	return L.wild[0] if L.get("wild", []).size() else Rect2(0, L.foe_y0, FW, L.foe_y1 - L.foe_y0)
 func foe_roam(p: Vector2) -> Vector2:   # 喺自己嗰區隨便行
 	if L.get("wild", []).size():
 		var r = _wild_of(p).grow(-40)
+		if L.has("gdir"): return Vector2(rng.randf_range(r.position.x, r.end.x), rng.randf_range(r.position.y + 40, r.end.y - 20))   # [zone2]
 		return Vector2(rng.randf_range(r.position.x, r.end.x), rng.randf_range(maxf(r.position.y, L.foe_y0), L.foe_y1 - 30))
 	return Vector2(rng.randf_range(24, FW - 24), rng.randf_range(L.foe_y0, L.foe_y1 - 30))
 func view_cull(p: Vector2) -> bool: return true
@@ -824,7 +863,7 @@ func _step_foes(dt: float) -> void:
 		match f.st:
 			"roam":
 				if _move(f, f.tgt, dt, 40.0):
-					if f.t > f.get("calm", 3.0): f.st = "charge"; f.tgt = fence_tgt(f.pos.x); f.t = 0.0   # [zone]
+					if f.t > f.get("calm", 3.0): f.st = "charge"; f.tgt = fence_tgt(f.pos.x, f.pos.y); f.t = 0.0   # [zone]
 					else: f.tgt = foe_roam(f.pos)
 			"charge":
 				if _move(f, f.tgt, dt, 95.0): f.st = "bang"; f.t = 0.0; ev.append({"k": "bang", "pos": f.pos})
@@ -846,7 +885,9 @@ func spawn_foe() -> bool:
 	var p0 = Vector2(-30.0 if left else FW + 30.0, y); var t0 = Vector2(rng.randf_range(40, FW - 40), y)
 	if L.get("wild", []).size():   # [zone] 由野外區深處（頂）出
 		var wr: Rect2 = L.wild[rng.randi() % L.wild.size()]
-		p0 = Vector2(rng.randf_range(wr.position.x + 40, wr.end.x - 40), wr.position.y + 120.0); t0 = foe_roam(p0); left = t0.x > p0.x
+		p0 = Vector2(rng.randf_range(wr.position.x + 40, wr.end.x - 40), wr.position.y + 120.0)
+		if L.has("gdir") and gate_d(gate_i(wr.get_center())) < 0: p0.y = wr.end.y - 120.0   # [zone2] 野外喺下面：由底出
+		t0 = foe_roam(p0); left = t0.x > p0.x
 	foes.append({"k": str(ks[rng.randi() % ks.size()]), "pos": p0, "hp": hp, "mx": hp, "st": "roam", "t": 0.0, "calm": rng.randf_range(1.5, 4.0),
 		"tgt": t0, "ph": rng.randf() * 10.0, "flip": not left})
 	return true
@@ -876,7 +917,7 @@ func _step_guards(dt: float) -> void:
 		if tgt == null or not (tgt in foes) or tgt.st == "die":
 			tgt = null; var best = 1e9
 			for f in foes:
-				if f.st == "die" or f.pos.y < L.fence_y - 90.0: continue
+				if f.st == "die" or not at_fence(f.pos, 90.0): continue   # [zone2]
 				var taken = false
 				for g2 in guards: if g2 != g and g2.tgt == f: taken = true
 				var d = absf(f.pos.x - g.pos.x) + (60.0 if taken else 0.0) + (0.0 if f.st == "bang" else 40.0)
@@ -885,9 +926,9 @@ func _step_guards(dt: float) -> void:
 		if tgt == null:
 			_move(g, guard_home(int(g.slot)), dt, 70.0)
 			continue
-		var want = Vector2(clampf(tgt.pos.x + (-22.0 if tgt.pos.x > g.pos.x else 22.0), 20, ww() - 20), L.guard_y)   # [zone]
+		var want = Vector2(clampf(tgt.pos.x + (-22.0 if tgt.pos.x > g.pos.x else 22.0), 20, ww() - 20), guard_line(tgt.pos, 26.0))   # [zone2]
 		if _move(g, want, dt, 110.0) or absf(tgt.pos.x - g.pos.x) < 30.0:
 			g.flip = tgt.pos.x < g.pos.x
-			if g.cd <= 0.0 and tgt.pos.y >= L.fence_y - 90.0:
+			if g.cd <= 0.0 and at_fence(tgt.pos, 90.0):
 				g.cd = 0.5; g.atk = 0.25
 				hit_foe(tgt, g.dps * 0.5, "guard")

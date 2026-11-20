@@ -508,7 +508,7 @@ func _draw_stage() -> void:
 	var fk = _fold_k()
 	var walking = anim != null and not anim.done and anim.t >= A_FOLD - 0.2
 	# 圍欄外孤魂＋圍欄（地圖頂）
-	if vy0 < L.fence_y + 80.0:
+	if zone or vy0 < L.fence_y + 80.0:   # [zone2] 分區地圖：野外區可以喺大排檔下面
 		var fo = sim.foes.duplicate(); fo.sort_custom(func(a, b): return a.pos.y < b.pos.y)
 		for f in fo: _draw_foe(ctx, f)
 		if not fence_art(): _draw_fence(ctx)   # [camp] fence_art：柵欄喺背景圖

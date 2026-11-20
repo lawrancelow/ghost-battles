@@ -47,7 +47,11 @@ func _V(): return J.G.get("Village")
 
 # ================= 烘地面 =================
 func bake(t) -> void:
-	var m = ZD.mdef(0); var K = 1.5
+	var cs = OS.get_environment("GB_ZMAP").split(",", false) if OS.has_environment("GB_ZMAP") else PackedStringArray(["0", "1", "2", "3"])
+	for cc in cs: await _bake1(t, int(cc))
+	_p("RESULT ok=1 bad=0")
+func _bake1(t, ci: int) -> void:
+	var m = ZD.mdef(ci); var K = 1.5
 	var W = float(m.w); var H = float(m.h)
 	var key = str(m.ground)
 	for half in 2:
@@ -64,7 +68,6 @@ func bake(t) -> void:
 		im.save_webp(path, true, 0.82)
 		_p("baked %s %s" % [path, im.get_size()])
 		vp.queue_free()
-	_p("RESULT ok=1 bad=0")
 
 # ================= 冒煙：開機截幾張 =================
 func smoke(t) -> void:
@@ -417,11 +420,12 @@ func _run(t, shots: bool) -> void:
 	await _finish_battle(t, false); ZD.poll()
 	if shots: await _shots(t, m)
 	# ================= 8. 第 2 張圖：舊豎條布局照用 =================
-	sim.st().ci = 1.0; sc._after_move(); await _w(t, 1.0)
-	_chk("第 2 張圖：冇 zones 定義 → 舊豎條（POS 還原）", not ZD.on() and not nv.zone and J.num(J.G.POS.gate[1]) == 118.0 and J.num(J.G.W) == 390.0)
-	_chk("第 2 張圖：大排檔用舊 layout", not sc.zone and float(MD.layout(1).get("w", 390)) == 390.0)
+	sim.st().ci = 4.0; sc._after_move(); await _w(t, 1.0)
+	_chk("第 5 張圖：冇 zones 定義 → 舊豎條（POS 還原）", not ZD.on() and not nv.zone and J.num(J.G.POS.gate[1]) == 118.0 and J.num(J.G.W) == 390.0)
+	_chk("第 5 張圖：大排檔用舊 layout", not sc.zone and float(MD.layout(4).get("w", 390)) == 390.0)
 	sim.st().ci = 0.0; sc._after_move(); await _w(t, 1.0)
 	_chk("返第 1 張圖：再套分區", ZD.on() and nv.zone and J.num(J.G.POS.gate[1]) == 1152.0)
+	if not OS.has_environment("GB_ZONE1_ONLY"): await maps_check(t, m, shots)   # [zone2] 第 2–4 關
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
 # 每區名牌只畫一個（全名／短名按縮放揀其一）；守墓鬼用現有 n30 鬼、戰鬥顯示名
@@ -457,3 +461,386 @@ func _shots(t, m) -> void:
 	var ba = ZD.v2(ZD.zone("w_pit").boss_at); c.center_on(ba)
 	await _w(t, 0.4); nv.zone_tap(c.w2s(ba + Vector2(0, -30))); await _w(t, 0.5); await _shot(t, "z26_boss_card")
 	m.close_sheet()
+
+# ================= [zone2] 第 2–4 關（ci 1–3）：每關都驗 =================
+const SIDE_OF := {"0": "N", "1": "E", "2": "S", "3": "W"}
+const LOOK_OF := {"0": "l1", "1": "l2", "2": "l3", "3": "l4"}
+class StoryStub extends RefCounted:
+	var log: Array = []
+	var held: Array = []
+	var defer := false
+	func zone_event(kind, id := "", cb := Callable()) -> bool:
+		log.append([kind, id])
+		if cb.is_valid():
+			if defer: held.append(cb); return true
+			cb.call()
+		return false
+	func has_ev(kind: String, id := "*") -> bool:
+		for e in log: if e[0] == kind and (id == "*" or e[1] == id): return true
+		return false
+func _goto(t, m, c: int) -> void:
+	var sc = m.mv_view
+	sc.sim.st().ci = float(c); sc._after_move(); await _w(t, 1.2)
+func maps_check(t, m, shots: bool) -> void:
+	var sides = {}
+	var looks = {}
+	for c in [0, 1, 2, 3]:
+		var Z = ZD.mdef(c)
+		sides[str(Z.get("gate_side", ""))] = true; looks[str(Z.get("look", {}).get("key", ""))] = true
+	_chk("四關出村門喺唔同邊（北／東／南／西）", sides.size() == 4 and sides.has("N") and sides.has("E") and sides.has("S") and sides.has("W"), sides.keys())
+	_chk("四關各自 look（l1–l4）", looks.size() == 4, looks.keys())
+	for c in [1, 2, 3]: await map_check(t, m, c, shots)
+	await migrate_check(t, m)
+	await _goto(t, m, 0)
+func map_check(t, m, c: int, shots: bool) -> void:
+	var nv = m.village; var S = J.G.S; var sc = m.mv_view; var sim = sc.sim; var em = m.mv_embed
+	var stub = StoryStub.new(); ZD.hook = stub
+	S.zone.erase("sent")
+	await _goto(t, m, c)
+	var Z = ZD.cur(); var tag = "第 %d 關：" % (c + 1)
+	_chk(tag + "分區模式＋套用", ZD.on() and nv.zone and ZD.applied() == str(c) and sc.zone, ZD.applied())
+	_chk(tag + "look＝" + LOOK_OF[str(c)], ZV.lkey() == LOOK_OF[str(c)] and ResourceLoader.exists("res://assets/img/%s_a.webp" % Z.ground) and nv.ysort.modulate == ZV.grade())
+	_chk(tag + "世界大細", J.num(J.G.W) == float(Z.w) and J.num(J.G.WH) == float(Z.h) and nv.zone_cam().world == Vector2(Z.w, Z.h))
+	_chk(tag + "大排檔台＝該關 STATIONS", MD.stations(c).size() == (7 if c == 1 else 8) and Z.market.st.size() == MD.stations(c).size(), MD.stations(c))
+	var POS = J.G.get("POS"); var vr = ZD.zrect("village"); var mr = ZD.zrect("market")
+	# ---- 布局 ----
+	var items = []
+	for k in Z.village.POS:
+		if k == "gate": continue
+		items.append([k, _foot(_spr_rect(k, J.num(POS[k][0]), J.num(POS[k][1]), float(Art.BW.get(k, 100)))), "village"])
+	for i in J.G.TREE_POS.size():
+		var p = J.G.TREE_POS[i]; items.append(["tree%d" % i, _foot(_spr_rect("tree", p[0], p[1], 62)).grow(-6), "village"])
+	for i in J.G.PADDY_POS.size():
+		var p = J.G.PADDY_POS[i]; items.append(["paddy%d" % i, Rect2(p[0] - 36, p[1] - 30, 72, 34), "village"])
+	for e in nv.extras(): items.append([e[0], Rect2(e[1] - e[3] / 2.0, e[2] - 50, e[3], 50), "village"])
+	for sid in MD.stations(c):
+		var p = MD.st_xy(c, sid); items.append([sid, Rect2(p.x - 56, p.y - 92, 112, 160), "market"])
+	var cp = MD.v2(MD.layout(c).counter); items.append(["counter", Rect2(cp.x - 92, cp.y - 70, 184, 84), "market"])
+	var gp = ZD.v2(Z.village.POS.gate); var gate_r = _foot(_spr_rect("gate", gp.x, gp.y, 150.0))
+	items.append(["gate", gate_r, ""])
+	for z in ZD.of_type("res"):
+		for b in z.get("fields", {}):
+			for nd in CF.nodes(b): items.append(["%s.%d" % [b, nd.i], Rect2(nd.x - 22, nd.y - 40, 44, 42), str(z.id)])
+			var sp = CF.sign_pos(b); items.append(["%s.sign" % b, Rect2(sp.x - 40, sp.y - 46, 80, 48), str(z.id)])
+		for b in z.get("shops", {}):
+			var q = ZD.v2(z.shops[b].pos); items.append([b, Rect2(q.x - 53, q.y - 96, 106, 100), str(z.id)])
+	var ov = []
+	for i in items.size():
+		for j in range(i + 1, items.size()):
+			var a = items[i]; var b = items[j]
+			if a[0].begins_with("tree") and b[0].begins_with("tree"): continue
+			if a[0].begins_with("paddy") and b[0].begins_with("paddy"): continue
+			if a[1].grow(-3).intersects(b[1].grow(-3)): ov.append("%s×%s" % [a[0], b[0]])
+	_chk(tag + "布局：建築／台／資源點／名牌／出村門冇重疊", ov.is_empty(), ov)
+	var outz = []
+	for it in items:
+		if it[2] != "" and not ZD.zrect(it[2]).grow(2).encloses(it[1]): outz.append("%s→%s" % [it[0], it[2]])
+	_chk(tag + "所有建築喺所屬區內", outz.is_empty(), outz)
+	var ZG = load("res://game/zone/zone_ground.gd")
+	var ps = ZG.path_samples(Z, 6.0)
+	var on_path = func(r: Rect2) -> bool:
+		for e in ps:
+			if e[2] != "main": continue
+			var q: Vector2 = e[0]; var hw: float = e[1]
+			if Rect2(q.x - hw, q.y - hw * 0.5, hw * 2.0, hw).intersects(r): return true
+		return false
+	var pov = []
+	for pr in Z.village.get("props", []):
+		var pw = maxf(24.0, float(pr[3]) * 0.6)
+		var r = Rect2(float(pr[1]) - pw / 2.0, float(pr[2]) - 12, pw, 14)
+		if not vr.grow(-4).encloses(r): pov.append("%s 出界" % pr[0])
+		if on_path.call(r): pov.append("%s 壓路" % pr[0])
+		for it in items: if it[1].grow(-2).intersects(r): pov.append("%s×%s" % [pr[0], it[0]])
+	_chk(tag + "院落擺設（該關 zq_*）唔壓主路、唔撞建築", pov.is_empty(), pov)
+	var zq = 0
+	for pr in Z.village.props: if str(pr[0]).begins_with("zq_"): zq += 1
+	_chk(tag + "村子院落用該關擺設（zq_* ≥ 10 件）", zq >= 10, zq)
+	# 出村門喺指定嗰邊、對住大排檔
+	var side = str(Z.gate_side); var gok = false
+	match side:
+		"E": gok = gp.x >= vr.end.x - 10 and mr.position.x >= vr.end.x and absf(gp.y - 1208) < 40
+		"S": gok = gp.y >= vr.end.y and mr.position.y >= vr.end.y - 4
+		"W": gok = gp.x <= vr.position.x + 10 and mr.end.x <= vr.position.x
+	_chk(tag + "出村門喺%s邊、大排檔喺嗰邊" % side, gok, gp)
+	for z in ZD.of_type("wild"): _chk(tag + "%s 王位喺區內" % z.id, ZD.rect(z.rect).has_point(ZD.v2(z.boss_at)))
+	# ---- 路徑 ----
+	var grs = []
+	for g in Z.market.gates: grs.append(Rect2(float(g[0]) - 32, float(g[1]) - 40, 64, 80))
+	var in_market = func(p):
+		var ok2 = mr.grow(2).has_point(p)
+		for r in grs: if r.has_point(p): ok2 = true
+		return ok2 and not ZV.blocked(p)
+	var g0 = ZD.v2(Z.market.gates[0]); var g1 = ZD.v2(Z.market.gates[1])
+	var e1 = sim.QP[sim.QP.size() - 1]; var e2 = sim.QP2[sim.QP2.size() - 1]
+	_chk(tag + "客人兩條路喺大排檔內、各由一道野外門入", _poly_ok(sim.QP, in_market) and _poly_ok(sim.QP2, in_market) and minf(e1.distance_to(g0), e1.distance_to(g1)) < 30 and minf(e2.distance_to(g0), e2.distance_to(g1)) < 30 and e1.distance_to(e2) > 100, [e1, e2])
+	var pp_ok = []
+	for sid in MD.stations(c): if not _poly_ok(MD.st_path(c, sid), in_market): pp_ok.append(sid)
+	_chk(tag + "搬貨路全部喺大排檔內", pp_ok.is_empty(), pp_ok)
+	var corr = Rect2(gp.x - 80, gp.y - 110, 160, 160)
+	var pth = em._path()
+	_chk(tag + "挑夫路：村子 → 出村門 → 櫃台", _poly_ok(pth, func(p): return (mr.grow(14).has_point(p) or corr.has_point(p) or vr.has_point(p)) and not ZV.blocked(p)) and vr.has_point(pth[0]) and mr.grow(14).has_point(pth[pth.size() - 1]), pth)
+	var gs = sim.L.gates
+	var ft0 = sim.fence_tgt(g0.x, (ZD.rect(ZD.of_type("wild")[0].rect).get_center()).y); var ft1 = sim.fence_tgt(g1.x, ZD.rect(ZD.of_type("wild")[1].rect).get_center().y)
+	_chk(tag + "孤魂衝最近嘅野外門（任何方向）", gs.size() == 2 and ft0.distance_to(g0) < 30 and ft1.distance_to(g1) < 30, [ft0, ft1])
+	var w0 = ZD.rect(ZD.of_type("wild")[0].rect).get_center(); var w1 = ZD.rect(ZD.of_type("wild")[1].rect).get_center()
+	_chk(tag + "孤魂喺野外深處唔算到門口；衝到門口先算", not sim.at_fence(w0, 90) and not sim.at_fence(w1, 90) and sim.at_fence(ft0, 90) and sim.at_fence(ft1, 90))
+	var gh_ok = true
+	for i in 3: if not mr.has_point(sim.guard_home(i)): gh_ok = false
+	_chk(tag + "守夜企喺大排檔門口", gh_ok)
+	# 阿福：未佔領入唔到；佔領後經門洞／橋／小徑可達；地形阻隔有碰撞
+	for zid in ["A", "B", "C"]: S.zone.own.erase("%d:%s" % [c, zid])
+	var vh = ZD.v2(Z.village.hero)
+	var blocked0 = true
+	for zid in ["A", "B", "C"]:
+		var dst = ZD.v2(Z.zones.filter(func(z): return z.id == zid)[0].fields.values()[0].sign)
+		var r0 = ZW.route(vh, dst)
+		if not (vr.grow(4).has_point(r0[r0.size() - 1]) or ZD.rect(ZD.zone(zid).door.rect).has_point(r0[r0.size() - 1])): blocked0 = false
+	_chk(tag + "未佔領：阿福入唔到資源區", blocked0)
+	for zid in ["A", "B", "C"]: ZD.set_owned(zid)
+	var reach = true; var dbg = []
+	for zid in ["A", "B", "C"]:
+		var dst = ZD.v2(ZD.zone(zid).fields.values()[0].sign) + Vector2(0, 8)
+		var rt = ZW.route(vh, dst)
+		if not _poly_ok([vh] + rt, _walkable) or rt[rt.size() - 1] != dst: reach = false; dbg.append([zid, rt])
+	var dA = ZD.v2(ZD.zone("A").fields.values()[0].sign) + Vector2(0, 8); var dB = ZD.v2(ZD.zone("B").fields.values()[0].sign) + Vector2(0, 8)
+	var rab = [dA] + ZW.route(dA, dB)
+	if not _poly_ok(rab, _walkable): reach = false; dbg.append(["A→B", rab])
+	_chk(tag + "路徑可達：村子 ↔ A／B／C、A → B（唔穿阻隔）", reach, dbg)
+	var bok = []
+	for b in Z.barriers:
+		var k = str(b.k)
+		var probe = []; var open = []
+		match k:
+			"river": probe = [Vector2((float(b.x0) + float(b.x1)) * 0.3, float(b.y))]; for br in b.bridges: open.append(Vector2((float(br[0]) + float(br[1])) / 2.0, float(b.y)))
+			"vriver": probe = [Vector2(float(b.x), float(b.y0) + 100)]; for br in b.bridges: open.append(Vector2(float(b.x), (float(br[0]) + float(br[1])) / 2.0))
+			"ditch", "vfence", "rail": probe = [Vector2(float(b.x), float(b.y0) + 60)]; open = [Vector2(float(b.x), (float(b.gap[0]) + float(b.gap[1])) / 2.0)]
+			"belt", "fence": probe = [Vector2(float(b.x0) + 40, float(b.y) - 6)]; open = [Vector2((float(b.gap[0]) + float(b.gap[1])) / 2.0, float(b.y) - 6)]
+			"stakes": probe = [Vector2(float(b.x0) + 20, float(b.y) - 10)]; for g in b.gaps: open.append(Vector2((float(g[0]) + float(g[1])) / 2.0, float(b.y) - 10))
+			"void": for r in b.rects: probe.append(ZD.rect(r).get_center())
+		for p in probe: if not ZV.blocked(p): bok.append("%s 唔擋 %s" % [k, p])
+		for p in open: if ZV.blocked(p): bok.append("%s 門口擋 %s" % [k, p])
+	_chk(tag + "地形阻隔有碰撞、門口／橋／小徑通", bok.is_empty(), bok)
+	var pz = J.G.PlazaLife; var zok = true
+	for zz in [pz.ZA, pz.ZB]:
+		for p in [Vector2(zz[0], zz[2]), Vector2(zz[1], zz[3])]: if not vr.has_point(p) or ZV.blocked(p): zok = false
+	_chk(tag + "廣場鬼活動範圍喺村子內", zok)
+	# 實際行：撳第一個資源點 → 阿福經門洞入去
+	var V = _V(); var H = V.hero
+	H.x = vh.x; H.y = vh.y; H.tx = vh.x; H.ty = vh.y; H.act = null; H.target = null; H.erase("zf")
+	var fb = str(ZD.zone("B").fields.keys()[0]); var nd0 = CF.nodes(fb)[0]
+	CF.tap_node(V, fb, 0, nd0.x, nd0.y)
+	var thru = false; var bad_n = 0
+	for i in 150:
+		await _w(t, 0.1)
+		var hp = Vector2(J.num(H.x), J.num(H.y))
+		if ZD.rect(ZD.zone("B").door.rect).grow(10).has_point(hp): thru = true
+		if not _walkable(hp): bad_n += 1
+		if ZD.zrect("B").has_point(hp) and H.get("act") is Dictionary: break
+	_chk(tag + "撳 B 資源點：阿福經門口行入去開始採", thru and bad_n == 0 and H.get("act") is Dictionary, [J.num(H.x), J.num(H.y), bad_n])
+	H.x = vh.x; H.y = vh.y; H.tx = vh.x; H.ty = vh.y; H.act = null; H.target = null; H.erase("zf"); H["zq"] = []
+	for zid in ["A", "B", "C"]: S.zone.own.erase("%d:%s" % [c, zid])
+	# ---- 攻佔、二級廠 ----
+	var zA = ZD.zone("A"); var need = int(zA.power)
+	S.res.troops = 0.0
+	_chk(tag + "建議戰力遞增（A < B < C）", ZD.need("A") < ZD.need("B") and ZD.need("B") < ZD.need("C"), [ZD.need("A"), ZD.need("B"), ZD.need("C")])
+	_chk(tag + "戰力唔夠：派陰兵攻佔唔得", ZD.capture_auto("A") == "weak" and not ZD.owned("A"))
+	var fA = str(zA.fields.keys()[0])
+	_chk(tag + "未佔領：A 資源點唔採得", not CF.usable(fA))
+	S.bld.home = 1.0; S.res.troops = float(need) + 100.0
+	var r = ZD.capture_auto("A")
+	_chk(tag + "派陰兵攻佔 A：成功、扣兵", r == "ok" and ZD.owned("A") and J.num(S.res.troops) < float(need) + 100.0)
+	_chk(tag + "劇情事件：zone_cap A", stub.has_ev("zone_cap", "A"))
+	var ok_f = []
+	for z in ZD.of_type("res"):
+		if J.t(z.get("nofac")): if not (z.get("shops", {}) as Dictionary).is_empty(): ok_f.append("%s 暫無但有廠" % z.id)
+		for b in z.get("shops", {}):
+			if ZD.bid_zone(str(b)) != str(z.id) or not ZD.zrect(str(z.id)).has_point(CB.pos(str(b))): ok_f.append("%s 唔喺 %s" % [b, z.id])
+			if ZD.owned(str(z.id)) == false and CB.zone_lock(str(b)) == "": ok_f.append("%s 未佔領都起得" % b)
+	_chk(tag + "二級廠只可建喺所屬區（冇廠嘅區寫暫無）", ok_f.is_empty(), ok_f)
+	for z in ZD.of_type("res"):
+		if (z.get("shops", {}) as Dictionary).is_empty(): continue
+		var sb = str(z.shops.keys()[0]); var fb2 = str(z.fields.keys()[0]); var keep = J.num(S.bld.get(fb2, 0))
+		ZD.set_owned(str(z.id)); S.bld[fb2] = 1.0
+		var l1 = CB.zone_lock(sb)
+		S.bld[fb2] = 3.0
+		var l3 = CB.zone_lock(sb)
+		_chk(tag + "%s：%s Lv1 起唔到、Lv3 起得" % [z.id, sb], l1.contains("Lv3") and l3 == "", [l1, l3])
+		S.zone.sent = {}; ZD._watch_t = 5; ZD.watch(Rect2())
+		_chk(tag + "劇情事件：factory %s" % z.id, stub.has_ev("factory", str(z.id)))
+		S.bld[fb2] = keep
+		S.zone.own.erase("%d:%s" % [c, z.id])
+		break
+	# ---- 事件：map_enter、zone_seen ----
+	var cam = nv.zone_cam()
+	S.zone.sent = {}
+	cam.z = nv.size.x / 390.0
+	for z in ZD.zones():
+		if str(z.type) in ["res", "wild"]:
+			cam.center_on(ZD.rect(z.rect).get_center()); await _w(t, 0.25)
+	var me_ok = false
+	for e in ZD.EV_LOG: if e[0] == "map_enter" and int(e[2]) == c: me_ok = true
+	_chk(tag + "劇情事件：map_enter（記錄；劇情線自己播開場）", me_ok)
+	var seen_all = true
+	for z in ZD.zones(): if str(z.type) in ["res", "wild"] and not stub.has_ev("zone_seen", str(z.id)): seen_all = false
+	_chk(tag + "劇情事件：每個資源區／野外區 zone_seen", seen_all, stub.log)
+	# ---- 野外王 ----
+	var arts = []
+	for z in ZD.of_type("wild"):
+		for b in z.bosses:
+			if not Spr.ok(str(b.art)) or not J.G.ENEMY_T.has(str(b.art)): arts.append(b.art)
+	_chk(tag + "王全部用現有鬼怪素材", arts.is_empty(), arts)
+	var mains = []
+	for z in ZD.of_type("wild"):
+		for b in z.bosses: if J.t(b.get("main")): mains.append(b.chapter)
+	_chk(tag + "主 Boss＝世界地圖第 %d 章原 Boss 關卡" % (c + 1), mains.size() == 1 and int(mains[0][0]) == c and int(mains[0][1]) == 2, mains)
+	var w0z = str(ZD.of_type("wild")[0].id)
+	ZD.unmark_bosses(c)
+	var had = J.t(S.cleared.get("%d-3" % (c + 1)))
+	S.cleared.erase("%d-3" % (c + 1))
+	_chk(tag + "王未打：唔拔得營", not sim.can_move() and not ZD.all_bosses_done())
+	if not ZD.team_ok(): S.team = [S.ghosts[0].id]
+	stub.defer = true
+	var bid0 = str(ZD.bosses(w0z)[0].id)
+	var rb = ZD.start_battle("boss", w0z)
+	var B = J.G.get("Battle")
+	_chk(tag + "boss_pre：劇情播緊未開戰", rb == "ok" and stub.has_ev("boss_pre", bid0) and not J.t(B.get("active")) and stub.held.size() == 1)
+	stub.defer = false
+	stub.held[0].call(); stub.held.clear()
+	_chk(tag + "boss_pre 播完先開戰", J.t(B.get("active")))
+	await _w(t, 1.0)
+	if shots: await _shot(t, "m%d_boss_battle" % (c + 1))
+	await _finish_battle(t, true); ZD.poll()
+	_chk(tag + "打低①王 → 輪到②、boss_win 事件", ZD.boss_done(w0z, 0) and ZD.boss_next(w0z) == 1 and stub.has_ev("boss_win", bid0))
+	ZD.mark_all_bosses(c)
+	S.zone.sent = {}; ZD._watch_t = 5; ZD.watch(Rect2())
+	for i in MD.goals(c).size(): if not sim.goal_claimed(i): sim.st().goals_done.append(float(i))
+	S.cleared["%d-3" % (c + 1)] = true
+	_chk(tag + "全部王打低 → 解放、可以拔營、liberate 事件", ZD.all_bosses_done() and sim.can_move() and stub.has_ev("liberate"))
+	ZD.unmark_bosses(c); sim.st().goals_done = []
+	if not had: S.cleared.erase("%d-3" % (c + 1))
+	# ---- 點擊 ----
+	cam.z = nv.size.x / 390.0
+	m.close_sheet()
+	await _skip(t, 4)   # 主線劇情（打完王可能有）播完先撳
+	var cz = ZD.zrect("C").get_center()
+	cam.center_on(cz); await _w(t, 0.3)
+	nv.zone_tap(cam.w2s(cz))
+	_chk(tag + "撳未佔領 C 出攻佔卡", m.sheet.visible and m.sheet_title.text.contains(ZD.T(ZD.zone("C").n).split("　")[-1]), m.sheet_title.text)
+	m.close_sheet()
+	var ba = ZD.v2(ZD.zone(w0z).boss_at)
+	cam.center_on(ba); await _w(t, 0.3)
+	nv.zone_tap(cam.w2s(ba + Vector2(0, -30)))
+	_chk(tag + "撳野外王出挑戰卡", m.sheet.visible and m.sheet_title.text.contains(ZD.T(ZD.zone(w0z).n).split("　")[-1]), m.sheet_title.text)
+	m.close_sheet()
+	var opened = [""]
+	var UI = J.G.get("UI"); var o_ob = UI.get("openBuilding")
+	UI["openBuilding"] = func(_t0, a): opened[0] = J.str(J.arg(a, 0)); return null
+	var spp = ZD.v2(Z.village.POS.store) + Vector2(0, -30)
+	cam.center_on(spp); await _w(t, 0.3)
+	nv.zone_tap(cam.w2s(spp))
+	_chk(tag + "撳倉庫開建築卡（唔誤觸區／門）", opened[0] == "store" and not m.sheet.visible, opened[0])
+	UI["openBuilding"] = o_ob
+	var sid0 = MD.stations(c)[0]; sim.sst(sid0).unlocked = true
+	var stp = sim.st_pos(sid0)
+	cam.center_on(stp); await _w(t, 0.4)
+	nv.zone_tap(cam.w2s(stp + Vector2(0, -40)))
+	_chk(tag + "撳大排檔台開資料卡", sc.sheet.visible and sc.sel == sid0, sc.sel)
+	sc.close_sheet(); await _w(t, 0.4)
+	# 客人、孤魂（跑一陣）
+	for sid in MD.stations(c): sim.sst(sid).unlocked = true
+	cam.center_on(mr.get_center())
+	for i in 36: await _w(t, 0.25)
+	var cu_ok = sim.custs.size() > 0
+	for cu in sim.custs: if not mr.grow(60).has_point(cu.pos): cu_ok = false
+	_chk(tag + "客人喺大排檔（由野外門入）", cu_ok, sim.custs.size())
+	var foe_ok = sim.foes.size() > 0; var fbad = []
+	for f in sim.foes:
+		var inw = false
+		for z in ZD.of_type("wild"): if ZD.rect(z.rect).grow(40).has_point(f.pos): inw = true
+		for g in sim.L.gates: if f.pos.distance_to(g) < 80: inw = true
+		if not inw: foe_ok = false; fbad.append(f.pos)
+	_chk(tag + "孤魂喺野外區／野外門", foe_ok, [sim.foes.size(), fbad])
+	await names_check2(t, m)
+	if shots: await _shots_map(t, m, c)
+	ZD.hook = null
+func names_check2(t, m) -> void:
+	var nv = m.village; var c = nv.zone_cam()
+	for zz in [c.z_min(), nv.size.x / 390.0]:
+		c.z = zz; c.clamp_all(); c.center_on(ZD.zrect("village").get_center()); await _w(t, 0.3)
+		var dup = []
+		for z in ZD.zones():
+			var full = ZD.T(z.n); var short = full.split("　")[-1]
+			var n = 0
+			for s in ZV.plates: if s.begins_with(full) or s == short or s.begins_with(short + "（"): n += 1
+			if z.type != "market" and ZD.rect(z.rect).intersects(nv.view_rect()) and n != 1: dup.append("%s×%d" % [full, n])
+		_chk("縮放 %.2f：每區名牌只畫一個" % zz, dup.is_empty(), dup)
+# 舊存檔遷移：老闆存檔＝第 2 關中期（S.mv.ci = 1；有建築／資源田／派鬼；已過 1-3）
+func migrate_check(t, m) -> void:
+	var S = J.G.S; var sc = m.mv_view
+	await _goto(t, m, 1)
+	var bak = {"zone": S.get("zone", {}).duplicate(true), "bld": S.bld.duplicate(true), "cleared": S.cleared.duplicate(true)}
+	var posts = {}
+	for g in S.ghosts: posts[str(g.id)] = J.str(g.get("post"))
+	for case_i in 2:
+		S.erase("zone")
+		if case_i == 1: S["zone"] = {"v": 1.0, "own": {"0:A": true}, "boss": {"0:zb_egui": true, "0:zb_eguiking": true}, "exp": null, "mig": 1.0}   # 已經行過 zone1 遷移嘅存檔
+		S.bld["b_coco"] = 4.0; S.bld["b_cocomilk"] = 1.0; S.bld["b_bamboo"] = 3.0; S.bld.erase("b_latex"); S.bld.erase("b_rubbersheet")
+		S.bld["b_tea"] = 0.0
+		S.cleared["1-3"] = true; S.cleared.erase("2-3")
+		var gid = str(S.ghosts[0].id); S.ghosts[0]["post"] = "b_coco"
+		ZD.st()
+		var tg = "舊存檔（%s）：" % ["冇 zone", "行過 zone1 遷移"][case_i]
+		_chk(tg + "椰林已開墾 → 第 2 關 A 已佔領", ZD.owned("A", 1))
+		_chk(tg + "竹林已開墾 → 第 2 關 C 已佔領", ZD.owned("C", 1))
+		_chk(tg + "冇膠園 → B 未佔領", not ZD.owned("B", 1))
+		_chk(tg + "未去到嘅第 3／4 關唔送", not ZD.owned("A", 2) and not ZD.owned("C", 3))
+		_chk(tg + "Toyol 未打 → 第 2 關王未打；第 1 關餓鬼坑已打", not ZD.boss_done("w_rubber", 1, 1) and ZD.boss_done("w_pit", 1, 0))
+		_chk(tg + "等級、派鬼保留", CB.lv("b_coco") == 4 and CB.lv("b_cocomilk") == 1 and CB.lv("b_bamboo") == 3 and str(S.ghosts[0].post) == "b_coco" and str(S.ghosts[0].id) == gid)
+		_chk(tg + "唔卡關：椰漿廠照用、竹林照採、B 可攻佔", ZD.bid_ok("b_cocomilk") and CF.usable("b_bamboo") and ZD.zone("B").power > 0)
+		S.cleared["2-3"] = true; S.erase("zone"); ZD.st()
+		_chk(tg + "已打 Toyol（2-3）→ 廢膠廠兩個王已打", ZD.boss_done("w_rubber", 0, 1) and ZD.boss_done("w_rubber", 1, 1) and not ZD.boss_done("w_kgrave", 0, 1))
+		S.cleared.erase("2-3")
+	S["zone"] = bak.zone; S["bld"] = bak.bld; S["cleared"] = bak.cleared
+	for g in S.ghosts: g["post"] = posts.get(str(g.id), g.get("post"))
+func _shots_map(t, m, c: int) -> void:
+	var nv = m.village; var cam = nv.zone_cam(); var S = J.G.S; var n = c + 1
+	DirAccess.make_dir_recursive_absolute(SHOTS2)
+	cam.vel = Vector2.ZERO
+	for zid in ["A", "B"]: S.zone.own.erase("%d:%s" % [c, zid])
+	ZD.set_owned("C")
+	cam.z = cam.z_min(); cam.clamp_all(); cam.center_on(Vector2(ZD.world_size().x / 2, ZD.world_size().y / 2)); await _w(t, 1.0); await _shot2(t, "m%d_00_whole_min" % n)
+	cam.z = nv.size.x / 390.0
+	var vc = ZD.zrect("village")
+	for e in [["m%d_10_village_top" % n, vc.get_center() + Vector2(-150, -250)], ["m%d_11_village_mid" % n, vc.get_center() + Vector2(150, 0)],
+			["m%d_12_village_bot" % n, vc.get_center() + Vector2(-150, 250)], ["m%d_13_village_gate" % n, ZD.v2(ZD.cur().village.POS.gate)]]:
+		cam.center_on(e[1]); await _w(t, 0.8); await _shot2(t, e[0])
+	for zid in ["A", "B", "C"]:
+		var zr = ZD.zrect(zid)
+		cam.center_on(zr.get_center()); await _w(t, 0.8); await _shot2(t, "m%d_2%s_res_%s" % [n, zid, "owned" if ZD.owned(zid) else "locked"])
+	ZD.set_owned("A"); cam.center_on(ZD.zrect("A").get_center()); await _w(t, 0.8); await _shot2(t, "m%d_2A_res_owned" % n)
+	var mr = ZD.zrect("market")
+	cam.center_on(mr.get_center() + Vector2(0, -mr.size.y * 0.25)); await _w(t, 0.8); await _shot2(t, "m%d_30_market_a" % n)
+	cam.center_on(mr.get_center() + Vector2(0, mr.size.y * 0.25)); await _w(t, 0.8); await _shot2(t, "m%d_31_market_b" % n)
+	for z in ZD.of_type("wild"):
+		cam.center_on(ZD.v2(z.boss_at) + Vector2(0, -60)); await _w(t, 0.8); await _shot2(t, "m%d_4_wild_%s" % [n, z.id])
+	for zid in ["A", "B"]: S.zone.own.erase("%d:%s" % [c, zid])
+	S.zone.own.erase("%d:C" % c)
+const SHOTS2 := "/tmp/zone2/shots/"
+func _shot2(t, name: String):
+	await RenderingServer.frame_post_draw
+	t.get_viewport().get_texture().get_image().save_png(SHOTS2 + name + ".png"); _p("shot " + name)
+func dbg(t) -> void:
+	var m = await _boot(t)
+	for c in [2, 3]:
+		await _goto(t, m, c)
+		var S = J.G.S
+		for zid in ["A", "B", "C"]: ZD.set_owned(zid)
+		var V = _V(); var H = V.hero; var vh = ZD.v2(ZD.cur().village.hero)
+		H.x = vh.x; H.y = vh.y; H.tx = vh.x; H.ty = vh.y; H.act = null; H.target = null; H.erase("zf")
+		var fb = str(ZD.zone("B").fields.keys()[0]); var nd0 = CF.nodes(fb)[0]
+		_p("c=%d fb=%s nd0=%s usable=%s ripe=%s route=%s" % [c, fb, [nd0.x, nd0.y], CF.usable(fb), CF.ripe(fb, 0), ZW.route(vh, Vector2(nd0.x, nd0.y))])
+		CF.tap_node(V, fb, 0, nd0.x, nd0.y)
+		for i in 40:
+			await _w(t, 0.25)
+			_p("  %s,%s t=%s,%s zq=%s zf=%s act=%s" % [int(J.num(H.x)), int(J.num(H.y)), int(J.num(H.tx)), int(J.num(H.ty)), H.get("zq"), H.get("zf"), H.get("act") != null])
+	_p("RESULT ok=0 bad=0")

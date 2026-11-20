@@ -237,7 +237,7 @@ func all(t) -> void:
 	# ---------- 10. 冇 chain.json 都唔壞 ----------
 	M.use_file("res://data/nat/__no_chain__.json")
 	CB.reset()
-	_chk("冇資料：冇拓展建築", CB.new_blds().is_empty() and CB.shown().is_empty() and CB.world_h() == 1130.0)
+	_chk("冇資料：冇拓展建築", CB.new_blds().is_empty() and CB.shown().is_empty() and CB.world_h() == (ZD.world_size().y if ZD.on() else 1130.0))   # [zone2] 第 2–4 關都係分區地圖：世界高＝分區地圖
 	var cw = J.mc(N(), "bld", ["wood"])
 	_chk("冇資料：舊建築卡照開", cw is Dictionary and J.str(cw.name) != "")
 	J.cl(J.G.get("produce"), null, [10.0])

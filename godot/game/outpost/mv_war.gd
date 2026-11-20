@@ -339,7 +339,7 @@ func _spawn_wave_foe(sim, boss: bool) -> void:
 	var ks = MD.map_def(ci).get("fence_foes", ["youhun"])
 	if boss and ks is Array and ks.size(): f.k = str(ks[ks.size() - 1])
 	f.hp = hp; f.mx = hp; f.st = "charge"; f.t = 0.0; f["wave"] = true
-	f.tgt = sim.fence_tgt(_rng.randf_range(40, sim.ww() - 40))   # [zone]
+	f.tgt = sim.fence_tgt(_rng.randf_range(40, sim.ww() - 40)) if not sim.L.has("gdir") else sim.fence_tgt(f.pos.x, f.pos.y)   # [zone2] 由自己嗰區衝最近嘅門
 	if boss: f["boss"] = true; wave.boss = f
 	wave.foes.append(f)
 func _end_wave(sim, w: Dictionary, won: bool) -> void:
@@ -361,12 +361,12 @@ func _end_wave(sim, w: Dictionary, won: bool) -> void:
 func _step_flee(sim, dt: float) -> void:
 	for f in sim.foes.duplicate():
 		if f.st != "flee": continue
-		f.pos += Vector2(0, -80.0 * dt) + Vector2(-60.0 if f.pos.x < sim.ww() / 2.0 else 60.0, 0) * dt
+		f.pos += Vector2(0, 80.0 * dt * sim.flee_dir(f.pos)) + Vector2(-60.0 if f.pos.x < sim.ww() / 2.0 else 60.0, 0) * dt   # [zone2] 野外喺下面就向下逃
 		f["walk"] = true
-		if f.pos.y < 20.0 or f.pos.x < -40.0 or f.pos.x > sim.ww() + 40.0: sim.foes.erase(f)
+		if f.pos.y < 20.0 or f.pos.y > float(sim.L.get("wh", 1e9)) - 20.0 or f.pos.x < -40.0 or f.pos.x > sim.ww() + 40.0: sim.foes.erase(f)
 
 # ---------------- 義勇軍 ----------------
-func _near_fence(sim, f) -> bool: return f.st != "die" and f.st != "flee" and f.pos.y >= sim.L.fence_y - 90.0
+func _near_fence(sim, f) -> bool: return f.st != "die" and f.st != "flee" and sim.at_fence(f.pos, 90.0)   # [zone2] 任何方向嘅野外門
 func _step_vols(sim, dt: float) -> void:
 	var fy = float(sim.L.fence_y)
 	for r in vols.duplicate():
@@ -402,7 +402,7 @@ func _step_vols(sim, dt: float) -> void:
 					continue
 				r.st = "fight"
 				var side = -1.0 if (int(r.slot) % 2 == 0) else 1.0
-				var want = Vector2(clampf(tgt.pos.x + side * (18.0 + 6.0 * (int(r.slot) % 3)), 16, sim.ww() - 16), fy + 24.0 + (int(r.slot) % 2) * 8.0)   # [zone]
+				var want = Vector2(clampf(tgt.pos.x + side * (18.0 + 6.0 * (int(r.slot) % 3)), 16, sim.ww() - 16), sim.guard_line(tgt.pos, 24.0 + (int(r.slot) % 2) * 8.0))   # [zone2]
 				r.walk = not _mv(r, want, dt, 110.0)
 				if absf(tgt.pos.x - r.pos.x) < 40.0 and absf(r.pos.y - want.y) < 6.0:
 					r.flip = tgt.pos.x < r.pos.x
@@ -424,7 +424,7 @@ func _blocker(sim, f):
 	for r in vols:
 		if r.st == "walk": continue
 		var dx = absf(r.pos.x - f.pos.x)
-		if dx < 46.0 and r.pos.y < float(sim.L.fence_y) + 50.0 and dx < bd: bd = dx; best = r
+		if dx < 46.0 and sim.inside_d(r.pos, f.pos) < 50.0 and dx < bd: bd = dx; best = r   # [zone2]
 	return best
 func _guarded(sim, f) -> bool:
 	for g in sim.guards: if absf(g.pos.x - f.pos.x) < 34.0: return true

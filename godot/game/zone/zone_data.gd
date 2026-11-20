@@ -81,7 +81,7 @@ static func zone_at(p: Vector2, c := -1) -> String:
 	return ""
 static func door_at(p: Vector2, c := -1) -> String:   # 撳中門洞（屬於邊個資源區）
 	for z in of_type("res", c):
-		if z.get("door") is Dictionary and rect(z.door.rect).grow(6).has_point(p): return str(z.id)
+		if z.get("door") is Dictionary and rect(z.door.get("vis", z.door.rect)).grow(6).has_point(p): return str(z.id)   # [zone2] vis：畫閘嗰格（第 3 關石階平台好闊）
 	return ""
 
 # ---------------- 狀態 ----------------
@@ -92,6 +92,7 @@ static func st():
 	var z = s.zone
 	for k in ["own", "boss"]: if not (z.get(k) is Dictionary): z[k] = {}
 	if int(J.num(z.get("mig", 0))) < 1: _migrate(s, z)
+	if int(J.num(z.get("mig", 0))) < 2: _migrate2(s, z)
 	return z
 static func _k(id: String, c := -1) -> String: return "%d:%s" % [ci() if c < 0 else c, id]
 static func owned(zid: String, c := -1) -> bool:
@@ -108,13 +109,32 @@ static func set_owned(zid: String, c := -1) -> void:
 static func _migrate(s: Dictionary, z: Dictionary) -> void:
 	z["mig"] = 1.0
 	var bld = s.get("bld") if s.get("bld") is Dictionary else {}
+	var cur = int(J.num(s.mv.get("ci", 0))) if s.get("mv") is Dictionary else 0
 	for ck in D().maps:
 		var c = int(ck)
+		if c > cur: continue   # [zone2] 未去到嘅圖唔送（同一個建築 id 第 2–4 關會再出現）
 		for zz in zones(c):
 			if str(zz.get("type")) == "res":
 				var hit = false
 				for b in _zbids(zz): if J.num(bld.get(b, 0)) > 0: hit = true
 				if hit: z.own[_k(str(zz.id), c)] = true
+			elif str(zz.get("type")) == "wild":
+				var bs = zz.get("bosses", [])
+				for i in bs.size():
+					if bs[i].get("chapter") is Array and _chapter_done(s, bs[i].chapter):
+						for j in i + 1: z.boss[_k(str(bs[j].id), c)] = true
+# [zone2] 第 2–4 關加入之後再遷移一次（舊存檔已經行過 v1）：只處理而家所在嘅圖同之前嘅圖（未去到嘅圖照新開始，唔送）；
+#   已開墾資源田／已起加工廠 → 該區已佔領；世界地圖已打低嘅主 Boss → 對應王（連前面嘅）已打低。等級、派鬼唔郁。
+static func _migrate2(s: Dictionary, z: Dictionary) -> void:
+	z["mig"] = 2.0
+	var bld = s.get("bld") if s.get("bld") is Dictionary else {}
+	var cur = int(J.num(s.mv.get("ci", 0))) if s.get("mv") is Dictionary else 0
+	for ck in D().maps:
+		var c = int(ck)
+		if c == 0 or c > cur: continue
+		for zz in zones(c):
+			if str(zz.get("type")) == "res":
+				for b in _zbids(zz): if J.num(bld.get(b, 0)) > 0: z.own[_k(str(zz.id), c)] = true
 			elif str(zz.get("type")) == "wild":
 				var bs = zz.get("bosses", [])
 				for i in bs.size():
@@ -149,6 +169,7 @@ static func capture_auto(zid: String) -> String:
 	s.res["troops"] = maxf(0.0, J.num(s.res.get("troops", 0)) - loss(zid))
 	set_owned(zid)
 	_save()
+	ev("zone_cap", zid)   # [zone2] 劇情
 	return "ok"
 
 # ---------------- 野外王 ----------------
@@ -189,6 +210,15 @@ static func team_ok() -> bool:
 	return false
 # kind = "cap"（資源區）／"boss"（野外王）；回 "ok"／"noteam"／"nobattle"／"order"／"done"
 static func start_battle(kind: String, zid: String) -> String:
+	if kind == "boss":   # [zone2] 王開戰前：先播劇情（boss_pre），播完先入戰鬥
+		var bi0 = boss_next(zid)
+		if bi0 >= 0 and team_ok() and S() != null and J.G.get("Battle") is Dictionary:
+			var bid0 = str(bosses(zid)[bi0].id)
+			var r0 = ["ok"]
+			ev("boss_pre", bid0, func(): r0[0] = _start_battle(kind, zid))
+			return r0[0]
+	return _start_battle(kind, zid)
+static func _start_battle(kind: String, zid: String) -> String:
 	var s = S(); var B = J.G.get("Battle")
 	if s == null or not (B is Dictionary): return "nobattle"
 	if not team_ok(): return "noteam"
@@ -255,8 +285,14 @@ static func resolve(win: bool) -> Dictionary:
 			if bi >= 0 and bi < bs.size():
 				z.boss[_k(str(bs[bi].id), c)] = true
 				out["boss"] = T(bs[bi].get("n", ["", ""]))
+				out["bid"] = str(bs[bi].id)
 	NEWS.append(out)
 	_save()
+	if win and c == ci():   # [zone2] 劇情
+		if ex.kind == "cap": ev("zone_cap", zid)
+		elif out.has("bid"):
+			ev("boss_win", str(out.bid))
+			if all_bosses_done(c): _ev_once("liberate", "")
 	return out
 static func _save() -> void:
 	var f = J.G.get("save")
@@ -355,7 +391,8 @@ static func apply() -> void:
 		var eave = {"x": float(pz.eave[0]), "y": float(pz.eave[1]), "ey": float(pz.eave[2])}
 		_plaza(PL, pz.ZA, pz.ZB, eave, _fa(pz.banana), _fa(pz.bumps))
 		var fc = v.fence
-		VF.set_cfg(float(fc.y), float(fc.gate_x), float(fc.gap), fc.spans)
+		if J.t(fc.get("off")): VF.set_cfg(-1e6, -1e6, 0.0, [[-10.0, -10.0], [-10.0, -10.0]])   # [zone2] 出村門唔喺北面：舊橫柵欄唔用
+		else: VF.set_cfg(float(fc.y), float(fc.gate_x), float(fc.gap), fc.spans)
 		_hero(v2(v.hero), zrect("village").grow(-16))
 	_applied = want
 	var CF = load("res://game/outpost/chain_field.gd"); CF.reset()
@@ -385,3 +422,66 @@ static func _hero(home: Vector2, r: Rect2) -> void:
 	H["zq"] = []
 static func applied() -> String: return _applied
 static func reset_apply() -> void: _applied = "~"   # 下次 apply 一定重做
+
+# ================= [zone2] 劇情事件（zone 線 ↔ 劇情線 zstory 約定） =================
+# 喺以下時刻叫 MS.zone_event(kind, id[, cb])（MS＝mv_scene.story，即 mv_story.gd 實例；冇就跳過，唔報錯）：
+#   map_enter（第一次見到呢關新地圖）、zone_seen（第一次鏡頭見到某資源區／野外區）、zone_cap（佔領資源區）、
+#   boss_pre（王開戰前；cb＝開戰，劇情播完先 call）、boss_win（打低王）、factory（二級廠解鎖，id＝資源區 id）、liberate（全部王打低）
+#   id＝zones.json 嘅 zone id／boss id（每張圖嘅清單喺 maps[ci].events）。
+static var EV_LOG: Array = []   # 測試用：[[kind, id, ci], …]
+static var hook = null   # 測試用：代替劇情線（有 zone_event(kind, id, cb) 方法嘅物件）
+static var _ms = null
+static var _ms_ok := -1
+# 劇情線接口（branch zstory）：MS = load("res://game/outpost/mv_story.gd")；MS.zone_ev(kind, id, cb) 係 static；冇就回 null（唔報錯）
+static func _story():
+	if hook != null: return hook
+	if _ms_ok < 0:
+		_ms_ok = 0
+		if ResourceLoader.exists("res://game/outpost/mv_story.gd"):
+			_ms = load("res://game/outpost/mv_story.gd")
+			for f in _ms.get_script_method_list(): if str(f.get("name", "")) == "zone_ev": _ms_ok = 1
+	return _ms if _ms_ok == 1 else null
+# 回 true＝cb 會由劇情播完先 call；false＝cb 已經即刻 call 咗
+static func ev(kind: String, id := "", cb := Callable()) -> bool:
+	EV_LOG.append([kind, id, ci()])
+	var st = _story()
+	if st != null and kind != "map_enter":   # map_enter：劇情線自己睇 ZD.on_for(ci) 播開場，唔使叫
+		if hook != null: return J.t(hook.zone_event(kind, id, cb))
+		return J.t(st.zone_ev(kind, id, cb))
+	if cb.is_valid(): cb.call()
+	return false
+# 每張存檔每個事件只發一次（S.zone.sent）
+static func _ev_once(kind: String, id: String) -> void:
+	var z = st()
+	if z == null: return
+	if not (z.get("sent") is Dictionary): z["sent"] = {}
+	var k = "%d:%s:%s" % [ci(), kind, id]
+	if z.sent.has(k): return
+	var st0 = _story()
+	if st0 != null:   # 有劇情線先記「發咗」（劇情線未上之前唔好食咗啲事件）
+		z.sent[k] = 1.0
+		ev(kind, id)
+	elif not _logged.has(k):
+		_logged[k] = true
+		EV_LOG.append([kind, id, ci()])
+static var _logged := {}
+# 畫面每格叫（zone_view.draw_over）：map_enter、zone_seen（鏡頭第一次見到某區三成或者區中心）、factory（加工廠條件啱咗）、liberate
+static var _watch_t := 0
+static func watch(view: Rect2) -> void:
+	if not on(): return
+	_watch_t += 1
+	if _watch_t % 6 != 0: return
+	_ev_once("map_enter", "")
+	for z in zones():
+		var tp = str(z.get("type"))
+		if tp != "res" and tp != "wild": continue
+		var r = rect(z.rect); var a = r.intersection(view).get_area()
+		if view.has_point(r.get_center()) or a >= minf(r.get_area(), view.get_area()) * 0.3: _ev_once("zone_seen", str(z.id))
+	for z in of_type("res"):
+		if not owned(str(z.id)): continue
+		for b in (z.get("shops", {}) as Dictionary):
+			if shop_req(str(b))[0]: _ev_once("factory", str(z.id))
+	if all_bosses_done(): _ev_once("liberate", "")
+static func events(c := -1) -> Array:
+	var e = mdef(ci() if c < 0 else c).get("events", [])
+	return e if e is Array else []
