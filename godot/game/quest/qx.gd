@@ -312,7 +312,7 @@ func _process(dt: float) -> void:
 		tq.offset_bottom = -86 - (main.size.y * 0.62 if top else 0.0)
 	_spk(); _pgchat(); _fix_unlock()
 	dq(); side_tick()
-	if btn.visible and not J.t(J.mc(J.G.get("Story"), "busy", [])) and not main.sheet.visible: event("village")
+	if btn.visible and not J.t(J.mc(J.G.get("Story"), "busy", [])) and not main.sheet.visible and not J.t(J.gp(J.G.get("Battle"), "active")): event("village")   # [mapbattle] 大地圖打緊仗唔彈劇情
 	var n = daily_ready()
 	for k in sq():
 		var e = sq()[k]; var x = sdef(k)

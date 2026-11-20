@@ -533,7 +533,8 @@ func start_expedition(sim) -> String:
 	S.cleared[ex.sid] = true   # 當「再打」：戰鬥只畀少量冥幣＋好評（唔出寶箱）；結算後 resolve 會清返
 	var ui = J.G.get("UI")
 	if ui != null: J.mc(ui, "close", [])
-	J.mc(B, "start", [-1.0, -1.0, ex])
+	var go = func(): J.mc(B, "start", [-1.0, -1.0, ex])
+	if not load("res://game/zone/zone_battle.gd").start("raid", "", go): go.call()   # [mapbattle] 分區地圖：喺大排檔即時迎戰
 	return "ok"
 
 # 收戰鬥結果（main.gd 每 0.5 秒叫；畫面每格叫）：回 {} 或 {win, d, mats}

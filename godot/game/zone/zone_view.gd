@@ -5,6 +5,8 @@
 extends RefCounted
 
 const ZD = preload("res://game/zone/zone_data.gd")
+const TA = preload("res://game/zone/zone_taunt.gd")   # [mapbattle] 王喺門外叫囂
+static func _mb(): return load("res://game/zone/zone_battle.gd")   # [mapbattle] 大地圖即時戰鬥
 const WALL_W := 10.0
 const WALL_COL := {"wild": "#4a1c20", "market": "#4a3422", "village": "#4a3422", "res": "#2e2a30"}
 
@@ -509,6 +511,9 @@ static func draw_over(c: CanvasItem, nv) -> void:
 		var tp = str(z.type)
 		if tp == "res" and not ZD.owned(str(z.id)):
 			hits.append([r, "res", str(z.id)])
+			if _mb().on_zone(str(z.id)):   # [mapbattle] 攻佔緊：黑霧散開，睇到戰場
+				if r.intersects(vr): _plate(ctx, _name(nv, z), r.get_center().x, r.position.y + _name_px(nv) * 1.4, _name_px(nv), _rgba(str(z.get("col", "#3a3036")), 0.92))
+				continue
 			if r.intersects(vr): _fog(c, ctx, nv, z, r, t)
 			continue
 		if tp == "wild":
@@ -523,6 +528,7 @@ static func draw_over(c: CanvasItem, nv) -> void:
 			var px = _name_px(nv)
 			var lb = _name(nv, z) + (ZD.L("（起點）", "（起點）") if tp == "village" and _rel(nv) >= 0.6 else "")
 			_plate(ctx, lb, r.get_center().x, r.position.y + px * 1.3, px, _rgba(str(z.get("col", "#a8602a")), 0.92))
+	TA.draw(c, nv)   # [mapbattle] 打唔過嘅王喺柵欄／野外門外面叫囂（泡泡喺大排檔 HUD 下面）
 static func _rgba(hex: String, a: float) -> String:
 	var c = Color(hex)
 	return "rgba(%d,%d,%d,%.2f)" % [int(c.r * 255), int(c.g * 255), int(c.b * 255), a]
@@ -575,6 +581,7 @@ static func _wild_over(ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float) -> void:
 		_plate(ctx, ZD.L("已解放", "已解放"), at.x, at.y - 20, maxi(px, int(npx * 0.8)), "rgba(40,90,50,.92)")
 		return
 	var b = bs[bi]
+	if _mb().on_zone(zid) or TA.boss_taunting(zid) != "": return   # [mapbattle] 王喺戰場上／走咗去門外叫囂
 	var k = str(b.get("art", "youhun"))
 	var bob = sin(t * 2.0) * 3.0
 	var g = ctx.createRadialGradient(at.x, at.y - 40, 6, at.x, at.y - 40, 70)
@@ -592,6 +599,12 @@ static func _wild_over(ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float) -> void:
 # ---------------- 點擊（世界座標）：回 true＝處理咗 ----------------
 static func tap(main, p: Vector2) -> bool:
 	if not ZD.on(): return false
+	if _mb().fighting(): return false   # [mapbattle] 打緊：唔開攻佔／挑戰卡（撳大排檔照得）
+	var th = TA.hit(p)   # [mapbattle] 撳門外叫囂緊嘅王 → 再挑戰
+	if th.size():
+		if th[1] == "cap": open_capture(main, th[0])
+		else: open_boss(main, th[0])
+		return true
 	var zid = ZD.door_at(p)
 	if zid != "" and not ZD.owned(zid): open_capture(main, zid); return true
 	for h in hits:

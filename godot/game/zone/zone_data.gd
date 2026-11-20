@@ -242,7 +242,8 @@ static func _start_battle(kind: String, zid: String) -> String:
 	if chap != null:
 		var sid = "%d-%d" % [int(chap[0]) + 1, int(chap[1]) + 1]
 		st().exp = {"kind": kind, "ci": float(c), "id": zid, "bi": float(bi), "sid": sid, "had": true, "chap": true}
-		J.mc(B, "start", [float(chap[0]), float(chap[1])])
+		var go = func(): J.mc(B, "start", [float(chap[0]), float(chap[1])])
+		if not _mb().start(kind, zid, go, {"bid": str(bosses(zid)[bi].id)}): go.call()   # [mapbattle] 喺大地圖打（勝利＝原關卡通關）
 		return "ok"
 	var st0 = (stage as Dictionary).duplicate(true)
 	st0["name"] = nm
@@ -256,11 +257,13 @@ static func _start_battle(kind: String, zid: String) -> String:
 		for e in st0.en: en2.append(str(e) if ET.has(str(e)) else "youhun")
 		st0["en"] = en2
 		if not ET.has(str(st0.boss)): st0["boss"] = en2[en2.size() - 1]
-	J.mc(B, "start", [-1.0, -1.0, {"stage": st0, "bg": bg, "sid": sid2}])
+	var go2 = func(): J.mc(B, "start", [-1.0, -1.0, {"stage": st0, "bg": bg, "sid": sid2}])
+	if not _mb().start(kind, zid, go2, {"bid": str(bosses(zid)[bi].id) if kind == "boss" else ""}): go2.call()   # [mapbattle]
 	if kind == "boss" and bi >= 0 and J.t(bosses(zid)[bi].get("rename")):   # 王喺戰鬥入面顯示呢度嘅名（例如「亂葬崗守墓鬼」）
 		for u in J.iter(B.get("units")):
 			if J.t(J.gp(u, "boss")): u["name"] = nm
 	return "ok"
+static func _mb(): return load("res://game/zone/zone_battle.gd")   # [mapbattle] 大地圖即時戰鬥
 static var NEWS: Array = []   # 戰鬥結果（畫面攞嚟出橫額）
 # main.gd／畫面每格叫：收戰鬥結果
 static func poll() -> Dictionary:
