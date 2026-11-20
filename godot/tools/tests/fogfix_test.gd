@@ -187,6 +187,21 @@ func _fog_check(t, m) -> void:
 		var fi = lg.find(["fog", "A"]); var li = lg.find(["lock", "A"]); var pi = lg.find(["power", "A"]); var bi = lg.find(["btn", "A"])
 		_chk(tag + "A 區：先畫黑霧，再畫鎖、戰力字、攻佔掣（喺霧上面）", fi >= 0 and li > fi and pi > li and bi > pi, lg)
 		_chk(tag + "A 區名牌喺霧上面", ZV.plates.has(ZV._name(nv, ZD.zone("A"))))
+		var lum = 9.0
+		for tr in 3:   # 隨機事件橫額（「有大單！」）會蓋住畫面：量三次攞最暗
+			lum = minf(lum, await _fog_lum(t, nv, zr))
+			if lum < 0.08: break
+			await _w(t, 2.5)
+		_chk(tag + "A 區霧下近乎全黑（平均亮度 < 0.08）", lum < 0.08, "%.3f" % lum)
+		await _shot(t, "L%d_10_resA_fog" % (c + 1))
+		ZD.set_owned("A"); await _w(t, 0.35)
+		await _shot(t, "L%d_11_resA_capturing" % (c + 1))
+		await _w(t, 1.4)
+		_chk(tag + "佔領後 A 區冇霧", not ZV.fog_log.has(["fog", "A"]))
+		await _shot(t, "L%d_12_resA_owned" % (c + 1))
+		S.zone.own.erase("%d:A" % c)
+	await _goto(t, m, 0)
+func _fog_lum(t, nv, zr: Rect2) -> float:
 		var im = await _img(t)
 		var off = nv.get_global_rect().position
 		var inner = zr.grow(-36); var cc = zr.get_center(); var sm = 0.0; var sn = 0
@@ -201,16 +216,7 @@ func _fog_check(t, m) -> void:
 						sm += _lum(im, Rect2(sp.x - 6, sp.y - 6, 12, 12)); sn += 1
 				gx += 24.0
 			gy += 24.0
-		var lum = sm / maxf(1, sn)
-		_chk(tag + "A 區霧下近乎全黑（平均亮度 < 0.08）", lum < 0.08, "%.3f" % lum)
-		await _shot(t, "L%d_10_resA_fog" % (c + 1))
-		ZD.set_owned("A"); await _w(t, 0.35)
-		await _shot(t, "L%d_11_resA_capturing" % (c + 1))
-		await _w(t, 1.4)
-		_chk(tag + "佔領後 A 區冇霧", not ZV.fog_log.has(["fog", "A"]))
-		await _shot(t, "L%d_12_resA_owned" % (c + 1))
-		S.zone.own.erase("%d:A" % c)
-	await _goto(t, m, 0)
+		return sm / maxf(1, sn)
 
 # ================= 3. 出村門外跟主線逐步解霧（第 1 關新遊戲） =================
 func _qidx(tp: String, key: String) -> int:
@@ -231,12 +237,20 @@ func _reveal_check(t, m) -> void:
 	S.qi = 0.0; S.lv = 1.0; S.cleared = {}; S.zone["rev"] = {}
 	S.bld["wood"] = 1.0; S.bld["home"] = 0.0
 	for zid in ["A", "B", "C"]: S.zone.own.erase("0:" + zid)
+	var sent_keep = S.zone.get("sent", {}).duplicate(true); S.zone["sent"] = {}
 	ZD.reveal_poll(true)
 	_chk("新遊戲開局：出村門外全部黑霧（大排檔、兩個野外區、三個資源區）", _hidden() == ["A", "B", "C", "market", "w_graves", "w_pit"], _hidden())
 	_chk("野外未開：冇鬼潮、冇孤魂", not ZD.wild_open())
 	var sim = m.mv_view.sim; var n0 = sim.custs.size(); var f0 = sim.foes.size()
 	cam.z = cam.z_min(); cam.clamp_all(); cam.center_on(Vector2(670, 1205)); await _w(t, 1.2)
 	_chk("新遊戲開局：大排檔層畫咗黑霧", ZV.fog_log.has(["gfog", "market"]) and ZV.fog_log.has(["gfog", "w_pit"]) and ZV.fog_log.has(["gfog", "w_graves"]))
+	ZD.EV_LOG.clear()
+	cam.z = nv.size.x / 390.0; cam.center_on(ZD.zrect("A").get_center()); await _w(t, 1.0)
+	cam.center_on(ZD.zrect("w_pit").get_center()); await _w(t, 1.0)
+	var pan_ev = []
+	for e in ZD.EV_LOG: if e[0] == "zone_seen": pan_ev.append(e[1])
+	_chk("鏡頭掃過黑霧區：唔發 zone_seen（介紹劇情唔會跟鏡頭播）", pan_ev.is_empty(), pan_ev)
+	cam.z = cam.z_min(); cam.clamp_all(); cam.center_on(Vector2(670, 1205)); await _w(t, 0.8)
 	_chk("新遊戲開局：A／B／C 未介紹（只有黑霧，冇鎖、冇戰力字）", ZV.fog_log.has(["fog", "A"]) and not ZV.fog_log.has(["lock", "A"]) and not ZV.fog_log.has(["power", "B"]))
 	await _skip(t, 6); await _w(t, 0.3)
 	await _shot(t, "R01_new_game_whole")
@@ -270,8 +284,11 @@ func _reveal_check(t, m) -> void:
 		if st[0] == "bLevel": S.bld[st[1]] = 2.0
 		var r1 = ZD.reveal_poll(true)
 		var exp_hidden = opened.slice(i + 1); exp_hidden.sort()
-		var evr = []
-		for e in ZD.EV_LOG: if e[0] == "reveal": evr.append(e[1])
+		var evr = []; var evs = []
+		for e in ZD.EV_LOG:
+			if e[0] == "reveal": evr.append(e[1])
+			if e[0] == "zone_seen": evs.append(e[1])
+		_chk("解 %s：介紹劇情 zone_seen 喺解霧嗰刻發一次（大排檔用開場劇情）" % st[2][0], evs == ([] if st[2][0] == "market" else st[2]), evs)
 		_chk("完成「%s」→ 只散 %s 嘅霧（未完成唔散）" % [ZD._quest(st[0], st[1]).get("text", st[1]), st[2]], r0.is_empty() and r1 == st[2] and _hidden() == exp_hidden and evr == st[2] and ZD.REV_NEWS.size() == 1, [r0, r1, _hidden(), evr])
 		var zr = ZD.zrect(st[2][0])
 		cam.z = nv.size.x / 390.0 if st[2][0] != "market" else cam.z
@@ -286,7 +303,7 @@ func _reveal_check(t, m) -> void:
 		if st[2][0] == "w_pit": _chk("野外區開咗：有鬼潮", ZD.wild_open())
 	cam.z = cam.z_min(); cam.clamp_all(); cam.center_on(Vector2(670, 1205)); await _w(t, 0.8)
 	await _shot(t, "R11_all_revealed_whole")
-	S.qi = keep.qi; S.lv = keep.lv; S.bld = keep.bld; S.cleared = keep.cleared; S.zone["rev"] = keep.rev
+	S.qi = keep.qi; S.lv = keep.lv; S.bld = keep.bld; S.cleared = keep.cleared; S.zone["rev"] = keep.rev; S.zone["sent"] = sent_keep
 	ZD.reveal_all(0)
 
 # ================= 4. 舊存檔／大禮包新號／第 2 關中期／存檔補格 =================
@@ -339,12 +356,24 @@ func _save_check(t, m) -> void:
 	var st1 = [ZD.revealed("market"), ZD.revealed("w_kgrave"), ZD.revealed("A")]
 	sd[str(eb.id)] = 1.0
 	ZD.reveal_poll(true)
-	var st2 = [ZD.revealed("w_kgrave"), ZD.revealed("w_rubber"), ZD.revealed("A"), ZD.revealed("C")]
+	var st2 = [ZD.revealed("w_kgrave"), ZD.revealed("w_rubber"), ZD.revealed("A"), ZD.revealed("B"), ZD.revealed("C")]
+	# 資源區跟劇情逐個開：A＝開檔劇情、B＝新檔劇情（unlock）、C＝賣貨劇情（sold）
+	var bk = {}; var stp = []
+	for kv in [["open", "A"], ["unlock", "B"], ["sold", "C"]]:
+		var bb = ZD.beat_of(kv[0], 1); bk[str(bb.get("id", ""))] = sd.get(str(bb.get("id", "")))
+		var hint_ok = ZD.reveal_hint(kv[1]).contains(MS.TN(bb.scene.title)) if bb.get("scene") is Dictionary else false
+		var before = ZD.revealed(kv[1])
+		sd[str(bb.id)] = 1.0; ZD.reveal_poll(true)
+		stp.append([kv[1], before, ZD.revealed(kv[1]), hint_ok])
 	MS.auto_on = false
+	for k in bk:
+		if bk[k] == null: sd.erase(k)
+		else: sd[k] = bk[k]
 	if had == null: sd.erase(str(eb.id))
 	else: sd[str(eb.id)] = had
 	_chk("第 2 關到埗：大排檔即開、野外／資源區等開場劇情", st1 == [true, false, false], st1)
-	_chk("第 2 關開場劇情播完：野外區、資源區解霧", st2 == [true, true, true, true], st2)
+	_chk("第 2 關開場劇情播完：淨係野外區解霧（資源區未開）", st2 == [true, true, false, false, false], st2)
+	_chk("第 2 關資源區 A／B／C：各自劇情（開檔／新檔／賣貨）播完先逐個開，提示寫明劇情名", stp == [["A", false, true, true], ["B", false, true, true], ["C", false, true, true]], stp)
 	# 存檔補格：舊得 6 棵／4 格 → 補返 8／6，已砍／已割照舊對應
 	S.trees = [3.0, 0.0, 3.0, 2.0, 3.0, 3.0]; S.treeRegrow = [0.0, 12.0, 0.0, 0.0, 0.0, 0.0]
 	S.paddy = [1.0, 0.0, 1.0, 1.0]; S.paddyRegrow = [0.0, 9.0, 0.0, 0.0]

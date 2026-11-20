@@ -567,7 +567,7 @@ static func _enter_done(c: int) -> bool:
 # "beat_t"：呢關第一個 when.t＝佢嘅大排檔劇情（open／unlock／sold…）播完／跳過（冇劇情線／自動播關 → 當播完）
 static func beat_of(t: String, c: int) -> Dictionary:
 	var MS = _story()
-	if MS == null or hook != null or not MS.has_method("beats"): return {}
+	if MS == null or hook != null: return {}
 	for b in MS.beats(c):
 		if b is Dictionary and b.get("when") is Dictionary and str(b.when.get("t", "")) == t: return b
 	return {}

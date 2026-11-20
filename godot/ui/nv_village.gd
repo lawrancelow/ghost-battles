@@ -623,6 +623,9 @@ func _sync_field(b: String) -> void:
 		_static("cn_%s_%d" % [b, i], float(nd.y), [hpv, snappedf(g, 0.05), un, shk], anim, func(ctx): CF.draw_node(ctx, bb, ndd, t, not un))
 	var sp = CF.sign_pos(b); var nw = CB.workers(b).size()
 	var b2 = b
+	if zone:   # [fogfix] 未佔領（黑霧）資源區入面嘅田名牌唔畫（之前透過黑霧撞住鎖／戰力字）
+		var fz = ZD.zone_at(sp)
+		if fz != "" and str(ZD.zone(fz).get("type", "")) == "res" and not ZD.owned(fz): return
 	_static("cs_" + b, sp.y, [lvv, un, nw, DB.lang], false, func(ctx): CF.draw_sign(ctx, b2, lvv, un, nw))
 
 func _txt(ctx: Ctx, s: String, x: float, y: float, col := "#f6e2b0", px := FONT_PX, outline := "rgba(30,16,8,.95)") -> void:
