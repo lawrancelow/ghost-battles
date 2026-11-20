@@ -241,6 +241,19 @@ static func _stonewall(c: CanvasItem, ctx: Ctx, b: Dictionary, vr: Rect2) -> voi
 				if rng.randf() < 0.35: it.append(["zb_bush", cx + dx + rng.randf_range(-22, 22), y + 6, rng.randf_range(34, 46), rng.randf() < 0.5, 0.68])
 			y += rng.randf_range(28, 34); i += 1
 		_geo["wall"] = it
+	if Spr.ok("zb_wall_v"):   # 南北走向石牆圖：上下拼接（接位用碎石／雜草蓋），拱門喺門洞
+		var tx = Spr.get_tex("zb_wall_v"); var ww = 64.0; var hh = ww * tx.get_height() / tx.get_width(); var stp = hh * 0.82
+		for seg in [[float(b.y0), gy0 + 4.0], [gy1 + 30.0, float(b.y1) + 8.0]]:
+			var yb = float(seg[0]) + stp
+			var k2 = 0
+			while yb <= float(seg[1]) + stp * 0.5:
+				var ybb = minf(yb, float(seg[1]))
+				if ybb - hh < vr.end.y and ybb > vr.position.y - 20:
+					_sp(c, "zb_wall_v", cx + (3.0 if k2 % 2 == 0 else -3.0), ybb, ww, k2 % 2 == 1, Color(0.86, 0.83, 0.83))
+					if Spr.ok("zb_rock2") and ybb < float(seg[1]) - 4: _sp(c, "zb_rock2", cx + 4, ybb + 6, 54.0, k2 % 2 == 0, Color(0.8, 0.78, 0.8))
+				yb += stp; k2 += 1
+		if Spr.ok("zb_arch"): _sp(c, "zb_arch", cx, gy1 + 26, 104.0, false, Color(0.86, 0.83, 0.83))
+		return
 	if Spr.ok("zb_wall"):
 		for e in _geo["wall"]:
 			if float(e[2]) < vr.position.y - 10 or float(e[2]) - 50 > vr.end.y: continue
@@ -281,6 +294,54 @@ static func _props(c: CanvasItem, ctx: Ctx, vr: Rect2, t: float) -> void:
 					for j in 3:
 						var cx2 = x - 18 + j * 18; var sw = sin(t * 1.5 + j) * 2.0
 						Art.poly(ctx, [cx2 - 7, y - 43, cx2 + 7, y - 43, cx2 + 8 + sw, y - 26, cx2 - 6 + sw, y - 26], cols[j], "#3a3430", 1)
+				"fence":   # 矮竹籬：一排斜斜嘅竹枝＋兩條橫竹
+					var n = int(w / 7.0)
+					for j in n:
+						var fx = x - w / 2.0 + j * 7.0; var hh = 16.0 + fmod(j * 3.1, 5.0)
+						Art.rr(ctx, fx - 1.5, y - hh, 3, hh, 1, "#8a8a52", "#2a2a16", 0.8)
+					for yy in [y - 12.0, y - 6.0]: Art.rr(ctx, x - w / 2.0 - 2, yy, w + 2, 2.5, 1, "#a0a060")
+				"woodpile":   # 柴堆
+					for j in 3:
+						for i2 in 4 - j:
+							var lx = x - 16 + i2 * 10 + j * 5; var ly = y - 5 - j * 8
+							Art.el(ctx, lx, ly, 5, 4.5, "#6a4a2a", "#2a1a0e", 1); Art.el(ctx, lx, ly, 2, 1.8, "#a88a5a")
+				"jar":   # 水缸
+					Art.el(ctx, x, y, 12, 4, "rgba(8,2,8,.35)")
+					Art.poly(ctx, [x - 9, y - 22, x + 9, y - 22, x + 12, y - 10, x + 8, y, x - 8, y, x - 12, y - 10], "#4a4a52", "#16161c", 1.2)
+					Art.el(ctx, x, y - 22, 9, 3, "#1a2a34", "#16161c", 1)
+				"coop":   # 雞籠（冇活物）：竹籠＋幾條羽毛
+					Art.el(ctx, x, y, 20, 5, "rgba(8,2,8,.3)")
+					Art.poly(ctx, [x - 18, y, x + 18, y, x + 14, y - 22, x - 14, y - 22], "rgba(120,100,60,.85)", "#2a1e10", 1.2)
+					for j in 6: Art.rr(ctx, x - 15 + j * 6, y - 21, 1.2, 20, 0.5, "#3a2a16")
+					Art.el(ctx, x + 22, y - 2, 2.5, 1, "#d8d0c0")
+				"veg":   # 小菜圃：幾行泥畦＋暗綠菜
+					Art.rr(ctx, x - w / 2.0, y - 22, w, 22, 2, "rgba(54,38,26,.9)", "#1e140c", 1)
+					for r in 3:
+						for j in int(w / 10.0):
+							Art.el(ctx, x - w / 2.0 + 6 + j * 10, y - 17 + r * 7, 3.5, 2.5, ["#3c5a30", "#4a6a38", "#34502a"][(j + r) % 3])
+				"mill":   # 石磨
+					Art.el(ctx, x, y - 4, 16, 6, "#5a565a", "#1a181a", 1.2)
+					Art.rr(ctx, x - 13, y - 14, 26, 9, 3, "#6a666a", "#1a181a", 1.2)
+					Art.el(ctx, x, y - 14, 12, 4, "#7a767a", "#1a181a", 1)
+					Art.rr(ctx, x + 8, y - 24, 3, 11, 1, "#5a3e28")
+				"pebbles":
+					for j in 6: Art.el(ctx, x - 12 + fmod(j * 7.3, 24.0), y - fmod(j * 3.7, 8.0), 2.5 + fmod(j, 2.0), 1.8, ["#4a4448", "#5a5458", "#3a3438"][j % 3], "#161216", 0.6)
+				"flowers":   # 野花（暗紅、灰白）
+					for j in 7:
+						var fx2 = x - 12 + fmod(j * 5.3, 24.0); var fy2 = y - fmod(j * 4.1, 10.0)
+						ctx.strokeStyle = "#2c3628"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(fx2, fy2 + 6); ctx.lineTo(fx2, fy2); ctx.stroke()
+						Art.el(ctx, fx2, fy2, 2, 2, ["#8a2a2a", "#c8c0b0", "#6a2a4a"][j % 3])
+		elif k.begins_with("deco:"):
+			match k.substr(5):
+				"tree": _sp(c, "tree", x, y, w, int(x) % 2 == 1, Color(0.5, 0.46, 0.5))
+				"paddy":
+					if Spr.ok("paddy"): _sp(c, "paddy", x, y + 4, w, int(y) % 2 == 1, Color(0.6, 0.56, 0.48))
+				"scarecrow":
+					if Spr.ok("scarecrow"): _sp(c, "scarecrow", x, y + 4, w, false, Color(0.62, 0.55, 0.55))
+				"post":
+					if Spr.ok("lamppost"):
+						_sp(c, "lamppost", x, y + 3, 35.0, false, Color(0.7, 0.62, 0.6))
+						PtGfx.init(); c.draw_texture_rect(PtGfx.RAD, Rect2(x + 6 - 20, y - 30 - 20, 40, 40), false, Color(1, 0.92, 0.75, 0.22 + sin(t * 2 + x) * 0.06))
 		elif Spr.ok(k):
 			var tint = Color(0.62, 0.58, 0.6) if k == "tree" else Color(0.78, 0.76, 0.78)
 			_sp(c, k, x, y, w, int(x) % 2 == 1, tint)
@@ -314,6 +375,10 @@ static func _river(c: CanvasItem, ctx: Ctx, b: Dictionary, vr: Rect2, t: float) 
 	if br is Array: _bridge(c, ctx, float(br[0]), float(br[1]), river_y(b, (float(br[0]) + float(br[1])) / 2.0), W2)
 # 破木橋：南北向（對準中路），木板一塊塊打橫，兩邊扶手，爛咗一塊
 static func _bridge(c: CanvasItem, ctx: Ctx, bx0: float, bx1: float, by: float, W2: float) -> void:
+	if Spr.ok("zb_bridge_v"):   # 南北向破木橋圖（中段畫咗河水）：水面對準條河
+		var w0 = (bx1 - bx0) * 1.7; var tx = Spr.get_tex("zb_bridge_v"); var h0 = w0 * tx.get_height() / tx.get_width()
+		_sp(c, "zb_bridge_v", (bx0 + bx1) / 2.0, by + h0 * 0.45, w0, false, Color(0.88, 0.85, 0.85))
+		return
 	var y0 = by - W2 / 2.0 - 14.0; var y1 = by + W2 / 2.0 + 14.0
 	Art.el(ctx, (bx0 + bx1) / 2.0, y1 + 2, (bx1 - bx0) * 0.6, 5, "rgba(4,2,6,.4)")
 	var yy = y0; var k = 0

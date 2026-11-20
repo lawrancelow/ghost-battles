@@ -68,6 +68,39 @@ func _draw() -> void:
 		if tint.has(key):   # [zone v4] 柔邊漸變（交界唔見硬邊）
 			var tc: Color = tint[key]; var n = 8
 			for k in n: draw_rect(_rect(z.rect).grow(28.0 - k * 8.0), Color(tc.r, tc.g, tc.b, tc.a / n * 1.6))
+	# [zone v6] 地面變化：草地斑塊（深綠灰）、泥濘水窪、稻田田埂（唔好成片均勻啡色）
+	draw_set_transform_matrix(X)
+	for z in M.zones:
+		if not (str(z.type) in ["village", "res", "market"]): continue
+		var zr = _rect(z.rect).grow(-10)
+		var npatch = int(zr.get_area() / 9000.0)
+		for i in npatch:
+			var cx = zr.position.x + R() * zr.size.x; var cy = zr.position.y + R() * zr.size.y
+			if _on_road(Vector2(cx, cy)): continue
+			var rr = 26.0 + R() * 46.0
+			for k in 6:   # 一嚿軟邊草地
+				var ox = (R() - 0.5) * rr * 1.2; var oy = (R() - 0.5) * rr * 0.6
+				var col = [_c("#2c3a26", 0.10), _c("#34422c", 0.10), _c("#263020", 0.12)][k % 3]
+				draw_set_transform(Vector2(cx + ox, cy + oy) * K - Vector2(0, Y0 * K), 0, Vector2(K * 1.5, K * 0.75))
+				draw_circle(Vector2.ZERO, rr * (0.5 + R() * 0.4), col)
+		draw_set_transform_matrix(X)
+		if str(z.type) == "market": continue
+		for i in int(zr.get_area() / 60000.0) + 1:   # 水窪
+			var px = zr.position.x + 20 + R() * (zr.size.x - 40); var py = zr.position.y + 20 + R() * (zr.size.y - 40)
+			if _on_road(Vector2(px, py)): continue
+			var pw = 9.0 + R() * 9.0
+			draw_set_transform(Vector2(px, py) * K - Vector2(0, Y0 * K), 0, Vector2(K * 1.6, K * 0.7))
+			draw_circle(Vector2.ZERO, pw + 4, _c("#1c140e", 0.35)); draw_circle(Vector2.ZERO, pw, _c("#16202a", 0.6))
+			draw_circle(Vector2(-pw * 0.3, -pw * 0.25), pw * 0.35, _c("#4a6068", 0.25))
+			draw_set_transform_matrix(X)
+	var V = M.get("village", {})
+	if V.get("PADDY_POS") is Array:   # 田埂：稻田一大片（真田＋裝飾田）外圍泥埂
+		var pts = V.PADDY_POS.duplicate()
+		for pr in V.get("props", []): if str(pr[0]) == "deco:paddy": pts.append([pr[1], pr[2]])
+		for q in pts:
+			var r0 = Rect2(float(q[0]) - 44, float(q[1]) - 38, 88, 46)
+			draw_rect(r0, _c("#24180f", 0.35))
+			draw_rect(r0, _c("#6a5034", 0.35), false, 3.0)
 	# 草
 	var tuft = func(tx: float, ty: float, big: bool) -> void:
 		var gc = ["#2c3628", "#36412f", "#283024", "#3c4434"]
@@ -112,9 +145,9 @@ func _draw() -> void:
 	draw_set_transform_matrix(X)
 	for e in _ps:
 		var q: Vector2 = e[0]; var hw: float = e[1]
-		draw_circle(q, hw + 7.0, _c("#1e140e", 0.05))
-		draw_circle(q, hw, _c("#4e3a28", 0.16 if e[2] == "main" else 0.13))
-		draw_circle(q, hw * 0.6, _c("#5e4632", 0.10))
+		draw_circle(q, hw + 8.0, _c("#1a120c", 0.06))   # 路邊深一級
+		draw_circle(q, hw, _c("#6a5038", 0.20 if e[2] == "main" else 0.17))   # 路面淺一級
+		draw_circle(q, hw * 0.6, _c("#7a5e42", 0.10))
 	var j = 0
 	for e in _ps:
 		j += 1

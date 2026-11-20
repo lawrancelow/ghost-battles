@@ -58,7 +58,7 @@ M0 = {
     {"k": "cliff", "rects": [[0, 0, 224, 1152], [1116, 0, 1340, 1152], [0, 2008, 448, 2410], [892, 2008, 1340, 2410]]},   # 四周虛空：山岩懸崖＋濃霧＋黑森林
     {"k": "forest", "x0": 204, "x1": 250, "y0": 1162, "y1": 1984, "gap": [1540, 1612]},   # 中央村｜A：樹林帶＋小徑
     {"k": "stonewall", "x0": 1100, "x1": 1130, "y0": 1162, "y1": 1984, "gap": [1545, 1607]},   # 中央村｜B：青苔舊石牆＋拱門
-    {"k": "river", "y": 1996, "amp": 6, "w": 34, "x0": 0, "x1": 1340, "bridge": [644, 696]},   # 中央村｜C：暗色小河＋破木橋
+    {"k": "river", "y": 1996, "amp": 6, "w": 40, "x0": 0, "x1": 1340, "bridge": [644, 696]},   # 中央村｜C：暗色小河＋破木橋
   ],
   # [zone v5] 彎曲泥石路（唔再係兩條死直石板路）：main＝主路（中路由出村門落到橋、橫路連小徑同拱門），lane＝去各建築嘅小路分岔
   "paths": [
@@ -120,6 +120,103 @@ M0 = {
     "decor": [], "spare": [], "fence_art": True, "unify": True, "zone": True,
   },
 }
+
+# ================= [zone v6] 中央村自然填充（老闆：每屏都要有內容，參考 Level1_Map_Art_v2 密度） =================
+#   1) 院落：每間建築兩側貼住擺矮竹籬、晾衫竹、柴堆、水缸、雞籠（冇活物）、菜圃、石磨、木桶、木箱
+#   2) 槐樹林外圍裝飾槐樹／灌木（唔可砍）；稻田外圍裝飾稻田＋田埂
+#   3) 小路兩邊路燈、雜草、碎石
+#   4) 填空：60×60 格掃描，周圍 70 內冇嘢就補雜草／碎石／灌木 → 冇大過約 120×120 嘅空地
+#   全部避開：建築圖、可砍槐樹、可割稻田、主路／小路、公告板、打工鬼企位、門洞路點
+import math, random
+def _paths_samples(M, step=6.0):
+    out = []
+    for pa in M["paths"]:
+        P = [tuple(map(float, q)) for q in pa["pts"]]; hw = pa["w"] / 2.0
+        for i in range(len(P) - 1):
+            p0 = P[max(0, i - 1)]; p1 = P[i]; p2 = P[i + 1]; p3 = P[min(len(P) - 1, i + 2)]
+            n = max(1, int(math.dist(p1, p2) / step))
+            for k in range(n):
+                t = k / n; t2 = t * t; t3 = t2 * t
+                q = [0.5 * ((2 * p1[j]) + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t3) for j in (0, 1)]
+                out.append((q[0], q[1], hw, pa["k"]))
+    return out
+def _dress(M):
+    rnd = random.Random(20261120)
+    V = M["village"]; VR = (230 + 24, 1160 + 30, 1110 - 24, 1984 - 14)
+    BW = {"house": 150, "gate": 150, "plank": 106, "bun": 106, "wood": 108, "rice": 108, "store": 112, "home": 104, "camp": 108, "altar": 104, "furnace": 62}
+    blocks = []   # (x0,y0,x1,y1) 唔可以擺嘢
+    for k, (x, y) in V["POS"].items():
+        w = BW.get(k, 100); h = w * 0.93
+        blocks.append((x - w / 2 + 4, y + 6 - h * 0.75, x + w / 2 - 4, y + 16))
+    for (x, y) in V["TREE_POS"]: blocks.append((x - 28, y - 58, x + 28, y + 10))
+    for (x, y) in V["PADDY_POS"]: blocks.append((x - 40, y - 34, x + 40, y + 8))
+    for e in V["EXTRA"]: blocks.append((e[1] - e[3] / 2 - 6, e[2] - 70, e[1] + e[3] / 2 + 6, e[2] + 8))
+    for d in V["DECOR"]: blocks.append((d[1] - 12, d[2] - 30, d[1] + 12, d[2] + 6))
+    for sp in V["spots"].values():
+        for q in sp: blocks.append((q[0] - 14, q[1] - 40, q[0] + 14, q[1] + 6))
+    PS = _paths_samples(M)
+    def free(x0, y0, x1, y1, pad=0.0, roads=True):
+        if x0 < VR[0] or x1 > VR[2] or y0 < VR[1] or y1 > VR[3]: return False
+        for b in blocks:
+            if x0 < b[2] + pad and x1 > b[0] - pad and y0 < b[3] + pad and y1 > b[1] - pad: return False
+        if roads:
+            for (px, py, hw, k) in PS:
+                m = hw + (8 if k == "main" else 5)
+                if abs(px - (x0 + x1) / 2) < (x1 - x0) / 2 + m and abs(py - (y0 + y1) / 2) < (y1 - y0) / 2 + m * 0.7: return False
+        return True
+    props = []
+    def put(k, x, y, w, foot=None, pad=2.0, roads=True):
+        fw = foot or max(22.0, w * 0.7)
+        r = (x - fw / 2, y - 16, x + fw / 2, y + 4)
+        if not free(*r, pad=pad, roads=roads): return False
+        props.append([k, round(x), round(y), round(w)]); blocks.append(r); return True
+    # 1) 院落：貼住建築兩側
+    yard = ["proc:fence", "proc:laundry", "proc:woodpile", "proc:jar", "proc:coop", "proc:veg", "proc:mill", "proc:barrel", "store__crate"]
+    for k, (x, y) in V["POS"].items():
+        if k == "gate": continue
+        w = BW.get(k, 100)
+        cand = [(-w / 2 - 26, -6), (w / 2 + 26, -6), (-w / 2 - 20, 22), (w / 2 + 20, 22), (-w / 2 - 50, 8), (w / 2 + 50, 8), (0, 30)]
+        rnd.shuffle(cand); placed = 0
+        for (dx, dy) in cand:
+            kk = yard[rnd.randrange(len(yard))]
+            ww = {"proc:fence": 60, "proc:laundry": 64, "proc:veg": 56, "proc:coop": 40, "proc:woodpile": 44, "proc:mill": 34, "proc:jar": 24, "proc:barrel": 22, "store__crate": 30}[kk]
+            if put(kk, x + dx, y + dy, ww): placed += 1
+            if placed >= 3: break
+    # 2) 槐樹林外圍：裝飾槐樹／灌木
+    gx0, gy0, gx1, gy1 = 270, 1240, 440, 1365
+    for i in range(16):
+        a = i / 16 * math.tau; x = (gx0 + gx1) / 2 + math.cos(a) * 118; y = (gy0 + gy1) / 2 + 30 + math.sin(a) * 82
+        put("deco:tree" if i % 3 else "zb_bush", x, y, 58 if i % 3 else 60, foot=30)
+    # 稻田外圍：裝飾稻田（同一片田）＋田埂（地面畫）
+    for (x, y) in [(870, 1300), (870, 1360), (1110 - 40, 1300 - 60), (950, 1240), (1030, 1240), (870, 1240)]:
+        put("deco:paddy", x, y, 78, foot=70, pad=-6)
+    put("deco:scarecrow", 1090, 1420, 40, foot=24)
+    # 3) 小路兩邊：路燈、雜草、碎石
+    for pa in M["paths"]:
+        if pa["k"] != "lane": continue
+        P = pa["pts"]
+        for i in range(len(P) - 1):
+            (x0, y0), (x1, y1) = P[i], P[i + 1]
+            mx, my = (x0 + x1) / 2, (y0 + y1) / 2; L = math.dist(P[i], P[i + 1]) or 1
+            nx, ny = -(y1 - y0) / L, (x1 - x0) / L
+            side = 1 if i % 2 == 0 else -1
+            off = pa["w"] / 2 + 16
+            if not put("deco:post", mx + nx * off * side, my + ny * off * side, 30, foot=18):
+                put("proc:grass", mx + nx * off * side, my + ny * off * side, 0, foot=20)
+            put("zb_rock2", mx - nx * (off + 6) * side, my - ny * (off + 6) * side + 6, 36, foot=26)
+    # 4) 填空：冇大過約 120×120 嘅空地
+    fill = ["proc:grass", "proc:grass", "zb_rock2", "zb_bush", "proc:pebbles", "deco:tree", "proc:flowers"]
+    for gy in range(int(VR[1]) + 24, int(VR[3]), 46):
+        for gx in range(int(VR[0]) + 24, int(VR[2]), 46):
+            cx, cy = gx + rnd.uniform(-14, 14), gy + rnd.uniform(-14, 14)
+            near = any(abs(cx - (b[0] + b[2]) / 2) < (b[2] - b[0]) / 2 + 22 and abs(cy - (b[1] + b[3]) / 2) < (b[3] - b[1]) / 2 + 22 for b in blocks)
+            if near: continue
+            k = fill[rnd.randrange(len(fill))]
+            w = {"zb_rock2": rnd.uniform(40, 54), "zb_bush": rnd.uniform(50, 64), "deco:tree": rnd.uniform(52, 60)}.get(k, 0)
+            put(k, cx, cy, w, foot=26)
+    V["props"] = props
+_dress(M0)
+
 D = {"v": 1, "maps": {"0": M0}}
 json.dump(D, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("wrote", OUT)
