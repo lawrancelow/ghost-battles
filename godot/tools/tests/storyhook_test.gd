@@ -193,6 +193,7 @@ func _logic(t) -> void:
 	for i in MD.goals(c0).size(): if not sim.goal_claimed(i): sim.st().goals_done.append(float(i))
 	_tick(sts, scs); _chk("all_done：目標全領、Boss 未打唔播", not sts.played.has("syn_end"))
 	_S().cleared["%d-3" % (c0 + 1)] = true
+	load("res://game/zone/zone_data.gd").mark_all_bosses(c0)   # [zone] 分區地圖：野外王全部打低先算 all_done
 	_tick(sts, scs); _chk("all_done：Boss 已打低播", sts.played.has("syn_end"))
 	_S().cleared = {}
 	STY.map_story(c0)["beats"] = keep_b
@@ -479,6 +480,7 @@ func _shots(t) -> void:
 	S["cleared"] = S.get("cleared", {}) if S.get("cleared") is Dictionary else {}
 	var cl0 = S.cleared.get("1-3")
 	S.cleared["1-3"] = true
+	load("res://game/zone/zone_data.gd").mark_all_bosses(0)   # [zone] 新規則：第 1 關野外王全部打低先拔得營
 	_chk("真場景：可以拔營", sc.can_move())
 	_chk("真場景：拔營前冇其他劇情播緊", m.story.cur == null and m.story.q.is_empty() and not sc.story._playing)
 	var r = sc.move_next()

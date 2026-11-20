@@ -8,9 +8,16 @@ const ZD = preload("res://game/zone/zone_data.gd")
 const WALL_W := 10.0
 const WALL_COL := {"wild": "#4a1c20", "market": "#4a3422", "village": "#4a3422", "res": "#2e2a30"}
 
-static func _fs(nv, base: float) -> int:   # 世界字大細：畫面上最少 base px
-	var rel = float(nv.sc) / maxf(0.01, float(nv.size.x) / 390.0)
-	return int(ceil(maxf(base, base / maxf(0.05, rel) * 0.95)))
+# 世界標籤跟地圖一齊縮：細節字（戰力、點我、王名）固定世界大細，縮到畫面細過 14px 就淡出收埋；
+#   只有區名牌一直留（畫面上最少 14px，縮到好細改用短名）
+static func _rel(nv) -> float: return float(nv.sc) / maxf(0.01, float(nv.size.x) / 390.0)
+static func _fs(nv, base: float) -> int: return int(base)
+static func _det(nv) -> float: return clampf((_rel(nv) - 0.82) / 0.1, 0.0, 1.0)   # 16 世界 px × 0.875 ≈ 14 畫面 px
+static func _name_px(nv) -> int: return int(ceil(maxf(17.0, 14.5 / maxf(0.05, _rel(nv)))))
+static func _name(nv, z: Dictionary) -> String:
+	var n = ZD.T(z.get("n", ["", ""]))
+	if _rel(nv) < 0.6 and n.contains("　"): n = n.split("　")[-1]
+	return n
 static func _txt(ctx: Ctx, s: String, x: float, y: float, px: int, col := "#f6e2b0", outline := "rgba(20,8,8,.95)") -> void:
 	ctx.font = "900 %dpx %s" % [px, Art.SERIF]; ctx.textAlign = "center"; ctx.textBaseline = "middle"
 	ctx.lineWidth = maxf(3.0, px * 0.22); ctx.strokeStyle = outline; ctx.lineJoin = "round"; ctx.strokeText(s, x, y)
@@ -63,6 +70,7 @@ static func draw_under(c: CanvasItem, nv) -> void:
 			if str(b.k) == kind: _barrier(c, ctx, b, vr, t)
 	for z in ZD.zones():
 		if str(z.type) == "wild" and ZD.rect(z.rect).intersects(vr): _wild_decor(ctx, z, t)
+	_props(c, ctx, vr, t)
 	for z in ZD.of_type("res"):   # 未佔領：門洞／小徑／橋頭打橫幾條木閘
 		if z.get("door") is Dictionary and not ZD.owned(str(z.id)) and ZD.rect(z.door.rect).intersects(vr): _door(ctx, ZD.rect(z.door.rect), false)
 
@@ -78,7 +86,7 @@ static func blocked(p: Vector2) -> bool:
 				if p.x >= float(b.x0) and p.x <= float(b.x1) and p.y >= float(b.y0) and p.y <= float(b.y1) and not (p.y >= float(b.gap[0]) and p.y <= float(b.gap[1])): return true
 			"river":
 				var br = b.get("bridge", [0, 0])
-				if absf(p.y - river_y(b, p.x)) < 12.0 and not (p.x >= float(br[0]) and p.x <= float(br[1])): return true
+				if absf(p.y - river_y(b, p.x)) < float(b.get("w", 24)) / 2.0 + 4.0 and not (p.x >= float(br[0]) and p.x <= float(br[1])): return true
 			"stakes":
 				if p.y > float(b.y) - 34 and p.y < float(b.y) + 3 and p.x >= float(b.x0) and p.x <= float(b.x1):
 					var ing = false
@@ -215,64 +223,107 @@ static func _forest(ctx: Ctx, b: Dictionary, vr: Rect2) -> void:
 	var gy = (float(b.gap[0]) + float(b.gap[1])) / 2.0   # 小徑：踩實嘅泥
 	Art.el(ctx, (float(b.x0) + float(b.x1)) / 2.0, gy, (float(b.x1) - float(b.x0)) * 0.7, 22, "rgba(70,52,36,.4)")
 
-# 青苔舊石牆（zb_wall 截一段石塊，一節節直疊）＋拱門（zb_arch）
+# 青苔舊石牆（透視：zb_wall 縮細、一段段斜向錯開疊落去，有崩口長草＋碎石）＋拱門（zb_arch，前後接住兩段牆）
 static func _stonewall(c: CanvasItem, ctx: Ctx, b: Dictionary, vr: Rect2) -> void:
 	var x0 = float(b.x0); var x1 = float(b.x1); var cx = (x0 + x1) / 2.0
-	if x1 < vr.position.x - 40 or x0 > vr.end.x + 40: return
+	if x1 < vr.position.x - 60 or x0 > vr.end.x + 60: return
 	var gy0 = float(b.gap[0]); var gy1 = float(b.gap[1])
+	if not _geo.has("wall"):
+		var rng = RandomNumberGenerator.new(); rng.seed = 7171
+		var it = []
+		var y = float(b.y0) + 34.0; var i = 0
+		while y <= float(b.y1) + 6:
+			if not (y > gy0 - 10 and y < gy1 + 36):
+				var brk = rng.randf() < 0.16   # 崩口：碎石＋草
+				var dx = (6.0 if i % 2 == 0 else -6.0) + rng.randf_range(-3, 3)   # 一段段錯開（透視：牆身打斜望）
+				if brk: it.append(["zb_rock2", cx + dx, y + 4, rng.randf_range(58, 70), rng.randf() < 0.5, 0.78])
+				else: it.append(["zb_wall", cx + dx, y, rng.randf_range(64, 74), rng.randf() < 0.5, rng.randf_range(0.76, 0.9)])
+				if rng.randf() < 0.35: it.append(["zb_bush", cx + dx + rng.randf_range(-22, 22), y + 6, rng.randf_range(34, 46), rng.randf() < 0.5, 0.68])
+			y += rng.randf_range(28, 34); i += 1
+		_geo["wall"] = it
 	if Spr.ok("zb_wall"):
-		var y = float(b.y0) + 26.0; var i = 0
-		while y <= float(b.y1) + 4:
-			if not (y > gy0 - 2 and y < gy1 + 30) and y > vr.position.y - 10 and y - 60 < vr.end.y:
-				var u0 = [0.02, 0.30, 0.55][i % 3]
-				_sp(c, "zb_wall", cx + sin(y) * 1.5, y, 46.0, i % 2 == 1, Color(0.82, 0.8, 0.8), [u0, 0.42, u0 + 0.42, 1.0])
-			y += 20.0; i += 1
-		if Spr.ok("zb_arch"): _sp(c, "zb_arch", cx, gy1 + 22, 96.0, false, Color(0.85, 0.82, 0.82))
+		for e in _geo["wall"]:
+			if float(e[2]) < vr.position.y - 10 or float(e[2]) - 50 > vr.end.y: continue
+			var g = float(e[5])
+			_sp(c, e[0], float(e[1]), float(e[2]), float(e[3]), e[4], Color(g, g * 0.97, g * 0.97))
+		if Spr.ok("zb_arch"): _sp(c, "zb_arch", cx, gy1 + 26, 104.0, false, Color(0.86, 0.83, 0.83))
 		return
-	var y2 = float(b.y0); var row = 0
+	var y2 = float(b.y0)
 	while y2 < float(b.y1):
-		var gap = y2 + 16 > gy0 and y2 < gy1
-		if not gap and y2 > vr.position.y - 20 and y2 < vr.end.y + 20:
-			var off = 0.0 if row % 2 == 0 else 7.0
-			var xx = x0 - off
-			while xx < x1:
-				var a0 = maxf(xx, x0); var a1 = minf(xx + 15, x1)
-				var g = 0.30 + fmod(absf(xx * 13.0 + y2 * 7.0), 9.0) / 100.0
-				c.draw_rect(Rect2(a0, y2, a1 - a0 - 1, 15), Color(g, g - 0.03, g - 0.05))
-				c.draw_rect(Rect2(a0, y2, a1 - a0 - 1, 15), Color(0.1, 0.08, 0.08), false, 1.0)
-				xx += 15.0
-		y2 += 16.0; row += 1
+		if not (y2 + 16 > gy0 and y2 < gy1) and y2 > vr.position.y - 20 and y2 < vr.end.y + 20:
+			var g2 = 0.30 + fmod(absf(y2 * 7.0), 9.0) / 100.0
+			c.draw_rect(Rect2(x0, y2, x1 - x0, 15), Color(g2, g2 - 0.03, g2 - 0.05)); c.draw_rect(Rect2(x0, y2, x1 - x0, 15), Color(0.1, 0.08, 0.08), false, 1.0)
+		y2 += 16.0
 	ctx.strokeStyle = "#6a625e"; ctx.lineWidth = 7
 	ctx.beginPath(); ctx.ellipse(cx, gy0 + 2, (x1 - x0) * 0.5 + 6, 18, 0, PI, TAU); ctx.stroke()
+
+# 村子自然填充：雜草叢、碎石、黑灌木、樹、木桶、晾衫竹、籮、木頭車（zones.json village.props）
+static func _props(c: CanvasItem, ctx: Ctx, vr: Rect2, t: float) -> void:
+	for e in ZD.cur().get("village", {}).get("props", []):
+		var k = str(e[0]); var x = float(e[1]); var y = float(e[2]); var w = float(e[3])
+		if not vr.grow(60).has_point(Vector2(x, y)): continue
+		if k.begins_with("proc:"):
+			match k.substr(5):
+				"grass":
+					for j in 9:
+						var gx = x + (j - 4) * 4.0 + sin(j * 2.3) * 3.0; var h = 10.0 + fmod(j * 3.7, 9.0)
+						ctx.strokeStyle = ["#2c3628", "#3a4630", "#46523a"][j % 3]; ctx.lineWidth = 1.6
+						ctx.beginPath(); ctx.moveTo(gx, y); ctx.quadraticCurveTo(gx + 2 + sin(t + j) * 1.2, y - h * 0.6, gx + 4 + sin(t * 1.3 + j) * 2.0, y - h); ctx.stroke()
+				"barrel":
+					Art.el(ctx, x, y, 12, 4, "rgba(8,2,8,.35)")
+					Art.rr(ctx, x - 10, y - 24, 20, 24, 4, "#5a3e28", "#1e140c", 1.3)
+					for yy in [y - 19, y - 7]: Art.rr(ctx, x - 11, yy, 22, 3, 1, "#2e2a28")
+					Art.el(ctx, x, y - 24, 10, 3, "#3e2a1a", "#1e140c", 1)
+				"laundry":   # 晾衫竹：兩條竹＋一條橫竹，掛住幾件舊衫（陰間風，灰白）
+					for sx in [-28.0, 28.0]: Art.rr(ctx, x + sx - 2, y - 46, 4, 46, 1, "#8a8a5a", "#2a2a1a", 1)
+					ctx.strokeStyle = "#a0a070"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(x - 32, y - 44); ctx.lineTo(x + 32, y - 44); ctx.stroke()
+					var cols = ["#b8b0a0", "#8a6a6a", "#c8c0b0"]
+					for j in 3:
+						var cx2 = x - 18 + j * 18; var sw = sin(t * 1.5 + j) * 2.0
+						Art.poly(ctx, [cx2 - 7, y - 43, cx2 + 7, y - 43, cx2 + 8 + sw, y - 26, cx2 - 6 + sw, y - 26], cols[j], "#3a3430", 1)
+		elif Spr.ok(k):
+			var tint = Color(0.62, 0.58, 0.6) if k == "tree" else Color(0.78, 0.76, 0.78)
+			_sp(c, k, x, y, w, int(x) % 2 == 1, tint)
 
 # 暗色小河（兩端入山岩）＋破木橋
 static func river_y(b: Dictionary, x: float) -> float: return float(b.y) + float(b.get("amp", 7)) * sin(x / 70.0)
 static func _river(c: CanvasItem, ctx: Ctx, b: Dictionary, vr: Rect2, t: float) -> void:
 	var y0 = float(b.y)
-	if y0 < vr.position.y - 40 or y0 > vr.end.y + 40: return
+	if y0 < vr.position.y - 60 or y0 > vr.end.y + 60: return
+	var W2 = float(b.get("w", 30))
 	var pts = PackedVector2Array()
 	var x = maxf(float(b.x0), vr.position.x - 20)
 	while x <= minf(float(b.x1), vr.end.x + 20): pts.append(Vector2(x, river_y(b, x))); x += 12.0
 	if pts.size() < 2: return
-	c.draw_polyline(pts, Color("#1a2418"), 30.0, true)   # 岸邊濕泥
-	c.draw_polyline(pts, Color("#101c28"), 22.0, true)
-	c.draw_polyline(pts, Color("#1c3442"), 14.0, true)
+	c.draw_polyline(pts, Color(0.10, 0.12, 0.08, 0.55), W2 + 14.0, true)   # 岸邊濕泥（柔）
+	c.draw_polyline(pts, Color("#141c18"), W2 + 6.0, true)
+	c.draw_polyline(pts, Color("#0e1a26"), W2, true)
+	c.draw_polyline(pts, Color("#183040"), W2 * 0.55, true)
 	for i in pts.size() - 1:   # 水光：慢慢流
 		var ph = fmod(pts[i].x * 0.05 + t * 1.6, 6.0)
-		if ph < 1.2: c.draw_line(pts[i] + Vector2(0, -2), pts[i + 1] + Vector2(0, -2), Color(0.45, 0.62, 0.68, 0.5 * (1.2 - ph)), 1.6)
+		if ph < 1.2: c.draw_line(pts[i] + Vector2(0, -3), pts[i + 1] + Vector2(0, -3), Color(0.45, 0.62, 0.68, 0.5 * (1.2 - ph)), 1.6)
+	# 兩端流入山岩：岩石堆蓋住河頭河尾
+	for ex in [float(b.x0) + 20.0, float(b.x1) - 20.0]:
+		if ex < vr.position.x - 100 or ex > vr.end.x + 100: continue
+		var ey = river_y(b, ex)
+		for j in 4:
+			var ox = (j - 1.5) * 26.0 * (1.0 if ex < 670 else -1.0)
+			if Spr.ok("zb_rock1"): _sp(c, "zb_rock1" if j % 2 == 0 else "zb_rock2", ex + ox, ey + 18 + (j % 2) * 8, 90.0 - j * 8, j % 2 == 1, Color(0.78, 0.76, 0.8))
+			else: _proc_rock(c, Vector2(ex + ox, ey), 24.0)
 	var br = b.get("bridge")
-	if br is Array:
-		var bx0 = float(br[0]); var bx1 = float(br[1]); var by = river_y(b, (bx0 + bx1) / 2.0)
-		if Spr.ok("zb_bridge"):
-			_sp(c, "zb_bridge", (bx0 + bx1) / 2.0, by + 34, (bx1 - bx0) * 2.0, false, Color(0.88, 0.85, 0.85))
-			return
-		Art.rr(ctx, bx0, by - 20, bx1 - bx0, 40, 2, "#6e5034", "#22160c", 1.6)
-		ctx.strokeStyle = "#3e2a18"; ctx.lineWidth = 1.2
-		var xx = bx0 + 6.0
-		while xx < bx1 - 2:
-			ctx.beginPath(); ctx.moveTo(xx, by - 19); ctx.lineTo(xx + sin(xx) * 1.5, by + 19); ctx.stroke(); xx += 8.0
-		Art.rr(ctx, bx0 + 22, by - 6, 9, 9, 1, "#1c3442")   # 爛咗一塊
-		for sx in [bx0 - 3.0, bx1 - 3.0]: Art.rr(ctx, sx, by - 26, 6, 52, 1.5, "#4a3424", "#1a100a", 1)
+	if br is Array: _bridge(c, ctx, float(br[0]), float(br[1]), river_y(b, (float(br[0]) + float(br[1])) / 2.0), W2)
+# 破木橋：南北向（對準中路），木板一塊塊打橫，兩邊扶手，爛咗一塊
+static func _bridge(c: CanvasItem, ctx: Ctx, bx0: float, bx1: float, by: float, W2: float) -> void:
+	var y0 = by - W2 / 2.0 - 14.0; var y1 = by + W2 / 2.0 + 14.0
+	Art.el(ctx, (bx0 + bx1) / 2.0, y1 + 2, (bx1 - bx0) * 0.6, 5, "rgba(4,2,6,.4)")
+	var yy = y0; var k = 0
+	while yy < y1:
+		var g = 0.36 + fmod(k * 0.37, 0.1)
+		if k != 3: Art.rr(ctx, bx0 + sin(k * 1.7) * 1.5, yy, bx1 - bx0, 7, 1.2, "rgba(%d,%d,%d,1)" % [int(g * 255), int(g * 0.72 * 255), int(g * 0.5 * 255)], "#1e140c", 1)
+		yy += 7.5; k += 1
+	for sx in [bx0 - 4.0, bx1 - 2.0]:
+		Art.rr(ctx, sx, y0 - 8, 6, y1 - y0 + 10, 1.5, "#4a3424", "#1a100a", 1)
+		for py in [y0 - 12, y1 - 6]: Art.rr(ctx, sx - 1, py, 8, 12, 1.5, "#5a3e28", "#1a100a", 1)
 
 static func _wall(ctx: Ctx, a: Vector2, b: Vector2, col: String) -> void:
 	var horiz = absf(a.y - b.y) < 0.5
@@ -351,8 +402,8 @@ static func draw_over(c: CanvasItem, nv) -> void:
 			if r.intersects(vr): _wild_over(ctx, nv, z, r, t)
 			continue
 		if r.intersects(vr):
-			var px = _fs(nv, 17)
-			var lb = ZD.T(z.n) + (ZD.L("（起點）", "（起點）") if tp == "village" else "")
+			var px = _name_px(nv)
+			var lb = _name(nv, z) + (ZD.L("（起點）", "（起點）") if tp == "village" and _rel(nv) >= 0.6 else "")
 			_plate(ctx, lb, r.get_center().x, r.position.y + px * 1.3, px, _rgba(str(z.get("col", "#a8602a")), 0.92))
 static func _rgba(hex: String, a: float) -> String:
 	var c = Color(hex)
@@ -369,15 +420,17 @@ static func _fog(c: CanvasItem, ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float)
 		var rr = 70.0 + (i % 4) * 24.0
 		c.draw_texture_rect(PtGfx.RAD, Rect2(fx - rr, fy - rr * 0.6, rr * 2, rr * 1.2), false, Color(0.55, 0.52, 0.62, 0.10))
 	var cx = r.get_center().x; var cy = r.get_center().y
-	var px = _fs(nv, 16)
-	_plate(ctx, ZD.T(z.n), cx, r.position.y + px * 1.4, px, _rgba(str(z.get("col", "#3a3036")), 0.92))
-	var lk = maxf(22.0, px * 1.6)
-	_lock(ctx, cx, cy - lk * 1.4, lk)
+	var npx = _name_px(nv)
+	_plate(ctx, _name(nv, z), cx, r.position.y + npx * 1.4, npx, _rgba(str(z.get("col", "#3a3036")), 0.92))
+	var px = 16; var da = _det(nv)
+	var lk = maxf(26.0, npx * 1.4)
+	_lock(ctx, cx, cy - (lk * 1.4 if da > 0.0 else lk * 0.4), lk)
+	if da <= 0.0: return
+	ctx.globalAlpha = da
 	var need = ZD.need(str(z.id)); var pw = ZD.power()
 	_txt(ctx, ZD.L("建議戰力 %d", "建議戰力 %d") % need, cx, cy + px * 0.4, px + 2, "#ffd27a")
 	_txt(ctx, ZD.L("你嘅陰兵戰力 %d", "你的陰兵戰力 %d") % pw, cx, cy + px * 2.0, px, "#9fe39a" if pw >= need else "#ff9a7a")
-	var a = 0.75 + 0.25 * sin(t * 3.0)
-	ctx.globalAlpha = a
+	ctx.globalAlpha = da * (0.75 + 0.25 * sin(t * 3.0))
 	_plate(ctx, ZD.L("撳我攻佔", "點我攻佔"), cx, cy + px * 3.8, px, "rgba(150,40,30,.95)")
 	ctx.globalAlpha = 1.0
 static func _lock(ctx: Ctx, x: float, y: float, s: float) -> void:
@@ -388,17 +441,19 @@ static func _lock(ctx: Ctx, x: float, y: float, s: float) -> void:
 
 static func _wild_over(ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float) -> void:
 	var zid = str(z.id)
-	var px = _fs(nv, 16)
-	_plate(ctx, ZD.T(z.n), r.get_center().x, r.position.y + px * 1.3, px, _rgba(str(z.get("col", "#8a1c24")), 0.92))
+	var npx = _name_px(nv); var px = 16; var da = _det(nv)
+	_plate(ctx, _name(nv, z), r.get_center().x, r.position.y + npx * 1.3, npx, _rgba(str(z.get("col", "#8a1c24")), 0.92))
 	var bs = ZD.bosses(zid); var parts = []
 	for i in bs.size():
 		parts.append(("①②③④⑤")[i] + ZD.T(bs[i].n) + ("✓" if ZD.boss_done(zid, i) else ""))
-	var py = _fs(nv, 14)
-	_plate(ctx, ZD.L("王：", "王：") + "　".join(parts), r.get_center().x, r.position.y + px * 1.3 + py * 2.0, py, "rgba(20,10,14,.85)", "#ffe8c4")
+	var py = 14
+	ctx.globalAlpha = da
+	if da > 0.0: _plate(ctx, ZD.L("王：", "王：") + "　".join(parts), r.get_center().x, r.position.y + npx * 1.3 + npx * 0.9 + py * 1.2, py, "rgba(20,10,14,.85)", "#ffe8c4")
+	ctx.globalAlpha = 1.0
 	var bi = ZD.boss_next(zid)
 	var at = ZD.v2(z.get("boss_at", [r.get_center().x, r.get_center().y]))
 	if bi < 0:
-		_plate(ctx, ZD.L("已解放", "已解放"), at.x, at.y - 20, px, "rgba(40,90,50,.92)")
+		_plate(ctx, ZD.L("已解放", "已解放"), at.x, at.y - 20, maxi(px, int(npx * 0.8)), "rgba(40,90,50,.92)")
 		return
 	var b = bs[bi]
 	var k = str(b.get("art", "youhun"))
@@ -407,9 +462,11 @@ static func _wild_over(ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float) -> void:
 	g.addColorStop(0, "rgba(200,30,30,.38)"); g.addColorStop(1, "rgba(200,30,30,0)")
 	ctx.fillStyle = g; ctx.fillRect(at.x - 70, at.y - 110, 140, 140)
 	Art.draw_char(ctx, k, at.x, at.y + bob, 1.05 if J.t(b.get("main")) else 0.9, {"t": t, "flip": false})
+	if da <= 0.0: return
 	var lbl = ("①②③④⑤")[bi] + ZD.T(b.n) + (ZD.L("（主 Boss）", "（主 Boss）") if J.t(b.get("main")) else "")
+	ctx.globalAlpha = da
 	_txt(ctx, lbl, at.x, at.y + px * 1.0, px, "#ffb0a0")
-	ctx.globalAlpha = 0.75 + 0.25 * sin(t * 3.0)
+	ctx.globalAlpha = da * (0.75 + 0.25 * sin(t * 3.0))
 	_plate(ctx, ZD.L("撳我挑戰", "點我挑戰"), at.x, at.y + px * 2.6, px, "rgba(150,40,30,.95)")
 	ctx.globalAlpha = 1.0
 

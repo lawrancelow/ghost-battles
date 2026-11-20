@@ -144,7 +144,7 @@ func _zone_cam_frame(dt: float) -> void:
 	var ws = ZD.world_size()
 	if c.world != ws: c.world = ws; c.clamp_all()
 	if c.view != size and size.x > 0: c.view = size; c.clamp_all()
-	c.top_extra = _zone_top_px() / maxf(0.01, c.z)
+	if absf(c.top_px - _zone_top_px()) > 0.5: c.top_px = _zone_top_px(); c.clamp_all()
 	c.step(minf(dt, 0.1))
 	sc = c.z; cam_x = c.x
 	V["scale"] = sc; V["w"] = size.x; V["h"] = size.y; V["camY"] = c.y
@@ -439,6 +439,10 @@ func _pointer(c: CanvasItem) -> void:
 	var vh = size.y / sc; var top = cam_y + 8; var bot = cam_y + vh - 12; var rot = 0.0
 	if ty < top: ty = top + 14; rot = PI
 	elif ty > bot: ty = bot - 14
+	if zone:   # [zone] 目標喺畫面左右外面：箭頭企喺畫面邊、打側指過去
+		var vr = view_rect()
+		if x < vr.position.x + 16: x = vr.position.x + 18; rot = PI / 2
+		elif x > vr.end.x - 16: x = vr.end.x - 18; rot = -PI / 2
 	c.draw_set_transform(Vector2(x, ty), rot, Vector2.ONE)
 	var pts = PackedVector2Array([Vector2(-9, -14), Vector2(9, -14), Vector2(9, -2), Vector2(15, -2), Vector2(0, 12), Vector2(-15, -2), Vector2(-9, -2)])
 	c.draw_colored_polygon(pts, Color("#ffd84a"))

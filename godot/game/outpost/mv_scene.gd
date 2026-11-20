@@ -1417,6 +1417,7 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 	w += 20.0; var h = lines.size() * 20.0 + 12.0 + (18.0 if b.who != "" else 0.0)
 	var wtop = s2w(Vector2(0, top_pad + HUD_H + 4.0)).y; var wbot = s2w(Vector2(0, top_pad + view_h())).y - h - 10.0   # [zone] 經 s2w
 	if sim.war != null: wtop = maxf(wtop, s2w(Vector2(0, float(sim.war.hud_y(self)) + 46.0)).y)   # [camp] 對白框唔好俾影響力條遮住
+	if zone and float(zt.z) < 0.7: return   # [zone] 縮到好細：對白框唔出（字會細過 14px）
 	if embed:   # [unify] 嵌入：講嘢嘅人唔喺鏡頭（或者喺原村子）就唔出框；框唔好落到出村門下面
 		if b.p.y > world_h() or b.p.y < s2w(Vector2.ZERO).y or b.p.y > s2w(Vector2(0, H)).y: return
 		if zone and (b.p.x < view_x0() or b.p.x > view_x1()): return

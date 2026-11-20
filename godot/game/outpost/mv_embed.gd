@@ -114,7 +114,7 @@ func _process(dt: float) -> void:
 	_install()
 	_update_top()
 	if ZD.on(): _zone_frame(dt); return   # [zone]
-	if sc.zone: sc.zone = false; sc._layout()
+	if sc.zone: sc.zone = false; sc._layout(); sc.sim.relayout(); sc.sim._sync_key = ""; sc.sim.sync()   # [zone] 換返舊豎條
 	var cy = vcam()
 	sc.hud_on = cy < HUD_CAM or sc.sheet.visible or sc.anim != null
 	var qb = main.get("quest_bar") if main != null else null   # 精簡 HUD 已經包主線：任務條收埋
@@ -136,7 +136,7 @@ func _zone_frame(dt: float) -> void:
 	var nv = village
 	if not nv.has_method("zone_cam") or nv.size.x <= 0: return
 	var c = nv.zone_cam()
-	if not sc.zone: sc.zone = true; sc._layout(); sc.sim.relayout(); sc.sim.sync()
+	if not sc.zone: sc.zone = true; sc._layout(); sc.sim.relayout(); sc.sim._sync_key = ""; sc.sim.sync()
 	sc.zt = {"z": c.z / maxf(0.01, sc.k), "x": c.x, "y": c.y}
 	sc.hud_on = zone_hud_vis() or sc.sheet.visible or sc.anim != null
 	var qb = main.get("quest_bar") if main != null else null

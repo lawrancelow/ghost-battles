@@ -53,6 +53,9 @@ func all(t) -> void:
 	m._hide_title(); await _w(t, 1.0); await _skip(t)
 	var S = J.G.S
 	CB.install()
+	# [zone] 第 1 關係分區地圖：資源區要先攻佔先起得／採得（攻佔流程喺 zone_test.gd 測）→ 呢度當全部已佔領，照測建築邏輯
+	var ZD = load("res://game/zone/zone_data.gd")
+	for zid in ["A", "B", "C"]: ZD.set_owned(zid)
 	# ---------- 0. 資料 ----------
 	_chk("chain.json 有拓展建築", CB.new_blds().size() > 0, CB.new_blds().size())
 	_chk("舊建築對照（wood/rice/plank/bun）", CB.of_old("wood") != "" and CB.of_old("bun") != "")

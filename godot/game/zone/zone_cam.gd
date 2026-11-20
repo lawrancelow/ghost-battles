@@ -15,6 +15,7 @@ var z := 1.0
 var view := Vector2(390, 700)
 var world := Vector2(390, 1130)
 var top_extra := 0.0
+var top_px := 0.0             # 頂部 HUD 蓋住幾多畫面 px（最細縮放時成張圖要喺 HUD 下面完整顯示）
 var vel := Vector2.ZERO
 var tgt = null                # 平滑移動目標（左上角）
 var touches := {}             # index → 位置（畫面）
@@ -24,7 +25,7 @@ var _t := 0.0
 var _touch_seen := false
 var dragging := false
 
-func z_min() -> float: return view.x / maxf(1.0, world.x)          # 睇到成張圖闊度
+func z_min() -> float: return minf(view.x / maxf(1.0, world.x), maxf(1.0, view.y - top_px) / maxf(1.0, world.y))   # 成張圖（闊同高）喺 HUD 下面睇得晒
 func z_max() -> float: return maxf(z_min(), view.x / MAX_UNITS)
 func vw() -> float: return view.x / z
 func vh() -> float: return view.y / z
@@ -37,7 +38,9 @@ func clamp_all() -> void:
 	var w = vw(); var h = vh()
 	if w >= world.x: x = (world.x - w) / 2.0
 	else: x = clampf(x, 0.0, world.x - w)
-	if h >= world.y + top_extra: y = (world.y - h) / 2.0
+	top_extra = top_px / z
+	var avail = h - top_extra
+	if avail >= world.y: y = -top_extra - (avail - world.y) / 2.0
 	else: y = clampf(y, -top_extra, world.y - h)
 
 func set_zoom(nz: float, about: Vector2) -> void:   # about：畫面座標（縮放時呢點唔郁）

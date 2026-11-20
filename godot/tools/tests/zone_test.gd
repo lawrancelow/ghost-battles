@@ -129,6 +129,16 @@ func _run(t, shots: bool) -> void:
 	_chk("村子 POS 換咗做分區座標", same, POS.gate)
 	_chk("槐樹 6 棵、稻田 4 格", J.G.TREE_POS.size() == 6 and J.G.PADDY_POS.size() == 4)
 	_chk("世界大細 1340×2410", J.num(J.G.W) == 1340.0 and J.num(J.G.WH) == 2410.0)
+	# 原村子建築（棺材鋪、包子鋪…）喺舊存檔照樣存在、畫喺新位
+	var b0 = {}
+	for k in ["plank", "bun", "house", "store", "home"]: b0[k] = S.bld.get(k, 0); S.bld[k] = maxf(1.0, J.num(S.bld.get(k, 0)))
+	await _w(t, 0.3)
+	var drawn = []
+	for k in ["plank", "bun", "house", "store", "home"]:
+		var st0 = nv.statics.get("b_" + k)
+		if st0 != null and st0.node.visible and absf(st0.node.position.y - J.num(POS[k][1])) < 0.5: drawn.append(k)
+	_chk("原村子建築（棺材鋪、包子鋪、鬼宅、倉庫、民宅）有畫、喺新位", drawn.size() == 5, drawn)
+	for k in b0: S.bld[k] = b0[k]
 	# ================= 1. 布局冇重疊／喺所屬區內 =================
 	var vr = ZD.zrect("village"); var mr = ZD.zrect("market")
 	var items = []   # [名, 佔地, 區]
@@ -162,14 +172,30 @@ func _run(t, shots: bool) -> void:
 	for it in items:
 		if not ZD.zrect(it[2]).grow(2).encloses(it[1]): outz.append("%s→%s %s" % [it[0], it[2], it[1]])
 	_chk("所有建築喺所屬區內", outz.is_empty(), outz)
-	var roads = []
-	for rd in Z.roads: roads.append(ZD.rect(rd))
+	# 路（彎曲泥石路）：建築地基唔可以壓住主路／小路；擺設唔可以壓住主路、唔可以撞建築
+	var ZG = load("res://game/zone/zone_ground.gd")
+	var ps = ZG.path_samples(Z, 6.0)
+	var on_path = func(r: Rect2, kinds: Array) -> bool:
+		for e in ps:
+			if not (e[2] in kinds): continue
+			var q: Vector2 = e[0]; var hw: float = e[1]
+			if Rect2(q.x - hw, q.y - hw * 0.5, hw * 2.0, hw).intersects(r): return true
+		return false
 	var onroad = []
 	for it in items:
 		if it[2] != "village" and it[2] != "market": continue
-		var base = Rect2(it[1].position.x, it[1].end.y - 16, it[1].size.x, 16)
-		for r in roads: if r.grow(-2).intersects(base) and not it[0].begins_with("paddy"): onroad.append(it[0])
-	_chk("建築唔擋石板路", onroad.is_empty(), onroad)
+		if it[0].begins_with("paddy") or it[0].begins_with("tree"): continue
+		var base = Rect2(it[1].position.x + 6, it[1].end.y - 14, it[1].size.x - 12, 14)
+		if on_path.call(base, ["main"]): onroad.append(it[0])
+	_chk("建築唔擋主路（彎曲泥石路）", onroad.is_empty(), onroad)
+	var pov = []
+	for pr in Z.village.get("props", []):
+		var pw = maxf(24.0, float(pr[3]) * 0.6)
+		var r = Rect2(float(pr[1]) - pw / 2.0, float(pr[2]) - 12, pw, 14)
+		if not vr.grow(-4).encloses(r): pov.append("%s 出界" % pr[0])
+		if on_path.call(r, ["main"]): pov.append("%s 壓路" % pr[0])
+		for it in items: if it[1].grow(-2).intersects(r): pov.append("%s×%s" % [pr[0], it[0]])
+	_chk("自然填充（草、石、樹、木桶、晾衫竹）唔壓主路、唔撞建築", pov.is_empty(), pov)
 	var gate = ZD.v2(Z.village.POS.gate)
 	_chk("出村門喺大排檔同中央村之間（中路上）", gate.y > mr.end.y and gate.y <= vr.position.y + 4 and absf(gate.x - 670) < 1)
 	for z in ZD.of_type("wild"):
@@ -293,7 +319,8 @@ func _run(t, shots: bool) -> void:
 	# ================= 6. 鏡頭：拖動、縮放、邊界、慣性 =================
 	var c = nv.zone_cam()
 	c.z = 0.01; c.clamp_all()
-	_chk("最細縮放＝睇到成張圖闊度", absf(c.vw() - 1340.0) < 0.5 and absf(c.x) < 0.5, [c.vw(), c.x])
+	var tl = c.s2w(Vector2(0, c.top_px)); var br = c.s2w(c.view)
+	_chk("最細縮放：成張圖（闊＋高）喺 HUD 下面、底部導航上面完整顯示", tl.x <= 0.5 and tl.y <= 0.5 and br.x >= 1339.5 and br.y >= 2409.5 and c.top_px > 50.0, [tl, br, c.top_px])
 	c.z = 99.0; c.clamp_all()
 	_chk("最大縮放有上限（最少睇 300 單位）", absf(c.vw() - 300.0) < 0.5)
 	c.z = nv.size.x / 390.0; c.center_on(Vector2(670, 1500)); c.vel = Vector2.ZERO

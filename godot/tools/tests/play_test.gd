@@ -260,6 +260,7 @@ func logic(_t) -> void:
 	pp.orders.clear()
 	var o3 = EV.make_order(P, sim); o3.left = 0.5
 	var inf1 = MVW.inf()
+	sim.foes.clear()   # [zone] 隔離：呢一秒唔好有孤魂拍門偷嘢（另外 −1）混入（分區地圖孤魂衝野外門，時間同舊柵欄唔同）
 	_run(sim, 1.0)
 	_chk("過咗限時：影響力 −3", inf1 - MVW.inf(), 3.0)
 	_ok("過咗限時：單取消", pp.orders.is_empty())

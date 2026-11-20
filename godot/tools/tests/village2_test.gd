@@ -50,6 +50,8 @@ func _camY() -> float: return J.num(_V().get("camY"))
 func N(): return J.gp(J.G.get("UI"), "_n")
 
 func _boot(t):
+	# [zone] 呢個測試驗舊豎條布局（第 2–6 張圖照用、zones.json 冇定義嘅圖）；第 1 張圖分區地圖由 zone_test.gd 測
+	load("res://game/zone/zone_data.gd").force_off = true
 	DirAccess.make_dir_recursive_absolute(SHOTS)
 	await _wait_boot(t)
 	var m = _main(t)

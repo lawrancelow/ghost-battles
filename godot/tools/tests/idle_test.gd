@@ -187,6 +187,7 @@ func logic(_t) -> void:
 	sim.st().st[K].made_n = 777.0; sim.st().st[K].lv = 12.0
 	for i in MD.goals(0).size(): sim.st().goals_done.append(float(i))
 	_S().cleared["1-3"] = true
+	load("res://game/zone/zone_data.gd").mark_all_bosses(0)   # [zone] 新規則：第 1 關野外王全部打低先拔得營
 	_ok("拔營", sim.move_next())
 	_ok("領班鬼放返（post = null）", not J.t(sim.ghost("t_id1").post))
 	_chk("隨村台 made_n 跟住走", IDL.made_n(sim, K), 777.0)

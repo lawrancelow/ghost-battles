@@ -348,7 +348,8 @@ func _logic(t, shots: bool) -> void:
 		mot.fore_mo[sid0].st = "doze"; mot.fore_mo[sid0].t = 0.0
 		var used = mot.tap(sc, fp + Vector2(0, -30))
 		_chk("撳瞓緊嘅領班 → 嚇醒", used and mot.fore_mo[sid0].st == "wake")
-		_chk("領班唔出畫面", fp.x >= 20.0 and fp.x <= 370.0, fp)
+		var wx = float(sc.sim.ww())   # [zone] 分區地圖世界闊 1340（舊豎條 390）
+		_chk("領班唔出地圖邊", fp.x >= 20.0 and fp.x <= wx - 20.0, fp)
 	# 2. 狀態切換唔報錯（離屏錄製）：每張圖所有客人 × 所有狀態；員工所有台；惡鬼所有狀態；義勇軍
 	var ctx = Ctx.new(Recorder.new())
 	var n_draw = 0

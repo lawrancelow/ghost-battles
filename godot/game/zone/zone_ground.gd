@@ -16,8 +16,27 @@ func R() -> float:
 func _c(h: String, a := 1.0) -> Color: return Color(Color(h), a)
 static func _rect(a) -> Rect2: return Rect2(float(a[0]), float(a[1]), float(a[2]) - float(a[0]), float(a[3]) - float(a[1]))
 
-func _on_road(p: Vector2, roads: Array) -> bool:
-	for r in roads: if r.grow(4).has_point(p): return true
+# [zone v5] 路：彎曲泥石路（paths 折線經 Catmull-Rom 變順）；回 [[點, 半闊, 種類], ...]
+static func path_samples(M: Dictionary, step := 5.0) -> Array:
+	var o = []
+	for pa in M.get("paths", []):
+		var P = []
+		for q in pa.pts: P.append(Vector2(float(q[0]), float(q[1])))
+		var hw = float(pa.get("w", 30)) / 2.0
+		for i in P.size() - 1:
+			var p0 = P[maxi(0, i - 1)]; var p1 = P[i]; var p2 = P[i + 1]; var p3 = P[mini(P.size() - 1, i + 2)]
+			var n = maxi(1, int(p1.distance_to(p2) / step))
+			for k in n:
+				var t = float(k) / n
+				var t2 = t * t; var t3 = t2 * t
+				var q = 0.5 * ((2.0 * p1) + (-p0 + p2) * t + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2 + (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3)
+				o.append([q, hw, str(pa.get("k", "lane"))])
+		o.append([P[P.size() - 1], hw, str(pa.get("k", "lane"))])
+	return o
+var _ps := []
+func _on_road(p: Vector2, _roads = null) -> bool:
+	for e in _ps:
+		if absf(e[0].x - p.x) < e[1] + 6 and e[0].distance_to(p) < e[1] + 4: return true
 	return false
 
 func _draw() -> void:
@@ -35,7 +54,7 @@ func _draw() -> void:
 		for gy in int(ceil(H / ts.y)):
 			for gx in int(ceil(W / ts.x)): draw_texture_rect(tile, Rect2(Vector2(gx, gy) * ts, ts), false, Color(1.0, 0.98, 0.9))
 	var roads = []
-	for rd in M.get("roads", []): roads.append(_rect(rd))
+	_ps = path_samples(M)
 	var area = W * H / 440700.0   # 舊村子面積倍數（密度一樣）
 	for i in int(50 * area):
 		var px = R() * W; var py = R() * H; var r = 40 + R() * 70
@@ -89,31 +108,29 @@ func _draw() -> void:
 				if k == 0: x.moveTo(ccx + cos(a) * rr, ccy + sin(a) * rr)
 				else: x.lineTo(ccx + cos(a) * rr, ccy + sin(a) * rr)
 			x.stroke()
-	for r in roads:
-		if r.size.y >= r.size.x:   # 直路：每行兩塊，隔行錯開
-			var y = r.position.y; var row = 0
-			while y < r.end.y:
-				var hw = r.size.x / 2.0; var off = 0.0 if row % 2 == 0 else hw * 0.5
-				var xx = r.position.x - off
-				while xx < r.end.x:
-					var a0 = maxf(xx, r.position.x); var a1 = minf(xx + hw, r.end.x)
-					if a1 - a0 > 6: slab.call(a0, y, a1 - a0, minf(18, r.end.y - y))
-					xx += hw
-				y += 18; row += 1
-		else:
-			var xx2 = r.position.x; var col = 0
-			while xx2 < r.end.x:
-				var hh = r.size.y / 2.0; var off2 = 0.0 if col % 2 == 0 else hh * 0.5
-				var yy = r.position.y - off2
-				while yy < r.end.y:
-					var b0 = maxf(yy, r.position.y); var b1 = minf(yy + hh, r.end.y)
-					if b1 - b0 > 5: slab.call(xx2, b0, minf(22, r.end.x - xx2), b1 - b0)
-					yy += hh
-				xx2 += 22; col += 1
+	# 泥石路：踩實嘅泥（柔邊）＋主路中間散落石板／碎石
+	draw_set_transform_matrix(X)
+	for e in _ps:
+		var q: Vector2 = e[0]; var hw: float = e[1]
+		draw_circle(q, hw + 7.0, _c("#1e140e", 0.05))
+		draw_circle(q, hw, _c("#4e3a28", 0.16 if e[2] == "main" else 0.13))
+		draw_circle(q, hw * 0.6, _c("#5e4632", 0.10))
+	var j = 0
+	for e in _ps:
+		j += 1
+		var q: Vector2 = e[0]; var hw: float = e[1]
+		if e[2] == "main":
+			if j % 3 != 0: continue
+			for k in 2:
+				var sx = q.x + (R() - 0.5) * hw * 1.3; var sy = q.y + (R() - 0.5) * 6
+				var w = 9 + R() * 9; var h = 6 + R() * 5
+				slab.call(sx - w / 2, sy - h / 2, w, h)
+		elif j % 5 == 0:
+			x.fillStyle = "rgba(40,32,30,.6)"; x.beginPath(); x.ellipse(q.x + (R() - 0.5) * hw, q.y + (R() - 0.5) * 4, 2 + R() * 2, 1.5 + R(), 0, 0, TAU); x.fill()
 	# 螺旋龜裂
 	for i in int(16 * area):
 		var sx2 = R() * W; var sy2 = 30 + R() * (H - 50)
-		if _on_road(Vector2(sx2, sy2), roads): continue
+		if _on_road(Vector2(sx2, sy2)): continue
 		x.strokeStyle = "rgba(14,8,10,.38)"; x.lineWidth = 0.8; x.beginPath()
 		var turns = 2.2 + R() * 1.5; var rmax = 7 + R() * 9; var a0 = R() * TAU
 		for k in 40:
@@ -147,7 +164,6 @@ func _draw() -> void:
 func _void(W: float, H: float) -> Array:
 	var solid = []
 	for z in M.zones: solid.append(_rect(z.rect).grow(12))
-	for rd in M.get("roads", []): solid.append(_rect(rd).grow(12))
 	var mk = M.get("market", {})
 	if mk.get("counter") is Array:   # 大排檔底 → 出村門走廊
 		var vz = {}

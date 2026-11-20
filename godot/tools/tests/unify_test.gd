@@ -41,6 +41,8 @@ func logic(t) -> void: await _run(t, false, false)
 func shots0(t) -> void: await _run(t, true, false, true)
 
 func _boot(t):
+	# [zone] 呢個測試驗舊豎條布局（第 2–6 張圖照用、zones.json 冇定義嘅圖）；第 1 張圖分區地圖由 zone_test.gd 測
+	load("res://game/zone/zone_data.gd").force_off = true
 	DirAccess.make_dir_recursive_absolute(SHOTS)
 	await _wait_boot(t)
 	var m = _main(t)
@@ -167,10 +169,10 @@ func _run(t, shots: bool, full: bool, only0 := false) -> void:
 	# ---------- 客人、孤魂、挑夫鬼 ----------
 	for sid in MD.stations(c0): sc.sim.sst(sid).unlocked = true
 	_cam(-E + 300.0)
+	var sides = {}
 	for i in 40:
 		await _w(t, 0.25)
-	var sides = {}
-	for cu in sc.sim.custs: sides[int(cu.get("side", 0))] = true
+		for cu in sc.sim.custs: sides[int(cu.get("side", 0))] = true   # 十秒內出現過嘅客人（隨機左右，唔好只睇最後一刻）
 	_chk("客人行排隊線（兩邊都有）", sc.sim.custs.size() > 0 and sides.size() == 2, "客 %d 邊 %s" % [sc.sim.custs.size(), sides.keys()])
 	var on_path = true
 	for cu in sc.sim.custs:

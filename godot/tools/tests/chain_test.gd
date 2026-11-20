@@ -193,6 +193,7 @@ func mv() -> void:
 	_p("===== 7. 隨村台跟大屋走（每張圖都有、等級保留、版面容得落） =====")
 	sim.st().st[A].lv = 7.0
 	S.cleared["1-3"] = true
+	load("res://game/zone/zone_data.gd").mark_all_bosses(0)   # [zone] 新規則：第 1 關野外王全部打低先拔得營
 	for i in MD.goals(0).size(): sim.st().goals_done.append(float(i))
 	_chk("move_next", sim.move_next())
 	_chk("第 2 張圖都有嘆氣蒸籠", MD.stations(1).has(A) and sim.st().st.has(A))

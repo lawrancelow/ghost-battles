@@ -289,6 +289,17 @@ static func bid_ok(bid: String) -> bool:
 	if not shop_def(bid).is_empty(): return shop_req(bid)[0]
 	return true
 
+# 測試用：當呢張圖全部野外王已打低
+static func mark_all_bosses(c := 0) -> void:
+	var s = st()
+	if s == null: return
+	for z in of_type("wild", c):
+		for b in z.get("bosses", []): s.boss[_k(str(b.id), c)] = true
+static func unmark_bosses(c := 0) -> void:
+	var s = st()
+	if s == null: return
+	for z in of_type("wild", c):
+		for b in z.get("bosses", []): s.boss.erase(_k(str(b.id), c))
 # ---------------- 拔營 ----------------
 static func can_move_ok(c: int) -> bool:
 	if not on_for(c): return true

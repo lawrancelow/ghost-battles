@@ -314,6 +314,7 @@ func logic(_t) -> void:
 	sim._pay(_cust(sim, gg, 1))
 	for i in MD.goals(0).size(): sim.st().goals_done.append(float(i))
 	S.cleared["1-3"] = true
+	load("res://game/zone/zone_data.gd").mark_all_bosses(0)   # [zone] 新規則：第 1 關野外王全部打低先拔得營
 	_ok("move_next", sim.move_next())
 	_ok("拔營後冇義勇軍", w.vol.is_empty() and sim.war.vols.is_empty())
 	_chk("新圖影響力 = 60", MVW.inf(), 60.0)

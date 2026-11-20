@@ -38,7 +38,17 @@ func _out(sid, lv) -> int: return int(_sd(sid).base_out) + int((lv - 1) / 10)
 func _tm(sid, lv) -> float: return float(_sd(sid).base_time) / (1.0 + 0.02 * (lv - 1)) / pow(2, _nk(sid, lv, false))   # [idle]
 # 搬貨來回時間（獨立計）：台前 → road[ri] → … → road[j] → 櫃台後，÷ 240 × 2 + 0.6
 func _carry(ci: int, sid) -> float:
-	var Ly = D.MAPS[ci].layout; var e = Ly.st[sid]; var rd = Ly.road; var j = int(Ly.j); var ri = int(e[2])
+	var Ly = D.MAPS[ci].layout
+	var Zf = JSON.parse_string(FileAccess.get_file_as_string("res://data/nat/zones.json"))   # [zone] 第 1 關分區地圖：大排檔 layout 喺 zones.json（每台自己搬貨路 paths）
+	if Zf is Dictionary and Zf.maps.has(str(ci)) and not load("res://game/zone/zone_data.gd").disabled():
+		var ZL = Zf.maps[str(ci)].market; var e2 = ZL.st[sid]
+		var pz = [Vector2(e2[0], e2[1] + 30)]
+		for q in ZL.paths[sid]: pz.append(Vector2(q[0], q[1]))
+		pz.append(Vector2(ZL.counter[0], ZL.counter[1] - 30))
+		var d2 = 0.0
+		for k in range(1, pz.size()): d2 += pz[k - 1].distance_to(pz[k])
+		return 2.0 * d2 / 240.0 + 0.6
+	var e = Ly.st[sid]; var rd = Ly.road; var j = int(Ly.j); var ri = int(e[2])
 	var pts = [Vector2(e[0], e[1] + 30)]
 	var i = ri
 	while true:
@@ -197,6 +207,7 @@ func logic(_t) -> void:
 			_chk("Boss 未打：未完成", 1.0 if sim.goal_done(i) else 0.0, 0.0)
 			_chk("Boss 未打：can_move = false", 1.0 if sim.can_move() else 0.0, 0.0)
 			S.cleared["1-3"] = true
+			load("res://game/zone/zone_data.gd").mark_all_bosses(0)   # [zone] 新規則：第 1 關野外王全部打低先拔得營
 		elif not sim.goal_done(i):
 			match str(g.t):
 				"unlock":
@@ -460,6 +471,7 @@ func shots(tt) -> void:
 	# 拔營（第一張圖做齊）
 	_goto_map(sim, 0, 5, [12, 26, 9, 51, 3])
 	S.cleared["1-3"] = true; S.res["coins"] = 1e9
+	load("res://game/zone/zone_data.gd").mark_all_bosses(0)   # [zone] 新規則：第 1 關野外王全部打低先拔得營
 	var G = D.MAPS[0].goals
 	for i in G.size():
 		var gg = G[i]
