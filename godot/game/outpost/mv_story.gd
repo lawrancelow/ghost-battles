@@ -394,10 +394,12 @@ static func zviewing(sc) -> bool:
 static func next_zone(sim) -> Dictionary:
 	if sim == null or sim.st() == null: return {}
 	var c = sim.ci()
+	var q = zq()
+	for j in range(q.size() - 1, -1, -1):   # 唔係呢張圖（已經拔營）／已播：清走
+		if is_seen(str(q[j])) or _beat_ci(str(q[j])) != c: q.remove_at(j)
 	var eb = enter_beat(c)
 	if not eb.is_empty() and not is_seen(str(eb.id)):
 		return eb if ZD.on_for(c) else {}
-	var q = zq()
 	var i = 0
 	while i < q.size():
 		var b = beat(str(q[i]))

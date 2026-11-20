@@ -120,6 +120,7 @@ func _logic(t) -> void:
 		_reset_map(sim, c)
 		var r = _mk(sim); var st = r[0]; var sc = r[1]
 		var bl = STY.beats(c)
+		for zb in bl: if STY.is_zone(zb): STY.mark(str(zb.id))   # [zstory] 分區 beat（開場、協調前置）由 zstory_test 測；呢度當已播
 		var moves = []
 		for b in bl:
 			var id = str(b.id); var wt = str(b.when.t)

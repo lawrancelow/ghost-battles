@@ -208,7 +208,7 @@ def main():
                     for x in (l[1], l[2]):
                         if any(j in x for j in JOB) and not fem.get(x) and x not in FEM_OK: E(bt + " 阿福講生前工作但 fem.json 冇女版：%s" % x)
                 all_text.append((bt, l[0]))
-                if l[0] not in spk_art and l[0] not in art and l[0] not in ("旁白", "系統", "？？？", "抬棺鬼", "告示", "主播", "DJ", "記者", "聽眾") and sc.get("style") == "talk":
+                if l[0] not in spk_art and l[0] not in art and l[0] not in ("旁白", "系統", "？？？", "抬棺鬼", "告示", "主播", "DJ", "記者", "聽眾", "稻草人") and sc.get("style") == "talk":
                     W(bt + " 講者「%s」冇圖（SPEAKER_ART／art 都冇）" % l[0])
             for sp, k in art.items():
                 if k not in ghosts and k not in core.get("ENEMY_T", {}) and k not in spk_art.values(): W(bt + " art %s→%s 唔係已知鬼圖鍵" % (sp, k))
