@@ -384,9 +384,9 @@ func _draw_mist(c: CanvasItem) -> void:
 	_draw_wander_souls(c)
 
 # [souls14] 村入面半透明亡魂慢慢飄（純氣氛，唔撳得、唔影響玩法）：每隻有自己路線，隔一陣淡入淡出
-#   用本身有樣貌、下身係鬼尾（冇腳）嘅本土鬼圖；下半身再逐段淡出，似飄緊
+#   專登新畫嘅亡魂（有樣貌、冇腳、下身一縷煙）；鬼尾尾段再淡出，似飄緊
 const SOUL_N := 7
-const SOUL_ART := ["n30_diaosi", "n30_qionggui", "n30_guhangui", "n30_dongsi", "n30_yangui", "n30_danxiao", "n30_jiugui"]
+const SOUL_ART := ["soul_a", "soul_b", "soul_c", "soul_d", "soul_f", "soul_a", "soul_b"]   # 新畫：唐裝老伯、長髮女子、竹笠農夫、旗袍婦人、提燈阿婆
 const SOUL_SLICES := 10
 func _draw_wander_souls(c: CanvasItem) -> void:
 	var vr = Rect2(0, 150, W, WH - 150)
@@ -415,7 +415,7 @@ func _draw_wander_souls(c: CanvasItem) -> void:
 		var iw = float(im.get_width()); var ih = float(im.get_height())
 		for sl in SOUL_SLICES:   # 由上至下逐段畫，下半身慢慢淡出（冇腳、似飄緊）
 			var f0 = float(sl) / SOUL_SLICES; var f1 = float(sl + 1) / SOUL_SLICES
-			var fa = 1.0 if f1 <= 0.55 else clampf(1.0 - (f0 - 0.55) / 0.45, 0.0, 1.0)
+			var fa = 1.0 if f1 <= 0.7 else clampf(1.0 - (f0 - 0.7) / 0.3, 0.15, 1.0)
 			if fa <= 0.01: continue
 			var sway = sin(t * 2.2 + ph + f0 * 3.0) * 3.0 * f0   # 下身輕輕擺
 			var dst = Rect2(x - w / 2 + sway, y - h + h * f0, w, h * (f1 - f0) + 0.6)
