@@ -158,6 +158,7 @@ func _run(t, shots: bool, full: bool, only0 := false) -> void:
 	if J.G.get("World") != null and J.t(J.gp(J.G.get("World"), "on")): J.mc(J.G.get("World"), "close", [])
 	await _w(t, 0.3)
 	# 原村子撳建築照舊
+	if not J.t(J.G.S.bld.get("store")): J.G.S.bld["store"] = 1.0   # [ruins13] 未解鎖嘅廢墟撳唔到：測撳建築要先起咗
 	var bo = [""]
 	var UI = J.G.get("UI"); var o_ob = UI.get("openBuilding")
 	UI["openBuilding"] = func(_t, a): bo[0] = J.str(J.arg(a, 0)); return null

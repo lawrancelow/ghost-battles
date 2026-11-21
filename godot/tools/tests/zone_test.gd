@@ -367,6 +367,7 @@ func _run(t, shots: bool) -> void:
 	var UI = J.G.get("UI"); var o_ob = UI.get("openBuilding")
 	UI["openBuilding"] = func(_t0, a): opened[0] = J.str(J.arg(a, 0)); return null
 	var sp = Vector2(800, 1270)   # 倉庫
+	if not J.t(J.G.S.bld.get("store")): J.G.S.bld["store"] = 1.0   # [ruins13] 未解鎖嘅廢墟撳唔到：測撳建築要先起咗
 	c.center_on(sp); await _w(t, 0.2)
 	nv.zone_tap(c.w2s(sp))
 	_chk("撳倉庫開建築卡", opened[0] == "store", opened[0])
