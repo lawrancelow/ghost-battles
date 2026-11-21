@@ -396,7 +396,7 @@ func _draw_wander_souls(c: CanvasItem) -> void:
 		var ph = i * 2.399
 		var per = 16.0 + fmod(i * 5.3, 9.0)
 		var k = fmod(t + i * 7.1, per) / per          # 0→1 一個出現週期
-		var a = pow(sin(k * PI), 2.0) * 0.5
+		var a = pow(sin(k * PI), 1.4) * 0.6
 		if a < 0.01: continue
 		var cyc = floor((t + i * 7.1) / per)          # 每次重新出現換個位、換隻鬼
 		var key = SOUL_ART[(i + int(cyc) * 5) % SOUL_ART.size()]
@@ -408,7 +408,7 @@ func _draw_wander_souls(c: CanvasItem) -> void:
 		var x = clampf(bx + dx, vr.position.x, vr.end.x)
 		var y = clampf(by + sin(t * 0.37 + ph * 2.0) * 22.0, vr.position.y, vr.end.y) - 22.0 - sin(t * 1.6 + ph) * 6.0
 		if y < top or y > bot: continue
-		var h = 66.0 + fmod(i * 7.0, 12.0); var w = h * im.get_width() / im.get_height()
+		var h = 84.0 + fmod(i * 7.0, 16.0); var w = h * im.get_width() / im.get_height()
 		var flip = cos(t * 0.21 + ph) * (1.0 if i % 2 == 0 else -1.0) < 0.0
 		c.draw_texture_rect(PtGfx.RAD, Rect2(x - w * 0.9, y - h * 1.0, w * 1.8, h * 1.1), false, Color(0.70, 0.82, 0.90, a * 0.30))
 		var tint = Color(0.86, 0.92, 0.98)
