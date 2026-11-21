@@ -49,6 +49,11 @@ func _boot(t):
 	return m
 
 func logic(t) -> void: await _run(t, false)
+func l1(t) -> void:
+	var m = await _boot(t)
+	ZD.gate_on = false
+	await _level(t, m, 0)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
 func all(t) -> void: _shots_on = true; await _run(t, true)
 
 func _run(t, _shots: bool) -> void:
@@ -69,7 +74,9 @@ func _paddy_vis(p: Vector2) -> Rect2:
 
 func _diag(m, V) -> String:
 	var H = V.hero; var st = J.G.get("Story"); var UI = J.G.get("UI")
-	return "hero=(%d,%d) tx=(%d,%d) tg=%s act=%s zq=%d walking=%s story=%s modal=%s cur=%s" % [J.num(H.x), J.num(H.y), J.num(H.get("tx")), J.num(H.get("ty")), H.get("target"), H.get("act"), (H.get("zq") as Array).size() if H.get("zq") is Array else -1, H.get("walking"),
+	var B = J.G.get("Battle")
+	var ex = " battle=%s paused=%s lv=%s frames=%d lastT=%s actT=%s fps=%d" % [J.t(B.get("active")) if B is Dictionary else null, m.get_tree().paused, J.G.S.get("lv"), Engine.get_process_frames(), J.G.get("lastT"), H.get("actT"), Engine.get_frames_per_second()]
+	return ex + " hero=(%d,%d) tx=(%d,%d) tg=%s act=%s zq=%d walking=%s story=%s modal=%s cur=%s" % [J.num(H.x), J.num(H.y), J.num(H.get("tx")), J.num(H.get("ty")), H.get("target"), H.get("act"), (H.get("zq") as Array).size() if H.get("zq") is Array else -1, H.get("walking"),
 		J.t(J.mc(st, "busy", [])) if st != null else null, J.t(J.mc(UI, "modalOpen", [])) if UI != null else null, m.get("story").get("cur") != null if m.get("story") else null]
 func _reset_hero(V) -> void:
 	var H = V.hero; var hp = ZD.v2(ZD.cur().village.hero)
