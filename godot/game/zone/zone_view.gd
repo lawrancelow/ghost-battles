@@ -909,13 +909,18 @@ static func _water() -> Array:
 		"l2": return [Color("#0c1e1c"), Color("#16343a")]
 		"l3": return [Color("#101a26"), Color("#22303e")]
 		"l4": return [Color("#0a1c20"), Color("#1a3436")]
+		"l5": return [Color("#121418"), Color("#24282e")]   # [zone56] 大坑渠污水
+		"l6": return [Color("#0a1414"), Color("#16282a")]   # [zone56] 冥河支流
 	return [Color("#0e1a26"), Color("#183040")]
 
 # 四周天然邊界（void）：熱帶黑樹林（jungle）／峭壁崖石枯松（cliff）／紅樹林蘆葦泥灘（marsh）；固定種子
 const VOID_KIT := {
 	"jungle": [["zb_bush", 90, 120, 0.55], ["zt_banana", 80, 110, 0.6], ["zb_bush", 100, 130, 0.5], ["zp_deadtree", 80, 100, 0.5], ["zt_banana", 90, 120, 0.55]],
 	"cliff": [["zb_rock1", 110, 150, 0.7], ["zb_rock2", 80, 110, 0.72], ["zt_cliffpine", 100, 140, 0.7], ["zb_rock1", 120, 150, 0.66], ["zb_cliff", 120, 140, 0.7]],
-	"marsh": [["zt_mangrove", 110, 150, 0.6], ["zt_reeds", 80, 110, 0.66], ["zt_mangrove", 100, 140, 0.55], ["zt_reeds", 90, 120, 0.6], ["zb_bush", 80, 110, 0.5]]}
+	"marsh": [["zt_mangrove", 110, 150, 0.6], ["zt_reeds", 80, 110, 0.66], ["zt_mangrove", 100, 140, 0.55], ["zt_reeds", 90, 120, 0.6], ["zb_bush", 80, 110, 0.5]],
+	# [zone56] 第 5 關組屋區：舊組屋、竹棚、天橋柱；第 6 關總部外圍：停車場柱、光管、紙箱、文件櫃
+	"city": [["zt_flats", 130, 170, 0.6], ["zt_scaffold", 100, 130, 0.62], ["zt_flyover", 120, 150, 0.6], ["zq_bins", 60, 70, 0.6], ["zt_sodium", 90, 110, 0.62]],
+	"hq": [["zt_pillar", 110, 140, 0.6], ["zq_cartons", 70, 84, 0.62], ["zt_tubelamp", 90, 110, 0.6], ["zq_filecab", 52, 60, 0.6], ["zt_pillar", 100, 130, 0.58]]}
 static func _void(c: CanvasItem, b: Dictionary, vr: Rect2, t: float) -> void:
 	var st = str(b.get("style", "jungle"))
 	var kit = VOID_KIT.get(st, VOID_KIT.jungle)
@@ -1069,7 +1074,10 @@ static func draw_atmo(c: CanvasItem, nv) -> void:
 				"fireflies": _fx_fireflies(c, base, cid, t, dens)
 				"fog": _fx_fog(c, base, cid, t, dens)
 				"rain": _fx_rain(c, base, cid, t, dens)
+				"paper": _fx_paper(c, base, cid, t, dens)
+				"tube": _fx_dust(c, base, cid, t, dens)
 	if fx == "rain": _fx_rain_tint(c, vr, t)
+	if fx == "tube": _fx_tube_flicker(c, vr, t)
 	if fx == "fog": c.draw_rect(vr, Color(0.55, 0.65, 0.85, 0.05))   # 冷月光
 static func rain_k(t: float) -> float:   # 0..1：而家落雨幾大
 	var ph = fmod(t, 70.0)
@@ -1091,6 +1099,42 @@ static func _fx_leaves(c: CanvasItem, base: Vector2, cid: int, t: float, dens: f
 		if ash: c.draw_rect(Rect2(-s / 2, -s / 2, s, s), col)
 		else: c.draw_colored_polygon(PackedVector2Array([Vector2(-s, 0), Vector2(0, -s * 0.5), Vector2(s, 0), Vector2(0, s * 0.5)]), col)
 		c.draw_set_transform_matrix(Transform2D.IDENTITY)
+# [zone56] l5：舊報紙碎被夜風吹過馬路（翻轉、打圈），間中一張大張報紙貼地滑過
+static func _fx_paper(c: CanvasItem, base: Vector2, cid: int, t: float, dens: float) -> void:
+	var n = int(6 * dens)
+	for i in n:
+		var k = cid + i * 29
+		var sp = 26.0 + _h(k, 1) * 22.0
+		var x = fmod(_h(k, 2) * CELL + t * sp, CELL)
+		var y = _h(k, 3) * CELL + sin(t * 1.3 + _h(k, 4) * 6.0) * 14.0 - x * 0.08
+		var p = base + Vector2(x, fmod(y + CELL, CELL))
+		var a = t * (2.0 + _h(k, 5) * 2.0) + _h(k, 6) * 6.0
+		var w = 5.0 + _h(k, 7) * 4.0
+		var sq = 0.25 + 0.75 * absf(sin(a))
+		c.draw_set_transform(p, a * 0.4, Vector2(1.0, sq))
+		c.draw_rect(Rect2(-w / 2, -w * 0.35, w, w * 0.7), Color(0.78, 0.76, 0.68, 0.72))
+		c.draw_line(Vector2(-w * 0.35, -w * 0.1), Vector2(w * 0.35, -w * 0.1), Color(0.2, 0.2, 0.2, 0.5), 0.6)
+		c.draw_line(Vector2(-w * 0.35, w * 0.12), Vector2(w * 0.2, w * 0.12), Color(0.2, 0.2, 0.2, 0.5), 0.6)
+		c.draw_set_transform_matrix(Transform2D.IDENTITY)
+	if _h(cid, 8) < 0.35:   # 大張報紙貼地滑
+		var ph = fmod(t * 0.08 + _h(cid, 9), 1.0)
+		var q = base + Vector2(ph * CELL, _h(cid, 10) * CELL + sin(t * 2.0) * 3.0)
+		c.draw_set_transform(q, 0.15 * sin(t * 1.7 + cid), Vector2(1.0, 0.55))
+		c.draw_rect(Rect2(-12, -8, 24, 16), Color(0.72, 0.70, 0.62, 0.6))
+		for j in 4: c.draw_line(Vector2(-9, -5 + j * 3.4), Vector2(8 - (j % 2) * 6, -5 + j * 3.4), Color(0.18, 0.18, 0.18, 0.45), 0.7)
+		c.draw_set_transform_matrix(Transform2D.IDENTITY)
+# [zone56] l6：光管下浮塵（慢慢升降）
+static func _fx_dust(c: CanvasItem, base: Vector2, cid: int, t: float, dens: float) -> void:
+	var n = int(14 * dens)
+	for i in n:
+		var k = cid + i * 23
+		var p = base + Vector2(_h(k, 1) * CELL + sin(t * 0.4 + _h(k, 2) * 9.0) * 10.0, fmod(_h(k, 3) * CELL - t * (3.0 + _h(k, 4) * 4.0) + CELL, CELL))
+		c.draw_circle(p, 0.9 + _h(k, 5) * 0.8, Color(0.82, 0.95, 0.88, 0.35 + 0.25 * sin(t * 2.0 + k)))
+# [zone56] l6：成區光管間中閃一下（約 9 秒一次，閃兩下）
+static func _fx_tube_flicker(c: CanvasItem, vr: Rect2, t: float) -> void:
+	var ph = fmod(t, 9.0)
+	if ph > 8.55 and (ph < 8.65 or ph > 8.78): c.draw_rect(vr, Color(0.0, 0.02, 0.02, 0.22))
+	else: c.draw_rect(vr, Color(0.55, 0.85, 0.72, 0.035))
 static func _fx_fireflies(c: CanvasItem, base: Vector2, cid: int, t: float, dens: float) -> void:
 	var n = int(9 * dens)
 	for i in n:

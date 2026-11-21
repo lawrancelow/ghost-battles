@@ -82,7 +82,7 @@ def main():
 
     # ---- id 對 zones.json ----
     want_b, want_c = {}, {}
-    for ci in ("0", "1", "2", "3"):
+    for ci in ("0", "1", "2", "3", "4", "5"):
         for zz in Z["maps"][ci]["zones"]:
             for b in zz.get("bosses", []): want_b[b["id"]] = ci
             if zz.get("type") == "res": want_c.setdefault(ci, set()).add(zz["id"])

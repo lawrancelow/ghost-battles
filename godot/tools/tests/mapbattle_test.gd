@@ -113,8 +113,7 @@ func _run(t) -> void:
 	await cap_flow(t, m)
 	await raid_flow(t, m)
 	await perf(t, m)
-	for c in [1, 2, 3]: await map_flow(t, m, c)
-	await old_maps(t, m)
+	for c in [1, 2, 3, 4, 5]: await map_flow(t, m, c)   # [zone56] 第 5、6 關都分區咗，冇舊豎條圖剩低
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
 # ================= 王戰（第 1 關亂葬崗 ①紙人偶頭目） =================

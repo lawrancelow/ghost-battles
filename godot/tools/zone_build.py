@@ -586,6 +586,154 @@ M3 = {
 }
 _dress(M3, "l4", (D3X, D3Y), _gate_blocks(520, 1146))
 
+# ================= [zone56] 第 5、6 關 =================
+import copy
+ZQ_W.update({"zq_bins": 60, "zq_newsstack": 58, "zq_cones": 74, "zq_scooter": 72, "zq_planter": 70, "zq_dryrack": 74, "zq_busstop": 70, "zq_traffic": 40,
+             "zq_filecab": 50, "zq_chair": 54, "zq_tonerbox": 72, "zq_cooler": 44, "zq_punch": 56, "zq_deadplant": 56, "zq_cartons": 74, "zq_firehose": 64})
+FILL_W.update({"zq_bins": (52, 60), "zq_cones": (60, 70), "zq_planter": (58, 66), "zq_newsstack": (48, 56),
+               "zq_cartons": (60, 70), "zq_deadplant": (48, 56), "zq_filecab": (44, 50), "zq_chair": (46, 52)})
+YARD_LOOK["l5"] = {"yard": {"home": ["zq_dryrack", "zq_bins", "zq_planter", "zp_fence"], "store": ["zq_newsstack", "zp_sacks", "zq_cones"],
+                  "wood": ["zp_woodpile", "zq_cones", "zp_fence"], "plank": ["zp_woodpile", "zq_newsstack", "zp_fence"],
+                  "rice": ["zp_sacks", "zq_planter", "zp_fence"], "bun": ["zq_scooter", "zp_jars", "zp_stove"],
+                  "house": ["zq_busstop", "zq_planter", "zp_fence", "zq_dryrack"], "altar": ["zq_planter", "zp_bench"],
+                  "camp": ["zq_cones", "zq_bins", "zp_bench"], "furnace": ["zp_jars"]},
+         "misc": [("zq_planter", 880, 1230), ("zq_bins", 1075, 1410), ("zq_newsstack", 470, 1440), ("zq_cones", 760, 1440), ("zq_dryrack", 760, 1660)],
+         "fill": ["zb_rock2", "proc:grass", "zq_bins", "zq_cones", "proc:pebbles", "zq_planter", "proc:grass", "zq_newsstack"], "grove": "zb_bush"}
+YARD_LOOK["l6"] = {"yard": {"home": ["zq_cooler", "zq_chair", "zq_deadplant", "zp_fence"], "store": ["zq_cartons", "zq_tonerbox", "zq_filecab"],
+                  "wood": ["zp_woodpile", "zq_cartons", "zp_fence"], "plank": ["zp_woodpile", "zq_filecab", "zp_fence"],
+                  "rice": ["zp_sacks", "zq_deadplant", "zp_fence"], "bun": ["zq_cooler", "zp_jars", "zp_stove"],
+                  "house": ["zq_punch", "zq_chair", "zp_fence", "zq_firehose"], "altar": ["zq_deadplant", "zp_bench"],
+                  "camp": ["zq_firehose", "zq_cartons", "zp_bench"], "furnace": ["zp_jars"]},
+         "misc": [("zq_deadplant", 880, 1230), ("zq_cartons", 1075, 1410), ("zq_filecab", 470, 1440), ("zq_chair", 760, 1440), ("zq_cooler", 760, 1660)],
+         "fill": ["zq_cartons", "proc:pebbles", "zq_deadplant", "zb_rock2", "zq_chair", "proc:pebbles", "zq_filecab", "proc:grass"], "grove": "zb_bush"}
+LOOKS["l5"] = {"name": "橫死路口（組屋區、鈉燈、舊報紙）",
+         "g": {"base": "#3a3632", "tile": [0.74, 0.70, 0.66], "blob": [["#5a524a", 0.16], ["#0e0c0c", 0.24]],
+               "patch": [["#2e3428", 0.10], ["#3a3a30", 0.10], ["#28282a", 0.14]], "patch_n": 0.7, "puddle_n": 1.6, "puddle": "#16181c",
+               "tuft": ["#4a4a34", "#5a5a3a", "#3a3a2a", "#6a6440"], "tuft_n": 0.6,
+               "road": [["#0c0c0e", 0.04], ["#3a3a3e", 0.12], ["#4a4a50", 0.13], ["#5a5a60", 0.06]], "rut": "#1a1a1e",
+               "crack_n": 2.0, "drycrack": 0.0, "slabs": 0.6, "void": "#0e0e12",
+               "stroke": [["#5a5450", 0.20], ["#3a3634", 0.26], ["#141214", 0.24], ["#4a4a3a", 0.12], ["#1a1820", 0.20], ["#6a645a", 0.10]],
+               "tint": {"wild": [0.40, 0.06, 0.06, 0.30], "A": [0.30, 0.24, 0.10, 0.18], "B": [0.20, 0.20, 0.22, 0.18], "C": [0.08, 0.18, 0.26, 0.20]}},
+         "atmo": {"grade": [1.0, 0.90, 0.78], "fog": [0.42, 0.36, 0.30], "lamp": [1.0, 0.62, 0.28], "fx": "paper", "mist": [0.86, 0.74, 0.56, 0.07]}}
+LOOKS["l6"] = {"name": "地府集團（總部大廈、光管、碳粉）",
+         "g": {"base": "#2c302e", "tile": [0.62, 0.70, 0.66], "blob": [["#4a5450", 0.16], ["#080c0c", 0.26]],
+               "patch": [["#243028", 0.10], ["#2c3830", 0.10], ["#1e2422", 0.14]], "patch_n": 0.5, "puddle_n": 0.8, "puddle": "#101818",
+               "tuft": ["#3a4a3a", "#4a5a44", "#2c3a30", "#566050"], "tuft_n": 0.4,
+               "road": [["#0a0c0c", 0.04], ["#3c4242", 0.12], ["#4c5252", 0.13], ["#5c6262", 0.06]], "rut": "#161a1a",
+               "crack_n": 1.2, "drycrack": 0.0, "slabs": 1.0, "void": "#080c0e",
+               "stroke": [["#4a5250", 0.20], ["#2c3230", 0.26], ["#0e1212", 0.24], ["#3a4a40", 0.12], ["#141a1c", 0.20], ["#5a6460", 0.10]],
+               "tint": {"wild": [0.36, 0.04, 0.08, 0.30], "A": [0.10, 0.10, 0.14, 0.22], "B": [0.10, 0.26, 0.12, 0.20], "C": [0.30, 0.24, 0.10, 0.18]}},
+         "atmo": {"grade": [0.82, 0.96, 0.90], "fog": [0.30, 0.40, 0.36], "lamp": [0.78, 1.0, 0.88], "fx": "tube", "mist": [0.70, 0.86, 0.80, 0.08]}}
+
+# ---------------- 第 5 關（ci 4）橫死路口：甘榜推平起組屋。骨架照第 3 關（大排檔喺村南、野外區喺最南），大排檔多一行放第 9 檔 ----------------
+SH5 = 200   # 大排檔以南全部向下推 200（第三行檔）
+def _shy(p, y0=2390, d=SH5): return [p[0], p[1] + d] if p[1] >= y0 else list(p)
+def _shr(r, y0=2390, d=SH5): return [r[0], r[1] + (d if r[1] >= y0 else 0), r[2], r[3] + (d if r[3] >= y0 else 0)]
+M4 = copy.deepcopy(M2)
+M4.update({"w": 1480, "h": 2920 + SH5, "ground": "zone5_ground", "look": dict(LOOKS["l5"], key="l5"), "gate_side": "S", "cam": {"home": [740, 1300], "zoom": 1.0}})
+_z = {z["id"]: z for z in M4["zones"]}
+for z in M4["zones"]:
+    z["rect"] = _shr(z["rect"])
+    if z["type"] == "wild":
+        z["gate"]["y"] += SH5; z["boss_at"] = _shy(z["boss_at"]); z.pop("decor", None)
+_z["w_yizhuang"].update({"id": "w_carpark", "n": ["野外區　舊墳場停車場", "野外區　舊墳場停車場"],
+   "bosses": [_boss("zb_zipai", "自拍跌死鬼頭目", "n30_zipai", ["youhun", "n30_zipai", "zhiren"], 16.5),
+              {"id": "zb_pocong5", "n": ["Pocong", "Pocong"], "art": "pocong", "main": True, "chapter": [4, 1]}],
+   "decor": [["zt_sodium", 110, 2810, 110], ["zq_cones", 560, 2780, 74], ["zq_scooter", 220, 3040, 72], ["zt_sodium", 640, 3060, 110],
+             ["zq_bins", 470, 2700, 60], ["zq_cones", 300, 2700, 70], ["grave", 160, 2960, 0], ["grave", 560, 2960, 0]]})
+_z["w_gorge"].update({"id": "w_cinema", "n": ["野外區　舊戲院", "野外區　舊戲院"],
+   "bosses": [_boss("zb_chengsi", "撐死鬼頭目", "n30_chengsi", ["zhiren", "n30_chengsi", "youhun"], 17.5),
+              {"id": "zb_penanggal", "n": ["Penanggal", "Penanggal"], "art": "penanggal", "main": True, "chapter": [4, 2]}],
+   "decor": [["zt_flats", 860, 2800, 140], ["zt_sodium", 1400, 2780, 110], ["zq_newsstack", 1240, 3060, 58], ["zq_bins", 860, 3060, 60],
+             ["zq_planter", 1320, 2960, 66], ["zt_flyover", 1380, 3070, 130]]})
+_z["market"]["n"] = ["開放區　陰間大排檔（巴士總站夜市）", "開放區　陰間大排檔（巴士總站夜市）"]
+_z["A"].update({"n": ["資源區 A　拆樓竹棚", "資源區 A　拆樓竹棚"], "power": 18000, "loss": 0.3, "col": "#5a5a2a", "nofac": False,
+   "fields": {"b_bamboo": {"nodes": [[110, 470], [250, 450], [390, 476], [200, 590]], "sign": [300, 700], "n": ["拆樓竹棚", "拆樓竹棚"]}},
+   "shops": {"b_strip": {"pos": [140, 760], "need": {"b_bamboo": 3}}},
+   "stage": {"en": ["zhiren", "youhun", "zhiren"], "boss": "youhun", "p": 16}})
+_z["B"].update({"n": ["資源區 B　橋底回收站", "資源區 B　橋底回收站"], "power": 21000, "loss": 0.3, "col": "#4a4a4a",
+   "fields": {"b_newspaper": {"nodes": [[960, 470], [1080, 450], [1010, 560], [1140, 540]], "sign": [1060, 650]}},
+   "shops": {"b_pulp": {"pos": [1330, 580], "need": {"b_newspaper": 3}}},
+   "stage": {"en": ["youhun", "zhiren", "youhun"], "boss": "zhiren", "p": 17}})
+_z["C"].update({"n": ["資源區 C　舊村古井", "資源區 C　舊村古井"], "power": 24000, "loss": 0.3,
+   "fields": {"b_well": {"nodes": [[70, 1130], [190, 1150], [120, 1240]], "sign": [150, 1400], "n": ["舊村古井", "舊村古井"]}},
+   "shops": {"b_paper": {"pos": [140, 1580], "need": {"b_well": 3}}},
+   "note": ["紙寮要竹：竹由拆樓竹棚供應", "紙寮要竹：竹由拆樓竹棚供應"],
+   "stage": {"en": ["zhiren", "pocong", "zhiren"], "boss": "zhiren", "p": 18}})
+M4["barriers"] = [
+    {"k": "void", "style": "city", "rects": [[0, 0, 1480, 214], [636, 214, 844, 836], [1184, 864, 1480, 1740], [0, 1730, 300, 2440 + SH5], [1180, 1740, 1480, 2440 + SH5]]},
+    {"k": "ridge", "rect": [718, 2430 + SH5, 762, 2920 + SH5]},
+    {"k": "rail", "x": 292, "y0": 900, "y1": 1728, "gap": [1284, 1348], "key": "zt_rail"},
+    {"k": "fence", "y": 1748, "x0": 300, "x1": 1180, "gap": [710, 770], "key": "zt_rail", "seg": 92},
+    {"k": "stakes", "y": 2416 + SH5, "x0": 300, "x1": 1180, "gaps": [[485, 545], [935, 995]], "dir": -1},
+]
+M4["scenery"] = [["zt_flats", 120, 150, 150], ["zt_flats", 1340, 150, 150], ["zt_flyover", 740, 300, 150], ["zt_scaffold", 700, 700, 120],
+                 ["zt_sodium", 760, 860, 100], ["zt_flats", 1320, 1060, 140], ["zt_scaffold", 1360, 1500, 120], ["zt_sodium", 1240, 1700, 100],
+                 ["zt_flats", 120, 1880, 140], ["zt_flyover", 1340, 2000, 140], ["zt_sodium", 200, 2300, 100], ["zt_flats", 1360, 2340, 140]]
+M4.pop("gfx", None)
+M4["paths"] = [dict(pa, pts=[_shy(q) for q in pa["pts"]]) for pa in M2["paths"]]
+M4["village"] = village_at(D2X, D2Y, [740, 1770], {"banana": "willo", "scarecrow": "scarecrow"})
+_m = M4["market"]
+_m.update({"h": 2400 + SH5, "wh": 2920 + SH5, "fence_y": 2416 + SH5})
+for k in ("road", "q2", "porter", "guard_slots", "vol_slots", "vol_mid", "gates"):
+    _m[k] = [_shy(q) for q in _m[k]]
+_m["q2"] = [[740, 1942], [700, 1944], [640, 1952], [490, 1990], [490, 2180], [490, 2380], [490, 2580], [515, 2620]]
+_m["road"] = [[965, 2620], [990, 2580], [990, 2380], [990, 2180], [990, 1990], [840, 1952], [780, 1944], [740, 1870]]
+_m["st"] = {"st_waimai": [400, 2060, 5], "st_ifon": [580, 2060, 5], "st_mingbiao": [900, 2060, 5], "st_paoche": [1080, 2060, 5],
+            "st_shougongcu": [400, 2300, 5], "st_xifei": [580, 2300, 5], "st_baogu": [900, 2300, 5], "st_shoubao": [1080, 2300, 5],
+            "st_zhishan": [740, 2520, 5]}
+_C = [[740, 2160], [740, 1990], [866, 1960], [866, 1850], [770, 1850]]
+_m["paths"] = {"st_waimai": [[400, 2160]] + _C, "st_ifon": [[580, 2160]] + _C, "st_mingbiao": [[900, 2160]] + _C, "st_paoche": [[1080, 2160]] + _C,
+               "st_shougongcu": [[400, 2340], [400, 2420], [620, 2420], [620, 2160]] + _C, "st_xifei": [[580, 2340], [620, 2420], [620, 2160]] + _C,
+               "st_baogu": [[900, 2340], [860, 2420], [860, 2160]] + _C, "st_shoubao": [[1080, 2340], [1080, 2420], [860, 2420], [860, 2160]] + _C,
+               "st_zhishan": [[740, 2560], [740, 2440], [620, 2420], [620, 2160]] + _C}
+_m["vol_mid"] = [[740, 2160]]
+_dress(M4, "l5", (D2X, D2Y), _gate_blocks(740, 1770))
+
+# ---------------- 第 6 關（ci 5）地府集團：總部大廈外圍。骨架照第 2 關（大排檔喺村東一條、野外區喺東北／東南），大排檔補到 9 檔 ----------------
+M5 = copy.deepcopy(M1)
+M5.update({"ground": "zone6_ground", "look": dict(LOOKS["l6"], key="l6"), "gate_side": "E", "cam": {"home": [900, 1150], "zoom": 1.0}})
+_z = {z["id"]: z for z in M5["zones"]}
+_z["w_kgrave"].update({"id": "w_gate", "n": ["野外區　集團正門", "野外區　集團正門"],
+   "bosses": [_boss("zb_niutou", "牛頭保安主任", "niutou", ["zhiren", "niutou", "zhiren"], 20.5),
+              {"id": "zb_wuchang", "n": ["黑白無常", "黑白無常"], "art": "heiwu", "main": True, "chapter": [5, 1]}],
+   "decor": [["zt_guardbooth", 1470, 150, 130], ["zt_turnstile", 1690, 170, 120], ["zt_tubelamp", 1420, 420, 100], ["zt_tubelamp", 1760, 430, 100],
+             ["zq_firehose", 1730, 300, 64], ["zq_cartons", 1450, 300, 70], ["zt_pillar", 1590, 90, 120]]})
+_z["w_rubber"].update({"id": "w_board", "n": ["野外區　董事會走廊", "野外區　董事會走廊"],
+   "bosses": [_boss("zb_mamian", "馬面秘書長", "mamian", ["zhiren", "mamian", "youhun"], 21.5),
+              {"id": "zb_huang", "n": ["黃總", "黃總"], "art": "huang", "main": True, "chapter": [5, 2]}],
+   "decor": [["zt_pillar", 1450, 1880, 120], ["zt_pillar", 1730, 1880, 120], ["zq_filecab", 1440, 2180, 52], ["zq_chair", 1740, 2200, 56],
+             ["zq_deadplant", 1460, 2050, 56], ["zq_punch", 1740, 2050, 58], ["zt_tubelamp", 1590, 2220, 100]]})
+_z["market"]["n"] = ["開放區　陰間大排檔（集團員工飯堂）", "開放區　陰間大排檔（集團員工飯堂）"]
+_z["A"].update({"n": ["資源區 A　地庫碳粉房", "資源區 A　地庫碳粉房"], "power": 27000, "loss": 0.3, "col": "#2a2a30",
+   "fields": {"b_toner": {"nodes": [[600, 430], [720, 404], [840, 436], [680, 524]], "sign": [790, 600]}},
+   "shops": {"b_ink": {"pos": [1150, 560], "need": {"b_toner": 3}}},
+   "stage": {"en": ["zhiren", "niutou", "zhiren"], "boss": "zhiren", "p": 20}})
+_z["B"].update({"n": ["資源區 B　頂樓孟婆茶園", "資源區 B　頂樓孟婆茶園"], "power": 31000, "loss": 0.3, "col": "#2a4a32",
+   "fields": {"b_tea": {"nodes": [[90, 990], [210, 960], [320, 1000], [150, 1090], [290, 1110]], "sign": [220, 1210], "n": ["孟婆茶園", "孟婆茶園"]}},
+   "shops": {}, "nofac": True,
+   "stage": {"en": ["youhun", "mamian", "youhun"], "boss": "youhun", "p": 21}})
+_z["C"].update({"n": ["資源區 C　紙紮部禾稈倉", "資源區 C　紙紮部禾稈倉"], "power": 35000, "loss": 0.3, "col": "#6a5a2a",
+   "fields": {"b_straw": {"nodes": [[600, 1930], [700, 1905], [800, 1945], [660, 2020]], "sign": [770, 2080], "n": ["紙紮禾稈倉", "紙紮禾稈倉"]}},
+   "shops": {"b_rope": {"pos": [1150, 2010], "need": {"b_straw": 3}}},
+   "stage": {"en": ["zhiren", "niutou", "zhiren"], "boss": "zhiren", "p": 22}})
+for _b in M5["barriers"]:
+    if _b["k"] == "void": _b["style"] = "hq"
+    if _b.get("key") in ("zt_pagar",): _b["key"] = "zt_rail"
+    if _b.get("fence") == "zt_pagar": _b["fence"] = "zt_rail"
+    if _b["k"] == "belt": _b["key"] = "zt_pillar"; _b["step"] = 96
+M5["scenery"] = [["zt_pillar", 120, 210, 130], ["zt_tubelamp", 300, 470, 110], ["zt_pillar", 90, 1880, 130], ["zt_guardbooth", 320, 2140, 130],
+                 ["zt_tubelamp", 1000, 2180, 110], ["zt_pillar", 600, 120, 120], ["zt_turnstile", 1220, 150, 120]]
+M5["village"] = village_at(D1X, D1Y, [1372, 1208], {"scarecrow": "scarecrow", "grave": "grave", "banana": "willo"})
+_m = M5["market"]
+_m["st"] = {"st_mengpotang": [1510, 800, 5], "st_xizhuang": [1710, 800, 5], "st_zhiku": [1510, 1010, 5], "st_biaoge": [1710, 1010, 5],
+            "st_jiabandeng": [1710, 1200, 5], "st_tangyi": [1510, 1460, 5], "st_daka": [1710, 1460, 5], "st_shoubao": [1510, 1660, 5], "st_zhishan": [1710, 1660, 5]}
+_m["paths"] = {"st_mengpotang": [[1590, 846], [1600, 1190]], "st_xizhuang": [[1640, 846], [1604, 1190]], "st_zhiku": [[1590, 1056], [1600, 1190]],
+               "st_biaoge": [[1640, 1056], [1604, 1190]], "st_jiabandeng": [[1650, 1240], [1604, 1196]],
+               "st_tangyi": [[1638, 1500], [1638, 1196], [1570, 1196]], "st_daka": [[1640, 1500], [1640, 1196], [1570, 1196]],
+               "st_shoubao": [[1566, 1700], [1566, 1600], [1638, 1500], [1638, 1196], [1570, 1196]], "st_zhishan": [[1640, 1700], [1640, 1196], [1570, 1196]]}
+_dress(M5, "l6", (D1X, D1Y), _gate_blocks(1372, 1208))
+
 # [zone2] 資源區自然填充（唔空洞）：避開資源點、名牌、加工廠、門口、路；[圖鍵或 proc:種類, x, y, 闊]
 ZFILL = {
   1: {"A": ["zt_banana", "zb_bush", "proc:grass", "zq_cocohusk", "proc:flowers", "zt_banana"], "B": ["zb_bush", "proc:grass", "zq_latexcups", "proc:flowers", "zb_bush"],
@@ -593,10 +741,15 @@ ZFILL = {
   2: {"A": ["proc:grass", "zb_rock2", "zt_cliffpine", "proc:grass", "zq_lanternpost"], "B": ["zq_sandals", "zb_rock2", "proc:grass", "zp_deadtree", "proc:grass"],
       "C": ["zb_rock2", "proc:grass", "zq_trough", "proc:pebbles", "zq_stonetable"]},
   3: {"A": ["zt_reeds", "zt_reeds", "proc:grass", "zb_bush", "zb_rock2"], "B": ["zt_reeds", "zq_floats", "zt_reeds", "zq_nets"],
-      "C": ["zt_reeds", "zq_cocohusk", "zb_bush", "proc:grass", "zt_banana"]}}
+      "C": ["zt_reeds", "zq_cocohusk", "zb_bush", "proc:grass", "zt_banana"]},
+  4: {"A": ["zq_cones", "proc:pebbles", "zb_rock2", "zq_bins", "proc:grass"], "B": ["zq_newsstack", "zq_bins", "proc:pebbles", "zq_planter"],
+      "C": ["zb_rock2", "proc:grass", "zq_planter", "proc:pebbles", "zb_bush"]},
+  5: {"A": ["zq_tonerbox", "zq_cartons", "proc:pebbles", "zq_filecab"], "B": ["zq_deadplant", "proc:grass", "zb_bush", "zq_chair", "proc:grass"],
+      "C": ["zq_cartons", "proc:pebbles", "zq_firehose", "zb_rock2", "proc:grass"]}}
 FW_ = {"zt_banana": (56, 70), "zb_bush": (60, 76), "zq_cocohusk": (52, 60), "zq_latexcups": (52, 60), "zb_rock2": (44, 56), "zt_cliffpine": (64, 80),
        "zq_lanternpost": (44, 50), "zq_sandals": (44, 52), "zp_deadtree": (56, 68), "zq_trough": (58, 66), "zq_stonetable": (58, 66), "zt_reeds": (54, 70),
-       "zq_floats": (48, 56), "zq_nets": (60, 70)}
+       "zq_floats": (48, 56), "zq_nets": (60, 70), "zq_cones": (60, 70), "zq_bins": (52, 60), "zq_newsstack": (48, 56), "zq_planter": (58, 66),
+       "zq_tonerbox": (60, 70), "zq_cartons": (60, 70), "zq_filecab": (44, 50), "zq_deadplant": (48, 56), "zq_chair": (46, 52), "zq_firehose": (54, 60)}
 def _zfill(M, ci):
     rnd = random.Random(7000 + ci)
     PS = _paths_samples(M)
@@ -628,7 +781,7 @@ def _zfill(M, ci):
                 props.append([k, round(x), round(y), round(w)]); bl.append((box[0] - 6, box[1] - 10, box[2] + 6, box[3] + 4))
         props.sort(key=lambda e: e[2])
         z["props"] = props
-_zfill(M1, 1); _zfill(M2, 2); _zfill(M3, 3)
+_zfill(M1, 1); _zfill(M2, 2); _zfill(M3, 3); _zfill(M4, 4); _zfill(M5, 5)
 
 # 劇情事件 id（zone 線 ↔ 劇情線 zstory）：每張圖嘅事件清單（id＝zone id／boss id）
 def _events(M):
@@ -644,7 +797,7 @@ def _events(M):
         if z["type"] == "res" and z.get("shops"): ev.append({"kind": "factory", "id": z["id"], "bid": list(z["shops"])[0]})
     ev.append({"kind": "liberate", "id": ""})
     return ev
-for _M in (M0, M1, M2, M3): _M["events"] = _events(_M)
+for _M in (M0, M1, M2, M3, M4, M5): _M["events"] = _events(_M)
 
 # ================= [fogfix] 出村門外跟主線逐步解霧（zone_data.gd cond_ok；報告列清楚等老闆確認） =================
 # 第 1 關：出村門外由開局起全部黑霧；每區喺「佢自己對應嗰個主線任務」完成先散（hint 由遊戲按任務名自動生成）
@@ -666,11 +819,11 @@ def _reveal(M, first):
         else:       # 第 2–4 關：拔營到埗 → 大排檔即開；野外區喺該關開場劇情（map_enter）後開；資源區跟劇情逐個開
             if t == "wild": z["reveal"] = {"enter": True, "hint": H_ENTER}
             elif t == "res": z["reveal"] = {"beat_t": RES_BEAT[zid]}   # hint 由遊戲按劇情標題自動生成
-_reveal(M0, True); _reveal(M1, False); _reveal(M2, False); _reveal(M3, False)
+_reveal(M0, True); _reveal(M1, False); _reveal(M2, False); _reveal(M3, False); _reveal(M4, False); _reveal(M5, False)
 
 _dress(M0)
 
-D = {"v": 1, "maps": {"0": M0, "1": M1, "2": M2, "3": M3}}
+D = {"v": 1, "maps": {"0": M0, "1": M1, "2": M2, "3": M3, "4": M4, "5": M5}}
 
 # ================= [paddyfix] 槐樹林／稻田：冇「似樹似田但撳唔到」嘅裝飾 =================
 #   1) 任何裝飾都唔可以用可砍槐樹（tree／tree_bare／stump）或可割稻田（paddy／paddy_cut）嘅圖

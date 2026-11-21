@@ -84,6 +84,7 @@ func _drive(sim, b: Dictionary) -> void:
 		"all_done":
 			for i in MD.goals(sim.ci()).size(): if not sim.goal_claimed(i): sim.st().goals_done.append(float(i))
 			_S().cleared["%d-3" % (sim.ci() + 1)] = true
+			load("res://game/zone/zone_data.gd").mark_all_bosses(int(sim.ci()))   # [zone56] 第 6 關都分區：野外王全部打低先算 all_done
 		"inf_below": MVW.ws().inf[str(sim.ci())] = n - 1.0
 		"wave": MVW.ws().wn[str(sim.ci())] = n
 

@@ -103,6 +103,7 @@ def zone_check(tag, ci, beats, ZS, zm):
         if w.get("kind") == "boss_win":
             for nm, k in ZS.RECRUIT.items():
                 if ZS.MAIN_BOSS.get(ci) == w.get("id") and k in str(w.get("id")): own = nm
+            own = getattr(ZS, "JOIN_AT", {}).get(w.get("id"), own)
         for l in ln:
             if not isinstance(l, list) or len(l) < 3: continue
             if l[0] in ZS.RECRUIT and l[0] != own and (len(l) < 4 or not re.match(r"^(has|seen):", l[3])):

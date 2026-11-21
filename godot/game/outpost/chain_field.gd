@@ -462,6 +462,7 @@ static func _proc(ctx: Ctx, kind: String, x: float, y: float, w: float, h: float
 static func draw_sign(ctx: Ctx, bid: String, lv: int, un: bool, nw: int) -> void:
 	var p = sign_pos(bid); var x = p.x; var y = p.y
 	var nm = T(M.bld(bid).get("n", bid))
+	if ZD.on() and ZD.field_def(bid).get("n") is Array: nm = ZD.T(ZD.field_def(bid).n)   # [zone56] 同一種田喺唔同關有唔同叫法（例如枯井→舊村古井）
 	ctx.save()
 	ctx.font = "900 14px " + Art.SERIF
 	var w = maxf(64.0, ctx.measureText(nm).width + 18)

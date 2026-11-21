@@ -180,7 +180,9 @@ func all(t) -> void:
 	var inside = true
 	for r in rects: if r.position.x < 0 or r.end.x > 390 or r.position.y < CB.FENCE_Y: inside = false
 	_chk("全部拓展建築唔疊", not overlap, sh.size())
-	_chk("全部喺 390 寬內、喺舊村子（1130）以下", inside)
+	# [zone56] 六張圖全部分區：舊豎條擺位唔再用（分區擺位由 zone_test 驗）
+	if load("res://game/zone/zone_data.gd").mdef(5).size() > 0: inside = true
+	_chk("全部喺 390 寬內、喺舊村子（1130）以下（或該圖已分區）", inside)
 	_chk("世界加長", CB.world_h() > 1130 + 100, CB.world_h())
 	S.mv["ci"] = 0.0
 	_chk("第一張圖只顯示已解鎖＋下一張圖預告", CB.shown().size() < CB.new_blds().size(), "%d/%d" % [CB.shown().size(), CB.new_blds().size()])

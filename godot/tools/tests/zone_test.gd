@@ -422,8 +422,10 @@ func _run(t, shots: bool) -> void:
 	if shots: await _shots(t, m)
 	# ================= 8. 第 2 張圖：舊豎條布局照用 =================
 	sim.st().ci = 4.0; sc._after_move(); await _w(t, 1.0)
-	_chk("第 5 張圖：冇 zones 定義 → 舊豎條（POS 還原）", not ZD.on() and not nv.zone and J.num(J.G.POS.gate[1]) == 118.0 and J.num(J.G.W) == 390.0)
-	_chk("第 5 張圖：大排檔用舊 layout", not sc.zone and float(MD.layout(4).get("w", 390)) == 390.0)
+	_chk("第 5 張圖：[zone56] 已有 zones 定義 → 分區", ZD.on() and nv.zone and sc.zone and ZD.applied() == "4")
+	var nz = 0
+	for mi in MD.maps_n(): if ZD.mdef(mi).size() > 0: nz += 1
+	_chk("全部地圖都有分區定義", nz == MD.maps_n() and MD.maps_n() == 6, nz)
 	sim.st().ci = 0.0; sc._after_move(); await _w(t, 1.0)
 	_chk("返第 1 張圖：再套分區", ZD.on() and nv.zone and J.num(J.G.POS.gate[1]) == 1152.0)
 	if not OS.has_environment("GB_ZONE1_ONLY"): await maps_check(t, m, shots)   # [zone2] 第 2–4 關
@@ -465,7 +467,7 @@ func _shots(t, m) -> void:
 
 # ================= [zone2] 第 2–4 關（ci 1–3）：每關都驗 =================
 const SIDE_OF := {"0": "N", "1": "E", "2": "S", "3": "W"}
-const LOOK_OF := {"0": "l1", "1": "l2", "2": "l3", "3": "l4"}
+const LOOK_OF := {"0": "l1", "1": "l2", "2": "l3", "3": "l4", "4": "l5", "5": "l6"}
 class StoryStub extends RefCounted:
 	var log: Array = []
 	var held: Array = []
@@ -482,15 +484,26 @@ class StoryStub extends RefCounted:
 func _goto(t, m, c: int) -> void:
 	var sc = m.mv_view
 	sc.sim.st().ci = float(c); sc._after_move(); await _w(t, 1.2)
+# [zone56] 第 5、6 關：主線第 2 段（Pocong／黑白無常）都喺野外王度打，所以容許 [c,1]＋[c,2]
+func _mains_ok(mains: Array, c: int) -> bool:
+	var st = []
+	for x in mains:
+		if int(x[0]) != c: return false
+		st.append(int(x[1]))
+	st.sort()
+	return st == [2] or (c >= 4 and st == [1, 2])
 func maps_check(t, m, shots: bool) -> void:
 	var sides = {}
 	var looks = {}
 	for c in [0, 1, 2, 3]:
 		var Z = ZD.mdef(c)
-		sides[str(Z.get("gate_side", ""))] = true; looks[str(Z.get("look", {}).get("key", ""))] = true
-	_chk("四關出村門喺唔同邊（北／東／南／西）", sides.size() == 4 and sides.has("N") and sides.has("E") and sides.has("S") and sides.has("W"), sides.keys())
-	_chk("四關各自 look（l1–l4）", looks.size() == 4, looks.keys())
-	for c in [1, 2, 3]: await map_check(t, m, c, shots)
+		sides[str(Z.get("gate_side", ""))] = true
+	for c in [0, 1, 2, 3, 4, 5]:
+		looks[str(ZD.mdef(c).get("look", {}).get("key", ""))] = true
+	_chk("頭四關出村門喺唔同邊（北／東／南／西）", sides.size() == 4 and sides.has("N") and sides.has("E") and sides.has("S") and sides.has("W"), sides.keys())
+	_chk("第 5、6 關出村門（南／東）", str(ZD.mdef(4).get("gate_side", "")) == "S" and str(ZD.mdef(5).get("gate_side", "")) == "E", [ZD.mdef(4).get("gate_side"), ZD.mdef(5).get("gate_side")])
+	_chk("六關各自 look（l1–l6）", looks.size() == 6, looks.keys())
+	for c in [1, 2, 3, 4, 5]: await map_check(t, m, c, shots)
 	await migrate_check(t, m)
 	await _goto(t, m, 0)
 func map_check(t, m, c: int, shots: bool) -> void:
@@ -502,7 +515,7 @@ func map_check(t, m, c: int, shots: bool) -> void:
 	_chk(tag + "分區模式＋套用", ZD.on() and nv.zone and ZD.applied() == str(c) and sc.zone, ZD.applied())
 	_chk(tag + "look＝" + LOOK_OF[str(c)], ZV.lkey() == LOOK_OF[str(c)] and ResourceLoader.exists("res://assets/img/%s_a.webp" % Z.ground) and nv.ysort.modulate == ZV.grade())
 	_chk(tag + "世界大細", J.num(J.G.W) == float(Z.w) and J.num(J.G.WH) == float(Z.h) and nv.zone_cam().world == Vector2(Z.w, Z.h))
-	_chk(tag + "大排檔台＝該關 STATIONS", MD.stations(c).size() == (7 if c == 1 else 8) and Z.market.st.size() == MD.stations(c).size(), MD.stations(c))
+	_chk(tag + "大排檔台＝該關 STATIONS", MD.stations(c).size() == (7 if c == 1 else (9 if c >= 4 else 8)) and Z.market.st.size() == MD.stations(c).size(), MD.stations(c))
 	var POS = J.G.get("POS"); var vr = ZD.zrect("village"); var mr = ZD.zrect("market")
 	# ---- 布局 ----
 	var items = []
@@ -693,7 +706,7 @@ func map_check(t, m, c: int, shots: bool) -> void:
 	var mains = []
 	for z in ZD.of_type("wild"):
 		for b in z.bosses: if J.t(b.get("main")): mains.append(b.chapter)
-	_chk(tag + "主 Boss＝世界地圖第 %d 章原 Boss 關卡" % (c + 1), mains.size() == 1 and int(mains[0][0]) == c and int(mains[0][1]) == 2, mains)
+	_chk(tag + "主 Boss＝世界地圖第 %d 章原 Boss 關卡" % (c + 1), _mains_ok(mains, c), mains)
 	var w0z = str(ZD.of_type("wild")[0].id)
 	ZD.unmark_bosses(c)
 	var had = J.t(S.cleared.get("%d-3" % (c + 1)))
@@ -716,7 +729,7 @@ func map_check(t, m, c: int, shots: bool) -> void:
 	S.zone.sent = {}; ZD._watch_t = 5; ZD.watch(Rect2())
 	for i in MD.goals(c).size(): if not sim.goal_claimed(i): sim.st().goals_done.append(float(i))
 	S.cleared["%d-3" % (c + 1)] = true
-	_chk(tag + "全部王打低 → 解放、可以拔營、liberate 事件", ZD.all_bosses_done() and sim.can_move() and stub.has_ev("liberate"))
+	_chk(tag + "全部王打低 → 解放、可以拔營、liberate 事件", ZD.all_bosses_done() and (sim.can_move() or c == MD.maps_n() - 1) and stub.has_ev("liberate"))
 	ZD.unmark_bosses(c); sim.st().goals_done = []
 	if not had: S.cleared.erase("%d-3" % (c + 1))
 	# ---- 點擊 ----
