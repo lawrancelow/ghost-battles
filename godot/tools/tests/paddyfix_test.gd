@@ -67,6 +67,10 @@ func _paddy_vis(p: Vector2) -> Rect2:
 	var im = Spr.get_tex("paddy"); var h = 56.0 * im.get_height() / im.get_width()
 	return Rect2(p.x - 28.0, p.y + 9.0 - h, 56.0, h)
 
+func _diag(m, V) -> String:
+	var H = V.hero; var st = J.G.get("Story"); var UI = J.G.get("UI")
+	return "hero=(%d,%d) tx=(%d,%d) tg=%s act=%s zq=%d walking=%s story=%s modal=%s cur=%s" % [J.num(H.x), J.num(H.y), J.num(H.get("tx")), J.num(H.get("ty")), H.get("target"), H.get("act"), (H.get("zq") as Array).size() if H.get("zq") is Array else -1, H.get("walking"),
+		J.t(J.mc(st, "busy", [])) if st != null else null, J.t(J.mc(UI, "modalOpen", [])) if UI != null else null, m.get("story").get("cur") != null if m.get("story") else null]
 func _reset_hero(V) -> void:
 	var H = V.hero; var hp = ZD.v2(ZD.cur().village.hero)
 	H.x = hp.x; H.y = hp.y; H.tx = hp.x; H.ty = hp.y; H.act = null; H.target = null; H["zq"] = []; H.walking = false
@@ -129,12 +133,17 @@ func _level(t, m, c: int) -> void:
 		var vr = _paddy_vis(ZD.v2(PP[i]))
 		cam.center_on(vr.get_center()); await _w(t, 0.1)
 		_unblock(m)
+		var pre = _diag(m, V)
 		nv.zone_tap(nv.zone_w2s(vr.get_center()))
-		for k in 120:
+		var post = _diag(m, V)
+		var dl = Time.get_ticks_msec() + 90000   # 實時 90 秒上限（機慢、幀率低時 dt 被夾，遊戲時間行得慢）
+		for k in 100000:
+			if Time.get_ticks_msec() > dl: break
 			await _w(t, 0.1)
 			if not J.t(S.paddy[i]): break
 			if k % 10 == 9: _unblock(m)
 		if not J.t(S.paddy[i]): got.append(i); S.paddyRegrow[i] = 999.0   # 截圖時唔好生返
+		else: _p("diag paddy %d\n  pre  %s\n  post %s\n  end  %s" % [i, pre, post, _diag(m, V)])
 	_chk(tag + "6 格稻田全部撳得、行得到、割得", got.size() == 6, got)
 	var cut = []
 	for i in TP.size():
@@ -143,11 +152,14 @@ func _level(t, m, c: int) -> void:
 		cam.center_on(vr.get_center()); await _w(t, 0.1)
 		_unblock(m)
 		nv.zone_tap(nv.zone_w2s(vr.get_center()))
-		for k in 200:
+		var dl = Time.get_ticks_msec() + 120000
+		for k in 100000:
+			if Time.get_ticks_msec() > dl: break
 			await _w(t, 0.1)
 			if int(J.num(S.trees[i])) <= 0: break
 			if k % 10 == 9: _unblock(m)
 		if int(J.num(S.trees[i])) <= 0: cut.append(i); S.treeRegrow[i] = 999.0
+		else: _p("diag tree %d %s" % [i, _diag(m, V)])
 	_chk(tag + "8 棵槐樹全部撳得、行得到、砍得", cut.size() == 8, cut)
 	Engine.time_scale = 1.0
 	_reset_hero(V)
