@@ -110,11 +110,11 @@ func draw_ruin(ctx: Ctx, x: float, y: float, name: String, can: bool, seed: int,
 	if not can: return
 	var bob = sin(t * 2.4) * 1.5
 	ctx.save(); ctx.font = "900 14px %s" % SERIF; var w = maxf(76, ctx.measureText(name).width + 20)
-	rr(ctx, x - 1.5, y - 46, 3, 26, 1, "#5a4030")
-	rr(ctx, x - w / 2, y - 76 + bob, w, 34, 3, "#e6d2a0", "#5a4030", 1.5)
+	rr(ctx, x - 1.5, y - 26, 3, 22, 1, "#5a4030")
+	rr(ctx, x - w / 2, y - 50 + bob, w, 34, 3, "#e6d2a0", "#5a4030", 1.5)
 	ctx.textAlign = "center"; ctx.textBaseline = "middle"
-	ctx.fillStyle = "#2b1d12"; ctx.fillText(name, x, y - 66 + bob)
-	ctx.fillStyle = "#b8321f"; ctx.font = "900 12px sans-serif"; ctx.fillText("可重建", x, y - 51 + bob)
+	ctx.fillStyle = "#2b1d12"; ctx.fillText(name, x, y - 40 + bob)
+	ctx.fillStyle = "#b8321f"; ctx.font = "900 12px sans-serif"; ctx.fillText("可重建", x, y - 25 + bob)
 	ctx.restore()
 
 const PERCH := [[-0.22, 0.40, 1], [0.24, 0.30, -1]]
