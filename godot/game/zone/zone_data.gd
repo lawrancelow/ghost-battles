@@ -493,6 +493,7 @@ static func watch(view: Rect2) -> void:
 		if tp != "res" and tp != "wild": continue
 		var r = rect(z.rect); var a = r.intersection(view).get_area()
 		if not revealed(str(z.id)): continue   # [fogfix] 未解霧（未介紹）嘅區唔發 zone_seen
+		if gate_on and z.get("reveal") is Dictionary: continue   # [fogfix] 有解霧條件嘅區：zone_seen 喺解霧嗰刻發（reveal_poll），唔跟鏡頭
 		if view.has_point(r.get_center()) or a >= minf(r.get_area(), view.get_area()) * 0.3: _ev_once("zone_seen", str(z.id))
 	for z in of_type("res"):
 		if not owned(str(z.id)): continue
@@ -540,6 +541,10 @@ static func reveal_hint(zid: String, c := -1) -> String:
 			var tx = str(q.get("text", ""))
 			if str(zone(zid, c).get("type")) == "market": return L("出村門未開：完成主線任務「%s」先出得村", "出村門未開放：完成主線任務「%s」後才能出村") % tx
 			return L("完成主線任務「%s」後開放", "完成主線任務「%s」後開放") % tx
+	if r is Dictionary and r.get("beat_t") != null:   # 「睇完劇情「甘榜開檔」後開放」
+		var bb = beat_of(str(r.beat_t), ci() if c < 0 else c)
+		var tl = bb.get("scene", {}).get("title") if bb.get("scene") is Dictionary else null
+		if tl != null and T(tl) != "": return L("睇完劇情「%s」先開放", "看完劇情「%s」後開放") % T(tl)
 	if r is Dictionary and r.get("hint") != null: return T(r.hint)
 	return L("呢度仲未開放，跟住主線任務行落去就會開", "這裡還沒開放，跟著主線任務走就會開放")
 static func _quest(t: String, key: String) -> Dictionary:
@@ -559,6 +564,19 @@ static func _enter_done(c: int) -> bool:
 	if not MS.auto_on: return true
 	var eb = MS.enter_beat(c)
 	return eb.is_empty() or MS.is_seen(str(eb.get("id", "")))
+# "beat_t"：呢關第一個 when.t＝佢嘅大排檔劇情（open／unlock／sold…）播完／跳過（冇劇情線／自動播關 → 當播完）
+static func beat_of(t: String, c: int) -> Dictionary:
+	var MS = _story()
+	if MS == null or hook != null: return {}
+	for b in MS.beats(c):
+		if b is Dictionary and b.get("when") is Dictionary and str(b.when.get("t", "")) == t: return b
+	return {}
+static func _beat_done(t: String, c: int) -> bool:
+	var MS = _story()
+	if MS == null or hook != null: return true
+	if not MS.auto_on: return true
+	var b = beat_of(t, c)
+	return b.is_empty() or MS.is_seen(str(b.get("id", "")))
 static func cond_ok(zid: String, c := -1) -> bool:
 	var z = zone(zid, c); var cc = ci() if c < 0 else c
 	var r = z.get("reveal")
@@ -583,6 +601,7 @@ static func cond_ok(zid: String, c := -1) -> bool:
 		if i2 >= 0 and qi >= i2: return true
 		if str(r.quest_at[0]) == "stage" and s.get("cleared") is Dictionary and J.t(s.cleared.get(str(r.quest_at[1]))): return true
 	if J.t(r.get("enter")) and _enter_done(cc): return true
+	if r.get("beat_t") != null and _beat_done(str(r.beat_t), cc): return true
 	if r.get("with") != null and str(r.with) != zid and revealed(str(r.with), c): return true
 	return false
 # 解霧檢查（ZD.poll 每格、watch 每 6 格；quiet＝唔播動畫／橫額）
@@ -603,6 +622,7 @@ static func reveal_poll(force := false, quiet := false) -> Array:
 				REVEALED[_k(zid, c)] = Time.get_ticks_msec()
 				REV_NEWS.append([zid, c])
 				ev("reveal", zid)
+				if str(z.get("type")) in ["res", "wild"]: _ev_once("zone_seen", zid)   # 介紹劇情：解霧先排（劇情線逐個播，唔連播）
 	if out.size(): _save()
 	return out
 # 測試／除錯：成張圖即刻解

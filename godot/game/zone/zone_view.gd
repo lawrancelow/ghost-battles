@@ -663,8 +663,22 @@ static func draw_gate_fog(c: CanvasItem, ctx: Ctx, t: float, vr: Rect2) -> void:
 		var da = _det(nv) if nv != null else 1.0
 		if da > 0.0 or tp == "market":
 			ctx.globalAlpha = maxf(da, 1.0 if tp == "market" else 0.0)
-			_txt(ctx, ZD.reveal_hint(zid), cx, py + px * 1.5, maxi(14, int(px * 0.85)), "#ffe2a8")
+			_hint_box(ctx, ZD.reveal_hint(zid), cx, py + px * 1.0, maxi(14, int(px * 0.85)))
 			ctx.globalAlpha = 1.0
+# 提示：深色底框＋最多兩行（「：」後面斷行；太長就對半），唔會出界
+static func _hint_box(ctx: Ctx, s: String, cx: float, y: float, px: int) -> void:
+	var ls = []
+	var i = s.find("：")
+	if i > 0: ls = [s.substr(0, i + 1), s.substr(i + 1)]
+	elif s.length() > 16: ls = [s.substr(0, int(ceil(s.length() / 2.0))), s.substr(int(ceil(s.length() / 2.0)))]
+	else: ls = [s]
+	ctx.font = "900 %dpx %s" % [px, Art.SERIF]
+	var w = 0.0
+	for l in ls: w = maxf(w, ctx.measureText(l).width)
+	var lh = px * 1.3
+	var h = lh * ls.size() + px * 0.6
+	Art.rr(ctx, cx - w / 2 - px * 0.6, y, w + px * 1.2, h, px * 0.3, "rgba(14,8,12,.88)", "rgba(255,210,140,.45)", 1.2)
+	for k in ls.size(): _txt(ctx, ls[k], cx, y + px * 0.3 + lh * (k + 0.5), px, "#ffe2a8")
 static func gate_pos() -> Vector2: return ZD.v2(ZD.cur().get("village", {}).get("POS", {}).get("gate", [0, 0]))
 static func gate_locked_hit(p: Vector2) -> bool:   # 撳中鎖住嘅出村門（大排檔未開）
 	if ZD.revealed("market"): return false
@@ -819,9 +833,10 @@ static func eat_news(main) -> void:
 			if tp == "market": mk.append(nm)
 			elif tp == "wild": wl.append(nm)
 			else: rs.append(nm)
-		if main != null:
+		if main != null:   # 解霧：出 toast（唔用大橫額，免得蓋住霧散動畫）
 			var head = ZD.L("出村門外嘅路開咗！", "出村門外的路開了！") if mk.size() else (ZD.L("霧散咗！", "霧散了！") if wl.size() else ZD.L("發現新地方！", "發現新地方！"))
-			main.show_banner(head + "、".join(mk + wl + rs))
+			if main.has_method("show_toast"): main.show_toast(head + "、".join(mk + wl + rs))
+			else: main.show_banner(head + "、".join(mk + wl + rs))
 	while ZD.NEWS.size():
 		var r = ZD.NEWS.pop_front()
 		if main == null: continue

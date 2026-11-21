@@ -605,6 +605,7 @@ func _sync_chain() -> void:
 	for b in sh:
 		if CB.CF.is_field(b): _sync_field(b); continue   # [village2] 資源田：一個個資源點＋田名牌
 		var p = CB.pos(b); var st = str(ws.get(b, "idle")); var lvv = CB.lv(b); var un = CB.unlocked(b)
+		if zone and _fogged_res(p): continue   # [fogfix] 未佔領（黑霧）資源區入面嘅加工廠／地盤牌唔畫（之前透過黑霧撞住鎖／戰力字）
 		var bb: String = b
 		_static("cb_" + b, p.y, [lvv, st, un, DB.lang], st == "work" or st == "starve", func(ctx): _chain_bld(ctx, bb, p.x, p.y, lvv, st, un))
 
@@ -623,7 +624,12 @@ func _sync_field(b: String) -> void:
 		_static("cn_%s_%d" % [b, i], float(nd.y), [hpv, snappedf(g, 0.05), un, shk], anim, func(ctx): CF.draw_node(ctx, bb, ndd, t, not un))
 	var sp = CF.sign_pos(b); var nw = CB.workers(b).size()
 	var b2 = b
+	if zone and _fogged_res(sp): return   # [fogfix] 未佔領（黑霧）資源區入面嘅田名牌唔畫
 	_static("cs_" + b, sp.y, [lvv, un, nw, DB.lang], false, func(ctx): CF.draw_sign(ctx, b2, lvv, un, nw))
+
+func _fogged_res(p: Vector2) -> bool:
+	var fz = ZD.zone_at(p)
+	return fz != "" and str(ZD.zone(fz).get("type", "")) == "res" and not ZD.owned(fz)
 
 func _txt(ctx: Ctx, s: String, x: float, y: float, col := "#f6e2b0", px := FONT_PX, outline := "rgba(30,16,8,.95)") -> void:
 	ctx.font = "900 %dpx %s" % [px, Art.SERIF]; ctx.textAlign = "center"; ctx.textBaseline = "middle"
