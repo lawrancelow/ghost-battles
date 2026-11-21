@@ -385,23 +385,23 @@ func _draw_mist(c: CanvasItem) -> void:
 
 # [souls14] 村入面半透明亡魂慢慢飄（純氣氛，唔撳得、唔影響玩法）：每隻有自己路線，隔一陣淡入淡出
 #   專登新畫嘅亡魂（有樣貌、冇腳、下身一縷煙）；鬼尾尾段再淡出，似飄緊
-const SOUL_N := 7
-const SOUL_ART := ["soul_a", "soul_b", "soul_c", "soul_d", "soul_f", "soul_a", "soul_b"]   # 新畫：唐裝老伯、長髮女子、竹笠農夫、旗袍婦人、提燈阿婆
+const SOUL_N := 12
+const SOUL_ART := ["soul_a", "soul_b", "soul_c", "soul_d", "soul_f", "soul_g", "soul_h", "soul_i", "soul_j", "soul_k", "soul_l", "soul_m", "soul_n", "soul_p", "soul_q", "soul_r"]   # 專登新畫嘅 16 隻亡魂（全部成年人／老人）
 const SOUL_SLICES := 10
 func _draw_wander_souls(c: CanvasItem) -> void:
 	var vr = Rect2(0, 150, W, WH - 150)
 	if zone: vr = ZD.zrect("village").grow(-30)
 	var top = cam_y - 80; var bot = cam_y + size.y / sc + 80
 	for i in SOUL_N:
-		var key = SOUL_ART[i % SOUL_ART.size()]
-		if not Spr.ok(key): continue
-		var im = Spr.get_tex(key)
 		var ph = i * 2.399
 		var per = 16.0 + fmod(i * 5.3, 9.0)
 		var k = fmod(t + i * 7.1, per) / per          # 0→1 一個出現週期
 		var a = pow(sin(k * PI), 2.0) * 0.5
 		if a < 0.01: continue
-		var cyc = floor((t + i * 7.1) / per)          # 每次重新出現換個位
+		var cyc = floor((t + i * 7.1) / per)          # 每次重新出現換個位、換隻鬼
+		var key = SOUL_ART[(i + int(cyc) * 5) % SOUL_ART.size()]
+		if not Spr.ok(key): continue
+		var im = Spr.get_tex(key)
 		var bx = vr.position.x + fmod(abs(sin(cyc * 12.9898 + ph) * 43758.5453), 1.0) * vr.size.x
 		var by = vr.position.y + fmod(abs(sin(cyc * 78.233 + ph * 3.1) * 12345.678), 1.0) * vr.size.y
 		var dx = sin(t * 0.21 + ph) * 46.0 + (k - 0.5) * 70.0 * (1.0 if i % 2 == 0 else -1.0)
