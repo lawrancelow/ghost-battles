@@ -1,0 +1,7 @@
+#skip suite
+cd /home/claude && bash setup/prep.sh 1b3bfac /tmp/new11 0.10.1 > /tmp/prep15.log 2>&1; echo "prep SE $(grep -c 'SCRIPT ERROR' /tmp/prep15.log)"; ls -la --time-style=+%H:%M /tmp/new11/Linux.pck
+T=~/.local/share/godot/export_templates/4.3.stable/linux_debug.x86_64; PT=/tmp/v40; rm -rf $PT; mkdir -p $PT/xa $PT/xb $PT/t; SRC=/home/claude/ghost-battles/godot/tools/tests; cp $SRC/full_run.gd $SRC/l3_play.gd $SRC/l1_pt_play.gd $PT/t/; sed -i "s#res://tools/tests/#$PT/t/#g" $PT/t/*.gd
+echo "[[\"wait\",3],[\"gdrun\",\"$PT/t/full_run.gd\",\"all\"],[\"quit\"]]" > $PT/full.json; echo '[["wait",420],["quit"]]' > $PT/st.json
+cd $PT; env XDG_DATA_HOME=$PT/xb GB_UPDATE_URL=http://127.0.0.1:8799/none.json GB_SELFTEST=1 GB_TEST=$PT/st.json timeout 600 xvfb-run -a -s '-screen 0 450x975x24' $T --main-pack /tmp/new11/Linux.pck --rendering-driver opengl3 > $PT/st.log 2>&1
+F=$(find $PT/xb -name selftest.json | head -1); python3 -c "import json; d=json.load(open('$F')); r=d.get('res',{}); print('selftest', len(r), {k:v for k,v in r.items() if not str(v).startswith('OK') and k!='info'})"; echo "SE $(grep -c 'SCRIPT ERROR' $PT/st.log)"
+env XDG_DATA_HOME=$PT/xa GB_UPDATE_URL=http://127.0.0.1:8799/none.json GB_TEST=$PT/full.json timeout 1500 xvfb-run -a -s '-screen 0 450x975x24' $T --main-pack /tmp/new11/Linux.pck --rendering-driver opengl3 > $PT/full.log 2>&1; grep "\[full\] done" $PT/full.log; echo "full SE $(grep -c 'SCRIPT ERROR' $PT/full.log)"

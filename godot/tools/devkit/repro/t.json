@@ -1,0 +1,1 @@
+[["wait",3],["import","/tmp/gift/GiftSave_Player1.txt"],["storyskip",30],["wait",3],["storyskip",30],["gdrun","/tmp/repro/r.gd","all"],["quit"]]
