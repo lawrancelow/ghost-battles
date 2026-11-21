@@ -408,7 +408,7 @@ func _draw_wander_souls(c: CanvasItem) -> void:
 		var x = clampf(bx + dx, vr.position.x, vr.end.x)
 		var y = clampf(by + sin(t * 0.37 + ph * 2.0) * 22.0, vr.position.y, vr.end.y) - 22.0 - sin(t * 1.6 + ph) * 6.0
 		if y < top or y > bot: continue
-		var h = 84.0 + fmod(i * 7.0, 16.0); var w = h * im.get_width() / im.get_height()
+		var h = 44.0 + fmod(i * 3.0, 6.0) - 3.0; var w = h * im.get_width() / im.get_height()   # 同主角差唔多大（主角 CHAR_H 58 × 村內 0.72 ≈ 42）
 		var flip = cos(t * 0.21 + ph) * (1.0 if i % 2 == 0 else -1.0) < 0.0
 		c.draw_texture_rect(PtGfx.RAD, Rect2(x - w * 0.9, y - h * 1.0, w * 1.8, h * 1.1), false, Color(0.70, 0.82, 0.90, a * 0.30))
 		var tint = Color(0.86, 0.92, 0.98)

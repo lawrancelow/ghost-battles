@@ -554,7 +554,7 @@ static func _rgba(hex: String, a: float) -> String:
 #   已開放＝中央村、已解霧嘅大排檔／野外區、已介紹嘅資源區；格仔 32px，逐行合併，狀態變先重算。
 const GAP_CELL := 32.0
 const GAP_NEAR := 60.0      # 已開放區周圍留幾多唔蓋
-const GAP_NEAR_VIL := 16.0  # 中央村：差唔多貼邊（村外山石樹林都蓋）
+const GAP_NEAR_VIL := 40.0  # 中央村：貼邊（村外山石樹林都蓋，但柵欄同村邊唔好蓋住主角）
 const GAP_PAD := 14   # 世界邊外面都蓋（鏡頭睇到嘅界外山石）
 static var _gap_key := ""
 static var _gap_runs: Array = []
