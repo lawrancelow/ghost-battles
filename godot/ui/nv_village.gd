@@ -380,6 +380,39 @@ func _draw_mist(c: CanvasItem) -> void:
 		if my < cam_y - 100 or my > cam_y + size.y / sc + 100: continue
 		var mc = ZV.mist_col() if zone else Color(200 / 255.0, 210 / 255.0, 200 / 255.0, 0.06)   # [zone2] 每關霧色
 		c.draw_texture_rect(PtGfx.RAD, Rect2(mx - 90, my - 90, 180, 180), false, mc)
+	_draw_wander_souls(c)
+
+# [souls14] 村入面半透明亡魂慢慢飄（純氣氛，唔撳得、唔影響玩法）：每隻有自己路線，隔一陣淡入淡出
+const SOUL_N := 7
+func _draw_wander_souls(c: CanvasItem) -> void:
+	if not Spr.ok("youhun"): return
+	var im = Spr.get_tex("youhun")
+	var vr = Rect2(0, 150, W, WH - 150)
+	if zone: vr = ZD.zrect("village").grow(-30)
+	var top = cam_y - 80; var bot = cam_y + size.y / sc + 80
+	for i in SOUL_N:
+		var ph = i * 2.399
+		var per = 16.0 + fmod(i * 5.3, 9.0)
+		var k = fmod(t + i * 7.1, per) / per          # 0→1 一個出現週期
+		var a = pow(sin(k * PI), 2.0) * 0.34
+		if a < 0.01: continue
+		var cyc = floor((t + i * 7.1) / per)          # 每次重新出現換個位
+		var bx = vr.position.x + fmod(abs(sin(cyc * 12.9898 + ph) * 43758.5453), 1.0) * vr.size.x
+		var by = vr.position.y + fmod(abs(sin(cyc * 78.233 + ph * 3.1) * 12345.678), 1.0) * vr.size.y
+		var dx = sin(t * 0.21 + ph) * 46.0 + (k - 0.5) * 70.0 * (1.0 if i % 2 == 0 else -1.0)
+		var x = clampf(bx + dx, vr.position.x, vr.end.x)
+		var y = clampf(by + sin(t * 0.37 + ph * 2.0) * 22.0, vr.position.y, vr.end.y) - 18.0 - sin(t * 1.6 + ph) * 5.0
+		if y < top or y > bot: continue
+		var w = 40.0 + fmod(i * 7.0, 14.0); var h = w * im.get_height() / im.get_width()
+		var flip = cos(t * 0.21 + ph) * (1.0 if i % 2 == 0 else -1.0) < 0.0
+		c.draw_texture_rect(PtGfx.RAD, Rect2(x - w, y - h * 0.9, w * 2.0, h * 1.3), false, Color(0.62, 0.78, 0.95, a * 0.45))
+		for tr in 3:   # 拖尾：淡淡幾個殘影
+			var ox = -sin(t * 0.21 + ph) * 6.0 * (tr + 1); var oy = 4.0 * (tr + 1)
+			c.draw_texture_rect(PtGfx.RAD, Rect2(x + ox - 10, y + oy - 6, 20, 14), false, Color(0.7, 0.85, 1.0, a * 0.25 / (tr + 1)))
+		if flip: c.draw_set_transform(Vector2(x, 0), 0, Vector2(-1, 1))
+		var rx = 0.0 if flip else x
+		c.draw_texture_rect(im, Rect2(rx - w / 2, y - h, w, h), false, Color(0.80, 0.90, 1.0, a))
+		if flip: c.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 
 # ---------------- 烏鴉、羽毛、碎片 ----------------
 const PART_IMG := {"spark": "fx_spark", "chip": "fx_chips", "dust": "fx_dust", "dough": "fx_dough", "grain": "fx_dough"}
