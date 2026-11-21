@@ -126,6 +126,9 @@ func _test_queue(sim) -> void:
 	_reset_map(sim, 0)
 	var r = _mk(sim); var st = r[0]; var sc = r[1]
 	_settle(st, sc)
+	_chk("A 第 1 關：大排檔未解霧 → 開場新聞都唔播", st.played.is_empty(), st.played)
+	ZD._rev()[ZD._k("market", 0)] = 1.0; STY.mark("mv0_open", 2.0)
+	_settle(st, sc)
 	_chk("A 新開檔第 1 關：開場新聞播（一幕）", st.played == ["zs0_map_enter"], st.played)
 	_chk("A 播完 → 等（S.mv.story_hold）", STY.held())
 	# 解霧兩區（C、w_pit），佇列有兩幕
@@ -144,7 +147,7 @@ func _test_queue(sim) -> void:
 	_settle(st, sc)
 	_chk("A 播完又等：第二幕唔會即刻跟", st.played.size() == 2 and STY.held(), st.played)
 	# 60 秒冇動作 → 放
-	_tick(st, sc, 590, 0.1)
+	_tick(st, sc, 520, 0.1)   # 之前 settle 咗兩次（約 6 秒）→ 共約 58 秒
 	_chk("A 59 秒：仲等緊", st.played.size() == 2, st.played)
 	_tick(st, sc, 40, 0.1)
 	_chk("A 夠 60 秒 → 放下一幕", st.played.size() == 3, st.played)
@@ -162,10 +165,11 @@ func _test_queue(sim) -> void:
 		_chk("A 任務動作「%s」→ 放" % act, not STY.held())
 	# 佇列次序：打王回應先過區介紹
 	_reset_map(sim, 0)
+	ZD._rev()[ZD._k("market", 0)] = 1.0; STY.mark("mv0_open", 2.0)
 	r = _mk(sim); st = r[0]; sc = r[1]
 	_settle(st, sc)
 	_rev("w_graves", 0)
-	S.zone.boss[ZD._k("zb_egui", 0)] = 1.0
+	_S().zone.boss[ZD._k("zb_egui", 0)] = 1.0
 	STY.zq().append("zs0_boss_win_zb_egui")
 	S_inc("qi"); _settle(st, sc)
 	_chk("A 佇列次序：boss_win 先過之前入佇列嘅區介紹", st.played.size() == 2 and st.played[1] == "zs0_boss_win_zb_egui", st.played)
@@ -190,7 +194,9 @@ func _act(sim, act: String) -> void:
 func _test_gate(sim) -> void:
 	_reset_map(sim, 0)
 	var r = _mk(sim); var st = r[0]; var sc = r[1]
-	_settle(st, sc); STY.hold_clear()
+	_settle(st, sc)
+	_chk("B 大排檔有霧：開場新聞等", st.played.is_empty(), st.played)
+	STY.mark("zs0_map_enter"); STY.hold_clear()
 	var n0 = st.played.size()
 	var fogged = []
 	for z in ZD.zones(0): if str(z.type) != "village" and not ZD.revealed(str(z.id), 0): fogged.append(str(z.id))
@@ -223,6 +229,7 @@ func _test_gate(sim) -> void:
 # ---------------- C boss_pre ----------------
 func _test_boss(sim) -> void:
 	_reset_map(sim, 0)
+	ZD._rev()[ZD._k("market", 0)] = 1.0; STY.mark("mv0_open", 2.0)
 	var r = _mk(sim); var st = r[0]; var sc = r[1]
 	_settle(st, sc)
 	_rev("w_pit", 0); _rev("w_graves", 0)
@@ -264,15 +271,18 @@ func _test_new_l1(sim) -> void:
 	_chk("D 村子開場播完：唔會即刻接開場新聞", st.played.is_empty() and STY.held(), st.played)
 	S.cnt["chop"] = J.num(S.cnt.get("chop", 0)) + 1.0   # 斬第一棵樹
 	_settle(st, sc)
-	_chk("D 做咗第一件事 → 開場新聞", st.played == ["zs0_map_enter"], st.played)
-	var steps = []   # [描述, 動作 Callable]
 	for qi in range(1, 7): _qi_to(sim, st, sc, qi)
-	_chk("D 主線 0–5（大排檔未開）：冇其他劇情", st.played.size() == 1, st.played)
+	_chk("D 主線 0–5（大排檔未開）：乜劇情都冇（開場新聞等大排檔）", st.played.is_empty(), st.played)
 	_qi_to(sim, st, sc, 7)   # 升到 3 級 → 大排檔解霧
+	_chk("D 大排檔解霧 → 開場新聞（一幕）", st.played == ["zs0_map_enter"], st.played)
 	_busy = true; _tick(st, sc, 5); _busy = false; _settle(st, sc)   # ch1_intro（村子）
+	_chk("D 村子 ch1_intro 播完：唔即刻接開檔", st.played.size() == 1, st.played)
 	S.cnt["rice"] = J.num(S.cnt.get("rice", 0)) + 1.0; _settle(st, sc)
 	_qi_to(sim, st, sc, 8)   # 1-1 → 餓鬼坑
 	S.cleared["1-1"] = true; _settle(st, sc)
+	var cb0 = [0]
+	st.zone_event("boss_pre", "w_pit", func(): cb0[0] += 1); _finish_all()
+	_chk("D 餓鬼坑王戰前劇情播完即刻開戰", cb0[0] == 1)
 	sim.sst("st_nuomici")["unlocked"] = true; _settle(st, sc)
 	_qi_to(sim, st, sc, 9); _qi_to(sim, st, sc, 10)
 	S.zone.boss[ZD._k("zb_egui", 0)] = 1.0; st.zone_event("boss_win", "zb_egui"); _settle(st, sc)   # 王戰前（boss_pre）喺下面另計
@@ -282,8 +292,10 @@ func _test_new_l1(sim) -> void:
 	sim.st().sold["x"] = 300.0; _settle(st, sc)
 	_qi_to(sim, st, sc, 13)
 	_qi_to(sim, st, sc, 14)   # 1-3 → 枯井巷
+	S_inc("qi"); _settle(st, sc); S_inc("qi"); _settle(st, sc)
 	S.zone.own[ZD._k("A", 0)] = 1.0; st.zone_event("zone_cap", "A"); _settle(st, sc)
-	for qi in range(15, 18): _qi_to(sim, st, sc, qi)   # 民宅 → 荒田
+	for qi in range(17, 21): _qi_to(sim, st, sc, qi)   # 民宅（第 16 個任務）→ 荒田
+	_p("D 荒田解霧：%s" % str(ZD.revealed("C", 0)))
 	S.zone.own[ZD._k("C", 0)] = 1.0; st.zone_event("zone_cap", "C"); _settle(st, sc)
 	S.zone.own[ZD._k("B", 0)] = 1.0; st.zone_event("zone_cap", "B"); _settle(st, sc)
 	for z in ["A", "B", "C"]: st.zone_event("factory", z); _settle(st, sc)

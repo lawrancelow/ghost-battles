@@ -23,6 +23,7 @@
 #       村子嘅劇情（主劇情播放器，唔係本檔播）播完都一樣要等，唔會一幕接一幕。
 #       玩家自己撳出嚟嘅（boss_pre 開戰前、拔營 move）唔使等，即刻播；播完照樣「等」。
 #     · 分區介紹（zone_seen）只喺嗰區解霧（revealed）之後先播："reveal" 事件或者 revealed(zid) 變 true 就入佇列；霧未散嘅區唔播、唔記。
+#     · 第 1 關開場新聞（map_enter）等大排檔解霧（enter_ready）先播；第 2–4 關大排檔冇霧閘，開場即刻播。
 #     · 佇列次序：玩家動作嘅回應（boss_win／zone_cap／factory／liberate）先，然後區介紹，最後大排檔 beat。
 #     · 舊存檔（S.mv.story_pace 未有）：之前嘅圖全部記做跳過；呢張圖已經有進度 → 狀態上已經過咗嘅 beat 全部默默記做跳過，唔會一次過補播。
 # 用法（mv_scene）：story = load("res://game/outpost/mv_story.gd").new()；_process → story.tick(self, dt)；
@@ -428,7 +429,7 @@ static func next_zone(sim) -> Dictionary:
 		if is_seen(str(q[j])) or _beat_ci(str(q[j])) != c: q.remove_at(j)
 	var eb = enter_beat(c)
 	if not eb.is_empty() and not is_seen(str(eb.id)):
-		return eb if ZD.on_for(c) else {}
+		return eb if ZD.on_for(c) and enter_ready(c) else {}
 	var i = 0
 	var pick = -1; var best = 9
 	while i < q.size():
@@ -446,6 +447,9 @@ static func next_zone(sim) -> Dictionary:
 	if pick >= 0:
 		var pb = beat(str(q[pick])); q.remove_at(pick); return pb
 	return {}
+
+# 開場（map_enter）播得未：大排檔有霧閘嘅圖（第 1 關：升到 3 級先出得村）要等大排檔解霧；第 2–4 關大排檔冇閘＝即刻
+static func enter_ready(c: int) -> bool: return ZD.revealed("market", c)
 
 # ================= [pace] 節奏：一幕一等、區介紹跟解霧、舊存檔 =================
 # 分區 beat 而家播得未（zone_seen：嗰區要已解霧）
