@@ -343,15 +343,19 @@ func _test_l24(sim) -> void:
 		_settle(st, sc)
 		_chk("E 圖%d：開場先播（一幕）" % (c + 1), st.played.size() == 1 and st.played[0] == "zs%d_map_enter" % c, st.played)
 		ZD.reveal_poll(true); _settle(st, sc)
-		_chk("E 圖%d：開場播完 → 解霧，但係唔即刻接區介紹" % (c + 1), st.played.size() == 1 and ZD.revealed("A", c), st.played)
+		_chk("E 圖%d：開場播完 → 解霧，但係唔即刻接區介紹" % (c + 1), st.played.size() == 1 and ZD.revealed(str(ZD.of_type("wild", c)[0].id), c), st.played)
 		var got = []
 		for i in 10:
-			S_inc("qi"); _settle(st, sc)
+			S_inc("qi"); ZD.reveal_poll(true); _settle(st, sc)
 			got.append(st.played.size())
 		_chk("E 圖%d：一個動作放一幕（播幕數 %s）" % [c + 1, str(got)], got[0] == 2 and got[1] == 3 and got[2] == 4)
-		var zs = 0
-		for id in st.played: if str(id).contains("zone_seen"): zs += 1
-		_chk("E 圖%d：解咗霧嘅區介紹全部播晒（%d）" % [c + 1, zs], zs == 5, st.played)
+		var zs = []
+		for id in st.played: if str(id).contains("zone_seen"): zs.append(id)
+		var pre = "zs%d_zone_seen_" % c
+		var wild_ok = true
+		for z in ZD.of_type("wild", c): wild_ok = wild_ok and st.played.has(pre + str(z.id))
+		_chk("E 圖%d：開場之後野外區介紹播晒、開檔之後先到資源區 A" % (c + 1), wild_ok and st.played.has(pre + "A") and st.played.find(pre + "A") > st.played.find("mv%d_open" % c), st.played)
+		_chk("E 圖%d：B／C 仲有霧 → 介紹唔播" % (c + 1), not ZD.revealed("B", c) and not st.played.has(pre + "B") and not st.played.has(pre + "C"), zs)
 
 # ---------------- F 舊存檔 ----------------
 func _test_old(sim) -> void:
