@@ -671,6 +671,26 @@ _reveal(M0, True); _reveal(M1, False); _reveal(M2, False); _reveal(M3, False)
 _dress(M0)
 
 D = {"v": 1, "maps": {"0": M0, "1": M1, "2": M2, "3": M3}}
+
+# ================= [paddyfix] 槐樹林／稻田：冇「似樹似田但撳唔到」嘅裝飾 =================
+#   1) 任何裝飾都唔可以用可砍槐樹（tree／tree_bare／stump）或可割稻田（paddy／paddy_cut）嘅圖
+#   2) 可砍槐樹 GROVE_R 內唔擺樹形裝飾（枯樹、灌木樹、松、香蕉樹）→ 換碎石：玩家一眼睇得出邊幾棵係槐樹林
+INTERACTIVE_ART = {"tree", "tree_bare", "stump", "paddy", "paddy_cut", "deco:tree", "deco:paddy"}
+TREE_SHAPED = {"zp_deadtree", "zb_bush", "zt_cliffpine", "zt_banana", "zt_mangrove", "banana", "deco:banana"}
+GROVE_R = 130.0
+def _grove_clear(M):
+    V = M["village"]; T = V["TREE_POS"]
+    for pr in V["props"]:
+        if pr[0] in TREE_SHAPED and min(math.hypot(pr[1] - tx, pr[2] - ty) for tx, ty in T) < GROVE_R:
+            pr[0] = "zb_rock2"; pr[3] = 46
+    V["DECOR"] = [d for d in V["DECOR"] if not (d[0] in TREE_SHAPED and min(math.hypot(d[1] - tx, d[2] - ty) for tx, ty in T) < GROVE_R)]
+for _c, _m in D["maps"].items():
+    _grove_clear(_m)
+    _V = _m["village"]
+    assert len(_V["TREE_POS"]) == 8 and len(_V["PADDY_POS"]) == 6, ("槐樹要 8 棵、稻田要 6 格", _c)
+    _all = [("props", p) for p in _V["props"]] + [("DECOR", d) for d in _V["DECOR"]] + [("scenery", s) for s in _m.get("scenery", [])]
+    for _z in _m["zones"]: _all += [(_z["id"], p) for p in _z.get("props", []) + _z.get("decor", [])]
+    for _w, _p in _all: assert _p[0] not in INTERACTIVE_ART, ("裝飾用咗槐樹／稻田圖", _c, _w, _p)
 # [mapbattle] 紅線：兒童形象（toyol、xiaogui）唔做圍欄／被打嘅雜兵、守區怪；Toyol 只可以係主線第 2 章主 Boss（chapter 原關卡）
 CHILD_ART = {"toyol", "xiaogui"}
 for _c, _m in D["maps"].items():
