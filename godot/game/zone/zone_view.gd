@@ -384,7 +384,8 @@ static func _props(c: CanvasItem, ctx: Ctx, vr: Rect2, t: float) -> void:
 				"scarecrow":
 					if Spr.ok("scarecrow"): _sp(c, "scarecrow", x, y + 4, w, false, Color(0.62, 0.55, 0.55))
 				"post":
-					if Spr.ok("lamppost"):
+					if ResourceLoader.exists("res://assets/spr/fg_lamp1.webp"): Art.draw_lamp(Ctx.new(c), x, y, t, 50.0)   # [lamp16]
+					elif Spr.ok("lamppost"):
 						_sp(c, "lamppost", x, y + 3, 35.0, false, Color(0.7, 0.62, 0.6))
 						PtGfx.init(); c.draw_texture_rect(PtGfx.RAD, Rect2(x + 6 - 20, y - 30 - 20, 40, 40), false, Color(_lamp().r, _lamp().g, _lamp().b, 0.24 + sin(t * 2 + x) * 0.06))
 		elif k in NOT_DECOR: continue   # [fogfix] 互動物件嘅圖唔可以做裝飾

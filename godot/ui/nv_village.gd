@@ -211,7 +211,9 @@ func _static(key: String, y: float, sig, animated: bool, fn: Callable) -> void:
 func _draw_static(c: CanvasItem, key: String) -> void:
 	var s = statics[key]
 	var ctx = Ctx.new(c, Transform2D(0, Vector2(0, -c.position.y)))
+	Art.ink_w = 0.85 if zone else 0.0   # [seat16] 村子靜態物件（建築、樹、稻田、擺設）加墨線描邊
 	s.fn.call(ctx)
+	Art.ink_w = 0.0
 
 var _st_map := "~"
 const BLD_SEED := ["house", "wood", "rice", "plank", "bun", "store", "home", "camp", "altar", "furnace"]
@@ -530,6 +532,7 @@ func _decor(ctx: Ctx, kind: String, x: float, y: float) -> void:
 		"scarecrow":
 			if Spr.ok("scarecrow"): _put(c, "scarecrow", B * Transform2D(sin(t * 0.9) * 0.03, Vector2(x, y)), 0, 4, 0, 62); return
 		"post":
+			if ResourceLoader.exists("res://assets/spr/fg_lamp1.webp"): Art.draw_lamp(ctx, x, y, t); return   # [lamp16]
 			if Spr.ok("lamppost"):
 				_put(c, "lamppost", B, x, y + 3, 0, 46)
 				_glow(c, B, x + 6, y - 30, 18, Color(1, 236 / 255.0, 190 / 255.0, 0.22 + sin(t * 2 + x) * 0.06)); return
@@ -702,13 +705,16 @@ func _chain_bld(ctx: Ctx, bid: String, x: float, y: float, lvv: int, st: String,
 		_site(ctx, bid, x, y, un)
 		ctx.restore(); return
 	var tex = CB.art_tex(bid)
-	Art.el(ctx, x, y + 1, 48, 8, "rgba(0,0,0,.3)")
+	var sd16 = hash(bid) % 997
+	Art.seat(ctx, x, y + 1, 106, sd16)   # [seat16]
+	Art.seat_back(ctx, x, y + 1, 106, sd16)   # [fg16b]
 	var roof_top = y - 74.0
 	if tex != null:
 		var bw = 106.0; var bh = bw * tex.get_height() / tex.get_width()
 		if bh > 96: bh = 96.0; bw = bh * tex.get_width() / tex.get_height()
 		ctx.drawImage(tex, x - bw / 2, y + 6 - bh, bw, bh); roof_top = y + 6 - bh
 	else: _hut(ctx, bid, x, y, col, st)
+	Art.seat_front(ctx, x, y + 1, 106, sd16)   # [seat16]
 	if st == "work": _work_fx(ctx, bid, x, y, roof_top, col, tex != null)
 	# 名牌（14px）＋等級
 	var nm = CB.bname(bid)

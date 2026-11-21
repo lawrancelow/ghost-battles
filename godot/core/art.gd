@@ -33,11 +33,147 @@ func shadow(ctx: Ctx, x: float, y: float, s: float) -> void:
 # ---------------- scene.js：以底邊中心畫一張圖 ----------------
 const VS = preload("res://game/village_style.gd")   # [villageart] 新畫風調色
 var tint := Color.WHITE   # [villageart] put() 用嘅調色（只喺村子樹／稻田／擺設／出村門設）
+# ---------------- [seat16] 建築接地：墨線排線影、踩實泥地、前景草叢碎石、墨線描邊 ----------------
+var ink_w := 0.0   # put() 描邊粗幼（世界 px）；0＝唔描。只喺村子靜態物件畫嘅時候開
+const INK_COL := Color(0.0, 0.0, 0.0, 0.62)
+const INK_OFF := [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1), Vector2(0.7, 0.7), Vector2(-0.7, 0.7), Vector2(0.7, -0.7), Vector2(-0.7, -0.7)]
+static func _sr(seed: int, k: int) -> float:   # 固定亂數 0..1（同一間建築每次畫都一樣）
+	var v = sin(float(seed) * 12.9898 + float(k) * 78.233) * 43758.5453
+	return v - floor(v)
+# 建築腳下：一塊踩實嘅泥地（蓋住地面圖嘅草同路邊）＋斜排線接地影。喺建築圖之前畫
+func seat(ctx: Ctx, x: float, y: float, w: float, seed := 0, pad := true) -> void:
+	var rx = w * 0.50; var ry = maxf(7.0, w * 0.105)
+	if pad:
+		el(ctx, x, y + 2, rx * 1.16, ry * 1.55, "rgba(74,50,32,.20)")
+		el(ctx, x, y + 2, rx * 1.02, ry * 1.25, "rgba(66,44,28,.30)")
+		el(ctx, x, y + 2, rx * 0.86, ry * 1.00, "rgba(54,36,24,.36)")
+	el(ctx, x + rx * 0.06, y + 3, rx * 0.84, ry * 0.80, "rgba(18,10,8,.34)")
+	hatch(ctx, x + rx * 0.06, y + 3, rx * 0.96, ry * 1.05, 2.4, "rgba(14,8,5,.72)", 1.0, seed)
+# 橢圓入面畫斜排線（同地面圖嘅排線同一方向：左下去右上）
+func hatch(ctx: Ctx, cx: float, cy: float, rx: float, ry: float, gap: float, col: String, lw: float, seed := 0) -> void:
+	var d = Vector2(0.86, -0.5); var nrm = Vector2(0.5, 0.86)
+	var ext = rx * absf(nrm.x) + ry * absf(nrm.y)
+	ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineCap = "round"
+	var k = 0; var o = -ext
+	while o < ext:
+		var p0 = nrm * o
+		var A = d.x * d.x / (rx * rx) + d.y * d.y / (ry * ry)
+		var B = 2.0 * (p0.x * d.x / (rx * rx) + p0.y * d.y / (ry * ry))
+		var C = p0.x * p0.x / (rx * rx) + p0.y * p0.y / (ry * ry) - 1.0
+		var D = B * B - 4.0 * A * C
+		if D > 0.0:
+			var q = sqrt(D); var s0 = (-B - q) / (2.0 * A); var s1 = (-B + q) / (2.0 * A)
+			var j0 = _sr(seed, k) * 0.22; var j1 = _sr(seed, k + 97) * 0.22   # 兩頭隨機縮短少少，似手畫
+			var a = p0 + d * lerpf(s0, s1, j0); var b = p0 + d * lerpf(s0, s1, 1.0 - j1)
+			ctx.beginPath(); ctx.moveTo(cx + a.x, cy + a.y); ctx.lineTo(cx + b.x, cy + b.y); ctx.stroke()
+		o += gap * (0.8 + _sr(seed, k + 31) * 0.4); k += 1
+	ctx.lineCap = "butt"
+# 一叢墨線枯草（同新地面圖嘅草一樣：赭黃葉、黑邊）
+func tuft(ctx: Ctx, x: float, y: float, h: float, seed := 0) -> void:
+	var n = 5 + int(_sr(seed, 1) * 3.0)
+	for i in n:
+		var f = (float(i) + 0.5) / float(n) - 0.5
+		var bx = x + f * h * 0.55; var lean = f * h * 1.15 + (_sr(seed, 10 + i) - 0.5) * h * 0.25
+		var hh = h * (1.0 - absf(f) * 0.85) * (0.75 + _sr(seed, 20 + i) * 0.4)
+		var bw = maxf(0.9, h * 0.085)
+		var fillc = "#b59a40" if i % 3 != 1 else "#8f7a30"
+		poly(ctx, [bx - bw, y, bx + bw, y, bx + lean, y - hh], fillc, "#1a110a", 0.8)
+	ctx.strokeStyle = "rgba(20,12,8,.7)"; ctx.lineWidth = 0.8
+	ctx.beginPath(); ctx.moveTo(x - h * 0.34, y + 0.6); ctx.lineTo(x + h * 0.34, y + 0.6); ctx.stroke()
+func pebble(ctx: Ctx, x: float, y: float, r: float, seed := 0) -> void:
+	el(ctx, x + 0.6, y + r * 0.5, r * 1.05, r * 0.45, "rgba(14,8,6,.45)")
+	el(ctx, x, y, r, r * 0.68, "#a8997e" if seed % 2 == 0 else "#8f8068", "#1a110a", 0.7)
+# [seat16b] 斜投影：用建築自己嘅剪影，壓扁再向右下斜倒喺地面（光由左後方嚟）
+func cast(ctx: Ctx, key: String, x: float, y: float, w: float, h := 0.0) -> void:
+	var im = Spr.get_tex(key)
+	if im == null: return
+	if h == 0.0: h = w * im.get_height() / im.get_width()
+	var m = ctx._mod() * Color(0.04, 0.02, 0.02, 0.52)
+	var M = Transform2D(Vector2(1, 0), Vector2(-0.70, -0.30), Vector2(x, y))
+	ctx.ci.draw_set_transform_matrix(ctx.T * M)
+	ctx.ci.draw_texture_rect(im, Rect2(-w / 2, -h, w, h), false, m)
+	ctx.ci.draw_set_transform_matrix(Transform2D.IDENTITY)
+# 建築圖之後畫：喺底邊前面壓草叢同碎石，遮住條硬邊
+func seat_front(ctx: Ctx, x: float, y: float, w: float, seed := 0, mid := true) -> void:
+	# [fg16] 前景層：草堆／土堆／石堆貼圖壓喺建築底邊前面（建築名牌喺呢層之後先畫，唔會被遮）
+	var sd = seed * 7 + 3; var pw = maxf(w, 92.0)
+	var L = ["g", "r", "g", "d"][int(_sr(sd, 1) * 4.0) % 4]; var R = ["r", "g", "d", "g"][int(_sr(sd, 2) * 4.0) % 4]
+	if mid: fg(ctx, "d%d" % (1 + int(_sr(sd, 3) * 4.0) % 4), x + (_sr(sd, 4) - 0.5) * w * 0.24, y + 14, pw * 0.50, _sr(sd, 5) > 0.5)
+	fg(ctx, "%s%d" % [L, 1 + int(_sr(sd, 6) * 4.0) % 4], x - w * (0.44 + _sr(sd, 7) * 0.08), y + 11 + _sr(sd, 8) * 3, pw * (0.54 + _sr(sd, 9) * 0.10), false)
+	fg(ctx, "%s%d" % [R, 1 + int(_sr(sd, 10) * 4.0) % 4], x + w * (0.44 + _sr(sd, 11) * 0.08), y + 10 + _sr(sd, 12) * 3, pw * (0.52 + _sr(sd, 13) * 0.10), true)
+	if mid and _sr(sd, 14) > 0.3: fg(ctx, "g%d" % (1 + int(_sr(sd, 15) * 4.0) % 4), x + w * (0.14 + _sr(sd, 16) * 0.12) * (1.0 if _sr(sd, 17) > 0.5 else -1.0), y + 17, pw * 0.34, _sr(sd, 18) > 0.5)
+# [fg16b] 後景層：建築後面兩側嘅草叢／矮石（畫喺建築之前，俾建築遮住一半），顏色壓暗少少，前後都包住
+func seat_back(ctx: Ctx, x: float, y: float, w: float, seed := 0) -> void:
+	var sd = seed * 11 + 5; var pw = maxf(w, 92.0); var dk = Color(0.72, 0.68, 0.66)
+	fg(ctx, "g%d" % (1 + int(_sr(sd, 1) * 4.0) % 4), x - w * (0.50 + _sr(sd, 2) * 0.06), y - 6 - _sr(sd, 3) * 5, pw * 0.56, true, dk)
+	fg(ctx, "%s%d" % [["g", "r"][int(_sr(sd, 4) * 2.0) % 2], 1 + int(_sr(sd, 5) * 4.0) % 4], x + w * (0.50 + _sr(sd, 6) * 0.06), y - 7 - _sr(sd, 7) * 5, pw * 0.54, false, dk)
+	if _sr(sd, 8) > 0.4: fg(ctx, "r%d" % (1 + int(_sr(sd, 9) * 4.0) % 4), x + w * (_sr(sd, 10) - 0.5) * 0.9, y - 14, pw * 0.36, _sr(sd, 11) > 0.5, dk)
+# [lamp16] 新路燈（3 款）＋特效：地面暖光、燈籠光暈（呼吸＋閃爍）、飛蛾
+const LAMPS := {1: [[0.793, 0.413]], 2: [[0.767, 0.431]], 3: [[0.242, 0.453], [0.84, 0.459]]}
+var lamp_seen := {}   # "x,y" → [世界座標燈籠位, 上次畫嘅毫秒, 閃爍強度]（暗影層用嚟開燈光）
+static func lamp_flick(t: float, x: float) -> float:
+	var f = 0.86 + sin(t * 2.1 + x) * 0.07 + sin(t * 13.7 + x * 1.3) * 0.035
+	if fmod(t * 0.37 + x * 0.011, 1.0) > 0.965: f -= 0.22   # 間中閃一下
+	return f
+func draw_lamp(ctx: Ctx, x: float, y: float, t: float, H := 60.0) -> void:
+	var v = [1, 2, 1, 3][int(absf(x * 0.37 + y * 0.11)) % 4]; var flip = int(x / 4.0) % 2 == 0
+	if not _fg_tex.has("lamp%d" % v): fg(ctx, "lamp%d" % v, -99999, -99999, 1)
+	var im = _fg_tex.get("lamp%d" % v)
+	if im == null: return
+	var w = H * im.get_width() / im.get_height(); var fl = lamp_flick(t, x)
+	PtGfx.init()
+	var c = ctx.ci
+	c.draw_set_transform_matrix(ctx.T)
+	c.draw_texture_rect(PtGfx.RAD, Rect2(x - 46, y - 14, 92, 34), false, ctx._mod() * Color(1.0, 0.78, 0.42, 0.20 * fl))   # 腳下地面暖光
+	c.draw_set_transform_matrix(Transform2D.IDENTITY)
+	el(ctx, x, y + 1, w * 0.30, 3.2, "rgba(10,5,4,.5)")
+	var m = ctx._mod()
+	c.draw_set_transform_matrix(ctx.T * Transform2D(Vector2(-1.0 if flip else 1.0, 0), Vector2(0, 1), Vector2(x, y + 3)))
+	for o in INK_OFF: c.draw_texture_rect(im, Rect2(-w / 2 + o.x * 0.7, -H + o.y * 0.7, w, H), false, m * INK_COL)
+	c.draw_texture_rect(im, Rect2(-w / 2, -H, w, H), false, m)
+	c.draw_set_transform_matrix(ctx.T)
+	var first = Vector2.ZERO; var k = 0
+	for L in LAMPS[v]:
+		var lx = x + (L[0] - 0.5) * w * (-1.0 if flip else 1.0); var ly = y + 3 - H + L[1] * H
+		if k == 0: first = Vector2(lx, ly)
+		var r = H * 0.62 * (0.92 + fl * 0.12)
+		c.draw_texture_rect(PtGfx.RAD, Rect2(lx - r, ly - r, r * 2, r * 2), false, m * Color(1.0, 0.80, 0.45, 0.34 * fl))   # 大光暈
+		c.draw_texture_rect(PtGfx.RAD, Rect2(lx - r * 0.42, ly - r * 0.42, r * 0.84, r * 0.84), false, m * Color(1.0, 0.95, 0.75, 0.42 * fl))   # 燈芯
+		for j in 3:   # 飛蛾：圍住燈籠兜圈、拍翼
+			var ph = float(j) * 2.1 + x * 0.05 + float(k); var sp = 1.6 + float(j) * 0.5
+			var mx = lx + cos(t * sp + ph) * (H * 0.20 + float(j) * 2.0); var my = ly + sin(t * sp * 1.3 + ph) * H * 0.13 - 1.0
+			var wing = 1.1 + absf(sin(t * 22.0 + ph)) * 1.1
+			c.draw_line(Vector2(mx - wing, my - 0.6), Vector2(mx + wing, my - 0.6), m * Color(0.93, 0.88, 0.74, 0.85), 0.9)
+			c.draw_circle(Vector2(mx, my), 0.6, m * Color(0.22, 0.16, 0.12, 0.9))
+		k += 1
+	c.draw_set_transform_matrix(Transform2D.IDENTITY)
+	var wp = ctx.base.affine_inverse() * (ctx.T * first)
+	lamp_seen["%d,%d" % [int(x), int(y)]] = [wp, Time.get_ticks_msec(), fl]
+var _fg_tex := {}
+func fg(ctx: Ctx, k: String, x: float, y: float, w: float, flip := false, tintc := Color.WHITE) -> void:
+	if not _fg_tex.has(k):
+		var p = "res://assets/spr/fg_%s.webp" % k
+		_fg_tex[k] = load(p) if ResourceLoader.exists(p) else null
+	var im = _fg_tex[k]
+	if im == null: return
+	var h = w * im.get_height() / im.get_width()
+	el(ctx, x, y - 1, w * 0.46, maxf(2.0, h * 0.16), "rgba(12,6,5,.38)")   # 貼地暗影
+	var m = ctx._mod() * tintc
+	ctx.ci.draw_set_transform_matrix(ctx.T * Transform2D(Vector2(-1.0 if flip else 1.0, 0), Vector2(0, 1), Vector2(x, y)))
+	ctx.ci.draw_texture_rect(im, Rect2(-w / 2, -h, w, h), false, m)
+	ctx.ci.draw_set_transform_matrix(Transform2D.IDENTITY)
+
 func put(ctx: Ctx, key: String, x: float, y: float, w: float, h := 0.0) -> Rect2:
 	var im = Spr.get_tex(key)
 	if im == null: return Rect2()
 	if h == 0.0: h = w * im.get_height() / im.get_width()
 	if w == 0.0: w = h * im.get_width() / im.get_height()
+	if ink_w > 0.0:   # [seat16] 墨線描邊：同一張圖染黑、向 8 個方向偏移畫一圈，再畫本體
+		var ik = ctx._mod() * INK_COL
+		if ik.a > 0.001:
+			ctx.ci.draw_set_transform_matrix(ctx.T)
+			for o in INK_OFF: ctx.ci.draw_texture_rect(im, Rect2(x - w / 2 + o.x * ink_w, y - h + o.y * ink_w, w, h), false, ik)
+			ctx.ci.draw_set_transform_matrix(Transform2D.IDENTITY)
 	if tint != Color.WHITE:   # [villageart]
 		var m = ctx._mod() * tint
 		if m.a > 0.001: ctx.ci.draw_set_transform_matrix(ctx.T); ctx.ci.draw_texture_rect(im, Rect2(x - w / 2, y - h, w, h), false, m); ctx.ci.draw_set_transform_matrix(Transform2D.IDENTITY)
@@ -72,8 +208,12 @@ func sign_board(ctx: Ctx, x: float, y: float, text: String, lv) -> void:
 	if lv: lv_badge(ctx, x + w / 2 - 1, y - 23, lv)
 
 func draw_building(ctx: Ctx, id: String, x: float, y: float, lv, t: float, extra = null) -> void:
-	el(ctx, x, y + 1, BW[id] * 0.44, 7, "rgba(10,2,8,.34)")   # [villageart] 冇淺色地台，深紫黑影
+	var sd = hash(id) % 997
+	seat(ctx, x, y + 1, BW[id], sd)   # [seat16] 踩實泥地＋排線接地影（代替原本嘅朦朧橢圓影）
+	seat_back(ctx, x, y + 1, BW[id], sd)   # [fg16b]
+	var iw = ink_w; ink_w = 0.0; cast(ctx, id, x, y + 2, BW[id]); ink_w = iw   # [seat16b]
 	var r = put(ctx, id, x, y + 6, BW[id])
+	seat_front(ctx, x, y + 1, BW[id], sd)
 	var bname: String = DB.D.BUILDINGS[id].name
 	if PLAQUE.has(id): plaque_text(ctx, r, PLAQUE[id], bname, lv)
 	else: sign_board(ctx, x + (0.0 if id == "furnace" else BW[id] * 0.30), y + 12, bname, lv)
@@ -83,7 +223,9 @@ func draw_building(ctx: Ctx, id: String, x: float, y: float, lv, t: float, extra
 		ctx.fillStyle = g; ctx.fillRect(fx - 30, fy - 30, 60, 60)
 
 func draw_gate(ctx: Ctx, x: float, y: float, _t: float) -> void:
+	seat_back(ctx, x, y + 1, BW.gate, 71)   # [fg16b]
 	var r = vput(ctx, "gate", x, y + 6, BW.gate); plaque_text(ctx, r, PLAQUE.gate, "出村", 0)
+	seat_front(ctx, x, y + 1, BW.gate, 71, false)   # [fg16] 門洞中間唔放嘢
 
 func draw_site(ctx: Ctx, x: float, y: float, name: String) -> void:
 	ctx.save(); ctx.font = "700 12px \"PingFang TC\",\"Noto Sans TC\",sans-serif"; var w = maxf(64, ctx.measureText(name).width + 22)
@@ -99,6 +241,7 @@ func draw_site(ctx: Ctx, x: float, y: float, name: String) -> void:
 func draw_ruin(ctx: Ctx, x: float, y: float, name: String, can: bool, seed: int, t := 0.0, req := "") -> void:
 	el(ctx, x, y - 4, 54, 16, "rgba(24,16,12,.55)")
 	el(ctx, x - 8, y - 6, 36, 10, "rgba(52,36,26,.45)")
+	hatch(ctx, x, y - 4, 52, 15, 2.8, "rgba(14,8,6,.5)", 0.8, seed + 5)   # [seat16]
 	var sv = tint; tint = Color(0.58, 0.52, 0.50)
 	var flip = seed % 2 == 1
 	if Spr.ok("zb_stakes"): put(ctx, "zb_stakes", x + (10.0 if flip else -10.0), y - 12, 70)
@@ -107,6 +250,7 @@ func draw_ruin(ctx: Ctx, x: float, y: float, name: String, can: bool, seed: int,
 	if Spr.ok("zb_rock2"): put(ctx, "zb_rock2", x + (2.0 if flip else -4.0), y + 10, 26)
 	if Spr.ok("zb_bush"): put(ctx, "zb_bush", x + (-34.0 if flip else 34.0), y + 8, 28)
 	tint = sv
+	seat_front(ctx, x, y + 2, 104, seed + 40)   # [seat16]
 	if not can:   # [ruins13b] 未解鎖：灰色木牌（建築名＋點樣開），唔郁
 		ctx.save(); ctx.font = "900 14px %s" % SERIF; var w0 = maxf(84, maxf(ctx.measureText(name).width, ctx.measureText(req).width * 0.86) + 20)
 		rr(ctx, x - 1.5, y - 26, 3, 22, 1, "#4a3a30")
@@ -128,11 +272,13 @@ const PERCH := [[-0.22, 0.40, 1], [0.24, 0.30, -1]]
 func draw_tree(ctx: Ctx, x: float, y: float, hp: int, t: float, shake: bool, perched: bool, idx: int) -> void:
 	if hp <= 0: vput(ctx, "stump", x, y + 3, 38); return
 	var sx = sin(t * 60) * 2.2 if shake else 0.0; var H = 80.0 + (idx % 3) * 4
-	el(ctx, x, y + 2, 20, 5, "rgba(0,0,0,.35)")
+	seat(ctx, x, y + 2, 40, idx + 11, false)   # [seat16]
 	ctx.save()
 	if shake: ctx.translate(x, y); ctx.rotate(sin(t * 60) * 0.02); ctx.translate(-x, -y)
 	var key = "tree_bare" if Spr.ok("tree_bare") else "tree"; var flip = idx % 2 == 1
 	if flip: ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0)
+	var tim = Spr.get_tex(key)
+	if tim != null: cast(ctx, key, x + sx, y + 2, H * tim.get_width() / tim.get_height(), H)   # [seat16b]
 	var r = vput(ctx, key, x + sx, y + 4, 0, H)
 	ctx.restore()
 	VS.tree_extra(ctx, x + sx, y, r, flip, t)   # [villageart] 樹洞臉／手指枝暗影
@@ -173,6 +319,7 @@ func draw_decor(ctx: Ctx, kind: String, x: float, y: float, t: float) -> void:
 		var d: Array = DECO[kind]
 		if kind == "banana": ctx.save(); ctx.translate(x, y); ctx.rotate(sin(t * 0.8 + x) * 0.02); vput(ctx, d[0], 0, 2, d[1], d[2]); ctx.restore(); return
 		if kind == "scarecrow": ctx.save(); ctx.translate(x, y); ctx.rotate(sin(t * 0.9) * 0.03); vput(ctx, d[0], 0, 4, d[1], d[2]); ctx.restore(); return
+		if kind == "post" and ResourceLoader.exists("res://assets/spr/fg_lamp1.webp"): draw_lamp(ctx, x, y, t); return   # [lamp16]
 		vput(ctx, d[0], x, y + 3, d[1], d[2])
 		if kind == "post":
 			var a = 0.22 + sin(t * 2 + x) * 0.06; var g = ctx.createRadialGradient(x + 6, y - 30, 1, x + 6, y - 30, 18)

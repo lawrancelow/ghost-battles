@@ -25,6 +25,12 @@ static func attach(nv) -> void:
 	nv.world.add_child(m); nv.world.move_child(m, nv.ysort.get_index())          # 後層：地面之上、建築之下
 	var mf = Layer.new(); mf.name = "va_mist_f"; mf.fn = func(c): draw_mist(c, nv, true)
 	nv.world.add_child(mf); nv.world.move_child(mf, nv.ysort.get_index() + 1)    # 前層：建築之上
+	# [dark16] 全地圖半透明暗影：一塊全屏暗色，shader 入面喺路燈／起好嘅建築／主角附近挖亮兼加暖光
+	var dk = Layer.new(); dk.name = "va_dark"
+	var sh = Shader.new(); sh.code = DARK_SH
+	var sm = ShaderMaterial.new(); sm.shader = sh; dk.material = sm
+	dk.fn = func(c): draw_dark(c, nv, sm)
+	nv.world.add_child(dk); nv.world.move_child(dk, nv.zone_over.get_index())   # 喺 zone_over 之下：黑霧、王、區名牌、提示字唔會被壓暗
 	var n = Layer.new(); n.name = "va_night"; n.fn = func(c): draw_night(c, nv)
 	nv.world.add_child(n); nv.world.move_child(n, nv.top_ui.get_index())         # 泡泡／浮字／箭頭之下
 
@@ -38,6 +44,7 @@ class Layer extends Node2D:
 # ---------------- 血霧：用通用版 game/outpost/mv_mist.gd（後層喺建築下、前層喺建築上）----------------
 const MIST = preload("res://game/outpost/mv_mist.gd")
 static func draw_mist(c: CanvasItem, nv, front: bool) -> void:
+	if not bld_mist: return   # [dark16] 新地面上血霧變成一塊污漬，熄咗；接地改由前景層＋暗影層做
 	var S = J.G.get("S"); var POS = J.G.get("POS"); var order = J.G.get("BLD_ORDER")
 	if not (S is Dictionary) or POS == null or order == null: return
 	var BW: Dictionary = Art.BW
@@ -68,6 +75,67 @@ static func vig_tex() -> Texture2D:
 	gt.fill_from = Vector2(0.5, 0.5); gt.fill_to = Vector2(1.08, 1.08); gt.width = 128; gt.height = 256
 	_vig = gt
 	return _vig
+
+static var dark_on := true
+static var bld_mist := false
+const NL := 40
+const DARK_SH := """shader_type canvas_item;
+uniform vec2 lp[40]; uniform vec2 lr[40]; uniform float li[40]; uniform int ln = 0;
+uniform vec4 dark : source_color = vec4(0.03, 0.03, 0.13, 0.54);
+uniform vec3 warm : source_color = vec3(1.0, 0.72, 0.36);
+varying vec2 wp;
+void vertex() { wp = VERTEX; }
+void fragment() {
+	float L = 0.0;
+	for (int i = 0; i < ln; i++) {
+		vec2 d = (wp - lp[i]) / lr[i];
+		float f = clamp(1.0 - dot(d, d), 0.0, 1.0);
+		L += f * f * (3.0 - 2.0 * f) * li[i];
+	}
+	L = clamp(L, 0.0, 1.0);
+	COLOR = vec4(mix(dark.rgb, warm, L), mix(dark.a, 0.10, L));
+}"""
+static func draw_dark(c: CanvasItem, nv, sm: ShaderMaterial) -> void:
+	if not dark_on: sm.set_shader_parameter("ln", 0); return
+	var P = PackedVector2Array(); var R = PackedVector2Array(); var I = PackedFloat32Array()
+	var S = J.G.get("S"); var POS = J.G.get("POS"); var order = J.G.get("BLD_ORDER")
+	var vr: Rect2 = nv.view_rect().grow(170)
+	var now = Time.get_ticks_msec()
+	for k in Art.lamp_seen:   # 路燈：暖光圈跟住閃爍
+		var e = Art.lamp_seen[k]
+		if now - int(e[1]) > 400 or not vr.has_point(e[0]) or P.size() >= NL: continue
+		P.append(e[0] + Vector2(0, 16)); R.append(Vector2(105, 84)); I.append(clampf(float(e[2]) * 1.05, 0.0, 1.0))
+	if S is Dictionary and POS != null and order != null:
+		var BW: Dictionary = Art.BW
+		for id in order:   # 起好嘅建築：成間屋連門口亮返
+			if not POS.has(id) or not J.t(S.bld.get(id, 0)) or not BW.has(id) or P.size() >= NL: continue
+			var p = Vector2(J.num(POS[id][0]), J.num(POS[id][1]))
+			if not vr.has_point(p): continue
+			var w: float = BW[id]
+			P.append(p + Vector2(0, -w * 0.26)); R.append(Vector2(w * 0.98, w * 0.80)); I.append(0.86 + sin(nv.t * 1.3 + p.x) * 0.05)
+		if POS.has("gate") and P.size() < NL:
+			P.append(Vector2(J.num(POS.gate[0]), J.num(POS.gate[1]) - 40)); R.append(Vector2(150, 110)); I.append(0.85)
+	var ZD = load("res://game/zone/zone_data.gd")
+	if ZD.on():   # 村外：大排檔成個場亮、野外區王企嗰度亮、已攻佔資源區亮
+		for z in ZD.zones():
+			if P.size() >= NL - 1: break
+			var zr: Rect2 = ZD.rect(z.rect); var tp = str(z.type); var zid = str(z.id)
+			if not zr.intersects(vr): continue
+			if tp == "market" and ZD.revealed(zid):
+				P.append(zr.get_center()); R.append(zr.size * 0.62); I.append(0.80)
+			elif tp == "wild" and ZD.revealed(zid):
+				P.append(ZD.v2(z.get("boss_at", [zr.get_center().x, zr.get_center().y])) + Vector2(0, -20)); R.append(Vector2(190, 160)); I.append(0.78 + sin(nv.t * 1.7 + zr.position.x) * 0.05)
+				P.append(zr.get_center()); R.append(zr.size * 0.60); I.append(0.38)
+			elif tp == "res" and ZD.owned(zid):
+				P.append(zr.get_center()); R.append(zr.size * 0.62); I.append(0.66)
+	var V = J.G.get("Village")
+	if V != null and V.get("hero") is Dictionary and V.hero.has("x") and P.size() < NL:   # 主角身邊一圈微光
+		P.append(Vector2(J.num(V.hero.x), J.num(V.hero.y) - 18)); R.append(Vector2(62, 54)); I.append(0.5)
+	var n = P.size()
+	P.resize(NL); R.resize(NL); I.resize(NL)
+	for i in range(n, NL): R[i] = Vector2(1, 1)
+	sm.set_shader_parameter("lp", P); sm.set_shader_parameter("lr", R); sm.set_shader_parameter("li", I); sm.set_shader_parameter("ln", n)
+	c.draw_rect(nv.view_rect().grow(8), Color.WHITE)
 
 static func draw_night(c: CanvasItem, nv) -> void:
 	var r: Rect2 = nv.view_rect().grow(4)   # [zone] 分區地圖：跟 2D 鏡頭
