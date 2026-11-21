@@ -354,9 +354,13 @@ static func v_hit_test(x: float, y: float):
 	for i in PP.size():
 		var px = J.num(PP[i][0]); var py = J.num(PP[i][1])
 		if absf(x - px) < 26 and absf(y - py + 4) < 16: return {"kind": "paddy", "i": float(i)}
+	var SB = _S().get("bld", {}) if _S() is Dictionary else {}
 	for id in POS:
 		var bx = J.num(POS[id][0]); var by = J.num(POS[id][1])
 		var w = 70.0 if id == "house" else (65.0 if id == "gate" else (26.0 if id == "furnace" else 46.0)); var h = 115.0 if id == "house" else (92.0 if id == "gate" else 70.0)
+		if id != "gate" and SB is Dictionary and SB.has(id) and not J.t(SB.get(id)):   # [ruins13] 未起嘅地盤（廢墟）
+			if not J.t(_c("bldUnlocked", [id])): continue   # 未解鎖：撳唔到（之前撳空地都會彈建築卡）
+			w = 40.0; h = 80.0   # 可重建：撳廢墟／木牌
 		if absf(x - bx) < w and y > by - h and y < by + 10: return {"kind": "gate" if id == "gate" else "bld", "id": id}
 	return null
 

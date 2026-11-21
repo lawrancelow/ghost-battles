@@ -260,8 +260,20 @@ func _reveal_check(t, m) -> void:
 	J.G["TREE_POS"] = [[38.0, 402.0]]
 	ZD.apply()
 	_chk("[hotfix12] POS／TREE_POS 俾人換咗（匯入存檔重開）：自動重新套用分區座標", J.G.POS.gate == gp_ok and J.G.TREE_POS.size() == 8, [J.G.POS.gate, gp_ok, J.G.TREE_POS.size()])
+	var bad_hit = []; var can_hit = []
+	for id in J.G.POS:
+		if id == "gate" or not S.bld.has(id) or J.t(S.bld.get(id)): continue
+		var bp = J.G.POS[id]; var hh = J.mc(J.G.get("Village"), "hitTest", [float(bp[0]), float(bp[1]) - 20.0])
+		var unl = J.t(J.cl(J.G.get("bldUnlocked"), null, [id]))
+		if not unl and hh is Dictionary and str(hh.get("kind")) == "bld" and str(hh.get("id")) == id: bad_hit.append(id)
+		if unl: can_hit.append([id, hh is Dictionary and str(hh.get("id")) == id])
+	_chk("[ruins13] 未解鎖嘅廢墟地盤撳唔到（唔彈建築卡）", bad_hit.is_empty(), bad_hit)
+	_p("ruins can_hit=%s" % [can_hit])
+	_chk("[ruins13] 已解鎖未起（可重建）撳得", can_hit.all(func(e): return e[1]), can_hit)
 	await _skip(t, 6); await _w(t, 0.3)
 	await _shot(t, "R01_new_game_whole")
+	cam.z = nv.size.x / 390.0 * 1.4; cam.center_on(Vector2(600, 1400)); await _w(t, 1.0)
+	await _shot(t, "R01b_village_ruins")
 	cam.z = nv.size.x / 390.0; cam.center_on(ZV.gate_pos() + Vector2(0, -60)); await _w(t, 1.0)
 	_chk("出村門鎖住：門上面有「出村門未開」牌＋要完成邊個任務", ZV.fog_log.has(["gate_lock", "market"]) and ZD.reveal_hint("market").contains("升到 3 級"), ZD.reveal_hint("market"))
 	await _skip(t, 6); await _w(t, 0.5)

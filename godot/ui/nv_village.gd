@@ -214,6 +214,7 @@ func _draw_static(c: CanvasItem, key: String) -> void:
 	s.fn.call(ctx)
 
 var _st_map := "~"
+const BLD_SEED := ["house", "wood", "rice", "plank", "bun", "store", "home", "camp", "altar", "furnace"]
 func _sync_statics() -> void:
 	var S = J.G.S
 	for k in statics: statics[k].used = false
@@ -240,9 +241,9 @@ func _sync_statics() -> void:
 			_static("b_" + id, p[1], [lv, extra], id == "furnace" and extra, func(ctx):
 				Art.draw_building(ctx, idd, p[0], p[1], lv, t, false)
 				if idd == "furnace" and extra: _furnace_glow(ctx.ci, p[0], p[1]))
-		elif J.t(J.cl(bunl, null, [id])):
-			var nm = J.str(BUILDINGS[id].name)
-			_static("b_" + id, p[1], "site", false, func(ctx): Art.draw_site(ctx, p[0], p[1], nm))
+		elif BUILDINGS.get(id) != null:   # [ruins13] 未起：廢墟；已解鎖加「可重建」牌（撳得），未解鎖淨係廢墟（撳唔到）
+			var nm = J.str(BUILDINGS[id].name); var can = J.t(J.cl(bunl, null, [id])); var sd = BLD_SEED.find(id)
+			_static("b_" + id, p[1], ["ruin", can], can, func(ctx): Art.draw_ruin(ctx, p[0], p[1], nm, can, sd, t))
 	# 原生新增：任務公告板（撳落去開任務面板）、投胎辦事處
 	for e in extras():
 		var ek: String = e[0]; var ex: float = e[1]; var ey: float = e[2]; var ew: float = e[3]

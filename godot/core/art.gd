@@ -95,6 +95,28 @@ func draw_site(ctx: Ctx, x: float, y: float, name: String) -> void:
 	ctx.fillStyle = "#c2362b"; ctx.font = "900 10px sans-serif"; ctx.fillText("待建", x, y - 14)
 	ctx.restore()
 
+# [ruins13] 未起嘅地盤：廢墟（燒焦地、碎石、爛木、雜草）。can＝已解鎖可以起：加一塊細木牌「可重建」＋建築名；未解鎖：淨係廢墟（撳唔到）
+func draw_ruin(ctx: Ctx, x: float, y: float, name: String, can: bool, seed: int, t := 0.0) -> void:
+	el(ctx, x, y - 4, 54, 16, "rgba(24,16,12,.55)")
+	el(ctx, x - 8, y - 6, 36, 10, "rgba(52,36,26,.45)")
+	var sv = tint; tint = Color(0.58, 0.52, 0.50)
+	var flip = seed % 2 == 1
+	if Spr.ok("zb_stakes"): put(ctx, "zb_stakes", x + (10.0 if flip else -10.0), y - 12, 70)
+	if Spr.ok("zp_woodpile"): put(ctx, "zp_woodpile", x + (-20.0 if flip else 20.0), y + 2, 46)
+	if Spr.ok("zb_rock1"): put(ctx, "zb_rock1", x + (24.0 if flip else -24.0), y + 6, 34)
+	if Spr.ok("zb_rock2"): put(ctx, "zb_rock2", x + (2.0 if flip else -4.0), y + 10, 26)
+	if Spr.ok("zb_bush"): put(ctx, "zb_bush", x + (-34.0 if flip else 34.0), y + 8, 28)
+	tint = sv
+	if not can: return
+	var bob = sin(t * 2.4) * 1.5
+	ctx.save(); ctx.font = "900 14px %s" % SERIF; var w = maxf(76, ctx.measureText(name).width + 20)
+	rr(ctx, x - 1.5, y - 46, 3, 26, 1, "#5a4030")
+	rr(ctx, x - w / 2, y - 76 + bob, w, 34, 3, "#e6d2a0", "#5a4030", 1.5)
+	ctx.textAlign = "center"; ctx.textBaseline = "middle"
+	ctx.fillStyle = "#2b1d12"; ctx.fillText(name, x, y - 66 + bob)
+	ctx.fillStyle = "#b8321f"; ctx.font = "900 12px sans-serif"; ctx.fillText("可重建", x, y - 51 + bob)
+	ctx.restore()
+
 const PERCH := [[-0.22, 0.40, 1], [0.24, 0.30, -1]]
 func draw_tree(ctx: Ctx, x: float, y: float, hp: int, t: float, shake: bool, perched: bool, idx: int) -> void:
 	if hp <= 0: vput(ctx, "stump", x, y + 3, 38); return
