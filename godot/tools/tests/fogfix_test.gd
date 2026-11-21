@@ -252,6 +252,14 @@ func _reveal_check(t, m) -> void:
 	_chk("鏡頭掃過黑霧區：唔發 zone_seen（介紹劇情唔會跟鏡頭播）", pan_ev.is_empty(), pan_ev)
 	cam.z = cam.z_min(); cam.clamp_all(); cam.center_on(Vector2(670, 1205)); await _w(t, 0.8)
 	_chk("新遊戲開局：A／B／C 未介紹（只有黑霧，冇鎖、冇戰力字）", ZV.fog_log.has(["fog", "A"]) and not ZV.fog_log.has(["lock", "A"]) and not ZV.fog_log.has(["power", "B"]))
+	var gaps = []
+	for e in ZV.fog_log: if e[0] == "gap": gaps.append(e[1])
+	_chk("[hotfix12] 新遊戲開局：區與區之間（山石、邊界）都蓋黑霧", gaps.size() > 0 and int(gaps[0]) > 20, gaps)
+	var gp_ok = J.G.POS.gate.duplicate()
+	J.G["POS"] = J.G.POS.duplicate(true); J.G.POS["gate"] = [195.0, 118.0]   # 模擬重開局／匯入存檔：遊戲換咗一份舊豎條座標
+	J.G["TREE_POS"] = [[38.0, 402.0]]
+	ZD.apply()
+	_chk("[hotfix12] POS／TREE_POS 俾人換咗（匯入存檔重開）：自動重新套用分區座標", J.G.POS.gate == gp_ok and J.G.TREE_POS.size() == 8, [J.G.POS.gate, gp_ok, J.G.TREE_POS.size()])
 	await _skip(t, 6); await _w(t, 0.3)
 	await _shot(t, "R01_new_game_whole")
 	cam.z = nv.size.x / 390.0; cam.center_on(ZV.gate_pos() + Vector2(0, -60)); await _w(t, 1.0)

@@ -20,6 +20,8 @@ const PATH := "res://data/nat/zones.json"
 static var _D = null
 static var force_off := false      # 測試用：強制用舊豎條布局
 static var _applied := ""          # 而家套用咗邊張圖嘅村子座標（"" = 舊）
+static var _pos_ref = null          # [hotfix12] 套用嗰陣嘅 J.G.POS／TREE_POS（重開局／匯入存檔會換新 dict，要重新套用）
+static var _tree_ref = null
 static var _orig = null            # 舊村子座標（還原用）
 static var _mv_l := {}             # ci → 大排檔 layout 快取
 
@@ -367,8 +369,8 @@ static func mv_layout(c: int) -> Dictionary:
 # ---------------- 村子座標套用（J.G POS／TREE_POS／PADDY_POS／DECOR／W／WH、廣場鬼範圍、柵欄） ----------------
 static func apply() -> void:
 	var want = str(ci()) if on() else ""
-	if want == _applied: return
 	var G = J.G
+	if want == _applied and is_same(G.get("POS"), _pos_ref) and is_same(G.get("TREE_POS"), _tree_ref): return
 	if G.get("POS") == null: return
 	var PL = G.get("PlazaLife")
 	if _orig == null:
@@ -402,6 +404,7 @@ static func apply() -> void:
 		else: VF.set_cfg(float(fc.y), float(fc.gate_x), float(fc.gap), fc.spans)
 		_hero(v2(v.hero), zrect("village").grow(-16))
 	_applied = want
+	_pos_ref = G.get("POS"); _tree_ref = G.get("TREE_POS")
 	var CF = load("res://game/outpost/chain_field.gd"); CF.reset()
 	var V = G.get("Village")
 	if V is Dictionary and V.get("plaza") is Dictionary:   # 廣場鬼：重新擺（舊位喺新圖外面）

@@ -510,6 +510,7 @@ static func draw_over(c: CanvasItem, nv) -> void:
 	ZD.watch(nv.view_rect())   # [zone2] 劇情事件：第一次見到某區、二級廠解鎖、解放
 	var mbf = _mb().fighting()   # [mapbattle] 打緊仗：收埋區名牌、王進度、戰力字（黑霧照畫）
 	fog_log.clear()
+	_gap_fog(c, vr)   # [hotfix12] 區與區之間（山、樹林、河、邊界）未開放都蓋黑霧：開局淨係見中央村
 	for z in ZD.zones():
 		var r = ZD.rect(z.rect)
 		var tp = str(z.type)
@@ -548,6 +549,44 @@ static func draw_over(c: CanvasItem, nv) -> void:
 static func _rgba(hex: String, a: float) -> String:
 	var c = Color(hex)
 	return "rgba(%d,%d,%d,%.2f)" % [int(c.r * 255), int(c.g * 255), int(c.b * 255), a]
+
+# [hotfix12] 區與區之間嘅空隙（邊界山石、樹林、河、柵欄）：唔近任何「已開放」區就蓋黑霧。
+#   已開放＝中央村、已解霧嘅大排檔／野外區、已介紹嘅資源區；格仔 32px，逐行合併，狀態變先重算。
+const GAP_CELL := 32.0
+const GAP_NEAR := 240.0
+const GAP_PAD := 14   # 世界邊外面都蓋（鏡頭睇到嘅界外山石）
+static var _gap_key := ""
+static var _gap_runs: Array = []
+static func _gap_fog(c: CanvasItem, vr: Rect2) -> void:
+	if not ZD.gate_on: return
+	var open: Array = []; var zr: Array = []; var key = str(ZD.ci())
+	for z in ZD.zones():
+		var r = ZD.rect(z.rect); var tp = str(z.type); var zid = str(z.id)
+		zr.append(r)
+		var op = tp == "village" or ZD.revealed(zid)
+		if op: open.append(r.grow(GAP_NEAR))
+		key += "1" if op else "0"
+	if key != _gap_key:
+		_gap_key = key; _gap_runs.clear()
+		if not key.substr(str(ZD.ci()).length()).contains("0"): return   # 全部開晒：唔再蓋
+		var ws = ZD.world_size()
+		var nx = int(ceil(ws.x / GAP_CELL)); var ny = int(ceil(ws.y / GAP_CELL))
+		for j in range(-GAP_PAD, ny + GAP_PAD):
+			var x0 = -GAP_PAD - 1
+			for i in range(-GAP_PAD, nx + GAP_PAD + 1):
+				var dark = false
+				if i < nx + GAP_PAD:
+					var p = Vector2((i + 0.5) * GAP_CELL, (j + 0.5) * GAP_CELL)
+					dark = true
+					for r in open: if r.has_point(p): dark = false; break
+					if dark: for r in zr: if r.has_point(p): dark = false; break   # 區入面：由該區自己嘅霧處理
+				if dark and x0 < -GAP_PAD: x0 = i
+				elif not dark and x0 >= -GAP_PAD:
+					_gap_runs.append(Rect2(x0 * GAP_CELL, j * GAP_CELL, (i - x0) * GAP_CELL, GAP_CELL)); x0 = -GAP_PAD - 1
+	var col = Color(FOG_COL.r, FOG_COL.g, FOG_COL.b, fog_core_alpha())
+	for r in _gap_runs:
+		if r.intersects(vr): c.draw_rect(r, col)
+	if _gap_runs.size(): fog_log.append(["gap", _gap_runs.size()])
 
 # ---------------- [fogfix] 黑霧：近乎全黑（核心不透明度 fog_core_alpha() ≈ 0.89）、柔邊、霧邊慢慢飄 ----------------
 # 一層層由外向內加深（FOG_LAYERS 層 × FOG_LA）＋核心（FOG_CORE）；邊沿一圈柔霧團（PtGfx.RAD）慢慢郁；入面幾團淡灰霧絲飄過。
