@@ -243,7 +243,8 @@ func _sync_statics() -> void:
 				if idd == "furnace" and extra: _furnace_glow(ctx.ci, p[0], p[1]))
 		elif BUILDINGS.get(id) != null:   # [ruins13] 未起：廢墟；已解鎖加「可重建」牌（撳得），未解鎖淨係廢墟（撳唔到）
 			var nm = J.str(BUILDINGS[id].name); var can = J.t(J.cl(bunl, null, [id])); var sd = BLD_SEED.find(id)
-			_static("b_" + id, p[1], ["ruin", can], can, func(ctx): Art.draw_ruin(ctx, p[0], p[1], nm, can, sd, t))
+			var rq = "" if can else str(load("res://native/game.gd").bld_req(id))
+			_static("b_" + id, p[1], ["ruin", can, rq], can, func(ctx): Art.draw_ruin(ctx, p[0], p[1], nm, can, sd, t, rq))
 	# 原生新增：任務公告板（撳落去開任務面板）、投胎辦事處
 	for e in extras():
 		var ek: String = e[0]; var ex: float = e[1]; var ey: float = e[2]; var ew: float = e[3]
@@ -383,36 +384,44 @@ func _draw_mist(c: CanvasItem) -> void:
 	_draw_wander_souls(c)
 
 # [souls14] 村入面半透明亡魂慢慢飄（純氣氛，唔撳得、唔影響玩法）：每隻有自己路線，隔一陣淡入淡出
+#   用本身有樣貌、下身係鬼尾（冇腳）嘅本土鬼圖；下半身再逐段淡出，似飄緊
 const SOUL_N := 7
+const SOUL_ART := ["n30_diaosi", "n30_qionggui", "n30_guhangui", "n30_dongsi", "n30_yangui", "n30_danxiao", "n30_jiugui"]
+const SOUL_SLICES := 10
 func _draw_wander_souls(c: CanvasItem) -> void:
-	if not Spr.ok("youhun"): return
-	var im = Spr.get_tex("youhun")
 	var vr = Rect2(0, 150, W, WH - 150)
 	if zone: vr = ZD.zrect("village").grow(-30)
 	var top = cam_y - 80; var bot = cam_y + size.y / sc + 80
 	for i in SOUL_N:
+		var key = SOUL_ART[i % SOUL_ART.size()]
+		if not Spr.ok(key): continue
+		var im = Spr.get_tex(key)
 		var ph = i * 2.399
 		var per = 16.0 + fmod(i * 5.3, 9.0)
 		var k = fmod(t + i * 7.1, per) / per          # 0→1 一個出現週期
-		var a = pow(sin(k * PI), 2.0) * 0.34
+		var a = pow(sin(k * PI), 2.0) * 0.5
 		if a < 0.01: continue
 		var cyc = floor((t + i * 7.1) / per)          # 每次重新出現換個位
 		var bx = vr.position.x + fmod(abs(sin(cyc * 12.9898 + ph) * 43758.5453), 1.0) * vr.size.x
 		var by = vr.position.y + fmod(abs(sin(cyc * 78.233 + ph * 3.1) * 12345.678), 1.0) * vr.size.y
 		var dx = sin(t * 0.21 + ph) * 46.0 + (k - 0.5) * 70.0 * (1.0 if i % 2 == 0 else -1.0)
 		var x = clampf(bx + dx, vr.position.x, vr.end.x)
-		var y = clampf(by + sin(t * 0.37 + ph * 2.0) * 22.0, vr.position.y, vr.end.y) - 18.0 - sin(t * 1.6 + ph) * 5.0
+		var y = clampf(by + sin(t * 0.37 + ph * 2.0) * 22.0, vr.position.y, vr.end.y) - 22.0 - sin(t * 1.6 + ph) * 6.0
 		if y < top or y > bot: continue
-		var w = 40.0 + fmod(i * 7.0, 14.0); var h = w * im.get_height() / im.get_width()
+		var h = 66.0 + fmod(i * 7.0, 12.0); var w = h * im.get_width() / im.get_height()
 		var flip = cos(t * 0.21 + ph) * (1.0 if i % 2 == 0 else -1.0) < 0.0
-		c.draw_texture_rect(PtGfx.RAD, Rect2(x - w, y - h * 0.9, w * 2.0, h * 1.3), false, Color(0.62, 0.78, 0.95, a * 0.45))
-		for tr in 3:   # 拖尾：淡淡幾個殘影
-			var ox = -sin(t * 0.21 + ph) * 6.0 * (tr + 1); var oy = 4.0 * (tr + 1)
-			c.draw_texture_rect(PtGfx.RAD, Rect2(x + ox - 10, y + oy - 6, 20, 14), false, Color(0.7, 0.85, 1.0, a * 0.25 / (tr + 1)))
-		if flip: c.draw_set_transform(Vector2(x, 0), 0, Vector2(-1, 1))
-		var rx = 0.0 if flip else x
-		c.draw_texture_rect(im, Rect2(rx - w / 2, y - h, w, h), false, Color(0.80, 0.90, 1.0, a))
-		if flip: c.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+		c.draw_texture_rect(PtGfx.RAD, Rect2(x - w * 0.9, y - h * 1.0, w * 1.8, h * 1.1), false, Color(0.70, 0.82, 0.90, a * 0.30))
+		var tint = Color(0.86, 0.92, 0.98)
+		var iw = float(im.get_width()); var ih = float(im.get_height())
+		for sl in SOUL_SLICES:   # 由上至下逐段畫，下半身慢慢淡出（冇腳、似飄緊）
+			var f0 = float(sl) / SOUL_SLICES; var f1 = float(sl + 1) / SOUL_SLICES
+			var fa = 1.0 if f1 <= 0.55 else clampf(1.0 - (f0 - 0.55) / 0.45, 0.0, 1.0)
+			if fa <= 0.01: continue
+			var sway = sin(t * 2.2 + ph + f0 * 3.0) * 3.0 * f0   # 下身輕輕擺
+			var dst = Rect2(x - w / 2 + sway, y - h + h * f0, w, h * (f1 - f0) + 0.6)
+			var src = Rect2(0, ih * f0, iw, ih * (f1 - f0))
+			if flip: src = Rect2(iw, ih * f0, -iw, ih * (f1 - f0))
+			c.draw_texture_rect_region(im, dst, src, Color(tint.r, tint.g, tint.b, a * fa))
 
 # ---------------- 烏鴉、羽毛、碎片 ----------------
 const PART_IMG := {"spark": "fx_spark", "chip": "fx_chips", "dust": "fx_dust", "dough": "fx_dough", "grain": "fx_dough"}

@@ -300,6 +300,14 @@ static func q_complete(this_) -> void:
 	J.cl(_g("save"), null, []); _ui_refresh()
 
 # ---------------- 其他 ----------------
+# [ruins13b] 未解鎖嘅建築：講要做咩先開（廢墟牌／撳廢墟提示）
+static func bld_req(id) -> String:
+	var S = _S(); var b = _g("BUILDINGS").get(J.str(id))
+	if b == null: return ""
+	if J.t(b.get("unlockLv")) and J.num(S.lv) < J.num(b.unlockLv): return "主公 %d 級開放" % int(J.num(b.unlockLv))
+	if J.t(b.get("unlockStage")) and not J.t(S.cleared.get(J.str(b.unlockStage))): return "通關 %s 開放" % J.str(b.unlockStage)
+	if J.t(b.get("unlockQuest")): return "跟主線任務開放"
+	return ""
 static func bld_unlocked(id) -> bool:
 	var S = _S(); var b = _g("BUILDINGS")[J.str(id)]
 	if J.t(b.get("unlockLv")) and J.num(S.lv) < J.num(b.unlockLv): return false
@@ -359,7 +367,9 @@ static func v_hit_test(x: float, y: float):
 		var bx = J.num(POS[id][0]); var by = J.num(POS[id][1])
 		var w = 70.0 if id == "house" else (65.0 if id == "gate" else (26.0 if id == "furnace" else 46.0)); var h = 115.0 if id == "house" else (92.0 if id == "gate" else 70.0)
 		if id != "gate" and SB is Dictionary and SB.has(id) and not J.t(SB.get(id)):   # [ruins13] 未起嘅地盤（廢墟）
-			if not J.t(_c("bldUnlocked", [id])): continue   # 未解鎖：撳唔到（之前撳空地都會彈建築卡）
+			if not J.t(_c("bldUnlocked", [id])):   # 未解鎖：唔彈建築卡（之前撳空地都會彈），撳廢墟／木牌淨係講點樣開
+				if absf(x - bx) < 40 and y > by - 80 and y < by + 10: return {"kind": "ruin", "id": id}
+				continue
 			w = 40.0; h = 80.0   # 可重建：撳廢墟／木牌
 		if absf(x - bx) < w and y > by - h and y < by + 10: return {"kind": "gate" if id == "gate" else "bld", "id": id}
 	return null
@@ -381,6 +391,9 @@ static func v_tap(this_, x: float, y: float) -> void:
 		var i = int(J.num(h.i)); var pp = _pos("PADDY_POS", i)
 		if J.t(S.paddy[i]): J.mc(this_, "walkTo", [J.num(pp[0]) - 30, J.num(pp[1]) + 4, {"kind": "paddy", "i": float(i)}])
 		else: _float(x, y - 20, "稻子還沒熟", "#ccc")
+		return
+	if k == "ruin":   # [ruins13b] 未解鎖廢墟：講要做咩先開
+		_float(x, y - 30, "%s：%s" % [J.str(_g("BUILDINGS")[J.str(h.id)].name), bld_req(h.id)], "#e8d8b0")
 		return
 	if k == "gate":
 		var Wd = _g("World")

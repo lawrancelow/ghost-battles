@@ -553,7 +553,8 @@ static func _rgba(hex: String, a: float) -> String:
 # [hotfix12] 區與區之間嘅空隙（邊界山石、樹林、河、柵欄）：唔近任何「已開放」區就蓋黑霧。
 #   已開放＝中央村、已解霧嘅大排檔／野外區、已介紹嘅資源區；格仔 32px，逐行合併，狀態變先重算。
 const GAP_CELL := 32.0
-const GAP_NEAR := 240.0
+const GAP_NEAR := 60.0      # 已開放區周圍留幾多唔蓋
+const GAP_NEAR_VIL := 16.0  # 中央村：差唔多貼邊（村外山石樹林都蓋）
 const GAP_PAD := 14   # 世界邊外面都蓋（鏡頭睇到嘅界外山石）
 static var _gap_key := ""
 static var _gap_runs: Array = []
@@ -564,7 +565,7 @@ static func _gap_fog(c: CanvasItem, vr: Rect2) -> void:
 		var r = ZD.rect(z.rect); var tp = str(z.type); var zid = str(z.id)
 		zr.append(r)
 		var op = tp == "village" or ZD.revealed(zid)
-		if op: open.append(r.grow(GAP_NEAR))
+		if op: open.append(r.grow(GAP_NEAR_VIL if tp == "village" else GAP_NEAR))
 		key += "1" if op else "0"
 	if key != _gap_key:
 		_gap_key = key; _gap_runs.clear()
