@@ -150,7 +150,7 @@ func open_list() -> void:
 	var body: VBoxContainer = main.sheet_body
 	var ts = list_targets()
 	var hp = hero_pos()
-	var hint = UIKit.rich(L("揀一個目標：鏡頭帶你過去，阿福自己行埋去，到咗撳底部個大掣就開打。", "選一個目標：鏡頭帶你過去，阿福自己走過去，到了按底部的大按鈕就開打。"), 16, UIKit.INKTXT)
+	var hint = UIKit.rich(DB.N(L("揀一個目標：鏡頭帶你過去，阿福自己行埋去，到咗撳底部個大掣就開打。", "選一個目標：鏡頭帶你過去，阿福自己走過去，到了按底部的大按鈕就開打。")), 16, UIKit.INKTXT)
 	body.add_child(hint)
 	if ts.is_empty():
 		body.add_child(UIKit.rich("[color=#6e5838]%s[/color]" % L("而家冇可以打嘅目標。完成主線任務會開放更多地方。", "現在沒有可以打的目標。完成主線任務會開放更多地方。"), 16, UIKit.INKTXT))
