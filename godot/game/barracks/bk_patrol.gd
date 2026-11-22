@@ -9,10 +9,10 @@ const SALUTE := 1.0
 const SPEED := 24.0
 const MAX_N := 8
 const PER := 25            # 每 25 個陰兵（村裡：待命＋防衛）畫 1 隻
-# 路網（相對村子區左上角；六關村子佈局一樣）。D＝兵營門口
-const NODES := {"D": Vector2(752, 650), "E1": Vector2(700, 488), "C": Vector2(442, 486), "N1": Vector2(442, 300), "N2": Vector2(442, 120),
-	"W1": Vector2(170, 486), "S1": Vector2(442, 700), "E2": Vector2(840, 482), "SE": Vector2(600, 640)}
-const EDGES := [["D", "E1"], ["E1", "C"], ["E1", "E2"], ["C", "N1"], ["N1", "N2"], ["C", "W1"], ["C", "S1"], ["S1", "SE"], ["SE", "D"]]
+# 路網（相對村子區左上角；六關村子佈局一樣）。D＝兵營門口；行村中直路（x 442）、橫路（y 470）同南面小路（y 700），避開所有建築（測試逐關檢查）
+const NODES := {"D": Vector2(752, 650), "SE": Vector2(700, 700), "S1": Vector2(442, 700), "C": Vector2(442, 470), "E1": Vector2(700, 470),
+	"E2": Vector2(840, 470), "W1": Vector2(170, 470), "N1": Vector2(442, 300), "N2": Vector2(442, 120)}
+const EDGES := [["D", "SE"], ["SE", "S1"], ["S1", "C"], ["C", "E1"], ["E1", "E2"], ["C", "W1"], ["C", "N1"], ["N1", "N2"]]
 const GUARDS := [Vector2(-36, 22), Vector2(6, 24)]   # 兵營門口兩個崗（相對兵營 POS；草棚門口兩邊，唔遮名牌）
 
 var origin := Vector2.ZERO

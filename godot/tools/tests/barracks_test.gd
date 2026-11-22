@@ -285,4 +285,21 @@ func _layout() -> void:
 		for p in v.PADDY_POS: if Rect2(float(p[0]) - 36, float(p[1]) - 30, 72, 34).intersects(me): hit.append("paddy")
 		for d in v.DECOR: if str(d[0]) != "willo" and Rect2(float(d[1]) - 12, float(d[2]) - 10, 24, 14).intersects(me): hit.append(str(d[0]))
 		for e in v.get("EXTRA", []): if Rect2(float(e[1]) - float(e[3]) / 2, float(e[2]) - 20, float(e[3]), 24).intersects(me): hit.append(str(e[0]))
+		# 巡邏路線：每段路唔穿過任何建築（連兵營）、樹、稻田、公告板
+		var phit = []
+		var allpos = v.POS.duplicate(); allpos["barracks"] = [bp.x, bp.y]
+		for e in BP.EDGES:
+			var a0 = vr.position + BP.NODES[e[0]]; var b0 = vr.position + BP.NODES[e[1]]
+			for i in 81:
+				var q = a0.lerp(b0, i / 80.0)
+				for k in allpos:
+					var pp = ZD.v2(allpos[k]); var hw = float(Art.BW.get(k, 100)) * 0.45
+					if absf(q.x - pp.x) < hw and q.y > pp.y - 40 and q.y < pp.y + 10: phit.append("%s-%s:%s" % [e[0], e[1], k])
+				for tp in v.TREE_POS: if absf(q.x - float(tp[0])) < 16 and q.y > float(tp[1]) - 12 and q.y < float(tp[1]) + 8: phit.append("tree")
+				for tp in v.PADDY_POS: if absf(q.x - float(tp[0])) < 36 and q.y > float(tp[1]) - 30 and q.y < float(tp[1]) + 8: phit.append("paddy")
+				for ex in v.get("EXTRA", []): if absf(q.x - float(ex[1])) < float(ex[3]) / 2 and q.y > float(ex[2]) - 24 and q.y < float(ex[2]) + 6: phit.append(str(ex[0]))
+			if not vr.has_point(a0) or not vr.has_point(b0): phit.append("out")
+		var uniq = []
+		for h in phit: if not uniq.has(h): uniq.append(h)
+		_chk("第 %d 關：巡邏路線唔穿過建築／樹／稻田" % (c + 1), uniq.is_empty(), uniq)
 		_chk("第 %d 關：兵營喺村子入面、唔撞其他嘢" % (c + 1), vr.grow(-8).encloses(Rect2(bp.x - 58, bp.y - 100, 116, 110)) and hit.is_empty(), [bp, hit])
