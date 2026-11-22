@@ -98,7 +98,7 @@ static func _rich(text: String, size := 14.0, col := UIKit.INKTXT) -> RichTextLa
 	r.add_theme_font_override("normal_font", UIKit.font("sans", 400)); r.add_theme_font_override("bold_font", UIKit.font("sans", 900))
 	r.add_theme_font_size_override("normal_font_size", int(size)); r.add_theme_font_size_override("bold_font_size", int(size))
 	r.add_theme_color_override("default_color", col); r.mouse_filter = Control.MOUSE_FILTER_PASS
-	r.text = text; return r
+	r.text = DB.N(text); return r   # [femfix] 女主：名、稱號照改
 
 static func bb(h) -> String: return JSBridge.html2bb(J.str(h)).replace("[color=#ff8a7a]", "[color=#c2362b]")
 
@@ -227,7 +227,7 @@ static func open_pick(post: String, back: String) -> void:
 		var hb = HBoxContainer.new(); hb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); hb.offset_left = 6; hb.offset_right = -6; hb.mouse_filter = Control.MOUSE_FILTER_IGNORE; hb.add_theme_constant_override("separation", 8)
 		var po = _por(J.str(g.k), 48, 0.5 if fb else 1.0); po.mouse_filter = Control.MOUSE_FILTER_IGNORE; hb.add_child(po)
 		var keytxt = "%s %d" % [stn, int(J.num(g.key))]
-		var r = UIKit.rich("[b]%s[/b] %s　[color=#9c2219][b]%s[/b][/color]%s　%s\n[font_size=12]%s%s[/font_size]" % [J.str(g.name), _qtag(J.str(g.q)), keytxt, ("　Lv%d" % int(J.num(g.lv))) if stn != "等級" else "", J.str(g.other), ("目前：" + J.str(g.where)) if J.str(g.where) != "閒著" else "閒著", "　[color=#c2362b]怕糯米，不肯去[/color]" if fb else ""], 14, UIKit.INKTXT)
+		var r = UIKit.rich(DB.N("[b]%s[/b] %s　[color=#9c2219][b]%s[/b][/color]%s　%s\n[font_size=12]%s%s[/font_size]" % [J.str(g.name), _qtag(J.str(g.q)), keytxt, ("　Lv%d" % int(J.num(g.lv))) if stn != "等級" else "", J.str(g.other), ("目前：" + J.str(g.where)) if J.str(g.where) != "閒著" else "閒著", "　[color=#c2362b]怕糯米，不肯去[/color]" if fb else ""]), 14, UIKit.INKTXT)
 		r.size_flags_horizontal = Control.SIZE_EXPAND_FILL; r.mouse_filter = Control.MOUSE_FILTER_IGNORE; r.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		hb.add_child(r); row.add_child(hb)
 		var gid = J.str(g.id)

@@ -814,10 +814,10 @@ func _render_roster() -> void:
 		var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 10); pc.add_child(hb)
 		hb.add_child(UIKit.portrait(g.k, 60))
 		var gd: Dictionary = D.GHOSTS.get(g.k, {})
-		var txt = "[b]%s[/b] [color=#9c2219]%s[/color] [b]Lv%d[/b] %s\n[font_size=12]%s力 %d　智 %d　武 %d　%s[/font_size]\n[font_size=12][color=#2e5d55]【%s】%s[/color][/font_size]" % [g.name, g.q, lv, ("[bgcolor=#c2362b][color=#fff] %s [/color][/bgcolor]" % tag) if tag else "", (gd.title + "　") if gd.has("title") else "", G.stat(g, 0), G.stat(g, 1), G.stat(g, 2), "遠程" if d.get("range") == "ranged" else "近戰", sk.name, sk.desc]
+		var txt = "[b]%s[/b] [color=#9c2219]%s[/color] [b]Lv%d[/b] %s\n[font_size=12]%s力 %d　智 %d　武 %d　%s[/font_size]\n[font_size=12][color=#2e5d55]【%s】%s[/color][/font_size]" % [DB.N(g.name), g.q, lv, ("[bgcolor=#c2362b][color=#fff] %s [/color][/bgcolor]" % tag) if tag else "", (DB.N(gd.title) + "　") if gd.has("title") else "", G.stat(g, 0), G.stat(g, 1), G.stat(g, 2), "遠程" if d.get("range") == "ranged" else "近戰", sk.name, sk.desc]
 		if gd.has("trait"): txt += "\n[font_size=12][color=#6e5838]%s[/color][/font_size]" % DB.L(gd.trait)
 		txt += "\n[font_size=12]%s[/font_size]" % (("打工：" + D.POSTS[g.post].name) if g.get("post") != null and D.POSTS.has(g.post) else ("主公本人" if g.k == "afu" else "閒著"))
-		var info = UIKit.rich(txt, 14, UIKit.INKTXT); info.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hb.add_child(info)
+		var info = UIKit.rich(DB.N(txt), 14, UIKit.INKTXT); info.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hb.add_child(info)   # [femfix] 女主：名、稱號（過勞死學霸）照改
 		var act = VBoxContainer.new(); hb.add_child(act)
 		if g.k == "afu": act.add_child(UIKit.label("隨主公\n等級成長", 11, UIKit.INKDIM))
 		elif lv < G.ghostCap():
