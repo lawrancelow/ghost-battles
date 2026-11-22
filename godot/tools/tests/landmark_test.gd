@@ -614,26 +614,17 @@ func _zq_check(t, m, shots: bool) -> void:
 	var f_on = LA.FX_LOG.frames
 	_chk("鏡頭對住：動態每格畫", f_on >= 10, f_on)
 	_chk("實際畫出嚟嘅鬼魂冇出木樁圈", LA.FX_LOG.max_out <= 1.0, LA.FX_LOG.max_out)
+	var top = nv.world.get_node_or_null("lm_zq_top"); var vn = nv.world.get_node_or_null("va_night")
+	_chk("鬼魂層喺夜色層之上、泡泡層之下（唔畀夜色壓暗）", top != null and top.visible and vn != null and top.get_index() > vn.get_index() and top.get_index() < nv.top_ui.get_index() and top.get_index() > nv.ysort.get_index(), [top.get_index() if top else -1, vn.get_index() if vn else -1])
 	if shots:
-		for k in 4: await _shot(t, "zq_anim_%d" % k); await _w(t, 0.45)
+		for k in 4: await _shot(t, "zq_anim_night_%d" % k); await _w(t, 0.45)
+		var VS = load("res://game/village_style.gd")   # 白天對照：熄暗影、夜色暈邊
+		VS.dark_on = false
+		if vn: vn.visible = false
+		await _w(t, 0.3)
+		for k in 4: await _shot(t, "zq_anim_day_%d" % k); await _w(t, 0.45)
+		VS.dark_on = true
+		if vn: vn.visible = true
 	_cam(m, ZD.zrect("village").get_center()); await _w(t, 0.6)
 	LA.FX_LOG.frames = 0; await _w(t, 1.0)
 	_chk("鏡頭外：動態唔畫（效能）", LA.FX_LOG.frames <= 1, LA.FX_LOG.frames)
-
-func probe(t) -> void:
-	var m = await _boot(t)
-	ZD.gate_on = false
-	await _goto(t, m, 0)
-	var nv = m.village
-	_cam(m, LM.art_rect("zhiqian").get_center(), nv.size.x / 470.0); await _w(t, 1.5)
-	var gn = nv.statics.get("lm_zqg_0").node
-	_p("node class=%s parent=%s mod=%s selfmod=%s vis_in_tree=%s mat=%s" % [gn.get_class(), gn.get_parent().name, gn.modulate, gn.self_modulate, gn.is_visible_in_tree(), gn.material])
-	_p("spr %s %s tex %s" % [Spr.ok("zqg2_emerge"), Spr.ok("zqg2_press"), LA._gtex("emerge", 0)])
-	var a = LM.at("zhiqian"); var ar = LM.art_rect("zhiqian")
-	for i in LA.ZQ_N:
-		var o = LA.ghost_state(i, nv.t, a.x, a.y, ar.size.x, ar.size.y - 10.0)
-		var s = nv.statics.get("lm_zqg_%d" % i)
-		_p("g%d pos=%s a=%.2f pose=%s node=%s vis=%s y=%s z=%s" % [i, o.pos, o.a, o.pose, s != null, s.node.visible if s else null, s.node.position.y if s else null, s.node.z_index if s else null])
-	_p("t=%s cam_y=%s view=%s" % [nv.t, nv.cam_y, nv.view_rect()])
-	await _shot(t, "probe_zq")
-	_p("RESULT ok=1 bad=0")

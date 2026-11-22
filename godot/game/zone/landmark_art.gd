@@ -175,7 +175,7 @@ const ZQ_KNOTS := [Vector2(0.214, 0.17), Vector2(0.389, 0.098), Vector2(0.617, 0
 const GHOST_KEYS := ["zqg2_%s"]
 const GHOST_TMP := ["soul_a", "soul_b", "soul_c", "soul_d"]
 const ZQ_N := 5          # 同時幾多隻（3～5）
-const ZQ_GH := 0.24      # 鬼魂高＝主陣圖高 × 呢個
+const ZQ_GH := 0.30      # 鬼魂高＝主陣圖高 × 呢個（20:xx 總指揮：24% 太細，改 30%）
 const ZQ_HALF := 0.56    # 鬼魂半闊＝高 × 呢個（最闊嘅 drift 約 0.51，加拉伸）
 static func _gtex(pose: String, i: int) -> Texture2D:
 	for f in GHOST_KEYS:
@@ -244,9 +244,9 @@ static func ghost_state(i: int, t: float, x: float, y: float, w: float, h: float
 		if absf(o.pos.x - fp.x) < half + 8.0 and o.pos.y > fp.y - 3.0: o.pos = Vector2(o.pos.x, fp.y - 3.0)
 	var st = sin(t * 4.3 + i * 1.9) * 0.06   # 輕微拉伸（x／y 交替）
 	o.sx *= 1.0 + st; o.sy *= 1.0 - st
-	var fl = 0.88 + 0.12 * sin(t * 13.0 + i * 2.7)   # 忽明忽暗；偶爾成隻變淡幾乎睇唔到
-	if sin(t * 0.83 + i * 2.3) > 0.965: fl *= 0.12
-	o.a = float(o.a) * 0.86 * fl
+	var fl = 0.765 + 0.235 * sin(t * 13.0 + i * 2.7)   # 忽明忽暗：最低 0.85×0.53≈0.45
+	if sin(t * 0.83 + i * 2.3) > 0.992: fl = 0.15   # 偶爾一下成隻變淡（好短）
+	o.a = float(o.a) * 0.85 * fl
 	return o
 static var FX_LOG := {"frames": 0, "max_out": 0.0, "ripples": 0}   # 測試用：畫咗幾多格、鬼魂（連身闊）最出到圈幾多（≤ 1＝喺圈內）
 static func _ghost(c: CanvasItem, T: Transform2D, o: Dictionary, i: int, t: float, alpha: float) -> void:
@@ -258,46 +258,57 @@ static func _ghost(c: CanvasItem, T: Transform2D, o: Dictionary, i: int, t: floa
 	var sx = (-1.0 if o.flip else 1.0) * float(o.sx)
 	var sk = sin(t * 3.1 + i) * 0.06   # 身體隨正弦擺（斜少少）
 	c.draw_set_transform_matrix(T * Transform2D(Vector2(sx, 0), Vector2(sk, float(o.sy)), foot))
-	# 鬼魂圖本身半透明、又淺色，夜色底下會溶咗：背後一團淡青光，本體畫兩次（提亮）睇得清塊面
-	if PtGfx.RAD != null: c.draw_texture_rect(PtGfx.RAD, Rect2(-gw * 0.7, -gh * 1.05, gw * 1.4, gh * 1.0), false, Color(0.7, 1.0, 0.8, 0.16 * alpha))
-	var mc = Color(1.3, 1.34, 1.24, alpha * 0.8)   # 疊三次：原圖好薄，夜色底下先睇得清塊面同輪廓
-	for k in 3: c.draw_texture_rect(tx, Rect2(-gw / 2.0, -gh, gw, gh), false, mc)
+	# 喺夜色層之上畫（唔畀夜色／暗影壓暗）：背後一圈好淡嘅青綠外發光，本體疊兩次（原圖好薄）睇得清塊面
+	if PtGfx.RAD != null: c.draw_texture_rect(PtGfx.RAD, Rect2(-gw * 0.75, -gh * 1.08, gw * 1.5, gh * 1.1), false, Color(0.55, 1.0, 0.8, 0.2 * alpha))
+	for k in 2: c.draw_texture_rect(tx, Rect2(-gw / 2.0, -gh, gw, gh), false, Color(1, 1, 1, alpha))
 	c.draw_set_transform_matrix(T)
-# 底層（y＝圖頂）：黑罈綠光一明一暗、罈口煙、陣上紅線輕震
+# 底層（ysort，y＝圖頂）：陣上紅線輕震
 static func draw_fx(ctx: Ctx, x: float, y: float, w: float, t: float) -> void:
 	var h = size_of("zhiqian", w).y
 	var c = ctx.ci
 	var G = _geo(x, y, w, h)
-	var jar: Vector2 = G.jar; var mouth: Vector2 = G.mouth
-	FX_LOG.frames += 1
+	var jar: Vector2 = G.jar
 	c.draw_set_transform_matrix(ctx.T)
-	var g = 0.5 + 0.5 * sin(t * 2.1)
-	if PtGfx.RAD != null:
-		var r = w * (0.14 + 0.03 * g)
-		c.draw_texture_rect(PtGfx.RAD, Rect2(jar.x - r, jar.y - r * 1.1, r * 2.0, r * 2.0), false, Color(0.45, 1.0, 0.5, 0.14 + 0.2 * g))
-		for k in 3:
-			var sm = fposmod(t * 0.35 + k / 3.0, 1.0)
-			var sr = w * (0.03 + 0.05 * sm)
-			c.draw_texture_rect(PtGfx.RAD, Rect2(mouth.x - sr + sin(t + k) * 6.0, mouth.y - 6.0 - sm * 46.0 - sr, sr * 2.0, sr * 2.0), false, Color(0.7, 0.95, 0.7, 0.16 * (1.0 - sm)))
 	for j in ZQ_KNOTS.size():   # 陣法本身嘅紅線（唔係綁鬼）
 		var kp = Vector2(x - w / 2.0 + ZQ_KNOTS[j].x * w, float(G.top) + ZQ_KNOTS[j].y * h)
 		var mid = (jar + kp) * 0.5 + Vector2(0, 4.0 + sin(t * 9.0 + j * 1.7) * 1.3)
 		c.draw_polyline(PackedVector2Array([jar, mid, kp]), Color(0.62, 0.08, 0.07, 0.26), 1.1, true)
 	c.draw_set_transform_matrix(Transform2D.IDENTITY)
-# 一隻鬼（自己一個 y 排序節點；y＝腳位）：殘影、本體、屏障漣漪、化煙
-static func draw_ghost(ctx: Ctx, i: int, x: float, y: float, w: float, t: float) -> void:
+# 上層（夜色層之上，唔畀夜色壓暗；世界座標）：黑罈綠光一明一暗、罈口煙、全部鬼魂（按腳位排先後）
+#   鬼魂腳位限死喺前排木樁頂後面 → 前排木樁同鬼魂喺畫面上唔會疊，喺上層畫都唔會錯前後
+static func draw_top(c: CanvasItem, x: float, y: float, w: float, t: float) -> void:
 	var h = size_of("zhiqian", w).y
-	var c = ctx.ci
+	var G = _geo(x, y, w, h)
+	var jar: Vector2 = G.jar; var mouth: Vector2 = G.mouth
+	FX_LOG.frames += 1
+	var T = Transform2D.IDENTITY
+	c.draw_set_transform_matrix(T)
+	var g = 0.5 + 0.5 * sin(t * 2.1)
+	if PtGfx.RAD != null:
+		var r = w * (0.14 + 0.03 * g)
+		c.draw_texture_rect(PtGfx.RAD, Rect2(jar.x - r, jar.y - r * 1.1, r * 2.0, r * 2.0), false, Color(0.45, 1.0, 0.5, 0.12 + 0.2 * g))
+		for k in 3:
+			var sm = fposmod(t * 0.35 + k / 3.0, 1.0)
+			var sr = w * (0.03 + 0.05 * sm)
+			c.draw_texture_rect(PtGfx.RAD, Rect2(mouth.x - sr + sin(t + k) * 6.0, mouth.y - 6.0 - sm * 46.0 - sr, sr * 2.0, sr * 2.0), false, Color(0.7, 0.95, 0.7, 0.14 * (1.0 - sm)))
+	var order = []
+	for i in ZQ_N: order.append([i, ghost_state(i, t, x, y, w, h).pos.y])
+	order.sort_custom(func(a, b): return a[1] < b[1])
+	for e in order: draw_ghost(c, T, int(e[0]), x, y, w, t)
+	c.draw_set_transform_matrix(Transform2D.IDENTITY)
+# 一隻鬼：殘影、本體、屏障漣漪、化煙
+static func draw_ghost(c: CanvasItem, T: Transform2D, i: int, x: float, y: float, w: float, t: float) -> void:
+	var h = size_of("zhiqian", w).y
 	var o = ghost_state(i, t, x, y, w, h)
-	c.draw_set_transform_matrix(ctx.T)
+	c.draw_set_transform_matrix(T)
 	if float(o.smoke) > 0.0 and PtGfx.RAD != null:
 		for k in 4:
 			var sp = o.pos + Vector2(sin(k * 1.9 + i) * 20.0 * float(o.smoke), -float(o.gh) * 0.5 - float(o.smoke) * 22.0 - k * 6.0)
 			var sr = float(o.gh) * (0.18 + 0.14 * float(o.smoke))
 			c.draw_texture_rect(PtGfx.RAD, Rect2(sp.x - sr, sp.y - sr, sr * 2.0, sr * 2.0), false, Color(0.78, 0.86, 0.76, 0.24 * (1.0 - float(o.smoke))))
 	var ob = ghost_state(i, t - 0.09, x, y, w, h)   # 淡殘影 1 個
-	if str(ob.pose) == str(o.pose): _ghost(c, ctx.T, ob, i, t - 0.09, float(ob.a) * 0.3)
-	_ghost(c, ctx.T, o, i, t, float(o.a))
+	if str(ob.pose) == str(o.pose): _ghost(c, T, ob, i, t - 0.09, float(ob.a) * 0.3)
+	_ghost(c, T, o, i, t, float(o.a))
 	if float(o.rip) > 0.0:   # 外側直立弧形綠漣漪（似撞玻璃牆）
 		FX_LOG.ripples += 1
 		var d: Vector2 = o.dir

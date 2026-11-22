@@ -358,6 +358,8 @@ static func register() -> void:
 # ---------------- 畫：地圖上（nv_village 靜態層） ----------------
 #   大山：泥地（最底，y＝圖頂）＋山圖（y＝山腳橢圓中間）＋外圍道具（每件自己 y）；全部靜態（sig 唔變就唔重畫）
 static func statics(nv) -> void:
+	var zt = nv.world.get_node_or_null("lm_zq_top") if nv.get("world") != null else null
+	if zt != null: zt.visible = false   # 冇紙錢陣／唔喺分區：收埋（下面有就再開）
 	if not ZD.on(): return
 	var ci = ZD.ci()
 	for z in zones_of():
@@ -372,9 +374,12 @@ static func statics(nv) -> void:
 				nv._static("lmq_%d" % i, float(e2[2]), [ci, i], false, func(ctx): LA.draw_ring(ctx, e2))
 			var on = ar.grow(60).intersects(nv.view_rect())   # 鏡頭外唔每格重畫（效能）
 			nv._static("lm_zq_fx", ar.position.y + 7.0, [ci, "fx"], on, func(ctx): LA.draw_fx(ctx, a.x, a.y, ar.size.x, nv.t))
-			for gi in LA.ZQ_N:   # 每隻鬼魂自己 y 排序（腳位），同木樁、散件、主角前後啱
-				var gy = LA.ghost_y(gi, a.x, a.y, ar.size.x, nv.t) if on else a.y - ar.size.y * 0.5
-				nv._static("lm_zqg_%d" % gi, gy, [ci, "g", gi], on, func(ctx): LA.draw_ghost(ctx, gi, a.x, a.y, ar.size.x, nv.t))
+			zq_on = on
+			var top = _zq_top(nv)
+			if top != null:
+				top.fn = func(c): LA.draw_top(c, a.x, a.y, ar.size.x, nv.t)
+				top.visible = on and unlocked(lm)   # 未開（黑霧）唔畫
+				if top.visible: top.queue_redraw()
 			continue
 		nv._static("lm_" + lm, a.y + LA.sort_dy(lm), [ci, lm], false, func(ctx): LA.draw(ctx, lm, a.x, a.y, w))
 		if lm != "hill": continue
@@ -383,6 +388,19 @@ static func statics(nv) -> void:
 		for i in ring.size():
 			var e = ring[i]
 			nv._static("lmr_%d" % i, float(e[2]), [ci, i], false, func(ctx): LA.draw_ring(ctx, e))
+# 紙錢陣上層節點：放喺夜色層（va_night）之上、泡泡／浮字（top_ui）之下 → 鬼魂、罈光唔畀夜色／暗影壓暗
+static var zq_on := false
+static func _zq_top(nv):
+	var w = nv.get("world")
+	if w == null: return null
+	var n = w.get_node_or_null("lm_zq_top")
+	if n == null:
+		n = PtDraw.new(); n.name = "lm_zq_top"; n.tag = "zqtop"
+		w.add_child(n)
+	var tu = nv.get("top_ui")
+	if tu != null and n.get_index() != tu.get_index() - 1:   # 永遠緊貼 top_ui 之前（夜色層之後）
+		w.move_child(n, w.get_child_count() - 1); w.move_child(n, tu.get_index())
+	return n
 # 上層（zone_view.draw_over 尾）：未開＝黑霧＋名牌＋鎖＋點樣開；開咗＝名牌（＋紅點）
 static func draw_over(c: CanvasItem, nv, ctx: Ctx, vr: Rect2, t: float) -> void:
 	if not ZD.on(): return
