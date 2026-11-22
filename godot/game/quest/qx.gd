@@ -133,7 +133,7 @@ func dq() -> Dictionary:
 	if not s.has("dq") or not (s.dq is Dictionary): s.dq = {"day": "", "list": [], "streak": 0.0, "bonus": false, "last_full": ""}
 	var q: Dictionary = s.dq
 	if q.day != _today(): _roll(q)
-	if load("res://game/zone/zone_data.gd").on():   # [outgate] 今日已派咗巡陰日常：換做村子日常（舊巡陰暫時唔開）
+	if load("res://game/zone/zone_data.gd").on() and not load("res://game/zone/landmark.gd").patrol_ok():   # [outgate] 今日已派咗巡陰日常：換做村子日常（舊巡陰暫時唔開）；[landmark] 紙錢陣開咗就重開
 		var have = []
 		for e in q.list: have.append(str(e.id))
 		for i in q.list.size():
@@ -153,7 +153,7 @@ func _roll(q: Dictionary) -> void:
 	var vil = pool.filter(func(x): return x.cat == "village")
 	var pat = pool.filter(func(x): return x.cat == "patrol")
 	var lv = J.num(S().lv)
-	if lv < 3 or load("res://game/zone/zone_data.gd").on(): pat = []   # 未開巡陰；[outgate] 新版：舊巡陰暫時唔開，唔派巡陰日常
+	if lv < 3 or (load("res://game/zone/zone_data.gd").on() and not load("res://game/zone/landmark.gd").patrol_ok()): pat = []   # [landmark] 紙錢陣開咗：巡陰日常重開   # 未開巡陰；[outgate] 新版：舊巡陰暫時唔開，唔派巡陰日常
 	var pick = []
 	var rng = RandomNumberGenerator.new(); rng.seed = hash(q.day + str(J.num(S().get("uid", 0))))
 	var take = func(arr: Array, n: int) -> void:
@@ -327,7 +327,7 @@ func _process(dt: float) -> void:
 		var e = sq()[k]; var x = sdef(k)
 		if not x.is_empty() and not e.done and (e.get("new", false) or (int(e.step) < x.steps.size() and x.steps[int(e.step)].get("pay") != null)): n += 1
 	var P = J.G.get("Patrol"); var N = J.gp(P, "_nat") if P != null else null
-	if N != null and not load("res://game/zone/zone_data.gd").on():   # [outgate]
+	if N != null and (not load("res://game/zone/zone_data.gd").on() or load("res://game/zone/landmark.gd").patrol_ok()):   # [outgate] [landmark] 紙錢陣開咗：巡陰區域目標重開
 		for gl in D.get("goals", []):
 			if not sq().has("goal_" + gl.id) and J.t(J.cl(N.regionOpen, null, [float(gl.ci)])) and metric(gl.m) >= float(gl.n): n += 1
 	dot.visible = n > 0; badge_n = n
@@ -408,7 +408,7 @@ func _main_tab(body: VBoxContainer) -> void:
 	var P = J.G.get("Patrol"); var N = J.gp(P, "_nat")
 	var shown = false
 	for gl in D.get("goals", []):
-		if load("res://game/zone/zone_data.gd").on(): break   # [outgate] 舊巡陰區域目標：暫時唔開
+		if load("res://game/zone/zone_data.gd").on() and not load("res://game/zone/landmark.gd").patrol_ok(): break   # [outgate] 舊巡陰區域目標：紙錢陣未開唔出 [landmark]
 		if not J.t(J.cl(N.regionOpen, null, [float(gl.ci)])): continue
 		var key = "goal_" + gl.id; var got = sq().has(key)
 		if got: continue

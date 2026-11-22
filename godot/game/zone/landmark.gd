@@ -27,15 +27,20 @@ const PLACES := {
 			"sub": [{"id": "scare", "n": ["夜班嚇人", "夜班嚇人"], "d": ["返夜班，一間間辦公室嚇過去。", "上夜班，一間間辦公室嚇過去。"]},
 				{"id": "tower", "n": ["樓裡有鬼", "樓裡有鬼"], "d": ["揀一棟樓，由地下嚇到天台，天光前返嚟。", "選一棟樓，從地下嚇到天台，天亮前回來。"]}]},
 	],
+	"zhiqian": [
+		{"id": "battle", "n": ["夜班巡陰", "夜班巡陰"], "d": ["帶住部門落陰間巡夜：打鬼、收地、升職。", "帶著部門下陰間巡夜：打鬼、收地、升職。"]},
+		{"id": "yard", "n": ["陰陽交界", "陰陽交界"], "d": ["發大水嗰晚卡住咗嘅村民，等緊你去救。", "發大水那晚被困住的村民，等著你去救。"]},
+	],
 }
 const INTRO := {
 	"hill": ["村邊嘅墳山。山後兩條小路：一條去冥街夜市，一條落亂葬崗。", "村邊的墳山。山後兩條小路：一條去冥街夜市，一條下亂葬崗。"],
 	"tower": ["一半喺陰間、一半喺陽間嘅爛塔樓。爬上去，就返到陽間。", "一半在陰間、一半在陽間的破塔樓。爬上去，就回到陽間。"],
+	"zhiqian": ["陰間速遞公司嘅私人傳送點。交一疊金銀紙做運費，就送你去巡陰或者陰陽交界。", "陰間速遞公司的私人傳送點。交一疊金銀紙當運費，就送你去巡陰或者陰陽交界。"],
 }
 # 第一次開：短劇情（港式粵語原句＋中文；講者名／少爺等稱呼由 DB.N 換女主版）
 const STORY := {
 	"hill": {"style": "talk", "bg": "field", "title": ["無名義山", "無名義山"], "lines": [
-		["旁白", "村邊多咗座矮山丘。山路兩邊插住一條條爛木牌，冇一塊寫名；山頂一堆亂石，掛住一盞燈。", "村邊多了一座矮山丘。山路兩邊插著一根根爛木牌，沒有一塊寫著名字；山頂一堆亂石，掛著一盞燈。"],
+		["旁白", "村邊嗰座荒山，由山腳到山頂都係墳：爛牌坊、斷牆、一級級石級，冇一塊碑寫名；山頂棵枯樹吊住盞燈。", "村邊那座荒山，從山腳到山頂都是墳：破牌坊、斷牆、一級級石階，沒有一塊碑寫著名字；山頂那棵枯樹吊著一盞燈。"],
 		["小紙", "少爺，義山即係墳山。呢度啲墳冇人記得叫咩名，所以叫「無名」。", "少爺，義山就是墳山。這裡的墳沒人記得叫什麼名字，所以叫「無名」。"],
 		["阿福", "山後面有兩條路：一條出去冥街夜市，一條落去亂葬崗。", "山後面有兩條路：一條出去冥街夜市，一條下去亂葬崗。"],
 		["系統", "親，收工去夜市都計 KPI。記得打卡。", "親，下班去夜市也算 KPI。記得打卡。"]]},
@@ -44,6 +49,12 @@ const STORY := {
 		["小紙", "少爺，呢座塔下半截喺陰間，上半截喺陽間。爬上頂，就返到上面。", "少爺，這座塔下半截在陰間，上半截在陽間。爬到頂，就回到上面。"],
 		["阿福", "上面……即係我以前返工嗰度？", "上面……就是我以前上班的地方？"],
 		["系統", "親，陽間任務一律由塔樓出發：站崗、返夜班，全部有得計。", "親，陽間任務一律從塔樓出發：站崗、上夜班，全都算數。"]]},
+	"zhiqian": {"style": "talk", "bg": "field", "title": ["紙錢陣", "紙錢陣"], "lines": [
+		["旁白", "村邊一片草地，一圈木樁圍住堆亂石，石頂一個黑罈，紅線由罈口拉晒去四圍；金銀紙散到一地。", "村邊一片草地，一圈木樁圍著一堆亂石，石頂一個黑罈，紅線從罈口拉到四周；金銀紙撒了一地。"],
+		["小紙", "少爺，呢個係陰間速遞公司嘅私人傳送點，叫紙錢陣。一疊金銀紙做運費，送你去夜班巡陰，或者陰陽交界。", "少爺，這是陰間速遞公司的私人傳送點，叫紙錢陣。一疊金銀紙當運費，送你去夜班巡陰，或者陰陽交界。"],
+		["阿福", "個罈入面啲嘢……係咪想爬出嚟？", "罈子裡的東西……是不是想爬出來？"],
+		["小紙", "佢哋出唔到陣㗎。你唔好踩過條紅線就得。", "它們出不了陣的。你別踩過紅線就行。"],
+		["系統", "親，運費一律唔設退款。祝你巡得開心。", "親，運費一概不退。祝你巡得開心。"]]},
 }
 
 static func L(yue: String, zhs: String) -> String: return ZD.L(yue, zhs)
@@ -57,7 +68,8 @@ static func zone_of(lm: String, c := -1) -> Dictionary:
 static func has(lm: String, c := -1) -> bool: return not zone_of(lm, c).is_empty()
 static func at(lm: String, c := -1) -> Vector2: return ZD.v2(zone_of(lm, c).get("at", [0, 0]))
 static func stand(lm: String, c := -1) -> Vector2: return ZD.v2(zone_of(lm, c).get("stand", zone_of(lm, c).get("at", [0, 0])))
-static func art_rect(lm: String, c := -1) -> Rect2: return LA.rect_of(lm, at(lm, c))
+static func zw(lm: String, c := -1) -> float: return float(zone_of(lm, c).get("w", 0.0))   # 個別關收窄（紙錢陣第 3、5 關）
+static func art_rect(lm: String, c := -1) -> Rect2: return LA.rect_of(lm, at(lm, c), zw(lm, c))
 static func hit_rect(lm: String, c := -1) -> Rect2:   # 撳嘅範圍：最少手指大細
 	var r = art_rect(lm, c)
 	return r.grow_individual(maxf(0.0, (88.0 - r.size.x) / 2.0), 0.0, maxf(0.0, (88.0 - r.size.x) / 2.0), 0.0).grow(8.0)
@@ -167,6 +179,8 @@ static func dot(lm: String) -> bool:
 	return false
 # 冥街夜市而家去唔去得到（棟篤笑「今晚登台」提示用）
 static func street_ok() -> bool: return has("hill") and unlocked("hill")
+# [outgate] 舊巡陰（夜班巡陰）而家經紙錢陣去得未：巡陰日常、巡陰區域目標隨紙錢陣重開
+static func patrol_ok() -> bool: return ZD.on() and has("zhiqian") and unlocked("zhiqian")
 
 # ---------------- 撳 ----------------
 static func _main():
@@ -175,8 +189,8 @@ static func _main():
 static func lm_at(p: Vector2) -> String:
 	for z in zones_of():
 		var lm = str(z.get("lm", ""))
-		if lm == "hill":
-			if LA.solid(lm, at(lm), p): return lm   # 大山：成座山（圖入面實色位）都撳得
+		if lm == "hill" or lm == "zhiqian":
+			if LA.solid(lm, at(lm), p, zw(lm)): return lm   # 大山／紙錢陣：成幅（圖入面實色位）都撳得
 		elif hit_rect(lm).has_point(p): return lm
 	return ""
 # zone_view.tap 掛鈎：回 true＝處理咗
@@ -339,7 +353,21 @@ static func statics(nv) -> void:
 	var ci = ZD.ci()
 	for z in zones_of():
 		var lm = str(z.get("lm", "")); var a = at(lm)
-		nv._static("lm_" + lm, a.y + LA.sort_dy(lm), [ci, lm], false, func(ctx): LA.draw(ctx, lm, a.x, a.y))
+		var w = zw(lm)
+		if lm == "zhiqian":   # 平鋪地面（y＝圖頂）＋外圍散件＋動態（鬼魂；只喺鏡頭入面先每格重畫）
+			var ar = art_rect(lm)
+			nv._static("lm_zhiqian", ar.position.y + 6.0, [ci, lm, w], false, func(ctx): LA.draw(ctx, lm, a.x, a.y, w))
+			var ring2 = z.get("ring", [])
+			for i in ring2.size():
+				var e2 = ring2[i]
+				nv._static("lmq_%d" % i, float(e2[2]), [ci, i], false, func(ctx): LA.draw_ring(ctx, e2))
+			var on = ar.grow(60).intersects(nv.view_rect())   # 鏡頭外唔每格重畫（效能）
+			nv._static("lm_zq_fx", ar.position.y + 7.0, [ci, "fx"], on, func(ctx): LA.draw_fx(ctx, a.x, a.y, ar.size.x, nv.t))
+			for gi in LA.ZQ_N:   # 每隻鬼魂自己 y 排序（腳位），同木樁、散件、主角前後啱
+				var gy = LA.ghost_y(gi, a.x, a.y, ar.size.x, nv.t) if on else a.y - ar.size.y * 0.5
+				nv._static("lm_zqg_%d" % gi, gy, [ci, "g", gi], on, func(ctx): LA.draw_ghost(ctx, gi, a.x, a.y, ar.size.x, nv.t))
+			continue
+		nv._static("lm_" + lm, a.y + LA.sort_dy(lm), [ci, lm], false, func(ctx): LA.draw(ctx, lm, a.x, a.y, w))
 		if lm != "hill": continue
 		nv._static("lm_hill_pt", art_rect(lm).position.y, [ci, "pt"], false, func(ctx): LA.draw_patch(ctx, a.x, a.y))
 		var ring = z.get("ring", [])

@@ -79,6 +79,8 @@ func _shot_map(t, m, c: int) -> void:
 	_cam(m, hr.get_center() + Vector2(0, 0), nv.size.x / 300.0); await _w(t, 0.8); await _shot(t, "m%d_hill_near" % (c + 1))
 	if LM.has("tower"):
 		_cam(m, LM.at("tower") + Vector2(0, -70)); await _w(t, 0.8); await _shot(t, "m%d_tower" % (c + 1))
+	var qr = LM.art_rect("zhiqian")
+	_cam(m, qr.get_center() + Vector2(0, 10), nv.size.x / 470.0); await _w(t, 0.8); await _shot(t, "m%d_zhiqian" % (c + 1))
 
 func survey(t) -> void:
 	var m = await _boot(t)
@@ -105,6 +107,7 @@ func _run(t, shots: bool) -> void:
 	await _return_check(t, m)
 	await _migrate_check(t, m)
 	await _misc_check(t, m)
+	await _zq_check(t, m, shots)
 	ZD.gate_on = false; MS.auto_on = false; LM.go_fn = Callable()
 	S["qi"] = bak.qi; S["cleared"] = bak.cleared; S["seen"] = bak.seen; S["visit"] = bak.visit; S["hero"] = bak.hero
 	if bak.lm == null: S.erase("lm")
@@ -133,15 +136,15 @@ func _data_check(_t, _m) -> void:
 		_chk(tag + "無名義山圖成幅喺地圖入面（唔裁切）", Rect2(Vector2(-1, -1), ws + Vector2(2, 2)).encloses(Rect2(ar.position, ar.size - Vector2(0, 10))), [ar, ws])
 		var dx = maxf(0.0, maxf(vr.position.x - ar.end.x, ar.position.x - vr.end.x)); var dy = maxf(0.0, maxf(vr.position.y - ar.end.y, ar.position.y - vr.end.y))
 		_chk(tag + "無名義山喺村邊（距離村 ≤ 200）", Vector2(dx, dy).length() <= 200.0, Vector2(dx, dy).length())
-		var ov = []
-		for z in ZD.zones(c): if not (str(z.type) in ["landmark", "village"]) and ZD.rect(z.rect).intersects(ar.grow(-2)): ov.append(str(z.id))
-		_chk(tag + "無名義山唔疊資源區／大排檔／野外", ov.is_empty(), ov)
+		var ovh = []
+		for z in ZD.zones(c): if not (str(z.type) in ["landmark", "village"]) and ZD.rect(z.rect).intersects(ar.grow(-2)): ovh.append(str(z.id))
+		_chk(tag + "無名義山唔疊資源區／大排檔／野外", ovh.is_empty(), ovh)
 		_chk(tag + "無名義山解鎖＝主線 1-2", str(LM.zone_of("hill", c).get("unlock", {}).get("quest_done", [])) == str(["stage", "1-2"]))
-		var blk = []
+		var blkh = []
 		for b in ZD.mdef(c).get("barriers", []):
 			if str(b.k) in ["void", "cliff"]:
-				for r in b.rects: if ZD.rect(r).intersects(Rect2(ar.position + Vector2(0, ar.size.y * 0.55), Vector2(ar.size.x, ar.size.y * 0.45 - 10)).grow(-2)): blk.append(r)
-		_chk(tag + "山腳挖咗虛空／山岩（之後主角行得到）", blk.is_empty(), blk)
+				for r in b.rects: if ZD.rect(r).intersects(Rect2(ar.position + Vector2(0, ar.size.y * 0.55), Vector2(ar.size.x, ar.size.y * 0.45 - 10)).grow(-2)): blkh.append(r)
+		_chk(tag + "山腳挖咗虛空／山岩（之後主角行得到）", blkh.is_empty(), blkh)
 		var ring = LM.zone_of("hill", c).get("ring", [])
 		var bad_r = []
 		for e in ring:
@@ -222,11 +225,21 @@ func _maps_check(t, m, shots: bool) -> void:
 			_chk(tag + "破塔樓圖畫咗", stn != null and stn.node.visible and absf(stn.node.position.y - LM.at("tower").y) < 0.5)
 			_chk(tag + "破塔樓企位唔喺阻隔上", not ZV.blocked(LM.stand("tower")) and not ZV.blocked(LM.at("tower")))
 		# 撳 → 開啱嘅卡（測試唔閘：已開）；大山：山頂枯樹、山腰、山腳都撳得；四角透明天空唔算
-		for lm in ["hill", "tower"]:
+		var lms = []
+		for z in LM.zones_of(): lms.append(str(z.lm))
+		var lov = []
+		for i in lms.size():
+			for j in range(i + 1, lms.size()):
+				if LM.art_rect(lms[i]).grow(-4).intersects(LM.art_rect(lms[j]).grow(-4)): lov.append("%s×%s" % [lms[i], lms[j]])
+				for e in LM.zone_of(lms[i]).get("ring", []):
+					if LA.solid(lms[j], LM.at(lms[j]), Vector2(float(e[1]), float(e[2]) - 6.0), LM.zw(lms[j])): lov.append("%s 道具壓 %s" % [lms[i], lms[j]])
+		_chk(tag + "三個地標（同外圍道具）互不重疊", lov.is_empty(), lov)
+		for lm in ["hill", "tower", "zhiqian"]:
 			if not LM.has(lm): continue
 			var ar = LM.art_rect(lm)
 			var pts = [ar.get_center()]
 			if lm == "hill": pts = [ar.position + Vector2(ar.size.x * 0.46, ar.size.y * 0.06), ar.position + Vector2(ar.size.x * 0.3, ar.size.y * 0.55), ar.position + Vector2(ar.size.x * 0.5, ar.size.y * 0.9), ar.position + Vector2(ar.size.x * 0.06, ar.size.y * 0.75)]
+			if lm == "zhiqian": pts = [ar.position + Vector2(ar.size.x * 0.5, ar.size.y * 0.3), ar.position + Vector2(ar.size.x * 0.12, ar.size.y * 0.5), ar.position + Vector2(ar.size.x * 0.85, ar.size.y * 0.75)]
 			var okn = 0
 			for p in pts:
 				m.close_sheet(); LM.CARD = ""
@@ -459,7 +472,7 @@ func _misc_check(t, m) -> void:
 	S.lm.open["hill"] = 1.0
 	var all = []
 	for c in AT.providers: all.append_array(c.call(m))
-	var tg = all.filter(func(x): return x.kind == "landmark")
+	var tg = all.filter(func(x): return x.kind == "landmark" and x.id == "lm_hill")
 	_chk("行動目標：無名義山（kind landmark、位＝山腳企位、名）", tg.size() == 1 and tg[0].id == "lm_hill" and tg[0].pos == LM.stand("hill") and tg[0].name == "無名義山" and tg[0].foe_pow == 0, tg)
 	m.close_sheet(); LM.CARD = ""
 	if tg.size(): tg[0].go.call()
@@ -480,3 +493,124 @@ func _misc_check(t, m) -> void:
 	var q = G.quest_cur()
 	_chk("打完 1-2 之後任務條：同 JS 一樣（唔係「下班後去冥街夜市逛逛」）", q is Dictionary and str(q.get("t")) == str(B[int(S.qi)].get("t")) and str(q.get("t")) != "visit", q)
 	S["qi"] = qi0
+
+# ================= 8. 紙錢陣（老闆 19:42／19:47） =================
+func _zq_check(t, m, shots: bool) -> void:
+	var S = J.G.S
+	# 資料（六關）
+	for c in 6:
+		var tag = "紙錢陣第 %d 關：" % (c + 1)
+		var z = LM.zone_of("zhiqian", c)
+		if z.is_empty(): _chk(tag + "有", false); continue
+		var ar = LM.art_rect("zhiqian", c); var vr = ZD.zrect("village", c)
+		var ws = Vector2(float(ZD.mdef(c).w), float(ZD.mdef(c).h))
+		_chk(tag + "成幅喺地圖入面（唔裁切）", Rect2(Vector2(-1, -1), ws + Vector2(2, 2)).encloses(Rect2(ar.position, ar.size - Vector2(0, 10))), ar)
+		_chk(tag + "大小同無名義山同級（闊 ≥ 290）", ar.size.x >= 290.0, ar.size.x)
+		var dx = maxf(0.0, maxf(vr.position.x - ar.end.x, ar.position.x - vr.end.x)); var dy = maxf(0.0, maxf(vr.position.y - ar.end.y, ar.position.y - vr.end.y))
+		_chk(tag + "喺村邊（距離村 ≤ 260）", Vector2(dx, dy).length() <= 260.0, Vector2(dx, dy).length())
+		var ov = []
+		for zz in ZD.zones(c): if str(zz.type) != "landmark" and ZD.rect(zz.rect).intersects(ar.grow(-2)): ov.append(str(zz.id))
+		_chk(tag + "唔疊村／資源區／大排檔／野外", ov.is_empty(), ov)
+		_chk(tag + "解鎖＝主線 1-3（打低餓鬼王）", str(z.get("unlock", {}).get("quest_done", [])) == str(["stage", "1-3"]))
+		var ring = z.get("ring", []); var keys = {}; var bad_r = []
+		for e in ring:
+			keys[str(e[0])] = 1
+			for zz in ZD.zones(c): if str(zz.type) != "landmark" and ZD.rect(zz.rect).has_point(Vector2(float(e[1]), float(e[2]))): bad_r.append(e[0])
+		_chk(tag + "外圍散件 ≥ 15 件、≥ 6 款、唔入其他區", ring.size() >= 15 and keys.size() >= 6 and bad_r.is_empty(), [ring.size(), keys.size(), bad_r])
+		var blk = []
+		for b in ZD.mdef(c).get("barriers", []):
+			if str(b.k) in ["void", "cliff"]:
+				for r in b.rects: if ZD.rect(r).intersects(ar.grow(-4)): blk.append(r)
+		_chk(tag + "陣地挖咗虛空（之後行得到）", blk.is_empty(), blk)
+	_chk("散件做咗通用道具（Spr 登記，連新汽水樽／膠袋汽水）", Spr.ok("zq_ingots") and Spr.ok("zq_paper_horse") and Spr.ok("zq_dancer") and Spr.ok("zq_soda_bottles") and Spr.ok("zq_soda_bags"))
+	_chk("舊綁繩鬼魂圖冇入包", not ResourceLoader.exists("res://assets/spr/zqg_yanked.webp"))
+	# 動態：純函數抽樣 60 秒（唔使畫）：絕不出木樁圈、同時 3～5 隻、冇綁繩、浮現／飄／掙扎／縮返齊、前排木樁永遠喺鬼魂前面
+	var w = 375.0; var h = LA.size_of("zhiqian").y; var G = LA._geo(500, 500, w, h)
+	var mo = 0.0; var vis_ok = 0; var n = 0; var poses = {}; var rip = false; var smoke = false; var maxv = 0; var front_bad = 0
+	var fronts = []
+	for kn in LA.ZQ_KNOTS: if kn.y > 0.6: fronts.append(Vector2(500 - w / 2.0 + kn.x * w, G.top + (kn.y - 0.07) * h))   # 前排木樁頂
+	var tt = 0.0
+	while tt < 60.0:
+		var v = 0
+		for i in LA.ZQ_N:
+			var o = LA.ghost_state(i, tt, 500, 500, w, h)
+			if float(o.u) < 0.88:
+				v += 1
+				poses[str(o.pose)] = 1
+				mo = maxf(mo, LA.inside(G, o.pos, float(o.gh) * LA.ZQ_HALF))
+				for fp in fronts:
+					if absf(o.pos.x - fp.x) < float(o.gh) * LA.ZQ_HALF + 8.0 and o.pos.y > fp.y + 3.0: front_bad += 1
+			if float(o.rip) > 0.5: rip = true
+			if float(o.smoke) > 0.5: smoke = true
+		if v >= 3: vis_ok += 1
+		maxv = maxi(maxv, v)
+		n += 1; tt += 0.05
+	_chk("鬼魂絕不越過木樁圈（60 秒抽樣，連身闊）", mo <= 1.0, mo)
+	_chk("前排木樁永遠喺鬼魂前面（鬼魂腳位唔低過前排木樁頂）", front_bad == 0, front_bad)
+	_chk("同時 3～5 隻（≥ 85% 時間 ≥ 3 隻、最多 5）", float(vis_ok) / n >= 0.85 and maxv <= 5, [float(vis_ok) / n, maxv])
+	_chk("冇綁繩姿勢、用無繩新圖（浮現／飄／螺旋／掙扎／縮返）", not poses.has("yanked") and poses.has("emerge") and poses.has("drift") and poses.has("spiral") and poses.has("press") and poses.has("recoil") and Spr.ok("zqg2_press") and not Spr.ok("zqg_yanked"), poses.keys())
+	_chk("屏障漣漪、化煙散去都有", rip and smoke)
+	var o1 = LA.ghost_state(0, 1.0, 500, 500, w, h); var o2 = LA.ghost_state(0, 1.0, 500, 500, w, h)
+	_chk("動態係時間嘅純函數（每格唔使存狀態）", o1.pos == o2.pos and o1.a == o2.a)
+	# 遊戲入面：解鎖、撳、卡、去
+	ZD.gate_on = true
+	await _goto(t, m, 0)
+	S.lm.open.erase("zhiqian")
+	S.cleared.erase("1-3"); S["qi"] = float(_qidx("stage", "1-3"))
+	LM.poll(true)
+	_chk("1-3 未打：紙錢陣未開、提示講 1-3", not LM.unlocked("zhiqian") and LM.hint("zhiqian").contains("1-3"), LM.hint("zhiqian"))
+	_chk("紙錢陣未開：巡陰日常／區域目標仍然停（patrol_ok 假）", not LM.patrol_ok())
+	m.close_sheet()
+	_cam(m, LM.art_rect("zhiqian").get_center()); await _w(t, 0.5)
+	var fl = []
+	for e in ZV.fog_log: if e[0] == "lm_fog": fl.append(e[1])
+	_chk("未開：紙錢陣有黑霧", fl.has("zhiqian"), fl)
+	if shots: await _shot(t, "zq_locked")
+	var r = ZV.tap(m, LM.art_rect("zhiqian").get_center()); await _w(t, 0.2)
+	_chk("撳未開嘅紙錢陣：出提示、唔開卡", r and not m.sheet.visible)
+	S.cleared["1-3"] = true; S["qi"] = float(_qidx("stage", "1-3") + 1)
+	LM.NEWS.clear()
+	var op = LM.poll(true)
+	_chk("打低餓鬼王（1-3）：紙錢陣開", LM.unlocked("zhiqian") and op.has("zhiqian"), op)
+	_chk("紙錢陣開咗：巡陰日常／區域目標重開（patrol_ok）", LM.patrol_ok())
+	_chk("開過一次：第 4 關都開（跟村拔營）", LM.unlocked("zhiqian", 3))
+	LM.NEWS.clear()
+	var tg = []
+	for c2 in AT.providers: tg.append_array(c2.call(m))
+	tg = tg.filter(func(x): return x.id == "lm_zhiqian")
+	_chk("行動目標：紙錢陣（kind landmark、位＝企位）", tg.size() == 1 and tg[0].kind == "landmark" and tg[0].pos == LM.stand("zhiqian"), tg)
+	# 第一次：劇情 → 卡
+	MS.seen_d().erase(LM.story_id("zhiqian")); LM.STORY_LOG.clear(); MS.auto_on = true
+	m.close_sheet()
+	ZV.tap(m, LM.art_rect("zhiqian").get_center()); await _w(t, 1.0)
+	if shots: await _shot(t, "zq_story")
+	await _skip(t, 8); await _w(t, 0.5)
+	_chk("第一次撳紙錢陣：先播劇情、播完開卡", LM.STORY_LOG == [LM.story_id("zhiqian")] and m.sheet.visible and LM.CARD == "zhiqian", [LM.STORY_LOG, LM.CARD])
+	MS.auto_on = false
+	_chk("紙錢陣卡：夜班巡陰、陰陽交界", _find(m, "lm_battle") != null and _find(m, "lm_yard") != null and _find(m, "go_battle") != null and _find(m, "go_yard") != null and _find(m, "lm_street") == null)
+	if shots: await _w(t, 0.3); await _shot(t, "card_zhiqian")
+	var got = []
+	LM.go_fn = func(pid): got.append(pid)
+	for pid in ["battle", "yard"]:
+		m.close_sheet(); LM.open_card(m, "zhiqian"); await _w(t, 0.2)
+		_find(m, "go_" + pid).pressed.emit(); await _w(t, 0.1); LM.ret = {}
+	_chk("撳「去」：夜班巡陰、陰陽交界開啱", got == ["battle", "yard"], got)
+	LM.go_fn = Callable()
+	m.close_sheet()
+	# 舊存檔：冇 S.lm、已過 1-3 → 即開
+	var keep = S.lm.duplicate(true)
+	S.erase("lm"); LM.poll(true)
+	_chk("舊存檔（已過 1-3、冇 S.lm）：紙錢陣即開", LM.unlocked("zhiqian"))
+	S["lm"] = keep
+	# 動態：鏡頭喺度先畫；鏡頭外唔畫
+	var nv = m.village
+	LA.FX_LOG.frames = 0; LA.FX_LOG.max_out = 0.0
+	_cam(m, LM.art_rect("zhiqian").get_center(), nv.size.x / 470.0); await _w(t, 2.0)
+	var f_on = LA.FX_LOG.frames
+	_chk("鏡頭對住：動態每格畫", f_on >= 10, f_on)
+	_chk("實際畫出嚟嘅鬼魂冇出木樁圈", LA.FX_LOG.max_out <= 1.0, LA.FX_LOG.max_out)
+	if shots:
+		for k in 4: await _shot(t, "zq_anim_%d" % k); await _w(t, 0.45)
+	_cam(m, ZD.zrect("village").get_center()); await _w(t, 0.6)
+	LA.FX_LOG.frames = 0; await _w(t, 1.0)
+	_chk("鏡頭外：動態唔畫（效能）", LA.FX_LOG.frames <= 1, LA.FX_LOG.frames)

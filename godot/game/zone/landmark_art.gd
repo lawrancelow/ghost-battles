@@ -12,7 +12,8 @@ extends RefCounted
 
 const ART := {
 	"hill": {"png": "res://assets/spr/lm_hill_big.webp", "w": 375.0, "h": 247.4, "sort": -30.0},   # 大山：y 排序用山腳橢圓中間（企喺山前腳嘅人畫喺山上面）
-	"tower": {"png": "res://assets/spr/lm_tower.webp", "w": 100.0, "h": 170.0},   # 正式圖 378×644：比民宅（104 闊、約 90 高）高一截
+	"tower": {"png": "res://assets/spr/lm_tower.webp", "w": 100.0, "h": 170.0},
+	"zhiqian": {"png": "res://assets/spr/lm_zhiqian.webp", "w": 375.0, "h": 248.2, "flat": true},   # 紙錢陣：平鋪地面（y 排序＝圖頂，企喺上面嘅嘢一律畫喺佢上面）   # 正式圖 378×644：比民宅（104 闊、約 90 高）高一截
 }
 const ILLUS := {
 	"street": ["bg_worldmap2", Rect2(0, 655, 448, 280)],
@@ -21,15 +22,19 @@ const ILLUS := {
 	"back": ["bg_worldmap2", Rect2(352, 470, 320, 200)],
 	"scare": ["bg_office", Rect2()],
 	"tower": ["bg_worldmap2", Rect2(90, 180, 290, 181)],
+	"battle": ["bg_worldmap2", Rect2(0, 900, 420, 262)],
+	"yard": ["bg_worldmap2", Rect2(584, 905, 440, 275)],
 }
 const INK := "#17121a"
 
-static func size_of(lm: String) -> Vector2:
+#   w：zones.json 個別關可以收窄（紙錢陣第 3、5 關），0＝用 ART 預設
+static func size_of(lm: String, w := 0.0) -> Vector2:
 	var a = ART.get(lm, {})
-	return Vector2(float(a.get("w", 120.0)), float(a.get("h", 100.0)))
+	var w0 = float(a.get("w", 120.0)); var h0 = float(a.get("h", 100.0))
+	return Vector2(w, h0 * w / w0) if w > 0.0 else Vector2(w0, h0)
 # 地標圖嘅範圍（世界座標；撳、黑霧、名牌位都跟佢）
-static func rect_of(lm: String, at: Vector2) -> Rect2:
-	var s = size_of(lm)
+static func rect_of(lm: String, at: Vector2, w := 0.0) -> Rect2:
+	var s = size_of(lm, w)
 	return Rect2(at.x - s.x / 2.0, at.y - s.y, s.x, s.y + 10.0)
 
 # 卡插圖：回 Texture2D（裁好）；冇圖回 null
@@ -48,29 +53,29 @@ static func illus(pid: String) -> Texture2D:
 
 # ---------------- 地圖上畫（nv_village 靜態層，ctx 係世界座標） ----------------
 static func sort_dy(lm: String) -> float: return float(ART.get(lm, {}).get("sort", 0.0))
-static func draw(ctx: Ctx, lm: String, x: float, y: float) -> void:
+static func draw(ctx: Ctx, lm: String, x: float, y: float, w0 := 0.0) -> void:
 	var a = ART.get(lm, {})
 	var p = str(a.get("png", ""))
 	if p != "" and ResourceLoader.exists(p):
 		var tx: Texture2D = _tex(p)
-		var w = float(a.w); var h = w * tx.get_height() / tx.get_width()   # 照原圖比例，唔裁唔壓
-		if lm != "hill": Art.seat(ctx, x, y - 2, w * 0.72, 77)
+		var w = w0 if w0 > 0.0 else float(a.w); var h = w * tx.get_height() / tx.get_width()   # 照原圖比例，唔裁唔壓
+		if lm == "tower": Art.seat(ctx, x, y - 2, w * 0.72, 77)
 		ctx.drawImage(tx, x - w / 2.0, y - h + 4.0, w, h)
 		return
 	match lm:
 		"hill": _hill(ctx, x, y)
 		"tower": _tower(ctx, x, y)
-static var _tx := {}
+static var _texc := {}
 static func _tex(p: String) -> Texture2D:
-	if not _tx.has(p): _tx[p] = load(p)
-	return _tx[p]
+	if not _texc.has(p): _texc[p] = load(p)
+	return _texc[p]
 # 撳：圖入面實色嘅位先算（大山四角係透明天空，唔好搶咗隔籬嘅撳）
 static var _mask := {}
-static func solid(lm: String, at: Vector2, p: Vector2) -> bool:
-	var r = rect_of(lm, at)
+static func solid(lm: String, at: Vector2, p: Vector2, w0 := 0.0) -> bool:
+	var r = rect_of(lm, at, w0)
 	if not r.has_point(p): return false
 	var a = ART.get(lm, {})
-	if lm != "hill" or not ResourceLoader.exists(str(a.get("png", ""))): return true
+	if lm == "tower" or not ResourceLoader.exists(str(a.get("png", ""))): return true
 	if not _mask.has(lm):
 		var im: Image = _tex(str(a.png)).get_image()
 		if im != null:
@@ -80,7 +85,7 @@ static func solid(lm: String, at: Vector2, p: Vector2) -> bool:
 		_mask[lm] = im
 	var m: Image = _mask[lm]
 	if m == null: return true
-	var w = float(a.w); var h = w * m.get_height() / m.get_width()
+	var w = w0 if w0 > 0.0 else float(a.w); var h = w * m.get_height() / m.get_width()
 	var u = (p.x - (at.x - w / 2.0)) / w; var v = (p.y - (at.y - h + 4.0)) / h
 	if u < 0.0 or u >= 1.0 or v < 0.0 or v >= 1.0: return false
 	var ix = int(u * m.get_width()); var iy = int(v * m.get_height())
@@ -117,7 +122,7 @@ static func draw_ring(ctx: Ctx, e: Array) -> void:
 	var im = Spr.get_tex(k)
 	if im != null: h = w * im.get_height() / im.get_width()
 	Art.el(ctx, x, y - 1, w * 0.42, maxf(2.0, h * 0.12), "rgba(12,6,5,.35)")   # 貼地暗影
-	var sv = Art.tint; Art.tint = Color(0.6, 0.55, 0.53)
+	var sv = Art.tint; Art.tint = Color(0.84, 0.8, 0.78) if k.begins_with("zq_") else Color(0.6, 0.55, 0.53)   # 紙錢陣散件原色多啲
 	if flip:
 		ctx.save(); ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0)
 		Art.put(ctx, k, x, y + 4, w); ctx.restore()
@@ -132,6 +137,152 @@ static func _bones(ctx: Ctx, x: float, y: float, w: float, sd: int) -> void:
 		_ln(ctx, [p0, p1], "#2a2220", 3.6)
 		_ln(ctx, [p0, p1], "#cfc6b0", 2.2)
 		for q in [p0, p1]: Art.el(ctx, q.x, q.y, 2.4, 1.8, "#d8cfba", "#2a2220", 0.8)
+
+# ================= 紙錢陣動態（老闆 19:42／19:47／19:59）：鬼魂由黑罈口嘅煙慢慢浮現 → 沿弧線／螺旋飄去木樁圈（擺動、拉伸）
+#   → 近圈減速、貼住無形屏障掙扎（press，外側一道直立弧形綠漣漪，似撞玻璃牆）→ 好似燙親咁縮返、化煙散去 → 隔陣再由罈浮現
+#   冇任何綁繩；同時 5 隻錯開；半透明（睇得清塊面）、忽明忽暗、偶爾變淡；淡殘影 1 個；絕不出木樁圈（連身闊）
+#   前後：鬼魂腳位限制喺「木樁頂連成嘅橢圓」入面 → 前排木樁永遠喺鬼魂前面（唔會疊錯），後排木樁喺鬼魂後面；每隻鬼自己 y 排序
+#   鬼魂圖：GHOST_KEYS 由頭揀第一個有嘅（zqg2_* 無繩正式圖 → 東方亡魂 soul_* 後備）；換圖只改呢度
+const ZQ_MOUTH := Vector2(0.50, 0.215)   # 黑罈口（主陣圖比例位）
+const ZQ_JAR := Vector2(0.505, 0.27)     # 黑罈身（綠光）
+const ZQ_FENCE := [Vector2(0.50, 0.405), Vector2(0.425, 0.33)]   # 木樁頂連成嘅橢圓：中心、半徑（圖闊／圖高嘅比例）
+const ZQ_KNOTS := [Vector2(0.214, 0.17), Vector2(0.389, 0.098), Vector2(0.617, 0.098), Vector2(0.798, 0.19), Vector2(0.908, 0.333), Vector2(0.916, 0.528),
+	Vector2(0.811, 0.689), Vector2(0.606, 0.792), Vector2(0.351, 0.804), Vector2(0.201, 0.706), Vector2(0.076, 0.54), Vector2(0.103, 0.333)]
+const GHOST_KEYS := ["zqg2_%s"]
+const GHOST_TMP := ["soul_a", "soul_b", "soul_c", "soul_d"]
+const ZQ_N := 5          # 同時幾多隻（3～5）
+const ZQ_GH := 0.24      # 鬼魂高＝主陣圖高 × 呢個
+const ZQ_HALF := 0.56    # 鬼魂半闊＝高 × 呢個（最闊嘅 drift 約 0.51，加拉伸）
+static func _gtex(pose: String, i: int) -> Texture2D:
+	for f in GHOST_KEYS:
+		var k = f % pose
+		if Spr.ok(k): return Spr.get_tex(k)
+	var k2 = GHOST_TMP[i % GHOST_TMP.size()]
+	return Spr.get_tex(k2) if Spr.ok(k2) else null
+static func _ease(u: float) -> float: return u * u * (3.0 - 2.0 * u)
+static func _geo(x: float, y: float, w: float, h: float) -> Dictionary:
+	var top = y - h
+	var P = func(v: Vector2) -> Vector2: return Vector2(x - w / 2.0 + v.x * w, top + v.y * h)
+	return {"mouth": P.call(ZQ_MOUTH), "jar": P.call(ZQ_JAR), "ctr": P.call(ZQ_FENCE[0]), "RX": ZQ_FENCE[1].x * w, "RY": ZQ_FENCE[1].y * h, "gh": h * ZQ_GH, "top": top}
+# 腳位可唔可以企：連身闊都喺木樁頂橢圓入面
+static func inside(G: Dictionary, p: Vector2, half: float) -> float:
+	var rx = maxf(1.0, float(G.RX) - half)
+	return sqrt(pow((p.x - G.ctr.x) / rx, 2.0) + pow((p.y - G.ctr.y) / float(G.RY), 2.0))
+# 一隻鬼喺時間 t 嘅狀態（時間嘅純函數，唔使存）：{pos（腳位）, pose, flip, k（大細）, sx/sy（拉伸）, a（透明）, rip（漣漪 0..1）, dir（向外方向）, smoke（化煙 0..1）, u}
+static func ghost_state(i: int, t: float, x: float, y: float, w: float, h: float) -> Dictionary:
+	var G = _geo(x, y, w, h)
+	var per = 6.2 + i * 0.53
+	var tt = t + i * 1.37
+	var cyc = int(floor(tt / per)); var u = fposmod(tt, per) / per
+	var gh: float = G.gh; var half = gh * ZQ_HALF
+	var mouth: Vector2 = G.mouth; var ctr: Vector2 = G.ctr
+	var ang = _r(91 + i * 13, cyc) * TAU
+	var dir = Vector2(cos(ang), sin(ang))
+	var edge = ctr + Vector2(dir.x * (float(G.RX) - half), dir.y * float(G.RY)) * 0.93
+	var spin = 1.0 if _r(97 + i, cyc) < 0.5 else -1.0
+	var hov = _r(103 + i, cyc) < 0.35
+	var o = {"pos": mouth, "pose": "emerge", "flip": spin < 0.0, "k": 1.0, "sx": 1.0, "sy": 1.0, "a": 0.0, "rip": 0.0, "dir": dir, "smoke": 0.0, "u": u, "gh": gh}
+	var nrm = Vector2(-(edge - mouth).y, (edge - mouth).x).normalized()
+	var path = func(e: float) -> Vector2:   # 弧線＋螺旋：由罈口向外，橫向擺一個弧，頭段打個細圈
+		var p = mouth.lerp(edge, e) + nrm * sin(e * PI) * 30.0 * spin + Vector2(sin(e * TAU * 1.5) * 7.0, -cos(e * TAU * 1.5) * 4.0) * (1.0 - e)
+		var q = inside(G, p, half)
+		return ctr + (p - ctr) / q * 0.99 if q > 0.99 else p   # 弧線都唔准出圈
+	if u < 0.16:   # 由罈口嘅煙浮現：淡入、由細變大、向上拉長
+		var e = _ease(u / 0.16)
+		o.pos = mouth + Vector2(0, -e * 10.0); o.k = lerpf(0.3, 1.0, e); o.sx = lerpf(0.55, 1.0, e); o.sy = lerpf(1.55, 1.0, e); o.a = e
+	elif u < 0.54:   # 飄：快出、中段（有時）停一停打轉、近圈減速
+		var e = (u - 0.16) / 0.38
+		var s = e
+		if hov: s = e * 0.9 if e < 0.4 else (0.36 + (e - 0.4) * 0.15 if e < 0.6 else 0.39 + (e - 0.6) / 0.4 * 0.61)
+		s = sin(clampf(s, 0.0, 1.0) * PI * 0.5)
+		o.pos = path.call(s) + Vector2(0, -10.0 * (1.0 - s))
+		o.pose = ("hover" if hov and e > 0.4 and e < 0.6 else ("spiral" if spin > 0.0 and e < 0.5 else "drift"))
+		o.flip = (path.call(minf(1.0, s + 0.03)) - o.pos).x < 0.0
+		o.a = 1.0
+	elif u < 0.72:   # 貼住無形屏障掙扎
+		var e = (u - 0.54) / 0.18
+		o.pos = edge + Vector2(sin(t * 29.0 + i) * 1.6, cos(t * 23.0 + i) * 1.0) * (1.0 - e * 0.3)
+		o.pose = "press"; o.flip = dir.x < 0.0; o.a = 1.0
+		o.rip = sin(e * PI)
+	elif u < 0.88:   # 燙親咁縮返、化煙散去
+		var e = (u - 0.72) / 0.16
+		o.pos = edge.lerp(mouth, 0.35 * _ease(minf(1.0, e * 1.6))) + Vector2(0, -e * 14.0)
+		o.pose = "recoil"; o.flip = dir.x >= 0.0
+		o.k = lerpf(1.0, 0.6, e); o.sx = lerpf(1.0, 1.35, e); o.sy = lerpf(1.0, 0.65, e); o.a = 1.0 - e; o.smoke = e
+	else:
+		o.a = 0.0
+	var st = sin(t * 4.3 + i * 1.9) * 0.06   # 輕微拉伸（x／y 交替）
+	o.sx *= 1.0 + st; o.sy *= 1.0 - st
+	var fl = 0.88 + 0.12 * sin(t * 13.0 + i * 2.7)   # 忽明忽暗；偶爾成隻變淡幾乎睇唔到
+	if sin(t * 0.83 + i * 2.3) > 0.965: fl *= 0.12
+	o.a = float(o.a) * 0.86 * fl
+	return o
+static var FX_LOG := {"frames": 0, "max_out": 0.0, "ripples": 0}   # 測試用：畫咗幾多格、鬼魂（連身闊）最出到圈幾多（≤ 1＝喺圈內）
+static func _ghost(c: CanvasItem, T: Transform2D, o: Dictionary, i: int, t: float, alpha: float) -> void:
+	var tx = _gtex(str(o.pose), i)
+	if tx == null or alpha <= 0.005: return
+	var gh = float(o.gh) * float(o.k); var gw = gh * tx.get_width() / tx.get_height()
+	var sway = Vector2(sin(t * 1.9 + i) * 2.5, sin(t * 2.6 + i) * 2.5)   # 左右擺、上下浮
+	var foot = o.pos + sway
+	var sx = (-1.0 if o.flip else 1.0) * float(o.sx)
+	var sk = sin(t * 3.1 + i) * 0.06   # 身體隨正弦擺（斜少少）
+	c.draw_set_transform_matrix(T * Transform2D(Vector2(sx, 0), Vector2(sk, float(o.sy)), foot))
+	c.draw_texture_rect(tx, Rect2(-gw / 2.0, -gh, gw, gh), false, Color(1, 1, 1, alpha))
+	c.draw_set_transform_matrix(T)
+# 底層（y＝圖頂）：黑罈綠光一明一暗、罈口煙、陣上紅線輕震
+static func draw_fx(ctx: Ctx, x: float, y: float, w: float, t: float) -> void:
+	var h = size_of("zhiqian", w).y
+	var c = ctx.ci
+	var G = _geo(x, y, w, h)
+	var jar: Vector2 = G.jar; var mouth: Vector2 = G.mouth
+	FX_LOG.frames += 1
+	c.draw_set_transform_matrix(ctx.T)
+	var g = 0.5 + 0.5 * sin(t * 2.1)
+	if PtGfx.RAD != null:
+		var r = w * (0.14 + 0.03 * g)
+		c.draw_texture_rect(PtGfx.RAD, Rect2(jar.x - r, jar.y - r * 1.1, r * 2.0, r * 2.0), false, Color(0.45, 1.0, 0.5, 0.14 + 0.2 * g))
+		for k in 3:
+			var sm = fposmod(t * 0.35 + k / 3.0, 1.0)
+			var sr = w * (0.03 + 0.05 * sm)
+			c.draw_texture_rect(PtGfx.RAD, Rect2(mouth.x - sr + sin(t + k) * 6.0, mouth.y - 6.0 - sm * 46.0 - sr, sr * 2.0, sr * 2.0), false, Color(0.7, 0.95, 0.7, 0.16 * (1.0 - sm)))
+	for j in ZQ_KNOTS.size():   # 陣法本身嘅紅線（唔係綁鬼）
+		var kp = Vector2(x - w / 2.0 + ZQ_KNOTS[j].x * w, float(G.top) + ZQ_KNOTS[j].y * h)
+		var mid = (jar + kp) * 0.5 + Vector2(0, 4.0 + sin(t * 9.0 + j * 1.7) * 1.3)
+		c.draw_polyline(PackedVector2Array([jar, mid, kp]), Color(0.62, 0.08, 0.07, 0.26), 1.1, true)
+	c.draw_set_transform_matrix(Transform2D.IDENTITY)
+# 一隻鬼（自己一個 y 排序節點；y＝腳位）：殘影、本體、屏障漣漪、化煙
+static func draw_ghost(ctx: Ctx, i: int, x: float, y: float, w: float, t: float) -> void:
+	var h = size_of("zhiqian", w).y
+	var c = ctx.ci
+	var o = ghost_state(i, t, x, y, w, h)
+	c.draw_set_transform_matrix(ctx.T)
+	if float(o.smoke) > 0.0 and PtGfx.RAD != null:
+		for k in 4:
+			var sp = o.pos + Vector2(sin(k * 1.9 + i) * 20.0 * float(o.smoke), -float(o.gh) * 0.5 - float(o.smoke) * 22.0 - k * 6.0)
+			var sr = float(o.gh) * (0.18 + 0.14 * float(o.smoke))
+			c.draw_texture_rect(PtGfx.RAD, Rect2(sp.x - sr, sp.y - sr, sr * 2.0, sr * 2.0), false, Color(0.78, 0.86, 0.76, 0.24 * (1.0 - float(o.smoke))))
+	var ob = ghost_state(i, t - 0.09, x, y, w, h)   # 淡殘影 1 個
+	if str(ob.pose) == str(o.pose): _ghost(c, ctx.T, ob, i, t - 0.09, float(ob.a) * 0.3)
+	_ghost(c, ctx.T, o, i, t, float(o.a))
+	if float(o.rip) > 0.0:   # 外側直立弧形綠漣漪（似撞玻璃牆）
+		FX_LOG.ripples += 1
+		var d: Vector2 = o.dir
+		var tg = Vector2(-d.y, d.x * 0.55).normalized()   # 屏障切線（地面橢圓）
+		var base = o.pos + d * Vector2(10.0, 5.0)
+		for k in 2:
+			var rr = fposmod(t * 1.5 + k * 0.5, 1.0)
+			var wr = float(o.gh) * (0.35 + rr * 0.35); var hr = float(o.gh) * (0.55 + rr * 0.45)
+			var pts = PackedVector2Array()
+			for q in 17:
+				var a = PI * q / 16.0
+				pts.append(base + tg * cos(a) * wr + Vector2(0, -sin(a) * hr) + d * sin(a) * 3.0)
+			c.draw_polyline(pts, Color(0.55, 1.0, 0.62, 0.5 * float(o.rip) * (1.0 - rr)), 1.6, true)
+	if float(o.a) > 0.01:
+		var G = _geo(x, y, w, h)
+		FX_LOG.max_out = maxf(FX_LOG.max_out, inside(G, o.pos, float(o.gh) * ZQ_HALF * 0.999))
+	c.draw_set_transform_matrix(Transform2D.IDENTITY)
+static func ghost_y(i: int, x: float, y: float, w: float, t: float) -> float:
+	return float(ghost_state(i, t, x, y, w, size_of("zhiqian", w).y).pos.y)
 
 static func _r(seed: int, k: int) -> float:
 	var v = sin(float(seed) * 12.9898 + float(k) * 78.233) * 43758.5453
