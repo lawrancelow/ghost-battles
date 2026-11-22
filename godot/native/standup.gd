@@ -239,11 +239,12 @@ static func _story_page() -> void:
 static func _announce() -> void:
 	var s = st(); var Sk = _g("Skits")
 	if s == null or Sk == null or not J.t(J.mc(Sk, "quiet", [])): return
-	if load("res://game/zone/zone_data.gd").on(): return   # [outgate] 冥街夜市暫時唔開：唔出「今晚登台」提示
+	var zon = load("res://game/zone/zone_data.gd").on()
+	if zon and not load("res://game/zone/landmark.gd").street_ok(): return   # [outgate] [landmark] 冥街夜市要等無名義山開咗先出「今晚登台」提示
 	for b in BITS:
 		if ok(b) and not J.t(J.gp(J.gp(s, "ann"), b.id)) and not J.t(J.gp(J.gp(s, "seen"), b.id)):
 			J.sp(J.gp(s, "ann"), b.id, 1.0)
-			J.mc(_g("Fx"), "toast", ["冥街夜市・棟篤笑：<b>%s《%s》</b>今晚登台。<br><small>出村 → 冥街夜市 → 棟篤笑</small>" % [J.str(b.who), J.str(_L(b.title))]])
+			J.mc(_g("Fx"), "toast", ["冥街夜市・棟篤笑：<b>%s《%s》</b>今晚登台。<br><small>%s → 冥街夜市 → 棟篤笑</small>" % [J.str(b.who), J.str(_L(b.title)), "無名義山" if zon else "出村"]])   # [landmark]
 			_save()
 			return
 

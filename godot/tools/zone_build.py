@@ -823,6 +823,111 @@ _reveal(M0, True); _reveal(M1, False); _reveal(M2, False); _reveal(M3, False); _
 
 _dress(M0)
 
+# ================= [landmark] 地標（zones.json 新 type "landmark"；畫面／規則喺 game/zone/landmark.gd） =================
+#   無名義山（hill）：每關村邊一座（拔營跟住搬，見下面 HILL_AT）；解鎖＝第 1 關打完 1-2；開過一次每關都開
+#   破塔樓（tower）：第 2 關起每關一座，喺村外一塊空地（由虛空挖出嚟，主角之後可以行過去）；解鎖＝到埗、睇完該關開場劇情
+#   解鎖條件用 "unlock"（唔用 "reveal"：地標嘅黑霧／解鎖由 landmark.gd 自己管，唔影響出村門外解霧嘅計數）
+#   at＝底邊中心（畫圖、行動目標位）；stand＝玩完返嚟主角企嘅位；rect＝黑霧／撳嘅範圍
+# [landmark] 19:00 老闆：無名義山要大（約 3.5～4 棟民宅並排、似一座小山），用 lm_hill_big.webp（1314×867）
+#   村子入面冇咁大嘅空位（六關村內布局一樣、塞滿建築／槐樹／稻田／路）→ 每關揀村邊一塊虛空／山岩空地放（拔營＝每關都喺村邊）
+#   at＝圖底邊中心；stand＝主角企位（山腳前面，行動目標位）；cut＝挖走虛空／山岩（山＋外圍亂葬崗都喺入面，之後全圖可走時行得到）
+HILL_W = 375; HILL_H = round(HILL_W * 867 / 1314, 1)
+HILL_AT = {0: {"at": [1116, 2262], "stand": [1010, 2292], "cut": [892, 2010, 1340, 2330]},     # 村南：過河右邊（營帳對面）
+           1: {"at": [226, 610], "stand": [330, 640], "cut": [0, 330, 452, 668]},              # 村西北：竹林區左邊
+           2: {"at": [1293, 1720], "stand": [1158, 1706], "cut": [1184, 1474, 1480, 1792]},    # 村東南：破塔樓下面（山左腳搭入村邊空位）
+           3: {"at": [1740, 585], "stand": [1640, 606], "cut": [1500, 320, 1980, 618]}}        # 村東北：河對面
+HILL_AT[4] = HILL_AT[2]; HILL_AT[5] = HILL_AT[1]
+# 山腳外圍「亂葬崗／廢墟」過渡：用現有道具圖（w_graves／draw_ruin 嗰批）；唔可撳、唔擋路，每件自己 y 排序
+RING_KIT = [("grave", 26, 34, 3), ("zb_rock1", 30, 44, 3), ("zb_rock2", 26, 38, 3), ("zp_deadtree", 52, 70, 2), ("zp_jars", 28, 36, 2),
+            ("zb_stakes", 48, 62, 2), ("zb_wall", 46, 60, 2), ("zb_bush", 32, 44, 2), ("zp_woodpile", 34, 42, 1), ("proc:bones", 18, 24, 3),
+            ("fg_d1", 56, 74, 2), ("fg_d3", 56, 74, 2), ("fg_g2", 48, 64, 2), ("fg_r2", 40, 52, 2)]
+RING_CAP = {"proc:bones": 4, "zp_deadtree": 3, "zb_wall": 2, "zb_stakes": 2, "zp_woodpile": 1, "zp_jars": 3, "grave": 6, "zb_bush": 3}
+# 通用「道具散佈」：喺 (cx, cy) 為中心嘅橢圓環（內 rx0/ry0、外 rx1/ry1）入面隨機（seed 固定）但唔擠埋一嚿咁擺道具
+#   kit：[(圖鍵, 最細闊, 最大闊, 權重)]；caps：每款最多幾件；box：只可以擺喺呢個框入面；back：背後（上半環）擺唔擺（山會遮住就唔擺）
+#   唔入村／資源區／大排檔／野外（M 嘅非地標區）；回 [[圖鍵, x, y, 闊, 左右翻]]（按 y 排好，每件自己 y 排序）
+def _scatter(M, cx, cy, rx0, ry0, rx1, ry1, kit, seed, n, box, caps=None, back=True, avoid=()):
+    rnd = random.Random(seed); caps = caps or {}
+    bag = [k for k in kit for _ in range(k[3])]
+    others = [z["rect"] for z in M["zones"] if z["type"] != "landmark"] + list(avoid)
+    out = []
+    for tries in range(1500):
+        if len(out) >= n: break
+        a = rnd.uniform(0, math.tau); f = math.sqrt(rnd.uniform(0, 1))
+        x = cx + math.cos(a) * (rx0 + (rx1 - rx0) * f); y = cy + math.sin(a) * (ry0 + (ry1 - ry0) * f)
+        if not back and math.sin(a) < 0.15 and abs(math.cos(a)) < 0.9: continue
+        k = rnd.choice(bag); w = round(rnd.uniform(k[1], k[2]))
+        if sum(1 for o in out if o[0] == k[0]) >= caps.get(k[0], 99): continue
+        if not (box[0] + w * 0.5 + 4 < x < box[2] - w * 0.5 - 4 and box[1] + 30 < y < box[3] - 6): continue
+        if any(r[0] - w * 0.5 < x < r[2] + w * 0.5 and r[1] - 6 < y < r[3] + 40 for r in others): continue
+        if any((x - o[1]) ** 2 + ((y - o[2]) * 1.6) ** 2 < (o[3] * 0.5 + w * 0.5) ** 2 * 0.55 for o in out): continue
+        out.append([k[0], round(x), round(y), w, rnd.random() < 0.5])
+    out.sort(key=lambda e: e[2])
+    return out
+def _hill_ring(M, ci, at, cut):
+    cy = at[1] - HILL_H * 0.17 + 6; rx = HILL_W * 0.5; ry = HILL_H * 0.17
+    return _scatter(M, at[0], cy, rx, ry * 1.15, rx * 1.28, ry * 1.9, RING_KIT, 7100 + ci, 26, cut, RING_CAP, back=False)
+# [landmark] 紙錢陣（老闆 19:42 定稿）：主陣圖 lm_zhiqian.webp（1316×871，草地邊已羽化、平鋪地面）＋外圍散件 zq_*
+#   汽水樽（19:59 換咗冇牌子直身玻璃樽）、膠袋紅汽水都用；大小同無名義山同級（闊 375）；第 3、5 關村邊得 300 闊空位 → 闊 290。解鎖：第 1 關打低餓鬼王（1-3）
+ZQ_W = 375
+ZQ_AT = {0: {"at": [224, 2292], "stand": [330, 2318], "cut": [0, 2010, 448, 2400]},          # 村南：過河左邊（同無名義山隔住 C 區相對）
+         1: {"at": [226, 2080], "stand": [334, 2106], "cut": [0, 1600, 452, 2240]},          # 村西南（原破塔樓位，塔樓搬去無名義山後面）
+         2: {"at": [150, 2010], "stand": [236, 2034], "cut": [0, 1734, 300, 2320], "w": 290},  # 村西南：C 區下面
+         3: {"at": [1715, 1900], "stand": [1505, 1862], "cut": [1450, 1636, 1980, 2240]}}     # 村東南：B 區右邊（塔樓搬落下面）
+ZQ_AT[4] = ZQ_AT[2]; ZQ_AT[5] = ZQ_AT[1]
+ZQ_KIT = [("zq_ingots", 44, 56, 3), ("zq_burn_bucket", 30, 38, 2), ("zq_candles", 32, 40, 3), ("zq_lantern_pole", 44, 52, 2), ("zq_coin_pole", 44, 52, 2),
+          ("zq_paper_horse", 50, 60, 2), ("zq_paper_sedan", 50, 60, 2), ("zq_parcels", 44, 54, 3), ("zq_ribbon_post", 36, 44, 2), ("zq_zebras", 48, 58, 2),
+          ("zq_dancer", 30, 36, 1), ("zq_soda_bottles", 30, 36, 1), ("zq_soda_bags", 36, 44, 1), ("fg_g2", 46, 60, 2), ("fg_g1", 46, 60, 2)]
+ZQ_CAP = {"zq_soda_bottles": 2, "zq_soda_bags": 2, "zq_dancer": 2, "zq_zebras": 2, "zq_paper_sedan": 2, "zq_paper_horse": 2, "zq_burn_bucket": 2, "fg_g1": 3, "fg_g2": 3}
+def _sub_rect(r, h):
+    """r 減去 h（都係 [x0,y0,x1,y1]）→ 最多四塊"""
+    if h[0] >= r[2] or h[2] <= r[0] or h[1] >= r[3] or h[3] <= r[1]: return [r]
+    o = []
+    if h[1] > r[1]: o.append([r[0], r[1], r[2], h[1]])
+    if h[3] < r[3]: o.append([r[0], h[3], r[2], r[3]])
+    y0 = max(r[1], h[1]); y1 = min(r[3], h[3])
+    if h[0] > r[0]: o.append([r[0], y0, h[0], y1])
+    if h[2] < r[2]: o.append([h[2], y0, r[2], y1])
+    return [q for q in o if q[2] - q[0] >= 8 and q[3] - q[1] >= 8]
+def _carve(M, cut, pad):
+    for b in M.get("barriers", []):   # 虛空／山岩挖一塊空地出嚟
+        if b["k"] in ("void", "cliff"):
+            nr = []
+            for r in b["rects"]: nr += _sub_rect(r, cut)
+            b["rects"] = nr
+    M["scenery"] = [s for s in M.get("scenery", []) if not (cut[0] - pad < s[1] < cut[2] + pad and cut[1] < s[2] < cut[3] + pad)]
+TOWER_AT = {1: {"rect": [330, 140, 450, 340], "at": [390, 326], "stand": [300, 342]},           # 紙錢陣嚟咗：搬去無名義山後面（村西北）
+            2: {"rect": [1196, 1060, 1470, 1470], "at": [1330, 1430], "stand": [1236, 1452]},
+            3: {"rect": [1540, 2040, 1700, 2238], "at": [1600, 2222], "stand": [1690, 2230]}}       # 紙錢陣嚟咗：塔樓搬去陣下面
+TOWER_AT[4] = TOWER_AT[2]; TOWER_AT[5] = TOWER_AT[1]
+def _landmarks(M, ci):
+    H = HILL_AT[ci]; hx, hy = H["at"]
+    hr = [round(hx - HILL_W / 2 - 6), round(hy - HILL_H - 6), round(hx + HILL_W / 2 + 6), hy + 14]
+    _carve(M, H["cut"], 60)
+    ring = _hill_ring(M, ci, H["at"], H["cut"])
+    fr = [min([hr[0]] + [e[1] - e[3] // 2 for e in ring]), hr[1], max([hr[2]] + [e[1] + e[3] // 2 for e in ring]), max([hr[3]] + [e[2] + 8 for e in ring])]   # 黑霧範圍：山＋外圍
+    M["zones"].append({"id": "lm_hill", "type": "landmark", "lm": "hill", "rect": fr, "n": ["地標　無名義山", "地標　無名義山"], "col": "#4a4458",
+                       "at": [hx, hy], "stand": list(H["stand"]), "unlock": {"quest_done": ["stage", "1-2"]}, "ring": ring})
+    V = M["village"]   # 山圖範圍內嘅村內自然填充擺設拎走（第 3、5 關山左腳搭入村邊）
+    V["props"] = [p for p in V.get("props", []) if not (hr[0] - 16 < p[1] < hr[2] + 16 and hr[1] + 40 < p[2] < hr[3] + 20)]
+    # 村內擺設（DECOR 嘅墳／樹）同山圖疊：拎走（第 3、5 關山左腳搭入村邊）
+    V["DECOR"] = [d for d in V.get("DECOR", []) if not (hr[0] < d[1] < hr[2] and hr[1] + 40 < d[2] < hr[3] + 20)]
+    Q = ZQ_AT[ci]; qw = Q.get("w", ZQ_W); qh = round(qw * 871 / 1316, 1); qx, qy = Q["at"]
+    _carve(M, Q["cut"], 60)
+    qr = [round(qx - qw / 2 - 4), round(qy - qh - 4), round(qx + qw / 2 + 4), qy + 6]
+    tav = [TOWER_AT[ci]["rect"]] if ci in TOWER_AT else []
+    zring = _scatter(M, qx, qy - qh * 0.5, qw * 0.5 + 6, qh * 0.5 + 6, qw * 0.5 + 92, qh * 0.5 + 62, ZQ_KIT, 7300 + ci, 22, Q["cut"], ZQ_CAP, avoid=tav)
+    zfr = [min([qr[0]] + [e[1] - e[3] // 2 for e in zring]), min([qr[1]] + [e[2] - e[3] for e in zring]), max([qr[2]] + [e[1] + e[3] // 2 for e in zring]), max([qr[3]] + [e[2] + 8 for e in zring])]
+    zq = {"id": "lm_zhiqian", "type": "landmark", "lm": "zhiqian", "rect": zfr, "n": ["地標　紙錢陣", "地標　紙錢陣"], "col": "#5a2a26",
+          "at": [qx, qy], "stand": list(Q["stand"]), "unlock": {"quest_done": ["stage", "1-3"]}, "ring": zring}
+    if "w" in Q: zq["w"] = qw
+    M["zones"].append(zq)
+    if ci in TOWER_AT:
+        T = TOWER_AT[ci]
+        M["zones"].append({"id": "lm_tower", "type": "landmark", "lm": "tower", "rect": list(T["rect"]), "n": ["地標　破塔樓", "地標　破塔樓"], "col": "#3e3a48",
+                           "at": list(T["at"]), "stand": list(T["stand"]), "unlock": {"enter": True, "hint": H_ENTER}})
+        _carve(M, [T["rect"][0] - 10, T["rect"][1] - 10, T["rect"][2] + 10, T["rect"][3] + 10], 60)
+for _ci, _M in enumerate((M0, M1, M2, M3, M4, M5)): _landmarks(_M, _ci)
+
 D = {"v": 1, "maps": {"0": M0, "1": M1, "2": M2, "3": M3, "4": M4, "5": M5}}
 
 # ================= [paddyfix] 槐樹林／稻田：冇「似樹似田但撳唔到」嘅裝飾 =================

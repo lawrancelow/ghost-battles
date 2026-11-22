@@ -297,6 +297,7 @@ func _sync_statics() -> void:
 		var ripe = J.t(S.paddy[i]); var ii2 = i
 		_static("p_%d" % i, p[1] - 10, ripe, false, func(ctx): Art.draw_paddy(ctx, p[0], p[1], ripe, t, ii2))
 		i += 1
+	load("res://game/zone/landmark.gd").statics(self)   # [landmark] 地標圖（跟建築一齊 y 排序）
 	for k in statics:
 		var s = statics[k]
 		if not s.used and s.node.visible: s.node.visible = false

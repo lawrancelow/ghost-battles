@@ -107,6 +107,7 @@ func reset() -> void:
 	S = new_state(); _migrate(true)
 
 func _migrate(fresh: bool) -> void:
+	_drop_visit_quests()   # [landmark] [outgate]
 	var d = new_state()
 	for k in d:
 		if not S.has(k): S[k] = d[k]
@@ -124,6 +125,14 @@ func _migrate(fresh: bool) -> void:
 	for pos in at:
 		if old >= pos: add += 1
 	S.qi = old + add; S.qv = 2
+
+# [landmark] [outgate] core.json（舊網頁版導出）主線清單仲有「冥街夜市」「陰陽交界」兩個 visit 插入任務，JS 嗰份（J.G.QUESTS，任務進度用佢）已經冇；
+#   兩份唔對齊 → 任務條／建築解鎖顯示錯位（1-2 之後顯示「下班後去冥街夜市逛逛」）。呢度拎走，同 JS 對齊（S.qi 本來就係跟 JS 清單，唔使遷移）
+func _drop_visit_quests() -> void:
+	var Q = DB.D.get("QUESTS")
+	if not (Q is Array): return
+	for i in range(Q.size() - 1, -1, -1):
+		if Q[i] is Dictionary and str(Q[i].get("t", "")) == "visit": Q.remove_at(i)
 
 # ---------------- 數值公式 F ----------------
 func expNeed(lv: float) -> int: return int(round(30 * pow(lv, 1.75)))
@@ -311,6 +320,7 @@ func bldUnlocked(id: String) -> bool:
 	if b.get("unlockLv") and S.lv < b.unlockLv: return false
 	if b.get("unlockStage") and not S.cleared.get(b.unlockStage, false): return false
 	if b.get("unlockQuest"):
+		_drop_visit_quests()   # [landmark] [outgate]
 		var Q: Array = D("QUESTS")
 		for i in Q.size():
 			if Q[i].t == "build" and Q[i].get("b") == id:
@@ -322,6 +332,7 @@ func furnaceReady() -> bool:
 
 # ---------------- 任務 ----------------
 func quest_cur() -> Variant:
+	_drop_visit_quests()   # [landmark] [outgate] 開機路徑唔一定經 _migrate：用之前對齊一次（冇 visit 就即刻返）
 	var Q: Array = D("QUESTS")
 	return Q[int(S.qi)] if int(S.qi) < Q.size() else null
 func quest_progress(q: Dictionary) -> Array:
