@@ -458,7 +458,7 @@ func _hand(ctx: Ctx, fn, a: Dictionary, o: Dictionary) -> bool:
 	return not (done is bool and done == false)
 
 func _draw_mesh(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary, js: bool, skip_moves: bool) -> void:
-	var solid = is_solid(type); var H: float = char_h(type) * s; var t: float = o.t
+	var solid = is_solid(type) or J.t(o.get("solid")); var H: float = char_h(type) * s; var t: float = o.t   # [herobig] o.solid：當實體畫（主角）
 	var pose = _pz(o)
 	# 平日動作（DAILY[act]）：回傳 false 先照一般畫法
 	var act = o.get("act")
@@ -565,7 +565,7 @@ func _draw_plain(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictio
 	var f = func(c: Ctx, xx: float, yy: float) -> void:
 		if spr: _draw_sprite(c, type, xx, yy, s, o)
 		else: _draw_youhun(c, xx, yy, s, o)
-	var ghost = not is_solid(type)
+	var ghost = not is_solid(type) and not J.t(o.get("solid"))   # [herobig]
 	ctx.save()
 	if o.get("alpha") != null: ctx.globalAlpha = J.num(o.alpha)
 	if not (o.get("shadow") is bool and o.shadow == false):

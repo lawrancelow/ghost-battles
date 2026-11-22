@@ -298,6 +298,22 @@ func _draw_seg(c: CanvasItem, n: PtDraw) -> void:
 
 var hero_flip := false
 var hero_seg = null
+# [herobig] 主角深色描邊：用同一份錄製喺主角後面畫幾次（偏少少、染黑），令主角喺淺色路面都清楚
+var hero_ol: PtDraw = null
+const HERO_OL := [Vector2(-1.6, 0), Vector2(1.6, 0), Vector2(0, -1.6), Vector2(0, 1.4), Vector2(-1.1, -1.1), Vector2(1.1, -1.1)]
+func _hero_outline(n: PtDraw, y: float) -> void:
+	if hero_ol == null or not is_instance_valid(hero_ol):
+		hero_ol = PtDraw.new(); hero_ol.tag = "hero_ol"; ysort.add_child(hero_ol)
+		hero_ol.self_modulate = Color(0.05, 0.03, 0.04, 0.78)
+		hero_ol.fn = func(c):
+			var src = hero_ol.get_meta("src") if hero_ol.has_meta("src") else null
+			if src == null or not is_instance_valid(src): return
+			var r: Recorder = src.get_meta("rec")
+			for d in HERO_OL: r.replay(c, Transform2D(0, Vector2(d.x, d.y - hero_ol.position.y)))
+	hero_ol.set_meta("src", n)
+	hero_ol.position = Vector2(0, y - 0.05)
+	hero_ol.visible = true
+	hero_ol.queue_redraw()
 func _sync_dynamic() -> void:
 	seg_used = 0
 	var tc0 = Time.get_ticks_usec()
@@ -309,7 +325,12 @@ func _sync_dynamic() -> void:
 		var y = J.num(it.y)
 		if it.get("kind") == "plaza" and plaza.try_item(it, y): continue
 		var n = _seg(); n.position = Vector2(0, y)
+		n.self_modulate = Color.WHITE
 		if it.get("kind") == "hero":
+			# [herobig] 主角唔跟每關色調變灰：抵銷 ysort 嘅色調，再光少少，喺地圖上一眼認到
+			var gm2 = ysort.modulate
+			n.self_modulate = Color(minf(1.7, 1.12 / maxf(0.1, gm2.r)), minf(1.7, 1.12 / maxf(0.1, gm2.g)), minf(1.7, 1.12 / maxf(0.1, gm2.b)), 1.0)
+			_hero_outline(n, y)
 			# 主角每幀重錄（以前隔幀，手機上動作變一半幀數，割稻好硬）
 			hero_flip = false
 			if hero_flip and n == hero_seg and n.has_meta("hy"):

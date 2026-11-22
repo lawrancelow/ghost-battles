@@ -5,6 +5,7 @@
 #   第二段：村子邏輯；第三段：Fx/JossFx/Story/paintBg/groundLayer/drawLily/村子繪畫；第四段：UI＋補丁（__nat_menu、UI._n）；第五段：loop/startGame/全局常數
 # 規矩：其他模塊會包（wrap）嘅函數（ratesPerMin、joinGhost、Quest.complete…）一律經 J.G／J.mc 叫，包裝先會生效
 extends RefCounted
+const HERO_S := 0.9   # [herobig] 主角喺村／分區地圖嘅大細（舊 0.72）
 
 const CE = preload("res://game/outpost/chain_eco.gd")   # [chain] 拓展建築產量
 const CM = preload("res://game/outpost/mat.gd")           # [chain] 材料庫
@@ -654,7 +655,8 @@ static func v_collect(this_, ctx) -> Array:
 	items.append({"y": H.y, "kind": "hero", "f": func(_t, _a):
 		var o = {"t": t, "walk": H.get("walking"), "work": J.t(H.get("act")), "flip": J.num(H.dir) < 0, "mood": "happy" if J.t(S.get("ended")) else null, "pose": hp[0], "pt": hp[1]}
 		if J.t(hd): J.assign(o, [hd])
-		return J.mc(ART, "drawChar", [ctx, "afu", H.x, H.y, 0.72, o])})
+		o["solid"] = true   # [herobig] 主角唔透明（唔做鬼魂下身淡出）、大少少，喺地圖上易認
+		return J.mc(ART, "drawChar", [ctx, "afu", H.x, H.y, HERO_S, o])})
 	return items
 
 static func install_seg2() -> void:
@@ -1057,7 +1059,8 @@ static func v_draw(this_) -> void:
 	items.append({"y": H.y, "f": func(_t, _a):
 		var o = {"t": t, "walk": H.get("walking"), "work": J.t(H.get("act")), "flip": J.num(H.dir) < 0, "mood": "happy" if J.t(S.get("ended")) else null, "pose": hp[0], "pt": hp[1]}
 		if J.t(hd): J.assign(o, [hd])
-		return J.mc(ART, "drawChar", [ctx, "afu", H.x, H.y, 0.72, o])})
+		o["solid"] = true   # [herobig] 主角唔透明（唔做鬼魂下身淡出）、大少少，喺地圖上易認
+		return J.mc(ART, "drawChar", [ctx, "afu", H.x, H.y, HERO_S, o])})
 	for it in stable_sort(items, func(a, b): return J.num(J.gp(a, "y")) - J.num(J.gp(b, "y"))): J.cl(J.gp(it, "f"), null, [])
 	for f in J.iter(this_.feathers):
 		m(ctx, "save"); p(ctx, "globalAlpha", maxf(0, 1 - J.num(f.t) / J.num(f.life))); m(ctx, "translate", [f.x, f.y]); m(ctx, "rotate", [sin(J.num(f.rot)) * 0.8])

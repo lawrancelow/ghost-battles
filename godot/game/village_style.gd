@@ -130,7 +130,7 @@ static func draw_dark(c: CanvasItem, nv, sm: ShaderMaterial) -> void:
 				P.append(zr.get_center()); R.append(zr.size * 0.62); I.append(0.66)
 	var V = J.G.get("Village")
 	if V != null and V.get("hero") is Dictionary and V.hero.has("x") and P.size() < NL:   # 主角身邊一圈微光
-		P.append(Vector2(J.num(V.hero.x), J.num(V.hero.y) - 18)); R.append(Vector2(62, 54)); I.append(0.5)
+		P.append(Vector2(J.num(V.hero.x), J.num(V.hero.y) - 24)); R.append(Vector2(82, 74)); I.append(0.95)   # [herobig] 主角夠光，唔會俾暗影食咗
 	var n = P.size()
 	P.resize(NL); R.resize(NL); I.resize(NL)
 	for i in range(n, NL): R[i] = Vector2(1, 1)
