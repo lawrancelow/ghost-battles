@@ -348,7 +348,7 @@ func _nav_gray() -> void:
 static func nav_battle(m) -> bool:
 	if not ZD.on(): return false
 	LOG.append(["nav", "battle"])
-	if m != null and m.has_method("show_toast"): m.show_toast(L("「地盤」之後開放：將來會變成返去已打過地盤嘅傳送點。", "「地盤」之後開放：將來會變成回到已打過地盤的傳送點。"))
+	if m != null and m.has_method("show_toast"): m.show_toast(L("「地盤」之後開放", "「地盤」之後開放"))
 	return true
 
 # ================= 地圖點擊（世界座標）：目標點擊範圍最少手指大小，重疊時敵人優先；回 true＝處理咗 =================
