@@ -385,6 +385,9 @@ func _story_check(t, m, shots: bool) -> void:
 	m.close_sheet()
 	_cam(m, LM.at("hill") + Vector2(0, -60)); await _w(t, 0.4)
 	MS.auto_on = true
+	for _i in 30:   # [integ] 合併後：其他線嘅劇情（襲擾開場、兵營）可能喺度播緊；等佢播完先撳（一次只播一段）
+		if not ZV._busy(): break
+		await _skip(t, 2); await _w(t, 0.2)
 	if shots:
 		ZV.tap(m, LM.art_rect("hill").get_center()); await _w(t, 1.2)
 		await _shot(t, "story_hill")

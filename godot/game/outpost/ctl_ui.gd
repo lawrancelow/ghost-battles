@@ -135,7 +135,7 @@ func _build_sortie() -> void:
 # 出擊清單：敵人（主線關卡先）＋可攻佔，按距離；最多 5 個
 func list_targets() -> Array:
 	var hp = hero_pos()
-	var a = AT.collect(main)
+	var a = AT.collect(main).filter(func(t): return str(t.get("kind", "")) in ["stage", "king", "res", "raid"])   # [integ] 出擊只列可打目標（地標、兵營唔算；佢哋照用行動按鈕）
 	a.sort_custom(func(x, y):
 		var px = 0 if str(x.kind) == "stage" else 1; var py = 0 if str(y.kind) == "stage" else 1
 		if px != py: return px < py

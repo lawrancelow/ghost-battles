@@ -345,7 +345,7 @@ static func targets(_game = null) -> Array:
 	for z in zones_of():
 		var lm = str(z.get("lm", ""))
 		if not unlocked(lm): continue
-		o.append({"id": str(z.id), "kind": "landmark", "name": name_of(lm), "pos": stand(lm), "my_pow": 0, "foe_pow": 0, "icon": "",
+		o.append({"id": str(z.id), "kind": "landmark", "name": name_of(lm), "pos": stand(lm), "hit": hit_rect(lm), "my_pow": 0, "foe_pow": 0, "icon": "",   # [integ] hit：整座山／陣都撳得中（ctl 點擊先行）
 			"go": func(): open(_main(), lm)})
 	return o
 static func _static_init() -> void: register()

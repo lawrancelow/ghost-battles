@@ -225,7 +225,7 @@ func list_check(t, m, ct) -> void:
 	for c in m.sheet_body.get_children(): if c.has_meta("tid"): rows.append(c)
 	var ids = []
 	for r in rows: ids.append(str(r.get_meta("tid")))
-	var all_n = AT.collect(m).size()
+	var all_n = AT.collect(m).filter(func(x): return str(x.get("kind", "")) in ["stage", "king", "res", "raid"]).size()   # [integ] 出擊只列可打目標
 	_chk("出擊清單：開咗、最多 5 個、數目啱", m.sheet.visible and rows.size() == mini(5, all_n), [rows.size(), all_n, ids])
 	_chk("出擊清單：主線關卡排第一", ids.size() > 0 and ids[0] == "stage:1-1", ids)
 	var txt_ok = true; var dump = []
