@@ -8,7 +8,7 @@
 #         劇情播放中、戰鬥中、新手頭幾個任務（S.qi < min_qi）唔計時。
 #         離線（兩次 tick 相隔 > offline_gap 秒）：最多積一次——返嚟最多即刻預告一次，唔會一次過嚟幾轉。
 #   到達：隨機揀一個運作中嘅目標（村子建築／大排檔／已佔資源區；停工中、壞咗嘅唔揀）。
-#         防衛戰力（S.army.def＋cap_def；冇 S.army 就用陰兵戰力 × def_frac 保底）≥ 惡鬼戰力 → 自動擊退、小收入；
+#         防衛戰力（派去防衛 × def_full ＋ 待命陰兵 × def_frac 保底；算法用兵營 bk_data）≥ 惡鬼戰力 → 自動擊退、小收入；
 #         唔夠 → 惡鬼行到目標（walk 秒）再圍住（siege 秒）：玩家可以按行動按鈕（act_targets kind "raid"）或者撳惡鬼親自迎戰（大地圖戰鬥 kind raid）。
 #         打贏＝擊退；打輸／唔理到時間＝襲擾成功。
 #   懲罰：同一處連續被成功襲擾第 1、2 次：停工 stop 秒（損壞外觀）；第 break_n 次：壞咗，要花資源修理（點建築出修理掣），唔修唔運作。
@@ -32,9 +32,8 @@ const TUNE := {
 	"pow_ci": 40.0,
 	"pow_n": 3.0,
 	"pow_n_max": 20.0,
-	"def_frac": 0.5,       # 冇陰兵派遣（S.army）時：防衛戰力 = 陰兵戰力（ZD.power）× 呢個
-	"cap_pow": 30.0,       # 每位防衛隊長（S.army.cap_def）加幾多防衛戰力
-	"cap_pow_lv": 3.0,     #   ＋ 隊長每級再加
+	"def_full": 1.0,       # 防衛戰力：派去防衛嘅陰兵（兵營 bk_data.def_power，已含加成、防衛隊長）× 呢個
+	"def_frac": 0.5,       #          ＋ 待命陰兵（未派出；冇兵營＝全部）戰力 × 呢個（保底）
 	"auto_coins": 25.0,    # 自動擊退：冥幣 = auto_coins × (第幾關 + 1)
 	"fight_coins": 60.0,   # 親自迎戰打贏：冥幣 = fight_coins × (第幾關 + 1)
 	"fight_p": 0.6,        # 親自迎戰嘅敵人強度 = 呢關第一場主線關卡強度（p）× 呢個（越細越易）
@@ -211,24 +210,22 @@ static func market_down() -> bool: return _peek() != null and is_down("market")
 static func has_army() -> bool:
 	var s = S()
 	return s != null and s.get("army") is Dictionary
+static func _bk(): return load("res://game/barracks/bk_data.gd")
+# 待命陰兵戰力（未派出；冇兵營＝全部陰兵都算待命）
+static func standby_pow() -> int:
+	if S() == null: return 0
+	var BK = _bk()
+	if not BK.built(): return int(floor(float(BK.total()) * BK.troop_mul()))
+	return BK.power()
+# 派去防衛嘅陰兵戰力（直接用兵營算法：def × 民宅／兵營加成 × 防衛隊長加成；冇兵營＝0）
+static func deployed_pow() -> int:
+	if S() == null: return 0
+	var BK = _bk()
+	return BK.def_power() if BK.built() else 0
+# 防衛戰力 = 派去防衛 × def_full ＋ 待命 × def_frac（保底：唔派兵都守得住初期襲擾；派咗更穩）
 static func def_pow() -> int:
-	var s = S()
-	if s == null: return 0
-	var a = s.get("army")
-	if a is Dictionary:   # 陰兵派遣（barracks 線）：守村嘅陰兵 × 民宅加成 ＋ 防衛隊長
-		var d = floor(J.num(a.get("def", 0))) * ZD.troop_mul()
-		var caps = a.get("cap_def", [])
-		if caps is Array:
-			var F = J.G.get("F")
-			for id in caps:
-				var g = null
-				for x in J.iter(s.get("ghosts")):
-					if x is Dictionary and str(x.get("id")) == str(id): g = x; break
-				if g == null: continue
-				var lv = J.num(J.mc(F, "glv", [g])) if F != null else J.num(g.get("lv", 1))
-				d += float(TUNE.cap_pow) + float(TUNE.cap_pow_lv) * lv
-		return int(floor(d))
-	return int(floor(ZD.power() * float(TUNE.def_frac)))   # 保底：未有陰兵派遣
+	if S() == null: return 0
+	return int(floor(float(deployed_pow()) * float(TUNE.def_full) + float(standby_pow()) * float(TUNE.def_frac)))
 static func foe_pow(n := -1) -> int:
 	var r = st(); var nn = J.num(r.n) if n < 0 and r != null else float(maxi(n, 0))
 	return int(round(float(TUNE.pow_base) + float(TUNE.pow_ci) * ci() + minf(nn, float(TUNE.pow_n_max)) * float(TUNE.pow_n)))

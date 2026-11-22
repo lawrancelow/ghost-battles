@@ -244,17 +244,42 @@ func offline(t, m) -> void:
 # ================= 自動擊退 =================
 func auto_repel(t, m) -> void:
 	var S = J.G.S; var rr = r()
-	S.erase("army")
+	var BK = load("res://game/barracks/bk_data.gd")
+	var lv0 = J.num(S.bld.get("barracks", 0))
+	var army0 = S.get("army")
+	if army0 is Dictionary: army0 = army0.duplicate(true)
 	S_troops(300.0)
+	# ① 冇兵營：全部陰兵算待命
+	S.bld["barracks"] = 0.0
+	S["army"] = {"def": 50.0}   # 冇兵營嘅殘留派遣唔計
 	var dp = RAID.def_pow()
-	_chk("冇 S.army：防衛戰力保底＝陰兵戰力 × %.2f" % RAID.TUNE.def_frac, dp == int(floor(ZD.power() * RAID.TUNE.def_frac)) and dp > 0, dp)
-	S["army"] = {"def": 120.0, "sweep": {}, "cap_def": [], "cap_sweep": {}}
-	_chk("有 S.army：讀 def", RAID.def_pow() == int(floor(120.0 * ZD.troop_mul())), RAID.def_pow())
-	S.army["cap_def"] = [S.ghosts[0].id]
-	_chk("有 S.army：防衛隊長加戰力", RAID.def_pow() > int(floor(120.0 * ZD.troop_mul())), RAID.def_pow())
+	_chk("冇兵營：防衛戰力＝全部陰兵 × 加成 × %.2f（保底）" % RAID.TUNE.def_frac, dp == int(floor(300.0 * BK.troop_mul() * RAID.TUNE.def_frac)) and RAID.deployed_pow() == 0 and dp > 0, dp)
+	_chk("冇兵營、唔派兵：初期襲擾守得住（惡鬼戰力 ≤ 防衛）", RAID.foe_pow(0) <= dp and RAID.foe_pow(5) <= dp, [RAID.foe_pow(0), RAID.foe_pow(5), dp])
+	S_troops(60.0)
+	_chk("冇兵營、得 60 陰兵（第 3 級任務送嘅數）：第一次襲擾都守得住", RAID.foe_pow(0) <= RAID.def_pow(), [RAID.foe_pow(0), RAID.def_pow()])
+	S_troops(300.0)
+	# ② 有兵營、未派防衛
+	S.bld["barracks"] = 1.0
+	S["army"] = {}
+	BK.set_def(0)
+	var dp2 = RAID.def_pow()
+	_chk("有兵營未派防衛：防衛戰力＝待命 × %.2f" % RAID.TUNE.def_frac, RAID.deployed_pow() == 0 and dp2 == int(floor(float(BK.power()) * RAID.TUNE.def_frac)) and dp2 > 0, dp2)
+	_chk("有兵營未派防衛：初期襲擾都守得住", RAID.foe_pow(0) <= dp2, [RAID.foe_pow(0), dp2])
+	# ③ 派咗防衛：用兵營算法（bk_data.def_power），比唔派更穩
+	BK.set_def(120)
+	var dp3 = RAID.def_pow()
+	_chk("派咗防衛：防衛戰力＝兵營 def_power × %.1f ＋ 待命 × %.2f" % [RAID.TUNE.def_full, RAID.TUNE.def_frac], RAID.deployed_pow() == BK.def_power() and BK.def_power() > 0 and dp3 == int(floor(float(BK.def_power()) * RAID.TUNE.def_full + float(BK.power()) * RAID.TUNE.def_frac)), [dp3, BK.def_power(), BK.power()])
+	_chk("派咗防衛：比唔派更穩", dp3 > dp2, [dp3, dp2])
+	if S.ghosts.size():
+		S.army["cap_def"] = [S.ghosts[0].id]
+		_chk("派咗防衛＋防衛隊長：再高", RAID.def_pow() >= dp3, [RAID.def_pow(), dp3])
 	S["army"] = {"def": 0.0}
-	_chk("S.army 欄位唔齊都讀得（def 0、冇 cap_def）", RAID.def_pow() == 0)
-	S.erase("army")
+	_chk("S.army 欄位唔齊都讀得", RAID.def_pow() >= 0)
+	# 還原
+	S.bld["barracks"] = lv0
+	if army0 is Dictionary: S["army"] = army0
+	else: S.erase("army")
+	BK.set_def(0)
 	_chk("惡鬼戰力：第 1 關容易（≤ 保底防衛）", RAID.foe_pow() <= RAID.def_pow(), [RAID.foe_pow(), RAID.def_pow()])
 	rr.streak["b:bun"] = 2.0
 	var c0 = J.num(S.res.coins)
