@@ -620,7 +620,6 @@ func probe(t) -> void:
 	ZD.gate_on = false
 	await _goto(t, m, 0)
 	var nv = m.village
-	LA.DBG = true
 	_cam(m, LM.art_rect("zhiqian").get_center(), nv.size.x / 470.0); await _w(t, 1.5)
 	var gn = nv.statics.get("lm_zqg_0").node
 	_p("node class=%s parent=%s mod=%s selfmod=%s vis_in_tree=%s mat=%s" % [gn.get_class(), gn.get_parent().name, gn.modulate, gn.self_modulate, gn.is_visible_in_tree(), gn.material])

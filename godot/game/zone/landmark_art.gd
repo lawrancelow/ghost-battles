@@ -231,7 +231,6 @@ static func ghost_state(i: int, t: float, x: float, y: float, w: float, h: float
 	o.a = float(o.a) * 0.86 * fl
 	return o
 static var FX_LOG := {"frames": 0, "max_out": 0.0, "ripples": 0}   # 測試用：畫咗幾多格、鬼魂（連身闊）最出到圈幾多（≤ 1＝喺圈內）
-static var DBG := false
 static func _ghost(c: CanvasItem, T: Transform2D, o: Dictionary, i: int, t: float, alpha: float) -> void:
 	var tx = _gtex(str(o.pose), i)
 	if tx == null or alpha <= 0.005: return
@@ -241,8 +240,11 @@ static func _ghost(c: CanvasItem, T: Transform2D, o: Dictionary, i: int, t: floa
 	var sx = (-1.0 if o.flip else 1.0) * float(o.sx)
 	var sk = sin(t * 3.1 + i) * 0.06   # 身體隨正弦擺（斜少少）
 	c.draw_set_transform_matrix(T * Transform2D(Vector2(sx, 0), Vector2(sk, float(o.sy)), foot))
-	c.draw_texture_rect(tx, Rect2(-gw / 2.0, -gh, gw, gh), false, Color(1, 1, 1, alpha))
-	if DBG: c.draw_rect(Rect2(-gw / 2.0, -gh, gw, gh), Color(1, 0, 0, 0.8), false, 2.0)
+	# 鬼魂圖本身半透明、又淺色，夜色底下會溶咗：背後一團淡青光，本體畫兩次（提亮）睇得清塊面
+	if PtGfx.RAD != null: c.draw_texture_rect(PtGfx.RAD, Rect2(-gw * 0.7, -gh * 1.05, gw * 1.4, gh * 1.0), false, Color(0.7, 1.0, 0.8, 0.12 * alpha))
+	var mc = Color(1.12, 1.16, 1.08, alpha)
+	c.draw_texture_rect(tx, Rect2(-gw / 2.0, -gh, gw, gh), false, mc)
+	c.draw_texture_rect(tx, Rect2(-gw / 2.0, -gh, gw, gh), false, Color(1, 1, 1, alpha * 0.75))
 	c.draw_set_transform_matrix(T)
 # 底層（y＝圖頂）：黑罈綠光一明一暗、罈口煙、陣上紅線輕震
 static func draw_fx(ctx: Ctx, x: float, y: float, w: float, t: float) -> void:
