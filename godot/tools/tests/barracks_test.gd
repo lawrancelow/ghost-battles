@@ -96,6 +96,12 @@ func all(t) -> void:
 	var txt = ""
 	for l in sc.lines: txt += str(DB.N(l[0])) + str(DB.L(l[1]))
 	_chk("女主版：稱呼經 DB.N（少爺→大小姐、阿福→阿慧）", txt.contains("大小姐") and not txt.contains("少爺") and txt.contains("阿慧") and not txt.contains("阿福"), txt.substr(0, 60))
+	var lg = DB.lang; DB.lang = "yue"; var ty = ""
+	for l in sc.lines: ty += str(DB.L(l[1]))
+	DB.lang = "zh"; var tz = ""
+	for l in sc.lines: tz += str(DB.L(l[1]))
+	DB.lang = lg
+	_chk("粵語原句／中文兩版", ty.contains("冇腳") and tz.contains("沒腳") and not tz.contains("冇腳"), [ty.substr(0, 20), tz.substr(0, 20)])
 	S["hero"] = h0
 	J.mc(N, "bldAct", ["barracks", "up", null])
 	_chk("升級：照原本建築升級（Lv2）", BK.lv() == 2 or J.num(S.bld.house) < 2, [BK.lv(), S.bld.house])
@@ -214,6 +220,19 @@ func all(t) -> void:
 	var g0 = P.sol[0]
 	P.step(0.05, g0.p + Vector2(0, -40))
 	_chk("門口崗哨都會敬禮", g0.pose == "salute")
+	# 陰兵圖（教官款）：四張齊、統一縮放、顯示高度同亡魂協調
+	var BA = load("res://game/barracks/bk_art.gd")
+	var all4 = true
+	for ps in BA.POSES: if BA.pose_tex(ps) == null: all4 = false
+	_chk("陰兵圖四張齊（企／行／敬禮／打）", all4)
+	if all4:
+		var hh = BA._sc * BA.pose_tex("stand").get_height()
+		_chk("陰兵顯示高度 %.1f（亡魂約 41–47）" % hh, hh >= 41.0 and hh <= 50.0)
+		var ax_ok = true
+		for ps in BA.POSES: if float(BA._ax.get(ps, -1)) <= 0.0 or float(BA._ax.get(ps, -1)) >= BA.pose_tex(ps).get_width(): ax_ok = false
+		_chk("落腳點自動計（喺圖入面）", ax_ok, BA._ax)
+	var bkp = m.village.get_node_or_null("BkPatrol") if m.get("village") != null else null
+	_chk("村裡巡邏節點掛咗", bkp != null)
 
 	# ================= 7. 行動目標 =================
 	var tg = []

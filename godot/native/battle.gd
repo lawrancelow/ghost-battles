@@ -385,7 +385,7 @@ static func start(ci, si, wild) -> void:
 	for i in team.size(): B.units.append(J.mc(B, "mkGhostUnit", [team[i], float(i)]))
 	var ad = _gbi(S.get("adviser"))
 	B["adviser"] = {"k": ad.k, "name": ad.name, "energy": 0.0, "sk": J.gp(_g("SKILLS"), ad.k), "bonus": _stat(ad, 1) / 8 / 100, "atk": 20 + _stat(ad, 2) * 1.4, "side": 0.0} if J.t(ad) else null
-	var sq = mini(8, int(floor(J.num(S.res.troops) / 25))); B["squads"] = float(sq)
+	var sq = mini(8, int(floor(float(load("res://game/barracks/bk_data.gd").standby()) / 25))); B["squads"] = float(sq)   # [barracks] 只帶待命陰兵（防衛、清剿嘅留低）
 	var tb = load("res://game/zone/zone_data.gd").troop_mul()   # [barracks] 陰兵加成：兵營（舊存檔民宅加成保底）
 	var lv = J.num(S.lv)
 	for i in sq:

@@ -388,14 +388,22 @@ static func on_built(sid) -> void:
 	var Sy = J.G.get("Story")
 	if Sy != null: J.mc(Sy, "queue", [story_scene()])
 	_save()
+# 一段短劇（4 句）：原句港式粵語，中文登記入 LANG_ZH（同 qx.gd _story 一樣，播放器按語言揀、經 DB.N 換女主稱呼）
+#   守 mv_story「一個任務只放一段故事」：呢段係「起兵營」嘅回應，播完 mv_story 照樣入「等」狀態（_ext_watch），唔會連播下一幕
+const STORY := [
+	["小紙", "少爺，兵營搭好喇！啲陰兵排好晒隊，等你訓話。", "少爺，兵營建好了！陰兵都排好隊，等你訓話。"],
+	["陰兵", "報告！全營到齊！不過我哋冇腳，所以操步淨係識飄。", "報告！全營到齊！不過我們沒有腳，所以操步只會飄。"],
+	["阿福", "冇腳唔緊要，識敬禮就得。", "沒腳沒關係，會敬禮就行。"],
+	["陰兵", "收到！（全營敬禮，跌咗三個頭盔）", "收到！（全營敬禮，掉了三個頭盔）"]]
 static func story_scene() -> Dictionary:
-	var y = not zh()
-	var L = func(yue: String, zhs: String) -> String: return yue if y else zhs
-	return {"style": "talk", "bg": "village", "lines": [
-		["小紙", L.call("少爺，兵營搭好喇！啲陰兵排好晒隊，等你訓話。", "少爺，兵營建好了！陰兵都排好隊，等你訓話。")],
-		["陰兵", L.call("報告！全營到齊！不過我哋冇腳，所以操步淨係識飄。", "報告！全營到齊！不過我們沒有腳，所以操步只會飄。")],
-		["阿福", L.call("冇腳唔緊要，識敬禮就得。", "沒腳沒關係，會敬禮就行。")],
-		["陰兵", L.call("收到！（全營敬禮，跌咗三個頭盔）", "收到！（全營敬禮，掉了三個頭盔）")]]}
+	var lines = []; var zhm = {}
+	for l in STORY:
+		lines.append([l[0], l[1]]); zhm[l[1]] = l[2]
+	if J.G.get("LANG") != null: J.mc(J.G.get("LANG"), "add", [zhm])
+	if DB.D is Dictionary:
+		if not DB.D.has("LANG_ZH"): DB.D["LANG_ZH"] = {}
+		DB.D.LANG_ZH.merge(zhm, true)
+	return {"style": "talk", "bg": "village", "lines": lines}
 
 # ---------------- 行動目標（act_targets） ----------------
 static func targets(_game) -> Array:
