@@ -417,6 +417,7 @@ static func draw_over(c: CanvasItem, nv, ctx: Ctx, vr: Rect2, t: float) -> void:
 		elif k < 1.0: ZV._fog_body(c, zr, t, vr, 1.0 - ZV._ease(k), k * 40.0)
 		var npx = ZV._name_px(nv)
 		var py = ar.position.y - npx * 0.6
+		if lm == "zhiqian": py = ar.end.y + npx * 0.2   # 紙錢陣：名牌放陣前（上面有鬼魂飄出嚟，唔好遮住名牌）
 		var pr = ZV._plate(ctx, ZV._name(nv, z), ar.get_center().x, py, npx, ZV._rgba(str(z.get("col", "#4a4458")), 0.92))
 		if not op:
 			var lk = maxf(22.0, npx * 1.1)

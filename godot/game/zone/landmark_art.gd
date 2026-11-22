@@ -260,7 +260,8 @@ static func _ghost(c: CanvasItem, T: Transform2D, o: Dictionary, i: int, t: floa
 	c.draw_set_transform_matrix(T * Transform2D(Vector2(sx, 0), Vector2(sk, float(o.sy)), foot))
 	# 喺夜色層之上畫（唔畀夜色／暗影壓暗）：背後一圈好淡嘅青綠外發光，本體疊兩次（原圖好薄）睇得清塊面
 	if PtGfx.RAD != null: c.draw_texture_rect(PtGfx.RAD, Rect2(-gw * 0.75, -gh * 1.08, gw * 1.5, gh * 1.1), false, Color(0.55, 1.0, 0.8, 0.2 * alpha))
-	for k in 2: c.draw_texture_rect(tx, Rect2(-gw / 2.0, -gh, gw, gh), false, Color(1, 1, 1, alpha))
+	c.draw_texture_rect(tx, Rect2(-gw / 2.0, -gh, gw, gh), false, Color(0.8, 0.94, 0.88, alpha))   # 偏冷青灰（唔好黃到發光）
+	c.draw_texture_rect(tx, Rect2(-gw / 2.0, -gh, gw, gh), false, Color(0.7, 0.86, 0.8, alpha * 0.6))
 	c.draw_set_transform_matrix(T)
 # 底層（ysort，y＝圖頂）：陣上紅線輕震
 static func draw_fx(ctx: Ctx, x: float, y: float, w: float, t: float) -> void:
