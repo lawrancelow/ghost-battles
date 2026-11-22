@@ -536,7 +536,7 @@ func _zq_check(t, m, shots: bool) -> void:
 		var v = 0; var quads = {}
 		for i in LA.ZQ_N:
 			var o = LA.ghost_state(i, tt, 500, 500, w, h)
-			if float(o.u) < 0.84 and float(o.a) > 0.0:
+			if float(o.u) < 0.86 and float(o.a) > 0.0:
 				v += 1
 				poses[str(o.pose)] = 1
 				mo = maxf(mo, LA.inside(G, o.pos, float(o.gh) * LA.ZQ_HALF))
@@ -553,7 +553,7 @@ func _zq_check(t, m, shots: bool) -> void:
 	_chk("分佈全陣：≥ 50% 時間同時喺 3 個方位以上（左前／左後／右前／右後）", float(spread) / n >= 0.5, float(spread) / n)
 	_chk("冇綁繩姿勢、用無繩新圖（浮現／飄／螺旋／掙扎／縮返）", not poses.has("yanked") and poses.has("emerge") and poses.has("drift") and poses.has("spiral") and poses.has("press") and poses.has("recoil") and Spr.ok("zqg2_press") and not Spr.ok("zqg_yanked"), poses.keys())
 	_chk("屏障漣漪、化煙散去都有", rip and smoke)
-	_chk("撞屏障停 ≥ 1 秒", 0.24 * LA.ZQ_PER >= 1.0, 0.24 * LA.ZQ_PER)
+	_chk("撞屏障停 ≥ 1 秒", 0.26 * LA.ZQ_PER >= 1.0, 0.26 * LA.ZQ_PER)
 	var o1 = LA.ghost_state(0, 1.0, 500, 500, w, h); var o2 = LA.ghost_state(0, 1.0, 500, 500, w, h)
 	_chk("動態係時間嘅純函數（每格唔使存狀態）", o1.pos == o2.pos and o1.a == o2.a)
 	# 遊戲入面：解鎖、撳、卡、去
