@@ -554,7 +554,7 @@ func _gait_fx(sc, k: String, e: Dictionary, fx: Array) -> void:
 func cust(sc, ctx: Ctx, c: Dictionary) -> bool:
 	var t0 = Time.get_ticks_usec()
 	var m = _mo(c); var k = str(c.k); var s = sc.CS
-	var o = {"t": sc.t + c.ph, "walk": c.get("walk", false), "flip": c.get("flip", true), "alpha": 0.95}
+	var o = {"t": sc.t + c.ph, "seed": c.ph, "walk": c.get("walk", false), "flip": c.get("flip", true), "alpha": 0.95}
 	var tf = {}; var fx = []
 	var x = c.pos.x; var y = c.pos.y
 	var fwd = -1.0 if o.flip else 1.0
@@ -679,7 +679,7 @@ func _step_worker(sc, w: Dictionary, dt: float) -> void:
 func worker(sc, ctx: Ctx, w: Dictionary) -> bool:
 	var t0 = Time.get_ticks_usec()
 	var m = _mo(w); var k = str(w.k); var s = sc.CS * 0.9
-	var o = {"t": sc.t + w.ph, "tamed": true, "shadow": true, "walk": w.get("walk", false), "flip": w.get("flip", false)}
+	var o = {"t": sc.t + w.ph, "seed": w.ph, "tamed": true, "shadow": true, "walk": w.get("walk", false), "flip": w.get("flip", false)}
 	var tf = {}; var fx = []
 	var x = w.pos.x; var y = w.pos.y
 	var art = str(MD.st_def(w.sid).get("art", ""))
@@ -716,7 +716,7 @@ func worker(sc, ctx: Ctx, w: Dictionary) -> bool:
 			if paper_fire:   # 紙紮員工對住火：做嘢都要縮開少少
 				ctx.save(); ctx.translate(x, y); ctx.rotate(-0.1 * fwd0); ctx.translate(-x, -y); _mark(k, "fire_fear")
 				fx.append(["sweat", head_of(k, x, y, s, fwd0) + Vector2(-fwd0 * 10.0, 4.0), 1.0, sc.t + m.seed])
-			J.mc(WK, "drawAct", [ctx, k, x, y, s, a, at, {"flip": o.flip, "tamed": true, "untied": true, "wv": v, "t": sc.t + w.ph}])
+			J.mc(WK, "drawAct", [ctx, k, x, y, s, a, at, {"flip": o.flip, "tamed": true, "untied": true, "wv": v, "t": sc.t + w.ph, "seed": w.ph}])
 			if SNIP.has(art) and fmod(m.wt + float(m.seed), 0.55) < 0.02:   # 剪：紙碎飄落
 				_add({"k": "drop", "x": x + fwd0 * 16.0, "y": y - 30.0, "vx": _rng.randf_range(-20, 20), "vy": -30.0, "life": 0.9, "r": 2.4, "c": "#efe6d2", "gy": y + 2.0})
 			if paper_fire: ctx.restore()
@@ -931,7 +931,7 @@ func foe(sc, ctx: Ctx, f: Dictionary) -> bool:
 	var m = _mo(f)
 	var a = 0.92
 	var y = f.pos.y + float(f.get("bob", 0.0)) + sin(sc.t * 2.2 + f.ph) * 2.0
-	var o = {"t": sc.t + f.ph, "walk": f.get("walk", false) or f.st == "bang", "flip": f.get("flip", false), "alpha": a, "noShadow": true}
+	var o = {"t": sc.t + f.ph, "seed": f.ph, "walk": f.get("walk", false) or f.st == "bang", "flip": f.get("flip", false), "alpha": a, "noShadow": true}
 	if f.has("hurt"): o["hurt"] = true
 	if f.st == "bang": o["atk"] = true
 	var tf = {}

@@ -657,7 +657,7 @@ func _draw_empty(ctx: Ctx, sid: String, i: int, sp: Vector2) -> void:
 		_txt(ctx, T("請管事", "請管事"), sp.x, sp.y - 42, 16, Color("#ffd27a"), "center", 900, 4)
 
 func _draw_cust(ctx: Ctx, c: Dictionary, sid: String) -> void:
-	Art.draw_char(ctx, c.k, c.x, c.y, CSCALE * 0.92, {"t": t + c.ph, "walk": c.get("walk", false), "flip": c.flip, "alpha": 0.92})
+	Art.draw_char(ctx, c.k, c.x, c.y, CSCALE * 0.92, {"t": t + c.ph, "seed": c.ph, "walk": c.get("walk", false), "flip": c.flip, "alpha": 0.92})
 	if c.st == "serve":
 		var w = 40.0; var x0 = c.x - w / 2; var y0 = c.y - 50
 		Art.rr(ctx, x0 - 1, y0 - 1, w + 2, 8, 3, "rgba(0,0,0,.6)")
@@ -666,7 +666,7 @@ func _draw_cust(ctx: Ctx, c: Dictionary, sid: String) -> void:
 func _draw_lone(ctx: Ctx, l: Dictionary) -> void:
 	var a = 0.55 + 0.1 * sin(t * 3 + l.ph)
 	if l.st == "flee": a = maxf(0.0, 0.6 - l.t * 0.15)
-	var o = {"t": t + l.ph, "walk": l.st in ["walk", "flee", "loot"], "flip": l.st in ["walk", "steal", "wait"], "alpha": a, "noShadow": true}
+	var o = {"t": t + l.ph, "seed": l.ph, "walk": l.st in ["walk", "flee", "loot"], "flip": l.st in ["walk", "steal", "wait"], "alpha": a, "noShadow": true}
 	if l.st == "steal": o["work"] = true
 	Art.draw_char(ctx, l.k, l.x, l.y - 4 + sin(t * 2.4 + l.ph) * 3.0, CSCALE * 0.95, o)
 	# 藍色鬼火光暈＋小標

@@ -82,9 +82,9 @@
       "bg": "field"
      },
      "art": {
-      "遊魂甲": "youhun",
-      "遊魂乙": "youhun",
-      "遊魂丙": "youhun"
+      "遊魂甲": "soul_f",
+      "遊魂乙": "soul_a",
+      "遊魂丙": "soul_i"
      }
     },
     {

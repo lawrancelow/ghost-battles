@@ -316,7 +316,7 @@ func _draw() -> void:
 	var spots = worker_spots(); vis = []
 	for s in spots:
 		vis.append({"g": s.g, "x": s.x, "y": s.y})
-		items.append([s.y, func(): Art.draw_char(ctx, s.g.k, s.x, s.y, 0.62, {"t": t + s.ph, "work": true, "flip": s.flip, "tamed": true})])
+		items.append([s.y, func(): Art.draw_char(ctx, s.g.k, s.x, s.y, 0.62, {"t": t + s.ph, "seed": s.ph, "work": true, "flip": s.flip, "tamed": true})])
 	var idle = []
 	for g in S.ghosts:
 		if g.get("post") == null and g.k != "afu": idle.append(g)

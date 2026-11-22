@@ -26,11 +26,15 @@ func _init(unit: Dictionary, battle: Dictionary) -> void:
 	pc.over.visible = false; pc.glow.visible = false
 	mv = PtDraw.new(); mv.fn = _draw_mv; mv.tag = "mv"; add_child(mv)
 
+func _seed():   # [eastsoul] 每個單位固定一隻亡魂樣
+	if not u.has("_soul"): u["_soul"] = randi() % 1000
+	return u._soul
 # PtChar 要嘅 run 介面
 func fx_tex(_n): return null
 func draw_over(_n, _u, _o) -> void: pass
 
 func custom_draw(k: String, pose) -> bool:
+	if k == "youhun": return true   # [eastsoul] 遊魂唔用白布鬼網格，改畫東方亡魂
 	if ATK.has(pose) and _moves is Dictionary and _moves.has(k): return true
 	return _rig is Dictionary and _rig.get(k) is Dictionary and _rig[k].get("custom") != null
 
@@ -45,7 +49,7 @@ func sync(T: float) -> void:
 	var tg = u.anim.get("tg") if u.get("anim") is Dictionary else null
 	if tg is Dictionary and J.num(tg.hp) <= 0: tg = null
 	var o = {"tdx": J.num(tg.x) - J.num(u.x) if tg != null else (-40.0 if side1 else 40.0), "tdy": BtDraw.uy(B, tg) - y0 if tg != null else 0.0,
-		"t": T + J.num(u.get("lane", 0)), "walk": P.pose == "move", "pose": P.pose, "pt": P.pt, "flip": side1, "enemy": side1, "alpha": P.alpha, "rot": P.rot, "tamed": not side1, "untied": not side1}
+		"t": T + J.num(u.get("lane", 0)), "seed": _seed(), "walk": P.pose == "move", "pose": P.pose, "pt": P.pt, "flip": side1, "enemy": side1, "alpha": P.alpha, "rot": P.rot, "tamed": not side1, "untied": not side1}
 	var cast = J.num(u.casting.t) / J.num(u.casting.dur) if u.get("casting") is Dictionary else -1.0
 	st = {"x": x, "y0": y0, "y": y0 + P.oy, "s": s, "o": o, "P": P, "cast": cast, "T": T, "side1": side1, "flash": J.num(u.get("flash", 0))}
 	var k = pu.k

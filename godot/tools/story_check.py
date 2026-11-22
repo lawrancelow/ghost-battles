@@ -213,7 +213,7 @@ def main():
                 if l[0] not in spk_art and l[0] not in art and l[0] not in ("旁白", "系統", "？？？", "抬棺鬼", "告示", "主播", "DJ", "記者", "聽眾", "稻草人") and sc.get("style") == "talk":
                     W(bt + " 講者「%s」冇圖（SPEAKER_ART／art 都冇）" % l[0])
             for sp, k in art.items():
-                if k not in ghosts and k not in core.get("ENEMY_T", {}) and k not in spk_art.values(): W(bt + " art %s→%s 唔係已知鬼圖鍵" % (sp, k))
+                if k not in ghosts and k not in core.get("ENEMY_T", {}) and k not in spk_art.values() and not (k.startswith("soul_") and os.path.exists(os.path.join(ROOT, "assets", "spr", k + ".webp"))): W(bt + " art %s→%s 唔係已知鬼圖鍵" % (sp, k))
             here.append(bid)
         # --- 4. 惡鬼 ---
         fo = sm.get("FOE", {})

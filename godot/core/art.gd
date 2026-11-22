@@ -367,6 +367,7 @@ func _jart(k: String):
 	var A = J.G.get("ART")
 	return J.gp(A, k) if A != null else null
 func char_h(type: String) -> float:
+	if type.begins_with("soul_"): return SOUL_H   # [eastsoul]
 	var h = _jart("CHAR_H")   # JS 表優先；原生另加嘅（巡陰 npc_kiln 等，JS 冇）用本地表
 	if h is Dictionary and h.has(type) and J.t(h[type]): return J.num(h[type])
 	return float(CHAR_H.get(type, 0))
@@ -386,8 +387,19 @@ static func _ot(o: Dictionary) -> float: return J.num(o.get("t")) if J.t(o.get("
 static func _pz(o: Dictionary) -> String: return J.str(o.pose) if o.get("pose") != null else ""
 
 # js = true：照網頁版，有 o.act 就交俾 DAILY（JS ART.drawChar 叫）；原生場景要講明 o._daily
+# [eastsoul] 遊魂一律用東方亡魂（有樣貌、冇腳、下身一縷煙；全部成年人／老人），唔再用白布西方鬼
+#   邊一隻：o.seed（每個角色固定，例如客人 ph、戰鬥單位）；冇 seed 就用返做 OT 嗰隻（返工男）
+const SOULS := ["soul_a", "soul_b", "soul_c", "soul_d", "soul_f", "soul_g", "soul_h", "soul_i", "soul_j", "soul_k", "soul_l", "soul_m", "soul_n", "soul_p", "soul_q", "soul_r"]
+const SOUL_H := 50.0
+func soul_of(o: Dictionary) -> String:
+	var sd = o.get("seed")
+	if sd == null: return "soul_i"
+	if sd is String and SOULS.has(sd): return sd
+	return SOULS[absi(hash(str(sd))) % SOULS.size()]
 func draw_char(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary = {}, js := false) -> void:
+	if type == "youhun" and not J.t(o.get("oldGhost")) and PtGfx.tex("soul_i") != null: type = soul_of(o)   # [eastsoul]
 	o["t"] = _ot(o)
+	if type.begins_with("soul_") and PtGfx.tex(type) != null: _draw_soul(ctx, type, x, y, s, o); return
 	if char_h(type) > 0 and _ma_has(type) and not _special_has(type) and not J.t(o.get("noMesh")):
 		_draw_mesh(ctx, type, x, y, s, o, js, false); return
 	var PU = J.G.get("Puppet")
@@ -397,6 +409,34 @@ func draw_char(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictiona
 		if J.t(o.get("rot")): ctx.translate(x, y - 15 * s); ctx.rotate(J.num(o.rot)); ctx.translate(-x, -(y - 15 * s))
 		_draw_puppet(ctx, type, x, y, s, o); ctx.restore(); return
 	_draw_plain(ctx, type, x, y, s, o)
+
+# [eastsoul] 東方亡魂：直接逐段畫圖（下身慢慢淡出、輕輕擺），唔用錄製＋逐點淡出（戰鬥入面一次十幾隻都夠快）
+const SOUL_SL := 7
+func _draw_soul(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary) -> void:
+	var img = PtGfx.tex(type); var iw = float(img.get_width()); var ih = float(img.get_height())
+	var t: float = J.num(o.get("t", 0.0)); var H = SOUL_H * s; var Wd = H * iw / ih
+	ctx.save()
+	if o.get("alpha") != null: ctx.globalAlpha = J.num(o.alpha)
+	var base = ctx.globalAlpha
+	if not (o.get("shadow") is bool and o.shadow == false) and not J.t(o.get("noShadow")):
+		ctx.save(); ctx.globalAlpha = base * 0.55; shadow(ctx, x, y + 1 * s, s * 0.8); ctx.restore()
+	var r = 0.0; var sc = 1.0
+	if J.t(o.get("walk")): r += sin(t * 6.0) * 0.05
+	if J.t(o.get("work")): r += sin(t * 10.0) * 0.08
+	if J.t(o.get("atk")): sc = 1.08
+	if J.t(o.get("rot")): r += J.num(o.rot)
+	var fy = y - (5 + sin(t * 2.4) * 2.5) * s
+	ctx.translate(x, fy)
+	if r != 0.0: ctx.rotate(r)
+	if J.t(o.get("flip")): ctx.scale(-sc, sc)
+	elif sc != 1.0: ctx.scale(sc, sc)
+	for i in SOUL_SL:
+		var f0 = float(i) / SOUL_SL; var f1 = float(i + 1) / SOUL_SL
+		var fa = 1.0 if f1 <= 0.62 else clampf(1.0 - (f0 - 0.62) / 0.38, 0.12, 1.0)
+		var sway = sin(t * 2.2 + f0 * 3.0) * 2.2 * s * f0
+		ctx.globalAlpha = base * fa
+		ctx.drawImage(img, 0.0, ih * f0, iw, ih * (f1 - f0), -Wd / 2 + sway, -H + H * f0, Wd, H * (f1 - f0) + 0.6)
+	ctx.restore()
 
 # MOVES 交返 false 之後（BtMoves 叫）：由 custom／Limbs／網格繼續畫，唔再入 MOVES
 func draw_char_after_moves(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary) -> void:

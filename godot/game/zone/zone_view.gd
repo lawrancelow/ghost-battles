@@ -567,7 +567,7 @@ static func _stage_over(ctx: Ctx, nv, vr: Rect2, t: float) -> void:
 	var order = [0, 2, 1] if ks.size() == 3 else range(ks.size())
 	for i in order:
 		var o = off[i] if ks.size() == 3 else Vector2((i - (ks.size() - 1) * 0.5) * 46.0, 0)
-		Art.draw_char(ctx, ks[i], at.x + o.x, at.y + o.y + sin(t * 2.0 + i) * 3.0, 0.85, {"t": t + i, "flip": true})
+		Art.draw_char(ctx, ks[i], at.x + o.x, at.y + o.y + sin(t * 2.0 + i) * 3.0, 0.85, {"t": t + i, "flip": true, "seed": str(tg.sid) + str(i)})
 	var px = 16
 	_txt(ctx, ZD.L("主線 %s　%s", "主線 %s　%s") % [str(tg.sid), str(tg.get("name", ""))], at.x, at.y + px * 1.2, px, "#ffb0a0")
 	ctx.globalAlpha = 0.75 + 0.25 * sin(t * 3.0)

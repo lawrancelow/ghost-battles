@@ -797,7 +797,7 @@ func _step_amb(dt: float) -> void:
 func _draw_amb_ghosts(ctx: Ctx, vy0: float, vy1: float) -> void:
 	for g in amb.g:
 		if g.y < vy0 or g.y > vy1 or (embed and g.y > world_h() - 60.0): continue   # [unify]
-		Art.draw_char(ctx, "youhun", g.x, g.y + sin(t * 1.4 + g.ph) * 8.0, CS * 0.75, {"t": t + g.ph, "flip": g.v < 0, "alpha": 0.22, "noShadow": true})
+		Art.draw_char(ctx, "youhun", g.x, g.y + sin(t * 1.4 + g.ph) * 8.0, CS * 0.75, {"t": t + g.ph, "seed": g.ph, "flip": g.v < 0, "alpha": 0.22, "noShadow": true})
 func _draw_amb_fly(ctx: Ctx) -> void:
 	for f in amb.f:
 		if embed and f.y > world_h() - 40.0: continue   # [unify]
@@ -849,7 +849,7 @@ func _draw_foe(ctx: Ctx, f: Dictionary) -> void:
 	var a = 0.92
 	if f.st == "die": a = maxf(0.0, 0.92 - f.t * 1.3)
 	var y = f.pos.y + float(f.get("bob", 0.0)) + sin(t * 2.2 + f.ph) * 2.0
-	var o = {"t": t + f.ph, "walk": f.get("walk", false) or f.st == "bang", "flip": f.get("flip", false), "alpha": a, "noShadow": true}
+	var o = {"t": t + f.ph, "seed": f.ph, "walk": f.get("walk", false) or f.st == "bang", "flip": f.get("flip", false), "alpha": a, "noShadow": true}
 	if f.has("hurt"): o["hurt"] = true
 	if f.st == "bang": o["atk"] = true
 	Art.el(ctx, f.pos.x, y - 26, 30, 30, "rgba(140,190,255,.12)"); Art.el(ctx, f.pos.x, y - 26, 18, 18, "rgba(160,200,255,.14)")
@@ -860,7 +860,7 @@ func _draw_foe(ctx: Ctx, f: Dictionary) -> void:
 		Art.rr(ctx, f.pos.x - w / 2, y - 61, w * clampf(f.hp / f.mx, 0, 1), 5, 2, "#e05a4a")
 
 func _draw_guard(ctx: Ctx, g: Dictionary) -> void:
-	var o = {"t": t + g.ph, "walk": g.get("walk", false), "flip": g.get("flip", false), "tamed": true, "shadow": true}
+	var o = {"t": t + g.ph, "seed": g.ph, "walk": g.get("walk", false), "flip": g.get("flip", false), "tamed": true, "shadow": true}
 	if g.atk > 0.0: o["atk"] = true
 	if mot == null or not mot.guard(self, ctx, g, o): Art.draw_char(ctx, str(g.k), g.pos.x, g.pos.y, CS * 0.95, o)   # [motion]
 	_txt(ctx, MD.S("guard_tag", "守夜", "守夜"), g.pos.x, g.pos.y + 12, 14, Color("#ffd27a"), "center", 900, 4)
@@ -931,7 +931,7 @@ func _draw_counter(ctx: Ctx, fk: float) -> void:
 
 # ---------------- 客人 ----------------
 func _draw_cust(ctx: Ctx, c: Dictionary) -> void:
-	var o = {"t": t + c.ph, "walk": c.get("walk", false), "flip": c.get("flip", true), "alpha": 0.95}
+	var o = {"t": t + c.ph, "seed": c.ph, "walk": c.get("walk", false), "flip": c.get("flip", true), "alpha": 0.95}
 	if not sim.plus.act_draw(self, ctx, c, CS, o):   # [play] 事件動作優先
 		if mot == null or not mot.cust(self, ctx, c): Art.draw_char(ctx, str(c.k), c.pos.x, c.pos.y, CS, o)   # [motion] 冇事件：種族專屬動作
 	if c.st == "out" and (mot == null or mot.happy(c)):   # [motion] 嬲走唔出 ♪
@@ -1169,7 +1169,7 @@ func _icon(ctx: Ctx, gid: String, x: float, y: float, sz: float) -> void:
 
 func _draw_worker(ctx: Ctx, w: Dictionary) -> void:
 	if mot != null and not mot.play_busy(w) and mot.worker(self, ctx, w): return   # [motion] 玩法線事件動作（偷食、打瞌睡……）優先
-	var o = {"t": t + w.ph, "tamed": true, "shadow": true, "walk": w.get("walk", false), "flip": w.get("flip", false)}
+	var o = {"t": t + w.ph, "seed": w.ph, "tamed": true, "shadow": true, "walk": w.get("walk", false), "flip": w.get("flip", false)}
 	if w.st == "work" and not w.get("walk", false): o["work"] = true; o["flip"] = int(w.slot) % 2 == 1
 	if not sim.plus.act_draw(self, ctx, w, CS * 0.9, o): Art.draw_char(ctx, str(w.k), w.pos.x, w.pos.y, CS * 0.9, o)   # [play] 特別動作
 	if w.carry > 0:

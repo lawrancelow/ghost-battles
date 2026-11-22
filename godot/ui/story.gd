@@ -125,6 +125,7 @@ func _show_line() -> void:
 	if talkbox != null:
 		nm.get_parent().visible = who != "旁白"; nm.text = DB.N(who)   # 只換顯示；SPEAKER_ART 照用原講者名
 		var art = "sys" if who == "系統" else DB.D.SPEAKER_ART.get(who)
+		if art == "youhun": art = Art.soul_of({"seed": who})   # [eastsoul] 遊魂頭像：東方亡魂（同一個講者名＝同一個樣）
 		pt.visible = art != null
 		tx.offset_left = 108 if art != null else 18
 		if art != null and art != "sys":

@@ -666,7 +666,7 @@ func draw_world(sc, ctx, vy0: float, vy1: float) -> void:
 		_draw_vol(sc, ctx, r)
 
 func _draw_vol(sc, ctx, r: Dictionary) -> void:
-	var o = {"t": sc.t + r.ph, "walk": r.get("walk", false), "flip": r.get("flip", false), "tamed": true, "shadow": true}
+	var o = {"t": sc.t + r.ph, "seed": r.ph, "walk": r.get("walk", false), "flip": r.get("flip", false), "tamed": true, "shadow": true}
 	if r.has("atk_t"): o["atk"] = true
 	if r.has("hurt"): o["hurt"] = true
 	var p = r.pos; var s = CS * 0.9
@@ -713,7 +713,7 @@ func draw_boss(sc, ctx, f: Dictionary) -> void:
 	var a = 0.95
 	if f.st == "die": a = maxf(0.0, 0.95 - f.t * 1.3)
 	var y = f.pos.y + float(f.get("bob", 0.0)) + sin(sc.t * 2.0 + f.ph) * 2.0
-	var o = {"t": sc.t + f.ph, "walk": f.get("walk", false) or f.st == "bang", "flip": f.get("flip", false), "alpha": a, "noShadow": true}
+	var o = {"t": sc.t + f.ph, "seed": f.ph, "walk": f.get("walk", false) or f.st == "bang", "flip": f.get("flip", false), "alpha": a, "noShadow": true}
 	if f.has("hurt"): o["hurt"] = true
 	if f.st == "bang": o["atk"] = true
 	Art.el(ctx, f.pos.x, y - 40, 48, 44, "rgba(255,120,100,.14)")
