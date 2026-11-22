@@ -34,7 +34,7 @@ const MD = preload("res://game/outpost/mv_data.gd")
 const MVW = preload("res://game/outpost/mv_war.gd")
 const SIM = preload("res://game/outpost/mv_sim.gd")
 const ZD = preload("res://game/zone/zone_data.gd")
-const ZKINDS := ["map_enter", "zone_seen", "zone_cap", "boss_pre", "boss_win", "factory", "liberate", "reveal", "stage_win"]   # [outgate] stage_win：主線關卡（x-1…）打完
+const ZKINDS := ["map_enter", "zone_seen", "zone_cap", "boss_pre", "boss_win", "factory", "liberate", "reveal", "stage_win", "raid_intro"]   # [outgate] stage_win：主線關卡（x-1…）打完；[raid] raid_intro：惡鬼襲擾開始（game/raid/raid.gd 排入佇列）
 const ZREACT := ["boss_win", "zone_cap", "factory", "liberate", "stage_win"]   # [pace] 玩家動作嘅回應：佇列優先
 const HOLD_T := 1.0e9          # [pace] [outgate] 播完一幕之後：唔再計時放行，一定要玩家做完一個任務先播下一幕
 const PATH := "res://data/nat/mv_story.json"
@@ -416,6 +416,9 @@ func zone_event(kind: String, id := "", cb := Callable()) -> bool:
 		return true
 	var q = zq()
 	if not q.has(bid): q.append(bid)
+	if k2 == "boss_win" and c == 0 and norm_id(k2, str(id), c) == "zb_eguiking":   # [raid] 打低餓鬼王：襲擾開場劇情跟住入佇列（need.after 保證喺王戰勝利之後、一個任務一段）
+		var rb = zone_beat(c, "raid_intro", "")
+		if not rb.is_empty() and not is_seen(str(rb.id)) and not q.has(str(rb.id)): q.append(str(rb.id))
 	return true
 
 # 睇緊分區地圖？（唔理鏡頭喺邊；彈出卡、拔營動畫、戰鬥中都唔播）

@@ -171,6 +171,12 @@ func _logic(t) -> void:
 				var ret2 = st.zone_event(k, zid, func(): called[0] += 1)
 				_chk("圖%d %s：播過再撳 → 即刻開戰、唔重播" % [c + 1, id], not ret2 and called[0] == 2 and _q.is_empty() and st.played.count(id) == 1)
 				continue
+			if k == "raid_intro":   # [raid] 襲擾開場：打低餓鬼王嗰陣跟住入佇列（唔使另外事件），一個任務一段
+				_tick(st, sc, 3)
+				_chk("圖%d %s：打低餓鬼王後跟住播（一次）" % [c + 1, id], st.played.count(id) == 1 and st.played.find(id) > st.played.find("zs0_boss_win_zb_eguiking"), st.played)
+				st.zone_event(k, zid); _tick(st, sc, 3)
+				_chk("圖%d %s：再嚟事件唔重播" % [c + 1, id], st.played.count(id) == 1)
+				continue
 			_tick(st, sc, 1)
 			_chk("圖%d %s：冇事件唔播" % [c + 1, id], not st.played.has(id))
 			var ret3 = st.zone_event(k, zid)

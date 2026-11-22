@@ -35,6 +35,7 @@ extends RefCounted
 
 const MD = preload("res://game/outpost/mv_data.gd")
 const M = preload("res://game/outpost/mat.gd")
+const RAID = preload("res://game/raid/raid.gd")   # [raid]
 
 const INF0 := 60.0
 const ALARM := 30.0
@@ -156,7 +157,7 @@ static func occ_sid() -> String:
 	var w = ws(); if w == null: return ""
 	var v = w.occ.get(str(cur_ci()))
 	return str(v) if v != null else ""
-func blocked(_sim, sid: String) -> bool: return sid != "" and occ_sid() == sid
+func blocked(_sim, sid: String) -> bool: return sid != "" and (occ_sid() == sid or RAID.market_down())   # [raid] 大排檔被襲擾：全部檔停工
 static func alarm_on() -> bool:
 	var w = ws(); return w != null and w.get("alarm") is Dictionary
 static func need_exp() -> bool: return alarm_on() or occ_sid() != ""

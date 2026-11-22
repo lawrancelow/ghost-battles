@@ -32,6 +32,8 @@ var kind := ""                # boss／cap／raid
 var zid := ""
 var bid := ""
 var tkey := ""                # 叫囂鍵（zone_taunt）
+var raid_at = null            # [raid] 村子被惡鬼襲擾：戰場對準目標（Vector2）；null＝照舊喺大排檔
+var raid_from = null          # [raid] 惡鬼由邊度行過嚟
 var ci := 0
 var B: Dictionary
 var units_ref = null
@@ -102,6 +104,7 @@ static func start(k: String, id: String, cb: Callable, opt := {}) -> bool:
 	if be != null: J.mc(J.gp(be, "classList"), "remove", ["on"])   # 舊 DOM 戰鬥畫面唔出（結算框由 NvDomCard 原生畫）
 	var n = load("res://game/zone/zone_battle.gd").new(); n.name = "MapBattle"
 	n.kind = k; n.zid = id; n.bid = str(opt.get("bid", "")); n.B = Bt
+	if opt.get("at") is Vector2: n.raid_at = opt.at; n.raid_from = opt.get("from", opt.at)   # [raid]
 	cur = n
 	var v = village()
 	v.add_child(n)
@@ -174,6 +177,10 @@ func _geometry() -> void:
 		anchor = ZD.front_anchor()
 		zid = str(wz[0].id) if wz.size() else ""
 		tkey = TA.raid_key(ZD.ci()) if kind == "raid" else ""
+		if raid_at != null:   # [raid] 落點：目標建築／大排檔／資源區（村口、資源區都得）
+			anchor = raid_at
+			var az = ZD.zone_at(anchor)
+			r = ZD.zrect(az) if az != "" else Rect2(anchor - Vector2(240, 260), Vector2(480, 520))
 	S = clampf((r.size.x - 16.0) / 360.0, 0.5, S_MAX)
 	# 王對準 anchor（王嘅 battle 起始位）
 	var bu = _boss_unit()
@@ -241,6 +248,10 @@ func _plan_march() -> void:
 		if z.get("door") is Dictionary: path.append(ZD.v2(z.door.in)); path.append(ZD.v2(z.door.out))
 	else:
 		path = _gate_path(zid, kind == "boss")
+	if raid_at != null:   # [raid] 隊伍由主角身邊行去目標
+		var VV = J.G.get("Village"); var hp = raid_at + Vector2(0, 160)
+		if VV is Dictionary and VV.get("hero") is Dictionary: hp = Vector2(J.num(VV.hero.x), J.num(VV.hero.y))
+		path = PackedVector2Array([hp, raid_at + Vector2(0, 40)])
 	var order = 0
 	for i in B.units.size():
 		var u = B.units[i]
@@ -253,6 +264,8 @@ func _plan_march() -> void:
 		else:
 			var src = PackedVector2Array()
 			if kind == "boss" and tkey != "" and TA.on(tkey) and J.t(u.get("boss")): src = PackedVector2Array([TA.spot(tkey), goal])
+			elif raid_at != null:   # [raid] 惡鬼由邊界行埋嚟
+				src = PackedVector2Array([raid_from + Vector2((i % 3 - 1) * 26.0, 0), goal])
 			elif kind == "raid" or kind == "stage":
 				var g = TA.gate_of(zid)
 				src = PackedVector2Array([g[0] + Vector2((i % 3 - 1) * 26.0, -float(g[1]) * 60.0), g[0], goal])
@@ -654,6 +667,7 @@ func _build_ui() -> void:
 	var st = B.get("stage")
 	var nm = J.str(st.get("name")) if st is Dictionary else ""
 	var pre = {"boss": ZD.L("王戰", "王戰"), "cap": ZD.L("攻佔", "攻佔"), "raid": ZD.L("迎戰鬼潮", "迎戰鬼潮")}.get(kind, "")
+	if raid_at != null: pre = ZD.L("迎戰", "迎戰")   # [raid] 標題已經係「餓鬼襲擾包子鋪」
 	title_l.text = "%s　%s" % [pre, L(nm)]
 	_sync_btns()
 func _ls(k: String, v: String) -> void:

@@ -5,6 +5,7 @@ var village: Control
 # 移動村（出殯巡遊大排檔）：S.mv_on 開咗就用佢做 home 分頁，舊村子畫面收埋（代碼保留，開關關咗照用）
 const MVB := preload("res://game/outpost/mv_bridge.gd")
 const MVW := preload("res://game/outpost/mv_war.gd")   # [war] 親自出征：收戰鬥結果
+const RAID := preload("res://game/raid/raid.gd")   # [raid] 村子被惡鬼襲擾
 const MV_SCENE := "res://game/outpost/mv_scene.gd"            # 引擎線交貨
 const MV_STUB := "res://game/outpost/mv_scene_stub.gd"        # 整合線假場景（引擎未交貨時用）
 const CBLD := preload("res://game/outpost/chain_bld.gd")   # [village] 後院拓展建築
@@ -573,6 +574,7 @@ func _mv_tick() -> void:
 	if not mv_on(): return
 	MVW.poll()   # [war]
 	ZDm.poll(); ZVm.eat_news(self)   # [zone] 攻佔／野外王戰鬥結果
+	RAID.tick(self)   # [raid]
 	MVB.tick()
 	# 舊存檔第一次入嚟：簡短介紹（等標題、手機、劇情、自檢都完先彈）
 	if MVB.intro_pending() and title_ov == null and phone == null and loading == null and selftest == null:
