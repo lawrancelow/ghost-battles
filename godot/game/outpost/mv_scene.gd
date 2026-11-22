@@ -13,6 +13,7 @@ const IDL = preload("res://game/outpost/mv_idle.gd")   # [idle]
 const MIST = preload("res://game/outpost/mv_mist.gd")   # [unify] 血霧（mapart 線）：台、櫃台底
 const MOT = preload("res://game/outpost/mv_motion.gd")
 const ZDs = preload("res://game/zone/zone_data.gd")   # [zone]   # [motion] 角色特別動作
+const MB = preload("res://game/outpost/mv_bake.gd")   # [perf] 名牌／HUD 烘圖
 const FW := 390.0
 const GOLD := Color("#f3d68a")
 const INK := Color("#2b1d12")
@@ -597,8 +598,9 @@ func _draw_stage() -> void:
 	_draw_parts(ctx, false)
 	if not embed or hud_k > 0.01:   # [unify] 嵌入：睇到大排檔區先出 HUD
 		ctx.globalAlpha = hud_k if embed else 1.0
-		_draw_hud(ctx)
+		MB.draw(self, ctx, "hud", func(c): _draw_hud(c))   # [perf] HUD 內容冇變就用烘圖（數值變先重烘；閃動多就自動逐格畫）
 		ctx.globalAlpha = 1.0
+	MB.gc(self)   # [perf]
 
 # ---------------- 地面：背景圖直向鋪（隔塊反轉接縫）＋路＋小河＋橋 ----------------
 func _draw_ground(ctx: Ctx, vy0: float, vy1: float) -> void:
@@ -1065,40 +1067,44 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 				_wbtns["slot:%s:%d" % [sid, i]] = Rect2(sp.x - 20, sp.y - 40, 40, 46)
 	ctx.restore()
 	# 名牌：名＋等級＋里程碑星
-	if fk > 0.5:
-		var ny = p.y + 42.0
-		var name = MD.T(MD.st_def(sid).get("n"))
-		var cw = _cell_w() - 8.0
-		if un:
-			var ft = _fit(ctx, name, cw - 12.0, 15)
-			ctx.font = "900 %dpx sans-serif" % ft[1]; var tw = ctx.measureText(ft[0]).width + 14
-			Art.rr(ctx, p.x - tw / 2, ny - 11, tw, 22, 6, "rgba(30,18,12,.82)", "#b89a52", 1)
-			var pw2 = maxf(tw, 46.0 + 6.0 * 13.0)   # [polish4] 連第二行 Lv＋星（通常闊過名牌）
-			_plates.append(Rect2(p.x - pw2 / 2, ny - 11, pw2, 42))   # [camp] 名牌位（生產鏈掣避開）
-			_txt(ctx, ft[0], p.x, ny, ft[1], Color("#f6e6c0"), "center", 900, 0)
-			# 第二行：Lv＋里程碑星
-			var nm = MD.nm(sid, sim.lv(sid)); var tot = MD.miles(sid).size()
-			var lvs = "Lv%d" % int(sim.lv(sid))
-			ctx.font = "900 14px sans-serif"; var lw = ctx.measureText(lvs).width
-			var rw = lw + 6.0 + tot * 13.0; var x0 = p.x - rw / 2.0
-			_txt(ctx, lvs, x0, ny + 20, 14, GOLD, "left", 900, 4)
-			for i in tot: _star(ctx, x0 + lw + 12.0 + i * 13.0, ny + 20, 6.0, i < nm)
-		else:
-			var cost = float(MD.st_def(sid).get("unlock_cost", 0))
-			var ureq = IDL.unlock_req(sim, sid)   # [idle] 解鎖鏈：上一個台未到 Lv10 → 顯示條件、唔畀撳
-			var ok = sim.coins() >= cost and ureq[0]
-			_lock(ctx, Vector2(p.x, p.y - 46))
-			_plates.append(Rect2(p.x - cw / 2, ny - 16, cw, 56))   # [camp]
-			var ft2 = _fit(ctx, name, cw, 15)
-			_txt(ctx, ft2[0], p.x, ny - 4, ft2[1], Color("#f0e2c8"), "center", 900, 4)
-			var bw = minf(112.0 if ureq[0] else cw, cw)   # [idle] 解鎖條件字長啲：用成格闊
-			Art.rr(ctx, p.x - bw / 2, ny + 8, bw, 28, 8, "#bb3427" if ok else "#4a3a30", "#f2a080" if ok else "#7a6050", 1.5)
-			if ureq[0]: _coin_ic(ctx, p.x - bw / 2 + 16, ny + 22, 8.0)   # [idle]
-			if not ureq[0]:   # [idle]
-				var rq = _fit(ctx, MD.S("unl_req", "要%s Lv%d", "需%s Lv%d") % [MD.T(MD.st_def(ureq[1]).get("n")), ureq[2]], bw - 8.0, 14)
-				_txt(ctx, rq[0], p.x, ny + 22, rq[1], Color("#d8c8b0"), "center", 900, 0)
-			else: _txt(ctx, MD.S("unlock_btn", "解鎖 %s", "解鎖 %s") % MD.fmt(cost), p.x + 8, ny + 22, 15, Color("#fff3e0") if ok else Color("#b8a898"), "center", 900, 0)
-			_wbtns["unl:" + sid] = Rect2(p.x - bw / 2, ny + 4, bw, 36)
+	if fk > 0.5:   # [perf] 名牌烘成圖（內容變先重烘），_plates／_wbtns 照登記
+		var sid2 = sid; var p2 = p; var un2 = un
+		MB.draw(self, ctx, "pl:" + sid, func(c): _draw_plate(c, sid2, p2, un2))
+
+func _draw_plate(ctx: Ctx, sid: String, p: Vector2, un: bool) -> void:   # [perf] 名牌（名＋Lv＋星／解鎖掣）：搬出嚟俾 MB 烘圖
+	var ny = p.y + 42.0
+	var name = MD.T(MD.st_def(sid).get("n"))
+	var cw = _cell_w() - 8.0
+	if un:
+		var ft = _fit(ctx, name, cw - 12.0, 15)
+		ctx.font = "900 %dpx sans-serif" % ft[1]; var tw = ctx.measureText(ft[0]).width + 14
+		Art.rr(ctx, p.x - tw / 2, ny - 11, tw, 22, 6, "rgba(30,18,12,.82)", "#b89a52", 1)
+		var pw2 = maxf(tw, 46.0 + 6.0 * 13.0)   # [polish4] 連第二行 Lv＋星（通常闊過名牌）
+		_plates.append(Rect2(p.x - pw2 / 2, ny - 11, pw2, 42))   # [camp] 名牌位（生產鏈掣避開）
+		_txt(ctx, ft[0], p.x, ny, ft[1], Color("#f6e6c0"), "center", 900, 0)
+		# 第二行：Lv＋里程碑星
+		var nm = MD.nm(sid, sim.lv(sid)); var tot = MD.miles(sid).size()
+		var lvs = "Lv%d" % int(sim.lv(sid))
+		ctx.font = "900 14px sans-serif"; var lw = ctx.measureText(lvs).width
+		var rw = lw + 6.0 + tot * 13.0; var x0 = p.x - rw / 2.0
+		_txt(ctx, lvs, x0, ny + 20, 14, GOLD, "left", 900, 4)
+		for i in tot: _star(ctx, x0 + lw + 12.0 + i * 13.0, ny + 20, 6.0, i < nm)
+	else:
+		var cost = float(MD.st_def(sid).get("unlock_cost", 0))
+		var ureq = IDL.unlock_req(sim, sid)   # [idle] 解鎖鏈：上一個台未到 Lv10 → 顯示條件、唔畀撳
+		var ok = sim.coins() >= cost and ureq[0]
+		_lock(ctx, Vector2(p.x, p.y - 46))
+		_plates.append(Rect2(p.x - cw / 2, ny - 16, cw, 56))   # [camp]
+		var ft2 = _fit(ctx, name, cw, 15)
+		_txt(ctx, ft2[0], p.x, ny - 4, ft2[1], Color("#f0e2c8"), "center", 900, 4)
+		var bw = minf(112.0 if ureq[0] else cw, cw)   # [idle] 解鎖條件字長啲：用成格闊
+		Art.rr(ctx, p.x - bw / 2, ny + 8, bw, 28, 8, "#bb3427" if ok else "#4a3a30", "#f2a080" if ok else "#7a6050", 1.5)
+		if ureq[0]: _coin_ic(ctx, p.x - bw / 2 + 16, ny + 22, 8.0)   # [idle]
+		if not ureq[0]:   # [idle]
+			var rq = _fit(ctx, MD.S("unl_req", "要%s Lv%d", "需%s Lv%d") % [MD.T(MD.st_def(ureq[1]).get("n")), ureq[2]], bw - 8.0, 14)
+			_txt(ctx, rq[0], p.x, ny + 22, rq[1], Color("#d8c8b0"), "center", 900, 0)
+		else: _txt(ctx, MD.S("unlock_btn", "解鎖 %s", "解鎖 %s") % MD.fmt(cost), p.x + 8, ny + 22, 15, Color("#fff3e0") if ok else Color("#b8a898"), "center", 900, 0)
+		_wbtns["unl:" + sid] = Rect2(p.x - bw / 2, ny + 4, bw, 36)
 
 # [unify] 血霧：用 Ctx 而家嘅變換（鏡頭、摺埋動畫）畫
 func _mist(ctx: Ctx, key: String, base: Vector2, w: float, h: float, front: bool) -> void:

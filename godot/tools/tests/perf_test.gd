@@ -71,4 +71,27 @@ func all(t) -> void:
 	await _w(t, 1.0)
 	_ck(hg != null and hg.visible and is_instance_valid(hg), "開關之後主角唔見")
 	_ck(nv.world.get_index() < nv.get_child_count(), "世界層次")
+	# 7. 大排檔：名牌／HUD 烘圖（MB）
+	var MB = load("res://game/outpost/mv_bake.gd")
+	nv.zone_cam().center_on(load("res://game/zone/zone_data.gd").zrect("market").get_center())
+	await _w(t, 2.5)
+	var h0 = MB.stats.hit
+	await _w(t, 1.0)
+	_ck(MB.stats.hit - h0 > 20, "大排檔名牌冇用烘圖 %d" % (MB.stats.hit - h0))
+	var mvs = nv.find_child("MvScene", true, false)
+	_ck(mvs != null and mvs.has_meta("mvbake") and (mvs.get_meta("mvbake") as Dictionary).keys().any(func(k): return str(k).begins_with("pl:")), "冇名牌烘圖")
+	_ck(mvs != null and mvs._plates.size() > 0, "名牌位（_plates）冇登記")
+	# 8. 安全畫面模式：烘圖全部停，逐格畫
+	var sg = G.safe_gfx
+	G.safe_gfx = true
+	_ck(not MB.ok() and not NB.ok(), "安全畫面模式仲烘圖")
+	var l0 = MB.stats.live; var h1 = MB.stats.hit
+	await _w(t, 0.6)
+	_ck(MB.stats.hit == h1, "安全畫面模式仲用烘圖")
+	G.safe_gfx = sg
+	G.gfx_bad["mvbake"] = true
+	_ck(not MB.ok(), "烘圖閃退記號冇效")
+	G.gfx_bad.erase("mvbake")
+	await _w(t, 1.0)
+	_ck(MB.ok() and MB.stats.hit > h1, "安全模式關返冇恢復烘圖")
 	print("[perf] RESULT ok=%d bad=%d" % [ok, bad])

@@ -95,6 +95,8 @@ func all(t):
 			var b0 = NBs.stats.bake
 			await _w(t, 1.0)
 			print("[pf] %s 烘圖：累計 %d 次，1 秒內新烘 %d 次，SubViewport %d 個" % [spot, NBs.stats.bake, NBs.stats.bake - b0, nv.get_node("perf_bake").get_child_count() if nv.has_node("perf_bake") else 0])
+		var MBs = load("res://game/outpost/mv_bake.gd") if ResourceLoader.exists("res://game/outpost/mv_bake.gd") else null
+		if MBs != null: print("[pf] %s 大排檔烘圖：烘 %d 次、用圖 %d 次、逐格 %d 次" % [spot, MBs.stats.bake, MBs.stats.hit, MBs.stats.live])
 		print("[pf] %s process(腳本)平均 %.1fms  drawcalls=%d prims=%d objs=%d" % [spot, tp / 20.0 * 1000.0, Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)])
 		if OS.get_environment("PF_QUICK") == "1" and spot != "night":
 			var rw = await _ab(t, nv.world)

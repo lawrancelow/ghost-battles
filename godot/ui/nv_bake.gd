@@ -9,6 +9,7 @@ extends RefCounted
 static var enabled := true          # 總開關（測試／出事可以熄）
 static var budget := 6              # 每格最多烘幾件（避免縮放時一格烘晒全部）
 static var _used := 0
+static var _probe_done := false
 static var _mat: CanvasItemMaterial = null
 static var stats := {"bake": 0, "hit": 0}
 const K_MAX := 4.0                  # 每世界單位最多幾 px
@@ -21,7 +22,7 @@ static func mat() -> CanvasItemMaterial:
 	return _mat
 
 static func ok() -> bool:
-	return enabled and not G.gfx_bad.has("bake") and not G.gfx_bad.has("nvbake")
+	return enabled and not G.safe_gfx and not G.gfx_bad.has("bake") and not G.gfx_bad.has("nvbake")   # 安全畫面模式／烘圖閃退過：逐格畫
 
 # 而家每世界單位等於幾多實際螢幕 px
 static func px_k(nv) -> float:
@@ -111,6 +112,10 @@ static func _bake(nv, key: String, s: Dictionary, k: float, b):
 	var nd: Node2D
 	if b != null and is_instance_valid(b.vp): vp = b.vp; nd = b.node
 	else:
+		if not _probe_done:   # 第一次烘：留閃退記號（probe:nvbake），0.5 秒後還原；閃退咗下次 G.gfx_bad 有 nvbake → 自動逐格畫
+			_probe_done = true
+			var prev = G.crumb_now(); G.crumb("probe:nvbake")
+			nv.get_tree().create_timer(0.5).timeout.connect(func(): if G.crumb_now() == "probe:nvbake": G.crumb(prev))
 		vp = SubViewport.new(); vp.transparent_bg = true; vp.disable_3d = true
 		vp.canvas_item_default_texture_filter = Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_LINEAR
 		nd = Node2D.new(); vp.add_child(nd)
