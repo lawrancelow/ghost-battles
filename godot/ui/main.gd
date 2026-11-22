@@ -885,6 +885,9 @@ func open_story() -> void:
 	mvb.pressed.connect(func(): set_mv(not mv_on()); mvb.text = "村子畫面：" + ("移動村（大排檔）" if mv_on() else "舊村子"))
 	var sgb = UIKit.btn("安全畫面模式：" + ("開" if G.safe_gfx else "關") + "（閃退時用，重開遊戲生效）", "ghost"); sheet_body.add_child(sgb)
 	sgb.pressed.connect(func(): G.set_safe_gfx(not G.safe_gfx); sgb.text = "安全畫面模式：" + ("開" if G.safe_gfx else "關") + "（閃退時用，重開遊戲生效）")
+	var PMd = load("res://ui/perf_mode.gd"); PMd.load_pref()   # [perf] 流暢模式
+	var pmb = UIKit.btn(PMd.label(), "ghost"); sheet_body.add_child(pmb)
+	pmb.pressed.connect(func(): PMd.set_on(not PMd.on, self); pmb.text = PMd.label())
 	var stb = UIKit.btn("全面自檢（約 3–5 分鐘，出報告俾開發者）", "ghost"); sheet_body.add_child(stb)
 	stb.pressed.connect(func(): SelfTest.start(true); JSRun.reset_world(); get_tree().call_deferred("reload_current_scene"))
 	var lgb = UIKit.btn("錯誤記錄（有問題時截圖俾開發者）", "ghost"); sheet_body.add_child(lgb)
