@@ -8,6 +8,7 @@ extends RefCounted
 var ok := 0
 var bad := 0
 const SHOTS := "/home/claude/docs/militia_shots/"
+static var SHOT_MAPS := []
 const ZD = preload("res://game/zone/zone_data.gd")
 const ML = preload("res://game/militia/ml_data.gd")
 const MD = preload("res://game/outpost/mv_data.gd")
@@ -55,6 +56,9 @@ func logic(t) -> void:
 	var m = await _boot(t)
 	await _logic(t, m)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+func shots35(t) -> void:
+	SHOT_MAPS = [3, 5]
+	await shots(t)
 func shots(t) -> void:
 	var m = await _boot(t)
 	await _shots(t, m)
@@ -395,12 +399,13 @@ func _shots(t, m) -> void:
 	var nv = m.village
 	S.lv = 6.0
 	S.res.coins = 1e7
-	for c in [0, 1, 2, 3, 4, 5]:
+	for c in (SHOT_MAPS if SHOT_MAPS.size() else [0, 1, 2, 3, 4, 5]):
 		m.mv_view.sim.st().ci = float(c); m.mv_view._after_move(); await _w(t, 1.2)
 		ZD.reveal_all(c)
 		var sim = m.mv_view.sim
 		var mv = sim.st()
 		if mv.st.has(ML.SID): mv.st[ML.SID].unlocked = c != 3; mv.st[ML.SID].lv = 30.0
+		if c == 5: mv.st["st_tangyi"].unlocked = true
 		nv = m.village
 		var p = MD.st_xy(c, ML.SID)
 		var cam = nv.zone_cam()
