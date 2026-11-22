@@ -416,6 +416,9 @@ func zone_event(kind: String, id := "", cb := Callable()) -> bool:
 		return true
 	var q = zq()
 	if not q.has(bid): q.append(bid)
+	if k2 == "boss_win" and c == 0 and norm_id(k2, str(id), c) == "zb_eguiking":   # [raid] 打低餓鬼王：襲擾開場劇情跟住入佇列（need.after 保證喺王戰勝利之後、一個任務一段）
+		var rb = zone_beat(c, "raid_intro", "")
+		if not rb.is_empty() and not is_seen(str(rb.id)) and not q.has(str(rb.id)): q.append(str(rb.id))
 	return true
 
 # 睇緊分區地圖？（唔理鏡頭喺邊；彈出卡、拔營動畫、戰鬥中都唔播）
