@@ -194,7 +194,7 @@ static func inside(G: Dictionary, p: Vector2, half: float) -> float:
 	return sqrt(pow((p.x - G.ctr.x) / rx, 2.0) + pow((p.y - G.ctr.y) / float(G.RY), 2.0))
 # 一隻鬼喺時間 t 嘅狀態（時間嘅純函數，唔使存）：{pos（地面位）, lift（離地高）, pose, flip, k（大細）, sx/sy（拉伸）, a（透明）, rip（漣漪 0..1）, dir（向外方向）, smoke（化煙 0..1）, u}
 #   5 隻錯開半個週期／5，每隻每輪揀唔同方向（均勻分佈喺全圈：左右前後都有）；鬼魂喺最上層畫，飄到前半圈蓋住前排木樁得（似喺半空）
-#   段落：浮現 0–0.06 → 飄行 0.06–0.36 → 貼住屏障掙扎 0.36–0.62（約 1.7 秒）→ 縮返（後半先化煙淡出）0.62–0.86 → 隱身 0.86–1（隱身窗 < 1/5 週期：任何時刻最少 4 隻、多數 4–5 隻睇得清）
+#   段落：浮現 0–0.04 → 飄行 0.04–0.36 → 貼住屏障掙扎 0.36–0.62（約 1.7 秒）→ 縮返（後段先化煙淡出）0.62–0.92 → 隱身 0.92–1（任何時刻最少 4 隻睇得清）
 const ZQ_PER := 6.4
 static func ghost_state(i: int, t: float, x: float, y: float, w: float, h: float) -> Dictionary:
 	var G = _geo(x, y, w, h)
@@ -214,11 +214,11 @@ static func ghost_state(i: int, t: float, x: float, y: float, w: float, h: float
 		var p = start.lerp(edge, e) + nrm * sin(e * PI) * 34.0 * spin + Vector2(sin(e * TAU * 1.5) * 8.0, -cos(e * TAU * 1.5) * 4.0) * (1.0 - e)
 		var q = inside(G, p, half)
 		return ctr + (p - ctr) / q * 0.97 if q > 0.97 else p
-	if u < 0.06:   # 由罈口嘅煙浮現：淡入、由細變大、向上拉長
-		var e = _ease(u / 0.06)
+	if u < 0.04:   # 由罈口嘅煙浮現：淡入、由細變大、向上拉長
+		var e = _ease(u / 0.04)
 		o.lift = lerpf(0.0, 22.0, e); o.k = lerpf(0.3, 1.0, e); o.sx = lerpf(0.55, 1.0, e); o.sy = lerpf(1.55, 1.0, e); o.a = e
 	elif u < 0.36:   # 飄行：快出慢到（近圈減速），有時中段停一停
-		var e = (u - 0.06) / 0.30
+		var e = (u - 0.04) / 0.32
 		var s = e
 		if hov: s = e * 0.9 if e < 0.4 else (0.36 + (e - 0.4) * 0.15 if e < 0.6 else 0.39 + (e - 0.6) / 0.4 * 0.61)
 		s = sin(clampf(s, 0.0, 1.0) * PI * 0.5)
@@ -232,11 +232,11 @@ static func ghost_state(i: int, t: float, x: float, y: float, w: float, h: float
 		o.lift = 14.0 + sin(t * 7.0 + i) * 2.0
 		o.pose = "press"; o.flip = dir.x < 0.0; o.a = 1.0
 		o.rip = clampf(minf(e / 0.15, (1.0 - e) / 0.15), 0.0, 1.0)
-	elif u < 0.86:   # 燙親咁縮返、化煙散去
-		var e = (u - 0.62) / 0.24
+	elif u < 0.92:   # 燙親咁縮返、化煙散去
+		var e = (u - 0.62) / 0.30
 		o.pos = edge.lerp(start, 0.35 * _ease(minf(1.0, e * 1.6))); o.lift = 14.0 + e * 18.0
 		o.pose = "recoil"; o.flip = dir.x >= 0.0
-		o.k = lerpf(1.0, 0.6, e); o.sx = lerpf(1.0, 1.35, e); o.sy = lerpf(1.0, 0.65, e); o.a = 1.0 - maxf(0.0, e - 0.45) / 0.55; o.smoke = maxf(0.0, e - 0.3) / 0.7
+		o.k = lerpf(1.0, 0.6, e); o.sx = lerpf(1.0, 1.35, e); o.sy = lerpf(1.0, 0.65, e); o.a = 1.0 - maxf(0.0, e - 0.6) / 0.4; o.smoke = maxf(0.0, e - 0.4) / 0.6
 	else:
 		o.a = 0.0
 	var q = inside(G, o.pos, half)   # 保險：連身闊一定喺木樁圈入面
