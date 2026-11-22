@@ -33,6 +33,7 @@ static func next_of(ci: int, sid: String) -> String:
 	return str(a[i + 1]) if i >= 0 and i + 1 < a.size() else ""
 # 可唔可以解鎖（唔計錢）：[ok, 要邊個台, 要幾級]
 static func unlock_req(sim, sid: String) -> Array:
+	if sid == "st_bingqi": return load("res://game/militia/ml_data.gd").unlock_req(sim)   # [militia] 兵器檔：要補丁紙衫檔 Lv10
 	var p = prev_of(sim.ci(), sid)
 	if p == "": return [true, "", 0]
 	return [sim.lv(p) >= UNLOCK_LV and sim.unlocked(p), p, UNLOCK_LV]

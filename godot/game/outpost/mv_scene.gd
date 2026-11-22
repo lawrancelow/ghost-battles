@@ -320,6 +320,7 @@ func _eat_events() -> void:
 	if story != null: story.eat(self)   # [story] 先換句（客人 say／惡鬼 FOE），再俾 war 出
 	sim.war.eat(self)   # [war]
 	sim.plus.eat(self)   # [play]
+	load("res://game/militia/ml_ui.gd").eat(self)   # [militia] 遊魂兵加入飄字
 	for e in sim.ev:
 		match e.k:
 			"pay":
@@ -1074,6 +1075,7 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 func _draw_plate(ctx: Ctx, sid: String, p: Vector2, un: bool) -> void:   # [perf] 名牌（名＋Lv＋星／解鎖掣）：搬出嚟俾 MB 烘圖
 	var ny = p.y + 42.0
 	var name = MD.T(MD.st_def(sid).get("n"))
+	if sid == "st_bingqi" and un: name = load("res://game/militia/ml_data.gd").plate_name()   # [militia] 名牌顯示今期兵器
 	var cw = _cell_w() - 8.0
 	if un:
 		var ft = _fit(ctx, name, cw - 12.0, 15)
@@ -1129,6 +1131,7 @@ func _producing(sid: String) -> bool:   # 有人做緊／手做緊 → 播生產
 func walking_now() -> bool: return anim != null and not anim.done
 
 func _proc_station(ctx: Ctx, sid: String, p: Vector2, w: float) -> Rect2:   # 冇圖：紙紮攤檔
+	if sid == "st_bingqi": return load("res://game/militia/ml_art.gd").draw_stall(ctx, p, w, load("res://game/militia/ml_data.gd").tier_now())   # [militia] 暫代：兵器架
 	var h = w * 0.78
 	var x = p.x - w / 2; var y = p.y - h
 	Art.rr(ctx, x + 6, y + h * 0.42, w - 12, h * 0.58, 4, "#8a4a2a", "#3a1a08", 2)
@@ -1169,6 +1172,7 @@ func _coin_ic(ctx: Ctx, x: float, y: float, r: float) -> void:
 
 # 貨品圖示（160×160 圖，冇就畫個色塊＋字）
 func _icon(ctx: Ctx, gid: String, x: float, y: float, sz: float) -> void:
+	if gid == "m_bingqi": load("res://game/militia/ml_art.gd").draw_icon(ctx, load("res://game/militia/ml_data.gd").tier_now(), x, y, sz); return   # [militia] 兵器圖示按級數
 	var gd = MD.good_def(gid); var key = str(gd.get("icon", ""))
 	if gd.is_empty() and M.has_def(gid):   # [chain] 材料（唔喺 GOODS）：用 MATS 圖鍵，冇就用舊資源圖示
 		key = M.icon(gid); gd = {"n": M.def(gid).get("n", [gid, gid])}

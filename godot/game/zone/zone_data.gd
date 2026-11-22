@@ -160,16 +160,17 @@ static func troop_mul() -> float:   # [barracks] 民宅加成搬去兵營（舊�
 	return _bk().troop_mul()
 static func power() -> int:   # [barracks] 只計待命陰兵（防衛、清剿嘅唔計）
 	if S() == null: return 0
-	return _bk().power()
-static func need(zid: String) -> int: return int(zone(zid).get("power", 0))
+	return _bk().power() + _ml().power()   # [militia] ＋遊魂兵出擊兵力（冇遊魂兵＝同舊一樣）
+static func _ml(): return load("res://game/militia/ml_data.gd")   # [militia]
+static func need(zid: String) -> int: return int(round(float(zone(zid).get("power", 0)) * _ml().res_mul()))   # [militia] × RES_MUL[關]
 static func loss(zid: String) -> int:
-	return int(ceil(float(need(zid)) * float(zone(zid).get("loss", 0.3)) / troop_mul()))
+	return int(_ml().cap_loss(need(zid), float(zone(zid).get("loss", 0.3)))[0])   # [militia] 陰兵嗰份（遊魂兵分擔咗嘅唔計；冇遊魂兵＝舊公式）
+static func loss_ml(zid: String) -> int: return int(_ml().cap_loss(need(zid), float(zone(zid).get("loss", 0.3)))[1])   # [militia] 遊魂兵折損人數
 # 派陰兵攻佔：回 "ok"／"owned"／"weak"
 static func capture_auto(zid: String) -> String:
 	if owned(zid): return "owned"
 	if power() < need(zid): return "weak"
-	var s = S()
-	s.res["troops"] = maxf(0.0, J.num(s.res.get("troops", 0)) - loss(zid))
+	_ml().apply_cap_loss(need(zid), float(zone(zid).get("loss", 0.3)))   # [militia] 折損：陰兵＋遊魂兵按比例（冇遊魂兵＝同舊 loss() 一樣）
 	set_owned(zid)
 	_save()
 	ev("zone_cap", zid)   # [zone2] 劇情

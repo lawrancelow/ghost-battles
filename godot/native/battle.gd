@@ -391,6 +391,7 @@ static func start(ci, si, wild) -> void:
 	for i in sq:
 		var hp = (90 + 14 * lv) * tb
 		B.units.append({"side": 0.0, "k": "youhun", "name": "陰兵", "minion": true, "hp": hp, "maxhp": hp, "atk": (9 + 2.2 * lv) * tb, "range": 38.0, "spd": 52.0, "x": 120.0 + floor(i / 4.0) * 18, "lane": (i % 4) * 0.95 + 0.4, "energy": 0.0, "sk": null, "st": {}, "cd": randf()})
+	load("res://game/militia/ml_data.gd").battle_units(B, st, wild)   # [militia] 對外戰鬥：遊魂兵小隊＋敵方惡鬼嘍囉
 	var ET = _g("ENEMY_T"); var SK = _g("SKILLS"); var en: Array = st.en
 	for i in en.size():
 		var e = en[i]; var T = ET[e]; var hp = (260 + 90 * J.num(st.p)) * J.num(T[0]); var boss = J.str(e) == J.str(st.get("boss"))
@@ -497,7 +498,8 @@ static func finish(win, quit = null, timeout = null) -> void:
 	var w = J.t(win); var q = J.t(quit); var to = J.t(timeout)
 	B["result"] = {"win": win}; _snd("win" if w else "lose")
 	var dead_minions = 0
-	for u in B.units: if J.t(u.get("minion")) and _nn(u, "hp") <= 0: dead_minions += 1
+	for u in B.units: if J.t(u.get("minion")) and _nn(u, "hp") <= 0 and _nn(u, "side") == 0 and u.get("ml") == null: dead_minions += 1   # [militia] 只計陰兵（遊魂兵、敵方嘍囉另計）
+	var ml_lost = load("res://game/militia/ml_data.gd").battle_loss(B)   # [militia]
 	var lost = minf(J.num(S.res.troops), dead_minions * 25)
 	S.res["troops"] = maxf(0.0, J.num(S.res.troops) - lost)
 	var st = B.stage; var sid = J.str(B.sid); var first = w and not J.t(S.cleared.get(sid))
@@ -516,6 +518,7 @@ static func finish(win, quit = null, timeout = null) -> void:
 		h += ("" if q else "<p class=\"quip\">%s</p>" % _pick(_g("LOSE_QUIPS")))
 		h += "<p>%s</p>" % ("" if q else "提示：換上嚇法對得上的陣容（看敵人怕什麼）；先嚇到敵人失神，再接另一種他怕的，打出連嚇。")
 	h += "\n      " + (("<p class=\"lost\">陰兵戰死 %d</p>" % int(floor(lost))) if lost != 0 else "")
+	if ml_lost != "": h += "<p class=\"lost\">%s</p>" % ml_lost   # [militia]
 	var team_g = []
 	for id in S.team: team_g.append(_gbi(id))
 	h += "\n      " + (J.str(J.mc(GP, "failHTML", [J.mc(GP, "avg", [team_g]), J.mc(GP, "stageNeed", [st, sid])])) if not w and not q else "")

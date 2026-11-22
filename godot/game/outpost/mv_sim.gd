@@ -23,6 +23,7 @@ const ROUTES := ["auto", "stock", "sell"]
 const MVW = preload("res://game/outpost/mv_war.gd")   # [war]
 const IDL = preload("res://game/outpost/mv_idle.gd")   # [idle] Idle Outpost 式升級（解鎖鏈／累計產量門檻／品質星／領班）
 const MVP = preload("res://game/outpost/mv_plus.gd")   # [play] 鬼客脾氣／委託單／詭異事件／羈絆／夜潮／招牌菜
+const ML = preload("res://game/militia/ml_data.gd")   # [militia] 客人只要有供應嘅貨、高級客循序漸進、遊魂兵
 const FW := 390.0
 const ZDm = preload("res://game/zone/zone_data.gd")   # [zone]
 const WALK := 120.0
@@ -796,6 +797,7 @@ func _cust_stars(c: Dictionary) -> float:   # [idle] 客人要嘅貨裡面最高
 		if s != "": b = maxi(b, MD.stars(s, lv(s)))
 	return float(b)
 func spawn_cust() -> bool:
+	if ML.on(): return ML.spawn_cust(self)   # [militia]
 	var av = avail_goods(); if av.is_empty(): return false
 	var cands = []
 	for cid in MD.map_def(ci()).get("customers", []):
@@ -844,6 +846,7 @@ func _pay(c: Dictionary) -> void:
 	ev.append({"k": "pay", "amt": amt, "pos": c.pos + Vector2(0, -60), "cid": c.cid})
 	war.on_paid(self, c)   # [war]
 	plus.on_paid(self, c, amt)   # [play]
+	ML.on_paid(self, c)   # [militia] 買兵器 → 加入遊魂兵
 
 # ---------------- 圍欄孤魂 ----------------
 func fence_pressure() -> int:

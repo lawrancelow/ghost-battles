@@ -71,8 +71,8 @@ static func on_spawn(P, sim, c: Dictionary) -> void:
 			if sid == "": tp = "none"
 			else:
 				var cur = MD.stars(sid, sim.lv(sid))
-				var need = clampi(cur + (0 if P.rng.randf() < 0.5 else 1), 1, MD.miles(sid).size())
-				c["star_need"] = {g: float(need)}
+				if cur < 1: tp = "none"   # [militia] 只要村裡已經有嘅品質：★0 嘅貨唔會有挑剔客
+				else: c["star_need"] = {g: float(cur)}   # [militia] 要求 ≤ 而家星（舊：而家 +0／+1，會要唔存在嘅品質）
 	c["tp"] = tp
 	P.stat_add(sim, "t_" + tp)
 	match tp:
