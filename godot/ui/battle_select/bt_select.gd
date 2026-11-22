@@ -201,6 +201,7 @@ static func _put(slot: String, id) -> void:
 		var from = str(idx) if idx >= 0 else ("adv" if J.str(Sx.get("adviser")) == J.str(id) else "")
 		if from != "": put.call(from, cur if cur != null and J.str(cur) != "" else null)
 	put.call(slot, id)
+	if id != null and slot != "adv": load("res://game/barracks/bk_data.gd").after_team(id)   # [barracks] 名鬼一職
 	J.cl(js("save"), null, [])
 	open_select()
 

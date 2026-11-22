@@ -81,6 +81,7 @@ func _build() -> void:
 	VS.attach(self)   # [villageart]
 	RV.attach(self)   # [raid]
 	PM.apply(self)   # [perf] 流暢模式（讀返設定）
+	load("res://game/barracks/bk_patrol_view.gd").attach(self)   # [barracks] 陰兵巡邏
 
 # ---------------- 每幀 ----------------
 func _process(_dt: float) -> void:

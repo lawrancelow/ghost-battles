@@ -183,7 +183,7 @@ func put(ctx: Ctx, key: String, x: float, y: float, w: float, h := 0.0) -> Rect2
 func vput(ctx: Ctx, key: String, x: float, y: float, w: float, h := 0.0) -> Rect2:   # [villageart] 調色版 put
 	tint = VS.tint_for(key); var r = put(ctx, key, x, y, w, h); tint = Color.WHITE; return r
 
-const BW := {"house": 150, "gate": 150, "plank": 106, "bun": 106, "wood": 108, "rice": 108, "store": 112, "home": 104, "camp": 108, "altar": 104, "furnace": 62}
+const BW := {"house": 150, "gate": 150, "plank": 106, "bun": 106, "wood": 108, "rice": 108, "store": 112, "home": 104, "camp": 108, "altar": 104, "furnace": 62, "barracks": 100}   # [barracks]
 const PLAQUE := {"house": [0.47, 0.49, 0.24], "gate": [0.50, 0.335, 0.34], "plank": [0.44, 0.36, 0.32], "store": [0.48, 0.43, 0.33], "wood": [0.40, 0.36, 0.26]}
 
 func lv_badge(ctx: Ctx, x: float, y: float, lv) -> void:
@@ -208,6 +208,7 @@ func sign_board(ctx: Ctx, x: float, y: float, text: String, lv) -> void:
 	if lv: lv_badge(ctx, x + w / 2 - 1, y - 23, lv)
 
 func draw_building(ctx: Ctx, id: String, x: float, y: float, lv, t: float, extra = null) -> void:
+	if id == "barracks": load("res://game/barracks/bk_art.gd").draw_building(ctx, x, y, lv, t); return   # [barracks] 兵營圖（bk_art.gd）
 	var sd = hash(id) % 997
 	seat(ctx, x, y + 1, BW[id], sd)   # [seat16] 踩實泥地＋排線接地影（代替原本嘅朦朧橢圓影）
 	seat_back(ctx, x, y + 1, BW[id], sd)   # [fg16b]

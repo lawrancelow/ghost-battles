@@ -4,8 +4,8 @@
 # 狀態：S.zone = {"v":1, "own":{"<ci>:<zid>":true}, "boss":{"<ci>:<bossid>":true}, "exp":null|{kind,ci,id,sid,had}}
 #
 # 規則：
-#   陰兵戰力 power() = floor(S.res.troops) × (1 + 0.08 × max(0, 民宅等級 − 1))
-#                     （同戰鬥入面陰兵嘅民宅加成 tb 一樣；陰兵＝民宅遊魂自願當兵嗰個 S.res.troops）
+#   陰兵戰力 power() = floor(待命陰兵) × troop_mul()   # [barracks] 待命 = S.res.troops − 防衛 − 清剿；
+#                     troop_mul = max(1 + 0.08 × 兵營等級, 舊存檔民宅加成保底)（戰鬥入面陰兵 tb 一樣用 troop_mul）
 #   資源區：未佔領 = 黑霧＋鎖＋建議戰力 N（zones.json power）
 #           派陰兵攻佔：power ≥ N 先得；即刻佔領，折損 ceil(N × loss ÷ 民宅加成) 個陰兵（loss 預設 0.3）
 #           親自出征：用現有戰鬥（Battle.start 野鬼戰格式，stage 喺 zones.json），打贏即佔領；輸咗冇損失
@@ -154,14 +154,13 @@ static func _chapter_done(s, ch: Array) -> bool:
 	return cl is Dictionary and J.t(cl.get("%d-%d" % [int(ch[0]) + 1, int(ch[1]) + 1]))
 
 # ---------------- 陰兵戰力 ----------------
-static func troop_mul() -> float:
-	var s = S()
-	if s == null: return 1.0
-	return 1.0 + 0.08 * maxf(0.0, J.num(s.bld.get("home", 1)) - 1.0)
-static func power() -> int:
-	var s = S()
-	if s == null: return 0
-	return int(floor(floor(J.num(s.res.get("troops", 0))) * troop_mul()))
+static func _bk(): return load("res://game/barracks/bk_data.gd")   # [barracks]
+static func troop_mul() -> float:   # [barracks] 民宅加成搬去兵營（舊存檔有保底，見 bk_data.gd）
+	if S() == null: return 1.0
+	return _bk().troop_mul()
+static func power() -> int:   # [barracks] 只計待命陰兵（防衛、清剿嘅唔計）
+	if S() == null: return 0
+	return _bk().power()
 static func need(zid: String) -> int: return int(zone(zid).get("power", 0))
 static func loss(zid: String) -> int:
 	return int(ceil(float(need(zid)) * float(zone(zid).get("loss", 0.3)) / troop_mul()))
@@ -456,6 +455,7 @@ static func apply() -> void:
 		else: VF.set_cfg(float(fc.y), float(fc.gate_x), float(fc.gap), fc.spans)
 		_hero(v2(v.hero), zrect("village").grow(-16))
 	_applied = want
+	_bk().on_apply()   # [barracks] 兵營位置
 	_pos_ref = G.get("POS"); _tree_ref = G.get("TREE_POS")
 	var CF = load("res://game/outpost/chain_field.gd"); CF.reset()
 	var V = G.get("Village")
