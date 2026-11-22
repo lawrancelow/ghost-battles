@@ -76,24 +76,30 @@ static func solid(lm: String, at: Vector2, p: Vector2, w0 := 0.0) -> bool:
 	if not r.has_point(p): return false
 	var a = ART.get(lm, {})
 	if lm == "tower" or not ResourceLoader.exists(str(a.get("png", ""))): return true
-	if not _mask.has(lm):
+	if not _mask.has(lm):   # 縮細 1/6 嘅實色表，再向外擴 3 格（約 5 世界像素：枯樹枝之間嘅窿、霧邊都撳得）
 		var im: Image = _tex(str(a.png)).get_image()
+		var mk = {}
 		if im != null:
 			im = im.duplicate() as Image
 			if im.is_compressed(): im.decompress()
 			im.resize(im.get_width() / 6, im.get_height() / 6, Image.INTERPOLATE_BILINEAR)
-		_mask[lm] = im
-	var m: Image = _mask[lm]
-	if m == null: return true
-	var w = w0 if w0 > 0.0 else float(a.w); var h = w * m.get_height() / m.get_width()
+			var mw = im.get_width(); var mh = im.get_height()
+			var raw = PackedByteArray(); raw.resize(mw * mh)
+			for yy in mh:
+				for xx in mw:
+					if im.get_pixel(xx, yy).a > 0.15:
+						for dy in range(-3, 4):
+							for dx in range(-3, 4):
+								var qx = xx + dx; var qy = yy + dy
+								if qx >= 0 and qy >= 0 and qx < mw and qy < mh: raw[qy * mw + qx] = 1
+			mk = {"w": mw, "h": mh, "b": raw}
+		_mask[lm] = mk
+	var m: Dictionary = _mask[lm]
+	if m.is_empty(): return true
+	var w = w0 if w0 > 0.0 else float(a.w); var h = w * float(m.h) / float(m.w)
 	var u = (p.x - (at.x - w / 2.0)) / w; var v = (p.y - (at.y - h + 4.0)) / h
 	if u < 0.0 or u >= 1.0 or v < 0.0 or v >= 1.0: return false
-	var ix = int(u * m.get_width()); var iy = int(v * m.get_height())
-	for dy in range(-1, 2):   # 邊位寬鬆少少（手指大細）
-		for dx in range(-1, 2):
-			var qx = clampi(ix + dx * 2, 0, m.get_width() - 1); var qy = clampi(iy + dy * 2, 0, m.get_height() - 1)
-			if m.get_pixel(qx, qy).a > 0.3: return true
-	return false
+	return m.b[int(v * m.h) * int(m.w) + int(u * m.w)] == 1
 
 # 山腳地面：一塊唔規則嘅泥地（墨線排線、偏灰），將山圖同四周地面接埋（唔好方塊感）；靜態，畫一次
 static func draw_patch(ctx: Ctx, x: float, y: float) -> void:
@@ -211,6 +217,13 @@ static func ghost_state(i: int, t: float, x: float, y: float, w: float, h: float
 		o.k = lerpf(1.0, 0.6, e); o.sx = lerpf(1.0, 1.35, e); o.sy = lerpf(1.0, 0.65, e); o.a = 1.0 - e; o.smoke = e
 	else:
 		o.a = 0.0
+	# 保險：連身闊一定喺木樁頂橢圓入面；前排木樁頂嘅前面唔企（木樁永遠喺鬼魂前面）
+	var q = inside(G, o.pos, half)
+	if q > 0.96: o.pos = ctr + (o.pos - ctr) * 0.96 / q
+	for kn in ZQ_KNOTS:
+		if kn.y < 0.6: continue
+		var fp = Vector2(x - w / 2.0 + kn.x * w, float(G.top) + (kn.y - 0.07) * h)
+		if absf(o.pos.x - fp.x) < half + 8.0 and o.pos.y > fp.y - 3.0: o.pos = Vector2(o.pos.x, fp.y - 3.0)
 	var st = sin(t * 4.3 + i * 1.9) * 0.06   # 輕微拉伸（x／y 交替）
 	o.sx *= 1.0 + st; o.sy *= 1.0 - st
 	var fl = 0.88 + 0.12 * sin(t * 13.0 + i * 2.7)   # 忽明忽暗；偶爾成隻變淡幾乎睇唔到
@@ -218,6 +231,7 @@ static func ghost_state(i: int, t: float, x: float, y: float, w: float, h: float
 	o.a = float(o.a) * 0.86 * fl
 	return o
 static var FX_LOG := {"frames": 0, "max_out": 0.0, "ripples": 0}   # 測試用：畫咗幾多格、鬼魂（連身闊）最出到圈幾多（≤ 1＝喺圈內）
+static var DBG := false
 static func _ghost(c: CanvasItem, T: Transform2D, o: Dictionary, i: int, t: float, alpha: float) -> void:
 	var tx = _gtex(str(o.pose), i)
 	if tx == null or alpha <= 0.005: return
@@ -228,6 +242,7 @@ static func _ghost(c: CanvasItem, T: Transform2D, o: Dictionary, i: int, t: floa
 	var sk = sin(t * 3.1 + i) * 0.06   # 身體隨正弦擺（斜少少）
 	c.draw_set_transform_matrix(T * Transform2D(Vector2(sx, 0), Vector2(sk, float(o.sy)), foot))
 	c.draw_texture_rect(tx, Rect2(-gw / 2.0, -gh, gw, gh), false, Color(1, 1, 1, alpha))
+	if DBG: c.draw_rect(Rect2(-gw / 2.0, -gh, gw, gh), Color(1, 0, 0, 0.8), false, 2.0)
 	c.draw_set_transform_matrix(T)
 # 底層（y＝圖頂）：黑罈綠光一明一暗、罈口煙、陣上紅線輕震
 static func draw_fx(ctx: Ctx, x: float, y: float, w: float, t: float) -> void:

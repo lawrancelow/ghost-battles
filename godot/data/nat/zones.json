@@ -10348,10 +10348,10 @@
      "type": "landmark",
      "lm": "zhiqian",
      "rect": [
-      1459,
-      1873,
-      1972,
-      2241
+      1466,
+      1621,
+      1969,
+      1962
      ],
      "n": [
       "地標　紙錢陣",
@@ -10359,12 +10359,12 @@
      ],
      "col": "#5a2a26",
      "at": [
-      1720,
-      2212
+      1715,
+      1900
      ],
      "stand": [
       1505,
-      2110
+      1862
      ],
      "unlock": {
       "quest_done": [
@@ -10374,158 +10374,158 @@
      },
      "ring": [
       [
-       "zq_soda_bottles",
-       1772,
-       1906,
-       33,
-       false
-      ],
-      [
-       "zq_dancer",
-       1613,
-       1923,
-       32,
-       false
-      ],
-      [
-       "zq_burn_bucket",
-       1825,
-       1933,
-       37,
-       false
-      ],
-      [
-       "zq_parcels",
-       1743,
-       1935,
-       48,
-       true
-      ],
-      [
-       "zq_ingots",
-       1611,
-       1941,
-       45,
-       false
-      ],
-      [
-       "zq_ribbon_post",
-       1888,
-       1942,
-       37,
+       "fg_g1",
+       1902,
+       1668,
+       46,
        true
       ],
       [
        "zq_coin_pole",
-       1920,
-       1963,
-       45,
-       false
-      ],
-      [
-       "zq_soda_bottles",
-       1873,
-       1966,
-       35,
+       1862,
+       1668,
+       47,
        true
       ],
       [
-       "zq_ingots",
-       1572,
-       1989,
-       50,
+       "zq_lantern_pole",
+       1511,
+       1695,
+       47,
+       true
+      ],
+      [
+       "zq_zebras",
+       1940,
+       1699,
+       55,
        false
       ],
       [
-       "zq_ingots",
-       1518,
-       1992,
-       49,
-       false
-      ],
-      [
-       "zq_soda_bags",
-       1925,
-       2008,
-       36,
-       false
-      ],
-      [
-       "zq_paper_horse",
-       1500,
-       2026,
-       56,
-       false
-      ],
-      [
-       "zq_candles",
-       1532,
-       2044,
-       34,
-       false
-      ],
-      [
-       "zq_candles",
-       1482,
-       2065,
-       32,
-       false
-      ],
-      [
-       "zq_candles",
-       1939,
-       2090,
-       33,
+       "zq_ribbon_post",
+       1935,
+       1809,
+       42,
        false
       ],
       [
        "zq_zebras",
-       1925,
-       2146,
+       1920,
+       1834,
        56,
        false
       ],
       [
-       "zq_zebras",
-       1946,
-       2177,
-       52,
+       "fg_g2",
+       1494,
+       1836,
+       57,
+       true
+      ],
+      [
+       "zq_ribbon_post",
+       1504,
+       1860,
+       43,
+       false
+      ],
+      [
+       "zq_candles",
+       1910,
+       1868,
+       35,
+       false
+      ],
+      [
+       "zq_lantern_pole",
+       1945,
+       1878,
+       48,
        true
       ],
       [
        "zq_parcels",
-       1482,
-       2177,
-       46,
-       false
-      ],
-      [
-       "zq_ingots",
-       1557,
-       2196,
-       49,
+       1594,
+       1885,
+       45,
        false
       ],
       [
        "zq_ribbon_post",
-       1501,
-       2198,
+       1496,
+       1886,
        37,
        false
       ],
       [
-       "zq_burn_bucket",
-       1876,
-       2224,
-       33,
+       "fg_g2",
+       1546,
+       1894,
+       55,
        true
       ],
       [
-       "zq_ribbon_post",
-       1681,
-       2233,
-       42,
+       "zq_burn_bucket",
+       1871,
+       1911,
+       33,
        false
+      ],
+      [
+       "zq_coin_pole",
+       1591,
+       1919,
+       44,
+       true
+      ],
+      [
+       "zq_candles",
+       1547,
+       1920,
+       34,
+       false
+      ],
+      [
+       "zq_ingots",
+       1657,
+       1926,
+       47,
+       true
+      ],
+      [
+       "zq_lantern_pole",
+       1817,
+       1933,
+       52,
+       false
+      ],
+      [
+       "zq_parcels",
+       1707,
+       1939,
+       54,
+       false
+      ],
+      [
+       "zq_candles",
+       1614,
+       1940,
+       37,
+       false
+      ],
+      [
+       "zq_ingots",
+       1783,
+       1949,
+       51,
+       true
+      ],
+      [
+       "zq_parcels",
+       1667,
+       1954,
+       53,
+       true
       ]
      ]
     },
@@ -10535,9 +10535,9 @@
      "lm": "tower",
      "rect": [
       1540,
-      1650,
+      2040,
       1700,
-      1880
+      2238
      ],
      "n": [
       "地標　破塔樓",
@@ -10546,11 +10546,11 @@
      "col": "#3e3a48",
      "at": [
       1600,
-      1840
+      2222
      ],
      "stand": [
       1690,
-      1862
+      2230
      ],
      "unlock": {
       "enter": true,
