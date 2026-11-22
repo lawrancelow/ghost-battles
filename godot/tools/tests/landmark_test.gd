@@ -536,7 +536,7 @@ func _zq_check(t, m, shots: bool) -> void:
 		var v = 0; var quads = {}
 		for i in LA.ZQ_N:
 			var o = LA.ghost_state(i, tt, 500, 500, w, h)
-			if float(o.u) < 0.80 and float(o.a) > 0.0:
+			if float(o.u) < 0.84 and float(o.a) > 0.0:
 				v += 1
 				poses[str(o.pose)] = 1
 				mo = maxf(mo, LA.inside(G, o.pos, float(o.gh) * LA.ZQ_HALF))
@@ -549,7 +549,7 @@ func _zq_check(t, m, shots: bool) -> void:
 		maxv = maxi(maxv, v)
 		n += 1; tt += 0.05
 	_chk("鬼魂絕不越過木樁圈外緣（60 秒抽樣，連身闊）", mo <= 1.0, mo)
-	_chk("同時 ≥ 4 隻（≥ 80% 時間）、最多 5", float(vis4) / n >= 0.8 and maxv <= 5, [float(vis4) / n, maxv])
+	_chk("同時 ≥ 4 隻（≥ 95% 時間）、最多 5", float(vis4) / n >= 0.95 and maxv <= 5, [float(vis4) / n, maxv])
 	_chk("分佈全陣：≥ 50% 時間同時喺 3 個方位以上（左前／左後／右前／右後）", float(spread) / n >= 0.5, float(spread) / n)
 	_chk("冇綁繩姿勢、用無繩新圖（浮現／飄／螺旋／掙扎／縮返）", not poses.has("yanked") and poses.has("emerge") and poses.has("drift") and poses.has("spiral") and poses.has("press") and poses.has("recoil") and Spr.ok("zqg2_press") and not Spr.ok("zqg_yanked"), poses.keys())
 	_chk("屏障漣漪、化煙散去都有", rip and smoke)
