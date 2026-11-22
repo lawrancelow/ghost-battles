@@ -286,22 +286,25 @@ static func on_paid(sim, c: Dictionary) -> void:
 	var n = int(J.num((c.get("got", {}) as Dictionary).get(GOOD, 0)))
 	if n <= 0: return
 	var t = tier_now()
-	for i in n: join(t)
-	sim.ev.append({"k": "ml_join", "pos": c.pos + Vector2(0, -70), "t": t, "line": L("遊魂兵 +%d・%s", "遊魂兵 +%d・%s") % [n, tier_name(t)]})
+	var got = 0
+	for i in n: if join(t): got += 1
+	if got <= 0: return   # 等佢付錢期間滿咗額（又唔好過最弱）：買咗就算，唔入伍
+	sim.ev.append({"k": "ml_join", "pos": c.pos + Vector2(0, -70), "t": t, "line": L("遊魂兵 +%d・%s", "遊魂兵 +%d・%s") % [got, tier_name(t)]})
 	var a = st()
 	if a != null and not J.t(a.get("story")):
 		a["story"] = true
 		var Sy = J.G.get("Story")
 		if Sy != null: J.mc(Sy, "queue", [story_scene()])
-static func join(t: int) -> void:
+static func join(t: int) -> bool:
 	var a = st()
-	if a == null: return
+	if a == null: return false
 	if total() >= cap():
 		var w = weakest()
-		if w < 0 or w >= t: return
+		if w < 0 or w >= t: return false
 		remove(w, 1)   # 最弱一個退休，換新
 	add(t, 1)
 	a["join"] = J.num(a.get("join", 0)) + 1.0
+	return true
 
 # 出戰：最好兵器嗰批先，最多 sq × sq_max 人；回 [[級, 人數], …]（好→差）
 static func field() -> Array:
