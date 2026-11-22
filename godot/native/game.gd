@@ -643,7 +643,7 @@ static func v_collect(this_, ctx) -> Array:
 			if WK != null: return J.mc(WK, "drawWorker", [ctx, ss, t, 0.62, work_info])
 			return J.mc(ART, "drawChar", [ctx, J.gp(J.gp(ss, "g"), "k"), J.gp(ss, "x"), J.gp(ss, "y"), 0.62, {"t": t + J.num(J.gp(ss, "ph")), "work": true, "flip": J.gp(ss, "flip"), "tamed": true, "untied": true}])})
 	var idle = []
-	for g in S.ghosts: if not J.t(g.get("post")) and J.str(g.k) != "afu": idle.append(g)
+	for g in S.ghosts: if not J.t(g.get("post")) and J.str(g.k) != "afu" and J.str(g.k) != "xiaozhi": idle.append(g)   # [xzfollow] 小紙冇派工就跟住主角
 	var n0 = items.size()
 	var PL = _g("PlazaLife")
 	if PL != null: J.mc(PL, "frame", [this_, idle, items, vis, ctx, t])
@@ -657,7 +657,30 @@ static func v_collect(this_, ctx) -> Array:
 		if J.t(hd): J.assign(o, [hd])
 		o["solid"] = true   # [herobig] 主角唔透明（唔做鬼魂下身淡出）、大少少，喺地圖上易認
 		return J.mc(ART, "drawChar", [ctx, "afu", H.x, H.y, HERO_S, o])})
+	_xz_follow(this_, S, items, vis, ctx, t)
 	return items
+
+# [xzfollow] 小紙（媽媽燒落嚟嘅紙紮傭人）冇派去打工嘅時候，一直跟喺主角後面
+static func _xz_follow(this_, S, items: Array, vis, ctx, t) -> void:
+	var xz = null
+	for g in S.ghosts: if J.str(g.k) == "xiaozhi": xz = g; break
+	if xz == null or J.t(xz.get("post")): return
+	var H = this_.hero
+	var hx = J.num(H.x); var hy = J.num(H.y); var dir = -1.0 if J.num(H.dir) < 0 else 1.0
+	var tx = hx - dir * 30.0; var ty = hy + 4.0
+	var f = this_.get("xzf")
+	if not (f is Dictionary) or Vector2(J.num(f.x), J.num(f.y)).distance_to(Vector2(hx, hy)) > 400.0: f = {"x": tx, "y": ty, "fl": dir < 0}; this_["xzf"] = f
+	var dx = tx - J.num(f.x); var dy = ty - J.num(f.y)
+	var d = sqrt(dx * dx + dy * dy)
+	var walk = d > 6.0
+	if walk:
+		var k = 0.09
+		f["x"] = J.num(f.x) + dx * k; f["y"] = J.num(f.y) + dy * k
+		if absf(dx) > 2.0: f["fl"] = dx < 0
+	else: f["fl"] = dir < 0
+	if vis is Array: vis.append({"g": xz, "x": f.x, "y": f.y})
+	var fx = J.num(f.x); var fy = J.num(f.y); var fl = f.fl
+	items.append({"y": fy, "kind": "xz", "f": func(_t, _a): return J.mc(_g("ART"), "drawChar", [ctx, "xiaozhi", fx, fy, HERO_S * 0.92, {"t": t + 1.7, "walk": walk, "flip": fl, "tamed": true, "untied": true}])})
 
 static func install_seg2() -> void:
 	var V: Dictionary = J.G["Village"]
@@ -1045,7 +1068,7 @@ static func v_draw(this_) -> void:
 			if WK != null: return J.mc(WK, "drawWorker", [ctx, ss, t, 0.62, work_info])
 			return J.mc(ART, "drawChar", [ctx, J.gp(J.gp(ss, "g"), "k"), J.gp(ss, "x"), J.gp(ss, "y"), 0.62, {"t": t + J.num(J.gp(ss, "ph")), "work": true, "flip": J.gp(ss, "flip"), "tamed": true, "untied": true}])})
 	var idle = []
-	for g in S.ghosts: if not J.t(g.get("post")) and J.str(g.k) != "afu": idle.append(g)
+	for g in S.ghosts: if not J.t(g.get("post")) and J.str(g.k) != "afu" and J.str(g.k) != "xiaozhi": idle.append(g)   # [xzfollow] 小紙冇派工就跟住主角
 	var PL = _g("PlazaLife")
 	if PL != null: J.mc(PL, "frame", [this_, idle, items, vis, ctx, t])
 	else:
@@ -1061,6 +1084,7 @@ static func v_draw(this_) -> void:
 		if J.t(hd): J.assign(o, [hd])
 		o["solid"] = true   # [herobig] 主角唔透明（唔做鬼魂下身淡出）、大少少，喺地圖上易認
 		return J.mc(ART, "drawChar", [ctx, "afu", H.x, H.y, HERO_S, o])})
+	_xz_follow(this_, S, items, vis, ctx, t)
 	for it in stable_sort(items, func(a, b): return J.num(J.gp(a, "y")) - J.num(J.gp(b, "y"))): J.cl(J.gp(it, "f"), null, [])
 	for f in J.iter(this_.feathers):
 		m(ctx, "save"); p(ctx, "globalAlpha", maxf(0, 1 - J.num(f.t) / J.num(f.life))); m(ctx, "translate", [f.x, f.y]); m(ctx, "rotate", [sin(J.num(f.rot)) * 0.8])
