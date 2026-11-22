@@ -181,6 +181,7 @@ func zone_hud_tap(p: Vector2) -> bool:
 func zone_world_tap(wp: Vector2) -> void:
 	if not active() or sc.sim == null: return
 	sc.tap(sc.w2s(wp))
+	if sc.get("tap_free"): load("res://game/outpost/ctl_ui.gd").walk_free(wp)   # [ctl] 撳大排檔／野外空地：主角行過去
 
 # 鏡頭移去大排檔區（拔營、測試、主線任務用）
 func focus_outpost(frac := 0.5) -> void:

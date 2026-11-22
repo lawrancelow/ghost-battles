@@ -4,6 +4,7 @@ extends RefCounted
 
 const ZD = preload("res://game/zone/zone_data.gd")
 const INSET := 22.0   # 夾入區內（樹林帶／石牆／河都喺區邊，唔好踩到）
+const CW = preload("res://game/outpost/ctl_walk.gd")   # [ctl] 全圖可走（大排檔、野外都入得）
 
 static func install(V: Dictionary) -> void:
 	if not is_same(V.get("__zn_ws_w"), V.get("workerSpots")): _wrap_spots(V)
@@ -59,6 +60,7 @@ static func _unclamp(H: Dictionary, p: Vector2) -> void:
 	H["tx"] = clampf(p.x, 14.0, ws.x - 14.0); H["ty"] = clampf(p.y, 20.0, ws.y - 10.0)
 # 阿福可以企嘅區：村子＋已佔領資源區（門洞當村子）
 static func region(p: Vector2) -> String:
+	if CW.enabled: return CW.region(p)   # [ctl]
 	for z in ZD.of_type("res"):
 		if z.get("door") is Dictionary and ZD.rect(z.door.rect).grow(4).has_point(p): return "village"
 	var zid = ZD.zone_at(p)
@@ -83,6 +85,7 @@ static func _owned_res() -> Array:
 	return o
 # 路點（最尾一個係終點）
 static func route(from: Vector2, dst: Vector2) -> Array:
+	if CW.enabled: return CW.route(from, dst)   # [ctl]
 	var fr = region(from); if fr == "": fr = _near_region(from)
 	var tr = region(dst)
 	if tr == "": tr = _near_region(dst); dst = _clamp_in("village" if tr == "village" else tr, dst)

@@ -1596,7 +1596,9 @@ func _stage_input(ev: InputEvent) -> void:
 		pass
 
 func _hit(name: String, p: Vector2) -> bool: return _btns.has(name) and _btns[name].has_point(p)
+var tap_free := false   # [ctl] 上一下撳係咪撳咗空地（冇撳中任何嘢）
 func tap(p: Vector2) -> void:
+	tap_free = false   # [ctl]
 	if card != null:
 		if float(card.t) > 0.3: card = null; _snd("coin")
 		return
@@ -1650,6 +1652,7 @@ func tap(p: Vector2) -> void:
 			if sim.unlocked(sid): open_sheet(sid)
 			return
 	if sheet.visible: close_sheet()
+	else: tap_free = true   # [ctl]
 
 # ================= 升級條 =================
 var _up_btns := []

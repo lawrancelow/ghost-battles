@@ -54,6 +54,7 @@ func _ready() -> void:
 	_build_village(); _build_top(); _build_nav(); _build_sheet()
 	story = Control.new(); story.set_script(load("res://ui/story.gd")); add_child(story)
 	_build_fx()
+	load("res://game/outpost/ctl_ui.gd").attach(self)   # [ctl] 行動按鈕、出擊清單、地盤掣變灰
 	move_child(praise_box, sheet.get_index())   # 系統誇獎喺村子層，面板蓋住佢（同網頁版 z-index 一樣）
 	G.modal_open = func() -> bool: return J.t(J.mc(J.G.get("UI"), "modalOpen", []))
 	G.refreshed.connect(refresh); G.toast.connect(show_toast); G.banner.connect(show_banner); G.praise.connect(show_praise)
@@ -430,6 +431,7 @@ func _nav_on(t: String) -> void:
 
 func _nav(t: String) -> void:
 	var ui = J.G.get("UI")
+	if t == "battle" and load("res://game/outpost/ctl_ui.gd").nav_battle(self): return   # [ctl] 「地盤」掣：灰色，之後開放
 	if t == "battle" and ZDm.on(): J.mc(J.G.get("UI"), "close", []); _go_out(); return   # [outgate] 新版：唔開舊世界地圖，鏡頭去出村門外
 	if t == "battle": J.mc(J.G.get("UI"), "close", []); J.mc(J.G.get("World"), "open", []); return
 	J.mc(ui, "open", [t])
