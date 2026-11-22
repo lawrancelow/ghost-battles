@@ -14,6 +14,9 @@ const ZV = preload("res://game/zone/zone_view.gd")   # [zone]
 const ZCAM = preload("res://game/zone/zone_cam.gd")   # [zone]
 const ZW = preload("res://game/zone/zone_walk.gd")   # [zone]
 const RV = preload("res://game/raid/raid_view.gd")   # [raid] 惡鬼襲擾：預告、損壞外觀、迎戰／修理
+const NB = preload("res://ui/nv_bake.gd")   # [perf] 靜態物件烘圖
+const HOL = preload("res://ui/nv_hero_ol.gd")   # [perf] 主角描邊 shader
+const PM = preload("res://ui/perf_mode.gd")   # [perf] 流暢模式
 
 var V: Dictionary
 var world: Node2D
@@ -77,6 +80,7 @@ func _build() -> void:
 	add_child(yard_back)
 	VS.attach(self)   # [villageart]
 	RV.attach(self)   # [raid]
+	PM.apply(self)   # [perf] 流暢模式（讀返設定）
 
 # ---------------- 每幀 ----------------
 func _process(_dt: float) -> void:
@@ -113,7 +117,13 @@ func _process(_dt: float) -> void:
 	var ewh = CB.world_h()
 	if ewh != _ext_h: _ext_h = ewh; ext_ground.queue_redraw()
 	lily.queue_redraw(); mist.queue_redraw(); top_fx.queue_redraw(); top_ui.queue_redraw()
-	if zone: zone_under.queue_redraw(); zone_over.queue_redraw()
+	if zone:
+		# [perf] 地形層（山、河、樹林、擺設）：鏡頭冇郁就隔格先重畫（河水等慢動畫 30 幀已經夠順）
+		var ck = Vector3(cam_x, cam_y, sc)
+		if ck != _zu_cam or Engine.get_process_frames() % 2 == 0: _zu_cam = ck; zone_under.queue_redraw()
+		zone_over.queue_redraw()
+	NB.frame(self)   # [perf]
+	PM.frame(self)   # [perf]
 	if OS.has_environment("GB_PROF"):
 		prof["static"] = prof.get("static", 0) + t1 - t0; prof["dyn"] = prof.get("dyn", 0) + t2 - t1; prof_n += 1
 		if prof_n >= 30:
@@ -196,26 +206,33 @@ func zone_tap(p: Vector2) -> void:
 	J.mc(V, "tap", [w.x, w.y])
 
 # ---------------- 靜態物件：原生 Art 畫，狀態冇變唔重畫 ----------------
-func _static(key: String, y: float, sig, animated: bool, fn: Callable) -> void:
+func _static(key: String, y: float, sig, animated: bool, fn: Callable, live := Callable()) -> void:   # [perf] live：會郁嘅部分（fn 部分烘成圖）
 	var s = statics.get(key)
 	if s == null:
 		var n = PtDraw.new(); n.tag = "st_" + key.substr(0, 2); n.position = Vector2(0, y); ysort.add_child(n)
 		s = {"node": n, "sig": null, "fn": fn}; statics[key] = s
 		n.fn = func(c): _draw_static(c, key)
-	s.fn = fn; s.used = true
+	s.fn = fn; s.used = true; s["anim"] = animated; s["live"] = live   # [perf]
 	var n2: PtDraw = s.node
 	if n2.position.y != y: n2.position.y = y
 	if animated and (y < cam_y - 40 or y > cam_y + size.y / maxf(0.01, sc) + 140):
 		s.dirty = true; return  # 鏡頭外動畫唔重畫
-	if animated or typeof(s.sig) != typeof(sig) or s.sig != sig or s.get("dirty", false):   # [unify] 地盤 "site" → 起好 [lv,…] 唔同型別
+	var chg = typeof(s.sig) != typeof(sig) or s.sig != sig or s.get("dirty", false)   # [unify] 地盤 "site" → 起好 [lv,…] 唔同型別
+	if animated and not chg and (y < cam_y + 30 or y > cam_y + size.y / maxf(0.01, sc) + 40) and Engine.get_process_frames() % 2 == 1:
+		return   # [perf] 半出鏡（畫面邊）嘅動畫物件：隔格先重畫
+	if animated or chg:
+		if chg: s["ver"] = int(s.get("ver", 0)) + 1   # [perf] ver：狀態變咗，烘圖要重烘
 		s.sig = sig; s.dirty = false
 		n2.queue_redraw()
 
 func _draw_static(c: CanvasItem, key: String) -> void:
 	var s = statics[key]
+	if RV.TILT.has(key): NB._unbake(c, s)   # [integ] 壞咗歪斜嘅建築唔用烘圖，照舊逐格畫（等損壞外觀即時見到）
+	elif NB.draw(self, c, key, s): return   # [perf] 用烘好嘅圖
 	var ctx = Ctx.new(c, RV.tilt(key, Transform2D(0, Vector2(0, -c.position.y)), c.position.y))   # [raid] 損壞建築歪斜
 	Art.ink_w = 0.85 if zone else 0.0   # [seat16] 村子靜態物件（建築、樹、稻田、擺設）加墨線描邊
 	s.fn.call(ctx)
+	if s.get("live", Callable()).is_valid(): s.live.call(ctx)   # [perf]
 	Art.ink_w = 0.0
 
 var _st_map := "~"
@@ -249,7 +266,9 @@ func _sync_statics() -> void:
 		elif BUILDINGS.get(id) != null:   # [ruins13] 未起：廢墟；已解鎖加「可重建」牌（撳得），未解鎖淨係廢墟（撳唔到）
 			var nm = J.str(BUILDINGS[id].name); var can = J.t(J.cl(bunl, null, [id])); var sd = BLD_SEED.find(id)
 			var rq = "" if can else str(load("res://native/game.gd").bld_req(id))
-			_static("b_" + id, p[1], ["ruin", can, rq], can, func(ctx): Art.draw_ruin(ctx, p[0], p[1], nm, can, sd, t, rq))
+			if can:   # [perf] 可重建：廢墟烘成圖，木牌（上下浮）每格照畫
+				_static("b_" + id, p[1], ["ruin", can, rq], can, func(ctx): _ruin_part(ctx, 1, p, nm, can, sd, rq), func(ctx): _ruin_part(ctx, 2, p, nm, can, sd, rq))
+			else: _static("b_" + id, p[1], ["ruin", can, rq], can, func(ctx): Art.draw_ruin(ctx, p[0], p[1], nm, can, sd, t, rq))
 	# 原生新增：任務公告板（撳落去開任務面板）、投胎辦事處
 	for e in extras():
 		var ek: String = e[0]; var ex: float = e[1]; var ey: float = e[2]; var ew: float = e[3]
@@ -281,6 +300,9 @@ func _sync_statics() -> void:
 		var s = statics[k]
 		if not s.used and s.node.visible: s.node.visible = false
 		elif s.used and not s.node.visible: s.node.visible = true
+
+func _ruin_part(ctx: Ctx, part: int, p, nm: String, can: bool, sd: int, rq: String) -> void:   # [perf] 廢墟（1）／木牌（2）分開畫
+	Art.ruin_part = part; Art.draw_ruin(ctx, p[0], p[1], nm, can, sd, t, rq); Art.ruin_part = 0
 
 # ---------------- 會郁嘅：打工鬼、廣場鬼、阿福 ----------------
 func _seg() -> PtDraw:
@@ -324,16 +346,24 @@ func _sync_dynamic() -> void:
 	prof["collect"] = prof.get("collect", 0) + Time.get_ticks_usec() - tc0
 	if not items is Array: items = []
 	plaza.begin_frame()
+	HOL.begin(self)   # [perf]
+	var cvr = view_rect()   # [perf] 鏡頭外嘅打工鬼／小紙唔錄唔畫（角色腳底 y；頭頂最多高 160）
 	for it in items:
 		var y = J.num(it.y)
+		var ik = it.get("kind")   # [perf]
+		if (ik == "work" or ik == "xz") and (y < cvr.position.y - 20.0 or y - 160.0 > cvr.end.y): continue   # [perf]
+		if ik == "work" and it.get("s") != null and absf(J.num(J.gp(it.s, "x")) - cvr.get_center().x) > cvr.size.x * 0.5 + 90.0: continue   # [perf]
 		if it.get("kind") == "plaza" and plaza.try_item(it, y): continue
-		var n = _seg(); n.position = Vector2(0, y)
+		var hn = HOL.node(self, y) if it.get("kind") == "hero" else null   # [perf] 主角：入描邊 shader 群組（群組位置做 y 排序）
+		var n = hn if hn != null else _seg()
+		if hn == null: n.position = Vector2(0, y)
 		n.self_modulate = Color.WHITE
 		if it.get("kind") == "hero":
 			# [herobig] 主角唔跟每關色調變灰：抵銷 ysort 嘅色調，再光少少，喺地圖上一眼認到
 			var gm2 = ysort.modulate
 			n.self_modulate = Color(minf(1.7, 1.12 / maxf(0.1, gm2.r)), minf(1.7, 1.12 / maxf(0.1, gm2.g)), minf(1.7, 1.12 / maxf(0.1, gm2.b)), 1.0)
-			_hero_outline(n, y)
+			if hn == null: _hero_outline(n, y)
+			elif hero_ol != null and is_instance_valid(hero_ol) and hero_ol.visible: hero_ol.visible = false   # [perf]
 			# 主角每幀重錄（以前隔幀，手機上動作變一半幀數，割稻好硬）
 			hero_flip = false
 			if hero_flip and n == hero_seg and n.has_meta("hy"):
@@ -348,10 +378,12 @@ func _sync_dynamic() -> void:
 		prof[kk] = prof.get(kk, 0) + Time.get_ticks_usec() - ti0
 		n.queue_redraw()
 	plaza.end_frame()
+	HOL.end(self)   # [perf]
 	for i in range(seg_used, segs.size()):
 		if segs[i].visible: segs[i].visible = false
 
 # ---------------- 地面、彼岸花、霧 ----------------
+var _zu_cam := Vector3.ZERO   # [perf]
 var _zone_was := false
 var _zg_map := "~"
 var _zg_tex := {}   # [zone] 分區地面圖（上下兩半）
@@ -402,10 +434,13 @@ func _draw_mist(c: CanvasItem) -> void:
 	PtGfx.init()
 	var WW = W; var nm = 6
 	if zone: WW = ZD.world_size().x; nm = int(ZD.world_size().y / 170.0)   # [zone]
+	VS.mist_pts.clear()   # [perf] 霧團交俾暗影 shader 一次畫（VS.DARK_SH）
 	for i in nm:
+		if PM.lite() and i % 2 == 1: continue   # [perf] 流暢模式：少霧
 		var mx = fmod(t * 8 + i * 90 * WW / W, WW + 200) - 100; var my = 160 + i * 170
 		if my < cam_y - 100 or my > cam_y + size.y / sc + 100: continue
 		var mc = ZV.mist_col() if zone else Color(200 / 255.0, 210 / 255.0, 200 / 255.0, 0.06)   # [zone2] 每關霧色
+		if VS.mist_in_dark(): VS.mist_pts.append(Vector2(mx, my)); VS.mist_col = mc; continue   # [perf]
 		c.draw_texture_rect(PtGfx.RAD, Rect2(mx - 90, my - 90, 180, 180), false, mc)
 	_draw_wander_souls(c)
 
@@ -419,6 +454,7 @@ func _draw_wander_souls(c: CanvasItem) -> void:
 	if zone: vr = ZD.zrect("village").grow(-30)
 	var top = cam_y - 80; var bot = cam_y + size.y / sc + 80
 	for i in SOUL_N:
+		if PM.lite() and i % 2 == 1: continue   # [perf] 流暢模式：亡魂減半
 		var ph = i * 2.399
 		var per = 16.0 + fmod(i * 5.3, 9.0)
 		var k = fmod(t + i * 7.1, per) / per          # 0→1 一個出現週期
@@ -677,7 +713,9 @@ func _sync_chain() -> void:
 		var p = CB.pos(b); var st = str(ws.get(b, "idle")); var lvv = CB.lv(b); var un = CB.unlocked(b)
 		if zone and _fogged_res(p): continue   # [fogfix] 未佔領（黑霧）資源區入面嘅加工廠／地盤牌唔畫（之前透過黑霧撞住鎖／戰力字）
 		var bb: String = b
-		_static("cb_" + b, p.y, [lvv, st, un, DB.lang], st == "work" or st == "starve", func(ctx): _chain_bld(ctx, bb, p.x, p.y, lvv, st, un))
+		if st == "work" and lvv > 0 and CB.art_tex(b) != null:   # [perf] 開工：建築烘成圖，冒煙／材料粒子每格照畫
+			_static("cb_" + b, p.y, [lvv, st, un, DB.lang], true, func(ctx): _chain_bld(ctx, bb, p.x, p.y, lvv, "", un), func(ctx): _chain_fx(ctx, bb, p.x, p.y))
+		else: _static("cb_" + b, p.y, [lvv, st, un, DB.lang], st == "work" or st == "starve", func(ctx): _chain_bld(ctx, bb, p.x, p.y, lvv, st, un))
 
 # [village2] 資源田：每個資源點一個靜態節點（y 排序，同槐樹一樣阿福／鬼可以企喺前後）
 func _sync_field(b: String) -> void:
@@ -757,6 +795,12 @@ func _chain_bld(ctx: Ctx, bid: String, x: float, y: float, lvv: int, st: String,
 		_txt(ctx, s2, x, roof_top - 13.5, "#fff3e0", FONT_PX, "rgba(80,10,6,.9)")
 		ctx.globalAlpha = 1
 	ctx.restore()
+
+func _chain_fx(ctx: Ctx, bid: String, x: float, y: float) -> void:   # [perf] 同 _chain_bld 一樣計屋頂位，淨係畫工作動畫
+	var tex = CB.art_tex(bid)
+	var bw = 106.0; var bh = bw * tex.get_height() / tex.get_width()
+	if bh > 96: bh = 96.0
+	ctx.save(); _work_fx(ctx, bid, x, y, y + 6 - bh, CB.mat_col(CB.main_out(bid)), true); ctx.restore()
 
 # 後備：程序畫一間細屋（屋頂顏色跟出產材料）＋門口掛住產品圖示
 func _hut(ctx: Ctx, bid: String, x: float, y: float, col: Color, st: String) -> void:

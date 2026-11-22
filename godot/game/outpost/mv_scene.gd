@@ -493,6 +493,9 @@ static var _mb_s = null
 static func _mbf() -> bool:   # [mapbattle] 分區大地圖打緊仗（行軍／開打／結算）
 	if _mb_s == null: _mb_s = load("res://game/zone/zone_battle.gd")
 	return _mb_s.fighting()
+# [perf] 分區地圖：呢點喺唔喺鏡頭入面（左右多留 110、上下 vy0..vy1 再多 160，角色頭頂氣泡／血條唔會切走）
+func _in_view(p: Vector2, vy0: float, vy1: float) -> bool:
+	return p.x > view_x0() - 110.0 and p.x < view_x1() + 110.0 and p.y > vy0 - 40.0 and p.y < vy1 + 160.0
 func _draw_stage() -> void:
 	if sim == null or sim.st() == null or sim.L.is_empty(): return
 	var ctx = Ctx.new(stage)
@@ -515,10 +518,14 @@ func _draw_stage() -> void:
 	# 圍欄外孤魂＋圍欄（地圖頂）
 	if zone or vy0 < L.fence_y + 80.0:   # [zone2] 分區地圖：野外區可以喺大排檔下面
 		var fo = sim.foes.duplicate(); fo.sort_custom(func(a, b): return a.pos.y < b.pos.y)
-		for f in fo: _draw_foe(ctx, f)
+		for f in fo:
+			if zone and not f.get("boss", false) and not _in_view(f.pos, vy0, vy1): continue   # [perf] 鏡頭外唔畫（淨係畫，唔影響邏輯）
+			_draw_foe(ctx, f)
 		if not fence_art(): _draw_fence(ctx)   # [camp] fence_art：柵欄喺背景圖
 		if not walking:
-			for g in sim.guards: _draw_guard(ctx, g)
+			for g in sim.guards:
+				if zone and not _in_view(g.pos, vy0, vy1): continue   # [perf]
+				_draw_guard(ctx, g)
 			if not _mbf(): _draw_guard_slots(ctx)   # [mapbattle] 打緊仗：收埋「派鬼守夜」牌
 	_draw_amb_ghosts(ctx, vy0, vy1)
 	# 佈景＋台＋人：按 y 排（只畫鏡頭內）
@@ -537,6 +544,7 @@ func _draw_stage() -> void:
 	if not walking and not mk_hid:
 		for c in sim.custs:
 			if c.pos.y < vy0 - 20.0 or c.pos.y - 160.0 > vy1: continue
+			if zone and not _in_view(c.pos, vy0, vy1): continue   # [perf] 鏡頭外（左右）唔畫
 			var cc = c
 			items.append([c.pos.y + c.slot * 0.01, func(): _draw_cust(ctx, cc)])
 	if fk > 0.04 and not mk_hid:
@@ -548,6 +556,7 @@ func _draw_stage() -> void:
 	if not walking and not mk_hid:
 		for w in sim.workers:
 			if w.pos.y < vy0 - 20.0 or w.pos.y - 120.0 > vy1: continue
+			if zone and not _in_view(w.pos, vy0, vy1): continue   # [perf]
 			var ww = w
 			items.append([w.pos.y, func(): _draw_worker(ctx, ww)])
 	if embed and embed_draw != null: embed_draw.call(ctx, vy0, vy1, items)   # [unify] 留位、挑夫鬼（入 y 排序）
@@ -797,6 +806,7 @@ func _step_amb(dt: float) -> void:
 func _draw_amb_ghosts(ctx: Ctx, vy0: float, vy1: float) -> void:
 	for g in amb.g:
 		if g.y < vy0 or g.y > vy1 or (embed and g.y > world_h() - 60.0): continue   # [unify]
+		if zone and not _in_view(Vector2(g.x, g.y), vy0, vy1): continue   # [perf]
 		Art.draw_char(ctx, "youhun", g.x, g.y + sin(t * 1.4 + g.ph) * 8.0, CS * 0.75, {"t": t + g.ph, "seed": g.ph, "flip": g.v < 0, "alpha": 0.22, "noShadow": true})
 func _draw_amb_fly(ctx: Ctx) -> void:
 	for f in amb.f:

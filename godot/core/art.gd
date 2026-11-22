@@ -238,7 +238,12 @@ func draw_site(ctx: Ctx, x: float, y: float, name: String) -> void:
 	ctx.restore()
 
 # [ruins13] 未起嘅地盤：廢墟（燒焦地、碎石、爛木、雜草）。can＝已解鎖可以起：加一塊細木牌「可重建」＋建築名；未解鎖：淨係廢墟（撳唔到）
+var ruin_part := 0   # [perf] 0＝成個廢墟；1＝淨係廢墟（唔畫木牌，烘圖用）；2＝淨係木牌
 func draw_ruin(ctx: Ctx, x: float, y: float, name: String, can: bool, seed: int, t := 0.0, req := "") -> void:
+	if ruin_part != 2: _ruin_body(ctx, x, y, seed)   # [perf]
+	if ruin_part == 1: return
+	_ruin_sign(ctx, x, y, name, can, t, req)
+func _ruin_body(ctx: Ctx, x: float, y: float, seed: int) -> void:
 	el(ctx, x, y - 4, 54, 16, "rgba(24,16,12,.55)")
 	el(ctx, x - 8, y - 6, 36, 10, "rgba(52,36,26,.45)")
 	hatch(ctx, x, y - 4, 52, 15, 2.8, "rgba(14,8,6,.5)", 0.8, seed + 5)   # [seat16]
@@ -251,6 +256,7 @@ func draw_ruin(ctx: Ctx, x: float, y: float, name: String, can: bool, seed: int,
 	if Spr.ok("zb_bush"): put(ctx, "zb_bush", x + (-34.0 if flip else 34.0), y + 8, 28)
 	tint = sv
 	seat_front(ctx, x, y + 2, 104, seed + 40)   # [seat16]
+func _ruin_sign(ctx: Ctx, x: float, y: float, name: String, can: bool, t: float, req: String) -> void:
 	if not can:   # [ruins13b] 未解鎖：灰色木牌（建築名＋點樣開），唔郁
 		ctx.save(); ctx.font = "900 14px %s" % SERIF; var w0 = maxf(84, maxf(ctx.measureText(name).width, ctx.measureText(req).width * 0.86) + 20)
 		rr(ctx, x - 1.5, y - 26, 3, 22, 1, "#4a3a30")

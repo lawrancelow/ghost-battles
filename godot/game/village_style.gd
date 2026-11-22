@@ -25,6 +25,7 @@ static func attach(nv) -> void:
 	nv.world.add_child(m); nv.world.move_child(m, nv.ysort.get_index())          # 後層：地面之上、建築之下
 	var mf = Layer.new(); mf.name = "va_mist_f"; mf.fn = func(c): draw_mist(c, nv, true)
 	nv.world.add_child(mf); nv.world.move_child(mf, nv.ysort.get_index() + 1)    # 前層：建築之上
+	m.visible = bld_mist; mf.visible = bld_mist   # [perf] 血霧熄咗：兩層唔使每格重畫
 	# [dark16] 全地圖半透明暗影：一塊全屏暗色，shader 入面喺路燈／起好嘅建築／主角附近挖亮兼加暖光
 	var dk = Layer.new(); dk.name = "va_dark"
 	var sh = Shader.new(); sh.code = DARK_SH
@@ -83,9 +84,14 @@ const DARK_SH := """shader_type canvas_item;
 uniform vec2 lp[40]; uniform vec2 lr[40]; uniform float li[40]; uniform int ln = 0;
 uniform vec4 dark : source_color = vec4(0.03, 0.03, 0.13, 0.54);
 uniform vec3 warm : source_color = vec3(1.0, 0.72, 0.36);
+uniform vec2 mp[16]; uniform int mn = 0; uniform vec4 mcol = vec4(0.784, 0.824, 0.784, 0.06);
 varying vec2 wp;
 void vertex() { wp = VERTEX; }
 void fragment() {
+	// [perf] 村入面飄嘅霧團（以前 nv_village 霧層逐團畫 PtGfx.RAD：中心實、半徑 90 線性變透明）併入呢個 shader 一次畫
+	float ma = 0.0;
+	for (int i = 0; i < mn; i++) ma = max(ma, clamp(1.0 - length(wp - mp[i]) / 90.0, 0.0, 1.0));
+	ma *= mcol.a;
 	float L = 0.0;
 	for (int i = 0; i < ln; i++) {
 		vec2 d = (wp - lp[i]) / lr[i];
@@ -93,8 +99,16 @@ void fragment() {
 		L += f * f * (3.0 - 2.0 * f) * li[i];
 	}
 	L = clamp(L, 0.0, 1.0);
-	COLOR = vec4(mix(dark.rgb, warm, L), mix(dark.a, 0.10, L));
+	vec4 D = vec4(mix(dark.rgb, warm, L), mix(dark.a, 0.10, L));
+	// 霧（下）＋暗影（上）兩層 alpha 疊合（同以前分兩層畫嘅結果一樣）
+	float A = D.a + ma * (1.0 - D.a);
+	vec3 C = (D.rgb * D.a + mcol.rgb * ma * (1.0 - D.a)) / max(A, 0.0001);
+	COLOR = vec4(C, A);
 }"""
+# [perf] 霧團交俾暗影 shader 畫：nv_village._draw_mist 填 mist_pts（世界座標）、mist_col
+static var mist_pts := PackedVector2Array()
+static var mist_col := Color(200 / 255.0, 210 / 255.0, 200 / 255.0, 0.06)
+static func mist_in_dark() -> bool: return dark_on
 static func draw_dark(c: CanvasItem, nv, sm: ShaderMaterial) -> void:
 	if not dark_on: sm.set_shader_parameter("ln", 0); return
 	var P = PackedVector2Array(); var R = PackedVector2Array(); var I = PackedFloat32Array()
@@ -135,6 +149,8 @@ static func draw_dark(c: CanvasItem, nv, sm: ShaderMaterial) -> void:
 	P.resize(NL); R.resize(NL); I.resize(NL)
 	for i in range(n, NL): R[i] = Vector2(1, 1)
 	sm.set_shader_parameter("lp", P); sm.set_shader_parameter("lr", R); sm.set_shader_parameter("li", I); sm.set_shader_parameter("ln", n)
+	var mpp = mist_pts.duplicate(); var mn = mini(mpp.size(), 16); mpp.resize(16)   # [perf] 霧團
+	sm.set_shader_parameter("mp", mpp); sm.set_shader_parameter("mn", mn); sm.set_shader_parameter("mcol", mist_col)
 	c.draw_rect(nv.view_rect().grow(8), Color.WHITE)
 
 static func draw_night(c: CanvasItem, nv) -> void:
