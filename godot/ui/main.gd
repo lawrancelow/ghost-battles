@@ -314,7 +314,7 @@ func _process(dt: float) -> void:
 		return
 	_process_js_state()
 	ui_t += dt
-	if ui_t > 0.5 and title_ov == null: ui_t = 0; refresh()
+	if ui_t > 0.5 and title_ov == null: ui_t = 0; refresh(); load("res://game/barracks/bk_data.gd").poll()   # [barracks] 清剿結算
 
 # ---------------- 版面 ----------------
 func _build_village() -> void:

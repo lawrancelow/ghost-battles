@@ -273,7 +273,7 @@ func equip(u: PtU, g) -> void:
 	if bd is Dictionary: u.badge = {"col": Color(J.str(FAC[bd.f].col)), "c": J.num(bd.c)}
 
 func troop_unit(i: int) -> PtU:
-	var tb = 1 + 0.08 * maxf(0, J.num(S.bld.get("home", 0)) - 1); var hp = (90 + 14 * J.num(S.lv)) * tb
+	var tb = load("res://game/zone/zone_data.gd").troop_mul(); var hp = (90 + 14 * J.num(S.lv)) * tb   # [barracks] 兵營加成
 	var u = PtU.new(); u.side = 0; u.role = "troop"; u.k = "youhun"; u.name = "陰兵"; u.fac = fac_of("youhun")
 	u.hp = hp; u.maxhp = hp; u.atk = (9 + 2.2 * J.num(S.lv)) * tb; u.rng = 40; u.aspd = 1; u.spd = 175; u.cd = randf(); u.s = 0.4; u.ti = i
 	return u

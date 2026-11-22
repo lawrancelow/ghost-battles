@@ -185,6 +185,7 @@ static func _draw_bld(id: String, d) -> void:
 	if fe != null:
 		var left2 = J.num(fe.left)
 		_row("鬼節宴：壽包 300\n[font_size=12]全村智力總和 %d/%d%s[/font_size]" % [int(J.num(fe.iq)), int(J.num(fe.need)), "　冷卻 %d 分" % int(ceil(left2 / 60)) if left2 > 0 else ""], [_btn("擺宴", "gold", J.t(fe.can), func(): _act_bld(id, "feast"))])
+	if id == "barracks": load("res://game/barracks/bk_ui.gd").panel(_body(), func(): _render_bld(id, true))   # [barracks] 派遣、隊長
 	for p in d.posts:
 		_post_ui(id, p)
 
@@ -319,6 +320,7 @@ static func _gcard(g) -> Control:
 		var ub = _btn("升級\n壽包 %d" % int(J.num(g.cost)), "gold", J.t(g.canUp), func(): jn("rosterAct", ["up", gid]); _render_roster(false), true)
 		ub.custom_minimum_size = Vector2(76, 46); act.add_child(ub)
 	else: act.add_child(UIKit.label("已達上限", 11, UIKit.INKDIM))
+	if J.t(g.get("job")): act.add_child(load("res://game/barracks/bk_ui.gd").job_btn(gid))   # [barracks] 名鬼分配
 	if J.t(g.canRel):
 		var rb = _confirm_btn("送去投胎", "ghost", "確定？", func(): jn("rosterAct", ["rel", gid]); _render_roster(false))
 		rb.custom_minimum_size = Vector2(76, 30); act.add_child(rb)

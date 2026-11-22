@@ -75,6 +75,7 @@ func _build() -> void:
 		if m: CB.hide_yard(m))
 	add_child(yard_back)
 	VS.attach(self)   # [villageart]
+	load("res://game/barracks/bk_patrol_view.gd").attach(self)   # [barracks] 陰兵巡邏
 
 # ---------------- 每幀 ----------------
 func _process(_dt: float) -> void:

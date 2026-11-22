@@ -94,7 +94,8 @@ static func cap() -> float:
 	var ws = workers_at("store")
 	if ws.size() > 0: c *= 1 + stat(ws[0], 2) / 100
 	return J.round(c)
-static func troop_cap() -> float: var S = _S(); return 150 + 150 * J.num(S.bld.home) + 50 * J.num(S.bld.camp)
+static func troop_cap() -> float: var S = _S(); return 150 + 150 * J.num(S.bld.home) + 50 * J.num(S.bld.camp) + BK().cap_bonus()   # [barracks] 兵營加上限
+static func BK(): return load("res://game/barracks/bk_data.gd")   # [barracks]
 static func roster_cap() -> float: return 5 + 2 * J.num(_S().bld.home)
 static func walk() -> float:
 	var GS = _g("GhostStreet")
@@ -147,7 +148,7 @@ static func rates_per_min() -> Dictionary:
 				r.drillBy.append([g.k, o])
 			"store": if J.str(g.k) == "toyol": r.coins += 2 + lv * 0.25
 		r.exp += 0.6
-	if J.t(S.bld.get("home")): r.troops += 1.2 + 1.3 * J.num(S.bld.home)   # 村裡的遊魂自願當陰兵（民宅）
+	if J.t(S.bld.get("home")): r.troops += (1.2 + 1.3 * J.num(S.bld.home)) * BK().train_mul()   # 村裡的遊魂自願當陰兵（民宅）；[barracks] 兵營加訓練速度
 	return r
 
 # 推進 dt 秒的產出（含加工鏈，原料不足時按比例）；ratesPerMin 經 J.G 叫（rivals 會包）
@@ -310,6 +311,7 @@ static func bld_req(id) -> String:
 	if J.t(b.get("unlockLv")) and J.num(S.lv) < J.num(b.unlockLv): return "主公 %d 級開放" % int(J.num(b.unlockLv))
 	if J.t(b.get("unlockStage")) and not J.t(S.cleared.get(J.str(b.unlockStage))): return "通關 %s 開放" % J.str(b.unlockStage)
 	if J.t(b.get("unlockQuest")): return "跟主線任務開放"
+	if J.t(b.get("unlockBld")) and not J.t(S.bld.get(J.str(b.unlockBld))): return "先起好%s" % J.str(_g("BUILDINGS")[J.str(b.unlockBld)].name)   # [barracks]
 	return ""
 static func bld_unlocked(id) -> bool:
 	var S = _S(); var b = _g("BUILDINGS")[J.str(id)]
@@ -319,6 +321,7 @@ static func bld_unlocked(id) -> bool:
 		var Q = _g("QUESTS"); var qi = -1
 		for i in Q.size(): if J.str(Q[i].get("t")) == "build" and J.str(Q[i].get("b")) == J.str(id): qi = i; break
 		if qi > J.num(S.qi): return false
+	if J.t(b.get("unlockBld")) and not J.t(S.bld.get(J.str(b.unlockBld))): return false   # [barracks] 兵營：要先起民宅
 	return true
 static func furnace_ready():
 	var S = _S(); var f = S.bld.get("furnace")
@@ -1239,6 +1242,7 @@ static func ui_bld_effect(id) -> String:
 					parts.append("%s 嚇功 Lv%s%s" % [J.str(g.name), J.str(lv), ("（%s/%s）" % [J.str(floor(J.num(J.mc(RW, "drillXp", [g.k])))), J.str(nx)]) if J.t(nx) else "（滿）"])
 				h += "<br>" + "　".join(parts)
 			return h
+		"barracks": return L.call(BK().effect_text())   # [barracks]
 	return ""
 static func ui_post_stat_txt(g, post) -> String:
 	var s = J.num(_g("POSTS")[J.str(post)].stat); var F = _g("F")
@@ -1319,7 +1323,7 @@ static func n_bld_act(id, a, arg):
 	var S = _S(); var F = _g("F"); var sid = J.str(id); var act = J.str(a); var B = _g("BUILDINGS")[sid]; var UI = _ui()
 	if act == "build":
 		if not J.t(_c("canPay", [B.build])): return null
-		_snd("build"); _c("pay", [B.build]); S.bld[sid] = 1.0; _c("gainExp", [15.0]); _fx("banner", ["%s 建好了！" % J.str(B.name)]); J.mc(_g("Quest"), "check", [])
+		_snd("build"); _c("pay", [B.build]); S.bld[sid] = 1.0; _c("gainExp", [15.0]); _fx("banner", ["%s 建好了！" % J.str(B.name)]); J.mc(_g("Quest"), "check", []); BK().on_built(sid)   # [barracks] 兵營第一次建成劇情
 	if act == "up":
 		var c = J.mc(F, "upCost", [id, S.bld[sid]])
 		if not J.t(_c("canPay", [c])) or J.num(S.bld[sid]) >= J.num(J.mc(F, "bldMax", [id])): return null
@@ -1367,7 +1371,7 @@ static func n_pick(post) -> Dictionary:
 		var d = GH.get(J.str(g.k)); var fb = J.gp(d, "forbid") if d != null else null; var isfb = fb != null and J.iter(fb).has(ps)
 		var oth = []
 		for i in [0, 1, 2]: if float(i) != s: oth.append(J.str(SN[i]) + J.str(J.mc(F, "stat", [g, float(i)])))
-		out.append({"id": g.id, "k": g.k, "name": g.name, "q": g.q, "key": J.mc(F, "stat", [g, s]) if s >= 0 else J.mc(F, "glv", [g]), "lv": J.mc(F, "glv", [g]), "other": " ".join(oth), "where": post_label(g.post).trim_prefix("打工：") if J.t(g.get("post")) else "閒著", "fb": isfb})
+		out.append({"id": g.id, "k": g.k, "name": g.name, "q": g.q, "key": J.mc(F, "stat", [g, s]) if s >= 0 else J.mc(F, "glv", [g]), "lv": J.mc(F, "glv", [g]), "other": " ".join(oth), "where": BK().where_txt(g, post_label(g.post).trim_prefix("打工：") if J.t(g.get("post")) else "閒著"), "fb": isfb})   # [barracks]
 	return {"name": PD.name, "stat": SN[int(s)] if s >= 0 else "等級", "list": out}
 static func n_pick_do(post, gid) -> void:
 	var g = _c("ghostById", [gid])
@@ -1375,7 +1379,7 @@ static func n_pick_do(post, gid) -> void:
 	var ws = J.iter(_c("workersAt", [post]))
 	if J.num(J.mc(_g("F"), "slots", [post])) <= 0: return   # [village2] 冇崗位（未開墾／未起）：唔派（以前 ws 空會出錯）
 	if ws.size() >= J.num(J.mc(_g("F"), "slots", [post])): ws[0]["post"] = null
-	g["post"] = post; J.mc(_g("Quest"), "check", []); _c("save"); m(_ui(), "refresh")
+	g["post"] = post; BK().after_post(g); J.mc(_g("Quest"), "check", []); _c("save"); m(_ui(), "refresh")   # [barracks] 名鬼一職
 static func n_roster() -> Dictionary:
 	var S = _S(); var F = _g("F"); var GH = _g("GHOSTS"); var SK = _g("SKILLS"); var GP = _g("GP")
 	var o = {"cap": J.mc(F, "ghostCap", []), "fcnt": _c("fodderCount"), "rcap": J.mc(F, "rosterCap", []), "buns": _c("fmt", [S.res.buns]), "list": []}
@@ -1408,6 +1412,7 @@ static func n_roster() -> Dictionary:
 		if _has("Bonds"):
 			var bt = J.mc(_g("Bonds"), "bondLine", [g.k])
 			if J.t(bt): e.extra.append(["#c0603a", bt])
+		BK().roster_entry(g, e)   # [barracks] 名鬼職務
 		o.list.append(e)
 	return o
 static func n_roster_act(a, id) -> void:
