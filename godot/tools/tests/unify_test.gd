@@ -111,7 +111,8 @@ func _run(t, shots: bool, full: bool, only0 := false) -> void:
 		var sids = MD.stations(c); var reg = []
 		for s in sids: if not MD.is_carry(s): reg.append(s)
 		var spare = Ly.get("spare", [])
-		_chk("圖%d 台數（固定 %d＋2 隨村）" % [c + 1, TARGET[c]], reg.size() + spare.size() == TARGET[c] and sids.size() - reg.size() == 2, "已有 %d、留位 %d" % [reg.size(), spare.size()])
+		var ncarry = load("res://game/outpost/mat.gd").carry().size()   # [militia] 隨村台多咗紙紮兵器檔（3 個）
+		_chk("圖%d 台數（固定 %d＋%d 隨村）" % [c + 1, TARGET[c], ncarry], reg.size() + spare.size() == TARGET[c] and sids.size() - reg.size() == ncarry, "已有 %d、留位 %d" % [reg.size(), spare.size()])
 		var rs = []
 		for s in sids:
 			var p = MD.st_xy(c, s); rs.append([s, Rect2(p.x - 56, p.y - 92, 112, 160)])
@@ -169,6 +170,7 @@ func _run(t, shots: bool, full: bool, only0 := false) -> void:
 	m.close_sheet()
 	# ---------- 客人、孤魂、挑夫鬼 ----------
 	for sid in MD.stations(c0): sc.sim.sst(sid).unlocked = true
+	for sid in MD.stations(c0): sc.sim.st().counter[str(MD.st_def(sid).get("good", ""))] = 30.0   # [militia] 客人只要有供應嘅貨：櫃台擺貨
 	_cam(-E + 300.0)
 	var sides = {}
 	for i in 40:

@@ -381,6 +381,17 @@
    "bad": [],
    "stat": 1,
    "work": "chop"
+  },
+  "st_bingqi": {
+   "fit": [
+    "laojiang",
+    "heiwu"
+   ],
+   "bad": [
+    "xiaozhi"
+   ],
+   "stat": 0,
+   "work": "hammer"
   }
  },
  "PAIRS": [

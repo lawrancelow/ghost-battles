@@ -399,6 +399,7 @@ func _run(t, shots: bool) -> void:
 	await _w(t, 0.6)
 	# 客人、孤魂
 	for sid in MD.stations(0): sim.sst(sid).unlocked = true
+	for sid in MD.stations(0): sim.st().counter[str(MD.st_def(sid).get("good", ""))] = 20.0   # [militia] 客人只要有供應嘅貨：櫃台擺貨
 	c.center_on(Vector2(670, 700))
 	for i in 30: await _w(t, 0.25)
 	var cu_ok = sim.custs.size() > 0
@@ -515,7 +516,7 @@ func map_check(t, m, c: int, shots: bool) -> void:
 	_chk(tag + "分區模式＋套用", ZD.on() and nv.zone and ZD.applied() == str(c) and sc.zone, ZD.applied())
 	_chk(tag + "look＝" + LOOK_OF[str(c)], ZV.lkey() == LOOK_OF[str(c)] and ResourceLoader.exists("res://assets/img/%s_a.webp" % Z.ground) and nv.ysort.modulate == ZV.grade())
 	_chk(tag + "世界大細", J.num(J.G.W) == float(Z.w) and J.num(J.G.WH) == float(Z.h) and nv.zone_cam().world == Vector2(Z.w, Z.h))
-	_chk(tag + "大排檔台＝該關 STATIONS", MD.stations(c).size() == (7 if c == 1 else (9 if c >= 4 else 8)) and Z.market.st.size() == MD.stations(c).size(), MD.stations(c))
+	_chk(tag + "大排檔台＝該關 STATIONS", MD.stations(c).size() == (7 if c == 1 else (9 if c >= 4 else 8)) + 1 and Z.market.st.size() == MD.stations(c).size(), MD.stations(c))   # [militia] ＋1 隨村台紙紮兵器檔
 	var POS = J.G.get("POS"); var vr = ZD.zrect("village"); var mr = ZD.zrect("market")
 	# ---- 布局 ----
 	var items = []
@@ -654,7 +655,7 @@ func map_check(t, m, c: int, shots: bool) -> void:
 	H.x = vh.x; H.y = vh.y; H.tx = vh.x; H.ty = vh.y; H.act = null; H.target = null; H.erase("zf"); H["zq"] = []
 	for zid in ["A", "B", "C"]: S.zone.own.erase("%d:%s" % [c, zid])
 	# ---- 攻佔、二級廠 ----
-	var zA = ZD.zone("A"); var need = int(zA.power)
+	var zA = ZD.zone("A"); var need = ZD.need("A")   # [militia] 需要兵力 = zones.json power × RES_MUL[關]
 	S.res.troops = 0.0
 	_chk(tag + "建議戰力遞增（A < B < C）", ZD.need("A") < ZD.need("B") and ZD.need("B") < ZD.need("C"), [ZD.need("A"), ZD.need("B"), ZD.need("C")])
 	_chk(tag + "戰力唔夠：派陰兵攻佔唔得", ZD.capture_auto("A") == "weak" and not ZD.owned("A"))
@@ -762,6 +763,7 @@ func map_check(t, m, c: int, shots: bool) -> void:
 	sc.close_sheet(); await _w(t, 0.4)
 	# 客人、孤魂（跑一陣）
 	for sid in MD.stations(c): sim.sst(sid).unlocked = true
+	for sid in MD.stations(c): sim.st().counter[str(MD.st_def(sid).get("good", ""))] = 20.0   # [militia] 客人只要有供應嘅貨：櫃台擺貨
 	cam.center_on(mr.get_center())
 	for i in 36: await _w(t, 0.25)
 	var cu_ok = sim.custs.size() > 0

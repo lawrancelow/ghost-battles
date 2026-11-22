@@ -187,8 +187,8 @@ func logic(_t) -> void:
 	var ev6 = _run(sim, 5.2)
 	_chk("冇人擋 5 秒：偷一次", float(_cnt(ev6, "war_steal")), 1.0)
 	_chk("影響力 −1", MVW.inf(), 59.0)
+	sim.spawn_cust(); sim.spawn_cust()   # [militia] 客人只要有供應嘅貨：先有貨先出客，之後先賣清櫃台
 	sim.st().counter = {}
-	sim.spawn_cust(); sim.spawn_cust()
 	for cc in sim.custs: cc.st = "queue"
 	f.st = "bang"; f.t = 0.0; f.press = 0.0
 	ev6 = _run(sim, 5.2)
