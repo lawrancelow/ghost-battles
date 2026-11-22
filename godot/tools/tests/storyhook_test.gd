@@ -309,6 +309,7 @@ func _logic(t) -> void:
 	# 真 sim：等太耐離開嘅事件有 cid（[story] 掛鈎）
 	_reset_map(sim, 0)
 	for sid in MD.stations(0): sim.sst(sid).unlocked = true
+	for sid in MD.stations(0): sim.st().counter[str(MD.st_def(sid).get("good", ""))] = 30.0   # [militia] 客人只要有供應嘅貨：櫃台擺貨
 	sim.custs = []; sim.spawn_t = 0.0
 	sim.spawn_cust()
 	var evs = []
@@ -439,6 +440,7 @@ func _shots(t) -> void:
 	for i in 8:
 		if m.story.cur != null: m.story.skip_scene()
 		await _w(t, 0.2)
+	for sid in MD.stations(0): sc.sim.st().counter[str(MD.st_def(sid).get("good", ""))] = 30.0   # [militia] 客人只要有供應嘅貨：櫃台擺貨
 	sc._prefill(); await _w(t, 5.0)
 	# 客人四種氣泡
 	var cs = []
