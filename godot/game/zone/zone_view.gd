@@ -847,6 +847,7 @@ static func open_capture(main, zid: String) -> void:
 	var R = func(bb: String, sz := 16): var r = UIKit.rich(bb, sz, UIKit.INKTXT); body.add_child(r); return r
 	R.call("[b]%s[/b]　[color=#a8322a]%d[/color]" % [ZD.L("建議戰力", "建議戰力"), need], 18)
 	R.call("[b]%s[/b]　[color=%s]%d[/color]" % [ZD.L("你嘅陰兵戰力", "你的陰兵戰力"), "#3d7a3a" if pw >= need else "#a8322a", pw], 18)
+	if load("res://game/militia/ml_data.gd").power() > 0: R.call(load("res://game/militia/ml_ui.gd").cap_split_txt(), 14)   # [militia]
 	R.call(ZD.L("陰兵戰力 ＝ 陰兵數 × 民宅加成（民宅每升一級 +8%）。陰兵由民宅嘅遊魂自願當，會慢慢多。", "陰兵戰力 ＝ 陰兵數 × 民宅加成（民宅每升一級 +8%）。陰兵由民宅的遊魂自願加入，會慢慢增加。"), 14)
 	var names = []
 	for b in ZD._zbids(z): names.append(_bname(b))
@@ -857,7 +858,7 @@ static func open_capture(main, zid: String) -> void:
 		var nd = z.shops[b].get("need", {})
 		for f in nd: R.call(ZD.L("（%s 要「%s」升到 Lv%d 先起得，只可以起喺呢區）", "（%s 要「%s」升到 Lv%d 才能建，只能建在這區）") % [_bname(b), _bname(str(f)), int(nd[f])], 14)
 	body.add_child(UIKit.hsep())
-	var b1 = UIKit.btn(ZD.L("派陰兵攻佔（折損 %d 陰兵）", "派陰兵攻佔（折損 %d 陰兵）") % ZD.loss(zid), "gold")
+	var b1 = UIKit.btn(load("res://game/militia/ml_ui.gd").cap_btn_txt(zid), "gold")   # [militia] 有遊魂兵：寫埋遊魂兵折損
 	b1.disabled = pw < need
 	b1.pressed.connect(func():
 		if ZD.capture_auto(zid) == "ok":

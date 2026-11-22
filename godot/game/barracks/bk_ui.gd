@@ -41,6 +41,7 @@ static func panel(body: VBoxContainer, refresh: Callable) -> void:
 	# 待命
 	var v0 = _box(body, T("待命（攻佔資源區用）", "待命（攻佔資源區用）"))
 	_line(v0, T("待命陰兵 [b]%d[/b]　攻佔戰力 [b][color=#9c2219]%d[/color][/b]\n[font_size=12]喺地圖撳資源區「派陰兵攻佔」就用呢班；攻佔會折損約三成。[/font_size]", "待命陰兵 [b]%d[/b]　攻佔戰力 [b][color=#9c2219]%d[/color][/b]\n[font_size=12]在地圖點資源區「派陰兵攻佔」就用這批；攻佔會折損約三成。[/font_size]") % [BK.standby(), BK.power()], [])
+	load("res://game/militia/ml_ui.gd").bk_box(body)   # [militia] 遊魂兵（民兵）一欄
 	# 防衛
 	var v1 = _box(body, T("村子防衛（守村口、大排檔、已佔資源區）", "村子防衛（守村口、大排檔、已佔資源區）"))
 	var can_add = BK.standby() > 0

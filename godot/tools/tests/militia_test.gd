@@ -288,7 +288,7 @@ func _logic(t, m) -> void:
 	var t6 = 0
 	for u in mils: if int(J.num(u.ml)) == 6: u.hp = 0.0; t6 += 1; break
 	for u in B.units: if J.t(u.get("minion")) and J.num(u.side) == 0 and u.get("ml") == null: u.hp = 0.0; break
-	J.mc(B, "finish", [false, true])
+	J.mc(B, "finish", [false, true]); _close_result()
 	_chk("戰死一隊遊魂兵：加班戰甲 −25（60→35）；陰兵一隊 −25", ML.n_of(6) == 35 and absf(J.num(S.res.troops) - 95.0) < 0.5, [ML.n_of(6), S.res.troops])
 	B.active = false
 	# 唔係對外（襲擾戰：沒有出征記錄的野外戰）：冇遊魂兵、冇嘍囉
@@ -299,13 +299,13 @@ func _logic(t, m) -> void:
 		if u.get("ml") != null: n_m2 += 1
 		if J.t(u.get("foe_ml")): n_f2 += 1
 	_chk("村子襲擾戰：遊魂兵唔上陣、冇嘍囉", n_m2 == 0 and n_f2 == 0 and not J.t(B.get("ml_ext")), [n_m2, n_f2])
-	J.mc(B, "finish", [false, true]); B.active = false
+	J.mc(B, "finish", [false, true]); _close_result(); B.active = false
 	# 主線 1-1：新手，冇嘍囉
 	J.mc(B, "start", [0.0, 0.0])
 	var n_f3 = 0
 	for u in B.units: if J.t(u.get("foe_ml")): n_f3 += 1
 	_chk("主線 1-1（p1）：冇嘍囉", n_f3 == 0)
-	J.mc(B, "finish", [false, true]); B.active = false
+	J.mc(B, "finish", [false, true]); _close_result(); B.active = false
 	G["__nat_battle"] = ob; G["__nat_btSize"] = osz
 	S.cleared.erase("raid_test")
 	# ================= 8. 野外敵人新曲線 =================
@@ -372,6 +372,10 @@ func _logic(t, m) -> void:
 	m.mv_view.sim.paused = false
 
 func zid_a() -> String: return "A"
+func _close_result() -> void:   # 戰鬥結算框（舊 DOM 卡）：撳「回村子」收埋
+	var dl = J.G.get("$")
+	var okb = J.cl(dl, null, ["#b-ok"]) if dl != null else null
+	if okb != null and okb.get("onclick") != null: J.cl(J.gp(okb, "onclick"), okb, [])
 func _mono(tab: Array) -> bool:
 	var prev = -1
 	for row in tab:
@@ -412,4 +416,83 @@ func _shots(t, m) -> void:
 		cam.z = clampf(nv.size.x / 560.0, cam.z_min(), cam.z_max())
 		cam.center_on(p + Vector2(0, -40)); await _w(t, 1.0)
 		await _shot(t, "stall_m%d" % c)
+	if SHOT_MAPS.size(): _p("shots done"); return
+	await _scene_shots(t, m)
 	_p("shots done")
+
+const MB = preload("res://game/zone/zone_battle.gd")
+func _scene_shots(t, m) -> void:
+	var S = J.G.S
+	m.mv_view.sim.st().ci = 0.0; m.mv_view._after_move(); await _w(t, 1.5)
+	ZD.reveal_all(0)
+	await _skip(t, 4)
+	var sc = m.mv_view; var sim = sc.sim; var mv = sim.st()
+	sim.paused = false
+	for sid in mv.st: mv.st[sid].unlocked = true
+	mv.st["st_zhishan"].lv = 12.0; mv.st[ML.SID].lv = 26.0   # ★2 紙紮藤牌
+	S.erase("militia")
+	for sid in MD.stations(0):
+		var g = str(MD.st_def(sid).get("good", ""))
+		mv.counter[g] = 20.0
+	S.mat = {"m_strip": 200.0, "m_rope": 200.0, "m_bao": 200.0, "m_paper": 200.0, "m_wellwater": 200.0, "m_bamboo": 200.0}
+	# 排隊：一個遊魂兵客
+	sim.custs.clear()
+	var rec = null
+	for i in 200:
+		if sim.spawn_cust() and J.t(sim.custs[sim.custs.size() - 1].get("ml")): rec = sim.custs[sim.custs.size() - 1]; break
+		if sim.custs.size() >= 3: sim.custs.pop_front()
+	var nv = m.village; var cam = nv.zone_cam()
+	cam.z = clampf(nv.size.x / 420.0, cam.z_min(), cam.z_max())
+	var ctr = MD.v2(MD.layout(0).counter)
+	cam.center_on(ctr + Vector2(-40, -80)); await _w(t, 4.0)
+	await _shot(t, "ml_01_queue_recruit")
+	# 付錢 → 加入（飄字＋第一次劇情）
+	if rec != null and rec in sim.custs:
+		rec.got = rec.wants.duplicate(); sim._pay(rec)
+	await _w(t, 0.5)
+	await _shot(t, "ml_02_join_float")
+	await _w(t, 1.2)
+	await _shot(t, "ml_03_story")
+	await _skip(t, 8)
+	# 兵器檔資料卡
+	S.militia.n = {"2": 60.0, "1": 50.0, "0": 40.0}
+	sc.open_sheet(ML.SID); await _w(t, 1.2)
+	await _shot(t, "ml_04_stall_sheet")
+	sc.close_sheet(); await _w(t, 0.5)
+	# 兵營面板
+	S.bld["home"] = maxf(1.0, J.num(S.bld.get("home", 0))); S.bld["barracks"] = 3.0; S.res.troops = 180.0
+	BK.open_panel(); await _w(t, 1.2)
+	var sh = m.get("sheet")
+	if sh != null and sh.has_method("get_v_scroll_bar"): pass
+	await _shot(t, "ml_05_barracks_panel")
+	var body = m.get("sheet_body")
+	if body != null:
+		var sc2 = body.get_parent()
+		while sc2 != null and not (sc2 is ScrollContainer): sc2 = sc2.get_parent()
+		if sc2 is ScrollContainer:
+			for k in body.get_children():
+				if k is PanelContainer and str(k.get_child(0).get_child(0).text if k.get_child(0).get_child_count() > 0 and k.get_child(0).get_child(0) is RichTextLabel else "").contains("遊魂兵"):
+					sc2.scroll_vertical = int(k.position.y) - 40
+			await _w(t, 0.6)
+			await _shot(t, "ml_06_barracks_militia")
+	if m.has_method("close_sheet"): m.close_sheet()
+	await _w(t, 0.5)
+	# 出擊構成：親自出征攻佔 B（p2.5 → 嘍囉 1 隊）及主線 2 關級（p6 野外王）
+	_team3(S)
+	S.zone.own.erase("0:C")
+	var r = ZD.start_battle("cap", "C"); await _f(t, 2)
+	if MB.cur != null:
+		MB.t_skip_march(); await _w(t, 1.5)
+		await _shot(t, "ml_07_battle_cap")
+		MB.cur.quit(); await _f(t, 3)
+	var okb = J.cl(J.G.get("$"), null, ["#b-ok"]) if J.G.get("$") != null else null
+	if okb != null and okb.get("onclick") != null: J.cl(J.gp(okb, "onclick"), okb, [])
+	await _w(t, 1.0); ZD.poll()
+	for i in 60:
+		if not MB.busy(): break
+		await _w(t, 0.3)
+	# 攻佔面板
+	S.res.troops = 240.0
+	load("res://game/zone/zone_view.gd").open_capture(m, "C"); await _w(t, 1.0)
+	await _shot(t, "ml_08_capture_sheet")
+	if m.has_method("close_sheet"): m.close_sheet()

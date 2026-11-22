@@ -541,6 +541,7 @@ func _draw_txt(n: CanvasItem) -> void:
 		var head = (36.0 if mn else (92.0 if bo else 72.0)) * S * BtDraw.scale_of(u) / (0.75 if mn else (1.7 if bo else 1.32))
 		var wp = b2w(J.num(u.x) + P.ox * 0.4, uy_b(u)) + Vector2(0, -head - 6.0 * S)
 		_at(n, wp)
+		if u.get("ml") != null: load("res://game/militia/ml_art.gd").tag(n, wp, 1.0 / z, int(J.num(u.ml)))   # [militia] 遊魂兵頭頂兵器牌
 		var bw = 26.0 if mn else (60.0 if bo else 42.0)
 		if mn and hp >= J.num(u.maxhp) - 0.01: continue   # 陰兵滿血唔出血條（戰場唔好太亂）
 		n.draw_style_box(_box(Color(0, 0, 0, 0.65), 2), Rect2(-bw / 2 - 1, -1, bw + 2, 7))
@@ -669,6 +670,7 @@ func _build_ui() -> void:
 	var pre = {"boss": ZD.L("王戰", "王戰"), "cap": ZD.L("攻佔", "攻佔"), "raid": ZD.L("迎戰鬼潮", "迎戰鬼潮")}.get(kind, "")
 	if raid_at != null: pre = ZD.L("迎戰", "迎戰")   # [raid] 標題已經係「餓鬼襲擾包子鋪」
 	title_l.text = "%s　%s" % [pre, L(nm)]
+	load("res://game/militia/ml_ui.gd").battle_bar(self)   # [militia] 出擊構成：陰兵＋遊魂兵 對 嘍囉
 	_sync_btns()
 func _ls(k: String, v: String) -> void:
 	var ls = J.G.get("localStorage")

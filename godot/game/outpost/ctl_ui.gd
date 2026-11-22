@@ -93,6 +93,7 @@ static func pow_info(t: Dictionary) -> Array:
 	var my = int(t.get("my_pow", 0)); var foe = int(t.get("foe_pow", 0))
 	if foe <= 0: return ["", L("撳一下入去", "點一下進入"), C_OK]
 	var lab = L("陰兵 %d／建議 %d", "陰兵 %d／建議 %d") if str(t.get("kind")) == "res" else L("鬼力 %d／敵 %d", "鬼力 %d／敵 %d")
+	if str(t.get("kind")) == "res" and load("res://game/militia/ml_data.gd").power() > 0: lab = L("兵力 %d／建議 %d", "兵力 %d／建議 %d")   # [militia] 陰兵＋遊魂兵
 	var r = float(my) / float(maxi(1, foe))
 	if r >= 1.0: return [lab % [my, foe], L("勝算高", "勝算高"), C_OK]
 	if r >= 0.8: return [lab % [my, foe], L("有啲險", "有點險"), C_MID]

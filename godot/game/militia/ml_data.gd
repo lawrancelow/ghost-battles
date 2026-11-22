@@ -384,7 +384,7 @@ static func battle_units(B: Dictionary, stg: Dictionary, wild) -> void:
 		B.units.append({"side": 0.0, "k": "youhun", "name": "遊魂兵", "minion": true, "ml": float(t), "hp": hp, "maxhp": hp, "atk": (9 + 2.2 * lv) * k * float(TUNE.atk_k),
 			"range": 38.0, "spd": 52.0, "x": 104.0 - floor(i / 4.0) * 14, "lane": (i % 4) * 0.95 + 0.4, "energy": 0.0, "sk": null, "st": {}, "cd": randf()})
 	var p = J.num(stg.get("p", 1)); var F = foe_army(p); var n = foe_squads(F)
-	B["ml_foe"] = float(F); B["ml_my"] = float(army_pow()); B["ml_sq"] = [float(int(B.get("squads", 0))), float(sq.size()), float(n)]
+	B["ml_foe"] = float(F); B["ml_my"] = float(int(B.get("squads", 0))) * float(TUNE.sq) * ZD.troop_mul() + float(power()); B["ml_sq"] = [float(int(B.get("squads", 0))), float(sq.size()), float(n)]
 	if n <= 0: return
 	var kk = float(F) / (float(TUNE.sq) * n); var L0 = lr(p)
 	var fk = _fodder(stg)

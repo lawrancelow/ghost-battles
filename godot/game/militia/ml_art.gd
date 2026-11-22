@@ -72,3 +72,9 @@ static func draw_stall(ctx: Ctx, p: Vector2, w: float, tier: int) -> Rect2:
 		draw_icon(ctx, tt, x + w * (0.25 + 0.25 * k), y + h * 0.40 + 30, 26.0)
 	Art.rr(ctx, x + 2, y + h * 0.86, w - 4, 8, 2, "#c8a878", "#5a3a1a", 1)               # 檯面
 	return Rect2(x, y, w, h)
+
+# 戰場：遊魂兵頭頂細兵器牌（畫面 px；k＝世界→畫面縮放倒數）；畫完還原 _at 嘅變換
+static func tag(n: CanvasItem, wp: Vector2, k: float, t: int) -> void:
+	var ctx = Ctx.new(n, Transform2D(0.0, Vector2(k, k), 0.0, wp))
+	draw_icon(ctx, t, 0.0, -4.0, 20.0)
+	n.draw_set_transform(wp, 0, Vector2(k, k))
