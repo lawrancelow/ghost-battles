@@ -202,7 +202,8 @@ static func ghost_state(i: int, t: float, x: float, y: float, w: float, h: float
 	var cyc = int(floor(tt / ZQ_PER)); var u = fposmod(tt, ZQ_PER) / ZQ_PER
 	var gh: float = G.gh; var half = gh * ZQ_HALF
 	var mouth: Vector2 = G.mouth; var ctr: Vector2 = G.ctr
-	var ang = TAU * (float(i) / ZQ_N + cyc * 0.37 + (_r(91 + i * 13, cyc) - 0.5) * 0.12)
+	var kk = cyc * ZQ_N - i   # 全域第幾次出場（每 PER/N 秒一隻）：用黃金角分方向 → 同時喺場嘅幾隻一定散開（左右前後）
+	var ang = kk * 2.39996 + (_r(91 + i * 13, cyc) - 0.5) * 0.25
 	var dir = Vector2(cos(ang), sin(ang))
 	var edge = ctr + Vector2(dir.x * (float(G.RX) - half), dir.y * float(G.RY)) * 0.95
 	var spin = 1.0 if _r(97 + i, cyc) < 0.5 else -1.0
