@@ -58,7 +58,7 @@ static func panel(body: VBoxContainer, refresh: Callable) -> void:
 		_line(v1, "%s　Lv%d" % [J.str(g.name), int(BK.glv(g))], [_b(T("換人", "換人"), "", true, func(): open_cap_pick("cap_def", gid)), _b(T("撤下", "撤下"), "", true, func(): BK.set_job(gid, "idle"); rf.call())])
 	if a.cap_def.size() < mx: _line(v1, "[color=#8a7650]" + T("空缺", "空缺") + "[/color]", [_b(T("委任", "委任"), "gold", true, func(): open_cap_pick("cap_def", null))])
 	# 清剿
-	var v2 = _box(body, T("野外清剿（已打低王嘅野外區）", "野外清剿（已打低王的野外區）"))
+	var v2 = _box(body, T("野外清剿（已打低王嘅野外區）", "野外清剿（已打倒王的野外區）"))
 	var zs = BK.sweep_zones()
 	if zs.is_empty():
 		v2.add_child(_rich(T("[color=#8a7650]未有可以清剿嘅野外區：先打低野外區入面所有王。[/color]", "[color=#8a7650]還沒有可以清剿的野外區：先打倒野外區裡所有王。[/color]"), 13))

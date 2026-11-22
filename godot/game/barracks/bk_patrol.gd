@@ -43,9 +43,9 @@ func sync(n: int, org: Vector2, bp: Vector2) -> void:
 		if s.guard:
 			s["home"] = bp + GUARDS[i]; s["p"] = s.home; s["dir"] = -1.0 if i == 0 else 1.0
 		else:
-			var keys = NODES.keys(); var k = keys[(i * 3) % keys.size()]
+			var keys = NODES.keys(); var k = keys[(i * 2 + 1) % keys.size()]   # 每隻起點唔同（唔會疊埋一齊行）
 			s["p"] = npos(k) + Vector2(rng.randf_range(-6, 6), rng.randf_range(-4, 4)); s["cur"] = k; s["prev"] = ""; s["tgt"] = _next(k, "")
-			s["wait"] = 0.0
+			s["wait"] = 0.0; s["spd"] = SPEED * rng.randf_range(0.85, 1.15)   # 快慢少少唔同，唔會一路並排
 		sol.append(s)
 
 func _next(k: String, prev: String) -> String:
@@ -82,7 +82,7 @@ func step(dt: float, hero: Vector2) -> void:
 			s.prev = s.cur; s.cur = s.tgt; s.tgt = _next(s.cur, s.prev)
 			if rng.randf() < 0.35: s.wait = rng.randf_range(0.8, 2.5)   # 偶然企定望吓
 			continue
-		var mv = minf(L, SPEED * dt)
+		var mv = minf(L, float(s.get("spd", SPEED)) * dt)
 		s.p += v / L * mv
 		if absf(v.x) > 1.0: s.dir = 1.0 if v.x > 0 else -1.0
 		s.pose = "walk"

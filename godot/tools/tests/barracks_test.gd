@@ -198,6 +198,17 @@ func all(t) -> void:
 	var P = BP.new(3)
 	var org = Vector2(1000, 1000); var bp = org + BP.NODES.D + Vector2(28, -30)
 	_chk("巡邏數量：每 25 隻 1 個、最多 8、冇兵營 0", BP.count_for(60, true) == 3 and BP.count_for(1000, true) == 8 and BP.count_for(500, false) == 0 and BP.count_for(0, true) == 0)
+	var P8 = BP.new(5); P8.sync(8, org, bp)
+	var close = {}
+	for f in 200:
+		P8.step(0.05, Vector2.INF)
+		for i in range(2, 8):
+			for j in range(i + 1, 8):
+				if P8.sol[i].p.distance_to(P8.sol[j].p) < 8.0:
+					var kk = "%d-%d" % [i, j]
+					close[kk] = close.get(kk, 0) + 1
+	var stuck = close.keys().filter(func(k): return close[k] > 100)
+	_chk("8 隻巡邏：唔會兩隻疊埋一齊行", stuck.is_empty(), close)
 	P.sync(4, org, bp)
 	for i in 30: P.step(0.05, Vector2.INF)
 	var s3 = P.sol[3]
