@@ -11,6 +11,7 @@ const CE = preload("res://game/outpost/chain_eco.gd")   # [chain] 拓展建築�
 const CM = preload("res://game/outpost/mat.gd")           # [chain] 材料庫
 const FURNACE_CD := 300.0
 const JOSS = preload("res://game/joss/joss.gd")   # [joss] 化寶爐＝陽間包裹
+const RAID = preload("res://game/raid/raid.gd")   # [raid] 惡鬼襲擾：停工／壞咗嘅建築唔產出
 const FEAST_CD := 1200.0
 const FEAST_NEED := 350.0
 static var _trans = null
@@ -130,6 +131,7 @@ static func rates_per_min() -> Dictionary:
 	var r = {"wood": 0.0, "rice": 0.0, "planks": 0.0, "buns": 0.0, "troops": 0.0, "coins": 0.0, "woodUse": 0.0, "riceUse": 0.0, "bunUse": 0.0, "exp": 0.0}
 	for g in S.ghosts:
 		if not J.t(g.get("post")): continue
+		if RAID.post_down(J.str(g.post)): continue   # [raid] 被襲擾：停工／壞咗
 		var lv = glv(g)
 		match J.str(g.post):
 			"wood": r.wood += (9 + 0.7 * lv) * mult("wood")
@@ -147,7 +149,7 @@ static func rates_per_min() -> Dictionary:
 				r.drillBy.append([g.k, o])
 			"store": if J.str(g.k) == "toyol": r.coins += 2 + lv * 0.25
 		r.exp += 0.6
-	if J.t(S.bld.get("home")): r.troops += 1.2 + 1.3 * J.num(S.bld.home)   # 村裡的遊魂自願當陰兵（民宅）
+	if J.t(S.bld.get("home")) and not RAID.post_down("home"): r.troops += 1.2 + 1.3 * J.num(S.bld.home)   # 村裡的遊魂自願當陰兵（民宅）
 	return r
 
 # 推進 dt 秒的產出（含加工鏈，原料不足時按比例）；ratesPerMin 經 J.G 叫（rivals 會包）

@@ -13,6 +13,7 @@ const ZD = preload("res://game/zone/zone_data.gd")   # [zone] 分區地圖
 const ZV = preload("res://game/zone/zone_view.gd")   # [zone]
 const ZCAM = preload("res://game/zone/zone_cam.gd")   # [zone]
 const ZW = preload("res://game/zone/zone_walk.gd")   # [zone]
+const RV = preload("res://game/raid/raid_view.gd")   # [raid] 惡鬼襲擾：預告、損壞外觀、迎戰／修理
 
 var V: Dictionary
 var world: Node2D
@@ -75,6 +76,7 @@ func _build() -> void:
 		if m: CB.hide_yard(m))
 	add_child(yard_back)
 	VS.attach(self)   # [villageart]
+	RV.attach(self)   # [raid]
 
 # ---------------- 每幀 ----------------
 func _process(_dt: float) -> void:
@@ -186,6 +188,7 @@ func zone_tap(p: Vector2) -> void:
 	var w = zone_s2w(p)
 	var hit = extra_hit(p)
 	if hit != "": _extra_tap(hit); return
+	if RV.tap(m, w): return   # [raid] 撳惡鬼迎戰／撳壞咗嘅建築修理
 	if ZV.tap(m, w): return
 	var zid = ZD.zone_at(w)
 	var tp = str(ZD.zone(zid).get("type", "")) if zid != "" else ""
@@ -210,7 +213,7 @@ func _static(key: String, y: float, sig, animated: bool, fn: Callable) -> void:
 
 func _draw_static(c: CanvasItem, key: String) -> void:
 	var s = statics[key]
-	var ctx = Ctx.new(c, Transform2D(0, Vector2(0, -c.position.y)))
+	var ctx = Ctx.new(c, RV.tilt(key, Transform2D(0, Vector2(0, -c.position.y)), c.position.y))   # [raid] 損壞建築歪斜
 	Art.ink_w = 0.85 if zone else 0.0   # [seat16] 村子靜態物件（建築、樹、稻田、擺設）加墨線描邊
 	s.fn.call(ctx)
 	Art.ink_w = 0.0

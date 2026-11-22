@@ -17,6 +17,7 @@
 extends RefCounted
 
 const M = preload("res://game/outpost/mat.gd")
+const RAID = preload("res://game/raid/raid.gd")   # [raid] 資源區被襲擾：停工／壞咗
 
 static func S():
 	var s = J.G.get("S")
@@ -121,6 +122,7 @@ static func rates() -> Dictionary:
 	for u in units:
 		var bid: String = u[0]; var d = M.bld(bid); var wf: float = u[1]; var p = bid
 		if not (s.get("bld") is Dictionary) or J.num(s.bld.get(p, 0)) <= 0: continue
+		if RAID.bid_down(bid): continue   # [raid]
 		if not o.has(bid): o[bid] = {"w": 0, "out": {}, "in": {}}
 		var e = o[bid]
 		e.w += 1
