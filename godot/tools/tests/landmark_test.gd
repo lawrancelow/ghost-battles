@@ -528,32 +528,32 @@ func _zq_check(t, m, shots: bool) -> void:
 		_chk(tag + "陣地挖咗虛空（之後行得到）", blk.is_empty(), blk)
 	_chk("散件做咗通用道具（Spr 登記，連新汽水樽／膠袋汽水）", Spr.ok("zq_ingots") and Spr.ok("zq_paper_horse") and Spr.ok("zq_dancer") and Spr.ok("zq_soda_bottles") and Spr.ok("zq_soda_bags"))
 	_chk("舊綁繩鬼魂圖冇入包", not ResourceLoader.exists("res://assets/spr/zqg_yanked.webp"))
-	# 動態：純函數抽樣 60 秒（唔使畫）：絕不出木樁圈、同時 3～5 隻、冇綁繩、浮現／飄／掙扎／縮返齊、前排木樁永遠喺鬼魂前面
+	# 動態：純函數抽樣 60 秒（唔使畫）：絕不出木樁圈外緣、同時 ≥ 4 隻、分佈全陣（左右前後）、冇綁繩、各段齊、撞屏障停 ≥ 1 秒
 	var w = 375.0; var h = LA.size_of("zhiqian").y; var G = LA._geo(500, 500, w, h)
-	var mo = 0.0; var vis_ok = 0; var n = 0; var poses = {}; var rip = false; var smoke = false; var maxv = 0; var front_bad = 0
-	var fronts = []
-	for kn in LA.ZQ_KNOTS: if kn.y > 0.6: fronts.append(Vector2(500 - w / 2.0 + kn.x * w, G.top + (kn.y - 0.07) * h))   # 前排木樁頂
+	var mo = 0.0; var vis4 = 0; var spread = 0; var n = 0; var poses = {}; var rip = false; var smoke = false; var maxv = 0
 	var tt = 0.0
 	while tt < 60.0:
-		var v = 0
+		var v = 0; var quads = {}
 		for i in LA.ZQ_N:
 			var o = LA.ghost_state(i, tt, 500, 500, w, h)
-			if float(o.u) < 0.88:
+			if float(o.u) < 0.80 and float(o.a) > 0.0:
 				v += 1
 				poses[str(o.pose)] = 1
 				mo = maxf(mo, LA.inside(G, o.pos, float(o.gh) * LA.ZQ_HALF))
-				for fp in fronts:
-					if absf(o.pos.x - fp.x) < float(o.gh) * LA.ZQ_HALF + 8.0 and o.pos.y > fp.y + 3.0: front_bad += 1
+				var d = o.pos - G.ctr
+				if d.length() > 25.0: quads[("R" if d.x > 0 else "L") + ("F" if d.y > 0 else "B")] = 1
 			if float(o.rip) > 0.5: rip = true
 			if float(o.smoke) > 0.5: smoke = true
-		if v >= 3: vis_ok += 1
+		if v >= 4: vis4 += 1
+		if quads.size() >= 3: spread += 1
 		maxv = maxi(maxv, v)
 		n += 1; tt += 0.05
-	_chk("鬼魂絕不越過木樁圈（60 秒抽樣，連身闊）", mo <= 1.0, mo)
-	_chk("前排木樁永遠喺鬼魂前面（鬼魂腳位唔低過前排木樁頂）", front_bad == 0, front_bad)
-	_chk("同時 3～5 隻（≥ 85% 時間 ≥ 3 隻、最多 5）", float(vis_ok) / n >= 0.85 and maxv <= 5, [float(vis_ok) / n, maxv])
+	_chk("鬼魂絕不越過木樁圈外緣（60 秒抽樣，連身闊）", mo <= 1.0, mo)
+	_chk("同時 ≥ 4 隻（≥ 80% 時間）、最多 5", float(vis4) / n >= 0.8 and maxv <= 5, [float(vis4) / n, maxv])
+	_chk("分佈全陣：≥ 50% 時間同時喺 3 個方位以上（左前／左後／右前／右後）", float(spread) / n >= 0.5, float(spread) / n)
 	_chk("冇綁繩姿勢、用無繩新圖（浮現／飄／螺旋／掙扎／縮返）", not poses.has("yanked") and poses.has("emerge") and poses.has("drift") and poses.has("spiral") and poses.has("press") and poses.has("recoil") and Spr.ok("zqg2_press") and not Spr.ok("zqg_yanked"), poses.keys())
 	_chk("屏障漣漪、化煙散去都有", rip and smoke)
+	_chk("撞屏障停 ≥ 1 秒", 0.24 * LA.ZQ_PER >= 1.0, 0.24 * LA.ZQ_PER)
 	var o1 = LA.ghost_state(0, 1.0, 500, 500, w, h); var o2 = LA.ghost_state(0, 1.0, 500, 500, w, h)
 	_chk("動態係時間嘅純函數（每格唔使存狀態）", o1.pos == o2.pos and o1.a == o2.a)
 	# 遊戲入面：解鎖、撳、卡、去
@@ -617,12 +617,12 @@ func _zq_check(t, m, shots: bool) -> void:
 	var top = nv.world.get_node_or_null("lm_zq_top"); var vn = nv.world.get_node_or_null("va_night")
 	_chk("鬼魂層喺夜色層之上、泡泡層之下（唔畀夜色壓暗）", top != null and top.visible and vn != null and top.get_index() > vn.get_index() and top.get_index() < nv.top_ui.get_index() and top.get_index() > nv.ysort.get_index(), [top.get_index() if top else -1, vn.get_index() if vn else -1])
 	if shots:
-		for k in 4: await _shot(t, "zq_anim_night_%d" % k); await _w(t, 0.45)
+		for k in 4: await _shot(t, "zq_anim_night_%d" % k); await _w(t, 1.5)
 		var VS = load("res://game/village_style.gd")   # 白天對照：熄暗影、夜色暈邊
 		VS.dark_on = false
 		if vn: vn.visible = false
 		await _w(t, 0.3)
-		for k in 4: await _shot(t, "zq_anim_day_%d" % k); await _w(t, 0.45)
+		for k in 4: await _shot(t, "zq_anim_day_%d" % k); await _w(t, 1.5)
 		VS.dark_on = true
 		if vn: vn.visible = true
 	_cam(m, ZD.zrect("village").get_center()); await _w(t, 0.6)
