@@ -694,7 +694,7 @@ static func _fog(c: CanvasItem, ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float,
 	ctx.globalAlpha = da * ra
 	var need = ZD.need(zid); var pw = ZD.power()
 	_txt(ctx, ZD.L("建議戰力 %d", "建議戰力 %d") % need, cx, cy + px * 0.4, px + 2, "#ffd27a")
-	_txt(ctx, ZD.L("你嘅陰兵戰力 %d", "你的陰兵戰力 %d") % pw, cx, cy + px * 2.0, px, "#9fe39a" if pw >= need else "#ff9a7a")
+	_txt(ctx, (ZD.L("你嘅出擊兵力 %d", "你的出擊兵力 %d") if load("res://game/militia/ml_data.gd").power() > 0 else ZD.L("你嘅陰兵戰力 %d", "你的陰兵戰力 %d")) % pw, cx, cy + px * 2.0, px, "#9fe39a" if pw >= need else "#ff9a7a")   # [militia] 有遊魂兵：叫「出擊兵力」
 	fog_log.append(["power", zid])
 	ctx.globalAlpha = da * ra * (0.75 + 0.25 * sin(t * 3.0))
 	_plate(ctx, ZD.L("撳我攻佔", "點我攻佔"), cx, cy + px * 3.8, px, "rgba(150,40,30,.95)")
@@ -846,7 +846,7 @@ static func open_capture(main, zid: String) -> void:
 	var need = ZD.need(zid); var pw = ZD.power()
 	var R = func(bb: String, sz := 16): var r = UIKit.rich(bb, sz, UIKit.INKTXT); body.add_child(r); return r
 	R.call("[b]%s[/b]　[color=#a8322a]%d[/color]" % [ZD.L("建議戰力", "建議戰力"), need], 18)
-	R.call("[b]%s[/b]　[color=%s]%d[/color]" % [ZD.L("你嘅陰兵戰力", "你的陰兵戰力"), "#3d7a3a" if pw >= need else "#a8322a", pw], 18)
+	R.call("[b]%s[/b]　[color=%s]%d[/color]" % [ZD.L("你嘅出擊兵力", "你的出擊兵力") if load("res://game/militia/ml_data.gd").power() > 0 else ZD.L("你嘅陰兵戰力", "你的陰兵戰力"), "#3d7a3a" if pw >= need else "#a8322a", pw], 18)   # [militia]
 	if load("res://game/militia/ml_data.gd").power() > 0: R.call(load("res://game/militia/ml_ui.gd").cap_split_txt(), 14)   # [militia]
 	R.call(ZD.L("陰兵戰力 ＝ 陰兵數 × 民宅加成（民宅每升一級 +8%）。陰兵由民宅嘅遊魂自願當，會慢慢多。", "陰兵戰力 ＝ 陰兵數 × 民宅加成（民宅每升一級 +8%）。陰兵由民宅的遊魂自願加入，會慢慢增加。"), 14)
 	var names = []

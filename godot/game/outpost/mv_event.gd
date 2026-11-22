@@ -260,6 +260,7 @@ static func prod_rate(P, sim, sid: String) -> float:   # 每秒件數（估算�
 static func make_order(P, sim) -> Dictionary:
 	var cands = []
 	for sid in _unl(sim):
+		if not load("res://game/militia/ml_data.gd").order_ok(sim, sid): continue   # [militia] 委託單都只要有供應嘅貨（兵器唔入委託單）
 		var r = prod_rate(P, sim, sid)
 		if r > 0.0: cands.append([sid, r])
 	if cands.is_empty(): return {}

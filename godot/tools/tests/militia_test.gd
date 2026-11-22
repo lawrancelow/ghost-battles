@@ -131,6 +131,8 @@ func _logic(t, m) -> void:
 	sim.war.ws().occ[str(ci)] = "st_douhua"
 	_chk("被孤魂霸咗嘅台：有貨都唔算有供應", ML.supply(sim, "st_douhua") == 0 and not ML.supplied(sim).has("m_douhua"))
 	sim.war.ws().occ = {}
+	mv.counter = {}
+	_chk("委託單：冇料冇貨嘅台唔入單、兵器永遠唔入單", not ML.order_ok(sim, "st_douhua") and not ML.order_ok(sim, ML.SID) and ML.order_ok(sim, "st_shoubao"))
 	# ================= 2. 高級客比例上限 =================
 	_clear_supply(sim)
 	var allg = []
@@ -281,7 +283,7 @@ func _logic(t, m) -> void:
 		if J.t(u.get("minion")) and J.num(u.side) == 0 and u.get("ml") == null: n_y += 1; ytop = maxf(ytop, J.num(u.maxhp))
 		if u.get("ml") != null: n_m += 1; mils.append(u); mtop = maxf(mtop, J.num(u.maxhp))
 		if J.t(u.get("foe_ml")): n_f += 1; foes.append(u)
-	_chk("主線 3-3：陰兵 4 隊（120÷25）＋遊魂兵 5 隊＋敵方嘍囉 5 隊（F=285）", n_y == 4 and n_m == 5 and n_f == 5 and int(J.num(B.ml_foe)) == 285, [n_y, n_m, n_f, B.get("ml_foe")])
+	_chk("主線 3-3：陰兵 4 隊（120÷25）＋遊魂兵 5 隊＋敵方嘍囉 5 隊（F=255）", n_y == 4 and n_m == 5 and n_f == 5 and int(J.num(B.ml_foe)) == 255, [n_y, n_m, n_f, B.get("ml_foe")])
 	_chk("遊魂兵比陰兵脆（最強一隊血 < 陰兵一隊血）", mtop < ytop, [mtop, ytop])
 	_chk("嘍囉造型用嗰關小怪（殭屍）、屬敵方", foes.size() > 0 and str(foes[0].k) == "zombie" and J.num(foes[0].side) == 1, foes[0].k if foes.size() else "")
 	# 戰死：殺一隊加班戰甲遊魂兵、一隊陰兵，撤退結算
@@ -309,7 +311,7 @@ func _logic(t, m) -> void:
 	G["__nat_battle"] = ob; G["__nat_btSize"] = osz
 	S.cleared.erase("raid_test")
 	# ================= 8. 野外敵人新曲線 =================
-	var pts = {1.0: 0, 2.0: 0, 3.0: 60, 5.0: 120, 7.0: 180, 11.0: 285, 15.0: 330, 20.0: 375, 23.0: 420, 30.0: 420}
+	var pts = {1.0: 0, 2.0: 0, 3.0: 60, 5.0: 120, 7.0: 180, 11.0: 255, 15.0: 320, 20.0: 360, 23.0: 410, 30.0: 410}
 	var cv_ok = true; var got = {}
 	for p in pts:
 		got[p] = ML.foe_army(p)
@@ -396,6 +398,69 @@ func _all_maps_have_stall() -> bool:
 			var q = Vector2(float(mk.st[sid][0]), float(mk.st[sid][1]))
 			if absf(q.x - p.x) < 120.0 and absf(q.y - p.y) < 120.0: _p("近 %s %s %s" % [ck, sid, q]); return false
 	return true
+
+# ================= 平衡模擬：兵對兵（只計小隊：名鬼無敵唔出手、敵方主將移走），睇三種配置嘅勝負同剩血 =================
+func balance(t) -> void:
+	var m = await _boot(t)
+	var S = J.G.S
+	if m.get("mv_view") != null and m.mv_view.sim != null: m.mv_view.sim.paused = true
+	_team3(S)
+	var B = J.G.Battle; var G = J.G
+	var ob = G.get("__nat_battle"); var osz = G.get("__nat_btSize")
+	G["__nat_battle"] = func(_t, _a): return true
+	G["__nat_btSize"] = func(_t, _a): return [390.0, 560.0]
+	var TB = [1.0, 1.08, 1.16, 1.32, 1.48, 1.64]
+	var TE = [0, 1, 2, 3, 4, 5]      # 預計嗰關兵器級
+	var rows = []
+	for c in [0, 1, 2, 3, 4, 5]:
+		var p = J.num(J.G.CHAPTERS[c].stages[2].p)
+		S.lv = float(clampi(int(round(ML.lr(p))), 1, 20))
+		S.bld["barracks"] = round((TB[c] - 1.0) / 0.08); S.bld["home"] = maxf(1.0, J.num(S.bld.get("home", 1)))
+		BK.st(); BK.st()["def"] = 0.0; BK.st()["sweep"] = {}
+		var cfgs = [["只靠陰兵", 200, {}], ["陰兵+遊魂兵（預計兵器）", 200, {str(TE[c]): 150.0}], ["陰兵+遊魂兵（加班戰甲）", 200, {"6": 150.0}], ["陰兵減半+遊魂兵", 100, {str(TE[c]): 150.0}]]
+		for cf in cfgs:
+			var res = []
+			for rep in 3:
+				S.res.troops = float(cf[1]); S["militia"] = {"v": 1.0, "n": (cf[2] as Dictionary).duplicate()}
+				res.append(_duel(B, c))
+			var w = 0; var ours = 0.0; var foes = 0.0; var tt = 0.0
+			for r in res:
+				if r.win: w += 1
+				ours += r.our; foes += r.foe; tt += r.t
+			var line = "BAL 第%d關 x-3 p%.0f F=%d　%s：兵力 %d　勝 %d/3　我方剩血 %d%%　敵方剩血 %d%%　%.0f 秒" % [c + 1, p, ML.foe_army(p), cf[0], int(J.num(B.get("ml_my", 0))), w, int(ours / 3.0 * 100), int(foes / 3.0 * 100), tt / 3.0]
+			_p(line); rows.append(line)
+	G["__nat_battle"] = ob; G["__nat_btSize"] = osz
+	S.erase("militia")
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+func _duel(B, c: int) -> Dictionary:
+	J.mc(B, "start", [float(c), 2.0])
+	var keep = []
+	for u in B.units:
+		if J.num(u.side) == 0 and not J.t(u.get("minion")):
+			u.hp = 1e9; u.maxhp = 1e9; u.atk = 0.0; u.spd = 0.0; u.sk = null; u.x = 16.0; keep.append(u)
+		elif J.num(u.side) == 1 and not J.t(u.get("minion")):
+			if not keep.any(func(x): return J.num(x.side) == 1 and not J.t(x.get("minion"))):   # 留一隻敵方主將做木樁（唔郁唔打、打唔死），免戰鬥提早結算
+				u.hp = 1e9; u.maxhp = 1e9; u.atk = 0.0; u.spd = 0.0; u.sk = null; u.x = 386.0; u.energy = 0.0; keep.append(u)
+		else: keep.append(u)
+	B.units = keep
+	B.adviser = null
+	var tt = 0.0
+	for i in 5400:
+		J.mc(B, "update", [1.0 / 30.0]); tt += 1.0 / 30.0
+		var my = 0; var fo = 0
+		for u in B.units:
+			if J.num(u.hp) <= 0 or not J.t(u.get("minion")): continue
+			if J.num(u.side) == 0: my += 1
+			else: fo += 1
+		if my == 0 or fo == 0 or B.get("result") != null: break
+	var oh = 0.0; var om = 0.0; var fh = 0.0; var fm = 0.0
+	for u in B.units:
+		if not J.t(u.get("minion")): continue
+		if J.num(u.side) == 0: oh += maxf(0.0, J.num(u.hp)); om += J.num(u.maxhp)
+		else: fh += maxf(0.0, J.num(u.hp)); fm += J.num(u.maxhp)
+	var r = {"win": fh <= 0.0 and oh > 0.0, "our": oh / maxf(1.0, om), "foe": fh / maxf(1.0, fm), "t": tt}
+	B.active = false; B.result = null
+	return r
 
 # ================= 截圖 =================
 func _shots(t, m) -> void:

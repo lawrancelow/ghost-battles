@@ -55,7 +55,8 @@ const TIERS := [
 		"d": ["地府集團配發：打爛唔賠，打贏唔加薪。", "地府集團配發：打壞不賠，打贏不加薪。"]},
 ]
 # 敵方兵力曲線：[關卡難度 p, 兵力 F]，中間直線插值；p 以下＝0、以上＝最尾
-const FOE_CURVE := [[2.0, 0.0], [3.0, 60.0], [7.0, 180.0], [11.0, 285.0], [15.0, 330.0], [20.0, 375.0], [23.0, 420.0]]
+#   （militia_test balance 兵對兵模擬調過：只靠陰兵第 3 關起輸、陰兵＋預計兵器遊魂兵贏、兵器越好剩血越多）
+const FOE_CURVE := [[2.0, 0.0], [3.0, 60.0], [7.0, 180.0], [11.0, 255.0], [15.0, 320.0], [20.0, 360.0], [23.0, 410.0]]
 # 資源區「派兵攻佔」需要兵力倍數（按關；第 1 關兵器檔啱啱開，唔加）
 const RES_MUL := [1.0, 1.15, 1.25, 1.30, 1.35, 1.40]
 
@@ -125,6 +126,10 @@ static func supplied(sim) -> Array:   # 而家客人可以要嘅貨
 		if lv == 2: act.append(g)
 		elif lv == 1: can.append(g)
 	return act if act.size() else can
+# 委託單（mv_event.make_order 掛鈎）：兵器唔入單；其他要有供應（料夠／有貨）
+static func order_ok(sim, sid: String) -> bool:
+	if not on(): return true
+	return sid != SID and supply(sim, sid) > 0
 static var _hi := {}
 static func high_goods(ci: int) -> Array:   # 每張圖最貴 high_top 樣貨（唔計兵器）
 	if _hi.has(ci): return _hi[ci]
