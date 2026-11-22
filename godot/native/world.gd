@@ -43,6 +43,7 @@ static func spots() -> Array:
 	]
 
 static func open_() -> void:
+	if load("res://game/zone/landmark.gd").intercept_world(): return   # [landmark] 由地標入嘅玩法收尾：唔開舊世界地圖，返地標旁邊
 	var doc = _g("document")
 	for e in J.iter(J.S_document_("querySelectorAll", ["#pol-tip"])): J.mc(e, "remove", [])
 	var el = _el("#world")

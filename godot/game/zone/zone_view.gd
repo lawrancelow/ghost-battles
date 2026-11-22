@@ -6,6 +6,7 @@ extends RefCounted
 
 const ZD = preload("res://game/zone/zone_data.gd")
 const TA = preload("res://game/zone/zone_taunt.gd")   # [mapbattle] 王喺門外叫囂
+const LM = preload("res://game/zone/landmark.gd")   # [landmark] 地標（無名義山、破塔樓）
 static func _mb(): return load("res://game/zone/zone_battle.gd")   # [mapbattle] 大地圖即時戰鬥
 const WALL_W := 10.0
 const WALL_COL := {"wild": "#4a1c20", "market": "#4a3422", "village": "#4a3422", "res": "#2e2a30"}
@@ -516,6 +517,7 @@ static func draw_over(c: CanvasItem, nv) -> void:
 		var r = ZD.rect(z.rect)
 		var tp = str(z.type)
 		var zid0 = str(z.id)
+		if tp == "landmark": continue   # [landmark] 地標自己畫（LM.draw_over）
 		if tp == "res": _track_cap(zid0, ZD.owned(zid0))
 		if tp == "res" and ZD.owned(zid0) and r.intersects(vr):   # [fogfix] 啱啱佔領：黑霧散開（短動畫）
 			var dk = _cap_k(zid0)
@@ -547,6 +549,7 @@ static func draw_over(c: CanvasItem, nv) -> void:
 			var lb = _name(nv, z) + (ZD.L("（起點）", "（起點）") if tp == "village" and _rel(nv) >= 0.6 else "")
 			_plate(ctx, lb, r.get_center().x, r.position.y + px * 1.3, px, _rgba(str(z.get("col", "#a8602a")), 0.92))
 	if not mbf: _stage_over(ctx, nv, vr, t)   # [outgate] 主線關卡：敵人企喺大排檔前面等
+	LM.draw_over(c, nv, ctx, vr, t)   # [landmark] 地標：黑霧／名牌／紅點
 	TA.draw(c, nv)   # [mapbattle] 打唔過嘅王喺柵欄／野外門外面叫囂（泡泡喺大排檔 HUD 下面）
 # [outgate] 主線關卡（x-1、x-2…）：敵人喺大排檔前面（近野外門）企住，撳就喺度開打
 static func _stage_over(ctx: Ctx, nv, vr: Rect2, t: float) -> void:
@@ -802,6 +805,7 @@ static func tap(main, p: Vector2) -> bool:
 		if th[1] == "cap": open_capture(main, th[0])
 		else: open_boss(main, th[0])
 		return true
+	if LM.tap(main, p): return true   # [landmark] 撳地標 → 選地點卡（未開：講點樣開）
 	if gate_locked_hit(p):   # [fogfix] 出村門未開：講要完成邊個主線任務
 		if main != null and main.has_method("show_toast"): main.show_toast(ZD.reveal_hint("market"))
 		return true

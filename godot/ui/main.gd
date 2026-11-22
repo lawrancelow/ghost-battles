@@ -13,6 +13,7 @@ var mv_view: Control = null
 var mv_back: Button
 var mv_embed: Node = null   # [unify] 合一地圖：村子分頁頂段嘅大排檔區（game/outpost/mv_embed.gd）
 const ZDm := preload("res://game/zone/zone_data.gd")   # [zone] 分區地圖
+const LMm := preload("res://game/zone/landmark.gd")   # [landmark] 地標
 const ZVm := preload("res://game/zone/zone_view.gd")   # [zone]
 const UNIFY := true          # [unify] 合一地圖（移動村獨立全屏畫面、後院掣、營地取消）
 var dom: Control
@@ -313,6 +314,7 @@ func _process(dt: float) -> void:
 			DisplayServer.clipboard_set(log_tail(200))
 		return
 	_process_js_state()
+	LMm.tick(self)   # [landmark] 玩完舊玩法 → 返地標旁邊；地標解鎖 toast
 	ui_t += dt
 	if ui_t > 0.5 and title_ov == null: ui_t = 0; refresh()
 
