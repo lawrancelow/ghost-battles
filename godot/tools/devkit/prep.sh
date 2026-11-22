@@ -3,7 +3,7 @@ set -e
 C=$1; OUT=$2; VER=$3
 rm -rf $OUT && mkdir -p $OUT
 (cd /home/claude/ghost-battles && git archive $C godot | tar -x -C $OUT)
-cp -r /home/claude/gbgd/godot/.godot $OUT/godot/
+cp -r /home/claude/ghost-battles/godot/.godot $OUT/godot/
 cd $OUT/godot
 sed -i "s/config\/version=\"[^\"]*\"/config\/version=\"$VER\"/" project.godot
 DROP=()

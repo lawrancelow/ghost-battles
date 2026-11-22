@@ -3,7 +3,7 @@ set -e
 B=$1; V=$2; N=$3; G=/opt/godot/Godot_v4.3-stable_linux.x86_64; OUT=/home/claude/wt/main/godot-update; PK=/home/claude/ghost-battles/godot/tools/update/pck.py
 cd /tmp/new11/godot
 for K in android linux; do P=$([ $K = android ] && echo Android || echo Linux)
- python3 $PK manifest $B/$P.pck $B/$K.json >/dev/null
+ [ -f $B/$P.pck ] && python3 $PK manifest $B/$P.pck $B/$K.json >/dev/null
  rm -rf /tmp/diff_${V}_$K; python3 $PK diff /tmp/new11/$P.pck $B/$K.json /tmp/diff_${V}_$K >/dev/null
  python3 - "$OUT/version.json" "$V" "$K" "/tmp/diff_${V}_$K" "$G" "$OUT" "$N" <<'PY'
 import json, sys, os, hashlib, subprocess
