@@ -341,6 +341,10 @@ func _card_check(t, m, shots: bool) -> void:
 	m.close_sheet(); LM.open_card(m, "tower"); await _w(t, 0.3)
 	var lk = _find(m, "lock_station")
 	_chk("未開嘅地點：冇「去」掣，寫明點樣開", lk != null and _find(m, "go_station") == null and str(lk.text).contains("第一章"), lk.text if lk else "")
+	_chk("未開嘅地點插圖：灰階＋鎖", _find(m, "lm_station").find_child("lock", true, false) != null and _find(m, "lm_station").find_child("pic", true, false).texture is ImageTexture)
+	var arts = []
+	for pid in ["street", "gyard", "station", "scare", "tower", "battle", "yard"]: if not str(LA.ILLUS[pid][0]).begins_with("res://assets/img/lm_card_") or LA.illus(pid) == null: arts.append(pid)
+	_chk("選地點卡用正式插圖（lm_card_*，唔再用舊世界地圖暫代）", arts.is_empty(), arts)
 	if shots: await _w(t, 0.3); await _shot(t, "card_tower_locked")
 	S.seen["ch1_end"] = true
 	# 撳「去」：入啱嘅玩法（測試代替真正開）
@@ -588,6 +592,7 @@ func _zq_check(t, m, shots: bool) -> void:
 	_chk("第一次撳紙錢陣：先播劇情、播完開卡", LM.STORY_LOG == [LM.story_id("zhiqian")] and m.sheet.visible and LM.CARD == "zhiqian", [LM.STORY_LOG, LM.CARD])
 	MS.auto_on = false
 	_chk("紙錢陣卡：夜班巡陰、陰陽交界", _find(m, "lm_battle") != null and _find(m, "lm_yard") != null and _find(m, "go_battle") != null and _find(m, "go_yard") != null and _find(m, "lm_street") == null)
+	_chk("紙錢陣卡頭圖（唔裁唔拉）", _find(m, "head") != null and _find(m, "head").stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_CENTERED)
 	if shots: await _w(t, 0.3); await _shot(t, "card_zhiqian")
 	var got = []
 	LM.go_fn = func(pid): got.append(pid)

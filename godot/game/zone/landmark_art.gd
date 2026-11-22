@@ -15,16 +15,34 @@ const ART := {
 	"tower": {"png": "res://assets/spr/lm_tower.webp", "w": 100.0, "h": 170.0},
 	"zhiqian": {"png": "res://assets/spr/lm_zhiqian.webp", "w": 375.0, "h": 248.2, "flat": true},   # 紙錢陣：平鋪地面（y 排序＝圖頂，企喺上面嘅嘢一律畫喺佢上面）   # 正式圖 378×644：比民宅（104 闊、約 90 高）高一截
 }
-const ILLUS := {
-	"street": ["bg_worldmap2", Rect2(0, 655, 448, 280)],
-	"gyard": ["bg_worldmap2", Rect2(600, 985, 424, 265)],
-	"station": ["bg_worldmap2", Rect2(650, 700, 374, 234)],
-	"back": ["bg_worldmap2", Rect2(352, 470, 320, 200)],
-	"scare": ["bg_office", Rect2()],
-	"tower": ["bg_worldmap2", Rect2(90, 180, 290, 181)],
-	"battle": ["bg_worldmap2", Rect2(0, 900, 420, 262)],
-	"yard": ["bg_worldmap2", Rect2(584, 905, 440, 275)],
+const ILLUS := {   # 選地點卡插圖（20:xx 正式圖到：assets/img/lm_card_*.webp，約 360×330，cover 縮放）
+	"street": ["res://assets/img/lm_card_night_market.webp", Rect2()],
+	"gyard": ["res://assets/img/lm_card_graveyard.webp", Rect2()],
+	"station": ["res://assets/img/lm_card_guard_post.webp", Rect2()],
+	"back": ["res://assets/img/lm_card_return_mortal.webp", Rect2()],
+	"scare": ["res://assets/img/lm_card_return_mortal.webp", Rect2()],
+	"tower": ["res://assets/img/lm_card_haunted_building.webp", Rect2()],
+	"battle": ["res://assets/img/lm_card_patrol.webp", Rect2()],
+	"yard": ["res://assets/img/lm_card_border.webp", Rect2()],
 }
+const HEAD := {"zhiqian": "res://assets/img/lm_card_paper_circle.webp"}   # 地標卡頭圖（有就喺簡介左邊）
+# 未開放：灰階版（快取）
+static var _gray := {}
+static func gray(tx: Texture2D) -> Texture2D:
+	if tx == null: return null
+	var k = tx.get_rid()
+	if not _gray.has(k):
+		var im: Image = tx.get_image()
+		if im == null: return tx
+		im = im.duplicate() as Image
+		if im.is_compressed(): im.decompress()
+		im.convert(Image.FORMAT_RGBA8)
+		for y in im.get_height():
+			for x in im.get_width():
+				var c = im.get_pixel(x, y); var l = c.r * 0.3 + c.g * 0.59 + c.b * 0.11
+				im.set_pixel(x, y, Color(l * 0.85, l * 0.83, l * 0.8, c.a))
+		_gray[k] = ImageTexture.create_from_image(im)
+	return _gray[k]
 const INK := "#17121a"
 
 #   w：zones.json 個別關可以收窄（紙錢陣第 3、5 關），0＝用 ART 預設
@@ -241,10 +259,9 @@ static func _ghost(c: CanvasItem, T: Transform2D, o: Dictionary, i: int, t: floa
 	var sk = sin(t * 3.1 + i) * 0.06   # 身體隨正弦擺（斜少少）
 	c.draw_set_transform_matrix(T * Transform2D(Vector2(sx, 0), Vector2(sk, float(o.sy)), foot))
 	# 鬼魂圖本身半透明、又淺色，夜色底下會溶咗：背後一團淡青光，本體畫兩次（提亮）睇得清塊面
-	if PtGfx.RAD != null: c.draw_texture_rect(PtGfx.RAD, Rect2(-gw * 0.7, -gh * 1.05, gw * 1.4, gh * 1.0), false, Color(0.7, 1.0, 0.8, 0.12 * alpha))
-	var mc = Color(1.12, 1.16, 1.08, alpha)
-	c.draw_texture_rect(tx, Rect2(-gw / 2.0, -gh, gw, gh), false, mc)
-	c.draw_texture_rect(tx, Rect2(-gw / 2.0, -gh, gw, gh), false, Color(1, 1, 1, alpha * 0.75))
+	if PtGfx.RAD != null: c.draw_texture_rect(PtGfx.RAD, Rect2(-gw * 0.7, -gh * 1.05, gw * 1.4, gh * 1.0), false, Color(0.7, 1.0, 0.8, 0.16 * alpha))
+	var mc = Color(1.3, 1.34, 1.24, alpha * 0.8)   # 疊三次：原圖好薄，夜色底下先睇得清塊面同輪廓
+	for k in 3: c.draw_texture_rect(tx, Rect2(-gw / 2.0, -gh, gw, gh), false, mc)
 	c.draw_set_transform_matrix(T)
 # 底層（y＝圖頂）：黑罈綠光一明一暗、罈口煙、陣上紅線輕震
 static func draw_fx(ctx: Ctx, x: float, y: float, w: float, t: float) -> void:

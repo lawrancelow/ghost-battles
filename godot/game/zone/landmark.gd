@@ -231,7 +231,14 @@ static func open_card(main, lm: String) -> void:
 	main.open_sheet(name_of(lm), func(): open_card(main, lm))
 	if main.has_method("_clear_body"): main._clear_body()   # 即刻拎走舊內容（唔好等 queue_free，免得同名節點改名）
 	var body = main.sheet_body
-	var intro = UIKit.rich(T(INTRO.get(lm, ["", ""])), 15, UIKit.INKDIM); body.add_child(intro)
+	var intro = UIKit.rich(T(INTRO.get(lm, ["", ""])), 15, UIKit.INKDIM)
+	var hp = str(LA.HEAD.get(lm, ""))
+	if hp != "" and ResourceLoader.exists(hp):   # 卡頭圖（唔裁唔拉：原比例縮細）
+		var hh = HBoxContainer.new(); hh.add_theme_constant_override("separation", 10)
+		var hd = TextureRect.new(); hd.name = "head"; hd.texture = load(hp); hd.custom_minimum_size = Vector2(126, 120)
+		hd.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; hd.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		hh.add_child(hd); intro.size_flags_horizontal = Control.SIZE_EXPAND_FILL; intro.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hh.add_child(intro); body.add_child(hh)
+	else: body.add_child(intro)
 	body.add_child(UIKit.hsep())
 	for p in PLACES.get(lm, []): body.add_child(_row(main, lm, p))
 static func _row(main, lm: String, p: Dictionary) -> Control:
@@ -239,11 +246,13 @@ static func _row(main, lm: String, p: Dictionary) -> Control:
 	var box = PanelContainer.new(); box.name = "lm_" + pid
 	box.add_theme_stylebox_override("panel", UIKit.sb(Color("#e2cc92"), 6, UIKit.PAPERLINE, 1, Vector4(8, 8, 8, 8)))
 	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 10); box.add_child(hb)
-	var pic = TextureRect.new(); pic.custom_minimum_size = Vector2(112, 70); pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	var pic = TextureRect.new(); pic.custom_minimum_size = Vector2(104, 96); pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE   # 同插圖比例（約 1.1:1）：cover 只裁好少，唔變形
 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED; pic.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	pic.texture = LA.illus(pid); pic.clip_contents = true
+	pic.texture = LA.illus(pid); pic.clip_contents = true; pic.name = "pic"
 	var op = place_open(pid)
-	if not op: pic.modulate = Color(0.55, 0.52, 0.5)
+	if not op:   # 未開放：灰階＋鎖
+		pic.texture = LA.gray(pic.texture)
+		var lk = _LockIcon.new(); lk.name = "lock"; lk.set_anchors_preset(Control.PRESET_FULL_RECT); lk.mouse_filter = Control.MOUSE_FILTER_IGNORE; pic.add_child(lk)
 	hb.add_child(pic)
 	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 4); vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hb.add_child(vb)
 	var title = HBoxContainer.new(); title.add_theme_constant_override("separation", 6); vb.add_child(title)
@@ -403,3 +412,13 @@ static func draw_over(c: CanvasItem, nv, ctx: Ctx, vr: Rect2, t: float) -> void:
 			var r = 7.0 + sin(t * 5.0) * 1.2
 			ctx.fillStyle = "#e8303a"; ctx.strokeStyle = "#fff3e0"; ctx.lineWidth = 2
 			ctx.beginPath(); ctx.arc(pr.end.x - 2, pr.position.y + 2, r, 0, TAU); ctx.fill(); ctx.stroke()
+
+# 未開放地點插圖上嘅鎖（半透明黑底＋墨線鎖頭）
+class _LockIcon extends Control:
+	func _draw() -> void:
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.32))
+		var c = size / 2.0 + Vector2(0, 6); var w = 26.0; var h = 20.0
+		draw_arc(c + Vector2(0, -h * 0.5), w * 0.32, PI, TAU, 16, Color("#f3e6c8"), 3.5, true)
+		draw_rect(Rect2(c.x - w / 2.0, c.y - h * 0.5, w, h), Color("#f3e6c8"))
+		draw_rect(Rect2(c.x - w / 2.0, c.y - h * 0.5, w, h), Color("#2a1e16"), false, 1.5)
+		draw_circle(c + Vector2(0, 1), 3.0, Color("#2a1e16"))
