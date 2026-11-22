@@ -82,15 +82,15 @@ func all(t):
 		for i in 4:
 			if m.story.cur != null: m.story.skip_scene()
 		await _shot(t, spot)
-		var base = 0.0
-		for k in 3: base += await _ms(t)
-		base /= 3.0
+		var base = 0.0; var nb = 6 if OS.get_environment("PF_BASE") == "1" else 3
+		for k in nb: base += await _ms(t)
+		base /= float(nb)
 		print("[pf] %s base %.1fms (gpu %.2fms)" % [spot, base, gpu])
 		res[spot + ":base"] = base
 		var tp = 0.0
 		for k in 20:
 			await RenderingServer.frame_post_draw; tp += Performance.get_monitor(Performance.TIME_PROCESS)
-		var NBs = load("res://ui/nv_bake.gd")
+		var NBs = load("res://ui/nv_bake.gd") if ResourceLoader.exists("res://ui/nv_bake.gd") else null
 		if NBs != null and NBs.get("stats") != null:
 			var b0 = NBs.stats.bake
 			await _w(t, 1.0)
@@ -140,18 +140,21 @@ func all(t):
 				print("[pf] %s MvScene.stage(畫) 佔 %.1fms drawcalls %d prims %d" % [spot, rs[0], ds.x, ds.y])
 				var ro = await _ab(t, mvs0.over)
 				print("[pf] %s MvScene.over 佔 %.1fms" % [spot, ro[0]])
-		if spot == "night" or OS.get_environment("PF_QUICK") == "1": continue
+		if OS.get_environment("PF_QUICK") == "1" or OS.get_environment("PF_BASE") == "1": continue
 		var kids = []
 		for c in nv.world.get_children():
 			if c is CanvasItem and c.visible and (str(c.get("tag")) in lay_names or str(c.name) in lay_names or c == nv.ysort): kids.append(c)
 		var mvs = _find(nv, "MvScene")
 		if mvs and mvs.visible: kids.append(mvs)
 		if nv.hero_ol != null and nv.hero_ol.visible: kids.append(nv.hero_ol)
+		var hg = nv.ysort.get_node_or_null("hero_grp")   # 改之後：主角描邊 CanvasGroup
+		if hg != null and hg.visible: kids.append(hg)
 		for c in kids:
 			var nm = str(c.get("tag")) if c.get("tag") != null else str(c.name)
 			if c == nv.ysort: nm = "ysort"
 			var r = await _ab(t, c)
-			print("[pf] %s 層 %-10s 佔 %.1fms" % [spot, nm, r[0]])
+			var dd2 = await _dch(t, [c])
+			print("[pf] %s 層 %-10s 佔 %.1fms  drawcalls %d prims %d" % [spot, nm, r[0], dd2.x, dd2.y])
 			res[spot + ":" + nm] = r[0]
 		# 全部全畫面覆蓋層一齊收
 		var ov = []

@@ -215,6 +215,8 @@ func _static(key: String, y: float, sig, animated: bool, fn: Callable, live := C
 	if animated and (y < cam_y - 40 or y > cam_y + size.y / maxf(0.01, sc) + 140):
 		s.dirty = true; return  # 鏡頭外動畫唔重畫
 	var chg = typeof(s.sig) != typeof(sig) or s.sig != sig or s.get("dirty", false)   # [unify] 地盤 "site" → 起好 [lv,…] 唔同型別
+	if animated and not chg and (y < cam_y + 30 or y > cam_y + size.y / maxf(0.01, sc) + 40) and Engine.get_process_frames() % 2 == 1:
+		return   # [perf] 半出鏡（畫面邊）嘅動畫物件：隔格先重畫
 	if animated or chg:
 		if chg: s["ver"] = int(s.get("ver", 0)) + 1   # [perf] ver：狀態變咗，烘圖要重烘
 		s.sig = sig; s.dirty = false
@@ -341,8 +343,12 @@ func _sync_dynamic() -> void:
 	if not items is Array: items = []
 	plaza.begin_frame()
 	HOL.begin(self)   # [perf]
+	var cvr = view_rect()   # [perf] 鏡頭外嘅打工鬼／小紙唔錄唔畫（角色腳底 y；頭頂最多高 160）
 	for it in items:
 		var y = J.num(it.y)
+		var ik = it.get("kind")   # [perf]
+		if (ik == "work" or ik == "xz") and (y < cvr.position.y - 20.0 or y - 160.0 > cvr.end.y): continue   # [perf]
+		if ik == "work" and it.get("s") != null and absf(J.num(J.gp(it.s, "x")) - cvr.get_center().x) > cvr.size.x * 0.5 + 90.0: continue   # [perf]
 		if it.get("kind") == "plaza" and plaza.try_item(it, y): continue
 		var hn = HOL.node(self, y) if it.get("kind") == "hero" else null   # [perf] 主角：入描邊 shader 群組（群組位置做 y 排序）
 		var n = hn if hn != null else _seg()
