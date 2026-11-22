@@ -133,6 +133,15 @@ func dq() -> Dictionary:
 	if not s.has("dq") or not (s.dq is Dictionary): s.dq = {"day": "", "list": [], "streak": 0.0, "bonus": false, "last_full": ""}
 	var q: Dictionary = s.dq
 	if q.day != _today(): _roll(q)
+	if load("res://game/zone/zone_data.gd").on():   # [outgate] 今日已派咗巡陰日常：換做村子日常（舊巡陰暫時唔開）
+		var have = []
+		for e in q.list: have.append(str(e.id))
+		for i in q.list.size():
+			var x = ddef(str(q.list[i].id))
+			if x.is_empty() or str(x.get("cat", "")) != "patrol" or J.t(q.list[i].get("got")): continue
+			for y in D.get("daily", []):
+				if str(y.cat) == "village" and not have.has(str(y.id)):
+					have.append(str(y.id)); q.list[i] = {"id": y.id, "base": metric(y.m), "got": false}; break
 	return q
 
 func _roll(q: Dictionary) -> void:
@@ -144,7 +153,7 @@ func _roll(q: Dictionary) -> void:
 	var vil = pool.filter(func(x): return x.cat == "village")
 	var pat = pool.filter(func(x): return x.cat == "patrol")
 	var lv = J.num(S().lv)
-	if lv < 3: pat = []   # 未開巡陰
+	if lv < 3 or load("res://game/zone/zone_data.gd").on(): pat = []   # 未開巡陰；[outgate] 新版：舊巡陰暫時唔開，唔派巡陰日常
 	var pick = []
 	var rng = RandomNumberGenerator.new(); rng.seed = hash(q.day + str(J.num(S().get("uid", 0))))
 	var take = func(arr: Array, n: int) -> void:
@@ -318,7 +327,7 @@ func _process(dt: float) -> void:
 		var e = sq()[k]; var x = sdef(k)
 		if not x.is_empty() and not e.done and (e.get("new", false) or (int(e.step) < x.steps.size() and x.steps[int(e.step)].get("pay") != null)): n += 1
 	var P = J.G.get("Patrol"); var N = J.gp(P, "_nat") if P != null else null
-	if N != null:
+	if N != null and not load("res://game/zone/zone_data.gd").on():   # [outgate]
 		for gl in D.get("goals", []):
 			if not sq().has("goal_" + gl.id) and J.t(J.cl(N.regionOpen, null, [float(gl.ci)])) and metric(gl.m) >= float(gl.n): n += 1
 	dot.visible = n > 0; badge_n = n
@@ -382,12 +391,13 @@ func _main_tab(body: VBoxContainer) -> void:
 	if cur is Dictionary:
 		var p = J.mc(Q, "progress", [cur])
 		body.add_child(UIKit.rich("[b]目前主線[/b]（%d/%d）" % [qi + 1, qs.size()], 15, UIKit.INKTXT))
-		body.add_child(UIKit.rich("%s　[color=#9c2219]%d/%d[/color]" % [J.str(cur.text), int(J.num(p[0])), int(J.num(p[1]))], 16, UIKit.INKTXT))
+		body.add_child(UIKit.rich("%s　[color=#9c2219]%d/%d[/color]" % [load("res://game/outpost/mv_bridge.gd").quest_text(cur), int(J.num(p[0])), int(J.num(p[1]))], 16, UIKit.INKTXT))
 		var go = UIKit.btn("前往", "gold", true); go.size_flags_horizontal = Control.SIZE_SHRINK_END
 		go.pressed.connect(func():
 			var main = get_tree().root.get_node_or_null("Main")
 			main.close_sheet()
 			if cur.get("go") == "roster": main.open_roster(); return
+			if cur.get("go") == "gate" and load("res://game/zone/zone_data.gd").on() and main.has_method("_go_out"): main._go_out(); return   # [outgate]
 			if cur.get("go") == "gate": J.mc(J.G.get("Patrol"), "openPrep", []); return
 			var pp = J.mc(J.G.get("Village"), "questTarget", [])
 			if pp: J.mc(J.G.get("Village"), "focus", [pp[0], pp[1]]))
@@ -398,6 +408,7 @@ func _main_tab(body: VBoxContainer) -> void:
 	var P = J.G.get("Patrol"); var N = J.gp(P, "_nat")
 	var shown = false
 	for gl in D.get("goals", []):
+		if load("res://game/zone/zone_data.gd").on(): break   # [outgate] 舊巡陰區域目標：暫時唔開
 		if not J.t(J.cl(N.regionOpen, null, [float(gl.ci)])): continue
 		var key = "goal_" + gl.id; var got = sq().has(key)
 		if got: continue

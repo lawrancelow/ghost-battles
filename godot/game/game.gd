@@ -47,7 +47,7 @@ func new_state() -> Dictionary:
 		"cleared": {}, "qi": 0, "cnt": {"chop": 0, "rice": 0, "craftPlank": 0, "craftBun": 0, "recruit": 0, "feast": 0, "chest": 0},
 		"seen": {}, "chests": {"g": 0, "b": 0, "p": 0}, "furnaceAt": 0, "feastAt": 0, "last": now_ms(), "ended": false,
 		"trees": [3, 3, 3, 3, 3, 3, 3, 3], "treeRegrow": [0, 0, 0, 0, 0, 0, 0, 0], "paddy": [1, 1, 1, 1, 1, 1], "paddyRegrow": [0, 0, 0, 0, 0, 0],
-		"uid": 1, "prod": {}, "visit": {}, "wmSeen": {}, "qv": 2,
+		"uid": 1, "prod": {}, "visit": {}, "wmSeen": {}, "qv": 3,
 		"hero": {"name": "阿福", "full": "陳大福", "en": "Kelvin", "sex": "m", "set": false},   # 主角名／性別（DB.N 顯示時替換）
 	}
 
@@ -112,13 +112,14 @@ func _migrate(fresh: bool) -> void:
 		if not S.has(k): S[k] = d[k]
 	if S.get("visit") == null: S.visit = {}
 	if S.get("wmSeen") == null: S.wmSeen = {}
-	if fresh: S.qv = 2; return
+	if fresh: S.qv = 3; return   # [outgate] 3：冥街夜市、陰陽交界兩個插入任務已拎走（見 native/guide.gd）
 	# guide.js：舊存檔（qv<2）喺「出征 1-2」「擊敗餓鬼王 1-3」之後插咗兩個任務，索引要往後挪
 	if int(S.get("qv", 1) if S.get("qv") != null else 1) >= 2: return
 	var Q: Array = D("QUESTS"); var at = []
 	for i in Q.size():
 		if Q[i].t == "visit" and Q[i].get("place") == "street": at.append(i)
 		if Q[i].t == "visit" and Q[i].get("place") == "yard": at.append(i - 1)
+	if at.is_empty(): S.qv = 3; return   # [outgate] 清單已冇插入任務：舊存檔（qv 1）索引唔使郁
 	var old = int(S.qi); var add = 0
 	for pos in at:
 		if old >= pos: add += 1

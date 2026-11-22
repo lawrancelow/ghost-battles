@@ -73,6 +73,7 @@ def zone_check(tag, ci, beats, ZS, zm):
     for w, bs in zi["wild"].items():
         need.append(("zone_seen", w))
         for x in bs: need += [("boss_pre", x), ("boss_win", x)]
+    need += list(getattr(ZS, "EXTRA", {}).get(ci, []))   # [outgate] 主線關卡打完（stage_win）
     for k in need:
         if k not in got: E(tag + " 分區事件冇 beat：%s %s" % k)
     for k in got:
@@ -94,7 +95,7 @@ def zone_check(tag, ci, beats, ZS, zm):
         w = b["when"]; ln = b["scene"].get("lines", [])
         if w.get("kind") != "map_enter":
             n0 = len([l for l in ln if len(l) == 3])
-            if n0 < 2 or len(ln) > 5 + (2 if w.get("kind") == "liberate" else 0): E(tag + " %s 過程劇情要 2–5 句（無條件 %d／全部 %d）" % (b["id"], n0, len(ln)))
+            if n0 < 2 or len(ln) > (10 if w.get("kind") == "stage_win" else 5 + (2 if w.get("kind") == "liberate" else 0)): E(tag + " %s 過程劇情要 2–5 句（無條件 %d／全部 %d）" % (b["id"], n0, len(ln)))
             if "zs%d_map_enter" % ci not in b.get("need", {}).get("after", []): E(tag + " %s 要 need.after 開場" % b["id"])
         if w.get("kind", "").startswith("boss_"):
             z, i = ZS._where(ci, w.get("id"))

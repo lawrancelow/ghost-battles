@@ -114,6 +114,7 @@ func _run(t) -> void:
 	await raid_flow(t, m)
 	await perf(t, m)
 	for c in [1, 2, 3, 4, 5]: await map_flow(t, m, c)   # [zone56] 第 5、6 關都分區咗，冇舊豎條圖剩低
+	await stage_flow(t, m)   # [outgate] 主線關卡喺大排檔前面打
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
 # ================= 王戰（第 1 關亂葬崗 ①紙人偶頭目） =================
@@ -463,6 +464,44 @@ func map_flow(t, m, c: int) -> void:
 	J.mc(B(), "finish", [false, true]); await _f(t, 2); await _ok_btn(t); ZD.poll()
 	MB.t_skip_back(); await _until(t, func(): return not MB.busy(), 25.0)
 	S.zone["taunt"] = {}
+
+# ================= [outgate] 主線關卡（x-1、x-2）喺大排檔前面打 =================
+func _qidx_stage(sid: String) -> int:
+	var Q = J.G.get("QUESTS")
+	for i in Q.size(): if str(Q[i].get("t")) == "stage" and str(Q[i].get("s")) == sid: return i
+	return -1
+func stage_flow(t, m) -> void:
+	var S = J.G.S; var sc = m.mv_view
+	sc.sim.st().ci = 0.0; sc._after_move(); await _w(t, 1.2)
+	var qi0 = S.qi; var cl0 = (S.cleared as Dictionary).duplicate()
+	S.cleared.erase("1-1"); S["qi"] = float(_qidx_stage("1-1"))
+	var tg = ZD.stage_target()
+	_chk("主線 1-1：迎戰位喺大排檔入面", tg.has("pos") and ZD.zrect("market").has_point(tg.pos), tg)
+	var r = ZD.start_stage(); await _f(t, 2)
+	var mb = MB.cur
+	_chk("主線 1-1：大地圖開打（stage）、戰場喺大排檔", r == "ok" and mb != null and mb.kind == "stage" and ZD.zrect("market").grow(2).encloses(mb.field) and J.t(B().get("active")), [r, mb.field if mb else null])
+	_chk("主線 1-1：唔開舊戰鬥畫面", BtRun.cur == null)
+	MB.t_skip_march(); await _w(t, 0.6)
+	J.mc(B(), "finish", [true]); await _f(t, 2); await _ok_btn(t); ZD.poll()
+	MB.t_skip_back(); await _until(t, func(): return not MB.busy(), 25.0)
+	_chk("主線 1-1：贏咗記通關、隊伍行返村", J.t(S.cleared.get("1-1")) and not MB.busy())
+	await _f(t, 3)
+	_chk("主線 1-1：通關後迎戰位收返", not ZD.stage_target().has("pos") or str(ZD.stage_target().sid) != "1-1", ZD.stage_target())
+	S["qi"] = float(_qidx_stage("1-3")); S.cleared.erase("1-3")
+	var tg3 = ZD.stage_target()
+	_chk("主線 1-3（餓鬼王）：指去野外王，唔喺大排檔前面", tg3.get("zid", "") == "w_pit" and not tg3.has("pos"), tg3)
+	S["qi"] = float(_qidx_stage("2-1"))
+	_chk("主線 2-1 喺第 1 關：要拔營先打（later）", J.t(ZD.stage_target().get("later")), ZD.stage_target())
+	m._nav("battle"); await _w(t, 0.5)
+	_chk("「地盤」掣：唔開舊世界地圖", not J.t(J.gp(J.gp(JSRun.by_id("world"), "classList"), "d").has("on") if JSRun.by_id("world") != null else false))
+	var bad_at = []
+	for c in 6:
+		sc.sim.st().ci = float(c); sc._after_move(); await _w(t, 0.8)
+		var fa = ZD.front_anchor()
+		if not ZD.zrect("market").grow(-40).has_point(fa): bad_at.append([c, fa, ZD.zrect("market")])
+	_chk("六關迎戰位都喺大排檔入面（離邊 ≥40）", bad_at.is_empty(), bad_at)
+	sc.sim.st().ci = 0.0; sc._after_move(); await _w(t, 0.8)
+	S["qi"] = qi0; S["cleared"] = cl0
 
 # ================= 第 5 關（冇分區）照用舊戰鬥畫面 =================
 func old_maps(t, m) -> void:

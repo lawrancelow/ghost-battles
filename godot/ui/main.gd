@@ -349,6 +349,7 @@ func _build_village() -> void:
 				var cg = {"tree": "wood", "paddy": "rice"}.get(str(q.get("go")), str(q.get("go"))) if q else ""   # [camp] 營地建築任務：鏡頭移去嗰間
 				if mv_view != null and mv_view.has_method("focus_camp") and cg != "": mv_view.focus_camp(cg)
 				return
+			if ZDm.on() and _stage_focus(): return   # [outgate] 主線關卡：去大排檔前面迎戰
 			var p = J.mc(J.G.get("Village"), "questTarget", [])
 			if p: close_sheet(); J.mc(J.G.get("Village"), "focus", [p[0], p[1]]))
 
@@ -429,8 +430,33 @@ func _nav_on(t: String) -> void:
 
 func _nav(t: String) -> void:
 	var ui = J.G.get("UI")
+	if t == "battle" and ZDm.on(): J.mc(J.G.get("UI"), "close", []); _go_out(); return   # [outgate] 新版：唔開舊世界地圖，鏡頭去出村門外
 	if t == "battle": J.mc(J.G.get("UI"), "close", []); J.mc(J.G.get("World"), "open", []); return
 	J.mc(ui, "open", [t])
+
+# [outgate] 新版出村：舊世界地圖（夜班巡陰、冥街夜市、陰陽交界…）暫時唔開；「地盤」掣同主線關卡任務都帶鏡頭去出村門外
+func _cam_to(p: Vector2) -> void:
+	if village == null or not village.has_method("zone_cam"): return
+	var cam = village.zone_cam()
+	if cam != null: cam.center_on(p)
+# 主線關卡任務：鏡頭去迎戰位／野外王；回 true＝處理咗
+func _stage_focus(toast_if_none := true) -> bool:
+	var tg = ZDm.stage_target()
+	if tg.is_empty(): return false
+	close_sheet(); _nav_on("village")
+	if tg.has("pos"): _cam_to(tg.pos); return true
+	if tg.has("zid"):
+		var z = ZDm.zone(str(tg.zid))
+		_cam_to(ZDm.v2(z.get("boss_at", [0, 0])) if z.get("boss_at") != null else ZDm.zrect(str(tg.zid)).get_center())
+		return true
+	if J.t(tg.get("locked")): show_toast(ZDm.reveal_hint("market")); return true
+	if J.t(tg.get("later")) and toast_if_none: show_toast(ZDm.L("呢一關喺下一站：先解放呢度，再拔營過去", "這一關在下一站：先解放這裡，再拔營過去")); return true
+	return false
+func _go_out() -> void:
+	_nav_on("village")
+	if _stage_focus(false): return
+	if not ZDm.revealed("market"): show_toast(ZDm.reveal_hint("market")); _cam_to(ZDm.v2(ZDm.cur().get("village", {}).get("POS", {}).get("gate", [0, 0]))); return
+	_cam_to(ZDm.zrect("market").get_center())
 
 func _build_sheet() -> void:
 	sheet = Panel.new(); sheet.anchor_right = 1; sheet.anchor_top = 0.16; sheet.anchor_bottom = 1; sheet.visible = false

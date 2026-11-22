@@ -220,6 +220,12 @@ static func quest_text(q) -> String:
 		if b == "house": return T("紙紮大屋擴建到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))), "紙紮大屋擴建到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))))
 		if b == "store": return T("大屋倉庫擴到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))), "大屋倉庫擴到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))))
 	if t in ["chop", "rice", "craftPlank", "build", "bLevel"]: return T("營地：", "營地：") + txt   # [camp] 原本村子嘅建築喺大地圖底「營地」
+	if t == "stage" and txt.begins_with("夜班巡陰"):   # [outgate] 新版：主線關卡喺大排檔前面打（唔再經舊世界地圖「夜班巡陰」）
+		var sid = str(q.get("s", "")); var nm = sid
+		var CH = J.G.get("CHAPTERS"); var p2 = sid.split("-")
+		if CH is Array and p2.size() == 2 and int(p2[0]) - 1 < CH.size() and CH[int(p2[0]) - 1].get("stages") is Array and int(p2[1]) - 1 < CH[int(p2[0]) - 1].stages.size():
+			nm = str(CH[int(p2[0]) - 1].stages[int(p2[1]) - 1].get("name", sid))
+		return T("出村迎戰：%s（%s）" % [nm, sid], "出村迎戰：%s（%s）" % [nm, sid])
 	if t == "assign": return T("派 %d 隻鬼去打工（營地或者生產台）" % int(J.num(q.get("n", 1))), "派 %d 隻鬼去打工（營地或者生產台）" % int(J.num(q.get("n", 1))))   # [camp]
 	return txt
 

@@ -293,7 +293,9 @@ static func q_check(this_) -> void:
 static func q_complete(this_) -> void:
 	var S = _S(); var q = J.mc(this_, "cur", []); S["qi"] = J.num(S.qi) + 1
 	var txt = J.str(J.cl(_g("give"), null, [q.r])); _snd("coin")
-	_fx("toast", ["任務完成：%s<br><b>%s</b>" % [J.str(q.text), txt] + (("<br>" + J.str(q.note)) if J.t(q.get("note")) else "")])
+	var qtx = J.str(q.text)
+	if J.str(q.get("t")) == "stage" and qtx.begins_with("夜班巡陰"): qtx = load("res://game/outpost/mv_bridge.gd").quest_text(q)   # [outgate] 新版叫「出村迎戰」
+	_fx("toast", ["任務完成：%s<br><b>%s</b>" % [qtx, txt] + (("<br>" + J.str(q.note)) if J.t(q.get("note")) else "")])
 	var nq = J.mc(this_, "cur", [])
 	if J.t(nq) and J.t(nq.get("onStart")):
 		for id in nq.onStart: if not J.t(S.seen.get(J.str(id))): J.mc(_g("Story"), "queue", [id])

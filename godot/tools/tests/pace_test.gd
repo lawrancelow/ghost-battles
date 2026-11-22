@@ -114,6 +114,7 @@ func _logic(t) -> void:
 	_test_new_l1(sim)
 	_test_l24(sim)
 	_test_old(sim)
+	_test_qv()
 	# 還原
 	STY.auto_on = a0; STY.pace_on = p0; ZD.gate_on = g0
 	for k in S.keys(): S.erase(k)
@@ -146,23 +147,29 @@ func _test_queue(sim) -> void:
 	_chk("A 主線任務前進 → 放一幕（只一幕）", st.played.size() == 2, st.played)
 	_settle(st, sc)
 	_chk("A 播完又等：第二幕唔會即刻跟", st.played.size() == 2 and STY.held(), st.played)
-	# 60 秒冇動作 → 放
-	_tick(st, sc, 520, 0.1)   # 之前 settle 咗兩次（約 6 秒）→ 共約 58 秒
-	_chk("A 59 秒：仲等緊", st.played.size() == 2, st.played)
-	_tick(st, sc, 40, 0.1)
-	_chk("A 夠 60 秒 → 放下一幕", st.played.size() == 3, st.played)
-	# 村子劇情（主劇情播放器）播完都要等
-	_tick(st, sc, 700, 0.1)   # 等完
-	_chk("A 冇嘢等緊（佇列空）", not STY.held() or st.played.size() == 3)
+	# [outgate] 唔再計時放行：等幾耐都唔放，一定要做完一個任務
+	_tick(st, sc, 6000, 0.1)   # 10 分鐘
+	_chk("A 等 10 分鐘冇做任務 → 都唔放", st.played.size() == 2, st.played)
+	S_inc("qi"); _settle(st, sc)
+	_chk("A 再做一個任務 → 放下一幕", st.played.size() == 3, st.played)
+	# 村子劇情（主劇情播放器）播完都要等（播完等 1 秒先開始等，等住嗰陣結算嘅主線任務都計埋）
 	STY.hold_clear()
-	_busy = true; _tick(st, sc, 10, 0.1); _busy = false; _tick(st, sc, 2, 0.1)
+	_busy = true; _tick(st, sc, 10, 0.1); _busy = false; _tick(st, sc, 15, 0.1)
 	_chk("A 村子劇情播完 → 都要等", STY.held())
-	# 各種任務動作都放
-	for act in ["bld", "cnt", "own", "boss", "cleared", "station"]:
+	STY.hold_clear()
+	_busy = true; _tick(st, sc, 10, 0.1); S_inc("qi"); _busy = false; _tick(st, sc, 15, 0.1)
+	_chk("A 村子劇情播完先結算嘅主線任務：算返呢個任務，唔會即刻放", STY.held(), st.played)
+	# [outgate] 只有「任務」先放：主線任務、佔領、打（非主線）王；斬樹收成、升建築、升攤位、主線關卡通關（同主線任務一齊計）唔放
+	for act in ["own", "boss"]:
 		STY.hold_clear(); st.hold_start(sim)
 		_act(sim, act)
 		_tick(st, sc, 10, 0.1)
-		_chk("A 任務動作「%s」→ 放" % act, not STY.held())
+		_chk("A 任務「%s」→ 放" % act, not STY.held())
+	for act in ["bld", "cnt", "cleared", "station"]:
+		STY.hold_clear(); st.hold_start(sim)
+		_act(sim, act)
+		_tick(st, sc, 10, 0.1)
+		_chk("A 細動作「%s」→ 唔放" % act, STY.held())
 	# 佇列次序：打王回應先過區介紹
 	_reset_map(sim, 0)
 	ZD._rev()[ZD._k("market", 0)] = 1.0; STY.mark("mv0_open", 2.0)
@@ -406,3 +413,28 @@ func _test_old(sim) -> void:
 	var r3 = _mk(sim)
 	r3[0].migrate(sim)
 	_chk("F 新開檔：遷移唔記任何跳過", STY.seen_d().is_empty(), STY.seen_d())
+
+# ---------------- [outgate] 舊存檔：拎走冥街夜市、陰陽交界兩個插入任務之後，主線索引對返 ----------------
+func _test_qv() -> void:
+	var Gd = load("res://native/guide.gd")
+	var Q: Array = J.G.get("QUESTS")
+	var has_visit = false
+	for q in Q: if str(q.get("t")) == "visit": has_visit = true
+	_chk("Q 主線冇咗「visit」任務（冥街夜市、陰陽交界）", not has_visit)
+	var i12 = -1; var i13 = -1; var i11 = -1
+	for i in Q.size():
+		if str(Q[i].get("t")) == "stage" and str(Q[i].get("s")) == "1-2": i12 = i
+		if str(Q[i].get("t")) == "stage" and str(Q[i].get("s")) == "1-3": i13 = i
+		if str(Q[i].get("t")) == "stage" and str(Q[i].get("s")) == "1-1": i11 = i
+	_chk("Q 1-1 開頭冇劇情、1-2 開頭係新聞＋餓鬼搶包", (Q[i11].get("onStart", []) as Array).is_empty() and Q[i12].get("onStart") == ["ch1_intro", "ch1_intro2"], [Q[i11].get("onStart"), Q[i12].get("onStart")])
+	# 第 2 版清單：[… 1-2(i12), 夜市(i12+1), …, 1-3(i13+1), 交界(i13+2), …]
+	var S = _S(); var save = [S.get("qi"), S.get("qv")]
+	var cases = [[i12, i12], [i12 + 1, i12 + 1], [i12 + 2, i12 + 1], [i13 + 1, i13], [i13 + 2, i13 + 1], [i13 + 3, i13 + 1], [i13 + 10, i13 + 8]]
+	var bad = []
+	for c in cases:
+		S["qv"] = 2.0; S["qi"] = float(c[0]); Gd.migrate(false)
+		if int(S.qi) != int(c[1]) or J.num(S.qv) != 3.0: bad.append([c, S.qi])
+	_chk("Q 第 2 版存檔：主線索引減返已做嘅插入任務（做緊嗰個就跳去下一個）", bad.is_empty(), bad)
+	S["qv"] = 1.0; S["qi"] = 20.0; Gd.migrate(false)
+	_chk("Q 第 1 版存檔（未插過）：索引唔郁", int(S.qi) == 20 and J.num(S.qv) == 3.0, S.qi)
+	S["qi"] = save[0]; S["qv"] = save[1]

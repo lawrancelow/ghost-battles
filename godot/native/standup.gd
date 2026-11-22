@@ -239,6 +239,7 @@ static func _story_page() -> void:
 static func _announce() -> void:
 	var s = st(); var Sk = _g("Skits")
 	if s == null or Sk == null or not J.t(J.mc(Sk, "quiet", [])): return
+	if load("res://game/zone/zone_data.gd").on(): return   # [outgate] 冥街夜市暫時唔開：唔出「今晚登台」提示
 	for b in BITS:
 		if ok(b) and not J.t(J.gp(J.gp(s, "ann"), b.id)) and not J.t(J.gp(J.gp(s, "seen"), b.id)):
 			J.sp(J.gp(s, "ann"), b.id, 1.0)

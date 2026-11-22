@@ -546,7 +546,33 @@ static func draw_over(c: CanvasItem, nv) -> void:
 			var px = _name_px(nv)
 			var lb = _name(nv, z) + (ZD.L("（起點）", "（起點）") if tp == "village" and _rel(nv) >= 0.6 else "")
 			_plate(ctx, lb, r.get_center().x, r.position.y + px * 1.3, px, _rgba(str(z.get("col", "#a8602a")), 0.92))
+	if not mbf: _stage_over(ctx, nv, vr, t)   # [outgate] 主線關卡：敵人企喺大排檔前面等
 	TA.draw(c, nv)   # [mapbattle] 打唔過嘅王喺柵欄／野外門外面叫囂（泡泡喺大排檔 HUD 下面）
+# [outgate] 主線關卡（x-1、x-2…）：敵人喺大排檔前面（近野外門）企住，撳就喺度開打
+static func _stage_over(ctx: Ctx, nv, vr: Rect2, t: float) -> void:
+	var tg = ZD.stage_target()
+	if not tg.has("pos"): return
+	var at: Vector2 = tg.pos
+	hits.insert(0, [Rect2(at.x - 100, at.y - 150, 200, 210), "stage", str(tg.sid)])
+	if not vr.grow(120).has_point(at): return
+	var ks = []
+	for e in (tg.get("en", []) as Array):
+		if ks.size() < 3: ks.append(str(e))
+	if tg.get("boss") != null and not ks.has(str(tg.boss)): ks[ks.size() / 2 if ks.size() else 0] = str(tg.boss)
+	if ks.is_empty(): ks = ["youhun"]
+	var g = ctx.createRadialGradient(at.x, at.y - 40, 6, at.x, at.y - 40, 95)
+	g.addColorStop(0, "rgba(200,30,30,.34)"); g.addColorStop(1, "rgba(200,30,30,0)")
+	ctx.fillStyle = g; ctx.fillRect(at.x - 95, at.y - 135, 190, 190)
+	var off = [Vector2(-46, -6), Vector2(0, 8), Vector2(46, -6)]
+	var order = [0, 2, 1] if ks.size() == 3 else range(ks.size())
+	for i in order:
+		var o = off[i] if ks.size() == 3 else Vector2((i - (ks.size() - 1) * 0.5) * 46.0, 0)
+		Art.draw_char(ctx, ks[i], at.x + o.x, at.y + o.y + sin(t * 2.0 + i) * 3.0, 0.85, {"t": t + i, "flip": true})
+	var px = 16
+	_txt(ctx, ZD.L("主線 %s　%s", "主線 %s　%s") % [str(tg.sid), str(tg.get("name", ""))], at.x, at.y + px * 1.2, px, "#ffb0a0")
+	ctx.globalAlpha = 0.75 + 0.25 * sin(t * 3.0)
+	_plate(ctx, ZD.L("撳我迎戰", "點我迎戰"), at.x, at.y + px * 2.8, px, "rgba(150,40,30,.95)")
+	ctx.globalAlpha = 1.0
 static func _rgba(hex: String, a: float) -> String:
 	var c = Color(hex)
 	return "rgba(%d,%d,%d,%.2f)" % [int(c.r * 255), int(c.g * 255), int(c.b * 255), a]
@@ -787,6 +813,11 @@ static func tap(main, p: Vector2) -> bool:
 	if zid != "" and not ZD.owned(zid) and ZD.revealed(zid): open_capture(main, zid); return true
 	for h in hits:
 		if not h[0].has_point(p): continue
+		if h[1] == "stage":   # [outgate] 主線關卡：喺大排檔前面開打
+			if _busy(): return true
+			var r = ZD.start_stage()
+			if r == "noteam" and main != null and main.has_method("show_toast"): main.show_toast(ZD.L("未有出戰隊伍：去「鬼怪」揀隊先", "還沒有出戰隊伍：先到「鬼怪」選隊"))
+			return true
 		if h[1] == "res": open_capture(main, h[2]); return true
 		if h[1] == "wild":
 			var z = ZD.zone(h[2])

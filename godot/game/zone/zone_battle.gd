@@ -84,7 +84,7 @@ static func usable() -> bool:
 	return not force_off and not OS.has_environment("GB_NOMAPBATTLE") and ZD.on() and village() != null
 static func busy() -> bool: return cur != null and is_instance_valid(cur) and cur.phase != "done"
 static func fighting() -> bool: return busy() and cur.phase in ["march", "fight", "result"]
-static func on_zone(id: String) -> bool: return busy() and cur.zid == id and cur.kind != "raid"
+static func on_zone(id: String) -> bool: return busy() and cur.zid == id and cur.kind != "raid" and cur.kind != "stage"
 # kind：boss／cap／raid；cb：真正開戰（叫 Battle.start）；回 false＝唔用大地圖（照舊畫面，cb 未叫）
 static func start(k: String, id: String, cb: Callable, opt := {}) -> bool:
 	if not usable(): return false
@@ -168,13 +168,12 @@ func _geometry() -> void:
 			var o = ZD.v2(z.door.out)
 			if o.x > r.get_center().x + 20.0: m = -1.0
 		tkey = TA.cap_key(ZD.ci(), zid)
-	else:   # raid：喺大排檔近野外門迎戰
+	else:   # raid：喺大排檔近野外門迎戰；[outgate] stage（主線關卡）都喺度打
 		r = ZD.zrect("market")
 		var wz = ZD.of_type("wild")
-		var g = TA.gate_of(str(wz[0].id)) if wz.size() else [r.get_center(), 1.0]
-		anchor = g[0] + Vector2(0, 150.0 if float(g[1]) > 0 else -120.0)
+		anchor = ZD.front_anchor()
 		zid = str(wz[0].id) if wz.size() else ""
-		tkey = TA.raid_key(ZD.ci())
+		tkey = TA.raid_key(ZD.ci()) if kind == "raid" else ""
 	S = clampf((r.size.x - 16.0) / 360.0, 0.5, S_MAX)
 	# 王對準 anchor（王嘅 battle 起始位）
 	var bu = _boss_unit()
@@ -254,7 +253,7 @@ func _plan_march() -> void:
 		else:
 			var src = PackedVector2Array()
 			if kind == "boss" and tkey != "" and TA.on(tkey) and J.t(u.get("boss")): src = PackedVector2Array([TA.spot(tkey), goal])
-			elif kind == "raid":
+			elif kind == "raid" or kind == "stage":
 				var g = TA.gate_of(zid)
 				src = PackedVector2Array([g[0] + Vector2((i % 3 - 1) * 26.0, -float(g[1]) * 60.0), g[0], goal])
 			if src.size():

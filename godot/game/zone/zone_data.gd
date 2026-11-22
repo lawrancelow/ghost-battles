@@ -268,6 +268,58 @@ static func _start_battle(kind: String, zid: String) -> String:
 			if J.t(J.gp(u, "boss")): u["name"] = nm
 	return "ok"
 static func _mb(): return load("res://game/zone/zone_battle.gd")   # [mapbattle] 大地圖即時戰鬥
+# ================= [outgate] 主線關卡（x-1、x-2…）喺分區地圖大排檔前面打（舊世界地圖「夜班巡陰」唔再開） =================
+# 回 {}＝而家冇；{"sid","c","s","name","en","boss","pos"}＝喺大排檔前面打；{"sid",…,"zid"}＝係某個野外王（去嗰度打）；
+# {"sid",…,"later": true}＝唔係呢張圖嘅章節（要先解放、拔營）
+static func _cur_q():
+	var Q = J.G.get("Quest")
+	return J.mc(Q, "cur", []) if Q != null else null
+static func stage_target() -> Dictionary:
+	if not on() or S() == null: return {}
+	var q = _cur_q()
+	if not (q is Dictionary) or str(q.get("t", "")) != "stage": return {}
+	var sid = str(q.get("s", ""))
+	var s = S()
+	if s.get("cleared") is Dictionary and J.t(s.cleared.get(sid)): return {}
+	var p = sid.split("-")
+	if p.size() != 2: return {}
+	var cc = int(p[0]) - 1; var si = int(p[1]) - 1
+	var out = {"sid": sid, "c": cc, "s": si}
+	var CH = J.G.get("CHAPTERS")
+	if CH is Array and cc >= 0 and cc < CH.size() and CH[cc].get("stages") is Array and si < CH[cc].stages.size():
+		var stg = CH[cc].stages[si]
+		out["name"] = str(stg.get("name", sid)); out["en"] = stg.get("en", []); out["boss"] = stg.get("boss")
+	if cc != ci(): out["later"] = true; return out
+	for z in of_type("wild"):
+		var bs = bosses(str(z.id))
+		for i in bs.size():
+			var ch = bs[i].get("chapter")
+			if ch is Array and int(ch[0]) == cc and int(ch[1]) == si: out["zid"] = str(z.id); out["bi"] = i; return out
+	if not revealed("market"): out["locked"] = true; return out
+	out["pos"] = front_anchor()
+	return out
+# 大排檔近野外門嘅迎戰位（同鬼潮告急一樣）
+static func front_anchor(c := -1) -> Vector2:
+	var r = zrect("market", c)
+	var wz = of_type("wild", c)
+	if wz.is_empty(): return r.get_center()
+	var TA = load("res://game/zone/zone_taunt.gd")
+	var g = TA.gate_of(str(wz[0].id))
+	return g[0] + Vector2(0, 150.0 if float(g[1]) > 0 else -120.0)
+# 開打（大排檔前面）：回 "ok"／"noteam"／"nobattle"／"none"
+static func start_stage() -> String:
+	var tg = stage_target()
+	if tg.is_empty() or not tg.has("pos"): return "none"
+	var B = J.G.get("Battle")
+	if not (B is Dictionary): return "nobattle"
+	if not team_ok(): return "noteam"
+	var ui = J.G.get("UI")
+	if ui != null: J.mc(ui, "close", [])
+	var c = float(tg.c); var si = float(tg.s)
+	var go = func(): J.mc(B, "start", [c, si])
+	var wz = of_type("wild")
+	if not _mb().start("stage", str(wz[0].id) if wz.size() else "", go): go.call()
+	return "ok"
 static var NEWS: Array = []   # 戰鬥結果（畫面攞嚟出橫額）
 # main.gd／畫面每格叫：收戰鬥結果
 static func poll() -> Dictionary:
@@ -542,6 +594,7 @@ static func reveal_hint(zid: String, c := -1) -> String:
 		var q = _quest(str(r.quest_done[0]), str(r.quest_done[1]))
 		if not q.is_empty():
 			var tx = str(q.get("text", ""))
+			if str(q.get("t", "")) == "stage" and tx.begins_with("夜班巡陰"): tx = load("res://game/outpost/mv_bridge.gd").quest_text(q)   # [outgate]
 			if str(zone(zid, c).get("type")) == "market": return L("出村門未開：完成主線任務「%s」先出得村", "出村門未開放：完成主線任務「%s」後才能出村") % tx
 			return L("完成主線任務「%s」後開放", "完成主線任務「%s」後開放") % tx
 	if r is Dictionary and r.get("beat_t") != null:   # 「睇完劇情「甘榜開檔」後開放」

@@ -34,9 +34,9 @@ const MD = preload("res://game/outpost/mv_data.gd")
 const MVW = preload("res://game/outpost/mv_war.gd")
 const SIM = preload("res://game/outpost/mv_sim.gd")
 const ZD = preload("res://game/zone/zone_data.gd")
-const ZKINDS := ["map_enter", "zone_seen", "zone_cap", "boss_pre", "boss_win", "factory", "liberate", "reveal"]
-const ZREACT := ["boss_win", "zone_cap", "factory", "liberate"]   # [pace] 玩家動作嘅回應：佇列優先
-const HOLD_T := 60.0           # [pace] 播完一幕之後，最多等幾秒（遊戲時間）就放下一幕
+const ZKINDS := ["map_enter", "zone_seen", "zone_cap", "boss_pre", "boss_win", "factory", "liberate", "reveal", "stage_win"]   # [outgate] stage_win：主線關卡（x-1…）打完
+const ZREACT := ["boss_win", "zone_cap", "factory", "liberate", "stage_win"]   # [pace] 玩家動作嘅回應：佇列優先
+const HOLD_T := 1.0e9          # [pace] [outgate] 播完一幕之後：唔再計時放行，一定要玩家做完一個任務先播下一幕
 const PATH := "res://data/nat/mv_story.json"
 const CHECK_DT := 0.5          # 幾耐檢查一次觸發
 const GAP := 1.2               # 一個 beat 播完，隔幾秒先播下一個
@@ -65,6 +65,10 @@ var _rng := RandomNumberGenerator.new()
 var _sc = null                       # 最近 tick 嘅場景（weakref）：zone_event 播 boss_pre 用
 var _ext := false                    # [pace] 主劇情播放器播緊唔係本檔嘅劇情（村子劇情）：播完要等
 var _hct := 0.0                      # [pace] 幾耐對一次任務動作
+var _ext_story := false             # [outgate] 今次村子劇情有冇唔係系統通知嘅故事
+var _ext_grace := 0.0                # [outgate] 村子故事播完 → 等呢幾秒先記低進度開始等
+const EXT_GRACE := 1.0
+var _snap := ""                      # [outgate] 一幕開始播嗰陣嘅進度簽名：播緊期間先完成嘅任務（例如等劇情播完先結算嘅主線任務）都計
 
 func _init() -> void: _rng.randomize()
 
@@ -213,6 +217,7 @@ func _player(sc):
 func play(sc, b: Dictionary, cb := Callable()) -> void:
 	var id = str(b.get("id", ""))
 	mark(id, 1.0); played.append(id); _playing = true
+	if _snap == "": _snap = sig(_sim_of(sc))
 	var scene = build_scene(b)
 	var done = func():
 		_playing = false; _gap = GAP
@@ -256,9 +261,14 @@ func tick(sc, dt: float) -> void:
 	_live = weakref(self); _sc = weakref(sc)
 	_cust_wait(sc)
 	_foe_head(sc)
+	if auto_on: _stage_scan(sc.sim)   # [outgate] 主線關卡打完 → stage_win
 	if auto_on and pace_on:
 		migrate(sc.sim)
 		_ext_watch(sc)
+		if _ext_grace > 0.0:
+			_ext_grace -= dt
+			if _ext_grace <= 0.0: _snap = ""; hold_start(sc.sim)
+			return
 		hold_tick(sc.sim, dt)
 	if _gap > 0.0: _gap -= dt; return
 	_ct -= dt
@@ -473,7 +483,8 @@ func hold_start(sim) -> void:
 	if not pace_on: return
 	var m = _mv()
 	if m == null: return
-	m["story_hold"] = {"t": HOLD_T, "sig": sig(sim)}
+	m["story_hold"] = {"t": HOLD_T, "sig": _snap if _snap != "" else sig(sim)}
+	_snap = ""
 	_hct = CHECK_DT
 # 每格：數時間（播緊劇情唔計）；每 CHECK_DT 對一次進度簽名，變咗（玩家做咗任務動作）→ 放
 func hold_tick(sim, dt: float) -> void:
@@ -491,18 +502,45 @@ static func _sum(d) -> float:
 	if d is Dictionary:
 		for k in d: t += J.num(d[k])
 	return t
-# 進度簽名：主線任務、建築等級、收成／採集／製作次數、通關、佔領、打王、大排檔攤位解鎖＋等級
-static func sig(sim) -> String:
+# 進度簽名：[outgate] 淨係「任務」先算——主線任務前進、通關、佔領、打王（斬樹、收成、升台呢啲細動作唔算）
+static func sig(_sim) -> String:
 	var s = J.G.get("S")
 	if not (s is Dictionary): return ""
-	var a = [J.num(s.get("qi", 0)), _sum(s.get("bld")), _sum(s.get("cnt")), (s.cleared as Dictionary).size() if s.get("cleared") is Dictionary else 0]
+	#   主線關卡／主線王：通關同完成主線任務係同一件事，只計主線任務（唔係會一件事放行兩次）
+	var a = [J.num(s.get("qi", 0))]
 	var z = s.get("zone")
-	if z is Dictionary: a.append(JSON.stringify(z.get("own", {})).hash()); a.append(JSON.stringify(z.get("boss", {})).hash())
-	if sim != null and sim.st() != null and sim.st().get("st") is Dictionary:
-		var t = 0.0
-		for k in sim.st().st: t += sim.lv(str(k)) + (1.0 if sim.unlocked(str(k)) else 0.0)
-		a.append(t)
+	if z is Dictionary:
+		a.append(JSON.stringify(z.get("own", {})).hash())
+		var bs = []
+		for k in (z.get("boss", {}) as Dictionary):
+			if J.t(z.boss[k]) and not _main_key(str(k)): bs.append(str(k))
+		bs.sort(); a.append(str(bs).hash())
 	return str(a)
+static func _main_key(k: String) -> bool:   # "c:bid" 係唔係主線王（有 chapter）
+	var p = k.split(":")
+	if p.size() != 2: return false
+	for z in ZD.of_type("wild", int(p[0])):
+		for b in ZD.bosses(str(z.id), int(p[0])):
+			if str(b.id) == p[1] and b.get("chapter") is Array: return true
+	return false
+
+# [outgate] 主線關卡打完（S.cleared 多咗呢張圖嘅 x-1…）→ stage_win 入佇列；第一次跑：記低已有嘅，唔補播
+#   舊存檔：開場新聞（舊 zs0_map_enter）已經睇過 → 新聞搬咗去 1-1 打完，唔使再播
+func _stage_scan(sim) -> void:
+	var m = _mv(); var s = J.G.get("S")
+	if m == null or not (s is Dictionary) or not (s.get("cleared") is Dictionary) or sim == null or sim.st() == null: return
+	var c = sim.ci()
+	if not (m.get("story_stg") is Dictionary):
+		m["story_stg"] = {}
+		for k in s.cleared: m.story_stg[str(k)] = 1.0
+		if is_seen("zs0_map_enter") and not is_seen("zs0_stage_win_1-1"): mark("zs0_stage_win_1-1", 2.0)
+		return
+	var pre = "%d-" % (c + 1)
+	for k in s.cleared:
+		var sk = str(k)
+		if m.story_stg.has(sk) or not J.t(s.cleared[k]): continue
+		m.story_stg[sk] = 1.0
+		if sk.begins_with(pre): zone_event("stage_win", sk)
 func _sim_of(sc):
 	if sc == null or (sc is Object and not is_instance_valid(sc)): return null
 	return sc.get("sim") if sc is Object else null
@@ -518,10 +556,21 @@ func _ext_watch(sc) -> void:
 		else:
 			var st = J.G.get("Story")
 			if st is Dictionary: b = J.t(J.mc(st, "busy", []))
-	if b: _ext = true
+	if b:
+		if not _ext_sys(sc): _ext_story = true
+		_ext = true
 	elif _ext:
 		_ext = false
-		hold_start(sc.sim)
+		# [outgate] 村子劇情（主線、送禮、收編…）係呢個任務嘅故事：播完等多 1 秒（等住嗰陣先結算嘅主線任務都計埋）先開始等下一個任務；
+		#   淨係系統通知（升級解鎖，style "sys"）唔算故事，唔使等
+		if _ext_story: _ext_story = false; _ext_grace = EXT_GRACE
+# 主劇情播放器播緊嘅係唔係系統通知（升級解鎖）
+func _ext_sys(sc) -> bool:
+	if busy_fn.is_valid(): return false
+	var p = _player(sc)
+	if p == null or not (p.get("cur") is Dictionary): return false
+	var c = p.cur.get("sc")
+	return c is Dictionary and str(c.get("style", "")) == "sys"
 
 # 解霧咗、未播、未入佇列嘅區介紹 → 入佇列（"reveal" 事件嘅後備：例如解霧嗰陣冇劇情實例）
 static func reveal_scan(c: int) -> void:

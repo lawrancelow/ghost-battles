@@ -9,7 +9,7 @@ func all(t) -> void:
 	DB.lang = "zh"
 	S["hero"] = {"name": "阿明", "full": "李大明", "en": "Ming", "sex": "m", "set": true}
 	var b = null
-	for x in MS.beats(0): if str(x.id) == "zs0_map_enter": b = x
+	for x in MS.beats(0): if str(x.id) == "zs0_stage_win_1-1": b = x   # [outgate] 陰間新聞台（有村長全名）搬咗去 1-1 打完
 	var sc = MS.build_scene(b); var txt = ""
 	for l in sc.lines: txt += str(DB.L(l[1]))
 	if txt.contains("李大明") and not txt.contains("陳大福"): ok += 1

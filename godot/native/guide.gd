@@ -2,7 +2,7 @@
 # 介面同轉譯版一樣：J.G["Guide"] = { migrate, dot, anyDot, visit, drawGateDot }；載入時插入 SCENES.q_street/q_yard 同 QUESTS 兩個任務
 extends RefCounted
 
-const QV := 2.0
+const QV := 3.0   # [outgate] 3：拎走冥街夜市、陰陽交界兩個主線插入任務
 static var at: Array = []
 
 static func _g(n: String): return J.G.get(n)
@@ -22,10 +22,15 @@ static func migrate(fresh) -> void:
 	if not J.t(S.get("visit")): S["visit"] = {}
 	if not J.t(S.get("wmSeen")): S["wmSeen"] = {}
 	if J.t(fresh): S["qv"] = QV
-	if (J.num(S.get("qv")) if J.t(S.get("qv")) else 1.0) >= QV: return
-	var old = J.num(S.get("qi")); var add = 0
-	for pos in at: if old >= pos: add += 1
-	S["qi"] = old + add; S["qv"] = QV
+	var qv = J.num(S.get("qv")) if J.t(S.get("qv")) else 1.0
+	if qv >= QV: return
+	# [outgate] 第 3 版：冥街夜市、陰陽交界兩個插入任務拎走（舊出村玩法暫時唔開）
+	#   第 2 版清單：兩個任務喺 at[0]、at[1]+1；做過咗嘅（位置 < qi）要減返；啱啱做緊嗰個＝直接跳去下一個
+	if qv >= 2.0 and at.size() == 2:
+		var old = J.num(S.get("qi")); var sub = 0
+		for pos in [at[0], at[1] + 1.0]: if old > pos: sub += 1
+		S["qi"] = old - sub
+	S["qv"] = QV
 	var W = _g("World")
 	if W != null:
 		for s in J.iter(J.gp(W, "SPOTS")): if open_(s): S.wmSeen[J.str(J.gp(s, "id"))] = 1.0
@@ -39,6 +44,7 @@ static func dot(id) -> bool:
 	return s != null and open_(s) and not J.t(S.visit.get(J.str(id))) and not J.t(ws.get(J.str(id))) and J.str(id) != "battle"
 
 static func any_dot() -> bool:
+	if load("res://game/zone/zone_data.gd").on(): return false   # [outgate] 舊世界地圖唔開：出村門唔出「新地方」紅點
 	var W = _g("World")
 	if W == null: return false
 	for s in J.iter(J.gp(W, "SPOTS")): if dot(J.gp(s, "id")): return true
@@ -87,10 +93,11 @@ func run(_env) -> void:
 	for a in ADD:
 		var i = _find_stage(Q, a.after)
 		if i >= 0: at.append(float(i + 1))
-	var rev = ADD.duplicate(); rev.reverse()
-	for a in rev:
-		var i = _find_stage(Q, a.after)
-		if i >= 0: Q.insert(i + 1, a.q)
+	# [outgate] 唔再插入（舊出村玩法暫時唔開）；at 留住俾舊存檔對位
+	# [outgate] 第一章節奏：出村門一開淨係播「村口」（分區開場）；舊 1-1 開頭兩段（新聞＋餓鬼搶包）搬去 1-2 開頭（1-2 先係餓鬼）
+	var i11 = _find_stage(Q, "1-1"); var i12 = _find_stage(Q, "1-2")
+	if i11 >= 0 and i12 >= 0 and Q[i11].get("onStart") is Array and Q[i11].onStart.has("ch1_intro"):
+		Q[i12]["onStart"] = Q[i11].onStart.duplicate(); Q[i11]["onStart"] = []
 	var Gd = {
 		"migrate": func(_t, a): migrate(J.arg(a, 0)); return null,
 		"dot": func(_t, a): return dot(J.arg(a, 0)),
