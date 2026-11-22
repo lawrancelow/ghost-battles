@@ -2,14 +2,16 @@
 #   const LA = preload("res://game/zone/landmark_art.gd")
 #   地圖上嘅地標：ART[lm].png 有檔就貼圖（底邊中心對準 zones.json 嘅 at，闊 ART[lm].w），冇就用下面程序畫嘅暫代圖
 #   選地點卡插圖：ILLUS[地點] ＝ [圖鍵或 res 路徑, 裁切 Rect2（像素）]；而家暫用舊世界地圖 bg_worldmap2（1024×1536）嘅局部
-#   正式圖（2026-11-22 已到）：無名義山 res://assets/spr/lm_hill.webp（505×513）、破塔樓 res://assets/spr/lm_tower.webp（378×644），透明底、圖底＝地面
+#   正式圖（2026-11-22 已到）：無名義山 res://assets/spr/lm_hill_big.webp（1314×867，19:00 老闆要大山：已含山腳亂葬崗、墳、破牌坊、斷牆、霧）、
+#     破塔樓 res://assets/spr/lm_tower.webp（378×644），透明底、圖底＝地面
+#   無名義山顯示闊 375（約 3.6 棟民宅 104 闊並排）；山腳外圍再加一圈「亂葬崗／廢墟」道具（zones.json lm_hill.ring，tools/zone_build.py 生成）
 #     換圖：覆蓋呢兩個檔（同比例最好）；比例唔同就改 ART 嘅 w／h（h ＝ w × 圖高 ÷ 圖闊）。下面程序畫只係冇圖時後備
 #     卡插圖   → 每張 512×320（橫），放 res://assets/img/lm_card_<地點>.webp，再改 ILLUS 對應一行做 ["res://assets/img/lm_card_xxx.webp", Rect2()]
 # 畫風（Style D）：墨線、排線、蠟筆質感、偏灰病態色；冇宗教符號（墳只係冇字石碑同土包）
 extends RefCounted
 
 const ART := {
-	"hill": {"png": "res://assets/spr/lm_hill.webp", "w": 150.0, "h": 152.0},     # 正式圖 505×513：約一間大建築（紙紮大屋 150 闊）
+	"hill": {"png": "res://assets/spr/lm_hill_big.webp", "w": 375.0, "h": 247.4, "sort": -30.0},   # 大山：y 排序用山腳橢圓中間（企喺山前腳嘅人畫喺山上面）
 	"tower": {"png": "res://assets/spr/lm_tower.webp", "w": 100.0, "h": 170.0},   # 正式圖 378×644：比民宅（104 闊、約 90 高）高一截
 }
 const ILLUS := {
@@ -45,20 +47,91 @@ static func illus(pid: String) -> Texture2D:
 	return at
 
 # ---------------- 地圖上畫（nv_village 靜態層，ctx 係世界座標） ----------------
+static func sort_dy(lm: String) -> float: return float(ART.get(lm, {}).get("sort", 0.0))
 static func draw(ctx: Ctx, lm: String, x: float, y: float) -> void:
 	var a = ART.get(lm, {})
 	var p = str(a.get("png", ""))
 	if p != "" and ResourceLoader.exists(p):
-		var tx: Texture2D = load(p)
+		var tx: Texture2D = _tex(p)
 		var w = float(a.w); var h = w * tx.get_height() / tx.get_width()   # 照原圖比例，唔裁唔壓
-		Art.seat(ctx, x, y - 2, w * 0.72, 77)
-		ctx.ci.draw_set_transform_matrix(ctx.T)
-		ctx.ci.draw_texture_rect(tx, Rect2(x - w / 2.0, y - h + 4.0, w, h), false)
-		ctx.ci.draw_set_transform_matrix(Transform2D.IDENTITY)
+		if lm != "hill": Art.seat(ctx, x, y - 2, w * 0.72, 77)
+		ctx.drawImage(tx, x - w / 2.0, y - h + 4.0, w, h)
 		return
 	match lm:
 		"hill": _hill(ctx, x, y)
 		"tower": _tower(ctx, x, y)
+static var _tx := {}
+static func _tex(p: String) -> Texture2D:
+	if not _tx.has(p): _tx[p] = load(p)
+	return _tx[p]
+# 撳：圖入面實色嘅位先算（大山四角係透明天空，唔好搶咗隔籬嘅撳）
+static var _mask := {}
+static func solid(lm: String, at: Vector2, p: Vector2) -> bool:
+	var r = rect_of(lm, at)
+	if not r.has_point(p): return false
+	var a = ART.get(lm, {})
+	if lm != "hill" or not ResourceLoader.exists(str(a.get("png", ""))): return true
+	if not _mask.has(lm):
+		var im: Image = _tex(str(a.png)).get_image()
+		if im != null:
+			im = im.duplicate() as Image
+			if im.is_compressed(): im.decompress()
+			im.resize(im.get_width() / 6, im.get_height() / 6, Image.INTERPOLATE_BILINEAR)
+		_mask[lm] = im
+	var m: Image = _mask[lm]
+	if m == null: return true
+	var w = float(a.w); var h = w * m.get_height() / m.get_width()
+	var u = (p.x - (at.x - w / 2.0)) / w; var v = (p.y - (at.y - h + 4.0)) / h
+	if u < 0.0 or u >= 1.0 or v < 0.0 or v >= 1.0: return false
+	var ix = int(u * m.get_width()); var iy = int(v * m.get_height())
+	for dy in range(-1, 2):   # 邊位寬鬆少少（手指大細）
+		for dx in range(-1, 2):
+			var qx = clampi(ix + dx * 2, 0, m.get_width() - 1); var qy = clampi(iy + dy * 2, 0, m.get_height() - 1)
+			if m.get_pixel(qx, qy).a > 0.3: return true
+	return false
+
+# 山腳地面：一塊唔規則嘅泥地（墨線排線、偏灰），將山圖同四周地面接埋（唔好方塊感）；靜態，畫一次
+static func draw_patch(ctx: Ctx, x: float, y: float) -> void:
+	var s = size_of("hill")
+	var cx = x; var cy = y - s.y * 0.15
+	var rx = s.x * 0.6; var ry = s.y * 0.3
+	for i in 5:   # 由外到內：淡 → 實
+		var k = 1.0 - i * 0.12
+		Art.el(ctx, cx, cy, rx * k, ry * k, "rgba(40,32,28,%.2f)" % (0.10 + i * 0.05))
+	for i in 18:   # 邊位泥塊（打散橢圓邊）
+		var a = TAU * _r(61, i); var rr = 0.78 + 0.22 * _r(62, i)
+		Art.el(ctx, cx + cos(a) * rx * rr, cy + sin(a) * ry * rr, 22.0 + _r(63, i) * 26.0, 7.0 + _r(64, i) * 7.0, "rgba(46,36,30,%.2f)" % (0.16 + _r(65, i) * 0.14))
+	ctx.strokeStyle = "rgba(14,10,10,.28)"; ctx.lineWidth = 1.0; ctx.lineCap = "round"
+	for i in 60:   # 排線
+		var a = TAU * _r(71, i); var rr = sqrt(_r(72, i)) * 0.95
+		var px = cx + cos(a) * rx * rr; var py = cy + sin(a) * ry * rr
+		ctx.beginPath(); ctx.moveTo(px - 4, py + 2); ctx.lineTo(px + 4, py - 2); ctx.stroke()
+	ctx.lineCap = "butt"
+# 山腳外圍一件道具（墳、碑、亂石、枯樹、破罐、斷牆、木樁、骨頭…），偏灰同 draw_ruin 一樣
+static func draw_ring(ctx: Ctx, e: Array) -> void:
+	var k = str(e[0]); var x = float(e[1]); var y = float(e[2]); var w = float(e[3]); var flip = J.t(e[4]) if e.size() > 4 else false
+	if k == "proc:bones": _bones(ctx, x, y, w, int(x * 7 + y)); return
+	if k.begins_with("fg_"): Art.fg(ctx, k.substr(3), x, y + 2, w, flip, Color(0.62, 0.56, 0.54)); return
+	if not Spr.ok(k): return
+	var h = 0.0
+	var im = Spr.get_tex(k)
+	if im != null: h = w * im.get_height() / im.get_width()
+	Art.el(ctx, x, y - 1, w * 0.42, maxf(2.0, h * 0.12), "rgba(12,6,5,.35)")   # 貼地暗影
+	var sv = Art.tint; Art.tint = Color(0.6, 0.55, 0.53)
+	if flip:
+		ctx.save(); ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0)
+		Art.put(ctx, k, x, y + 4, w); ctx.restore()
+	else: Art.put(ctx, k, x, y + 4, w)
+	Art.tint = sv
+static func _bones(ctx: Ctx, x: float, y: float, w: float, sd: int) -> void:
+	Art.el(ctx, x, y + 1, w * 0.55, 3.0, "rgba(12,6,5,.3)")
+	for i in 2 + sd % 2:
+		var a = (_r(sd, i) - 0.5) * 1.4; var l = w * (0.35 + 0.2 * _r(sd, i + 5))
+		var ox = (i - 0.5) * w * 0.25; var oy = (_r(sd, i + 9) - 0.5) * 4.0
+		var p0 = Vector2(x + ox - cos(a) * l, y + oy - sin(a) * l * 0.4); var p1 = Vector2(x + ox + cos(a) * l, y + oy + sin(a) * l * 0.4)
+		_ln(ctx, [p0, p1], "#2a2220", 3.6)
+		_ln(ctx, [p0, p1], "#cfc6b0", 2.2)
+		for q in [p0, p1]: Art.el(ctx, q.x, q.y, 2.4, 1.8, "#d8cfba", "#2a2220", 0.8)
 
 static func _r(seed: int, k: int) -> float:
 	var v = sin(float(seed) * 12.9898 + float(k) * 78.233) * 43758.5453

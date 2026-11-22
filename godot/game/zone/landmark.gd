@@ -175,7 +175,9 @@ static func _main():
 static func lm_at(p: Vector2) -> String:
 	for z in zones_of():
 		var lm = str(z.get("lm", ""))
-		if hit_rect(lm).has_point(p): return lm
+		if lm == "hill":
+			if LA.solid(lm, at(lm), p): return lm   # 大山：成座山（圖入面實色位）都撳得
+		elif hit_rect(lm).has_point(p): return lm
 	return ""
 # zone_view.tap 掛鈎：回 true＝處理咗
 static func tap(main, p: Vector2) -> bool:
@@ -311,7 +313,7 @@ static func arrive(main, lm: String) -> void:
 	var nv = main.get("village")
 	if nv != null and nv.has_method("zone_cam"):
 		var cam = nv.zone_cam()
-		if cam != null: cam.center_on(at(lm) + Vector2(0, -40))
+		if cam != null: cam.center_on(at(lm) + Vector2(0, -minf(art_rect(lm).size.y * 0.35, 90.0)))
 
 # ---------------- 行動目標（act_targets，kind "landmark"；go 開選地點卡） ----------------
 static func targets(_game = null) -> Array:
@@ -320,7 +322,7 @@ static func targets(_game = null) -> Array:
 	for z in zones_of():
 		var lm = str(z.get("lm", ""))
 		if not unlocked(lm): continue
-		o.append({"id": str(z.id), "kind": "landmark", "name": name_of(lm), "pos": at(lm), "my_pow": 0, "foe_pow": 0, "icon": "",
+		o.append({"id": str(z.id), "kind": "landmark", "name": name_of(lm), "pos": stand(lm), "my_pow": 0, "foe_pow": 0, "icon": "",
 			"go": func(): open(_main(), lm)})
 	return o
 static func _static_init() -> void: register()
@@ -331,11 +333,19 @@ static func register() -> void:
 	AT.providers.append(cb)
 
 # ---------------- 畫：地圖上（nv_village 靜態層） ----------------
+#   大山：泥地（最底，y＝圖頂）＋山圖（y＝山腳橢圓中間）＋外圍道具（每件自己 y）；全部靜態（sig 唔變就唔重畫）
 static func statics(nv) -> void:
 	if not ZD.on(): return
+	var ci = ZD.ci()
 	for z in zones_of():
 		var lm = str(z.get("lm", "")); var a = at(lm)
-		nv._static("lm_" + lm, a.y, [ZD.ci(), lm], false, func(ctx): LA.draw(ctx, lm, a.x, a.y))
+		nv._static("lm_" + lm, a.y + LA.sort_dy(lm), [ci, lm], false, func(ctx): LA.draw(ctx, lm, a.x, a.y))
+		if lm != "hill": continue
+		nv._static("lm_hill_pt", art_rect(lm).position.y, [ci, "pt"], false, func(ctx): LA.draw_patch(ctx, a.x, a.y))
+		var ring = z.get("ring", [])
+		for i in ring.size():
+			var e = ring[i]
+			nv._static("lmr_%d" % i, float(e[2]), [ci, i], false, func(ctx): LA.draw_ring(ctx, e))
 # 上層（zone_view.draw_over 尾）：未開＝黑霧＋名牌＋鎖＋點樣開；開咗＝名牌（＋紅點）
 static func draw_over(c: CanvasItem, nv, ctx: Ctx, vr: Rect2, t: float) -> void:
 	if not ZD.on(): return

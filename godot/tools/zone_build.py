@@ -824,15 +824,44 @@ _reveal(M0, True); _reveal(M1, False); _reveal(M2, False); _reveal(M3, False); _
 _dress(M0)
 
 # ================= [landmark] 地標（zones.json 新 type "landmark"；畫面／規則喺 game/zone/landmark.gd） =================
-#   無名義山（hill）：每關村子同一個相對位（村子左上角 + (770, 670)，祭壇同拔營營帳之間），拔營跟住搬；解鎖＝第 1 關打完 1-2
+#   無名義山（hill）：每關村邊一座（拔營跟住搬，見下面 HILL_AT）；解鎖＝第 1 關打完 1-2；開過一次每關都開
 #   破塔樓（tower）：第 2 關起每關一座，喺村外一塊空地（由虛空挖出嚟，主角之後可以行過去）；解鎖＝到埗、睇完該關開場劇情
 #   解鎖條件用 "unlock"（唔用 "reveal"：地標嘅黑霧／解鎖由 landmark.gd 自己管，唔影響出村門外解霧嘅計數）
 #   at＝底邊中心（畫圖、行動目標位）；stand＝玩完返嚟主角企嘅位；rect＝黑霧／撳嘅範圍
-HILL_REL = (770, 670); HILL_W = 150; HILL_H = 152
-TOWER_AT = {1: {"rect": [130, 1620, 450, 1990], "at": [300, 1920], "stand": [404, 1944]},
-            2: {"rect": [1196, 1060, 1470, 1470], "at": [1330, 1430], "stand": [1236, 1452]},
-            3: {"rect": [1450, 1640, 1830, 2000], "at": [1640, 1940], "stand": [1530, 1962]}}
-TOWER_AT[4] = TOWER_AT[2]; TOWER_AT[5] = TOWER_AT[1]
+# [landmark] 19:00 老闆：無名義山要大（約 3.5～4 棟民宅並排、似一座小山），用 lm_hill_big.webp（1314×867）
+#   村子入面冇咁大嘅空位（六關村內布局一樣、塞滿建築／槐樹／稻田／路）→ 每關揀村邊一塊虛空／山岩空地放（拔營＝每關都喺村邊）
+#   at＝圖底邊中心；stand＝主角企位（山腳前面，行動目標位）；cut＝挖走虛空／山岩（山＋外圍亂葬崗都喺入面，之後全圖可走時行得到）
+HILL_W = 375; HILL_H = round(HILL_W * 867 / 1314, 1)
+HILL_AT = {0: {"at": [1116, 2262], "stand": [1010, 2292], "cut": [892, 2010, 1340, 2330]},     # 村南：過河右邊（營帳對面）
+           1: {"at": [226, 610], "stand": [330, 640], "cut": [0, 330, 452, 668]},              # 村西北：竹林區左邊
+           2: {"at": [1293, 1720], "stand": [1158, 1706], "cut": [1184, 1474, 1480, 1792]},    # 村東南：破塔樓下面（山左腳搭入村邊空位）
+           3: {"at": [1740, 585], "stand": [1640, 606], "cut": [1500, 320, 1980, 618]}}        # 村東北：河對面
+HILL_AT[4] = HILL_AT[2]; HILL_AT[5] = HILL_AT[1]
+# 山腳外圍「亂葬崗／廢墟」過渡：用現有道具圖（w_graves／draw_ruin 嗰批）；唔可撳、唔擋路，每件自己 y 排序
+RING_KIT = [("grave", 26, 34, 3), ("zb_rock1", 30, 44, 3), ("zb_rock2", 26, 38, 3), ("zp_deadtree", 52, 70, 2), ("zp_jars", 28, 36, 2),
+            ("zb_stakes", 48, 62, 2), ("zb_wall", 46, 60, 2), ("zb_bush", 32, 44, 2), ("zp_woodpile", 34, 42, 1), ("proc:bones", 18, 24, 3),
+            ("fg_d1", 56, 74, 2), ("fg_d3", 56, 74, 2), ("fg_g2", 48, 64, 2), ("fg_r2", 40, 52, 2)]
+RING_CAP = {"proc:bones": 4, "zp_deadtree": 3, "zb_wall": 2, "zb_stakes": 2, "zp_woodpile": 1, "zp_jars": 3, "grave": 6, "zb_bush": 3}
+def _hill_ring(M, ci, at, cut):
+    rnd = random.Random(7100 + ci)
+    cx = at[0]; cy = at[1] - HILL_H * 0.17; rx = HILL_W * 0.5; ry = HILL_H * 0.17
+    bag = [k for k in RING_KIT for _ in range(k[3])]
+    others = [z["rect"] for z in M["zones"] if z["type"] != "landmark"]
+    out = []
+    for tries in range(900):
+        if len(out) >= 26: break
+        a = math.radians(rnd.uniform(-28, 208))
+        sx = rnd.uniform(1.0, 1.28); sy = rnd.uniform(1.15, 1.9)
+        x = cx + math.cos(a) * rx * sx; y = cy + math.sin(a) * ry * sy + 6
+        if math.sin(a) < 0.15 and abs(math.cos(a)) < 0.9: continue          # 山背後畀山遮住：唔放
+        k = rnd.choice(bag); w = round(rnd.uniform(k[1], k[2]))
+        if sum(1 for o in out if o[0] == k[0]) >= RING_CAP.get(k[0], 4): continue
+        if not (cut[0] + w * 0.5 + 4 < x < cut[2] - w * 0.5 - 4 and cut[1] + 30 < y < cut[3] - 6): continue
+        if any(r[0] - w * 0.5 < x < r[2] + w * 0.5 and r[1] - 6 < y < r[3] + 40 for r in others): continue   # 唔入村／資源區／大排檔
+        if any((x - o[1]) ** 2 + ((y - o[2]) * 1.6) ** 2 < (o[3] * 0.5 + w * 0.5) ** 2 * 0.55 for o in out): continue
+        out.append([k[0], round(x), round(y), w, rnd.random() < 0.5])
+    out.sort(key=lambda e: e[2])
+    return out
 def _sub_rect(r, h):
     """r 減去 h（都係 [x0,y0,x1,y1]）→ 最多四塊"""
     if h[0] >= r[2] or h[2] <= r[0] or h[1] >= r[3] or h[3] <= r[1]: return [r]
@@ -843,25 +872,34 @@ def _sub_rect(r, h):
     if h[0] > r[0]: o.append([r[0], y0, h[0], y1])
     if h[2] < r[2]: o.append([h[2], y0, r[2], y1])
     return [q for q in o if q[2] - q[0] >= 8 and q[3] - q[1] >= 8]
+def _carve(M, cut, pad):
+    for b in M.get("barriers", []):   # 虛空／山岩挖一塊空地出嚟
+        if b["k"] in ("void", "cliff"):
+            nr = []
+            for r in b["rects"]: nr += _sub_rect(r, cut)
+            b["rects"] = nr
+    M["scenery"] = [s for s in M.get("scenery", []) if not (cut[0] - pad < s[1] < cut[2] + pad and cut[1] < s[2] < cut[3] + pad)]
+TOWER_AT = {1: {"rect": [130, 1620, 450, 1990], "at": [300, 1920], "stand": [404, 1944]},
+            2: {"rect": [1196, 1060, 1470, 1470], "at": [1330, 1430], "stand": [1236, 1452]},
+            3: {"rect": [1450, 1640, 1830, 2000], "at": [1640, 1940], "stand": [1530, 1962]}}
+TOWER_AT[4] = TOWER_AT[2]; TOWER_AT[5] = TOWER_AT[1]
 def _landmarks(M, ci):
-    vr = [z for z in M["zones"] if z["type"] == "village"][0]["rect"]
-    hx = vr[0] + HILL_REL[0]; hy = vr[1] + HILL_REL[1]
-    hr = [hx - HILL_W // 2 - 6, hy - HILL_H - 14, hx + HILL_W // 2 + 6, hy + 14]
-    M["zones"].append({"id": "lm_hill", "type": "landmark", "lm": "hill", "rect": hr, "n": ["地標　無名義山", "地標　無名義山"], "col": "#4a4458",
-                       "at": [hx, hy], "stand": [hx - 75, hy + 14], "unlock": {"quest_done": ["stage", "1-2"]}})
-    V = M["village"]   # 山丘範圍內嘅自然填充擺設拎走（唔好壓住山）
-    V["props"] = [p for p in V.get("props", []) if not (hr[0] - 16 < p[1] < hr[2] + 16 and hr[1] < p[2] < hr[3] + 20)]
+    H = HILL_AT[ci]; hx, hy = H["at"]
+    hr = [round(hx - HILL_W / 2 - 6), round(hy - HILL_H - 6), round(hx + HILL_W / 2 + 6), hy + 14]
+    _carve(M, H["cut"], 60)
+    ring = _hill_ring(M, ci, H["at"], H["cut"])
+    fr = [min([hr[0]] + [e[1] - e[3] // 2 for e in ring]), hr[1], max([hr[2]] + [e[1] + e[3] // 2 for e in ring]), max([hr[3]] + [e[2] + 8 for e in ring])]   # 黑霧範圍：山＋外圍
+    M["zones"].append({"id": "lm_hill", "type": "landmark", "lm": "hill", "rect": fr, "n": ["地標　無名義山", "地標　無名義山"], "col": "#4a4458",
+                       "at": [hx, hy], "stand": list(H["stand"]), "unlock": {"quest_done": ["stage", "1-2"]}, "ring": ring})
+    V = M["village"]   # 山圖範圍內嘅村內自然填充擺設拎走（第 3、5 關山左腳搭入村邊）
+    V["props"] = [p for p in V.get("props", []) if not (hr[0] - 16 < p[1] < hr[2] + 16 and hr[1] + 40 < p[2] < hr[3] + 20)]
+    # 村內擺設（DECOR 嘅墳／樹）同山圖疊：拎走（第 3、5 關山左腳搭入村邊）
+    V["DECOR"] = [d for d in V.get("DECOR", []) if not (hr[0] < d[1] < hr[2] and hr[1] + 40 < d[2] < hr[3] + 20)]
     if ci in TOWER_AT:
         T = TOWER_AT[ci]
         M["zones"].append({"id": "lm_tower", "type": "landmark", "lm": "tower", "rect": list(T["rect"]), "n": ["地標　破塔樓", "地標　破塔樓"], "col": "#3e3a48",
                            "at": list(T["at"]), "stand": list(T["stand"]), "unlock": {"enter": True, "hint": H_ENTER}})
-        cut = [T["rect"][0] - 10, T["rect"][1] - 10, T["rect"][2] + 10, T["rect"][3] + 10]
-        for b in M.get("barriers", []):   # 虛空挖一塊空地出嚟
-            if b["k"] in ("void", "cliff"):
-                nr = []
-                for r in b["rects"]: nr += _sub_rect(r, cut)
-                b["rects"] = nr
-        M["scenery"] = [s for s in M.get("scenery", []) if not (cut[0] - 60 < s[1] < cut[2] + 60 and cut[1] < s[2] < cut[3] + 60)]
+        _carve(M, [T["rect"][0] - 10, T["rect"][1] - 10, T["rect"][2] + 10, T["rect"][3] + 10], 60)
 for _ci, _M in enumerate((M0, M1, M2, M3, M4, M5)): _landmarks(_M, _ci)
 
 D = {"v": 1, "maps": {"0": M0, "1": M1, "2": M2, "3": M3, "4": M4, "5": M5}}

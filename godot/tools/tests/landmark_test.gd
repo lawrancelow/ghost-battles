@@ -55,6 +55,30 @@ func _spr_rect(key: String, x: float, y: float, w: float) -> Rect2:
 	var h = w * tx.get_height() / tx.get_width() if tx != null else w
 	return Rect2(x - w / 2.0, y + 6.0 - h, w, h)
 func _qidx(tp: String, key: String) -> int: return ZD._qidx(tp, key)
+func _solid_in(r: Rect2) -> bool:   # 呢個範圍有冇大山實色（每 5 點抽樣）
+	var a = LM.at("hill")
+	if not r.intersects(LM.art_rect("hill")): return false
+	var y = r.position.y
+	while y <= r.end.y:
+		var x = r.position.x
+		while x <= r.end.x:
+			if LA.solid("hill", a, Vector2(x, y)): return true
+			x += 5.0
+		y += 5.0
+	return false
+# 截圖：村子全景（看到村＋山）、無名義山近景、破塔樓近景
+func _shot_map(t, m, c: int) -> void:
+	var nv = m.village; var cam = nv.zone_cam()
+	m.close_sheet()
+	var vr = ZD.zrect("village"); var hr = LM.art_rect("hill")
+	var box = vr.merge(hr)
+	cam.vel = Vector2.ZERO
+	cam.z = maxf(cam.z_min(), minf(nv.size.x / (box.size.x + 40.0), nv.size.y * 0.78 / (box.size.y + 40.0)))
+	cam.center_on(box.get_center() + Vector2(0, -30)); await _w(t, 1.0); await _shot(t, "m%d_pano" % (c + 1))
+	_cam(m, hr.get_center() + Vector2(0, 10), nv.size.x / 470.0); await _w(t, 0.8); await _shot(t, "m%d_hill" % (c + 1))
+	_cam(m, hr.get_center() + Vector2(0, 0), nv.size.x / 300.0); await _w(t, 0.8); await _shot(t, "m%d_hill_near" % (c + 1))
+	if LM.has("tower"):
+		_cam(m, LM.at("tower") + Vector2(0, -70)); await _w(t, 0.8); await _shot(t, "m%d_tower" % (c + 1))
 
 func survey(t) -> void:
 	var m = await _boot(t)
@@ -90,24 +114,46 @@ func _run(t, shots: bool) -> void:
 
 # ================= 1. 資料／布局（六關） =================
 func _data_check(_t, _m) -> void:
-	var rel0 = null; var rel_same = true; var hill_all = true; var tower_ok = true
+	var hill_all = true; var tower_ok = true
 	for c in 6:
-		var vr = ZD.zrect("village", c)
-		var h = LM.zone_of("hill", c)
-		if h.is_empty(): hill_all = false; continue
-		var rel = LM.at("hill", c) - vr.position
-		if rel0 == null: rel0 = rel
-		elif rel != rel0: rel_same = false
+		if LM.zone_of("hill", c).is_empty(): hill_all = false
 		var tw = LM.zone_of("tower", c)
 		if (c == 0) != tw.is_empty(): tower_ok = false
-	_chk("六關都有無名義山", hill_all)
-	_chk("無名義山喺每關村子同一個相對位（拔營跟住搬）", rel_same, rel0)
+	_chk("六關都有無名義山（拔營跟住搬：每關村邊一座）", hill_all)
 	_chk("破塔樓：第 1 關冇，第 2–6 關每關一座", tower_ok)
+	var tx = load(LA.ART.hill.png)
+	_chk("無名義山用大圖 lm_hill_big（1314×867）、舊細圖唔入包", tx != null and tx.get_width() == 1314 and tx.get_height() == 867 and not ResourceLoader.exists("res://assets/spr/lm_hill.webp"))
+	var hw = LA.size_of("hill").x
+	_chk("無名義山闊＝3.5～4 棟民宅（民宅 104）", hw >= 104 * 3.5 and hw <= 104 * 4.0, hw)
 	for c in 6:
 		var tag = "第 %d 關：" % (c + 1)
 		var vr = ZD.zrect("village", c)
-		_chk(tag + "無名義山圖喺中央村入面", vr.encloses(LM.art_rect("hill", c)), LM.art_rect("hill", c))
+		var ar = LM.art_rect("hill", c)
+		var ws = Vector2(float(ZD.mdef(c).w), float(ZD.mdef(c).h))
+		_chk(tag + "無名義山圖成幅喺地圖入面（唔裁切）", Rect2(Vector2(-1, -1), ws + Vector2(2, 2)).encloses(Rect2(ar.position, ar.size - Vector2(0, 10))), [ar, ws])
+		var dx = maxf(0.0, maxf(vr.position.x - ar.end.x, ar.position.x - vr.end.x)); var dy = maxf(0.0, maxf(vr.position.y - ar.end.y, ar.position.y - vr.end.y))
+		_chk(tag + "無名義山喺村邊（距離村 ≤ 200）", Vector2(dx, dy).length() <= 200.0, Vector2(dx, dy).length())
+		var ov = []
+		for z in ZD.zones(c): if not (str(z.type) in ["landmark", "village"]) and ZD.rect(z.rect).intersects(ar.grow(-2)): ov.append(str(z.id))
+		_chk(tag + "無名義山唔疊資源區／大排檔／野外", ov.is_empty(), ov)
 		_chk(tag + "無名義山解鎖＝主線 1-2", str(LM.zone_of("hill", c).get("unlock", {}).get("quest_done", [])) == str(["stage", "1-2"]))
+		var blk = []
+		for b in ZD.mdef(c).get("barriers", []):
+			if str(b.k) in ["void", "cliff"]:
+				for r in b.rects: if ZD.rect(r).intersects(Rect2(ar.position + Vector2(0, ar.size.y * 0.55), Vector2(ar.size.x, ar.size.y * 0.45 - 10)).grow(-2)): blk.append(r)
+		_chk(tag + "山腳挖咗虛空／山岩（之後主角行得到）", blk.is_empty(), blk)
+		var ring = LM.zone_of("hill", c).get("ring", [])
+		var bad_r = []
+		for e in ring:
+			var q = Vector2(float(e[1]), float(e[2]))
+			for z in ZD.zones(c): if str(z.type) != "landmark" and ZD.rect(z.rect).has_point(q): bad_r.append([e[0], z.id])
+		_chk(tag + "山腳外圍亂葬崗道具 ≥ 12 件、唔入村／其他區", ring.size() >= 12 and bad_r.is_empty(), [ring.size(), bad_r])
+		var keys = {}
+		for e in ring: keys[str(e[0])] = 1
+		_chk(tag + "外圍道具用現有墳／碑／石／骨等（唔係一種）", keys.size() >= 5 and (keys.has("grave")) and keys.has("proc:bones"), keys.keys())
+		var fr = ZD.rect(LM.zone_of("hill", c).rect); var enc = fr.encloses(Rect2(ar.position, ar.size - Vector2(0, 10)))
+		for e in ring: if not fr.grow(2).has_point(Vector2(float(e[1]), float(e[2]))): enc = false
+		_chk(tag + "黑霧範圍包住山＋外圍", enc)
 		if c == 0: continue
 		var tz = LM.zone_of("tower", c); var tr = ZD.rect(tz.rect)
 		_chk(tag + "破塔樓圖喺自己區入面", tr.encloses(LM.art_rect("tower", c)), [tr, LM.art_rect("tower", c)])
@@ -138,41 +184,62 @@ func _maps_check(t, m, shots: bool) -> void:
 		for k in POS:
 			if k == "gate": continue
 			var r = _spr_rect(k, J.num(POS[k][0]), J.num(POS[k][1]), float(Art.BW.get(k, 100)))
-			var foot = Rect2(r.position.x + r.size.x * 0.1, r.position.y + r.size.y * 0.45, r.size.x * 0.8, r.size.y * 0.55)
-			if foot.intersects(hr.grow(-6)): hit.append(k)
+			if _solid_in(Rect2(r.position.x + r.size.x * 0.1, r.position.y + r.size.y * 0.2, r.size.x * 0.8, r.size.y * 0.8)): hit.append(k)
 		for i in J.G.TREE_POS.size():
-			var p = J.G.TREE_POS[i]; if Rect2(p[0] - 22, p[1] - 50, 44, 50).intersects(hr): hit.append("tree%d" % i)
+			var p = J.G.TREE_POS[i]; if _solid_in(Rect2(p[0] - 22, p[1] - 80, 44, 80)): hit.append("tree%d" % i)
 		for i in J.G.PADDY_POS.size():
-			var p = J.G.PADDY_POS[i]; if Rect2(p[0] - 36, p[1] - 30, 72, 34).intersects(hr): hit.append("paddy%d" % i)
-		for e in nv.extras(): if Rect2(e[1] - e[3] / 2.0, e[2] - 50, e[3], 50).intersects(hr): hit.append(e[0])
+			var p = J.G.PADDY_POS[i]; if _solid_in(Rect2(p[0] - 36, p[1] - 30, 72, 34)): hit.append("paddy%d" % i)
+		for e in nv.extras(): if _solid_in(Rect2(e[1] - e[3] / 2.0, e[2] - 50, e[3], 50)): hit.append(e[0])
 		var ZG = load("res://game/zone/zone_ground.gd")
 		for e in ZG.path_samples(ZD.cur(), 6.0):
-			if str(e[2]) != "main": continue
 			var q: Vector2 = e[0]; var hw: float = e[1]
-			if Rect2(q.x - hw, q.y - hw * 0.5, hw * 2.0, hw).intersects(hr.grow(-4)): hit.append("main_road"); break
-		_chk(tag + "無名義山唔撞建築／槐樹／稻田／公告板／主路", hit.is_empty(), hit)
-		_chk(tag + "無名義山企位（stand）行得到", ZW.region(LM.stand("hill")) == "village" and not ZV.blocked(LM.stand("hill")), LM.stand("hill"))
+			if hr.has_point(q) and LA.solid("hill", LM.at("hill"), q): hit.append("road"); break
+		if LM.has("tower"):
+			var tr2 = LM.art_rect("tower")
+			if _solid_in(Rect2(tr2.position.x + 8, tr2.position.y, tr2.size.x - 16, tr2.size.y - 10)): hit.append("tower")
+		_chk(tag + "無名義山唔遮建築／槐樹／稻田／公告板／路／破塔樓", hit.is_empty(), hit)
+		var sd = LM.stand("hill")
+		_chk(tag + "無名義山企位（山腳前面）唔喺阻隔上、唔畀山遮", not ZV.blocked(sd) and sd.y > LM.at("hill").y + LA.sort_dy("hill") and (ZW.region(sd) == "village" or ZD.zone_at(sd) in ["", "lm_hill"]), sd)
+		var near = INF
+		for yy in range(int(hr.position.y), int(hr.end.y), 4):
+			for xx in range(int(hr.position.x), int(hr.end.x), 4):
+				if LA.solid("hill", LM.at("hill"), Vector2(xx, yy)): near = minf(near, sd.distance_to(Vector2(xx, yy)))
+		_chk(tag + "企位貼住山腳（≤ 60）", near <= 60.0, near)
 		await _w(t, 0.3)
 		var sn = nv.statics.get("lm_hill"); var stn = nv.statics.get("lm_tower")
-		_chk(tag + "無名義山圖畫咗、y 排序位＝山腳", sn != null and sn.node.visible and absf(sn.node.position.y - LM.at("hill").y) < 0.5)
+		_chk(tag + "無名義山圖畫咗、y 排序位＝山腳橢圓中", sn != null and sn.node.visible and absf(sn.node.position.y - (LM.at("hill").y + LA.sort_dy("hill"))) < 0.5)
+		var ring = LM.zone_of("hill").get("ring", [])
+		var rn = 0
+		for i in ring.size():
+			var q = nv.statics.get("lmr_%d" % i)
+			if q != null and q.node.visible and absf(q.node.position.y - float(ring[i][2])) < 0.5: rn += 1
+		var stale = nv.statics.get("lmr_%d" % ring.size())
+		_chk(tag + "外圍道具每件自己 y 排序、冇上一關剩低", rn == ring.size() and (stale == null or not stale.node.visible), [rn, ring.size()])
+		var pt = nv.statics.get("lm_hill_pt")
+		_chk(tag + "山腳泥地喺最底（y＝圖頂）", pt != null and pt.node.visible and pt.node.position.y <= hr.position.y + 0.5)
 		if c == 0: _chk(tag + "冇破塔樓圖", stn == null or not stn.node.visible)
 		else:
 			_chk(tag + "破塔樓圖畫咗", stn != null and stn.node.visible and absf(stn.node.position.y - LM.at("tower").y) < 0.5)
 			_chk(tag + "破塔樓企位唔喺阻隔上", not ZV.blocked(LM.stand("tower")) and not ZV.blocked(LM.at("tower")))
-		# 撳 → 開啱嘅卡（測試唔閘：已開）
+		# 撳 → 開啱嘅卡（測試唔閘：已開）；大山：山頂枯樹、山腰、山腳都撳得；四角透明天空唔算
 		for lm in ["hill", "tower"]:
 			if not LM.has(lm): continue
-			m.close_sheet(); LM.CARD = ""
-			_cam(m, LM.at(lm) + Vector2(0, -60)); await _w(t, 0.4)
-			var p = LM.art_rect(lm).get_center()
-			var r0 = ZV.tap(m, p)
-			await _w(t, 0.2)
-			_chk(tag + "撳%s → 開%s嘅選地點卡" % [lm, lm], r0 and m.sheet.visible and LM.CARD == lm and m.sheet_title.text == LM.name_of(lm), [r0, LM.CARD, m.sheet_title.text])
-			if shots and c in [0, 1, 2, 3]:
-				m.close_sheet(); _cam(m, LM.at(lm) + Vector2(0, -70)); await _w(t, 0.8); await _shot(t, "m%d_%s" % [c + 1, lm])
+			var ar = LM.art_rect(lm)
+			var pts = [ar.get_center()]
+			if lm == "hill": pts = [ar.position + Vector2(ar.size.x * 0.46, ar.size.y * 0.06), ar.position + Vector2(ar.size.x * 0.3, ar.size.y * 0.55), ar.position + Vector2(ar.size.x * 0.5, ar.size.y * 0.9), ar.position + Vector2(ar.size.x * 0.06, ar.size.y * 0.75)]
+			var okn = 0
+			for p in pts:
+				m.close_sheet(); LM.CARD = ""
+				_cam(m, p); await _w(t, 0.25)
+				var r0 = ZV.tap(m, p)
+				await _w(t, 0.15)
+				if r0 and m.sheet.visible and LM.CARD == lm and m.sheet_title.text == LM.name_of(lm): okn += 1
+			_chk(tag + "撳%s（%d 個位）→ 開%s嘅選地點卡" % [lm, pts.size(), lm], okn == pts.size(), okn)
 			m.close_sheet()
-		if shots and c in [4, 5]:
-			_cam(m, LM.at("tower") + Vector2(0, -70)); await _w(t, 0.8); await _shot(t, "m%d_tower" % (c + 1))
+			if lm == "hill":
+				_chk(tag + "大山四角透明位唔當撳中", LM.lm_at(ar.position + Vector2(6, 6)) == "" and LM.lm_at(Vector2(ar.end.x - 6, ar.position.y + 6)) == "")
+		if shots:
+			await _shot_map(t, m, c)
 		# 名牌（每個地標一個）
 		_cam(m, LM.at("hill") + Vector2(0, -60)); await _w(t, 0.4)
 		var n = 0
@@ -393,7 +460,7 @@ func _misc_check(t, m) -> void:
 	var all = []
 	for c in AT.providers: all.append_array(c.call(m))
 	var tg = all.filter(func(x): return x.kind == "landmark")
-	_chk("行動目標：無名義山（kind landmark、位、名）", tg.size() == 1 and tg[0].id == "lm_hill" and tg[0].pos == LM.at("hill") and tg[0].name == "無名義山" and tg[0].foe_pow == 0, tg)
+	_chk("行動目標：無名義山（kind landmark、位＝山腳企位、名）", tg.size() == 1 and tg[0].id == "lm_hill" and tg[0].pos == LM.stand("hill") and tg[0].name == "無名義山" and tg[0].foe_pow == 0, tg)
 	m.close_sheet(); LM.CARD = ""
 	if tg.size(): tg[0].go.call()
 	_chk("行動目標 go：開選地點卡", m.sheet.visible and LM.CARD == "hill", [m.sheet.visible, LM.CARD, ZV._busy(), J.mc(J.G.get("UI"), "modalOpen", []), J.mc(J.G.get("Story"), "busy", [])])
@@ -413,12 +480,3 @@ func _misc_check(t, m) -> void:
 	var q = G.quest_cur()
 	_chk("打完 1-2 之後任務條：同 JS 一樣（唔係「下班後去冥街夜市逛逛」）", q is Dictionary and str(q.get("t")) == str(B[int(S.qi)].get("t")) and str(q.get("t")) != "visit", q)
 	S["qi"] = qi0
-
-func probe(t) -> void:
-	var m = await _boot(t)
-	var tr = TextureRect.new(); tr.texture = load("res://assets/spr/lm_hill.webp"); tr.position = Vector2(20, 200); tr.size = Vector2(150, 152)
-	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; m.add_child(tr)
-	var tr2 = TextureRect.new(); tr2.texture = load("res://assets/spr/home.webp"); tr2.position = Vector2(200, 200); tr2.size = Vector2(150, 140)
-	tr2.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; m.add_child(tr2)
-	await _w(t, 1.0); await _shot(t, "probe_tex")
-	_p("RESULT ok=1 bad=0")
