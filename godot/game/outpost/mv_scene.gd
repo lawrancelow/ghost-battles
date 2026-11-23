@@ -591,6 +591,8 @@ func _draw_stage() -> void:
 	if zone: _brects.append_array(load("res://game/zone/zone_taunt.gd").world_rects)   # [mapbattle] 閒談對白框避開王嘅叫囂泡泡   # [play] 對白框避開事件名同右上「生產鏈」掣
 	if not _mbf() and not mk_hid:   # [mapbattle] 打緊仗：收埋閒談對白框
 		for b in bubbles: _draw_bubble(ctx, b)
+	if _ABL.active:   # [abui] 攤位名牌（烘圖畫，喺度登記）唔畀戰鬥字蓋住
+		for q in _plates: _ABL.avoid_ci(ctx.ci, ctx.T, q, true)
 	if zone: load("res://game/zone/zone_view.gd").draw_gate_fog(stage, ctx, t, Rect2(float(zt.x) - 10.0, vy0, FW / maxf(0.01, float(zt.z)) + 20.0, vy1 - vy0))   # [fogfix] 出村門外未開放：黑霧蓋住台／客／孤魂
 	if embed and anim != null:   # [unify] 拔營：大排檔區＋村外區淡出、換圖、淡入（原村子唔變）
 		var fa = clampf(1.0 - absf(float(anim.t) - A_SWAP) / 1.8, 0.0, 1.0)
@@ -602,7 +604,7 @@ func _draw_stage() -> void:
 		ctx.globalAlpha = hud_k if embed else 1.0
 		MB.draw(self, ctx, "hud", func(c): _draw_hud(c))   # [perf] HUD 內容冇變就用烘圖（數值變先重烘；閃動多就自動逐格畫）
 		ctx.globalAlpha = 1.0
-		if _ABL.active and embed and hud_k > 0.3: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(0, top_pad, FW, EHUD_H + 14.0))   # [abui] 頂部 HUD（任務、收益、影響力條）唔畀戰鬥字蓋住（HUD 係烘圖，喺度登記）
+		if _ABL.active and embed and hud_k > 0.3: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(0, top_pad, FW, EHUD_H + 14.0), true)   # [abui] 頂部 HUD（任務、收益、影響力條）唔畀戰鬥字蓋住（HUD 係烘圖，喺度登記）
 	MB.gc(self)   # [perf]
 
 # ---------------- 地面：背景圖直向鋪（隔塊反轉接縫）＋路＋小河＋橋 ----------------
@@ -1484,7 +1486,7 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 				ov += absf(cy - y0) * 2.0
 				if ov < least: least = ov; x = cx; y = cy
 	_brects.append(Rect2(x, y, w, h)); _drects.append(Rect2(x, y, w, h))
-	if _ABL.active: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(x - 2, y - 2, w + 4, h + 4))   # [abui] 對白框唔畀戰鬥字蓋住
+	if _ABL.active: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(x - 2, y - 2, w + 4, h + 4), true)   # [abui] 對白框唔畀戰鬥字蓋住
 	var a = clampf(minf(b.t / 0.15, (b.life - b.t) / 0.3), 0, 1)
 	ctx.save(); ctx.globalAlpha = a
 	Art.rr(ctx, x, y, w, h, 8, "rgba(250,244,228,.96)", "#5e4a30", 1.5)

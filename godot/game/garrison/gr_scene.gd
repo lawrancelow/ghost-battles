@@ -2,6 +2,7 @@
 # 由 Garrison.open(ci) 開；數值全部喺 garrison.gd（呢度只係畫面＋撳嘢），舊數字面板由「補給／詳細」開返
 extends Control
 
+const _ABL = preload("res://game/rts/ab_lay.gd")   # [abui]
 const FW := 390.0
 const FH := 844.0
 # 檔口位置（底邊中心）、圖、闊度
@@ -804,6 +805,7 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 	var a = clampf(minf(b.t / 0.15, (b.life - b.t) / 0.3), 0, 1)
 	ctx.save(); ctx.globalAlpha = a
 	Art.rr(ctx, x, y, w, h, 8, "rgba(250,244,228,.96)", "#5e4a30", 1.5)
+	if _ABL.active: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(x - 2, y - 2, w + 4, h + 4), true)   # [abui] 對白框唔畀戰鬥字蓋住
 	var yy = y + 6.0
 	if b.who != "": _txt(ctx, b.who, x + 10, yy + 9, 14, Color("#9c2219"), "left", 900, 0); yy += 18.0
 	for l in lines: _txt(ctx, l, x + 10, yy + 10, 15, INK, "left", 700, 0); yy += 20.0
@@ -836,6 +838,10 @@ func _txt(ctx: Ctx, s: String, x: float, y: float, sz: int, col: Color, align :=
 		"center": x = clampf(x, tw / 2.0 + 4.0, FW - tw / 2.0 - 4.0)
 		"left": x = clampf(x, 4.0, FW - tw - 4.0)
 		"right": x = clampf(x, tw + 4.0, FW - 4.0)
+	if _ABL.active:   # [abui] 地圖戰鬥時：字唔畀戰鬥字蓋住；撞到血條就嗰格讓路
+		var tr = Rect2(x - (tw / 2.0 if align == "center" else (tw if align == "right" else 0.0)) - 3.0, y - sz * 0.65, tw + 6.0, sz * 1.3)
+		if _ABL.busy_hit(ctx.ci, ctx.T, tr): return
+		_ABL.avoid_ci(ctx.ci, ctx.T, tr)
 	if outline > 0:
 		ctx.lineWidth = outline; ctx.strokeStyle = "rgba(10,6,4,.92)"; ctx.lineJoin = "round"; ctx.strokeText(s, x, y)
 	ctx.fillStyle = "#" + col.to_html(true); ctx.fillText(s, x, y)

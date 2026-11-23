@@ -20,21 +20,42 @@ static var active := false        # 有仗喺鏡頭內先登記（慳效能）
 static var STATS := {"blocks": 0, "moved": 0, "hidden_txt": 0, "fl": 0, "fl_wait": 0}
 
 # ---- 其他場景（例如大排檔 mv_scene._txt「派鬼守夜」）登記自己畫咗嘅字 ----
-static func avoid_ci(ci, T: Transform2D, r: Rect2) -> void:
+static func avoid_ci(ci, T: Transform2D, r: Rect2, solid := false) -> void:   # solid＝對白框、名牌（底圖，唔係字）
 	if not (ci is CanvasItem) or not ci.is_inside_tree() or not ci.is_visible_in_tree(): return
 	var id = ci.get_instance_id(); var fr = Engine.get_process_frames()
 	var e = ext.get(id)
-	if e == null or int(e[0]) != fr: e = [fr, []]; ext[id] = e
-	e[1].append((ci.get_global_transform_with_canvas() * T) * r)
+	if e == null or int(e[0]) != fr: e = [fr, [], []]; ext[id] = e
+	e[2 if solid else 1].append((ci.get_global_transform_with_canvas() * T) * r)
 
 static func begin() -> void:
 	obs.clear(); blocks.clear(); fls.clear(); placed.clear(); bars.clear()
 	var fr = Engine.get_process_frames()
 	for id in ext.keys():
 		if not is_instance_id_valid(id) or not (instance_from_id(id) as CanvasItem).is_visible_in_tree(): ext.erase(id); continue   # 冇重畫＝字仲喺度，照避
-		obs.append_array(ext[id][1])
+		obs.append_array(ext[id][1]); obs.append_array(ext[id][2])
 
 static func add_obs(r: Rect2) -> void: obs.append(r)
+# 舊村子（jsgen Village，自動生成碼唔改）嘅閒談對白框：照佢 drawBubble 嘅算法推返位置，當障礙
+static func village_bubble(f: Font) -> void:
+	var V = J.G.get("Village")
+	if not (V is Dictionary) or not (V.get("bubble") is Dictionary): return
+	var b: Dictionary = V.bubble
+	var v = null
+	for o in J.iter(V.get("vis", [])):
+		if not (o is Dictionary): continue
+		var oh = J.t(o.get("hero"))
+		if (J.t(b.get("hero")) and oh) or (not J.t(b.get("hero")) and not oh and o.get("g") is Dictionary and str(o.g.get("id")) == str(b.get("id"))): v = o; break
+	if v == null: return
+	var cx = V.get("ctx"); var ci = cx.get("ci") if cx is Object else null
+	if not (ci is CanvasItem) or not ci.is_visible_in_tree(): return
+	var tw = f.get_string_size(str(b.get("text", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+	var nl = maxi(1, int(ceil(tw / 168.0)))
+	var w = minf(tw, 168.0) + 16.0; var h = nl * 17.0 + 10.0
+	var W = float(J.G.get("W", 390.0))
+	var bx = clampf(J.num(v.x) - w / 2.0, 6.0, W - w - 6.0); var by = J.num(v.y) - 62.0 - h
+	var k = J.num(V.get("dpr", 1.0)) * J.num(V.get("scale", 1.0))
+	var base = Transform2D(Vector2(k, 0), Vector2(0, k), Vector2(0, -J.num(V.get("camY", 0.0)) * k))
+	add_obs((ci.get_global_transform_with_canvas() * base) * Rect2(bx, by, w, h + 7.0).grow(4.0))
 static var bars: Array = []       # 單位血條（畫面）：郁唔到，村子字撞到就讓路
 static var busy: Array = []       # 上一格戰鬥字＋血條佔咗嘅位（畫面）
 static func add_bar(r: Rect2) -> void: obs.append(r); bars.append(r)
@@ -81,7 +102,7 @@ static func solve(view_r: Rect2, f: Font) -> void:
 			if str(l.k) == "icons" and (l.keys as Array).size() > 2:
 				var l2 = l.duplicate(); l2.keys = (l.keys as Array).slice(0, 2); l2.w = 2 * (IC * 2.0 + GAP) + 2.0; mini.append(l2)
 			else: mini.append(l)
-		for st in [[full, 4, 1], [lite, 4, 1], [full, 12, 2], [lite, 12, 2], [full, 16, 4], [lite, 16, 4], [full, 14, 4, true], [lite, 14, 4, true], [mini, 16, 4], [mini, 14, 4, true]]:   # 最後兩級：擠到頂 HUD 都仲搵到位（打橫錯開更遠，引線指返）
+		for st in [[full, 4, 1], [lite, 4, 1], [full, 12, 2], [lite, 12, 2], [full, 16, 4], [lite, 16, 4], [full, 14, 4, true], [lite, 14, 4, true], [mini, 26, 6], [mini, 24, 6, true]]:   # 最後兩級：擠到頂 HUD 都仲搵到位（打橫錯開更遠，引線指返）
 			if (st[0] as Array).is_empty(): continue
 			if st[0] == lite and lite.size() == full.size(): continue
 			if st[0] == mini and mini == lite: continue
@@ -90,6 +111,9 @@ static func solve(view_r: Rect2, f: Font) -> void:
 				ok = true
 				if st[0] != full: STATS.hidden_txt += 1
 				break
+		if not ok and int(b.pr) <= 1:   # 敵人資訊唔准收：成個畫面搵最近嘅空位（引線指返）
+			_set_lines(b, mini)
+			ok = _place_any(b, inner)
 		if not ok: b.show = false
 	# 飄字
 	for x in fls:
@@ -127,7 +151,7 @@ static func _set_lines(b: Dictionary, ls: Array) -> void:
 	for l in ls: w = maxf(w, float(l.w)); h += float(l.h)
 	b.w = w; b.h = h
 static func _place_block(b: Dictionary, inner: Rect2, nj := 12, nd := 2, down := false) -> bool:
-	var dxs = [0.0, 0.55, -0.55, 1.1, -1.1, 1.65, -1.65, 2.2, -2.2].slice(0, 1 + nd * 2)
+	var dxs = [0.0, 0.55, -0.55, 1.1, -1.1, 1.65, -1.65, 2.2, -2.2, 2.75, -2.75, 3.3, -3.3].slice(0, 1 + nd * 2)
 	for j in nj:
 		for dx in dxs:
 			if j == 0 and dx != 0.0 and not down: continue
@@ -139,6 +163,22 @@ static func _place_block(b: Dictionary, inner: Rect2, nj := 12, nd := 2, down :=
 			if c.distance_to(b.S) > 1.0: STATS.moved += 1
 			return true
 	return false
+
+static func _place_any(b: Dictionary, inner: Rect2) -> bool:
+	var best = null; var bd = INF
+	var y = inner.position.y + b.h
+	while y <= inner.end.y:
+		var x = inner.position.x + b.w / 2.0 + 1.0
+		while x <= inner.end.x - b.w / 2.0 - 1.0:
+			var c = Vector2(x, y); var d = c.distance_squared_to(b.S)
+			if d < bd:
+				var r = Rect2(c.x - b.w / 2 - 1, c.y - b.h, b.w + 2, b.h)
+				if inner.encloses(r) and not _hit(r): best = c; bd = d
+			x += 12.0
+		y += 12.0
+	if best == null: return false
+	placed.append(Rect2(best.x - b.w / 2 - 1, best.y - b.h, b.w + 2, b.h)); b.pos = best; STATS.moved += 1
+	return true
 
 # ---- 畫 ----
 static func _go(n: CanvasItem, xf_inv: Transform2D, P: Vector2, k := 1.0) -> void:

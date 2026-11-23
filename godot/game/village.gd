@@ -370,7 +370,7 @@ func _draw_bubble(ctx: Ctx) -> void:
 	w += 16; var h = lines.size() * 17.0 + 10
 	var bx = clampf(v.x - w / 2, 6, W - w - 6); var by: float = v.y - 62 - h
 	Art.rr(ctx, bx, by, w, h, 4, "#ecd9a4", "#5a4030", 1.2)
-	if _ABL.active: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(bx - 2, by - 2, w + 4, h + 10))   # [abui] 閒談對白框唔畀戰鬥字蓋住
+	if _ABL.active: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(bx - 2, by - 2, w + 4, h + 10), true)   # [abui] 閒談對白框唔畀戰鬥字蓋住
 	Art.poly(ctx, [v.x - 5, by + h - 0.5, v.x + 5, by + h - 0.5, v.x, by + h + 7], "#ecd9a4")
 	ctx.strokeStyle = "#5a4030"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(v.x - 5, by + h); ctx.lineTo(v.x, by + h + 7); ctx.lineTo(v.x + 5, by + h); ctx.stroke()
 	ctx.fillStyle = "#2b1d12"; ctx.textAlign = "left"; ctx.textBaseline = "top"
