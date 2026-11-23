@@ -8,6 +8,7 @@ extends RefCounted
 const MD = preload("res://game/outpost/mv_data.gd")
 const AB = preload("res://game/rts/abil.gd")   # [ab] 能力引擎（AB.on() 假＝全部行舊路）
 const AF = preload("res://game/rts/abform.gd")   # [abform] 陣型、揀目標、AoE 半徑、護衛、自動施放 AI
+const AH = preload("res://game/rts/ab_hud.gd")   # [abui] 名鬼長按切自動／手動（S.ab_auto）
 
 # ---- 同 battle.gd 一樣 ----
 const WIND := 0.22
@@ -594,9 +595,10 @@ func _step_fight(dt: float) -> void:
 			u.casting["t"] = J.num(u.casting.t) + dt
 			if J.num(u.casting.t) >= J.num(u.casting.dur): fire_cast(u)
 			continue
+		var may_auto = _nn(u, "side") == 1 or (AH.auto_of(u, auto) and not J.t(u.get("minion")))   # [整合] abui 每隻名鬼自動／手動
 		if af:   # [abform] 自動施放 AI（6 條件＋5 秒保底；敵人都經 AI）
-			if J.t(u.get("sk")) and not J.t(u.get("anim")) and AF.want_cast(self, u, dt): begin_cast(u); continue
-		elif J.t(u.get("sk")) and _nn(u, "energy") >= 100 and not J.t(u.get("anim")) and (_nn(u, "side") == 1 or (auto and not J.t(u.get("minion")))): begin_cast(u); continue
+			if may_auto and J.t(u.get("sk")) and not J.t(u.get("anim")) and AF.want_cast(self, u, dt): begin_cast(u); continue
+		elif J.t(u.get("sk")) and _nn(u, "energy") >= 100 and not J.t(u.get("anim")) and may_auto: begin_cast(u); continue
 		if J.t(u.get("anim")): step_anim(u, dt); continue
 		var ft = AF.flank_tg(self, u) if af else null   # [abform] 側翼繞後
 		var tg = ft if ft != null else _line_tg(u)

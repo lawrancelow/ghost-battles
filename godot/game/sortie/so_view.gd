@@ -146,6 +146,7 @@ static func open_card(e: Dictionary) -> void:
 		"locked": lab.call(L("未開放：先打下上一圈據點", "未開放：先打下上一圈據點"), 16, Color("#c0c0c0"))
 	load("res://game/soul/soul_ui.gd").card_rows(vb, d.soul)   # [soul]
 	lab.call(d.team, 15, Color("#f0e0d0"))
+	load("res://game/rts/ab_card.gd").add_to(vb, SO.stage_of(e).en, {"dark": true, "host": pc, "on_change": func(): open_card(e)})   # [abui] 偵察卡＋揀軍師
 	var hb = HFlowContainer.new(); hb.add_theme_constant_override("h_separation", 10); vb.add_child(hb)
 	var l0 = UIKit.label(L("出擊消耗：", "出擊消耗："), 16, Color("#ffd27a"), "sans", 900); hb.add_child(l0)
 	for x in d.cost:
