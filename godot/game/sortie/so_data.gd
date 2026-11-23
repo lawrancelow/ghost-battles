@@ -360,4 +360,4 @@ static func path_of(e: Dictionary, at: Vector2) -> PackedVector2Array:
 		for p in r: o.append(ZD.v2(p))
 		if o[o.size() - 1].distance_to(at) > 4.0: o.append(at)
 		return o
-	return RTS.stage_path(at)
+	return _rts().stage_path(at)
