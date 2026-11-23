@@ -78,12 +78,12 @@ func _has(op, ev: String) -> bool:
 func _prep(t, m) -> void:
 	var S = J.G.S; var sc = m.mv_view
 	if int(J.num(sc.sim.st().ci)) != 0: sc.sim.st().ci = 0.0; sc._after_move(); await _w(t, 1.2)
-	if demo:   # 示範存檔：多兩隻名鬼、主公 3 級、150 陰兵（6 隊）——睇得清楚三種隊伍
+	if demo and S.ghosts.size() < 3:   # 示範存檔：多兩隻名鬼、主公 3 級、150 陰兵（6 隊）——睇得清楚三種隊伍
 		var have = []
 		for g in S.ghosts: have.append(str(g.k))
 		for k in ["xiaozhi", "toyol"]:
 			if not k in have: J.cl(J.G.get("joinGhost"), null, [k])
-		await _skip(t, 2)
+		await _skip(t, 8)
 		S["lv"] = 3.0
 	_team3(S)
 	S.res["troops"] = 150.0 if demo else 100.0
@@ -418,9 +418,12 @@ func video(t) -> void:
 	await _w(t, 1.0)
 	_p("VIDEO_START frame=%d" % Engine.get_frames_drawn())
 	await _w(t, 2.5)
+	await _skip(t, 2)
 	nv.zone_tap(c.w2s(tg.pos + Vector2(0, -60)))   # 撳據點下令
 	await _w(t, 0.3)
+	if RTS.op_for("1-1") == null: _p("tap no op → start_stage"); ZD.start_stage()
 	var op = RTS.op_for("1-1")
+	if op == null: _p("RESULT ok=0 bad=1"); t.get_tree().quit(); return
 	await _w(t, 1.6)
 	await _follow(t, m, func(): return op.phase != "march", 25.0, Vector2(0, -40))
 	c.glide_to(op.anchor + Vector2(-40, 110))

@@ -101,6 +101,7 @@ func logic(t) -> void: await _run(t)
 func all(t) -> void: shots = true; await _run(t)
 
 func _run(t) -> void:
+	load("res://game/rts/rts.gd").force = 0   # [rts] 呢度測舊大地圖戰鬥（1-1 原型新打法見 rts_test）
 	var m = await _boot(t)
 	var S = J.G.S; var nv = m.village
 	_team3(S); S.res["troops"] = maxf(200.0, J.num(S.res.get("troops", 0)))
