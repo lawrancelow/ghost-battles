@@ -121,6 +121,8 @@ func logic(t) -> void: await _run(t)
 func cmp(t) -> void:   # 只跑同舊版比較（快）＋橫隊截圖
 	var m = await _boot(t)
 	await compare_old(t, m)
+	demo = true; _p("== 示範存檔（3 名鬼、150 陰兵＝6 隊）")
+	await compare_old(t, m)
 	await line_shots(t, m)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 # 真行軍：展開成橫隊 → 接觸後 3 秒、6 秒截圖，並計我方係咪到齊陣位
@@ -202,7 +204,7 @@ func _old_fight(B: Dictionary) -> Dictionary:
 	var t_ = J.num(B.t)
 	B["active"] = false; B["result"] = null
 	return {"win": res[0] == true, "t": t_, "dead": dead}
-const TUNES := [[0.0, 0.0], [60.0, 0.0], [120.0, 0.0], [0.0, 1.2], [60.0, 1.2], [120.0, 2.0]]   # 調校候選（敵人優先打小隊 px, 我方排陣秒）
+const TUNES := [[0.0, 0.0], [60.0, 0.0], [120.0, 2.0]]   # 調校候選（敵人優先打小隊 px, 我方排陣秒）
 const SIM_REF = preload("res://tools/tests/rts_sim_ref25.gd")
 func _new_fight(units: Array, tg: Dictionary, ref := false, tune = null) -> Dictionary:
 	var op = SIM_REF.new() if ref else SIM.new()
@@ -258,7 +260,7 @@ func compare_old(t, m) -> void:
 	_p("compare 舊：贏 %d/%d 平均 %.1f 秒 陰兵小隊戰死 %.2f ｜ 新：贏 %d/%d 平均 %.1f 秒（交戰）陰兵小隊戰死 %.2f" % [A.win, N, A.t / N, A.dead / float(N), Z.win, N, Z.t / N, Z.dead / float(N)])
 	_p("compare integ25 版（行軍唔展開）：贏 %d/%d 平均 %.1f 秒 戰死 %.2f ｜ 新（展開橫隊）：贏 %d/%d 平均 %.1f 秒 戰死 %.2f" % [R.win, N, R.t / N, R.dead / float(N), Z.win, N, Z.t / N, Z.dead / float(N)])
 	for vi in TUNES.size(): _p("tune %s：贏 %d/%d 戰死 %.2f 平均 %.1f 秒" % [str(TUNES[vi]), VAR[vi][0], N, VAR[vi][1] / N, VAR[vi][2] / N])
-	_chk("新橫隊同 integ25 版：勝率一樣、平均戰死差 ≤ 1 隊", R.win == Z.win and absf(R.dead - Z.dead) / N <= 1.0, [R.win, Z.win, R.dead / float(N), Z.dead / float(N)])
+	_chk("新橫隊同舊版：勝率一樣、平均戰死差 ≤ 1 隊", A.win == Z.win and absf(A.dead - Z.dead) / N <= 1.0, [A.win, Z.win, A.dead / float(N), Z.dead / float(N)])
 	_chk("開戰單位同舊版一模一樣（種類、血、攻、射程）", same_stats)
 	_chk("勝負同舊版一致（1-1：舊贏幾多場、新都贏幾多場 ±1）", absi(A.win - Z.win) <= 1, [A.win, Z.win])
 	_chk("陰兵折損同舊版接近（平均差 ≤ 1.5 隊）", absf(A.dead - Z.dead) / N <= 1.5, [A.dead / float(N), Z.dead / float(N)])

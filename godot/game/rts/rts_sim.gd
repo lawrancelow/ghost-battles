@@ -57,8 +57,8 @@ var org := Vector2.ZERO
 var cosmetic := false         # 純畫面（派兵攻佔、自動擊退）：我方唔會死、結果由舊規則定
 var no_heroes := false
 var foe_from = null           # 敵人由邊度行過嚟（襲擾）
-var tune_minion := 0.0         # 敵人揀目標：陰兵小隊（企正面）優先幾多（同舊版直線一樣，前面嘅小隊食傷害）
-var tune_open := 0.0           # 接觸後我方要幾耐排陣先出第一下
+var tune_minion := 120.0         # 敵人揀目標：陰兵小隊（企正面）優先幾多（同舊版直線一樣，前面嘅小隊食傷害）
+var tune_open := 2.0           # 接觸後我方要幾耐排陣先出第一下
 var dep_go := false           # 橫隊排齊咗，一齊推前
 var dep_t := 0.0              # 第一隊到位等咗幾耐
 
