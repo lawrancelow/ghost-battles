@@ -83,21 +83,17 @@ static func alpha_of(op, u: Dictionary) -> float:
 	if not status(op, u).stealth: return 1.0
 	return 0.35 if J.num(u.get("side", 0)) != 0 else 0.55
 
-# 頭頂（畫面 px 座標系，原點＝血條左上中間；向上係負）。回傳用咗之後嘅 yy
-static func draw_over(v, n: CanvasItem, f: Font, op, u: Dictionary, yy: float) -> float:
+# 頭頂資訊行（由下而上；交 ab_lay 排版，唔重疊）：讀條、狀態圖示（盾殼隱飛失神＋敵人機制）
+static func lines_of(op, u: Dictionary, f: Font) -> Array:
+	var o = []
 	var s = status(op, u)
 	var side1 = J.num(u.get("side", 0)) != 0
-	# 讀條（血條上面）
 	if s.chant != null and op != null and op.phase == "fight":
 		var bw = 52.0 if s.chant.big else 40.0
-		var col = Color("#ff5a4a") if side1 else Color("#ffd84a")
-		var y0 = yy - 6.0
-		n.draw_rect(Rect2(-bw / 2 - 2, y0 - 2, bw + 4, 9), Color(0, 0, 0, 0.8))
-		n.draw_rect(Rect2(-bw / 2, y0, bw * float(s.chant.f), 5), col)
-		yy -= 12.0
+		o.append({"k": "chant", "w": bw + 4.0, "h": 12.0, "f": float(s.chant.f), "col": Color("#ff5a4a") if side1 else Color("#ffd84a")})
 		if str(s.chant.name) != "":
-			v._str(n, f, str(DB.L(str(s.chant.name))), 0, yy, 15, Color("#ffb0a0") if side1 else Color("#fff0b0")); yy -= 18.0
-	# 圖示一行：盾、殼、隱、飛／擊落、失神，敵人再加機制（同一個唔重複）
+			var nm = str(DB.L(str(s.chant.name)))
+			o.append({"k": "text", "s": nm, "px": 15, "w": f.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 10.0, "h": 19.0, "col": Color("#ffb0a0") if side1 else Color("#fff0b0")})
 	var row = []
 	if s.shield > 0.5: row.append("st_shield")
 	if s.shell >= 0: row.append("st_shell")
@@ -107,21 +103,14 @@ static func draw_over(v, n: CanvasItem, f: Font, op, u: Dictionary, yy: float) -
 	if s.daze: row.append("st_daze")
 	if side1:
 		var shown = {"shell": s.shell >= 0, "stealth": s.stealth, "fly": s.fly or s.ground}
-		var nm = 0
+		var nm2 = 0
 		for m in mechs(u):
 			var c = AI.canon(m)
-			if shown.get(c, false) or nm >= 3: continue
-			row.append(c); nm += 1
-	if row.is_empty(): return yy
-	var gap = IC * 2.0 + 3.0
-	var x0 = -(row.size() - 1) * gap * 0.5
-	var cy = yy - IC - 1.0
-	for i in row.size():
-		var c = Vector2(x0 + i * gap, cy)
-		AI.draw(n, row[i], c, IC)
-		if row[i] == "st_shell":   # 殼剩幾多：圈外弧
-			n.draw_arc(c, IC + 2.0, -PI / 2, -PI / 2 + TAU * float(s.shell), 24, Color("#ffd27a"), 2.5, true)
-	return yy - IC * 2.0 - 5.0
+			if shown.get(c, false) or nm2 >= 3: continue
+			row.append(c); nm2 += 1
+	if row.size():
+		o.append({"k": "icons", "keys": row, "shell": s.shell, "w": row.size() * (IC * 2.0 + 3.0) + 2.0, "h": IC * 2.0 + 5.0})
+	return o
 
 # ---------------- ab 事件飄字 ----------------
 const EV := {
@@ -151,33 +140,30 @@ static func on_event(op, e: Array) -> void:
 	else: return   # 唔識嘅積木唔飄字（免得一堆英文）
 	if d != null: col = d[2]
 	if u == null: return
-	var stack = 0
-	for x in FL: if x.u == u and x.t < 0.6: stack += 1
-	if stack >= 3: return   # 同一隻同時最多 3 行，唔好疊爆
-	FL.append({"u": u, "op": op, "text": text, "col": col, "t": 0.0, "life": 1.3, "dy": -stack * 28.0})
+	for x in FL:   # 同一隻、同一句仲喺度：合併做「×2」
+		if x.u == u and x.base == text and x.t < 0.9:
+			x.n += 1; x.text = "%s×%d" % [text, x.n]; x.t = minf(x.t, 0.2); return
+	FL.append({"u": u, "op": op, "base": text, "text": text, "n": 1, "col": col, "t": 0.0, "life": 1.3, "wait": 0.0, "shown": false})
 	if FL.size() > 40: FL.pop_front()
 
-static func tick(dt: float) -> void:
+static func tick(dt: float) -> void:   # 排唔到位＝延遲出（時間唔郁）；等超過 2 秒就唔出
 	var keep = []
 	for x in FL:
-		x.t += dt
-		if x.t < x.life: keep.append(x)
+		if J.t(x.get("shown")): x.t += dt
+		else: x.wait += dt
+		if x.t < x.life and x.wait < 2.0: keep.append(x)
 	FL = keep
 
-static func draw_floats(v, n: CanvasItem, f: Font, vr: Rect2) -> void:
+static func gather_floats(v, AL) -> void:
 	for x in FL:
 		var u: Dictionary = x.u
 		var op = x.op
-		var p: Vector2 = (op.head(u) if op != null else (u.p as Vector2) + Vector2(0, -56)) + Vector2(0, -lift_of(op, u))
-		if not vr.has_point(p): continue
+		if op == null: continue
+		var wp: Vector2 = op.head(u) + Vector2(0, -4 - lift_of(op, u))
 		var k = x.t / x.life
 		var a = 1.0 if k < 0.7 else 1.0 - (k - 0.7) / 0.3
-		var pop = 1.2 - 0.2 * clampf(x.t / 0.12, 0, 1)
-		var top = minf(-20.0, J.num(u.get("_hud_y", -40.0))) - 4.0   # 由頭頂資訊最高嗰行再上：唔遮血條、狀態圖示、失神字
-		v._at(n, p + Vector2(0, -4.0 + (top - x.t * 18.0) / v._z()), pop)
 		var c = Color(x.col); c.a = a
-		v._str(n, f, str(x.text), 0, x.dy, 18, c, 5)
-	n.draw_set_transform_matrix(Transform2D.IDENTITY)
+		AL.add_float(x, v._scr(wp), str(x.text), 18, c, x.t * 18.0, 1.12 - 0.12 * clampf(x.t / 0.12, 0, 1), u)
 
 # ---------------- 名鬼技能：長按切自動／手動（S.ab_auto[gid]；冇＝跟總掣 gb_auto） ----------------
 static func gid_of(u: Dictionary) -> String: return J.str(u.get("gid", u.get("k")))

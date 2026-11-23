@@ -15,6 +15,7 @@ const RFX = preload("res://game/rts/rts_fx.gd")
 const FXK = preload("res://game/fxkit/fx_kit.gd")
 const AH = preload("res://game/rts/ab_hud.gd")   # [abui] 頭頂狀態、ab 飄字、自動／手動
 const AI = preload("res://game/rts/ab_icon.gd")   # [abui]
+const AL = preload("res://game/rts/ab_lay.gd")   # [abui] 頭頂字唔重疊排版
 
 const K_ONE := 0.85           # 名鬼／敵人（BtChar 1.32）→ 約 50–58 世界 px 高，同村子主角差唔多
 const K_REP := 1.2            # 小隊代表兵（BtChar 0.75）→ 約 38 px
@@ -399,9 +400,33 @@ func _str(n: CanvasItem, f: Font, s: String, x: float, y: float, px: int, col: C
 	var w = f.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 	if ow > 0: n.draw_string_outline(f, Vector2(x - w / 2, y), s, HORIZONTAL_ALIGNMENT_LEFT, -1, px, ow, Color(DARK, DARK.a * col.a))
 	n.draw_string(f, Vector2(x - w / 2, y), s, HORIZONTAL_ALIGNMENT_LEFT, -1, px, col)
+# [abui] 地圖上面嘅可撳 HUD（細過半個畫面、會食撳嘅 Control）：每 0.5 秒重新搵一次
+var _hud_c: Array = []
+var _hud_at := -1.0
+func _hud_ctl() -> Array:
+	if _t - _hud_at < 0.5 and _hud_at >= 0: return _hud_c
+	_hud_at = _t; _hud_c.clear()
+	var m = RTS._main()
+	if m == null: return _hud_c
+	var va = get_viewport().get_visible_rect().size
+	var st = [m]
+	while st.size():
+		var x = st.pop_back()
+		if x == ui or x == ov: continue
+		if x is CanvasItem and not x.visible: continue
+		if x is Control and x.mouse_filter == Control.MOUSE_FILTER_STOP:
+			var r = (x as Control).get_global_rect()
+			if r.size.x * r.size.y < va.x * va.y * 0.25 and r.size.x > 4 and r.size.y > 4: _hud_c.append(x); continue
+		for ch in x.get_children(): st.append(ch)
+	return _hud_c
+func _scr(wp: Vector2) -> Vector2: return txt.get_global_transform_with_canvas() * wp   # [abui] 世界 → 畫面
+func _avoid_w(wp: Vector2, r: Rect2) -> void: AL.add_obs(Rect2(_scr(wp) + r.position, r.size))   # [abui]
 func _draw_txt(n: CanvasItem) -> void:
 	var f = UIKit.font("sans", 900)
 	var vr: Rect2 = nv.view_rect().grow(60)
+	AL.begin()   # [abui]
+	AL.active = false
+	for o0 in RTS.ops: if o0.phase in ["fight", "end"] and o0.vfx_on: AL.active = true
 	var tg = ZD.stage_target()
 	if tg.has("pos") and RTS.owns(str(tg.sid)) and vr.has_point(tg.pos):   # 據點名牌
 		var at: Vector2 = tg.pos
@@ -409,6 +434,7 @@ func _draw_txt(n: CanvasItem) -> void:
 		_at(n, at + RTS.CAMP_OFF + Vector2(0, 34))
 		if op0 == null:
 			_str(n, f, L("主線 %s　%s", "主線 %s　%s") % [str(tg.sid), str(DB.L(str(tg.get("name", ""))))], 0, 0, 16, Color("#ffb0a0"))
+			_avoid_w(at + RTS.CAMP_OFF + Vector2(0, 34), Rect2(-110, -18, 220, 54))   # [abui]
 			var a = 0.75 + 0.25 * sin(_t * 3.0)
 			var s = L("撳我迎戰", "點我迎戰"); var w = f.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
 			n.draw_style_box(_box(Color(0.59, 0.16, 0.12, 0.95 * a), 6), Rect2(-w / 2 - 9, 7, w + 18, 26))
@@ -417,7 +443,24 @@ func _draw_txt(n: CanvasItem) -> void:
 	load("res://game/sortie/so_view.gd").draw(self, n, f, vr)   # [sortie] 據點木牌（等級、已清空、重生）
 	for op in RTS.ops: _draw_op(n, f, op, vr)
 	_draw_pv_mech(n, vr)   # [abui]
-	AH.draw_floats(self, n, f, vr)   # [abui]
+	AH.gather_floats(self, AL)   # [abui]
+	for b in btns.values(): AL.add_obs(b.get_global_rect().grow(4))   # [abui] 右邊技能鈕、戰況條唔畫字落去
+	for c in _hud_ctl(): if is_instance_valid(c) and c.is_visible_in_tree(): AL.add_obs(c.get_global_rect().grow(3))   # [abui] 地圖上嘅 HUD 掣（生產鏈、招牌菜……）
+	var msc = nv.get_node_or_null("MvScene")   # [abui] 大排檔 HUD 畫出嚟嘅掣（招牌菜、任務條……）
+	var m0 = RTS._main()
+	if m0 != null and m0.get("mv_view") != null and is_instance_valid(m0.mv_view): msc = m0.mv_view
+	if msc != null and msc.get("over") is Control and msc.get("_btns") is Dictionary and msc.over.is_visible_in_tree():
+		var oxf = msc.over.get_global_transform_with_canvas()
+		var va = get_viewport().get_visible_rect().size
+		for k in msc._btns:
+			var r = msc._btns[k]
+			if r is Rect2 and r.size.x * r.size.y < va.x * va.y * 0.25: AL.add_obs((oxf * (r as Rect2)).grow(2))
+	if chip != null and chip.visible: AL.add_obs(chip.get_global_rect())
+	if chip_auto != null and chip_auto.visible: AL.add_obs(chip_auto.get_global_rect())
+	var vp = get_viewport().get_visible_rect()
+	var top_px = float(nv._zone_top_px()) if nv.has_method("_zone_top_px") else 0.0
+	AL.solve(Rect2(vp.position + Vector2(0, top_px), vp.size - Vector2(0, top_px + 70.0)), f)   # [abui] 唔入頂部 HUD、底部導航
+	AL.draw(self, n, f)
 	for s in stamps:
 		var p: Vector2 = s.p
 		if s.get("u") != null and s.get("op") != null: p = s.op.head(s.u) + Vector2(0, -16)
@@ -467,26 +510,29 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 		if op.phase in ["fight", "end"] or not full:
 			if not (mn and full):
 				var bw = 28.0 if mn else (58.0 if bo else 44.0)
+				AL.add_obs(Rect2(_scr(hd) + Vector2(-bw / 2 - 2, -2), Vector2(bw + 4, 12)))   # [abui] 血條係障礙：唔准字蓋住
 				n.draw_style_box(_box(Color(0, 0, 0, 0.7), 2), Rect2(-bw / 2 - 1, -1, bw + 2, 8))
 				var fr = clampf(hp / maxf(1.0, J.num(u.maxhp)), 0, 1)
 				if fr * bw > 0.3: n.draw_style_box(_box(Color("#e84a5f") if side1 else Color("#4ade80"), 2), Rect2(-bw / 2, 0, bw * fr, 6))
 				var en = J.num(u.get("energy", 0))
 				if u.get("sk") != null and not mn and not side1 and en > 0.5: n.draw_style_box(_box(Color("#ffd84a") if en >= 100 else Color("#7dd3fc"), 1), Rect2(-bw / 2, 6, bw * clampf(en / 100.0, 0, 1), 3))
-		var yy = AH.draw_over(self, n, f, op, u, -7.0) if op.phase == "fight" else -7.0   # [abui] 盾殼隱飛失神讀條
-		if not side1 and not mn and op.phase == "fight" and J.num(u.get("energy", 0)) >= 100:   # 技能滿：頭頂小金點（對應右邊圓鈕）
-			var pa = 0.6 + 0.4 * sin(_t * 8.0)
-			n.draw_circle(Vector2(0, yy - 8), 7.0, Color(1, 0.84, 0.3, pa)); n.draw_circle(Vector2(0, yy - 8), 3.5, Color(1, 1, 0.9, pa))
-			yy -= 18.0
-		if bo: _str(n, f, str(DB.L(J.str(u.name))), 0, yy, 15, Color("#ffd0d8")); yy -= 18.0
+		# [abui] 頭頂資訊（讀條、狀態圖示、技能滿金點、王名、腳軟、失神）交 ab_lay 排版：同隔籬唔重疊
+		var lines = AH.lines_of(op, u, f) if op.phase == "fight" else []
+		if u.get("ml") != null: lines.push_front({"k": "gap", "w": 30.0, "h": 22.0})
+		if not side1 and not mn and op.phase == "fight" and J.num(u.get("energy", 0)) >= 100: lines.append({"k": "dot", "w": 16.0, "h": 18.0})
+		if bo:
+			var bn = str(DB.L(J.str(u.name)))
+			lines.append({"k": "text", "s": bn, "px": 15, "col": Color("#ffd0d8"), "w": f.get_string_size(bn, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 10.0, "h": 19.0})
 		if op.phase == "fight":
 			var st: Dictionary = u.st
 			if J.num(st.get("air", 0)) > 0 or J.num(st.get("down", 0)) > 0:
-				_str(n, f, str(DB.L("嚇彈起" if J.num(st.get("air", 0)) > 0 else "腳軟")), 0, yy, 14, Color("#99ffff") if J.num(st.get("air", 0)) > 0 else Color("#ffcc99")); yy -= 17.0
+				var sn = str(DB.L("嚇彈起" if J.num(st.get("air", 0)) > 0 else "腳軟"))
+				lines.append({"k": "text", "s": sn, "px": 14, "col": Color("#99ffff") if J.num(st.get("air", 0)) > 0 else Color("#ffcc99"), "w": f.get_string_size(sn, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x + 10.0, "h": 18.0, "opt": true})
 			var ft = u.get("fearT")
 			if side1 and ft is Dictionary and J.num(ft.get("until", 0)) > op.t:
-				_str(n, f, str(DB.L("失神")), 0, yy, 15, Color("#e6c4ff"))
-				yy -= 18.0
-		u["_hud_y"] = yy   # [abui] 頭頂資訊疊到幾高（畫面 px）：ab 飄字由呢度再上
+				var fn = str(DB.L("失神"))
+				lines.append({"k": "text", "s": fn, "px": 15, "col": Color("#e6c4ff"), "w": f.get_string_size(fn, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 10.0, "h": 19.0, "opt": true})
+		AL.add_block(u, _scr(hd) + Vector2(0, -2), lines)
 	n.draw_set_transform_matrix(Transform2D.IDENTITY)
 	# 特效
 	for fx in op.fx:
@@ -501,11 +547,10 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 				_at(n, wp, pop)
 				var col = Color(fx.col); col.a = a
 				_str(n, f, str(fx.text), 0, 0, 20 if J.t(fx.get("big")) else 16, col, 5)
-			"txt":
+			"txt":   # [abui] 技能名、怕X・失神、連嚇：同 ab 飄字一齊排（唔重疊）
 				var a = 1.0 if k < 0.7 else 1.0 - (k - 0.7) / 0.3
-				_at(n, p + Vector2(0, -t * 22))
 				var col = Color(fx.col); col.a = a
-				_str(n, f, str(fx.text), 0, 0, int(fx.get("px", 15)), col, 5)
+				AL.add_float(fx, _scr(p), str(fx.text), int(fx.get("px", 15)), col, t * 22.0, 1.0, null)
 		n.draw_set_transform_matrix(Transform2D.IDENTITY)
 	# 戰報（結算後 4.5 秒，喺戰場上面）
 	if op.has_meta("report") and op.phase in ["back", "done"]:
@@ -538,10 +583,9 @@ func _draw_pv_mech(n: CanvasItem, vr: Rect2) -> void:
 		var ms = AH.mechs(u)
 		if ms.is_empty(): continue
 		var h = 78.0 if J.t(u.get("boss")) else 56.0
-		_at(n, (u.p as Vector2) + Vector2(0, -h - 6 - AH.lift_of(null, u)))
-		var k = mini(3, ms.size()); var gap = AH.IC * 2.0 + 3.0
-		for i in k: AI.draw(n, ms[i], Vector2(-(k - 1) * gap * 0.5 + i * gap, -AH.IC), AH.IC)
-	n.draw_set_transform_matrix(Transform2D.IDENTITY)
+		var row = []
+		for m in ms.slice(0, 3): row.append(AI.canon(m))
+		AL.add_block(u, _scr((u.p as Vector2) + Vector2(0, -h - 6 - AH.lift_of(null, u))), [{"k": "icons", "keys": row, "w": row.size() * (AH.IC * 2.0 + 3.0) + 2.0, "h": AH.IC * 2.0 + 5.0}])
 
 # ================= 技能小圓鈕＋戰況條 =================
 func _sync_ui() -> void:

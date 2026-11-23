@@ -4,6 +4,7 @@
 # 公開：setup(main)、on_show()、on_hide()、mv_state()、ci()、can_move()、move_next()（拔營，有動畫）、offline_gain(ms)
 # 數值／狀態：mv_sim.gd（S.mv）；公式：mv_data.gd。冇 class_name、冇 autoload。
 extends Control
+const _ABL = preload("res://game/rts/ab_lay.gd")   # [abui]
 
 const MD = preload("res://game/outpost/mv_data.gd")
 const SIM = preload("res://game/outpost/mv_sim.gd")
@@ -1590,6 +1591,7 @@ func _txt(ctx: Ctx, s: String, x: float, y: float, sz: int, col: Color, align :=
 		"center": x = clampf(x, _tx0 + tw / 2.0 + 4.0, _tx1 - tw / 2.0 - 4.0)   # [zone] _tx0／_tx1：畫世界時係可見範圍
 		"left": x = clampf(x, _tx0 + 4.0, _tx1 - tw - 4.0)
 		"right": x = clampf(x, _tx0 + tw + 4.0, _tx1 - 4.0)
+	if _ABL.active: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(x - (tw / 2.0 if align == "center" else (tw if align == "right" else 0.0)) - 3.0, y - sz * 0.65, tw + 6.0, sz * 1.3))   # [abui] 村子字（例如「派鬼守夜」）唔畀戰鬥字蓋住
 	if outline > 0:
 		ctx.lineWidth = outline; ctx.strokeStyle = "rgba(10,6,4,.92)"; ctx.lineJoin = "round"; ctx.strokeText(s, x, y)
 	ctx.fillStyle = "#" + col.to_html(true); ctx.fillText(s, x, y)

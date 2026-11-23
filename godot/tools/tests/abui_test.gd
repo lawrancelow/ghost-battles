@@ -17,6 +17,7 @@ const AB = preload("res://game/rts/abil.gd")
 const AC = preload("res://game/rts/ab_card.gd")
 const AH = preload("res://game/rts/ab_hud.gd")
 const AI = preload("res://game/rts/ab_icon.gd")
+const AL = preload("res://game/rts/ab_lay.gd")
 
 func _p(m): print("[abui] ", m)
 func _chk(name: String, cond: bool, extra = "") -> void:
@@ -310,6 +311,7 @@ func stage_card_and_fight(t, m) -> void:
 	for x in AH.FL: txts.append(x.text)
 	_chk("ab 事件飄字：現形！殼破！屍變！（唔識嘅唔飄）", txts.has(RTS.L("現形！", "現形！")) and txts.has(RTS.L("殼破！", "殼破！")) and txts.has(RTS.L("屍變！", "屍變！")) and txts.size() == n0 + 3, txts)
 	await _w(t, 0.15); await _shot(t, "07_fight_status_icons")
+	await dense(t, m, op, foes, heroes)
 	# 長按技能鈕切自動／手動，而且真係影響模擬
 	var h = null
 	for u in heroes: if J.num(u.hp) > 0 and J.t(u.get("out")): h = u; break
@@ -348,3 +350,50 @@ func stage_card_and_fight(t, m) -> void:
 		J.G.get("Battle")["auto"] = false
 	S.erase("ab_auto")
 	RTS.recall(op)
+
+# ---- 密集場面：3／5／8 隻敵人擠埋一齊，頭頂字、飄字、建築字完全唔重疊 ----
+func _overlap_check(tag: String) -> void:
+	var pl: Array = AL.placed
+	var bad_pairs = []
+	for i in pl.size():
+		for j in range(i + 1, pl.size()):
+			if (pl[i] as Rect2).intersects(pl[j]): bad_pairs.append([i, j])
+		for o in AL.obs:
+			if (pl[i] as Rect2).intersects(o): bad_pairs.append([i, "obs"])
+	var nb = 0; var nf = 0
+	for b in AL.blocks: if b.show: nb += 1
+	for x in AL.fls: if x.get("show", false): nf += 1
+	_chk("%s：頭頂資訊塊、飄字兩兩唔重疊，亦唔蓋血條／木牌／村子字（塊 %d、飄字 %d、障礙 %d、村子字 %d）" % [tag, nb, nf, AL.obs.size(), AL.ext.size()], bad_pairs.is_empty(), bad_pairs.slice(0, 5))
+	_chk("%s：大部份資訊照顯示（唔係靠收埋）" % tag, nb >= int(AL.blocks.size() * 0.6), [nb, AL.blocks.size()])
+func dense(t, m, op, foes: Array, heroes: Array) -> void:
+	var base: Dictionary = foes[0]
+	var extra = []
+	for i in 5:   # 補夠 8 隻敵人
+		var d = base.duplicate(); d["st"] = {}; d["anim"] = null; d["tg"] = null; d["casting"] = null; d["_id"] = "dx%d" % i; d.erase("chant"); d.erase("hid"); d.erase("fly")
+		op.units.append(d); extra.append(d)
+	var all_f = op.units.filter(func(u): return J.num(u.side) == 1 and J.num(u.hp) > 0)
+	var c: Vector2 = op.anchor + Vector2(0, -30)
+	for n in [3, 5, 8]:
+		for i in all_f.size():
+			var u = all_f[i]
+			if i < n:
+				u["hp"] = 1e6; u["spd"] = 0.0
+				u["p"] = c + Vector2((i % 4 - 1.5) * 16.0, (i / 4) * 18.0)
+				u["fearT"] = {"t": "light", "until": op.t + 60.0}
+				u["shell"] = 300.0; u["shell_max"] = 1000.0
+				if i % 3 == 0: u["chant"] = {"t": 9.0, "dur": 20.0, "name": "年終考核"}
+				if i % 3 == 1: u["fly"] = true
+			else:
+				u["p"] = c + Vector2(600, 600)
+		for i in n:
+			var v = all_f[i]
+			op.events.append(["ab", null, ["reveal", "shell_break", "revive", "seal"][i % 4], v])
+			op.text(op.head(v) + Vector2(0, -22), "怕燈・失神", "#e8d0ff")
+		_cam(m, c + Vector2(0, 40), m.village.size.x / 300.0)
+		await _w(t, 0.5)
+		_overlap_check("密集 %d 隻" % n)
+		await _shot(t, "11_dense_%d" % n)
+		await _w(t, 0.6)
+		_overlap_check("密集 %d 隻（0.6 秒後）" % n)
+		await _shot(t, "11_dense_%d_b" % n)
+	for d in extra: op.units.erase(d)
