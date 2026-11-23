@@ -151,6 +151,7 @@ static func _start_battle(cb: Callable) -> Dictionary:
 static func recall(op) -> void:
 	if op == null or op.phase in ["back", "done"]: return
 	LOG.append(["recall", op.sid, op.phase])
+	if op.kind == "sortie" and op.phase == "march": load("res://game/sortie/so_data.gd").refund(op)   # [sortie] 未開打叫回：退消耗
 	op.recall()
 static func focus(op) -> void:
 	var m = _main()
@@ -171,6 +172,7 @@ static func tick(dt: float) -> void:
 
 # ================= 結算：交返 Battle.finish（舊程式） =================
 static func _settle(op) -> bool:
+	if op.kind == "sortie": return load("res://game/sortie/so_data.gd").settle(op)   # [sortie] 野外出擊：唔推主線、加出擊獎勵
 	var r = op.result
 	if r == null: return false
 	if J.t(r.get("none")): return true

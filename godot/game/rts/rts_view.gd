@@ -158,6 +158,7 @@ func _want() -> Array:   # [[key, unit, op 或 null]]
 			set_meta("pv_sid", str(tg.sid)); set_meta("pv", RTS.camp_preview(tg))
 		var pv: Array = get_meta("pv")
 		for i in pv.size(): o.append(["pv:%s:%d" % [str(tg.sid), i], pv[i], null])
+	o.append_array(load("res://game/sortie/so_view.gd").want())   # [sortie] 野外出擊據點
 	return o
 func _sync_units(dt: float) -> void:
 	fb["t"] = _t
@@ -358,6 +359,7 @@ func _draw_txt(n: CanvasItem) -> void:
 			n.draw_style_box(_box(Color(0.59, 0.16, 0.12, 0.95 * a), 6), Rect2(-w / 2 - 9, 7, w + 18, 26))
 			_str(n, f, s, 0, 26, 16, Color(1, 0.96, 0.9, a), 0)
 		n.draw_set_transform_matrix(Transform2D.IDENTITY)
+	load("res://game/sortie/so_view.gd").draw(self, n, f, vr)   # [sortie] 據點木牌（等級、已清空、重生）
 	for op in RTS.ops: _draw_op(n, f, op, vr)
 	for s in stamps:
 		var p: Vector2 = s.p

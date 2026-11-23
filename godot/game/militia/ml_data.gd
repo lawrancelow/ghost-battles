@@ -375,6 +375,7 @@ static func apply_cap_loss(need: int, rate := -1.0) -> Array:
 # 呢場係咪「對外」：主線章節關卡；或者分區出征（S.zone.exp 嘅 sid 同呢場一樣：攻佔資源區／野外王）
 static func external(wild) -> bool:
 	if not on(): return false
+	if wild is Dictionary and J.t(wild.get("sortie")): return true   # [sortie] 野外出擊：遊魂兵都跟隊
 	if not J.t(wild): return true
 	var z = ZD.st()
 	if z == null or not (z.get("exp") is Dictionary): return false
