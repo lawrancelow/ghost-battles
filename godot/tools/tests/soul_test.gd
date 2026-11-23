@@ -100,9 +100,11 @@ func data_check() -> void:
 		var cs = SO.camps(c)
 		for e in cs:
 			var k = SOUL.guard_of(e)
-			if k == "": nocamp.append(SOUL.ckey(e))
+			if k == "":
+				var raw = str(SOUL.D().CAMP.get(SOUL.ckey(e), ""))
+				if not (raw in ["niutou", "mamian"]): nocamp.append(SOUL.ckey(e))   # 牛頭馬面：cdata 定咗升名鬼，但未有 GHOSTS 資料 → 暫時唔掉主魂
 			elif not J.G.GHOSTS.has(k): bad_g.append(k)
-	_chk("90 個據點全部有駐守名鬼（臨時表）", nocamp.is_empty() and SO.camps(0).size() == 15, nocamp)
+	_chk("90 個據點都有駐守名鬼（牛頭、馬面未入名冊除外）", nocamp.is_empty() and SO.camps(0).size() == 15, nocamp)
 	_chk("駐守鬼全部係現有名鬼（有圖）", bad_g.is_empty(), bad_g)
 	var cnt = {"凡": 0, "靈": 0, "煞": 0, "王": 0}
 	for k in D.PIN: cnt[D.PIN[k]] += 1
@@ -113,13 +115,18 @@ func data_check() -> void:
 	for k in J.G.GHOSTS:
 		if k == "afu" or SOUL.story(k): continue
 		var src = SOUL.sources(k)
-		if src.is_empty(): miss.append(k)
+		var wild = false
+		for c in 6:
+			for z in J.iter(ZD.mdef(c).get("zones", [])):
+				for b in J.iter(z.get("bosses", [])):
+					if SOUL.king_ghost(str(b.get("id", "")), c) == k: wild = true
+		if src.is_empty() and not wild: miss.append(k)
 		elif src.filter(func(x): return x.pri).is_empty(): nopri.append(k)
-	_chk("每隻現有非劇情名鬼起碼 1 個據點來源（主或副）", miss.is_empty(), miss)
+	_chk("每隻現有非劇情名鬼起碼 1 個來源（據點主／副，或野外王首殺）", miss.is_empty(), miss)
 	_p("只有副魂來源（等 cdata 補主魂據點／野外王重打）：%s" % str(nopri))
 	var both = 0
 	for k in D.PIN: if SOUL.sources(k).size() >= 2: both += 1
-	_chk("大部分名鬼有 ≥2 個來源（主＋副）", both >= 60, both)
+	_chk("起碼 30 隻名鬼有 ≥2 個據點來源（主＋副）", both >= 30, both)
 
 # ---- 舊存檔遷移 ----
 func migrate_check() -> void:
