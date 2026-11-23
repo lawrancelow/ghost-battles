@@ -428,6 +428,11 @@
     "t": "camp",
     "id": "so1_r3_1",
     "guard": true
+   },
+   {
+    "t": "camp",
+    "id": "so1_r4_1",
+    "guard": false
    }
   ],
   "n30_jerangkung": [
@@ -462,14 +467,6 @@
     "t": "camp",
     "id": "so1_r4_3",
     "guard": true
-   }
-  ],
-  "nw_nian": [
-   {
-    "t": "camp",
-    "id": "so1_r4_1",
-    "guard": true,
-    "co": true
    }
   ],
   "pg_tuimo": [
@@ -810,6 +807,14 @@
     "t": "camp",
     "id": "so3_r4_1",
     "guard": false
+   }
+  ],
+  "nw_nian": [
+   {
+    "t": "camp",
+    "id": "so3_r3_1",
+    "guard": true,
+    "co": true
    }
   ],
   "nw_buhuagu": [
@@ -1671,13 +1676,13 @@
     "霸體",
     "殼"
    ],
-   "ch": 1,
+   "ch": 3,
    "tags": [
     "回",
     "定"
    ],
    "pin": "煞",
-   "camp": "so1_r4_1"
+   "camp": "so3_r3_1"
   },
   "nw_shen": {
    "name": "蜃",
@@ -3939,14 +3944,14 @@
     "egui",
     "youhun",
     "n30_danxiao",
-    "nw_nian",
+    "n30_jiugui",
     "pg_tuimo"
    ],
    "plan": [
     "egui",
     "youhun",
     "n30_danxiao",
-    "nw_nian",
+    "n30_jiugui",
     "pg_tuimo"
    ],
    "hm": [
@@ -3981,16 +3986,13 @@
     "再生"
    ],
    "mech_plan": [
-    "殼",
     "再生",
     "霸體"
    ],
    "sys": [
-    "魂",
-    "妖"
+    "魂"
    ],
-   "king": false,
-   "guard2": "nw_nian"
+   "king": false
   },
   "so1_r4_2": {
    "c": 0,
@@ -5398,14 +5400,14 @@
    "en": [
     "xiaogui",
     "egui",
-    "xiaogui",
+    "nw_nian",
     "n30_taozhai",
     "nw_ganshi"
    ],
    "plan": [
     "xiaogui",
     "egui",
-    "xiaogui",
+    "nw_nian",
     "n30_taozhai",
     "nw_ganshi"
    ],
@@ -5430,9 +5432,7 @@
     [
      "再生"
     ],
-    [
-     "隱"
-    ],
+    [],
     [],
     []
    ],
@@ -5448,14 +5448,18 @@
    ],
    "mech_plan": [
     "隱",
+    "殼",
     "再生",
+    "霸體",
     "屍變"
    ],
    "sys": [
     "使",
-    "魂"
+    "魂",
+    "妖"
    ],
-   "king": false
+   "king": false,
+   "guard2": "nw_nian"
   },
   "so3_r3_2": {
    "c": 2,

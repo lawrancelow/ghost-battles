@@ -3020,7 +3020,7 @@
    "kind": "named",
    "recruit": true,
    "use_abil": true,
-   "ch": 1
+   "ch": 3
   },
   "nw_shen": {
    "sys": "妖",
@@ -4153,9 +4153,9 @@
    "ch": 3
   },
   "nw_nian": {
-   "gang": "餓鬼坑幫",
-   "ring": 4,
-   "ch": 1
+   "gang": "古道收數佬",
+   "ring": 3,
+   "ch": 3
   },
   "nw_shen": {
    "gang": "沉船灘水妖",

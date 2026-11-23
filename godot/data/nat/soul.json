@@ -554,7 +554,7 @@
   ],
   "0:so1_r4_1": [
    "n30_danxiao",
-   "nw_nian",
+   "n30_jiugui",
    "pg_tuimo"
   ],
   "0:so1_r4_2": [
@@ -657,6 +657,7 @@
    "n30_diaosi"
   ],
   "2:so3_r3_1": [
+   "nw_nian",
    "n30_taozhai",
    "nw_ganshi"
   ],
@@ -941,7 +942,7 @@
   ],
   "0:so1_r4_1": [
    "n30_danxiao",
-   "nw_nian",
+   "n30_jiugui",
    "pg_tuimo"
   ],
   "0:so1_r4_2": [
@@ -1044,6 +1045,7 @@
    "n30_diaosi"
   ],
   "2:so3_r3_1": [
+   "nw_nian",
    "n30_taozhai",
    "nw_ganshi"
   ],
@@ -1310,7 +1312,7 @@
   "nw_dullahan": 5,
   "nw_bifang": 2,
   "nw_qiongqi": 2,
-  "nw_nian": 0,
+  "nw_nian": 2,
   "nw_shen": 3,
   "nw_wangliang": 0,
   "nw_niexiaoqian": 2,
@@ -1344,7 +1346,6 @@
   "0:so1_r2_2": "nw_wangliang",
   "0:so1_r2_3": "nw_zhizhama",
   "0:so1_r2_4": "nw_paakbok",
-  "0:so1_r4_1": "nw_nian",
   "1:so2_r2_1": "nw_bonceng",
   "1:so2_r2_2": "nw_banaspati",
   "1:so2_r2_4": "nw_guiamngaan",
@@ -1353,6 +1354,7 @@
   "2:so3_r2_2": "nw_luotoumin",
   "2:so3_r2_3": "nw_bifang",
   "2:so3_r2_4": "nw_niexiaoqian",
+  "2:so3_r3_1": "nw_nian",
   "2:so3_r3_3": "nw_qiongqi",
   "3:so4_r2_1": "nw_nangtani",
   "3:so4_r2_2": "nw_shen",
