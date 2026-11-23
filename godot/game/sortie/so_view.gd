@@ -168,6 +168,7 @@ static func open_card(e: Dictionary) -> void:
 	for k in ["normal", "hover", "pressed"]: cl.add_theme_stylebox_override(k, cs2)
 	cl.add_theme_font_override("font", UIKit.font("sans", 900)); cl.add_theme_font_size_override("font_size", 16)
 	bb.add_child(cl)
+	load("res://game/soul/soul2.gd").card_row(vb, e)   # [soul2] 抄功課
 	if d.state == "open" and not d.afford: lab.call(L("資源不夠，不能出擊", "資源不夠，不能出擊"), 15, Color("#ff7a6a"))
 	go.pressed.connect(func(): press_go(e))
 	cl.pressed.connect(func(): close_card())

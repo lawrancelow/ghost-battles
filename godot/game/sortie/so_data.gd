@@ -279,6 +279,7 @@ static func settle(op) -> bool:
 		if g.rare != "": rep["rare"] = g.rare
 		var sl = load("res://game/soul/soul_data.gd").on_sortie_win(e, g.first)   # [soul] 戰後掉魂魄：戰報加一行
 		if str(sl.line) != "": rep["soul"] = sl.line; rep["soul_ready"] = sl.ready; rep["lost"].append(sl.line)
+		load("res://game/soul/soul2.gd").after_win(op, e, sl)   # [soul2] 抄功課門檻（鬼力）、遇見、魂火飛向戰況條
 		var ex = J.G.get("save")
 		if ex != null: J.cl(ex, null, [])
 	op.set_meta("report", rep)
