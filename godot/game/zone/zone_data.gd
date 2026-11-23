@@ -727,6 +727,9 @@ static func sorties(c := -1) -> Array:
 static func sortie(id: String, c := -1) -> Dictionary:
 	for s in sorties(c): if str(s.id) == id: return s
 	return {}
+static func exits4(c := -1) -> Array:   # [dirs4] 四方向出路 [{dir, kind:"wild"/"path", wz, look, pts}]
+	var r = mdef(ci() if c < 0 else c).get("exits4", [])
+	return r if r is Array else []
 static func ring_props(c := -1) -> Array:
 	var r = mdef(ci() if c < 0 else c).get("ring_props", [])
 	return r if r is Array else []

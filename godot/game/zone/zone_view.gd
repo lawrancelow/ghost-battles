@@ -77,6 +77,7 @@ static func draw_under(c: CanvasItem, nv) -> void:
 		for b in bs:
 			if str(b.k) == kind: _barrier(c, ctx, b, vr, t)
 	_scenery(c, vr)   # [zone2] 區外佈景（高腳屋殘骸、崖石枯松、紅樹林…）
+	ZR.draw_paths(c, ctx, vr, t)   # [dirs4] 四方向出路：核心地圖入面嗰段小路
 	for z in ZD.zones():
 		if str(z.type) == "wild" and ZD.rect(z.rect).intersects(vr): _wild_decor(ctx, z, t)
 	_props(c, ctx, vr, t)

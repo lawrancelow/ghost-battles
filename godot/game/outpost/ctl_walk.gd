@@ -45,6 +45,10 @@ static func _wgate_rect(zid: String) -> Rect2:
 	return r
 
 static func _open(zid: String) -> bool:
+	if zid.begins_with("x_"): return true   # [dirs4] 出路小路
+	if zid.begins_with("rg_"):   # [dirs4] 圈帶：經野外區出口嘅方向要野外區已散霧
+		var e = _ex(zid.substr(3))
+		return not e.is_empty() and (str(e.kind) != "wild" or _open(str(e.wz)))
 	var z = ZD.zone(zid)
 	if z.is_empty(): return false
 	match str(z.get("type")):
@@ -53,6 +57,10 @@ static func _open(zid: String) -> bool:
 		"market", "wild": return ZD.revealed(zid)
 	return false
 static func _parent(zid: String) -> String:
+	if zid.begins_with("x_"): return "village"   # [dirs4]
+	if zid.begins_with("rg_"):
+		var e = _ex(zid.substr(3))
+		return ("x_" + str(e.dir)) if str(e.get("kind")) == "path" else str(e.get("wz", "village"))
 	match str(ZD.zone(zid).get("type")):
 		"res", "market": return "village"
 		"wild": return "market"
@@ -60,6 +68,8 @@ static func _parent(zid: String) -> String:
 
 # 阿福可以企嘅區（"" ＝ 企唔到）
 static func region(p: Vector2) -> String:
+	var xr = _dirs_region(p)   # [dirs4] 出路小路／已散霧圈帶
+	if xr != "": return xr if _open(xr) else ""
 	for z in ZD.of_type("res"):
 		if z.get("door") is Dictionary and ZD.rect(z.door.rect).grow(4).has_point(p): return "village"
 	var zid = ZD.zone_at(p)
@@ -71,6 +81,7 @@ static func region(p: Vector2) -> String:
 		if _open(str(z.id)) and _wgate_rect(str(z.id)).has_point(p): return "market"
 	return ""
 static func _clamp_in(zid: String, p: Vector2) -> Vector2:
+	if zid.begins_with("x_") or zid.begins_with("rg_"): return _dirs_clamp(zid, p)   # [dirs4]
 	var r = ZD.zrect(zid).grow(-INSET)
 	return Vector2(clampf(p.x, r.position.x, r.end.x), clampf(p.y, r.position.y + 10.0, r.end.y))
 static func _regions() -> Array:
@@ -94,6 +105,7 @@ static func _chain(zid: String) -> Array:   # [zid, 父, …, village]
 	return o
 # 由 a 區去隔籬嘅 b 區（a、b 一定係父子）要經嘅路點
 static func _hop(a: String, b: String) -> Array:
+	if a.begins_with("x_") or b.begins_with("x_") or a.begins_with("rg_") or b.begins_with("rg_"): return _dirs_hop(a, b)   # [dirs4]
 	var ta = str(ZD.zone(a).get("type")); var tb = str(ZD.zone(b).get("type"))
 	if ta == "res" or tb == "res":
 		var r = a if ta == "res" else b
@@ -136,6 +148,13 @@ static func _entry(zid: String) -> Array:
 static func route(from: Vector2, dst: Vector2) -> Array:
 	var fr = region(from); if fr == "": fr = _near_region(from)
 	var tr = region(dst)
+	if tr == "" and ZD.ring_at(dst) != 0:   # [dirs4] 撳咗圈帶（未散霧／出晒界）：停喺霧邊
+		var sd = _side(dst); var rz = "rg_" + sd
+		if _open(rz): tr = rz; dst = _dirs_clamp(rz, dst)
+		else:
+			var e0 = _ex(sd)
+			var e1 = _entry(str(e0.get("wz", "")))
+			if e1.size(): tr = e1[0]; dst = e1[1]
 	if tr == "":
 		var e = _entry(ZD.zone_at(dst))   # 撳咗未開放嘅區（黑霧／未佔領）：停喺入口（霧邊）
 		if e.size(): tr = e[0]; dst = e[1]
@@ -150,4 +169,68 @@ static func route(from: Vector2, dst: Vector2) -> Array:
 		var path = up + down.slice(1)
 		for i in path.size() - 1: o.append_array(_hop(path[i], path[i + 1]))
 	o.append(dst)
+	return o
+
+# ================= [dirs4] 四方向出路＋圈帶（老闆 11:06） =================
+#   x_<方向>：核心地圖入面（村外）嗰段出路小路（zones.json exits4 kind=path），父＝village
+#   rg_<方向>：核心地圖外面、已散霧嘅圈帶（分東南西北四邊），父＝x_<方向> 或嗰邊嘅野外區（kind=wild）
+#   未散霧嘅圈：停喺已開圈嘅外邊（霧邊），同核心黑霧規則一樣
+const XW := 24.0
+static func _ex(d: String) -> Dictionary:
+	for e in ZD.exits4(): if str(e.dir) == d: return e
+	return {}
+static func _side(p: Vector2) -> String:
+	var ws = ZD.world_size()
+	var cx = (p.x - ws.x / 2.0) / ws.x; var cy = (p.y - ws.y / 2.0) / ws.y
+	if absf(cx) > absf(cy): return "E" if cx > 0 else "W"
+	return "S" if cy > 0 else "N"
+static func _open_outer() -> Rect2:
+	var rs = ZD.rings()
+	var lv = 0
+	for rg in rs: if ZD.ring_open(int(rg.ring)): lv = int(rg.ring)
+	if lv <= 0: return Rect2(Vector2.ZERO, ZD.world_size())
+	return ZD.rect(rs[lv - 1].outer)
+static func _segq(p: Vector2, a: Vector2, b: Vector2) -> Vector2:
+	var ab = b - a; var L2 = ab.length_squared()
+	if L2 <= 0.0: return a
+	return a + ab * clampf((p - a).dot(ab) / L2, 0.0, 1.0)
+static func _xnear(e: Dictionary, p: Vector2) -> Vector2:
+	var pts = e.pts; var best = ZD.v2(pts[0]); var bd = INF
+	for i in pts.size() - 1:
+		var q = _segq(p, ZD.v2(pts[i]), ZD.v2(pts[i + 1]))
+		if q.distance_to(p) < bd: bd = q.distance_to(p); best = q
+	return best
+static func _dirs_region(p: Vector2) -> String:
+	if ZD.exits4().is_empty(): return ""
+	var core = Rect2(Vector2.ZERO, ZD.world_size())
+	if not core.has_point(p):
+		if _open_outer().grow(-INSET + 1.0).has_point(p): return "rg_" + _side(p)
+		for e in ZD.exits4():   # 出口外 60 嗰小段（核心邊 → 圈帶）
+			if str(e.kind) == "path" and _xnear(e, p).distance_to(p) <= XW: return "x_" + str(e.dir)
+		return ""
+	if ZD.zone_at(p) != "": return ""
+	for e in ZD.exits4():
+		if str(e.kind) == "path" and _xnear(e, p).distance_to(p) <= XW: return "x_" + str(e.dir)
+	return ""
+static func _dirs_clamp(zid: String, p: Vector2) -> Vector2:
+	if zid.begins_with("x_"): return _xnear(_ex(zid.substr(2)), p)
+	var d = zid.substr(3); var o = _open_outer().grow(-INSET); var ws = ZD.world_size()
+	var q = Vector2(clampf(p.x, o.position.x, o.end.x), clampf(p.y, o.position.y, o.end.y))
+	match d:   # 推出核心地圖外（企喺嗰邊圈帶）
+		"N": q.y = minf(q.y, -INSET)
+		"S": q.y = maxf(q.y, ws.y + INSET)
+		"W": q.x = minf(q.x, -INSET)
+		"E": q.x = maxf(q.x, ws.x + INSET)
+	return q
+static func _dirs_hop(a: String, b: String) -> Array:
+	var rev = false; var x = a; var y = b
+	if b == "village" or (a.begins_with("rg_") and not b.begins_with("rg_")): rev = true; x = b; y = a   # 統一由內行出
+	var o = []
+	if x == "village" and y.begins_with("x_"):
+		var pts = _ex(y.substr(2)).pts
+		for i in pts.size() - 1: o.append(ZD.v2(pts[i]))
+	elif y.begins_with("rg_"):
+		var pts = _ex(y.substr(3)).pts
+		o = [ZD.v2(pts[pts.size() - 2]), ZD.v2(pts[pts.size() - 1])]
+	if rev: o.reverse()
 	return o
