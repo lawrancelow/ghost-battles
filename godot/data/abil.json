@@ -1,0 +1,389 @@
+{
+ "ver": 1,
+ "_note": "abcore 擁有結構與 TAGS／MECH／COMBO_LV；cdata 擁有 ABIL／ENEMY／LINK 內容／CAMP_MOD。MECH 數值以 counter.md 4.1 為準。結構見 ability.md 2.2–2.5",
+ "COMBO_LV": 17,
+ "off": false,
+ "SCARE_NOTE": "戰鬥用嚇法／系／預設應對標籤（counter.md 6.4、6.5）；唔改 SCARE_GHOSTS。ABIL／ENEMY／counter.json 有 sys、sc、tags 就以佢哋為準",
+ "SCARE": {
+  "laojiang": {"sys": "屍", "sc": ["cold"], "tags": ["定"]},
+  "n30_dongsi": {"sys": "屍", "sc": ["cold"], "tags": ["拉", "破", "刺"]},
+  "n30_gashadokuro": {"sys": "屍", "sc": ["cold"], "tags": ["掃"]},
+  "n30_hanba": {"sys": "屍", "sc": ["light"], "tags": ["掃", "削", "照"]},
+  "n30_jenglot": {"sys": "屍", "sc": ["cold"], "tags": ["掃"]},
+  "n30_jerangkung": {"sys": "屍", "sc": ["cold"], "tags": ["遠", "破"]},
+  "n30_vetala": {"sys": "屍", "sc": ["face"], "tags": ["拉", "刺", "削"]},
+  "nw_baimao": {"sys": "屍", "sc": ["cold"], "tags": ["破", "定"]},
+  "nw_buhuagu": {"sys": "屍", "sc": ["cold"], "tags": ["定"]},
+  "nw_honeonna": {"sys": "屍", "sc": ["light"], "tags": ["遠", "照"]},
+  "nw_mummy": {"sys": "屍", "sc": ["cold"], "tags": ["定", "收"]},
+  "pocong": {"sys": "屍", "sc": ["cold"], "tags": ["掃", "收"]},
+  "afu": {"sys": "魂", "sc": ["face"], "tags": ["刺"]},
+  "eguiking": {"sys": "魂", "sc": ["sound"], "tags": ["破", "刺", "回"]},
+  "n30_danxiao": {"sys": "魂", "sc": ["breath"], "tags": ["破"]},
+  "n30_dugui": {"sys": "魂", "sc": ["paper"], "tags": ["破"]},
+  "n30_guhangui": {"sys": "魂", "sc": ["paper"], "tags": []},
+  "n30_hantugalah": {"sys": "魂", "sc": ["shadow"], "tags": ["拉"]},
+  "n30_jiugui": {"sys": "魂", "sc": ["breath"], "tags": []},
+  "n30_maoshi": {"sys": "魂", "sc": ["breath"], "tags": ["拉"]},
+  "n30_phiam": {"sys": "魂", "sc": ["shadow"], "tags": ["拉", "削"]},
+  "n30_qionggui": {"sys": "魂", "sc": ["breath"], "tags": ["掃", "削"]},
+  "n30_xiasi": {"sys": "魂", "sc": ["face"], "tags": ["掃", "削"]},
+  "n30_yangui": {"sys": "魂", "sc": ["breath"], "tags": ["削"]},
+  "nw_ganshi": {"sys": "魂", "sc": ["sound"], "tags": ["遠", "收"]},
+  "nw_guihuo": {"sys": "魂", "sc": ["light"], "tags": ["遠", "掃", "照"]},
+  "pg_ji": {"sys": "魂", "sc": ["shadow"], "tags": ["掃", "削"]},
+  "pg_songding": {"sys": "魂", "sc": ["face"], "tags": ["拉", "刺"]},
+  "pg_tuimo": {"sys": "魂", "sc": ["sound"], "tags": ["掃", "定"]},
+  "tianhua": {"sys": "魂", "sc": ["face"], "tags": ["遠", "拉", "刺"]},
+  "n30_chochin": {"sys": "紙紮", "sc": ["light"], "tags": ["遠", "破", "照"]},
+  "n30_kasaobake": {"sys": "紙紮", "sc": ["paper"], "tags": []},
+  "n30_xiangcai": {"sys": "紙紮", "sc": ["paper"], "tags": ["破"]},
+  "nw_zzcar": {"sys": "紙紮", "sc": ["light"], "tags": ["掃", "破", "照"]},
+  "nw_zzhouse": {"sys": "紙紮", "sc": ["paper"], "tags": ["定"]},
+  "nw_zzphone": {"sys": "紙紮", "sc": ["phone"], "tags": ["遠", "削"]},
+  "xiaozhi": {"sys": "紙紮", "sc": ["paper"], "tags": ["遠", "拉", "掃"]},
+  "n30_aswang": {"sys": "妖", "sc": ["shadow"], "tags": ["破", "刺", "回"]},
+  "n30_baigujing": {"sys": "妖", "sc": ["shadow"], "tags": ["回"]},
+  "n30_bunian": {"sys": "妖", "sc": ["shadow"], "tags": ["刺", "削", "照"]},
+  "n30_genderuwo": {"sys": "妖", "sc": ["shadow"], "tags": ["破", "刺", "定"]},
+  "n30_kappa": {"sys": "妖", "sc": ["cold"], "tags": ["拉"]},
+  "n30_nopperabo": {"sys": "妖", "sc": ["face"], "tags": ["定"]},
+  "n30_rokurokubi": {"sys": "妖", "sc": ["shadow"], "tags": []},
+  "n30_shanxiao": {"sys": "妖", "sc": ["shadow"], "tags": ["破"]},
+  "n30_tikbalang": {"sys": "妖", "sc": ["shadow"], "tags": ["刺"]},
+  "nw_daqiang": {"sys": "妖", "sc": ["shadow"], "tags": ["照"]},
+  "nw_dullahan": {"sys": "妖", "sc": ["shadow"], "tags": ["破", "刺"]},
+  "nw_huli": {"sys": "妖", "sc": ["shadow"], "tags": ["遠", "照"]},
+  "nw_kapre": {"sys": "妖", "sc": ["breath"], "tags": ["掃", "定"]},
+  "nw_krahang": {"sys": "妖", "sc": ["shadow"], "tags": ["遠", "拉"]},
+  "nw_shejing": {"sys": "妖", "sc": ["cold"], "tags": ["掃", "回"]},
+  "nw_tiangou": {"sys": "妖", "sc": ["shadow"], "tags": ["遠", "拉"]},
+  "n30_banshee": {"sys": "厲", "sc": ["sound"], "tags": ["掃"]},
+  "n30_churel": {"sys": "厲", "sc": ["sound"], "tags": []},
+  "n30_diaosi": {"sys": "厲", "sc": ["face"], "tags": ["刺", "收"]},
+  "n30_guixinniang": {"sys": "厲", "sc": ["sound"], "tags": ["掃"]},
+  "n30_hannya": {"sys": "厲", "sc": ["face"], "tags": ["破"]},
+  "n30_kuchisake": {"sys": "厲", "sc": ["face"], "tags": ["破"]},
+  "n30_maenak": {"sys": "厲", "sc": ["sound"], "tags": ["回"]},
+  "n30_yukionna": {"sys": "厲", "sc": ["cold"], "tags": ["拉", "掃", "削"]},
+  "nw_ameonna": {"sys": "厲", "sc": ["cold"], "tags": ["遠", "削"]},
+  "nw_huapi": {"sys": "厲", "sc": ["paper"], "tags": ["削", "照"]},
+  "nw_sundel": {"sys": "厲", "sc": ["sound"], "tags": ["刺"]},
+  "nw_teketeke": {"sys": "厲", "sc": ["sound"], "tags": ["刺"]},
+  "penanggal": {"sys": "厲", "sc": ["face"], "tags": ["遠", "回"]},
+  "pg_ex": {"sys": "厲", "sc": ["phone"], "tags": ["拉", "掃"]},
+  "pontianak": {"sys": "厲", "sc": ["sound"], "tags": ["拉"]},
+  "n30_changgui": {"sys": "使", "sc": ["face"], "tags": []},
+  "n30_hanturaya": {"sys": "使", "sc": ["shadow"], "tags": ["拉", "掃"]},
+  "n30_pelesit": {"sys": "使", "sc": ["sound"], "tags": []},
+  "n30_polong": {"sys": "使", "sc": ["face"], "tags": ["回"]},
+  "n30_taozhai": {"sys": "使", "sc": ["paper"], "tags": ["拉", "刺", "削"]},
+  "nw_bajang": {"sys": "使", "sc": ["face"], "tags": ["刺", "削"]},
+  "nw_kuaidi": {"sys": "使", "sc": ["phone"], "tags": ["遠", "刺"]},
+  "nw_yeleng_guard": {"sys": "使", "sc": ["face"], "tags": ["定"]},
+  "nw_yeleng_sales": {"sys": "使", "sc": ["phone"], "tags": ["遠", "削"]},
+  "toyol": {"sys": "使", "sc": ["face"], "tags": ["削"]},
+  "baiwu": {"sys": "官", "sc": ["paper"], "tags": ["掃", "收"]},
+  "heiwu": {"sys": "官", "sc": ["shadow"], "tags": ["掃", "定", "收"]},
+  "mamian": {"sys": "官", "sc": ["light"], "tags": ["照"]},
+  "mengpo": {"sys": "官", "sc": ["breath"], "tags": ["遠", "削", "回"]},
+  "n30_yecha": {"sys": "官", "sc": ["light"], "tags": ["破", "刺", "照", "定"]},
+  "niutou": {"sys": "官", "sc": ["light"], "tags": ["照", "定"]},
+  "nw_panguan": {"sys": "官", "sc": ["paper"], "tags": ["照", "收"]},
+  "nw_toutai": {"sys": "官", "sc": ["paper"], "tags": ["削", "回"]},
+  "n30_chehuo": {"sys": "橫", "sc": ["light"], "tags": ["刺", "照"]},
+  "n30_chengsi": {"sys": "橫", "sc": ["breath"], "tags": ["回"]},
+  "n30_daji": {"sys": "橫", "sc": ["phone"], "tags": ["破"]},
+  "n30_diansi": {"sys": "橫", "sc": ["phone"], "tags": ["遠", "拉", "掃"]},
+  "n30_leipi": {"sys": "橫", "sc": ["light"], "tags": ["掃", "照"]},
+  "n30_liulian": {"sys": "橫", "sc": ["phone"], "tags": ["遠", "刺"]},
+  "n30_shedu": {"sys": "橫", "sc": ["phone"], "tags": ["回"]},
+  "n30_shidu": {"sys": "橫", "sc": ["breath"], "tags": ["掃"]},
+  "n30_wutou": {"sys": "橫", "sc": ["face"], "tags": ["拉", "掃"]},
+  "n30_xiaosi": {"sys": "橫", "sc": ["sound"], "tags": ["掃", "削"]},
+  "n30_yesi": {"sys": "橫", "sc": ["phone"], "tags": ["遠"]},
+  "n30_yezi": {"sys": "橫", "sc": ["phone"], "tags": ["拉"]},
+  "n30_zhongshu": {"sys": "橫", "sc": ["light"], "tags": ["掃", "削", "照"]},
+  "n30_zipai": {"sys": "橫", "sc": ["phone"], "tags": ["拉"]},
+  "nw_tisi": {"sys": "橫", "sc": ["cold"], "tags": ["拉", "收"]},
+  "pg_landlady": {"sys": "橫", "sc": ["paper"], "tags": ["掃"]},
+  "youhun": {"sys": "魂", "sc": ["breath"], "tags": []},
+  "egui": {"sys": "魂", "sc": ["breath"], "tags": []},
+  "shuigui": {"sys": "橫", "sc": ["cold"], "tags": []},
+  "zombie": {"sys": "屍", "sc": ["cold"], "tags": []},
+  "zd_bone": {"sys": "屍", "sc": ["cold"], "tags": []},
+  "zhiren": {"sys": "紙紮", "sc": ["paper"], "tags": []},
+  "zd_zhima": {"sys": "紙紮", "sc": ["paper"], "tags": []},
+  "zd_shanjing": {"sys": "妖", "sc": ["shadow"], "tags": []},
+  "zd_shuihou": {"sys": "妖", "sc": ["shadow"], "tags": []},
+  "zd_hongyi": {"sys": "厲", "sc": ["sound"], "tags": []},
+  "xiaogui": {"sys": "使", "sc": ["face"], "tags": []},
+  "zd_paotui": {"sys": "使", "sc": ["face"], "tags": []},
+  "zd_yinchai": {"sys": "官", "sc": ["light"], "tags": []},
+  "zd_hengsi": {"sys": "橫", "sc": ["phone"], "tags": []},
+  "bm_taotie": {"sys": "妖", "sc": ["shadow"], "tags": []},
+  "bm_jembalang": {"sys": "妖", "sc": ["shadow"], "tags": []},
+  "bm_hou": {"sys": "屍", "sc": ["cold"], "tags": []},
+  "bm_langsuir": {"sys": "厲", "sc": ["sound"], "tags": []},
+  "bm_krasue": {"sys": "厲", "sc": ["face"], "tags": []},
+  "huang": {"sys": "官", "sc": ["phone"], "tags": []},
+  "bm_pang": {"sys": "官", "sc": ["paper"], "tags": []},
+  "bm_shuten": {"sys": "妖", "sc": ["shadow"], "tags": []}
+ },
+ "TAGS": {
+  "遠": {
+   "n": "遠程",
+   "en": "ranged",
+   "icon": "ab_ranged",
+   "c": "#7dd3fc",
+   "desc": "遠程出手：打飛行全額、近身反傷唔反彈"
+  },
+  "拉": {
+   "n": "拉落地",
+   "en": "pull",
+   "icon": "ab_pull",
+   "c": "#a3e635",
+   "desc": "腳軟拉落地：飛行敵人落地 4 秒（全隊全額）、截停突襲"
+  },
+  "掃": {
+   "n": "全體",
+   "en": "sweep",
+   "icon": "ab_sweep",
+   "c": "#fbbf24",
+   "desc": "範圍技：一下清散骨小怪、分身"
+  },
+  "破": {
+   "n": "破殼",
+   "en": "break",
+   "icon": "ab_break",
+   "c": "#f97316",
+   "desc": "多段／重擊：對殼 ×2～×3；控場無視霸體"
+  },
+  "刺": {
+   "n": "單體爆發",
+   "en": "stab",
+   "icon": "ab_stab",
+   "c": "#ef4444",
+   "desc": "優先斬召喚者；斬殺"
+  },
+  "削": {
+   "n": "削嚇氣",
+   "en": "sap",
+   "icon": "ab_sap",
+   "c": "#a78bfa",
+   "desc": "削嚇氣：停回血 6 秒、延遲召喚"
+  },
+  "回": {
+   "n": "吸血治療",
+   "en": "heal",
+   "icon": "ab_heal",
+   "c": "#4ade80",
+   "desc": "吸血／治療：抵消反傷、捱得耐"
+  },
+  "照": {
+   "n": "現形",
+   "en": "reveal",
+   "icon": "ab_reveal",
+   "c": "#fde68a",
+   "desc": "命中令 150px 內隱身敵人現形 8 秒、即破分身（嚇法係「燈」自帶）"
+  },
+  "定": {
+   "n": "企定定",
+   "en": "steady",
+   "icon": "ab_steady",
+   "c": "#93c5fd",
+   "desc": "免疫並保護身邊 150px 我方：嚇氣光環、迷魂；吸引突襲者"
+  },
+  "收": {
+   "n": "收屍",
+   "en": "seal",
+   "icon": "ab_seal",
+   "c": "#e5e7eb",
+   "desc": "場上有佢：屍變敵人唔會再起身"
+  }
+ },
+ "MECH": {
+  "飛": {
+   "en": "fly",
+   "n": "飛",
+   "icon": "mc_fly",
+   "counter": [
+    "遠",
+    "拉"
+   ],
+   "melee": 0.3,
+   "aoe": 0.7,
+   "ground_s": 4.0,
+   "warn": "浮空：近戰傷害只有 30%（全體技 70%）"
+  },
+  "隱": {
+   "en": "stealth",
+   "n": "隱",
+   "icon": "mc_stealth",
+   "counter": [
+    "照"
+   ],
+   "cycle": 6.0,
+   "dur": 4.0,
+   "near": 80.0,
+   "aoe": 0.5,
+   "reveal_s": 8.0,
+   "reveal_r": 150.0,
+   "warn": "每 6 秒隱身 4 秒：揀唔到佢做目標"
+  },
+  "殼": {
+   "en": "shell",
+   "n": "殼",
+   "icon": "mc_shell",
+   "counter": [
+    "破"
+   ],
+   "pct": 0.35,
+   "taken": 0.5,
+   "multi_x": 3.0,
+   "heavy_x": 2.0,
+   "heavy_mult": 1.8,
+   "warn": "殼未破：受傷減半"
+  },
+  "再生": {
+   "en": "regen",
+   "n": "再生",
+   "icon": "mc_regen",
+   "counter": [
+    "削"
+   ],
+   "rate": 0.025,
+   "boss_rate": 0.015,
+   "stop_s": 6.0,
+   "warn": "每秒回 2.5% 血"
+  },
+  "散骨": {
+   "en": "split",
+   "n": "散骨",
+   "icon": "mc_split",
+   "counter": [
+    "掃"
+   ],
+   "n_split": 3,
+   "hp": 0.25,
+   "atk": 0.4,
+   "warn": "死後散成 3 隻小怪"
+  },
+  "召喚": {
+   "en": "summon",
+   "n": "召喚",
+   "icon": "mc_summon",
+   "counter": [
+    "刺",
+    "削"
+   ],
+   "n_sum": 2,
+   "cap": 6,
+   "hp": 0.3,
+   "atk": 0.4,
+   "warn": "嚇氣滿就召 2 隻嘍囉（最多 6 隻）"
+  },
+  "反傷": {
+   "en": "thorns",
+   "n": "反傷",
+   "icon": "mc_thorns",
+   "counter": [
+    "遠",
+    "回"
+   ],
+   "pct": 0.2,
+   "warn": "近戰打佢反彈 20% 傷害"
+  },
+  "嚇氣光環": {
+   "en": "fear_aura",
+   "n": "嚇氣光環",
+   "icon": "mc_aura",
+   "counter": [
+    "定"
+   ],
+   "r": 150.0,
+   "energy": 0.5,
+   "minion_atk": 0.8,
+   "dispel_s": 5.0,
+   "warn": "150px 內我方嚇氣增長減半、陰兵攻 −20%"
+  },
+  "霸體": {
+   "en": "cc_immune",
+   "n": "霸體",
+   "icon": "mc_cc",
+   "counter": [
+    "破",
+    "刺"
+   ],
+   "warn": "腳軟／嚇彈起／嚇退無效、追擊唔成立"
+  },
+  "屍變": {
+   "en": "undead",
+   "n": "屍變",
+   "icon": "mc_undead",
+   "counter": [
+    "收"
+   ],
+   "delay": 4.0,
+   "hp": 0.5,
+   "warn": "倒下 4 秒後半血再起一次"
+  },
+  "突襲": {
+   "en": "rush",
+   "n": "突襲",
+   "icon": "mc_rush",
+   "counter": [
+    "定",
+    "拉"
+   ],
+   "warn": "開打即繞過陰兵衝向我方遠程／名鬼"
+  },
+  "迷魂": {
+   "en": "confuse",
+   "n": "迷魂",
+   "icon": "mc_confuse",
+   "counter": [
+    "定"
+   ],
+   "every": 8.0,
+   "r": 150.0,
+   "n_tg": 3,
+   "dur": 2.5,
+   "warn": "每 8 秒令身邊 3 隻我方亂走 2.5 秒"
+  },
+  "分身": {
+   "en": "clone",
+   "n": "分身",
+   "icon": "mc_clone",
+   "counter": [
+    "照",
+    "掃"
+   ],
+   "n_clone": 2,
+   "warn": "開打放 2 個分身（1 血），打錯目標"
+  }
+ },
+ "ABIL": {},
+ "ENEMY": {},
+ "LINK": [],
+ "CAMP_MOD": {
+  "ring": [
+   [
+    0,
+    1
+   ],
+   [
+    1,
+    1
+   ],
+   [
+    1,
+    2
+   ],
+   [
+    2,
+    3
+   ]
+  ]
+ }
+}
