@@ -194,7 +194,6 @@ func fight(sn: Dictionary, team: Array, adv: String, insts: Dictionary, sd: int,
 	var op = SIM.new()
 	op.kind = "sortie"
 	op.adviser = adviser_of(adv, insts, up)
-	if op.adviser is Dictionary: op.adviser["p"] = PATH[0]   # 軍師坐鎮後方（引擎 head(軍師) 冇 p 會報錯，見報告）
 	op.setup(us, PackedVector2Array(PATH), AT, PATH[0])
 	op.auto = true
 	op.t_skip_march()
@@ -292,6 +291,7 @@ func run_ch(t, c: int) -> Dictionary:
 		var pool = pool_of(c, int(st.ring))
 		_set_save(c, st.lv, pool, rk)
 		var insts = {}
+		for k in pool_of(c, 5): insts[k] = ghost_inst(k, st.lv, rk)   # 全章名鬼實例（萬能隊可能用到本場地未有嘅鬼）
 		for g in J.G.S.ghosts: insts[str(g.k)] = g
 		var sn = site_snap(st)
 		var pw = {}
@@ -322,8 +322,7 @@ func run_ch(t, c: int) -> Dictionary:
 			M[i][key] = batch(snaps[i], tm, best_adv(tm, pools[i], instss[i]), instss[i], 1).perf
 		await t.get_tree().process_frame
 	# 3) 萬能隊：隊員喺第 1 圈已經有（全章揀得）；粗篩總分前 2 → 全種子
-	var base_pool = pools[0]
-	for i in sites.size(): if int(sites[i].ring) == 1 and sites[i].kind == "sortie": base_pool = pools[i]; break
+	var base_pool = pool_of(c, 2)   # 萬能隊：第 2 圈時已擁有嘅鬼（第 1 章第 1 圈得 2 隻，湊唔夠 3 隻）
 	var rough = []
 	for tm in G:
 		if not _sub(tm, base_pool): continue
@@ -376,14 +375,22 @@ func run_ch(t, c: int) -> Dictionary:
 		var U35 = batch(sn, uni.team, best_adv(uni.team, base_pool, insts), insts, 3, UP_LV)
 		var row = {"id": st.id, "kind": st.kind, "ring": st.ring, "p": st.p, "lv": st.lv, "bm": st.get("bm", ""), "pool": pool.size(), "foes": _fk(sn),
 			"best": best.team, "badv": best.adv, "B": best.r, "R": rr, "U": U, "U35": U35, "u": U.perf / maxf(0.01, best.r.perf)}
+		var cr = {}
 		if CAL and st.kind == "sortie":
-			var cr = cal_site(sn, best, pool, insts, i, c, int(st.ring))
+			cr = cal_site(sn, best, pool, insts, i, c, int(st.ring))
 			row["s"] = cr.s; row["cal"] = cr
 		out.sites.append(row)
 		if row.has("s"): _p("c%d %-9s 校準 s=%.3f（最佳 勝%.0f%%、隨機 勝%.0f%%）" % [c + 1, st.id, row.s, cr.B * 100, cr.R * 100])
 		_p("c%d %-9s r%d p%4.1f lv%2d 池%2d｜最佳 勝%3.0f%% %2.0fs 死%.1f 時間到%.0f%% perf%.2f %s+%s｜隨機 勝%3.0f%%｜萬能 勝%3.0f%% u%.2f｜+3.5 勝%3.0f%%" % [c + 1, st.id, st.ring, st.p, st.lv, pool.size(),
 			best.r.wr * 100, best.r.t, best.r.dead, best.r.to * 100, best.r.perf, str(best.team), best.adv, rr.wr * 100, U.wr * 100, row.u, U35.wr * 100])
 		await t.get_tree().process_frame
+	var nm = {}
+	for k in pool_of(c, 5): nm[k] = str(DB.N(str(J.G.GHOSTS[k].name)))
+	for sn in snaps:
+		if sn.is_empty(): continue
+		for u in sn.foes: nm[str(u.k)] = str(u.get("name", u.k))
+	out["names"] = nm
+	if not CAL: judge(out)
 	out["sec"] = (Time.get_ticks_msec() - t0) / 1000.0
 	var f = FileAccess.open(OUT + "/c%d.json" % c, FileAccess.WRITE)
 	f.store_string(JSON.stringify(out)); f.close()
@@ -393,6 +400,27 @@ func _fk(sn: Dictionary) -> Array:
 	var o = []
 	for u in sn.foes: o.append(str(u.k))
 	return o
+
+# ================= 合格線 =================
+func judge(out: Dictionary) -> void:
+	var c = int(out.c); var bb = []; var rb = []; var r1 = []; var ub = []; var us = 0.0; var n = 0; var to = 0.0; var tn = 0.0
+	for r in out.sites:
+		if r.has("err"): bb.append(r.id); continue
+		if r.B.wr < 0.8: bb.append("%s %.0f%%" % [r.id, r.B.wr * 100])
+		if r.R.wr < 0.25: rb.append("%s %.0f%%" % [r.id, r.R.wr * 100])
+		if int(r.ring) == 1 and r.B.wr < 0.95: r1.append("%s %.0f%%" % [r.id, r.B.wr * 100])
+		if r.U35.wr < 0.5: ub.append("%s %.0f%%" % [r.id, r.U35.wr * 100])
+		us += minf(1.0, r.u); n += 1
+		to += r.B.to * r.B.n + r.U.to * r.U.n + r.R.to * N_RAND * N_SEED_R; tn += r.B.n + r.U.n + N_RAND * N_SEED_R
+	var U = us / maxf(1.0, n)
+	out["Uavg"] = U; out["to_rate"] = to / maxf(1.0, tn)
+	_chk("第 %d 章：每個場地最佳隊勝率 ≥80%%" % (c + 1), bb.is_empty(), bb)
+	_chk("第 %d 章：每個場地隨機隊勝率 ≥25%%" % (c + 1), rb.is_empty(), rb)
+	_chk("第 %d 章：第 1 圈最佳隊勝率 ≥95%%" % (c + 1), r1.is_empty(), r1)
+	_chk("第 %d 章：萬能隊練高 %.1f 級過每個場地（勝率 ≥50%%）" % [c + 1, UP_LV], ub.is_empty(), ub)
+	_chk("第 %d 章：時間到比率 ≤15%%" % (c + 1), out.to_rate <= 0.15, "%.1f%%" % (out.to_rate * 100))
+	if c >= 1: _chk("第 %d 章：萬能度 U ≤ 0.85" % (c + 1), U <= 0.85, "%.3f %s" % [U, str(out.uni)])
+	else: _p("（第 1 章教學：萬能度 U=%.3f 唔設線）" % U)
 
 # ================= 校準 =================
 var CAL := false
@@ -491,12 +519,12 @@ func probe(t) -> void:
 	var sn2 = site_snap(sites[0])
 	_p("snap 一個 %.3f 秒" % [(Time.get_ticks_msec() - t0) / 1000.0])
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
-func c0(t) -> void: await _boot(t); await run_ch(t, 0); _p("RESULT ok=1 bad=0")
-func c1(t) -> void: await _boot(t); await run_ch(t, 1); _p("RESULT ok=1 bad=0")
-func c2(t) -> void: await _boot(t); await run_ch(t, 2); _p("RESULT ok=1 bad=0")
-func c3(t) -> void: await _boot(t); await run_ch(t, 3); _p("RESULT ok=1 bad=0")
-func c4(t) -> void: await _boot(t); await run_ch(t, 4); _p("RESULT ok=1 bad=0")
-func c5(t) -> void: await _boot(t); await run_ch(t, 5); _p("RESULT ok=1 bad=0")
+func c0(t) -> void: await _boot(t); await run_ch(t, 0); _p("RESULT ok=%d bad=%d" % [ok, bad])
+func c1(t) -> void: await _boot(t); await run_ch(t, 1); _p("RESULT ok=%d bad=%d" % [ok, bad])
+func c2(t) -> void: await _boot(t); await run_ch(t, 2); _p("RESULT ok=%d bad=%d" % [ok, bad])
+func c3(t) -> void: await _boot(t); await run_ch(t, 3); _p("RESULT ok=%d bad=%d" % [ok, bad])
+func c4(t) -> void: await _boot(t); await run_ch(t, 4); _p("RESULT ok=%d bad=%d" % [ok, bad])
+func c5(t) -> void: await _boot(t); await run_ch(t, 5); _p("RESULT ok=%d bad=%d" % [ok, bad])
 func cal_a(t) -> void:
 	await _boot(t); CAL = true
 	for c in [0, 1, 4]: await run_ch(t, c)
@@ -507,9 +535,9 @@ func cal_b(t) -> void:
 	_p("RESULT ok=1 bad=0")
 func ca(t) -> void:
 	await _boot(t)
-	for c in [0, 1, 2]: await run_ch(t, c)
-	_p("RESULT ok=1 bad=0")
+	for c in [0, 1, 4]: await run_ch(t, c)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
 func cb(t) -> void:
 	await _boot(t)
-	for c in [3, 4, 5]: await run_ch(t, c)
-	_p("RESULT ok=1 bad=0")
+	for c in [2, 3, 5]: await run_ch(t, c)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
