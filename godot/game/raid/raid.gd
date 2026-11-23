@@ -376,6 +376,7 @@ static func repel(how: String) -> void:
 	if key != "": r.streak.erase(key)
 	r["won"] = J.num(r.won) + 1.0
 	NEWS.append({"k": "repel", "how": how, "tgt": key, "coins": coins})
+	load("res://game/soul/soul_data.gd").on_raid(how)   # [soul] 擊退：散魂
 	_log("repel", [how, key, coins])
 	_next()
 # 襲擾成功

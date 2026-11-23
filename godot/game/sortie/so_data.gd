@@ -7,6 +7,8 @@ extends RefCounted
 
 const ZD = preload("res://game/zone/zone_data.gd")
 const M = preload("res://game/outpost/mat.gd")
+const CT = preload("res://game/counter/ct_data.gd")   # [counter] 據點敵人／打折讀 counter.json
+const NGB = preload("res://game/newghost/ng_boss.gd")   # [newghost] 魔王據點
 
 # ======================= 常數表（測試員試玩後只改呢度） =======================
 const LV_BASE := [1.0, 5.0, 9.0, 13.0, 17.0, 21.0]   # fallback：每關第 1 圈等級（＝主線 x-1 難度）
@@ -61,6 +63,7 @@ static func camps(c := -1) -> Array:
 			var mlv = J.num(e.get("lv", 0)); var rmin = c * 10 + 1 + (r - 1) * 3
 			var p = LV_BASE[clampi(c, 0, 5)] + LV_RING[r - 1] + clampf(mlv - rmin, 0.0, 2.0) * 0.4
 			o.append({"id": str(e.get("id", "s%d" % o.size())), "ring": r, "lv": p, "pos": ZD.v2(e.pos), "c": c})
+			if e.has("boss"): o[o.size() - 1]["bm"] = NGB.boss_of(e, c)   # [newghost] 魔王據點（第 1 關之後可能換酒吞童子）
 		return o
 	return fallback(c)
 static func fallback(c: int) -> Array:
@@ -127,6 +130,7 @@ static func cleared_left_s(e: Dictionary) -> float:   # 已清空仲有幾多秒
 	return maxf(0.0, (t - now_ms()) / 1000.0)
 static func state(e: Dictionary) -> String:   # "open"／"cleared"／"locked"／"out"（出擊中）
 	if not ring_open(int(e.ring), int(e.c)): return "locked"
+	if NGB.locked(e): return "locked"   # [newghost] 魔王據點：第 4 圈其他據點全部首勝先開
 	if cleared_left_s(e) > 0: return "cleared"
 	var RTS = _rts()
 	if RTS.op_for(sid_of(e)) != null: return "out"
@@ -166,11 +170,21 @@ static func cost_text(cs: Dictionary) -> String:
 
 # ======================= 敵人 =======================
 static func stage_of(e: Dictionary) -> Dictionary:
+	if str(e.get("bm", "")) != "":   # [newghost] 魔王據點：魔王＋嘍囉
+		var nb = NGB.stage(e, title(e))
+		var cb = CT.stage_en(str(e.get("id", "")))   # [counter] counter.json 有就加副將（駐守鬼＝主魂）
+		if not cb.is_empty():
+			cb = cb.duplicate(true); cb.en[cb.en.size() - 1] = str(e.bm)   # 隱藏酒吞童子換位
+			nb["en"] = cb.en; nb["ct"] = cb; nb["guard"] = cb.guard
+		return nb
 	var c = int(e.c); var r = ri(e.ring)
 	var CH = J.G.get("CHAPTERS")
 	var pool = []; var bg = "field"
+	if CH is Array and c < CH.size(): bg = str(CH[c].get("bg", "field"))
+	var ct = CT.stage_en(str(e.get("id", ""))) if not e.get("tmp", false) else {}   # [counter] 鬼幫據點：counter.json 有就用
+	if not ct.is_empty() and ct.en.size() == ENEMY_N[r]:
+		return {"name": title(e), "en": ct.en, "boss": "", "p": float(e.lv), "sortie": true, "bg": bg, "ct": ct, "guard": ct.guard}
 	if CH is Array and c < CH.size():
-		bg = str(CH[c].get("bg", "field"))
 		var sts = CH[c].stages
 		var si = mini(r, sts.size() - 1)
 		for k in sts[si].en: if not (str(k) in NAMED): pool.append(str(k))
@@ -201,16 +215,23 @@ static func dispatch(e: Dictionary) -> String:
 	var cs = cost(e, lu)
 	if not afford(cs): return "poor"
 	var stg = stage_of(e)
+	stg = load("res://game/soul/soul_data.gd").guard_stage(e, stg)   # [soul] 駐守名鬼做頭目
 	var sid = sid_of(e)
 	var wild = {"stage": stg, "bg": stg.bg, "sid": sid, "sortie": true}
 	var snap = RTS._start_battle(func(): J.mc(B, "start", [-1.0, -1.0, wild]))
 	if snap.is_empty(): return "nobattle"
+	var gu = CT.apply_camp(snap, stg.ct) if stg.has("ct") else null   # [counter] 頂替雜兵縮細；gu＝駐守鬼
+	RTS._soften(snap, {"kind": "sortie", "c": int(e.c)})   # [counter] 據點同樣打折（修據點未打折 bug）
 	if int(e.ring) >= 4:   # 第 4 圈：最後一隻做頭目
-		var last = null
-		for u in snap.units: if J.num(u.side) == 1 and not J.t(u.get("minion")): last = u
+		var last = gu
+		if last == null:
+			for u in snap.units: if J.num(u.side) == 1 and not J.t(u.get("minion")): last = u
 		if last != null:
-			last["boss"] = true; last["hp"] = J.num(last.hp) * BOSS_HP; last["maxhp"] = last.hp; last["name"] = L("惡鬼頭目", "惡鬼頭目")
+			var gk = str(stg.get("guard", ""))   # [soul]＋[counter] 駐守名鬼：血 ×1.25（ENEMY_T 已有品級倍率）；頭目保留真名
+			last["boss"] = true; last["hp"] = J.num(last.hp) * (1.25 if (gk != "" or gu != null) else BOSS_HP); last["maxhp"] = last.hp
+			last["name"] = (L("%s（頭目）", "%s（頭目）") % str(last.get("name", gk))) if (gu != null or gk != "") else L("惡鬼頭目", "惡鬼頭目")
 	pay(cs)
+	NGB.decorate(snap, e)   # [newghost] 魔王名牌
 	var c = cst(e); c["tries"] = J.num(c.tries) + 1
 	var op = RTS.SIM.new()
 	op.id = RTS._next_id; RTS._next_id += 1
@@ -218,6 +239,7 @@ static func dispatch(e: Dictionary) -> String:
 	op.title = title(e)
 	op.adviser = snap.get("adviser")
 	op.set_meta("snap", snap); op.set_meta("camp", e); op.set_meta("cost", cs)
+	if stg.has("guard"): op.set_meta("guard", stg.guard)   # [counter] 駐守鬼（soul 線讀）
 	var at: Vector2 = e.pos
 	op.setup(snap.units, path_of(e, at), at, RTS.gate_pos())
 	RTS.ops.append(op)
@@ -275,6 +297,9 @@ static func settle(op) -> bool:
 		if g.rare != "": extra.append(L("極稀有！", "極稀有！") + g.rare)
 		rep["lost"] = extra + rep.lost
 		if g.rare != "": rep["rare"] = g.rare
+		var sl = load("res://game/soul/soul_data.gd").on_sortie_win(e, g.first, load("res://game/soul/soul_data.gd").good_play(op))   # [soul] 戰後掉魂魄：戰報加一行
+		if str(sl.line) != "": rep["soul"] = sl.line; rep["soul_ready"] = sl.ready; rep["lost"].append(sl.line)
+		load("res://game/soul/soul2.gd").after_win(op, e, sl)   # [soul2] 抄功課門檻（鬼力）、遇見、魂火飛向戰況條
 		var ex = J.G.get("save")
 		if ex != null: J.cl(ex, null, [])
 	op.set_meta("report", rep)
@@ -291,6 +316,8 @@ static func reward(e: Dictionary) -> Dictionary:
 	var c = cst(e); var r = ri(e.ring); var lv = float(e.lv)
 	var out = {"first": false, "rare": "", "lines": [], "coin": REW_COIN * lv, "first_txt": ""}
 	var s = S()
+	var bml = NGB.on_win(e, not J.t(c.get("first")))   # [newghost] 魔王據點：掉散魂（不可招降）
+	if bml != "": out.lines.append(bml)
 	# 普通
 	s.res["coins"] = have("coins") + REW_COIN * lv
 	s.res["planks"] = have("planks") + REW_PLANK[r]

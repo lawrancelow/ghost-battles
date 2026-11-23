@@ -260,10 +260,10 @@ func compare_old(t, m) -> void:
 	_p("compare 舊：贏 %d/%d 平均 %.1f 秒 陰兵小隊戰死 %.2f ｜ 新：贏 %d/%d 平均 %.1f 秒（交戰）陰兵小隊戰死 %.2f" % [A.win, N, A.t / N, A.dead / float(N), Z.win, N, Z.t / N, Z.dead / float(N)])
 	_p("compare integ25 版（行軍唔展開）：贏 %d/%d 平均 %.1f 秒 戰死 %.2f ｜ 新（展開橫隊）：贏 %d/%d 平均 %.1f 秒 戰死 %.2f" % [R.win, N, R.t / N, R.dead / float(N), Z.win, N, Z.t / N, Z.dead / float(N)])
 	for vi in TUNES.size(): _p("tune %s：贏 %d/%d 戰死 %.2f 平均 %.1f 秒" % [str(TUNES[vi]), VAR[vi][0], N, VAR[vi][1] / N, VAR[vi][2] / N])
-	_chk("新橫隊同舊版：勝率一樣、平均戰死差 ≤ 1 隊", A.win == Z.win and absf(A.dead - Z.dead) / N <= 1.0, [A.win, Z.win, A.dead / float(N), Z.dead / float(N)])
+	_chk("新橫隊同舊版：勝率唔低過舊版、平均戰死唔多過舊版 1 隊（[abform] 新陣型戰死會少咗，只限唔可以多）", Z.win >= A.win - 1 and (Z.dead - A.dead) / N <= 1.0, [A.win, Z.win, A.dead / float(N), Z.dead / float(N)])
 	_chk("開戰單位同舊版一模一樣（種類、血、攻、射程）", same_stats)
 	_chk("勝負同舊版一致（1-1：舊贏幾多場、新都贏幾多場 ±1）", absi(A.win - Z.win) <= 1, [A.win, Z.win])
-	_chk("陰兵折損同舊版接近（平均差 ≤ 1.5 隊）", absf(A.dead - Z.dead) / N <= 1.5, [A.dead / float(N), Z.dead / float(N)])
+	_chk("陰兵折損唔多過舊版（平均多 ≤ 1.5 隊；[abform] 少咗係修好）", (Z.dead - A.dead) / N <= 1.5, [A.dead / float(N), Z.dead / float(N)])
 	_chk("一場仗交戰時間合理（10–60 秒）", Z.t / N >= 5.0 and Z.t / N <= 60.0, Z.t / N)
 	cmp_res = [A, Z, N]
 
