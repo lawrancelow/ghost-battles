@@ -57,7 +57,10 @@ static func camps(c := -1) -> Array:
 		for e in src:
 			if not (e is Dictionary) or not e.has("pos"): continue
 			var r = clampi(int(J.num(e.get("ring", 1))), 1, 4)
-			o.append({"id": str(e.get("id", "s%d" % o.size())), "ring": r, "lv": float(J.num(e.get("lv", LV_BASE[clampi(c, 0, 5)] + LV_RING[r - 1]))), "pos": ZD.v2(e.pos), "c": c})
+			# [integ] mapx 嘅 lv 係「每關 Lv1–62 顯示等級」；戰鬥難度要用主線同一把尺：每關基準＋圈加成＋圈內次序（0～0.8）
+			var mlv = J.num(e.get("lv", 0)); var rmin = c * 10 + 1 + (r - 1) * 3
+			var p = LV_BASE[clampi(c, 0, 5)] + LV_RING[r - 1] + clampf(mlv - rmin, 0.0, 2.0) * 0.4
+			o.append({"id": str(e.get("id", "s%d" % o.size())), "ring": r, "lv": p, "pos": ZD.v2(e.pos), "c": c})
 		return o
 	return fallback(c)
 static func fallback(c: int) -> Array:

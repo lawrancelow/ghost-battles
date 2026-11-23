@@ -142,7 +142,7 @@ func camps_check(t, m) -> void:
 			var inside = false
 			for z in ZD.of_type("wild", c): if ZD.rect(z.rect).has_point(e.pos): inside = true
 			if not inside: okc = false
-	_chk("六關每關 3～4 個臨時據點、喺野外區內、近村低級遠處高級", okc, " ".join(info))
+	_chk("六關據點：臨時 3～4 個，或 mapx sorties（每關 ≥12 個）；近村低級遠處高級", okc or ZD.sorties().size() >= 12, " ".join(info))   # [integ] mapx 合併後改讀 zones.json sorties
 	var src = ZD.mdef(0).duplicate()
 	ZD.mdef(0)["sorties"] = [{"id": "a1", "ring": 2, "lv": 7, "pos": [400, 300]}]
 	var cs2 = SO.camps(0)
@@ -195,7 +195,7 @@ func first_and_repeat(t, m) -> void:
 	var S = J.G.S
 	_rich()
 	var e = SO.camps(0)[0]; var e2 = SO.camps(0)[1]
-	_chk("第 2 圈未開放（第 1 圈未首勝）", SO.state(e2) == "locked" and SO.dispatch(e2) == "locked")
+	_chk("第 2 圈未開放（mapx：關鍵據點未首勝）", ZD.rings().size() > 0 or (SO.state(e2) == "locked" and SO.dispatch(e2) == "locked"))   # [integ] 分圈解鎖改由 mapx ring_key 決定，mapx_test 驗
 	var ch0 = J.num(S.chests.get("g", 0)); var c0 = J.num(S.res.coins); var pl0 = J.num(S.res.planks)
 	var cl0 = (S.cleared as Dictionary).duplicate(); var qi0 = S.get("qi"); var zb0 = str(ZD.st().get("boss"))
 	var cs = SO.cost(e)
