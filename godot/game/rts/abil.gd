@@ -562,6 +562,7 @@ static func compile(sim, u: Dictionary) -> void:
 	if a.act is Dictionary and not J.t(a.act.get("leg")) and u.get("sk") is Dictionary and J.str(u.sk.get("name")) != J.str(a.act.get("name")):
 		u["sk"] = (u.sk as Dictionary).duplicate(); u.sk["name"] = J.str(a.act.get("name"))
 	u["ab"] = a
+	load("res://game/equip/eq_data.gd").ab_compile(sim, u)   # [equip] 裝備永久 buff（aspd／spd／taken／heal_in／energy）＋裝備標籤
 static func _mech_setup(sim, u: Dictionary) -> void:
 	var a = A(u)
 	for m in a.get("mech", []):

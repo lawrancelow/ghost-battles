@@ -90,8 +90,14 @@ static func stall_open() -> bool:
 	var e = stall_e()
 	return e != null and J.t(e.get("unlocked"))
 static func tier_now() -> int: return clampi(MD.stars(SID, stall_lv()), 0, TIERS.size() - 1)
-static func tier_name(t: int) -> String: return T(TIERS[clampi(t, 0, TIERS.size() - 1)].n)
-static func tier_desc(t: int) -> String: return T(TIERS[clampi(t, 0, TIERS.size() - 1)].d)
+static func tier_name(t: int) -> String:
+	var eq_id = load("res://game/equip/eq_data.gd").ml_pick(clampi(t, 0, TIERS.size() - 1)) if load("res://game/equip/eq_data.gd").on() else ""   # [equip] 今期款名
+	if eq_id != "": return load("res://game/equip/eq_data.gd").name_of(eq_id)
+	return T(TIERS[clampi(t, 0, TIERS.size() - 1)].n)
+static func tier_desc(t: int) -> String:
+	var eq_id = load("res://game/equip/eq_data.gd").ml_pick(clampi(t, 0, TIERS.size() - 1)) if load("res://game/equip/eq_data.gd").on() else ""   # [equip] 今期款笑位
+	if eq_id != "": return load("res://game/equip/eq_data.gd").desc_of(eq_id)
+	return T(TIERS[clampi(t, 0, TIERS.size() - 1)].d)
 static func plate_name() -> String: return L("兵器・", "兵器・") + tier_name(tier_now())
 static func pw(t: int) -> float: return float(TIERS[clampi(t, 0, TIERS.size() - 1)].pw)
 # mat.gd recipe() 掛鈎：兵器檔按而家級數用料（n＝1：每件一份）
@@ -303,6 +309,7 @@ static func join(t: int) -> bool:
 		if w < 0 or w >= t: return false
 		remove(w, 1)   # 最弱一個退休，換新
 	add(t, 1)
+	load("res://game/equip/eq_data.gd").ml_join(t)   # [equip] 記低佢揸邊款（外觀＋A/B 倍率）
 	a["join"] = J.num(a.get("join", 0)) + 1.0
 	return true
 

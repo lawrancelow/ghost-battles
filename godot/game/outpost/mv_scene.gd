@@ -1704,6 +1704,7 @@ func _fill_sheet() -> void:
 	var how = _lbl(MD.T(sd.get("how", "")), 14, DIMC, "sans", 700); how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; how.custom_minimum_size = Vector2(350, 0); sheet_box.add_child(how)
 	_recipe_row(sid)   # [chain] 用乜做 → 出乜
 	if sid == "st_bingqi": load("res://game/militia/ml_ui.gd").sheet_rows(self, sheet_box)   # [militia] 今期兵器、遊魂兵數
+	if sid == "st_bingqi": load("res://game/equip/eq_ui.gd").sheet_rows(self, sheet_box)   # [equip] 今期 A/B 款、訂製名鬼裝備
 	# 數值：而家 → 下一級
 	var nx = minf(mx, l + 1.0)
 	var grid = GridContainer.new(); grid.columns = 2; grid.add_theme_constant_override("h_separation", 14); grid.add_theme_constant_override("v_separation", 2); sheet_box.add_child(grid)

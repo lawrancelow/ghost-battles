@@ -842,6 +842,8 @@ func _render_roster() -> void:
 				S.ghosts.erase(g); S.team = S.team.map(func(x): return null if x == g.id else x)
 				if S.adviser == g.id: S.adviser = null
 				show_toast("%s 去投胎了。退回 壽包 %s" % [g.name, G.fmt(back)]); G.save(); refresh(); _render_roster())
+		load("res://game/equip/eq_ui.gd").roster_strip(pc, hb, J.str(g.id))   # [equip] 裝備三格
+		load("res://game/equip/eq_ui.gd").on_change = func(): _render_roster()   # [equip]
 		sheet_body.add_child(pc)
 
 # --- 箱子 ---

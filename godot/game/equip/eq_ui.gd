@@ -1,0 +1,232 @@
+# [equip] 裝備 UI：兵器檔資料卡（今期款、訂製入口）、訂製面板、名冊三格、換裝面板（全部 static）
+extends RefCounted
+
+const EQ = preload("res://game/equip/eq_data.gd")
+const EA = preload("res://game/equip/eq_art.gd")
+const EV = preload("res://game/equip/eq_view.gd")
+const M = preload("res://game/outpost/mat.gd")
+const TAGW := {"遠": "遠程", "拉": "拉落地", "掃": "範圍", "破": "破殼", "刺": "斬召喚", "削": "停回血", "回": "吸血治療", "照": "現形", "定": "定驚", "收": "收屍變"}
+const SCW := {"breath": "吹氣", "light": "燈", "cold": "凍", "sound": "怪聲", "paper": "紙", "phone": "電話", "face": "鬼臉", "shadow": "黑影"}
+const STW := {"atk": "攻", "hp": "血", "taken": "受傷", "energy": "儲能", "aspd": "攻速", "spd": "行速", "heal_in": "受治療"}
+
+static func L(yue: String, zhs: String) -> String: return EQ.L(yue, zhs)
+static var popup_root = null      # 測試：最後開嘅面板
+static var on_change = null       # 名冊：換裝後重畫
+
+# ---------------- 文字 ----------------
+static func stat_txt(id: String) -> String:
+	var it = EQ.item(id); var a = []
+	var st = it.get("st", {})
+	if str(it.get("kind")) == "ml":
+		var ak = J.num(it.get("atk_k", 1)); var hk = J.num(it.get("hp_k", 1))
+		a.append(L("每人戰力 %.2f", "每人戰力 %.2f") % load("res://game/militia/ml_data.gd").pw(int(J.num(it.tier))))
+		if absf(ak - 1.0) > 0.001 or absf(hk - 1.0) > 0.001: a.append(L("攻×%.2f 血×%.2f", "攻×%.2f 血×%.2f") % [ak, hk])
+		else: a.append(L("均衡", "均衡"))
+		return "　".join(a)
+	if st is Dictionary:
+		for s in ["atk", "hp", "taken", "energy", "aspd", "spd", "heal_in"]:
+			if st.has(s): a.append("%s%+d%%" % [STW[s], int(round(J.num(st[s]) * 100))])
+	if str(it.get("tag", "")) != "": a.append(L("補標籤「%s」（%s）", "補標籤「%s」（%s）") % [it.tag, TAGW.get(str(it.tag), "")])
+	if str(it.get("sc", "")) != "": a.append(L("同聲同氣「%s」", "同聲同氣「%s」") % SCW.get(str(it.sc), str(it.sc)))
+	return "　".join(a)
+static func rec_txt(id: String) -> String:
+	var it = EQ.item(id); var a = []
+	var r = it.get("rec", {})
+	if r is Dictionary:
+		for m in r: a.append("%s %d/%d" % [M.name(str(m)), int(M.amt(str(m))), int(J.num(r[m]))])
+	if J.num(it.get("coin", 0)) > 0: a.append(L("冥幣 %d", "冥幣 %d") % int(J.num(it.coin)))
+	return "　".join(a)
+static func full_name(id: String) -> String:
+	var it = EQ.item(id)
+	if str(it.get("kind")) == "eq": return "%s〔%s〕" % [EQ.name_of(id), EQ.grade_name(EQ.grade_of(id))]
+	return EQ.name_of(id)
+
+# ---------------- 小部件 ----------------
+class IconC extends Control:
+	var id := ""
+	var ring := true
+	func _draw() -> void:
+		if id == "":
+			var c = size * 0.5
+			draw_circle(c, minf(size.x, size.y) * 0.46, Color(0, 0, 0, 0.12))
+			draw_arc(c, minf(size.x, size.y) * 0.46, 0, TAU, 32, Color("#8a7a5a"), 1.5)
+			return
+		var ctx = Ctx.new(self)
+		load("res://game/equip/eq_art.gd").icon(ctx, id, size.x * 0.5, size.y, minf(size.x, size.y), ring)
+class PreviewC extends Control:
+	var k := ""
+	var w := {}
+	var last := Rect2()
+	func _draw() -> void:
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.17, 0.12, 0.1, 0.92))
+		var ctx = Ctx.new(self)
+		last = load("res://game/equip/eq_view.gd").preview(ctx, k, w, Rect2(Vector2(6, 6), size - Vector2(12, 12)))
+		draw_rect(Rect2(Vector2.ZERO, size), Color("#6a5040"), false, 2.0)
+static func icon_c(id: String, sz: float) -> Control:
+	var c = IconC.new(); c.id = id; c.custom_minimum_size = Vector2(sz, sz); c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return c
+static func _lbl(t: String, sz := 15, col := UIKit.INKTXT, w := 700) -> Label:
+	var l = UIKit.label(t, sz, col, "sans", w); l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
+static func _btn(t: String, kind: String, en: bool, f: Callable) -> Button:
+	var b = UIKit.btn(t, kind, true); b.disabled = not en; b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(84, 40); b.pressed.connect(f)
+	return b
+
+# ---------------- 浮動面板（CanvasLayer 疊最上） ----------------
+static func popup(title: String, w := 440.0) -> VBoxContainer:
+	close_popup()
+	var tree = Engine.get_main_loop()
+	var cl = CanvasLayer.new(); cl.layer = 60; cl.name = "EqPopup"
+	var bg = ColorRect.new(); bg.color = Color(0, 0, 0, 0.55); bg.set_anchors_preset(Control.PRESET_FULL_RECT); bg.mouse_filter = Control.MOUSE_FILTER_STOP; cl.add_child(bg)
+	var vs = tree.root.get_visible_rect().size if tree is SceneTree else Vector2(540, 960)
+	var pw = minf(w, vs.x - 20)
+	var pc = PanelContainer.new(); pc.add_theme_stylebox_override("panel", UIKit.sb(UIKit.PAPER, 10, UIKit.PAPERLINE, 2, Vector4(12, 10, 12, 12)))
+	pc.position = Vector2((vs.x - pw) * 0.5, 40); pc.size = Vector2(pw, vs.y - 80); pc.custom_minimum_size = pc.size; cl.add_child(pc)
+	var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 8); pc.add_child(v)
+	var h = HBoxContainer.new(); v.add_child(h)
+	var tl = UIKit.label(title, 20, UIKit.CINNABAR2, "serif", 900); tl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; h.add_child(tl)
+	var cb = UIKit.btn("✕", "ghost", true); cb.custom_minimum_size = Vector2(42, 40); cb.focus_mode = Control.FOCUS_NONE; cb.pressed.connect(close_popup); h.add_child(cb)
+	var sc = ScrollContainer.new(); sc.size_flags_vertical = Control.SIZE_EXPAND_FILL; sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; v.add_child(sc)
+	var body = VBoxContainer.new(); body.size_flags_horizontal = Control.SIZE_EXPAND_FILL; body.add_theme_constant_override("separation", 6); sc.add_child(body)
+	if tree is SceneTree: tree.root.add_child(cl)
+	popup_root = cl
+	cl.set_meta("body", body); cl.set_meta("title", title)
+	return body
+static func close_popup() -> void:
+	if popup_root != null and is_instance_valid(popup_root): popup_root.queue_free()
+	popup_root = null
+
+# ---------------- 兵器檔資料卡（mv_scene._fill_sheet 掛鈎） ----------------
+static func sheet_rows(sc, box: Control) -> void:
+	if not EQ.on(): return
+	var t = EQ.stall_star()
+	var l = EQ.ml_items(t)
+	var pb = PanelContainer.new(); pb.add_theme_stylebox_override("panel", UIKit.sb(Color(0.4, 0.25, 0.1, 0.10), 8, Color("#b08a50"), 1, Vector4(8, 4, 8, 6))); box.add_child(pb)
+	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 4); pb.add_child(vb)
+	if l.size() > 1:
+		vb.add_child(_lbl(L("今期賣俾遊魂（揀一款）：", "本期賣給遊魂（選一款）："), 15, Color("#4a2a10"), 900))
+		var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 6); vb.add_child(hb)
+		for id in l:
+			var cur = EQ.ml_pick(t) == id
+			var bx = HBoxContainer.new(); bx.add_theme_constant_override("separation", 2)
+			var b = _btn(("● " if cur else "") + EQ.name_of(id), "gold" if cur else "", true, func():
+				EQ.set_ml_pick(t, id)
+				if sc != null and sc.has_method("_fill_sheet"): sc._fill_sheet())
+			b.custom_minimum_size = Vector2(150, 44); b.name = "MlPick_" + id
+			bx.add_child(icon_c(id, 36)); bx.add_child(b); hb.add_child(bx)
+		vb.add_child(_lbl(stat_txt(EQ.ml_pick(t)) + "　" + L("用料：", "用料：") + rec_txt(EQ.ml_pick(t)), 13, Color("#5a4a30")))
+	var nb = _btn(L("訂製名鬼裝備（倉庫 %d 件）", "訂製名鬼裝備（倉庫 %d 件）") % inv_total(), "gold", true, func(): open_craft())
+	nb.custom_minimum_size = Vector2(0, 44); nb.name = "EqCraftBtn"; vb.add_child(nb)
+static func inv_total() -> int:
+	var e = EQ.st(); var n = 0
+	if e == null: return 0
+	for id in e.inv: n += int(J.num(e.inv[id]))
+	return n
+
+# ---------------- 訂製面板 ----------------
+static func open_craft() -> void:
+	var body = popup(L("紙紮兵器檔・訂製名鬼裝備", "紙紮兵器攤・訂製名鬼裝備"), 480)
+	_fill_craft(body)
+static func _fill_craft(body: VBoxContainer) -> void:
+	for c in body.get_children(): body.remove_child(c); c.queue_free()
+	body.add_child(_lbl(L("兵器檔★%d　冥幣 %d　訂好入倉，喺「鬼怪名冊」換裝。", "兵器攤★%d　冥幣 %d　訂好入倉，在「鬼怪名冊」換裝。") % [EQ.stall_star(), int(EQ.coins())], 14, UIKit.INKDIM))
+	for sl in EQ.SLOTS:
+		body.add_child(UIKit.label(EQ.slot_name(sl), 17, UIKit.CINNABAR2, "serif", 900))
+		for id in EQ.items("eq", sl): body.add_child(_craft_row(body, id))
+static func _craft_row(body: VBoxContainer, id: String) -> Control:
+	var ok = EQ.unlocked(id)
+	var pc = PanelContainer.new(); pc.name = "Craft_" + id
+	pc.add_theme_stylebox_override("panel", UIKit.sb(Color(1, 0.97, 0.88, 0.95) if ok else Color(0.78, 0.75, 0.7, 0.9), 8, EQ.grade_col(EQ.grade_of(id)), 2, Vector4(8, 6, 8, 6)))
+	var h = HBoxContainer.new(); h.add_theme_constant_override("separation", 8); pc.add_child(h)
+	h.add_child(icon_c(id, 48))
+	var v = VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; v.add_theme_constant_override("separation", 1); h.add_child(v)
+	v.add_child(_lbl(full_name(id) + ("　" + L("倉 %d（空 %d）", "倉 %d（閒 %d）") % [EQ.n_inv(id), EQ.n_free(id)] if EQ.n_inv(id) > 0 else ""), 16, UIKit.INKTXT, 900))
+	v.add_child(_lbl(stat_txt(id), 14, Color("#2f5a8c"), 900))
+	v.add_child(_lbl(EQ.desc_of(id), 13, UIKit.INKDIM, 400))
+	v.add_child(_lbl((L("用料：", "用料：") + rec_txt(id)) if ok else EQ.lock_txt(id), 13, UIKit.INKTXT if ok else Color("#9c2219"), 700))
+	var a = VBoxContainer.new(); a.add_theme_constant_override("separation", 4); h.add_child(a)
+	var mb = _btn(L("訂製", "訂製"), "gold", EQ.can_make(id), func():
+		EQ.make(id); _fill_craft(body))
+	mb.name = "Make_" + id; a.add_child(mb)
+	if EQ.n_free(id) > 0:
+		var rb = _btn(L("回收 +%d", "回收 +%d") % int(J.num(EQ.item(id).get("price", 0))), "", true, func():
+			EQ.recycle(id); _fill_craft(body))
+		a.add_child(rb)
+	return pc
+
+# ---------------- 名冊：三格（menus._gcard 掛鈎） ----------------
+static func roster_strip(card: PanelContainer, hb: Control, gid: String) -> void:
+	if not EQ.on() or EQ.ghost(gid) == null: return
+	card.remove_child(hb)
+	var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 4); card.add_child(v); v.add_child(hb)
+	var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 6); row.name = "EqStrip"; v.add_child(row)
+	row.add_child(_lbl(L("裝備", "裝備"), 14, UIKit.INKDIM, 900))
+	var w = EQ.worn(gid)
+	for sl in EQ.SLOTS:
+		var id = str(w.get(sl, ""))
+		var b = Button.new(); b.focus_mode = Control.FOCUS_NONE; b.name = "Slot_" + sl
+		b.custom_minimum_size = Vector2(0, 48); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.clip_text = true
+		b.add_theme_stylebox_override("normal", UIKit.sb(Color(0, 0, 0, 0.06), 6, EQ.grade_col(EQ.grade_of(id)) if id != "" else Color("#b89a52"), 1, Vector4(4, 2, 4, 2)))
+		b.add_theme_font_size_override("font_size", 14)
+		b.add_theme_color_override("font_color", UIKit.INKTXT)
+		var ic = icon_c(id, 40); ic.position = Vector2(4, 4); b.add_child(ic)
+		b.text = "　　 " + (EQ.name_of(id) if id != "" else EQ.slot_name(sl) + L("：空", "：空"))
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.pressed.connect(func(): open_slot(gid, sl))
+		row.add_child(b)
+	var ti = EQ.tag_info(gid)
+	if str(ti.tag) != "":
+		var why = {"": L("生效", "生效"), "own": L("本身已有，冇效", "本身已有，無效"), "full": L("本領已滿 3 個，冇效", "本領已滿 3 個，無效")}[str(ti.why)]
+		v.add_child(_lbl(L("裝備標籤「%s」：%s", "裝備標籤「%s」：%s") % [ti.tag, why], 13, Color("#2f5a8c") if str(ti.why) == "" else UIKit.INKDIM))
+
+# ---------------- 換裝面板 ----------------
+static func open_slot(gid: String, sl: String) -> void:
+	var g = EQ.ghost(gid)
+	if g == null: return
+	var body = popup(L("%s・%s", "%s・%s") % [J.str(g.get("name")), EQ.slot_name(sl)], 460)
+	_fill_slot(body, gid, sl)
+static func _fill_slot(body: VBoxContainer, gid: String, sl: String) -> void:
+	for c in body.get_children(): body.remove_child(c); c.queue_free()
+	var k = EQ.k_of(gid)
+	var pv = PreviewC.new(); pv.k = k; pv.w = EQ.worn(gid); pv.custom_minimum_size = Vector2(0, 230); pv.name = "EqPreview"; body.add_child(pv)
+	var b = EQ.bonus(gid)
+	var parts = []
+	for s in ["atk", "hp", "taken", "energy", "aspd", "spd", "heal_in"]:
+		if absf(J.num(b[s])) > 0.0001: parts.append("%s%+d%%" % [STW[s], int(round(J.num(b[s]) * 100))])
+	body.add_child(_lbl(L("合計：", "合計：") + ("　".join(parts) if parts.size() else L("冇", "無")) + "　" + L("（封頂：攻／血 +25%）", "（封頂：攻／血 +25%）"), 14, Color("#2f5a8c"), 900))
+	var own = EQ.own_tags(k)
+	body.add_child(_lbl(L("本身標籤：%s　裝備最多補 1 個", "本身標籤：%s　裝備最多補 1 個") % ("、".join(own) if own.size() else L("冇", "無")), 13, UIKit.INKDIM))
+	var cur = str(EQ.worn(gid).get(sl, ""))
+	if cur != "":
+		var ub = _btn(L("卸下 %s", "卸下 %s") % EQ.name_of(cur), "", true, func():
+			EQ.unwear(gid, sl); _changed(); _fill_slot(body, gid, sl))
+		ub.custom_minimum_size = Vector2(0, 42); ub.name = "Unwear"; body.add_child(ub)
+	var any = false
+	for id in EQ.items("eq", sl):
+		if EQ.n_inv(id) <= 0: continue
+		any = true
+		var pc = PanelContainer.new(); pc.name = "Opt_" + id
+		pc.add_theme_stylebox_override("panel", UIKit.sb(Color(1, 0.97, 0.88, 0.95), 8, EQ.grade_col(EQ.grade_of(id)), 3 if id == cur else 1, Vector4(8, 6, 8, 6)))
+		var h = HBoxContainer.new(); h.add_theme_constant_override("separation", 8); pc.add_child(h)
+		h.add_child(icon_c(id, 46))
+		var v = VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; h.add_child(v)
+		v.add_child(_lbl(full_name(id) + "　" + L("閒置 %d", "閒置 %d") % EQ.n_free(id), 15, UIKit.INKTXT, 900))
+		var tx = stat_txt(id)
+		var tg = str(EQ.item(id).get("tag", ""))
+		if tg != "" and own.has(tg): tx += "　" + L("（本身已有）", "（本身已有）")
+		elif tg != "" and own.size() >= 3: tx += "　" + L("（本領已滿）", "（本領已滿）")
+		var sc = str(EQ.item(id).get("sc", ""))
+		if sc != "" and EQ.own_scares(k).has(sc): tx += "　" + L("（同聲同氣 攻+8%）", "（同聲同氣 攻+8%）")
+		v.add_child(_lbl(tx, 13, Color("#2f5a8c"), 700))
+		var why = EQ.why_not(gid, id)
+		if id == cur: h.add_child(_lbl(L("已穿", "已穿"), 14, UIKit.CINNABAR2, 900))
+		else:
+			var wb = _btn(L("穿上", "穿上"), "gold", why == "", func():
+				EQ.wear(gid, id); _changed(); _fill_slot(body, gid, sl))
+			wb.name = "Wear_" + id; h.add_child(wb)
+			if why != "": v.add_child(_lbl(why, 12, Color("#9c2219")))
+		body.add_child(pc)
+	if not any: body.add_child(_lbl(L("倉庫冇呢格嘅裝備：去大排檔「紙紮兵器檔」訂製。", "倉庫沒有這格的裝備：去大排檔「紙紮兵器攤」訂製。"), 14, UIKit.INKDIM))
+static func _changed() -> void:
+	if on_change is Callable and on_change.is_valid(): on_change.call()

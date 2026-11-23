@@ -272,6 +272,7 @@ class UnitVis extends Node2D:
 				var px = {"side": u.side, "k": J.str(u.k), "boss": J.t(u.get("boss")), "minion": minion, "x": 0.0, "lane": -5.0, "hp": 1.0, "maxhp": 1.0, "st": {}, "range": J.num(u.get("range", 46)), "_soul": (randi() % 1000)}
 				proxies.append(px)
 				var c = BtChar.new(px, fb); w.add_child(c); chars.append(c)
+				load("res://game/equip/eq_view.gd").attach(c, u)   # [equip] 裝備疊層（兵器喺手、帽喺頭、護身色環徽章）
 	func _alive_reps() -> int:
 		var hp = J.num(u.get("hp", 0))
 		if hp <= 0: return 0
