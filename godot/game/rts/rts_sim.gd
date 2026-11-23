@@ -22,6 +22,9 @@ const AGGRO := 170.0         # 接觸範圍
 const GAP := 46.0            # 隊與隊之間（弧長 px ≈ 0.6 秒）
 const SALUTE := 1.0          # 回到集合點敬禮幾秒
 const REPS := 2              # 每隊畫幾個代表兵
+const DEPLOY := 250.0        # 離迎戰點幾遠開始由行軍隊形展開成戰鬥橫隊
+const ROWGAP := 46.0         # 橫隊前後行距
+const DEP_WAIT := 6.0        # 前排最多等後面幾秒（等齊就一齊推前）
 
 var id := 0
 var kind := "stage"
@@ -54,6 +57,10 @@ var org := Vector2.ZERO
 var cosmetic := false         # 純畫面（派兵攻佔、自動擊退）：我方唔會死、結果由舊規則定
 var no_heroes := false
 var foe_from = null           # 敵人由邊度行過嚟（襲擾）
+var tune_minion := 0.0         # 敵人揀目標：陰兵小隊（企正面）優先幾多（同舊版直線一樣，前面嘅小隊食傷害）
+var tune_open := 0.0           # 接觸後我方要幾耐排陣先出第一下
+var dep_go := false           # 橫隊排齊咗，一齊推前
+var dep_t := 0.0              # 第一隊到位等咗幾耐
 
 func _init() -> void:
 	rw = J.G.get("Rework")
@@ -77,6 +84,7 @@ func setup(us: Array, out_path: PackedVector2Array, at: Vector2, gate_p: Vector2
 		u["lat"] = 0.0 if not J.t(u.get("minion")) else (11.0 if i % 2 == 0 else -11.0)
 		u["p"] = path[0]; u["face"] = 1.0; u["out"] = false; u["eng"] = false
 		u["stamp"] = false
+	_deploy_slots(order)
 	var foes = []
 	for u in units: if _nn(u, "side") == 1: foes.append(u)
 	var pos = camp_layout(at, foes.size(), _dir_in())
@@ -100,6 +108,27 @@ static func camp_layout(at: Vector2, n: int, dir_in: Vector2) -> Array:
 		if i < row.size(): o.append(at + row[i])
 		else: o.append(at + sd * (((i - row.size()) % 6) - 2.5) * 30 - fw * (78 + 30 * floor((i - row.size()) / 6.0)))
 	return o
+# 行軍隊形 → 戰鬥隊形：預先定好每隊喺橫隊嘅橫位（dl）同第幾行（drow），次序同接觸時 _form 一樣
+#   前行：名鬼一半 ＋ 陰兵小隊 ＋ 名鬼另一半（近身）；後行：遠程。一行太長（> 8 隊）就分兩行。
+func _deploy_slots(order: Array) -> void:
+	var mel = []; var rng = []
+	for u in order: (rng if _nn(u, "range") > 60 else mel).append(u)
+	var hs = mel.filter(func(x): return not J.t(x.get("minion")))
+	var sq = mel.filter(func(x): return J.t(x.get("minion")))
+	var line = hs.slice(0, (hs.size() + 1) / 2) + sq + hs.slice((hs.size() + 1) / 2)
+	var rows = []
+	if line.size() > 8:   # 兩行：單數位企前、雙數位企後（同 _slots 兩行排法一樣）
+		var a = []; var b = []
+		for i in line.size(): (a if i % 2 == 0 else b).append(line[i])
+		rows = [a, b]
+	else: rows = [line]
+	if rng.size(): rows.append(rng)
+	for r in rows.size():
+		var arr = rows[r]
+		for i in arr.size():
+			arr[i]["dl"] = (i - (arr.size() - 1) * 0.5) * (42.0 if r < rows.size() - 1 or rng.is_empty() else 46.0)
+			arr[i]["drow"] = r
+			arr[i]["dep"] = 0   # 0 行軍 1 到位等緊 2 推前
 func _dir_in() -> Vector2:   # 隊伍最後一段嘅方向（入據點）
 	if path.size() < 2: return Vector2(0, -1)
 	return (path[path.size() - 1] - path[path.size() - 2]).normalized()
@@ -363,7 +392,9 @@ func _walk_path(u: Dictionary, dt: float, spd: float, pts: PackedVector2Array, p
 	if not J.t(u.get("out")): u["out"] = true; events.append(["depart", u])
 	var done = _nn(u, "s") >= plen
 	if done: u["s"] = plen
-	u["p"] = _path_at(pts, _nn(u, "s"), _nn(u, "lat") * (1.0 - clampf((_nn(u, "s") - (plen - 60.0)) / 60.0, 0.0, 1.0)) if phase != "back" else _nn(u, "lat"))
+	var lt = _nn(u, "lat") * (1.0 - clampf((_nn(u, "s") - (plen - 60.0)) / 60.0, 0.0, 1.0)) if phase != "back" else _nn(u, "lat")
+	if phase != "back" and u.has("wl"): lt = _nn(u, "wl")   # 展開中／已展開：用橫隊橫位
+	u["p"] = _path_at(pts, _nn(u, "s"), lt)
 	var dx = (u.p as Vector2).x - p0.x
 	if absf(dx) > 0.02: u["face"] = _sign(dx)
 	u["walking"] = not done
@@ -381,7 +412,37 @@ func _step_march(dt: float) -> void:
 					u["p"] = (u.p as Vector2) + d.normalized() * minf(d.length(), 40.0 * dt); u["walking"] = true; u["face"] = _sign(d.x) if absf(d.x) > 1 else u.get("face", -1.0)
 				else: u["walking"] = false
 			continue
-		_walk_path(u, dt, MARCH, path, path_len)
+		_deploy_walk(u, dt)
+	# 全部到位（或者等夠鐘）→ 成條橫隊一齊推前
+	if not dep_go:
+		var all_in = true; var any_in = false
+		for u in units:
+			if _nn(u, "side") != 0 or _nn(u, "hp") <= 0: continue
+			if int(_nn(u, "dep")) >= 1: any_in = true
+			else: all_in = false
+		if any_in: dep_t += dt
+		if any_in and (all_in or dep_t >= DEP_WAIT):
+			dep_go = true; events.append(["deploy", null])
+
+func _stop_s(u: Dictionary) -> float: return path_len - DEPLOY - _nn(u, "drow") * ROWGAP
+func _deploy_walk(u: Dictionary, dt: float) -> void:
+	if not u.has("dl"): _walk_path(u, dt, MARCH, path, path_len); return
+	var stop = _stop_s(u)
+	if dep_go:   # 推前：同一速度，行住橫隊
+		u["wl"] = _nn(u, "dl"); u["dep"] = 2
+		_walk_path(u, dt, MARCH, path, path_len); return
+	var s0 = _nn(u, "s")
+	if s0 >= stop:   # 到位：企定等後面
+		u["dep"] = 1; u["wl"] = _nn(u, "dl")
+		u["p"] = _path_at(path, s0, _nn(u, "dl")); u["walking"] = false
+		u["face"] = _sign(_dir_in().x) if absf(_dir_in().x) > 0.1 else u.get("face", 1.0)
+		return
+	# 未到位：前面有人等緊就跑步；最後 120px 斜斜行去自己橫位
+	var any_wait = dep_t > 0.0
+	var k = clampf((s0 - (stop - 120.0)) / 120.0, 0.0, 1.0)
+	if k > 0.0: u["wl"] = lerpf(_nn(u, "lat"), _nn(u, "dl"), k)
+	_walk_path(u, dt, MARCH * (1.35 if any_wait else 1.0), path, path_len)
+	if _nn(u, "s") > stop: u["s"] = stop
 
 func _contact() -> void:
 	for u in units:
@@ -419,6 +480,8 @@ func _form() -> void:
 	_slots(line, 42.0); _slots(rng, 46.0)
 	fo.sort_custom(func(a, b): return _lat(a.p) < _lat(b.p))
 	_slots(fo, 46.0)
+	if tune_open > 0.0:
+		for u in ou: u["cd"] = maxf(_nn(u, "cd"), tune_open)
 func _slots(arr: Array, gap: float) -> void:
 	var h = (arr.size() + 1) / 2   # 兩行排法：人多過對面陣線闊就分前後兩行（後行補位），唔會疊成直龍
 	for i in arr.size():
@@ -433,6 +496,7 @@ func _line_tg(u: Dictionary):
 	var best = null; var bk = 1e9
 	for v in enemies_of(u):
 		var k = absf(_lat(v.p) - my) * 1.6 + absf(_axl(v.p) - _axl(u.p)) * 0.4
+		if tune_minion != 0.0 and _nn(u, "side") == 1 and J.t(v.get("minion")): k -= tune_minion
 		if k < bk: bk = k; best = v
 	u["tg"] = best
 	return best
@@ -636,3 +700,6 @@ func t_skip_march() -> void:   # 成隊（保持次序）推到離迎戰點 200p
 	var sh = maxf(0.0, path_len - 200.0 - mx)
 	for u in units:
 		if _nn(u, "side") == 0: u["s"] = _nn(u, "s") + sh
+	dep_go = true   # 測試跳行軍：當已排好
+	for u in units:
+		if _nn(u, "side") == 0 and u.has("dl"): u["wl"] = _nn(u, "dl"); u["dep"] = 2

@@ -118,6 +118,41 @@ func smoke(t) -> void:
 
 # ================= logic／shots =================
 func logic(t) -> void: await _run(t)
+func cmp(t) -> void:   # 只跑同舊版比較（快）＋橫隊截圖
+	var m = await _boot(t)
+	await compare_old(t, m)
+	await line_shots(t, m)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+# 真行軍：展開成橫隊 → 接觸後 3 秒、6 秒截圖，並計我方係咪到齊陣位
+func line_shots(t, m) -> void:
+	shots = true
+	await _prep(t, m)
+	B()["auto"] = true
+	var r = ZD.start_stage()
+	if RTS.pending != null: RTS.card_go()
+	var op = RTS.op_for("1-1")
+	if op == null: _chk("line_shots 開到仗", false, r); return
+	var c = m.village.zone_cam()
+	var w_dep = func():
+		c.glide_to(op.center() + Vector2(0, -40))
+		return op.dep_go or op.phase != "march"
+	var dep = await _until(t, w_dep, 90.0)
+	_cam(m, op.center() + Vector2(0, -60), m.village.size.x / 390.0)
+	var mis = 0.0; var n = 0
+	for u in op.units:
+		if J.num(u.side) == 0 and J.num(u.hp) > 0 and u.has("dl"):
+			mis = maxf(mis, absf(J.num(u.s) - op._stop_s(u))); n += 1
+	await _w(t, 0.3); await _shot(t, "line_deploy")
+	_chk("展開：全部到咗自己陣位先推前（行距誤差 < 30px）", dep and mis < 30.0, [n, mis, op.dep_t])
+	var w_ct = func():
+		c.glide_to(op.center() + Vector2(0, -40))
+		return op.phase != "march"
+	await _until(t, w_ct, 60.0)
+	_cam(m, op.anchor + Vector2(0, 70), m.village.size.x / 390.0)
+	await _w(t, 3.0); await _shot(t, "line_contact_3s")
+	await _w(t, 3.0); await _shot(t, "line_contact_6s")
+	await _until(t, func(): return op.phase in ["back", "done"], 90.0)
+	await _until(t, func(): return op.phase == "done", 90.0)
 func shots_(t) -> void: shots = true; demo = true; await _run(t)
 func _run(t) -> void:
 	var m = await _boot(t)
@@ -167,8 +202,11 @@ func _old_fight(B: Dictionary) -> Dictionary:
 	var t_ = J.num(B.t)
 	B["active"] = false; B["result"] = null
 	return {"win": res[0] == true, "t": t_, "dead": dead}
-func _new_fight(units: Array, tg: Dictionary) -> Dictionary:
-	var op = SIM.new()
+const TUNES := [[0.0, 0.0], [60.0, 0.0], [120.0, 0.0], [0.0, 1.2], [60.0, 1.2], [120.0, 2.0]]   # 調校候選（敵人優先打小隊 px, 我方排陣秒）
+const SIM_REF = preload("res://tools/tests/rts_sim_ref25.gd")
+func _new_fight(units: Array, tg: Dictionary, ref := false, tune = null) -> Dictionary:
+	var op = SIM_REF.new() if ref else SIM.new()
+	if tune != null: op.tune_minion = tune[0]; op.tune_open = tune[1]
 	op.setup(units, RTS.stage_path(tg.pos + RTS.CAMP_OFF), tg.pos + RTS.CAMP_OFF, RTS.gate_pos())
 	var n = 0
 	while op.result == null and n < 30 * 200:
@@ -183,7 +221,9 @@ func compare_old(t, m) -> void:
 	var Bt = B()
 	var save_meal = S.get("street", {}).get("meal") if S.get("street") is Dictionary else null
 	var N = 8
-	var A = {"win": 0, "t": 0.0, "dead": 0}; var Z = {"win": 0, "t": 0.0, "dead": 0}
+	var VAR = []
+	for x in TUNES: VAR.append([0, 0.0, 0.0])
+	var A = {"win": 0, "t": 0.0, "dead": 0}; var Z = {"win": 0, "t": 0.0, "dead": 0}; var R = {"win": 0, "t": 0.0, "dead": 0}
 	var same_stats = true
 	for i in N:
 		# 舊：Battle.start（唔開畫面）＋ Battle.update 打到完
@@ -202,13 +242,23 @@ func compare_old(t, m) -> void:
 		for u in snap.units: sig_new.append([J.str(u.k), J.num(u.side), int(J.num(u.hp)), int(J.num(u.atk) * 10), J.num(u.range)])
 		if str(sig_old) != str(sig_new): same_stats = false; _p("sig old %s new %s" % [sig_old, sig_new])
 		var r1 = _new_fight(snap.units, tg)
-		for k in ["t", "dead"]: A[k] += r0[k]; Z[k] += r1[k]
-		A.win += int(r0.win); Z.win += int(r1.win)
+		var snap2 = RTS._start_battle(func(): J.mc(Bt, "start", [0.0, 0.0]))
+		var r2 = _new_fight(snap2.units, tg, true)
+		for k in ["t", "dead"]: A[k] += r0[k]; Z[k] += r1[k]; R[k] += r2[k]
+		A.win += int(r0.win); Z.win += int(r1.win); R.win += int(r2.win)
+		for vi in TUNES.size():
+			var sn = RTS._start_battle(func(): J.mc(Bt, "start", [0.0, 0.0]))
+			var rv = _new_fight(sn.units, tg, false, TUNES[vi])
+			VAR[vi][0] += int(rv.win); VAR[vi][1] += rv.dead; VAR[vi][2] += rv.t
+		_p("cmp#%d 舊引擎 %s｜integ25 %s｜新 %s" % [i, str(r0), str(r2), str(r1)])
 		await _f(t, 1)
 	var J0 = J.G.get("$"); var be = J.cl(J0, null, ["#battle"])
 	if be != null: J.mc(J.gp(be, "classList"), "remove", ["on"])
 	J.mc(J.G.get("Sound"), "setMode", ["village"])
 	_p("compare 舊：贏 %d/%d 平均 %.1f 秒 陰兵小隊戰死 %.2f ｜ 新：贏 %d/%d 平均 %.1f 秒（交戰）陰兵小隊戰死 %.2f" % [A.win, N, A.t / N, A.dead / float(N), Z.win, N, Z.t / N, Z.dead / float(N)])
+	_p("compare integ25 版（行軍唔展開）：贏 %d/%d 平均 %.1f 秒 戰死 %.2f ｜ 新（展開橫隊）：贏 %d/%d 平均 %.1f 秒 戰死 %.2f" % [R.win, N, R.t / N, R.dead / float(N), Z.win, N, Z.t / N, Z.dead / float(N)])
+	for vi in TUNES.size(): _p("tune %s：贏 %d/%d 戰死 %.2f 平均 %.1f 秒" % [str(TUNES[vi]), VAR[vi][0], N, VAR[vi][1] / N, VAR[vi][2] / N])
+	_chk("新橫隊同 integ25 版：勝率一樣、平均戰死差 ≤ 1 隊", R.win == Z.win and absf(R.dead - Z.dead) / N <= 1.0, [R.win, Z.win, R.dead / float(N), Z.dead / float(N)])
 	_chk("開戰單位同舊版一模一樣（種類、血、攻、射程）", same_stats)
 	_chk("勝負同舊版一致（1-1：舊贏幾多場、新都贏幾多場 ±1）", absi(A.win - Z.win) <= 1, [A.win, Z.win])
 	_chk("陰兵折損同舊版接近（平均差 ≤ 1.5 隊）", absf(A.dead - Z.dead) / N <= 1.5, [A.dead / float(N), Z.dead / float(N)])
@@ -258,7 +308,7 @@ func main_flow(t, m) -> void:
 	_chk("鏡頭外：角色唔畫（節點收埋），模擬照行", offv and op.T > 2.0)
 	_cam(m, op.center())
 	await _w(t, 0.3); await _shot(t, "04_march")
-	var con = await _until(t, func(): return op.phase != "march", 30.0)
+	var con = await _until(t, func(): return op.phase != "march", 40.0)
 	_chk("行到據點：接觸自動開打", con and _has(op, "contact"), op.phase)
 	var near = false
 	for u in op.units: if J.num(u.side) == 0 and J.t(u.get("out")) and (u.p as Vector2).distance_to(op.anchor) < 260: near = true
@@ -586,6 +636,70 @@ func video(t) -> void:
 		if op.phase == "done": break
 		if i % 6 == 0: c.glide_to(op.center() + Vector2(0, -60))
 		await _f(t, 1)
+	await _w(t, 1.5)
+	_p("VIDEO_END frame=%d" % Engine.get_frames_drawn())
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+# ================= svideo：野外出擊一個據點（配 --write-movie 30 幀）：小卡消耗 → 出村 → 沿 mapx 路線行軍 → 展開橫隊 → 開打 → 技能 → 首勝戰報 → 收工回村 =================
+func svideo(t) -> void:
+	demo = true
+	var SO = load("res://game/sortie/so_data.gd"); var SOV = load("res://game/sortie/so_view.gd")
+	var m = await _boot(t)
+	await _prep(t, m)
+	J.G.S.res["buns"] = 5000.0; J.G.S.res["coins"] = 100000.0
+	B()["auto"] = false
+	var nv = m.village; var c = nv.zone_cam()
+	var e = null
+	for x in SO.camps(0): if SO.state(x) == "open" and not J.t(SO.cst(x).get("first")): e = x; break
+	if e == null: e = SO.camps(0)[0]
+	_cam(m, e.pos + Vector2(0, 90), nv.size.x / 420.0)
+	await _w(t, 0.5)
+	_p("VIDEO_START frame=%d camp=%s" % [Engine.get_frames_drawn(), SO.key(e)])
+	await _w(t, 1.2)
+	SOV.open_card(e)
+	await _w(t, 3.0)   # 小卡：名鬼、陰兵、消耗
+	var r = SOV.press_go(e)
+	var op = RTS.op_for(SO.sid_of(e))
+	_p("go %s op %s" % [r, str(op != null)])
+	if op == null: _p("RESULT ok=0 bad=1"); return
+	# 行軍：鏡頭跟住；離展開點遠嘅路段 ×3 快轉（短片唔好太長）
+	for i in 30 * 120:
+		if op.phase != "march": break
+		var lead = -INF
+		for u in op.units: if J.num(u.side) == 0: lead = maxf(lead, J.num(u.s))
+		var far = lead < op.path_len - op.DEPLOY - 140.0 and op.dep_t == 0.0
+		Engine.time_scale = 3.0 if far and op.T > 4.0 else 1.0
+		if i % 6 == 0: c.glide_to(op.center() + Vector2(0, -50))
+		await _f(t, 1)
+	Engine.time_scale = 1.0
+	c.glide_to(op.anchor + Vector2(0, 80))
+	await _w(t, 1.5)
+	var h = null
+	for u in op.units: if J.num(u.side) == 0 and not J.t(u.get("minion")) and J.num(u.hp) > 0: h = u; break
+	if h != null and op.phase == "fight":
+		h["energy"] = 100.0
+		await _w(t, 1.0)
+		var b = RV.inst.btns.get(J.str(h.get("gid", h.k)))
+		if b != null:
+			var ev = InputEventMouseButton.new(); ev.button_index = MOUSE_BUTTON_LEFT; ev.pressed = true; ev.position = Vector2(10, 10)
+			b._gui_input(ev); _p("skill pressed")
+	B()["auto"] = true
+	for i in 30 * 60:
+		if op.phase in ["back", "done"]: break
+		if i % 10 == 0: c.glide_to(op.anchor + Vector2(0, 80))
+		await _f(t, 1)
+	_p("report %s" % str(op.get_meta("report", {})))
+	await _w(t, 3.0)   # 戰報
+	for i in 30 * 60:   # 收工回村：遠路 ×3，近村門返 1 倍睇打卡
+		if i % 20 == 0: _story_skip(m)
+		if op.phase == "done": break
+		var near = false
+		for u in op.units:
+			if J.num(u.side) == 0 and J.num(u.hp) > 0 and u.get("bp") is PackedVector2Array and absf(J.num(u.get("blen", 0)) - J.num(u.s)) < 260.0: near = true
+		Engine.time_scale = 1.0 if near else 3.0
+		if i % 6 == 0: c.glide_to(op.center() + Vector2(0, -60))
+		await _f(t, 1)
+	Engine.time_scale = 1.0
 	await _w(t, 1.5)
 	_p("VIDEO_END frame=%d" % Engine.get_frames_drawn())
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
