@@ -331,9 +331,9 @@ func _run(t, shots: bool) -> void:
 	_ev_btn(nv, Vector2(200, 400), true); _ev_mv(nv, Vector2(260, 330)); _ev_mv(nv, Vector2(300, 300)); _ev_btn(nv, Vector2(300, 300), false)
 	_chk("拖動：上下左右都郁", c.x < x0 - 50 and c.y > y0 + 50, [c.x - x0, c.y - y0])
 	for i in 40: _ev_btn(nv, Vector2(10, 10), true); _ev_mv(nv, Vector2(380, 600)); _ev_btn(nv, Vector2(380, 600), false)
-	_chk("邊界夾住（左上）", absf(c.x) < 0.5 and c.y >= -c.top_extra - 0.5, [c.x, c.y])
+	_chk("邊界夾住（左上）", absf(c.x - ZD.bounds().position.x) < 0.5 and c.y >= ZD.bounds().position.y - c.top_extra - 0.5, [c.x, c.y])   # [mapx] 鏡頭範圍＝分圈擴展後 ext
 	for i in 60: _ev_btn(nv, Vector2(380, 600), true); _ev_mv(nv, Vector2(10, 10)); _ev_btn(nv, Vector2(10, 10), false)
-	_chk("邊界夾住（右下）", absf(c.x - (1340.0 - c.vw())) < 0.5 and absf(c.y - (2410.0 - c.vh())) < 0.5, [c.x, c.y])
+	_chk("邊界夾住（右下）", absf(c.x - (ZD.bounds().end.x - c.vw())) < 0.5 and absf(c.y - (ZD.bounds().end.y - c.vh())) < 0.5, [c.x, c.y])
 	c.center_on(Vector2(670, 1500)); c.vel = Vector2.ZERO
 	var z0 = c.z
 	_touch(nv, 0, Vector2(150, 300), true); _touch(nv, 1, Vector2(250, 300), true)
@@ -515,7 +515,7 @@ func map_check(t, m, c: int, shots: bool) -> void:
 	var Z = ZD.cur(); var tag = "第 %d 關：" % (c + 1)
 	_chk(tag + "分區模式＋套用", ZD.on() and nv.zone and ZD.applied() == str(c) and sc.zone, ZD.applied())
 	_chk(tag + "look＝" + LOOK_OF[str(c)], ZV.lkey() == LOOK_OF[str(c)] and ResourceLoader.exists("res://assets/img/%s_a.webp" % Z.ground) and nv.ysort.modulate == ZV.grade())
-	_chk(tag + "世界大細", J.num(J.G.W) == float(Z.w) and J.num(J.G.WH) == float(Z.h) and nv.zone_cam().world == Vector2(Z.w, Z.h))
+	_chk(tag + "世界大細", J.num(J.G.W) == float(Z.w) and J.num(J.G.WH) == float(Z.h) and nv.zone_cam().world == ZD.bounds().size and nv.zone_cam().org == ZD.bounds().position)   # [mapx]
 	_chk(tag + "大排檔台＝該關 STATIONS", MD.stations(c).size() == (7 if c == 1 else (9 if c >= 4 else 8)) + 1 and Z.market.st.size() == MD.stations(c).size(), MD.stations(c))   # [militia] ＋1 隨村台紙紮兵器檔
 	var POS = J.G.get("POS"); var vr = ZD.zrect("village"); var mr = ZD.zrect("market")
 	# ---- 布局 ----

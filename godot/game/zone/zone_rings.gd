@@ -108,7 +108,9 @@ static func draw_over(c: CanvasItem, ctx: Ctx, nv, vr: Rect2, t: float) -> void:
 					if r2.size.x > 0 and r2.size.y > 0: c.draw_rect(r2, Color(FC.r, FC.g, FC.b, al))
 		log.append(["fog", k, 0])
 	# 圈名牌：每圈上下左右四邊中間（喺鏡頭入面先畫）
-	var px = int(clampf(16.0 / maxf(0.02, float(nv.sc) / maxf(0.01, float(nv.size.x) / 390.0)), 16.0, 220.0))
+	var rel = float(nv.sc) / maxf(0.01, float(nv.size.x) / 390.0)
+	var far = rel < 0.45   # 縮到好細（全景）：只畫上下兩個名牌、字細啲，唔好疊埋一齊
+	var px = int(clampf((11.0 if far else 16.0) / maxf(0.02, rel), 16.0, 160.0))
 	var vin = vr.grow(-40.0)
 	for rg in rs:
 		var k = int(rg.ring)
@@ -119,7 +121,9 @@ static func draw_over(c: CanvasItem, ctx: Ctx, nv, vr: Rect2, t: float) -> void:
 		var s = "%s　Lv%d–%d" % [ZD.T(rg.n), int(lv[0]), int(lv[1])]
 		var op = ZD.ring_open(k)
 		if not op: s += ZD.L("（未散霧）", "（未散霧）")
-		for p in [Vector2(inner.get_center().x, mid_t), Vector2(inner.get_center().x, mid_b), Vector2(mid_l, inner.get_center().y), Vector2(mid_r, inner.get_center().y)]:
+		var spots = [Vector2(inner.get_center().x, mid_t), Vector2(inner.get_center().x, mid_b)]
+		if not far: spots += [Vector2(mid_l, inner.get_center().y), Vector2(mid_r, inner.get_center().y)]
+		for p in spots:
 			if not vin.has_point(p): continue
 			ctx.font = "900 %dpx %s" % [px, Art.SERIF]
 			var w = ctx.measureText(s).width + px * 1.1; var h = px * 1.55
