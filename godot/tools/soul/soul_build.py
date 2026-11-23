@@ -52,13 +52,15 @@ for c, row in enumerate(CH):
 
 # 第一階段臨時表＝cdata 線 counter.json 據點 guard 嘅快照（cdata 合併後遊戲直接讀 counter.json，呢度只係後備）
 CT = "/home/claude/wt/cdata/godot/data/nat/counter.json"
-CAMP_PLAN = {}
+CAMP_PLAN = {}; CAMP_EN = {}; CAMP_EN_PLAN = {}
 if os.path.exists(CT):
     ct = json.load(open(CT, encoding="utf-8"))
     CAMP = {}
     for cid, d in ct["camps"].items():
         CAMP["%d:%s" % (d["c"], cid)] = d["guard"]
         CAMP_PLAN["%d:%s" % (d["c"], cid)] = d.get("guard_plan", d["guard"])
+        CAMP_EN["%d:%s" % (d["c"], cid)] = [x for x in d.get("en", []) if x in PIN]
+        CAMP_EN_PLAN["%d:%s" % (d["c"], cid)] = [x for x in d.get("plan", d.get("en", [])) if x in PIN]
 for k in CAMP.values(): assert k in PIN, k
 
 # 心願供品：[資源, 粵語原句, 中文]（冇寫就用壽包）
@@ -93,7 +95,7 @@ STORY_JOIN = ["afu", "xiaozhi", "eguiking", "toyol", "laojiang", "pontianak", "p
 STORY_CH = {"xiaozhi": 0, "eguiking": 0, "toyol": 1, "tianhua": 1, "laojiang": 2, "pontianak": 3, "pocong": 4, "penanggal": 4, "baiwu": 5, "heiwu": 5, "mengpo": 5, "pg_landlady": 5}
 
 out = {"v": 2, "note": "soul 線：品級、據點駐守臨時表（counter.json guard 優先）、心願供品；數值見 soul_data.gd 頂部",
-       "PIN": PIN, "CAMP": CAMP, "WISH": WISH, "STORY_JOIN": STORY_JOIN, "STORY_CH": STORY_CH, "TMP_SUB": TMP_SUB, "CAMP_PLAN": CAMP_PLAN, "NEW": NEWG}
+       "PIN": PIN, "CAMP": CAMP, "WISH": WISH, "STORY_JOIN": STORY_JOIN, "STORY_CH": STORY_CH, "TMP_SUB": TMP_SUB, "CAMP_PLAN": CAMP_PLAN, "CAMP_EN": CAMP_EN, "CAMP_EN_PLAN": CAMP_EN_PLAN, "NEW": NEWG}
 p = os.path.join("data", "nat", "soul.json")
 with open(p, "w", encoding="utf-8") as f: json.dump(out, f, ensure_ascii=False, indent=1)
 # 驗：每隻非劇情鬼起碼 1 個主魂據點

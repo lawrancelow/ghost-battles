@@ -81,7 +81,7 @@ static func CT() -> Dictionary:   # cdata 線 counter.json（未合併就係 {}�
 			var o = JSON.parse_string(f.get_as_text()) if f != null else null
 			if o is Dictionary: _CT = o
 	return _CT
-static func reload() -> void: _D = null; _CT = null
+static func reload() -> void: _D = null; _CT = null; _gset = null
 static func GH() -> Dictionary:
 	var g = J.G.get("GHOSTS")
 	return g if g is Dictionary else {}
@@ -183,7 +183,29 @@ static func guard_of(e: Dictionary) -> String:
 	if k == "": k = str(D().CAMP.get(ckey(e), ""))
 	return k if is_ghost(k) else ""
 static func _camps(c: int) -> Array: return load("res://game/sortie/so_data.gd").camps(c)
-static func sec_of(e: Dictionary) -> String:   # 副魂 = 同章往後第 5 個據點嘅駐守鬼
+# 副魂：優先用「同場另一隻名鬼」（真係打過佢；冇主魂據點嘅鬼優先）；冇就用同章往後第 5 個據點嘅駐守鬼
+static var _gset = null
+static func _guards() -> Dictionary:
+	if _gset == null:
+		_gset = {}
+		for c in 6:
+			for e in _camps(c): _gset[guard_of(e)] = true
+	return _gset
+static func camp_named(e: Dictionary) -> Array:   # 據點入面嘅名鬼（counter.json en → soul.json CAMP_EN）
+	var cs = CT().get("camps")
+	var d = cs.get(str(e.get("id", ""))) if cs is Dictionary else null
+	var en = d.get("en") if d is Dictionary else D().get("CAMP_EN", {}).get(ckey(e))
+	var o = []
+	for k in J.iter(en): if is_ghost(J.str(k)) and not (J.str(k) in o): o.append(J.str(k))
+	return o
+static func sec_of(e: Dictionary) -> String:
+	var g = guard_of(e)
+	var best = ""
+	for k in camp_named(e):
+		if k == g: continue
+		if not _guards().has(k): return k
+		if best == "": best = k
+	if best != "": return best
 	var cs = _camps(int(J.num(e.get("c", 0))))
 	var n = cs.size()
 	if n < 2: return ""
@@ -191,7 +213,7 @@ static func sec_of(e: Dictionary) -> String:   # 副魂 = 同章往後第 5 個�
 		if str(cs[i].id) == str(e.get("id", "")):
 			for j in range(5, 5 + n):
 				var k = guard_of(cs[(i + j) % n])
-				if k != "" and k != guard_of(e): return k
+				if k != "" and k != g: return k
 	return ""
 static func guard_live(e: Dictionary) -> bool:   # 劇情鬼未加入：據點用舊頭目，唔掉主魂
 	var k = guard_of(e)
