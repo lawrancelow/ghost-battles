@@ -160,6 +160,22 @@ func sweep(t) -> void:
 		_p("== " + str(sc[0]))
 		for x in line: _p("   " + x)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+# 快速調校（被圍）：[RESC_N, RESC_K, T_FRONT]
+const BV := [[2, 2, 60.0], [2, 3, 60.0], [2, 4, 60.0], [1, 3, 60.0], [2, 3, 40.0], [2, 2, 40.0]]
+func bsw(t) -> void:
+	await _boot(t)
+	for sc in SCN.slice(1):
+		_p("== " + str(sc[0]))
+		for vi in range(-1, BV.size()):
+			var R = {"win": 0, "dead": 0, "first": 0.0, "sur": 0.0, "hs": 0.0}
+			if vi >= 0: AF.RESC_N = BV[vi][0]; AF.RESC_K = BV[vi][1]; AF.T_FRONT = BV[vi][2]
+			for s in N_SEED:
+				var r = run(sc, s, 0 if vi < 0 else 1)
+				R.win += int(r.win); R.dead += r.dead; R.first += r.first; R.sur += r.sur; R.hs += r.hs
+			_p("   %s 贏%d 死%.1f 首%.1f 圍%.1f%%" % ["舊" if vi < 0 else str(BV[vi]), R.win, R.dead / float(N_SEED), R.first / N_SEED, 100 * R.sur / maxf(0.01, R.hs)])
+			await t.get_tree().process_frame
+	AF.RESC_N = 2; AF.RESC_K = 2; AF.T_FRONT = 60.0
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
 func regress(t) -> void:
 	await _boot(t)
 	await regress_checks(t)
@@ -219,13 +235,17 @@ func units_checks(t) -> void:
 	_chk("接觸開打", op.phase == "fight", op.phase)
 	var ls = []; var hl = []
 	for u in op.units:
-		if J.num(u.side) == 0 and J.num(u.range) <= 60: ls.append(float(u.ls))
+		if J.num(u.side) == 0 and J.num(u.range) <= 60 and AF.role_of(u) != "flank": ls.append(float(u.ls))   # 側翼企最外、2 秒後離線繞後：中間按其餘計
 		if J.num(u.side) == 0 and not J.t(u.get("minion")) and J.num(u.range) <= 60 and AF.role_of(u) == "front": hl.append(float(u.ls))   # 側翼名鬼（數據 role=flank）本來就企兩頭
 	ls.sort()
 	var lo = ls[0]; var hi = ls[ls.size() - 1]; var w = hi - lo
 	var mid = true
 	for x in hl: if x < lo + w / 3.0 - 1.0 or x > hi - w / 3.0 + 1.0: mid = false
-	_chk("前排名鬼企陣線中間三分一（唔再企兩頭）", mid, [hl, lo, hi])
+	_chk("前排名鬼企陣線（小隊＋前排）中間三分一（唔再企兩頭）", mid, [hl, lo, hi])
+	var fla = []; var ext = true
+	for u in op.units: if J.num(u.side) == 0 and AF.role_of(u) == "flank" and J.num(u.range) <= 60: fla.append(float(u.ls))
+	for x in fla: if x > lo and x < hi: ext = false
+	_chk("側翼名鬼企成條線最外", ext, [fla, lo, hi])
 	var ends = []
 	for u in op.units: if J.num(u.side) == 0 and J.num(u.range) <= 60 and (float(u.ls) == lo or float(u.ls) == hi): ends.append(J.t(u.get("minion")) or AF.role_of(u) == "flank")
 	_chk("陣線兩頭係陰兵小隊（或者側翼名鬼）", ends.size() == 2 and ends[0] and ends[1], ends)
@@ -237,7 +257,7 @@ func units_checks(t) -> void:
 	var op2 = new_op(mk_units(sc))
 	var dl_h = []; var dl_all = []
 	for u in op2.units:
-		if J.num(u.side) == 0 and J.num(u.range) <= 60 and u.has("dl"):
+		if J.num(u.side) == 0 and J.num(u.range) <= 60 and u.has("dl") and AF.role_of(u) != "flank":
 			dl_all.append(float(u.dl))
 			if not J.t(u.get("minion")) and AF.role_of(u) == "front": dl_h.append(float(u.dl))
 	dl_all.sort()
