@@ -6,6 +6,7 @@
 extends RefCounted
 
 const MD = preload("res://game/outpost/mv_data.gd")
+const AH = preload("res://game/rts/ab_hud.gd")   # [abui] 名鬼長按切自動／手動（S.ab_auto）
 
 # ---- 同 battle.gd 一樣 ----
 const WIND := 0.22
@@ -571,7 +572,7 @@ func _step_fight(dt: float) -> void:
 			u.casting["t"] = J.num(u.casting.t) + dt
 			if J.num(u.casting.t) >= J.num(u.casting.dur): fire_cast(u)
 			continue
-		if J.t(u.get("sk")) and _nn(u, "energy") >= 100 and not J.t(u.get("anim")) and (_nn(u, "side") == 1 or (auto and not J.t(u.get("minion")))): begin_cast(u); continue
+		if J.t(u.get("sk")) and _nn(u, "energy") >= 100 and not J.t(u.get("anim")) and (_nn(u, "side") == 1 or (AH.auto_of(u, auto) and not J.t(u.get("minion")))): begin_cast(u); continue   # [abui] 每隻名鬼自動／手動
 		if J.t(u.get("anim")): step_anim(u, dt); continue
 		var tg = _line_tg(u)
 		if tg == null: u["walking"] = false; continue

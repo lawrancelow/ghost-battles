@@ -13,6 +13,8 @@ const ZD = preload("res://game/zone/zone_data.gd")
 const BA = preload("res://game/barracks/bk_art.gd")
 const RFX = preload("res://game/rts/rts_fx.gd")
 const FXK = preload("res://game/fxkit/fx_kit.gd")
+const AH = preload("res://game/rts/ab_hud.gd")   # [abui] 頭頂狀態、ab 飄字、自動／手動
+const AI = preload("res://game/rts/ab_icon.gd")   # [abui]
 
 const K_ONE := 0.85           # 名鬼／敵人（BtChar 1.32）→ 約 50–58 世界 px 高，同村子主角差唔多
 const K_REP := 1.2            # 小隊代表兵（BtChar 0.75）→ 約 38 px
@@ -44,6 +46,7 @@ var fxg: Node2D
 var fxt: Node2D
 var _fire_tex: Texture2D
 static var inst = null
+var _pvu: Array = []          # [abui]
 static var PROF := {}
 
 static func attach(village) -> void:
@@ -129,6 +132,7 @@ func _main_op():   # 戰況條／技能鈕：名鬼帶隊嗰場優先
 func _process(dt: float) -> void:
 	RTS.tick(dt)   # 模擬：唔睇畫面（去咗大排檔、鬼怪頁都照打）
 	_t += dt
+	AH.tick(dt)   # [abui]
 	if nv == null or not is_instance_valid(nv): return
 	if not nv.is_visible_in_tree() or not ZD.on():
 		if ov != null: ov.visible = false; ui.visible = false
@@ -195,6 +199,8 @@ func _want() -> Array:   # [[key, unit, op 或 null]]
 func _sync_units(dt: float) -> void:
 	fb["t"] = _t
 	var want = _want()
+	_pvu.clear()   # [abui] 據點預覽敵人（頭頂畫機制圖示）
+	for w in want: if w[2] == null: _pvu.append(w[1])
 	var keep = {}
 	var vr: Rect2 = nv.view_rect().grow(90)
 	for w in want:
@@ -240,6 +246,15 @@ class UnitVis extends Node2D:
 	var sols: Array = []
 	var dead_t := [-1.0, -1.0]
 	var flash := 0.0
+	var lift := 0.0               # [abui] 飛行抬高（px，平滑）
+	var off_base: Array = []      # [abui] 代表兵原位
+	func _draw() -> void:         # [abui] 飛行：腳底影
+		if lift < 1.0: return
+		var k = clampf(lift / AH.LIFT, 0, 1)
+		draw_set_transform(Vector2(0, 2), 0, Vector2(1, 0.34))
+		draw_circle(Vector2.ZERO, 20.0 - 4.0 * k, Color(0, 0, 0, 0.32 * k))
+		draw_circle(Vector2.ZERO, 12.0 - 2.0 * k, Color(0, 0, 0, 0.22 * k))
+		draw_set_transform_matrix(Transform2D.IDENTITY)
 	func setup(unit: Dictionary, fakeb: Dictionary) -> void:
 		u = unit; fb = fakeb
 		y_sort_enabled = true
@@ -249,6 +264,7 @@ class UnitVis extends Node2D:
 		var n = 1 if kind == "one" else SIM.REPS
 		for i in n:
 			var off = REP_OFF[i] if n > 1 else Vector2.ZERO
+			off_base.append(off)   # [abui]
 			if kind == "yin":
 				var s = SolRep.new(); s.position = off; s.seed = int(abs(hash(str(u.get("lane", 0)) + str(i)))) % 97; add_child(s); sols.append(s)
 			else:
@@ -266,6 +282,11 @@ class UnitVis extends Node2D:
 		var natural = 1.0 if J.num(u.side) == 0 else -1.0
 		var flip = face * natural
 		var ar = _alive_reps() if kind != "one" else (1 if J.num(u.get("hp", 0)) > 0 else 0)
+		var lt = AH.lift_of(op, u) if kind != "yin" else 0.0   # [abui] 飛高 30px＋影；隱身半透明
+		if absf(lt - lift) > 0.05:
+			lift = move_toward(lift, lt, dt * 90.0); queue_redraw()
+		var al = AH.alpha_of(op, u)
+		if absf(modulate.a - al) > 0.01: modulate.a = move_toward(modulate.a, al, dt * 3.0)
 		var n = maxi(wraps.size(), sols.size())
 		for i in n:
 			var rep_dead = (kind != "one") and i >= ar
@@ -286,6 +307,7 @@ class UnitVis extends Node2D:
 			return
 		for i in chars.size():
 			var w: Node2D = wraps[i]
+			w.position = (off_base[i] as Vector2) + Vector2(0, -lift)   # [abui]
 			var k = K_ONE if kind == "one" else K_REP
 			w.scale = Vector2(k * flip, k)
 			var px: Dictionary = proxies[i]
@@ -353,6 +375,7 @@ func _events() -> void:
 					stamps.append({"p": op.head(u) + Vector2(0, -14), "text": L(e[2], e[2]) if e[2] != "打卡" else L("打卡", "打卡"), "t": 0.0, "life": 1.3, "kind": "stamp", "u": u, "op": op})
 				"contact":
 					if _on_screen(op.anchor): Snd.play("click")
+				"ab": AH.on_event(op, e)   # [abui] 能力事件飄字
 		_ev_seen[op.id] = op.events.size()
 	var keep = []
 	for s in stamps:
@@ -393,6 +416,8 @@ func _draw_txt(n: CanvasItem) -> void:
 		n.draw_set_transform_matrix(Transform2D.IDENTITY)
 	load("res://game/sortie/so_view.gd").draw(self, n, f, vr)   # [sortie] 據點木牌（等級、已清空、重生）
 	for op in RTS.ops: _draw_op(n, f, op, vr)
+	_draw_pv_mech(n, vr)   # [abui]
+	AH.draw_floats(self, n, f, vr)   # [abui]
 	for s in stamps:
 		var p: Vector2 = s.p
 		if s.get("u") != null and s.get("op") != null: p = s.op.head(s.u) + Vector2(0, -16)
@@ -433,7 +458,7 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 		if hp <= 0 or not _shown(u, op) or not vr.has_point(u.p): continue
 		if J.num(u.side) == 0 and not J.t(u.get("out")): continue
 		var mn = J.t(u.get("minion")); var bo = J.t(u.get("boss")); var side1 = J.num(u.side) != 0
-		var hd = op.head(u) + Vector2(0, -4)
+		var hd = op.head(u) + Vector2(0, -4 - AH.lift_of(op, u))   # [abui] 飛行抬高
 		_at(n, hd)
 		if u.get("ml") != null:
 			load("res://game/militia/ml_art.gd").tag(n, hd + Vector2(0, -10), 1.0 / _z(), int(J.num(u.ml)))   # 遊魂兵頭頂兵器牌
@@ -447,7 +472,7 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 				if fr * bw > 0.3: n.draw_style_box(_box(Color("#e84a5f") if side1 else Color("#4ade80"), 2), Rect2(-bw / 2, 0, bw * fr, 6))
 				var en = J.num(u.get("energy", 0))
 				if u.get("sk") != null and not mn and not side1 and en > 0.5: n.draw_style_box(_box(Color("#ffd84a") if en >= 100 else Color("#7dd3fc"), 1), Rect2(-bw / 2, 6, bw * clampf(en / 100.0, 0, 1), 3))
-		var yy = -7.0
+		var yy = AH.draw_over(self, n, f, op, u, -7.0) if op.phase == "fight" else -7.0   # [abui] 盾殼隱飛失神讀條
 		if not side1 and not mn and op.phase == "fight" and J.num(u.get("energy", 0)) >= 100:   # 技能滿：頭頂小金點（對應右邊圓鈕）
 			var pa = 0.6 + 0.4 * sin(_t * 8.0)
 			n.draw_circle(Vector2(0, yy - 8), 7.0, Color(1, 0.84, 0.3, pa)); n.draw_circle(Vector2(0, yy - 8), 3.5, Color(1, 1, 0.9, pa))
@@ -503,6 +528,19 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 			for x in lost: _str(n, f, str(x), 0, y, 15, Color(0.55, 0.12, 0.1, a), 0); y += 20.0
 			n.draw_set_transform_matrix(Transform2D.IDENTITY)
 
+# [abui] 據點預覽敵人：頭頂機制細圖示（出擊前喺地圖都睇到「佢識飛」）
+func _draw_pv_mech(n: CanvasItem, vr: Rect2) -> void:
+	if _z() < 0.35: return   # 拉得太遠唔畫（太細睇唔清，反而遮地圖）
+	for u in _pvu:
+		if not vr.has_point(u.p): continue
+		var ms = AH.mechs(u)
+		if ms.is_empty(): continue
+		var h = 78.0 if J.t(u.get("boss")) else 56.0
+		_at(n, (u.p as Vector2) + Vector2(0, -h - 6 - AH.lift_of(null, u)))
+		var k = mini(3, ms.size()); var gap = AH.IC * 2.0 + 3.0
+		for i in k: AI.draw(n, ms[i], Vector2(-(k - 1) * gap * 0.5 + i * gap, -AH.IC), AH.IC)
+	n.draw_set_transform_matrix(Transform2D.IDENTITY)
+
 # ================= 技能小圓鈕＋戰況條 =================
 func _sync_ui() -> void:
 	var op = _main_op()
@@ -557,12 +595,36 @@ class SkillBtn extends Control:
 		custom_minimum_size = Vector2(BTN, BTN + 18); size = Vector2(BTN, BTN + 18)
 		mouse_filter = Control.MOUSE_FILTER_STOP
 	func ready_() -> bool: return op != null and op.phase == "fight" and J.num(u.get("energy", 0)) >= 100 and J.num(u.get("hp", 0)) > 0 and u.get("casting") == null
+	var hold := -1.0              # [abui] 長按計時（≥ HOLD 秒＝切換呢隻自動／手動）
+	const HOLD := 0.6
 	func _gui_input(ev: InputEvent) -> void:
-		if (ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT) or (ev is InputEventScreenTouch and ev.pressed):
+		var down = (ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT) or (ev is InputEventScreenTouch and ev.pressed)
+		var up = (ev is InputEventMouseButton and not ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT) or (ev is InputEventScreenTouch and not ev.pressed)
+		if down:
 			accept_event()
+			hold = 0.0
 			if op != null and op.cast(u):
 				RTS.LOG.append(["cast", J.str(u.k)])
 				Snd.play("click")
+		elif up:
+			accept_event(); hold = -1.0
+	func _process(dt: float) -> void:   # [abui] 長按
+		if hold < 0: return
+		hold += dt
+		if hold >= HOLD:
+			hold = -1.0
+			long_press()
+	func auto_now() -> bool:
+		var B = J.G.get("Battle")
+		return AH.auto_of(u, J.t(J.gp(B, "auto")) if B != null else false)
+	func long_press() -> void:
+		var B = J.G.get("Battle")
+		var on = AH.toggle(u, J.t(J.gp(B, "auto")) if B != null else false)
+		var nm = str(DB.L(J.str(u.get("name", ""))))
+		RTS.toast(RTS.L("%s：%s", "%s：%s") % [nm, RTS.L("自動放技能", "自動放技能") if on else RTS.L("手動（撳先放）", "手動（點擊才放）")])
+		RTS.LOG.append(["ab_auto", J.str(u.k), on])
+		Snd.play("click")
+		queue_redraw()
 	func _draw() -> void:
 		var c = Vector2(BTN, BTN) * 0.5; var R = BTN * 0.5
 		var dead = J.num(u.get("hp", 0)) <= 0
@@ -587,6 +649,14 @@ class SkillBtn extends Control:
 			var w = f.get_string_size("放", HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
 			draw_string(f, o + Vector2(R * 0.72 - w / 2, -R * 0.72 + 5), "放", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.WHITE)
 		draw_set_transform_matrix(Transform2D.IDENTITY)
+		if hold >= 0.12:   # [abui] 長按進度圈
+			draw_arc(c, R + 5, -PI / 2, -PI / 2 + TAU * clampf(hold / HOLD, 0, 1), 40, Color("#7ac0b0"), 4.0, true)
+		var au = auto_now()   # [abui] 左下角「自／手」牌（長按切換）
+		var bc = c + Vector2(-R * 0.6, R * 0.6)
+		draw_circle(bc, 10, Color("#2e5d55") if au else Color("#4a3a32"))
+		draw_arc(bc, 10, 0, TAU, 20, Color("#7ac0b0") if au else Color("#a08870"), 1.5, true)
+		var bt = "自" if au else "手"; var bw = f.get_string_size(bt, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+		draw_string(f, bc + Vector2(-bw / 2, 5), bt, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color.WHITE)
 		if docked:   # 貼邊：名（知道係邊隻）
 			var nm = str(DB.L(J.str(u.get("name", ""))))
 			var w2 = f.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x

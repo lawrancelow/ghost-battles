@@ -159,6 +159,7 @@ static func _card_body(m, pend: Dictionary) -> void:
 		if not J.t(id): continue
 		for g in J.iter(S.ghosts): if g is Dictionary and J.str(g.id) == J.str(id): hn.append(str(DB.L(J.str(g.name))))
 	body.add_child(UIKit.rich("[b]%s[/b]　%s" % [L("名鬼帶隊", "名鬼帶隊"), "、".join(hn) if hn.size() else L("（冇）", "（無）")], 17, UIKit.INKTXT))
+	load("res://game/rts/ab_card.gd").add_to(body, load("res://game/rts/ab_card.gd").keys_for(pend), {"on_change": func(): _card_body(m, pend)})   # [abui] 偵察卡＋揀軍師
 	var row = func(label: String, key: String, mx: int, per: String):
 		var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 10)
 		var l = UIKit.label(label, 17, UIKit.INKTXT, "sans", 900); l.custom_minimum_size = Vector2(96, 44); l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER; hb.add_child(l)
