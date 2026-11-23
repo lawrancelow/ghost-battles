@@ -521,7 +521,7 @@ func _chip_text(op) -> void:
 		"back":
 			var r = op.result
 			s = L("凱旋", "凱旋") if r != null and J.t(r.get("win")) else L("撤退", "撤退")
-	chip_l.text = "%s %s" % [op.sid, s]
+	chip_l.text = "%s %s" % [op.title if op.kind == "sortie" else op.sid, s]   # [sortie] 出擊顯示據點名
 	chip_recall.visible = op.phase in ["march", "fight"]
 
 class SkillBtn extends Control:

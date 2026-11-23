@@ -68,7 +68,7 @@ static func fallback(c: int) -> Array:
 	for z in wz:
 		var r = ZD.rect(z.rect)
 		var ba = ZD.v2(z.get("boss_at", [-9999, -9999]))
-		var near_y = r.end.y - 70.0 if mk.y > r.get_center().y else r.position.y + 70.0
+		var near_y = r.end.y - 130.0 if mk.y > r.get_center().y else r.position.y + 130.0
 		var far_y = r.position.y + 90.0 if mk.y > r.get_center().y else r.end.y - 90.0
 		if r.size.x < r.size.y * 0.9:   # 豎長嘅區（左右兩邊）：近＝向住市集嗰邊
 			near_y = r.get_center().y + (r.size.y * 0.3 if mk.y > r.get_center().y else -r.size.y * 0.3)
@@ -90,6 +90,7 @@ static func camp(id: String, c := -1) -> Dictionary:
 	return {}
 static func key(e: Dictionary) -> String: return "%d:%s" % [int(e.c), str(e.id)]
 static func sid_of(e: Dictionary) -> String: return "出擊·" + key(e)
+static func short(e: Dictionary) -> String: return "Lv.%d %s" % [int(e.lv), ZD.T(RING_NAME[ri(e.ring)])]
 static func title(e: Dictionary) -> String: return L("Lv.%d　%s據點", "Lv.%d　%s據點") % [int(e.lv), ZD.T(RING_NAME[ri(e.ring)])]
 
 # ======================= 存檔 =======================
@@ -263,7 +264,12 @@ static func settle(op) -> bool:
 		var g = reward(e)
 		rep["first"] = g.first
 		rep["head"] = L("首勝！", "首勝！") + title(e) if g.first else L("勝利　%s", "勝利　%s") % title(e)
-		rep["reward"] = "，".join([str(rep.get("reward", ""))] + g.lines) if str(rep.get("reward", "")) != "" else "，".join(g.lines)
+		rep["full"] = "，".join([str(rep.get("reward", ""))] + g.lines)
+		rep["reward"] = L("冥幣 +%d　好評 +%d　棺材板 +%d", "冥幣 +%d　好評 +%d　棺材板 +%d") % [int(g.coin + 20.0 * float(e.lv)), int(8.0 * float(e.lv)), REW_PLANK[ri(e.ring)]]
+		var extra = []
+		if g.first_txt != "": extra.append(g.first_txt)
+		if g.rare != "": extra.append(L("極稀有！", "極稀有！") + g.rare)
+		rep["lost"] = extra + rep.lost
 		if g.rare != "": rep["rare"] = g.rare
 		var ex = J.G.get("save")
 		if ex != null: J.cl(ex, null, [])
@@ -271,15 +277,15 @@ static func settle(op) -> bool:
 	RTS.last_report = rep
 	LOG.append(["settle", key(e), r.win, rep])
 	var lines = [rep.head]
-	if str(rep.get("reward", "")) != "": lines.append(rep.reward)
-	for x in rep.lost: lines.append(x)
+	if str(rep.get("full", rep.get("reward", ""))) != "": lines.append(str(rep.get("full", rep.get("reward", ""))))
+	for x in rep.lost: if not str(rep.get("full", "")).contains(str(x)): lines.append(x)
 	RTS.toast("　".join(lines))
 	return true
 
 # 打贏：普通＋首勝＋極稀有；清空據點。回 {first, rare, lines}
 static func reward(e: Dictionary) -> Dictionary:
 	var c = cst(e); var r = ri(e.ring); var lv = float(e.lv)
-	var out = {"first": false, "rare": "", "lines": []}
+	var out = {"first": false, "rare": "", "lines": [], "coin": REW_COIN * lv, "first_txt": ""}
 	var s = S()
 	# 普通
 	s.res["coins"] = have("coins") + REW_COIN * lv
@@ -296,6 +302,8 @@ static func reward(e: Dictionary) -> Dictionary:
 			s.chests[k] = int(J.num(s.chests.get(k, 0))) + cn[k]
 			parts.append("%s ×%d" % [{"g": L("綠箱", "綠箱"), "b": L("藍箱", "藍箱"), "p": L("紫箱", "紫箱")}[k], cn[k]])
 		s.res["coins"] = have("coins") + FIRST_COIN * lv
+		out.coin += FIRST_COIN * lv
+		out.first_txt = L("首勝獎：%s", "首勝獎：%s") % "，".join(parts)
 		out.lines.append(L("首勝獎：%s，冥幣 +%d", "首勝獎：%s，冥幣 +%d") % ["，".join(parts), int(FIRST_COIN * lv)])
 	# 極稀有（保底）
 	c["wins"] = J.num(c.wins) + 1

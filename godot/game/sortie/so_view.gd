@@ -46,7 +46,7 @@ static func draw(v, n: CanvasItem, f: Font, vr: Rect2) -> void:
 		if not vr.has_point(at): continue
 		var s = SO.state(e)
 		v._at(n, at + Vector2(0, 40))
-		var l1 = SO.title(e)
+		var l1 = SO.short(e)
 		var l2 = ""
 		var bg = Color(0.32, 0.2, 0.1, 0.95); var bd = Color("#e8b060"); var col = Color("#fff0d0")
 		match s:
@@ -55,19 +55,19 @@ static func draw(v, n: CanvasItem, f: Font, vr: Rect2) -> void:
 				l2 = L("首勝有獎", "首勝有獎") if not J.t(c.get("first")) else L("可重複出擊", "可重複出擊")
 			"out": l2 = L("出擊中", "出擊中"); bd = Color("#7ac0b0")
 			"locked":
-				l2 = L("未開放：先打下第%d圈", "未開放：先打下第%d圈") % (int(e.ring) - 1) if int(e.ring) > 1 else L("未開放：野外未解霧", "未開放：野外未解霧")
+				l2 = L("未開放", "未開放")
 				bg = Color(0.18, 0.16, 0.16, 0.9); bd = Color("#6a6060"); col = Color("#c8c0b8")
 			"cleared":
 				var left = int(ceil(SO.cleared_left_s(e)))
-				l1 = L("已清空", "已清空") + "　" + SO.title(e)
+				l1 = SO.short(e) + "　" + L("已清空", "已清空")
 				l2 = L("重生 %d:%02d", "重生 %d:%02d") % [left / 60, left % 60]
 				bg = Color(0.2, 0.2, 0.2, 0.88); bd = Color("#909090"); col = Color("#e0e0e0")
-		var w = maxf(f.get_string_size(l1, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x, f.get_string_size(l2, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x)
-		n.draw_style_box(v._box(Color(0, 0, 0, 0.35), 6), Rect2(-w / 2 - 9, -14, w + 22, 50))
-		n.draw_style_box(v._box(bd, 6), Rect2(-w / 2 - 11, -17, w + 22, 50))
-		n.draw_style_box(v._box(bg, 5), Rect2(-w / 2 - 9, -15, w + 18, 46))
-		v._str(n, f, l1, 0, 5, 16, col, 0)
-		v._str(n, f, l2, 0, 25, 14, Color(col, 0.85) if s != "open" else Color("#ffd27a"), 0)
+		var w = maxf(f.get_string_size(l1, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x, f.get_string_size(l2, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x)
+		n.draw_style_box(v._box(Color(0, 0, 0, 0.35), 6), Rect2(-w / 2 - 6, -13, w + 16, 44))
+		n.draw_style_box(v._box(bd, 6), Rect2(-w / 2 - 8, -16, w + 16, 44))
+		n.draw_style_box(v._box(bg, 5), Rect2(-w / 2 - 6, -14, w + 12, 40))
+		v._str(n, f, l1, 0, 4, 15, col, 0)
+		v._str(n, f, l2, 0, 22, 14, Color(col, 0.85) if s != "open" else Color("#ffd27a"), 0)
 		if s == "cleared":   # 空營：一面倒咗嘅旗
 			v._at(n, at + Vector2(0, -6))
 			n.draw_line(Vector2(-14, 8), Vector2(18, -6), Color(0.35, 0.25, 0.15, 0.9), 3.0)
@@ -132,11 +132,11 @@ static func open_card(e: Dictionary) -> void:
 	sb.shadow_color = Color(0, 0, 0, 0.5); sb.shadow_size = 8
 	pc.add_theme_stylebox_override("panel", sb)
 	pc.mouse_filter = Control.MOUSE_FILTER_STOP
-	pc.anchor_left = 0; pc.anchor_right = 1; pc.anchor_top = 1; pc.anchor_bottom = 1
-	pc.offset_left = 10; pc.offset_right = -10; pc.offset_bottom = -96; pc.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	pc.anchor_left = 0; pc.anchor_right = 1; pc.anchor_top = 0; pc.anchor_bottom = 0   # 擺上半（下面係 toast、行動按鈕）
+	pc.offset_left = 10; pc.offset_right = -10; pc.offset_top = 232; pc.grow_vertical = Control.GROW_DIRECTION_END
 	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 4); pc.add_child(vb)
 	var lab = func(t: String, px: int, col: Color):
-		var l = UIKit.label(t, px, col, "sans", 900); l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; l.custom_minimum_size = Vector2(380, 0); vb.add_child(l); return l
+		var l = UIKit.label(t, px, col, "sans", 900); l.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; l.custom_minimum_size = Vector2(0, 0); l.size_flags_horizontal = Control.SIZE_EXPAND_FILL; vb.add_child(l); return l
 	lab.call(d.head, 20, Color("#ffe0a0"))
 	match d.state:
 		"cleared":
@@ -144,7 +144,7 @@ static func open_card(e: Dictionary) -> void:
 			lab.call(L("已清空：%d:%02d 後重生", "已清空：%d:%02d 後重生") % [left / 60, left % 60], 16, Color("#c0c0c0"))
 		"locked": lab.call(L("未開放：先打下上一圈據點", "未開放：先打下上一圈據點"), 16, Color("#c0c0c0"))
 	lab.call(d.team, 15, Color("#f0e0d0"))
-	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 10); vb.add_child(hb)
+	var hb = HFlowContainer.new(); hb.add_theme_constant_override("h_separation", 10); vb.add_child(hb)
 	var l0 = UIKit.label(L("出擊消耗：", "出擊消耗："), 16, Color("#ffd27a"), "sans", 900); hb.add_child(l0)
 	for x in d.cost:
 		var l = UIKit.label(x[0], 16, Color("#a8f0a0") if x[1] else Color("#ff7a6a"), "sans", 900); hb.add_child(l)
