@@ -14,6 +14,7 @@ const ZW = preload("res://game/zone/zone_walk.gd")
 const MD = preload("res://game/outpost/mv_data.gd")
 const CB = preload("res://game/outpost/chain_bld.gd")
 const CF = preload("res://game/outpost/chain_field.gd")
+const RTS = preload("res://game/rts/rts.gd")   # [qaudit2] 戰鬥改咗地圖半即時（zone_battle.start 交畀 rts）
 
 func _p(m): print("[zone] ", m)
 func _chk(name: String, cond: bool, extra = "") -> void:
@@ -99,7 +100,25 @@ func _touch(nv, i: int, p: Vector2, down: bool) -> void:
 	var e = InputEventScreenTouch.new(); e.index = i; e.position = p; e.pressed = down; nv._gui_input(e)
 func _tdrag(nv, i: int, p: Vector2) -> void:
 	var e = InputEventScreenDrag.new(); e.index = i; e.position = p; nv._gui_input(e)
+# [qaudit2] 出擊小卡撳「出發」（小卡一定要即刻撳：rts.tick 見唔到小卡畫面會當取消）→ 回新開嘅出擊（冇就 null）
+func _go():
+	if RTS.pending == null: return null
+	var n0 = RTS.ops.size()
+	var r = RTS.card_go()
+	return RTS.ops[RTS.ops.size() - 1] if r == "ok" and RTS.ops.size() > n0 else null
+func _op_units() -> Array:
+	return RTS.ops[RTS.ops.size() - 1].units if RTS.ops.size() else []
 func _finish_battle(t, win: bool) -> void:
+	if RTS.ops.size():   # [qaudit2] 地圖戰鬥：直接分勝負 → rts 結算（交返 Battle.finish），當隊伍已經行返村
+		var op = RTS.ops[RTS.ops.size() - 1]
+		op.finish(win)
+		for i in 60:
+			if op.settled: break
+			RTS.tick(0.016); await t.get_tree().process_frame
+		op.phase = "done"
+		RTS.tick(0.016); await t.get_tree().process_frame
+		await _w(t, 0.5); await _skip(t, 2)
+		return
 	var B = J.G.get("Battle")
 	J.mc(B, "finish", [win])
 	await _w(t, 0.6)
@@ -282,7 +301,8 @@ func _run(t, shots: bool) -> void:
 	if not any: S.team = [S.ghosts[1].id if S.ghosts.size() > 1 else S.ghosts[0].id]
 	var rb = ZD.start_battle("cap", "B")
 	var B = J.G.get("Battle")
-	_chk("親自出征 B：開現有戰鬥", rb == "ok" and J.t(B.get("active")) and str(B.sid) == str(S.zone.exp.sid), [rb, B.get("sid")])
+	var opb = _go()   # [qaudit2] 出擊小卡「出發」→ 隊伍喺地圖行出去打
+	_chk("親自出征 B：出擊小卡出發 → 地圖戰鬥", rb == "ok" and opb != null and str(opb.sid) == str(S.zone.exp.sid) and not J.t(B.get("active")), [rb, opb.sid if opb else null])
 	await _w(t, 1.5)
 	if shots: await _shot(t, "z30_capture_battle")
 	await _finish_battle(t, true)
@@ -301,6 +321,7 @@ func _run(t, shots: bool) -> void:
 	_chk("王要按次序：亂葬崗下一個係 ①", ZD.boss_next("w_graves") == 0)
 	_chk("餓鬼坑：主 Boss＝世界地圖 1-3（已打）", ZD.boss_done("w_pit", 1) and ZD.main_boss_done())
 	var rb2 = ZD.start_battle("boss", "w_graves")
+	_go()   # [qaudit2]
 	await _w(t, 1.0)
 	await _finish_battle(t, true); ZD.poll()
 	_chk("打低紙人偶頭目 → 輪到守墓鬼", rb2 == "ok" and ZD.boss_done("w_graves", 0) and ZD.boss_next("w_graves") == 1)
@@ -415,9 +436,9 @@ func _run(t, shots: bool) -> void:
 	var kb = ZD.bosses("w_graves")[1]
 	_chk("守墓鬼用現有鬼怪素材（唔借殭屍兵）", str(kb.art) == "n30_jerangkung" and Spr.ok("n30_jerangkung") and J.G.ENEMY_T.has("n30_jerangkung"))
 	S.zone.boss["0:zb_paper"] = true; S.zone.boss.erase("0:zb_keeper")
-	var rk = ZD.start_battle("boss", "w_graves"); await _w(t, 1.0)
+	var rk = ZD.start_battle("boss", "w_graves"); _go(); await _w(t, 1.0)   # [qaudit2]
 	var bn = ""
-	for u in J.iter(J.G.Battle.units): if J.t(J.gp(u, "boss")): bn = J.str(u.name)
+	for u in _op_units(): if J.t(J.gp(u, "boss")): bn = J.str(u.name)
 	_chk("戰鬥入面王名＝亂葬崗守墓鬼", rk == "ok" and bn == "亂葬崗守墓鬼", bn)
 	await _finish_battle(t, false); ZD.poll()
 	if shots: await _shots(t, m)
@@ -718,10 +739,11 @@ func map_check(t, m, c: int, shots: bool) -> void:
 	var bid0 = str(ZD.bosses(w0z)[0].id)
 	var rb = ZD.start_battle("boss", w0z)
 	var B = J.G.get("Battle")
-	_chk(tag + "boss_pre：劇情播緊未開戰", rb == "ok" and stub.has_ev("boss_pre", bid0) and not J.t(B.get("active")) and stub.held.size() == 1)
+	_chk(tag + "boss_pre：劇情播緊未開戰", rb == "ok" and stub.has_ev("boss_pre", bid0) and not J.t(B.get("active")) and RTS.pending == null and RTS.ops.is_empty() and stub.held.size() == 1)
 	stub.defer = false
 	stub.held[0].call(); stub.held.clear()
-	_chk(tag + "boss_pre 播完先開戰", J.t(B.get("active")))
+	var opm = _go()   # [qaudit2] 劇情播完先出出擊小卡 → 出發
+	_chk(tag + "boss_pre 播完先開戰（出擊小卡出發）", opm != null and opm.kind == "boss")
 	await _w(t, 1.0)
 	if shots: await _shot(t, "m%d_boss_battle" % (c + 1))
 	await _finish_battle(t, true); ZD.poll()

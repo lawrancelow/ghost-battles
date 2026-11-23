@@ -364,7 +364,9 @@ func walk_check(t, m, ct) -> void:
 	rv.erase("0:market")
 	var vh0 = ZD.v2(ZD.cur().village.hero)
 	var rm = ZW.route(vh0, ZD.zrect("market").get_center())
-	_chk("黑霧未散嘅大排檔：主角擋喺霧邊（停喺村子）", not ZD.zrect("market").has_point(rm[rm.size() - 1]) and CW.region(rm[rm.size() - 1]) == "village", rm)
+	# [qaudit2] dirs4 之後四條出路都由村門 (670,1160) 開始：停喺村門時 region 會報 x_<方向>（出路小路，父＝村子），都算停喺村子
+	var rme: Vector2 = rm[rm.size() - 1]; var rmr = CW.region(rme)
+	_chk("黑霧未散嘅大排檔：主角擋喺霧邊（停喺村子）", not ZD.zrect("market").has_point(rme) and (rmr == "village" or (rmr.begins_with("x_") and ZD.zrect("village").grow(4).has_point(rme))), [rm, rmr])
 	if had != null: rv["0:market"] = had
 	rv["0:market"] = 1.0
 	var hw = rv.get("0:w_graves"); rv.erase("0:w_graves")

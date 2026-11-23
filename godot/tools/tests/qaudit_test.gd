@@ -14,6 +14,7 @@ const AT = preload("res://game/outpost/act_targets.gd")
 const CTL = preload("res://game/outpost/ctl_ui.gd")
 const MB = preload("res://game/outpost/mv_bridge.gd")
 const TS := 6.0   # 測試加速：Engine.time_scale
+const FSTEP := 12  # [qaudit2] 打仗加速：每格額外行幾步（每步 0.1 秒）
 
 var ok := 0
 var bad := 0
@@ -236,14 +237,26 @@ func _fight(t, m, x) -> String:
 	if RTS.pending == null:
 		await _w(t, 0.5)
 		if RTS.pending == null: return "冇出擊小卡"
+	var n0 = RTS.ops.size()
+	var B = J.G.get("Battle"); if B is Dictionary: B["auto"] = true
 	var r = RTS.card_go()
 	if r != "ok": return "出發失敗:" + r
-	var B = J.G.get("Battle"); if B is Dictionary: B["auto"] = true
-	for k in 400:
-		await _w(t, 0.5)
-		if RTS.ops.is_empty(): break
-		if k % 40 == 0: _p("    op %s" % str(RTS.ops.map(func(o): return [o.sid, o.phase, int(o.t)])))
-		if k % 10 == 0: await _skip(t, 1)
+	var op = RTS.ops[RTS.ops.size() - 1] if RTS.ops.size() > n0 else null
+	# [qaudit2] 測試加速：機器慢（幀率低），rts.tick 每格最多行 0.1 秒 → 每格額外行 FSTEP 步（同一套規則，只係快啲）；
+	#   模擬時間用呢場仗自己行咗幾耐（op.T）計，唔用計時器
+	var fr = 0
+	while op != null and op.phase != "done" and fr < 20000:
+		if op.phase in ["march", "fight", "back"]:
+			for i in FSTEP:
+				op.step(0.1)
+				if not (op.phase in ["march", "fight", "back"]): break
+		await t.get_tree().process_frame
+		fr += 1
+		if fr % 400 == 0: _p("    op %s" % str(RTS.ops.map(func(o): return [o.sid, o.phase, int(o.t), int(o.T)])))
+		if fr % 60 == 0: await _skip(t, 1)
+	if op != null:
+		simt += op.T
+		if op.phase != "done": _p("    op 未完：%s %s" % [op.phase, str(op.result)])
 	await _skip(t, 4)
 	var rep = RTS.last_report
 	return "勝" if str(rep.get("head", "")).contains("勝") or str(rep.get("head", "")).contains("通關") or str(rep.get("win", "")) == "true" else "結果:" + str(rep.get("head", ""))
