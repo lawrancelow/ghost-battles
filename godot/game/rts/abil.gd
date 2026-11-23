@@ -39,7 +39,7 @@ static func ct() -> Dictionary:
 				if x is Dictionary: CT = x
 	return CT
 static func reload() -> void:
-	D = null; CT = null; _gt = {}
+	D = null; CT = null; _gt = {}; _fcache = {}
 static func on() -> bool:
 	if force == 0: return false
 	if data().is_empty(): return false
@@ -133,7 +133,6 @@ n30_maenak 厲 怪聲 回
 n30_yukionna 厲 凍 拉掃削
 nw_ameonna 厲 凍 遠削
 nw_huapi 厲 紙 削照
-nw_sundel 厲 怪聲 刺
 nw_teketeke 厲 怪聲 刺
 penanggal 厲 鬼臉 遠回
 pg_ex 厲 電話 拉掃
@@ -154,7 +153,7 @@ mamian 官 燈 照
 mengpo 官 吹氣 遠削回
 n30_yecha 官 燈 破刺照定
 niutou 官 燈 照定
-nw_panguan 官 紙 照收
+nw_shenpi 官 紙 照收
 nw_toutai 官 紙 削回
 n30_chehuo 橫 燈 刺照
 n30_chengsi 橫 吹氣 回
@@ -196,6 +195,7 @@ bm_pang 官 紙 -
 bm_shuten 妖 黑影 -
 """
 static var _gt := {}
+static var _fcache := {}
 static func _gtab() -> Dictionary:
 	if _gt.is_empty():
 		var sc = data().get("SCARE")
@@ -259,7 +259,16 @@ static func scares_of(k) -> Array:   # 名鬼嘅嚇法（英文 key）；全部�
 		var ts = J.mc(rw, "typesOf", [ks])
 		if ts is Array and ts.size(): return ts
 	return []
-static func fear_of(k) -> Dictionary:   # {w: 怕, i: 唔怕}：有系就照民俗表；冇就跟舊 rework
+static func fear_of(k) -> Dictionary:   # {w: 怕, i: 唔怕}：ENEMY／counter.json 寫定優先；再按系民俗表；冇就跟舊 rework
+	var ks = J.str(k)
+	if _fcache.has(ks): return _fcache[ks]
+	for e in [_ent("ENEMY", ks), _ctg(ks)]:
+		if e.get("fear") != null or e.get("imm") != null:
+			var w = []; var im = []
+			for x in _arr(e.get("fear")): w.append(WZ.get(J.str(x), J.str(x)))
+			for x in _arr(e.get("imm")): im.append(WZ.get(J.str(x), J.str(x)))
+			_fcache[ks] = {"w": w, "i": im}
+			return _fcache[ks]
 	var s = sys_of(k)
 	if SYS.has(s): return SYS[s]
 	var rw = J.G.get("Rework") if J.G != null else null
@@ -1127,6 +1136,7 @@ static func hit(sim, src: Dictionary, v: Dictionary, mult: float, c = null) -> f
 		elif ranged(src): pass
 		else: mod *= mp("飛", "aoe", 0.7) if aoe else mp("飛", "melee", 0.3)
 	if aoe and stealthed(sim, v): mod *= mp("隱", "aoe", 0.5)
+	if aoe and J.t(v.get("small")): mod *= mp("散骨", "aoe_x", 3.0)   # 碎骨一掃就散（「掃」應對散骨）
 	var sb = get_bf(sim, src, "stealth")
 	if sb != null and not sk:   # 隱身首擊
 		mod *= J.num(sb.get("first_x", 1.5))

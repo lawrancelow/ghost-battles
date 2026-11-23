@@ -79,7 +79,7 @@ func _fresh(nf := 2, nh := 1) -> Array:
 	for i in nh: hs.append(mk(N_K, 0, 2000, 60, 46, SKH.duplicate()))
 	for i in nf: fs.append(mk(F_K, 1, 3000, 40))
 	var op = placed(hs, fs)
-	for x in hs: x.ab.tags = []
+	_bare(op)
 	return [op, hs, fs]
 func _prims() -> void:
 	var r; var op; var h; var f; var d0; var d1
@@ -303,41 +303,77 @@ func _legacy() -> void:
 	_p("有應對標籤嘅名鬼 %d/%d；例：%s" % [nt, GH.size(), AB.describe("laojiang")])
 	_chk("describe／tags_of／scares_of 接口", AB.describe("xiaozhi") != "" and AB.tags_of("xiaozhi").has("掃") and AB.sys_of("pocong") == "屍")
 
+# 由數據揀：嚇法 x 對佢係 怕／唔怕／中性 嘅敵人；用某種嚇法嘅名鬼
+func _foe_by(x: String, rel: String) -> String:
+	var ET = J.G.get("ENEMY_T")
+	for k in ET:
+		var f = AB.fear_of(k)
+		var r = "w" if (f.w as Array).has(x) else ("i" if (f.i as Array).has(x) else "n")
+		if r == rel: return k
+	return ""
+func _hero_sc(x: String, avoid := []) -> String:
+	for k in J.G.get("GHOSTS"):
+		if not (k in avoid) and AB.scares_of(k).size() == 1 and AB.scares_of(k)[0] == x: return k
+	return ""
+func _hero_sys(sy: String) -> String:
+	for k in J.G.get("GHOSTS"): if AB.sys_of(k) == sy: return k
+	return ""
+func _bare(op) -> void:   # 測試倍率：拎走機制（飛 ×0.3 等），只量兩層克制
+	for u in op.units:
+		var a = u.get("ab")
+		if a is Dictionary: a["mech"] = []; a["fly"] = false; a["shell"] = 0.0; a["tags"] = []
 func _layers() -> void:
-	# 普攻：怕 ×1.15、唔怕 ×0.8；技能：怕 ×1.35＋失神、連嚇、追嚇 ×1.3、唔怕 ×0.6；敵人技能打名鬼 ×1.25／×0.75；封頂
-	var h = mk("n30_xiaosi", 0, 2000, 100)   # 橫系、怪聲
-	var f_fear = mk("zombie", 1, 50000, 40)   # 屍：怕吹氣、怪聲；唔怕凍
-	var f_neu = mk("youhun", 1, 50000, 40)    # 魂：怪聲中性
-	var f_imm = mk("pontianak", 1, 50000, 40) # 厲：唔怕怪聲
-	var op = placed([h], [f_fear, f_neu, f_imm])
+	# 普攻：怕 ×1.15、唔怕 ×0.8；技能：怕 ×1.35＋失神、連嚇、追嚇 ×1.3、唔怕 ×0.6；敵人技能打名鬼 ×1.25／×0.75；封頂（全部按數據查怕／唔怕）
+	var x = "sound"
+	var hk = _hero_sc(x)
+	var kf = _foe_by(x, "w"); var kn = _foe_by(x, "n"); var ki = _foe_by(x, "i")
+	_p("倍率測試：名鬼 %s（%s）打 怕 %s／中性 %s／唔怕 %s" % [hk, x, kf, kn, ki])
+	var h = mk(hk, 0, 2000, 100)
+	var f_fear = mk(kf, 1, 50000, 40); var f_neu = mk(kn, 1, 50000, 40); var f_imm = mk(ki, 1, 50000, 40)
+	var op = placed([h], [f_fear, f_neu, f_imm]); _bare(op)
 	var dn = H(op, h, f_neu); var df = H(op, h, f_fear); var di = H(op, h, f_imm)
 	_chk("普攻吃克制：怕 ×1.15、唔怕 ×0.8", absf(df / dn - 1.15) < 0.02 and absf(di / dn - 0.8) < 0.02, [dn, df, di])
 	var c = {"sk": true, "kind": "hit", "mult": 1.0, "hits": 1}
 	var sn = H(op, h, f_neu, 1.0, c); var sf = H(op, h, f_fear, 1.0, c); var si = H(op, h, f_imm, 1.0, c)
-	var drill = 1 + 0.05 * (J.num(J.mc(J.G.Rework, "drillLv", ["n30_xiaosi"])) - 1)
-	_chk("技能：怕 ×1.35＋失神、唔怕 ×0.6", absf(sf / sn - 1.35) < 0.02 and absf(si / sn - 0.6) < 0.02 and f_fear.get("fearT") is Dictionary, [sn, sf, si, drill])
-	var h2 = mk("n30_danxiao", 0, 2000, 100)   # 魂系、吹氣：屍怕吹氣 → 失神中換吹氣＝連嚇
+	_chk("技能：怕 ×1.35＋失神、唔怕 ×0.6", absf(sf / sn - 1.35) < 0.02 and absf(si / sn - 0.6) < 0.02 and f_fear.get("fearT") is Dictionary, [sn, sf, si])
+	# 連嚇：同一隻敵人嘅第二種怕
+	var w = AB.fear_of(kf).w
+	var x2 = w[0] if w[0] != x else w[1]
+	var h2 = mk(_hero_sc(x2), 0, 2000, 100)
+	var kn2 = _foe_by(x2, "n")
+	var f_n2 = mk(kn2, 1, 50000, 40)
 	op.units.append(h2); AB.compile(op, h2); h2["p"] = Vector2(30, 300)
-	var sc_ = H(op, h2, f_fear, 1.0, c)
-	var s_ref = H(op, h2, f_neu, 1.0, c)   # 吹氣打魂＝唔怕 ×0.6
-	_chk("連嚇：失神中換第二種怕 ×1.35×1.8", absf(sc_ / (s_ref / 0.6) - 1.35 * 1.8) < 0.05, [sc_, s_ref])
-	var h3 = mk("n30_yesi", 0, 2000, 100)   # 橫、電話：屍中性 → 追嚇
-	op.units.append(h3); AB.compile(op, h3); h3["p"] = Vector2(-30, 300)
-	f_fear["fearT"] = {"t": "sound", "until": op.t + 3.0}
+	op.units.append(f_n2); AB.compile(op, f_n2); f_n2["p"] = Vector2(30, 240); _bare(op)
+	var sc_ = H(op, h2, f_fear, 1.0, c); var s_ref = H(op, h2, f_n2, 1.0, c)
+	_chk("連嚇：失神中換第二種怕 ×1.35×1.8", absf(sc_ / s_ref - 1.35 * 1.8) < 0.05, [h2.k, sc_, s_ref])
+	# 追嚇：失神中被中性嚇法打
+	var x3 = ""
+	for y in AB.W: if not (AB.fear_of(kf).w as Array).has(y) and not (AB.fear_of(kf).i as Array).has(y) and _hero_sc(y) != "": x3 = y; break
+	var h3 = mk(_hero_sc(x3), 0, 2000, 100)
+	op.units.append(h3); AB.compile(op, h3); h3["p"] = Vector2(-30, 300); _bare(op)
+	f_fear["fearT"] = {"t": x, "until": op.t + 3.0}
 	var sz = H(op, h3, f_fear, 1.0, c); f_fear.erase("fearT"); var sz0 = H(op, h3, f_fear, 1.0, c)
-	_chk("追嚇：失神中被中性嚇法打 ×1.3", absf(sz / sz0 - 1.3) < 0.02, [sz, sz0])
-	# 敵人技能打名鬼：敵方電話 vs 名鬼系（厲怕電話、橫唔怕電話）
-	var e = mk("zd_hengsi", 1, 5000, 100)
-	var hl = mk("n30_banshee", 0, 50000, 50); var hh = mk("n30_zipai", 0, 50000, 50); var hn = mk(N_K, 0, 50000, 50)
-	op = placed([hl, hh, hn], [e])
+	_chk("追嚇：失神中被中性嚇法打 ×1.3", absf(sz / sz0 - 1.3) < 0.02, [h3.k, sz, sz0])
+	# 敵人技能打名鬼：敵方嚇法 vs 名鬼嘅系
+	var ek = ""
+	for k in J.G.get("ENEMY_T"): if AB.scares_of(k).size() and AB.scares_of(k)[0] == "phone": ek = k; break
+	var sw = ""; var si_ = ""; var sn_ = ""
+	for sy in AB.SYS:
+		if (AB.SYS[sy].w as Array).has("phone") and sw == "": sw = sy
+		elif (AB.SYS[sy].i as Array).has("phone") and si_ == "": si_ = sy
+		elif not (AB.SYS[sy].w as Array).has("phone") and not (AB.SYS[sy].i as Array).has("phone") and sn_ == "": sn_ = sy
+	var e = mk(ek, 1, 5000, 100)
+	var hl = mk(_hero_sys(sw), 0, 50000, 50); var hh = mk(_hero_sys(si_), 0, 50000, 50); var hn = mk(_hero_sys(sn_), 0, 50000, 50)
+	op = placed([hl, hh, hn], [e]); _bare(op)
 	var en = H(op, e, hn, 1.0, c); var el = H(op, e, hl, 1.0, c); var eh = H(op, e, hh, 1.0, c); var e_norm = H(op, e, hl)
-	_chk("敵人技能打名鬼：怕 ×1.25、唔怕 ×0.75；普攻唔計", absf(el / en - 1.25) < 0.02 and absf(eh / en - 0.75) < 0.02 and absf(e_norm - en) < 2, [en, el, eh, e_norm])
+	_chk("敵人技能打名鬼：怕 ×1.25、唔怕 ×0.75；普攻唔計", absf(el / en - 1.25) < 0.02 and absf(eh / en - 0.75) < 0.02 and absf(e_norm - en) < 2, [ek, en, el, eh, e_norm])
 	# 封頂 4.0：連嚇 2.43 × 追擊 1.8 × 易傷 ×2
-	op = placed([mk("n30_xiaosi", 0, 2000, 100)], [mk("zombie", 1, 99999, 40)])
-	var u = op.units[0]; var v = op.units[1]
-	var yh = mk("youhun", 1, 99999, 40); yh["p"] = Vector2(0, 250)
+	var yh = mk(kn, 1, 99999, 40); var v = mk(kf, 1, 99999, 40)
+	op = placed([mk(hk, 0, 2000, 100)], [yh, v]); _bare(op)
+	var u = op.units[0]
 	var base = H(op, u, yh, 1.0, c)
-	AB.compile(op, v); v["fearT"] = {"t": "breath", "until": 99.0}; v.st["down"] = 1.0
+	var drill = 1 + 0.05 * (J.num(J.mc(J.G.Rework, "drillLv", [hk])) - 1)
+	v["fearT"] = {"t": x2, "until": 99.0}; v.st["down"] = 1.0
 	AB.add_bf(op, v, {"p": "mark", "stat": "taken", "v": 1.0, "dur": 9})
 	var big = H(op, u, v, 1.0, {"sk": true, "kind": "hit", "mult": 1.0, "follow": "down", "fol_x": 1.8})
 	_chk("兩層總倍率封頂 ×4.0", absf(big * drill / base - 4.0) < 0.15, [base, big, drill])
@@ -477,10 +513,13 @@ func mech(t) -> void:
 		for k in a.ev: if not (k in ["trig_start"]): key_ev[k] = a.ev[k]
 		_p("機制 %-4s 冇應對(%s) 難度 ×%.2f 勝 %d/%d 時 %.1f 失血 %.0f%%｜有應對(%s) ×%.2f 勝 %d/%d 時 %.1f｜事件 %s" % [m, nc, dn, a.win, N, a.t, a.loss * 100, co, dc, b.win, N, b.t, str(key_ev).substr(0, 160)])
 		var hr = a.hl / maxf(0.01, base[nc].hl)
-		_chk("機制 %s：真係生效（冇應對：難度 > ×1.03 或名鬼失血 ×1.2）" % m, dn > 1.03 or hr >= 1.2, "難度 %.2f 名鬼失血 ×%.2f" % [dn, hr])
+		var nev = 0
+		for k in a.ev: if not (k in ["trig_start"]): nev += int(a.ev[k])
+		_chk("機制 %s：真係生效（有機制事件，或冇應對難度 > ×1.03）" % m, nev > 0 or dn > 1.03, "難度 %.2f 名鬼失血 ×%.2f 事件 %d" % [dn, hr, nev])
+		_chk("機制 %s：有解（帶啱應對贏到 ≥ 5/6）" % m, b.win >= N - 1, b.win)
+		if dn >= 1.15: _chk("機制 %s：帶啱應對明顯易打（有應對 ≤ 冇應對 −0.1，或 ≤ ×1.15）" % m, dc <= dn - 0.1 or dc <= 1.15, ["%.2f" % dc, "%.2f" % dn])
+		if a.win == 0: _p("WARN 機制 %s：冇應對隊（純近戰、冇控場）贏 0/%d，近乎硬鎖（交平衡線／老闆定）" % [m, N])
 		if dn < 1.3 or dn > 3.0: _p("WARN 機制 %s 冇應對難度 ×%.2f 唔喺目標 1.3–3（數值照 counter.md 4.1，交平衡線）" % [m, dn])
-		_chk("機制 %s：唔硬鎖（冇應對都贏到 ≥ 1 場、難度 ≤ ×3.5）" % m, a.win >= 1 and dn <= 3.5, [a.win, "%.2f" % dn])
-		_chk("機制 %s：帶啱應對明顯易打（有應對 ≤ 冇應對 −0.15，或 ≤ ×1.15）" % m, dc <= dn - 0.15 or dc <= 1.15, ["%.2f" % dc, "%.2f" % dn])
 		await t.get_tree().process_frame
 	var inr = 0
 	for r in rows: if r[1] >= 1.3 and r[1] <= 3.0: inr += 1

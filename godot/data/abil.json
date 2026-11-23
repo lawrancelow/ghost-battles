@@ -610,15 +610,6 @@
     "照"
    ]
   },
-  "nw_sundel": {
-   "sys": "厲",
-   "sc": [
-    "sound"
-   ],
-   "tags": [
-    "刺"
-   ]
-  },
   "nw_teketeke": {
    "sys": "厲",
    "sc": [
@@ -812,7 +803,7 @@
     "定"
    ]
   },
-  "nw_panguan": {
+  "nw_shenpi": {
    "sys": "官",
    "sc": [
     "paper"
@@ -1278,7 +1269,8 @@
    "n_split": 3,
    "hp": 0.25,
    "atk": 0.4,
-   "warn": "死後散成 3 隻小怪"
+   "warn": "死後散成 3 隻小怪",
+   "aoe_x": 3.0
   },
   "召喚": {
    "en": "summon",
