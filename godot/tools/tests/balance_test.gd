@@ -23,11 +23,11 @@ const AB = preload("res://game/rts/abil.gd")
 const SD = preload("res://game/soul/soul_data.gd")
 const NGB = preload("res://game/newghost/ng_boss.gd")
 
-const DT := 0.05
+var DT := 0.1          # 0.1 同 0.05 結果相近（probe 驗過），快 1.7 倍
 const N_SEED := 6          # 最佳隊／萬能隊每場種子
-const N_SEED_R := 3        # 隨機隊每隊種子
+const N_SEED_R := 2        # 隨機隊每隊種子
 const N_RAND := 6          # 隨機隊數
-const BEST_K := 5          # 最佳隊候選（解析分數前幾名）
+const BEST_K := 4          # 最佳隊候選（解析分數前幾名）
 const UNI_K := 6           # 萬能隊候選
 const UP_LV := 3.5         # 容錯：萬能隊練高幾級
 const N_YIN := 4
@@ -37,6 +37,7 @@ const AT := Vector2(0, 640)
 const P2L := [[1, 3], [2, 3], [3, 4], [5, 6], [6, 6], [7, 7], [9, 8], [10, 9], [11, 9], [13, 10], [14, 11], [15, 11], [17, 12], [18, 13], [20, 14], [21, 15], [22, 16], [23, 17]]
 const RANK_CH := [0, 0, 1, 1, 1, 2]   # soul_rhythm：核心名鬼平均職級（章開始時）
 const OUT := "/tmp/bal"
+const OWN := [6, 14, 24, 34, 54, 66, 85]
 
 func _p(m): print("[balance] ", m)
 func _chk(name: String, cond: bool, extra = "") -> void:
@@ -80,8 +81,11 @@ func pool_of(c: int, ring: int) -> Array:
 	for k in sj:
 		if k == "afu": continue
 		if int(sc.get(k, 0)) < c or (int(sc.get(k, 0)) == c and _story_in(k, c, ring)): if not o.has(k): o.append(k)
+	# 擁有數上限：soul_rhythm.md 每日60分玩家（章開始 6／14／24／34／54／66，第 6 章尾 85），章內按圈線性增加；先到先得（早章、內圈先）
+	var cap = int(round(OWN[c] + (OWN[c + 1] - OWN[c]) * (ring - 1) / 4.0))
 	for cc in range(0, c + 1):
 		for x in guards_of(cc):
+			if o.size() >= cap: break
 			if cc < c or int(x[0]) < ring:
 				if not o.has(x[1]) and J.G.GHOSTS.has(x[1]): o.append(x[1])
 	return o
@@ -153,6 +157,17 @@ func site_snap(st: Dictionary) -> Dictionary:
 		elif J.t(u.get("minion")) and u.get("ml") == null and sq.size() < N_YIN: sq.append(u)
 	return {"foes": foes, "sq": sq}
 
+# 據點題目整體縮放（＝counter.json 該據點 hm、am 同乘 s；遊魂嘍囉 foe_ml 唔受影響）
+func scaled(sn: Dictionary, sk: float) -> Dictionary:
+	if sk == 1.0: return sn
+	var fs = []
+	for u in sn.foes:
+		var v = u.duplicate(true)
+		if v.get("foe_ml") == null:
+			v["hp"] = J.num(v.hp) * sk; v["maxhp"] = J.num(v.maxhp) * sk; v["atk"] = J.num(v.atk) * sk
+		fs.append(v)
+	return {"foes": fs, "sq": sn.sq}
+
 # ================= 一場 =================
 func hero_units(team: Array, insts: Dictionary, up := 0.0) -> Array:
 	var B = J.G.Battle
@@ -179,6 +194,7 @@ func fight(sn: Dictionary, team: Array, adv: String, insts: Dictionary, sd: int,
 	var op = SIM.new()
 	op.kind = "sortie"
 	op.adviser = adviser_of(adv, insts, up)
+	if op.adviser is Dictionary: op.adviser["p"] = PATH[0]   # 軍師坐鎮後方（引擎 head(軍師) 冇 p 會報錯，見報告）
 	op.setup(us, PackedVector2Array(PATH), AT, PATH[0])
 	op.auto = true
 	op.t_skip_march()
@@ -258,14 +274,21 @@ func best_adv(team: Array, pool: Array, insts: Dictionary) -> String:
 	return b
 
 # ================= 一章 =================
+func _sub(tm: Array, pool: Array) -> bool:
+	for k in tm: if not pool.has(k): return false
+	return true
+func _better(a: Dictionary, b) -> bool: return b == null or a.wr + 0.1 * a.perf > b.wr + 0.1 * b.perf
 func run_ch(t, c: int) -> Dictionary:
 	var t0 = Time.get_ticks_msec()
 	var sites = sites_of(c)
 	var rk = RANK_CH[c]
 	var out = {"c": c, "sites": []}
-	var snaps = []; var pools = []; var instss = []
-	# 1) 每個場地：敵人快照、名鬼池、解析前幾名
-	for st in sites:
+	var snaps = []; var pools = []; var instss = []; var M = []
+	if CAL and STEPS.has(c): out["steps"] = await step_test(t, c, sites, rk)
+	# 1) 每個場地：敵人快照、名鬼池；解析前 BEST_K 名各跑 1 種子
+	var G = []
+	for i in sites.size():
+		var st = sites[i]
 		var pool = pool_of(c, int(st.ring))
 		_set_save(c, st.lv, pool, rk)
 		var insts = {}
@@ -275,23 +298,70 @@ func run_ch(t, c: int) -> Dictionary:
 		for k in pool:
 			var u = J.mc(J.G.Battle, "mkGhostUnit", [insts[k], 0.0])
 			pw[k] = sqrt(J.num(u.maxhp) * J.num(u.atk))
-		snaps.append(sn); pools.append(pool); instss.append({"i": insts, "pw": pw})
+		snaps.append(sn); pools.append(pool); instss.append(insts)
+		var m = {}
+		if not sn.is_empty():
+			var sc = []
+			for tm in _combos(pool): sc.append([ascore(tm, sn, pw), tm])
+			sc.sort_custom(func(a, b): return a[0] > b[0])
+			var scr = []
+			for j in mini(BEST_K, sc.size()):
+				var tm = sc[j][1]
+				var r = batch(sn, tm, best_adv(tm, pool, insts), insts, 1)
+				m[",".join(tm)] = r.perf; scr.append([r.perf, tm])
+			scr.sort_custom(func(a, b): return a[0] > b[0])
+			for x in scr.slice(0, 2): if not G.has(x[1]): G.append(x[1])
+		M.append(m)
 		await t.get_tree().process_frame
-	# 2) 最佳隊
-	var cand_all = {}   # 隊 key → 累計解析
+	# 2) 全章候選隊逐個場地跑 1 種子（有齊隊員先跑）
 	for i in sites.size():
-		var st = sites[i]; var sn = snaps[i]; var pool = pools[i]; var insts = instss[i].i; var pw = instss[i].pw
+		if snaps[i].is_empty(): continue
+		for tm in G:
+			var key = ",".join(tm)
+			if M[i].has(key) or not _sub(tm, pools[i]): continue
+			M[i][key] = batch(snaps[i], tm, best_adv(tm, pools[i], instss[i]), instss[i], 1).perf
+		await t.get_tree().process_frame
+	# 3) 萬能隊：隊員喺第 1 圈已經有（全章揀得）；粗篩總分前 2 → 全種子
+	var base_pool = pools[0]
+	for i in sites.size(): if int(sites[i].ring) == 1 and sites[i].kind == "sortie": base_pool = pools[i]; break
+	var rough = []
+	for tm in G:
+		if not _sub(tm, base_pool): continue
+		var s = 0.0
+		for i in sites.size(): s += float(M[i].get(",".join(tm), 0.0))
+		rough.append([s, tm])
+	if rough.is_empty(): rough.append([0.0, base_pool.slice(0, 3)])
+	rough.sort_custom(func(a, b): return a[0] > b[0])
+	var uni = null; var unis = []
+	for x in rough.slice(0, 2):
+		var tm = x[1]; var tot = 0.0; var per = []
+		for i in sites.size():
+			if snaps[i].is_empty(): per.append(null); continue
+			var r = batch(snaps[i], tm, best_adv(tm, base_pool, instss[i]), instss[i], N_SEED)
+			per.append(r); tot += r.perf
+		var u = {"team": tm, "tot": tot, "per": per}
+		unis.append(u)
+		if uni == null or tot > uni.tot: uni = u
+		await t.get_tree().process_frame
+	out["uni"] = uni.team
+	# 4) 每個場地：最佳隊（M 前 2 名全種子；萬能隊候選都計）、隨機隊、萬能隊 +3.5 級
+	var nto = 0; var nall = 0
+	for i in sites.size():
+		var st = sites[i]; var sn = snaps[i]; var pool = pools[i]; var insts = instss[i]
 		if sn.is_empty(): out.sites.append({"id": st.id, "err": "nobattle"}); continue
-		var cs = _combos(pool)
-		var sc = []
-		for tm in cs: sc.append([ascore(tm, sn, pw), tm])
-		sc.sort_custom(func(a, b): return a[0] > b[0])
+		var ks = M[i].keys()
+		ks.sort_custom(func(a, b): return M[i][a] > M[i][b])
 		var best = null
-		for j in mini(BEST_K, sc.size()):
-			var tm = sc[j][1]; var adv = best_adv(tm, pool, insts)
+		for u in unis:
+			if u.per[i] != null and _sub(u.team, pool) and _better(u.per[i], null if best == null else best.r): best = {"team": u.team, "adv": best_adv(u.team, pool, insts), "r": u.per[i]}
+		for key in ks.slice(0, 2):
+			var tm = Array(key.split(","))
+			var same = false
+			for u in unis: if u.team == tm: same = true
+			if same: continue
+			var adv = best_adv(tm, pool, insts)
 			var r = batch(sn, tm, adv, insts, N_SEED)
-			if best == null or r.perf > best.r.perf: best = {"team": tm, "adv": adv, "r": r}
-		# 隨機隊
+			if _better(r, null if best == null else best.r): best = {"team": tm, "adv": adv, "r": r}
 		var rr = {"wr": 0.0, "to": 0.0, "t": 0.0, "dead": 0.0, "perf": 0.0, "n": 0}
 		var rng = RandomNumberGenerator.new(); rng.seed = 555 + i * 31 + c * 1000
 		for j in N_RAND:
@@ -302,73 +372,95 @@ func run_ch(t, c: int) -> Dictionary:
 			var adv = p2[3] if p2.size() > 3 else ""
 			var r = batch(sn, tm, adv, insts, N_SEED_R, 0.0, 100 + j * 10)
 			for f in ["wr", "to", "t", "dead", "perf"]: rr[f] += r[f] / N_RAND
+		var U = uni.per[i]
+		var U35 = batch(sn, uni.team, best_adv(uni.team, base_pool, insts), insts, 3, UP_LV)
 		var row = {"id": st.id, "kind": st.kind, "ring": st.ring, "p": st.p, "lv": st.lv, "bm": st.get("bm", ""), "pool": pool.size(), "foes": _fk(sn),
-			"best": best.team, "badv": best.adv, "B": best.r, "R": rr}
+			"best": best.team, "badv": best.adv, "B": best.r, "R": rr, "U": U, "U35": U35, "u": U.perf / maxf(0.01, best.r.perf)}
+		if CAL and st.kind == "sortie":
+			var cr = cal_site(sn, best, pool, insts, i, c, int(st.ring))
+			row["s"] = cr.s; row["cal"] = cr
 		out.sites.append(row)
-		_p("c%d %s r%d p%.1f lv%d 池%d 最佳%s+%s 勝%.0f%% %.0fs 死%.1f perf%.2f｜隨機 勝%.0f%% perf%.2f" % [c + 1, st.id, st.ring, st.p, st.lv, pool.size(), str(best.team), best.adv, best.r.wr * 100, best.r.t, best.r.dead, best.r.perf, rr.wr * 100, rr.perf])
-		# 萬能隊候選：只要全章都有嘅鬼（第 1 圈池）→ 之後過濾
-		for j in mini(UNI_K * 2, sc.size()):
-			var key = ",".join(sc[j][1])
-			cand_all[key] = float(cand_all.get(key, 0.0)) + sc[j][0]
-		await t.get_tree().process_frame
-	# 3) 萬能隊：全章固定（隊員要喺第 1 個場地已經有，即全章都揀得）
-	var base_pool = pools[0]
-	for i in sites.size(): if int(sites[i].ring) == 1 and sites[i].kind == "sortie": base_pool = pools[i]; break
-	var cands = []
-	for row in out.sites:
-		if row.has("best"):
-			var ok2 = true
-			for k in row.best: if not base_pool.has(k): ok2 = false
-			if ok2 and not cands.has(row.best): cands.append(row.best)
-	var ks = cand_all.keys()
-	ks.sort_custom(func(a, b): return cand_all[a] > cand_all[b])
-	for key in ks:
-		var tm = Array(key.split(","))
-		var ok3 = true
-		for k in tm: if not base_pool.has(k): ok3 = false
-		if ok3 and not cands.has(tm): cands.append(tm)
-		if cands.size() >= UNI_K + 4: break
-	# 先用 2 個種子粗篩，前 3 名再跑全種子
-	var rough = []
-	for tm in cands.slice(0, UNI_K + 4):
-		var s = 0.0
-		for i in sites.size():
-			if snaps[i].is_empty(): continue
-			var adv = best_adv(tm, base_pool, instss[i].i)
-			s += batch(snaps[i], tm, adv, instss[i].i, 2, 0.0, 300).perf
-		rough.append([s, tm])
-		await t.get_tree().process_frame
-	rough.sort_custom(func(a, b): return a[0] > b[0])
-	var uni = null
-	for x in rough.slice(0, 3):
-		var tm = x[1]; var tot = 0.0; var per = []
-		for i in sites.size():
-			if snaps[i].is_empty(): per.append(null); continue
-			var adv = best_adv(tm, base_pool, instss[i].i)
-			var r = batch(snaps[i], tm, adv, instss[i].i, N_SEED)
-			per.append(r); tot += r.perf
-		if uni == null or tot > uni.tot: uni = {"team": tm, "tot": tot, "per": per}
-		await t.get_tree().process_frame
-	out["uni"] = uni.team
-	var urow = []
-	for i in sites.size():
-		if snaps[i].is_empty(): continue
-		var row = out.sites[i]
-		row["U"] = uni.per[i]
-		var adv = best_adv(uni.team, base_pool, instss[i].i)
-		row["U35"] = batch(snaps[i], uni.team, adv, instss[i].i, N_SEED, UP_LV)
-		row["u"] = uni.per[i].perf / maxf(0.01, row.B.perf)
-		_p("c%d %s 萬能隊%s 勝%.0f%% perf%.2f（÷最佳 %.2f）｜+%.1f級 勝%.0f%%" % [c + 1, row.id, str(uni.team), uni.per[i].wr * 100, uni.per[i].perf, row.u, UP_LV, row.U35.wr * 100])
+		if row.has("s"): _p("c%d %-9s 校準 s=%.3f（最佳 勝%.0f%%、隨機 勝%.0f%%）" % [c + 1, st.id, row.s, cr.B * 100, cr.R * 100])
+		_p("c%d %-9s r%d p%4.1f lv%2d 池%2d｜最佳 勝%3.0f%% %2.0fs 死%.1f 時間到%.0f%% perf%.2f %s+%s｜隨機 勝%3.0f%%｜萬能 勝%3.0f%% u%.2f｜+3.5 勝%3.0f%%" % [c + 1, st.id, st.ring, st.p, st.lv, pool.size(),
+			best.r.wr * 100, best.r.t, best.r.dead, best.r.to * 100, best.r.perf, str(best.team), best.adv, rr.wr * 100, U.wr * 100, row.u, U35.wr * 100])
 		await t.get_tree().process_frame
 	out["sec"] = (Time.get_ticks_msec() - t0) / 1000.0
 	var f = FileAccess.open(OUT + "/c%d.json" % c, FileAccess.WRITE)
 	f.store_string(JSON.stringify(out)); f.close()
-	_p("c%d 完成 %.0f 秒" % [c + 1, out.sec])
+	_p("c%d 完成 %.0f 秒｜萬能隊 %s｜候選 %d 隊" % [c + 1, out.sec, str(uni.team), G.size()])
 	return out
 func _fk(sn: Dictionary) -> Array:
 	var o = []
 	for u in sn.foes: o.append(str(u.k))
 	return o
+
+# ================= 校準 =================
+var CAL := false
+const STEPS := {4: [[0.70, 0.55], [0.85, 0.75], [1.0, 1.0]], 5: [[0.65, 0.50], [0.80, 0.70], [1.0, 1.0]]}   # counter.md 10.2：A／B／C
+func _rand_wr(sn: Dictionary, pool: Array, insts: Dictionary, i: int, c: int, nt: int, ns: int) -> float:
+	var rng = RandomNumberGenerator.new(); rng.seed = 777 + i * 31 + c * 1000
+	var w = 0.0
+	for j in nt:
+		var p2 = pool.duplicate()
+		for q in range(p2.size() - 1, 0, -1):
+			var x = rng.randi_range(0, q); var tmp = p2[q]; p2[q] = p2[x]; p2[x] = tmp
+		w += batch(sn, p2.slice(0, mini(3, p2.size())), p2[3] if p2.size() > 3 else "", insts, ns, 0.0, 200 + j * 10).wr / nt
+	return w
+func _cal_ok(sn, best, pool, insts, i, c, ring, sk) -> Dictionary:
+	var s2 = scaled(sn, sk)
+	var b = batch(s2, best.team, best.adv, insts, 4, 0.0, 50).wr
+	var r = _rand_wr(s2, pool, insts, i, c, 4, 2)
+	return {"ok": b >= 0.99 and r >= 0.375, "B": b, "R": r}
+func cal_site(sn, best, pool, insts, i, c, ring) -> Dictionary:
+	var top = _cal_ok(sn, best, pool, insts, i, c, ring, 1.0)
+	if top.ok: return {"s": 1.0, "B": top.B, "R": top.R}
+	var lo = log(0.15); var hi = 0.0; var lr = null
+	for it in 6:
+		var mid = (lo + hi) / 2.0
+		var r = _cal_ok(sn, best, pool, insts, i, c, ring, exp(mid))
+		if r.ok: lo = mid; lr = r
+		else: hi = mid
+	if lr == null: lr = _cal_ok(sn, best, pool, insts, i, c, ring, exp(lo))
+	return {"s": snappedf(exp(lo), 0.001), "B": lr.B, "R": lr.R}
+# 第 5、6 關主線：A／B／C 三步逐步試；全部主線關最佳隊 ≥ 5/6、隨機隊 ≥ 25% 先算過；揀最遠過到嘅一步，主線 ch_k、據點 sortie_k 同步
+func step_test(t, c: int, sites: Array, rk: int) -> Dictionary:
+	var res = {"tried": [], "pick": 0}
+	var D = CT.data()
+	for si in STEPS[c].size():
+		var k = STEPS[c][si]
+		D["ch_k"][str(c)] = {"hp": k[0], "atk": k[1]}
+		var allok = true; var rows = []
+		for st in sites:
+			if st.kind != "stage": continue
+			var pool = pool_of(c, int(st.ring))
+			_set_save(c, st.lv, pool, rk)
+			var insts = {}
+			for g in J.G.S.ghosts: insts[str(g.k)] = g
+			var sn = site_snap(st)
+			var pw = {}
+			for kk in pool:
+				var u = J.mc(J.G.Battle, "mkGhostUnit", [insts[kk], 0.0]); pw[kk] = sqrt(J.num(u.maxhp) * J.num(u.atk))
+			var sc = []
+			for tm in _combos(pool): sc.append([ascore(tm, sn, pw), tm])
+			sc.sort_custom(func(a, b): return a[0] > b[0])
+			var best = null
+			for j in mini(6, sc.size()):
+				var tm = sc[j][1]
+				var r = batch(sn, tm, best_adv(tm, pool, insts), insts, N_SEED)
+				if _better(r, null if best == null else best.r): best = {"team": tm, "r": r}
+			var rw = _rand_wr(sn, pool, insts, 0, c, N_RAND, 2)
+			rows.append([st.id, best.r.wr, rw, best.team])
+			if best.r.wr < 0.8 or rw < 0.25: allok = false
+			await t.get_tree().process_frame
+		res.tried.append({"step": "ABC"[si], "k": k, "rows": rows, "ok": allok})
+		_p("c%d 主線 SOFT 步驟 %s %s：%s %s" % [c + 1, "ABC"[si], str(k), "過" if allok else "唔過", str(rows)])
+		if allok: res.pick = si
+		else: break
+	var kp = STEPS[c][res.pick]
+	D["ch_k"][str(c)] = {"hp": kp[0], "atk": kp[1]}
+	D["sortie_k"][str(c)] = {"hp": kp[0], "atk": kp[1]}
+	res["k"] = kp
+	return res
 
 # ================= 入口 =================
 func probe(t) -> void:
@@ -386,8 +478,14 @@ func probe(t) -> void:
 	for g in J.G.S.ghosts: insts[str(g.k)] = g
 	var sn = site_snap(st)
 	_p("site %s foes %s sq %d" % [st.id, str(_fk(sn)), sn.sq.size()])
+	for u in sn.foes: _p("  foe %s hp%.0f atk%.0f minion=%s sum=%s foe_ml=%s mech=%s boss=%s" % [u.k, J.num(u.hp), J.num(u.atk), str(u.get("minion")), str(u.get("sum")), str(u.get("foe_ml")), str(u.get("mech")), str(u.get("boss"))])
 	var t0 = Time.get_ticks_msec()
-	var r = batch(sn, pool.slice(0, 3), pool[3], insts, 10)
+	var r = batch(sn, pool.slice(0, 3), pool[3], insts, 20)
+	_p("DT0.05 20 場 %.2f 秒：%s" % [(Time.get_ticks_msec() - t0) / 1000.0, str(r)])
+	DT = 0.1
+	t0 = Time.get_ticks_msec()
+	r = batch(sn, pool.slice(0, 3), pool[3], insts, 20)
+	DT = 0.1
 	_p("10 場 %.2f 秒：%s" % [(Time.get_ticks_msec() - t0) / 1000.0, str(r)])
 	t0 = Time.get_ticks_msec()
 	var sn2 = site_snap(sites[0])
@@ -399,6 +497,14 @@ func c2(t) -> void: await _boot(t); await run_ch(t, 2); _p("RESULT ok=1 bad=0")
 func c3(t) -> void: await _boot(t); await run_ch(t, 3); _p("RESULT ok=1 bad=0")
 func c4(t) -> void: await _boot(t); await run_ch(t, 4); _p("RESULT ok=1 bad=0")
 func c5(t) -> void: await _boot(t); await run_ch(t, 5); _p("RESULT ok=1 bad=0")
+func cal_a(t) -> void:
+	await _boot(t); CAL = true
+	for c in [0, 1, 4]: await run_ch(t, c)
+	_p("RESULT ok=1 bad=0")
+func cal_b(t) -> void:
+	await _boot(t); CAL = true
+	for c in [2, 3, 5]: await run_ch(t, c)
+	_p("RESULT ok=1 bad=0")
 func ca(t) -> void:
 	await _boot(t)
 	for c in [0, 1, 2]: await run_ch(t, c)

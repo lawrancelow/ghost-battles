@@ -808,6 +808,8 @@ if __name__ == "__main__":
     if errs and "--force" not in sys.argv: sys.exit(1)
     json.dump(abil, open(os.path.join(ROOT, "data/abil.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     json.dump(counter, open(os.path.join(ROOT, "data/nat/counter.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    if os.path.exists(os.path.join(ROOT, "tools/balance/bal_scale.json")):   # [balance] 重生成後重套平衡線校準（據點 hm／am、ch_k、sortie_k）
+        import subprocess; subprocess.run([sys.executable, "-I", os.path.join(ROOT, "tools/balance/apply_bal.py"), "--from-scale"], check=True)
     # 報告
     from collections import Counter
     tc = Counter(t for e in AB.values() for t in e["tags"])
