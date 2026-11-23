@@ -142,7 +142,7 @@ func data_check() -> void:
 	_chk("定案名：狐妖、紙紮跑車", nm_ok)
 	var cnt = {}
 	for x in L: cnt[S2.pin(str(x.k))] = int(cnt.get(S2.pin(str(x.k)), 0)) + 1
-	_chk("每格都有品級（凡靈煞王＋阿福）", int(cnt.get("凡", 0)) + int(cnt.get("靈", 0)) + int(cnt.get("煞", 0)) + int(cnt.get("王", 0)) == 100 and int(cnt.get("主", 0)) == 1, cnt)
+	_chk("每格都有品級（凡靈煞王＋阿福）", int(cnt.get("凡", 0)) + int(cnt.get("靈", 0)) + int(cnt.get("煞", 0)) + int(cnt.get("王", 0)) == L.size() - 1 and int(cnt.get("主", 0)) == 1, cnt)
 	var sysc = {}
 	for x in L: if str(x.k) != "afu": sysc[S2.sys_of(str(x.k))] = true
 	_chk("每格都有 8 系之一", sysc.size() == 8 and not sysc.has(""), sysc.keys())
@@ -206,7 +206,7 @@ func ms_check() -> void:
 	_chk("夠 10 隻：可以領", S2.ms_list()[0].state == "can", S2.got_n())
 	_chk("領獎：散魂 +20、紫箱 +1", S2.ms_claim(10) == "ok" and SOUL.san() == san0 + S2.MS_SAN and int(J.num(S.chests.p)) == p0 + 1)
 	_chk("領過唔可以再領", S2.ms_claim(10) == "got" and S2.ms_list()[0].state == "got")
-	_chk("完成獎共 10 級（10…100）", S2.ms_list().size() == 10 and int(S2.ms_list()[9].m) == 100, S2.ms_list().map(func(x): return x.m))
+	_chk("完成獎每 10 隻一級（按名冊數）", S2.ms_list().size() == int((L.size() - 1) / 10) and int(S2.ms_list()[-1].m) == S2.ms_list().size() * 10,   # [整合] 名冊 131 隻 S2.ms_list().map(func(x): return x.m))
 
 # ---- 抄功課 ----
 func sweep_check() -> void:
