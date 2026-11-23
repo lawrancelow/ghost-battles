@@ -40,6 +40,7 @@ func _old(ch: float, si: float) -> Dictionary:
 	for u in Bt.units: if J.num(u.side) == 1 and J.num(u.hp) > 0: left.append("%s %d" % [str(u.get("name", u.k)), int(J.num(u.hp))])
 	Bt["active"] = false; Bt["result"] = null
 	return {"win": res[0] == true, "t": int(t_), "left": left}
+var trace := false
 func _new(ch: float, si: float, zid: String, bid: String) -> Dictionary:
 	var Bt = J.G.Battle
 	Bt["auto"] = true
@@ -50,6 +51,13 @@ func _new(ch: float, si: float, zid: String, bid: String) -> Dictionary:
 	var n = 0
 	while op.result == null and n < 30 * 300:
 		op.step(1.0 / 30.0); n += 1
+		if trace and n % 45 == 0 and op.phase == "fight":
+			var ln = []
+			for u in op.units:
+				if J.num(u.hp) <= 0: continue
+				var tg = u.get("tg")
+				ln.append("%s%s(%d,%d)%d%s%s" % ["敵" if J.num(u.side) == 1 else "", str(u.get("name", "")).left(3), int(u.p.x), int(u.p.y), int(J.num(u.hp)), ("→" + str(tg.get("name", "")).left(3) + "d%d" % int(op.dist(u, tg))) if tg is Dictionary else "", ("" if J.t(u.get("eng")) or J.num(u.side) == 1 else "未接") + ("" if not J.t(u.get("minion")) else "")])
+			_p("    t=%.1f %s" % [op.t, " ".join(ln)])
 	var left = []; var mine = []
 	for u in op.units:
 		if J.num(u.side) == 1 and J.num(u.hp) > 0: left.append("%s %d" % [str(u.get("name", u.k)), int(J.num(u.hp))])
@@ -66,6 +74,12 @@ func cmp(t) -> void:
 	var named = []
 	for g in S.ghosts: if str(g.k) != "afu": named.append(g)
 	_p("team=%s troops=%s lv=%s ghosts=%s" % [str(S.team), str(S.res.troops), str(S.lv), str(named.map(func(g): return [g.k, g.lv, g.get("post")]))])
+	if OS.has_environment("QA_MAX"):   # 頂盡：全部名鬼升到上限、軍師、嚇功 Lv5
+		var cap = J.num(J.mc(J.G.F, "ghostCap", []))
+		for g in named: g["lv"] = cap
+		if not S.has("drill") or not (S.drill is Dictionary): S["drill"] = {}
+		if OS.has_environment("QA_DRILL"): for g in named: S.drill[str(g.k)] = 6000.0
+		_p("頂盡：上限 %d" % int(cap))
 	var teams = [J.iter(S.team).filter(func(x): return x != null)]
 	var GP = J.G.get("GP")
 	named.sort_custom(func(a, b): return J.num(J.mc(GP, "pow", [a])) > J.num(J.mc(GP, "pow", [b])))
@@ -74,11 +88,13 @@ func cmp(t) -> void:
 	for g in named:
 		if t2.size() < 3: t2.append(g.id)
 	if t2.size() > 1: teams.append(t2)
+	if OS.has_environment("QA_ADV") and named.size() > 2: S["adviser"] = named[2].id; _p("軍師 %s" % str(named[2].k))
 	for tm in teams:
 		var tt = tm.duplicate(); while tt.size() < 3: tt.append(null)
 		S["team"] = tt
 		var wo = 0; var wn = 0
 		for i in 6:
+			trace = OS.has_environment("QA_TRACE") and i == 0 and tm.size() > 1 and str(tm[1]) != "g1"
 			var r0 = _old(ch, si); var r1 = _new(ch, si, zid, bid)
 			wo += int(r0.win); wn += int(r1.win)
 			if i == 0: _p("  new 我方 %s｜敵方 %s" % [str(r1.mine), str(r1.foes)])

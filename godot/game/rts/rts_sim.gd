@@ -25,7 +25,7 @@ const REPS := 2              # 每隊畫幾個代表兵
 const DEPLOY := 250.0        # 離迎戰點幾遠開始由行軍隊形展開成戰鬥橫隊
 const ROWGAP := 46.0         # 橫隊前後行距
 const DEP_WAIT := 6.0        # 前排最多等後面幾秒（等齊就一齊推前）
-const CLOSE := 100.0         # [qaudit2] 離目標「射程 + 呢個」以內：唔再追陣位，直接埋身
+const CLOSE := 100.0         # [qaudit2] 離目標「射程 + 呢個」以內、而陣位比自己而家更遠離目標：唔再追陣位，直接埋身
 #   （陣位係跟對面位置計：雙方都追緊自己陣位時會變成你追我走，兩隻企喺 93px 互相望住一齊平行移，行出地圖（實測 x=-1300）、成半分鐘冇出手）
 
 var id := 0
@@ -581,7 +581,7 @@ func _step_fight(dt: float) -> void:
 		if d > _nn(u, "range") + 12.0:
 			var want = _line_want(u, tg)
 			var dv = (want - (u.p as Vector2))
-			if dv.length() < 3.0 or d < _nn(u, "range") + CLOSE: dv = (tg.p as Vector2) - (u.p as Vector2)   # [qaudit2]
+			if dv.length() < 3.0 or (d < _nn(u, "range") + CLOSE and want.distance_to(tg.p) > d): dv = (tg.p as Vector2) - (u.p as Vector2)   # [qaudit2] 陣位反而離目標更遠：直接埋身
 			u["p"] = (u.p as Vector2) + dv.normalized() * minf(_nn(u, "spd") * dt, dv.length()); u["walking"] = true
 		else:
 			u["walking"] = false; u["cd"] = _nn(u, "cd") - dt

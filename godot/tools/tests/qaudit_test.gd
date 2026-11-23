@@ -237,29 +237,44 @@ func _pick_target(tg: Dictionary):
 func _strengthen(t) -> void:   # 打輸：畀兵＋升名鬼（玩家會做嘅事）
 	_rich()
 	_give({"troops": 400.0}, "陰兵")
+	# [qaudit2] 名鬼等級上限跟主角等級（Lv7→30、Lv15→40）：玩家打唔過會掛機／做嘢儲好評升級 → 測試畀一級好評（記低）
+	var S = _S(); var en = maxf(10.0, float(load("res://native/game.gd").exp_need(J.num(S.lv))) - J.num(S.exp) + 1.0)
+	J.cl(J.G.get("gainExp"), null, [en]); gifts.append([_qi(), "好評（練級）", en])
+	# 名冊「升級」：全部名鬼升到上限（壽包唔夠就畀；記低）——之前只升 8 級又冇壽包，老殭／Pontianak 呢類底子好嘅一直停喺 Lv12～14
+	var F = J.G.get("F"); var bn = 0.0
 	for g in _free_ghosts():
-		for k in 5: Menus.jn("rosterAct", ["up", J.str(g.id)])
+		if J.str(g.get("q")) != "名": continue
+		for k in 45:
+			if J.num(J.mc(F, "glv", [g])) >= J.num(J.mc(F, "ghostCap", [])): break
+			var c = J.num(J.mc(F, "lvCost", [g.lv]))
+			if J.num(_S().res.buns) < c: J.cl(J.G.get("give"), null, [{"buns": c * 2.0}]); bn += c * 2.0
+			Menus.jn("rosterAct", ["up", J.str(g.id)])
+	if bn > 0: gifts.append([_qi(), "壽包（升名鬼）", bn])
 # [qaudit2] 出擊前：名冊「職務 → 出陣」將最強嘅名鬼放入出陣空位（名鬼一職：派咗去打工嘅會由崗位調返嚟；打完唔調返）
 #   （第 1 關「派 1 隻鬼去打工」會將唯一嘅小紙由出陣調走，之後阿福一個帶兵打餓鬼王必輸：舊引擎同新地圖戰鬥都係 0/6；小紙出陣就 6/6）
+var tm_alt := 0   # [qaudit2] 打輸之後玩家會試其他出陣組合：第 n 次輸就試第 n 個組合
+const PAIRS := [[0, 1], [0, 2], [1, 2], [0, 3], [1, 3], [2, 3]]
 func _team_up() -> String:
 	var S = _S(); var BKd = load("res://game/barracks/bk_data.gd")
 	if not (S.get("team") is Array): return ""
-	var gs = []
-	for g in S.ghosts: if BKd.is_named(g) and not J.iter(S.team).has(g.id) and BKd.job(g) != "away": gs.append(g)
 	var GP = J.G.get("GP")
 	var pw = func(g): return J.num(J.mc(GP, "pow", [g]))
+	var gs = []
+	for g in S.ghosts: if BKd.is_named(g) and BKd.job(g) != "away": gs.append(g)
 	gs.sort_custom(func(a, b): return pw.call(a) > pw.call(b))
+	if gs.is_empty(): return ""
+	var pr = PAIRS[tm_alt % PAIRS.size()]
+	var want = []
+	for k in pr: if k < gs.size(): want.append(J.str(gs[k].id))
+	if want.size() < mini(2, gs.size()): want = [J.str(gs[0].id)] + ([J.str(gs[1].id)] if gs.size() > 1 else [])
+	var cur = []
+	for id in S.team: if id != null and str(id) != "afu": cur.append(J.str(id))
+	if cur.size() == want.size() and cur.all(func(x): return x in want): return ""
+	for id in cur: if not (id in want): BKd.set_job(id, "idle")
 	var o = []
-	for g in gs:
-		if J.iter(S.team).has(null):
-			if BKd.set_job(g.id, "team") == "ok": o.append(str(g.name))
-			continue
-		var weak = null   # 出陣滿咗：鬼力高過出陣最弱嗰隻（唔計阿福）就換
-		for id in S.team:
-			if id == null or str(id) == "afu": continue
-			var x = J.cl(J.G.get("ghostById"), null, [id])
-			if x is Dictionary and (weak == null or pw.call(x) < pw.call(weak)): weak = x
-		if weak != null and pw.call(g) > pw.call(weak) + 1.0 and BKd.set_job(g.id, "team", weak.id) == "ok": o.append("%s換%s" % [str(g.name), str(weak.name)])
+	for id in want:
+		if id in cur: continue
+		if BKd.set_job(id, "team") == "ok": o.append(str(J.cl(J.G.get("ghostById"), null, [id]).name))
 	return ("出陣＋" + "、".join(o)) if o.size() else ""
 func _fight(t, m, x) -> String:
 	var tu = _team_up()
@@ -346,7 +361,8 @@ func _do_stage(t, m, q) -> String:
 			break
 		var r = await _fight(t, m, x)
 		how.append("出擊清單「%s」%s" % [str(x.name), r])
-		if not r.begins_with("勝") and _prog(q)[0] < 1: _strengthen(t)
+		if not r.begins_with("勝") and _prog(q)[0] < 1: _strengthen(t); tm_alt += 1
+		elif r.begins_with("勝"): tm_alt = 0
 		J.mc(_Q(), "check", [])
 	return "；".join(how)
 # 拔營：先清晒野外王（出擊清單），再領大排檔目標（測試加速），最後撳拔營
@@ -360,7 +376,8 @@ func _move_camp(t, m) -> String:
 		for x in (_ctl().list_targets() if _ctl() else AT.collect(null)): if str(x.kind) == "king": ks.append(x)
 		if ks.is_empty(): break
 		var r = await _fight(t, m, ks[0]); log.append(str(ks[0].name) + r)
-		if not r.begins_with("勝"): _strengthen(t)
+		if not r.begins_with("勝"): _strengthen(t); tm_alt += 1
+		else: tm_alt = 0
 	var ab = ZD.all_bosses_done(c)
 	if not ab:
 		var miss = []
