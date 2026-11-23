@@ -196,6 +196,7 @@ static func go_camp(e: Dictionary) -> void:
 
 # 入職通知書／升職信（短卡，3 秒自動收；撳一下即收）
 static func _letter(k: String, promote: bool) -> void:
+	if load("res://game/soul/soul_fx.gd").letter(k, promote): return   # [soul2] 入職通知書／升職演出
 	var m = _main()
 	if m == null: return
 	var host = m.get("sheet") if m.get("sheet") != null else m

@@ -283,6 +283,7 @@ static func _draw_roster(d) -> void:
 	if d.get("codex") != null:
 		var cb = _btn("新鬼圖鑑（%s）" % J.str(d.codex), "", true, func(): close_hook(); J.mc(J.G.get("N30W"), "openCodex", []))
 		cb.custom_minimum_size = Vector2(0, 40); _body().add_child(cb)
+	load("res://game/soul/soul_codex.gd").roster_btns(_body())   # [soul2] 名鬼圖鑑、王座重遊
 	for g in d.list: r_cards[J.str(g.id)] = [JSON.stringify(g), _gcard(g)]
 
 static func _gcard(g) -> Control:
