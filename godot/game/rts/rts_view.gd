@@ -11,6 +11,8 @@ const RTS = preload("res://game/rts/rts.gd")
 const SIM = preload("res://game/rts/rts_sim.gd")
 const ZD = preload("res://game/zone/zone_data.gd")
 const BA = preload("res://game/barracks/bk_art.gd")
+const RFX = preload("res://game/rts/rts_fx.gd")
+const FXK = preload("res://game/fxkit/fx_kit.gd")
 
 const K_ONE := 0.85           # 名鬼／敵人（BtChar 1.32）→ 約 50–58 世界 px 高，同村子主角差唔多
 const K_REP := 1.2            # 小隊代表兵（BtChar 0.75）→ 約 38 px
@@ -37,6 +39,10 @@ var _yawn := 6.0
 var _ev_seen := {}            # op.id → 已處理事件數
 var stamps: Array = []        # {p, text, t, col}
 var _snd_t := 0.0
+var rfx = null                # [rtsfx] 同夜班巡陰一樣嘅貼圖特效
+var fxg: Node2D
+var fxt: Node2D
+var _fire_tex: Texture2D
 static var inst = null
 static var PROF := {}
 
@@ -57,7 +63,10 @@ func _build() -> void:
 	nv.add_child(ov)
 	root = Node2D.new(); ov.add_child(root)
 	under = PtDraw.new(); under.tag = "rts_under"; under.fn = _draw_under; root.add_child(under)
+	fxg = Node2D.new(); fxg.name = "RtsFxG"; root.add_child(fxg)
 	wl = Node2D.new(); wl.y_sort_enabled = true; root.add_child(wl)
+	fxt = Node2D.new(); fxt.name = "RtsFxT"; root.add_child(fxt)
+	rfx = RFX.new(fxg, fxt)
 	txt = PtDraw.new(); txt.tag = "rts_txt"; txt.fn = _draw_txt; root.add_child(txt)
 	ui = Control.new(); ui.name = "RtsUI"; ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -123,10 +132,12 @@ func _process(dt: float) -> void:
 	if nv == null or not is_instance_valid(nv): return
 	if not nv.is_visible_in_tree() or not ZD.on():
 		if ov != null: ov.visible = false; ui.visible = false
+		_fx_off()
 		return
 	if ov == null: _build()
 	ov.visible = true; ui.visible = true
 	var t0 = Time.get_ticks_usec()
+	_fx_frame(dt)
 	_layer()
 	_sync_units(dt)
 	_events()
@@ -134,6 +145,26 @@ func _process(dt: float) -> void:
 	_sync_ui()
 	PROF["view"] = PROF.get("view", 0) + Time.get_ticks_usec() - t0
 	PROF["n"] = PROF.get("n", 0) + 1
+
+# [rtsfx] 只有鏡頭內嘅仗開特效；震屏只喺呢度（輕微）
+func _fx_off() -> void:
+	for op in RTS.ops: op.vfx_on = false; op.vq.clear()
+	if rfx != null: rfx.clear()
+func _fx_frame(dt: float) -> void:
+	var vr: Rect2 = nv.view_rect().grow(120)
+	rfx.vr = vr
+	var any_on = false
+	for op in RTS.ops:
+		var on = op.phase in ["fight", "end"] and vr.grow(160).has_point(op.center())
+		op.vfx_on = on
+		if not on: op.vq.clear(); continue
+		any_on = true
+		if op.phase == "fight": rfx.appear_op(op)
+		rfx.consume(op)
+	if not any_on: rfx.shake = 0.0
+	rfx.tick(dt)
+	if rfx.shake > 0.05 and nv.get("world") is Node2D:
+		nv.world.position += Vector2((randf() - 0.5), (randf() - 0.5) * 0.7) * rfx.shake * float(nv.sc)
 
 func _layer() -> void:
 	var sc = nv.get_node_or_null("MvScene")
@@ -388,10 +419,14 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 		if not vr.has_point(p): continue
 		var col = Color(q.col)
 		var tr: Array = q.trail
-		for i in tr.size():
-			var c2 = col; c2.a = 0.12 + 0.5 * float(i) / maxf(1, tr.size())
-			n.draw_circle(tr[i], 2.0 + i * 0.4, c2)
-		n.draw_circle(p, 5.0, col); n.draw_circle(p, 2.4, Color.WHITE)
+		for i in tr.size():   # 拖尾
+			var c2 = col; c2.a = 0.08 + 0.35 * float(i) / maxf(1, tr.size())
+			n.draw_circle(tr[i], 1.5 + i * 0.5, c2)
+		if _fire_tex == null: _fire_tex = PtGfx.tex("fx_fire")
+		var src = q.get("src")
+		var S = rfx.sty_of(src) if src is Dictionary and rfx != null else {"hue": 0.0, "k": 0.9}
+		var prev: Vector2 = tr[tr.size() - 1] if tr.size() else p - Vector2(1, 0)
+		FXK.draw_bolt(n, _fire_tex, p, atan2(p.y - prev.y, p.x - prev.x), 0.8 if src is Dictionary and J.t(src.get("minion")) else 1.05, S.hue)
 	# 角色血條、名
 	for u in op.units:
 		var hp = J.num(u.get("hp", 0))
@@ -431,20 +466,7 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 		var p: Vector2 = fx.p
 		if not vr.has_point(p): continue
 		var t = J.num(fx.t); var life = J.num(fx.life); var k = t / life
-		match str(fx.kind):
-			"spark":
-				var col = Color(fx.col); col.a = 1.0 - k
-				var R = (10.0 + 16.0 * k) * J.num(fx.k)
-				for i in 8:
-					var an = float(fx.rot) + i * TAU / 8
-					n.draw_line(p + Vector2(cos(an), sin(an)) * R * 0.35, p + Vector2(cos(an), sin(an)) * R, col, 2.0)
-			"slash":
-				var col = Color(fx.col); col.a = 1.0 - k
-				var r = J.num(fx.r) * 0.8; var d = J.num(fx.dir)
-				n.draw_arc(p, r, -PI * 0.75 + (0.0 if d > 0 else PI * 0.5), -PI * 0.75 + PI * 1.0 * (0.4 + k) + (0.0 if d > 0 else PI * 0.5), 12, col, 3.0)
-			"ring":
-				var col = Color(fx.col); col.a = 1.0 - k
-				n.draw_arc(p, 12.0 + k * 22.0, 0, TAU, 24, col, 2.5)
+		match str(fx.kind):   # spark／slash／ring 改由 rts_fx 貼圖特效畫（同夜班巡陰一樣）
 			"num":
 				var a = 1.0 if k < 0.7 else 1.0 - (k - 0.7) / 0.3
 				var pop = 0.35 + (t / 0.1) * 1.05 if t < 0.1 else (1.4 - (t - 0.1) / 0.1 * 0.4 if t < 0.2 else 1.0)

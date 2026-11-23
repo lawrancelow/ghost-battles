@@ -9,6 +9,7 @@ const DOWN_T := 4.5
 const ACC := 1500.0
 const RING := {"lead": [55.0, 130.0], "crew": [80.0, 185.0], "troop": [100.0, 215.0]}
 const ATK := {"windup": 0.15, "strike": 0.1, "recover": 0.22, "cast": 0.45}
+const FXK = preload("res://game/fxkit/fx_kit.gd")
 const HUE := {"yuan": 110.0, "chan": -150.0, "lan": 35.0, "foe": -155.0, "gold": 0.0}
 const CN := "一二三四五六"
 
@@ -1043,17 +1044,14 @@ func pie() -> void:
 	var lines = [["阿福", T("各位！做完今晚，年尾分紅一定有！（應該）", "各位！做完今晚，年底分紅一定有！（應該）")], ["阿福", T("公司好睇好你哋㗎！（我估）", "公司很看好你們的！（我猜）")], ["阿福", T("呢個 project 做完，大家升職！（未批）", "這個 project 做完，大家升職！（還沒批）")]]
 	var l = lines[randi() % lines.size()]; msg("<b>%s</b>：%s　全隊攻擊 +30%%" % [l[0], l[1]], 2.5); snd("gong")
 
-func spark(x: float, y: float, k: float, red: bool) -> void:
-	spr("fx_hit", x, y, {"s0": 0.08 * k, "s1": 0.22 * k, "life": 0.18, "rot": randf() * 6.28, "hue": -155.0 if red else 0.0})
-	if k >= 1.3: spr("fx_bolt", x, y - 6, {"s0": 0.18, "s1": 0.3, "life": 0.16, "rot": (randf() - 0.5) * 1.2})
+func spark(x: float, y: float, k: float, red: bool) -> void: FXK.spark(spr, x, y, k, red)   # 配方共用（game/fxkit）
 
 func spr(n: String, x: float, y: float, o := {}) -> void:
 	var f = {"kind": "spr", "n": n, "x": x, "y": y, "t": 0.0, "life": 0.3, "s0": 0.3, "s1": 0.5, "rot": 0.0, "alpha": 1.0, "add": true, "sx": 1.0, "sy": 1.0, "vy": 0.0, "hue": 0.0}
 	f.merge(o, true)
 	fx.append(f)
 
-func dust(x: float, y: float, k: float) -> void:
-	spr("fx_dust", x + (randf() - 0.5) * 10, y, {"add": true, "alpha": 0.45, "s0": 0.06 * k, "s1": 0.16 * k, "life": 0.5, "vy": 10.0, "anchor": 0.8, "flip": randf() < 0.5})
+func dust(x: float, y: float, k: float) -> void: FXK.dust(spr, x, y, k)
 
 func ambient(dt: float) -> void:
 	while wisps.size() < 26: wisps.append({"x": L.x + (randf() - 0.5) * 700, "y": L.y + (randf() - 0.5) * 1000, "vx": (randf() - 0.5) * 14, "vy": -6 - randf() * 12, "ph": randf() * 6, "r": 1.2 + randf() * 1.8, "hue": 0 if randf() < 0.7 else 1})
@@ -1062,23 +1060,7 @@ func ambient(dt: float) -> void:
 		if absf(w.x - L.x) > 420 or absf(w.y - L.y) > 620: w.x = L.x + (randf() - 0.5) * 700; w.y = L.y + 300 + randf() * 300
 
 # 鬼出場：0 鬼火聚形、1 黑霧散開、2 碎紙旋風、3 地底爬出（裂地）
-func appear_fx(x: float, y: float, style: int, k := 1.0) -> void:
-	match style:
-		0:
-			for i in 4:
-				var a = i * PI / 2 + randf() * 0.6; var r = 70.0 * k
-				spr("fx2_ghostfire", x + cos(a) * r, y - 30 + sin(a) * r * 0.5, {"vx": -cos(a) * r, "vy": sin(a) * r * 0.5, "s0": 0.22 * k, "s1": 0.1 * k, "life": 0.55, "anchor": 0.85})
-			spr("fx2_burst", x, y - 34, {"s0": 0.1 * k, "s1": 0.45 * k, "life": 0.5, "alpha": 0.9})
-		1:
-			spr("fx2_smoke", x, y - 20, {"s0": 0.2 * k, "s1": 0.75 * k, "life": 0.9, "add": false, "alpha": 0.85, "vy": 20.0})
-			spr("fx2_smoke", x + 20 * k, y - 10, {"s0": 0.15 * k, "s1": 0.5 * k, "life": 0.75, "add": false, "alpha": 0.7, "flip": true, "rot": 0.4})
-		2:
-			spr("fx2_scraps", x, y - 30, {"s0": 0.25 * k, "s1": 0.6 * k, "life": 0.85, "add": false, "spin": 5.0, "alpha": 0.95})
-			spr("fx2_scraps", x, y - 30, {"s0": 0.4 * k, "s1": 0.8 * k, "life": 0.7, "add": false, "spin": -4.0, "alpha": 0.6, "flip": true})
-		_:
-			spr("fx2_crack", x, y + 6, {"ground": true, "add": false, "s0": 0.32 * k, "s1": 0.4 * k, "life": 1.6, "alpha": 1.0, "sy": 0.6})
-			spr("fx2_ghostfire", x, y - 10, {"s0": 0.12 * k, "s1": 0.3 * k, "life": 0.7, "vy": 50.0, "anchor": 0.9, "alpha": 0.8, "hue": 280.0})
-	snd("paper" if style == 2 else "hit")
+func appear_fx(x: float, y: float, style: int, k := 1.0) -> void: snd(FXK.appear(spr, x, y, style, k))
 
 # 收編：合約由頭頂落嚟，蓋個印
 func contract_fx(x: float, y: float) -> void:
@@ -1687,41 +1669,13 @@ func _sync_after() -> void:
 
 # ---------------- 特效圖（按色相／疊光分組畫）----------------
 func _sync_fx() -> void:
-	var groups = {}
-	for f in fx:
-		if f.kind != "spr": continue
-		var key = "%s_%d_%s" % ["g" if f.get("ground", false) else "t", int(f.hue), f.add]
-		if not groups.has(key): groups[key] = []
-		groups[key].append(f)
-	for key in fx_groups.keys():
-		if not groups.has(key): fx_groups[key].visible = false
+	var groups = FXK.sync_groups(fx, fx_groups, fxground, fxtop, fx_tex)
 	for key in groups:
-		var n: PtDraw = fx_groups.get(key)
-		if n == null:
-			n = PtDraw.new(); var parts = key.split("_")
-			n.material = PtGfx.hue_mat(float(parts[1]), parts[2] == "true")
-			(fxground if parts[0] == "g" else fxtop).add_child(n); fx_groups[key] = n
-		n.visible = true
-		var lst = groups[key]
-		n.fn = func(c): for f in lst: _draw_spr(c, f)
-		n.queue_redraw()
 		if not key.begins_with("g"):
-			for f in lst:
+			for f in groups[key]:
 				if f.add and f.t < f.life * 0.5: lights.append([f.x, f.y, 60.0, 0.85, null])
 
-func _draw_spr(c: CanvasItem, f: Dictionary) -> void:
-	var im = fx_tex(f.n)
-	if im == null or f.t < 0: return
-	var p = f.t / f.life; var e = 1 - pow(1 - p, 2.2); var s = f.s0 + (f.s1 - f.s0) * e
-	var a = f.alpha * ((p / 0.2) if f.get("fadeIn", false) and p < 0.2 else 1.0) * (1.0 if p < 0.55 else 1 - (p - 0.55) / 0.45)
-	var w = im.get_width() * s * f.sx; var h = im.get_height() * s * f.sy
-	var X = Transform2D(0, Vector2(f.x + f.get("vx", 0.0) * p, f.y - f.vy * p))
-	var r = f.rot + f.get("spin", 0.0) * p
-	if r != 0.0: X = X * Transform2D(r, Vector2.ZERO)
-	if f.get("flip", false): X = X * Transform2D(Vector2(-1, 0), Vector2(0, 1), Vector2.ZERO)
-	c.draw_set_transform_matrix(X)
-	c.draw_texture_rect(im, Rect2(-w / 2, -h * f.get("anchor", 0.5), w, h), false, Color(1, 1, 1, maxf(0, a)))
-	c.draw_set_transform_matrix(Transform2D.IDENTITY)
+func _draw_spr(c: CanvasItem, f: Dictionary) -> void: FXK.draw_spr(c, f, fx_tex(f.n))
 
 # ---------------- 地面、小路 ----------------
 func _draw_ground(c: CanvasItem) -> void:
@@ -1959,14 +1913,7 @@ func _draw_proj(c: CanvasItem) -> void:
 	var fi = fx_tex("fx_fire")
 	for q in proj:
 		if fi == null: continue
-		var ang = atan2(q.get("vy", 0.0), q.get("vx", 1.0)); var W = 46 * q.big; var H = W * fi.get_height() / fi.get_width()
-		c.draw_set_transform_matrix(Transform2D(ang, Vector2(q.x, q.y)))
-		var hm: Basis = PtGfx.m_sat(1.2) * PtGfx.m_hue(q.hue) if q.hue != 0.0 else Basis.IDENTITY
-		var col = Color(1, 1, 1)
-		if q.hue != 0.0:
-			var v = hm * Vector3(0.6, 1.0, 0.8); col = Color(clampf(v.x / 1.0, 0, 1) * 1.4, clampf(v.y, 0, 1), clampf(v.z, 0, 1) * 1.2)
-		c.draw_texture_rect(fi, Rect2(-W * 0.8, -H / 2, W, H), false, col if q.hue != 0.0 else Color.WHITE)
-	c.draw_set_transform_matrix(Transform2D.IDENTITY)
+		FXK.draw_bolt(c, fi, Vector2(q.x, q.y), atan2(q.get("vy", 0.0), q.get("vx", 1.0)), q.big, q.hue)
 
 func _draw_fxmisc(c: CanvasItem) -> void:
 	for f in fx:

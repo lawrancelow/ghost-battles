@@ -34,6 +34,10 @@ var phase := "march"         # march → fight → end（等結算）→ back �
 var units: Array = []
 var proj: Array = []
 var fx: Array = []
+# 畫面特效隊列（rts_view 喺鏡頭內先開 vfx_on；鏡頭外／測試唔開＝零成本、模擬照舊）
+var vfx_on := false
+var vq: Array = []
+var hstop := 0.0              # 命中停頓：只停呢場仗（只喺 vfx_on 時有）
 var events: Array = []       # 畫面／測試用：[事件, 資料]
 var t := 0.0                 # 交戰時間（同舊 B.t）
 var T := 0.0                 # 總時間
@@ -195,6 +199,8 @@ func _path_at(pts: PackedVector2Array, s: float, lat: float) -> Vector2:
 	return p + Vector2(-d.y, d.x) * lat
 
 # ================= 特效（世界座標） =================
+func _vq(e: Array) -> void:
+	if vfx_on and vq.size() < 64: vq.append(e)
 func _fx(d: Dictionary) -> void: d["t"] = 0.0; fx.append(d)
 func spark(p: Vector2, k: float, col: String) -> void: _fx({"kind": "spark", "p": p, "life": 0.24, "k": k, "col": col, "rot": randf() * PI})
 func text(p: Vector2, s: String, col: String, life := 1.1, px := 15) -> void: _fx({"kind": "txt", "p": p, "text": s, "col": col, "life": life, "px": px})
@@ -260,6 +266,7 @@ func hit(src: Dictionary, v: Dictionary, mult: float, sk) -> float:
 		v["hp"] = 0.0; v["deadT"] = 0.0; v["dieDir"] = dir; v["anim"] = null; v["casting"] = null
 		spark(hp_.lerp(v.p, 0.4), 1.6, "#ffffff")
 		events.append(["down", v])
+	_vq(["hit", src, v, J.t(sk) or combo_hit, _nn(v, "hp") <= 0])
 	events.append(["hit", v])
 	return dmg
 func _state(v: Dictionary):
@@ -295,6 +302,7 @@ func do_skill(u: Dictionary, sk) -> void:
 							s2 = sk.duplicate(); s2["apply"] = null; s2["sap"] = 0.0; s2["steal"] = 0.0
 						hit(u, v, mult / hits, s2)
 			else: hit(u, v, mult, sk)
+	_vq(["skill", u, kd, nearest(u) if kd != "heal" and kd != "aoe" else null])
 	var at = head(u) + Vector2(0, -34) if u.get("p") != null else center() + Vector2(0, -120)
 	text(at, J.str(DB.L(J.str(sk.name))), "#bbffff" if sd == 0 else "#ff99aa", 1.1, 17)
 	events.append(["skill", u])
@@ -303,6 +311,7 @@ func begin_cast(u: Dictionary) -> void:
 	u["energy"] = 0.0
 	if u.get("p") == null: adv_cast = {"u": u, "t": 0.0, "dur": CAST}; return
 	u["anim"] = null; u["walking"] = false; u["casting"] = {"t": 0.0, "dur": CAST, "slow": false}
+	_vq(["cast", u])
 func cast(u: Dictionary) -> bool:   # 撳技能鈕（同 battle.cast 一樣嘅條件）
 	if result != null or phase != "fight" or _nn(u, "energy") < 100: return false
 	if u.get("hp") != null and _nn(u, "hp") <= 0: return false
@@ -335,6 +344,7 @@ func step_anim(u: Dictionary, dt: float) -> void:
 				var d = _sign((tg.p as Vector2).x - (u.p as Vector2).x)
 				if d == 0: d = -1.0 if _nn(u, "side") != 0 else 1.0
 				_fx({"kind": "slash", "p": head(tg).lerp(tg.p, 0.45), "dir": d, "life": 0.17, "r": (18.0 if J.t(u.get("minion")) else 26.0) * (1.4 if J.t(u.get("boss")) else 1.0), "col": "#e8fbff" if _nn(u, "side") == 0 else "#ffd0c0"})
+				_vq(["melee", u, tg])
 				hit(u, tg, 1.0, null)
 		if J.num(a.t) >= STRIKE: u["anim"] = {"name": "recover", "t": J.num(a.t) - STRIKE, "dur": REC}
 		return
@@ -356,7 +366,7 @@ func step_proj(dt: float) -> void:
 		var d = (tp - q.p).length(); var step = PSPD * dt
 		q.trail.append(q.p)
 		if q.trail.size() > 7: q.trail.pop_front()
-		if d <= step + 4: hit(q.src, q.tg, 1.0, null); continue
+		if d <= step + 4: _vq(["phit", q.src, q.tg, q.p]); hit(q.src, q.tg, 1.0, null); continue
 		q["p"] = q.p + (tp - q.p) / d * step
 		keep.append(q)
 	proj = keep
@@ -378,6 +388,10 @@ func step(dt: float) -> void:
 		if J.num(f.t) < J.num(f.life): nfx.append(f)
 	fx = nfx
 	snd_t -= dt
+	if hstop > 0.0:
+		hstop -= dt
+		if vfx_on and phase == "fight": return
+
 	match phase:
 		"march": _step_march(dt); _contact()
 		"fight": _step_fight(dt)
