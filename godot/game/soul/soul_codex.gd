@@ -130,6 +130,9 @@ static func _grid(body: VBoxContainer) -> void:
 
 # ---- 格仔 ----
 class Cell extends Control:
+	const SOUL = preload("res://game/soul/soul_data.gd")
+	const S2 = preload("res://game/soul/soul2.gd")
+	const FX = preload("res://game/soul/soul_fx.gd")
 	var k := ""
 	var no := 0
 	var st := "unseen"
@@ -187,17 +190,17 @@ class Cell extends Control:
 			draw_arc(c, 17, 0, TAU, 36, FX.INK, 1.5, true)
 		# 名
 		var ny = H - 34
-		var name = nm if st != "unseen" else "？？？"
-		FX.text_c(self, name, W / 2, ny, 16, FX.INK, "sans", r.size.x - 8)
+		var nm2 = nm if st != "unseen" else "？？？"
+		FX.text_c(self, nm2, W / 2, ny, 16, FX.INK, "sans", r.size.x - 8)
 		# 底行
 		var line = ""; var col = Color(FX.INK, 0.7)
 		match st:
 			"own":
-				if k == "afu": line = L("主角 Lv%d", "主角 Lv%d") % lv
+				if k == "afu": line = SOUL.L("主角 Lv%d", "主角 Lv%d") % lv
 				else: line = "Lv%d" % lv
 			"prog": line = "%d/%d" % [have, need]; col = Color("#2e6b5a")
-			"seen": line = L("已遇見", "已遇見")
-			"unseen": line = L("第%d章", "第%d章") % maxi(1, int(S2.entry(k).get("ch", 1)))
+			"seen": line = SOUL.L("已遇見", "已遇見")
+			"unseen": line = SOUL.L("第%d章", "第%d章") % maxi(1, int(S2.entry(k).get("ch", 1)))
 		if st == "own" and k != "afu":
 			for i in SOUL.RANK_MAX:   # 職級星
 				var sp = Vector2(W / 2 - 34 + i * 17, H - 12)
@@ -380,6 +383,9 @@ static func _where(k: String, short: bool) -> String:
 	return "\n".join(o)
 
 class Big extends Control:
+	const SOUL = preload("res://game/soul/soul_data.gd")
+	const S2 = preload("res://game/soul/soul2.gd")
+	const FX = preload("res://game/soul/soul_fx.gd")
 	var k := ""
 	var st := ""
 	var tex: Texture2D = null

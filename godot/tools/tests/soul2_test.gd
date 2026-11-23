@@ -353,7 +353,7 @@ func sortie_hook_check(t, m) -> void:
 			await _w(t, 0.12); await _shot(t, "11_soulfire_hit")
 	_ff(op, ["done"])
 	await _w(t, 1.0)
-func Fire_arrive(f) -> float: return f.RISE + f.FLY + 0.01
+func Fire_arrive(_f) -> float: return 0.35 + 0.8 + 0.01
 
 # ---- 截圖 ----
 func shot_all(t, m) -> void:
@@ -415,7 +415,7 @@ func shot_all(t, m) -> void:
 	o.rk["n30_qionggui"] = 4.0
 	FX.letter("n30_qionggui", true)
 	var n2 = m.get_node_or_null("SoulShow")
-	n2.t = n2.T_CARD + 0.55; n2.set_process(false); n2.queue_redraw()
+	n2.t = 2.5 + 0.55; n2.set_process(false); n2.queue_redraw()
 	await _w(t, 0.15); await _shot(t, "19_promote")
 	n2.queue_free()
 	o.rk["n30_qionggui"] = 3.0

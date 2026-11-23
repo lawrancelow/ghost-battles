@@ -127,6 +127,7 @@ static func soul_fire(op, sl: Dictionary) -> Node:
 	return fx
 
 class Fire extends Control:
+	var F = load("res://game/soul/soul_fx.gd")
 	var a := Vector2.ZERO
 	var b := Vector2.ZERO
 	var chip: Control = null
@@ -154,7 +155,7 @@ class Fire extends Control:
 		if chip != null and is_instance_valid(chip):
 			chip.modulate = Color(2.2, 2.2, 1.6)
 			var tw = chip.create_tween(); tw.tween_property(chip, "modulate", Color.WHITE, 0.45)
-		var p = Pop.new(); p.txt = str(it.txt); p.n = int(it.n); p.col = SEC_C if it.sec else GOLD
+		var p = Pop.new(); p.txt = str(it.txt); p.n = int(it.n); p.col = F.SEC_C if it.sec else F.GOLD
 		p.at = b + Vector2(0, -36 - 34 * items.find(it)); p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		p.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		get_parent().add_child(p)
@@ -164,17 +165,18 @@ class Fire extends Control:
 			var u = t - float(it.d)
 			if u < 0 or it.get("hit", false): continue
 			var p = _pos(u); var p0 = _pos(maxf(0.0, u - 0.05))
-			var col = SEC_C if it.sec else SOUL_C
+			var col = F.SEC_C if it.sec else F.SOUL_C
 			for j in 7:   # 尾巴：一粒粒淡落去
 				var q = _pos(maxf(0.0, u - 0.035 * (j + 1)))
 				draw_circle(q, maxf(1.5, 9.0 - j * 1.2), Color(col, 0.42 - j * 0.055))
 			var r = 13.0 * (0.4 + 0.6 * clampf(u / RISE, 0.0, 1.0))
-			flame(self, p, r, p - p0 if u > RISE else Vector2(0, -1), col, t)
+			F.flame(self, p, r, p - p0 if u > RISE else Vector2(0, -1), col, t)
 
 class Pop extends Control:
+	var F = load("res://game/soul/soul_fx.gd")
 	var txt := ""
 	var n := 0
-	var col := GOLD
+	var col: Color = F.GOLD
 	var at := Vector2.ZERO
 	var t := 0.0
 	func _ready() -> void: set_process(true)
@@ -184,12 +186,12 @@ class Pop extends Control:
 	func _draw() -> void:
 		var al = clampf(1.0 - maxf(0.0, t - 1.2) / 0.7, 0.0, 1.0)
 		var y = at.y - 26.0 * ease(minf(1.0, t / 0.5), 0.4)
-		var f = font("sans")
+		var f = F.font("sans")
 		var w = f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
 		var x = clampf(at.x - 40.0, 8.0, size.x - w - 8.0)
 		var k = 1.0 + 0.25 * maxf(0.0, 1.0 - t / 0.18)
 		draw_set_transform(Vector2(x, y), 0, Vector2(k, k))
-		draw_string_outline(f, Vector2.ZERO, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, 6, Color(INK, al))
+		draw_string_outline(f, Vector2.ZERO, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, 6, Color(F.INK, al))
 		draw_string(f, Vector2.ZERO, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(col, al))
 		draw_set_transform_matrix(Transform2D.IDENTITY)
 
@@ -199,7 +201,7 @@ static func letter(k: String, promote: bool) -> bool:
 	var m = _main()
 	if m == null: return false
 	var old = m.get_node_or_null("SoulShow")
-	if old != null: old.queue_free()
+	if old != null: old.name = "SoulShowOld"; old.queue_free()
 	var sh = Show.new(); sh.name = "SoulShow"; sh.k = k; sh.promote = promote
 	sh.r = SOUL.rank(k)
 	sh.nm = SOUL.gname(k)
@@ -224,6 +226,7 @@ static func letter(k: String, promote: bool) -> bool:
 	return true
 
 class Show extends Control:
+	var F = load("res://game/soul/soul_fx.gd")
 	var k := ""
 	var nm := ""
 	var pin := "凡"
@@ -244,7 +247,7 @@ class Show extends Control:
 		set_process(true)
 		var rng = RandomNumberGenerator.new(); rng.seed = hash(k)
 		for i in 26: smoke.append({"x": rng.randf_range(-70, 70), "v": rng.randf_range(30, 70), "r": rng.randf_range(16, 34), "d": rng.randf_range(0, 0.6), "w": rng.randf_range(0, TAU)})
-		for i in 34: bits.append({"x": rng.randf_range(-1, 1), "y": rng.randf_range(-0.2, 0.3), "v": rng.randf_range(60, 160), "s": rng.randf_range(4, 9), "a": rng.randf_range(0, TAU), "c": [GOLD, CINNABAR, PAPER][i % 3]})
+		for i in 34: bits.append({"x": rng.randf_range(-1, 1), "y": rng.randf_range(-0.2, 0.3), "v": rng.randf_range(60, 160), "s": rng.randf_range(4, 9), "a": rng.randf_range(0, TAU), "c": [F.GOLD, F.CINNABAR, F.PAPER][i % 3]})
 		if promote: t = T_CARD - 0.4   # 升職：直接出升職信（有金紙碎＋星星逐粒亮）
 		Snd.play("praise" if promote else "whoosh")
 	func _gui_input(ev: InputEvent) -> void:
@@ -271,9 +274,9 @@ class Show extends Control:
 		# 化寶爐（墨線）
 		var base = c + Vector2(0, 150)
 		var pot = PackedVector2Array([base + Vector2(-70, -40), base + Vector2(70, -40), base + Vector2(56, 30), base + Vector2(-56, 30)])
-		draw_colored_polygon(pot, Color("#4a3a30")); pot.append(pot[0]); draw_polyline(pot, INK, 3.0, true)
-		for i in 5: draw_line(base + Vector2(-44 + i * 22, -30), base + Vector2(-38 + i * 22, 22), Color(INK, 0.35), 1.5)
-		draw_rect(Rect2(base + Vector2(-80, -48), Vector2(160, 10)), Color("#5a4838")); draw_rect(Rect2(base + Vector2(-80, -48), Vector2(160, 10)), INK, false, 2.0)
+		draw_colored_polygon(pot, Color("#4a3a30")); pot.append(pot[0]); draw_polyline(pot, F.INK, 3.0, true)
+		for i in 5: draw_line(base + Vector2(-44 + i * 22, -30), base + Vector2(-38 + i * 22, 22), Color(F.INK, 0.35), 1.5)
+		draw_rect(Rect2(base + Vector2(-80, -48), Vector2(160, 10)), Color("#5a4838")); draw_rect(Rect2(base + Vector2(-80, -48), Vector2(160, 10)), F.INK, false, 2.0)
 		# 黃紙：飄落 → 喺爐口燒
 		var pt = clampf(t / T_PAPER, 0, 1)
 		var burn = clampf((t - T_PAPER) / (T_BURN - T_PAPER), 0, 1)
@@ -283,22 +286,22 @@ class Show extends Control:
 			var pr = Rect2(pc.x - pw / 2, pc.y - 75, pw, ph)
 			draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 			if ph > 2:
-				draw_rect(pr, Color("#e8c64a", pt)); draw_rect(pr, Color(INK, pt), false, 2.0)
-				var f = font("serif")
+				draw_rect(pr, Color("#e8c64a", pt)); draw_rect(pr, Color(F.INK, pt), false, 2.0)
+				var f = F.font("serif")
 				var n = mini(nm.length(), 5)
 				for i in n:   # 豎寫名（逐隻字寫出）
 					var ch = nm.substr(i, 1)
 					var y = pr.position.y + 26 + i * 24
 					if y > pr.end.y - 4 or float(i) / n > pt * 1.2: continue
 					var w = f.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x
-					draw_string(f, Vector2(pc.x - w / 2, y), ch, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(CINNABAR, pt))
+					draw_string(f, Vector2(pc.x - w / 2, y), ch, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(F.CINNABAR, pt))
 				if burn > 0:   # 焦邊＋火舌
 					draw_line(Vector2(pr.position.x, pr.end.y), Vector2(pr.end.x, pr.end.y), Color("#3a2010"), 4.0)
 					for i in 5:
 						var fx = pr.position.x + 6 + i * (pw - 12) / 4.0
-						flame(self, Vector2(fx, pr.end.y + 4), 7.0 + 3.0 * sin(t * 20.0 + i), Vector2(0, -1), Color("#ff9a3a"), t)
+						F.flame(self, Vector2(fx, pr.end.y + 4), 7.0 + 3.0 * sin(t * 20.0 + i), Vector2(0, -1), Color("#ff9a3a"), t)
 		if t > T_PAPER:   # 爐火
-			for i in 4: flame(self, base + Vector2(-36 + i * 24, -54), 10.0 + 4.0 * sin(t * 14.0 + i * 1.7), Vector2(0, -1), Color("#ff8a30"), t)
+			for i in 4: F.flame(self, base + Vector2(-36 + i * 24, -54), 10.0 + 4.0 * sin(t * 14.0 + i * 1.7), Vector2(0, -1), Color("#ff8a30"), t)
 		# 青煙
 		var sm = clampf((t - T_BURN + 0.3) / 0.9, 0, 1)
 		if sm > 0:
@@ -308,79 +311,79 @@ class Show extends Control:
 				var p = base + Vector2(float(s.x) + sin(u * 2.0 + float(s.w)) * 14.0, -60 - float(s.v) * u * 2.2)
 				var al = clampf(0.5 - u * 0.22, 0, 0.5) * (1.0 - clampf((t - T_CARD) / 0.3, 0, 1))
 				draw_circle(p, float(s.r) * (1.0 + u * 0.6), Color(0.55, 0.75, 0.68, al))
-				draw_arc(p, float(s.r) * (1.0 + u * 0.6), 0, TAU, 20, Color(INK, al * 0.5), 1.2, true)
+				draw_arc(p, float(s.r) * (1.0 + u * 0.6), 0, TAU, 20, Color(F.INK, al * 0.5), 1.2, true)
 		# 鬼現身（原圖，淡入＋飄）
 		var ga = clampf((t - T_BURN) / (T_GHOST - T_BURN), 0, 1) * (1.0 - clampf((t - T_CARD) / 0.3, 0, 1))
 		if ga > 0 and tex != null:
 			var box = Rect2(c.x - 90, c.y - 150 + sin(t * 3.0) * 6.0 - 20.0 * ga, 180, 240)
-			draw_texture_rect(tex, fit(tex, box), false, Color(0.75 + 0.25 * ga, 1, 0.92 + 0.08 * ga, ga))
+			draw_texture_rect(tex, F.fit(tex, box), false, Color(0.75 + 0.25 * ga, 1, 0.92 + 0.08 * ga, ga))
 	func _draw_card() -> void:
 		var R = _card_rect()
 		var u = clampf((t - (T_CARD - 0.4)) / 0.4, 0, 1)
 		var off = (1.0 - ease(u, 0.4)) * 90.0
 		var al = u * (1.0 - clampf((t - (T_END - 0.4)) / 0.4, 0, 1))
 		modulate.a = 1.0
-		var r = Rect2(R.position + Vector2(0, off), R.size)
+		var cr = Rect2(R.position + Vector2(0, off), R.size)
 		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
-		ink_card(self, r, Color(PAPER, al), hash(k) % 97, Color(INK, al))
-		draw_rect(r.grow(-10), Color(CINNABAR, 0.7 * al), false, 2.0)
-		var cx = r.get_center().x
-		var head = L("升職信", "升職信") if promote else L("入職通知書", "入職通知書")
-		text_c(self, head, cx, r.position.y + 50, 30, Color(INK, al), "serif")
-		draw_line(Vector2(r.position.x + 30, r.position.y + 64), Vector2(r.end.x - 30, r.position.y + 64), Color(INK, 0.4 * al), 1.5)
+		F.ink_card(self, cr, Color(F.PAPER, al), hash(k) % 97, Color(F.INK, al))
+		draw_rect(cr.grow(-10), Color(F.CINNABAR, 0.7 * al), false, 2.0)
+		var cx = cr.get_center().x
+		var head = F.L("升職信", "升職信") if promote else F.L("入職通知書", "入職通知書")
+		F.text_c(self, head, cx, cr.position.y + 50, 30, Color(F.INK, al), "serif")
+		draw_line(Vector2(cr.position.x + 30, cr.position.y + 64), Vector2(cr.end.x - 30, cr.position.y + 64), Color(F.INK, 0.4 * al), 1.5)
 		# 左：鬼（全身原圖，入框唔裁切）
-		var box = Rect2(r.position.x + 22, r.position.y + 78, 132, 176)
-		draw_rect(box, Color(PAPER2, al)); draw_rect(box, Color(INK, al), false, 2.0)
-		if tex != null: draw_texture_rect(tex, fit(tex, box.grow(-6)), false, Color(1, 1, 1, al))
-		var tx = box.end.x + 14; var tw = r.end.x - 20 - tx
-		var y = r.position.y + 104
-		text_l(self, nm, tx, y, 26, Color(INK, al), "serif", tw); y += 34
-		text_l(self, L("%s品", "%s品") % pin, tx, y, 18, Color(PINC.get(pin, Color.GRAY), al), "sans", tw); y += 30
+		var box = Rect2(cr.position.x + 22, cr.position.y + 78, 132, 176)
+		draw_rect(box, Color(F.PAPER2, al)); draw_rect(box, Color(F.INK, al), false, 2.0)
+		if tex != null: draw_texture_rect(tex, F.fit(tex, box.grow(-6)), false, Color(1, 1, 1, al))
+		var tx = box.end.x + 14; var tw = cr.end.x - 20 - tx
+		var y = cr.position.y + 104
+		F.text_l(self, nm, tx, y, 26, Color(F.INK, al), "serif", tw); y += 34
+		F.text_l(self, F.L("%s品", "%s品") % pin, tx, y, 18, Color(F.PINC.get(pin, Color.GRAY), al), "sans", tw); y += 30
 		if promote:
-			text_l(self, L("由【%s】", "由【%s】") % SOUL.rank_name(maxi(0, r - 1)), tx, y, 18, Color(INK, 0.75 * al), "sans", tw); y += 28
-			text_l(self, L("升為【%s】", "升為【%s】") % SOUL.rank_name(r), tx, y, 22, Color(CINNABAR, al), "sans", tw); y += 34
+			F.text_l(self, F.L("由【%s】", "由【%s】") % SOUL.rank_name(maxi(0, r - 1)), tx, y, 18, Color(F.INK, 0.75 * al), "sans", tw); y += 28
+			F.text_l(self, F.L("升為【%s】", "升為【%s】") % SOUL.rank_name(r), tx, y, 22, Color(F.CINNABAR, al), "sans", tw); y += 34
 			# 星：逐粒亮
 			for i in SOUL.RANK_MAX:
 				var sp = Vector2(tx + 12 + i * 24, y - 6)
 				var lit = i < r - 1 or (i == r - 1 and t > T_CARD + 0.25)
 				var pop = 1.0 + (0.6 * maxf(0.0, 1.0 - (t - T_CARD - 0.25) / 0.25) if i == r - 1 and lit else 0.0)
-				_star(sp, 10.0 * pop, Color(GOLD, al) if lit else Color(INK, 0.25 * al))
+				_star(sp, 10.0 * pop, Color(F.GOLD, al) if lit else Color(F.INK, 0.25 * al))
 		else:
-			text_l(self, L("職位：試用", "職位：試用"), tx, y, 20, Color(CINNABAR, al), "sans", tw); y += 30
-			text_l(self, L("即日起生效", "即日起生效"), tx, y, 17, Color(INK, 0.75 * al), "sans", tw)
+			F.text_l(self, F.L("職位：試用", "職位：試用"), tx, y, 20, Color(F.CINNABAR, al), "sans", tw); y += 30
+			F.text_l(self, F.L("即日起生效", "即日起生效"), tx, y, 17, Color(F.INK, 0.75 * al), "sans", tw)
 		var by = box.end.y + 30
 		if promote:
 			for ln in lines:
-				text_l(self, "・" + str(ln), r.position.x + 26, by, 17, Color(INK, al), "sans", r.size.x - 52); by += 28
+				F.text_l(self, "・" + str(ln), cr.position.x + 26, by, 17, Color(F.INK, al), "sans", cr.size.x - 52); by += 28
 			by += 6
-			text_l(self, L("「做得幾好，繼續努力。」", "「做得不錯，繼續努力。」"), r.position.x + 26, by, 19, Color(CINNABAR, al), "serif", r.size.x - 52); by += 26
-			text_l(self, L("——阿福（好難得咁讚人）", "——阿福（難得稱讚人）"), r.position.x + 26, by, 16, Color(INK, 0.7 * al), "sans", r.size.x - 52)
+			F.text_l(self, F.L("「做得幾好，繼續努力。」", "「做得不錯，繼續努力。」"), cr.position.x + 26, by, 19, Color(F.CINNABAR, al), "serif", cr.size.x - 52); by += 26
+			F.text_l(self, F.L("——阿福（好難得咁讚人）", "——阿福（難得稱讚人）"), cr.position.x + 26, by, 16, Color(F.INK, 0.7 * al), "sans", cr.size.x - 52)
 		else:
-			text_l(self, L("茲聘請 %s 為落魄村員工。", "茲聘請 %s 為落魄村員工。") % nm, r.position.x + 26, by, 18, Color(INK, al), "sans", r.size.x - 52); by += 30
-			text_l(self, L("試用期三個月，冇勞工假。", "試用期三個月，沒有勞工假。"), r.position.x + 26, by, 18, Color(INK, al), "sans", r.size.x - 52); by += 30
-			text_l(self, L("簽名：阿福", "簽名：阿福"), r.end.x - 160, by + 8, 18, Color(INK, 0.8 * al), "serif", 140)
+			F.text_l(self, F.L("茲聘請 %s 為落魄村員工。", "茲聘請 %s 為落魄村員工。") % nm, cr.position.x + 26, by, 18, Color(F.INK, al), "sans", cr.size.x - 52); by += 30
+			F.text_l(self, F.L("試用期三個月，冇勞工假。", "試用期三個月，沒有勞工假。"), cr.position.x + 26, by, 18, Color(F.INK, al), "sans", cr.size.x - 52); by += 30
+			F.text_l(self, F.L("簽名：阿福", "簽名：阿福"), cr.end.x - 160, by + 8, 18, Color(F.INK, 0.8 * al), "serif", 140)
 		# 硃砂印：落印（由大縮細＋輕震）
 		var st = clampf((t - T_CARD - 0.35) / 0.18, 0, 1)
 		if st > 0:
 			var k2 = lerpf(2.2, 1.0, ease(st, 0.3))
-			seal(self, Vector2(r.end.x - 58, r.end.y - 58), L("升職", "升職") if promote else L("落魄村印", "落魄村印"), 58.0, k2)
+			F.seal(self, Vector2(cr.end.x - 58, cr.end.y - 58), F.L("升職", "升職") if promote else F.L("落魄村印", "落魄村印"), 58.0, k2)
 		# 升職：金紙碎
 		if promote:
 			for b in bits:
 				var u2 = t - T_CARD
 				if u2 < 0: continue
-				var p = Vector2(cx + float(b.x) * r.size.x * 0.5, r.position.y + float(b.y) * 100 + float(b.v) * u2)
-				if p.y > r.end.y + 40: continue
+				var p = Vector2(cx + float(b.x) * cr.size.x * 0.5, cr.position.y + float(b.y) * 100 + float(b.v) * u2)
+				if p.y > cr.end.y + 40: continue
 				draw_set_transform(p, float(b.a) + u2 * 4.0, Vector2.ONE)
 				draw_rect(Rect2(-float(b.s) / 2, -float(b.s) / 4, float(b.s), float(b.s) / 2), Color(b.c, al * 0.9))
 				draw_set_transform_matrix(Transform2D.IDENTITY)
-		if t > T_CARD + 0.6: text_c(self, L("撳一下收起", "按一下收起"), cx, r.end.y + 34, 16, Color(1, 0.95, 0.85, 0.8 * al), "sans", -1, 4)
+		if t > T_CARD + 0.6: F.text_c(self, F.L("撳一下收起", "按一下收起"), cx, cr.end.y + 34, 16, Color(1, 0.95, 0.85, 0.8 * al), "sans", -1, 4)
 	func _star(p: Vector2, r: float, col: Color) -> void:
 		var pts = PackedVector2Array()
 		for i in 10:
 			var a = -PI / 2 + i * PI / 5
 			pts.append(p + Vector2(cos(a), sin(a)) * (r if i % 2 == 0 else r * 0.45))
-		draw_colored_polygon(pts, col); pts.append(pts[0]); draw_polyline(pts, Color(INK, col.a), 1.5, true)
+		draw_colored_polygon(pts, col); pts.append(pts[0]); draw_polyline(pts, Color(F.INK, col.a), 1.5, true)
 
 const PINC := {"凡": Color("#5a6b78"), "靈": Color("#2f6fb0"), "煞": Color("#8a2a8a"), "王": Color("#b07a1f"), "主": Color("#9c2219")}
 
@@ -389,7 +392,7 @@ static func photocopy(title: String, line: String) -> Node:
 	var m = _main()
 	if m == null: return null
 	var old = m.get_node_or_null("SoulCopy")
-	if old != null: old.queue_free()
+	if old != null: old.name = "SoulCopyOld"; old.queue_free()
 	var c = Copy.new(); c.name = "SoulCopy"; c.title = title; c.line = line
 	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	m.add_child(c)
@@ -398,6 +401,7 @@ static func photocopy(title: String, line: String) -> Node:
 	return c
 
 class Copy extends Control:
+	var F = load("res://game/soul/soul_fx.gd")
 	var title := ""
 	var line := ""
 	var t := 0.0
@@ -410,17 +414,17 @@ class Copy extends Control:
 		var x = (size.x - w) / 2
 		var slot_y = size.y * 0.16 + 30   # 頂部（唔遮下面戰場同按鈕）
 		# 影印機出紙口
-		draw_rect(Rect2(x - 20, slot_y - 18, w + 40, 20), Color("#3a3430")); draw_rect(Rect2(x - 20, slot_y - 18, w + 40, 20), INK, false, 2.0)
+		draw_rect(Rect2(x - 20, slot_y - 18, w + 40, 20), Color("#3a3430")); draw_rect(Rect2(x - 20, slot_y - 18, w + 40, 20), F.INK, false, 2.0)
 		var out = ease(clampf(t / 0.45, 0, 1), 0.4)
 		var al = 1.0 - clampf((t - 1.25) / 0.35, 0, 1)
 		var r = Rect2(x, slot_y, w, h * out)
 		if r.size.y < 2: return
-		ink_card(self, r, Color(1, 1, 1, al), 3, Color(INK, al))
+		F.ink_card(self, r, Color(1, 1, 1, al), 3, Color(F.INK, al))
 		draw_rect(Rect2(x, slot_y, w, minf(h * out, 6)), Color(0, 0, 0, 0.25 * al))   # 出紙口陰影
 		var cx = x + w / 2
-		if r.size.y > 50: text_c(self, L("影印戰報", "影印戰報"), cx, slot_y + 38, 24, Color(INK, al), "serif")
-		if r.size.y > 80: text_c(self, title, cx, slot_y + 70, 17, Color(INK, 0.8 * al), "sans", w - 24)
-		if r.size.y > 110: text_c(self, L("（格式完全一樣）", "（格式完全一樣）"), cx, slot_y + 100, 15, Color(INK, 0.6 * al), "sans", w - 24)
+		if r.size.y > 50: F.text_c(self, F.L("影印戰報", "影印戰報"), cx, slot_y + 38, 24, Color(F.INK, al), "serif")
+		if r.size.y > 80: F.text_c(self, title, cx, slot_y + 70, 17, Color(F.INK, 0.8 * al), "sans", w - 24)
+		if r.size.y > 110: F.text_c(self, F.L("（格式完全一樣）", "（格式完全一樣）"), cx, slot_y + 100, 15, Color(F.INK, 0.6 * al), "sans", w - 24)
 		if t > 0.5:
 			var k = lerpf(2.0, 1.0, ease(clampf((t - 0.5) / 0.15, 0, 1), 0.3))
-			seal(self, Vector2(x + w - 40, slot_y + h - 40), L("已抄", "已抄"), 48.0, k * al if al > 0.05 else 0.01)
+			F.seal(self, Vector2(x + w - 40, slot_y + h - 40), F.L("已抄", "已抄"), 48.0, k * al if al > 0.05 else 0.01)
