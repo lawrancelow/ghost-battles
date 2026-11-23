@@ -328,30 +328,42 @@ static func on_throne_end(k: String, win: bool) -> Dictionary:
 	return rep
 
 # ======================= 出擊小卡：抄功課掣（so_view.open_card 掛鈎） =======================
-static func card_row(vb: VBoxContainer, e: Dictionary) -> void:
-	if o() == null or e.is_empty(): return
+static func card_row(vb: VBoxContainer, e: Dictionary) -> void:   # 掣擺喺「出擊／關閉」同一行（小卡唔加高）；抄唔到就喺上面加一行短原因
+	if o() == null or e.is_empty() or vb.get_child_count() == 0: return
 	var c = can_sweep(e)
 	if str(c.why) == "locked": return
-	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 10); hb.alignment = BoxContainer.ALIGNMENT_CENTER
+	var bb = vb.get_child(vb.get_child_count() - 1)
+	if not (bb is HBoxContainer): bb = HBoxContainer.new(); vb.add_child(bb)
 	var b = Button.new(); b.name = "SweepBtn"; b.focus_mode = Control.FOCUS_NONE
-	b.text = L("抄功課　今日 %d/%d", "抄功課　今日 %d/%d") % [swp_today(), SWEEP_DAY]
-	b.custom_minimum_size = Vector2(252, 44)
 	var on = bool(c.ok)
-	var gs = UIKit.sb(Color("#2e4a6a") if on else Color("#4a4440"), 8, Color("#9ad0ff") if on else Color("#706860"), 2, Vector4(10, 4, 10, 4))
+	b.text = L("抄功課 %d/%d", "抄功課 %d/%d") % [swp_today(), SWEEP_DAY]
+	b.custom_minimum_size = Vector2(118, 42)
+	var sib = bb.get_children().filter(func(x): return x is Button)   # 手機直屏：三個掣要擺得落一行（出擊 104、關閉 72）
+	if sib.size() >= 1: sib[0].custom_minimum_size.x = minf(sib[0].custom_minimum_size.x, 104.0)
+	if sib.size() >= 2: sib[1].custom_minimum_size.x = minf(sib[1].custom_minimum_size.x, 72.0)
+	bb.add_theme_constant_override("separation", 8)
+	var gs = UIKit.sb(Color("#2e4a6a") if on else Color("#4a4440"), 8, Color("#9ad0ff") if on else Color("#706860"), 2, Vector4(8, 4, 8, 4))
 	for k in ["normal", "hover", "pressed", "disabled"]: b.add_theme_stylebox_override(k, gs)
-	b.add_theme_font_override("font", UIKit.font("sans", 900)); b.add_theme_font_size_override("font_size", 18)
+	b.add_theme_font_override("font", UIKit.font("sans", 900)); b.add_theme_font_size_override("font_size", 16)
 	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_disabled_color"]: b.add_theme_color_override(k, Color("#eef6ff") if on else Color("#a8a0a0"))
 	b.disabled = not on
 	b.pressed.connect(func(): press_sweep(e))
-	hb.add_child(b)
-	vb.add_child(hb)
-	var why = why_text(c)
-	if why != "" and not on:
-		var l = UIKit.label(why, 15, Color("#c8c0b8"), "sans", 900); l.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL; vb.add_child(l)
-	elif on:
-		var l2 = UIKit.label(L("唔使出兵：即刻結算，照扣出擊消耗", "不用出兵：即時結算，照扣出擊消耗"), 14, Color("#bcd8f0"), "sans", 900); l2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l2.size_flags_horizontal = Control.SIZE_EXPAND_FILL; vb.add_child(l2)
+	bb.add_child(b)
+	if on: return   # 可以抄：唔加行（小卡唔加高）
+	var t = short_why(c)
+	var l = UIKit.label(t, 15, Color("#d0c4b8"), "sans", 900); l.name = "SweepWhy"
+	l.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vb.add_child(l); vb.move_child(l, bb.get_index())
+static func short_why(c: Dictionary) -> String:
+	match str(c.why):
+		"wins": return L("抄功課：贏夠 %d 次先開（%d/%d）", "抄功課：贏夠 %d 次才開（%d/%d）") % [SWEEP_WINS, int(c.wins), SWEEP_WINS]
+		"cap": return L("抄功課：今日 %d 次用晒（05:00 重置）", "抄功課：今天 %d 次已用完（05:00 重置）") % SWEEP_DAY
+		"gp": return L("抄功課：鬼力 %d／要 %d", "抄功課：鬼力 %d／需 %d") % [int(c.gp), int(c.need_gp)]
+		"poor": return L("抄功課：資源不夠", "抄功課：資源不夠")
+		"cleared": return L("抄功課：等據點重生", "抄功課：等據點重生")
+		"noteam": return L("抄功課：未有出戰名鬼", "抄功課：還沒有出戰名鬼")
+		"out": return L("抄功課：出擊中", "抄功課：出擊中")
+	return ""
 static func press_sweep(e: Dictionary) -> Dictionary:
 	var r = sweep(e)
 	var SOV = load("res://game/sortie/so_view.gd")
