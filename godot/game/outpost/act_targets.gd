@@ -72,6 +72,7 @@ static func _p_stage(game) -> Array:
 	if not ZD.on(): return []
 	var tg = ZD.stage_target()
 	if not tg.has("pos"): return []
+	if load("res://game/rts/rts.gd").op_for(str(tg.sid)) != null: return []   # [rts] 已經出擊緊：唔再出「迎戰」掣／點擊範圍（唔好食咗隔離檔口嘅撳）
 	var sid = str(tg.sid); var at: Vector2 = tg.pos
 	var stg = {}
 	var CH = J.G.get("CHAPTERS")

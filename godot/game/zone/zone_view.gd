@@ -556,6 +556,7 @@ static func _stage_over(ctx: Ctx, nv, vr: Rect2, t: float) -> void:
 	var tg = ZD.stage_target()
 	if not tg.has("pos"): return
 	var at: Vector2 = tg.pos
+	if load("res://game/rts/rts.gd").op_for(str(tg.sid)) != null: return   # [rts] 出擊緊：據點唔再食撳
 	hits.insert(0, [Rect2(at.x - 100, at.y - 150, 200, 210), "stage", str(tg.sid)])
 	if load("res://game/rts/rts.gd").owns(str(tg.sid)): return   # [rts] 據點由 rts_view 畫（敵人係實體）
 	if not vr.grow(120).has_point(at): return

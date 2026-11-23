@@ -22,6 +22,7 @@ var nv = null
 var ov: Control               # 疊喺 MvScene 上面
 var root: Node2D
 var wl: Node2D                # 角色（y 排）
+var under: PtDraw             # 腳底陣營色圈（分得清敵我）
 var txt: PtDraw
 var ui: Control               # 技能鈕、戰況條
 var chip: PanelContainer
@@ -55,6 +56,7 @@ func _build() -> void:
 	ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	nv.add_child(ov)
 	root = Node2D.new(); ov.add_child(root)
+	under = PtDraw.new(); under.tag = "rts_under"; under.fn = _draw_under; root.add_child(under)
 	wl = Node2D.new(); wl.y_sort_enabled = true; root.add_child(wl)
 	txt = PtDraw.new(); txt.tag = "rts_txt"; txt.fn = _draw_txt; root.add_child(txt)
 	ui = Control.new(); ui.name = "RtsUI"; ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -127,7 +129,7 @@ func _process(dt: float) -> void:
 	_layer()
 	_sync_units(dt)
 	_events()
-	txt.queue_redraw()
+	txt.queue_redraw(); under.queue_redraw()
 	_sync_ui()
 	PROF["view"] = PROF.get("view", 0) + Time.get_ticks_usec() - t0
 	PROF["n"] = PROF.get("n", 0) + 1
@@ -289,6 +291,22 @@ class SolRep extends Node2D:
 			return
 		modulate = Color(1 + flash * 1.2, 1 + flash, 1 + flash * 0.8, 1)
 		BA.draw_soldier(self, pose, ph, dir, seed, base)
+
+# 腳底色圈：我方青綠、敵方暗紅（交戰先出；小隊圈大啲包住三個代表兵）
+func _draw_under(n: CanvasItem) -> void:
+	var vr: Rect2 = nv.view_rect().grow(60)
+	for op in RTS.ops:
+		if not (op.phase in ["fight", "end"]): continue
+		for u in op.units:
+			if J.num(u.get("hp", 0)) <= 0 or not _shown(u, op) or not vr.has_point(u.p): continue
+			if J.num(u.side) == 0 and not J.t(u.get("out")): continue
+			var mn = J.t(u.get("minion"))
+			var col = Color(0.35, 0.95, 0.8, 0.22) if J.num(u.side) == 0 else Color(1.0, 0.22, 0.2, 0.26)
+			var rx = 30.0 if mn else 22.0
+			n.draw_set_transform(u.p + Vector2(0, 3), 0, Vector2(1, 0.36))
+			n.draw_circle(Vector2.ZERO, rx, col)
+			n.draw_arc(Vector2.ZERO, rx, 0, TAU, 28, Color(col, col.a * 2.2), 2.0)
+	n.draw_set_transform_matrix(Transform2D.IDENTITY)
 
 # ---------------- 事件（打卡印、聲） ----------------
 func _events() -> void:

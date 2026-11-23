@@ -57,11 +57,14 @@ func _init() -> void:
 func setup(us: Array, out_path: PackedVector2Array, at: Vector2, gate_p: Vector2) -> void:
 	units = us; path = out_path; path_len = MD.poly_len(path); anchor = at; gate = gate_p
 	gate_s = _s_of(gate)
-	# 出發次序：陰兵小隊 → 名鬼 → 遊魂兵小隊（隊與隊相隔 GAP）
-	var order = []
-	for u in units: if _nn(u, "side") == 0 and J.t(u.get("minion")) and u.get("ml") == null: order.append(u)
-	for u in units: if _nn(u, "side") == 0 and not J.t(u.get("minion")): order.append(u)
-	for u in units: if _nn(u, "side") == 0 and u.get("ml") != null: order.append(u)
+	# 出發次序：陰兵開路兩隊 → 名鬼 → 其餘陰兵 → 遊魂兵（隊與隊相隔 GAP）
+	var yin = []; var hs = []; var mls = []
+	for u in units:
+		if _nn(u, "side") != 0: continue
+		if not J.t(u.get("minion")): hs.append(u)
+		elif u.get("ml") == null: yin.append(u)
+		else: mls.append(u)
+	var order = yin.slice(0, 2) + hs + yin.slice(2) + mls
 	for i in order.size():
 		var u = order[i]
 		u["s"] = -i * GAP
@@ -383,7 +386,7 @@ func _step_fight(dt: float) -> void:
 		if _nn(u, "side") == 0 and not J.t(u.get("eng")):   # 未到前線：照路線行；有敵人入咗接觸範圍就開打
 			var n0 = nearest(u) if present(u) else null
 			if n0 != null and dist(u, n0) <= AGGRO: u["eng"] = true
-			elif _walk_path(u, dt, MARCH, path, path_len): u["eng"] = true
+			elif _walk_path(u, dt, MARCH * 1.3, path, path_len): u["eng"] = true   # 開打咗：後面嘅跑步上前
 			continue
 		var st = u.st
 		if _nn(st, "air") > 0:

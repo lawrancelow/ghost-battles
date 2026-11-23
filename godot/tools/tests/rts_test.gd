@@ -10,6 +10,7 @@ var ok := 0
 var bad := 0
 var shots := false
 var demo := false
+var cmp_res = null
 const SHOTS := "/home/claude/docs/rts_shots/"
 const ZD = preload("res://game/zone/zone_data.gd")
 const RTS = preload("res://game/rts/rts.gd")
@@ -211,7 +212,7 @@ func compare_old(t, m) -> void:
 	_chk("勝負同舊版一致（1-1：舊贏幾多場、新都贏幾多場 ±1）", absi(A.win - Z.win) <= 1, [A.win, Z.win])
 	_chk("陰兵折損同舊版接近（平均差 ≤ 1.5 隊）", absf(A.dead - Z.dead) / N <= 1.5, [A.dead / float(N), Z.dead / float(N)])
 	_chk("一場仗交戰時間合理（10–60 秒）", Z.t / N >= 5.0 and Z.t / N <= 60.0, Z.t / N)
-	RTS.set_meta("cmp", [A, Z, N])
+	cmp_res = [A, Z, N]
 
 # ---- 主流程：下令 → 出村 → 到位 → 接觸 → 技能 → 打仗期間操作村子 → 結算同舊版 → 回村敬禮 ----
 func main_flow(t, m) -> void:
@@ -298,15 +299,18 @@ func main_flow(t, m) -> void:
 		J.mc(V, "walkTo", [hp0.x + 60.0, hp0.y + 40.0, null]); await _w(t, 1.0)
 		_chk("打仗期間阿福照行路", Vector2(J.num(V.hero.x), J.num(V.hero.y)).distance_to(hp0) > 10.0)
 		var P = J.G.get("POS")
-		var hb = Vector2(J.num(P.home[0]), J.num(P.home[1])) if P is Dictionary and P.has("home") else Vector2.ZERO
-		_cam(m, hb); await _w(t, 0.3)
-		nv.zone_tap(c.w2s(hb + Vector2(0, -20))); await _f(t, 4)
-		var UI = J.G.get("UI")
-		var opened = J.t(J.mc(UI, "modalOpen", [])) or (m.sheet != null and m.sheet.visible)
+		var opened = false
+		for bk in ["plank", "wood", "bun", "rice", "store", "home", "house"]:   # 揀一間撳得開卡嘅（未解鎖嘅只出提示）
+			if not (P is Dictionary and P.has(bk)): continue
+			var hb = Vector2(J.num(P[bk][0]), J.num(P[bk][1]))
+			_cam(m, hb); await _w(t, 0.3)
+			nv.zone_tap(c.w2s(hb + Vector2(0, -40))); await _w(t, 0.6)
+			opened = str(Menus.cur).begins_with("bld:") and m.sheet != null and m.sheet.visible
+			if opened: break
+		_p("bld card %s" % str(Menus.cur))
 		_chk("打仗期間點建築：開到建築面板", opened)
 		await _shot(t, "08_building_while_fight")
-		if m.sheet != null and m.sheet.visible: m.close_sheet()
-		J.mc(UI, "close", [])
+		Menus.close_hook(); await _w(t, 0.3)
 		await _f(t, 2)
 	_cam(m, op.anchor + Vector2(-10, 90))
 	B()["auto"] = true
@@ -390,3 +394,63 @@ func other_stage_old(t, m) -> void:
 	if okb != null: J.cl(J.gp(okb, "onclick"), okb, [])
 	MB.t_skip_back(); await _until(t, func(): return not MB.busy(), 25.0)
 	S.cleared.erase("1-1")
+
+# ================= video：配 --write-movie（固定 30 幀）錄一段由下令到回村 =================
+func _follow(t, m, cond: Callable, secs: float, off := Vector2.ZERO) -> void:
+	var c = m.village.zone_cam()
+	var n = int(secs * 30)
+	for i in n:
+		if cond.call(): return
+		var op = RTS.op_for("1-1")
+		if op != null and i % 6 == 0: c.glide_to(op.center() + off)
+		await _f(t, 1)
+func _story_skip(m) -> void:
+	var st = m.get("story")
+	if st and st.get("cur") != null: st.skip_scene()
+func video(t) -> void:
+	demo = true
+	var m = await _boot(t)
+	await _prep(t, m)
+	B()["auto"] = false
+	var nv = m.village; var c = nv.zone_cam()
+	var tg = ZD.stage_target()
+	_cam(m, tg.pos + Vector2(0, 200), nv.size.x / 390.0)
+	await _w(t, 1.0)
+	_p("VIDEO_START frame=%d" % Engine.get_frames_drawn())
+	await _w(t, 2.5)
+	nv.zone_tap(c.w2s(tg.pos + Vector2(0, -60)))   # 撳據點下令
+	await _w(t, 0.3)
+	var op = RTS.op_for("1-1")
+	await _w(t, 1.6)
+	await _follow(t, m, func(): return op.phase != "march", 25.0, Vector2(0, -40))
+	c.glide_to(op.anchor + Vector2(-40, 110))
+	await _w(t, 2.0)
+	var h = null
+	for u in op.units: if J.num(u.side) == 0 and not J.t(u.get("minion")) and J.num(u.hp) > 0 and J.t(u.get("out")): h = u; break
+	if h != null and op.phase == "fight":
+		h["energy"] = 100.0
+		await _w(t, 1.2)
+		var b = RV.inst.btns.get(J.str(h.get("gid", h.k)))
+		if b != null:
+			var ev = InputEventMouseButton.new(); ev.button_index = MOUSE_BUTTON_LEFT; ev.pressed = true; ev.position = Vector2(10, 10)
+			b._gui_input(ev)
+	await _w(t, 1.0)
+	if op.phase == "fight":   # 打緊仗：隔離檔口收貨
+		var sc = m.mv_view; var sim = sc.sim
+		sim.st().pile["st_shoubao"] = 3.0
+		await _w(t, 0.8)
+		var rr = sc._wbtns.get("ring:st_shoubao")
+		if rr is Rect2: nv.zone_tap(c.w2s(rr.get_center()))
+	B()["auto"] = true
+	for i in 30 * 40:
+		if op.phase in ["back", "done"]: break
+		await _f(t, 1)
+	await _w(t, 2.5)
+	for i in 30 * 30:   # 回村：鏡頭跟住；有劇情／升級彈窗就跳過（短片唔停）
+		if i % 20 == 0: _story_skip(m)
+		if op.phase == "done": break
+		if i % 6 == 0: c.glide_to(op.center() + Vector2(0, -60))
+		await _f(t, 1)
+	await _w(t, 1.5)
+	_p("VIDEO_END frame=%d" % Engine.get_frames_drawn())
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
