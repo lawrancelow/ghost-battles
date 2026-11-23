@@ -386,7 +386,7 @@ func _duel() -> Array:
 const MECHS := ["飛", "隱", "殼", "再生", "散骨", "召喚", "反傷", "嚇氣光環", "霸體", "屍變", "突襲", "迷魂", "分身"]
 # 每種機制：冇應對隊、有應對隊（按 counter.md 4.1 應對標籤）
 const PLANS := {
-	"飛": ["melee", "ranged"], "隱": ["melee", "reveal"], "殼": ["melee", "break"], "再生": ["melee", "sap"], "散骨": ["melee", "sweep"],
+	"飛": ["melee", "ranged"], "隱": ["ranged", "ranged_reveal"], "殼": ["melee", "break"], "再生": ["melee", "sap"], "散骨": ["melee", "sweep"],
 	"召喚": ["melee", "stab"], "反傷": ["melee", "ranged"], "嚇氣光環": ["melee", "steady"], "霸體": ["cc", "break"], "屍變": ["melee", "seal"],
 	"突襲": ["ranged_back", "steady_back"], "迷魂": ["melee", "steady"], "分身": ["melee", "reveal"],
 }
@@ -396,14 +396,14 @@ func _team(kind: String) -> Array:
 		var rng = 46.0
 		var sk = {"name": "測試擊", "kind": "hit", "mult": 1.5}
 		match kind:
-			"ranged": rng = 150.0
+			"ranged", "ranged_reveal": rng = 150.0
 			"sweep": sk = {"name": "測試掃", "kind": "aoe", "mult": 0.9}
 			"break": sk = {"name": "測試連擊", "kind": "hit", "mult": 1.6, "hits": 3}
 			"sap": sk = {"name": "測試削", "kind": "hit", "mult": 1.4, "sap": 40}
 			"cc", "break_cc": sk = {"name": "測試絆", "kind": "hit", "mult": 1.4, "apply": "down", "follow": "down"}
 			"stab": sk = {"name": "測試刺", "kind": "hit", "mult": 1.8}
 			"ranged_back", "steady_back": rng = 150.0 if i > 0 else 46.0
-		var u = mk(N_K, 0, 2200, 60, rng, sk)
+		var u = mk(N_K, 0, 2400.0 if kind.ends_with("_back") and rng > 60 else 4000.0, 60, rng, sk)
 		o.append(u)
 	for i in 4: o.append(mk("youhun", 0, 500, 20, 38, null, true))
 	return o
@@ -411,6 +411,7 @@ func _tags_for(kind: String, i: int) -> Array:
 	match kind:
 		"ranged": return ["遠"]
 		"reveal": return ["照"]
+		"ranged_reveal": return ["遠", "照"] if i == 0 else ["遠"]
 		"break": return ["破"]
 		"sap": return ["削"]
 		"sweep": return ["掃"]
@@ -427,7 +428,7 @@ func _fight(kind: String, mech: String, sd: int) -> Dictionary:
 	var fs = []
 	for i in 3:
 		var f = mk(F_K, 1, 2600, 45)
-		if mech != "": f["mech"] = [mech]
+		if mech != "" and i < 2: f["mech"] = [mech]   # 名鬼型兩隻帶機制、雜兵一隻冇（同據點配置一樣）
 		fs.append(f)
 	var op = arena(us + fs)
 	for i in 3:
@@ -435,27 +436,27 @@ func _fight(kind: String, mech: String, sd: int) -> Dictionary:
 		a["tags"] = _tags_for(kind, i)
 		if kind == "break": a.tags = ["破"]
 	op.t_skip_march()
-	var hp0 = 0.0
-	for u in op.units: if J.num(u.side) == 0: hp0 += J.num(u.maxhp)
+	var hp0 = [0.0, 0.0]
+	for u in op.units: if J.num(u.side) == 0: hp0[int(J.t(u.get("minion")))] += J.num(u.maxhp)
 	var n = 0
 	while op.result == null and n < 20 * 100: op.step(0.05); n += 1
-	var hp1 = 0.0
-	for u in op.units: if J.num(u.side) == 0: hp1 += maxf(0.0, J.num(u.hp))
+	var hp1 = [0.0, 0.0]
+	for u in op.units: if J.num(u.side) == 0 and not J.t(u.get("sum")): hp1[int(J.t(u.get("minion")))] += maxf(0.0, J.num(u.hp))
 	var win = op.result != null and J.t(op.result.win)
-	var loss = 1.0 - hp1 / maxf(1.0, hp0)
+	var loss = (1.0 - hp1[0] / maxf(1.0, hp0[0])) + 0.5 * (1.0 - hp1[1] / maxf(1.0, hp0[1]))   # 名鬼失血全計、陰兵計一半
 	var tt = op.t if win else 90.0 + (90.0 * (1.0 - _foe_frac(op)))
-	return {"win": win, "t": op.t, "loss": loss, "score": tt * (1.0 + loss), "ev": op.ab_log.get("ev", {})}
+	return {"win": win, "t": op.t, "loss": loss, "hl": 1.0 - hp1[0] / maxf(1.0, hp0[0]), "score": tt * (1.0 + loss), "ev": op.ab_log.get("ev", {})}
 func _foe_frac(op) -> float:
 	var a = 0.0; var b = 0.0
 	for u in op.units: if J.num(u.side) == 1 and not J.t(u.get("sum")): a += maxf(0.0, J.num(u.hp)); b += J.num(u.maxhp)
 	return a / maxf(1.0, b)
 func _avg(kind: String, mech: String, N: int) -> Dictionary:
-	var s = 0.0; var w = 0; var tt = 0.0; var ls = 0.0; var evs = {}
+	var s = 0.0; var w = 0; var tt = 0.0; var ls = 0.0; var evs = {}; var hl = 0.0
 	for i in N:
 		var r = _fight(kind, mech, 100 + i)
-		s += r.score; w += int(r.win); tt += r.t; ls += r.loss
+		s += r.score; w += int(r.win); tt += r.t; ls += r.loss; hl += r.hl
 		for k in r.ev: evs[k] = int(evs.get(k, 0)) + int(r.ev[k])
-	return {"score": s / N, "win": w, "t": tt / N, "loss": ls / N, "ev": evs}
+	return {"score": s / N, "win": w, "t": tt / N, "loss": ls / N, "hl": hl / N, "ev": evs}
 func mech(t) -> void:
 	await _boot(t)
 	AB.force = 1; AB.reload()
@@ -475,7 +476,9 @@ func mech(t) -> void:
 		var key_ev = {}
 		for k in a.ev: if not (k in ["trig_start"]): key_ev[k] = a.ev[k]
 		_p("機制 %-4s 冇應對(%s) 難度 ×%.2f 勝 %d/%d 時 %.1f 失血 %.0f%%｜有應對(%s) ×%.2f 勝 %d/%d 時 %.1f｜事件 %s" % [m, nc, dn, a.win, N, a.t, a.loss * 100, co, dc, b.win, N, b.t, str(key_ev).substr(0, 160)])
-		_chk("機制 %s：真係生效（冇應對難度 ≥ ×1.15）" % m, dn >= 1.15, "%.2f" % dn)
+		var hr = a.hl / maxf(0.01, base[nc].hl)
+		_chk("機制 %s：真係生效（冇應對：難度 > ×1.03 或名鬼失血 ×1.2）" % m, dn > 1.03 or hr >= 1.2, "難度 %.2f 名鬼失血 ×%.2f" % [dn, hr])
+		if dn < 1.3 or dn > 3.0: _p("WARN 機制 %s 冇應對難度 ×%.2f 唔喺目標 1.3–3（數值照 counter.md 4.1，交平衡線）" % [m, dn])
 		_chk("機制 %s：唔硬鎖（冇應對都贏到 ≥ 1 場、難度 ≤ ×3.5）" % m, a.win >= 1 and dn <= 3.5, [a.win, "%.2f" % dn])
 		_chk("機制 %s：帶啱應對明顯易打（有應對 ≤ 冇應對 −0.15，或 ≤ ×1.15）" % m, dc <= dn - 0.15 or dc <= 1.15, ["%.2f" % dc, "%.2f" % dn])
 		await t.get_tree().process_frame

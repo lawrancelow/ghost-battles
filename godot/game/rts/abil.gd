@@ -563,13 +563,17 @@ static func _mech_setup(sim, u: Dictionary) -> void:
 				if not J.t(u.get("sk")): u["sk"] = {"name": "召喚", "kind": "hit", "mult": 1.0}
 			"突襲": a["rush"] = true
 			"迷魂": a["conf_t"] = 2.0
-			"分身":
-				for i in int(mp("分身", "n_clone", 2)):
-					var c = _clone_of(u)
-					c["ab"]["clone"] = true
-					var off = Vector2((i * 2 - 1) * 34.0, 10.0)
-					if sim.perp is Vector2: off = (sim.perp as Vector2) * (i * 2 - 1) * 34.0
-					_spawn(sim, c, _pos(sim, u) + off)
+			"分身": _clones(sim, u); a["clone_t"] = mp("分身", "re", 10.0)
+static func _clones(sim, u: Dictionary) -> void:   # 放分身（補返夠 n_clone 個）
+	var have = 0
+	for w in sim.units: if J.t(A(w).get("clone")) and A(w).get("by") == u and sim.alive(w): have += 1
+	for i in range(have, int(mp("分身", "n_clone", 2))):
+		var c = _clone_of(u)
+		c["ab"]["clone"] = true; c["ab"]["by"] = u
+		var off = Vector2((i * 2 - 1) * 34.0, 10.0)
+		if sim.perp is Vector2: off = (sim.perp as Vector2) * (i * 2 - 1) * 34.0
+		_spawn(sim, c, _pos(sim, u) + off)
+	if have < int(mp("分身", "n_clone", 2)) and sim.phase == "fight": sim.text(sim.head(u) + Vector2(0, -24), "分身", "#d8b4fe", 0.9); ev(sim, "clone", u, null)
 static func _clone_of(u: Dictionary) -> Dictionary:
 	var c = {}
 	for k in ["side", "k", "name", "atk", "range", "spd", "boss"]: c[k] = u.get(k)
@@ -1475,6 +1479,11 @@ static func _slow_tick(sim, step: float) -> void:
 			for w in sim.units:
 				if _nn(w, "side") == 1 and sim.alive(w) and (has_mech(w, "隱") or J.t(A(w).get("clone"))) and (u.p as Vector2).distance_to(w.p) <= mp("隱", "reveal_r", 150.0):
 					_reveal(sim, u, w.p, 40.0, mp("隱", "reveal_s", 8.0) * 0.25)
+	# 分身：每 re 秒補返分身（re=0 唔補）
+	for w in sim.units:
+		if _nn(w, "side") != 1 or not sim.alive(w) or not has_mech(w, "分身") or mp("分身", "re", 10.0) <= 0: continue
+		A(w)["clone_t"] = J.num(A(w).get("clone_t", 8.0)) - step
+		if J.num(A(w).clone_t) <= 0: A(w)["clone_t"] = mp("分身", "re", 10.0); _clones(sim, w)
 	# 迷魂：每 8 秒令 150px 內 3 隻我方亂走 2.5 秒（「定」免疫＋保護身邊）
 	for w in sim.units:
 		if _nn(w, "side") != 1 or not sim.alive(w) or not has_mech(w, "迷魂"): continue
@@ -1520,9 +1529,9 @@ static func _slow_tick(sim, step: float) -> void:
 
 # ================= 召喚機制 =================
 static func _summon_mech(sim, u: Dictionary) -> void:
-	var mine = 0
-	for w in sim.units: if J.t(A(w).get("sum")) and A(w).get("by") == u and sim.alive(w): mine += 1
-	for w in sim.ab_st.spawn: if A(w).get("by") == u: mine += 1
+	var mine = 0   # 場上最多 6 隻（全部召喚者合計，counter.md 4.1）
+	for w in sim.units: if _nn(w, "side") == 1 and A(w).get("by") != null and sim.alive(w): mine += 1
+	for w in sim.ab_st.spawn: if A(w).get("by") != null: mine += 1
 	var cap = int(mp("召喚", "cap", 6)); var n = mini(int(mp("召喚", "n_sum", 2)), cap - mine)
 	var en = _ent("ENEMY", J.str(u.get("k")))
 	var fk = J.str(en.get("sum_k", _fod(sim)))
