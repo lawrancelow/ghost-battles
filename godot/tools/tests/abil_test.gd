@@ -656,6 +656,7 @@ func _fight(kind: String, mech: String, sd: int) -> Dictionary:
 		var a = op.units[i].ab
 		a["tags"] = _tags_for(kind, i)
 		if kind == "break": a.tags = ["破"]
+		a["act"] = AB.from_legacy(op.units[i].get("sk")); a["pas"] = []   # 隔離：用測試技（N_K 喺 abil.json 有自己主動技／被動，會蓋過測試技）
 	op.t_skip_march()
 	var hp0 = [0.0, 0.0]
 	for u in op.units: if J.num(u.side) == 0: hp0[int(J.t(u.get("minion")))] += J.num(u.maxhp)
