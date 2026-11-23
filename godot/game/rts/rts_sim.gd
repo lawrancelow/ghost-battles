@@ -502,8 +502,7 @@ func _step_fight(dt: float) -> void:
 			var want = _line_want(u, tg)
 			var dv = (want - (u.p as Vector2))
 			if dv.length() < 3.0: dv = (tg.p as Vector2) - (u.p as Vector2)
-			var sp_ = _nn(u, "spd") if d < _nn(u, "range") + 90.0 else maxf(_nn(u, "spd"), MARCH * 1.25)   # 離陣位遠：跑步入位
-			u["p"] = (u.p as Vector2) + dv.normalized() * minf(sp_ * dt, dv.length()); u["walking"] = true
+			u["p"] = (u.p as Vector2) + dv.normalized() * minf(_nn(u, "spd") * dt, dv.length()); u["walking"] = true
 		else:
 			u["walking"] = false; u["cd"] = _nn(u, "cd") - dt
 			if J.num(u.cd) <= lead_of(u, tg): u["anim"] = {"name": "windup", "t": 0.0, "dur": WIND, "tg": tg}

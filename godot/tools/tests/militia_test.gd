@@ -35,6 +35,7 @@ func _skip(t, n := 6):
 		if st and st.get("cur") != null: st.skip_scene()
 		await _w(t, 0.2)
 func _boot(t):
+	load("res://game/rts/rts.gd").force = 0   # [rts] 呢個測試測舊戰鬥接口／數值（新地圖打法見 rts_test）
 	DirAccess.make_dir_recursive_absolute(SHOTS)
 	for i in 120:
 		await _w(t, 0.5)
