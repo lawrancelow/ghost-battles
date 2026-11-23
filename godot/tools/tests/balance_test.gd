@@ -256,6 +256,15 @@ func ascore(team: Array, sn: Dictionary, pw: Dictionary) -> float:
 	var P = 0.0
 	for k in team: P += pw[k]
 	return O / maxf(1.0, W) * (P / team.size())
+const TOPN := 14   # 名鬼池大過呢個數：先用單隻解析分數揀前 TOPN 隻先砌組合（C(90,3) 太多）
+func top_pool(pool: Array, sn: Dictionary, pw: Dictionary) -> Array:
+	if pool.size() <= TOPN: return pool
+	var sc = []
+	for k in pool: sc.append([ascore([k], sn, pw), k])
+	sc.sort_custom(func(a, b): return a[0] > b[0])
+	var o = []
+	for x in sc.slice(0, TOPN): o.append(x[1])
+	return o
 func _combos(pool: Array) -> Array:
 	var o = []
 	var n = pool.size()
@@ -302,7 +311,7 @@ func run_ch(t, c: int) -> Dictionary:
 		var m = {}
 		if not sn.is_empty():
 			var sc = []
-			for tm in _combos(pool): sc.append([ascore(tm, sn, pw), tm])
+			for tm in _combos(top_pool(pool, sn, pw)): sc.append([ascore(tm, sn, pw), tm])
 			sc.sort_custom(func(a, b): return a[0] > b[0])
 			var scr = []
 			for j in mini(BEST_K, sc.size()):
@@ -310,7 +319,7 @@ func run_ch(t, c: int) -> Dictionary:
 				var r = batch(sn, tm, best_adv(tm, pool, insts), insts, 1)
 				m[",".join(tm)] = r.perf; scr.append([r.perf, tm])
 			scr.sort_custom(func(a, b): return a[0] > b[0])
-			for x in scr.slice(0, 2): if not G.has(x[1]): G.append(x[1])
+			for x in scr.slice(0, 1): if not G.has(x[1]): G.append(x[1])
 		M.append(m)
 		await t.get_tree().process_frame
 	# 2) 全章候選隊逐個場地跑 1 種子（有齊隊員先跑）
@@ -469,7 +478,7 @@ func step_test(t, c: int, sites: Array, rk: int) -> Dictionary:
 			for kk in pool:
 				var u = J.mc(J.G.Battle, "mkGhostUnit", [insts[kk], 0.0]); pw[kk] = sqrt(J.num(u.maxhp) * J.num(u.atk))
 			var sc = []
-			for tm in _combos(pool): sc.append([ascore(tm, sn, pw), tm])
+			for tm in _combos(top_pool(pool, sn, pw)): sc.append([ascore(tm, sn, pw), tm])
 			sc.sort_custom(func(a, b): return a[0] > b[0])
 			var best = null
 			for j in mini(6, sc.size()):
@@ -489,6 +498,57 @@ func step_test(t, c: int, sites: Array, rk: int) -> Dictionary:
 	D["sortie_k"][str(c)] = {"hp": kp[0], "atk": kp[1]}
 	res["k"] = kp
 	return res
+
+# 輕量校準（每批 ≤ 10 分鐘）：只做指定圈嘅據點；"stage"＝第 5、6 關主線 SOFT 步驟試
+func run_cal(t, c: int, rings: Array, tag: String) -> void:
+	var t0 = Time.get_ticks_msec()
+	CAL = true
+	var sites = sites_of(c); var rk = RANK_CH[c]
+	var out = {"c": c, "sites": [], "part": tag}
+	if rings.has("stage") and STEPS.has(c): out["steps"] = await step_test(t, c, sites, rk)
+	elif STEPS.has(c):   # 據點批次：沿用主線批揀到嘅步驟（冇就 A）
+		var kp = STEPS[c][0]
+		var fp = OUT + "/cal_c%d_stage.json" % c
+		if FileAccess.file_exists(fp):
+			var j = JSON.parse_string(FileAccess.get_file_as_string(fp))
+			if j is Dictionary and j.has("steps"): kp = j.steps.k
+		var D = CT.data()
+		D["ch_k"][str(c)] = {"hp": kp[0], "atk": kp[1]}; D["sortie_k"][str(c)] = {"hp": kp[0], "atk": kp[1]}
+	for i in sites.size():
+		var st = sites[i]
+		if st.kind != "sortie" or not rings.has(int(st.ring)): continue
+		var pool = pool_of(c, int(st.ring))
+		_set_save(c, st.lv, pool, rk)
+		var insts = {}
+		for g in J.G.S.ghosts: insts[str(g.k)] = g
+		var sn = site_snap(st)
+		if sn.is_empty(): continue
+		var pw = {}
+		for k in pool:
+			var u = J.mc(J.G.Battle, "mkGhostUnit", [insts[k], 0.0]); pw[k] = sqrt(J.num(u.maxhp) * J.num(u.atk))
+		var sc = []
+		for tm in _combos(top_pool(pool, sn, pw)): sc.append([ascore(tm, sn, pw), tm])
+		sc.sort_custom(func(a, b): return a[0] > b[0])
+		var scr = []
+		for j in mini(6, sc.size()):
+			var tm = sc[j][1]
+			scr.append([batch(sn, tm, best_adv(tm, pool, insts), insts, 1).perf, tm])
+		scr.sort_custom(func(a, b): return a[0] > b[0])
+		var best = null
+		for x in scr.slice(0, 2):
+			var adv = best_adv(x[1], pool, insts)
+			var r = batch(sn, x[1], adv, insts, 4)
+			if _better(r, null if best == null else best.r): best = {"team": x[1], "adv": adv, "r": r}
+		var cr = cal_site(sn, best, pool, insts, i, c, int(st.ring))
+		out.sites.append({"id": st.id, "ring": st.ring, "s": cr.s, "cal": cr, "best": best.team})
+		_p("c%d %-9s 校準 s=%.3f（最佳 勝%.0f%%、隨機 勝%.0f%%）%s" % [c + 1, st.id, cr.s, cr.B * 100, cr.R * 100, str(best.team)])
+		await t.get_tree().process_frame
+	var f = FileAccess.open(OUT + "/cal_c%d_%s.json" % [c, tag], FileAccess.WRITE)
+	f.store_string(JSON.stringify(out)); f.close()
+	_p("c%d 校準批 %s 完成 %.0f 秒" % [c + 1, tag, (Time.get_ticks_msec() - t0) / 1000.0])
+func k5s(t) -> void: await _boot(t); await run_cal(t, 5, ["stage"], "stage"); _p("RESULT ok=1 bad=0")
+func k5a(t) -> void: await _boot(t); await run_cal(t, 5, [1, 2], "r12"); _p("RESULT ok=1 bad=0")
+func k5b(t) -> void: await _boot(t); await run_cal(t, 5, [3, 4], "r34"); _p("RESULT ok=1 bad=0")
 
 # ================= 入口 =================
 func probe(t) -> void:

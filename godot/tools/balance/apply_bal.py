@@ -10,7 +10,7 @@ if "--from-scale" in sys.argv:
     sc = json.load(open(SC, encoding="utf-8"))
 else:
     sc = json.load(open(SC, encoding="utf-8")) if os.path.exists(SC) else {"camps": {}, "ch_k": {}, "sortie_k": {}}
-    for f in sorted(glob.glob("/tmp/bal/c*.json")):
+    for f in sorted(glob.glob("/tmp/bal/c*.json") + glob.glob("/tmp/bal/cal_*.json")):
         d = json.load(open(f, encoding="utf-8"))
         c = d["c"]
         if "steps" in d:
