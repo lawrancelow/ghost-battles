@@ -10,7 +10,7 @@ const EA = preload("res://game/equip/eq_art.gd")
 const BOX := 1.25
 # [eqview2] 顯示方案開關：pin＝現行（貼手／帽／色環徽章）；float＝方案 B 鬼物飄浮；strike＝方案 C 出手才現形（eq_view2.gd）
 #   讀 S.equip.view（冇就 VIEW_DEFAULT）；測試可設 view_test 蓋過
-const VIEW_DEFAULT := "pin"
+const VIEW_DEFAULT := "float"   # 老闆 2026-11-24 06:50 揀 B 鬼物飄浮
 const VIEWS := ["pin", "float", "strike"]
 static var view_test := ""
 static func scheme() -> String:
