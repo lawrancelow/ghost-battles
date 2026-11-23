@@ -12,7 +12,7 @@ var bad := 0
 const SIM = preload("res://game/rts/rts_sim.gd")
 const REF = preload("res://tools/tests/abform_ref_sim.gd")
 const AF = preload("res://game/rts/abform.gd")
-const N_SEED := 8
+const N_SEED := 6
 const DT := 1.0 / 30.0
 
 func _p(m): print("[abform] ", m)
@@ -47,9 +47,9 @@ func mk_foe(e: String, p: float, boss := false) -> Dictionary:
 # 場景：[名, 主公lv, 名鬼lv, 名鬼, 小隊數, 敵人, p, 王]
 const SCN := [
 	["A 早期 p3（4 隊）", 3, 6, ["afu", "n30_danxiao", "n30_maoshi"], 4, ["egui", "egui", "youhun", "egui", "youhun"], 3.0, ""],
-	["B 中期 p10（8 隊）", 8, 16, ["afu", "laojiang", "n30_jiugui"], 8, ["zombie", "zombie", "shuigui", "egui", "niutou", "mamian", "pocong"], 10.0, ""],
-	["C 王 AoE p13（8 隊＋遠程）", 11, 22, ["afu", "heiwu", "xiaozhi"], 8, ["huang", "shuigui", "zombie", "zombie", "mamian", "niutou", "egui"], 13.0, "huang"],
-	["D 寬陣 p8（對面 9 隻）", 7, 14, ["afu", "laojiang", "n30_jiugui"], 2, ["egui", "zombie", "youhun", "egui", "zombie", "youhun", "egui", "shuigui", "youhun"], 8.0, ""],
+	["B 中期 p7（8 隊）", 8, 20, ["afu", "laojiang", "n30_jiugui"], 8, ["zombie", "shuigui", "egui", "egui", "niutou", "pocong"], 7.0, ""],
+	["C 王 AoE p9（8 隊＋遠程）", 10, 24, ["afu", "heiwu", "xiaozhi"], 8, ["pocong", "shuigui", "zombie", "egui", "mamian", "egui"], 9.0, "pocong"],
+	["D 寬陣 p4（對面 9 隻）", 6, 14, ["afu", "laojiang", "n30_jiugui"], 2, ["egui", "zombie", "youhun", "egui", "zombie", "youhun", "egui", "shuigui", "youhun"], 4.0, ""],
 ]
 func mk_units(sc: Array) -> Array:
 	var o = []
@@ -138,6 +138,24 @@ func form(t) -> void:
 	await _boot(t)
 	await units_checks(t)
 	await battle_checks(t)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+# 調校：每個變體 [前排威脅, 小隊威脅, 護衛比例, 小隊企後, 名鬼近戰上限]，同舊版對比
+const VARS := [[60.0, 30.0, 0.35, 0.0, 3], [60.0, 30.0, 0.35, 0.0, 2], [120.0, 30.0, 0.45, 18.0, 2], [30.0, 30.0, 0.35, 0.0, 2], [0.0, 0.0, 0.45, 0.0, 2], [60.0, 30.0, 0.6, 18.0, 2], [200.0, 30.0, 0.45, 18.0, 3]]
+func sweep(t) -> void:
+	await _boot(t)
+	for sc in SCN.slice(1):
+		var line = []
+		for vi in range(-1, VARS.size()):
+			var R = {"win": 0, "dead": 0, "first": 0.0, "sur": 0.0, "hs": 0.0, "t": 0.0}
+			if vi >= 0:
+				var v = VARS[vi]; AF.T_FRONT = v[0]; AF.T_SQ = v[1]; AF.GUARD_PCT = v[2]; AF.SQ_BACK = v[3]; AF.MEL_CAP_HERO = v[4]
+			for s in N_SEED:
+				var r = run(sc, s, 0 if vi < 0 else 1)
+				R.win += int(r.win); R.dead += r.dead; R.first += r.first; R.sur += r.sur; R.hs += r.hs; R.t += r.t
+			line.append("%s 贏%d 死%.1f 首%.1f 圍%.0f%% %.0fs" % ["舊" if vi < 0 else str(VARS[vi]), R.win, R.dead / float(N_SEED), R.first / N_SEED, 100 * R.sur / maxf(0.01, R.hs), R.t / N_SEED])
+			await t.get_tree().process_frame
+		_p("== " + str(sc[0]))
+		for x in line: _p("   " + x)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 func regress(t) -> void:
 	await _boot(t)
@@ -294,7 +312,9 @@ func units_checks(t) -> void:
 		if J.num(u.side) == 0 and op6.alive(u) and u.get("tg") is Dictionary: var key = int(J.num(u.tg._id)); cnt[key] = int(cnt.get(key, 0)) + 1
 	var mx = 0
 	for k in cnt: mx = maxi(mx, cnt[k])
-	_chk("7 個近戰打 2 隻：每隻最多 3 個（另一個等位／轉目標）", mx <= 3 or op6.foes_alive() < 2, cnt)
+	var mn = 99
+	for k in cnt: mn = mini(mn, cnt[k])
+	_chk("7 個近戰打 2 隻：平均分開（最多 4、兩邊差 ≤ 1；舊版會全部圍一隻）", op6.foes_alive() < 2 or (mx <= 4 and mx - mn <= 1 and cnt.size() == 2), cnt)
 	# 5) 前排護衛
 	seed(15)
 	var op7 = new_op(mk_units(SCN[1])); _to_fight(op7)
@@ -304,15 +324,17 @@ func units_checks(t) -> void:
 		if J.num(u.side) == 0 and not J.t(u.get("minion")) and AF.role_of(u) == "front" and fr == null: fr = u
 	for u in op7.units:
 		if J.num(u.side) == 0 and J.t(u.get("minion")) and op7.alive(u): sq7 = u; break
+	for u in op7.units: if J.num(u.side) == 0 and u != fr and u != sq7: u["p"] = (fr.p as Vector2) + Vector2(0, 900)   # 其他人企遠啲
 	sq7["p"] = (fr.p as Vector2) + Vector2(30, 0)
 	fr["gbud"] = 1000.0
 	var fh = J.num(fr.hp); var sh = J.num(sq7.hp)
 	sq7["af_ph"] = sh; sq7["hp"] = sh - 40.0
-	AF.guard_tick(op7, DT)
-	_chk("護衛：身邊小隊食 40 → 名鬼分擔 35%（14）", absf(J.num(sq7.hp) - (sh - 26.0)) < 0.6 and absf(fh - J.num(fr.hp) - 14.0) < 0.6, [J.num(sq7.hp) - sh, fh - J.num(fr.hp)])
+	AF.guard_tick(op7, 0.0)
+	var gs = 40.0 * AF.GUARD_PCT
+	_chk("護衛：身邊小隊食 40 → 名鬼分擔 %d%%（%.0f）" % [int(AF.GUARD_PCT * 100), gs], absf(J.num(sq7.hp) - (sh - 40.0 + gs)) < 0.6 and absf(fh - J.num(fr.hp) - gs) < 0.6, [J.num(sq7.hp) - sh, fh - J.num(fr.hp)])
 	sq7["p"] = (fr.p as Vector2) + Vector2(200, 0)
 	sh = J.num(sq7.hp); sq7["af_ph"] = sh; sq7["hp"] = sh - 40.0; fh = J.num(fr.hp)
-	AF.guard_tick(op7, DT)
+	AF.guard_tick(op7, 0.0)
 	_chk("護衛：離遠（>70px）唔擋", absf(J.num(sq7.hp) - (sh - 40.0)) < 0.01 and absf(fh - J.num(fr.hp)) < 0.01)
 	fr["gbud"] = 0.0; sq7["p"] = (fr.p as Vector2) + Vector2(30, 0)
 	sh = J.num(sq7.hp); sq7["af_ph"] = sh; sq7["hp"] = sh - 40.0

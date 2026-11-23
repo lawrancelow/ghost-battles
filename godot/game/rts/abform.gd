@@ -7,19 +7,21 @@ extends RefCounted
 static var force := -1          # 測試：-1 跟總開關；0 全關（舊路）；1 全開
 const AOE_R := 130.0            # AoE 半徑（唔再打全場）
 const MEL_CAP := 3              # 每隻目標最多幾個近戰同時打（遠程唔計）
-const T_FRONT := 60.0           # 敵人揀目標：威脅值（愈大愈優先；單位＝橫距 px／1.6）
-const T_SQ := 30.0              #   陰兵小隊（舊版 120：敵人一定先打小隊 → 小隊秒死）
+static var MEL_CAP_HERO := 2         # 敵人打我方名鬼：最多 2 個近戰（其餘去打小隊／等位）→ 名鬼唔會被圍
+static var T_FRONT := 120.0          # 敵人揀目標：威脅值（愈大愈優先；單位＝橫距 px／1.6）
+static var T_SQ := 30.0              #   陰兵小隊（舊版 120：敵人一定先打小隊 → 小隊秒死）
 const T_BACK := -80.0           #   後排名鬼（唔易被揀）
 const T_TAUNT := 999.0          #   嘲諷（st.taunt > 0 或者 bf 有 taunt，由 abcore 積木設）
-const GUARD_R := 70.0           # 前排名鬼護衛：身邊幾遠嘅陰兵小隊
-const GUARD_PCT := 0.35         #   小隊受傷幾成轉去名鬼身
+static var GUARD_R := 70.0           # 前排名鬼護衛：身邊幾遠嘅陰兵小隊
+static var GUARD_PCT := 0.45         #   小隊受傷幾成轉去名鬼身
 const GUARD_CAP := 0.06         #   每秒最多轉名鬼 maxhp 幾多成
 const GUARD_FLOOR := 0.3        #   名鬼自己血低過呢個比例就唔再擋
 const WAIT := 5.0               # 自動施放：滿咗嚇氣等夠幾秒條件都唔成立 → 照放（唔會儲住唔用）
 const BOSS_OPEN := 3.0          # 敵人王：接觸後幾秒先第一次放技（俾玩家睇到）
 const SIDE_LANE := 50.0         # 橫距 < 呢個先直接埋身；否則由自己嗰邊側身埋去（保住橫隊次序）
-const RESC_N := 3               # 名鬼被幾多隻近戰鎖住 → 叫最近嘅小隊過嚟救
+const RESC_N := 2               # 名鬼被幾多隻近戰鎖住 → 叫最近嘅小隊過嚟救
 const RESC_T := 3.0             # 救援維持幾秒
+static var SQ_BACK := 18.0           # 小隊比前排名鬼企後幾多（開頭 8 秒）
 const CLOSE := 100.0            # 同 rts_sim.CLOSE：射程＋呢個以內當「近」
 
 # 總開關（審查修正第 3 項：全域、唔入玩家存檔）：abil.gd 嘅 static var OFF＝true，或者 data/abil.json 頂層 "off": true → 全部行舊路
@@ -85,7 +87,7 @@ static func line_order(mel: Array) -> Array:
 	slot.resize(n)
 	var F = fr.size()
 	for j in F:
-		var f = 0.5 if F == 1 else 1.0 / 3.0 + (1.0 / 3.0) * float(j) / float(F - 1)
+		var f = 0.5 if F == 1 else 0.35 + 0.3 * float(j) / float(F - 1)   # 中間三分一以內
 		var idx = clampi(int(round(f * (n - 1))), 0, n - 1)
 		while slot[idx] != null: idx = (idx + 1) % n
 		slot[idx] = fr[j]
@@ -103,12 +105,13 @@ static func _ab_split(line: Array) -> Array:
 	var need_a = (line.size() + 1) / 2
 	var lock = 0
 	for u in line: if role_of(u) != "sq": lock += 1
-	var free_a = maxi(0, need_a - lock)
+	var m = line.size() - lock
+	var free_a = clampi(need_a - lock, 0, m)
 	var k = 0
 	for u in line:
 		if role_of(u) != "sq": a.append(u)
-		else:
-			if k % 2 == 0 and free_a > 0: a.append(u); free_a -= 1
+		else:   # 平均揀 free_a 隊企前行（唔好前面嗰幾隊搶晒，令名鬼喺前行變咗企一邊）
+			if m > 0 and floori((k + 1) * free_a / float(m) + 0.0001) > floori(k * free_a / float(m) + 0.0001): a.append(u)
 			else: b.append(u)
 			k += 1
 	return [a, b]
@@ -149,6 +152,8 @@ static func pre_tick(sim, dt: float) -> void:
 		rt = 0.5
 		_rescue(sim)
 	sim.set_meta("af_rt", rt)
+static func cap_of(v: Dictionary) -> int:
+	return MEL_CAP_HERO if _nn(v, "side") == 0 and not J.t(v.get("minion")) else MEL_CAP
 static func _load_of(sim, v: Dictionary) -> int:
 	var n = sim.get_meta("af_tgn", {})
 	return int(n.get(int(_nn(v, "_id")), 0))
@@ -166,14 +171,14 @@ static func line_tg(sim, u: Dictionary):
 	var mel = _mel(u)
 	if cur is Dictionary and sim.alive(cur) and targetable(sim, u, cur):
 		if _nn(u, "resc") > sim.t: return cur                         # 救援中：黐實
-		if absf(sim._lat(cur.p) - my) < 90.0: return cur
+		if absf(sim._lat(cur.p) - my) < 90.0 and (not mel or _load_of(sim, cur) <= cap_of(cur)): return cur
 	var best = null; var bk = 1e9
 	var foe = _nn(u, "side") == 1
 	for v in sim.enemies_of(u):
 		if not targetable(sim, u, v): continue
 		var k = absf(sim._lat(v.p) - my) * 1.6 + absf(sim._axl(v.p) - sim._axl(u.p)) * 0.4
 		if foe: k -= threat(v)
-		if mel and v != cur and _load_of(sim, v) >= MEL_CAP: k += 100000.0   # 夠人打緊：揀下一隻（全部都滿先返嚟）
+		if mel and _load_of(sim, v) - (1 if v == cur else 0) >= cap_of(v): k += 100000.0   # 夠人打緊：揀下一隻（全部都滿先返嚟）
 		if k < bk: bk = k; best = v
 	if mel: _bump(sim, cur if cur is Dictionary and sim.alive(cur) else null, best)
 	u["tg"] = best
@@ -220,6 +225,7 @@ static func want(sim, u: Dictionary, tg: Dictionary, d: float) -> Vector2:
 			return sim.org + sim.perp * float(u.get("ls", 0.0)) - sim.ax * (60.0 if _nn(u, "side") == 0 else -60.0)
 		return tg.p
 	var lw: Vector2 = sim._line_want(u, tg)
+	if J.t(u.get("minion")) and _nn(u, "side") == 0 and sim.t < 8.0: lw -= sim.ax * SQ_BACK   # 開頭幾秒小隊企後少少：前排名鬼先頂住
 	if d >= r + CLOSE: return lw
 	var my = sim._lat(lw)
 	var dl = clampf(my - sim._lat(tg.p), -r * 0.6, r * 0.6)
