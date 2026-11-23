@@ -49,7 +49,7 @@ static func auto_anchor(k: String) -> Dictionary:
 	if best.x < 0: return dflt
 	var nx = func(px: float) -> float: return (px - ws * 0.5) / hs
 	var hand = Vector2(nx.call(best.x) - 0.03, (best.y - hs) / float(hs))
-	return {"hand": Vector2(clampf(hand.x, 0.05, 0.4), clampf(hand.y, -0.7, -0.3)), "head": Vector2(clampf(nx.call(hx), -0.2, 0.2), clampf((top - hs) / float(hs), -1.0, -0.6)), "src": "auto"}
+	return {"hand": Vector2(clampf(hand.x, 0.05, 0.3), clampf(hand.y, -0.7, -0.3)), "head": Vector2(clampf(nx.call(hx), -0.2, 0.2), clampf((top - hs) / float(hs), -1.0, -0.6)), "src": "auto"}
 
 # ---------------- 畫：一隻角色身上全部裝備 ----------------
 # ctx 已經喺角色座標；foot＝腳底；H＝角色高（px）；fd＝1 面向右／−1 面向左；pose／pt＝出招狀態
@@ -66,7 +66,7 @@ static func draw_on(ctx: Ctx, k: String, w: Dictionary, foot: Vector2, H: float,
 		var gc = EQ.grade_col(EQ.grade_of(id)) if str(it.get("kind")) == "eq" else Color("#c8b080")
 		match look:
 			"hand":
-				var L = H * (0.52 if EA.is_long(id) else 0.34)
+				var L = H * (0.48 if EA.is_long(id) else 0.32)
 				var ang = 0.55
 				if pose == "windup": ang = 0.55 - 0.9 * pt
 				elif pose == "strike": ang = -0.35 + 1.75 * minf(1.0, pt * 1.6)

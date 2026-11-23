@@ -161,18 +161,19 @@ static func roster_strip(card: PanelContainer, hb: Control, gid: String) -> void
 	card.remove_child(hb)
 	var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 4); card.add_child(v); v.add_child(hb)
 	var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 6); row.name = "EqStrip"; v.add_child(row)
-	row.add_child(_lbl(L("裝備", "裝備"), 14, UIKit.INKDIM, 900))
 	var w = EQ.worn(gid)
 	for sl in EQ.SLOTS:
 		var id = str(w.get(sl, ""))
 		var b = Button.new(); b.focus_mode = Control.FOCUS_NONE; b.name = "Slot_" + sl
-		b.custom_minimum_size = Vector2(0, 48); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.clip_text = true
-		b.add_theme_stylebox_override("normal", UIKit.sb(Color(0, 0, 0, 0.06), 6, EQ.grade_col(EQ.grade_of(id)) if id != "" else Color("#b89a52"), 1, Vector4(4, 2, 4, 2)))
-		b.add_theme_font_size_override("font_size", 14)
-		b.add_theme_color_override("font_color", UIKit.INKTXT)
-		var ic = icon_c(id, 40); ic.position = Vector2(4, 4); b.add_child(ic)
-		b.text = "　　 " + (EQ.name_of(id) if id != "" else EQ.slot_name(sl) + L("：空", "：空"))
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.custom_minimum_size = Vector2(0, 50); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var gc = EQ.grade_col(EQ.grade_of(id)) if id != "" else Color("#b89a52")
+		for stn in ["normal", "hover", "pressed"]: b.add_theme_stylebox_override(stn, UIKit.sb(Color(0, 0, 0, 0.06 if stn == "normal" else 0.12), 6, gc, 2 if id != "" else 1, Vector4(4, 2, 4, 2)))
+		var hb2 = HBoxContainer.new(); hb2.set_anchors_preset(Control.PRESET_FULL_RECT); hb2.offset_left = 4; hb2.offset_right = -4
+		hb2.add_theme_constant_override("separation", 3); hb2.mouse_filter = Control.MOUSE_FILTER_IGNORE; b.add_child(hb2)
+		var ic = icon_c(id, 38); ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hb2.add_child(ic)
+		var lb = UIKit.label(EQ.name_of(id) if id != "" else EQ.slot_name(sl), 14, UIKit.INKTXT if id != "" else UIKit.INKDIM, "sans", 900 if id != "" else 700)
+		lb.size_flags_horizontal = Control.SIZE_EXPAND_FILL; lb.clip_text = true; lb.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		lb.vertical_alignment = VERTICAL_ALIGNMENT_CENTER; lb.size_flags_vertical = Control.SIZE_FILL; lb.mouse_filter = Control.MOUSE_FILTER_IGNORE; hb2.add_child(lb)
 		b.pressed.connect(func(): open_slot(gid, sl))
 		row.add_child(b)
 	var ti = EQ.tag_info(gid)
