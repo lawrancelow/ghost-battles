@@ -329,6 +329,8 @@ static func on_throne_end(k: String, win: bool) -> Dictionary:
 
 # ======================= 出擊小卡：抄功課掣（so_view.open_card 掛鈎） =======================
 static func card_row(vb: VBoxContainer, e: Dictionary) -> void:   # 掣擺喺「出擊／關閉」同一行（小卡唔加高）；抄唔到就喺上面加一行短原因
+	var pc0 = vb.get_parent()
+	if pc0 is Control and not pc0.resized.is_connected(fit_card.bind(pc0)): pc0.resized.connect(fit_card.bind(pc0))
 	if o() == null or e.is_empty() or vb.get_child_count() == 0: return
 	var c = can_sweep(e)
 	if str(c.why) == "locked": return
@@ -354,6 +356,20 @@ static func card_row(vb: VBoxContainer, e: Dictionary) -> void:   # 掣擺喺「
 	var l = UIKit.label(t, 15, Color("#d0c4b8"), "sans", 900); l.name = "SweepWhy"
 	l.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.add_child(l); vb.move_child(l, bb.get_index())
+# 小卡太高（細屏）：成張向上移，保證最底一行掣喺底部導航之上、完整可撳
+const CARD_BOTTOM_GAP := 74.0   # 底部導航高度＋留白
+static func fit_card(pc: Control) -> void:
+	if not is_instance_valid(pc) or not pc.is_inside_tree(): return
+	var vh = pc.get_viewport_rect().size.y
+	var par = pc.get_parent()
+	var top0 = par.get_global_rect().position.y if par is Control else 0.0
+	var limit = vh - CARD_BOTTOM_GAP
+	var gr = pc.get_global_rect()
+	if gr.end.y > limit + 0.5:
+		var nt = maxf(8.0 - top0, pc.offset_top - (gr.end.y - limit))
+		if absf(nt - pc.offset_top) > 0.5:
+			var h = gr.size.y
+			pc.offset_top = nt; pc.offset_bottom = nt + h
 static func short_why(c: Dictionary) -> String:
 	match str(c.why):
 		"wins": return L("抄功課：贏夠 %d 次先開（%d/%d）", "抄功課：贏夠 %d 次才開（%d/%d）") % [SWEEP_WINS, int(c.wins), SWEEP_WINS]

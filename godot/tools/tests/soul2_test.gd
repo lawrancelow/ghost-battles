@@ -112,7 +112,16 @@ func data_check() -> void:
 	for k in J.G.GHOSTS:
 		var d = J.G.GHOSTS[k]
 		if (str(d.get("q", "")) == "名" or k == "afu") and not ks.has(k): miss.append(k)
-	_chk("現有 72 隻名鬼＋阿福全部有格", miss.is_empty() and J.G.GHOSTS.size() == 73, miss)
+	_chk("全部名鬼（現有 72＋新 26＋牛頭馬面）＋阿福都有格", miss.is_empty(), miss)
+	var noart = []; var nosay = []
+	for x in L:
+		var k = str(x.k)
+		if FX.tex_of(k) == null: noart.append(k)
+		var gd = J.G.GHOSTS.get(k, {})
+		if str(gd.get("say", "")) == "" and str(S2.C().SAY_FB.get(k, "")) == "": nosay.append(k)
+	_chk("101 格全部有真圖（冇暫代）", noart.is_empty(), noart)
+	_chk("101 格全部有台詞", nosay.is_empty(), nosay)
+	_chk("新鬼係真數據（GHOSTS 有）：nw_shenpi、nw_teketeke", J.G.GHOSTS.has("nw_shenpi") and J.G.GHOSTS.has("nw_teketeke") and not ks.has("nw_panguan"))
 	var nw = L.filter(func(x): return str(x.k).begins_with("nw_"))
 	_chk("新鬼 26 隻、冇 Sundel Bolong、有 Teke Teke", nw.size() == 26 and not ks.has("nw_sundel") and ks.has("nw_teketeke"), nw.size())
 	_chk("牛頭、馬面升名鬼有格", ks.has("niutou") and ks.has("mamian"))
@@ -158,7 +167,10 @@ func state_check() -> void:
 	_chk("狀態：有魂魄未招降", S2.state(k2) == "prog")
 	_chk("狀態：已遇見冇魂魄", S2.state(k3) == "seen")
 	_chk("狀態：未遇見", S2.state(k4) == "unseen")
-	_chk("狀態：新鬼（未有數據）＝未遇見", S2.state("nw_huapi") == "unseen")
+	o.seen.erase("nw_huapi"); o.sh.erase("nw_huapi")
+	_chk("狀態：新鬼未遇見", S2.state("nw_huapi") == "unseen")
+	o.seen["nw_huapi"] = 1.0
+	_chk("狀態：新鬼遇見後用真數據", S2.state("nw_huapi") == "seen" and SOUL.is_ghost("nw_huapi"))
 	_chk("狀態：阿福永遠已招降", S2.state("afu") == "own")
 	_chk("傳聞：未遇見顯示 lore 頭一句（≤12 字）", CX._rumor(k4).length() > 0 and CX._rumor(k4).length() <= 12, CX._rumor(k4))
 	_chk("地點：未遇見顯示第幾章", CX._where(k4, true).contains("第"), CX._where(k4, true))
@@ -353,6 +365,18 @@ func sortie_hook_check(t, m) -> void:
 			await _w(t, 0.12); await _shot(t, "11_soulfire_hit")
 	_ff(op, ["done"])
 	await _w(t, 1.0)
+func _card_check(t, tag: String) -> void:
+	var vs = t.get_viewport().get_visible_rect().size
+	var card = SOV.card
+	if card == null: _chk("小卡（%s）" % tag, false); return
+	var cr = card.get_global_rect()
+	_chk("小卡（%s）喺畫面入面、底部導航之上" % tag, cr.position.y >= 0 and cr.end.y <= vs.y - 60 and cr.end.x <= vs.x + 0.5, [cr, vs])
+	var fb = _main(t).get_node_or_null("CtlSortie")
+	_chk("小卡（%s）開住：浮動「出擊」掣收起" % tag, fb == null or not fb.visible)
+	for b in card.find_children("*", "Button", true, false):
+		var gr = b.get_global_rect()
+		if not Rect2(0, 0, vs.x, vs.y - 60).encloses(gr): _chk("小卡（%s）掣「%s」完整可撳" % [tag, b.text], false, gr); return
+	_chk("小卡（%s）所有掣完整喺畫面入面" % tag, true)
 func Fire_arrive(_f) -> float: return 0.35 + 0.8 + 0.01
 
 # ---- 截圖 ----
@@ -383,7 +407,10 @@ func shot_all(t, m) -> void:
 	o.seen.erase("n30_hannya"); o.sh.erase("n30_hannya")
 	if SOUL.owned("n30_hannya"): _drop_k("n30_hannya")
 	CX.open_detail("n30_hannya"); await _w(t, 0.6); await _shot(t, "08_detail_unseen")
+	o.seen["nw_huapi"] = 1.0; o.sh["nw_huapi"] = 20.0
 	CX.open_detail("nw_huapi"); await _w(t, 0.6); await _shot(t, "08b_detail_new")
+	CX.f_pin = ""; CX.f_sys = ""; CX.open(); await _w(t, 0.6)
+	m.sheet_scroll.scroll_vertical = 5200; await _w(t, 0.4); await _shot(t, "08c_codex_new_ghosts")
 	S.cleared["1-3"] = true; S.cleared["2-3"] = true
 	CX.open_throne(); await _w(t, 0.6); await _shot(t, "09_throne")
 	m.close_sheet(); Menus.close_hook(); await _w(t, 0.5)
@@ -393,21 +420,27 @@ func shot_all(t, m) -> void:
 	S2.o().swp_gp.erase(SOUL.ckey(e))
 	_cam(m, e.pos + Vector2(0, 80), m.village.size.x / 420.0)
 	await _w(t, 0.6)
-	SOV.open_card(e); await _w(t, 0.6); await _shot(t, "12_card_sweep")
-	var b = SOV.card.find_child("SweepBtn", true, false) if SOV.card != null else null
-	_chk("小卡有抄功課掣（可撳）", b != null and not b.disabled)
-	if b != null:
-		var gr = b.get_global_rect()
-		var vs = t.get_viewport().get_visible_rect().size
-		_chk("抄功課掣喺畫面入面、唔撞底部導航", Rect2(0, 0, vs.x, vs.y - 60).encloses(gr), [gr, vs])
-		_chk("小卡冇變闊出界", SOV.card.get_global_rect().end.x <= vs.x + 0.5, [SOV.card.get_global_rect(), vs])
-		_chk("小卡冇因抄功課變高出界", SOV.card.get_global_rect().end.y <= vs.y - 60, SOV.card.get_global_rect())
+	for sz in [Vector2i(450, 975), Vector2i(360, 780)]:
+		t.get_window().size = sz
+		await _w(t, 0.8)
+		_cam(m, e.pos + Vector2(0, 80), m.village.size.x / 420.0)
+		await _w(t, 0.4)
+		SOV.open_card(e); await _w(t, 0.7); await _shot(t, "12_card_sweep_%dx%d" % [sz.x, sz.y])
+		await _card_check(t, "%dx%d" % [sz.x, sz.y])
+		var sb = SOV.card.find_child("SweepBtn", true, false) if SOV.card != null else null
+		_chk("小卡有抄功課掣（可撳）%dx%d" % [sz.x, sz.y], sb != null and not sb.disabled)
+		SOV.close_card(); await _w(t, 0.3)
+		var e3 = SO.camps(0)[3]
+		var c3 = SO.cst(e3); c3["wins"] = 1.0; c3["clr"] = 0.0; c3["first"] = true
+		SOV.open_card(e3); await _w(t, 0.7); await _shot(t, "14_card_locked_%dx%d" % [sz.x, sz.y])
+		await _card_check(t, "%dx%d 未夠勝場" % [sz.x, sz.y])
+		SOV.close_card(); await _w(t, 0.3)
+	t.get_window().size = Vector2i(450, 975); await _w(t, 0.8)
+	_cam(m, e.pos + Vector2(0, 80), m.village.size.x / 420.0)
+	SOV.open_card(e); await _w(t, 0.5)
 	S2.press_sweep(e)
 	await _w(t, 0.35); await _shot(t, "13_photocopy")
 	await _w(t, 1.6)
-	var e2 = SO.camps(0)[3]
-	var c2 = SO.cst(e2); c2["wins"] = 1.0; c2["clr"] = 0.0; c2["first"] = true
-	SOV.open_card(e2); await _w(t, 0.6); await _shot(t, "14_card_sweep_locked"); SOV.close_card()
 	# 招降演出：黃紙 → 火燒 → 鬼現身 → 通知書
 	for x in [[0.55, "15_summon_paper"], [1.15, "16_summon_burn"], [1.95, "17_summon_ghost"], [3.4, "18_summon_letter"]]:
 		FX.letter("n30_qionggui", false)

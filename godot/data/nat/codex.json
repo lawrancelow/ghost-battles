@@ -17,202 +17,8 @@
    "new": false
   },
   {
-   "k": "n30_qionggui",
-   "no": 1,
-   "name": "窮鬼",
-   "sys": "魂",
-   "sc": "吹氣",
-   "mech": [],
-   "tags": [],
-   "ch": 1,
-   "reg": "中",
-   "note": "",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "n30_danxiao",
-   "no": 2,
-   "name": "膽小鬼",
-   "sys": "魂",
-   "sc": "吹氣",
-   "mech": [],
-   "tags": [],
-   "ch": 1,
-   "reg": "中",
-   "note": "",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "n30_jiugui",
-   "no": 3,
-   "name": "酒鬼",
-   "sys": "魂",
-   "sc": "吹氣",
-   "mech": [
-    "霸體"
-   ],
-   "tags": [],
-   "ch": 1,
-   "reg": "中",
-   "note": "",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "pg_tuimo",
-   "no": 4,
-   "name": "推磨鬼",
-   "sys": "魂",
-   "sc": "怪聲",
-   "mech": [
-    "霸體"
-   ],
-   "tags": [
-    "定"
-   ],
-   "ch": 1,
-   "reg": "中",
-   "note": "推磨唔停＝霸體",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "n30_wutou",
-   "no": 5,
-   "name": "無頭鬼",
-   "sys": "橫",
-   "sc": "鬼臉",
-   "mech": [
-    "散骨"
-   ],
-   "tags": [],
-   "ch": 1,
-   "reg": "中",
-   "note": "斬首＝橫死",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "nw_guihuo",
-   "no": 6,
-   "name": "鬼火",
-   "sys": "魂",
-   "sc": "燈",
-   "mech": [
-    "飛",
-    "散骨"
-   ],
-   "tags": [
-    "遠",
-    "照",
-    "掃"
-   ],
-   "ch": 1,
-   "reg": "中",
-   "note": "亂葬崗燐火",
-   "pin": "凡",
-   "new": true
-  },
-  {
-   "k": "n30_kasaobake",
-   "no": 7,
-   "name": "唐傘妖",
-   "sys": "紙紮",
-   "sc": "紙",
-   "mech": [
-    "突襲"
-   ],
-   "tags": [],
-   "ch": 1,
-   "reg": "日",
-   "note": "和傘＝紙",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "n30_chochin",
-   "no": 8,
-   "name": "提燈妖",
-   "sys": "紙紮",
-   "sc": "燈",
-   "mech": [
-    "反傷"
-   ],
-   "tags": [],
-   "ch": 1,
-   "reg": "日",
-   "note": "例外：提燈＝燈；建議改遠程（噴火）",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "n30_yesi",
-   "no": 9,
-   "name": "噎死鬼",
-   "sys": "橫",
-   "sc": "電話",
-   "mech": [],
-   "tags": [],
-   "ch": 1,
-   "reg": "意",
-   "note": "建議改遠程（湯圓子彈）",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "n30_maoshi",
-   "no": 10,
-   "name": "冒失鬼",
-   "sys": "魂",
-   "sc": "吹氣",
-   "mech": [],
-   "tags": [],
-   "ch": 1,
-   "reg": "中",
-   "note": "",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "n30_jerangkung",
-   "no": 11,
-   "name": "Hantu Jerangkung",
-   "sys": "屍",
-   "sc": "凍",
-   "mech": [
-    "散骨"
-   ],
-   "tags": [],
-   "ch": 1,
-   "reg": "馬",
-   "note": "建議改遠程（骨頭迴旋鏢）；第1關王 zb_keeper",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "nw_huli",
-   "no": 12,
-   "name": "狐妖",
-   "sys": "妖",
-   "sc": "黑影",
-   "mech": [
-    "分身"
-   ],
-   "tags": [
-    "遠",
-    "照"
-   ],
-   "ch": 1,
-   "reg": "中",
-   "note": "《聊齋》狐",
-   "pin": "靈",
-   "new": true
-  },
-  {
    "k": "xiaozhi",
-   "no": 13,
+   "no": 1,
    "name": "小紙",
    "sys": "紙紮",
    "sc": "紙",
@@ -226,7 +32,7 @@
   },
   {
    "k": "eguiking",
-   "no": 14,
+   "no": 2,
    "name": "餓鬼王",
    "sys": "魂",
    "sc": "怪聲",
@@ -242,205 +48,8 @@
    "new": false
   },
   {
-   "k": "n30_pelesit",
-   "no": 15,
-   "name": "Pelesit",
-   "sys": "使",
-   "sc": "怪聲",
-   "mech": [
-    "飛"
-   ],
-   "tags": [],
-   "ch": 2,
-   "reg": "馬",
-   "note": "例外：蟋蟀叫＝怪聲",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "n30_polong",
-   "no": 16,
-   "name": "Polong",
-   "sys": "使",
-   "sc": "鬼臉",
-   "mech": [
-    "再生"
-   ],
-   "tags": [],
-   "ch": 2,
-   "reg": "馬",
-   "note": "",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "n30_jenglot",
-   "no": 17,
-   "name": "Jenglot",
-   "sys": "屍",
-   "sc": "凍",
-   "mech": [
-    "再生"
-   ],
-   "tags": [],
-   "ch": 2,
-   "reg": "馬",
-   "note": "",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "n30_shidu",
-   "no": 18,
-   "name": "食物中毒鬼",
-   "sys": "橫",
-   "sc": "吹氣",
-   "mech": [
-    "反傷"
-   ],
-   "tags": [],
-   "ch": 2,
-   "reg": "意",
-   "note": "例外：臭屁＝吹氣",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "n30_yangui",
-   "no": 19,
-   "name": "煙鬼",
-   "sys": "魂",
-   "sc": "吹氣",
-   "mech": [
-    "隱"
-   ],
-   "tags": [],
-   "ch": 2,
-   "reg": "中",
-   "note": "",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "nw_bajang",
-   "no": 20,
-   "name": "Bajang",
-   "sys": "使",
-   "sc": "鬼臉",
-   "mech": [
-    "隱"
-   ],
-   "tags": [
-    "削",
-    "刺"
-   ],
-   "ch": 2,
-   "reg": "馬",
-   "note": "馬來使魔（Skeat《Malay Magic》1900）",
-   "pin": "靈",
-   "new": true
-  },
-  {
-   "k": "n30_bunian",
-   "no": 21,
-   "name": "Orang Bunian",
-   "sys": "妖",
-   "sc": "黑影",
-   "mech": [
-    "隱"
-   ],
-   "tags": [
-    "照"
-   ],
-   "ch": 2,
-   "reg": "馬",
-   "note": "",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "n30_yezi",
-   "no": 22,
-   "name": "椰子砸死鬼",
-   "sys": "橫",
-   "sc": "電話",
-   "mech": [
-    "殼"
-   ],
-   "tags": [],
-   "ch": 2,
-   "reg": "意",
-   "note": "",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "n30_liulian",
-   "no": 23,
-   "name": "榴槤砸死鬼",
-   "sys": "橫",
-   "sc": "電話",
-   "mech": [
-    "反傷"
-   ],
-   "tags": [],
-   "ch": 2,
-   "reg": "意",
-   "note": "建議改遠程（丟榴槤）",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "n30_dugui",
-   "no": 24,
-   "name": "賭鬼",
-   "sys": "魂",
-   "sc": "紙",
-   "mech": [
-    "分身"
-   ],
-   "tags": [],
-   "ch": 2,
-   "reg": "中",
-   "note": "例外：飛牌＝紙",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "n30_guhangui",
-   "no": 25,
-   "name": "孤寒鬼",
-   "sys": "魂",
-   "sc": "紙",
-   "mech": [
-    "殼"
-   ],
-   "tags": [],
-   "ch": 2,
-   "reg": "中",
-   "note": "例外：算盤欠單＝紙",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "n30_hantugalah",
-   "no": 26,
-   "name": "Hantu Galah",
-   "sys": "魂",
-   "sc": "黑影",
-   "mech": [
-    "嚇氣光環"
-   ],
-   "tags": [],
-   "ch": 2,
-   "reg": "馬",
-   "note": "例外：越望越高的黑影",
-   "pin": "靈",
-   "new": false
-  },
-  {
    "k": "toyol",
-   "no": 27,
+   "no": 3,
    "name": "Toyol",
    "sys": "使",
    "sc": "鬼臉",
@@ -456,163 +65,255 @@
    "new": false
   },
   {
-   "k": "n30_hanturaya",
-   "no": 28,
-   "name": "Hantu Raya",
-   "sys": "使",
-   "sc": "黑影",
+   "k": "laojiang",
+   "no": 4,
+   "name": "老殭",
+   "sys": "屍",
+   "sc": "凍",
    "mech": [
-    "分身",
-    "召喚"
-   ],
-   "tags": [],
-   "ch": 2,
-   "reg": "馬",
-   "note": "例外：主人的大黑影",
-   "pin": "煞",
-   "new": false
-  },
-  {
-   "k": "n30_genderuwo",
-   "no": 29,
-   "name": "Genderuwo",
-   "sys": "妖",
-   "sc": "黑影",
-   "mech": [
-    "霸體"
+    "霸體",
+    "屍變"
    ],
    "tags": [
     "定"
    ],
-   "ch": 2,
+   "ch": 3,
+   "reg": "中",
+   "note": "劇情收編",
+   "pin": "王",
+   "new": false
+  },
+  {
+   "k": "pontianak",
+   "no": 5,
+   "name": "Pontianak",
+   "sys": "厲",
+   "sc": "怪聲",
+   "mech": [
+    "飛",
+    "嚇氣光環"
+   ],
+   "tags": [],
+   "ch": 4,
    "reg": "馬",
-   "note": "",
+   "note": "劇情收編",
+   "pin": "王",
+   "new": false
+  },
+  {
+   "k": "pocong",
+   "no": 6,
+   "name": "Pocong",
+   "sys": "屍",
+   "sc": "凍",
+   "mech": [
+    "殼",
+    "屍變"
+   ],
+   "tags": [
+    "收"
+   ],
+   "ch": 5,
+   "reg": "馬",
+   "note": "劇情收編",
    "pin": "煞",
    "new": false
   },
   {
-   "k": "n30_changgui",
-   "no": 30,
-   "name": "倀鬼",
-   "sys": "使",
+   "k": "penanggal",
+   "no": 7,
+   "name": "Penanggal",
+   "sys": "厲",
    "sc": "鬼臉",
    "mech": [
-    "召喚"
+    "飛",
+    "突襲"
    ],
    "tags": [],
-   "ch": 3,
+   "ch": 5,
+   "reg": "馬",
+   "note": "劇情收編",
+   "pin": "王",
+   "new": false
+  },
+  {
+   "k": "mengpo",
+   "no": 8,
+   "name": "孟婆",
+   "sys": "官",
+   "sc": "紙",
+   "mech": [],
+   "tags": [],
+   "ch": 6,
+   "reg": "中",
+   "note": "",
+   "pin": "王",
+   "new": false
+  },
+  {
+   "k": "baiwu",
+   "no": 9,
+   "name": "白無常",
+   "sys": "官",
+   "sc": "紙",
+   "mech": [
+    "嚇氣光環",
+    "分身"
+   ],
+   "tags": [
+    "收"
+   ],
+   "ch": 6,
+   "reg": "中",
+   "note": "劇情收編",
+   "pin": "王",
+   "new": false
+  },
+  {
+   "k": "tianhua",
+   "no": 10,
+   "name": "天花姐",
+   "sys": "魂",
+   "sc": "鬼臉",
+   "mech": [
+    "突襲"
+   ],
+   "tags": [],
+   "ch": 4,
+   "reg": "中",
+   "note": "支線；新入敵表",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "heiwu",
+   "no": 11,
+   "name": "黑無常",
+   "sys": "官",
+   "sc": "黑影",
+   "mech": [
+    "殼",
+    "霸體"
+   ],
+   "tags": [
+    "收",
+    "定"
+   ],
+   "ch": 6,
+   "reg": "中",
+   "note": "劇情收編",
+   "pin": "王",
+   "new": false
+  },
+  {
+   "k": "n30_qionggui",
+   "no": 12,
+   "name": "窮鬼",
+   "sys": "魂",
+   "sc": "吹氣",
+   "mech": [],
+   "tags": [],
+   "ch": 1,
    "reg": "中",
    "note": "",
    "pin": "凡",
    "new": false
   },
   {
-   "k": "nw_baimao",
-   "no": 31,
-   "name": "白毛殭屍",
-   "sys": "屍",
-   "sc": "凍",
-   "mech": [
-    "霸體",
-    "再生"
-   ],
-   "tags": [
-    "定",
-    "破"
-   ],
-   "ch": 3,
-   "reg": "中",
-   "note": "民間殭屍分級：白毛殭屍",
-   "pin": "靈",
-   "new": true
-  },
-  {
-   "k": "n30_shanxiao",
-   "no": 32,
-   "name": "山魈",
-   "sys": "妖",
-   "sc": "黑影",
-   "mech": [
-    "突襲"
-   ],
-   "tags": [],
-   "ch": 3,
-   "reg": "中",
-   "note": "",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "n30_tikbalang",
-   "no": 33,
-   "name": "Tikbalang",
-   "sys": "妖",
-   "sc": "黑影",
-   "mech": [
-    "迷魂"
-   ],
-   "tags": [],
-   "ch": 3,
-   "reg": "泰",
-   "note": "",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "n30_baigujing",
-   "no": 34,
-   "name": "白骨精",
-   "sys": "妖",
-   "sc": "黑影",
-   "mech": [
-    "分身",
-    "再生"
-   ],
-   "tags": [],
-   "ch": 3,
-   "reg": "中",
-   "note": "",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "nw_daqiang",
-   "no": 35,
-   "name": "鬼打牆",
-   "sys": "妖",
-   "sc": "黑影",
-   "mech": [
-    "迷魂"
-   ],
-   "tags": [
-    "照"
-   ],
-   "ch": 3,
-   "reg": "中",
-   "note": "民間說鬼打牆係狐狸／黃鼠狼作怪",
-   "pin": "靈",
-   "new": true
-  },
-  {
-   "k": "nw_ganshi",
-   "no": 36,
-   "name": "趕屍匠",
+   "k": "n30_danxiao",
+   "no": 13,
+   "name": "膽小鬼",
    "sys": "魂",
-   "sc": "怪聲",
+   "sc": "吹氣",
    "mech": [],
-   "tags": [
-    "收",
-    "遠"
-   ],
-   "ch": 3,
+   "tags": [],
+   "ch": 1,
    "reg": "中",
-   "note": "湘西趕屍；STORY_BIBLE 支線「走失趕屍匠」",
+   "note": "",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "n30_maoshi",
+   "no": 14,
+   "name": "冒失鬼",
+   "sys": "魂",
+   "sc": "吹氣",
+   "mech": [],
+   "tags": [],
+   "ch": 1,
+   "reg": "中",
+   "note": "",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "n30_yangui",
+   "no": 15,
+   "name": "煙鬼",
+   "sys": "魂",
+   "sc": "吹氣",
+   "mech": [
+    "隱"
+   ],
+   "tags": [],
+   "ch": 2,
+   "reg": "中",
+   "note": "",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "n30_jiugui",
+   "no": 16,
+   "name": "酒鬼",
+   "sys": "魂",
+   "sc": "吹氣",
+   "mech": [
+    "霸體"
+   ],
+   "tags": [],
+   "ch": 1,
+   "reg": "中",
+   "note": "",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "n30_dugui",
+   "no": 17,
+   "name": "賭鬼",
+   "sys": "魂",
+   "sc": "紙",
+   "mech": [
+    "分身"
+   ],
+   "tags": [],
+   "ch": 2,
+   "reg": "中",
+   "note": "例外：飛牌＝紙",
    "pin": "靈",
-   "new": true
+   "new": false
+  },
+  {
+   "k": "n30_guhangui",
+   "no": 18,
+   "name": "孤寒鬼",
+   "sys": "魂",
+   "sc": "紙",
+   "mech": [
+    "殼"
+   ],
+   "tags": [],
+   "ch": 2,
+   "reg": "中",
+   "note": "例外：算盤欠單＝紙",
+   "pin": "靈",
+   "new": false
   },
   {
    "k": "n30_taozhai",
-   "no": 37,
+   "no": 19,
    "name": "討債鬼",
    "sys": "使",
    "sc": "紙",
@@ -627,24 +328,8 @@
    "new": false
   },
   {
-   "k": "pg_songding",
-   "no": 38,
-   "name": "被賣鬼",
-   "sys": "魂",
-   "sc": "鬼臉",
-   "mech": [
-    "分身"
-   ],
-   "tags": [],
-   "ch": 3,
-   "reg": "中",
-   "note": "變羊＝分身",
-   "pin": "靈",
-   "new": false
-  },
-  {
    "k": "n30_diaosi",
-   "no": 39,
+   "no": 20,
    "name": "吊死鬼",
    "sys": "厲",
    "sc": "鬼臉",
@@ -661,43 +346,107 @@
    "new": false
   },
   {
-   "k": "n30_shedu",
-   "no": 40,
-   "name": "蛇咬鬼",
+   "k": "n30_wutou",
+   "no": 21,
+   "name": "無頭鬼",
    "sys": "橫",
-   "sc": "電話",
+   "sc": "鬼臉",
    "mech": [
-    "反傷"
+    "散骨"
+   ],
+   "tags": [],
+   "ch": 1,
+   "reg": "中",
+   "note": "斬首＝橫死",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "n30_changgui",
+   "no": 22,
+   "name": "倀鬼",
+   "sys": "使",
+   "sc": "鬼臉",
+   "mech": [
+    "召喚"
    ],
    "tags": [],
    "ch": 3,
-   "reg": "意",
+   "reg": "中",
+   "note": "",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "n30_guixinniang",
+   "no": 23,
+   "name": "鬼新娘",
+   "sys": "厲",
+   "sc": "怪聲",
+   "mech": [
+    "召喚"
+   ],
+   "tags": [],
+   "ch": 4,
+   "reg": "中",
+   "note": "嗩吶迎親隊＝召喚",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_baigujing",
+   "no": 24,
+   "name": "白骨精",
+   "sys": "妖",
+   "sc": "黑影",
+   "mech": [
+    "分身",
+    "再生"
+   ],
+   "tags": [],
+   "ch": 3,
+   "reg": "中",
    "note": "",
    "pin": "靈",
    "new": false
   },
   {
-   "k": "nw_buhuagu",
-   "no": 41,
-   "name": "不化骨",
-   "sys": "屍",
-   "sc": "凍",
+   "k": "n30_shanxiao",
+   "no": 25,
+   "name": "山魈",
+   "sys": "妖",
+   "sc": "黑影",
    "mech": [
-    "殼",
-    "屍變"
+    "突襲"
+   ],
+   "tags": [],
+   "ch": 3,
+   "reg": "中",
+   "note": "",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_yecha",
+   "no": 26,
+   "name": "夜叉",
+   "sys": "官",
+   "sc": "燈",
+   "mech": [
+    "殼"
    ],
    "tags": [
     "定"
    ],
-   "ch": 3,
-   "reg": "中",
-   "note": "民間殭屍傳說「不化骨」",
+   "ch": 6,
+   "reg": "他",
+   "note": "",
    "pin": "煞",
-   "new": true
+   "new": false
   },
   {
    "k": "n30_hanba",
-   "no": 42,
+   "no": 27,
    "name": "旱魃",
    "sys": "屍",
    "sc": "燈",
@@ -713,41 +462,281 @@
    "new": false
   },
   {
-   "k": "nw_huapi",
-   "no": 43,
-   "name": "畫皮",
-   "sys": "厲",
-   "sc": "紙",
+   "k": "n30_pelesit",
+   "no": 28,
+   "name": "Pelesit",
+   "sys": "使",
+   "sc": "怪聲",
    "mech": [
-    "分身"
+    "飛"
    ],
-   "tags": [
-    "削",
-    "照"
-   ],
-   "ch": 3,
-   "reg": "中",
-   "note": "《聊齋·畫皮》",
-   "pin": "煞",
-   "new": true
+   "tags": [],
+   "ch": 2,
+   "reg": "馬",
+   "note": "例外：蟋蟀叫＝怪聲",
+   "pin": "凡",
+   "new": false
   },
   {
-   "k": "laojiang",
-   "no": 44,
-   "name": "老殭",
+   "k": "n30_polong",
+   "no": 29,
+   "name": "Polong",
+   "sys": "使",
+   "sc": "鬼臉",
+   "mech": [
+    "再生"
+   ],
+   "tags": [],
+   "ch": 2,
+   "reg": "馬",
+   "note": "",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "n30_jenglot",
+   "no": 30,
+   "name": "Jenglot",
    "sys": "屍",
    "sc": "凍",
    "mech": [
-    "霸體",
-    "屍變"
+    "再生"
+   ],
+   "tags": [],
+   "ch": 2,
+   "reg": "馬",
+   "note": "",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "n30_hantugalah",
+   "no": 31,
+   "name": "Hantu Galah",
+   "sys": "魂",
+   "sc": "黑影",
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tags": [],
+   "ch": 2,
+   "reg": "馬",
+   "note": "例外：越望越高的黑影",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_jerangkung",
+   "no": 32,
+   "name": "Hantu Jerangkung",
+   "sys": "屍",
+   "sc": "凍",
+   "mech": [
+    "散骨"
+   ],
+   "tags": [],
+   "ch": 1,
+   "reg": "馬",
+   "note": "建議改遠程（骨頭迴旋鏢）；第1關王 zb_keeper",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_bunian",
+   "no": 33,
+   "name": "Orang Bunian",
+   "sys": "妖",
+   "sc": "黑影",
+   "mech": [
+    "隱"
+   ],
+   "tags": [
+    "照"
+   ],
+   "ch": 2,
+   "reg": "馬",
+   "note": "",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_hanturaya",
+   "no": 34,
+   "name": "Hantu Raya",
+   "sys": "使",
+   "sc": "黑影",
+   "mech": [
+    "分身",
+    "召喚"
+   ],
+   "tags": [],
+   "ch": 2,
+   "reg": "馬",
+   "note": "例外：主人的大黑影",
+   "pin": "煞",
+   "new": false
+  },
+  {
+   "k": "n30_genderuwo",
+   "no": 35,
+   "name": "Genderuwo",
+   "sys": "妖",
+   "sc": "黑影",
+   "mech": [
+    "霸體"
    ],
    "tags": [
     "定"
    ],
+   "ch": 2,
+   "reg": "馬",
+   "note": "",
+   "pin": "煞",
+   "new": false
+  },
+  {
+   "k": "n30_phiam",
+   "no": 36,
+   "name": "Phi Am",
+   "sys": "魂",
+   "sc": "黑影",
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tags": [],
+   "ch": 4,
+   "reg": "泰",
+   "note": "例外：鬼壓床＝黑影",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "n30_churel",
+   "no": 37,
+   "name": "Churel",
+   "sys": "厲",
+   "sc": "怪聲",
+   "mech": [
+    "迷魂"
+   ],
+   "tags": [],
+   "ch": 4,
+   "reg": "泰",
+   "note": "",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_tikbalang",
+   "no": 38,
+   "name": "Tikbalang",
+   "sys": "妖",
+   "sc": "黑影",
+   "mech": [
+    "迷魂"
+   ],
+   "tags": [],
    "ch": 3,
-   "reg": "中",
-   "note": "劇情收編",
-   "pin": "王",
+   "reg": "泰",
+   "note": "",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_maenak",
+   "no": 39,
+   "name": "Mae Nak",
+   "sys": "厲",
+   "sc": "怪聲",
+   "mech": [
+    "突襲"
+   ],
+   "tags": [],
+   "ch": 4,
+   "reg": "泰",
+   "note": "",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_aswang",
+   "no": 40,
+   "name": "Aswang",
+   "sys": "妖",
+   "sc": "黑影",
+   "mech": [
+    "再生",
+    "分身"
+   ],
+   "tags": [],
+   "ch": 4,
+   "reg": "泰",
+   "note": "",
+   "pin": "煞",
+   "new": false
+  },
+  {
+   "k": "n30_vetala",
+   "no": 41,
+   "name": "Vetala",
+   "sys": "屍",
+   "sc": "鬼臉",
+   "mech": [
+    "迷魂"
+   ],
+   "tags": [],
+   "ch": 5,
+   "reg": "泰",
+   "note": "例外：倒吊鬼臉",
+   "pin": "煞",
+   "new": false
+  },
+  {
+   "k": "n30_banshee",
+   "no": 42,
+   "name": "Banshee",
+   "sys": "厲",
+   "sc": "怪聲",
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tags": [],
+   "ch": 5,
+   "reg": "他",
+   "note": "",
+   "pin": "煞",
+   "new": false
+  },
+  {
+   "k": "n30_kasaobake",
+   "no": 43,
+   "name": "唐傘妖",
+   "sys": "紙紮",
+   "sc": "紙",
+   "mech": [
+    "突襲"
+   ],
+   "tags": [],
+   "ch": 1,
+   "reg": "日",
+   "note": "和傘＝紙",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "n30_chochin",
+   "no": 44,
+   "name": "提燈妖",
+   "sys": "紙紮",
+   "sc": "燈",
+   "mech": [
+    "反傷"
+   ],
+   "tags": [],
+   "ch": 1,
+   "reg": "日",
+   "note": "例外：提燈＝燈；建議改遠程（噴火）",
+   "pin": "凡",
    "new": false
   },
   {
@@ -767,24 +756,184 @@
    "new": false
   },
   {
-   "k": "n30_phiam",
+   "k": "n30_nopperabo",
    "no": 46,
-   "name": "Phi Am",
-   "sys": "魂",
+   "name": "無臉鬼",
+   "sys": "妖",
+   "sc": "鬼臉",
+   "mech": [
+    "隱"
+   ],
+   "tags": [
+    "定"
+   ],
+   "ch": 5,
+   "reg": "日",
+   "note": "",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_rokurokubi",
+   "no": 47,
+   "name": "轆轤首",
+   "sys": "妖",
    "sc": "黑影",
+   "mech": [
+    "突襲"
+   ],
+   "tags": [],
+   "ch": 5,
+   "reg": "日",
+   "note": "",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_kuchisake",
+   "no": 48,
+   "name": "裂口女",
+   "sys": "厲",
+   "sc": "鬼臉",
+   "mech": [
+    "突襲"
+   ],
+   "tags": [],
+   "ch": 5,
+   "reg": "日",
+   "note": "",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_yukionna",
+   "no": 49,
+   "name": "雪女",
+   "sys": "厲",
+   "sc": "凍",
    "mech": [
     "嚇氣光環"
    ],
    "tags": [],
-   "ch": 4,
-   "reg": "泰",
-   "note": "例外：鬼壓床＝黑影",
+   "ch": 5,
+   "reg": "日",
+   "note": "例外：吐冰霜＝凍",
+   "pin": "煞",
+   "new": false
+  },
+  {
+   "k": "n30_hannya",
+   "no": 50,
+   "name": "般若",
+   "sys": "厲",
+   "sc": "鬼臉",
+   "mech": [
+    "反傷",
+    "霸體"
+   ],
+   "tags": [],
+   "ch": 5,
+   "reg": "日",
+   "note": "",
+   "pin": "煞",
+   "new": false
+  },
+  {
+   "k": "n30_gashadokuro",
+   "no": 51,
+   "name": "餓者髑髏",
+   "sys": "屍",
+   "sc": "凍",
+   "mech": [
+    "散骨",
+    "霸體"
+   ],
+   "tags": [],
+   "ch": 5,
+   "reg": "日",
+   "note": "",
+   "pin": "煞",
+   "new": false
+  },
+  {
+   "k": "n30_zipai",
+   "no": 52,
+   "name": "自拍跌死鬼",
+   "sys": "橫",
+   "sc": "電話",
+   "mech": [
+    "分身"
+   ],
+   "tags": [],
+   "ch": 5,
+   "reg": "意",
+   "note": "",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "n30_xiaosi",
+   "no": 53,
+   "name": "笑死鬼",
+   "sys": "橫",
+   "sc": "怪聲",
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tags": [],
+   "ch": 5,
+   "reg": "意",
+   "note": "例外：笑聲＝怪聲",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "n30_yesi",
+   "no": 54,
+   "name": "噎死鬼",
+   "sys": "橫",
+   "sc": "電話",
+   "mech": [],
+   "tags": [],
+   "ch": 1,
+   "reg": "意",
+   "note": "建議改遠程（湯圓子彈）",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "n30_shidu",
+   "no": 55,
+   "name": "食物中毒鬼",
+   "sys": "橫",
+   "sc": "吹氣",
+   "mech": [
+    "反傷"
+   ],
+   "tags": [],
+   "ch": 2,
+   "reg": "意",
+   "note": "例外：臭屁＝吹氣",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "n30_daji",
+   "no": 56,
+   "name": "打機猝死鬼",
+   "sys": "橫",
+   "sc": "電話",
+   "mech": [],
+   "tags": [],
+   "ch": 5,
+   "reg": "意",
+   "note": "",
    "pin": "凡",
    "new": false
   },
   {
    "k": "n30_xiasi",
-   "no": 47,
+   "no": 57,
    "name": "嚇死鬼",
    "sys": "魂",
    "sc": "鬼臉",
@@ -799,56 +948,457 @@
    "new": false
   },
   {
-   "k": "n30_churel",
-   "no": 48,
-   "name": "Churel",
-   "sys": "厲",
-   "sc": "怪聲",
+   "k": "n30_chehuo",
+   "no": 58,
+   "name": "車禍鬼",
+   "sys": "橫",
+   "sc": "燈",
    "mech": [
-    "迷魂"
+    "突襲"
    ],
    "tags": [],
-   "ch": 4,
-   "reg": "泰",
+   "ch": 5,
+   "reg": "意",
+   "note": "例外：車頭燈＝燈",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_yezi",
+   "no": 59,
+   "name": "椰子砸死鬼",
+   "sys": "橫",
+   "sc": "電話",
+   "mech": [
+    "殼"
+   ],
+   "tags": [],
+   "ch": 2,
+   "reg": "意",
    "note": "",
    "pin": "靈",
    "new": false
   },
   {
-   "k": "n30_maenak",
-   "no": 49,
-   "name": "Mae Nak",
+   "k": "n30_liulian",
+   "no": 60,
+   "name": "榴槤砸死鬼",
+   "sys": "橫",
+   "sc": "電話",
+   "mech": [
+    "反傷"
+   ],
+   "tags": [],
+   "ch": 2,
+   "reg": "意",
+   "note": "建議改遠程（丟榴槤）",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_zhongshu",
+   "no": 61,
+   "name": "中暑鬼",
+   "sys": "橫",
+   "sc": "燈",
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tags": [],
+   "ch": 4,
+   "reg": "意",
+   "note": "例外：烈日＝燈",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_chengsi",
+   "no": 62,
+   "name": "撐死鬼",
+   "sys": "橫",
+   "sc": "吹氣",
+   "mech": [
+    "再生"
+   ],
+   "tags": [],
+   "ch": 5,
+   "reg": "意",
+   "note": "例外：打嗝＝吹氣",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_shedu",
+   "no": 63,
+   "name": "蛇咬鬼",
+   "sys": "橫",
+   "sc": "電話",
+   "mech": [
+    "反傷"
+   ],
+   "tags": [],
+   "ch": 3,
+   "reg": "意",
+   "note": "",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "n30_diansi",
+   "no": 64,
+   "name": "電死鬼",
+   "sys": "橫",
+   "sc": "電話",
+   "mech": [
+    "反傷"
+   ],
+   "tags": [],
+   "ch": 6,
+   "reg": "意",
+   "note": "建議改遠程（放電）",
+   "pin": "煞",
+   "new": false
+  },
+  {
+   "k": "n30_dongsi",
+   "no": 65,
+   "name": "凍死鬼",
+   "sys": "屍",
+   "sc": "凍",
+   "mech": [
+    "殼"
+   ],
+   "tags": [],
+   "ch": 6,
+   "reg": "意",
+   "note": "結冰＝屍",
+   "pin": "煞",
+   "new": false
+  },
+  {
+   "k": "n30_leipi",
+   "no": 66,
+   "name": "雷劈鬼",
+   "sys": "橫",
+   "sc": "燈",
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tags": [],
+   "ch": 6,
+   "reg": "意",
+   "note": "例外：閃電＝燈",
+   "pin": "煞",
+   "new": false
+  },
+  {
+   "k": "n30_xiangcai",
+   "no": 67,
+   "name": "大象踩扁鬼",
+   "sys": "紙紮",
+   "sc": "紙",
+   "mech": [
+    "隱"
+   ],
+   "tags": [],
+   "ch": 4,
+   "reg": "意",
+   "note": "扁到變紙＝紙紮；入門縫＝隱",
+   "pin": "煞",
+   "new": false
+  },
+  {
+   "k": "pg_tuimo",
+   "no": 68,
+   "name": "推磨鬼",
+   "sys": "魂",
+   "sc": "怪聲",
+   "mech": [
+    "霸體"
+   ],
+   "tags": [
+    "定"
+   ],
+   "ch": 1,
+   "reg": "中",
+   "note": "推磨唔停＝霸體",
+   "pin": "凡",
+   "new": false
+  },
+  {
+   "k": "pg_songding",
+   "no": 69,
+   "name": "被賣鬼",
+   "sys": "魂",
+   "sc": "鬼臉",
+   "mech": [
+    "分身"
+   ],
+   "tags": [],
+   "ch": 3,
+   "reg": "中",
+   "note": "變羊＝分身",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "pg_ji",
+   "no": 70,
+   "name": "聻",
+   "sys": "魂",
+   "sc": "黑影",
+   "mech": [
+    "隱",
+    "屍變"
+   ],
+   "tags": [],
+   "ch": 6,
+   "reg": "中",
+   "note": "「鬼死為聻」",
+   "pin": "煞",
+   "new": false
+  },
+  {
+   "k": "pg_ex",
+   "no": 71,
+   "name": "前女友鬼",
+   "sys": "厲",
+   "sc": "電話",
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tags": [],
+   "ch": 6,
+   "reg": "意",
+   "note": "例外：只回「哦」＝電話",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "pg_landlady",
+   "no": 72,
+   "name": "二房東",
+   "sys": "橫",
+   "sc": "紙",
+   "mech": [
+    "召喚",
+    "殼"
+   ],
+   "tags": [],
+   "ch": 6,
+   "reg": "意",
+   "note": "焗死＝橫死；例外：屋規＝紙",
+   "pin": "煞",
+   "new": false
+  },
+  {
+   "k": "niutou",
+   "no": 73,
+   "name": "牛頭",
+   "sys": "官",
+   "sc": "燈",
+   "mech": [
+    "殼"
+   ],
+   "tags": [
+    "定"
+   ],
+   "ch": 6,
+   "reg": "中",
+   "note": "雜兵升名鬼（已有敵人圖）",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "mamian",
+   "no": 74,
+   "name": "馬面",
+   "sys": "官",
+   "sc": "燈",
+   "mech": [
+    "突襲"
+   ],
+   "tags": [],
+   "ch": 6,
+   "reg": "中",
+   "note": "雜兵升名鬼（已有敵人圖）",
+   "pin": "靈",
+   "new": false
+  },
+  {
+   "k": "nw_guihuo",
+   "no": 75,
+   "name": "鬼火",
+   "sys": "魂",
+   "sc": "燈",
+   "mech": [
+    "飛",
+    "散骨"
+   ],
+   "tags": [
+    "遠",
+    "照",
+    "掃"
+   ],
+   "ch": 1,
+   "reg": "中",
+   "note": "亂葬崗燐火",
+   "pin": "凡",
+   "new": true
+  },
+  {
+   "k": "nw_huli",
+   "no": 76,
+   "name": "狐妖",
+   "sys": "妖",
+   "sc": "黑影",
+   "mech": [
+    "分身"
+   ],
+   "tags": [
+    "遠",
+    "照"
+   ],
+   "ch": 1,
+   "reg": "中",
+   "note": "《聊齋》狐",
+   "pin": "靈",
+   "new": true
+  },
+  {
+   "k": "nw_bajang",
+   "no": 77,
+   "name": "Bajang",
+   "sys": "使",
+   "sc": "鬼臉",
+   "mech": [
+    "隱"
+   ],
+   "tags": [
+    "削",
+    "刺"
+   ],
+   "ch": 2,
+   "reg": "馬",
+   "note": "馬來使魔（Skeat《Malay Magic》1900）",
+   "pin": "靈",
+   "new": true
+  },
+  {
+   "k": "nw_teketeke",
+   "no": 78,
+   "name": "Teke Teke",
    "sys": "厲",
    "sc": "怪聲",
    "mech": [
     "突襲"
    ],
-   "tags": [],
-   "ch": 4,
-   "reg": "泰",
-   "note": "",
+   "tags": [
+    "刺",
+    "拉"
+   ],
+   "ch": 5,
+   "reg": "他",
+   "note": "第 5 關；被動唔好寫免疫腳軟（改突襲加速），免得偵察卡應對寫錯",
    "pin": "靈",
-   "new": false
+   "new": true
   },
   {
-   "k": "n30_guixinniang",
-   "no": 50,
-   "name": "鬼新娘",
-   "sys": "厲",
-   "sc": "怪聲",
+   "k": "nw_baimao",
+   "no": 79,
+   "name": "白毛殭屍",
+   "sys": "屍",
+   "sc": "凍",
    "mech": [
-    "召喚"
+    "霸體",
+    "再生"
    ],
-   "tags": [],
-   "ch": 4,
+   "tags": [
+    "定",
+    "破"
+   ],
+   "ch": 3,
    "reg": "中",
-   "note": "嗩吶迎親隊＝召喚",
+   "note": "民間殭屍分級：白毛殭屍",
    "pin": "靈",
-   "new": false
+   "new": true
+  },
+  {
+   "k": "nw_buhuagu",
+   "no": 80,
+   "name": "不化骨",
+   "sys": "屍",
+   "sc": "凍",
+   "mech": [
+    "殼",
+    "屍變"
+   ],
+   "tags": [
+    "定"
+   ],
+   "ch": 3,
+   "reg": "中",
+   "note": "民間殭屍傳說「不化骨」",
+   "pin": "煞",
+   "new": true
+  },
+  {
+   "k": "nw_daqiang",
+   "no": 81,
+   "name": "鬼打牆",
+   "sys": "妖",
+   "sc": "黑影",
+   "mech": [
+    "迷魂"
+   ],
+   "tags": [
+    "照"
+   ],
+   "ch": 3,
+   "reg": "中",
+   "note": "民間說鬼打牆係狐狸／黃鼠狼作怪",
+   "pin": "靈",
+   "new": true
+  },
+  {
+   "k": "nw_ganshi",
+   "no": 82,
+   "name": "趕屍匠",
+   "sys": "魂",
+   "sc": "怪聲",
+   "mech": [],
+   "tags": [
+    "收",
+    "遠"
+   ],
+   "ch": 3,
+   "reg": "中",
+   "note": "湘西趕屍；STORY_BIBLE 支線「走失趕屍匠」",
+   "pin": "靈",
+   "new": true
+  },
+  {
+   "k": "nw_huapi",
+   "no": 83,
+   "name": "畫皮",
+   "sys": "厲",
+   "sc": "紙",
+   "mech": [
+    "分身"
+   ],
+   "tags": [
+    "削",
+    "照"
+   ],
+   "ch": 3,
+   "reg": "中",
+   "note": "《聊齋·畫皮》",
+   "pin": "煞",
+   "new": true
   },
   {
    "k": "nw_ameonna",
-   "no": 51,
+   "no": 84,
    "name": "雨女",
    "sys": "厲",
    "sc": "凍",
@@ -867,7 +1417,7 @@
   },
   {
    "k": "nw_shejing",
-   "no": 52,
+   "no": 85,
    "name": "蛇精",
    "sys": "妖",
    "sc": "凍",
@@ -886,7 +1436,7 @@
   },
   {
    "k": "nw_tiangou",
-   "no": 53,
+   "no": 86,
    "name": "天狗",
    "sys": "妖",
    "sc": "黑影",
@@ -905,7 +1455,7 @@
   },
   {
    "k": "nw_tisi",
-   "no": 54,
+   "no": 87,
    "name": "替死鬼",
    "sys": "橫",
    "sc": "凍",
@@ -923,41 +1473,9 @@
    "new": true
   },
   {
-   "k": "n30_zhongshu",
-   "no": 55,
-   "name": "中暑鬼",
-   "sys": "橫",
-   "sc": "燈",
-   "mech": [
-    "嚇氣光環"
-   ],
-   "tags": [],
-   "ch": 4,
-   "reg": "意",
-   "note": "例外：烈日＝燈",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "tianhua",
-   "no": 56,
-   "name": "天花姐",
-   "sys": "魂",
-   "sc": "鬼臉",
-   "mech": [
-    "突襲"
-   ],
-   "tags": [],
-   "ch": 4,
-   "reg": "中",
-   "note": "支線；新入敵表",
-   "pin": "靈",
-   "new": false
-  },
-  {
    "k": "nw_krahang",
-   "no": 57,
-   "name": "Krahang",
+   "no": 88,
+   "name": "Phi Krahang",
    "sys": "妖",
    "sc": "黑影",
    "mech": [
@@ -974,41 +1492,8 @@
    "new": true
   },
   {
-   "k": "n30_aswang",
-   "no": 58,
-   "name": "Aswang",
-   "sys": "妖",
-   "sc": "黑影",
-   "mech": [
-    "再生",
-    "分身"
-   ],
-   "tags": [],
-   "ch": 4,
-   "reg": "泰",
-   "note": "",
-   "pin": "煞",
-   "new": false
-  },
-  {
-   "k": "n30_xiangcai",
-   "no": 59,
-   "name": "大象踩扁鬼",
-   "sys": "紙紮",
-   "sc": "紙",
-   "mech": [
-    "隱"
-   ],
-   "tags": [],
-   "ch": 4,
-   "reg": "意",
-   "note": "扁到變紙＝紙紮；入門縫＝隱",
-   "pin": "煞",
-   "new": false
-  },
-  {
    "k": "nw_kapre",
-   "no": 60,
+   "no": 89,
    "name": "Kapre",
    "sys": "妖",
    "sc": "吹氣",
@@ -1027,153 +1512,8 @@
    "new": true
   },
   {
-   "k": "pontianak",
-   "no": 61,
-   "name": "Pontianak",
-   "sys": "厲",
-   "sc": "怪聲",
-   "mech": [
-    "飛",
-    "嚇氣光環"
-   ],
-   "tags": [],
-   "ch": 4,
-   "reg": "馬",
-   "note": "劇情收編",
-   "pin": "王",
-   "new": false
-  },
-  {
-   "k": "n30_zipai",
-   "no": 62,
-   "name": "自拍跌死鬼",
-   "sys": "橫",
-   "sc": "電話",
-   "mech": [
-    "分身"
-   ],
-   "tags": [],
-   "ch": 5,
-   "reg": "意",
-   "note": "",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "n30_daji",
-   "no": 63,
-   "name": "打機猝死鬼",
-   "sys": "橫",
-   "sc": "電話",
-   "mech": [],
-   "tags": [],
-   "ch": 5,
-   "reg": "意",
-   "note": "",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "n30_xiaosi",
-   "no": 64,
-   "name": "笑死鬼",
-   "sys": "橫",
-   "sc": "怪聲",
-   "mech": [
-    "嚇氣光環"
-   ],
-   "tags": [],
-   "ch": 5,
-   "reg": "意",
-   "note": "例外：笑聲＝怪聲",
-   "pin": "凡",
-   "new": false
-  },
-  {
-   "k": "n30_kuchisake",
-   "no": 65,
-   "name": "裂口女",
-   "sys": "厲",
-   "sc": "鬼臉",
-   "mech": [
-    "突襲"
-   ],
-   "tags": [],
-   "ch": 5,
-   "reg": "日",
-   "note": "",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "n30_chehuo",
-   "no": 66,
-   "name": "車禍鬼",
-   "sys": "橫",
-   "sc": "燈",
-   "mech": [
-    "突襲"
-   ],
-   "tags": [],
-   "ch": 5,
-   "reg": "意",
-   "note": "例外：車頭燈＝燈",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "n30_chengsi",
-   "no": 67,
-   "name": "撐死鬼",
-   "sys": "橫",
-   "sc": "吹氣",
-   "mech": [
-    "再生"
-   ],
-   "tags": [],
-   "ch": 5,
-   "reg": "意",
-   "note": "例外：打嗝＝吹氣",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "n30_nopperabo",
-   "no": 68,
-   "name": "無臉鬼",
-   "sys": "妖",
-   "sc": "鬼臉",
-   "mech": [
-    "隱"
-   ],
-   "tags": [
-    "定"
-   ],
-   "ch": 5,
-   "reg": "日",
-   "note": "",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "n30_rokurokubi",
-   "no": 69,
-   "name": "轆轤首",
-   "sys": "妖",
-   "sc": "黑影",
-   "mech": [
-    "突襲"
-   ],
-   "tags": [],
-   "ch": 5,
-   "reg": "日",
-   "note": "",
-   "pin": "靈",
-   "new": false
-  },
-  {
    "k": "nw_honeonna",
-   "no": 70,
+   "no": 90,
    "name": "骨女",
    "sys": "屍",
    "sc": "燈",
@@ -1191,185 +1531,8 @@
    "new": true
   },
   {
-   "k": "nw_zzphone",
-   "no": 71,
-   "name": "紙紮手機",
-   "sys": "紙紮",
-   "sc": "電話",
-   "mech": [
-    "隱"
-   ],
-   "tags": [
-    "遠",
-    "削"
-   ],
-   "ch": 5,
-   "reg": "中",
-   "note": "港式紙紮祭品；例外：電話",
-   "pin": "靈",
-   "new": true
-  },
-  {
-   "k": "nw_zzcar",
-   "no": 72,
-   "name": "紙紮跑車",
-   "sys": "紙紮",
-   "sc": "燈",
-   "mech": [
-    "突襲"
-   ],
-   "tags": [
-    "破",
-    "掃"
-   ],
-   "ch": 5,
-   "reg": "中",
-   "note": "港式紙紮祭品（不寫品牌）；例外：車頭燈",
-   "pin": "靈",
-   "new": true
-  },
-  {
-   "k": "nw_kuaidi",
-   "no": 73,
-   "name": "陰司快遞員",
-   "sys": "使",
-   "sc": "電話",
-   "mech": [
-    "突襲"
-   ],
-   "tags": [
-    "遠",
-    "刺"
-   ],
-   "ch": 5,
-   "reg": "中",
-   "note": "STORY_BIBLE 支線角色；例外：電話",
-   "pin": "靈",
-   "new": true
-  },
-  {
-   "k": "nw_teketeke",
-   "no": 74,
-   "name": "Teke Teke",
-   "sys": "厲",
-   "sc": "怪聲",
-   "mech": [
-    "突襲"
-   ],
-   "tags": [
-    "刺",
-    "拉"
-   ],
-   "ch": 5,
-   "reg": "他",
-   "note": "第 5 關；被動唔好寫免疫腳軟（改突襲加速），免得偵察卡應對寫錯",
-   "pin": "靈",
-   "new": true
-  },
-  {
-   "k": "pocong",
-   "no": 75,
-   "name": "Pocong",
-   "sys": "屍",
-   "sc": "凍",
-   "mech": [
-    "殼",
-    "屍變"
-   ],
-   "tags": [
-    "收"
-   ],
-   "ch": 5,
-   "reg": "馬",
-   "note": "劇情收編",
-   "pin": "煞",
-   "new": false
-  },
-  {
-   "k": "n30_banshee",
-   "no": 76,
-   "name": "Banshee",
-   "sys": "厲",
-   "sc": "怪聲",
-   "mech": [
-    "嚇氣光環"
-   ],
-   "tags": [],
-   "ch": 5,
-   "reg": "他",
-   "note": "",
-   "pin": "煞",
-   "new": false
-  },
-  {
-   "k": "n30_yukionna",
-   "no": 77,
-   "name": "雪女",
-   "sys": "厲",
-   "sc": "凍",
-   "mech": [
-    "嚇氣光環"
-   ],
-   "tags": [],
-   "ch": 5,
-   "reg": "日",
-   "note": "例外：吐冰霜＝凍",
-   "pin": "煞",
-   "new": false
-  },
-  {
-   "k": "n30_hannya",
-   "no": 78,
-   "name": "般若",
-   "sys": "厲",
-   "sc": "鬼臉",
-   "mech": [
-    "反傷",
-    "霸體"
-   ],
-   "tags": [],
-   "ch": 5,
-   "reg": "日",
-   "note": "",
-   "pin": "煞",
-   "new": false
-  },
-  {
-   "k": "n30_gashadokuro",
-   "no": 79,
-   "name": "餓者髑髏",
-   "sys": "屍",
-   "sc": "凍",
-   "mech": [
-    "散骨",
-    "霸體"
-   ],
-   "tags": [],
-   "ch": 5,
-   "reg": "日",
-   "note": "",
-   "pin": "煞",
-   "new": false
-  },
-  {
-   "k": "n30_vetala",
-   "no": 80,
-   "name": "Vetala",
-   "sys": "屍",
-   "sc": "鬼臉",
-   "mech": [
-    "迷魂"
-   ],
-   "tags": [],
-   "ch": 5,
-   "reg": "泰",
-   "note": "例外：倒吊鬼臉",
-   "pin": "煞",
-   "new": false
-  },
-  {
    "k": "nw_mummy",
-   "no": 81,
+   "no": 91,
    "name": "木乃伊",
    "sys": "屍",
    "sc": "凍",
@@ -1388,250 +1551,65 @@
    "new": true
   },
   {
-   "k": "penanggal",
-   "no": 82,
-   "name": "Penanggal",
-   "sys": "厲",
-   "sc": "鬼臉",
-   "mech": [
-    "飛",
-    "突襲"
-   ],
-   "tags": [],
-   "ch": 5,
-   "reg": "馬",
-   "note": "劇情收編",
-   "pin": "王",
-   "new": false
-  },
-  {
-   "k": "niutou",
-   "no": 83,
-   "name": "niutou",
-   "sys": "官",
-   "sc": "燈",
-   "mech": [
-    "殼"
-   ],
-   "tags": [
-    "定"
-   ],
-   "ch": 6,
-   "reg": "中",
-   "note": "雜兵升名鬼（已有敵人圖）",
-   "pin": "靈",
-   "new": true
-  },
-  {
-   "k": "mamian",
-   "no": 84,
-   "name": "mamian",
-   "sys": "官",
-   "sc": "燈",
-   "mech": [
-    "突襲"
-   ],
-   "tags": [],
-   "ch": 6,
-   "reg": "中",
-   "note": "雜兵升名鬼（已有敵人圖）",
-   "pin": "靈",
-   "new": true
-  },
-  {
-   "k": "nw_toutai",
-   "no": 85,
-   "name": "投胎辦事處職員",
-   "sys": "官",
-   "sc": "紙",
-   "mech": [
-    "召喚"
-   ],
-   "tags": [
-    "削",
-    "回"
-   ],
-   "ch": 6,
-   "reg": "中",
-   "note": "STORY_BIBLE 支線角色；例外：表格＝紙",
-   "pin": "靈",
-   "new": true
-  },
-  {
-   "k": "pg_ex",
-   "no": 86,
-   "name": "前女友鬼",
-   "sys": "厲",
+   "k": "nw_zzphone",
+   "no": 92,
+   "name": "紙紮手機",
+   "sys": "紙紮",
    "sc": "電話",
    "mech": [
-    "嚇氣光環"
-   ],
-   "tags": [],
-   "ch": 6,
-   "reg": "意",
-   "note": "例外：只回「哦」＝電話",
-   "pin": "靈",
-   "new": false
-  },
-  {
-   "k": "nw_yeleng_guard",
-   "no": 87,
-   "name": "夜冷村保安",
-   "sys": "使",
-   "sc": "鬼臉",
-   "mech": [
-    "殼"
-   ],
-   "tags": [
-    "定"
-   ],
-   "ch": 6,
-   "reg": "中",
-   "note": "STORY_BIBLE 夜冷村員工①",
-   "pin": "靈",
-   "new": true
-  },
-  {
-   "k": "nw_yeleng_sales",
-   "no": 88,
-   "name": "夜冷村推銷員",
-   "sys": "使",
-   "sc": "電話",
-   "mech": [
-    "召喚"
+    "隱"
    ],
    "tags": [
     "遠",
     "削"
    ],
-   "ch": 6,
+   "ch": 5,
    "reg": "中",
-   "note": "STORY_BIBLE 夜冷村員工②；例外：電話",
+   "note": "港式紙紮祭品；例外：電話",
    "pin": "靈",
    "new": true
   },
   {
-   "k": "nw_shenpi",
-   "no": 89,
-   "name": "陰司審批官",
-   "sys": "官",
-   "sc": "紙",
+   "k": "nw_zzcar",
+   "no": 93,
+   "name": "紙紮跑車",
+   "sys": "紙紮",
+   "sc": "燈",
    "mech": [
-    "嚇氣光環"
+    "突襲"
    ],
    "tags": [
-    "收",
-    "照"
+    "破",
+    "掃"
    ],
-   "ch": 6,
-   "reg": "他",
-   "note": "原判官位，名「陰司審批官」，必須有「收」",
-   "pin": "煞",
+   "ch": 5,
+   "reg": "中",
+   "note": "港式紙紮祭品（不寫品牌）；例外：車頭燈",
+   "pin": "靈",
    "new": true
   },
   {
-   "k": "n30_yecha",
-   "no": 90,
-   "name": "夜叉",
-   "sys": "官",
-   "sc": "燈",
-   "mech": [
-    "殼"
-   ],
-   "tags": [
-    "定"
-   ],
-   "ch": 6,
-   "reg": "他",
-   "note": "",
-   "pin": "煞",
-   "new": false
-  },
-  {
-   "k": "pg_landlady",
-   "no": 91,
-   "name": "二房東",
-   "sys": "橫",
-   "sc": "紙",
-   "mech": [
-    "召喚",
-    "殼"
-   ],
-   "tags": [],
-   "ch": 6,
-   "reg": "意",
-   "note": "焗死＝橫死；例外：屋規＝紙",
-   "pin": "煞",
-   "new": false
-  },
-  {
-   "k": "n30_diansi",
-   "no": 92,
-   "name": "電死鬼",
-   "sys": "橫",
+   "k": "nw_kuaidi",
+   "no": 94,
+   "name": "陰司快遞員",
+   "sys": "使",
    "sc": "電話",
    "mech": [
-    "反傷"
+    "突襲"
    ],
-   "tags": [],
-   "ch": 6,
-   "reg": "意",
-   "note": "建議改遠程（放電）",
-   "pin": "煞",
-   "new": false
-  },
-  {
-   "k": "n30_leipi",
-   "no": 93,
-   "name": "雷劈鬼",
-   "sys": "橫",
-   "sc": "燈",
-   "mech": [
-    "嚇氣光環"
+   "tags": [
+    "遠",
+    "刺"
    ],
-   "tags": [],
-   "ch": 6,
-   "reg": "意",
-   "note": "例外：閃電＝燈",
-   "pin": "煞",
-   "new": false
-  },
-  {
-   "k": "n30_dongsi",
-   "no": 94,
-   "name": "凍死鬼",
-   "sys": "屍",
-   "sc": "凍",
-   "mech": [
-    "殼"
-   ],
-   "tags": [],
-   "ch": 6,
-   "reg": "意",
-   "note": "結冰＝屍",
-   "pin": "煞",
-   "new": false
-  },
-  {
-   "k": "pg_ji",
-   "no": 95,
-   "name": "聻",
-   "sys": "魂",
-   "sc": "黑影",
-   "mech": [
-    "隱",
-    "屍變"
-   ],
-   "tags": [],
-   "ch": 6,
+   "ch": 5,
    "reg": "中",
-   "note": "「鬼死為聻」",
-   "pin": "煞",
-   "new": false
+   "note": "STORY_BIBLE 支線角色；例外：電話",
+   "pin": "靈",
+   "new": true
   },
   {
    "k": "nw_zzhouse",
-   "no": 96,
+   "no": 95,
    "name": "紙紮大屋",
    "sys": "紙紮",
    "sc": "紙",
@@ -1649,8 +1627,83 @@
    "new": true
   },
   {
-   "k": "nw_dullahan",
+   "k": "nw_shenpi",
+   "no": 96,
+   "name": "陰司審批官",
+   "sys": "官",
+   "sc": "紙",
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tags": [
+    "收",
+    "照"
+   ],
+   "ch": 6,
+   "reg": "他",
+   "note": "原判官位，名「陰司審批官」，必須有「收」",
+   "pin": "煞",
+   "new": true
+  },
+  {
+   "k": "nw_toutai",
    "no": 97,
+   "name": "投胎辦事處職員",
+   "sys": "官",
+   "sc": "紙",
+   "mech": [
+    "召喚"
+   ],
+   "tags": [
+    "削",
+    "回"
+   ],
+   "ch": 6,
+   "reg": "中",
+   "note": "STORY_BIBLE 支線角色；例外：表格＝紙",
+   "pin": "靈",
+   "new": true
+  },
+  {
+   "k": "nw_yeleng_guard",
+   "no": 98,
+   "name": "夜冷村保安",
+   "sys": "使",
+   "sc": "鬼臉",
+   "mech": [
+    "殼"
+   ],
+   "tags": [
+    "定"
+   ],
+   "ch": 6,
+   "reg": "中",
+   "note": "STORY_BIBLE 夜冷村員工①",
+   "pin": "靈",
+   "new": true
+  },
+  {
+   "k": "nw_yeleng_sales",
+   "no": 99,
+   "name": "夜冷村推銷員",
+   "sys": "使",
+   "sc": "電話",
+   "mech": [
+    "召喚"
+   ],
+   "tags": [
+    "遠",
+    "削"
+   ],
+   "ch": 6,
+   "reg": "中",
+   "note": "STORY_BIBLE 夜冷村員工②；例外：電話",
+   "pin": "靈",
+   "new": true
+  },
+  {
+   "k": "nw_dullahan",
+   "no": 100,
    "name": "Dullahan",
    "sys": "妖",
    "sc": "黑影",
@@ -1667,61 +1720,22 @@
    "note": "愛爾蘭傳說的無頭騎士（屬妖精）",
    "pin": "煞",
    "new": true
-  },
-  {
-   "k": "baiwu",
-   "no": 98,
-   "name": "白無常",
-   "sys": "官",
-   "sc": "紙",
-   "mech": [
-    "嚇氣光環",
-    "分身"
-   ],
-   "tags": [
-    "收"
-   ],
-   "ch": 6,
-   "reg": "中",
-   "note": "劇情收編",
-   "pin": "王",
-   "new": false
-  },
-  {
-   "k": "heiwu",
-   "no": 99,
-   "name": "黑無常",
-   "sys": "官",
-   "sc": "黑影",
-   "mech": [
-    "殼",
-    "霸體"
-   ],
-   "tags": [
-    "收",
-    "定"
-   ],
-   "ch": 6,
-   "reg": "中",
-   "note": "劇情收編",
-   "pin": "王",
-   "new": false
-  },
-  {
-   "k": "mengpo",
-   "no": 100,
-   "name": "孟婆",
-   "sys": "官",
-   "sc": "紙",
-   "mech": [],
-   "tags": [],
-   "ch": 6,
-   "reg": "中",
-   "note": "",
-   "pin": "王",
-   "new": false
   }
  ],
+ "SAY_FB": {
+  "afu": "收工？未得，仲有一場。",
+  "xiaozhi": "少爺，紙紮嘅都要開工，你話打邊個，我就打邊個。",
+  "eguiking": "包！有包就跟你！冇包……都照跟住先！",
+  "toyol": "老闆，摸一下，就摸一下咋，村入面啲嘢我保證唔郁。",
+  "laojiang": "本官跳咗兩百年，今日准你跟住本官一齊跳。",
+  "pontianak": "呵呵呵……公司走唔開？咁我過嚟搵你囉。",
+  "pocong": "有冇請人呀？我跳得好快㗎，唔信你望住！",
+  "penanggal": "快啲快啲，咬完呢啖我仲要返去浸醋！",
+  "mengpo": "後生仔，打完先至飲，飲完就唔記得痛㗎喇。",
+  "baiwu": "本月第三百二十一個，請出示證件，多謝合作。",
+  "tianhua": "哎喲……我條腰呀，你哋企開少少，我要落嚟喇。",
+  "heiwu": "又一個。行啦。"
+ },
  "SYS": {
   "屍": {
    "fear": [

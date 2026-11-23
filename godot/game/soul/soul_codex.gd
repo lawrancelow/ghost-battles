@@ -319,6 +319,7 @@ static func _detail(body: VBoxContainer, k: String) -> void:
 	body.add_child(_rich(str(DB.N(lore)) if lore != "" else L("落魄村原創。", "落魄村原創。"), 17))
 	# 台詞
 	var say = str(gd.get("say", ""))
+	if say == "": say = str(S2.C().get("SAY_FB", {}).get(k, ""))
 	if say == "" and SOUL.D().WISH.has(k): say = SOUL.wish_of(k)[1]
 	if say != "":
 		_h(body, L("台詞", "台詞"))

@@ -15,9 +15,11 @@ GH = core["GHOSTS"]
 def jl(p):
     try: return json.load(open(p, encoding="utf-8"))
     except Exception: return {}
-SOULJ = jl("/home/claude/wt/soul/godot/data/nat/soul.json") or jl("data/nat/soul.json")
-CT = jl("/home/claude/wt/cdata/godot/data/nat/counter.json") or jl("data/nat/counter.json")
-AB = jl("/home/claude/wt/abcore/godot/data/abil.json") or jl("data/abil.json")
+SOULJ = jl("data/nat/soul.json")
+CT = jl("data/nat/counter.json")
+AB = jl("data/abil.json")
+NG = jl("data/nat/newghost.json")   # newghost 線：26 新鬼＋牛頭馬面（GHOSTS、PIN、ROSTER、SAY_FB）
+for k, v in (NG.get("GHOSTS") or {}).items(): GH.setdefault(k, v)
 # 劇情鬼／冇入名冊嘅現有名鬼
 extra = {"afu": ("主", "吹氣", 0), "xiaozhi": ("紙紮", "紙", 1), "mengpo": ("官", "紙", 6), "tianhua": ("魂", "鬼臉", 4)}
 for k, (s, a, ch) in extra.items():
@@ -37,6 +39,8 @@ if CTN:
         R[k] = dict(id=k, sys=v.get("sys", base.get("sys", "魂")), sc=[CT.get("scares", {}).get(v.get("sc", ""), v.get("sc", "")) or "鬼臉"], mech=v.get("mech", []), ch=int(v.get("ch", 1)),
                     t=base.get("t", "T2"), tags=v.get("tags", []), note=v.get("note", "") or base.get("note", ""), name=v.get("name", k), new=True)
 FIX_NAME = {"nw_huli": "狐妖", "nw_zzcar": "紙紮跑車", "nw_panguan": "陰司審批官", "nw_shenpi": "陰司審批官"}
+for k, v in (NG.get("GHOSTS") or {}).items():
+    if k in R and v.get("name"): FIX_NAME[k] = v["name"]   # 真名以 newghost 為準
 for k, n in FIX_NAME.items():
     if k in R: R[k]["name"] = n
 R.pop("nw_sundel", None)   # 老闆 20:24 定案：去掉
@@ -50,7 +54,7 @@ REG = {
 reg = {}
 for r, ks in REG.items():
     for k in ks.split(): reg[k] = r
-PINS = SOULJ.get("PIN", {})
+PINS = dict(SOULJ.get("PIN", {})); PINS.update(NG.get("PIN") or {})
 TPIN = {"T1": "凡", "T2": "靈", "T3": "煞", "T4": "王"}
 # 次序：阿福 → 劇情鬼 → 按章、按品（凡→王）、名冊次序
 order = ["afu"] + [k for k in R if k != "afu"]
@@ -62,13 +66,15 @@ def key(k):
     if k == "afu": return (-1, 0, 0)
     return (d["ch"], PO.get(PINS.get(k, TPIN.get(d["t"], "凡")), 0), ORD0.index(k))
 order.sort(key=key)
+ROS = [k for k in (NG.get("ROSTER") or []) if k in R]
+if len(ROS) == len(R): order = ROS   # newghost 定案 101 次序
 out = []
 for i, k in enumerate(order):
     d = R[k]
     g = GH.get(k, {})
     pin = "主" if k == "afu" else PINS.get(k, PINS.get(ALIAS.get(k, ""), TPIN.get(d["t"], "凡")))
     out.append({"k": k, "no": i, "name": d["name"] or g.get("name", k), "sys": d["sys"], "sc": d["sc"][0], "mech": d["mech"],
-                "tags": d["tags"], "ch": d["ch"], "reg": reg.get(k, "他"), "note": d["note"], "pin": pin, "new": bool(d["new"]) or k not in GH})
+                "tags": d["tags"], "ch": d["ch"], "reg": reg.get(k, "他"), "note": d["note"], "pin": pin, "new": bool(d["new"])})
 SYS = {}
 for s, v in (CT.get("sys") or {}).items(): SYS[s] = {"fear": v.get("fear", []), "imm": v.get("imm", "")}
 SC = {a: b for a, b in (CT.get("scares") or {}).items()} if isinstance(CT.get("scares"), dict) else {}
@@ -77,7 +83,7 @@ MECH = {}
 for k, v in (AB.get("MECH") or {}).items():
     if isinstance(v, dict): MECH[k] = {"desc": v.get("desc", v.get("d", "")), "counter": v.get("counter", [])}
 res = {"v": 1, "note": "soul2 線：名鬼圖鑑 101 格（tools/soul/codex_build.py 產生）。pin 只係後備，品級以 soul.json PIN 為準；sys/tags 只係後備，以 abil.json 為準。",
-       "LIST": out, "SYS": SYS, "SC": SC, "TAGS": TAGS, "MECH": MECH,
+       "LIST": out, "SAY_FB": NG.get("SAY_FB") or {}, "SYS": SYS, "SC": SC, "TAGS": TAGS, "MECH": MECH,
        "REG": {"中": "中國", "馬": "馬來／印尼", "泰": "泰國／菲律賓／印度", "日": "日本", "意": "原創意外鬼", "他": "其他"}}
 json.dump(res, open("data/nat/codex.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 from collections import Counter
