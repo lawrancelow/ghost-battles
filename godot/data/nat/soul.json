@@ -101,7 +101,37 @@
   "nw_yeleng_sales": "靈",
   "nw_dullahan": "煞",
   "mengpo": "王",
-  "xiaozhi": "靈"
+  "xiaozhi": "靈",
+  "nw_bifang": "靈",
+  "nw_qiongqi": "煞",
+  "nw_nian": "煞",
+  "nw_shen": "靈",
+  "nw_wangliang": "凡",
+  "nw_niexiaoqian": "煞",
+  "nw_zhizhama": "凡",
+  "nw_luotoumin": "靈",
+  "nw_guiamngaan": "靈",
+  "nw_guisihknai": "凡",
+  "nw_paakbok": "凡",
+  "nw_dikseigwai": "凡",
+  "nw_mosinna": "靈",
+  "nw_kamaitachi": "凡",
+  "nw_nurikabe": "煞",
+  "nw_akaname": "凡",
+  "nw_makuragaeshi": "凡",
+  "nw_dodomeki": "靈",
+  "nw_ungaikyo": "靈",
+  "nw_jinmenken": "凡",
+  "nw_ushioni": "煞",
+  "nw_nekomata": "靈",
+  "nw_harimau": "煞",
+  "nw_banaspati": "靈",
+  "nw_bonceng": "凡",
+  "nw_nangtani": "靈",
+  "nw_manananggal": "靈",
+  "nw_nuno": "凡",
+  "nw_dokkaebi": "煞",
+  "nw_poltergeist": "靈"
  },
  "CAMP": {
   "0:so1_r1_1": "n30_qionggui",
@@ -109,16 +139,16 @@
   "0:so1_r1_3": "n30_kasaobake",
   "0:so1_r1_4": "n30_yesi",
   "0:so1_r2_1": "n30_danxiao",
-  "0:so1_r2_2": "n30_xiasi",
+  "0:so1_r2_2": "nw_guihuo",
   "0:so1_r2_3": "n30_chochin",
   "0:so1_r2_4": "n30_maoshi",
   "0:so1_r3_1": "n30_jiugui",
   "0:so1_r3_2": "n30_jerangkung",
   "0:so1_r3_3": "n30_kasaobake",
-  "0:so1_r3_4": "n30_baigujing",
+  "0:so1_r3_4": "nw_huli",
   "0:so1_r4_1": "pg_tuimo",
   "0:so1_r4_2": "n30_chochin",
-  "0:so1_r4_3": "n30_baigujing",
+  "0:so1_r4_3": "nw_huli",
   "1:so2_r1_1": "n30_shidu",
   "1:so2_r1_2": "n30_bunian",
   "1:so2_r1_3": "n30_pelesit",
@@ -129,71 +159,77 @@
   "1:so2_r2_4": "n30_dugui",
   "1:so2_r3_1": "n30_liulian",
   "1:so2_r3_2": "n30_genderuwo",
-  "1:so2_r3_3": "n30_taozhai",
+  "1:so2_r3_3": "nw_bajang",
   "1:so2_r3_4": "n30_hantugalah",
   "1:so2_r4_1": "n30_hanturaya",
-  "1:so2_r4_2": "n30_hantugalah",
+  "1:so2_r4_2": "n30_guhangui",
   "1:so2_r4_3": "n30_liulian",
   "2:so3_r1_1": "n30_changgui",
   "2:so3_r1_2": "n30_jenglot",
-  "2:so3_r1_3": "n30_tikbalang",
+  "2:so3_r1_3": "nw_daqiang",
   "2:so3_r1_4": "n30_shedu",
   "2:so3_r2_1": "n30_taozhai",
-  "2:so3_r2_2": "n30_jerangkung",
+  "2:so3_r2_2": "nw_baimao",
   "2:so3_r2_3": "n30_tikbalang",
   "2:so3_r2_4": "n30_diaosi",
-  "2:so3_r3_1": "n30_guhangui",
-  "2:so3_r3_2": "n30_dongsi",
+  "2:so3_r3_1": "nw_ganshi",
+  "2:so3_r3_2": "nw_buhuagu",
   "2:so3_r3_3": "n30_shanxiao",
-  "2:so3_r3_4": "n30_yukionna",
+  "2:so3_r3_4": "nw_huapi",
   "2:so3_r4_1": "pg_songding",
   "2:so3_r4_2": "n30_hanba",
   "2:so3_r4_3": "n30_baigujing",
   "3:so4_r1_1": "n30_churel",
   "3:so4_r1_2": "n30_kappa",
-  "3:so4_r1_3": "n30_chehuo",
+  "3:so4_r1_3": "nw_tisi",
   "3:so4_r1_4": "n30_phiam",
   "3:so4_r2_1": "n30_maenak",
-  "3:so4_r2_2": "n30_rokurokubi",
+  "3:so4_r2_2": "nw_tiangou",
   "3:so4_r2_3": "n30_zhongshu",
-  "3:so4_r2_4": "n30_hantugalah",
+  "3:so4_r2_4": "n30_xiasi",
   "3:so4_r3_1": "n30_guixinniang",
-  "3:so4_r3_2": "n30_baigujing",
+  "3:so4_r3_2": "nw_shejing",
   "3:so4_r3_3": "n30_xiangcai",
-  "3:so4_r3_4": "n30_genderuwo",
-  "3:so4_r4_1": "n30_aswang",
+  "3:so4_r3_4": "nw_kapre",
+  "3:so4_r4_1": "nw_krahang",
   "3:so4_r4_2": "n30_xiangcai",
-  "3:so4_r4_3": "n30_yukionna",
+  "3:so4_r4_3": "nw_ameonna",
   "4:so5_r1_1": "n30_nopperabo",
   "4:so5_r1_2": "n30_kuchisake",
   "4:so5_r1_3": "n30_daji",
-  "4:so5_r1_4": "n30_xiangcai",
+  "4:so5_r1_4": "nw_zzphone",
   "4:so5_r2_1": "n30_rokurokubi",
   "4:so5_r2_2": "n30_yukionna",
   "4:so5_r2_3": "n30_xiaosi",
   "4:so5_r2_4": "n30_vetala",
-  "4:so5_r3_1": "n30_jerangkung",
+  "4:so5_r3_1": "nw_honeonna",
   "4:so5_r3_2": "n30_hannya",
-  "4:so5_r3_3": "n30_chengsi",
+  "4:so5_r3_3": "n30_chehuo",
   "4:so5_r3_4": "n30_gashadokuro",
-  "4:so5_r4_1": "n30_taozhai",
-  "4:so5_r4_2": "n30_taozhai",
-  "4:so5_r4_3": "n30_taozhai",
-  "5:so6_r1_1": "n30_xiangcai",
+  "4:so5_r4_1": "nw_teketeke",
+  "4:so5_r4_2": "n30_banshee",
+  "4:so5_r4_3": "nw_kuaidi",
+  "5:so6_r1_1": "nw_zzhouse",
   "5:so6_r1_2": "pg_ex",
   "5:so6_r1_3": "niutou",
   "5:so6_r1_4": "n30_diansi",
-  "5:so6_r2_1": "n30_changgui",
-  "5:so6_r2_2": "mamian",
-  "5:so6_r2_3": "mamian",
+  "5:so6_r2_1": "nw_yeleng_sales",
+  "5:so6_r2_2": "nw_toutai",
+  "5:so6_r2_3": "nw_mummy",
   "5:so6_r2_4": "n30_dongsi",
-  "5:so6_r3_1": "n30_xiangcai",
-  "5:so6_r3_2": "n30_yecha",
-  "5:so6_r3_3": "n30_taozhai",
-  "5:so6_r3_4": "n30_genderuwo",
+  "5:so6_r3_1": "pg_ji",
+  "5:so6_r3_2": "nw_shenpi",
+  "5:so6_r3_3": "nw_yeleng_guard",
+  "5:so6_r3_4": "nw_dullahan",
   "5:so6_r4_1": "n30_yecha",
-  "5:so6_r4_2": "n30_genderuwo",
-  "5:so6_r4_3": "pg_landlady"
+  "5:so6_r4_2": "n30_leipi",
+  "5:so6_r4_3": "pg_landlady",
+  "0:so1_r4_4": "n30_jerangkung",
+  "1:so2_r4_4": "n30_genderuwo",
+  "2:so3_r4_4": "n30_baigujing",
+  "3:so4_r4_4": "nw_kapre",
+  "4:so5_r4_4": "nw_zzcar",
+  "5:so6_r4_4": "nw_shenpi"
  },
  "WISH": {
   "n30_qionggui": [
@@ -402,7 +438,7 @@
   "1:so2_r3_3": "nw_bajang",
   "1:so2_r3_4": "n30_hantugalah",
   "1:so2_r4_1": "n30_hanturaya",
-  "1:so2_r4_2": "n30_hantugalah",
+  "1:so2_r4_2": "n30_guhangui",
   "1:so2_r4_3": "n30_liulian",
   "2:so3_r1_1": "n30_changgui",
   "2:so3_r1_2": "n30_jenglot",
@@ -426,12 +462,12 @@
   "3:so4_r2_1": "n30_maenak",
   "3:so4_r2_2": "nw_tiangou",
   "3:so4_r2_3": "n30_zhongshu",
-  "3:so4_r2_4": "tianhua",
+  "3:so4_r2_4": "n30_xiasi",
   "3:so4_r3_1": "n30_guixinniang",
   "3:so4_r3_2": "nw_shejing",
   "3:so4_r3_3": "n30_xiangcai",
   "3:so4_r3_4": "nw_kapre",
-  "3:so4_r4_1": "n30_aswang",
+  "3:so4_r4_1": "nw_krahang",
   "3:so4_r4_2": "n30_xiangcai",
   "3:so4_r4_3": "nw_ameonna",
   "4:so5_r1_1": "n30_nopperabo",
@@ -444,10 +480,10 @@
   "4:so5_r2_4": "n30_vetala",
   "4:so5_r3_1": "nw_honeonna",
   "4:so5_r3_2": "n30_hannya",
-  "4:so5_r3_3": "n30_chengsi",
+  "4:so5_r3_3": "n30_chehuo",
   "4:so5_r3_4": "n30_gashadokuro",
-  "4:so5_r4_1": "nw_kuaidi",
-  "4:so5_r4_2": "nw_kuaidi",
+  "4:so5_r4_1": "nw_teketeke",
+  "4:so5_r4_2": "n30_banshee",
   "4:so5_r4_3": "nw_kuaidi",
   "5:so6_r1_1": "nw_zzhouse",
   "5:so6_r1_2": "pg_ex",
@@ -455,15 +491,21 @@
   "5:so6_r1_4": "n30_diansi",
   "5:so6_r2_1": "nw_yeleng_sales",
   "5:so6_r2_2": "nw_toutai",
-  "5:so6_r2_3": "mamian",
+  "5:so6_r2_3": "nw_mummy",
   "5:so6_r2_4": "n30_dongsi",
-  "5:so6_r3_1": "nw_zzhouse",
+  "5:so6_r3_1": "pg_ji",
   "5:so6_r3_2": "nw_shenpi",
   "5:so6_r3_3": "nw_yeleng_guard",
   "5:so6_r3_4": "nw_dullahan",
   "5:so6_r4_1": "n30_yecha",
-  "5:so6_r4_2": "nw_dullahan",
-  "5:so6_r4_3": "pg_landlady"
+  "5:so6_r4_2": "n30_leipi",
+  "5:so6_r4_3": "pg_landlady",
+  "0:so1_r4_4": "n30_jerangkung",
+  "1:so2_r4_4": "n30_genderuwo",
+  "2:so3_r4_4": "n30_baigujing",
+  "3:so4_r4_4": "nw_kapre",
+  "4:so5_r4_4": "nw_zzcar",
+  "5:so6_r4_4": "nw_shenpi"
  },
  "CAMP_EN": {
   "0:so1_r1_1": [
@@ -479,454 +521,19 @@
    "n30_yesi"
   ],
   "0:so1_r2_1": [
-   "n30_qionggui",
+   "nw_guisihknai",
    "n30_danxiao"
   ],
   "0:so1_r2_2": [
-   "n30_wutou",
-   "n30_xiasi"
-  ],
-  "0:so1_r2_3": [
-   "n30_kasaobake",
-   "n30_chochin"
-  ],
-  "0:so1_r2_4": [
-   "n30_yesi",
-   "n30_maoshi"
-  ],
-  "0:so1_r3_1": [
-   "n30_danxiao",
-   "n30_jiugui"
-  ],
-  "0:so1_r3_2": [
-   "n30_xiasi",
-   "n30_jerangkung"
-  ],
-  "0:so1_r3_3": [
-   "n30_chochin",
-   "n30_kasaobake"
-  ],
-  "0:so1_r3_4": [
-   "n30_baigujing",
-   "n30_baigujing"
-  ],
-  "0:so1_r4_1": [
-   "n30_danxiao",
-   "n30_jiugui",
-   "pg_tuimo"
-  ],
-  "0:so1_r4_2": [
-   "n30_chochin",
-   "n30_kasaobake",
-   "n30_chochin"
-  ],
-  "0:so1_r4_3": [
-   "n30_maoshi",
-   "n30_baigujing",
-   "n30_baigujing"
-  ],
-  "1:so2_r1_1": [
-   "n30_shidu"
-  ],
-  "1:so2_r1_2": [
-   "n30_kappa",
-   "n30_kappa",
-   "n30_bunian"
-  ],
-  "1:so2_r1_3": [
-   "n30_pelesit"
-  ],
-  "1:so2_r1_4": [
-   "pg_ex",
-   "n30_yangui"
-  ],
-  "1:so2_r2_1": [
-   "n30_shidu",
-   "n30_yezi"
-  ],
-  "1:so2_r2_2": [
-   "n30_kappa",
-   "n30_kappa",
-   "n30_bunian",
-   "n30_bunian"
-  ],
-  "1:so2_r2_3": [
-   "n30_pelesit",
-   "n30_polong"
-  ],
-  "1:so2_r2_4": [
-   "pg_ex",
-   "n30_yangui",
-   "n30_dugui"
-  ],
-  "1:so2_r3_1": [
-   "n30_yezi",
-   "n30_liulian"
-  ],
-  "1:so2_r3_2": [
-   "n30_kappa",
-   "n30_kappa",
-   "n30_kappa",
-   "n30_bunian",
-   "n30_genderuwo"
-  ],
-  "1:so2_r3_3": [
-   "n30_polong",
-   "n30_taozhai"
-  ],
-  "1:so2_r3_4": [
-   "pg_ex",
-   "n30_guhangui",
-   "n30_hantugalah"
-  ],
-  "1:so2_r4_1": [
-   "n30_polong",
-   "n30_taozhai",
-   "n30_hanturaya"
-  ],
-  "1:so2_r4_2": [
-   "pg_ex",
-   "n30_dugui",
-   "n30_guhangui",
-   "n30_hantugalah"
-  ],
-  "1:so2_r4_3": [
-   "n30_yezi",
-   "n30_liulian",
-   "n30_liulian"
-  ],
-  "2:so3_r1_1": [
-   "n30_changgui"
-  ],
-  "2:so3_r1_2": [
-   "n30_jenglot"
-  ],
-  "2:so3_r1_3": [
-   "n30_kappa",
-   "n30_kappa",
-   "n30_tikbalang"
-  ],
-  "2:so3_r1_4": [
-   "pg_ex",
-   "n30_shedu"
-  ],
-  "2:so3_r2_1": [
-   "n30_changgui",
-   "n30_taozhai"
-  ],
-  "2:so3_r2_2": [
-   "n30_jenglot",
-   "n30_jerangkung"
-  ],
-  "2:so3_r2_3": [
-   "n30_kappa",
-   "n30_kappa",
-   "n30_tikbalang",
-   "n30_tikbalang"
-  ],
-  "2:so3_r2_4": [
-   "pg_ex",
-   "n30_shedu",
-   "n30_diaosi"
-  ],
-  "2:so3_r3_1": [
-   "n30_taozhai",
-   "n30_guhangui"
-  ],
-  "2:so3_r3_2": [
-   "n30_jerangkung",
-   "n30_dongsi"
-  ],
-  "2:so3_r3_3": [
-   "n30_kappa",
-   "n30_kappa",
-   "n30_kappa",
-   "n30_tikbalang",
-   "n30_shanxiao"
-  ],
-  "2:so3_r3_4": [
-   "pg_ex",
-   "pg_ex",
-   "n30_yukionna",
-   "n30_yukionna"
-  ],
-  "2:so3_r4_1": [
-   "n30_taozhai",
-   "n30_guhangui",
-   "pg_songding"
-  ],
-  "2:so3_r4_2": [
-   "n30_jerangkung",
-   "n30_dongsi",
-   "n30_hanba"
-  ],
-  "2:so3_r4_3": [
-   "n30_kappa",
-   "n30_kappa",
-   "n30_tikbalang",
-   "n30_shanxiao",
-   "n30_baigujing"
-  ],
-  "3:so4_r1_1": [
-   "pg_ex",
-   "pg_ex",
-   "n30_churel"
-  ],
-  "3:so4_r1_2": [
-   "n30_kappa",
-   "n30_kappa",
-   "n30_kappa"
-  ],
-  "3:so4_r1_3": [
-   "n30_chehuo"
-  ],
-  "3:so4_r1_4": [
-   "pg_ex",
-   "n30_kappa",
-   "n30_phiam"
-  ],
-  "3:so4_r2_1": [
-   "pg_ex",
-   "pg_ex",
-   "n30_churel",
-   "n30_maenak"
-  ],
-  "3:so4_r2_2": [
-   "n30_kappa",
-   "n30_kappa",
-   "n30_kappa",
-   "n30_rokurokubi"
-  ],
-  "3:so4_r2_3": [
-   "n30_chehuo",
-   "n30_zhongshu"
-  ],
-  "3:so4_r2_4": [
-   "pg_ex",
-   "n30_kappa",
-   "n30_xiasi",
-   "n30_hantugalah"
-  ],
-  "3:so4_r3_1": [
-   "pg_ex",
-   "pg_ex",
-   "pg_ex",
-   "n30_maenak",
-   "n30_guixinniang"
-  ],
-  "3:so4_r3_2": [
-   "n30_kappa",
-   "n30_kappa",
-   "n30_kappa",
-   "n30_rokurokubi",
-   "n30_baigujing"
-  ],
-  "3:so4_r3_3": [
-   "n30_zhongshu",
-   "n30_xiangcai"
-  ],
-  "3:so4_r3_4": [
-   "pg_ex",
-   "n30_kappa",
-   "pg_ex",
-   "n30_shanxiao",
-   "n30_genderuwo"
-  ],
-  "3:so4_r4_1": [
-   "n30_kappa",
-   "n30_kappa",
-   "n30_rokurokubi",
-   "n30_baigujing",
-   "n30_aswang"
-  ],
-  "3:so4_r4_2": [
-   "n30_zhongshu",
-   "n30_xiangcai",
-   "n30_xiangcai"
-  ],
-  "3:so4_r4_3": [
-   "pg_ex",
-   "pg_ex",
-   "n30_maenak",
-   "n30_guixinniang",
-   "n30_yukionna"
-  ],
-  "4:so5_r1_1": [
-   "n30_kappa",
-   "n30_nopperabo"
-  ],
-  "4:so5_r1_2": [
-   "pg_ex",
-   "pg_ex",
-   "n30_kuchisake"
-  ],
-  "4:so5_r1_3": [
-   "n30_daji"
-  ],
-  "4:so5_r1_4": [
-   "n30_xiangcai"
-  ],
-  "4:so5_r2_1": [
-   "n30_kappa",
-   "n30_nopperabo",
-   "n30_rokurokubi"
-  ],
-  "4:so5_r2_2": [
-   "pg_ex",
-   "pg_ex",
-   "n30_maenak",
-   "n30_yukionna"
-  ],
-  "4:so5_r2_3": [
-   "n30_daji",
-   "n30_xiaosi"
-  ],
-  "4:so5_r2_4": [
-   "n30_kasaobake",
-   "n30_vetala"
-  ],
-  "4:so5_r3_1": [
-   "n30_kappa",
-   "n30_kappa",
-   "n30_rokurokubi",
-   "n30_jerangkung"
-  ],
-  "4:so5_r3_2": [
-   "pg_ex",
-   "pg_ex",
-   "pg_ex",
-   "n30_banshee",
-   "n30_hannya"
-  ],
-  "4:so5_r3_3": [
-   "n30_chehuo",
-   "n30_chengsi"
-  ],
-  "4:so5_r3_4": [
-   "n30_dongsi",
-   "n30_gashadokuro"
-  ],
-  "4:so5_r4_1": [
-   "n30_kappa",
-   "n30_rokurokubi",
-   "n30_jerangkung",
-   "n30_taozhai"
-  ],
-  "4:so5_r4_2": [
-   "n30_kappa",
-   "n30_nopperabo",
-   "n30_jerangkung",
-   "n30_taozhai"
-  ],
-  "4:so5_r4_3": [
-   "n30_kappa",
-   "n30_nopperabo",
-   "n30_rokurokubi",
-   "n30_taozhai"
-  ],
-  "5:so6_r1_1": [
-   "n30_xiangcai"
-  ],
-  "5:so6_r1_2": [
-   "pg_ex",
-   "niutou",
-   "pg_ex"
-  ],
-  "5:so6_r1_3": [
-   "niutou",
-   "niutou",
-   "niutou"
-  ],
-  "5:so6_r1_4": [
-   "n30_diansi"
-  ],
-  "5:so6_r2_1": [
-   "n30_xiangcai",
-   "n30_changgui"
-  ],
-  "5:so6_r2_2": [
-   "pg_ex",
-   "niutou",
-   "pg_ex",
-   "mamian"
-  ],
-  "5:so6_r2_3": [
-   "niutou",
-   "niutou",
-   "niutou",
-   "mamian"
-  ],
-  "5:so6_r2_4": [
-   "n30_diansi",
-   "n30_dongsi"
-  ],
-  "5:so6_r3_1": [
-   "n30_changgui",
-   "n30_xiangcai"
-  ],
-  "5:so6_r3_2": [
-   "pg_ex",
-   "niutou",
-   "pg_ex",
-   "pg_ex",
-   "n30_yecha"
-  ],
-  "5:so6_r3_3": [
-   "niutou",
-   "niutou",
-   "niutou",
-   "mamian",
-   "n30_taozhai"
-  ],
-  "5:so6_r3_4": [
-   "pg_ji",
-   "n30_genderuwo"
-  ],
-  "5:so6_r4_1": [
-   "niutou",
-   "niutou",
-   "mamian",
-   "n30_taozhai",
-   "n30_yecha"
-  ],
-  "5:so6_r4_2": [
-   "n30_leipi",
-   "pg_ji",
-   "n30_genderuwo"
-  ],
-  "5:so6_r4_3": [
-   "n30_changgui",
-   "n30_xiangcai",
-   "pg_landlady"
-  ]
- },
- "CAMP_EN_PLAN": {
-  "0:so1_r1_1": [
-   "n30_qionggui"
-  ],
-  "0:so1_r1_2": [
-   "n30_wutou"
-  ],
-  "0:so1_r1_3": [
-   "n30_kasaobake"
-  ],
-  "0:so1_r1_4": [
-   "n30_yesi"
-  ],
-  "0:so1_r2_1": [
-   "n30_qionggui",
-   "n30_danxiao"
-  ],
-  "0:so1_r2_2": [
-   "n30_wutou",
+   "nw_wangliang",
    "nw_guihuo"
   ],
   "0:so1_r2_3": [
-   "n30_kasaobake",
+   "nw_zhizhama",
    "n30_chochin"
   ],
   "0:so1_r2_4": [
-   "n30_yesi",
+   "nw_paakbok",
    "n30_maoshi"
   ],
   "0:so1_r3_1": [
@@ -947,7 +554,7 @@
   ],
   "0:so1_r4_1": [
    "n30_danxiao",
-   "n30_jiugui",
+   "nw_nian",
    "pg_tuimo"
   ],
   "0:so1_r4_2": [
@@ -973,11 +580,12 @@
    "n30_yangui"
   ],
   "1:so2_r2_1": [
+   "nw_bonceng",
    "n30_shidu",
    "n30_yezi"
   ],
   "1:so2_r2_2": [
-   "n30_bunian",
+   "nw_banaspati",
    "n30_bunian"
   ],
   "1:so2_r2_3": [
@@ -985,7 +593,7 @@
    "n30_polong"
   ],
   "1:so2_r2_4": [
-   "n30_yangui",
+   "nw_guiamngaan",
    "n30_dugui"
   ],
   "1:so2_r3_1": [
@@ -993,6 +601,7 @@
    "n30_liulian"
   ],
   "1:so2_r3_2": [
+   "nw_harimau",
    "n30_bunian",
    "n30_genderuwo"
   ],
@@ -1011,8 +620,8 @@
   ],
   "1:so2_r4_2": [
    "n30_dugui",
-   "n30_guhangui",
-   "n30_hantugalah"
+   "n30_hantugalah",
+   "n30_guhangui"
   ],
   "1:so2_r4_3": [
    "n30_yezi",
@@ -1032,19 +641,19 @@
    "n30_shedu"
   ],
   "2:so3_r2_1": [
-   "n30_changgui",
+   "nw_mosinna",
    "n30_taozhai"
   ],
   "2:so3_r2_2": [
-   "n30_jenglot",
+   "nw_luotoumin",
    "nw_baimao"
   ],
   "2:so3_r2_3": [
-   "nw_daqiang",
+   "nw_bifang",
    "n30_tikbalang"
   ],
   "2:so3_r2_4": [
-   "n30_shedu",
+   "nw_niexiaoqian",
    "n30_diaosi"
   ],
   "2:so3_r3_1": [
@@ -1056,6 +665,7 @@
    "nw_buhuagu"
   ],
   "2:so3_r3_3": [
+   "nw_qiongqi",
    "n30_tikbalang",
    "n30_shanxiao"
   ],
@@ -1091,26 +701,30 @@
    "n30_phiam"
   ],
   "3:so4_r2_1": [
+   "nw_nangtani",
    "n30_churel",
    "n30_maenak"
   ],
   "3:so4_r2_2": [
+   "nw_shen",
    "n30_kappa",
    "nw_tiangou"
   ],
   "3:so4_r2_3": [
-   "nw_tisi",
+   "nw_akaname",
    "n30_zhongshu"
   ],
   "3:so4_r2_4": [
-   "n30_xiasi",
-   "tianhua"
+   "nw_manananggal",
+   "n30_xiasi"
   ],
   "3:so4_r3_1": [
+   "nw_nuno",
    "n30_maenak",
    "n30_guixinniang"
   ],
   "3:so4_r3_2": [
+   "nw_ushioni",
    "nw_tiangou",
    "nw_shejing"
   ],
@@ -1123,9 +737,9 @@
    "nw_kapre"
   ],
   "3:so4_r4_1": [
-   "nw_tiangou",
    "nw_shejing",
-   "n30_aswang"
+   "n30_aswang",
+   "nw_krahang"
   ],
   "3:so4_r4_2": [
    "n30_zhongshu",
@@ -1150,23 +764,25 @@
    "nw_zzphone"
   ],
   "4:so5_r2_1": [
+   "nw_jinmenken",
    "n30_nopperabo",
    "n30_rokurokubi"
   ],
   "4:so5_r2_2": [
+   "nw_makuragaeshi",
    "nw_teketeke",
    "n30_yukionna"
   ],
   "4:so5_r2_3": [
-   "n30_daji",
+   "nw_dikseigwai",
    "n30_xiaosi"
   ],
   "4:so5_r2_4": [
-   "nw_zzcar",
+   "nw_nekomata",
    "n30_vetala"
   ],
   "4:so5_r3_1": [
-   "n30_rokurokubi",
+   "nw_kamaitachi",
    "nw_honeonna"
   ],
   "4:so5_r3_2": [
@@ -1174,22 +790,23 @@
    "n30_hannya"
   ],
   "4:so5_r3_3": [
-   "n30_chehuo",
-   "n30_chengsi"
+   "nw_dodomeki",
+   "n30_chengsi",
+   "n30_chehuo"
   ],
   "4:so5_r3_4": [
    "nw_mummy",
    "n30_gashadokuro"
   ],
   "4:so5_r4_1": [
-   "n30_rokurokubi",
    "nw_honeonna",
-   "nw_kuaidi"
+   "nw_kuaidi",
+   "nw_teketeke"
   ],
   "4:so5_r4_2": [
-   "n30_nopperabo",
    "nw_honeonna",
-   "nw_kuaidi"
+   "nw_kuaidi",
+   "n30_banshee"
   ],
   "4:so5_r4_3": [
    "n30_nopperabo",
@@ -1213,26 +830,29 @@
    "nw_yeleng_sales"
   ],
   "5:so6_r2_2": [
-   "pg_ex",
+   "nw_ungaikyo",
    "nw_toutai"
   ],
   "5:so6_r2_3": [
-   "niutou",
-   "mamian"
+   "mamian",
+   "nw_mummy"
   ],
   "5:so6_r2_4": [
+   "nw_poltergeist",
    "n30_diansi",
    "n30_dongsi"
   ],
   "5:so6_r3_1": [
-   "nw_yeleng_sales",
-   "nw_zzhouse"
+   "nw_dokkaebi",
+   "nw_zzhouse",
+   "pg_ji"
   ],
   "5:so6_r3_2": [
    "pg_ex",
    "nw_shenpi"
   ],
   "5:so6_r3_3": [
+   "nw_nurikabe",
    "mamian",
    "nw_yeleng_guard"
   ],
@@ -1246,14 +866,419 @@
    "n30_yecha"
   ],
   "5:so6_r4_2": [
-   "n30_leipi",
    "pg_ji",
-   "nw_dullahan"
+   "nw_dullahan",
+   "n30_leipi"
   ],
   "5:so6_r4_3": [
    "nw_yeleng_sales",
    "nw_zzhouse",
    "pg_landlady"
+  ],
+  "0:so1_r4_4": [
+   "n30_jerangkung"
+  ],
+  "1:so2_r4_4": [
+   "n30_genderuwo"
+  ],
+  "2:so3_r4_4": [
+   "n30_baigujing"
+  ],
+  "3:so4_r4_4": [
+   "nw_kapre"
+  ],
+  "4:so5_r4_4": [
+   "nw_zzcar"
+  ],
+  "5:so6_r4_4": [
+   "nw_shenpi"
+  ]
+ },
+ "CAMP_EN_PLAN": {
+  "0:so1_r1_1": [
+   "n30_qionggui"
+  ],
+  "0:so1_r1_2": [
+   "n30_wutou"
+  ],
+  "0:so1_r1_3": [
+   "n30_kasaobake"
+  ],
+  "0:so1_r1_4": [
+   "n30_yesi"
+  ],
+  "0:so1_r2_1": [
+   "nw_guisihknai",
+   "n30_danxiao"
+  ],
+  "0:so1_r2_2": [
+   "nw_wangliang",
+   "nw_guihuo"
+  ],
+  "0:so1_r2_3": [
+   "nw_zhizhama",
+   "n30_chochin"
+  ],
+  "0:so1_r2_4": [
+   "nw_paakbok",
+   "n30_maoshi"
+  ],
+  "0:so1_r3_1": [
+   "n30_danxiao",
+   "n30_jiugui"
+  ],
+  "0:so1_r3_2": [
+   "nw_guihuo",
+   "n30_jerangkung"
+  ],
+  "0:so1_r3_3": [
+   "n30_chochin",
+   "n30_kasaobake"
+  ],
+  "0:so1_r3_4": [
+   "nw_huli",
+   "nw_huli"
+  ],
+  "0:so1_r4_1": [
+   "n30_danxiao",
+   "nw_nian",
+   "pg_tuimo"
+  ],
+  "0:so1_r4_2": [
+   "n30_chochin",
+   "n30_kasaobake",
+   "n30_chochin"
+  ],
+  "0:so1_r4_3": [
+   "n30_maoshi",
+   "nw_huli",
+   "nw_huli"
+  ],
+  "1:so2_r1_1": [
+   "n30_shidu"
+  ],
+  "1:so2_r1_2": [
+   "n30_bunian"
+  ],
+  "1:so2_r1_3": [
+   "n30_pelesit"
+  ],
+  "1:so2_r1_4": [
+   "n30_yangui"
+  ],
+  "1:so2_r2_1": [
+   "nw_bonceng",
+   "n30_shidu",
+   "n30_yezi"
+  ],
+  "1:so2_r2_2": [
+   "nw_banaspati",
+   "n30_bunian"
+  ],
+  "1:so2_r2_3": [
+   "n30_pelesit",
+   "n30_polong"
+  ],
+  "1:so2_r2_4": [
+   "nw_guiamngaan",
+   "n30_dugui"
+  ],
+  "1:so2_r3_1": [
+   "n30_yezi",
+   "n30_liulian"
+  ],
+  "1:so2_r3_2": [
+   "nw_harimau",
+   "n30_bunian",
+   "n30_genderuwo"
+  ],
+  "1:so2_r3_3": [
+   "n30_polong",
+   "nw_bajang"
+  ],
+  "1:so2_r3_4": [
+   "n30_guhangui",
+   "n30_hantugalah"
+  ],
+  "1:so2_r4_1": [
+   "n30_polong",
+   "nw_bajang",
+   "n30_hanturaya"
+  ],
+  "1:so2_r4_2": [
+   "n30_dugui",
+   "n30_hantugalah",
+   "n30_guhangui"
+  ],
+  "1:so2_r4_3": [
+   "n30_yezi",
+   "n30_liulian",
+   "n30_liulian"
+  ],
+  "2:so3_r1_1": [
+   "n30_changgui"
+  ],
+  "2:so3_r1_2": [
+   "n30_jenglot"
+  ],
+  "2:so3_r1_3": [
+   "nw_daqiang"
+  ],
+  "2:so3_r1_4": [
+   "n30_shedu"
+  ],
+  "2:so3_r2_1": [
+   "nw_mosinna",
+   "n30_taozhai"
+  ],
+  "2:so3_r2_2": [
+   "nw_luotoumin",
+   "nw_baimao"
+  ],
+  "2:so3_r2_3": [
+   "nw_bifang",
+   "n30_tikbalang"
+  ],
+  "2:so3_r2_4": [
+   "nw_niexiaoqian",
+   "n30_diaosi"
+  ],
+  "2:so3_r3_1": [
+   "n30_taozhai",
+   "nw_ganshi"
+  ],
+  "2:so3_r3_2": [
+   "nw_baimao",
+   "nw_buhuagu"
+  ],
+  "2:so3_r3_3": [
+   "nw_qiongqi",
+   "n30_tikbalang",
+   "n30_shanxiao"
+  ],
+  "2:so3_r3_4": [
+   "nw_huapi",
+   "nw_huapi"
+  ],
+  "2:so3_r4_1": [
+   "n30_taozhai",
+   "nw_ganshi",
+   "pg_songding"
+  ],
+  "2:so3_r4_2": [
+   "nw_baimao",
+   "nw_buhuagu",
+   "n30_hanba"
+  ],
+  "2:so3_r4_3": [
+   "n30_tikbalang",
+   "n30_shanxiao",
+   "n30_baigujing"
+  ],
+  "3:so4_r1_1": [
+   "n30_churel"
+  ],
+  "3:so4_r1_2": [
+   "n30_kappa"
+  ],
+  "3:so4_r1_3": [
+   "nw_tisi"
+  ],
+  "3:so4_r1_4": [
+   "n30_phiam"
+  ],
+  "3:so4_r2_1": [
+   "nw_nangtani",
+   "n30_churel",
+   "n30_maenak"
+  ],
+  "3:so4_r2_2": [
+   "nw_shen",
+   "n30_kappa",
+   "nw_tiangou"
+  ],
+  "3:so4_r2_3": [
+   "nw_akaname",
+   "n30_zhongshu"
+  ],
+  "3:so4_r2_4": [
+   "nw_manananggal",
+   "n30_xiasi"
+  ],
+  "3:so4_r3_1": [
+   "nw_nuno",
+   "n30_maenak",
+   "n30_guixinniang"
+  ],
+  "3:so4_r3_2": [
+   "nw_ushioni",
+   "nw_tiangou",
+   "nw_shejing"
+  ],
+  "3:so4_r3_3": [
+   "n30_zhongshu",
+   "n30_xiangcai"
+  ],
+  "3:so4_r3_4": [
+   "nw_krahang",
+   "nw_kapre"
+  ],
+  "3:so4_r4_1": [
+   "nw_shejing",
+   "n30_aswang",
+   "nw_krahang"
+  ],
+  "3:so4_r4_2": [
+   "n30_zhongshu",
+   "n30_xiangcai",
+   "n30_xiangcai"
+  ],
+  "3:so4_r4_3": [
+   "n30_maenak",
+   "n30_guixinniang",
+   "nw_ameonna"
+  ],
+  "4:so5_r1_1": [
+   "n30_nopperabo"
+  ],
+  "4:so5_r1_2": [
+   "n30_kuchisake"
+  ],
+  "4:so5_r1_3": [
+   "n30_daji"
+  ],
+  "4:so5_r1_4": [
+   "nw_zzphone"
+  ],
+  "4:so5_r2_1": [
+   "nw_jinmenken",
+   "n30_nopperabo",
+   "n30_rokurokubi"
+  ],
+  "4:so5_r2_2": [
+   "nw_makuragaeshi",
+   "nw_teketeke",
+   "n30_yukionna"
+  ],
+  "4:so5_r2_3": [
+   "nw_dikseigwai",
+   "n30_xiaosi"
+  ],
+  "4:so5_r2_4": [
+   "nw_nekomata",
+   "n30_vetala"
+  ],
+  "4:so5_r3_1": [
+   "nw_kamaitachi",
+   "nw_honeonna"
+  ],
+  "4:so5_r3_2": [
+   "n30_banshee",
+   "n30_hannya"
+  ],
+  "4:so5_r3_3": [
+   "nw_dodomeki",
+   "n30_chengsi",
+   "n30_chehuo"
+  ],
+  "4:so5_r3_4": [
+   "nw_mummy",
+   "n30_gashadokuro"
+  ],
+  "4:so5_r4_1": [
+   "nw_honeonna",
+   "nw_kuaidi",
+   "nw_teketeke"
+  ],
+  "4:so5_r4_2": [
+   "nw_honeonna",
+   "nw_kuaidi",
+   "n30_banshee"
+  ],
+  "4:so5_r4_3": [
+   "n30_nopperabo",
+   "n30_rokurokubi",
+   "nw_kuaidi"
+  ],
+  "5:so6_r1_1": [
+   "nw_zzhouse"
+  ],
+  "5:so6_r1_2": [
+   "pg_ex"
+  ],
+  "5:so6_r1_3": [
+   "niutou"
+  ],
+  "5:so6_r1_4": [
+   "n30_diansi"
+  ],
+  "5:so6_r2_1": [
+   "nw_zzhouse",
+   "nw_yeleng_sales"
+  ],
+  "5:so6_r2_2": [
+   "nw_ungaikyo",
+   "nw_toutai"
+  ],
+  "5:so6_r2_3": [
+   "mamian",
+   "nw_mummy"
+  ],
+  "5:so6_r2_4": [
+   "nw_poltergeist",
+   "n30_diansi",
+   "n30_dongsi"
+  ],
+  "5:so6_r3_1": [
+   "nw_dokkaebi",
+   "nw_zzhouse",
+   "pg_ji"
+  ],
+  "5:so6_r3_2": [
+   "pg_ex",
+   "nw_shenpi"
+  ],
+  "5:so6_r3_3": [
+   "nw_nurikabe",
+   "mamian",
+   "nw_yeleng_guard"
+  ],
+  "5:so6_r3_4": [
+   "pg_ji",
+   "nw_dullahan"
+  ],
+  "5:so6_r4_1": [
+   "mamian",
+   "nw_yeleng_guard",
+   "n30_yecha"
+  ],
+  "5:so6_r4_2": [
+   "pg_ji",
+   "nw_dullahan",
+   "n30_leipi"
+  ],
+  "5:so6_r4_3": [
+   "nw_yeleng_sales",
+   "nw_zzhouse",
+   "pg_landlady"
+  ],
+  "0:so1_r4_4": [
+   "n30_jerangkung"
+  ],
+  "1:so2_r4_4": [
+   "n30_genderuwo"
+  ],
+  "2:so3_r4_4": [
+   "n30_baigujing"
+  ],
+  "3:so4_r4_4": [
+   "nw_kapre"
+  ],
+  "4:so5_r4_4": [
+   "nw_zzcar"
+  ],
+  "5:so6_r4_4": [
+   "nw_shenpi"
   ]
  },
  "NEW": {
@@ -1282,6 +1307,68 @@
   "nw_zzhouse": 5,
   "nw_yeleng_guard": 5,
   "nw_yeleng_sales": 5,
-  "nw_dullahan": 5
+  "nw_dullahan": 5,
+  "nw_bifang": 2,
+  "nw_qiongqi": 2,
+  "nw_nian": 0,
+  "nw_shen": 3,
+  "nw_wangliang": 0,
+  "nw_niexiaoqian": 2,
+  "nw_zhizhama": 0,
+  "nw_luotoumin": 2,
+  "nw_guiamngaan": 1,
+  "nw_guisihknai": 0,
+  "nw_paakbok": 0,
+  "nw_dikseigwai": 4,
+  "nw_mosinna": 2,
+  "nw_kamaitachi": 4,
+  "nw_nurikabe": 5,
+  "nw_akaname": 3,
+  "nw_makuragaeshi": 4,
+  "nw_dodomeki": 4,
+  "nw_ungaikyo": 5,
+  "nw_jinmenken": 4,
+  "nw_ushioni": 3,
+  "nw_nekomata": 4,
+  "nw_harimau": 1,
+  "nw_banaspati": 1,
+  "nw_bonceng": 1,
+  "nw_nangtani": 3,
+  "nw_manananggal": 3,
+  "nw_nuno": 3,
+  "nw_dokkaebi": 5,
+  "nw_poltergeist": 5
+ },
+ "CAMP2": {
+  "0:so1_r2_1": "nw_guisihknai",
+  "0:so1_r2_2": "nw_wangliang",
+  "0:so1_r2_3": "nw_zhizhama",
+  "0:so1_r2_4": "nw_paakbok",
+  "0:so1_r4_1": "nw_nian",
+  "1:so2_r2_1": "nw_bonceng",
+  "1:so2_r2_2": "nw_banaspati",
+  "1:so2_r2_4": "nw_guiamngaan",
+  "1:so2_r3_2": "nw_harimau",
+  "2:so3_r2_1": "nw_mosinna",
+  "2:so3_r2_2": "nw_luotoumin",
+  "2:so3_r2_3": "nw_bifang",
+  "2:so3_r2_4": "nw_niexiaoqian",
+  "2:so3_r3_3": "nw_qiongqi",
+  "3:so4_r2_1": "nw_nangtani",
+  "3:so4_r2_2": "nw_shen",
+  "3:so4_r2_3": "nw_akaname",
+  "3:so4_r2_4": "nw_manananggal",
+  "3:so4_r3_1": "nw_nuno",
+  "3:so4_r3_2": "nw_ushioni",
+  "4:so5_r2_1": "nw_jinmenken",
+  "4:so5_r2_2": "nw_makuragaeshi",
+  "4:so5_r2_3": "nw_dikseigwai",
+  "4:so5_r2_4": "nw_nekomata",
+  "4:so5_r3_1": "nw_kamaitachi",
+  "4:so5_r3_3": "nw_dodomeki",
+  "5:so6_r2_2": "nw_ungaikyo",
+  "5:so6_r2_4": "nw_poltergeist",
+  "5:so6_r3_1": "nw_dokkaebi",
+  "5:so6_r3_3": "nw_nurikabe"
  }
 }
