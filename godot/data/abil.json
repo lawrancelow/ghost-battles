@@ -9539,6 +9539,761 @@
    "kind": "fod",
    "recruit": false,
    "use_abil": false
+  },
+  "nw_bifang": {
+   "sys": "妖",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "飛"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_qiongqi": {
+   "sys": "妖",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "突襲",
+    "霸體"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_nian": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "霸體",
+    "殼"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_shen": {
+   "sys": "妖",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "分身",
+    "隱"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_wangliang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "再生"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_niexiaoqian": {
+   "sys": "魂",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "隱"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_zhizhama": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "light",
+    "breath"
+   ],
+   "imm": [
+    "paper"
+   ],
+   "why": [
+    "怕燈：紙紮怕火",
+    "怕吹氣：紙輕，一吹就飛",
+    "唔怕紙：自己就係紙"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_luotoumin": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "飛",
+    "突襲"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_guiamngaan": {
+   "sys": "魂",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "隱"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_guisihknai": {
+   "sys": "魂",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_paakbok": {
+   "sys": "魂",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_dikseigwai": {
+   "sys": "橫",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_mosinna": {
+   "sys": "妖",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "迷魂"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_kamaitachi": {
+   "sys": "妖",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_nurikabe": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "殼",
+    "霸體"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_akaname": {
+   "sys": "妖",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "再生"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_makuragaeshi": {
+   "sys": "妖",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "迷魂"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_dodomeki": {
+   "sys": "妖",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "隱"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_ungaikyo": {
+   "sys": "妖",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "反傷"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_jinmenken": {
+   "sys": "妖",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_ushioni": {
+   "sys": "妖",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "殼",
+    "反傷"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_nekomata": {
+   "sys": "妖",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "召喚"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_harimau": {
+   "sys": "妖",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "霸體"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_banaspati": {
+   "sys": "妖",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "散骨"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_bonceng": {
+   "sys": "魂",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "隱"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_nangtani": {
+   "sys": "妖",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "隱"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_manananggal": {
+   "sys": "厲",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "飛",
+    "突襲"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_nuno": {
+   "sys": "妖",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "反傷"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_dokkaebi": {
+   "sys": "妖",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "霸體"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_poltergeist": {
+   "sys": "魂",
+   "sc": [
+    "sound"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "隱"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
   }
  },
  "LINK": [],

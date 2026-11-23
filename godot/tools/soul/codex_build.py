@@ -40,6 +40,12 @@ FIX_NAME = {"nw_huli": "狐妖", "nw_zzcar": "紙紮跑車", "nw_panguan": "陰�
 for k, n in FIX_NAME.items():
     if k in R: R[k]["name"] = n
 R.pop("nw_sundel", None)   # 老闆 20:24 定案：去掉
+# [roster2] 第二批新名鬼 30 隻（data/nat/newghost2.json）：同 101 格一齊按章、品排
+N2 = jl("data/nat/newghost2.json")
+for k in N2.get("ROSTER2", []):
+    e = N2["ENEMY"][k]
+    R[k] = dict(id=k, sys=e["sys"], sc=[CT.get("scares", {}).get(e["sc"][0], e["sc"][0])], mech=e["mech"], ch=int(e["ch"]), t="T%d" % int(e["tier"]),
+                tags=N2["ABIL"][k]["tags"], note="第二批", name=N2["GHOSTS"][k]["name"], new=True)
 REG = {
     "中": "afu xiaozhi eguiking laojiang mengpo baiwu heiwu tianhua niutou mamian n30_qionggui n30_danxiao n30_maoshi n30_yangui n30_jiugui n30_dugui n30_guhangui n30_taozhai n30_diaosi n30_wutou n30_changgui n30_guixinniang n30_baigujing n30_shanxiao n30_hanba pg_tuimo pg_songding pg_ji nw_guihuo nw_huli nw_baimao nw_buhuagu nw_daqiang nw_ganshi nw_huapi nw_shejing nw_tisi nw_panguan nw_toutai nw_zzphone nw_zzcar nw_zzhouse nw_kuaidi nw_yeleng_guard nw_yeleng_sales",
     "馬": "toyol pontianak pocong penanggal n30_pelesit n30_polong n30_jenglot n30_hantugalah n30_jerangkung n30_bunian n30_hanturaya n30_genderuwo nw_bajang",
@@ -47,10 +53,15 @@ REG = {
     "日": "n30_kasaobake n30_chochin n30_kappa n30_nopperabo n30_rokurokubi n30_kuchisake n30_yukionna n30_hannya n30_gashadokuro nw_ameonna nw_honeonna nw_tiangou",
     "意": "n30_zipai n30_xiaosi n30_yesi n30_shidu n30_daji n30_xiasi n30_chehuo n30_yezi n30_liulian n30_zhongshu n30_chengsi n30_shedu n30_diansi n30_dongsi n30_leipi n30_xiangcai pg_ex pg_landlady",
 }
+REG["中"] += " nw_guisihknai nw_nian nw_wangliang nw_zhizhama nw_paakbok nw_bifang nw_qiongqi nw_mosinna nw_niexiaoqian nw_luotoumin nw_shen nw_guiamngaan nw_dikseigwai"   # [roster2]
+REG["馬"] += " nw_harimau nw_banaspati nw_bonceng"
+REG["泰"] += " nw_nangtani nw_manananggal nw_nuno"
+REG["日"] += " nw_kamaitachi nw_nurikabe nw_akaname nw_makuragaeshi nw_dodomeki nw_ungaikyo nw_jinmenken nw_ushioni nw_nekomata"
 reg = {}
 for r, ks in REG.items():
     for k in ks.split(): reg[k] = r
-PINS = SOULJ.get("PIN", {})
+PINS = dict(SOULJ.get("PIN", {}))
+PINS.update(N2.get("PIN", {}))   # [roster2]
 TPIN = {"T1": "凡", "T2": "靈", "T3": "煞", "T4": "王"}
 # 次序：阿福 → 劇情鬼 → 按章、按品（凡→王）、名冊次序
 order = ["afu"] + [k for k in R if k != "afu"]
@@ -76,7 +87,7 @@ TAGS = {k: {"n": v.get("n", k), "c": v.get("c", "#888"), "desc": v.get("desc", "
 MECH = {}
 for k, v in (AB.get("MECH") or {}).items():
     if isinstance(v, dict): MECH[k] = {"desc": v.get("desc", v.get("d", "")), "counter": v.get("counter", [])}
-res = {"v": 1, "note": "soul2 線：名鬼圖鑑 101 格（tools/soul/codex_build.py 產生）。pin 只係後備，品級以 soul.json PIN 為準；sys/tags 只係後備，以 abil.json 為準。",
+res = {"v": 1, "note": "soul2 線：名鬼圖鑑 131 格（tools/soul/codex_build.py 產生；roster2 加第二批 30）。pin 只係後備，品級以 soul.json PIN 為準；sys/tags 只係後備，以 abil.json 為準。",
        "LIST": out, "SYS": SYS, "SC": SC, "TAGS": TAGS, "MECH": MECH,
        "REG": {"中": "中國", "馬": "馬來／印尼", "泰": "泰國／菲律賓／印度", "日": "日本", "意": "原創意外鬼", "他": "其他"}}
 json.dump(res, open("data/nat/codex.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)

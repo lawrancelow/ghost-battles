@@ -94,7 +94,7 @@ func _run(t) -> void:
 # ---- 數據 ----
 func data_check() -> void:
 	var D = SOUL.D()
-	_chk("soul.json：定案名冊 100 隻名鬼（不計阿福）都有品級、現有 72 隻全部有", D.PIN.size() == 100 and J.G.GHOSTS.keys().filter(func(k): return k != "afu" and not D.PIN.has(k)).is_empty(), D.PIN.size())
+	_chk("soul.json：定案名冊 130 隻名鬼（不計阿福；roster2 加第二批 30）都有品級、現有 72 隻全部有", D.PIN.size() == 130 and J.G.GHOSTS.keys().filter(func(k): return k != "afu" and not D.PIN.has(k)).is_empty(), D.PIN.size())
 	var nocamp = []; var bad_g = []
 	for c in 6:
 		var cs = SO.camps(c)
@@ -104,11 +104,11 @@ func data_check() -> void:
 				var raw = str(SOUL.D().CAMP.get(SOUL.ckey(e), ""))
 				if not (raw in ["niutou", "mamian"]): nocamp.append(SOUL.ckey(e))   # 牛頭馬面：cdata 定咗升名鬼，但未有 GHOSTS 資料 → 暫時唔掉主魂
 			elif not J.G.GHOSTS.has(k): bad_g.append(k)
-	_chk("90 個據點都有駐守名鬼（牛頭、馬面未入名冊除外）", nocamp.is_empty() and SO.camps(0).size() == 15, nocamp)
+	_chk("90 個據點都有駐守名鬼（牛頭、馬面未入名冊除外）", nocamp.is_empty() and SO.camps(0).filter(func(x): return str(x.get("bm", "")) == "").size() == 15, nocamp)
 	_chk("駐守鬼全部係現有名鬼（有圖）", bad_g.is_empty(), bad_g)
 	var cnt = {"凡": 0, "靈": 0, "煞": 0, "王": 0}
 	for k in D.PIN: cnt[D.PIN[k]] += 1
-	_chk("品級分布（按名冊 T 值）凡22 靈46 煞26 王6，冇 k1/k2", cnt == {"凡": 22, "靈": 46, "煞": 26, "王": 6} and not D.PIN.has("new_k1"), cnt)
+	_chk("品級分布（按名冊 T 值）凡22＋11 靈46＋12 煞26＋7 王6（roster2 第二批 30），冇 k1/k2", cnt == {"凡": 33, "靈": 58, "煞": 33, "王": 6} and not D.PIN.has("new_k1"), cnt)
 	_chk("id 統一：審批官 nw_shenpi、Teke Teke nw_teketeke（冇 nw_panguan／nw_sundel）", D.PIN.has("nw_shenpi") and D.PIN.has("nw_teketeke") and not D.PIN.has("nw_panguan") and not D.PIN.has("nw_sundel") and not JSON.stringify(D).contains("nw_panguan") and not JSON.stringify(D).contains("nw_sundel"))
 	var e = SO.camps(0)[0]
 	_chk("第1章第1據點：主魂窮鬼、有副魂（往後第 5 個據點）", SOUL.guard_of(e) == "n30_qionggui" and SOUL.sec_of(e) == SOUL.guard_of(SO.camps(0)[5]), [SOUL.guard_of(e), SOUL.sec_of(e)])
