@@ -208,7 +208,8 @@ static func _dirs_region(p: Vector2) -> String:
 		for e in ZD.exits4():   # 出口外 60 嗰小段（核心邊 → 圈帶）
 			if str(e.kind) == "path" and _xnear(e, p).distance_to(p) <= XW: return "x_" + str(e.dir)
 		return ""
-	if ZD.zone_at(p) != "": return ""
+	for z in ZD.zones():   # [integ] 貼住區邊（≤3px）嘅出路唔當入咗個區
+		if ZD.rect(z.rect).grow(-3.0).has_point(p): return ""
 	for e in ZD.exits4():
 		if str(e.kind) == "path" and _xnear(e, p).distance_to(p) <= XW: return "x_" + str(e.dir)
 	return ""
