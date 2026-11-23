@@ -412,15 +412,19 @@ func _form() -> void:
 	perp = Vector2(-ax.y, ax.x); org = (c0 + c1) * 0.5
 	var mel = []; var rng = []
 	for u in ou: (rng if _nn(u, "range") > 60 else mel).append(u)
-	# 近身：名鬼排中間，小隊兩邊
+	# 近身：陰兵小隊頂正面（同舊版小隊企最前一樣），名鬼喺兩翼包抄
 	var hs = mel.filter(func(x): return not J.t(x.get("minion")))
 	var sq = mel.filter(func(x): return J.t(x.get("minion")))
-	var line = sq.slice(0, sq.size() / 2) + hs + sq.slice(sq.size() / 2)
+	var line = hs.slice(0, (hs.size() + 1) / 2) + sq + hs.slice((hs.size() + 1) / 2)
 	_slots(line, 42.0); _slots(rng, 46.0)
 	fo.sort_custom(func(a, b): return _lat(a.p) < _lat(b.p))
 	_slots(fo, 46.0)
 func _slots(arr: Array, gap: float) -> void:
-	for i in arr.size(): arr[i]["ls"] = (i - (arr.size() - 1) * 0.5) * gap
+	var h = (arr.size() + 1) / 2   # 兩行排法：人多過對面陣線闊就分前後兩行（後行補位），唔會疊成直龍
+	for i in arr.size():
+		arr[i]["ls"] = (i - (arr.size() - 1) * 0.5) * gap
+		var row = i % 2; var j = i / 2; var nr = h if row == 0 else arr.size() - h
+		arr[i]["row"] = row; arr[i]["ls2"] = (j - (nr - 1) * 0.5) * gap
 # 陣線走位：守住自己橫位，沿軸向前去到「對面最近嗰隻」射程邊；對面冇人先橫移
 func _line_tg(u: Dictionary):
 	var cur = u.get("tg")
@@ -432,24 +436,42 @@ func _line_tg(u: Dictionary):
 		if k < bk: bk = k; best = v
 	u["tg"] = best
 	return best
+var _span := {}   # side → [對面中心, 對面半闊, 自己半闊]（每格算一次）
+func _spans() -> void:
+	for sd in [0, 1]:
+		var lo = INF; var hi = -INF; var mine = 0.0
+		for v in units:
+			if _nn(v, "hp") <= 0: continue
+			if _nn(v, "side") != sd and alive(v): var l = _lat(v.p); lo = minf(lo, l); hi = maxf(hi, l)
+			elif _nn(v, "side") == sd: mine = maxf(mine, absf(float(v.get("ls", 0.0))))
+		var mine2 = 0.0
+		for v in units: if _nn(v, "side") == sd and _nn(v, "hp") > 0: mine2 = maxf(mine2, absf(float(v.get("ls2", 0.0))))
+		_span[sd] = [(lo + hi) * 0.5 if lo < INF else 0.0, (hi - lo) * 0.5 if lo < INF else 0.0, mine, mine2]
 func _line_want(u: Dictionary, tg: Dictionary) -> Vector2:
-	var my = float(u.get("ls", _lat(u.p)))
-	var tl = _lat(tg.p)
-	if absf(tl - my) > 46.0: my = tl + clampf(my - tl, -40.0, 40.0)   # 對面冇人：靠埋去最近嗰隻側邊
+	# 自己陣位按比例壓入「對面陣線闊度 + 兩翼」：保持次序、排成一條線（人多過對面就兩翼包抄，唔會疊成一條直龍）
+	var sp = _span.get(int(_nn(u, "side")), [0.0, 0.0, 0.0, 0.0])
+	var ls = float(u.get("ls", 0.0))
+	var k = minf(1.0, (float(sp[1]) + 56.0) / maxf(1.0, float(sp[2])))
+	var back = 0.0
+	if k < 0.85 and u.has("ls2"):   # 一行擺唔落：分兩行，後行企後 40px
+		ls = float(u.ls2); k = minf(1.0, (float(sp[1]) + 56.0) / maxf(1.0, float(sp[3])))
+		back = 40.0 * float(u.get("row", 0))
+	var my = float(sp[0]) + ls * k
 	var sg = 1.0 if _nn(u, "side") == 0 else -1.0
-	var a = _axl(tg.p) - sg * _nn(u, "range") * 0.85
+	var a = _axl(tg.p) - sg * (_nn(u, "range") * 0.85 + back)
 	return org + perp * my + ax * a
 
 func _step_fight(dt: float) -> void:
 	auto = J.t(J.gp(J.G.get("Battle"), "auto")) if J.G.get("Battle") != null else auto
 	t += dt
 	step_proj(dt)
+	_spans()
 	for u in units:
 		vis_tick(u, dt)
 		if _nn(u, "hp") <= 0: continue
 		if _nn(u, "side") == 0 and not J.t(u.get("eng")):   # 未到前線：照路線行；有敵人入咗接觸範圍就開打
 			var n0 = nearest(u) if present(u) else null
-			if n0 != null and dist(u, n0) <= AGGRO: u["eng"] = true
+			if n0 != null and dist(u, n0) <= AGGRO * 2.6: u["eng"] = true   # 開打咗：近戰場嘅直接去自己陣位（排成一條線），遠嘅照路線行
 			elif _walk_path(u, dt, MARCH * 1.3, path, path_len): u["eng"] = true   # 開打咗：後面嘅跑步上前
 			continue
 		var st = u.st
@@ -480,7 +502,8 @@ func _step_fight(dt: float) -> void:
 			var want = _line_want(u, tg)
 			var dv = (want - (u.p as Vector2))
 			if dv.length() < 3.0: dv = (tg.p as Vector2) - (u.p as Vector2)
-			u["p"] = (u.p as Vector2) + dv.normalized() * minf(_nn(u, "spd") * dt, dv.length()); u["walking"] = true
+			var sp_ = _nn(u, "spd") if d < _nn(u, "range") + 90.0 else maxf(_nn(u, "spd"), MARCH * 1.25)   # 離陣位遠：跑步入位
+			u["p"] = (u.p as Vector2) + dv.normalized() * minf(sp_ * dt, dv.length()); u["walking"] = true
 		else:
 			u["walking"] = false; u["cd"] = _nn(u, "cd") - dt
 			if J.num(u.cd) <= lead_of(u, tg): u["anim"] = {"name": "windup", "t": 0.0, "dur": WIND, "tg": tg}

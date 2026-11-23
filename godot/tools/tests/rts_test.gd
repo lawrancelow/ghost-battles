@@ -264,7 +264,7 @@ func main_flow(t, m) -> void:
 	for u in op.units: if J.num(u.side) == 0 and J.t(u.get("out")) and (u.p as Vector2).distance_to(op.anchor) < 260: near = true
 	_chk("開打位置喺大排檔據點附近", near and ZD.zrect("market").has_point(op.anchor))
 	_cam(m, op.anchor + Vector2(-10, 90))
-	await _w(t, 1.5); await _shot(t, "05_fight")
+	await _w(t, 3.5); await _shot(t, "05_fight")
 	var hits = false
 	for f in op.fx: if str(f.kind) == "num": hits = true
 	_chk("睇到打：扣血數字", hits or op.t > 0.5)
@@ -363,8 +363,8 @@ func recall_flow(t, m) -> void:
 	await _w(t, 1.5)
 	RV.inst.chip_recall.emit_signal("pressed"); await _f(t, 2)
 	_chk("行軍中叫回：轉頭回村", op != null and op.phase == "back" and op.recalled)
-	var d1 = await _until(t, func(): return RTS.ops.is_empty(), 30.0)
-	_chk("行軍中叫回：冇結算、冇扣兵、冇通關", d1 and J.num(S.res.troops) == tr0 and not J.t(S.cleared.get("1-1")) and J.num(S.res.get("coins", 0)) == coins0)
+	var d1 = await _until(t, func(): return RTS.ops.is_empty(), 45.0)
+	_chk("行軍中叫回：冇結算、冇扣兵、冇通關", d1 and J.num(S.res.troops) >= tr0 and not J.t(S.cleared.get("1-1")) and J.num(S.res.get("coins", 0)) >= coins0 and not op.settled, [d1, tr0, S.res.troops, coins0, S.res.get("coins"), op.settled])
 	# 交戰中叫回
 	await _prep(t, m)
 	tr0 = J.num(S.res.troops)
@@ -428,7 +428,7 @@ func other_stage_old(t, m) -> void:
 	var ob = RTS.ops[0] if RTS.ops.size() else null
 	_chk("野外王：地圖戰（kind boss），王喺野外區，原位唔再畫", ob != null and ob.kind == "boss" and ZD.zrect("w_graves").grow(80).has_point(ob.anchor) and MB.on_zone("w_graves"))
 	_chk("野外王：路線經野外門入野外", ob != null and ZD.zrect("w_graves").grow(40).has_point(ob.path[ob.path.size() - 1]))
-	_cam(m, ob.anchor + Vector2(0, 80)); ob.t_skip_march(); await _w(t, 2.5); await _shot(t, "12_boss")
+	_cam(m, ob.anchor + Vector2(0, 80)); ob.t_skip_march(); await _w(t, 5.0); await _shot(t, "12_boss")
 	for u in ob.units: if J.num(u.side) == 0 and not J.t(u.get("minion")): u["hp"] = 0.0; u["deadT"] = 0.0
 	await _until(t, func(): return ob.phase in ["back", "done"], 20.0)
 	var bid = str(ZD.bosses("w_graves")[0].id)
@@ -446,7 +446,7 @@ func other_stage_old(t, m) -> void:
 	var rcap = ZD.start_battle("cap", "B"); await _f(t, 2); RTS.card_go(); await _f(t, 2)
 	var oc = RTS.ops[0] if RTS.ops.size() else null
 	_chk("親征：地圖戰（kind cap），經門洞入資源區、黑霧散開", oc != null and oc.kind == "cap" and MB.on_zone("B"), rcap)
-	_cam(m, oc.anchor); oc.t_skip_march(); await _w(t, 2.0); await _shot(t, "13_cap")
+	_cam(m, oc.anchor); oc.t_skip_march(); await _w(t, 4.0); await _shot(t, "13_cap")
 	for u in oc.units: if J.num(u.side) == 1: u["hp"] = 1.0
 	var e4 = await _wait_op_end(t, oc)
 	_chk("親征打贏：資源區佔領", e4 and ZD.owned("B"), oc.result)

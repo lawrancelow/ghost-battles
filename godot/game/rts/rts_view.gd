@@ -74,7 +74,7 @@ func _build_chip() -> void:
 	chip.mouse_filter = Control.MOUSE_FILTER_STOP
 	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 6); chip.add_child(hb)
 	chip_l = UIKit.label("", 16, Color("#ffe8c8"), "sans", 900); chip_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	chip_l.custom_minimum_size = Vector2(100, 34); chip_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chip_l.custom_minimum_size = Vector2(100, 34); chip_l.clip_text = true; chip_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hb.add_child(chip_l)
 	chip_auto = _btn(L("自動", "自動"), Color("#3a2c26"), Color("#6a5040")); ui.add_child(chip_auto)   # 擺喺右邊技能鈕上面（同技能有關）
 	chip_auto.custom_minimum_size = Vector2(56, 32); chip_auto.size = Vector2(56, 32)
@@ -520,7 +520,8 @@ func _chip_text(op) -> void:
 		"back":
 			var r = op.result
 			s = L("凱旋", "凱旋") if r != null and J.t(r.get("win")) else L("撤退", "撤退")
-	chip_l.text = "%s %s" % [op.sid, s]
+	var nm = {"stage": op.sid, "boss": L("王戰", "王戰"), "cap": L("親征", "親征"), "capauto": L("攻佔", "攻佔"), "raid": L("迎擊", "迎擊"), "raidauto": L("守村", "守村")}.get(op.kind, op.sid)
+	chip_l.text = "%s %s" % [nm, s]
 	chip_recall.visible = op.phase in ["march", "fight"]
 
 class SkillBtn extends Control:
