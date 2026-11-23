@@ -115,6 +115,7 @@ static func cst(e: Dictionary) -> Dictionary:
 static func ring_open(ring: int, c := -1) -> bool:
 	if c < 0: c = ZD.ci()
 	if ring <= 1: return force_open or ZD.wild_open(c)
+	if ZD.rings(c).size() > 0: return force_open or ZD.ring_open(ring, c)   # [integ] 有 mapx 分圈就以 mapx 為準
 	for e in camps(c):
 		if int(e.ring) == ring - 1 and J.t(cst(e).get("first")): return true
 	return false
@@ -215,7 +216,7 @@ static func dispatch(e: Dictionary) -> String:
 	op.adviser = snap.get("adviser")
 	op.set_meta("snap", snap); op.set_meta("camp", e); op.set_meta("cost", cs)
 	var at: Vector2 = e.pos
-	op.setup(snap.units, RTS.stage_path(at), at, RTS.gate_pos())
+	op.setup(snap.units, path_of(e, at), at, RTS.gate_pos())
 	RTS.ops.append(op)
 	LOG.append(["dispatch", key(e), cs, lu])
 	var m = RTS._main()
@@ -294,6 +295,7 @@ static func reward(e: Dictionary) -> Dictionary:
 	# 首勝
 	if not J.t(c.get("first")):
 		c["first"] = true; out.first = true
+		if not e.get("tmp", false): ZD.sortie_won(str(e.id))   # [integ] mapx：關鍵據點首勝開下一圈（散霧）
 		var cn = {}
 		for k in FIRST_CHEST[r]: cn[k] = int(cn.get(k, 0)) + 1
 		if not (s.get("chests") is Dictionary): s["chests"] = {"g": 0, "b": 0, "p": 0}
@@ -348,3 +350,14 @@ static func give_rare(r: int) -> String:
 				s.chests[x.id] = int(J.num(s.chests.get(x.id, 0))) + int(x.n)
 	var t = rare_text(r)
 	return t + ("（%s）" % "、".join(o) if o.size() else "")
+
+# [integ] 行軍路線：mapx 有 route 就沿 route 行，否則用主線路線
+static func path_of(e: Dictionary, at: Vector2) -> PackedVector2Array:
+	var z = ZD.sortie(str(e.get("id", "")))
+	var r = z.get("route")
+	if r is Array and r.size() >= 2:
+		var o = PackedVector2Array()
+		for p in r: o.append(ZD.v2(p))
+		if o[o.size() - 1].distance_to(at) > 4.0: o.append(at)
+		return o
+	return RTS.stage_path(at)

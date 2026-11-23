@@ -23,7 +23,7 @@ static func want() -> Array:
 		if s == "cleared" or s == "out": _pv.erase(k); continue
 		if not _pv.has(k):
 			var stg = SO.stage_of(e)
-			var pth = RTS.stage_path(e.pos)
+			var pth = load("res://game/sortie/so_data.gd").path_of(e, e.pos)   # [integ]
 			var din = (pth[pth.size() - 1] - pth[pth.size() - 2]).normalized() if pth.size() >= 2 else Vector2(0, -1)
 			var pos = RTS.SIM.camp_layout(e.pos, stg.en.size(), din)
 			var ET = J.G.get("ENEMY_T")
