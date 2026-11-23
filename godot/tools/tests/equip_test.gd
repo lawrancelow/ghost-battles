@@ -230,7 +230,7 @@ func _logic(t, m) -> void:
 	EV.village(ops, "xiaozhi", 100, 200, 60, 1.0)
 	var bops = []
 	EV.village(ops, "xiaozhi", 100, 200, 60, 1.0, bops)
-	_chk("村子廣場：小紙有裝兵器 → 手持喺身後一層、帽喺前一層", bops.size() == 1 and ops.size() >= 1)
+	_chk("村子廣場：小紙有裝兵器有畫出（pin：手持身後一層／float：飄浮）", (bops.size() == 1 and ops.size() >= 1) if EV.scheme() == "pin" else (ops.size() + bops.size() >= 1), [EV.scheme(), ops.size(), bops.size()])   # [補丁29] 預設改 float
 	var ops2 = []
 	EV.village(ops2, "zzz_none", 100, 200, 60, 1.0)
 	_chk("冇裝備嘅鬼：乜都唔加", ops2.is_empty())
