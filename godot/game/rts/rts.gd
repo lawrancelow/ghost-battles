@@ -216,6 +216,7 @@ static func _launch(pend: Dictionary, ny: int, nm: int) -> String:
 	var snap = _start_battle(pend.cb)
 	if snap.is_empty(): return "nobattle"
 	_trim(snap, ny, nm)
+	_soften(snap, pend)   # [qaudit2]
 	var op = SIM.new()
 	op.id = _next_id; _next_id += 1
 	op.kind = pend.kind
@@ -245,6 +246,16 @@ static func _launch(pend: Dictionary, ny: int, nm: int) -> String:
 		if not cam.rect().grow(-60).has_point(op.path[0]): cam.glide_to(op.path[0].lerp(op.path[min(1, op.path.size() - 1)], 0.5))
 	Snd.play("click")
 	return "ok"
+# [qaudit2] 第 5、6 關主線關卡／野外王：敵人血、攻打折（地圖戰鬥喺呢兩關明顯難過舊引擎；正常練級＋換 2～3 次陣容要贏得到）
+const SOFT := {4: 0.55, 5: 0.5}   # 地圖序號（0 起）→ 敵方血／攻倍數
+static func _soften(snap: Dictionary, pend: Dictionary) -> void:
+	if not (str(pend.get("kind")) in ["stage", "boss"]): return
+	var k = float(SOFT.get(ZD.ci(), 1.0))
+	if k >= 1.0: return
+	for u in snap.units:
+		if J.num(u.get("side")) != 1: continue
+		u["hp"] = J.num(u.hp) * k; u["maxhp"] = J.num(u.get("maxhp", u.hp / k)) * k
+		u["atk"] = J.num(u.get("atk")) * k
 # 揀少咗嘅隊：由單位表拎走（留喺村，唔計戰死）
 static func _trim(snap: Dictionary, ny: int, nm: int) -> void:
 	var o = []; var cy = 0; var cm = 0
