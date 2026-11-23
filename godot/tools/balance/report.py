@@ -8,7 +8,7 @@ sp = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bal_scale.json")
 if os.path.exists(sp): scale = json.load(open(sp, encoding="utf-8")).get("camps", {})
 L = [pre]
 summ = []
-for f in sorted(glob.glob("/tmp/bal/c*.json")):
+for f in sorted(glob.glob("/tmp/bal/c[0-9].json")):
     d = json.load(open(f, encoding="utf-8"))
     c = d["c"]; nm = d.get("names", {})
     n = lambda k: nm.get(k, k)

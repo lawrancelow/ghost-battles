@@ -452,7 +452,7 @@ func cal_site(sn, best, pool, insts, i, c, ring) -> Dictionary:
 	var top = _cal_ok(sn, best, pool, insts, i, c, ring, 1.0)
 	if top.ok: return {"s": 1.0, "B": top.B, "R": top.R}
 	var lo = log(0.15); var hi = 0.0; var lr = null
-	for it in 6:
+	for it in 5:
 		var mid = (lo + hi) / 2.0
 		var r = _cal_ok(sn, best, pool, insts, i, c, ring, exp(mid))
 		if r.ok: lo = mid; lr = r
@@ -487,7 +487,7 @@ func step_test(t, c: int, sites: Array, rk: int) -> Dictionary:
 				if _better(r, null if best == null else best.r): best = {"team": tm, "r": r}
 			var rw = _rand_wr(sn, pool, insts, 0, c, N_RAND, 2)
 			rows.append([st.id, best.r.wr, rw, best.team])
-			if best.r.wr < 0.8 or rw < 0.25: allok = false
+			if best.r.wr < 0.8: allok = false   # 主線只要最佳隊 ≥80%（隨機 ≥25% 係「據點」合格線，審查修正 11③；隨機照記錄）
 			await t.get_tree().process_frame
 		res.tried.append({"step": "ABC"[si], "k": k, "rows": rows, "ok": allok})
 		_p("c%d 主線 SOFT 步驟 %s %s：%s %s" % [c + 1, "ABC"[si], str(k), "過" if allok else "唔過", str(rows)])
@@ -495,7 +495,7 @@ func step_test(t, c: int, sites: Array, rk: int) -> Dictionary:
 		else: break
 	var kp = STEPS[c][res.pick]
 	D["ch_k"][str(c)] = {"hp": kp[0], "atk": kp[1]}
-	D["sortie_k"][str(c)] = {"hp": kp[0], "atk": kp[1]}
+	D["sortie_k"][str(c)] = {"hp": STEPS[c][0][0], "atk": STEPS[c][0][1]}   # 據點固定步驟 A（據點難度由 hm／am 校準負責）
 	res["k"] = kp
 	return res
 
@@ -513,7 +513,7 @@ func run_cal(t, c: int, rings: Array, tag: String) -> void:
 			var j = JSON.parse_string(FileAccess.get_file_as_string(fp))
 			if j is Dictionary and j.has("steps"): kp = j.steps.k
 		var D = CT.data()
-		D["ch_k"][str(c)] = {"hp": kp[0], "atk": kp[1]}; D["sortie_k"][str(c)] = {"hp": kp[0], "atk": kp[1]}
+		D["ch_k"][str(c)] = {"hp": kp[0], "atk": kp[1]}; D["sortie_k"][str(c)] = {"hp": STEPS[c][0][0], "atk": STEPS[c][0][1]}
 	for i in sites.size():
 		var st = sites[i]
 		if st.kind != "sortie" or not rings.has(int(st.ring)): continue
@@ -546,6 +546,17 @@ func run_cal(t, c: int, rings: Array, tag: String) -> void:
 	var f = FileAccess.open(OUT + "/cal_c%d_%s.json" % [c, tag], FileAccess.WRITE)
 	f.store_string(JSON.stringify(out)); f.close()
 	_p("c%d 校準批 %s 完成 %.0f 秒" % [c + 1, tag, (Time.get_ticks_msec() - t0) / 1000.0])
+func k0a(t) -> void: await _boot(t); await run_cal(t, 0, [1, 2], "r12"); _p("RESULT ok=1 bad=0")
+func k0b(t) -> void: await _boot(t); await run_cal(t, 0, [3, 4], "r34"); _p("RESULT ok=1 bad=0")
+func k1a(t) -> void: await _boot(t); await run_cal(t, 1, [1, 2], "r12"); _p("RESULT ok=1 bad=0")
+func k1b(t) -> void: await _boot(t); await run_cal(t, 1, [3, 4], "r34"); _p("RESULT ok=1 bad=0")
+func k2a(t) -> void: await _boot(t); await run_cal(t, 2, [1, 2], "r12"); _p("RESULT ok=1 bad=0")
+func k2b(t) -> void: await _boot(t); await run_cal(t, 2, [3, 4], "r34"); _p("RESULT ok=1 bad=0")
+func k3a(t) -> void: await _boot(t); await run_cal(t, 3, [1, 2], "r12"); _p("RESULT ok=1 bad=0")
+func k3b(t) -> void: await _boot(t); await run_cal(t, 3, [3, 4], "r34"); _p("RESULT ok=1 bad=0")
+func k4s(t) -> void: await _boot(t); await run_cal(t, 4, ["stage"], "stage"); _p("RESULT ok=1 bad=0")
+func k4a(t) -> void: await _boot(t); await run_cal(t, 4, [1, 2], "r12"); _p("RESULT ok=1 bad=0")
+func k4b(t) -> void: await _boot(t); await run_cal(t, 4, [3, 4], "r34"); _p("RESULT ok=1 bad=0")
 func k5s(t) -> void: await _boot(t); await run_cal(t, 5, ["stage"], "stage"); _p("RESULT ok=1 bad=0")
 func k5a(t) -> void: await _boot(t); await run_cal(t, 5, [1, 2], "r12"); _p("RESULT ok=1 bad=0")
 func k5b(t) -> void: await _boot(t); await run_cal(t, 5, [3, 4], "r34"); _p("RESULT ok=1 bad=0")

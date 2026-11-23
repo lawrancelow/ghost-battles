@@ -11,13 +11,13 @@ if "--from-scale" in sys.argv:
 else:
     sc = json.load(open(SC, encoding="utf-8")) if os.path.exists(SC) else {"camps": {}, "ch_k": {}, "sortie_k": {}}
     if "--mech-only" in sys.argv: sys.argv.append("--no-tmp")
-    for f in ([] if "--no-tmp" in sys.argv else sorted(glob.glob("/tmp/bal/c*.json") + glob.glob("/tmp/bal/cal_*.json"))):
+    for f in ([] if "--no-tmp" in sys.argv else sorted(glob.glob("/tmp/bal/c[0-9].json") + glob.glob("/tmp/bal/cal_*.json"))):
         d = json.load(open(f, encoding="utf-8"))
         c = d["c"]
         if "steps" in d:
             k = d["steps"]["k"]
             sc["ch_k"][str(c)] = {"hp": k[0], "atk": k[1]}
-            sc["sortie_k"][str(c)] = {"hp": k[0], "atk": k[1]}
+            sc["sortie_k"][str(c)] = {"hp": 0.70, "atk": 0.55} if c == 4 else {"hp": 0.65, "atk": 0.50}   # 據點固定步驟 A
         for r in d["sites"]:
             if "s" in r:
                 old = float(sc["camps"].get(r["id"], 1.0))
