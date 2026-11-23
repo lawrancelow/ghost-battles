@@ -657,6 +657,18 @@
     "guard": false
    }
   ],
+  "n30_yangui": [
+   {
+    "t": "camp",
+    "id": "so2_r1_4",
+    "guard": true
+   },
+   {
+    "t": "camp",
+    "id": "so2_r2_4",
+    "guard": false
+   }
+  ],
   "pg_ex": [
    {
     "t": "camp",
@@ -756,18 +768,6 @@
    {
     "t": "camp",
     "id": "so6_r3_2",
-    "guard": false
-   }
-  ],
-  "n30_yangui": [
-   {
-    "t": "camp",
-    "id": "so2_r1_4",
-    "guard": true
-   },
-   {
-    "t": "camp",
-    "id": "so2_r2_4",
     "guard": false
    }
   ],
@@ -903,23 +903,6 @@
     "guard": false
    }
   ],
-  "n30_hantugalah": [
-   {
-    "t": "camp",
-    "id": "so2_r3_4",
-    "guard": true
-   },
-   {
-    "t": "camp",
-    "id": "so2_r4_2",
-    "guard": true
-   },
-   {
-    "t": "camp",
-    "id": "so4_r2_4",
-    "guard": true
-   }
-  ],
   "n30_guhangui": [
    {
     "t": "camp",
@@ -940,6 +923,23 @@
     "t": "camp",
     "id": "so3_r4_1",
     "guard": false
+   }
+  ],
+  "n30_hantugalah": [
+   {
+    "t": "camp",
+    "id": "so2_r3_4",
+    "guard": true
+   },
+   {
+    "t": "camp",
+    "id": "so2_r4_2",
+    "guard": true
+   },
+   {
+    "t": "camp",
+    "id": "so4_r2_4",
+    "guard": true
    }
   ],
   "n30_hanturaya": [
@@ -1542,13 +1542,13 @@
     "stage": "5-3"
    }
   ],
-  "heiwu": [
+  "baiwu": [
    {
     "t": "throne",
     "stage": "6-2"
    }
   ],
-  "baiwu": [
+  "heiwu": [
    {
     "t": "throne",
     "stage": "6-2"
@@ -8635,108 +8635,108 @@
   }
  ],
  "names": {
-  "n30_jenglot": "Jenglot",
-  "pg_ex": "前女友鬼",
-  "n30_chehuo": "車禍鬼",
-  "nw_buhuagu": "不化骨",
-  "n30_liulian": "榴槤砸死鬼",
-  "n30_kappa": "河童",
-  "n30_shedu": "蛇咬鬼",
-  "n30_maoshi": "冒失鬼",
-  "n30_pelesit": "Pelesit",
-  "n30_churel": "Churel",
-  "n30_yangui": "煙鬼",
-  "nw_dullahan": "Dullahan",
-  "nw_tisi": "替死鬼",
-  "nw_honeonna": "骨女",
-  "n30_polong": "Polong",
-  "n30_genderuwo": "Genderuwo",
-  "n30_yukionna": "雪女",
-  "n30_xiaosi": "笑死鬼",
-  "n30_hanba": "旱魃",
-  "n30_phiam": "Phi Am",
-  "n30_tikbalang": "Tikbalang",
-  "n30_changgui": "倀鬼",
-  "nw_krahang": "Krahang",
-  "n30_kasaobake": "唐傘妖",
-  "n30_chochin": "提燈妖",
-  "nw_shejing": "蛇精",
-  "n30_maenak": "Mae Nak",
-  "n30_yezi": "椰子砸死鬼",
-  "n30_baigujing": "白骨精",
-  "n30_dugui": "賭鬼",
-  "n30_xiasi": "嚇死鬼",
-  "nw_guihuo": "鬼火",
-  "n30_danxiao": "膽小鬼",
-  "n30_vetala": "Vetala",
-  "xiaogui": "小鬼",
-  "n30_hanturaya": "Hantu Raya",
-  "pg_tuimo": "推磨鬼",
-  "nw_baimao": "白毛殭屍",
-  "n30_rokurokubi": "轆轤首",
-  "nw_tiangou": "天狗",
-  "n30_chengsi": "撐死鬼",
-  "nw_teketeke": "Teke Teke",
-  "n30_daji": "打機猝死鬼",
-  "zd_hongyi": "紅衣女鬼",
-  "n30_gashadokuro": "餓者髑髏",
-  "n30_shanxiao": "山魈",
-  "tianhua": "天花姐",
-  "pg_ji": "聻",
-  "nw_kuaidi": "陰司快遞員",
-  "shuigui": "水鬼",
-  "nw_kapre": "Kapre",
-  "zd_zhima": "紙馬",
-  "n30_hantugalah": "Hantu Galah",
-  "n30_aswang": "Aswang",
-  "zhiren": "紙人偶",
-  "n30_diansi": "電死鬼",
-  "n30_shidu": "食物中毒鬼",
-  "n30_jiugui": "酒鬼",
-  "n30_wutou": "無頭鬼",
-  "mamian": "馬面",
-  "youhun": "遊魂",
-  "nw_ganshi": "趕屍匠",
   "egui": "餓鬼",
-  "zd_yinchai": "陰差",
-  "n30_leipi": "雷劈鬼",
-  "n30_zhongshu": "中暑鬼",
-  "n30_bunian": "Orang Bunian",
-  "nw_shenpi": "陰司審批官",
-  "niutou": "牛頭",
-  "n30_nopperabo": "無臉鬼",
-  "n30_dongsi": "凍死鬼",
-  "zd_bone": "骷髏兵",
-  "n30_diaosi": "吊死鬼",
-  "nw_daqiang": "鬼打牆",
-  "n30_hannya": "般若",
-  "n30_xiangcai": "大象踩扁鬼",
-  "n30_kuchisake": "裂口女",
-  "n30_yesi": "噎死鬼",
-  "n30_taozhai": "討債鬼",
-  "nw_zzphone": "紙紮手機",
-  "nw_zzhouse": "紙紮大屋",
-  "nw_bajang": "Bajang",
-  "nw_yeleng_guard": "夜冷村保安",
-  "nw_mummy": "木乃伊",
-  "zd_shanjing": "山精",
-  "nw_zzcar": "紙紮跑車",
-  "n30_guhangui": "孤寒鬼",
+  "mamian": "馬面",
+  "n30_aswang": "Aswang",
+  "n30_baigujing": "白骨精",
   "n30_banshee": "Banshee",
-  "nw_ameonna": "雨女",
-  "n30_yecha": "夜叉",
-  "zd_paotui": "跑腿鬼",
-  "pg_landlady": "二房東",
-  "nw_huapi": "畫皮",
-  "zd_hengsi": "橫死新鬼",
-  "nw_huli": "狐妖",
-  "nw_yeleng_sales": "夜冷村推銷員",
-  "zd_shuihou": "水猴子",
+  "n30_bunian": "Orang Bunian",
+  "n30_changgui": "倀鬼",
+  "n30_chehuo": "車禍鬼",
+  "n30_chengsi": "撐死鬼",
+  "n30_chochin": "提燈妖",
+  "n30_churel": "Churel",
+  "n30_daji": "打機猝死鬼",
+  "n30_danxiao": "膽小鬼",
+  "n30_diansi": "電死鬼",
+  "n30_diaosi": "吊死鬼",
+  "n30_dongsi": "凍死鬼",
+  "n30_dugui": "賭鬼",
+  "n30_gashadokuro": "餓者髑髏",
+  "n30_genderuwo": "Genderuwo",
+  "n30_guhangui": "孤寒鬼",
   "n30_guixinniang": "鬼新娘",
+  "n30_hanba": "旱魃",
+  "n30_hannya": "般若",
+  "n30_hantugalah": "Hantu Galah",
+  "n30_hanturaya": "Hantu Raya",
+  "n30_jenglot": "Jenglot",
   "n30_jerangkung": "Hantu Jerangkung",
-  "zombie": "殭屍兵",
+  "n30_jiugui": "酒鬼",
+  "n30_kappa": "河童",
+  "n30_kasaobake": "唐傘妖",
+  "n30_kuchisake": "裂口女",
+  "n30_leipi": "雷劈鬼",
+  "n30_liulian": "榴槤砸死鬼",
+  "n30_maenak": "Mae Nak",
+  "n30_maoshi": "冒失鬼",
+  "n30_nopperabo": "無臉鬼",
+  "n30_pelesit": "Pelesit",
+  "n30_phiam": "Phi Am",
+  "n30_polong": "Polong",
   "n30_qionggui": "窮鬼",
+  "n30_rokurokubi": "轆轤首",
+  "n30_shanxiao": "山魈",
+  "n30_shedu": "蛇咬鬼",
+  "n30_shidu": "食物中毒鬼",
+  "n30_taozhai": "討債鬼",
+  "n30_tikbalang": "Tikbalang",
+  "n30_vetala": "Vetala",
+  "n30_wutou": "無頭鬼",
+  "n30_xiangcai": "大象踩扁鬼",
+  "n30_xiaosi": "笑死鬼",
+  "n30_xiasi": "嚇死鬼",
+  "n30_yangui": "煙鬼",
+  "n30_yecha": "夜叉",
+  "n30_yesi": "噎死鬼",
+  "n30_yezi": "椰子砸死鬼",
+  "n30_yukionna": "雪女",
+  "n30_zhongshu": "中暑鬼",
+  "niutou": "牛頭",
+  "nw_ameonna": "雨女",
+  "nw_baimao": "白毛殭屍",
+  "nw_bajang": "Bajang",
+  "nw_buhuagu": "不化骨",
+  "nw_daqiang": "鬼打牆",
+  "nw_dullahan": "Dullahan",
+  "nw_ganshi": "趕屍匠",
+  "nw_guihuo": "鬼火",
+  "nw_honeonna": "骨女",
+  "nw_huapi": "畫皮",
+  "nw_huli": "狐妖",
+  "nw_kapre": "Kapre",
+  "nw_krahang": "Krahang",
+  "nw_kuaidi": "陰司快遞員",
+  "nw_mummy": "木乃伊",
+  "nw_shejing": "蛇精",
+  "nw_shenpi": "陰司審批官",
+  "nw_teketeke": "Teke Teke",
+  "nw_tiangou": "天狗",
+  "nw_tisi": "替死鬼",
+  "nw_toutai": "投胎辦事處職員",
+  "nw_yeleng_guard": "夜冷村保安",
+  "nw_yeleng_sales": "夜冷村推銷員",
+  "nw_zzcar": "紙紮跑車",
+  "nw_zzhouse": "紙紮大屋",
+  "nw_zzphone": "紙紮手機",
+  "pg_ex": "前女友鬼",
+  "pg_ji": "聻",
+  "pg_landlady": "二房東",
   "pg_songding": "被賣鬼",
-  "nw_toutai": "投胎辦事處職員"
+  "pg_tuimo": "推磨鬼",
+  "shuigui": "水鬼",
+  "tianhua": "天花姐",
+  "xiaogui": "小鬼",
+  "youhun": "遊魂",
+  "zd_bone": "骷髏兵",
+  "zd_hengsi": "橫死新鬼",
+  "zd_hongyi": "紅衣女鬼",
+  "zd_paotui": "跑腿鬼",
+  "zd_shanjing": "山精",
+  "zd_shuihou": "水猴子",
+  "zd_yinchai": "陰差",
+  "zd_zhima": "紙馬",
+  "zhiren": "紙人偶",
+  "zombie": "殭屍兵"
  }
 }

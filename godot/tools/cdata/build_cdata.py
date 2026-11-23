@@ -623,8 +623,12 @@ def build():
         elif k == "huang": e = ent(k); kind = "boss"
         else: e = ent(k); kind = "named"
         f = SYS[e["sys"]]
-        ENEMY[k] = {"sys": e["sys"], "sc": [SC[e["sc"]]], "fear": [SC[f[0]], SC[f[1]]], "imm": [SC[f[2]]],
-                    "why": ["怕%s：%s" % (f[0], f[3]), "怕%s：%s" % (f[1], f[4]), "唔怕%s：%s" % (f[2], f[5])],
+        # 例外嚇法（約三成名鬼用非本系嚇法，例如提燈妖＝燈）：自己識嘅嘢唔怕 → 由「怕」搬去「唔怕」
+        fe = [x for x in (f[0], f[1]) if x != e["sc"]]
+        im = [f[2]] + ([e["sc"]] if e["sc"] in (f[0], f[1]) else [])
+        why = ["怕%s：%s" % (x, f[3] if x == f[0] else f[4]) for x in fe] + ["唔怕%s：%s" % (f[2], f[5])]
+        if len(im) > 1: why.append("唔怕%s：自己識玩嘅把戲唔怕" % e["sc"])
+        ENEMY[k] = {"sys": e["sys"], "sc": [SC[e["sc"]]], "fear": [SC[x] for x in fe], "imm": [SC[x] for x in im], "why": why,
                     "mech": e["mech"], "tier": e.get("t", 0), "kind": kind, "recruit": kind == "named", "use_abil": k in AB}
     # 頂替表合法
     for a, (b, hm, am) in SUB.items():
@@ -683,7 +687,7 @@ def build():
     # 魂魄來源（審查修正 9）：據點駐守／野外王／王座重遊（劇情王）
     src = {}
     for cid, c in camps.items():
-        for k in set(c["en"]):
+        for k in sorted(set(c["en"])):
             if ENEMY[k]["recruit"]: src.setdefault(k, []).append({"t": "camp", "id": cid, "guard": k == c["guard"]})
     for ci, m in ZONES.items():
         for z in m["zones"]:
@@ -693,13 +697,13 @@ def build():
                 if k and k in ENEMY and ENEMY[k]["recruit"]: src.setdefault(k, []).append({"t": "wildboss", "id": b["id"], "c": int(ci)})
     for ci, chp in enumerate(CORE["CHAPTERS"]):
         for si, stg in enumerate(chp["stages"]):
-            for k in set(stg.get("en", [])):
+            for k in sorted(set(stg.get("en", []))):
                 if k in ("eguiking", "toyol", "laojiang", "pontianak", "pocong", "penanggal", "baiwu", "heiwu"):
                     src.setdefault(k, []).append({"t": "throne", "stage": "%d-%d" % (ci + 1, si + 1)})
     recruit = sorted(k for k in AB if k not in ("afu", "xiaozhi", "mengpo") and (ENEMY.get(k, {}).get("recruit")))
     for k in recruit:
         if not src.get(k): errs.append("%s 冇魂魄來源" % k)
-    plan_names = {i: ent(i)["name"] for i in set(i for c in CAMPS for i in c["plan"])}
+    plan_names = {i: ent(i)["name"] for i in sorted(set(i for c in CAMPS for i in c["plan"]))}
     sub_tab = [{"plan": a, "plan_name": ent(a)["name"], "sys": ent(a)["sys"], "now": SUB[a][0], "now_name": ET[SUB[a][0]][2],
                 "hm": SUB[a][1], "am": SUB[a][2], "camps": sorted(subs_used.get(a, []))} for a in SUB]
     counter = {

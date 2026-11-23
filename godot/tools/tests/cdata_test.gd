@@ -179,11 +179,14 @@ func enemy_check() -> void:
 		var e = E[k]
 		for m in e.get("mech", []): if not m in MECHS: badm.append("%s:%s" % [k, m])
 		var si = CT.sys_info(str(e.get("sys", "")))
-		if si.is_empty() or e.get("fear", []) != si.get("fear") or e.get("imm", []) != [si.get("imm")]: badf.append(k)
+		var fe: Array = e.get("fear", []); var im: Array = e.get("imm", [])
+		if si.is_empty() or fe.is_empty() or not (si.get("imm") in im): badf.append(k)
+		for f in fe: if not f in si.get("fear", []): badf.append(k)
+		if fe.size() == 1 and not (e.get("sc", [""])[0] in im): badf.append(k)
 		for f in e.get("fear", []): if f in e.get("sc", []): badf.append("%s 怕自己嚇法" % k)
 	_chk("現有 ENEMY_T 全部（%d）有 ENEMY 條目" % ET.size(), miss.is_empty(), miss)
 	_chk("ENEMY 機制全部屬 13 種", badm.is_empty(), badm)
-	_chk("ENEMY 怕／唔怕照 8 系表（取代 hash 隨機；唔會怕自己嘅嚇法）", badf.is_empty(), badf)
+	_chk("ENEMY 怕／唔怕照 8 系表（取代 hash 隨機；例外嚇法：自己識嘅唔怕）", badf.is_empty(), badf)
 	var pc = E.get("pocong", {})
 	_chk("Pocong 矛盾修好：唔再怕自己嘅嚇法", not (pc.get("sc", [""])[0] in pc.get("fear", [])), pc)
 	_chk("黃總唔可招降、名鬼型可招降", not J.t(E.get("huang", {}).get("recruit")) and J.t(E.get("n30_bunian", {}).get("recruit")))
@@ -235,8 +238,8 @@ func counter_check() -> void:
 	var sb = []
 	for x in D.get("subs", []):
 		var now = str(x.get("now", ""))
-		var E = AB.enemy(now)
-		if not ET.has(now) or str(E.get("sys", "")) != str(x.get("sys", "")): sb.append(x.get("plan"))
+		var EN = AB.enemy(now)
+		if not ET.has(now) or str(EN.get("sys", "")) != str(x.get("sys", "")): sb.append(x.get("plan"))
 	_chk("頂替表：新鬼位全部用同系、有圖（ENEMY_T）嘅現有鬼", sb.is_empty() and (D.get("subs", []) as Array).size() > 0, sb)
 	var names = D.get("names", {})
 	_chk("新鬼名照定案：狐妖、Teke Teke、陰司審批官、投胎辦事處職員、紙紮跑車", names.get("nw_huli") == "狐妖" and names.get("nw_teketeke") == "Teke Teke" and names.get("nw_shenpi") == "陰司審批官" and names.get("nw_toutai") == "投胎辦事處職員" and names.get("nw_zzcar") == "紙紮跑車")
