@@ -16,6 +16,7 @@ const TOP := -0.98            # 兵器最高（以 H 為 1）：頭頂資訊喺�
 const SK_DUR := 0.65          # 技能放出後飛撲幾秒（Over 自己計時）
 const YIN := Color(0.66, 0.88, 1.0)   # 陰氣色
 static var LAST := {}         # 測試：最後一次畫嘅範圍 {k: Rect2（以 H 為 1）}
+static var LAST_BACK := {}
 static var _prof := {}
 static var _mat: ShaderMaterial = null
 
@@ -71,10 +72,15 @@ static func glow(ci: CanvasItem, xf: Transform2D, k: String, foot: Vector2, H: f
 	ci.draw_set_transform_matrix(xf)
 
 # ---------------- 主畫：一隻名鬼身上（front 層） ----------------
-static func draw(ctx: Ctx, sch: String, k: String, w: Dictionary, foot: Vector2, H: float, fd: float, st: Dictionary, low := false) -> Rect2:
+static func draw(ctx: Ctx, sch: String, k: String, w: Dictionary, foot: Vector2, H: float, fd: float, st: Dictionary, low := false, layer := "front") -> Rect2:
 	var EV = load("res://game/equip/eq_view.gd")
 	var r = Rect2(foot, Vector2.ZERO)
 	var T = J.num(st.get("T", 0.0))
+	if layer == "back":   # 角色後面一層：只有飛過身後嘅兵器（方案 B）
+		var wb = str(w.get("wea", ""))
+		if sch == "float" and wb != "" and str(EQ.item(wb).get("look")) == "hand": r = _float(ctx, k, wb, foot, H, fd, st, low, "back")
+		LAST_BACK[k] = Rect2((r.position - foot) / H, r.size / H)
+		return r
 	# 頭戴：照現行（壓喺頭頂）
 	var hw = {}
 	for sl in ["wea", "arm", "acc"]:
@@ -104,7 +110,7 @@ static func draw(ctx: Ctx, sch: String, k: String, w: Dictionary, foot: Vector2,
 
 # ---------------- 方案 B：鬼物飄浮 ----------------
 static func rest_of(k: String, wea: String, foot: Vector2, H: float, fd: float, T: float) -> Array:   # [中心, 角度(弧度，0＝向上), 長度]
-	var L = H * (0.42 if EA.is_long(wea) else 0.32)
+	var L = H * (0.46 if EA.is_long(wea) else 0.36)
 	var e = ext(k, -1.0, -0.78, -0.3)     # 圖嘅背側（左）上半身幾闊
 	var cx = clampf(e + 0.07, 0.30, 0.50)
 	var c = foot + Vector2(-fd * cx * H, (-0.50 + 0.035 * sin(T * 2.1)) * H)
@@ -163,7 +169,7 @@ static func float_at(k: String, wea: String, foot: Vector2, H: float, fd: float,
 		var top = c0 + Vector2(-fd * 0.02 * H, -0.06 * H * k1)
 		var L2 = L * sc
 		top.y = maxf(top.y, foot.y + (TOP * H) + L2 * 0.5 + 0.02 * H)
-		return [top, a0 + fd * TAU * _ease(ph), L2, 1.0]
+		return [top, a0 + fd * 0.22 * sin(ph * TAU * 2.0), L2, 1.0]
 	var big = act == "sk"
 	if big:
 		c0 = c0 + Vector2(-fd * 0.02 * H, -0.06 * H); L *= 1.45
@@ -172,14 +178,21 @@ static func float_at(k: String, wea: String, foot: Vector2, H: float, fd: float,
 	var reach = minf(dist - 0.12 * H, (3.6 if big else 1.0) * H)
 	reach = maxf(reach, 0.25 * H)
 	var hit = c0 + dn * reach
+	# 目標企得高過自己頭頂（透視後面）：撞擊點壓喺自己頭頂資訊線以下，飛行全程唔掠過自己血條／頭頂字
+	var ylim = foot.y + TOP * H + L * 0.5 + 0.02 * H
+	if hit.y < ylim:
+		hit.y = ylim
+		dn = (hit - c0).normalized() if (hit - c0).length() > 1.0 else dn
 	var aim = atan2(dn.x, -dn.y)
+	# 目標喺身前（兵器由背側飛過去）：飛行路線向下彎（經胸腹以下），唔掠過塊臉
+	var sg = Vector2(0, (0.30 if big else 0.22) * H) if (hit.x - foot.x) * fd > 0.0 else Vector2.ZERO
 	if big:   # 放出：直撲目標（轉 1.5 圈）→ 撞擊 → 飛返
 		if ph < 0.45:
 			var q = _ease(ph / 0.45)
-			return [c0.lerp(hit, q), lerp(a0, aim + fd * TAU * 1.5, q), L, 1.0]
+			return [c0.lerp(hit, q) + sg * sin(q * PI), lerp_angle(a0, aim, minf(1.0, q * 4.0)) + fd * TAU * 1.5 * clampf((q - 0.3) / 0.7, 0, 1), L, 1.0]
 		if ph < 0.6: return [hit + dn * 0.04 * H * sin((ph - 0.45) / 0.15 * PI), aim, L, 1.0]
 		var q2 = _ease((ph - 0.6) / 0.4)
-		return [hit.lerp(c0, q2), lerp_angle(aim, a0, q2), lerp(L, L / 1.45, q2), 1.0]
+		return [hit.lerp(c0, q2) + sg * sin(q2 * PI), lerp_angle(aim, a0, q2), lerp(L, L / 1.45, q2), 1.0]
 	# 普攻：後拉 → 直刺 → 撞擊 → 飛返（細幅度）
 	var back = c0 - dn * 0.08 * H
 	if ph < 0.3:
@@ -187,17 +200,27 @@ static func float_at(k: String, wea: String, foot: Vector2, H: float, fd: float,
 		return [c0.lerp(back, q), lerp_angle(a0, aim, q), L, 1.0]
 	if ph < 0.55:
 		var q = (ph - 0.3) / 0.25; q = q * q
-		return [back.lerp(hit, q), aim, L, 1.0]
+		return [back.lerp(hit, q) + sg * sin(q * PI), aim, L, 1.0]
 	if ph < 0.65: return [hit + dn * 0.03 * H * sin((ph - 0.55) / 0.1 * PI), aim, L, 1.0]
 	var q3 = _ease((ph - 0.65) / 0.35)
-	return [hit.lerp(c0, q3), lerp_angle(aim, a0, q3), L, 1.0]
-static func _float(ctx: Ctx, k: String, wea: String, foot: Vector2, H: float, fd: float, st: Dictionary, low: bool) -> Rect2:
+	return [hit.lerp(c0, q3) + sg * sin(q3 * PI), lerp_angle(aim, a0, q3), L, 1.0]
+# 飛行中嘅兵器喺名鬼身體範圍入面 → 畫喺角色後面一層（飛過身後，唔會遮臉）；待機永遠前面
+static func float_back(k: String, c: Vector2, foot: Vector2, H: float, fd: float, act: String, ang := 0.0, L := 0.0) -> bool:
+	if act == "idle": return false
+	var l = -ext(k, -1.0, -0.95, -0.2) - 0.04; var rr = ext(k, 1.0, -0.95, -0.2) + 0.04
+	var dv = Vector2(sin(ang), -cos(ang)) * L * 0.5
+	for p in [c, c + dv, c - dv]:
+		var xi = (p.x - foot.x) / H * fd
+		if xi > l and xi < rr: return true
+	return false
+static func _float(ctx: Ctx, k: String, wea: String, foot: Vector2, H: float, fd: float, st: Dictionary, low: bool, layer := "front") -> Rect2:
 	var T = J.num(st.get("T", 0.0))
 	var act = str(st.get("act", "idle")); var ph = J.num(st.get("ph", 0.0))
 	var gc = EQ.grade_col(EQ.grade_of(wea))
 	var P = float_at(k, wea, foot, H, fd, st, ph)
 	var c: Vector2 = P[0]; var ang: float = P[1]; var L: float = P[2]
 	var r = Rect2(c, Vector2.ZERO)
+	if float_back(k, c, foot, H, fd, act, ang, L) != (layer == "back"): return r
 	var moving = act == "atk" and ph > 0.25 or act == "sk"
 	# 殘影／拖尾
 	if not low:

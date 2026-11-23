@@ -156,8 +156,10 @@ class Sheet extends Control:
 				if tex != null: draw_texture_rect(tex, Rect2(c.foot.x - Wd * 0.5, c.foot.y - c.H, Wd, c.H), false)
 				rr = rr.merge(E1.draw_on(ctx, k, w, c.foot, c.H, 1.0, pose, pt, false, "front"))
 			else:
+				var rb = E2.draw(ctx, c.sch, k, w, c.foot, c.H, 1.0, st, false, "back")   # 飛過身後嘅兵器
 				if tex != null: draw_texture_rect(tex, Rect2(c.foot.x - Wd * 0.5, c.foot.y - c.H, Wd, c.H), false)
 				rr = E2.draw(ctx, c.sch, k, w, c.foot, c.H, 1.0, st)
+				if rb.size.x > 0: rr = rr.merge(rb)
 			res["%s|%d" % [c.sch, c.col]] = Rect2((rr.position - c.foot) / c.H, rr.size / c.H)
 			# 頭頂血條＋技能條（同地圖戰鬥一樣嘅位：op.head ≈ 腳底上 1.0H 再高 4px）
 			var hd = c.foot + Vector2(0, -1.02 * c.H - 6)
@@ -215,13 +217,19 @@ func _cmp(t, m) -> void:
 		var dv = Vector2(sin(R[1]), -cos(R[1]))
 		var wr = _seg_rect(R[0] - dv * R[2] * 0.5, R[0] + dv * R[2] * 0.5, 0.03)
 		if wr.intersects(fr): face.append([k, "B", wr, fr])
+		for act in ["atk", "cast", "sk"]:   # B 蓄力、飛出／飛返全程唔掠過臉（目標喺身前）
+			for q in 21:
+				var F = EV2.float_at(k, w.wea, Vector2.ZERO, 1.0, 1.0, {"T": 1.3, "act": act, "tg": Vector2(CW * 0.52 / 300.0, -0.4)}, q / 20.0)
+				if EV2.float_back(k, F[0], Vector2.ZERO, 1.0, 1.0, act, F[1], F[2]): continue   # 喺身後飛過：俾身體遮住，唔會遮臉
+				var dvf = Vector2(sin(F[1]), -cos(F[1]))
+				if _seg_rect(F[0] - dvf * F[2] * 0.5, F[0] + dvf * F[2] * 0.5, 0.0).intersects(fr.grow(-0.02)): face.append([k, "B-" + act, q]); break
 		var bp = EV2.badge_pos(k, Vector2.ZERO, 1.0, 1.0)
 		var br = Rect2(bp + Vector2(-0.065, -0.13), Vector2(0.13, 0.13))
 		if br.intersects(fr): face.append([k, "C", br, fr])
 		sv.queue_free(); await _f(t, 2)
 	_chk("B／C 待機：6 隻名鬼全部喺 1.25H 框內（唔爆格）", oob.is_empty(), oob)
 	_chk("B／C 任何狀態：兵器唔高過頭頂資訊線（血條、ab_lay 頭頂字唔遮）", high.is_empty(), high)
-	_chk("B 飄浮兵器、C 徽章唔遮臉", face.is_empty(), face)
+	_chk("B 飄浮兵器（待機＋飛出飛返全程）、C 徽章唔遮臉", face.is_empty(), face)
 
 # ================= game：地圖戰鬥實戰 =================
 func _stall(lv: float) -> void:
@@ -277,10 +285,10 @@ func _start(t, m, troops: float):
 func _cam(m, p: Vector2, z: float) -> void:
 	var c = m.village.zone_cam()
 	c.z = m.village.size.x / z; c.clamp_all(); c.tgt = null; c.vel = Vector2.ZERO; c.center_on(p)
-func _hero(op, k := ""):
+func _hero(op, k := "") -> Dictionary:
 	for u in op.units:
 		if J.num(u.side) == 0 and u.get("eq") is Dictionary and J.num(u.hp) > 0 and (k == "" or str(u.k) == k): return u
-	return null
+	return {}
 func _game(t, m) -> void:
 	var ids = await _team(t, ["afu", "n30_kappa", "nw_guihuo"])
 	_chk("出陣名鬼 3 隻穿好裝備", ids.size() >= 3, ids)
@@ -296,41 +304,59 @@ func _game(t, m) -> void:
 			for ch in RV.inst.vis[key].chars: if ch.get_node_or_null("EqGlow") != null: ng += 1
 	_chk("名鬼掛咗描邊層 EqGlow（%d）" % ng, ng >= 1)
 	# 三方案各一張近鏡
-	var h = _hero(op)
+	var h: Dictionary = _hero(op)
 	for sv in [["pin", "A"], ["float", "B"], ["strike", "C"]]:
 		EV.view_test = sv[0]
 		h = _hero(op)
-		if h == null: break
+		if h.is_empty(): break
 		_cam(m, (h.p as Vector2) + Vector2(20, -30), 95.0)
 		await _w(t, 0.6); await _shot(t, "ingame_%s_%s" % [sv[1], sv[0]])
 		var ci = await _crop_img(t, m, (h.p as Vector2) + Vector2(25, -28))
 		ci.save_png(SHOTS + "ingame_%s_%s_zoom.png" % [sv[1], sv[0]])
+	EV.view_test = ""
+	B_end(op)
+	await _w(t, 3.0)
+	await _video(t, m)
+func _video(t, m) -> void:
+	# 乾淨示範：只派阿福一隻（冇陰兵、冇隊友技能特效遮住），由開打前行近敵人開始錄
+	await _team(t, ["afu"])
+	var op = await _start(t, m, 0.0)
+	if op == null: _chk("示範戰開到", false); return
+	for u in op.units: u["hp"] = J.num(u.hp) * 15; u["maxhp"] = J.num(u.maxhp) * 15
+	var h: Dictionary = {}
 	# B 方案：連續截幀（遊戲放慢到 0.35 倍、每幀都截，之後 13fps 合成 ≈ 真實速度），鏡頭跟鬼火（企得開，睇得清），中途放技能
 	EV.view_test = "float"
 	DirAccess.make_dir_recursive_absolute(FR)
 	for f in DirAccess.get_files_at(FR): DirAccess.remove_absolute(FR + f)
 	var n = 0; var fired = false
 	var times = []
-	h = _hero(op, "nw_guihuo")
-	if h == null: h = _hero(op)
+	h = _hero(op, "afu")
 	Engine.time_scale = 0.35
 	var gt = 0.0
-	while n < 115 and h != null:
+	var top_min = 0.0
+	while n < 185 and not h.is_empty():
 		if J.num(h.hp) <= 0: break
-		if n % 2 == 0: _cam(m, (h.p as Vector2) + Vector2(30, -30), 130.0)
-		if not fired and n >= 45:
+		if n % 2 == 0: _cam(m, (h.p as Vector2) + Vector2(10, -25), 130.0)
+		if not fired and n >= 70:
 			h["energy"] = 100.0
 			fired = op.cast(h)
-		var ci2 = await _crop_img(t, m, (h.p as Vector2) + Vector2(30, -30), Vector2(230, 200), 2.4)
+		var ci2 = await _crop_img(t, m, (h.p as Vector2) + Vector2(10, -28), Vector2(250, 210), 2.2)
 		ci2.save_png(FR + "f%03d.png" % n)
+		var lr = EV2.LAST.get("afu")
+		if lr is Rect2: top_min = minf(top_min, lr.position.y)
 		gt += t.get_tree().root.get_process_delta_time()
 		times.append(snappedf(gt, 0.001))
 		n += 1
 	Engine.time_scale = 1.0
-	_chk("B 方案連續截幀 %d 幀（放咗技能：%s）" % [n, fired], n >= 60 and fired)
+	_chk("B 方案連續截幀 %d 幀（放咗技能：%s）" % [n, fired], n >= 120 and fired)
+	_chk("實戰 B：飛出攻擊／技能全程唔高過自己頭頂資訊線（最高 %.2fH）" % top_min, top_min >= EV2.TOP - 0.06)
 	var fa = FileAccess.open(FR + "times.txt", FileAccess.WRITE); fa.store_string(" ".join(times.map(func(x): return str(x)))); fa.close()
 	EV.view_test = ""
 	B_end(op)
+func video(t) -> void:
+	var m = await _boot(t)
+	await _video(t, m)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
 func B_end(op) -> void:
 	for u in op.units: if J.num(u.side) == 1: u["hp"] = 0.0
 
@@ -357,7 +383,6 @@ func _perf(t, m) -> void:
 		elif J.t(u.get("minion")): nsq += 1
 		else: nh += 1
 	_p("戰場：我方名鬼 %d、陰兵／遊魂兵小隊 %d、敵 %d（共 %d 隊）" % [nh, nsq, ne, nh + nsq + ne])
-	var h = _hero(op)
 	_cam(m, op.center() + Vector2(0, -30), 300.0)
 	await _w(t, 1.0)
 	var R = {}

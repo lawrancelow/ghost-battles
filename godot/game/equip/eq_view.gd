@@ -172,6 +172,9 @@ class Over extends Node2D:
 					_sk += dt
 					if _sk > EV2.SK_DUR: _sk = -1.0
 			queue_redraw()
+	func _peer_sk() -> float:   # [eqview2] 後層用前層嘅技能計時
+		var f = bc.get_node_or_null("EqOver") if bc != null else null
+		return f._sk if f != null else -1.0
 	func _tgv(foot: Vector2):   # [eqview2] 目標身體中間（相對腳底，本節點座標）
 		var tg = u.anim.get("tg") if u.get("anim") is Dictionary else null
 		if not (tg is Dictionary) or J.num(tg.get("hp", 0)) <= 0: tg = u.get("tg")
@@ -205,10 +208,9 @@ class Over extends Node2D:
 				if arm == "" or str(EQ2.item(arm).get("look")) != "body": return
 				EV2.glow(self, Transform2D.IDENTITY, k, foot, H, fd, EQ2.grade_col(EQ2.grade_of(arm)), T, 0.45 if u.get("anim") is Dictionary else 1.0)
 				return
-			if layer != "front": return
-			var s2 = EV2.state_of(u, T, _sk)
+			var s2 = EV2.state_of(u, T, _sk if layer == "front" else _peer_sk())
 			if s2.act != "idle": s2["tg"] = _tgv(foot)
-			EV2.draw(Ctx.new(self), sch, k, w, foot, H, fd, s2)
+			EV2.draw(Ctx.new(self), sch, k, w, foot, H, fd, s2, false, layer)   # back＝飛過身後嘅兵器
 			return
 		if layer == "glow": return
 		var ctx = Ctx.new(self)
