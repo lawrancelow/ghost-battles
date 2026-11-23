@@ -46,8 +46,8 @@ static func _uniq(a: Array) -> Array:
 	return o
 static func tags(k: String) -> Array: return _uniq(AB.tags_of(k))
 static func counters(m) -> Array:
-	var o = _uniq(AB.counters_of(AI.canon(m)))
-	if o.is_empty(): o = _uniq(AB.counters_of(m))
+	var o = _uniq(AB._arr(AB.mech_def(AB.norm_mech(AI.canon(m))).get("counter")))   # [abui] abcore：MECH 表（中文 key）嘅 counter
+	if o.is_empty(): o = _uniq(AB._arr(AB.mech_def(J.str(m)).get("counter")))
 	return o
 static func adv_tag(g) -> String:   # 軍師提供嘅全隊型標籤（取第一個）
 	if g == null: return ""
@@ -256,6 +256,7 @@ static func render(box: VBoxContainer) -> void:
 		var who: Array = cv[m]
 		if who.size():
 			nok += 1
+			if cmp: continue   # 精簡：✔ 唔逐條列（應對度、成員圖示已經講咗）
 			var nm = []
 			for w in who: nm.append("%s（%s%s）" % [str(DB.L(J.str(w.g.name))), AI.name_of(w.t), L("・軍師", "・軍師") if J.t(w.get("adv")) else ""])
 			box.add_child(_lab("✔ %s：%s" % [AI.name_of(m), "、".join(nm)], 16, P.ok))
@@ -306,10 +307,34 @@ static func _fit(box: VBoxContainer, again := 3) -> void:
 	var par = host.get_parent()
 	var py = (par as Control).get_global_rect().position.y if par is Control else 0.0
 	var room = vh - NAV_H - 8.0 - py
-	var nt = clampf(room - h, 8.0, top0)
+	# 卡頂最高去到「主線任務條」下面（唔好畀任務條遮住卡頭）
+	var top_min = 8.0
+	var m = Engine.get_main_loop().root.get_node_or_null("Main")
+	var qb = m.get("quest_bar") if m != null else null
+	if qb is Control and is_instance_valid(qb) and qb.is_visible_in_tree(): top_min = maxf(top_min, qb.get_global_rect().end.y + 4.0)
+	top_min = minf(top_min, py + top0)
+	var avail = vh - NAV_H - 8.0 - top_min
+	var nt = clampf(room - h, top_min - py, top0)
 	host.offset_top = nt; host.offset_bottom = nt + h   # 兩邊一齊設：成張卡向上移（唔係拉長）
-	if h > room and not J.t(box.get_meta("compact", false)):
-		box.set_meta("compact", true); render(box)
+	if h > room - (top_min - py) and not J.t(box.get_meta("compact", false)):
+		box.set_meta("compact", true); render(box); return
+	# 精簡咗都仲高過畫面（例如其他線加咗行）：偵察段自己變可捲（出擊掣、獎勵行照見），唔出界、唔縮字
+	var sc = box.get_parent()
+	if h > avail + 0.5 or sc is ScrollContainer:
+		if not (sc is ScrollContainer):
+			var par2 = box.get_parent(); var idx = box.get_index()
+			sc = ScrollContainer.new(); sc.name = "AbScroll"
+			sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+			sc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			par2.remove_child(box); sc.add_child(box); par2.add_child(sc); par2.move_child(sc, idx)
+			box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var bh = box.get_combined_minimum_size().y
+		var cur = (sc as Control).custom_minimum_size.y
+		var other = h - (cur if cur > 0 else bh)
+		(sc as Control).custom_minimum_size.y = clampf(avail - other, minf(150.0, bh), bh)
+		h = host.get_combined_minimum_size().y
+		nt = clampf(room - h, top_min - py, top0)
+		host.offset_top = nt; host.offset_bottom = nt + h
 static func _member(g, need: Dictionary, P: Dictionary, adv: bool, box: VBoxContainer, cmp := false) -> Control:
 	var p = PanelContainer.new(); p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var ts = tags(J.str(g.k)) if g != null else []
