@@ -35,27 +35,6 @@ static func begin() -> void:
 		obs.append_array(ext[id][1]); obs.append_array(ext[id][2])
 
 static func add_obs(r: Rect2) -> void: obs.append(r)
-# 舊村子（jsgen Village，自動生成碼唔改）嘅閒談對白框：照佢 drawBubble 嘅算法推返位置，當障礙
-static func village_bubble(f: Font) -> void:
-	var V = J.G.get("Village")
-	if not (V is Dictionary) or not (V.get("bubble") is Dictionary): return
-	var b: Dictionary = V.bubble
-	var v = null
-	for o in J.iter(V.get("vis", [])):
-		if not (o is Dictionary): continue
-		var oh = J.t(o.get("hero"))
-		if (J.t(b.get("hero")) and oh) or (not J.t(b.get("hero")) and not oh and o.get("g") is Dictionary and str(o.g.get("id")) == str(b.get("id"))): v = o; break
-	if v == null: return
-	var cx = V.get("ctx"); var ci = cx.get("ci") if cx is Object else null
-	if not (ci is CanvasItem) or not ci.is_visible_in_tree(): return
-	var tw = f.get_string_size(str(b.get("text", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
-	var nl = maxi(1, int(ceil(tw / 168.0)))
-	var w = minf(tw, 168.0) + 16.0; var h = nl * 17.0 + 10.0
-	var W = float(J.G.get("W", 390.0))
-	var bx = clampf(J.num(v.x) - w / 2.0, 6.0, W - w - 6.0); var by = J.num(v.y) - 62.0 - h
-	var k = J.num(V.get("dpr", 1.0)) * J.num(V.get("scale", 1.0))
-	var base = Transform2D(Vector2(k, 0), Vector2(0, k), Vector2(0, -J.num(V.get("camY", 0.0)) * k))
-	add_obs((ci.get_global_transform_with_canvas() * base) * Rect2(bx, by, w, h + 7.0).grow(4.0))
 static var bars: Array = []       # 單位血條（畫面）：郁唔到，村子字撞到就讓路
 static var busy: Array = []       # 上一格戰鬥字＋血條佔咗嘅位（畫面）
 static func add_bar(r: Rect2) -> void: obs.append(r); bars.append(r)

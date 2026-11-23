@@ -4,6 +4,7 @@
 # 邏輯（阿福走路、砍樹、產出、廣場鬼嘅行為）仍然係 JS（Village.update、PlazaLife.update），存檔同網頁互通。
 extends "res://ui/js_canvas_view.gd"
 
+const _ABL = preload("res://game/rts/ab_lay.gd")   # [abui]
 const W := 390.0
 const WH := 1130.0
 const CB = preload("res://game/outpost/chain_bld.gd")   # 後院拓展建築（生產鏈）
@@ -527,6 +528,7 @@ func _draw_top_ui(c: CanvasItem) -> void:
 		var ft = J.num(f.t); var a = maxf(0, 1 - ft / J.num(f.life)); var txt = J.str(f.text)
 		var sw = fb.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
 		var p = Vector2(J.num(f.x) - sw / 2, J.num(f.y) - ft * 26)
+		if _ABL.active: _ABL.avoid_ci(c, Transform2D.IDENTITY, Rect2(p.x - 3, p.y - 15, sw + 6, 20), true)   # [abui] 村子浮字（收成等）唔畀戰鬥字蓋住
 		c.draw_string_outline(fb, p, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, 4, Color(10 / 255.0, 6 / 255.0, 20 / 255.0, 0.9 * a))
 		c.draw_string(fb, p, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(J.str(f.col), a) if Color.html_is_valid(J.str(f.col)) else Color(1, 1, 1, a))
 
@@ -545,6 +547,7 @@ func _bubble(c: CanvasItem, fnt: Font, text: String, bt: float, vx: float, vy: f
 	var paper = Color("#ecd9a4", a); var line = Color("#5a4030", a)
 	var sb = StyleBoxFlat.new(); sb.bg_color = paper; sb.border_color = line; sb.set_border_width_all(1); sb.set_corner_radius_all(4); sb.anti_aliasing = true
 	c.draw_style_box(sb, Rect2(bx, by, w, h))
+	if _ABL.active: _ABL.avoid_ci(c, Transform2D.IDENTITY, Rect2(bx - 2, by - 2, w + 4, h + 11), true)   # [abui] 閒談對白框唔畀戰鬥字蓋住
 	c.draw_colored_polygon(PackedVector2Array([Vector2(vx - 5, by + h - 1), Vector2(vx + 5, by + h - 1), Vector2(vx, by + h + 7)]), paper)
 	c.draw_polyline(PackedVector2Array([Vector2(vx - 5, by + h), Vector2(vx, by + h + 7), Vector2(vx + 5, by + h)]), line, 1.2, true)
 	for i in lines.size(): c.draw_string(fnt, Vector2(bx + 8, by + 6 + i * 17 + fs), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, int(fs), Color("#2b1d12", a))

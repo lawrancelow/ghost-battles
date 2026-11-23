@@ -458,7 +458,6 @@ func _draw_txt(n: CanvasItem) -> void:
 		for k in msc._btns:
 			var r = msc._btns[k]
 			if r is Rect2 and r.size.x * r.size.y < va.x * va.y * 0.25: AL.add_obs((oxf * (r as Rect2)).grow(2))
-	AL.village_bubble(f)   # [abui] 舊村子閒談對白框
 	if chip != null and chip.visible: AL.add_obs(chip.get_global_rect())
 	if chip_auto != null and chip_auto.visible: AL.add_obs(chip_auto.get_global_rect())
 	var vp = get_viewport().get_visible_rect()

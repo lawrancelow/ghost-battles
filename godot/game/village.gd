@@ -1,7 +1,6 @@
 # 村子場景（移植 game.js Village）：世界座標 390×1130，可上下拖動；主公砍樹、收割、親手做
 extends Control
 
-const _ABL = preload("res://game/rts/ab_lay.gd")   # [abui]
 const W := 390.0
 const WH := 1130.0
 const POS := {"gate": [195, 118], "house": [195, 300], "furnace": [338, 258], "wood": [92, 612], "rice": [298, 612], "plank": [95, 752], "bun": [295, 752], "store": [195, 872], "home": [92, 1000], "camp": [300, 1000], "altar": [195, 1092]}
@@ -370,7 +369,6 @@ func _draw_bubble(ctx: Ctx) -> void:
 	w += 16; var h = lines.size() * 17.0 + 10
 	var bx = clampf(v.x - w / 2, 6, W - w - 6); var by: float = v.y - 62 - h
 	Art.rr(ctx, bx, by, w, h, 4, "#ecd9a4", "#5a4030", 1.2)
-	if _ABL.active: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(bx - 2, by - 2, w + 4, h + 10), true)   # [abui] 閒談對白框唔畀戰鬥字蓋住
 	Art.poly(ctx, [v.x - 5, by + h - 0.5, v.x + 5, by + h - 0.5, v.x, by + h + 7], "#ecd9a4")
 	ctx.strokeStyle = "#5a4030"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(v.x - 5, by + h); ctx.lineTo(v.x, by + h + 7); ctx.lineTo(v.x + 5, by + h); ctx.stroke()
 	ctx.fillStyle = "#2b1d12"; ctx.textAlign = "left"; ctx.textBaseline = "top"
