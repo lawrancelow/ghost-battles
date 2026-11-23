@@ -6,6 +6,7 @@
 extends RefCounted
 
 const MD = preload("res://game/outpost/mv_data.gd")
+const AF = preload("res://game/rts/abform.gd")   # [abform] 陣型、揀目標、AoE 半徑、護衛、自動施放 AI
 
 # ---- 同 battle.gd 一樣 ----
 const WIND := 0.22
@@ -123,7 +124,8 @@ func _deploy_slots(order: Array) -> void:
 	var sq = mel.filter(func(x): return J.t(x.get("minion")))
 	var line = hs.slice(0, (hs.size() + 1) / 2) + sq + hs.slice((hs.size() + 1) / 2)
 	var rows = []
-	if line.size() > 8:   # 兩行：單數位企前、雙數位企後（同 _slots 兩行排法一樣）
+	if AF.on(): line = AF.line_order(mel); rows = AF.split_rows(line)   # [abform] 前排名鬼企中間、小隊企兩頭
+	elif line.size() > 8:   # 兩行：單數位企前、雙數位企後（同 _slots 兩行排法一樣）
 		var a = []; var b = []
 		for i in line.size(): (a if i % 2 == 0 else b).append(line[i])
 		rows = [a, b]
@@ -289,7 +291,7 @@ func do_skill(u: Dictionary, sk) -> void:
 				_fx({"kind": "ring", "p": v.p, "life": 0.5, "col": "#8affb0"})
 		if J.t(sk.get("forget")): for v in enemies_of(u): v["energy"] = 0.0
 	elif kd == "aoe":
-		for v in enemies_of(u): hit(u, v, mult, sk)
+		for v in (AF.aoe_targets(self, u) if AF.on() else enemies_of(u)): hit(u, v, mult, sk)   # [abform] 半徑 130，唔再打全場
 	else:
 		var v = nearest(u)
 		if v != null:
@@ -493,7 +495,9 @@ func _form() -> void:
 	var hs = mel.filter(func(x): return not J.t(x.get("minion")))
 	var sq = mel.filter(func(x): return J.t(x.get("minion")))
 	var line = hs.slice(0, (hs.size() + 1) / 2) + sq + hs.slice((hs.size() + 1) / 2)
-	_slots(line, 42.0); _slots(rng, 46.0)
+	if AF.on(): AF.slots(AF.line_order(mel), 42.0)   # [abform] [翼][小隊][前排名鬼][小隊][前排名鬼][小隊][翼]
+	else: _slots(line, 42.0)
+	_slots(rng, 46.0)
 	fo.sort_custom(func(a, b): return _lat(a.p) < _lat(b.p))
 	_slots(fo, 46.0)
 	if tune_open > 0.0:
@@ -506,6 +510,7 @@ func _slots(arr: Array, gap: float) -> void:
 		arr[i]["row"] = row; arr[i]["ls2"] = (j - (nr - 1) * 0.5) * gap
 # 陣線走位：守住自己橫位，沿軸向前去到「對面最近嗰隻」射程邊；對面冇人先橫移
 func _line_tg(u: Dictionary):
+	if AF.on(): return AF.line_tg(self, u)   # [abform] 威脅值＋每隻目標最多 3 個近戰
 	var cur = u.get("tg")
 	var my = float(u.get("ls", _lat(u.p)))
 	if cur is Dictionary and alive(cur) and absf(_lat(cur.p) - my) < 90.0: return cur
@@ -546,6 +551,8 @@ func _step_fight(dt: float) -> void:
 	t += dt
 	step_proj(dt)
 	_spans()
+	var af = AF.on()   # [abform]
+	if af: AF.pre_tick(self, dt)
 	for u in units:
 		vis_tick(u, dt)
 		if _nn(u, "hp") <= 0: continue
@@ -571,17 +578,21 @@ func _step_fight(dt: float) -> void:
 			u.casting["t"] = J.num(u.casting.t) + dt
 			if J.num(u.casting.t) >= J.num(u.casting.dur): fire_cast(u)
 			continue
-		if J.t(u.get("sk")) and _nn(u, "energy") >= 100 and not J.t(u.get("anim")) and (_nn(u, "side") == 1 or (auto and not J.t(u.get("minion")))): begin_cast(u); continue
+		if af:   # [abform] 自動施放 AI（6 條件＋5 秒保底；敵人都經 AI）
+			if J.t(u.get("sk")) and not J.t(u.get("anim")) and AF.want_cast(self, u, dt): begin_cast(u); continue
+		elif J.t(u.get("sk")) and _nn(u, "energy") >= 100 and not J.t(u.get("anim")) and (_nn(u, "side") == 1 or (auto and not J.t(u.get("minion")))): begin_cast(u); continue
 		if J.t(u.get("anim")): step_anim(u, dt); continue
-		var tg = _line_tg(u)
+		var ft = AF.flank_tg(self, u) if af else null   # [abform] 側翼繞後
+		var tg = ft if ft != null else _line_tg(u)
 		if tg == null: u["walking"] = false; continue
 		var d = dist(u, tg)
 		var dx = (tg.p as Vector2).x - (u.p as Vector2).x
 		if absf(dx) > 3.0: u["face"] = _sign(dx)
 		if d > _nn(u, "range") + 12.0:
-			var want = _line_want(u, tg)
+			var want = AF.want(self, u, tg, d) if af else _line_want(u, tg)   # [abform] 近身時喺目標自己嗰邊側身企（唔再直衝成一團）
 			var dv = (want - (u.p as Vector2))
-			if dv.length() < 3.0 or (d < _nn(u, "range") + CLOSE and want.distance_to(tg.p) > d): dv = (tg.p as Vector2) - (u.p as Vector2)   # [qaudit2] 陣位反而離目標更遠：直接埋身
+			if af: pass
+			elif dv.length() < 3.0 or (d < _nn(u, "range") + CLOSE and want.distance_to(tg.p) > d): dv = (tg.p as Vector2) - (u.p as Vector2)   # [qaudit2] 陣位反而離目標更遠：直接埋身
 			u["p"] = (u.p as Vector2) + dv.normalized() * minf(_nn(u, "spd") * dt, dv.length()); u["walking"] = true
 		else:
 			u["walking"] = false; u["cd"] = _nn(u, "cd") - dt
@@ -594,6 +605,7 @@ func _step_fight(dt: float) -> void:
 		adv_cast["t"] = J.num(adv_cast.t) + dt
 		if J.num(adv_cast.t) >= J.num(adv_cast.dur):
 			var cu = adv_cast.u; adv_cast = null; do_skill(cu, cu.get("sk"))
+	if af: AF.guard_tick(self, dt)   # [abform] 前排名鬼護衛身邊陰兵
 	_separate(dt)
 	if foes_alive() == 0: finish(true)
 	elif (heroes_alive() == 0 and not no_heroes) or (no_heroes and _ours_alive() == 0): finish(false)
@@ -626,6 +638,7 @@ func _slot_pos(u: Dictionary, tg: Dictionary) -> Vector2:
 	var r = _nn(u, "range") * 0.85 + (6.0 if J.t(u.get("minion")) else 10.0)
 	return (tg.p as Vector2) + base.rotated(a) * r
 func _separate(dt: float) -> void:
+	if AF.on(): AF.separate(self, dt); return   # [abform] 同邊沿橫向推、異邊沿軸推
 	var al = []
 	for u in units: if alive(u) and (_nn(u, "side") == 1 or J.t(u.get("eng"))): al.append(u)
 	for i in al.size():
