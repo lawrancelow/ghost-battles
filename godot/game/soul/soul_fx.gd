@@ -89,7 +89,13 @@ static func flame(c: CanvasItem, p: Vector2, r: float, dir: Vector2, col: Color,
 	c.draw_colored_polygon(pts, Color(col, 0.92))
 	pts.append(pts[0])
 	c.draw_polyline(pts, INK, 2.0, true)
-	c.draw_circle(p + d * r * 0.12, r * 0.45, Color(1, 1, 0.95, 0.85))
+	var core = PackedVector2Array()
+	for i in 12:
+		var a2 = float(i) / 12.0 * TAU
+		var v2 = Vector2(cos(a2), sin(a2))
+		var al2 = v2.dot(back)
+		core.append(p + d * r * 0.1 + (back * al2 * (1.0 + maxf(0.0, al2) * 0.9) + side * v2.dot(side)) * r * 0.48)
+	c.draw_colored_polygon(core, Color(1, 0.97, 0.8, 0.9))
 
 # ======================= ① 魂火飛向戰況條 =======================
 # so_data.settle 打贏 → soul2.after_win → 呢度。sl = soul_data.on_sortie_win 回傳 {items:[{k,n,sec}], mul, san}
@@ -135,7 +141,14 @@ class Fire extends Control:
 	var t := 0.0
 	const RISE := 0.35
 	const FLY := 0.8
-	func _ready() -> void: set_process(true)
+	func _ready() -> void:
+		set_process(true)
+		for i in items.size():   # 飄字（全名）：喺駐守鬼倒低嘅位升起
+			var it = items[i]
+			var p = Pop.new(); p.txt = str(it.txt); p.n = int(it.n); p.col = F.SEC_C if it.sec else F.GOLD
+			p.at = a + Vector2(-60, -50 - 30 * i); p.rise = 30.0; p.life = 2.2; p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			p.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			add_sibling.call_deferred(p)
 	func _pos(u: float) -> Vector2:   # 先升起，再沿弧線飛
 		if u < RISE: return a + Vector2(0, -36.0 * ease(u / RISE, 0.5))
 		var k = clampf((u - RISE) / FLY, 0.0, 1.0)
@@ -156,7 +169,10 @@ class Fire extends Control:
 			chip.modulate = Color(2.2, 2.2, 1.6)
 			var tw = chip.create_tween(); tw.tween_property(chip, "modulate", Color.WHITE, 0.45)
 		var p = Pop.new(); p.txt = str(it.txt); p.n = int(it.n); p.col = F.SEC_C if it.sec else F.GOLD
-		p.at = b + Vector2(0, -36 - 34 * items.find(it)); p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var cr = Rect2(b - Vector2(60, 20), Vector2(120, 40))
+		if chip != null and is_instance_valid(chip): cr = Rect2(get_global_transform_with_canvas().affine_inverse() * chip.get_global_rect().position, chip.size)
+		p.txt = "+%d" % int(it.n); p.px = 22
+		p.at = Vector2(cr.end.x + 8 + 50 * items.find(it), cr.get_center().y + 8); p.mouse_filter = Control.MOUSE_FILTER_IGNORE   # 戰況條右邊（唔俾 toast 遮）
 		p.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		get_parent().add_child(p)
 		Snd.play("coin")
@@ -174,6 +190,9 @@ class Fire extends Control:
 
 class Pop extends Control:
 	var F = load("res://game/soul/soul_fx.gd")
+	var px := 20
+	var rise := 8.0
+	var life := 1.9
 	var txt := ""
 	var n := 0
 	var col: Color = F.GOLD
@@ -182,17 +201,17 @@ class Pop extends Control:
 	func _ready() -> void: set_process(true)
 	func _process(dt: float) -> void:
 		t += dt; queue_redraw()
-		if t > 1.9: queue_free()
+		if t > life: queue_free()
 	func _draw() -> void:
-		var al = clampf(1.0 - maxf(0.0, t - 1.2) / 0.7, 0.0, 1.0)
-		var y = at.y - 26.0 * ease(minf(1.0, t / 0.5), 0.4)
+		var al = clampf(1.0 - maxf(0.0, t - (life - 0.7)) / 0.7, 0.0, 1.0)
+		var y = at.y - rise * ease(minf(1.0, t / 0.6), 0.4)
 		var f = F.font("sans")
-		var w = f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
-		var x = clampf(at.x - 40.0, 8.0, size.x - w - 8.0)
+		var w = f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+		var x = clampf(at.x, 8.0, maxf(8.0, size.x - w - 8.0))
 		var k = 1.0 + 0.25 * maxf(0.0, 1.0 - t / 0.18)
 		draw_set_transform(Vector2(x, y), 0, Vector2(k, k))
-		draw_string_outline(f, Vector2.ZERO, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, 6, Color(F.INK, al))
-		draw_string(f, Vector2.ZERO, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(col, al))
+		draw_string_outline(f, Vector2.ZERO, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px, 6, Color(F.INK, al))
+		draw_string(f, Vector2.ZERO, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px, Color(col, al))
 		draw_set_transform_matrix(Transform2D.IDENTITY)
 
 # ======================= ② 招降入職通知書 ③ 升職演出 =======================
@@ -299,9 +318,9 @@ class Show extends Control:
 					draw_line(Vector2(pr.position.x, pr.end.y), Vector2(pr.end.x, pr.end.y), Color("#3a2010"), 4.0)
 					for i in 5:
 						var fx = pr.position.x + 6 + i * (pw - 12) / 4.0
-						F.flame(self, Vector2(fx, pr.end.y + 4), 7.0 + 3.0 * sin(t * 20.0 + i), Vector2(0, -1), Color("#ff9a3a"), t)
+						F.flame(self, Vector2(fx, pr.end.y + 4), 7.0 + 3.0 * sin(t * 20.0 + i), Vector2(0, 1), Color("#ff9a3a"), t)
 		if t > T_PAPER:   # 爐火
-			for i in 4: F.flame(self, base + Vector2(-36 + i * 24, -54), 10.0 + 4.0 * sin(t * 14.0 + i * 1.7), Vector2(0, -1), Color("#ff8a30"), t)
+			for i in 4: F.flame(self, base + Vector2(-36 + i * 24, -50), 10.0 + 4.0 * sin(t * 14.0 + i * 1.7), Vector2(0, 1), Color("#ff8a30"), t)
 		# 青煙
 		var sm = clampf((t - T_BURN + 0.3) / 0.9, 0, 1)
 		if sm > 0:
@@ -359,9 +378,9 @@ class Show extends Control:
 			F.text_l(self, F.L("「做得幾好，繼續努力。」", "「做得不錯，繼續努力。」"), cr.position.x + 26, by, 19, Color(F.CINNABAR, al), "serif", cr.size.x - 52); by += 26
 			F.text_l(self, F.L("——阿福（好難得咁讚人）", "——阿福（難得稱讚人）"), cr.position.x + 26, by, 16, Color(F.INK, 0.7 * al), "sans", cr.size.x - 52)
 		else:
-			F.text_l(self, F.L("茲聘請 %s 為落魄村員工。", "茲聘請 %s 為落魄村員工。") % nm, cr.position.x + 26, by, 18, Color(F.INK, al), "sans", cr.size.x - 52); by += 30
+			F.text_l(self, F.L("現聘請 %s 為落魄村員工。", "現聘請 %s 為落魄村員工。") % nm, cr.position.x + 26, by, 18, Color(F.INK, al), "sans", cr.size.x - 52); by += 30
 			F.text_l(self, F.L("試用期三個月，冇勞工假。", "試用期三個月，沒有勞工假。"), cr.position.x + 26, by, 18, Color(F.INK, al), "sans", cr.size.x - 52); by += 30
-			F.text_l(self, F.L("簽名：阿福", "簽名：阿福"), cr.end.x - 160, by + 8, 18, Color(F.INK, 0.8 * al), "serif", 140)
+			F.text_l(self, F.L("簽名：阿福", "簽名：阿福"), cr.position.x + 26, by + 8, 18, Color(F.INK, 0.8 * al), "serif", 160)
 		# 硃砂印：落印（由大縮細＋輕震）
 		var st = clampf((t - T_CARD - 0.35) / 0.18, 0, 1)
 		if st > 0:

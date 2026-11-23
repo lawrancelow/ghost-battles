@@ -398,7 +398,10 @@ func shot_all(t, m) -> void:
 	_chk("小卡有抄功課掣（可撳）", b != null and not b.disabled)
 	if b != null:
 		var gr = b.get_global_rect()
-		_chk("抄功課掣喺畫面入面（唔出界）", Rect2(Vector2.ZERO, t.get_viewport().get_visible_rect().size).encloses(gr), gr)
+		var vs = t.get_viewport().get_visible_rect().size
+		_chk("抄功課掣喺畫面入面、唔撞底部導航", Rect2(0, 0, vs.x, vs.y - 60).encloses(gr), [gr, vs])
+		_chk("小卡冇變闊出界", SOV.card.get_global_rect().end.x <= vs.x + 0.5, [SOV.card.get_global_rect(), vs])
+		_chk("小卡冇因抄功課變高出界", SOV.card.get_global_rect().end.y <= vs.y - 60, SOV.card.get_global_rect())
 	S2.press_sweep(e)
 	await _w(t, 0.35); await _shot(t, "13_photocopy")
 	await _w(t, 1.6)

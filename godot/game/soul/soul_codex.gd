@@ -83,29 +83,31 @@ static func filtered() -> Array:
 
 static func _grid(body: VBoxContainer) -> void:
 	var n = S2.got_n()
-	body.add_child(_rich(L("已招降 [b]%d[/b]/%d　（每招降 10 隻有「年度員工大合照」獎）", "已招降 [b]%d[/b]/%d　（每招降 10 隻有「年度員工大合照」獎）") % [n, S2.total()], 17))
-	# 完成獎：10 個印
-	var mr = HFlowContainer.new(); mr.add_theme_constant_override("h_separation", 6); mr.add_theme_constant_override("v_separation", 6)
-	for x in S2.ms_list():
+	body.add_child(_rich(L("已招降 [b]%d[/b]/%d　每 10 隻一個獎", "已招降 [b]%d[/b]/%d　每 10 隻一個獎") % [n, S2.total()], 18))
+	# 完成獎：一行字＋（有得領先出）領獎掣
+	var ml = S2.ms_list()
+	var gotn = ml.filter(func(x): return x.state == "got").size()
+	var nx = ml.filter(func(x): return x.state == "lock")
+	var t = L("完成獎：已領 %d/%d", "完成獎：已領 %d/%d") % [gotn, ml.size()]
+	if nx.size(): t += L("　下一個 %d 隻（差 %d）", "　下一個 %d 隻（差 %d）") % [int(nx[0].m), int(nx[0].m) - n]
+	body.add_child(_rich(t, 16, DIM))
+	for x in ml:
+		if x.state != "can": continue
 		var mm = int(x.m)
-		var st = str(x.state)
-		var t = ("✓ %d" % mm) if st == "got" else (L("領 %d", "領 %d") % mm if st == "can" else "%d" % mm)
-		var b = _btn(t, "gold" if st == "can" else "", st == "can", func():
+		var b = _btn(L("領「年度員工大合照」（%d 隻）：散魂 +%d、紫箱", "領「年度員工大合照」（%d 隻）：散魂 +%d、紫箱") % [mm, S2.MS_SAN], "gold", true, func():
 			if S2.ms_claim(mm) == "ok":
 				var m = _m()
 				if m != null and m.has_method("show_banner"): m.show_banner(S2.ms_text(mm))
 				Snd.play("chest")
-			render(), 16, 40)
-		b.custom_minimum_size = Vector2(70, 40)
-		mr.add_child(b)
-	body.add_child(mr)
+			render(), 16, 44)
+		body.add_child(b)
 	# 篩選
 	body.add_child(_rich(L("品級", "品級"), 16, DIM))
 	var pr = HFlowContainer.new(); pr.add_theme_constant_override("h_separation", 6); pr.add_theme_constant_override("v_separation", 6)
 	for p in ["", "凡", "靈", "煞", "王"]:
 		var pp = p
 		var b = _btn(p if p != "" else L("全部", "全部"), "gold" if f_pin == p else "", true, func(): f_pin = pp; render(), 17, 42)
-		b.custom_minimum_size = Vector2(72, 42); pr.add_child(b)
+		b.custom_minimum_size = Vector2(60, 42); pr.add_child(b)
 	body.add_child(pr)
 	body.add_child(_rich(L("系", "系"), 16, DIM))
 	var sr = HFlowContainer.new(); sr.add_theme_constant_override("h_separation", 6); sr.add_theme_constant_override("v_separation", 6)
@@ -176,7 +178,7 @@ class Cell extends Control:
 			var pw = f.get_string_size(pin, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
 			draw_string(f, Vector2(r.end.x - pw - 6, r.position.y + 23), pin, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, pc)
 		# 圖框：全身原圖縮入（唔裁切）
-		var box = Rect2(r.position.x + 6, r.position.y + 28, r.size.x - 12, H - 28 - 58)
+		var box = Rect2(r.position.x + 6, r.position.y + 28, r.size.x - 12, H - 28 - 66)
 		var mod = Color.WHITE
 		match st:
 			"prog", "seen": mod = Color(0.5, 0.5, 0.53)
@@ -188,25 +190,29 @@ class Cell extends Control:
 			draw_circle(c, 17, Color(0.1, 0.08, 0.06, 0.85))
 			draw_arc(c, 13, -PI / 2, -PI / 2 + TAU * clampf(float(have) / need, 0, 1), 36, Color("#6fe0c0"), 5.0, true)
 			draw_arc(c, 17, 0, TAU, 36, FX.INK, 1.5, true)
-		# 名
-		var ny = H - 34
+		# 名（太長：縮到 13；再長就分兩行）
 		var nm2 = nm if st != "unseen" else "？？？"
-		FX.text_c(self, nm2, W / 2, ny, 16, FX.INK, "sans", r.size.x - 8)
+		var two = st == "own" and k != "afu"
+		var ny = H - (48 if two else 34)
+		var f2 = FX.font("sans"); var mw = r.size.x - 8
+		if f2.get_string_size(nm2, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x > mw:
+			var cut = nm2.find(" ")
+			if cut < 0: cut = nm2.length() / 2
+			FX.text_c(self, nm2.substr(0, cut).strip_edges(), W / 2, ny - 14, 13, FX.INK, "sans", mw)
+			FX.text_c(self, nm2.substr(cut).strip_edges(), W / 2, ny + 1, 13, FX.INK, "sans", mw)
+		else: FX.text_c(self, nm2, W / 2, ny, 16, FX.INK, "sans", mw)
 		# 底行
 		var line = ""; var col = Color(FX.INK, 0.7)
 		match st:
-			"own":
-				if k == "afu": line = SOUL.L("主角 Lv%d", "主角 Lv%d") % lv
-				else: line = "Lv%d" % lv
+			"own": line = (SOUL.L("主角 Lv%d", "主角 Lv%d") % lv) if k == "afu" else ("Lv%d　%s" % [lv, SOUL.rank_name(rk)])
 			"prog": line = "%d/%d" % [have, need]; col = Color("#2e6b5a")
 			"seen": line = SOUL.L("已遇見", "已遇見")
 			"unseen": line = SOUL.L("第%d章", "第%d章") % maxi(1, int(S2.entry(k).get("ch", 1)))
-		if st == "own" and k != "afu":
+		if two:
+			FX.text_c(self, line, W / 2, H - 27, 13, col, "sans", mw)
 			for i in SOUL.RANK_MAX:   # 職級星
-				var sp = Vector2(W / 2 - 34 + i * 17, H - 12)
-				_star(sp, 7.0, Color("#e8b040") if i < rk else Color(FX.INK, 0.18))
-			FX.text_c(self, line, W / 2, H - 22 - 0, 13, col, "sans", r.size.x - 8)
-		else: FX.text_c(self, line, W / 2, H - 12, 14, col, "sans", r.size.x - 8)
+				_star(Vector2(W / 2 - 34 + i * 17, H - 12), 7.0, Color("#e8b040") if i < rk else Color(FX.INK, 0.18))
+		else: FX.text_c(self, line, W / 2, H - 12, 14, col, "sans", mw)
 	func _star(p: Vector2, rr: float, col: Color) -> void:
 		var pts = PackedVector2Array()
 		for i in 10:
@@ -258,9 +264,10 @@ static func _detail(body: VBoxContainer, k: String) -> void:
 	if known and str(gd.get("title", "")) != "": vb.add_child(_rich(str(DB.N(str(gd.title))), 16, DIM))
 	var pin = S2.pin(k)
 	var sysn = S2.sys_of(k)
-	vb.add_child(_rich("[color=%s][b]%s品[/b][/color]　%s" % [FX.PINC.get(pin, Color.GRAY).to_html(false), pin, (L("%s系", "%s系") % sysn if known and sysn != "" and sysn != "主" else "")], 18))
-	var reg = str(S2.C().REG.get(str(ent.get("reg", "")), ""))
-	if reg != "": vb.add_child(_rich(L("地區：%s", "地區：%s") % reg, 16, DIM))
+	if known:
+		vb.add_child(_rich("[color=%s][b]%s品[/b][/color]　%s" % [FX.PINC.get(pin, Color.GRAY).to_html(false), pin if pin != "主" else "主角", (L("%s系", "%s系") % sysn if sysn != "" and sysn != "主" else "")], 18))
+		var reg = str(S2.C().REG.get(str(ent.get("reg", "")), ""))
+		if reg != "": vb.add_child(_rich(L("地區：%s", "地區：%s") % reg, 16, DIM))
 	vb.add_child(_rich(_state_line(k, st), 17, Color("#2e5a3a") if st == "own" else INK))
 	if st == "own" and k != "afu":
 		var r = SOUL.rank(k)
@@ -337,7 +344,7 @@ static func _go_btns(body: VBoxContainer, k: String) -> void:
 	var kd = S2.king(k)
 	if not kd.is_empty():
 		var b3 = _btn(L("王座重遊", "王座重遊"), "", true, func(): open_throne(), 17, 46); b3.size_flags_horizontal = Control.SIZE_EXPAND_FILL; bb.add_child(b3)
-	if SOUL.is_ghost(k) and k != "afu":
+	if SOUL.is_ghost(k) and k != "afu" and S2.state(k) != "unseen":
 		var b2 = _btn(L("去祭壇", "去祭壇"), "", true, func():
 			SUI.tab = "promote" if SOUL.owned(k) else "summon"
 			Menus.open_bld("altar"), 17, 46)
