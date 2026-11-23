@@ -107,7 +107,7 @@ static func _grid(body: VBoxContainer) -> void:
 	for p in ["", "凡", "靈", "煞", "王"]:
 		var pp = p
 		var b = _btn(p if p != "" else L("全部", "全部"), "gold" if f_pin == p else "", true, func(): f_pin = pp; render(), 17, 42)
-		b.custom_minimum_size = Vector2(72, 42); pr.add_child(b)
+		b.custom_minimum_size = Vector2(60, 42); pr.add_child(b)
 	body.add_child(pr)
 	body.add_child(_rich(L("系", "系"), 16, DIM))
 	var sr = HFlowContainer.new(); sr.add_theme_constant_override("h_separation", 6); sr.add_theme_constant_override("v_separation", 6)
