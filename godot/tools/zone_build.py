@@ -1112,8 +1112,12 @@ def _rings(M, ci):
         while len(pick) < RING_N[k - 1]:
             order = sorted([d for d in DIRV if d not in [c[3] for c in pick]] or list(DIRV), key=lambda d: (dcount[d], len(cands[k][d]) == 0))
             done = False
+            def stag(c, d=None):   # 同方向據點左右交錯（全景名牌唔會疊成一條柱）：同前幾個同方向據點橫向隔 ≥ 420
+                nv = DIRV[c[3]]; lat = c[1][0] if nv[0] == 0 else c[1][1]
+                near = [s for s in so if s["dir"] == c[3] and abs((s["pos"][0] if nv[0] == 0 else s["pos"][1]) - lat) < 420]
+                return c[0] + 900 * len(near)
             for d in order:
-                for c in sorted(cands[k][d], key=lambda c: c[0]):
+                for c in sorted(cands[k][d], key=stag):
                     if all(math.dist(c[1], s["pos"]) >= 200 for s in so) and all(math.dist(c[1], q[1]) >= 200 for q in pick):
                         pick.append(c); dcount[d] += 1; done = True; break
                 if done: break
