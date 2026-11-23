@@ -25,6 +25,7 @@ static var SQ_BACK := 0.0             # 小隊比前排名鬼企後幾多（開�
 const CLOSE := 100.0            # 同 rts_sim.CLOSE：射程＋呢個以內當「近」
 
 # 總開關（審查修正第 3 項：全域、唔入玩家存檔）：abil.gd 嘅 static var OFF＝true，或者 data/abil.json 頂層 "off": true → 全部行舊路
+const ABE = preload("res://game/rts/abil.gd")   # [abform] 真 abcore（targetable 用）；總開關照用 AB_PATH
 static var AB_PATH := "res://game/rts/abil.gd"   # abcore 檔；測試可以指去 stub
 static var _ab = null
 static var _ab_path := ""
@@ -86,9 +87,10 @@ static func line_order(mel: Array) -> Array:
 	var slot = []
 	slot.resize(n)
 	var F = fr.size()
+	var m = n + fl.size(); var nf0 = int(ceil(fl.size() / 2.0))   # 成條線（連側翼）計中間，唔係淨係小隊＋前排
 	for j in F:
-		var f = 0.5 if F == 1 else 0.35 + 0.3 * float(j) / float(F - 1)   # 中間三分一以內
-		var idx = clampi(int(round(f * (n - 1))), 0, n - 1)
+		var f = 0.5 if F == 1 else 0.38 + 0.24 * float(j) / float(F - 1)   # 中間三分一以內
+		var idx = clampi(int(round(f * (m - 1))) - nf0, 0, n - 1)
 		while slot[idx] != null: idx = (idx + 1) % n
 		slot[idx] = fr[j]
 	var si = 0
@@ -164,6 +166,7 @@ static func _bump(sim, old, nv) -> void:
 static func targetable(sim, u: Dictionary, v: Dictionary) -> bool:
 	# abcore 嘅 AB.targetable（隱身、飛行）合併後喺呢度接：sim 有 ab_targetable 就問佢
 	if sim.has_method("ab_targetable"): return sim.ab_targetable(u, v)
+	if J.t(sim.get("ab")): return ABE.targetable(sim, u, v)   # [abform] 整合：隱身遠過 80px 唔揀，免得 AB.pick_fix 改揀最近而爆每目標上限
 	return true
 static func line_tg(sim, u: Dictionary):
 	var cur = u.get("tg")

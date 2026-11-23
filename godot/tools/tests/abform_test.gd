@@ -12,6 +12,7 @@ var bad := 0
 const SIM = preload("res://game/rts/rts_sim.gd")
 const REF = preload("res://tools/tests/abform_ref_sim.gd")
 const AF = preload("res://game/rts/abform.gd")
+const AB = preload("res://game/rts/abil.gd")   # 整合後：abcore 能力引擎（同 REF 比要關，AB.force=0）
 const N_SEED := 6
 const DT := 1.0 / 30.0
 
@@ -92,6 +93,8 @@ func _spacing(op) -> Array:   # [沿軸標準差（近身前行）, 同邊貼埋
 	var ld = {}; var mel = 0
 	for u in al:
 		if J.num(u.range) > 60: continue
+		var ua = u.get("ab") if u.get("ab") is Dictionary else {}
+		if J.num(ua.get("lock_until", 0)) > op.t or J.num(ua.get("taunt_until", 0)) > op.t or J.num(ua.get("charm_until", 0)) > op.t: continue   # 能力強制目標（衝鋒鎖定／嘲諷／迷惑）唔計上限
 		mel += 1
 		var tg = u.get("tg")
 		if tg is Dictionary and op.alive(tg) and op.dist(u, tg) <= J.num(u.range) + 30: ld[int(J.num(tg._id))] = int(ld.get(int(J.num(tg._id)), 0)) + 1
@@ -217,15 +220,15 @@ func units_checks(t) -> void:
 	var ls = []; var hl = []
 	for u in op.units:
 		if J.num(u.side) == 0 and J.num(u.range) <= 60: ls.append(float(u.ls))
-		if J.num(u.side) == 0 and not J.t(u.get("minion")) and J.num(u.range) <= 60: hl.append(float(u.ls))
+		if J.num(u.side) == 0 and not J.t(u.get("minion")) and J.num(u.range) <= 60 and AF.role_of(u) == "front": hl.append(float(u.ls))   # 側翼名鬼（數據 role=flank）本來就企兩頭
 	ls.sort()
 	var lo = ls[0]; var hi = ls[ls.size() - 1]; var w = hi - lo
 	var mid = true
 	for x in hl: if x < lo + w / 3.0 - 1.0 or x > hi - w / 3.0 + 1.0: mid = false
 	_chk("前排名鬼企陣線中間三分一（唔再企兩頭）", mid, [hl, lo, hi])
 	var ends = []
-	for u in op.units: if J.num(u.side) == 0 and J.num(u.range) <= 60 and (float(u.ls) == lo or float(u.ls) == hi): ends.append(J.t(u.get("minion")))
-	_chk("陣線兩頭係陰兵小隊", ends.size() == 2 and ends[0] and ends[1], ends)
+	for u in op.units: if J.num(u.side) == 0 and J.num(u.range) <= 60 and (float(u.ls) == lo or float(u.ls) == hi): ends.append(J.t(u.get("minion")) or AF.role_of(u) == "flank")
+	_chk("陣線兩頭係陰兵小隊（或者側翼名鬼）", ends.size() == 2 and ends[0] and ends[1], ends)
 	var r0 = true
 	for u in op.units: if J.num(u.side) == 0 and not J.t(u.get("minion")) and J.num(u.range) <= 60 and int(J.num(u.get("row", 0))) != 0: r0 = false
 	_chk("壓成兩行時前排名鬼一定喺前行", r0)
@@ -236,13 +239,14 @@ func units_checks(t) -> void:
 	for u in op2.units:
 		if J.num(u.side) == 0 and J.num(u.range) <= 60 and u.has("dl"):
 			dl_all.append(float(u.dl))
-			if not J.t(u.get("minion")): dl_h.append(float(u.dl))
+			if not J.t(u.get("minion")) and AF.role_of(u) == "front": dl_h.append(float(u.dl))
 	dl_all.sort()
 	var wd = dl_all[dl_all.size() - 1] - dl_all[0]
 	var mid2 = true
 	for x in dl_h: if absf(x - (dl_all[0] + wd / 2.0)) > wd / 3.0 + 1.0: mid2 = false
 	_chk("行軍展開橫隊：名鬼都喺中間（同接觸排法一致）", mid2, dl_h)
-	# 2) AoE 半徑 130
+	# 2) AoE 半徑 130（abform 掛鈎喺舊技能路：AB 關先行到；AB 開時由 abcore 嘅 AOE_R=130 負責，下面另外驗）
+	AB.force = 0
 	seed(12)
 	var us = [mk_hero("afu", 10)]
 	for i in 6: us.append(mk_sq(5))
@@ -278,6 +282,25 @@ func units_checks(t) -> void:
 	for i in sq0.size(): if J.num(sq0[i].hp) < h0[i]: hn0 += 1
 	_chk("對照：舊版 AoE 打全場（6 隊全中）", hn0 == 6, hn0)
 	AF.force = 1
+	AB.force = 1
+	# AB 開（實際遊戲）：細紙「紙錢漫天」circle r130 —— 圈內 3 隻中、圈外 3 隻冇事
+	seed(12)
+	var us8 = [mk_hero("xiaozhi", 10)]
+	for i in 6: us8.append(mk_foe("youhun", 3.0))
+	var op8 = new_op(us8); _to_fight(op8)
+	var xz8 = op8.units[0]; var fo8 = op8.units.filter(func(x): return J.num(x.side) == 1)
+	var c8 = (xz8.p as Vector2) + Vector2(0, -120)
+	for i in fo8.size(): fo8[i]["p"] = c8 + (Vector2(-50 + 50 * i, 0) if i < 3 else Vector2(-600 - 80 * i, -500))
+	var h8 = []
+	for v in fo8: h8.append(J.num(v.hp))
+	op8.do_skill(xz8, xz8.sk)
+	var in8 = 0; var out8 = 0
+	for i in fo8.size():
+		if J.num(fo8[i].hp) < h8[i]:
+			if i < 3: in8 += 1
+			else: out8 += 1
+	_chk("AB 開：群攻都係半徑 130（圈內 3 中、圈外 0）", in8 == 3 and out8 == 0, [in8, out8])
+	AB.force = -1
 	# 3) 威脅值：敵人揀前排名鬼多過小隊、後排名鬼最少
 	seed(13)
 	var op5 = new_op(mk_units(SCN[2])); _to_fight(op5)
@@ -362,8 +385,14 @@ func ai_checks(t) -> void:
 	var op = _ai_op()
 	var afu = _u(op, "afu"); var mp = _u(op, "mengpo"); var xz = _u(op, "xiaozhi"); var eg = _u(op, "eguiking"); var ty = _u(op, "toyol")
 	var hu = _u(op, "huang", 1); var eg1 = _u(op, "egui", 1); var hw = _u(op, "heiwu", 1)
-	_chk("AI 由舊技能推：單體 asap、治療 ally_hp、群攻 n_in、吸血 self_hp、抽嚇氣 foe_cast", AF.ai_of(afu).when == "asap" and AF.ai_of(mp).when == "ally_hp" and AF.ai_of(xz).when == "n_in" and AF.ai_of(eg).when == "self_hp" and AF.ai_of(ty).when == "foe_cast",
-		[AF.ai_of(afu).when, AF.ai_of(mp).when, AF.ai_of(xz).when, AF.ai_of(eg).when, AF.ai_of(ty).when])
+	# 數據（abil.json act.ai）優先；冇數據嘅鬼先由舊 SKILLS 推（用假 key 驗推導）
+	_chk("AI 跟 abil.json：阿福 asap、孟婆 ally_hp、細紙 n_in", AF.ai_of(afu).when == "asap" and AF.ai_of(mp).when == "ally_hp" and AF.ai_of(xz).when == "n_in", [AF.ai_of(afu).when, AF.ai_of(mp).when, AF.ai_of(xz).when])
+	var dv = []
+	for kk in ["afu", "mengpo", "xiaozhi", "eguiking", "toyol"]:
+		var fk = {"k": "_af_nodata_" + kk, "side": 0.0, "sk": J.G.SKILLS.get(kk)}
+		dv.append(AF.ai_of(fk).when)
+	_chk("AI 由舊技能推（冇數據時）：單體 asap、治療 ally_hp、群攻 n_in、吸血 self_hp、抽嚇氣 foe_cast", dv == ["asap", "ally_hp", "n_in", "self_hp", "foe_cast"], dv)
+	eg["ai_"] = {"when": "self_hp", "self_hp": 0.6, "wait": AF.WAIT}; ty["ai_"] = {"when": "foe_cast", "wait": AF.WAIT}
 	for u in op.units: u["energy"] = 100.0
 	# asap：目標入射程先放
 	for v in op.units: if J.num(v.side) == 1: v["p"] = (afu.p as Vector2) + Vector2(0, -400)
@@ -424,7 +453,7 @@ func ai_checks(t) -> void:
 	_chk("敵人王：接觸後 3 秒內唔放技", not AF.want_cast(op, hu, DT))
 	op.t = 4.0
 	_chk("敵人王：3 秒後、我方聚埋 → 放", AF.want_cast(op, hu, DT))
-	hw["full_t"] = 0.0
+	hw["full_t"] = 0.0; hw["ai_"] = {"when": "n_in", "wait": AF.WAIT}   # 敵人預設 n_in=2（黑無常數據寫 3，呢度驗敵人預設）
 	var k = 0
 	for v in op.units: if J.num(v.side) == 0: v["p"] = (hw.p as Vector2) + Vector2(-500 + 260 * k, 300); k += 1
 	_chk("敵人 AoE：我方散開（圈內 < 2）→ 唔放", not AF.want_cast(op, hw, DT))
@@ -443,6 +472,7 @@ func ai_checks(t) -> void:
 
 # ================= regress =================
 func regress_checks(t) -> void:
+	AB.force = 0   # REF（改動前原裝 rts_sim）冇 abcore：比較時兩邊都關 AB
 	var same = true; var n = 0
 	for sc in SCN:
 		for s in 3:
@@ -453,16 +483,27 @@ func regress_checks(t) -> void:
 				same = false; _p("差異 %s #%d 舊 %s 新 %s" % [sc[0], s, str([a.win, a.t, a.dead]), str([b.win, b.t, b.dead])])
 		await t.get_tree().process_frame
 	_chk("AF 關（force=0）：%d 場同改動前 rts_sim 一模一樣（勝負、時間、每隻血）" % n, same)
+	AB.force = -1
+	# 真總開關：abil.gd 嘅 OFF＝true → AB、AF 一齊退回舊路（同原裝一樣）
+	AB.OFF = true
+	var a1 = run(SCN[1], 4, 0, true); var b1 = run(SCN[1], 4, -1)
+	AB.OFF = false
+	_chk("真總開關 AB.OFF＝true：能力＋陣型一鍵退回舊路（同原裝一樣）", str(a1.hp) == str(b1.hp) and a1.t == b1.t, [a1.t, b1.t])
 	# 總開關（全域 static，唔入存檔）：用 stub 模擬 abil.gd 嘅 OFF
-	var keys0 = (J.G.S as Dictionary).keys().size()
+	var keys0 = (J.G.S as Dictionary).keys().duplicate()
 	var STUB = load("res://tools/tests/abform_abstub.gd")
 	var op0 = AF.AB_PATH
 	AF.AB_PATH = "res://tools/tests/abform_abstub.gd"
 	STUB.OFF = true
+	AB.force = 0
 	var a2 = run(SCN[1], 5, 0, true); var b2 = run(SCN[1], 5, -1)
+	AB.force = -1
 	_chk("總開關 OFF＝true：一鍵退回舊路（同原裝一樣）", str(a2.hp) == str(b2.hp) and a2.t == b2.t, [a2.t, b2.t])
 	STUB.OFF = false
 	var c2 = run(SCN[1], 5, -1)
 	_chk("總開關 OFF＝false：行新陣型（結果唔同舊）", str(c2.hp) != str(a2.hp))
 	AF.AB_PATH = op0
-	_chk("開關唔寫入玩家存檔", (J.G.S as Dictionary).keys().size() == keys0 and not (J.G.S as Dictionary).has("ab_off"))
+	var addk = []
+	for kk in (J.G.S as Dictionary).keys(): if not (kk in keys0): addk.append(kk)
+	var afk = addk.filter(func(x): return str(x) in ["ab_off", "af_off", "abform"] or str(x).begins_with("af_"))
+	_chk("開關唔寫入玩家存檔（陣型冇加存檔欄位；其他線戰鬥期間加嘅：%s）" % str(addk), afk.is_empty() and not (J.G.S as Dictionary).has("ab_off"), afk)
