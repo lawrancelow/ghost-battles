@@ -74,6 +74,11 @@ static func draw(ci: CanvasItem, key, c: Vector2, r: float, dim := false, a := 1
 	var base = _col(k)
 	if dim: base = Color(0.36, 0.34, 0.34)
 	ci.draw_circle(c + Vector2(0, r * 0.08), r, Color(0, 0, 0, 0.35 * a))
+	var tx0 = _tex_of(k)
+	if tx0 is Texture2D:   # [整合] 正式圖示本身已有底色同深褐圈：畫滿 2r，唔再疊自己嘅圈；未應對就變灰
+		var m = Color(0.55, 0.53, 0.53, a) if dim else Color(1, 1, 1, a)
+		ci.draw_texture_rect(tx0, Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0), false, m)
+		return
 	ci.draw_circle(c, r, Color(base.darkened(0.15), 0.96 * a))
 	ci.draw_circle(c, r * 0.82, Color(base.lightened(0.06), 0.96 * a))
 	var tx = _tex_of(k)
