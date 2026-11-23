@@ -8,6 +8,17 @@ SC = os.path.join(ROOT, "tools/balance/bal_scale.json")
 CJ = os.path.join(ROOT, "data/nat/counter.json")
 if "--from-scale" in sys.argv:
     sc = json.load(open(SC, encoding="utf-8"))
+elif "--touchup" in sys.argv:   # 驗證跑（c<N>.json）之後微調：最佳 <80% ×0.8；隨機 <25% 或 萬能 +3.5 級過唔到 ×0.85
+    sc = json.load(open(SC, encoding="utf-8"))
+    for f in sorted(glob.glob("/tmp/bal/c[0-9].json")):
+        for r in json.load(open(f, encoding="utf-8"))["sites"]:
+            if r.get("kind") != "sortie" or "B" not in r: continue
+            k = 1.0
+            if r["B"]["wr"] < 0.8: k = 0.8
+            elif r["R"]["wr"] < 0.25 or r["U35"]["wr"] < 0.5: k = 0.85
+            if k < 1.0:
+                sc["camps"][r["id"]] = round(float(sc["camps"].get(r["id"], 1.0)) * k, 3); print("touchup", r["id"], k, sc["camps"][r["id"]])
+    json.dump(sc, open(SC, "w", encoding="utf-8"), ensure_ascii=False, indent=1, sort_keys=True)
 else:
     sc = json.load(open(SC, encoding="utf-8")) if os.path.exists(SC) else {"camps": {}, "ch_k": {}, "sortie_k": {}}
     if "--mech-only" in sys.argv: sys.argv.append("--no-tmp")

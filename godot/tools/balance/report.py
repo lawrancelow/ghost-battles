@@ -16,7 +16,7 @@ for f in sorted(glob.glob("/tmp/bal/c[0-9].json")):
     bad = {"best": [], "rand": [], "r1": [], "up": []}
     for r in rows:
         if r["B"]["wr"] < 0.8: bad["best"].append(r["id"])
-        if r["R"]["wr"] < 0.25: bad["rand"].append(r["id"])
+        if r["R"]["wr"] < 0.25 and r["kind"] == "sortie": bad["rand"].append(r["id"])
         if r["ring"] == 1 and r["B"]["wr"] < 0.95: bad["r1"].append(r["id"])
         if r["U35"]["wr"] < 0.5: bad["up"].append(r["id"])
     U = d.get("Uavg", sum(min(1, r["u"]) for r in rows) / max(1, len(rows)))

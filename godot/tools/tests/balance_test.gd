@@ -416,7 +416,7 @@ func judge(out: Dictionary) -> void:
 	for r in out.sites:
 		if r.has("err"): bb.append(r.id); continue
 		if r.B.wr < 0.8: bb.append("%s %.0f%%" % [r.id, r.B.wr * 100])
-		if r.R.wr < 0.25: rb.append("%s %.0f%%" % [r.id, r.R.wr * 100])
+		if r.R.wr < 0.25 and r.kind == "sortie": rb.append("%s %.0f%%" % [r.id, r.R.wr * 100])   # 隨機隊 ≥25%：據點合格線（審查修正 11③）；主線關照記錄唔判
 		if int(r.ring) == 1 and r.B.wr < 0.95: r1.append("%s %.0f%%" % [r.id, r.B.wr * 100])
 		if r.U35.wr < 0.5: ub.append("%s %.0f%%" % [r.id, r.U35.wr * 100])
 		us += minf(1.0, r.u); n += 1
@@ -424,7 +424,7 @@ func judge(out: Dictionary) -> void:
 	var U = us / maxf(1.0, n)
 	out["Uavg"] = U; out["to_rate"] = to / maxf(1.0, tn)
 	_chk("第 %d 章：每個場地最佳隊勝率 ≥80%%" % (c + 1), bb.is_empty(), bb)
-	_chk("第 %d 章：每個場地隨機隊勝率 ≥25%%" % (c + 1), rb.is_empty(), rb)
+	_chk("第 %d 章：每個據點隨機隊勝率 ≥25%%" % (c + 1), rb.is_empty(), rb)
 	_chk("第 %d 章：第 1 圈最佳隊勝率 ≥95%%" % (c + 1), r1.is_empty(), r1)
 	_chk("第 %d 章：萬能隊練高 %.1f 級過每個場地（勝率 ≥50%%）" % [c + 1, UP_LV], ub.is_empty(), ub)
 	_chk("第 %d 章：時間到比率 ≤15%%" % (c + 1), out.to_rate <= 0.15, "%.1f%%" % (out.to_rate * 100))
