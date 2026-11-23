@@ -279,7 +279,7 @@ static func _trim(snap: Dictionary, ny: int, nm: int) -> void:
 static func mk_squads(ny: int, nm: int) -> Array:
 	var S = J.G.S; var lv = J.num(S.get("lv", 1)); var tb = ZD.troop_mul(); var o = []
 	for i in ny:
-		var hp = (90 + 14 * lv) * tb
+		var hp = (90 + 14 * lv) * tb * _yin_hp_k()   # [整合] 陰兵血倍率讀 counter.json yin_k.hp（平衡線調）
 		o.append({"side": 0.0, "k": "youhun", "name": "陰兵", "minion": true, "hp": hp, "maxhp": hp, "atk": (9 + 2.2 * lv) * tb, "range": 38.0, "spd": 52.0, "energy": 0.0, "sk": null, "st": {}, "cd": randf()})
 	var ML = load("res://game/militia/ml_data.gd"); var sq = ML.squads()
 	for i in mini(nm, sq.size()):
@@ -559,3 +559,14 @@ static func _report(html: String) -> Dictionary:
 		elif cls == "lost": o.lost.append(tx)
 		elif o.reward == "" and not tx.begins_with("提示"): o.reward = tx
 	return o
+
+
+static var _yk := -1.0
+static func _yin_hp_k() -> float:   # [整合] counter.json {"yin_k": {"hp": x}}，冇就 1.0
+	if _yk < 0.0:
+		_yk = 1.0
+		var f = FileAccess.open("res://data/nat/counter.json", FileAccess.READ)
+		if f != null:
+			var d = JSON.parse_string(f.get_as_text())
+			if d is Dictionary and d.get("yin_k") is Dictionary: _yk = float(d.yin_k.get("hp", 1.0))
+	return _yk

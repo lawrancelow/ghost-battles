@@ -221,6 +221,7 @@ func text(p: Vector2, s: String, col: String, life := 1.1, px := 15) -> void: _f
 # ================= 受擊（battle.gd hit ＋ rework 包裝） =================
 func head(u: Dictionary) -> Vector2:   # 頭頂（世界）
 	var h = 40.0 if J.t(u.get("minion")) else (78.0 if J.t(u.get("boss")) else 56.0)
+	if not (u.get("p") is Vector2): return Vector2(-9999, -9999)   # [整合] 軍師等冇場上位置嘅單位：唔報錯
 	return (u.p as Vector2) + Vector2(0, -h)
 func hit(src: Dictionary, v: Dictionary, mult: float, sk) -> float:
 	if ab: return AB.hit(self, src, v, mult, sk)   # [ab] 新管線（兩層克制、機制、積木）；舊管線原封不動留喺下面
