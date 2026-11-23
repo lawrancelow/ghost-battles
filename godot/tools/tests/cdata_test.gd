@@ -213,7 +213,7 @@ func counter_check() -> void:
 	var k4 = D.get("ch_k", {}).get("4", {}); var k5 = D.get("ch_k", {}).get("5", {})
 	_chk("ch_k＝SOFT 步驟 A（第 5 關血 0.70 攻 0.55；第 6 關血 0.65 攻 0.50）", is_equal_approx(float(k4.get("hp", 0)), 0.70) and is_equal_approx(float(k4.get("atk", 0)), 0.55) and is_equal_approx(float(k5.get("hp", 0)), 0.65) and is_equal_approx(float(k5.get("atk", 0)), 0.50))
 	var s4 = D.get("sortie_k", {}).get("4", {}); var s5 = D.get("sortie_k", {}).get("5", {})
-	_chk("sortie_k＝據點第 5 關 0.55、第 6 關 0.5（同舊主線同級起步）", is_equal_approx(float(s4.get("hp", 0)), 0.55) and is_equal_approx(float(s4.get("atk", 0)), 0.55) and is_equal_approx(float(s5.get("hp", 0)), 0.5) and is_equal_approx(float(s5.get("atk", 0)), 0.5))
+	_chk("sortie_k＝據點步驟 A（第 5 關 0.70／0.55、第 6 關 0.65／0.50；balance 線統一，據點難度改由 hm／am 校準）", is_equal_approx(float(s4.get("hp", 0)), 0.70) and is_equal_approx(float(s4.get("atk", 0)), 0.55) and is_equal_approx(float(s5.get("hp", 0)), 0.65) and is_equal_approx(float(s5.get("atk", 0)), 0.5))   # [balance]
 	var nt = D.get("new", {})
 	_chk("新鬼 26 隻有第二階段標籤規格；陰司審批官有「收」；Teke Teke 喺第 5 關", nt.size() == 26 and "收" in nt.get("nw_shenpi", {}).get("tags", []) and int(nt.get("nw_teketeke", {}).get("ch", 0)) == 5)
 	# 魂魄來源：每隻可招降鬼最少一個
@@ -356,7 +356,7 @@ func _snap() -> Dictionary:
 	return {"units": [{"side": 0.0, "hp": 100.0, "maxhp": 100.0, "atk": 10.0}, {"side": 1.0, "hp": 1000.0, "maxhp": 1000.0, "atk": 100.0}]}
 func soften_check() -> void:
 	var s = _snap(); RTS._soften(s, {"kind": "sortie", "c": 4})
-	_chk("據點（sortie）第 5 關打折：血 ×0.55、攻 ×0.55（sortie_k；修據點未打折 bug）", is_equal_approx(s.units[1].hp, 550.0) and is_equal_approx(s.units[1].maxhp, 550.0) and is_equal_approx(s.units[1].atk, 55.0) and is_equal_approx(s.units[0].hp, 100.0), s.units[1])
+	_chk("據點（sortie）第 5 關打折：血 ×0.70、攻 ×0.55（sortie_k；修據點未打折 bug）", is_equal_approx(s.units[1].hp, 700.0) and is_equal_approx(s.units[1].maxhp, 700.0) and is_equal_approx(s.units[1].atk, 55.0) and is_equal_approx(s.units[0].hp, 100.0), s.units[1])
 	s = _snap(); RTS._soften(s, {"kind": "stage", "c": 4})
 	_chk("主線第 5 關（步驟 A）：血 ×0.70、攻 ×0.55", is_equal_approx(s.units[1].hp, 700.0) and is_equal_approx(s.units[1].atk, 55.0), s.units[1])
 	s = _snap(); RTS._soften(s, {"kind": "stage", "c": 5})
@@ -414,11 +414,11 @@ func flow_check(t, m) -> void:
 	var p = float(e.lv); var okhp = true; var info = []
 	for i in foes.size():
 		var u = foes[i]; var T = ET[str(u.k)]
-		var exp = (260.0 + 90.0 * p) * float(T[0]) * float(st.ct.hm[i]) * 0.55 * ((1.25 if (str(st.get("guard", "")) != "" or st.has("ct")) else SO.BOSS_HP) if i == foes.size() - 1 else 1.0)   # [整合] 駐守名鬼頭目 ×1.25（soul 規則），無駐守仍 ×1.6
+		var exp = (260.0 + 90.0 * p) * float(T[0]) * float(st.ct.hm[i]) * 0.70 * ((1.25 if (str(st.get("guard", "")) != "" or st.has("ct")) else SO.BOSS_HP) if i == foes.size() - 1 else 1.0)   # [整合] 駐守名鬼頭目 ×1.25（soul 規則），無駐守仍 ×1.6
 		var expa = (16.0 + 7.5 * p) * float(T[1]) * float(st.ct.am[i]) * 0.55
 		info.append("%s %d/%d %d/%d" % [u.k, int(J.num(u.maxhp)), int(exp), int(J.num(u.atk)), int(expa)])
 		if absf(J.num(u.maxhp) - exp) > exp * 0.02 or absf(J.num(u.atk) - expa) > expa * 0.02: okhp = false
-	_chk("據點敵人血 ×0.55、攻 ×0.55（第 5 關 sortie_k）、頂替雜兵縮細、頭目血 ×1.25（駐守名鬼）／×1.6", okhp, " ".join(info))
+	_chk("據點敵人血 ×0.70、攻 ×0.55（第 5 關 sortie_k，balance 步驟 A）、頂替雜兵縮細、頭目血 ×1.25（駐守名鬼）／×1.6", okhp, " ".join(info))
 	var last = foes[foes.size() - 1] if foes.size() else {}
 	_chk("頭目＝駐守鬼、保留真名", J.t(last.get("boss")) and str(last.get("k")) == st.guard and str(last.get("name", "")).contains(str(ET[st.guard][2])), [last.get("name"), st.guard])
 	var mok = true
