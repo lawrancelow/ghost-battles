@@ -137,7 +137,7 @@ static func on_event(op, e: Array) -> void:
 	var stack = 0
 	for x in FL: if x.u == u and x.t < 0.6: stack += 1
 	if stack >= 3: return   # 同一隻同時最多 3 行，唔好疊爆
-	FL.append({"u": u, "op": op, "text": text, "col": col, "t": 0.0, "life": 1.3, "dy": -stack * 22.0})
+	FL.append({"u": u, "op": op, "text": text, "col": col, "t": 0.0, "life": 1.3, "dy": -stack * 28.0})
 	if FL.size() > 40: FL.pop_front()
 
 static func tick(dt: float) -> void:
@@ -151,12 +151,13 @@ static func draw_floats(v, n: CanvasItem, f: Font, vr: Rect2) -> void:
 	for x in FL:
 		var u: Dictionary = x.u
 		var op = x.op
-		var p: Vector2 = (op.head(u) if op != null else (u.p as Vector2) + Vector2(0, -56)) + Vector2(0, -lift_of(op, u) - 30.0)
+		var p: Vector2 = (op.head(u) if op != null else (u.p as Vector2) + Vector2(0, -56)) + Vector2(0, -lift_of(op, u))
 		if not vr.has_point(p): continue
 		var k = x.t / x.life
 		var a = 1.0 if k < 0.7 else 1.0 - (k - 0.7) / 0.3
-		var pop = 1.25 - 0.25 * clampf(x.t / 0.12, 0, 1)
-		v._at(n, p + Vector2(0, -x.t * 18.0), pop)
+		var pop = 1.2 - 0.2 * clampf(x.t / 0.12, 0, 1)
+		var top = minf(-20.0, J.num(u.get("_hud_y", -40.0))) - 4.0   # 由頭頂資訊最高嗰行再上：唔遮血條、狀態圖示、失神字
+		v._at(n, p + Vector2(0, -4.0 + (top - x.t * 18.0) / v._z()), pop)
 		var c = Color(x.col); c.a = a
 		v._str(n, f, str(x.text), 0, x.dy, 18, c, 5)
 	n.draw_set_transform_matrix(Transform2D.IDENTITY)

@@ -100,10 +100,15 @@ static func _P(c: Vector2, g: float, a: Array) -> PackedVector2Array:
 static func _glyph(ci: CanvasItem, k: String, c: Vector2, g: float, col: Color, ink: Color) -> void:
 	var w = maxf(1.4, g * 0.2)
 	match k:
-		"fly", "st_fly":   # 兩邊翼
-			_ln(ci, _P(c, g, [-1, 0.2, -0.6, -0.5, -0.1, 0.1]), col, ink, w)
-			_ln(ci, _P(c, g, [1, 0.2, 0.6, -0.5, 0.1, 0.1]), col, ink, w)
-			_ln(ci, _P(c, g, [-0.75, 0.55, 0, 0.25, 0.75, 0.55]), col, ink, w)
+		"fly", "st_fly":   # 一對翼（實心骨白＋墨邊）＋身
+			for sx in [-1.0, 1.0]:
+				var wp = []
+				for q in [0.05, 0.1, 0.4, -0.6, 0.98, -0.35, 0.78, -0.02, 0.9, 0.32, 0.52, 0.18, 0.3, 0.5]: wp.append(q)
+				for i in range(0, wp.size(), 2): wp[i] *= sx
+				var pg = _P(c, g, wp)
+				ci.draw_colored_polygon(pg, col)
+				pg.append(pg[0]); ci.draw_polyline(pg, ink, maxf(1.2, w * 0.7), true)
+			_dot(ci, c + Vector2(0, 0.12) * g, g * 0.2, ink, ink)
 		"stealth", "st_stealth":   # 半隻眼＋斜線
 			_arc(ci, c + Vector2(0, g * 0.45), g * 0.85, PI * 1.15, PI * 1.85, col, ink, w)
 			_arc(ci, c - Vector2(0, g * 0.45), g * 0.85, PI * 0.15, PI * 0.85, col, ink, w)

@@ -143,6 +143,7 @@ static func _pal(dark: bool) -> Dictionary:
 	return {"tx": UIKit.INKTXT, "dim": UIKit.INKDIM, "ok": Color("#2e6d5a"), "bad": Color("#c2362b"), "hd": Color("#7a1a10"), "box": Color(0, 0, 0, 0.05), "bd": Color(0.4, 0.3, 0.2, 0.3), "lit": Color("#c8822a")}
 
 static func add_to(vb: Container, enemy_keys: Array, opt := {}) -> VBoxContainer:
+	for c in vb.get_children(): if c.name == "AbCard": vb.remove_child(c); c.queue_free()   # 舊卡等緊 free：讓個名
 	var box = VBoxContainer.new(); box.name = "AbCard"
 	box.add_theme_constant_override("separation", 6)
 	box.set_meta("ks", enemy_keys.duplicate()); box.set_meta("opt", opt)
@@ -182,6 +183,7 @@ static func render(box: VBoxContainer) -> void:
 	var opt: Dictionary = box.get_meta("opt", {})
 	var dark = J.t(opt.get("dark", false))
 	var P = _pal(dark)
+	var cmp = J.t(box.get_meta("compact", false))   # 放唔落畫面時：細啲、少啲
 	# ---- 第 1 行：偵察：系 ×數、怕乜 ----
 	var hf = HFlowContainer.new(); hf.add_theme_constant_override("h_separation", 6); hf.add_theme_constant_override("v_separation", 4); box.add_child(hf)
 	hf.add_child(_lab(L("偵察", "偵察"), 18, P.hd, false))
@@ -207,6 +209,16 @@ static func render(box: VBoxContainer) -> void:
 	var ms = enemy_mechs(ks)
 	var team = team_now(); var adv = ghost(J.G.S.get("adviser"))
 	var cv = cover(team, adv, ms)
+	if J.t(box.get_meta("pick_adv", false)):   # 揀緊軍師：只顯示隊伍＋清單（唔好令張卡太長）
+		var need0 = {}
+		for m in ms:
+			for t in counters(m): need0[t] = true
+		var tr0 = HBoxContainer.new(); tr0.add_theme_constant_override("separation", 6); box.add_child(tr0)
+		for g in team: tr0.add_child(_member(g, need0, P, false, box, cmp))
+		tr0.add_child(_member(adv, need0, P, true, box, cmp))
+		_adv_picker(box, P, dark)
+		if box.get_meta("opt", {}).get("host") != null: (func(): _fit(box)).call_deferred()
+		return
 	if ms.is_empty():
 		box.add_child(_lab(L("敵人冇特別本事：正常打就得", "敵人沒有特別本事：正常打就行"), 16, P.dim))
 	else:
@@ -215,7 +227,7 @@ static func render(box: VBoxContainer) -> void:
 		for m in ms:
 			var okm = not (cv[m] as Array).is_empty()
 			var cell = VBoxContainer.new(); cell.add_theme_constant_override("separation", 0); cell.custom_minimum_size = Vector2(70, 0)
-			var ic = AI.Icon.new(m, 54.0)
+			var ic = AI.Icon.new(m, 44.0 if cmp else 54.0)
 			ic.ring = P.ok if okm else P.bad
 			ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 			cell.add_child(ic)
@@ -229,16 +241,15 @@ static func render(box: VBoxContainer) -> void:
 		if open_m != "" and open_m in ms:
 			var d = AI.info(open_m).get("d", ["", ""])
 			box.add_child(_lab("%s：%s" % [AI.name_of(open_m), L(d[0], d[1])], 15, P.dim))
-		else:
+		elif not cmp:
 			box.add_child(_lab(L("（撳圖示睇說明）", "（點圖示看說明）"), 14, P.dim))
 	# ---- 我方：3 隻＋軍師 ----
 	var need = {}
 	for m in ms:
 		for t in counters(m): need[t] = true
 	var tr = HBoxContainer.new(); tr.add_theme_constant_override("separation", 6); box.add_child(tr)
-	for g in team: tr.add_child(_member(g, need, P, false, box))
-	tr.add_child(_member(adv, need, P, true, box))
-	if J.t(box.get_meta("pick_adv", false)): _adv_picker(box, P, dark)
+	for g in team: tr.add_child(_member(g, need, P, false, box, cmp))
+	tr.add_child(_member(adv, need, P, true, box, cmp))
 	# ---- ✔／✘ ----
 	var nok = 0
 	for m in ms:
@@ -252,13 +263,13 @@ static func render(box: VBoxContainer) -> void:
 			var ws2 = AI.info(m).get("w", ["", ""])
 			var cn = []
 			for t in counters(m): cn.append("「%s」" % AI.name_of(t))
-			box.add_child(_lab("✘ %s：%s%s → %s" % [AI.name_of(m), L("冇隊員識", "沒有隊員懂"), "／".join(cn), L(ws2[0], ws2[1])], 16, P.bad))
+			box.add_child(_lab("✘ %s：%s%s → %s" % [AI.name_of(m), L("冇", "缺"), "／".join(cn), L(ws2[0], ws2[1])], 16, P.bad))
 	if ms.size():
 		var dots = ""
 		for i in ms.size(): dots += "●" if i < nok else "○"
 		box.add_child(_lab(L("應對度 %s（%d/%d）", "應對度 %s（%d/%d）") % [dots, nok, ms.size()], 16, P.ok if nok == ms.size() else P.tx))
 	# ---- 推薦＋換上 ----
-	var rc = recommend(ms)
+	var rc = recommend(ms, 1 if cmp else 2)
 	if rc.size():
 		box.add_child(_lab(L("推薦：", "推薦："), 16, P.hd, false))
 		for r in rc:
@@ -275,10 +286,31 @@ static func render(box: VBoxContainer) -> void:
 				var sl = swap_in(gid, ms)
 				if sl >= 0: Snd.play("click"); _changed(box))
 			hb.add_child(b)
-	if ms.size() and nok < ms.size():
+	if box.get_meta("opt", {}).get("host") != null: (func(): _fit(box)).call_deferred()
+	if ms.size() and nok < ms.size() and not cmp:
 		box.add_child(_lab(L("冇應對都打得贏，只係辛苦啲、慢啲", "沒有應對也打得贏，只是辛苦點、慢一點"), 14, P.dim))
 
-static func _member(g, need: Dictionary, P: Dictionary, adv: bool, box: VBoxContainer) -> Control:
+# 浮動卡（野外出擊卡）：放唔落就向上移；再唔夠就轉精簡版（唔准出界、唔准遮底部導航）
+const NAV_H := 74.0
+static func _fit(box: VBoxContainer, again := 3) -> void:
+	if not is_instance_valid(box) or not box.is_inside_tree():
+		if again > 0 and is_instance_valid(box): (func(): _fit(box, again - 1)).call_deferred()
+		return
+	if again > 0: box.get_tree().process_frame.connect(func(): _fit(box, again - 1), CONNECT_ONE_SHOT)   # HFlow 要排完先知真高度
+	var host = (box.get_meta("opt", {}) as Dictionary).get("host")
+	if not (host is Control) or not is_instance_valid(host): return
+	if not host.has_meta("top0"): host.set_meta("top0", host.offset_top)
+	var vh = host.get_viewport_rect().size.y
+	var h = host.get_combined_minimum_size().y
+	var top0 = float(host.get_meta("top0"))
+	var par = host.get_parent()
+	var py = (par as Control).get_global_rect().position.y if par is Control else 0.0
+	var room = vh - NAV_H - 8.0 - py
+	var nt = clampf(room - h, 8.0, top0)
+	host.offset_top = nt; host.offset_bottom = nt + h   # 兩邊一齊設：成張卡向上移（唔係拉長）
+	if h > room and not J.t(box.get_meta("compact", false)):
+		box.set_meta("compact", true); render(box)
+static func _member(g, need: Dictionary, P: Dictionary, adv: bool, box: VBoxContainer, cmp := false) -> Control:
 	var p = PanelContainer.new(); p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var ts = tags(J.str(g.k)) if g != null else []
 	var lit = false
@@ -288,7 +320,7 @@ static func _member(g, need: Dictionary, P: Dictionary, adv: bool, box: VBoxCont
 	if adv:
 		var hl = _lab(L("軍師", "軍師"), 14, P.hd, false); hl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; vb.add_child(hl)
 	if g != null:
-		var pr = UIKit.portrait(J.str(g.k), 44 if adv else 48); pr.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; pr.mouse_filter = Control.MOUSE_FILTER_IGNORE; vb.add_child(pr)
+		var pr = UIKit.portrait(J.str(g.k), (34 if adv else 38) if cmp else (44 if adv else 48)); pr.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; pr.mouse_filter = Control.MOUSE_FILTER_IGNORE; vb.add_child(pr)
 	var nm = str(DB.L(J.str(g.name))) if g != null else L("＋揀軍師", "＋選軍師")
 	var nl = _lab(nm, 15, P.tx, false); nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; nl.clip_text = true; nl.custom_minimum_size = Vector2(0, 20); vb.add_child(nl)
 	if g != null:

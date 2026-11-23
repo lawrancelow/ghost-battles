@@ -485,6 +485,8 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 			var ft = u.get("fearT")
 			if side1 and ft is Dictionary and J.num(ft.get("until", 0)) > op.t:
 				_str(n, f, str(DB.L("失神")), 0, yy, 15, Color("#e6c4ff"))
+				yy -= 18.0
+		u["_hud_y"] = yy   # [abui] 頭頂資訊疊到幾高（畫面 px）：ab 飄字由呢度再上
 	n.draw_set_transform_matrix(Transform2D.IDENTITY)
 	# 特效
 	for fx in op.fx:

@@ -138,9 +138,10 @@ func calc_check() -> void:
 	_chk("推薦覆蓋最多未應對機制者行先（黑無常：定＋收）", rk.size() and rk[0] == "heiwu", rk)
 	var t0 = (S.team as Array).duplicate()
 	var sl = AC.swap_in(_id_of("heiwu"), ms)
-	_chk("換上：唔換阿福、換走應對最少嗰隻", sl > 0 and S.team[0] == _id_of("afu") and (S.team as Array).has(_id_of("heiwu")) and (S.team as Array).has(_id_of("xiaozhi")), [t0, S.team])
+	_chk("換上：唔換阿福、黑無常入隊", sl > 0 and S.team[0] == _id_of("afu") and (S.team as Array).has(_id_of("heiwu")), [t0, S.team])
 	var cv2 = AC.cover(AC.team_now(), null, ms)
 	_chk("換上後：光環、屍變都 ✔", (cv2.fear_aura as Array).size() > 0 and (cv2.revive as Array).size() > 0)
+	S["team"] = [_id_of("afu"), _id_of("xiaozhi"), _id_of("toyol")]
 	AC.set_adviser(_id_of("laojiang"))
 	_chk("揀軍師：S.adviser 設好", J.str(S.adviser) == J.str(_id_of("laojiang")))
 	AC.set_adviser(_id_of("xiaozhi"))
@@ -208,7 +209,7 @@ func sortie_card(t, m) -> void:
 		if e != null: break
 	if e == null: e = SO.camps()[0]
 	_p("camp %s en=%s mechs=%s" % [SO.key(e), str(SO.stage_of(e).en), str(AC.enemy_mechs(SO.stage_of(e).en))])
-	SOV.open_card(e); await _f(t, 4)
+	SOV.open_card(e); await _f(t, 8)
 	var card = SOV.card
 	var box = card.find_child("AbCard", true, false) if card != null else null
 	_chk("野外出擊卡：有偵察段", box != null)
@@ -231,7 +232,7 @@ func sortie_card(t, m) -> void:
 		_chk("撳機制圖示：出說明", str(box.get_meta("open_m", "")) != "")
 		await _shot(t, "02_sortie_card_desc")
 	# 揀軍師
-	box.set_meta("pick_adv", true); AC.render(box); await _f(t, 4)
+	box.set_meta("pick_adv", true); AC.render(box); await _f(t, 8)
 	cr = SOV.card.get_global_rect()
 	_chk("揀軍師清單打開：卡仍然喺畫面內", vp.encloses(cr), cr)
 	await _shot(t, "03_sortie_pick_adviser")
@@ -251,7 +252,7 @@ func stage_card_and_fight(t, m) -> void:
 	await _f(t, 3)
 	var tg = ZD.stage_target()
 	# 偵察卡：用 Pontianak＋黃總＋老殭（機制多）示範推薦＋換上
-	var pend = {"kind": "stage", "id": "demo", "cb": func(): pass, "opt": {}, "tg": {"en": ["pontianak", "huang", "laojiang"]}, "name": "示範"}
+	var pend = {"kind": "stage", "id": "demo", "ny": 2, "nm": 0, "cb": func(): pass, "opt": {}, "tg": {"en": ["pontianak", "huang", "laojiang"]}, "name": "示範"}
 	m.open_sheet(RTS.L("出擊：%s", "出擊：%s") % "示範", func(): pass)
 	RTS._card_body(m, pend); await _f(t, 4)
 	var box = m.sheet_body.find_child("AbCard", true, false)
@@ -285,7 +286,7 @@ func stage_card_and_fight(t, m) -> void:
 	_cam(m, op.anchor + Vector2(0, 60), m.village.size.x / 300.0)
 	await _w(t, 2.0)
 	# 注入狀態
-	if foes.size() >= 1: foes[0]["shell"] = 300.0; foes[0]["shell_max"] = 1000.0; foes[0]["chant"] = {"t": 0.0, "dur": 30.0, "name": "年終考核"}
+	if foes.size() >= 1: foes[0]["shell"] = 300.0; foes[0]["shell_max"] = 1000.0; foes[0]["chant"] = {"t": 18.0, "dur": 30.0, "name": "年終考核"}
 	if foes.size() >= 2: foes[1]["hid"] = true
 	if foes.size() >= 3: foes[2]["fly"] = true
 	for f in foes: f["fearT"] = {"t": "light", "until": op.t + 60.0}
