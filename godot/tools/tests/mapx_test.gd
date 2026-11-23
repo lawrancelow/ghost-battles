@@ -105,6 +105,7 @@ func _data_check(c: int) -> void:
 		for s2 in so:
 			if s2 != s and p.distance_to(ZD.v2(s2.pos)) < 200.0: ov_ok = false
 		for e in ZD.ring_props(c):
+			if str(e[0]) in ["tr_mt_bridge", "proc:steps"]: continue   # [integ] 出路畫面（吊橋／石級）本身就喺路口
 			if p.distance_to(Vector2(float(e[1]), float(e[2]))) < 100.0: prop_ok = false
 	_chk(tag + "據點喺自己嗰圈入面", pos_ok, bad_l)
 	_chk(tag + "據點互相唔重疊（≥200）", ov_ok)
@@ -134,7 +135,7 @@ func _data_check(c: int) -> void:
 	var per = [0, 0, 0, 0, 0]; var tr = [0, 0, 0, 0, 0]
 	for e in ZD.ring_props(c):
 		per[int(e[5])] += 1
-		if str(e[0]).begins_with("tr_"): tr[int(e[5])] += 1
+		if str(e[0]).begins_with("tr_") and str(e[0]) != "tr_mt_bridge": tr[int(e[5])] += 1   # [integ] dirs4 出路吊橋唔計點綴
 	_chk(tag + "每圈有點綴散件；荒野／深處／最外圈新地貌圖只做點綴（≤60 件）", per[1] > 20 and per[2] > 20 and per[3] > 20 and per[4] > 20 and tr[2] >= 5 and tr[3] >= 5 and tr[4] >= 5 and tr[1] == 0 and tr[2] + tr[3] + tr[4] <= 60, [per, tr])
 	var tex_ok = true
 	for k in ["tr_wood_deadtrees", "tr_wood_log", "tr_wood_thorn", "tr_wood_fence", "tr_ruin_arch", "tr_ruin_wall", "tr_swamp_pool", "tr_swamp_roots", "tr_mt_rocks", "tr_mt_pine_cliff", "tr_mt_bridge", "tr_mt_watchpost"]:

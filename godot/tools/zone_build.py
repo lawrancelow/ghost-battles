@@ -1171,6 +1171,9 @@ def _rings(M, ci):
         else:
             props = [o for o in props if math.dist((o[1], o[2]), (ex[0], ex[1] + nv[1] * 110)) > 150]
             for i in range(6): props.append(["proc:steps", round(ex[0]), round(ex[1] + nv[1] * (14 + i * 26)), 56, False, 1])
+    # [integ] 據點營地範圍唔擺散件（四方向重排據點後要再清一次）
+    _sp = [tuple(e["pos"]) for e in M.get("sorties", [])]
+    props = [o for o in props if str(o[0]) in ("tr_mt_bridge", "proc:steps") or all(math.dist((o[1], o[2]), q) >= 100 for q in _sp)]
     props.sort(key=lambda e: e[2])
     M["ring_props"] = props
 for _ci, _M in enumerate((M0, M1, M2, M3, M4, M5)): _rings(_M, _ci)
