@@ -2,7 +2,8 @@
 # 用法：bash /home/claude/setup/edtest.sh <godot目錄> eqv2 res://tools/tests/eqview2_test.gd cmp|game|perf|all <秒>
 #   cmp ：6 隻唔同體型名鬼 × 3 方案 × 3 狀態（待機／普攻中／放技能中）比較圖 → /home/claude/docs/shots/eqview2/compare_*.png
 #         檢查：B／C 待機喺 1.25H 框內、任何狀態唔高過頭頂資訊線、兵器／徽章唔遮臉
-#   game：地圖戰鬥（1-1）實戰：三方案各一張近鏡；B 方案連續截幀（/tmp/eqv2_frames → b_anim.mp4＋b_anim.png 八格）
+#   game：地圖戰鬥（1-1）實戰：三方案各一張近鏡（all＝cmp＋game）
+#   video：另開一次（乾淨開局）：只派阿福、B 方案連續截幀 /tmp/eqv2_frames → ffmpeg 合成 b_anim.mp4、揀 8 格拼 b_anim.png
 #   perf：同一場大戰（8 隊）分別用 pin／float／strike 量幀時間
 #   正式裝備圖 eqi_*（未批准、唔入 repo）：由 assets/spr 直接載入，只用嚟截圖
 extends RefCounted
@@ -315,8 +316,6 @@ func _game(t, m) -> void:
 		ci.save_png(SHOTS + "ingame_%s_%s_zoom.png" % [sv[1], sv[0]])
 	EV.view_test = ""
 	B_end(op)
-	await _w(t, 3.0)
-	await _video(t, m)
 func _video(t, m) -> void:
 	# 乾淨示範：只派阿福一隻（冇陰兵、冇隊友技能特效遮住），由開打前行近敵人開始錄
 	await _team(t, ["afu"])
