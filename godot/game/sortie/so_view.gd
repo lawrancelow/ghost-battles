@@ -63,6 +63,7 @@ static func draw(v, n: CanvasItem, f: Font, vr: Rect2) -> void:
 				l2 = L("重生 %d:%02d", "重生 %d:%02d") % [left / 60, left % 60]
 				bg = Color(0.2, 0.2, 0.2, 0.88); bd = Color("#909090"); col = Color("#e0e0e0")
 		var w = maxf(f.get_string_size(l1, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x, f.get_string_size(l2, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x)
+		if v.has_method("_avoid_w"): v._avoid_w(at + Vector2(0, 40), Rect2(-w / 2 - 10, -18, w + 20, 48))   # [abui] 木牌唔畀戰鬥字蓋住
 		n.draw_style_box(v._box(Color(0, 0, 0, 0.35), 6), Rect2(-w / 2 - 6, -13, w + 16, 44))
 		n.draw_style_box(v._box(bd, 6), Rect2(-w / 2 - 8, -16, w + 16, 44))
 		n.draw_style_box(v._box(bg, 5), Rect2(-w / 2 - 6, -14, w + 12, 40))

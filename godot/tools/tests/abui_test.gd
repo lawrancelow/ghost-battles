@@ -17,6 +17,7 @@ const AB = preload("res://game/rts/abil.gd")
 const AC = preload("res://game/rts/ab_card.gd")
 const AH = preload("res://game/rts/ab_hud.gd")
 const AI = preload("res://game/rts/ab_icon.gd")
+const AL = preload("res://game/rts/ab_lay.gd")
 
 func _p(m): print("[abui] ", m)
 func _chk(name: String, cond: bool, extra = "") -> void:
@@ -96,7 +97,7 @@ func _run(t) -> void:
 # ---- stub 介面 ----
 func data_check() -> void:
 	_chk("AB.on() 開（冇 abil.json 用後備表）", AB.on())
-	_chk("AB.mechs_of：Pontianak 識飛", AB.mechs_of("pontianak").has("fly"), AB.mechs_of("pontianak"))
+	_chk("AB.mechs_of：Pontianak 識飛", AC.enemy_mechs(["pontianak"]).has("fly"), AC.enemy_mechs(["pontianak"]))
 	var allc = true
 	for m in AI.INFO.keys():
 		if m.begins_with("st_") or m in AI.TAGS: continue
@@ -130,7 +131,10 @@ func calc_check() -> void:
 	_chk("敵人機制合併唔重複", ms.size() == 6 and ms.has("fly") and ms.has("summon"), ms)
 	var cv = AC.cover(AC.team_now(), null, ms)
 	_chk("✔ 飛行：小紙（遠）", (cv.fly as Array).size() >= 1 and str(cv.fly[0].g.k) == "xiaozhi", cv.fly)
-	_chk("✘ 嚇氣光環：隊入面冇「定」", (cv.fear_aura as Array).is_empty())
+	var has_st = false   # 數據會改（abcore 正式表）：以隊員實際標籤判斷 ✔／✘ 啱唔啱
+	for g in AC.team_now():
+		for tg in AC.tags(J.str(g.k)): if tg in AC.counters("fear_aura"): has_st = true
+	_chk("嚇氣光環：✔／✘ 同隊員標籤一致（隊有「定」＝%s）" % has_st, (cv.fear_aura as Array).is_empty() != has_st, cv.fear_aura)
 	var rc = AC.recommend(ms)
 	var rk = []
 	for r in rc: rk.append(str(r.g.k))
@@ -186,7 +190,13 @@ func _all_in(root: Control, box: Rect2) -> Array:
 		for x in c.get_children():
 			if x is Control and x.visible:
 				var r = (x as Control).get_global_rect()
-				if r.size.x > 0 and not box.grow(1.0).encloses(r): badl.append([x.name, r])
+				var clip = box
+				var a = x.get_parent()
+				while a != null and a != root:   # 喺可捲區入面：以可捲區為界（捲出去嘅本來就睇唔到）
+					if a is ScrollContainer: clip = (a as Control).get_global_rect(); break
+					a = a.get_parent()
+				var chk = r if clip == box else Rect2(r.position.x, box.position.y, r.size.x, 1.0)   # 可捲區入面：只查左右
+				if r.size.x > 0 and not box.grow(1.0).encloses(chk): badl.append([x.name, r])
 				st.append(x)
 	return badl
 func _fonts_ok(root: Node) -> Array:
@@ -308,8 +318,15 @@ func stage_card_and_fight(t, m) -> void:
 	await _f(t, 3)
 	var txts = []
 	for x in AH.FL: txts.append(x.text)
-	_chk("ab 事件飄字：現形！殼破！屍變！（唔識嘅唔飄）", txts.has(RTS.L("現形！", "現形！")) and txts.has(RTS.L("殼破！", "殼破！")) and txts.has(RTS.L("屍變！", "屍變！")) and txts.size() == n0 + 3, txts)
+	_chk("ab 事件飄字：現形！殼破！屍變！（唔識嘅唔飄）", txts.has(RTS.L("現形！", "現形！")) and txts.has(RTS.L("殼破！", "殼破！")) and txts.has(RTS.L("屍變！", "屍變！")) and not str(txts).contains("not_a_prim"), [n0, txts])
+	# 節流：光環每格刷新「免疫」→ 同一隻 3 秒（光環型 12 秒）內只飄一次
+	var vv = foes[0]; var fl0 = AH.FL.size(); var dr0 = AH.STAT_DROP
+	for i in 20: AH.on_event(op, ["ab", null, "immune", vv])
+	var nim = 0
+	for x in AH.FL: if x.u == vv and x.base == RTS.L("免疫", "免疫"): nim += 1
+	_chk("節流：同一隻連發 20 次「免疫」只飄 1 個、唔會變「免疫×20」", nim == 1 and AH.STAT_DROP - dr0 == 19, [nim, AH.STAT_DROP - dr0])
 	await _w(t, 0.15); await _shot(t, "07_fight_status_icons")
+	await dense(t, m, op, foes, heroes)
 	# 長按技能鈕切自動／手動，而且真係影響模擬
 	var h = null
 	for u in heroes: if J.num(u.hp) > 0 and J.t(u.get("out")): h = u; break
@@ -348,3 +365,64 @@ func stage_card_and_fight(t, m) -> void:
 		J.G.get("Battle")["auto"] = false
 	S.erase("ab_auto")
 	RTS.recall(op)
+
+# ---- 密集場面：3／5／8 隻敵人擠埋一齊，頭頂字、飄字、建築字完全唔重疊 ----
+func _overlap_check(tag: String) -> void:
+	var pl: Array = AL.placed
+	var bad_pairs = []
+	for i in pl.size():
+		for j in range(i + 1, pl.size()):
+			if (pl[i] as Rect2).intersects(pl[j]): bad_pairs.append([i, j])
+		for o in AL.obs:
+			if (pl[i] as Rect2).intersects(o): bad_pairs.append([i, "obs"])
+	var ext_bad = []   # 村子字（派鬼守夜等）同血條：撞到就要讓路（唔畫）
+	for id in AL.ext:
+		for r in AL.ext[id][1]:
+			for b in AL.bars: if (r as Rect2).intersects(b): ext_bad.append([r, b])
+	_chk("%s：村子字唔撞血條（撞到嗰格讓路）" % tag, ext_bad.is_empty(), ext_bad.slice(0, 3))
+	var nb = 0; var nf = 0
+	var hid = []
+	for b in AL.blocks:
+		if b.show: nb += 1
+		else: hid.append([str(b.u.get("k")), b.S, b.w, b.h])
+	if hid.size(): _p("  %s 收埋嘅塊：%s" % [tag, str(hid)])
+	for x in AL.fls: if x.get("show", false): nf += 1
+	_chk("%s：頭頂資訊塊、飄字兩兩唔重疊，亦唔蓋血條／木牌／村子字（塊 %d、飄字 %d、障礙 %d、村子字 %d）" % [tag, nb, nf, AL.obs.size(), AL.ext.size()], bad_pairs.is_empty(), bad_pairs.slice(0, 5))
+	var ne = 0; var nes = 0
+	for b in AL.blocks:
+		if b.u is Dictionary and J.num(b.u.get("side", 0)) != 0:
+			ne += 1
+			if b.show: nes += 1
+	_chk("%s：敵人頭頂資訊全部照顯示（唔係靠收埋；擠到冇位只收遊魂兵牌）" % tag, nes == ne, [nes, ne, nb, AL.blocks.size()])
+func dense(t, m, op, foes: Array, heroes: Array) -> void:
+	var base: Dictionary = foes[0]
+	var extra = []
+	for i in 5:   # 補夠 8 隻敵人
+		var d = base.duplicate(); d["st"] = {}; d["anim"] = null; d["tg"] = null; d["casting"] = null; d["_id"] = "dx%d" % i; d.erase("chant"); d.erase("hid"); d.erase("fly")
+		op.units.append(d); extra.append(d)
+	var all_f = op.units.filter(func(u): return J.num(u.side) == 1 and J.num(u.hp) > 0)
+	var c: Vector2 = op.anchor + Vector2(0, -30)
+	for n in [3, 5, 8]:
+		for i in all_f.size():
+			var u = all_f[i]
+			if i < n:
+				u["hp"] = 1e6; u["spd"] = 0.0
+				u["p"] = c + Vector2((i % 4 - 1.5) * 16.0, (i / 4) * 18.0)
+				u["fearT"] = {"t": "light", "until": op.t + 60.0}
+				u["shell"] = 300.0; u["shell_max"] = 1000.0
+				if i % 3 == 0: u["chant"] = {"t": 9.0, "dur": 20.0, "name": "年終考核"}
+				if i % 3 == 1: u["fly"] = true
+			else:
+				u["p"] = c + Vector2(600, 600)
+		for i in n:
+			var v = all_f[i]
+			op.events.append(["ab", null, ["reveal", "shell_break", "revive", "seal", "interrupt", "summon", "execute", "clone_pop"][(i + n) % 8], v])
+			op.text(op.head(v) + Vector2(0, -22), "怕燈・失神", "#e8d0ff")
+		_cam(m, c + Vector2(0, 40), m.village.size.x / 300.0)
+		await _w(t, 0.5)
+		_overlap_check("密集 %d 隻" % n)
+		await _shot(t, "11_dense_%d" % n)
+		await _w(t, 0.6)
+		_overlap_check("密集 %d 隻（0.6 秒後）" % n)
+		await _shot(t, "11_dense_%d_b" % n)
+	for d in extra: op.units.erase(d)
