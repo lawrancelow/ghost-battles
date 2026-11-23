@@ -322,7 +322,10 @@ func camp_check(t, m) -> void:
 		var dr = NG.D().BOSS.bm_taotie.drop
 		var san1 = J.num(S.soul.get("san", 0)) if S.get("soul") is Dictionary else 0.0
 		_chk("打贏魔王：戰報勝利、首勝", J.t(rep.get("win")) and J.t(rep.get("first")), rep.get("head"))
-		_chk("掉散魂（首勝 %d＋%d）" % [int(dr.first), int(dr.win)], absf(san1 - san0 - dr.first - dr.win) < 0.01, [san0, san1])
+		# soul 線：野外出擊打贏另加散魂（第 4 圈 SAN[3]），唔關魔王掉落
+		var extra = 0.0
+		if ResourceLoader.exists("res://game/soul/soul_data.gd"): extra = float(load("res://game/soul/soul_data.gd").SAN[3])
+		_chk("掉散魂（首勝 %d＋%d＋出擊 %d）" % [int(dr.first), int(dr.win), int(extra)], absf(san1 - san0 - dr.first - dr.win - extra) < 0.01, [san0, san1])
 		_chk("戰報有散魂一行", str(rep.get("full", "")).contains("散魂"), rep.get("full"))
 		_chk("魔王唔會變名鬼（S.ghosts 冇 bm_）", S.ghosts.all(func(g): return not str(g.k).begins_with("bm_")))
 		_chk("記錄打低魔王", NGB.beat("bm_taotie") == 1)
