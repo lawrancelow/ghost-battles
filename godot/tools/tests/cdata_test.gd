@@ -259,7 +259,7 @@ func counter_check() -> void:
 	var sb = []
 	for x in D.get("subs", []):
 		var now = str(x.get("now", ""))
-		var EN = AB.enemy(now)
+		var EN = AB.data().get("ENEMY", {}).get(now, {})   # [roster2] integ 嘅 abil.gd 冇 enemy()（parse error），改讀 data()
 		if not ET.has(now) or str(EN.get("sys", "")) != str(x.get("sys", "")): sb.append(x.get("plan"))
 	_chk("頂替表已撤（新鬼、新雜兵全部用真身出場）", (D.get("subs", []) as Array).is_empty(), D.get("subs"))
 	var nwin = {}

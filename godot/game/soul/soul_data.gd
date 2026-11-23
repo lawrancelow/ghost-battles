@@ -182,6 +182,15 @@ static func guard_of(e: Dictionary) -> String:
 	if k == "": k = _ct_guard(e)
 	if k == "": k = str(D().CAMP.get(ckey(e), ""))
 	return k if is_ghost(k) else ""
+# [roster2] 雙駐守：counter.json camps[id].guard2（第二批新鬼）；打贏同原駐守一樣掉主魂（counter 關咗／魔王據點＝冇）
+static func guard2_of(e: Dictionary) -> String:
+	if e.is_empty() or str(e.get("bm", "")) != "": return ""
+	if not load("res://game/counter/ct_data.gd").on(): return ""
+	var cs = CT().get("camps")
+	var d = cs.get(str(e.get("id", ""))) if cs is Dictionary else null
+	if not (d is Dictionary) or int(J.num(d.get("c", e.get("c", 0)))) != int(J.num(e.get("c", 0))): return ""
+	var k = str(d.get("guard2", ""))
+	return k if is_ghost(k) and k != guard_of(e) else ""
 static func _camps(c: int) -> Array: return load("res://game/sortie/so_data.gd").camps(c)
 # 副魂：優先用「同場另一隻名鬼」（真係打過佢；冇主魂據點嘅鬼優先）；冇就用同章往後第 5 個據點嘅駐守鬼
 static var _gset = null
@@ -189,7 +198,9 @@ static func _guards() -> Dictionary:
 	if _gset == null:
 		_gset = {}
 		for c in 6:
-			for e in _camps(c): _gset[guard_of(e)] = true
+			for e in _camps(c):
+				_gset[guard_of(e)] = true
+				_gset[guard2_of(e)] = true   # [roster2]
 	return _gset
 static func camp_named(e: Dictionary) -> Array:   # 據點入面嘅名鬼（counter.json en → soul.json CAMP_EN）
 	var cs = CT().get("camps")
@@ -200,9 +211,10 @@ static func camp_named(e: Dictionary) -> Array:   # 據點入面嘅名鬼（coun
 	return o
 static func sec_of(e: Dictionary) -> String:
 	var g = guard_of(e)
+	var g2 = guard2_of(e)   # [roster2] 雙駐守唔做副魂
 	var best = ""
 	for k in camp_named(e):
-		if k == g: continue
+		if k == g or k == g2: continue
 		if not _guards().has(k): return k
 		if best == "": best = k
 	if best != "": return best
@@ -224,12 +236,15 @@ static func sources(k: String) -> Array:   # [{e, pri:bool}]：邊度有（所�
 	for c in 6:
 		for e in _camps(c):
 			if guard_of(e) == k: o.append({"e": e, "pri": true})
+			elif guard2_of(e) == k: o.append({"e": e, "pri": true, "co": true})   # [roster2]
 			elif sec_of(e) == k: o.append({"e": e, "pri": false})
 	return o
 static func ch_of(k: String) -> int:   # 招降費用嘅「章」
 	var best = 99
 	for key in D().CAMP:
 		if str(D().CAMP[key]) == k: best = mini(best, int(str(key).get_slice(":", 0)))
+	for key in D().get("CAMP2", {}):   # [roster2] 雙駐守
+		if str(D().CAMP2[key]) == k: best = mini(best, int(str(key).get_slice(":", 0)))
 	if best < 99: return best
 	return int(J.num(D().STORY_CH.get(k, 0)))
 
@@ -283,7 +298,8 @@ static func on_sortie_win(e: Dictionary, first: bool, good := false) -> Dictiona
 	var parts = []
 	var k = guard_of(e)
 	var was_ready = {}
-	for kk in [k, sec_of(e)]: if kk != "": was_ready[kk] = can_summon(kk).ok
+	var k3 = guard2_of(e)   # [roster2] 雙駐守
+	for kk in [k, sec_of(e), k3]: if kk != "": was_ready[kk] = can_summon(kk).ok
 	if k != "" and guard_live(e):
 		var base = PRI[r] + (1 if rng.randf() < PRI_BONUS_P else 0)
 		var n = maxi(1, int(round(base * mul)))
@@ -292,6 +308,13 @@ static func on_sortie_win(e: Dictionary, first: bool, good := false) -> Dictiona
 		var g = gain(k, n, "sortie")
 		out.items.append({"k": k, "n": n, "sec": false})
 		parts.append(_gain_txt(g))
+	if k3 != "":   # [roster2] 雙駐守：同原駐守一樣嘅主魂數（唔另外抽隨機，唔影響副魂機率）
+		var n3 = maxi(1, int(round(PRI[r] * mul)))
+		if good: n3 += GOOD_BONUS
+		if first: n3 += FIRST[r]
+		var g3 = gain(k3, n3, "sortie")
+		out.items.append({"k": k3, "n": n3, "sec": false, "co": true})
+		parts.append(_gain_txt(g3))
 	# 副魂（保底）
 	var k2 = sec_of(e)
 	if k2 != "":
@@ -561,6 +584,8 @@ static func migrate(s: Dictionary, o: Dictionary) -> void:
 			if k == "" or (story(k) and not owned(k)): continue
 			var n = FIRST[ri(e.ring)] + 2 * mini(int(J.num(d.get("wins", 0))), 5)
 			gain(k, n, "mig"); nsh += n
+			var k3 = guard2_of(e)   # [roster2] 雙駐守一樣補
+			if k3 != "": gain(k3, n, "mig"); nsh += n
 	# 3. 已打低嘅野外王（非劇情）：+15
 	var zz = s.get("zone")
 	if zz is Dictionary and zz.get("boss") is Dictionary:

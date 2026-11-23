@@ -103,10 +103,10 @@ func _run(t) -> void:
 # ---- 圖鑑資料 ----
 func data_check() -> void:
 	var L = S2.list()
-	_chk("圖鑑 101 格", L.size() == 101, L.size())
+	_chk("圖鑑 131 格（roster2 加第二批 30）", L.size() == 131, L.size())
 	var ks = {}
 	for x in L: ks[str(x.k)] = true
-	_chk("101 格冇重複", ks.size() == 101)
+	_chk("131 格冇重複", ks.size() == 131)
 	_chk("第一格係阿福", str(L[0].k) == "afu")
 	var miss = []
 	for k in J.G.GHOSTS:
@@ -114,7 +114,7 @@ func data_check() -> void:
 		if (str(d.get("q", "")) == "名" or k == "afu") and not ks.has(k): miss.append(k)
 	_chk("現有 72 隻名鬼＋阿福全部有格", miss.is_empty() and J.G.GHOSTS.size() == 73, miss)
 	var nw = L.filter(func(x): return str(x.k).begins_with("nw_"))
-	_chk("新鬼 26 隻、冇 Sundel Bolong、有 Teke Teke", nw.size() == 26 and not ks.has("nw_sundel") and ks.has("nw_teketeke"), nw.size())
+	_chk("新鬼 26＋第二批 30 隻（roster2）、冇 Sundel Bolong、有 Teke Teke", nw.size() == 56 and not ks.has("nw_sundel") and ks.has("nw_teketeke"), nw.size())
 	_chk("牛頭、馬面升名鬼有格", ks.has("niutou") and ks.has("mamian"))
 	var nm_ok = true
 	for x in L:
@@ -123,7 +123,7 @@ func data_check() -> void:
 	_chk("定案名：狐妖、紙紮跑車", nm_ok)
 	var cnt = {}
 	for x in L: cnt[S2.pin(str(x.k))] = int(cnt.get(S2.pin(str(x.k)), 0)) + 1
-	_chk("每格都有品級（凡靈煞王＋阿福）", int(cnt.get("凡", 0)) + int(cnt.get("靈", 0)) + int(cnt.get("煞", 0)) + int(cnt.get("王", 0)) == 100 and int(cnt.get("主", 0)) == 1, cnt)
+	_chk("每格都有品級（凡靈煞王＋阿福）", int(cnt.get("凡", 0)) + int(cnt.get("靈", 0)) + int(cnt.get("煞", 0)) + int(cnt.get("王", 0)) == 130 and int(cnt.get("主", 0)) == 1, cnt)   # [roster2] 100→130
 	var sysc = {}
 	for x in L: if str(x.k) != "afu": sysc[S2.sys_of(str(x.k))] = true
 	_chk("每格都有 8 系之一", sysc.size() == 8 and not sysc.has(""), sysc.keys())

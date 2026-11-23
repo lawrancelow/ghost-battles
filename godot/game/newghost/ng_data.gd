@@ -22,7 +22,24 @@ static func D() -> Dictionary:
 			var j = JSON.parse_string(f.get_as_text())
 			if j is Dictionary: _D = j
 	return _D
-static func reload() -> void: _D = null
+static func reload() -> void: _D = null; _D2 = null
+# [roster2] 第二批新名鬼 30 隻：data/nat/newghost2.json（tools/newghost/build_newghost2.py 由 ng_src2.py 生成）；install() 尾一行 install2() 登記
+const PATH2 := "res://data/nat/newghost2.json"
+static var _D2 = null
+static var installed2 := false
+static func D2() -> Dictionary:
+	if _D2 == null:
+		_D2 = {}
+		var f = FileAccess.open(PATH2, FileAccess.READ)
+		if f:
+			var j = JSON.parse_string(f.get_as_text())
+			if j is Dictionary: _D2 = j
+	return _D2
+static func keys2() -> Array: return D2().get("ROSTER2", [])                 # [roster2] 第二批 30
+static func roster_all() -> Array:                                            # [roster2] 131 隻（冇第二批就 101）
+	var r = D2().get("ROSTER", [])
+	return r if r is Array and r.size() else roster()
+static func _g2(sec: String, k: String): return D().get(sec, {}).get(k, D2().get(sec, {}).get(k))   # [roster2] 第一批冇就搵第二批
 
 # ---------------- 名冊查詢 ----------------
 static func keys() -> Array: return D().get("GHOSTS", {}).keys()          # 新名鬼＋牛頭馬面（28）
@@ -30,19 +47,20 @@ static func new_keys() -> Array: return keys().filter(func(k): return str(k).beg
 static func roster() -> Array: return D().get("ROSTER", [])                # 101 隻
 static func boss_keys() -> Array: return D().get("BOSS", {}).keys()
 static func fod_keys() -> Array: return D().get("FOD", {}).keys()
-static func pin(k: String) -> String: return str(D().get("PIN", {}).get(k, ""))
+static func pin(k: String) -> String: return str(_g2("PIN", k) if _g2("PIN", k) != null else "")
 static func abil(k: String) -> Dictionary:
-	var a = D().get("ABIL", {}).get(k)
+	var a = _g2("ABIL", k)
 	return a if a is Dictionary else {}
 static func enemy(k: String) -> Dictionary:
-	var e = D().get("ENEMY", {}).get(k)
+	var e = _g2("ENEMY", k)
 	return e if e is Dictionary else {}
 static func alias(k: String) -> String: return str(D().get("ALIAS", {}).get(k, k))
 static func links() -> Array: return D().get("LINK", [])
+static func links_all() -> Array: return links() + D2().get("LINK", [])   # [roster2] 25＋第二批 5
 
 # ---------------- 立繪（真圖優先，冇就暫代圖） ----------------
 static func spr_path(k: String) -> String:
-	var a = D().get("ART", {}).get(k)
+	var a = _g2("ART", k)
 	if not (a is Dictionary): return ""
 	var real = SPR_DIR + str(a.spr) + ".webp"
 	if ResourceLoader.exists(real): return real
@@ -51,14 +69,16 @@ static func is_placeholder(k: String) -> bool: return spr_path(k).begins_with(PH
 static func placeholders() -> Array:
 	var o = []
 	for k in D().get("ART", {}): if is_placeholder(str(k)): o.append(str(k))
+	for k in D2().get("ART", {}): if is_placeholder(str(k)): o.append(str(k))   # [roster2]
 	return o
 
-static func _art() -> void:
+static func _art(d = null) -> void:
+	if d == null: d = D()   # [roster2] 第二批共用
 	var ART = J.G.get("ART")
 	var CH = J.gp(ART, "CHAR_H") if ART != null else null
 	var SO = J.gp(ART, "SOLID") if ART != null else null
-	for k in D().get("ART", {}):
-		var a = D().ART[k]
+	for k in d.get("ART", {}):
+		var a = d.ART[k]
 		var cur = Spr._man.get(str(k))
 		if cur == null or str(cur).begins_with(PH_DIR):   # spr_manifest 已有真圖（例如牛頭馬面、日後 art 線登記）就唔郁
 			Spr._man[str(k)] = spr_path(str(k)); Spr._tex.erase(str(k))
@@ -70,11 +90,12 @@ static func _put(dst, src: Dictionary, over := false) -> void:
 	if not (dst is Dictionary): return
 	for k in src:
 		if over or not dst.has(k): dst[k] = src[k].duplicate(true) if (src[k] is Dictionary or src[k] is Array) else src[k]
-static func _combos(arr) -> void:
+static func _combos(arr, d = null) -> void:
+	if d == null: d = D()   # [roster2]
 	if not (arr is Array): return
 	var have = {}
 	for c in arr: if c is Dictionary: have[str(c.get("id", ""))] = true
-	for c in D().get("COMBOS_OLD", []): if not have.has(str(c.id)): arr.append(c.duplicate(true))
+	for c in d.get("COMBOS_OLD", []): if not have.has(str(c.id)): arr.append(c.duplicate(true))
 
 static func install() -> void:
 	var d = D()
@@ -90,16 +111,33 @@ static func install() -> void:
 	_art()
 	merge_abil()
 	installed = true
+	install2()   # [roster2] 第二批 30 隻（newghost2.json）
+
+# [roster2] 同 install() 一樣登記第二批（GHOSTS／SKILLS／ENEMY_T／COMBOS／LANG／圖／ABIL／ENEMY／LINK）
+static func install2() -> void:
+	var d = D2()
+	if d.is_empty(): return
+	for tb in ["GHOSTS", "SKILLS", "ENEMY_T"]:
+		_put(J.G.get(tb), d.get(tb, {}))
+		_put(DB.D.get(tb), d.get(tb, {}))
+	_combos(J.G.get("COMBOS"), d); _combos(DB.D.get("COMBOS"), d)
+	var ZH = d.get("LANG_ZH", {})
+	var LANG = J.G.get("LANG")
+	if LANG != null and ZH.size(): J.mc(LANG, "add", [ZH])
+	if DB.D.get("LANG_ZH") is Dictionary: _put(DB.D.LANG_ZH, ZH)
+	_art(d)
+	merge_abil(null, d)
+	installed2 = true
 
 # abcore 嘅 abil.gd（data/abil.json）：ABIL／ENEMY 只加冇嘅 key；LINK 只加冇嘅 id（ABIL 段歸 newghost＋cdata；唔郁舊條目）
-static func merge_abil(A = null) -> void:
+static func merge_abil(A = null, d = null) -> void:
 	if A == null:
 		if not ResourceLoader.exists(ABIL_GD): return
 		var AB = load(ABIL_GD)
 		if AB == null or not AB.has_method("data"): return
 		A = AB.data()
 	if not (A is Dictionary) or A.is_empty(): return
-	var d = D()
+	if d == null: d = D()   # [roster2] 第二批共用
 	for sec in ["ABIL", "ENEMY"]:
 		if not (A.get(sec) is Dictionary): A[sec] = {}
 		for k in d.get(sec, {}): if not A[sec].has(k): A[sec][k] = d[sec][k]
@@ -138,7 +176,7 @@ static func active_links(team: Array) -> Array:
 	var o = []
 	var ks = {}
 	for x in team: ks[str(x)] = true
-	for L in links():
+	for L in links_all():   # [roster2]
 		var n = 0
 		for m in L.m: if ks.has(str(m)): n += 1
 		if n < int(L.need): continue
