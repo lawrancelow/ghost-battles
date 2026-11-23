@@ -1,0 +1,5890 @@
+{
+ "v": 1,
+ "note": "cdata 線生成（tools/cdata/build_cdata.py）。第一階段：新鬼／新雜兵用同系現有鬼頂替（subs）；plan＝原定組合（第二階段出圖後換返）。",
+ "scares": {
+  "breath": "吹氣",
+  "light": "燈",
+  "cold": "凍",
+  "sound": "怪聲",
+  "paper": "紙",
+  "phone": "電話",
+  "face": "鬼臉",
+  "shadow": "黑影"
+ },
+ "sys": {
+  "屍": {
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": "cold",
+   "why": {
+    "breath": "生人氣：一啖氣噴埋面就亂",
+    "sound": "雞啼：雞一啼就要返棺",
+    "cold": "屍體本來就凍"
+   }
+  },
+  "魂": {
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": "breath",
+   "why": {
+    "light": "遊魂怕光",
+    "shadow": "以為聻嚟咗（鬼之畏聻）",
+    "breath": "飄慣咗"
+   }
+  },
+  "紙紮": {
+   "fear": [
+    "light",
+    "breath"
+   ],
+   "imm": "paper",
+   "why": {
+    "light": "紙紮怕火",
+    "breath": "紙輕，一吹就飛",
+    "paper": "自己就係紙"
+   }
+  },
+  "妖": {
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": "shadow",
+   "why": {
+    "sound": "爆竹嚇走山臊",
+    "cold": "山精野獸一凍就要冬眠",
+    "shadow": "山林夜色係主場"
+   }
+  },
+  "厲": {
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": "sound",
+   "why": {
+    "phone": "「公司走唔開」嗰通電話",
+    "face": "笑佢樣衰",
+    "sound": "尖叫係佢哋專利"
+   }
+  },
+  "使": {
+   "fear": [
+    "paper",
+    "shadow"
+   ],
+   "imm": "face",
+   "why": {
+    "paper": "主人嘅契約字條",
+    "shadow": "以為主人返嚟",
+    "face": "自己最愛扮鬼臉"
+   }
+  },
+  "官": {
+   "fear": [
+    "paper",
+    "phone"
+   ],
+   "imm": "light",
+   "why": {
+    "paper": "公文、投訴信",
+    "phone": "上頭 call",
+    "light": "24 小時開燈返工"
+   }
+  },
+  "橫": {
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": "phone",
+   "why": {
+    "cold": "停屍間雪櫃",
+    "face": "扮佢死相",
+    "phone": "自己就係因為電話死"
+   }
+  }
+ },
+ "mult": {
+  "skill_fear": 1.35,
+  "skill_imm": 0.6,
+  "combo": 1.8,
+  "chase": 1.3,
+  "atk_fear": 1.15,
+  "atk_imm": 0.8,
+  "foe_fear": 1.25,
+  "foe_imm": 0.75,
+  "daze_s": 3.2,
+  "clamp": [
+   0.2,
+   4.0
+  ]
+ },
+ "mech": {
+  "飛": {
+   "melee": 0.3,
+   "aoe": 0.7,
+   "pull_s": 4.0,
+   "id": "fly",
+   "tags": [
+    "遠",
+    "拉"
+   ]
+  },
+  "隱": {
+   "cycle": 6.0,
+   "dur": 4.0,
+   "near": 80,
+   "aoe": 0.5,
+   "reveal_s": 8.0,
+   "reveal_r": 150,
+   "id": "stealth",
+   "tags": [
+    "照"
+   ]
+  },
+  "殼": {
+   "pct": 0.35,
+   "taken": 0.5,
+   "hits_x": 3.0,
+   "heavy_x": 2.0,
+   "heavy_m": 1.8,
+   "id": "shell",
+   "tags": [
+    "破"
+   ]
+  },
+  "再生": {
+   "pct": 0.025,
+   "boss_pct": 0.015,
+   "stop_s": 6.0,
+   "stop_sc": "cold",
+   "id": "regen",
+   "tags": [
+    "削"
+   ]
+  },
+  "散骨": {
+   "n": 3,
+   "hp": 0.25,
+   "id": "split",
+   "tags": [
+    "掃"
+   ]
+  },
+  "召喚": {
+   "n": 2,
+   "cap": 6,
+   "burst_m": 1.7,
+   "id": "summon",
+   "tags": [
+    "刺",
+    "削"
+   ]
+  },
+  "反傷": {
+   "pct": 0.2,
+   "id": "thorns",
+   "tags": [
+    "遠",
+    "回"
+   ]
+  },
+  "嚇氣光環": {
+   "r": 150,
+   "energy": -0.5,
+   "minion_atk": -0.2,
+   "dispel_sc": "face",
+   "dispel_s": 5.0,
+   "id": "fear_aura",
+   "tags": [
+    "定"
+   ]
+  },
+  "霸體": {
+   "immune": [
+    "down",
+    "air",
+    "push"
+   ],
+   "id": "cc_immune",
+   "tags": [
+    "破",
+    "刺"
+   ]
+  },
+  "屍變": {
+   "delay": 4.0,
+   "hp": 0.5,
+   "id": "revive",
+   "tags": [
+    "收"
+   ]
+  },
+  "突襲": {
+   "to": "back",
+   "id": "rush",
+   "tags": [
+    "定",
+    "拉"
+   ]
+  },
+  "迷魂": {
+   "cycle": 8.0,
+   "r": 150,
+   "n": 3,
+   "dur": 2.5,
+   "id": "confuse",
+   "tags": [
+    "定"
+   ]
+  },
+  "分身": {
+   "n": 2,
+   "absorb": 0.3,
+   "id": "clone",
+   "tags": [
+    "照",
+    "掃"
+   ]
+  }
+ },
+ "ch_k": {
+  "4": {
+   "hp": 0.7,
+   "atk": 0.55
+  },
+  "5": {
+   "hp": 0.65,
+   "atk": 0.5
+  }
+ },
+ "ring_mech": [
+  [
+   0,
+   1
+  ],
+  [
+   1,
+   2
+  ],
+  [
+   2,
+   3
+  ],
+  [
+   3,
+   5
+  ]
+ ],
+ "boss_hp": 1.6,
+ "gangs": {
+  "0": {
+   "W": {
+    "name": "餓鬼坑幫",
+    "sys": [
+     "魂"
+    ],
+    "mech_plan": [
+     "再生",
+     "霸體"
+    ],
+    "mem": [
+     "n30_qionggui",
+     "n30_danxiao",
+     "n30_jiugui",
+     "pg_tuimo"
+    ],
+    "fod": [
+     "egui",
+     "youhun"
+    ],
+    "mem_now": [
+     "n30_qionggui",
+     "n30_danxiao",
+     "n30_jiugui",
+     "pg_tuimo"
+    ],
+    "fod_now": [
+     "egui",
+     "youhun"
+    ]
+   },
+   "E": {
+    "name": "亂葬崗骷髏",
+    "sys": [
+     "橫",
+     "魂",
+     "屍"
+    ],
+    "mech_plan": [
+     "飛",
+     "散骨"
+    ],
+    "mem": [
+     "n30_wutou",
+     "nw_guihuo",
+     "n30_jerangkung",
+     "n30_jerangkung"
+    ],
+    "fod": [
+     "zd_bone",
+     "youhun"
+    ],
+    "mem_now": [
+     "n30_wutou",
+     "n30_xiasi",
+     "n30_jerangkung",
+     "n30_jerangkung"
+    ],
+    "fod_now": [
+     "zombie",
+     "youhun"
+    ]
+   },
+   "S": {
+    "name": "紙錢陣",
+    "sys": [
+     "紙紮"
+    ],
+    "mech_plan": [
+     "反傷",
+     "突襲"
+    ],
+    "mem": [
+     "n30_kasaobake",
+     "n30_chochin",
+     "n30_kasaobake",
+     "n30_chochin"
+    ],
+    "fod": [
+     "zhiren"
+    ],
+    "mem_now": [
+     "n30_kasaobake",
+     "n30_chochin",
+     "n30_kasaobake",
+     "n30_chochin"
+    ],
+    "fod_now": [
+     "zhiren"
+    ]
+   },
+   "N": {
+    "name": "荒田橫死組",
+    "sys": [
+     "橫",
+     "魂",
+     "妖"
+    ],
+    "mech_plan": [
+     "再生",
+     "分身"
+    ],
+    "mem": [
+     "n30_yesi",
+     "n30_maoshi",
+     "nw_huli",
+     "nw_huli"
+    ],
+    "fod": [
+     "zd_hengsi",
+     "egui"
+    ],
+    "mem_now": [
+     "n30_yesi",
+     "n30_maoshi",
+     "n30_baigujing",
+     "n30_baigujing"
+    ],
+    "fod_now": [
+     "shuigui",
+     "egui"
+    ]
+   }
+  },
+  "1": {
+   "W": {
+    "name": "甘榜使魔",
+    "sys": [
+     "使"
+    ],
+    "mech_plan": [
+     "飛",
+     "隱",
+     "再生",
+     "召喚",
+     "分身"
+    ],
+    "mem": [
+     "n30_pelesit",
+     "n30_polong",
+     "nw_bajang",
+     "n30_hanturaya"
+    ],
+    "fod": [
+     "xiaogui"
+    ],
+    "mem_now": [
+     "n30_pelesit",
+     "n30_polong",
+     "n30_taozhai",
+     "n30_hanturaya"
+    ],
+    "fod_now": [
+     "xiaogui"
+    ]
+   },
+   "E": {
+    "name": "廢膠廠山精",
+    "sys": [
+     "妖"
+    ],
+    "mech_plan": [
+     "隱",
+     "霸體"
+    ],
+    "mem": [
+     "n30_bunian",
+     "n30_bunian",
+     "n30_genderuwo",
+     "n30_genderuwo"
+    ],
+    "fod": [
+     "zd_shanjing"
+    ],
+    "mem_now": [
+     "n30_bunian",
+     "n30_bunian",
+     "n30_genderuwo",
+     "n30_genderuwo"
+    ],
+    "fod_now": [
+     "n30_kappa"
+    ]
+   },
+   "S": {
+    "name": "椰林膠園橫死組",
+    "sys": [
+     "橫"
+    ],
+    "mech_plan": [
+     "殼",
+     "反傷"
+    ],
+    "mem": [
+     "n30_shidu",
+     "n30_yezi",
+     "n30_liulian",
+     "n30_liulian"
+    ],
+    "fod": [
+     "zd_hengsi"
+    ],
+    "mem_now": [
+     "n30_shidu",
+     "n30_yezi",
+     "n30_liulian",
+     "n30_liulian"
+    ],
+    "fod_now": [
+     "shuigui"
+    ]
+   },
+   "N": {
+    "name": "竹林賭檔",
+    "sys": [
+     "魂",
+     "厲"
+    ],
+    "mech_plan": [
+     "隱",
+     "殼",
+     "嚇氣光環",
+     "突襲",
+     "分身"
+    ],
+    "mem": [
+     "n30_yangui",
+     "n30_dugui",
+     "n30_guhangui",
+     "n30_hantugalah",
+     "nw_teketeke"
+    ],
+    "fod": [
+     "youhun",
+     "zd_hongyi"
+    ],
+    "mem_now": [
+     "n30_yangui",
+     "n30_dugui",
+     "n30_guhangui",
+     "n30_hantugalah",
+     "n30_kuchisake"
+    ],
+    "fod_now": [
+     "youhun",
+     "pg_ex"
+    ]
+   }
+  },
+  "2": {
+   "W": {
+    "name": "義莊屍隊",
+    "sys": [
+     "屍"
+    ],
+    "mech_plan": [
+     "殼",
+     "再生",
+     "嚇氣光環",
+     "霸體",
+     "屍變"
+    ],
+    "mem": [
+     "n30_jenglot",
+     "nw_baimao",
+     "nw_buhuagu",
+     "n30_hanba"
+    ],
+    "fod": [
+     "zombie"
+    ],
+    "mem_now": [
+     "n30_jenglot",
+     "n30_jerangkung",
+     "n30_dongsi",
+     "n30_hanba"
+    ],
+    "fod_now": [
+     "zombie"
+    ]
+   },
+   "E": {
+    "name": "亂石峽山妖",
+    "sys": [
+     "妖"
+    ],
+    "mech_plan": [
+     "再生",
+     "突襲",
+     "迷魂",
+     "分身"
+    ],
+    "mem": [
+     "nw_daqiang",
+     "n30_tikbalang",
+     "n30_shanxiao",
+     "n30_baigujing"
+    ],
+    "fod": [
+     "zd_shanjing"
+    ],
+    "mem_now": [
+     "n30_tikbalang",
+     "n30_tikbalang",
+     "n30_shanxiao",
+     "n30_baigujing"
+    ],
+    "fod_now": [
+     "n30_kappa"
+    ]
+   },
+   "S": {
+    "name": "古道收數佬",
+    "sys": [
+     "使",
+     "魂"
+    ],
+    "mech_plan": [
+     "隱",
+     "再生",
+     "召喚",
+     "屍變",
+     "分身"
+    ],
+    "mem": [
+     "n30_changgui",
+     "n30_taozhai",
+     "nw_ganshi",
+     "pg_songding"
+    ],
+    "fod": [
+     "xiaogui",
+     "egui"
+    ],
+    "mem_now": [
+     "n30_changgui",
+     "n30_taozhai",
+     "n30_guhangui",
+     "pg_songding"
+    ],
+    "fod_now": [
+     "xiaogui",
+     "egui"
+    ]
+   },
+   "N": {
+    "name": "霧谷吊頸林",
+    "sys": [
+     "橫",
+     "厲"
+    ],
+    "mech_plan": [
+     "反傷",
+     "嚇氣光環",
+     "屍變",
+     "突襲",
+     "分身"
+    ],
+    "mem": [
+     "n30_shedu",
+     "n30_diaosi",
+     "nw_huapi",
+     "nw_huapi"
+    ],
+    "fod": [
+     "zd_hongyi",
+     "zombie"
+    ],
+    "mem_now": [
+     "n30_shedu",
+     "n30_diaosi",
+     "n30_yukionna",
+     "n30_yukionna"
+    ],
+    "fod_now": [
+     "pg_ex",
+     "zombie"
+    ]
+   }
+  },
+  "3": {
+   "W": {
+    "name": "紅樹林新娘",
+    "sys": [
+     "厲"
+    ],
+    "mech_plan": [
+     "召喚",
+     "嚇氣光環",
+     "突襲",
+     "迷魂"
+    ],
+    "mem": [
+     "n30_churel",
+     "n30_maenak",
+     "n30_guixinniang",
+     "nw_ameonna"
+    ],
+    "fod": [
+     "zd_hongyi"
+    ],
+    "mem_now": [
+     "n30_churel",
+     "n30_maenak",
+     "n30_guixinniang",
+     "n30_yukionna"
+    ],
+    "fod_now": [
+     "pg_ex"
+    ]
+   },
+   "E": {
+    "name": "沉船灘水妖",
+    "sys": [
+     "妖"
+    ],
+    "mech_plan": [
+     "飛",
+     "殼",
+     "再生",
+     "突襲",
+     "分身"
+    ],
+    "mem": [
+     "n30_kappa",
+     "nw_tiangou",
+     "nw_shejing",
+     "n30_aswang"
+    ],
+    "fod": [
+     "zd_shuihou"
+    ],
+    "mem_now": [
+     "n30_kappa",
+     "n30_rokurokubi",
+     "n30_baigujing",
+     "n30_aswang"
+    ],
+    "fod_now": [
+     "n30_kappa"
+    ]
+   },
+   "S": {
+    "name": "河口替身組",
+    "sys": [
+     "橫",
+     "紙紮"
+    ],
+    "mech_plan": [
+     "隱",
+     "嚇氣光環",
+     "突襲"
+    ],
+    "mem": [
+     "nw_tisi",
+     "n30_zhongshu",
+     "n30_xiangcai",
+     "n30_xiangcai"
+    ],
+    "fod": [
+     "shuigui"
+    ],
+    "mem_now": [
+     "n30_chehuo",
+     "n30_zhongshu",
+     "n30_xiangcai",
+     "n30_xiangcai"
+    ],
+    "fod_now": [
+     "shuigui"
+    ]
+   },
+   "N": {
+    "name": "蕉園夜叫",
+    "sys": [
+     "魂",
+     "妖"
+    ],
+    "mech_plan": [
+     "飛",
+     "隱",
+     "嚇氣光環",
+     "霸體",
+     "突襲"
+    ],
+    "mem": [
+     "n30_phiam",
+     "n30_xiasi",
+     "tianhua",
+     "nw_krahang",
+     "nw_kapre"
+    ],
+    "fod": [
+     "zd_hongyi",
+     "zd_shuihou"
+    ],
+    "mem_now": [
+     "n30_phiam",
+     "n30_xiasi",
+     "n30_hantugalah",
+     "n30_shanxiao",
+     "n30_genderuwo"
+    ],
+    "fod_now": [
+     "pg_ex",
+     "n30_kappa"
+    ]
+   }
+  },
+  "4": {
+   "W": {
+    "name": "舊戲院女鬼",
+    "sys": [
+     "厲"
+    ],
+    "mech_plan": [
+     "反傷",
+     "嚇氣光環",
+     "霸體",
+     "突襲"
+    ],
+    "mem": [
+     "n30_kuchisake",
+     "n30_yukionna",
+     "n30_banshee",
+     "n30_hannya"
+    ],
+    "fod": [
+     "zd_hongyi"
+    ],
+    "mem_now": [
+     "n30_kuchisake",
+     "n30_yukionna",
+     "n30_banshee",
+     "n30_hannya"
+    ],
+    "fod_now": [
+     "pg_ex"
+    ]
+   },
+   "E": {
+    "name": "停車場橫死組",
+    "sys": [
+     "橫"
+    ],
+    "mech_plan": [
+     "再生",
+     "嚇氣光環",
+     "突襲"
+    ],
+    "mem": [
+     "n30_daji",
+     "n30_xiaosi",
+     "n30_chehuo",
+     "n30_chengsi"
+    ],
+    "fod": [
+     "zd_hengsi"
+    ],
+    "mem_now": [
+     "n30_daji",
+     "n30_xiaosi",
+     "n30_chehuo",
+     "n30_chengsi"
+    ],
+    "fod_now": [
+     "shuigui"
+    ]
+   },
+   "S": {
+    "name": "巴士站怪談",
+    "sys": [
+     "妖",
+     "屍",
+     "使"
+    ],
+    "mech_plan": [
+     "隱",
+     "散骨",
+     "突襲"
+    ],
+    "mem": [
+     "n30_nopperabo",
+     "n30_rokurokubi",
+     "nw_honeonna",
+     "nw_kuaidi"
+    ],
+    "fod": [
+     "zd_shanjing",
+     "zd_bone"
+    ],
+    "mem_now": [
+     "n30_nopperabo",
+     "n30_rokurokubi",
+     "n30_jerangkung",
+     "n30_taozhai"
+    ],
+    "fod_now": [
+     "n30_kappa",
+     "zombie"
+    ]
+   },
+   "N": {
+    "name": "舊村古井",
+    "sys": [
+     "紙紮",
+     "屍"
+    ],
+    "mech_plan": [
+     "隱",
+     "殼",
+     "散骨",
+     "霸體",
+     "屍變",
+     "突襲",
+     "迷魂"
+    ],
+    "mem": [
+     "nw_zzphone",
+     "nw_zzcar",
+     "n30_vetala",
+     "nw_mummy",
+     "n30_gashadokuro"
+    ],
+    "fod": [
+     "zd_bone",
+     "zd_zhima"
+    ],
+    "mem_now": [
+     "n30_xiangcai",
+     "n30_kasaobake",
+     "n30_vetala",
+     "n30_dongsi",
+     "n30_gashadokuro"
+    ],
+    "fod_now": [
+     "zombie",
+     "zhiren"
+    ]
+   }
+  },
+  "5": {
+   "W": {
+    "name": "集團保安部",
+    "sys": [
+     "官",
+     "使"
+    ],
+    "mech_plan": [
+     "殼",
+     "突襲"
+    ],
+    "mem": [
+     "niutou",
+     "mamian",
+     "nw_yeleng_guard",
+     "n30_yecha"
+    ],
+    "fod": [
+     "zd_yinchai"
+    ],
+    "mem_now": [
+     "niutou",
+     "mamian",
+     "n30_taozhai",
+     "n30_yecha"
+    ],
+    "fod_now": [
+     "niutou"
+    ]
+   },
+   "E": {
+    "name": "董事會審批部",
+    "sys": [
+     "厲",
+     "官"
+    ],
+    "mech_plan": [
+     "殼",
+     "召喚",
+     "嚇氣光環"
+    ],
+    "mem": [
+     "pg_ex",
+     "nw_lunhou",
+     "pg_ex",
+     "nw_shenpi"
+    ],
+    "fod": [
+     "zd_hongyi",
+     "zd_yinchai"
+    ],
+    "mem_now": [
+     "pg_ex",
+     "mamian",
+     "pg_ex",
+     "n30_yecha"
+    ],
+    "fod_now": [
+     "pg_ex",
+     "niutou"
+    ]
+   },
+   "S": {
+    "name": "地庫紙紮部",
+    "sys": [
+     "紙紮",
+     "使",
+     "橫"
+    ],
+    "mech_plan": [
+     "殼",
+     "召喚",
+     "突襲"
+    ],
+    "mem": [
+     "nw_zzhouse",
+     "nw_yeleng_sales",
+     "nw_zzhouse",
+     "pg_landlady"
+    ],
+    "fod": [
+     "zhiren",
+     "zd_zhima"
+    ],
+    "mem_now": [
+     "n30_xiangcai",
+     "n30_changgui",
+     "n30_xiangcai",
+     "pg_landlady"
+    ],
+    "fod_now": [
+     "zhiren",
+     "zhiren"
+    ]
+   },
+   "N": {
+    "name": "頂樓機房",
+    "sys": [
+     "橫",
+     "屍",
+     "魂",
+     "妖"
+    ],
+    "mech_plan": [
+     "隱",
+     "殼",
+     "召喚",
+     "反傷",
+     "嚇氣光環",
+     "霸體",
+     "屍變",
+     "突襲"
+    ],
+    "mem": [
+     "n30_diansi",
+     "n30_dongsi",
+     "n30_leipi",
+     "pg_ji",
+     "nw_dullahan"
+    ],
+    "fod": [
+     "zd_hengsi",
+     "zd_paotui"
+    ],
+    "mem_now": [
+     "n30_diansi",
+     "n30_dongsi",
+     "n30_leipi",
+     "pg_ji",
+     "n30_genderuwo"
+    ],
+    "fod_now": [
+     "shuigui",
+     "xiaogui"
+    ]
+   }
+  }
+ },
+ "camps": {
+  "so1_r1_1": {
+   "c": 0,
+   "ring": 1,
+   "dir": "W",
+   "gang": "餓鬼坑幫",
+   "en": [
+    "egui",
+    "youhun",
+    "n30_qionggui"
+   ],
+   "plan": [
+    "egui",
+    "youhun",
+    "n30_qionggui"
+   ],
+   "hm": [
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_qionggui",
+   "guard_plan": "n30_qionggui",
+   "mech": [
+    "再生"
+   ],
+   "mech_plan": [
+    "再生"
+   ],
+   "sys": [
+    "魂"
+   ],
+   "king": false
+  },
+  "so1_r1_2": {
+   "c": 0,
+   "ring": 1,
+   "dir": "E",
+   "gang": "亂葬崗骷髏",
+   "en": [
+    "zombie",
+    "youhun",
+    "n30_wutou"
+   ],
+   "plan": [
+    "zd_bone",
+    "youhun",
+    "n30_wutou"
+   ],
+   "hm": [
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_wutou",
+   "guard_plan": "n30_wutou",
+   "mech": [
+    "散骨",
+    "屍變"
+   ],
+   "mech_plan": [
+    "散骨"
+   ],
+   "sys": [
+    "屍",
+    "魂",
+    "橫"
+   ],
+   "king": false
+  },
+  "so1_r1_3": {
+   "c": 0,
+   "ring": 1,
+   "dir": "S",
+   "gang": "紙錢陣",
+   "en": [
+    "zhiren",
+    "zhiren",
+    "n30_kasaobake"
+   ],
+   "plan": [
+    "zhiren",
+    "zhiren",
+    "n30_kasaobake"
+   ],
+   "hm": [
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_kasaobake",
+   "guard_plan": "n30_kasaobake",
+   "mech": [
+    "突襲"
+   ],
+   "mech_plan": [
+    "突襲"
+   ],
+   "sys": [
+    "紙紮"
+   ],
+   "king": false
+  },
+  "so1_r1_4": {
+   "c": 0,
+   "ring": 1,
+   "dir": "N",
+   "gang": "荒田橫死組",
+   "en": [
+    "shuigui",
+    "egui",
+    "n30_yesi"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "egui",
+    "n30_yesi"
+   ],
+   "hm": [
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_yesi",
+   "guard_plan": "n30_yesi",
+   "mech": [
+    "再生",
+    "突襲"
+   ],
+   "mech_plan": [
+    "再生"
+   ],
+   "sys": [
+    "橫",
+    "魂"
+   ],
+   "king": false
+  },
+  "so1_r2_1": {
+   "c": 0,
+   "ring": 2,
+   "dir": "W",
+   "gang": "餓鬼坑幫",
+   "en": [
+    "egui",
+    "youhun",
+    "n30_qionggui",
+    "n30_danxiao"
+   ],
+   "plan": [
+    "egui",
+    "youhun",
+    "n30_qionggui",
+    "n30_danxiao"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_danxiao",
+   "guard_plan": "n30_danxiao",
+   "mech": [
+    "再生"
+   ],
+   "mech_plan": [
+    "再生"
+   ],
+   "sys": [
+    "魂"
+   ],
+   "king": false
+  },
+  "so1_r2_2": {
+   "c": 0,
+   "ring": 2,
+   "dir": "E",
+   "gang": "亂葬崗骷髏",
+   "en": [
+    "zombie",
+    "youhun",
+    "n30_wutou",
+    "n30_xiasi"
+   ],
+   "plan": [
+    "zd_bone",
+    "youhun",
+    "n30_wutou",
+    "nw_guihuo"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_xiasi",
+   "guard_plan": "nw_guihuo",
+   "mech": [
+    "散骨",
+    "嚇氣光環",
+    "屍變"
+   ],
+   "mech_plan": [
+    "飛",
+    "散骨"
+   ],
+   "sys": [
+    "魂",
+    "屍",
+    "橫"
+   ],
+   "king": false
+  },
+  "so1_r2_3": {
+   "c": 0,
+   "ring": 2,
+   "dir": "S",
+   "gang": "紙錢陣",
+   "en": [
+    "zhiren",
+    "zhiren",
+    "n30_kasaobake",
+    "n30_chochin"
+   ],
+   "plan": [
+    "zhiren",
+    "zhiren",
+    "n30_kasaobake",
+    "n30_chochin"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_chochin",
+   "guard_plan": "n30_chochin",
+   "mech": [
+    "反傷",
+    "突襲"
+   ],
+   "mech_plan": [
+    "反傷",
+    "突襲"
+   ],
+   "sys": [
+    "紙紮"
+   ],
+   "king": false
+  },
+  "so1_r2_4": {
+   "c": 0,
+   "ring": 2,
+   "dir": "N",
+   "gang": "荒田橫死組",
+   "en": [
+    "shuigui",
+    "egui",
+    "n30_yesi",
+    "n30_maoshi"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "egui",
+    "n30_yesi",
+    "n30_maoshi"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_maoshi",
+   "guard_plan": "n30_maoshi",
+   "mech": [
+    "再生",
+    "突襲"
+   ],
+   "mech_plan": [
+    "再生"
+   ],
+   "sys": [
+    "橫",
+    "魂"
+   ],
+   "king": false
+  },
+  "so1_r3_1": {
+   "c": 0,
+   "ring": 3,
+   "dir": "W",
+   "gang": "餓鬼坑幫",
+   "en": [
+    "egui",
+    "youhun",
+    "egui",
+    "n30_danxiao",
+    "n30_jiugui"
+   ],
+   "plan": [
+    "egui",
+    "youhun",
+    "egui",
+    "n30_danxiao",
+    "n30_jiugui"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_jiugui",
+   "guard_plan": "n30_jiugui",
+   "mech": [
+    "再生",
+    "霸體"
+   ],
+   "mech_plan": [
+    "再生",
+    "霸體"
+   ],
+   "sys": [
+    "魂"
+   ],
+   "king": false
+  },
+  "so1_r3_2": {
+   "c": 0,
+   "ring": 3,
+   "dir": "E",
+   "gang": "亂葬崗骷髏",
+   "en": [
+    "zombie",
+    "youhun",
+    "zombie",
+    "n30_xiasi",
+    "n30_jerangkung"
+   ],
+   "plan": [
+    "zd_bone",
+    "youhun",
+    "zd_bone",
+    "nw_guihuo",
+    "n30_jerangkung"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_jerangkung",
+   "guard_plan": "n30_jerangkung",
+   "mech": [
+    "散骨",
+    "嚇氣光環",
+    "屍變"
+   ],
+   "mech_plan": [
+    "飛",
+    "散骨"
+   ],
+   "sys": [
+    "屍",
+    "魂"
+   ],
+   "king": false
+  },
+  "so1_r3_3": {
+   "c": 0,
+   "ring": 3,
+   "dir": "S",
+   "gang": "紙錢陣",
+   "en": [
+    "zhiren",
+    "zhiren",
+    "zhiren",
+    "n30_chochin",
+    "n30_kasaobake"
+   ],
+   "plan": [
+    "zhiren",
+    "zhiren",
+    "zhiren",
+    "n30_chochin",
+    "n30_kasaobake"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_kasaobake",
+   "guard_plan": "n30_kasaobake",
+   "mech": [
+    "反傷",
+    "突襲"
+   ],
+   "mech_plan": [
+    "反傷",
+    "突襲"
+   ],
+   "sys": [
+    "紙紮"
+   ],
+   "king": false
+  },
+  "so1_r3_4": {
+   "c": 0,
+   "ring": 3,
+   "dir": "N",
+   "gang": "荒田橫死組",
+   "en": [
+    "shuigui",
+    "egui",
+    "shuigui",
+    "n30_baigujing",
+    "n30_baigujing"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "egui",
+    "zd_hengsi",
+    "nw_huli",
+    "nw_huli"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_baigujing",
+   "guard_plan": "nw_huli",
+   "mech": [
+    "再生",
+    "突襲",
+    "分身"
+   ],
+   "mech_plan": [
+    "再生",
+    "分身"
+   ],
+   "sys": [
+    "橫",
+    "妖",
+    "魂"
+   ],
+   "king": true
+  },
+  "so1_r4_1": {
+   "c": 0,
+   "ring": 4,
+   "dir": "W",
+   "gang": "餓鬼坑幫",
+   "en": [
+    "egui",
+    "youhun",
+    "n30_danxiao",
+    "n30_jiugui",
+    "pg_tuimo"
+   ],
+   "plan": [
+    "egui",
+    "youhun",
+    "n30_danxiao",
+    "n30_jiugui",
+    "pg_tuimo"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "pg_tuimo",
+   "guard_plan": "pg_tuimo",
+   "mech": [
+    "再生",
+    "霸體"
+   ],
+   "mech_plan": [
+    "再生",
+    "霸體"
+   ],
+   "sys": [
+    "魂"
+   ],
+   "king": false
+  },
+  "so1_r4_2": {
+   "c": 0,
+   "ring": 4,
+   "dir": "S",
+   "gang": "紙錢陣",
+   "en": [
+    "zhiren",
+    "zhiren",
+    "n30_chochin",
+    "n30_kasaobake",
+    "n30_chochin"
+   ],
+   "plan": [
+    "zhiren",
+    "zhiren",
+    "n30_chochin",
+    "n30_kasaobake",
+    "n30_chochin"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_chochin",
+   "guard_plan": "n30_chochin",
+   "mech": [
+    "反傷",
+    "突襲"
+   ],
+   "mech_plan": [
+    "反傷",
+    "突襲"
+   ],
+   "sys": [
+    "紙紮"
+   ],
+   "king": false
+  },
+  "so1_r4_3": {
+   "c": 0,
+   "ring": 4,
+   "dir": "N",
+   "gang": "荒田橫死組",
+   "en": [
+    "shuigui",
+    "egui",
+    "n30_maoshi",
+    "n30_baigujing",
+    "n30_baigujing"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "egui",
+    "n30_maoshi",
+    "nw_huli",
+    "nw_huli"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_baigujing",
+   "guard_plan": "nw_huli",
+   "mech": [
+    "再生",
+    "突襲",
+    "分身"
+   ],
+   "mech_plan": [
+    "再生",
+    "分身"
+   ],
+   "sys": [
+    "魂",
+    "妖",
+    "橫"
+   ],
+   "king": false
+  },
+  "so2_r1_1": {
+   "c": 1,
+   "ring": 1,
+   "dir": "W",
+   "gang": "甘榜使魔",
+   "en": [
+    "xiaogui",
+    "xiaogui",
+    "n30_pelesit"
+   ],
+   "plan": [
+    "xiaogui",
+    "xiaogui",
+    "n30_pelesit"
+   ],
+   "hm": [
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_pelesit",
+   "guard_plan": "n30_pelesit",
+   "mech": [
+    "飛",
+    "隱"
+   ],
+   "mech_plan": [
+    "飛",
+    "隱"
+   ],
+   "sys": [
+    "使"
+   ],
+   "king": false
+  },
+  "so2_r1_2": {
+   "c": 1,
+   "ring": 1,
+   "dir": "E",
+   "gang": "廢膠廠山精",
+   "en": [
+    "n30_kappa",
+    "n30_kappa",
+    "n30_bunian"
+   ],
+   "plan": [
+    "zd_shanjing",
+    "zd_shanjing",
+    "n30_bunian"
+   ],
+   "hm": [
+    0.7,
+    0.7,
+    1
+   ],
+   "am": [
+    0.9,
+    0.9,
+    1
+   ],
+   "guard": "n30_bunian",
+   "guard_plan": "n30_bunian",
+   "mech": [
+    "隱",
+    "殼"
+   ],
+   "mech_plan": [
+    "隱"
+   ],
+   "sys": [
+    "妖"
+   ],
+   "king": false
+  },
+  "so2_r1_3": {
+   "c": 1,
+   "ring": 1,
+   "dir": "S",
+   "gang": "椰林膠園橫死組",
+   "en": [
+    "shuigui",
+    "shuigui",
+    "n30_shidu"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "zd_hengsi",
+    "n30_shidu"
+   ],
+   "hm": [
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_shidu",
+   "guard_plan": "n30_shidu",
+   "mech": [
+    "反傷",
+    "突襲"
+   ],
+   "mech_plan": [
+    "反傷"
+   ],
+   "sys": [
+    "橫"
+   ],
+   "king": false
+  },
+  "so2_r1_4": {
+   "c": 1,
+   "ring": 1,
+   "dir": "N",
+   "gang": "竹林賭檔",
+   "en": [
+    "youhun",
+    "pg_ex",
+    "n30_yangui"
+   ],
+   "plan": [
+    "youhun",
+    "zd_hongyi",
+    "n30_yangui"
+   ],
+   "hm": [
+    1,
+    0.5,
+    1
+   ],
+   "am": [
+    1,
+    0.85,
+    1
+   ],
+   "guard": "n30_yangui",
+   "guard_plan": "n30_yangui",
+   "mech": [
+    "隱",
+    "嚇氣光環"
+   ],
+   "mech_plan": [
+    "隱",
+    "嚇氣光環"
+   ],
+   "sys": [
+    "魂",
+    "厲"
+   ],
+   "king": false
+  },
+  "so2_r2_1": {
+   "c": 1,
+   "ring": 2,
+   "dir": "W",
+   "gang": "甘榜使魔",
+   "en": [
+    "xiaogui",
+    "xiaogui",
+    "n30_pelesit",
+    "n30_polong"
+   ],
+   "plan": [
+    "xiaogui",
+    "xiaogui",
+    "n30_pelesit",
+    "n30_polong"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_polong",
+   "guard_plan": "n30_polong",
+   "mech": [
+    "飛",
+    "隱",
+    "再生"
+   ],
+   "mech_plan": [
+    "飛",
+    "隱",
+    "再生"
+   ],
+   "sys": [
+    "使"
+   ],
+   "king": false
+  },
+  "so2_r2_2": {
+   "c": 1,
+   "ring": 2,
+   "dir": "E",
+   "gang": "廢膠廠山精",
+   "en": [
+    "n30_kappa",
+    "n30_kappa",
+    "n30_bunian",
+    "n30_bunian"
+   ],
+   "plan": [
+    "zd_shanjing",
+    "zd_shanjing",
+    "n30_bunian",
+    "n30_bunian"
+   ],
+   "hm": [
+    0.7,
+    0.7,
+    1,
+    1
+   ],
+   "am": [
+    0.9,
+    0.9,
+    1,
+    1
+   ],
+   "guard": "n30_bunian",
+   "guard_plan": "n30_bunian",
+   "mech": [
+    "隱",
+    "殼"
+   ],
+   "mech_plan": [
+    "隱"
+   ],
+   "sys": [
+    "妖"
+   ],
+   "king": false
+  },
+  "so2_r2_3": {
+   "c": 1,
+   "ring": 2,
+   "dir": "S",
+   "gang": "椰林膠園橫死組",
+   "en": [
+    "shuigui",
+    "shuigui",
+    "n30_shidu",
+    "n30_yezi"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "zd_hengsi",
+    "n30_shidu",
+    "n30_yezi"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_yezi",
+   "guard_plan": "n30_yezi",
+   "mech": [
+    "殼",
+    "反傷",
+    "突襲"
+   ],
+   "mech_plan": [
+    "殼",
+    "反傷"
+   ],
+   "sys": [
+    "橫"
+   ],
+   "king": false
+  },
+  "so2_r2_4": {
+   "c": 1,
+   "ring": 2,
+   "dir": "N",
+   "gang": "竹林賭檔",
+   "en": [
+    "youhun",
+    "pg_ex",
+    "n30_yangui",
+    "n30_dugui"
+   ],
+   "plan": [
+    "youhun",
+    "zd_hongyi",
+    "n30_yangui",
+    "n30_dugui"
+   ],
+   "hm": [
+    1,
+    0.5,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    0.85,
+    1,
+    1
+   ],
+   "guard": "n30_dugui",
+   "guard_plan": "n30_dugui",
+   "mech": [
+    "隱",
+    "嚇氣光環",
+    "分身"
+   ],
+   "mech_plan": [
+    "隱",
+    "嚇氣光環",
+    "分身"
+   ],
+   "sys": [
+    "魂",
+    "厲"
+   ],
+   "king": false
+  },
+  "so2_r3_1": {
+   "c": 1,
+   "ring": 3,
+   "dir": "W",
+   "gang": "甘榜使魔",
+   "en": [
+    "xiaogui",
+    "xiaogui",
+    "xiaogui",
+    "n30_polong",
+    "n30_taozhai"
+   ],
+   "plan": [
+    "xiaogui",
+    "xiaogui",
+    "xiaogui",
+    "n30_polong",
+    "nw_bajang"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_taozhai",
+   "guard_plan": "nw_bajang",
+   "mech": [
+    "隱",
+    "再生",
+    "屍變"
+   ],
+   "mech_plan": [
+    "隱",
+    "再生"
+   ],
+   "sys": [
+    "使"
+   ],
+   "king": false
+  },
+  "so2_r3_2": {
+   "c": 1,
+   "ring": 3,
+   "dir": "E",
+   "gang": "廢膠廠山精",
+   "en": [
+    "n30_kappa",
+    "n30_kappa",
+    "n30_kappa",
+    "n30_bunian",
+    "n30_genderuwo"
+   ],
+   "plan": [
+    "zd_shanjing",
+    "zd_shanjing",
+    "zd_shanjing",
+    "n30_bunian",
+    "n30_genderuwo"
+   ],
+   "hm": [
+    0.7,
+    0.7,
+    0.7,
+    1,
+    1
+   ],
+   "am": [
+    0.9,
+    0.9,
+    0.9,
+    1,
+    1
+   ],
+   "guard": "n30_genderuwo",
+   "guard_plan": "n30_genderuwo",
+   "mech": [
+    "隱",
+    "殼",
+    "霸體"
+   ],
+   "mech_plan": [
+    "隱",
+    "霸體"
+   ],
+   "sys": [
+    "妖"
+   ],
+   "king": false
+  },
+  "so2_r3_3": {
+   "c": 1,
+   "ring": 3,
+   "dir": "S",
+   "gang": "椰林膠園橫死組",
+   "en": [
+    "shuigui",
+    "shuigui",
+    "shuigui",
+    "n30_yezi",
+    "n30_liulian"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "zd_hengsi",
+    "zd_hengsi",
+    "n30_yezi",
+    "n30_liulian"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_liulian",
+   "guard_plan": "n30_liulian",
+   "mech": [
+    "殼",
+    "反傷",
+    "突襲"
+   ],
+   "mech_plan": [
+    "殼",
+    "反傷"
+   ],
+   "sys": [
+    "橫"
+   ],
+   "king": false
+  },
+  "so2_r3_4": {
+   "c": 1,
+   "ring": 3,
+   "dir": "N",
+   "gang": "竹林賭檔",
+   "en": [
+    "youhun",
+    "pg_ex",
+    "youhun",
+    "n30_hantugalah",
+    "n30_kuchisake"
+   ],
+   "plan": [
+    "youhun",
+    "zd_hongyi",
+    "youhun",
+    "n30_hantugalah",
+    "nw_teketeke"
+   ],
+   "hm": [
+    1,
+    0.5,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    0.85,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_kuchisake",
+   "guard_plan": "nw_teketeke",
+   "mech": [
+    "嚇氣光環",
+    "突襲"
+   ],
+   "mech_plan": [
+    "嚇氣光環",
+    "突襲"
+   ],
+   "sys": [
+    "魂",
+    "厲"
+   ],
+   "king": true
+  },
+  "so2_r4_1": {
+   "c": 1,
+   "ring": 4,
+   "dir": "W",
+   "gang": "甘榜使魔",
+   "en": [
+    "xiaogui",
+    "xiaogui",
+    "n30_polong",
+    "n30_taozhai",
+    "n30_hanturaya"
+   ],
+   "plan": [
+    "xiaogui",
+    "xiaogui",
+    "n30_polong",
+    "nw_bajang",
+    "n30_hanturaya"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_hanturaya",
+   "guard_plan": "n30_hanturaya",
+   "mech": [
+    "隱",
+    "再生",
+    "召喚",
+    "屍變",
+    "分身"
+   ],
+   "mech_plan": [
+    "隱",
+    "再生",
+    "召喚",
+    "分身"
+   ],
+   "sys": [
+    "使"
+   ],
+   "king": false
+  },
+  "so2_r4_2": {
+   "c": 1,
+   "ring": 4,
+   "dir": "S",
+   "gang": "椰林膠園橫死組",
+   "en": [
+    "shuigui",
+    "shuigui",
+    "n30_yezi",
+    "n30_liulian",
+    "n30_liulian"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "zd_hengsi",
+    "n30_yezi",
+    "n30_liulian",
+    "n30_liulian"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_liulian",
+   "guard_plan": "n30_liulian",
+   "mech": [
+    "殼",
+    "反傷",
+    "突襲"
+   ],
+   "mech_plan": [
+    "殼",
+    "反傷"
+   ],
+   "sys": [
+    "橫"
+   ],
+   "king": false
+  },
+  "so2_r4_3": {
+   "c": 1,
+   "ring": 4,
+   "dir": "N",
+   "gang": "竹林賭檔",
+   "en": [
+    "youhun",
+    "pg_ex",
+    "n30_guhangui",
+    "n30_hantugalah",
+    "n30_kuchisake"
+   ],
+   "plan": [
+    "youhun",
+    "zd_hongyi",
+    "n30_guhangui",
+    "n30_hantugalah",
+    "nw_teketeke"
+   ],
+   "hm": [
+    1,
+    0.5,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    0.85,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_kuchisake",
+   "guard_plan": "nw_teketeke",
+   "mech": [
+    "殼",
+    "嚇氣光環",
+    "突襲"
+   ],
+   "mech_plan": [
+    "殼",
+    "嚇氣光環",
+    "突襲"
+   ],
+   "sys": [
+    "魂",
+    "厲"
+   ],
+   "king": false
+  },
+  "so3_r1_1": {
+   "c": 2,
+   "ring": 1,
+   "dir": "W",
+   "gang": "義莊屍隊",
+   "en": [
+    "zombie",
+    "zombie",
+    "n30_jenglot"
+   ],
+   "plan": [
+    "zombie",
+    "zombie",
+    "n30_jenglot"
+   ],
+   "hm": [
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_jenglot",
+   "guard_plan": "n30_jenglot",
+   "mech": [
+    "再生",
+    "屍變"
+   ],
+   "mech_plan": [
+    "再生",
+    "屍變"
+   ],
+   "sys": [
+    "屍"
+   ],
+   "king": false
+  },
+  "so3_r1_2": {
+   "c": 2,
+   "ring": 1,
+   "dir": "E",
+   "gang": "亂石峽山妖",
+   "en": [
+    "n30_kappa",
+    "n30_kappa",
+    "n30_tikbalang"
+   ],
+   "plan": [
+    "zd_shanjing",
+    "zd_shanjing",
+    "nw_daqiang"
+   ],
+   "hm": [
+    0.7,
+    0.7,
+    1
+   ],
+   "am": [
+    0.9,
+    0.9,
+    1
+   ],
+   "guard": "n30_tikbalang",
+   "guard_plan": "nw_daqiang",
+   "mech": [
+    "殼",
+    "迷魂"
+   ],
+   "mech_plan": [
+    "迷魂"
+   ],
+   "sys": [
+    "妖"
+   ],
+   "king": false
+  },
+  "so3_r1_3": {
+   "c": 2,
+   "ring": 1,
+   "dir": "S",
+   "gang": "古道收數佬",
+   "en": [
+    "xiaogui",
+    "egui",
+    "n30_changgui"
+   ],
+   "plan": [
+    "xiaogui",
+    "egui",
+    "n30_changgui"
+   ],
+   "hm": [
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_changgui",
+   "guard_plan": "n30_changgui",
+   "mech": [
+    "隱",
+    "再生",
+    "召喚"
+   ],
+   "mech_plan": [
+    "隱",
+    "再生",
+    "召喚"
+   ],
+   "sys": [
+    "使",
+    "魂"
+   ],
+   "king": false
+  },
+  "so3_r1_4": {
+   "c": 2,
+   "ring": 1,
+   "dir": "N",
+   "gang": "霧谷吊頸林",
+   "en": [
+    "pg_ex",
+    "zombie",
+    "n30_shedu"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zombie",
+    "n30_shedu"
+   ],
+   "hm": [
+    0.5,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    1,
+    1
+   ],
+   "guard": "n30_shedu",
+   "guard_plan": "n30_shedu",
+   "mech": [
+    "反傷",
+    "嚇氣光環",
+    "屍變"
+   ],
+   "mech_plan": [
+    "反傷",
+    "嚇氣光環",
+    "屍變"
+   ],
+   "sys": [
+    "厲",
+    "屍",
+    "橫"
+   ],
+   "king": false
+  },
+  "so3_r2_1": {
+   "c": 2,
+   "ring": 2,
+   "dir": "W",
+   "gang": "義莊屍隊",
+   "en": [
+    "zombie",
+    "zombie",
+    "n30_jenglot",
+    "n30_jerangkung"
+   ],
+   "plan": [
+    "zombie",
+    "zombie",
+    "n30_jenglot",
+    "nw_baimao"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_jerangkung",
+   "guard_plan": "nw_baimao",
+   "mech": [
+    "再生",
+    "散骨",
+    "屍變"
+   ],
+   "mech_plan": [
+    "再生",
+    "霸體",
+    "屍變"
+   ],
+   "sys": [
+    "屍"
+   ],
+   "king": false
+  },
+  "so3_r2_2": {
+   "c": 2,
+   "ring": 2,
+   "dir": "E",
+   "gang": "亂石峽山妖",
+   "en": [
+    "n30_kappa",
+    "n30_kappa",
+    "n30_tikbalang",
+    "n30_tikbalang"
+   ],
+   "plan": [
+    "zd_shanjing",
+    "zd_shanjing",
+    "nw_daqiang",
+    "n30_tikbalang"
+   ],
+   "hm": [
+    0.7,
+    0.7,
+    1,
+    1
+   ],
+   "am": [
+    0.9,
+    0.9,
+    1,
+    1
+   ],
+   "guard": "n30_tikbalang",
+   "guard_plan": "n30_tikbalang",
+   "mech": [
+    "殼",
+    "迷魂"
+   ],
+   "mech_plan": [
+    "迷魂"
+   ],
+   "sys": [
+    "妖"
+   ],
+   "king": false
+  },
+  "so3_r2_3": {
+   "c": 2,
+   "ring": 2,
+   "dir": "S",
+   "gang": "古道收數佬",
+   "en": [
+    "xiaogui",
+    "egui",
+    "n30_changgui",
+    "n30_taozhai"
+   ],
+   "plan": [
+    "xiaogui",
+    "egui",
+    "n30_changgui",
+    "n30_taozhai"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_taozhai",
+   "guard_plan": "n30_taozhai",
+   "mech": [
+    "隱",
+    "再生",
+    "召喚",
+    "屍變"
+   ],
+   "mech_plan": [
+    "隱",
+    "再生",
+    "召喚",
+    "屍變"
+   ],
+   "sys": [
+    "使",
+    "魂"
+   ],
+   "king": false
+  },
+  "so3_r2_4": {
+   "c": 2,
+   "ring": 2,
+   "dir": "N",
+   "gang": "霧谷吊頸林",
+   "en": [
+    "pg_ex",
+    "zombie",
+    "n30_shedu",
+    "n30_diaosi"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zombie",
+    "n30_shedu",
+    "n30_diaosi"
+   ],
+   "hm": [
+    0.5,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_diaosi",
+   "guard_plan": "n30_diaosi",
+   "mech": [
+    "反傷",
+    "嚇氣光環",
+    "屍變",
+    "突襲"
+   ],
+   "mech_plan": [
+    "反傷",
+    "嚇氣光環",
+    "屍變",
+    "突襲"
+   ],
+   "sys": [
+    "厲",
+    "屍",
+    "橫"
+   ],
+   "king": false
+  },
+  "so3_r3_1": {
+   "c": 2,
+   "ring": 3,
+   "dir": "W",
+   "gang": "義莊屍隊",
+   "en": [
+    "zombie",
+    "zombie",
+    "zombie",
+    "n30_jerangkung",
+    "n30_dongsi"
+   ],
+   "plan": [
+    "zombie",
+    "zombie",
+    "zombie",
+    "nw_baimao",
+    "nw_buhuagu"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_dongsi",
+   "guard_plan": "nw_buhuagu",
+   "mech": [
+    "殼",
+    "散骨",
+    "屍變"
+   ],
+   "mech_plan": [
+    "殼",
+    "再生",
+    "霸體",
+    "屍變"
+   ],
+   "sys": [
+    "屍"
+   ],
+   "king": false
+  },
+  "so3_r3_2": {
+   "c": 2,
+   "ring": 3,
+   "dir": "E",
+   "gang": "亂石峽山妖",
+   "en": [
+    "n30_kappa",
+    "n30_kappa",
+    "n30_kappa",
+    "n30_tikbalang",
+    "n30_shanxiao"
+   ],
+   "plan": [
+    "zd_shanjing",
+    "zd_shanjing",
+    "zd_shanjing",
+    "n30_tikbalang",
+    "n30_shanxiao"
+   ],
+   "hm": [
+    0.7,
+    0.7,
+    0.7,
+    1,
+    1
+   ],
+   "am": [
+    0.9,
+    0.9,
+    0.9,
+    1,
+    1
+   ],
+   "guard": "n30_shanxiao",
+   "guard_plan": "n30_shanxiao",
+   "mech": [
+    "殼",
+    "突襲",
+    "迷魂"
+   ],
+   "mech_plan": [
+    "突襲",
+    "迷魂"
+   ],
+   "sys": [
+    "妖"
+   ],
+   "king": false
+  },
+  "so3_r3_3": {
+   "c": 2,
+   "ring": 3,
+   "dir": "S",
+   "gang": "古道收數佬",
+   "en": [
+    "xiaogui",
+    "egui",
+    "xiaogui",
+    "n30_taozhai",
+    "n30_guhangui"
+   ],
+   "plan": [
+    "xiaogui",
+    "egui",
+    "xiaogui",
+    "n30_taozhai",
+    "nw_ganshi"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_guhangui",
+   "guard_plan": "nw_ganshi",
+   "mech": [
+    "隱",
+    "殼",
+    "再生",
+    "屍變"
+   ],
+   "mech_plan": [
+    "隱",
+    "再生",
+    "屍變"
+   ],
+   "sys": [
+    "使",
+    "魂"
+   ],
+   "king": false
+  },
+  "so3_r3_4": {
+   "c": 2,
+   "ring": 3,
+   "dir": "N",
+   "gang": "霧谷吊頸林",
+   "en": [
+    "pg_ex",
+    "zombie",
+    "pg_ex",
+    "n30_yukionna",
+    "n30_yukionna"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zombie",
+    "zd_hongyi",
+    "nw_huapi",
+    "nw_huapi"
+   ],
+   "hm": [
+    0.5,
+    1,
+    0.5,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    1,
+    0.85,
+    1,
+    1
+   ],
+   "guard": "n30_yukionna",
+   "guard_plan": "nw_huapi",
+   "mech": [
+    "嚇氣光環",
+    "屍變"
+   ],
+   "mech_plan": [
+    "嚇氣光環",
+    "屍變",
+    "分身"
+   ],
+   "sys": [
+    "厲",
+    "屍"
+   ],
+   "king": true
+  },
+  "so3_r4_1": {
+   "c": 2,
+   "ring": 4,
+   "dir": "W",
+   "gang": "義莊屍隊",
+   "en": [
+    "zombie",
+    "zombie",
+    "n30_jerangkung",
+    "n30_dongsi",
+    "n30_hanba"
+   ],
+   "plan": [
+    "zombie",
+    "zombie",
+    "nw_baimao",
+    "nw_buhuagu",
+    "n30_hanba"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_hanba",
+   "guard_plan": "n30_hanba",
+   "mech": [
+    "殼",
+    "再生",
+    "散骨",
+    "嚇氣光環",
+    "屍變"
+   ],
+   "mech_plan": [
+    "殼",
+    "再生",
+    "嚇氣光環",
+    "霸體",
+    "屍變"
+   ],
+   "sys": [
+    "屍"
+   ],
+   "king": false
+  },
+  "so3_r4_2": {
+   "c": 2,
+   "ring": 4,
+   "dir": "S",
+   "gang": "古道收數佬",
+   "en": [
+    "xiaogui",
+    "egui",
+    "n30_taozhai",
+    "n30_guhangui",
+    "pg_songding"
+   ],
+   "plan": [
+    "xiaogui",
+    "egui",
+    "n30_taozhai",
+    "nw_ganshi",
+    "pg_songding"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "pg_songding",
+   "guard_plan": "pg_songding",
+   "mech": [
+    "隱",
+    "殼",
+    "再生",
+    "屍變",
+    "分身"
+   ],
+   "mech_plan": [
+    "隱",
+    "再生",
+    "屍變",
+    "分身"
+   ],
+   "sys": [
+    "魂",
+    "使"
+   ],
+   "king": false
+  },
+  "so3_r4_3": {
+   "c": 2,
+   "ring": 4,
+   "dir": "N",
+   "gang": "霧谷吊頸林",
+   "en": [
+    "pg_ex",
+    "zombie",
+    "n30_diaosi",
+    "n30_yukionna",
+    "n30_yukionna"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zombie",
+    "n30_diaosi",
+    "nw_huapi",
+    "nw_huapi"
+   ],
+   "hm": [
+    0.5,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_yukionna",
+   "guard_plan": "nw_huapi",
+   "mech": [
+    "嚇氣光環",
+    "屍變",
+    "突襲"
+   ],
+   "mech_plan": [
+    "嚇氣光環",
+    "屍變",
+    "突襲",
+    "分身"
+   ],
+   "sys": [
+    "厲",
+    "屍"
+   ],
+   "king": false
+  },
+  "so4_r1_1": {
+   "c": 3,
+   "ring": 1,
+   "dir": "W",
+   "gang": "紅樹林新娘",
+   "en": [
+    "pg_ex",
+    "pg_ex",
+    "n30_churel"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_hongyi",
+    "n30_churel"
+   ],
+   "hm": [
+    0.5,
+    0.5,
+    1
+   ],
+   "am": [
+    0.85,
+    0.85,
+    1
+   ],
+   "guard": "n30_churel",
+   "guard_plan": "n30_churel",
+   "mech": [
+    "嚇氣光環",
+    "迷魂"
+   ],
+   "mech_plan": [
+    "嚇氣光環",
+    "迷魂"
+   ],
+   "sys": [
+    "厲"
+   ],
+   "king": false
+  },
+  "so4_r1_2": {
+   "c": 3,
+   "ring": 1,
+   "dir": "E",
+   "gang": "沉船灘水妖",
+   "en": [
+    "n30_kappa",
+    "n30_kappa",
+    "n30_kappa"
+   ],
+   "plan": [
+    "zd_shuihou",
+    "zd_shuihou",
+    "n30_kappa"
+   ],
+   "hm": [
+    0.7,
+    0.7,
+    1
+   ],
+   "am": [
+    0.9,
+    0.9,
+    1
+   ],
+   "guard": "n30_kappa",
+   "guard_plan": "n30_kappa",
+   "mech": [
+    "殼"
+   ],
+   "mech_plan": [
+    "殼",
+    "突襲"
+   ],
+   "sys": [
+    "妖"
+   ],
+   "king": false
+  },
+  "so4_r1_3": {
+   "c": 3,
+   "ring": 1,
+   "dir": "S",
+   "gang": "河口替身組",
+   "en": [
+    "shuigui",
+    "shuigui",
+    "n30_chehuo"
+   ],
+   "plan": [
+    "shuigui",
+    "shuigui",
+    "nw_tisi"
+   ],
+   "hm": [
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_chehuo",
+   "guard_plan": "nw_tisi",
+   "mech": [
+    "突襲"
+   ],
+   "mech_plan": [
+    "突襲"
+   ],
+   "sys": [
+    "橫"
+   ],
+   "king": false
+  },
+  "so4_r1_4": {
+   "c": 3,
+   "ring": 1,
+   "dir": "N",
+   "gang": "蕉園夜叫",
+   "en": [
+    "pg_ex",
+    "n30_kappa",
+    "n30_phiam"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_shuihou",
+    "n30_phiam"
+   ],
+   "hm": [
+    0.5,
+    0.7,
+    1
+   ],
+   "am": [
+    0.85,
+    0.9,
+    1
+   ],
+   "guard": "n30_phiam",
+   "guard_plan": "n30_phiam",
+   "mech": [
+    "殼",
+    "嚇氣光環"
+   ],
+   "mech_plan": [
+    "嚇氣光環",
+    "突襲"
+   ],
+   "sys": [
+    "厲",
+    "妖",
+    "魂"
+   ],
+   "king": false
+  },
+  "so4_r2_1": {
+   "c": 3,
+   "ring": 2,
+   "dir": "W",
+   "gang": "紅樹林新娘",
+   "en": [
+    "pg_ex",
+    "pg_ex",
+    "n30_churel",
+    "n30_maenak"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_hongyi",
+    "n30_churel",
+    "n30_maenak"
+   ],
+   "hm": [
+    0.5,
+    0.5,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    0.85,
+    1,
+    1
+   ],
+   "guard": "n30_maenak",
+   "guard_plan": "n30_maenak",
+   "mech": [
+    "嚇氣光環",
+    "突襲",
+    "迷魂"
+   ],
+   "mech_plan": [
+    "嚇氣光環",
+    "突襲",
+    "迷魂"
+   ],
+   "sys": [
+    "厲"
+   ],
+   "king": false
+  },
+  "so4_r2_2": {
+   "c": 3,
+   "ring": 2,
+   "dir": "E",
+   "gang": "沉船灘水妖",
+   "en": [
+    "n30_kappa",
+    "n30_kappa",
+    "n30_kappa",
+    "n30_rokurokubi"
+   ],
+   "plan": [
+    "zd_shuihou",
+    "zd_shuihou",
+    "n30_kappa",
+    "nw_tiangou"
+   ],
+   "hm": [
+    0.7,
+    0.7,
+    1,
+    1
+   ],
+   "am": [
+    0.9,
+    0.9,
+    1,
+    1
+   ],
+   "guard": "n30_rokurokubi",
+   "guard_plan": "nw_tiangou",
+   "mech": [
+    "殼",
+    "突襲"
+   ],
+   "mech_plan": [
+    "飛",
+    "殼",
+    "突襲"
+   ],
+   "sys": [
+    "妖"
+   ],
+   "king": false
+  },
+  "so4_r2_3": {
+   "c": 3,
+   "ring": 2,
+   "dir": "S",
+   "gang": "河口替身組",
+   "en": [
+    "shuigui",
+    "shuigui",
+    "n30_chehuo",
+    "n30_zhongshu"
+   ],
+   "plan": [
+    "shuigui",
+    "shuigui",
+    "nw_tisi",
+    "n30_zhongshu"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_zhongshu",
+   "guard_plan": "n30_zhongshu",
+   "mech": [
+    "嚇氣光環",
+    "突襲"
+   ],
+   "mech_plan": [
+    "嚇氣光環",
+    "突襲"
+   ],
+   "sys": [
+    "橫"
+   ],
+   "king": false
+  },
+  "so4_r2_4": {
+   "c": 3,
+   "ring": 2,
+   "dir": "N",
+   "gang": "蕉園夜叫",
+   "en": [
+    "pg_ex",
+    "n30_kappa",
+    "n30_phiam",
+    "n30_xiasi"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_shuihou",
+    "n30_phiam",
+    "n30_xiasi"
+   ],
+   "hm": [
+    0.5,
+    0.7,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    0.9,
+    1,
+    1
+   ],
+   "guard": "n30_xiasi",
+   "guard_plan": "n30_xiasi",
+   "mech": [
+    "殼",
+    "嚇氣光環"
+   ],
+   "mech_plan": [
+    "嚇氣光環",
+    "突襲"
+   ],
+   "sys": [
+    "魂",
+    "厲",
+    "妖"
+   ],
+   "king": false
+  },
+  "so4_r3_1": {
+   "c": 3,
+   "ring": 3,
+   "dir": "W",
+   "gang": "紅樹林新娘",
+   "en": [
+    "pg_ex",
+    "pg_ex",
+    "pg_ex",
+    "n30_maenak",
+    "n30_guixinniang"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_hongyi",
+    "zd_hongyi",
+    "n30_maenak",
+    "n30_guixinniang"
+   ],
+   "hm": [
+    0.5,
+    0.5,
+    0.5,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    0.85,
+    0.85,
+    1,
+    1
+   ],
+   "guard": "n30_guixinniang",
+   "guard_plan": "n30_guixinniang",
+   "mech": [
+    "召喚",
+    "嚇氣光環",
+    "突襲"
+   ],
+   "mech_plan": [
+    "召喚",
+    "嚇氣光環",
+    "突襲"
+   ],
+   "sys": [
+    "厲"
+   ],
+   "king": false
+  },
+  "so4_r3_2": {
+   "c": 3,
+   "ring": 3,
+   "dir": "E",
+   "gang": "沉船灘水妖",
+   "en": [
+    "n30_kappa",
+    "n30_kappa",
+    "n30_kappa",
+    "n30_rokurokubi",
+    "n30_baigujing"
+   ],
+   "plan": [
+    "zd_shuihou",
+    "zd_shuihou",
+    "zd_shuihou",
+    "nw_tiangou",
+    "nw_shejing"
+   ],
+   "hm": [
+    0.7,
+    0.7,
+    0.7,
+    1,
+    1
+   ],
+   "am": [
+    0.9,
+    0.9,
+    0.9,
+    1,
+    1
+   ],
+   "guard": "n30_baigujing",
+   "guard_plan": "nw_shejing",
+   "mech": [
+    "殼",
+    "再生",
+    "突襲",
+    "分身"
+   ],
+   "mech_plan": [
+    "飛",
+    "再生",
+    "突襲"
+   ],
+   "sys": [
+    "妖"
+   ],
+   "king": false
+  },
+  "so4_r3_3": {
+   "c": 3,
+   "ring": 3,
+   "dir": "S",
+   "gang": "河口替身組",
+   "en": [
+    "shuigui",
+    "shuigui",
+    "shuigui",
+    "n30_zhongshu",
+    "n30_xiangcai"
+   ],
+   "plan": [
+    "shuigui",
+    "shuigui",
+    "shuigui",
+    "n30_zhongshu",
+    "n30_xiangcai"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_xiangcai",
+   "guard_plan": "n30_xiangcai",
+   "mech": [
+    "隱",
+    "嚇氣光環",
+    "突襲"
+   ],
+   "mech_plan": [
+    "隱",
+    "嚇氣光環",
+    "突襲"
+   ],
+   "sys": [
+    "橫",
+    "紙紮"
+   ],
+   "king": false
+  },
+  "so4_r3_4": {
+   "c": 3,
+   "ring": 3,
+   "dir": "N",
+   "gang": "蕉園夜叫",
+   "en": [
+    "pg_ex",
+    "n30_kappa",
+    "pg_ex",
+    "n30_shanxiao",
+    "n30_genderuwo"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_shuihou",
+    "zd_hongyi",
+    "nw_krahang",
+    "nw_kapre"
+   ],
+   "hm": [
+    0.5,
+    0.7,
+    0.5,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    0.9,
+    0.85,
+    1,
+    1
+   ],
+   "guard": "n30_genderuwo",
+   "guard_plan": "nw_kapre",
+   "mech": [
+    "殼",
+    "嚇氣光環",
+    "霸體",
+    "突襲"
+   ],
+   "mech_plan": [
+    "飛",
+    "隱",
+    "嚇氣光環",
+    "霸體",
+    "突襲"
+   ],
+   "sys": [
+    "妖",
+    "厲"
+   ],
+   "king": true
+  },
+  "so4_r4_1": {
+   "c": 3,
+   "ring": 4,
+   "dir": "W",
+   "gang": "紅樹林新娘",
+   "en": [
+    "pg_ex",
+    "pg_ex",
+    "n30_maenak",
+    "n30_guixinniang",
+    "n30_yukionna"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_hongyi",
+    "n30_maenak",
+    "n30_guixinniang",
+    "nw_ameonna"
+   ],
+   "hm": [
+    0.5,
+    0.5,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    0.85,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_yukionna",
+   "guard_plan": "nw_ameonna",
+   "mech": [
+    "召喚",
+    "嚇氣光環",
+    "突襲"
+   ],
+   "mech_plan": [
+    "召喚",
+    "嚇氣光環",
+    "突襲"
+   ],
+   "sys": [
+    "厲"
+   ],
+   "king": false
+  },
+  "so4_r4_2": {
+   "c": 3,
+   "ring": 4,
+   "dir": "S",
+   "gang": "河口替身組",
+   "en": [
+    "shuigui",
+    "shuigui",
+    "n30_zhongshu",
+    "n30_xiangcai",
+    "n30_xiangcai"
+   ],
+   "plan": [
+    "shuigui",
+    "shuigui",
+    "n30_zhongshu",
+    "n30_xiangcai",
+    "n30_xiangcai"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_xiangcai",
+   "guard_plan": "n30_xiangcai",
+   "mech": [
+    "隱",
+    "嚇氣光環",
+    "突襲"
+   ],
+   "mech_plan": [
+    "隱",
+    "嚇氣光環",
+    "突襲"
+   ],
+   "sys": [
+    "橫",
+    "紙紮"
+   ],
+   "king": false
+  },
+  "so4_r4_3": {
+   "c": 3,
+   "ring": 4,
+   "dir": "N",
+   "gang": "蕉園夜叫",
+   "en": [
+    "pg_ex",
+    "n30_kappa",
+    "n30_hantugalah",
+    "n30_shanxiao",
+    "n30_genderuwo"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_shuihou",
+    "tianhua",
+    "nw_krahang",
+    "nw_kapre"
+   ],
+   "hm": [
+    0.5,
+    0.7,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    0.9,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_genderuwo",
+   "guard_plan": "nw_kapre",
+   "mech": [
+    "殼",
+    "嚇氣光環",
+    "霸體",
+    "突襲"
+   ],
+   "mech_plan": [
+    "飛",
+    "隱",
+    "嚇氣光環",
+    "霸體",
+    "突襲"
+   ],
+   "sys": [
+    "妖",
+    "厲",
+    "魂"
+   ],
+   "king": false
+  },
+  "so5_r1_1": {
+   "c": 4,
+   "ring": 1,
+   "dir": "W",
+   "gang": "舊戲院女鬼",
+   "en": [
+    "pg_ex",
+    "pg_ex",
+    "n30_kuchisake"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_hongyi",
+    "n30_kuchisake"
+   ],
+   "hm": [
+    0.5,
+    0.5,
+    1
+   ],
+   "am": [
+    0.85,
+    0.85,
+    1
+   ],
+   "guard": "n30_kuchisake",
+   "guard_plan": "n30_kuchisake",
+   "mech": [
+    "嚇氣光環",
+    "突襲"
+   ],
+   "mech_plan": [
+    "嚇氣光環",
+    "突襲"
+   ],
+   "sys": [
+    "厲"
+   ],
+   "king": false
+  },
+  "so5_r1_2": {
+   "c": 4,
+   "ring": 1,
+   "dir": "E",
+   "gang": "停車場橫死組",
+   "en": [
+    "shuigui",
+    "shuigui",
+    "n30_daji"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "zd_hengsi",
+    "n30_daji"
+   ],
+   "hm": [
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_daji",
+   "guard_plan": "n30_daji",
+   "mech": [
+    "突襲"
+   ],
+   "mech_plan": [],
+   "sys": [
+    "橫"
+   ],
+   "king": false
+  },
+  "so5_r1_3": {
+   "c": 4,
+   "ring": 1,
+   "dir": "S",
+   "gang": "巴士站怪談",
+   "en": [
+    "n30_kappa",
+    "zombie",
+    "n30_nopperabo"
+   ],
+   "plan": [
+    "zd_shanjing",
+    "zd_bone",
+    "n30_nopperabo"
+   ],
+   "hm": [
+    0.7,
+    1,
+    1
+   ],
+   "am": [
+    0.9,
+    1,
+    1
+   ],
+   "guard": "n30_nopperabo",
+   "guard_plan": "n30_nopperabo",
+   "mech": [
+    "隱",
+    "殼",
+    "屍變"
+   ],
+   "mech_plan": [
+    "隱",
+    "散骨"
+   ],
+   "sys": [
+    "妖",
+    "屍"
+   ],
+   "king": false
+  },
+  "so5_r1_4": {
+   "c": 4,
+   "ring": 1,
+   "dir": "N",
+   "gang": "舊村古井",
+   "en": [
+    "zombie",
+    "zhiren",
+    "n30_xiangcai"
+   ],
+   "plan": [
+    "zd_bone",
+    "zd_zhima",
+    "nw_zzphone"
+   ],
+   "hm": [
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_xiangcai",
+   "guard_plan": "nw_zzphone",
+   "mech": [
+    "隱",
+    "屍變"
+   ],
+   "mech_plan": [
+    "隱",
+    "散骨",
+    "突襲"
+   ],
+   "sys": [
+    "紙紮",
+    "屍"
+   ],
+   "king": false
+  },
+  "so5_r2_1": {
+   "c": 4,
+   "ring": 2,
+   "dir": "W",
+   "gang": "舊戲院女鬼",
+   "en": [
+    "pg_ex",
+    "pg_ex",
+    "n30_kuchisake",
+    "n30_yukionna"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_hongyi",
+    "n30_kuchisake",
+    "n30_yukionna"
+   ],
+   "hm": [
+    0.5,
+    0.5,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    0.85,
+    1,
+    1
+   ],
+   "guard": "n30_yukionna",
+   "guard_plan": "n30_yukionna",
+   "mech": [
+    "嚇氣光環",
+    "突襲"
+   ],
+   "mech_plan": [
+    "嚇氣光環",
+    "突襲"
+   ],
+   "sys": [
+    "厲"
+   ],
+   "king": false
+  },
+  "so5_r2_2": {
+   "c": 4,
+   "ring": 2,
+   "dir": "E",
+   "gang": "停車場橫死組",
+   "en": [
+    "shuigui",
+    "shuigui",
+    "n30_daji",
+    "n30_xiaosi"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "zd_hengsi",
+    "n30_daji",
+    "n30_xiaosi"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_xiaosi",
+   "guard_plan": "n30_xiaosi",
+   "mech": [
+    "嚇氣光環",
+    "突襲"
+   ],
+   "mech_plan": [
+    "嚇氣光環"
+   ],
+   "sys": [
+    "橫"
+   ],
+   "king": false
+  },
+  "so5_r2_3": {
+   "c": 4,
+   "ring": 2,
+   "dir": "S",
+   "gang": "巴士站怪談",
+   "en": [
+    "n30_kappa",
+    "zombie",
+    "n30_nopperabo",
+    "n30_rokurokubi"
+   ],
+   "plan": [
+    "zd_shanjing",
+    "zd_bone",
+    "n30_nopperabo",
+    "n30_rokurokubi"
+   ],
+   "hm": [
+    0.7,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    0.9,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_rokurokubi",
+   "guard_plan": "n30_rokurokubi",
+   "mech": [
+    "隱",
+    "殼",
+    "屍變",
+    "突襲"
+   ],
+   "mech_plan": [
+    "隱",
+    "散骨",
+    "突襲"
+   ],
+   "sys": [
+    "妖",
+    "屍"
+   ],
+   "king": false
+  },
+  "so5_r2_4": {
+   "c": 4,
+   "ring": 2,
+   "dir": "N",
+   "gang": "舊村古井",
+   "en": [
+    "zombie",
+    "zhiren",
+    "n30_xiangcai",
+    "n30_kasaobake"
+   ],
+   "plan": [
+    "zd_bone",
+    "zd_zhima",
+    "nw_zzphone",
+    "nw_zzcar"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_kasaobake",
+   "guard_plan": "nw_zzcar",
+   "mech": [
+    "隱",
+    "屍變",
+    "突襲"
+   ],
+   "mech_plan": [
+    "隱",
+    "散骨",
+    "突襲"
+   ],
+   "sys": [
+    "紙紮",
+    "屍"
+   ],
+   "king": false
+  },
+  "so5_r3_1": {
+   "c": 4,
+   "ring": 3,
+   "dir": "W",
+   "gang": "舊戲院女鬼",
+   "en": [
+    "pg_ex",
+    "pg_ex",
+    "pg_ex",
+    "n30_yukionna",
+    "n30_banshee"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_hongyi",
+    "zd_hongyi",
+    "n30_yukionna",
+    "n30_banshee"
+   ],
+   "hm": [
+    0.5,
+    0.5,
+    0.5,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    0.85,
+    0.85,
+    1,
+    1
+   ],
+   "guard": "n30_banshee",
+   "guard_plan": "n30_banshee",
+   "mech": [
+    "嚇氣光環"
+   ],
+   "mech_plan": [
+    "嚇氣光環"
+   ],
+   "sys": [
+    "厲"
+   ],
+   "king": false
+  },
+  "so5_r3_2": {
+   "c": 4,
+   "ring": 3,
+   "dir": "E",
+   "gang": "停車場橫死組",
+   "en": [
+    "shuigui",
+    "shuigui",
+    "shuigui",
+    "n30_xiaosi",
+    "n30_chehuo"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "zd_hengsi",
+    "zd_hengsi",
+    "n30_xiaosi",
+    "n30_chehuo"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_chehuo",
+   "guard_plan": "n30_chehuo",
+   "mech": [
+    "嚇氣光環",
+    "突襲"
+   ],
+   "mech_plan": [
+    "嚇氣光環",
+    "突襲"
+   ],
+   "sys": [
+    "橫"
+   ],
+   "king": false
+  },
+  "so5_r3_3": {
+   "c": 4,
+   "ring": 3,
+   "dir": "S",
+   "gang": "巴士站怪談",
+   "en": [
+    "n30_kappa",
+    "zombie",
+    "n30_kappa",
+    "n30_rokurokubi",
+    "n30_jerangkung"
+   ],
+   "plan": [
+    "zd_shanjing",
+    "zd_bone",
+    "zd_shanjing",
+    "n30_rokurokubi",
+    "nw_honeonna"
+   ],
+   "hm": [
+    0.7,
+    1,
+    0.7,
+    1,
+    1
+   ],
+   "am": [
+    0.9,
+    1,
+    0.9,
+    1,
+    1
+   ],
+   "guard": "n30_jerangkung",
+   "guard_plan": "nw_honeonna",
+   "mech": [
+    "殼",
+    "散骨",
+    "屍變",
+    "突襲"
+   ],
+   "mech_plan": [
+    "隱",
+    "散骨",
+    "突襲"
+   ],
+   "sys": [
+    "妖",
+    "屍"
+   ],
+   "king": false
+  },
+  "so5_r3_4": {
+   "c": 4,
+   "ring": 3,
+   "dir": "N",
+   "gang": "舊村古井",
+   "en": [
+    "zombie",
+    "zhiren",
+    "zombie",
+    "n30_dongsi",
+    "n30_gashadokuro"
+   ],
+   "plan": [
+    "zd_bone",
+    "zd_zhima",
+    "zd_bone",
+    "nw_mummy",
+    "n30_gashadokuro"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_gashadokuro",
+   "guard_plan": "n30_gashadokuro",
+   "mech": [
+    "殼",
+    "散骨",
+    "霸體",
+    "屍變"
+   ],
+   "mech_plan": [
+    "殼",
+    "散骨",
+    "霸體",
+    "屍變",
+    "突襲"
+   ],
+   "sys": [
+    "屍",
+    "紙紮"
+   ],
+   "king": true
+  },
+  "so5_r4_1": {
+   "c": 4,
+   "ring": 4,
+   "dir": "W",
+   "gang": "舊戲院女鬼",
+   "en": [
+    "pg_ex",
+    "pg_ex",
+    "n30_yukionna",
+    "n30_banshee",
+    "n30_hannya"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_hongyi",
+    "n30_yukionna",
+    "n30_banshee",
+    "n30_hannya"
+   ],
+   "hm": [
+    0.5,
+    0.5,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    0.85,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_hannya",
+   "guard_plan": "n30_hannya",
+   "mech": [
+    "反傷",
+    "嚇氣光環",
+    "霸體"
+   ],
+   "mech_plan": [
+    "反傷",
+    "嚇氣光環",
+    "霸體"
+   ],
+   "sys": [
+    "厲"
+   ],
+   "king": false
+  },
+  "so5_r4_2": {
+   "c": 4,
+   "ring": 4,
+   "dir": "S",
+   "gang": "巴士站怪談",
+   "en": [
+    "n30_kappa",
+    "zombie",
+    "n30_rokurokubi",
+    "n30_jerangkung",
+    "n30_taozhai"
+   ],
+   "plan": [
+    "zd_shanjing",
+    "zd_bone",
+    "n30_rokurokubi",
+    "nw_honeonna",
+    "nw_kuaidi"
+   ],
+   "hm": [
+    0.7,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    0.9,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_taozhai",
+   "guard_plan": "nw_kuaidi",
+   "mech": [
+    "殼",
+    "散骨",
+    "屍變",
+    "突襲"
+   ],
+   "mech_plan": [
+    "隱",
+    "散骨",
+    "突襲"
+   ],
+   "sys": [
+    "妖",
+    "屍",
+    "使"
+   ],
+   "king": false
+  },
+  "so5_r4_3": {
+   "c": 4,
+   "ring": 4,
+   "dir": "N",
+   "gang": "舊村古井",
+   "en": [
+    "zombie",
+    "zhiren",
+    "n30_vetala",
+    "n30_dongsi",
+    "n30_gashadokuro"
+   ],
+   "plan": [
+    "zd_bone",
+    "zd_zhima",
+    "n30_vetala",
+    "nw_mummy",
+    "n30_gashadokuro"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_gashadokuro",
+   "guard_plan": "n30_gashadokuro",
+   "mech": [
+    "殼",
+    "散骨",
+    "霸體",
+    "屍變",
+    "迷魂"
+   ],
+   "mech_plan": [
+    "殼",
+    "散骨",
+    "霸體",
+    "屍變",
+    "突襲",
+    "迷魂"
+   ],
+   "sys": [
+    "屍",
+    "紙紮"
+   ],
+   "king": false
+  },
+  "so6_r1_1": {
+   "c": 5,
+   "ring": 1,
+   "dir": "W",
+   "gang": "集團保安部",
+   "en": [
+    "niutou",
+    "niutou",
+    "niutou"
+   ],
+   "plan": [
+    "zd_yinchai",
+    "zd_yinchai",
+    "niutou"
+   ],
+   "hm": [
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1
+   ],
+   "guard": "niutou",
+   "guard_plan": "niutou",
+   "mech": [
+    "殼"
+   ],
+   "mech_plan": [
+    "殼"
+   ],
+   "sys": [
+    "官"
+   ],
+   "king": false
+  },
+  "so6_r1_2": {
+   "c": 5,
+   "ring": 1,
+   "dir": "E",
+   "gang": "董事會審批部",
+   "en": [
+    "pg_ex",
+    "niutou",
+    "pg_ex"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_yinchai",
+    "pg_ex"
+   ],
+   "hm": [
+    0.5,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    1,
+    1
+   ],
+   "guard": "pg_ex",
+   "guard_plan": "pg_ex",
+   "mech": [
+    "殼",
+    "嚇氣光環"
+   ],
+   "mech_plan": [
+    "殼",
+    "嚇氣光環"
+   ],
+   "sys": [
+    "厲",
+    "官"
+   ],
+   "king": false
+  },
+  "so6_r1_3": {
+   "c": 5,
+   "ring": 1,
+   "dir": "S",
+   "gang": "地庫紙紮部",
+   "en": [
+    "zhiren",
+    "zhiren",
+    "n30_xiangcai"
+   ],
+   "plan": [
+    "zhiren",
+    "zd_zhima",
+    "nw_zzhouse"
+   ],
+   "hm": [
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_xiangcai",
+   "guard_plan": "nw_zzhouse",
+   "mech": [
+    "隱"
+   ],
+   "mech_plan": [
+    "殼",
+    "召喚",
+    "突襲"
+   ],
+   "sys": [
+    "紙紮"
+   ],
+   "king": false
+  },
+  "so6_r1_4": {
+   "c": 5,
+   "ring": 1,
+   "dir": "N",
+   "gang": "頂樓機房",
+   "en": [
+    "shuigui",
+    "xiaogui",
+    "n30_diansi"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "zd_paotui",
+    "n30_diansi"
+   ],
+   "hm": [
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_diansi",
+   "guard_plan": "n30_diansi",
+   "mech": [
+    "隱",
+    "反傷",
+    "突襲"
+   ],
+   "mech_plan": [
+    "召喚",
+    "反傷"
+   ],
+   "sys": [
+    "橫",
+    "使"
+   ],
+   "king": false
+  },
+  "so6_r2_1": {
+   "c": 5,
+   "ring": 2,
+   "dir": "W",
+   "gang": "集團保安部",
+   "en": [
+    "niutou",
+    "niutou",
+    "niutou",
+    "mamian"
+   ],
+   "plan": [
+    "zd_yinchai",
+    "zd_yinchai",
+    "niutou",
+    "mamian"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "mamian",
+   "guard_plan": "mamian",
+   "mech": [
+    "殼",
+    "突襲"
+   ],
+   "mech_plan": [
+    "殼",
+    "突襲"
+   ],
+   "sys": [
+    "官"
+   ],
+   "king": false
+  },
+  "so6_r2_2": {
+   "c": 5,
+   "ring": 2,
+   "dir": "E",
+   "gang": "董事會審批部",
+   "en": [
+    "pg_ex",
+    "niutou",
+    "pg_ex",
+    "mamian"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_yinchai",
+    "pg_ex",
+    "nw_lunhou"
+   ],
+   "hm": [
+    0.5,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    1,
+    1,
+    1
+   ],
+   "guard": "mamian",
+   "guard_plan": "nw_lunhou",
+   "mech": [
+    "殼",
+    "嚇氣光環",
+    "突襲"
+   ],
+   "mech_plan": [
+    "殼",
+    "召喚",
+    "嚇氣光環"
+   ],
+   "sys": [
+    "厲",
+    "官"
+   ],
+   "king": false
+  },
+  "so6_r2_3": {
+   "c": 5,
+   "ring": 2,
+   "dir": "S",
+   "gang": "地庫紙紮部",
+   "en": [
+    "zhiren",
+    "zhiren",
+    "n30_xiangcai",
+    "n30_changgui"
+   ],
+   "plan": [
+    "zhiren",
+    "zd_zhima",
+    "nw_zzhouse",
+    "nw_yeleng_sales"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_changgui",
+   "guard_plan": "nw_yeleng_sales",
+   "mech": [
+    "隱",
+    "召喚"
+   ],
+   "mech_plan": [
+    "殼",
+    "召喚",
+    "突襲"
+   ],
+   "sys": [
+    "紙紮",
+    "使"
+   ],
+   "king": false
+  },
+  "so6_r2_4": {
+   "c": 5,
+   "ring": 2,
+   "dir": "N",
+   "gang": "頂樓機房",
+   "en": [
+    "shuigui",
+    "xiaogui",
+    "n30_diansi",
+    "n30_dongsi"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "zd_paotui",
+    "n30_diansi",
+    "n30_dongsi"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_dongsi",
+   "guard_plan": "n30_dongsi",
+   "mech": [
+    "隱",
+    "殼",
+    "反傷",
+    "突襲"
+   ],
+   "mech_plan": [
+    "殼",
+    "召喚",
+    "反傷"
+   ],
+   "sys": [
+    "橫",
+    "使",
+    "屍"
+   ],
+   "king": false
+  },
+  "so6_r3_1": {
+   "c": 5,
+   "ring": 3,
+   "dir": "W",
+   "gang": "集團保安部",
+   "en": [
+    "niutou",
+    "niutou",
+    "niutou",
+    "mamian",
+    "n30_taozhai"
+   ],
+   "plan": [
+    "zd_yinchai",
+    "zd_yinchai",
+    "zd_yinchai",
+    "mamian",
+    "nw_yeleng_guard"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_taozhai",
+   "guard_plan": "nw_yeleng_guard",
+   "mech": [
+    "殼",
+    "屍變",
+    "突襲"
+   ],
+   "mech_plan": [
+    "殼",
+    "突襲"
+   ],
+   "sys": [
+    "官",
+    "使"
+   ],
+   "king": false
+  },
+  "so6_r3_2": {
+   "c": 5,
+   "ring": 3,
+   "dir": "E",
+   "gang": "董事會審批部",
+   "en": [
+    "pg_ex",
+    "niutou",
+    "pg_ex",
+    "mamian",
+    "pg_ex"
+   ],
+   "plan": [
+    "zd_hongyi",
+    "zd_yinchai",
+    "zd_hongyi",
+    "nw_lunhou",
+    "pg_ex"
+   ],
+   "hm": [
+    0.5,
+    1,
+    0.5,
+    1,
+    1
+   ],
+   "am": [
+    0.85,
+    1,
+    0.85,
+    1,
+    1
+   ],
+   "guard": "pg_ex",
+   "guard_plan": "pg_ex",
+   "mech": [
+    "殼",
+    "嚇氣光環",
+    "突襲"
+   ],
+   "mech_plan": [
+    "殼",
+    "召喚",
+    "嚇氣光環"
+   ],
+   "sys": [
+    "厲",
+    "官"
+   ],
+   "king": false
+  },
+  "so6_r3_3": {
+   "c": 5,
+   "ring": 3,
+   "dir": "S",
+   "gang": "地庫紙紮部",
+   "en": [
+    "zhiren",
+    "zhiren",
+    "zhiren",
+    "n30_changgui",
+    "n30_xiangcai"
+   ],
+   "plan": [
+    "zhiren",
+    "zd_zhima",
+    "zhiren",
+    "nw_yeleng_sales",
+    "nw_zzhouse"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_xiangcai",
+   "guard_plan": "nw_zzhouse",
+   "mech": [
+    "隱",
+    "召喚"
+   ],
+   "mech_plan": [
+    "殼",
+    "召喚",
+    "突襲"
+   ],
+   "sys": [
+    "紙紮",
+    "使"
+   ],
+   "king": false
+  },
+  "so6_r3_4": {
+   "c": 5,
+   "ring": 3,
+   "dir": "N",
+   "gang": "頂樓機房",
+   "en": [
+    "shuigui",
+    "xiaogui",
+    "shuigui",
+    "pg_ji",
+    "n30_genderuwo"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "zd_paotui",
+    "zd_hengsi",
+    "pg_ji",
+    "nw_dullahan"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_genderuwo",
+   "guard_plan": "nw_dullahan",
+   "mech": [
+    "隱",
+    "霸體",
+    "屍變",
+    "突襲"
+   ],
+   "mech_plan": [
+    "隱",
+    "召喚",
+    "霸體",
+    "屍變",
+    "突襲"
+   ],
+   "sys": [
+    "橫",
+    "使",
+    "魂",
+    "妖"
+   ],
+   "king": true
+  },
+  "so6_r4_1": {
+   "c": 5,
+   "ring": 4,
+   "dir": "W",
+   "gang": "集團保安部",
+   "en": [
+    "niutou",
+    "niutou",
+    "mamian",
+    "n30_taozhai",
+    "n30_yecha"
+   ],
+   "plan": [
+    "zd_yinchai",
+    "zd_yinchai",
+    "mamian",
+    "nw_yeleng_guard",
+    "n30_yecha"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_yecha",
+   "guard_plan": "n30_yecha",
+   "mech": [
+    "殼",
+    "屍變",
+    "突襲"
+   ],
+   "mech_plan": [
+    "殼",
+    "突襲"
+   ],
+   "sys": [
+    "官",
+    "使"
+   ],
+   "king": false
+  },
+  "so6_r4_2": {
+   "c": 5,
+   "ring": 4,
+   "dir": "S",
+   "gang": "地庫紙紮部",
+   "en": [
+    "zhiren",
+    "zhiren",
+    "n30_changgui",
+    "n30_xiangcai",
+    "pg_landlady"
+   ],
+   "plan": [
+    "zhiren",
+    "zd_zhima",
+    "nw_yeleng_sales",
+    "nw_zzhouse",
+    "pg_landlady"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "pg_landlady",
+   "guard_plan": "pg_landlady",
+   "mech": [
+    "隱",
+    "殼",
+    "召喚"
+   ],
+   "mech_plan": [
+    "殼",
+    "召喚",
+    "突襲"
+   ],
+   "sys": [
+    "紙紮",
+    "使",
+    "橫"
+   ],
+   "king": false
+  },
+  "so6_r4_3": {
+   "c": 5,
+   "ring": 4,
+   "dir": "N",
+   "gang": "頂樓機房",
+   "en": [
+    "shuigui",
+    "xiaogui",
+    "n30_leipi",
+    "pg_ji",
+    "n30_genderuwo"
+   ],
+   "plan": [
+    "zd_hengsi",
+    "zd_paotui",
+    "n30_leipi",
+    "pg_ji",
+    "nw_dullahan"
+   ],
+   "hm": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "am": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "guard": "n30_genderuwo",
+   "guard_plan": "nw_dullahan",
+   "mech": [
+    "隱",
+    "嚇氣光環",
+    "霸體",
+    "屍變",
+    "突襲"
+   ],
+   "mech_plan": [
+    "隱",
+    "召喚",
+    "嚇氣光環",
+    "霸體",
+    "屍變",
+    "突襲"
+   ],
+   "sys": [
+    "橫",
+    "使",
+    "魂",
+    "妖"
+   ],
+   "king": false
+  }
+ },
+ "subs": [
+  {
+   "plan": "nw_guihuo",
+   "plan_name": "鬼火",
+   "sys": "魂",
+   "now": "n30_xiasi",
+   "now_name": "嚇死鬼",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so1_r2_2",
+    "so1_r3_2"
+   ]
+  },
+  {
+   "plan": "nw_huli",
+   "plan_name": "狐妖",
+   "sys": "妖",
+   "now": "n30_baigujing",
+   "now_name": "白骨精",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so1_r3_4",
+    "so1_r4_3"
+   ]
+  },
+  {
+   "plan": "nw_bajang",
+   "plan_name": "Bajang",
+   "sys": "使",
+   "now": "n30_taozhai",
+   "now_name": "討債鬼",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so2_r3_1",
+    "so2_r4_1"
+   ]
+  },
+  {
+   "plan": "nw_teketeke",
+   "plan_name": "Teke Teke",
+   "sys": "厲",
+   "now": "n30_kuchisake",
+   "now_name": "裂口女",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so2_r3_4",
+    "so2_r4_3"
+   ]
+  },
+  {
+   "plan": "nw_baimao",
+   "plan_name": "白毛殭屍",
+   "sys": "屍",
+   "now": "n30_jerangkung",
+   "now_name": "Hantu Jerangkung",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so3_r2_1",
+    "so3_r3_1",
+    "so3_r4_1"
+   ]
+  },
+  {
+   "plan": "nw_buhuagu",
+   "plan_name": "不化骨",
+   "sys": "屍",
+   "now": "n30_dongsi",
+   "now_name": "凍死鬼",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so3_r3_1",
+    "so3_r4_1"
+   ]
+  },
+  {
+   "plan": "nw_daqiang",
+   "plan_name": "鬼打牆",
+   "sys": "妖",
+   "now": "n30_tikbalang",
+   "now_name": "Tikbalang",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so3_r1_2",
+    "so3_r2_2"
+   ]
+  },
+  {
+   "plan": "nw_ganshi",
+   "plan_name": "趕屍匠",
+   "sys": "魂",
+   "now": "n30_guhangui",
+   "now_name": "孤寒鬼",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so3_r3_3",
+    "so3_r4_2"
+   ]
+  },
+  {
+   "plan": "nw_huapi",
+   "plan_name": "畫皮",
+   "sys": "厲",
+   "now": "n30_yukionna",
+   "now_name": "雪女",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so3_r3_4",
+    "so3_r4_3"
+   ]
+  },
+  {
+   "plan": "nw_ameonna",
+   "plan_name": "雨女",
+   "sys": "厲",
+   "now": "n30_yukionna",
+   "now_name": "雪女",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so4_r4_1"
+   ]
+  },
+  {
+   "plan": "nw_shejing",
+   "plan_name": "蛇精",
+   "sys": "妖",
+   "now": "n30_baigujing",
+   "now_name": "白骨精",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so4_r3_2"
+   ]
+  },
+  {
+   "plan": "nw_tiangou",
+   "plan_name": "天狗",
+   "sys": "妖",
+   "now": "n30_rokurokubi",
+   "now_name": "轆轤首",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so4_r2_2",
+    "so4_r3_2"
+   ]
+  },
+  {
+   "plan": "nw_tisi",
+   "plan_name": "替死鬼",
+   "sys": "橫",
+   "now": "n30_chehuo",
+   "now_name": "車禍鬼",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so4_r1_3",
+    "so4_r2_3"
+   ]
+  },
+  {
+   "plan": "nw_krahang",
+   "plan_name": "Krahang",
+   "sys": "妖",
+   "now": "n30_shanxiao",
+   "now_name": "山魈",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so4_r3_4",
+    "so4_r4_3"
+   ]
+  },
+  {
+   "plan": "nw_kapre",
+   "plan_name": "Kapre",
+   "sys": "妖",
+   "now": "n30_genderuwo",
+   "now_name": "Genderuwo",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so4_r3_4",
+    "so4_r4_3"
+   ]
+  },
+  {
+   "plan": "nw_honeonna",
+   "plan_name": "骨女",
+   "sys": "屍",
+   "now": "n30_jerangkung",
+   "now_name": "Hantu Jerangkung",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so5_r3_3",
+    "so5_r4_2"
+   ]
+  },
+  {
+   "plan": "nw_mummy",
+   "plan_name": "木乃伊",
+   "sys": "屍",
+   "now": "n30_dongsi",
+   "now_name": "凍死鬼",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so5_r3_4",
+    "so5_r4_3"
+   ]
+  },
+  {
+   "plan": "nw_zzphone",
+   "plan_name": "紙紮手機",
+   "sys": "紙紮",
+   "now": "n30_xiangcai",
+   "now_name": "大象踩扁鬼",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so5_r1_4",
+    "so5_r2_4"
+   ]
+  },
+  {
+   "plan": "nw_zzcar",
+   "plan_name": "紙紮名車",
+   "sys": "紙紮",
+   "now": "n30_kasaobake",
+   "now_name": "唐傘妖",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so5_r2_4"
+   ]
+  },
+  {
+   "plan": "nw_kuaidi",
+   "plan_name": "陰司快遞員",
+   "sys": "使",
+   "now": "n30_taozhai",
+   "now_name": "討債鬼",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so5_r4_2"
+   ]
+  },
+  {
+   "plan": "nw_zzhouse",
+   "plan_name": "紙紮大屋",
+   "sys": "紙紮",
+   "now": "n30_xiangcai",
+   "now_name": "大象踩扁鬼",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so6_r1_3",
+    "so6_r2_3",
+    "so6_r3_3",
+    "so6_r4_2"
+   ]
+  },
+  {
+   "plan": "nw_shenpi",
+   "plan_name": "陰司審批主任",
+   "sys": "官",
+   "now": "n30_yecha",
+   "now_name": "夜叉",
+   "hm": 1,
+   "am": 1,
+   "camps": []
+  },
+  {
+   "plan": "nw_lunhou",
+   "plan_name": "輪候處職員",
+   "sys": "官",
+   "now": "mamian",
+   "now_name": "馬面",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so6_r2_2",
+    "so6_r3_2"
+   ]
+  },
+  {
+   "plan": "nw_yeleng_guard",
+   "plan_name": "夜冷村保安",
+   "sys": "使",
+   "now": "n30_taozhai",
+   "now_name": "討債鬼",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so6_r3_1",
+    "so6_r4_1"
+   ]
+  },
+  {
+   "plan": "nw_yeleng_sales",
+   "plan_name": "夜冷村推銷員",
+   "sys": "使",
+   "now": "n30_changgui",
+   "now_name": "倀鬼",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so6_r2_3",
+    "so6_r3_3",
+    "so6_r4_2"
+   ]
+  },
+  {
+   "plan": "nw_dullahan",
+   "plan_name": "Dullahan",
+   "sys": "妖",
+   "now": "n30_genderuwo",
+   "now_name": "Genderuwo",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so6_r3_4",
+    "so6_r4_3"
+   ]
+  },
+  {
+   "plan": "tianhua",
+   "plan_name": "天花姐",
+   "sys": "魂",
+   "now": "n30_hantugalah",
+   "now_name": "Hantu Galah",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so4_r4_3"
+   ]
+  },
+  {
+   "plan": "zd_bone",
+   "plan_name": "骷髏兵",
+   "sys": "屍",
+   "now": "zombie",
+   "now_name": "殭屍兵",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so1_r1_2",
+    "so1_r2_2",
+    "so1_r3_2",
+    "so5_r1_3",
+    "so5_r1_4",
+    "so5_r2_3",
+    "so5_r2_4",
+    "so5_r3_3",
+    "so5_r3_4",
+    "so5_r4_2",
+    "so5_r4_3"
+   ]
+  },
+  {
+   "plan": "zd_zhima",
+   "plan_name": "紙馬",
+   "sys": "紙紮",
+   "now": "zhiren",
+   "now_name": "紙人偶",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so5_r1_4",
+    "so5_r2_4",
+    "so5_r3_4",
+    "so5_r4_3",
+    "so6_r1_3",
+    "so6_r2_3",
+    "so6_r3_3",
+    "so6_r4_2"
+   ]
+  },
+  {
+   "plan": "zd_shanjing",
+   "plan_name": "山精",
+   "sys": "妖",
+   "now": "n30_kappa",
+   "now_name": "河童",
+   "hm": 0.7,
+   "am": 0.9,
+   "camps": [
+    "so2_r1_2",
+    "so2_r2_2",
+    "so2_r3_2",
+    "so3_r1_2",
+    "so3_r2_2",
+    "so3_r3_2",
+    "so5_r1_3",
+    "so5_r2_3",
+    "so5_r3_3",
+    "so5_r4_2"
+   ]
+  },
+  {
+   "plan": "zd_shuihou",
+   "plan_name": "水猴子",
+   "sys": "妖",
+   "now": "n30_kappa",
+   "now_name": "河童",
+   "hm": 0.7,
+   "am": 0.9,
+   "camps": [
+    "so4_r1_2",
+    "so4_r1_4",
+    "so4_r2_2",
+    "so4_r2_4",
+    "so4_r3_2",
+    "so4_r3_4",
+    "so4_r4_3"
+   ]
+  },
+  {
+   "plan": "zd_hongyi",
+   "plan_name": "紅衣女鬼",
+   "sys": "厲",
+   "now": "pg_ex",
+   "now_name": "前女友鬼",
+   "hm": 0.5,
+   "am": 0.85,
+   "camps": [
+    "so2_r1_4",
+    "so2_r2_4",
+    "so2_r3_4",
+    "so2_r4_3",
+    "so3_r1_4",
+    "so3_r2_4",
+    "so3_r3_4",
+    "so3_r4_3",
+    "so4_r1_1",
+    "so4_r1_4",
+    "so4_r2_1",
+    "so4_r2_4",
+    "so4_r3_1",
+    "so4_r3_4",
+    "so4_r4_1",
+    "so4_r4_3",
+    "so5_r1_1",
+    "so5_r2_1",
+    "so5_r3_1",
+    "so5_r4_1",
+    "so6_r1_2",
+    "so6_r2_2",
+    "so6_r3_2"
+   ]
+  },
+  {
+   "plan": "zd_paotui",
+   "plan_name": "跑腿鬼",
+   "sys": "使",
+   "now": "xiaogui",
+   "now_name": "小鬼",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so6_r1_4",
+    "so6_r2_4",
+    "so6_r3_4",
+    "so6_r4_3"
+   ]
+  },
+  {
+   "plan": "zd_yinchai",
+   "plan_name": "陰差",
+   "sys": "官",
+   "now": "niutou",
+   "now_name": "牛頭",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so6_r1_1",
+    "so6_r1_2",
+    "so6_r2_1",
+    "so6_r2_2",
+    "so6_r3_1",
+    "so6_r3_2",
+    "so6_r4_1"
+   ]
+  },
+  {
+   "plan": "zd_hengsi",
+   "plan_name": "橫死新鬼",
+   "sys": "橫",
+   "now": "shuigui",
+   "now_name": "水鬼",
+   "hm": 1,
+   "am": 1,
+   "camps": [
+    "so1_r1_4",
+    "so1_r2_4",
+    "so1_r3_4",
+    "so1_r4_3",
+    "so2_r1_3",
+    "so2_r2_3",
+    "so2_r3_3",
+    "so2_r4_2",
+    "so5_r1_2",
+    "so5_r2_2",
+    "so5_r3_2",
+    "so6_r1_4",
+    "so6_r2_4",
+    "so6_r3_4",
+    "so6_r4_3"
+   ]
+  }
+ ],
+ "names": {
+  "n30_wutou": "無頭鬼",
+  "n30_nopperabo": "無臉鬼",
+  "n30_yukionna": "雪女",
+  "n30_gashadokuro": "餓者髑髏",
+  "nw_yeleng_guard": "夜冷村保安",
+  "nw_shejing": "蛇精",
+  "nw_kapre": "Kapre",
+  "nw_baimao": "白毛殭屍",
+  "n30_banshee": "Banshee",
+  "pg_landlady": "二房東",
+  "nw_honeonna": "骨女",
+  "n30_yesi": "噎死鬼",
+  "nw_daqiang": "鬼打牆",
+  "zd_bone": "骷髏兵",
+  "nw_dullahan": "Dullahan",
+  "zd_hengsi": "橫死新鬼",
+  "n30_chehuo": "車禍鬼",
+  "n30_hantugalah": "Hantu Galah",
+  "n30_jerangkung": "Hantu Jerangkung",
+  "n30_changgui": "倀鬼",
+  "niutou": "牛頭",
+  "n30_kuchisake": "裂口女",
+  "n30_liulian": "榴槤砸死鬼",
+  "n30_pelesit": "Pelesit",
+  "n30_maenak": "Mae Nak",
+  "n30_polong": "Polong",
+  "zd_paotui": "跑腿鬼",
+  "n30_hannya": "般若",
+  "n30_guixinniang": "鬼新娘",
+  "zd_zhima": "紙馬",
+  "n30_chochin": "提燈妖",
+  "xiaogui": "小鬼",
+  "n30_taozhai": "討債鬼",
+  "n30_maoshi": "冒失鬼",
+  "pg_ji": "聻",
+  "tianhua": "天花姐",
+  "nw_zzhouse": "紙紮大屋",
+  "n30_kappa": "河童",
+  "n30_diansi": "電死鬼",
+  "nw_zzcar": "紙紮名車",
+  "n30_dongsi": "凍死鬼",
+  "n30_danxiao": "膽小鬼",
+  "n30_guhangui": "孤寒鬼",
+  "pg_tuimo": "推磨鬼",
+  "nw_bajang": "Bajang",
+  "n30_shedu": "蛇咬鬼",
+  "zd_shuihou": "水猴子",
+  "zombie": "殭屍兵",
+  "n30_tikbalang": "Tikbalang",
+  "nw_krahang": "Krahang",
+  "nw_lunhou": "輪候處職員",
+  "n30_zhongshu": "中暑鬼",
+  "youhun": "遊魂",
+  "nw_buhuagu": "不化骨",
+  "n30_bunian": "Orang Bunian",
+  "zd_hongyi": "紅衣女鬼",
+  "nw_teketeke": "Teke Teke",
+  "n30_phiam": "Phi Am",
+  "n30_leipi": "雷劈鬼",
+  "zd_shanjing": "山精",
+  "mamian": "馬面",
+  "nw_mummy": "木乃伊",
+  "egui": "餓鬼",
+  "n30_genderuwo": "Genderuwo",
+  "n30_kasaobake": "唐傘妖",
+  "n30_rokurokubi": "轆轤首",
+  "nw_guihuo": "鬼火",
+  "shuigui": "水鬼",
+  "n30_churel": "Churel",
+  "pg_ex": "前女友鬼",
+  "zd_yinchai": "陰差",
+  "n30_dugui": "賭鬼",
+  "n30_shidu": "食物中毒鬼",
+  "nw_zzphone": "紙紮手機",
+  "nw_yeleng_sales": "夜冷村推銷員",
+  "n30_hanturaya": "Hantu Raya",
+  "nw_tisi": "替死鬼",
+  "n30_xiangcai": "大象踩扁鬼",
+  "nw_kuaidi": "陰司快遞員",
+  "n30_shanxiao": "山魈",
+  "nw_ameonna": "雨女",
+  "pg_songding": "被賣鬼",
+  "nw_tiangou": "天狗",
+  "n30_yangui": "煙鬼",
+  "n30_diaosi": "吊死鬼",
+  "n30_qionggui": "窮鬼",
+  "nw_huapi": "畫皮",
+  "zhiren": "紙人偶",
+  "nw_huli": "狐妖",
+  "n30_daji": "打機猝死鬼",
+  "n30_yezi": "椰子砸死鬼",
+  "n30_jenglot": "Jenglot",
+  "n30_xiasi": "嚇死鬼",
+  "n30_hanba": "旱魃",
+  "nw_ganshi": "趕屍匠",
+  "n30_jiugui": "酒鬼",
+  "n30_vetala": "Vetala",
+  "n30_yecha": "夜叉",
+  "n30_xiaosi": "笑死鬼"
+ }
+}
