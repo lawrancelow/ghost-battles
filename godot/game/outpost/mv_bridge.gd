@@ -203,7 +203,7 @@ const QTXT := {
 }
 const BTXT := {
 	"bun": ["營地起包子鋪（出普通包子）", "營地建造包子鋪（出普通包子）"],   # [camp] 後院 → 營地
-	"store": ["拔營一次或各台合共 20 級", "拔營一次或各台合計 20 級"],
+	"store": ["起倉庫（或者拔營一次／大排檔各台合共 20 級）", "建造倉庫（或拔營一次／大排檔各台合計 20 級）"],   # [qaudit] 建築卡都起得
 	"altar": ["打低餓鬼王，開招魂台", "打倒餓鬼王，開放招魂台"], "furnace": ["升到 6 級（營地化寶爐）", "升到 6 級（營地化寶爐）"],   # [camp] [qaudit] 招魂台唔使起：打低餓鬼王自動開
 }
 static func quest_disp(_q, p: Array) -> Array: return p   # 進度照舊（後院建築係真等級）
@@ -229,8 +229,8 @@ static func _quest_text(q) -> String:
 		var a = BTXT[str(q.b)]; return a[0] if DB.lang == "yue" else a[1]
 	if t == "bLevel":
 		var b = str(q.get("b", ""))
-		if b == "house": return T("紙紮大屋擴建到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))), "紙紮大屋擴建到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))))
-		if b == "store": return T("大屋倉庫擴到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))), "大屋倉庫擴到 %d 級（拔營／升台）" % int(J.num(q.get("n", 1))))
+		if b == "house": return T("紙紮大屋擴建到 %d 級（升級鬼宅／拔營／升台）" % int(J.num(q.get("n", 1))), "紙紮大屋擴建到 %d 級（升級鬼宅／拔營／升台）" % int(J.num(q.get("n", 1))))   # [qaudit]
+		if b == "store": return T("大屋倉庫擴到 %d 級（升級倉庫／拔營／升台）" % int(J.num(q.get("n", 1))), "大屋倉庫擴到 %d 級（升級倉庫／拔營／升台）" % int(J.num(q.get("n", 1))))   # [qaudit]
 	if t in ["chop", "rice", "craftPlank", "build", "bLevel"]: return T("營地：", "營地：") + txt   # [camp] 原本村子嘅建築喺大地圖底「營地」
 	if t == "stage" and txt.begins_with("夜班巡陰"):   # [outgate] 新版：主線關卡喺大排檔前面打（唔再經舊世界地圖「夜班巡陰」）
 		var sid = str(q.get("s", "")); var nm = sid
