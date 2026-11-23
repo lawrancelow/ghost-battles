@@ -97,7 +97,7 @@ func _run(t) -> void:
 # ---- stub 介面 ----
 func data_check() -> void:
 	_chk("AB.on() 開（冇 abil.json 用後備表）", AB.on())
-	_chk("AB.mechs_of：Pontianak 識飛", AB.mechs_of("pontianak").has("fly"), AB.mechs_of("pontianak"))
+	_chk("AB.mechs_of：Pontianak 識飛", AC.enemy_mechs(["pontianak"]).has("fly"), AC.enemy_mechs(["pontianak"]))
 	var allc = true
 	for m in AI.INFO.keys():
 		if m.begins_with("st_") or m in AI.TAGS: continue
@@ -131,7 +131,10 @@ func calc_check() -> void:
 	_chk("敵人機制合併唔重複", ms.size() == 6 and ms.has("fly") and ms.has("summon"), ms)
 	var cv = AC.cover(AC.team_now(), null, ms)
 	_chk("✔ 飛行：小紙（遠）", (cv.fly as Array).size() >= 1 and str(cv.fly[0].g.k) == "xiaozhi", cv.fly)
-	_chk("✘ 嚇氣光環：隊入面冇「定」", (cv.fear_aura as Array).is_empty())
+	var has_st = false   # 數據會改（abcore 正式表）：以隊員實際標籤判斷 ✔／✘ 啱唔啱
+	for g in AC.team_now():
+		for tg in AC.tags(J.str(g.k)): if tg in AC.counters("fear_aura"): has_st = true
+	_chk("嚇氣光環：✔／✘ 同隊員標籤一致（隊有「定」＝%s）" % has_st, (cv.fear_aura as Array).is_empty() != has_st, cv.fear_aura)
 	var rc = AC.recommend(ms)
 	var rk = []
 	for r in rc: rk.append(str(r.g.k))
@@ -187,7 +190,13 @@ func _all_in(root: Control, box: Rect2) -> Array:
 		for x in c.get_children():
 			if x is Control and x.visible:
 				var r = (x as Control).get_global_rect()
-				if r.size.x > 0 and not box.grow(1.0).encloses(r): badl.append([x.name, r])
+				var clip = box
+				var a = x.get_parent()
+				while a != null and a != root:   # 喺可捲區入面：以可捲區為界（捲出去嘅本來就睇唔到）
+					if a is ScrollContainer: clip = (a as Control).get_global_rect(); break
+					a = a.get_parent()
+				var chk = r if clip == box else Rect2(r.position.x, box.position.y, r.size.x, 1.0)   # 可捲區入面：只查左右
+				if r.size.x > 0 and not box.grow(1.0).encloses(chk): badl.append([x.name, r])
 				st.append(x)
 	return badl
 func _fonts_ok(root: Node) -> Array:

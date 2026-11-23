@@ -23,9 +23,9 @@ static var _mc := {}               # 鬼 k → 機制（快取）
 static func L(yue: String, zhs: String) -> String: return str(DB.N(load("res://game/zone/zone_data.gd").L(yue, zhs)))
 
 static func mechs(u: Dictionary) -> Array:
-	if u.get("mech") is Array: return u.mech
+	if u.get("mech") is Array: return (u.mech as Array).map(func(m): return AI.canon(AB.norm_mech(m)))   # [abui] 中文／英文一律轉英文正名
 	var k = J.str(u.get("k"))
-	if not _mc.has(k): _mc[k] = AB.mechs_of(k) if AB.on() else []
+	if not _mc.has(k): _mc[k] = (AB.mechs_of(k) if AB.on() else []).map(func(m): return AI.canon(m))
 	return _mc[k]
 
 static func _t(op) -> float: return float(op.t) if op != null else 0.0
