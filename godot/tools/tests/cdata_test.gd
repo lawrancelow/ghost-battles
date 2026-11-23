@@ -258,7 +258,11 @@ func counter_check() -> void:
 		var now = str(x.get("now", ""))
 		var EN = AB.enemy(now)
 		if not ET.has(now) or str(EN.get("sys", "")) != str(x.get("sys", "")): sb.append(x.get("plan"))
-	_chk("頂替表：新鬼位全部用同系、有圖（ENEMY_T）嘅現有鬼", sb.is_empty() and (D.get("subs", []) as Array).size() > 0, sb)
+	_chk("頂替表已撤（新鬼、新雜兵全部用真身出場）", (D.get("subs", []) as Array).is_empty(), D.get("subs"))
+	var nwin = {}
+	for id in D.get("camps", {}):
+		for k in D.camps[id].en: if str(k).begins_with("nw_") or str(k).begins_with("zd_") or str(k).begins_with("bm_"): nwin[k] = true
+	_chk("新鬼 26、新雜兵 8、魔王 6 喺據點真身出場（≥36 種）", nwin.size() >= 36 and ET.has("nw_shenpi") and ET.has("zd_hengsi") and ET.has("bm_pang"), nwin.size())
 	var names = D.get("names", {})
 	_chk("新鬼名照定案：狐妖、Teke Teke、陰司審批官、投胎辦事處職員、紙紮跑車", names.get("nw_huli") == "狐妖" and names.get("nw_teketeke") == "Teke Teke" and names.get("nw_shenpi") == "陰司審批官" and names.get("nw_toutai") == "投胎辦事處職員" and names.get("nw_zzcar") == "紙紮跑車")
 
@@ -270,6 +274,8 @@ func camp_check() -> void:
 	var total = 0
 	for c in 6:
 		var zs = ZD.sorties(c)
+		var sc = {}
+		for e0 in SO.camps(c): sc[str(e0.id)] = e0
 		for z in zs:
 			total += 1
 			var id = str(z.id)
@@ -283,8 +289,10 @@ func camp_check() -> void:
 				if not ET.has(k) or not E.has(k): en_bad.append("%s:%s" % [id, k])
 				if k in SO.NAMED: named_bad.append("%s:%s" % [id, k])
 			var gk = str(cp.get("guard", ""))
-			if gk == "" or en.is_empty() or en[en.size() - 1] != gk or not J.t(E.get(gk, {}).get("recruit")) or not A.has(gk): guard_bad.append("%s:%s" % [id, gk])
-			var e = {"id": id, "ring": int(z.ring), "c": c, "lv": 5.0, "pos": Vector2.ZERO}
+			var gi = en.size() - (2 if cp.has("bm") else 1)
+			if gk == "" or en.is_empty() or en[gi] != gk or not J.t(E.get(gk, {}).get("recruit")): guard_bad.append("%s:%s" % [id, gk])
+			if cp.has("bm") and (str(z.get("boss", "")) != str(cp.bm) or en[en.size() - 1] != str(cp.bm)): guard_bad.append(id + ":魔王")
+			var e = sc.get(id, {"id": id, "ring": int(z.ring), "c": c, "lv": 5.0, "pos": Vector2.ZERO})
 			var st = SO.stage_of(e)
 			if st.get("en") != en or str(st.get("guard", "")) != gk: st_bad.append(id)
 	var cap_bad = []
@@ -293,7 +301,7 @@ func camp_check() -> void:
 		var cp = C[id]; var cap = [1, 1, 2, 3][clampi(int(cp.ring), 1, 4) - 1]
 		var ms: Array = cp.get("mech", [])
 		if ms.size() > cap or (cp.get("q", []) as Array).size() > 2: cap_bad.append("%s:%d" % [id, ms.size()])
-		for mm in ms: if int(intro.get(mm, 99)) > int(cp.c): cap_bad.append("%s 未教 %s" % [id, mm])
+		for mm in ms: if int(intro.get(mm, 99)) > int(cp.c) and not cp.has("bm"): cap_bad.append("%s 未教 %s" % [id, mm])
 		var mk: Array = cp.get("mk", [])
 		if mk.size() != (cp.en as Array).size(): cap_bad.append(id + ":mk")
 		else:
@@ -312,11 +320,11 @@ func camp_check() -> void:
 		if dupc.has(key): dd.append([dupc[key], id])
 		dupc[key] = id
 	_chk("同一關冇兩個據點敵人組合完全一樣", dd.is_empty(), dd)
-	_chk("zones.json 六關據點共 90 個", total == 90 and C.size() == 90, [total, C.size()])
+	_chk("zones.json 六關據點共 90＋6 魔王據點", total == 96 and C.size() == 96, [total, C.size()])
 	_chk("90 據點全部有組合、圈／方向對得上、有行軍路線（可達）", reach_bad.is_empty(), reach_bad)
 	_chk("每據點敵人隻數＝ENEMY_N、全部有圖（ENEMY_T）", en_bad.is_empty(), en_bad)
 	_chk("據點唔放主線劇情王（NAMED）", named_bad.is_empty(), named_bad)
-	_chk("每據點有駐守鬼（最後一隻、可招降、有 ABIL）", guard_bad.is_empty(), guard_bad)
+	_chk("每據點有駐守鬼（最後一隻／魔王據點係副將、可招降）；魔王據點＝zones.json 嘅 bm", guard_bad.is_empty(), guard_bad)
 	_chk("so_data.stage_of 改讀 counter.json（敵人＋駐守鬼）", st_bad.is_empty(), st_bad)
 	# 同幫同方向：第 1～4 圈都係同一幫
 	var gb = []
@@ -413,5 +421,17 @@ func flow_check(t, m) -> void:
 	for i in foes.size(): if foes[i].get("mech") != st.ct.mk[i]: mok = false
 	_chk("每隻敵人寫入據點實際機制 u.mech", mok)
 	_chk("op 記住駐守鬼（soul 線讀）", str(op.get_meta("guard", "")) == st.guard)
-	RTS.recall(op)
+	RTS.recall(op); RTS.ops.erase(op)
+	await _w(t, 0.3)
+	for x in SO.camps(4): if int(x.ring) == 4 and str(x.get("bm", "")) == "": SO.cst(x)["first"] = true; SO.cst(x)["clr"] = 0.0
+	var eb = SO.camp("so5_r4_4", 4)
+	var stb = SO.stage_of(eb)
+	var rb = SO.dispatch(eb)
+	var opb = RTS.op_for(SO.sid_of(eb))
+	_chk("第 5 關魔王據點（Krasue）打得：魔王＋嘍囉＋副將", rb == "ok" and opb != null and str(stb.en[stb.en.size() - 1]) == "bm_krasue", [rb, stb.get("en")])
+	if opb != null:
+		var bmu = null; var gk2 = ""
+		for u in opb.units: if J.num(u.side) == 1 and str(u.k) == "bm_krasue": bmu = u
+		_chk("魔王有名牌、頭目旗；副將＝駐守鬼（主魂）", bmu != null and J.t(bmu.get("boss")) and str(opb.get_meta("guard", "")) == str(stb.get("guard")) and str(stb.get("guard")) != "", [bmu.get("name") if bmu else null, stb.get("guard")])
+		RTS.recall(opb); RTS.ops.erase(opb)
 	SO.force_open = false; SO.test_now = -1.0

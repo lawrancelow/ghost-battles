@@ -7330,6 +7330,1046 @@
    "kind": "named",
    "recruit": true,
    "use_abil": true
+  },
+  "nw_guihuo": {
+   "sys": "魂",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "shadow"
+   ],
+   "imm": [
+    "breath",
+    "light"
+   ],
+   "why": [
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗",
+    "唔怕燈：自己識玩嘅把戲唔怕"
+   ],
+   "mech": [
+    "飛",
+    "散骨"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_huli": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "分身"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_bajang": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "paper",
+    "shadow"
+   ],
+   "imm": [
+    "face"
+   ],
+   "why": [
+    "怕紙：主人嘅契約字條",
+    "怕黑影：以為主人返嚟",
+    "唔怕鬼臉：自己最愛扮鬼臉"
+   ],
+   "mech": [
+    "隱"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_teketeke": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_baimao": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "霸體",
+    "再生"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_buhuagu": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "殼",
+    "屍變"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_daqiang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "迷魂"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_ganshi": {
+   "sys": "魂",
+   "sc": [
+    "sound"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_huapi": {
+   "sys": "厲",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "分身"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_ameonna": {
+   "sys": "厲",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_shejing": {
+   "sys": "妖",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "sound"
+   ],
+   "imm": [
+    "shadow",
+    "cold"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "唔怕黑影：山林夜色係主場",
+    "唔怕凍：自己識玩嘅把戲唔怕"
+   ],
+   "mech": [
+    "再生"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_tiangou": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "飛"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_tisi": {
+   "sys": "橫",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "face"
+   ],
+   "imm": [
+    "phone",
+    "cold"
+   ],
+   "why": [
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死",
+    "唔怕凍：自己識玩嘅把戲唔怕"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_krahang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "飛"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_kapre": {
+   "sys": "妖",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "隱",
+    "霸體"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_honeonna": {
+   "sys": "屍",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "隱"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_mummy": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "殼",
+    "屍變"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_zzphone": {
+   "sys": "紙紮",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "light",
+    "breath"
+   ],
+   "imm": [
+    "paper"
+   ],
+   "why": [
+    "怕燈：紙紮怕火",
+    "怕吹氣：紙輕，一吹就飛",
+    "唔怕紙：自己就係紙"
+   ],
+   "mech": [
+    "隱"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_zzcar": {
+   "sys": "紙紮",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "breath"
+   ],
+   "imm": [
+    "paper",
+    "light"
+   ],
+   "why": [
+    "怕吹氣：紙輕，一吹就飛",
+    "唔怕紙：自己就係紙",
+    "唔怕燈：自己識玩嘅把戲唔怕"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_kuaidi": {
+   "sys": "使",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "paper",
+    "shadow"
+   ],
+   "imm": [
+    "face"
+   ],
+   "why": [
+    "怕紙：主人嘅契約字條",
+    "怕黑影：以為主人返嚟",
+    "唔怕鬼臉：自己最愛扮鬼臉"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_zzhouse": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "light",
+    "breath"
+   ],
+   "imm": [
+    "paper"
+   ],
+   "why": [
+    "怕燈：紙紮怕火",
+    "怕吹氣：紙輕，一吹就飛",
+    "唔怕紙：自己就係紙"
+   ],
+   "mech": [
+    "殼",
+    "召喚"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_shenpi": {
+   "sys": "官",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "phone"
+   ],
+   "imm": [
+    "light",
+    "paper"
+   ],
+   "why": [
+    "怕電話：上頭 call",
+    "唔怕燈：24 小時開燈返工",
+    "唔怕紙：自己識玩嘅把戲唔怕"
+   ],
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_toutai": {
+   "sys": "官",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "phone"
+   ],
+   "imm": [
+    "light",
+    "paper"
+   ],
+   "why": [
+    "怕電話：上頭 call",
+    "唔怕燈：24 小時開燈返工",
+    "唔怕紙：自己識玩嘅把戲唔怕"
+   ],
+   "mech": [
+    "召喚"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_yeleng_guard": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "paper",
+    "shadow"
+   ],
+   "imm": [
+    "face"
+   ],
+   "why": [
+    "怕紙：主人嘅契約字條",
+    "怕黑影：以為主人返嚟",
+    "唔怕鬼臉：自己最愛扮鬼臉"
+   ],
+   "mech": [
+    "殼"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_yeleng_sales": {
+   "sys": "使",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "paper",
+    "shadow"
+   ],
+   "imm": [
+    "face"
+   ],
+   "why": [
+    "怕紙：主人嘅契約字條",
+    "怕黑影：以為主人返嚟",
+    "唔怕鬼臉：自己最愛扮鬼臉"
+   ],
+   "mech": [
+    "召喚"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "nw_dullahan": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "突襲",
+    "霸體"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": false
+  },
+  "bm_taotie": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "再生",
+    "召喚",
+    "霸體"
+   ],
+   "tier": 5,
+   "kind": "boss",
+   "recruit": false,
+   "use_abil": false
+  },
+  "bm_jembalang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "隱",
+    "分身",
+    "突襲"
+   ],
+   "tier": 5,
+   "kind": "boss",
+   "recruit": false,
+   "use_abil": false
+  },
+  "bm_hou": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "屍變",
+    "殼",
+    "霸體"
+   ],
+   "tier": 5,
+   "kind": "boss",
+   "recruit": false,
+   "use_abil": false
+  },
+  "bm_langsuir": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "飛",
+    "嚇氣光環",
+    "再生"
+   ],
+   "tier": 5,
+   "kind": "boss",
+   "recruit": false,
+   "use_abil": false
+  },
+  "bm_krasue": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "phone"
+   ],
+   "imm": [
+    "sound",
+    "face"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "唔怕怪聲：尖叫係佢哋專利",
+    "唔怕鬼臉：自己識玩嘅把戲唔怕"
+   ],
+   "mech": [
+    "飛",
+    "反傷",
+    "散骨"
+   ],
+   "tier": 5,
+   "kind": "boss",
+   "recruit": false,
+   "use_abil": false
+  },
+  "bm_pang": {
+   "sys": "官",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "phone"
+   ],
+   "imm": [
+    "light",
+    "paper"
+   ],
+   "why": [
+    "怕電話：上頭 call",
+    "唔怕燈：24 小時開燈返工",
+    "唔怕紙：自己識玩嘅把戲唔怕"
+   ],
+   "mech": [
+    "分身",
+    "反傷",
+    "召喚"
+   ],
+   "tier": 5,
+   "kind": "boss",
+   "recruit": false,
+   "use_abil": false
+  },
+  "bm_shuten": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "霸體",
+    "再生",
+    "嚇氣光環"
+   ],
+   "tier": 5,
+   "kind": "boss",
+   "recruit": false,
+   "use_abil": false
+  },
+  "zd_bone": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "散骨"
+   ],
+   "tier": 0,
+   "kind": "fod",
+   "recruit": false,
+   "use_abil": false
+  },
+  "zd_zhima": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "light",
+    "breath"
+   ],
+   "imm": [
+    "paper"
+   ],
+   "why": [
+    "怕燈：紙紮怕火",
+    "怕吹氣：紙輕，一吹就飛",
+    "唔怕紙：自己就係紙"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 0,
+   "kind": "fod",
+   "recruit": false,
+   "use_abil": false
+  },
+  "zd_shanjing": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [],
+   "tier": 0,
+   "kind": "fod",
+   "recruit": false,
+   "use_abil": false
+  },
+  "zd_shuihou": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 0,
+   "kind": "fod",
+   "recruit": false,
+   "use_abil": false
+  },
+  "zd_hongyi": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tier": 0,
+   "kind": "fod",
+   "recruit": false,
+   "use_abil": false
+  },
+  "zd_paotui": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "paper",
+    "shadow"
+   ],
+   "imm": [
+    "face"
+   ],
+   "why": [
+    "怕紙：主人嘅契約字條",
+    "怕黑影：以為主人返嚟",
+    "唔怕鬼臉：自己最愛扮鬼臉"
+   ],
+   "mech": [
+    "召喚"
+   ],
+   "tier": 0,
+   "kind": "fod",
+   "recruit": false,
+   "use_abil": false
+  },
+  "zd_yinchai": {
+   "sys": "官",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "paper",
+    "phone"
+   ],
+   "imm": [
+    "light"
+   ],
+   "why": [
+    "怕紙：公文、投訴信",
+    "怕電話：上頭 call",
+    "唔怕燈：24 小時開燈返工"
+   ],
+   "mech": [
+    "殼"
+   ],
+   "tier": 0,
+   "kind": "fod",
+   "recruit": false,
+   "use_abil": false
+  },
+  "zd_hengsi": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [],
+   "tier": 0,
+   "kind": "fod",
+   "recruit": false,
+   "use_abil": false
   }
  },
  "CAMP_MOD": {

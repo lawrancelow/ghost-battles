@@ -3,11 +3,16 @@
 # 依據：/home/claude/bs/counter.md（第 3、4、6、8、10、11 節）、roster.md（第 3 節能力概念、第 7.1 節）、ability.md（第 2 節結構）
 #       counter_tool/counter_sim.py 的名冊與鬼幫（PLAN 第 6 節定案：狐狸精→狐妖、Sundel Bolong→Teke Teke、判官→陰司審批主任、投胎辦事處職員→輪候處職員）
 # 第一階段：新鬼（nw_*）、新雜兵（zd_*）、天花姐（未入 ENEMY_T）冇敵人圖 → 用同系現有鬼頂替（SUB 表），counter.json 記住原定（plan）同實際（en）。
-import json, os, sys, itertools
+import json, os, sys, itertools, re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CORE = json.load(open(os.path.join(ROOT, "data/core.json"), encoding="utf-8"))
-ET = CORE["ENEMY_T"]; GH = CORE["GHOSTS"]; SK = CORE["SKILLS"]
+ET = dict(CORE["ENEMY_T"]); GH = CORE["GHOSTS"]; SK = CORE["SKILLS"]
+# newghost 線：新名鬼 26、大魔王 7、新雜兵 8 已有圖同 ENEMY_T（data/nat/newghost.json），行起身時登記入遊戲
+NGJ = json.load(open(os.path.join(ROOT, "data/nat/newghost.json"), encoding="utf-8"))
+ET.update(NGJ["ENEMY_T"])
+_ngb = open(os.path.join(ROOT, "game/newghost/ng_boss.gd"), encoding="utf-8").read()
+ESCORT = {m.group(1): re.findall(r'"([a-z_0-9]+)"', m.group(2)) for m in re.finditer(r'"(bm_[a-z]+)": \[([^\]]*)\]', _ngb)}
 
 # ======================= 第一層：8 系 × 8 嚇法（counter.md 3.3） =======================
 SC = {"吹氣": "breath", "燈": "light", "凍": "cold", "怪聲": "sound", "紙": "paper", "電話": "phone", "鬼臉": "face", "黑影": "shadow"}
@@ -114,23 +119,14 @@ FOD = {  # 雜兵 14（counter.md 6.4）
     "zd_shuihou": ("水猴子", "妖", "黑影", "突襲"), "zd_hongyi": ("紅衣女鬼", "厲", "怪聲", "嚇氣光環"), "zd_paotui": ("跑腿鬼", "使", "鬼臉", "召喚"),
     "zd_yinchai": ("陰差", "官", "燈", "殼"), "zd_hengsi": ("橫死新鬼", "橫", "電話", ""),
 }
-BOSS = {"huang": ("黃總", "官", "電話", "召喚,殼,嚇氣光環")}   # 第一階段只有黃總有圖（其餘 7 隻魔王第二階段）
+BOSS = {"huang": ("黃總", "官", "電話", "召喚,殼,嚇氣光環"),   # 大魔王（counter.md 6.4；不可招降）
+        "bm_taotie": ("饕餮", "妖", "黑影", "再生,召喚,霸體"), "bm_jembalang": ("Jembalang", "妖", "黑影", "隱,分身,突襲"),
+        "bm_hou": ("犼", "屍", "凍", "屍變,殼,霸體"), "bm_langsuir": ("Langsuir", "厲", "怪聲", "飛,嚇氣光環,再生"),
+        "bm_krasue": ("Krasue", "厲", "鬼臉", "飛,反傷,散骨"), "bm_pang": ("龐總", "官", "紙", "分身,反傷,召喚"),
+        "bm_shuten": ("酒吞童子", "妖", "黑影", "霸體,再生,嚇氣光環")}
 
-# 頂替表（第一階段）：原定 id → (現有有圖嘅同系鬼, 血倍, 攻倍)；倍數令頂替雜兵嘅名鬼唔會強過原定雜兵
-SUB = {
-    "nw_guihuo": ("n30_xiasi", 1, 1), "nw_huli": ("n30_baigujing", 1, 1), "nw_bajang": ("n30_taozhai", 1, 1),
-    "nw_teketeke": ("n30_maenak", 1, 1), "nw_baimao": ("n30_jerangkung", 1, 1), "nw_buhuagu": ("n30_dongsi", 1, 1),
-    "nw_daqiang": ("n30_tikbalang", 1, 1), "nw_ganshi": ("n30_guhangui", 1, 1), "nw_huapi": ("n30_yukionna", 1, 1),
-    "nw_ameonna": ("n30_yukionna", 1, 1), "nw_shejing": ("n30_baigujing", 1, 1), "nw_tiangou": ("n30_rokurokubi", 1, 1),
-    "nw_tisi": ("n30_chehuo", 1, 1), "nw_krahang": ("n30_shanxiao", 1, 1), "nw_kapre": ("n30_genderuwo", 1, 1),
-    "nw_honeonna": ("n30_jerangkung", 1, 1), "nw_mummy": ("n30_dongsi", 1, 1), "nw_zzphone": ("n30_xiangcai", 1, 1),
-    "nw_zzcar": ("n30_kasaobake", 1, 1), "nw_kuaidi": ("n30_taozhai", 1, 1), "nw_zzhouse": ("n30_xiangcai", 1, 1),
-    "nw_shenpi": ("n30_yecha", 1, 1), "nw_toutai": ("mamian", 1, 1), "nw_yeleng_guard": ("n30_taozhai", 1, 1),
-    "nw_yeleng_sales": ("n30_changgui", 1, 1), "nw_dullahan": ("n30_genderuwo", 1, 1), "tianhua": ("n30_hantugalah", 1, 1),
-    "zd_bone": ("zombie", 1, 1), "zd_zhima": ("zhiren", 1, 1), "zd_shanjing": ("n30_kappa", 0.7, 0.9),
-    "zd_shuihou": ("n30_kappa", 0.7, 0.9), "zd_hongyi": ("pg_ex", 0.5, 0.85), "zd_paotui": ("xiaogui", 1, 1),
-    "zd_yinchai": ("niutou", 1, 1), "zd_hengsi": ("shuigui", 1, 1),
-}
+# 頂替表：newghost 合併後全部撤掉（新鬼、新雜兵都有圖同 ENEMY_T）
+SUB = {}
 
 # ======================= 鬼幫 24＋據點 90（counter.md 5.1、8；counter_sim.py） =======================
 GANGS = {
@@ -149,7 +145,7 @@ GANGS = {
  4: {"W": ("紅樹林新娘", ["n30_churel", "n30_maenak", "n30_guixinniang", "nw_ameonna"], ["zd_hongyi"]),
      "E": ("沉船灘水妖", ["n30_kappa", "nw_tiangou", "nw_shejing", "n30_aswang"], ["zd_shuihou"]),
      "S": ("河口替身組", ["nw_tisi", "n30_zhongshu", "n30_xiangcai", "n30_xiangcai"], ["shuigui"]),
-     "N": ("蕉園夜叫", ["n30_phiam", "n30_xiasi", "tianhua", "nw_krahang", "nw_kapre"], ["zd_hongyi", "zd_shuihou"])},
+     "N": ("蕉園夜叫", ["n30_phiam", "n30_xiasi", "nw_krahang", "nw_kapre"], ["zd_hongyi", "zd_shuihou"])},
  5: {"W": ("舊戲院女鬼", ["n30_kuchisake", "nw_teketeke", "n30_yukionna", "n30_banshee", "n30_hannya"], ["zd_hongyi"]),
      "E": ("停車場橫死組", ["n30_daji", "n30_xiaosi", "n30_chehuo", "n30_chengsi"], ["zd_hengsi"]),
      "S": ("巴士站怪談", ["n30_nopperabo", "n30_rokurokubi", "nw_honeonna", "nw_kuaidi"], ["zd_shanjing", "zd_bone"]),
@@ -181,9 +177,10 @@ def ent(i):
     if i in BOSS:
         f = BOSS[i]; return dict(id=i, name=f[0], sys=f[1], sc=f[2], mech=f[3].split(","), fod=False, t=5)
     raise KeyError(i)
-def real(i):   # 第一階段實際出場嘅 key（有 ENEMY_T、有圖）
+def real(i):   # 實際出場嘅 key（有 ENEMY_T、有圖）
     if i in ET: return (i, 1, 1)
-    return SUB[i]
+    if i in SUB: return SUB[i]
+    raise KeyError("%s 冇 ENEMY_T" % i)
 
 # 鬼幫方向：按 zones.json 每章真實據點方向（審查修正 7）。counter_sim 嘅「N」幫＝野外王（king）路線幫，
 # 搬去該章 king 所在方向；原本喺嗰個方向嘅幫搬去 N。
@@ -195,11 +192,14 @@ def gang_dirs(ch):
     m["N"], m[kd] = kd, "N"          # counter 幫標籤 → 真實方向
     return {m[d]: GANGS[ch][d] for d in "WESN"}
 REAL_GANGS = {ch: gang_dirs(ch) for ch in GANGS}
-STAGE2_SRC = []   # 讓咗位嘅新鬼：階段 2 魔王據點（so{c}_r4_4，+6 個）做主魂來源
+ALT = {b["stage"]["boss"] for m in ZONES.values() for z in m["zones"] for b in (z.get("bosses") or []) if (b.get("stage") or {}).get("boss")}
+ALT |= {"eguiking", "toyol", "laojiang", "pontianak", "pocong", "penanggal", "baiwu", "heiwu"}   # 野外王／王座重遊已經有主魂
+LIEUT = {}   # 魔王據點副將（魔王唔可招降 → 副將做駐守鬼，主魂嚟源）：{章: 鬼}
 CAMPS = []
 for ch in range(1, 7):
     seen = {}
     for e in ZONES[str(ch - 1)]["sorties"]:
+        if e.get("boss"): continue   # 魔王據點另外砌（下面）
         r = int(e["ring"]); d = e["dir"]
         gname, mem, fod = REAL_GANGS[ch][d]
         n = EN_N[r - 1]; nn = NAMED_N[r - 1]
@@ -235,9 +235,6 @@ for ch in range(1, 7):
             if m in gs: continue
             dupc = [c for c in cs if gs.count(c["plan"][-1]) > 1 and not c["king"]]
             if not dupc: dupc = [c for c in cs if gs.count(c["plan"][-1]) > 1]
-            if not dupc and m in ET:   # 據點唔夠（5 成員 4 據點）：現有鬼優先做駐守，新鬼讓位去階段 2 魔王據點
-                dupc = [c for c in cs if c["plan"][-1] not in ET and m in c["plan"][-c["nn"]:]]
-                for c in dupc: STAGE2_SRC.append((c["plan"][-1], c["c"]))
             if not dupc: continue
             # 先揀已經有呢隻嘅據點；否則揀圈數最接近成員強弱次序嘅
             have = [c for c in dupc if m in c["plan"][-c["nn"]:]]
@@ -247,22 +244,45 @@ for ch in range(1, 7):
             if len(pk) == c["nn"]: pk = pk[1:]
             c["plan"] = c["fods"] + pk + [m]
 
-# 主魂補位（每章）：仲未做過駐守鬼嘅成員 → 現有鬼「客串」做同章駐守鬼重複嘅據點（第 4 圈優先）；新鬼記階段 2（魔王據點／補據點）
-GUEST = []
+# 主魂補位（每章）：仲未做過駐守鬼嘅成員 → 「客串」做同章駐守鬼重複嘅據點（第 4 圈優先）；再唔夠就做魔王據點副將
+GUEST = []; MISSING = []
 for ch in range(1, 7):
     cs = [c for c in CAMPS if c["c"] == ch - 1]
     mems = [m for d in "WESN" for m in REAL_GANGS[ch][d][1]]
     for m in dict.fromkeys(mems):
         gs = [c["plan"][-1] for c in cs]
         if m in gs: continue
-        if m not in ET:
-            STAGE2_SRC.append((m, ch - 1)); continue
-        dup = sorted([c for c in cs if gs.count(c["plan"][-1]) > 1 and not c["king"]], key=lambda c: (-c["ring"], c["id"]))
-        if not dup: continue
+        if m in ALT: continue
+        dup = sorted([c for c in cs if (gs.count(c["plan"][-1]) > 1 or c["plan"][-1] in ALT) and not c["king"]], key=lambda c: (-c["ring"], c["id"]))
+        if not dup:
+            if ch - 1 not in LIEUT: LIEUT[ch - 1] = m   # 據點唔夠：做魔王據點副將
+            else: MISSING.append((m, ch))
+            continue
         c = dup[0]
         pk = [x for x in c["plan"][-c["nn"]:] if x != m][1:]
         c["plan"] = c["fods"] + pk + [m]
         GUEST.append((m, c["id"]))
+
+# 本章冇位：去後一章（再唔得就前一章）駐守鬼重複嘅據點客串
+for m, ch in MISSING:
+    for c2 in [ch + 1, ch + 2, ch - 1]:
+        cs = [c for c in CAMPS if c["c"] == c2 - 1]
+        gs = [c["plan"][-1] for c in cs]
+        dup = sorted([c for c in cs if (gs.count(c["plan"][-1]) > 1 or c["plan"][-1] in ALT) and not c["king"]], key=lambda c: (-c["ring"], c["id"]))
+        if dup:
+            c = dup[0]; pk = [x for x in c["plan"][-c["nn"]:] if x != m][1:]
+            c["plan"] = c["fods"] + pk + [m]; GUEST.append((m, c["id"])); break
+
+# 魔王據點 6 個（newghost 線加喺 zones.json：so{c}_r4_4，boss＝bm_*）：嘍囉 3＋副將（可招降，駐守鬼）＋魔王
+for ch in range(1, 7):
+    for e in ZONES[str(ch - 1)]["sorties"]:
+        if not e.get("boss"): continue
+        bm = e["boss"]; esc = ESCORT.get(bm, ["youhun"] * 4)
+        lt = LIEUT.get(ch - 1)
+        if lt is None:   # 冇缺位：用該方向鬼幫最強成員做副將
+            lt = REAL_GANGS[ch][e["dir"]][1][-1]
+        plan = esc[:3] + [lt, bm]
+        CAMPS.append(dict(id=e["id"], c=ch - 1, ring=4, dir=e["dir"], gang="魔王", plan=plan, king=False, nn=2, n=5, fods=esc[:3], bm=bm))
 
 # 機制教學節奏（審查修正 8）：第 1 章最多 3 種，之後每章新加 2 種；每據點上限 第 1～2 圈 1、第 3 圈 2、第 4 圈 3
 RING_CAP = [1, 1, 2, 3]
@@ -657,8 +677,8 @@ def build():
     # 敵人
     ENEMY = {}
     for k in ET:
-        if k in ("youhun", "egui", "xiaogui", "zombie", "shuigui", "zhiren"): e = ent(k); kind = "fod"
-        elif k == "huang": e = ent(k); kind = "boss"
+        if k in ("youhun", "egui", "xiaogui", "zombie", "shuigui", "zhiren") or k.startswith("zd_"): e = ent(k); kind = "fod"
+        elif k in BOSS: e = ent(k); kind = "boss"
         else: e = ent(k); kind = "named"
         f = SYS[e["sys"]]
         # 例外嚇法（約三成名鬼用非本系嚇法，例如提燈妖＝燈）：自己識嘅嘢唔怕 → 由「怕」搬去「唔怕」
@@ -680,10 +700,10 @@ def build():
     for ch in range(6):
         cnt = {}
         for c in CAMPS:
-            if c["c"] != ch: continue
+            if c["c"] != ch or c.get("bm"): continue
             for i in c["plan"]:
                 for m in ENEMY[real(i)[0]]["mech"]: cnt[m] = cnt.get(m, 0) + 1
-        later = {m for c in CAMPS if c["c"] > ch for i in c["plan"] for m in ENEMY[real(i)[0]]["mech"]}
+        later = {m for c in CAMPS if c["c"] > ch and not c.get("bm") for i in c["plan"] for m in ENEMY[real(i)[0]]["mech"]}
         new = sorted([m for m in cnt if m not in allowed], key=lambda m: (m in later, -cnt[m], MECHS.index(m)))[:NEW_PER_CH[ch]]   # 之後再冇機會出嘅先教
         if ch == 0: new = ["再生", "突襲", "散骨"]   # counter.md 13：第 1 關只教最直觀三個
         for m in new: intro[m] = ch
@@ -701,16 +721,18 @@ def build():
             for m in ENEMY[k]["mech"]:
                 if m in c["allow"]: raw[m] = raw.get(m, 0) + (2 if k == en[-1] else 1)   # 駐守鬼嘅機制優先
         keep = sorted(raw, key=lambda m: (-raw[m], MECHS.index(m)))[:RING_CAP[c["ring"] - 1]]
+        if c.get("bm"): keep = ENEMY[c["bm"]]["mech"][:3]   # 魔王據點：魔王自己 3 個機制（收尾，唔受教學節奏限）
         mech = sorted(keep, key=MECHS.index)
         mk = [[m for m in ENEMY[k]["mech"] if m in keep] for k in en]
         pmech = sorted({m for i in c["plan"] for m in ent(i)["mech"]}, key=MECHS.index)
-        guard = en[-1]; gp = c["plan"][-1]
+        guard = en[-2] if c.get("bm") else en[-1]; gp = c["plan"][-2] if c.get("bm") else c["plan"][-1]
         if not ENEMY[guard]["recruit"]: errs.append("%s 駐守鬼 %s 唔可招降" % (c["id"], guard))
         sy = {}
         for k in en: sy[ENEMY[k]["sys"]] = sy.get(ENEMY[k]["sys"], 0) + 1
         camps[c["id"]] = {"c": c["c"], "ring": c["ring"], "dir": c["dir"], "gang": c["gang"], "en": en, "plan": c["plan"],
                           "hm": hm, "am": am, "mk": mk, "guard": guard, "guard_plan": gp, "mech": mech, "q": mech[:2], "mech_plan": pmech,
                           "sys": sorted(sy, key=lambda s: -sy[s]), "king": c["king"]}
+        if c.get("bm"): camps[c["id"]]["bm"] = c["bm"]
     gangs = {}
     for ch, ds in REAL_GANGS.items():
         gangs[str(ch - 1)] = {}
@@ -741,9 +763,7 @@ def build():
     for cid, c in camps.items():
         gp = c["guard_plan"]
         if gp != c["guard"]: src.setdefault(gp, []).append({"t": "camp", "id": cid, "guard": True, "plan": True})
-    for k, ci in dict.fromkeys(STAGE2_SRC):
-        src.setdefault(k, []).append({"t": "stage2", "id": "so%d_r4_4" % (ci + 1), "guard": True, "note": "階段 2：魔王據點／補據點駐守（第一階段冇圖，未出場）"})
-    recruit = sorted(k for k in AB if k not in ("afu", "xiaozhi", "mengpo") and (ENEMY.get(k, {}).get("recruit")))
+    recruit = sorted(k for k in ENEMY if k not in ("afu", "xiaozhi", "mengpo") and ENEMY[k].get("recruit"))
     for k in recruit:
         if not src.get(k): errs.append("%s 冇魂魄來源" % k)
     for k in sorted(set(recruit) | set(NEW_TAGS)):   # 主魂來源：據點駐守／野外王／王座重遊（唔計副魂）
@@ -763,7 +783,7 @@ def build():
         "mech_intro": intro, "ring_cap": RING_CAP,
         "src": src, "src_note": "t：camp＝據點（guard＝駐守鬼主魂）、wildboss＝野外王重打、throne＝王座重遊（主線劇情王重打）",
         "guest": [{"k": k, "camp": c} for k, c in GUEST],
-        "new": {k: {"name": R[k]["name"], "sys": R[k]["sys"], "sc": SC[R[k]["sc"]], "mech": R[k]["mech"], "ch": R[k]["ch"], "tags": v, "sub": SUB[k][0], "note": NEW_NOTE.get(k, "")} for k, v in NEW_TAGS.items()},
+        "new": {k: {"name": R[k]["name"], "sys": R[k]["sys"], "sc": SC[R[k]["sc"]], "mech": R[k]["mech"], "ch": R[k]["ch"], "tags": v, "note": NEW_NOTE.get(k, "")} for k, v in NEW_TAGS.items()},
         "ring_mech": RING_MECH,
         "boss_hp": 1.6,
         "gangs": gangs,
