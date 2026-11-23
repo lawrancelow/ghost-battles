@@ -12,7 +12,8 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 spec = importlib.util.spec_from_file_location("ng_src", os.path.join(HERE, "ng_src.py"))
 S = importlib.util.module_from_spec(spec); spec.loader.exec_module(S)
 OUT = os.path.join(ROOT, "data", "nat", "newghost.json")
-CDATA_ABIL = "/home/claude/wt/cdata/godot/data/abil.json"   # 校驗用（有就比對重複能力／台詞；冇就略過）
+CDATA_ABIL = os.path.join(ROOT, "data", "abil.json")   # cdata 線 abil.json（整合後喺本樹）：ENEMY 段係系／嚇法／怕唔怕嘅唯一來源；ABIL.say 比對重複
+if not os.path.exists(CDATA_ABIL): CDATA_ABIL = "/home/claude/wt/cdata/godot/data/abil.json"
 
 def J(p): return json.load(open(p, encoding="utf-8"))
 ERR = []
@@ -42,7 +43,7 @@ def strings(o, out):
         for v in o: strings(v, out)
 EXIST = set()
 for p in glob.glob(os.path.join(ROOT, "data", "*.json")) + glob.glob(os.path.join(ROOT, "data", "nat", "*.json")):
-    if os.path.basename(p) in ("newghost.json",): continue
+    if os.path.basename(p) in ("newghost.json", "abil.json"): continue   # abil.json 台詞下面逐隻加（牛頭馬面嗰兩句係同一隻鬼）
     try: strings(J(p), EXIST)
     except Exception: pass
 CD = J(CDATA_ABIL) if os.path.exists(CDATA_ABIL) else {}
@@ -55,7 +56,12 @@ MECH13 = ["飛", "隱", "殼", "再生", "散骨", "召喚", "反傷", "嚇氣�
 PRIMS = set("dmg dot execute chain splash mark pierce down air push pull stun silence interrupt slow flee taunt heal hot shield drain guard immune cleanse revive buff energy anti_air reveal armor_break shield_break dispel banish sap wound dash stealth summon coin zone charm confuse".split())
 SEL = {"near", "far", "low", "strong", "back", "caster", "flyer", "stealth", "boss", "self", "ally_low", "allies", "all_r"}
 
-def fears(d):
+CD_EN = CD.get("ENEMY", {})
+def fears(d, k=None):
+    e = CD_EN.get(k) if k else None
+    if isinstance(e, dict) and e.get("fear") is not None:   # 定案：以 cdata abil.json ENEMY（8 系規則）為準，唔自己定
+        return list(e["fear"]), list(e["imm"]), list(e.get("why", []))
+    ERR.append("%s：abil.json ENEMY 冇呢隻（怕唔怕要由 cdata 定）" % k)
     f0, f1, im, w0, w1, wi = S.SYS[d["sys"]]
     fe = d.get("fear") or [f0, f1]
     why = d.get("why") or ["怕%s：%s" % (f0, w0), "怕%s：%s" % (f1, w1)]
@@ -76,10 +82,16 @@ for k, v in CD.get("ABIL", {}).items():
 def lang(y, z):
     if y and z and y != z: out["LANG_ZH"][y] = z
 
+SC_R = {v: kk for kk, v in S.SC.items()}
+for k in list(S.G) + list(S.B) + list(S.F):
+    e = CD_EN.get(k); d = S.G.get(k) or S.B.get(k) or S.F.get(k)
+    if isinstance(e, dict):
+        chk(e.get("sys") == d["sys"] and e.get("sc", [None])[0] == S.SC[d["sc"]], k, "系／嚇法同 abil.json ENEMY 唔一致", e.get("sys"), e.get("sc"), d["sys"], d["sc"])
+        chk(list(e.get("mech", [])) == list(d["mech"]), k, "機制同 abil.json ENEMY 唔一致", e.get("mech"), d["mech"])
 for k, d in S.G.items():
     short = k[3:] if k.startswith("nw_") else k
     chk(d["sys"] in S.SYS and d["sc"] in S.SC, k, "系／嚇法")
-    fe, im, why = fears(d)
+    fe, im, why = fears(d, k)
     chk(S.SC[d["sc"]] not in fe, k, "自己嚇法唔可以喺「怕」", d["sc"], fe)
     chk(2 <= len(d["tags"]) <= 3 and all(t in TAGS10 for t in d["tags"]), k, "標籤 2–3 個", d["tags"])
     chk(all(m in MECH13 for m in d["mech"]) and len(d["mech"]) <= 3, k, "機制", d["mech"])
@@ -112,7 +124,7 @@ for k, d in S.G.items():
     out["ABIL"][k] = ab
 
 for k, d in S.B.items():
-    fe, im, why = fears(d)
+    fe, im, why = fears(d, k)
     chk(S.SC[d["sc"]] not in fe, k, "自己嚇法唔可以喺「怕」")
     chk(len(d["mech"]) == 3 and all(m in MECH13 for m in d["mech"]), k, "魔王 3 個機制")
     say = d["say"]; chk(say[0].strip() not in EXIST and say[0] not in SAYS, k, "台詞撞", say[0]); SAYS[say[0]] = k
@@ -129,7 +141,7 @@ for k, d in S.B.items():
     out["ART"][k] = {"spr": d.get("spr") or k, "h": d["h"], "solid": True, "ph": k}
 
 for k, d in S.F.items():
-    fe, im, why = fears(d)
+    fe, im, why = fears(d, k)
     out["ENEMY_T"][k] = [d["en"][0], d["en"][1], d["name"]]
     out["ENEMY"][k] = {"sys": d["sys"], "sc": [S.SC[d["sc"]]], "fear": fe, "imm": im, "why": why, "mech": d["mech"], "tier": 0,
                        "kind": "fod", "recruit": False, "use_abil": False, "quirk": d["quirk"]}
@@ -172,6 +184,20 @@ for k in ROSTER:
     chk(sy, k, "冇台詞")
     chk(sy not in ALL_SAY, k, "台詞同", ALL_SAY.get(sy), "重複")
     ALL_SAY[sy] = k
+
+# ---------------- 標籤 ↔ 積木（cdata build_cdata.py derive() 同一套規則；標籤以 counter.json new 為準） ----------------
+spec2 = importlib.util.spec_from_file_location("ng_derive", os.path.join(HERE, "ng_derive.py"))
+DV = importlib.util.module_from_spec(spec2); spec2.loader.exec_module(DV)
+CNEW = J(os.path.join(ROOT, "data", "nat", "counter.json")).get("new", {})
+for k in NEW:
+    want = CNEW.get(k, {}).get("tags")
+    chk(want, k, "counter.json new 冇呢隻")
+    if not want: continue
+    a = out["ABIL"][k]
+    chk(set(a["tags"]) == set(want), k, "標籤同 counter.json new 唔一致", a["tags"], want)
+    a["tags"] = list(want)
+    d = DV.derive(a)
+    chk(d == set(want), k, "標籤同積木唔一致：標 %s、推導 %s" % (sorted(want), sorted(d)))
 
 if ERR:
     print("校驗失敗：")

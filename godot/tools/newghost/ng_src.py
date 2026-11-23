@@ -25,7 +25,7 @@ def M(x): return [round(x * f, 2) for f in STAR]
 
 # ---------------------------------------------------------------------------------------------
 # 名鬼：key → dict
-#   name／title／trait／lore（中文書面，出處）／say（[粵, 中]）／sys／sc／fear（覆寫：自己嚇法唔可以喺「怕」）／why
+#   name／title／trait／lore（中文書面，出處）／say（[粵, 中]）／sys／sc（怕／唔怕唔喺呢度定：由 data/abil.json ENEMY 讀，cdata 8 系規則）
 #   tier（敵人強度 T1–T3）／pin（凡靈煞王）／ch（出場章）／mech（做敵人時嘅機制）／tags（應對標籤）／rng（近中遠）／role
 #   base（[力, 智, 武]，已按 T 縮放）／skill（舊引擎 SKILLS：kind/mult/apply/follow/hits/drain/sap/steal）／act、pas、aura（ABIL）
 #   spr（立繪檔名，冇就＝id）／h（畫面高度 CHAR_H）／solid（實體，唔係飄）
@@ -35,7 +35,6 @@ def ghost(k, **kw): G[k] = kw
 
 ghost("nw_guihuo", name="鬼火", title="夜班唯一照明", sys="魂", sc="燈", tier=1, pin="凡", ch=1, mech=["飛", "散骨"], tags=["遠", "照", "掃"],
       rng="遠", role="back", base=[25, 60, 55], h=50, solid=False,
-      fear=["吹氣", "凍"], why=["怕吹氣：一啖氣吹散團火", "怕凍：落霜火就熄"],
       trait="全村最慳電：夜班冇人肯開燈，佢自己就係燈。",
       lore="民間把墳地夜間飄浮的磷火叫「鬼火」；西晉張華《博物志》：「鬥戰死亡之處，其人馬血積年化為燐。」",
       say=["我照住你行，你行到邊，我燒到邊。", "我幫你照著路，你走到哪裡，我燒到哪裡。"],
@@ -47,12 +46,12 @@ ghost("nw_guihuo", name="鬼火", title="夜班唯一照明", sys="魂", sc="燈
            {"tr": "every", "t": 7.0, "star": 2, "fx": [{"p": "reveal", "r": 150, "dur": 3.0, "tg": "self"}]}])
 
 ghost("nw_huli", name="狐妖", title="千年道行，專拆假面", sys="妖", sc="黑影", tier=2, pin="靈", ch=1, mech=["分身"], tags=["遠", "照"],
-      rng="中", role="back", base=[56, 106, 81], h=58,
+      rng="遠", role="back", base=[56, 106, 81], h=58,
       trait="一眼睇穿邊個扮嘢；開會時最怕佢坐前排。",
       lore="東晉郭璞《玄中記》：「狐五十歲，能變化為婦人；百歲為美女……千歲即與天通，為天狐。」清代蒲松齡《聊齋志異》亦多狐妖故事。",
       say=["千年道行唔係玩嘢，你嗰塊假面，我一眼就睇穿。", "千年道行不是鬧著玩的，你那張假面具，我一眼就看穿。"],
       skill={"name": "狐火照妖", "kind": "aoe", "mult": 0.9, "follow": "down", "desc": "狐火一照，分身、隱身全部現形，假嘅仲要多食一下。"},
-      act={"name": "狐火照妖", "tg": {"sel": "far", "shape": "circle", "r": 110},
+      act={"name": "狐火照妖", "tg": {"sel": "far"},
            "fx": [{"p": "reveal", "r": 110, "dur": 6.0}, {"p": "dmg", "mult": M(1.1), "vs_mech": {"分身": 2.0, "隱": 1.5}}],
            "ai": {"n_in": 2, "r": 110, "wait": 5}},
       pas=[{"tr": "hit_taken", "star": 0, "chance": 0.25, "icd": 8, "fx": [{"p": "stealth", "dur": 2.0, "first_x": 1.4, "tg": "self"}]}])
@@ -86,7 +85,7 @@ ghost("nw_baimao", name="白毛殭屍", title="唔係老，係凍親", sys="屍"
       lore="民間殭屍傳說：屍體久停不葬，生出白毛便成「白殭」，再變綠毛、黑毛，越變越兇；港產殭屍片亦常見「白毛殭屍」。",
       say=["我把毛白咗唔係因為老，係凍親。有冇暖水袋？", "我的毛白了不是因為老，是冷到了。有沒有暖水袋？"],
       skill={"name": "白毛掃", "kind": "aoe", "mult": 0.9, "hits": 2, "desc": "雙爪連掃身邊一圈，順手扒甩對方層殼。"},
-      act={"name": "白毛掃", "tg": {"sel": "self", "shape": "self_circle", "r": 120},
+      act={"name": "白毛掃", "tg": {"sel": "near"},
            "fx": [{"p": "dmg", "mult": M(0.85), "hits": 2}, {"p": "armor_break", "v": 0.3, "dur": 6.0}, {"p": "taunt", "r": 120, "dur": 3.0}],
            "ai": {"n_in": 2, "r": 120, "wait": 5}},
       pas=[{"tr": "start", "star": 0, "fx": [{"p": "immune", "tags": ["fear_aura", "confuse"], "dur": -1, "tg": "self"}]},
@@ -98,7 +97,7 @@ ghost("nw_buhuagu", name="不化骨", title="燒唔化、埋唔爛", sys="屍", 
       lore="粵港民間傳說：人死後屍骨久久不化，叫「不化骨」，相傳年深日久會成精作祟，是民間最兇的屍怪之一。",
       say=["燒唔化、埋唔爛，我塊骨硬過你老細把口。", "燒不化、埋不爛，我的骨頭比你老闆的嘴還硬。"],
       skill={"name": "硬骨頭", "kind": "aoe", "mult": 0.8, "apply": "push", "desc": "企定定吸晒啲攻擊，身邊未死透嘅、召喚出嚟嘅，全部打散。"},
-      act={"name": "硬骨頭", "tg": {"sel": "self", "shape": "self_circle", "r": 130},
+      act={"name": "硬骨頭", "tg": {"sel": "near"},
            "fx": [{"p": "taunt", "r": 130, "dur": 4.0}, {"p": "banish", "hp_pct": 0.35}, {"p": "shield", "pct": 0.2, "dur": 5.0, "tg": "self"}],
            "ai": {"n_in": 2, "r": 130, "wait": 5}},
       pas=[{"tr": "start", "star": 0, "fx": [{"p": "immune", "tags": ["fear_aura", "confuse", "flee"], "dur": -1, "tg": "self"}]},
@@ -121,7 +120,7 @@ ghost("nw_ganshi", name="趕屍匠", title="走失咗條隊嘅帶隊", sys="魂"
       lore="湘西趕屍傳說：趕屍匠夜裏搖銅鈴、撒紙錢，帶客死異鄉的屍體走山路返鄉，口喊「陰人上路，陽人迴避」；本作第 3 章「走失的趕屍匠」。",
       say=["陰人上路，陽人迴避——講完收工，邊位跟我行？", "陰人上路，陽人迴避——說完收工，哪位跟我走？"],
       skill={"name": "搖鈴收隊", "kind": "aoe", "mult": 0.85, "desc": "銅鈴一響，屍變嘅、召喚嘅全部企定，殘嘅直接收隊。"},
-      act={"name": "搖鈴收隊", "tg": {"sel": "far", "shape": "chain", "n": 4, "falloff": 0.12},
+      act={"name": "搖鈴收隊", "tg": {"sel": "far"},
            "fx": [{"p": "dmg", "mult": M(0.9)}, {"p": "banish", "hp_pct": 0.4}, {"p": "stun", "dur": 0.8}],
            "ai": {"n_in": 2, "r": 150, "wait": 5}},
       pas=[{"tr": "every", "t": 8.0, "star": 0, "fx": [{"p": "banish", "hp_pct": 0.25, "tg": "all_r", "r": 150}]}])
@@ -144,14 +143,13 @@ ghost("nw_ameonna", name="雨女", title="一出門就落雨", sys="厲", sc="�
       lore="鳥山石燕《今昔百鬼拾遺》「雨女」：隨雨而至的女妖，所到之處必然下雨。",
       say=["我行到邊度，邊度就落雨，出門記得帶遮。", "我走到哪裡，哪裡就下雨，出門記得帶傘。"],
       skill={"name": "冷雨", "kind": "aoe", "mult": 0.75, "sap": 15, "desc": "喺敵陣落一場冷雨，淋到嘅行慢、嚇氣一直漏。"},
-      act={"name": "冷雨", "tg": {"sel": "near", "shape": "circle", "r": 140},
-           "fx": [{"p": "zone", "r": 140, "dur": 6.0, "fx": [{"p": "slow", "v": -0.25, "dur": 0.6}, {"p": "sap", "v": 6}]}, {"p": "dmg", "mult": M(0.7)}],
-           "ai": {"n_in": 3, "r": 140, "wait": 5}},
-      pas=[{"tr": "attack", "n": 3, "star": 0, "fx": [{"p": "sap", "v": 10}]}])
+      act={"name": "冷雨", "tg": {"sel": "strong"},
+           "fx": [{"p": "dmg", "mult": M(0.9)}, {"p": "slow", "v": -0.3, "dur": 4.0}, {"p": "sap", "v": 25}],
+           "ai": {"when": "asap"}},
+      pas=[{"tr": "every", "t": 9.0, "star": 0, "fx": [{"p": "zone", "r": 140, "dur": 5.0, "tg": "far", "fx": [{"p": "slow", "v": -0.25, "dur": 0.6}, {"p": "sap", "v": 6}]}]}])
 
 ghost("nw_shejing", name="蛇精", title="脫一層皮又一條好漢", sys="妖", sc="凍", tier=2, pin="靈", ch=4, mech=["再生"], tags=["掃", "回"],
       rng="近", role="front", base=[100, 69, 94], h=58,
-      fear=["怪聲", "燈"], why=["怕怪聲：打草驚蛇", "怕燈：蛇怕火光"],
       trait="每年脫一次皮，脫完當自己新入職。",
       lore="民間蛇妖傳說：蛇修煉成精能化人形，最廣為人知的是明代馮夢龍《警世通言·白娘子永鎮雷峰塔》。",
       say=["脫一層皮又係一條好漢，你哋做人就冇呢個福利。", "脫一層皮又是一條好漢，你們做人就沒有這種福利。"],
@@ -175,7 +173,6 @@ ghost("nw_tiangou", name="天狗", title="食月光當宵夜", sys="妖", sc="�
 
 ghost("nw_tisi", name="替死鬼", title="永遠係佢孭鑊", sys="橫", sc="凍", tier=2, pin="靈", ch=4, mech=["突襲"], tags=["拉", "收"],
       rng="近", role="front", base=[106, 44, 88], h=58,
-      fear=["鬼臉", "燈"], why=["怕鬼臉：扮佢死相", "怕燈：水底見唔到光"],
       trait="全身濕晒，因為公司每單衰嘢都係佢落水頂。",
       lore="俗語「替死鬼」源自民間水鬼「找替身」傳說：溺死的鬼要拉一個人落水做替身才可投胎，清代紀昀《閱微草堂筆記》亦多記溺鬼求代。",
       say=["冇問題，個鑊我孭，你哋行先。", "沒問題，這個黑鍋我背，你們先走。"],
@@ -183,8 +180,7 @@ ghost("nw_tisi", name="替死鬼", title="永遠係佢孭鑊", sys="橫", sc="�
       act={"name": "搵替身", "tg": {"sel": "back"},
            "fx": [{"p": "pull", "dist": 140}, {"p": "down", "dur": 1.2}, {"p": "dmg", "mult": M(1.3)}, {"p": "banish", "hp_pct": 0.3}],
            "ai": {"when": "asap"}},
-      pas=[{"tr": "start", "star": 0, "fx": [{"p": "guard", "r": 80, "pct": 0.3, "cap": 0.05, "dur": -1}]},
-           {"tr": "death", "star": 2, "fx": [{"p": "execute", "hp_pct": 1.0, "x": 1.0, "boss_pct": 0.15, "tg": "near"}]}])
+      pas=[{"tr": "death", "star": 0, "fx": [{"p": "pull", "dist": 120, "tg": "near"}, {"p": "banish", "hp_pct": 0.5, "tg": "near"}]}])
 
 ghost("nw_krahang", name="Phi Krahang", title="用簸箕當翼", sys="妖", sc="黑影", tier=2, pin="靈", ch=4, mech=["飛"], tags=["遠", "拉"],
       rng="遠", role="back", base=[69, 75, 100], h=60,
@@ -192,7 +188,7 @@ ghost("nw_krahang", name="Phi Krahang", title="用簸箕當翼", sys="妖", sc="
       lore="泰國民間 Phi Krahang：男鬼，以兩個簸箕作翼、舂米杵作尾，夜裏飛行，常與 Krasue 並提。",
       say=["簸箕當翼都飛得起，你仲有咩藉口唔做嘢？", "簸箕當翅膀都飛得起來，你還有什麼藉口不做事？"],
       skill={"name": "簸箕翼", "kind": "aoe", "mult": 0.9, "apply": "down", "desc": "升空撞向一群飛行敵人，撞中嘅全部跌落地。"},
-      act={"name": "簸箕翼", "tg": {"sel": "flyer", "shape": "circle", "r": 100},
+      act={"name": "簸箕翼", "tg": {"sel": "flyer"},
            "fx": [{"p": "dmg", "mult": M(1.0), "vs_mech": {"飛": 1.5}}, {"p": "down", "dur": 2.0}],
            "ai": {"n_in": 2, "r": 100, "wait": 5}},
       pas=[{"tr": "start", "star": 0, "fx": [{"p": "anti_air", "x": 1.3, "dur": -1, "tg": "self"}]},
@@ -205,7 +201,7 @@ ghost("nw_kapre", name="Kapre", title="樹頂食大煙", sys="妖", sc="吹氣",
       say=["坐低食口煙先，打交唔使咁趕。", "先坐下抽口煙，打架不用這麼趕。"],
       skill={"name": "大煙圈", "kind": "aoe", "mult": 0.9, "desc": "噴一個大煙圈罩住隊友，入面嘅唔怕迷魂；外面嘅敵人食煙食到咳。"},
       act={"name": "大煙圈", "tg": {"sel": "self", "shape": "self_circle", "r": 150},
-           "fx": [{"p": "dmg", "mult": M(0.85)}, {"p": "slow", "v": -0.2, "dur": 3.0}, {"p": "immune", "tags": ["confuse", "fear_aura"], "dur": 6.0, "tg": "allies", "r": 150}],
+           "fx": [{"p": "dmg", "mult": M(0.85)}, {"p": "slow", "v": -0.2, "dur": 3.0}, {"p": "taunt", "r": 150, "dur": 3.0}, {"p": "immune", "tags": ["confuse", "fear_aura"], "dur": 6.0, "tg": "allies", "r": 150}],
            "ai": {"n_in": 3, "r": 150, "wait": 5}},
       pas=[{"tr": "start", "star": 0, "fx": [{"p": "immune", "tags": ["down", "push"], "dur": -1, "tg": "self"}]}])
 
@@ -226,8 +222,8 @@ ghost("nw_mummy", name="木乃伊", title="繃帶三千年未拆線", sys="屍",
       lore="古埃及以香料、麻布處理遺體的木乃伊；本作取舊戲院怪獸片裏「紮滿繃帶、一跛一跛」的形象。",
       say=["紮咗三千年繃帶都未拆線，你哋醫院排期真係唔得。", "包了三千年繃帶都還沒拆線，你們醫院排期真的不行。"],
       skill={"name": "繃帶纏", "kind": "aoe", "mult": 0.8, "apply": "down", "desc": "甩出繃帶紮住身邊一圈，紮到郁唔到，殘嘅順手打包收走。"},
-      act={"name": "繃帶纏", "tg": {"sel": "near", "shape": "circle", "r": 100},
-           "fx": [{"p": "dmg", "mult": M(0.8)}, {"p": "stun", "dur": 1.4}, {"p": "banish", "hp_pct": 0.35}],
+      act={"name": "繃帶纏", "tg": {"sel": "near"},
+           "fx": [{"p": "dmg", "mult": M(0.8)}, {"p": "stun", "dur": 1.4}, {"p": "banish", "hp_pct": 0.35}, {"p": "taunt", "r": 100, "dur": 3.0}],
            "ai": {"n_in": 2, "r": 100, "wait": 5}},
       pas=[{"tr": "start", "star": 0, "fx": [{"p": "immune", "tags": ["fear_aura", "flee"], "dur": -1, "tg": "self"}]},
            {"tr": "ally_down", "star": 2, "icd": 10, "fx": [{"p": "shield", "pct": 0.15, "dur": 5.0, "tg": "self"}]}])
@@ -238,14 +234,13 @@ ghost("nw_zzphone", name="紙紮手機", title="得一格電都打得通", sys="
       lore="港式紙紮祭品：清明、拜山時燒給先人的紙紮手機（本作不寫任何品牌）；第 2 章媽媽燒落嚟的，就是這一部。",
       say=["一格電都夠我打爆你部機，邊個未覆訊息？", "一格電就夠我打爆你的手機，誰還沒回訊息？"],
       skill={"name": "奪命 call", "kind": "aoe", "mult": 0.7, "sap": 20, "desc": "一連打幾個電話過去，接到嘅成個呆咗，技能放唔出。"},
-      act={"name": "奪命 call", "tg": {"sel": "caster", "shape": "chain", "n": 4, "falloff": 0.15},
+      act={"name": "奪命 call", "tg": {"sel": "caster"},
            "fx": [{"p": "dmg", "mult": M(0.7)}, {"p": "silence", "dur": 2.0}, {"p": "sap", "v": 20}],
            "ai": {"when": "foe_cast", "wait": 5}},
       pas=[{"tr": "attack", "n": 3, "star": 0, "fx": [{"p": "interrupt"}]}])
 
 ghost("nw_zzcar", name="紙紮跑車", title="開大燈都要守交通規則", sys="紙紮", sc="燈", tier=2, pin="靈", ch=5, mech=["突襲"], tags=["破", "掃", "照"],
       rng="近", role="flank", base=[81, 56, 100], h=48,
-      fear=["吹氣", "凍"], why=["怕吹氣：紙車一吹就反", "怕凍：落霜紙會濕"],
       trait="紙紮嘅，冇牌、冇油、冇保險，最快係落斜。",
       lore="港式紙紮祭品：燒給先人代步的紙紮車（本作不畫真實車款）；第 5 章媽媽燒落嚟的「紙紮跑車」。",
       say=["紙紮嘅都要守交通規則，不過今晚我開大燈。", "紙紮的也要守交通規則，不過今晚我開遠光燈。"],
@@ -272,31 +267,29 @@ ghost("nw_zzhouse", name="紙紮大屋", title="三層半連天台", sys="紙紮
       lore="港式紙紮祭品：燒給先人的紙紮大屋（洋樓、別墅），連傭人、汽車、家電一齊燒落去。",
       say=["三層半連天台，燒落嚟冇按揭，夠晒威。", "三層半加天台，燒下來沒有房貸，夠威風。"],
       skill={"name": "加建", "kind": "aoe", "mult": 0.6, "hits": 3, "desc": "就地加建一層：身邊敵人俾磚頭掟三下兼拆殼，隊友有瓦遮頭。"},
-      act={"name": "加建", "tg": {"sel": "self", "shape": "self_circle", "r": 130},
-           "fx": [{"p": "dmg", "mult": M(0.55), "hits": 3}, {"p": "armor_break", "v": 0.35, "dur": 6.0}, {"p": "immune", "tags": ["fear_aura"], "dur": 6.0, "tg": "allies", "r": 160}],
+      act={"name": "加建", "tg": {"sel": "near"},
+           "fx": [{"p": "dmg", "mult": M(0.55), "hits": 3}, {"p": "armor_break", "v": 0.35, "dur": 6.0}, {"p": "taunt", "r": 130, "dur": 3.0}, {"p": "immune", "tags": ["fear_aura"], "dur": 6.0, "tg": "allies", "r": 160}],
            "ai": {"n_in": 2, "r": 130, "wait": 5}},
       pas=[{"tr": "start", "star": 0, "fx": [{"p": "shield", "pct": 0.25, "dur": 12.0, "tg": "self"}]}])
 
 ghost("nw_shenpi", name="陰司審批官", title="填錯一格打回頭", sys="官", sc="紙", tier=3, pin="煞", ch=6, mech=["嚇氣光環"], tags=["收", "照"],
       rng="中", role="back", base=[69, 115, 92], h=62,
-      fear=["電話", "鬼臉"], why=["怕電話：上頭 call", "怕鬼臉：當面笑佢官腔"],
       trait="一枝筆、一個印，批唔批全睇佢心情。",
       lore="民間地府傳說裏掌簿冊、審案的文官；本作把地府寫成公司，這個位叫「集團審批部・陰司審批官」，只寫成公務員，不寫成神。",
       say=["表格填錯一格，打回頭重新排隊，冇得傾。", "表格填錯一格，退回去重新排隊，沒得商量。"],
       skill={"name": "唔批", "kind": "aoe", "mult": 0.8, "desc": "大印一蓋：召喚出嚟嘅、屍變返生嘅，一律「唔批」；匿埋嘅即刻現形。"},
-      act={"name": "唔批", "tg": {"sel": "near", "shape": "circle", "r": 130},
-           "fx": [{"p": "dmg", "mult": M(0.8)}, {"p": "banish", "hp_pct": 0.4}, {"p": "reveal", "r": 130, "dur": 6.0}, {"p": "silence", "dur": 1.2}],
+      act={"name": "唔批", "tg": {"sel": "near"},
+           "fx": [{"p": "dmg", "mult": M(0.8)}, {"p": "banish", "hp_pct": 0.4}, {"p": "reveal", "r": 130, "dur": 6.0}],
            "ai": {"n_in": 2, "r": 130, "wait": 5}},
       pas=[{"tr": "every", "t": 12.0, "star": 0, "fx": [{"p": "dispel", "n": 1, "tg": "all_r", "r": 160}]}])
 
 ghost("nw_toutai", name="投胎辦事處職員", title="前面仲有八百萬人", sys="官", sc="紙", tier=2, pin="靈", ch=6, mech=["召喚"], tags=["削", "回"],
       rng="中", role="back", base=[56, 113, 69], h=58,
-      fear=["電話", "怪聲"], why=["怕電話：上頭 call", "怕怪聲：輪候區嘈到佢收工"],
       trait="派籌、蓋印、叫號，一做三百年冇升職。",
       lore="本作原創（STORY_BIBLE 支線角色）：地府「投胎辦事處」的櫃位職員，投胎要攞籌、填表、輪候。",
       say=["攞籌先，前面仲有八百萬人，你慢慢等。", "先拿號碼牌，前面還有八百萬人，你慢慢等。"],
       skill={"name": "攞籌", "kind": "heal", "mult": 0.15, "sap": 20, "desc": "派籌叫號：隊友回血；對面嚇氣俾佢叫到冇晒耐性。"},
-      act={"name": "攞籌", "tg": {"sel": "near", "shape": "circle", "r": 150},
+      act={"name": "攞籌", "tg": {"sel": "strong"},
            "fx": [{"p": "sap", "v": 25}, {"p": "slow", "v": -0.15, "dur": 3.0}, {"p": "heal", "pct": 0.15, "tg": "allies", "r": 220}],
            "ai": {"ally_hp": 0.6, "wait": 5}},
       pas=[{"tr": "every", "t": 10.0, "star": 0, "fx": [{"p": "hot", "pct": 0.02, "dur": 5.0, "tg": "ally_low"}]}])
@@ -307,7 +300,7 @@ ghost("nw_yeleng_guard", name="夜冷村保安", title="未登記一律企定", 
       lore="本作原創（STORY_BIBLE 夜冷村員工①）：隔籬夜冷村的閘口保安，最緊要係「登記」。",
       say=["登記咗未？未登記嘅，一律喺閘口企定定。", "登記了沒有？沒登記的，一律在閘口站好。"],
       skill={"name": "截停", "kind": "aoe", "mult": 0.7, "apply": "down", "desc": "吹雞截停：身邊敵人全部要佢登記，衝埋嚟嘅即刻腳軟。"},
-      act={"name": "截停", "tg": {"sel": "self", "shape": "self_circle", "r": 140},
+      act={"name": "截停", "tg": {"sel": "near"},
            "fx": [{"p": "taunt", "r": 140, "dur": 4.0}, {"p": "down", "dur": 1.2}, {"p": "immune", "tags": ["confuse", "fear_aura"], "dur": 6.0, "tg": "self"}],
            "ai": {"n_in": 2, "r": 140, "wait": 5}},
       pas=[{"tr": "hit_taken", "star": 0, "chance": 0.3, "icd": 5, "fx": [{"p": "push", "dist": 40, "tg": "attacker"}]}])
@@ -384,7 +377,6 @@ boss("bm_langsuir", name="Langsuir", title="指甲長過合約", sys="厲", sc="
      aura={"r": 160, "side": "foe", "fx": [{"p": "buff", "stat": "energy", "v": -0.5}]},
      drop={"first": 34, "win": 7})
 boss("bm_krasue", name="Krasue", title="會飛嘅夜光頭", sys="厲", sc="鬼臉", ch=4, mech=["飛", "反傷", "散骨"], en=[4.6, 1.6], h=90,
-     fear=["電話", "燈"], why=["怕電話：「公司走唔開」嗰通電話", "怕燈：天光就要返身"],
      lore="泰國、柬埔寨民間 Krasue：夜間只得頭顱連着發光的長尾飛出覓食的女鬼，與第 5 章 Penanggal 同類而更兇（本作不畫內臟，頸下畫成發光燈籠尾）。",
      say=["你哋嗰個 Penanggal 要浸醋？我唔使，我自己發光。", "你們那個 Penanggal 要泡醋？我不用，我自己會發光。"],
      act={"name": "夜光掃", "tg": {"sel": "near", "shape": "line", "len": 280, "w": 60},
@@ -392,7 +384,6 @@ boss("bm_krasue", name="Krasue", title="會飛嘅夜光頭", sys="厲", sc="鬼�
      pas=[{"tr": "death", "fx": [{"p": "summon", "k": "zd_bone", "n": 3, "hp_pct": 0.25, "atk_pct": 0.5, "dur": -1, "split": True}]}],
      drop={"first": 36, "win": 8})
 boss("bm_pang", name="龐總", title="地府集團區域經理", sys="官", sc="紙", ch=5, mech=["分身", "反傷", "召喚"], en=[5.0, 1.65], h=70, spr="bm_pang",
-     fear=["電話", "凍"], why=["怕電話：董事局一 call 就腳軟", "怕凍：「凍結預算」四個字"],
      lore="本作原創（STORY_BIBLE 人物卡）：地府集團區域經理、阿福直屬上司；口頭禪「我哋係一個大家庭」，絕對唔會認錯，所以永遠唔會投降。立繪用老闆原有圖（未定之前用暫代圖）。",
      say=["我哋係一個大家庭；所以今晚，你哋全家一齊 OT。", "我們是一個大家庭；所以今晚，你們全家一起加班。"],
      act={"name": "甩鍋", "tg": {"sel": "strong"},
