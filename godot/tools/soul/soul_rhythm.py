@@ -114,7 +114,7 @@ WILD = {}
 if _CT:
     for k, src in _CT.get("src", {}).items():
         for x in src:
-            if x.get("t") == "wildboss": WILD.setdefault(S_(k), int(x.get("c", 0)) + 1)
+            if x.get("t") == "wildboss": WILD.setdefault(S_({"nw_panguan": "nw_shenpi", "nw_sundel": "nw_teketeke"}.get(k, k)), int(x.get("c", 0)) + 1)
 
 def simulate(runs_per_day, days=60, seed=1, verbose=False, ch_day=None, end_day=None, core_n=12):
     global CH_DAY, END_DAY

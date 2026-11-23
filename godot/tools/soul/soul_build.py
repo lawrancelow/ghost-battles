@@ -10,16 +10,20 @@ import re
 ROSTER = "/home/claude/bs/counter_tool/roster_data.py"
 TPIN = {"T1": "凡", "T2": "靈", "T3": "煞"}
 STORY_PIN = {"eguiking": "煞", "toyol": "煞", "pocong": "煞", "laojiang": "王", "pontianak": "王", "penanggal": "王", "baiwu": "王", "heiwu": "王", "mengpo": "王", "xiaozhi": "靈"}
+# id 統一（總指揮：以美術、newghost 線為準）
+RENAME = {"nw_panguan": "nw_shenpi", "nw_sundel": "nw_teketeke"}
 PIN = {}; NEWG = {}
 for ln in open(ROSTER, encoding="utf-8"):
     m = re.match(r'add\("([a-z0-9_]+)",\s*"[^"]*",\s*"[^"]*",\s*"[^"]*",\s*(\d),\s*"[^"]*",\s*"(T\d)"', ln)
     if not m: continue
     k, ch, t = m.group(1), int(m.group(2)), m.group(3)
-    if k == "nw_sundel": k, ch = "nw_teketeke", 5
+    if k == "nw_sundel": ch = 5
+    k = RENAME.get(k, k)
     PIN[k] = STORY_PIN.get(k, TPIN.get(t, "王"))
     if "new=True" in ln or k == "nw_teketeke": NEWG[k] = ch - 1
 for k, v in STORY_PIN.items(): PIN.setdefault(k, v)
 assert len(PIN) == 100, len(PIN)
+assert not any(k in PIN for k in RENAME), "舊 id 殘留"
 
 # 每章 15 據點主魂（次序＝zones.json sorties：r1_1..r4_3）；new_* ＝〔新〕位
 CH = [
@@ -57,10 +61,11 @@ if os.path.exists(CT):
     ct = json.load(open(CT, encoding="utf-8"))
     CAMP = {}
     for cid, d in ct["camps"].items():
-        CAMP["%d:%s" % (d["c"], cid)] = d["guard"]
-        CAMP_PLAN["%d:%s" % (d["c"], cid)] = d.get("guard_plan", d["guard"])
-        CAMP_EN["%d:%s" % (d["c"], cid)] = [x for x in d.get("en", []) if x in PIN]
-        CAMP_EN_PLAN["%d:%s" % (d["c"], cid)] = [x for x in d.get("plan", d.get("en", [])) if x in PIN]
+        R_ = lambda x: RENAME.get(x, x)
+        CAMP["%d:%s" % (d["c"], cid)] = R_(d["guard"])
+        CAMP_PLAN["%d:%s" % (d["c"], cid)] = R_(d.get("guard_plan", d["guard"]))
+        CAMP_EN["%d:%s" % (d["c"], cid)] = [R_(x) for x in d.get("en", []) if R_(x) in PIN]
+        CAMP_EN_PLAN["%d:%s" % (d["c"], cid)] = [R_(x) for x in d.get("plan", d.get("en", [])) if R_(x) in PIN]
 for k in CAMP.values(): assert k in PIN, k
 
 # 心願供品：[資源, 粵語原句, 中文]（冇寫就用壽包）
