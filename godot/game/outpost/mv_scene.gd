@@ -602,6 +602,7 @@ func _draw_stage() -> void:
 		ctx.globalAlpha = hud_k if embed else 1.0
 		MB.draw(self, ctx, "hud", func(c): _draw_hud(c))   # [perf] HUD 內容冇變就用烘圖（數值變先重烘；閃動多就自動逐格畫）
 		ctx.globalAlpha = 1.0
+		if _ABL.active and embed and hud_k > 0.3: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(0, top_pad, FW, EHUD_H + 14.0))   # [abui] 頂部 HUD（任務、收益、影響力條）唔畀戰鬥字蓋住（HUD 係烘圖，喺度登記）
 	MB.gc(self)   # [perf]
 
 # ---------------- 地面：背景圖直向鋪（隔塊反轉接縫）＋路＋小河＋橋 ----------------
@@ -1483,6 +1484,7 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 				ov += absf(cy - y0) * 2.0
 				if ov < least: least = ov; x = cx; y = cy
 	_brects.append(Rect2(x, y, w, h)); _drects.append(Rect2(x, y, w, h))
+	if _ABL.active: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(x - 2, y - 2, w + 4, h + 4))   # [abui] 對白框唔畀戰鬥字蓋住
 	var a = clampf(minf(b.t / 0.15, (b.life - b.t) / 0.3), 0, 1)
 	ctx.save(); ctx.globalAlpha = a
 	Art.rr(ctx, x, y, w, h, 8, "rgba(250,244,228,.96)", "#5e4a30", 1.5)
@@ -1591,7 +1593,10 @@ func _txt(ctx: Ctx, s: String, x: float, y: float, sz: int, col: Color, align :=
 		"center": x = clampf(x, _tx0 + tw / 2.0 + 4.0, _tx1 - tw / 2.0 - 4.0)   # [zone] _tx0／_tx1：畫世界時係可見範圍
 		"left": x = clampf(x, _tx0 + 4.0, _tx1 - tw - 4.0)
 		"right": x = clampf(x, _tx0 + tw + 4.0, _tx1 - 4.0)
-	if _ABL.active: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(x - (tw / 2.0 if align == "center" else (tw if align == "right" else 0.0)) - 3.0, y - sz * 0.65, tw + 6.0, sz * 1.3))   # [abui] 村子字（例如「派鬼守夜」）唔畀戰鬥字蓋住
+	if _ABL.active:   # [abui] 村子字（例如「派鬼守夜」）唔畀戰鬥字蓋住；撞到血條／戰鬥字（郁唔到）就嗰格讓路唔畫
+		var tr = Rect2(x - (tw / 2.0 if align == "center" else (tw if align == "right" else 0.0)) - 3.0, y - sz * 0.65, tw + 6.0, sz * 1.3)
+		if _ABL.busy_hit(ctx.ci, ctx.T, tr): return
+		_ABL.avoid_ci(ctx.ci, ctx.T, tr)
 	if outline > 0:
 		ctx.lineWidth = outline; ctx.strokeStyle = "rgba(10,6,4,.92)"; ctx.lineJoin = "round"; ctx.strokeText(s, x, y)
 	ctx.fillStyle = "#" + col.to_html(true); ctx.fillText(s, x, y)

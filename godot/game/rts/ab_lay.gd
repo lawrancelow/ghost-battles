@@ -28,20 +28,33 @@ static func avoid_ci(ci, T: Transform2D, r: Rect2) -> void:
 	e[1].append((ci.get_global_transform_with_canvas() * T) * r)
 
 static func begin() -> void:
-	obs.clear(); blocks.clear(); fls.clear(); placed.clear()
+	obs.clear(); blocks.clear(); fls.clear(); placed.clear(); bars.clear()
 	var fr = Engine.get_process_frames()
 	for id in ext.keys():
 		if not is_instance_id_valid(id) or not (instance_from_id(id) as CanvasItem).is_visible_in_tree(): ext.erase(id); continue   # 冇重畫＝字仲喺度，照避
 		obs.append_array(ext[id][1])
 
 static func add_obs(r: Rect2) -> void: obs.append(r)
+static var bars: Array = []       # 單位血條（畫面）：郁唔到，村子字撞到就讓路
+static var busy: Array = []       # 上一格戰鬥字＋血條佔咗嘅位（畫面）
+static func add_bar(r: Rect2) -> void: obs.append(r); bars.append(r)
+# 村子字（例如「派鬼守夜」）撞到戰鬥字／血條：嗰格唔畫（打完自己返嚟），避免字疊字
+static func busy_hit(ci, T: Transform2D, r: Rect2) -> bool:
+	if not active or busy.is_empty() or not (ci is CanvasItem) or not ci.is_inside_tree(): return false
+	var R = (ci.get_global_transform_with_canvas() * T) * r
+	for b in busy: if R.intersects(b): return true
+	return false
 
 # 資訊塊：lines 由下而上，每行 {k:"text"/"icons"/"chant"/"dot", h, w, ...}；opt＝可收埋嘅（文字）
 static func add_block(u, S: Vector2, lines: Array) -> void:
 	if lines.is_empty(): return
 	var w = 0.0; var h = 0.0
 	for l in lines: w = maxf(w, float(l.w)); h += float(l.h)
-	blocks.append({"u": u, "S": S, "lines": lines, "w": w, "h": h, "pos": S, "show": true})
+	var pr = 2   # 排位先後：王 → 敵人 → 名鬼 → 小兵／遊魂兵（擠到冇位時，最唔重要嘅先收）
+	if u is Dictionary:
+		if J.num(u.get("side", 0)) != 0: pr = 0 if J.t(u.get("boss")) else 1
+		elif J.t(u.get("minion")): pr = 3
+	blocks.append({"u": u, "S": S, "lines": lines, "w": w, "h": h, "pos": S, "show": true, "pr": pr})
 
 # 飄字：S＝錨點（畫面）、rise＝已經升咗幾多 px
 static func add_float(key, S: Vector2, text: String, px: int, col: Color, rise: float, pop: float, src = null) -> void:
@@ -56,18 +69,24 @@ static func solve(view_r: Rect2, f: Font) -> void:
 	STATS.blocks = blocks.size()
 	var inner = view_r.grow(-4.0)
 	# 資訊塊：前排（畫面越下）優先
-	blocks.sort_custom(func(a, b): return a.S.y > b.S.y)
+	blocks.sort_custom(func(a, b): return a.pr < b.pr if a.pr != b.pr else a.S.y > b.S.y)
 	for b in blocks:
 		# 次序：原位附近（全部）→ 原位附近（收埋可選字，例如「失神」字，圖示照有）→ 遠啲（引線）→ 遠啲＋收字 → 唔顯示
 		var full = b.lines
 		var lite = []
 		for l in full: if not J.t(l.get("opt")): lite.append(l)
 		var ok = false
-		for st in [[full, 4, 1], [lite, 4, 1], [full, 12, 2], [lite, 12, 2]]:
+		var mini = []   # 最後一招：圖示行只留頭 2 個（最緊要嘅盾／殼先排前），文字收埋
+		for l in lite:
+			if str(l.k) == "icons" and (l.keys as Array).size() > 2:
+				var l2 = l.duplicate(); l2.keys = (l.keys as Array).slice(0, 2); l2.w = 2 * (IC * 2.0 + GAP) + 2.0; mini.append(l2)
+			else: mini.append(l)
+		for st in [[full, 4, 1], [lite, 4, 1], [full, 12, 2], [lite, 12, 2], [full, 16, 4], [lite, 16, 4], [full, 14, 4, true], [lite, 14, 4, true], [mini, 16, 4], [mini, 14, 4, true]]:   # 最後兩級：擠到頂 HUD 都仲搵到位（打橫錯開更遠，引線指返）
 			if (st[0] as Array).is_empty(): continue
-			if st[0] != full and lite.size() == full.size(): continue
+			if st[0] == lite and lite.size() == full.size(): continue
+			if st[0] == mini and mini == lite: continue
 			_set_lines(b, st[0])
-			if _place_block(b, inner, st[1], st[2]):
+			if _place_block(b, inner, st[1], st[2], st.size() > 3):
 				ok = true
 				if st[0] != full: STATS.hidden_txt += 1
 				break
@@ -86,6 +105,10 @@ static func solve(view_r: Rect2, f: Font) -> void:
 		if kd.get("slot") is Array: cands.append(kd.slot)   # 上一格用開嘅位優先（唔會左右跳）
 		for j in 6:
 			for dx in [0.0, 0.62, -0.62, 1.24, -1.24]: cands.append([dx, j])
+		for j in range(6, 10):   # 上面擠滿：再高啲、再闊啲
+			for dx in [0.0, 0.62, -0.62, 1.24, -1.24, 1.86, -1.86]: cands.append([dx, j])
+		for j in range(-1, -9, -1):   # 仲係冇位：排去下面（貼住頂 HUD 嗰陣）
+			for dx in [0.0, 0.62, -0.62, 1.24, -1.24, 1.86, -1.86]: cands.append([dx, j])
 		for cd in cands:
 			var c = base + Vector2(float(cd[0]) * w, -6.0 - x.rise - int(cd[1]) * (h + 2.0))
 			var r = Rect2(c.x - w / 2, c.y - h, w, h)
@@ -94,6 +117,7 @@ static func solve(view_r: Rect2, f: Font) -> void:
 			if x.key is Dictionary: x.key["slot"] = cd
 			break
 	STATS.fl = fls.size()
+	busy = bars + placed
 	for x in fls:
 		if x.key is Dictionary: x.key["shown"] = x.show
 
@@ -102,12 +126,13 @@ static func _set_lines(b: Dictionary, ls: Array) -> void:
 	var w = 0.0; var h = 0.0
 	for l in ls: w = maxf(w, float(l.w)); h += float(l.h)
 	b.w = w; b.h = h
-static func _place_block(b: Dictionary, inner: Rect2, nj := 12, nd := 2) -> bool:
-	var dxs = [0.0, 0.55, -0.55, 1.1, -1.1].slice(0, 1 + nd * 2)
+static func _place_block(b: Dictionary, inner: Rect2, nj := 12, nd := 2, down := false) -> bool:
+	var dxs = [0.0, 0.55, -0.55, 1.1, -1.1, 1.65, -1.65, 2.2, -2.2].slice(0, 1 + nd * 2)
 	for j in nj:
 		for dx in dxs:
-			if j == 0 and dx != 0.0: continue
+			if j == 0 and dx != 0.0 and not down: continue
 			var c = b.S + Vector2(dx * (b.w + 6.0), -j * 7.0)
+			if down: c = b.S + Vector2(dx * (b.w + 6.0), 16.0 + b.h + j * 8.0)   # 上面擠滿（例如貼住頂部 HUD）：排去血條下面，引線指返
 			var r = Rect2(c.x - b.w / 2 - 1, c.y - b.h, b.w + 2, b.h)
 			if not inner.encloses(r) or _hit(r): continue
 			placed.append(r); b.pos = c
@@ -143,6 +168,10 @@ static func draw(v, n: CanvasItem, f: Font) -> void:
 					var pa = 0.6 + 0.4 * sin(Time.get_ticks_msec() / 1000.0 * 8.0)
 					n.draw_circle(Vector2(0, y - 9), 7.0, Color(1, 0.84, 0.3, pa)); n.draw_circle(Vector2(0, y - 9), 3.5, Color(1, 1, 0.9, pa))
 				"gap": pass
+				"ml":   # 遊魂兵兵器牌（ml_art 用世界座標畫）
+					n.draw_set_transform_matrix(Transform2D.IDENTITY)
+					load("res://game/militia/ml_art.gd").tag(n, xf_inv * (P + Vector2(0, y - 8.0)), xf_inv.get_scale().x, int(l.t))
+					_go(n, xf_inv, P)
 				"icons":
 					var row: Array = l.keys
 					var gap = IC * 2.0 + GAP

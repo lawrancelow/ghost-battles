@@ -127,6 +127,10 @@ const EV := {
 }
 const EV_ALIAS := {"現形": "reveal", "殼破": "shell_break", "屍變": "revive", "收": "seal", "驅散": "dispel", "打斷": "interrupt", "擊落": "ground", "反傷": "thorns", "散骨": "split", "召喚": "summon", "斬殺": "execute"}
 
+const FL_CD := 3.0          # [abui] 同一隻同一句最短間隔（秒）
+const FL_CD_LONG := 12.0    # 持續／光環型狀態（引擎每次刷新都會發事件）
+const FL_LONG := ["immune", "steady", "cc_immune", "fear_aura", "shield", "regen", "stealth", "fly"]
+static var STAT_DROP := 0   # 測試用：節流食咗幾多個
 static func on_event(op, e: Array) -> void:
 	if e.size() < 3: return
 	var src = e[1]; var prim = str(e[2]); var tg = e[3] if e.size() > 3 else null
@@ -140,6 +144,13 @@ static func on_event(op, e: Array) -> void:
 	else: return   # 唔識嘅積木唔飄字（免得一堆英文）
 	if d != null: col = d[2]
 	if u == null: return
+	# 節流：同一隻、同一句 3 秒內只飄一次（光環型持續狀態，例如無頭鬼光環每格重新上「免疫」，12 秒先再提一次）
+	var now = float(op.t) if op != null and op.get("t") != null else Time.get_ticks_msec() / 1000.0
+	var cdm = u.get("_flcd")
+	if not (cdm is Dictionary): cdm = {}; u["_flcd"] = cdm
+	if cdm.has(text) and now - float(cdm[text]) < (FL_CD_LONG if key in FL_LONG else FL_CD):
+		STAT_DROP += 1; return
+	cdm[text] = now
 	for x in FL:   # 同一隻、同一句仲喺度：合併做「×2」
 		if x.u == u and x.base == text and x.t < 0.9:
 			x.n += 1; x.text = "%s×%d" % [text, x.n]; x.t = minf(x.t, 0.2); return

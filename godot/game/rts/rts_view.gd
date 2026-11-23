@@ -401,6 +401,7 @@ func _str(n: CanvasItem, f: Font, s: String, x: float, y: float, px: int, col: C
 	if ow > 0: n.draw_string_outline(f, Vector2(x - w / 2, y), s, HORIZONTAL_ALIGNMENT_LEFT, -1, px, ow, Color(DARK, DARK.a * col.a))
 	n.draw_string(f, Vector2(x - w / 2, y), s, HORIZONTAL_ALIGNMENT_LEFT, -1, px, col)
 # [abui] 地圖上面嘅可撳 HUD（細過半個畫面、會食撳嘅 Control）：每 0.5 秒重新搵一次
+var _txt_seen := {}   # [abui] 同格重複 txt 飄字
 var _hud_c: Array = []
 var _hud_at := -1.0
 func _hud_ctl() -> Array:
@@ -425,8 +426,10 @@ func _draw_txt(n: CanvasItem) -> void:
 	var f = UIKit.font("sans", 900)
 	var vr: Rect2 = nv.view_rect().grow(60)
 	AL.begin()   # [abui]
+	_txt_seen.clear()
 	AL.active = false
 	for o0 in RTS.ops: if o0.phase in ["fight", "end"] and o0.vfx_on: AL.active = true
+	if not AL.active: AL.busy.clear()
 	var tg = ZD.stage_target()
 	if tg.has("pos") and RTS.owns(str(tg.sid)) and vr.has_point(tg.pos):   # 據點名牌
 		var at: Vector2 = tg.pos
@@ -503,14 +506,11 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 		var mn = J.t(u.get("minion")); var bo = J.t(u.get("boss")); var side1 = J.num(u.side) != 0
 		var hd = op.head(u) + Vector2(0, -4 - AH.lift_of(op, u))   # [abui] 飛行抬高
 		_at(n, hd)
-		if u.get("ml") != null:
-			load("res://game/militia/ml_art.gd").tag(n, hd + Vector2(0, -10), 1.0 / _z(), int(J.num(u.ml)))   # 遊魂兵頭頂兵器牌
-			_at(n, hd)
 		var full = hp >= J.num(u.get("maxhp", 1)) - 0.01
 		if op.phase in ["fight", "end"] or not full:
 			if not (mn and full):
 				var bw = 28.0 if mn else (58.0 if bo else 44.0)
-				AL.add_obs(Rect2(_scr(hd) + Vector2(-bw / 2 - 2, -2), Vector2(bw + 4, 12)))   # [abui] 血條係障礙：唔准字蓋住
+				AL.add_bar(Rect2(_scr(hd) + Vector2(-bw / 2 - 2, -2), Vector2(bw + 4, 12)))   # [abui] 血條係障礙：唔准字蓋住
 				n.draw_style_box(_box(Color(0, 0, 0, 0.7), 2), Rect2(-bw / 2 - 1, -1, bw + 2, 8))
 				var fr = clampf(hp / maxf(1.0, J.num(u.maxhp)), 0, 1)
 				if fr * bw > 0.3: n.draw_style_box(_box(Color("#e84a5f") if side1 else Color("#4ade80"), 2), Rect2(-bw / 2, 0, bw * fr, 6))
@@ -518,7 +518,7 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 				if u.get("sk") != null and not mn and not side1 and en > 0.5: n.draw_style_box(_box(Color("#ffd84a") if en >= 100 else Color("#7dd3fc"), 1), Rect2(-bw / 2, 6, bw * clampf(en / 100.0, 0, 1), 3))
 		# [abui] 頭頂資訊（讀條、狀態圖示、技能滿金點、王名、腳軟、失神）交 ab_lay 排版：同隔籬唔重疊
 		var lines = AH.lines_of(op, u, f) if op.phase == "fight" else []
-		if u.get("ml") != null: lines.push_front({"k": "gap", "w": 30.0, "h": 22.0})
+		if u.get("ml") != null: lines.push_front({"k": "ml", "t": int(J.num(u.ml)), "w": 26.0, "h": 22.0})   # 遊魂兵頭頂兵器牌（一齊排版，唔會疊）
 		if not side1 and not mn and op.phase == "fight" and J.num(u.get("energy", 0)) >= 100: lines.append({"k": "dot", "w": 16.0, "h": 18.0})
 		if bo:
 			var bn = str(DB.L(J.str(u.name)))
@@ -548,6 +548,9 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 				var col = Color(fx.col); col.a = a
 				_str(n, f, str(fx.text), 0, 0, 20 if J.t(fx.get("big")) else 16, col, 5)
 			"txt":   # [abui] 技能名、怕X・失神、連嚇：同 ab 飄字一齊排（唔重疊）
+				var dk = "%s@%d,%d" % [str(fx.text), int(p.x / 48.0), int(p.y / 48.0)]
+				if _txt_seen.has(dk): continue   # 同一句喺同一位（例如霸體每次擋控場都出）：只出一個
+				_txt_seen[dk] = true
 				var a = 1.0 if k < 0.7 else 1.0 - (k - 0.7) / 0.3
 				var col = Color(fx.col); col.a = a
 				AL.add_float(fx, _scr(p), str(fx.text), int(fx.get("px", 15)), col, t * 22.0, 1.0, null)

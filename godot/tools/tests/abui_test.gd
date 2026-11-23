@@ -318,7 +318,13 @@ func stage_card_and_fight(t, m) -> void:
 	await _f(t, 3)
 	var txts = []
 	for x in AH.FL: txts.append(x.text)
-	_chk("ab 事件飄字：現形！殼破！屍變！（唔識嘅唔飄）", txts.has(RTS.L("現形！", "現形！")) and txts.has(RTS.L("殼破！", "殼破！")) and txts.has(RTS.L("屍變！", "屍變！")) and txts.size() == n0 + 3, txts)
+	_chk("ab 事件飄字：現形！殼破！屍變！（唔識嘅唔飄）", txts.has(RTS.L("現形！", "現形！")) and txts.has(RTS.L("殼破！", "殼破！")) and txts.has(RTS.L("屍變！", "屍變！")) and not str(txts).contains("not_a_prim"), [n0, txts])
+	# 節流：光環每格刷新「免疫」→ 同一隻 3 秒（光環型 12 秒）內只飄一次
+	var vv = foes[0]; var fl0 = AH.FL.size(); var dr0 = AH.STAT_DROP
+	for i in 20: AH.on_event(op, ["ab", null, "immune", vv])
+	var nim = 0
+	for x in AH.FL: if x.u == vv and x.base == RTS.L("免疫", "免疫"): nim += 1
+	_chk("節流：同一隻連發 20 次「免疫」只飄 1 個、唔會變「免疫×20」", nim == 1 and AH.STAT_DROP - dr0 == 19, [nim, AH.STAT_DROP - dr0])
 	await _w(t, 0.15); await _shot(t, "07_fight_status_icons")
 	await dense(t, m, op, foes, heroes)
 	# 長按技能鈕切自動／手動，而且真係影響模擬
@@ -369,11 +375,25 @@ func _overlap_check(tag: String) -> void:
 			if (pl[i] as Rect2).intersects(pl[j]): bad_pairs.append([i, j])
 		for o in AL.obs:
 			if (pl[i] as Rect2).intersects(o): bad_pairs.append([i, "obs"])
+	var ext_bad = []   # 村子字（派鬼守夜等）同血條：撞到就要讓路（唔畫）
+	for id in AL.ext:
+		for r in AL.ext[id][1]:
+			for b in AL.bars: if (r as Rect2).intersects(b): ext_bad.append([r, b])
+	_chk("%s：村子字唔撞血條（撞到嗰格讓路）" % tag, ext_bad.is_empty(), ext_bad.slice(0, 3))
 	var nb = 0; var nf = 0
-	for b in AL.blocks: if b.show: nb += 1
+	var hid = []
+	for b in AL.blocks:
+		if b.show: nb += 1
+		else: hid.append([str(b.u.get("k")), b.S, b.w, b.h])
+	if hid.size(): _p("  %s 收埋嘅塊：%s" % [tag, str(hid)])
 	for x in AL.fls: if x.get("show", false): nf += 1
 	_chk("%s：頭頂資訊塊、飄字兩兩唔重疊，亦唔蓋血條／木牌／村子字（塊 %d、飄字 %d、障礙 %d、村子字 %d）" % [tag, nb, nf, AL.obs.size(), AL.ext.size()], bad_pairs.is_empty(), bad_pairs.slice(0, 5))
-	_chk("%s：大部份資訊照顯示（唔係靠收埋）" % tag, nb >= int(AL.blocks.size() * 0.6), [nb, AL.blocks.size()])
+	var ne = 0; var nes = 0
+	for b in AL.blocks:
+		if b.u is Dictionary and J.num(b.u.get("side", 0)) != 0:
+			ne += 1
+			if b.show: nes += 1
+	_chk("%s：敵人頭頂資訊全部照顯示（唔係靠收埋；擠到冇位只收遊魂兵牌）" % tag, nes == ne, [nes, ne, nb, AL.blocks.size()])
 func dense(t, m, op, foes: Array, heroes: Array) -> void:
 	var base: Dictionary = foes[0]
 	var extra = []
@@ -396,7 +416,7 @@ func dense(t, m, op, foes: Array, heroes: Array) -> void:
 				u["p"] = c + Vector2(600, 600)
 		for i in n:
 			var v = all_f[i]
-			op.events.append(["ab", null, ["reveal", "shell_break", "revive", "seal"][i % 4], v])
+			op.events.append(["ab", null, ["reveal", "shell_break", "revive", "seal", "interrupt", "summon", "execute", "clone_pop"][(i + n) % 8], v])
 			op.text(op.head(v) + Vector2(0, -22), "怕燈・失神", "#e8d0ff")
 		_cam(m, c + Vector2(0, 40), m.village.size.x / 300.0)
 		await _w(t, 0.5)
