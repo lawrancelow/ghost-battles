@@ -221,6 +221,8 @@ func ui_ok() -> bool:
 	if str(main.get("tab")) != "village": return false
 	if main.village == null or not main.village.is_visible_in_tree(): return false
 	if main.sheet != null and main.sheet.visible: return false
+	var SOVc = load("res://game/sortie/so_view.gd").card   # [soul2] 出擊小卡開住：浮動「出擊」掣、行動按鈕收起（唔遮小卡）
+	if SOVc != null and is_instance_valid(SOVc): return false
 	if _busy(): return false
 	if load("res://game/zone/zone_battle.gd").busy(): return false
 	var sc = main.get("mv_view")

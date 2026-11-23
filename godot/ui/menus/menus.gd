@@ -326,6 +326,8 @@ static func _gcard(g) -> Control:
 	if J.t(g.canRel):
 		var rb = _confirm_btn("送去投胎", "ghost", "確定？", func(): jn("rosterAct", ["rel", gid]); _render_roster(false))
 		rb.custom_minimum_size = Vector2(76, 30); act.add_child(rb)
+	load("res://game/equip/eq_ui.gd").roster_strip(card, hb, gid)   # [equip] 裝備三格（撳開換裝）
+	load("res://game/equip/eq_ui.gd").on_change = func(): _render_roster(true)   # [equip]
 	_body().add_child(card)
 	return card
 

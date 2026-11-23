@@ -103,7 +103,7 @@ static func give(gain: Dictionary) -> void:
 
 # ================= [chain] 生產鏈索引（引擎線） =================
 static func recipe(sid: String) -> Dictionary:
-	if sid == "st_bingqi": return load("res://game/militia/ml_data.gd").recipe_now()   # [militia] 兵器檔按級數用料
+	if sid == "st_bingqi": return load("res://game/equip/eq_data.gd").recipe_now()   # [militia] 兵器檔按級數用料；[equip] 今期 A/B 款用料（冇數據就行返 militia）
 	var r = D().RECIPES.get(sid)
 	return r if r is Dictionary else {}
 static func rin(sid: String) -> Dictionary:

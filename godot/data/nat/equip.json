@@ -1,0 +1,2542 @@
+{
+ "v": 1,
+ "GRADE_N": [
+  [
+   "凡",
+   "凡"
+  ],
+  [
+   "良",
+   "良"
+  ],
+  [
+   "精",
+   "精"
+  ],
+  [
+   "名",
+   "名"
+  ]
+ ],
+ "GRADE_COL": [
+  "#8a8478",
+  "#4e9a4a",
+  "#3f78c0",
+  "#d2a12a"
+ ],
+ "SLOT_N": {
+  "wea": [
+   "兵器",
+   "兵器"
+  ],
+  "arm": [
+   "護身",
+   "護身"
+  ],
+  "acc": [
+   "隨身物",
+   "隨身物"
+  ]
+ },
+ "CAP": {
+  "atk": 0.25,
+  "hp": 0.25,
+  "taken": -0.1,
+  "energy": 0.2,
+  "aspd": 0.12,
+  "spd": 0.15,
+  "heal_in": 0.25
+ },
+ "SC_BONUS": 0.08,
+ "MAX_TAG": 1,
+ "MAX_NAMED": 1,
+ "RECYCLE": 0.3,
+ "ITEMS": {
+  "ml_zhugan": {
+   "id": "ml_zhugan",
+   "kind": "ml",
+   "slot": "ml",
+   "tier": 0,
+   "var": "A",
+   "atk_k": 1.0,
+   "hp_k": 1.0,
+   "look": "hand",
+   "shape": "pole",
+   "rec": {
+    "m_bamboo": 1
+   },
+   "n": [
+    "晾衫竹",
+    "晾衣竹竿"
+   ],
+   "d": [
+    "曬咗一百年衫嘅竹，打鬼之前記得收衫。",
+    "曬了一百年衣服的竹竿，打鬼之前記得收衣服。"
+   ],
+   "price": 40,
+   "bld": "st_bingqi"
+  },
+  "ml_jimao": {
+   "id": "ml_jimao",
+   "kind": "ml",
+   "slot": "ml",
+   "tier": 0,
+   "var": "B",
+   "atk_k": 1.12,
+   "hp_k": 0.9,
+   "look": "hand",
+   "shape": "duster",
+   "rec": {
+    "m_wood": 1
+   },
+   "n": [
+    "雞毛掃",
+    "雞毛撢子"
+   ],
+   "d": [
+    "掃塵掃到惡鬼打乞嗤。",
+    "撢灰撢到惡鬼打噴嚏。"
+   ],
+   "price": 40,
+   "bld": "st_bingqi"
+  },
+  "ml_chaidao": {
+   "id": "ml_chaidao",
+   "kind": "ml",
+   "slot": "ml",
+   "tier": 1,
+   "var": "A",
+   "atk_k": 1.0,
+   "hp_k": 1.0,
+   "look": "hand",
+   "shape": "cleaver",
+   "rec": {
+    "m_wood": 1,
+    "m_strip": 1
+   },
+   "n": [
+    "生鏽柴刀",
+    "生鏽柴刀"
+   ],
+   "d": [
+    "伐木場報銷落嚟，鏽到要兩隻鬼一齊斬。",
+    "伐木場報廢下來的，鏽到要兩隻鬼一起砍。"
+   ],
+   "price": 40,
+   "bld": "st_bingqi"
+  },
+  "ml_wokchan": {
+   "id": "ml_wokchan",
+   "kind": "ml",
+   "slot": "ml",
+   "tier": 1,
+   "var": "B",
+   "atk_k": 1.12,
+   "hp_k": 0.9,
+   "look": "hand",
+   "shape": "spatula",
+   "rec": {
+    "m_plank": 1,
+    "m_strip": 1
+   },
+   "n": [
+    "鐵鑊鏟",
+    "鐵鍋鏟"
+   ],
+   "d": [
+    "大排檔夜更師傅借出，講明聽朝六點要還。",
+    "大排檔夜班師傅借出來的，說好明早六點要還。"
+   ],
+   "price": 40,
+   "bld": "st_bingqi"
+  },
+  "ml_tengpai": {
+   "id": "ml_tengpai",
+   "kind": "ml",
+   "slot": "ml",
+   "tier": 2,
+   "var": "A",
+   "atk_k": 1.0,
+   "hp_k": 1.0,
+   "look": "hand",
+   "shape": "shield",
+   "rec": {
+    "m_strip": 2,
+    "m_rope": 1
+   },
+   "n": [
+    "紙紮藤牌",
+    "紙紮藤牌"
+   ],
+   "d": [
+    "擋得住一次，第二次靠信念。",
+    "擋得住一次，第二次靠信念。"
+   ],
+   "price": 40,
+   "bld": "st_bingqi"
+  },
+  "ml_suogu": {
+   "id": "ml_suogu",
+   "kind": "ml",
+   "slot": "ml",
+   "tier": 2,
+   "var": "B",
+   "atk_k": 0.9,
+   "hp_k": 1.12,
+   "look": "hand",
+   "shape": "umbrella",
+   "rec": {
+    "m_paper": 1,
+    "m_strip": 1,
+    "m_rope": 1
+   },
+   "n": [
+    "縮骨遮",
+    "折疊傘"
+   ],
+   "d": [
+    "開遮擋、收遮戳；落雨仲有得用。",
+    "開傘擋、收傘戳；下雨還能用。"
+   ],
+   "price": 40,
+   "bld": "st_bingqi"
+  },
+  "ml_kuijia": {
+   "id": "ml_kuijia",
+   "kind": "ml",
+   "slot": "ml",
+   "tier": 3,
+   "var": "A",
+   "atk_k": 1.0,
+   "hp_k": 1.0,
+   "look": "body",
+   "shape": "paper_armor",
+   "rec": {
+    "m_paper": 2,
+    "m_strip": 1,
+    "m_rope": 1
+   },
+   "n": [
+    "紙紮盔甲",
+    "紙紮盔甲"
+   ],
+   "d": [
+    "長官話量身訂造，其實全部均碼。",
+    "長官說是量身訂做，其實全部均碼。"
+   ],
+   "price": 40,
+   "bld": "st_bingqi"
+  },
+  "ml_dituo": {
+   "id": "ml_dituo",
+   "kind": "ml",
+   "slot": "ml",
+   "tier": 3,
+   "var": "B",
+   "atk_k": 1.12,
+   "hp_k": 0.9,
+   "look": "hand",
+   "shape": "mop",
+   "rec": {
+    "m_wood": 2,
+    "m_rope": 2
+   },
+   "n": [
+    "地拖長槍",
+    "拖把長槍"
+   ],
+   "d": [
+    "清潔部退役，拖過嘅地比惡鬼仲污糟。",
+    "清潔部退役，拖過的地比惡鬼還髒。"
+   ],
+   "price": 40,
+   "bld": "st_bingqi"
+  },
+  "ml_wokhelm": {
+   "id": "ml_wokhelm",
+   "kind": "ml",
+   "slot": "ml",
+   "tier": 4,
+   "var": "A",
+   "atk_k": 1.0,
+   "hp_k": 1.0,
+   "look": "head",
+   "shape": "wok_helm",
+   "rec": {
+    "m_plank": 2,
+    "m_rope": 1
+   },
+   "n": [
+    "退役鐵鑊頭盔",
+    "退役鐵鍋頭盔"
+   ],
+   "d": [
+    "炒咗三十年嘅鑊，戴落去仲有鑊氣。",
+    "炒了三十年的鍋，戴上去還有鍋氣。"
+   ],
+   "price": 40,
+   "bld": "st_bingqi"
+  },
+  "ml_gongdi": {
+   "id": "ml_gongdi",
+   "kind": "ml",
+   "slot": "ml",
+   "tier": 4,
+   "var": "B",
+   "atk_k": 0.9,
+   "hp_k": 1.12,
+   "look": "head",
+   "shape": "hardhat",
+   "rec": {
+    "m_paper": 2,
+    "m_plank": 1,
+    "m_rope": 1
+   },
+   "n": [
+    "工地安全帽",
+    "工地安全帽"
+   ],
+   "d": [
+    "「安全第一」四個字，寫喺一個死人頭上。",
+    "「安全第一」四個字，寫在一個死人頭上。"
+   ],
+   "price": 40,
+   "bld": "st_bingqi"
+  },
+  "ml_tietong": {
+   "id": "ml_tietong",
+   "kind": "ml",
+   "slot": "ml",
+   "tier": 5,
+   "var": "A",
+   "atk_k": 1.0,
+   "hp_k": 1.0,
+   "look": "hand",
+   "shape": "pipe",
+   "rec": {
+    "m_plank": 3,
+    "m_rope": 2
+   },
+   "n": [
+    "收數鐵通",
+    "討債鐵管"
+   ],
+   "d": [
+    "前任收數佬遺物，敲一下惡鬼會自動還錢。",
+    "前任討債人的遺物，敲一下惡鬼會自動還錢。"
+   ],
+   "price": 40,
+   "bld": "st_bingqi"
+  },
+  "ml_huanshou": {
+   "id": "ml_huanshou",
+   "kind": "ml",
+   "slot": "ml",
+   "tier": 5,
+   "var": "B",
+   "atk_k": 1.12,
+   "hp_k": 0.9,
+   "look": "hand",
+   "shape": "ring_sword",
+   "rec": {
+    "m_plank": 2,
+    "m_strip": 2,
+    "m_rope": 1
+   },
+   "n": [
+    "生鏽環首刀",
+    "生鏽環首刀"
+   ],
+   "d": [
+    "古董舖話係漢朝貨，底下印住「出口加工」。",
+    "古董店說是漢朝貨，底下印著「出口加工」。"
+   ],
+   "price": 40,
+   "bld": "st_bingqi"
+  },
+  "ml_jiaban": {
+   "id": "ml_jiaban",
+   "kind": "ml",
+   "slot": "ml",
+   "tier": 6,
+   "var": "A",
+   "atk_k": 1.0,
+   "hp_k": 1.0,
+   "look": "body",
+   "shape": "ot_armor",
+   "rec": {
+    "m_paper": 3,
+    "m_strip": 2,
+    "m_plank": 2
+   },
+   "n": [
+    "加班戰甲（附免責聲明）",
+    "加班戰甲（附免責聲明）"
+   ],
+   "d": [
+    "地府集團配發：打爛唔賠，打贏唔加薪。",
+    "地府集團配發：打壞不賠，打贏不加薪。"
+   ],
+   "price": 40,
+   "bld": "st_bingqi"
+  },
+  "ml_suanpan": {
+   "id": "ml_suanpan",
+   "kind": "ml",
+   "slot": "ml",
+   "tier": 6,
+   "var": "B",
+   "atk_k": 0.9,
+   "hp_k": 1.12,
+   "look": "hand",
+   "shape": "abacus",
+   "rec": {
+    "m_plank": 3,
+    "m_strip": 2,
+    "m_paper": 1
+   },
+   "n": [
+    "鐵算盤盾",
+    "鐵算盤盾"
+   ],
+   "d": [
+    "每擋一下都幫你計數，月尾一齊找數。",
+    "每擋一下都幫你記帳，月底一起結算。"
+   ],
+   "price": 40,
+   "bld": "st_bingqi"
+  },
+  "eq_tuoxie": {
+   "id": "eq_tuoxie",
+   "kind": "eq",
+   "slot": "wea",
+   "grade": 0,
+   "st": {
+    "atk": 0.06,
+    "aspd": 0.06
+   },
+   "tag": "",
+   "sc": "",
+   "look": "hand",
+   "shape": "slipper",
+   "rec": {
+    "m_plank": 2,
+    "m_rope": 1
+   },
+   "coin": 200,
+   "star": 0,
+   "price": 60,
+   "n": [
+    "膠拖鞋",
+    "膠拖鞋"
+   ],
+   "d": [
+    "天下武功，唯拖鞋不破；打完仲著得返。",
+    "天下武功，唯拖鞋不破；打完還能穿回去。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_jimao": {
+   "id": "eq_jimao",
+   "kind": "eq",
+   "slot": "wea",
+   "grade": 0,
+   "st": {
+    "atk": 0.05
+   },
+   "tag": "掃",
+   "sc": "",
+   "look": "hand",
+   "shape": "duster",
+   "rec": {
+    "m_bamboo": 4,
+    "m_rope": 2
+   },
+   "coin": 200,
+   "star": 0,
+   "price": 60,
+   "n": [
+    "雞毛掃",
+    "雞毛撢子"
+   ],
+   "d": [
+    "一掃一大片，連蜘蛛網都冇埋。",
+    "一撢一大片，連蜘蛛網都沒了。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_wokchan": {
+   "id": "eq_wokchan",
+   "kind": "eq",
+   "slot": "wea",
+   "grade": 0,
+   "st": {
+    "atk": 0.08
+   },
+   "tag": "",
+   "sc": "",
+   "look": "hand",
+   "shape": "spatula",
+   "rec": {
+    "m_plank": 3,
+    "m_strip": 2
+   },
+   "coin": 200,
+   "star": 0,
+   "price": 60,
+   "n": [
+    "鐵鑊鏟",
+    "鐵鍋鏟"
+   ],
+   "d": [
+    "炒得住小炒，炒得住惡鬼。",
+    "炒得了小炒，也炒得了惡鬼。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_suanpan": {
+   "id": "eq_suanpan",
+   "kind": "eq",
+   "slot": "wea",
+   "grade": 1,
+   "st": {
+    "atk": 0.09
+   },
+   "tag": "破",
+   "sc": "",
+   "look": "hand",
+   "shape": "abacus",
+   "rec": {
+    "m_plank": 6,
+    "m_strip": 4
+   },
+   "coin": 1500,
+   "star": 1,
+   "price": 450,
+   "n": [
+    "鐵算盤",
+    "鐵算盤"
+   ],
+   "d": [
+    "一粒一粒計，計到個殼都爆。",
+    "一顆一顆算，算到殼都爆了。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_danca": {
+   "id": "eq_danca",
+   "kind": "eq",
+   "slot": "wea",
+   "grade": 1,
+   "st": {
+    "atk": 0.08
+   },
+   "tag": "遠",
+   "sc": "",
+   "look": "hand",
+   "shape": "slingshot",
+   "rec": {
+    "m_wood": 6,
+    "m_rope": 4
+   },
+   "coin": 1500,
+   "star": 1,
+   "price": 450,
+   "n": [
+    "天台彈叉",
+    "天台彈弓"
+   ],
+   "d": [
+    "天台曬鹹魚嗰陣用嚟趕雀，而家趕鬼。",
+    "天台曬鹹魚時用來趕麻雀，現在趕鬼。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_suogu": {
+   "id": "eq_suogu",
+   "kind": "eq",
+   "slot": "wea",
+   "grade": 1,
+   "st": {
+    "atk": 0.07,
+    "hp": 0.04
+   },
+   "tag": "定",
+   "sc": "",
+   "look": "hand",
+   "shape": "umbrella",
+   "rec": {
+    "m_paper": 6,
+    "m_strip": 4
+   },
+   "coin": 1500,
+   "star": 1,
+   "price": 450,
+   "n": [
+    "縮骨遮",
+    "折疊傘"
+   ],
+   "d": [
+    "開遮企喺度，隔籬啲鬼都覺得安心。",
+    "撐傘站在那裡，旁邊的鬼都覺得安心。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_liangcha": {
+   "id": "eq_liangcha",
+   "kind": "eq",
+   "slot": "wea",
+   "grade": 2,
+   "st": {
+    "atk": 0.11
+   },
+   "tag": "拉",
+   "sc": "",
+   "look": "hand",
+   "shape": "fork_pole",
+   "rec": {
+    "m_bamboo": 12,
+    "m_rope": 8,
+    "m_strip": 6
+   },
+   "coin": 12000,
+   "star": 3,
+   "price": 3600,
+   "n": [
+    "晾衫叉",
+    "晾衣叉"
+   ],
+   "d": [
+    "高處啲衫叉得落嚟，飛喺天嗰啲都叉得落嚟。",
+    "高處的衣服叉得下來，飛在天上的也叉得下來。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_huanshou": {
+   "id": "eq_huanshou",
+   "kind": "eq",
+   "slot": "wea",
+   "grade": 2,
+   "st": {
+    "atk": 0.13
+   },
+   "tag": "刺",
+   "sc": "",
+   "look": "hand",
+   "shape": "ring_sword",
+   "rec": {
+    "m_plank": 12,
+    "m_strip": 8,
+    "m_rope": 6
+   },
+   "coin": 12000,
+   "star": 3,
+   "price": 3600,
+   "n": [
+    "生鏽環首刀",
+    "生鏽環首刀"
+   ],
+   "d": [
+    "唔知斬過乜，總之好有經驗。",
+    "不知道砍過什麼，總之很有經驗。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_huoqi": {
+   "id": "eq_huoqi",
+   "kind": "eq",
+   "slot": "wea",
+   "grade": 3,
+   "st": {
+    "atk": 0.16,
+    "aspd": 0.05
+   },
+   "tag": "",
+   "sc": "breath",
+   "look": "hand",
+   "shape": "wok_spatula_gold",
+   "rec": {
+    "m_plank": 30,
+    "m_strip": 20,
+    "m_rope": 20
+   },
+   "coin": 90000,
+   "star": 5,
+   "price": 27000,
+   "n": [
+    "三十年鑊氣鏟",
+    "三十年鍋氣鏟"
+   ],
+   "d": [
+    "大排檔師傅退休嗰晚交落嚟：「火要猛，手要快，收工要準時。」",
+    "大排檔師傅退休那晚交下來：「火要猛，手要快，下班要準時。」"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_xizhuang": {
+   "id": "eq_xizhuang",
+   "kind": "eq",
+   "slot": "arm",
+   "grade": 0,
+   "st": {
+    "hp": 0.06,
+    "energy": 0.05
+   },
+   "tag": "",
+   "sc": "",
+   "look": "body",
+   "shape": "suit",
+   "rec": {
+    "m_paper": 4,
+    "m_rope": 1
+   },
+   "coin": 200,
+   "star": 0,
+   "price": 60,
+   "n": [
+    "紙紮西裝",
+    "紙紮西裝"
+   ],
+   "d": [
+    "著住開會，大招都儲得快啲（因為冇人想聽你講）。",
+    "穿著開會，大招也蓄得快一點（因為沒人想聽你講）。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_anquan": {
+   "id": "eq_anquan",
+   "kind": "eq",
+   "slot": "arm",
+   "grade": 0,
+   "st": {
+    "hp": 0.07,
+    "taken": -0.03
+   },
+   "tag": "",
+   "sc": "",
+   "look": "head",
+   "shape": "hardhat",
+   "rec": {
+    "m_paper": 3,
+    "m_plank": 2
+   },
+   "coin": 200,
+   "star": 0,
+   "price": 60,
+   "n": [
+    "工地安全帽",
+    "工地安全帽"
+   ],
+   "d": [
+    "頭戴式。安全帽係保住咗嘅。",
+    "頭戴式。安全帽倒是保住了。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_tengpai": {
+   "id": "eq_tengpai",
+   "kind": "eq",
+   "slot": "arm",
+   "grade": 0,
+   "st": {
+    "hp": 0.06,
+    "taken": -0.04
+   },
+   "tag": "",
+   "sc": "",
+   "look": "body",
+   "shape": "shield",
+   "rec": {
+    "m_strip": 4,
+    "m_rope": 2
+   },
+   "coin": 200,
+   "star": 0,
+   "price": 60,
+   "n": [
+    "藤牌",
+    "藤牌"
+   ],
+   "d": [
+    "藤織嘅，好透氣，打中都透氣。",
+    "藤編的，很透氣，被打中也透氣。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_weiqun": {
+   "id": "eq_weiqun",
+   "kind": "eq",
+   "slot": "arm",
+   "grade": 1,
+   "st": {
+    "hp": 0.09,
+    "heal_in": 0.1
+   },
+   "tag": "回",
+   "sc": "",
+   "look": "body",
+   "shape": "apron",
+   "rec": {
+    "m_paper": 6,
+    "m_rope": 4
+   },
+   "coin": 1500,
+   "star": 1,
+   "price": 450,
+   "n": [
+    "油漬圍裙",
+    "油漬圍裙"
+   ],
+   "d": [
+    "抹得手，抹得血，仲抹得返啲元氣。",
+    "擦得了手，擦得了血，還能擦回一點元氣。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_tiewok": {
+   "id": "eq_tiewok",
+   "kind": "eq",
+   "slot": "arm",
+   "grade": 1,
+   "st": {
+    "hp": 0.11,
+    "taken": -0.05
+   },
+   "tag": "",
+   "sc": "",
+   "look": "body",
+   "shape": "wok_back",
+   "rec": {
+    "m_plank": 8,
+    "m_rope": 3
+   },
+   "coin": 1500,
+   "star": 1,
+   "price": 450,
+   "n": [
+    "反轉鐵鑊",
+    "反轉鐵鍋"
+   ],
+   "d": [
+    "揹喺背脊，龜殼嘅原理，龜嘅尊嚴。",
+    "揹在背上，龜殼的原理，龜的尊嚴。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_baoan": {
+   "id": "eq_baoan",
+   "kind": "eq",
+   "slot": "arm",
+   "grade": 1,
+   "st": {
+    "hp": 0.1,
+    "taken": -0.03
+   },
+   "tag": "定",
+   "sc": "",
+   "look": "body",
+   "shape": "guard_uniform",
+   "rec": {
+    "m_paper": 6,
+    "m_strip": 3,
+    "m_rope": 2
+   },
+   "coin": 1500,
+   "star": 1,
+   "price": 450,
+   "n": [
+    "保安制服",
+    "保全制服"
+   ],
+   "d": [
+    "著上身即刻覺得自己守得住成條村，雖然人工冇加。",
+    "一穿上就覺得自己守得住整條村，雖然薪水沒加。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_guanban": {
+   "id": "eq_guanban",
+   "kind": "eq",
+   "slot": "arm",
+   "grade": 2,
+   "st": {
+    "hp": 0.14,
+    "taken": -0.06
+   },
+   "tag": "",
+   "sc": "",
+   "look": "body",
+   "shape": "coffin_shield",
+   "rec": {
+    "m_plank": 20,
+    "m_rope": 6
+   },
+   "coin": 12000,
+   "star": 3,
+   "price": 3600,
+   "n": [
+    "二手棺材板盾",
+    "二手棺材板盾"
+   ],
+   "d": [
+    "前任用家話好瞓。",
+    "前任用家說很好睡。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_yulou": {
+   "id": "eq_yulou",
+   "kind": "eq",
+   "slot": "arm",
+   "grade": 2,
+   "st": {
+    "hp": 0.12
+   },
+   "tag": "收",
+   "sc": "",
+   "look": "body",
+   "shape": "raincoat",
+   "rec": {
+    "m_paper": 16,
+    "m_strip": 6,
+    "m_rope": 6
+   },
+   "coin": 12000,
+   "star": 3,
+   "price": 3600,
+   "n": [
+    "紙紮雨褸",
+    "紙紮雨衣"
+   ],
+   "d": [
+    "攤開蓋住倒地嗰隻，佢就翻唔到身。",
+    "攤開蓋住倒地那隻，它就翻不了身。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_laogong": {
+   "id": "eq_laogong",
+   "kind": "eq",
+   "slot": "arm",
+   "grade": 3,
+   "st": {
+    "hp": 0.18,
+    "taken": -0.06,
+    "energy": 0.05
+   },
+   "tag": "",
+   "sc": "",
+   "look": "body",
+   "shape": "old_uniform",
+   "rec": {
+    "m_paper": 30,
+    "m_plank": 20,
+    "m_rope": 20
+   },
+   "coin": 90000,
+   "star": 5,
+   "price": 27000,
+   "n": [
+    "三十年老員工制服",
+    "三十年老員工制服"
+   ],
+   "d": [
+    "洗到褪晒色，仲係最硬淨嗰件。",
+    "洗到全褪色了，還是最耐穿的那件。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_staffcard": {
+   "id": "eq_staffcard",
+   "kind": "eq",
+   "slot": "acc",
+   "grade": 0,
+   "st": {
+    "energy": 0.08
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "staff_card",
+   "rec": {
+    "m_paper": 2,
+    "m_rope": 1
+   },
+   "coin": 200,
+   "star": 0,
+   "price": 60,
+   "n": [
+    "員工證",
+    "員工證"
+   ],
+   "d": [
+    "掛喺心口，拍卡入閘，拍卡出招。",
+    "掛在胸前，刷卡進閘，刷卡出招。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_liangchapot": {
+   "id": "eq_liangchapot",
+   "kind": "eq",
+   "slot": "acc",
+   "grade": 0,
+   "st": {
+    "heal_in": 0.15
+   },
+   "tag": "回",
+   "sc": "",
+   "look": "belt",
+   "shape": "tea_pot",
+   "rec": {
+    "m_wood": 2,
+    "m_strip": 2
+   },
+   "coin": 200,
+   "star": 0,
+   "price": 60,
+   "n": [
+    "涼茶壺",
+    "涼茶壺"
+   ],
+   "d": [
+    "飲啖涼茶，下火回氣，苦到惡鬼都皺眉。",
+    "喝口涼茶，降火回氣，苦到惡鬼都皺眉。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_dianzhan": {
+   "id": "eq_dianzhan",
+   "kind": "eq",
+   "slot": "acc",
+   "grade": 1,
+   "st": {
+    "energy": 0.05
+   },
+   "tag": "照",
+   "sc": "light",
+   "look": "belt",
+   "shape": "flashlight",
+   "rec": {
+    "m_paper": 4,
+    "m_plank": 3
+   },
+   "coin": 1500,
+   "star": 1,
+   "price": 450,
+   "n": [
+    "保安電筒",
+    "保全手電筒"
+   ],
+   "d": [
+    "照一照，匿埋嗰隻即刻現形，跟住問佢攞員工證。",
+    "照一照，躲起來那隻立刻現形，接著問它要員工證。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_naozhong": {
+   "id": "eq_naozhong",
+   "kind": "eq",
+   "slot": "acc",
+   "grade": 1,
+   "st": {
+    "aspd": 0.05
+   },
+   "tag": "削",
+   "sc": "",
+   "look": "belt",
+   "shape": "alarm_clock",
+   "rec": {
+    "m_plank": 4,
+    "m_strip": 4
+   },
+   "coin": 1500,
+   "star": 1,
+   "price": 450,
+   "n": [
+    "舊鬧鐘",
+    "舊鬧鐘"
+   ],
+   "d": [
+    "一響，乜嘢回血都停；包括你嘅午睡。",
+    "一響，什麼回血都停；包括你的午睡。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_yinji": {
+   "id": "eq_yinji",
+   "kind": "eq",
+   "slot": "acc",
+   "grade": 1,
+   "st": {
+    "energy": 0.06
+   },
+   "tag": "拉",
+   "sc": "sound",
+   "look": "belt",
+   "shape": "whistle",
+   "rec": {
+    "m_strip": 5,
+    "m_rope": 3
+   },
+   "coin": 1500,
+   "star": 1,
+   "price": 450,
+   "n": [
+    "銀雞（哨子）",
+    "哨子"
+   ],
+   "d": [
+    "吹一聲，飛喺天嗰啲都跌落嚟睇下發生咩事。",
+    "吹一聲，飛在天上的都掉下來看看發生什麼事。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_paperphone": {
+   "id": "eq_paperphone",
+   "kind": "eq",
+   "slot": "acc",
+   "grade": 2,
+   "st": {
+    "energy": 0.12
+   },
+   "tag": "",
+   "sc": "phone",
+   "look": "belt",
+   "shape": "paper_phone",
+   "rec": {
+    "m_paper": 14,
+    "m_strip": 8
+   },
+   "coin": 12000,
+   "star": 3,
+   "price": 3600,
+   "n": [
+    "紙紮手提電話",
+    "紙紮手機"
+   ],
+   "d": [
+    "打唔通，但係響得好大聲。",
+    "打不通，但是響得很大聲。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_fengyou": {
+   "id": "eq_fengyou",
+   "kind": "eq",
+   "slot": "acc",
+   "grade": 2,
+   "st": {
+    "spd": 0.1,
+    "heal_in": 0.1
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "oil_bottle",
+   "rec": {
+    "m_bamboo": 10,
+    "m_rope": 8,
+    "m_paper": 6
+   },
+   "coin": 12000,
+   "star": 3,
+   "price": 3600,
+   "n": [
+    "驅風油",
+    "驅風油"
+   ],
+   "d": [
+    "搽兩滴，行得快過收工鐘。",
+    "擦兩滴，走得比下班鐘還快。"
+   ],
+   "bld": "st_bingqi"
+  },
+  "eq_jinzheng": {
+   "id": "eq_jinzheng",
+   "kind": "eq",
+   "slot": "acc",
+   "grade": 3,
+   "st": {
+    "energy": 0.15,
+    "atk": 0.05,
+    "hp": 0.05
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "gold_card",
+   "rec": {
+    "m_paper": 30,
+    "m_strip": 20,
+    "m_rope": 20
+   },
+   "coin": 90000,
+   "star": 5,
+   "price": 27000,
+   "n": [
+    "鍍金長期服務證",
+    "鍍金長期服務證"
+   ],
+   "d": [
+    "服務滿三十年頒發，鍍金部分已經甩晒。",
+    "服務滿三十年頒發，鍍金部分已經掉光了。"
+   ],
+   "bld": "st_bingqi"
+  }
+ },
+ "ANCHOR": {
+  "afu": {
+   "hand": [
+    0.22,
+    -0.42
+   ],
+   "head": [
+    0.0,
+    -0.95
+   ],
+   "src": "manual"
+  },
+  "baiwu": {
+   "hand": [
+    0.29,
+    -0.56
+   ],
+   "head": [
+    0.09,
+    -1
+   ],
+   "src": "auto"
+  },
+  "bm_hou": {
+   "hand": [
+    0.3,
+    -0.5
+   ],
+   "head": [
+    -0.11,
+    -0.97
+   ],
+   "src": "auto"
+  },
+  "bm_jembalang": {
+   "hand": [
+    0.3,
+    -0.45
+   ],
+   "head": [
+    -0.09,
+    -0.97
+   ],
+   "src": "auto"
+  },
+  "bm_krasue": {
+   "hand": [
+    0.3,
+    -0.61
+   ],
+   "head": [
+    0.02,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "bm_langsuir": {
+   "hand": [
+    0.3,
+    -0.62
+   ],
+   "head": [
+    -0.08,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "bm_pang": {
+   "hand": [
+    0.3,
+    -0.48
+   ],
+   "head": [
+    -0.01,
+    -1
+   ],
+   "src": "auto"
+  },
+  "bm_shuten": {
+   "hand": [
+    0.3,
+    -0.47
+   ],
+   "head": [
+    0,
+    -0.95
+   ],
+   "src": "auto"
+  },
+  "bm_taotie": {
+   "hand": [
+    0.3,
+    -0.45
+   ],
+   "head": [
+    0.08,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "egui": {
+   "hand": [
+    0.21,
+    -0.41
+   ],
+   "head": [
+    -0.02,
+    -1
+   ],
+   "src": "auto"
+  },
+  "eguiking": {
+   "hand": [
+    0.3,
+    -0.45
+   ],
+   "head": [
+    0.02,
+    -0.97
+   ],
+   "src": "manual"
+  },
+  "heiwu": {
+   "hand": [
+    0.24,
+    -0.56
+   ],
+   "head": [
+    0.02,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "huang": {
+   "hand": [
+    0.3,
+    -0.5
+   ],
+   "head": [
+    -0.01,
+    -1
+   ],
+   "src": "auto"
+  },
+  "laojiang": {
+   "hand": [
+    0.34,
+    -0.62
+   ],
+   "head": [
+    0.0,
+    -0.97
+   ],
+   "src": "manual"
+  },
+  "mamian": {
+   "hand": [
+    0.3,
+    -0.62
+   ],
+   "head": [
+    -0.07,
+    -1
+   ],
+   "src": "auto"
+  },
+  "mengpo": {
+   "hand": [
+    0.19,
+    -0.62
+   ],
+   "head": [
+    0.09,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_aswang": {
+   "hand": [
+    0.3,
+    -0.44
+   ],
+   "head": [
+    -0.13,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_baigujing": {
+   "hand": [
+    0.13,
+    -0.42
+   ],
+   "head": [
+    0.02,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_banshee": {
+   "hand": [
+    0.3,
+    -0.61
+   ],
+   "head": [
+    -0.02,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_bunian": {
+   "hand": [
+    0.27,
+    -0.48
+   ],
+   "head": [
+    -0.07,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_changgui": {
+   "hand": [
+    0.13,
+    -0.47
+   ],
+   "head": [
+    -0.07,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_chehuo": {
+   "hand": [
+    0.24,
+    -0.45
+   ],
+   "head": [
+    0.08,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_chengsi": {
+   "hand": [
+    0.3,
+    -0.62
+   ],
+   "head": [
+    -0.05,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_chochin": {
+   "hand": [
+    0.3,
+    -0.62
+   ],
+   "head": [
+    0.01,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_churel": {
+   "hand": [
+    0.3,
+    -0.62
+   ],
+   "head": [
+    -0.09,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_daji": {
+   "hand": [
+    0.07,
+    -0.61
+   ],
+   "head": [
+    -0.17,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_danxiao": {
+   "hand": [
+    0.23,
+    -0.62
+   ],
+   "head": [
+    -0.04,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_diansi": {
+   "hand": [
+    0.3,
+    -0.61
+   ],
+   "head": [
+    -0.01,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_diaosi": {
+   "hand": [
+    0.21,
+    -0.41
+   ],
+   "head": [
+    -0.02,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_dongsi": {
+   "hand": [
+    0.3,
+    -0.48
+   ],
+   "head": [
+    0,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_dugui": {
+   "hand": [
+    0.3,
+    -0.61
+   ],
+   "head": [
+    -0.04,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_gashadokuro": {
+   "hand": [
+    0.3,
+    -0.47
+   ],
+   "head": [
+    -0.17,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_genderuwo": {
+   "hand": [
+    0.3,
+    -0.44
+   ],
+   "head": [
+    0.01,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_guhangui": {
+   "hand": [
+    0.3,
+    -0.5
+   ],
+   "head": [
+    0.03,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_guixinniang": {
+   "hand": [
+    0.3,
+    -0.53
+   ],
+   "head": [
+    0,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_hanba": {
+   "hand": [
+    0.28,
+    -0.55
+   ],
+   "head": [
+    -0.01,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_hannya": {
+   "hand": [
+    0.18,
+    -0.62
+   ],
+   "head": [
+    0.03,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_hantugalah": {
+   "hand": [
+    0.05,
+    -0.56
+   ],
+   "head": [
+    0.01,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_hanturaya": {
+   "hand": [
+    0.3,
+    -0.58
+   ],
+   "head": [
+    0.01,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_jenglot": {
+   "hand": [
+    0.29,
+    -0.5
+   ],
+   "head": [
+    -0.03,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_jerangkung": {
+   "hand": [
+    0.27,
+    -0.58
+   ],
+   "head": [
+    0.03,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_jiugui": {
+   "hand": [
+    0.3,
+    -0.56
+   ],
+   "head": [
+    -0.04,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_kappa": {
+   "hand": [
+    0.3,
+    -0.44
+   ],
+   "head": [
+    -0.01,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_kasaobake": {
+   "hand": [
+    0.3,
+    -0.55
+   ],
+   "head": [
+    -0.05,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_kuchisake": {
+   "hand": [
+    0.26,
+    -0.45
+   ],
+   "head": [
+    -0.09,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_leipi": {
+   "hand": [
+    0.3,
+    -0.55
+   ],
+   "head": [
+    -0.11,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_liulian": {
+   "hand": [
+    0.2,
+    -0.58
+   ],
+   "head": [
+    0.09,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_maenak": {
+   "hand": [
+    0.3,
+    -0.45
+   ],
+   "head": [
+    0.14,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_maoshi": {
+   "hand": [
+    0.3,
+    -0.59
+   ],
+   "head": [
+    0.03,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_nopperabo": {
+   "hand": [
+    0.18,
+    -0.41
+   ],
+   "head": [
+    0.03,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_pelesit": {
+   "hand": [
+    0.3,
+    -0.42
+   ],
+   "head": [
+    -0.12,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_phiam": {
+   "hand": [
+    0.3,
+    -0.41
+   ],
+   "head": [
+    0.1,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_polong": {
+   "hand": [
+    0.24,
+    -0.56
+   ],
+   "head": [
+    -0.04,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_qionggui": {
+   "hand": [
+    0.3,
+    -0.41
+   ],
+   "head": [
+    -0.07,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_rokurokubi": {
+   "hand": [
+    0.24,
+    -0.62
+   ],
+   "head": [
+    -0.17,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_shanxiao": {
+   "hand": [
+    0.3,
+    -0.47
+   ],
+   "head": [
+    0,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_shedu": {
+   "hand": [
+    0.3,
+    -0.5
+   ],
+   "head": [
+    -0.07,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_shidu": {
+   "hand": [
+    0.26,
+    -0.61
+   ],
+   "head": [
+    -0.01,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_taozhai": {
+   "hand": [
+    0.3,
+    -0.41
+   ],
+   "head": [
+    -0.01,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_tikbalang": {
+   "hand": [
+    0.3,
+    -0.41
+   ],
+   "head": [
+    -0.12,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_vetala": {
+   "hand": [
+    0.3,
+    -0.45
+   ],
+   "head": [
+    -0.02,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_wutou": {
+   "hand": [
+    0.3,
+    -0.56
+   ],
+   "head": [
+    0.05,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_xiangcai": {
+   "hand": [
+    0.3,
+    -0.52
+   ],
+   "head": [
+    0.2,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_xiaosi": {
+   "hand": [
+    0.3,
+    -0.62
+   ],
+   "head": [
+    -0.08,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_xiasi": {
+   "hand": [
+    0.23,
+    -0.42
+   ],
+   "head": [
+    0.05,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_yangui": {
+   "hand": [
+    0.3,
+    -0.61
+   ],
+   "head": [
+    -0.13,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_yecha": {
+   "hand": [
+    0.27,
+    -0.59
+   ],
+   "head": [
+    0.01,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_yesi": {
+   "hand": [
+    0.24,
+    -0.42
+   ],
+   "head": [
+    0.08,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_yezi": {
+   "hand": [
+    0.13,
+    -0.41
+   ],
+   "head": [
+    0.09,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_yukionna": {
+   "hand": [
+    0.3,
+    -0.59
+   ],
+   "head": [
+    0.02,
+    -1
+   ],
+   "src": "auto"
+  },
+  "n30_zhongshu": {
+   "hand": [
+    0.3,
+    -0.53
+   ],
+   "head": [
+    0.04,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "n30_zipai": {
+   "hand": [
+    0.26,
+    -0.62
+   ],
+   "head": [
+    -0.16,
+    -1
+   ],
+   "src": "auto"
+  },
+  "niutou": {
+   "hand": [
+    0.3,
+    -0.41
+   ],
+   "head": [
+    0.07,
+    -1
+   ],
+   "src": "auto"
+  },
+  "nw_ameonna": {
+   "hand": [
+    0.22,
+    -0.56
+   ],
+   "head": [
+    0,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_baimao": {
+   "hand": [
+    0.3,
+    -0.42
+   ],
+   "head": [
+    0.05,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_bajang": {
+   "hand": [
+    0.3,
+    -0.52
+   ],
+   "head": [
+    0.2,
+    -0.95
+   ],
+   "src": "auto"
+  },
+  "nw_buhuagu": {
+   "hand": [
+    0.3,
+    -0.52
+   ],
+   "head": [
+    -0.05,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_daqiang": {
+   "hand": [
+    0.3,
+    -0.47
+   ],
+   "head": [
+    0.13,
+    -0.94
+   ],
+   "src": "auto"
+  },
+  "nw_dullahan": {
+   "hand": [
+    0.3,
+    -0.52
+   ],
+   "head": [
+    0.11,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_ganshi": {
+   "hand": [
+    0.3,
+    -0.62
+   ],
+   "head": [
+    -0.13,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_guihuo": {
+   "hand": [
+    0.27,
+    -0.56
+   ],
+   "head": [
+    0.06,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_honeonna": {
+   "hand": [
+    0.3,
+    -0.53
+   ],
+   "head": [
+    0.15,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_huapi": {
+   "hand": [
+    0.28,
+    -0.42
+   ],
+   "head": [
+    0.09,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_huli": {
+   "hand": [
+    0.3,
+    -0.42
+   ],
+   "head": [
+    -0.03,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_kapre": {
+   "hand": [
+    0.3,
+    -0.45
+   ],
+   "head": [
+    0,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_krahang": {
+   "hand": [
+    0.3,
+    -0.55
+   ],
+   "head": [
+    -0.07,
+    -0.89
+   ],
+   "src": "auto"
+  },
+  "nw_kuaidi": {
+   "hand": [
+    0.3,
+    -0.41
+   ],
+   "head": [
+    -0.12,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_mummy": {
+   "hand": [
+    0.3,
+    -0.55
+   ],
+   "head": [
+    -0.06,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_shejing": {
+   "hand": [
+    0.27,
+    -0.53
+   ],
+   "head": [
+    0.13,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_shenpi": {
+   "hand": [
+    0.3,
+    -0.61
+   ],
+   "head": [
+    0.11,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_teketeke": {
+   "hand": [
+    0.3,
+    -0.59
+   ],
+   "head": [
+    -0.01,
+    -0.77
+   ],
+   "src": "auto"
+  },
+  "nw_tiangou": {
+   "hand": [
+    0.3,
+    -0.48
+   ],
+   "head": [
+    -0.1,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_tisi": {
+   "hand": [
+    0.22,
+    -0.58
+   ],
+   "head": [
+    0.01,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_toutai": {
+   "hand": [
+    0.22,
+    -0.61
+   ],
+   "head": [
+    0.09,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_yeleng_guard": {
+   "hand": [
+    0.22,
+    -0.52
+   ],
+   "head": [
+    0.04,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_yeleng_sales": {
+   "hand": [
+    0.27,
+    -0.47
+   ],
+   "head": [
+    0.03,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_zzcar": {
+   "hand": [
+    0.3,
+    -0.59
+   ],
+   "head": [
+    0.2,
+    -0.66
+   ],
+   "src": "auto"
+  },
+  "nw_zzhouse": {
+   "hand": [
+    0.3,
+    -0.44
+   ],
+   "head": [
+    0.14,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "nw_zzphone": {
+   "hand": [
+    0.3,
+    -0.42
+   ],
+   "head": [
+    0.07,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "penanggal": {
+   "hand": [
+    0.3,
+    -0.53
+   ],
+   "head": [
+    -0.01,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "pg_ex": {
+   "hand": [
+    0.2,
+    -0.62
+   ],
+   "head": [
+    -0.06,
+    -1
+   ],
+   "src": "auto"
+  },
+  "pg_ji": {
+   "hand": [
+    0.22,
+    -0.53
+   ],
+   "head": [
+    0,
+    -1
+   ],
+   "src": "auto"
+  },
+  "pg_landlady": {
+   "hand": [
+    0.29,
+    -0.61
+   ],
+   "head": [
+    -0.03,
+    -1
+   ],
+   "src": "auto"
+  },
+  "pg_songding": {
+   "hand": [
+    0.24,
+    -0.48
+   ],
+   "head": [
+    0.01,
+    -1
+   ],
+   "src": "auto"
+  },
+  "pg_tuimo": {
+   "hand": [
+    0.22,
+    -0.41
+   ],
+   "head": [
+    -0.15,
+    -1
+   ],
+   "src": "auto"
+  },
+  "pocong": {
+   "hand": [
+    0.14,
+    -0.5
+   ],
+   "head": [
+    0.0,
+    -0.98
+   ],
+   "src": "manual"
+  },
+  "pontianak": {
+   "hand": [
+    0.2,
+    -0.48
+   ],
+   "head": [
+    0.0,
+    -0.97
+   ],
+   "src": "manual"
+  },
+  "shuigui": {
+   "hand": [
+    0.27,
+    -0.5
+   ],
+   "head": [
+    -0.03,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "tianhua": {
+   "hand": [
+    0.24,
+    -0.45
+   ],
+   "head": [
+    0.0,
+    -0.95
+   ],
+   "src": "manual"
+  },
+  "toyol": {
+   "hand": [
+    0.23,
+    -0.48
+   ],
+   "head": [
+    -0.01,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "xiaogui": {
+   "hand": [
+    0.26,
+    -0.45
+   ],
+   "head": [
+    -0.02,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "xiaozhi": {
+   "hand": [
+    0.22,
+    -0.4
+   ],
+   "head": [
+    0.0,
+    -0.95
+   ],
+   "src": "manual"
+  },
+  "youhun": {
+   "hand": [
+    0.24,
+    -0.46
+   ],
+   "head": [
+    0.0,
+    -0.92
+   ],
+   "src": "manual"
+  },
+  "zd_bone": {
+   "hand": [
+    0.3,
+    -0.41
+   ],
+   "head": [
+    0,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "zd_hengsi": {
+   "hand": [
+    0.24,
+    -0.48
+   ],
+   "head": [
+    -0.07,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "zd_hongyi": {
+   "hand": [
+    0.2,
+    -0.5
+   ],
+   "head": [
+    -0.03,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "zd_paotui": {
+   "hand": [
+    0.3,
+    -0.42
+   ],
+   "head": [
+    -0.09,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "zd_shanjing": {
+   "hand": [
+    0.28,
+    -0.5
+   ],
+   "head": [
+    0.06,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "zd_shuihou": {
+   "hand": [
+    0.3,
+    -0.55
+   ],
+   "head": [
+    -0.1,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "zd_yinchai": {
+   "hand": [
+    0.27,
+    -0.41
+   ],
+   "head": [
+    0.01,
+    -0.98
+   ],
+   "src": "auto"
+  },
+  "zd_zhima": {
+   "hand": [
+    0.3,
+    -0.59
+   ],
+   "head": [
+    -0.2,
+    -0.91
+   ],
+   "src": "auto"
+  },
+  "zhiren": {
+   "hand": [
+    0.2,
+    -0.62
+   ],
+   "head": [
+    0.04,
+    -1
+   ],
+   "src": "auto"
+  },
+  "zombie": {
+   "hand": [
+    0.26,
+    -0.62
+   ],
+   "head": [
+    0.02,
+    -0.98
+   ],
+   "src": "auto"
+  }
+ }
+}
