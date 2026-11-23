@@ -1148,6 +1148,18 @@
     "guard": true
    }
   ],
+  "n30_chengsi": [
+   {
+    "t": "camp",
+    "id": "so5_r3_3",
+    "guard": false
+   },
+   {
+    "t": "wildboss",
+    "id": "zb_chengsi",
+    "c": 4
+   }
+  ],
   "n30_gashadokuro": [
    {
     "t": "camp",
@@ -1384,13 +1396,6 @@
    {
     "t": "wildboss",
     "id": "zb_zipai",
-    "c": 4
-   }
-  ],
-  "n30_chengsi": [
-   {
-    "t": "wildboss",
-    "id": "zb_chengsi",
     "c": 4
    }
   ],
@@ -6702,21 +6707,25 @@
     "zd_hengsi",
     "zd_hengsi",
     "zd_hengsi",
+    "n30_chengsi",
     "n30_chehuo"
    ],
    "plan": [
     "zd_hengsi",
     "zd_hengsi",
     "zd_hengsi",
+    "n30_chengsi",
     "n30_chehuo"
    ],
    "hm": [
     1,
     1,
     1,
+    1,
     1
    ],
    "am": [
+    1,
     1,
     1,
     1,
@@ -6727,18 +6736,24 @@
     [],
     [],
     [
+     "再生"
+    ],
+    [
      "突襲"
     ]
    ],
    "guard": "n30_chehuo",
    "guard_plan": "n30_chehuo",
    "mech": [
+    "再生",
     "突襲"
    ],
    "q": [
+    "再生",
     "突襲"
    ],
    "mech_plan": [
+    "再生",
     "突襲"
    ],
    "sys": [
@@ -8410,6 +8425,7 @@
   "n30_bunian": "Orang Bunian",
   "n30_changgui": "倀鬼",
   "n30_chehuo": "車禍鬼",
+  "n30_chengsi": "撐死鬼",
   "n30_chochin": "提燈妖",
   "n30_churel": "Churel",
   "n30_daji": "打機猝死鬼",

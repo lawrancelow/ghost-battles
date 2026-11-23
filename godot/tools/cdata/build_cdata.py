@@ -259,7 +259,7 @@ for ch in range(1, 7):
             else: MISSING.append((m, ch))
             continue
         c = dup[0]
-        pk = [x for x in c["plan"][-c["nn"]:] if x != m][1:]
+        pk = [x for x in c["plan"][-c["nn"]:] if x != m]; pk = pk[1:] if len(pk) == c["nn"] else pk
         c["plan"] = c["fods"] + pk + [m]
         GUEST.append((m, c["id"]))
 
@@ -270,7 +270,7 @@ for m, ch in MISSING:
         gs = [c["plan"][-1] for c in cs]
         dup = sorted([c for c in cs if (gs.count(c["plan"][-1]) > 1 or c["plan"][-1] in ALT) and not c["king"]], key=lambda c: (-c["ring"], c["id"]))
         if dup:
-            c = dup[0]; pk = [x for x in c["plan"][-c["nn"]:] if x != m][1:]
+            c = dup[0]; pk = [x for x in c["plan"][-c["nn"]:] if x != m]; pk = pk[1:] if len(pk) == c["nn"] else pk
             c["plan"] = c["fods"] + pk + [m]; GUEST.append((m, c["id"])); break
 
 # 魔王據點 6 個（newghost 線加喺 zones.json：so{c}_r4_4，boss＝bm_*）：嘍囉 3＋副將（可招降，駐守鬼）＋魔王

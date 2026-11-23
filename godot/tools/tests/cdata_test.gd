@@ -109,8 +109,11 @@ func _sig(a: Dictionary) -> String:
 func abil_check() -> void:
 	var D = AB.data()
 	_chk("abil.json 讀得到、有 ABIL／ENEMY／TAGS／MECH", D.get("ABIL") is Dictionary and D.get("ENEMY") is Dictionary and D.get("TAGS") is Dictionary and D.get("MECH") is Dictionary)
-	var A: Dictionary = D.get("ABIL", {})
-	var GH = J.G.get("GHOSTS")
+	var A: Dictionary = {}   # 只校驗 cdata 自己 abil.json 嘅 ABIL（newghost 嘅新鬼 ABIL 行起身先加入，歸 newghost 線）
+	var FJ = JSON.parse_string(FileAccess.get_file_as_string("res://data/abil.json"))
+	if FJ is Dictionary: A = FJ.get("ABIL", {})
+	var GH = {}
+	for k in J.G.get("GHOSTS"): if not str(k).begins_with("nw_"): GH[k] = true
 	var miss = []
 	for k in GH: if not A.has(k): miss.append(k)
 	for k in ["niutou", "mamian"]: if not A.has(k): miss.append(k)
@@ -330,6 +333,7 @@ func camp_check() -> void:
 	var gb = []
 	for id in C:
 		var cp = C[id]
+		if cp.has("bm"): continue
 		var g = CT.gang(int(cp.c), str(cp.dir))
 		if g.is_empty() or str(g.name) != str(cp.gang): gb.append(id)
 	_chk("同一方向第 1～4 圈都係同一個鬼幫", gb.is_empty(), gb)
