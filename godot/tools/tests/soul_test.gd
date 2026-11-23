@@ -104,7 +104,8 @@ func data_check() -> void:
 				var raw = str(SOUL.D().CAMP.get(SOUL.ckey(e), ""))
 				if not (raw in ["niutou", "mamian"]): nocamp.append(SOUL.ckey(e))   # 牛頭馬面：cdata 定咗升名鬼，但未有 GHOSTS 資料 → 暫時唔掉主魂
 			elif not J.G.GHOSTS.has(k): bad_g.append(k)
-	_chk("90 個據點都有駐守名鬼（牛頭、馬面未入名冊除外）", nocamp.is_empty() and SO.camps(0).size() == 15, nocamp)
+	var nbm = SO.camps(0).filter(func(e): return str(e.get("bm", "")) == "" and not e.has("boss")).size()   # [soul2] 合併 integ：newghost 每關加 1 個魔王據點（魔王不可招降），唔計
+	_chk("90 個據點都有駐守名鬼（牛頭、馬面未入名冊除外；魔王據點另計）", nocamp.is_empty() and nbm == 15, [nocamp, nbm, SO.camps(0).size()])
 	_chk("駐守鬼全部係現有名鬼（有圖）", bad_g.is_empty(), bad_g)
 	var cnt = {"凡": 0, "靈": 0, "煞": 0, "王": 0}
 	for k in D.PIN: cnt[D.PIN[k]] += 1
