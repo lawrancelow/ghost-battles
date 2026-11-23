@@ -312,7 +312,7 @@ func flow_check(t, m) -> void:
 		for u in op.units:
 			if J.num(u.side) == 1 and not J.t(u.get("minion")): ks.append(str(u.k)); last = u
 		_chk("敵陣有年獸（雙駐守）＝counter.json 組合", "nw_nian" in ks and ks == st.en, [ks, st.en])
-		_chk("頭目（最後一隻）仍係原駐守、op 記住駐守鬼", last != null and str(last.k) == str(st.guard) and J.t(last.get("boss")) and str(op.get_meta("guard", "")) == str(st.guard), [last.k if last else null, st.guard])
+		_chk("最後一隻（第 4 圈＝頭目）仍係原駐守、op 記住駐守鬼", last != null and str(last.k) == str(st.guard) and (int(e.ring) < 4 or J.t(last.get("boss"))) and str(op.get_meta("guard", "")) == str(st.guard), [last.k if last else null, st.guard])
 		var nu = null
 		for u in op.units: if J.num(u.side) == 1 and str(u.k) == "nw_nian": nu = u
 		_chk("年獸單位有能力（abcore 讀到 ABIL／機制）", nu != null and AB.on() and (AB.tags_of("nw_nian") as Array).size() >= 2, AB.tags_of("nw_nian") if nu != null else null)
