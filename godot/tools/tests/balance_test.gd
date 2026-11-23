@@ -198,9 +198,13 @@ func fight(sn: Dictionary, team: Array, adv: String, insts: Dictionary, sd: int,
 	op.auto = true
 	op.t_skip_march()
 	var n = 0
+	var first_t = -1.0
 	while op.result == null and n < 4000:
 		op.step(DT); n += 1
 		if op.events.size() > 64: op.events.clear()
+		if first_t < 0 and op.phase == "fight":
+			for u in op.units: if J.num(u.side) == 0 and J.t(u.get("minion")) and J.num(u.hp) <= 0: first_t = op.t; break
+	if first_t < 0: first_t = op.t
 	var r = op.result if op.result != null else {"win": false, "timeout": true}
 	var win = J.t(r.get("win")); var to = J.t(r.get("timeout")) or op.result == null
 	var mh = 0.0; var hh = 0.0; var fm = 0.0; var fh = 0.0; var dead = 0
@@ -212,7 +216,7 @@ func fight(sn: Dictionary, team: Array, adv: String, insts: Dictionary, sd: int,
 		else:
 			fm += J.num(u.get("maxhp", 1)); fh += maxf(0.0, J.num(u.hp))
 	var perf = (1.0 + hh / maxf(1.0, mh)) if win else (1.0 - fh / maxf(1.0, fm))
-	return {"win": win, "to": to, "t": op.t, "dead": dead, "perf": perf}
+	return {"win": win, "to": to, "t": op.t, "dead": dead, "perf": perf, "first": first_t}
 func batch(sn: Dictionary, team: Array, adv: String, insts: Dictionary, ns: int, up := 0.0, s0 := 0) -> Dictionary:
 	var R = {"w": 0, "n": 0, "to": 0, "t": 0.0, "dead": 0.0, "perf": 0.0}
 	for s in ns:
@@ -588,6 +592,33 @@ func msweep(t) -> void:
 			for k in keep: MD[m][k] = keep[k]
 			await t.get_tree().process_frame
 	AB.force = -1
+	_p("RESULT ok=1 bad=0")
+
+# ================= 陰兵血倍率：第一隊陣亡時間（真實場地、最佳隊候選；陰兵血 ×k 喺測試入面乘） =================
+func yinp(t) -> void:
+	await _boot(t)
+	for k in [1.0, 1.3, 1.6, 1.9]:
+		var tot = 0.0; var nn = 0; var w = 0.0
+		for c in 6:
+			var sites = sites_of(c)
+			for i in [0, 4, 9, 14, 18]:
+				var st = sites[i]
+				var pool = pool_of(c, int(st.ring))
+				_set_save(c, st.lv, pool, RANK_CH[c])
+				var insts = {}
+				for g in J.G.S.ghosts: insts[str(g.k)] = g
+				var sn = site_snap(st)
+				if sn.is_empty(): continue
+				var sq = []
+				for u in sn.sq:
+					var v = u.duplicate(true); v["hp"] = J.num(v.hp) * k; v["maxhp"] = J.num(v.maxhp) * k; sq.append(v)
+				var s2 = {"foes": sn.foes, "sq": sq}
+				var tm = pool.slice(0, mini(3, pool.size()))
+				for sd in 3:
+					var r = fight(s2, tm, best_adv(tm, pool, insts), insts, sd)
+					tot += r.first; nn += 1; w += float(r.win)
+			await t.get_tree().process_frame
+		_p("陰兵血 ×%.1f：第一隊陣亡平均 %.2f 秒（%d 場，池頭 3 隻，勝 %.0f%%）" % [k, tot / maxf(1, nn), nn, 100.0 * w / maxf(1, nn)])
 	_p("RESULT ok=1 bad=0")
 
 # ================= 入口 =================
