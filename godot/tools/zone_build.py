@@ -1016,7 +1016,7 @@ def _exits(M, wz):
 #   M["exits4"]＝[{dir:"N/E/S/W", kind:"wild"/"path", wz, pts:[[x,y]…]（由村門口到地圖邊外 60）, look:"bridge"/"steps"/"wild"}]
 DIRV = {"N": (0, -1), "S": (0, 1), "W": (-1, 0), "E": (1, 0)}
 G4 = 5
-def _astar_exit(M, start, dv):
+def _astar_exit(M, start, dv, PAD=-5):
     import heapq
     W, H = M["w"], M["h"]; nx, ny = W // G4 + 1, H // G4 + 1
     vr = next(z["rect"] for z in M["zones"] if z["type"] == "village")
@@ -1024,7 +1024,7 @@ def _astar_exit(M, start, dv):
     def ok(i, j):
         x, y = i * G4, j * G4
         if _in_r((x, y), vr, 0): return True   # 村入面（出路喺村柵欄開後門）
-        return not any(_in_r((x, y), r, 1) for r in blk)
+        return not any(_in_r((x, y), r, PAD) for r in blk)   # [integ] 離區邊至少 5px，唔好貼住區邊行（主角先行得到）
     def goal(i, j): return (dv[1] < 0 and j == 0) or (dv[1] > 0 and j == ny - 1) or (dv[0] < 0 and i == 0) or (dv[0] > 0 and i == nx - 1)
     s = (int(round(start[0] / G4)), int(round(start[1] / G4)))
     dist = {s: 0.0}; prev = {}; pq = [(0.0, s)]; end = None
@@ -1067,6 +1067,8 @@ def _exits4(M):
         if got is None:
             st = _base_route(M, wz_all[0])[0]
             pts = _astar_exit(M, st, dv)
+            # [integ] 離區邊 5px 嘅路如果要沿地圖邊行，就退返貼罅行（舊做法）
+            if pts is None or any((q[0] <= 0 or q[0] >= M["w"] or q[1] <= 0 or q[1] >= M["h"]) for q in pts[1:-2]): pts = _astar_exit(M, st, dv, 1)
             assert pts, ("四方向出路搵唔到", d)
             got = {"dir": d, "kind": "path", "wz": "", "look": "bridge" if d in "EW" else "steps", "pts": pts}
         got["pts"] = [[round(q[0]), round(q[1])] for q in got["pts"]]
