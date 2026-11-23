@@ -131,6 +131,9 @@ def bake(ci, M):
         dr.line(pts, fill=255, width=int(34 * SCALE));
         for q in pts[1:]: dr.ellipse([q[0] - 17 * SCALE, q[1] - 17 * SCALE, q[0] + 17 * SCALE, q[1] + 17 * SCALE], fill=255)
         q = pts[-1]; r = 70 * SCALE; dr.ellipse([q[0] - r, q[1] - r * 0.55, q[0] + r, q[1] + r * 0.55], fill=255)   # 據點空地
+    for e4 in M.get("exits4", []):   # [dirs4] 四方向出路：出核心地圖嗰段畫闊啲
+        pts = [((p[0] - x0) * SCALE, (p[1] - y0) * SCALE) for p in e4["pts"][-2:]]
+        dr.line(pts, fill=255, width=int(44 * SCALE))
     path = np.asarray(path.filter(ImageFilter.GaussianBlur(4)), dtype=np.float32)[..., None] / 255.0
     D, _ = _mix(PATH_TILE, yy + 13, xx + 29, rnd, H, W); D *= 0.9
     out = out * (1 - path * 0.85) + D * path * 0.85
