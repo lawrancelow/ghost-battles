@@ -140,7 +140,7 @@ static func _summon(body: VBoxContainer, refresh: Callable) -> void:
 		for x in ch.slice(0, 24): _summon_row(body, x, refresh)
 	var unseen = 0
 	for k in SOUL.D().PIN:
-		if not SOUL.seen(str(k)) and not SOUL.story(str(k)): unseen += 1
+		if SOUL.is_ghost(str(k)) and not SOUL.seen(str(k)) and not SOUL.story(str(k)): unseen += 1
 	if unseen > 0: body.add_child(_rich(L("仲有 %d 隻名鬼未遇見：去野外據點打，就會知道係邊個。", "還有 %d 隻名鬼未遇見：到野外據點打，就會知道是誰。") % unseen, 15, DIM))
 static func _summon_row(body: VBoxContainer, x: Dictionary, refresh: Callable) -> void:
 	var k = str(x.k); var c: Dictionary = x.c; var cs: Dictionary = c.cost

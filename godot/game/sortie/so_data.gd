@@ -277,7 +277,7 @@ static func settle(op) -> bool:
 		if g.rare != "": extra.append(L("極稀有！", "極稀有！") + g.rare)
 		rep["lost"] = extra + rep.lost
 		if g.rare != "": rep["rare"] = g.rare
-		var sl = load("res://game/soul/soul_data.gd").on_sortie_win(e, g.first)   # [soul] 戰後掉魂魄：戰報加一行
+		var sl = load("res://game/soul/soul_data.gd").on_sortie_win(e, g.first, load("res://game/soul/soul_data.gd").good_play(op))   # [soul] 戰後掉魂魄：戰報加一行
 		if str(sl.line) != "": rep["soul"] = sl.line; rep["soul_ready"] = sl.ready; rep["lost"].append(sl.line)
 		var ex = J.G.get("save")
 		if ex != null: J.cl(ex, null, [])

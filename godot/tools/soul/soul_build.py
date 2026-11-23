@@ -3,12 +3,23 @@
 # 數據來源：/home/claude/bs/soul.md 第 2、3、4 節；據點表 = /home/claude/bs/soul_sim/camp_table.md
 # 第一階段：〔新〕鬼位未有圖 → 暫用現有同品級鬼頂（TMP_SUB），counter.json 有 guard 時以 counter 為準
 import json, os
-PIN = {}
-for k in "n30_qionggui n30_danxiao n30_maoshi n30_yangui n30_jiugui n30_wutou n30_changgui n30_pelesit n30_polong n30_jenglot n30_phiam n30_kasaobake n30_chochin n30_kappa n30_zipai n30_xiaosi n30_yesi n30_shidu n30_daji n30_xiasi pg_tuimo".split(): PIN[k] = "凡"
-for k in "n30_dugui n30_guhangui n30_taozhai n30_diaosi n30_guixinniang n30_baigujing n30_shanxiao n30_hantugalah n30_jerangkung n30_bunian n30_churel n30_tikbalang n30_maenak n30_nopperabo n30_rokurokubi n30_kuchisake n30_chehuo n30_yezi n30_liulian n30_zhongshu n30_chengsi n30_shedu pg_songding pg_ex xiaozhi".split(): PIN[k] = "靈"
-for k in "n30_yecha n30_hanba n30_hanturaya n30_genderuwo n30_aswang n30_vetala n30_banshee n30_yukionna n30_hannya n30_gashadokuro n30_diansi n30_dongsi n30_leipi n30_xiangcai pg_ji pg_landlady eguiking toyol pocong tianhua".split(): PIN[k] = "煞"
-for k in "laojiang pontianak penanggal baiwu heiwu mengpo".split(): PIN[k] = "王"
-assert len(PIN) == 72, len(PIN)
+# 品級定案（FIXES_review1 第 15 項）：按定案名冊 /home/claude/bs/counter_tool/roster_data.py 的 T 值
+#   T1＝凡、T2＝靈、T3＝煞；劇情王（T4）按 soul.md：餓鬼王／Toyol／Pocong 煞，其餘王；小紙靈、孟婆王、天花姐按 T。
+#   Sundel Bolong 已去掉（老闆 20:24），空位 Teke Teke（第 5 關、厲、突襲，T2）。冇 k1／k2。
+import re
+ROSTER = "/home/claude/bs/counter_tool/roster_data.py"
+TPIN = {"T1": "凡", "T2": "靈", "T3": "煞"}
+STORY_PIN = {"eguiking": "煞", "toyol": "煞", "pocong": "煞", "laojiang": "王", "pontianak": "王", "penanggal": "王", "baiwu": "王", "heiwu": "王", "mengpo": "王", "xiaozhi": "靈"}
+PIN = {}; NEWG = {}
+for ln in open(ROSTER, encoding="utf-8"):
+    m = re.match(r'add\("([a-z0-9_]+)",\s*"[^"]*",\s*"[^"]*",\s*"[^"]*",\s*(\d),\s*"[^"]*",\s*"(T\d)"', ln)
+    if not m: continue
+    k, ch, t = m.group(1), int(m.group(2)), m.group(3)
+    if k == "nw_sundel": k, ch = "nw_teketeke", 5
+    PIN[k] = STORY_PIN.get(k, TPIN.get(t, "王"))
+    if "new=True" in ln or k == "nw_teketeke": NEWG[k] = ch - 1
+for k, v in STORY_PIN.items(): PIN.setdefault(k, v)
+assert len(PIN) == 100, len(PIN)
 
 # 每章 15 據點主魂（次序＝zones.json sorties：r1_1..r4_3）；new_* ＝〔新〕位
 CH = [
@@ -38,6 +49,17 @@ for c, row in enumerate(CH):
     for i, k in enumerate(ks):
         assert k in PIN, k
         CAMP["%d:so%d_%s" % (c, c + 1, IDS[i])] = k
+
+# 第一階段臨時表＝cdata 線 counter.json 據點 guard 嘅快照（cdata 合併後遊戲直接讀 counter.json，呢度只係後備）
+CT = "/home/claude/wt/cdata/godot/data/nat/counter.json"
+CAMP_PLAN = {}
+if os.path.exists(CT):
+    ct = json.load(open(CT, encoding="utf-8"))
+    CAMP = {}
+    for cid, d in ct["camps"].items():
+        CAMP["%d:%s" % (d["c"], cid)] = d["guard"]
+        CAMP_PLAN["%d:%s" % (d["c"], cid)] = d.get("guard_plan", d["guard"])
+for k in CAMP.values(): assert k in PIN, k
 
 # 心願供品：[資源, 粵語原句, 中文]（冇寫就用壽包）
 WISH = {
@@ -70,12 +92,14 @@ STORY_JOIN = ["afu", "xiaozhi", "eguiking", "toyol", "laojiang", "pontianak", "p
 # 劇情鬼所屬章（0 起計，用嚟計招降費）
 STORY_CH = {"xiaozhi": 0, "eguiking": 0, "toyol": 1, "tianhua": 1, "laojiang": 2, "pontianak": 3, "pocong": 4, "penanggal": 4, "baiwu": 5, "heiwu": 5, "mengpo": 5, "pg_landlady": 5}
 
-out = {"v": 1, "note": "soul 線：品級、據點駐守臨時表（counter.json guard 優先）、心願供品；數值見 soul_data.gd 頂部",
-       "PIN": PIN, "CAMP": CAMP, "WISH": WISH, "STORY_JOIN": STORY_JOIN, "STORY_CH": STORY_CH, "TMP_SUB": TMP_SUB}
+out = {"v": 2, "note": "soul 線：品級、據點駐守臨時表（counter.json guard 優先）、心願供品；數值見 soul_data.gd 頂部",
+       "PIN": PIN, "CAMP": CAMP, "WISH": WISH, "STORY_JOIN": STORY_JOIN, "STORY_CH": STORY_CH, "TMP_SUB": TMP_SUB, "CAMP_PLAN": CAMP_PLAN, "NEW": NEWG}
 p = os.path.join("data", "nat", "soul.json")
 with open(p, "w", encoding="utf-8") as f: json.dump(out, f, ensure_ascii=False, indent=1)
 # 驗：每隻非劇情鬼起碼 1 個主魂據點
 src = {}
 for k, g in CAMP.items(): src.setdefault(g, []).append(k)
-miss = [k for k in PIN if k not in src and k not in STORY_JOIN]
+import collections
+print("pin", dict(collections.Counter(PIN.values())))
+miss = [k for k in PIN if k not in src and k not in STORY_JOIN and k not in NEWG]
 print("wrote", p, "camps", len(CAMP), "ghosts with camp", len(src), "missing", miss)

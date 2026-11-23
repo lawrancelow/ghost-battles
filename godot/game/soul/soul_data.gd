@@ -24,10 +24,12 @@ const RANK_MAX := 5
 const RANK_COST := {"凡": [5, 10, 20, 30, 45], "靈": [10, 15, 25, 40, 55], "煞": [10, 20, 30, 45, 70], "王": [15, 25, 40, 60, 80]}   # 升到第 1..5 級要幾多魂魄
 const RANK_COIN := [50.0, 200.0, 450.0, 800.0, 1250.0]           # 升到第 1..5 級冥幣（× 品值）
 const ALTAR_RANK := [0, 2, 3, 4, 5, 6]                           # 升到第 r 級要祭壇等級
-const STAT_PCT := {"凡": 0.08, "靈": 0.06, "煞": 0.05, "王": 0.05}   # 每職級三圍 +%
-const CAP_PER_RANK := 3                                          # 每職級等級上限 +3
+const STAT_PCT := {"凡": 0.05, "靈": 0.04, "煞": 0.04, "王": 0.04}   # 每職級三圍 +%（合夥人合計：凡 +25%、其餘 +20%；FIXES_review1 第 16 項：防練幾隻就通關）
+const CAP_PER_RANK := 2                                          # 每職級等級上限 +2（最多 +10）
 const PRI := [3, 4, 5, 6]                                        # 每次打贏主魂（第 1～4 圈）
 const PRI_BONUS_P := 0.30                                        # 30% 多 1 隻
+const GOOD_BONUS := 1                                            # 「打得好」：用到 ≥1 個正確應對（克制或機制）主魂 +1
+const RANK_SUB_MAX := 0.5                                        # 升職：散魂最多頂每級消耗嘅一半
 const FIRST := [10, 8, 6, 6]                                     # 首勝見面禮（主魂）
 const SEC_P := 0.25                                              # 副魂機會
 const SEC_N := 2                                                 # 副魂隻數
@@ -250,8 +252,8 @@ static func _gain_txt(g: Dictionary, tag := "") -> String:
 	return "%s +%d（%d/%d）" % [gname(k), int(g.n), souls(k), need_of(k)] + tag
 
 # 野外出擊打贏（so_data.settle 掛鈎）：回 {line, ready:[k], items:[{k,n,sec}], san}
-static func on_sortie_win(e: Dictionary, first: bool) -> Dictionary:
-	var out = {"line": "", "ready": [], "items": [], "san": 0, "mul": 1.0}
+static func on_sortie_win(e: Dictionary, first: bool, good := false) -> Dictionary:
+	var out = {"line": "", "ready": [], "items": [], "san": 0, "mul": 1.0, "good": good}
 	var o = st()
 	if o == null: return out
 	var key = ckey(e); var r = ri(e.get("ring", 1))
@@ -263,6 +265,7 @@ static func on_sortie_win(e: Dictionary, first: bool) -> Dictionary:
 	if k != "" and guard_live(e):
 		var base = PRI[r] + (1 if rng.randf() < PRI_BONUS_P else 0)
 		var n = maxi(1, int(round(base * mul)))
+		if good: n += GOOD_BONUS
 		if first: n += FIRST[r]
 		var g = gain(k, n, "sortie")
 		out.items.append({"k": k, "n": n, "sec": false})
@@ -285,6 +288,7 @@ static func on_sortie_win(e: Dictionary, first: bool) -> Dictionary:
 	parts.append(L("散魂 +%d", "散魂 +%d") % sn)
 	var fr = _fr(); fr.n[key] = float(wins_today(key) + 1)
 	var line = L("魂魄：", "魂魄：") + "、".join(parts)
+	if good and k != "" and guard_live(e): line += L("（打得好 +%d）", "（打得好 +%d）") % GOOD_BONUS
 	if mul < 0.99: line += L("（怨氣已散 ×%s）", "（怨氣已散 ×%s）") % ("½" if mul >= 0.5 else "¼")
 	for kk in was_ready:
 		if not was_ready[kk] and can_summon(kk).ok: out.ready.append(kk)
@@ -292,6 +296,34 @@ static func on_sortie_win(e: Dictionary, first: bool) -> Dictionary:
 	out.line = line
 	LOG.append(["sortie", key, out])
 	return out
+# 「打得好」：今場出陣名鬼有冇用到正確應對（敵人系怕佢嘅嚇法＝克制，或者佢嘅標籤應對敵人機制）
+#   優先用 abcore 戰後記錄 op.ab_log.good；冇就用 abil.gd API（AB.tags_of／counters_of）推算；兩樣都冇（能力線未合併）＝false
+static func good_play(op) -> bool:
+	if not (op is Object): return false
+	var lg = op.get("ab_log")
+	if lg == null and op.has_meta("ab_log"): lg = op.get_meta("ab_log")
+	if lg is Dictionary and lg.has("good"): return J.t(lg.good)
+	if not ResourceLoader.exists("res://game/rts/abil.gd"): return false
+	var AB = load("res://game/rts/abil.gd")
+	if AB == null or not AB.has_method("tags_of") or not AB.has_method("counters_of"): return false
+	if AB.has_method("on") and not AB.on(): return false
+	var mine = {}; var foes = []
+	for u in J.iter(op.get("units")):
+		var k = J.str(J.gp(u, "k"))
+		if J.num(J.gp(u, "side")) == 0 and is_ghost(k):
+			for t in J.iter(AB.tags_of(k)): mine[str(t)] = true
+		elif J.num(J.gp(u, "side")) == 1: foes.append(k)
+	for k in foes:
+		for t in J.iter(AB.counters_of(k)):
+			if mine.has(str(t)): return true
+	return false
+# 專長格（FIXES_review1 第 2 項；abcore 按呢個解鎖 ABIL[k].perk[0..1]）：主任開 1、總監開 2；王品入村即有 1
+static func perk_slots(k: String) -> int:
+	var r = rank(k)
+	var n = (1 if r >= 2 else 0) + (1 if r >= 4 else 0)
+	if pin(k) == "王": n = maxi(n, 1 + (1 if r >= 4 else 0))
+	return mini(2, n)
+
 # 野外王（zone_data.resolve 掛鈎）：非劇情王首殺 +15
 static func on_king(bid: String, c: int, first: bool) -> String:
 	if not first or st() == null: return ""
@@ -397,6 +429,7 @@ static func can_promote(k: String) -> Dictionary:
 	out.need = rank_cost(k, to); out.coins = RANK_COIN[to - 1] * pv(k); out.altar = ALTAR_RANK[to]
 	var miss = maxi(0, out.need - out.have)
 	if miss > 0:
+		if miss > int(floor(out.need * RANK_SUB_MAX)): out.why = "souls"; return out   # 散魂封頂一半
 		out.sub = miss; out.sub_cost = miss * pv(k) * SAN_BUY
 		if san() < out.sub_cost: out.why = "souls"; return out
 	if altar_lv() < out.altar: out.why = "altar"; return out

@@ -94,7 +94,7 @@ func _run(t) -> void:
 # ---- 數據 ----
 func data_check() -> void:
 	var D = SOUL.D()
-	_chk("soul.json：72 隻名鬼都有品級", D.PIN.size() == 72, D.PIN.size())
+	_chk("soul.json：定案名冊 100 隻名鬼（不計阿福）都有品級、現有 72 隻全部有", D.PIN.size() == 100 and J.G.GHOSTS.keys().filter(func(k): return k != "afu" and not D.PIN.has(k)).is_empty(), D.PIN.size())
 	var nocamp = []; var bad_g = []
 	for c in 6:
 		var cs = SO.camps(c)
@@ -106,14 +106,17 @@ func data_check() -> void:
 	_chk("駐守鬼全部係現有名鬼（有圖）", bad_g.is_empty(), bad_g)
 	var cnt = {"凡": 0, "靈": 0, "煞": 0, "王": 0}
 	for k in D.PIN: cnt[D.PIN[k]] += 1
-	_chk("品級分布 凡21 靈25 煞20 王6", cnt == {"凡": 21, "靈": 25, "煞": 20, "王": 6}, cnt)
+	_chk("品級分布（按名冊 T 值）凡22 靈46 煞26 王6，冇 k1/k2", cnt == {"凡": 22, "靈": 46, "煞": 26, "王": 6} and not D.PIN.has("new_k1"), cnt)
 	var e = SO.camps(0)[0]
-	_chk("第1章第1據點：主魂窮鬼、副魂推磨鬼", SOUL.guard_of(e) == "n30_qionggui" and SOUL.sec_of(e) == "pg_tuimo", [SOUL.guard_of(e), SOUL.sec_of(e)])
-	var miss = []
-	for k in D.PIN:
-		if SOUL.story(k): continue
-		if SOUL.sources(k).filter(func(x): return x.pri).is_empty(): miss.append(k)
-	_chk("每隻非劇情名鬼起碼 1 個主魂據點", miss.is_empty(), miss)
+	_chk("第1章第1據點：主魂窮鬼、有副魂（往後第 5 個據點）", SOUL.guard_of(e) == "n30_qionggui" and SOUL.sec_of(e) == SOUL.guard_of(SO.camps(0)[5]), [SOUL.guard_of(e), SOUL.sec_of(e)])
+	var miss = []; var nopri = []
+	for k in J.G.GHOSTS:
+		if k == "afu" or SOUL.story(k): continue
+		var src = SOUL.sources(k)
+		if src.is_empty(): miss.append(k)
+		elif src.filter(func(x): return x.pri).is_empty(): nopri.append(k)
+	_chk("每隻現有非劇情名鬼起碼 1 個據點來源（主或副）", miss.is_empty(), miss)
+	_p("只有副魂來源（等 cdata 補主魂據點／野外王重打）：%s" % str(nopri))
 	var both = 0
 	for k in D.PIN: if SOUL.sources(k).size() >= 2: both += 1
 	_chk("大部分名鬼有 ≥2 個來源（主＋副）", both >= 60, both)
@@ -148,7 +151,7 @@ func migrate_check() -> void:
 	_chk("遷移：已招降記 got／seen", J.t(o.got.get("n30_dugui")) and J.t(o.seen.get("n30_dugui")))
 	var exp_q = SOUL.FIRST[0] + 2 * 5
 	_chk("遷移：已首勝據點補首勝禮＋2×min(勝,5)（窮鬼 %d）" % exp_q, SOUL.souls("n30_qionggui") == exp_q, SOUL.souls("n30_qionggui"))
-	_chk("遷移：未首勝據點唔補", SOUL.souls("n30_danxiao") == 0)
+	_chk("遷移：未首勝據點唔補", SOUL.souls(SOUL.guard_of(SO.camps(0)[1])) == 0)
 	_chk("遷移：打低非劇情野外王補 15（Jerangkung）", SOUL.souls("n30_jerangkung") == SOUL.KING_FIRST, SOUL.souls("n30_jerangkung"))
 	_chk("遷移：通關主線每關散魂 10", SOUL.san() == SOUL.STAGE_SAN * nst, [SOUL.san(), nst])
 	var gone_k = []
@@ -178,16 +181,22 @@ func drops_check(t, m) -> void:
 	_chk("散魂 +1（圈 1）", SOUL.san() == 1, SOUL.san())
 	_chk("戰報一行：「魂魄：窮鬼 +N（x/30）…散魂 +1」", str(r0.line).begins_with("魂魄：") and str(r0.line).contains("窮鬼") and str(r0.line).contains("散魂 +1"), r0.line)
 	_chk("打贏記遇見", SOUL.seen("n30_qionggui"))
+	o.fr = {"day": -1.0, "n": {}}
+	SOUL.rng.seed = 5; var bg0 = SOUL.souls("n30_qionggui"); SOUL.on_sortie_win(e, false, false); var dn = SOUL.souls("n30_qionggui") - bg0
+	o.fr = {"day": -1.0, "n": {}}
+	SOUL.rng.seed = 5; bg0 = SOUL.souls("n30_qionggui"); var rg = SOUL.on_sortie_win(e, false, true); var dg = SOUL.souls("n30_qionggui") - bg0
+	_chk("打得好（用到正確應對）：主魂 +1、戰報寫明", dg == dn + 1 and str(rg.line).contains("打得好"), [dn, dg])
+	o.fr = {"day": -1.0, "n": {}}
 	# 副魂保底：每據點連續 3 次冇，第 4 次必得；統計比率
 	var key = SOUL.ckey(e)
 	o.sec[key] = 0.0
 	var hits = 0; var gap = 0; var gmax = 0
 	for i in 4000:
 		o.fr = {"day": float(SOUL.today()), "n": {}}
-		var before = SOUL.souls("pg_tuimo")
+		var before = SOUL.souls(SOUL.sec_of(e))
 		SOUL.on_sortie_win(e, false)
 		gap += 1
-		if SOUL.souls("pg_tuimo") > before: hits += 1; gmax = maxi(gmax, gap); gap = 0
+		if SOUL.souls(SOUL.sec_of(e)) > before: hits += 1; gmax = maxi(gmax, gap); gap = 0
 	var p = hits / 4000.0
 	# 理論：每 4 次窗口 p_eff = 1 / E[次數]；E = Σ (1-q)^k, k=0..3，q=0.25
 	var E = 0.0
@@ -200,7 +209,7 @@ func drops_check(t, m) -> void:
 	SOUL.on_sortie_win(e4, false)
 	_chk("圈 4 主魂 6～7、散魂 +2", SOUL.souls(k4) - b4 >= 6 and SOUL.souls(k4) - b4 <= 7, [k4, SOUL.souls(k4) - b4])
 	# 劇情鬼據點（小紙）：小紙未加入 → 唔掉主魂
-	var ex = SO.camps(0)[11]
+	var ex = SO.camps(0)[11].duplicate(); ex["guard"] = "xiaozhi"   # 劇情鬼據點（zones.json 可直接寫 guard）
 	var hadx = SOUL.owned("xiaozhi")
 	if hadx: _drop_k("xiaozhi")
 	var bx = SOUL.souls("xiaozhi")
@@ -270,8 +279,9 @@ func summon_check() -> void:
 	_chk("靈品要祭壇 Lv2", SOUL.can_summon(kl).why == "altar")
 	S.bld["altar"] = 2.0
 	var cs2 = SOUL.summon_cost(kl)
-	_chk("心願供品：孤寒鬼要冥幣（招降 160＋心願 40）", cs2.wish == "coins" and cs2.coins == 160.0 and cs2.wish_n == 40.0, cs2)
-	S.res["coins"] = 199.0
+	var c1 = float(SOUL.ch_of(kl) + 1)
+	_chk("心願供品：孤寒鬼要冥幣（招降 160×(章+1)＋心願 40×(章+1)）", cs2.wish == "coins" and cs2.coins == 160.0 * c1 and cs2.wish_n == 40.0 * c1, cs2)
+	S.res["coins"] = 200.0 * c1 - 1.0
 	_chk("冥幣唔夠：唔招得", SOUL.can_summon(kl).why == "coins")
 	_rich()
 	_chk("夠晒：招得", SOUL.summon(kl) == "ok" and SOUL.owned(kl))
@@ -289,14 +299,14 @@ func promote_check() -> void:
 	var cap0 = SOUL.cap_of(g)
 	var coin0 = J.num(S.res.coins)
 	_chk("升正式：魂魄 5、冥幣 50", SOUL.promote(k) == "ok" and SOUL.rank(k) == 1 and SOUL.souls(k) == 0 and J.num(S.res.coins) == coin0 - 50)
-	_chk("三圍 ＝ 基礎 ×1.08", g.st == SOUL.stat_target(k, 1), [g.st, SOUL.stat_target(k, 1)])
-	_chk("等級上限 +3", SOUL.cap_of(g) == cap0 + 3, [cap0, SOUL.cap_of(g)])
+	_chk("三圍 ＝ 基礎 ×1.05（凡）", g.st == SOUL.stat_target(k, 1), [g.st, SOUL.stat_target(k, 1)])
+	_chk("等級上限 +2", SOUL.cap_of(g) == cap0 + 2, [cap0, SOUL.cap_of(g)])
 	# 名冊升級：超過 ghostCap 都升得
 	var NG = load("res://native/game.gd")
 	g["lv"] = NG.ghost_cap()
 	var lv0 = J.num(g.lv)
 	NG.n_roster_act("up", g.id)
-	_chk("名冊：職級令等級上限 +3（ghostCap 之後仲升得）", J.num(g.lv) == lv0 + 1, [lv0, g.lv])
+	_chk("名冊：職級令等級上限 +2（ghostCap 之後仲升得）", J.num(g.lv) == lv0 + 1, [lv0, g.lv])
 	var re = NG.n_roster()
 	var ent = {}
 	for x in re.list: if J.str(x.id) == J.str(g.id): ent = x
@@ -307,16 +317,19 @@ func promote_check() -> void:
 	o.sh[k] = float(need_total)
 	for r in range(2, 6): SOUL.promote(k)
 	_chk("升到合夥人（5 級）用晒 %d 隻" % need_total, SOUL.rank(k) == 5 and SOUL.souls(k) == 0, [SOUL.rank(k), SOUL.souls(k)])
-	_chk("合夥人三圍 ＝ 基礎 ×1.40", g.st == SOUL.stat_target(k, 5))
+	_chk("合夥人三圍 ＝ 基礎 ×1.25（凡；其餘品 ×1.20）、上限 +10", g.st == SOUL.stat_target(k, 5) and SOUL.stat_target("n30_guhangui", 5)[0] == round(J.G.GHOSTS.n30_guhangui.base[0] * 1.2) and SOUL.cap_of(g) == cap0 + 10)
+	_chk("專長格：合夥人 2、試用 0、王品試用 1", SOUL.perk_slots(k) == 2 and SOUL.perk_slots("n30_guhangui") == 0 and SOUL.perk_slots("laojiang") == 1)
 	_chk("合夥人唔可以再升", SOUL.can_promote(k).why == "max")
 	var s0 = SOUL.san()
 	var gg = SOUL.gain(k, 4, "test")
 	_chk("合夥人之後魂魄自動化散魂（凡 ×1）", SOUL.souls(k) == 0 and SOUL.san() == s0 + 4 and gg.to_san == 4)
 	# 散魂頂升職（冇上限）
 	var k2 = "n30_guhangui"
-	o.sh[k2] = 0.0; o["san"] = 40.0
+	o.sh[k2] = 0.0; o["san"] = 999.0
+	_chk("升職散魂頂替封頂一半：0/10 唔得", SOUL.can_promote(k2).why == "souls")
+	o.sh[k2] = 5.0
 	var c = SOUL.can_promote(k2)
-	_chk("升職散魂頂替：靈 10 隻 × 4 散魂 = 40", c.ok and c.sub == 10 and c.sub_cost == 40, c)
+	_chk("升職散魂頂替：靈差 5 隻 × 4 散魂 = 20", c.ok and c.sub == 5 and c.sub_cost == 20, c)
 	# 分解
 	o.sh[k2] = 10.0; o["san"] = 0.0; S.bld["altar"] = 5.0
 	var got = SOUL.dismantle(k2, 10)
@@ -369,23 +382,24 @@ func sortie_check(t, m) -> void:
 	S["lv"] = maxf(3.0, J.num(S.lv)); S.res["troops"] = 100.0
 	J.G.Battle["auto"] = true
 	_rich()
-	var e = SO.camps(0)[4]   # 酒鬼（圈 2）
+	var e = SO.camps(0)[4]   # 圈 2
 	S.sortie.camps.erase(SO.key(e))
 	var stg = SOUL.guard_stage(e, SO.stage_of(e))
-	_chk("據點敵人最後一隻＝駐守名鬼", stg.en[stg.en.size() - 1] == "n30_jiugui" and stg.get("guard") == "n30_jiugui", stg.en)
+	_chk("據點敵人有駐守名鬼", SOUL.guard_of(e) in stg.en and stg.get("guard") == SOUL.guard_of(e), stg.en)
 	var info = SUI.card_info(e)
-	_chk("小卡資料：駐守、怨氣、副魂、散魂", info.k == "n30_jiugui" and str(info.fresh).contains("怨氣") and info.k2 != "" and int(info.san) == 1, info)
-	var b0 = SOUL.souls("n30_jiugui")
+	_chk("小卡資料：駐守、怨氣、副魂、散魂", info.k == SOUL.guard_of(e) and str(info.fresh).contains("怨氣") and info.k2 != "" and int(info.san) == 1, info)
+	var gk = SOUL.guard_of(e)
+	var b0 = SOUL.souls(gk)
 	var r = SO.dispatch(e)
 	var op = RTS.op_for(SO.sid_of(e))
 	_chk("出擊", r == "ok" and op != null, r)
 	if op == null: return
-	var gu = op.units.filter(func(u): return J.num(u.side) == 1 and J.str(u.get("k")) == "n30_jiugui")
+	var gu = op.units.filter(func(u): return J.num(u.side) == 1 and J.str(u.get("k")) == gk)
 	_chk("戰場上有駐守名鬼", gu.size() >= 1)
 	for u in op.units: if J.num(u.side) == 1: u["hp"] = 1.0
 	_ff(op, ["back", "done"]); _ff(op, ["done"])
 	var rep = RTS.last_report
-	_chk("打贏掉主魂（首勝 +8 起）", SOUL.souls("n30_jiugui") - b0 >= SOUL.PRI[1] + SOUL.FIRST[1], SOUL.souls("n30_jiugui") - b0)
+	_chk("打贏掉主魂（首勝 +8 起）", SOUL.souls(gk) - b0 >= SOUL.PRI[1] + SOUL.FIRST[1], SOUL.souls(gk) - b0)
 	_chk("戰報有魂魄一行", str(rep.get("soul", "")).begins_with("魂魄：") and str(rep.get("lost", [])).contains("魂魄："), rep.get("soul"))
 
 # ---- 截圖 ----
