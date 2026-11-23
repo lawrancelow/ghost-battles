@@ -44,7 +44,7 @@ func _new(ch: float, si: float, zid: String, bid: String) -> Dictionary:
 	var Bt = J.G.Battle
 	Bt["auto"] = true
 	var snap = RTS._start_battle(func(): J.mc(Bt, "start", [ch, si]))
-	var g = RTS.geometry({"kind": "boss", "id": zid, "opt": {"bid": bid}})
+	var g = RTS.geometry({"kind": "boss", "id": zid, "opt": {"bid": bid}}) if zid != "" else RTS.geometry({"kind": "stage", "opt": {}, "tg": {"pos": ZD.front_anchor()}})
 	var op = SIM.new()
 	op.setup(snap.units, g.path, g.at, RTS.gate_pos())
 	var n = 0
@@ -66,7 +66,10 @@ func cmp(t) -> void:
 	var named = []
 	for g in S.ghosts: if str(g.k) != "afu": named.append(g)
 	_p("team=%s troops=%s lv=%s ghosts=%s" % [str(S.team), str(S.res.troops), str(S.lv), str(named.map(func(g): return [g.k, g.lv, g.get("post")]))])
-	var teams = [["afu"]]
+	var teams = [J.iter(S.team).filter(func(x): return x != null)]
+	var GP = J.G.get("GP")
+	named.sort_custom(func(a, b): return J.num(J.mc(GP, "pow", [a])) > J.num(J.mc(GP, "pow", [b])))
+	_p("鬼力排名 %s" % str(named.map(func(g): return [g.k, g.lv, int(J.num(J.mc(GP, "pow", [g])))])))
 	var t2 = ["afu"]
 	for g in named:
 		if t2.size() < 3: t2.append(g.id)

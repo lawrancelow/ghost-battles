@@ -14,7 +14,8 @@ const AT = preload("res://game/outpost/act_targets.gd")
 const CTL = preload("res://game/outpost/ctl_ui.gd")
 const MB = preload("res://game/outpost/mv_bridge.gd")
 const TS := 1.0   # [qaudit2] 原本 6：但村子／生產（JS 迴圈）用真實時鐘，Engine.time_scale 只加速 Godot 嗰邊 → 模擬時間計錯；改返 1，打仗、練功另外加速
-const FSTEP := 12  # [qaudit2] 打仗加速：每格額外行幾步（每步 0.1 秒）
+const FSTEP := 36  # [qaudit2] 打仗加速：每格額外行幾步（每步 1/30 秒，同正常幀率接近；步太粗會影響勝負）
+const FDT := 1.0 / 30.0
 
 var ok := 0
 var bad := 0
@@ -245,11 +246,20 @@ func _team_up() -> String:
 	if not (S.get("team") is Array): return ""
 	var gs = []
 	for g in S.ghosts: if BKd.is_named(g) and not J.iter(S.team).has(g.id) and BKd.job(g) != "away": gs.append(g)
-	gs.sort_custom(func(a, b): return J.num(a.lv) > J.num(b.lv))
+	var GP = J.G.get("GP")
+	var pw = func(g): return J.num(J.mc(GP, "pow", [g]))
+	gs.sort_custom(func(a, b): return pw.call(a) > pw.call(b))
 	var o = []
 	for g in gs:
-		if not J.iter(S.team).has(null): break
-		if BKd.set_job(g.id, "team") == "ok": o.append(str(g.name))
+		if J.iter(S.team).has(null):
+			if BKd.set_job(g.id, "team") == "ok": o.append(str(g.name))
+			continue
+		var weak = null   # 出陣滿咗：鬼力高過出陣最弱嗰隻（唔計阿福）就換
+		for id in S.team:
+			if id == null or str(id) == "afu": continue
+			var x = J.cl(J.G.get("ghostById"), null, [id])
+			if x is Dictionary and (weak == null or pw.call(x) < pw.call(weak)): weak = x
+		if weak != null and pw.call(g) > pw.call(weak) + 1.0 and BKd.set_job(g.id, "team", weak.id) == "ok": o.append("%s換%s" % [str(g.name), str(weak.name)])
 	return ("出陣＋" + "、".join(o)) if o.size() else ""
 func _fight(t, m, x) -> String:
 	var tu = _team_up()
@@ -279,10 +289,20 @@ func _fight(t, m, x) -> String:
 	while op != null and op.phase != "done" and fr < 20000:
 		if op.phase in ["march", "fight", "back"]:
 			for i in FSTEP:
-				op.step(0.1)
+				op.step(FDT)
 				if not (op.phase in ["march", "fight", "back"]): break
 		await t.get_tree().process_frame
 		fr += 1
+		if OS.has_environment("QA_DBG") and fr % (1 if OS.get_environment("QA_DBG") == "2" else 4) == 0 and op.phase == "fight":   # [qaudit2] 除錯：逐隻單位位置／血／目標
+			var ln = []
+			for u in op.units:
+				if J.num(u.get("hp")) <= 0: continue
+				var tg = u.get("tg")
+				var ex = ""
+				if OS.get_environment("QA_DBG") == "2" and not J.t(u.get("minion")):
+					ex = "[d%d st%s an%s ca%s cd%.1f rg%d]" % [int(op.dist(u, tg)) if tg is Dictionary else -1, str(u.st), str(u.get("anim").get("name") if u.get("anim") is Dictionary else ""), str(J.t(u.get("casting"))), J.num(u.get("cd")), int(J.num(u.get("range")))]
+				ln.append("%s%s(%d,%d)hp%d%s%s%s" % ["敵" if J.num(u.side) == 1 else "", str(u.get("name", "")).left(4), int(u.p.x), int(u.p.y), int(J.num(u.hp)), ("→" + str(tg.get("name", "")).left(4)) if tg is Dictionary else "", "" if J.t(u.get("eng")) or J.num(u.side) == 1 else "未接", ex])
+			_p("    t=%.1f %s" % [op.t, " ".join(ln)])
 		if fr % 400 == 0: _p("    op %s" % str(RTS.ops.map(func(o): return [o.sid, o.phase, int(o.t), int(o.T)])))
 		if fr % 60 == 0: await _skip(t, 1)
 	if op != null:
