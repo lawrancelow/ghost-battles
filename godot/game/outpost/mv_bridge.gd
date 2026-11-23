@@ -174,7 +174,7 @@ static func mapped_bld() -> Dictionary:
 	var o = {"house": house}
 	o["store"] = (1 + c + floor(sl / 40.0)) if (c >= 1 or sl >= 20) else 0.0
 	o["home"] = 1.0 if c >= 1 else 0.0
-	o["altar"] = 1.0 if J.t(J.gp(s.get("cleared", {}), "1-3")) else 0.0
+	o["altar"] = (1.0 + c) if J.t(J.gp(s.get("cleared", {}), "1-3")) else 0.0   # [soul] 祭壇等級 = 1＋章（只升唔跌）
 	o["furnace"] = 1.0 if J.num(s.get("lv", 1)) >= 6 else 0.0
 	for k in o:
 		if k != "house": o[k] = minf(o[k], house)

@@ -512,12 +512,16 @@ static func _settle(op) -> bool:
 	var box = J.cl(f, null, ["#b-result"]) if f != null else null
 	var rep = _report(J.str(J.gp(box, "innerHTML")) if box != null else "")
 	rep["win"] = r.win; rep["sid"] = op.sid; rep["first"] = r.win and not J.t(cl0.get(op.sid))
+	if J.t(rep.first) and op.kind == "stage":   # [soul] 主線首通：散魂
+		var sl = load("res://game/soul/soul_data.gd").on_stage_first(str(op.sid))
+		if sl != "": rep.lost.append(sl)
 	var okb = J.cl(f, null, ["#b-ok"]) if f != null else null
 	if okb != null and J.gp(okb, "onclick") != null: J.cl(J.gp(okb, "onclick"), okb, [])   # 自動「繼續」（_on_ok：主線推進、關後劇情）
 	B["active"] = false
 	if box != null: J.mc(J.gp(box, "classList"), "remove", ["on"])
 	# 入口自己嘅結果（王／親征：zone exp；襲擾；鬼潮）——即刻收，唔好畀下一場 Battle.start 蓋咗
-	ZD.poll()
+	var zr = ZD.poll()
+	if zr is Dictionary and str(zr.get("soul", "")) != "": rep.lost.append(str(zr.soul))   # [soul] 野外王魂魄
 	load("res://game/raid/raid.gd").poll_fight()
 	load("res://game/outpost/mv_war.gd").poll()
 	B["result"] = null   # 收完即清：唔好俾下一場同名（再挑戰）一開就被當成舊結果

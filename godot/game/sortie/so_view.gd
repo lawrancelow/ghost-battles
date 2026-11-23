@@ -22,7 +22,7 @@ static func want() -> Array:
 		var s = SO.state(e)
 		if s == "cleared" or s == "out": _pv.erase(k); continue
 		if not _pv.has(k):
-			var stg = SO.stage_of(e)
+			var stg = load("res://game/soul/soul_data.gd").guard_stage(e, SO.stage_of(e))   # [soul] 駐守名鬼企喺據點
 			var pth = load("res://game/sortie/so_data.gd").path_of(e, e.pos)   # [integ]
 			var din = (pth[pth.size() - 1] - pth[pth.size() - 2]).normalized() if pth.size() >= 2 else Vector2(0, -1)
 			var pos = RTS.SIM.camp_layout(e.pos, stg.en.size(), din)
@@ -121,6 +121,7 @@ static func card_lines(e: Dictionary) -> Dictionary:
 	o["first"] = (L("首勝（已領）", "首勝（已領）") if J.t(c.get("first")) else L("首勝特殊獎：", "首勝特殊獎：")) + "、".join(cp) + L("、冥幣 %d", "、冥幣 %d") % int(SO.FIRST_COIN * e.lv)
 	o["rare"] = L("有機會獲得（極稀有）：%s", "有機會獲得（極稀有）：%s") % SO.rare_text(r)
 	o["pity"] = L("保底：再打贏 %d 次必得", "保底：再打贏 %d 次必得") % SO.pity_left(e)
+	o["soul"] = load("res://game/soul/soul_ui.gd").card_info(e)   # [soul] 駐守鬼、魂魄、怨氣
 	return o
 static func open_card(e: Dictionary) -> void:
 	close_card()
@@ -143,6 +144,7 @@ static func open_card(e: Dictionary) -> void:
 			var left = int(ceil(SO.cleared_left_s(e)))
 			lab.call(L("已清空：%d:%02d 後重生", "已清空：%d:%02d 後重生") % [left / 60, left % 60], 16, Color("#c0c0c0"))
 		"locked": lab.call(L("未開放：先打下上一圈據點", "未開放：先打下上一圈據點"), 16, Color("#c0c0c0"))
+	load("res://game/soul/soul_ui.gd").card_rows(vb, d.soul)   # [soul]
 	lab.call(d.team, 15, Color("#f0e0d0"))
 	var hb = HFlowContainer.new(); hb.add_theme_constant_override("h_separation", 10); vb.add_child(hb)
 	var l0 = UIKit.label(L("出擊消耗：", "出擊消耗："), 16, Color("#ffd27a"), "sans", 900); hb.add_child(l0)

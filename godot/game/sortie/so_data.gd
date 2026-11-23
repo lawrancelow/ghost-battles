@@ -201,6 +201,7 @@ static func dispatch(e: Dictionary) -> String:
 	var cs = cost(e, lu)
 	if not afford(cs): return "poor"
 	var stg = stage_of(e)
+	stg = load("res://game/soul/soul_data.gd").guard_stage(e, stg)   # [soul] 駐守名鬼做頭目
 	var sid = sid_of(e)
 	var wild = {"stage": stg, "bg": stg.bg, "sid": sid, "sortie": true}
 	var snap = RTS._start_battle(func(): J.mc(B, "start", [-1.0, -1.0, wild]))
@@ -209,7 +210,8 @@ static func dispatch(e: Dictionary) -> String:
 		var last = null
 		for u in snap.units: if J.num(u.side) == 1 and not J.t(u.get("minion")): last = u
 		if last != null:
-			last["boss"] = true; last["hp"] = J.num(last.hp) * BOSS_HP; last["maxhp"] = last.hp; last["name"] = L("惡鬼頭目", "惡鬼頭目")
+			var gk = str(stg.get("guard", ""))   # [soul] 駐守名鬼：血 ×1.25（ENEMY_T 已有品級倍率）、名牌顯示鬼名
+			last["boss"] = true; last["hp"] = J.num(last.hp) * (1.25 if gk != "" else BOSS_HP); last["maxhp"] = last.hp; last["name"] = L("惡鬼頭目", "惡鬼頭目") if gk == "" else str(last.get("name", gk))
 	pay(cs)
 	var c = cst(e); c["tries"] = J.num(c.tries) + 1
 	var op = RTS.SIM.new()
@@ -275,6 +277,8 @@ static func settle(op) -> bool:
 		if g.rare != "": extra.append(L("極稀有！", "極稀有！") + g.rare)
 		rep["lost"] = extra + rep.lost
 		if g.rare != "": rep["rare"] = g.rare
+		var sl = load("res://game/soul/soul_data.gd").on_sortie_win(e, g.first, load("res://game/soul/soul_data.gd").good_play(op))   # [soul] 戰後掉魂魄：戰報加一行
+		if str(sl.line) != "": rep["soul"] = sl.line; rep["soul_ready"] = sl.ready; rep["lost"].append(sl.line)
 		var ex = J.G.get("save")
 		if ex != null: J.cl(ex, null, [])
 	op.set_meta("report", rep)

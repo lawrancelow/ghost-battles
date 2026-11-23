@@ -345,8 +345,10 @@ static func resolve(win: bool) -> Dictionary:
 		else:
 			var bs = bosses(zid, c); var bi = int(J.num(ex.bi))
 			if bi >= 0 and bi < bs.size():
+				var kf = not J.t(z.boss.get(_k(str(bs[bi].id), c)))   # [soul]
 				z.boss[_k(str(bs[bi].id), c)] = true
 				out["boss"] = T(bs[bi].get("n", ["", ""]))
+				out["soul"] = load("res://game/soul/soul_data.gd").on_king(str(bs[bi].id), c, kf)   # [soul] 野外王首殺：魂魄 +15
 				out["bid"] = str(bs[bi].id)
 	NEWS.append(out)
 	_save()
