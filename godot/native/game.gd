@@ -1415,6 +1415,7 @@ static func n_roster() -> Dictionary:
 			var bt = J.mc(_g("Bonds"), "bondLine", [g.k])
 			if J.t(bt): e.extra.append(["#c0603a", bt])
 		BK().roster_entry(g, e)   # [barracks] 名鬼職務
+		load("res://game/soul/soul_data.gd").roster_entry(g, e)   # [soul] 品級、職級、等級上限 +3×職級
 		o.list.append(e)
 	return o
 static func n_roster_act(a, id) -> void:
@@ -1422,7 +1423,7 @@ static func n_roster_act(a, id) -> void:
 	if not J.t(g): return
 	if J.str(a) == "up":
 		var c = J.num(J.mc(F, "lvCost", [g.lv]))
-		if J.num(S.res.buns) < c or J.num(J.mc(F, "glv", [g])) >= J.num(J.mc(F, "ghostCap", [])): return
+		if J.num(S.res.buns) < c or J.num(J.mc(F, "glv", [g])) >= maxf(J.num(J.mc(F, "ghostCap", [])), load("res://game/soul/soul_data.gd").cap_of(g)): return   # [soul] 職級加上限
 		S.res["buns"] = J.num(S.res.buns) - c; g["spent"] = J.num(g.spent) + c; g["lv"] = J.num(g.lv) + 1; _c("gainExp", [2.0]); J.mc(_g("Quest"), "check", []); _c("save"); m(_ui(), "refresh")
 	if J.str(a) == "rel":
 		var back = floor(J.num(g.spent) * 0.6); S.res["buns"] = J.num(S.res.buns) + back

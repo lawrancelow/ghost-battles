@@ -6,7 +6,9 @@
 extends RefCounted
 
 const MD = preload("res://game/outpost/mv_data.gd")
+const AB = preload("res://game/rts/abil.gd")   # [ab] 能力引擎（AB.on() 假＝全部行舊路）
 const AF = preload("res://game/rts/abform.gd")   # [abform] 陣型、揀目標、AoE 半徑、護衛、自動施放 AI
+const AH = preload("res://game/rts/ab_hud.gd")   # [abui] 名鬼長按切自動／手動（S.ab_auto）
 
 # ---- 同 battle.gd 一樣 ----
 const WIND := 0.22
@@ -68,6 +70,9 @@ var tune_minion := 120.0         # 敵人揀目標：陰兵小隊（企正面）
 var tune_open := 2.0           # 接觸後我方要幾耐排陣先出第一下
 var dep_go := false           # 橫隊排齊咗，一齊推前
 var dep_t := 0.0              # 第一隊到位等咗幾耐
+var ab := false               # [ab] 呢場用能力引擎
+var ab_log := {}              # [ab] 戰後：kills=[{k, sum, boss}]、ev={積木: 次數}（魂魄線、測試用）
+var ab_st = null              # [ab] 引擎內部狀態
 
 func _init() -> void:
 	rw = J.G.get("Rework")
@@ -104,6 +109,8 @@ func setup(us: Array, out_path: PackedVector2Array, at: Vector2, gate_p: Vector2
 		u["_id"] = i
 		u["st"] = u.get("st", {}) if u.get("st") is Dictionary else {}
 		if u.get("cd") == null: u["cd"] = randf() * 0.5
+	ab = AB.on()   # [ab]
+	if ab: AB.setup(self)   # [ab]
 
 # 據點排位：主將（王）喺中間前面，其餘左右兩邊、嘍囉喺後面（同 view 嘅預覽一樣）
 static func camp_layout(at: Vector2, n: int, dir_in: Vector2) -> Array:
@@ -172,10 +179,12 @@ func _ours_alive() -> int:
 func heroes_alive() -> int:
 	var n = 0
 	for u in units: if _nn(u, "side") == 0 and not J.t(u.get("minion")) and _nn(u, "hp") > 0: n += 1
+	if ab: n += AB.pending(self, 0)   # [ab] 返生中
 	return n
 func foes_alive() -> int:
 	var n = 0
 	for u in units: if _nn(u, "side") == 1 and _nn(u, "hp") > 0: n += 1
+	if ab: n += AB.pending(self, 1)   # [ab] 屍變中
 	return n
 func center() -> Vector2:   # 而家戰場（俾鏡頭／戰況條）
 	if phase == "march" or phase == "back":
@@ -214,6 +223,7 @@ func head(u: Dictionary) -> Vector2:   # 頭頂（世界）
 	var h = 40.0 if J.t(u.get("minion")) else (78.0 if J.t(u.get("boss")) else 56.0)
 	return (u.p as Vector2) + Vector2(0, -h)
 func hit(src: Dictionary, v: Dictionary, mult: float, sk) -> float:
+	if ab: return AB.hit(self, src, v, mult, sk)   # [ab] 新管線（兩層克制、機制、積木）；舊管線原封不動留喺下面
 	var m = mult
 	var tag = null; var tcol = "#e8d0ff"; var chain = false
 	# rework：名鬼技能打敵人 → 嚇法相剋
@@ -273,6 +283,11 @@ func hit(src: Dictionary, v: Dictionary, mult: float, sk) -> float:
 	_vq(["hit", src, v, J.t(sk) or combo_hit, _nn(v, "hp") <= 0])
 	events.append(["hit", v])
 	return dmg
+func ab_down(v: Dictionary, dir: float) -> void:   # [ab] 倒下（同舊 hit 一樣嘅畫面同事件）
+	_load.erase(str(v.get("_id", "")))
+	v["hp"] = 0.0; v["deadT"] = 0.0; v["dieDir"] = dir; v["anim"] = null; v["casting"] = null
+	spark(head(v).lerp(v.p, 0.4), 1.6, "#ffffff")
+	events.append(["down", v])
 func _state(v: Dictionary):
 	if _nn(v.st, "air") > 0: return "air"
 	if _nn(v.st, "down") > 0: return "down"
@@ -280,6 +295,7 @@ func _state(v: Dictionary):
 
 func do_skill(u: Dictionary, sk) -> void:
 	if not J.t(sk): return
+	if ab: AB.cast(self, u, sk); return   # [ab]
 	var mult = J.num(sk.mult)
 	var kd = J.str(sk.get("kind"))
 	var sd = _nn(u, "side")
@@ -556,6 +572,7 @@ func _step_fight(dt: float) -> void:
 	for u in units:
 		vis_tick(u, dt)
 		if _nn(u, "hp") <= 0: continue
+		if ab and AB.tick_unit(self, u, dt): continue   # [ab] 定身／驚走／迷魂／dot／再生
 		if _nn(u, "side") == 0 and not J.t(u.get("eng")):   # 未到前線：照路線行；有敵人入咗接觸範圍就開打
 			var n0 = nearest(u) if present(u) else null
 			if n0 != null and dist(u, n0) <= AGGRO * 2.6: u["eng"] = true   # 開打咗：近戰場嘅直接去自己陣位（排成一條線），遠嘅照路線行
@@ -572,18 +589,20 @@ func _step_fight(dt: float) -> void:
 			u["anim"] = null; st["push"] = J.num(st.push) - dt
 			u["p"] = (u.p as Vector2) + (u.get("pushD", Vector2.ZERO) as Vector2) * 160.0 * dt
 			continue
-		if J.t(u.get("sk")): u["energy"] = minf(100.0, _nn(u, "energy") + (11.0 if J.t(u.get("boss")) else 9.0) * dt)
+		if J.t(u.get("sk")): u["energy"] = minf(100.0, _nn(u, "energy") + (11.0 if J.t(u.get("boss")) else 9.0) * dt * (AB.emul(self, u) if ab else 1.0))   # [ab] 嚇氣光環／封口
 		if J.t(u.get("casting")):
 			u["cd"] = _nn(u, "cd") - dt
 			u.casting["t"] = J.num(u.casting.t) + dt
 			if J.num(u.casting.t) >= J.num(u.casting.dur): fire_cast(u)
 			continue
+		var may_auto = _nn(u, "side") == 1 or (AH.auto_of(u, auto) and not J.t(u.get("minion")))   # [整合] abui 每隻名鬼自動／手動
 		if af:   # [abform] 自動施放 AI（6 條件＋5 秒保底；敵人都經 AI）
-			if J.t(u.get("sk")) and not J.t(u.get("anim")) and AF.want_cast(self, u, dt): begin_cast(u); continue
-		elif J.t(u.get("sk")) and _nn(u, "energy") >= 100 and not J.t(u.get("anim")) and (_nn(u, "side") == 1 or (auto and not J.t(u.get("minion")))): begin_cast(u); continue
+			if may_auto and J.t(u.get("sk")) and not J.t(u.get("anim")) and AF.want_cast(self, u, dt): begin_cast(u); continue
+		elif J.t(u.get("sk")) and _nn(u, "energy") >= 100 and not J.t(u.get("anim")) and may_auto: begin_cast(u); continue
 		if J.t(u.get("anim")): step_anim(u, dt); continue
 		var ft = AF.flank_tg(self, u) if af else null   # [abform] 側翼繞後
 		var tg = ft if ft != null else _line_tg(u)
+		if ab: tg = AB.pick_fix(self, u, tg)   # [ab] 嘲諷／突襲／刺／隱身（整合：在 abform 揀目標之後修正）
 		if tg == null: u["walking"] = false; continue
 		var d = dist(u, tg)
 		var dx = (tg.p as Vector2).x - (u.p as Vector2).x
@@ -605,6 +624,7 @@ func _step_fight(dt: float) -> void:
 		adv_cast["t"] = J.num(adv_cast.t) + dt
 		if J.num(adv_cast.t) >= J.num(adv_cast.dur):
 			var cu = adv_cast.u; adv_cast = null; do_skill(cu, cu.get("sk"))
+	if ab: AB.tick(self, dt)   # [ab] 機制計時、光環、合體技、召喚物入場
 	if af: AF.guard_tick(self, dt)   # [abform] 前排名鬼護衛身邊陰兵
 	_separate(dt)
 	if foes_alive() == 0: finish(true)
@@ -656,6 +676,7 @@ func _separate(dt: float) -> void:
 func finish(win: bool, quit := false, timeout := false) -> void:
 	if result != null: return
 	result = {"win": win, "quit": quit, "timeout": timeout}
+	if ab: AB.report(self)   # [ab]
 	phase = "end"
 	for u in units: u["walking"] = false; u["casting"] = null
 	proj.clear()

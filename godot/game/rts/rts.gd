@@ -159,6 +159,7 @@ static func _card_body(m, pend: Dictionary) -> void:
 		if not J.t(id): continue
 		for g in J.iter(S.ghosts): if g is Dictionary and J.str(g.id) == J.str(id): hn.append(str(DB.L(J.str(g.name))))
 	body.add_child(UIKit.rich("[b]%s[/b]　%s" % [L("名鬼帶隊", "名鬼帶隊"), "、".join(hn) if hn.size() else L("（冇）", "（無）")], 17, UIKit.INKTXT))
+	load("res://game/rts/ab_card.gd").add_to(body, load("res://game/rts/ab_card.gd").keys_for(pend), {"on_change": func(): _card_body(m, pend)})   # [abui] 偵察卡＋揀軍師
 	var row = func(label: String, key: String, mx: int, per: String):
 		var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 10)
 		var l = UIKit.label(label, 17, UIKit.INKTXT, "sans", 900); l.custom_minimum_size = Vector2(96, 44); l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER; hb.add_child(l)
@@ -249,8 +250,11 @@ static func _launch(pend: Dictionary, ny: int, nm: int) -> String:
 # [qaudit2] 第 5、6 關主線關卡／野外王：敵人血、攻打折（地圖戰鬥喺呢兩關明顯難過舊引擎；正常練級＋換 2～3 次陣容要贏得到）
 const SOFT := {4: 0.55, 5: 0.5}   # 地圖序號（0 起）→ 敵方血／攻倍數
 static func _soften(snap: Dictionary, pend: Dictionary) -> void:
-	if not (str(pend.get("kind")) in ["stage", "boss"]): return
-	var k = float(SOFT.get(ZD.ci(), 1.0))
+	if not (str(pend.get("kind")) in ["stage", "boss", "sortie"]): return   # [counter] 據點（sortie）同樣打折
+	var ci = int(pend.get("c", ZD.ci()))
+	var ck = load("res://game/counter/ct_data.gd").ch_k(ci, str(pend.get("kind")))   # [counter] SOFT 步驟 A：主線 ch_k、據點 sortie_k（血／攻分開）；冇就用舊 SOFT
+	if not ck.is_empty(): load("res://game/counter/ct_data.gd").soften(snap, ck.hp, ck.atk); return
+	var k = float(SOFT.get(ci, 1.0))
 	if k >= 1.0: return
 	for u in snap.units:
 		if J.num(u.get("side")) != 1: continue
@@ -512,12 +516,16 @@ static func _settle(op) -> bool:
 	var box = J.cl(f, null, ["#b-result"]) if f != null else null
 	var rep = _report(J.str(J.gp(box, "innerHTML")) if box != null else "")
 	rep["win"] = r.win; rep["sid"] = op.sid; rep["first"] = r.win and not J.t(cl0.get(op.sid))
+	if J.t(rep.first) and op.kind == "stage":   # [soul] 主線首通：散魂
+		var sl = load("res://game/soul/soul_data.gd").on_stage_first(str(op.sid))
+		if sl != "": rep.lost.append(sl)
 	var okb = J.cl(f, null, ["#b-ok"]) if f != null else null
 	if okb != null and J.gp(okb, "onclick") != null: J.cl(J.gp(okb, "onclick"), okb, [])   # 自動「繼續」（_on_ok：主線推進、關後劇情）
 	B["active"] = false
 	if box != null: J.mc(J.gp(box, "classList"), "remove", ["on"])
 	# 入口自己嘅結果（王／親征：zone exp；襲擾；鬼潮）——即刻收，唔好畀下一場 Battle.start 蓋咗
-	ZD.poll()
+	var zr = ZD.poll()
+	if zr is Dictionary and str(zr.get("soul", "")) != "": rep.lost.append(str(zr.soul))   # [soul] 野外王魂魄
 	load("res://game/raid/raid.gd").poll_fight()
 	load("res://game/outpost/mv_war.gd").poll()
 	B["result"] = null   # 收完即清：唔好俾下一場同名（再挑戰）一開就被當成舊結果

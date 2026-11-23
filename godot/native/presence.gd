@@ -128,6 +128,14 @@ static func update() -> void:
 	for g in _ghosts():
 		if is_afu(g): continue
 		var v = val(g); var id = J.str(g.id)
+		if resting_kind(g):   # [soul] 名鬼唔會魂飛魄散：存在感跌到底就去「休養」
+			p.cd.erase(id); p.warn.erase(id)
+			if not (p.get("rest") is Dictionary): p["rest"] = {}
+			if v <= TU.COUNT and not J.t(p.rest.get(id)):
+				p.rest[id] = 1.0
+				_toast("<b>%s</b> 太耐冇出場，去咗休養（三圍略降）。帶佢出去打、或者送壽包，就會返嚟。" % J.str(g.name) if not zh() else "<b>%s</b> 太久沒出場，去休養了（三圍略降）。帶他出去打、或送壽包，就會回來。" % J.str(g.name))
+			elif v > TU.WARN and J.t(p.rest.get(id)): p.rest.erase(id)
+			continue
 		if v <= TU.WARN and not J.t(p.warn.get(id)): p.warn[id] = 1.0; new_warn.append(g)
 		if v <= TU.COUNT and J.t(p.warn.get(id)) and not J.t(p.cd.get(id)):
 			p.cd[id] = now + TU.CD_DAYS * DAY
@@ -321,14 +329,17 @@ static func run_scene(s: Dictionary) -> void:
 			J.mc(_g("Story"), "queue", [{"style": "mail", "title": "存在感不足警告", "lines": ls}, func(_t, _a): _done(); return null])
 		"farewell":
 			var g = s.g
-			if _idx(_ghosts(), g) < 0 or val(g) > TU.COUNT: _done(); return
+			if _idx(_ghosts(), g) < 0 or val(g) > TU.COUNT or resting_kind(g): _done(); return   # [soul] 名鬼唔散
 			stage(_rnd(_g("PRES_FAREWELL")), g, "%s・魂飛魄散" % J.str(g.name), "道別", func(): vanish(g); _done())
 		"amnesia":
 			stage(_rnd(_g("PRES_AMNESIA")), s.g, "%s・失憶回歸" % J.str(s.g.name), "重新招魂", done)
 		_: _done()
 
 # ---------- 魂飛魄散／重新招魂 ----------
+static func resting_kind(g) -> bool: return J.t(g) and J.str(J.gp(g, "q")) == "名"   # [soul] 名鬼：休養，唔魂飛魄散
+static func resting(g) -> bool: return resting_kind(g) and val(g) <= TU.COUNT
 static func vanish(g) -> void:
+	if resting_kind(g): return   # [soul]
 	var p = st(); var S = _S(); var id = J.str(g.id)
 	p.gone.append({"k": g.k, "name": g.name, "q": g.q, "lv": g.lv, "st": g.get("st"), "arch": g.get("arch") if J.t(g.get("arch")) else null, "at": clock()})
 	var ng = []
@@ -396,6 +407,7 @@ static func bar(v: float) -> String:
 	return "<span style=\"display:inline-block;vertical-align:middle;width:70px;height:7px;border-radius:4px;background:rgba(0,0,0,.18);overflow:hidden;margin:0 4px\"><i style=\"display:block;height:100%%;width:%s%%;background:%s\"></i></span>" % [J.str(J.round(v)), col]
 static func badge(g) -> String:
 	var v = val(g); var d = days_left(g)
+	if resting(g): return "<b style=\"color:#8a6a2a\">休養中（帶佢出去打／送壽包就返嚟）</b>" if not zh() else "<b style=\"color:#8a6a2a\">休養中（帶他出去打／送壽包就回來）</b>"   # [soul]
 	if d != null: return "<b style=\"color:#c0392b\">魂飛魄散倒數 %s 日</b>" % J.str(d)
 	if v <= TU.WARN: return "<b style=\"color:#c0392b\">⚠ 存在感不足</b>"
 	if v < TU.FADE: return "<span style=\"color:#9a7a3a\">變淡中</span>"

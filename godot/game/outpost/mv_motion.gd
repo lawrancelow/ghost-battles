@@ -275,7 +275,7 @@ func t_idle(act: String, at: float, dur: float, tf: Dictionary, o: Dictionary, k
 			var hpz = clampf(at / dur, 0, 1); var up = sin(PI * clampf((hpz - 0.2) / 0.65, 0, 1))
 			var crouch = sin(PI * clampf(hpz / 0.2, 0, 1)) if hpz < 0.2 else 0.0
 			tf["dy"] = float(tf.get("dy", 0.0)) - up * 14.0 * s; tf["sy"] = float(tf.get("sy", 1.0)) * (1.0 - 0.12 * crouch + 0.06 * up); tf["sx"] = float(tf.get("sx", 1.0)) * (1.0 + 0.08 * crouch - 0.03 * up); tf["gs"] = 0.9
-		"t_armup":   # Pocong：「終於可以舉手了」——成條伸長、左右擰
+		"t_armup":   # Pocong：舉手——成條伸長、左右擰
 			tf["sy"] = float(tf.get("sy", 1.0)) * (1.0 + 0.08 * e); tf["sx"] = float(tf.get("sx", 1.0)) * (1.0 - 0.05 * e); tf["r"] = float(tf.get("r", 0.0)) + sin(at * 9.0) * 0.08 * e
 			fx.append(["txt", "舉手！", hp + Vector2(0, -14.0), e, "#f3d68a"])
 		"t_peek":   # Toyol：偷望櫃台冥幣 → 被望到即刻扮乖

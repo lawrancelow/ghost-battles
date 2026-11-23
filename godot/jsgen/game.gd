@@ -3838,7 +3838,7 @@ func _f179(this_, a: Array, env):
 			var _t951 = (("　冷卻 " + J.str(ceil(J.num(J.div(v_left_784, 60.0)))) + " 分") if J.cmp(v_left_784, 0.0, ">") else "")
 			var _t948 = J.cmp(J.gp(J.gp(J.G.get("S"), "res"), "buns"), 300.0, ">=")
 			var _t949 = (J.cmp(v_iq_783, J.gp(J.G.get("F"), "feastNeed"), ">=") if _t948 else _t948)
-			var _t952 = J.add(v_h_773, ("<div class=\"row\"><span>盂蘭宴：壽包 300<br><small>全村智力總和 " + J.str(v_iq_783) + "/" + J.str(_t950) + _t951 + "</small></span><button class=\"btn gold\" data-act=\"feast\" " + ("" if (J.cmp(v_left_784, 0.0, "<=") if _t949 else _t949) else "disabled") + ">擺宴</button></div>"))
+			var _t952 = J.add(v_h_773, ("<div class=\"row\"><span>鬼節宴：壽包 300<br><small>全村智力總和 " + J.str(v_iq_783) + "/" + J.str(_t950) + _t951 + "</small></span><button class=\"btn gold\" data-act=\"feast\" " + ("" if (J.cmp(v_left_784, 0.0, "<=") if _t949 else _t949) else "disabled") + ">擺宴</button></div>"))
 			v_h_773 = _t952
 		for _t953 in J.iter(J.gp(v_b_771, "posts")):
 			v_p_787 = _t953
@@ -3923,11 +3923,11 @@ func _f186(this_, a: Array, env):
 		if J.cmp(J.cl(J.G.get("fodderCount"), null, []), J.mc(J.G.get("F"), "rosterCap", []), "<"):
 			var _t985 = J.G.get("recruitFodder")
 			v_g_793 = J.cl(_t985, null, [true])
-			J.mc(J.G.get("Fx"), "toast", [("盂蘭宴請來了稀客 <b>" + J.str(J.gp(v_g_793, "name")) + "</b>（紫）！好評 +150")])
+			J.mc(J.G.get("Fx"), "toast", [("鬼節宴請來了稀客 <b>" + J.str(J.gp(v_g_793, "name")) + "</b>（紫）！好評 +150")])
 		else:
 			var _t986 = J.gp(J.G.get("S"), "chests")
 			J.sp(_t986, "p", J.num(J.gp(_t986, "p")) + 1.0)
-			J.mc(J.G.get("Fx"), "toast", ["盂蘭宴賓客滿座，可惜村裡住不下了。客人留下一個<b>紫箱</b>就走了。好評 +150"])
+			J.mc(J.G.get("Fx"), "toast", ["鬼節宴賓客滿座，可惜村裡住不下了。客人留下一個<b>紫箱</b>就走了。好評 +150"])
 		J.mc(J.G.get("Quest"), "check", [])
 	if J.seq(v_a_789, "assign"):
 		J.mc(env["__p"]["this"], "pickWorker", [J.gp(J.gp(env["btn"], "dataset"), "post"), env["__p"]["id"]])
@@ -5021,11 +5021,11 @@ func _f249(this_, a: Array, env):
 		if J.cmp(J.cl(J.G.get("fodderCount"), null, []), J.mc(J.G.get("F"), "rosterCap", []), "<"):
 			var _t1359 = J.G.get("recruitFodder")
 			v_g_960 = J.cl(_t1359, null, [true])
-			J.mc(J.G.get("Fx"), "toast", [("盂蘭宴請來了稀客 <b>" + J.str(J.gp(v_g_960, "name")) + "</b>（紫）！好評 +150")])
+			J.mc(J.G.get("Fx"), "toast", [("鬼節宴請來了稀客 <b>" + J.str(J.gp(v_g_960, "name")) + "</b>（紫）！好評 +150")])
 		else:
 			var _t1360 = J.gp(J.G.get("S"), "chests")
 			J.sp(_t1360, "p", J.num(J.gp(_t1360, "p")) + 1.0)
-			J.mc(J.G.get("Fx"), "toast", ["盂蘭宴賓客滿座，可惜村裡住不下了。客人留下一個<b>紫箱</b>就走了。好評 +150"])
+			J.mc(J.G.get("Fx"), "toast", ["鬼節宴賓客滿座，可惜村裡住不下了。客人留下一個<b>紫箱</b>就走了。好評 +150"])
 		J.mc(J.G.get("Quest"), "check", [])
 	if J.seq(v_a_955, "unassign"):
 		var _t1361 = J.G.get("ghostById")

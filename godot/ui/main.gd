@@ -116,6 +116,7 @@ func _boot_js() -> void:
 	_boot_step("start", func(): J.cl(J.G.get("startGame"), null, []))
 	_boot_step("state", func(): G.S = J.G["S"]; G.js_mode = true)
 	_boot_step("mv", func(): MVB.install(); MVB.migrate(); _mv_apply())
+	_boot_step("soul", func(): load("res://game/soul/soul_data.gd").install())   # [soul] 祭壇：舊直接加入改送魂魄、改名
 	_boot_step("resize", func(): J.mc(J.G.get("Village"), "resize", []))
 	_boot_step("refresh", func(): refresh())
 	# 逐樣顯示：每樣畫完一幀先開下一樣；手機驅動喺第一次畫某樣嘢時閃退，麵包屑就會講係邊樣（show:xxx）
@@ -608,6 +609,7 @@ func _gift_tick() -> void:
 	if c is Dictionary:
 		if not (G.S.get("chests") is Dictionary): G.S["chests"] = {"g": 0, "b": 0, "p": 0}
 		for k in c: G.S.chests[k] = J.num(G.S.chests.get(k, 0)) + J.num(c[k])
+	if g.get("soul") is Dictionary: load("res://game/soul/soul_data.gd").gift(g.soul)   # [soul] 送魂魄／散魂
 	G.S.erase("gift"); G.save(); refresh()
 	show_toast(str(g.get("msg", "收到測試大禮包！")))
 
