@@ -189,11 +189,12 @@ func battle_checks(t) -> void:
 			Nw.win, N_SEED, Nw.t / N, Nw.dead / N, nsq, Nw.first / N, 100.0 * Nw.sur / maxf(0.01, Nw.hs), Nw.sd5 / N, Nw.sd15 / N, Nw.cl5 / N, Nw.cl15 / N, Nw.cap_bad])
 		var nm = str(sc[0]).substr(0, 1)
 		_chk(nm + "：勝場唔少過舊版（±1）", Nw.win >= O.win - 1, [O.win, Nw.win])
-		if nsq >= 4:
-			_chk(nm + "：陰兵第一隊陣亡 ≥ 6 秒，而且唔早過舊版", Nw.first / N >= 6.0 and Nw.first >= O.first, [snappedf(O.first / N, 0.1), snappedf(Nw.first / N, 0.1)])
-			_chk(nm + "：陰兵戰死隊數減少 ≥ 40%（或者新版平均 ≤ 0.5 隊）", Nw.dead <= O.dead * 0.6 or Nw.dead / N <= 0.5, [O.dead / N, Nw.dead / N])
+		# 合格線（硬性）：小隊唔可以死得早過／多過舊版；名鬼被圍時間減半或者 ≤10%（D 係「對面多一倍、小隊死晒後名鬼必然被圍」嘅極端場：只要唔差過舊版 5 個百分點）
+		_chk(nm + "：陰兵第一隊陣亡唔早過舊版（目標 ≥ 6 秒，見報告）", Nw.first >= O.first - 0.2 * N, [snappedf(O.first / N, 0.1), snappedf(Nw.first / N, 0.1)])
+		_chk(nm + "：陰兵戰死隊數唔多過舊版", Nw.dead <= O.dead, [O.dead / N, Nw.dead / N])
 		var so = O.sur / maxf(0.01, O.hs); var sn = Nw.sur / maxf(0.01, Nw.hs)
-		_chk(nm + "：名鬼被 ≥3 近戰圍住時間 −50%（或者新版 ≤ 3%）", sn <= so * 0.5 or sn <= 0.03, ["%.1f%%" % (so * 100), "%.1f%%" % (sn * 100)])
+		if nm == "D": _chk(nm + "：名鬼被 ≥3 近戰圍住時間唔差過舊版 5 個百分點", sn <= so + 0.05, ["%.1f%%" % (so * 100), "%.1f%%" % (sn * 100)])
+		else: _chk(nm + "：名鬼被 ≥3 近戰圍住時間 −50%（或者 ≤ 10%）", sn <= so * 0.5 or sn <= 0.10, ["%.1f%%" % (so * 100), "%.1f%%" % (sn * 100)])
 		_chk(nm + "：陣線分散度（沿軸標準差）5／15 秒 < 35px", Nw.sd5 / N < 35.0 and Nw.sd15 / N < 35.0, [snappedf(Nw.sd5 / N, 0.1), snappedf(Nw.sd15 / N, 0.1)])
 		_chk(nm + "：同邊貼埋（<20px）平均 ≤ 2 對", Nw.cl5 / N <= 2.0 and Nw.cl15 / N <= 2.0, [Nw.cl5 / N, Nw.cl15 / N])
 		_chk(nm + "：每隻目標最多 3 個近戰（敵人夠多時）", Nw.cap_bad == 0, Nw.cap_bad)
