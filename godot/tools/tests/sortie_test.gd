@@ -146,7 +146,7 @@ func camps_check(t, m) -> void:
 	var src = ZD.mdef(0).duplicate()
 	ZD.mdef(0)["sorties"] = [{"id": "a1", "ring": 2, "lv": 7, "pos": [400, 300]}]
 	var cs2 = SO.camps(0)
-	_chk("zones.json 有 sorties 陣列就用佢（id／ring／lv／pos）", cs2.size() == 1 and cs2[0].id == "a1" and int(cs2[0].ring) == 2 and int(cs2[0].lv) == 7 and cs2[0].pos == Vector2(400, 300))
+	_chk("zones.json 有 sorties 陣列就用佢（id／ring／pos；lv 換算成主線難度尺）", cs2.size() == 1 and cs2[0].id == "a1" and int(cs2[0].ring) == 2 and is_equal_approx(cs2[0].lv, SO.LV_BASE[0] + SO.LV_RING[1] + 0.8) and cs2[0].pos == Vector2(400, 300))
 	ZD.mdef(0).erase("sorties")
 	var st = SO.stage_of(SO.camps(0)[3])
 	_chk("第 4 圈敵人 5 隻、唔用主線名角", st.en.size() == 5 and not ("eguiking" in st.en), st.en)
