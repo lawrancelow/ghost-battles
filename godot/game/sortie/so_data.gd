@@ -7,6 +7,7 @@ extends RefCounted
 
 const ZD = preload("res://game/zone/zone_data.gd")
 const M = preload("res://game/outpost/mat.gd")
+const CT = preload("res://game/counter/ct_data.gd")   # [counter] 據點敵人／打折讀 counter.json
 
 # ======================= 常數表（測試員試玩後只改呢度） =======================
 const LV_BASE := [1.0, 5.0, 9.0, 13.0, 17.0, 21.0]   # fallback：每關第 1 圈等級（＝主線 x-1 難度）
@@ -169,8 +170,11 @@ static func stage_of(e: Dictionary) -> Dictionary:
 	var c = int(e.c); var r = ri(e.ring)
 	var CH = J.G.get("CHAPTERS")
 	var pool = []; var bg = "field"
+	if CH is Array and c < CH.size(): bg = str(CH[c].get("bg", "field"))
+	var ct = CT.stage_en(str(e.get("id", ""))) if not e.get("tmp", false) else {}   # [counter] 鬼幫據點：counter.json 有就用
+	if not ct.is_empty() and ct.en.size() == ENEMY_N[r]:
+		return {"name": title(e), "en": ct.en, "boss": "", "p": float(e.lv), "sortie": true, "bg": bg, "ct": ct, "guard": ct.guard}
 	if CH is Array and c < CH.size():
-		bg = str(CH[c].get("bg", "field"))
 		var sts = CH[c].stages
 		var si = mini(r, sts.size() - 1)
 		for k in sts[si].en: if not (str(k) in NAMED): pool.append(str(k))
@@ -206,12 +210,16 @@ static func dispatch(e: Dictionary) -> String:
 	var wild = {"stage": stg, "bg": stg.bg, "sid": sid, "sortie": true}
 	var snap = RTS._start_battle(func(): J.mc(B, "start", [-1.0, -1.0, wild]))
 	if snap.is_empty(): return "nobattle"
+	var gu = CT.apply_camp(snap, stg.ct) if stg.has("ct") else null   # [counter] 頂替雜兵縮細；gu＝駐守鬼
+	RTS._soften(snap, {"kind": "sortie", "c": int(e.c)})   # [counter] 據點同樣打折（修據點未打折 bug）
 	if int(e.ring) >= 4:   # 第 4 圈：最後一隻做頭目
-		var last = null
-		for u in snap.units: if J.num(u.side) == 1 and not J.t(u.get("minion")): last = u
+		var last = gu
+		if last == null:
+			for u in snap.units: if J.num(u.side) == 1 and not J.t(u.get("minion")): last = u
 		if last != null:
-			var gk = str(stg.get("guard", ""))   # [soul] 駐守名鬼：血 ×1.25（ENEMY_T 已有品級倍率）、名牌顯示鬼名
-			last["boss"] = true; last["hp"] = J.num(last.hp) * (1.25 if gk != "" else BOSS_HP); last["maxhp"] = last.hp; last["name"] = L("惡鬼頭目", "惡鬼頭目") if gk == "" else str(last.get("name", gk))
+			var gk = str(stg.get("guard", ""))   # [soul]＋[counter] 駐守名鬼：血 ×1.25（ENEMY_T 已有品級倍率）；頭目保留真名
+			last["boss"] = true; last["hp"] = J.num(last.hp) * (1.25 if (gk != "" or gu != null) else BOSS_HP); last["maxhp"] = last.hp
+			last["name"] = (L("%s（頭目）", "%s（頭目）") % str(last.get("name", gk))) if (gu != null or gk != "") else L("惡鬼頭目", "惡鬼頭目")
 	pay(cs)
 	var c = cst(e); c["tries"] = J.num(c.tries) + 1
 	var op = RTS.SIM.new()
@@ -220,6 +228,7 @@ static func dispatch(e: Dictionary) -> String:
 	op.title = title(e)
 	op.adviser = snap.get("adviser")
 	op.set_meta("snap", snap); op.set_meta("camp", e); op.set_meta("cost", cs)
+	if stg.has("guard"): op.set_meta("guard", stg.guard)   # [counter] 駐守鬼（soul 線讀）
 	var at: Vector2 = e.pos
 	op.setup(snap.units, path_of(e, at), at, RTS.gate_pos())
 	RTS.ops.append(op)

@@ -249,8 +249,11 @@ static func _launch(pend: Dictionary, ny: int, nm: int) -> String:
 # [qaudit2] 第 5、6 關主線關卡／野外王：敵人血、攻打折（地圖戰鬥喺呢兩關明顯難過舊引擎；正常練級＋換 2～3 次陣容要贏得到）
 const SOFT := {4: 0.55, 5: 0.5}   # 地圖序號（0 起）→ 敵方血／攻倍數
 static func _soften(snap: Dictionary, pend: Dictionary) -> void:
-	if not (str(pend.get("kind")) in ["stage", "boss"]): return
-	var k = float(SOFT.get(ZD.ci(), 1.0))
+	if not (str(pend.get("kind")) in ["stage", "boss", "sortie"]): return   # [counter] 據點（sortie）同樣打折
+	var ci = int(pend.get("c", ZD.ci()))
+	var ck = load("res://game/counter/ct_data.gd").ch_k(ci, str(pend.get("kind")))   # [counter] SOFT 步驟 A：主線 ch_k、據點 sortie_k（血／攻分開）；冇就用舊 SOFT
+	if not ck.is_empty(): load("res://game/counter/ct_data.gd").soften(snap, ck.hp, ck.atk); return
+	var k = float(SOFT.get(ci, 1.0))
 	if k >= 1.0: return
 	for u in snap.units:
 		if J.num(u.get("side")) != 1: continue

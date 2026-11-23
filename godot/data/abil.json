@@ -5,130 +5,1141 @@
  "off": false,
  "SCARE_NOTE": "戰鬥用嚇法／系／預設應對標籤（counter.md 6.4、6.5）；唔改 SCARE_GHOSTS。ABIL／ENEMY／counter.json 有 sys、sc、tags 就以佢哋為準",
  "SCARE": {
-  "laojiang": {"sys": "屍", "sc": ["cold"], "tags": ["定"]},
-  "n30_dongsi": {"sys": "屍", "sc": ["cold"], "tags": ["拉", "破", "刺"]},
-  "n30_gashadokuro": {"sys": "屍", "sc": ["cold"], "tags": ["掃"]},
-  "n30_hanba": {"sys": "屍", "sc": ["light"], "tags": ["掃", "削", "照"]},
-  "n30_jenglot": {"sys": "屍", "sc": ["cold"], "tags": ["掃"]},
-  "n30_jerangkung": {"sys": "屍", "sc": ["cold"], "tags": ["遠", "破"]},
-  "n30_vetala": {"sys": "屍", "sc": ["face"], "tags": ["拉", "刺", "削"]},
-  "nw_baimao": {"sys": "屍", "sc": ["cold"], "tags": ["破", "定"]},
-  "nw_buhuagu": {"sys": "屍", "sc": ["cold"], "tags": ["定"]},
-  "nw_honeonna": {"sys": "屍", "sc": ["light"], "tags": ["遠", "照"]},
-  "nw_mummy": {"sys": "屍", "sc": ["cold"], "tags": ["定", "收"]},
-  "pocong": {"sys": "屍", "sc": ["cold"], "tags": ["掃", "收"]},
-  "afu": {"sys": "魂", "sc": ["face"], "tags": ["刺"]},
-  "eguiking": {"sys": "魂", "sc": ["sound"], "tags": ["破", "刺", "回"]},
-  "n30_danxiao": {"sys": "魂", "sc": ["breath"], "tags": ["破"]},
-  "n30_dugui": {"sys": "魂", "sc": ["paper"], "tags": ["破"]},
-  "n30_guhangui": {"sys": "魂", "sc": ["paper"], "tags": []},
-  "n30_hantugalah": {"sys": "魂", "sc": ["shadow"], "tags": ["拉"]},
-  "n30_jiugui": {"sys": "魂", "sc": ["breath"], "tags": []},
-  "n30_maoshi": {"sys": "魂", "sc": ["breath"], "tags": ["拉"]},
-  "n30_phiam": {"sys": "魂", "sc": ["shadow"], "tags": ["拉", "削"]},
-  "n30_qionggui": {"sys": "魂", "sc": ["breath"], "tags": ["掃", "削"]},
-  "n30_xiasi": {"sys": "魂", "sc": ["face"], "tags": ["掃", "削"]},
-  "n30_yangui": {"sys": "魂", "sc": ["breath"], "tags": ["削"]},
-  "nw_ganshi": {"sys": "魂", "sc": ["sound"], "tags": ["遠", "收"]},
-  "nw_guihuo": {"sys": "魂", "sc": ["light"], "tags": ["遠", "掃", "照"]},
-  "pg_ji": {"sys": "魂", "sc": ["shadow"], "tags": ["掃", "削"]},
-  "pg_songding": {"sys": "魂", "sc": ["face"], "tags": ["拉", "刺"]},
-  "pg_tuimo": {"sys": "魂", "sc": ["sound"], "tags": ["掃", "定"]},
-  "tianhua": {"sys": "魂", "sc": ["face"], "tags": ["遠", "拉", "刺"]},
-  "n30_chochin": {"sys": "紙紮", "sc": ["light"], "tags": ["遠", "破", "照"]},
-  "n30_kasaobake": {"sys": "紙紮", "sc": ["paper"], "tags": []},
-  "n30_xiangcai": {"sys": "紙紮", "sc": ["paper"], "tags": ["破"]},
-  "nw_zzcar": {"sys": "紙紮", "sc": ["light"], "tags": ["掃", "破", "照"]},
-  "nw_zzhouse": {"sys": "紙紮", "sc": ["paper"], "tags": ["定"]},
-  "nw_zzphone": {"sys": "紙紮", "sc": ["phone"], "tags": ["遠", "削"]},
-  "xiaozhi": {"sys": "紙紮", "sc": ["paper"], "tags": ["遠", "拉", "掃"]},
-  "n30_aswang": {"sys": "妖", "sc": ["shadow"], "tags": ["破", "刺", "回"]},
-  "n30_baigujing": {"sys": "妖", "sc": ["shadow"], "tags": ["回"]},
-  "n30_bunian": {"sys": "妖", "sc": ["shadow"], "tags": ["刺", "削", "照"]},
-  "n30_genderuwo": {"sys": "妖", "sc": ["shadow"], "tags": ["破", "刺", "定"]},
-  "n30_kappa": {"sys": "妖", "sc": ["cold"], "tags": ["拉"]},
-  "n30_nopperabo": {"sys": "妖", "sc": ["face"], "tags": ["定"]},
-  "n30_rokurokubi": {"sys": "妖", "sc": ["shadow"], "tags": []},
-  "n30_shanxiao": {"sys": "妖", "sc": ["shadow"], "tags": ["破"]},
-  "n30_tikbalang": {"sys": "妖", "sc": ["shadow"], "tags": ["刺"]},
-  "nw_daqiang": {"sys": "妖", "sc": ["shadow"], "tags": ["照"]},
-  "nw_dullahan": {"sys": "妖", "sc": ["shadow"], "tags": ["破", "刺"]},
-  "nw_huli": {"sys": "妖", "sc": ["shadow"], "tags": ["遠", "照"]},
-  "nw_kapre": {"sys": "妖", "sc": ["breath"], "tags": ["掃", "定"]},
-  "nw_krahang": {"sys": "妖", "sc": ["shadow"], "tags": ["遠", "拉"]},
-  "nw_shejing": {"sys": "妖", "sc": ["cold"], "tags": ["掃", "回"]},
-  "nw_tiangou": {"sys": "妖", "sc": ["shadow"], "tags": ["遠", "拉"]},
-  "n30_banshee": {"sys": "厲", "sc": ["sound"], "tags": ["掃"]},
-  "n30_churel": {"sys": "厲", "sc": ["sound"], "tags": []},
-  "n30_diaosi": {"sys": "厲", "sc": ["face"], "tags": ["刺", "收"]},
-  "n30_guixinniang": {"sys": "厲", "sc": ["sound"], "tags": ["掃"]},
-  "n30_hannya": {"sys": "厲", "sc": ["face"], "tags": ["破"]},
-  "n30_kuchisake": {"sys": "厲", "sc": ["face"], "tags": ["破"]},
-  "n30_maenak": {"sys": "厲", "sc": ["sound"], "tags": ["回"]},
-  "n30_yukionna": {"sys": "厲", "sc": ["cold"], "tags": ["拉", "掃", "削"]},
-  "nw_ameonna": {"sys": "厲", "sc": ["cold"], "tags": ["遠", "削"]},
-  "nw_huapi": {"sys": "厲", "sc": ["paper"], "tags": ["削", "照"]},
-  "nw_sundel": {"sys": "厲", "sc": ["sound"], "tags": ["刺"]},
-  "nw_teketeke": {"sys": "厲", "sc": ["sound"], "tags": ["刺"]},
-  "penanggal": {"sys": "厲", "sc": ["face"], "tags": ["遠", "回"]},
-  "pg_ex": {"sys": "厲", "sc": ["phone"], "tags": ["拉", "掃"]},
-  "pontianak": {"sys": "厲", "sc": ["sound"], "tags": ["拉"]},
-  "n30_changgui": {"sys": "使", "sc": ["face"], "tags": []},
-  "n30_hanturaya": {"sys": "使", "sc": ["shadow"], "tags": ["拉", "掃"]},
-  "n30_pelesit": {"sys": "使", "sc": ["sound"], "tags": []},
-  "n30_polong": {"sys": "使", "sc": ["face"], "tags": ["回"]},
-  "n30_taozhai": {"sys": "使", "sc": ["paper"], "tags": ["拉", "刺", "削"]},
-  "nw_bajang": {"sys": "使", "sc": ["face"], "tags": ["刺", "削"]},
-  "nw_kuaidi": {"sys": "使", "sc": ["phone"], "tags": ["遠", "刺"]},
-  "nw_yeleng_guard": {"sys": "使", "sc": ["face"], "tags": ["定"]},
-  "nw_yeleng_sales": {"sys": "使", "sc": ["phone"], "tags": ["遠", "削"]},
-  "toyol": {"sys": "使", "sc": ["face"], "tags": ["削"]},
-  "baiwu": {"sys": "官", "sc": ["paper"], "tags": ["掃", "收"]},
-  "heiwu": {"sys": "官", "sc": ["shadow"], "tags": ["掃", "定", "收"]},
-  "mamian": {"sys": "官", "sc": ["light"], "tags": ["照"]},
-  "mengpo": {"sys": "官", "sc": ["breath"], "tags": ["遠", "削", "回"]},
-  "n30_yecha": {"sys": "官", "sc": ["light"], "tags": ["破", "刺", "照", "定"]},
-  "niutou": {"sys": "官", "sc": ["light"], "tags": ["照", "定"]},
-  "nw_panguan": {"sys": "官", "sc": ["paper"], "tags": ["照", "收"]},
-  "nw_toutai": {"sys": "官", "sc": ["paper"], "tags": ["削", "回"]},
-  "n30_chehuo": {"sys": "橫", "sc": ["light"], "tags": ["刺", "照"]},
-  "n30_chengsi": {"sys": "橫", "sc": ["breath"], "tags": ["回"]},
-  "n30_daji": {"sys": "橫", "sc": ["phone"], "tags": ["破"]},
-  "n30_diansi": {"sys": "橫", "sc": ["phone"], "tags": ["遠", "拉", "掃"]},
-  "n30_leipi": {"sys": "橫", "sc": ["light"], "tags": ["掃", "照"]},
-  "n30_liulian": {"sys": "橫", "sc": ["phone"], "tags": ["遠", "刺"]},
-  "n30_shedu": {"sys": "橫", "sc": ["phone"], "tags": ["回"]},
-  "n30_shidu": {"sys": "橫", "sc": ["breath"], "tags": ["掃"]},
-  "n30_wutou": {"sys": "橫", "sc": ["face"], "tags": ["拉", "掃"]},
-  "n30_xiaosi": {"sys": "橫", "sc": ["sound"], "tags": ["掃", "削"]},
-  "n30_yesi": {"sys": "橫", "sc": ["phone"], "tags": ["遠"]},
-  "n30_yezi": {"sys": "橫", "sc": ["phone"], "tags": ["拉"]},
-  "n30_zhongshu": {"sys": "橫", "sc": ["light"], "tags": ["掃", "削", "照"]},
-  "n30_zipai": {"sys": "橫", "sc": ["phone"], "tags": ["拉"]},
-  "nw_tisi": {"sys": "橫", "sc": ["cold"], "tags": ["拉", "收"]},
-  "pg_landlady": {"sys": "橫", "sc": ["paper"], "tags": ["掃"]},
-  "youhun": {"sys": "魂", "sc": ["breath"], "tags": []},
-  "egui": {"sys": "魂", "sc": ["breath"], "tags": []},
-  "shuigui": {"sys": "橫", "sc": ["cold"], "tags": []},
-  "zombie": {"sys": "屍", "sc": ["cold"], "tags": []},
-  "zd_bone": {"sys": "屍", "sc": ["cold"], "tags": []},
-  "zhiren": {"sys": "紙紮", "sc": ["paper"], "tags": []},
-  "zd_zhima": {"sys": "紙紮", "sc": ["paper"], "tags": []},
-  "zd_shanjing": {"sys": "妖", "sc": ["shadow"], "tags": []},
-  "zd_shuihou": {"sys": "妖", "sc": ["shadow"], "tags": []},
-  "zd_hongyi": {"sys": "厲", "sc": ["sound"], "tags": []},
-  "xiaogui": {"sys": "使", "sc": ["face"], "tags": []},
-  "zd_paotui": {"sys": "使", "sc": ["face"], "tags": []},
-  "zd_yinchai": {"sys": "官", "sc": ["light"], "tags": []},
-  "zd_hengsi": {"sys": "橫", "sc": ["phone"], "tags": []},
-  "bm_taotie": {"sys": "妖", "sc": ["shadow"], "tags": []},
-  "bm_jembalang": {"sys": "妖", "sc": ["shadow"], "tags": []},
-  "bm_hou": {"sys": "屍", "sc": ["cold"], "tags": []},
-  "bm_langsuir": {"sys": "厲", "sc": ["sound"], "tags": []},
-  "bm_krasue": {"sys": "厲", "sc": ["face"], "tags": []},
-  "huang": {"sys": "官", "sc": ["phone"], "tags": []},
-  "bm_pang": {"sys": "官", "sc": ["paper"], "tags": []},
-  "bm_shuten": {"sys": "妖", "sc": ["shadow"], "tags": []}
+  "laojiang": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "tags": [
+    "定"
+   ]
+  },
+  "n30_dongsi": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "tags": [
+    "拉",
+    "破",
+    "刺"
+   ]
+  },
+  "n30_gashadokuro": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "tags": [
+    "掃"
+   ]
+  },
+  "n30_hanba": {
+   "sys": "屍",
+   "sc": [
+    "light"
+   ],
+   "tags": [
+    "掃",
+    "削",
+    "照"
+   ]
+  },
+  "n30_jenglot": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "tags": [
+    "掃"
+   ]
+  },
+  "n30_jerangkung": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "tags": [
+    "遠",
+    "破"
+   ]
+  },
+  "n30_vetala": {
+   "sys": "屍",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "拉",
+    "刺",
+    "削"
+   ]
+  },
+  "nw_baimao": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "tags": [
+    "破",
+    "定"
+   ]
+  },
+  "nw_buhuagu": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "tags": [
+    "定"
+   ]
+  },
+  "nw_honeonna": {
+   "sys": "屍",
+   "sc": [
+    "light"
+   ],
+   "tags": [
+    "遠",
+    "照"
+   ]
+  },
+  "nw_mummy": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "tags": [
+    "定",
+    "收"
+   ]
+  },
+  "pocong": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "tags": [
+    "掃",
+    "收"
+   ]
+  },
+  "afu": {
+   "sys": "魂",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "刺"
+   ]
+  },
+  "eguiking": {
+   "sys": "魂",
+   "sc": [
+    "sound"
+   ],
+   "tags": [
+    "破",
+    "刺",
+    "回"
+   ]
+  },
+  "n30_danxiao": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "tags": [
+    "破"
+   ]
+  },
+  "n30_dugui": {
+   "sys": "魂",
+   "sc": [
+    "paper"
+   ],
+   "tags": [
+    "破"
+   ]
+  },
+  "n30_guhangui": {
+   "sys": "魂",
+   "sc": [
+    "paper"
+   ],
+   "tags": []
+  },
+  "n30_hantugalah": {
+   "sys": "魂",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "拉"
+   ]
+  },
+  "n30_jiugui": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "tags": []
+  },
+  "n30_maoshi": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "tags": [
+    "拉"
+   ]
+  },
+  "n30_phiam": {
+   "sys": "魂",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "拉",
+    "削"
+   ]
+  },
+  "n30_qionggui": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "tags": [
+    "掃",
+    "削"
+   ]
+  },
+  "n30_xiasi": {
+   "sys": "魂",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "掃",
+    "削"
+   ]
+  },
+  "n30_yangui": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "tags": [
+    "削"
+   ]
+  },
+  "nw_ganshi": {
+   "sys": "魂",
+   "sc": [
+    "sound"
+   ],
+   "tags": [
+    "遠",
+    "收"
+   ]
+  },
+  "nw_guihuo": {
+   "sys": "魂",
+   "sc": [
+    "light"
+   ],
+   "tags": [
+    "遠",
+    "掃",
+    "照"
+   ]
+  },
+  "pg_ji": {
+   "sys": "魂",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "掃",
+    "削"
+   ]
+  },
+  "pg_songding": {
+   "sys": "魂",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "拉",
+    "刺"
+   ]
+  },
+  "pg_tuimo": {
+   "sys": "魂",
+   "sc": [
+    "sound"
+   ],
+   "tags": [
+    "掃",
+    "定"
+   ]
+  },
+  "tianhua": {
+   "sys": "魂",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "遠",
+    "拉",
+    "刺"
+   ]
+  },
+  "n30_chochin": {
+   "sys": "紙紮",
+   "sc": [
+    "light"
+   ],
+   "tags": [
+    "遠",
+    "破",
+    "照"
+   ]
+  },
+  "n30_kasaobake": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "tags": []
+  },
+  "n30_xiangcai": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "tags": [
+    "破"
+   ]
+  },
+  "nw_zzcar": {
+   "sys": "紙紮",
+   "sc": [
+    "light"
+   ],
+   "tags": [
+    "掃",
+    "破",
+    "照"
+   ]
+  },
+  "nw_zzhouse": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "tags": [
+    "定"
+   ]
+  },
+  "nw_zzphone": {
+   "sys": "紙紮",
+   "sc": [
+    "phone"
+   ],
+   "tags": [
+    "遠",
+    "削"
+   ]
+  },
+  "xiaozhi": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "tags": [
+    "遠",
+    "拉",
+    "掃"
+   ]
+  },
+  "n30_aswang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "破",
+    "刺",
+    "回"
+   ]
+  },
+  "n30_baigujing": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "回"
+   ]
+  },
+  "n30_bunian": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "刺",
+    "削",
+    "照"
+   ]
+  },
+  "n30_genderuwo": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "破",
+    "刺",
+    "定"
+   ]
+  },
+  "n30_kappa": {
+   "sys": "妖",
+   "sc": [
+    "cold"
+   ],
+   "tags": [
+    "拉"
+   ]
+  },
+  "n30_nopperabo": {
+   "sys": "妖",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "定"
+   ]
+  },
+  "n30_rokurokubi": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": []
+  },
+  "n30_shanxiao": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "破"
+   ]
+  },
+  "n30_tikbalang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "刺"
+   ]
+  },
+  "nw_daqiang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "照"
+   ]
+  },
+  "nw_dullahan": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "破",
+    "刺"
+   ]
+  },
+  "nw_huli": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "遠",
+    "照"
+   ]
+  },
+  "nw_kapre": {
+   "sys": "妖",
+   "sc": [
+    "breath"
+   ],
+   "tags": [
+    "掃",
+    "定"
+   ]
+  },
+  "nw_krahang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "遠",
+    "拉"
+   ]
+  },
+  "nw_shejing": {
+   "sys": "妖",
+   "sc": [
+    "cold"
+   ],
+   "tags": [
+    "掃",
+    "回"
+   ]
+  },
+  "nw_tiangou": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "遠",
+    "拉"
+   ]
+  },
+  "n30_banshee": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "tags": [
+    "掃"
+   ]
+  },
+  "n30_churel": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "tags": []
+  },
+  "n30_diaosi": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "刺",
+    "收"
+   ]
+  },
+  "n30_guixinniang": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "tags": [
+    "掃"
+   ]
+  },
+  "n30_hannya": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "破"
+   ]
+  },
+  "n30_kuchisake": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "破"
+   ]
+  },
+  "n30_maenak": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "tags": [
+    "回"
+   ]
+  },
+  "n30_yukionna": {
+   "sys": "厲",
+   "sc": [
+    "cold"
+   ],
+   "tags": [
+    "拉",
+    "掃",
+    "削"
+   ]
+  },
+  "nw_ameonna": {
+   "sys": "厲",
+   "sc": [
+    "cold"
+   ],
+   "tags": [
+    "遠",
+    "削"
+   ]
+  },
+  "nw_huapi": {
+   "sys": "厲",
+   "sc": [
+    "paper"
+   ],
+   "tags": [
+    "削",
+    "照"
+   ]
+  },
+  "nw_sundel": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "tags": [
+    "刺"
+   ]
+  },
+  "nw_teketeke": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "tags": [
+    "刺"
+   ]
+  },
+  "penanggal": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "遠",
+    "回"
+   ]
+  },
+  "pg_ex": {
+   "sys": "厲",
+   "sc": [
+    "phone"
+   ],
+   "tags": [
+    "拉",
+    "掃"
+   ]
+  },
+  "pontianak": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "tags": [
+    "拉"
+   ]
+  },
+  "n30_changgui": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "tags": []
+  },
+  "n30_hanturaya": {
+   "sys": "使",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "拉",
+    "掃"
+   ]
+  },
+  "n30_pelesit": {
+   "sys": "使",
+   "sc": [
+    "sound"
+   ],
+   "tags": []
+  },
+  "n30_polong": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "回"
+   ]
+  },
+  "n30_taozhai": {
+   "sys": "使",
+   "sc": [
+    "paper"
+   ],
+   "tags": [
+    "拉",
+    "刺",
+    "削"
+   ]
+  },
+  "nw_bajang": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "刺",
+    "削"
+   ]
+  },
+  "nw_kuaidi": {
+   "sys": "使",
+   "sc": [
+    "phone"
+   ],
+   "tags": [
+    "遠",
+    "刺"
+   ]
+  },
+  "nw_yeleng_guard": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "定"
+   ]
+  },
+  "nw_yeleng_sales": {
+   "sys": "使",
+   "sc": [
+    "phone"
+   ],
+   "tags": [
+    "遠",
+    "削"
+   ]
+  },
+  "toyol": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "削"
+   ]
+  },
+  "baiwu": {
+   "sys": "官",
+   "sc": [
+    "paper"
+   ],
+   "tags": [
+    "掃",
+    "收"
+   ]
+  },
+  "heiwu": {
+   "sys": "官",
+   "sc": [
+    "shadow"
+   ],
+   "tags": [
+    "掃",
+    "定",
+    "收"
+   ]
+  },
+  "mamian": {
+   "sys": "官",
+   "sc": [
+    "light"
+   ],
+   "tags": [
+    "照"
+   ]
+  },
+  "mengpo": {
+   "sys": "官",
+   "sc": [
+    "breath"
+   ],
+   "tags": [
+    "遠",
+    "削",
+    "回"
+   ]
+  },
+  "n30_yecha": {
+   "sys": "官",
+   "sc": [
+    "light"
+   ],
+   "tags": [
+    "破",
+    "刺",
+    "照",
+    "定"
+   ]
+  },
+  "niutou": {
+   "sys": "官",
+   "sc": [
+    "light"
+   ],
+   "tags": [
+    "照",
+    "定"
+   ]
+  },
+  "nw_panguan": {
+   "sys": "官",
+   "sc": [
+    "paper"
+   ],
+   "tags": [
+    "照",
+    "收"
+   ]
+  },
+  "nw_toutai": {
+   "sys": "官",
+   "sc": [
+    "paper"
+   ],
+   "tags": [
+    "削",
+    "回"
+   ]
+  },
+  "n30_chehuo": {
+   "sys": "橫",
+   "sc": [
+    "light"
+   ],
+   "tags": [
+    "刺",
+    "照"
+   ]
+  },
+  "n30_chengsi": {
+   "sys": "橫",
+   "sc": [
+    "breath"
+   ],
+   "tags": [
+    "回"
+   ]
+  },
+  "n30_daji": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "tags": [
+    "破"
+   ]
+  },
+  "n30_diansi": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "tags": [
+    "遠",
+    "拉",
+    "掃"
+   ]
+  },
+  "n30_leipi": {
+   "sys": "橫",
+   "sc": [
+    "light"
+   ],
+   "tags": [
+    "掃",
+    "照"
+   ]
+  },
+  "n30_liulian": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "tags": [
+    "遠",
+    "刺"
+   ]
+  },
+  "n30_shedu": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "tags": [
+    "回"
+   ]
+  },
+  "n30_shidu": {
+   "sys": "橫",
+   "sc": [
+    "breath"
+   ],
+   "tags": [
+    "掃"
+   ]
+  },
+  "n30_wutou": {
+   "sys": "橫",
+   "sc": [
+    "face"
+   ],
+   "tags": [
+    "拉",
+    "掃"
+   ]
+  },
+  "n30_xiaosi": {
+   "sys": "橫",
+   "sc": [
+    "sound"
+   ],
+   "tags": [
+    "掃",
+    "削"
+   ]
+  },
+  "n30_yesi": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "tags": [
+    "遠"
+   ]
+  },
+  "n30_yezi": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "tags": [
+    "拉"
+   ]
+  },
+  "n30_zhongshu": {
+   "sys": "橫",
+   "sc": [
+    "light"
+   ],
+   "tags": [
+    "掃",
+    "削",
+    "照"
+   ]
+  },
+  "n30_zipai": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "tags": [
+    "拉"
+   ]
+  },
+  "nw_tisi": {
+   "sys": "橫",
+   "sc": [
+    "cold"
+   ],
+   "tags": [
+    "拉",
+    "收"
+   ]
+  },
+  "pg_landlady": {
+   "sys": "橫",
+   "sc": [
+    "paper"
+   ],
+   "tags": [
+    "掃"
+   ]
+  },
+  "youhun": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "tags": []
+  },
+  "egui": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "tags": []
+  },
+  "shuigui": {
+   "sys": "橫",
+   "sc": [
+    "cold"
+   ],
+   "tags": []
+  },
+  "zombie": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "tags": []
+  },
+  "zd_bone": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "tags": []
+  },
+  "zhiren": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "tags": []
+  },
+  "zd_zhima": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "tags": []
+  },
+  "zd_shanjing": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": []
+  },
+  "zd_shuihou": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": []
+  },
+  "zd_hongyi": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "tags": []
+  },
+  "xiaogui": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "tags": []
+  },
+  "zd_paotui": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "tags": []
+  },
+  "zd_yinchai": {
+   "sys": "官",
+   "sc": [
+    "light"
+   ],
+   "tags": []
+  },
+  "zd_hengsi": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "tags": []
+  },
+  "bm_taotie": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": []
+  },
+  "bm_jembalang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": []
+  },
+  "bm_hou": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "tags": []
+  },
+  "bm_langsuir": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "tags": []
+  },
+  "bm_krasue": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "tags": []
+  },
+  "huang": {
+   "sys": "官",
+   "sc": [
+    "phone"
+   ],
+   "tags": []
+  },
+  "bm_pang": {
+   "sys": "官",
+   "sc": [
+    "paper"
+   ],
+   "tags": []
+  },
+  "bm_shuten": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": []
+  }
  },
  "TAGS": {
   "遠": {
@@ -363,8 +1374,7140 @@
    "warn": "開打放 2 個分身（1 血），打錯目標"
   }
  },
- "ABIL": {},
- "ENEMY": {},
+ "ABIL": {
+  "afu": {
+   "sys": "魂",
+   "sc": [
+    "face"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "刺",
+    "定"
+   ],
+   "act": {
+    "name": "通宵斧",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ],
+      "vs_state": "down",
+      "x": 1.8
+     },
+     {
+      "p": "push",
+      "dist": 40
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "kill",
+     "star": 0,
+     "fx": [
+      {
+       "p": "energy",
+       "v": 20,
+       "tg": "self"
+      }
+     ],
+     "icd": 3
+    }
+   ],
+   "aura": {
+    "star": 2,
+    "r": 150,
+    "side": "ally",
+    "fx": [
+     {
+      "p": "immune",
+      "tags": [
+       "fear_aura",
+       "confuse"
+      ],
+      "dur": -1
+     }
+    ]
+   },
+   "say": [
+    "收工？未得，仲有一場。",
+    "收工？還沒，還有一場。"
+   ]
+  },
+  "xiaozhi": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "rng": 150,
+   "role": "back",
+   "tags": [
+    "遠",
+    "拉",
+    "掃"
+   ],
+   "act": {
+    "name": "紙錢漫天",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 130
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       0.8,
+       0.84,
+       0.88,
+       0.94,
+       1.0,
+       1.08
+      ]
+     },
+     {
+      "p": "down",
+      "dur": 1.2
+     },
+     {
+      "p": "energy",
+      "v": 15,
+      "tg": "allies"
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "death",
+     "star": 0,
+     "fx": [
+      {
+       "p": "revive",
+       "pct": 0.5,
+       "delay": 8.0,
+       "n": 1
+      }
+     ]
+    }
+   ],
+   "say": [
+    "少爺，紙紮嘅都要開工，你話打邊個，我就打邊個。",
+    "少爺，紙紮的也要上班，你說打誰，我就打誰。"
+   ]
+  },
+  "eguiking": {
+   "sys": "魂",
+   "sc": [
+    "sound"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "刺",
+    "回",
+    "收"
+   ],
+   "act": {
+    "name": "大胃一口",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       2.1,
+       2.21,
+       2.31,
+       2.46,
+       2.62,
+       2.84
+      ],
+      "vs_state": "down",
+      "x": 1.8
+     },
+     {
+      "p": "drain",
+      "pct": 0.4
+     },
+     {
+      "p": "banish",
+      "hp_pct": 0.35
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "heal_in",
+       "v": -0.5,
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    },
+    {
+     "tr": "kill",
+     "star": 2,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "maxhp",
+       "v": 0.05,
+       "dur": -1,
+       "stack": 6,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "包！有包就跟你！冇包……都照跟住先！",
+    "包子！有包子就跟你！沒有包子……也先跟著！"
+   ]
+  },
+  "toyol": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "rng": 46,
+   "role": "flank",
+   "tags": [
+    "刺",
+    "削"
+   ],
+   "act": {
+    "name": "順手牽羊",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.3,
+       1.37,
+       1.43,
+       1.52,
+       1.62,
+       1.76
+      ]
+     },
+     {
+      "p": "push",
+      "dist": 40
+     },
+     {
+      "p": "dispel",
+      "n": 1,
+      "to": "self"
+     },
+     {
+      "p": "coin",
+      "v": 25
+     },
+     {
+      "p": "sap",
+      "v": 35
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "stealth",
+       "dur": 4.0,
+       "first_x": 1.0
+      },
+      {
+       "p": "dash",
+       "to": "back"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "老闆，摸一下，就摸一下咋，村入面啲嘢我保證唔郁。",
+    "老闆，摸一下，就摸一下而已，村裡的東西我保證不碰。"
+   ]
+  },
+  "laojiang": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "掃",
+    "定"
+   ],
+   "act": {
+    "name": "跳屍撞",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "line",
+     "len": 220,
+     "w": 44
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.5,
+       1.58,
+       1.65,
+       1.75,
+       1.88,
+       2.03
+      ]
+     },
+     {
+      "p": "air",
+      "dur": 1.0
+     }
+    ],
+    "ai": {
+     "n_in": 2,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "immune",
+       "tags": [
+        "down",
+        "push"
+       ],
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "aura": {
+    "star": 3,
+    "r": 150,
+    "side": "ally",
+    "fx": [
+     {
+      "p": "immune",
+      "tags": [
+       "fear_aura",
+       "confuse"
+      ],
+      "dur": -1
+     }
+    ]
+   },
+   "say": [
+    "本官跳咗兩百年，今日准你跟住本官一齊跳。",
+    "本官跳了兩百年，今天准你跟著本官一起跳。"
+   ]
+  },
+  "pontianak": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "rng": 100,
+   "role": "flank",
+   "tags": [
+    "拉",
+    "刺"
+   ],
+   "act": {
+    "name": "長髮纏",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "back"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ],
+      "vs_state": "air",
+      "x": 1.8
+     },
+     {
+      "p": "pull",
+      "dist": 120
+     },
+     {
+      "p": "down",
+      "dur": 1.4
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "stealth",
+       "dur": -1,
+       "first_x": 2.0,
+       "until": "attack"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "呵呵呵……公司走唔開？咁我過嚟搵你囉。",
+    "呵呵呵……公司走不開？那我過來找你吧。"
+   ]
+  },
+  "pocong": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "拉",
+    "掃",
+    "收"
+   ],
+   "act": {
+    "name": "裹屍壓",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "dense",
+     "shape": "circle",
+     "r": 130
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.0,
+       1.05,
+       1.1,
+       1.17,
+       1.25,
+       1.35
+      ],
+      "vs_state": "down",
+      "x": 1.8
+     },
+     {
+      "p": "down",
+      "dur": 1.4
+     },
+     {
+      "p": "banish",
+      "hp_pct": 0.3
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "every",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "dodge",
+       "v": 0.3,
+       "dur": 0.6,
+       "tg": "self"
+      }
+     ],
+     "t": 3.0
+    },
+    {
+     "tr": "start",
+     "star": 2,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "taken_melee",
+       "v": -0.2,
+       "dur": -1,
+       "tg": "self"
+      },
+      {
+       "p": "immune",
+       "tags": [
+        "confuse",
+        "slow"
+       ],
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "有冇請人呀？我跳得好快㗎，唔信你望住！",
+    "有沒有請人？我跳得很快的，不信你看著！"
+   ]
+  },
+  "penanggal": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "rng": 150,
+   "role": "back",
+   "tags": [
+    "遠",
+    "回"
+   ],
+   "act": {
+    "name": "飛頭咬",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "back"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.6,
+       1.68,
+       1.76,
+       1.87,
+       2.0,
+       2.16
+      ],
+      "vs_state": "air",
+      "x": 1.8
+     },
+     {
+      "p": "drain",
+      "pct": 0.5
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "low_hp",
+     "star": 0,
+     "fx": [
+      {
+       "p": "stealth",
+       "dur": 3.0,
+       "untarget": true
+      },
+      {
+       "p": "heal",
+       "pct": 0.3,
+       "tg": "self"
+      }
+     ],
+     "pct": 0.3
+    }
+   ],
+   "say": [
+    "快啲快啲，咬完呢啖我仲要返去浸醋！",
+    "快點快點，咬完這口我還要回去泡醋！"
+   ]
+  },
+  "mengpo": {
+   "sys": "官",
+   "sc": [
+    "breath"
+   ],
+   "rng": 150,
+   "role": "back",
+   "tags": [
+    "遠",
+    "削",
+    "回"
+   ],
+   "act": {
+    "name": "一碗湯",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "allies",
+     "r": 220
+    },
+    "fx": [
+     {
+      "p": "heal",
+      "pct": 0.3
+     },
+     {
+      "p": "cleanse",
+      "n": 9
+     },
+     {
+      "p": "sap",
+      "v": 100,
+      "tg": "all_r",
+      "r": 220
+     }
+    ],
+    "ai": {
+     "ally_hp": 0.5,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "every",
+     "star": 0,
+     "fx": [
+      {
+       "p": "heal",
+       "pct": 0.08,
+       "tg": "ally_low"
+      }
+     ],
+     "t": 10.0
+    }
+   ],
+   "say": [
+    "後生仔，打完先至飲，飲完就唔記得痛㗎喇。",
+    "年輕人，打完才喝，喝完就不記得痛了。"
+   ]
+  },
+  "baiwu": {
+   "sys": "官",
+   "sc": [
+    "paper"
+   ],
+   "rng": 100,
+   "role": "flank",
+   "tags": [
+    "掃",
+    "收"
+   ],
+   "act": {
+    "name": "一見生財",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 130
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       0.9,
+       0.95,
+       0.99,
+       1.05,
+       1.12,
+       1.22
+      ]
+     },
+     {
+      "p": "air",
+      "dur": 1.0
+     },
+     {
+      "p": "coin",
+      "v": 30
+     },
+     {
+      "p": "banish",
+      "hp_pct": 0.4
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "slow",
+       "v": -0.3,
+       "dur": 10.0,
+       "tg": "foes"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "本月第三百二十一個，請出示證件，多謝合作。",
+    "本月第三百二十一個，請出示證件，謝謝合作。"
+   ]
+  },
+  "tianhua": {
+   "sys": "魂",
+   "sc": [
+    "face"
+   ],
+   "rng": 150,
+   "role": "back",
+   "tags": [
+    "遠",
+    "拉",
+    "刺"
+   ],
+   "act": {
+    "name": "從天而降",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "back"
+    },
+    "fx": [
+     {
+      "p": "dash",
+      "to": "target"
+     },
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ],
+      "vs_state": "air",
+      "x": 1.8
+     },
+     {
+      "p": "down",
+      "dur": 1.4
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "kill",
+     "star": 0,
+     "fx": [
+      {
+       "p": "energy",
+       "v": 15,
+       "tg": "self"
+      }
+     ],
+     "icd": 3
+    }
+   ],
+   "say": [
+    "哎喲……我條腰呀，你哋企開少少，我要落嚟喇。",
+    "哎喲……我的腰啊，你們站開一點，我要下來了。"
+   ]
+  },
+  "heiwu": {
+   "sys": "官",
+   "sc": [
+    "shadow"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "掃",
+    "定",
+    "收"
+   ],
+   "act": {
+    "name": "天下太平",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 130
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.3,
+       1.37,
+       1.43,
+       1.52,
+       1.62,
+       1.76
+      ],
+      "vs_state": "air",
+      "x": 1.8
+     },
+     {
+      "p": "stun",
+      "dur": 1.5
+     },
+     {
+      "p": "banish",
+      "hp_pct": 0.3
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "taunt",
+       "r": 120,
+       "dur": 4.0
+      }
+     ]
+    }
+   ],
+   "say": [
+    "又一個。行啦。",
+    "又一個。走吧。"
+   ]
+  },
+  "n30_qionggui": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "掃",
+    "削"
+   ],
+   "act": {
+    "name": "空袋飛蛾",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 130
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       0.7,
+       0.73,
+       0.77,
+       0.82,
+       0.88,
+       0.94
+      ]
+     },
+     {
+      "p": "sap",
+      "v": 20
+     },
+     {
+      "p": "energy",
+      "v": 8,
+      "tg": "allies"
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "death",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "atk",
+       "v": -0.3,
+       "dur": 6.0,
+       "tg": "killer"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "你請我入隊就當係投資，回報率……我遲啲先話你知。",
+    "你請我入隊就當是投資，回報率……我晚點再告訴你。"
+   ]
+  },
+  "n30_danxiao": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "拉",
+    "破"
+   ],
+   "act": {
+    "name": "閉眼亂揮",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.3,
+       1.37,
+       1.43,
+       1.52,
+       1.62,
+       1.76
+      ],
+      "hits": 3
+     },
+     {
+      "p": "push",
+      "dist": 30
+     },
+     {
+      "p": "down",
+      "dur": 0.8,
+      "on": "last"
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "hit_taken",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "dodge",
+       "v": 0.04,
+       "dur": -1,
+       "stack": 9,
+       "tg": "self"
+      }
+     ],
+     "icd": 2
+    }
+   ],
+   "say": [
+    "我、我唔係驚呀，我係……熱緊身咋！",
+    "我、我不是怕啊，我是……在熱身而已！"
+   ]
+  },
+  "n30_maoshi": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "拉",
+    "掃",
+    "破"
+   ],
+   "act": {
+    "name": "跌倒頭槌",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "line",
+     "len": 200,
+     "w": 40
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.5,
+       1.58,
+       1.65,
+       1.75,
+       1.88,
+       2.03
+      ]
+     },
+     {
+      "p": "down",
+      "dur": 1.4
+     },
+     {
+      "p": "stun",
+      "dur": 1.0,
+      "tg": "self"
+     }
+    ],
+    "ai": {
+     "n_in": 2,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "attack",
+     "star": 0,
+     "fx": [
+      {
+       "p": "shield_break",
+       "pct": 0.25
+      },
+      {
+       "p": "armor_break",
+       "v": 0.15,
+       "dur": 5.0
+      }
+     ],
+     "n": 4
+    }
+   ],
+   "say": [
+    "睇住睇住——哎呀！又撞到嘢，對唔住對唔住！",
+    "小心小心——哎呀！又撞到東西，對不起對不起！"
+   ]
+  },
+  "n30_yangui": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "rng": 100,
+   "role": "back",
+   "tags": [
+    "掃",
+    "削"
+   ],
+   "act": {
+    "name": "煙圈套頭",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 90
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.2,
+       1.26,
+       1.32,
+       1.4,
+       1.5,
+       1.62
+      ]
+     },
+     {
+      "p": "sap",
+      "v": 60
+     },
+     {
+      "p": "silence",
+      "dur": 2.0
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [],
+   "aura": {
+    "star": 2,
+    "r": 90,
+    "side": "foe",
+    "fx": [
+     {
+      "p": "buff",
+      "stat": "hit",
+      "v": -0.15
+     }
+    ]
+   },
+   "say": [
+    "放心，食完呢支我就戒……呢句我講咗第五百次。",
+    "放心，抽完這支我就戒……這句我說了第五百次。"
+   ]
+  },
+  "n30_jiugui": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "rng": 46,
+   "role": "flank",
+   "tags": [
+    "掃",
+    "刺"
+   ],
+   "act": {
+    "name": "醉漢撲撞",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "line",
+     "len": 180,
+     "w": 44
+    },
+    "fx": [
+     {
+      "p": "dash",
+      "to": "target",
+      "n": 3
+     },
+     {
+      "p": "dmg",
+      "mult": [
+       1.6,
+       1.68,
+       1.76,
+       1.87,
+       2.0,
+       2.16
+      ]
+     },
+     {
+      "p": "push",
+      "dist": 40
+     }
+    ],
+    "ai": {
+     "n_in": 2,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "hit_taken",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "dodge",
+       "v": 1.0,
+       "dur": 0.5,
+       "tg": "self"
+      }
+     ],
+     "chance": 0.25,
+     "icd": 3
+    },
+    {
+     "tr": "low_hp",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "atk",
+       "v": 0.3,
+       "dur": -1,
+       "tg": "self"
+      }
+     ],
+     "pct": 0.4
+    }
+   ],
+   "say": [
+    "飲杯先！飲完呢杯我先話你知我幫邊個。",
+    "先喝一杯！喝完這杯我再告訴你我幫誰。"
+   ]
+  },
+  "n30_dugui": {
+   "sys": "魂",
+   "sc": [
+    "paper"
+   ],
+   "rng": 150,
+   "role": "back",
+   "tags": [
+    "遠",
+    "破"
+   ],
+   "act": {
+    "name": "梭哈",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.6,
+       1.68,
+       1.76,
+       1.87,
+       2.0,
+       2.16
+      ],
+      "hits": 3
+     },
+     {
+      "p": "coin",
+      "v": 25
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "attack",
+     "star": 0,
+     "fx": [
+      {
+       "p": "energy",
+       "v": 10,
+       "tg": "self"
+      }
+     ],
+     "n": 6
+    }
+   ],
+   "say": [
+    "買定離手！跟我呢鋪，包你連本帶利攞返。",
+    "買定離手！跟我這一局，保證你連本帶利拿回來。"
+   ]
+  },
+  "n30_guhangui": {
+   "sys": "魂",
+   "sc": [
+    "paper"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "破",
+    "削"
+   ],
+   "act": {
+    "name": "算盤摑",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.5,
+       1.58,
+       1.65,
+       1.75,
+       1.88,
+       2.03
+      ]
+     },
+     {
+      "p": "shield_break",
+      "pct": 1.0
+     },
+     {
+      "p": "coin",
+      "v": 40
+     },
+     {
+      "p": "sap",
+      "v": 25
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "taken",
+       "v": -0.25,
+       "dur": -1,
+       "tg": "self"
+      },
+      {
+       "p": "buff",
+       "stat": "heal_in",
+       "v": -0.5,
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "入你隊？包食包住先講，交通津貼另計。",
+    "入你的隊？包吃包住再說，交通津貼另計。"
+   ]
+  },
+  "n30_taozhai": {
+   "sys": "使",
+   "sc": [
+    "paper"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "拉",
+    "刺",
+    "削"
+   ],
+   "act": {
+    "name": "紅油潑門",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "mark",
+      "v": 0.2,
+      "dur": 8.0
+     },
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ]
+     },
+     {
+      "p": "down",
+      "dur": 1.4
+     },
+     {
+      "p": "sap",
+      "v": 20
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "spd_vs_mark",
+       "v": 0.4,
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "欠落嘅數，做咗鬼都要還，我幫你逐個追。",
+    "欠下的債，做了鬼也要還，我幫你一個一個追。"
+   ]
+  },
+  "n30_diaosi": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "rng": 100,
+   "role": "front",
+   "tags": [
+    "刺",
+    "收"
+   ],
+   "act": {
+    "name": "長舌鞭",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ]
+     },
+     {
+      "p": "stun",
+      "dur": 2.5
+     },
+     {
+      "p": "mark",
+      "v": 0.25,
+      "dur": 2.5
+     },
+     {
+      "p": "banish",
+      "hp_pct": 0.3
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "immune",
+       "tags": [
+        "pull",
+        "air"
+       ],
+       "dur": -1,
+       "tg": "self"
+      },
+      {
+       "p": "anti_air",
+       "x": 1.25
+      }
+     ]
+    }
+   ],
+   "say": [
+    "我條脷長咗少少，你唔介意嘛？介意都冇計。",
+    "我的舌頭長了一點，你不介意吧？介意也沒辦法。"
+   ]
+  },
+  "n30_wutou": {
+   "sys": "橫",
+   "sc": [
+    "face"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "拉",
+    "掃",
+    "照"
+   ],
+   "act": {
+    "name": "人頭保齡球",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "line",
+     "len": 240,
+     "w": 40
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.0,
+       1.05,
+       1.1,
+       1.17,
+       1.25,
+       1.35
+      ]
+     },
+     {
+      "p": "down",
+      "dur": 1.2
+     }
+    ],
+    "ai": {
+     "n_in": 2,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "immune",
+       "tags": [
+        "confuse",
+        "blind"
+       ],
+       "dur": -1,
+       "tg": "self"
+      },
+      {
+       "p": "reveal",
+       "r": 80,
+       "dur": -1
+      }
+     ]
+    }
+   ],
+   "say": [
+    "你搵我個頭？轉個彎就見到，佢識自己滾返嚟。",
+    "你找我的頭？轉個彎就看到，它會自己滾回來。"
+   ]
+  },
+  "n30_changgui": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "拉",
+    "刺"
+   ],
+   "act": {
+    "name": "喚虎撲",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "summon",
+      "k": "tiger",
+      "n": 1,
+      "hp_pct": 0.5,
+      "atk_pct": 0.8,
+      "dur": 12.0
+     },
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ]
+     },
+     {
+      "p": "down",
+      "dur": 1.0
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "ally_down",
+     "star": 0,
+     "fx": [
+      {
+       "p": "energy",
+       "v": 20,
+       "tg": "self"
+      }
+     ],
+     "icd": 6
+    }
+   ],
+   "say": [
+    "我負責帶路，咬人嗰啲交畀阿虎，分工好清楚。",
+    "我負責帶路，咬人的交給老虎，分工很清楚。"
+   ]
+  },
+  "n30_guixinniang": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "rng": 150,
+   "role": "back",
+   "tags": [
+    "遠",
+    "掃"
+   ],
+   "act": {
+    "name": "拋繡球",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 130
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       0.9,
+       0.95,
+       0.99,
+       1.05,
+       1.12,
+       1.22
+      ]
+     },
+     {
+      "p": "air",
+      "dur": 1.0
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "every",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "atk",
+       "v": 0.2,
+       "dur": 10.0,
+       "tg": "allies"
+      }
+     ],
+     "t": 60.0
+    }
+   ],
+   "say": [
+    "繡球拋咗出去，接唔接都好，你都要負責。",
+    "繡球拋了出去，接不接都好，你都要負責。"
+   ]
+  },
+  "n30_baigujing": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "rng": 46,
+   "role": "flank",
+   "tags": [
+    "刺",
+    "回"
+   ],
+   "act": {
+    "name": "飛吻骷髏",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "stealth",
+      "dur": 3.0,
+      "first_x": 1.0
+     },
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ]
+     },
+     {
+      "p": "drain",
+      "pct": 0.35
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "death",
+     "star": 0,
+     "fx": [
+      {
+       "p": "revive",
+       "pct": 0.3,
+       "delay": 3.0,
+       "n": 2
+      }
+     ]
+    }
+   ],
+   "say": [
+    "三次，你要打足三次先算數，少一次都唔得。",
+    "三次，你要打足三次才算數，少一次都不行。"
+   ]
+  },
+  "n30_shanxiao": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "掃",
+    "破"
+   ],
+   "act": {
+    "name": "單腳長臂掃",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 120
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.6,
+       1.68,
+       1.76,
+       1.87,
+       2.0,
+       2.16
+      ],
+      "hits": 2,
+      "vs_state": "air",
+      "x": 1.8
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "kill",
+     "star": 0,
+     "fx": [
+      {
+       "p": "energy",
+       "v": 20,
+       "tg": "self"
+      }
+     ],
+     "icd": 3
+    }
+   ],
+   "say": [
+    "千祈唔好燒爆竹！你一燒我就上樹，成場冇得打。",
+    "千萬不要放鞭炮！你一放我就上樹，整場沒得打。"
+   ]
+  },
+  "n30_yecha": {
+   "sys": "官",
+   "sc": [
+    "light"
+   ],
+   "rng": 100,
+   "role": "front",
+   "tags": [
+    "破",
+    "刺",
+    "照"
+   ],
+   "act": {
+    "name": "鋼叉突刺",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.8,
+       1.89,
+       1.98,
+       2.11,
+       2.25,
+       2.43
+      ],
+      "vs_state": "down",
+      "x": 1.8
+     },
+     {
+      "p": "push",
+      "dist": 40
+     },
+     {
+      "p": "armor_break",
+      "v": 0.3,
+      "dur": 6.0
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "kill",
+     "star": 0,
+     "fx": [
+      {
+       "p": "energy",
+       "v": 30,
+       "tg": "self"
+      }
+     ],
+     "icd": 2
+    }
+   ],
+   "say": [
+    "把叉擦到發光先出得門，你等多陣。",
+    "把叉擦到發亮才能出門，你多等一會。"
+   ]
+  },
+  "n30_hanba": {
+   "sys": "屍",
+   "sc": [
+    "light"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "掃",
+    "削",
+    "照"
+   ],
+   "act": {
+    "name": "熱浪",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 130
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.1,
+       1.16,
+       1.21,
+       1.29,
+       1.38,
+       1.49
+      ]
+     },
+     {
+      "p": "sap",
+      "v": 15
+     },
+     {
+      "p": "dot",
+      "dps": 0.15,
+      "dur": 4.0,
+      "kind": "fire"
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [],
+   "aura": {
+    "star": 0,
+    "r": 120,
+    "side": "foe",
+    "fx": [
+     {
+      "p": "wound",
+      "v": 0.5
+     }
+    ]
+   },
+   "say": [
+    "我行過嘅地方，連你啲眼淚都乾埋。",
+    "我走過的地方，連你的眼淚都乾掉。"
+   ]
+  },
+  "n30_pelesit": {
+   "sys": "使",
+   "sc": [
+    "sound"
+   ],
+   "rng": 46,
+   "role": "flank",
+   "tags": [
+    "刺",
+    "削"
+   ],
+   "act": {
+    "name": "跳咬",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ],
+      "vs_state": "air",
+      "x": 1.8
+     },
+     {
+      "p": "sap",
+      "v": 20
+     },
+     {
+      "p": "summon",
+      "k": "cricket",
+      "n": 3,
+      "hp_pct": 0.1,
+      "atk_pct": 0.2,
+      "dur": 8.0
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [],
+   "aura": {
+    "star": 2,
+    "r": 140,
+    "side": "foe",
+    "fx": [
+     {
+      "p": "buff",
+      "stat": "energy",
+      "v": -0.2
+     }
+    ]
+   },
+   "say": [
+    "唧唧！我叫大聲啲，佢哋成晚都瞓唔著。",
+    "唧唧！我叫大聲一點，他們整晚都睡不著。"
+   ]
+  },
+  "n30_polong": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "rng": 100,
+   "role": "flank",
+   "tags": [
+    "刺",
+    "回",
+    "收"
+   ],
+   "act": {
+    "name": "出瓶竄咬",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "far"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ]
+     },
+     {
+      "p": "drain",
+      "pct": 0.3
+     },
+     {
+      "p": "banish",
+      "hp_pct": 0.3,
+      "note": "收入樽"
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "ally_down",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "atk",
+       "v": 0.05,
+       "dur": -1,
+       "stack": 6,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "捧穩個樽，我出去咬完就返嚟，唔使等門。",
+    "捧穩瓶子，我出去咬完就回來，不用等門。"
+   ]
+  },
+  "n30_jenglot": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "掃",
+    "回"
+   ],
+   "act": {
+    "name": "轉身甩髮",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 120
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       0.8,
+       0.84,
+       0.88,
+       0.94,
+       1.0,
+       1.08
+      ]
+     },
+     {
+      "p": "push",
+      "dist": 30
+     },
+     {
+      "p": "slow",
+      "v": -0.4,
+      "dur": 4.0
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "attack",
+     "star": 0,
+     "fx": [
+      {
+       "p": "drain",
+       "pct": 0.06
+      }
+     ],
+     "n": 1
+    },
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "heal_in",
+       "v": -1.0,
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "我細細隻，但係頭髮長，一甩就成片。",
+    "我個子小，但頭髮長，一甩就一大片。"
+   ]
+  },
+  "n30_hantugalah": {
+   "sys": "魂",
+   "sc": [
+    "shadow"
+   ],
+   "rng": 100,
+   "role": "front",
+   "tags": [
+    "拉",
+    "刺"
+   ],
+   "act": {
+    "name": "高處彈額頭",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "flyer"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ]
+     },
+     {
+      "p": "down",
+      "dur": 1.4
+     },
+     {
+      "p": "anti_air",
+      "x": 1.3
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "hit_taken",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "atk",
+       "v": 0.05,
+       "dur": -1,
+       "stack": 5,
+       "tg": "self"
+      }
+     ],
+     "icd": 2
+    }
+   ],
+   "say": [
+    "唔使抬頭，我自己彎低身同你講。",
+    "不用抬頭，我自己彎下身跟你說。"
+   ]
+  },
+  "n30_jerangkung": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "rng": 150,
+   "role": "back",
+   "tags": [
+    "遠",
+    "破"
+   ],
+   "act": {
+    "name": "骨頭迴旋鏢",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.6,
+       1.68,
+       1.76,
+       1.87,
+       2.0,
+       2.16
+      ],
+      "hits": 2
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "death",
+     "star": 0,
+     "fx": [
+      {
+       "p": "revive",
+       "pct": 0.4,
+       "delay": 3.0,
+       "n": 1
+      }
+     ]
+    }
+   ],
+   "say": [
+    "骨頭拆得出嚟就掟得出去，環保。",
+    "骨頭拆得下來就丟得出去，環保。"
+   ]
+  },
+  "n30_bunian": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "rng": 46,
+   "role": "flank",
+   "tags": [
+    "刺",
+    "削",
+    "照"
+   ],
+   "act": {
+    "name": "隱身繞後",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "back"
+    },
+    "fx": [
+     {
+      "p": "dash",
+      "to": "back"
+     },
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ]
+     },
+     {
+      "p": "sap",
+      "v": 30
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "every",
+     "star": 0,
+     "fx": [
+      {
+       "p": "stealth",
+       "dur": 3.0,
+       "first_x": 1.0
+      }
+     ],
+     "t": 12.0
+    },
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "reveal",
+       "r": 90,
+       "dur": -1
+      }
+     ]
+    }
+   ],
+   "say": [
+    "出陣名單記得寫埋我個名，唔係又當我曠工。",
+    "出陣名單記得寫上我的名字，不然又當我曠工。"
+   ]
+  },
+  "n30_hanturaya": {
+   "sys": "使",
+   "sc": [
+    "shadow"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "拉",
+    "掃"
+   ],
+   "act": {
+    "name": "黑影壓頂",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 130
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.1,
+       1.16,
+       1.21,
+       1.29,
+       1.38,
+       1.49
+      ]
+     },
+     {
+      "p": "down",
+      "dur": 1.4
+     },
+     {
+      "p": "summon",
+      "k": "copy",
+      "n": 1,
+      "hp_pct": 0.6,
+      "atk_pct": 0.6,
+      "dur": 10.0
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "death",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "atk",
+       "v": 0.3,
+       "dur": -1,
+       "tg": "ally_top"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "你係我新主人？好，你講乜我做乜，連你個樣我都扮埋。",
+    "你是我的新主人？好，你說什麼我做什麼，連你的樣子我都扮。"
+   ]
+  },
+  "n30_genderuwo": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "刺",
+    "定"
+   ],
+   "act": {
+    "name": "跳起搥地",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.9,
+       1.99,
+       2.09,
+       2.22,
+       2.38,
+       2.56
+      ]
+     },
+     {
+      "p": "air",
+      "dur": 1.0
+     },
+     {
+      "p": "taunt",
+      "r": 120,
+      "dur": 4.0
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "attack",
+     "star": 0,
+     "fx": [
+      {
+       "p": "slow",
+       "v": -0.15,
+       "dur": 5.0
+      }
+     ],
+     "n": 1
+    }
+   ],
+   "say": [
+    "嚟呀！望住我呀！你隻拖鞋喺我度，想要就過嚟攞。",
+    "來啊！看著我！你的拖鞋在我這裡，想要就過來拿。"
+   ]
+  },
+  "n30_phiam": {
+   "sys": "魂",
+   "sc": [
+    "shadow"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "拉",
+    "削"
+   ],
+   "act": {
+    "name": "鬼壓床",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.4,
+       1.47,
+       1.54,
+       1.64,
+       1.75,
+       1.89
+      ]
+     },
+     {
+      "p": "down",
+      "dur": 3.0,
+      "boss_x": 0.5
+     },
+     {
+      "p": "sap",
+      "v": 15
+     },
+     {
+      "p": "buff",
+      "stat": "taken",
+      "v": -0.5,
+      "dur": 3.0,
+      "tg": "self"
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [],
+   "say": [
+    "坐一陣啫，你瞓你嘅，我坐我嘅。",
+    "坐一會而已，你睡你的，我坐我的。"
+   ]
+  },
+  "n30_churel": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "rng": 100,
+   "role": "flank",
+   "tags": [
+    "拉",
+    "掃"
+   ],
+   "act": {
+    "name": "反腳倒衝",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "line",
+     "len": 200,
+     "w": 44
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.3,
+       1.37,
+       1.43,
+       1.52,
+       1.62,
+       1.76
+      ]
+     },
+     {
+      "p": "pull",
+      "dist": 80
+     }
+    ],
+    "ai": {
+     "n_in": 2,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "hit_taken",
+     "star": 0,
+     "fx": [
+      {
+       "p": "flee",
+       "dur": 1.5,
+       "tg": "attacker"
+      }
+     ],
+     "chance": 0.3,
+     "icd": 4
+    }
+   ],
+   "say": [
+    "我隻腳指住嗰邊，其實我係行緊過嚟呢邊。",
+    "我的腳指著那邊，其實我是在走過來這邊。"
+   ]
+  },
+  "n30_tikbalang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "rng": 46,
+   "role": "flank",
+   "tags": [
+    "拉",
+    "刺"
+   ],
+   "act": {
+    "name": "轉身馬後踢",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ]
+     },
+     {
+      "p": "air",
+      "dur": 1.0
+     },
+     {
+      "p": "down",
+      "dur": 1.0,
+      "on": "land"
+     },
+     {
+      "p": "flee",
+      "dur": 3.0
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "spd",
+       "v": 0.3,
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "跟我行，條路我好熟，熟到行十轉都係返嚟呢度。",
+    "跟我走，這條路我很熟，熟到走十次都回到這裡。"
+   ]
+  },
+  "n30_maenak": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "rng": 100,
+   "role": "front",
+   "tags": [
+    "拉",
+    "回"
+   ],
+   "act": {
+    "name": "長臂抓",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "far"
+    },
+    "fx": [
+     {
+      "p": "pull",
+      "dist": 160
+     },
+     {
+      "p": "dmg",
+      "mult": [
+       1.5,
+       1.58,
+       1.65,
+       1.75,
+       1.88,
+       2.03
+      ],
+      "vs_state": "down",
+      "x": 1.8
+     },
+     {
+      "p": "drain",
+      "pct": 0.25
+     },
+     {
+      "p": "anti_air",
+      "x": 1.25
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "every",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "atk",
+       "v": 0.04,
+       "dur": -1,
+       "stack": 5,
+       "tg": "self",
+       "still": true
+      }
+     ],
+     "t": 5.0
+    }
+   ],
+   "say": [
+    "Mak 未返，我照喺度等，等埋你一齊打。",
+    "Mak 還沒回來，我照樣在這裡等，等你一起打。"
+   ]
+  },
+  "n30_aswang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "rng": 46,
+   "role": "flank",
+   "tags": [
+    "刺",
+    "回"
+   ],
+   "act": {
+    "name": "長舌吸血",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.8,
+       1.89,
+       1.98,
+       2.11,
+       2.25,
+       2.43
+      ]
+     },
+     {
+      "p": "drain",
+      "pct": 0.45
+     },
+     {
+      "p": "execute",
+      "hp_pct": 0.25,
+      "x": 2.0
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "atk",
+       "v": -0.2,
+       "dur": 30.0,
+       "tg": "self"
+      },
+      {
+       "p": "buff",
+       "stat": "taken",
+       "v": -0.2,
+       "dur": 30.0,
+       "tg": "self"
+      }
+     ]
+    },
+    {
+     "tr": "every",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "atk",
+       "v": 0.35,
+       "dur": -1,
+       "tg": "self"
+      }
+     ],
+     "t": 30.0,
+     "n": 1
+    }
+   ],
+   "say": [
+    "日頭見到我，你會以為我係街市賣菜嗰個。",
+    "白天看到我，你會以為我是菜市場賣菜的那個。"
+   ]
+  },
+  "n30_vetala": {
+   "sys": "屍",
+   "sc": [
+    "face"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "拉",
+    "刺",
+    "削"
+   ],
+   "act": {
+    "name": "倒吊驚嚇",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ]
+     },
+     {
+      "p": "down",
+      "dur": 1.4
+     },
+     {
+      "p": "sap",
+      "v": 30
+     },
+     {
+      "p": "buff",
+      "stat": "self_hurt",
+      "v": 0.05,
+      "dur": 4.0,
+      "tg": "target"
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "death",
+     "star": 0,
+     "fx": [
+      {
+       "p": "revive",
+       "pct": 0.35,
+       "delay": 2.0,
+       "n": 1
+      }
+     ]
+    }
+   ],
+   "say": [
+    "估吓：乜嘢打極都唔死？……答案就喺你面前。",
+    "猜猜看：什麼東西怎麼打都不死？……答案就在你面前。"
+   ]
+  },
+  "n30_banshee": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "rng": 150,
+   "role": "back",
+   "tags": [
+    "遠",
+    "掃",
+    "削"
+   ],
+   "act": {
+    "name": "報喪尖叫",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "cone",
+     "r": 160,
+     "deg": 90
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.0,
+       1.05,
+       1.1,
+       1.17,
+       1.25,
+       1.35
+      ],
+      "vs_state": "down",
+      "x": 1.8
+     },
+     {
+      "p": "push",
+      "dist": 40
+     },
+     {
+      "p": "sap",
+      "v": 20
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 2,
+     "fx": [
+      {
+       "p": "mark",
+       "v": 0.5,
+       "dur": -1,
+       "tg": "first_low",
+       "hp_pct": 0.2
+      }
+     ]
+    }
+   ],
+   "say": [
+    "我一叫，就有人要執包袱，今次係邊個你自己估。",
+    "我一叫，就有人要收拾包袱，這次是誰你自己猜。"
+   ]
+  },
+  "n30_kasaobake": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "拉",
+    "定"
+   ],
+   "act": {
+    "name": "開遮",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "allies",
+     "r": 120
+    },
+    "fx": [
+     {
+      "p": "shield",
+      "pct": 0.15,
+      "dur": 6.0,
+      "vs": "ranged"
+     },
+     {
+      "p": "taunt",
+      "r": 100,
+      "dur": 3.0
+     }
+    ],
+    "ai": {
+     "ally_hp": 0.6,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "attack",
+     "star": 0,
+     "fx": [
+      {
+       "p": "down",
+       "dur": 0.8
+      }
+     ],
+     "n": 4
+    }
+   ],
+   "say": [
+    "落雨唔帶遮？唔緊要，有我喺度，你淋唔濕。",
+    "下雨沒帶傘？沒關係，有我在，你淋不濕。"
+   ],
+   "old_name": "跳過去舔"
+  },
+  "n30_chochin": {
+   "sys": "紙紮",
+   "sc": [
+    "light"
+   ],
+   "rng": 150,
+   "role": "back",
+   "tags": [
+    "遠",
+    "破",
+    "照"
+   ],
+   "act": {
+    "name": "噴火咬",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.4,
+       1.47,
+       1.54,
+       1.64,
+       1.75,
+       1.89
+      ],
+      "hits": 2
+     },
+     {
+      "p": "dot",
+      "dps": 0.15,
+      "dur": 4.0,
+      "kind": "fire",
+      "vs_sys": {
+       "紙紮": 2.0
+      }
+     },
+     {
+      "p": "reveal",
+      "r": 200,
+      "dur": 8.0
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [],
+   "aura": {
+    "star": 3,
+    "r": 150,
+    "side": "ally",
+    "fx": [
+     {
+      "p": "buff",
+      "stat": "hit",
+      "v": 0.1
+     }
+    ]
+   },
+   "say": [
+    "黑麻麻點打？我照住你，你專心打就得。",
+    "黑漆漆怎麼打？我幫你照著，你專心打就行。"
+   ]
+  },
+  "n30_kappa": {
+   "sys": "妖",
+   "sc": [
+    "cold"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "拉",
+    "掃"
+   ],
+   "act": {
+    "name": "鞠躬潑水",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "cone",
+     "r": 120,
+     "deg": 90
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.2,
+       1.26,
+       1.32,
+       1.4,
+       1.5,
+       1.62
+      ]
+     },
+     {
+      "p": "down",
+      "dur": 1.2
+     },
+     {
+      "p": "mark",
+      "v": 0.1,
+      "dur": 8.0,
+      "kind": "wet"
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "shield",
+       "pct": 0.2,
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "多多指教。（鞠躬）……碟水倒咗少少，唔緊要。",
+    "請多指教。（鞠躬）……碟子的水灑了一點，沒關係。"
+   ]
+  },
+  "n30_nopperabo": {
+   "sys": "妖",
+   "sc": [
+    "face"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "削",
+    "定"
+   ],
+   "act": {
+    "name": "公事包上勾",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.6,
+       1.68,
+       1.76,
+       1.87,
+       2.0,
+       2.16
+      ]
+     },
+     {
+      "p": "air",
+      "dur": 1.0
+     },
+     {
+      "p": "interrupt"
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "threat",
+       "v": -0.8,
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "aura": {
+    "star": 0,
+    "r": 150,
+    "side": "ally",
+    "fx": [
+     {
+      "p": "immune",
+      "tags": [
+       "fear_aura",
+       "confuse"
+      ],
+      "dur": -1
+     }
+    ]
+   },
+   "say": [
+    "我個樣你記唔記得都冇所謂，反正老闆都唔記得。",
+    "我的樣子你記不記得都無所謂，反正老闆也不記得。"
+   ]
+  },
+  "n30_rokurokubi": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "rng": 100,
+   "role": "flank",
+   "tags": [
+    "拉",
+    "刺"
+   ],
+   "act": {
+    "name": "伸頸頭槌",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "back"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ],
+      "vs_state": "air",
+      "x": 1.8
+     },
+     {
+      "p": "down",
+      "dur": 1.0
+     },
+     {
+      "p": "anti_air",
+      "x": 1.3
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "immune",
+       "tags": [
+        "taunt"
+       ],
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "條頸伸出去睇吓先，你哋喺度等我。",
+    "脖子先伸出去看看，你們在這裡等我。"
+   ]
+  },
+  "n30_kuchisake": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "rng": 46,
+   "role": "flank",
+   "tags": [
+    "破",
+    "刺"
+   ],
+   "act": {
+    "name": "剪刀咔嚓",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ],
+      "hits": 2
+     },
+     {
+      "p": "execute",
+      "hp_pct": 0.5,
+      "x": 1.6
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "spd",
+       "v": 0.25,
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "今次唔問你喇，你自己講：我靚定唔靚？",
+    "這次不問你了，你自己說：我漂不漂亮？"
+   ]
+  },
+  "n30_yukionna": {
+   "sys": "厲",
+   "sc": [
+    "cold"
+   ],
+   "rng": 100,
+   "role": "back",
+   "tags": [
+    "拉",
+    "掃",
+    "削"
+   ],
+   "act": {
+    "name": "吐冰霜",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "cone",
+     "r": 160,
+     "deg": 90
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.0,
+       1.05,
+       1.1,
+       1.17,
+       1.25,
+       1.35
+      ]
+     },
+     {
+      "p": "down",
+      "dur": 2.0
+     },
+     {
+      "p": "sap",
+      "v": 20
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "attack",
+     "star": 0,
+     "fx": [
+      {
+       "p": "slow",
+       "va": -0.2,
+       "dur": 4.0
+      }
+     ],
+     "n": 1
+    }
+   ],
+   "say": [
+    "唔使驚，凍住咗就唔痛，我試過。",
+    "不用怕，凍住了就不痛，我試過。"
+   ]
+  },
+  "n30_hannya": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "rng": 46,
+   "role": "flank",
+   "tags": [
+    "破",
+    "刺"
+   ],
+   "act": {
+    "name": "妒火暴衝",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dash",
+      "to": "target"
+     },
+     {
+      "p": "dmg",
+      "mult": [
+       1.9,
+       1.99,
+       2.09,
+       2.22,
+       2.38,
+       2.56
+      ],
+      "hits": 2
+     },
+     {
+      "p": "push",
+      "dist": 40
+     },
+     {
+      "p": "dot",
+      "dps": 0.1,
+      "dur": 4.0,
+      "kind": "fire"
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "atk_per_foe_buff",
+       "v": 0.1,
+       "dur": -1,
+       "stack": 5,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "點解佢哋有護盾我冇？好，我自己過去攞。",
+    "為什麼他們有護盾我沒有？好，我自己過去拿。"
+   ]
+  },
+  "n30_gashadokuro": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "掃",
+    "回",
+    "收"
+   ],
+   "act": {
+    "name": "巨手一拍",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 200
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.1,
+       1.16,
+       1.21,
+       1.29,
+       1.38,
+       1.49
+      ],
+      "vs_state": "air",
+      "x": 1.8
+     },
+     {
+      "p": "air",
+      "dur": 0.8
+     },
+     {
+      "p": "banish",
+      "hp_pct": 0.25,
+      "note": "執埋啲骨"
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "kill",
+     "star": 0,
+     "fx": [
+      {
+       "p": "hot",
+       "pct": 0.05,
+       "dur": 3.0,
+       "tg": "self"
+      }
+     ]
+    },
+    {
+     "tr": "ally_down",
+     "star": 2,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "maxhp",
+       "v": 0.04,
+       "dur": -1,
+       "stack": 10,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "越多人倒低，我就越大隻，你哋自己小心。",
+    "越多人倒下，我就越大隻，你們自己小心。"
+   ]
+  },
+  "n30_zipai": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "rng": 100,
+   "role": "front",
+   "tags": [
+    "拉",
+    "掃"
+   ],
+   "act": {
+    "name": "閃光滑鏟",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "cone",
+     "r": 140,
+     "deg": 80
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.2,
+       1.26,
+       1.32,
+       1.4,
+       1.5,
+       1.62
+      ]
+     },
+     {
+      "p": "buff",
+      "stat": "hit",
+      "v": -0.5,
+      "dur": 3.0,
+      "tg": "target"
+     },
+     {
+      "p": "down",
+      "dur": 1.2
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "kill",
+     "star": 0,
+     "fx": [
+      {
+       "p": "energy",
+       "v": 5,
+       "tg": "allies"
+      }
+     ],
+     "icd": 1
+    }
+   ],
+   "say": [
+    "等等，呢個角度靚，打完先影一張……唔好郁！",
+    "等等，這個角度好看，打完先拍一張……不要動！"
+   ]
+  },
+  "n30_xiaosi": {
+   "sys": "橫",
+   "sc": [
+    "sound"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "掃",
+    "削"
+   ],
+   "act": {
+    "name": "傳染的笑",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 130
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       0.7,
+       0.73,
+       0.77,
+       0.82,
+       0.88,
+       0.94
+      ]
+     },
+     {
+      "p": "stun",
+      "dur": 2.0,
+      "boss_x": 0.5
+     },
+     {
+      "p": "sap",
+      "v": 30
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "death",
+     "star": 0,
+     "fx": [
+      {
+       "p": "recast",
+       "x": 0.5
+      }
+     ]
+    }
+   ],
+   "say": [
+    "我盡量唔笑……噗，唔得，你個陣型太好笑。",
+    "我盡量不笑……噗，不行，你的陣型太好笑。"
+   ]
+  },
+  "n30_yesi": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "rng": 150,
+   "role": "back",
+   "tags": [
+    "遠",
+    "刺"
+   ],
+   "act": {
+    "name": "湯圓子彈",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ]
+     },
+     {
+      "p": "stun",
+      "dur": 2.0
+     },
+     {
+      "p": "push",
+      "dist": 30
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "energy",
+       "v": 100,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "（咳）……好嘢，終於吐咗出嚟，下一粒畀你。",
+    "（咳）……好啊，終於吐出來了，下一顆給你。"
+   ]
+  },
+  "n30_shidu": {
+   "sys": "橫",
+   "sc": [
+    "breath"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "掃",
+    "削"
+   ],
+   "act": {
+    "name": "綠色臭屁",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "zone",
+      "r": 110,
+      "dur": 6.0,
+      "fx": [
+       {
+        "p": "dot",
+        "dps": 0.08,
+        "dur": 1.0,
+        "kind": "poison"
+       },
+       {
+        "p": "wound",
+        "v": 0.4,
+        "dur": 1.0
+       }
+      ]
+     },
+     {
+      "p": "push",
+      "dist": 40
+     }
+    ],
+    "ai": {
+     "n_in": 2,
+     "r": 110,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "every",
+     "star": 0,
+     "fx": [
+      {
+       "p": "stealth",
+       "dur": 2.0,
+       "untarget": true
+      }
+     ],
+     "t": 15.0
+    }
+   ],
+   "say": [
+    "放心，我已經清空咗個肚，今次應該……應該頂得住。",
+    "放心，我已經清空了肚子，這次應該……應該撐得住。"
+   ]
+  },
+  "n30_daji": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "破",
+    "削"
+   ],
+   "act": {
+    "name": "手掣連段",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.4,
+       1.47,
+       1.54,
+       1.64,
+       1.75,
+       1.89
+      ],
+      "hits": 4,
+      "ramp": 0.15
+     },
+     {
+      "p": "interrupt"
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "death",
+     "star": 0,
+     "fx": [
+      {
+       "p": "revive",
+       "pct": 0.01,
+       "n": 1,
+       "if_ally_kill": 5.0
+      }
+     ]
+    }
+   ],
+   "say": [
+    "上次打到最尾一關先斷氣，今次我一定要睇到片尾名單。",
+    "上次打到最後一關才斷氣，這次我一定要看到片尾名單。"
+   ]
+  },
+  "n30_xiasi": {
+   "sys": "魂",
+   "sc": [
+    "face"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "掃",
+    "削"
+   ],
+   "act": {
+    "name": "突然嚇你",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 130
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       0.75,
+       0.79,
+       0.83,
+       0.88,
+       0.94,
+       1.01
+      ]
+     },
+     {
+      "p": "push",
+      "dist": 40
+     },
+     {
+      "p": "sap",
+      "v": 10
+     },
+     {
+      "p": "mark",
+      "v": 0,
+      "dur": 3.0,
+      "kind": "dazed"
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "stun",
+       "dur": 3.0,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "我一出聲佢哋就驚，不過通常係我自己驚先。",
+    "我一出聲他們就怕，不過通常是我自己先怕。"
+   ]
+  },
+  "n30_chehuo": {
+   "sys": "橫",
+   "sc": [
+    "light"
+   ],
+   "rng": 46,
+   "role": "flank",
+   "tags": [
+    "刺",
+    "照"
+   ],
+   "act": {
+    "name": "催油門撞",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dash",
+      "to": "target",
+      "dist": 200
+     },
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ]
+     },
+     {
+      "p": "push",
+      "dist": 60
+     },
+     {
+      "p": "dmg_self",
+      "pct": 0.1
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "low_hp",
+     "star": 0,
+     "fx": [
+      {
+       "p": "shield",
+       "pct": 0.15,
+       "dur": 4.0,
+       "tg": "self"
+      }
+     ],
+     "pct": 0.15
+    }
+   ],
+   "say": [
+    "借借！我趕緊單，撞完呢轉先同你傾。",
+    "借過借過！我趕單，撞完這趟再跟你聊。"
+   ]
+  },
+  "n30_yezi": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "rng": 150,
+   "role": "back",
+   "tags": [
+    "遠",
+    "拉",
+    "掃"
+   ],
+   "act": {
+    "name": "小心頭頂",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "dense",
+     "shape": "circle",
+     "r": 100,
+     "delay": 2.0
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.6,
+       1.68,
+       1.76,
+       1.87,
+       2.0,
+       2.16
+      ]
+     },
+     {
+      "p": "down",
+      "dur": 1.4
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "immune",
+       "tags": [
+        "delayed"
+       ],
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "我一指上天，你哋最好識得走。",
+    "我一指天上，你們最好懂得逃。"
+   ]
+  },
+  "n30_liulian": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "rng": 150,
+   "role": "back",
+   "tags": [
+    "遠",
+    "破",
+    "刺"
+   ],
+   "act": {
+    "name": "丟榴槤",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ],
+      "vs_state": "down",
+      "x": 1.8
+     },
+     {
+      "p": "armor_break",
+      "v": 0.4,
+      "dur": 6.0
+     },
+     {
+      "p": "push",
+      "dist": 30
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "hit_taken",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "hit",
+       "v": -0.1,
+       "dur": 3.0,
+       "tg": "attacker"
+      }
+     ],
+     "melee": true
+    }
+   ],
+   "say": [
+    "榴槤一開，敵我不分，個個都要掩住個鼻。",
+    "榴槤一開，敵我不分，每個人都要捂住鼻子。"
+   ]
+  },
+  "n30_zhongshu": {
+   "sys": "橫",
+   "sc": [
+    "light"
+   ],
+   "rng": 100,
+   "role": "back",
+   "tags": [
+    "掃",
+    "削",
+    "照"
+   ],
+   "act": {
+    "name": "烈日曬",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 130
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       0.9,
+       0.95,
+       0.99,
+       1.05,
+       1.12,
+       1.22
+      ]
+     },
+     {
+      "p": "slow",
+      "va": -0.25,
+      "dur": 5.0
+     },
+     {
+      "p": "dot",
+      "dps": 0.06,
+      "dur": 5.0,
+      "kind": "fire"
+     },
+     {
+      "p": "sap",
+      "v": 20
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "hit_taken",
+     "star": 0,
+     "fx": [
+      {
+       "p": "energy",
+       "v": 15,
+       "tg": "self"
+      }
+     ],
+     "by_sc": "cold",
+     "icd": 4
+    }
+   ],
+   "say": [
+    "排咗成朝隊，終於輪到我出場。",
+    "排了一整個早上的隊，終於輪到我出場。"
+   ]
+  },
+  "n30_chengsi": {
+   "sys": "橫",
+   "sc": [
+    "breath"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "回",
+    "定"
+   ],
+   "act": {
+    "name": "再嚟一碟",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "self"
+    },
+    "fx": [
+     {
+      "p": "heal",
+      "pct": 0.25,
+      "tg": "self"
+     },
+     {
+      "p": "buff",
+      "stat": "size",
+      "v": 0.3,
+      "dur": 6.0,
+      "tg": "self"
+     },
+     {
+      "p": "taunt",
+      "r": 120,
+      "dur": 4.0
+     }
+    ],
+    "ai": {
+     "self_hp": 0.6,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "heal_in",
+       "v": 0.5,
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "自助餐嚟㗎，唔食夠本點對得住自己？",
+    "這是自助餐，不吃夠本怎麼對得起自己？"
+   ],
+   "old_name": "大肚腩一頂"
+  },
+  "n30_shedu": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "rng": 46,
+   "role": "flank",
+   "tags": [
+    "削",
+    "回"
+   ],
+   "act": {
+    "name": "蛇撲出去",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.6,
+       1.68,
+       1.76,
+       1.87,
+       2.0,
+       2.16
+      ]
+     },
+     {
+      "p": "drain",
+      "pct": 0.3
+     },
+     {
+      "p": "dot",
+      "dps": 0.03,
+      "dur": 6.0,
+      "kind": "poison",
+      "pct_hp": true
+     },
+     {
+      "p": "wound",
+      "v": 0.5,
+      "dur": 6.0
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "hit_taken",
+     "star": 0,
+     "fx": [
+      {
+       "p": "dmg",
+       "mult": 0.3,
+       "tg": "attacker"
+      }
+     ],
+     "icd": 2
+    }
+   ],
+   "say": [
+    "條蛇同我已經好熟，佢淨係咬其他人。",
+    "那條蛇跟我已經很熟，牠只咬別人。"
+   ]
+  },
+  "n30_diansi": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "rng": 150,
+   "role": "back",
+   "tags": [
+    "遠",
+    "拉",
+    "掃"
+   ],
+   "act": {
+    "name": "插頭放電",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "chain",
+     "n": 5,
+     "falloff": 0.15
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.05,
+       1.1,
+       1.16,
+       1.23,
+       1.31,
+       1.42
+      ],
+      "vs_mark": {
+       "wet": 1.5
+      }
+     },
+     {
+      "p": "down",
+      "dur": 1.0
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "hit_taken",
+     "star": 0,
+     "fx": [
+      {
+       "p": "dmg",
+       "pct_hp": 0.08,
+       "tg": "attacker"
+      }
+     ],
+     "melee": true,
+     "icd": 1
+    }
+   ],
+   "say": [
+    "唔好掂我，我成身仲有電。",
+    "不要碰我，我全身還有電。"
+   ]
+  },
+  "n30_dongsi": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "拉",
+    "定"
+   ],
+   "act": {
+    "name": "披毯",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "allies",
+     "r": 100,
+     "n": 3
+    },
+    "fx": [
+     {
+      "p": "shield",
+      "pct": 0.2,
+      "dur": 6.0
+     },
+     {
+      "p": "guard",
+      "r": 70,
+      "pct": 0.35,
+      "cap": 0.06,
+      "dur": 6.0
+     }
+    ],
+    "ai": {
+     "ally_hp": 0.6,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "attack",
+     "star": 0,
+     "fx": [
+      {
+       "p": "down",
+       "dur": 0.8
+      }
+     ],
+     "n": 3
+    },
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "immune",
+       "tags": [
+        "freeze"
+       ],
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "我凍到冇感覺，所以你打我，我都冇感覺。",
+    "我冷到沒感覺，所以你打我，我也沒感覺。"
+   ],
+   "old_name": "噴嚏冰柱"
+  },
+  "n30_leipi": {
+   "sys": "橫",
+   "sc": [
+    "light"
+   ],
+   "rng": 150,
+   "role": "back",
+   "tags": [
+    "遠",
+    "掃",
+    "照"
+   ],
+   "act": {
+    "name": "舉傘招雷",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "strong",
+     "shape": "chain",
+     "n": 3,
+     "falloff": 0.0
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.1,
+       1.16,
+       1.21,
+       1.29,
+       1.38,
+       1.49
+      ]
+     },
+     {
+      "p": "air",
+      "dur": 1.0
+     },
+     {
+      "p": "anti_air",
+      "x": 1.4
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "hit_taken",
+     "star": 0,
+     "fx": [
+      {
+       "p": "energy",
+       "v": 10,
+       "tg": "self"
+      }
+     ],
+     "by_el": "elec"
+    }
+   ],
+   "say": [
+    "行雷嗰陣你企遠啲，我負責吸晒佢。",
+    "打雷的時候你站遠一點，我負責全部吸走。"
+   ]
+  },
+  "n30_xiangcai": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "rng": 46,
+   "role": "flank",
+   "tags": [
+    "掃",
+    "破",
+    "刺"
+   ],
+   "act": {
+    "name": "紙片刀",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "back",
+     "shape": "line",
+     "len": 220,
+     "w": 30
+    },
+    "fx": [
+     {
+      "p": "dash",
+      "to": "back"
+     },
+     {
+      "p": "dmg",
+      "mult": [
+       1.8,
+       1.89,
+       1.98,
+       2.11,
+       2.25,
+       2.43
+      ],
+      "hits": 2,
+      "vs_state": "air",
+      "x": 1.8
+     }
+    ],
+    "ai": {
+     "n_in": 2,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "dodge_ranged",
+       "v": 0.4,
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "我而家薄過張紙，門罅都入得，你個陣型更加入得。",
+    "我現在比紙還薄，門縫都進得去，你的陣型更進得去。"
+   ]
+  },
+  "pg_tuimo": {
+   "sys": "魂",
+   "sc": [
+    "sound"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "掃",
+    "定"
+   ],
+   "act": {
+    "name": "推磨轉轉轉",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "self",
+     "shape": "self_circle",
+     "r": 100
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       0.8,
+       0.84,
+       0.88,
+       0.94,
+       1.0,
+       1.08
+      ]
+     },
+     {
+      "p": "push",
+      "dist": 30
+     },
+     {
+      "p": "energy",
+      "v": 24,
+      "tg": "allies"
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "ally_cast",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "atk",
+       "v": 0.05,
+       "dur": -1,
+       "stack": 6,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "aura": {
+    "star": 0,
+    "r": 150,
+    "side": "ally",
+    "fx": [
+     {
+      "p": "immune",
+      "tags": [
+       "fear_aura",
+       "confuse"
+      ],
+      "dur": -1
+     }
+    ]
+   },
+   "say": [
+    "磨我推，功勞你攞，我早就習慣咗。",
+    "磨我推，功勞你拿，我早就習慣了。"
+   ]
+  },
+  "pg_songding": {
+   "sys": "魂",
+   "sc": [
+    "face"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "拉",
+    "刺"
+   ],
+   "act": {
+    "name": "變羊回馬槍",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.7,
+       1.78,
+       1.87,
+       1.99,
+       2.12,
+       2.29
+      ]
+     },
+     {
+      "p": "down",
+      "dur": 1.4
+     },
+     {
+      "p": "buff",
+      "stat": "taken",
+      "v": -0.5,
+      "dur": 4.0,
+      "tg": "self"
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "death",
+     "star": 0,
+     "fx": [
+      {
+       "p": "coin",
+       "v": 30
+      }
+     ]
+    }
+   ],
+   "say": [
+    "你話我係鬼我就係鬼，你話我係羊……等我諗吓先。",
+    "你說我是鬼我就是鬼，你說我是羊……讓我想想先。"
+   ]
+  },
+  "pg_ji": {
+   "sys": "魂",
+   "sc": [
+    "shadow"
+   ],
+   "rng": 46,
+   "role": "flank",
+   "tags": [
+    "掃",
+    "削",
+    "收"
+   ],
+   "act": {
+    "name": "死多一次",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 130
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       0.7,
+       0.73,
+       0.77,
+       0.82,
+       0.88,
+       0.94
+      ]
+     },
+     {
+      "p": "sap",
+      "v": 25
+     },
+     {
+      "p": "banish",
+      "hp_pct": 0.4
+     }
+    ],
+    "ai": {
+     "tg_mech": "屍變",
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "stealth",
+       "dur": 6.0,
+       "untarget": true
+      }
+     ]
+    }
+   ],
+   "say": [
+    "鬼都怕我，你點解唔怕？……哦，原來你未死。",
+    "鬼都怕我，你為什麼不怕？……哦，原來你還沒死。"
+   ]
+  },
+  "pg_ex": {
+   "sys": "厲",
+   "sc": [
+    "phone"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "拉",
+    "掃",
+    "削"
+   ],
+   "act": {
+    "name": "我有講錯嗎",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 130
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       0.75,
+       0.79,
+       0.83,
+       0.88,
+       0.94,
+       1.01
+      ]
+     },
+     {
+      "p": "down",
+      "dur": 1.4
+     },
+     {
+      "p": "silence",
+      "dur": 2.5
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "cc_taken",
+       "v": -0.5,
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "七年喇，今次係你叫我入隊，唔好又淨係覆我一個「哦」。",
+    "七年了，這次是你叫我入隊，不要又只回我一個「哦」。"
+   ]
+  },
+  "pg_landlady": {
+   "sys": "橫",
+   "sc": [
+    "paper"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "掃",
+    "削"
+   ],
+   "act": {
+    "name": "我講第二次",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near",
+     "shape": "circle",
+     "r": 130
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       0.85,
+       0.89,
+       0.94,
+       0.99,
+       1.06,
+       1.15
+      ]
+     },
+     {
+      "p": "coin",
+      "v": 20
+     },
+     {
+      "p": "push",
+      "dist": 30
+     },
+     {
+      "p": "slow",
+      "v": -0.6,
+      "dur": 5.0
+     },
+     {
+      "p": "silence",
+      "dur": 1.5
+     },
+     {
+      "p": "dispel",
+      "n": 2
+     }
+    ],
+    "ai": {
+     "n_in": 3,
+     "r": 130,
+     "wait": 5
+    }
+   },
+   "pas": [
+    {
+     "tr": "every",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "cast_cost",
+       "v": 0.1,
+       "dur": -1,
+       "stack": 3,
+       "tg": "foes"
+      }
+     ],
+     "t": 20.0
+    }
+   ],
+   "say": [
+    "入得我間屋就要守我嘅規矩，我唔想講第二次。",
+    "進了我的屋就要守我的規矩，我不想說第二次。"
+   ]
+  },
+  "niutou": {
+   "sys": "官",
+   "sc": [
+    "light"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "照",
+    "定",
+    "收"
+   ],
+   "act": {
+    "name": "牛角頂",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.6,
+       1.68,
+       1.76,
+       1.87,
+       2.0,
+       2.16
+      ]
+     },
+     {
+      "p": "air",
+      "dur": 1.0
+     },
+     {
+      "p": "taunt",
+      "r": 120,
+      "dur": 3.0
+     },
+     {
+      "p": "banish",
+      "hp_pct": 0.3
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "guard",
+       "r": 70,
+       "pct": 0.35,
+       "cap": 0.06,
+       "dur": -1
+      }
+     ]
+    }
+   ],
+   "say": [
+    "鬼差開工，冇預約一律排隊，打尖嘅我頂佢出去。",
+    "鬼差上班，沒預約一律排隊，插隊的我頂他出去。"
+   ]
+  },
+  "mamian": {
+   "sys": "官",
+   "sc": [
+    "light"
+   ],
+   "rng": 46,
+   "role": "front",
+   "tags": [
+    "照",
+    "收"
+   ],
+   "act": {
+    "name": "馬蹄踏",
+    "cost": 100,
+    "cast": 0.45,
+    "tg": {
+     "sel": "near"
+    },
+    "fx": [
+     {
+      "p": "dmg",
+      "mult": [
+       1.6,
+       1.68,
+       1.76,
+       1.87,
+       2.0,
+       2.16
+      ],
+      "vs_state": "down",
+      "x": 1.8
+     },
+     {
+      "p": "banish",
+      "hp_pct": 0.3
+     }
+    ],
+    "ai": {
+     "when": "asap"
+    }
+   },
+   "pas": [
+    {
+     "tr": "start",
+     "star": 0,
+     "fx": [
+      {
+       "p": "buff",
+       "stat": "spd",
+       "v": 0.2,
+       "dur": -1,
+       "tg": "self"
+      }
+     ]
+    }
+   ],
+   "say": [
+    "名單上有你個名，跑得幾快都冇用，我四隻蹄。",
+    "名單上有你的名字，跑多快都沒用，我有四隻蹄。"
+   ]
+  }
+ },
+ "ENEMY": {
+  "youhun": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [],
+   "tier": 0,
+   "kind": "fod",
+   "recruit": false,
+   "use_abil": false
+  },
+  "egui": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "再生"
+   ],
+   "tier": 0,
+   "kind": "fod",
+   "recruit": false,
+   "use_abil": false
+  },
+  "xiaogui": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "paper",
+    "shadow"
+   ],
+   "imm": [
+    "face"
+   ],
+   "why": [
+    "怕紙：主人嘅契約字條",
+    "怕黑影：以為主人返嚟",
+    "唔怕鬼臉：自己最愛扮鬼臉"
+   ],
+   "mech": [
+    "隱"
+   ],
+   "tier": 0,
+   "kind": "fod",
+   "recruit": false,
+   "use_abil": false
+  },
+  "zombie": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "屍變"
+   ],
+   "tier": 0,
+   "kind": "fod",
+   "recruit": false,
+   "use_abil": false
+  },
+  "shuigui": {
+   "sys": "橫",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 0,
+   "kind": "fod",
+   "recruit": false,
+   "use_abil": false
+  },
+  "zhiren": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "light",
+    "breath"
+   ],
+   "imm": [
+    "paper"
+   ],
+   "why": [
+    "怕燈：紙紮怕火",
+    "怕吹氣：紙輕，一吹就飛",
+    "唔怕紙：自己就係紙"
+   ],
+   "mech": [],
+   "tier": 0,
+   "kind": "fod",
+   "recruit": false,
+   "use_abil": false
+  },
+  "niutou": {
+   "sys": "官",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "paper",
+    "phone"
+   ],
+   "imm": [
+    "light"
+   ],
+   "why": [
+    "怕紙：公文、投訴信",
+    "怕電話：上頭 call",
+    "唔怕燈：24 小時開燈返工"
+   ],
+   "mech": [
+    "殼"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "mamian": {
+   "sys": "官",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "paper",
+    "phone"
+   ],
+   "imm": [
+    "light"
+   ],
+   "why": [
+    "怕紙：公文、投訴信",
+    "怕電話：上頭 call",
+    "唔怕燈：24 小時開燈返工"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "eguiking": {
+   "sys": "魂",
+   "sc": [
+    "sound"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "再生",
+    "霸體"
+   ],
+   "tier": 4,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "toyol": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "paper",
+    "shadow"
+   ],
+   "imm": [
+    "face"
+   ],
+   "why": [
+    "怕紙：主人嘅契約字條",
+    "怕黑影：以為主人返嚟",
+    "唔怕鬼臉：自己最愛扮鬼臉"
+   ],
+   "mech": [
+    "隱",
+    "召喚"
+   ],
+   "tier": 4,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "laojiang": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "霸體",
+    "屍變"
+   ],
+   "tier": 4,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "pontianak": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "飛",
+    "嚇氣光環"
+   ],
+   "tier": 4,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "pocong": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "殼",
+    "屍變"
+   ],
+   "tier": 4,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "penanggal": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "飛",
+    "突襲"
+   ],
+   "tier": 4,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "baiwu": {
+   "sys": "官",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "paper",
+    "phone"
+   ],
+   "imm": [
+    "light"
+   ],
+   "why": [
+    "怕紙：公文、投訴信",
+    "怕電話：上頭 call",
+    "唔怕燈：24 小時開燈返工"
+   ],
+   "mech": [
+    "嚇氣光環",
+    "分身"
+   ],
+   "tier": 4,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "heiwu": {
+   "sys": "官",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "paper",
+    "phone"
+   ],
+   "imm": [
+    "light"
+   ],
+   "why": [
+    "怕紙：公文、投訴信",
+    "怕電話：上頭 call",
+    "唔怕燈：24 小時開燈返工"
+   ],
+   "mech": [
+    "殼",
+    "霸體"
+   ],
+   "tier": 4,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "huang": {
+   "sys": "官",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "paper",
+    "phone"
+   ],
+   "imm": [
+    "light"
+   ],
+   "why": [
+    "怕紙：公文、投訴信",
+    "怕電話：上頭 call",
+    "唔怕燈：24 小時開燈返工"
+   ],
+   "mech": [
+    "召喚",
+    "殼",
+    "嚇氣光環"
+   ],
+   "tier": 5,
+   "kind": "boss",
+   "recruit": false,
+   "use_abil": false
+  },
+  "n30_qionggui": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_danxiao": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_maoshi": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_yangui": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "隱"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_jiugui": {
+   "sys": "魂",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "霸體"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_dugui": {
+   "sys": "魂",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "分身"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_guhangui": {
+   "sys": "魂",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "殼"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_taozhai": {
+   "sys": "使",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "paper",
+    "shadow"
+   ],
+   "imm": [
+    "face"
+   ],
+   "why": [
+    "怕紙：主人嘅契約字條",
+    "怕黑影：以為主人返嚟",
+    "唔怕鬼臉：自己最愛扮鬼臉"
+   ],
+   "mech": [
+    "屍變"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_diaosi": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_wutou": {
+   "sys": "橫",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "散骨"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_changgui": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "paper",
+    "shadow"
+   ],
+   "imm": [
+    "face"
+   ],
+   "why": [
+    "怕紙：主人嘅契約字條",
+    "怕黑影：以為主人返嚟",
+    "唔怕鬼臉：自己最愛扮鬼臉"
+   ],
+   "mech": [
+    "召喚"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_guixinniang": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "召喚"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_baigujing": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "分身",
+    "再生"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_shanxiao": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_yecha": {
+   "sys": "官",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "paper",
+    "phone"
+   ],
+   "imm": [
+    "light"
+   ],
+   "why": [
+    "怕紙：公文、投訴信",
+    "怕電話：上頭 call",
+    "唔怕燈：24 小時開燈返工"
+   ],
+   "mech": [
+    "殼"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_hanba": {
+   "sys": "屍",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "嚇氣光環",
+    "再生"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_pelesit": {
+   "sys": "使",
+   "sc": [
+    "sound"
+   ],
+   "fear": [
+    "paper",
+    "shadow"
+   ],
+   "imm": [
+    "face"
+   ],
+   "why": [
+    "怕紙：主人嘅契約字條",
+    "怕黑影：以為主人返嚟",
+    "唔怕鬼臉：自己最愛扮鬼臉"
+   ],
+   "mech": [
+    "飛"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_polong": {
+   "sys": "使",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "paper",
+    "shadow"
+   ],
+   "imm": [
+    "face"
+   ],
+   "why": [
+    "怕紙：主人嘅契約字條",
+    "怕黑影：以為主人返嚟",
+    "唔怕鬼臉：自己最愛扮鬼臉"
+   ],
+   "mech": [
+    "再生"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_jenglot": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "再生"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_hantugalah": {
+   "sys": "魂",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_jerangkung": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "散骨"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_bunian": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "隱"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_hanturaya": {
+   "sys": "使",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "paper",
+    "shadow"
+   ],
+   "imm": [
+    "face"
+   ],
+   "why": [
+    "怕紙：主人嘅契約字條",
+    "怕黑影：以為主人返嚟",
+    "唔怕鬼臉：自己最愛扮鬼臉"
+   ],
+   "mech": [
+    "分身",
+    "召喚"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_genderuwo": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "霸體"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_phiam": {
+   "sys": "魂",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_churel": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "迷魂"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_tikbalang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "迷魂"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_maenak": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_aswang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "再生",
+    "分身"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_vetala": {
+   "sys": "屍",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "迷魂"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_banshee": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_kasaobake": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "light",
+    "breath"
+   ],
+   "imm": [
+    "paper"
+   ],
+   "why": [
+    "怕燈：紙紮怕火",
+    "怕吹氣：紙輕，一吹就飛",
+    "唔怕紙：自己就係紙"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_chochin": {
+   "sys": "紙紮",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "light",
+    "breath"
+   ],
+   "imm": [
+    "paper"
+   ],
+   "why": [
+    "怕燈：紙紮怕火",
+    "怕吹氣：紙輕，一吹就飛",
+    "唔怕紙：自己就係紙"
+   ],
+   "mech": [
+    "反傷"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_kappa": {
+   "sys": "妖",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "殼"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_nopperabo": {
+   "sys": "妖",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "隱"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_rokurokubi": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "sound",
+    "cold"
+   ],
+   "imm": [
+    "shadow"
+   ],
+   "why": [
+    "怕怪聲：爆竹嚇走山臊",
+    "怕凍：山精野獸一凍就要冬眠",
+    "唔怕黑影：山林夜色係主場"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_kuchisake": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_yukionna": {
+   "sys": "厲",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_hannya": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "反傷",
+    "霸體"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_gashadokuro": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "散骨",
+    "霸體"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_zipai": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "分身"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_xiaosi": {
+   "sys": "橫",
+   "sc": [
+    "sound"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_yesi": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_shidu": {
+   "sys": "橫",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "反傷"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_daji": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_xiasi": {
+   "sys": "魂",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_chehuo": {
+   "sys": "橫",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "突襲"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_yezi": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "殼"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_liulian": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "反傷"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_zhongshu": {
+   "sys": "橫",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_chengsi": {
+   "sys": "橫",
+   "sc": [
+    "breath"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "再生"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_shedu": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "反傷"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_diansi": {
+   "sys": "橫",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "反傷"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_dongsi": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "fear": [
+    "breath",
+    "sound"
+   ],
+   "imm": [
+    "cold"
+   ],
+   "why": [
+    "怕吹氣：生人氣：一啖氣噴埋面就亂",
+    "怕怪聲：雞啼：雞一啼就要返棺",
+    "唔怕凍：屍體本來就凍"
+   ],
+   "mech": [
+    "殼"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_leipi": {
+   "sys": "橫",
+   "sc": [
+    "light"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "n30_xiangcai": {
+   "sys": "紙紮",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "light",
+    "breath"
+   ],
+   "imm": [
+    "paper"
+   ],
+   "why": [
+    "怕燈：紙紮怕火",
+    "怕吹氣：紙輕，一吹就飛",
+    "唔怕紙：自己就係紙"
+   ],
+   "mech": [
+    "隱"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "pg_tuimo": {
+   "sys": "魂",
+   "sc": [
+    "sound"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "霸體"
+   ],
+   "tier": 1,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "pg_songding": {
+   "sys": "魂",
+   "sc": [
+    "face"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "分身"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "pg_ji": {
+   "sys": "魂",
+   "sc": [
+    "shadow"
+   ],
+   "fear": [
+    "light",
+    "shadow"
+   ],
+   "imm": [
+    "breath"
+   ],
+   "why": [
+    "怕燈：遊魂怕光",
+    "怕黑影：以為聻嚟咗（鬼之畏聻）",
+    "唔怕吹氣：飄慣咗"
+   ],
+   "mech": [
+    "隱",
+    "屍變"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "pg_ex": {
+   "sys": "厲",
+   "sc": [
+    "phone"
+   ],
+   "fear": [
+    "phone",
+    "face"
+   ],
+   "imm": [
+    "sound"
+   ],
+   "why": [
+    "怕電話：「公司走唔開」嗰通電話",
+    "怕鬼臉：笑佢樣衰",
+    "唔怕怪聲：尖叫係佢哋專利"
+   ],
+   "mech": [
+    "嚇氣光環"
+   ],
+   "tier": 2,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  },
+  "pg_landlady": {
+   "sys": "橫",
+   "sc": [
+    "paper"
+   ],
+   "fear": [
+    "cold",
+    "face"
+   ],
+   "imm": [
+    "phone"
+   ],
+   "why": [
+    "怕凍：停屍間雪櫃",
+    "怕鬼臉：扮佢死相",
+    "唔怕電話：自己就係因為電話死"
+   ],
+   "mech": [
+    "召喚",
+    "殼"
+   ],
+   "tier": 3,
+   "kind": "named",
+   "recruit": true,
+   "use_abil": true
+  }
+ },
  "LINK": [],
  "CAMP_MOD": {
   "ring": [
@@ -373,7 +8516,7 @@
     1
    ],
    [
-    1,
+    0,
     1
    ],
    [
@@ -384,6 +8527,13 @@
     2,
     3
    ]
-  ]
+  ],
+  "cap": [
+   1,
+   1,
+   2,
+   3
+  ],
+  "note": "每據點實際機制見 counter.json camps[id].mech／mk（每隻敵人嘅機制＝ENEMY.mech ∩ 據點 mech）"
  }
 }
