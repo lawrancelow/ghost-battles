@@ -7,6 +7,7 @@ extends RefCounted
 
 const ZD = preload("res://game/zone/zone_data.gd")
 const M = preload("res://game/outpost/mat.gd")
+const NGB = preload("res://game/newghost/ng_boss.gd")   # [newghost] 魔王據點
 
 # ======================= 常數表（測試員試玩後只改呢度） =======================
 const LV_BASE := [1.0, 5.0, 9.0, 13.0, 17.0, 21.0]   # fallback：每關第 1 圈等級（＝主線 x-1 難度）
@@ -61,6 +62,7 @@ static func camps(c := -1) -> Array:
 			var mlv = J.num(e.get("lv", 0)); var rmin = c * 10 + 1 + (r - 1) * 3
 			var p = LV_BASE[clampi(c, 0, 5)] + LV_RING[r - 1] + clampf(mlv - rmin, 0.0, 2.0) * 0.4
 			o.append({"id": str(e.get("id", "s%d" % o.size())), "ring": r, "lv": p, "pos": ZD.v2(e.pos), "c": c})
+			if e.has("boss"): o[o.size() - 1]["bm"] = NGB.boss_of(e, c)   # [newghost] 魔王據點（第 1 關之後可能換酒吞童子）
 		return o
 	return fallback(c)
 static func fallback(c: int) -> Array:
@@ -127,6 +129,7 @@ static func cleared_left_s(e: Dictionary) -> float:   # 已清空仲有幾多秒
 	return maxf(0.0, (t - now_ms()) / 1000.0)
 static func state(e: Dictionary) -> String:   # "open"／"cleared"／"locked"／"out"（出擊中）
 	if not ring_open(int(e.ring), int(e.c)): return "locked"
+	if NGB.locked(e): return "locked"   # [newghost] 魔王據點：第 4 圈其他據點全部首勝先開
 	if cleared_left_s(e) > 0: return "cleared"
 	var RTS = _rts()
 	if RTS.op_for(sid_of(e)) != null: return "out"
@@ -166,6 +169,7 @@ static func cost_text(cs: Dictionary) -> String:
 
 # ======================= 敵人 =======================
 static func stage_of(e: Dictionary) -> Dictionary:
+	if str(e.get("bm", "")) != "": return NGB.stage(e, title(e))   # [newghost] 魔王據點：魔王＋嘍囉
 	var c = int(e.c); var r = ri(e.ring)
 	var CH = J.G.get("CHAPTERS")
 	var pool = []; var bg = "field"
@@ -211,6 +215,7 @@ static func dispatch(e: Dictionary) -> String:
 		if last != null:
 			last["boss"] = true; last["hp"] = J.num(last.hp) * BOSS_HP; last["maxhp"] = last.hp; last["name"] = L("惡鬼頭目", "惡鬼頭目")
 	pay(cs)
+	NGB.decorate(snap, e)   # [newghost] 魔王名牌
 	var c = cst(e); c["tries"] = J.num(c.tries) + 1
 	var op = RTS.SIM.new()
 	op.id = RTS._next_id; RTS._next_id += 1
@@ -291,6 +296,8 @@ static func reward(e: Dictionary) -> Dictionary:
 	var c = cst(e); var r = ri(e.ring); var lv = float(e.lv)
 	var out = {"first": false, "rare": "", "lines": [], "coin": REW_COIN * lv, "first_txt": ""}
 	var s = S()
+	var bml = NGB.on_win(e, not J.t(c.get("first")))   # [newghost] 魔王據點：掉散魂（不可招降）
+	if bml != "": out.lines.append(bml)
 	# 普通
 	s.res["coins"] = have("coins") + REW_COIN * lv
 	s.res["planks"] = have("planks") + REW_PLANK[r]

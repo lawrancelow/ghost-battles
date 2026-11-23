@@ -35,3 +35,4 @@ func run(_env) -> void:
 	if LANG != null: J.mc(LANG, "add", [ZH])
 	hook()
 	J.G["PG_GHOSTS"] = {"keys": D.keys.duplicate(), "hook": func(_t, _a): hook(); return null}
+	preload("res://game/newghost/ng_data.gd").install()   # [newghost] 新名鬼 26＋牛頭馬面＋大魔王＋新雜兵＋合體技（data/nat/newghost.json）
