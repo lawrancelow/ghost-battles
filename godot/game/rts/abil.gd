@@ -730,10 +730,11 @@ static func _aura_link_on(sim, cb: Dictionary) -> void:   # 被動合體技：�
 		var f2 = (fx as Dictionary).duplicate()
 		var p = J.str(f2.get("p"))
 		var ts = _link_tg(sim, cb, src, f2)
-		if f2.get("who") != null:
+		if f2.get("who") != null:   # [ab] 指名成員（例：jiaoshu 只係 Nang Tani 回血 +30%）：直接由同場成員揀，唔理 tg
 			var keep = []
-			for pr in ts: if J.str(pr[0].get("k")) == J.str(f2.who): keep.append(pr)
+			for u in cb.m: if sim.alive(u) and J.str(u.get("k")) == J.str(f2.who): keep.append([u, 1.0])
 			ts = keep
+			if ts.is_empty(): continue
 		if f2.get("dur") == null and p in ["buff", "immune", "shield"]: f2["dur"] = -1
 		match p:
 			"on_kill_heal", "on_kill_maxhp", "on_ally_down":
@@ -746,7 +747,7 @@ static func _aura_link_on(sim, cb: Dictionary) -> void:   # 被動合體技：�
 			"stealth", "taunt", "guard", "splash", "pierce", "anti_air":   # [ab] 落喺自己身上嘅積木：逐個目標各自施放（例：jiaoshu 只令 Pontianak 隱身）
 				for pr in ts: prim(sim, pr[0], f2, [pr], {"sk": false, "link": true, "kind": "aura"})
 			_:
-				var src2 = cb.m[0] if p in SELF_P else src
+				var src2 = (ts[0][0] if f2.get("who") != null else cb.m[0]) if p in SELF_P else src
 				prim(sim, src2, f2, ts, {"sk": false, "link": true, "kind": "aura"})
 	sim.text(sim.center() + Vector2(0, -110), J.str(DB.L(J.str(cb.c.get("name")))), "#ffb0ff", 1.4, 18)
 	sim.events.append(["combo", cb.c])
