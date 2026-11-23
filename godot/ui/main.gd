@@ -397,7 +397,7 @@ func _build_top() -> void:
 		grid.add_child(cell)
 	top.resized.connect(func(): exp_bar.size.x = top.size.x - 76 - 116)
 
-const MV_HELP := {"wood": "槐木（T1）：[b]後院伐木場[/b]派鬼斬。棺材鋪用嚟做棺材板。", "rice": "糯米（T1）：[b]後院糯米田[/b]派鬼割。包子鋪用嚟包普通包子。", "planks": "棺材板（T2）：[b]後院棺材鋪[/b]出（2 槐木 → 1 板）。藍箱也會開出。用嚟升級建築，移動村部分台都要用。", "buns": "壽包（T3）：只由隨村台[b]嘆氣蒸籠[/b]用普通包子蒸（包子鋪而家出普通包子）。綠箱也會開出。用嚟升級鬼怪、派宵夜、練嚇功。", "coins": "冥幣：大排檔賣貨收錢、打關卡、開紫箱。", "troops": "陰兵：村裡遊魂自願加入，[b]民宅[/b]越高級來得越快。夜班巡陰時每 25 個跟一隊。"}   # [chain]
+const MV_HELP := {"wood": "槐木（T1）：村子[b]伐木場[/b]派鬼斬。棺材鋪用嚟做棺材板。", "rice": "糯米（T1）：村子[b]糯米田[/b]派鬼割。包子鋪用嚟包普通包子。", "planks": "棺材板（T2）：村子[b]棺材鋪[/b]出（2 槐木 → 1 板）。藍箱也會開出。用嚟升級建築，移動村部分台都要用。", "buns": "壽包（T3）：只由隨村台[b]嘆氣蒸籠[/b]用普通包子蒸（包子鋪而家出普通包子）。綠箱也會開出。用嚟升級鬼怪、派宵夜、練嚇功。", "coins": "冥幣：大排檔賣貨收錢、打關卡、開紫箱。", "troops": "陰兵：村裡遊魂自願加入，[b]民宅[/b]越高級來得越快。撳「出擊」時每 25 個編成一隊。"}   # [chain] [qaudit] 合一地圖冇「後院」、冇舊巡陰：改字
 
 func _build_nav() -> void:
 	var nav = Panel.new(); nav.anchor_top = 1; nav.anchor_bottom = 1; nav.anchor_right = 1; nav.offset_top = -NAV_H

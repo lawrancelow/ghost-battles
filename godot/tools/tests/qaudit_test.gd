@@ -99,8 +99,10 @@ func _do_field(t, m, q, kind: String) -> String:
 		if _prog(q)[0] >= _prog(q)[1]: break
 		var p = J.mc(V, "questTarget", [])
 		if p == null: return "冇目標"
-		J.mc(V, "tap", [J.num(p[0]), J.num(p[1]) - 20.0])
-		await _w(t, 1.5)
+		J.mc(V, "tap", [J.num(p[0]), J.num(p[1]) - (20.0 if kind == "tree" else 0.0)])
+		for j in 12:   # 等阿福行到、做完（唔好中途再撳，會打斷）
+			await _w(t, 0.5)
+			if V.hero.get("target") == null and V.hero.get("act") == null: break
 		if kind == "paddy" and k % 6 == 5: await _w(t, 6.0)   # 等禾熟
 	return "撳%s" % ("樹" if kind == "tree" else "稻田")
 func _do_craft(t, q) -> String:
@@ -109,7 +111,10 @@ func _do_craft(t, q) -> String:
 	for k in 40:
 		if _prog(q)[0] >= _prog(q)[1]: break
 		_bld(b, "craft", 1)
-		await _w(t, 0.5)
+		var V = J.G.get("Village")
+		for j in 20:   # 阿福行去建築親手做：等佢做完先再撳
+			await _w(t, 0.5)
+			if V.hero.get("target") == null and V.hero.get("act") == null: break
 		if str(q.t) == "craftBun":   # 新版：嘆氣蒸籠蒸出壽包（mv_bridge）：等佢蒸
 			await _w(t, 3.0)
 	return "建築卡「親手做」"
@@ -134,7 +139,7 @@ func _do_level(t, q) -> String:
 	var need = J.num(q.n)
 	for k in 20:
 		if J.num(_S().lv) >= need: break
-		var S = _S(); var en = J.num(J.cl(J.G.get("expNeed"), null, [S.lv])) - J.num(S.exp) + 1.0
+		var S = _S(); var en = maxf(10.0, float(load("res://native/game.gd").exp_need(J.num(S.lv))) - J.num(S.exp) + 1.0)
 		J.cl(J.G.get("gainExp"), null, [en]); gifts.append([_qi(), "好評", en])
 		await _w(t, 0.3); await _skip(t, 2)
 	return "給好評（升級）"

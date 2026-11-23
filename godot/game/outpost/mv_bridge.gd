@@ -204,11 +204,23 @@ const QTXT := {
 const BTXT := {
 	"bun": ["營地起包子鋪（出普通包子）", "營地建造包子鋪（出普通包子）"],   # [camp] 後院 → 營地
 	"store": ["拔營一次或各台合共 20 級", "拔營一次或各台合計 20 級"],
-	"altar": ["打低餓鬼王（營地招魂台）", "打倒餓鬼王（營地招魂台）"], "furnace": ["升到 6 級（營地化寶爐）", "升到 6 級（營地化寶爐）"],   # [camp]
+	"altar": ["打低餓鬼王，開招魂台", "打倒餓鬼王，開放招魂台"], "furnace": ["升到 6 級（營地化寶爐）", "升到 6 級（營地化寶爐）"],   # [camp] [qaudit] 招魂台唔使起：打低餓鬼王自動開
 }
 static func quest_disp(_q, p: Array) -> Array: return p   # 進度照舊（後院建築係真等級）
 
-static func quest_text(q) -> String:
+static func quest_text(q) -> String: return _qx_unify(_quest_text(q), q)   # [qaudit] 全部入口（任務條、任務面板、完成提示、解霧提示）用同一套字
+# [qaudit] 合一地圖已經冇「營地」：統一換做村子；野外王任務：王前面仲有頭目要先打，講清楚
+static func _qx_unify(s: String, q) -> String:
+	s = s.trim_prefix("營地：").replace("營地或者生產台", "村子或者大排檔").replace("營地建造", "建造").replace("（營地招魂台）", "（招魂台）").replace("（營地化寶爐）", "（化寶爐）")
+	if on() and q is Dictionary and str(q.get("t", "")) == "stage":
+		var ZDq = load("res://game/zone/zone_data.gd")
+		var tg = ZDq.stage_target()
+		if tg.has("zid") and str(tg.get("sid", "")) == str(q.get("s", "")):
+			var bn = ZDq.boss_next(str(tg.zid))
+			if bn >= 0 and bn < int(tg.get("bi", 0)):
+				s += T("（先打低%s）", "（先打倒%s）") % ZDq.T(ZDq.bosses(str(tg.zid))[bn].get("n", ["", ""]))
+	return s
+static func _quest_text(q) -> String:
 	var txt = str(J.gp(q, "text"))
 	if not on() or not (q is Dictionary): return txt
 	var t = str(q.get("t", ""))
