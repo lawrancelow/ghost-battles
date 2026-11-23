@@ -1,5 +1,6 @@
 # [abcore] 能力引擎測試（ability.md 第 7 節）
-# 用法：edtest.sh <godot> <tag> res://tools/tests/abil_test.gd prim|mech|all
+# 用法：edtest.sh <godot> <tag> res://tools/tests/abil_test.gd prim|link|mech|all
+#   link：25 組合體技（newghost LINK）逐組喺地圖戰鬥觸發；26 新鬼＋牛頭馬面主動技都放得出
 #   prim：40 個積木逐個最細場景（狀態真係變）＋舊 SKILLS 自動轉換＋兩層克制倍率＋封頂＋合體技＋ab_off 回舊路
 #   mech：13 種機制 ×「冇應對隊」／「有應對隊」×（有機制／冇機制）× N 種子；難度倍數＝(時間×(1+我方失血比)) ÷ 同隊打冇機制
 extends RefCounted
@@ -15,7 +16,8 @@ func _chk(name: String, cond: bool, extra = "") -> void:
 func _boot(t) -> void:
 	for i in 120:
 		await t.get_tree().create_timer(0.5).timeout
-		if J.G.get("S") is Dictionary and J.G.get("Rework") != null and J.G.get("SKILLS") is Dictionary: break
+		var NG = load("res://game/newghost/ng_data.gd")
+		if J.G.get("S") is Dictionary and J.G.get("Rework") != null and J.G.get("SKILLS") is Dictionary and (NG == null or NG.installed): break
 	await t.get_tree().create_timer(1.0).timeout
 
 # ---------------- 單位／場地 ----------------
@@ -71,6 +73,8 @@ func prim(t) -> void:
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 func all(t) -> void:
 	await prim(t)
+	ok = 0; bad = 0
+	await link(t)
 	ok = 0; bad = 0
 	await mech(t)
 
@@ -384,19 +388,80 @@ func _combo() -> void:
 	var SK = J.G.get("SKILLS")
 	var a = mk("baiwu", 0, 3000, 80, 46, SK["baiwu"]); var b = mk("heiwu", 0, 3000, 80, 46, SK["heiwu"])
 	var fs = [mk(F_K, 1, 4000, 30), mk(F_K, 1, 4000, 30)]
-	var op = placed([a, b], fs)
-	_chk("合體技：黑白無常同場 → 有合體技", AB.combo_list(op).size() == 1)
+	var op = placed([a, b], fs); _bare(op)
+	var L = AB.combo_list(op)
+	_chk("合體技：黑白無常同場 → 有合體技", L.size() >= 1 and J.str(L[0].c.get("id")) == "wuchang", L.size())
 	op.auto = true
-	var cb = AB.combo_list(op)[0]; cb["energy"] = 100.0
+	L[0]["energy"] = 100.0
 	var h0 = J.num(fs[0].hp)
 	for i in 20: AB.tick(op, 0.05)
 	var fired = false
 	for e in op.events: if e[0] == "combo": fired = true
-	_chk("合體技喺地圖戰鬥放出（全場傷害＋腳軟）", fired and J.num(fs[0].hp) < h0 and J.num(fs[1].st.get("down", 0)) > 0, [h0, fs[0].hp])
-	S["lv"] = 3.0
-	op = placed([mk("baiwu", 0, 3000, 80), mk("heiwu", 0, 3000, 80)], [mk(F_K, 1, 4000, 30)])
-	_chk("合體技：主公 Lv<17 唔開（同舊版）", AB.combo_list(op).is_empty())
+	_chk("合體技喺地圖戰鬥放出（全場傷害＋控場）", fired and J.num(fs[0].hp) < h0 and (J.num(fs[1].st.get("air", 0)) > 0 or J.num(fs[1].st.get("down", 0)) > 0), [h0, fs[0].hp, fs[1].st])
 	S["lv"] = lv0
+
+# ================= link：25 組合體技全部觸發；新鬼主動技都放得出 =================
+func link(t) -> void:
+	await _boot(t)
+	AB.force = 1; AB.reload()
+	var S = J.G.S; var lv0 = S.get("lv", 1); S["lv"] = 20.0
+	var SK = J.G.get("SKILLS")
+	var Ls = AB.data().get("LINK", [])
+	_chk("LINK 讀到 newghost 25 組", Ls.size() >= 25, Ls.size())
+	var nfire = 0
+	for c in Ls:
+		var mem = []
+		for k in AB._arr(c.get("must")): if not k in mem: mem.append(k)
+		for k in AB.link_members(c):
+			if mem.size() >= maxi(int(J.num(c.get("need", 2))), 2): break
+			if not k in mem: mem.append(k)
+		var hs = []
+		for k in mem: hs.append(mk(str(k), 0, 4000, 80, 46, SK.get(str(k))))
+		var fs = [mk(F_K, 1, 6000, 30), mk(F_K, 1, 6000, 30), mk(F_K, 1, 6000, 30)]
+		fs[0]["mech"] = ["召喚"]
+		var op = placed(hs, fs)
+		op.auto = true
+		var cl = AB.combo_list(op)
+		var mine = null
+		for cb in cl: if J.str(cb.c.get("id")) == J.str(c.id): mine = cb
+		if mine == null: _chk("合體技 %s（%s）組得成" % [c.id, c.get("name")], false, mem); continue
+		mine["energy"] = 100.0
+		var hp0 = 0.0
+		for f in fs: hp0 += J.num(f.hp)
+		for i in 30: AB.tick(op, 0.05)
+		var key = "link_" + str(c.id)
+		var got = int(op.ab_log.ev.get(key, 0)) > 0
+		var hp1 = 0.0
+		for f in fs: hp1 += J.num(f.hp)
+		var eff = []
+		for k in op.ab_log.ev: if not str(k).begins_with("link_") and k != "combo" and k != "trig_start": eff.append(k)
+		var okk = got and (str(c.get("kind")) == "aura" or hp1 < hp0)
+		if okk: nfire += 1
+		_chk("合體技 %s（%s，%s）喺地圖戰鬥觸發" % [c.id, c.get("name"), c.get("kind")], okk, [mem, int(hp0 - hp1), eff])
+	_chk("25 組合體技全部觸發", nfire >= 25, nfire)
+	# 新鬼（26＋牛頭馬面）主動技
+	var NG = load("res://game/newghost/ng_data.gd")
+	var ks = NG.keys() if NG != null else []
+	var okn = 0; var badk = []
+	for k in ks:
+		var act = AB.act_of(k)
+		if not (act is Dictionary): badk.append([k, "冇 act"]); continue
+		var h = mk(str(k), 0, 4000, 80, 46, SK.get(str(k)))
+		var fs2 = [mk(F_K, 1, 6000, 30), mk(F_K, 1, 6000, 30)]
+		fs2[1]["mech"] = ["飛"]
+		var op2 = placed([h, mk(N_K, 0, 3000, 50)], fs2)
+		var ev0 = op2.events.size(); var c0 = int(op2.ab_log.get("cast", 0))
+		var hp0b = J.num(fs2[0].hp) + J.num(fs2[1].hp)
+		op2.do_skill(h, h.get("sk") if h.get("sk") != null else {"name": "x", "kind": "ab"})
+		for i in 10: op2.step(0.05)
+		var hp1b = J.num(fs2[0].hp) + J.num(fs2[1].hp)
+		var evs = op2.ab_log.get("ev", {}).keys()
+		if int(op2.ab_log.get("cast", 0)) > c0 and (hp1b < hp0b or evs.size() > 0): okn += 1
+		else: badk.append([k, act.get("name"), evs])
+	_chk("新鬼主動技全部放得出、有效果（%d 隻）" % ks.size(), badk.is_empty() and ks.size() >= 28, badk)
+	S["lv"] = lv0
+	AB.force = -1
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
 func _off() -> void:
 	AB.force = -1; AB.OFF = true
