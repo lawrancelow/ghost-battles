@@ -82,6 +82,7 @@ func _build() -> void:
 	RV.attach(self)   # [raid]
 	PM.apply(self)   # [perf] 流暢模式（讀返設定）
 	load("res://game/barracks/bk_patrol_view.gd").attach(self)   # [barracks] 陰兵巡邏
+	load("res://game/rts/rts_view.gd").attach(self)   # [rts] 地圖半即時戰鬥（模擬＋畫面）
 
 # ---------------- 每幀 ----------------
 func _process(_dt: float) -> void:

@@ -310,6 +310,7 @@ static func front_anchor(c := -1) -> Vector2:
 static func start_stage() -> String:
 	var tg = stage_target()
 	if tg.is_empty() or not tg.has("pos"): return "none"
+	if load("res://game/rts/rts.gd").enabled_for(str(tg.sid)): return load("res://game/rts/rts.gd").dispatch_stage(tg)   # [rts] 原型：地圖半即時戰鬥
 	var B = J.G.get("Battle")
 	if not (B is Dictionary): return "nobattle"
 	if not team_ok(): return "noteam"
