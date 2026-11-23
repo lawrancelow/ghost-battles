@@ -12,6 +12,8 @@ static func has_img(key: String) -> bool: return Spr.ok(key) and Spr.get_tex(key
 static func draw_icon(ctx: Ctx, t: int, x: float, y: float, sz: float) -> void:
 	var key = icon_key(t)
 	if has_img(key): Art.put(ctx, key, x, y, sz, sz); return
+	var EQ = load("res://game/equip/eq_data.gd")   # [equip] 冇圖：按今期款畫（A 款＝原本嗰件）
+	if EQ.on() and EQ.ml_pick(t) != "": load("res://game/equip/eq_art.gd").icon(ctx, EQ.ml_pick(t), x, y, sz); return
 	var c = Vector2(x, y - sz * 0.5); var s = sz / 24.0
 	Art.el(ctx, c.x, c.y, sz * 0.5, sz * 0.5, "rgba(236,226,200,.92)", INK, maxf(1.0, 1.2 * s))
 	ctx.save(); ctx.translate(c.x, c.y); ctx.scale(s, s)

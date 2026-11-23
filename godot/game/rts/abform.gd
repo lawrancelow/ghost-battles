@@ -19,12 +19,14 @@ const GUARD_FLOOR := 0.3        #   名鬼自己血低過呢個比例就唔再�
 const WAIT := 5.0               # 自動施放：滿咗嚇氣等夠幾秒條件都唔成立 → 照放（唔會儲住唔用）
 const BOSS_OPEN := 3.0          # 敵人王：接觸後幾秒先第一次放技（俾玩家睇到）
 const SIDE_LANE := 50.0         # 橫距 < 呢個先直接埋身；否則由自己嗰邊側身埋去（保住橫隊次序）
-const RESC_N := 2               # 名鬼被幾多隻近戰鎖住 → 叫最近嘅小隊過嚟救
+static var RESC_N := 2               # 名鬼被幾多隻近戰鎖住 → 叫最近嘅小隊過嚟救
+static var RESC_K := 2            # 救援派幾多隊小隊
 const RESC_T := 3.0             # 救援維持幾秒
 static var SQ_BACK := 0.0             # 小隊比前排名鬼企後幾多（開頭 8 秒）
 const CLOSE := 100.0            # 同 rts_sim.CLOSE：射程＋呢個以內當「近」
 
 # 總開關（審查修正第 3 項：全域、唔入玩家存檔）：abil.gd 嘅 static var OFF＝true，或者 data/abil.json 頂層 "off": true → 全部行舊路
+const ABE = preload("res://game/rts/abil.gd")   # [abform] 真 abcore（targetable 用）；總開關照用 AB_PATH
 static var AB_PATH := "res://game/rts/abil.gd"   # abcore 檔；測試可以指去 stub
 static var _ab = null
 static var _ab_path := ""
@@ -86,7 +88,7 @@ static func line_order(mel: Array) -> Array:
 	var slot = []
 	slot.resize(n)
 	var F = fr.size()
-	for j in F:
+	for j in F:   # 側翼接觸 2 秒就離線去繞後，所以「中間」按小隊＋前排計（唔連側翼）
 		var f = 0.5 if F == 1 else 0.35 + 0.3 * float(j) / float(F - 1)   # 中間三分一以內
 		var idx = clampi(int(round(f * (n - 1))), 0, n - 1)
 		while slot[idx] != null: idx = (idx + 1) % n
@@ -164,6 +166,7 @@ static func _bump(sim, old, nv) -> void:
 static func targetable(sim, u: Dictionary, v: Dictionary) -> bool:
 	# abcore 嘅 AB.targetable（隱身、飛行）合併後喺呢度接：sim 有 ab_targetable 就問佢
 	if sim.has_method("ab_targetable"): return sim.ab_targetable(u, v)
+	if J.t(sim.get("ab")): return ABE.targetable(sim, u, v)   # [abform] 整合：隱身遠過 80px 唔揀，免得 AB.pick_fix 改揀最近而爆每目標上限
 	return true
 static func line_tg(sim, u: Dictionary):
 	var cur = u.get("tg")
@@ -210,7 +213,7 @@ static func _rescue(sim) -> void:
 		for s in sim.units:
 			if _nn(s, "side") == 0 and J.t(s.get("minion")) and sim.alive(s) and J.t(s.get("eng")) and _nn(s, "resc") <= sim.t: sqs.append(s)
 		sqs.sort_custom(func(a, b): return sim.dist(a, h) < sim.dist(b, h))
-		for i in mini(2, sqs.size()):
+		for i in mini(RESC_K, sqs.size()):
 			var tg = att[i % att.size()]
 			_bump(sim, sqs[i].get("tg"), tg); sqs[i]["tg"] = tg; sqs[i]["resc"] = sim.t + RESC_T
 		if sqs.size(): sim.events.append(["af_rescue", h])
