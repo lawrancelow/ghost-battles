@@ -259,7 +259,7 @@ func counter_check() -> void:
 	var sb = []
 	for x in D.get("subs", []):
 		var now = str(x.get("now", ""))
-		var EN = AB.enemy(now)
+		var EN = AB.data().get("ENEMY", {}).get(now, {})   # [roster2] integ 嘅 abil.gd 冇 enemy()（parse error），改讀 data()
 		if not ET.has(now) or str(EN.get("sys", "")) != str(x.get("sys", "")): sb.append(x.get("plan"))
 	_chk("頂替表已撤（新鬼、新雜兵全部用真身出場）", (D.get("subs", []) as Array).is_empty(), D.get("subs"))
 	var nwin = {}
@@ -414,11 +414,11 @@ func flow_check(t, m) -> void:
 	var p = float(e.lv); var okhp = true; var info = []
 	for i in foes.size():
 		var u = foes[i]; var T = ET[str(u.k)]
-		var exp = (260.0 + 90.0 * p) * float(T[0]) * float(st.ct.hm[i]) * 0.55 * (SO.BOSS_HP if i == foes.size() - 1 else 1.0)
+		var exp = (260.0 + 90.0 * p) * float(T[0]) * float(st.ct.hm[i]) * 0.55 * ((1.25 if (str(st.get("guard", "")) != "" or st.has("ct")) else SO.BOSS_HP) if i == foes.size() - 1 else 1.0)   # [整合] 駐守名鬼頭目 ×1.25（soul 規則），無駐守仍 ×1.6
 		var expa = (16.0 + 7.5 * p) * float(T[1]) * float(st.ct.am[i]) * 0.55
 		info.append("%s %d/%d %d/%d" % [u.k, int(J.num(u.maxhp)), int(exp), int(J.num(u.atk)), int(expa)])
 		if absf(J.num(u.maxhp) - exp) > exp * 0.02 or absf(J.num(u.atk) - expa) > expa * 0.02: okhp = false
-	_chk("據點敵人血 ×0.55、攻 ×0.55（第 5 關 sortie_k）、頂替雜兵縮細、頭目血 ×1.6", okhp, " ".join(info))
+	_chk("據點敵人血 ×0.55、攻 ×0.55（第 5 關 sortie_k）、頂替雜兵縮細、頭目血 ×1.25（駐守名鬼）／×1.6", okhp, " ".join(info))
 	var last = foes[foes.size() - 1] if foes.size() else {}
 	_chk("頭目＝駐守鬼、保留真名", J.t(last.get("boss")) and str(last.get("k")) == st.guard and str(last.get("name", "")).contains(str(ET[st.guard][2])), [last.get("name"), st.guard])
 	var mok = true

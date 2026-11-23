@@ -9,6 +9,7 @@ extends RefCounted
 const PATH := "res://data/abil.json"
 const CT_PATH := "res://data/nat/counter.json"
 const NG_PATH := "res://game/newghost/ng_data.gd"
+const NG2_PATH := "res://data/nat/newghost2.json"   # [ab] roster2 第二批
 const CAP_LO := 0.2           # 兩層克制＋機制＋追擊 總倍率封頂
 const CAP_HI := 4.0
 const ADV_CAP := 0.25         # 軍師加成封頂 +25%
@@ -32,7 +33,23 @@ static func data() -> Dictionary:
 		if not D.is_empty() and ResourceLoader.exists(NG_PATH):   # newghost：ABIL／ENEMY／LINK 只補冇嘅 key（reload 後都補返）
 			var NG = load(NG_PATH)
 			if NG != null and NG.has_method("merge_abil"): NG.merge_abil(D)
+		if not D.is_empty(): _merge_ng(D, NG2_PATH)   # [ab] 第二批 30 隻（roster2 線）：有就讀
 	return D
+static func _merge_ng(A: Dictionary, path: String) -> void:   # newghost*.json：ABIL／ENEMY 只補 abil.json 冇嘅 key（怕／不怕以 abil.json 為準）；LINK 只補冇嘅 id
+	if not FileAccess.file_exists(path): return
+	var f = FileAccess.open(path, FileAccess.READ)
+	if f == null: return
+	var d = JSON.parse_string(f.get_as_text())
+	if not (d is Dictionary): return
+	for sec in ["ABIL", "ENEMY"]:
+		if not (A.get(sec) is Dictionary): A[sec] = {}
+		var src = d.get(sec, {})
+		if src is Dictionary:
+			for k in src: if not A[sec].has(k): A[sec][k] = src[k]
+	if not (A.get("LINK") is Array): A["LINK"] = []
+	var have = {}
+	for x in A.LINK: if x is Dictionary: have[J.str(x.get("id", ""))] = true
+	for x in _arr(d.get("LINK")): if x is Dictionary and not have.has(J.str(x.get("id", ""))): A.LINK.append(x); have[J.str(x.id)] = true
 static func abil(k) -> Dictionary: return _ent("ABIL", J.str(k))   # ng_data.abil_of 用
 static func ct() -> Dictionary:
 	if CT == null:
@@ -673,7 +690,7 @@ static func _link_src(sim, cb: Dictionary) -> Dictionary:
 	for u in cb.m:
 		if u.get("p") is Vector2: ps += u.p; n += 1
 		atk += _nn(u, "atk")
-	return {"k": "", "atk": atk / maxf(1, cb.m.size()), "side": 0.0, "hp": 1.0, "maxhp": 1.0, "p": ps / maxf(1, n), "energy": 0.0, "minion": true, "range": 150.0, "link": true,
+	return {"k": "", "atk": atk / maxf(1, cb.m.size()), "side": 0.0, "hp": 1.0, "maxhp": 1.0, "p": ps / maxf(1, n), "energy": 0.0, "minion": true, "range": 150.0, "link": true, "mem": cb.m,
 		"ab": {"tags": ["遠", "破"], "mech": [], "bf": [], "sc": [], "pas": [], "icd": {}, "n_att": 0, "star": 0}}
 static func combo_list(sim) -> Array: return sim.ab_st.get("combo", []) if sim.ab_st is Dictionary else []
 static func combo_cast(sim, i := 0) -> bool:   # 合體技按鈕（abui 接）
@@ -713,10 +730,11 @@ static func _aura_link_on(sim, cb: Dictionary) -> void:   # 被動合體技：�
 		var f2 = (fx as Dictionary).duplicate()
 		var p = J.str(f2.get("p"))
 		var ts = _link_tg(sim, cb, src, f2)
-		if f2.get("who") != null:
+		if f2.get("who") != null:   # [ab] 指名成員（例：jiaoshu 只係 Nang Tani 回血 +30%）：直接由同場成員揀，唔理 tg
 			var keep = []
-			for pr in ts: if J.str(pr[0].get("k")) == J.str(f2.who): keep.append(pr)
+			for u in cb.m: if sim.alive(u) and J.str(u.get("k")) == J.str(f2.who): keep.append([u, 1.0])
 			ts = keep
+			if ts.is_empty(): continue
 		if f2.get("dur") == null and p in ["buff", "immune", "shield"]: f2["dur"] = -1
 		match p:
 			"on_kill_heal", "on_kill_maxhp", "on_ally_down":
@@ -726,8 +744,10 @@ static func _aura_link_on(sim, cb: Dictionary) -> void:   # 被動合體技：�
 					if _nn(w, "side") == 1 and has_mech(w, "召喚"): add_bf(sim, w, {"id": "sum_cd", "p": "sum_cd", "stat": "energy", "v": -J.num(f2.get("v", 0.5)), "dur": -1, "neg": true})
 				cb["sum_cd"] = J.num(f2.get("v", 0.5))
 			"reveal_pulse": cb["pulse"] = f2; cb["pulse_t"] = 0.0
+			"stealth", "taunt", "guard", "splash", "pierce", "anti_air":   # [ab] 落喺自己身上嘅積木：逐個目標各自施放（例：jiaoshu 只令 Pontianak 隱身）
+				for pr in ts: prim(sim, pr[0], f2, [pr], {"sk": false, "link": true, "kind": "aura"})
 			_:
-				var src2 = cb.m[0] if p in SELF_P else src
+				var src2 = (ts[0][0] if f2.get("who") != null else cb.m[0]) if p in SELF_P else src
 				prim(sim, src2, f2, ts, {"sk": false, "link": true, "kind": "aura"})
 	sim.text(sim.center() + Vector2(0, -110), J.str(DB.L(J.str(cb.c.get("name")))), "#ffb0ff", 1.4, 18)
 	sim.events.append(["combo", cb.c])
@@ -957,12 +977,13 @@ static func prim(sim, u: Dictionary, fx: Dictionary, ts: Array, ctx: Dictionary)
 			for pr in ts:
 				var v = pr[0]
 				if _nn(v, "side") == sd: continue
+				if not cc_ok(sim, {"ab": {"tags": [], "mech": []}}, v, "dot_" + J.str(fx.get("kind", "burn"))) or not cc_ok(sim, {"ab": {"tags": [], "mech": []}}, v, "dot"): ev(sim, "immune_dot", u, v); continue   # [ab] 免疫燒傷等（合體技 shanhai）
 				add_bf(sim, v, {"id": "dot_" + J.str(fx.get("kind", "burn")), "p": "dot", "kind": J.str(fx.get("kind", "burn")), "v": _v(fx, "dps", 0.3, star) * _nn(u, "atk"), "dur": _v(fx, "dur", 4.0, star), "neg": true, "src": u, "tick": 0.0, "stack": 3})
 				ev(sim, "dot", u, v)
 		"execute":   # 斬殺：血 < hp_pct 直接 ×x
 			for pr in ts:
 				var v = pr[0]
-				if _nn(v, "hp") > 0 and _nn(v, "hp") < _v(fx, "hp_pct", 0.25, star) * _nn(v, "maxhp"):
+				if _nn(v, "hp") > 0 and _nn(v, "hp") < (_v(fx, "hp_pct", 0.25, star) + _exx(sim, u)) * _nn(v, "maxhp"):
 					var c4 = ctx.duplicate(); c4["exec"] = true
 					hit(sim, u, v, _v(fx, "x", 3.0, star), c4)
 					ev(sim, "execute", u, v)
@@ -1002,7 +1023,7 @@ static func prim(sim, u: Dictionary, fx: Dictionary, ts: Array, ctx: Dictionary)
 			for pr in ts:
 				var v = pr[0]
 				if _nn(v, "side") == sd: continue
-				add_bf(sim, v, {"id": "slow", "p": "slow", "stat": "spd", "v": -_v(fx, "v", 0.4, star), "dur": _v(fx, "dur", 3.0, star), "neg": true})
+				add_bf(sim, v, {"id": "slow", "p": "slow", "stat": "spd", "v": -absf(_v(fx, "v", 0.4, star)), "dur": _v(fx, "dur", 3.0, star) + _ccx(sim, u), "neg": true})   # [ab] v 正負都當減速
 				if _v(fx, "va", 0.0, star) > 0: add_bf(sim, v, {"id": "slow_a", "p": "slow", "stat": "aspd", "v": -_v(fx, "va", 0.0, star), "dur": _v(fx, "dur", 3.0, star), "neg": true})
 				ev(sim, "slow", u, v)
 		"flee":
@@ -1065,7 +1086,7 @@ static func prim(sim, u: Dictionary, fx: Dictionary, ts: Array, ctx: Dictionary)
 				return
 			var tsb = _self_or(ts, u, sd) if _v(fx, "v", 0.2, star) >= 0 or ts.is_empty() or _nn(ts[0][0], "side") == sd else ts
 			for pr in tsb:
-				add_bf(sim, pr[0], {"id": "buff_" + J.str(fx.get("stat", "atk")), "p": "buff", "stat": J.str(fx.get("stat", "atk")), "v": _v(fx, "v", 0.2, star), "dur": _v(fx, "dur", 5.0, star)})
+				add_bf(sim, pr[0], {"id": "buff_" + J.str(fx.get("stat", "atk")), "p": "buff", "stat": J.str(fx.get("stat", "atk")), "v": _v(fx, "v", 0.2, star), "dur": _v(fx, "dur", 5.0, star), "mech": _arr(fx.get("mech"))})
 				ev(sim, "buff", u, pr[0])
 		"energy":
 			for pr in _self_or(ts, u, sd):
@@ -1073,7 +1094,7 @@ static func prim(sim, u: Dictionary, fx: Dictionary, ts: Array, ctx: Dictionary)
 		# ---- 應對（克制）專用 ----
 		"anti_air": A(u)["anti_air"] = _v(fx, "x", 1.25, star); ev(sim, "anti_air", u, u)
 		"reveal":
-			var rr = _v(fx, "r", 150, star)
+			var rr = _v(fx, "r", 150, star) * stat(sim, u, "reveal_r")   # [ab] 合體技 tsukumo：雲外鏡現形範圍 +50%
 			var c0 = ts[0][0].p if ts.size() and ts[0][0].get("p") is Vector2 else _pos(sim, u)
 			_reveal(sim, u, c0, rr, _v(fx, "dur", 8.0, star))
 		"armor_break":
@@ -1153,13 +1174,13 @@ static func prim(sim, u: Dictionary, fx: Dictionary, ts: Array, ctx: Dictionary)
 			for pr in ts:
 				var v = pr[0]
 				if _nn(v, "side") == sd or _nn(v, "hp") <= 0 or not cc_ok(sim, u, v, "charm"): continue
-				A(v)["charm_until"] = t + _v(fx, "dur", 3.0, star); v["tg"] = null; v["anim"] = null
+				A(v)["charm_until"] = t + _v(fx, "dur", 3.0, star) + _ccx(sim, u); v["tg"] = null; v["anim"] = null
 				sim.text(sim.head(v) + Vector2(0, -18), "迷惑", "#f9a8d4", 0.9); ev(sim, "charm", u, v)
 		"confuse":
 			for pr in ts:
 				var v = pr[0]
 				if _nn(v, "side") == sd or _nn(v, "hp") <= 0 or not cc_ok(sim, u, v, "confuse") or protected(sim, v): continue
-				A(v)["conf_until"] = t + _v(fx, "dur", 2.5, star); A(v)["conf_dir"] = Vector2.from_angle(randf() * TAU)
+				A(v)["conf_until"] = t + _v(fx, "dur", 2.5, star) + _ccx(sim, u); A(v)["conf_dir"] = Vector2.from_angle(randf() * TAU)
 				sim.text(sim.head(v) + Vector2(0, -18), "迷魂", "#d8b4fe", 0.9); ev(sim, "confuse_fx", u, v)
 		"sap_lock":   # 鎖嚇氣：一段時間唔加嚇氣
 			var tl5 = ts if ts.size() else select(sim, u, {"sel": "foes"})
@@ -1180,6 +1201,7 @@ static func prim(sim, u: Dictionary, fx: Dictionary, ts: Array, ctx: Dictionary)
 			var c3 = ts[0][0].p if ts.size() and ts[0][0].get("p") is Vector2 else _pos(sim, u)
 			sim.ab_st.zones.append({"p": c3, "r": _v(fx, "r", 90, star), "until": t + _v(fx, "dur", 4.0, star), "fx": _arr(fx.get("fx")), "src": u, "acc": 0.0})
 			sim._fx({"kind": "ring", "p": c3, "life": 0.6, "col": "#a3e635"}); ev(sim, "zone", u, u)
+static func _exx(sim, u) -> float: return maxf(0.0, stat(sim, u, "execute") - 1.0)   # [ab] 合體技 baosang：斬殺線 +v
 static func _self_or(ts: Array, u: Dictionary, sd: float) -> Array:   # 支援積木：目標係敵人就改為自己
 	var o = []
 	for pr in ts: if pr[0] is Dictionary and _nn(pr[0], "side") == sd: o.append(pr)
@@ -1191,9 +1213,9 @@ static func _heal(sim, w: Dictionary, h: float) -> void:
 static func _ground(sim, v: Dictionary) -> void:   # 飛行被腳軟／彈起／扯近＝拉落地 4 秒
 	var a = A(v)
 	if J.t(a.get("fly")) and J.num(a.get("ground_until", -1)) <= sim.t:
-		a["ground_until"] = sim.t + mp("飛", "ground_s", 4.0)
+		a["ground_until"] = sim.t + mp("飛", "ground_s", 4.0) * stat(sim, v, "grounded")   # [ab] 合體技 feitou：被打落地時間減半
 		sim.text(sim.head(v) + Vector2(0, -20), "拉落地", "#a3e635", 1.0); ev(sim, "ground", null, v)
-	elif J.t(a.get("fly")): a["ground_until"] = sim.t + mp("飛", "ground_s", 4.0)
+	elif J.t(a.get("fly")): a["ground_until"] = sim.t + mp("飛", "ground_s", 4.0) * stat(sim, v, "grounded")
 static func _reveal(sim, src, c: Vector2, r: float, dur: float) -> void:
 	var did = false
 	for w in sim.units:
@@ -1209,14 +1231,21 @@ static func _reveal(sim, src, c: Vector2, r: float, dur: float) -> void:
 			for b in wa.get("bf", []): if J.str(b.get("p")) != "stealth": keep.append(b)
 			wa["bf"] = keep; did = true
 	if did: ev(sim, "reveal", src, null)
+static func _ccx(sim, src) -> float:   # [ab] 合體技 cc_dur：我方控制效果 +N 秒（合體技來源＝成員最高）
+	if not (src is Dictionary): return 0.0
+	if J.t(src.get("link")) and src.get("mem") is Array:
+		var m = 0.0
+		for w in src.mem: m = maxf(m, stat(sim, w, "cc_dur") - 1.0)
+		return m
+	return maxf(0.0, stat(sim, src, "cc_dur") - 1.0)
 static func cc(sim, src, v: Dictionary, kind: String, fx := {}, star := 0) -> bool:
 	if not cc_ok(sim, src, v, kind):
 		if has_mech(v, "霸體"): sim.text(sim.head(v) + Vector2(0, -20), "霸體", "#fca5a5", 0.8); ev(sim, "cc_immune", src, v)
 		return false
 	var sp = _pos(sim, src)
 	match kind:
-		"air": v.st["air"] = _v(fx, "dur", 1.0, star) * stat(sim, v, "cc_taken"); v.st["airMax"] = v.st.air; v.st["down"] = 0.0
-		"down": v.st["down"] = _v(fx, "dur", 1.4, star) * stat(sim, v, "cc_taken"); v.st["downMax"] = v.st.down; v.st["air"] = 0.0
+		"air": v.st["air"] = (_v(fx, "dur", 1.0, star) + _ccx(sim, src)) * stat(sim, v, "cc_taken"); v.st["airMax"] = v.st.air; v.st["down"] = 0.0
+		"down": v.st["down"] = (_v(fx, "dur", 1.4, star) + _ccx(sim, src)) * stat(sim, v, "cc_taken"); v.st["downMax"] = v.st.down; v.st["air"] = 0.0
 		"push":
 			var dist = _v(fx, "dist", 40.0, star)
 			v.st["push"] = dist / 160.0
@@ -1226,7 +1255,7 @@ static func cc(sim, src, v: Dictionary, kind: String, fx := {}, star := 0) -> bo
 			v.st["push"] = dist2 / 160.0
 			v["pushD"] = (sp - (v.p as Vector2)).normalized() if (v.p as Vector2).distance_to(sp) > 0.5 else Vector2(-1, 0)
 		"stun":
-			A(v)["stun_until"] = maxf(J.num(A(v).get("stun_until", 0)), sim.t + _v(fx, "dur", 1.2, star))
+			A(v)["stun_until"] = maxf(J.num(A(v).get("stun_until", 0)), sim.t + _v(fx, "dur", 1.2, star) + _ccx(sim, src))
 	v["anim"] = null
 	if kind in ["down", "air", "pull"]: _ground(sim, v)
 	if kind in ["down", "pull", "stun"]: A(v)["rush_off"] = true
@@ -1273,7 +1302,7 @@ static func hit(sim, src: Dictionary, v: Dictionary, mult: float, c = null) -> f
 					mod *= 1.35
 					if marked and v.fearT.t != tp: mod *= 1.8; chain = true; tag = "%s＋%s・連嚇" % [word(v.fearT.t), wd]; tcol = "#ffd84a"
 					else: tag = "怕%s・失神" % wd
-					v["fearT"] = {"t": tp, "until": sim.t + 3.2}
+					v["fearT"] = {"t": tp, "until": sim.t + 3.2 + maxf(0.0, stat(sim, src, "daze_dur") - 1.0)}   # [ab] 合體技 kwaidan：失神 +1 秒
 				elif marked and v.fearT.t != tp: mod *= 1.3; tag = "追嚇"; tcol = "#ffe8a0"
 			else:   # 普攻也吃克制（counter.md 3.5）
 				if f.i.has(tp): mod *= 0.8
@@ -1282,7 +1311,7 @@ static func hit(sim, src: Dictionary, v: Dictionary, mult: float, c = null) -> f
 		var es = sa.get("sc", [])
 		var hs = J.str(va.get("sys", ""))
 		if es.size() and SYS.has(hs):
-			if (SYS[hs].w as Array).has(es[0]): mod *= 1.25
+			if (SYS[hs].w as Array).has(es[0]): mod *= 1.0 + 0.25 * (stat(sim, v, "fear_" + J.str(es[0])) if es[0] == "light" else 1.0)   # [ab] 合體技 zhizha／tsukumo：「怕燈（火）」弱點減半
 			elif (SYS[hs].i as Array).has(es[0]): mod *= 0.75
 	# ---- 追擊（舊 follow）：霸體唔成立（「破」照計） ----
 	var combo_hit = false
@@ -1292,11 +1321,14 @@ static func hit(sim, src: Dictionary, v: Dictionary, mult: float, c = null) -> f
 	# ---- 第二層：機制 ----
 	if c.get("vs_mech") is Dictionary:
 		for m in c.vs_mech: if has_mech(v, norm_mech(m)): mod *= J.num(c.vs_mech[m])
+	for b in sa.get("bf", []):   # [ab] 合體技 liaozhai：buff vs_mech（對指定機制敵人傷害 +v）
+		if J.str(b.get("stat")) == "vs_mech" and J.num(b.until) > sim.t:
+			for m in _arr(b.get("mech")): if has_mech(v, norm_mech(m)): mod *= 1.0 + J.num(b.v); break
 	if c.get("vs_sys") is Dictionary and c.vs_sys.has(J.str(va.get("sys", ""))): mod *= J.num(c.vs_sys[J.str(va.sys)])
 	if J.num(stat(sim, v, "taken_melee")) != 1.0 and not ranged(src): mod *= stat(sim, v, "taken_melee")
 	if c.get("vs_tag") is Dictionary:
 		for tg in c.vs_tag: if has_tag(v, norm_tag(tg)): mod *= J.num(c.vs_tag[tg])
-	if c.get("execute") is Dictionary and _nn(v, "hp") < J.num(c.execute.get("hp_pct", 0.25)) * _nn(v, "maxhp"): mod *= J.num(c.execute.get("x", 2.0)); ev(sim, "execute", src, v)
+	if c.get("execute") is Dictionary and _nn(v, "hp") < (J.num(c.execute.get("hp_pct", 0.25)) + _exx(sim, src)) * _nn(v, "maxhp"): mod *= J.num(c.execute.get("x", 2.0)); ev(sim, "execute", src, v)
 	if flying(sim, v):
 		if J.num(sa.get("anti_air", 0)) > 0: mod *= J.num(sa.anti_air)
 		elif ranged(src): pass
@@ -1400,7 +1432,7 @@ static func _reveal_hit(sim, src, v: Dictionary) -> void:
 	for w in sim.units:
 		if _nn(w, "side") == _nn(v, "side") and _nn(w, "hp") > 0 and (J.t(A(w).get("clone")) or has_mech(w, "隱") or has_bf(sim, w, "stealth")) and (w.p as Vector2).distance_to(v.p) <= mp("隱", "reveal_r", 150.0):
 			if J.t(A(w).get("clone")) or stealthed(sim, w) or J.num(A(w).get("rev_until", 0)) < sim.t + 2.0: need = true; break
-	if need: _reveal(sim, src, v.p, mp("隱", "reveal_r", 150.0), mp("隱", "reveal_s", 8.0))
+	if need: _reveal(sim, src, v.p, mp("隱", "reveal_r", 150.0) * stat(sim, src, "reveal_r"), mp("隱", "reveal_s", 8.0))
 static func _guard_of(sim, v: Dictionary):
 	for w in sim.units:
 		if _nn(w, "side") != _nn(v, "side") or w == v or not sim.alive(w): continue
@@ -1676,7 +1708,7 @@ static func _slow_tick(sim, step: float) -> void:
 	for u in sim.units:
 		if _nn(u, "side") == 0 and sim.alive(u) and has_tag(u, "照"):
 			for w in sim.units:
-				if _nn(w, "side") == 1 and sim.alive(w) and (has_mech(w, "隱") or J.t(A(w).get("clone"))) and (u.p as Vector2).distance_to(w.p) <= mp("隱", "reveal_r", 150.0):
+				if _nn(w, "side") == 1 and sim.alive(w) and (has_mech(w, "隱") or J.t(A(w).get("clone"))) and (u.p as Vector2).distance_to(w.p) <= mp("隱", "reveal_r", 150.0) * stat(sim, u, "reveal_r"):
 					_reveal(sim, u, w.p, 40.0, mp("隱", "reveal_s", 8.0) * 0.25)
 	# 分身：每 re 秒補返分身（re=0 唔補）
 	for w in sim.units:

@@ -304,6 +304,12 @@ static func card_info(e: Dictionary) -> Dictionary:
 		o["per"] = "+%d～%d" % [lo, hi] if hi > lo else "+%d" % lo
 		o["first"] = SOUL.FIRST[r] if first else 0
 		o["partner"] = o.owned and o.rank >= SOUL.RANK_MAX
+	var g2 = SOUL.guard2_of(e)   # [roster2] 雙駐守（第二批新鬼）
+	o["g2"] = g2
+	if g2 != "":
+		o["g2_name"] = SOUL.gname(g2) if SOUL.seen(g2) else "？？？"
+		o["g2_have"] = SOUL.souls(g2)
+		o["g2_need"] = SOUL.rank_cost(g2, SOUL.rank(g2) + 1) if SOUL.owned(g2) and SOUL.rank(g2) < SOUL.RANK_MAX else SOUL.need_of(g2)
 	var k2 = SOUL.sec_of(e)
 	o["k2"] = k2
 	if k2 != "":
@@ -334,6 +340,8 @@ static func card_rows(vb: VBoxContainer, d) -> void:
 		var l2 = L("每次 %s", "每次 %s") % str(d.get("per", ""))
 		if int(d.get("first", 0)) > 0: l2 += L("　首勝 +%d", "　首勝 +%d") % int(d.first)
 		lab.call(l2, 15, Color("#ffd27a"))
+	if str(d.get("g2", "")) != "":   # [roster2] 雙駐守
+		lab.call(L("雙駐守：%s　魂魄 %d/%d（每次同樣掉）", "雙駐守：%s　魂魄 %d/%d（每次同樣掉）") % [str(d.g2_name), int(d.g2_have), int(d.g2_need)], 15, Color("#f4e2ff"))
 	lab.call(str(d.fresh), 15, Color("#a8f0a0") if float(d.mul) > 0.99 else Color("#ff9a7a"))
 	var l3 = L("散魂 +%d", "散魂 +%d") % int(d.san)
 	if str(d.get("k2", "")) != "": l3 = L("副魂 %s 25%%（保底：再 %d 次必得）　", "副魂 %s 25%%（保底：再 %d 次必得）　") % [str(d.name2), int(d.pity2)] + l3

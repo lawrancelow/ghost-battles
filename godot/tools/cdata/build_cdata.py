@@ -11,6 +11,10 @@ ET = dict(CORE["ENEMY_T"]); GH = CORE["GHOSTS"]; SK = CORE["SKILLS"]
 # newghost 線：新名鬼 26、大魔王 7、新雜兵 8 已有圖同 ENEMY_T（data/nat/newghost.json），行起身時登記入遊戲
 NGJ = json.load(open(os.path.join(ROOT, "data/nat/newghost.json"), encoding="utf-8"))
 ET.update(NGJ["ENEMY_T"])
+# [roster2] 第二批新名鬼 30 隻（data/nat/newghost2.json）：ENEMY_T／名冊／據點雙駐守（tools/newghost/ng2_cdata.py）；冇呢個檔就乜都唔做
+import importlib.util as _iu
+_s2 = _iu.spec_from_file_location("ng2_cdata", os.path.join(ROOT, "tools/newghost/ng2_cdata.py")); NG2 = _iu.module_from_spec(_s2); _s2.loader.exec_module(NG2)
+ET.update(NG2.enemy_t())
 _ngb = open(os.path.join(ROOT, "game/newghost/ng_boss.gd"), encoding="utf-8").read()
 ESCORT = {m.group(1): re.findall(r'"([a-z_0-9]+)"', m.group(2)) for m in re.finditer(r'"(bm_[a-z]+)": \[([^\]]*)\]', _ngb)}
 
@@ -112,6 +116,7 @@ for row in [
 ]:
     i, s, a, m, ch, t, nm = row
     add(i, s, a, m, ch, t, name=nm, new=True)
+for i, s, a, m, ch, t, nm in NG2.rows(): add(i, s, a, m, ch, t, name=nm, new=True)   # [roster2] 第二批 30
 FOD = {  # 雜兵 14（counter.md 6.4）
     "youhun": ("遊魂", "魂", "吹氣", ""), "egui": ("餓鬼", "魂", "吹氣", "再生"), "shuigui": ("水鬼", "橫", "凍", "突襲"),
     "zombie": ("殭屍兵", "屍", "凍", "屍變"), "zhiren": ("紙人偶", "紙紮", "紙", ""), "xiaogui": ("小鬼", "使", "鬼臉", "隱"),
@@ -283,6 +288,8 @@ for ch in range(1, 7):
             lt = REAL_GANGS[ch][e["dir"]][1][-1]
         plan = esc[:3] + [lt, bm]
         CAMPS.append(dict(id=e["id"], c=ch - 1, ring=4, dir=e["dir"], gang="魔王", plan=plan, king=False, nn=2, n=5, fods=esc[:3], bm=bm))
+
+NG2.place(CAMPS, lambda i: ent(i)["mech"])   # [roster2] 第二批 30 隻做據點雙駐守（guard2）
 
 # 機制教學節奏（審查修正 8）：第 1 章最多 3 種，之後每章新加 2 種；每據點上限 第 1～2 圈 1、第 3 圈 2、第 4 圈 3
 RING_CAP = [1, 1, 2, 3]
@@ -702,8 +709,9 @@ def build():
         for c in CAMPS:
             if c["c"] != ch or c.get("bm"): continue
             for i in c["plan"]:
+                if i == c.get("guard2"): continue   # [roster2] 雙駐守唔改教學節奏
                 for m in ENEMY[real(i)[0]]["mech"]: cnt[m] = cnt.get(m, 0) + 1
-        later = {m for c in CAMPS if c["c"] > ch and not c.get("bm") for i in c["plan"] for m in ENEMY[real(i)[0]]["mech"]}
+        later = {m for c in CAMPS if c["c"] > ch and not c.get("bm") for i in c["plan"] if i != c.get("guard2") for m in ENEMY[real(i)[0]]["mech"]}
         new = sorted([m for m in cnt if m not in allowed], key=lambda m: (m in later, -cnt[m], MECHS.index(m)))[:NEW_PER_CH[ch]]   # 之後再冇機會出嘅先教
         if ch == 0: new = ["再生", "突襲", "散骨"]   # counter.md 13：第 1 關只教最直觀三個
         for m in new: intro[m] = ch
@@ -733,6 +741,7 @@ def build():
                           "hm": hm, "am": am, "mk": mk, "guard": guard, "guard_plan": gp, "mech": mech, "q": mech[:2], "mech_plan": pmech,
                           "sys": sorted(sy, key=lambda s: -sy[s]), "king": c["king"]}
         if c.get("bm"): camps[c["id"]]["bm"] = c["bm"]
+        if c.get("guard2"): camps[c["id"]]["guard2"] = c["guard2"]   # [roster2] 雙駐守（打贏都掉主魂）
     gangs = {}
     for ch, ds in REAL_GANGS.items():
         gangs[str(ch - 1)] = {}
@@ -749,6 +758,7 @@ def build():
     for cid, c in camps.items():
         for k in sorted(set(c["en"])):
             if ENEMY[k]["recruit"]: src.setdefault(k, []).append({"t": "camp", "id": cid, "guard": k == c["guard"]})
+    NG2.mark_src(camps, src)   # [roster2]
     for ci, m in ZONES.items():
         for z in m["zones"]:
             for b in z.get("bosses") or []:
@@ -783,6 +793,7 @@ def build():
         "mech_intro": intro, "ring_cap": RING_CAP,
         "src": src, "src_note": "t：camp＝據點（guard＝駐守鬼主魂）、wildboss＝野外王重打、throne＝王座重遊（主線劇情王重打）",
         "guest": [{"k": k, "camp": c} for k, c in GUEST],
+        "new2": NG2.new2(), "guard2_note": "roster2：camps[id].guard2＝雙駐守（第二批新鬼；打贏同 guard 一樣掉主魂）",   # [roster2]
         "new": {k: {"name": R[k]["name"], "sys": R[k]["sys"], "sc": SC[R[k]["sc"]], "mech": R[k]["mech"], "ch": R[k]["ch"], "tags": v, "note": NEW_NOTE.get(k, "")} for k, v in NEW_TAGS.items()},
         "ring_mech": RING_MECH,
         "boss_hp": 1.6,

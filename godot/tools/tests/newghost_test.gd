@@ -63,6 +63,44 @@ func _sig(a: Dictionary) -> String:
 	ps.sort()
 	return JSON.stringify(act.get("tg", {}), "", true) + "|" + ",".join(ps)
 
+# 標籤推導：同 tools/cdata/build_cdata.py derive()、cdata_test.gd _derive() 一致
+const MULTI := ["circle", "self_circle", "cone", "line", "chain"]
+func _derive(a: Dictionary) -> Array:
+	var ps = []; var src = [a.act.fx]
+	for p in a.get("pas", []): src.append(p.fx)
+	if a.get("aura") is Dictionary: src.append(a.aura.fx)
+	while src.size():
+		for x in src.pop_front():
+			ps.append(x)
+			if str(x.p) == "zone": src.append(x.get("fx", []))
+	var ids = {}
+	for x in ps: ids[str(x.p)] = true
+	var t = []; var act = a.act; var tg = act.tg
+	if float(a.rng) >= 150: t.append("遠")
+	if ids.has("down") or ids.has("pull"): t.append("拉")
+	var zone_act = false
+	for x in act.fx: if str(x.p) == "zone": zone_act = true
+	if str(tg.get("shape", "")) in MULTI or zone_act: t.append("掃")
+	var hits2 = false; var big = false
+	var single = str(tg.get("shape", "single")) == "single" and not (str(tg.get("sel", "")) in ["allies", "self"])
+	for x in act.fx:
+		if str(x.p) != "dmg": continue
+		var h = int(x.get("hits", 1)); var mm = x.mult[0] if x.mult is Array else float(x.mult)
+		if h >= 2: hits2 = true
+		if h < 2 and float(mm) >= 1.7: big = true
+	if hits2 or ids.has("shield_break") or ids.has("armor_break"): t.append("破")
+	if (single and big) or ids.has("execute") or ids.has("dash"): t.append("刺")
+	if ids.has("sap") or ids.has("wound") or ids.has("silence") or ids.has("interrupt"): t.append("削")
+	if ids.has("drain") or ids.has("heal") or ids.has("hot"): t.append("回")
+	if ids.has("reveal") or "light" in a.sc: t.append("照")
+	var steady = ids.has("taunt") or ids.has("guard")
+	if a.get("aura") is Dictionary and str(a.aura.side) == "ally":
+		for x in a.aura.fx:
+			if str(x.p) == "immune" and ("fear_aura" in x.get("tags", []) or "confuse" in x.get("tags", [])): steady = true
+	if steady: t.append("定")
+	if ids.has("banish"): t.append("收")
+	return t
+
 func roster_check() -> void:
 	_chk("newghost.json 讀到、已登記（patrol_ghosts 掛鈎）", NG.installed and not NG.D().is_empty())
 	var R = NG.roster(); var GH = J.G.GHOSTS
@@ -121,12 +159,33 @@ func roster_check() -> void:
 		var e = NG.enemy(str(k)); var g = GH[k]
 		var tg = (NG.abil(str(k)).get("tags", e.get("tags", [])) as Array)
 		if k in ["niutou", "mamian"]: tg = ["x", "y"]   # 標籤歸 cdata ABIL
-		var good = e.has("sys") and (e.get("sc", []) as Array).size() == 1 and (e.get("fear", []) as Array).size() == 2 and (e.get("imm", []) as Array).size() == 1
+		var good = e.has("sys") and (e.get("sc", []) as Array).size() == 1 and (e.get("fear", []) as Array).size() >= 1 and (e.get("imm", []) as Array).size() >= 1
 		good = good and not (e.sc[0] in e.fear) and tg.size() >= 2 and tg.size() <= 3
 		good = good and NG.pin(str(k)) in ["凡", "靈", "煞"] and str(g.get("lore", "")).length() > 10 and str(g.get("title", "")) != "" and str(g.get("trait", "")) != ""
 		good = good and (J.G.SKILLS.get(k) is Dictionary) and (J.G.ENEMY_T.get(k) is Array)
 		if not good: badd.append(k)
-	_chk("新鬼／牛頭馬面：系、嚇法、怕兩種唔怕一種（自己嚇法唔喺怕）、標籤 2–3、品級、出處、SKILLS、ENEMY_T", badd.is_empty(), badd)
+	_chk("新鬼／牛頭馬面：系、嚇法、有怕有唔怕（自己嚇法唔喺怕）、標籤 2–3、品級、出處、SKILLS、ENEMY_T", badd.is_empty(), badd)
+	# 怕／唔怕、系、嚇法、機制：同 cdata abil.json ENEMY 一致（定案：以 cdata 8 系規則為準）
+	var FJ = JSON.parse_string(FileAccess.get_file_as_string("res://data/abil.json"))
+	var CE = FJ.get("ENEMY", {}) if FJ is Dictionary else {}
+	var neq = []
+	for k in NG.D().get("ENEMY", {}):
+		var a = NG.enemy(str(k)); var c = CE.get(k)
+		if not (c is Dictionary): neq.append(str(k) + ":冇"); continue
+		for f in ["sys", "sc", "fear", "imm", "mech"]:
+			if JSON.stringify(a.get(f)) != JSON.stringify(c.get(f)): neq.append("%s.%s" % [k, f])
+	_chk("新鬼／魔王／雜兵 43 種：系、嚇法、怕／唔怕、機制同 abil.json ENEMY 一致", neq.is_empty() and CE.size() > 0, neq)
+	# 標籤 ↔ 積木（cdata 推導規則）、標籤＝counter.json new 規格
+	var CN = JSON.parse_string(FileAccess.get_file_as_string("res://data/nat/counter.json")).get("new", {})
+	var tmis = []
+	for k in NG.new_keys():
+		var a = NG.abil(str(k)); var tg = (a.get("tags", []) as Array).duplicate(); tg.sort()
+		var want = (CN.get(k, {}).get("tags", []) as Array).duplicate(); want.sort()
+		var d = _derive(a); d.sort()
+		if tg != want or d != want: tmis.append("%s 標%s 規格%s 推導%s" % [k, tg, want, d])
+	_chk("新鬼 26 隻：標籤＝counter.json new 規格＝能力積木推導（cdata 規則）", tmis.is_empty() and CN.size() >= 26, tmis)
+	_chk("例：鬼火怕黑影、唔怕吹氣同燈", NG.enemy("nw_guihuo").fear == ["shadow"] and "breath" in NG.enemy("nw_guihuo").imm and "light" in NG.enemy("nw_guihuo").imm)
+	_chk("例：狐妖標「遠照」：射程遠（≥150）、有現形積木", float(NG.abil("nw_huli").rng) >= 150 and JSON.stringify(NG.abil("nw_huli").act.fx).contains("reveal"))
 	_chk("改名定案：陰司審批官、投胎辦事處職員、紙紮跑車、狐妖", GH.nw_shenpi.name == "陰司審批官" and GH.nw_toutai.name == "投胎辦事處職員" and GH.nw_zzcar.name == "紙紮跑車" and GH.nw_huli.name == "狐妖")
 	_chk("陰司審批官有「收」；Teke Teke 第 5 關、冇免疫腳軟", "收" in NG.abil("nw_shenpi").tags and int(NG.enemy("nw_teketeke").ch) == 5 and not JSON.stringify(NG.abil("nw_teketeke")).contains("\"down\",\"push\"") and not JSON.stringify(NG.abil("nw_teketeke").get("pas", [])).contains("immune"))
 
@@ -263,7 +322,10 @@ func camp_check(t, m) -> void:
 		var dr = NG.D().BOSS.bm_taotie.drop
 		var san1 = J.num(S.soul.get("san", 0)) if S.get("soul") is Dictionary else 0.0
 		_chk("打贏魔王：戰報勝利、首勝", J.t(rep.get("win")) and J.t(rep.get("first")), rep.get("head"))
-		_chk("掉散魂（首勝 %d＋%d）" % [int(dr.first), int(dr.win)], absf(san1 - san0 - dr.first - dr.win) < 0.01, [san0, san1])
+		# soul 線：野外出擊打贏另加散魂（第 4 圈 SAN[3]），唔關魔王掉落
+		var extra = 0.0
+		if ResourceLoader.exists("res://game/soul/soul_data.gd"): extra = float(load("res://game/soul/soul_data.gd").SAN[3])
+		_chk("掉散魂（首勝 %d＋%d＋出擊 %d）" % [int(dr.first), int(dr.win), int(extra)], absf(san1 - san0 - dr.first - dr.win - extra) < 0.01, [san0, san1])
 		_chk("戰報有散魂一行", str(rep.get("full", "")).contains("散魂"), rep.get("full"))
 		_chk("魔王唔會變名鬼（S.ghosts 冇 bm_）", S.ghosts.all(func(g): return not str(g.k).begins_with("bm_")))
 		_chk("記錄打低魔王", NGB.beat("bm_taotie") == 1)

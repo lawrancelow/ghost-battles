@@ -435,13 +435,25 @@ func link(t) -> void:
 		for f in fs: hp1 += J.num(f.hp)
 		var eff = []
 		for k in op.ab_log.ev: if not str(k).begins_with("link_") and k != "combo" and k != "trig_start": eff.append(k)
-		var okk = got and (str(c.get("kind")) == "aura" or hp1 < hp0)
+		var miss = _link_eff(op, mine, hs, fs) if str(c.get("kind")) == "aura" else []
+		var okk = got and miss.is_empty() and (str(c.get("kind")) == "aura" or hp1 < hp0)
 		if okk: nfire += 1
-		_chk("合體技 %s（%s，%s）喺地圖戰鬥觸發" % [c.id, c.get("name"), c.get("kind")], okk, [mem, int(hp0 - hp1), eff])
+		_chk("合體技 %s（%s，%s）喺地圖戰鬥觸發、效果落實" % [c.id, c.get("name"), c.get("kind")], okk, [mem, int(hp0 - hp1), eff, miss])
+		# 觸發判斷同 ng_data.gd 嘅 NG.active_links 一致
+		var NGa = load("res://game/newghost/ng_data.gd")
+		if NGa != null and NGa.has_method("active_links") and NGa.links().any(func(x): return str(x.id) == str(c.id)):
+			var ids = NGa.active_links(mem).map(func(x): return str(x.id))
+			_chk("NG.active_links 同引擎一致：%s" % c.id, ids.has(str(c.id)), ids)
 	_chk("25 組合體技全部觸發", nfire >= 25, nfire)
+	_link_prims()
 	# 新鬼（26＋牛頭馬面）主動技
 	var NG = load("res://game/newghost/ng_data.gd")
 	var ks = NG.keys() if NG != null else []
+	var n1 = ks.size()
+	if FileAccess.file_exists("res://data/nat/newghost2.json"):   # 第二批 30 隻（roster2）：有就一齊驗
+		var j2 = JSON.parse_string(FileAccess.get_file_as_string("res://data/nat/newghost2.json"))
+		if j2 is Dictionary:
+			for k in j2.get("ABIL", {}): if not k in ks: ks = ks + [k]
 	var okn = 0; var badk = []
 	for k in ks:
 		var act = AB.act_of(k)
@@ -458,10 +470,118 @@ func link(t) -> void:
 		var evs = op2.ab_log.get("ev", {}).keys()
 		if int(op2.ab_log.get("cast", 0)) > c0 and (hp1b < hp0b or evs.size() > 0): okn += 1
 		else: badk.append([k, act.get("name"), evs])
-	_chk("新鬼主動技全部放得出、有效果（%d 隻）" % ks.size(), badk.is_empty() and ks.size() >= 28, badk)
+	_chk("新鬼主動技全部放得出、有效果（%d 隻）" % ks.size(), badk.is_empty() and n1 >= 28, [n1, ks.size(), badk])
 	S["lv"] = lv0
 	AB.force = -1
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+# aura 合體技：逐個 fx 驗證狀態真係落咗
+func _link_eff(op, cb, hs: Array, fs: Array) -> Array:
+	var miss = []
+	for fx in AB._link_fx(cb):
+		var p = str(fx.get("p")); var okf = false
+		var who = fx.get("who")
+		var tgt = hs.filter(func(u): return who == null or str(u.k) == str(who))
+		if str(fx.get("tg", "")) == "foes": tgt = fs
+		match p:
+			"buff":
+				for u in tgt:
+					for b in AB.A(u).get("bf", []): if str(b.get("stat")) == str(fx.stat): okf = true
+			"immune":
+				for u in tgt:
+					for b in AB.A(u).get("bf", []): if str(b.get("p")) == "immune": okf = true
+			"on_kill_heal", "on_kill_maxhp", "on_ally_down":
+				for u in hs: if AB.A(u).get(p) is Dictionary: okf = true
+			"foe_summon_cd": okf = AB.has_bf(op, fs[0], "sum_cd")
+			"reveal_pulse": okf = cb.get("pulse") is Dictionary and int(op.ab_log.ev.get("reveal_pulse", 0)) > 0
+			"energy":
+				for u in tgt: if J.num(u.energy) >= J.num(fx.get("v", 1)) * 0.9: okf = true
+			"shield":
+				for u in hs: if J.num(AB.A(u).get("shd", 0)) > 0: okf = true
+			"stealth":
+				for u in tgt: if AB.has_bf(op, u, "stealth"): okf = true
+			"sap_lock": okf = AB.has_bf(op, fs[0], "sap_lock")
+			"sap": okf = int(op.ab_log.ev.get("sap", 0)) > 0
+			_: okf = int(op.ab_log.ev.get(p, 0)) > 0
+		if not okf: miss.append(p)
+	return miss
+
+# 合體技新積木逐個驗證（數值真係生效）
+func _link_prims() -> void:
+	var SK = J.G.get("SKILLS")
+	# slow：v 負數都係減速
+	var u = mk(N_K, 0, 3000, 50); var v = mk(F_K, 1, 3000, 30)
+	var op = placed([u], [v])
+	P(op, u, {"p": "slow", "v": -0.35, "dur": 4.0}, [v])
+	_chk("slow v=-0.35 都係減速（yusan）", AB.stat(op, v, "spd") < 1.0, AB.stat(op, v, "spd"))
+	# 免疫燒傷
+	var e = mk(F_K, 1, 3000, 30); var h = mk(N_K, 0, 3000, 50)
+	op = placed([h], [e])
+	P(op, h, {"p": "immune", "tags": ["dot_fire"], "dur": -1}, [h])
+	P(op, e, {"p": "dot", "dps": 0.5, "dur": 4.0, "kind": "fire"}, [h])
+	P(op, e, {"p": "dot", "dps": 0.5, "dur": 4.0, "kind": "poison"}, [h])
+	var nd = AB.A(h).bf.filter(func(b): return str(b.get("p")) == "dot")
+	_chk("免疫燒傷：火 dot 唔上身、毒照上（shanhai）", nd.size() == 1 and str(nd[0].kind) == "poison", nd.size())
+	# vs_mech buff
+	u = mk(N_K, 0, 3000, 100); var v1 = mk(F_K, 1, 50000, 30); var v2 = mk(F_K, 1, 50000, 30)
+	op = placed([u], [v1, v2]); _bare(op)
+	AB.A(v1)["mech"] = ["屍變"]
+	var d0 = H(op, u, v1, 1.0, {"sk": true, "kind": "hit"}); var dn0 = H(op, u, v2, 1.0, {"sk": true, "kind": "hit"})
+	P(op, u, {"p": "buff", "stat": "vs_mech", "v": 0.25, "mech": ["屍變"], "dur": -1}, [u])
+	var d1 = H(op, u, v1, 1.0, {"sk": true, "kind": "hit"}); var dn1 = H(op, u, v2, 1.0, {"sk": true, "kind": "hit"})
+	_chk("vs_mech buff：對屍變 +25%、對冇機制唔變（liaozhai）", absf(d1 / maxf(1, d0) - 1.25) < 0.03 and absf(dn1 / maxf(1, dn0) - 1.0) < 0.03, [d0, d1, dn0, dn1])
+	# 斬殺線 +15%
+	u = mk(N_K, 0, 3000, 100); v = mk(F_K, 1, 10000, 30)
+	op = placed([u], [v]); _bare(op); v["hp"] = 5000.0
+	var c0 = int(op.ab_log.ev.get("execute", 0))
+	P(op, u, {"p": "execute", "hp_pct": 0.4, "x": 2.0}, [v])
+	var c1 = int(op.ab_log.ev.get("execute", 0))
+	P(op, u, {"p": "buff", "stat": "execute", "v": 0.15, "dur": -1}, [u]); v["hp"] = 5000.0
+	P(op, u, {"p": "execute", "hp_pct": 0.4, "x": 2.0}, [v])
+	_chk("斬殺線 +15%：50% 血 0.4 線唔斬、+0.15 後斬（baosang）", c1 == c0 and int(op.ab_log.ev.get("execute", 0)) > c1, [c0, c1, op.ab_log.ev.get("execute")])
+	# 落地時間減半
+	var fl = mk(N_K, 0, 3000, 50); e = mk(F_K, 1, 3000, 30)
+	op = placed([fl], [e]); AB.A(fl)["fly"] = true
+	AB._ground(op, fl); var g0 = J.num(AB.A(fl).ground_until) - op.t
+	AB.A(fl)["ground_until"] = -1.0
+	P(op, fl, {"p": "buff", "stat": "grounded", "v": -0.5, "dur": -1}, [fl])
+	AB._ground(op, fl); var g1 = J.num(AB.A(fl).ground_until) - op.t
+	_chk("被打落地時間減半（feitou）", absf(g1 - g0 * 0.5) < 0.05, [g0, g1])
+	# 控制 +1 秒
+	u = mk(N_K, 0, 3000, 50); v = mk(F_K, 1, 3000, 30)
+	op = placed([u], [v]); _bare(op)
+	AB.cc(op, u, v, "down", {"dur": 1.4}); var t0 = J.num(v.st.down)
+	P(op, u, {"p": "buff", "stat": "cc_dur", "v": 1.0, "dur": -1}, [u])
+	AB.cc(op, u, v, "down", {"dur": 1.4}); var t1 = J.num(v.st.down)
+	_chk("我方控制 +1 秒（shanlin／yueyu）", absf(t1 - t0 - 1.0) < 0.05, [t0, t1])
+	# 怕燈弱點減半：敵人燈系技能打怕燈嘅名鬼
+	var hs = ""
+	for sy in AB.SYS: if (AB.SYS[sy].w as Array).has("light"): hs = sy; break
+	var hk = _hero_sys(hs) if hs != "" else ""
+	var fk = ""
+	for k in (AB.data().get("ENEMY", {}) as Dictionary):
+		if AB.scares_of(k).size() and str(AB.scares_of(k)[0]) == "light": fk = str(k); break
+	if hk != "" and fk != "":
+		h = mk(hk, 0, 50000, 50); e = mk(fk, 1, 3000, 100)
+		op = placed([h], [e]); _bare(op)
+		AB.A(e)["sc"] = ["light"]
+		var w0 = H(op, e, h, 1.0, {"sk": true, "kind": "hit"})
+		P(op, h, {"p": "buff", "stat": "fear_light", "v": -0.5, "dur": -1}, [h])
+		var w1 = H(op, e, h, 1.0, {"sk": true, "kind": "hit"})
+		_chk("怕燈（火）弱點減半：×1.25→×1.125（zhizha／tsukumo）", absf(w1 / maxf(1, w0) - 1.125 / 1.25) < 0.03, [hk, fk, w0, w1])
+	else: _chk("怕燈測試搵到名鬼／敵人", false, [hs, hk, fk])
+	# 失神 +1 秒
+	var kf = _foe_by("light", "w"); var hl = _hero_sc("light")
+	if kf != "" and hl != "":
+		h = mk(hl, 0, 3000, 80); v = mk(kf, 1, 50000, 30)
+		op = placed([h], [v]); _bare(op)
+		AB.A(h)["sc"] = ["light"]
+		H(op, h, v, 1.0, {"sk": true, "kind": "hit"}); var f0 = J.num(v.fearT.until) - op.t
+		v.erase("fearT")
+		P(op, h, {"p": "buff", "stat": "daze_dur", "v": 1.0, "dur": -1}, [h])
+		H(op, h, v, 1.0, {"sk": true, "kind": "hit"}); var f1 = J.num(v.fearT.until) - op.t
+		_chk("失神時間 +1 秒（kwaidan）", absf(f1 - f0 - 1.0) < 0.05, [f0, f1])
+	else: _chk("失神測試搵到名鬼／敵人", false, [kf, hl])
 
 func _off() -> void:
 	AB.force = -1; AB.OFF = true
@@ -536,6 +656,7 @@ func _fight(kind: String, mech: String, sd: int) -> Dictionary:
 		var a = op.units[i].ab
 		a["tags"] = _tags_for(kind, i)
 		if kind == "break": a.tags = ["破"]
+		a["act"] = AB.from_legacy(op.units[i].get("sk")); a["pas"] = []   # 隔離：用測試技（N_K 喺 abil.json 有自己主動技／被動，會蓋過測試技）
 	op.t_skip_march()
 	var hp0 = [0.0, 0.0]
 	for u in op.units: if J.num(u.side) == 0: hp0[int(J.t(u.get("minion")))] += J.num(u.maxhp)
