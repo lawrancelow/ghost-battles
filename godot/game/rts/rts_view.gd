@@ -15,7 +15,7 @@ const BA = preload("res://game/barracks/bk_art.gd")
 const K_ONE := 0.85           # 名鬼／敵人（BtChar 1.32）→ 約 50–58 世界 px 高，同村子主角差唔多
 const K_REP := 1.2            # 小隊代表兵（BtChar 0.75）→ 約 38 px
 const K_SOL := 0.92           # 陰兵代表兵（兵營圖 46px）→ 約 39 px
-const REP_OFF := [Vector2(0, -8), Vector2(-17, 6), Vector2(17, 6)]
+const REP_OFF := [Vector2(-11, -3), Vector2(11, 4)]
 const BTN := 52.0             # 技能鈕直徑（畫面 px）
 
 var nv = null
@@ -111,7 +111,8 @@ func _sync_auto() -> void:
 	var s = UIKit.sb(Color("#2e5d55") if on else Color("#3a2c26"), 8, Color("#7ac0b0") if on else Color("#6a5040"), 2, Vector4(9, 4, 9, 4))
 	for k in ["normal", "hover", "pressed"]: chip_auto.add_theme_stylebox_override(k, s)
 
-func _main_op():
+func _main_op():   # 戰況條／技能鈕：名鬼帶隊嗰場優先
+	for o in RTS.ops: if o.phase != "done" and not o.no_heroes: return o
 	for o in RTS.ops: if o.phase != "done": return o
 	return null
 
@@ -205,7 +206,7 @@ class UnitVis extends Node2D:
 	var chars: Array = []
 	var proxies: Array = []
 	var sols: Array = []
-	var dead_t := [-1.0, -1.0, -1.0]
+	var dead_t := [-1.0, -1.0]
 	var flash := 0.0
 	func setup(unit: Dictionary, fakeb: Dictionary) -> void:
 		u = unit; fb = fakeb
@@ -213,7 +214,7 @@ class UnitVis extends Node2D:
 		var minion = J.t(u.get("minion"))
 		if minion and J.num(u.side) == 0 and u.get("ml") == null: kind = "yin"
 		elif minion: kind = "squad"
-		var n = 1 if kind == "one" else 3
+		var n = 1 if kind == "one" else SIM.REPS
 		for i in n:
 			var off = REP_OFF[i] if n > 1 else Vector2.ZERO
 			if kind == "yin":
@@ -226,7 +227,7 @@ class UnitVis extends Node2D:
 	func _alive_reps() -> int:
 		var hp = J.num(u.get("hp", 0))
 		if hp <= 0: return 0
-		return clampi(int(ceil(hp / maxf(1.0, J.num(u.get("maxhp", 1))) * 3.0 - 0.001)), 1, 3)
+		return clampi(int(ceil(hp / maxf(1.0, J.num(u.get("maxhp", 1))) * float(SIM.REPS) - 0.001)), 1, SIM.REPS)
 	func sync(T: float, dt: float, op) -> void:
 		position = (u.p as Vector2).round()
 		var face = J.num(u.get("face", 1.0)); if face == 0: face = 1.0

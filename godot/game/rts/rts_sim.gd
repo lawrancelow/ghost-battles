@@ -21,7 +21,7 @@ const BACK := 84.0           # 回村
 const AGGRO := 170.0         # 接觸範圍
 const GAP := 46.0            # 隊與隊之間（弧長 px ≈ 0.6 秒）
 const SALUTE := 1.0          # 回到集合點敬禮幾秒
-const REPS := 3              # 每隊畫幾個代表兵
+const REPS := 2              # 每隊畫幾個代表兵
 
 var id := 0
 var kind := "stage"
@@ -48,6 +48,12 @@ var coins_won := 0.0
 var rw = null                # J.G.Rework
 var snd_t := 0.0
 var settled := false
+var ax := Vector2(0, -1)      # 陣線軸：我方 → 敵方
+var perp := Vector2(1, 0)
+var org := Vector2.ZERO
+var cosmetic := false         # 純畫面（派兵攻佔、自動擊退）：我方唔會死、結果由舊規則定
+var no_heroes := false
+var foe_from = null           # 敵人由邊度行過嚟（襲擾）
 
 func _init() -> void:
 	rw = J.G.get("Rework")
@@ -76,6 +82,7 @@ func setup(us: Array, out_path: PackedVector2Array, at: Vector2, gate_p: Vector2
 	var pos = camp_layout(at, foes.size(), _dir_in())
 	for i in foes.size():
 		var u = foes[i]; u["p"] = pos[i]; u["post"] = pos[i]; u["face"] = -1.0 if _dir_in().x >= 0 else 1.0
+		if foe_from is Vector2: u["p"] = (foe_from as Vector2) + (pos[i] - at); u["walking"] = true
 		u["eng"] = false
 	for i in units.size():
 		var u = units[i]
@@ -121,6 +128,10 @@ func dist(a: Dictionary, b: Dictionary) -> float: return (a.p as Vector2).distan
 func lead_of(u: Dictionary, tg: Dictionary) -> float:
 	if _nn(u, "range") > 60: return WIND + maxf(0.0, dist(u, tg) - 10) / PSPD
 	return WIND + IMPACT
+func _ours_alive() -> int:
+	var n = 0
+	for u in units: if _nn(u, "side") == 0 and _nn(u, "hp") > 0: n += 1
+	return n
 func heroes_alive() -> int:
 	var n = 0
 	for u in units: if _nn(u, "side") == 0 and not J.t(u.get("minion")) and _nn(u, "hp") > 0: n += 1
@@ -190,7 +201,8 @@ func hit(src: Dictionary, v: Dictionary, mult: float, sk) -> float:
 	var combo_hit = false
 	if J.t(sk) and J.t(sk.get("follow")) and _state(v) == sk.get("follow"): m *= 1.8; combo_hit = true
 	var dmg = J.round(_nn(src, "atk") * m * bonus * (0.9 + randf() * 0.2))
-	v["hp"] = _nn(v, "hp") - dmg
+	if cosmetic and _nn(v, "side") == 0: v["hp"] = maxf(_nn(v, "maxhp") * 0.25, _nn(v, "hp") - dmg)   # 純畫面：結果由舊規則定，唔好畫錯
+	else: v["hp"] = _nn(v, "hp") - dmg
 	var sp: Vector2 = src.get("p", v.p)
 	var dir = _sign((v.p as Vector2).x - sp.x)
 	if dir == 0: dir = 1.0 if _nn(v, "side") != 0 else -1.0
@@ -362,7 +374,13 @@ func _walk_path(u: Dictionary, dt: float, spd: float, pts: PackedVector2Array, p
 func _step_march(dt: float) -> void:
 	for u in units:
 		vis_tick(u, dt)
-		if _nn(u, "side") != 0: continue
+		if _nn(u, "side") != 0:
+			if foe_from != null and u.get("post") is Vector2:   # 惡鬼由野地行入嚟
+				var d = (u.post as Vector2) - (u.p as Vector2)
+				if d.length() > 2.0:
+					u["p"] = (u.p as Vector2) + d.normalized() * minf(d.length(), 40.0 * dt); u["walking"] = true; u["face"] = _sign(d.x) if absf(d.x) > 1 else u.get("face", -1.0)
+				else: u["walking"] = false
+			continue
 		_walk_path(u, dt, MARCH, path, path_len)
 
 func _contact() -> void:
@@ -371,10 +389,56 @@ func _contact() -> void:
 		for v in units:
 			if _nn(v, "side") == 1 and alive(v) and dist(u, v) <= AGGRO:
 				phase = "fight"; t = 0.0
+				_form()
 				events.append(["contact", null])
 				for e in units:
 					if _nn(e, "side") == 1 and _nn(e, "hp") > 0: text(head(e) + Vector2(0, -16), "！", "#ffdd55", 0.9, 24)
 				return
+
+# 接觸：定兩條陣線（我方一條、敵方一條，橫排站開；遠程企後一行）
+func _lat(p: Vector2) -> float: return (p - org).dot(perp)
+func _axl(p: Vector2) -> float: return (p - org).dot(ax)
+func _form() -> void:
+	var fo = []; var ou = []
+	for u in units:
+		if _nn(u, "hp") <= 0: continue
+		if _nn(u, "side") == 1: fo.append(u)
+		else: ou.append(u)
+	var c0 = Vector2.ZERO
+	for u in fo: c0 += u.p
+	c0 = c0 / maxf(1, fo.size()) if fo.size() else anchor
+	var c1 = path[path.size() - 1] if path.size() else c0 + Vector2(0, 120)
+	ax = (c0 - c1).normalized() if c0.distance_to(c1) > 1 else Vector2(0, -1)
+	perp = Vector2(-ax.y, ax.x); org = (c0 + c1) * 0.5
+	var mel = []; var rng = []
+	for u in ou: (rng if _nn(u, "range") > 60 else mel).append(u)
+	# 近身：名鬼排中間，小隊兩邊
+	var hs = mel.filter(func(x): return not J.t(x.get("minion")))
+	var sq = mel.filter(func(x): return J.t(x.get("minion")))
+	var line = sq.slice(0, sq.size() / 2) + hs + sq.slice(sq.size() / 2)
+	_slots(line, 42.0); _slots(rng, 46.0)
+	fo.sort_custom(func(a, b): return _lat(a.p) < _lat(b.p))
+	_slots(fo, 46.0)
+func _slots(arr: Array, gap: float) -> void:
+	for i in arr.size(): arr[i]["ls"] = (i - (arr.size() - 1) * 0.5) * gap
+# 陣線走位：守住自己橫位，沿軸向前去到「對面最近嗰隻」射程邊；對面冇人先橫移
+func _line_tg(u: Dictionary):
+	var cur = u.get("tg")
+	var my = float(u.get("ls", _lat(u.p)))
+	if cur is Dictionary and alive(cur) and absf(_lat(cur.p) - my) < 90.0: return cur
+	var best = null; var bk = 1e9
+	for v in enemies_of(u):
+		var k = absf(_lat(v.p) - my) * 1.6 + absf(_axl(v.p) - _axl(u.p)) * 0.4
+		if k < bk: bk = k; best = v
+	u["tg"] = best
+	return best
+func _line_want(u: Dictionary, tg: Dictionary) -> Vector2:
+	var my = float(u.get("ls", _lat(u.p)))
+	var tl = _lat(tg.p)
+	if absf(tl - my) > 46.0: my = tl + clampf(my - tl, -40.0, 40.0)   # 對面冇人：靠埋去最近嗰隻側邊
+	var sg = 1.0 if _nn(u, "side") == 0 else -1.0
+	var a = _axl(tg.p) - sg * _nn(u, "range") * 0.85
+	return org + perp * my + ax * a
 
 func _step_fight(dt: float) -> void:
 	auto = J.t(J.gp(J.G.get("Battle"), "auto")) if J.G.get("Battle") != null else auto
@@ -407,13 +471,13 @@ func _step_fight(dt: float) -> void:
 			continue
 		if J.t(u.get("sk")) and _nn(u, "energy") >= 100 and not J.t(u.get("anim")) and (_nn(u, "side") == 1 or (auto and not J.t(u.get("minion")))): begin_cast(u); continue
 		if J.t(u.get("anim")): step_anim(u, dt); continue
-		var tg = _pick(u)
+		var tg = _line_tg(u)
 		if tg == null: u["walking"] = false; continue
 		var d = dist(u, tg)
 		var dx = (tg.p as Vector2).x - (u.p as Vector2).x
 		if absf(dx) > 3.0: u["face"] = _sign(dx)
-		if d > _nn(u, "range"):
-			var want = _slot_pos(u, tg)
+		if d > _nn(u, "range") + 12.0:
+			var want = _line_want(u, tg)
 			var dv = (want - (u.p as Vector2))
 			if dv.length() < 3.0: dv = (tg.p as Vector2) - (u.p as Vector2)
 			u["p"] = (u.p as Vector2) + dv.normalized() * minf(_nn(u, "spd") * dt, dv.length()); u["walking"] = true
@@ -430,7 +494,7 @@ func _step_fight(dt: float) -> void:
 			var cu = adv_cast.u; adv_cast = null; do_skill(cu, cu.get("sk"))
 	_separate(dt)
 	if foes_alive() == 0: finish(true)
-	elif heroes_alive() == 0: finish(false)
+	elif (heroes_alive() == 0 and not no_heroes) or (no_heroes and _ours_alive() == 0): finish(false)
 	elif t >= TIME_LIMIT: finish(false, false, true)
 
 # 揀目標：黐住而家嗰個；冇就揀「近 ＋ 少人打緊」嘅（唔好全部擠埋一隻）

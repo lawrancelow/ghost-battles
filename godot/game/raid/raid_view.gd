@@ -172,7 +172,7 @@ func _draw(c: CanvasItem) -> void:
 			ctx.globalAlpha = 1.0
 			hits.append([_bld_rect(at, w).merge(pr), "repair", key])
 	var ph = RAID.phase(); var cu = RAID.cur()
-	if cu is Dictionary and (ph == "warn" or ph == "siege") and not load("res://game/zone/zone_battle.gd").fighting():
+	if cu is Dictionary and (ph == "warn" or ph == "siege") and not load("res://game/zone/zone_battle.gd").fighting() and not load("res://game/rts/rts.gd").has_kind("raid"):   # [rts] 迎擊緊：惡鬼由 rts 畫
 		var at2 = RAID.tpos(str(cu.tgt))
 		_target_mark(c, ctx, at2, ph, px)
 		if ph == "siege": _draw_foes(c, ctx, cu, px)

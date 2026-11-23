@@ -127,6 +127,7 @@ func _run(t) -> void:
 	await main_flow(t, m)
 	await recall_flow(t, m)
 	await other_stage_old(t, m)
+	await routes(t, m)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
 # ---- 冇新存檔欄位；開關關咗 → 1-1 照舊（舊 mapbattle） ----
@@ -134,7 +135,7 @@ func old_save_check(t, m) -> void:
 	await _prep(t, m)
 	var S = J.G.S
 	var keys0 = (S as Dictionary).keys()
-	_chk("1-1 用新打法（原型開關）、1-2 唔用", RTS.enabled_for("1-1") and not RTS.enabled_for("1-2"))
+	_chk("主線全開：1-1、2-3、6-3 都用新打法", RTS.enabled_for("1-1") and RTS.enabled_for("2-3") and RTS.enabled_for("6-3"))
 	RTS.force = 0
 	var r = ZD.start_stage(); await _f(t, 2)
 	_chk("開關關咗：1-1 照舊大地圖戰鬥（zone_battle）", r == "ok" and MB.busy() and RTS.ops.is_empty(), r)
@@ -226,6 +227,9 @@ func main_flow(t, m) -> void:
 	var coins0 = J.num(S.res.get("coins", 0)); var exp0 = J.num(S.get("exp", 0)); var qi0 = J.num(S.qi); var tr0 = J.num(S.res.troops); var lv0 = J.num(S.lv)
 	# 經真正入口：撳地圖據點（zone_view.tap → ZD.start_stage → RTS）
 	nv.zone_tap(c.w2s(tg.pos + Vector2(0, -60))); await _f(t, 2)
+	_chk("撳據點：出「出擊小卡」（揀帶幾隊）", RTS.pending != null and m.sheet != null and m.sheet.visible)
+	await _w(t, 0.3); await _shot(t, "00_card")
+	RTS.card_go(); await _f(t, 2)
 	var op = RTS.op_for("1-1")
 	_chk("撳據點：下令出擊（op 建立）", op != null and op.phase == "march")
 	if op == null: return
@@ -354,7 +358,7 @@ func recall_flow(t, m) -> void:
 	await _prep(t, m)
 	var S = J.G.S
 	var tr0 = J.num(S.res.troops); var coins0 = J.num(S.res.get("coins", 0))
-	ZD.start_stage(); await _f(t, 2)
+	ZD.start_stage(); await _f(t, 2); RTS.card_go(); await _f(t, 2)
 	var op = RTS.op_for("1-1")
 	await _w(t, 1.5)
 	RV.inst.chip_recall.emit_signal("pressed"); await _f(t, 2)
@@ -364,7 +368,7 @@ func recall_flow(t, m) -> void:
 	# 交戰中叫回
 	await _prep(t, m)
 	tr0 = J.num(S.res.troops)
-	ZD.start_stage(); await _f(t, 2)
+	ZD.start_stage(); await _f(t, 2); RTS.card_go(); await _f(t, 2)
 	op = RTS.op_for("1-1")
 	op.t_skip_march()
 	await _until(t, func(): return op.phase == "fight", 15.0)
@@ -380,20 +384,146 @@ func recall_flow(t, m) -> void:
 	await _until(t, func(): return RTS.ops.is_empty(), 30.0)
 	_chk("撤退後據點仲喺度（可以再打）", ZD.stage_target().has("pos") and str(ZD.stage_target().sid) == "1-1")
 
-# ---- 其他關照舊 ----
+# ---- 全面鋪開：1-2、野外王、親征、派兵攻佔、鬼潮告急、自動擊退、出擊小卡揀隊、同時 2 場 ----
+func _wait_op_end(t, op, secs := 120.0) -> bool:
+	if op == null: return false
+	op.t_skip_march()
+	return await _until(t, func(): return op.phase in ["back", "done"], secs)
+func _home(t) -> void:
+	for o in RTS.ops: if o.phase == "back": for u in o.units: u["s"] = 9999.0
+	await _until(t, func(): return RTS.ops.is_empty(), 30.0)
 func other_stage_old(t, m) -> void:
 	await _prep(t, m)
 	var S = J.G.S
+	B()["auto"] = true
 	S.cleared["1-1"] = true; S.cleared.erase("1-2"); S["qi"] = float(_qidx_stage("1-2"))
 	await _f(t, 2)
 	var r = ZD.start_stage(); await _f(t, 2)
-	_chk("1-2 照舊大地圖戰鬥（未鋪開）", r == "ok" and MB.busy() and RTS.ops.is_empty(), r)
-	MB.t_skip_march(); await _f(t, 2)
-	J.mc(B(), "finish", [false, true]); await _f(t, 2)
-	var dl = J.G.get("$"); var okb = J.cl(dl, null, ["#b-ok"])
-	if okb != null: J.cl(J.gp(okb, "onclick"), okb, [])
-	MB.t_skip_back(); await _until(t, func(): return not MB.busy(), 25.0)
+	_chk("1-2 都用新打法（主線全開）：出小卡", r == "ok" and RTS.pending != null and not MB.busy())
+	RTS.pending.ny = 1
+	RTS.card_go(); await _f(t, 2)
+	var op = RTS.op_for("1-2")
+	_chk("出擊小卡揀 1 隊陰兵：只派 1 隊", op != null and RTS._count(op).yin == 1, RTS._count(op) if op else null)
+	# 同時第二場：名鬼帶隊嘅唔得；純兵（派兵攻佔）得
+	ZD.unmark_bosses(0); ZD.reveal_all(0)
+	var r2 = ZD.start_battle("boss", "w_graves"); await _f(t, 2)
+	_chk("名鬼帶緊隊：第二場名鬼戰唔准出", RTS.pending == null and RTS.ops.size() == 1, [r2, RTS.ops.size()])
+	S.res["troops"] = 2000.0
+	var rc = RTS.dispatch_capture("A"); await _f(t, 2)
+	_chk("同時第二場：純兵派兵攻佔出到（同時 2 場）", rc == "ok" and RTS.ops.size() == 2, rc)
+	_cam(m, RTS.ops[1].center()); await _w(t, 1.0); await _shot(t, "11_two_ops")
+	var cap = RTS.ops[1]
+	var e1 = await _wait_op_end(t, op)
+	var e2 = await _wait_op_end(t, cap)
+	_chk("1-2 打完", e1 and op.result != null, op.result)
+	_chk("派兵攻佔：行到門洞打完 → 佔領（折損照舊）", e2 and ZD.owned("A"), [cap.phase, ZD.owned("A")])
+	await _home(t)
+	# 野外王
+	ZD.unmark_bosses(0); S.zone["taunt"] = {}
+	var tr0 = J.num(S.res.troops)
+	var rb = ZD.start_battle("boss", "w_graves"); await _f(t, 2); await _skip(t, 4)
+	if RTS.pending == null: await _f(t, 4)
+	_chk("野外王：出小卡", RTS.pending != null, rb)
+	RTS.card_go(); await _f(t, 2)
+	var ob = RTS.ops[0] if RTS.ops.size() else null
+	_chk("野外王：地圖戰（kind boss），王喺野外區，原位唔再畫", ob != null and ob.kind == "boss" and ZD.zrect("w_graves").grow(80).has_point(ob.anchor) and MB.on_zone("w_graves"))
+	_chk("野外王：路線經野外門入野外", ob != null and ZD.zrect("w_graves").grow(40).has_point(ob.path[ob.path.size() - 1]))
+	_cam(m, ob.anchor + Vector2(0, 80)); ob.t_skip_march(); await _w(t, 2.5); await _shot(t, "12_boss")
+	for u in ob.units: if J.num(u.side) == 0 and not J.t(u.get("minion")): u["hp"] = 0.0; u["deadT"] = 0.0
+	await _until(t, func(): return ob.phase in ["back", "done"], 20.0)
+	var bid = str(ZD.bosses("w_graves")[0].id)
+	_chk("野外王輸咗：王去門外叫囂（同舊版）", TA.on(TA.boss_key(0, bid)), S.zone.get("taunt"))
+	await _home(t)
+	var rb2 = ZD.start_battle("boss", "w_graves"); await _f(t, 2); await _skip(t, 4); RTS.card_go(); await _f(t, 2)
+	var ob2 = RTS.ops[0] if RTS.ops.size() else null
+	_chk("再挑戰：喺門外叫囂位打", ob2 != null and ob2.anchor.distance_to(TA.spot(TA.boss_key(0, bid))) < 5.0)
+	for u in ob2.units: if J.num(u.side) == 1: u["hp"] = 1.0
+	B()["auto"] = true
+	var e3 = await _wait_op_end(t, ob2)
+	_chk("再挑戰打贏：王記打低、叫囂清走", e3 and ZD.boss_done("w_graves", 0) and not TA.on(TA.boss_key(0, bid)), [ob2.result, ZD.boss_done("w_graves", 0)])
+	await _home(t); await _skip(t, 6)
+	# 親征（資源區 B）
+	var rcap = ZD.start_battle("cap", "B"); await _f(t, 2); RTS.card_go(); await _f(t, 2)
+	var oc = RTS.ops[0] if RTS.ops.size() else null
+	_chk("親征：地圖戰（kind cap），經門洞入資源區、黑霧散開", oc != null and oc.kind == "cap" and MB.on_zone("B"), rcap)
+	_cam(m, oc.anchor); oc.t_skip_march(); await _w(t, 2.0); await _shot(t, "13_cap")
+	for u in oc.units: if J.num(u.side) == 1: u["hp"] = 1.0
+	var e4 = await _wait_op_end(t, oc)
+	_chk("親征打贏：資源區佔領", e4 and ZD.owned("B"), oc.result)
+	await _home(t); await _skip(t, 6)
+	# 取消小卡：入口設咗嘅嘢清返
+	ZD.unmark_bosses(0); S.zone["taunt"] = {}
+	ZD.start_battle("boss", "w_graves"); await _f(t, 2); await _skip(t, 4)
+	m.close_sheet(); await _f(t, 6)
+	_chk("小卡唔出發就關：冇出擊、王戰 exp 清返", RTS.pending == null and RTS.ops.is_empty() and not (ZD.st().get("exp") is Dictionary))
+	# 鬼潮告急（大排檔）
+	var MVW = load("res://game/outpost/mv_war.gd")
+	MVW.ws()["alarm"] = {"t": 120.0}
+	var rx = m.mv_view.sim.war.start_expedition(m.mv_view.sim); await _f(t, 3)
+	var ox = RTS.ops[0] if RTS.ops.size() else null
+	_chk("鬼潮告急：唔問直接出（kind raid），惡鬼由野外門行入嚟", rx == "ok" and ox != null and ox.kind == "raid" and ox.foe_from != null)
+	if ox != null:
+		for u in ox.units: if J.num(u.side) == 1: u["hp"] = 1.0
+		var e5 = await _wait_op_end(t, ox)
+		_chk("鬼潮告急打完：mv_war 收到結果", e5 and not (MVW.ws().get("exp") is Dictionary))
+	await _home(t)
+	# 襲擾自動擊退：防衛隊出營迎擊（純畫面）
+	var RAID = load("res://game/raid/raid.gd")
+	var tk = RAID.targets()
+	if tk.size():
+		var at = RAID.tpos(str(tk[0]))
+		RTS.raid_show({"tgt": tk[0], "from": [at.x, at.y - 420.0], "ks": ["egui"]}); await _f(t, 2)
+		var orr = RTS.ops[0] if RTS.ops.size() else null
+		_chk("襲擾（防衛夠）：防衛隊出營、惡鬼行入村，睇到打", orr != null and orr.kind == "raidauto" and orr.no_heroes)
+		if orr != null:
+			_cam(m, at); await _w(t, 3.0); await _shot(t, "14_raid_defend")
+			var e6 = await _wait_op_end(t, orr)
+			_chk("自動擊退：惡鬼全倒、防衛隊冇死", e6 and orr.result.win and orr._ours_alive() > 0)
+	await _home(t)
 	S.cleared.erase("1-1")
+
+# ---- 六關路線：主線迎戰位、每個野外王、每個資源區門洞，行軍路線都喺走得嘅地方 ----
+const CW = preload("res://game/outpost/ctl_walk.gd")
+const ZV = preload("res://game/zone/zone_view.gd")
+const TA = preload("res://game/zone/zone_taunt.gd")
+func _walkable(p: Vector2) -> bool: return CW.region(p) != "" and not ZV.blocked(p)
+func _poly_ok(P) -> Array:
+	for i in P.size() - 1:
+		var a: Vector2 = P[i]; var b: Vector2 = P[i + 1]
+		var n = maxi(1, int(ceil(a.distance_to(b) / 4.0)))
+		for k in n + 1:
+			var q = a.lerp(b, float(k) / n)
+			if not _walkable(q): return [false, q]
+	return [true, null]
+func routes(t, m) -> void:
+	var sc = m.mv_view; var bad_r = []; var n = 0
+	for c in 6:
+		sc.sim.st().ci = float(c); sc._after_move(); await _w(t, 0.8)
+		ZD.reveal_all(c)
+		await _f(t, 2)
+		var at = ZD.front_anchor() + RTS.CAMP_OFF
+		var P = RTS.stage_path(at); n += 1
+		var r = _poly_ok(P); if not r[0]: bad_r.append([c, "stage", r[1]])
+		for z in ZD.of_type("wild"):
+			var zr = ZD.zrect(str(z.id))
+			var ba = ZD.v2(z.get("boss_at", [zr.get_center().x, zr.get_center().y]))
+			var W = RTS.wild_path(str(z.id), ba); n += 1
+			var r2 = _poly_ok(W); if not r2[0]: bad_r.append([c, str(z.id), r2[1]])
+		for z in ZD.of_type("res"):
+			if not (z.get("door") is Dictionary): continue
+			var g = RTS.geometry({"kind": "cap", "id": str(z.id), "opt": {}})
+			var Q = []
+			for p in g.path:
+				Q.append(p)
+				if p.distance_to(ZD.v2(z.door.get("in"))) < 1.0: break
+			n += 1
+			var r3 = _poly_ok(Q); if not r3[0]: bad_r.append([c, str(z.id), r3[1]])
+		if shots:
+			var c0 = m.village.zone_cam(); c0.z = c0.z_min() * 1.6; c0.clamp_all(); c0.center_on(ZD.zrect("market").get_center()); await _w(t, 0.5)
+			await _shot(t, "route_ch%d" % (c + 1))
+	_p("routes checked %d bad %s" % [n, str(bad_r)])
+	_chk("六關行軍路線（主線、野外王、資源區）全部走得（%d 條）" % n, bad_r.is_empty(), bad_r)
+	sc.sim.st().ci = 0.0; sc._after_move(); await _w(t, 1.0)
 
 # ================= video：配 --write-movie（固定 30 幀）錄一段由下令到回村 =================
 func _follow(t, m, cond: Callable, secs: float, off := Vector2.ZERO) -> void:
@@ -421,7 +551,9 @@ func video(t) -> void:
 	await _skip(t, 2)
 	nv.zone_tap(c.w2s(tg.pos + Vector2(0, -60)))   # 撳據點下令
 	await _w(t, 0.3)
-	if RTS.op_for("1-1") == null: _p("tap no op → start_stage"); ZD.start_stage()
+	await _w(t, 1.2)
+	if RTS.pending != null: RTS.card_go()
+	if RTS.op_for("1-1") == null: _p("tap no op → start_stage"); ZD.start_stage(); RTS.card_go()
 	var op = RTS.op_for("1-1")
 	if op == null: _p("RESULT ok=0 bad=1"); t.get_tree().quit(); return
 	await _w(t, 1.6)

@@ -359,6 +359,7 @@ static func arrive() -> void:
 	c["def"] = float(dp)
 	if dp >= int(J.num(c.pow)):
 		_log("auto", [c.tgt, dp, c.pow])
+		load("res://game/rts/rts.gd").raid_show(c.duplicate(true))   # [rts] 睇到防衛隊出營迎擊
 		repel("auto")
 	else:
 		r["ph"] = "siege"; c["t"] = 0.0

@@ -863,6 +863,10 @@ static func open_capture(main, zid: String) -> void:
 	var b1 = UIKit.btn(load("res://game/militia/ml_ui.gd").cap_btn_txt(zid), "gold")   # [militia] 有遊魂兵：寫埋遊魂兵折損
 	b1.disabled = pw < need
 	b1.pressed.connect(func():
+		if load("res://game/rts/rts.gd").on():   # [rts] 真係派隊行過去打
+			var rr = load("res://game/rts/rts.gd").dispatch_capture(zid)
+			if rr == "ok": main.close_sheet()
+			return
 		if ZD.capture_auto(zid) == "ok":
 			main.close_sheet(); Snd.play("build")
 			main.show_banner(ZD.L("%s 攻佔咗！", "%s 攻佔了！") % ZD.T(z.n)); main.refresh())

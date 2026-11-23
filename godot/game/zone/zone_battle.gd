@@ -86,9 +86,10 @@ static func usable() -> bool:
 	return not force_off and not OS.has_environment("GB_NOMAPBATTLE") and ZD.on() and village() != null
 static func busy() -> bool: return cur != null and is_instance_valid(cur) and cur.phase != "done"
 static func fighting() -> bool: return busy() and cur.phase in ["march", "fight", "result"]
-static func on_zone(id: String) -> bool: return busy() and cur.zid == id and cur.kind != "raid" and cur.kind != "stage"
+static func on_zone(id: String) -> bool: return (busy() and cur.zid == id and cur.kind != "raid" and cur.kind != "stage") or load("res://game/rts/rts.gd").on_zone(id)   # [rts] 王／親征打緊：王唔畫喺原位、黑霧散開
 # kind：boss／cap／raid；cb：真正開戰（叫 Battle.start）；回 false＝唔用大地圖（照舊畫面，cb 未叫）
 static func start(k: String, id: String, cb: Callable, opt := {}) -> bool:
+	if load("res://game/rts/rts.gd").start_generic(k, id, cb, opt): return true   # [rts] 全面鋪開：改用地圖半即時戰鬥（舊畫面只喺 GB_NORTS／測試 force=0 先用）
 	if not usable(): return false
 	if busy(): cur._teardown()
 	var G = J.G
