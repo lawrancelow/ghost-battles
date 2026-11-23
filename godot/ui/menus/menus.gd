@@ -169,6 +169,7 @@ static func _draw_bld(id: String, d) -> void:
 		vb.add_child(hb); _body().add_child(vb); _body().add_child(UIKit.hsep())
 	if d.get("furnace") != null: load("res://game/joss/joss_ui.gd").panel(_body(), func(): _render_bld(id, true))   # [joss] 陽間包裹
 	var al = d.get("altar")
+	if al != null and load("res://game/soul/soul_ui.gd").altar(_body(), func(): _render_bld(id, true)): al = null   # [soul] 祭壇四頁（招雜鬼頁照用下面舊介面）
 	if al != null:
 		_row("招魂一次：%s\n[font_size=12]雜鬼名額 %d/%d（升級民宅增加；收服的名鬼不佔名額）[/font_size]" % [bb(al.cost), int(J.num(al.cnt)), int(J.num(al.cap))], [_btn("招魂", "gold", J.t(al.can), func(): _act_bld(id, "recruit"))])
 		_p("目前可能招到：%s。收服更多鬼怪後，招魂池會變大。" % J.str(al.pool), 13)
