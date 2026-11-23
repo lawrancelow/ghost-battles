@@ -108,7 +108,8 @@ static func draw_over(c: CanvasItem, ctx: Ctx, nv, vr: Rect2, t: float) -> void:
 					if r2.size.x > 0 and r2.size.y > 0: c.draw_rect(r2, Color(FC.r, FC.g, FC.b, al))
 		log.append(["fog", k, 0])
 	# 圈名牌：每圈上下左右四邊中間（喺鏡頭入面先畫）
-	var px = int(clampf(16.0 / maxf(0.05, float(nv.sc) / maxf(0.01, float(nv.size.x) / 390.0)), 16.0, 64.0))
+	var px = int(clampf(16.0 / maxf(0.02, float(nv.sc) / maxf(0.01, float(nv.size.x) / 390.0)), 16.0, 220.0))
+	var vin = vr.grow(-40.0)
 	for rg in rs:
 		var k = int(rg.ring)
 		var inner = ZD.rect(rg.inner); var outer = ZD.rect(rg.outer)
@@ -119,9 +120,10 @@ static func draw_over(c: CanvasItem, ctx: Ctx, nv, vr: Rect2, t: float) -> void:
 		var op = ZD.ring_open(k)
 		if not op: s += ZD.L("（未散霧）", "（未散霧）")
 		for p in [Vector2(inner.get_center().x, mid_t), Vector2(inner.get_center().x, mid_b), Vector2(mid_l, inner.get_center().y), Vector2(mid_r, inner.get_center().y)]:
-			if not vr.has_point(p): continue
+			if not vin.has_point(p): continue
 			ctx.font = "900 %dpx %s" % [px, Art.SERIF]
 			var w = ctx.measureText(s).width + px * 1.1; var h = px * 1.55
+			p.x = clampf(p.x, vin.position.x + w / 2 + 6, maxf(vin.position.x + w / 2 + 6, vin.end.x - w / 2 - 6))   # 名牌唔好畀畫面邊裁走
 			Art.rr(ctx, p.x - w / 2, p.y - h / 2, w, h, px * 0.35, "rgba(30,20,24,.78)" if op else "rgba(10,6,12,.6)", "rgba(255,230,190,.45)", maxf(1.2, px * 0.08))
 			ZV._txt(ctx, s, p.x, p.y + 1, px, "#f6e2b0" if op else "#a89a90")
 			log.append(["plate", k, 0])

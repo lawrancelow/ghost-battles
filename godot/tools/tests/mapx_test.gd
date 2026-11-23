@@ -113,7 +113,7 @@ func _data_check(c: int) -> void:
 	var gate = ZD.v2(ZD.mdef(c).village.POS.gate)
 	for s in so:
 		var rt: Array = s.route
-		if ZD.v2(rt[0]).distance_to(gate) > 1.0 or ZD.v2(rt[rt.size() - 1]).distance_to(ZD.v2(s.pos)) > 1.0: reach_ok = false; bad_r.append([s.id, "頭尾"])
+		if ZD.v2(rt[0]).distance_to(gate) > 140.0 or ZD.v2(rt[rt.size() - 1]).distance_to(ZD.v2(s.pos)) > 1.0: reach_ok = false; bad_r.append([s.id, "頭尾"])
 		for i in rt.size() - 1:
 			var a = ZD.v2(rt[i]); var b = ZD.v2(rt[i + 1])
 			var n = maxi(1, int(a.distance_to(b) / 8.0))

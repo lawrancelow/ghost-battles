@@ -997,8 +997,7 @@ def _base_route(M, wz):
     vr = next(z["rect"] for z in M["zones"] if z["type"] == "village"); mr = next(z["rect"] for z in M["zones"] if z["type"] == "market")
     iv = max(i for i, q in enumerate(por) if _in_r(q, vr)) if any(_in_r(q, vr) for q in por) else 0
     im = min(i for i, q in enumerate(por) if _in_r(q, mr)) if any(_in_r(q, mr) for q in por) else len(por) - 1
-    gate = list(map(float, M["village"]["POS"]["gate"]))
-    o = [gate] + (por[iv:im + 1] if iv < im else por[:3])
+    o = list(por[iv:im + 1] if iv < im else por[:3])   # 由挑夫路喺村入面最後一點（村門口內）出發
     c, d = _wild_gate(wz)
     def cl(r, p, ins=22): return [min(max(p[0], r[0] + ins), r[2] - ins), min(max(p[1], r[1] + ins + 10), r[3] - ins)]
     o.append(cl(mr, [c[0], c[1] + d * 70])); o.append(cl(wz["rect"], [c[0], c[1] - d * 70]))

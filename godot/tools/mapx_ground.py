@@ -26,6 +26,9 @@ RING_TILES = {1: [("near_grass", 0, 0), ("near_dirt", 0.66, 110)],
               3: [("deep_swampmud", 0, 0), ("deep_stonepave", 0.58, 140), ("deep_water", 0.64, 90)],
               4: [("mt_rock", 0, 0), ("wild_gravesoil", 0.72, 100)]}
 PATH_TILE = "near_dirt"
+# 每圈色調（RGB 倍數）：令四圈喺全景都分得出（近郊偏綠、荒野偏枯黃、深處偏青黑、最外圈偏灰藍）；BRIGHT＝整體提亮（遊戲有夜色調再壓暗）
+RING_TINT = {1: (1.00, 1.12, 0.92), 2: (1.14, 1.04, 0.84), 3: (0.80, 0.98, 0.98), 4: (1.06, 1.08, 1.20)}
+BRIGHT = 1.22
 PROC = {"near_grass": ("#2e3a24", "#3f4e2e", "#1f281a", 6), "near_dirt": ("#4a3a2a", "#5c4a36", "#33281e", 4),
         "wild_drygrass": ("#4a4430", "#5e5638", "#2e2a20", 5), "wild_gravesoil": ("#3a2e26", "#4a3a30", "#261e1a", 3),
         "deep_stonepave": ("#3a3e3a", "#50544e", "#262a28", 3), "deep_swampmud": ("#1e2e2a", "#2e4440", "#121c1a", 8),
@@ -116,6 +119,7 @@ def bake(ci, M):
         src[k] = used
         # 每圈大尺度色調噪聲（同圈唔平板）
         tint = 1.0 + (_vnoise(H, W, 160, rnd) - 0.5) * 0.18
+        T = T * np.array(RING_TINT[k], dtype=np.float32) * BRIGHT
         out += T * (tint * wgt)[..., None]; wsum += wgt
     out /= np.maximum(wsum, 1e-4)[..., None]
     # 泥路：沿每個據點路線（核心地圖外嗰段）畫闊約 34 世界 px 嘅泥路，邊緣柔
