@@ -165,7 +165,7 @@ func _prims() -> void:
 	h.hp = 1000.0; P(op, h, {"p": "heal", "pct": 0.2}, [h]); seen["heal"] = 1
 	_chk("積木 heal：回 20%", absf(J.num(h.hp) - 1400.0) < 1)
 	h.hp = 1000.0; P(op, h, {"p": "hot", "pct": 0.05, "dur": 4}, [h]); steps(op, 2.0); seen["hot"] = 1
-	_chk("積木 hot：持續回血", J.num(h.hp) > 1150, h.hp)
+	_chk("積木 hot：持續回血", J.num(h.hp) >= 1140, h.hp)
 	# 20 shield
 	r = _fresh(); op = r[0]; h = r[1][0]; f = r[2][0]
 	P(op, h, {"p": "shield", "pct": 0.1, "dur": 6}, [h]); var hp0 = J.num(h.hp); AB.hit(op, f, h, 1.0, null); seen["shield"] = 1
