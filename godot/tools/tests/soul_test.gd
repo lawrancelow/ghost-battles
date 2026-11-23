@@ -109,6 +109,7 @@ func data_check() -> void:
 	var cnt = {"凡": 0, "靈": 0, "煞": 0, "王": 0}
 	for k in D.PIN: cnt[D.PIN[k]] += 1
 	_chk("品級分布（按名冊 T 值）凡22 靈46 煞26 王6，冇 k1/k2", cnt == {"凡": 22, "靈": 46, "煞": 26, "王": 6} and not D.PIN.has("new_k1"), cnt)
+	_chk("id 統一：審批官 nw_shenpi、Teke Teke nw_teketeke（冇 nw_panguan／nw_sundel）", D.PIN.has("nw_shenpi") and D.PIN.has("nw_teketeke") and not D.PIN.has("nw_panguan") and not D.PIN.has("nw_sundel") and not JSON.stringify(D).contains("nw_panguan") and not JSON.stringify(D).contains("nw_sundel"))
 	var e = SO.camps(0)[0]
 	_chk("第1章第1據點：主魂窮鬼、有副魂（往後第 5 個據點）", SOUL.guard_of(e) == "n30_qionggui" and SOUL.sec_of(e) == SOUL.guard_of(SO.camps(0)[5]), [SOUL.guard_of(e), SOUL.sec_of(e)])
 	var miss = []; var nopri = []

@@ -88,7 +88,7 @@
   "niutou": "靈",
   "mamian": "靈",
   "n30_yecha": "煞",
-  "nw_panguan": "煞",
+  "nw_shenpi": "煞",
   "nw_toutai": "靈",
   "pg_ex": "靈",
   "pg_landlady": "煞",
@@ -1229,7 +1229,8 @@
    "nw_zzhouse"
   ],
   "5:so6_r3_2": [
-   "pg_ex"
+   "pg_ex",
+   "nw_shenpi"
   ],
   "5:so6_r3_3": [
    "mamian",
@@ -1276,7 +1277,7 @@
   "nw_zzphone": 4,
   "nw_zzcar": 4,
   "nw_kuaidi": 4,
-  "nw_panguan": 5,
+  "nw_shenpi": 5,
   "nw_toutai": 5,
   "nw_zzhouse": 5,
   "nw_yeleng_guard": 5,
