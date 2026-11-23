@@ -201,7 +201,7 @@ ghost("nw_manananggal", name="Manananggal", title="上半身返夜更", sys="厲
 ghost("nw_nangtani", name="Nang Tani", title="香蕉樹下派飯", sys="妖", sc="紙", tier=2, pin="靈", ch=4, mech=["隱"], tags=["回", "定"],
       rng="中", role="back", base=[45, 110, 80], h=58, camp=("紅樹林新娘", 2),
       trait="住喺野生香蕉樹，肚餓嘅就嚟樹下坐；不過千祈唔好斬佢棵樹。",
-      lore="泰國民間的「Nang Tani」（นางตานี）：住在野生香蕉樹（芭蕉）裏的女精靈，常穿綠色傳統衣裙，在月夜現身；民間會在樹下供奉。",
+      lore="泰國民間的「Nang Tani」：住在野生香蕉樹（芭蕉）裏的女精靈，常穿綠色傳統衣裙，在月夜現身；民間會在樹下供奉。",
       say=["肚餓就嚟樹下坐，香蕉有排都食唔晒。", "肚子餓就來樹下坐，香蕉多到吃不完。"],
       skill={"name": "香蕉樹蔭", "kind": "heal", "mult": 0.2, "desc": "種棵香蕉樹：樹蔭下嘅隊友慢慢回血，仲有層護盾。"},
       act={"name": "香蕉樹蔭", "tg": {"sel": "allies", "r": 180},

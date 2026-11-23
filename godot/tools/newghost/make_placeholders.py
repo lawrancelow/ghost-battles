@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # [newghost] 暫代圖：assets/spr/ng_ph/<ph>.webp（新名鬼 nw_*、大魔王 bm_*、雜兵 zd_*）
 # 風格跟 core/art.gd：深褐粗墨線、偏灰病態色、白色無瞳眼；身上寫名（一眼知係暫代）。真圖（assets/spr/<spr>.webp）一到，遊戲自動用真圖。
-# 用法：python3 -I tools/newghost/make_placeholders.py（之後要 Godot --import 一次）
-import json, os, math
+# 用法：python3 -I tools/newghost/make_placeholders.py [data/nat/newghost2.json]（之後要 Godot --import 一次）
+import json, os, math, sys
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
-D = json.load(open(os.path.join(ROOT, "data", "nat", "newghost.json"), encoding="utf-8"))
+D = json.load(open(sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "data", "nat", "newghost.json"), encoding="utf-8"))   # [roster2] 可傳 data/nat/newghost2.json
 OUT = os.path.join(ROOT, "assets", "spr", "ng_ph"); os.makedirs(OUT, exist_ok=True)
 FONT = "/usr/share/fonts/opentype/noto/NotoSerifCJK-Bold.ttc"
 INK = (58, 36, 24, 255)
@@ -16,7 +16,7 @@ PAL = {"屍": (150, 160, 140), "魂": (170, 190, 200), "紙紮": (215, 205, 180)
 
 def name_of(k):
     for sec in ("GHOSTS", "BOSS", "FOD"):
-        if k in D[sec]: return D[sec][k]["name"]
+        if k in D.get(sec, {}): return D[sec][k]["name"]
     return k
 def sys_of(k): return D["ENEMY"].get(k, {}).get("sys", "魂")
 
@@ -77,5 +77,5 @@ def draw(k, ph, boss=False, fod=False, solid=True):
 n = 0
 for k, a in D["ART"].items():
     if os.path.exists(os.path.join(ROOT, "assets", "spr", a["spr"] + ".webp")): continue   # 已有真圖（牛頭馬面等）
-    draw(k, a["ph"], boss=k in D["BOSS"], fod=k in D["FOD"], solid=a.get("solid", True)); n += 1
+    draw(k, a["ph"], boss=k in D.get("BOSS", {}), fod=k in D.get("FOD", {}), solid=a.get("solid", True)); n += 1
 print("placeholders", n, "->", OUT)
