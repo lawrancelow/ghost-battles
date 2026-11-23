@@ -14,6 +14,7 @@ var y := 0.0
 var z := 1.0
 var view := Vector2(390, 700)
 var world := Vector2(390, 1130)
+var org := Vector2.ZERO       # [mapx] 世界左上角（分圈擴展之後係負數：ZD.bounds().position）
 var top_extra := 0.0
 var top_px := 0.0             # 頂部 HUD 蓋住幾多畫面 px（最細縮放時成張圖要喺 HUD 下面完整顯示）
 var vel := Vector2.ZERO
@@ -36,12 +37,12 @@ func rect() -> Rect2: return Rect2(x, y, vw(), vh())
 func clamp_all() -> void:
 	z = clampf(z, z_min(), z_max())
 	var w = vw(); var h = vh()
-	if w >= world.x: x = (world.x - w) / 2.0
-	else: x = clampf(x, 0.0, world.x - w)
+	if w >= world.x: x = org.x + (world.x - w) / 2.0
+	else: x = clampf(x, org.x, org.x + world.x - w)
 	top_extra = top_px / z
 	var avail = h - top_extra
-	if avail >= world.y: y = -top_extra - (avail - world.y) / 2.0
-	else: y = clampf(y, -top_extra, world.y - h)
+	if avail >= world.y: y = org.y - top_extra - (avail - world.y) / 2.0
+	else: y = clampf(y, org.y - top_extra, org.y + world.y - h)
 
 func set_zoom(nz: float, about: Vector2) -> void:   # about：畫面座標（縮放時呢點唔郁）
 	var wp = s2w(about)
