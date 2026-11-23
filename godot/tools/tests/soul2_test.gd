@@ -101,12 +101,21 @@ func _run(t) -> void:
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
 # ---- 圖鑑資料 ----
+func _ng2_keys() -> Array:
+	if not FileAccess.file_exists("res://data/nat/newghost2.json"): return []
+	var N = JSON.parse_string(FileAccess.get_file_as_string("res://data/nat/newghost2.json"))
+	if not (N is Dictionary) or not (N.get("GHOSTS") is Dictionary): return []
+	return N.GHOSTS.keys().filter(func(k): return str(N.GHOSTS[k].get("q", "")) == "名")
 func data_check() -> void:
 	var L = S2.list()
-	_chk("圖鑑 101 格", L.size() == 101, L.size())
+	var n2 = _ng2_keys()   # roster2 第二批（newghost2.json 有先計）
+	var NT = 101 + n2.size()
+	_chk("圖鑑 %d 格（101＋第二批 %d）" % [NT, n2.size()], L.size() == NT, L.size())
 	var ks = {}
 	for x in L: ks[str(x.k)] = true
-	_chk("101 格冇重複", ks.size() == 101)
+	_chk("%d 格冇重複" % NT, ks.size() == NT)
+	var miss2 = n2.filter(func(k): return not ks.has(k))
+	_chk("第二批全部自動加格", miss2.is_empty(), miss2)
 	_chk("第一格係阿福", str(L[0].k) == "afu")
 	var miss = []
 	for k in J.G.GHOSTS:
@@ -116,14 +125,15 @@ func data_check() -> void:
 	var noart = []; var nosay = []
 	for x in L:
 		var k = str(x.k)
-		if FX.tex_of(k) == null: noart.append(k)
+		var tx = FX.tex_of(k)
+		if tx == null or (not n2.has(k) and tx.resource_path.contains("ng_ph")): noart.append(k)
 		var gd = J.G.GHOSTS.get(k, {})
 		if str(gd.get("say", "")) == "" and str(S2.C().SAY_FB.get(k, "")) == "": nosay.append(k)
-	_chk("101 格全部有真圖（冇暫代）", noart.is_empty(), noart)
-	_chk("101 格全部有台詞", nosay.is_empty(), nosay)
+	_chk("%d 格全部有圖（第一批 101 格係真圖、冇暫代）" % NT, noart.is_empty(), noart)
+	_chk("%d 格全部有台詞" % NT, nosay.is_empty(), nosay)
 	_chk("新鬼係真數據（GHOSTS 有）：nw_shenpi、nw_teketeke", J.G.GHOSTS.has("nw_shenpi") and J.G.GHOSTS.has("nw_teketeke") and not ks.has("nw_panguan"))
 	var nw = L.filter(func(x): return str(x.k).begins_with("nw_"))
-	_chk("新鬼 26 隻、冇 Sundel Bolong、有 Teke Teke", nw.size() == 26 and not ks.has("nw_sundel") and ks.has("nw_teketeke"), nw.size())
+	_chk("新鬼 26＋%d 隻、冇 Sundel Bolong、有 Teke Teke" % n2.size(), nw.size() == 26 + n2.size() and not ks.has("nw_sundel") and ks.has("nw_teketeke"), nw.size())
 	_chk("牛頭、馬面升名鬼有格", ks.has("niutou") and ks.has("mamian"))
 	var nm_ok = true
 	for x in L:
@@ -365,18 +375,40 @@ func sortie_hook_check(t, m) -> void:
 			await _w(t, 0.12); await _shot(t, "11_soulfire_hit")
 	_ff(op, ["done"])
 	await _w(t, 1.0)
-func _card_check(t, tag: String) -> void:
+func _card_check(t, tag: String, click := false) -> void:
 	var vs = t.get_viewport().get_visible_rect().size
 	var card = SOV.card
 	if card == null: _chk("小卡（%s）" % tag, false); return
 	var cr = card.get_global_rect()
-	_chk("小卡（%s）喺畫面入面、底部導航之上" % tag, cr.position.y >= 0 and cr.end.y <= vs.y - 60 and cr.end.x <= vs.x + 0.5, [cr, vs])
+	_chk("小卡（%s）喺頂部資源列之下、底部導航之上" % tag, cr.position.y >= 140 and cr.end.y <= vs.y - 60 and cr.end.x <= vs.x + 0.5, [cr, vs])
 	var fb = _main(t).get_node_or_null("CtlSortie")
-	_chk("小卡（%s）開住：浮動「出擊」掣收起" % tag, fb == null or not fb.visible)
+	_chk("小卡（%s）開住：浮動「出擊」掣收起" % tag, fb == null or not fb.is_visible_in_tree())
+	var sc = card.find_child("CardScroll", true, false)
+	_chk("小卡（%s）資料喺捲動區、掣行固定喺底" % tag, sc != null)
+	var row = []
 	for b in card.find_children("*", "Button", true, false):
+		if sc != null and sc.is_ancestor_of(b): continue
+		row.append(b)
+	_chk("小卡（%s）最底一行有出擊／關閉" % tag, row.any(func(b): return b.text == "出擊") and row.any(func(b): return b.text == "關閉"), row.map(func(b): return b.text))
+	var bad_b = []
+	for b in row:
 		var gr = b.get_global_rect()
-		if not Rect2(0, 0, vs.x, vs.y - 60).encloses(gr): _chk("小卡（%s）掣「%s」完整可撳" % [tag, b.text], false, gr); return
-	_chk("小卡（%s）所有掣完整喺畫面入面" % tag, true)
+		if not Rect2(0, 0, vs.x, vs.y - 60).encloses(gr): bad_b.append([b.text, gr])
+		if fb != null and fb.is_visible_in_tree() and fb.get_global_rect().intersects(gr): bad_b.append([b.text, "被浮動出擊掣遮"])
+	_chk("小卡（%s）最底一行掣完整、唔撞導航" % tag, bad_b.is_empty(), bad_b)
+	if sc != null:
+		var sr = sc.get_global_rect()
+		_chk("小卡（%s）捲動區喺畫面入面" % tag, sr.position.y >= 140 and sr.end.y <= cr.end.y, sr)
+	if click:   # 真係撳：模擬手指撳「關閉」中心，小卡要收
+		var cl = row.filter(func(b): return b.text == "關閉")
+		if not cl.is_empty():
+			var p = cl[0].get_global_rect().get_center()
+			var vp = t.get_viewport()
+			for pr in [true, false]:
+				var ev = InputEventMouseButton.new(); ev.button_index = MOUSE_BUTTON_LEFT; ev.pressed = pr; ev.position = p; ev.global_position = p
+				vp.push_input(ev, true)
+				await _w(t, 0.1)
+			_chk("小卡（%s）真撳「關閉」收到" % tag, SOV.card == null or not is_instance_valid(SOV.card), p)
 func Fire_arrive(_f) -> float: return 0.35 + 0.8 + 0.01
 
 # ---- 截圖 ----
@@ -433,7 +465,7 @@ func shot_all(t, m) -> void:
 		var e3 = SO.camps(0)[3]
 		var c3 = SO.cst(e3); c3["wins"] = 1.0; c3["clr"] = 0.0; c3["first"] = true
 		SOV.open_card(e3); await _w(t, 0.7); await _shot(t, "14_card_locked_%dx%d" % [sz.x, sz.y])
-		await _card_check(t, "%dx%d 未夠勝場" % [sz.x, sz.y])
+		await _card_check(t, "%dx%d 未夠勝場" % [sz.x, sz.y], true)
 		SOV.close_card(); await _w(t, 0.3)
 	t.get_window().size = Vector2i(450, 975); await _w(t, 0.8)
 	_cam(m, e.pos + Vector2(0, 80), m.village.size.x / 420.0)
