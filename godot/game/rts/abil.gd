@@ -8,6 +8,7 @@ extends RefCounted
 
 const PATH := "res://data/abil.json"
 const CT_PATH := "res://data/nat/counter.json"
+const NG_PATH := "res://game/newghost/ng_data.gd"
 const CAP_LO := 0.2           # 兩層克制＋機制＋追擊 總倍率封頂
 const CAP_HI := 4.0
 const ADV_CAP := 0.25         # 軍師加成封頂 +25%
@@ -28,7 +29,11 @@ static func data() -> Dictionary:
 			if f:
 				var x = JSON.parse_string(f.get_as_text())
 				if x is Dictionary: D = x
+		if not D.is_empty() and ResourceLoader.exists(NG_PATH):   # newghost：ABIL／ENEMY／LINK 只補冇嘅 key（reload 後都補返）
+			var NG = load(NG_PATH)
+			if NG != null and NG.has_method("merge_abil"): NG.merge_abil(D)
 	return D
+static func abil(k) -> Dictionary: return _ent("ABIL", J.str(k))   # ng_data.abil_of 用
 static func ct() -> Dictionary:
 	if CT == null:
 		CT = {}
@@ -553,7 +558,8 @@ static func compile(sim, u: Dictionary) -> void:
 		else: a.act = from_legacy(u.get("sk"))
 		for t in _arr(en.get("tags")): a.tags.append(norm_tag(t))
 	if e.size() and (a.hero or J.t(_ent("ENEMY", k).get("use_abil"))):
-		for pe in _arr(e.get("pas")): if pe is Dictionary: a.pas.append(pe)   # 被動：一入隊就有
+		for pe in _arr(e.get("pas")):   # 被動：star 0 一入隊就有；star n＝職級 ≥ n 先開（2 主任、4 總監）
+			if pe is Dictionary and int(J.num(pe.get("star", 0))) <= int(a.star): a.pas.append(pe)
 		for pe in perks_of(k, int(a.star) if a.hero else (2 if J.t(u.get("boss")) else 0)):   # 專長：按職級（做敵人：王當主任）
 			if pe.get("aura") is Dictionary: a.aura = pe.aura
 			if pe.get("tr") != null: a.pas.append(pe)
@@ -607,43 +613,91 @@ static func _flush(sim) -> void:
 	sim.ab_st["spawn"] = []
 
 # ================= 合體技（COMBOS＋LINK，在地圖戰鬥生效） =================
-static func links() -> Array:
+static func links() -> Array:   # LINK（abil.json＋newghost）優先；舊 COMBOS 補冇嘅 id（a、b → m）
 	var o = []; var ids = {}
 	for c in _arr(data().get("LINK")):
-		if c is Dictionary: o.append(c); ids[J.str(c.get("id"))] = true
+		if c is Dictionary and not ids.has(J.str(c.get("id"))): o.append(c); ids[J.str(c.get("id"))] = true
 	var CB = J.G.get("COMBOS") if J.G != null else null
 	if CB is Array:
 		for c in CB:
 			if c is Dictionary and not ids.has(J.str(c.get("id"))):
-				var x = (c as Dictionary).duplicate(); x["leg"] = true; o.append(x)
+				var x = (c as Dictionary).duplicate(); x["leg"] = true; ids[J.str(c.get("id"))] = true; o.append(x)
 	return o
+static func link_members(c: Dictionary) -> Array:
+	var m = _arr(c.get("m"))
+	if m.is_empty(): m = [c.get("a"), c.get("b")]
+	return m
 static func _combos(sim) -> void:
 	sim.ab_st["combo"] = []
 	var S = J.G.get("S") if J.G != null else null
 	var lv = J.num(S.get("lv", 1)) if S is Dictionary else 1.0
 	for c in links():
-		var need = J.num(c.get("lv", data().get("COMBO_LV", 17) if J.t(c.get("leg")) else 0))
-		if lv < need: continue
-		var a = null; var b = null
-		for u in sim.units:
-			if not is_hero(u): continue
-			if a == null and J.str(u.get("k")) == J.str(c.get("a")): a = u
-			elif b == null and J.str(u.get("k")) == J.str(c.get("b")): b = u
-		if a != null and b != null: sim.ab_st.combo.append({"c": c, "a": a, "b": b, "energy": 0.0, "cast": null})
+		var need_lv = J.num(c.get("lv", data().get("COMBO_LV", 17) if J.t(c.get("leg")) else 0))
+		if lv < need_lv: continue
+		var mem = []; var ks = {}
+		for k in link_members(c):
+			for u in sim.units:
+				if is_hero(u) and J.str(u.get("k")) == J.str(k) and not ks.has(J.str(k)) and not J.t(u.get("sum")): mem.append(u); ks[J.str(k)] = true; break
+		if mem.size() < int(J.num(c.get("need", 2))): continue
+		var ok = true
+		for k in _arr(c.get("must")): if not ks.has(J.str(k)): ok = false
+		if not ok: continue
+		var kind = J.str(c.get("kind", "strike"))
+		var cb = {"c": c, "a": mem[0], "b": mem[1] if mem.size() > 1 else mem[0], "m": mem, "n": mem.size(), "energy": 0.0, "cast": null, "kind": kind, "on": false}
+		sim.ab_st.combo.append(cb)
+static func _link_fx(cb: Dictionary) -> Array:
+	var L = _arr(cb.c.get("fx")).duplicate()
+	if int(cb.n) >= 3: L += _arr(cb.c.get("fx3"))
+	return L
+static func _link_tg(sim, cb: Dictionary, src: Dictionary, fx: Dictionary) -> Array:   # 合體技 fx.tg：members／allies／foes／all_r／near／back（fx 上可帶 shape、r）
+	var tg = fx.get("tg")
+	var o = []
+	match J.str(tg):
+		"members":
+			for u in cb.m: if sim.alive(u): o.append([u, 1.0])
+			return o
+		"allies":
+			for u in allies(sim, src): o.append([u, 1.0])
+			return o
+		"foes", "":
+			if J.str(tg) == "" and J.str(fx.get("p")) in SELF_P:
+				for u in cb.m: if sim.alive(u): o.append([u, 1.0])
+				return o
+			return select(sim, src, {"sel": "foes", "r": J.num(fx.get("r", 0))})
+		"all_r": return select(sim, src, {"sel": "foes", "r": J.num(fx.get("r", 400))})
+	var d = {"sel": J.str(tg)}
+	for k in ["shape", "r", "n", "falloff", "deg", "len", "w"]: if fx.has(k): d[k] = fx[k]
+	return select(sim, src, d)
+static func _link_src(sim, cb: Dictionary) -> Dictionary:
+	var ps = Vector2.ZERO; var n = 0; var atk = 0.0
+	for u in cb.m:
+		if u.get("p") is Vector2: ps += u.p; n += 1
+		atk += _nn(u, "atk")
+	return {"k": "", "atk": atk / maxf(1, cb.m.size()), "side": 0.0, "hp": 1.0, "maxhp": 1.0, "p": ps / maxf(1, n), "energy": 0.0, "minion": true, "range": 150.0, "link": true,
+		"ab": {"tags": ["遠", "破"], "mech": [], "bf": [], "sc": [], "pas": [], "icd": {}, "n_att": 0, "star": 0}}
 static func combo_list(sim) -> Array: return sim.ab_st.get("combo", []) if sim.ab_st is Dictionary else []
 static func combo_cast(sim, i := 0) -> bool:   # 合體技按鈕（abui 接）
 	var L = combo_list(sim)
 	if i >= L.size(): return false
 	var cb = L[i]
+	if J.str(cb.get("kind", "strike")) == "aura": return false
 	if J.num(cb.energy) < 100 or sim.result != null or sim.phase != "fight" or cb.cast != null: return false
-	if _nn(cb.a, "hp") <= 0 or _nn(cb.b, "hp") <= 0: return false
+	var alive_n = 0
+	for u in cb.m: if _nn(u, "hp") > 0: alive_n += 1
+	if alive_n < int(J.num(cb.c.get("need", 2))): return false
 	cb["energy"] = 0.0; cb["cast"] = {"t": 0.0, "dur": 0.45}
 	sim.events.append(["combo_cast", cb.c])
 	return true
 static func _combo_tick(sim, dt: float) -> void:
 	for i in combo_list(sim).size():
 		var cb = combo_list(sim)[i]
-		var both = _nn(cb.a, "hp") > 0 and _nn(cb.b, "hp") > 0
+		var alive_n = 0
+		for u in cb.m: if _nn(u, "hp") > 0: alive_n += 1
+		var both = alive_n >= int(J.num(cb.c.get("need", 2)))
+		if J.str(cb.get("kind")) == "aura":
+			if both and not J.t(cb.get("on")): _aura_link_on(sim, cb)
+			if J.t(cb.get("on")): _aura_link_tick(sim, cb, dt)
+			continue
 		if both: cb["energy"] = minf(100.0, J.num(cb.energy) + 5.0 * dt)
 		if cb.cast == null and J.num(cb.energy) >= 100 and both and sim.auto: combo_cast(sim, i)
 		if cb.cast != null:
@@ -651,15 +705,56 @@ static func _combo_tick(sim, dt: float) -> void:
 			if J.num(cb.cast.t) >= J.num(cb.cast.dur):
 				cb["cast"] = null
 				if both: _combo_fire(sim, cb)
+static func _aura_link_on(sim, cb: Dictionary) -> void:   # 被動合體技：同場即生效（成場有效）
+	cb["on"] = true
+	var src = _link_src(sim, cb)
+	for fx in _link_fx(cb):
+		if not (fx is Dictionary): continue
+		var f2 = (fx as Dictionary).duplicate()
+		var p = J.str(f2.get("p"))
+		var ts = _link_tg(sim, cb, src, f2)
+		if f2.get("who") != null:
+			var keep = []
+			for pr in ts: if J.str(pr[0].get("k")) == J.str(f2.who): keep.append(pr)
+			ts = keep
+		if f2.get("dur") == null and p in ["buff", "immune", "shield"]: f2["dur"] = -1
+		match p:
+			"on_kill_heal", "on_kill_maxhp", "on_ally_down":
+				for u in cb.m: A(u)[p] = f2
+			"foe_summon_cd":
+				for w in sim.units:
+					if _nn(w, "side") == 1 and has_mech(w, "召喚"): add_bf(sim, w, {"id": "sum_cd", "p": "sum_cd", "stat": "energy", "v": -J.num(f2.get("v", 0.5)), "dur": -1, "neg": true})
+				cb["sum_cd"] = J.num(f2.get("v", 0.5))
+			"reveal_pulse": cb["pulse"] = f2; cb["pulse_t"] = 0.0
+			_:
+				var src2 = cb.m[0] if p in SELF_P else src
+				prim(sim, src2, f2, ts, {"sk": false, "link": true, "kind": "aura"})
+	sim.text(sim.center() + Vector2(0, -110), J.str(DB.L(J.str(cb.c.get("name")))), "#ffb0ff", 1.4, 18)
+	sim.events.append(["combo", cb.c])
+	ev(sim, "link_" + J.str(cb.c.get("id")), cb.a, cb.b)
+static func _aura_link_tick(sim, cb: Dictionary, dt: float) -> void:
+	if cb.get("pulse") is Dictionary:
+		cb["pulse_t"] = J.num(cb.pulse_t) - dt
+		if J.num(cb.pulse_t) <= 0:
+			cb["pulse_t"] = J.num(cb.pulse.get("t", 6.0))
+			for u in cb.m:
+				if sim.alive(u) and u.get("p") is Vector2: _reveal(sim, u, u.p, J.num(cb.pulse.get("r", 180)), 3.0)
+			ev(sim, "reveal_pulse", cb.a, null)
+	if J.num(cb.get("sum_cd", 0)) > 0:   # 中途召喚出嚟嘅召喚者都減速
+		for w in sim.units:
+			if _nn(w, "side") == 1 and has_mech(w, "召喚") and not has_bf(sim, w, "sum_cd"): add_bf(sim, w, {"id": "sum_cd", "p": "sum_cd", "stat": "energy", "v": -J.num(cb.sum_cd), "dur": -1, "neg": true})
 static func _combo_fire(sim, cb: Dictionary) -> void:
 	var c = cb.c
-	var mid = ((cb.a.p as Vector2) + (cb.b.p as Vector2)) * 0.5
-	var src = {"k": "", "atk": (_nn(cb.a, "atk") + _nn(cb.b, "atk")) / 2.0, "side": 0.0, "hp": 1.0, "maxhp": 1.0, "p": mid, "energy": 0.0, "minion": true, "range": 150.0,
-		"ab": {"tags": ["遠", "破"], "mech": [], "bf": [], "sc": [], "pas": [], "icd": {}, "n_att": 0, "star": 0}}
-	var ab_ = c.get("abil")
-	if ab_ is Dictionary and _arr(ab_.get("fx")).size():
-		var tl = select(sim, src, ab_.get("tg", {"sel": "foes"}))
-		run_fx(sim, src, _arr(ab_.fx), tl, {"sk": true, "kind": "aoe", "aoe": true, "combo": true, "name": J.str(c.get("name"))})
+	var src = _link_src(sim, cb)
+	var L = _link_fx(cb)
+	if L.size() and not J.t(c.get("leg")):
+		var first = []
+		for fx in L:
+			if not (fx is Dictionary): continue
+			var ts = _link_tg(sim, cb, src, fx) if fx.get("tg") != null else first
+			if fx.get("tg") != null and first.is_empty(): first = ts
+			if fx.get("tg") == null and first.is_empty(): ts = select(sim, src, {"sel": "foes"}); first = ts
+			prim(sim, src, fx, ts, {"sk": true, "kind": "aoe", "aoe": true, "combo": true, "name": J.str(c.get("name"))})
 	else:   # 舊 COMBOS：全場嚇彈起後重重摔下（battle.gd fire_combo）
 		for v in foes(sim, src, true):
 			hit(sim, src, v, J.num(c.get("mult", 2.0)), {"sk": true, "kind": "aoe", "aoe": true, "combo": true})
@@ -670,6 +765,7 @@ static func _combo_fire(sim, cb: Dictionary) -> void:
 	sim._fx({"kind": "ring", "p": sim.center(), "life": 0.6, "col": "#ffb0ff"})
 	sim.events.append(["combo", c])
 	ev(sim, "combo", cb.a, cb.b)
+	ev(sim, "link_" + J.str(c.get("id")), cb.a, cb.b)
 
 # ================= 目標選擇器（ability.md 2.5） =================
 # 回 Array of [單位, 倍數]
@@ -722,6 +818,20 @@ static func select(sim, u: Dictionary, tg) -> Array:
 			for w in cand: if flying(sim, w): pri = w; break
 		"summoner":
 			for w in cand: if has_mech(w, "召喚"): pri = w; break
+		"dense":   # 身邊最多敵人嗰隻
+			var bc = -1
+			var rr0 = J.num(tg.get("r", AOE_R))
+			for w in cand:
+				var n0 = 0
+				for w2 in cand: if (w2.p as Vector2).distance_to(w.p) <= rr0: n0 += 1
+				if n0 > bc: bc = n0; pri = w
+		"first_low":
+			for w in cand: if _nn(w, "hp") < J.num(tg.get("hp_pct", 0.3)) * _nn(w, "maxhp"): pri = w; break
+			if pri == null: return []
+		"ally_top":
+			var bt = -1.0
+			for w in allies(sim, u): if w != u and _nn(w, "atk") > bt: bt = _nn(w, "atk"); pri = w
+			return [[pri, 1.0]] if pri != null else []
 		_:
 			if sel.begins_with("mech:"):
 				var mm = norm_mech(sel.substr(5))
@@ -796,15 +906,27 @@ static func cast(sim, u: Dictionary, sk = null) -> void:
 	var at = sim.head(u) + Vector2(0, -34) if u.get("p") != null else sim.center() + Vector2(0, -120)
 	sim.text(at, J.str(DB.L(J.str(act.get("name")))), "#bbffff" if sd == 0 else "#ff99aa", 1.1, 17)
 	sim.events.append(["skill", u])
+	for w in sim.units:   # 隊友放技：ally_cast 觸發
+		if w != u and _nn(w, "side") == sd and sim.alive(w) and A(w).get("pas", []).size(): trig(sim, w, "ally_cast", u)
 	# 名鬼放技：附近敵人嘅 foe_cast 觸發
 	for w in sim.units:
 		if _nn(w, "side") != sd and sim.alive(w) and A(w).get("pas", []).size() and _pos(sim, u).distance_to(w.p) <= 300: trig(sim, w, "foe_cast", u)
-static func run_fx(sim, u: Dictionary, L: Array, tl: Array, ctx: Dictionary) -> void:
+const CTX_TG := ["attacker", "killer", "target", "victim"]
+static func run_fx(sim, u: Dictionary, L: Array, tl: Array, ctx: Dictionary, other = null) -> void:
 	for fx in L:
 		if not (fx is Dictionary): continue
 		var ts = tl
 		var o = fx.get("tg")
-		if o != null: ts = select(sim, u, o)
+		if o is String and o in CTX_TG:
+			ts = [[other, 1.0]] if other is Dictionary and _nn(other, "hp") > 0 else (tl if o == "target" else [])
+		elif o is String and o == "first_low": ts = select(sim, u, {"sel": "first_low", "hp_pct": J.num(fx.get("hp_pct", 0.3))})
+		elif o != null: ts = select(sim, u, o)
+		if J.str(fx.get("p")) == "recast":
+			if not J.t(ctx.get("recast")) and A(u).get("act") is Dictionary:
+				var c2 = ctx.duplicate(); c2["recast"] = true; c2["rx"] = J.num(fx.get("x", 0.5))
+				run_fx(sim, u, _arr(A(u).act.get("fx")), select(sim, u, A(u).act.get("tg", {"sel": "near"})), c2)
+				ev(sim, "recast", u, null)
+			continue
 		prim(sim, u, fx, ts, ctx)
 const SELF_P := ["shield", "heal", "hot", "buff", "immune", "cleanse", "energy", "stealth", "revive", "guard", "taunt", "anti_air", "splash", "pierce", "dash", "summon", "zone_self"]
 
@@ -815,12 +937,16 @@ static func prim(sim, u: Dictionary, fx: Dictionary, ts: Array, ctx: Dictionary)
 	match p:
 		# ---- 傷害類 ----
 		"dmg":
-			var mult = _v(fx, "mult", 1.0, star); var hits = maxi(1, int(_v(fx, "hits", 1, star)))
+			if fx.get("pct_hp") != null:   # 按目標最大血直接扣（反電）
+				for pr in ts: if _nn(pr[0], "side") != sd: raw(sim, pr[0], _v(fx, "pct_hp", 0.05, star) * _nn(pr[0], "maxhp"), u)
+				return
+			var mult = _v(fx, "mult", 1.0, star) * (J.num(ctx.get("rx", 1.0)) if J.t(ctx.get("recast")) else 1.0); var hits = maxi(1, int(_v(fx, "hits", 1, star)))
 			var c = ctx.duplicate()
 			c["mult"] = mult; c["hits"] = hits
 			if fx.get("vs_state") != null: c["follow"] = J.str(fx.vs_state); c["fol_x"] = _v(fx, "x", 1.8, star)
 			if fx.get("vs_mech") is Dictionary: c["vs_mech"] = fx.vs_mech
 			if fx.get("vs_tag") is Dictionary: c["vs_tag"] = fx.vs_tag
+			if fx.get("vs_sys") is Dictionary: c["vs_sys"] = fx.vs_sys
 			if fx.get("drain") != null: c["drain"] = _v(fx, "drain", 0.0, star)
 			if fx.get("execute") is Dictionary: c["execute"] = fx.execute
 			for pr in ts:
@@ -897,7 +1023,7 @@ static func prim(sim, u: Dictionary, fx: Dictionary, ts: Array, ctx: Dictionary)
 			for pr in _self_or(ts, u, sd):
 				var w = pr[0]
 				if _nn(w, "hp") <= 0: continue
-				var h = (_v(fx, "pct", 0.0, star) * _nn(w, "maxhp") + _v(fx, "mult", 0.0, star) * _nn(u, "atk")) * stat(sim, w, "heal_in")
+				var h = (_v(fx, "pct", 0.0, star) * _nn(w, "maxhp") + _v(fx, "mult", 0.0, star) * _nn(u, "atk")) * stat(sim, w, "heal_in") * stat(sim, u, "heal_out")
 				_heal(sim, w, h)
 				if w.get("p") is Vector2: sim._fx({"kind": "ring", "p": w.p, "life": 0.5, "col": "#8affb0"})
 			ev(sim, "heal", u, u)
@@ -932,7 +1058,13 @@ static func prim(sim, u: Dictionary, fx: Dictionary, ts: Array, ctx: Dictionary)
 		"revive":
 			for pr in _self_or(ts, u, sd): A(pr[0])["revive"] = _v(fx, "pct", 0.4, star); ev(sim, "revive_set", u, pr[0])
 		"buff":
-			for pr in _self_or(ts, u, sd):
+			if J.str(fx.get("stat")) == "maxhp":
+				for pr in _self_or(ts, u, sd):
+					var w = pr[0]; var add = _nn(w, "maxhp") * _v(fx, "v", 0.1, star)
+					w["maxhp"] = _nn(w, "maxhp") + add; w["hp"] = _nn(w, "hp") + maxf(0.0, add); ev(sim, "buff", u, w)
+				return
+			var tsb = _self_or(ts, u, sd) if _v(fx, "v", 0.2, star) >= 0 or ts.is_empty() or _nn(ts[0][0], "side") == sd else ts
+			for pr in tsb:
 				add_bf(sim, pr[0], {"id": "buff_" + J.str(fx.get("stat", "atk")), "p": "buff", "stat": J.str(fx.get("stat", "atk")), "v": _v(fx, "v", 0.2, star), "dur": _v(fx, "dur", 5.0, star)})
 				ev(sim, "buff", u, pr[0])
 		"energy":
@@ -1013,8 +1145,34 @@ static func prim(sim, u: Dictionary, fx: Dictionary, ts: Array, ctx: Dictionary)
 					"range": 38.0, "spd": 50.0, "energy": 0.0, "sk": null, "st": {}, "minion": sd == 0, "boss": false}
 				c2["maxhp"] = c2.hp
 				_spawn(sim, c2, _pos(sim, u) + Vector2(randf_range(-30, 30), randf_range(-12, 12)) + (sim.ax as Vector2) * (20.0 if sd == 0 else -20.0))
-				if _v(fx, "dur", -1, star) > 0: A(c2)["expire"] = t + _v(fx, "dur", -1, star)
+				if _v(fx, "dur", -1, star) > 0: A(c2)["expire"] = t + _v(fx, "dur", -1, star) * stat(sim, u, "summon_dur")
 			ev(sim, "summon", u, u)
+		"dmg_self":
+			raw(sim, u, _v(fx, "pct", 0.1, star) * _nn(u, "maxhp"), null, {"self": true}); ev(sim, "dmg_self", u, u)
+		"charm":   # 迷惑：目標轉頭打自己友
+			for pr in ts:
+				var v = pr[0]
+				if _nn(v, "side") == sd or _nn(v, "hp") <= 0 or not cc_ok(sim, u, v, "charm"): continue
+				A(v)["charm_until"] = t + _v(fx, "dur", 3.0, star); v["tg"] = null; v["anim"] = null
+				sim.text(sim.head(v) + Vector2(0, -18), "迷惑", "#f9a8d4", 0.9); ev(sim, "charm", u, v)
+		"confuse":
+			for pr in ts:
+				var v = pr[0]
+				if _nn(v, "side") == sd or _nn(v, "hp") <= 0 or not cc_ok(sim, u, v, "confuse") or protected(sim, v): continue
+				A(v)["conf_until"] = t + _v(fx, "dur", 2.5, star); A(v)["conf_dir"] = Vector2.from_angle(randf() * TAU)
+				sim.text(sim.head(v) + Vector2(0, -18), "迷魂", "#d8b4fe", 0.9); ev(sim, "confuse_fx", u, v)
+		"sap_lock":   # 鎖嚇氣：一段時間唔加嚇氣
+			var tl5 = ts if ts.size() else select(sim, u, {"sel": "foes"})
+			for pr in tl5:
+				if _nn(pr[0], "side") == sd: continue
+				add_bf(sim, pr[0], {"id": "sap_lock", "p": "sap_lock", "stat": "energy", "v": -1.0, "dur": _v(fx, "dur", 5.0, star), "neg": true})
+			ev(sim, "sap_lock", u, null)
+		"on_kill_heal", "on_kill_maxhp", "on_ally_down": A(u)[p] = fx; ev(sim, p + "_set", u, u)
+		"foe_summon_cd":
+			for w in sim.units:
+				if _nn(w, "side") != sd and has_mech(w, "召喚"): add_bf(sim, w, {"id": "sum_cd", "p": "sum_cd", "stat": "energy", "v": -_v(fx, "v", 0.5, star), "dur": -1, "neg": true})
+			ev(sim, "foe_summon_cd", u, null)
+		"reveal_pulse": _reveal(sim, u, _pos(sim, u), _v(fx, "r", 180, star), 3.0)
 		"coin":
 			if sd == 0: sim.coins_won += _v(fx, "v", 10, star)
 			ev(sim, "coin", u, u)
@@ -1057,8 +1215,8 @@ static func cc(sim, src, v: Dictionary, kind: String, fx := {}, star := 0) -> bo
 		return false
 	var sp = _pos(sim, src)
 	match kind:
-		"air": v.st["air"] = _v(fx, "dur", 1.0, star); v.st["airMax"] = v.st.air; v.st["down"] = 0.0
-		"down": v.st["down"] = _v(fx, "dur", 1.4, star); v.st["downMax"] = v.st.down; v.st["air"] = 0.0
+		"air": v.st["air"] = _v(fx, "dur", 1.0, star) * stat(sim, v, "cc_taken"); v.st["airMax"] = v.st.air; v.st["down"] = 0.0
+		"down": v.st["down"] = _v(fx, "dur", 1.4, star) * stat(sim, v, "cc_taken"); v.st["downMax"] = v.st.down; v.st["air"] = 0.0
 		"push":
 			var dist = _v(fx, "dist", 40.0, star)
 			v.st["push"] = dist / 160.0
@@ -1087,6 +1245,12 @@ static func hit(sim, src: Dictionary, v: Dictionary, mult: float, c = null) -> f
 	if src.get("ab") == null: compile(sim, src)
 	var sk = J.t(c.get("sk")); var aoe = J.t(c.get("aoe"))
 	var sa = A(src); var va = A(v)
+	if not sk and not J.t(c.get("splash")):   # 閃避（buff dodge／dodge_ranged）對命中（buff hit）
+		var miss = (stat(sim, v, "dodge") - 1.0) + ((stat(sim, v, "dodge_ranged") - 1.0) if ranged(src) else 0.0) - (stat(sim, src, "hit") - 1.0)
+		if miss > 0 and randf() < miss:
+			if v.get("p") is Vector2: sim.text(sim.head(v) + Vector2(0, -14), "閃", "#e5e7eb", 0.6)
+			ev(sim, "dodge", src, v)
+			return 0.0
 	var sd = _nn(src, "side"); var vsd = _nn(v, "side")
 	var mod = 1.0
 	var tag = null; var tcol = "#e8d0ff"; var chain = false; var tp = null
@@ -1128,6 +1292,8 @@ static func hit(sim, src: Dictionary, v: Dictionary, mult: float, c = null) -> f
 	# ---- 第二層：機制 ----
 	if c.get("vs_mech") is Dictionary:
 		for m in c.vs_mech: if has_mech(v, norm_mech(m)): mod *= J.num(c.vs_mech[m])
+	if c.get("vs_sys") is Dictionary and c.vs_sys.has(J.str(va.get("sys", ""))): mod *= J.num(c.vs_sys[J.str(va.sys)])
+	if J.num(stat(sim, v, "taken_melee")) != 1.0 and not ranged(src): mod *= stat(sim, v, "taken_melee")
 	if c.get("vs_tag") is Dictionary:
 		for tg in c.vs_tag: if has_tag(v, norm_tag(tg)): mod *= J.num(c.vs_tag[tg])
 	if c.get("execute") is Dictionary and _nn(v, "hp") < J.num(c.execute.get("hp_pct", 0.25)) * _nn(v, "maxhp"): mod *= J.num(c.execute.get("x", 2.0)); ev(sim, "execute", src, v)
@@ -1245,7 +1411,7 @@ static func raw(sim, v: Dictionary, amt: float, src, c := {}) -> void:   # 直�
 	if _nn(v, "hp") <= 0 or amt <= 0: return
 	if sim.cosmetic and _nn(v, "side") == 0: v["hp"] = maxf(_nn(v, "maxhp") * 0.25, _nn(v, "hp") - amt)
 	else: v["hp"] = _nn(v, "hp") - amt
-	if v.get("p") is Vector2 and amt >= 1.0:
+	if v.get("p") is Vector2 and amt >= 1.0 and not J.t(c.get("quiet")):
 		sim._fx({"kind": "num", "p": sim.head(v) + Vector2((randf() - 0.5) * 14, -2), "vx": 0.0, "text": J.str(J.round(amt)), "life": 0.7, "col": "#c4b5fd" if not J.t(c.get("thorn")) else "#fca5a5", "big": false})
 	if _nn(v, "hp") <= 0:
 		var dir = 1.0
@@ -1285,6 +1451,20 @@ static func on_down(sim, v: Dictionary, src: Dictionary, c: Dictionary) -> void:
 		ev(sim, "split", src, v)
 	if J.t(va.get("sum")) or J.t(v.get("sum")): pass
 	trig(sim, src, "kill", v)
+	if src is Dictionary and _nn(src, "side") != sd:
+		var okh = A(src).get("on_kill_heal")
+		if okh is Dictionary:
+			for w in sim.units: if is_hero(w) and sim.alive(w): _heal_quiet(w, _nn(w, "maxhp") * J.num(okh.get("pct", 0.03)))
+			ev(sim, "on_kill_heal", src, v)
+		var okm = A(src).get("on_kill_maxhp")
+		if okm is Dictionary and int(A(src).get("okm_n", 0)) < int(J.num(okm.get("cap", 5))):
+			A(src)["okm_n"] = int(A(src).get("okm_n", 0)) + 1
+			var add = _nn(src, "maxhp") * J.num(okm.get("v", 0.03)); src["maxhp"] = _nn(src, "maxhp") + add; src["hp"] = _nn(src, "hp") + add
+			ev(sim, "on_kill_maxhp", src, v)
+	for w in sim.units:
+		if w != v and _nn(w, "side") == sd and sim.alive(w) and A(w).get("on_ally_down") is Dictionary:
+			var oad = A(w).on_ally_down
+			add_bf(sim, w, {"id": "oad", "p": "buff", "stat": J.str(oad.get("stat", "atk")), "v": J.num(oad.get("v", 0.2)), "dur": -1, "stack": 5}); ev(sim, "on_ally_down", w, v)
 	for w in sim.units:
 		if w != v and _nn(w, "side") == sd and sim.alive(w) and A(w).get("pas", []).size(): trig(sim, w, "ally_down", v)
 	trig(sim, v, "death", src)
@@ -1320,9 +1500,8 @@ static func trig(sim, u, tr: String, other = null) -> void:
 		for fx in _arr(pe.get("fx")):
 			if not (fx is Dictionary): continue
 			var t2 = ts
-			if fx.get("tg") != null: t2 = select(sim, u, fx.tg)
-			elif J.str(fx.get("p")) in SELF_P: t2 = [[u, 1.0]]
-			prim(sim, u, fx, t2, {"sk": false, "pas": true, "kind": "pas"})
+			if fx.get("tg") == null and J.str(fx.get("p")) in SELF_P: t2 = [[u, 1.0]]
+			run_fx(sim, u, [fx], t2, {"sk": false, "pas": true, "kind": "pas"}, other)
 		ev(sim, "trig_" + tr, u, other)
 
 # ================= 每格：單位（喺 _step_fight 每隻單位開頭；回 true＝今格唔郁） =================
@@ -1345,6 +1524,9 @@ static func tick_unit(sim, u: Dictionary, dt: float) -> bool:
 			keep.append(b)
 		a["bf"] = keep
 		if _nn(u, "hp") <= 0: return true
+	var shb = stat(sim, u, "self_hurt") - 1.0
+	if shb > 0: raw(sim, u, _nn(u, "maxhp") * shb * dt, null, {"dot": true, "quiet": true})
+	if _nn(u, "hp") <= 0: return true
 	# 召喚物到時消失
 	if J.num(a.get("expire", 0)) > 0 and J.num(a.expire) <= t: raw(sim, u, _nn(u, "hp") + 1, null, {"expire": true}); return true
 	# 再生：每秒回 2.5%（王 1.5%）；削／凍／驅散停 6 秒；重創減
@@ -1381,6 +1563,13 @@ static func pick_fix(sim, u: Dictionary, tg):
 	var a = A(u)
 	if a.is_empty(): return tg
 	var t = sim.t
+	if J.num(a.get("charm_until", 0)) > t:   # 迷惑：打自己友
+		var bn0 = 1e9; var nb0 = null
+		for w in sim.units:
+			if w != u and _nn(w, "side") == _nn(u, "side") and sim.alive(w):
+				var d0 = (u.p as Vector2).distance_to(w.p)
+				if d0 < bn0: bn0 = d0; nb0 = w
+		if nb0 != null: u["tg"] = nb0; return nb0
 	var tb = a.get("taunt_by")
 	if tb is Dictionary and J.num(a.get("taunt_until", 0)) > t and sim.alive(tb): u["tg"] = tb; return tb
 	var lk = a.get("lock")
