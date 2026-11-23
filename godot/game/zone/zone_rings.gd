@@ -72,6 +72,9 @@ static func draw_under(c: CanvasItem, ctx: Ctx, vr: Rect2, t: float) -> void:
 					var gx = x + (j - 3) * 4.0; var hh = 9.0 + fmod(j * 3.7, 8.0)
 					ctx.strokeStyle = ["#2c3628", "#3a4630", "#46523a"][j % 3]; ctx.lineWidth = 1.6
 					ctx.beginPath(); ctx.moveTo(gx, y); ctx.quadraticCurveTo(gx + 2, y - hh * 0.6, gx + 4 + sin(t * 1.3 + j) * 1.5, y - hh); ctx.stroke()
+			"proc:steps":   # [dirs4] 下山石級（一級級石板）
+				Art.rr(ctx, x - w / 2, y - 9, w, 11, 3, "#6a645c", "#2a2622", 1.4)
+				Art.rr(ctx, x - w / 2 + 3, y - 9, w - 6, 3, 1, "rgba(200,190,170,.25)")
 			"proc:flowers":
 				for j in 6: Art.el(ctx, x - 10 + fmod(j * 5.3, 20.0), y - fmod(j * 4.1, 9.0), 2, 2, ["#8a2a2a", "#c8c0b0", "#6a2a4a"][j % 3])
 			_:
@@ -131,3 +134,26 @@ static func draw_over(c: CanvasItem, ctx: Ctx, nv, vr: Rect2, t: float) -> void:
 			Art.rr(ctx, p.x - w / 2, p.y - h / 2, w, h, px * 0.35, "rgba(30,20,24,.78)" if op else "rgba(10,6,12,.6)", "rgba(255,230,190,.45)", maxf(1.2, px * 0.08))
 			ZV._txt(ctx, s, p.x, p.y + 1, px, "#f6e2b0" if op else "#a89a90")
 			log.append(["plate", k, 0])
+
+# [dirs4] 四方向出路：核心地圖入面（村／區外面嗰段）畫泥石小路；出口外嗰段由瓦片地面烘圖畫
+static func draw_paths(c: CanvasItem, ctx: Ctx, vr: Rect2, t: float) -> void:
+	var zs = []
+	for z in ZD.zones(): zs.append(ZD.rect(z.rect))
+	var n = 0
+	for e in ZD.exits4():
+		if str(e.get("kind")) != "path": continue
+		var pts = e.pts
+		for i in pts.size() - 1:
+			var a = ZD.v2(pts[i]); var b = ZD.v2(pts[i + 1])
+			var L = a.distance_to(b); var k = maxi(1, int(L / 14.0))
+			for j in k + 1:
+				var q = a.lerp(b, float(j) / float(k))
+				if not vr.has_point(q): continue
+				var inz = false
+				for r in zs: if r.grow(-2).has_point(q): inz = true; break
+				if inz: continue
+				c.draw_circle(q, 20.0, Color(0.30, 0.24, 0.18, 0.95))
+				c.draw_circle(q + Vector2(3, 2), 13.0, Color(0.38, 0.31, 0.23, 0.9))
+				if (j + i) % 3 == 0: c.draw_circle(q + Vector2(_h(j, i) * 20.0 - 10.0, _h(i, j) * 12.0 - 6.0), 3.0, Color(0.55, 0.52, 0.46, 0.9))
+				n += 1
+	log.append(["paths", 0, n])

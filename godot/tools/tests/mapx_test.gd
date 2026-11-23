@@ -60,6 +60,7 @@ func _run(t, shots: bool) -> void:
 	for c in 6:
 		await _goto(t, m, c)
 		_data_check(c)
+		_dirs_check(c)   # [dirs4]
 		if shots: await _shots(t, m, c)
 	await _fog_check(t, m, shots)
 	_migrate_check()
@@ -207,3 +208,78 @@ func _shots(t, m, c: int) -> void:
 		var gdraw = ZR.log.filter(func(e): return e[0] == "ground").size()
 		_chk("第%d關第%d圈近景：瓦片地面一次畫、散件只畫鏡頭入面（%d 件）" % [c + 1, k, np], gdraw == 1 and np < ZD.ring_props(c).size() / 2, [gdraw, np])
 		await _shot(t, "m%d_ring%d" % [c + 1, k])
+
+# ================= [dirs4] 四方向出路 =================
+const DSHOTS := "/home/claude/docs/dirs4_shots/"
+func dirs(t) -> void:   # 單跑 dirs4：資料＋行路＋截圖
+	var m = await _boot(t)
+	var zst = ZD.st()
+	var bak = (zst.get("rings", {}) as Dictionary).duplicate(true) if zst.get("rings") is Dictionary else {}
+	DirAccess.make_dir_recursive_absolute(DSHOTS)
+	for c in 6:
+		await _goto(t, m, c)
+		_dirs_check(c)
+		ZD.gate_on = false
+		var nv = m.village; var cam = nv.zone_cam()
+		cam.vel = Vector2.ZERO; cam.tgt = null; cam.z = cam.z_min(); cam.clamp_all(); cam.center_on(ZD.bounds().get_center()); await _w(t, 1.0)
+		await RenderingServer.frame_post_draw
+		t.get_viewport().get_texture().get_image().save_png(DSHOTS + "m%d_overview.png" % (c + 1))
+		for e in ZD.exits4(c):
+			if c != 0 and c != 1 and c != 2: break
+			var pts = e.pts; var q = ZD.v2(pts[pts.size() - 2])
+			_cam(m, q, nv.size.x / 390.0 * 0.7); await _w(t, 0.7)
+			await RenderingServer.frame_post_draw
+			t.get_viewport().get_texture().get_image().save_png(DSHOTS + "m%d_exit_%s_%s.png" % [c + 1, e.dir, e.look])
+			var np = 0
+			for l in ZR.log: if l[0] == "paths": np = int(l[2])
+			if str(e.kind) == "path": _chk("第%d關%s出路小路有畫（%d 點）" % [c + 1, e.dir, np], np > 0, np)
+	ZD.gate_on = false
+	zst["rings"] = bak
+	await _goto(t, m, 0)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+func _dirs_check(c: int) -> void:
+	var tag = "第%d關［四方向］" % (c + 1)
+	var ex = ZD.exits4(c); var so = ZD.sorties(c)
+	var ds = {}
+	for e in ex: ds[str(e.dir)] = e
+	_chk(tag + "東南西北四條出路", ds.size() == 4 and ds.has("N") and ds.has("E") and ds.has("S") and ds.has("W"), ds.keys())
+	var cnt = {"N": 0, "E": 0, "S": 0, "W": 0}
+	var reach = true; var mx = 0.0
+	for s in so:
+		cnt[str(s.get("dir", "?"))] = cnt.get(str(s.get("dir", "?")), 0) + 1
+		var e = ds.get(str(s.get("dir", "")), {})
+		if e.is_empty() or s.route.size() < e.pts.size() + 1: reach = false; continue
+		for i in e.pts.size(): if ZD.v2(s.route[i]) != ZD.v2(e.pts[i]): reach = false
+		if ZD.v2(s.route[s.route.size() - 1]) != ZD.v2(s.pos): reach = false
+		mx = maxf(mx, _plen(s.route) / 72.0)
+	_chk(tag + "四個方向都有據點（每方向 ≥ 3）", cnt.N >= 3 and cnt.E >= 3 and cnt.S >= 3 and cnt.W >= 3, cnt)
+	_chk(tag + "每個據點 route 由村門口經佢方向出路行到據點", reach)
+	_chk(tag + "行軍上限 ≤ 40 秒（最長 %.1f）" % mx, mx <= 40.0, mx)
+	# 主角行路（要喺當前地圖）
+	if ZD.ci() != c: return
+	var zst = ZD.st()
+	var bak = (zst.get("rings", {}) as Dictionary).duplicate(true) if zst.get("rings") is Dictionary else {}
+	var gon = ZD.gate_on
+	ZD.gate_on = true; zst["rings"] = {}
+	var vc = ZD.zrect("village").get_center()
+	var rv_bak = ZD._rev().duplicate(true)
+	var walk_ok = true; var stop_ok = true; var bad_l = []
+	for d in ["N", "E", "S", "W"]:
+		var r1 = ZD.sorties(c).filter(func(s): return int(s.ring) == 1 and str(s.get("dir")) == d)
+		var e = ds.get(d, {})
+		if e.is_empty(): continue
+		var rv = ZD._rev()
+		for z in ZD.of_type("market") + ZD.of_type("wild"): rv[ZD._k(str(z.id), c)] = true   # 核心野外區當已解霧（只測圈帶）
+		var tgt = ZD.v2(r1[0].pos) if r1.size() else ZD.v2(e.pts[e.pts.size() - 1])
+		var rt = CW.route(vc, tgt)
+		var last: Vector2 = rt[rt.size() - 1]
+		if not (CW.region(last) != "" and last.distance_to(tgt) < 30.0): walk_ok = false; bad_l.append([d, "walk", last, tgt, CW.region(tgt)])
+		# 未開嘅第 3 圈：停喺霧邊（第 1 圈外邊以內）
+		var far = ZD.sorties(c).filter(func(s): return int(s.ring) == 3 and str(s.get("dir")) == d)
+		if far.size():
+			var rt2 = CW.route(vc, ZD.v2(far[0].pos)); var l2: Vector2 = rt2[rt2.size() - 1]
+			if ZD.ring_at(l2) > 1 or l2.distance_to(ZD.v2(far[0].pos)) < 100.0: stop_ok = false; bad_l.append([d, "fog", l2])
+	_chk(tag + "主角可以走入已散霧圈帶（四方向，經出路）", walk_ok, bad_l)
+	_chk(tag + "未散霧圈帶：停喺霧邊", stop_ok, bad_l)
+	ZD.gate_on = gon; zst["rings"] = bak
+	var rv0 = ZD._rev(); rv0.clear(); rv0.merge(rv_bak)

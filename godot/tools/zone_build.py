@@ -1010,6 +1010,69 @@ def _exits(M, wz):
     if r[0] <= 0: o.append(([0.0, (r[1] + r[3]) / 2], (-1, 0)))
     if r[2] >= W: o.append(([float(W), (r[1] + r[3]) / 2], (1, 0)))
     return o
+# [dirs4] 四方向出路（老闆 11:06）：每關東南西北都有一條路出核心地圖。
+#   野外區本身貼住嗰邊 → 沿用野外區出口（route 經大排檔、野外門）；冇嘅方向 → 由村門口（挑夫路村內點）
+#   用格網 A* 喺「村／區與區之間嘅罅」行到地圖邊（唔穿資源區、地標、大排檔、野外區）
+#   M["exits4"]＝[{dir:"N/E/S/W", kind:"wild"/"path", wz, pts:[[x,y]…]（由村門口到地圖邊外 60）, look:"bridge"/"steps"/"wild"}]
+DIRV = {"N": (0, -1), "S": (0, 1), "W": (-1, 0), "E": (1, 0)}
+G4 = 5
+def _astar_exit(M, start, dv):
+    import heapq
+    W, H = M["w"], M["h"]; nx, ny = W // G4 + 1, H // G4 + 1
+    vr = next(z["rect"] for z in M["zones"] if z["type"] == "village")
+    blk = [z["rect"] for z in M["zones"] if z["type"] != "village"]
+    def ok(i, j):
+        x, y = i * G4, j * G4
+        if _in_r((x, y), vr, 0): return True   # 村入面（出路喺村柵欄開後門）
+        return not any(_in_r((x, y), r, 1) for r in blk)
+    def goal(i, j): return (dv[1] < 0 and j == 0) or (dv[1] > 0 and j == ny - 1) or (dv[0] < 0 and i == 0) or (dv[0] > 0 and i == nx - 1)
+    s = (int(round(start[0] / G4)), int(round(start[1] / G4)))
+    dist = {s: 0.0}; prev = {}; pq = [(0.0, s)]; end = None
+    while pq:
+        d, c = heapq.heappop(pq)
+        if d > dist.get(c, 1e18): continue
+        if goal(*c): end = c; break
+        for di in (-1, 0, 1):
+            for dj in (-1, 0, 1):
+                if not di and not dj: continue
+                n = (c[0] + di, c[1] + dj)
+                if not (0 <= n[0] < nx and 0 <= n[1] < ny) or not ok(*n): continue
+                if di and dj and not (ok(c[0] + di, c[1]) and ok(c[0], c[1] + dj)): continue   # 斜行唔准切角
+                # 出村門口要經村邊（唔准斜穿柵欄）；離開村之後喺罅入面行
+                nd = d + math.hypot(di, dj) * G4 * (1.0 if _in_r((n[0] * G4, n[1] * G4), vr, 14) else 1.15)
+                if nd < dist.get(n, 1e18): dist[n] = nd; prev[n] = c; heapq.heappush(pq, (nd, n))
+    if end is None: return None
+    path = [end]
+    while path[-1] != s: path.append(prev[path[-1]])
+    path.reverse(); pts = [[float(i * G4), float(j * G4)] for i, j in path]
+    # 簡化：共線點刪走（保留轉角）
+    o = [pts[0]]
+    for i in range(1, len(pts) - 1):
+        a, b, c = o[-1], pts[i], pts[i + 1]
+        if abs((b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0])) > 1e-6: o.append(b)
+    o.append(pts[-1]); e = o[-1]
+    o.append([e[0] + dv[0] * 60, e[1] + dv[1] * 60])
+    return o
+def _exits4(M):
+    out = []
+    wz_all = [z for z in M["zones"] if z["type"] == "wild"]
+    for d, dv in DIRV.items():
+        got = None
+        for wz in wz_all:
+            for ex, nv in _exits(M, wz):
+                if tuple(nv) == dv and got is None:
+                    base = _base_route(M, wz); ba = list(map(float, wz["boss_at"]))
+                    got = {"dir": d, "kind": "wild", "wz": wz["id"], "look": "wild",
+                           "pts": base + [ba, [ex[0] - nv[0] * 30, ex[1] - nv[1] * 30], [ex[0] + nv[0] * 60, ex[1] + nv[1] * 60]]}
+        if got is None:
+            st = _base_route(M, wz_all[0])[0]
+            pts = _astar_exit(M, st, dv)
+            assert pts, ("四方向出路搵唔到", d)
+            got = {"dir": d, "kind": "path", "wz": "", "look": "bridge" if d in "EW" else "steps", "pts": pts}
+        got["pts"] = [[round(q[0]), round(q[1])] for q in got["pts"]]
+        out.append(got)
+    M["exits4"] = out
+    return out
 def _rings(M, ci):
     core = [0, 0, M["w"], M["h"]]
     acc = 0; rings = []; prev = core
@@ -1022,43 +1085,55 @@ def _rings(M, ci):
         prev = outer
     M["ext"] = prev; M["rings"] = rings
     # 據點：每個野外區出口向外，喺每圈圈帶中段揀候選點；條路長 ≤ 40 秒；互相隔 ≥ 200；揀散啲（最遠點取樣）
-    cands = {k: [] for k in range(1, 5)}
-    for wz in [z for z in M["zones"] if z["type"] == "wild"]:
-        base = _base_route(M, wz); ba = list(map(float, wz["boss_at"]))
-        for ex, nv in _exits(M, wz):
-            tv = (-nv[1], nv[0])
-            for k, rg in enumerate(rings):
-                d0 = rg["inner"]; din = (ex[0] - d0[0]) if nv[0] < 0 else (d0[2] - ex[0]) if nv[0] > 0 else (ex[1] - d0[1]) if nv[1] < 0 else (d0[3] - ex[1])
-                for f in (0.35, 0.5, 0.65):
-                    dep = din + RING_W[k] * f
-                    for lat in range(-900, 901, 90):
-                        p = [ex[0] + nv[0] * dep + tv[0] * lat, ex[1] + nv[1] * dep + tv[1] * lat]
-                        band = rg["outer"]; inner = rg["inner"]
-                        if not _in_r(p, band, 70) or _in_r(p, _grow(inner, 70)): continue
-                        mid = [ex[0] + nv[0] * min(dep, 60), ex[1] + nv[1] * min(dep, 60)]   # 出口外 60：出咗核心地圖先轉彎
-                        route = base + [ba, [ex[0] - nv[0] * 30, ex[1] - nv[1] * 30], mid, p]
-                        L = _plen(route)
-                        if L / MARCH_SPD > MARCH_MAX - 1.0: continue
-                        cands[k + 1].append((L, [round(p[0]), round(p[1])], [[round(q[0]), round(q[1])] for q in route]))
-    so = []
+    # [dirs4] 據點：四個方向出路各自向外，喺每圈圈帶中段揀候選點；條路長 ≤ 40 秒；互相隔 ≥ 200
+    cands = {k: {d: [] for d in DIRV} for k in range(1, 5)}
+    for e4 in _exits4(M):
+        nv = DIRV[e4["dir"]]; tv = (-nv[1], nv[0]); out_pt = e4["pts"][-1]
+        ex = [out_pt[0] - nv[0] * 60, out_pt[1] - nv[1] * 60]
+        for k, rg in enumerate(rings):
+            d0 = rg["inner"]; din = (ex[0] - d0[0]) if nv[0] < 0 else (d0[2] - ex[0]) if nv[0] > 0 else (ex[1] - d0[1]) if nv[1] < 0 else (d0[3] - ex[1])
+            for f in (0.35, 0.5, 0.65):
+                dep = din + RING_W[k] * f
+                for lat in range(-900, 901, 90):
+                    p = [ex[0] + nv[0] * dep + tv[0] * lat, ex[1] + nv[1] * dep + tv[1] * lat]
+                    if not _in_r(p, rg["outer"], 70) or _in_r(p, _grow(rg["inner"], 70)): continue
+                    # 據點要喺呢個方向嗰邊（唔好由東出路行去北邊）
+                    cx, cy = (p[0] - M["w"] / 2) / M["w"], (p[1] - M["h"] / 2) / M["h"]
+                    side = ("E" if cx > 0 else "W") if abs(cx) > abs(cy) else ("S" if cy > 0 else "N")
+                    if side != e4["dir"]: continue
+                    route = list(e4["pts"]) + [p]
+                    L = _plen(route)
+                    if L / MARCH_SPD > MARCH_MAX - 1.0: continue
+                    cands[k + 1][e4["dir"]].append((L, [round(p[0]), round(p[1])], [[round(q[0]), round(q[1])] for q in route], e4["dir"]))
+    so = []; dcount = {d: 0 for d in DIRV}
     for k in range(1, 5):
-        cs = sorted(cands[k], key=lambda c: c[0]); pick = []
-        assert len(cs) >= RING_N[k - 1], ("據點候選唔夠", ci, k, len(cs))
-        for c0 in cs:
-            if all(math.dist(c0[1], s["pos"]) >= 200 for s in so): pick.append(c0); break
+        pick = []
+        # 輪流：該圈據點最少嗰個方向優先；每個方向揀最短（行軍近）而又同其他據點隔 ≥ 200 嘅候選
         while len(pick) < RING_N[k - 1]:
-            best = None; bd = -1
-            for c in cs:
-                dmin = min([math.dist(c[1], q[1]) for q in pick] + [math.dist(c[1], s["pos"]) for s in so])
-                if dmin > bd: bd = dmin; best = c
-            assert bd >= 200, ("據點太密", ci, k)
-            pick.append(best)
+            order = sorted([d for d in DIRV if d not in [c[3] for c in pick]] or list(DIRV), key=lambda d: (dcount[d], len(cands[k][d]) == 0))
+            done = False
+            def stag(c, d=None):   # 同方向據點左右交錯（全景名牌唔會疊成一條柱）：同前幾個同方向據點橫向隔 ≥ 420
+                nv = DIRV[c[3]]; lat = c[1][0] if nv[0] == 0 else c[1][1]
+                near = [s for s in so if s["dir"] == c[3] and abs((s["pos"][0] if nv[0] == 0 else s["pos"][1]) - lat) < 420]
+                return c[0] + 900 * len(near)
+            for d in order:
+                for c in sorted(cands[k][d], key=stag):
+                    if all(math.dist(c[1], s["pos"]) >= 200 for s in so) and all(math.dist(c[1], q[1]) >= 200 for q in pick):
+                        pick.append(c); dcount[d] += 1; done = True; break
+                if done: break
+            if not done:   # 呢圈其他方向冇位：同一方向再揀
+                for d in sorted(DIRV, key=lambda d: dcount[d]):
+                    for c in sorted(cands[k][d], key=lambda c: c[0]):
+                        if all(math.dist(c[1], s["pos"]) >= 200 for s in so) and all(math.dist(c[1], q[1]) >= 200 for q in pick):
+                            pick.append(c); dcount[d] += 1; done = True; break
+                    if done: break
+            assert done, ("據點候選唔夠", ci, k, {d: len(v) for d, v in cands[k].items()})
         pick.sort(key=lambda c: c[0])
         lo, hi = rings[k - 1]["lv"]; n = len(pick)
         for j, c in enumerate(pick):
             lv = lo + round((hi - lo) * j / max(1, n - 1))
             so.append({"id": "so%d_r%d_%d" % (ci + 1, k, j + 1), "ring": k, "lv": lv, "pos": c[1], "ring_key": k < 4 and j == n - 1,
-                       "king": k == 3 and j == n - 1, "route": c[2], "march_s": round(c[0] / MARCH_SPD, 1)})
+                       "king": k == 3 and j == n - 1, "route": c[2], "march_s": round(c[0] / MARCH_SPD, 1), "dir": c[3]})
     M["sorties"] = so
     # 地貌散件：每圈按 kit 散佈（避開據點 110、路線 50）；圈帶每塊矩形按面積分配數量
     avoid_pts = [s["pos"] for s in so]
@@ -1086,6 +1161,16 @@ def _rings(M, ci):
                 if any(segd((x, y), a, b) < 44 + w * 0.4 for a, b in segs): continue
                 if any(abs(x - o[1]) < (w + o[3]) * 0.5 + 10 and abs(y - o[2]) < max(26, (w + o[3]) * 0.3) for o in props): continue
                 props.append([e[0], round(x), round(y), w, rnd.random() < 0.5, k + 1]); got += 1
+    # [dirs4] 出路畫面（唔擋路、唔可撳）：東／西＝吊橋 tr_mt_bridge（出核心地圖邊、跨虛空）；南／北（非野外區）＝下山石級 proc:steps
+    for e4 in M["exits4"]:
+        if e4["kind"] != "path": continue
+        nv = DIRV[e4["dir"]]; q = e4["pts"][-1]; ex = [q[0] - nv[0] * 60, q[1] - nv[1] * 60]
+        if e4["look"] == "bridge":
+            props = [o for o in props if math.dist((o[1], o[2]), (ex[0] + nv[0] * 110, ex[1])) > 170]
+            props.append(["tr_mt_bridge", round(ex[0] + nv[0] * 96), round(ex[1] + 46), 200, nv[0] < 0, 1])
+        else:
+            props = [o for o in props if math.dist((o[1], o[2]), (ex[0], ex[1] + nv[1] * 110)) > 150]
+            for i in range(6): props.append(["proc:steps", round(ex[0]), round(ex[1] + nv[1] * (14 + i * 26)), 56, False, 1])
     props.sort(key=lambda e: e[2])
     M["ring_props"] = props
 for _ci, _M in enumerate((M0, M1, M2, M3, M4, M5)): _rings(_M, _ci)
@@ -1108,6 +1193,21 @@ for _c, _m in D["maps"].items():
         for t in _so:
             if t is not s: assert math.dist(s["pos"], t["pos"]) >= 200, ("據點重疊", _c, s["id"], t["id"])
     assert len({s["id"] for s in _so}) == len(_so)
+    # [dirs4] 四方向：每關東南西北都有出路、都有據點（每方向 ≥ 3）；村外嗰段出路唔穿資源區／地標／大排檔／野外區
+    _e4 = {e["dir"]: e for e in _m["exits4"]}
+    assert set(_e4) == {"N", "E", "S", "W"}, ("四方向出路", _c)
+    for _d in "NESW":
+        assert sum(1 for s in _so if s["dir"] == _d) >= 3, ("方向據點唔夠", _c, _d, [s["dir"] for s in _so])
+        _e = _e4[_d]
+        if _e["kind"] != "path": continue
+        _vr = next(z["rect"] for z in _m["zones"] if z["type"] == "village")
+        _bl = [z["rect"] for z in _m["zones"] if z["type"] != "village"]
+        _pp = _e["pts"]
+        for _i in range(len(_pp) - 1):
+            for _t in range(21):
+                _q = (_pp[_i][0] + (_pp[_i + 1][0] - _pp[_i][0]) * _t / 20, _pp[_i][1] + (_pp[_i + 1][1] - _pp[_i][1]) * _t / 20)
+                assert not any(_in_r(_q, r, 1) for r in _bl), ("出路穿過建築區", _c, _d, _q)
+    for s in _so: assert s["route"][:len(_e4[s["dir"]]["pts"])] == _e4[s["dir"]]["pts"], ("據點路線唔係經佢方向出路", _c, s["id"])
 # [mapx] 其他線直接改 zones.json 嘅大排檔檔位（militia 線 st_bingqi 兵器檔、第 4／6 關檔位微調，唔喺本檔定義）：重新產生時保留舊檔值，唔好洗走
 if os.path.exists(OUT):
     try: _old = json.load(open(OUT, encoding="utf-8"))
