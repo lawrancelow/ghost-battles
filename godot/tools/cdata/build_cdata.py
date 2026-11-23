@@ -91,7 +91,7 @@ for row in [
 # 新鬼 26（第二階段出圖；PLAN 第 6 節定案名）
 for row in [
     ("nw_guihuo", "魂", "燈", "飛,散骨", 1, 1, "鬼火"), ("nw_huli", "妖", "黑影", "分身", 1, 2, "狐妖"),
-    ("nw_bajang", "使", "鬼臉", "隱", 2, 2, "Bajang"), ("nw_teketeke", "厲", "怪聲", "突襲", 2, 2, "Teke Teke"),
+    ("nw_bajang", "使", "鬼臉", "隱", 2, 2, "Bajang"), ("nw_teketeke", "厲", "怪聲", "突襲", 5, 2, "Teke Teke"),
     ("nw_baimao", "屍", "凍", "霸體,再生", 3, 2, "白毛殭屍"), ("nw_buhuagu", "屍", "凍", "殼,屍變", 3, 3, "不化骨"),
     ("nw_daqiang", "妖", "黑影", "迷魂", 3, 2, "鬼打牆"), ("nw_ganshi", "魂", "怪聲", "", 3, 2, "趕屍匠"),
     ("nw_huapi", "厲", "紙", "分身", 3, 3, "畫皮"),
@@ -99,10 +99,10 @@ for row in [
     ("nw_tiangou", "妖", "黑影", "飛", 4, 2, "天狗"), ("nw_tisi", "橫", "凍", "突襲", 4, 2, "替死鬼"),
     ("nw_krahang", "妖", "黑影", "飛", 4, 2, "Krahang"), ("nw_kapre", "妖", "吹氣", "隱,霸體", 4, 3, "Kapre"),
     ("nw_honeonna", "屍", "燈", "隱", 5, 2, "骨女"), ("nw_mummy", "屍", "凍", "殼,屍變", 5, 3, "木乃伊"),
-    ("nw_zzphone", "紙紮", "電話", "隱", 5, 2, "紙紮手機"), ("nw_zzcar", "紙紮", "燈", "突襲", 5, 2, "紙紮名車"),
+    ("nw_zzphone", "紙紮", "電話", "隱", 5, 2, "紙紮手機"), ("nw_zzcar", "紙紮", "燈", "突襲", 5, 2, "紙紮跑車"),
     ("nw_kuaidi", "使", "電話", "突襲", 5, 2, "陰司快遞員"),
-    ("nw_zzhouse", "紙紮", "紙", "殼,召喚", 6, 3, "紙紮大屋"), ("nw_shenpi", "官", "紙", "嚇氣光環", 6, 3, "陰司審批主任"),
-    ("nw_lunhou", "官", "紙", "召喚", 6, 2, "輪候處職員"), ("nw_yeleng_guard", "使", "鬼臉", "殼", 6, 2, "夜冷村保安"),
+    ("nw_zzhouse", "紙紮", "紙", "殼,召喚", 6, 3, "紙紮大屋"), ("nw_shenpi", "官", "紙", "嚇氣光環", 6, 3, "陰司審批官"),
+    ("nw_toutai", "官", "紙", "召喚", 6, 2, "投胎辦事處職員"), ("nw_yeleng_guard", "使", "鬼臉", "殼", 6, 2, "夜冷村保安"),
     ("nw_yeleng_sales", "使", "電話", "召喚", 6, 2, "夜冷村推銷員"), ("nw_dullahan", "妖", "黑影", "突襲,霸體", 6, 3, "Dullahan"),
 ]:
     i, s, a, m, ch, t, nm = row
@@ -119,13 +119,13 @@ BOSS = {"huang": ("黃總", "官", "電話", "召喚,殼,嚇氣光環")}   # 第
 # 頂替表（第一階段）：原定 id → (現有有圖嘅同系鬼, 血倍, 攻倍)；倍數令頂替雜兵嘅名鬼唔會強過原定雜兵
 SUB = {
     "nw_guihuo": ("n30_xiasi", 1, 1), "nw_huli": ("n30_baigujing", 1, 1), "nw_bajang": ("n30_taozhai", 1, 1),
-    "nw_teketeke": ("n30_kuchisake", 1, 1), "nw_baimao": ("n30_jerangkung", 1, 1), "nw_buhuagu": ("n30_dongsi", 1, 1),
+    "nw_teketeke": ("n30_maenak", 1, 1), "nw_baimao": ("n30_jerangkung", 1, 1), "nw_buhuagu": ("n30_dongsi", 1, 1),
     "nw_daqiang": ("n30_tikbalang", 1, 1), "nw_ganshi": ("n30_guhangui", 1, 1), "nw_huapi": ("n30_yukionna", 1, 1),
     "nw_ameonna": ("n30_yukionna", 1, 1), "nw_shejing": ("n30_baigujing", 1, 1), "nw_tiangou": ("n30_rokurokubi", 1, 1),
     "nw_tisi": ("n30_chehuo", 1, 1), "nw_krahang": ("n30_shanxiao", 1, 1), "nw_kapre": ("n30_genderuwo", 1, 1),
     "nw_honeonna": ("n30_jerangkung", 1, 1), "nw_mummy": ("n30_dongsi", 1, 1), "nw_zzphone": ("n30_xiangcai", 1, 1),
     "nw_zzcar": ("n30_kasaobake", 1, 1), "nw_kuaidi": ("n30_taozhai", 1, 1), "nw_zzhouse": ("n30_xiangcai", 1, 1),
-    "nw_shenpi": ("n30_yecha", 1, 1), "nw_lunhou": ("mamian", 1, 1), "nw_yeleng_guard": ("n30_taozhai", 1, 1),
+    "nw_shenpi": ("n30_yecha", 1, 1), "nw_toutai": ("mamian", 1, 1), "nw_yeleng_guard": ("n30_taozhai", 1, 1),
     "nw_yeleng_sales": ("n30_changgui", 1, 1), "nw_dullahan": ("n30_genderuwo", 1, 1), "tianhua": ("n30_hantugalah", 1, 1),
     "zd_bone": ("zombie", 1, 1), "zd_zhima": ("zhiren", 1, 1), "zd_shanjing": ("n30_kappa", 0.7, 0.9),
     "zd_shuihou": ("n30_kappa", 0.7, 0.9), "zd_hongyi": ("pg_ex", 0.5, 0.85), "zd_paotui": ("xiaogui", 1, 1),
@@ -141,7 +141,7 @@ GANGS = {
  2: {"W": ("甘榜使魔", ["n30_pelesit", "n30_polong", "nw_bajang", "n30_hanturaya"], ["xiaogui"]),
      "E": ("廢膠廠山精", ["n30_bunian", "n30_bunian", "n30_genderuwo", "n30_genderuwo"], ["zd_shanjing"]),
      "S": ("椰林膠園橫死組", ["n30_shidu", "n30_yezi", "n30_liulian", "n30_liulian"], ["zd_hengsi"]),
-     "N": ("竹林賭檔", ["n30_yangui", "n30_dugui", "n30_guhangui", "n30_hantugalah", "nw_teketeke"], ["youhun", "zd_hongyi"])},
+     "N": ("竹林賭檔", ["n30_yangui", "n30_dugui", "n30_guhangui", "n30_hantugalah"], ["youhun", "zd_hongyi"])},
  3: {"W": ("義莊屍隊", ["n30_jenglot", "nw_baimao", "nw_buhuagu", "n30_hanba"], ["zombie"]),
      "E": ("亂石峽山妖", ["nw_daqiang", "n30_tikbalang", "n30_shanxiao", "n30_baigujing"], ["zd_shanjing"]),
      "S": ("古道收數佬", ["n30_changgui", "n30_taozhai", "nw_ganshi", "pg_songding"], ["xiaogui", "egui"]),
@@ -150,17 +150,29 @@ GANGS = {
      "E": ("沉船灘水妖", ["n30_kappa", "nw_tiangou", "nw_shejing", "n30_aswang"], ["zd_shuihou"]),
      "S": ("河口替身組", ["nw_tisi", "n30_zhongshu", "n30_xiangcai", "n30_xiangcai"], ["shuigui"]),
      "N": ("蕉園夜叫", ["n30_phiam", "n30_xiasi", "tianhua", "nw_krahang", "nw_kapre"], ["zd_hongyi", "zd_shuihou"])},
- 5: {"W": ("舊戲院女鬼", ["n30_kuchisake", "n30_yukionna", "n30_banshee", "n30_hannya"], ["zd_hongyi"]),
+ 5: {"W": ("舊戲院女鬼", ["n30_kuchisake", "nw_teketeke", "n30_yukionna", "n30_banshee", "n30_hannya"], ["zd_hongyi"]),
      "E": ("停車場橫死組", ["n30_daji", "n30_xiaosi", "n30_chehuo", "n30_chengsi"], ["zd_hengsi"]),
      "S": ("巴士站怪談", ["n30_nopperabo", "n30_rokurokubi", "nw_honeonna", "nw_kuaidi"], ["zd_shanjing", "zd_bone"]),
      "N": ("舊村古井", ["nw_zzphone", "nw_zzcar", "n30_vetala", "nw_mummy", "n30_gashadokuro"], ["zd_bone", "zd_zhima"])},
  6: {"W": ("集團保安部", ["niutou", "mamian", "nw_yeleng_guard", "n30_yecha"], ["zd_yinchai"]),
-     "E": ("董事會審批部", ["pg_ex", "nw_lunhou", "pg_ex", "nw_shenpi"], ["zd_hongyi", "zd_yinchai"]),
+     "E": ("董事會審批部", ["pg_ex", "nw_toutai", "pg_ex", "nw_shenpi"], ["zd_hongyi", "zd_yinchai"]),
      "S": ("地庫紙紮部", ["nw_zzhouse", "nw_yeleng_sales", "nw_zzhouse", "pg_landlady"], ["zhiren", "zd_zhima"]),
      "N": ("頂樓機房", ["n30_diansi", "n30_dongsi", "n30_leipi", "pg_ji", "nw_dullahan"], ["zd_hengsi", "zd_paotui"])},
 }
 EN_N = [3, 4, 5, 5]; NAMED_N = [1, 2, 2, 3]
-RING_MECH = [[0, 1], [1, 2], [2, 3], [3, 5]]   # 每圈機制數（設計目標；只作報告／測試參考）
+RING_MECH = [[0, 1], [0, 1], [1, 2], [2, 3]]   # 每圈機制數 [最少, 最多]（審查修正 8 硬上限）
+# 新鬼 26 第二階段要做到嘅應對標籤（counter.md 11.3＋審查修正 12～14）
+NEW_TAGS = {
+    "nw_guihuo": ["遠", "照", "掃"], "nw_huli": ["遠", "照"], "nw_bajang": ["削", "刺"], "nw_teketeke": ["刺", "拉"],
+    "nw_baimao": ["定", "破"], "nw_buhuagu": ["定", "收"], "nw_daqiang": ["照", "掃"], "nw_ganshi": ["收", "遠"],
+    "nw_huapi": ["削", "照"], "nw_ameonna": ["遠", "削"], "nw_shejing": ["掃", "回"], "nw_tiangou": ["遠", "拉"],
+    "nw_tisi": ["拉", "收"], "nw_krahang": ["遠", "拉"], "nw_kapre": ["定", "掃"], "nw_honeonna": ["遠", "照"],
+    "nw_mummy": ["收", "定"], "nw_zzphone": ["遠", "削"], "nw_zzcar": ["破", "掃", "照"], "nw_kuaidi": ["遠", "刺"],
+    "nw_zzhouse": ["定", "破"], "nw_shenpi": ["收", "照"], "nw_toutai": ["削", "回"], "nw_yeleng_guard": ["定", "拉"],
+    "nw_yeleng_sales": ["遠", "削"], "nw_dullahan": ["刺", "破"],
+}
+NEW_NOTE = {"nw_teketeke": "第 5 關；被動唔好寫免疫腳軟（改突襲加速），免得偵察卡應對寫錯", "nw_shenpi": "原判官位，名「陰司審批官」，必須有「收」",
+            "nw_zzcar": "紙紮跑車（唔畫真實車款）", "nw_toutai": "投胎辦事處職員（STORY_BIBLE 世界觀，維持原名）"}
 
 def ent(i):
     if i in R: return dict(R[i], fod=False)
@@ -173,19 +185,50 @@ def real(i):   # 第一階段實際出場嘅 key（有 ENEMY_T、有圖）
     if i in ET: return (i, 1, 1)
     return SUB[i]
 
+# 鬼幫方向：按 zones.json 每章真實據點方向（審查修正 7）。counter_sim 嘅「N」幫＝野外王（king）路線幫，
+# 搬去該章 king 所在方向；原本喺嗰個方向嘅幫搬去 N。
+ZONES = json.load(open(os.path.join(ROOT, "data/nat/zones.json"), encoding="utf-8"))["maps"]
+def gang_dirs(ch):
+    so = ZONES[str(ch - 1)]["sorties"]
+    kd = [e["dir"] for e in so if e.get("king")][0]
+    m = {d: d for d in "WESN"}
+    m["N"], m[kd] = kd, "N"          # counter 幫標籤 → 真實方向
+    return {m[d]: GANGS[ch][d] for d in "WESN"}
+REAL_GANGS = {ch: gang_dirs(ch) for ch in GANGS}
 CAMPS = []
 for ch in range(1, 7):
-    for r in range(1, 5):
-        dirs = ["W", "E", "S", "N"] if r < 4 else ["W", "S", "N"]
-        for k, d in enumerate(dirs):
-            gname, mem, fod = GANGS[ch][d]
-            n = EN_N[r - 1]; nn = NAMED_N[r - 1]
-            st = {1: 0, 2: 0, 3: 1, 4: len(mem) - 3}[r]
-            pick = [mem[min(len(mem) - 1, st + j)] for j in range(nn)]
-            if r == 3 and d == "N": pick = mem[-2:]
-            fods = [fod[j % len(fod)] for j in range(n - nn)]
-            plan = fods + pick              # 雜兵先、名鬼後：最後一隻＝駐守鬼（第 4 圈／野外王即頭目）
-            CAMPS.append(dict(id="so%d_r%d_%d" % (ch, r, k + 1), c=ch - 1, ring=r, dir=d, gang=gname, plan=plan))
+    seen = {}
+    for e in ZONES[str(ch - 1)]["sorties"]:
+        r = int(e["ring"]); d = e["dir"]
+        gname, mem, fod = REAL_GANGS[ch][d]
+        n = EN_N[r - 1]; nn = NAMED_N[r - 1]
+        j0 = seen.get((d, r), 0); seen[(d, r)] = j0 + 1   # 同幫同圈多過一個據點（例：第 5 關第 4 圈三個都喺南）→ 名鬼往前推
+        st = {1: 0, 2: 0, 3: 1, 4: len(mem) - 3}[r]
+        pick = [mem[min(len(mem) - 1, st + j)] for j in range(nn)]
+        if j0 > 0:   # 同幫同圈第 2、3 個據點：揀下一個（由強到弱）唔同組合，駐守鬼照舊係最強嗰隻
+            cb = sorted(itertools.combinations(range(len(mem)), nn), key=lambda t: (-t[-1], -sum(t)))
+            pick = [mem[x] for x in cb[min(j0, len(cb) - 1)]]
+        if e.get("king"): pick = mem[-2:]
+        fods = [fod[(j + j0) % len(fod)] for j in range(n - nn)]
+        plan = fods + pick              # 雜兵先、名鬼後：最後一隻＝駐守鬼（第 4 圈／野外王即頭目）
+        CAMPS.append(dict(id=e["id"], c=ch - 1, ring=r, dir=d, gang=gname, plan=plan, king=bool(e.get("king")), nn=nn, n=n, fods=fods))
+    # 覆蓋：每幫每個成員最少出現喺一個據點（第 5 關第 4 圈全部喺南，西／北幫冇第 4 圈 → 名鬼順序推前）
+    for d in "WESN":
+        gname, mem, fod = REAL_GANGS[ch][d]
+        cs = sorted([c for c in CAMPS if c["c"] == ch - 1 and c["dir"] == d], key=lambda c: (c["ring"], c["id"]))
+        used = {i for c in cs for i in c["plan"][-c["nn"]:]}
+        if set(mem) <= used: continue
+        nk = [c for c in cs if not c["king"]]
+        m2 = len(mem) - (2 if any(c["king"] for c in cs) else 0)
+        left = sum(c["nn"] for c in nk)
+        for c in nk:
+            st = max(0, min(len(mem) - c["nn"], m2 - left))
+            left -= c["nn"]
+            c["plan"] = c["fods"] + mem[st:st + c["nn"]]
+
+# 機制教學節奏（審查修正 8）：第 1 章最多 3 種，之後每章新加 2 種；每據點上限 第 1～2 圈 1、第 3 圈 2、第 4 圈 3
+RING_CAP = [1, 1, 2, 3]
+NEW_PER_CH = [3, 2, 2, 2, 2, 2]
 
 # ======================= 能力（roster.md 第 3 節；ability.md 第 2 節結構） =======================
 # 積木縮寫
@@ -222,8 +265,8 @@ G("xiaozhi", F_, "back", ["遠", "拉", "掃"],
   A("紙錢漫天", CIR(130), [dmg(0.8), F("down", dur=1.2), F("energy", v=15, tg="allies")], AOE_AI),
   [P("death", [F("revive", pct=0.5, delay=8.0, n=1)])], None,
   ["少爺，紙紮嘅都要開工，你話打邊個，我就打邊個。", "少爺，紙紮的也要上班，你說打誰，我就打誰。"])
-G("eguiking", N, "front", ["刺", "回"],
-  A("大胃一口", NEAR, [dmg(2.1, vs_state="down", x=1.8), F("drain", pct=0.4)]),
+G("eguiking", N, "front", ["刺", "回", "收"],
+  A("大胃一口", NEAR, [dmg(2.1, vs_state="down", x=1.8), F("drain", pct=0.4), F("banish", hp_pct=0.35)]),
   [P("start", [F("buff", stat="heal_in", v=-0.5, dur=-1, tg="self")]),
    P("kill", [F("buff", stat="maxhp", v=0.05, dur=-1, stack=6, tg="self")], star=2)], None,
   ["包！有包就跟你！冇包……都照跟住先！", "包子！有包子就跟你！沒有包子……也先跟著！"])
@@ -331,8 +374,8 @@ G("n30_pelesit", N, "flank", ["刺", "削"],
   A("跳咬", NEAR, [dmg(1.7, vs_state="air", x=1.8), F("sap", v=20), F("summon", k="cricket", n=3, hp_pct=0.1, atk_pct=0.2, dur=8.0)]),
   [], AU(140, "foe", [F("buff", stat="energy", v=-0.2)], 2),
   ["唧唧！我叫大聲啲，佢哋成晚都瞓唔著。", "唧唧！我叫大聲一點，他們整晚都睡不著。"])
-G("n30_polong", M_, "flank", ["刺", "回"],
-  A("出瓶竄咬", {"sel": "far"}, [dmg(1.7), F("drain", pct=0.3)]),
+G("n30_polong", M_, "flank", ["刺", "回", "收"],
+  A("出瓶竄咬", {"sel": "far"}, [dmg(1.7), F("drain", pct=0.3), F("banish", hp_pct=0.3, note="收入樽")]),
   [P("ally_down", [F("buff", stat="atk", v=0.05, dur=-1, stack=6, tg="self")])], None,
   ["捧穩個樽，我出去咬完就返嚟，唔使等門。", "捧穩瓶子，我出去咬完就回來，不用等門。"])
 G("n30_jenglot", N, "front", ["掃", "回"],
@@ -420,8 +463,8 @@ G("n30_hannya", N, "flank", ["破", "刺"],
   A("妒火暴衝", NEAR, [F("dash", to="target"), dmg(1.9, hits=2), F("push", dist=40), F("dot", dps=0.1, dur=4.0, kind="fire")]),
   [P("start", [F("buff", stat="atk_per_foe_buff", v=0.1, dur=-1, stack=5, tg="self")])], None,
   ["點解佢哋有護盾我冇？好，我自己過去攞。", "為什麼他們有護盾我沒有？好，我自己過去拿。"])
-G("n30_gashadokuro", N, "front", ["掃", "回"],
-  A("巨手一拍", CIR(200), [dmg(1.1, vs_state="air", x=1.8), F("air", dur=0.8)], AOE_AI),
+G("n30_gashadokuro", N, "front", ["掃", "回", "收"],
+  A("巨手一拍", CIR(200), [dmg(1.1, vs_state="air", x=1.8), F("air", dur=0.8), F("banish", hp_pct=0.25, note="執埋啲骨")], AOE_AI),
   [P("kill", [F("hot", pct=0.05, dur=3.0, tg="self")]), P("ally_down", [F("buff", stat="maxhp", v=0.04, dur=-1, stack=10, tg="self")], star=2)], None,
   ["越多人倒低，我就越大隻，你哋自己小心。", "越多人倒下，我就越大隻，你們自己小心。"])
 G("n30_zipai", M_, "front", ["拉", "掃"],
@@ -508,8 +551,8 @@ G("pg_landlady", N, "front", ["掃", "削"],
   A("我講第二次", CIR(130), [dmg(0.85), F("coin", v=20), F("push", dist=30), F("slow", v=-0.6, dur=5.0), F("silence", dur=1.5), F("dispel", n=2)], AOE_AI),
   [P("every", [F("buff", stat="cast_cost", v=0.1, dur=-1, stack=3, tg="foes")], t=20.0)], None,
   ["入得我間屋就要守我嘅規矩，我唔想講第二次。", "進了我的屋就要守我的規矩，我不想說第二次。"])
-G("niutou", N, "front", ["照", "定"],
-  A("牛角頂", NEAR, [dmg(1.6), F("air", dur=1.0), F("taunt", r=120, dur=3.0)]),
+G("niutou", N, "front", ["照", "定", "收"],
+  A("牛角頂", NEAR, [dmg(1.6), F("air", dur=1.0), F("taunt", r=120, dur=3.0), F("banish", hp_pct=0.3)]),
   [P("start", [F("guard", r=70, pct=0.35, cap=0.06, dur=-1)])], None,
   ["鬼差開工，冇預約一律排隊，打尖嘅我頂佢出去。", "鬼差上班，沒預約一律排隊，插隊的我頂他出去。"])
 G("mamian", N, "front", ["照", "收"],
@@ -590,22 +633,44 @@ def build():
         if ea["sys"] != eb["sys"]: errs.append("頂替 %s→%s 唔同系 %s/%s" % (a, b, ea["sys"], eb["sys"]))
     # 據點
     camps = {}; subs_used = {}
+    # 每章開放嘅機制（累積）：按該章實際出場敵人嘅機制出現次數揀新嘅
+    allowed = []; intro = {}
+    for ch in range(6):
+        cnt = {}
+        for c in CAMPS:
+            if c["c"] != ch: continue
+            for i in c["plan"]:
+                for m in ENEMY[real(i)[0]]["mech"]: cnt[m] = cnt.get(m, 0) + 1
+        later = {m for c in CAMPS if c["c"] > ch for i in c["plan"] for m in ENEMY[real(i)[0]]["mech"]}
+        new = sorted([m for m in cnt if m not in allowed], key=lambda m: (m in later, -cnt[m], MECHS.index(m)))[:NEW_PER_CH[ch]]   # 之後再冇機會出嘅先教
+        if ch == 0: new = ["再生", "突襲", "散骨"]   # counter.md 13：第 1 關只教最直觀三個
+        for m in new: intro[m] = ch
+        allowed = allowed + new
+        for c in CAMPS:
+            if c["c"] != ch: continue
+            c["allow"] = list(allowed)
     for c in CAMPS:
         en = []; hm = []; am = []
         for i in c["plan"]:
             k, h, a = real(i); en.append(k); hm.append(h); am.append(a)
             if k != i: subs_used.setdefault(i, set()).add(c["id"])
-        mech = sorted({m for k in en for m in ENEMY[k]["mech"]}, key=MECHS.index)
+        raw = {}
+        for k in en:
+            for m in ENEMY[k]["mech"]:
+                if m in c["allow"]: raw[m] = raw.get(m, 0) + (2 if k == en[-1] else 1)   # 駐守鬼嘅機制優先
+        keep = sorted(raw, key=lambda m: (-raw[m], MECHS.index(m)))[:RING_CAP[c["ring"] - 1]]
+        mech = sorted(keep, key=MECHS.index)
+        mk = [[m for m in ENEMY[k]["mech"] if m in keep] for k in en]
         pmech = sorted({m for i in c["plan"] for m in ent(i)["mech"]}, key=MECHS.index)
         guard = en[-1]; gp = c["plan"][-1]
         if not ENEMY[guard]["recruit"]: errs.append("%s 駐守鬼 %s 唔可招降" % (c["id"], guard))
         sy = {}
         for k in en: sy[ENEMY[k]["sys"]] = sy.get(ENEMY[k]["sys"], 0) + 1
         camps[c["id"]] = {"c": c["c"], "ring": c["ring"], "dir": c["dir"], "gang": c["gang"], "en": en, "plan": c["plan"],
-                          "hm": hm, "am": am, "guard": guard, "guard_plan": gp, "mech": mech, "mech_plan": pmech,
-                          "sys": sorted(sy, key=lambda s: -sy[s]), "king": c["ring"] == 3 and c["dir"] == "N"}
+                          "hm": hm, "am": am, "mk": mk, "guard": guard, "guard_plan": gp, "mech": mech, "q": mech[:2], "mech_plan": pmech,
+                          "sys": sorted(sy, key=lambda s: -sy[s]), "king": c["king"]}
     gangs = {}
-    for ch, ds in GANGS.items():
+    for ch, ds in REAL_GANGS.items():
         gangs[str(ch - 1)] = {}
         for d, (nm, mem, fod) in ds.items():
             ms = sorted({m for i in mem + fod for m in ent(i)["mech"]}, key=MECHS.index)
@@ -615,6 +680,25 @@ def build():
                 if s not in sy: sy.append(s)
             gangs[str(ch - 1)][d] = {"name": nm, "sys": sy, "mech_plan": ms, "mem": mem, "fod": fod,
                                      "mem_now": [real(i)[0] for i in mem], "fod_now": [real(i)[0] for i in fod]}
+    # 魂魄來源（審查修正 9）：據點駐守／野外王／王座重遊（劇情王）
+    src = {}
+    for cid, c in camps.items():
+        for k in set(c["en"]):
+            if ENEMY[k]["recruit"]: src.setdefault(k, []).append({"t": "camp", "id": cid, "guard": k == c["guard"]})
+    for ci, m in ZONES.items():
+        for z in m["zones"]:
+            for b in z.get("bosses") or []:
+                stg = b.get("stage") or {}
+                k = stg.get("boss")
+                if k and k in ENEMY and ENEMY[k]["recruit"]: src.setdefault(k, []).append({"t": "wildboss", "id": b["id"], "c": int(ci)})
+    for ci, chp in enumerate(CORE["CHAPTERS"]):
+        for si, stg in enumerate(chp["stages"]):
+            for k in set(stg.get("en", [])):
+                if k in ("eguiking", "toyol", "laojiang", "pontianak", "pocong", "penanggal", "baiwu", "heiwu"):
+                    src.setdefault(k, []).append({"t": "throne", "stage": "%d-%d" % (ci + 1, si + 1)})
+    recruit = sorted(k for k in AB if k not in ("afu", "xiaozhi", "mengpo") and (ENEMY.get(k, {}).get("recruit")))
+    for k in recruit:
+        if not src.get(k): errs.append("%s 冇魂魄來源" % k)
     plan_names = {i: ent(i)["name"] for i in set(i for c in CAMPS for i in c["plan"])}
     sub_tab = [{"plan": a, "plan_name": ent(a)["name"], "sys": ent(a)["sys"], "now": SUB[a][0], "now_name": ET[SUB[a][0]][2],
                 "hm": SUB[a][1], "am": SUB[a][2], "camps": sorted(subs_used.get(a, []))} for a in SUB]
@@ -625,7 +709,11 @@ def build():
         "sys": {s: {"fear": [SC[f[0]], SC[f[1]]], "imm": SC[f[2]], "why": {SC[f[0]]: f[3], SC[f[1]]: f[4], SC[f[2]]: f[5]}} for s, f in SYS.items()},
         "mult": {"skill_fear": 1.35, "skill_imm": 0.6, "combo": 1.8, "chase": 1.3, "atk_fear": 1.15, "atk_imm": 0.8, "foe_fear": 1.25, "foe_imm": 0.75, "daze_s": 3.2, "clamp": [0.2, 4.0]},
         "mech": {m: dict(MECH_DEF[m][2], id=MECH_DEF[m][0], tags=MECH_DEF[m][1]) for m in MECHS},
-        "ch_k": {"4": {"hp": 0.70, "atk": 0.55}, "5": {"hp": 0.65, "atk": 0.50}},
+        "ch_k": {"4": {"hp": 0.70, "atk": 0.55}, "5": {"hp": 0.65, "atk": 0.50}},          # 主線（步驟 A）
+        "sortie_k": {"4": {"hp": 0.55, "atk": 0.55}, "5": {"hp": 0.50, "atk": 0.50}},      # 據點（審查修正 10：同舊主線同級起步，之後平衡線調）
+        "mech_intro": intro, "ring_cap": RING_CAP,
+        "src": src, "src_note": "t：camp＝據點（guard＝駐守鬼主魂）、wildboss＝野外王重打、throne＝王座重遊（主線劇情王重打）",
+        "new": {k: {"name": R[k]["name"], "sys": R[k]["sys"], "sc": SC[R[k]["sc"]], "mech": R[k]["mech"], "ch": R[k]["ch"], "tags": v, "sub": SUB[k][0], "note": NEW_NOTE.get(k, "")} for k, v in NEW_TAGS.items()},
         "ring_mech": RING_MECH,
         "boss_hp": 1.6,
         "gangs": gangs,
@@ -640,7 +728,7 @@ def build():
         "MECH": {m: {"id": MECH_DEF[m][0], "n": m, "icon": "mc_" + MECH_DEF[m][0], "counter": MECH_DEF[m][1], "warn": MECH_DEF[m][3]} for m in MECHS},
         "ABIL": AB,
         "ENEMY": ENEMY,
-        "CAMP_MOD": {"ring": RING_MECH},
+        "CAMP_MOD": {"ring": RING_MECH, "cap": RING_CAP, "note": "每據點實際機制見 counter.json camps[id].mech／mk（每隻敵人嘅機制＝ENEMY.mech ∩ 據點 mech）"},
     }
     return errs, abil, counter
 

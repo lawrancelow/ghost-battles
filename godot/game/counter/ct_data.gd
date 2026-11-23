@@ -30,9 +30,9 @@ static func fear_of_sys(sy: String) -> Dictionary:   # {w:[怕,怕], i:[不怕]}
 	return {"w": f.get("fear", []), "i": [f.get("imm", "")], "why": ""}
 
 # ---------- 第 5、6 關打折（SOFT 步驟 A：血、攻分開） ----------
-static func ch_k(ci: int) -> Dictionary:   # 冇＝{}（即唔打折）
+static func ch_k(ci: int, kind := "stage") -> Dictionary:   # 冇＝{}（即唔打折）；據點用 sortie_k（審查修正 10）
 	if not on(): return {}
-	var t = data().get("ch_k", {})
+	var t = data().get("sortie_k" if kind == "sortie" else "ch_k", {})
 	var k = t.get(str(ci)) if t is Dictionary else null
 	if not (k is Dictionary): return {}
 	return {"hp": float(k.get("hp", 1.0)), "atk": float(k.get("atk", 1.0))}
@@ -65,9 +65,9 @@ static func stage_en(id: String) -> Dictionary:
 		if ET is Dictionary and not ET.has(str(k)): return {}
 		en.append(str(k))
 	if en.is_empty(): return {}
-	return {"en": en, "hm": c.get("hm", []), "am": c.get("am", []), "guard": str(c.get("guard", "")), "gang": str(c.get("gang", "")),
+	return {"en": en, "hm": c.get("hm", []), "am": c.get("am", []), "mk": c.get("mk", []), "guard": str(c.get("guard", "")), "gang": str(c.get("gang", "")),
 		"dir": str(c.get("dir", "")), "mech": c.get("mech", []), "sys": c.get("sys", []), "king": J.t(c.get("king", false))}
-# 出擊後：頂替雜兵嘅名鬼按 hm／am 縮細；回駐守鬼單位（最後一隻敵方名鬼）
+# 出擊後：頂替雜兵嘅名鬼按 hm／am 縮細、寫入每隻嘅機制 u.mech；回駐守鬼單位（最後一隻敵方名鬼）
 static func apply_camp(snap: Dictionary, st: Dictionary):
 	var en: Array = st.get("en", []); var hm: Array = st.get("hm", []); var am: Array = st.get("am", [])
 	var i = 0; var last = null
@@ -78,6 +78,8 @@ static func apply_camp(snap: Dictionary, st: Dictionary):
 			if h != 1.0: u["hp"] = J.num(u.hp) * h; u["maxhp"] = J.num(u.get("maxhp", u.hp)) * h
 			if a != 1.0: u["atk"] = J.num(u.atk) * a
 			u["camp_i"] = i
+			var mk: Array = st.get("mk", [])
+			if i < mk.size(): u["mech"] = mk[i]   # 呢隻敵人喺呢個據點實際開嘅機制（ENEMY.mech ∩ 據點上限；abcore 有 u.mech 就用佢）
 		i += 1
 		last = u
 	return last

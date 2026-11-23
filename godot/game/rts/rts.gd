@@ -251,7 +251,7 @@ const SOFT := {4: 0.55, 5: 0.5}   # 地圖序號（0 起）→ 敵方血／攻�
 static func _soften(snap: Dictionary, pend: Dictionary) -> void:
 	if not (str(pend.get("kind")) in ["stage", "boss", "sortie"]): return   # [counter] 據點（sortie）同樣打折
 	var ci = int(pend.get("c", ZD.ci()))
-	var ck = load("res://game/counter/ct_data.gd").ch_k(ci)   # [counter] SOFT 步驟 A：counter.json ch_k 血／攻分開；冇就用舊 SOFT
+	var ck = load("res://game/counter/ct_data.gd").ch_k(ci, str(pend.get("kind")))   # [counter] SOFT 步驟 A：主線 ch_k、據點 sortie_k（血／攻分開）；冇就用舊 SOFT
 	if not ck.is_empty(): load("res://game/counter/ct_data.gd").soften(snap, ck.hp, ck.atk); return
 	var k = float(SOFT.get(ci, 1.0))
 	if k >= 1.0: return

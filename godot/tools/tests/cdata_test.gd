@@ -17,7 +17,7 @@ const MECHS := ["飛", "隱", "殼", "再生", "散骨", "召喚", "反傷", "�
 const SYSS := ["屍", "魂", "紙紮", "妖", "厲", "使", "官", "橫"]
 const SCS := ["breath", "light", "cold", "sound", "paper", "phone", "face", "shadow"]
 const MULTI := ["circle", "self_circle", "cone", "line", "chain"]
-const BANNED := ["盂蘭", "盂兰", "超度", "狐狸精", "唐僧", "佛教", "梵語", "判官", "投胎"]
+const BANNED := ["盂蘭", "盂兰", "超度", "狐狸精", "唐僧", "佛教", "梵語", "判官"]
 
 func _p(m): print("[cdata] ", m)
 func _chk(name: String, cond: bool, extra = "") -> void:
@@ -156,8 +156,8 @@ func abil_check() -> void:
 			for x in M[m].get("counter", []):
 				if x in A[k].tags: n += 1; break
 		info.append("%s%d" % [m, n])
-		if n < 3: weak.append("%s:%d" % [m, n])
-	_chk("13 種機制每種 ≥3 隻名鬼應對", weak.is_empty(), " ".join(info) + (" 不足:%s" % str(weak) if weak.size() else ""))
+		if n < 8: weak.append("%s:%d" % [m, n])
+	_chk("13 種機制每種 ≥8 隻名鬼應對", weak.is_empty(), " ".join(info) + (" 不足:%s" % str(weak) if weak.size() else ""))
 	var ti = []
 	for x in TAGS: ti.append("%s%d" % [x, int(tagc.get(x, 0))])
 	_p("標籤分佈：" + " ".join(ti))
@@ -206,6 +206,23 @@ func counter_check() -> void:
 	_chk("8 系表：每系怕 2 唔怕 1；每種嚇法剛好被 2 系怕、1 系唔怕", okf, [fc, ic])
 	var k4 = D.get("ch_k", {}).get("4", {}); var k5 = D.get("ch_k", {}).get("5", {})
 	_chk("ch_k＝SOFT 步驟 A（第 5 關血 0.70 攻 0.55；第 6 關血 0.65 攻 0.50）", is_equal_approx(float(k4.get("hp", 0)), 0.70) and is_equal_approx(float(k4.get("atk", 0)), 0.55) and is_equal_approx(float(k5.get("hp", 0)), 0.65) and is_equal_approx(float(k5.get("atk", 0)), 0.50))
+	var s4 = D.get("sortie_k", {}).get("4", {}); var s5 = D.get("sortie_k", {}).get("5", {})
+	_chk("sortie_k＝據點第 5 關 0.55、第 6 關 0.5（同舊主線同級起步）", is_equal_approx(float(s4.get("hp", 0)), 0.55) and is_equal_approx(float(s4.get("atk", 0)), 0.55) and is_equal_approx(float(s5.get("hp", 0)), 0.5) and is_equal_approx(float(s5.get("atk", 0)), 0.5))
+	var nt = D.get("new", {})
+	_chk("新鬼 26 隻有第二階段標籤規格；陰司審批官有「收」；Teke Teke 喺第 5 關", nt.size() == 26 and "收" in nt.get("nw_shenpi", {}).get("tags", []) and int(nt.get("nw_teketeke", {}).get("ch", 0)) == 5)
+	# 魂魄來源：每隻可招降鬼最少一個
+	var SRC: Dictionary = D.get("src", {}); var A = AB.data().ABIL; var E = AB.data().ENEMY
+	var nos = []
+	for k in A:
+		if k in ["afu", "xiaozhi", "mengpo"] or not J.t(E.get(k, {}).get("recruit")): continue
+		if (SRC.get(k, []) as Array).is_empty(): nos.append(k)
+	_chk("每隻可招降名鬼最少一個魂魄來源（據點／野外王／王座重遊）", nos.is_empty(), nos)
+	# 教學節奏：第 1 章 ≤3 種，之後每章新加 ≤2
+	var intro: Dictionary = D.get("mech_intro", {}); var per = {}
+	for m in intro: per[int(intro[m])] = int(per.get(int(intro[m]), 0)) + 1
+	var pace = int(per.get(0, 0)) <= 3
+	for c in range(1, 6): if int(per.get(c, 0)) > 2: pace = false
+	_chk("機制教學節奏：第 1 章 ≤3 種、之後每章新加 ≤2 種（13 種全部有登場章）", pace and intro.size() == 13, per)
 	var G: Dictionary = D.get("gangs", {})
 	var ng = 0; var gbad = []
 	for c in G:
@@ -222,7 +239,7 @@ func counter_check() -> void:
 		if not ET.has(now) or str(E.get("sys", "")) != str(x.get("sys", "")): sb.append(x.get("plan"))
 	_chk("頂替表：新鬼位全部用同系、有圖（ENEMY_T）嘅現有鬼", sb.is_empty() and (D.get("subs", []) as Array).size() > 0, sb)
 	var names = D.get("names", {})
-	_chk("新鬼名照定案：狐妖、Teke Teke、陰司審批主任、輪候處職員", names.get("nw_huli") == "狐妖" and names.get("nw_teketeke") == "Teke Teke" and names.get("nw_shenpi") == "陰司審批主任" and names.get("nw_lunhou") == "輪候處職員")
+	_chk("新鬼名照定案：狐妖、Teke Teke、陰司審批官、投胎辦事處職員、紙紮跑車", names.get("nw_huli") == "狐妖" and names.get("nw_teketeke") == "Teke Teke" and names.get("nw_shenpi") == "陰司審批官" and names.get("nw_toutai") == "投胎辦事處職員" and names.get("nw_zzcar") == "紙紮跑車")
 
 # ---------------- 90 據點 ----------------
 func camp_check() -> void:
@@ -249,6 +266,31 @@ func camp_check() -> void:
 			var e = {"id": id, "ring": int(z.ring), "c": c, "lv": 5.0, "pos": Vector2.ZERO}
 			var st = SO.stage_of(e)
 			if st.get("en") != en or str(st.get("guard", "")) != gk: st_bad.append(id)
+	var cap_bad = []
+	var intro: Dictionary = D.get("mech_intro", {})
+	for id in C:
+		var cp = C[id]; var cap = [1, 1, 2, 3][clampi(int(cp.ring), 1, 4) - 1]
+		var ms: Array = cp.get("mech", [])
+		if ms.size() > cap or (cp.get("q", []) as Array).size() > 2: cap_bad.append("%s:%d" % [id, ms.size()])
+		for mm in ms: if int(intro.get(mm, 99)) > int(cp.c): cap_bad.append("%s 未教 %s" % [id, mm])
+		var mk: Array = cp.get("mk", [])
+		if mk.size() != (cp.en as Array).size(): cap_bad.append(id + ":mk")
+		else:
+			for i in mk.size():
+				for mm in mk[i]: if not (mm in ms) or not (mm in E.get(cp.en[i], {}).get("mech", [])): cap_bad.append("%s:%s" % [id, mm])
+	_chk("每據點機制硬上限（第 1～2 圈 1、第 3 圈 2、第 4 圈 3）、只用已教機制、每隻 mk 合法、主題 ≤2", cap_bad.is_empty(), cap_bad)
+	var dirs_bad = []
+	for id in C:
+		var z = ZD.sortie(id, int(C[id].c))
+		if z.is_empty() or str(z.get("dir", "")) != str(C[id].dir) or J.t(z.get("king", false)) != J.t(C[id].get("king", false)): dirs_bad.append(id)
+	_chk("鬼幫方向按 zones.json 真實據點方向（含野外王據點）", dirs_bad.is_empty(), dirs_bad)
+	var dupc = {}; var dd = []
+	for id in C:
+		var srt = (C[id].en as Array).duplicate(); srt.sort()
+		var key = "%d:%s" % [int(C[id].c), str(srt)]
+		if dupc.has(key): dd.append([dupc[key], id])
+		dupc[key] = id
+	_chk("同一關冇兩個據點敵人組合完全一樣", dd.is_empty(), dd)
 	_chk("zones.json 六關據點共 90 個", total == 90 and C.size() == 90, [total, C.size()])
 	_chk("90 據點全部有組合、圈／方向對得上、有行軍路線（可達）", reach_bad.is_empty(), reach_bad)
 	_chk("每據點敵人隻數＝ENEMY_N、全部有圖（ENEMY_T）", en_bad.is_empty(), en_bad)
@@ -281,7 +323,9 @@ func _snap() -> Dictionary:
 	return {"units": [{"side": 0.0, "hp": 100.0, "maxhp": 100.0, "atk": 10.0}, {"side": 1.0, "hp": 1000.0, "maxhp": 1000.0, "atk": 100.0}]}
 func soften_check() -> void:
 	var s = _snap(); RTS._soften(s, {"kind": "sortie", "c": 4})
-	_chk("據點（sortie）第 5 關打折：血 ×0.70、攻 ×0.55（修據點未打折 bug）", is_equal_approx(s.units[1].hp, 700.0) and is_equal_approx(s.units[1].maxhp, 700.0) and is_equal_approx(s.units[1].atk, 55.0) and is_equal_approx(s.units[0].hp, 100.0), s.units[1])
+	_chk("據點（sortie）第 5 關打折：血 ×0.55、攻 ×0.55（sortie_k；修據點未打折 bug）", is_equal_approx(s.units[1].hp, 550.0) and is_equal_approx(s.units[1].maxhp, 550.0) and is_equal_approx(s.units[1].atk, 55.0) and is_equal_approx(s.units[0].hp, 100.0), s.units[1])
+	s = _snap(); RTS._soften(s, {"kind": "stage", "c": 4})
+	_chk("主線第 5 關（步驟 A）：血 ×0.70、攻 ×0.55", is_equal_approx(s.units[1].hp, 700.0) and is_equal_approx(s.units[1].atk, 55.0), s.units[1])
 	s = _snap(); RTS._soften(s, {"kind": "stage", "c": 5})
 	_chk("主線第 6 關：血 ×0.65、攻 ×0.50", is_equal_approx(s.units[1].hp, 650.0) and is_equal_approx(s.units[1].atk, 50.0), s.units[1])
 	s = _snap(); RTS._soften(s, {"kind": "sortie", "c": 2})
@@ -337,13 +381,16 @@ func flow_check(t, m) -> void:
 	var p = float(e.lv); var okhp = true; var info = []
 	for i in foes.size():
 		var u = foes[i]; var T = ET[str(u.k)]
-		var exp = (260.0 + 90.0 * p) * float(T[0]) * float(st.ct.hm[i]) * 0.70 * (SO.BOSS_HP if i == foes.size() - 1 else 1.0)
+		var exp = (260.0 + 90.0 * p) * float(T[0]) * float(st.ct.hm[i]) * 0.55 * (SO.BOSS_HP if i == foes.size() - 1 else 1.0)
 		var expa = (16.0 + 7.5 * p) * float(T[1]) * float(st.ct.am[i]) * 0.55
 		info.append("%s %d/%d %d/%d" % [u.k, int(J.num(u.maxhp)), int(exp), int(J.num(u.atk)), int(expa)])
 		if absf(J.num(u.maxhp) - exp) > exp * 0.02 or absf(J.num(u.atk) - expa) > expa * 0.02: okhp = false
-	_chk("據點敵人血 ×0.70、攻 ×0.55（第 5 關）、頂替雜兵縮細、頭目血 ×1.6", okhp, " ".join(info))
+	_chk("據點敵人血 ×0.55、攻 ×0.55（第 5 關 sortie_k）、頂替雜兵縮細、頭目血 ×1.6", okhp, " ".join(info))
 	var last = foes[foes.size() - 1] if foes.size() else {}
 	_chk("頭目＝駐守鬼、保留真名", J.t(last.get("boss")) and str(last.get("k")) == st.guard and str(last.get("name", "")).contains(str(ET[st.guard][2])), [last.get("name"), st.guard])
+	var mok = true
+	for i in foes.size(): if foes[i].get("mech") != st.ct.mk[i]: mok = false
+	_chk("每隻敵人寫入據點實際機制 u.mech", mok)
 	_chk("op 記住駐守鬼（soul 線讀）", str(op.get_meta("guard", "")) == st.guard)
 	RTS.recall(op)
 	SO.force_open = false; SO.test_now = -1.0
