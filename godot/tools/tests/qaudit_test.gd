@@ -414,7 +414,10 @@ func play(t) -> void:
 		if qi == last_qi:   # 同一個任務做完一輪都推唔郁
 			stuck.append([qi, _qtext(q)])
 			_chk("任務 %d「%s」可以推進" % [qi, _qtext(q)], false, "STUCK")
-			_S()["qi"] = float(qi + 1)   # 測試後門：跳過，繼續搵後面問題（已報 BAD）
+			if str(q.get("t", "")) == "stage":   # [qaudit2] 關卡卡住：後門當通關（唔係就之後拔營全部連環卡住），記低
+				_S().cleared[str(q.s)] = true; gifts.append([qi, "後門通關", str(q.s)])
+				J.mc(_Q(), "check", []); await _skip(t, 3)
+			if _qi() == qi: _S()["qi"] = float(qi + 1)   # 測試後門：跳過，繼續搵後面問題（已報 BAD）
 			last_qi = -1; continue
 		last_qi = qi
 		_snap(qi)
@@ -448,7 +451,7 @@ func play(t) -> void:
 	_chk("通關 6-3", J.t(S.cleared.get("6-3")))
 	_chk("冇卡住嘅任務", stuck.is_empty(), stuck)
 	_p("gifts %d 次（資源／好評／加速）" % gifts.size())
-	for g in gifts: if str(g[1]) == "大排檔目標加速": _p("  加速 Q%d %s" % [g[0], str(g[2])])
+	for g in gifts: if str(g[1]) in ["大排檔目標加速", "後門通關"]: _p("  %s Q%d %s" % [str(g[1]), g[0], str(g[2])])
 	_p("simtime %ds" % int(simt))
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
