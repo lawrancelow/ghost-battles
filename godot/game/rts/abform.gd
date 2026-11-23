@@ -8,12 +8,12 @@ static var force := -1          # 測試：-1 跟總開關；0 全關（舊路�
 const AOE_R := 130.0            # AoE 半徑（唔再打全場）
 const MEL_CAP := 3              # 每隻目標最多幾個近戰同時打（遠程唔計）
 static var MEL_CAP_HERO := 2         # 敵人打我方名鬼：最多 2 個近戰（其餘去打小隊／等位）→ 名鬼唔會被圍
-static var T_FRONT := 120.0          # 敵人揀目標：威脅值（愈大愈優先；單位＝橫距 px／1.6）
+static var T_FRONT := 60.0           # 敵人揀目標：威脅值（愈大愈優先；單位＝橫距 px／1.6）
 static var T_SQ := 30.0              #   陰兵小隊（舊版 120：敵人一定先打小隊 → 小隊秒死）
 const T_BACK := -80.0           #   後排名鬼（唔易被揀）
 const T_TAUNT := 999.0          #   嘲諷（st.taunt > 0 或者 bf 有 taunt，由 abcore 積木設）
 static var GUARD_R := 70.0           # 前排名鬼護衛：身邊幾遠嘅陰兵小隊
-static var GUARD_PCT := 0.45         #   小隊受傷幾成轉去名鬼身
+static var GUARD_PCT := 0.35         #   小隊受傷幾成轉去名鬼身
 const GUARD_CAP := 0.06         #   每秒最多轉名鬼 maxhp 幾多成
 const GUARD_FLOOR := 0.3        #   名鬼自己血低過呢個比例就唔再擋
 const WAIT := 5.0               # 自動施放：滿咗嚇氣等夠幾秒條件都唔成立 → 照放（唔會儲住唔用）
@@ -21,7 +21,7 @@ const BOSS_OPEN := 3.0          # 敵人王：接觸後幾秒先第一次放技�
 const SIDE_LANE := 50.0         # 橫距 < 呢個先直接埋身；否則由自己嗰邊側身埋去（保住橫隊次序）
 const RESC_N := 2               # 名鬼被幾多隻近戰鎖住 → 叫最近嘅小隊過嚟救
 const RESC_T := 3.0             # 救援維持幾秒
-static var SQ_BACK := 18.0           # 小隊比前排名鬼企後幾多（開頭 8 秒）
+static var SQ_BACK := 0.0             # 小隊比前排名鬼企後幾多（開頭 8 秒）
 const CLOSE := 100.0            # 同 rts_sim.CLOSE：射程＋呢個以內當「近」
 
 # 總開關（審查修正第 3 項：全域、唔入玩家存檔）：abil.gd 嘅 static var OFF＝true，或者 data/abil.json 頂層 "off": true → 全部行舊路
