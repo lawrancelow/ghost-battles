@@ -687,7 +687,7 @@ def build():
     # 魂魄來源（審查修正 9）：據點駐守／野外王／王座重遊（劇情王）
     src = {}
     for cid, c in camps.items():
-        for k in set(c["en"]):
+        for k in sorted(set(c["en"])):
             if ENEMY[k]["recruit"]: src.setdefault(k, []).append({"t": "camp", "id": cid, "guard": k == c["guard"]})
     for ci, m in ZONES.items():
         for z in m["zones"]:
@@ -697,13 +697,13 @@ def build():
                 if k and k in ENEMY and ENEMY[k]["recruit"]: src.setdefault(k, []).append({"t": "wildboss", "id": b["id"], "c": int(ci)})
     for ci, chp in enumerate(CORE["CHAPTERS"]):
         for si, stg in enumerate(chp["stages"]):
-            for k in set(stg.get("en", [])):
+            for k in sorted(set(stg.get("en", []))):
                 if k in ("eguiking", "toyol", "laojiang", "pontianak", "pocong", "penanggal", "baiwu", "heiwu"):
                     src.setdefault(k, []).append({"t": "throne", "stage": "%d-%d" % (ci + 1, si + 1)})
     recruit = sorted(k for k in AB if k not in ("afu", "xiaozhi", "mengpo") and (ENEMY.get(k, {}).get("recruit")))
     for k in recruit:
         if not src.get(k): errs.append("%s 冇魂魄來源" % k)
-    plan_names = {i: ent(i)["name"] for i in set(i for c in CAMPS for i in c["plan"])}
+    plan_names = {i: ent(i)["name"] for i in sorted(set(i for c in CAMPS for i in c["plan"]))}
     sub_tab = [{"plan": a, "plan_name": ent(a)["name"], "sys": ent(a)["sys"], "now": SUB[a][0], "now_name": ET[SUB[a][0]][2],
                 "hm": SUB[a][1], "am": SUB[a][2], "camps": sorted(subs_used.get(a, []))} for a in SUB]
     counter = {
