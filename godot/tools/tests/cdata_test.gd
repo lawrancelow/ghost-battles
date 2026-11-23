@@ -220,6 +220,24 @@ func counter_check() -> void:
 		if k in ["afu", "xiaozhi", "mengpo"] or not J.t(E.get(k, {}).get("recruit")): continue
 		if (SRC.get(k, []) as Array).is_empty(): nos.append(k)
 	_chk("每隻可招降名鬼最少一個魂魄來源（據點／野外王／王座重遊）", nos.is_empty(), nos)
+	var nop = []
+	var keys = []
+	for k in A:
+		if not (k in ["afu", "xiaozhi", "mengpo"]) and J.t(E.get(k, {}).get("recruit")): keys.append(k)
+	for k in D.get("new", {}): keys.append(k)
+	for k in keys:
+		var okp = false
+		for x in SRC.get(k, []):
+			if str(x.get("t", "")) != "camp" or J.t(x.get("guard", false)): okp = true
+		if not okp: nop.append(k)
+	_chk("每隻可招降鬼（含 26 新鬼）最少一個主魂來源（據點駐守 guard／野外王／王座重遊／階段 2 魔王據點）", nop.is_empty(), nop)
+	var g1 = []
+	for k in ["n30_banshee", "n30_leipi", "pg_ji"]:
+		var gd = false
+		for x in SRC.get(k, []): if str(x.get("t", "")) == "camp" and J.t(x.get("guard", false)) and not J.t(x.get("plan", false)): gd = true
+		if not gd: g1.append(k)
+	_chk("Banshee、雷劈鬼、聻 第一階段有主魂據點（駐守）", g1.is_empty(), g1)
+	_chk("陰司審批官（nw_shenpi）有主魂來源；id 統一（冇 nw_panguan／nw_sundel）", (SRC.get("nw_shenpi", []) as Array).size() > 0 and not JSON.stringify(D).contains("nw_panguan") and not JSON.stringify(D).contains("nw_sundel"))
 	# 教學節奏：第 1 章 ≤3 種，之後每章新加 ≤2
 	var intro: Dictionary = D.get("mech_intro", {}); var per = {}
 	for m in intro: per[int(intro[m])] = int(per.get(int(intro[m]), 0)) + 1

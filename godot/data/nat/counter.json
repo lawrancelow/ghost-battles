@@ -389,7 +389,7 @@
    {
     "t": "camp",
     "id": "so4_r2_4",
-    "guard": false
+    "guard": true
    }
   ],
   "n30_chochin": [
@@ -843,12 +843,12 @@
    {
     "t": "camp",
     "id": "so6_r3_4",
-    "guard": true
+    "guard": false
    },
    {
     "t": "camp",
     "id": "so6_r4_2",
-    "guard": true
+    "guard": false
    }
   ],
   "n30_taozhai": [
@@ -880,12 +880,12 @@
    {
     "t": "camp",
     "id": "so5_r4_1",
-    "guard": true
+    "guard": false
    },
    {
     "t": "camp",
     "id": "so5_r4_2",
-    "guard": true
+    "guard": false
    },
    {
     "t": "camp",
@@ -912,7 +912,7 @@
    {
     "t": "camp",
     "id": "so2_r4_2",
-    "guard": false
+    "guard": true
    },
    {
     "t": "camp",
@@ -934,12 +934,12 @@
    {
     "t": "camp",
     "id": "so2_r4_2",
-    "guard": true
+    "guard": false
    },
    {
     "t": "camp",
     "id": "so4_r2_4",
-    "guard": true
+    "guard": false
    }
   ],
   "n30_hanturaya": [
@@ -1141,6 +1141,11 @@
     "t": "camp",
     "id": "so5_r3_3",
     "guard": false
+   },
+   {
+    "t": "camp",
+    "id": "so5_r4_2",
+    "guard": true
    }
   ],
   "n30_phiam": [
@@ -1196,11 +1201,6 @@
    {
     "t": "camp",
     "id": "so5_r3_1",
-    "guard": false
-   },
-   {
-    "t": "camp",
-    "id": "so5_r4_1",
     "guard": false
    },
    {
@@ -1300,11 +1300,6 @@
    },
    {
     "t": "camp",
-    "id": "so5_r4_2",
-    "guard": false
-   },
-   {
-    "t": "camp",
     "id": "so5_r4_3",
     "guard": false
    }
@@ -1347,6 +1342,11 @@
     "t": "camp",
     "id": "so5_r3_2",
     "guard": false
+   },
+   {
+    "t": "camp",
+    "id": "so5_r4_1",
+    "guard": true
    }
   ],
   "n30_hannya": [
@@ -1472,7 +1472,7 @@
    {
     "t": "camp",
     "id": "so6_r3_4",
-    "guard": false
+    "guard": true
    },
    {
     "t": "camp",
@@ -1484,7 +1484,7 @@
    {
     "t": "camp",
     "id": "so6_r4_2",
-    "guard": false
+    "guard": true
    }
   ],
   "pg_landlady": [
@@ -1553,9 +1553,247 @@
     "t": "throne",
     "stage": "6-2"
    }
+  ],
+  "nw_guihuo": [
+   {
+    "t": "camp",
+    "id": "so1_r2_2",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_huli": [
+   {
+    "t": "camp",
+    "id": "so1_r3_4",
+    "guard": true,
+    "plan": true
+   },
+   {
+    "t": "camp",
+    "id": "so1_r4_3",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_bajang": [
+   {
+    "t": "camp",
+    "id": "so2_r3_3",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_daqiang": [
+   {
+    "t": "camp",
+    "id": "so3_r1_3",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_baimao": [
+   {
+    "t": "camp",
+    "id": "so3_r2_2",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_ganshi": [
+   {
+    "t": "camp",
+    "id": "so3_r3_1",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_buhuagu": [
+   {
+    "t": "camp",
+    "id": "so3_r3_2",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_huapi": [
+   {
+    "t": "camp",
+    "id": "so3_r3_4",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_tisi": [
+   {
+    "t": "camp",
+    "id": "so4_r1_3",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_tiangou": [
+   {
+    "t": "camp",
+    "id": "so4_r2_2",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_shejing": [
+   {
+    "t": "camp",
+    "id": "so4_r3_2",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_kapre": [
+   {
+    "t": "camp",
+    "id": "so4_r3_4",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_ameonna": [
+   {
+    "t": "camp",
+    "id": "so4_r4_3",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_zzphone": [
+   {
+    "t": "camp",
+    "id": "so5_r1_4",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_honeonna": [
+   {
+    "t": "camp",
+    "id": "so5_r3_1",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_kuaidi": [
+   {
+    "t": "camp",
+    "id": "so5_r4_3",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_zzhouse": [
+   {
+    "t": "camp",
+    "id": "so6_r1_1",
+    "guard": true,
+    "plan": true
+   },
+   {
+    "t": "camp",
+    "id": "so6_r3_1",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_yeleng_sales": [
+   {
+    "t": "camp",
+    "id": "so6_r2_1",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_toutai": [
+   {
+    "t": "camp",
+    "id": "so6_r2_2",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_shenpi": [
+   {
+    "t": "camp",
+    "id": "so6_r3_2",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "nw_yeleng_guard": [
+   {
+    "t": "camp",
+    "id": "so6_r3_3",
+    "guard": true,
+    "plan": true
+   }
+  ],
+  "tianhua": [
+   {
+    "t": "stage2",
+    "id": "so4_r4_4",
+    "guard": true,
+    "note": "階段 2：魔王據點／補據點駐守（第一階段冇圖，未出場）"
+   }
+  ],
+  "nw_dullahan": [
+   {
+    "t": "stage2",
+    "id": "so6_r4_4",
+    "guard": true,
+    "note": "階段 2：魔王據點／補據點駐守（第一階段冇圖，未出場）"
+   }
+  ],
+  "nw_krahang": [
+   {
+    "t": "stage2",
+    "id": "so4_r4_4",
+    "guard": true,
+    "note": "階段 2：魔王據點／補據點駐守（第一階段冇圖，未出場）"
+   }
+  ],
+  "nw_teketeke": [
+   {
+    "t": "stage2",
+    "id": "so5_r4_4",
+    "guard": true,
+    "note": "階段 2：魔王據點／補據點駐守（第一階段冇圖，未出場）"
+   }
+  ],
+  "nw_zzcar": [
+   {
+    "t": "stage2",
+    "id": "so5_r4_4",
+    "guard": true,
+    "note": "階段 2：魔王據點／補據點駐守（第一階段冇圖，未出場）"
+   }
+  ],
+  "nw_mummy": [
+   {
+    "t": "stage2",
+    "id": "so5_r4_4",
+    "guard": true,
+    "note": "階段 2：魔王據點／補據點駐守（第一階段冇圖，未出場）"
+   }
   ]
  },
  "src_note": "t：camp＝據點（guard＝駐守鬼主魂）、wildboss＝野外王重打、throne＝王座重遊（主線劇情王重打）",
+ "guest": [
+  {
+   "k": "n30_banshee",
+   "camp": "so5_r4_1"
+  },
+  {
+   "k": "n30_chehuo",
+   "camp": "so5_r4_2"
+  }
+ ],
  "new": {
   "nw_guihuo": {
    "name": "鬼火",
@@ -4343,15 +4581,15 @@
     "youhun",
     "pg_ex",
     "n30_dugui",
-    "n30_guhangui",
-    "n30_hantugalah"
+    "n30_hantugalah",
+    "n30_guhangui"
    ],
    "plan": [
     "youhun",
     "zd_hongyi",
     "n30_dugui",
-    "n30_guhangui",
-    "n30_hantugalah"
+    "n30_hantugalah",
+    "n30_guhangui"
    ],
    "hm": [
     1,
@@ -4374,8 +4612,8 @@
     [],
     []
    ],
-   "guard": "n30_hantugalah",
-   "guard_plan": "n30_hantugalah",
+   "guard": "n30_guhangui",
+   "guard_plan": "n30_guhangui",
    "mech": [],
    "q": [],
    "mech_plan": [
@@ -5742,14 +5980,14 @@
    "en": [
     "pg_ex",
     "n30_kappa",
-    "n30_xiasi",
-    "n30_hantugalah"
+    "n30_hantugalah",
+    "n30_xiasi"
    ],
    "plan": [
     "zd_hongyi",
     "zd_shuihou",
-    "n30_xiasi",
-    "tianhua"
+    "tianhua",
+    "n30_xiasi"
    ],
    "hm": [
     0.5,
@@ -5775,8 +6013,8 @@
      "嚇氣光環"
     ]
    ],
-   "guard": "n30_hantugalah",
-   "guard_plan": "tianhua",
+   "guard": "n30_xiasi",
+   "guard_plan": "n30_xiasi",
    "mech": [
     "嚇氣光環"
    ],
@@ -6983,16 +7221,16 @@
    "en": [
     "n30_kappa",
     "zombie",
-    "n30_rokurokubi",
     "n30_jerangkung",
-    "n30_taozhai"
+    "n30_taozhai",
+    "n30_banshee"
    ],
    "plan": [
     "zd_shanjing",
     "zd_bone",
-    "n30_rokurokubi",
     "nw_honeonna",
-    "nw_kuaidi"
+    "nw_kuaidi",
+    "n30_banshee"
    ],
    "hm": [
     0.7,
@@ -7017,32 +7255,34 @@
     ],
     [],
     [
-     "散骨"
+     "屍變"
     ],
     [
-     "屍變"
+     "嚇氣光環"
     ]
    ],
-   "guard": "n30_taozhai",
-   "guard_plan": "nw_kuaidi",
+   "guard": "n30_banshee",
+   "guard_plan": "n30_banshee",
    "mech": [
     "殼",
-    "散骨",
+    "嚇氣光環",
     "屍變"
    ],
    "q": [
     "殼",
-    "散骨"
+    "嚇氣光環"
    ],
    "mech_plan": [
     "隱",
     "散骨",
+    "嚇氣光環",
     "突襲"
    ],
    "sys": [
-    "妖",
     "屍",
-    "使"
+    "妖",
+    "使",
+    "厲"
    ],
    "king": false
   },
@@ -7054,16 +7294,16 @@
    "en": [
     "zombie",
     "n30_kappa",
-    "n30_nopperabo",
     "n30_jerangkung",
-    "n30_taozhai"
+    "n30_taozhai",
+    "n30_chehuo"
    ],
    "plan": [
     "zd_bone",
     "zd_shanjing",
-    "n30_nopperabo",
     "nw_honeonna",
-    "nw_kuaidi"
+    "nw_kuaidi",
+    "n30_chehuo"
    ],
    "hm": [
     1,
@@ -7086,24 +7326,24 @@
     [
      "殼"
     ],
-    [
-     "隱"
-    ],
     [],
     [
      "屍變"
+    ],
+    [
+     "突襲"
     ]
    ],
-   "guard": "n30_taozhai",
-   "guard_plan": "nw_kuaidi",
+   "guard": "n30_chehuo",
+   "guard_plan": "n30_chehuo",
    "mech": [
-    "隱",
     "殼",
-    "屍變"
+    "屍變",
+    "突襲"
    ],
    "q": [
-    "隱",
-    "殼"
+    "殼",
+    "屍變"
    ],
    "mech_plan": [
     "隱",
@@ -7113,7 +7353,8 @@
    "sys": [
     "屍",
     "妖",
-    "使"
+    "使",
+    "橫"
    ],
    "king": false
   },
@@ -7833,15 +8074,15 @@
     "shuigui",
     "xiaogui",
     "shuigui",
-    "pg_ji",
-    "n30_genderuwo"
+    "n30_genderuwo",
+    "pg_ji"
    ],
    "plan": [
     "zd_hengsi",
     "zd_paotui",
     "zd_hengsi",
-    "pg_ji",
-    "nw_dullahan"
+    "nw_dullahan",
+    "pg_ji"
    ],
    "hm": [
     1,
@@ -7863,22 +8104,21 @@
      "隱"
     ],
     [],
+    [],
     [
-     "隱"
-    ],
-    [
-     "霸體"
+     "隱",
+     "屍變"
     ]
    ],
-   "guard": "n30_genderuwo",
-   "guard_plan": "nw_dullahan",
+   "guard": "pg_ji",
+   "guard_plan": "pg_ji",
    "mech": [
     "隱",
-    "霸體"
+    "屍變"
    ],
    "q": [
     "隱",
-    "霸體"
+    "屍變"
    ],
    "mech_plan": [
     "隱",
@@ -7890,8 +8130,8 @@
    "sys": [
     "橫",
     "使",
-    "魂",
-    "妖"
+    "妖",
+    "魂"
    ],
    "king": true
   },
@@ -7974,16 +8214,16 @@
    "en": [
     "shuigui",
     "xiaogui",
-    "n30_leipi",
     "pg_ji",
-    "n30_genderuwo"
+    "n30_genderuwo",
+    "n30_leipi"
    ],
    "plan": [
     "zd_hengsi",
     "zd_paotui",
-    "n30_leipi",
     "pg_ji",
-    "nw_dullahan"
+    "nw_dullahan",
+    "n30_leipi"
    ],
    "hm": [
     1,
@@ -8005,17 +8245,17 @@
      "隱"
     ],
     [
-     "嚇氣光環"
-    ],
-    [
      "隱"
     ],
     [
      "霸體"
+    ],
+    [
+     "嚇氣光環"
     ]
    ],
-   "guard": "n30_genderuwo",
-   "guard_plan": "nw_dullahan",
+   "guard": "n30_leipi",
+   "guard_plan": "n30_leipi",
    "mech": [
     "隱",
     "嚇氣光環",

@@ -195,6 +195,7 @@ def gang_dirs(ch):
     m["N"], m[kd] = kd, "N"          # counter 幫標籤 → 真實方向
     return {m[d]: GANGS[ch][d] for d in "WESN"}
 REAL_GANGS = {ch: gang_dirs(ch) for ch in GANGS}
+STAGE2_SRC = []   # 讓咗位嘅新鬼：階段 2 魔王據點（so{c}_r4_4，+6 個）做主魂來源
 CAMPS = []
 for ch in range(1, 7):
     seen = {}
@@ -225,6 +226,43 @@ for ch in range(1, 7):
             st = max(0, min(len(mem) - c["nn"], m2 - left))
             left -= c["nn"]
             c["plan"] = c["fods"] + mem[st:st + c["nn"]]
+    # 主魂：每幫每個成員最少做一次駐守鬼（guard＝最後一隻）；駐守鬼重複嘅據點讓位（soul 線回報：Banshee、雷劈鬼、聻、審批官冇主魂據點）
+    for d in "WESN":
+        gname, mem, fod = REAL_GANGS[ch][d]
+        cs = sorted([c for c in CAMPS if c["c"] == ch - 1 and c["dir"] == d], key=lambda c: (c["ring"], c["id"]))
+        for m in mem:
+            gs = [c["plan"][-1] for c in cs]
+            if m in gs: continue
+            dupc = [c for c in cs if gs.count(c["plan"][-1]) > 1 and not c["king"]]
+            if not dupc: dupc = [c for c in cs if gs.count(c["plan"][-1]) > 1]
+            if not dupc and m in ET:   # 據點唔夠（5 成員 4 據點）：現有鬼優先做駐守，新鬼讓位去階段 2 魔王據點
+                dupc = [c for c in cs if c["plan"][-1] not in ET and m in c["plan"][-c["nn"]:]]
+                for c in dupc: STAGE2_SRC.append((c["plan"][-1], c["c"]))
+            if not dupc: continue
+            # 先揀已經有呢隻嘅據點；否則揀圈數最接近成員強弱次序嘅
+            have = [c for c in dupc if m in c["plan"][-c["nn"]:]]
+            want = mem.index(m) / max(1, len(mem) - 1) * 3 + 1
+            c = (have or sorted(dupc, key=lambda c: abs(c["ring"] - want)))[0]
+            pk = [x for x in c["plan"][-c["nn"]:] if x != m]
+            if len(pk) == c["nn"]: pk = pk[1:]
+            c["plan"] = c["fods"] + pk + [m]
+
+# 主魂補位（每章）：仲未做過駐守鬼嘅成員 → 現有鬼「客串」做同章駐守鬼重複嘅據點（第 4 圈優先）；新鬼記階段 2（魔王據點／補據點）
+GUEST = []
+for ch in range(1, 7):
+    cs = [c for c in CAMPS if c["c"] == ch - 1]
+    mems = [m for d in "WESN" for m in REAL_GANGS[ch][d][1]]
+    for m in dict.fromkeys(mems):
+        gs = [c["plan"][-1] for c in cs]
+        if m in gs: continue
+        if m not in ET:
+            STAGE2_SRC.append((m, ch - 1)); continue
+        dup = sorted([c for c in cs if gs.count(c["plan"][-1]) > 1 and not c["king"]], key=lambda c: (-c["ring"], c["id"]))
+        if not dup: continue
+        c = dup[0]
+        pk = [x for x in c["plan"][-c["nn"]:] if x != m][1:]
+        c["plan"] = c["fods"] + pk + [m]
+        GUEST.append((m, c["id"]))
 
 # 機制教學節奏（審查修正 8）：第 1 章最多 3 種，之後每章新加 2 種；每據點上限 第 1～2 圈 1、第 3 圈 2、第 4 圈 3
 RING_CAP = [1, 1, 2, 3]
@@ -700,9 +738,16 @@ def build():
             for k in sorted(set(stg.get("en", []))):
                 if k in ("eguiking", "toyol", "laojiang", "pontianak", "pocong", "penanggal", "baiwu", "heiwu"):
                     src.setdefault(k, []).append({"t": "throne", "stage": "%d-%d" % (ci + 1, si + 1)})
+    for cid, c in camps.items():
+        gp = c["guard_plan"]
+        if gp != c["guard"]: src.setdefault(gp, []).append({"t": "camp", "id": cid, "guard": True, "plan": True})
+    for k, ci in dict.fromkeys(STAGE2_SRC):
+        src.setdefault(k, []).append({"t": "stage2", "id": "so%d_r4_4" % (ci + 1), "guard": True, "note": "階段 2：魔王據點／補據點駐守（第一階段冇圖，未出場）"})
     recruit = sorted(k for k in AB if k not in ("afu", "xiaozhi", "mengpo") and (ENEMY.get(k, {}).get("recruit")))
     for k in recruit:
         if not src.get(k): errs.append("%s 冇魂魄來源" % k)
+    for k in sorted(set(recruit) | set(NEW_TAGS)):   # 主魂來源：據點駐守／野外王／王座重遊（唔計副魂）
+        if not any(x["t"] != "camp" or x.get("guard") for x in src.get(k, [])): errs.append("%s 冇主魂來源" % k)
     plan_names = {i: ent(i)["name"] for i in sorted(set(i for c in CAMPS for i in c["plan"]))}
     sub_tab = [{"plan": a, "plan_name": ent(a)["name"], "sys": ent(a)["sys"], "now": SUB[a][0], "now_name": ET[SUB[a][0]][2],
                 "hm": SUB[a][1], "am": SUB[a][2], "camps": sorted(subs_used.get(a, []))} for a in SUB]
@@ -717,6 +762,7 @@ def build():
         "sortie_k": {"4": {"hp": 0.55, "atk": 0.55}, "5": {"hp": 0.50, "atk": 0.50}},      # 據點（審查修正 10：同舊主線同級起步，之後平衡線調）
         "mech_intro": intro, "ring_cap": RING_CAP,
         "src": src, "src_note": "t：camp＝據點（guard＝駐守鬼主魂）、wildboss＝野外王重打、throne＝王座重遊（主線劇情王重打）",
+        "guest": [{"k": k, "camp": c} for k, c in GUEST],
         "new": {k: {"name": R[k]["name"], "sys": R[k]["sys"], "sc": SC[R[k]["sc"]], "mech": R[k]["mech"], "ch": R[k]["ch"], "tags": v, "sub": SUB[k][0], "note": NEW_NOTE.get(k, "")} for k, v in NEW_TAGS.items()},
         "ring_mech": RING_MECH,
         "boss_hp": 1.6,
