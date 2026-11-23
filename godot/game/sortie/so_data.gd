@@ -170,7 +170,13 @@ static func cost_text(cs: Dictionary) -> String:
 
 # ======================= 敵人 =======================
 static func stage_of(e: Dictionary) -> Dictionary:
-	if str(e.get("bm", "")) != "": return NGB.stage(e, title(e))   # [newghost] 魔王據點：魔王＋嘍囉
+	if str(e.get("bm", "")) != "":   # [newghost] 魔王據點：魔王＋嘍囉
+		var nb = NGB.stage(e, title(e))
+		var cb = CT.stage_en(str(e.get("id", "")))   # [counter] counter.json 有就加副將（駐守鬼＝主魂）
+		if not cb.is_empty():
+			cb = cb.duplicate(true); cb.en[cb.en.size() - 1] = str(e.bm)   # 隱藏酒吞童子換位
+			nb["en"] = cb.en; nb["ct"] = cb; nb["guard"] = cb.guard
+		return nb
 	var c = int(e.c); var r = ri(e.ring)
 	var CH = J.G.get("CHAPTERS")
 	var pool = []; var bg = "field"
