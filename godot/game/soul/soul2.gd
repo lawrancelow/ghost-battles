@@ -55,7 +55,35 @@ static func C() -> Dictionary:
 		var by = {}
 		for x in _C.LIST: by[str(x.k)] = x
 		_C["BY"] = by
+		_grow()
 	return _C
+# 圖鑑格數隨名冊自動增加：newghost2.json（roster2 第二批）有、codex.json 未重跑時，即場補格（重跑 codex_build.py 後呢度冇嘢做）
+const NG2_PATH := "res://data/nat/newghost2.json"
+const SCN := {"breath": "吹氣", "light": "燈", "cold": "凍", "sound": "怪聲", "paper": "紙", "phone": "電話", "face": "鬼臉", "shadow": "黑影"}
+static func _grow() -> void:
+	if not FileAccess.file_exists(NG2_PATH): return
+	var f = FileAccess.open(NG2_PATH, FileAccess.READ)
+	var N = JSON.parse_string(f.get_as_text()) if f != null else null
+	if not (N is Dictionary): return
+	var G = N.get("GHOSTS", {}); var EN = N.get("ENEMY", {}); var AB = N.get("ABIL", {}); var PN = N.get("PIN", {}); var CP = N.get("CAMP2", {})
+	if not (G is Dictionary): return
+	var ks = N.get("ROSTER2", G.keys())
+	for k0 in ks:
+		var k = str(k0)
+		if _C.BY.has(k) or not (G.get(k) is Dictionary) or str(G[k].get("q", "")) != "名": continue
+		var e = EN.get(k, {}) if EN.get(k) is Dictionary else {}
+		var a = AB.get(k, {}) if AB.get(k) is Dictionary else {}
+		var scs = e.get("sc", a.get("sc", []))
+		var sc = str(scs[0]) if scs is Array and not scs.is_empty() else "face"
+		var cp = CP.get(k, {}) if CP.get(k) is Dictionary else {}
+		var x = {"k": k, "no": _C.LIST.size(), "name": str(G[k].get("name", k)), "sys": str(e.get("sys", a.get("sys", "魂"))), "sc": SCN.get(sc, sc),
+			"mech": e.get("mech", []), "tags": a.get("tags", []), "ch": int(e.get("ch", 1)), "reg": "", "note": str(cp.get("gang", G[k].get("title", ""))),
+			"pin": str(PN.get(k, "靈")), "new": true}
+		_C.LIST.append(x); _C.BY[k] = x
+	var say = N.get("SAY_FB", {})
+	if say is Dictionary:
+		if not (_C.get("SAY_FB") is Dictionary): _C["SAY_FB"] = {}
+		for k in say: if not _C.SAY_FB.has(k): _C.SAY_FB[k] = say[k]
 static func entry(k: String) -> Dictionary: return C().BY.get(k, {})
 static func list() -> Array: return C().LIST
 static func pin(k: String) -> String:
@@ -328,7 +356,10 @@ static func on_throne_end(k: String, win: bool) -> Dictionary:
 	return rep
 
 # ======================= 出擊小卡：抄功課掣（so_view.open_card 掛鈎） =======================
-static func card_row(vb: VBoxContainer, e: Dictionary) -> void:   # 掣擺喺「出擊／關閉」同一行（小卡唔加高）；抄唔到就喺上面加一行短原因
+static func card_row(vb: VBoxContainer, e: Dictionary) -> void:   # so_view.open_card 掛鈎：抄功課掣＋內容捲動區（最底一行掣固定喺底、永遠完整可撳）
+	_card_row(vb, e)
+	_scrollify(vb)
+static func _card_row(vb: VBoxContainer, e: Dictionary) -> void:   # 掣擺喺「出擊／關閉」同一行（小卡唔加高）；抄唔到就喺上面加一行短原因
 	if o() == null or e.is_empty() or vb.get_child_count() == 0: return
 	var c = can_sweep(e)
 	if str(c.why) == "locked": return
@@ -354,6 +385,58 @@ static func card_row(vb: VBoxContainer, e: Dictionary) -> void:   # 掣擺喺「
 	var l = UIKit.label(t, 15, Color("#d0c4b8"), "sans", 900); l.name = "SweepWhy"
 	l.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.add_child(l); vb.move_child(l, bb.get_index())
+# 小卡太高（細屏）：上面資料放入捲動區，「抄功課原因＋出擊／關閉／抄功課」一行固定喺卡底；
+# 卡嘅高度限喺「頂部資源列下面 → 底部導航上面」，最底一行掣永遠完整、可撳（唔再俾浮動出擊掣／導航遮住）
+const CARD_BOTTOM_GAP := 74.0   # 底部導航高度＋留白
+const CARD_TOP_MIN := 150.0     # 頂部資源列＋主線條下面（太高先向上移，最多移到呢度）
+static func _scrollify(vb: VBoxContainer) -> void:
+	var pc = vb.get_parent()
+	if not (pc is Control) or vb.get_node_or_null("CardScroll") != null: return
+	var fix = -1   # 第一個固定喺底嘅節點：SweepWhy 或者掣行
+	for i in vb.get_child_count():
+		var c = vb.get_child(i)
+		if c.name == "SweepWhy" or (c is HBoxContainer and c.get_children().any(func(x): return x is Button and x.text == L("關閉", "關閉"))):
+			fix = i; break
+	if fix <= 0: return
+	var sc = ScrollContainer.new(); sc.name = "CardScroll"
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var inner = VBoxContainer.new(); inner.name = "CardBody"; inner.add_theme_constant_override("separation", vb.get_theme_constant("separation"))
+	inner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.add_child(inner)
+	var mv = []
+	for i in fix: mv.append(vb.get_child(i))
+	for c in mv:
+		vb.remove_child(c); inner.add_child(c)
+	vb.add_child(sc); vb.move_child(sc, 0)
+	if not pc.resized.is_connected(fit_card.bind(pc)): pc.resized.connect(fit_card.bind(pc))
+	inner.minimum_size_changed.connect(func(): fit_card(pc))
+	(func(): fit_card(pc)).call_deferred()
+static func fit_card(pc: Control) -> void:
+	if not is_instance_valid(pc) or not pc.is_inside_tree(): return
+	var sc = pc.find_child("CardScroll", true, false)
+	if sc == null: return
+	var vb = sc.get_parent(); var inner = sc.get_child(0)
+	var vh = pc.get_viewport_rect().size.y
+	var par = pc.get_parent()
+	var top0 = par.get_global_rect().position.y if par is Control else 0.0
+	var sep = float(vb.get_theme_constant("separation"))
+	var fixed_h = 0.0   # 卡底固定部份＋邊框
+	for c in vb.get_children():
+		if c != sc and c is Control and c.visible: fixed_h += c.get_combined_minimum_size().y + sep
+	var st = pc.get_theme_stylebox("panel")
+	var pad = (st.get_margin(SIDE_TOP) + st.get_margin(SIDE_BOTTOM)) if st != null else 20.0
+	var want = inner.get_combined_minimum_size().y
+	var top = 232.0   # so_view 原本位置
+	var avail = vh - CARD_BOTTOM_GAP - top0 - top - fixed_h - pad
+	if want > avail:   # 原位擺唔落：先向上移（最多到 CARD_TOP_MIN），再唔夠就捲動
+		top = maxf(CARD_TOP_MIN - top0, top - (want - avail))
+		avail = vh - CARD_BOTTOM_GAP - top0 - top - fixed_h - pad
+	var h = clampf(want, 60.0, maxf(60.0, avail))
+	if absf(sc.custom_minimum_size.y - h) > 0.5: sc.custom_minimum_size.y = h
+	if absf(pc.offset_top - top) > 0.5: pc.offset_top = top
+	pc.offset_bottom = pc.offset_top   # grow_vertical END：高度由內容決定
+	pc.reset_size()
 static func short_why(c: Dictionary) -> String:
 	match str(c.why):
 		"wins": return L("抄功課：贏夠 %d 次先開（%d/%d）", "抄功課：贏夠 %d 次才開（%d/%d）") % [SWEEP_WINS, int(c.wins), SWEEP_WINS]
