@@ -10,7 +10,8 @@ if "--from-scale" in sys.argv:
     sc = json.load(open(SC, encoding="utf-8"))
 else:
     sc = json.load(open(SC, encoding="utf-8")) if os.path.exists(SC) else {"camps": {}, "ch_k": {}, "sortie_k": {}}
-    for f in sorted(glob.glob("/tmp/bal/c*.json") + glob.glob("/tmp/bal/cal_*.json")):
+    if "--mech-only" in sys.argv: sys.argv.append("--no-tmp")
+    for f in ([] if "--no-tmp" in sys.argv else sorted(glob.glob("/tmp/bal/c*.json") + glob.glob("/tmp/bal/cal_*.json"))):
         d = json.load(open(f, encoding="utf-8"))
         c = d["c"]
         if "steps" in d:
@@ -33,5 +34,22 @@ for cid, s in sc["camps"].items():
     cp["bal"] = s
 for key in ["ch_k", "sortie_k"]:
     for c, v in sc[key].items(): cj[key][c] = v
+# 機制數值（abil.json MECH＝引擎讀；counter.json mech＝設計表，同步對應 key）
+AJ = os.path.join(ROOT, "data/abil.json")
+MECH = sc.get("mech", {})
+if MECH:
+    aj = json.load(open(AJ, encoding="utf-8"))
+    for m, kv in MECH.items():
+        for k, v in kv.items(): aj["MECH"][m][k] = v
+    json.dump(aj, open(AJ, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    CMAP = {"n_sum": "n"}
+    for m, kv in MECH.items():
+        cm = cj["mech"].get(m)
+        if cm is None: continue
+        for k, v in kv.items():
+            if k == "warn": continue
+            ck = CMAP.get(k, k)
+            if m == "嚇氣光環" and k in ("energy", "minion_atk"): cm[ck] = round(v - 1.0, 3)   # counter.json 寫增減
+            elif ck in cm: cm[ck] = v
 json.dump(cj, open(CJ, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("camps", len(sc["camps"]), "ch_k", sc["ch_k"], "sortie_k", sc["sortie_k"])

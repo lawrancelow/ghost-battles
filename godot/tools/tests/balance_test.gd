@@ -550,6 +550,35 @@ func k5s(t) -> void: await _boot(t); await run_cal(t, 5, ["stage"], "stage"); _p
 func k5a(t) -> void: await _boot(t); await run_cal(t, 5, [1, 2], "r12"); _p("RESULT ok=1 bad=0")
 func k5b(t) -> void: await _boot(t); await run_cal(t, 5, [3, 4], "r34"); _p("RESULT ok=1 bad=0")
 
+# ================= 機制強度掃描（abil_test mech 同一套場景；只改記憶體入面 MECH 數值） =================
+const MSW := {   # 第 2 輪（第 1 輪結果見報告：飛 0.45、召喚 1/3 已定）
+	"隱": [{"dur": 4.5, "cycle": 6.0, "near": 70.0}, {"dur": 4.5, "cycle": 6.0, "near": 60.0}, {"dur": 5.0, "cycle": 6.0, "near": 70.0}, {"dur": 4.0, "cycle": 6.0, "near": 50.0}, {"dur": 4.8, "cycle": 6.0, "near": 65.0}],
+	"反傷": [{"pct": 1.1}, {"pct": 1.4}],
+	"嚇氣光環": [{"energy": 0.0, "minion_atk": 0.3, "r": 250.0}, {"energy": 0.1, "minion_atk": 0.4, "r": 300.0}, {"energy": 0.0, "minion_atk": 0.2, "r": 300.0}],
+}
+func msweep(t) -> void:
+	await _boot(t)
+	var AT = load("res://tools/tests/abil_test.gd").new()
+	AB.force = 1; AB.reload()
+	var MD = AB.data().get("MECH", {})
+	var N = 6
+	var base = {}
+	for m in AT.MECHS:
+		if not MSW.has(m): continue
+		var pl = AT.PLANS[m]; var nc = pl[0]; var co = pl[1]
+		if not base.has(nc): base[nc] = AT._avg(nc, "", N)
+		if not base.has(co): base[co] = AT._avg(co, "", N)
+		var vs = MSW.get(m, [{}])
+		var keep = MD[m].duplicate()
+		for v in vs:
+			for k in v: MD[m][k] = v[k]
+			var a = AT._avg(nc, m, N); var b = AT._avg(co, m, N)
+			_p("掃 %-4s %s：冇應對 ×%.2f 勝 %d/%d｜有應對 ×%.2f 勝 %d/%d" % [m, str(v), a.score / base[nc].score, a.win, N, b.score / base[co].score, b.win, N])
+			for k in keep: MD[m][k] = keep[k]
+			await t.get_tree().process_frame
+	AB.force = -1
+	_p("RESULT ok=1 bad=0")
+
 # ================= 入口 =================
 func probe(t) -> void:
 	await _boot(t)
