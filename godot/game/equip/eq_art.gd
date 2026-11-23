@@ -10,6 +10,9 @@ const LONG := ["pole", "duster", "mop", "fork_pole", "umbrella", "pipe", "ring_s
 
 static func img_key(id: String) -> String: return "eqi_" + id
 static func has_img(id: String) -> bool: return Spr.ok(img_key(id)) and Spr.get_tex(img_key(id)) != null
+# 圖示專用（斜放 icon 版，商店／名冊／圖鑑用）：eqi_<id>_i；未有就退回手持圖 eqi_<id>（垂直，照舊轉 0.7）；再冇就程序畫
+static func icon_key(id: String) -> String: return "eqi_%s_i" % id
+static func has_icon(id: String) -> bool: return Spr.ok(icon_key(id)) and Spr.get_tex(icon_key(id)) != null
 static func shape_of(id: String) -> String: return str(EQ.item(id).get("shape", ""))
 static func is_long(id: String) -> bool: return LONG.has(shape_of(id))
 
@@ -19,9 +22,12 @@ static func icon(ctx: Ctx, id: String, x: float, y: float, sz: float, ring := tr
 	if ring:
 		var gc = EQ.grade_col(EQ.grade_of(id)) if str(EQ.item(id).get("kind")) == "eq" else Color("#8a8478")
 		Art.el(ctx, c.x, c.y, sz * 0.5, sz * 0.5, "rgba(236,226,200,.94)", "#" + gc.to_html(false), maxf(1.2, 2.0 * s))
-	if has_img(id):
-		Art.put(ctx, img_key(id), x, y - sz * 0.08, sz * 0.84, sz * 0.84); return
+	if has_icon(id):
+		Art.put(ctx, icon_key(id), x, y - sz * 0.08, sz * 0.84, sz * 0.84); return
 	ctx.save(); ctx.translate(c.x, c.y); ctx.scale(s * 0.86, s * 0.86)
+	if has_img(id):   # 冇 icon 版：用手持圖（垂直）照程序圖一樣斜放
+		if HAND_SHAPES.has(shape_of(id)): ctx.rotate(0.7)
+		ctx.translate(0, 12); Art.put(ctx, img_key(id), 0, 0, 24, 24); ctx.restore(); return
 	if HAND_SHAPES.has(shape_of(id)):
 		ctx.rotate(0.7); ctx.translate(0, 12)
 	else: ctx.translate(0, 12)

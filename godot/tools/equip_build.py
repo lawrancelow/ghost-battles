@@ -75,6 +75,16 @@ ANCHOR = {
  "youhun": {"hand": [0.24, -0.46], "head": [0.0, -0.92]},
 }
 
+def anchors():
+    # 自動錨點表（tools/equip_anchor.json：equip_test anchors 用全身圖不透明輪廓生成），再用上面 ANCHOR 人工表蓋
+    p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "equip_anchor.json")
+    o = {}
+    if os.path.exists(p):
+        for k, v in json.load(open(p, encoding="utf-8")).items():
+            o[k] = {"hand": v["hand"], "head": v["head"], "src": "auto"}
+    for k, v in ANCHOR.items(): o[k] = dict(v, src="manual")
+    return o
+
 def main():
     items = {}
     for (i, t, v, ak, hk, look, shape, rec, n, d) in ML:
@@ -89,7 +99,7 @@ def main():
     out = {"v": 1, "GRADE_N": [["凡", "凡"], ["良", "良"], ["精", "精"], ["名", "名"]], "GRADE_COL": ["#8a8478", "#4e9a4a", "#3f78c0", "#d2a12a"],
            "SLOT_N": {"wea": ["兵器", "兵器"], "arm": ["護身", "護身"], "acc": ["隨身物", "隨身物"]},
            "CAP": CAP, "SC_BONUS": SC_BONUS, "MAX_TAG": MAX_TAG, "MAX_NAMED": MAX_NAMED, "RECYCLE": RECYCLE,
-           "ITEMS": items, "ANCHOR": ANCHOR}
+           "ITEMS": items, "ANCHOR": anchors()}
     p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "nat", "equip.json")
     with open(p, "w", encoding="utf-8") as f: json.dump(out, f, ensure_ascii=False, indent=1)
     print("equip.json", len(items), "items")

@@ -119,8 +119,10 @@ static func ml_now() -> String: return ml_pick(stall_star())
 static func recipe_now() -> Dictionary:   # mat.gd 掛鈎：兵器檔今期款用料
 	var id = ml_now()
 	var r = item(id).get("rec")
-	if not on() or not (r is Dictionary): return load("res://game/militia/ml_data.gd").recipe_now()
-	return {"in": (r as Dictionary).duplicate(), "out": "m_bingqi", "n": 1}
+	if not on() or not (r is Dictionary) or str(item(id).get("var", "A")) == "A": return load("res://game/militia/ml_data.gd").recipe_now()   # A 款＝militia 原表（同一份）
+	var o = {}
+	for k in r: o[str(k)] = int(J.num(r[k]))   # JSON 數字係 float，轉返 int 同原表一致
+	return {"in": o, "out": "m_bingqi", "n": 1}
 static func ml_join(t: int) -> void:   # ml_data.join 掛鈎：入伍嗰個揸嘅款
 	var e = st()
 	if e == null: return

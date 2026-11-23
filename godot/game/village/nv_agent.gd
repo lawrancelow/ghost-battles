@@ -90,7 +90,7 @@ func sync(ag: Dictionary, t: float, mute: bool) -> void:
 	if ft is Dictionary and J.num(ft.t) < 1:
 		var ftt = J.num(ft.t); var fs = J.str(ft.s)
 		head_ops.append(func(ctx): NvPlaza.txt(ctx, ax, hy - 6 - ftt * 8, fs, 10 * s * 1.4, "#ffe9a8", minf(1, (1 - ftt) * 3), 0.2))
-	load("res://game/equip/eq_view.gd").village(head_ops, k, ax, ay, H, fwd)   # [equip] 名鬼廣場上揸住兵器／戴帽
+	load("res://game/equip/eq_view.gd").village(head_ops, k, ax, ay, H, fwd, back_ops)   # [equip] 名鬼廣場上揸住兵器／戴帽
 	if k == "shuigui":
 		var sd = J.num(ag.get("seed", 0.0))
 		after_ops.append(func(ctx): NvPlaza.drips(ctx, ax, ay, t + sd, sd))

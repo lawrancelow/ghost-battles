@@ -228,7 +228,9 @@ func _logic(t, m) -> void:
 	# 村子廣場
 	var ops = []
 	EV.village(ops, "xiaozhi", 100, 200, 60, 1.0)
-	_chk("村子廣場：小紙有裝兵器 → 疊一層手持", ops.size() == 1)
+	var bops = []
+	EV.village(ops, "xiaozhi", 100, 200, 60, 1.0, bops)
+	_chk("村子廣場：小紙有裝兵器 → 手持喺身後一層、帽喺前一層", bops.size() == 1 and ops.size() >= 1)
 	var ops2 = []
 	EV.village(ops2, "zzz_none", 100, 200, 60, 1.0)
 	_chk("冇裝備嘅鬼：乜都唔加", ops2.is_empty())
@@ -297,7 +299,7 @@ func _shots(t, m) -> void:
 	var ks = ["afu", "xiaozhi", "laojiang", "eguiking", "pontianak", "tianhua", "n30_jiugui", "n30_kappa", "n30_hanba", "nw_ganshi", "n30_qionggui", "youhun"]
 	var sets = [{"wea": "eq_huoqi", "arm": "eq_anquan", "acc": "eq_dianzhan"}, {"wea": "eq_liangcha", "arm": "eq_laogong", "acc": "eq_yinji"}, {"ml": "ml_gongdi"}, {"wea": "eq_tengpai", "arm": "eq_guanban"}]
 	var cl = CanvasLayer.new(); cl.layer = 70; root.add_child(cl)
-	var gd = Grid.new(); gd.ks = ks; gd.sets = sets; gd.size = Vector2(450, 960); cl.add_child(gd)
+	var gd = Grid.new(); gd.ks = ks; gd.sets = sets; gd.size = t.get_viewport().get_visible_rect().size; cl.add_child(gd)
 	await _w(t, 0.4); await _shot(t, "07_display_grid")
 	var oob = []
 	for k in gd.bounds:
@@ -365,3 +367,79 @@ func _shots(t, m) -> void:
 		await _w(t, 0.3); await _shot(t, "11_rts_militia_zoom")
 	var t1 = 0
 	while t1 < 900 and not (op.phase in ["back", "done"]): await _w(t, 0.1); t1 += 1
+
+# ---------------- 錨點表：全部名鬼（不透明輪廓＋手／頭偵測），寫 tools/equip_anchor.json ----------------
+func _all_keys() -> Array:
+	var ks = {}
+	for src in ["res://data/abil.json", "res://data/nat/counter.json"]:
+		var o = JSON.parse_string(FileAccess.get_file_as_string(src))
+		if not (o is Dictionary): continue
+		for sec in ["SCARE", "ABIL", "names"]:
+			if o.get(sec) is Dictionary: for k in o[sec]: ks[str(k)] = true
+	if DB.D is Dictionary and DB.D.get("GHOSTS") is Dictionary:
+		for k in DB.D.GHOSTS: ks[str(k)] = true
+	var o2 = []
+	for k in ks.keys():
+		if PtGfx.tex(Art.spr_key(k)) != null: o2.append(k)
+	o2.sort()
+	return o2
+func anchors(t) -> void:
+	await _boot(t)
+	var ks = _all_keys()
+	var out = {}
+	var src = {"auto": 0, "default": 0}
+	for k in ks:
+		var a = EV.auto_anchor(k)
+		src[str(a.src)] = int(src.get(str(a.src), 0)) + 1
+		out[k] = {"hand": [snappedf(a.hand.x, 0.01), snappedf(a.hand.y, 0.01)], "head": [snappedf(a.head.x, 0.01), snappedf(a.head.y, 0.01)], "src": str(a.src)}
+	var f = FileAccess.open("res://tools/equip_anchor.json", FileAccess.WRITE)
+	f.store_string(JSON.stringify(out, " ", true)); f.close()
+	_chk("錨點表：%d 隻名鬼有圖（auto %d、default %d）" % [ks.size(), src.auto, src.default], ks.size() >= 100, src)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+# ---------------- 抽查：錨點點＋裝備疊層（20 隻一版） ----------------
+class Check extends Control:
+	var ks: Array = []
+	var w := {}
+	var cols := 5
+	var bounds := {}
+	func _draw() -> void:
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.13, 0.11, 0.1))
+		var EVv = load("res://game/equip/eq_view.gd")
+		var cw = size.x / cols; var ch = size.y / ceil(ks.size() / float(cols))
+		var f = ThemeDB.fallback_font
+		for i in ks.size():
+			var r = Rect2(Vector2((i % cols) * cw, floor(i / float(cols)) * ch), Vector2(cw - 4, ch - 4))
+			draw_rect(r, Color("#6a5040"), false, 1.0)
+			var box = Rect2(r.position + Vector2(2, 2), r.size - Vector2(4, 16))
+			var ctx = Ctx.new(self)
+			EVv.preview(ctx, ks[i], w, box)
+			bounds[ks[i]] = EVv.LAST.get(ks[i])
+			draw_string(f, Vector2(r.position.x + 2, r.end.y - 3), str(ks[i]).replace("n30_", "").replace("nw_", ""), HORIZONTAL_ALIGNMENT_LEFT, cw - 6, 11, Color("#e8d8b0"))
+func check20(t) -> void:
+	var m = await _boot(t)
+	var ks = _all_keys()
+	var picks = []
+	var step = maxf(1.0, ks.size() / 20.0)
+	for i in 20: if int(i * step) < ks.size(): picks.append(ks[int(i * step)])
+	await _grid_shot(t, picks, {"wea": "eq_liangcha", "arm": "eq_anquan", "acc": "eq_staffcard"}, "20_anchor_check_a", 5)
+	await _grid_shot(t, picks, {"wea": "eq_wokchan", "arm": "eq_laogong"}, "21_anchor_check_b", 5)
+	var picks2 = []
+	for i in 20: if int(i * step + step * 0.5) < ks.size(): picks2.append(ks[int(i * step + step * 0.5)])
+	await _grid_shot(t, picks2, {"wea": "eq_huanshou", "arm": "eq_anquan"}, "22_anchor_check_c", 5)
+	# 五種體型（人形、獸形、紙紮物件、飄浮無腳、大魔王）大圖
+	var five = []
+	for k in ["afu", "n30_kappa", "nw_zzhouse", "nw_guihuo", "eguiking"]:
+		if ks.has(k): five.append(k)
+	await _grid_shot(t, five, {"wea": "eq_huoqi", "arm": "eq_anquan", "acc": "eq_dianzhan"}, "23_five_types_a", 2)
+	await _grid_shot(t, five, {"wea": "eq_liangcha", "arm": "eq_baoan"}, "24_five_types_b", 2)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+func _grid_shot(t, ks: Array, w: Dictionary, name: String, cols: int) -> void:
+	var cl = CanvasLayer.new(); cl.layer = 80; t.get_tree().root.add_child(cl)
+	var g = Check.new(); g.ks = ks; g.w = w; g.cols = cols; g.size = t.get_viewport().get_visible_rect().size; cl.add_child(g)
+	await _w(t, 0.5); await _shot(t, name)
+	var oob = []
+	for k in g.bounds:
+		if g.bounds[k] is Rect2 and not EV.in_box(g.bounds[k]): oob.append(k)
+	_chk("%s：%d 隻全部喺框內" % [name, ks.size()], oob.is_empty(), oob)
+	cl.queue_free(); await _w(t, 0.2)
