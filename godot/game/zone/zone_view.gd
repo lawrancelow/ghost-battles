@@ -807,6 +807,7 @@ static func _wild_over(ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float) -> void:
 static func tap(main, p: Vector2) -> bool:
 	if not ZD.on(): return false
 	if _mb().fighting(): return false   # [mapbattle] 打緊：唔開攻佔／挑戰卡（撳大排檔照得）
+	if load("res://game/sortie/so_view.gd").tap(main, p): return true   # [sortie] 撳據點 → 出擊小卡
 	if load("res://game/outpost/ctl_ui.gd").tap(main, p): return true   # [ctl] 目標點擊範圍最少手指大小、重疊時敵人優先
 	var th = TA.hit(p)   # [mapbattle] 撳門外叫囂緊嘅王 → 再挑戰
 	if th.size():
