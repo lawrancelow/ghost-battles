@@ -958,5 +958,165 @@ for _c, _m in D["maps"].items():
             if _st: assert not (set(_st["en"]) | {_st.get("boss")}) & CHILD_ART, ("兒童形象做咗雜兵／守區怪", _c, _z["id"], _st)
         for _b in _z.get("bosses", []):
             assert _b.get("art") not in CHILD_ART or _b.get("chapter"), ("兒童形象做咗王", _c, _b["id"])
+# ================= [mapx] 野外分圈擴展（老闆 2026-11-23 09:30） =================
+#   每關以村為中心，原有地圖（w×h，村／大排檔／野外區／資源區／地標全部唔郁）外面加 4 圈：
+#     1 近郊（低級）→ 2 荒野（中級，枯林／墳地）→ 3 深處（高級＋野外王，破廟遺址／沼澤）→ 4 最外圈（最難，深山）
+#   ext：擴大後嘅世界範圍 [x0,y0,x1,y1]（x0／y0 係負數；w／h 照舊＝原有核心地圖，舊程式唔受影響）
+#   rings：[{ring,key,n,lv,inner,outer,rects,ground,kit,art}]（rects＝圈帶拆成四塊矩形；art＝換圖接口：docs/art/terrain/<key>_*.webp）
+#   ring_props：[[圖鍵或 proc:種類, x, y, 闊, 左右翻, ring]]（唔可撳、唔擋路；zone_view 淨係畫鏡頭入面）
+#   sorties：[{id, ring, lv, pos:[x,y], ring_key:bool, king:bool, route:[[x,y]…], march_s}]（只出座標同等級，戰鬥由 sortie 線寫）
+#     route：由村門沿可走路（挑夫路→大排檔→野外門→野外區→出口）行到據點；march_s＝以 rts 行軍速度 72px/s 計嘅秒數（≤ 40）
+#   ring_key：打低呢個據點 → 下一圈散霧（zone_data.open_ring）；king：野外王據點（深處圈）
+MARCH_SPD = 72.0; MARCH_MAX = 40.0
+RING_W = [400, 360, 360, 320]
+# [mapx] 老闆 09:39：地面改瓦片烘圖（tools/mapx_ground.py → assets/img/mapx_ground_<ci>.webp）；道具只做點綴（少量）
+#   tr_*（總指揮地貌圖，約 300×250）畫闊 96–140；每關每款最多 RING_TR_CAP 件；吊橋（tr_mt_bridge）冇深溝暫唔擺
+RING_DEF = [
+  {"key": "outskirt", "n": ["近郊", "近郊"], "ground": "#2e3824", "kit": [("zb_bush", 54, 72, 3), ("zb_rock2", 38, 52, 2), ("proc:grass", 0, 0, 5), ("proc:flowers", 0, 0, 2), ("zp_deadtree", 56, 70, 1)]},
+  {"key": "wilds", "n": ["荒野", "荒野"], "ground": "#36302a", "kit": [("tr_wood_deadtrees", 120, 140, 3), ("tr_wood_log", 96, 116, 2), ("tr_wood_thorn", 90, 110, 2), ("tr_wood_fence", 100, 120, 1), ("grave", 28, 36, 4), ("proc:bones", 0, 0, 2), ("zp_deadtree", 56, 72, 2)]},
+  {"key": "depths", "n": ["深處", "深處"], "ground": "#232e2c", "kit": [("tr_ruin_arch", 110, 130, 2), ("tr_ruin_wall", 110, 130, 2), ("tr_swamp_roots", 104, 124, 2), ("zt_reeds", 50, 64, 4), ("grave", 28, 36, 2), ("zq_candles", 32, 40, 1)]},
+  {"key": "peaks", "n": ["最外圈　深山", "最外圈　深山"], "ground": "#292a33", "kit": [("tr_mt_rocks", 110, 136, 3), ("tr_mt_pine_cliff", 114, 136, 3), ("tr_mt_watchpost", 108, 124, 1), ("zb_rock2", 40, 56, 4), ("zb_rock1", 40, 56, 3)]},
+]
+RING_TR_CAP = 6
+LV_BASE = [1, 11, 21, 31, 41, 51]       # 第 1 關 Lv1～12，往後每關 +10
+RING_LV = [(0, 2), (3, 5), (6, 8), (9, 11)]   # 每圈喺該關嘅等級段（加 LV_BASE）
+RING_N = [4, 4, 4, 3]
+def _grow(r, d): return [r[0] - d, r[1] - d, r[2] + d, r[3] + d]
+def _band_rects(inner, outer):
+    return [[outer[0], outer[1], outer[2], inner[1]], [outer[0], inner[3], outer[2], outer[3]],
+            [outer[0], inner[1], inner[0], inner[3]], [inner[2], inner[1], outer[2], inner[3]]]
+def _in_r(p, r, pad=0): return r[0] + pad <= p[0] <= r[2] - pad and r[1] + pad <= p[1] <= r[3] - pad
+def _plen(pts): return sum(math.dist(pts[i], pts[i + 1]) for i in range(len(pts) - 1))
+def _wild_gate(z):
+    r = z["rect"]; g = z.get("gate", {}); d = float(g.get("dir", 1))
+    gy = float(g.get("y", r[3] + 10 if d > 0 else r[1] - 10))
+    return [float(g.get("x", (r[0] + r[2]) / 2)), gy], d
+def _base_route(M, wz):
+    """村門 → 挑夫路 → 大排檔 → 野外門 → 野外區（同 ctl_walk._hop／rts.stage_path 一樣嘅路點）"""
+    mk = M["market"]; por = [list(map(float, q)) for q in mk["porter"]]
+    vr = next(z["rect"] for z in M["zones"] if z["type"] == "village"); mr = next(z["rect"] for z in M["zones"] if z["type"] == "market")
+    iv = max(i for i, q in enumerate(por) if _in_r(q, vr)) if any(_in_r(q, vr) for q in por) else 0
+    im = min(i for i, q in enumerate(por) if _in_r(q, mr)) if any(_in_r(q, mr) for q in por) else len(por) - 1
+    gate = list(map(float, M["village"]["POS"]["gate"]))
+    o = [gate] + (por[iv:im + 1] if iv < im else por[:3])
+    c, d = _wild_gate(wz)
+    def cl(r, p, ins=22): return [min(max(p[0], r[0] + ins), r[2] - ins), min(max(p[1], r[1] + ins + 10), r[3] - ins)]
+    o.append(cl(mr, [c[0], c[1] + d * 70])); o.append(cl(wz["rect"], [c[0], c[1] - d * 70]))
+    return o
+def _exits(M, wz):
+    """野外區貼住地圖邊嗰幾條邊 → 出口（邊中點，再推出去 30）"""
+    r = wz["rect"]; W, H = M["w"], M["h"]; o = []
+    if r[1] <= 0: o.append(([(r[0] + r[2]) / 2, 0.0], (0, -1)))
+    if r[3] >= H: o.append(([(r[0] + r[2]) / 2, float(H)], (0, 1)))
+    if r[0] <= 0: o.append(([0.0, (r[1] + r[3]) / 2], (-1, 0)))
+    if r[2] >= W: o.append(([float(W), (r[1] + r[3]) / 2], (1, 0)))
+    return o
+def _rings(M, ci):
+    core = [0, 0, M["w"], M["h"]]
+    acc = 0; rings = []; prev = core
+    for k, wd in enumerate(RING_W):
+        acc += wd; outer = _grow(core, acc)
+        lo, hi = RING_LV[k]
+        rings.append({"ring": k + 1, "key": RING_DEF[k]["key"], "n": RING_DEF[k]["n"], "lv": [LV_BASE[ci] + lo, LV_BASE[ci] + hi],
+                      "inner": prev, "outer": outer, "rects": _band_rects(prev, outer), "ground": RING_DEF[k]["ground"],
+                      "art": "terrain/%s" % RING_DEF[k]["key"]})
+        prev = outer
+    M["ext"] = prev; M["rings"] = rings
+    # 據點：每個野外區出口向外，喺每圈圈帶中段揀候選點；條路長 ≤ 40 秒；互相隔 ≥ 200；揀散啲（最遠點取樣）
+    cands = {k: [] for k in range(1, 5)}
+    for wz in [z for z in M["zones"] if z["type"] == "wild"]:
+        base = _base_route(M, wz); ba = list(map(float, wz["boss_at"]))
+        for ex, nv in _exits(M, wz):
+            tv = (-nv[1], nv[0])
+            for k, rg in enumerate(rings):
+                d0 = rg["inner"]; din = (ex[0] - d0[0]) if nv[0] < 0 else (d0[2] - ex[0]) if nv[0] > 0 else (ex[1] - d0[1]) if nv[1] < 0 else (d0[3] - ex[1])
+                for f in (0.35, 0.5, 0.65):
+                    dep = din + RING_W[k] * f
+                    for lat in range(-900, 901, 90):
+                        p = [ex[0] + nv[0] * dep + tv[0] * lat, ex[1] + nv[1] * dep + tv[1] * lat]
+                        band = rg["outer"]; inner = rg["inner"]
+                        if not _in_r(p, band, 70) or _in_r(p, _grow(inner, 70)): continue
+                        mid = [ex[0] + nv[0] * min(dep, 60), ex[1] + nv[1] * min(dep, 60)]   # 出口外 60：出咗核心地圖先轉彎
+                        route = base + [ba, [ex[0] - nv[0] * 30, ex[1] - nv[1] * 30], mid, p]
+                        L = _plen(route)
+                        if L / MARCH_SPD > MARCH_MAX - 1.0: continue
+                        cands[k + 1].append((L, [round(p[0]), round(p[1])], [[round(q[0]), round(q[1])] for q in route]))
+    so = []
+    for k in range(1, 5):
+        cs = sorted(cands[k], key=lambda c: c[0]); pick = []
+        assert len(cs) >= RING_N[k - 1], ("據點候選唔夠", ci, k, len(cs))
+        for c0 in cs:
+            if all(math.dist(c0[1], s["pos"]) >= 200 for s in so): pick.append(c0); break
+        while len(pick) < RING_N[k - 1]:
+            best = None; bd = -1
+            for c in cs:
+                dmin = min([math.dist(c[1], q[1]) for q in pick] + [math.dist(c[1], s["pos"]) for s in so])
+                if dmin > bd: bd = dmin; best = c
+            assert bd >= 200, ("據點太密", ci, k)
+            pick.append(best)
+        pick.sort(key=lambda c: c[0])
+        lo, hi = rings[k - 1]["lv"]; n = len(pick)
+        for j, c in enumerate(pick):
+            lv = lo + round((hi - lo) * j / max(1, n - 1))
+            so.append({"id": "so%d_r%d_%d" % (ci + 1, k, j + 1), "ring": k, "lv": lv, "pos": c[1], "ring_key": k < 4 and j == n - 1,
+                       "king": k == 3 and j == n - 1, "route": c[2], "march_s": round(c[0] / MARCH_SPD, 1)})
+    M["sorties"] = so
+    # 地貌散件：每圈按 kit 散佈（避開據點 110、路線 50）；圈帶每塊矩形按面積分配數量
+    avoid_pts = [s["pos"] for s in so]
+    segs = []
+    for s in so:
+        rt = s["route"]
+        for i in range(len(rt) - 1): segs.append((rt[i], rt[i + 1]))
+    def segd(p, a, b):
+        ax, ay = a; bx, by = b; dx, dy = bx - ax, by - ay; L2 = dx * dx + dy * dy
+        t = 0 if L2 == 0 else max(0, min(1, ((p[0] - ax) * dx + (p[1] - ay) * dy) / L2))
+        return math.dist(p, (ax + dx * t, ay + dy * t))
+    props = []
+    rnd = random.Random(9100 + ci)
+    for k, rg in enumerate(rings):
+        kit = RING_DEF[k]["kit"]; bag = [e for e in kit for _ in range(e[3])]
+        for rr in rg["rects"]:
+            area = (rr[2] - rr[0]) * (rr[3] - rr[1]); n = int(area / 70000)
+            got = 0
+            for _ in range(n * 6):
+                if got >= n: break
+                x = rnd.uniform(rr[0] + 30, rr[2] - 30); y = rnd.uniform(rr[1] + 50, rr[3] - 10)
+                e = rnd.choice(bag); w = round(rnd.uniform(e[1], e[2])) if e[2] else 0
+                if e[0].startswith("tr_") and sum(1 for o in props if o[0] == e[0]) >= (2 if e[0] == "tr_mt_watchpost" else RING_TR_CAP): continue
+                if any(math.dist((x, y), q) < 110 + w * 0.5 for q in avoid_pts): continue
+                if any(segd((x, y), a, b) < 44 + w * 0.4 for a, b in segs): continue
+                if any(abs(x - o[1]) < (w + o[3]) * 0.5 + 10 and abs(y - o[2]) < max(26, (w + o[3]) * 0.3) for o in props): continue
+                props.append([e[0], round(x), round(y), w, rnd.random() < 0.5, k + 1]); got += 1
+    props.sort(key=lambda e: e[2])
+    M["ring_props"] = props
+for _ci, _M in enumerate((M0, M1, M2, M3, M4, M5)): _rings(_M, _ci)
+# [mapx] 合規檢查：每圈 3～5 個據點、等級隨圈遞增、行軍 ≤ 40 秒、唔重疊、喺自己嗰圈圈帶入面（核心地圖外）、每圈（除最外圈）得一個 ring_key
+for _c, _m in D["maps"].items():
+    _so = _m["sorties"]
+    for _k in range(1, 5):
+        _r = [s for s in _so if s["ring"] == _k]
+        assert 3 <= len(_r) <= 5, ("每圈據點數", _c, _k)
+        assert sum(1 for s in _r if s["ring_key"]) == (1 if _k < 4 else 0), ("ring_key", _c, _k)
+        if _k > 1: assert min(s["lv"] for s in _r) > max(s["lv"] for s in _so if s["ring"] == _k - 1), ("等級要隨圈遞增", _c, _k)
+        _rg = _m["rings"][_k - 1]
+        for s in _r: assert _in_r(s["pos"], _rg["outer"]) and not _in_r(s["pos"], _rg["inner"]), ("據點唔喺自己嗰圈", _c, s["id"])
+    for s in _so:
+        assert _plen(s["route"]) / MARCH_SPD <= MARCH_MAX, ("行軍超過 40 秒", _c, s["id"])
+        _a, _b = s["route"][-2], s["route"][-1]   # 出咗核心地圖之後嗰段唔可以再穿返入核心（山岩／虛空）
+        for _i in range(41):
+            _q = (_a[0] + (_b[0] - _a[0]) * _i / 40, _a[1] + (_b[1] - _a[1]) * _i / 40)
+            assert not _in_r(_q, [1, 1, _m["w"] - 1, _m["h"] - 1]), ("圈外路線穿入核心", _c, s["id"])
+        for t in _so:
+            if t is not s: assert math.dist(s["pos"], t["pos"]) >= 200, ("據點重疊", _c, s["id"], t["id"])
+    assert len({s["id"] for s in _so}) == len(_so)
+# [mapx] 其他線直接改 zones.json 嘅大排檔檔位（militia 線 st_bingqi 兵器檔、第 4／6 關檔位微調，唔喺本檔定義）：重新產生時保留舊檔值，唔好洗走
+if os.path.exists(OUT):
+    try: _old = json.load(open(OUT, encoding="utf-8"))
+    except Exception: _old = {}
+    for _c, _m in D["maps"].items():
+        _om = _old.get("maps", {}).get(_c, {}).get("market", {})
+        for _k in ("st", "paths"):
+            for _sid, _v in (_om.get(_k) or {}).items():
+                _m["market"].setdefault(_k, {})[_sid] = _v   # 舊檔有嘅檔位（含其他線手動改過嘅座標）以舊檔為準
 json.dump(D, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("wrote", OUT)

@@ -97,6 +97,7 @@ static func st():
 	if int(J.num(z.get("mig", 0))) < 1: _migrate(s, z)
 	if int(J.num(z.get("mig", 0))) < 2: _migrate2(s, z)
 	if int(J.num(z.get("mig", 0))) < 3: _migrate3(s, z)
+	if int(J.num(z.get("mig", 0))) < 4: _migrate4(s, z)   # [mapx]
 	return z
 static func _k(id: String, c := -1) -> String: return "%d:%s" % [ci() if c < 0 else c, id]
 static func owned(zid: String, c := -1) -> bool:
@@ -712,3 +713,71 @@ static func _migrate3(s: Dictionary, z: Dictionary) -> void:
 			for zz in zones(cur):
 				var zid = str(zz.id)
 				if zz.get("reveal") is Dictionary and not J.t(z.rev.get(_k(zid, cur))) and cond_ok(zid, cur): z.rev[_k(zid, cur)] = 1.0
+
+# ================= [mapx] 野外分圈擴展（zones.json：ext／rings／ring_props／sorties，tools/zone_build.py 產生） =================
+#   圈：1 近郊 → 2 荒野 → 3 深處（野外王）→ 4 最外圈；0＝原有核心地圖（村、大排檔、野外區、資源區、地標）
+#   黑霧：起始只開第 1 圈；打低某圈 ring_key 據點（sortie 線叫 sortie_won／open_ring）→ 下一圈散霧
+#   狀態：S.zone.rings = {"<ci>": 已開到第幾圈}；舊存檔（已有進度）近郊＋荒野直接開（_migrate4）
+static func rings(c := -1) -> Array:
+	var r = mdef(ci() if c < 0 else c).get("rings", [])
+	return r if r is Array else []
+static func sorties(c := -1) -> Array:
+	var r = mdef(ci() if c < 0 else c).get("sorties", [])
+	return r if r is Array else []
+static func sortie(id: String, c := -1) -> Dictionary:
+	for s in sorties(c): if str(s.id) == id: return s
+	return {}
+static func ring_props(c := -1) -> Array:
+	var r = mdef(ci() if c < 0 else c).get("ring_props", [])
+	return r if r is Array else []
+static func bounds(c := -1) -> Rect2:   # 擴大後嘅世界範圍（鏡頭用）；冇 ext 就＝核心地圖
+	var m = mdef(ci() if c < 0 else c)
+	if m.get("ext") is Array: return rect(m.ext)
+	return Rect2(Vector2.ZERO, world_size(c))
+static func ring_at(p: Vector2, c := -1) -> int:   # 0＝核心地圖；1–4＝第幾圈；-1＝出晒界
+	if Rect2(Vector2.ZERO, world_size(c)).has_point(p): return 0
+	for rg in rings(c):
+		if rect(rg.outer).has_point(p): return int(rg.ring)
+	return -1
+static func ring_count(c := -1) -> int: return rings(c).size()
+static func ring_level(c := -1) -> int:   # 已開到第幾圈（最少 1）
+	var cc = ci() if c < 0 else c
+	var z = st()
+	if z == null or not (z.get("rings") is Dictionary): return 1
+	return maxi(1, int(J.num(z.rings.get(str(cc), 1))))
+static func ring_open(r: int, c := -1) -> bool:
+	var cc = ci() if c < 0 else c
+	if r <= 1: return true
+	if not gate_on or not on_for(cc): return true
+	return ring_level(cc) >= r
+static func open_ring(r: int, c := -1) -> void:
+	var cc = ci() if c < 0 else c
+	var z = st()
+	if z == null: return
+	if not (z.get("rings") is Dictionary): z["rings"] = {}
+	r = clampi(r, 1, maxi(1, ring_count(cc)))
+	if r > ring_level(cc):
+		z.rings[str(cc)] = float(r)
+		REVEALED["%d:ring%d" % [cc, r]] = Time.get_ticks_msec()   # 霧散動畫（zone_view 用 reveal_k）
+static func ring_key(r: int, c := -1) -> String:   # 呢圈嘅關鍵據點 id（最外圈冇）
+	for s in sorties(c): if int(s.ring) == r and J.t(s.get("ring_key")): return str(s.id)
+	return ""
+static func sortie_won(id: String, c := -1) -> bool:   # sortie 線：打贏據點後叫；係關鍵據點就開下一圈（回 true）
+	var s = sortie(id, c)
+	if s.is_empty() or not J.t(s.get("ring_key")): return false
+	var r = int(s.ring) + 1
+	if r > ring_count(c) or ring_open(r, c): return false
+	open_ring(r, c); return true
+static func sortie_open(id: String, c := -1) -> bool:   # 據點所在嗰圈已散霧
+	var s = sortie(id, c)
+	return not s.is_empty() and ring_open(int(s.ring), c)
+static func _migrate4(s: Dictionary, z: Dictionary) -> void:   # 舊存檔：已有進度 → 近郊＋荒野直接開（只送到而家所在嘅圖同之前嘅圖）
+	z["mig"] = 4.0
+	if not (z.get("rings") is Dictionary): z["rings"] = {}
+	var cur = int(J.num(s.mv.get("ci", 0))) if s.get("mv") is Dictionary else 0
+	var old = int(J.num(s.get("qi", 0))) > 0 or J.num(s.get("lv", 1)) > 1 or (s.get("cleared") is Dictionary and (s.cleared as Dictionary).size() > 0) \
+		or (z.get("own") is Dictionary and (z.own as Dictionary).size() > 0) or (z.get("boss") is Dictionary and (z.boss as Dictionary).size() > 0)
+	if not old: return
+	for ck in D().maps:
+		var c = int(ck)
+		if c <= cur and rings(c).size() >= 2: z.rings[str(c)] = maxf(2.0, J.num(z.rings.get(str(c), 1)))

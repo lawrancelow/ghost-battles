@@ -153,14 +153,15 @@ func _zone_top_px() -> float:   # 大排檔 HUD 蓋住嘅畫面高度（鏡頭�
 func zone_cam():
 	if zc == null:
 		zc = ZCAM.new()
-		zc.view = size; zc.world = ZD.world_size()
+		zc.view = size; var bb = ZD.bounds(); zc.world = bb.size; zc.org = bb.position   # [mapx] 鏡頭範圍＝分圈擴展後成個世界
 		var home = ZD.v2(ZD.cur().get("cam", {}).get("home", [zc.world.x / 2, zc.world.y / 2]))
 		zc.z = size.x / 390.0; zc.clamp_all(); zc.center_on(home)
 	return zc
 func _zone_cam_frame(dt: float) -> void:
 	var c = zone_cam()
 	var ws = ZD.world_size()
-	if c.world != ws: c.world = ws; c.clamp_all()
+	var bb = ZD.bounds()   # [mapx]
+	if c.world != bb.size or c.org != bb.position: c.world = bb.size; c.org = bb.position; c.clamp_all()
 	if _zc_map != ZD.applied():   # [zone2] 換咗圖（拔營）：鏡頭返新圖嘅村子
 		_zc_map = ZD.applied(); c.tgt = null; c.vel = Vector2.ZERO
 		c.center_on(ZD.v2(ZD.cur().get("cam", {}).get("home", [ws.x / 2, ws.y / 2])))

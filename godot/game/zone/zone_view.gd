@@ -6,6 +6,7 @@ extends RefCounted
 
 const ZD = preload("res://game/zone/zone_data.gd")
 const TA = preload("res://game/zone/zone_taunt.gd")   # [mapbattle] 王喺門外叫囂
+const ZR = preload("res://game/zone/zone_rings.gd")   # [mapx] 野外分圈擴展
 const LM = preload("res://game/zone/landmark.gd")   # [landmark] 地標（無名義山、破塔樓）
 static func _mb(): return load("res://game/zone/zone_battle.gd")   # [mapbattle] 大地圖即時戰鬥
 const WALL_W := 10.0
@@ -70,6 +71,7 @@ static func draw_under(c: CanvasItem, nv) -> void:
 	var t: float = nv.t
 	var vr: Rect2 = nv.view_rect().grow(120)
 	if _geo_ci != ZD.ci(): _geo.clear(); _geo_ci = ZD.ci()   # [zone2] 換圖：程序地形快取重做
+	ZR.draw_under(c, ctx, vr, t)   # [mapx] 分圈擴展：圈帶地面、地貌散件、據點空地（喺核心地圖外面）
 	var bs = ZD.cur().get("barriers", [])
 	for kind in ["void", "river", "vriver", "cliff", "ridge", "ditch", "jetties", "steps", "belt", "fence", "vfence", "rail", "stakes", "forest", "stonewall"]:
 		for b in bs:
@@ -512,6 +514,7 @@ static func draw_over(c: CanvasItem, nv) -> void:
 	ZD.watch(nv.view_rect())   # [zone2] 劇情事件：第一次見到某區、二級廠解鎖、解放
 	var mbf = _mb().fighting()   # [mapbattle] 打緊仗：收埋區名牌、王進度、戰力字（黑霧照畫）
 	fog_log.clear()
+	ZR.draw_over(c, ctx, nv, vr, t)   # [mapx] 未開嘅圈：黑霧＋圈名牌
 	_gap_fog(c, vr)   # [hotfix12] 區與區之間（山、樹林、河、邊界）未開放都蓋黑霧：開局淨係見中央村
 	for z in ZD.zones():
 		var r = ZD.rect(z.rect)
@@ -603,6 +606,7 @@ static func _gap_fog(c: CanvasItem, vr: Rect2) -> void:
 		_gap_key = key; _gap_runs.clear()
 		if not key.substr(str(ZD.ci()).length()).contains("0"): return   # 全部開晒：唔再蓋
 		var ws = ZD.world_size()
+		var has_rings = not ZD.rings().is_empty(); var core = Rect2(Vector2.ZERO, ws)
 		var nx = int(ceil(ws.x / GAP_CELL)); var ny = int(ceil(ws.y / GAP_CELL))
 		for j in range(-GAP_PAD, ny + GAP_PAD):
 			var x0 = -GAP_PAD - 1
@@ -611,6 +615,7 @@ static func _gap_fog(c: CanvasItem, vr: Rect2) -> void:
 				if i < nx + GAP_PAD:
 					var p = Vector2((i + 0.5) * GAP_CELL, (j + 0.5) * GAP_CELL)
 					dark = true
+					if has_rings and not core.has_point(p): dark = false   # [mapx] 核心地圖外面＝圈帶（由 zone_rings 分圈蓋霧）
 					for r in open: if r.has_point(p): dark = false; break
 					if dark: for r in zr: if r.has_point(p): dark = false; break   # 區入面：由該區自己嘅霧處理
 				if dark and x0 < -GAP_PAD: x0 = i
