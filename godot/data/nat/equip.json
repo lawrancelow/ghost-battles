@@ -1187,1356 +1187,1936 @@
  "ANCHOR": {
   "afu": {
    "hand": [
-    0.22,
-    -0.42
+    0.18,
+    -0.6
    ],
    "head": [
-    0.0,
-    -0.95
+    -0.03,
+    -0.959
    ],
+   "hw": 0.4,
+   "nh": "back",
    "src": "manual"
   },
   "baiwu": {
    "hand": [
-    0.29,
-    -0.56
+    0.19,
+    -0.33
    ],
    "head": [
-    0.09,
-    -1
+    0.0,
+    -1.038
    ],
-   "src": "auto"
+   "hw": 0.3,
+   "src": "manual"
   },
   "bm_hou": {
    "hand": [
-    0.3,
-    -0.5
+    0.51,
+    -0.04
    ],
    "head": [
-    -0.11,
-    -0.97
+    0.0,
+    -0.939
    ],
-   "src": "auto"
+   "hw": 0.4,
+   "nh": "side",
+   "src": "manual"
   },
   "bm_jembalang": {
    "hand": [
-    0.3,
-    -0.45
+    0.4,
+    -0.4
    ],
    "head": [
-    -0.09,
-    -0.97
+    0.0,
+    -0.892
    ],
-   "src": "auto"
+   "hw": 0.38,
+   "src": "manual"
   },
   "bm_krasue": {
    "hand": [
-    0.3,
-    -0.61
+    0.4,
+    -0.04
    ],
    "head": [
-    0.02,
-    -0.98
+    0.0,
+    -0.817
    ],
-   "src": "auto"
+   "hw": 0.34,
+   "nh": "side",
+   "src": "manual"
   },
   "bm_langsuir": {
    "hand": [
-    0.3,
+    -0.26,
     -0.62
    ],
    "head": [
-    -0.08,
-    -0.98
+    -0.02,
+    -0.923
    ],
-   "src": "auto"
+   "hw": 0.3,
+   "fr": 1,
+   "src": "manual"
   },
   "bm_pang": {
    "hand": [
     0.3,
-    -0.48
+    -0.36
    ],
    "head": [
-    -0.01,
-    -1
+    0.0,
+    -0.935
    ],
-   "src": "auto"
+   "hw": 0.36,
+   "src": "manual"
   },
   "bm_shuten": {
    "hand": [
-    0.3,
-    -0.47
+    0.51,
+    -0.04
    ],
    "head": [
-    0,
-    -0.95
+    0.0,
+    -0.899
    ],
-   "src": "auto"
+   "hw": 0.4,
+   "nh": "side",
+   "src": "manual"
   },
   "bm_taotie": {
    "hand": [
-    0.3,
-    -0.45
+    0.46,
+    -0.04
    ],
    "head": [
-    0.08,
-    -0.98
+    0.0,
+    -1.041
    ],
-   "src": "auto"
+   "hw": 0.46,
+   "nh": "side",
+   "src": "manual"
   },
   "egui": {
    "hand": [
-    0.21,
-    -0.41
+    0.15,
+    -0.33
    ],
    "head": [
-    -0.02,
-    -1
+    -0.05,
+    -1.022
    ],
-   "src": "auto"
+   "hw": 0.38,
+   "src": "manual"
   },
   "eguiking": {
    "hand": [
-    0.3,
-    -0.45
+    0.1,
+    -0.58
    ],
    "head": [
-    0.02,
-    -0.97
+    0.0,
+    -0.939
    ],
+   "hw": 0.4,
+   "fr": 1,
    "src": "manual"
   },
   "heiwu": {
    "hand": [
-    0.24,
-    -0.56
-   ],
-   "head": [
-    0.02,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "huang": {
-   "hand": [
-    0.3,
-    -0.5
-   ],
-   "head": [
-    -0.01,
-    -1
-   ],
-   "src": "auto"
-  },
-  "laojiang": {
-   "hand": [
-    0.34,
-    -0.62
+    0.25,
+    -0.27
    ],
    "head": [
     0.0,
-    -0.97
+    -1.028
    ],
+   "hw": 0.3,
+   "src": "manual"
+  },
+  "huang": {
+   "hand": [
+    -0.25,
+    -0.62
+   ],
+   "head": [
+    -0.05,
+    -0.922
+   ],
+   "hw": 0.38,
+   "nh": "back",
+   "src": "manual"
+  },
+  "laojiang": {
+   "hand": [
+    -0.29,
+    -0.47
+   ],
+   "head": [
+    0.0,
+    -0.875
+   ],
+   "hw": 0.5,
    "src": "manual"
   },
   "mamian": {
    "hand": [
-    0.3,
-    -0.62
+    -0.28,
+    -0.58
    ],
    "head": [
-    -0.07,
-    -1
+    -0.05,
+    -0.921
    ],
-   "src": "auto"
+   "hw": 0.35,
+   "nh": "back",
+   "src": "manual"
   },
   "mengpo": {
    "hand": [
-    0.19,
-    -0.62
+    0.27,
+    -0.04
    ],
    "head": [
-    0.09,
-    -0.98
+    0.0,
+    -0.882
    ],
-   "src": "auto"
+   "hw": 0.38,
+   "nh": "side",
+   "src": "manual"
   },
   "n30_aswang": {
    "hand": [
-    0.3,
-    -0.44
+    -0.27,
+    -0.35
    ],
    "head": [
-    -0.13,
-    -0.98
+    -0.08,
+    -0.947
    ],
-   "src": "auto"
+   "hw": 0.34,
+   "src": "manual"
   },
   "n30_baigujing": {
    "hand": [
-    0.13,
-    -0.42
+    0.2,
+    -0.35
    ],
    "head": [
-    0.02,
-    -1
+    0.0,
+    -0.937
    ],
-   "src": "auto"
+   "hw": 0.34,
+   "src": "manual"
   },
   "n30_banshee": {
    "hand": [
-    0.3,
-    -0.61
+    0.25,
+    -0.38
    ],
    "head": [
-    -0.02,
-    -1
+    0.0,
+    -0.965
    ],
-   "src": "auto"
+   "hw": 0.36,
+   "fr": 1,
+   "src": "manual"
   },
   "n30_bunian": {
    "hand": [
-    0.27,
-    -0.48
+    0.2,
+    -0.52
    ],
    "head": [
-    -0.07,
-    -1
+    0.0,
+    -0.903
    ],
-   "src": "auto"
+   "hw": 0.3,
+   "src": "manual"
   },
   "n30_changgui": {
    "hand": [
-    0.13,
-    -0.47
+    -0.36,
+    -0.53
    ],
    "head": [
-    -0.07,
-    -1
+    -0.18,
+    -0.93
    ],
-   "src": "auto"
+   "hw": 0.32,
+   "src": "manual"
   },
   "n30_chehuo": {
    "hand": [
-    0.24,
-    -0.45
+    0.25,
+    -0.36
    ],
    "head": [
-    0.08,
-    -0.98
+    0.02,
+    -0.961
    ],
-   "src": "auto"
+   "hw": 0.46,
+   "src": "manual"
   },
   "n30_chengsi": {
    "hand": [
     0.3,
-    -0.62
+    -0.04
    ],
    "head": [
-    -0.05,
-    -0.98
+    -0.12,
+    -0.925
    ],
-   "src": "auto"
+   "hw": 0.36,
+   "nh": "side",
+   "src": "manual"
   },
   "n30_chochin": {
    "hand": [
-    0.3,
-    -0.62
-   ],
-   "head": [
-    0.01,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_churel": {
-   "hand": [
-    0.3,
-    -0.62
-   ],
-   "head": [
-    -0.09,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_daji": {
-   "hand": [
-    0.07,
-    -0.61
-   ],
-   "head": [
-    -0.17,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_danxiao": {
-   "hand": [
-    0.23,
-    -0.62
-   ],
-   "head": [
-    -0.04,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_diansi": {
-   "hand": [
-    0.3,
-    -0.61
-   ],
-   "head": [
-    -0.01,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_diaosi": {
-   "hand": [
-    0.21,
-    -0.41
-   ],
-   "head": [
-    -0.02,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_dongsi": {
-   "hand": [
-    0.3,
-    -0.48
-   ],
-   "head": [
-    0,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_dugui": {
-   "hand": [
-    0.3,
-    -0.61
-   ],
-   "head": [
-    -0.04,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_gashadokuro": {
-   "hand": [
-    0.3,
-    -0.47
-   ],
-   "head": [
-    -0.17,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_genderuwo": {
-   "hand": [
-    0.3,
-    -0.44
-   ],
-   "head": [
-    0.01,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_guhangui": {
-   "hand": [
-    0.3,
-    -0.5
-   ],
-   "head": [
-    0.03,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_guixinniang": {
-   "hand": [
-    0.3,
-    -0.53
-   ],
-   "head": [
-    0,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_hanba": {
-   "hand": [
-    0.28,
-    -0.55
-   ],
-   "head": [
-    -0.01,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_hannya": {
-   "hand": [
-    0.18,
-    -0.62
-   ],
-   "head": [
-    0.03,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_hantugalah": {
-   "hand": [
-    0.05,
-    -0.56
-   ],
-   "head": [
-    0.01,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_hanturaya": {
-   "hand": [
-    0.3,
-    -0.58
-   ],
-   "head": [
-    0.01,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_jenglot": {
-   "hand": [
-    0.29,
-    -0.5
-   ],
-   "head": [
-    -0.03,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_jerangkung": {
-   "hand": [
-    0.27,
-    -0.58
-   ],
-   "head": [
-    0.03,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_jiugui": {
-   "hand": [
-    0.3,
-    -0.56
-   ],
-   "head": [
-    -0.04,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_kappa": {
-   "hand": [
-    0.3,
-    -0.44
-   ],
-   "head": [
-    -0.01,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_kasaobake": {
-   "hand": [
-    0.3,
-    -0.55
-   ],
-   "head": [
-    -0.05,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_kuchisake": {
-   "hand": [
-    0.26,
-    -0.45
-   ],
-   "head": [
-    -0.09,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_leipi": {
-   "hand": [
-    0.3,
-    -0.55
-   ],
-   "head": [
-    -0.11,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_liulian": {
-   "hand": [
-    0.2,
-    -0.58
-   ],
-   "head": [
-    0.09,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_maenak": {
-   "hand": [
-    0.3,
-    -0.45
-   ],
-   "head": [
-    0.14,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_maoshi": {
-   "hand": [
-    0.3,
-    -0.59
-   ],
-   "head": [
-    0.03,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_nopperabo": {
-   "hand": [
-    0.18,
-    -0.41
-   ],
-   "head": [
-    0.03,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_pelesit": {
-   "hand": [
-    0.3,
-    -0.42
-   ],
-   "head": [
-    -0.12,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_phiam": {
-   "hand": [
-    0.3,
-    -0.41
-   ],
-   "head": [
-    0.1,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_polong": {
-   "hand": [
-    0.24,
-    -0.56
-   ],
-   "head": [
-    -0.04,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_qionggui": {
-   "hand": [
-    0.3,
-    -0.41
-   ],
-   "head": [
-    -0.07,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_rokurokubi": {
-   "hand": [
-    0.24,
-    -0.62
-   ],
-   "head": [
-    -0.17,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_shanxiao": {
-   "hand": [
-    0.3,
-    -0.47
-   ],
-   "head": [
-    0,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_shedu": {
-   "hand": [
-    0.3,
-    -0.5
-   ],
-   "head": [
-    -0.07,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_shidu": {
-   "hand": [
-    0.26,
-    -0.61
-   ],
-   "head": [
-    -0.01,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_taozhai": {
-   "hand": [
-    0.3,
-    -0.41
-   ],
-   "head": [
-    -0.01,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_tikbalang": {
-   "hand": [
-    0.3,
-    -0.41
-   ],
-   "head": [
-    -0.12,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_vetala": {
-   "hand": [
-    0.3,
-    -0.45
-   ],
-   "head": [
-    -0.02,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_wutou": {
-   "hand": [
-    0.3,
-    -0.56
-   ],
-   "head": [
-    0.05,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_xiangcai": {
-   "hand": [
-    0.3,
-    -0.52
-   ],
-   "head": [
-    0.2,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_xiaosi": {
-   "hand": [
-    0.3,
-    -0.62
-   ],
-   "head": [
-    -0.08,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_xiasi": {
-   "hand": [
-    0.23,
-    -0.42
-   ],
-   "head": [
-    0.05,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_yangui": {
-   "hand": [
-    0.3,
-    -0.61
-   ],
-   "head": [
-    -0.13,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_yecha": {
-   "hand": [
-    0.27,
-    -0.59
-   ],
-   "head": [
-    0.01,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_yesi": {
-   "hand": [
-    0.24,
-    -0.42
+    0.35,
+    -0.04
    ],
    "head": [
     0.08,
-    -0.98
+    -0.964
    ],
-   "src": "auto"
+   "hw": 0.4,
+   "nh": "side",
+   "src": "manual"
   },
-  "n30_yezi": {
+  "n30_churel": {
    "hand": [
-    0.13,
-    -0.41
-   ],
-   "head": [
-    0.09,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_yukionna": {
-   "hand": [
-    0.3,
-    -0.59
-   ],
-   "head": [
-    0.02,
-    -1
-   ],
-   "src": "auto"
-  },
-  "n30_zhongshu": {
-   "hand": [
-    0.3,
-    -0.53
-   ],
-   "head": [
-    0.04,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "n30_zipai": {
-   "hand": [
-    0.26,
-    -0.62
-   ],
-   "head": [
-    -0.16,
-    -1
-   ],
-   "src": "auto"
-  },
-  "niutou": {
-   "hand": [
-    0.3,
-    -0.41
-   ],
-   "head": [
-    0.07,
-    -1
-   ],
-   "src": "auto"
-  },
-  "nw_ameonna": {
-   "hand": [
-    0.22,
-    -0.56
-   ],
-   "head": [
-    0,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_baimao": {
-   "hand": [
-    0.3,
-    -0.42
-   ],
-   "head": [
-    0.05,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_bajang": {
-   "hand": [
-    0.3,
-    -0.52
-   ],
-   "head": [
-    0.2,
-    -0.95
-   ],
-   "src": "auto"
-  },
-  "nw_buhuagu": {
-   "hand": [
-    0.3,
-    -0.52
+    0.25,
+    -0.36
    ],
    "head": [
     -0.05,
-    -0.98
+    -0.93
    ],
-   "src": "auto"
-  },
-  "nw_daqiang": {
-   "hand": [
-    0.3,
-    -0.47
-   ],
-   "head": [
-    0.13,
-    -0.94
-   ],
-   "src": "auto"
-  },
-  "nw_dullahan": {
-   "hand": [
-    0.3,
-    -0.52
-   ],
-   "head": [
-    0.11,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_ganshi": {
-   "hand": [
-    0.3,
-    -0.62
-   ],
-   "head": [
-    -0.13,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_guihuo": {
-   "hand": [
-    0.27,
-    -0.56
-   ],
-   "head": [
-    0.06,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_honeonna": {
-   "hand": [
-    0.3,
-    -0.53
-   ],
-   "head": [
-    0.15,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_huapi": {
-   "hand": [
-    0.28,
-    -0.42
-   ],
-   "head": [
-    0.09,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_huli": {
-   "hand": [
-    0.3,
-    -0.42
-   ],
-   "head": [
-    -0.03,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_kapre": {
-   "hand": [
-    0.3,
-    -0.45
-   ],
-   "head": [
-    0,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_krahang": {
-   "hand": [
-    0.3,
-    -0.55
-   ],
-   "head": [
-    -0.07,
-    -0.89
-   ],
-   "src": "auto"
-  },
-  "nw_kuaidi": {
-   "hand": [
-    0.3,
-    -0.41
-   ],
-   "head": [
-    -0.12,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_mummy": {
-   "hand": [
-    0.3,
-    -0.55
-   ],
-   "head": [
-    -0.06,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_shejing": {
-   "hand": [
-    0.27,
-    -0.53
-   ],
-   "head": [
-    0.13,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_shenpi": {
-   "hand": [
-    0.3,
-    -0.61
-   ],
-   "head": [
-    0.11,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_teketeke": {
-   "hand": [
-    0.3,
-    -0.59
-   ],
-   "head": [
-    -0.01,
-    -0.77
-   ],
-   "src": "auto"
-  },
-  "nw_tiangou": {
-   "hand": [
-    0.3,
-    -0.48
-   ],
-   "head": [
-    -0.1,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_tisi": {
-   "hand": [
-    0.22,
-    -0.58
-   ],
-   "head": [
-    0.01,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_toutai": {
-   "hand": [
-    0.22,
-    -0.61
-   ],
-   "head": [
-    0.09,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_yeleng_guard": {
-   "hand": [
-    0.22,
-    -0.52
-   ],
-   "head": [
-    0.04,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_yeleng_sales": {
-   "hand": [
-    0.27,
-    -0.47
-   ],
-   "head": [
-    0.03,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_zzcar": {
-   "hand": [
-    0.3,
-    -0.59
-   ],
-   "head": [
-    0.2,
-    -0.66
-   ],
-   "src": "auto"
-  },
-  "nw_zzhouse": {
-   "hand": [
-    0.3,
-    -0.44
-   ],
-   "head": [
-    0.14,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "nw_zzphone": {
-   "hand": [
-    0.3,
-    -0.42
-   ],
-   "head": [
-    0.07,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "penanggal": {
-   "hand": [
-    0.3,
-    -0.53
-   ],
-   "head": [
-    -0.01,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "pg_ex": {
-   "hand": [
-    0.2,
-    -0.62
-   ],
-   "head": [
-    -0.06,
-    -1
-   ],
-   "src": "auto"
-  },
-  "pg_ji": {
-   "hand": [
-    0.22,
-    -0.53
-   ],
-   "head": [
-    0,
-    -1
-   ],
-   "src": "auto"
-  },
-  "pg_landlady": {
-   "hand": [
-    0.29,
-    -0.61
-   ],
-   "head": [
-    -0.03,
-    -1
-   ],
-   "src": "auto"
-  },
-  "pg_songding": {
-   "hand": [
-    0.24,
-    -0.48
-   ],
-   "head": [
-    0.01,
-    -1
-   ],
-   "src": "auto"
-  },
-  "pg_tuimo": {
-   "hand": [
-    0.22,
-    -0.41
-   ],
-   "head": [
-    -0.15,
-    -1
-   ],
-   "src": "auto"
-  },
-  "pocong": {
-   "hand": [
-    0.14,
-    -0.5
-   ],
-   "head": [
-    0.0,
-    -0.98
-   ],
+   "hw": 0.32,
    "src": "manual"
   },
-  "pontianak": {
-   "hand": [
-    0.2,
-    -0.48
-   ],
-   "head": [
-    0.0,
-    -0.97
-   ],
-   "src": "manual"
-  },
-  "shuigui": {
-   "hand": [
-    0.27,
-    -0.5
-   ],
-   "head": [
-    -0.03,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "tianhua": {
-   "hand": [
-    0.24,
-    -0.45
-   ],
-   "head": [
-    0.0,
-    -0.95
-   ],
-   "src": "manual"
-  },
-  "toyol": {
-   "hand": [
-    0.23,
-    -0.48
-   ],
-   "head": [
-    -0.01,
-    -0.98
-   ],
-   "src": "auto"
-  },
-  "xiaogui": {
+  "n30_daji": {
    "hand": [
     0.26,
-    -0.45
+    -0.04
    ],
    "head": [
     -0.02,
-    -0.98
+    -0.909
    ],
-   "src": "auto"
+   "hw": 0.4,
+   "nh": "side",
+   "src": "manual"
   },
-  "xiaozhi": {
+  "n30_danxiao": {
+   "hand": [
+    0.28,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.965
+   ],
+   "hw": 0.36,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_diansi": {
+   "hand": [
+    0.2,
+    -0.33
+   ],
+   "head": [
+    0.0,
+    -0.892
+   ],
+   "hw": 0.38,
+   "src": "manual"
+  },
+  "n30_diaosi": {
    "hand": [
     0.22,
     -0.4
    ],
    "head": [
-    0.0,
-    -0.95
+    -0.02,
+    -0.917
    ],
+   "hw": 0.34,
+   "src": "manual"
+  },
+  "n30_dongsi": {
+   "hand": [
+    0.36,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.912
+   ],
+   "hw": 0.38,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_dugui": {
+   "hand": [
+    0.35,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.899
+   ],
+   "hw": 0.4,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_gashadokuro": {
+   "hand": [
+    -0.25,
+    -0.15
+   ],
+   "head": [
+    -0.12,
+    -0.937
+   ],
+   "hw": 0.34,
+   "fr": 1,
+   "src": "manual"
+  },
+  "n30_genderuwo": {
+   "hand": [
+    0.3,
+    -0.22
+   ],
+   "head": [
+    0.03,
+    -0.949
+   ],
+   "hw": 0.4,
+   "src": "manual"
+  },
+  "n30_guhangui": {
+   "hand": [
+    0.37,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.897
+   ],
+   "hw": 0.34,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_guixinniang": {
+   "hand": [
+    0.36,
+    -0.04
+   ],
+   "head": [
+    -0.02,
+    -0.926
+   ],
+   "hw": 0.42,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_hanba": {
+   "hand": [
+    0.28,
+    -0.44
+   ],
+   "head": [
+    0.0,
+    -0.962
+   ],
+   "hw": 0.38,
+   "src": "manual"
+  },
+  "n30_hannya": {
+   "hand": [
+    0.22,
+    -0.38
+   ],
+   "head": [
+    -0.1,
+    -0.903
+   ],
+   "hw": 0.3,
+   "src": "manual"
+  },
+  "n30_hantugalah": {
+   "hand": [
+    0.17,
+    -0.73
+   ],
+   "head": [
+    -0.05,
+    -0.994
+   ],
+   "hw": 0.22,
+   "src": "manual"
+  },
+  "n30_hanturaya": {
+   "hand": [
+    0.28,
+    -0.32
+   ],
+   "head": [
+    -0.05,
+    -0.963
+   ],
+   "hw": 0.3,
+   "fr": 1,
+   "src": "manual"
+  },
+  "n30_jenglot": {
+   "hand": [
+    0.13,
+    -0.33
+   ],
+   "head": [
+    0.0,
+    -0.873
+   ],
+   "hw": 0.3,
+   "fr": 1,
+   "src": "manual"
+  },
+  "n30_jerangkung": {
+   "hand": [
+    0.25,
+    -0.58
+   ],
+   "head": [
+    0.05,
+    -0.939
+   ],
+   "hw": 0.26,
+   "src": "manual"
+  },
+  "n30_jiugui": {
+   "hand": [
+    -0.33,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.946
+   ],
+   "hw": 0.42,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_kappa": {
+   "hand": [
+    0.39,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.966
+   ],
+   "hw": 0.42,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_kasaobake": {
+   "hand": [
+    0.36,
+    -0.04
+   ],
+   "head": [
+    0.02,
+    -0.968
+   ],
+   "hw": 0.3,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_kuchisake": {
+   "hand": [
+    0.2,
+    -0.64
+   ],
+   "head": [
+    -0.02,
+    -0.91
+   ],
+   "hw": 0.32,
+   "nh": "back",
+   "src": "manual"
+  },
+  "n30_leipi": {
+   "hand": [
+    -0.27,
+    -0.38
+   ],
+   "head": [
+    -0.05,
+    -0.872
+   ],
+   "hw": 0.38,
+   "fr": 1,
+   "src": "manual"
+  },
+  "n30_liulian": {
+   "hand": [
+    0.16,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.919
+   ],
+   "hw": 0.4,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_maenak": {
+   "hand": [
+    0.22,
+    -0.32
+   ],
+   "head": [
+    0.0,
+    -0.883
+   ],
+   "hw": 0.3,
+   "fr": 1,
+   "src": "manual"
+  },
+  "n30_maoshi": {
+   "hand": [
+    -0.42,
+    -0.47
+   ],
+   "head": [
+    -0.15,
+    -0.912
+   ],
+   "hw": 0.38,
+   "src": "manual"
+  },
+  "n30_nopperabo": {
+   "hand": [
+    0.22,
+    -0.35
+   ],
+   "head": [
+    -0.02,
+    -0.91
+   ],
+   "hw": 0.32,
+   "src": "manual"
+  },
+  "n30_pelesit": {
+   "hand": [
+    0.52,
+    -0.04
+   ],
+   "head": [
+    -0.12,
+    -0.683
+   ],
+   "hw": 0.3,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_phiam": {
+   "hand": [
+    0.17,
+    -0.25
+   ],
+   "head": [
+    -0.05,
+    -0.872
+   ],
+   "hw": 0.38,
+   "fr": 1,
+   "src": "manual"
+  },
+  "n30_polong": {
+   "hand": [
+    -0.24,
+    -0.6
+   ],
+   "head": [
+    -0.08,
+    -0.916
+   ],
+   "hw": 0.28,
+   "src": "manual"
+  },
+  "n30_qionggui": {
+   "hand": [
+    0.15,
+    -0.33
+   ],
+   "head": [
+    0.0,
+    -0.952
+   ],
+   "hw": 0.38,
+   "src": "manual"
+  },
+  "n30_rokurokubi": {
+   "hand": [
+    0.13,
+    -0.32
+   ],
+   "head": [
+    -0.18,
+    -0.913
+   ],
+   "hw": 0.3,
+   "src": "manual"
+  },
+  "n30_shanxiao": {
+   "hand": [
+    0.35,
+    -0.25
+   ],
+   "head": [
+    0.0,
+    -0.925
+   ],
+   "hw": 0.36,
+   "src": "manual"
+  },
+  "n30_shedu": {
+   "hand": [
+    -0.4,
+    -0.62
+   ],
+   "head": [
+    -0.05,
+    -0.952
+   ],
+   "hw": 0.38,
+   "src": "manual"
+  },
+  "n30_shidu": {
+   "hand": [
+    0.34,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.952
+   ],
+   "hw": 0.38,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_taozhai": {
+   "hand": [
+    -0.45,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.959
+   ],
+   "hw": 0.4,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_tikbalang": {
+   "hand": [
+    0.2,
+    -0.43
+   ],
+   "head": [
+    -0.05,
+    -0.933
+   ],
+   "hw": 0.3,
+   "fr": 1,
+   "src": "manual"
+  },
+  "n30_vetala": {
+   "hand": [
+    0.18,
+    -0.66
+   ],
+   "head": [
+    -0.08,
+    -0.923
+   ],
+   "hw": 0.3,
+   "nh": "back",
+   "src": "manual"
+  },
+  "n30_wutou": {
+   "hand": [
+    -0.25,
+    -0.4
+   ],
+   "head": [
+    0.22,
+    -0.626
+   ],
+   "hw": 0.28,
+   "src": "manual"
+  },
+  "n30_xiangcai": {
+   "hand": [
+    0.38,
+    -0.55
+   ],
+   "head": [
+    -0.05,
+    -0.651
+   ],
+   "hw": 0.35,
+   "fr": 1,
+   "src": "manual"
+  },
+  "n30_xiaosi": {
+   "hand": [
+    0.35,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.962
+   ],
+   "hw": 0.38,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_xiasi": {
+   "hand": [
+    0.18,
+    -0.55
+   ],
+   "head": [
+    0.0,
+    -0.925
+   ],
+   "hw": 0.36,
+   "src": "manual"
+  },
+  "n30_yangui": {
+   "hand": [
+    0.21,
+    -0.04
+   ],
+   "head": [
+    -0.1,
+    -0.927
+   ],
+   "hw": 0.34,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_yecha": {
+   "hand": [
+    0.22,
+    -0.6
+   ],
+   "head": [
+    0.0,
+    -0.932
+   ],
+   "hw": 0.38,
+   "nh": "back",
+   "src": "manual"
+  },
+  "n30_yesi": {
+   "hand": [
+    0.3,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.985
+   ],
+   "hw": 0.36,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_yezi": {
+   "hand": [
+    0.24,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.905
+   ],
+   "hw": 0.36,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_yukionna": {
+   "hand": [
+    0.17,
+    -0.5
+   ],
+   "head": [
+    0.0,
+    -0.923
+   ],
+   "hw": 0.3,
+   "fr": 1,
+   "src": "manual"
+  },
+  "n30_zhongshu": {
+   "hand": [
+    0.39,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.932
+   ],
+   "hw": 0.38,
+   "nh": "side",
+   "src": "manual"
+  },
+  "n30_zipai": {
+   "hand": [
+    -0.3,
+    -0.47
+   ],
+   "head": [
+    -0.05,
+    -0.946
+   ],
+   "hw": 0.42,
+   "fr": 1,
+   "src": "manual"
+  },
+  "niutou": {
+   "hand": [
+    0.22,
+    -0.58
+   ],
+   "head": [
+    0.0,
+    -0.925
+   ],
+   "hw": 0.36,
+   "nh": "back",
+   "src": "manual"
+  },
+  "nw_ameonna": {
+   "hand": [
+    0.08,
+    -0.35
+   ],
+   "head": [
+    0.0,
+    -0.803
+   ],
+   "hw": 0.3,
+   "fr": 1,
+   "src": "manual"
+  },
+  "nw_baimao": {
+   "hand": [
+    -0.33,
+    -0.52
+   ],
+   "head": [
+    -0.02,
+    -0.899
+   ],
+   "hw": 0.4,
+   "src": "manual"
+  },
+  "nw_bajang": {
+   "hand": [
+    -0.22,
+    -0.4
+   ],
+   "head": [
+    -0.18,
+    -0.763
+   ],
+   "hw": 0.3,
+   "fr": 1,
+   "src": "manual"
+  },
+  "nw_buhuagu": {
+   "hand": [
+    0.12,
+    -0.35
+   ],
+   "head": [
+    -0.06,
+    -0.97
+   ],
+   "hw": 0.36,
+   "fr": 1,
+   "src": "manual"
+  },
+  "nw_daqiang": {
+   "hand": [
+    0.51,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -1.004
+   ],
+   "hw": 0.4,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_dullahan": {
+   "hand": [
+    0.49,
+    -0.04
+   ],
+   "head": [
+    0.12,
+    -0.671
+   ],
+   "hw": 0.24,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_ganshi": {
+   "hand": [
+    0.36,
+    -0.04
+   ],
+   "head": [
+    -0.1,
+    -0.925
+   ],
+   "hw": 0.36,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_guihuo": {
+   "hand": [
+    0.34,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.744
+   ],
+   "hw": 0.4,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_honeonna": {
+   "hand": [
+    0.38,
+    -0.04
+   ],
+   "head": [
+    0.05,
+    -0.923
+   ],
+   "hw": 0.3,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_huapi": {
+   "hand": [
+    0.36,
+    -0.04
+   ],
+   "head": [
+    0.05,
+    -0.848
+   ],
+   "hw": 0.3,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_huli": {
+   "hand": [
+    0.38,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.898
+   ],
+   "hw": 0.3,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_kapre": {
+   "hand": [
+    -0.12,
+    -0.5
+   ],
+   "head": [
+    0.0,
+    -0.985
+   ],
+   "hw": 0.36,
+   "fr": 1,
+   "src": "manual"
+  },
+  "nw_krahang": {
+   "hand": [
+    0.5,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.91
+   ],
+   "hw": 0.32,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_kuaidi": {
+   "hand": [
+    0.39,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.939
+   ],
+   "hw": 0.4,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_mummy": {
+   "hand": [
+    -0.33,
+    -0.5
+   ],
+   "head": [
+    0.0,
+    -0.93
+   ],
+   "hw": 0.32,
+   "src": "manual"
+  },
+  "nw_shejing": {
+   "hand": [
+    0.44,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.935
+   ],
+   "hw": 0.32,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_shenpi": {
+   "hand": [
+    -0.34,
+    -0.04
+   ],
+   "head": [
+    -0.02,
+    -1.037
+   ],
+   "hw": 0.38,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_teketeke": {
+   "hand": [
+    -0.33,
+    -0.12
+   ],
+   "head": [
+    -0.12,
+    -0.782
+   ],
+   "hw": 0.34,
+   "src": "manual"
+  },
+  "nw_tiangou": {
+   "hand": [
+    0.37,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.988
+   ],
+   "hw": 0.3,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_tisi": {
+   "hand": [
+    0.15,
+    -0.38
+   ],
+   "head": [
+    -0.05,
+    -0.964
+   ],
+   "hw": 0.4,
+   "src": "manual"
+  },
+  "nw_toutai": {
+   "hand": [
+    0.26,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.948
+   ],
+   "hw": 0.3,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_yeleng_guard": {
+   "hand": [
+    0.27,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.957
+   ],
+   "hw": 0.38,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_yeleng_sales": {
+   "hand": [
+    0.33,
+    -0.04
+   ],
+   "head": [
+    0.05,
+    -1.002
+   ],
+   "hw": 0.34,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_zzcar": {
+   "hand": [
+    0.49,
+    -0.04
+   ],
+   "head": [
+    0.05,
+    -0.69
+   ],
+   "hw": 0.36,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_zzhouse": {
+   "hand": [
+    0.48,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -1.01
+   ],
+   "hw": 0.36,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_zzphone": {
+   "hand": [
+    0.32,
+    -0.48
+   ],
+   "head": [
+    0.08,
+    -1.024
+   ],
+   "hw": 0.4,
+   "src": "manual"
+  },
+  "penanggal": {
+   "hand": [
+    0.49,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.867
+   ],
+   "hw": 0.34,
+   "nh": "side",
+   "src": "manual"
+  },
+  "pg_ex": {
+   "hand": [
+    0.27,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.89
+   ],
+   "hw": 0.32,
+   "nh": "side",
+   "src": "manual"
+  },
+  "pg_ji": {
+   "hand": [
+    0.24,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.901
+   ],
+   "hw": 0.35,
+   "nh": "side",
+   "src": "manual"
+  },
+  "pg_landlady": {
+   "hand": [
+    -0.3,
+    -0.65
+   ],
+   "head": [
+    -0.03,
+    -0.939
+   ],
+   "hw": 0.4,
+   "src": "manual"
+  },
+  "pg_songding": {
+   "hand": [
+    0.25,
+    -0.52
+   ],
+   "head": [
+    0.0,
+    -0.873
+   ],
+   "hw": 0.3,
+   "src": "manual"
+  },
+  "pg_tuimo": {
+   "hand": [
+    0.12,
+    -0.5
+   ],
+   "head": [
+    -0.05,
+    -0.905
+   ],
+   "hw": 0.36,
+   "src": "manual"
+  },
+  "pocong": {
+   "hand": [
+    0.19,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.777
+   ],
+   "hw": 0.34,
+   "nh": "side",
+   "src": "manual"
+  },
+  "pontianak": {
+   "hand": [
+    0.12,
+    -0.5
+   ],
+   "head": [
+    0.0,
+    -0.873
+   ],
+   "hw": 0.3,
+   "fr": 1,
+   "src": "manual"
+  },
+  "shuigui": {
+   "hand": [
+    0.25,
+    -0.45
+   ],
+   "head": [
+    0.0,
+    -0.903
+   ],
+   "hw": 0.3,
+   "src": "manual"
+  },
+  "tianhua": {
+   "hand": [
+    -0.15,
+    -0.4
+   ],
+   "head": [
+    -0.12,
+    -0.82
+   ],
+   "hw": 0.32,
+   "fr": 1,
+   "src": "manual"
+  },
+  "toyol": {
+   "hand": [
+    0.3,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.953
+   ],
+   "hw": 0.44,
+   "nh": "side",
+   "src": "manual"
+  },
+  "xiaogui": {
+   "hand": [
+    0.25,
+    -0.48
+   ],
+   "head": [
+    -0.05,
+    -0.875
+   ],
+   "hw": 0.36,
+   "src": "manual"
+  },
+  "xiaozhi": {
+   "hand": [
+    0.2,
+    -0.33
+   ],
+   "head": [
+    0.0,
+    -0.866
+   ],
+   "hw": 0.42,
    "src": "manual"
   },
   "youhun": {
    "hand": [
-    0.24,
-    -0.46
+    0.25,
+    -0.47
    ],
    "head": [
     0.0,
-    -0.92
+    -1.021
    ],
+   "hw": 0.46,
    "src": "manual"
   },
   "zd_bone": {
    "hand": [
-    0.3,
-    -0.41
+    0.18,
+    -0.62
    ],
    "head": [
-    0,
-    -0.98
+    -0.03,
+    -0.956
    ],
-   "src": "auto"
+   "hw": 0.42,
+   "nh": "back",
+   "src": "manual"
   },
   "zd_hengsi": {
    "hand": [
-    0.24,
-    -0.48
+    -0.2,
+    -0.6
    ],
    "head": [
-    -0.07,
-    -0.98
+    -0.05,
+    -0.89
    ],
-   "src": "auto"
+   "hw": 0.32,
+   "src": "manual"
   },
   "zd_hongyi": {
    "hand": [
-    0.2,
+    0.1,
+    -0.42
+   ],
+   "head": [
+    0.0,
+    -0.883
+   ],
+   "hw": 0.3,
+   "fr": 1,
+   "src": "manual"
+  },
+  "zd_paotui": {
+   "hand": [
+    0.18,
     -0.5
    ],
    "head": [
     -0.03,
-    -0.98
+    -0.927
    ],
-   "src": "auto"
-  },
-  "zd_paotui": {
-   "hand": [
-    0.3,
-    -0.42
-   ],
-   "head": [
-    -0.09,
-    -0.98
-   ],
-   "src": "auto"
+   "hw": 0.34,
+   "src": "manual"
   },
   "zd_shanjing": {
    "hand": [
     0.28,
-    -0.5
+    -0.42
    ],
    "head": [
-    0.06,
-    -0.98
+    0.0,
+    -0.865
    ],
-   "src": "auto"
+   "hw": 0.36,
+   "src": "manual"
   },
   "zd_shuihou": {
    "hand": [
-    0.3,
-    -0.55
+    0.25,
+    -0.22
    ],
    "head": [
-    -0.1,
-    -0.98
+    -0.05,
+    -0.887
    ],
-   "src": "auto"
+   "hw": 0.34,
+   "src": "manual"
   },
   "zd_yinchai": {
    "hand": [
-    0.27,
-    -0.41
+    0.15,
+    -0.42
    ],
    "head": [
-    0.01,
-    -0.98
+    0.0,
+    -0.932
    ],
-   "src": "auto"
+   "hw": 0.38,
+   "src": "manual"
   },
   "zd_zhima": {
    "hand": [
-    0.3,
-    -0.59
+    0.49,
+    -0.04
    ],
    "head": [
-    -0.2,
-    -0.91
+    -0.27,
+    -0.826
    ],
-   "src": "auto"
+   "hw": 0.28,
+   "nh": "side",
+   "src": "manual"
   },
   "zhiren": {
    "hand": [
     0.2,
-    -0.62
+    -0.32
    ],
    "head": [
-    0.04,
-    -1
+    0.0,
+    -0.833
    ],
-   "src": "auto"
+   "hw": 0.44,
+   "src": "manual"
   },
   "zombie": {
    "hand": [
-    0.26,
+    -0.25,
+    -0.48
+   ],
+   "head": [
+    0.0,
+    -0.885
+   ],
+   "hw": 0.5,
+   "src": "manual"
+  },
+  "nw_akaname": {
+   "hand": [
+    -0.25,
+    -0.35
+   ],
+   "head": [
+    -0.05,
+    -0.995
+   ],
+   "hw": 0.32,
+   "src": "manual"
+  },
+  "nw_banaspati": {
+   "hand": [
+    0.28,
+    -0.04
+   ],
+   "head": [
+    -0.02,
+    -0.925
+   ],
+   "hw": 0.36,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_bifang": {
+   "hand": [
+    0.32,
+    -0.04
+   ],
+   "head": [
+    -0.1,
+    -0.861
+   ],
+   "hw": 0.24,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_bonceng": {
+   "hand": [
+    -0.32,
+    -0.55
+   ],
+   "head": [
+    -0.05,
+    -0.928
+   ],
+   "hw": 0.3,
+   "src": "manual"
+  },
+  "nw_dikseigwai": {
+   "hand": [
+    -0.28,
+    -0.76
+   ],
+   "head": [
+    0.0,
+    -0.971
+   ],
+   "hw": 0.42,
+   "src": "manual"
+  },
+  "nw_dodomeki": {
+   "hand": [
+    0.39,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.968
+   ],
+   "hw": 0.3,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_dokkaebi": {
+   "hand": [
+    -0.25,
     -0.62
    ],
    "head": [
-    0.02,
+    -0.05,
+    -0.945
+   ],
+   "hw": 0.36,
+   "nh": "back",
+   "src": "manual"
+  },
+  "nw_guiamngaan": {
+   "hand": [
+    0.35,
+    -0.48
+   ],
+   "head": [
+    0.0,
+    -0.79
+   ],
+   "hw": 0.36,
+   "src": "manual"
+  },
+  "nw_guisihknai": {
+   "hand": [
+    0.32,
+    -0.04
+   ],
+   "head": [
+    -0.02,
     -0.98
    ],
-   "src": "auto"
+   "hw": 0.36,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_harimau": {
+   "hand": [
+    -0.33,
+    -0.55
+   ],
+   "head": [
+    -0.1,
+    -0.955
+   ],
+   "hw": 0.32,
+   "src": "manual"
+  },
+  "nw_jinmenken": {
+   "hand": [
+    0.47,
+    -0.04
+   ],
+   "head": [
+    -0.22,
+    -0.822
+   ],
+   "hw": 0.34,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_kamaitachi": {
+   "hand": [
+    0.51,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.686
+   ],
+   "hw": 0.24,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_luotoumin": {
+   "hand": [
+    0.38,
+    -0.04
+   ],
+   "head": [
+    -0.2,
+    -0.923
+   ],
+   "hw": 0.3,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_makuragaeshi": {
+   "hand": [
+    0.34,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -1.05
+   ],
+   "hw": 0.36,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_manananggal": {
+   "hand": [
+    0.15,
+    -0.42
+   ],
+   "head": [
+    -0.02,
+    -0.816
+   ],
+   "hw": 0.28,
+   "fr": 1,
+   "src": "manual"
+  },
+  "nw_mosinna": {
+   "hand": [
+    0.42,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.904
+   ],
+   "hw": 0.4,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_nangtani": {
+   "hand": [
+    0.42,
+    -0.04
+   ],
+   "head": [
+    0.12,
+    -0.963
+   ],
+   "hw": 0.3,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_nekomata": {
+   "hand": [
+    -0.3,
+    -0.6
+   ],
+   "head": [
+    -0.1,
+    -0.958
+   ],
+   "hw": 0.3,
+   "src": "manual"
+  },
+  "nw_nian": {
+   "hand": [
+    0.51,
+    -0.04
+   ],
+   "head": [
+    -0.08,
+    -0.886
+   ],
+   "hw": 0.42,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_niexiaoqian": {
+   "hand": [
+    0.38,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.948
+   ],
+   "hw": 0.3,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_nuno": {
+   "hand": [
+    0.43,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.902
+   ],
+   "hw": 0.38,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_nurikabe": {
+   "hand": [
+    0.42,
+    -0.4
+   ],
+   "head": [
+    -0.02,
+    -1.091
+   ],
+   "hw": 0.42,
+   "src": "manual"
+  },
+  "nw_paakbok": {
+   "hand": [
+    0.21,
+    -0.32
+   ],
+   "head": [
+    -0.02,
+    -0.888
+   ],
+   "hw": 0.3,
+   "fr": 1,
+   "src": "manual"
+  },
+  "nw_poltergeist": {
+   "hand": [
+    -0.33,
+    -0.6
+   ],
+   "head": [
+    -0.05,
+    -0.9
+   ],
+   "hw": 0.36,
+   "src": "manual"
+  },
+  "nw_qiongqi": {
+   "hand": [
+    0.51,
+    -0.04
+   ],
+   "head": [
+    -0.12,
+    -0.76
+   ],
+   "hw": 0.32,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_shen": {
+   "hand": [
+    0.5,
+    -0.04
+   ],
+   "head": [
+    0.0,
+    -0.764
+   ],
+   "hw": 0.4,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_ungaikyo": {
+   "hand": [
+    0.38,
+    -0.48
+   ],
+   "head": [
+    0.0,
+    -0.97
+   ],
+   "hw": 0.36,
+   "src": "manual"
+  },
+  "nw_ushioni": {
+   "hand": [
+    0.51,
+    -0.04
+   ],
+   "head": [
+    -0.12,
+    -0.67
+   ],
+   "hw": 0.32,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_wangliang": {
+   "hand": [
+    0.39,
+    -0.04
+   ],
+   "head": [
+    -0.05,
+    -0.89
+   ],
+   "hw": 0.32,
+   "nh": "side",
+   "src": "manual"
+  },
+  "nw_zhizhama": {
+   "hand": [
+    0.5,
+    -0.04
+   ],
+   "head": [
+    -0.3,
+    -0.889
+   ],
+   "hw": 0.26,
+   "nh": "side",
+   "src": "manual"
   }
  }
 }
