@@ -235,8 +235,8 @@ func _logic(t, m) -> void:
 	EV.village(ops2, "zzz_none", 100, 200, 60, 1.0)
 	_chk("冇裝備嘅鬼：乜都唔加", ops2.is_empty())
 	# 錨點
-	var a1 = EV.anchor("xiaozhi"); var a2 = EV.anchor("n30_jiugui")
-	_chk("錨點：數據表（小紙）＋自動估（酒鬼）", str(a1.src) == "data" and str(a2.src) in ["auto", "default"], [a1, a2])
+	var a1 = EV.anchor("xiaozhi"); var a2 = EV.anchor("n30_jiugui"); var a3 = EV.auto_anchor("n30_jiugui")
+	_chk("錨點：名鬼錨點表 ≥100 隻（人工＋輪廓生成）、表外仍可即時自動估", EQ.D().ANCHOR.size() >= 100 and str(a1.src) == "data" and str(a2.src) == "data" and str(a3.src) == "auto", [EQ.D().ANCHOR.size(), a1, a3])
 
 # ---------------- 截圖 ----------------
 class Grid extends Control:
