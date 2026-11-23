@@ -8,6 +8,16 @@ extends RefCounted
 const EQ = preload("res://game/equip/eq_data.gd")
 const EA = preload("res://game/equip/eq_art.gd")
 const BOX := 1.25
+# [eqview2] 顯示方案開關：pin＝現行（貼手／帽／色環徽章）；float＝方案 B 鬼物飄浮；strike＝方案 C 出手才現形（eq_view2.gd）
+#   讀 S.equip.view（冇就 VIEW_DEFAULT）；測試可設 view_test 蓋過
+const VIEW_DEFAULT := "pin"
+const VIEWS := ["pin", "float", "strike"]
+static var view_test := ""
+static func scheme() -> String:
+	if view_test in VIEWS: return view_test
+	var S = J.G.get("S")
+	if S is Dictionary and S.get("equip") is Dictionary and str(S.equip.get("view", "")) in VIEWS: return str(S.equip.view)
+	return VIEW_DEFAULT
 static var _anc := {}
 static var LAST := {}          # 測試：最後一次畫嘅範圍 {k: Rect2（以 H 為 1）}
 
@@ -146,11 +156,31 @@ static func in_box(rn: Rect2) -> bool:
 # ---------------- 戰鬥疊層（掛喺 BtChar 入面） ----------------
 class Over extends Node2D:
 	const EQ2 = preload("res://game/equip/eq_data.gd")
+	const EV2 = preload("res://game/equip/eq_view2.gd")   # [eqview2]
 	var bc = null
 	var u: Dictionary
 	var layer := ""
-	func _process(_dt: float) -> void:
-		if bc != null and bc.visible: queue_redraw()
+	var _cprev := false   # [eqview2] 上一幀係咪蓄力緊（蓄完 → 技能飛撲計時）
+	var _sk := -1.0
+	func _process(dt: float) -> void:
+		if bc != null and bc.visible:
+			if layer == "front":   # [eqview2]
+				var c = u.get("casting") is Dictionary
+				if _cprev and not c and J.num(u.get("hp", 0)) > 0: _sk = 0.0
+				_cprev = c
+				if _sk >= 0.0:
+					_sk += dt
+					if _sk > EV2.SK_DUR: _sk = -1.0
+			queue_redraw()
+	func _tgv(foot: Vector2):   # [eqview2] 目標身體中間（相對腳底，本節點座標）
+		var tg = u.anim.get("tg") if u.get("anim") is Dictionary else null
+		if not (tg is Dictionary) or J.num(tg.get("hp", 0)) <= 0: tg = u.get("tg")
+		if not (tg is Dictionary) or J.num(tg.get("hp", 0)) <= 0 or not (tg.get("p") is Vector2): return null
+		var hh = 40.0 if J.t(tg.get("minion")) else (78.0 if J.t(tg.get("boss")) else 56.0)
+		var wrap = bc.get_parent(); var uv = wrap.get_parent() if wrap != null else null
+		var wl = uv.get_parent() if uv != null else null
+		if not (wl is CanvasItem): return null
+		return to_local(wl.get_global_transform() * ((tg.p as Vector2) + Vector2(0, -hh * 0.5))) - foot
 	func _draw() -> void:
 		if bc == null or not (bc.st is Dictionary) or bc.st.is_empty(): return
 		if J.num(u.get("hp", 0)) <= 0: return
@@ -165,6 +195,22 @@ class Over extends Node2D:
 		var pose = str(P.get("pose", "")) if P is Dictionary else ""
 		var pt = J.num(P.get("pt", 0)) if P is Dictionary else 0.0
 		var fd = -1.0 if J.t(st.get("side1")) else 1.0
+		var EVs = load("res://game/equip/eq_view.gd")
+		var sch = EVs.scheme()   # [eqview2] 方案 B／C：名鬼（遊魂兵照舊貼手）
+		if sch != "pin" and not w.has("ml"):
+			var foot = Vector2(J.num(st.x), J.num(st.y))
+			var T = J.num(st.get("T", 0.0))
+			if layer == "glow":
+				var arm = str(w.get("arm", ""))
+				if arm == "" or str(EQ2.item(arm).get("look")) != "body": return
+				EV2.glow(self, Transform2D.IDENTITY, k, foot, H, fd, EQ2.grade_col(EQ2.grade_of(arm)), T, 0.45 if u.get("anim") is Dictionary else 1.0)
+				return
+			if layer != "front": return
+			var s2 = EV2.state_of(u, T, _sk)
+			if s2.act != "idle": s2["tg"] = _tgv(foot)
+			EV2.draw(Ctx.new(self), sch, k, w, foot, H, fd, s2)
+			return
+		if layer == "glow": return
 		var ctx = Ctx.new(self)
 		load("res://game/equip/eq_view.gd").draw_on(ctx, k, w, Vector2(J.num(st.x), J.num(st.y)), H, fd, pose, pt, J.t(u.get("minion")) and w.has("ml") and str(EQ2.item(str(w.ml)).get("look")) != "body", layer)
 
@@ -176,6 +222,9 @@ static func attach(bc, u: Dictionary) -> void:
 	bc.add_child(o)
 	var ob = Over.new(); ob.bc = bc; ob.u = u; ob.name = "EqBack"; ob.layer = "back"
 	bc.add_child(ob); bc.move_child(ob, 0)   # 手持：喺角色身後一層
+	if u.get("eq") is Dictionary:   # [eqview2] 護身微光描邊（方案 B／C；全身圖染等級色，喺最後面）
+		var og = Over.new(); og.bc = bc; og.u = u; og.name = "EqGlow"; og.layer = "glow"; og.material = load("res://game/equip/eq_view2.gd").glow_mat()
+		bc.add_child(og); bc.move_child(og, 0)
 
 # ---------------- 村子廣場（nv_agent head_ops 掛鈎） ----------------
 static func village(ops: Array, k: String, ax: float, ay: float, H: float, fwd: float, back_ops = null) -> void:
@@ -187,6 +236,13 @@ static func village(ops: Array, k: String, ax: float, ay: float, H: float, fwd: 
 		var id = str(w.get(sl, ""))
 		if id != "" and str(EQ.item(id).get("look")) in ["hand", "head"]: ww[sl] = id
 	if ww.is_empty(): return
+	var sch = scheme()   # [eqview2] 方案 B：兵器喺身側飄；方案 C：平時唔見兵器（只戴帽）
+	if sch != "pin":
+		var ww2 = {}
+		for sl in ww: if sch == "float" or str(EQ.item(ww[sl]).get("look")) == "head": ww2[sl] = ww[sl]
+		if ww2.is_empty(): return
+		ops.append(func(ctx): load("res://game/equip/eq_view2.gd").draw(ctx, sch, k, ww2, Vector2(ax, ay), H, fwd, {"T": Time.get_ticks_msec() / 1000.0, "act": "idle"}, true))
+		return
 	var bo = back_ops if back_ops is Array else ops
 	bo.append(func(ctx): load("res://game/equip/eq_view.gd").draw_on(ctx, k, ww, Vector2(ax, ay), H, fwd, "", 0.0, true, "back"))
 	ops.append(func(ctx): load("res://game/equip/eq_view.gd").draw_on(ctx, k, ww, Vector2(ax, ay), H, fwd, "", 0.0, true, "front"))
@@ -201,9 +257,10 @@ static func preview(ctx: Ctx, k: String, w: Dictionary, box: Rect2) -> Rect2:
 		var iw = float(tex.get_width()); var ih = float(tex.get_height())
 		Wd = H * iw / ih
 		if Wd > box.size.x * 0.8: H *= box.size.x * 0.8 / Wd; Wd = box.size.x * 0.8
-	var r = draw_on(ctx, k, w, foot, H, 1.0, "", 0.0, false, "back")
+	var sch = scheme()   # [eqview2]
+	var r = draw_on(ctx, k, w, foot, H, 1.0, "", 0.0, false, "back") if sch == "pin" or w.has("ml") else Rect2(foot, Vector2.ZERO)
 	if tex != null:
 		ctx.ci.draw_set_transform_matrix(ctx.T); ctx.ci.draw_texture_rect(tex, Rect2(foot.x - Wd * 0.5, foot.y - H, Wd, H), false); ctx.ci.draw_set_transform_matrix(Transform2D.IDENTITY)
-	var r2 = draw_on(ctx, k, w, foot, H, 1.0, "", 0.0, false, "front")
+	var r2 = draw_on(ctx, k, w, foot, H, 1.0, "", 0.0, false, "front") if sch == "pin" or w.has("ml") else load("res://game/equip/eq_view2.gd").draw(ctx, sch, k, w, foot, H, 1.0, {"T": Time.get_ticks_msec() / 1000.0, "act": "idle"})
 	LAST[k] = Rect2((r.merge(r2).position - foot) / H, r.merge(r2).size / H)
 	return r.merge(r2)
