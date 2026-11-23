@@ -221,6 +221,7 @@ func _strengthen(t) -> void:   # 打輸：畀兵＋升名鬼（玩家會做嘅�
 	for g in _free_ghosts():
 		for k in 5: Menus.jn("rosterAct", ["up", J.str(g.id)])
 func _fight(t, m, x) -> String:
+	_p("  fight %s kind=%s" % [str(x.id), str(x.kind)])
 	var ctl = _ctl()
 	if ctl != null:
 		ctl.pick(x)   # 出擊清單揀一項：阿福行過去
@@ -230,6 +231,7 @@ func _fight(t, m, x) -> String:
 		if ctl.get("cur") is Dictionary and str(ctl.cur.get("id", "")) == str(x.id) and ctl.act_btn.visible: ctl.press_act()   # 行動按鈕
 		else: x.go.call()   # 行唔到：撳地圖目標（tap 同 go 一樣入口）
 	else: x.go.call()
+	_p("  pressed; pending=%s story=%s" % [str(RTS.pending != null), str(_story_busy(m))])
 	await _skip(t, 3)   # 王戰前劇情
 	if RTS.pending == null:
 		await _w(t, 0.5)
@@ -240,6 +242,7 @@ func _fight(t, m, x) -> String:
 	for k in 400:
 		await _w(t, 0.5)
 		if RTS.ops.is_empty(): break
+		if k % 40 == 0: _p("    op %s" % str(RTS.ops.map(func(o): return [o.sid, o.phase, int(o.t)])))
 		if k % 10 == 0: await _skip(t, 1)
 	await _skip(t, 4)
 	var rep = RTS.last_report
@@ -250,6 +253,7 @@ func _do_stage(t, m, q) -> String:
 		if _prog(q)[0] >= 1: break
 		await _skip(t, 2)
 		var tg = ZD.stage_target()
+		_p("  stage try %d tg=%s" % [tries, str(tg.keys())])
 		if tg.is_empty(): how.append("冇目標"); break
 		if J.t(tg.get("later")):
 			var mv = await _move_camp(t, m)
