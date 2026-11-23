@@ -13,7 +13,7 @@ const RTS = preload("res://game/rts/rts.gd")
 const AT = preload("res://game/outpost/act_targets.gd")
 const CTL = preload("res://game/outpost/ctl_ui.gd")
 const MB = preload("res://game/outpost/mv_bridge.gd")
-const TS := 6.0   # 測試加速：Engine.time_scale
+const TS := 1.0   # [qaudit2] 原本 6：但村子／生產（JS 迴圈）用真實時鐘，Engine.time_scale 只加速 Godot 嗰邊 → 模擬時間計錯；改返 1，打仗、練功另外加速
 const FSTEP := 12  # [qaudit2] 打仗加速：每格額外行幾步（每步 0.1 秒）
 
 var ok := 0
@@ -150,7 +150,7 @@ func _free_ghosts() -> Array:
 	return o
 func _do_assign(t, q) -> String:
 	var n = int(J.num(q.n))
-	var posts = ["bun", "plank", "wood", "rice", "home", "camp"]
+	var posts = ["bun", "plank", "wood", "rice", "home", "camp"].filter(func(x): return (J.G.get("POSTS") as Dictionary).has(x))   # [qaudit2] 民宅唔係崗位
 	if _free_ghosts().size() < n:
 		_rich()
 		for k in 6:
@@ -163,10 +163,14 @@ func _do_assign(t, q) -> String:
 		if J.t(g.get("post")): continue
 		for p in posts:
 			if J.num(_S().bld.get(p, 0)) <= 0: continue
+			# [qaudit2] 玩家揀有空位嘅崗位（崗位滿咗再派會頂走原本嗰隻，任務數唔會加）
+			if J.iter(J.cl(J.G.get("workersAt"), null, [p])).size() >= J.num(J.mc(J.G.get("F"), "slots", [p])): continue
 			Menus.open_pick(p, p); Menus.jn("pickDo", [p, J.str(g.id)]); Menus.close_hook(); m_close()
 			if J.t(g.get("post")): break
 		await _w(t, 0.3)
-	return "建築卡「派人」（%d 隻可派）" % _free_ghosts().size()
+	var sl = []
+	for p in posts: if J.num(_S().bld.get(p, 0)) > 0: sl.append("%s %d/%d" % [p, J.iter(J.cl(J.G.get("workersAt"), null, [p])).size(), int(J.num(J.mc(J.G.get("F"), "slots", [p])))])
+	return "建築卡「派人」（%d 隻可派；崗位 %s）" % [_free_ghosts().size(), ", ".join(sl)]
 func m_close():
 	var m = Engine.get_main_loop().root.get_node_or_null("Main")
 	if m: m.close_sheet()
@@ -193,10 +197,23 @@ func _do_drill(t, q) -> String:
 	if g == null and _free_ghosts().size(): g = _free_ghosts()[0]
 	if g == null: return "冇鬼"
 	Menus.open_pick("camp", "camp"); Menus.jn("pickDo", ["camp", J.str(g.id)]); Menus.close_hook(); m_close()
-	for k in 120:
+	# [qaudit2] 練功好慢（每分鐘 2～4 點，Lv2 要 300 點）：玩家會升訓練班加速；等嘅時候測試再加速（Engine.time_scale 調高，只係快轉時間）
+	var ups = 0
+	for k in 4:
+		_rich()
+		if J.num(_S().bld.get("camp", 0)) >= J.num(_S().bld.get("house", 1)): _bld("house", "up")
+		var b0 = J.num(_S().bld.get("camp", 0)); _bld("camp", "up")
+		if J.num(_S().bld.get("camp", 0)) > b0: ups += 1
+	var FAST := 40.0   # 生產（練功）用 J.G.TIME_SCALE 加速（遊戲本身嘅時間倍數；Engine.time_scale 管唔到）
+	J.G["TIME_SCALE"] = FAST
+	var t0 = simt
+	for k in 600:
 		if _prog(q)[0] >= _prog(q)[1]: break
-		await _w(t, 5.0)
-	return "訓練班「派人」等練功"
+		if k % 20 == 0: _give({"buns": 500.0}, "壽包（練功食）")
+		await t.get_tree().create_timer(1.0, true, false, true).timeout
+		simt += FAST
+	J.G["TIME_SCALE"] = 1.0
+	return "訓練班「派人」＋升訓練班 %d 級，等練功 %d 秒（%s/%s）" % [ups, int(simt - t0), str(_prog(q)[0]), str(_prog(q)[1])]
 func _do_feast(t, q) -> String:
 	_rich()
 	for k in 10:
@@ -221,8 +238,22 @@ func _strengthen(t) -> void:   # 打輸：畀兵＋升名鬼（玩家會做嘅�
 	_give({"troops": 400.0}, "陰兵")
 	for g in _free_ghosts():
 		for k in 5: Menus.jn("rosterAct", ["up", J.str(g.id)])
+# [qaudit2] 出擊前：名冊「職務 → 出陣」將最強嘅名鬼放入出陣空位（名鬼一職：派咗去打工嘅會由崗位調返嚟；打完唔調返）
+#   （第 1 關「派 1 隻鬼去打工」會將唯一嘅小紙由出陣調走，之後阿福一個帶兵打餓鬼王必輸：舊引擎同新地圖戰鬥都係 0/6；小紙出陣就 6/6）
+func _team_up() -> String:
+	var S = _S(); var BKd = load("res://game/barracks/bk_data.gd")
+	if not (S.get("team") is Array): return ""
+	var gs = []
+	for g in S.ghosts: if BKd.is_named(g) and not J.iter(S.team).has(g.id) and BKd.job(g) != "away": gs.append(g)
+	gs.sort_custom(func(a, b): return J.num(a.lv) > J.num(b.lv))
+	var o = []
+	for g in gs:
+		if not J.iter(S.team).has(null): break
+		if BKd.set_job(g.id, "team") == "ok": o.append(str(g.name))
+	return ("出陣＋" + "、".join(o)) if o.size() else ""
 func _fight(t, m, x) -> String:
-	_p("  fight %s kind=%s" % [str(x.id), str(x.kind)])
+	var tu = _team_up()
+	_p("  fight %s kind=%s %s team=%s" % [str(x.id), str(x.kind), tu, str(_S().team)])
 	var ctl = _ctl()
 	if ctl != null:
 		ctl.pick(x)   # 出擊清單揀一項：阿福行過去
@@ -256,10 +287,25 @@ func _fight(t, m, x) -> String:
 		if fr % 60 == 0: await _skip(t, 1)
 	if op != null:
 		simt += op.T
+		_p("    戰後 %s：%s" % [str(op.result), _unit_sum(op)])
 		if op.phase != "done": _p("    op 未完：%s %s" % [op.phase, str(op.result)])
 	await _skip(t, 4)
 	var rep = RTS.last_report
-	return "勝" if str(rep.get("head", "")).contains("勝") or str(rep.get("head", "")).contains("通關") or str(rep.get("win", "")) == "true" else "結果:" + str(rep.get("head", ""))
+	var tus = ("（%s）" % tu) if tu != "" else ""
+	return ("勝" + tus) if str(rep.get("head", "")).contains("勝") or str(rep.get("head", "")).contains("通關") or str(rep.get("win", "")) == "true" else ("結果:" + str(rep.get("head", "")) + tus)
+func _unit_sum(op) -> String:   # [qaudit2] 除錯：打完雙方剩幾多
+	var a = []; var f = []
+	for u in op.units:
+		var tag = "%s%s %d/%d" % [str(u.get("name", u.get("k", "?"))), ("Lv%d" % int(J.num(u.get("lv")))) if u.get("lv") != null else "", int(J.num(u.get("hp"))), int(J.num(u.get("maxhp")))]
+		if J.num(u.side) == 1: f.append(tag)
+		elif not J.t(u.get("minion")) or u.get("ml") != null: a.append(tag)
+		else: a.append("兵" + tag)
+	return "我方[%s] 敵方[%s] t=%d" % [", ".join(a), ", ".join(f), int(op.t)]
+func _snap(qi: int) -> void:   # [qaudit2] 每個任務開始前存檔快照（/tmp/qa2snap/qNN.json）：之後可以由呢度開始重玩（edtest_from.sh）
+	J.cl(J.G.get("save"), null, [])
+	DirAccess.make_dir_recursive_absolute("/tmp/qa2snap")
+	var f = FileAccess.open("/tmp/qa2snap/q%02d.json" % qi, FileAccess.WRITE)
+	if f: f.store_string(JSON.stringify(JSRun.ls))
 func _do_stage(t, m, q) -> String:
 	var sid = str(q.s); var how = []
 	for tries in 12:
@@ -320,7 +366,9 @@ func play(t) -> void:
 	CTL.attach(m)
 	var stuck = []
 	var last_qi = -1
-	while true:
+	var lim = int(OS.get_environment("QA_N")) if OS.has_environment("QA_N") else 9999   # [qaudit2] 除錯：只做 N 個任務
+	while lim > 0:
+		lim -= 1
 		await _skip(t, 2)
 		J.mc(_Q(), "check", [])
 		var q = _cur()
@@ -332,6 +380,7 @@ func play(t) -> void:
 			_S()["qi"] = float(qi + 1)   # 測試後門：跳過，繼續搵後面問題（已報 BAD）
 			last_qi = -1; continue
 		last_qi = qi
+		_snap(qi)
 		var t0 = simt
 		var bar = await _tap_bar(t, m)
 		var how = ""
