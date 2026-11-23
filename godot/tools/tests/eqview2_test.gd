@@ -386,7 +386,7 @@ func _perf(t, m) -> void:
 	_cam(m, op.center() + Vector2(0, -30), 300.0)
 	await _w(t, 1.0)
 	var R = {}
-	for rep in 2:
+	for rep in 3:
 		for sch in ["pin", "float", "strike"]:
 			EV.view_test = sch
 			await _f(t, 10)
@@ -396,7 +396,9 @@ func _perf(t, m) -> void:
 	var med = {}
 	for sch in R:
 		var a = R[sch]
-		med[sch] = [(a[0][0] + a[1][0]) / 2.0, (a[0][1] + a[1][1]) / 2.0, (a[0][2] + a[1][2]) / 2.0]
+		med[sch] = [0.0, 0.0, 0.0]
+		for x in a:
+			for j in 3: med[sch][j] += x[j] / a.size()
 		_p("效能 %s：幀 中位 %.1fms（p90 %.1f、平均 %.1f）≈ %.1f fps" % [sch, med[sch][0], med[sch][1], med[sch][2], 1000.0 / maxf(1.0, med[sch][2])])
 	await _shot(t, "perf_bigfight_float")
 	_chk("效能：B 方案（飄浮）平均幀時間 ≤ 現行 ×1.08＋1ms（fps 唔明顯跌）", med.float[2] <= med.pin[2] * 1.08 + 1.0, [med.pin, med.float])

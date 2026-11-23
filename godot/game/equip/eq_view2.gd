@@ -39,7 +39,14 @@ static func prof(k: String) -> Array:
 	_prof[k] = rows
 	return rows
 # 某一高度段（y0..y1，−1＝頂、0＝腳）圖嗰邊（side＝+1 右／−1 左）最出幾遠
+static var _ext := {}
 static func ext(k: String, side: float, y0: float, y1: float) -> float:
+	var ck = "%s|%s|%s|%s" % [k, side, y0, y1]
+	if _ext.has(ck): return _ext[ck]
+	var v = _ext_calc(k, side, y0, y1)
+	_ext[ck] = v
+	return v
+static func _ext_calc(k: String, side: float, y0: float, y1: float) -> float:
 	var rows = prof(k)
 	if rows.is_empty(): return 0.28
 	var e = 0.0
@@ -62,7 +69,7 @@ static func glow(ci: CanvasItem, xf: Transform2D, k: String, foot: Vector2, H: f
 	var Wd = H * tex.get_width() / float(tex.get_height())
 	ci.draw_set_transform_matrix(xf * Transform2D(0.0, Vector2(fd, 1.0), 0.0, foot))
 	var a = (0.42 + 0.14 * sin(T * 2.6)) * k_a
-	var n = 12
+	var n = 8   # 效能：每隻名鬼 16 次貼圖（8 方向 × 兩圈）
 	for ring in [[0.034, 0.26], [0.020, 0.7]]:
 		var c = Color(col.r, col.g, col.b, a * ring[1])
 		for i in n:
@@ -126,13 +133,13 @@ static func _put(ctx: Ctx, id: String, c: Vector2, ang: float, L: float, a := 1.
 	ctx.restore()
 static func _aura(ctx: Ctx, c: Vector2, ang: float, L: float, H: float, k := 1.0, gc := YIN) -> void:
 	ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(ang)
-	for i in 3:
-		var s = 1.0 - i * 0.25
-		Art.el(ctx, 0, 0, L * 0.30 * s * k, L * 0.62 * s * k, "rgba(%d,%d,%d,%.3f)" % [int(gc.r8), int(gc.g8), int(gc.b8), 0.07 + i * 0.03])
+	for i in 2:
+		var s = 1.0 - i * 0.3
+		Art.el(ctx, 0, 0, L * 0.30 * s * k, L * 0.62 * s * k, "rgba(%d,%d,%d,%.3f)" % [int(gc.r8), int(gc.g8), int(gc.b8), 0.09 + i * 0.05])
 	ctx.restore()
 static func _wisps(ctx: Ctx, c: Vector2, H: float, T: float) -> void:
-	for i in 3:
-		var q = fmod(T * 0.55 + i / 3.0, 1.0)
+	for i in 2:
+		var q = fmod(T * 0.55 + i / 2.0, 1.0)
 		var p = c + Vector2(sin(q * 5.0 + i * 2.1) * 0.07 * H, (0.16 - q * 0.30) * H)
 		Art.el(ctx, p.x, p.y, H * 0.018 * (1.0 - q * 0.5), H * 0.024 * (1.0 - q * 0.5), "rgba(190,235,255,%.2f)" % ((1.0 - q) * 0.45))
 # 拖尾帶：pts 由舊到新；闊度由 w0 漸變到 w1；一個多邊形填色（唔會一粒粒）
@@ -241,7 +248,7 @@ static func _float(ctx: Ctx, k: String, wea: String, foot: Vector2, H: float, fd
 					_ribbon(ctx, tp2, H * 0.004, H * 0.06, Color(1, 1, 0.92), 0.45)
 				else: _ribbon(ctx, tp2, H * 0.004, H * 0.06, YIN, 0.30)
 		else:
-			for j in [2, 1]:   # 待機殘影：慢慢跟住
+			for j in [2]:   # 待機殘影：慢慢跟住（一個，慳效能）
 				var Q = float_at(k, wea, foot, H, fd, {"T": T - j * 0.22, "act": act, "tg": st.get("tg")}, ph)
 				_put(ctx, wea, Q[0], Q[1], Q[2], 0.10 * j * 0.8, YIN)
 		_aura(ctx, c, ang, L, H, 1.35 if act in ["cast", "sk"] else 1.0, gc.lerp(YIN, 0.35) if act in ["cast", "sk"] else YIN)
