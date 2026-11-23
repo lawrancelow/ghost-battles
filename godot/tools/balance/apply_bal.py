@@ -43,6 +43,7 @@ for cid, s in sc["camps"].items():
     cp["hm"] = [round(x * f, 3) for x in cp["hm"]]
     cp["am"] = [round(x * f, 3) for x in cp["am"]]
     cp["bal"] = s
+if "yin_k" in sc: cj["yin_k"] = sc["yin_k"]   # 陰兵血倍率（rts.gd _yin_hp_k 讀）
 for key in ["ch_k", "sortie_k"]:
     for c, v in sc[key].items(): cj[key][c] = v
 # 機制數值（abil.json MECH＝引擎讀；counter.json mech＝設計表，同步對應 key）
