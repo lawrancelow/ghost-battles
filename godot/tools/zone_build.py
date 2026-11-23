@@ -981,6 +981,7 @@ RING_TR_CAP = 6
 LV_BASE = [1, 11, 21, 31, 41, 51]       # 第 1 關 Lv1～12，往後每關 +10
 RING_LV = [(0, 2), (3, 5), (6, 8), (9, 11)]   # 每圈喺該關嘅等級段（加 LV_BASE）
 RING_N = [4, 4, 4, 3]
+BOSS_CAMP = ["bm_taotie", "bm_jembalang", "bm_hou", "bm_langsuir", "bm_krasue", "bm_pang"]   # [newghost] 每關第 4 圈魔王據點（tools/newghost/ng_src.py BOSS_CAMP）
 def _grow(r, d): return [r[0] - d, r[1] - d, r[2] + d, r[3] + d]
 def _band_rects(inner, outer):
     return [[outer[0], outer[1], outer[2], inner[1]], [outer[0], inner[3], outer[2], outer[3]],
@@ -1173,6 +1174,34 @@ def _rings(M, ci):
         else:
             props = [o for o in props if math.dist((o[1], o[2]), (ex[0], ex[1] + nv[1] * 110)) > 150]
             for i in range(6): props.append(["proc:steps", round(ex[0]), round(ex[1] + nv[1] * (14 + i * 26)), 56, False, 1])
+    # [newghost] 魔王據點：每關第 4 圈加一個（counter.md 11.4、PLAN 第 6 節；不可招降，掉散魂；前置＝本關第 4 圈其他據點全部首勝，由 game/newghost/ng_boss.gd 判斷）
+    #   方向按本關真實出路（exits4）：揀第 4 圈據點最少嘅方向；同方向揀最深（行軍最長但 ≤ 40 秒）、同所有據點隔 ≥ 260 嘅候選
+    #   放喺散件生成之後先加（唔改變其他據點同散件嘅隨機結果，zones.json 改動最少）
+    _r4 = [e for e in so if e["ring"] == 4]; _best = None
+    _bc = {d: list(cands[4][d]) for d in DIRV}   # 加密候選（橫向每 45、深度 0.2～0.8）：第 5 關第 4 圈得南面行得到，要搵罅位
+    for e4 in M["exits4"]:
+        nv = DIRV[e4["dir"]]; tv = (-nv[1], nv[0]); out_pt = e4["pts"][-1]; ex = [out_pt[0] - nv[0] * 60, out_pt[1] - nv[1] * 60]; rg = rings[3]; d0 = rg["inner"]
+        din = (ex[0] - d0[0]) if nv[0] < 0 else (d0[2] - ex[0]) if nv[0] > 0 else (ex[1] - d0[1]) if nv[1] < 0 else (d0[3] - ex[1])
+        for f in (0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8):
+            for lat in range(-1350, 1351, 45):
+                p = [ex[0] + nv[0] * (din + RING_W[3] * f) + tv[0] * lat, ex[1] + nv[1] * (din + RING_W[3] * f) + tv[1] * lat]
+                if not _in_r(p, rg["outer"], 70) or _in_r(p, _grow(rg["inner"], 70)): continue
+                cx, cy = (p[0] - M["w"] / 2) / M["w"], (p[1] - M["h"] / 2) / M["h"]
+                if (("E" if cx > 0 else "W") if abs(cx) > abs(cy) else ("S" if cy > 0 else "N")) != e4["dir"]: continue
+                route = list(e4["pts"]) + [p]; L = _plen(route)
+                if L / MARCH_SPD > MARCH_MAX - 0.5: continue
+                _bc[e4["dir"]].append((L, [round(p[0]), round(p[1])], [[round(q[0]), round(q[1])] for q in route], e4["dir"]))
+    for _gap in (260, 200):   # 先試隔 260（營地唔擠），冇位先退返全圖標準 200
+        for _d in sorted(DIRV, key=lambda d: (sum(1 for e in _r4 if e["dir"] == d), "ESWN".index(d))):
+            for _c in sorted(_bc[_d], key=lambda c: -c[0]):
+                if all(math.dist(_c[1], e["pos"]) >= _gap for e in so): _best = _c; break
+            if _best: break
+        if _best: break
+    assert _best, ("魔王據點冇位", ci)
+    so.append({"id": "so%d_r4_4" % (ci + 1), "ring": 4, "lv": rings[3]["lv"][1], "pos": _best[1], "ring_key": False, "king": False,
+               "boss": BOSS_CAMP[ci], "route": _best[2], "march_s": round(_best[0] / MARCH_SPD, 1), "dir": _best[3]})
+    _ra, _rb = _best[2][-2], _best[2][-1]
+    props = [o for o in props if str(o[0]) in ("tr_mt_bridge", "proc:steps") or segd((o[1], o[2]), _ra, _rb) >= 44 + o[3] * 0.4]
     # [integ] 據點營地範圍唔擺散件（四方向重排據點後要再清一次）
     _sp = [tuple(e["pos"]) for e in M.get("sorties", [])]
     props = [o for o in props if str(o[0]) in ("tr_mt_bridge", "proc:steps") or all(math.dist((o[1], o[2]), q) >= 100 for q in _sp)]
