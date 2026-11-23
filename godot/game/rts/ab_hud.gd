@@ -56,7 +56,24 @@ static func status(op, u: Dictionary) -> Dictionary:
 	else:
 		var ca = u.get("casting")
 		if ca is Dictionary and J.num(ca.get("dur", 0)) > 0: o.chant = {"f": clampf(J.num(ca.get("t", 0)) / J.num(ca.dur), 0, 1), "name": "", "big": false}
+	_from_ab(o, u, t)   # [整合] abcore 把狀態放喺 u.ab，對齊
 	return o
+
+# [整合] abcore 引擎實際欄位：u.ab = {shd, shd_until, shell, shell0, fly, ground_until, st_on, rev_until, bf:[{p,until,v}]}
+static func _from_ab(o: Dictionary, u: Dictionary, t: float) -> void:
+	var a = u.get("ab")
+	if not (a is Dictionary): return
+	if J.num(a.get("shd", 0)) > 0 and J.num(a.get("shd_until", 0)) > t: o.shield = J.num(o.shield) + J.num(a.shd)
+	if a.get("shell") != null and J.num(a.get("shell0", 0)) > 0 and J.num(a.shell) > 0:
+		o.shell = clampf(J.num(a.shell) / J.num(a.shell0), 0.0, 1.0)
+	var st = J.t(a.get("st_on")) and J.num(a.get("rev_until", -1.0)) <= t
+	if not st and a.get("bf") is Array:
+		for b in a.bf:
+			if b is Dictionary and str(b.get("p", "")) == "stealth" and J.num(b.get("until", 0)) > t: st = true
+	if st: o.stealth = true
+	if J.t(a.get("fly")):
+		var gr = J.num(a.get("ground_until", -1.0)) > t
+		o.fly = not gr; o.ground = gr
 
 # UnitVis 用：飛行抬高幾多、透明度
 static func lift_of(op, u: Dictionary) -> float:
