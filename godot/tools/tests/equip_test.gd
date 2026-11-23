@@ -236,7 +236,7 @@ func _logic(t, m) -> void:
 	_chk("冇裝備嘅鬼：乜都唔加", ops2.is_empty())
 	# 錨點
 	var a1 = EV.anchor("xiaozhi"); var a2 = EV.anchor("n30_jiugui"); var a3 = EV.auto_anchor("n30_jiugui")
-	_chk("錨點：名鬼錨點表 ≥100 隻（人工＋輪廓生成）、表外仍可即時自動估", EQ.D().ANCHOR.size() >= 100 and str(a1.src) == "data" and str(a2.src) == "data" and str(a3.src) == "auto", [EQ.D().ANCHOR.size(), a1, a3])
+	_chk("錨點：名鬼錨點表 ≥100 隻（人工＋輪廓生成）、表外仍可即時自動估", EQ.D().ANCHOR.size() >= 100 and str(a1.src) in ["data", "manual"] and str(a2.src) in ["data", "manual"] and str(a3.src) == "auto", [EQ.D().ANCHOR.size(), a1, a3])
 
 # ---------------- 截圖 ----------------
 class Grid extends Control:
@@ -309,7 +309,7 @@ func _shots(t, m) -> void:
 	var face = []
 	for k in ks:
 		var A = EV.anchor(k)
-		if A.hand.x <= 0.0: face.append(k)
+		if not A.has("nh") and absf(A.hand.x) < 0.05: face.append(k)   # [anchor] 手可以喺圖左（x<0）；無手（nh）另計
 	_chk("兵器喺身前手位（唔喺臉中線）", face.is_empty(), face)
 	cl.queue_free(); await _w(t, 0.2)
 	# 4. 地圖戰鬥：名鬼揸兵器、遊魂兵揸 B 款
@@ -443,3 +443,65 @@ func _grid_shot(t, ks: Array, w: Dictionary, name: String, cols: int) -> void:
 		if g.bounds[k] is Rect2 and not EV.in_box(g.bounds[k]): oob.append(k)
 	_chk("%s：%d 隻全部喺框內" % [name, ks.size()], oob.is_empty(), oob)
 	cl.queue_free(); await _w(t, 0.2)
+
+# ---------------- [anchor] 全部名鬼穿戴預覽：長兵器（晾衫叉）＋安全帽，4×4 一版，大圖 SubViewport 出 ----------------
+#   用法：edtest.sh … equip_test.gd anchor_all
+#   未入庫嘅第二批（/home/claude/docs/art_pending/b2）直接由檔案載入暫用，只為預覽
+const B2_DIR := "/home/claude/docs/art_pending/b2/"
+class AllGrid extends Control:
+	var ks: Array = []
+	var w := {}
+	var bounds := {}
+	func _draw() -> void:
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.16, 0.15, 0.17))
+		var EVv = load("res://game/equip/eq_view.gd")
+		var cw = size.x / 4.0; var ch = size.y / 4.0
+		var f = ThemeDB.fallback_font
+		for i in ks.size():
+			var r = Rect2(Vector2((i % 4) * cw, floor(i / 4.0) * ch), Vector2(cw - 6, ch - 6))
+			draw_rect(r, Color(0.27, 0.26, 0.29))
+			draw_rect(r, Color("#6a5040"), false, 2.0)
+			var box = Rect2(r.position + Vector2(4, 4), r.size - Vector2(8, 30))
+			var ctx = Ctx.new(self)
+			EVv.preview(ctx, ks[i], w, box)
+			bounds[ks[i]] = EVv.LAST.get(ks[i])
+			var A = EVv.anchor(ks[i])
+			draw_string(f, Vector2(r.position.x + 6, r.end.y - 8), "%s  %s%s" % [ks[i], str(A.get("src")), ("  " + str(A.get("nh"))) if A.has("nh") else ""], HORIZONTAL_ALIGNMENT_LEFT, cw - 12, 20, Color("#f0e0b8"))
+func anchor_all(t) -> void:
+	var m = await _boot(t)
+	var A = EQ.D().get("ANCHOR", {})
+	var ks = A.keys(); ks.sort()
+	var miss = []
+	for k in ks:
+		if PtGfx.tex(Art.spr_key(k)) == null:
+			var p = B2_DIR + k + ".webp"
+			if FileAccess.file_exists(p):
+				var im = Image.load_from_file(p)
+				if im != null: PtGfx._tex[Spr.key_for(Art.spr_key(k))] = ImageTexture.create_from_image(im)
+			if PtGfx.tex(Art.spr_key(k)) == null: miss.append(k)
+	_chk("全部錨點鬼都搵到全身圖（%d 隻）" % ks.size(), miss.is_empty(), miss)
+	var man = 0
+	for k in ks: if str(A[k].get("src")) == "manual": man += 1
+	_chk("錨點全部人工定（%d/%d）" % [man, ks.size()], man == ks.size())
+	var badh = []
+	for k in ks:
+		var a = EV.anchor(k)
+		if not a.has("nh") and absf(a.hand.x) < 0.05: badh.append(k)
+	_chk("有手嘅鬼：手位唔喺中線（揸住喺身側）", badh.is_empty(), badh)
+	var w = {"wea": "eq_liangcha", "arm": "eq_anquan"}
+	var oob = []
+	var page = 0
+	for s in range(0, ks.size(), 16):
+		var sv = SubViewport.new(); sv.size = Vector2i(1600, 1800); sv.transparent_bg = false
+		sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		t.get_tree().root.add_child(sv)
+		var g = AllGrid.new(); g.ks = ks.slice(s, s + 16); g.w = w; g.size = Vector2(1600, 1800); sv.add_child(g)
+		await _f(t, 3); await RenderingServer.frame_post_draw
+		var name = "anchor_all_%02d" % page
+		sv.get_texture().get_image().save_png(SHOTS + name + ".png"); _p("shot " + name)
+		for k in g.bounds:
+			if g.bounds[k] is Rect2 and not EV.in_box(g.bounds[k]): oob.append([k, g.bounds[k]])
+		sv.queue_free(); await _f(t, 2)
+		page += 1
+	_chk("全部名鬼穿戴（長兵器＋安全帽）喺 1.25H 框內", oob.is_empty(), oob)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
