@@ -451,6 +451,11 @@ static func _start_battle(cb: Callable) -> Dictionary:
 	var B = G.get("Battle")
 	if not (B is Dictionary) or not J.t(B.get("active")): return {}
 	var snap = {"units": B.units}
+	var yk = _yin_hp_k()   # [整合] 陰兵血倍率（主線／據點／野外王）；遊魂兵（ml）唔計
+	if yk != 1.0:
+		for u in B.units:
+			if J.num(u.get("side")) == 0 and J.t(u.get("minion")) and u.get("ml") == null:
+				u["hp"] = J.num(u.hp) * yk; u["maxhp"] = J.num(u.get("maxhp", u.hp)) * yk
 	for k in ["stage", "sid", "ci", "si", "bg", "retake", "adviser", "comboSkill", "squads", "ml_ext", "ml_foe", "ml_my", "ml_sq"]: snap[k] = B.get(k)
 	B["active"] = false
 	var f = G.get("$")
