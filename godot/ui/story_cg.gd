@@ -1,4 +1,6 @@
-# [cg] 劇情插圖卡：特殊報導／情節播放時，喺畫面上半部顯示一張插圖（淡入＋慢慢推近）
+# [cg] 劇情插圖：特殊報導／情節播放時，用「老舊電視」形式喺畫面上半部播一張插圖
+#   出場：電視開機（中間一條光線拉開 → 上下撐開成畫面）＋掃描線、暗角、輕微雜訊閃爍；收場：關機縮返一點光。
+#   插圖出現時，後面嘅場景背景會濛化＋黑化（對話框唔受影響）。
 #   數據（寫喺 SCENES 某場）：
 #     "cg": {"<行號>": spec}   由第幾行開始換圖（之後一直顯示，直到下一個 spec；spec 係 "" 就收起）
 #     或者行本身第三個元素：["旁白", "……", spec]
@@ -11,26 +13,91 @@
 # 熱更新：冇 class_name；story.gd 用 preload
 extends Control
 
+const TV_SHADER := """
+shader_type canvas_item;
+uniform float pw = 1.0;      // 開機進度 0→1（<0.35 光線橫向拉開；之後上下撐開）
+uniform float tm = 0.0;      // 時間（雜訊／閃爍）
+float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+void fragment(){
+	vec2 uv = UV;
+	vec2 cc = uv - 0.5;
+	uv = 0.5 + cc * (1.0 + dot(cc, cc) * 0.10);   // 輕微弧面
+	float a1 = clamp(pw / 0.35, 0.0, 1.0);
+	float a2 = clamp((pw - 0.35) / 0.65, 0.0, 1.0);
+	float hh = mix(0.006, 0.5, a2 * a2 * (3.0 - 2.0 * a2));
+	float ww = mix(0.0, 0.5, a1);
+	vec2 suv = vec2(uv.x, 0.5 + (uv.y - 0.5) * (0.5 / max(hh, 0.006)));
+	vec3 col = texture(TEXTURE, clamp(suv, 0.0, 1.0)).rgb;
+	float ca = 0.0015;   // 少少色散
+	col.r = texture(TEXTURE, clamp(suv + vec2(ca, 0.0), 0.0, 1.0)).r;
+	col.b = texture(TEXTURE, clamp(suv - vec2(ca, 0.0), 0.0, 1.0)).b;
+	float sl = 0.86 + 0.14 * sin(uv.y * 900.0);   // 掃描線
+	col *= sl;
+	float n = hash(floor(uv * vec2(320.0, 240.0)) + floor(tm * 24.0));
+	col += (n - 0.5) * 0.07;   // 雜訊
+	col *= 0.97 + 0.03 * sin(tm * 9.0);   // 閃爍
+	float vg = smoothstep(0.85, 0.25, length(cc * vec2(1.0, 1.15)));   // 暗角
+	col *= mix(0.45, 1.0, vg);
+	col += 0.05 * smoothstep(0.45, 0.0, uv.y) * smoothstep(1.0, 0.2, uv.x);   // 玻璃反光
+	col = mix(vec3(1.0), col, a2);   // 開機時光線先白後出畫
+	bool ins = abs(uv.y - 0.5) <= hh && abs(uv.x - 0.5) <= ww && uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0;
+	COLOR = vec4(ins ? col : vec3(0.02, 0.03, 0.03), 1.0);
+}
+"""
+
+const BLUR_SHADER := """
+shader_type canvas_item;
+uniform sampler2D scr : hint_screen_texture, filter_linear_mipmap;
+uniform float amt = 0.0;     // 0→1：濛化＋黑化程度
+void fragment(){
+	vec2 px = SCREEN_PIXEL_SIZE * 3.0 * amt;
+	vec3 s = vec3(0.0); float w = 0.0;
+	for (int x = -3; x <= 3; x++) { for (int y = -3; y <= 3; y++) {
+		float k = exp(-float(x * x + y * y) / 8.0);
+		s += texture(scr, SCREEN_UV + vec2(float(x), float(y)) * px).rgb * k; w += k; } }
+	s /= w;
+	COLOR = vec4(s * mix(1.0, 0.35, amt), 1.0);
+}
+"""
+
 var frame: Panel
+var screen: Panel
+var vp: SubViewport
+var tv: TextureRect
 var pic: TextureRect
 var layer: Control
+var blur: ColorRect
 var cur_key := ""
 var _t := 0.0
 var _anim := false
+var _off := -1.0   # >=0：關機中
+var _tvmat: ShaderMaterial
+var _blmat: ShaderMaterial
+const B := 12.0   # 電視機殼闊度
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	anchor_left = 0.0; anchor_right = 1.0; anchor_top = 0.0; anchor_bottom = 0.0
 	offset_left = 10; offset_right = -10; offset_top = 56
-	frame = Panel.new(); frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb = StyleBoxFlat.new(); sb.bg_color = Color(0.06, 0.05, 0.06, 1); sb.border_color = Color("#c9a46a"); sb.set_border_width_all(3)
-	sb.set_corner_radius_all(6); sb.shadow_color = Color(0, 0, 0, 0.6); sb.shadow_size = 14
-	frame.add_theme_stylebox_override("panel", sb); frame.clip_contents = true
+	frame = Panel.new(); frame.mouse_filter = Control.MOUSE_FILTER_IGNORE   # 舊電視機殼（深啡木＋黑邊）
+	var sb = StyleBoxFlat.new(); sb.bg_color = Color("#3b2a1c"); sb.border_color = Color("#140d08"); sb.set_border_width_all(3)
+	sb.set_corner_radius_all(16); sb.shadow_color = Color(0, 0, 0, 0.7); sb.shadow_size = 18
+	frame.add_theme_stylebox_override("panel", sb)
 	add_child(frame)
+	screen = Panel.new(); screen.mouse_filter = Control.MOUSE_FILTER_IGNORE   # 螢幕（圓角、內陷）
+	var ss = StyleBoxFlat.new(); ss.bg_color = Color("#050606"); ss.border_color = Color("#0b0806"); ss.set_border_width_all(2); ss.set_corner_radius_all(22)
+	screen.add_theme_stylebox_override("panel", ss); screen.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
+	frame.add_child(screen)
+	vp = SubViewport.new(); vp.transparent_bg = false; vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(vp)
 	pic = TextureRect.new(); pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	frame.add_child(pic)
-	layer = Control.new(); layer.mouse_filter = Control.MOUSE_FILTER_IGNORE; frame.add_child(layer)
+	vp.add_child(pic)
+	layer = Control.new(); layer.mouse_filter = Control.MOUSE_FILTER_IGNORE; vp.add_child(layer)
+	tv = TextureRect.new(); tv.mouse_filter = Control.MOUSE_FILTER_IGNORE; tv.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tv.texture = vp.get_texture()
+	var sh = Shader.new(); sh.code = TV_SHADER; _tvmat = ShaderMaterial.new(); _tvmat.shader = sh; tv.material = _tvmat
+	screen.add_child(tv)
 	visible = false
 
 static func spec_of(sc: Dictionary, li: int, line: Array):
@@ -39,23 +106,40 @@ static func spec_of(sc: Dictionary, li: int, line: Array):
 	if m is Dictionary and m.has(str(li)): return m[str(li)]
 	return null
 
+func _ensure_blur() -> void:   # 背景濛化＋黑化：放喺舞台之上、對話框之下
+	var par = get_parent()
+	if par == null: return
+	if blur == null or not is_instance_valid(blur):
+		blur = ColorRect.new(); blur.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		blur.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		var sh = Shader.new(); sh.code = BLUR_SHADER; _blmat = ShaderMaterial.new(); _blmat.shader = sh; blur.material = _blmat
+		par.add_child(blur)
+	var st = par.get("stage")
+	var idx = (st.get_index() + 1) if (st != null and is_instance_valid(st)) else 1
+	par.move_child(blur, mini(idx, par.get_child_count() - 1))
+	blur.visible = true
+
 func show_spec(spec) -> void:
 	if spec == null: return
 	var d: Dictionary = spec if spec is Dictionary else {"k": str(spec)}
 	var k = str(d.get("k", ""))
 	if k == "" or not Spr.ok(k):
-		visible = false; cur_key = ""; return
+		hide_cg(); return
 	var tex: Texture2D = Spr.get_tex(k)
-	if tex == null: visible = false; return
+	if tex == null: hide_cg(); return
+	var same = visible and cur_key == k and _off < 0.0
 	cur_key = k
 	var W = maxf(200.0, get_parent().size.x - 20.0)
 	var H = W * float(tex.get_height()) / float(tex.get_width())
 	H = minf(H, get_parent().size.y * 0.46)
 	size = Vector2(W, H); custom_minimum_size = size
 	frame.position = Vector2.ZERO; frame.size = size
-	var B = 4.0   # 金框闊度：圖縮入框內
-	pic.texture = tex; pic.position = Vector2(B, B); pic.size = size - Vector2(B, B) * 2; pic.pivot_offset = pic.size / 2
-	layer.position = Vector2(B, B); layer.size = size - Vector2(B, B) * 2
+	screen.position = Vector2(B, B); screen.size = size - Vector2(B, B) * 2
+	tv.position = Vector2.ZERO; tv.size = screen.size
+	var vs = Vector2i(int(screen.size.x * 2.0), int(screen.size.y * 2.0))   # 2 倍解像度畫入去，縮細出嚟夠清
+	vp.size = vs
+	pic.texture = tex; pic.position = Vector2.ZERO; pic.size = Vector2(vs); pic.pivot_offset = pic.size / 2
+	layer.position = Vector2.ZERO; layer.size = Vector2(vs)
 	W = layer.size.x; H = layer.size.y
 	for c in layer.get_children(): c.queue_free()
 	for o in d.get("over", []):
@@ -77,30 +161,46 @@ func show_spec(spec) -> void:
 	for t in d.get("txt", []):
 		if not (t is Dictionary): continue
 		var lb = Label.new(); lb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		lb.text = DB.L(str(t.get("t", ""))); lb.add_theme_font_size_override("font_size", int(J.num(t.get("s", 20))))
+		lb.text = DB.L(str(t.get("t", ""))); lb.add_theme_font_size_override("font_size", int(J.num(t.get("s", 20)) * 2.0))
 		lb.add_theme_color_override("font_color", Color(str(t.get("c", "#3a2a1a"))))
 		lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; lb.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
 		var bw = W * J.num(t.get("w", 0.8)); lb.size = Vector2(bw, 10)
 		lb.position = Vector2(W * J.num(t.get("x", 0.5)) - bw / 2, H * J.num(t.get("y", 0.2)))
 		layer.add_child(lb)
-	visible = true; modulate.a = 0.0; _t = 0.0; _anim = true
-	var st = get_parent().get("stage")   # 插圖出現時，舞台上嘅角色收起，唔好同插圖入面嘅角色重複
-	if st != null and is_instance_valid(st): st.set("hide_acts", true); st.queue_redraw()
+	visible = true; modulate.a = 1.0; _off = -1.0; _anim = true
+	if not same: _t = 0.0   # 換新圖先重新開機；同一張就唔再閃
+	_ensure_blur()
+	var stg = get_parent().get("stage")   # 插圖出現時，舞台只畫背景、唔畫角色（唔好同插圖入面嘅角色重複）
+	if stg != null and is_instance_valid(stg): stg.set("hide_acts", true); stg.queue_redraw()
 
 static func _hero_spr() -> String:
 	var S = J.G.get("S")
 	var h = S.get("hero") if S is Dictionary else null
 	return "afuf" if h is Dictionary and str(h.get("sex", "m")) == "f" and Spr.ok("afuf") else "afu"
 
-func hide_cg() -> void:
-	visible = false; cur_key = ""
+func hide_cg() -> void:   # 關機：畫面縮返做一條線再熄
+	if not visible: _restore(); return
+	if _off < 0.0: _off = 0.0
+	cur_key = ""
+
+func _restore() -> void:
+	visible = false; cur_key = ""; _off = -1.0
+	if blur != null and is_instance_valid(blur): blur.visible = false
 	var st = get_parent().get("stage")
 	if st != null and is_instance_valid(st): st.set("hide_acts", false); st.queue_redraw()
 
 func _process(dt: float) -> void:
-	if not visible or not _anim: return
+	if not visible: return
 	_t += dt
-	modulate.a = clampf(_t / 0.35, 0.0, 1.0)
+	var pw = clampf(_t / 0.55, 0.0, 1.0)
+	var amt = clampf(_t / 0.4, 0.0, 1.0)
+	if _off >= 0.0:
+		_off += dt
+		pw = clampf(1.0 - _off / 0.3, 0.0, 1.0)
+		amt = minf(amt, pw)
+		if _off >= 0.32: _restore(); return
+	_tvmat.set_shader_parameter("pw", pw)
+	_tvmat.set_shader_parameter("tm", _t)
+	if _blmat != null: _blmat.set_shader_parameter("amt", amt)
 	var z = 1.0 + minf(_t, 12.0) * 0.004   # 慢慢推近
 	pic.scale = Vector2(z, z)
-	if _t > 12.0: _anim = false

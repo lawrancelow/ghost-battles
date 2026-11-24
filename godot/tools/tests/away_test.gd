@@ -327,6 +327,10 @@ func cg1(t) -> void:   # [cg] 第一章插圖：逐場播，喺有插圖嗰行�
 	var plan = [["op_wake", 0, "cg1_office"], ["op_wake", 1, "cg1_office_hide"], ["prologue_road", 0, "cg1_queue"], ["ch1_intro", 1, "cg1_news"], ["ch1_end", 6, "cg1_kneel"]]
 	for pl in plan:
 		G.story_req.emit(sc_all[pl[0]], Callable())
+		if pl[2] == "cg1_queue":
+			await _w(t, 0.1); await _shot(t, "cg1_on0")
+			await _w(t, 0.12); await _shot(t, "cg1_on1")
+			await _w(t, 0.15); await _shot(t, "cg1_on2")
 		await _w(t, 1.0)
 		var st = null
 		for n in m.get_children(): if n.has_method("advance"): st = n
