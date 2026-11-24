@@ -3,6 +3,8 @@ extends Node
 
 var _man = {}
 var _tex = {}
+var trace := false      # [perf2] 測試用：記低每張圖同步載入幾耐
+var trace_log := []
 
 func _ready() -> void:
 	var f = FileAccess.open("res://assets/spr_manifest.json", FileAccess.READ)
@@ -38,8 +40,10 @@ func get_tex(k: String) -> Texture2D:
 	k = key_for(k)
 	if _tex.has(k): return _tex[k]
 	if not _man.has(k): return null
+	var tl0 = Time.get_ticks_usec()
 	var t: Texture2D = load(_man[k])
 	_tex[k] = t
+	if trace: trace_log.append([k, (Time.get_ticks_usec() - tl0) / 1000.0])
 	return t
 
 func w(k: String) -> float:

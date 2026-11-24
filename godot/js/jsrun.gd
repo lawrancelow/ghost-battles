@@ -102,7 +102,10 @@ func _process(dt: float) -> void:
 		if OS.has_environment("GB_PROF") and Time.get_ticks_usec() - _u > 20000: print("[timer] ", (Time.get_ticks_usec() - _u) / 1000.0, "ms raf=", t.raf)
 		if OS.has_environment("GB_PROF2"): prof_timer += Time.get_ticks_usec() - _u
 	timers = timers.filter(func(t): return not t.get("dead", false))
-	if _ls_dirty: _ls_dirty = false; _save_ls()
+	if _ls_dirty:
+		_ls_dirty = false
+		var _q0 = Time.get_ticks_usec(); _save_ls()
+		if OS.has_environment("GB_PROF"): print("[ls] save %.1fms %d bytes" % [(Time.get_ticks_usec() - _q0) / 1000.0, _ls_bytes])
 
 func fire_later(el: El, ev: String) -> void:
 	timer(func(_t, _a): el.fire(ev), 0.0, false)
@@ -124,9 +127,11 @@ func ls_(m: String, a: Array):
 		"clear": ls.clear(); _ls_dirty = true
 		"key": var ks = ls.keys(); return ks[int(J.num(a[0]))] if int(J.num(a[0])) < ks.size() else null
 	return null
+var _ls_bytes := 0
 func _save_ls() -> void:
 	var f = FileAccess.open("user://localStorage.json", FileAccess.WRITE)
-	if f: f.store_string(JSON.stringify(ls))
+	var js = JSON.stringify(ls); _ls_bytes = js.length()
+	if f: f.store_string(js)
 func flush_ls() -> void: _save_ls()
 
 # ---------------- document ----------------

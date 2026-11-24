@@ -317,9 +317,11 @@ func _process(dt: float) -> void:
 			DisplayServer.clipboard_set(log_tail(200))
 		return
 	_process_js_state()
+	var _m0 = Time.get_ticks_usec()
 	LMm.tick(self)   # [landmark] 玩完舊玩法 → 返地標旁邊；地標解鎖 toast
 	ui_t += dt
 	if ui_t > 0.5 and title_ov == null: ui_t = 0; refresh(); load("res://game/barracks/bk_data.gd").poll()   # [barracks] 清剿結算
+	if OS.has_environment("GB_PROF") and Time.get_ticks_usec() - _m0 > 20000: print("[main] ", (Time.get_ticks_usec() - _m0) / 1000.0, "ms")
 
 # ---------------- 版面 ----------------
 func _build_village() -> void:

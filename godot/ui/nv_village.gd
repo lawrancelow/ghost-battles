@@ -18,6 +18,7 @@ const RV = preload("res://game/raid/raid_view.gd")   # [raid] 惡鬼襲擾：預
 const NB = preload("res://ui/nv_bake.gd")   # [perf] 靜態物件烘圖
 const HOL = preload("res://ui/nv_hero_ol.gd")   # [perf] 主角描邊 shader
 const PM = preload("res://ui/perf_mode.gd")   # [perf] 流暢模式
+const AW = preload("res://game/sortie/so_away.gd")   # [away] 出征中嘅名鬼唔留喺村
 
 var V: Dictionary
 var world: Node2D
@@ -47,6 +48,8 @@ var sc := 1.0
 var shx := 0.0
 var shy := 0.0
 var plaza: NvPlaza
+static var SPIKE := false   # [perf2] 測試用
+static var SPROF := {}
 var stub := NvStub.new()
 var prof := {}
 var prof_n := 0
@@ -127,6 +130,11 @@ func _process(_dt: float) -> void:
 		zone_over.queue_redraw()
 	NB.frame(self)   # [perf]
 	PM.frame(self)   # [perf]
+	var t3 = Time.get_ticks_usec()
+	if SPIKE:
+		for kv in [["v_static", t1 - t0], ["v_dyn", t2 - t1], ["v_rest", t3 - t2], ["v_draw", PtDraw.prof_us]]: SPROF[kv[0]] = SPROF.get(kv[0], 0) + kv[1]
+		PtDraw.prof_us = 0
+		SPROF["n"] = SPROF.get("n", 0) + 1
 	if OS.has_environment("GB_PROF"):
 		prof["static"] = prof.get("static", 0) + t1 - t0; prof["dyn"] = prof.get("dyn", 0) + t2 - t1; prof_n += 1
 		if prof_n >= 30:
@@ -194,6 +202,21 @@ func _zone_wrap() -> void:
 	V["setCam"] = cam; V["__zn_cam_w"] = cam; V["focus"] = foc
 func zone_s2w(p: Vector2) -> Vector2: return zone_cam().s2w(p)
 func zone_w2s(p: Vector2) -> Vector2: return zone_cam().w2s(p)
+# [away] 阿福出征中：砍樹／割禾／親手做唔得（唔係就會有隻睇唔見嘅阿福喺村度做嘢）
+var _away_msg_t := -99.0
+func _away_guard() -> void:
+	var H = V.get("hero")
+	if not (H is Dictionary): return
+	var tg = H.get("target"); var a = H.get("act")
+	var bad = (tg is Dictionary and str(tg.get("kind", "")) in ["tree", "paddy", "craft"]) or (a is Dictionary)
+	if not bad: return
+	H["target"] = null; H["act"] = null; H["walking"] = false
+	H["tx"] = H.get("x"); H["ty"] = H.get("y")
+	if t - _away_msg_t > 2.0:
+		_away_msg_t = t
+		var m = get_tree().root.get_node_or_null("Main")
+		if m != null and m.has_method("show_toast"): m.show_toast(str(DB.N(ZD.L("阿福跟咗隊出征，返嚟先做得", "阿福跟隊出征了，回來才能做"))))
+
 # 撳一下（畫面座標）：HUD → 公告板 → 區（攻佔／王）→ 大排檔／野外 → 村子（JS Village.tap）
 func zone_tap(p: Vector2) -> void:
 	var m = get_tree().root.get_node_or_null("Main")
@@ -359,6 +382,10 @@ func _sync_dynamic() -> void:
 		if (ik == "work" or ik == "xz") and (y < cvr.position.y - 20.0 or y - 160.0 > cvr.end.y): continue   # [perf]
 		if ik == "work" and it.get("s") != null and absf(J.num(J.gp(it.s, "x")) - cvr.get_center().x) > cvr.size.x * 0.5 + 90.0: continue   # [perf]
 		if it.get("kind") == "plaza" and plaza.try_item(it, y): continue
+		if ik == "hero" and AW.hero_out():   # [away] 阿福跟隊出征：村入面唔畫佢
+			_away_guard()
+			if hero_ol != null and is_instance_valid(hero_ol): hero_ol.visible = false
+			continue
 		var hn = HOL.node(self, y) if it.get("kind") == "hero" else null   # [perf] 主角：入描邊 shader 群組（群組位置做 y 排序）
 		var n = hn if hn != null else _seg()
 		if hn == null: n.position = Vector2(0, y)

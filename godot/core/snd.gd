@@ -360,14 +360,31 @@ func _play_bed(p: AudioStreamPlayer, st: AudioStreamWAV, lin: float) -> void:
 	p.stop(); p.stream = st; p.volume_db = -60.0; p.play()
 	create_tween().tween_property(p, "volume_db", linear_to_db(lin), 3.0)
 
-func _note(voices: Array, extra: Callable = Callable(), sec := 0.0) -> void:
-	if not on: return
-	var m = Mix.new(maxf(_len_of(voices), sec))
-	for v in voices:
-		if v.get("n", false): noise(m, v)
-		else: tone(m, v)
-	if extra.is_valid(): extra.call(m)
-	var st = _stream(m)
+# [perf2] 旋律音符：以前喺主線程逐粒即時合成（連殘響）＝ 每隔幾秒卡一下（手機上出征、村子都會頓）。
+#   而家：同一粒音合成過就記住；未合成過就交俾背景線程計，計好先播（遲一兩格冇人聽得出）。
+var _note_cache := {}
+var _note_busy := false
+func _note(voices: Array, extra: Callable = Callable(), sec := 0.0, key := "") -> void:
+	if key == "" and not extra.is_valid(): key = "n_%s_%s" % [str(voices), str(sec)]
+	if key != "" and _note_cache.has(key): _play_note(_note_cache[key]); return
+	if _note_busy: return   # 背景仲計緊上一粒：呢粒唔播（旋律本身就係隨機點綴）
+	_note_busy = true
+	var g = _gen
+	WorkerThreadPool.add_task(func():
+		var m = Mix.new(maxf(_len_of(voices), sec))
+		for v in voices:
+			if v.get("n", false): noise(m, v)
+			else: tone(m, v)
+		if extra.is_valid(): extra.call(m)
+		var st = _stream(m)
+		call_deferred("_note_done", key, st, g))
+
+func _note_done(key: String, st: AudioStreamWAV, g: int) -> void:
+	_note_busy = false
+	if key != "": _note_cache[key] = st
+	if g == _gen and on: _play_note(st)
+
+func _play_note(st: AudioStreamWAV) -> void:
 	var p: AudioStreamPlayer = null
 	for q in _mus: if not q.playing: p = q; break
 	if p == null: return
@@ -398,7 +415,7 @@ func set_mode(m: String) -> void:
 				_note(vs), 2.4, 4.8)
 			_every(func():
 				if _rng.randf() < 0.5: _note(_bell(146.83, 0.0, 0.09))
-				else: _note([], func(mx): _erhu(mx, 440, 349.23, 0.0, 2.6, 0.05), 4.4), 11, 19)
+				else: _note([], func(mx): _erhu(mx, 440, 349.23, 0.0, 2.6, 0.05), 4.4, "erhu_v"), 11, 19)
 		"story", "scare":
 			var st = await _bed_drone([36.71, 73.42], 260, 0.12, 0.03, 8.0)
 			if g != _gen: return

@@ -2,6 +2,7 @@
 # 行為（揀目的地、傾偈、追逐、捉弄）仍然係 JS PlazaLife.update；呢度只負責每幀畫：身體網格交俾 GPU（pt_mesh.gdshader）。
 class_name NvPlaza
 extends RefCounted
+const AW = preload("res://game/sortie/so_away.gd")   # [away]
 
 const SC := 0.58
 const TURN := 0.22
@@ -50,6 +51,7 @@ func end_frame() -> void:
 		var ay = J.num(ag.y)
 		if ay < vy0 or ay > vy1: continue  # 鏡頭外唔畫
 		var k = J.str(ag.k)
+		if AW.out(k): continue   # [away] 出征中嘅名鬼唔喺廣場遊蕩
 		var mute = b is Dictionary and ag.get("g") is Dictionary and b.get("id") == ag.g.get("id") and not J.t(b.get("hero"))
 		var special = SPECIAL != null and J.t(J.mc(SPECIAL, "has", [k]))
 		var nat_sp = special and NvSpecial.has(k)

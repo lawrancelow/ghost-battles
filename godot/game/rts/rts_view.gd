@@ -49,6 +49,7 @@ var _fire_tex: Texture2D
 static var inst = null
 var _pvu: Array = []          # [abui]
 static var PROF := {}
+static var SPIKE := false   # [perf2] 測試用：單格超過 60ms 印分項
 
 static func attach(village) -> void:
 	var n = Node.new(); n.name = "RtsView"
@@ -131,9 +132,11 @@ func _main_op():   # 戰況條／技能鈕：名鬼帶隊嗰場優先
 
 # ================= 每格 =================
 func _process(dt: float) -> void:
+	var tq0 = Time.get_ticks_usec()
 	RTS.tick(dt)   # 模擬：唔睇畫面（去咗大排檔、鬼怪頁都照打）
 	_t += dt
 	AH.tick(dt)   # [abui]
+	var tq1 = Time.get_ticks_usec()
 	if nv == null or not is_instance_valid(nv): return
 	if not nv.is_visible_in_tree() or not ZD.on():
 		if ov != null: ov.visible = false; ui.visible = false
@@ -143,11 +146,17 @@ func _process(dt: float) -> void:
 	ov.visible = true; ui.visible = true
 	var t0 = Time.get_ticks_usec()
 	_fx_frame(dt)
+	var ta = Time.get_ticks_usec()
 	_layer()
 	_sync_units(dt)
+	var tb = Time.get_ticks_usec()
 	_events()
 	txt.queue_redraw(); under.queue_redraw()
 	_sync_ui()
+	var tc = Time.get_ticks_usec()
+	if SPIKE:
+		for kv in [["sim", tq1 - tq0], ["fx", ta - t0], ["units", tb - ta], ["ui", tc - tb]]: PROF[kv[0]] = PROF.get(kv[0], 0) + kv[1]
+		PROF["sn"] = PROF.get("sn", 0) + 1
 	PROF["view"] = PROF.get("view", 0) + Time.get_ticks_usec() - t0
 	PROF["n"] = PROF.get("n", 0) + 1
 
