@@ -6,6 +6,7 @@
 #     或者行本身第三個元素：["旁白", "……", spec]
 #   spec："cg7_box" 或 {"k": "cg7_box", "over": [{"spr": "afu", "x": 0.2, "y": 0.95, "h": 0.55, "flip": false}],
 #                       "txt": [{"t": "…", "x": 0.5, "y": 0.2, "s": 22, "c": "#3a2a1a"}]}
+#     txt 加 "h"（同 "w"）＝一個框：字自動縮細到完全喺框入面、上下左右置中（y 變成框中心），唔自動斷行，用 \n 分行
 #     over 入面 spr 寫 "hero"＝主角（跟性別揀 afu／afuf）
 #     over＝喺插圖上疊遊戲現有立繪（老闆原創角色唔交 AI 重畫，一律用程式疊）；x、y 係腳底位置（0–1），h 係高度（插圖高度的比例）
 #     txt＝喺插圖上疊文字（插圖本身冇字）
@@ -161,11 +162,27 @@ func show_spec(spec) -> void:
 	for t in d.get("txt", []):
 		if not (t is Dictionary): continue
 		var lb = Label.new(); lb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		lb.text = DB.L(str(t.get("t", ""))); lb.add_theme_font_size_override("font_size", int(J.num(t.get("s", 20)) * 2.0))
+		var tx = str(DB.L(str(t.get("t", ""))))
+		lb.text = tx
 		lb.add_theme_color_override("font_color", Color(str(t.get("c", "#3a2a1a"))))
-		lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; lb.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
-		var bw = W * J.num(t.get("w", 0.8)); lb.size = Vector2(bw, 10)
-		lb.position = Vector2(W * J.num(t.get("x", 0.5)) - bw / 2, H * J.num(t.get("y", 0.2)))
+		lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var bw = W * J.num(t.get("w", 0.8))
+		if t.has("h"):   # 有框（例如紙箱嘅白色標籤）：字一定要喺框入面，自動縮細、唔自動斷行、上下置中
+			var bh = H * J.num(t.get("h"))
+			var ls = tx.split("\n"); var mc = 1
+			for l in ls: mc = maxi(mc, l.length())
+			var fs = mini(int(J.num(t.get("s", 20)) * 2.0), int(minf(bw * 0.92 / mc, bh * 0.9 / (ls.size() * 1.25))))
+			lb.add_theme_font_size_override("font_size", fs)
+			lb.add_theme_constant_override("line_spacing", int(fs * 0.12))
+			lb.autowrap_mode = TextServer.AUTOWRAP_OFF; lb.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			lb.clip_text = true
+			lb.size = Vector2(bw, bh)
+			lb.position = Vector2(W * J.num(t.get("x", 0.5)) - bw / 2, H * J.num(t.get("y", 0.2)) - bh / 2)   # 有框時 y＝框中心
+		else:
+			lb.add_theme_font_size_override("font_size", int(J.num(t.get("s", 20)) * 2.0))
+			lb.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+			lb.size = Vector2(bw, 10)
+			lb.position = Vector2(W * J.num(t.get("x", 0.5)) - bw / 2, H * J.num(t.get("y", 0.2)))
 		layer.add_child(lb)
 	visible = true; modulate.a = 1.0; _off = -1.0; _anim = true
 	if not same: _t = 0.0   # 換新圖先重新開機；同一張就唔再閃
@@ -215,3 +232,4 @@ func _process(dt: float) -> void:
 	if _blmat != null: _blmat.set_shader_parameter("amt", amt)
 	var z = 1.0 + minf(_t, 12.0) * 0.004   # 慢慢推近
 	pic.scale = Vector2(z, z)
+	layer.pivot_offset = layer.size / 2; layer.scale = pic.scale   # 疊圖／疊字跟插圖一齊推近，唔會錯位
