@@ -252,3 +252,43 @@ func mk(t) -> void:   # 大排檔截圖（等耐啲，睇名牌烘圖）
 	_cam(m, r.get_center() + Vector2(0, -40), m.village.size.x / 260.0)
 	await _w(t, 4.0); await _shot(t, "mk_zoom")
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func face(t) -> void:   # [face] 驗證 plain 模式立繪出手方向：名鬼打右邊敵人時影相
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	for i in 120:
+		await _w(t, 0.5)
+		var m0 = _main(t)
+		if m0 and m0.get("loading") == null and J.G.get("S") is Dictionary: break
+	await _w(t, 1.5)
+	var m = _main(t)
+	m._hide_title(); await _w(t, 1.0); await _skip(t)
+	if m.has_method("_nav_on"): m._nav_on("village")
+	await _w(t, 0.8)
+	var S = J.G.S
+	var SD = load("res://game/soul/soul_data.gd")
+	SD._bypass = true
+	for k in ["nw_kamaitachi", "nw_ushioni", "nw_teketeke"]: J.cl(J.G.get("joinGhost"), null, [k])
+	SD._bypass = false
+	await _skip(t, 8)
+	var ids = []
+	for g in S.ghosts: if str(g.get("k", g.get("id"))) in ["nw_kamaitachi", "nw_ushioni", "nw_teketeke"] or str(g.id).begins_with("nw_"): ids.append(g.id)
+	_p("team %s" % [ids])
+	S["team"] = ids.slice(0, 3)
+	S["lv"] = 30.0; S.res["troops"] = 100.0; S.res["buns"] = 5000.0; S.res["coins"] = 100000.0; J.G.get("Battle")["auto"] = true
+	SO.force_open = true; SO.test_now = 1000000.0
+	var e = SO.camps(0)[0]
+	_p("dispatch %s" % SO.dispatch(e))
+	var op = RTS.op_for(SO.sid_of(e))
+	if op == null: _p("RESULT ok=0 bad=1"); return
+	for i in 900:
+		if op.phase != "march": break
+		await _w(t, 0.1)
+	for n in 8:
+		var mid = Vector2.ZERO; var c = 0; var fm = Vector2.ZERO
+		for u in op.units:
+			if J.num(u.side) == 0 and not J.t(u.get("minion")) and u.get("p") is Vector2:
+				mid += u.p; c += 1
+				_p("  我方 %s face=%s anim=%s" % [u.k, u.get("face"), (u.anim.name if u.get("anim") is Dictionary else "-")])
+		if c > 0: _cam(m, mid / c, m.village.size.x / 160.0)
+		await _w(t, 0.7); await _shot(t, "face_%d" % n)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])

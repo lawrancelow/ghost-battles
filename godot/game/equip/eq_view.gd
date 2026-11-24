@@ -206,7 +206,7 @@ class Over extends Node2D:
 			if layer == "glow":
 				var arm = str(w.get("arm", ""))
 				if arm == "" or str(EQ2.item(arm).get("look")) != "body": return
-				EV2.glow(self, Transform2D.IDENTITY, k, foot, H, fd, EQ2.grade_col(EQ2.grade_of(arm)), T, 0.45 if u.get("anim") is Dictionary else 1.0)
+				EV2.glow(self, Transform2D.IDENTITY, k, foot, H, PtChar.plain_sx(k, J.t(st.get("side1"))), EQ2.grade_col(EQ2.grade_of(arm)), T, 0.45 if u.get("anim") is Dictionary else 1.0)
 				return
 			var s2 = EV2.state_of(u, T, _sk if layer == "front" else _peer_sk())
 			if s2.act != "idle": s2["tg"] = _tgv(foot)

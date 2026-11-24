@@ -12,6 +12,10 @@ const KEEP := {"y": 1, "sx": 1, "sy": 1}
 static var CHAR_H := {}
 static var SOLID := {}
 static var NATIVE_R := {}
+# [face] 整張圖（plain）模式入面原圖面向右嘅鬼（其餘預設面向左；正面嘅左右都得）
+const PLAIN_R := {"nw_buhuagu": 1, "nw_zzphone": 1}
+static func plain_sx(kk: String, flip: bool) -> float:   # 整張圖模式實際左右（-1＝鏡像）；裝備微光描邊要跟
+	return -1.0 if (not flip) != (PLAIN_R.has(kk) or NATIVE_R.has(kk)) else 1.0
 static var RIG := {}          # JS MeshAnim.RIG（含 n30 tweak）
 static var SPECIAL = null
 
@@ -270,7 +274,10 @@ func _draw_plain(n: CanvasItem) -> void:
 		n.draw_set_transform(Vector2(0, -20 * s), 0, Vector2(12 * s, 18 * s)); n.draw_circle(Vector2.ZERO, 1.0, Color(0.86, 0.9, 0.94, 0.8)); n.draw_set_transform_matrix(Transform2D.IDENTITY); return
 	var H = H0 * s; var iw = tex_plain.get_width(); var ih = tex_plain.get_height(); var Wd = H * iw / ih
 	var A = Transform2D.IDENTITY
-	if o.flip: A = A * Transform2D(Vector2(-1, 0), Vector2(0, 1), Vector2.ZERO)
+	# [face] 整張圖模式同網格模式用同一套規矩：原圖預設面向左（PLAIN_R／NATIVE_R 嘅係面向右）。
+	#   以前呢度直接用 o.flip，面向左嘅名鬼立繪會背住敵人出手（2026-11-24 修正）
+	var pfl = (not o.flip) != (PLAIN_R.has(k) or NATIVE_R.has(k))
+	if pfl: A = A * Transform2D(Vector2(-1, 0), Vector2(0, 1), Vector2.ZERO)
 	if o.rot != 0.0: A = A * Transform2D(0, Vector2(0, -15 * s)) * Transform2D(o.rot, Vector2.ZERO) * Transform2D(0, Vector2(0, 15 * s))
 	var ghost = not solid
 	var yy = 0.0 if not ghost else -(3 + sin(t * 2.4) * 2) * s
