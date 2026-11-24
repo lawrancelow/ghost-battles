@@ -170,8 +170,17 @@ func show_spec(spec) -> void:
 	visible = true; modulate.a = 1.0; _off = -1.0; _anim = true
 	if not same: _t = 0.0   # 換新圖先重新開機；同一張就唔再閃
 	_ensure_blur()
+	_place()
 	var stg = get_parent().get("stage")   # 插圖出現時，舞台只畫背景、唔畫角色（唔好同插圖入面嘅角色重複）
 	if stg != null and is_instance_valid(stg): stg.set("hide_acts", true); stg.queue_redraw()
+
+func _place() -> void:   # 居中：對話場＝對話框以上嘅空間正中；系統窗場＝插圖＋系統窗成組居中（由 story.gd 排）
+	var par = get_parent()
+	if par == null: return
+	if par.get("syswin") != null and is_instance_valid(par.get("syswin")):
+		par.call("_sys_layout"); return
+	var bot = par.size.y - (182.0 if par.get("talkbox") != null else 0.0)
+	offset_top = maxf(8.0, (bot - size.y) / 2.0)
 
 static func _hero_spr() -> String:
 	var S = J.G.get("S")
@@ -186,6 +195,8 @@ func hide_cg() -> void:   # 關機：畫面縮返做一條線再熄
 func _restore() -> void:
 	visible = false; cur_key = ""; _off = -1.0
 	if blur != null and is_instance_valid(blur): blur.visible = false
+	var par = get_parent()
+	if par != null and par.has_method("_sys_layout"): par.call("_sys_layout")
 	var st = get_parent().get("stage")
 	if st != null and is_instance_valid(st): st.set("hide_acts", false); st.queue_redraw()
 

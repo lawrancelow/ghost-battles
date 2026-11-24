@@ -19,6 +19,22 @@ var syswin: Panel
 var sysbody: VBoxContainer
 var sysscroll: ScrollContainer
 var tap_hint: Label
+var _sys_want := 180.0
+
+func _sys_layout() -> void:   # [cg] 系統窗位置：有插圖時，插圖＋系統窗成組喺畫面居中；冇就系統窗自己居中
+	if syswin == null or not is_instance_valid(syswin): return
+	var want = _sys_want
+	var on = cg != null and is_instance_valid(cg) and cg.visible
+	if on:
+		var total = cg.size.y + 12.0 + want
+		var top = maxf(8.0, (size.y - total) / 2.0)
+		cg.offset_top = top
+		syswin.anchor_top = 0; syswin.anchor_bottom = 0
+		syswin.offset_top = top + cg.size.y + 12.0; syswin.offset_bottom = syswin.offset_top + want
+	else:
+		syswin.anchor_top = 0.5; syswin.anchor_bottom = 0.5
+		syswin.offset_top = -want / 2; syswin.offset_bottom = want / 2
+	if tap_hint != null: tap_hint.position.y = (syswin.offset_bottom if on else size.y / 2 + want / 2) + 14
 var cur_line_label: Label
 const CGC = preload("res://ui/story_cg.gd")   # [cg] 劇情插圖卡
 var cg: Control = null
@@ -170,9 +186,8 @@ func _render_text() -> void:
 		_sysrow.text = str(_sysrow.get_meta("pre", "")) + s.replace("[", "[lb]")
 		await get_tree().process_frame
 		if sysscroll == null or syswin == null: return
-		var want = minf(sysbody.size.y + 58, size.y * 0.6 + 58)
-		syswin.offset_top = -want / 2; syswin.offset_bottom = want / 2
-		tap_hint.position.y = size.y / 2 + want / 2 + 14
+		_sys_want = minf(sysbody.size.y + 58, size.y * 0.6 + 58)
+		_sys_layout()
 		sysscroll.scroll_vertical = int(sysscroll.get_v_scroll_bar().max_value)
 
 func _gui_input(e: InputEvent) -> void:
