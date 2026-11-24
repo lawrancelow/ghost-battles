@@ -382,3 +382,33 @@ func vox(t) -> void:   # [vox] 第一章語氣聲：逐句播，記低每句出�
 		st.skip_scene(); await _w(t, 0.4)
 	ok += 1
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func cgf(t) -> void:   # [cg] 女主開場插圖
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	for i in 120:
+		await _w(t, 0.5)
+		var m0 = _main(t)
+		if m0 and m0.get("loading") == null and J.G.get("S") is Dictionary: break
+	await _w(t, 1.5)
+	J.G.S.hero = DB.hero_make("阿慧", "f")
+	var m = _main(t)
+	m._hide_title(); await _w(t, 1.0); await _skip(t)
+	var sc_all = JSON.parse_string(FileAccess.get_file_as_string("res://data/story_v2.json")).scenes
+	var plan = [["opf_wake", 0, "cgf_wake"], ["opf_guard", 0, "cgf_guard"], ["opf_desk", 0, "cgf_desk"], ["opf_desk", 2, "cgf_desk2"], ["opf_home", 1, "cgf_home"], ["opf_dinner", 0, "cgf_dinner"], ["opf_photo", 5, "cgf_footprint"]]
+	for pl in plan:
+		G.story_req.emit(sc_all[pl[0]], Callable())
+		await _w(t, 1.0)
+		var st = null
+		for n in m.get_children(): if n.has_method("advance"): st = n
+		if st == null: bad += 1; continue
+		for k in int(pl[1]) * 2: st.advance(); await _w(t, 0.05)
+		await _w(t, 1.6); await _shot(t, pl[2])
+		if st.cg != null and st.cg.visible: ok += 1
+		else: bad += 1; _p("BAD " + pl[2])
+		st.skip_scene(); await _w(t, 0.5)
+		for k in 30:
+			var any = false
+			for n in m.get_children(): if n.has_method("skip_scene") and n.get("cur") != null: n.skip_scene(); any = true
+			if not any: break
+			await _w(t, 0.3)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
