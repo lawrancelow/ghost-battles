@@ -37,6 +37,8 @@ func _sys_layout() -> void:   # [cg] 系統窗位置：有插圖時，插圖＋�
 	if tap_hint != null: tap_hint.position.y = (syswin.offset_bottom if on else size.y / 2 + want / 2) + 14
 var cur_line_label: Label
 const CGC = preload("res://ui/story_cg.gd")   # [cg] 劇情插圖卡
+const VOX = preload("res://ui/story_vox.gd")   # [vox] 角色語氣聲
+var vox: Node = null
 var cg: Control = null
 
 func _ready() -> void:
@@ -71,7 +73,7 @@ func next() -> void:
 
 func _clear() -> void:
 	for c in get_children(): c.queue_free()
-	stage = null; talkbox = null; syswin = null; wa = null; cg = null
+	stage = null; talkbox = null; syswin = null; wa = null; cg = null; vox = null
 
 var wa: WA = null
 
@@ -145,6 +147,9 @@ func _show_line() -> void:
 		if cs != null:
 			if str(cs) == "": cg.hide_cg()
 			else: cg.show_spec(cs)
+	if vox == null or not is_instance_valid(vox):
+		vox = Node.new(); vox.set_script(VOX); add_child(vox)
+	vox.line(sc, li, who, text)
 	full_text = text; shown = 0; typing = true; type_acc = 0.0
 	if talkbox != null:
 		nm.get_parent().visible = who != "旁白"; nm.text = DB.N(who)   # 只換顯示；SPEAKER_ART 照用原講者名

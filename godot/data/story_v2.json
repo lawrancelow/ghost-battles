@@ -169,6 +169,7 @@
 ]
 },
 "ch1_intro": {
+"vox": {"0": "cough"},
 "cg": {"1": "cg1_news"},
 "style": "news",
 "title": "陰間新聞台",
@@ -1335,6 +1336,7 @@
 ]
 },
 "op_guard": {
+"vox": {"5": "ex"},
 "cg": {"0": {"k": "cg1_guard", "over": [{"spr": "hero", "x": 0.3, "y": 0.93, "h": 0.46}, {"spr": "npc_guard", "x": 0.4, "y": 0.95, "h": 0.48, "flip": true}]}},
 "style": "talk",
 "bg": "office",

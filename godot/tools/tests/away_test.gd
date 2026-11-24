@@ -349,3 +349,34 @@ func cg1(t) -> void:   # [cg] 第一章插圖：逐場播，喺有插圖嗰行�
 			for n in m.get_children(): if n.has_method("skip_scene") and n.get("cur") != null: n.skip_scene()
 			await _w(t, 0.3)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func vox(t) -> void:   # [vox] 第一章語氣聲：逐句播，記低每句出咗咩聲
+	for i in 120:
+		await _w(t, 0.5)
+		var m0 = _main(t)
+		if m0 and m0.get("loading") == null and J.G.get("S") is Dictionary: break
+	await _w(t, 1.5)
+	var m = _main(t)
+	m._hide_title(); await _w(t, 1.0); await _skip(t)
+	var VX = load("res://ui/story_vox.gd")
+	var d = JSON.parse_string(FileAccess.get_file_as_string("res://data/story_v2.json"))
+	var sc_all = d.scenes
+	for sid in ["op_wake", "op_guard", "op_desk", "prologue_road", "prologue_sys", "ch1_intro", "ch1_intro2", "ch1_boss", "ch1_end", "gift_xiaozhi2"]:
+		var sc = sc_all[sid]
+		VX.LOG.clear()
+		G.story_req.emit(sc, Callable())
+		await _w(t, 0.6)
+		var st = null
+		for n in m.get_children(): if n.has_method("advance") and n.get("cur") != null: st = n
+		if st == null: bad += 1; _p("no story " + sid); continue
+		for li in sc.lines.size():
+			if li > 0:
+				if st.get("typing"): st.advance(); await _w(t, 0.02)
+				VX.LOG.clear()
+				st.advance(); await _w(t, 0.02)
+			await _w(t, 0.15)
+			var ln = sc.lines[li]
+			_p("  %s#%d %s「%s」→ %s" % [sid, li, ln[0], str(d.zh.get(ln[1], ln[1])).substr(0, 18), VX.LOG])
+		st.skip_scene(); await _w(t, 0.4)
+	ok += 1
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
