@@ -43,6 +43,17 @@ for cid, s in sc["camps"].items():
     cp["hm"] = [round(x * f, 3) for x in cp["hm"]]
     cp["am"] = [round(x * f, 3) for x in cp["am"]]
     cp["bal"] = s
+# [legion] 八大軍團據點（data/nat/legion.json CAMPS，id＝lg_<軍團>_<1-3>）：同樣 hm、am 同乘 s（bal 記住 s）
+LJ = os.path.join(ROOT, "data/nat/legion.json")
+if os.path.exists(LJ):
+    lj = json.load(open(LJ, encoding="utf-8")); nlg = 0
+    for cid, s in sc["camps"].items():
+        cp = lj.get("CAMPS", {}).get(cid)
+        if cp is None: continue
+        f = s / float(cp.get("bal", 1.0))
+        cp["hm"] = [round(x * f, 3) for x in cp["hm"]]; cp["am"] = [round(x * f, 3) for x in cp["am"]]; cp["bal"] = s; nlg += 1
+    json.dump(lj, open(LJ, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    print("legion camps", nlg)
 if "yin_k" in sc: cj["yin_k"] = sc["yin_k"]   # 陰兵血倍率（rts.gd _yin_hp_k 讀）
 for key in ["ch_k", "sortie_k"]:
     for c, v in sc[key].items(): cj[key][c] = v

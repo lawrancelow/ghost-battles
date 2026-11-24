@@ -10,6 +10,7 @@ const PATH := "res://data/abil.json"
 const CT_PATH := "res://data/nat/counter.json"
 const NG_PATH := "res://game/newghost/ng_data.gd"
 const NG2_PATH := "res://data/nat/newghost2.json"   # [ab] roster2 第二批
+const LG_PATH := "res://data/nat/legion.json"   # [legion] 八大軍團
 const CAP_LO := 0.2           # 兩層克制＋機制＋追擊 總倍率封頂
 const CAP_HI := 4.0
 const ADV_CAP := 0.25         # 軍師加成封頂 +25%
@@ -34,6 +35,7 @@ static func data() -> Dictionary:
 			var NG = load(NG_PATH)
 			if NG != null and NG.has_method("merge_abil"): NG.merge_abil(D)
 		if not D.is_empty(): _merge_ng(D, NG2_PATH)   # [ab] 第二批 30 隻（roster2 線）：有就讀
+		if not D.is_empty(): _merge_ng(D, LG_PATH)   # [legion] 八大軍團 54 隻
 	return D
 static func _merge_ng(A: Dictionary, path: String) -> void:   # newghost*.json：ABIL／ENEMY 只補 abil.json 冇嘅 key（怕／不怕以 abil.json 為準）；LINK 只補冇嘅 id
 	if not FileAccess.file_exists(path): return

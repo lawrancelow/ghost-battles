@@ -106,11 +106,17 @@ func _ng2_keys() -> Array:
 	var N = JSON.parse_string(FileAccess.get_file_as_string("res://data/nat/newghost2.json"))
 	if not (N is Dictionary) or not (N.get("GHOSTS") is Dictionary): return []
 	return N.GHOSTS.keys().filter(func(k): return str(N.GHOSTS[k].get("q", "")) == "名")
+func _lg_keys() -> Array:   # [legion]
+	if not FileAccess.file_exists("res://data/nat/legion.json"): return []
+	var N = JSON.parse_string(FileAccess.get_file_as_string("res://data/nat/legion.json"))
+	return N.get("ROSTER3", []) if N is Dictionary else []
 func data_check() -> void:
 	var L = S2.list()
 	var n2 = _ng2_keys()   # roster2 第二批（newghost2.json 有先計）
-	var NT = 101 + n2.size()
-	_chk("圖鑑 %d 格（101＋第二批 %d）" % [NT, n2.size()], L.size() == NT, L.size())
+	var nl = _lg_keys()   # [legion] 八大軍團 54 隻（legion.json 有先計）
+	var NT = 101 + n2.size() + nl.size()
+	_chk("圖鑑 %d 格（101＋第二批 %d＋軍團 %d）" % [NT, n2.size(), nl.size()], L.size() == NT, L.size())
+	_chk("軍團 54 隻全部自動加格", nl.all(func(k): return S2.entry(k).size() > 0))
 	var ks = {}
 	for x in L: ks[str(x.k)] = true
 	_chk("%d 格冇重複" % NT, ks.size() == NT)

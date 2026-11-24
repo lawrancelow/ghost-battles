@@ -9,6 +9,7 @@ const ZD = preload("res://game/zone/zone_data.gd")
 const M = preload("res://game/outpost/mat.gd")
 const CT = preload("res://game/counter/ct_data.gd")   # [counter] 據點敵人／打折讀 counter.json
 const NGB = preload("res://game/newghost/ng_boss.gd")   # [newghost] 魔王據點
+const LG = preload("res://game/legion/lg_data.gd")   # [legion] 軍團據點（掛咗圖先有）
 
 # ======================= 常數表（測試員試玩後只改呢度） =======================
 const LV_BASE := [1.0, 5.0, 9.0, 13.0, 17.0, 21.0]   # fallback：每關第 1 圈等級（＝主線 x-1 難度）
@@ -64,8 +65,8 @@ static func camps(c := -1) -> Array:
 			var p = LV_BASE[clampi(c, 0, 5)] + LV_RING[r - 1] + clampf(mlv - rmin, 0.0, 2.0) * 0.4
 			o.append({"id": str(e.get("id", "s%d" % o.size())), "ring": r, "lv": p, "pos": ZD.v2(e.pos), "c": c})
 			if e.has("boss"): o[o.size() - 1]["bm"] = NGB.boss_of(e, c)   # [newghost] 魔王據點（第 1 關之後可能換酒吞童子）
-		return o
-	return fallback(c)
+		return o + LG.camps(c)   # [legion]
+	return fallback(c) + LG.camps(c)   # [legion]
 static func fallback(c: int) -> Array:
 	var wz = ZD.of_type("wild", c)
 	if wz.is_empty(): return []
@@ -96,8 +97,12 @@ static func camp(id: String, c := -1) -> Dictionary:
 	return {}
 static func key(e: Dictionary) -> String: return "%d:%s" % [int(e.c), str(e.id)]
 static func sid_of(e: Dictionary) -> String: return "出擊·" + key(e)
-static func short(e: Dictionary) -> String: return "Lv.%d %s" % [int(e.lv), ZD.T(RING_NAME[ri(e.ring)])]
-static func title(e: Dictionary) -> String: return L("Lv.%d　%s據點", "Lv.%d　%s據點") % [int(e.lv), ZD.T(RING_NAME[ri(e.ring)])]
+static func short(e: Dictionary) -> String:
+	if LG.is_camp(e): return LG.short(e)   # [legion]
+	return "Lv.%d %s" % [int(e.lv), ZD.T(RING_NAME[ri(e.ring)])]
+static func title(e: Dictionary) -> String:
+	if LG.is_camp(e): return LG.title(e)   # [legion]
+	return L("Lv.%d　%s據點", "Lv.%d　%s據點") % [int(e.lv), ZD.T(RING_NAME[ri(e.ring)])]
 
 # ======================= 存檔 =======================
 static func st():
@@ -121,6 +126,7 @@ static func cst(e: Dictionary) -> Dictionary:
 static func ring_open(ring: int, c := -1) -> bool:
 	if c < 0: c = ZD.ci()
 	if ring <= 1: return force_open or ZD.wild_open(c)
+	if c >= 6: return force_open or ZD.ring_open(ring, c)   # [legion] 新地圖（七起）：跟地圖分圈；未有分圈＝開
 	if ZD.rings(c).size() > 0: return force_open or ZD.ring_open(ring, c)   # [integ] 有 mapx 分圈就以 mapx 為準
 	for e in camps(c):
 		if int(e.ring) == ring - 1 and J.t(cst(e).get("first")): return true
@@ -131,6 +137,7 @@ static func cleared_left_s(e: Dictionary) -> float:   # 已清空仲有幾多秒
 static func state(e: Dictionary) -> String:   # "open"／"cleared"／"locked"／"out"（出擊中）
 	if not ring_open(int(e.ring), int(e.c)): return "locked"
 	if NGB.locked(e): return "locked"   # [newghost] 魔王據點：第 4 圈其他據點全部首勝先開
+	if LG.locked(e): return "locked"   # [legion] 頭目營要雜兵營首勝、王營要頭目營首勝
 	if cleared_left_s(e) > 0: return "cleared"
 	var RTS = _rts()
 	if RTS.op_for(sid_of(e)) != null: return "out"
@@ -170,6 +177,7 @@ static func cost_text(cs: Dictionary) -> String:
 
 # ======================= 敵人 =======================
 static func stage_of(e: Dictionary) -> Dictionary:
+	if LG.is_camp(e): return LG.stage(e, title(e))   # [legion] 軍團營敵陣
 	if str(e.get("bm", "")) != "":   # [newghost] 魔王據點：魔王＋嘍囉
 		var nb = NGB.stage(e, title(e))
 		var cb = CT.stage_en(str(e.get("id", "")))   # [counter] counter.json 有就加副將（駐守鬼＝主魂）
@@ -222,7 +230,7 @@ static func dispatch(e: Dictionary) -> String:
 	if snap.is_empty(): return "nobattle"
 	var gu = CT.apply_camp(snap, stg.ct) if stg.has("ct") else null   # [counter] 頂替雜兵縮細；gu＝駐守鬼
 	RTS._soften(snap, {"kind": "sortie", "c": int(e.c)})   # [counter] 據點同樣打折（修據點未打折 bug）
-	if int(e.ring) >= 4:   # 第 4 圈：最後一隻做頭目
+	if int(e.ring) >= 4:   # 第 4 圈：最後一隻做頭目（[legion] 軍團王營同樣血 ×1.25；名牌由 LG.decorate 改做「軍團王」）
 		var last = gu
 		if last == null:
 			for u in snap.units: if J.num(u.side) == 1 and not J.t(u.get("minion")): last = u
@@ -232,6 +240,7 @@ static func dispatch(e: Dictionary) -> String:
 			last["name"] = (L("%s（頭目）", "%s（頭目）") % str(last.get("name", gk))) if (gu != null or gk != "") else L("惡鬼頭目", "惡鬼頭目")
 	pay(cs)
 	NGB.decorate(snap, e)   # [newghost] 魔王名牌
+	LG.decorate(snap, e)   # [legion] 遠程射程、頭目／軍團王名牌
 	var c = cst(e); c["tries"] = J.num(c.tries) + 1
 	var op = RTS.SIM.new()
 	op.id = RTS._next_id; RTS._next_id += 1
@@ -383,6 +392,13 @@ static func give_rare(r: int) -> String:
 
 # [integ] 行軍路線：mapx 有 route 就沿 route 行，否則用主線路線
 static func path_of(e: Dictionary, at: Vector2) -> PackedVector2Array:
+	if LG.is_camp(e):   # [legion] 軍團營：自帶 route；冇就用主線路線
+		var lr = e.get("route")
+		if not (lr is Array) or lr.size() < 2: return _rts().stage_path(at)
+		var lo = PackedVector2Array()
+		for p in lr: lo.append(ZD.v2(p))
+		if lo[lo.size() - 1].distance_to(at) > 4.0: lo.append(at)
+		return lo
 	var z = ZD.sortie(str(e.get("id", "")))
 	var r = z.get("route")
 	if r is Array and r.size() >= 2:

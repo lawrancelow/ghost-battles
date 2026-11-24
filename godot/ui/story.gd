@@ -20,6 +20,8 @@ var sysbody: VBoxContainer
 var sysscroll: ScrollContainer
 var tap_hint: Label
 var cur_line_label: Label
+const CGC = preload("res://ui/story_cg.gd")   # [cg] 劇情插圖卡
+var cg: Control = null
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -53,7 +55,7 @@ func next() -> void:
 
 func _clear() -> void:
 	for c in get_children(): c.queue_free()
-	stage = null; talkbox = null; syswin = null; wa = null
+	stage = null; talkbox = null; syswin = null; wa = null; cg = null
 
 var wa: WA = null
 
@@ -114,6 +116,7 @@ func _build(sc: Dictionary) -> void:
 		sysscroll.add_child(sysbody)
 		tap_hint = UIKit.label("點擊繼續", 14, Color(1, 1, 1, 0.55)); tap_hint.position = Vector2(0, 0); tap_hint.size = Vector2(390, 20); tap_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		add_child(tap_hint)
+	cg = Control.new(); cg.set_script(CGC); add_child(cg)   # [cg] 插圖卡（喺對話框／系統窗之上）
 	var sk = UIKit.btn("跳過 ▸▸", "ghost", true); sk.anchor_left = 1; sk.anchor_right = 1; sk.offset_left = -96; sk.offset_top = 10; sk.offset_right = -10
 	sk.add_theme_color_override("font_color", Color("#e8dcc0")); sk.add_theme_font_size_override("font_size", 14)
 	sk.pressed.connect(skip_scene); add_child(sk)
@@ -121,6 +124,11 @@ func _build(sc: Dictionary) -> void:
 func _show_line() -> void:
 	var sc: Dictionary = cur.sc
 	var ln: Array = sc.lines[li]; var who: String = ln[0]; var text: String = DB.L(str(ln[1]))
+	if cg != null:   # [cg] 呢行有插圖就換
+		var cs = CGC.spec_of(sc, li, ln)
+		if cs != null:
+			if str(cs) == "": cg.hide_cg()
+			else: cg.show_spec(cs)
 	full_text = text; shown = 0; typing = true; type_acc = 0.0
 	if talkbox != null:
 		nm.get_parent().visible = who != "旁白"; nm.text = DB.N(who)   # 只換顯示；SPEAKER_ART 照用原講者名

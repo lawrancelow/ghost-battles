@@ -112,6 +112,7 @@ static func install() -> void:
 	merge_abil()
 	installed = true
 	install2()   # [roster2] 第二批 30 隻（newghost2.json）
+	load("res://game/legion/lg_data.gd").install()   # [legion] 八大軍團 54 隻（legion.json）
 
 # [roster2] 同 install() 一樣登記第二批（GHOSTS／SKILLS／ENEMY_T／COMBOS／LANG／圖／ABIL／ENEMY／LINK）
 static func install2() -> void:

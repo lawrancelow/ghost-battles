@@ -94,7 +94,10 @@ static func pin(k: String) -> String:
 	if p in PINS: return p
 	var ct = CT().get("ghost", {})   # 新鬼：counter／名冊線可加 pin
 	if ct is Dictionary and ct.get(k) is Dictionary and str(ct[k].get("pin", "")) in PINS: return str(ct[k].pin)
+	var lp = _lg().pin(k)   # [legion] 八大軍團：雜兵凡、精英靈、頭目煞、軍團王王
+	if lp in PINS: return lp
 	return "凡"
+static func _lg(): return load("res://game/legion/lg_data.gd")   # [legion]
 static func pv(k: String) -> int: return int(PV[pin(k)])
 static func story(k: String) -> bool: return k in D().STORY_JOIN
 static func unsummonable(k: String) -> bool:   # 大魔王：counter.json boss／黃總
@@ -210,6 +213,7 @@ static func camp_named(e: Dictionary) -> Array:   # 據點入面嘅名鬼（coun
 	for k in J.iter(en): if is_ghost(J.str(k)) and not (J.str(k) in o): o.append(J.str(k))
 	return o
 static func sec_of(e: Dictionary) -> String:
+	if _lg().is_camp(e): return ""   # [legion] 軍團營：同場兵種已經全部掉主魂（co），唔再抽副魂
 	var g = guard_of(e)
 	var g2 = guard2_of(e)   # [roster2] 雙駐守唔做副魂
 	var best = ""
@@ -238,6 +242,7 @@ static func sources(k: String) -> Array:   # [{e, pri:bool}]：邊度有（所�
 			if guard_of(e) == k: o.append({"e": e, "pri": true})
 			elif guard2_of(e) == k: o.append({"e": e, "pri": true, "co": true})   # [roster2]
 			elif sec_of(e) == k: o.append({"e": e, "pri": false})
+	o += _lg().sources(k)   # [legion] 軍團營（掛咗新地圖先有）
 	return o
 static func ch_of(k: String) -> int:   # 招降費用嘅「章」
 	var best = 99
@@ -246,6 +251,7 @@ static func ch_of(k: String) -> int:   # 招降費用嘅「章」
 	for key in D().get("CAMP2", {}):   # [roster2] 雙駐守
 		if str(D().CAMP2[key]) == k: best = mini(best, int(str(key).get_slice(":", 0)))
 	if best < 99: return best
+	if _lg().ch_of(k) >= 0: return _lg().ch_of(k)   # [legion] 所屬地圖（ci 6–11）
 	return int(J.num(D().STORY_CH.get(k, 0)))
 
 # 據點敵人：最後一隻換成駐守名鬼（cdata 已放入就唔郁）；第 4 圈頭目血 ×1.25 交 so_data
@@ -315,6 +321,15 @@ static func on_sortie_win(e: Dictionary, first: bool, good := false) -> Dictiona
 		var g3 = gain(k3, n3, "sortie")
 		out.items.append({"k": k3, "n": n3, "sec": false, "co": true})
 		parts.append(_gain_txt(g3))
+	for kc in _lg().co_of(e):   # [legion] 軍團營：同場其他兵種一齊掉主魂（同雙駐守一樣數）
+		if not is_ghost(kc): continue
+		if not was_ready.has(kc): was_ready[kc] = can_summon(kc).ok
+		var nc = maxi(1, int(round(PRI[r] * mul)))
+		if good: nc += GOOD_BONUS
+		if first: nc += FIRST[r]
+		var gc = gain(kc, nc, "sortie")
+		out.items.append({"k": kc, "n": nc, "sec": false, "co": true})
+		parts.append(_gain_txt(gc))
 	# 副魂（保底）
 	var k2 = sec_of(e)
 	if k2 != "":
@@ -405,6 +420,7 @@ static func need_of(k: String) -> int:
 	return n
 static func wish_of(k: String) -> Array:   # [資源 key, 句子]
 	var w = D().WISH.get(k)
+	if not (w is Array) and _lg().wish(k).size() >= 3: w = _lg().wish(k)   # [legion]
 	if w is Array and w.size() >= 3: return [str(w[0]), L(str(w[1]), str(w[2]))]
 	return ["buns", L("壽包就得，最緊要係心意。", "壽包就好，最重要是心意。")]
 static func res_name(r: String) -> String:

@@ -60,14 +60,18 @@ static func C() -> Dictionary:
 # 圖鑑格數隨名冊自動增加：newghost2.json（roster2 第二批）有、codex.json 未重跑時，即場補格（重跑 codex_build.py 後呢度冇嘢做）
 const NG2_PATH := "res://data/nat/newghost2.json"
 const SCN := {"breath": "吹氣", "light": "燈", "cold": "凍", "sound": "怪聲", "paper": "紙", "phone": "電話", "face": "鬼臉", "shadow": "黑影"}
+const LG_PATH := "res://data/nat/legion.json"   # [legion] 八大軍團 54 隻：圖鑑自動加格（ROSTER3；note＝軍團名）
 static func _grow() -> void:
-	if not FileAccess.file_exists(NG2_PATH): return
-	var f = FileAccess.open(NG2_PATH, FileAccess.READ)
+	_grow_from(NG2_PATH, "ROSTER2", "CAMP2")
+	_grow_from(LG_PATH, "ROSTER3", "")   # [legion]
+static func _grow_from(path: String, rkey: String, ckey: String) -> void:
+	if not FileAccess.file_exists(path): return
+	var f = FileAccess.open(path, FileAccess.READ)
 	var N = JSON.parse_string(f.get_as_text()) if f != null else null
 	if not (N is Dictionary): return
-	var G = N.get("GHOSTS", {}); var EN = N.get("ENEMY", {}); var AB = N.get("ABIL", {}); var PN = N.get("PIN", {}); var CP = N.get("CAMP2", {})
+	var G = N.get("GHOSTS", {}); var EN = N.get("ENEMY", {}); var AB = N.get("ABIL", {}); var PN = N.get("PIN", {}); var CP = N.get(ckey, {}) if ckey != "" else {}; var LGS = N.get("LEG", {})
 	if not (G is Dictionary): return
-	var ks = N.get("ROSTER2", G.keys())
+	var ks = N.get(rkey, G.keys())
 	for k0 in ks:
 		var k = str(k0)
 		if _C.BY.has(k) or not (G.get(k) is Dictionary) or str(G[k].get("q", "")) != "名": continue
@@ -77,7 +81,7 @@ static func _grow() -> void:
 		var sc = str(scs[0]) if scs is Array and not scs.is_empty() else "face"
 		var cp = CP.get(k, {}) if CP.get(k) is Dictionary else {}
 		var x = {"k": k, "no": _C.LIST.size(), "name": str(G[k].get("name", k)), "sys": str(e.get("sys", a.get("sys", "魂"))), "sc": SCN.get(sc, sc),
-			"mech": e.get("mech", []), "tags": a.get("tags", []), "ch": int(e.get("ch", 1)), "reg": "", "note": str(cp.get("gang", G[k].get("title", ""))),
+			"mech": e.get("mech", []), "tags": a.get("tags", []), "ch": int(e.get("ch", 1)), "reg": str(G[k].get("reg", "")), "note": str(cp.get("gang", LGS.get(str(G[k].get("lg", "")), {}).get("name", G[k].get("title", "")))),
 			"pin": str(PN.get(k, "靈")), "new": true}
 		_C.LIST.append(x); _C.BY[k] = x
 	var say = N.get("SAY_FB", {})
