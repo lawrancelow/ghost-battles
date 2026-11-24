@@ -370,6 +370,7 @@ func _note(voices: Array, extra: Callable = Callable(), sec := 0.0, key := "") -
 	if _note_busy: return   # 背景仲計緊上一粒：呢粒唔播（旋律本身就係隨機點綴）
 	_note_busy = true
 	var g = _gen
+	var wr = weakref(self)   # 關遊戲時背景線程計完，Snd 可能已經冇咗
 	WorkerThreadPool.add_task(func():
 		var m = Mix.new(maxf(_len_of(voices), sec))
 		for v in voices:
@@ -377,7 +378,8 @@ func _note(voices: Array, extra: Callable = Callable(), sec := 0.0, key := "") -
 			else: tone(m, v)
 		if extra.is_valid(): extra.call(m)
 		var st = _stream(m)
-		call_deferred("_note_done", key, st, g))
+		var me = wr.get_ref()
+		if me != null: me.call_deferred("_note_done", key, st, g))
 
 func _note_done(key: String, st: AudioStreamWAV, g: int) -> void:
 	_note_busy = false
