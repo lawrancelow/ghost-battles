@@ -113,7 +113,7 @@ func abil_check() -> void:
 	var FJ = JSON.parse_string(FileAccess.get_file_as_string("res://data/abil.json"))
 	if FJ is Dictionary: A = FJ.get("ABIL", {})
 	var GH = {}
-	for k in J.G.get("GHOSTS"): if not str(k).begins_with("nw_"): GH[k] = true
+	for k in J.G.get("GHOSTS"): if not str(k).begins_with("nw_") and not str(k).begins_with("lg_"): GH[k] = true   # [legion] 八大軍團 ABIL 歸 legion.json（legion_test 校驗）
 	var miss = []
 	for k in GH: if not A.has(k): miss.append(k)
 	for k in ["niutou", "mamian"]: if not A.has(k): miss.append(k)
@@ -220,13 +220,13 @@ func counter_check() -> void:
 	var SRC: Dictionary = D.get("src", {}); var A = AB.data().ABIL; var E = AB.data().ENEMY
 	var nos = []
 	for k in A:
-		if k in ["afu", "xiaozhi", "mengpo"] or not J.t(E.get(k, {}).get("recruit")): continue
+		if k in ["afu", "xiaozhi", "mengpo"] or not J.t(E.get(k, {}).get("recruit")) or str(k).begins_with("lg_"): continue   # [legion] 軍團兵種嘅魂魄來源＝軍團營（legion.json，legion_test 校驗）
 		if (SRC.get(k, []) as Array).is_empty(): nos.append(k)
 	_chk("每隻可招降名鬼最少一個魂魄來源（據點／野外王／王座重遊）", nos.is_empty(), nos)
 	var nop = []
 	var keys = []
 	for k in A:
-		if not (k in ["afu", "xiaozhi", "mengpo"]) and J.t(E.get(k, {}).get("recruit")): keys.append(k)
+		if not (k in ["afu", "xiaozhi", "mengpo"]) and J.t(E.get(k, {}).get("recruit")) and not str(k).begins_with("lg_"): keys.append(k)   # [legion]
 	for k in D.get("new", {}): keys.append(k)
 	for k in keys:
 		var okp = false

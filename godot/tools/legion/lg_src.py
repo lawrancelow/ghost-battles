@@ -168,12 +168,12 @@ unit("lg_sgj_king", slot="king", name="黑潭水鬼王", title="下身係個漩�
      pas=[P("every", [F("confuse", dur=2.0, tg="all_r", r=140)], t=11.0), P("low_hp", [F("stealth", dur=2.0, tg="self")], star=2, pct=0.5)])
 
 # ============================== 3. 紙紮人 zzj（紙紮：怕燈、吹氣；唔怕紙） ==============================
-unit("lg_zzj_bing", slot="bing", name="紙紮兵", title="竹篾骨、銀紙刀", sc="紙", mech=["反傷"], rng="近", solid=True,
+unit("lg_zzj_bing", slot="bing", name="紙紮兵", title="竹篾骨、銀紙刀", sc="紙", mech=[], rng="近", solid=True,   # 雜兵唔帶反傷（成群＋遊魂嘍囉都係佢，近戰隊會被反死；校準 s 到底都打唔過）
      trait="竹篾紮骨、彩紙糊身，揸住把銀紙刀；斬人斬得爽，最怕有人點火。",
      say=["收咗你哋陽間一疊銀紙，總要做返啲嘢。", "收了你們陽間一疊銀紙，總得做點事。"],
      skill={"name": "銀紙刀", "kind": "hit", "mult": 0.55, "desc": "銀紙刀連斬兩下，打斷對方放技。"},
      act=A("銀紙刀", NEAR(), [DMG(0.55, hits=2), F("interrupt"), F("mark", v=0.1, dur=3.0)]),
-     pas=[P("hit_taken", [DMG(0.3)], chance=0.2, icd=5)])
+     pas=[P("start", [F("shield", pct=0.1, dur=5.0, tg="self")])])
 unit("lg_zzj_shoot", slot="shoot", name="紙紮弓手", title="紅紙箭尾", sc="黑影", mech=[], rng="遠", solid=True,
      trait="紙弓紙箭、箭尾貼紅紙；射得準，但係落雨天就成支箭軟晒。",
      say=["紙箭都係箭，射中一樣痛。", "紙箭也是箭，射中一樣痛。"],
@@ -192,13 +192,13 @@ unit("lg_zzj_elite", slot="elite", name="紙紮馬騎兵", title="紅纓紙槍",
      skill={"name": "紅纓衝陣", "kind": "hit", "mult": 1.3, "apply": "down", "desc": "騎馬衝去後排，一槍挑到對方仆低。"},
      act=A("紅纓衝陣", {"sel": "back"}, [F("dash", to="target", dist=300), DMG(1.3), F("down", dur=1.0), F("push", dist=40)]),
      pas=[P("start", [F("buff", stat="spd", v=0.5, dur=4.0, tg="self")])])
-unit("lg_zzj_boss", slot="boss", name="紙紮將軍", title="一身紙甲一把紙關刀", sc="紙", mech=["反傷", "霸體"], rng="近", solid=True,
-     trait="整套紙紮將軍盔甲、金銀箔貼邊，揸住紙關刀；你近身打佢，刀風就掃返你。",
+unit("lg_zzj_boss", slot="boss", name="紙紮將軍", title="一身紙甲一把紙關刀", sc="紙", mech=["霸體", "殼"], rng="近", solid=True,
+     trait="整套紙紮將軍盔甲、金銀箔貼邊，揸住紙關刀；紙甲層層疊，唔打穿都唔郁得佢。",
      say=["紙甲又點？燒落嚟嗰日，我都係將軍。", "紙甲又怎樣？燒下來那天，我也是將軍。"],
      skill={"name": "紙關刀", "kind": "aoe", "mult": 1.1, "desc": "紙關刀連劈兩下，身邊敵人全部中。"},
      act=A("紙關刀", NEAR(shape="circle", r=150), [DMG(0.6, hits=2)], AOE(3, 150)),
-     pas=[P("hit_taken", [DMG(0.5)], chance=0.3, icd=6), P("start", [F("shield", pct=0.2, dur=8.0, tg="self")], star=2)])
-unit("lg_zzj_boss2", slot="boss2", name="紙紮轎夫頭", title="扛住半頂紙轎", sc="凍", mech=["召喚", "反傷"], rng="中", solid=True,
+     pas=[P("low_hp", [F("shield", pct=0.25, dur=6.0, tg="self")], pct=0.4), P("start", [F("shield", pct=0.2, dur=8.0, tg="self")], star=2)])
+unit("lg_zzj_boss2", slot="boss2", name="紙紮轎夫頭", title="扛住半頂紙轎", sc="凍", mech=["召喚", "殼"], rng="中", solid=True,
      trait="扛住半頂紙紮轎、揸住紙燈籠；轎一放低，入面就行出幾個紙紮兵。",
      say=["起轎！大人話今晚要遊夜街。", "起轎！大人說今晚要夜遊街。"],
      skill={"name": "撞轎", "kind": "aoe", "mult": 0.6, "apply": "push", "desc": "紙轎一撞，身邊敵人撞開兼嚇散嚇氣；紙燈籠照出匿埋嘅。"},
