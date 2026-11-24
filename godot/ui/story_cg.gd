@@ -52,8 +52,10 @@ func show_spec(spec) -> void:
 	H = minf(H, get_parent().size.y * 0.46)
 	size = Vector2(W, H); custom_minimum_size = size
 	frame.position = Vector2.ZERO; frame.size = size
-	pic.texture = tex; pic.position = Vector2.ZERO; pic.size = size; pic.pivot_offset = size / 2
-	layer.position = Vector2.ZERO; layer.size = size
+	var B = 4.0   # 金框闊度：圖縮入框內
+	pic.texture = tex; pic.position = Vector2(B, B); pic.size = size - Vector2(B, B) * 2; pic.pivot_offset = pic.size / 2
+	layer.position = Vector2(B, B); layer.size = size - Vector2(B, B) * 2
+	W = layer.size.x; H = layer.size.y
 	for c in layer.get_children(): c.queue_free()
 	for o in d.get("over", []):
 		if not (o is Dictionary): continue
@@ -65,7 +67,11 @@ func show_spec(spec) -> void:
 		var hh = H * J.num(o.get("h", 0.5)); var ww = hh * float(st.get_width()) / float(st.get_height())
 		tr.size = Vector2(ww, hh); tr.position = Vector2(W * J.num(o.get("x", 0.5)) - ww / 2, H * J.num(o.get("y", 0.95)) - hh)
 		tr.flip_h = J.t(o.get("flip"))
-		layer.add_child(tr)
+		var sh = Panel.new(); sh.mouse_filter = Control.MOUSE_FILTER_IGNORE   # 腳底影，令疊上去嘅立繪企得穩
+		var ss = StyleBoxFlat.new(); ss.bg_color = Color(0, 0, 0, 0.38); ss.set_corner_radius_all(int(ww * 0.25))
+		sh.add_theme_stylebox_override("panel", ss)
+		sh.size = Vector2(ww * 0.62, ww * 0.12); sh.position = Vector2(tr.position.x + ww * 0.19, tr.position.y + hh - ww * 0.07)
+		layer.add_child(sh); layer.add_child(tr)
 	for t in d.get("txt", []):
 		if not (t is Dictionary): continue
 		var lb = Label.new(); lb.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -76,9 +82,13 @@ func show_spec(spec) -> void:
 		lb.position = Vector2(W * J.num(t.get("x", 0.5)) - bw / 2, H * J.num(t.get("y", 0.2)))
 		layer.add_child(lb)
 	visible = true; modulate.a = 0.0; _t = 0.0; _anim = true
+	var st = get_parent().get("stage")   # 插圖出現時，舞台上嘅角色收起，唔好同插圖入面嘅角色重複
+	if st != null and is_instance_valid(st): st.visible = false
 
 func hide_cg() -> void:
 	visible = false; cur_key = ""
+	var st = get_parent().get("stage")
+	if st != null and is_instance_valid(st): st.visible = true
 
 func _process(dt: float) -> void:
 	if not visible or not _anim: return
