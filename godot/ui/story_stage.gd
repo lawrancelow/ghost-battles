@@ -2,6 +2,7 @@
 extends Control
 
 var player
+var hide_acts := false   # [cg] 插圖出現時只畫背景、唔畫角色（唔好同插圖入面嘅角色重複）
 
 func _draw() -> void:
 	if player == null or player.cur == null: return
@@ -10,6 +11,7 @@ func _draw() -> void:
 	paint_bg(ctx, w, h, sc.get("bg", "village"))
 	if sc.get("mic", false):
 		var g = ctx.createRadialGradient(w * 0.5, h * 0.62, 10, w * 0.5, h * 0.62, w * 0.55); g.addColorStop(0, "rgba(255,236,190,.28)"); g.addColorStop(1, "rgba(0,0,0,.55)"); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h)
+	if hide_acts: return
 	var acts: Array = player.actors; var n = acts.size(); var spk: String = player.speaker()
 	for i in n:
 		var a: String = acts[i]

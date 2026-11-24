@@ -4,6 +4,7 @@
 #     或者行本身第三個元素：["旁白", "……", spec]
 #   spec："cg7_box" 或 {"k": "cg7_box", "over": [{"spr": "afu", "x": 0.2, "y": 0.95, "h": 0.55, "flip": false}],
 #                       "txt": [{"t": "…", "x": 0.5, "y": 0.2, "s": 22, "c": "#3a2a1a"}]}
+#     over 入面 spr 寫 "hero"＝主角（跟性別揀 afu／afuf）
 #     over＝喺插圖上疊遊戲現有立繪（老闆原創角色唔交 AI 重畫，一律用程式疊）；x、y 係腳底位置（0–1），h 係高度（插圖高度的比例）
 #     txt＝喺插圖上疊文字（插圖本身冇字）
 #   插圖冇入 manifest（未批／未到）就自動唔顯示，劇情照播。
@@ -60,6 +61,7 @@ func show_spec(spec) -> void:
 	for o in d.get("over", []):
 		if not (o is Dictionary): continue
 		var sk = str(o.get("spr", ""))
+		if sk == "hero": sk = _hero_spr()   # 主角：跟玩家揀嘅性別（男 afu／女 afuf）
 		var st: Texture2D = Spr.get_tex(Art.spr_key(sk)) if Spr.ok(Art.spr_key(sk)) else (Spr.get_tex(sk) if Spr.ok(sk) else null)
 		if st == null: continue
 		var tr = TextureRect.new(); tr.mouse_filter = Control.MOUSE_FILTER_IGNORE; tr.texture = st
@@ -83,12 +85,17 @@ func show_spec(spec) -> void:
 		layer.add_child(lb)
 	visible = true; modulate.a = 0.0; _t = 0.0; _anim = true
 	var st = get_parent().get("stage")   # 插圖出現時，舞台上嘅角色收起，唔好同插圖入面嘅角色重複
-	if st != null and is_instance_valid(st): st.visible = false
+	if st != null and is_instance_valid(st): st.set("hide_acts", true); st.queue_redraw()
+
+static func _hero_spr() -> String:
+	var S = J.G.get("S")
+	var h = S.get("hero") if S is Dictionary else null
+	return "afuf" if h is Dictionary and str(h.get("sex", "m")) == "f" and Spr.ok("afuf") else "afu"
 
 func hide_cg() -> void:
 	visible = false; cur_key = ""
 	var st = get_parent().get("stage")
-	if st != null and is_instance_valid(st): st.visible = true
+	if st != null and is_instance_valid(st): st.set("hide_acts", false); st.queue_redraw()
 
 func _process(dt: float) -> void:
 	if not visible or not _anim: return

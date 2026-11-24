@@ -302,7 +302,7 @@ func cgt(t) -> void:   # [cg] 劇情插圖卡截圖
 	await _w(t, 1.5)
 	var m = _main(t)
 	m._hide_title(); await _w(t, 1.0); await _skip(t)
-	var sc = {"style": "talk", "lines": [["旁白", "凌晨兩點四十七分，落魄村村口出現一個速遞箱。", {"k": "bg_kampung", "over": [{"spr": "afu", "x": 0.25, "y": 0.97, "h": 0.55}, {"spr": "xiaozhi", "x": 0.75, "y": 0.97, "h": 0.5, "flip": true}], "txt": [{"t": "易碎・勿倒置・內有殭屍", "x": 0.5, "y": 0.08, "s": 22, "c": "#ffe8b0"}]}], ["阿福", "我冇落單。"], ["小紙", "少爺，收件人寫住黃總。", ""]]}
+	var sc = {"style": "talk", "lines": [["旁白", "凌晨兩點四十七分，落魄村村口出現一個速遞箱。", {"k": "cg7_box", "over": [{"spr": "afu", "x": 0.72, "y": 0.93, "h": 0.36, "flip": true}, {"spr": "xiaozhi", "x": 0.86, "y": 0.93, "h": 0.3, "flip": true}]}], ["阿福", "我冇落單。"], ["小紙", "少爺，收件人寫住黃總。", ""]]}
 	G.story_req.emit(sc, Callable())
 	await _w(t, 2.0); await _shot(t, "cg_1")
 	var st = m.get_node_or_null("Story")
@@ -312,4 +312,36 @@ func cgt(t) -> void:   # [cg] 劇情插圖卡截圖
 	await _w(t, 1.2); await _shot(t, "cg_2")
 	if st: st.advance(); st.advance()
 	await _w(t, 1.2); await _shot(t, "cg_3")
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func cg1(t) -> void:   # [cg] 第一章插圖：逐場播，喺有插圖嗰行截圖
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	for i in 120:
+		await _w(t, 0.5)
+		var m0 = _main(t)
+		if m0 and m0.get("loading") == null and J.G.get("S") is Dictionary: break
+	await _w(t, 1.5)
+	var m = _main(t)
+	m._hide_title(); await _w(t, 1.0); await _skip(t)
+	var sc_all = JSON.parse_string(FileAccess.get_file_as_string("res://data/story_v2.json")).scenes
+	var plan = [["op_wake", 0, "cg1_office"], ["op_wake", 1, "cg1_office_hide"], ["prologue_road", 0, "cg1_queue"], ["ch1_intro", 1, "cg1_news"], ["ch1_end", 6, "cg1_kneel"]]
+	for pl in plan:
+		G.story_req.emit(sc_all[pl[0]], Callable())
+		await _w(t, 1.0)
+		var st = null
+		for n in m.get_children(): if n.has_method("advance"): st = n
+		if st == null: _p("no story node"); bad += 1; continue
+		for k in int(pl[1]) * 2: st.advance(); await _w(t, 0.05)
+		await _w(t, 1.5); await _shot(t, pl[2])
+		var vis = st.cg != null and st.cg.visible
+		var want = not str(pl[2]).ends_with("_hide")
+		if vis == want: ok += 1
+		else: bad += 1; _p("BAD %s cg visible=%s" % [pl[2], vis])
+		st.skip_scene(); await _w(t, 0.5)
+		for k in 30:
+			var any = false
+			for n in m.get_children(): if n.has_method("advance") and n.get("cur") != null: any = true
+			if not any: break
+			for n in m.get_children(): if n.has_method("skip_scene") and n.get("cur") != null: n.skip_scene()
+			await _w(t, 0.3)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
