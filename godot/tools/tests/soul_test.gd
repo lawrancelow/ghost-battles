@@ -94,7 +94,7 @@ func _run(t) -> void:
 # ---- 數據 ----
 func data_check() -> void:
 	var D = SOUL.D()
-	_chk("soul.json：定案名冊 130 隻名鬼（不計阿福；roster2 加第二批 30）都有品級、現有 72 隻全部有", D.PIN.size() == 130 and J.G.GHOSTS.keys().filter(func(k): return k != "afu" and not D.PIN.has(k)).is_empty(), D.PIN.size())
+	_chk("soul.json：定案名冊 130 隻名鬼（不計阿福；roster2 加第二批 30）都有品級、現有 72 隻全部有", D.PIN.size() == 130 and J.G.GHOSTS.keys().filter(func(k): return k != "afu" and not D.PIN.has(k) and not str(k).begins_with("lg_")).is_empty(), D.PIN.size())
 	var nocamp = []; var bad_g = []
 	for c in 6:
 		var cs = SO.camps(c)
@@ -115,7 +115,7 @@ func data_check() -> void:
 	_chk("第1章第1據點：主魂窮鬼、有副魂（往後第 5 個據點）", SOUL.guard_of(e) == "n30_qionggui" and SOUL.sec_of(e) == SOUL.guard_of(SO.camps(0)[5]), [SOUL.guard_of(e), SOUL.sec_of(e)])
 	var miss = []; var nopri = []
 	for k in J.G.GHOSTS:
-		if k == "afu" or SOUL.story(k): continue
+		if k == "afu" or SOUL.story(k) or str(k).begins_with("lg_"): continue   # [legion] 軍團兵種嘅來源＝軍團營（新地圖未掛；legion_test 校驗）
 		var src = SOUL.sources(k)
 		var wild = false
 		for c in 6:

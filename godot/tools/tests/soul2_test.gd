@@ -212,7 +212,7 @@ func ms_check() -> void:
 	_chk("夠 10 隻：可以領", S2.ms_list()[0].state == "can", S2.got_n())
 	_chk("領獎：散魂 +20、紫箱 +1", S2.ms_claim(10) == "ok" and SOUL.san() == san0 + S2.MS_SAN and int(J.num(S.chests.p)) == p0 + 1)
 	_chk("領過唔可以再領", S2.ms_claim(10) == "got" and S2.ms_list()[0].state == "got")
-	_chk("完成獎每 10 隻一級（按名冊數）", S2.ms_list().size() == int((S2.list().size() - 1) / 10) and int(S2.ms_list()[-1].m) == S2.ms_list().size() * 10, S2.ms_list().map(func(x): return x.m))
+	_chk("完成獎每 10 隻一級（按名冊數）", S2.ms_list().size() == int(ceil((S2.list().size() - 1) / 10.0)) and int(S2.ms_list()[-1].m) == mini(S2.ms_list().size() * 10, S2.list().size() - 1), S2.ms_list().map(func(x): return x.m))
 
 # ---- 抄功課 ----
 func sweep_check() -> void:
