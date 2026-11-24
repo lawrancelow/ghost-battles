@@ -48,6 +48,8 @@ func _notification(what: int) -> void:
 	# 切去後台：成個引擎停（同網頁版 sync() 一樣，唔好喺背景燒電）
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_APPLICATION_PAUSED: AudioServer.set_bus_mute(0, true)
 	elif what == NOTIFICATION_APPLICATION_FOCUS_IN or what == NOTIFICATION_APPLICATION_RESUMED: AudioServer.set_bus_mute(0, not on)
+	elif what == NOTIFICATION_PREDELETE or what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_EXIT_TREE:
+		if _note_task >= 0: WorkerThreadPool.wait_for_task_completion(_note_task); _note_task = -1   # [perf2] 關遊戲前等背景旋律計完
 
 # ====================================================================
 # 合成：聲部清單 → 一段 PCM
@@ -364,6 +366,7 @@ func _play_bed(p: AudioStreamPlayer, st: AudioStreamWAV, lin: float) -> void:
 #   而家：同一粒音合成過就記住；未合成過就交俾背景線程計，計好先播（遲一兩格冇人聽得出）。
 var _note_cache := {}
 var _note_busy := false
+var _note_task := -1
 func _note(voices: Array, extra: Callable = Callable(), sec := 0.0, key := "") -> void:
 	if key == "" and not extra.is_valid(): key = "n_%s_%s" % [str(voices), str(sec)]
 	if key != "" and _note_cache.has(key): _play_note(_note_cache[key]); return
@@ -371,7 +374,7 @@ func _note(voices: Array, extra: Callable = Callable(), sec := 0.0, key := "") -
 	_note_busy = true
 	var g = _gen
 	var wr = weakref(self)   # 關遊戲時背景線程計完，Snd 可能已經冇咗
-	WorkerThreadPool.add_task(func():
+	_note_task = WorkerThreadPool.add_task(func():
 		var m = Mix.new(maxf(_len_of(voices), sec))
 		for v in voices:
 			if v.get("n", false): noise(m, v)
@@ -383,6 +386,7 @@ func _note(voices: Array, extra: Callable = Callable(), sec := 0.0, key := "") -
 
 func _note_done(key: String, st: AudioStreamWAV, g: int) -> void:
 	_note_busy = false
+	if _note_task >= 0: WorkerThreadPool.wait_for_task_completion(_note_task); _note_task = -1
 	if key != "": _note_cache[key] = st
 	if g == _gen and on: _play_note(st)
 
