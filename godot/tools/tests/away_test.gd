@@ -324,7 +324,7 @@ func cg1(t) -> void:   # [cg] 第一章插圖：逐場播，喺有插圖嗰行�
 	var m = _main(t)
 	m._hide_title(); await _w(t, 1.0); await _skip(t)
 	var sc_all = JSON.parse_string(FileAccess.get_file_as_string("res://data/story_v2.json")).scenes
-	var plan = [["op_wake", 0, "cg1_office"], ["op_wake", 1, "cg1_office_hide"], ["prologue_road", 0, "cg1_queue"], ["ch1_intro", 1, "cg1_news"], ["ch1_end", 6, "cg1_kneel"]]
+	var plan = [["op_wake", 0, "cg1_office"], ["op_wake", 1, "cg1_office_hide"], ["prologue_road", 0, "cg1_queue"], ["ch1_intro", 1, "cg1_news"], ["ch1_end", 6, "cg1_kneel"], ["op_guard", 0, "cg1_guard"], ["op_desk", 0, "cg1_desk"], ["op_home", 1, "cg1_home"], ["op_dinner", 0, "cg1_dinner"], ["op_photo", 5, "cg1_footprint"], ["gift_xiaozhi", 1, "cg1_descend"]]
 	for pl in plan:
 		G.story_req.emit(sc_all[pl[0]], Callable())
 		if pl[2] == "cg1_queue":
