@@ -361,7 +361,7 @@ func vox(t) -> void:   # [vox] 第一章語氣聲：逐句播，記低每句出�
 	var VX = load("res://ui/story_vox.gd")
 	var d = JSON.parse_string(FileAccess.get_file_as_string("res://data/story_v2.json"))
 	var sc_all = d.scenes
-	for sid in ["op_wake", "op_guard", "op_desk", "prologue_road", "prologue_sys", "ch1_intro", "ch1_intro2", "ch1_boss", "ch1_end", "gift_xiaozhi2"]:
+	for sid in ["op_wake", "op_guard", "op_desk", "op_dinner", "op_photo", "prologue_road", "prologue_sys", "ch1_intro", "ch1_intro2", "ch1_boss", "ch1_end", "gift_xiaozhi2"]:
 		var sc = sc_all[sid]
 		VX.LOG.clear()
 		G.story_req.emit(sc, Callable())

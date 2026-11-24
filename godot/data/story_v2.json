@@ -44,6 +44,7 @@
 ]
 },
 "prologue_road": {
+"vox": {"1": "sigh", "3": "laugh"},
 "cg": {"0": {"k": "cg1_queue", "over": [{"spr": "hero", "x": 0.78, "y": 0.97, "h": 0.42, "flip": true}]}, "2": ""},
 "style": "talk",
 "bg": "road",
@@ -143,6 +144,7 @@
 ]
 },
 "gift_xiaozhi2": {
+"vox": {"0": "laugh"},
 "style": "talk",
 "bg": "village",
 "lines": [
@@ -211,6 +213,7 @@
 ]
 },
 "ch1_boss": {
+"vox": {"0": "ex"},
 "style": "talk",
 "bg": "field",
 "lines": [
@@ -1430,6 +1433,7 @@
 ]
 },
 "op_dinner": {
+"vox": {"3": "q"},
 "cg": {"0": "cg1_dinner"},
 "style": "talk",
 "bg": "home",

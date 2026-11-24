@@ -1,11 +1,69 @@
 {
- "speakers": {"阿福": "afu", "小紙": "xiaozhi", "白無常": "baiwu", "保安伯": "guard", "主播": "anchor"},
+ "speakers": {
+  "阿福": "afu",
+  "小紙": "xiaozhi",
+  "白無常": "baiwu",
+  "保安伯": "guard",
+  "主播": "anchor",
+  "黑無常": "heiwu",
+  "黑白無常": "heiwu",
+  "媽": "mom",
+  "餓鬼": "egui",
+  "餓鬼王": "eguiking"
+ },
  "moods": {
-  "afu": ["q", "ex", "sigh", "laugh"],
-  "afuf": ["q", "ex", "sigh", "laugh"],
-  "xiaozhi": ["q", "ex", "sigh", "laugh"],
-  "baiwu": ["q", "ex", "sigh", "laugh"],
-  "guard": ["q", "ex", "sigh"],
-  "anchor": ["cough", "q"]
+  "afu": [
+   "q",
+   "ex",
+   "sigh",
+   "laugh"
+  ],
+  "afuf": [
+   "q",
+   "ex",
+   "sigh",
+   "laugh"
+  ],
+  "xiaozhi": [
+   "q",
+   "ex",
+   "sigh",
+   "laugh"
+  ],
+  "baiwu": [
+   "q",
+   "ex",
+   "sigh",
+   "laugh"
+  ],
+  "guard": [
+   "q",
+   "ex",
+   "sigh"
+  ],
+  "anchor": [
+   "cough",
+   "q"
+  ],
+  "heiwu": [
+   "q",
+   "ex",
+   "sigh"
+  ],
+  "mom": [
+   "q",
+   "ex",
+   "sigh"
+  ],
+  "egui": [
+   "ex",
+   "laugh",
+   "sigh"
+  ],
+  "eguiking": [
+   "q",
+   "ex",
+   "sigh"
+  ]
  }
 }
