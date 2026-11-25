@@ -73,6 +73,7 @@ static func cover(team: Array, adv, ms: Array) -> Dictionary:
 		o[m] = who
 	return o
 static func team_now() -> Array:
+	BK.pad_team()
 	var o = []
 	for id in J.iter(J.G.S.get("team", [])):
 		var g = ghost(id)
@@ -108,6 +109,7 @@ static func recommend(ms: Array, n := 2) -> Array:
 # 換上：有空格先填；否則換走「應對最少、鬼力最低」嗰隻（唔換阿福）。回換咗邊格（-1＝換唔到）
 static func swap_in(id, ms: Array) -> int:
 	var S = J.G.S
+	BK.pad_team()
 	if not (S.get("team") is Array): return -1
 	var team: Array = S.team
 	var slot = -1
@@ -209,14 +211,14 @@ static func render(box: VBoxContainer) -> void:
 	var ms = enemy_mechs(ks)
 	var team = team_now(); var adv = ghost(J.G.S.get("adviser"))
 	var cv = cover(team, adv, ms)
-	if J.t(box.get_meta("pick_adv", false)):   # 揀緊軍師：只顯示隊伍＋清單（唔好令張卡太長）
+	var pk = str(box.get_meta("pick", ""))
+	if pk != "":   # 揀緊人（軍師或者出陣某一格）：只顯示隊伍＋清單（唔好令張卡太長）
 		var need0 = {}
 		for m in ms:
 			for t in counters(m): need0[t] = true
-		var tr0 = HBoxContainer.new(); tr0.add_theme_constant_override("separation", 6); box.add_child(tr0)
-		for g in team: tr0.add_child(_member(g, need0, P, false, box, cmp))
-		tr0.add_child(_member(adv, need0, P, true, box, cmp))
-		_adv_picker(box, P, dark)
+		box.add_child(_team_row(need0, P, box, cmp))
+		if pk == "adv": _adv_picker(box, P, dark)
+		else: _team_picker(box, P, dark, int(pk))
 		if box.get_meta("opt", {}).get("host") != null: (func(): _fit(box)).call_deferred()
 		return
 	if ms.is_empty():
@@ -243,13 +245,11 @@ static func render(box: VBoxContainer) -> void:
 			box.add_child(_lab("%s：%s" % [AI.name_of(open_m), L(d[0], d[1])], 15, P.dim))
 		elif not cmp:
 			box.add_child(_lab(L("（撳圖示睇說明）", "（點圖示看說明）"), 14, P.dim))
-	# ---- 我方：3 隻＋軍師 ----
+	# ---- 我方：出陣 5 格＋軍師（每格撳落去揀人）----
 	var need = {}
 	for m in ms:
 		for t in counters(m): need[t] = true
-	var tr = HBoxContainer.new(); tr.add_theme_constant_override("separation", 6); box.add_child(tr)
-	for g in team: tr.add_child(_member(g, need, P, false, box, cmp))
-	tr.add_child(_member(adv, need, P, true, box, cmp))
+	box.add_child(_team_row(need, P, box, cmp))
 	# ---- ✔／✘ ----
 	var nok = 0
 	for m in ms:
@@ -335,7 +335,72 @@ static func _fit(box: VBoxContainer, again := 3) -> void:
 		h = host.get_combined_minimum_size().y
 		nt = clampf(room - h, top_min - py, top0)
 		host.offset_top = nt; host.offset_bottom = nt + h
-static func _member(g, need: Dictionary, P: Dictionary, adv: bool, box: VBoxContainer, cmp := false) -> Control:
+static func _team_row(need: Dictionary, P: Dictionary, box: VBoxContainer, cmp: bool) -> Control:
+	BK.pad_team()
+	var S = J.G.S
+	var tr = GridContainer.new(); tr.columns = 6; tr.add_theme_constant_override("h_separation", 3); tr.add_theme_constant_override("v_separation", 3)
+	for i in BK.TEAM_MAX: tr.add_child(_member(ghost(S.team[i]), need, P, false, box, true, i))
+	tr.add_child(_member(ghost(S.get("adviser")), need, P, true, box, true))
+	for c in tr.get_children(): (c as Control).custom_minimum_size.x = 0
+	return tr
+
+static func _team_picker(box: VBoxContainer, P: Dictionary, dark: bool, slot: int) -> void:
+	var S = J.G.S
+	var pnl = PanelContainer.new()
+	pnl.add_theme_stylebox_override("panel", UIKit.sb(P.box, 6, P.lit, 2, Vector4(6, 6, 6, 6)))
+	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 4); pnl.add_child(vb)
+	vb.add_child(_lab(L("揀第 %d 格出陣嘅名鬼（已喺隊入面嘅會互換位置）", "選第 %d 格出陣的名鬼（已在隊裡的會互換位置）") % (slot + 1), 15, P.tx))
+	var fl = HFlowContainer.new(); fl.add_theme_constant_override("h_separation", 6); fl.add_theme_constant_override("v_separation", 6); vb.add_child(fl)
+	var cur = S.team[slot]
+	var list = []
+	for g in J.iter(S.get("ghosts", [])):
+		if g is Dictionary and (BK.is_named(g) or J.str(g.k) == "afu") and J.str(g.id) != J.str(cur): list.append(g)
+	list.sort_custom(func(a, b): return gpow(a) > gpow(b))
+	var mk = func(g):
+		var c = PanelContainer.new(); c.custom_minimum_size = Vector2(84, 0)
+		var away = g != null and BK.job(g) == "away"
+		c.add_theme_stylebox_override("panel", UIKit.sb(P.box, 6, P.bd, 1, Vector4(3, 3, 3, 3)))
+		var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 0); v.mouse_filter = Control.MOUSE_FILTER_IGNORE; c.add_child(v)
+		if g != null:
+			var pr = UIKit.portrait(J.str(g.k), 40); pr.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; pr.mouse_filter = Control.MOUSE_FILTER_IGNORE; v.add_child(pr)
+		var nl = _lab(str(DB.L(J.str(g.name))) if g != null else L("留空", "留空"), 14, P.tx, false); nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; nl.clip_text = true; v.add_child(nl)
+		if g != null:
+			var where = ""
+			if (S.team as Array).has(g.id): where = L("出陣中", "出陣中")
+			elif J.str(S.get("adviser")) == J.str(g.id): where = L("軍師", "軍師")
+			elif BK.job(g) != "idle": where = str(BK.job_label(g))
+			var sl = _lab(L("鬼力 %d", "鬼力 %d") % int(gpow(g)) + ("・" + where if where != "" else ""), 12, P.dim, false); sl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; sl.clip_text = true; v.add_child(sl)
+		if away: c.modulate = Color(1, 1, 1, 0.45); return c
+		c.mouse_filter = Control.MOUSE_FILTER_STOP
+		var gid = g.id if g != null else null
+		c.gui_input.connect(func(ev):
+			if (ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT) or (ev is InputEventScreenTouch and ev.pressed):
+				Snd.play("click"); put_slot(slot, gid); box.set_meta("pick", ""); _changed(box))
+		return c
+	if cur != null and J.t(cur): fl.add_child(mk.call(null))
+	for g in list: fl.add_child(mk.call(g))
+	if list.is_empty(): vb.add_child(_lab(L("冇其他名鬼", "沒有其他名鬼"), 14, P.dim))
+	box.add_child(pnl)
+
+# 將名鬼放入出陣第 slot 格：已喺隊 → 同嗰格互換；係軍師 → 唔再做軍師；其他職務（工位、隊長）自動移走
+static func put_slot(slot: int, id) -> void:
+	BK.pad_team()
+	var S = J.G.S; var team: Array = S.team
+	var old = team[slot]
+	if id == null: team[slot] = null
+	else:
+		var j = -1
+		for i in team.size(): if J.str(team[i]) == J.str(id): j = i
+		if j >= 0: team[j] = old
+		else:
+			var g = ghost(id)
+			if g != null: BK.clear_roles(g, "team")
+			if J.str(S.get("adviser")) == J.str(id): S["adviser"] = null
+		team[slot] = id
+	var sv = J.G.get("save")
+	if sv != null: J.cl(sv, null, [])
+
+static func _member(g, need: Dictionary, P: Dictionary, adv: bool, box: VBoxContainer, cmp := false, slot := -1) -> Control:
 	var p = PanelContainer.new(); p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var ts = tags(J.str(g.k)) if g != null else []
 	var lit = false
@@ -346,20 +411,22 @@ static func _member(g, need: Dictionary, P: Dictionary, adv: bool, box: VBoxCont
 		var hl = _lab(L("軍師", "軍師"), 14, P.hd, false); hl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; vb.add_child(hl)
 	if g != null:
 		var pr = UIKit.portrait(J.str(g.k), (34 if adv else 38) if cmp else (44 if adv else 48)); pr.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; pr.mouse_filter = Control.MOUSE_FILTER_IGNORE; vb.add_child(pr)
-	var nm = str(DB.L(J.str(g.name))) if g != null else L("＋揀軍師", "＋選軍師")
-	var nl = _lab(nm, 15, P.tx, false); nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; nl.clip_text = true; nl.custom_minimum_size = Vector2(0, 20); vb.add_child(nl)
+	var nm = str(DB.L(J.str(g.name))) if g != null else (L("＋軍師", "＋軍師") if adv else L("＋出陣", "＋出陣"))
+	var nl = _lab(nm, 13 if cmp else 15, P.tx, false); nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; nl.clip_text = true; nl.custom_minimum_size = Vector2(0, 20); vb.add_child(nl)
 	if g != null:
 		var th = HBoxContainer.new(); th.alignment = BoxContainer.ALIGNMENT_CENTER; th.add_theme_constant_override("separation", 2); th.mouse_filter = Control.MOUSE_FILTER_IGNORE; vb.add_child(th)
 		var show = ts if not adv else ([adv_tag(g)] if adv_tag(g) != "" else [])
 		for t in show.slice(0, 3):
-			var ic = AI.Icon.new(t, 26.0, not need.has(t)); ic.mouse_filter = Control.MOUSE_FILTER_IGNORE; th.add_child(ic)
+			var ic = AI.Icon.new(t, 19.0 if cmp else 26.0, not need.has(t)); ic.mouse_filter = Control.MOUSE_FILTER_IGNORE; th.add_child(ic)
 		if show.is_empty(): var nl2 = _lab(L("（冇標籤）", "（無標籤）"), 13, P.dim, false); th.add_child(nl2)
-	if adv:
-		var sub = _lab(L("撳換", "點擊換"), 13, P.dim, false); sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; vb.add_child(sub)
+	if adv or slot >= 0:   # [team5] 軍師同出陣格都撳得：揀人
+		var key = "adv" if adv else str(slot)
+		var cur_pick = str(box.get_meta("pick", "")) == key
+		if cur_pick: p.add_theme_stylebox_override("panel", UIKit.sb(P.box, 6, P.lit, 3, Vector4(3, 4, 3, 4)))
 		p.mouse_filter = Control.MOUSE_FILTER_STOP
 		p.gui_input.connect(func(ev):
 			if (ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT) or (ev is InputEventScreenTouch and ev.pressed):
-				Snd.play("click"); box.set_meta("pick_adv", not J.t(box.get_meta("pick_adv", false))); render(box))
+				Snd.play("click"); box.set_meta("pick", "" if str(box.get_meta("pick", "")) == key else key); render(box))
 	else: p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return p
 
@@ -393,7 +460,7 @@ static func _adv_picker(box: VBoxContainer, P: Dictionary, dark: bool) -> void:
 		var gid = g.id if g != null else null
 		c.gui_input.connect(func(ev):
 			if (ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT) or (ev is InputEventScreenTouch and ev.pressed):
-				Snd.play("click"); set_adviser(gid); box.set_meta("pick_adv", false); _changed(box))
+				Snd.play("click"); set_adviser(gid); box.set_meta("pick", ""); _changed(box))
 		return c
 	if S.get("adviser") != null: fl.add_child(mk.call(null))
 	for g in list: fl.add_child(mk.call(g))

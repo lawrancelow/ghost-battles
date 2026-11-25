@@ -773,3 +773,44 @@ func facing(t) -> void:   # [face] 主角左右：flip false／true 各畫一隻
 		cl.queue_free(); await _w(t, 0.3)
 	ok += 1
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func team5(t) -> void:   # [team5] 出擊卡：5 格出陣＋軍師；揀人互換；戰鬥帶齊 5 隻
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	for i in 120:
+		await _w(t, 0.5)
+		var m0 = _main(t)
+		if m0 and m0.get("loading") == null and J.G.get("S") is Dictionary: break
+	await _w(t, 1.5)
+	var m = _main(t)
+	m._hide_title(); await _w(t, 1.0); await _skip(t)
+	var AC = load("res://game/rts/ab_card.gd"); var BK = load("res://game/barracks/bk_data.gd")
+	var S = J.G.S
+	S["team"] = [S.team[0] if S.team.size() else null, null, null]   # 舊存檔 3 格
+	var ks = ["toyol", "laojiang", "pontianak", "pocong", "mengpo"]
+	for i in ks.size():
+		var g0 = (S.ghosts[0] as Dictionary).duplicate(true)
+		g0["id"] = "t5_%d" % i; g0["k"] = ks[i]; g0["q"] = "名"; g0["name"] = ks[i]; g0["post"] = null; g0["lv"] = 5
+		S.ghosts.append(g0)
+	var named = []
+	for g in S.ghosts: if BK.is_named(g) and not (S.team as Array).has(g.id): named.append(g)
+	_p("named free %d" % named.size())
+	var tn = AC.team_now()
+	if (S.team as Array).size() == 5: ok += 1
+	else: bad += 1; _p("BAD pad %d" % S.team.size())
+	for i in range(1, 5):
+		if i - 1 < named.size(): AC.put_slot(i, named[i - 1].id)
+	var cnt = 0
+	for x in S.team: if J.t(x): cnt += 1
+	if cnt == mini(5, 1 + named.size()): ok += 1
+	else: bad += 1; _p("BAD fill %d" % cnt)
+	if named.size() >= 2:   # 互換
+		var a = S.team[1]; var b = S.team[2]
+		AC.put_slot(1, b)
+		if J.str(S.team[1]) == J.str(b) and J.str(S.team[2]) == J.str(a): ok += 1
+		else: bad += 1; _p("BAD swap")
+	m.open_sheet("出擊", func(): pass)
+	var box = AC.add_to(m.sheet_body, ["egui", "zombie"], {})
+	await _w(t, 1.0); await _shot(t, "team5_card")
+	box.set_meta("pick", "4"); AC.render(box); await _w(t, 1.0); await _shot(t, "team5_pick")
+	m.close_sheet(); await _w(t, 0.5)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])

@@ -317,12 +317,12 @@ static func set_job(gid, jb: String, arg = null) -> String:
 	if job(g) == "away" and jb != "away": return T("佢喺村外工作緊，先喺嗰邊撤返", "他在村外工作中，先在那邊撤回")
 	match jb:
 		"team":
-			if not (s.get("team") is Array): s["team"] = [null, null, null]
+			pad_team()
 			if s.team.has(g.id): clear_roles(g, "team"); _save(); return "ok"
 			var i = s.team.find(null)
 			if i < 0 and arg != null:
 				for j in s.team.size(): if J.str(s.team[j]) == J.str(arg): i = j
-			if i < 0: return T("出陣已滿（最多 3）", "出陣已滿（最多 3）")
+			if i < 0: return T("出陣已滿（最多 5）", "出陣已滿（最多 5）")
 			clear_roles(g)
 			s.team[i] = g.id
 		"post":
@@ -362,6 +362,13 @@ static func _has_id(arr: Array, id) -> bool:
 # 掛鈎：派人去工位（native/game.gd n_pick_do）、佈陣（bt_select._put）之後叫：名鬼由其他職務移走
 static func after_post(g) -> void:
 	if is_named(g): clear_roles(g, "post")
+# [team5] 出陣最多 5 隻名鬼（舊存檔得 3 格 → 補到 5 格）
+const TEAM_MAX := 5
+static func pad_team() -> void:
+	var s = S()
+	if s == null: return
+	if not (s.get("team") is Array): s["team"] = []
+	while (s.team as Array).size() < TEAM_MAX: s.team.append(null)
 static func after_team(id) -> void:
 	var g = ghost(id)
 	if is_named(g): clear_roles(g, "team")

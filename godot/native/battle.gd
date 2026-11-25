@@ -368,7 +368,7 @@ static func mk_ghost_unit(g, i) -> Dictionary:
 	var dm = J.num(J.mc(_g("GP"), "drillMul", [g.k])); var hp = (300 + P * 8 + A * 4) * dm
 	var ranged = J.str(J.gp(d, "range")) == "ranged"; var ii = J.num(i)
 	return {"side": 0.0, "k": g.k, "gid": g.id, "name": g.name, "hp": hp, "maxhp": hp, "atk": (20 + A * 1.4) * dm, "range": 150.0 if ranged else 46.0,
-		"spd": 38.0 if ranged else 46.0, "x": 78 - ii * 14, "lane": ii * 1.1, "energy": 20.0, "sk": J.gp(_g("SKILLS"), g.k), "st": {}, "cd": randf() * 0.5, "lv": lv}
+		"spd": 38.0 if ranged else 46.0, "x": 78 - ii * 14, "lane": [0.0, 1.1, 2.2, 0.55, 1.65][int(ii) % 5], "energy": 20.0, "sk": J.gp(_g("SKILLS"), g.k), "st": {}, "cd": randf() * 0.5, "lv": lv}
 
 static func start(ci, si, wild) -> void:
 	var S = _S()

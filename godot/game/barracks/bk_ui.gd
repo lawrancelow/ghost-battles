@@ -142,7 +142,7 @@ static func open_job(gid: String) -> void:
 		body.add_child(_rich(T("[color=#c2362b]佢喺村外工作緊（站崗／樓裡有鬼等），要先喺嗰邊撤返。[/color]", "[color=#c2362b]他在村外工作中（站崗／樓裡有鬼等），要先在那邊撤回。[/color]"), 14))
 	else:
 		# 出陣
-		var vt = _box(body, T("出陣（最多 3）", "出陣（最多 3）"))
+		var vt = _box(body, T("出陣（最多 5）", "出陣（最多 5）"))
 		var in_team = J.iter(s.get("team", [])).has(g.id)
 		if in_team: vt.add_child(_rich(T("已經出陣緊。", "已經在出陣。"), 13))
 		elif J.iter(s.get("team", [])).has(null): _line(vt, T("有空位", "有空位"), [_b(T("出陣", "出陣"), "gold", true, func(): _do(gid, "team"))])
