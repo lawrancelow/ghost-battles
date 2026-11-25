@@ -270,15 +270,62 @@ func _draw_spare(ctx, x: float, y: float) -> void:
 	sc._txt(ctx, MD.S("spare", "待開檔", "待開攤"), x, y - 29, 14, Color("#f0e2c8"), "center", 900, 0)
 	ctx.restore()
 
+# 擔挑（墨線風）：竹扁擔擱喺膊頭（跟角色高度），兩頭被重量壓彎；繩吊住籮筐，行路時一彈一彈、籮筐輕輕擺；
+#   貨嘅圖示放入籮，籮身遮住下半截（似真係裝住）
+const LOAD_INK := "#22160e"
+func _draw_load(ctx, p: Dictionary, pos: Vector2, flip: bool, t: float) -> void:
+	var k = str(p.k); var s = 0.85
+	var h = Art.SOUL_H if k == "youhun" else Art.char_h(k)
+	if h <= 0.0: h = 52.0
+	var bob = absf(sin(t * 9.0)) * 1.8                 # 腳步彈
+	var sh = Vector2(pos.x + (-3.0 if flip else 3.0), pos.y - h * s * {"egui": 0.62}.get(k, 0.74) + bob)   # 膊頭
+	var half = 27.0; var sag = 3.2 + absf(sin(t * 9.0)) * 1.2   # 兩頭壓彎（落步時彎多啲）
+	var L = Vector2(sh.x - half, sh.y + sag); var R = Vector2(sh.x + half, sh.y + sag)
+	var sw = sin(t * 4.5 + float(p.ph)) * 0.14          # 籮筐擺
+	_basket(ctx, L, sw, str(p.mid))
+	_basket(ctx, R, sw * 0.85 + 0.03, str(p.mid))
+	# 竹扁擔：墨邊＋竹色＋高光，兩個竹節
+	ctx.save(); ctx.lineCap = "round"
+	for layer in [[LOAD_INK, 4.0, 0.0], ["#9a7a3e", 2.3, 0.0], ["rgba(222,196,130,.75)", 0.8, -0.6]]:
+		ctx.strokeStyle = layer[0]; ctx.lineWidth = layer[1]
+		ctx.beginPath(); ctx.moveTo(L.x, L.y + layer[2]); ctx.quadraticCurveTo(sh.x, sh.y - sag * 0.9 + layer[2], R.x, R.y + layer[2]); ctx.stroke()
+	ctx.strokeStyle = LOAD_INK; ctx.lineWidth = 1.1
+	for fx in [-0.5, 0.5]:
+		var q = _qpt(L, Vector2(sh.x, sh.y - sag * 0.9), R, 0.5 + fx * 0.5)
+		ctx.beginPath(); ctx.moveTo(q.x, q.y - 2.0); ctx.lineTo(q.x, q.y + 2.0); ctx.stroke()
+	ctx.restore()
+
+func _qpt(a: Vector2, c: Vector2, b: Vector2, u: float) -> Vector2: return a.lerp(c, u).lerp(c.lerp(b, u), u)
+
+# 一個籮筐：top＝扁擔吊點；ang＝擺動角度
+func _basket(ctx, top: Vector2, ang: float, mid: String) -> void:
+	ctx.save(); ctx.translate(top.x, top.y); ctx.rotate(ang)
+	var ry = 15.0   # 籮口高度
+	# 三條繩
+	ctx.strokeStyle = "#3a2614"; ctx.lineWidth = 1.0
+	for rx in [-8.5, 0.0, 8.5]:
+		ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(rx, ry); ctx.stroke()
+	# 貨（坐喺籮入面，露出上半）
+	sc._icon(ctx, mid, 0.0, ry + 4.5, 18.0)
+	# 籮身：上闊下窄、圓底
+	ctx.fillStyle = "#74502c"; ctx.strokeStyle = LOAD_INK; ctx.lineWidth = 1.4
+	ctx.beginPath(); ctx.moveTo(-10.5, ry); ctx.lineTo(10.5, ry); ctx.lineTo(8.0, ry + 10.5)
+	ctx.quadraticCurveTo(0.0, ry + 14.5, -8.0, ry + 10.5); ctx.closePath(); ctx.fill(); ctx.stroke()
+	# 竹織紋
+	ctx.strokeStyle = "rgba(214,172,104,.38)"; ctx.lineWidth = 0.9
+	for yy in [ry + 4.0, ry + 7.5]:
+		var w = 10.0 - (yy - ry) * 0.24
+		ctx.beginPath(); ctx.moveTo(-w, yy); ctx.lineTo(w, yy); ctx.stroke()
+	ctx.strokeStyle = "rgba(34,22,14,.45)"; ctx.lineWidth = 0.8
+	for xx in [-5.0, 0.0, 5.0]:
+		ctx.beginPath(); ctx.moveTo(xx, ry + 1.5); ctx.lineTo(xx * 0.8, ry + 11.0); ctx.stroke()
+	# 籮口邊
+	Art.rr(ctx, -11.5, ry - 1.8, 23.0, 3.6, 1.6, "#a27440", LOAD_INK, 1.1)
+	ctx.restore()
+
 func _draw_porter(ctx, p: Dictionary, pos: Vector2, flip: bool, a: float) -> void:
 	ctx.save(); ctx.globalAlpha = a
 	var t = float(sc.t) + float(p.ph)
 	if sc.get("mot") == null or not sc.mot.porter(sc, ctx, p, pos, flip, a, t): Art.draw_char(ctx, str(p.k), pos.x, pos.y, 0.85, {"t": t, "walk": true, "flip": flip, "tamed": true, "alpha": 0.95 * a})   # [motion] 挑夫步法
-	if str(p.mid) != "":   # 擔挑：一條竹＋兩籮貨
-		var by = pos.y - 62.0 + sin(t * 9.0) * 1.5
-		ctx.strokeStyle = "#8a6a3a"; ctx.lineWidth = 3
-		ctx.beginPath(); ctx.moveTo(pos.x - 26, by + 4); ctx.lineTo(pos.x + 26, by - 2); ctx.stroke()
-		for sx in [-24.0, 22.0]:
-			Art.rr(ctx, pos.x + sx - 9, by + 4, 18, 13, 3, "#6a4a2a", "#2a1a0e", 1)
-			sc._icon(ctx, str(p.mid), pos.x + sx, by + 8, 16.0)
+	if str(p.mid) != "": _draw_load(ctx, p, pos, flip, t)   # 擔挑：竹扁擔擱喺膊頭，兩頭吊住籮筐，籮入面係貨
 	ctx.restore()
