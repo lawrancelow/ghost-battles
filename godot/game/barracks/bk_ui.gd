@@ -145,7 +145,7 @@ static func open_job(gid: String) -> void:
 		var vt = _box(body, T("出陣（最多 5）", "出陣（最多 5）"))
 		var in_team = J.iter(s.get("team", [])).has(g.id)
 		if in_team: vt.add_child(_rich(T("已經出陣緊。", "已經在出陣。"), 13))
-		elif J.iter(s.get("team", [])).has(null): _line(vt, T("有空位", "有空位"), [_b(T("出陣", "出陣"), "gold", true, func(): _do(gid, "team"))])
+		elif J.iter(s.get("team", [])).has(null) and BK.team_count() < BK.TEAM_CAP: _line(vt, T("有空位", "有空位"), [_b(T("出陣", "出陣"), "gold", true, func(): _do(gid, "team"))])
 		else:
 			for x in s.team:
 				var og = BK.ghost(x)

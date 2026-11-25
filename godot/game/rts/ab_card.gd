@@ -113,7 +113,8 @@ static func swap_in(id, ms: Array) -> int:
 	if not (S.get("team") is Array): return -1
 	var team: Array = S.team
 	var slot = -1
-	for i in team.size(): if not J.t(team[i]): slot = i; break
+	if BK.team_count() < BK.TEAM_CAP:
+		for i in team.size(): if not J.t(team[i]): slot = i; break
 	if slot < 0:
 		var best = 1e9
 		for i in team.size():
@@ -338,18 +339,30 @@ static func _fit(box: VBoxContainer, again := 3) -> void:
 static func _team_row(need: Dictionary, P: Dictionary, box: VBoxContainer, cmp: bool) -> Control:
 	BK.pad_team()
 	var S = J.G.S
-	var tr = GridContainer.new(); tr.columns = 6; tr.add_theme_constant_override("h_separation", 3); tr.add_theme_constant_override("v_separation", 3)
-	for i in BK.TEAM_MAX: tr.add_child(_member(ghost(S.team[i]), need, P, false, box, true, i))
+	var wrap = VBoxContainer.new(); wrap.add_theme_constant_override("separation", 2)
+	wrap.add_child(_lab(L("站位：前排 3 格（坦・血 +20%）、後排 3 格（輸出・攻 +15%）；同時最多出陣 %d 隻（而家 %d）", "站位：前排 3 格（坦・血 +20%）、後排 3 格（輸出・攻 +15%）；同時最多出陣 %d 隻（現在 %d）") % [BK.TEAM_CAP, BK.team_count()], 13, P.dim))
+	var tr = GridContainer.new(); tr.columns = 5; tr.add_theme_constant_override("h_separation", 3); tr.add_theme_constant_override("v_separation", 3); wrap.add_child(tr)
+	var rl = func(t: String):
+		var l = _lab(t, 13, P.hd, false); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER; l.custom_minimum_size = Vector2(22, 0); l.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; return l
+	tr.add_child(rl.call(L("前\n排", "前\n排")))
+	for i in range(0, BK.FRONT_N): tr.add_child(_member(ghost(S.team[i]), need, P, false, box, true, i))
 	tr.add_child(_member(ghost(S.get("adviser")), need, P, true, box, true))
-	for c in tr.get_children(): (c as Control).custom_minimum_size.x = 0
-	return tr
+	tr.add_child(rl.call(L("後\n排", "後\n排")))
+	for i in range(BK.FRONT_N, BK.TEAM_MAX): tr.add_child(_member(ghost(S.team[i]), need, P, false, box, true, i))
+	tr.add_child(Control.new())
+	for c in tr.get_children():
+		if c is PanelContainer: (c as Control).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return wrap
 
 static func _team_picker(box: VBoxContainer, P: Dictionary, dark: bool, slot: int) -> void:
 	var S = J.G.S
 	var pnl = PanelContainer.new()
 	pnl.add_theme_stylebox_override("panel", UIKit.sb(P.box, 6, P.lit, 2, Vector4(6, 6, 6, 6)))
 	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 4); pnl.add_child(vb)
-	vb.add_child(_lab(L("揀第 %d 格出陣嘅名鬼（已喺隊入面嘅會互換位置）", "選第 %d 格出陣的名鬼（已在隊裡的會互換位置）") % (slot + 1), 15, P.tx))
+	vb.add_child(_lab(L("揀%s第 %d 格嘅名鬼（已喺隊入面嘅會互換位置）", "選%s第 %d 格的名鬼（已在隊裡的會互換位置）") % [L("前排", "前排") if slot < BK.FRONT_N else L("後排", "後排"), (slot % BK.FRONT_N) + 1], 15, P.tx))
+	var cur0 = S.team[slot]
+	if not J.t(cur0) and BK.team_count() >= BK.TEAM_CAP:
+		vb.add_child(_lab(L("已經出陣 %d 隻（上限）：揀已喺隊嘅名鬼＝移位；揀其他名鬼要先喺別格「留空」。", "已出陣 %d 隻（上限）：選已在隊裡的名鬼＝移位；選其他名鬼要先在別格「留空」。") % BK.TEAM_CAP, 13, P.bad))
 	var fl = HFlowContainer.new(); fl.add_theme_constant_override("h_separation", 6); fl.add_theme_constant_override("v_separation", 6); vb.add_child(fl)
 	var cur = S.team[slot]
 	var list = []
@@ -369,8 +382,9 @@ static func _team_picker(box: VBoxContainer, P: Dictionary, dark: bool, slot: in
 			if (S.team as Array).has(g.id): where = L("出陣中", "出陣中")
 			elif J.str(S.get("adviser")) == J.str(g.id): where = L("軍師", "軍師")
 			elif BK.job(g) != "idle": where = str(BK.job_label(g))
-			var sl = _lab(L("鬼力 %d", "鬼力 %d") % int(gpow(g)) + ("・" + where if where != "" else ""), 12, P.dim, false); sl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; sl.clip_text = true; v.add_child(sl)
-		if away: c.modulate = Color(1, 1, 1, 0.45); return c
+			var sl = _lab(L("鬼力 %d", "鬼力 %d") % int(gpow(g)) + ("・" + where if where != "" else ""), 13, P.dim, false); sl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; sl.clip_text = true; v.add_child(sl)
+		var blocked = g != null and not J.t(cur) and BK.team_count() >= BK.TEAM_CAP and not (S.team as Array).has(g.id)
+		if away or blocked: c.modulate = Color(1, 1, 1, 0.45); return c
 		c.mouse_filter = Control.MOUSE_FILTER_STOP
 		var gid = g.id if g != null else null
 		c.gui_input.connect(func(ev):
@@ -392,6 +406,7 @@ static func put_slot(slot: int, id) -> void:
 		var j = -1
 		for i in team.size(): if J.str(team[i]) == J.str(id): j = i
 		if j >= 0: team[j] = old
+		elif not J.t(old) and BK.team_count() >= BK.TEAM_CAP: return   # 已滿 5 隻：空格唔可以再加新鬼
 		else:
 			var g = ghost(id)
 			if g != null: BK.clear_roles(g, "team")
@@ -405,7 +420,9 @@ static func _member(g, need: Dictionary, P: Dictionary, adv: bool, box: VBoxCont
 	var ts = tags(J.str(g.k)) if g != null else []
 	var lit = false
 	for t in ts: if need.has(t) and (not adv or t == adv_tag(g)): lit = true
-	p.add_theme_stylebox_override("panel", UIKit.sb(P.box, 6, P.lit if lit else P.bd, 3 if lit else 1, Vector4(3, 4, 3, 4)))
+	var bg = P.box
+	if slot >= 0: bg = Color(0.55, 0.25, 0.2, 0.22) if slot < BK.FRONT_N else Color(0.2, 0.3, 0.55, 0.2)   # [row] 前排紅底、後排藍底
+	p.add_theme_stylebox_override("panel", UIKit.sb(bg, 6, P.lit if lit else P.bd, 3 if lit else 1, Vector4(3, 4, 3, 4)))
 	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 1); vb.alignment = BoxContainer.ALIGNMENT_CENTER; vb.mouse_filter = Control.MOUSE_FILTER_IGNORE; p.add_child(vb)
 	if adv:
 		var hl = _lab(L("軍師", "軍師"), 14, P.hd, false); hl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; vb.add_child(hl)

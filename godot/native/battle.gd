@@ -362,13 +362,23 @@ static func _dom_cards() -> void:
 		J.mc(J.gp(cd, "classList"), "toggle", ["dead", _nn(u, "hp") <= 0])
 
 # ---------------- 開戰 ----------------
+const FRONT_N := 3          # [row] 前排格數（第 1–3 格），後排第 4–6 格
+const ROW_FRONT_HP := 1.2    # 前排：血 +20%（坦）
+const ROW_BACK_ATK := 1.15   # 後排：攻 +15%（輸出）
 static func mk_ghost_unit(g, i) -> Dictionary:
 	var F = _g("F")
 	var lv = J.mc(F, "glv", [g]); var P = _stat(g, 0); var A = _stat(g, 2); var d = J.cl(_g("gdef"), null, [g])
 	var dm = J.num(J.mc(_g("GP"), "drillMul", [g.k])); var hp = (300 + P * 8 + A * 4) * dm
 	var ranged = J.str(J.gp(d, "range")) == "ranged"; var ii = J.num(i)
-	return {"side": 0.0, "k": g.k, "gid": g.id, "name": g.name, "hp": hp, "maxhp": hp, "atk": (20 + A * 1.4) * dm, "range": 150.0 if ranged else 46.0,
-		"spd": 38.0 if ranged else 46.0, "x": 78 - ii * 14, "lane": [0.0, 1.1, 2.2, 0.55, 1.65][int(ii) % 5], "energy": 20.0, "sk": J.gp(_g("SKILLS"), g.k), "st": {}, "cd": randf() * 0.5, "lv": lv}
+	# [row] 站位：前排（第 1–3 格）企前、血 +20%、行慢少少擋住；後排（第 4–6 格）企後、攻 +15%
+	var si = int(ii); var front = si < FRONT_N
+	var atk = (20 + A * 1.4) * dm
+	if front: hp *= ROW_FRONT_HP
+	else: atk *= ROW_BACK_ATK
+	var x = (96.0 - si * 6.0) if front else (50.0 - (si - FRONT_N) * 6.0)
+	var lane = [0.0, 1.1, 2.2][si % 3]
+	return {"side": 0.0, "k": g.k, "gid": g.id, "name": g.name, "hp": hp, "maxhp": hp, "atk": atk, "range": 150.0 if ranged else 46.0, "row": "front" if front else "back",
+		"spd": (38.0 if ranged else 46.0) * (0.92 if front else 1.0), "x": x, "lane": lane, "energy": 20.0, "sk": J.gp(_g("SKILLS"), g.k), "st": {}, "cd": randf() * 0.5, "lv": lv}
 
 static func start(ci, si, wild) -> void:
 	var S = _S()
@@ -379,10 +389,9 @@ static func start(ci, si, wild) -> void:
 	B["units"] = []; B["fx"] = []; B["t"] = 0.0; B["result"] = null; B["combo"] = 0.0; B["comboT"] = 0.0; B["coinsWon"] = 0.0; B["timeLimit"] = 90.0
 	B["proj"] = []; B["hitStop"] = 0.0; B["slowT"] = 0.0; B["shakeA"] = 0.0; B["flashT"] = 0.0; B["advCast"] = null; B["comboCast"] = null; B["lastHS"] = -9.0; B["comboPop"] = 0.0; B["hsBank"] = 0.12
 	var team = []
-	for id in S.team:
-		var g = _gbi(id)
-		if J.t(g): team.append(g)
-	for i in team.size(): B.units.append(J.mc(B, "mkGhostUnit", [team[i], float(i)]))
+	for ti in (S.team as Array).size():   # [row] 照格位入場：第 1–3 格前排，第 4–6 格後排
+		var g = _gbi(S.team[ti])
+		if J.t(g): team.append(g); B.units.append(J.mc(B, "mkGhostUnit", [g, float(ti)]))
 	var ad = _gbi(S.get("adviser"))
 	B["adviser"] = {"k": ad.k, "name": ad.name, "energy": 0.0, "sk": J.gp(_g("SKILLS"), ad.k), "bonus": _stat(ad, 1) / 8 / 100, "atk": 20 + _stat(ad, 2) * 1.4, "side": 0.0} if J.t(ad) else null
 	var sq = mini(8, int(floor(float(load("res://game/barracks/bk_data.gd").standby()) / 25))); B["squads"] = float(sq)   # [barracks] 只帶待命陰兵（防衛、清剿嘅留低）

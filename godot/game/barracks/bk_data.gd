@@ -319,7 +319,7 @@ static func set_job(gid, jb: String, arg = null) -> String:
 		"team":
 			pad_team()
 			if s.team.has(g.id): clear_roles(g, "team"); _save(); return "ok"
-			var i = s.team.find(null)
+			var i = s.team.find(null) if team_count() < TEAM_CAP else -1
 			if i < 0 and arg != null:
 				for j in s.team.size(): if J.str(s.team[j]) == J.str(arg): i = j
 			if i < 0: return T("出陣已滿（最多 5）", "出陣已滿（最多 5）")
@@ -362,8 +362,15 @@ static func _has_id(arr: Array, id) -> bool:
 # 掛鈎：派人去工位（native/game.gd n_pick_do）、佈陣（bt_select._put）之後叫：名鬼由其他職務移走
 static func after_post(g) -> void:
 	if is_named(g): clear_roles(g, "post")
-# [team5] 出陣最多 5 隻名鬼（舊存檔得 3 格 → 補到 5 格）
-const TEAM_MAX := 5
+# [team5] 站位 6 格（前排 3、後排 3），同時最多出陣 5 隻名鬼（舊存檔得 3 格 → 補到 6 格，原本 3 隻變前排）
+const TEAM_MAX := 6
+const TEAM_CAP := 5
+const FRONT_N := 3
+static func team_count() -> int:
+	var s = S(); var n = 0
+	if s != null and s.get("team") is Array:
+		for x in s.team: if J.t(x): n += 1
+	return n
 static func pad_team() -> void:
 	var s = S()
 	if s == null: return

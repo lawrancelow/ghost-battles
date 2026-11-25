@@ -795,22 +795,43 @@ func team5(t) -> void:   # [team5] 出擊卡：5 格出陣＋軍師；揀人互�
 	for g in S.ghosts: if BK.is_named(g) and not (S.team as Array).has(g.id): named.append(g)
 	_p("named free %d" % named.size())
 	var tn = AC.team_now()
-	if (S.team as Array).size() == 5: ok += 1
+	if (S.team as Array).size() == 6: ok += 1
 	else: bad += 1; _p("BAD pad %d" % S.team.size())
-	for i in range(1, 5):
-		if i - 1 < named.size(): AC.put_slot(i, named[i - 1].id)
+	for i in [1, 3, 4, 5]:   # 前排 2 隻、後排 3 隻
+		var k = [1, 3, 4, 5].find(i)
+		if k < named.size(): AC.put_slot(i, named[k].id)
+	var before = (S.team as Array).duplicate()
+	if named.size() >= 5: AC.put_slot(2, named[4].id)   # 已滿 5：空格加新鬼要拒絕
+	if S.team == before: ok += 1
+	else: bad += 1; _p("BAD cap")
 	var cnt = 0
 	for x in S.team: if J.t(x): cnt += 1
 	if cnt == mini(5, 1 + named.size()): ok += 1
 	else: bad += 1; _p("BAD fill %d" % cnt)
 	if named.size() >= 2:   # 互換
-		var a = S.team[1]; var b = S.team[2]
+		var a = S.team[1]; var b = S.team[3]
 		AC.put_slot(1, b)
-		if J.str(S.team[1]) == J.str(b) and J.str(S.team[2]) == J.str(a): ok += 1
+		if J.str(S.team[1]) == J.str(b) and J.str(S.team[3]) == J.str(a): ok += 1
 		else: bad += 1; _p("BAD swap")
 	m.open_sheet("出擊", func(): pass)
 	var box = AC.add_to(m.sheet_body, ["egui", "zombie"], {})
 	await _w(t, 1.0); await _shot(t, "team5_card")
 	box.set_meta("pick", "4"); AC.render(box); await _w(t, 1.0); await _shot(t, "team5_pick")
 	m.close_sheet(); await _w(t, 0.5)
+	# [row] 開戰：前排 2 隻企前（x 大）、血多；後排企後、攻高
+	J.mc(J.G.get("Battle"), "start", [0, 0, null]); await _w(t, 1.5)
+	var us = []
+	for u in J.G.get("Battle").units: if u is Dictionary and u.has("gid") and J.t(u.gid): us.append(u)
+	var rows = []
+	for u in us: rows.append([J.str(u.gid), J.str(u.get("row")), int(J.num(u.x))])
+	_p("units %s" % [rows])
+	var fr = us.filter(func(u): return J.str(u.get("row")) == "front"); var bk = us.filter(func(u): return J.str(u.get("row")) == "back")
+	var minf_x = 1e9; var maxb_x = -1e9
+	for u in fr: minf_x = minf(minf_x, J.num(u.x))
+	for u in bk: maxb_x = maxf(maxb_x, J.num(u.x))
+	if us.size() == 5 and fr.size() == 2 and bk.size() == 3 and minf_x > maxb_x: ok += 1
+	else: bad += 1; _p("BAD rows")
+	await _w(t, 2.5); await _shot(t, "team5_battle")
+	J.G.get("Battle")["active"] = false
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
