@@ -578,7 +578,9 @@ func _draw_plain(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictio
 	if not (o.get("shadow") is bool and o.shadow == false):
 		if ghost: ctx.save(); ctx.globalAlpha *= 0.55; shadow(ctx, x, y + 1 * s, s * 0.8); ctx.restore()
 		else: shadow(ctx, x, y + 1 * s, s)
-	if J.t(o.get("flip")): ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0)
+	var fl = J.t(o.get("flip"))
+	if type == "afu" and DB.hero_female(): fl = not fl   # [face] 女主立繪原圖向左（男主骨架預設向右）→ 反轉，武器同面向一致
+	if fl: ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0)
 	if J.t(o.get("rot")): ctx.translate(x, y - 15 * s); ctx.rotate(J.num(o.rot)); ctx.translate(-x, -(y - 15 * s))
 	if not ghost: f.call(ctx, x, y); ctx.restore(); return
 	# 飄浮：網頁版先畫入暫存畫布再用 destination-out 漸層擦淡下半身；Godot 冇呢種混合 → 錄低再按高度逐點乘透明度（效果一樣）

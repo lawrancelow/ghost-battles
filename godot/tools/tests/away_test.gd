@@ -742,3 +742,34 @@ func offer(t) -> void:   # [offer] 燒貨單：揀單介面 → 真開一晚（�
 			for n in m.get_children(): if n.has_method("skip_scene") and n.get("cur") != null: n.skip_scene()
 			await _w(t, 0.3)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+class FaceDraw extends Node2D:
+	var fem := false
+	func _process(_d): queue_redraw()
+	func _draw() -> void:
+		draw_rect(Rect2(0, 0, 450, 300), Color("#3a3430"))
+		var ctx = Ctx.new(self)
+		var i = 0
+		for fl in [false, true]:
+			Art.draw_char(ctx, "afu", 110 + i * 230, 230, 2.2, {"t": 0.0, "flip": fl, "pose": "idle"})
+			i += 1
+
+func facing(t) -> void:   # [face] 主角左右：flip false／true 各畫一隻（男女各截一張）
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	for i in 120:
+		await _w(t, 0.5)
+		var m0 = _main(t)
+		if m0 and m0.get("loading") == null and J.G.get("S") is Dictionary: break
+	await _w(t, 1.5)
+	var m = _main(t)
+	m._hide_title(); await _w(t, 1.0); await _skip(t)
+	for sx in ["m", "f"]:
+		if not (J.G.S.get("hero") is Dictionary): J.G.S["hero"] = {}
+		J.G.S.hero["sex"] = sx
+		var cl = CanvasLayer.new(); cl.layer = 100; m.add_child(cl)
+		var fd = FaceDraw.new(); cl.add_child(fd)
+		await _w(t, 0.8)
+		await _shot(t, "facing_" + sx)
+		cl.queue_free(); await _w(t, 0.3)
+	ok += 1
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
