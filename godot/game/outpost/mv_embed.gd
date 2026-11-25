@@ -271,7 +271,7 @@ func _draw_spare(ctx, x: float, y: float) -> void:
 	ctx.restore()
 
 # 擔挑：用遊戲本身嘅蠟筆畫素材（竹竿＝裝備「竹竿」原圖、籮筐＝大排檔「竹籮」原圖，去白邊／剪出嚟，
-#   assets/spr/mvp_pole、mvp_basket、mvp_basket_front），唔再程序畫，畫風同成個遊戲一樣。
+#   assets/spr/mvp_biandan、mvp_basket、mvp_basket_front），唔再程序畫，畫風同成個遊戲一樣。
 #   竹扁擔擱喺膊頭（跟角色高度、餓鬼弓身較低），左右兩半向下斜少少＝被重量壓彎；繩吊住籮筐，
 #   行路時一彈一彈、籮筐輕輕擺；貨嘅圖示放入籮，籮前半遮住貨嘅下半截（似真係裝住）。
 const LOAD_INK := "rgba(34,22,16,.85)"
@@ -285,25 +285,29 @@ func _draw_load(ctx, p: Dictionary, pos: Vector2, flip: bool, t: float) -> void:
 	if h <= 0.0: h = 52.0
 	var bob = absf(sin(t * 9.0)) * 1.8                 # 腳步彈
 	var sh = Vector2(pos.x + (-3.0 if flip else 3.0), pos.y - h * s * {"egui": 0.62}.get(k, 0.74) + bob)   # 膊頭
-	var half = 28.0; var droop = 0.10 + absf(sin(t * 9.0)) * 0.04   # 兩頭壓低（落步時多啲）
-	var L = sh + Vector2(-half, 0).rotated(-droop); var R = sh + Vector2(half, 0).rotated(droop)
+	# 扁擔（mvp_biandan：劈開嘅竹片、中間闊兩頭尖、已經壓彎；兩頭綁麻繩＋鐵鈎）：圖中間竹底擱喺膊頭
+	var bt = _ltex("mvp_biandan"); var bw = 62.0; var bh = bw * bt.get_height() / bt.get_width()
+	var tilt = sin(t * 4.5 + float(p.ph)) * 0.025      # 跟步輕輕側
+	ctx.save(); ctx.translate(sh.x, sh.y); ctx.rotate(tilt)
+	var o = Vector2(-bw * 0.5, -bh * BD_REST)
+	var hooks = []
+	for hx in BD_HOOK: hooks.append(Vector2(o.x + bw * hx, o.y + bh * BD_HOOK_Y))
 	var sw = sin(t * 4.5 + float(p.ph)) * 0.14          # 籮筐擺
-	_basket(ctx, L, sw, str(p.mid))
-	_basket(ctx, R, sw * 0.85 + 0.03, str(p.mid))
-	# 竹扁擔：左右兩半（原圖左半／右半），由膊頭向兩邊斜落
-	var pt = _ltex("mvp_pole"); var pw = float(pt.get_width()); var ph = float(pt.get_height())
-	var th = 6.4
-	for side in [-1, 1]:
-		ctx.save(); ctx.translate(sh.x, sh.y); ctx.rotate(droop * side)
-		if side < 0: ctx.drawImage(pt, 0, 0, pw * 0.5, ph, -half - 1.0, -th * 0.5, half + 1.0, th)
-		else: ctx.drawImage(pt, pw * 0.5, 0, pw * 0.5, ph, 0, -th * 0.5, half + 1.0, th)
-		ctx.restore()
+	_basket(ctx, hooks[0], sw, str(p.mid))
+	_basket(ctx, hooks[1], sw * 0.85 + 0.03, str(p.mid))
+	if flip: ctx.save(); ctx.scale(-1, 1)
+	ctx.drawImage(bt, o.x, o.y, bw, bh)
+	if flip: ctx.restore()
+	ctx.restore()
+const BD_REST := 0.382          # 圖入面：中間竹底（擱膊頭）嘅高度比例
+const BD_HOOK := [0.102, 0.872] # 兩個鐵鈎底嘅橫向比例
+const BD_HOOK_Y := 0.99
 
 # 一個籮筐：top＝扁擔吊點；ang＝擺動角度
 func _basket(ctx, top: Vector2, ang: float, mid: String) -> void:
 	var bt = _ltex("mvp_basket"); var bf = _ltex("mvp_basket_front")
 	var bw = 23.0; var bh = bw * bt.get_height() / bt.get_width()
-	var ry = 13.0   # 籮頂（圖頂）離吊點
+	var ry = 8.0    # 籮頂（圖頂）離吊點（鐵鈎底）
 	var rim = ry + bh * 0.215   # 籮口左右兩端
 	ctx.save(); ctx.translate(top.x, top.y); ctx.rotate(ang)
 	# 三條麻繩（微微彎）
