@@ -363,21 +363,19 @@ static func _dom_cards() -> void:
 
 # ---------------- 開戰 ----------------
 const FRONT_N := 3          # [row] 前排格數（第 1–3 格），後排第 4–6 格
-const ROW_FRONT_HP := 1.2    # 前排：血 +20%（坦）
-const ROW_BACK_ATK := 1.15   # 後排：攻 +15%（輸出）
 static func mk_ghost_unit(g, i) -> Dictionary:
 	var F = _g("F")
 	var lv = J.mc(F, "glv", [g]); var P = _stat(g, 0); var A = _stat(g, 2); var d = J.cl(_g("gdef"), null, [g])
 	var dm = J.num(J.mc(_g("GP"), "drillMul", [g.k])); var hp = (300 + P * 8 + A * 4) * dm
 	var ranged = J.str(J.gp(d, "range")) == "ranged"; var ii = J.num(i)
-	# [row] 站位：前排（第 1–3 格）企前、血 +20%、行慢少少擋住；後排（第 4–6 格）企後、攻 +15%
+	# [row] 站位：前排（第 1–3 格）企前先捱打；後排（第 4–6 格）企後。數值由定位（坦／攻／輔／醫）決定
 	var si = int(ii); var front = si < FRONT_N
 	var atk = (20 + A * 1.4) * dm
-	if front: hp *= ROW_FRONT_HP
-	else: atk *= ROW_BACK_ATK
+	var RC = load("res://game/rts/roles.gd").info(g.k)
+	hp *= float(RC.hp); atk *= float(RC.atk)
 	var x = (96.0 - si * 6.0) if front else (50.0 - (si - FRONT_N) * 6.0)
 	var lane = [0.0, 1.1, 2.2][si % 3]
-	return {"side": 0.0, "k": g.k, "gid": g.id, "name": g.name, "hp": hp, "maxhp": hp, "atk": atk, "range": 150.0 if ranged else 46.0, "row": "front" if front else "back",
+	return {"side": 0.0, "k": g.k, "gid": g.id, "name": g.name, "hp": hp, "maxhp": hp, "atk": atk, "range": 150.0 if ranged else 46.0, "row": "front" if front else "back", "cls": str(RC.zh),
 		"spd": (38.0 if ranged else 46.0) * (0.92 if front else 1.0), "x": x, "lane": lane, "energy": 20.0, "sk": J.gp(_g("SKILLS"), g.k), "st": {}, "cd": randf() * 0.5, "lv": lv}
 
 static func start(ci, si, wild) -> void:

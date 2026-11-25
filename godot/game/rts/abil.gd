@@ -583,6 +583,10 @@ static func compile(sim, u: Dictionary) -> void:
 			if pe.get("aura") is Dictionary: a.aura = pe.aura
 			if pe.get("tr") != null: a.pas.append(pe)
 		if e.get("aura") is Dictionary and a.aura == null: a.aura = e.aura
+	if a.hero and not a.sum and u != sim.get("adviser") and u.has("hp") and J.str(k) != "":   # [roles] 定位招：坦／攻／輔／醫（人人一樣會普攻）
+		var R = load("res://game/rts/roles.gd")
+		a["cls"] = R.cls_of(k)
+		for pe in R.kit(k): a.pas.append(pe)
 	if a.act is Dictionary and not J.t(a.act.get("leg")) and J.t(u.get("sk")) == false: u["sk"] = {"name": J.str(a.act.get("name")), "kind": "ab"}
 	if a.act is Dictionary and not J.t(a.act.get("leg")) and u.get("sk") is Dictionary and J.str(u.sk.get("name")) != J.str(a.act.get("name")):
 		u["sk"] = (u.sk as Dictionary).duplicate(); u.sk["name"] = J.str(a.act.get("name"))
@@ -1512,7 +1516,7 @@ static func pending(sim, side: int) -> int:   # 等緊屍變／返生嘅（勝�
 	return n
 
 # ================= 觸發（ability.md 2.3） =================
-static func trig(sim, u, tr: String, other = null) -> void:
+static func trig(sim, u, tr: String, other = null, only := -1) -> void:
 	if not (u is Dictionary): return
 	var a = A(u)
 	var L = a.get("pas", [])
@@ -1520,6 +1524,7 @@ static func trig(sim, u, tr: String, other = null) -> void:
 	for i in L.size():
 		var pe = L[i]
 		if J.str(pe.get("tr")) != tr: continue
+		if only >= 0 and i != only: continue   # [roles] every：每條被動各自計時
 		var key = str(i)
 		if J.num(a.icd.get(key, -1e9)) > sim.t: continue
 		if tr == "attack" and int(J.num(pe.get("n", 1))) > 1 and int(a.get("n_att", 0)) % int(J.num(pe.n)) != 0: continue
@@ -1758,7 +1763,7 @@ static func _slow_tick(sim, step: float) -> void:
 			if J.str(pe.get("tr")) == "every":
 				var k = "ev" + str(i)
 				a3[k] = J.num(a3.get(k, 0)) + step
-				if J.num(a3[k]) >= J.num(pe.get("t", 5)): a3[k] = 0.0; trig(sim, u, "every", null)
+				if J.num(a3[k]) >= J.num(pe.get("t", 5)): a3[k] = 0.0; trig(sim, u, "every", null, i)
 			elif J.str(pe.get("tr")) == "low_hp": trig(sim, u, "low_hp", null)
 
 # ================= 召喚機制 =================

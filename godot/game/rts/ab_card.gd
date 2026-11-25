@@ -340,7 +340,9 @@ static func _team_row(need: Dictionary, P: Dictionary, box: VBoxContainer, cmp: 
 	BK.pad_team()
 	var S = J.G.S
 	var wrap = VBoxContainer.new(); wrap.add_theme_constant_override("separation", 2)
-	wrap.add_child(_lab(L("站位：前排 3 格（坦・血 +20%）、後排 3 格（輸出・攻 +15%）；同時最多出陣 %d 隻（而家 %d）", "站位：前排 3 格（坦・血 +20%）、後排 3 格（輸出・攻 +15%）；同時最多出陣 %d 隻（現在 %d）") % [BK.TEAM_CAP, BK.team_count()], 13, P.dim))
+	var RO = load("res://game/rts/roles.gd")
+	wrap.add_child(_lab(L("站位：前排 3 格先捱打（放坦）、後排 3 格較安全（放攻／輔／醫）；同時最多出陣 %d 隻（而家 %d）", "站位：前排 3 格先挨打（放坦）、後排 3 格較安全（放攻／輔／醫）；同時最多出陣 %d 隻（現在 %d）") % [BK.TEAM_CAP, BK.team_count()], 13, P.dim))
+	wrap.add_child(_lab(L("隊伍組成：", "隊伍組成：") + RO.team_mix(S.team), 13, P.hd))
 	var tr = GridContainer.new(); tr.columns = 5; tr.add_theme_constant_override("h_separation", 3); tr.add_theme_constant_override("v_separation", 3); wrap.add_child(tr)
 	var rl = func(t: String):
 		var l = _lab(t, 13, P.hd, false); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER; l.custom_minimum_size = Vector2(22, 0); l.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; return l
@@ -360,6 +362,11 @@ static func _team_picker(box: VBoxContainer, P: Dictionary, dark: bool, slot: in
 	pnl.add_theme_stylebox_override("panel", UIKit.sb(P.box, 6, P.lit, 2, Vector4(6, 6, 6, 6)))
 	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 4); pnl.add_child(vb)
 	vb.add_child(_lab(L("揀%s第 %d 格嘅名鬼（已喺隊入面嘅會互換位置）", "選%s第 %d 格的名鬼（已在隊裡的會互換位置）") % [L("前排", "前排") if slot < BK.FRONT_N else L("後排", "後排"), (slot % BK.FRONT_N) + 1], 15, P.tx))
+	var RO = load("res://game/rts/roles.gd")
+	for c in RO.ORDER:
+		var lg = HBoxContainer.new(); lg.add_theme_constant_override("separation", 4); vb.add_child(lg)
+		var bd = RO.badge_cls(c, 13); bd.size_flags_vertical = Control.SIZE_SHRINK_CENTER; lg.add_child(bd)
+		var dl = _lab(RO.T(RO.CLS[c].desc), 13, P.dim); dl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; lg.add_child(dl)
 	var cur0 = S.team[slot]
 	if not J.t(cur0) and BK.team_count() >= BK.TEAM_CAP:
 		vb.add_child(_lab(L("已經出陣 %d 隻（上限）：揀已喺隊嘅名鬼＝移位；揀其他名鬼要先喺別格「留空」。", "已出陣 %d 隻（上限）：選已在隊裡的名鬼＝移位；選其他名鬼要先在別格「留空」。") % BK.TEAM_CAP, 13, P.bad))
@@ -376,7 +383,11 @@ static func _team_picker(box: VBoxContainer, P: Dictionary, dark: bool, slot: in
 		var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 0); v.mouse_filter = Control.MOUSE_FILTER_IGNORE; c.add_child(v)
 		if g != null:
 			var pr = UIKit.portrait(J.str(g.k), 40); pr.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; pr.mouse_filter = Control.MOUSE_FILTER_IGNORE; v.add_child(pr)
-		var nl = _lab(str(DB.L(J.str(g.name))) if g != null else L("留空", "留空"), 14, P.tx, false); nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; nl.clip_text = true; v.add_child(nl)
+		var nl = _lab(str(DB.L(J.str(g.name))) if g != null else L("留空", "留空"), 14, P.tx, false); nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; nl.clip_text = true
+		if g != null:
+			var nh = HBoxContainer.new(); nh.alignment = BoxContainer.ALIGNMENT_CENTER; nh.add_theme_constant_override("separation", 2); nh.mouse_filter = Control.MOUSE_FILTER_IGNORE; v.add_child(nh)
+			nh.add_child(RO.badge(g.k, 13)); nl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; nh.add_child(nl)
+		else: v.add_child(nl)
 		if g != null:
 			var where = ""
 			if (S.team as Array).has(g.id): where = L("出陣中", "出陣中")
@@ -429,7 +440,11 @@ static func _member(g, need: Dictionary, P: Dictionary, adv: bool, box: VBoxCont
 	if g != null:
 		var pr = UIKit.portrait(J.str(g.k), (34 if adv else 38) if cmp else (44 if adv else 48)); pr.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; pr.mouse_filter = Control.MOUSE_FILTER_IGNORE; vb.add_child(pr)
 	var nm = str(DB.L(J.str(g.name))) if g != null else (L("＋軍師", "＋軍師") if adv else L("＋出陣", "＋出陣"))
-	var nl = _lab(nm, 13 if cmp else 15, P.tx, false); nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; nl.clip_text = true; nl.custom_minimum_size = Vector2(0, 20); vb.add_child(nl)
+	var nl = _lab(nm, 13 if cmp else 15, P.tx, false); nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; nl.clip_text = true; nl.custom_minimum_size = Vector2(0, 20)
+	if g != null and not adv:   # [roles] 定位小標（坦／攻／輔／醫）
+		var nh = HBoxContainer.new(); nh.alignment = BoxContainer.ALIGNMENT_CENTER; nh.add_theme_constant_override("separation", 2); nh.mouse_filter = Control.MOUSE_FILTER_IGNORE; vb.add_child(nh)
+		nh.add_child(load("res://game/rts/roles.gd").badge(g.k, 13)); nl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; nh.add_child(nl)
+	else: vb.add_child(nl)
 	if g != null:
 		var th = HBoxContainer.new(); th.alignment = BoxContainer.ALIGNMENT_CENTER; th.add_theme_constant_override("separation", 2); th.mouse_filter = Control.MOUSE_FILTER_IGNORE; vb.add_child(th)
 		var show = ts if not adv else ([adv_tag(g)] if adv_tag(g) != "" else [])
