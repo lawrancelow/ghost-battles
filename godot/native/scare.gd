@@ -702,7 +702,7 @@ static func dao_tick(Sc, n, dt: float) -> void:
 		J.sp(n, "lt", (5.0 if gp(n, "lt") == null else n_(gp(n, "lt"))) - dt)
 		if n_(gp(n, "lt")) <= 0 and not J.t(gp(n, "bub")): J.sp(n, "lt", 6 + randf() * 4); bubble(Sc, n, "（執返個鈴）冇嘢，冇嘢……" if startled else pick(A_(gp(d, "lines"))), 2.4)
 		if n_(gp(n, "prog")) >= 1:
-			J.sp(Sc, "expelled", true); bubble(Sc, n, "（符紙一貼）收工！", 2.6)
+			J.sp(Sc, "expelled", true); bubble(Sc, n, "（鈴一搖）收工！", 2.6)
 			if not hl(Sc): mc(Sc, "float", [0.5, 0.35, "阿福被請走了……", "#ffcf6a", 3.0])
 			if not J.t(gp(Sc, "endAt")): J.sp(Sc, "endAt", gp(Sc, "t"))
 			return
