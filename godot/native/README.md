@@ -48,4 +48,4 @@ config/custom_user_dir_name="gbt_L2_<時間戳>"
 對照工具（native_xcheck）只比函數輸出，捉唔到呢類錯；要加探針確認包裝（wrapper）真係裝咗、計時器真係行到。
 
 ## 紅線：品牌名
-原生模塊唔經 build.sh 嘅品牌替換。寫字串時直接用替換後嘅名（WhatsApp→ApaKhabar、TikTok→GoyangGoyang、Grab→Tumpang、Google→Cari、iPhone→iFon、Netflix→Tengokflix、Spotify→Dengar、Tesla→Teslah、Dyson→Dysum、Face ID→Muka ID、Facebook→Mukabuku、Instagram／IG→Gambargram、LinkedIn→LinkedOut、Threads→Benang、Jordan→飛人波鞋、Chanel→Chanai、Prada→Pradah、LV→Louis Kitton、Waze→Wayz、Touch 'n Go→Tap 'n Gone、RapidKL→LRT、Kancil→國產細車、Zoom→Zum、Word→文件檔、Windows→Windoze、法拉利→法拉麗、維他奶→豆奶、麥當勞→漢堡包、Excel→試算表、PTPTN→學債）。提交前 grep 一次。
+原生模塊唔經 build.sh 嘅品牌替換。寫字串時直接用替換後嘅名（WhatsApp→ApaKhabar、TikTok→GoyangGoyang、Grab→Tumpang、Google→Cari、iPhone→iFon、Netflix→Neckflip、Spotify→Sputify、麥當勞→漢堡包、Excel→試算表、PTPTN→學債、Tesla→Tehlah、Dyson→Duckson、Face ID→Face IDK、Facebook→Mukabuku、Instagram／IG→Gambargram（待定）、LinkedIn→LinkedOut、Threads→Benang、Jordan→Air Jordang、Chanel→Chanai、Prada→Padah、LV→Lui Char、Waze→Waste、Touch 'n Go→Tap 'n Gone、RapidKL→Slowlikehell、Kancil→鼠鹿、Zoom→Zoom-bie、Word→Wurd、Windows→Windoze、法拉利→發拉你、維他奶→喂他奈）。提交前 grep 一次。
