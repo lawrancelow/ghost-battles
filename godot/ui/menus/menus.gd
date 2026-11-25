@@ -424,6 +424,11 @@ static func open_story() -> void:
 			_wide(("%s　%s" % [J.str(e.who), J.str(e.title)]) if ok else "？？？（%s）" % J.str(e.hint), "" if ok else "ghost", ok, func(): close_hook(); _sa("su", id))
 	_body().add_child(UIKit.hsep())
 	_wide("看手機", "", true, func(): close_hook(); _sa("phone"))
+	_wide("改名（現在叫：%s）" % str(DB.hero().get("name", "")), "", true, func():   # [name] 開新檔名打錯／被預設蓋咗都可以改返
+		close_hook()
+		var nc = load("res://ui/name_card.gd").new(); nc.rename_only = true
+		nc.on_done = func(): m.show_toast("已改名：" + str(DB.hero().get("name", "")))
+		m.add_child(nc))
 	var sb = _wide("聲音：" + ("開" if Snd.is_on() else "關"), "", true, func(): pass)
 	sb.pressed.connect(func(): sb.text = "聲音：" + ("開" if Snd.toggle() else "關"))
 	var lb = _wide("", "", true, func(): pass)

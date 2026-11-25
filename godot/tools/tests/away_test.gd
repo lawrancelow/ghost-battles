@@ -416,10 +416,15 @@ func namef(t) -> void:   # [name] 開新檔設定名（模擬手機輸入法：�
 		G.S.erase("hero"); J.G.S.erase("hero")
 		var NC = load("res://ui/name_card.gd")
 		var nc = NC.new(); m.add_child(nc); await _w(t, 0.6)
-		nc.ed.name.text = nm   # 唔經 t_fill：唔標 touched
-		nc._page_avatar(); await _w(t, 0.3)
+		await _shot(t, "namecard1_" + sx)
 		nc._pick(sx); await _w(t, 0.3)
-		nc.on_done = Callable(); nc._confirm(); await _w(t, 0.5)
+		nc._page_boot(); await _w(t, 0.5)
+		var pre = str(nc.ed.name.text)
+		if pre == ("阿慧" if sx == "f" else "阿福"): ok += 1
+		else: bad += 1; _p("BAD prefill %s" % pre)
+		nc.ed.name.grab_focus(); nc.ed.name.text = nm   # 模擬輸入法：唔觸發 text_changed、焦點仲喺欄度
+		await _shot(t, "namecard2_" + sx)
+		nc.on_done = Callable(); await nc._confirm_names(); await _w(t, 0.5)
 		var sc_all = JSON.parse_string(FileAccess.get_file_as_string("res://data/story_v2.json")).scenes
 		var sid = "opf_wake" if sx == "f" else "op_wake"
 		G.story_req.emit(sc_all[sid], Callable()); await _w(t, 1.0)
@@ -439,6 +444,14 @@ func namef(t) -> void:   # [name] 開新檔設定名（模擬手機輸入法：�
 			for n in m.get_children(): if n.has_method("skip_scene") and n.get("cur") != null: n.skip_scene(); any = true
 			if not any: break
 			await _w(t, 0.3)
+	# 設定入面改名：只改名唔改性別
+	var NC2 = load("res://ui/name_card.gd")
+	var sx0 = str(DB.hero().get("sex", "m"))
+	var rc = NC2.new(); rc.rename_only = true; m.add_child(rc); await _w(t, 0.6)
+	await _shot(t, "namecard_rename")
+	rc.ed.name.text = "阿強"; rc.on_done = Callable(); await rc._confirm_names(); await _w(t, 0.4)
+	if str(DB.hero().get("name")) == "阿強" and str(DB.hero().get("sex")) == sx0: ok += 1
+	else: bad += 1; _p("BAD rename %s" % [DB.hero()])
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
 func bgs(t) -> void:   # [bg] 開場各場舞台背景（男女線）＋箱子標籤：喺冇插圖嗰行截圖

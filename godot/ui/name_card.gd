@@ -89,6 +89,7 @@ static func apply_hero(S: Dictionary, h: Dictionary) -> void:
 
 # ---------------- 介面 ----------------
 var on_done: Callable = Callable()
+var rename_only := false   # 設定入面「改名」：只顯示名字頁，唔改性別
 var sex := "m"
 var page: VBoxContainer
 var ed := {}            # name/full/en → LineEdit
@@ -103,7 +104,8 @@ func _ready() -> void:
 	var bg = ColorRect.new(); bg.color = SCREEN; bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); bg.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(bg)
 	var h = hero_of(G.S)
 	if str(h.get("sex", "m")) == "f" and female_ready(): sex = "f"
-	_page_boot()
+	if rename_only: _page_boot(); return
+	_page_avatar()
 
 func _clear_page() -> void:
 	if page: page.queue_free()
@@ -129,11 +131,14 @@ func _page_boot() -> void:
 	page.add_child(_lbl("歡迎！請設定你的名字。", 19, TXT))
 	var sp = Control.new(); sp.custom_minimum_size = Vector2(0, 6); page.add_child(sp)
 	var h = hero_of(G.S); var d = DEF_F if sex == "f" else DEF_M
-	_field("name", "名字（大家這樣叫你）", str(h.get("name", d.name)) if h.has("name") else d.name, 6)
-	_field("full", "全名", str(h.get("full", d.full)) if h.has("full") else d.full, 8)
-	_field("en", "英文名（可以留空）", str(h.get("en", d.en)) if h.has("en") else d.en, 12)
+	var same = h.has("name") and str(h.get("sex", "m")) == sex   # 舊名只喺同性別先沿用（唔會將阿福帶去女主）
+	_field("name", "名字（大家這樣叫你）", str(h.get("name", d.name)) if same else d.name, 6)
+	_field("full", "全名", str(h.get("full", d.full)) if same else d.full, 8)
+	_field("en", "英文名（可以留空）", str(h.get("en", d.en)) if same else d.en, 12)
 	var sp2 = Control.new(); sp2.custom_minimum_size = Vector2(0, 8); page.add_child(sp2)
-	var nb = _big_btn("下一步"); nb.pressed.connect(_page_avatar); page.add_child(nb)
+	var nb = _big_btn("確定"); nb.pressed.connect(_confirm_names); page.add_child(nb)
+	if not rename_only:
+		var bk = _big_btn("返回揀頭像", false); bk.pressed.connect(_page_avatar); page.add_child(bk)
 	_fade_in(page)
 
 func _field(key: String, cap: String, val: String, maxlen: int) -> void:
@@ -158,24 +163,28 @@ func _read_fields() -> Dictionary:
 var _vals := {}
 
 # 第二頁：選擇個人頭像（黑色螢幕倒影）
-func _page_avatar() -> void:
-	_vals = _read_fields()
-	# 手機中文輸入法未必觸發 text_changed：凡係同預設唔同嘅欄都當玩家改過（揀女主時唔可以覆蓋玩家打嘅名）
-	var d0 = DEF_F if sex == "f" else DEF_M
-	for k in _vals: if clean(str(_vals[k]), 12) != str(d0[k]) and clean(str(_vals[k]), 12) != "": touched[k] = true
+func _page_avatar() -> void:   # 第一頁：揀頭像（先揀性別，名字頁先會預填啱嗰邊嘅預設，唔會再出現打咗名又俾人換走）
 	_clear_page()
-	page.add_child(_lbl("選擇個人頭像", 26, GLOW, "serif", 900))
-	page.add_child(_lbl("黑色的螢幕上，倒映出一個人影。", 18, SUB))
+	page.add_child(_lbl("系統已重新開機", 26, GLOW, "serif", 900))
+	page.add_child(_lbl("黑色的螢幕上，倒映出一個人影。選擇個人頭像。", 18, SUB))
 	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 14); hb.alignment = BoxContainer.ALIGNMENT_CENTER
 	page.add_child(hb)
 	hb.add_child(_tile("m", "打工仔", true))
 	hb.add_child(_tile("f", "四眼妹", female_ready()))
 	var who = _lbl("", 19, TXT); who.name = "Who"; page.add_child(who)
 	var sp = Control.new(); sp.size_flags_vertical = Control.SIZE_EXPAND_FILL; page.add_child(sp)
-	ok_btn = _big_btn("確定"); ok_btn.pressed.connect(_confirm); page.add_child(ok_btn)
-	var bk = _big_btn("返回改名字", false); bk.pressed.connect(func(): _page_boot_keep()); page.add_child(bk)
+	ok_btn = _big_btn("下一步：設定名字"); ok_btn.pressed.connect(_page_boot); page.add_child(ok_btn)
 	_pick(sex)
 	_fade_in(page)
+
+# 手機輸入法：撳掣前未「確認」嘅字未必寫入 LineEdit → 先收鍵盤、放開焦點，等一格再讀
+func _confirm_names() -> void:
+	for k in ed: if is_instance_valid(ed[k]): ed[k].release_focus()
+	DisplayServer.virtual_keyboard_hide()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_vals = _read_fields()
+	_confirm()
 
 func _page_boot_keep() -> void:
 	var keep = _vals.duplicate()
@@ -229,15 +238,10 @@ func _tile(sx: String, cap: String, open: bool) -> Control:
 
 func _pick(sx: String) -> void:
 	if sx == "f" and not female_ready(): sx = "m"
-	if sx != sex:
-		# 換性別：玩家冇改過嘅欄換成嗰邊嘅預設
-		var d = DEF_F if sx == "f" else DEF_M
-		for k in ["name", "full", "en"]:
-			if not touched.get(k, false): _vals[k] = d[k]
 	sex = sx
 	for k in tiles: tiles[k].button_pressed = k == sex
 	var who = page.get_node_or_null("Who")
-	if who: who.text = "%s（%s）" % [clean(str(_vals.get("name", "")), 6) if clean(str(_vals.get("name", "")), 6) != "" else (DEF_F if sex == "f" else DEF_M).name, "女" if sex == "f" else "男"]
+	if who: who.text = "打工仔（男）・過勞死" if sex == "m" else "四眼妹（女）・讀書讀死"
 
 func _confirm() -> void:
 	var h = _vals.duplicate(); h["sex"] = sex
@@ -257,6 +261,8 @@ func t_fill(nm: String, full := "", en := "") -> void:
 	if ed.has("name") and is_instance_valid(ed.name): ed.name.text = nm; touched["name"] = true
 	if full != "" and ed.has("full") and is_instance_valid(ed.full): ed.full.text = full; touched["full"] = true
 	if en != "" and ed.has("en") and is_instance_valid(ed.en): ed.en.text = en; touched["en"] = true
-func t_next() -> void: _page_avatar()
+func t_next() -> void: _confirm_names()
 func t_pick(sx: String) -> void: _pick(sx)
-func t_ok() -> void: _confirm()
+func t_ok() -> void:
+	if ed.has("name") and is_instance_valid(ed.name): _vals = _read_fields()
+	_confirm()
