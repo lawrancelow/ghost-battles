@@ -57,7 +57,7 @@ static func draw(ctx: Ctx, Sc: Dictionary, n: Dictionary, o: Dictionary, hh: flo
 		_part(ctx, "npc_mis_selfie", H, MeshAnim.idle(t), right)
 		var px = -fx * H * 0.17; var py = -H * 0.83
 		ctx.save(); ctx.globalAlpha *= 0.5 + 0.5 * randf()
-		var pr := Art.portrait_region("afu")
+		var pr = Art.portrait_region("afu")
 		if pr.size() == 2:
 			var sz = H * 0.16; var r: Rect2 = pr[1]
 			ctx.drawImage(pr[0], r.position.x, r.position.y, r.size.x, r.size.y, px - sz / 2 + (randf() - 0.5) * 3, py - sz / 2, sz, sz)
@@ -73,7 +73,7 @@ static func draw(ctx: Ctx, Sc: Dictionary, n: Dictionary, o: Dictionary, hh: flo
 		var key = "npc_mis_jump"
 		if not Spr.ok(key): return false
 		var q = fage if fage >= 0 else jt; var up = sin(minf(1, q / 0.6) * PI) * 0.12 * H; var sq = 0.9 if q < 0.08 else 1 + 0.06 * sin(minf(1, q / 0.6) * PI)
-		var im := Spr.get_tex(key); var h = H * im.get_height() / Spr.h("npc_mis"); var w = h * im.get_width() / im.get_height()
+		var im: Texture2D = Spr.get_tex(key); var h = H * im.get_height() / Spr.h("npc_mis"); var w = h * im.get_width() / im.get_height()
 		ctx.save(); ctx.translate((randf() - 0.5) * 2, -up); ctx.scale(1 / sq, sq); ctx.scale(-fx, 1)   # 原圖面向左
 		ctx.drawImage(im, -w * 0.58, -h, w, h)
 		var k = minf(1.2, q * 1.3); var cx = -w * 0.58 + w * 0.06; var cy = -h + h * 0.56

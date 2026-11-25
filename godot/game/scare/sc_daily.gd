@@ -49,7 +49,7 @@ static func _num(o: Dictionary, k: String, d := 0.0) -> float:
 # ---------- 畫一個角色：開始（原點 = 腳底中央，原圖方向，不翻；最後依面向整個翻）----------
 static func begin(ctx: Ctx, a: Dictionary, key: String, nr: bool, no_lift := false) -> St:
 	if not Spr.ok(key): return null
-	var tex := Spr.get_tex(key)
+	var tex: Texture2D = Spr.get_tex(key)
 	if tex == null: return null
 	var S := St.new()
 	var o: Dictionary = a.o
@@ -97,7 +97,7 @@ static func piece(S: St, key: String, pv: Vector2, at: Vector2, ang := 0.0, sc :
 # 道具（裁好嘅細圖）：闊 w，錨點 (ax,ay)，喺 (x,y) 轉 ang
 static func prop(ctx: Ctx, key: String, x: float, y: float, w: float, ang := 0.0, ax := 0.5, ay := 0.5, sx := 1.0, sy := 1.0) -> void:
 	if not Spr.ok(key): return
-	var im := Spr.get_tex(key); var h = w * im.get_height() / im.get_width()
+	var im: Texture2D = Spr.get_tex(key); var h = w * im.get_height() / im.get_width()
 	ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.scale(sx if sx else 1.0, sy if sy else 1.0); ctx.drawImage(im, -ax * w, -ay * h, w, h); ctx.restore()
 static func rotP(S: St, pu: float, pv: float, at: Vector2, ang: float, u: float, v: float) -> Vector2:
 	var x = (u - pu) * S.W; var y = (v - pv) * S.H; var c = cos(ang); var s = sin(ang)

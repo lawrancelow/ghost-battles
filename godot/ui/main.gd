@@ -76,12 +76,19 @@ func _boot_js() -> void:
 	var lb = UIKit.label("陰間連線中…", 16, Color("#f3e6c8"), "serif", 900); lb.anchor_left = 0; lb.anchor_right = 1; lb.anchor_top = 0.82; lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; loading.add_child(lb)
 	var bar_bg = ColorRect.new(); bar_bg.color = Color("#3a2e26"); bar_bg.anchor_left = 0.15; bar_bg.anchor_right = 0.85; bar_bg.anchor_top = 0.87; bar_bg.anchor_bottom = 0.87; bar_bg.offset_bottom = 6; loading.add_child(bar_bg)
 	var bar = ColorRect.new(); bar.color = Color("#c2362b"); bar.size = Vector2(0, 6); bar_bg.add_child(bar)
+	# 統一進度條：開機畫面（ui/launch.gd）嘅大進度條由更新一路推到載完模塊；冇（例如重載）就自己開一個只顯示用嘅
+	var ov = get_node_or_null("/root/GBLoad")
+	if ov == null:
+		ov = load("res://ui/launch.gd").Overlay.new(); ov.passive = true; ov.name = "GBLoad"; get_tree().root.add_child(ov)
+	else: ov.handoff()
 	await get_tree().process_frame
 	# 開機麵包屑（user://boot_crumb.txt，每步寫入）：上次未到「ok」就係閃退／卡死 → 救命畫面
 	#   畫面階段出事會自動開安全畫面模式（G.read_crumb）
 	G.read_crumb()
 	# 全面自檢（新版第一次開會自動跑；閃退重開會自動繼續）
 	SelfTest.on_boot()
+	if SelfTest.active() or G.last_crash != "":
+		if is_instance_valid(ov): ov.hide_now()   # 自檢畫面／救命畫面要撳得到，唔好遮住
 	if SelfTest.active():
 		G.last_crash = ""
 		if str(SelfTest.S.res.get("boot", "")) == "閃退": G.safe_gfx = true   # 開機本身都閃退：用安全模式先行得落去
@@ -107,6 +114,7 @@ func _boot_js() -> void:
 		if i % 8 == 0: G.crumb("mod:" + names[i])
 		JSRun.load_modules([names[i]])
 		bar.size.x = bar_bg.size.x * float(i + 1) / names.size()
+		if is_instance_valid(ov): ov.prog(float(i + 1) / names.size())
 		await get_tree().process_frame
 	print("[boot] modules ", Time.get_ticks_msec() - t0, "ms")
 	lb.text = "陰間連線中…（開門）"; boot_full_t = Time.get_ticks_msec()
@@ -121,6 +129,7 @@ func _boot_js() -> void:
 	_boot_step("refresh", func(): refresh())
 	# 逐樣顯示：每樣畫完一幀先開下一樣；手機驅動喺第一次畫某樣嘢時閃退，麵包屑就會講係邊樣（show:xxx）
 	await _staged_reveal()
+	if is_instance_valid(ov): ov.finish()
 	loading.queue_free(); loading = null
 	_boot_step("snd", func(): Snd.warm())
 	print("[boot] ready ", Time.get_ticks_msec() - t0, "ms")
@@ -956,14 +965,25 @@ func _show_title(fresh: bool) -> void:
 	bi.add_theme_color_override("font_outline_color", Color.BLACK); bi.add_theme_constant_override("outline_size", 4)
 	bi.pressed.connect(open_import); vb.add_child(bi)
 	# 版本號（測試員報問題時用）：右下角細字，唔遮內容
-	var vl = UIKit.label(Boot.label(), 11, Color(1, 1, 1, 0.45)); vl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	var vl = UIKit.label(_ver_text(), 11, Color(1, 1, 1, 0.45)); vl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	vl.anchor_left = 1; vl.anchor_right = 1; vl.anchor_top = 1; vl.anchor_bottom = 1; vl.offset_left = -200; vl.offset_right = -8; vl.offset_top = -20; vl.offset_bottom = -4
 	vl.mouse_filter = Control.MOUSE_FILTER_IGNORE; title_ov.add_child(vl)
 	vl.offset_left = -420; vl.autowrap_mode = TextServer.AUTOWRAP_OFF
 	var vt = Timer.new(); vt.wait_time = 1.0; vl.add_child(vt)   # 更新狀態即時顯示
-	vt.timeout.connect(func(): vl.text = Boot.label()); vt.start()
+	vt.timeout.connect(func(): vl.text = _ver_text()); vt.start()
 	bc.pressed.connect(_title_cont.bind(fresh))
 	bn.pressed.connect(_title_new.bind(fresh, bn, hint))
+
+# 版本號：開機畫面已經檢查／裝好更新（唔使重開）；只有 Boot 自己喺背景落緊／落好（後備）先用佢嘅字
+func _ver_text() -> String:
+	if Engine.has_meta("gb_ver") and not (str(Boot.status) in ["downloading", "pending"]):
+		var s = str(Engine.get_meta("gb_ver"))
+		match str(Boot.status):
+			"latest": s += "・已是最新"
+			"offline": s += "・連唔到更新伺服器"
+			"dlfail": s += "・更新下載失敗"
+		return s
+	return Boot.label()
 
 func _title_cont(fresh: bool) -> void:
 	if fresh: return
