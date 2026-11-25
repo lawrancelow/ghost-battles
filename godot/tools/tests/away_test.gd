@@ -352,6 +352,127 @@ func cg1(t) -> void:   # [cg] 第一章插圖：逐場播，喺有插圖嗰行�
 			await _w(t, 0.3)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
+func cg23(t) -> void:   # [cg] 第二、三章（＋天花姐支線）插圖：逐場播，喺有插圖嗰行截圖
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	for i in 120:
+		await _w(t, 0.5)
+		var m0 = _main(t)
+		if m0 and m0.get("loading") == null and J.G.get("S") is Dictionary: break
+	await _w(t, 1.5)
+	var m = _main(t)
+	m._hide_title(); await _w(t, 1.0); await _skip(t)
+	var fem = OS.get_environment("GB_FEM") == "1"
+	if fem:
+		if not (J.G.S.get("hero") is Dictionary): J.G.S["hero"] = {}
+		J.G.S.hero["sex"] = "f"
+	var sc_all = JSON.parse_string(FileAccess.get_file_as_string("res://data/story_v2.json")).scenes
+	var tag = "f" if fem else ""
+	var plan = [["ch2_intro", -1, "cg2_footprint"], ["ch2_boss", 0, "cg2_kampung"], ["ch2_boss", 2, "cg2_empty"], ["ch2_end", 8, "cg2_warehouse"], ["gift_phone", 0, "cg2_phone"], ["side_tianhua", 3, "cg2_tianhua"], ["ch3_intro", 0, "cg3_notice"], ["ch3_intro2", 1, "cg3_march"], ["ch3_boss", 0, "cg3_qing"], ["ch3_end", 3, "cg3_bed"]]
+	for pl in plan:
+		G.story_req.emit(sc_all[pl[0]], Callable())
+		await _w(t, 1.0)
+		var st = null
+		for n in m.get_children(): if n.has_method("advance"): st = n
+		if st == null: _p("no story node"); bad += 1; continue
+		if int(pl[1]) < 0:   # 聊天：等佢自己播到有相嗰句
+			for k in 24:
+				if st.get("wa") != null: st.wa.advance()
+				await _w(t, 0.35)
+			await _w(t, 1.0)
+			await _shot(t, pl[2] + tag)
+			var found = false
+			if st.get("wa") != null:
+				for b in st.wa.find_children("*", "", true, false):
+					if b.get("img") != null: found = true
+			if found: ok += 1
+			else: bad += 1; _p("BAD %s no photo bubble" % pl[2])
+		else:
+			for k in int(pl[1]) * 2: st.advance(); await _w(t, 0.05)
+			await _w(t, 1.5)
+			await _shot(t, pl[2] + tag)
+			var vis = st.cg != null and st.cg.visible and str(st.cg.get("cur_key")) == pl[2]
+			if vis: ok += 1
+			else: bad += 1; _p("BAD %s cg visible=%s key=%s" % [pl[2], st.cg != null and st.cg.visible, st.cg.get("cur_key") if st.cg else ""])
+		st.skip_scene(); await _w(t, 0.5)
+		for k in 30:
+			var any = false
+			for n in m.get_children(): if n.has_method("advance") and n.get("cur") != null: any = true
+			if not any: break
+			for n in m.get_children(): if n.has_method("skip_scene") and n.get("cur") != null: n.skip_scene()
+			await _w(t, 0.3)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func namef(t) -> void:   # [name] 開新檔設定名（模擬手機輸入法：唔觸發 text_changed）→ 揀女主 → 對話名牌要係玩家設定嘅名
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	for i in 120:
+		await _w(t, 0.5)
+		var m0 = _main(t)
+		if m0 and m0.get("loading") == null and J.G.get("S") is Dictionary: break
+	await _w(t, 1.5)
+	var m = _main(t)
+	m._hide_title(); await _w(t, 1.0); await _skip(t)
+	for sx in ["f", "m"]:
+		var nm = "小美" if sx == "f" else "大雄"
+		G.S.erase("hero"); J.G.S.erase("hero")
+		var NC = load("res://ui/name_card.gd")
+		var nc = NC.new(); m.add_child(nc); await _w(t, 0.6)
+		nc.ed.name.text = nm   # 唔經 t_fill：唔標 touched
+		nc._page_avatar(); await _w(t, 0.3)
+		nc._pick(sx); await _w(t, 0.3)
+		nc.on_done = Callable(); nc._confirm(); await _w(t, 0.5)
+		var sc_all = JSON.parse_string(FileAccess.get_file_as_string("res://data/story_v2.json")).scenes
+		var sid = "opf_wake" if sx == "f" else "op_wake"
+		G.story_req.emit(sc_all[sid], Callable()); await _w(t, 1.0)
+		var st = null
+		for n in m.get_children(): if n.has_method("advance") and n.get("cur") != null: st = n
+		st.advance(); await _w(t, 0.1); st.advance(); await _w(t, 1.2)
+		var labs = []
+		for l in st.find_children("*", "Label", true, false): if l.visible and l.is_visible_in_tree(): labs.append(l.text)
+		await _shot(t, "name_" + sx)
+		var hit = labs.has(nm)
+		if hit: ok += 1
+		else: bad += 1
+		_p(("ok " if hit else "BAD ") + "%s 名牌=%s hero=%s" % [sx, str(labs).substr(0, 120), str(DB.hero())])
+		st.skip_scene(); await _w(t, 0.6)
+		for k in 20:
+			var any = false
+			for n in m.get_children(): if n.has_method("skip_scene") and n.get("cur") != null: n.skip_scene(); any = true
+			if not any: break
+			await _w(t, 0.3)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func bgs(t) -> void:   # [bg] 開場各場舞台背景（男女線）＋箱子標籤：喺冇插圖嗰行截圖
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	for i in 120:
+		await _w(t, 0.5)
+		var m0 = _main(t)
+		if m0 and m0.get("loading") == null and J.G.get("S") is Dictionary: break
+	await _w(t, 1.5)
+	var m = _main(t)
+	m._hide_title(); await _w(t, 1.0); await _skip(t)
+	var sc_all = JSON.parse_string(FileAccess.get_file_as_string("res://data/story_v2.json")).scenes
+	var plan = [["m", "op_home", 3], ["m", "op_dinner", 2], ["f", "opf_wake", 2], ["f", "opf_home", 3], ["f", "opf_dinner", 2], ["f", "opf_desk", 0], ["f", "opf_desk", 2]]
+	for pl in plan:
+		DB.hero_apply(DB.hero_make("小美" if pl[0] == "f" else "大雄", pl[0]))
+		G.story_req.emit(sc_all[pl[1]], Callable()); await _w(t, 1.0)
+		var st = null
+		for n in m.get_children(): if n.has_method("advance") and n.get("cur") != null: st = n
+		for k in int(pl[2]) * 2: st.advance(); await _w(t, 0.05)
+		await _w(t, 1.6)
+		await _shot(t, "bg_%s_%d" % [pl[1], pl[2]])
+		var bg = str(st.cur.sc.get("bg", ""))
+		var good = bg == "" or Spr.ok("bg_" + bg)
+		if good: ok += 1
+		else: bad += 1
+		_p(("ok " if good else "BAD ") + "%s bg=%s" % [pl[1], bg])
+		st.skip_scene(); await _w(t, 0.5)
+		for k in 20:
+			var any = false
+			for n in m.get_children(): if n.has_method("skip_scene") and n.get("cur") != null: n.skip_scene(); any = true
+			if not any: break
+			await _w(t, 0.3)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
 func vox(t) -> void:   # [vox] 第一章語氣聲：逐句播，記低每句出咗咩聲
 	for i in 120:
 		await _w(t, 0.5)

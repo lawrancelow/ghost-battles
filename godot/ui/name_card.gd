@@ -160,6 +160,9 @@ var _vals := {}
 # 第二頁：選擇個人頭像（黑色螢幕倒影）
 func _page_avatar() -> void:
 	_vals = _read_fields()
+	# 手機中文輸入法未必觸發 text_changed：凡係同預設唔同嘅欄都當玩家改過（揀女主時唔可以覆蓋玩家打嘅名）
+	var d0 = DEF_F if sex == "f" else DEF_M
+	for k in _vals: if clean(str(_vals[k]), 12) != str(d0[k]) and clean(str(_vals[k]), 12) != "": touched[k] = true
 	_clear_page()
 	page.add_child(_lbl("選擇個人頭像", 26, GLOW, "serif", 900))
 	page.add_child(_lbl("黑色的螢幕上，倒映出一個人影。", 18, SUB))

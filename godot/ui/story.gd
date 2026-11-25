@@ -108,7 +108,7 @@ func _build(sc: Dictionary) -> void:
 		var nmp = PanelContainer.new(); nmp.add_theme_stylebox_override("panel", UIKit.sb(UIKit.CINNABAR, 2, Color("#f0c8b4"), 1, Vector4(12, 3, 12, 3)))
 		nmp.position = Vector2(108, -15); talkbox.add_child(nmp)
 		nm = UIKit.label("", 16, Color("#fff3e0"), "serif", 900); nmp.add_child(nm)
-		tx = UIKit.label("", 18, UIKit.INKTXT); tx.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+		tx = UIKit.label("", 18, UIKit.INKTXT); tx.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		tx.position = Vector2(108, 24); tx.size = Vector2(250, 120); tx.anchor_right = 1; tx.offset_right = -14
 		talkbox.add_child(tx)
 	else:

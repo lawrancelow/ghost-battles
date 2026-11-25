@@ -130,9 +130,15 @@ class Bubble extends Control:
 	var kind = "them"; var who = ""; var who_raw = ""; var text = ""; var time = ""; var tick = 0; var tail = true
 	var tick_col = WA.META
 	var para: TextParagraph; var maxw = 296.0; var inline_meta = true
+	var img: Texture2D = null; var img_h := 0.0   # [cg] 相片訊息：文字開頭「[img:圖鍵]」→ 泡泡入面顯示相（之後嘅字做相片說明）
 	const PL = 9.0; const PR = 9.0; const PT = 6.0; const PB = 8.0; const FS = 15; const LH = 21.0
 	func _init(k: String, w: String, t: String, tm: String, tk := 0, tl := true, mw := 296.0) -> void:
 		kind = k; who_raw = w; who = DB.N(w); text = DB.N(t); time = tm; tick = tk; tail = tl; maxw = mw
+		var rx = RegEx.create_from_string("^\\[img:([A-Za-z0-9_]+)\\]")
+		var m = rx.search(text)
+		if m and kind != "mid":
+			var key = m.get_string(1); text = text.substr(m.get_end()).strip_edges()
+			if Spr.ok(key): img = Spr.get_tex(key)
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		size_flags_horizontal = Control.SIZE_SHRINK_END if k == "me" else (Control.SIZE_SHRINK_CENTER if k == "mid" else Control.SIZE_SHRINK_BEGIN)
 		if tick == 3: tick_col = WA.BLUE
@@ -156,16 +162,19 @@ class Bubble extends Control:
 		para.add_string(text, WA.F(400), fs)
 		var inner = maxw - PL - PR
 		para.width = inner
-		var n = para.get_line_count(); var cw = 0.0
+		var n = para.get_line_count() if text != "" else 0; var cw = 0.0
 		for i in n: cw = maxf(cw, para.get_line_width(i))
+		if img != null:   # 相：闊度用泡泡最闊，高跟比例（最多 1.1 倍闊）
+			var iw = inner; img_h = minf(iw * img.get_height() / img.get_width(), iw * 1.1); cw = maxf(cw, iw)
 		var lh = 18.0 if kind == "mid" else LH
-		var h = PT + n * lh + (PB if kind != "mid" else 5.0)
+		var h = PT + n * lh + (PB if kind != "mid" else 5.0) + (img_h + (6.0 if n > 0 else 2.0) if img != null else 0.0)
 		var w = cw
 		if kind == "mid":
 			h = 5 + n * lh + 5
 		else:
 			var mw = _meta_w(); var last = para.get_line_width(n - 1) if n > 0 else 0.0
-			if last + 10 + mw <= inner: inline_meta = true; w = maxf(cw, last + 10 + mw)
+			if img != null and n == 0: inline_meta = false; h += 14
+			elif last + 10 + mw <= inner: inline_meta = true; w = maxf(cw, last + 10 + mw)
 			else: inline_meta = false; w = maxf(cw, mw); h += 14
 		if who != "" and kind == "them": h += 18; w = maxf(w, WA.F(600).get_string_size(who, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x)
 		w = maxf(w + PL + PR, 60.0 if kind != "mid" else 0.0)
@@ -189,9 +198,13 @@ class Bubble extends Control:
 		var y = top + (5.0 if kind == "mid" else PT)
 		if who != "" and kind == "them":
 			draw_string(WA.F(600), Vector2(PL, y + 13), who, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, WA.name_col(who_raw)); y += 18
+		if img != null:
+			var iw = size.x - PL - PR + 6.0
+			draw_texture_rect(img, Rect2(PL - 3.0, y, iw, img_h), false)
+			y += img_h + 6.0
 		var lh = 18.0 if kind == "mid" else LH
 		var col = WA.SUB if kind == "mid" else WA.TXT
-		for i in para.get_line_count():
+		for i in (para.get_line_count() if text != "" else 0):
 			var lw = para.get_line_width(i); var x = PL
 			if kind == "mid": x = (size.x - lw) / 2
 			para.draw_line(get_canvas_item(), Vector2(x, y + (lh - para.get_line_size(i).y) / 2 + i * lh), i, col)
@@ -514,6 +527,8 @@ func _line() -> Array:
 	var rx = RegEx.create_from_string("^(\\d\\d:\\d\\d)\\|([\\s\\S]*)$")
 	var m = rx.search(raw)
 	if m: tm = m.get_string(1); raw = m.get_string(2)
+	var im = sc_.get("img", {})   # [cg] 場景 "img": {"行號": 圖鍵} → 呢句連相一齊發
+	if im is Dictionary and im.has(str(li)): raw = "[img:%s]%s" % [str(im[str(li)]), raw]
 	return [str(sc_.lines[li][0]), raw, tm if tm != "" else now_hm()]
 
 func _show_line() -> void:

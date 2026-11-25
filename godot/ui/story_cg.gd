@@ -153,7 +153,10 @@ func show_spec(spec) -> void:
 		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
 		var hh = H * J.num(o.get("h", 0.5)); var ww = hh * float(st.get_width()) / float(st.get_height())
 		tr.size = Vector2(ww, hh); tr.position = Vector2(W * J.num(o.get("x", 0.5)) - ww / 2, H * J.num(o.get("y", 0.95)) - hh)
+		if J.t(o.get("top")): tr.position.y = H * J.num(o.get("y", 0.05))   # 吊喺天花板嘅角色：y＝頭頂（圖頂）位置
 		tr.flip_h = J.t(o.get("flip"))
+		if J.t(o.get("top")) or (o.get("shadow") is bool and not o.shadow):   # 唔企喺地上：冇腳底影
+			layer.add_child(tr); continue
 		var sh = Panel.new(); sh.mouse_filter = Control.MOUSE_FILTER_IGNORE   # 腳底影，令疊上去嘅立繪企得穩
 		var ss = StyleBoxFlat.new(); ss.bg_color = Color(0, 0, 0, 0.38); ss.set_corner_radius_all(int(ww * 0.25))
 		sh.add_theme_stylebox_override("panel", ss)
