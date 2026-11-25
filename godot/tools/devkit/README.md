@@ -21,3 +21,17 @@
 - `art/yinbing_prompt.txt`：陰兵三款造型生圖提示（未送出）。
 - 注意：上面腳本入面嘅路徑寫死 /tmp/…，用之前抄去對應位置或者改路徑。
 - 大禮包存檔碼 `/tmp/gift/GiftSave_Player1.txt`（repro、gift_test 用）**唔喺 repo**：容器重開後已經冇咗，要老闆再提供。
+
+## 2026-11-25 補丁 35：更新唔使重開（開機畫面大進度條）
+- 主場景 res://main.tscn 改為開機畫面（ui/launch.gd）；遊戲主畫面搬去 res://ui/main_game.tscn（節點名照舊 Main）。
+- 10 個 autoload（DB、Spr、MeshAnim、Limbs、Art、G、Tst、JSRun、Snd、QX）嘅檔案變成空殼，真正代碼喺 `*_impl.gd`
+  （例：core/db.gd → core/db_impl.gd）。**以後改 autoload 代碼要改 *_impl.gd**，外殼檔唔好加任何嘢。
+- 流程：開機畫面查 version.json → 有新補丁即場下載（進度、MB、速度、斷線自動續傳兩次）→ 分幀校驗 md5 → load_resource_pack
+  → 將 *_impl.gd 掛上 autoload 節點（同引擎開機一樣次序：先全部 set_script，再逐個入樹行 _ready）→ 載入 main_game.tscn
+  → main.gd 載模塊時繼續推同一條進度條（GBLoad 節點：handoff/prog/finish/hide_now）→ 標題畫面。
+- 原理：更新前只載入咗 Boot（底包）、10 個空殼、launch.gd，所以裝完新補丁再載入嘅全部都係新版代碼。
+  autoload 喺分析器眼中只係 Node（成員存取變「不安全存取」，照行）；所以唔好寫 `var x := Spr.get_tex(...)` 呢類由 autoload 推斷型別（會報錯），用 `var x: Texture2D = ...`。
+- launch.gd 只可以用引擎類，唔好用 UIKit／J 等 class_name，唔好 preload 遊戲檔；佢自己改咗要下次開機先生效，介面（handoff/prog/text/finish/hide_now/ver_label）要保持。
+- 同底包 Boot 分工：開機畫面一開始將 state.json 嘅 ver 寫做好大（Boot 背景檢查就當已是最新），查完寫返真版本；真版本另記 lv。冇網時即刻寫返，Boot 背景更新照做後備。
+- 由舊版（補丁 34 或之前）升上 35：舊 Boot 背景落 35，仍然要重開一次；35 之後每次更新都唔使重開。
+- 測試：GB_LAUNCH_SHOTS=<目錄> 開機畫面每秒截圖。升級實測腳本（限速／續傳／壞檔伺服器）寫喺交接文件。
