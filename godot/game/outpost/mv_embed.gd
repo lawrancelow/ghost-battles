@@ -270,10 +270,10 @@ func _draw_spare(ctx, x: float, y: float) -> void:
 	sc._txt(ctx, MD.S("spare", "待開檔", "待開攤"), x, y - 29, 14, Color("#f0e2c8"), "center", 900, 0)
 	ctx.restore()
 
-# 擔挑：用遊戲本身嘅蠟筆畫素材（竹竿＝裝備「竹竿」原圖、籮筐＝大排檔「竹籮」原圖，去白邊／剪出嚟，
-#   assets/spr/mvp_biandan、mvp_basket、mvp_basket_front），唔再程序畫，畫風同成個遊戲一樣。
-#   竹扁擔擱喺膊頭（跟角色高度、餓鬼弓身較低），左右兩半向下斜少少＝被重量壓彎；繩吊住籮筐，
-#   行路時一彈一彈、籮筐輕輕擺；貨嘅圖示放入籮，籮前半遮住貨嘅下半截（似真係裝住）。
+# 擔挑：用遊戲本身嘅蠟筆畫素材，唔再程序畫，畫風同成個遊戲一樣：
+#   扁擔 mvp_biandan＝劈開竹片（中間闊兩頭尖、已壓彎、兩頭麻繩＋鐵鈎；竹紋用裝備「竹竿」原圖，砌法見 tools/devkit/art/biandan_make.py）；
+#   籮筐 mvp_basket／mvp_basket_front＝大排檔「竹籮」原圖剪出（前後兩層夾住貨）。
+#   扁擔中間擱喺膊頭（跟角色高度、餓鬼弓身較低），行路一彈一彈、輕輕側；籮筐由鐵鈎吊住輕輕擺。
 const LOAD_INK := "rgba(34,22,16,.85)"
 var _lt = {}
 func _ltex(k: String) -> Texture2D:
