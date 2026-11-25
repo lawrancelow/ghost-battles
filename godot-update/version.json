@@ -44,16 +44,16 @@
   },
   "0.10.1": {
    "android": {
-    "ver": 40,
-    "file": "p_0101_android_40.pck",
-    "md5": "067fb14875f756ddc760b295780968f7",
-    "size": 76566528
+    "ver": 41,
+    "file": "p_0101_android_41.pck",
+    "md5": "54576879f5580cab70deec519c818f6c",
+    "size": 76577696
    },
    "linux": {
-    "ver": 40,
-    "file": "p_0101_linux_40.pck",
-    "md5": "067fb14875f756ddc760b295780968f7",
-    "size": 76566528
+    "ver": 41,
+    "file": "p_0101_linux_41.pck",
+    "md5": "54576879f5580cab70deec519c818f6c",
+    "size": 76577696
    }
   }
  }
