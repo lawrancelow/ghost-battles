@@ -592,7 +592,7 @@ func bryan(t) -> void:   # [bryan] Bryan 新劇情（男／女）＋記仇簿頁
 	# 選單：記仇簿收集（當睇晒）
 	for id in beats: if beats[id].get("diary") is Dictionary: qx.sq()["beat_" + id] = {"done": true, "beat": true}
 	var pg = qx.diary_pages()
-	if pg.size() == 7 and qx.diary_total() == 7 and int(pg[0].n) == 1: ok += 1
+	if pg.size() == 8 and qx.diary_total() == 8 and int(pg[0].n) == 1 and str(pg[7].id) == "c7_bryanbook": ok += 1
 	else: bad += 1; _p("BAD pages %s" % [pg])
 	load("res://ui/menus/menus.gd").open_story(); await _w(t, 1.5)
 	var found = 0
@@ -604,6 +604,128 @@ func bryan(t) -> void:   # [bryan] Bryan 新劇情（男／女）＋記仇簿頁
 			if str(c.text) == "Bryan 的感恩日記": sc.scroll_vertical = int(c.global_position.y - m.sheet_body.global_position.y) - 20
 	await _w(t, 0.8)
 	await _shot(t, "diary_menu" + tag)
-	if found == 7: ok += 1
+	if found == 8: ok += 1
 	else: bad += 1; _p("BAD menu buttons %d" % found)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func offer(t) -> void:   # [offer] 燒貨單：揀單介面 → 真開一晚（收工）→ 模擬嚇走燒貨人 → 燒貨劇情四場 → 冥牌坊貨倉賣貨
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	for i in 120:
+		await _w(t, 0.5)
+		var m0 = _main(t)
+		if m0 and m0.get("loading") == null and J.G.get("S") is Dictionary: break
+	await _w(t, 1.5)
+	var m = _main(t)
+	m._hide_title(); await _w(t, 1.0); await _skip(t)
+	var fem = OS.get_environment("GB_FEM") == "1"
+	if fem:
+		if not (J.G.S.get("hero") is Dictionary): J.G.S["hero"] = {}
+		J.G.S.hero["sex"] = "f"; J.G.S.hero["name"] = "小美"
+	var tag = "f" if fem else ""
+	var O = load("res://game/offer/offer_jobs.gd")
+	for k in ["ch1_end", "ch3_intro2", "ch3_end", "ch4_intro2", "ch4_end"]: J.G.S.seen[k] = true
+	if not O.opened(): ok += 1
+	else: bad += 1; _p("BAD opened before permit")
+	var qx = Engine.get_main_loop().root.get_node("QX")
+	qx.sq()["c3x_permit"] = {"step": 3.0, "base": 0.0, "done": true}
+	if O.opened() and O.jobs_open().size() == 5: ok += 1
+	else: bad += 1; _p("BAD jobs_open %d" % O.jobs_open().size())
+	# 揀單介面
+	ScSelect.hook("office"); await _w(t, 1.2)
+	await _shot(t, "offer_pick" + tag)
+	if ScSelect._job == "j_ken": ok += 1
+	else: bad += 1; _p("BAD default job %s" % ScSelect._job)
+	ScSelect._job = "j_mis"; ScSelect._render(); await _w(t, 0.6)
+	await _shot(t, "offer_pick2" + tag)
+	# 真開一晚，幾秒後提早收工（燒貨人冇走 → 失敗劇情；秒數同鎮定要還原）
+	var sec0 = J.num(J.G.get("NIGHT_SEC"))
+	ScSelect._go(); await _w(t, 4.0)
+	await _shot(t, "offer_night" + tag)
+	if absf(J.num(J.G.get("NIGHT_SEC")) - 170.0) < 0.1: ok += 1
+	else: bad += 1; _p("BAD sec %s" % J.G.get("NIGHT_SEC"))
+	J.mc(J.G.get("Scare"), "finish", [true]); await _w(t, 2.0)
+	if absf(J.num(J.G.get("NIGHT_SEC")) - sec0) < 0.1 and O.cur.is_empty(): ok += 1
+	else: bad += 1; _p("BAD restore sec=%s" % J.G.get("NIGHT_SEC"))
+	if O.pending.get("fail") == true: ok += 1
+	else: bad += 1; _p("BAD fail pending %s" % O.pending)
+	var ec = m.get_node_or_null("NvScEnd")
+	if ec: ec.queue_free()
+	await _w(t, 2.0)
+	var st = null
+	for n in m.get_children(): if n.has_method("advance"): st = n
+	await _shot(t, "offer_fail" + tag)
+	for k in 10:
+		for n in m.get_children(): if n.has_method("skip_scene") and n.get("cur") != null: n.skip_scene()
+		await _w(t, 0.3)
+	# 模擬嚇走燒貨人（3 星）
+	O.cur = O.job("j_mis")
+	var fake = {"npcs": [{"d": {"k": "mis"}, "fleeing": true}], "kpi": 1350.0, "expelled": false}
+	O.on_end(fake)
+	var stock0 = O.mpf().stock.duplicate()
+	if int(stock0.get("lc_bag", 0)) == 3 and int(stock0.get("no4", 0)) == 1 and O.best("j_mis") == 3: ok += 1
+	else: bad += 1; _p("BAD loot %s best=%d kpi=%s" % [stock0, O.best("j_mis"), fake.kpi])
+	await _w(t, 1.5)
+	var shots = [["offer_s1", 1], ["offer_s2", 2], ["offer_s3", 1], ["offer_s4", 2]]
+	var keys = ["cg_ow_bed", "cg_ow_master", "cg_ow_shop", "cg_ow_burn"]
+	for i in 4:
+		st = null
+		for n in m.get_children(): if n.has_method("advance") and n.get("cur") != null: st = n
+		if st == null: bad += 1; _p("BAD no scene %d" % i); continue
+		for k in int(shots[i][1]) * 2: st.advance(); await _w(t, 0.05)
+		await _w(t, 1.5)
+		await _shot(t, shots[i][0] + tag)
+		if st.cg != null and st.cg.visible and str(st.cg.get("cur_key")) == keys[i]: ok += 1
+		else: bad += 1; _p("BAD scene %d key=%s" % [i, st.cg.get("cur_key") if st.cg else ""])
+		st.skip_scene(); await _w(t, 1.0)
+	# 問米版（第一場之後嗰場）
+	O.cur = O.job("j_ken"); O.on_end({"npcs": [{"d": {"k": "ken"}, "fleeing": true}], "kpi": 900.0, "expelled": false})
+	await _w(t, 1.5)
+	st = null
+	for n in m.get_children(): if n.has_method("advance") and n.get("cur") != null: st = n
+	if st: st.skip_scene(); await _w(t, 1.2)
+	st = null
+	for n in m.get_children(): if n.has_method("advance") and n.get("cur") != null: st = n
+	if st:
+		for k in 6: st.advance(); await _w(t, 0.05)
+		await _w(t, 1.5)
+		await _shot(t, "offer_wenmi" + tag)
+		if st.cg != null and str(st.cg.get("cur_key")) == "cg_ow_wenmi": ok += 1
+		else: bad += 1; _p("BAD wenmi")
+	for k in 12:
+		for n in m.get_children(): if n.has_method("skip_scene") and n.get("cur") != null: n.skip_scene()
+		await _w(t, 0.3)
+	# 貨倉
+	load("res://game/offer/offer_ui.gd").open(); await _w(t, 1.2)
+	await _shot(t, "offer_store" + tag)
+	var c0 = J.num(J.G.S.res.get("coins", 0))
+	var got = O.sell("lc_bag", 2)
+	if got > 0 and int(O.mpf().stock.get("lc_bag", 0)) == 1 and J.num(J.G.S.res.get("coins", 0)) > c0: ok += 1
+	else: bad += 1; _p("BAD sell got=%d" % got)
+	m.close_sheet(); await _w(t, 0.5)
+	# 第三章新劇情：逐場播＋截圖
+	var bmap = {}
+	for b in qx.D.beats: bmap[b.id] = b
+	for id in ["c3x_famous", "c3x_idea", "c3x_open", "c4x_queue", "c4x_bryan"]:
+		if not bmap.has(id): bad += 1; _p("BAD no beat " + id); continue
+		qx.play_beat(bmap[id], fem); await _w(t, 1.0)
+		st = null
+		for n in m.get_children(): if n.has_method("advance") and n.get("cur") != null: st = n
+		if st == null: bad += 1; _p("BAD beat no story " + id); continue
+		for k in 4: st.advance(); await _w(t, 0.05)
+		await _w(t, 1.0); await _shot(t, "%s%s" % [id, tag]); ok += 1
+		for k in 12:
+			for n in m.get_children(): if n.has_method("skip_scene") and n.get("cur") != null: n.skip_scene()
+			await _w(t, 0.3)
+	var side = qx.sdef("c3x_permit")
+	if not side.is_empty() and side.steps.size() == 3: ok += 1
+	else: bad += 1; _p("BAD permit side")
+	qx._story(side.start); await _w(t, 1.0)
+	st = null
+	for n in m.get_children(): if n.has_method("advance") and n.get("cur") != null: st = n
+	if st:
+		for k in 8: st.advance(); await _w(t, 0.05)
+		await _w(t, 1.0); await _shot(t, "c3x_permit" + tag)
+		for k in 12:
+			for n in m.get_children(): if n.has_method("skip_scene") and n.get("cur") != null: n.skip_scene()
+			await _w(t, 0.3)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])

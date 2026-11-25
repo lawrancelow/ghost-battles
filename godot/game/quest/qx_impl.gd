@@ -355,6 +355,7 @@ func _process(dt: float) -> void:
 		var top = main.story != null and main.story.get("cur") != null
 		tq.offset_bottom = -86 - (main.size.y * 0.62 if top else 0.0)
 	_spk(); _pgchat(); _fix_unlock()
+	load("res://game/offer/offer_jobs.gd").tick()   # [offer] 收工後播燒貨劇情
 	dq(); side_tick()
 	if btn.visible and not J.t(J.mc(J.G.get("Story"), "busy", [])) and not main.sheet.visible and not J.t(J.gp(J.G.get("Battle"), "active")): event("village")   # [mapbattle] 大地圖打緊仗唔彈劇情
 	var n = daily_ready()

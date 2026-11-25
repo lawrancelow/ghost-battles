@@ -6,6 +6,8 @@ extends RefCounted
 
 static var _site := ""
 static var _chosen: Array = []
+static var _job := ""   # [offer] 今晚揀邊單燒貨單（"" ＝自由夜班）
+static func OJ(): return load("res://game/offer/offer_jobs.gd")
 
 static func main() -> Control: return Engine.get_main_loop().root.get_node_or_null("Main")
 static func js(n: String): return J.G.get(n)
@@ -28,6 +30,10 @@ static func hook(site_id) -> bool:
 	J.mc(js("Scare"), "migrate", [])
 	_chosen = []
 	for k in J.mc(js("ScareX").squad, "get", []): _chosen.append(J.str(k))
+	if OJ().opened() and (_job == "" or OJ().job(_job).is_empty()):   # [offer] 預設揀第一張未完成嘅燒貨單
+		_job = ""
+		for j in OJ().jobs_open():
+			if OJ().best(str(j.id)) == 0: _job = str(j.id); break
 	m.open_sheet(L("回陽間・帶隊出更"), func(): pass)
 	_render()
 	return true
@@ -48,6 +54,7 @@ static func _render() -> void:
 	var best = int(J.num(J.gp(J.gp(S.get("scare"), "best"), _site)))
 	var st = int(J.num(J.mc(Sc, "starsOf", [_site, best])))
 	var lg = J.cl(X.legend, null, [_site])
+	if OJ().opened(): _jobs(b)
 	b.add_child(_rich("%s。%s" % [L(site.name), Lf("揀今晚帶邊幾隻鬼：招式啱佢哋怕嘅嘢，先嚇得到人。阿福一定去，另外最多帶{n}隻。", {"n": _cn(_max())})], 13, UIKit.INKTXT))
 	b.add_child(_rich("%s：%d　%s　｜　%s Lv%d「%s」" % [L("最高紀錄"), best, "★".repeat(st) + "☆".repeat(3 - st), L("都市傳說"), int(J.num(lg.lv)), L(lg.name)]))
 	# 今晚嘅人怕乜
@@ -84,6 +91,7 @@ static func _render() -> void:
 		if b.get_parent() is ScrollContainer: b.get_parent().scroll_vertical = keep
 
 static func _go() -> void:
+	OJ().begin(_job if OJ().opened() else "")
 	J.mc(js("ScareX").squad, "set", [_chosen.duplicate()])
 	main().close_sheet()
 	var team = ["afu"]; team.append_array(J.mc(js("ScareX").squad, "get", []))
@@ -157,4 +165,46 @@ static func _kit(k: String, K: Dictionary) -> Control:
 		SK[k] = not J.t(SK.get(k))
 		J.cl(js("save"), null, [])
 		_render())
+	return p
+
+# ---------------- [offer] 燒貨單 ----------------
+static func _jobs(b: VBoxContainer) -> void:
+	var O = OJ(); var G = O.data().GOODS
+	var hd = HBoxContainer.new(); hd.add_theme_constant_override("separation", 6); b.add_child(hd)
+	var t = _rich("[b]%s[/b]\n[font_size=11]%s[/font_size]" % [L("今晚揀邊張燒貨單"), L("嚇走燒貨人先算數；分數越高，佢燒落嚟越多。")], 14, UIKit.INKTXT)
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hd.add_child(t)
+	var mb = UIKit.btn(L("冥牌坊貨倉"), "", true); mb.pressed.connect(func(): load("res://game/offer/offer_ui.gd").open())
+	hd.add_child(mb)
+	var opts = [{}]; opts.append_array(O.jobs_open())
+	for j in opts: b.add_child(_jobcard(j, G))
+
+static func _jobcard(j: Dictionary, G: Dictionary) -> Control:
+	var O = OJ(); var id = str(j.get("id", "")); var on = _job == id
+	var p = PanelContainer.new(); p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	p.add_theme_stylebox_override("panel", UIKit.sb(Color("#f3e6c0") if on else Color("#e2d8c0"), 5, Color("#c2362b") if on else Color("#a08a5a"), 2 if on else 1, Vector4(6, 5, 6, 5)))
+	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 6); hb.mouse_filter = Control.MOUSE_FILTER_IGNORE; p.add_child(hb)
+	if j.is_empty():
+		var r0 = _rich("[b]%s[/b]%s\n[font_size=11]%s[/font_size]" % [L("自由夜班"), "　✓" if on else "", L("照舊嚇人儲分，冇人燒嘢。")], 13, UIKit.INKTXT)
+		r0.size_flags_horizontal = Control.SIZE_EXPAND_FILL; r0.mouse_filter = Control.MOUSE_FILTER_IGNORE; hb.add_child(r0)
+	else:
+		var pr = TextureRect.new(); pr.custom_minimum_size = Vector2(46, 46); pr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; pr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		pr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var tk = "npc_" + str(j.target); if Spr.ok(tk): pr.texture = Spr.get_tex(tk)
+		hb.add_child(pr)
+		var gs = []
+		for g in j.g: gs.append(O.T(G.get(g, {}).get("n", [g, g])))
+		var bst = O.best(id)
+		var txt = "[b]%s[/b]%s　[color=#c2362b]%s[/color]\n[font_size=11]%s[/font_size]\n[font_size=11][color=#2e6d5a]%s：%s[/color]　%s[/font_size]" % [
+			O.T(j.name), "　✓" if on else "", "☠".repeat(int(j.diff)), O.T(j.desc), L("燒貨"), "、".join(gs),
+			(L("最佳") + " " + "★".repeat(bst) + "☆".repeat(3 - bst)) if bst > 0 else L("未完成")]
+		var r = _rich(txt, 13, UIKit.INKTXT); r.size_flags_horizontal = Control.SIZE_EXPAND_FILL; r.mouse_filter = Control.MOUSE_FILTER_IGNORE; hb.add_child(r)
+		for g in j.g:
+			var sk = str(G.get(g, {}).get("spr", ""))
+			if not Spr.ok(sk): continue
+			var ic = TextureRect.new(); ic.custom_minimum_size = Vector2(34, 34); ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			ic.texture = Spr.get_tex(sk); ic.mouse_filter = Control.MOUSE_FILTER_IGNORE; hb.add_child(ic)
+	p.mouse_filter = Control.MOUSE_FILTER_STOP
+	p.gui_input.connect(func(ev):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			Snd.play("click"); _job = id; _render())
 	return p

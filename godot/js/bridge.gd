@@ -50,7 +50,7 @@ static func install_natives(host: Node) -> void:
 			_: ScOffice.draw_item(a[0], a[1], a[2], J.num(a[3]))
 		return null
 	G["__nat_scKen"] = func(_t, a): return ScOffice.draw_ken(a[0], a[1], a[2], J.num(a[3]))
-	G["__nat_scEnd"] = func(_t, a): ScRun.end_hook(a[0]); NvDomCard.scare_end.call_deferred(); return null
+	G["__nat_scEnd"] = func(_t, a): load("res://game/offer/offer_jobs.gd").on_end(a[0]); ScRun.end_hook(a[0]); NvDomCard.scare_end.call_deferred(); return null
 	G["__nat_scTag"] = func(_t, a): ScTag.draw(a[0], a[1], a[2], J.num(a[3]), J.num(a[4]), J.num(a[5]), a[6]); return null
 	G["__nat_scSky"] = func(_t, a): ScFast.sky(a[0], a[1], J.num(a[2]), J.num(a[3])); return null
 	G["__nat_scBub"] = func(_t, a): ScFast.bubble(a[0], a[1], J.str(a[2]), J.num(a[3]), J.num(a[4]), J.t(a[5]), a[6] if a.size() > 6 else null); return null
