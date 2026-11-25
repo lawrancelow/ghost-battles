@@ -1230,7 +1230,7 @@ func _f33(this_, a: Array, env):
 	var _t341 = _s126["__p"]["T"]
 	var _t349 = [_t340, _t342, J.cl(_t341, null, ["{v} 千人睇過", "{v} 千人看過"])]
 	var _t344 = _s126["__p"]["T"]
-	var _t346 = J.cl(_t344, null, ["Threads・熱門", "Threads・熱門"])
+	var _t346 = J.cl(_t344, null, ["Benang・熱門", "Benang・熱門"])
 	var _t345 = _s126["__p"]["T"]
 	var _t348 = J.cl(_t345, null, ["#二十三樓有鬼　{who}嘅反應笑死，但係……後面嗰個係咩？", "#二十三樓有鬼　{who}的反應笑死，但是……後面那個是什麼？"])
 	var _t347 = _s126["__p"]["T"]

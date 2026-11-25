@@ -59,7 +59,7 @@ func event(ev: String) -> void:
 		if st.has(key) or b.on != ev or not _cond(b.get("when")): continue
 		if b.get("unless") != null and _cond(b.unless): continue
 		st[key] = {"done": true, "beat": true}
-		_story(b.story)
+		play_beat(b)
 		J.cl(J.G.get("save"), null, [])
 		return   # 一次一場
 
@@ -290,9 +290,44 @@ func pay_step(x: Dictionary, e: Dictionary) -> void:
 	for k in c: res[k] = J.num(res[k]) - J.num(c[k])
 	_advance(x, e)
 
+# [bryan] 一場 beat：女主有 lines_f／cg_f 就用女主版；有 diary＝之後再播一頁 Bryan 記仇簿
+func play_beat(b: Dictionary, fem = null) -> void:
+	var f: bool = DB.hero_female() if fem == null else bool(fem)
+	var sc: Dictionary = b.story
+	if f and sc.has("lines_f"):
+		sc = sc.duplicate(); sc.lines = sc.lines_f
+		if sc.has("cg_f"): sc.cg = sc.cg_f
+	_story(sc)
+	if b.get("diary") is Dictionary: _story(diary_scene(b.diary, f))
+
+# [bryan] 記仇簿一頁：舊電視插圖（打開嘅皮簿）＋右邊空白頁寫字（框內自動縮細）
+func diary_scene(dy: Dictionary, f := false) -> Dictionary:
+	var t: Array = dy.get("t_f", dy.t) if f else dy.t
+	var say: Array = dy.get("say", ["（Bryan 本皮面簿仔，揭開嗰頁寫住：）", "（Bryan 的皮面小本子，翻開的那頁寫著：）"])
+	return {"style": "notice", "title": "Bryan 的感恩日記", "lines": [["旁白", say]], "zh": {t[0]: t[1]},
+		"cg": {"0": {"k": "cg_bryanbook", "txt": [{"t": t[0], "x": 0.705, "y": 0.47, "w": 0.34, "h": 0.62, "s": 20, "c": "#24305c"}]}}}
+
+# [bryan] 已收集嘅記仇簿頁（睇過嗰場 beat 就算；舊存檔自動補返）
+func diary_pages() -> Array:
+	var r = []; var st = sq()
+	for b in D.get("beats", []):
+		if b.get("diary") is Dictionary and st.has("beat_" + b.id): r.append({"id": b.id, "n": int(b.diary.n)})
+	r.sort_custom(func(a, c): return a.n < c.n)
+	return r
+
+func diary_total() -> int:
+	var n = 0
+	for b in D.get("beats", []): if b.get("diary") is Dictionary: n += 1
+	return n
+
+func diary_show(id: String) -> void:
+	for b in D.get("beats", []):
+		if b.id == id and b.get("diary") is Dictionary: _story(diary_scene(b.diary, DB.hero_female())); return
+
 # 劇情：{"style":"talk","bg":"village","lines":[[講者,[粵,中]],…]}
 func _story(sc: Dictionary) -> void:
 	var lines = []; var zh = {}
+	if sc.get("zh") is Dictionary: zh.merge(sc.zh)
 	for l in sc.lines:
 		var txt = l[1]
 		if txt is Array: zh[txt[0]] = txt[1]; txt = txt[0]
@@ -547,7 +582,7 @@ func t_pgchat() -> void:
 # 測試：直接播某場劇情（beat id 或 side id:start/end/after<n>）
 func t_play(id: String, part: String = "") -> void:
 	for b in D.get("beats", []):
-		if b.id == id: _story(b.story); return
+		if b.id == id: play_beat(b, null if part == "" else part == "f"); return
 	var x = sdef(id)
 	if x.is_empty(): print("t_play: no ", id); return
 	if part == "end": _story(x.end)

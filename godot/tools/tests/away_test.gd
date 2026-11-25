@@ -533,3 +533,77 @@ func cgf(t) -> void:   # [cg] 女主開場插圖
 			if not any: break
 			await _w(t, 0.3)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func bryan(t) -> void:   # [bryan] Bryan 新劇情（男／女）＋記仇簿頁＋選單收集：逐場截圖
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	for i in 120:
+		await _w(t, 0.5)
+		var m0 = _main(t)
+		if m0 and m0.get("loading") == null and J.G.get("S") is Dictionary: break
+	await _w(t, 1.5)
+	var m = _main(t)
+	m._hide_title(); await _w(t, 1.0); await _skip(t)
+	var fem = OS.get_environment("GB_FEM") == "1"
+	if fem:
+		if not (J.G.S.get("hero") is Dictionary): J.G.S["hero"] = {}
+		J.G.S.hero["sex"] = "f"; J.G.S.hero["name"] = "小美"
+	var tag = "f" if fem else ""
+	var qx = Engine.get_main_loop().root.get_node("QX")
+	var beats = {}
+	for b in qx.D.beats: beats[b.id] = b
+	# [beat, 截圖行, 預期插圖（"" = 唔查）]
+	var plan = [["c1_bryan", 0, "cg1_huai"], ["c2_bryan", 0, "cg2_warehouse"], ["c2_bryan", 6, "cg2_warehouse"], ["c3_bryan", 7, ""], ["c4_bryan", 1, "cg4_banana"], ["c4_bryan", 7, "cg4_banana"], ["c5_bryan", 5, ""], ["c6_receipt", 10, ""], ["c7_bryanbook", 1, "cg_bryanbook"]]
+	if fem: plan = [["c1_bryan", 0, "cg1_huai"], ["c1_bryan", 2, "cg1_huai"], ["c1_bryan", 7, "cg1_huai"], ["c2_bryan", 1, "cg2_warehouse"], ["c2_bryan", 7, "cg2_warehouse"], ["c6_receipt", 4, ""], ["c6_receipt", 12, ""]]
+	var done_diary = {}
+	for pl in plan:
+		qx.play_beat(beats[pl[0]], fem)
+		await _w(t, 1.0)
+		var st = null
+		for n in m.get_children(): if n.has_method("advance"): st = n
+		if st == null: _p("no story node"); bad += 1; continue
+		var nl = st.cur.sc.lines.size()
+		if int(pl[1]) >= nl: bad += 1; _p("BAD %s line %d >= %d" % [pl[0], pl[1], nl]); continue
+		for k in int(pl[1]) * 2: st.advance(); await _w(t, 0.05)
+		await _w(t, 1.5)
+		await _shot(t, "%s_%d%s" % [pl[0], pl[1], tag])
+		if str(pl[2]) != "":
+			var vis = st.cg != null and st.cg.visible and str(st.cg.get("cur_key")) == pl[2]
+			if vis: ok += 1
+			else: bad += 1; _p("BAD %s cg visible=%s key=%s" % [pl[0], st.cg != null and st.cg.visible, st.cg.get("cur_key") if st.cg else ""])
+		else: ok += 1
+		st.skip_scene(); await _w(t, 1.2)   # 之後應該係記仇簿嗰頁
+		if beats[pl[0]].get("diary") is Dictionary and not done_diary.has(pl[0]):
+			done_diary[pl[0]] = true
+			await _w(t, 1.0)
+			await _shot(t, "diary_%s%s" % [pl[0], tag])
+			var dk = st.cg != null and st.cg.visible and str(st.cg.get("cur_key")) == "cg_bryanbook" and str(st.cur.sc.get("title", "")) == "Bryan 的感恩日記"
+			var lb = null
+			if st.cg != null:
+				for c in st.cg.layer.get_children(): if c is Label: lb = c
+			var fit = lb != null and lb.get_minimum_size().y <= lb.size.y + 1
+			if dk and fit: ok += 1
+			else: bad += 1; _p("BAD diary %s key=%s fit=%s" % [pl[0], st.cg.get("cur_key") if st.cg else "", fit])
+		for k in 30:
+			var any = false
+			for n in m.get_children(): if n.has_method("advance") and n.get("cur") != null: any = true
+			if not any: break
+			for n in m.get_children(): if n.has_method("skip_scene") and n.get("cur") != null: n.skip_scene()
+			await _w(t, 0.3)
+	# 選單：記仇簿收集（當睇晒）
+	for id in beats: if beats[id].get("diary") is Dictionary: qx.sq()["beat_" + id] = {"done": true, "beat": true}
+	var pg = qx.diary_pages()
+	if pg.size() == 7 and qx.diary_total() == 7 and int(pg[0].n) == 1: ok += 1
+	else: bad += 1; _p("BAD pages %s" % [pg])
+	load("res://ui/menus/menus.gd").open_story(); await _w(t, 1.5)
+	var found = 0
+	for c in m.sheet_body.find_children("*", "Button", true, false):
+		if str(c.text).begins_with("第 ") and str(c.text).ends_with(" 頁") or str(c.text) == "最後一頁": found += 1
+	var sc = m.sheet_body.get_parent()
+	if sc is ScrollContainer:
+		for c in m.sheet_body.find_children("*", "Label", true, false):
+			if str(c.text) == "Bryan 的感恩日記": sc.scroll_vertical = int(c.global_position.y - m.sheet_body.global_position.y) - 20
+	await _w(t, 0.8)
+	await _shot(t, "diary_menu" + tag)
+	if found == 7: ok += 1
+	else: bad += 1; _p("BAD menu buttons %d" % found)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])

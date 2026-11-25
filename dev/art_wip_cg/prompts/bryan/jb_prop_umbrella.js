@@ -1,0 +1,7 @@
+const t="BRYAN PROP UMBRELLA - new image please. An open large black gentleman's umbrella with a curved wooden J-handle, seen from the side and slightly tilted as if being held over someone, canopy fully open. Plain, no patterns. FORMAT: a single isolated game PROP sticker on a fully TRANSPARENT background (PNG with alpha), centered, nothing else in the image, no shadow box, no border, about 1024x1024. STYLE: match the attached reference exactly - soft hand-drawn colored-pencil / crayon illustration, grainy texture, thick uneven dark-brown outlines, muted dusty colors. STRICT RULES: absolutely NO text, letters, numbers, Chinese characters, signatures, logos, brand marks or watermarks anywhere (tags, covers and pages must be blank or only unreadable squiggles). No religious objects. No blood. No people, no characters, no hands.";
+const pm=document.querySelector('.ProseMirror'); pm.focus(); document.execCommand('selectAll',false,null); document.execCommand('delete',false,null); await new Promise(x=>setTimeout(x,300)); document.execCommand('insertText',false,t);
+let r='nobtn';
+for(let i=0;i<30;i++){await new Promise(x=>setTimeout(x,1000));
+ const b=document.querySelector('#composer-submit-button,[data-testid="send-button"],button[aria-label*="傳送"],button[aria-label*="Send"]');
+ if(b&&!b.disabled){b.click();r='sent';break;} if(b) r='disabled';}
+r

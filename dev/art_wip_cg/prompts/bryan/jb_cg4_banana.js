@@ -1,0 +1,7 @@
+const t="CG4 BANANA - new image please. A Malaysian banana plantation at night under a pale full moon: rows of tall banana trees with big tattered leaves and hanging banana bunches and purple banana hearts, a narrow muddy path between them, drifting mist, faint fireflies, eerie but beautiful. In the CENTER FOREGROUND leave a clear EMPTY patch of muddy path (two game characters will be placed there later). Funny but eerie (comedy 50%, spooky 50%). FORMAT: landscape 1536x1024 illustration card, full-bleed scene, no border. Keep important content inside the central 85% of the width. STYLE: match the attached reference exactly - soft hand-drawn colored-pencil / crayon illustration, grainy texture, thick uneven dark-brown outlines, muted dusty colors. STRICT RULES: absolutely NO text, letters, numbers, Chinese characters, signatures, logos, brand marks or watermarks anywhere (tags, covers and pages must be blank or only unreadable squiggles). No religious objects. No blood. No people, no characters, no hands.";
+const pm=document.querySelector('.ProseMirror'); pm.focus(); document.execCommand('selectAll',false,null); document.execCommand('delete',false,null); await new Promise(x=>setTimeout(x,300)); document.execCommand('insertText',false,t);
+let r='nobtn';
+for(let i=0;i<30;i++){await new Promise(x=>setTimeout(x,1000));
+ const b=document.querySelector('#composer-submit-button,[data-testid="send-button"],button[aria-label*="傳送"],button[aria-label*="Send"]');
+ if(b&&!b.disabled){b.click();r='sent';break;} if(b) r='disabled';}
+r

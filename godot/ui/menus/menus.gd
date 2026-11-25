@@ -408,6 +408,14 @@ static func open_story() -> void:
 		for e in sk.list:
 			var id = J.str(e.id); _wide(J.str(e.title), "", true, func(): close_hook(); _sa("skit", id))
 		if sk.list.size() == 0: _p("還沒看過。在村子裡多玩一會兒。", 13)
+	var qx = Engine.get_main_loop().root.get_node_or_null("QX")   # [bryan] 記仇簿收集品
+	if qx != null and qx.has_method("diary_pages"):
+		var pg: Array = qx.call("diary_pages")
+		_h4("Bryan 的感恩日記"); _p("Bryan 那本皮面本子，見到一頁收一頁（%d/%d）。" % [pg.size(), int(qx.call("diary_total"))], 13)
+		for e in pg:
+			var id = str(e.id); var n = int(e.n)
+			_wide(("最後一頁" if id == "c7_bryanbook" else "第 %d 頁" % n), "", true, func(): close_hook(); qx.call("diary_show", id))
+		if pg.size() == 0: _p("還沒有。Bryan 遲早會出現的。", 13)
 	var su = d.get("su")
 	if su != null:
 		_h4("冥街夜市・棟篤笑"); _p("在冥街夜市看過的節目，可以在這裡重溫。", 13)
