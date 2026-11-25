@@ -980,7 +980,7 @@ func _ver_text() -> String:
 		var s = str(Engine.get_meta("gb_ver"))
 		match str(Boot.status):
 			"latest": s += "・已是最新"
-			"offline": s += "・連唔到更新伺服器"
+			"offline": s += "・連不上更新伺服器"
 			"dlfail": s += "・更新下載失敗"
 		return s
 	return Boot.label()

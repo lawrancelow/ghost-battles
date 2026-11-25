@@ -121,7 +121,7 @@ class Overlay extends CanvasLayer:
 		bar_fill = Panel.new(); bar_fill.position = Vector2(3, 3); bar_fill.size = Vector2(0, 20); bar_fill.clip_contents = true
 		bar_fill.add_theme_stylebox_override("panel", _sb(Color("#c2362b"), 10)); bar_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE; bar_bg.add_child(bar_fill)
 		var hl = ColorRect.new(); hl.color = Color(1, 0.85, 0.6, 0.22); hl.position = Vector2(0, 2); hl.size = Vector2(4000, 6); hl.mouse_filter = Control.MOUSE_FILTER_IGNORE; bar_fill.add_child(hl)
-		shine = ColorRect.new(); shine.color = Color(1, 0.95, 0.8, 0.28); shine.size = Vector2(36, 20); shine.mouse_filter = Control.MOUSE_FILTER_IGNORE; bar_fill.add_child(shine)
+		shine = ColorRect.new(); shine.color = Color(1, 0.95, 0.8, 0.16); shine.size = Vector2(26, 20); shine.mouse_filter = Control.MOUSE_FILTER_IGNORE; bar_fill.add_child(shine)
 		pct_l = _lab(15, Color.WHITE, "sans_k"); pct_l.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); pct_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		pct_l.text = "0%"; bar_bg.add_child(pct_l)
 		detail_l = _lab(14, Color("#d9ccb2")); detail_l.anchor_right = 1; detail_l.anchor_top = 0.82; detail_l.anchor_bottom = 0.82
@@ -262,7 +262,7 @@ class Overlay extends CanvasLayer:
 			await get_tree().create_timer(0.8).timeout
 		if not (info is Dictionary):
 			_release_boot()
-			text("連唔到更新伺服器，先用而家嘅版本"); detail("")
+			text("連不上更新伺服器，先用目前的版本"); detail("")
 			if boot: boot.set("status", "offline")
 			await get_tree().create_timer(0.7).timeout
 			_activate(); return
@@ -318,7 +318,7 @@ class Overlay extends CanvasLayer:
 		dl_last_b = 0; dl_last_t = Time.get_ticks_msec(); spd_b = dl_from; spd_t = dl_last_t; speed = 0.0
 		print("[launch] download ", entry.url, " from ", dl_from)
 		if http.request(str(entry.url), hd) != OK:
-			http.queue_free(); http = null; _dl_fail("開唔到下載"); return
+			http.queue_free(); http = null; _dl_fail("無法開始下載"); return
 		_dl_tick()
 
 	func _dl_tick() -> void:
@@ -328,7 +328,7 @@ class Overlay extends CanvasLayer:
 		var now = Time.get_ticks_msec()
 		if got != dl_last_b: dl_last_b = int(got); dl_last_t = now
 		elif now - dl_last_t > 30000:   # 30 秒都冇新數據：當斷線
-			http.cancel_request(); var h0 = http; http = null; h0.queue_free(); _dl_fail("網絡冇反應"); return
+			http.cancel_request(); var h0 = http; http = null; h0.queue_free(); _dl_fail("網絡沒有反應"); return
 		if now - spd_t >= 700:
 			var inst = (got - spd_b) / ((now - spd_t) / 1000.0)
 			speed = inst if speed <= 0 else lerpf(speed, inst, 0.35)
@@ -354,11 +354,10 @@ class Overlay extends CanvasLayer:
 			if code == 206: _append(part, tmp)
 			else:   # 伺服器唔肯續傳，成個重新落咗
 				DirAccess.remove_absolute(tmp); DirAccess.rename_absolute(part, tmp)
-		text("校驗更新中…"); detail(""); prog(1.0)
-		await get_tree().process_frame; await get_tree().process_frame
-		if FileAccess.get_md5(tmp) != str(entry.md5):
+		prog(1.0)
+		if await _md5(tmp) != str(entry.md5):
 			DirAccess.remove_absolute(tmp)
-			_dl_fail("檔案唔完整"); return
+			_dl_fail("檔案不完整"); return
 		stage(0.58, 0.61); text("安裝更新中…")
 		await get_tree().process_frame
 		var fn = str(entry.file).get_file()
@@ -367,11 +366,26 @@ class Overlay extends CanvasLayer:
 		DirAccess.rename_absolute(tmp, dst)
 		_save({"base": base, "ver": int(entry.ver), "file": fn, "lv": int(entry.ver)})   # 舊補丁下次開機先刪（而家仲掛住）
 		if not ProjectSettings.load_resource_pack(dst, true):
-			_ask("更新已下載，重開遊戲先生效", [["先玩", true, func(): _unask(); _activate()]]); return
+			_ask("更新已下載，重開遊戲後生效", [["先玩", true, func(): _unask(); _activate()]]); return
 		print("[launch] patch ", entry.ver, " loaded in-session")
 		if boot: boot.set("content_ver", int(entry.ver)); boot.set("status", "latest")
 		ver_label(); prog(1.0)
 		_activate()
+
+	# 分幀計 md5（大補丁喺手機要一兩秒，唔好成個畫面停住）
+	func _md5(path: String) -> String:
+		text("校驗更新中…"); detail("")
+		var f = FileAccess.open(path, FileAccess.READ)
+		if f == null: return ""
+		var hc = HashingContext.new(); hc.start(HashingContext.HASH_MD5)
+		var n = float(maxi(f.get_length(), 1)); var tt = Time.get_ticks_msec()
+		while f.get_position() < f.get_length():
+			hc.update(f.get_buffer(1 << 20))
+			if Time.get_ticks_msec() - tt > 30:
+				detail("%d%%" % int(f.get_position() * 100.0 / n))
+				await get_tree().process_frame; tt = Time.get_ticks_msec()
+		f.close(); detail("")
+		return hc.finish().hex_encode()
 
 	func _append(src: String, dst: String) -> void:
 		var a = FileAccess.open(src, FileAccess.READ)
@@ -386,12 +400,12 @@ class Overlay extends CanvasLayer:
 		print("[launch] download failed ", why)
 		tries += 1
 		if tries <= 2:   # 自己再試兩次（續傳）
-			text("網絡唔穩定，重新連接中…"); detail(why)
+			text("網絡不穩定，重新連接中…"); detail(why)
 			await get_tree().create_timer(1.5).timeout
 			_download(); return
 		_ask("更新下載失敗（%s）" % why, [
 			["重試", true, func(): tries = 0; _download()],
-			["先玩而家嘅版本", false, func():
+			["先玩目前的版本", false, func():
 				_unask(); _release_boot()
 				if boot: boot.set("status", "dlfail"); boot.set("_err", why)
 				_activate()]])
@@ -417,6 +431,7 @@ class Overlay extends CanvasLayer:
 		for p in todo:
 			p[0].request_ready(); prev.add_sibling(p[0]); prev = p[0]
 		Engine.set_meta("gb_live", true)
+		print("[launch] live code ready ", Time.get_ticks_msec(), "ms")
 		prog(1.0)
 		_load_game()
 
@@ -427,4 +442,5 @@ class Overlay extends CanvasLayer:
 		var ps = load(GAME) as PackedScene
 		if ps == null: _ask("遊戲檔案有問題（主畫面），請重新安裝", []); return
 		prog(1.0)
+		print("[launch] game scene loaded ", Time.get_ticks_msec(), "ms")
 		get_tree().change_scene_to_packed(ps)
