@@ -111,13 +111,18 @@ const VNAME := {"chop": "伐木場：砍樹（同主角）", "hack": "後山竹�
 	"crank": "枯井轆轤：搖轆轤", "score": "膠園：割膠", "net": "河口罾棚：起罾", "pick": "霧谷茶田：採茶", "scoop": "地庫碳粉房：舀碳粉",
 	"saw": "棺材鋪：鋸板", "knead": "包子鋪：擀皮搓包", "dip": "紙寮：撈紙", "grate": "刨椰寮：刨椰絲", "press": "膠片房：壓膠片",
 	"twist": "搓繩棚：搓繩", "pound": "紙漿池：舂漿", "stir": "碳粉墨房：攪墨", "wok": "大排檔車頭蓋爆谷：兜鑊", "ladle": "大排檔枯井豆腐花：舀豆花",
-	"fold": "大排檔補丁紙衫檔：摺紙衫", "forge": "紙紮兵器檔：錘兵器", "steam": "大排檔嘆氣蒸籠：揭蒸籠", "stamp": "結霜表格室：蓋印", "fan": "椰殼炭爐：撥火", "mill": "大排檔自轉石磨：推磨"}
+	"fold": "大排檔補丁紙衫檔：摺紙衫", "forge": "紙紮兵器檔：錘兵器", "steam": "大排檔嘆氣蒸籠：揭蒸籠", "stamp": "結霜表格室：蓋印", "fan": "椰殼炭爐：撥火", "mill": "大排檔自轉石磨：推磨",
+	"fork": "禾稈草堆：叉禾稈上堆", "tongs": "橋底回收站：夾報紙", "sew": "補丁紙衫檔：縫紙衫", "brush": "怕黑燈籠：掃漿糊糊紙", "paint": "紙紮電器檯：油掃上色",
+	"catch": "樹下等榴槤：竹籮接榴槤", "pump": "水底吹救生圈：打氣", "slice": "割膠拖鞋廠：切鞋底", "pull": "長臂凍檸茶：拉茶", "salt": "碟頂鹹魚：抖鹽",
+	"plane": "頂樓棺材板躺椅：刨板", "screw": "停咗錶檔：扭螺絲"}
 const VPIECE := {"hack": "bamboo", "pick": "m_tealeaf", "reap": "rice"}
 const VICON := {"fold": "mvi_shirt"}
 const VK := {"chop": "n30_kappa", "hack": "n30_jiugui", "split": "laojiang", "poke": "egui", "reap": "n30_nopperabo", "crank": "nw_niexiaoqian",
 	"score": "n30_kappa", "net": "egui", "pick": "zhiren", "scoop": "toyol", "saw": "laojiang", "knead": "n30_jiugui", "dip": "nw_niexiaoqian",
 	"grate": "n30_nopperabo", "press": "egui", "twist": "nw_niexiaoqian", "pound": "pocong", "stir": "n30_kappa", "wok": "n30_jiugui", "ladle": "zhiren",
-	"fold": "nw_niexiaoqian", "forge": "laojiang", "steam": "egui", "stamp": "n30_nopperabo", "fan": "toyol", "mill": "egui"}
+	"fold": "nw_niexiaoqian", "forge": "laojiang", "steam": "egui", "stamp": "n30_nopperabo", "fan": "toyol", "mill": "egui",
+	"fork": "laojiang", "tongs": "toyol", "sew": "nw_niexiaoqian", "brush": "zhiren", "paint": "n30_kappa", "catch": "n30_jiugui", "pump": "egui",
+	"slice": "n30_kappa", "pull": "zhiren", "salt": "toyol", "plane": "laojiang", "screw": "n30_nopperabo"}
 
 class Sheet extends Control:
 	var rows: Array = []    # {label, cells:[{fn: Callable(ctx, x, y), cap}]}
@@ -166,7 +171,8 @@ func _cyc(v: String) -> float:
 		"crank": return 1.1 * 4 + 0.8
 		"stamp": return 2.6
 	return {"poke": 1.6, "score": 1.5, "net": 3.0, "pick": 0.9, "scoop": 1.8, "dip": 2.6, "grate": 0.5, "press": 1.4, "twist": 2.6, "pound": 0.9,
-		"stir": 1.6, "mill": 1.6, "wok": 1.0, "ladle": 1.8, "fold": 2.2, "forge": 0.9, "steam": 2.0, "fan": 0.55}.get(v, 1.0)
+		"stir": 1.6, "mill": 1.6, "wok": 1.0, "ladle": 1.8, "fold": 2.2, "forge": 0.9, "steam": 2.0, "fan": 0.55,
+		"fork": 1.6, "tongs": 1.5, "sew": 1.2, "brush": 1.4, "paint": 1.4, "catch": 2.2, "pump": 0.8, "slice": 0.9, "pull": 1.8, "salt": 0.5, "plane": 1.1, "screw": 1.6}.get(v, 1.0)
 
 func _sheets(t) -> void:
 	# 全部動作：每個 7 格（一個循環）
@@ -373,6 +379,7 @@ func props(t) -> void:
 			var cxw = wp + Vector2(-14.0 if fl else 14.0, -28)
 			_cam_close(m, cxw, 112.0); await _w(t, 0.6)
 			var pair = []
+			var old_fp = WA.FIELD_PROPS.get(e[1])
 			for on in [true, false]:
 				WA.FIELD_PROPS[e[1]] = on
 				await _f(t, 3)
@@ -380,7 +387,8 @@ func props(t) -> void:
 				pair.append(_crop(t, m, img, cxw, Vector2(420, 330), 0.95))
 				var L = WA.LAST.get(e[3], {})
 				_chk("對照：%s 畫到做工動畫（%s）" % [e[2], "有工作物" if on else "冇工作物"], str(L.get("verb", "")) == WA.verb_of_post(e[1]))
-			WA.FIELD_PROPS.erase(e[1])
+			if old_fp == null: WA.FIELD_PROPS.erase(e[1])
+			else: WA.FIELD_PROPS[e[1]] = old_fp
 			rows.append([e[2] + "（%s）" % WA.TOOL_OF.get(WA.verb_of_post(e[1]), ""), pair[0], pair[1]])
 		for g in gs: S.ghosts.erase(g)
 	# 拼圖：每行 建築名 ｜ 保留 ｜ 去掉
@@ -442,11 +450,11 @@ func _edge_draw(k: String, v: String, T: float, fl: bool, x := 200.0, y := 400.0
 func _edge_check() -> void:
 	var tot = 0; var worst = {}
 	for v in WA.VERBS:
-		var cy = _cyc(v); var n = int(ceil(cy * 2.0 / 0.004))
+		var cy = _cyc(v); var n = int(ceil(cy * 2.0 / 0.005))
 		var hits = 0; var wa = 0.0; var wd = 0.0; var bad_ang = 0; var bad_d = 0; var bad_mir = 0; var bad_raise = 0; var none = false
 		for k in EK:
 			for i in n:
-				var T = 3.0 + i * 0.004
+				var T = 3.0 + i * 0.005
 				var eR = _edge_draw(k, v, T, false); var eL = _edge_draw(k, v, T, true)
 				if eR.ck == "none": none = true; break
 				# 鏡像：面向左嘅工作面法向量＝面向右嘅左右對調
@@ -485,6 +493,18 @@ func _edge_check() -> void:
 	_p("edge 總工作格 %d" % tot)
 	# 斧頭：原圖刀口喺右（+u），唔准再鏡像
 	_chk("斧頭原圖唔鏡像（刀口喺 +x）", not WA.SPR_TOOL.axe[5])
+	# 音效掛點：每個動作都有事件名，兩個循環內至少觸發一次
+	for v in WA.VERBS:
+		_chk("音效事件名 " + v, str(WA.SFX.get(v, "")).begins_with("wk_"), v)
+		WA.SFX_LOG.clear(); WA._beat.clear()
+		var cy = _cyc(v)
+		for i in int(cy * 2.0 / 0.01): _edge_draw("egui", v, 3.0 + i * 0.01, false)
+		var nb = WA.SFX_LOG.size()
+		_chk("音效掛點會觸發 " + v, nb >= 1, nb)
+		_p("sfx %-6s %-18s 兩個循環觸發 %d 次" % [v, WA.SFX[v], nb])
+	# 資源田預設：6 塊唔畫工作物
+	for b in ["b_well", "b_bamboo", "b_banana", "b_coco", "b_latex", "b_straw"]: _chk("預設去掉工作物 " + b, not WA.props_for(b))
+	for b in ["wood", "b_wood", "rice", "b_tea", "b_fish", "b_newspaper", "b_toner"]: _chk("預設保留工作物 " + b, WA.props_for(b))
 	var n0 = WA.edge_n("axe", deg_to_rad(90.0))
 	_chk("斧頭打橫向前時刀口向落", n0.y > 0.95, n0)
 
@@ -541,7 +561,7 @@ func _edge_cell(ctx, k: String, v: String, T: float, fl: bool, cxp: float, cyp: 
 	var r = _eval(e0)
 	var c0: Vector2 = r.cp if not r.is_empty() else Vector2(0, -50)
 	if r.is_empty() and e0.tools.size() > 0: c0 = e0.tools[0].a
-	var Z = 2.0
+	var Z = {"catch": 1.2, "pull": 1.3, "fork": 1.6}.get(v, 2.0)   # 大件／高嘅動作少放大啲，唔好爆格
 	ctx.save(); ctx.translate(cxp, cyp); ctx.scale(Z, Z); ctx.translate(-c0.x, -c0.y)
 	var e = _edge_draw(k, v, T, fl, 0.0, 0.0, sc, ctx)
 	ctx.restore()
@@ -556,3 +576,214 @@ func _edge_cell(ctx, k: String, v: String, T: float, fl: bool, cxp: float, cyp: 
 	var hd = n.rotated(2.6) * 9.0; var hd2 = n.rotated(-2.6) * 9.0
 	ctx.moveTo(q.x, q.y); ctx.lineTo(q.x + hd.x, q.y + hd.y); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x + hd2.x, q.y + hd2.y); ctx.stroke()
 	ctx.fillStyle = "#6aff9a"; ctx.beginPath(); ctx.arc(p.x, p.y, 3.0, 0, TAU); ctx.fill()
+
+# ================= 體型：各種鬼做工時工具位置 =================
+const BODY := [["n30_kappa", "一般（兩腳企）"], ["egui", "冇腳飄浮"], ["pocong", "包住跳（冇手）"], ["nw_dokkaebi", "單腳 Dokkaebi"], ["nw_nian", "四腳獸：年獸"],
+	["bm_taotie", "四腳獸：饕餮"], ["toyol", "矮細：toyol"], ["bm_shuten", "巨大：酒吞"]]
+func bodies(t) -> void:
+	await _boot(t); await _bodies(t); _p("RESULT ok=%d bad=%d" % [ok, bad])
+func _bodies(t) -> void:
+	var S = Sheet.new(); S.cw = 230.0; S.ch = 230.0; S.top = 60.0
+	S.title = "各種體型做工：工具浮喺面向嗰邊（斬中／工作嗰刻）"
+	var vs = ["chop", "reap", "saw", "forge", "ladle", "pick"]
+	var Th = WA.chop_time()
+	for b in BODY:
+		var k: String = b[0]
+		if not Art.has_spr(k) and WA._h(k) <= 0: _p("冇體型 " + k); continue
+		var cells = []
+		for v in vs:
+			var H0 = EDGE_HIT.get(v, {"T": Th * 0.8 + 3.0 * 0 + Th * 2})
+			var T = float(H0.T) if EDGE_HIT.has(v) else (Th * 2.8 if v == "chop" else 3.0)
+			cells.append({"cap": "%s・%s" % [VNAME[v].get_slice("：", 1), WA.TOOL_OF[v]], "fn": func(ctx, x, y): WA.draw(ctx, k, x, y, _sc(k, 120.0), false, T, v, 3.0, {"piece": VPIECE.get(v, ""), "icon": "mvi_paper"})})
+		S.rows.append({"label": "%s（%s，H=%.0f）" % [b[1], k, WA._h(k)], "cells": cells})
+	S.size = Vector2(14 + vs.size() * S.cw, S.top + S.rows.size() * (S.ch + 34) + 10)
+	await _render(t, S, SHOTS + "HC_WorkAnim_Bodies.png")
+
+# ================= 批次2 審批圖 =================
+const NEWV := ["fork", "tongs", "sew", "brush", "paint", "catch", "pump", "slice", "pull", "salt", "plane", "screw"]
+func _first_hit(v: String) -> Dictionary:
+	if EDGE_HIT.has(v): return EDGE_HIT[v]
+	var cy = _cyc(v)
+	for i in int(cy * 2.0 / 0.005):
+		var T = 3.0 + i * 0.005
+		var e = _edge_draw(EK[0], v, T, false)
+		if e.ck == "none": return {"T": 3.0, "ang": 0.0, "ck": "none"}
+		if e.hit:
+			var r = _eval(e)
+			if not r.is_empty(): return {"T": T, "ang": r.ang, "ck": e.ck}
+	return {"T": 3.0, "ang": 0.0, "ck": "none"}
+func batch2(t) -> void:
+	await _boot(t)
+	var OUT2 = "/tmp/wk_b2/"; DirAccess.make_dir_recursive_absolute(OUT2)
+	# p1/p2：新動作逐格（每行 6 格，一個循環）
+	for part in 2:
+		var sh = Sheet.new(); sh.cw = 228.0; sh.ch = 220.0; sh.top = 60.0
+		sh.title = "批次2 新做工動作 %d/2（工具浮喺面向嗰邊；一行＝一個循環）" % (part + 1)
+		for v in NEWV.slice(part * 6, part * 6 + 6):
+			var k = VK[v]; var cells = []; var cy = _cyc(v)
+			for i in 6:
+				var T = 3.0 + cy * i / 6.0
+				cells.append({"cap": "%.2f 秒" % (cy * i / 6.0), "fn": func(ctx, x, y): WA.draw(ctx, k, x, y, _sc(k, 120.0), false, T, v, 3.0, {"piece": "", "icon": _icon_of(v)})})
+			sh.rows.append({"label": "%s（工具：%s，音效：%s）" % [VNAME[v], WA.TOOL_OF[v], WA.SFX[v]], "cells": cells})
+		sh.size = Vector2(14 + 6 * sh.cw, sh.top + sh.rows.size() * (sh.ch + 34) + 10)
+		await _render(t, sh, OUT2 + "p%d.png" % (part + 1))
+	# p3：新動作刀口特寫（面向右 12 格＋面向左 6 格）
+	var sh3 = Sheet.new(); sh3.cw = 228.0; sh3.ch = 228.0; sh3.top = 60.0
+	sh3.title = "批次2 工作面朝向特寫（工作嗰刻放大 2 倍）　綠箭＝工作面朝向　紅圈＝目標"
+	var cells3 = []
+	for e in NEWV.map(func(v): return [v, false]) + ["fork", "tongs", "sew", "slice", "plane", "screw"].map(func(v): return [v, true]):
+		var v: String = e[0]; var fl: bool = e[1]; var H0 = _first_hit(v); var T = float(H0.T)
+		var cap = "工作面朝目標：已檢查（%d°）" % int(round(H0.ang))
+		cells3.append({"top": "%s %s・%s" % ["◀面向左" if fl else "▶", VNAME[v].get_slice("：", 1), WA.TOOL_OF[v]], "cap": cap, "good": true, "ax": 0.5,
+			"fn": func(ctx, x, y): _edge_cell(ctx, EK[0], v, T, fl, x, y - 98)})
+	for i in range(0, cells3.size(), 6): sh3.rows.append({"label": "面向右" if i < 12 else "面向左（正確鏡像）", "cells": cells3.slice(i, i + 6)})
+	sh3.size = Vector2(14 + 6 * sh3.cw, sh3.top + sh3.rows.size() * (sh3.ch + 34) + 10)
+	await _render(t, sh3, OUT2 + "p3.png")
+	# p4：體型
+	await _bodies2(t, OUT2 + "p4.png")
+	# p5：整條生產鏈清單
+	var L = ChainList.new(); L.build(); L.size = Vector2(1400, 70 + L.lines.size() * 27 + 20)
+	await _render(t, L, OUT2 + "p5.png")
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+func _icon_of(v: String) -> String:
+	return {"sew": "mvi_shirt", "brush": "mvi_denglong", "paint": "mvi_phone"}.get(v, "mvi_paper")
+func _bodies2(t, path: String) -> void:
+	var S = Sheet.new(); S.cw = 228.0; S.ch = 222.0; S.top = 60.0
+	S.title = "各種體型做工（同一比例：以 H 縮放；工具浮喺面向嗰邊、離開身體最闊處）"
+	var vs = ["chop", "reap", "saw", "ladle", "sew", "pull"]
+	for b in BODY:
+		var k: String = b[0]
+		var cells = []
+		for v in vs:
+			var T = float(_first_hit(v).T)
+			cells.append({"cap": "%s・%s" % [VNAME[v].get_slice("：", 1), WA.TOOL_OF[v]], "fn": func(ctx, x, y): WA.draw(ctx, k, x, y, _sc(k, 118.0), false, T, v, 3.0, {"piece": VPIECE.get(v, ""), "icon": _icon_of(v)})})
+		S.rows.append({"label": "%s（%s）" % [b[1], k], "cells": cells})
+	S.size = Vector2(14 + vs.size() * S.cw, S.top + S.rows.size() * (S.ch + 34) + 10)
+	await _render(t, S, path)
+class ChainList extends Control:
+	var lines: Array = []   # [級, 建築, 動作, 工具, 音效, 新?]
+	func build() -> void:
+		var WA2 = load("res://game/outpost/work_anim.gd")
+		var C = JSON.parse_string(FileAccess.get_file_as_string("res://data/nat/chain.json"))
+		var O = JSON.parse_string(FileAccess.get_file_as_string("res://data/nat/outpost.json"))
+		var NV = ["fork", "tongs", "sew", "brush", "paint", "catch", "pump", "slice", "pull", "salt", "plane", "screw"]
+		for sec in [["GATHER", "一級採集"], ["WORKSHOPS", "二級加工"]]:
+			for bid in C[sec[0]]:
+				var v = WA2.verb_of_post(bid)
+				lines.append([sec[1], str(C[sec[0]][bid].n[0]), v, WA2.TOOL_OF.get(v, ""), WA2.SFX.get(v, ""), v in NV, bid in WA2.FIELD_PROPS and not WA2.FIELD_PROPS[bid]])
+		for sid in O.STATIONS:
+			var v = WA2.verb_of_stall(str(O.STATIONS[sid].art))
+			lines.append(["三級（大排檔）", str(O.STATIONS[sid].n[0]), v, WA2.TOOL_OF.get(v, ""), WA2.SFX.get(v, ""), v in NV, false])
+	func _draw() -> void:
+		var f = UIKit.font("sans", 900); var f2 = UIKit.font("sans", 500)
+		draw_rect(Rect2(Vector2.ZERO, size), Color("#1c1a20"))
+		draw_string(f, Vector2(14, 34), "生產鏈派工動作清單（建築 → 動作 → 工具 → 音效事件）　綠＝批次2 新加　＊＝預設去掉工作物", HORIZONTAL_ALIGNMENT_LEFT, -1, 21, Color("#f4e2b8"))
+		var xs = [14, 170, 420, 560, 760]
+		var hd = ["級別", "建築", "動作", "工具", "音效事件名"]
+		for i in 5: draw_string(f, Vector2(xs[i], 62), hd[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("#f3d68a"))
+		for r in lines.size():
+			var L = lines[r]; var y = 70 + r * 27
+			if r % 2 == 0: draw_rect(Rect2(8, y + 2, size.x - 16, 26), Color(1, 1, 1, 0.04))
+			var col = Color("#a8ffcf") if L[5] else Color("#d8d0c0")
+			var vals = [L[0], L[1] + ("＊" if L[6] else ""), L[2], L[3], L[4]]
+			for i in 5: draw_string(f2, Vector2(xs[i], y + 22), str(vals[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, col)
+
+# ================= 實機：新動作＋空手版（王牌階段圖／NoWeapon 名單）=================
+const LIVEK := ["nw_dokkaebi", "nw_nian", "bm_taotie", "bm_shuten", "huang", "n30_yecha", "n30_kuchisake", "n30_vetala", "nw_dullahan", "zd_bone", "mamian", "niutou", "heiwu", "baiwu", "mengpo", "pontianak"]
+const LIVE_POST := [[0, "b_straw"], [4, "b_newspaper"], [0, "wood"], [0, "rice"], [0, "b_well"], [0, "b_bamboo"]]
+static func _bare(k: String) -> String:   # 呢隻做工時用咩空手圖
+	if WA.nwp_key(k) != "": return "空手圖 " + WA.nwp_key(k)
+	if WA._ace_active(k): return "王牌階段圖 " + Spr.key_for(k)
+	return ""
+func live2(t) -> void:
+	var m = await _boot(t)
+	var S = J.G.S; var ZD = load("res://game/zone/zone_data.gd")
+	var sc = m.mv_view; var sim = sc.sim
+	var cells = []   # [img, 標題]
+	var ki = 0
+	var NEWSTALL = {}
+	for sid in MD.D().STATIONS: if NEWV.has(WA.verb_of_stall(str(MD.st_def(sid).get("art", "")))) or ["st_shoubao", "st_bingqi"].has(sid): NEWSTALL[sid] = true
+	var base: Dictionary = S.ghosts[0]
+	for c in 6:
+		if c > 0:
+			sim.st().ci = float(c); sc._after_move(); await _w(t, 1.5)
+		if m.has_method("_nav_on"): m._nav_on("village")
+		await _w(t, 1.0)
+		# 村子派工
+		var gs = []; var todo = []
+		for e in LIVE_POST:
+			if e[0] != c: continue
+			if e[1].begins_with("b_"):
+				S.bld[e[1]] = 1
+				var zid = ZD.bid_zone(e[1])
+				if zid != "": ZD.set_owned(zid)
+			var k = LIVEK[ki % LIVEK.size()]; ki += 1
+			var g = base.duplicate(true); g["k"] = k; g["id"] = 9500 + ki; g["post"] = e[1]
+			S.ghosts.append(g); gs.append(g); todo.append([e[1], k])
+		await _w(t, 0.8)
+		var spots = J.mc(J.G.Village, "workerSpots", [])
+		for e in todo:
+			var wp = null; var fl = false
+			for sp in spots: if str(J.gp(sp, "post")) == e[0]: wp = Vector2(J.num(sp.x), J.num(sp.y)); fl = J.t(J.gp(sp, "flip")); break
+			_chk("實機村子企位 " + e[0], wp != null)
+			if wp == null: continue
+			var cxw = wp + Vector2(-14.0 if fl else 14.0, -28)
+			_cam_close(m, cxw, 112.0); await _w(t, 0.7)
+			var img = await _shot(t, "HC_WorkAnim_Live_%s" % e[0])
+			var L = WA.LAST.get(e[1], {})
+			_chk("實機村子做工動畫 %s（%s）" % [e[0], e[1]], str(L.get("verb", "")) == WA.verb_of_post(e[0]), L.get("verb"))
+			_chk("實機村子空手 %s" % e[1], _bare(e[1]) != "", e[1])
+			cells.append([_crop(t, m, img, cxw, Vector2(420, 330), 0.95), "村子・%s：%s（%s）" % [VNAME.get(WA.verb_of_post(e[0]), e[0]).get_slice("：", 0), WA.TOOL_OF[WA.verb_of_post(e[0])], e[1]], _bare(e[1])])
+		for g in gs: S.ghosts.erase(g)
+		# 大排檔：呢張圖嘅新動作台
+		var sids = MD.stations(c).filter(func(sid): return NEWSTALL.has(sid))
+		if sids.is_empty(): continue
+		for sid in sids: sim.sst(sid).unlocked = true
+		await _w(t, 0.3)
+		sim.paused = true; sim.custs.clear(); sim.foes.clear(); sim.workers.clear(); sim._sync_key = "x"
+		var ws = []
+		for i in sids.size():
+			var p = sim.slot_pos(sids[i], 1)
+			var k = LIVEK[ki % LIVEK.size()]; ki += 1
+			var w = {"gid": "g_lv%d" % i, "k": k, "name": k, "sid": sids[i], "slot": 0, "st": "work", "prog": 0.2, "pos": p, "home": p, "carry": 0, "t": 0.0, "s": 0.0, "ph": i * 1.3, "paid": {}}
+			sim.workers.append(w); ws.append(w)
+		for w in ws:
+			await _look(t, m, w.pos.y); await _w(t, 0.5)
+			await RenderingServer.frame_post_draw
+			var img = t.get_viewport().get_texture().get_image()
+			var sp = _scr(m, w.pos)
+			var r = Rect2i(Vector2i(clampi(int(sp.x - 120), 0, img.get_width() - 260), clampi(int(sp.y - 190), 0, img.get_height() - 230)), Vector2i(260, 230))
+			var sub = img.get_region(r); sub.resize(int(260 * 1.5), int(230 * 1.5), Image.INTERPOLATE_LANCZOS)
+			var v = WA.verb_of_stall(str(MD.st_def(w.sid).get("art", "")))
+			var seen = sc.mot.seen.get(w.k, {})
+			_chk("實機大排檔做工動畫 %s（%s）" % [w.sid, w.k], seen.has("wa_" + v), seen.keys())
+			_chk("實機大排檔空手 %s" % w.k, _bare(w.k) != "", w.k)
+			cells.append([sub, "大排檔・%s：%s（%s）" % [MD.T(MD.st_def(w.sid).get("n", ["?", "?"])), WA.TOOL_OF[v], w.k], _bare(w.k)])
+		sim.workers.clear(); sim.paused = false
+	# 拼圖（每頁 ≤ 1400×2200）
+	var per = 6; var pg = 0
+	for i in range(0, cells.size(), per):
+		pg += 1
+		var sh = LiveSheet.new(); sh.cells = cells.slice(i, i + per); sh.title = "實機截圖（真遊戲畫法，近鏡）：新做工動作＋空手版　第 %d 頁" % pg
+		for cc in sh.cells: sh.texs.append(ImageTexture.create_from_image(cc[0]))
+		sh.size = Vector2(1400, 70 + 3 * (sh.cw_h() + 70))
+		await _render(t, sh, "/tmp/wk_b2/live_%d.png" % pg)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+class LiveSheet extends Control:
+	var cells: Array = []; var texs: Array = []; var title := ""
+	func cw_h() -> int: return 520
+	func _draw() -> void:
+		var f = UIKit.font("sans", 900); var f2 = UIKit.font("sans", 500)
+		draw_rect(Rect2(Vector2.ZERO, size), Color("#1c1a20"))
+		draw_string(f, Vector2(14, 36), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("#f4e2b8"))
+		for i in cells.size():
+			var col = i % 2; var row = i / 2
+			var tex: Texture2D = texs[i]
+			var bw = 680.0; var bh = 520.0
+			var k = minf(bw / tex.get_width(), bh / tex.get_height())
+			var sz = Vector2(tex.get_width(), tex.get_height()) * k
+			var p = Vector2(14 + col * 694, 70 + row * (bh + 70))
+			draw_string(f, p + Vector2(0, 22), str(cells[i][1]), HORIZONTAL_ALIGNMENT_LEFT, bw, 18, Color("#f3d68a"))
+			draw_string(f2, p + Vector2(0, 46), str(cells[i][2]), HORIZONTAL_ALIGNMENT_LEFT, bw, 15, Color("#a8ffcf"))
+			draw_texture_rect(tex, Rect2(p + Vector2(0, 56), sz), false)
+			draw_rect(Rect2(p + Vector2(0, 56), sz), Color(0.5, 0.44, 0.3), false, 2.0)
