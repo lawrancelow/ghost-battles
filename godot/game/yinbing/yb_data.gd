@@ -1,7 +1,7 @@
 # [yinbing] 陰兵兵種（近戰／中距／遠程／醫療）× 階級（雜兵／士兵／衛兵／親兵）＝16 款（全部 static；冇 class_name、冇 autoload：熱更新規矩）
 #   const YB = preload("res://game/yinbing/yb_data.gd")
 #   數據 data/nat/yinbing.json（tools/yinbing_build.py 生成；改數值改 build 腳本）；設計稿 /home/claude/art/out/HC_YinBing_Design.md
-#   第一期（phase 1）：只提供查表＋圖鍵（未接戰鬥，未改任何現有行為）；數值倍率要 phase ≥ 2 先生效
+#   第一期（phase 1）：兵種倍率（血／攻／射程／行速）生效；階級倍率要 phase ≥ 2 先生效（而家一律 1.0，只換外觀）
 extends RefCounted
 
 const PATH := "res://data/nat/yinbing.json"
@@ -111,10 +111,11 @@ static func assign(units: Array) -> int:
 	for u in units:
 		if u is Dictionary and J.num(u.get("side", 0)) == 0 and J.t(u.get("minion")) and u.get("ml") == null and u.get("yb_c") == null and not J.t(u.get("sum")): ys.append(u)
 	var cs = split(ys.size()); var r = rank_now()
+	var nm = norm(cs)
 	for i in ys.size():
 		var u = ys[i]; var c = cs[i]; var cd = cls(c)
 		u["yb_c"] = c; u["yb_r"] = r; u["name"] = name_of(c, r)
-		var hk = mul(c, r, "hp"); var ak = mul(c, r, "atk")
+		var hk = mul(c, r, "hp") / float(nm.hp); var ak = mul(c, r, "atk") / float(nm.atk)
 		u["yb_b"] = {"range": J.num(u.get("range", 38.0)), "spd": J.num(u.get("spd", 52.0)), "hk": hk, "ak": ak}   # 還原用（reassign）
 		u["hp"] = J.num(u.hp) * hk; u["maxhp"] = J.num(u.get("maxhp", u.hp)) * hk; u["atk"] = J.num(u.atk) * ak
 		u["range"] = float(cd.get("range", 38.0)); u["spd"] = float(cd.get("spd", 52.0))
@@ -122,6 +123,13 @@ static func assign(units: Array) -> int:
 	LOG.append(["assign", cs, r])
 	return ys.size()
 static var LOG: Array = []
+# 總戰力唔變：按今次實際分到嘅兵種（隊數少、四捨五入、玩家揀嘅編制都計）求兵種倍率平均，逐隊除返（第一期唔郁平衡）
+#   例：8 隊 3/2/2/1 → 血平均 0.969 → 刀盾手實際 ×1.29、長兵 ×0.98…；1 隊（只有刀盾）＝×1.0 同舊版一樣
+static func norm(cs: Array) -> Dictionary:
+	if cs.is_empty(): return {"hp": 1.0, "atk": 1.0}
+	var h = 0.0; var a = 0.0
+	for c in cs: h += float(cls(str(c)).get("hp", 1.0)); a += float(cls(str(c)).get("atk", 1.0))
+	return {"hp": h / cs.size(), "atk": a / cs.size()}
 static var HEALS := 0   # 測試用：累計醫咗幾多次
 # 揀少咗隊（rts._trim）之後重新按編制分：先還原兵種倍率（之後乘落去嘅血倍率照留），再分過
 static func reassign(units: Array) -> int:
@@ -133,6 +141,10 @@ static func reassign(units: Array) -> int:
 			u["range"] = float(b.range); u["spd"] = float(b.spd)
 		for k in ["yb_c", "yb_r", "yb_b", "yb_heal", "yb_ht"]: u.erase(k)
 	return assign(units)
+# 醫護兵醫得嘅：我方陰兵（有兵種）／遊魂兵（ml）／未分兵種嘅陰兵小隊；名鬼、召喚物、其他嘍囉唔醫
+static func is_troop(v: Dictionary) -> bool:
+	if not J.t(v.get("minion")) or J.t(v.get("sum")) or J.t(v.get("boss")): return false
+	return v.get("yb_c") != null or v.get("ml") != null or (J.str(v.get("k")) == "youhun" and str(v.get("name", "")) in ["陰兵", "遊魂兵"])
 # 醫護兵：每 heal.t 秒醫 heal.r 內血最少（比例）嘅一隊我方陰兵／遊魂兵（唔醫名鬼）；回 (治療量, 目標)
 static func heal_tick(sim, u: Dictionary, dt: float):
 	var h = u.get("yb_heal")
@@ -141,7 +153,7 @@ static func heal_tick(sim, u: Dictionary, dt: float):
 	if J.num(u.yb_ht) < float(h.get("t", 3.0)): return null
 	var best = null; var br = 1.0; var r = float(h.get("r", 160.0))
 	for v in sim.units:
-		if not (v is Dictionary) or J.num(v.get("side", 0)) != J.num(u.get("side", 0)) or not J.t(v.get("minion")) or J.t(v.get("sum")): continue
+		if not (v is Dictionary) or J.num(v.get("side", 0)) != J.num(u.get("side", 0)) or not is_troop(v): continue
 		if not sim.alive(v): continue
 		var mh = J.num(v.get("maxhp", 1)); var k = J.num(v.hp) / maxf(1.0, mh)
 		if k >= 0.999 or (v.p as Vector2).distance_to(u.p) > r: continue
@@ -160,24 +172,27 @@ static func box(body: VBoxContainer, refresh: Callable) -> void:
 	if not on(): return
 	var UI = load("res://game/barracks/bk_ui.gd")
 	var BK = load("res://game/barracks/bk_data.gd")
-	var v = UI._box(body, L2("陰兵編制（兵種）", "陰兵編制（兵種）"))
+	var v = UI._box(body, L2("陰兵兵種編制", "陰兵兵種編制"))
 	var r = rank_now(); var rd = rank(r)
 	var ML = load("res://game/militia/ml_data.gd")
 	var star = ML.tier_now() if ML.stall_open() else 0
-	var nxt = ""
+	if force_rank != "": star = int(rd.star[0])
+	var nxt = L2("　已經係最高階", "　已是最高階")
 	for x in ranks():
-		if int(x.star[0]) > star: nxt = L2("　兵器檔升到 ★%d 變%s", "　兵器檔升到 ★%d 變%s") % [int(x.star[0]), T(x.n)]; break
-	v.add_child(UI._rich(L2("階級：[b]%s[/b]（兵器檔 ★%d）%s", "階級：[b]%s[/b]（兵器檔 ★%d）%s") % [T(rd.get("n", ["", ""])), star, nxt], 13.5))
+		if int(x.star[0]) > star:
+			nxt = L2("　下一階：兵器檔 ★%d 變[b]%s[/b]（仲差 %d 粒★）", "　下一階：兵器檔 ★%d 變為[b]%s[/b]（還差 %d 顆★）") % [int(x.star[0]), T(x.n), int(x.star[0]) - star]; break
+	v.add_child(UI._rich(L2("而家階級：[b][color=#9c2219]%s[/color][/b]（兵器檔 ★%d）%s", "目前階級：[b][color=#9c2219]%s[/color][/b]（兵器檔 ★%d）%s") % [T(rd.get("n", ["", ""])), star, nxt], 13.5))
+	v.add_child(UI._rich("[font_size=12]%s[/font_size]" % L2("階級跟兵器檔★：雜兵 ★0–1、士兵 ★2–3、衛兵 ★4–5、親兵 ★6（今期只換裝束，數值唔變）", "階級跟兵器檔★：雜兵 ★0–1、士兵 ★2–3、衛兵 ★4–5、親兵 ★6（本期只換裝束，數值不變）"), 12, UIKit.INKDIM))
 	var nsq = mini(8, int(floor(float(BK.standby()) / 25.0)))
-	var cs = split(maxi(nsq, 1))
-	var parts = []
+	var cs = split(nsq) if nsq > 0 else []
+	var mx = mix()
+	v.add_child(UI._rich(L2("待命陰兵 [b]%d[/b] 個 → 出擊 [b]%d[/b] 隊（每隊 25 個，最多 8 隊）", "待命陰兵 [b]%d[/b] 名 → 出擊 [b]%d[/b] 隊（每隊 25 名，最多 8 隊）") % [int(BK.standby()), nsq], 13.5))
 	for c in classes():
-		var cnt = cs.count(str(c.id)) if nsq > 0 else 0
-		parts.append("%s %d" % [T(c.n), cnt])
-	v.add_child(UI._rich(L2("出擊 %d 隊：%s", "出擊 %d 隊：%s") % [nsq, "　".join(parts)], 13.5))
-	for c in classes():
-		v.add_child(UI._rich("[font_size=12]%s（%s）：%s[/font_size]" % [T(c.n), T(c.role), T(c.get("d", ""))], 12, UIKit.INKDIM))
+		var id = str(c.id); var cnt = cs.count(id)
+		v.add_child(UI._rich(L2("[b]%s[/b]（%s）　%d 隊・%d 個　編制 %d%%　射程 %d", "[b]%s[/b]（%s）　%d 隊・%d 名　編制 %d%%　射程 %d") % [T(c.n), T(c.role), cnt, cnt * 25, int(round(float(mx.get(id, 0)) * 100)), int(c.range)], 13))
+		v.add_child(UI._rich("[font_size=12]　%s[/font_size]" % T(c.get("d", "")), 12, UIKit.INKDIM))
 	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 4)
+	var lb = Label.new(); lb.text = L2("編制：", "編制："); lb.add_theme_font_size_override("font_size", 13); lb.add_theme_color_override("font_color", UIKit.INKTXT); hb.add_child(lb)
 	var cur = preset()
 	for id in PRESETS:
 		var pid = id

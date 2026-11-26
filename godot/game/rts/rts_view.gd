@@ -337,7 +337,7 @@ class UnitVis extends Node2D:
 			off_base.append(off)   # [abui]
 			if kind == "yin":
 				var s = SolRep.new(); s.position = off; s.seed = int(abs(hash(str(u.get("lane", 0)) + str(i)))) % 97
-				if u.get("yb_c") != null: s.look = "yb_%s_%s" % [str(u.yb_c), str(u.get("yb_r", "wei"))]   # [yinbing] 兵種×階級立繪
+				if u.get("yb_c") != null: s.look = "yb_%s_%s" % [str(u.yb_c), str(u.get("yb_r", "wei"))]; s.u = u; s.rep = i   # [yinbing] 兵種×階級立繪＋漂浮兵器
 				add_child(s); sols.append(s)
 			else:
 				var w = Node2D.new(); w.position = off; add_child(w); wraps.append(w)
@@ -401,7 +401,10 @@ class UnitVis extends Node2D:
 			chars[i].sync(T + i * 0.37)
 
 class SolRep extends Node2D:
+	const YBV = preload("res://game/yinbing/yb_view.gd")   # [yinbing] 漂浮兵器（eq_view2 float 方案）
 	var look := ""   # [yinbing] yb_<兵種>_<階級>；空＝現版
+	var u = null     # [yinbing] 所屬小隊（兵器瞄目標用）
+	var rep := 0
 	var pose := "stand"
 	var dir := 1.0
 	var ph := 0.0
@@ -419,7 +422,9 @@ class SolRep extends Node2D:
 			BA.draw_soldier(self, "stand", 0.0, dir, seed, base, look)
 			return
 		modulate = Color(1 + flash * 1.2, 1 + flash, 1 + flash * 0.8, 1)
+		if u is Dictionary: YBV.draw(self, base, look, u, dir, ph, position, "back", rep)
 		BA.draw_soldier(self, pose, ph, dir, seed, base, look)
+		if u is Dictionary: YBV.draw(self, base, look, u, dir, ph, position, "front", rep)
 
 # 腳底色圈：我方青綠、敵方暗紅（交戰先出；小隊圈大啲包住三個代表兵）
 func _draw_under(n: CanvasItem) -> void:
