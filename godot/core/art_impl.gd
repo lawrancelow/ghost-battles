@@ -8,6 +8,7 @@ const SOLID := {"npc_it": 1, "npc_mis": 1, "npc_ken": 1, "npc_boss": 1, "npc_gua
 const HOP := {"laojiang": 1, "zombie": 1, "pocong": 1}
 const CHAR_H := {"npc_it": 60, "npc_mis": 62, "npc_ken": 64, "npc_boss": 64, "npc_guard": 64, "npc_auntie": 60, "afu": 58, "xiaozhi": 54, "egui": 54, "eguiking": 66, "xiaogui": 46, "toyol": 46, "laojiang": 58, "zombie": 54, "shuigui": 56, "pontianak": 60, "pocong": 54, "penanggal": 52, "mengpo": 56, "youhun": 46, "baiwu": 76, "heiwu": 76, "niutou": 64, "mamian": 64, "huang": 62, "zhiren": 54, "tianhua": 60, "npc_kiln": 58, "npc_receipt": 56, "npc_driver": 58, "npc_ferry": 60, "npc_shop": 58, "npc_rubber": 58, "npc_fisher": 58, "npc_dock": 60, "npc_stall": 58, "npc_ticket": 56, "npc_dj": 56, "npc_inn": 58, "npc_granny": 54, "npc_grandpa": 56, "npc_hq": 58, "npc_clerk": 56, "res_granny": 54, "res_guard": 58, "res_helper": 56}
 const SPECIAL_T := {"penanggal": 1, "pocong": 1, "toyol": 1}
+const ACE = preload("res://game/soul/ace_art.gd")   # [p44] 王牌晉級立繪
 
 # ---------------- 基本形狀 ----------------
 func el(ctx: Ctx, x: float, y: float, rx: float, ry: float, fill = null, stroke = null, lw = null) -> void:
@@ -407,6 +408,7 @@ func draw_char(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictiona
 	if type == "youhun" and not J.t(o.get("oldGhost")) and PtGfx.tex("soul_i") != null: type = soul_of(o)   # [eastsoul]
 	o["t"] = _ot(o)
 	if type.begins_with("soul_") and PtGfx.tex(type) != null: _draw_soul(ctx, type, x, y, s, o); return
+	if ACE.STAGES.has(type) and ACE.active(type): _draw_plain(ctx, type, x, y, s, o); return   # [p44] 王牌階段圖：整張圖畫（唔用網格／木偶，嗰啲係手持兵器原圖）
 	if char_h(type) > 0 and _ma_has(type) and not _special_has(type) and not J.t(o.get("noMesh")):
 		_draw_mesh(ctx, type, x, y, s, o, js, false); return
 	var PU = J.G.get("Puppet")
@@ -650,9 +652,9 @@ static func fade_rec(raw: Recorder, g0: float, g1: float, r1: float, st: Array) 
 	return out
 
 func _draw_sprite(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictionary) -> void:
-	if _special_has(type): J.mc(J.G.SPECIAL, "draw", [ctx, type, x, y, s, o]); return
+	if _special_has(type) and not (ACE.STAGES.has(type) and ACE.active(type)): J.mc(J.G.SPECIAL, "draw", [ctx, type, x, y, s, o]); return
 	var key = spr_key(type); var img = PtGfx.tex(key); var iw = float(img.get_width()); var ih = float(img.get_height())
-	var t: float = o.t; var H: float = char_h(type) * s; var Wd = H * iw / ih
+	var t: float = o.t; var H: float = char_h(type) * s * ACE.h_k(type); var Wd = H * iw / ih   # [p44] 闊身階段圖收細少少
 	var sy = 1 + sin(t * 2.2) * 0.02; var sx = 1 - (sy - 1) * 0.5; var r = 0.0; var dy = 0.0
 	if J.t(o.get("walk")): r += sin(t * 9) * 0.07; dy -= absf(sin(t * 9)) * 1.5 * s
 	if J.t(o.get("work")): r += sin(t * 12) * 0.12
@@ -704,5 +706,8 @@ func portrait_region(type: String) -> Array:
 	if img == null: return []
 	var iw = float(img.get_width()); var ih = float(img.get_height())
 	var c: Array = PCROP.get(type, [0.0, 0.86])
+	if ACE.STAGES.has(type) and Spr.key_for(type) != type:   # [p44] 階段圖（已裁到內容）：由頂部取頭膊；無常頂帽高，向下移少少
+		var S2 = minf(iw, ih * 0.6); var sy2 = ih * (0.13 if type in ["heiwu", "baiwu"] else 0.0)
+		return [img, Rect2((iw - S2) / 2, sy2, S2, S2)]
 	var S = minf(iw * c[1], ih); var sx = (iw - S) / 2 + (iw * 0.1 if type == "afu" else 0.0); var sy = minf(ih - S, iw * c[0])
 	return [img, Rect2(clampf(sx, 0, iw - S), maxf(0, sy), S, S)]

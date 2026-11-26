@@ -1691,6 +1691,69 @@
     "offer"
    ]
   },
+  "eq_hero_axe": {
+   "id": "eq_hero_axe",
+   "kind": "eq",
+   "slot": "wea",
+   "grade": 0,
+   "st": {
+    "atk": 0.06
+   },
+   "tag": "",
+   "sc": "",
+   "look": "hand",
+   "shape": "axe",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "阿福把斧頭",
+    "阿福的斧頭"
+   ],
+   "d": [
+    "上班第一日公司派落嚟，話係「斬開難題」用。",
+    "上班第一天公司發的，說是「劈開難題」用。"
+   ],
+   "cat": "重",
+   "owner": "afu",
+   "hero": true,
+   "src": [
+    "hero"
+   ]
+  },
+  "eq_hero_ruler": {
+   "id": "eq_hero_ruler",
+   "kind": "eq",
+   "slot": "wea",
+   "grade": 0,
+   "st": {
+    "atk": 0.04,
+    "energy": 0.04
+   },
+   "tag": "",
+   "sc": "",
+   "look": "hand",
+   "shape": "ruler",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "三角尺",
+    "三角尺"
+   ],
+   "d": [
+    "量得出圖紙差幾多，量唔出人工差幾多。",
+    "量得出圖紙差多少，量不出薪水差多少。"
+   ],
+   "cat": "巧",
+   "owner": "afu",
+   "hero": true,
+   "src": [
+    "hero"
+   ]
+  },
   "ex_heiwu": {
    "id": "ex_heiwu",
    "kind": "ex",

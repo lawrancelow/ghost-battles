@@ -119,6 +119,14 @@ EQ = [
  ("eq_jinzheng", "acc", "名", {"energy": 0.15, "atk": 0.05, "hp": 0.05}, "", "", "gold_card", {"m_paper": 30, "m_strip": 20, "m_rope": 20}, ["鍍金長期服務證", "鍍金長期服務證"], ["服務滿三十年頒發，鍍金部分已經甩晒。", "服務滿三十年頒發，鍍金部分已經掉光了。"]),
 ]
 
+# [p44] 主角自己嘅兵器（主角預設裝上；唔造得、唔掉落、只有主角着得：owner＝afu）
+#   男主「斧」：重類、揮斬（eq_art ATK axe＝swing），斧刃喺圖右（EDGE 預設 +1）
+#   女主「三角尺」：巧類、突刺（尖角向前，ATK ruler＝thrust），有刻度嗰條直邊喺圖左（EDGE −1）
+HERO = [
+ ("eq_hero_axe", "重", {"atk": 0.06}, "axe", ["阿福把斧頭", "阿福的斧頭"], ["上班第一日公司派落嚟，話係「斬開難題」用。", "上班第一天公司發的，說是「劈開難題」用。"]),
+ ("eq_hero_ruler", "巧", {"atk": 0.04, "energy": 0.04}, "ruler", ["三角尺", "三角尺"], ["量得出圖紙差幾多，量唔出人工差幾多。", "量得出圖紙差多少，量不出薪水差多少。"]),
+]
+
 # 錨點人工表（[anchor] 線逐隻睇全身圖＋10% 格網定；蓋過 tools/equip_anchor.json 自動估）
 #   座標：角色高 H＝1、腳底中間＝原點、x 向右（圖右）、y 向上為負
 #   hand＝揸兵器嗰隻手（揀空手；hand.x < 0＝圖左邊嗰隻手，兵器向左外斜）
@@ -306,6 +314,9 @@ def main():
                     "cat": CAT[i], "src": SRC[gi]}
         for sk, sv in SETS.items():
             if i in sv["ids"]: items[i]["set"] = sk
+    for (i, cat, st, shape, n, d) in HERO:   # [p44] 主角兵器
+        items[i] = {"id": i, "kind": "eq", "slot": "wea", "grade": 0, "st": st, "tag": "", "sc": "", "look": "hand", "shape": shape, "rec": {}, "coin": 0, "star": 99,
+                    "price": 0, "n": n, "d": d, "cat": cat, "owner": "afu", "hero": True, "src": ["hero"]}
     for k, (n, st, d) in EX.items():   # [補丁43] 王牌專屬物
         i = "ex_" + k
         items[i] = {"id": i, "kind": "ex", "slot": "ex", "grade": 4, "st": st, "tag": "", "sc": "", "look": "belt", "shape": "ex", "rec": {}, "coin": 0, "star": 99,

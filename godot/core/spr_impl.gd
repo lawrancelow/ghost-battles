@@ -23,7 +23,10 @@ static func fem_key(k: String) -> String:
 
 func fem_ok() -> bool: return _man.has("afuf")
 
+var _ace = null   # [p44] 王牌晉級立繪（game/soul/ace_art.gd）
 func key_for(k: String) -> String:
+	if _ace == null: _ace = load("res://game/soul/ace_art.gd")
+	if _ace.STAGES.has(k): return _ace.map(k)
 	if not k.contains("afu"): return k
 	if not DB.hero_female(): return k
 	var fk = fem_key(k)
@@ -33,6 +36,7 @@ func key_for(k: String) -> String:
 func fem_src(path: String) -> String:
 	if not DB.hero_female(): return path
 	var k = path.get_file().get_basename()
+	if not k.contains("afu"): return path   # [p44] 只換女主圖（王牌階段圖唔經 JS 路徑）
 	var fk = key_for(k)
 	return str(_man[fk]) if fk != k else path
 

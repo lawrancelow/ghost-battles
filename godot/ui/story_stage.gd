@@ -13,12 +13,14 @@ func _draw() -> void:
 		var g = ctx.createRadialGradient(w * 0.5, h * 0.62, 10, w * 0.5, h * 0.62, w * 0.55); g.addColorStop(0, "rgba(255,236,190,.28)"); g.addColorStop(1, "rgba(0,0,0,.55)"); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h)
 	if hide_acts: return
 	var acts: Array = player.actors; var n = acts.size(); var spk: String = player.speaker()
+	var ACE = load("res://game/soul/ace_art.gd"); ACE.dlg_begin()   # [p44] 對話：五隻用手持兵器原圖
 	for i in n:
 		var a: String = acts[i]
 		var x = w * (0.5 if n == 1 else 0.16 + 0.68 * i / maxf(1, n - 1)); var y = h * 0.66 + ((i % 2) * 18.0 if n > 3 else 0.0)
 		var base = 3.1 if n <= 2 else (2.7 if n == 3 else (2.3 if n == 4 else 1.9))
 		var on = a == spk or (spk == "黑白無常" and (a == "白無常" or a == "黑無常"))
 		Art.draw_char(ctx, DB.D.SPEAKER_ART[a], x, y + (0.0 if on else 6.0), base if on else base * 0.9, {"t": 0.3, "flip": x > w / 2, "alpha": 1.0 if on else 0.45, "seed": a})
+	ACE.dlg_end()
 
 static func paint_bg(ctx: Ctx, w: float, h: float, bg: String) -> void:
 	var im = Spr.get_tex("bg_" + bg)

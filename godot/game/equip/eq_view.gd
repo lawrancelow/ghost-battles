@@ -156,6 +156,7 @@ static func in_box(rn: Rect2) -> bool:
 # ---------------- 戰鬥疊層（掛喺 BtChar 入面） ----------------
 class Over extends Node2D:
 	const EQ2 = preload("res://game/equip/eq_data.gd")
+	const ACE = preload("res://game/soul/ace_art.gd")   # [p44]
 	const EV2 = preload("res://game/equip/eq_view2.gd")   # [eqview2]
 	var bc = null
 	var u: Dictionary
@@ -202,9 +203,16 @@ class Over extends Node2D:
 		var w = {}
 		if u.get("eq") is Dictionary: w = u.eq
 		elif str(u.get("eq_ml", "")) != "": w = {"ml": str(u.eq_ml)}
+		var k = J.str(u.get("k"))
+		var kp = k   # [p44] 輪廓／錨點用嘅圖鍵（主角＝目前空手姿勢）
+		var pcx = bc.get("pc") if bc != null else null
+		if k == "afu" and pcx != null and pcx.hero:   # [p44] 主角：斧頭／三角尺改漂浮兵器（有裝備兵器就飄裝備兵器）
+			w = w.duplicate()
+			if str(w.get("wea", "")) == "" or str(EQ2.item(str(w.wea)).get("look")) != "hand": w["wea"] = ACE.hero_weapon()
+			kp = ACE.pose_key()
+			if layer == "glow" and str(w.get("arm", "")) == "": return
 		if w.is_empty(): return
 		var st = bc.st
-		var k = J.str(u.get("k"))
 		var H = J.num(PtChar.CHAR_H.get(k, 58.0)) * J.num(st.s) if PtChar.CHAR_H is Dictionary else 58.0 * J.num(st.s)
 		var P = st.get("P", {})
 		var pose = str(P.get("pose", "")) if P is Dictionary else ""
@@ -212,17 +220,18 @@ class Over extends Node2D:
 		var fd = -1.0 if J.t(st.get("side1")) else 1.0
 		var EVs = load("res://game/equip/eq_view.gd")
 		var sch = EVs.scheme()   # [eqview2] 方案 B／C：名鬼（遊魂兵照舊貼手）
+		if kp != k: sch = "float"   # 主角兵器一律漂浮
 		if sch != "pin" and not w.has("ml"):
 			var foot = Vector2(J.num(st.x), J.num(st.y))
 			var T = J.num(st.get("T", 0.0))
 			if layer == "glow":
 				var arm = str(w.get("arm", ""))
 				if arm == "" or str(EQ2.item(arm).get("look")) != "body": return
-				EV2.glow(self, Transform2D.IDENTITY, k, foot, H, PtChar.plain_sx(k, J.t(st.get("side1"))), EQ2.grade_col(EQ2.grade_of(arm)), T, 0.45 if u.get("anim") is Dictionary else 1.0)
+				EV2.glow(self, Transform2D.IDENTITY, kp, foot, H, PtChar.plain_sx(k, J.t(st.get("side1"))), EQ2.grade_col(EQ2.grade_of(arm)), T, 0.45 if u.get("anim") is Dictionary else 1.0)
 				return
 			var s2 = EV2.state_of(u, T, _sk if layer == "front" else _peer_sk())
 			if s2.act != "idle": s2["tg"] = _tgv(foot)
-			EV2.draw(Ctx.new(self), sch, k, w, foot, H, fd, s2, false, layer)   # back＝飛過身後嘅兵器
+			EV2.draw(Ctx.new(self), sch, kp, w, foot, H, fd, s2, false, layer)   # back＝飛過身後嘅兵器
 			return
 		if layer == "glow": return
 		var ctx = Ctx.new(self)
@@ -231,12 +240,13 @@ class Over extends Node2D:
 # rts_view UnitVis.setup 掛鈎：每個 BtChar 加一層（冇裝備嘅單位都掛，但係唔畫嘢）
 static func attach(bc, u: Dictionary) -> void:
 	if not EQ.on() or bc == null: return
-	if not (u.get("eq") is Dictionary) and str(u.get("eq_ml", "")) == "": return
+	var hero = J.str(u.get("k")) == "afu" and bc.get("pc") != null and bc.pc.hero   # [p44] 主角冇裝備都要掛（漂浮斧頭／三角尺）
+	if not hero and not (u.get("eq") is Dictionary) and str(u.get("eq_ml", "")) == "": return
 	var o = Over.new(); o.bc = bc; o.u = u; o.name = "EqOver"; o.layer = "front"
 	bc.add_child(o)
 	var ob = Over.new(); ob.bc = bc; ob.u = u; ob.name = "EqBack"; ob.layer = "back"
 	bc.add_child(ob); bc.move_child(ob, 0)   # 手持：喺角色身後一層
-	if u.get("eq") is Dictionary:   # [eqview2] 護身微光描邊（方案 B／C；全身圖染等級色，喺最後面）
+	if u.get("eq") is Dictionary or hero:   # [eqview2] 護身微光描邊（方案 B／C；全身圖染等級色，喺最後面）
 		var og = Over.new(); og.bc = bc; og.u = u; og.name = "EqGlow"; og.layer = "glow"; og.material = load("res://game/equip/eq_view2.gd").glow_mat()
 		bc.add_child(og); bc.move_child(og, 0)
 

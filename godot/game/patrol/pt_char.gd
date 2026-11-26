@@ -52,6 +52,9 @@ const ATK_P := {"windup": 1, "strike": 1, "follow": 1, "recover": 1}
 var mv: PtDraw = null
 var ctx_always := false
 var _mv_o := {}
+const ACE = preload("res://game/soul/ace_art.gd")   # [p44]
+var ace := false               # 王牌用緊階段圖
+var hero := false              # 主角空手姿勢（戰鬥）
 
 static func setup_static() -> void:
 	var ART = J.G.get("ART"); var MA = J.G.get("MeshAnim")
@@ -75,8 +78,14 @@ func _init(unit, r) -> void:
 	else:
 		mode = "none"; if H0 <= 0: H0 = 58.0
 	if not G.skin_ok() and (mode == "limbs" or mode == "mesh"): mode = "plain"   # 安全畫面模式：整張原圖（已證實所有手機都畫得到）
+	# [p44] 王牌晉級階段圖／主角空手姿勢（戰鬥）：整張圖畫（網格骨架係按手持兵器原圖砌嘅）
+	ace = ACE.STAGES.has(k) and ACE.active(k)
+	hero = k == "afu" and r is BtChar and ACE.active("afu")
+	if ace or hero:
+		mode = "plain"; if H0 <= 0: H0 = 58.0
+		if hero: ACE.new_scene()
 	if rig != null and rig is Dictionary: tweak = rig.get("tweak")
-	ctx_always = Art.SPECIAL_T.has(k) or (rig is Dictionary and rig.get("custom") != null)
+	ctx_always = (Art.SPECIAL_T.has(k) or (rig is Dictionary and rig.get("custom") != null)) and not (ace or hero)
 	glow = PtDraw.new(); glow.fn = _draw_glow; var gm = CanvasItemMaterial.new(); gm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD; glow.material = gm; add_child(glow)
 	ch = PtDraw.new(); ch.fn = _draw_shadow; add_child(ch)
 	back = PtDraw.new(); ch.add_child(back)
@@ -152,7 +161,7 @@ func sync(oo: Dictionary) -> void:
 
 # 出招／特殊鬼：收起網格同衣服，交俾 Ctx 畫；返嚟普通狀態就還原
 func _sync_ctx(pose) -> bool:
-	var use = not o.dying and pose != "down" and pose != "air" and (ctx_always or (ATK_P.has(pose) and BtMoves.has(k)))
+	var use = not o.dying and pose != "down" and pose != "air" and (ctx_always or (ATK_P.has(pose) and BtMoves.has(k))) and not (ace or hero)
 	if not use:
 		if mv != null and mv.visible:
 			mv.visible = false
@@ -272,7 +281,14 @@ func _draw_plain(n: CanvasItem) -> void:
 	var s: float = o.s; var t: float = o.t
 	if mode == "none" or tex_plain == null:
 		n.draw_set_transform(Vector2(0, -20 * s), 0, Vector2(12 * s, 18 * s)); n.draw_circle(Vector2.ZERO, 1.0, Color(0.86, 0.9, 0.94, 0.8)); n.draw_set_transform_matrix(Transform2D.IDENTITY); return
-	var H = H0 * s; var iw = tex_plain.get_width(); var ih = tex_plain.get_height(); var Wd = H * iw / ih
+	var tex_old: Texture2D = null; var fq = 1.0
+	if hero:   # [p44] 主角三個空手姿勢輪換（交叉淡入）
+		tex_plain = PtGfx.tex(ACE.pose_key())
+		var pf = ACE.pose_fade(); fq = pf[1]
+		if str(pf[0]) != "": tex_old = PtGfx.tex(str(pf[0]))
+	elif ace: tex_plain = PtGfx.tex(k)   # 突破升星即時換階段圖
+	if tex_plain == null: return
+	var H = H0 * s * (ACE.h_k(k) if ace else 1.0); var iw = tex_plain.get_width(); var ih = tex_plain.get_height(); var Wd = H * iw / ih
 	var A = Transform2D.IDENTITY
 	# [face] 整張圖模式同網格模式用同一套規矩：原圖預設面向左（PLAIN_R／NATIVE_R 嘅係面向右）。
 	#   以前呢度直接用 o.flip，面向左嘅名鬼立繪會背住敵人出手（2026-11-24 修正）
@@ -291,7 +307,11 @@ func _draw_plain(n: CanvasItem) -> void:
 		mat.set_shader_parameter("fade", Vector2(f0, 1.0 + 6.0 * s / H)); mat.set_shader_parameter("fade_k", 1.0)
 	else: mat.set_shader_parameter("fade_k", 0.0)
 	n.draw_set_transform_matrix(A)
-	n.draw_texture_rect(tex_plain, Rect2(-Wd / 2, -H, Wd, H), false)
+	if tex_old != null and fq < 1.0:
+		var Wo = H * tex_old.get_width() / float(tex_old.get_height())
+		n.draw_texture_rect(tex_old, Rect2(-Wo / 2, -H, Wo, H), false, Color(1, 1, 1, 1.0 - fq))
+		n.draw_texture_rect(tex_plain, Rect2(-Wd / 2, -H, Wd, H), false, Color(1, 1, 1, fq))
+	else: n.draw_texture_rect(tex_plain, Rect2(-Wd / 2, -H, Wd, H), false)
 	n.draw_set_transform_matrix(Transform2D.IDENTITY)
 
 # ---------------- 影、光暈、蓄力圈 ----------------

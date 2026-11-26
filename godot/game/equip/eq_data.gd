@@ -57,6 +57,7 @@ static func items(kind: String, slot := "") -> Array:   # 按等級、id 排
 		var it = D().ITEMS[k]
 		if str(it.get("kind")) != kind: continue
 		if slot != "" and str(it.get("slot")) != slot: continue
+		if J.t(it.get("hero")): continue   # [p44] 主角兵器唔入製作／自動穿戴清單
 		o.append(str(k))
 	o.sort_custom(func(a, b):
 		var ia = item(a); var ib = item(b)
@@ -75,7 +76,23 @@ static func st():
 	if int(J.num(e.get("v", 0))) < 1: e["v"] = 1.0
 	for k in ["inv", "worn", "made", "ml_pick", "ml_look", "plus"]:   # [補丁43] plus＝紙紮師傅加工等級 {id: 0–10}
 		if not (e.get(k) is Dictionary): e[k] = {}
+	_hero_default(e)
 	return e
+# [p44] 主角兵器：男主斧、女主三角尺；主角兵器格空咗（或者着住另一個性別嗰件）就自動裝返
+const HERO_WEA := {"m": "eq_hero_axe", "f": "eq_hero_ruler"}
+static func hero_wea() -> String: return HERO_WEA["f" if DB.hero_female() else "m"]
+static func _hero_default(e: Dictionary) -> void:
+	if D().ITEMS.get("eq_hero_axe") == null: return
+	var w = e.worn.get("afu")
+	var cur = str(w.get("wea", "")) if w is Dictionary else ""
+	var want = hero_wea()
+	if cur == want or (cur != "" and not HERO_WEA.values().has(cur)): return
+	if not (w is Dictionary): w = {}; e.worn["afu"] = w
+	if cur != "":   # 換咗性別：舊嗰件收返
+		e.inv[cur] = J.num(e.inv.get(cur, 0)) - 1.0
+		if J.num(e.inv[cur]) <= 0: e.inv.erase(cur)
+	e.inv[want] = J.num(e.inv.get(want, 0)) + 1.0
+	w["wea"] = want
 static func migrate() -> void:
 	if S() != null: st(); _clean()
 static func _clean() -> void:   # 名鬼已經唔喺度：穿住嘅退返倉
@@ -235,6 +252,7 @@ static func why_not(gid, id: String) -> String:   # "" = 穿得
 	if not (str(it.get("kind")) in ["eq", "ex"]): return L("唔係名鬼裝備", "不是名鬼裝備")
 	if ghost(gid) == null: return L("冇呢隻鬼", "沒有這隻鬼")
 	if str(it.get("kind")) == "ex" and str(it.get("owner", "")) != k_of(gid): return L("呢件係%s專屬", "這件是%s專屬") % load("res://game/soul/soul_data.gd").gname(str(it.get("owner", "")))
+	if J.t(it.get("hero")) and k_of(gid) != "afu": return L("呢件係主角專用", "這件是主角專用")   # [p44]
 	var cur = worn(gid)
 	if str(cur.get(str(it.slot), "")) == id: return ""
 	if n_free(id) <= 0: return L("倉庫冇剩", "倉庫沒有剩")

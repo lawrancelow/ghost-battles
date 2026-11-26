@@ -139,6 +139,7 @@ func _build() -> void:
 	over.tag = "over"; stage.add_child(over)
 	for u in B.units:
 		var c = BtChar.new(u, B); layer.add_child(c); chars.append(c)
+		if J.str(u.get("k")) == "afu": load("res://game/equip/eq_view.gd").attach(c, u)   # [p44] 主角漂浮兵器
 	stage.resized.connect(func(): if J.t(B.get("active")): J.mc(B, "resize", []))
 	# 提示
 	hint_l = UIKit.label(L("嚇氣滿了就點。先用敵人怕的嚇法嚇到他「失神」，再接另一種他怕的，就是「連嚇」。"), 12.5, Color(0.86, 0.8, 0.72, 0.75))

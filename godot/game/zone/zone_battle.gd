@@ -206,6 +206,7 @@ func _build_nodes() -> void:
 	under = PtDraw.new(); under.tag = "mb_under"; under.fn = _draw_under; layer.add_child(under)
 	for i in B.units.size():
 		var c = BtChar.new(B.units[i], B); c.set_meta("ix", i); layer.add_child(c); chars.append(c)
+		if J.str(B.units[i].get("k")) == "afu": load("res://game/equip/eq_view.gd").attach(c, B.units[i])   # [p44] 主角漂浮兵器
 	fxd = PtDraw.new(); fxd.tag = "mb_fx"; fxd.fn = _draw_fx; layer.add_child(fxd)
 	txt = PtDraw.new(); txt.tag = "mb_txt"; txt.fn = _draw_txt; root.add_child(txt)
 

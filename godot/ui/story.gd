@@ -158,7 +158,7 @@ func _show_line() -> void:
 		pt.visible = art != null
 		tx.offset_left = 108 if art != null else 18
 		if art != null and art != "sys":
-			var r = Art.portrait_region(art)
+			load("res://game/soul/ace_art.gd").dlg_begin(); var r = Art.portrait_region(art); load("res://game/soul/ace_art.gd").dlg_end()   # [p44] 對話：黑白無常、牛頭馬面、孟婆用手持兵器原圖
 			if r.size(): var at = AtlasTexture.new(); at.atlas = r[0]; at.region = r[1]; pt.texture = at
 			else: pt.visible = false; tx.offset_left = 18
 		elif art == "sys": pt.texture = null

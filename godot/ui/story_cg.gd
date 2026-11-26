@@ -147,7 +147,9 @@ func show_spec(spec) -> void:
 		if not (o is Dictionary): continue
 		var sk = str(o.get("spr", ""))
 		if sk == "hero": sk = _hero_spr()   # 主角：跟玩家揀嘅性別（男 afu／女 afuf）
+		var ACE = load("res://game/soul/ace_art.gd"); ACE.dlg_begin()   # [p44] 劇情插圖疊人：五隻用手持兵器原圖
 		var st: Texture2D = Spr.get_tex(Art.spr_key(sk)) if Spr.ok(Art.spr_key(sk)) else (Spr.get_tex(sk) if Spr.ok(sk) else null)
+		ACE.dlg_end()
 		if st == null: continue
 		var tr = TextureRect.new(); tr.mouse_filter = Control.MOUSE_FILTER_IGNORE; tr.texture = st
 		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT

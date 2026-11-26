@@ -35,6 +35,7 @@ func draw_over(_n, _u, _o) -> void: pass
 
 func custom_draw(k: String, pose) -> bool:
 	if k == "youhun": return true   # [eastsoul] 遊魂唔用白布鬼網格，改畫東方亡魂
+	if pc != null and (pc.ace or pc.hero): return false   # [p44] 王牌階段圖／主角空手：整張圖（唔行手持兵器專屬招式畫法）
 	if ATK.has(pose) and _moves is Dictionary and _moves.has(k): return true
 	return _rig is Dictionary and _rig.get(k) is Dictionary and _rig[k].get("custom") != null
 
