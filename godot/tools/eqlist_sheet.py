@@ -25,10 +25,12 @@ SCN = {"breath": "鑊氣（同聲同氣）", "light": "照（同聲同氣）", "
 ATKN = {"thrust": "突刺", "swing": "揮砍", "spin": "旋轉", "throw": "投擲"}
 LOOKN = {"hand": "手持", "body": "身上", "head": "頭戴", "belt": "隨身"}
 BLADE = {"cleaver", "cleaver_old", "ring_sword"}   # 有刃口、而且係揮砍：要睇刀口方向
-EDGE_SEEN = {"eq_huanshou": "已查：圖刃口在左，EDGE=−1，左右揮落均刀口向目標",
-             "ml_huanshou": "已查：圖刃口在左，EDGE=−1（遊魂兵手持，不揮砍）",
-             "eq_jue_caidao": "已查：暫代圖刃口在右，EDGE=+1；正式圖到要重查",
-             "ml_chaidao": "已查：圖刃口在右（崩口邊），預設 +1（遊魂兵手持，不揮砍）"}
+EDGE_SEEN = {"eq_huanshou": "已查（統一畫風新圖）：刃口在右，EDGE=+1（舊圖係 −1，已改）",
+             "ml_huanshou": "已查（新圖）：刃口在右，EDGE=+1（遊魂兵手持，不揮砍）",
+             "eq_jue_caidao": "已查：正式圖刃口在右，EDGE=+1",
+             "ml_chaidao": "已查（新圖）：崩口刃在右，EDGE=+1（遊魂兵手持，不揮砍）"}
+for _k in ("parang", "podao", "hwando", "tachi", "guandao", "miaodao", "kerambit", "shuangdao", "kusarigama"):
+    EDGE_SEEN["eq_w_" + _k] = "已查（新圖）：刃口在右，EDGE_W=+1"
 MAT = {"m_bamboo": "竹", "m_wood": "木", "m_strip": "竹篾", "m_plank": "木板", "m_rope": "草繩", "m_paper": "紙"}
 
 def pct(v):

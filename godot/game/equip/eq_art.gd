@@ -50,7 +50,8 @@ static func icon(ctx: Ctx, id: String, x: float, y: float, sz: float, ring := tr
 # 手持：(gx, gy)＝手位；L＝長度（世界 px）；ang＝弧度（0＝向上，正＝順時針）
 # [補丁43 修正] 刀口方向：兵器直立時刀口喺圖嘅邊一邊（+1 右、−1 左）。規矩：目標喺邊，刀鋒就向邊（揮落時刀口行先）
 #   [美術組 equip-list] 正式圖核對：eq_jue_caidao 手持圖刃口喺右（+1）；ml_chaidao 崩口喺右（+1）——寫明唔靠預設
-const EDGE := {"eq_huanshou": -1, "ml_huanshou": -1, "eq_jue_caidao": 1, "ml_chaidao": 1}
+#   [美術組 統一畫風重畫] 生鏽環首刀／翻版環首刀新圖刃口喺右，由 −1 改 +1；真兵器 9 把有刃（EDGE_W）逐件核對新圖都係刃口喺右 +1
+const EDGE := {"eq_huanshou": 1, "ml_huanshou": 1, "eq_jue_caidao": 1, "ml_chaidao": 1}
 # [equip-list] 真兵器刃口（全部規定美術圖直立時刃口喺圖右 +1；美術圖入庫後美術組要逐件核對，畫反咗就改呢度做 −1）
 const EDGE_W := {"eq_w_parang": 1, "eq_w_podao": 1, "eq_w_hwando": 1, "eq_w_tachi": 1, "eq_w_guandao": 1, "eq_w_kerambit": 1, "eq_w_shuangdao": 1,
 	"eq_w_kusarigama": 1, "eq_w_miaodao": 1}
