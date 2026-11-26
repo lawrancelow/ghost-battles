@@ -1292,7 +1292,7 @@ func eq43(t) -> void:   # [補丁43] 裝備大改：類別、加工、套裝、�
 	EQ.reload()
 	var S = J.G.S
 	var nex = EQ.items("ex", "ex").size()
-	_chk("裝備 64 件、專屬物 19、套裝 3", EQ.D().ITEMS.size() == 64 and nex == 19 and EQ.D().SETS.size() == 3, "%d %d" % [EQ.D().ITEMS.size(), nex])
+	_chk("裝備 66 件（含主角斧／三角尺）、專屬物 19、套裝 3", EQ.D().ITEMS.size() == 66 and nex == 19 and EQ.D().SETS.size() == 3, "%d %d" % [EQ.D().ITEMS.size(), nex])
 	_chk("來源：凡造得、名唔造得（燒落嚟）、絕／專屬唔造得", EQ.can_craft_src("eq_tuoxie") and not EQ.can_craft_src("eq_huoqi") and not EQ.can_craft_src("eq_jue_suit") and not EQ.can_craft_src("ex_heiwu") and EQ.src_txt("eq_huoqi") != "")
 	var ids = {}
 	for k in ["laojiang", "toyol", "mengpo", "heiwu"]:
