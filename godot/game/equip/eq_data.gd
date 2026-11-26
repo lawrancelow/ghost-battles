@@ -398,6 +398,18 @@ static func ace_fx_scale(k: String) -> Dictionary:   # {x 倍數, cut 秒}
 	var X = D().get("EX_PLUS", {}); var cut = 0.0
 	for tc in X.get("t_cut", []): if xp >= int(J.num(tc[0])): cut += J.num(tc[1])
 	return {"x": 1.0 + J.num(X.get("per", 0.05)) * xp, "cut": cut}
+# [p45] 軍團 8 王（冇王牌技，專屬物標 act_up）：加工改為升「招牌技」——招牌技 fx 數值 ×ace_fx_scale 倍數；
+#   每有 1 秒 cut（+5、+10 各 2 秒）就開場能量 +EX_LG.energy_per_cut_s（10）→ +5 開場 +20、+10 開場 +40
+static func ex_act_up(k: String, a: Dictionary) -> void:
+	if not J.t(item(ex_id(k)).get("act_up")): return
+	var xs = ace_fx_scale(k)
+	if ex_plus_k(k) < 0: return   # 冇著
+	var en = J.num(xs.cut) * J.num(D().get("EX_LG", {}).get("energy_per_cut_s", 10))
+	a["ace_x"] = xs; a["act_up"] = {"x": J.num(xs.x), "en": en}
+	if J.num(xs.x) > 1.0 and a.get("act") is Dictionary:
+		var ac = (a.act as Dictionary).duplicate(true)
+		ac["fx"] = load("res://game/rts/abil.gd").scaled_fx(ac.get("fx") if ac.get("fx") is Array else [], J.num(xs.x)); a["act"] = ac
+	if en > 0: (a.pas as Array).append({"tr": "start", "fx": [{"p": "energy", "v": en}], "tg": {"sel": "self"}, "ex_up": true})
 # 套裝：[{set, name, n, on:[b2,b3...], b2, b3}]
 static func set_info(gid) -> Array:
 	var o = []

@@ -5,8 +5,11 @@ extends RefCounted
 
 const EQ = preload("res://game/equip/eq_data.gd")
 const INK := "#2a1a10"
-const HAND_SHAPES := ["pole", "duster", "cleaver", "cleaver_old", "axe", "ruler", "spatula", "shield", "umbrella", "mop", "pipe", "ring_sword", "abacus", "slipper", "slingshot", "fork_pole", "wok_spatula_gold", "coffin_shield"]
+const HAND_SHAPES := ["pole", "duster", "cleaver", "cleaver_old", "axe", "ruler", "spatula", "shield", "umbrella", "mop", "pipe", "ring_sword", "abacus", "slipper", "slingshot", "fork_pole", "wok_spatula_gold", "coffin_shield", "stapler"]
 const LONG := ["pole", "duster", "mop", "fork_pole", "umbrella", "pipe", "ring_sword", "slingshot", "spatula", "wok_spatula_gold", "cleaver", "cleaver_old", "axe", "ruler"]   # [p44] 菜刀（cleaver_old）同柴刀共用畫法，之前漏咗入斜放圖示表同長兵器表
+# [equip-list] 真兵器 18 件：全部斜放圖示；長兵器（漂浮時用長尺寸）
+const HAND_W := ["parang", "spear", "podao", "hwando", "tachi", "meteor", "guandao", "emei", "kerambit", "sumpit", "butterfly", "kusarigama", "crossbow", "miaodao", "cane", "rope_dart", "iron_fan", "whip9"]
+const LONG_W := ["parang", "spear", "podao", "hwando", "tachi", "meteor", "guandao", "sumpit", "crossbow", "miaodao", "cane", "whip9"]
 
 static func img_key(id: String) -> String: return "eqi_" + id
 static func has_img(id: String) -> bool: return Spr.ok(img_key(id)) and Spr.get_tex(img_key(id)) != null
@@ -14,12 +17,17 @@ static func has_img(id: String) -> bool: return Spr.ok(img_key(id)) and Spr.get_
 static func icon_key(id: String) -> String: return "eqi_%s_i" % id
 static func has_icon(id: String) -> bool: return Spr.ok(icon_key(id)) and Spr.get_tex(icon_key(id)) != null
 static func shape_of(id: String) -> String: return str(EQ.item(id).get("shape", ""))
-static func is_long(id: String) -> bool: return LONG.has(shape_of(id))
+static func is_long(id: String) -> bool: return LONG.has(shape_of(id)) or LONG_W.has(shape_of(id))
+static func is_hand(sh: String) -> bool: return HAND_SHAPES.has(sh) or HAND_W.has(sh)
 # [補丁43] 漂浮兵器普攻方式：thrust 直刺、swing 揮斬、spin 轉住撞、throw 飛出去
 const ATK := {"pole": "thrust", "fork_pole": "thrust", "mop": "thrust", "pipe": "swing", "cleaver": "swing", "cleaver_old": "swing", "ring_sword": "swing",
 	"spatula": "swing", "wok_spatula_gold": "swing", "abacus": "swing", "stapler": "swing", "axe": "swing", "duster": "spin", "umbrella": "spin", "shield": "spin",
 	"coffin_shield": "spin", "ruler": "thrust", "slipper": "throw", "slingshot": "throw"}   # [p44] 三角尺：尖角向前直刺
-static func atk_style(id: String) -> String: return str(ATK.get(shape_of(id), "thrust"))
+# [equip-list] 真兵器打法（直刺：槍／刺／吹箭／弩；揮斬：刀；轉撞：錘／鞭／扇／鎖鐮；飛出去：繩鏢）
+const ATK_W := {"parang": "swing", "spear": "thrust", "podao": "swing", "hwando": "swing", "tachi": "swing", "meteor": "spin", "guandao": "swing",
+	"emei": "thrust", "kerambit": "swing", "sumpit": "thrust", "butterfly": "swing", "kusarigama": "spin", "crossbow": "thrust", "miaodao": "swing",
+	"cane": "swing", "rope_dart": "throw", "iron_fan": "spin", "whip9": "spin"}
+static func atk_style(id: String) -> String: return str(ATK.get(shape_of(id), ATK_W.get(shape_of(id), "thrust")))
 
 # 圖示：(x, y)＝底部中間；sz＝闊高；ring＝畫底圓＋等級色邊
 static func icon(ctx: Ctx, id: String, x: float, y: float, sz: float, ring := true) -> void:
@@ -31,9 +39,9 @@ static func icon(ctx: Ctx, id: String, x: float, y: float, sz: float, ring := tr
 		Art.put(ctx, icon_key(id), x, y - sz * 0.08, sz * 0.84, sz * 0.84); return
 	ctx.save(); ctx.translate(c.x, c.y); ctx.scale(s * 0.86, s * 0.86)
 	if has_img(id):   # 冇 icon 版：用手持圖（垂直）照程序圖一樣斜放
-		if HAND_SHAPES.has(shape_of(id)): ctx.rotate(0.7)
+		if is_hand(shape_of(id)): ctx.rotate(0.7)
 		ctx.translate(0, 12); Art.put(ctx, img_key(id), 0, 0, 24, 24); ctx.restore(); return
-	if HAND_SHAPES.has(shape_of(id)):
+	if is_hand(shape_of(id)):
 		ctx.rotate(0.7); ctx.translate(0, 12)
 	else: ctx.translate(0, 12)
 	shape(ctx, shape_of(id))
@@ -42,8 +50,13 @@ static func icon(ctx: Ctx, id: String, x: float, y: float, sz: float, ring := tr
 # 手持：(gx, gy)＝手位；L＝長度（世界 px）；ang＝弧度（0＝向上，正＝順時針）
 # [補丁43 修正] 刀口方向：兵器直立時刀口喺圖嘅邊一邊（+1 右、−1 左）。規矩：目標喺邊，刀鋒就向邊（揮落時刀口行先）
 #   [p44] 主角斧（eq_hero_axe）：斧刃喺右（預設 +1）；三角尺（eq_hero_ruler）：有刻度嗰條直邊（工作邊）喺左 → −1
-const EDGE := {"eq_huanshou": -1, "ml_huanshou": -1, "eq_hero_ruler": -1}
-static func edge_side(id: String) -> int: return int(EDGE.get(id, 1))
+#   [美術組 equip-list] 正式圖核對：eq_jue_caidao 手持圖刃口喺右（+1）；ml_chaidao 崩口喺右（+1）——寫明唔靠預設
+#   [美術組 統一畫風重畫] 生鏽環首刀／翻版環首刀新圖刃口喺右，由 −1 改 +1；真兵器 9 把有刃（EDGE_W）逐件核對新圖都係刃口喺右 +1
+const EDGE := {"eq_huanshou": 1, "ml_huanshou": 1, "eq_jue_caidao": 1, "ml_chaidao": 1, "eq_hero_axe": 1, "eq_hero_ruler": -1}
+# [equip-list] 真兵器刃口（全部規定美術圖直立時刃口喺圖右 +1；美術圖入庫後美術組要逐件核對，畫反咗就改呢度做 −1）
+const EDGE_W := {"eq_w_parang": 1, "eq_w_podao": 1, "eq_w_hwando": 1, "eq_w_tachi": 1, "eq_w_guandao": 1, "eq_w_kerambit": 1, "eq_w_shuangdao": 1,
+	"eq_w_kusarigama": 1, "eq_w_miaodao": 1}
+static func edge_side(id: String) -> int: return int(EDGE.get(id, EDGE_W.get(id, 1)))
 static func held(ctx: Ctx, id: String, gx: float, gy: float, L: float, ang: float, mir := false) -> void:
 	ctx.save(); ctx.translate(gx, gy); ctx.rotate(ang)
 	if mir: ctx.scale(-1, 1)   # 沿兵器長軸翻轉：刀口換邊
@@ -75,9 +88,9 @@ static func shape(ctx: Ctx, sh: String) -> void:
 		"coffee_cup":   # [補丁43] 凍咗嘅咖啡杯
 			Art.rr(ctx, -6, -16, 12, 16, 2, "#f2ecd8", INK, 1.0); Art.el(ctx, 8, -9, 3.5, 4.5, null, INK, 1.4)
 			Art.el(ctx, 0, -15, 5, 1.4, "#5a3a20")
-		"luichar_bag":   # [補丁43] Lui Char 手袋（LC 字樣）
-			Art.rr(ctx, -9, -14, 18, 14, 2, "#6a4a2a", INK, 1.0); Art.el(ctx, 0, -14, 5, 5, null, INK, 1.2)
-			_l(ctx, -4, -9, -4, -4, "#e0c050", 1.2); _l(ctx, -4, -4, -1, -4, "#e0c050", 1.2); Art.el(ctx, 3, -6.5, 2.2, 2.6, null, "#e0c050", 1.2)
+		"luichar_bag":   # 限量手袋（原創：酒紅菱格＋打卡鐘扣，冇字母 logo；正式圖 eqi_eq_jue_luichar 蓋過）
+			Art.poly(ctx, [-8, -13, 8, -13, 10, 0, -10, 0], "#7a2a3a", INK, 1.0); Art.el(ctx, 0, -14, 5, 5, null, "#c8a040", 1.2)
+			_l(ctx, -6, -9, 2, -1, "#5a1a2a", 0.6); _l(ctx, 6, -9, -2, -1, "#5a1a2a", 0.6); Art.el(ctx, 0, -9, 2.4, 2.4, "#f0e8d0", "#c8a040", 0.8)
 		"ex":   # [補丁43] 王牌專屬物（暫代：金邊錦囊）
 			Art.el(ctx, 0, -9, 8, 9, "#8a2a5a", INK, 1.1); _l(ctx, -4, -17, 4, -17, "#e0c050", 1.6); Art.el(ctx, 0, -9, 3, 3, "#e0c050", INK, 0.6)
 		"axe":   # [p44] 主角斧頭（暫代程序圖）：木柄＋斧頭，斧刃喺右（EDGE +1）

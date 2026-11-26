@@ -111,9 +111,33 @@ static var _TL := []
 #     刀類刀口向右（+x）；杯／勺口方向同下面 EDGE 說明一致。
 #   預設錨點：揸位 (0.5, 0.95)、柄頂 (0.5, 0.04)；工作面由 EDGE（24 格框）按比例換成 uv。
 #   如果圖嘅柄唔喺正中，喺 TOOL_ART[id] 加 "grip"／"tip"／"edge"（uv：[a, b, n]）覆蓋就得。
-const TOOL_ART := {"fork": {"key": "tool_fork"}, "tongs": {"key": "tool_tongs"}, "needle": {"key": "tool_needle"}, "brush": {"key": "tool_brush"},
-	"pbrush": {"key": "tool_pbrush"}, "cup": {"key": "tool_cup"}, "shaker": {"key": "tool_shaker"}, "plane": {"key": "tool_plane"},
-	"screwdriver": {"key": "tool_screwdriver"}, "pumph": {"key": "tool_pumph"}}
+#   [p45 美術接圖] 20 件工具正式圖（HC_Tool_*，統一放大到同一邊長）：每件加 "sz"（圖高＝L×sz：按件定顯示大小，鋼杯、印仔顯示偏大（0.9／0.95），細件都睇得清），
+#     "grip"／"tip"＝揸位同軸向（tip 只定方向：軸向就係工具「向上」——工作面唔沿圖直邊嘅用佢做旋轉修正：竹鹽筒口原圖朝右上、
+#     勺口／油掃毛／禾叉齒原圖向右、木刨底向右、擀麵棍直放、鋼杯口向右（再左右翻，柄喺後）），"edge"＝工作面 uv [a, b, 法向, 名]。
+#     grip 由 tools/worktool_art.py 反計：工作面喺工具框嘅位置＝程序線稿 EDGE 一樣，所以動作同刀口測試唔使改。
+#     柴刀、鋸、膠刀刃喺右（+x）；木刨刀口喺底；螺絲批直立、批咀向上。打氣筒：手柄（T 柄＋桿）tool_pumph，泵身另一張 tool_pump_body。
+const TOOL_ART := {
+	"ladle": {"key": "tool_ladle", "grip": [-0.1929, 0.175], "tip": [0.3071, 0.175], "sz": 1.15, "edge": [[0.423, 0.3], [0.423, 0.05], [-1, 0], "勺口（原圖勺口向右 → 左右翻再轉 90°：勺口向返揸位同程序線稿一樣，倒轉用時柄向後）"]},
+	"needle": {"key": "tool_needle", "grip": [0.408, 0.85], "tip": [0.4271, 0.3504], "sz": 1.2412, "edge": [[0.4388, 0.0449], [0.4388, 0.0449], [0.0382, -0.9993], "針尖"]},
+	"pbrush": {"key": "tool_pbrush", "grip": [-0.4443, 0.23], "tip": [0.0557, 0.23], "sz": 0.9, "edge": [[0.69, 0.4], [0.69, 0.06], [1, 0], "掃毛（原圖毛向右 → 旋轉令毛沿軸）"]},
+	"brush": {"key": "tool_brush", "grip": [0.51, 1.0908], "tip": [0.51, 0.5908], "sz": 1, "edge": [[0.34, 0.07], [0.68, 0.07], [0, -1], "掃毛"]},
+	"fan": {"key": "tool_fan", "grip": [0.5, 0.9646], "tip": [0.5, 0.4646], "sz": 1.05, "edge": [[0.5, 0.5], [0.5, 0.08], [1, 0], "扇面"]},
+	"chopper": {"key": "tool_chopper", "grip": [0.3066, 0.8937], "tip": [0.3066, 0.3937], "sz": 1.1, "edge": [[0.565, 0.12], [0.552, 0.55], [0.9996, 0.03], "刀口（刃在右）"]},
+	"pestle": {"key": "tool_pestle", "grip": [0.388, 0.9562], "tip": [0.4774, 0.4643], "sz": 1.15, "edge": [[0.4615, 0.0489], [0.6385, 0.0811], [0.1789, -0.9839], "杵頭"]},
+	"fork": {"key": "tool_fork", "grip": [-0.3065, 0.2805], "tip": [0.188, 0.2063], "sz": 1.1, "edge": [[0.63, 0.22], [0.63, 0.06], [0.9889, -0.1483], "叉齒（原圖齒向右彎 → 旋轉令齒沿軸）"]},
+	"plane": {"key": "tool_plane", "grip": [0.7, 0.505], "tip": [0.2, 0.505], "sz": 0.98, "edge": [[0.7, 0.93], [0.7, 0.08], [1, 0], "刨底刀口（原圖刨底向右 → 轉 90° 刨底向落）"]},
+	"pumph": {"key": "tool_pumph", "grip": [0.4964, 1], "tip": [0.4964, 0.5], "sz": 0.9081, "edge": [[0.4964, 1], [0.4964, 1], [0, 1], "泵桿底"]},
+	"pin": {"key": "tool_pin", "grip": [0.5067, 0.485], "tip": [0.0067, 0.485], "sz": 1.1, "edge": [[0.59, 0.8], [0.59, 0.17], [1, 0], "碌面（原圖直放 → 轉 90° 打橫）"]},
+	"shaker": {"key": "tool_shaker", "grip": [0.381, 0.897], "tip": [0.5391, 0.4227], "sz": 1.27, "edge": [[0.5399, 0.12], [0.7201, 0.18], [0.3162, -0.9487], "鹽筒孔（原圖筒口向右上 → 旋轉令筒口沿軸）"]},
+	"saw": {"key": "tool_saw", "grip": [0.4509, 0.927], "tip": [0.4509, 0.427], "sz": 1.19, "edge": [[0.556, 0.08], [0.612, 0.65], [0.9952, -0.0978], "鋸齒（齒在右）"]},
+	"screwdriver": {"key": "tool_screwdriver", "grip": [0.4988, 0.9737], "tip": [0.4984, 0.4737], "sz": 1.0767, "edge": [[0.498, 0.0449], [0.498, 0.0449], [-0.0008, -1], "批咀（直立向上）"]},
+	"stamp": {"key": "tool_stamp", "grip": [0.5, 0.9739], "tip": [0.5, 0.4739], "sz": 0.95, "edge": [[0.2, 0.93], [0.8, 0.93], [0, 1], "印面"]},
+	"paddle": {"key": "tool_paddle", "grip": [0.5, 0.9181], "tip": [0.5, 0.4181], "sz": 1.2, "edge": [[0.42, 0.05], [0.58, 0.05], [0, -1], "攪板頭"]},
+	"tapper": {"key": "tool_tapper", "grip": [0.341, 0.84], "tip": [0.341, 0.34], "sz": 1, "edge": [[0.585, 0.105], [0.572, 0.075], [0.9806, -0.1961], "膠刀鉤口（鉤在右）"]},
+	"cup": {"key": "tool_cup", "grip": [0.9017, 0.4985], "tip": [0.4061, 0.432], "sz": 0.9, "edge": [[0.125, 0.73], [0.21, 0.07], [-0.9911, -0.133], "杯口（原圖杯口向右 → 左右翻、轉 90°，柄喺後）"]},
+	"tongs": {"key": "tool_tongs", "grip": [0.52, 0.9579], "tip": [0.52, 0.4579], "sz": 1.12, "edge": [[0.48, 0.06], [0.56, 0.07], [0, -1], "夾嘴"]},
+	"spatula": {"key": "tool_spatula", "grip": [0.555, 0.9337], "tip": [0.555, 0.4337], "sz": 1.1, "edge": [[0.535, 0.05], [0.575, 0.075], [0, -1], "鏟口"]},
+}
 static var _dyn := {}   # id → [SPR_TOOL 格式, EDGE（uv）] 或 null
 static func _art(id: String) -> Variant:
 	if not TOOL_ART.has(id): return null
@@ -125,9 +149,13 @@ static func _art(id: String) -> Variant:
 	var span = absf(float(tp[1]) - float(gr[1]))
 	var uv = func(q: Vector2) -> Vector2:   # 24 格框 → uv（揸位 (0,0)→grip，(0,-24)→tip；橫向按圖闊高比）
 		return Vector2(float(gr[0]) + q.x / 24.0 * span * asp, lerpf(float(gr[1]), float(tp[1]), -q.y / 24.0))
-	var e2 = A.get("edge", [uv.call(E[0]), uv.call(E[1]), Vector2(E[2].x, E[2].y), E[3]])
-	_dyn[id] = [[str(A.key), float(gr[0]), float(gr[1]), float(tp[0]), float(tp[1]), false], e2]
+	var e2 = [uv.call(E[0]), uv.call(E[1]), Vector2(E[2].x, E[2].y), E[3]]
+	if A.get("edge") is Array:   # [p45] 美術量好嘅工作面（uv）
+		var ea: Array = A.edge
+		e2 = [Vector2(float(ea[0][0]), float(ea[0][1])), Vector2(float(ea[1][0]), float(ea[1][1])), Vector2(float(ea[2][0]), float(ea[2][1])).normalized(), str(ea[3])]
+	_dyn[id] = [[str(A.key), float(gr[0]), float(gr[1]), float(tp[0]), float(tp[1]), false, float(A.get("sz", 1.0))], e2]
 	return _dyn[id]
+static func _sz(d: Array) -> float: return float(d[6]) if d.size() > 6 else 1.0   # [p45] 顯示大小（圖高＝L×sz）
 static func _spr(id: String) -> Variant:
 	var a: Variant = _art(id)
 	if a != null: return a[0]
@@ -206,7 +234,7 @@ static func tool_xf(id: String, g: Vector2, L: float, ang: float) -> Transform2D
 	var d: Variant = _spr(id)
 	if d != null:
 		var tex = Spr.get_tex(d[0])
-		var h = L; var w = L * tex.get_width() / float(tex.get_height())
+		var h = L * _sz(d); var w = h * tex.get_width() / float(tex.get_height())
 		var m = -1.0 if d[5] else 1.0
 		var ai = atan2((d[3] - d[1]) * w * m, -(d[4] - d[2]) * h)
 		var X = Transform2D(ang - ai, g)
@@ -231,7 +259,7 @@ static func tool(ctx: Ctx, id: String, g: Vector2, L: float, ang: float, a := 1.
 	var d: Variant = _spr(id)
 	if d != null:
 		var tex = Spr.get_tex(d[0])
-		var h = L; var w = L * tex.get_width() / float(tex.get_height())
+		var h = L * _sz(d); var w = h * tex.get_width() / float(tex.get_height())
 		var m = -1.0 if d[5] else 1.0
 		var ai = atan2((d[3] - d[1]) * w * m, -(d[4] - d[2]) * h)
 		ctx.rotate(ang - ai)
@@ -1419,9 +1447,15 @@ static func _v_pump(c: Dictionary) -> void:
 	c.body = {"lean": 10.0 - 8.0 * up, "dx": 0.0, "dy": 0.03 * (1.0 - up), "sx": 1.0 + 0.03 * (1.0 - up), "sy": 1.0 - 0.05 * (1.0 - up)}
 	var inf = 0.6 + 0.4 * clampf(fmod(c.T, 8.0) / 7.0, 0, 1)
 	var rx = cx + 0.56 * H
+	var body_img = Spr.ok("tool_pump_body")   # [p45] 有泵身圖：泵身畫喺前面（桿插入泵筒），唔畫程序泵筒
+	if body_img:
+		var bt = Spr.get_tex("tool_pump_body")
+		var bw = -top * bt.get_width() / float(bt.get_height()) if bt != null else 0.0
+		c.front.append(func(ctx: Ctx): _put(ctx, "tool_pump_body", px, 0.0, bw))
 	c.back.append(func(ctx: Ctx):
-		Art.rr(ctx, px - 0.035 * H, top, 0.07 * H, -top, 0.015 * H, "#5a6a7a", INK, 1.0)
-		Art.rr(ctx, px - 0.07 * H, -0.02 * H, 0.14 * H, 0.02 * H, 0.008 * H, "#3a3a42", INK, 0.8)
+		if not body_img:
+			Art.rr(ctx, px - 0.035 * H, top, 0.07 * H, -top, 0.015 * H, "#5a6a7a", INK, 1.0)
+			Art.rr(ctx, px - 0.07 * H, -0.02 * H, 0.14 * H, 0.02 * H, 0.008 * H, "#3a3a42", INK, 0.8)
 		ctx.strokeStyle = "#2a2a30"; ctx.lineWidth = maxf(1.2, 0.012 * H); ctx.beginPath(); ctx.moveTo(px + 0.035 * H, -0.04 * H)
 		ctx.quadraticCurveTo((px + rx) / 2.0, 0.02 * H, rx - 0.1 * H * inf, -0.06 * H); ctx.stroke()
 		var r = 0.11 * H * inf

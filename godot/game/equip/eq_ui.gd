@@ -48,7 +48,10 @@ static func meta_txt(id: String) -> String:   # 類別、套裝
 	if sk != "":
 		var S0 = EQ.D().get("SETS", {}).get(sk, {})
 		a.append(L("【%s】%s；%s", "【%s】%s；%s") % [EQ.T(S0.get("n", [sk, sk])), EQ.T(S0.get("b2", {}).get("d", ["", ""])), EQ.T(S0.get("b3", {}).get("d", ["", ""]))])
-	if str(it.get("kind")) == "ex": a.append(L("加工令王牌技升級（每級 +5%%，+5、+10 各快 2 秒）", "加工讓王牌技升級（每級 +5%%，+5、+10 各快 2 秒）"))
+	if str(it.get("kind")) == "ex":   # [p45] 有 plus_d（軍團王：升招牌技）就顯示佢；修正舊字串「+5%%」冇 format 照出兩個 %
+		var pd = it.get("plus_d")
+		if pd is Array and pd.size() >= 2: a.append(L(str(pd[0]), str(pd[1])))
+		else: a.append(L("加工令王牌技升級（每級 +5%，+5、+10 各快 2 秒）", "加工讓王牌技升級（每級 +5%，+5、+10 各快 2 秒）"))
 	return "　".join(a)
 static func plus_txt(id: String) -> String:
 	var c = EQ.plus_cost(id); var a = []

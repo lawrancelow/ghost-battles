@@ -643,6 +643,7 @@ static func compile(sim, u: Dictionary) -> void:
 				if J.num(xs.cut) > 0 and ac2.get("t") != null: ac2["t"] = maxf(6.0, J.num(ac2.t) - J.num(xs.cut))
 				a["ace_x"] = xs
 				a.pas.append(ac2)
+			elif ace == null and UPm.born_ace(J.str(k)): load("res://game/equip/eq_data.gd").ex_act_up(J.str(k), a)   # [p45] 軍團王（冇王牌技）：專屬物加工升招牌技
 	if sd == 1 and not a.sum and not J.t(u.get("minion")) and not J.t(u.get("sum")):   # [補丁43] 敵方名鬼（據點）都有職業被動
 		var R2 = load("res://game/rts/roles.gd")
 		if R2.data().CLS.has(J.str(k)) and not R2.off() and OS.get_environment("GB_NOFOECLS") != "1":

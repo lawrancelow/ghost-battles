@@ -699,7 +699,7 @@ func _draw_youhun(ctx: Ctx, x: float, y: float, s: float, o: Dictionary) -> void
 	el(ctx, x + 10 * s, hy - 10 * s, 2 * s, 3 * s, "rgba(160,230,255,.8)")
 
 # 頭像（UI 用）：由原圖頂部裁一個正方形
-const PCROP := {"baiwu": [0.30, 0.95], "heiwu": [0.30, 0.95], "penanggal": [0.02, 0.85], "eguiking": [0.0, 0.8], "huang": [0.0, 0.8], "niutou": [0.04, 0.82], "mamian": [0.04, 0.82], "afu": [0.0, 0.72], "tree": [0, 1]}
+const PCROP := {"baiwu": [0.30, 0.95], "heiwu": [0.30, 0.95], "penanggal": [0.02, 0.85], "eguiking": [0.0, 0.8], "huang": [0.0, 0.8], "niutou": [0.04, 0.82], "mamian": [0.04, 0.82], "afu": [0.0, 0.72], "tree": [0, 1], "lg_dpl_bing": [0.15, 0.75]}   # [p44] 軍團空手改姿勢：古惑鬼頭位降低
 func portrait_region(type: String) -> Array:
 	var key = spr_key(type)
 	var img = PtGfx.tex(key)
