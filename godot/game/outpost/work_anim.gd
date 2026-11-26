@@ -107,6 +107,30 @@ const EDGE := {
 }
 static var _TL := []   # 測試：今次 draw 每件工具工作面（世界座標）
 
+# [空手版] 老闆規定：遊戲介面一律用空手版，只有劇情對話用原圖。
+#   王牌（game/soul/ace_art.gd 有階段圖）由 Art.draw_char → ACE 自動換空手階段圖，呢度唔使理；
+#   非王牌嘅「NoWeapon 名單」原本冇掛鈎 → 做工時用 assets/spr/nwp_<k>.webp（空手整張圖）畫。
+const NWP := ["huang", "n30_kuchisake", "n30_vetala", "n30_yecha", "nw_dullahan", "zd_bone", "mamian", "niutou", "nw_dokkaebi"]
+static var _ace = null
+static func _ace_active(k: String) -> bool:
+	if _ace == null:
+		_ace = load("res://game/soul/ace_art.gd") if ResourceLoader.exists("res://game/soul/ace_art.gd") else false
+	return _ace is GDScript and _ace.STAGES.has(k) and _ace.active(k)
+static func nwp_key(k: String) -> String:
+	if not NWP.has(k) or _ace_active(k): return ""
+	var kk = "nwp_" + k
+	return kk if Spr.ok(kk) else ""
+static func _draw_nwp(ctx: Ctx, k: String, nk: String, s: float, flip: bool, T: float) -> void:
+	var tex = Spr.get_tex(nk)
+	if tex == null: return
+	var H = _h(k) * s; var W = H * tex.get_width() / float(tex.get_height())
+	var sy = 1.0 + sin(T * 2.2) * 0.02
+	ctx.save()
+	if flip: ctx.scale(-1, 1)
+	ctx.scale(1.0 - (sy - 1.0) * 0.5, sy)
+	ctx.drawImage(tex, -W / 2, -H, W, H)
+	ctx.restore()
+
 static func verb_of_post(post: String) -> String: return str(POST.get(post, ""))
 static func verb_of_stall(art: String) -> String: return str(STALL.get(art, ""))
 
@@ -335,7 +359,9 @@ static func draw(ctx: Ctx, k: String, x: float, y: float, s: float, flip: bool, 
 	ctx.scale(b.sx, b.sy)
 	var o = {"t": T, "flip": flip, "pose": "wk", "tamed": true, "untied": true, "shadow": false}
 	if opt.get("solid", false): o["solid"] = true
-	Art.draw_char(ctx, k, 0.0, 0.0, s, o)
+	var nk = nwp_key(k)
+	if nk != "": _draw_nwp(ctx, k, nk, s, flip, T)   # 空手版（老闆：遊戲介面一律空手）
+	else: Art.draw_char(ctx, k, 0.0, 0.0, s, o)
 	ctx.restore()
 	# 前層：工具、特效
 	ctx.save(); ctx.translate(x, y); ctx.scale(fd, 1); ctx.translate(ax, 0); ctx.scale(z, z); ctx.translate(-ax, 0)

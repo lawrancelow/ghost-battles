@@ -687,3 +687,103 @@ class ChainList extends Control:
 			var col = Color("#a8ffcf") if L[5] else Color("#d8d0c0")
 			var vals = [L[0], L[1] + ("＊" if L[6] else ""), L[2], L[3], L[4]]
 			for i in 5: draw_string(f2, Vector2(xs[i], y + 22), str(vals[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, col)
+
+# ================= 實機：新動作＋空手版（王牌階段圖／NoWeapon 名單）=================
+const LIVEK := ["nw_dokkaebi", "nw_nian", "bm_taotie", "bm_shuten", "huang", "n30_yecha", "n30_kuchisake", "n30_vetala", "nw_dullahan", "zd_bone", "mamian", "niutou", "heiwu", "baiwu", "mengpo", "pontianak"]
+const LIVE_POST := [[0, "b_straw"], [4, "b_newspaper"], [0, "wood"], [0, "rice"], [0, "b_well"], [0, "b_bamboo"]]
+static func _bare(k: String) -> String:   # 呢隻做工時用咩空手圖
+	if WA.nwp_key(k) != "": return "空手圖 " + WA.nwp_key(k)
+	if WA._ace_active(k): return "王牌階段圖 " + Spr.key_for(k)
+	return ""
+func live2(t) -> void:
+	var m = await _boot(t)
+	var S = J.G.S; var ZD = load("res://game/zone/zone_data.gd")
+	var sc = m.mv_view; var sim = sc.sim
+	var cells = []   # [img, 標題]
+	var ki = 0
+	var NEWSTALL = {}
+	for sid in MD.D().STATIONS: if NEWV.has(WA.verb_of_stall(str(MD.st_def(sid).get("art", "")))) or ["st_shoubao", "st_bingqi"].has(sid): NEWSTALL[sid] = true
+	var base: Dictionary = S.ghosts[0]
+	for c in 6:
+		if c > 0:
+			sim.st().ci = float(c); sc._after_move(); await _w(t, 1.5)
+		if m.has_method("_nav_on"): m._nav_on("village")
+		await _w(t, 1.0)
+		# 村子派工
+		var gs = []; var todo = []
+		for e in LIVE_POST:
+			if e[0] != c: continue
+			if e[1].begins_with("b_"):
+				S.bld[e[1]] = 1
+				var zid = ZD.bid_zone(e[1])
+				if zid != "": ZD.set_owned(zid)
+			var k = LIVEK[ki % LIVEK.size()]; ki += 1
+			var g = base.duplicate(true); g["k"] = k; g["id"] = 9500 + ki; g["post"] = e[1]
+			S.ghosts.append(g); gs.append(g); todo.append([e[1], k])
+		await _w(t, 0.8)
+		var spots = J.mc(J.G.Village, "workerSpots", [])
+		for e in todo:
+			var wp = null; var fl = false
+			for sp in spots: if str(J.gp(sp, "post")) == e[0]: wp = Vector2(J.num(sp.x), J.num(sp.y)); fl = J.t(J.gp(sp, "flip")); break
+			_chk("實機村子企位 " + e[0], wp != null)
+			if wp == null: continue
+			var cxw = wp + Vector2(-14.0 if fl else 14.0, -28)
+			_cam_close(m, cxw, 112.0); await _w(t, 0.7)
+			var img = await _shot(t, "HC_WorkAnim_Live_%s" % e[0])
+			var L = WA.LAST.get(e[1], {})
+			_chk("實機村子做工動畫 %s（%s）" % [e[0], e[1]], str(L.get("verb", "")) == WA.verb_of_post(e[0]), L.get("verb"))
+			_chk("實機村子空手 %s" % e[1], _bare(e[1]) != "", e[1])
+			cells.append([_crop(t, m, img, cxw, Vector2(420, 330), 0.95), "村子・%s：%s（%s）" % [VNAME.get(WA.verb_of_post(e[0]), e[0]).get_slice("：", 0), WA.TOOL_OF[WA.verb_of_post(e[0])], e[1]], _bare(e[1])])
+		for g in gs: S.ghosts.erase(g)
+		# 大排檔：呢張圖嘅新動作台
+		var sids = MD.stations(c).filter(func(sid): return NEWSTALL.has(sid))
+		if sids.is_empty(): continue
+		for sid in sids: sim.sst(sid).unlocked = true
+		await _w(t, 0.3)
+		sim.paused = true; sim.custs.clear(); sim.foes.clear(); sim.workers.clear(); sim._sync_key = "x"
+		var ws = []
+		for i in sids.size():
+			var p = sim.slot_pos(sids[i], 1)
+			var k = LIVEK[ki % LIVEK.size()]; ki += 1
+			var w = {"gid": "g_lv%d" % i, "k": k, "name": k, "sid": sids[i], "slot": 0, "st": "work", "prog": 0.2, "pos": p, "home": p, "carry": 0, "t": 0.0, "s": 0.0, "ph": i * 1.3, "paid": {}}
+			sim.workers.append(w); ws.append(w)
+		for w in ws:
+			await _look(t, m, w.pos.y); await _w(t, 0.5)
+			await RenderingServer.frame_post_draw
+			var img = t.get_viewport().get_texture().get_image()
+			var sp = _scr(m, w.pos)
+			var r = Rect2i(clampi(int(sp.x - 120), 0, img.get_width() - 260), clampi(int(sp.y - 190), 0, img.get_height() - 230), Vector2i(260, 230))
+			var sub = img.get_region(r); sub.resize(int(260 * 1.5), int(230 * 1.5), Image.INTERPOLATE_LANCZOS)
+			var v = WA.verb_of_stall(str(MD.st_def(w.sid).get("art", "")))
+			var seen = sc.mot.seen.get(w.k, {})
+			_chk("實機大排檔做工動畫 %s（%s）" % [w.sid, w.k], seen.has("wa_" + v), seen.keys())
+			_chk("實機大排檔空手 %s" % w.k, _bare(w.k) != "", w.k)
+			cells.append([sub, "大排檔・%s：%s（%s）" % [MD.T(MD.st_def(w.sid).get("n", ["?", "?"])), WA.TOOL_OF[v], w.k], _bare(w.k)])
+		sim.workers.clear(); sim.paused = false
+	# 拼圖（每頁 ≤ 1400×2200）
+	var per = 6; var pg = 0
+	for i in range(0, cells.size(), per):
+		pg += 1
+		var sh = LiveSheet.new(); sh.cells = cells.slice(i, i + per); sh.title = "實機截圖（真遊戲畫法，近鏡）：新做工動作＋空手版　第 %d 頁" % pg
+		for cc in sh.cells: sh.texs.append(ImageTexture.create_from_image(cc[0]))
+		sh.size = Vector2(1400, 70 + 3 * (sh.cw_h() + 70))
+		await _render(t, sh, "/tmp/wk_b2/live_%d.png" % pg)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+class LiveSheet extends Control:
+	var cells: Array = []; var texs: Array = []; var title := ""
+	func cw_h() -> int: return 520
+	func _draw() -> void:
+		var f = UIKit.font("sans", 900); var f2 = UIKit.font("sans", 500)
+		draw_rect(Rect2(Vector2.ZERO, size), Color("#1c1a20"))
+		draw_string(f, Vector2(14, 36), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("#f4e2b8"))
+		for i in cells.size():
+			var col = i % 2; var row = i / 2
+			var tex: Texture2D = texs[i]
+			var bw = 680.0; var bh = 520.0
+			var k = minf(bw / tex.get_width(), bh / tex.get_height())
+			var sz = Vector2(tex.get_width(), tex.get_height()) * k
+			var p = Vector2(14 + col * 694, 70 + row * (bh + 70))
+			draw_string(f, p + Vector2(0, 22), str(cells[i][1]), HORIZONTAL_ALIGNMENT_LEFT, bw, 18, Color("#f3d68a"))
+			draw_string(f2, p + Vector2(0, 46), str(cells[i][2]), HORIZONTAL_ALIGNMENT_LEFT, bw, 15, Color("#a8ffcf"))
+			draw_texture_rect(tex, Rect2(p + Vector2(0, 56), sz), false)
+			draw_rect(Rect2(p + Vector2(0, 56), sz), Color(0.5, 0.44, 0.3), false, 2.0)
