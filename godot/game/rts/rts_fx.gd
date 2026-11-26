@@ -141,8 +141,9 @@ func sk2(op, u: Dictionary, pe: Dictionary, ts) -> void:
 	var n = "vx:" + key
 	match at:
 		"self": spr(n, up.x, _hy(op, u), o)
-		"area", "self_g":
+		"area":
 			var o2 = o.duplicate(); o2["anchor"] = 0.62; spr(n, up.x, up.y, o2)
+		"self_g": spr(n, up.x, up.y, o)   # [第二批] 自己腳底（anchor＝圖入面腳嘅位置）
 		"tgt_all":
 			var i = 0
 			for w in (tg if tg.size() else [u]):
@@ -156,6 +157,8 @@ func sk2(op, u: Dictionary, pe: Dictionary, ts) -> void:
 			var v3: Vector2 = w3.p if w3 != null else up + Vector2(120, 0)
 			var o4 = o.duplicate(); o4["flip"] = v3.x < up.x
 			spr(n, (up.x + v3.x) * 0.5, (_hy(op, u) + (_hy(op, w3) if w3 != null else _hy(op, u))) * 0.5, o4)
+		"tgt_h", "circ", "self_circ", "cone", "beam", "chain":
+			sk2_shape(op, u, pe, E, tg, at, o, n)
 		_:
 			var w4 = tg[0] if tg.size() else u
 			var o5 = o.duplicate()
@@ -163,6 +166,84 @@ func sk2(op, u: Dictionary, pe: Dictionary, ts) -> void:
 			spr(n, w4.p.x, _hy(op, w4), o5)
 	if key.begins_with("ace_"):
 		glow(up.x, up.y - 30, 2.0, 0.35); _shake(4.0)
+
+# [vfx 第二批] 群攻範圍形狀：大小由技能實際 tg（r／len／w／deg）計，唔靠估
+#   circ＝敵人最密嗰度圓心半徑 r｜self_circ＝自己為圓心半徑 r（隊友加持）＋每個隊友腳底細印｜cone＝自己為尖、向目標扇形
+#   beam＝由自己出發一條直線 len｜chain＝每個目標各一下＋目標之間連線｜tgt_h＝目標頭（封口）
+#   目錄（vfx_cat）入面：rr＝圖入面圈半徑（px，每格 256、s=1）；ar＝圖橫半徑／直半徑（壓返做正圓）；
+#   ax＝扇形尖／直線頭喺格心左邊幾多 px；ra＝扇形尖到弧邊 px；bl＝直線圖長 px；bw＝直線圖粗 px
+static func sk2_geom(op, u: Dictionary, pe: Dictionary, E: Dictionary, tg: Array) -> Dictionary:
+	var at = str(E.get("at", "tgt")); var T = pe.get("tg") if pe.get("tg") is Dictionary else {}
+	var up: Vector2 = u.p
+	var g = {"at": at}
+	match at:
+		"circ", "self_circ":
+			var r = J.num(T.get("r", 90)); g["r"] = r
+			g["c"] = up if at == "self_circ" else aoe_center(tg, r, up)
+		"cone", "beam":
+			var d = _dir_to(u, tg); g["dir"] = d; g["o"] = up
+			if at == "cone": g["r"] = J.num(T.get("r", 140)); g["deg"] = J.num(T.get("deg", 80))
+			else: g["len"] = J.num(T.get("len", 260)); g["w"] = J.num(T.get("w", 44))
+	return g
+static func aoe_center(tg: Array, r: float, fb: Vector2) -> Vector2:   # 圓心＝目標入面同其他全部距離 ≤ r、總距離最細嗰隻（同 abil select dense 一致）
+	if tg.is_empty(): return fb
+	var best = tg[0]; var bs = INF
+	for w in tg:
+		var ok = true; var sm = 0.0
+		for w2 in tg:
+			var d = (w.p as Vector2).distance_to(w2.p); sm += d
+			if d > r + 0.5: ok = false
+		if ok and sm < bs: bs = sm; best = w
+	return best.p
+static func _dir_to(u: Dictionary, tg: Array) -> Vector2:
+	var up: Vector2 = u.p; var cur = u.get("tg")
+	if cur is Dictionary and tg.has(cur): return ((cur.p as Vector2) - up).normalized()
+	var bn = INF; var d = Vector2.RIGHT if J.num(u.get("side", 0)) == 0 else Vector2.LEFT
+	for w in tg:
+		var dd = up.distance_to(w.p)
+		if dd < bn and dd > 0.5: bn = dd; d = ((w.p as Vector2) - up).normalized()
+	return d
+
+func sk2_shape(op, u: Dictionary, pe: Dictionary, E: Dictionary, tg: Array, at: String, o: Dictionary, n: String) -> void:
+	var G = sk2_geom(op, u, pe, E, tg)
+	var life = float(E.get("life", 1.0))
+	match at:
+		"tgt_h":
+			var w = tg[0] if tg.size() else u
+			var hp: Vector2 = op.head(w)
+			spr(n, hp.x, hp.y + 10, o)
+		"circ", "self_circ":
+			var s = J.num(G.r) / float(E.get("rr", 110)); var c: Vector2 = G.c
+			var o2 = o.duplicate(); o2.merge({"ground": true, "anchor": 0.5, "s0": s * 0.97, "s1": s, "sy": float(E.get("ar", 1.0)), "alpha": float(E.get("alpha", 1.0))}, true)
+			spr(n, c.x, c.y, o2)
+			if at == "self_circ":   # 隊友加持：每個受惠隊友腳底一個細印（同一張圖縮細）
+				var i = 0
+				for w in tg:
+					if i >= 6: break
+					var o3 = o.duplicate(); o3.merge({"ground": true, "anchor": 0.5, "s0": 0.16, "s1": 0.2, "sy": float(E.get("ar", 1.0)) * 0.6, "t": -0.12 - 0.04 * i, "life": life * 0.8}, true)
+					spr(n, w.p.x, w.p.y, o3); i += 1
+		"cone":
+			var s2 = J.num(G.r) / float(E.get("ra", 200)); var d: Vector2 = G.dir
+			var c2: Vector2 = (u.p as Vector2) - d * float(E.get("ax", -100)) * s2
+			var o4 = o.duplicate(); o4.merge({"ground": true, "anchor": 0.5, "s0": s2, "s1": s2, "rot": d.angle(), "sy": tan(deg_to_rad(J.num(G.deg) * 0.5)) / tan(deg_to_rad(float(E.get("deg_art", G.deg)) * 0.5))}, true)
+			spr(n, c2.x, c2.y, o4)
+		"beam":
+			var s3 = J.num(G.len) / float(E.get("bl", 220)); var d3: Vector2 = G.dir
+			var c3: Vector2 = (u.p as Vector2) - d3 * float(E.get("ax", -110)) * s3
+			var o5 = o.duplicate(); o5.merge({"ground": true, "anchor": 0.5, "s0": s3, "s1": s3, "rot": d3.angle(), "sy": clampf(J.num(G.w) / (float(E.get("bw", 40)) * s3), 0.3, 1.6)}, true)
+			spr(n, c3.x, c3.y, o5)
+		"chain":
+			var pts = [Vector2(u.p.x, _hy(op, u))]
+			for w in tg: pts.append(Vector2(w.p.x, _hy(op, w)))
+			var ls = float(E.get("ls", 0.4)); var bl = float(E.get("bl", 220))
+			for i in range(1, pts.size()):
+				var a: Vector2 = pts[i - 1]; var b: Vector2 = pts[i]; var L = a.distance_to(b)
+				var dly = -0.1 * (i - 1)
+				if L > 8.0:
+					var ol = o.duplicate(); ol.merge({"anchor": 0.5, "s0": ls, "s1": ls, "sx": L / (bl * ls), "rot": (b - a).angle(), "t": dly, "life": life * 0.7}, true)
+					spr(n + "_l", (a.x + b.x) * 0.5, (a.y + b.y) * 0.5, ol)
+				var oi = o.duplicate(); oi.merge({"t": dly - 0.06}, true)
+				spr(n, b.x, b.y, oi)
 
 func _down(op, v: Dictionary, hp_: Vector2) -> void:
 	FXK.spark(emit, hp_.x, hp_.y, 1.6, false)

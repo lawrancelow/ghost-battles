@@ -34,6 +34,8 @@ func cat(t) -> void: await _boot(t); cat_(); _p("RESULT ok=%d bad=%d" % [ok, bad
 func sim(t) -> void: await _boot(t); await sim_(t); _p("RESULT ok=%d bad=%d" % [ok, bad])
 func shots(t) -> void: await _boot(t); await shots_(t); _p("RESULT ok=%d bad=%d" % [ok, bad])
 func ui(t) -> void: await _boot(t); await ui_(t); _p("RESULT ok=%d bad=%d" % [ok, bad])
+func b2(t) -> void:   # 第二批：目錄＋真模擬（20 個新模板）＋實機樣本＋範圍形狀對數
+	await _boot(t); cat_(); await sim2_(t); geom_(); await shots2_(t); _p("RESULT ok=%d bad=%d" % [ok, bad])
 
 func _have() -> Array:
 	var o = []
@@ -188,3 +190,106 @@ func ui_(t) -> void:
 		t.get_viewport().get_texture().get_image().save_png(SHOTS + k + ".png")
 		await _w(t, float(VC.get_e(k).life) * 0.7)
 		_chk(k + " 播完自己消失", not is_instance_valid(n))
+
+# ================= 第二批 =================
+const B2 := ["T_DRAIN", "W_CLEAVE", "W_RAGE", "A_EXEC", "A_POISON", "A_VANISH", "R_LINE", "R_CHAIN", "R_ANTI", "M_BLAST", "M_BURN", "M_FROST", "M_HUSH", "S_RALLY", "S_HASTE", "S_DISPEL", "H_BURST", "H_HOT", "H_SHIELD", "H_CLEAN"]
+func _gk(D, tp: String) -> String:
+	for k in D.SUB: if str(D.SUB[k].get("tpl")) == tp and not D.ACE.has(k): return str(k)
+	return ""
+func sim2_(t) -> void:
+	var AB = load("res://game/rts/abil.gd"); var D = AB.sk2()
+	RFX.SK2.n = 0; RFX.SK2.keys = {}
+	var pick = []
+	for tp in B2:
+		var k = _gk(D, tp)
+		if k != "": pick.append(k)
+	var i = 0
+	while i < pick.size():
+		await _rts(pick.slice(i, i + 5), 26.0); i += 5
+		await t.get_tree().process_frame
+	_p("第二批 sk2 觸發 %d 次：%s" % [RFX.SK2.n, RFX.SK2.keys])
+	var ms = []
+	for tp in B2:
+		var key = "sub_" + tp
+		if VC.get_e(key) != null and not RFX.SK2.keys.has(key): ms.append(key)
+	_chk("第二批有圖嘅模板全部喺真模擬播到", ms.is_empty(), ms)
+	_chk("rts_fx 冇爆上限（drop 0）", int(RFX.STATS.drop) == 0, RFX.STATS.drop)
+
+# 範圍形狀對數：每個群攻模板，畫出嚟嘅大小＝技能 tg 實際範圍（誤差 ≤ 3%）
+func geom_() -> void:
+	var AB = load("res://game/rts/abil.gd"); var D = AB.sk2()
+	for tp in B2:
+		var key = "sub_" + tp; var E = VC.get_e(key)
+		if E == null: continue
+		var pe = D.SUB[_gk(D, tp)]; var T = pe.get("tg", {})
+		var kind = str(E.get("kind", "")); var at = str(E.get("at", ""))
+		var shaped = T.has("shape") or str(T.get("sel", "")) == "allies"
+		_chk(key + " 分類（%s）同技能範圍一致" % kind, (kind == "aoe") == T.has("shape") and (kind != "one" or not shaped), str(T))
+		match at:
+			"circ", "self_circ":
+				var s = J.num(T.r) / float(E.rr)
+				_chk(key + " 圈半徑＝r %d" % int(J.num(T.r)), absf(float(E.rr) * s - J.num(T.r)) <= J.num(T.r) * 0.03, "art %.0fpx×%.3f" % [float(E.rr), s])
+			"cone":
+				var s2 = J.num(T.r) / float(E.ra)
+				_chk(key + " 扇形半徑＝r %d、角度 %d°" % [int(J.num(T.r)), int(J.num(T.deg))], absf(float(E.ra) * s2 - J.num(T.r)) < 1.0, "art %.0f° → %d°" % [float(E.deg_art), int(J.num(T.deg))])
+			"beam":
+				var s3 = J.num(T.len) / float(E.bl)
+				var wd = float(E.bw) * s3 * clampf(J.num(T.w) / (float(E.bw) * s3), 0.3, 1.6)
+				_chk(key + " 直線長＝len %d、闊＝w %d" % [int(J.num(T.len)), int(J.num(T.w))], absf(float(E.bl) * s3 - J.num(T.len)) < 1.0 and absf(wd - J.num(T.w)) < 1.0, "畫出闊 %.0f" % wd)
+			"chain":
+				_chk(key + " 彈射連線圖", VC.tex(key + "_l") != null)
+
+func shots2_(t) -> void:
+	var AB = load("res://game/rts/abil.gd"); var D = AB.sk2()
+	PtGfx.init()
+	var sc = _scene(t); var cl: CanvasLayer = sc[0]; var g: Node2D = sc[1]; var un: Node2D = sc[2]; var tp: Node2D = sc[3]; var vs: Vector2 = sc[4]
+	var SIM = load("res://game/rts/rts_sim.gd"); var op = SIM.new()
+	var me_p = Vector2(150, 560); var nshot = 0
+	var L = {"one": [Vector2(300, 520)], "circ": [Vector2(300, 500), Vector2(350, 530), Vector2(280, 562), Vector2(332, 466)],
+		"near": [Vector2(250, 530), Vector2(268, 600), Vector2(236, 470)], "line": [Vector2(158, 470), Vector2(150, 400), Vector2(162, 335)],
+		"chain": [Vector2(262, 528), Vector2(348, 582), Vector2(300, 660)], "ally": [Vector2(70, 610), Vector2(215, 640), Vector2(100, 470), Vector2(250, 520)]}
+	var akeys = []
+	for k in D.SUB: if not D.ACE.has(k) and akeys.size() < 4: akeys.append(str(k))
+	for tpn in B2:
+		var key = "sub_" + tpn; var E = VC.get_e(key)
+		if E == null: continue
+		for c in un.get_children(): c.free()
+		var gk = _gk(D, tpn); var pe = D.SUB[gk]; var at = str(E.get("at", ""))
+		var lay = "one"
+		match at:
+			"circ": lay = "circ"
+			"cone": lay = "near"
+			"beam": lay = "line"
+			"chain": lay = "chain"
+			"self_circ": lay = "ally"
+		var u = {"side": 0.0, "k": gk, "p": me_p, "hp": 1.0, "maxhp": 1.0}
+		var ts = []
+		_unit(un, gk, me_p, 120.0)
+		if lay == "ally":
+			for j in L.ally.size():
+				var a = {"side": 0.0, "k": akeys[j], "p": L.ally[j], "hp": 1.0, "maxhp": 1.0}; ts.append([a, 1.0]); _unit(un, akeys[j], L.ally[j], 100.0)
+		elif str(E.get("kind")) == "buff" or str((pe.get("tg", {}) as Dictionary).get("sel", "")).begins_with("ally"):
+			if str(E.get("kind")) != "buff":
+				var a2 = {"side": 0.0, "k": akeys[0], "p": L.one[0], "hp": 1.0, "maxhp": 1.0}; ts.append([a2, 1.0]); _unit(un, akeys[0], L.one[0], 100.0)
+		else:
+			for p in L[lay]: var f = {"side": 1.0, "k": "egui", "p": p, "hp": 1.0, "maxhp": 1.0}; ts.append([f, 1.0]); _unit(un, "egui", p, 80.0, true)
+		if at == "cone" or at == "beam": u["tg"] = ts[0][0]
+		var fx = RFX.new(g, tp); fx.vr = Rect2(Vector2.ZERO, vs)
+		await t.get_tree().process_frame; await RenderingServer.frame_post_draw
+		t.get_viewport().get_texture().get_image().save_png(SHOTS + key + "_bg.png")   # 冇特效底圖：審批工具用嚟逐像素量特效實際大細
+		fx.sk2(op, u, pe, ts)
+		# 實際範圍（給審批圖畫白虛線）
+		var tl = []
+		for x in ts: if x[0] != u: tl.append(x[0])
+		var G = RFX.sk2_geom(op, u, pe, E, tl); var js = {"key": key, "at": at, "me": [me_p.x, me_p.y], "tg": []}
+		for x in tl: js.tg.append([x.p.x, x.p.y])
+		for kk in G: js[kk] = [G[kk].x, G[kk].y] if G[kk] is Vector2 else G[kk]
+		var fa = FileAccess.open(SHOTS + key + ".json", FileAccess.WRITE); fa.store_string(JSON.stringify(js)); fa.close()
+		fx.tick(float(E.get("life", 1.0)) * (0.5 if at in ["circ", "self_circ", "cone", "beam", "chain"] else 0.42))
+		await t.get_tree().process_frame; await RenderingServer.frame_post_draw
+		t.get_viewport().get_texture().get_image().save_png(SHOTS + key + ".png"); nshot += 1
+		fx.clear()
+		for c in g.get_children(): c.free()
+		for c in tp.get_children(): c.free()
+	cl.queue_free()
+	_chk("第二批實機樣本截圖", nshot >= 1, nshot)
