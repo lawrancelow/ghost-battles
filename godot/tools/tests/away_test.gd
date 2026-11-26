@@ -1537,7 +1537,7 @@ class EdgeSheet extends Control:
 func fwedge(t) -> void:
 	var m = await _boot(t)
 	var EA = load("res://game/equip/eq_art.gd")
-	_chk("環首刀刀口喺左、菜刀喺右", EA.edge_side("eq_huanshou") == -1 and EA.edge_side("eq_jue_caidao") == 1)
+	_chk("環首刀（新圖）刀口喺右、菜刀喺右", EA.edge_side("eq_huanshou") == 1 and EA.edge_side("ml_huanshou") == 1 and EA.edge_side("eq_jue_caidao") == 1)
 	for id in ["eq_huanshou", "eq_jue_caidao"]:
 		for fd in [1, -1]:
 			var mir = EA.edge_side(id) != fd
