@@ -21,6 +21,12 @@ var _sty := {}
 var _appeared := {}
 var _tex := {}
 var emit: Callable
+var loops: Array = []            # [vfx 第三批] 今格狀態循環（每格重建，唔佔 MAX_FX）
+var _stc := {}                   # 狀態快取 {unit id: [t, [keys]]}（每 0.25 秒先重算）
+var _lt := 0.0
+const AHm = preload("res://game/rts/ab_hud.gd")
+const ST_MAX_SHOW := 2           # 每隻最多疊 2 個狀態循環（控場／負面優先）
+const ST_PER := 1.0              # 循環一次 1 秒
 static var STATS := {"spawn": 0, "drop": 0, "peak": 0, "kinds": {}}
 
 func _init(g: Node2D, t: Node2D) -> void:
@@ -121,6 +127,47 @@ func consume(op) -> void:
 					_shake(r3.shake); _hitstop(op, r3.stop)
 				Snd.play("skill")
 	op.vq.clear()
+	status_loops(op)
+
+# [vfx 第三批] 狀態循環：每隻單位揀最重要 2 個有圖嘅狀態，疊喺身上（按 pos 放頭頂／嘴前／身中／腳底／背後）
+static func st_keys(op, u: Dictionary) -> Array:
+	var o = []
+	for e in AHm.effects(op, u): o.append(str(e.k))
+	var s0 = AHm.status(op, u)
+	if s0.get("daze", false): o.push_front("st_daze")
+	if J.num(s0.get("shield", 0)) > 0.5: o.append("st_shield")
+	if s0.get("stealth", false): o.append("st_stealth")
+	var r = []
+	for k in o:
+		if r.size() >= ST_MAX_SHOW: break
+		if not r.has(k) and VC.st_e(k) != null: r.append(k)
+	return r
+func status_loops(op) -> void:
+	for j in op.units.size():
+		var u: Dictionary = op.units[j]
+		if J.num(u.get("hp", 0)) <= 0 or not (u.get("p") is Vector2): continue
+		if not vr.has_point(u.p): continue
+		var id = int(op.id) * 1000 + j
+		var c = _stc.get(id)
+		if c == null or _lt - float(c[0]) > 0.25:
+			c = [_lt, st_keys(op, u)]; _stc[id] = c
+		st_draw(c[1], u.p, op.head(u), id)
+# 一隻單位嘅狀態循環（ks＝狀態鍵、p＝腳、hd＝頭、id＝錯開相位）；vfx_test 直接用嚟出樣本
+func st_draw(ks: Array, p: Vector2, hd: Vector2, id: int) -> void:
+	for i in ks.size():
+		var E = VC.st_e(ks[i])
+		if E == null: continue
+		var pos = str(E.get("pos", "body"))
+		var at: Vector2 = p
+		match pos:
+			"head": at = hd + Vector2(0, -8)
+			"mouth": at = hd.lerp(p, 0.18)
+			"body", "back": at = hd.lerp(p, 0.5)
+		var sc = float(E.get("s", VC.ST_POS_S.get(pos, 0.24)))
+		at.y += float(E.get("dy", 0.0))
+		var fi = int(floor((_lt + float(id % 97) * 0.13) / float(E.get("per", ST_PER)) * 16.0))
+		var f = FXK.spr_dict("vx:" + str(E.get("sheet", ks[i])), at.x, at.y, {"grid": VC.GRID, "fi": fi, "s0": sc, "s1": sc, "life": 1.0, "t": 0.0, "alpha": 0.9 if i == 0 else 0.75, "ground": pos in ["feet", "back"], "anchor": 0.5})
+		loops.append(f)
 
 # [vfx] 副技／王牌技序列幀：u＝出手者、pe＝技能資料、ts＝目標 [[unit, k], ...]
 static var SK2 := {"n": 0, "keys": {}}
@@ -164,8 +211,21 @@ func sk2(op, u: Dictionary, pe: Dictionary, ts) -> void:
 			var o5 = o.duplicate()
 			if E.get("dirflip", false): o5["flip"] = (w4.p as Vector2).x < up.x
 			spr(n, w4.p.x, _hy(op, w4), o5)
+	if E.has("ring"): ring_of(op, u, pe, E, o)
 	if key.begins_with("ace_"):
 		glow(up.x, up.y - 30, 2.0, 0.35); _shake(4.0)
+
+# [vfx 修正一] 第一批群攻／加持補地面範圍圈：自己為圓心，半徑＝技能 tg.r（唔改原圖，另疊一張俯視圈）
+#   目錄 ring＝圈序列幀鍵、ring_rr＝圈圖半徑（px，每格 256、s=1）、ring_ar＝橫／直
+static func ring_geom(u: Dictionary, pe: Dictionary, E: Dictionary) -> Dictionary:
+	var T = pe.get("tg") if pe.get("tg") is Dictionary else {}
+	return {"c": u.p, "r": J.num(T.get("r", E.get("ring_r", 120)))}
+func ring_of(op, u: Dictionary, pe: Dictionary, E: Dictionary, o: Dictionary) -> void:
+	if VC.tex(str(E.ring)) == null: return   # 冇圖唔播
+	var G = ring_geom(u, pe, E)
+	var s = J.num(G.r) / float(E.get("ring_rr", 100)); var c: Vector2 = G.c
+	var o2 = o.duplicate(); o2.merge({"ground": true, "anchor": 0.5, "s0": s * 0.97, "s1": s, "sy": float(E.get("ring_ar", 1.0)), "alpha": float(E.get("ring_a", 0.85)), "life": float(E.get("ring_life", E.get("life", 1.0)))}, true)
+	spr("vx:" + str(E.ring), c.x, c.y, o2)
 
 # [vfx 第二批] 群攻範圍形狀：大小由技能實際 tg（r／len／w／deg）計，唔靠估
 #   circ＝敵人最密嗰度圓心半徑 r｜self_circ＝自己為圓心半徑 r（隊友加持）＋每個隊友腳底細印｜cone＝自己為尖、向目標扇形
@@ -241,7 +301,7 @@ func sk2_shape(op, u: Dictionary, pe: Dictionary, E: Dictionary, tg: Array, at: 
 				var dly = -0.1 * (i - 1)
 				if L > 8.0:
 					var ol = o.duplicate(); ol.merge({"anchor": 0.5, "s0": ls, "s1": ls, "sx": L / (bl * ls), "rot": (b - a).angle(), "t": dly, "life": life * 0.7}, true)
-					spr(n + "_l", (a.x + b.x) * 0.5, (a.y + b.y) * 0.5, ol)
+					spr("vx:" + str(E.get("link", n.substr(3) + "_l")), (a.x + b.x) * 0.5, (a.y + b.y) * 0.5, ol)
 				var oi = o.duplicate(); oi.merge({"t": dly - 0.06}, true)
 				spr(n, b.x, b.y, oi)
 
@@ -281,8 +341,11 @@ func tick(dt: float) -> void:
 	fx = keep
 	STATS.peak = maxi(int(STATS.peak), fx.size())
 	shake = maxf(0.0, shake - dt * 12.0)
-	FXK.sync_groups(fx, groups, ground, top, tex)
+	_lt += dt
+	if _stc.size() > 400: _stc.clear()
+	FXK.sync_groups(fx + loops if loops.size() else fx, groups, ground, top, tex)
+	loops.clear()
 
 func clear() -> void:
-	fx.clear(); shake = 0.0
+	fx.clear(); loops.clear(); shake = 0.0
 	for k in groups: groups[k].visible = false
