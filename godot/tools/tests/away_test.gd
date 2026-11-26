@@ -1029,3 +1029,152 @@ func soulup(t) -> void:   # [soul_up] 品階融合＋星級突破＋掉落＋祭
 		await _w(t, 1.0); await _shot(t, "soulup_" + tb)
 		m.close_sheet(); await _w(t, 0.4)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func _boot(t):
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	for i in 120:
+		await _w(t, 0.5)
+		var m0 = _main(t)
+		if m0 and m0.get("loading") == null and J.G.get("S") is Dictionary: break
+	await _w(t, 1.5)
+	var m = _main(t)
+	m._hide_title(); await _w(t, 1.0); await _skip(t)
+	return m
+
+# RTS 模擬：ours＝[k...]（我方名鬼）、敵人 n 隻；回 {evs, ours, op}
+func _rts_run(ks: Array, foe_n := 5, sec := 20.0, foe_hp := 4000.0, pre = null) -> Dictionary:
+	var SIM = load("res://game/rts/rts_sim.gd"); var RO = load("res://game/rts/roles.gd")
+	var ours = []; var foes = []
+	for i in ks.size():
+		var nu = {"side": 0.0, "k": ks[i], "gid": "sk_%d" % i, "name": ks[i], "hp": 900.0, "maxhp": 900.0, "atk": 60.0, "range": 46.0, "spd": 46.0, "energy": 0.0, "sk": {"name": "x", "kind": "ab"}, "st": {}, "cd": randf(), "boss": false}
+		RO.apply_stats(nu); ours.append(nu)
+	for i in foe_n: foes.append({"side": 1.0, "k": "egui", "name": "e", "hp": foe_hp, "maxhp": foe_hp, "atk": 50.0, "range": 46.0, "spd": 46.0, "energy": 0.0, "sk": null, "st": {}, "cd": randf(), "boss": false})
+	var op = SIM.new()
+	op.setup(ours + foes, PackedVector2Array([Vector2(0, 900), Vector2(0, 300)]), Vector2(0, 220), Vector2(0, 900))
+	op.phase = "fight"; op.t = 0.0
+	for j in ours.size(): var u = ours[j]; u["p"] = Vector2((j - 2) * 40.0, 300.0); u["out"] = true; u["eng"] = true
+	for j in foes.size(): var u = foes[j]; u["p"] = Vector2((j - 2) * 40.0, 250.0); u["post"] = u.p
+	op._form()
+	if pre is Callable: pre.call(op, ours, foes)
+	var evs = {}; var who = {}
+	for st in int(sec / 0.05):
+		op.step(0.05)
+		for e in op.events:
+			if e is Array and e.size() >= 3 and str(e[0]) == "ab":
+				evs[str(e[2])] = int(evs.get(str(e[2]), 0)) + 1
+				if str(e[2]) in ["sub", "ace"] and e[1] is Dictionary: who[J.str(e[1].get("k")) + ":" + str(e[2])] = true
+		op.events.clear()
+	return {"evs": evs, "ours": ours, "op": op, "who": who}
+
+func sk2(t) -> void:   # [補丁43] 技能七層：副技／專長後備／王牌技／突破強化／封口擋副技
+	var m = await _boot(t)
+	var AB = load("res://game/rts/abil.gd"); var UP = load("res://game/soul/soul_up.gd"); var RO = load("res://game/rts/roles.gd")
+	var D = AB.sk2()
+	var nsub = D.get("SUB", {}).size(); var npk = 0
+	for k in D.get("PERK", {}): npk += (D.PERK[k] as Array).size()
+	_chk("數量 SUB 138 PERK 276 ACE 19", nsub == 138 and npk == 276 and D.get("ACE", {}).size() == 19, "%d %d %d" % [nsub, npk, D.ACE.size()])
+	# 每個 fx 積木都係引擎識嘅
+	var KNOWN = ["dmg", "dot", "execute", "chain", "splash", "mark", "pierce", "down", "air", "push", "pull", "stun", "silence", "interrupt", "slow", "flee", "taunt", "heal", "hot", "shield", "guard", "immune", "cleanse", "revive", "buff", "energy", "reveal", "armor_break", "shield_break", "dispel", "banish", "sap", "wound", "dash", "stealth", "charm", "confuse"]
+	var unk = []
+	for sec in ["SUB", "ACE"]:
+		for k in D[sec]: for fx in D[sec][k].fx: if not (str(fx.p) in KNOWN): unk.append(k + ":" + str(fx.p))
+	for k in D.PERK: for pe in D.PERK[k]: for fx in pe.fx: if not (str(fx.p) in KNOWN): unk.append(k + ":" + str(fx.p))
+	_chk("積木全部識", unk.is_empty(), unk)
+	# 每隻名鬼都有副技、兩條專長；同一隻鬼技能唔撞名（主技／副技／專長／王牌技）
+	var dupn = []
+	for k in RO.data().CLS:
+		var ac0 = AB.act_of(k)
+		var ns = [J.str(ac0.get("name")) if ac0 is Dictionary else ""]
+		if AB.sub_of(k) != null: ns.append(str(AB.sub_of(k).name))
+		for pe in AB.perk_list(k): ns.append(str(pe.get("name")))
+		if AB.ace_of(k) != null: ns.append(str(AB.ace_of(k).name))
+		var seen = {}
+		for n in ns:
+			if seen.has(n): dupn.append(k + ":" + n)
+			else: seen[n] = 1
+		if AB.sub_of(k) == null or AB.perk_list(k).size() != 2: dupn.append(k + ":缺")
+	_chk("每隻有副技＋兩專長＋唔撞名", dupn.is_empty(), dupn.slice(0, 6))
+	# 王牌技只限天生王牌
+	var bad_ace = []
+	for k in D.ACE: if not UP.born_ace(k): bad_ace.append(k)
+	_chk("王牌技全部係天生王牌", bad_ace.is_empty(), bad_ace)
+	# 專長解鎖：職級 0 冇；4 兩條；天生王牌職級 0 有 1 條
+	_chk("專長按職級", AB.perks_of("toyol", 0).size() == 0 and AB.perks_of("toyol", 2).size() == 1 and AB.perks_of("toyol", 4).size() == 2 and AB.perks_of("heiwu", 0).size() == 1,
+		"%d %d %d %d" % [AB.perks_of("toyol", 0).size(), AB.perks_of("toyol", 2).size(), AB.perks_of("toyol", 4).size(), AB.perks_of("heiwu", 0).size()])
+	# 戰鬥：副技＋王牌技真係發動
+	var team = ["laojiang", "heiwu", "toyol", "nw_guihuo", "mengpo"]
+	var r = _rts_run(team, 5, 24.0, 4000.0, func(op, ours, foes):
+		for w in foes: w["atk"] = 22.0)
+	_p("ev %s" % [r.evs]); _p("who %s" % [r.who.keys()])
+	for u in r.ours:
+		var na = 0
+		for pe in u.ab.pas: if J.t(pe.get("ace")): na += 1
+		_p("  %s hp %d/%d ace=%d stun_until=%.1f" % [J.str(u.k), J.num(u.hp), J.num(u.maxhp), na, J.num(u.ab.get("stun_until", 0))])
+	var subw = 0; var acew = 0
+	for kk in r.who:
+		if kk.ends_with(":sub"): subw += 1
+		elif kk.ends_with(":ace"): acew += 1
+	_chk("副技 5 隻都有發動", subw == 5, subw)
+	_chk("王牌技（黑無常、孟婆）有發動", r.who.has("heiwu:ace") and r.who.has("mengpo:ace"), r.who.keys())
+	var paslist = []
+	for u in r.ours: for pe in u.ab.pas: if J.t(pe.get("sub")): paslist.append(J.str(u.k))
+	_chk("compile 加咗副技", paslist.size() == 5, paslist)
+	# 對照：GB_NOSK2 冇得測環境變數 → 用封口：全程封住 → 副技 0
+	var r2 = _rts_run(["laojiang", "toyol"], 3, 14.0, 4000.0, func(op, ours, foes):
+		for u in ours: AB.add_bf(op, u, {"id": "silence", "p": "silence", "dur": 999.0, "neg": true}))
+	_chk("封口擋住副技", int(r2.evs.get("sub", 0)) == 0 and int(r2.evs.get("sub_blocked", 0)) > 0, r2.evs)
+	# 突破強化：toyol ★3（主技升 2 級）主技倍率 ×1.24
+	var S = J.G.S
+	var o = UP.st(); o.rk["toyol"] = 5.0; o.star["toyol"] = 3.0
+	var r3 = _rts_run(["toyol"], 1, 0.1)
+	var a3 = r3.ours[0].ab
+	var m0 = J.num(AB._v(AB.act_of("toyol").fx[0], "mult", 1.0, 5)); var m1 = J.num(AB._v(a3.act.fx[0], "mult", 1.0, 5))
+	_chk("突破 ★3 主技 ×1.24", absf(m1 / m0 - 1.24) < 0.01 and int(a3.act_lv) == 2 and int(a3.sub_lv) == 1, "%.3f→%.3f lv %d/%d" % [m0, m1, a3.act_lv, a3.sub_lv])
+	o.rk["nw_guihuo"] = 5.0; o.star["nw_guihuo"] = 2.0
+	var r4 = _rts_run(["nw_guihuo"], 1, 0.1)
+	var sp = null
+	for pe in r4.ours[0].ab.pas: if J.t(pe.get("sub")): sp = pe
+	var sb0 = AB.sub_of("nw_guihuo")
+	o.star["nw_guihuo"] = 0.0; o.rk["nw_guihuo"] = 0.0
+	var fk = ""; var fi = -1
+	for i in sb0.fx.size():
+		for kk in ["mult", "pct", "dps", "v", "x"]: if fk == "" and (sb0.fx[i].get(kk) is float or sb0.fx[i].get(kk) is int): fk = kk; fi = i
+	var rat = J.num(sp.fx[fi].get(fk)) / maxf(0.001, J.num(sb0.fx[fi].get(fk))) if sp != null and fi >= 0 else 0.0
+	_chk("突破 ★3 副技 ×1.12", sp != null and absf(rat - 1.12) < 0.01, "%s %.3f" % [fk, rat])
+	_chk("原數據冇俾改到", absf(J.num(AB._v(AB.act_of("toyol").fx[0], "mult", 1.0, 5)) - m0) < 1e-6)
+	o.star["toyol"] = 0.0; o.rk["toyol"] = 0.0
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func codex7(t) -> void:   # [補丁43] 圖鑑技能七層：截圖＋層數
+	var m = await _boot(t)
+	var SS = load("res://game/soul/soul_sk.gd"); var CX = load("res://game/soul/soul_codex.gd"); var UP = load("res://game/soul/soul_up.gd")
+	var S = J.G.S; var o = UP.st()
+	for k in ["heiwu", "toyol"]:
+		var g0 = (S.ghosts[0] as Dictionary).duplicate(true); g0["id"] = "cx_" + k; g0["k"] = k; g0["q"] = "名"; g0["name"] = k; g0["post"] = null
+		S.ghosts.append(g0)
+		if o.get("seen") is Dictionary: o.seen[k] = 1.0
+	o.rk["toyol"] = 5.0; o.star["toyol"] = 1.0
+	for k in ["heiwu", "toyol", "afu"]:
+		var ls = SS.layers(k)
+		var n_on = 0
+		for x in ls: if x.on: n_on += 1
+		var lays = {}
+		for x in ls: lays[str(x.lay)] = 1
+		_p("%s layers %d on %d %s" % [k, ls.size(), n_on, lays.keys()])
+		_chk(k + " 七層齊", lays.size() >= 6, lays.size())
+	var lt = SS.layers("toyol"); var lh = SS.layers("heiwu")
+	var p2t = false; var p1h = false; var aceh = false
+	for x in lt: if str(x.lay) == "專長二" and x.on: p2t = true
+	for x in lh:
+		if str(x.lay) == "專長一" and x.on: p1h = true
+		if str(x.lay) == "王牌技" and x.on and str(x.name) != "": aceh = true
+	_chk("Toyol 合夥人：專長二開咗", p2t)
+	_chk("黑無常：專長一（天生王牌）＋王牌技", p1h and aceh)
+	for k in ["heiwu", "toyol"]:
+		CX.open_detail(k); await _w(t, 0.8)
+		var sc = m.sheet_scroll
+		for i in 3:
+			sc.scroll_vertical = 380 + i * 520; await _w(t, 0.4); await _shot(t, "codex7_%s_%d" % [k, i])
+		m.close_sheet(); await _w(t, 0.3)
+	o.star["toyol"] = 0.0; o.rk["toyol"] = 0.0
+	_p("RESULT ok=%d bad=%d" % [ok, bad])

@@ -48,6 +48,18 @@ static func pj_name_i(i: int) -> String: return T(PJ[clampi(i / 3, 0, 5)]) + "�
 static func pj_name(k: String) -> String: return pj_name_i(pj(k))
 static func pin_name(k: String) -> String: return T(PJ[pin_i(k)])
 static func pj_col(k: String) -> Color: return Color(PJ_COL[pin_i(k)])
+# 出生品單字（凡靈煞王主）→ 新品名（凡魂、靈鬼、煞鬼、鬼王、主角）
+static func pin_label(p: String) -> String:
+	if p == "主": return L("主角", "主角")
+	var i = SOUL.PINS.find(p)
+	return T(PJ[i]) if i >= 0 else p
+static func pin_col(p: String) -> Color:
+	if p == "主": return Color("#9c2219")
+	var i = SOUL.PINS.find(p)
+	return Color(PJ_COL[i]) if i >= 0 else Color.GRAY
+# 已收：現時品階全名；未收：出生品
+static func tag_name(k: String) -> String: return pj_name(k) if SOUL.owned(k) and SOUL.is_ghost(k) else pin_label(SOUL.pin(k))
+static func tag_col(k: String) -> Color: return pj_col(k) if SOUL.owned(k) and SOUL.is_ghost(k) else pin_col(SOUL.pin(k))
 static func is_ace_k(k: String) -> bool: return pin_i(k) >= 3   # 鬼王或以上＝王牌（王牌上限計呢個）
 static func born_ace(k: String) -> bool: return SOUL.pin(k) == "王"
 static func stat_mul(k: String) -> float: return 1.0 + STAT_PER_PJ * (pj(k) - born(k)) + STAR_PCT * star(k)

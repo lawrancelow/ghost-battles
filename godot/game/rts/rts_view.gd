@@ -125,6 +125,66 @@ func _sync_auto() -> void:
 	var s = UIKit.sb(Color("#2e5d55") if on else Color("#3a2c26"), 8, Color("#7ac0b0") if on else Color("#6a5040"), 2, Vector4(9, 4, 9, 4))
 	for k in ["normal", "hover", "pressed"]: chip_auto.add_theme_stylebox_override(k, s)
 
+# ================= [補丁43] 撳戰鬥單位：睇佢身上全部 buff／debuff =================
+var insp = null          # {u, op, t}
+var _tap0 = null         # {p, t}
+func _input(ev: InputEvent) -> void:
+	if nv == null or not is_instance_valid(nv) or txt == null or not txt.is_visible_in_tree(): return
+	var dn = (ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and ev.pressed) or (ev is InputEventScreenTouch and ev.pressed)
+	var up = (ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed) or (ev is InputEventScreenTouch and not ev.pressed)
+	if dn: _tap0 = {"p": ev.position, "t": _t}; return
+	if not up or _tap0 == null: return
+	var p0: Vector2 = _tap0.p; var dt0 = _t - float(_tap0.t); _tap0 = null
+	if p0.distance_to(ev.position) > 12.0 or dt0 > 0.45: return
+	var hit = pick_at(ev.position)
+	if hit != null:
+		insp = {"u": hit[0], "op": hit[1], "t": 0.0}; get_viewport().set_input_as_handled()
+	elif insp != null: insp = null
+func pick_at(sp: Vector2):   # 畫面座標 → 最近嘅戰鬥單位（36px 內）
+	var best = null; var bd = 36.0
+	for op in RTS.ops:
+		if not (op.phase in ["fight", "end"]): continue
+		for u in op.units:
+			if J.num(u.get("hp", 0)) <= 0 or not (u.get("p") is Vector2) or not _shown(u, op): continue
+			if J.num(u.side) == 0 and not J.t(u.get("out")): continue
+			var q = _scr(op.head(u).lerp(u.p, 0.5))
+			var d = q.distance_to(sp)
+			if d < bd: bd = d; best = [u, op]
+	return best
+func insp_lines(u: Dictionary, op) -> Array:   # [[文字, 顏色]]
+	var o = []
+	var ef = AH.effects(op, u)
+	for e in ef:
+		var inf = AI.info(e.k)
+		var nm = str(DB.L(str(inf.get("n", e.k))))
+		var lt = "" if J.num(e.left) < 0 else L("　剩 %.1f 秒", "　剩 %.1f 秒") % J.num(e.left)
+		var nn = "" if int(e.n) < 2 else " ×%d" % int(e.n)
+		var ds = inf.get("d")
+		var dt = ("　" + RTS.L(str(ds[0]), str(ds[1]))) if ds is Array else ""
+		o.append([nm + nn + lt + dt, Color("#ffb0a0") if e.neg else Color("#b8f0c0")])
+	var s0 = AH.status(op, u)
+	if s0.shield > 0.5: o.push_front([L("護盾 %d", "護盾 %d") % int(s0.shield), Color("#9ad0ff")])
+	if s0.stealth: o.push_front([L("隱身", "隱身"), Color("#c8c0e0")])
+	if o.is_empty(): o.append([L("冇任何狀態", "沒有任何狀態"), Color("#d8d0c0")])
+	return o
+func _draw_insp(n: CanvasItem, f: Font) -> void:
+	if insp == null: return
+	var u: Dictionary = insp.u; var op = insp.op
+	if J.num(u.get("hp", 0)) <= 0 or not (op.phase in ["fight", "end"]): insp = null; return
+	n.draw_set_transform_matrix(Transform2D.IDENTITY)
+	var ls = insp_lines(u, op)
+	var vp = get_viewport().get_visible_rect().size
+	var W = minf(vp.x - 24.0, 420.0); var lh = 22.0
+	var H = 40.0 + ls.size() * lh + 8.0
+	var top_px = float(nv._zone_top_px()) if nv.has_method("_zone_top_px") else 0.0
+	var r = Rect2((vp.x - W) / 2.0, top_px + 8.0, W, H)
+	n.draw_style_box(_box(Color(0.08, 0.06, 0.1, 0.92), 8), r)
+	n.draw_rect(r, Color("#7a5a3a"), false, 2.0)
+	var nm = str(DB.L(J.str(u.get("name", u.get("k")))))
+	n.draw_string(f, r.position + Vector2(12, 26), nm + L("　身上狀態（撳其他地方收起）", "　身上狀態（點其他地方收起）"), HORIZONTAL_ALIGNMENT_LEFT, W - 20, 16, Color("#ffe8b0"))
+	for i in ls.size():
+		n.draw_string(f, r.position + Vector2(14, 48 + i * lh), str(ls[i][0]), HORIZONTAL_ALIGNMENT_LEFT, W - 24, 14, ls[i][1])
+
 func _main_op():   # 戰況條／技能鈕：名鬼帶隊嗰場優先
 	for o in RTS.ops: if o.phase != "done" and not o.no_heroes: return o
 	for o in RTS.ops: if o.phase != "done": return o
@@ -492,6 +552,7 @@ func _draw_txt(n: CanvasItem) -> void:
 			_at(n, p + Vector2(0, -s.t * 8))
 			_str(n, f, s.text, 0, 0, 15, Color(0.92, 0.88, 0.8, 0.9 * a))
 	n.draw_set_transform_matrix(Transform2D.IDENTITY)
+	_draw_insp(n, f)   # [補丁43]
 
 func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 	# 飛彈

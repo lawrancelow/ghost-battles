@@ -12,7 +12,7 @@ const INK := Color("#2b1d12")
 const DIM := Color("#6e5838")
 const RED := Color("#b0281c")
 const GOOD := Color("#2e6b3a")
-const PINC := {"凡": "#5a6b78", "靈": "#2f6fb0", "煞": "#8a2a8a", "王": "#b07a1f"}
+const PINC := {"凡": "#8f8a7e", "靈": "#3f88c8", "煞": "#9a4ad0", "王": "#e0a020"}   # 同 soul_up.PJ_COL
 
 static func L(yue: String, zhs: String) -> String: return SOUL.L(yue, zhs)
 static func _main(): return Engine.get_main_loop().root.get_node_or_null("Main")
@@ -49,7 +49,9 @@ static func _bar(v: float, mx: float, col: Color) -> ProgressBar:
 	b.custom_minimum_size = Vector2(0, 12); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.add_theme_stylebox_override("background", UIKit.sb(Color(0, 0, 0, 0.18), 5)); b.add_theme_stylebox_override("fill", UIKit.sb(col, 5))
 	return b
-static func _pin_tag(k: String) -> String: return "[color=%s][b]%s[/b][/color]" % [PINC.get(SOUL.pin(k), "#555"), SOUL.pin(k)]
+static func _pin_tag(k: String) -> String:
+	var U = load("res://game/soul/soul_up.gd")
+	return "[color=#%s][b]%s[/b][/color]" % [U.tag_col(k).darkened(0.15).to_html(false), U.tag_name(k)]
 static func _card(parent: Control) -> VBoxContainer:
 	var pc = PanelContainer.new(); pc.add_theme_stylebox_override("panel", UIKit.sb(Color(1, 0.97, 0.88, 0.55), 6, UIKit.PAPERLINE, 1, Vector4(10, 8, 10, 8)))
 	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 5); pc.add_child(vb); parent.add_child(pc)
@@ -87,9 +89,10 @@ static func altar(body: VBoxContainer, refresh: Callable) -> bool:
 static func _altar_hint() -> String:
 	var lv = SOUL.altar_lv()
 	var ok = []
-	for p in SOUL.PINS: if lv >= int(SOUL.ALTAR_PIN[p]): ok.append(p)
+	var U = load("res://game/soul/soul_up.gd")
+	for p in SOUL.PINS: if lv >= int(SOUL.ALTAR_PIN[p]): ok.append(U.pin_label(p))
 	var t = L("招得：%s", "可招降：%s") % "・".join(ok)
-	if lv < 4: t += L("（祭壇 Lv%d 開%s）", "（祭壇 Lv%d 開放%s）") % [lv + 1, SOUL.PINS[lv]]
+	if lv < 4: t += L("（祭壇 Lv%d 開%s）", "（祭壇 Lv%d 開放%s）") % [lv + 1, U.pin_label(SOUL.PINS[lv])]
 	return t
 static func _ready_n(promote: bool) -> int:
 	var o = SOUL.st(); var n = 0

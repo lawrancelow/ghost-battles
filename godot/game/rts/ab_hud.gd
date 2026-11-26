@@ -83,6 +83,65 @@ static func alpha_of(op, u: Dictionary) -> float:
 	if not status(op, u).stealth: return 1.0
 	return 0.35 if J.num(u.get("side", 0)) != 0 else 0.55
 
+# [補丁43] buff／debuff 目錄：回 [{k, n（層數）, neg, left（剩秒，-1＝成場）}]，控場先、dot、負面、正面
+const ST_MAX := 4
+const ST_ORDER := ["st_stun", "st_silence", "st_charm", "st_confuse", "st_flee", "st_air", "st_down", "st_taunted", "st_burn", "st_poison", "st_claw", "st_curse",
+	"st_mark", "st_abreak", "st_wound", "st_slow", "st_aslow", "st_atkd", "st_saplock",
+	"st_revive", "st_immune", "st_steady", "st_guard", "st_taunt", "st_def", "st_atk", "st_aspd", "st_spd", "st_hot", "st_healup"]
+const DOT_K := {"burn": "st_burn", "fire": "st_burn", "poison": "st_poison", "claw": "st_claw"}
+static func _bf_key(b: Dictionary) -> String:
+	var p = str(b.get("p", "")); var v = J.num(b.get("v", 0)); var stt = str(b.get("stat", ""))
+	match p:
+		"buff":
+			match stt:
+				"atk": return "st_atk" if v >= 0 else "st_atkd"
+				"aspd": return "st_aspd" if v >= 0 else "st_aslow"
+				"spd": return "st_spd" if v >= 0 else "st_slow"
+				"taken": return "st_def" if v < 0 else "st_mark"
+				"heal_out": return "st_healup" if v >= 0 else "st_wound"
+				"heal_in": return "st_healup" if v >= 0 else "st_wound"
+			return ""
+		"slow": return "st_aslow" if stt == "aspd" else "st_slow"
+		"mark": return "st_mark"
+		"armor_break": return "st_abreak"
+		"wound": return "st_wound"
+		"silence": return "st_silence"
+		"hot": return "st_hot"
+		"immune": return "st_immune"
+		"steady": return "st_taunt" if str(b.get("id", "")) == "steady_t" else "st_steady"
+		"dot": return DOT_K.get(str(b.get("kind", "burn")), "st_curse")
+		"sap_lock": return "st_saplock"
+	return ""
+static func effects(op, u: Dictionary) -> Array:
+	var t = _t(op)
+	var a = u.get("ab")
+	var acc = {}
+	var add = func(k: String, left: float):
+		if k == "": return
+		if not acc.has(k): acc[k] = {"k": k, "n": 0, "left": left}
+		acc[k].n += 1
+		if left < 0 or (J.num(acc[k].left) >= 0 and left > J.num(acc[k].left)): acc[k].left = left
+	if a is Dictionary:
+		for b in a.get("bf", []):
+			if not (b is Dictionary): continue
+			var un = J.num(b.get("until", 0))
+			if un <= t: continue
+			add.call(_bf_key(b), -1.0 if un > 1e8 else un - t)
+		if J.num(a.get("stun_until", 0)) > t: add.call("st_stun", J.num(a.stun_until) - t)
+		if J.num(a.get("flee_until", 0)) > t: add.call("st_flee", J.num(a.flee_until) - t)
+		if J.num(a.get("conf_until", 0)) > t: add.call("st_confuse", J.num(a.conf_until) - t)
+		if J.num(a.get("charm_until", 0)) > t: add.call("st_charm", J.num(a.charm_until) - t)
+		if J.num(a.get("taunt_until", 0)) > t and a.get("taunt_by") is Dictionary and J.num(a.taunt_by.get("hp", 0)) > 0: add.call("st_taunted", J.num(a.taunt_until) - t)
+		if J.num(a.get("revive", 0)) > 0: add.call("st_revive", -1.0)
+		if a.get("guard") is Dictionary and J.num(a.guard.get("until", 0)) > t: add.call("st_guard", -1.0 if J.num(a.guard.until) > 1e8 else J.num(a.guard.until) - t)
+	var st = u.get("st")
+	if st is Dictionary:
+		if J.num(st.get("air", 0)) > 0: add.call("st_air", J.num(st.air))
+		elif J.num(st.get("down", 0)) > 0: add.call("st_down", J.num(st.down))
+	var o = []
+	for k in ST_ORDER: if acc.has(k): var e = acc[k]; e["neg"] = J.t(AI.info(k).get("neg")); o.append(e)
+	return o
+
 # 頭頂資訊行（由下而上；交 ab_lay 排版，唔重疊）：讀條、狀態圖示（盾殼隱飛失神＋敵人機制）
 static func lines_of(op, u: Dictionary, f: Font) -> Array:
 	var o = []
@@ -110,6 +169,13 @@ static func lines_of(op, u: Dictionary, f: Font) -> Array:
 			row.append(c); nm2 += 1
 	if row.size():
 		o.append({"k": "icons", "keys": row, "shell": s.shell, "w": row.size() * (IC * 2.0 + 3.0) + 2.0, "h": IC * 2.0 + 5.0})
+	# [補丁43] buff／debuff 一排：最多 4 個（控場先），多出顯示「+N」，層數 ≥2 顯示細數字
+	var ef = effects(op, u)
+	if ef.size():
+		var ks = []; var nn = []; var ng = []
+		for i in mini(ST_MAX, ef.size()): ks.append(ef[i].k); nn.append(int(ef[i].n)); ng.append(bool(ef[i].neg))
+		var more = ef.size() - ks.size()
+		o.append({"k": "icons", "keys": ks, "stk": nn, "neg": ng, "more": more, "w": ks.size() * (IC * 2.0 + 3.0) + (22.0 if more > 0 else 0.0) + 2.0, "h": IC * 2.0 + 5.0})
 	return o
 
 # ---------------- ab 事件飄字 ----------------
@@ -124,7 +190,15 @@ const EV := {
 	"steady": ["定神", "定神", "#c8d8ff"], "fear_aura": ["嚇氣受壓", "嚇氣受壓", "#e0a0c0"], "rush": ["突襲！", "突襲！", "#ff8a6a"],
 	"heal": ["回血", "回血", "#8affb0"], "sap": ["削嚇氣", "削嚇氣", "#9ad0ff"], "cc_immune": ["霸體", "霸體", "#d0b090"],
 	"stealth": ["隱身", "隱身", "#b8b0d0"], "fly": ["飛起", "飛起", "#a8d0f0"],
+	# [補丁43] 狀態目錄新增（封口／打斷／嘲諷／迷魂／迷惑引擎本身已有飄字，唔重複）
+	"stun": ["定身", "定身", "#ffd27a"], "slow": ["減速", "減速", "#9ad0ff"], "mark": ["易傷", "易傷", "#ff9a7a"],
+	"armor_break": ["破甲", "破甲", "#ffb070"], "wound": ["重創", "重創", "#ff8aa0"], "flee": ["驚走", "驚走", "#d8e08a"],
+	"hot": ["回血", "回血", "#8affb0"], "revive_set": ["返生", "返生", "#d8f0a0"], "guard": ["護衛", "護衛", "#9ad0ff"],
+	"sap_lock": ["鎖嚇氣", "鎖嚇氣", "#9ab0ff"], "dot_burn": ["燒傷", "燒傷", "#ffa060"], "dot_poison": ["中毒", "中毒", "#a0e080"],
+	"dot_claw": ["抓傷", "抓傷", "#ff9a8a"], "dot_curse": ["陰氣", "陰氣", "#c0a0e0"],
 }
+const ST_FL := ["stun", "slow", "mark", "armor_break", "wound", "flee", "hot", "revive_set", "guard", "sap_lock", "dot_burn", "dot_poison", "dot_claw", "dot_curse"]
+const FL_CD_ST := 1.5       # [補丁43] 狀態飄字：同一隻同一狀態 1.5 秒內唔重複
 const EV_ALIAS := {"現形": "reveal", "殼破": "shell_break", "屍變": "revive", "收": "seal", "驅散": "dispel", "打斷": "interrupt", "擊落": "ground", "反傷": "thorns", "散骨": "split", "召喚": "summon", "斬殺": "execute"}
 
 const FL_CD := 3.0          # [abui] 同一隻同一句最短間隔（秒）
@@ -136,6 +210,12 @@ static func on_event(op, e: Array) -> void:
 	var src = e[1]; var prim = str(e[2]); var tg = e[3] if e.size() > 3 else null
 	var u = tg if tg is Dictionary and tg.get("p") != null else (src if src is Dictionary and src.get("p") != null else null)
 	var key = EV_ALIAS.get(prim, prim)
+	if key == "dot" and tg is Dictionary:   # [補丁43] dot 按種類飄字
+		var dk = "curse"
+		var ta = tg.get("ab")
+		if ta is Dictionary:
+			for b in ta.get("bf", []): if b is Dictionary and str(b.get("p", "")) == "dot": dk = str(b.get("kind", "burn"))
+		key = "dot_" + {"burn": "burn", "fire": "burn", "poison": "poison", "claw": "claw"}.get(dk, "curse")
 	var d = EV.get(key)
 	var text = ""
 	var col = "#fff0d0"
@@ -148,7 +228,7 @@ static func on_event(op, e: Array) -> void:
 	var now = float(op.t) if op != null and op.get("t") != null else Time.get_ticks_msec() / 1000.0
 	var cdm = u.get("_flcd")
 	if not (cdm is Dictionary): cdm = {}; u["_flcd"] = cdm
-	if cdm.has(text) and now - float(cdm[text]) < (FL_CD_LONG if key in FL_LONG else FL_CD):
+	if cdm.has(text) and now - float(cdm[text]) < (FL_CD_LONG if key in FL_LONG else (FL_CD_ST if key in ST_FL else FL_CD)):
 		STAT_DROP += 1; return
 	cdm[text] = now
 	for x in FL:   # 同一隻、同一句仲喺度：合併做「×2」

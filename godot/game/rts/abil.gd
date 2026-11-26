@@ -386,9 +386,43 @@ static func pin_of(k) -> String:
 	var sd = _soul()
 	if sd != null and sd.has_method("pin"): return J.str(sd.pin(J.str(k)))
 	return ""
+# [補丁43] 技能七層：副技 SUB、專長 PERK（後備）、王牌技 ACE（data/nat/skills2.json，tools/skills/skills2_build.py 生成）
+const SK2_PATH := "res://data/nat/skills2.json"
+static var _SK2: Dictionary = {}
+static func sk2() -> Dictionary:
+	if _SK2.is_empty():
+		var t = FileAccess.get_file_as_string(SK2_PATH)
+		var p = JSON.parse_string(t) if t != "" else null
+		_SK2 = p if p is Dictionary else {"SUB": {}, "PERK": {}, "ACE": {}}
+	return _SK2
+static func sk2_off() -> bool: return OS.get_environment("GB_NOSK2") == "1"   # 測試用：關副技／專長後備／王牌技（對照組）
+static func sub_of(k):
+	var e = sk2().get("SUB", {}).get(J.str(k))
+	return e if e is Dictionary else null
+static func ace_of(k):
+	var e = sk2().get("ACE", {}).get(J.str(k))
+	return e if e is Dictionary else null
+static func perk_list(k) -> Array:   # 全部專長（唔理解鎖）：ABIL 手寫優先，冇就用 skills2
+	var pk = _arr(_ent("ABIL", J.str(k)).get("perk"))
+	if pk.size() > 0 and pk[0] is Dictionary: return pk
+	if sk2_off(): return []
+	return _arr(sk2().get("PERK", {}).get(J.str(k)))
+const SCALE_K := ["mult", "pct", "dps", "x", "v"]
+static func scaled_fx(L: Array, f: float) -> Array:   # 突破強化：數值 ×f（陣列逐格乘）
+	var o = []
+	for fx in L:
+		if not (fx is Dictionary): o.append(fx); continue
+		var d = (fx as Dictionary).duplicate(true)
+		if f != 1.0:
+			for kk in SCALE_K:
+				var x = d.get(kk)
+				if x is Array: d[kk] = x.map(func(y): return J.num(y) * f)
+				elif x is float or x is int: d[kk] = float(x) * f
+		o.append(d)
+	return o
+static func _UPm(): return load("res://game/soul/soul_up.gd")
 static func perks_of(k, rk := -1) -> Array:   # 專長解鎖（唯一一張表）：職級 2 主任開專長 1、職級 4 總監開專長 2；王品入村即有專長 1
-	var e = _ent("ABIL", J.str(k))
-	var pk = _arr(e.get("perk"))
+	var pk = perk_list(k)
 	if rk < 0: rk = rank_of(k)
 	var o = []
 	if pk.size() > 0 and pk[0] is Dictionary and (rk >= 2 or pin_of(k) == "王"): o.append(pk[0])
@@ -591,6 +625,17 @@ static func compile(sim, u: Dictionary) -> void:
 		for w in sim.units:
 			if w is Dictionary and _nn(w, "side") == 0 and w.has("gid") and not J.t(w.get("minion")) and w != sim.get("adviser"): ks.append(J.str(w.k))
 		for pe in R.bond_kit(ks): a.pas.append(pe)   # [roles] 系羈絆
+		if not sk2_off():   # [補丁43] 副技＋王牌技＋突破強化
+			var UPm = _UPm()
+			var al = UPm.act_lv(J.str(k)); var sl = UPm.sub_lv(J.str(k))
+			a["act_lv"] = al; a["sub_lv"] = sl; a["bstar"] = UPm.star(J.str(k))
+			if al > 0 and a.act is Dictionary:
+				var ac = (a.act as Dictionary).duplicate(true); ac["fx"] = scaled_fx(_arr(ac.get("fx")), 1.0 + 0.12 * al); a.act = ac
+			var sb = sub_of(k)
+			if sb != null:
+				var s2 = (sb as Dictionary).duplicate(true); s2["fx"] = scaled_fx(_arr(s2.get("fx")), 1.0 + 0.12 * sl); a.pas.append(s2)
+			var ace = ace_of(k)
+			if ace != null and UPm.born_ace(J.str(k)): a.pas.append((ace as Dictionary).duplicate(true))
 	if a.act is Dictionary and not J.t(a.act.get("leg")) and J.t(u.get("sk")) == false: u["sk"] = {"name": J.str(a.act.get("name")), "kind": "ab"}
 	if a.act is Dictionary and not J.t(a.act.get("leg")) and u.get("sk") is Dictionary and J.str(u.sk.get("name")) != J.str(a.act.get("name")):
 		u["sk"] = (u.sk as Dictionary).duplicate(); u.sk["name"] = J.str(a.act.get("name"))
@@ -1536,7 +1581,13 @@ static func trig(sim, u, tr: String, other = null, only := -1) -> void:
 			if J.t(a.get("low_" + key)) or _nn(u, "hp") > J.num(pe.get("pct", 0.35)) * _nn(u, "maxhp"): continue
 			a["low_" + key] = true
 		if pe.get("chance") != null and randf() > J.num(pe.chance): continue
+		var named = J.t(pe.get("sub")) or J.t(pe.get("ace"))
+		if named and (has_bf(sim, u, "silence") or J.num(a.get("stun_until", 0)) > sim.t): ev(sim, "sub_blocked", u, null); continue   # [補丁43] 副技／王牌技：封口、定身擋住
 		a.icd[key] = sim.t + J.num(pe.get("icd", 1.0))
+		if named and u.get("p") is Vector2:
+			var nm = J.str(pe.get("name"))
+			sim.text(sim.head(u) + Vector2(0, -50), nm, "#ffd27a" if J.t(pe.get("ace")) else "#d8f3ff", 1.0, 15)
+			ev(sim, "ace" if J.t(pe.get("ace")) else "sub", u, null)
 		var ts = []
 		if pe.get("tg") != null: ts = select(sim, u, pe.tg)
 		elif other is Dictionary and _nn(other, "side") != _nn(u, "side") and sim.alive(other): ts = [[other, 1.0]]

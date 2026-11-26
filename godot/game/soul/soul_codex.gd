@@ -175,8 +175,9 @@ class Cell extends Control:
 		var f = FX.font("sans")
 		draw_string(f, Vector2(r.position.x + 6, r.position.y + 22), "%03d" % no, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(FX.INK, 0.55))
 		if st != "unseen" and pin != "":
-			var pw = f.get_string_size(pin, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
-			draw_string(f, Vector2(r.end.x - pw - 6, r.position.y + 23), pin, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, pc)
+			var pl = load("res://game/soul/soul_up.gd").pin_label(pin)
+			var pw = f.get_string_size(pl, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+			draw_string(f, Vector2(r.end.x - pw - 6, r.position.y + 23), pl, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, pc.darkened(0.15))
 		# 圖框：全身原圖縮入（唔裁切）
 		var box = Rect2(r.position.x + 6, r.position.y + 28, r.size.x - 12, H - 28 - 66)
 		var mod = Color.WHITE
@@ -265,7 +266,9 @@ static func _detail(body: VBoxContainer, k: String) -> void:
 	var pin = S2.pin(k)
 	var sysn = S2.sys_of(k)
 	if known:
-		vb.add_child(_rich("[color=%s][b]%s品[/b][/color]　%s" % [FX.PINC.get(pin, Color.GRAY).to_html(false), pin if pin != "主" else "主角", (L("%s系", "%s系") % sysn if sysn != "" and sysn != "主" else "")], 18))
+		var UP = load("res://game/soul/soul_up.gd")
+		var stn = UP.star(k) if SOUL.is_ghost(k) else 0
+		vb.add_child(_rich("[color=#%s][b]%s[/b][/color]%s　%s" % [UP.tag_col(k).darkened(0.15).to_html(false), UP.tag_name(k) if pin != "主" else L("主角", "主角"), ("　[color=#b07a1f]" + "★".repeat(stn) + "[/color]") if stn > 0 else "", (L("%s系", "%s系") % sysn if sysn != "" and sysn != "主" else "")], 18))
 		if SOUL.is_ghost(k) or k == "afu":   # [roles] 定位
 			var RO = load("res://game/rts/roles.gd"); var ci = RO.info(k)
 			var tl = RO.tier(k); var sb0 = RO.sub(k)
@@ -297,6 +300,9 @@ static func _detail(body: VBoxContainer, k: String) -> void:
 		var ds = str(AB.describe(k))
 		if ds != "": body.add_child(_rich(ds, 16, DIM))
 	if str(gd.get("trait", "")) != "": body.add_child(_rich(str(DB.N(str(gd.trait))), 16, DIM))
+	if SOUL.is_ghost(k) or k == "afu":   # [補丁43] 技能七層
+		_h(body, L("技能七層", "技能七層"))
+		load("res://game/soul/soul_sk.gd").add_to(body, k, func(tx, sz, c): return _rich(tx, sz, c), DIM, INK)
 	# 標籤
 	var tags = S2.tags_of(k)
 	var mech = ent.get("mech", [])

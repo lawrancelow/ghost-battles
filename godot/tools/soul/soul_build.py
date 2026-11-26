@@ -105,6 +105,11 @@ STORY_JOIN = ["afu", "xiaozhi", "eguiking", "toyol", "laojiang", "pontianak", "p
 # 劇情鬼所屬章（0 起計，用嚟計招降費）
 STORY_CH = {"xiaozhi": 0, "eguiking": 0, "toyol": 1, "tianhua": 1, "laojiang": 2, "pontianak": 3, "pocong": 4, "penanggal": 4, "baiwu": 5, "heiwu": 5, "mengpo": 5, "pg_landlady": 5}
 
+# [補丁43] 品級以 roles.json TIER 為準（七職業時合一：凡 33、靈 31、煞 54、王 19，含 7 魔王）；主角（小紙）保留原 PIN
+_RJ = json.load(open(os.path.join("data", "nat", "roles.json"), encoding="utf-8"))
+_TM = {"普通": "凡", "精英": "靈", "傳說": "煞", "王牌": "王"}
+for k, t in _RJ.get("TIER", {}).items():
+    if t in _TM: PIN[k] = _TM[t]
 out = {"v": 2, "note": "soul 線：品級、據點駐守臨時表（counter.json guard 優先）、心願供品；數值見 soul_data.gd 頂部",
        "PIN": PIN, "CAMP": CAMP, "WISH": WISH, "STORY_JOIN": STORY_JOIN, "STORY_CH": STORY_CH, "TMP_SUB": TMP_SUB, "CAMP_PLAN": CAMP_PLAN, "CAMP_EN": CAMP_EN, "CAMP_EN_PLAN": CAMP_EN_PLAN, "NEW": NEWG, "CAMP2": CAMP2}
 p = os.path.join("data", "nat", "soul.json")

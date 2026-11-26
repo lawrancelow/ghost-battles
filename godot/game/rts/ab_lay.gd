@@ -198,8 +198,18 @@ static func draw(v, n: CanvasItem, f: Font) -> void:
 					for i in row.size():
 						var c = Vector2(x0 + i * gap, y - IC - 2.0)
 						AI.draw(n, row[i], c, IC)
+						if l.get("neg") is Array and i < (l.neg as Array).size():   # [補丁43] 負面紅圈、正面綠圈
+							n.draw_arc(c, IC + 1.0, 0, TAU, 20, Color("#e0503a") if l.neg[i] else Color("#5ac070"), 1.6, true)
+						if l.get("stk") is Array and i < (l.stk as Array).size() and int(l.stk[i]) >= 2:   # 層數
+							var sf = ThemeDB.fallback_font
+							n.draw_circle(c + Vector2(IC * 0.72, IC * 0.62), 6.5, Color(0, 0, 0, 0.85))
+							n.draw_string(sf, c + Vector2(IC * 0.72 - 3.6, IC * 0.62 + 4.5), str(int(l.stk[i])), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color.WHITE)
 						if row[i] == "st_shell" and l.get("shell", -1.0) >= 0:
 							n.draw_arc(c, IC + 2.0, -PI / 2, -PI / 2 + TAU * float(l.shell), 24, Color("#ffd27a"), 2.5, true)
+					if int(l.get("more", 0)) > 0:   # 「+N」
+						var mf = ThemeDB.fallback_font
+						var mx = x0 + row.size() * gap - IC + 2.0
+						v._str(n, mf, "+%d" % int(l.more), mx + 8.0, y - 4, 13, Color("#fff0d0"), 4)
 			y -= float(l.h)
 	for x in fls:
 		if not x.get("show", false): continue

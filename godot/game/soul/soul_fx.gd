@@ -357,7 +357,7 @@ class Show extends Control:
 		var tx = box.end.x + 14; var tw = cr.end.x - 20 - tx
 		var y = cr.position.y + 104
 		F.text_l(self, nm, tx, y, 26, Color(F.INK, al), "serif", tw); y += 34
-		F.text_l(self, F.L("%s品", "%s品") % pin, tx, y, 18, Color(F.PINC.get(pin, Color.GRAY), al), "sans", tw); y += 30
+		F.text_l(self, load("res://game/soul/soul_up.gd").pin_label(pin), tx, y, 18, Color(F.PINC.get(pin, Color.GRAY).darkened(0.15), al), "sans", tw); y += 30
 		if promote:
 			F.text_l(self, F.L("由【%s】", "由【%s】") % SOUL.rank_name(maxi(0, r - 1)), tx, y, 18, Color(F.INK, 0.75 * al), "sans", tw); y += 28
 			F.text_l(self, F.L("升為【%s】", "升為【%s】") % SOUL.rank_name(r), tx, y, 22, Color(F.CINNABAR, al), "sans", tw); y += 34
@@ -404,7 +404,7 @@ class Show extends Control:
 			pts.append(p + Vector2(cos(a), sin(a)) * (r if i % 2 == 0 else r * 0.45))
 		draw_colored_polygon(pts, col); pts.append(pts[0]); draw_polyline(pts, Color(F.INK, col.a), 1.5, true)
 
-const PINC := {"凡": Color("#5a6b78"), "靈": Color("#2f6fb0"), "煞": Color("#8a2a8a"), "王": Color("#b07a1f"), "主": Color("#9c2219")}
+const PINC := {"凡": Color("#8f8a7e"), "靈": Color("#3f88c8"), "煞": Color("#9a4ad0"), "王": Color("#e0a020"), "主": Color("#9c2219")}   # 同 soul_up.PJ_COL
 
 # ======================= ④ 抄功課：影印戰報卡（約 1.4 秒） =======================
 static func photocopy(title: String, line: String) -> Node:
