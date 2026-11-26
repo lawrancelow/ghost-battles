@@ -16,13 +16,18 @@
   [
    "名",
    "名"
+  ],
+  [
+   "絕",
+   "絕"
   ]
  ],
  "GRADE_COL": [
   "#8a8478",
   "#4e9a4a",
   "#3f78c0",
-  "#d2a12a"
+  "#d2a12a",
+  "#a0306a"
  ],
  "SLOT_N": {
   "wea": [
@@ -36,16 +41,236 @@
   "acc": [
    "隨身物",
    "隨身物"
+  ],
+  "ex": [
+   "專屬物",
+   "專屬物"
   ]
  },
+ "CAT_OF_CLS": {
+  "坦": "重",
+  "戰": "重",
+  "刺": "輕",
+  "射": "輕",
+  "法": "巧",
+  "輔": "巧",
+  "醫": "巧"
+ },
+ "CAT_BONUS": 0.2,
+ "CAT_N": {
+  "重": [
+   "重",
+   "重"
+  ],
+  "輕": [
+   "輕",
+   "輕"
+  ],
+  "巧": [
+   "巧",
+   "巧"
+  ]
+ },
+ "PLUS": {
+  "max": 10,
+  "per": 0.08,
+  "coin": 300,
+  "mat2": {
+   "重": "m_plank",
+   "輕": "m_strip",
+   "巧": "m_paper"
+  },
+  "mat3": {
+   "重": "m_yeketan",
+   "輕": "m_caoxie",
+   "巧": "m_wucha"
+  },
+  "rope": "m_rope"
+ },
+ "SETS": {
+  "cha": {
+   "n": [
+    "茶餐廳系列",
+    "茶餐廳系列"
+   ],
+   "ids": [
+    "eq_wokchan",
+    "eq_weiqun",
+    "eq_liangchapot"
+   ],
+   "b2": {
+    "st": {
+     "heal_in": 0.12
+    },
+    "d": [
+     "2 件：受治療 +12%",
+     "2 件：受治療 +12%"
+    ]
+   },
+   "b3": {
+    "st": {
+     "atk": 0.05
+    },
+    "pas": [
+     {
+      "tr": "every",
+      "t": 10.0,
+      "fx": [
+       {
+        "p": "heal",
+        "pct": 0.06
+       }
+      ],
+      "tg": {
+       "sel": "self"
+      },
+      "set": true
+     }
+    ],
+    "d": [
+     "3 件：攻 +5%，每 10 秒自己回 6% 血（夜更師傅食飯鐘）",
+     "3 件：攻 +5%，每 10 秒自己回 6% 血（夜班師傅吃飯時間）"
+    ]
+   }
+  },
+  "office": {
+   "n": [
+    "辦公室系列",
+    "辦公室系列"
+   ],
+   "ids": [
+    "eq_dingshuji",
+    "eq_xizhuang",
+    "eq_staffcard",
+    "eq_kafei"
+   ],
+   "b2": {
+    "st": {
+     "energy": 0.1
+    },
+    "d": [
+     "2 件：儲能 +10%",
+     "2 件：儲能 +10%"
+    ]
+   },
+   "b3": {
+    "st": {
+     "aspd": 0.1
+    },
+    "pas": [
+     {
+      "tr": "start",
+      "fx": [
+       {
+        "p": "energy",
+        "v": 30
+       }
+      ],
+      "tg": {
+       "sel": "self"
+      },
+      "set": true
+     }
+    ],
+    "d": [
+     "3 件：攻速 +10%，開場能量 +30（返工即刻開會）",
+     "3 件：攻速 +10%，開場能量 +30（上班立刻開會）"
+    ]
+   }
+  },
+  "guard": {
+   "n": [
+    "夜更保安系列",
+    "夜班保全系列"
+   ],
+   "ids": [
+    "eq_dianzhan",
+    "eq_baoan",
+    "eq_yinji"
+   ],
+   "b2": {
+    "st": {
+     "taken": -0.06
+    },
+    "d": [
+     "2 件：受傷 −6%",
+     "2 件：受傷 −6%"
+    ]
+   },
+   "b3": {
+    "st": {
+     "hp": 0.06
+    },
+    "pas": [
+     {
+      "tr": "start",
+      "fx": [
+       {
+        "p": "shield",
+        "pct": 0.15,
+        "dur": 8.0
+       },
+       {
+        "p": "taunt",
+        "r": 150,
+        "dur": 2.0
+       }
+      ],
+      "tg": {
+       "sel": "self"
+      },
+      "set": true
+     }
+    ],
+    "d": [
+     "3 件：血 +6%，開場上 15% 護盾兼嘲諷（企閘）",
+     "3 件：血 +6%，開場獲得 15% 護盾並嘲諷（站崗）"
+    ]
+   }
+  }
+ },
+ "EX_PLUS": {
+  "per": 0.05,
+  "t_cut": [
+   [
+    5,
+    2.0
+   ],
+   [
+    10,
+    2.0
+   ]
+  ],
+  "mat": {
+   "m_zhishan": 6,
+   "m_rope": 10
+  },
+  "coin": 2000
+ },
+ "DROP": {
+  "offer": {
+   "p": [
+    0.0,
+    0.15,
+    0.3,
+    0.55
+   ],
+   "name_p3": 0.35
+  },
+  "boss": {
+   "jue": 0.04,
+   "ex_first": 1.0,
+   "ex": 0.08
+  }
+ },
  "CAP": {
-  "atk": 0.25,
-  "hp": 0.25,
-  "taken": -0.1,
-  "energy": 0.2,
-  "aspd": 0.12,
-  "spd": 0.15,
-  "heal_in": 0.25
+  "atk": 0.45,
+  "hp": 0.45,
+  "taken": -0.18,
+  "energy": 0.35,
+  "aspd": 0.25,
+  "spd": 0.25,
+  "heal_in": 0.4
  },
  "SC_BONUS": 0.08,
  "MAX_TAG": 1,
@@ -406,6 +631,171 @@
    "price": 40,
    "bld": "st_bingqi"
   },
+  "eq_dingshuji": {
+   "id": "eq_dingshuji",
+   "kind": "eq",
+   "slot": "wea",
+   "grade": 1,
+   "st": {
+    "atk": 0.07,
+    "energy": 0.04
+   },
+   "tag": "",
+   "sc": "",
+   "look": "hand",
+   "shape": "stapler",
+   "rec": {
+    "m_plank": 5,
+    "m_strip": 4
+   },
+   "coin": 1500,
+   "star": 1,
+   "price": 450,
+   "n": [
+    "重型釘書機",
+    "重型釘書機"
+   ],
+   "d": [
+    "一嘢釘落去，報告同惡鬼都唔會散。",
+    "一下釘下去，報告和惡鬼都不會散。"
+   ],
+   "bld": "st_bingqi",
+   "cat": "巧",
+   "src": [
+    "make"
+   ],
+   "set": "office"
+  },
+  "eq_kafei": {
+   "id": "eq_kafei",
+   "kind": "eq",
+   "slot": "acc",
+   "grade": 1,
+   "st": {
+    "aspd": 0.05,
+    "energy": 0.04
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "coffee_cup",
+   "rec": {
+    "m_paper": 4,
+    "m_rope": 2
+   },
+   "coin": 1500,
+   "star": 1,
+   "price": 450,
+   "n": [
+    "凍咗嘅咖啡杯",
+    "涼掉的咖啡杯"
+   ],
+   "d": [
+    "朝早九點沖，夜晚十點先記得飲。",
+    "早上九點泡的，晚上十點才記得喝。"
+   ],
+   "bld": "st_bingqi",
+   "cat": "巧",
+   "src": [
+    "make"
+   ],
+   "set": "office"
+  },
+  "eq_jue_caidao": {
+   "id": "eq_jue_caidao",
+   "kind": "eq",
+   "slot": "wea",
+   "grade": 4,
+   "st": {
+    "atk": 0.2,
+    "aspd": 0.06
+   },
+   "tag": "破",
+   "sc": "",
+   "look": "hand",
+   "shape": "cleaver_old",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 30000,
+   "n": [
+    "百年老字號菜刀",
+    "百年老字號菜刀"
+   ],
+   "d": [
+    "斬過三代人嘅燒味，刀口仲記得每一隻鵝。",
+    "切過三代人的燒味，刀口還記得每一隻鵝。"
+   ],
+   "bld": "st_bingqi",
+   "cat": "重",
+   "src": [
+    "boss"
+   ]
+  },
+  "eq_jue_suit": {
+   "id": "eq_jue_suit",
+   "kind": "eq",
+   "slot": "arm",
+   "grade": 4,
+   "st": {
+    "hp": 0.18,
+    "taken": -0.08,
+    "energy": 0.08
+   },
+   "tag": "",
+   "sc": "",
+   "look": "body",
+   "shape": "manager_suit",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 30000,
+   "n": [
+    "區域經理西裝",
+    "區域經理西裝"
+   ],
+   "d": [
+    "著上身講嘢自動多三成說服力，少三成良心。",
+    "穿上身說話自動多三成說服力，少三成良心。"
+   ],
+   "bld": "st_bingqi",
+   "cat": "巧",
+   "src": [
+    "boss"
+   ]
+  },
+  "eq_jue_luichar": {
+   "id": "eq_jue_luichar",
+   "kind": "eq",
+   "slot": "acc",
+   "grade": 4,
+   "st": {
+    "energy": 0.15,
+    "spd": 0.1,
+    "atk": 0.06
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "luichar_bag",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 30000,
+   "n": [
+    "Lui Char 限量手袋",
+    "Lui Char 限量手袋"
+   ],
+   "d": [
+    "陰間女鬼排三晚隊都買唔到嗰個。",
+    "陰間女鬼排三晚隊都買不到的那個。"
+   ],
+   "bld": "st_bingqi",
+   "cat": "輕",
+   "src": [
+    "boss"
+   ]
+  },
   "eq_tuoxie": {
    "id": "eq_tuoxie",
    "kind": "eq",
@@ -434,7 +824,11 @@
     "天下武功，唯拖鞋不破；打完仲著得返。",
     "天下武功，唯拖鞋不破；打完還能穿回去。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "輕",
+   "src": [
+    "make"
+   ]
   },
   "eq_jimao": {
    "id": "eq_jimao",
@@ -463,7 +857,11 @@
     "一掃一大片，連蜘蛛網都冇埋。",
     "一撢一大片，連蜘蛛網都沒了。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "巧",
+   "src": [
+    "make"
+   ]
   },
   "eq_wokchan": {
    "id": "eq_wokchan",
@@ -492,7 +890,12 @@
     "炒得住小炒，炒得住惡鬼。",
     "炒得了小炒，也炒得了惡鬼。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "重",
+   "src": [
+    "make"
+   ],
+   "set": "cha"
   },
   "eq_suanpan": {
    "id": "eq_suanpan",
@@ -521,7 +924,11 @@
     "一粒一粒計，計到個殼都爆。",
     "一顆一顆算，算到殼都爆了。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "巧",
+   "src": [
+    "make"
+   ]
   },
   "eq_danca": {
    "id": "eq_danca",
@@ -550,7 +957,11 @@
     "天台曬鹹魚嗰陣用嚟趕雀，而家趕鬼。",
     "天台曬鹹魚時用來趕麻雀，現在趕鬼。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "輕",
+   "src": [
+    "make"
+   ]
   },
   "eq_suogu": {
    "id": "eq_suogu",
@@ -580,7 +991,11 @@
     "開遮企喺度，隔籬啲鬼都覺得安心。",
     "撐傘站在那裡，旁邊的鬼都覺得安心。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "巧",
+   "src": [
+    "make"
+   ]
   },
   "eq_liangcha": {
    "id": "eq_liangcha",
@@ -610,7 +1025,12 @@
     "高處啲衫叉得落嚟，飛喺天嗰啲都叉得落嚟。",
     "高處的衣服叉得下來，飛在天上的也叉得下來。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "輕",
+   "src": [
+    "make",
+    "offer"
+   ]
   },
   "eq_huanshou": {
    "id": "eq_huanshou",
@@ -640,7 +1060,12 @@
     "唔知斬過乜，總之好有經驗。",
     "不知道砍過什麼，總之很有經驗。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "重",
+   "src": [
+    "make",
+    "offer"
+   ]
   },
   "eq_huoqi": {
    "id": "eq_huoqi",
@@ -671,7 +1096,11 @@
     "大排檔師傅退休嗰晚交落嚟：「火要猛，手要快，收工要準時。」",
     "大排檔師傅退休那晚交下來：「火要猛，手要快，下班要準時。」"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "重",
+   "src": [
+    "offer"
+   ]
   },
   "eq_xizhuang": {
    "id": "eq_xizhuang",
@@ -701,7 +1130,12 @@
     "著住開會，大招都儲得快啲（因為冇人想聽你講）。",
     "穿著開會，大招也蓄得快一點（因為沒人想聽你講）。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "巧",
+   "src": [
+    "make"
+   ],
+   "set": "office"
   },
   "eq_anquan": {
    "id": "eq_anquan",
@@ -731,7 +1165,11 @@
     "頭戴式。安全帽係保住咗嘅。",
     "頭戴式。安全帽倒是保住了。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "重",
+   "src": [
+    "make"
+   ]
   },
   "eq_tengpai": {
    "id": "eq_tengpai",
@@ -761,7 +1199,11 @@
     "藤織嘅，好透氣，打中都透氣。",
     "藤編的，很透氣，被打中也透氣。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "重",
+   "src": [
+    "make"
+   ]
   },
   "eq_weiqun": {
    "id": "eq_weiqun",
@@ -791,7 +1233,12 @@
     "抹得手，抹得血，仲抹得返啲元氣。",
     "擦得了手，擦得了血，還能擦回一點元氣。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "巧",
+   "src": [
+    "make"
+   ],
+   "set": "cha"
   },
   "eq_tiewok": {
    "id": "eq_tiewok",
@@ -821,7 +1268,11 @@
     "揹喺背脊，龜殼嘅原理，龜嘅尊嚴。",
     "揹在背上，龜殼的原理，龜的尊嚴。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "重",
+   "src": [
+    "make"
+   ]
   },
   "eq_baoan": {
    "id": "eq_baoan",
@@ -852,7 +1303,12 @@
     "著上身即刻覺得自己守得住成條村，雖然人工冇加。",
     "一穿上就覺得自己守得住整條村，雖然薪水沒加。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "重",
+   "src": [
+    "make"
+   ],
+   "set": "guard"
   },
   "eq_guanban": {
    "id": "eq_guanban",
@@ -882,7 +1338,12 @@
     "前任用家話好瞓。",
     "前任用家說很好睡。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "重",
+   "src": [
+    "make",
+    "offer"
+   ]
   },
   "eq_yulou": {
    "id": "eq_yulou",
@@ -912,7 +1373,12 @@
     "攤開蓋住倒地嗰隻，佢就翻唔到身。",
     "攤開蓋住倒地那隻，它就翻不了身。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "輕",
+   "src": [
+    "make",
+    "offer"
+   ]
   },
   "eq_laogong": {
    "id": "eq_laogong",
@@ -944,7 +1410,11 @@
     "洗到褪晒色，仲係最硬淨嗰件。",
     "洗到全褪色了，還是最耐穿的那件。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "巧",
+   "src": [
+    "offer"
+   ]
   },
   "eq_staffcard": {
    "id": "eq_staffcard",
@@ -973,7 +1443,12 @@
     "掛喺心口，拍卡入閘，拍卡出招。",
     "掛在胸前，刷卡進閘，刷卡出招。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "巧",
+   "src": [
+    "make"
+   ],
+   "set": "office"
   },
   "eq_liangchapot": {
    "id": "eq_liangchapot",
@@ -1002,7 +1477,12 @@
     "飲啖涼茶，下火回氣，苦到惡鬼都皺眉。",
     "喝口涼茶，降火回氣，苦到惡鬼都皺眉。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "巧",
+   "src": [
+    "make"
+   ],
+   "set": "cha"
   },
   "eq_dianzhan": {
    "id": "eq_dianzhan",
@@ -1031,7 +1511,12 @@
     "照一照，匿埋嗰隻即刻現形，跟住問佢攞員工證。",
     "照一照，躲起來那隻立刻現形，接著問它要員工證。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "輕",
+   "src": [
+    "make"
+   ],
+   "set": "guard"
   },
   "eq_naozhong": {
    "id": "eq_naozhong",
@@ -1060,7 +1545,11 @@
     "一響，乜嘢回血都停；包括你嘅午睡。",
     "一響，什麼回血都停；包括你的午睡。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "巧",
+   "src": [
+    "make"
+   ]
   },
   "eq_yinji": {
    "id": "eq_yinji",
@@ -1089,7 +1578,12 @@
     "吹一聲，飛喺天嗰啲都跌落嚟睇下發生咩事。",
     "吹一聲，飛在天上的都掉下來看看發生什麼事。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "輕",
+   "src": [
+    "make"
+   ],
+   "set": "guard"
   },
   "eq_paperphone": {
    "id": "eq_paperphone",
@@ -1118,7 +1612,12 @@
     "打唔通，但係響得好大聲。",
     "打不通，但是響得很大聲。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "巧",
+   "src": [
+    "make",
+    "offer"
+   ]
   },
   "eq_fengyou": {
    "id": "eq_fengyou",
@@ -1149,7 +1648,12 @@
     "搽兩滴，行得快過收工鐘。",
     "擦兩滴，走得比下班鐘還快。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "輕",
+   "src": [
+    "make",
+    "offer"
+   ]
   },
   "eq_jinzheng": {
    "id": "eq_jinzheng",
@@ -1181,7 +1685,581 @@
     "服務滿三十年頒發，鍍金部分已經甩晒。",
     "服務滿三十年頒發，鍍金部分已經掉光了。"
    ],
-   "bld": "st_bingqi"
+   "bld": "st_bingqi",
+   "cat": "巧",
+   "src": [
+    "offer"
+   ]
+  },
+  "ex_heiwu": {
+   "id": "ex_heiwu",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "hp": 0.1,
+    "taken": -0.05
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "押解文書",
+    "押解文書"
+   ],
+   "d": [
+    "蓋咗印就要跟佢走，冇得上訴。",
+    "蓋了印就得跟他走，不能上訴。"
+   ],
+   "owner": "heiwu",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_baiwu": {
+   "id": "ex_baiwu",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "energy": 0.12,
+    "atk": 0.05
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "一見生財錢袋",
+    "一見生財錢袋"
+   ],
+   "d": [
+    "入面永遠有一個冥幣，攞咗又會有。",
+    "裡面永遠有一個冥幣，拿了又會再有。"
+   ],
+   "owner": "baiwu",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_mengpo": {
+   "id": "ex_mengpo",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "heal_in": 0.12,
+    "energy": 0.08
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "祖傳湯勺",
+    "祖傳湯勺"
+   ],
+   "d": [
+    "攪一千年湯，勺柄都攪到發光。",
+    "攪了一千年湯，勺柄都攪到發亮。"
+   ],
+   "owner": "mengpo",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_niutou": {
+   "id": "ex_niutou",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "hp": 0.12,
+    "taken": -0.04
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "牛頭鼻環",
+    "牛頭鼻環"
+   ],
+   "d": [
+    "地府門口迎賓專用，扯一下會發脾氣。",
+    "地府門口迎賓專用，拉一下會發脾氣。"
+   ],
+   "owner": "niutou",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_mamian": {
+   "id": "ex_mamian",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "atk": 0.08,
+    "aspd": 0.06
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "快馬韁繩",
+    "快馬韁繩"
+   ],
+   "d": [
+    "一拉即走，連收工鐘都追唔上。",
+    "一拉就跑，連下班鐘都追不上。"
+   ],
+   "owner": "mamian",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_nw_huapi": {
+   "id": "ex_nw_huapi",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "energy": 0.1,
+    "atk": 0.06
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "描皮彩筆",
+    "描皮彩筆"
+   ],
+   "d": [
+    "畫邊個似邊個，最難畫係自己。",
+    "畫誰像誰，最難畫的是自己。"
+   ],
+   "owner": "nw_huapi",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_nw_qiongqi": {
+   "id": "ex_nw_qiongqi",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "atk": 0.1,
+    "spd": 0.06
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "是非簿",
+    "是非簿"
+   ],
+   "d": [
+    "記低晒邊個講道理，一個都唔放過。",
+    "記下了誰在講道理，一個都不放過。"
+   ],
+   "owner": "nw_qiongqi",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_nw_nian": {
+   "id": "ex_nw_nian",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "hp": 0.12,
+    "taken": -0.04
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "守歲燈籠",
+    "守歲燈籠"
+   ],
+   "d": [
+    "一年只點一晚，點著就唔想瞓。",
+    "一年只點一晚，點著就不想睡。"
+   ],
+   "owner": "nw_nian",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_nw_niexiaoqian": {
+   "id": "ex_nw_niexiaoqian",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "heal_in": 0.12,
+    "energy": 0.08
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "書生畫卷",
+    "書生畫卷"
+   ],
+   "d": [
+    "畫入面個書生，一直都等緊佢。",
+    "畫裡的書生，一直都在等她。"
+   ],
+   "owner": "nw_niexiaoqian",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_pontianak": {
+   "id": "ex_pontianak",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "atk": 0.1,
+    "aspd": 0.05
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "香蕉樹葉",
+    "香蕉樹葉"
+   ],
+   "d": [
+    "夜晚攞嚟遮面，白天攞嚟包糯米。",
+    "晚上拿來遮臉，白天拿來包糯米。"
+   ],
+   "owner": "pontianak",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_nw_dokkaebi": {
+   "id": "ex_nw_dokkaebi",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "heal_in": 0.1,
+    "energy": 0.1
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "隱身斗笠",
+    "隱身斗笠"
+   ],
+   "d": [
+    "戴上就冇人見到，除咗收數佬。",
+    "戴上就沒人看得見，除了討債的。"
+   ],
+   "owner": "nw_dokkaebi",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_nw_dullahan": {
+   "id": "ex_nw_dullahan",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "atk": 0.1,
+    "aspd": 0.05
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "點名冊",
+    "點名冊"
+   ],
+   "d": [
+    "叫到你個名，就唔好扮聽唔到。",
+    "叫到你的名字，就別裝沒聽見。"
+   ],
+   "owner": "nw_dullahan",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_bm_taotie": {
+   "id": "ex_bm_taotie",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "hp": 0.12,
+    "taken": -0.04
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "無底大碗",
+    "無底大碗"
+   ],
+   "d": [
+    "裝幾多都唔夠，洗碗嗰個最慘。",
+    "裝多少都不夠，洗碗的那個最慘。"
+   ],
+   "owner": "bm_taotie",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_bm_jembalang": {
+   "id": "ex_bm_jembalang",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "atk": 0.1,
+    "spd": 0.06
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "甘榜地契",
+    "甘榜地契"
+   ],
+   "d": [
+    "地底幾百年嘅業權，冇人敢爭。",
+    "地底幾百年的產權，沒人敢爭。"
+   ],
+   "owner": "bm_jembalang",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_bm_hou": {
+   "id": "ex_bm_hou",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "hp": 0.12,
+    "taken": -0.05
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "食剩龍鱗",
+    "吃剩的龍鱗"
+   ],
+   "d": [
+    "上次食龍食剩嗰塊，留低做紀念。",
+    "上次吃龍吃剩的那片，留下做紀念。"
+   ],
+   "owner": "bm_hou",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_bm_langsuir": {
+   "id": "ex_bm_langsuir",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "atk": 0.1,
+    "aspd": 0.05
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "指甲鉗",
+    "指甲鉗"
+   ],
+   "d": [
+    "傳說剪佢指甲就收得服佢，所以佢自己保管。",
+    "傳說剪她的指甲就能收服她，所以她自己保管。"
+   ],
+   "owner": "bm_langsuir",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_bm_krasue": {
+   "id": "ex_bm_krasue",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "energy": 0.1,
+    "atk": 0.06
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "發光頸巾",
+    "發光頸巾"
+   ],
+   "d": [
+    "夜晚自己識發光，唔使交電費。",
+    "晚上自己會發光，不用交電費。"
+   ],
+   "owner": "bm_krasue",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_bm_pang": {
+   "id": "ex_bm_pang",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "atk": 0.08,
+    "energy": 0.08
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "年度最佳員工獎座",
+    "年度最佳員工獎座"
+   ],
+   "d": [
+    "連續三十年頒俾自己。",
+    "連續三十年頒給自己。"
+   ],
+   "owner": "bm_pang",
+   "src": [
+    "boss"
+   ]
+  },
+  "ex_bm_shuten": {
+   "id": "ex_bm_shuten",
+   "kind": "ex",
+   "slot": "ex",
+   "grade": 4,
+   "st": {
+    "hp": 0.1,
+    "atk": 0.06
+   },
+   "tag": "",
+   "sc": "",
+   "look": "belt",
+   "shape": "ex",
+   "rec": {},
+   "coin": 0,
+   "star": 99,
+   "price": 0,
+   "n": [
+    "大江山酒葫蘆",
+    "大江山酒葫蘆"
+   ],
+   "d": [
+    "倒極都仲有，飲極都唔醉。",
+    "怎麼倒都還有，怎麼喝都不醉。"
+   ],
+   "owner": "bm_shuten",
+   "src": [
+    "boss"
+   ]
   }
  },
  "ANCHOR": {

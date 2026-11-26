@@ -20,7 +20,7 @@ static func is_long(id: String) -> bool: return LONG.has(shape_of(id))
 static func icon(ctx: Ctx, id: String, x: float, y: float, sz: float, ring := true) -> void:
 	var c = Vector2(x, y - sz * 0.5); var s = sz / 26.0
 	if ring:
-		var gc = EQ.grade_col(EQ.grade_of(id)) if str(EQ.item(id).get("kind")) == "eq" else Color("#8a8478")
+		var gc = EQ.grade_col(EQ.grade_of(id)) if str(EQ.item(id).get("kind")) in ["eq", "ex"] else Color("#8a8478")
 		Art.el(ctx, c.x, c.y, sz * 0.5, sz * 0.5, "rgba(236,226,200,.94)", "#" + gc.to_html(false), maxf(1.2, 2.0 * s))
 	if has_icon(id):
 		Art.put(ctx, icon_key(id), x, y - sz * 0.08, sz * 0.84, sz * 0.84); return
@@ -59,7 +59,18 @@ static func shape(ctx: Ctx, sh: String) -> void:
 			for i in 7:
 				var a = -0.75 + i * 0.25
 				Art.el(ctx, sin(a) * 4.0, -16 + absf(a) * 2.0 - cos(a) * 3.0, 2.0, 4.6, "#8c7f74" if i % 2 else "#b4a898", INK, 0.6)
-		"cleaver":   # 生鏽柴刀
+		"stapler":   # [補丁43] 重型釘書機
+			Art.rr(ctx, -9, -10, 18, 6, 2, "#3e4658", INK, 1.0); Art.rr(ctx, -9, -4, 18, 4, 1.5, "#5a6270", INK, 0.9)
+			Art.rr(ctx, -9, -12, 6, 3, 1, "#c8483a", INK, 0.7)
+		"coffee_cup":   # [補丁43] 凍咗嘅咖啡杯
+			Art.rr(ctx, -6, -16, 12, 16, 2, "#f2ecd8", INK, 1.0); Art.el(ctx, 8, -9, 3.5, 4.5, null, INK, 1.4)
+			Art.el(ctx, 0, -15, 5, 1.4, "#5a3a20")
+		"luichar_bag":   # [補丁43] Lui Char 手袋（LC 字樣）
+			Art.rr(ctx, -9, -14, 18, 14, 2, "#6a4a2a", INK, 1.0); Art.el(ctx, 0, -14, 5, 5, null, INK, 1.2)
+			_l(ctx, -4, -9, -4, -4, "#e0c050", 1.2); _l(ctx, -4, -4, -1, -4, "#e0c050", 1.2); Art.el(ctx, 3, -6.5, 2.2, 2.6, null, "#e0c050", 1.2)
+		"ex":   # [補丁43] 王牌專屬物（暫代：金邊錦囊）
+			Art.el(ctx, 0, -9, 8, 9, "#8a2a5a", INK, 1.1); _l(ctx, -4, -17, 4, -17, "#e0c050", 1.6); Art.el(ctx, 0, -9, 3, 3, "#e0c050", INK, 0.6)
+		"cleaver", "cleaver_old":   # 生鏽柴刀（老字號菜刀共用）
 			Art.rr(ctx, -1.5, -7, 3, 9, 1, "#6a4428", INK, 0.9)
 			Art.poly(ctx, [-2, -7, 6, -7, 7, -20, 1, -22, -2, -18], "#8c7a6a", INK, 1.0)
 			Art.el(ctx, 3.5, -12, 1.6, 1.2, "#9a5a32"); Art.el(ctx, 1.5, -17, 1.2, 1.0, "#9a5a32")
@@ -127,8 +138,8 @@ static func shape(ctx: Ctx, sh: String) -> void:
 			_l(ctx, 0, -11, 0, -2, "#b88a1a", 1.2)
 		"wok_back":   # 反轉鐵鑊（揹喺背：圓鑊）
 			Art.el(ctx, 0, -12, 10, 10, "#4a4a52", INK, 1.2); Art.el(ctx, -3, -15, 3, 2, "#6a6a72")
-		"paper_armor", "ot_armor", "suit", "apron", "guard_uniform", "raincoat", "old_uniform":   # 身上衫（圖示用）
-			var col = {"paper_armor": "#d8cfc0", "ot_armor": "#3e4658", "suit": "#2e2e34", "apron": "#b8a888", "guard_uniform": "#41557a", "raincoat": "#d8dcc0", "old_uniform": "#7a8a6a"}[sh]
+		"paper_armor", "ot_armor", "suit", "apron", "guard_uniform", "raincoat", "old_uniform", "manager_suit":   # 身上衫（圖示用）
+			var col = {"paper_armor": "#d8cfc0", "ot_armor": "#3e4658", "suit": "#2e2e34", "apron": "#b8a888", "guard_uniform": "#41557a", "raincoat": "#d8dcc0", "old_uniform": "#7a8a6a", "manager_suit": "#4a2a3a"}[sh]
 			Art.poly(ctx, [-10, -18, -4, -22, 4, -22, 10, -18, 9, 0, -9, 0], col, INK, 1.1)
 			Art.poly(ctx, [-4, -22, 0, -16, 4, -22], "#f0e8d8", INK, 0.7)
 			if sh == "paper_armor":

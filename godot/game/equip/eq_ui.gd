@@ -28,6 +28,32 @@ static func stat_txt(id: String) -> String:
 			if st.has(s): a.append("%s%+d%%" % [STW[s], int(round(J.num(st[s]) * 100))])
 	if str(it.get("tag", "")) != "": a.append(L("補標籤「%s」（%s）", "補標籤「%s」（%s）") % [it.tag, TAGW.get(str(it.tag), "")])
 	if str(it.get("sc", "")) != "": a.append(L("同聲同氣「%s」", "同聲同氣「%s」") % SCW.get(str(it.sc), str(it.sc)))
+	if EQ.plus(id) > 0 and str(it.get("kind")) == "eq": a.append(L("（已計加工 +%d%%）", "（已計加工 +%d%%）") % int(round(EQ.plus(id) * J.num(EQ.D().get("PLUS", {}).get("per", 0.08)) * 100)))
+	return "　".join(a)
+# [補丁43] 數值（計埋加工）
+static func stat_txt_plus(id: String, cls := "") -> String:
+	var it = EQ.item(id)
+	if str(it.get("kind")) == "ml": return stat_txt(id)
+	var a = []
+	var stv = EQ.item_st(id, cls)
+	for s0 in ["atk", "hp", "taken", "energy", "aspd", "spd", "heal_in"]:
+		if stv.has(s0): a.append("%s%+d%%" % [STW[s0], int(round(J.num(stv[s0]) * 100))])
+	if str(it.get("tag", "")) != "": a.append(L("補標籤「%s」", "補標籤「%s」") % it.tag)
+	if str(it.get("sc", "")) != "": a.append(L("同聲同氣「%s」", "同聲同氣「%s」") % SCW.get(str(it.sc), str(it.sc)))
+	return "　".join(a)
+static func meta_txt(id: String) -> String:   # 類別、套裝
+	var it = EQ.item(id); var a = []
+	if EQ.cat_of(id) != "": a.append(L("%s類（%s穿多 20%%）", "%s類（%s穿加 20%%）") % [EQ.cat_name(EQ.cat_of(id)), {"重": L("坦、戰", "坦、戰"), "輕": L("刺、射", "刺、射"), "巧": L("法、輔、醫", "法、輔、醫")}.get(EQ.cat_of(id), "")])
+	var sk = str(it.get("set", ""))
+	if sk != "":
+		var S0 = EQ.D().get("SETS", {}).get(sk, {})
+		a.append(L("【%s】%s；%s", "【%s】%s；%s") % [EQ.T(S0.get("n", [sk, sk])), EQ.T(S0.get("b2", {}).get("d", ["", ""])), EQ.T(S0.get("b3", {}).get("d", ["", ""]))])
+	if str(it.get("kind")) == "ex": a.append(L("加工令王牌技升級（每級 +5%%，+5、+10 各快 2 秒）", "加工讓王牌技升級（每級 +5%%，+5、+10 各快 2 秒）"))
+	return "　".join(a)
+static func plus_txt(id: String) -> String:
+	var c = EQ.plus_cost(id); var a = []
+	for m in c.mat: a.append("%s %d/%d" % [M.name(str(m)), int(M.amt(str(m))), int(c.mat[m])])
+	a.append(L("冥幣 %d", "冥幣 %d") % int(c.coins))
 	return "　".join(a)
 static func rec_txt(id: String) -> String:
 	var it = EQ.item(id); var a = []
@@ -38,7 +64,10 @@ static func rec_txt(id: String) -> String:
 	return "　".join(a)
 static func full_name(id: String) -> String:
 	var it = EQ.item(id)
-	if str(it.get("kind")) == "eq": return "%s〔%s〕" % [EQ.name_of(id), EQ.grade_name(EQ.grade_of(id))]
+	if str(it.get("kind")) in ["eq", "ex"]:
+		var pl = EQ.plus(id)
+		var cat = EQ.cat_name(EQ.cat_of(id)) if EQ.cat_of(id) != "" else L("專屬", "專屬")
+		return "%s%s〔%s・%s〕" % [EQ.name_of(id), ("+%d" % pl) if pl > 0 else "", EQ.grade_name(EQ.grade_of(id)), cat]
 	return EQ.name_of(id)
 
 # ---------------- 小部件 ----------------
@@ -131,9 +160,15 @@ static func open_craft() -> void:
 static func _fill_craft(body: VBoxContainer) -> void:
 	for c in body.get_children(): body.remove_child(c); c.queue_free()
 	body.add_child(_lbl(L("兵器檔★%d　冥幣 %d　訂好入倉，喺「鬼怪名冊」換裝。", "兵器攤★%d　冥幣 %d　訂好入倉，在「鬼怪名冊」換裝。") % [EQ.stall_star(), int(EQ.coins())], 14, UIKit.INKDIM))
+	body.add_child(_lbl(L("紙紮師傅加工：倉庫有嘅裝備可以加工 +1 至 +10（每級 +8%）；名品靠回陽間燒落嚟、絕品同專屬物靠打魔王。", "紙紮師傅加工：倉庫有的裝備可以加工 +1 至 +10（每級 +8%）；名品靠回陽間燒下來、絕品和專屬物靠打魔王。"), 13, UIKit.INKDIM))
 	for sl in EQ.SLOTS:
 		body.add_child(UIKit.label(EQ.slot_name(sl), 17, UIKit.CINNABAR2, "serif", 900))
 		for id in EQ.items("eq", sl): body.add_child(_craft_row(body, id))
+	var exs = []
+	for id in EQ.items("ex", "ex"): if EQ.n_inv(id) > 0: exs.append(id)
+	if exs.size():
+		body.add_child(UIKit.label(EQ.slot_name("ex"), 17, UIKit.CINNABAR2, "serif", 900))
+		for id in exs: body.add_child(_craft_row(body, id))
 static func _craft_row(body: VBoxContainer, id: String) -> Control:
 	var ok = EQ.unlocked(id)
 	var pc = PanelContainer.new(); pc.name = "Craft_" + id
@@ -142,13 +177,22 @@ static func _craft_row(body: VBoxContainer, id: String) -> Control:
 	h.add_child(icon_c(id, 48))
 	var v = VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; v.add_theme_constant_override("separation", 1); h.add_child(v)
 	v.add_child(_lbl(full_name(id) + ("　" + L("倉 %d（空 %d）", "倉 %d（閒 %d）") % [EQ.n_inv(id), EQ.n_free(id)] if EQ.n_inv(id) > 0 else ""), 16, UIKit.INKTXT, 900))
-	v.add_child(_lbl(stat_txt(id), 14, Color("#2f5a8c"), 900))
+	v.add_child(_lbl(stat_txt_plus(id), 14, Color("#2f5a8c"), 900))
+	var mt = meta_txt(id)
+	if mt != "": v.add_child(_lbl(mt, 13, Color("#6a4a20"), 700))
 	v.add_child(_lbl(EQ.desc_of(id), 13, UIKit.INKDIM, 400))
-	v.add_child(_lbl((L("用料：", "用料：") + rec_txt(id)) if ok else EQ.lock_txt(id), 13, UIKit.INKTXT if ok else Color("#9c2219"), 700))
+	if EQ.can_craft_src(id): v.add_child(_lbl((L("用料：", "用料：") + rec_txt(id)) if ok else EQ.lock_txt(id), 13, UIKit.INKTXT if ok else Color("#9c2219"), 700))
+	else: v.add_child(_lbl(EQ.src_txt(id), 13, Color("#7a3a8a"), 700))
+	if EQ.n_inv(id) > 0 and EQ.plus(id) < 10: v.add_child(_lbl(L("加工 +%d：", "加工 +%d：") % (EQ.plus(id) + 1) + plus_txt(id), 13, UIKit.INKTXT, 700))
 	var a = VBoxContainer.new(); a.add_theme_constant_override("separation", 4); h.add_child(a)
-	var mb = _btn(L("訂製", "訂製"), "gold", EQ.can_make(id), func():
-		EQ.make(id); _fill_craft(body))
-	mb.name = "Make_" + id; a.add_child(mb)
+	if EQ.can_craft_src(id):
+		var mb = _btn(L("訂製", "訂製"), "gold", EQ.can_make(id), func():
+			EQ.make(id); _fill_craft(body))
+		mb.name = "Make_" + id; a.add_child(mb)
+	if EQ.n_inv(id) > 0:
+		var pb = _btn(L("加工", "加工") if EQ.plus(id) < 10 else L("已到頂", "已到頂"), "gold", EQ.can_plus(id) == "", func():
+			EQ.do_plus(id); _fill_craft(body))
+		pb.name = "Plus_" + id; a.add_child(pb)
 	if EQ.n_free(id) > 0:
 		var rb = _btn(L("回收 +%d", "回收 +%d") % int(J.num(EQ.item(id).get("price", 0))), "", true, func():
 			EQ.recycle(id); _fill_craft(body))
@@ -162,7 +206,10 @@ static func roster_strip(card: PanelContainer, hb: Control, gid: String) -> void
 	var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 4); card.add_child(v); v.add_child(hb)
 	var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 6); row.name = "EqStrip"; v.add_child(row)
 	var w = EQ.worn(gid)
-	for sl in EQ.SLOTS:
+	var sls = EQ.SLOTS.duplicate()
+	var gk = EQ.k_of(gid)
+	if not EQ.item(EQ.ex_id(gk)).is_empty() and load("res://game/soul/soul_up.gd").born_ace(gk): sls.append("ex")   # [補丁43] 天生王牌：專屬物格
+	for sl in sls:
 		var id = str(w.get(sl, ""))
 		var b = Button.new(); b.focus_mode = Control.FOCUS_NONE; b.name = "Slot_" + sl
 		b.custom_minimum_size = Vector2(0, 50); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -176,6 +223,15 @@ static func roster_strip(card: PanelContainer, hb: Control, gid: String) -> void
 		lb.vertical_alignment = VERTICAL_ALIGNMENT_CENTER; lb.size_flags_vertical = Control.SIZE_FILL; lb.mouse_filter = Control.MOUSE_FILTER_IGNORE; hb2.add_child(lb)
 		b.pressed.connect(func(): open_slot(gid, sl))
 		row.add_child(b)
+	var row2 = HBoxContainer.new(); row2.add_theme_constant_override("separation", 6); v.add_child(row2)
+	var ab = _btn(L("一鍵穿戴", "一鍵穿戴"), "", true, func():
+		EQ.auto_wear(gid); _changed())
+	ab.name = "AutoWear"; ab.custom_minimum_size = Vector2(110, 38); row2.add_child(ab)
+	var sx = []
+	for si in EQ.set_info(gid): sx.append("%s %d/3" % [si.name, si.n])
+	if sx.size():
+		var sl0 = _lbl(L("套裝：", "套裝：") + "　".join(sx), 13, Color("#6a4a20"), 900)
+		sl0.size_flags_horizontal = Control.SIZE_EXPAND_FILL; row2.add_child(sl0)
 	var ti = EQ.tag_info(gid)
 	if str(ti.tag) != "":
 		var why = {"": L("生效", "生效"), "own": L("本身已有，冇效", "本身已有，無效"), "full": L("本領已滿 3 個，冇效", "本領已滿 3 個，無效")}[str(ti.why)]
@@ -195,7 +251,13 @@ static func _fill_slot(body: VBoxContainer, gid: String, sl: String) -> void:
 	var parts = []
 	for s in ["atk", "hp", "taken", "energy", "aspd", "spd", "heal_in"]:
 		if absf(J.num(b[s])) > 0.0001: parts.append("%s%+d%%" % [STW[s], int(round(J.num(b[s]) * 100))])
-	body.add_child(_lbl(L("合計：", "合計：") + ("　".join(parts) if parts.size() else L("冇", "無")) + "　" + L("（封頂：攻／血 +25%）", "（封頂：攻／血 +25%）"), 14, Color("#2f5a8c"), 900))
+	body.add_child(_lbl(L("合計：", "合計：") + ("　".join(parts) if parts.size() else L("冇", "無")) + "　" + L("（封頂：攻／血 +45%）", "（封頂：攻／血 +45%）"), 14, Color("#2f5a8c"), 900))
+	var cls = load("res://game/rts/roles.gd").cls_of(k)
+	body.add_child(_lbl(L("職業：%s　啱著：%s類（數值 +20%%）", "職業：%s　適合：%s類（數值 +20%%）") % [cls, EQ.cat_name(EQ.cat_for_cls(cls))], 13, Color("#6a4a20"), 900))
+	for si in EQ.set_info(gid):
+		var ds = []
+		for bb in si.on: ds.append(EQ.T(bb.get("d", ["", ""])))
+		body.add_child(_lbl(L("【%s】%d 件：", "【%s】%d 件：") % [si.name, si.n] + ("；".join(ds) if ds.size() else L("未夠 2 件", "未滿 2 件")), 13, Color("#6a4a20"), 900))
 	var own = EQ.own_tags(k)
 	body.add_child(_lbl(L("本身標籤：%s　裝備最多補 1 個", "本身標籤：%s　裝備最多補 1 個") % ("、".join(own) if own.size() else L("冇", "無")), 13, UIKit.INKDIM))
 	var cur = str(EQ.worn(gid).get(sl, ""))
@@ -204,7 +266,7 @@ static func _fill_slot(body: VBoxContainer, gid: String, sl: String) -> void:
 			EQ.unwear(gid, sl); _changed(); _fill_slot(body, gid, sl))
 		ub.custom_minimum_size = Vector2(0, 42); ub.name = "Unwear"; body.add_child(ub)
 	var any = false
-	for id in EQ.items("eq", sl):
+	for id in EQ.items("ex" if sl == "ex" else "eq", sl):
 		if EQ.n_inv(id) <= 0: continue
 		any = true
 		var pc = PanelContainer.new(); pc.name = "Opt_" + id
@@ -213,7 +275,8 @@ static func _fill_slot(body: VBoxContainer, gid: String, sl: String) -> void:
 		h.add_child(icon_c(id, 46))
 		var v = VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; h.add_child(v)
 		v.add_child(_lbl(full_name(id) + "　" + L("閒置 %d", "閒置 %d") % EQ.n_free(id), 15, UIKit.INKTXT, 900))
-		var tx = stat_txt(id)
+		var tx = stat_txt_plus(id, cls)
+		if EQ.cat_match(id, cls): tx += "　" + L("（啱類別 +20%）", "（適合類別 +20%）")
 		var tg = str(EQ.item(id).get("tag", ""))
 		if tg != "" and own.has(tg): tx += "　" + L("（本身已有）", "（本身已有）")
 		elif tg != "" and own.size() >= 3: tx += "　" + L("（本領已滿）", "（本領已滿）")
@@ -228,6 +291,6 @@ static func _fill_slot(body: VBoxContainer, gid: String, sl: String) -> void:
 			wb.name = "Wear_" + id; h.add_child(wb)
 			if why != "": v.add_child(_lbl(why, 12, Color("#9c2219")))
 		body.add_child(pc)
-	if not any: body.add_child(_lbl(L("倉庫冇呢格嘅裝備：去大排檔「紙紮兵器檔」訂製。", "倉庫沒有這格的裝備：去大排檔「紙紮兵器攤」訂製。"), 14, UIKit.INKDIM))
+	if not any: body.add_child(_lbl(L("專屬物要打魔王先有機會掉。", "專屬物要打魔王才有機會掉落。") if sl == "ex" else L("倉庫冇呢格嘅裝備：去大排檔「紙紮兵器檔」訂製。", "倉庫沒有這格的裝備：去大排檔「紙紮兵器攤」訂製。"), 14, UIKit.INKDIM))
 static func _changed() -> void:
 	if on_change is Callable and on_change.is_valid(): on_change.call()

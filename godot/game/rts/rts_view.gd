@@ -630,16 +630,19 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 	if op.has_meta("report") and op.phase in ["back", "done"]:
 		if not op.has_meta("rep_t"): op.set_meta("rep_t", _t)
 		var age = _t - float(op.get_meta("rep_t"))
-		if age < 4.5 and vr.has_point(op.anchor):
+		var srows = load("res://game/rts/abil.gd").stats_rows(op) if op.get("ab_log") is Dictionary else []   # [補丁43] 戰後統計
+		var life = 7.5 if srows.size() else 4.5
+		if age < life and vr.has_point(op.anchor):
 			var rep: Dictionary = op.get_meta("report")
-			var a = clampf(age / 0.25, 0, 1) * (1.0 if age < 3.8 else 1.0 - (age - 3.8) / 0.7)
+			var a = clampf(age / 0.25, 0, 1) * (1.0 if age < life - 0.7 else 1.0 - (age - (life - 0.7)) / 0.7)
 			_at(n, op.anchor + Vector2(0, -96), 0.9 + 0.1 * clampf(age / 0.2, 0, 1))
 			var l1 = str(rep.get("head", "")); var l2 = str(rep.get("reward", ""))
 			var lost: Array = rep.get("lost", [])
 			var w = maxf(f.get_string_size(l1, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x, f.get_string_size(l2, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x)
 			for x in lost: w = maxf(w, f.get_string_size(str(x), HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x)
+			if srows.size(): w = maxf(w, 300.0)
 			w = minf(w, nv.size.x - 40.0)
-			var h = 36.0 + (22.0 if l2 != "" else 0.0) + 20.0 * lost.size()
+			var h = 36.0 + (22.0 if l2 != "" else 0.0) + 20.0 * lost.size() + ((24.0 + 19.0 * mini(5, srows.size())) if srows.size() else 0.0)
 			var win = J.t(rep.get("win"))
 			n.draw_style_box(_box(Color(0.96, 0.9, 0.74, 0.94 * a), 6), Rect2(-w / 2 - 14, -30, w + 28, h))
 			n.draw_rect(Rect2(-w / 2 - 10, -26, w + 20, h - 8), Color(0.6, 0.14, 0.1, 0.8 * a) if win else Color(0.3, 0.26, 0.24, 0.8 * a), false, 2.0)
@@ -647,8 +650,27 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 			var y = 22.0
 			if l2 != "": _str(n, f, l2, 0, y, 15, Color(0.25, 0.18, 0.1, a), 0); y += 20.0
 			for x in lost: _str(n, f, str(x), 0, y, 15, Color(0.55, 0.12, 0.1, a), 0); y += 20.0
+			if srows.size():   # [補丁43] 名　輸出　承傷　治療（MVP 金色）
+				var cx = [-w / 2 + 50.0, -w / 2 + w * 0.45, -w / 2 + w * 0.66, -w / 2 + w * 0.87]
+				var hd = [L("名鬼", "名鬼"), L("輸出", "輸出"), L("承傷", "承傷"), L("治療", "治療")]
+				for i in 4: _str(n, f, hd[i], cx[i], y + 2, 14, Color(0.4, 0.3, 0.2, a), 0)
+				y += 21.0
+				for r0 in srows.slice(0, 5):
+					var cl = Color(0.7, 0.45, 0.05, a) if r0.mvp else Color(0.25, 0.18, 0.1, a)
+					var nm = str(DB.L(str(r0.name)))
+					if nm.length() > 6: nm = nm.substr(0, 6)
+					_str(n, f, ("★" if r0.mvp else "") + nm, cx[0], y, 14, cl, 0)
+					_str(n, f, _kn(J.num(r0.dmg)), cx[1], y, 14, cl, 0)
+					_str(n, f, _kn(J.num(r0.tak)), cx[2], y, 14, cl, 0)
+					_str(n, f, _kn(J.num(r0.heal)), cx[3], y, 14, cl, 0)
+					y += 19.0
 			n.draw_set_transform_matrix(Transform2D.IDENTITY)
 
+static func _kn(x: float) -> String:   # 1234 → 1.2K
+	if x >= 1e6: return "%.1fM" % (x / 1e6)
+	if x >= 1e4: return "%dK" % int(x / 1e3)
+	if x >= 1e3: return "%.1fK" % (x / 1e3)
+	return str(int(round(x)))
 # [abui] 據點預覽敵人：頭頂機制細圖示（出擊前喺地圖都睇到「佢識飛」）
 func _draw_pv_mech(n: CanvasItem, vr: Rect2) -> void:
 	if _z() < 0.35: return   # 拉得太遠唔畫（太細睇唔清，反而遮地圖）

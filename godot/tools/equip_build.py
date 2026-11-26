@@ -3,11 +3,60 @@
 # 設計稿：/home/claude/docs/equip_design.md
 import json, os
 
-GRADE = {"凡": 0, "良": 1, "精": 2, "名": 3}
-GRADE_STAR = [0, 1, 3, 5]            # 兵器檔★解鎖
-GRADE_COIN = [200, 1500, 12000, 90000]
+GRADE = {"凡": 0, "良": 1, "精": 2, "名": 3, "絕": 4}
+GRADE_STAR = [0, 1, 3, 5, 99]        # 兵器檔★解鎖（絕：唔造得）
+GRADE_COIN = [200, 1500, 12000, 90000, 0]
 RECYCLE = 0.3
-CAP = {"atk": 0.25, "hp": 0.25, "taken": -0.10, "energy": 0.20, "aspd": 0.12, "spd": 0.15, "heal_in": 0.25}
+# [補丁43] 封頂提高（有強化 +10、套裝、專屬物）
+CAP = {"atk": 0.45, "hp": 0.45, "taken": -0.18, "energy": 0.35, "aspd": 0.25, "spd": 0.25, "heal_in": 0.40}
+# [補丁43] 職業類別：重（坦戰）、輕（刺射）、巧（法輔醫）；穿啱類別該件數值 +20%。「巧」只用生活物品
+CAT_OF_CLS = {"坦": "重", "戰": "重", "刺": "輕", "射": "輕", "法": "巧", "輔": "巧", "醫": "巧"}
+CAT_BONUS = 0.20
+CAT = {"eq_tuoxie": "輕", "eq_jimao": "巧", "eq_wokchan": "重", "eq_suanpan": "巧", "eq_danca": "輕", "eq_suogu": "巧", "eq_liangcha": "輕", "eq_huanshou": "重", "eq_huoqi": "重",
+       "eq_xizhuang": "巧", "eq_anquan": "重", "eq_tengpai": "重", "eq_weiqun": "巧", "eq_tiewok": "重", "eq_baoan": "重", "eq_guanban": "重", "eq_yulou": "輕", "eq_laogong": "巧",
+       "eq_staffcard": "巧", "eq_liangchapot": "巧", "eq_dianzhan": "輕", "eq_naozhong": "巧", "eq_yinji": "輕", "eq_paperphone": "巧", "eq_fengyou": "輕", "eq_jinzheng": "巧",
+       "eq_dingshuji": "巧", "eq_kafei": "巧", "eq_jue_caidao": "重", "eq_jue_suit": "巧", "eq_jue_luichar": "輕"}
+# 來源：凡良精喺兵器檔造；名只靠回陽間燒貨（陽間人燒落嚟）；精都有機會燒落嚟；絕＝魔王掉；專屬物＝魔王掉、綁定嗰隻王牌
+SRC = {0: ["make"], 1: ["make"], 2: ["make", "offer"], 3: ["offer"], 4: ["boss"]}
+# 紙紮師傅加工：+1–+10，每級該件數值 +8%；+1–5 用二級料、+6–10 再加三級料
+PLUS = {"max": 10, "per": 0.08, "coin": 300, "mat2": {"重": "m_plank", "輕": "m_strip", "巧": "m_paper"}, "mat3": {"重": "m_yeketan", "輕": "m_caoxie", "巧": "m_wucha"}, "rope": "m_rope"}
+# 套裝（湊齊 2／3 件有額外效果；辦公室系列 4 件揀 3 件著）
+SETS = {
+ "cha": {"n": ["茶餐廳系列", "茶餐廳系列"], "ids": ["eq_wokchan", "eq_weiqun", "eq_liangchapot"],
+   "b2": {"st": {"heal_in": 0.12}, "d": ["2 件：受治療 +12%", "2 件：受治療 +12%"]},
+   "b3": {"st": {"atk": 0.05}, "pas": [{"tr": "every", "t": 10.0, "fx": [{"p": "heal", "pct": 0.06}], "tg": {"sel": "self"}, "set": True}], "d": ["3 件：攻 +5%，每 10 秒自己回 6% 血（夜更師傅食飯鐘）", "3 件：攻 +5%，每 10 秒自己回 6% 血（夜班師傅吃飯時間）"]}},
+ "office": {"n": ["辦公室系列", "辦公室系列"], "ids": ["eq_dingshuji", "eq_xizhuang", "eq_staffcard", "eq_kafei"],
+   "b2": {"st": {"energy": 0.10}, "d": ["2 件：儲能 +10%", "2 件：儲能 +10%"]},
+   "b3": {"st": {"aspd": 0.10}, "pas": [{"tr": "start", "fx": [{"p": "energy", "v": 30}], "tg": {"sel": "self"}, "set": True}], "d": ["3 件：攻速 +10%，開場能量 +30（返工即刻開會）", "3 件：攻速 +10%，開場能量 +30（上班立刻開會）"]}},
+ "guard": {"n": ["夜更保安系列", "夜班保全系列"], "ids": ["eq_dianzhan", "eq_baoan", "eq_yinji"],
+   "b2": {"st": {"taken": -0.06}, "d": ["2 件：受傷 −6%", "2 件：受傷 −6%"]},
+   "b3": {"st": {"hp": 0.06}, "pas": [{"tr": "start", "fx": [{"p": "shield", "pct": 0.15, "dur": 8.0}, {"p": "taunt", "r": 150, "dur": 2.0}], "tg": {"sel": "self"}, "set": True}], "d": ["3 件：血 +6%，開場上 15% 護盾兼嘲諷（企閘）", "3 件：血 +6%，開場獲得 15% 護盾並嘲諷（站崗）"]}},
+}
+# 王牌專屬物（19 件，綁定嗰隻鬼；強化令王牌技升級：每級 +5%，+5、+10 各快 2 秒）
+EX = {
+ "heiwu": (["押解文書", "押解文書"], {"hp": 0.10, "taken": -0.05}, ["蓋咗印就要跟佢走，冇得上訴。", "蓋了印就得跟他走，不能上訴。"]),
+ "baiwu": (["一見生財錢袋", "一見生財錢袋"], {"energy": 0.12, "atk": 0.05}, ["入面永遠有一個冥幣，攞咗又會有。", "裡面永遠有一個冥幣，拿了又會再有。"]),
+ "mengpo": (["祖傳湯勺", "祖傳湯勺"], {"heal_in": 0.12, "energy": 0.08}, ["攪一千年湯，勺柄都攪到發光。", "攪了一千年湯，勺柄都攪到發亮。"]),
+ "niutou": (["牛頭鼻環", "牛頭鼻環"], {"hp": 0.12, "taken": -0.04}, ["地府門口迎賓專用，扯一下會發脾氣。", "地府門口迎賓專用，拉一下會發脾氣。"]),
+ "mamian": (["快馬韁繩", "快馬韁繩"], {"atk": 0.08, "aspd": 0.06}, ["一拉即走，連收工鐘都追唔上。", "一拉就跑，連下班鐘都追不上。"]),
+ "nw_huapi": (["描皮彩筆", "描皮彩筆"], {"energy": 0.10, "atk": 0.06}, ["畫邊個似邊個，最難畫係自己。", "畫誰像誰，最難畫的是自己。"]),
+ "nw_qiongqi": (["是非簿", "是非簿"], {"atk": 0.10, "spd": 0.06}, ["記低晒邊個講道理，一個都唔放過。", "記下了誰在講道理，一個都不放過。"]),
+ "nw_nian": (["守歲燈籠", "守歲燈籠"], {"hp": 0.12, "taken": -0.04}, ["一年只點一晚，點著就唔想瞓。", "一年只點一晚，點著就不想睡。"]),
+ "nw_niexiaoqian": (["書生畫卷", "書生畫卷"], {"heal_in": 0.12, "energy": 0.08}, ["畫入面個書生，一直都等緊佢。", "畫裡的書生，一直都在等她。"]),
+ "pontianak": (["香蕉樹葉", "香蕉樹葉"], {"atk": 0.10, "aspd": 0.05}, ["夜晚攞嚟遮面，白天攞嚟包糯米。", "晚上拿來遮臉，白天拿來包糯米。"]),
+ "nw_dokkaebi": (["隱身斗笠", "隱身斗笠"], {"heal_in": 0.10, "energy": 0.10}, ["戴上就冇人見到，除咗收數佬。", "戴上就沒人看得見，除了討債的。"]),
+ "nw_dullahan": (["點名冊", "點名冊"], {"atk": 0.10, "aspd": 0.05}, ["叫到你個名，就唔好扮聽唔到。", "叫到你的名字，就別裝沒聽見。"]),
+ "bm_taotie": (["無底大碗", "無底大碗"], {"hp": 0.12, "taken": -0.04}, ["裝幾多都唔夠，洗碗嗰個最慘。", "裝多少都不夠，洗碗的那個最慘。"]),
+ "bm_jembalang": (["甘榜地契", "甘榜地契"], {"atk": 0.10, "spd": 0.06}, ["地底幾百年嘅業權，冇人敢爭。", "地底幾百年的產權，沒人敢爭。"]),
+ "bm_hou": (["食剩龍鱗", "吃剩的龍鱗"], {"hp": 0.12, "taken": -0.05}, ["上次食龍食剩嗰塊，留低做紀念。", "上次吃龍吃剩的那片，留下做紀念。"]),
+ "bm_langsuir": (["指甲鉗", "指甲鉗"], {"atk": 0.10, "aspd": 0.05}, ["傳說剪佢指甲就收得服佢，所以佢自己保管。", "傳說剪她的指甲就能收服她，所以她自己保管。"]),
+ "bm_krasue": (["發光頸巾", "發光頸巾"], {"energy": 0.10, "atk": 0.06}, ["夜晚自己識發光，唔使交電費。", "晚上自己會發光，不用交電費。"]),
+ "bm_pang": (["年度最佳員工獎座", "年度最佳員工獎座"], {"atk": 0.08, "energy": 0.08}, ["連續三十年頒俾自己。", "連續三十年頒給自己。"]),
+ "bm_shuten": (["大江山酒葫蘆", "大江山酒葫蘆"], {"hp": 0.10, "atk": 0.06}, ["倒極都仲有，飲極都唔醉。", "怎麼倒都還有，怎麼喝都不醉。"]),
+}
+EX_PLUS = {"per": 0.05, "t_cut": [[5, 2.0], [10, 2.0]], "mat": {"m_zhishan": 6, "m_rope": 10}, "coin": 2000}
+# 掉落：回陽間燒貨（星數越高越有機會燒兵器落嚟；三星先有名品）、魔王（絕 4%、專屬物首殺必掉一件／之後 8%）
+DROP = {"offer": {"p": [0.0, 0.15, 0.30, 0.55], "name_p3": 0.35}, "boss": {"jue": 0.04, "ex_first": 1.0, "ex": 0.08}}
 SC_BONUS = 0.08                       # 同聲同氣：額外攻
 MAX_TAG = 1
 MAX_NAMED = 1
@@ -32,6 +81,13 @@ ML = [
 
 # ---- 名鬼裝備：id、槽、等、數值、標籤、同聲同氣嚇法、外觀、用料、名、笑位 ----
 EQ = [
+ # [補丁43] 辦公室系列新件
+ ("eq_dingshuji", "wea", "良", {"atk": 0.07, "energy": 0.04}, "", "", "stapler", {"m_plank": 5, "m_strip": 4}, ["重型釘書機", "重型釘書機"], ["一嘢釘落去，報告同惡鬼都唔會散。", "一下釘下去，報告和惡鬼都不會散。"]),
+ ("eq_kafei", "acc", "良", {"aspd": 0.05, "energy": 0.04}, "", "", "coffee_cup", {"m_paper": 4, "m_rope": 2}, ["凍咗嘅咖啡杯", "涼掉的咖啡杯"], ["朝早九點沖，夜晚十點先記得飲。", "早上九點泡的，晚上十點才記得喝。"]),
+ # [補丁43] 絕品（魔王掉落）
+ ("eq_jue_caidao", "wea", "絕", {"atk": 0.20, "aspd": 0.06}, "破", "", "cleaver_old", {}, ["百年老字號菜刀", "百年老字號菜刀"], ["斬過三代人嘅燒味，刀口仲記得每一隻鵝。", "切過三代人的燒味，刀口還記得每一隻鵝。"]),
+ ("eq_jue_suit", "arm", "絕", {"hp": 0.18, "taken": -0.08, "energy": 0.08}, "", "", "manager_suit", {}, ["區域經理西裝", "區域經理西裝"], ["著上身講嘢自動多三成說服力，少三成良心。", "穿上身說話自動多三成說服力，少三成良心。"]),
+ ("eq_jue_luichar", "acc", "絕", {"energy": 0.15, "spd": 0.10, "atk": 0.06}, "", "", "luichar_bag", {}, ["Lui Char 限量手袋", "Lui Char 限量手袋"], ["陰間女鬼排三晚隊都買唔到嗰個。", "陰間女鬼排三晚隊都買不到的那個。"]),
  # 兵器
  ("eq_tuoxie", "wea", "凡", {"atk": 0.06, "aspd": 0.06}, "", "", "slipper", {"m_plank": 2, "m_rope": 1}, ["膠拖鞋", "膠拖鞋"], ["天下武功，唯拖鞋不破；打完仲著得返。", "天下武功，唯拖鞋不破；打完還能穿回去。"]),
  ("eq_jimao", "wea", "凡", {"atk": 0.05}, "掃", "", "duster", {"m_bamboo": 4, "m_rope": 2}, ["雞毛掃", "雞毛撢子"], ["一掃一大片，連蜘蛛網都冇埋。", "一撢一大片，連蜘蛛網都沒了。"]),
@@ -246,9 +302,18 @@ def main():
         look = {"wea": "hand", "arm": "body", "acc": "belt"}[sl]
         if shape == "hardhat": look = "head"
         items[i] = {"id": i, "kind": "eq", "slot": sl, "grade": gi, "st": st, "tag": tag, "sc": sc, "look": look, "shape": shape,
-                    "rec": rec, "coin": GRADE_COIN[gi], "star": GRADE_STAR[gi], "price": int(GRADE_COIN[gi] * RECYCLE), "n": n, "d": d, "bld": "st_bingqi"}
-    out = {"v": 1, "GRADE_N": [["凡", "凡"], ["良", "良"], ["精", "精"], ["名", "名"]], "GRADE_COL": ["#8a8478", "#4e9a4a", "#3f78c0", "#d2a12a"],
-           "SLOT_N": {"wea": ["兵器", "兵器"], "arm": ["護身", "護身"], "acc": ["隨身物", "隨身物"]},
+                    "rec": rec, "coin": GRADE_COIN[gi], "star": GRADE_STAR[gi], "price": int(GRADE_COIN[gi] * RECYCLE) if gi < 4 else 30000, "n": n, "d": d, "bld": "st_bingqi",
+                    "cat": CAT[i], "src": SRC[gi]}
+        for sk, sv in SETS.items():
+            if i in sv["ids"]: items[i]["set"] = sk
+    for k, (n, st, d) in EX.items():   # [補丁43] 王牌專屬物
+        i = "ex_" + k
+        items[i] = {"id": i, "kind": "ex", "slot": "ex", "grade": 4, "st": st, "tag": "", "sc": "", "look": "belt", "shape": "ex", "rec": {}, "coin": 0, "star": 99,
+                    "price": 0, "n": n, "d": d, "owner": k, "src": ["boss"]}
+    out = {"v": 1, "GRADE_N": [["凡", "凡"], ["良", "良"], ["精", "精"], ["名", "名"], ["絕", "絕"]], "GRADE_COL": ["#8a8478", "#4e9a4a", "#3f78c0", "#d2a12a", "#a0306a"],
+           "SLOT_N": {"wea": ["兵器", "兵器"], "arm": ["護身", "護身"], "acc": ["隨身物", "隨身物"], "ex": ["專屬物", "專屬物"]},
+           "CAT_OF_CLS": CAT_OF_CLS, "CAT_BONUS": CAT_BONUS, "CAT_N": {"重": ["重", "重"], "輕": ["輕", "輕"], "巧": ["巧", "巧"]},
+           "PLUS": PLUS, "SETS": SETS, "EX_PLUS": EX_PLUS, "DROP": DROP,
            "CAP": CAP, "SC_BONUS": SC_BONUS, "MAX_TAG": MAX_TAG, "MAX_NAMED": MAX_NAMED, "RECYCLE": RECYCLE,
            "ITEMS": items, "ANCHOR": anchors()}
     p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "nat", "equip.json")

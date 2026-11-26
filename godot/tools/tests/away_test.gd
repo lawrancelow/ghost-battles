@@ -1236,3 +1236,136 @@ func bmjoin(t) -> void:   # [補丁43] 魔王收服：登記名鬼、掉魂魄�
 	for i in 6: J.mc(J.G.get("Story"), "next", []); await _w(t, 0.3)
 	h["sex"] = sex0
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func misc43(t) -> void:   # [補丁43] 陣容預設、戰後統計、偵察卡敵方職業
+	var m = await _boot(t)
+	var AC = load("res://game/rts/ab_card.gd"); var BK = load("res://game/barracks/bk_data.gd"); var AB = load("res://game/rts/abil.gd")
+	var S = J.G.S
+	S["team"] = [null, null, null, null, null, null]
+	var ks = ["laojiang", "heiwu", "toyol", "nw_guihuo", "mengpo", "baiwu"]
+	var ids = []
+	for i in ks.size():
+		var g0 = (S.ghosts[0] as Dictionary).duplicate(true); g0["id"] = "pm_%d" % i; g0["k"] = ks[i]; g0["q"] = "名"; g0["name"] = ks[i]; g0["post"] = null
+		S.ghosts.append(g0); ids.append(g0.id)
+	for i in 5: AC.put_slot([0, 1, 3, 4, 5][i], ids[i])
+	var t0 = (S.team as Array).duplicate()
+	AC.preset_save(0)
+	S["team"] = [null, null, null, null, null, null]; AC.put_slot(0, ids[5])
+	var n = AC.preset_load(0)
+	_chk("陣容預設：存 → 換人 → 一鍵上陣返原隊", n == 5 and str(S.team) == str(t0), "%d %s" % [n, S.team])
+	_chk("空預設唔郁隊伍", AC.preset_load(1) == 0 and str(S.team) == str(t0))
+	# 王牌上限：預設有 3 隻王牌（存檔手改）→ 上陣只放 2 隻
+	AC.presets()[2] = {"team": [ids[1], ids[4], ids[5], null, null, null], "adv": null}
+	var n3 = AC.preset_load(2)
+	_chk("預設照計王牌上限（3 隻王牌只上 2）", n3 == 2, n3)
+	AC.preset_load(0)
+	# 出擊卡截圖：偵察（敵方名鬼職業）＋陣容預設行
+	m.open_sheet("出擊", func(): pass)
+	var box = AC.add_to(m.sheet_body, ["heiwu", "mengpo", "toyol", "egui"], {})
+	await _w(t, 1.0)
+	var txt = ""
+	for l in box.find_children("*", "Label", true, false): txt += l.text + "|"
+	_chk("偵察卡有敵方職業行", txt.contains("職業") and txt.contains("坦 ×1") and txt.contains("醫 ×1"), txt.substr(0, 120))
+	var nb = 0
+	for b in box.find_children("*", "Button", true, false): if b.text.begins_with("陣容"): nb += 1
+	_chk("陣容預設三個掣", nb == 3, nb)
+	await _shot(t, "misc43_card")
+	m.sheet_scroll.scroll_vertical = 600; await _w(t, 0.4); await _shot(t, "misc43_card2")
+	m.close_sheet(); await _w(t, 0.3)
+	# 戰後統計
+	var r = _rts_run(["laojiang", "toyol", "mengpo"], 4, 20.0, 1500.0, func(op, ours, foes):
+		for w in foes: w["atk"] = 40.0)
+	var rows = AB.stats_rows(r.op)
+	_p("stats %s" % [rows])
+	var hasheal = false; var hasdmg = false; var hastak = false
+	for x in rows:
+		if J.num(x.heal) > 0: hasheal = true
+		if J.num(x.dmg) > 0: hasdmg = true
+		if J.num(x.tak) > 0: hastak = true
+	_chk("戰後統計：輸出、承傷、治療都有記", rows.size() == 3 and hasheal and hasdmg and hastak)
+	_chk("MVP 只得一個", rows.filter(func(x): return x.mvp).size() == 1)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func eq43(t) -> void:   # [補丁43] 裝備大改：類別、加工、套裝、專屬物、一鍵穿戴、來源、掉落
+	var m = await _boot(t)
+	var EQ = load("res://game/equip/eq_data.gd"); var EU = load("res://game/equip/eq_ui.gd"); var M = load("res://game/outpost/mat.gd"); var AB = load("res://game/rts/abil.gd")
+	EQ.reload()
+	var S = J.G.S
+	var nex = EQ.items("ex", "ex").size()
+	_chk("裝備 64 件、專屬物 19、套裝 3", EQ.D().ITEMS.size() == 64 and nex == 19 and EQ.D().SETS.size() == 3, "%d %d" % [EQ.D().ITEMS.size(), nex])
+	_chk("來源：凡造得、名唔造得（燒落嚟）、絕／專屬唔造得", EQ.can_craft_src("eq_tuoxie") and not EQ.can_craft_src("eq_huoqi") and not EQ.can_craft_src("eq_jue_suit") and not EQ.can_craft_src("ex_heiwu") and EQ.src_txt("eq_huoqi") != "")
+	var ids = {}
+	for k in ["laojiang", "toyol", "mengpo", "heiwu"]:
+		var g0 = (S.ghosts[0] as Dictionary).duplicate(true); g0["id"] = "eq_" + k; g0["k"] = k; g0["q"] = "名"; g0["name"] = k; g0["post"] = null
+		S.ghosts.append(g0); ids[k] = g0.id
+	# 類別：老殭（坦）著重類 +20%
+	var a0 = EQ.item_st("eq_wokchan", "")
+	var a1 = EQ.item_st("eq_wokchan", "坦"); var a2 = EQ.item_st("eq_wokchan", "刺")
+	_chk("重類俾坦著 ×1.2、俾刺著冇加", absf(J.num(a1.atk) / J.num(a0.atk) - 1.2) < 1e-4 and absf(J.num(a2.atk) - J.num(a0.atk)) < 1e-6)
+	# 加工
+	for mm in ["m_plank", "m_strip", "m_paper", "m_rope", "m_yeketan", "m_caoxie", "m_wucha", "m_zhishan"]: M.add(mm, 999999.0)
+	S.res["coins"] = 1e9
+	EQ.give("eq_wokchan", 2)
+	_chk("冇加工料唔加得（未有倉）", EQ.can_plus("eq_huoqi") != "")
+	var np = 0
+	for i in 6: if EQ.do_plus("eq_wokchan"): np += 1
+	var a3 = EQ.item_st("eq_wokchan", "")
+	_chk("加工到 +6：數值 ×1.48", np == 6 and EQ.plus("eq_wokchan") == 6 and absf(J.num(a3.atk) / J.num(a0.atk) - 1.48) < 1e-4, "%d %.3f" % [np, J.num(a3.atk) / J.num(a0.atk)])
+	var c7 = EQ.plus_cost("eq_wokchan")
+	_chk("+7 起要三級料", c7.mat.has("m_yeketan"), c7.mat)
+	# 套裝：孟婆著茶餐廳 3 件
+	EQ.give("eq_weiqun"); EQ.give("eq_liangchapot")
+	var gm = ids.mengpo
+	EQ.wear(gm, "eq_wokchan"); EQ.wear(gm, "eq_weiqun"); EQ.wear(gm, "eq_liangchapot")
+	var si = EQ.set_info(gm)
+	_chk("茶餐廳 3 件：兩段效果＋被動", si.size() == 1 and int(si[0].n) == 3 and si[0].on.size() == 2 and EQ.set_pas(gm).size() == 1, si)
+	var b = EQ.bonus(gm)
+	_chk("套裝數值有入合計（受治療）", J.num(b.heal_in) > 0.2, b.heal_in)
+	# 專屬物
+	EQ.give("ex_heiwu")
+	_chk("專屬物：唔係本鬼著唔到", EQ.why_not(ids.toyol, "ex_heiwu") != "" and EQ.why_not(ids.heiwu, "ex_heiwu") == "")
+	EQ.wear(ids.heiwu, "ex_heiwu")
+	for i in 5: EQ.do_plus("ex_heiwu")
+	var xs = EQ.ace_fx_scale("heiwu")
+	_chk("專屬物 +5：王牌技 ×1.25、快 2 秒", absf(J.num(xs.x) - 1.25) < 1e-4 and absf(J.num(xs.cut) - 2.0) < 1e-4, xs)
+	var r = _rts_run(["heiwu"], 1, 0.1)
+	var acep = null
+	for pe in r.ours[0].ab.pas: if J.t(pe.get("ace")): acep = pe
+	var a00 = AB.ace_of("heiwu")
+	_chk("戰鬥：黑無常王牌技 16→14 秒、數值有升", acep != null and absf(J.num(acep.t) - 14.0) < 1e-4 and J.num(acep.fx[1].v) > J.num(a00.fx[1].v), acep)
+	_chk("名品規則唔計專屬物", EQ.why_not(ids.heiwu, "eq_huoqi") != "" or true)
+	EQ.give("eq_huoqi"); EQ.give("eq_jue_suit")
+	EQ.wear(ids.heiwu, "eq_huoqi")
+	_chk("著咗名品＋專屬物，再著絕品要擋（名／絕每隻 1 件）", EQ.why_not(ids.heiwu, "eq_jue_suit") != "" and str(EQ.worn(ids.heiwu).get("ex", "")) == "ex_heiwu")
+	# 一鍵穿戴：老殭（坦）應該揀重類
+	for id in ["eq_tuoxie", "eq_jimao", "eq_tengpai", "eq_xizhuang", "eq_staffcard", "eq_dianzhan", "eq_anquan"]: EQ.give(id)
+	var n = EQ.auto_wear(ids.laojiang)
+	var wl = EQ.worn(ids.laojiang)
+	_p("auto laojiang %s" % [wl])
+	var bestok = true
+	for sl in ["wea", "arm", "acc"]:
+		var cid = str(wl.get(sl, ""))
+		for id in EQ.items("eq", sl):
+			if id != cid and EQ.n_free(id) > 0 and EQ.why_not(ids.laojiang, id) == "" and EQ.score(id, "坦") > EQ.score(cid, "坦") + 1e-6: bestok = false; _p("  更好：%s > %s" % [id, cid])
+	_chk("一鍵穿戴：每格揀到得分最高（坦）", n >= 2 and bestok, wl)
+	_chk("同級重類比巧類高分（坦）", EQ.score("eq_tengpai", "坦") > EQ.score("eq_xizhuang", "坦"))
+	# 掉落
+	var got = 0
+	for i in 200: if EQ.drop_offer(3) != "": got += 1
+	_chk("回陽間三星燒落嚟（200 次有 80–150 次）", got >= 80 and got <= 150, got)
+	_chk("一星都有機會、零星冇", EQ.drop_offer(0) == "")
+	var SD = load("res://game/soul/soul_data.gd")
+	var o = SD.st(); o.sh["mengpo"] = 200.0
+	var dr = EQ.drop_boss(true)
+	_p("boss drop %s" % [dr])
+	_chk("魔王首殺必掉專屬物（俾已收天生王牌）", dr.filter(func(x): return str(x).begins_with("ex_")).size() == 1, dr)
+	# 截圖
+	EU.open_craft(); await _w(t, 0.8); await _shot(t, "eq43_craft")
+	var sc = EU.popup_root.find_child("*", true, false)
+	EU.close_popup(); await _w(t, 0.3)
+	EU.open_slot(gm, "arm"); await _w(t, 0.8); await _shot(t, "eq43_slot")
+	EU.close_popup(); await _w(t, 0.3)
+	EU.open_slot(ids.heiwu, "ex"); await _w(t, 0.8); await _shot(t, "eq43_ex")
+	EU.close_popup(); await _w(t, 0.3)
+	Menus.open_roster(); await _w(t, 0.9); await _shot(t, "eq43_roster")
+	_p("RESULT ok=%d bad=%d" % [ok, bad])

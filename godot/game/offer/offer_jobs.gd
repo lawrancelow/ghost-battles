@@ -130,6 +130,12 @@ static func on_end(sc) -> void:
 	for g in got:
 		M.stock[g] = int(M.stock.get(g, 0)) + got[g]
 	pending = {"job": j, "got": got, "st": st}
+	var EQd = load("res://game/equip/eq_data.gd")   # [補丁43] 陽間人燒紙紮兵器落嚟（名鬼裝備高級來源）
+	var eqid = EQd.drop_offer(st)
+	if eqid != "":
+		pending["eq"] = eqid
+		var mn = Engine.get_main_loop().root.get_node_or_null("Main")
+		if mn != null and mn.has_method("show_toast"): mn.show_toast(T(["陽間仲燒埋一件名鬼裝備落嚟：%s〔%s〕！" % [EQd.name_of(eqid), EQd.grade_name(EQd.grade_of(eqid))], "陽間還燒了一件名鬼裝備下來：%s〔%s〕！" % [EQd.name_of(eqid), EQd.grade_name(EQd.grade_of(eqid))]]))
 	J.cl(J.G.get("save"), null, [])
 
 # 收工結算框收起之後先播（結算框喺劇情下面，唔好疊埋）

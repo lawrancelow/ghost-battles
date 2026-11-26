@@ -636,7 +636,18 @@ static func compile(sim, u: Dictionary) -> void:
 			if sb != null:
 				var s2 = (sb as Dictionary).duplicate(true); s2["fx"] = scaled_fx(_arr(s2.get("fx")), 1.0 + 0.12 * sl); a.pas.append(s2)
 			var ace = ace_of(k)
-			if ace != null and UPm.born_ace(J.str(k)): a.pas.append((ace as Dictionary).duplicate(true))
+			if ace != null and UPm.born_ace(J.str(k)):
+				var ac2 = (ace as Dictionary).duplicate(true)
+				var xs = load("res://game/equip/eq_data.gd").ace_fx_scale(J.str(k))   # [補丁43] 專屬物加工：王牌技升級
+				if J.num(xs.x) > 1.0: ac2["fx"] = scaled_fx(_arr(ac2.get("fx")), J.num(xs.x))
+				if J.num(xs.cut) > 0 and ac2.get("t") != null: ac2["t"] = maxf(6.0, J.num(ac2.t) - J.num(xs.cut))
+				a["ace_x"] = xs
+				a.pas.append(ac2)
+	if sd == 1 and not a.sum and not J.t(u.get("minion")) and not J.t(u.get("sum")):   # [補丁43] 敵方名鬼（據點）都有職業被動
+		var R2 = load("res://game/rts/roles.gd")
+		if R2.data().CLS.has(J.str(k)) and not R2.off() and OS.get_environment("GB_NOFOECLS") != "1":
+			a["cls"] = R2.cls_of(k)
+			for pe in R2.kit(k): a.pas.append(pe)
 	if a.act is Dictionary and not J.t(a.act.get("leg")) and J.t(u.get("sk")) == false: u["sk"] = {"name": J.str(a.act.get("name")), "kind": "ab"}
 	if a.act is Dictionary and not J.t(a.act.get("leg")) and u.get("sk") is Dictionary and J.str(u.sk.get("name")) != J.str(a.act.get("name")):
 		u["sk"] = (u.sk as Dictionary).duplicate(); u.sk["name"] = J.str(a.act.get("name"))
@@ -1102,12 +1113,12 @@ static func prim(sim, u: Dictionary, fx: Dictionary, ts: Array, ctx: Dictionary)
 				var w = pr[0]
 				if _nn(w, "hp") <= 0: continue
 				var h = (_v(fx, "pct", 0.0, star) * _nn(w, "maxhp") + _v(fx, "mult", 0.0, star) * _nn(u, "atk")) * stat(sim, w, "heal_in") * stat(sim, u, "heal_out")
-				_heal(sim, w, h)
+				_heal(sim, w, h, u)
 				if w.get("p") is Vector2: sim._fx({"kind": "ring", "p": w.p, "life": 0.5, "col": "#8affb0"})
 			ev(sim, "heal", u, u)
 		"hot":
 			for pr in _self_or(ts, u, sd):
-				add_bf(sim, pr[0], {"id": "hot", "p": "hot", "v": _v(fx, "pct", 0.03, star), "dur": _v(fx, "dur", 5.0, star), "tick": 0.0})
+				add_bf(sim, pr[0], {"id": "hot", "p": "hot", "v": _v(fx, "pct", 0.03, star), "dur": _v(fx, "dur", 5.0, star), "tick": 0.0, "src": u})
 			ev(sim, "hot", u, u)
 		"shield":
 			for pr in _self_or(ts, u, sd):
@@ -1263,8 +1274,9 @@ static func _self_or(ts: Array, u: Dictionary, sd: float) -> Array:   # 支援�
 	var o = []
 	for pr in ts: if pr[0] is Dictionary and _nn(pr[0], "side") == sd: o.append(pr)
 	return o if o.size() else [[u, 1.0]]
-static func _heal(sim, w: Dictionary, h: float) -> void:
+static func _heal(sim, w: Dictionary, h: float, src = null) -> void:
 	if h <= 0 or _nn(w, "hp") <= 0: return
+	_stat(sim, "heal", src if src is Dictionary else w, minf(h, maxf(0.0, _nn(w, "maxhp") - _nn(w, "hp"))))   # [補丁43]
 	w["hp"] = minf(_nn(w, "maxhp"), _nn(w, "hp") + h)
 	if w.get("p") is Vector2: sim.text(sim.head(w) + Vector2(0, -10), "+" + J.str(J.round(h)), "#8affb0", 0.9)
 static func _ground(sim, v: Dictionary) -> void:   # 飛行被腳軟／彈起／扯近＝拉落地 4 秒
@@ -1437,8 +1449,10 @@ static func hit(sim, src: Dictionary, v: Dictionary, mult: float, c = null) -> f
 		if J.num(va.shell) <= 0:
 			dmg_hp = -J.num(va.shell) / k; va["shell"] = 0.0
 			sim.text(sim.head(v) + Vector2(0, -20), "殼破", "#f97316", 1.0); ev(sim, "shell_break", src, v)
+	var hp_b = _nn(v, "hp")
 	if sim.cosmetic and vsd == 0: v["hp"] = maxf(_nn(v, "maxhp") * 0.25, _nn(v, "hp") - dmg_hp)
 	else: v["hp"] = _nn(v, "hp") - dmg_hp
+	_stat(sim, "dmg", src, minf(dmg_hp, hp_b)); _stat(sim, "tak", v, minf(dmg_hp, hp_b))   # [補丁43] 戰後統計
 	# ---- 畫面（同舊 hit 一樣） ----
 	var sp: Vector2 = src.get("p", v.p) if src.get("p") is Vector2 else v.p
 	var dir = signf((v.p as Vector2).x - sp.x)
@@ -1453,7 +1467,10 @@ static func hit(sim, src: Dictionary, v: Dictionary, mult: float, c = null) -> f
 	if chain: sim.text(sim.center() + Vector2(0, -90), "連嚇！", "#ffd84a", 1.2, 20)
 	# ---- 舊式 apply（直接叫 op.hit 嗰啲） ----
 	if c.get("apply") != null and J.str(c.apply) != "" and _nn(v, "hp") > 0: cc(sim, src, v, J.str(c.apply))
-	if J.num(c.get("drain", 0)) > 0: _heal_quiet(src, dmg_hp * J.num(c.drain) * stat(sim, src, "heal_in"))
+	if J.num(c.get("drain", 0)) > 0:
+		var dh = dmg_hp * J.num(c.drain) * stat(sim, src, "heal_in")
+		_stat(sim, "heal", src, minf(dh, maxf(0.0, _nn(src, "maxhp") - _nn(src, "hp"))))   # [補丁43]
+		_heal_quiet(src, dh)
 	if J.num(c.get("sap", 0)) > 0: v["energy"] = maxf(0.0, _nn(v, "energy") - J.num(c.sap))
 	if not sk: src["energy"] = minf(100.0, _nn(src, "energy") + 8 * emul(sim, src))
 	v["energy"] = minf(100.0, _nn(v, "energy") + 4 * emul(sim, v))
@@ -1498,8 +1515,10 @@ static func _guard_of(sim, v: Dictionary):
 	return null
 static func raw(sim, v: Dictionary, amt: float, src, c := {}) -> void:   # 直接扣血（dot、反傷、護衛轉移、收魂）：唔再計倍率、唔觸發
 	if _nn(v, "hp") <= 0 or amt <= 0: return
+	var hp_b = _nn(v, "hp")
 	if sim.cosmetic and _nn(v, "side") == 0: v["hp"] = maxf(_nn(v, "maxhp") * 0.25, _nn(v, "hp") - amt)
 	else: v["hp"] = _nn(v, "hp") - amt
+	_stat(sim, "dmg", src, minf(amt, hp_b)); _stat(sim, "tak", v, minf(amt, hp_b))   # [補丁43]
 	if v.get("p") is Vector2 and amt >= 1.0 and not J.t(c.get("quiet")):
 		sim._fx({"kind": "num", "p": sim.head(v) + Vector2((randf() - 0.5) * 14, -2), "vx": 0.0, "text": J.str(J.round(amt)), "life": 0.7, "col": "#c4b5fd" if not J.t(c.get("thorn")) else "#fca5a5", "big": false})
 	if _nn(v, "hp") <= 0:
@@ -1616,7 +1635,10 @@ static func tick_unit(sim, u: Dictionary, dt: float) -> bool:
 				if J.num(b.tick) >= 0.5:
 					b["tick"] = J.num(b.tick) - 0.5
 					if p == "dot": raw(sim, u, J.num(b.v) * 0.5, b.get("src"), {"dot": true})
-					else: _heal_quiet(u, J.num(b.v) * _nn(u, "maxhp") * 0.5 * stat(sim, u, "heal_in"))
+					else:
+						var hh = J.num(b.v) * _nn(u, "maxhp") * 0.5 * stat(sim, u, "heal_in")
+						_stat(sim, "heal", b.get("src") if b.get("src") is Dictionary else u, minf(hh, maxf(0.0, _nn(u, "maxhp") - _nn(u, "hp"))))   # [補丁43]
+						_heal_quiet(u, hh)
 			keep.append(b)
 		a["bf"] = keep
 		if _nn(u, "hp") <= 0: return true
@@ -1848,6 +1870,25 @@ static func _fod(sim) -> String:
 	return ["youhun", "egui", "xiaogui", "shuigui", "zombie", "zhiren"][clampi(ci, 0, 5)]
 
 # ================= 結算 =================
+# [補丁43] 戰後統計：我方名鬼（有 gid、唔係嘍囉／召喚物）嘅輸出、承傷、治療
+static func _stat(sim, kind: String, u, amt: float) -> void:
+	if amt <= 0 or not (u is Dictionary) or _nn(u, "side") != 0 or not u.has("gid") or J.t(u.get("minion")) or J.t(u.get("sum")): return
+	if not (sim.ab_log is Dictionary): return
+	if not (sim.ab_log.get("stat") is Dictionary): sim.ab_log["stat"] = {}
+	var g = J.str(u.gid)
+	if not sim.ab_log.stat.has(g): sim.ab_log.stat[g] = {"k": J.str(u.get("k")), "name": J.str(u.get("name", u.get("k"))), "dmg": 0.0, "tak": 0.0, "heal": 0.0}
+	sim.ab_log.stat[g][kind] = J.num(sim.ab_log.stat[g][kind]) + amt
+# MVP：輸出 1 分、承傷 0.6 分、治療 1.2 分（坦、醫都有機會）；回 [{k,name,dmg,tak,heal,score,mvp}]，按分數排
+static func stats_rows(sim) -> Array:
+	var st = sim.ab_log.get("stat", {}) if sim.ab_log is Dictionary else {}
+	var o = []
+	for g in st:
+		var x = (st[g] as Dictionary).duplicate()
+		x["score"] = J.num(x.dmg) + 0.6 * J.num(x.tak) + 1.2 * J.num(x.heal); x["mvp"] = false
+		o.append(x)
+	o.sort_custom(func(a, b): return J.num(a.score) > J.num(b.score))
+	if o.size(): o[0].mvp = true
+	return o
 static func report(sim) -> void:
 	# 我方召喚物唔係陰兵：結算前拎走（唔計戰死、唔扣兵）
 	var keep = []

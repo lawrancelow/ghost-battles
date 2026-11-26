@@ -141,6 +141,60 @@ static func set_adviser(id) -> void:
 	var sv = J.G.get("save")
 	if sv != null: J.cl(sv, null, [])
 
+# ---------------- [補丁43] 陣容預設：3 套（S.team_pre）、一鍵上陣 ----------------
+const PRE_N := 3
+static func presets() -> Array:
+	var S = J.G.S
+	if not (S.get("team_pre") is Array): S["team_pre"] = [null, null, null]
+	while (S.team_pre as Array).size() < PRE_N: S.team_pre.append(null)
+	return S.team_pre
+static func preset_save(i: int) -> void:
+	BK.pad_team()
+	var S = J.G.S
+	presets()[i] = {"team": (S.team as Array).duplicate(), "adv": S.get("adviser")}
+	var sv = J.G.get("save")
+	if sv != null: J.cl(sv, null, [])
+# 一鍵上陣：清空出陣格，按預設逐格放（村外工作緊／已冇咗嘅鬼跳過；王牌上限照計）；回放咗幾多隻
+static func preset_load(i: int) -> int:
+	var pr = presets()[i]
+	if not (pr is Dictionary): return 0
+	BK.pad_team()
+	var S = J.G.S
+	for j in (S.team as Array).size(): S.team[j] = null
+	S["adviser"] = null
+	var n = 0
+	var tm: Array = pr.get("team", [])
+	for j in mini(tm.size(), (S.team as Array).size()):
+		var g = ghost(tm[j])
+		if g == null or BK.job(g) == "away": continue
+		put_slot(j, g.id)
+		if J.str(S.team[j]) == J.str(g.id): n += 1
+	var ad = ghost(pr.get("adv"))
+	if ad != null and BK.job(ad) != "away": set_adviser(ad.id)
+	var sv = J.G.get("save")
+	if sv != null: J.cl(sv, null, [])
+	return n
+static func preset_name(i: int) -> String:
+	var pr = presets()[i]
+	if not (pr is Dictionary): return L("陣容%d（空）", "陣容%d（空）") % (i + 1)
+	var c = 0
+	for x in pr.get("team", []): if ghost(x) != null: c += 1
+	return L("陣容%d・%d 隻", "陣容%d・%d 隻") % [i + 1, c]
+static func _preset_row(box: VBoxContainer, P: Dictionary) -> Control:
+	var hb = HFlowContainer.new(); hb.add_theme_constant_override("h_separation", 6); hb.add_theme_constant_override("v_separation", 4)
+	hb.add_child(_lab(L("陣容預設", "陣容預設"), 14, P.hd, false))
+	for i in PRE_N:
+		var has = presets()[i] is Dictionary
+		var b = UIKit.btn(preset_name(i), "gold" if has else "", true); b.focus_mode = Control.FOCUS_NONE; b.add_theme_font_size_override("font_size", 14); b.disabled = not has
+		b.tooltip_text = L("一鍵上陣", "一鍵上陣")
+		var ii = i
+		b.pressed.connect(func(): Snd.play("click"); preset_load(ii); _changed(box))
+		hb.add_child(b)
+		var sb = UIKit.btn(L("存", "存"), "", true); sb.focus_mode = Control.FOCUS_NONE; sb.add_theme_font_size_override("font_size", 14)
+		sb.pressed.connect(func(): Snd.play("click"); preset_save(ii); _changed(box))
+		hb.add_child(sb)
+	return hb
+
 # ---------------- 畫面 ----------------
 static func _pal(dark: bool) -> Dictionary:
 	if dark: return {"tx": Color("#f0e0d0"), "dim": Color("#c8b8a0"), "ok": Color("#a8f0a0"), "bad": Color("#ff8a7a"), "hd": Color("#ffd27a"), "box": Color(1, 1, 1, 0.06), "bd": Color(1, 1, 1, 0.16), "lit": Color("#ffd27a")}
@@ -199,6 +253,13 @@ static func render(box: VBoxContainer) -> void:
 		cnt[s] += 1
 	for s in order:
 		hf.add_child(_pill("%s ×%d" % [str(DB.L(s)) if s != "?" else L("未知", "未知"), cnt[s]], Color(SYS.get(s, "#6a6060"))))
+	var RO = load("res://game/rts/roles.gd")   # [補丁43] 敵方名鬼職業：幾坦幾醫
+	var cc = {}
+	for k in ks: if RO.data().CLS.has(str(k)) and not RO.off(): cc[RO.cls_of(str(k))] = int(cc.get(RO.cls_of(str(k)), 0)) + 1
+	if not cc.is_empty():
+		var hf2 = HFlowContainer.new(); hf2.add_theme_constant_override("h_separation", 6); hf2.add_theme_constant_override("v_separation", 4); box.add_child(hf2)
+		hf2.add_child(_lab(L("職業", "職業"), 16, P.hd, false))
+		for c0 in RO.ORDER: if cc.has(c0): hf2.add_child(_pill("%s ×%d" % [RO.T(RO.CLS[c0].name), cc[c0]], Color(str(RO.CLS[c0].col))))
 	var R = J.G.get("Rework"); var fw = {}
 	if R != null:
 		for k in ks:
@@ -252,6 +313,7 @@ static func render(box: VBoxContainer) -> void:
 	for m in ms:
 		for t in counters(m): need[t] = true
 	box.add_child(_team_row(need, P, box, cmp))
+	box.add_child(_preset_row(box, P))   # [補丁43] 陣容預設
 	# ---- ✔／✘ ----
 	var nok = 0
 	for m in ms:
