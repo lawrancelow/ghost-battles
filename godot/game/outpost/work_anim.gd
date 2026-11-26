@@ -21,36 +21,52 @@ static var LAST := {}
 #   PROPS＝false → 全部唔畫名鬼面前嘅工作物（木墩、轆轤架、竹、木盆……），只留浮喺身旁嘅工具動作同碎屑特效；
 #   FIELD_PROPS[bid／post]＝false → 只係嗰個資源田唔畫（靠地圖原本嘅井、竹叢、椰樹……）
 static var PROPS := true
-static var FIELD_PROPS := {}
+# [批次2 老闆 14:42 通過] 地圖本身已經畫咗井／竹叢／蕉樹／椰樹／膠樹／禾稈堆：呢 6 塊預設唔畫工作物，只留工具動作
+static var FIELD_PROPS := {"b_well": false, "b_bamboo": false, "b_banana": false, "b_coco": false, "b_latex": false, "b_straw": false}
 static func props_for(post: String) -> bool: return PROPS and bool(FIELD_PROPS.get(post, true))
 # 細道具嘅動作：工具＋工作物以工具位（cx, 腳底）為中心放大（遊戲入面角色細，唔放大睇唔清）
 const ZOOM := {"grate": 1.5, "press": 1.5, "stamp": 1.45, "fan": 1.5, "ladle": 1.3, "wok": 1.5, "fold": 1.5, "forge": 1.25, "steam": 1.25,
-	"pick": 1.35, "mill": 1.3, "scoop": 1.2, "knead": 1.25, "twist": 1.2, "pound": 1.2, "stir": 1.15, "reap": 1.15, "poke": 1.0}       # 測試：最後一次畫 {k: {"verb", "pts": [Vector2（本地框、以 H 為 1）], "body": {}}}
+	"pick": 1.35, "mill": 1.3, "scoop": 1.2, "knead": 1.25, "twist": 1.2, "pound": 1.2, "stir": 1.15, "reap": 1.15, "poke": 1.0,
+	"sew": 1.5, "brush": 1.45, "paint": 1.45, "screw": 1.6, "salt": 1.4, "slice": 1.35, "pull": 1.2, "tongs": 1.15, "pump": 1.25, "plane": 1.3}       # 測試：最後一次畫 {k: {"verb", "pts": [Vector2（本地框、以 H 為 1）], "body": {}}}
 
 # ---------------- 建築 → 動作 ----------------
 # 村子崗位（舊建築用 post 名，新建築用 bid）
 const POST := {
 	"wood": "chop", "b_wood": "chop", "rice": "reap", "b_rice": "reap", "plank": "saw", "b_plank": "saw", "bun": "knead", "b_bun": "knead",
-	"b_well": "crank", "b_bamboo": "hack", "b_coco": "poke", "b_latex": "score", "b_tea": "pick", "b_straw": "reap", "b_banana": "hack",
-	"b_fish": "net", "b_newspaper": "pick", "b_toner": "scoop",
+	"b_well": "crank", "b_bamboo": "hack", "b_coco": "poke", "b_latex": "score", "b_tea": "pick", "b_straw": "fork", "b_banana": "hack",
+	"b_fish": "net", "b_newspaper": "tongs", "b_toner": "scoop",
 	"b_paper": "dip", "b_strip": "split", "b_cocomilk": "grate", "b_rubbersheet": "press", "b_rope": "twist", "b_pulp": "pound", "b_ink": "stir",
 }
 # 大排檔各檔（台圖 art → 動作）
 const STALL := {
-	"mvs_steamer": "steam", "mvs_tailor": "fold", "mvs_well": "ladle", "mvs_mill": "mill", "mvs_kiln": "fan", "mvs_denglong": "fold",
-	"mvs_tiaodan": "ladle", "mvs_charcoal": "fan", "mvs_rubber": "press", "mvs_bamboo": "steam", "mvs_durian": "hack", "mvs_ricepot": "ladle",
-	"mvs_straw": "twist", "mvs_teahouse": "ladle", "mvs_coffin": "saw", "mvs_huajiao": "fold", "mvs_notice": "stamp", "mvs_ganlu": "fold",
-	"mvs_banana": "fold", "mvs_fish": "fan", "mvs_lemon": "stir", "mvs_exchange": "stamp", "mvs_float": "crank", "mvs_pier": "stamp",
-	"mvs_delivery": "fold", "mvs_phone": "forge", "mvs_watch": "forge", "mvs_garage": "forge", "mvs_vinegar": "stir", "mvs_cinema": "stamp",
-	"mvs_baogu": "wok", "mvs_soup": "ladle", "mvs_copier": "press", "mvs_umbrella": "fold", "mvs_files": "stamp", "mvs_lamp": "fold",
-	"mvs_lounge": "saw", "mvs_daka": "stamp", "mvs_house": "fold", "mvs_bingqi": "forge",
+	"mvs_steamer": "steam", "mvs_tailor": "sew", "mvs_well": "ladle", "mvs_mill": "mill", "mvs_kiln": "fan", "mvs_denglong": "brush",
+	"mvs_tiaodan": "ladle", "mvs_charcoal": "fan", "mvs_rubber": "slice", "mvs_bamboo": "steam", "mvs_durian": "catch", "mvs_ricepot": "ladle",
+	"mvs_straw": "twist", "mvs_teahouse": "pull", "mvs_coffin": "saw", "mvs_huajiao": "brush", "mvs_notice": "brush", "mvs_ganlu": "fold",
+	"mvs_banana": "fold", "mvs_fish": "salt", "mvs_lemon": "pull", "mvs_exchange": "stamp", "mvs_float": "pump", "mvs_pier": "stamp",
+	"mvs_delivery": "fold", "mvs_phone": "paint", "mvs_watch": "screw", "mvs_garage": "paint", "mvs_vinegar": "stir", "mvs_cinema": "stamp",
+	"mvs_baogu": "wok", "mvs_soup": "ladle", "mvs_copier": "press", "mvs_umbrella": "sew", "mvs_files": "stamp", "mvs_lamp": "brush",
+	"mvs_lounge": "plane", "mvs_daka": "stamp", "mvs_house": "fold", "mvs_bingqi": "forge",
 }
 # 動作 → 用嘅工具（說明／測試用）
 const TOOL_OF := {"chop": "斧頭", "hack": "柴刀", "split": "柴刀", "poke": "竹竿", "reap": "鐮刀", "crank": "轆轤搖柄", "score": "膠刀", "net": "罾",
 	"pick": "竹籮", "scoop": "長柄勺", "saw": "鋸", "knead": "擀麵棍", "dip": "竹簾", "grate": "刨椰凳", "press": "壓膠轆", "twist": "搓繩車",
-	"pound": "打漿杵", "stir": "攪棍", "wok": "鑊鏟＋鐵鑊", "ladle": "大勺", "fold": "紙", "forge": "木槌", "steam": "蒸籠蓋", "stamp": "印仔", "fan": "葵扇", "mill": "石磨推柄"}
+	"pound": "打漿杵", "stir": "攪棍", "wok": "鑊鏟＋鐵鑊", "ladle": "大勺", "fold": "紙", "forge": "木槌", "steam": "蒸籠蓋", "stamp": "印仔", "fan": "葵扇", "mill": "石磨推柄",
+	"fork": "禾叉", "tongs": "鐵夾", "sew": "針", "brush": "漿糊掃", "paint": "油掃", "catch": "竹籮", "pump": "打氣筒", "slice": "鞋底刀",
+	"pull": "鋼杯", "salt": "鹽筒", "plane": "木刨", "screw": "螺絲批"}
 const VERBS := ["chop", "hack", "split", "poke", "reap", "crank", "score", "net", "pick", "scoop", "saw", "knead", "dip", "grate", "press", "twist",
-	"pound", "stir", "wok", "ladle", "fold", "forge", "steam", "stamp", "fan", "mill"]
+	"pound", "stir", "wok", "ladle", "fold", "forge", "steam", "stamp", "fan", "mill",
+	"fork", "tongs", "sew", "brush", "paint", "catch", "pump", "slice", "pull", "salt", "plane", "screw"]
+# [批次2] 做工音效掛點：動作 → 事件名（音效組之後補聲）。觸發：每隻鬼「beat」（冇就用 hit）由 false 變 true 嗰一格
+const SFX := {"chop": "wk_chop_hit", "hack": "wk_hack_hit", "split": "wk_split_hit", "poke": "wk_poke_knock", "reap": "wk_reap_cut", "crank": "wk_crank_creak",
+	"score": "wk_score_scrape", "net": "wk_net_splash", "pick": "wk_pick_drop", "scoop": "wk_scoop_dig", "saw": "wk_saw_stroke", "knead": "wk_knead_roll",
+	"dip": "wk_dip_slosh", "grate": "wk_grate_rasp", "press": "wk_press_squeak", "twist": "wk_twist_whirr", "pound": "wk_pound_thud", "stir": "wk_stir_slosh",
+	"wok": "wk_wok_clang", "ladle": "wk_ladle_pour", "fold": "wk_fold_paper", "forge": "wk_forge_knock", "steam": "wk_steam_hiss", "stamp": "wk_stamp_thump",
+	"fan": "wk_fan_whoosh", "mill": "wk_mill_grind", "fork": "wk_fork_toss", "tongs": "wk_tongs_clack", "sew": "wk_sew_pull", "brush": "wk_brush_paste",
+	"paint": "wk_paint_stroke", "catch": "wk_catch_thud", "pump": "wk_pump_puff", "slice": "wk_slice_cut", "pull": "wk_pull_pour", "salt": "wk_salt_sprinkle",
+	"plane": "wk_plane_shave", "screw": "wk_screw_tick"}
+static var on_sfx := Callable()   # 音效組掛呢度：on_sfx.call(event, k, 世界 x, y)
+static var _beat := {}            # 每隻鬼上一格 beat
+static var SFX_LOG := []          # 測試：最近觸發（最多 200）
 # 工作物細節（同一動作唔同建築）
 const PIECE := {"b_bamboo": "bamboo", "b_banana": "leaf", "mvs_durian": "durian", "b_tea": "m_tealeaf", "b_newspaper": "m_newspaper",
 	"b_straw": "straw", "b_rice": "rice", "rice": "rice"}
@@ -78,6 +94,16 @@ const EDGE := {
 	"basket": [Vector2(-9, -12), Vector2(9, -12), Vector2(0, -1), "籮口"],
 	"spatula": [Vector2(-6, -23), Vector2(6, -23), Vector2(0, -1), "鏟口"],
 	"bar": [Vector2(0, -24), Vector2(0, -24), Vector2(0, -1), "推柄頭"],
+	"fork": [Vector2(-3.4, -25), Vector2(3.4, -25), Vector2(0, -1), "叉齒"],
+	"tongs": [Vector2(-1.4, -24), Vector2(1.4, -24), Vector2(0, -1), "夾嘴"],
+	"needle": [Vector2(0, -24), Vector2(0, -24), Vector2(0, -1), "針尖"],
+	"brush": [Vector2(-3.6, -24.5), Vector2(3.6, -24.5), Vector2(0, -1), "掃毛"],
+	"pbrush": [Vector2(-3.6, -24.5), Vector2(3.6, -24.5), Vector2(0, -1), "掃毛"],
+	"pumph": [Vector2(0, 0), Vector2(0, 0), Vector2(0, 1), "泵桿底"],
+	"cup": [Vector2(-4.4, -16), Vector2(4.4, -16), Vector2(0, -1), "杯口"],
+	"shaker": [Vector2(-3, -24), Vector2(3, -24), Vector2(0, -1), "鹽筒孔"],
+	"plane": [Vector2(-10, 0), Vector2(10, 0), Vector2(0, 1), "刨底刀口"],
+	"screwdriver": [Vector2(0, -24), Vector2(0, -24), Vector2(0, -1), "批咀"],
 }
 static var _TL := []   # 測試：今次 draw 每件工具工作面（世界座標）
 
@@ -102,8 +128,10 @@ static func chop_time() -> float:
 	var v = J.num(J.mc(F, "chopTime", [])) if F != null else 0.7
 	return v if v > 0.05 else 0.7
 static func _cx(k: String) -> float:   # 工具離身中線幾遠（以 H 為 1）：上半身最闊嗰邊 + 少少
+	# [批次2 體型] 四腳獸、酒吞呢類下半身最闊：量埋 -0.3..-0.05 嗰段，工具同工作物唔會疊落個身
 	var e = maxf(EV2.ext(k, 1.0, -0.78, -0.3), EV2.ext(k, -1.0, -0.78, -0.3))
-	return clampf(e + 0.08, 0.28, 0.5)
+	var lo = maxf(EV2.ext(k, 1.0, -0.3, -0.05), EV2.ext(k, -1.0, -0.3, -0.05))
+	return clampf(maxf(e + 0.08, lo + 0.02), 0.28, 0.62)
 static func _put(ctx: Ctx, key: String, x: float, y: float, w: float, rot := 0.0, a := 1.0, sx := 1.0, sy := 1.0) -> void:   # 底中間對 (x, y)
 	var tex = Spr.get_tex(key) if Spr.ok(key) else null
 	if tex == null: return
@@ -169,6 +197,40 @@ static func shape(ctx: Ctx, sh: String) -> void:
 			Art.poly(ctx, [7.0, -12.0, 5.6, -12.9, 6.9, -13.8], "#2a2730")                # 缺口
 			Art.poly(ctx, [7.3, -16.4, 6.0, -17.2, 7.3, -18.0], "#2a2730")
 			Art.el(ctx, 2.0, -13, 1.4, 1.1, "#9a5a32"); Art.el(ctx, 0.8, -18, 1.1, 0.9, "#9a5a32")
+		"fork":   # 禾叉：木柄＋橫鐵＋三支叉齒
+			_ink(ctx, V.call(0, 2), V.call(0, -17), "#8a6a40", 1.8)
+			_ink(ctx, V.call(-3.6, -17), V.call(3.6, -17), "#6a6a70", 1.2)
+			for xx in [-3.4, 0.0, 3.4]: _ink(ctx, V.call(xx, -17), V.call(xx, -25), "#8c8a84", 0.9)
+		"tongs":   # 鐵夾：兩支鐵條，頭尾窄
+			_ink(ctx, V.call(-0.6, 1), V.call(-1.4, -24), "#7a7a82", 1.0); _ink(ctx, V.call(0.6, 1), V.call(1.4, -24), "#7a7a82", 1.0)
+			Art.el(ctx, 0, 0, 1.6, 1.6, "#5a5a62", INK, 0.7)
+		"needle":   # 大針（紙紮師傅用）
+			_l(ctx, V.call(0, 0), V.call(0, -24), INK, 2.0); _l(ctx, V.call(0, 0), V.call(0, -23), "#d8d8e0", 1.0)
+			Art.el(ctx, 0, -2, 0.9, 1.6, null, INK, 0.6)
+		"brush", "pbrush":   # 漿糊掃／油掃：木柄＋鐵箍＋掃毛（毛尖沾漿／沾油）
+			_ink(ctx, V.call(0, 2), V.call(0, -13), "#8a6a40", 1.8)
+			Art.rr(ctx, -3.8, -16, 7.6, 3, 0.6, "#8c8a84", INK, 0.8)
+			Art.poly(ctx, [-3.6, -16, 3.6, -16, 3.6, -24.5, -3.6, -24.5], "#c8a868", INK, 0.9)
+			Art.rr(ctx, -3.6, -24.5, 7.2, 2.6, 0.6, "#f0ead8" if sh == "brush" else "#b83a2e")
+		"pumph":   # 打氣泵手柄：鐵桿＋頂部 T 柄
+			_ink(ctx, V.call(0, 0), V.call(0, -20), "#8c8a84", 1.2)
+			_ink(ctx, V.call(-6, -20), V.call(6, -20), "#6a4428", 2.2)
+		"cup":   # 拉茶鋼杯：杯口喺頂（y=-16），側邊有柄
+			Art.poly(ctx, [-4.4, -16, 4.4, -16, 3.6, -2, -3.6, -2], "#b8b8c0", INK, 1.0)
+			_l(ctx, V.call(-4.2, -15), V.call(4.2, -15), "#e8e8f0", 0.8)
+			ctx.strokeStyle = INK; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(-5.4, -9, 3, PI * 0.5, PI * 1.5); ctx.stroke()
+		"shaker":   # 竹鹽筒：竹筒，頂（y=-24）有孔
+			Art.rr(ctx, -3, -24, 6, 24, 1.2, "#b8925a", INK, 1.0)
+			_l(ctx, V.call(-3, -12), V.call(3, -12), "#6a4428", 0.8)
+			for xx in [-1.5, 0.0, 1.5]: Art.el(ctx, xx, -23.2, 0.5, 0.4, "#2a1a10")
+		"plane":   # 木刨：揸位＝刨底中間；刨身打橫，底有刀口
+			Art.rr(ctx, -10, -6, 20, 6, 1.2, "#9a7a4a", INK, 1.0)
+			Art.poly(ctx, [-1.5, -9, 1.2, -9, 3.5, 0, 1.0, 0], "#8c8a84", INK, 0.8)
+			Art.el(ctx, -6, -7, 2.2, 1.6, "#6a4428", INK, 0.7)
+			_l(ctx, V.call(-9.6, -0.4), V.call(9.6, -0.4), "#e4e2d8", 0.6)
+		"screwdriver":   # 螺絲批：粗柄＋幼鐵桿
+			Art.rr(ctx, -2.2, -9, 4.4, 11, 1.4, "#c8483a", INK, 0.9)
+			_ink(ctx, V.call(0, -9), V.call(0, -24), "#8c8a84", 0.9)
 		"bar":   # 推磨木柄
 			_ink(ctx, V.call(0, 2), V.call(0, -24), "#8a6a40", 2.2)
 		"saw":   # 框鋸：木柄＋長鋸片＋鋸齒
@@ -299,6 +361,15 @@ static func draw(ctx: Ctx, k: String, x: float, y: float, s: float, flip: bool, 
 		if tl.id == "_none": continue
 		for q in [tl.g, tl.g + _dv(tl.ang) * tl.L]: pts.append(Vector2(ax + (q.x - ax) * z, q.y * z) / H)
 	LAST[k] = {"verb": verb, "pts": pts, "body": b.duplicate(), "tools": c.tools.size(), "edge": ed}
+	# [批次2] 音效掛點
+	var bt = bool(c.get("beat", c.get("hit", false))); var bk = k + "|" + str(seed)
+	if bt and not bool(_beat.get(bk, false)):
+		var ev = str(SFX.get(verb, "")); var wp = Vector2(x + fd * ax, y)
+		if ev != "":
+			SFX_LOG.append({"ev": ev, "k": k, "T": T})
+			if SFX_LOG.size() > 200: SFX_LOG.pop_front()
+			if on_sfx.is_valid(): on_sfx.call(ev, k, wp.x, wp.y)
+	_beat[bk] = bt
 	return {"verb": verb, "hit": c.get("hit", false)}
 
 static func _verb(v: String, c: Dictionary) -> void:
@@ -331,6 +402,18 @@ static func _verb(v: String, c: Dictionary) -> void:
 		"stamp": _v_stamp(c)
 		"fan": _v_fan(c)
 		"mill": _v_mill(c)
+		"fork": _v_fork(c)
+		"tongs": _v_tongs(c)
+		"sew": _v_sew(c)
+		"brush": _v_brush(c, "brush")
+		"paint": _v_brush(c, "pbrush")
+		"catch": _v_catch(c)
+		"pump": _v_pump(c)
+		"slice": _v_slice(c)
+		"pull": _v_pull(c)
+		"salt": _v_salt(c)
+		"plane": _v_plane(c)
+		"screw": _v_screw(c)
 		_: _v_idle(c)
 	c["verb"] = v
 
@@ -542,7 +625,7 @@ static func _v_crank(c: Dictionary) -> void:
 	var arm = 0.085 * H
 	var E = E0 + Vector2(cos(ph), sin(ph)) * arm
 	c.tools.append({"id": "crank", "g": E0, "L": arm * 24.0 / 18.0, "ang": ph + PI / 2.0})
-	c["tgt"] = E0; c["ck"] = "touch"; c["hit"] = true   # 搖柄軸頭要裝喺轆轤軸上
+	c["tgt"] = E0; c["ck"] = "touch"; c["hit"] = true; c["beat"] = fmod(ph, TAU) < 0.3   # 搖柄軸頭要裝喺轆轤軸上
 	c.body = {"lean": 5.0 + 5.0 * cos(ph), "dx": 0.02 * cos(ph), "dy": 0.01 * sin(ph), "sx": 1.0 + 0.02 * cos(ph), "sy": 1.0 - 0.02 * cos(ph)}
 	var cyc = R * 4.0 + 0.8; var tt = fmod(c.T, cyc)
 	var up = clampf(tt / (R * 4.0), 0, 1)
@@ -698,7 +781,7 @@ static func _v_saw(c: Dictionary) -> void:
 	var g = place("saw", L, ang, cut, 0.45 - stroke * 0.22)   # 鋸齒線一路貼住鋸口底來回拉
 	if not sawing: g += Vector2(-0.03 * H, -0.06 * H)
 	c.tools.append({"id": "saw", "g": g, "L": L, "ang": ang})
-	c["tgt"] = Vector2(cut.x, top + 0.03 * H); c["surf"] = cut; c["hit"] = sawing; c["near"] = true   # 長鋸齒：用貼住鋸口嗰段量
+	c["tgt"] = Vector2(cut.x, top + 0.03 * H); c["surf"] = cut; c["hit"] = sawing; c["near"] = true; c["beat"] = sawing and sq < 0.06   # 長鋸齒：用貼住鋸口嗰段量
 	c.body = {"lean": 7.0 + 6.0 * stroke, "dx": 0.025 * stroke, "dy": 0.0, "sx": 1.0 + 0.015 * stroke, "sy": 1.0 - 0.015 * stroke}
 	var fallt = tt - S * n
 	c.back.append(func(ctx: Ctx):
@@ -734,7 +817,7 @@ static func _v_knead(c: Dictionary) -> void:
 	var pin = Vector2(x0 + rx * 0.06 * H, top - 0.06 * H + 0.012 * H * press)
 	var lift = 0.0 if rolling else _ez((tt - R * n) / 0.3) * 0.12
 	c.tools.append({"id": "pin", "g": pin + Vector2(0, -lift * H), "L": 0.24 * H, "ang": 0.04 * rx, "a": 1.0})
-	c["tgt"] = Vector2(x0, top); c["hit"] = rolling; c["near"] = true
+	c["tgt"] = Vector2(x0, top); c["hit"] = rolling; c["near"] = true; c["beat"] = rolling and press > 0.97
 	c.body = {"lean": 10.0 + 6.0 * press, "dx": 0.02 * rx, "dy": 0.012 * press, "sx": 1.0 + 0.02 * press, "sy": 1.0 - 0.03 * press}
 	c.back.append(func(ctx: Ctx):
 		_table(ctx, x0, 0.32 * H, -top - 0.03 * H)
@@ -794,7 +877,7 @@ static func _v_grate(c: Dictionary) -> void:
 	c.tools.append({"id": "_none", "g": C, "L": 0.0, "ang": 0.0, "a": 0.0})
 	var R = Transform2D(tilt, C)
 	c["face"] = {"a": R * Vector2(-0.055 * H, 0), "b": R * Vector2(0.055 * H, 0), "n": R.basis_xform(Vector2(0, 1)), "name": "椰肉切面"}; c["ti"] = -1
-	c["tgt"] = G + Vector2(0, 0.02 * H); c["hit"] = true
+	c["tgt"] = G + Vector2(0, 0.02 * H); c["hit"] = true; c["beat"] = st > 0.97
 	c.back.append(func(ctx: Ctx):
 		_table(ctx, bx, 0.3 * H, -top)
 		_ink(ctx, Vector2(G.x, top - 0.005 * H), Vector2(G.x, G.y + 0.012 * H), "#6a6a70", 1.6)   # 刀桿
@@ -824,7 +907,7 @@ static func _v_press(c: Dictionary) -> void:
 	var rx = cx + 0.34 * H; var ry = -0.36 * H; var rr = 0.05 * H
 	var D = Vector2(rx + 0.1 * H, ry)
 	c.tools.append({"id": "crank", "g": D, "L": 0.1 * H * 24.0 / 18.0, "ang": ph + PI / 2.0})
-	c["tgt"] = D; c["ck"] = "touch"; c["hit"] = true
+	c["tgt"] = D; c["ck"] = "touch"; c["hit"] = true; c["beat"] = fmod(ph, TAU) < 0.3
 	c.body = {"lean": 6.0 + 5.0 * cos(ph), "dx": 0.015 * cos(ph), "dy": 0.0, "sx": 1.0, "sy": 1.0 - 0.015 * cos(ph)}
 	var mv = fmod(c.T * 0.08 * H, 0.3 * H)
 	c.back.append(func(ctx: Ctx):
@@ -843,7 +926,7 @@ static func _v_twist(c: Dictionary) -> void:
 	var cyc = 2.6; var grow = clampf(fmod(c.T, cyc) / (cyc - 0.4), 0, 1)
 	var end = Vector2(hk.x + (0.15 + 0.35 * grow) * H, -0.3 * H)
 	c.tools.append({"id": "crank", "g": hk, "L": 0.06 * H * 24.0 / 18.0, "ang": ph})
-	c["tgt"] = hk; c["ck"] = "touch"; c["hit"] = true
+	c["tgt"] = hk; c["ck"] = "touch"; c["hit"] = true; c["beat"] = fmod(c.T, 2.6) < 0.05
 	c.body = {"lean": -3.0 + 2.0 * sin(ph * 0.5), "dx": -0.01 * grow, "dy": 0.0, "sx": 1.0, "sy": 1.0}
 	c.front.append(func(ctx: Ctx):
 		Art.el(ctx, hk.x, hk.y, 0.04 * H, 0.04 * H, "#7a5a34", INK, 1.0)
@@ -886,7 +969,7 @@ static func _v_stir(c: Dictionary) -> void:
 	var g = Vector2(vx + cos(ph) * 0.03 * H - 0.06 * H, -0.56 * H)
 	var d = tip - g
 	c.tools.append({"id": "paddle", "g": g, "L": d.length() + 0.04 * H, "ang": atan2(d.x, -d.y), "behind": sin(ph) < 0})
-	c["tgt"] = Vector2(tip.x, -0.03 * H); c["hit"] = true   # 攪板頭向落、插喺缸入面
+	c["tgt"] = Vector2(tip.x, -0.03 * H); c["hit"] = true; c["beat"] = fmod(ph, TAU) < 0.3   # 攪板頭向落、插喺缸入面
 	c.body = {"lean": 6.0 + 4.0 * cos(ph), "dx": 0.015 * cos(ph), "dy": 0.0, "sx": 1.0, "sy": 1.0}
 	c.back.append(func(ctx: Ctx):
 		var liq = _tub(ctx, vx, 0.34 * H, 0.2 * H, "#2c3a6a")
@@ -904,7 +987,7 @@ static func _v_wok(c: Dictionary) -> void:
 	var tipT = wc + Vector2(sin(c.T * 7.0) * 0.04 * H, 0.005 * H)
 	var sp = place("spatula", 0.28 * H, sang, tipT, 0.5)
 	c.tools.append({"id": "spatula", "g": sp, "L": 0.28 * H, "ang": sang})
-	c["tgt"] = Vector2(tipT.x, wc.y + 0.06 * H); c["hit"] = true
+	c["tgt"] = Vector2(tipT.x, wc.y + 0.06 * H); c["hit"] = true; c["beat"] = q >= 0.05 and q < 0.09
 	c.body = {"lean": 4.0 - 6.0 * toss, "dx": -0.01 * toss, "dy": -0.01 * toss, "sx": 1.0, "sy": 1.0 + 0.02 * toss}
 	c.back.append(func(ctx: Ctx):
 		_flame(ctx, cx + 0.26 * H, -0.24 * H, c.T, H, c.seed)
@@ -957,6 +1040,7 @@ static func _v_fold(c: Dictionary) -> void:
 	c.body = {"lean": 6.0 + 3.0 * nod, "dx": 0.0, "dy": 0.0, "sx": 1.0, "sy": 1.0}
 	c.tools.append({"id": "_none", "g": p, "L": 0.0, "ang": 0.0, "a": 0.0})
 	c["ck"] = "none"   # 摺紙：冇刀冇刃
+	c["beat"] = (q >= 0.0 and q < 0.04) or (q >= 0.3 and q < 0.34)   # 每摺一下一聲
 	c.front.append(func(ctx: Ctx):
 		var w = 0.22 * H; var h = 0.16 * H
 		if q < 0.3:
@@ -1067,7 +1151,7 @@ static func _v_fan(c: Dictionary) -> void:
 	var fc = Vector2(sx - 0.25 * H, -0.12 * H)   # 扇面中心
 	var g = place("fan", L, ang, fc, 0.5)
 	c.tools.append({"id": "fan", "g": g, "L": L, "ang": ang})
-	c["tgt"] = vent; c["hit"] = true
+	c["tgt"] = vent; c["hit"] = true; c["beat"] = w > 0.97
 	c.body = {"lean": 10.0 + 3.0 * w, "dx": 0.01 * w, "dy": 0.015, "sx": 1.0, "sy": 0.98}
 	c.back.append(func(ctx: Ctx):
 		Art.poly(ctx, [sx - 0.1 * H, -0.2 * H, sx + 0.1 * H, -0.2 * H, sx + 0.08 * H, 0, sx - 0.08 * H, 0], "#8a5a3a", INK, 1.0)
@@ -1112,7 +1196,7 @@ static func _v_mill(c: Dictionary) -> void:
 	var g = Vector2(cx + 0.02 * H, -0.42 * H)
 	var d = peg + Vector2(0, -0.05 * H) - g
 	c.tools.append({"id": "bar", "g": g, "L": d.length(), "ang": atan2(d.x, -d.y), "behind": sin(ph) < 0})
-	c["tgt"] = peg + Vector2(0, -0.05 * H); c["ck"] = "touch"; c["hit"] = true   # 推柄頭頂住磨柄
+	c["tgt"] = peg + Vector2(0, -0.05 * H); c["ck"] = "touch"; c["hit"] = true; c["beat"] = fmod(ph, TAU) < 0.3   # 推柄頭頂住磨柄
 	c.body = {"lean": 6.0 + 6.0 * cos(ph), "dx": 0.025 * cos(ph), "dy": 0.0, "sx": 1.0 + 0.015 * cos(ph), "sy": 1.0 - 0.015 * cos(ph)}
 	c.back.append(func(ctx: Ctx):
 		Art.rr(ctx, mx - rw * 1.15, -0.12 * H, rw * 2.3, 0.12 * H, 2, "#6a6a70", INK, 1.0)   # 磨盤
@@ -1125,3 +1209,276 @@ static func _v_mill(c: Dictionary) -> void:
 		Art.el(ctx, mx + rw * 1.5, -0.06 * H + f * 0.05 * H, 0.008 * H, 0.012 * H, "rgba(240,236,224,%.2f)" % (1.0 - f)))
 	c.front.append(func(ctx: Ctx):
 		_ink(ctx, peg, peg + Vector2(0, -0.06 * H), "#6a4428", 2.0))
+
+# ======================= [批次2] 補齊生產鏈：專屬做工動作 =======================
+# 同一套規矩：工具浮喺面向嗰邊、工作面（叉齒／夾嘴／針尖／掃毛／刀口／杯口…）朝住目標、面向左右鏡像、beat＝音效掛點
+
+# ---------------- 禾稈草堆：禾叉叉起地上散禾稈，拋上草堆 ----------------
+static func _v_fork(c: Dictionary) -> void:
+	var H: float = c.H; var cx: float = c.cx; var P = 1.6; var tt = fmod(c.T, P); var q = tt / P
+	var lx = cx + 0.28 * H; var sx = cx + 0.52 * H; var L = 0.42 * H
+	var A = Vector2(lx, -0.24 * H); var B = Vector2(lx, -0.05 * H); var C = Vector2(sx - 0.04 * H, -0.44 * H)
+	var tip: Vector2; var a = 165.0; var load = false; var toss = -1.0
+	if q < 0.3: tip = A.lerp(B, _ei(q / 0.3))                                                          # 叉落去
+	elif q < 0.6: var f = _ez((q - 0.3) / 0.3); tip = B.lerp(C, f); a = lerpf(165.0, 60.0, f); load = true   # 叉起、舉去草堆
+	elif q < 0.72: tip = C; a = 60.0 - 20.0 * sin((q - 0.6) / 0.12 * PI); toss = (q - 0.6) / 0.12       # 一拋
+	else: var f = _ez((q - 0.72) / 0.28); tip = C.lerp(A, f); a = lerpf(60.0, 165.0, f)
+	var ang = deg_to_rad(a)
+	c.tools.append({"id": "fork", "g": place("fork", L, ang, tip, 0.5), "L": L, "ang": ang})
+	c["tgt"] = Vector2(lx, 0.02 * H); c["hit"] = q >= 0.27 and q < 0.31
+	var d = sin(clampf(q / 0.6, 0, 1) * PI)
+	c.body = {"lean": 8.0 + 8.0 * d, "dx": 0.015 * d, "dy": 0.01 * d, "sx": 1.0, "sy": 1.0 - 0.02 * d}
+	c.back.append(func(ctx: Ctx):
+		for i in 7:   # 地上散禾稈
+			var x0 = lx + (i - 3) * 0.025 * H
+			_l(ctx, Vector2(x0 - 0.04 * H, -0.01 * H), Vector2(x0 + 0.04 * H, -0.04 * H - (i % 3) * 0.01 * H), "#d6b45a", maxf(1.0, 0.01 * H))
+		Art.poly(ctx, [sx - 0.1 * H, 0, sx + 0.1 * H, 0, sx + 0.06 * H, -0.36 * H, sx, -0.42 * H, sx - 0.06 * H, -0.36 * H], "#c8a04a", INK, 1.0)   # 草堆
+		for i in 5: _l(ctx, Vector2(sx - 0.07 * H + i * 0.035 * H, -0.02 * H), Vector2(sx - 0.04 * H + i * 0.02 * H, -0.34 * H), "#9a7a3a", 0.8)
+		_l(ctx, Vector2(sx - 0.08 * H, -0.2 * H), Vector2(sx + 0.08 * H, -0.2 * H), "#6a4428", 1.4))
+	c.front.append(func(ctx: Ctx):
+		if load or (toss >= 0.0 and toss < 0.5):
+			var p = tip + _dv(ang) * -0.03 * H
+			for i in 5: _l(ctx, p + Vector2(-0.05 * H, (i - 2) * 0.008 * H), p + Vector2(0.05 * H, (i - 2) * 0.01 * H), "#d6b45a", maxf(1.0, 0.01 * H))
+		if toss >= 0.5:
+			var f = (toss - 0.5) * 2.0
+			for i in 5: Art.el(ctx, C.x + 0.03 * H + i * 0.01 * H, C.y + f * 0.04 * H + i * 0.006 * H, 0.012 * H, 0.003 * H, "rgba(214,180,90,%.2f)" % (1.0 - f)))
+	c["beat"] = c.hit or (toss >= 0.0 and toss < 0.2)
+
+# ---------------- 橋底回收站：鐵夾夾起舊報紙，放入麻包 ----------------
+static func _v_tongs(c: Dictionary) -> void:
+	var H: float = c.H; var cx: float = c.cx; var P = 1.5; var tt = fmod(c.T, P); var q = tt / P
+	var px = cx + 0.3 * H; var sk = cx + 0.56 * H; var L = 0.34 * H
+	var A = Vector2(px, -0.3 * H); var B = Vector2(px, -0.1 * H); var C = Vector2(sk, -0.36 * H)
+	var tip: Vector2; var a = 168.0; var hold = false
+	if q < 0.3: tip = A.lerp(B, _ez(q / 0.3))
+	elif q < 0.38: tip = B; hold = q > 0.34
+	elif q < 0.68: tip = B.lerp(C, _ez((q - 0.38) / 0.3)); hold = true
+	elif q < 0.76: tip = C; hold = q < 0.72
+	else: tip = C.lerp(A, _ez((q - 0.76) / 0.24))
+	var ang = deg_to_rad(a)
+	c.tools.append({"id": "tongs", "g": place("tongs", L, ang, tip, 0.5), "L": L, "ang": ang})
+	c["tgt"] = Vector2(px, -0.02 * H); c["hit"] = q >= 0.3 and q < 0.36
+	var d = sin(clampf(q / 0.4, 0, 1) * PI)
+	c.body = {"lean": 6.0 + 10.0 * d, "dx": 0.015 * d, "dy": 0.0, "sx": 1.0, "sy": 1.0 - 0.02 * d}
+	c.back.append(func(ctx: Ctx):
+		for i in 4: Art.rr(ctx, px - 0.1 * H + i * 0.01 * H, -0.025 * H * (i + 1), 0.2 * H, 0.025 * H, 1, "#b8b0a0" if i % 2 else "#d0c8b8", INK, 0.8)
+		Art.poly(ctx, [sk - 0.08 * H, -0.3 * H, sk + 0.08 * H, -0.3 * H, sk + 0.09 * H, 0, sk - 0.09 * H, 0], "#a8906a", INK, 1.0)
+		Art.el(ctx, sk, -0.3 * H, 0.08 * H, 0.02 * H, "#2a2a30", INK, 0.8))
+	c.front.append(func(ctx: Ctx):
+		if hold:
+			ctx.save(); ctx.translate(tip.x, tip.y + 0.02 * H); ctx.rotate(0.3 * sin(c.T * 5.0))
+			Art.rr(ctx, -0.05 * H, -0.015 * H, 0.1 * H, 0.04 * H, 1, "#d0c8b8", INK, 0.7)
+			_l(ctx, Vector2(-0.04 * H, 0), Vector2(0.03 * H, 0), "#6a6a70", 0.6); ctx.restore())
+	c["beat"] = c.hit or (q >= 0.72 and q < 0.74)
+
+# ---------------- 紙衫檔／紙褲：大針由紙衫面插落、穿過，拉起條線 ----------------
+static func _v_sew(c: Dictionary) -> void:
+	var H: float = c.H; var cx: float = c.cx; var P = 1.2; var tt = fmod(c.T, P); var q = tt / P
+	var tx = cx + 0.32 * H; var top = -0.3 * H; var L = 0.16 * H
+	var n = int(c.T / P) % 4
+	var sp = Vector2(tx - 0.06 * H + n * 0.04 * H, top - 0.012 * H)   # 今針落點
+	var tip: Vector2; var a = 160.0
+	var up = Vector2(sp.x - 0.04 * H, -0.46 * H)
+	if q < 0.3: tip = up.lerp(sp + Vector2(0, -0.04 * H), _ez(q / 0.3))
+	elif q < 0.42: tip = (sp + Vector2(0, -0.04 * H)).lerp(sp + Vector2(0, 0.01 * H), (q - 0.3) / 0.12)
+	else: tip = (sp + Vector2(0, 0.01 * H)).lerp(up, _ez((q - 0.42) / 0.58)); a = lerpf(160.0, 200.0, _ez((q - 0.42) / 0.58))
+	var ang = deg_to_rad(a)
+	var g = place("needle", L, ang, tip, 0.5)
+	c.tools.append({"id": "needle", "g": g, "L": L, "ang": ang})
+	c["tgt"] = Vector2(sp.x, top + 0.04 * H); c["hit"] = q >= 0.3 and q < 0.4
+	var pl = sin(clampf((q - 0.42) / 0.58, 0, 1) * PI)
+	c.body = {"lean": 8.0 - 6.0 * pl, "dx": -0.01 * pl, "dy": 0.0, "sx": 1.0, "sy": 1.0 + 0.01 * pl}
+	var ik = str(c.opt.get("icon", "mvi_paper"))
+	c.back.append(func(ctx: Ctx):
+		_table(ctx, tx, 0.34 * H, -top)
+		Art.rr(ctx, tx - 0.13 * H, top - 0.014 * H, 0.26 * H, 0.014 * H, 0.5, "#efe6d2", INK, 0.7)
+		_put(ctx, ik, tx + 0.12 * H, top - 0.012 * H, 0.1 * H)
+		for i in n: _l(ctx, Vector2(tx - 0.06 * H + i * 0.04 * H, top - 0.016 * H), Vector2(tx - 0.03 * H + i * 0.04 * H, top - 0.016 * H), "#2a1a10", 1.0))
+	c.front.append(func(ctx: Ctx):
+		var eye = g + _dv(ang) * 0.02 * H
+		ctx.strokeStyle = "#3a2a20"; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(eye.x, eye.y)
+		ctx.quadraticCurveTo((eye.x + sp.x) / 2.0 - 0.03 * H, (eye.y + sp.y) / 2.0 + 0.03 * H, sp.x, sp.y); ctx.stroke())
+
+# ---------------- 燈籠／加班燈／尋人啟事／花轎（漿糊掃）；電器檯／車房（油掃）：掃毛貼住面，左右掃 ----------------
+static func _v_brush(c: Dictionary, id: String) -> void:
+	var H: float = c.H; var cx: float = c.cx; var P = 1.4; var tt = fmod(c.T, P); var q = tt / P
+	var bx = cx + 0.34 * H; var top = -0.3 * H; var L = 0.22 * H
+	var w = sin(q * TAU)
+	var lift = 0.0 if q < 0.8 else sin((q - 0.8) / 0.2 * PI) * 0.06 * H   # 一輪尾提起蘸漿
+	var tip = Vector2(bx + w * 0.08 * H, top - 0.02 * H - lift)
+	var a = 180.0 - 14.0 * cos(q * TAU)   # 掃毛拖喺後面
+	var ang = deg_to_rad(a)
+	c.tools.append({"id": id, "g": place(id, L, ang, tip, 0.5), "L": L, "ang": ang})
+	c["tgt"] = Vector2(tip.x, top + 0.04 * H); c["hit"] = lift < 0.002; c["beat"] = absf(w) > 0.98
+	c.body = {"lean": 8.0 + 2.0 * w, "dx": 0.015 * w, "dy": 0.0, "sx": 1.0, "sy": 1.0}
+	var ik = str(c.opt.get("icon", "mvi_paper")); var paint = id == "pbrush"
+	c.back.append(func(ctx: Ctx):
+		_table(ctx, bx, 0.32 * H, -top)
+		_put(ctx, ik, bx, top - 0.015 * H, 0.2 * H)
+		ctx.save(); ctx.globalAlpha *= 0.55
+		_l(ctx, Vector2(bx - 0.08 * H, top - 0.03 * H), Vector2(bx + 0.08 * H, top - 0.03 * H), "#b83a2e" if paint else "#f4f0e4", maxf(1.5, 0.02 * H))
+		ctx.restore()
+		Art.el(ctx, bx - 0.2 * H, -0.03 * H, 0.05 * H, 0.03 * H, "#5a5a62", INK, 0.8)
+		Art.el(ctx, bx - 0.2 * H, -0.05 * H, 0.04 * H, 0.01 * H, "#b83a2e" if paint else "#efe6d2"))
+
+# ---------------- 樹下等榴槤：竹籮籮口向上，接住跌落嚟嘅榴槤，倒落堆 ----------------
+static func _v_catch(c: Dictionary) -> void:
+	var H: float = c.H; var cx: float = c.cx; var P = 2.2; var tt = fmod(c.T, P); var q = tt / P
+	var bx = cx + 0.3 * H; var by = -0.3 * H; var tx = cx + 0.55 * H
+	var y0 = -0.84 * H
+	var dy = 0.0; var bang = 0.0
+	if q >= 0.55 and q < 0.65: dy = sin((q - 0.55) / 0.1 * PI) * 0.04 * H   # 接住一沉
+	if q >= 0.75 and q < 0.92: bang = sin((q - 0.75) / 0.17 * PI) * 1.2       # 倒落堆
+	var bg = Vector2(bx, by + dy)
+	c.tools.append({"id": "basket", "g": bg, "L": 0.2 * H, "ang": bang})
+	var dp: Vector2   # 榴槤中心
+	if q < 0.35: dp = Vector2(bx, y0 + sin(c.T * 3.0) * 0.004 * H)
+	elif q < 0.55: var f = (q - 0.35) / 0.2; dp = Vector2(bx, lerpf(y0, by - 0.12 * H, f * f))
+	elif q < 0.8: dp = bg + Vector2(0, -0.12 * H)
+	else: var f = clampf((q - 0.8) / 0.12, 0, 1); dp = (bg + Vector2(0, -0.12 * H)).lerp(Vector2(bx + 0.18 * H, -0.05 * H), f) + Vector2(0, -sin(f * PI) * 0.06 * H)
+	c["tgt"] = dp; c["hit"] = q >= 0.53 and q < 0.57
+	var look = clampf((q - 0.3) / 0.25, 0, 1)
+	c.body = {"lean": -4.0 * look + 6.0 * dy / (0.04 * H), "dx": 0.0, "dy": dy / H * 0.5, "sx": 1.0, "sy": 1.0 + 0.02 * look}
+	var cnt = int(c.T / P) % 4
+	c.back.append(func(ctx: Ctx):
+		Art.rr(ctx, tx - 0.04 * H, -0.9 * H, 0.08 * H, 0.9 * H, 0.02 * H, "#6e5a44", INK, 1.0)   # 榴槤樹
+		_ink(ctx, Vector2(tx, -0.82 * H), Vector2(bx - 0.04 * H, -0.9 * H), "#6e5a44", 2.4)
+		for i in 3: Art.el(ctx, tx - 0.2 * H + i * 0.14 * H, -0.92 * H, 0.1 * H, 0.04 * H, "#3e6a3a", INK, 0.9)
+		if q < 0.35: _l(ctx, Vector2(bx, -0.9 * H), Vector2(bx, y0 - 0.05 * H), "#5a7a3a", 1.2)
+		for i in cnt: _put(ctx, "mvi_durian", bx + 0.14 * H + i * 0.06 * H, 0.0, 0.1 * H))
+	c.front.append(func(ctx: Ctx):
+		_put(ctx, "mvi_durian", dp.x, dp.y + 0.06 * H, 0.12 * H, q * 2.0 if q > 0.8 else 0.0, 1.0 - clampf((q - 0.92) / 0.08, 0, 1)))
+
+# ---------------- 水底吹救生圈：打氣泵手柄撳落，條喉駁住救生圈，個圈一路脹大 ----------------
+static func _v_pump(c: Dictionary) -> void:
+	var H: float = c.H; var cx: float = c.cx; var P = 0.8; var tt = fmod(c.T, P); var q = tt / P
+	var px = cx + 0.28 * H; var top = -0.26 * H
+	var up = (1.0 - _ei(q / 0.45)) if q < 0.45 else _ez((q - 0.45) / 0.55)
+	var g = Vector2(px, top - 0.015 * H - up * 0.14 * H)
+	c.tools.append({"id": "pumph", "g": g, "L": 0.2 * H, "ang": 0.0})
+	c["tgt"] = Vector2(px, top + 0.12 * H); c["hit"] = q >= 0.4 and q < 0.48
+	c.body = {"lean": 10.0 - 8.0 * up, "dx": 0.0, "dy": 0.03 * (1.0 - up), "sx": 1.0 + 0.03 * (1.0 - up), "sy": 1.0 - 0.05 * (1.0 - up)}
+	var inf = 0.6 + 0.4 * clampf(fmod(c.T, 8.0) / 7.0, 0, 1)
+	var rx = cx + 0.56 * H
+	c.back.append(func(ctx: Ctx):
+		Art.rr(ctx, px - 0.035 * H, top, 0.07 * H, -top, 0.015 * H, "#5a6a7a", INK, 1.0)
+		Art.rr(ctx, px - 0.07 * H, -0.02 * H, 0.14 * H, 0.02 * H, 0.008 * H, "#3a3a42", INK, 0.8)
+		ctx.strokeStyle = "#2a2a30"; ctx.lineWidth = maxf(1.2, 0.012 * H); ctx.beginPath(); ctx.moveTo(px + 0.035 * H, -0.04 * H)
+		ctx.quadraticCurveTo((px + rx) / 2.0, 0.02 * H, rx - 0.1 * H * inf, -0.06 * H); ctx.stroke()
+		var r = 0.11 * H * inf
+		Art.el(ctx, rx, -r * 0.55, r, r * 0.55, "#d8483a", INK, 1.0)
+		for i in 4:
+			var an = i * PI / 2.0 + 0.4
+			Art.el(ctx, rx + cos(an) * r * 0.72, -r * 0.55 + sin(an) * r * 0.4, r * 0.18, r * 0.12, "#f4f0e4")
+		Art.el(ctx, rx, -r * 0.55, r * 0.45, r * 0.22, "#1c1a20", INK, 0.8))
+
+# ---------------- 割膠拖鞋廠：鞋底刀（刀口向落）喺膠片上搖住切出鞋底 ----------------
+static func _v_slice(c: Dictionary) -> void:
+	var H: float = c.H; var cx: float = c.cx; var P = 0.9; var tt = fmod(c.T, P); var q = tt / P
+	var bx = cx + 0.32 * H; var top = -0.3 * H; var L = 0.3 * H
+	var press = sin(clampf(q / 0.5, 0, 1) * PI * 0.5) if q < 0.5 else 1.0 - _ez((q - 0.5) / 0.5)
+	var ang = deg_to_rad(90.0 + 8.0 * sin(q * TAU))   # 搖住切
+	var n = int(c.T / P) % 3
+	var cp = Vector2(bx - 0.06 * H + n * 0.06 * H, top - 0.012 * H - (1.0 - press) * 0.07 * H)
+	c.tools.append({"id": "chopper", "g": place("chopper", L, ang, cp, 0.5), "L": L, "ang": ang})
+	c["tgt"] = Vector2(cp.x, top + 0.04 * H); c["surf"] = Vector2(cp.x, top - 0.012 * H); c["hit"] = press > 0.97
+	c.body = {"lean": 8.0 + 6.0 * press, "dx": 0.01 * press, "dy": 0.01 * press, "sx": 1.0 + 0.01 * press, "sy": 1.0 - 0.02 * press}
+	c.back.append(func(ctx: Ctx):
+		_table(ctx, bx, 0.34 * H, -top)
+		Art.rr(ctx, bx - 0.14 * H, top - 0.012 * H, 0.28 * H, 0.012 * H, 0.5, "#c8913a", INK, 0.7)   # 膠片
+		for i in n: Art.el(ctx, bx - 0.06 * H + i * 0.06 * H, top - 0.006 * H, 0.025 * H, 0.004 * H, null, "#2a1a10", 0.8)   # 切好嘅鞋底線
+		for i in 3: Art.el(ctx, bx + 0.2 * H, -0.01 * H - i * 0.012 * H, 0.04 * H, 0.008 * H, "#8a5a2a", INK, 0.6))   # 鞋底疊
+
+# ---------------- 霧谷茶寮／凍檸茶：拉茶 —— 鋼杯杯口斜向下面隻杯，越拉越高 ----------------
+static func _v_pull(c: Dictionary) -> void:
+	var H: float = c.H; var cx: float = c.cx; var P = 1.8; var tt = fmod(c.T, P); var q = tt / P
+	var L = 0.2 * H
+	var low = Vector2(cx + 0.4 * H, -0.3 * H)   # 下面隻杯杯口
+	var pour = 0.0; var hgt = 0.0
+	if q < 0.15: pour = _ez(q / 0.15)
+	elif q < 0.7: pour = 1.0; hgt = _ez((q - 0.15) / 0.55)
+	else: pour = 1.0 - _ez((q - 0.7) / 0.3); hgt = 1.0 - _ez((q - 0.7) / 0.3)
+	var ang = deg_to_rad(lerpf(0.0, 150.0, pour))
+	var lip = Vector2(low.x - 0.07 * H, lerpf(-0.46 * H, -0.64 * H, hgt))
+	var g = place("cup", L, ang, lip, 1.0)
+	c.tools.append({"id": "cup", "g": g, "L": L, "ang": ang})
+	c["tgt"] = low; c["hit"] = pour > 0.95 and q < 0.7; c["beat"] = q >= 0.15 and q < 0.17
+	c.body = {"lean": -3.0 * hgt + 4.0, "dx": 0.0, "dy": -0.01 * hgt, "sx": 1.0, "sy": 1.0 + 0.02 * hgt}
+	var tea = "#c88a4a"
+	c.back.append(func(ctx: Ctx):
+		_table(ctx, low.x, 0.2 * H, 0.2 * H)
+		Art.poly(ctx, [low.x - 0.045 * H, low.y, low.x + 0.045 * H, low.y, low.x + 0.037 * H, -0.2 * H, low.x - 0.037 * H, -0.2 * H], "#b8b8c0", INK, 1.0)
+		Art.el(ctx, low.x, low.y + 0.004 * H, 0.04 * H, 0.008 * H, "#f0dcc0"))
+	c.front.append(func(ctx: Ctx):
+		if pour > 0.9:
+			var lp = edge_pt("cup", g, L, ang, 1.0)
+			ctx.strokeStyle = tea; ctx.lineWidth = maxf(1.4, 0.014 * H); ctx.lineCap = "round"
+			ctx.beginPath(); ctx.moveTo(lp.x, lp.y); ctx.quadraticCurveTo(lp.x + 0.03 * H, (lp.y + low.y) / 2.0, low.x, low.y); ctx.stroke()
+			Art.el(ctx, low.x, low.y - 0.006 * H, 0.03 * H, 0.008 * H, "rgba(250,240,220,.9)"))
+
+# ---------------- 碟頂鹹魚：竹鹽筒孔口向落，喺魚上面抖鹽 ----------------
+static func _v_salt(c: Dictionary) -> void:
+	var H: float = c.H; var cx: float = c.cx; var P = 0.5; var w = sin(c.T / P * TAU)
+	var bx = cx + 0.34 * H; var top = -0.26 * H; var L = 0.16 * H
+	var hole = Vector2(bx - 0.03 * H + w * 0.01 * H, -0.46 * H + absf(w) * 0.01 * H)
+	var ang = deg_to_rad(155.0 + 8.0 * w)
+	c.tools.append({"id": "shaker", "g": place("shaker", L, ang, hole, 0.5), "L": L, "ang": ang})
+	c["tgt"] = Vector2(bx, top - 0.02 * H); c["hit"] = true; c["beat"] = w > 0.97
+	c.body = {"lean": 8.0 + 2.0 * w, "dx": 0.005 * w, "dy": 0.0, "sx": 1.0, "sy": 1.0}
+	c.back.append(func(ctx: Ctx):
+		_table(ctx, bx, 0.3 * H, -top)
+		Art.el(ctx, bx, top - 0.008 * H, 0.14 * H, 0.025 * H, "#c8c0a8", INK, 0.9)   # 碟
+		for i in 2: _put(ctx, "mvi_fish", bx - 0.05 * H + i * 0.1 * H, top - 0.004 * H, 0.12 * H))
+	c.front.append(func(ctx: Ctx):
+		for i in 6:
+			var f = fmod(c.T * 2.4 + i / 6.0, 1.0)
+			var p = hole.lerp(Vector2(bx - 0.02 * H + (i - 2.5) * 0.015 * H, top - 0.02 * H), f)
+			Art.el(ctx, p.x, p.y, 0.004 * H, 0.004 * H, "rgba(250,250,245,%.2f)" % (1.0 - f * 0.6)))
+
+# ---------------- 頂樓棺材板躺椅：木刨貼住板面向前推，刨花由刨頂捲出 ----------------
+static func _v_plane(c: Dictionary) -> void:
+	var H: float = c.H; var cx: float = c.cx; var P = 1.1; var tt = fmod(c.T, P); var q = tt / P
+	var bx = cx + 0.36 * H; var top = -0.3 * H; var L = 0.24 * H
+	var x0 = bx - 0.16 * H; var x1 = bx + 0.12 * H
+	var push = q < 0.6
+	var gx = lerpf(x0, x1, _ez(q / 0.6)) if push else lerpf(x1, x0, _ez((q - 0.6) / 0.4))
+	var lift = 0.0 if push else sin((q - 0.6) / 0.4 * PI) * 0.04 * H
+	var g = Vector2(gx, top - 0.02 * H - lift)
+	c.tools.append({"id": "plane", "g": g, "L": L, "ang": 0.0})
+	c["tgt"] = Vector2(gx, top + 0.02 * H); c["surf"] = Vector2(gx, top - 0.02 * H); c["hit"] = push and q > 0.05; c["beat"] = q < 0.03
+	var d = _ez(q / 0.6) if push else 1.0 - _ez((q - 0.6) / 0.4)
+	c.body = {"lean": 6.0 + 10.0 * d, "dx": 0.04 * d, "dy": 0.01 * d, "sx": 1.0 + 0.02 * d, "sy": 1.0 - 0.02 * d}
+	c.back.append(func(ctx: Ctx):
+		for s in [-1.0, 1.0]:
+			_ink(ctx, Vector2(bx + s * 0.16 * H, 0), Vector2(bx + s * 0.13 * H, top), "#6a4428", 1.6)
+			_ink(ctx, Vector2(bx + s * 0.1 * H, 0), Vector2(bx + s * 0.13 * H, top), "#6a4428", 1.6)
+		Art.rr(ctx, bx - 0.24 * H, top - 0.02 * H, 0.48 * H, 0.025 * H, 1, "#a07a4e", INK, 1.0)
+		for i in 3: Art.el(ctx, bx - 0.24 * H + 0.06 * H + i * 0.03 * H, -0.01 * H, 0.02 * H, 0.006 * H, null, "#d8b888", 0.8))
+	c.front.append(func(ctx: Ctx):
+		if push and q > 0.05:
+			var k = clampf(q / 0.6, 0, 1)
+			ctx.strokeStyle = "#e8c890"; ctx.lineWidth = maxf(1.0, 0.012 * H)
+			ctx.beginPath(); ctx.arc(g.x - 0.01 * H, g.y - 0.08 * H * 0.24 / 0.24 - 0.02 * H * k, 0.012 * H + 0.012 * H * k, 0.0, PI * 1.6 * k + 0.4); ctx.stroke())
+
+# ---------------- 停咗錶檔：螺絲批批咀向落頂住錶背螺絲，扭 ----------------
+static func _v_screw(c: Dictionary) -> void:
+	var H: float = c.H; var cx: float = c.cx; var P = 1.6; var tt = fmod(c.T, P); var q = tt / P
+	var bx = cx + 0.32 * H; var top = -0.3 * H; var L = 0.2 * H
+	var n = int(c.T / P) % 3
+	var sp = Vector2(bx - 0.03 * H + n * 0.03 * H, top - 0.03 * H)
+	var lift = 0.0
+	if q < 0.15: lift = 1.0 - _ez(q / 0.15)
+	elif q > 0.85: lift = _ez((q - 0.85) / 0.15)
+	var on = q >= 0.15 and q <= 0.85
+	var tw = sin(c.T * 18.0) * 4.0 if on else 0.0
+	var ang = deg_to_rad(175.0 + tw * 0.5)
+	var tip = sp + Vector2(0, -lift * 0.06 * H)
+	c.tools.append({"id": "screwdriver", "g": place("screwdriver", L, ang, tip, 0.5), "L": L, "ang": ang})
+	c["tgt"] = Vector2(sp.x, top + 0.02 * H); c["surf"] = sp; c["hit"] = on; c["beat"] = on and fmod(c.T * 3.0, 1.0) < 0.1
+	c.body = {"lean": 12.0, "dx": 0.01, "dy": 0.01, "sx": 1.0, "sy": 1.0}
+	c.back.append(func(ctx: Ctx):
+		_table(ctx, bx, 0.3 * H, -top)
+		Art.el(ctx, bx, top - 0.015 * H, 0.07 * H, 0.018 * H, "#c8b070", INK, 1.0)   # 錶背
+		Art.el(ctx, bx, top - 0.02 * H, 0.055 * H, 0.012 * H, "#a8a8b0", INK, 0.7)
+		for i in 3: Art.el(ctx, bx - 0.03 * H + i * 0.03 * H, top - 0.028 * H, 0.006 * H, 0.003 * H, "#5a5a62" if i >= n else "#d8d8e0")
+		_ink(ctx, Vector2(bx - 0.12 * H, top - 0.005 * H), Vector2(bx - 0.07 * H, top - 0.012 * H), "#3a2a20", 1.6))   # 錶帶
