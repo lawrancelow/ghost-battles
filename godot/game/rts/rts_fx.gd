@@ -5,6 +5,7 @@
 extends RefCounted
 
 const FXK = preload("res://game/fxkit/fx_kit.gd")
+const VC = preload("res://game/fxkit/vfx_cat.gd")   # [vfx] 序列幀特效目錄
 const MAX_FX := 120
 const SHAKE_K := 0.35          # 巡陰震屏量 × 0.35（輕微）
 const SHAKE_MAX := 3.2
@@ -28,6 +29,7 @@ func _init(g: Node2D, t: Node2D) -> void:
 
 func tex(n: String) -> Texture2D:
 	if n == "_rad": return PtGfx.RAD_SOFT
+	if n.begins_with("vx:"): return VC.tex(n.substr(3))
 	if not _tex.has(n): _tex[n] = PtGfx.tex(n)
 	return _tex[n]
 
@@ -91,6 +93,7 @@ func consume(op) -> void:
 				if big: _shake(4.0); _hitstop(op, 0.05)
 				if Time.get_ticks_msec() - _snd_at > 80: _snd_at = Time.get_ticks_msec(); Snd.play("hit")
 				if dead: _down(op, v2, hp_)
+			"sk2": sk2(op, e[1], e[2], e[3])
 			"cast":
 				var cu: Dictionary = e[1]
 				if cu.get("p") != null: spr("fx_aura", cu.p.x, cu.p.y + 4, {"ground": true, "s0": 0.15, "s1": 0.32, "life": 0.6, "anchor": 0.5, "sy": 0.5, "hue": sty_of(cu).hue, "prio": true})
@@ -118,6 +121,48 @@ func consume(op) -> void:
 					_shake(r3.shake); _hitstop(op, r3.stop)
 				Snd.play("skill")
 	op.vq.clear()
+
+# [vfx] 副技／王牌技序列幀：u＝出手者、pe＝技能資料、ts＝目標 [[unit, k], ...]
+static var SK2 := {"n": 0, "keys": {}}
+func sk2(op, u: Dictionary, pe: Dictionary, ts) -> void:
+	if not (u.get("p") is Vector2): return
+	var key = VC.key_of(pe, J.str(u.get("k")))
+	var E = VC.get_e(key) if key != "" else null
+	if E == null: return
+	SK2.n += 1; SK2.keys[key] = int(SK2.keys.get(key, 0)) + 1
+	var tg = []
+	if ts is Array:
+		for x in ts:
+			var w = x[0] if x is Array and x.size() else null
+			if w is Dictionary and w.get("p") is Vector2 and w != u: tg.append(w)
+	var at = str(E.get("at", "tgt")); var sc = float(E.get("s", 0.6)); var life = float(E.get("life", 1.0))
+	var o = {"grid": VC.GRID, "s0": sc * 0.96, "s1": sc * 1.04, "life": life, "alpha": 1.0, "prio": true, "anchor": float(E.get("anchor", 0.5))}
+	var up: Vector2 = u.p
+	var n = "vx:" + key
+	match at:
+		"self": spr(n, up.x, _hy(op, u), o)
+		"area", "self_g":
+			var o2 = o.duplicate(); o2["anchor"] = 0.62; spr(n, up.x, up.y, o2)
+		"tgt_all":
+			var i = 0
+			for w in (tg if tg.size() else [u]):
+				if i >= 4: break
+				var o3 = o.duplicate(); o3["t"] = -0.08 * i; spr(n, w.p.x, _hy(op, w), o3); i += 1
+		"tgt_g":
+			var w2 = tg[0] if tg.size() else u
+			spr(n, w2.p.x, w2.p.y, o)
+		"line":
+			var w3 = tg[0] if tg.size() else null
+			var v3: Vector2 = w3.p if w3 != null else up + Vector2(120, 0)
+			var o4 = o.duplicate(); o4["flip"] = v3.x < up.x
+			spr(n, (up.x + v3.x) * 0.5, (_hy(op, u) + (_hy(op, w3) if w3 != null else _hy(op, u))) * 0.5, o4)
+		_:
+			var w4 = tg[0] if tg.size() else u
+			var o5 = o.duplicate()
+			if E.get("dirflip", false): o5["flip"] = (w4.p as Vector2).x < up.x
+			spr(n, w4.p.x, _hy(op, w4), o5)
+	if key.begins_with("ace_"):
+		glow(up.x, up.y - 30, 2.0, 0.35); _shake(4.0)
 
 func _down(op, v: Dictionary, hp_: Vector2) -> void:
 	FXK.spark(emit, hp_.x, hp_.y, 1.6, false)

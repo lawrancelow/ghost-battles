@@ -1612,6 +1612,7 @@ static func trig(sim, u, tr: String, other = null, only := -1) -> void:
 		if pe.get("tg") != null: ts = select(sim, u, pe.tg)
 		elif other is Dictionary and _nn(other, "side") != _nn(u, "side") and sim.alive(other): ts = [[other, 1.0]]
 		else: ts = select(sim, u, {"sel": "near"})
+		if named: sim._vq(["sk2", u, pe, ts])   # [vfx] 副技／王牌技序列幀特效
 		for fx in _arr(pe.get("fx")):
 			if not (fx is Dictionary): continue
 			var t2 = ts

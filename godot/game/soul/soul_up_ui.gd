@@ -52,6 +52,7 @@ static func fuse_page(body: VBoxContainer, refresh: Callable) -> void:
 		var lab = L("融合", "融合")
 		bb.add_child(UI._btn(lab, "gold", c.ok, func():
 			if UP.fuse(k) == "ok":
+				load("res://game/fxkit/vfx_play.gd").burst("up_fuse")   # [vfx] 融合升品特效
 				var m = UI._main()
 				if m != null and m.has_method("show_banner"): m.show_banner(L("【%s】融合成%s！", "【%s】融合成%s！") % [SOUL.gname(k), UP.pj_name(k)])
 			refresh.call()))
@@ -81,6 +82,7 @@ static func star_page(body: VBoxContainer, refresh: Callable) -> void:
 		var lab = L("突破", "突破")
 		bb.add_child(UI._btn(lab, "gold", c.ok, func():
 			if UP.up_star(k) == "ok":
+				load("res://game/fxkit/vfx_play.gd").burst("up_star")   # [vfx] 星級突破特效
 				var m = UI._main()
 				if m != null and m.has_method("show_banner"): m.show_banner(L("【%s】突破到 ★%d！", "【%s】突破到 ★%d！") % [SOUL.gname(k), UP.star(k)])
 			refresh.call()))

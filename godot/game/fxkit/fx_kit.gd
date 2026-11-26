@@ -93,13 +93,20 @@ static func draw_spr(c: CanvasItem, f: Dictionary, im: Texture2D) -> void:
 	if im == null or f.t < 0: return
 	var p = f.t / f.life; var e = 1 - pow(1 - p, 2.2); var s = f.s0 + (f.s1 - f.s0) * e
 	var a = f.alpha * ((p / 0.2) if f.get("fadeIn", false) and p < 0.2 else 1.0) * (1.0 if p < 0.55 else 1 - (p - 0.55) / 0.45)
-	var w = im.get_width() * s * f.sx; var h = im.get_height() * s * f.sy
+	var g = int(f.get("grid", 0))   # [vfx] 序列幀（g×g 格）：按進度揀格，序列幀自己有淡出，唔再疊淡出
+	var src = Rect2()
+	if g > 0:
+		var cw = im.get_width() / g; var ch = im.get_height() / g; var fi = mini(g * g - 1, int(p * g * g))
+		src = Rect2((fi % g) * cw, (fi / g) * ch, cw, ch); s = f.s0 + (f.s1 - f.s0) * p
+		a = f.alpha * (1.0 if p < 0.9 else (1 - p) / 0.1)
+	var w = (src.size.x if g > 0 else im.get_width()) * s * f.sx; var h = (src.size.y if g > 0 else im.get_height()) * s * f.sy
 	var X = Transform2D(0, Vector2(f.x + f.get("vx", 0.0) * p, f.y - f.vy * p))
 	var r = f.rot + f.get("spin", 0.0) * p
 	if r != 0.0: X = X * Transform2D(r, Vector2.ZERO)
 	if f.get("flip", false): X = X * Transform2D(Vector2(-1, 0), Vector2(0, 1), Vector2.ZERO)
 	c.draw_set_transform_matrix(X)
-	c.draw_texture_rect(im, Rect2(-w / 2, -h * f.get("anchor", 0.5), w, h), false, Color(1, 1, 1, maxf(0, a)))
+	if g > 0: c.draw_texture_rect_region(im, Rect2(-w / 2, -h * f.get("anchor", 0.5), w, h), src, Color(1, 1, 1, maxf(0, a)))
+	else: c.draw_texture_rect(im, Rect2(-w / 2, -h * f.get("anchor", 0.5), w, h), false, Color(1, 1, 1, maxf(0, a)))
 	c.draw_set_transform_matrix(Transform2D.IDENTITY)
 
 # 飛彈本體（巡陰 _draw_proj 原樣）：fx_fire 貼圖，按色相上色
