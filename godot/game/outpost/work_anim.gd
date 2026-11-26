@@ -115,7 +115,7 @@ const TOOL_ART := {"fork": {"key": "tool_fork"}, "tongs": {"key": "tool_tongs"},
 	"pbrush": {"key": "tool_pbrush"}, "cup": {"key": "tool_cup"}, "shaker": {"key": "tool_shaker"}, "plane": {"key": "tool_plane"},
 	"screwdriver": {"key": "tool_screwdriver"}, "pumph": {"key": "tool_pumph"}}
 static var _dyn := {}   # id → [SPR_TOOL 格式, EDGE（uv）] 或 null
-static func _art(id: String):
+static func _art(id: String) -> Variant:
 	if not TOOL_ART.has(id): return null
 	if _dyn.has(id) and _dyn[id] != null: return _dyn[id]
 	var A: Dictionary = TOOL_ART[id]
@@ -128,13 +128,13 @@ static func _art(id: String):
 	var e2 = A.get("edge", [uv.call(E[0]), uv.call(E[1]), Vector2(E[2].x, E[2].y), E[3]])
 	_dyn[id] = [[str(A.key), float(gr[0]), float(gr[1]), float(tp[0]), float(tp[1]), false], e2]
 	return _dyn[id]
-static func _spr(id: String):
-	var a = _art(id)
+static func _spr(id: String) -> Variant:
+	var a: Variant = _art(id)
 	if a != null: return a[0]
 	if SPR_TOOL.has(id) and Spr.ok(SPR_TOOL[id][0]): return SPR_TOOL[id]
 	return null
-static func _edge(id: String):
-	var a = _art(id)
+static func _edge(id: String) -> Variant:
+	var a: Variant = _art(id)
 	if a != null: return a[1]
 	return EDGE.get(id)   # 測試：今次 draw 每件工具工作面（世界座標）
 
@@ -203,7 +203,7 @@ static func _sprh(key: String, w: float) -> float:
 # 揸位 g、長 L、角度 ang（0＝向上、正＝向前）；本地框
 # 工具空間 → 本地框（同 tool() 畫法一模一樣；原圖工具嘅工具空間＝uv）
 static func tool_xf(id: String, g: Vector2, L: float, ang: float) -> Transform2D:
-	var d = _spr(id)
+	var d: Variant = _spr(id)
 	if d != null:
 		var tex = Spr.get_tex(d[0])
 		var h = L; var w = L * tex.get_width() / float(tex.get_height())
@@ -215,20 +215,20 @@ static func tool_xf(id: String, g: Vector2, L: float, ang: float) -> Transform2D
 	return Transform2D(ang, g) * Transform2D(Vector2(L / 24.0, 0), Vector2(0, L / 24.0), Vector2.ZERO)
 # 工作面喺本地框嘅位置：e＝0..1（a→b）；同法向量
 static func edge_pt(id: String, g: Vector2, L: float, ang: float, e := 0.5) -> Vector2:
-	var E = _edge(id); if E == null: return g
+	var E: Variant = _edge(id); if E == null: return g
 	return tool_xf(id, g, L, ang) * (E[0] as Vector2).lerp(E[1], e)
 static func edge_n(id: String, ang: float) -> Vector2:
-	var E = _edge(id); if E == null: return Vector2.UP
+	var E: Variant = _edge(id); if E == null: return Vector2.UP
 	return tool_xf(id, Vector2.ZERO, 1.0, ang).basis_xform(E[2]).normalized()
 # 要工作面上 e 嗰點落喺 at：倒計揸位
 static func place(id: String, L: float, ang: float, at: Vector2, e := 0.5) -> Vector2:
 	return at - edge_pt(id, Vector2.ZERO, L, ang, e)
 static func tool(ctx: Ctx, id: String, g: Vector2, L: float, ang: float, a := 1.0) -> void:
 	if EDGE.has(id):   # 測試記錄：真正畫落去嘅變換（包埋面向鏡像、放大）
-		var X = ctx.getTransform() * tool_xf(id, g, L, ang); var E = _edge(id)
+		var X = ctx.getTransform() * tool_xf(id, g, L, ang); var E: Variant = _edge(id)
 		_TL.append({"id": id, "a": X * (E[0] as Vector2), "b": X * (E[1] as Vector2), "n": X.basis_xform(E[2]).normalized()})
 	ctx.save(); ctx.globalAlpha *= a; ctx.translate(g.x, g.y)
-	var d = _spr(id)
+	var d: Variant = _spr(id)
 	if d != null:
 		var tex = Spr.get_tex(d[0])
 		var h = L; var w = L * tex.get_width() / float(tex.get_height())
