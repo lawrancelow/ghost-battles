@@ -93,13 +93,16 @@ func _logic(t, m) -> void:
 	# ---------- 數據 ----------
 	EQ.reload()
 	var all_ids = EQ.D().ITEMS.keys()
-	_chk("數據：equip.json 有 40 件（民 14＋名鬼 26）", all_ids.size() == 40 and EQ.items("ml").size() == 14 and EQ.items("eq").size() == 26, [all_ids.size(), EQ.items("ml").size(), EQ.items("eq").size()])
-	_chk("名鬼三格：兵器 9、護身 9、隨身物 8", EQ.items("eq", "wea").size() == 9 and EQ.items("eq", "arm").size() == 9 and EQ.items("eq", "acc").size() == 8)
-	var grades = [0, 0, 0, 0]
+	# [equip-list] 件數跟返現況：民 14＋名鬼 51（補丁43 31 件＋真兵器 18＋武館 2）＋專屬物 27（主角兵器 hero 唔計）
+	var nh = 0
+	for id in all_ids: if J.t(EQ.item(id).get("hero")): nh += 1
+	_chk("數據：equip.json 有 92 件（民 14＋名鬼 51＋專屬物 27）", all_ids.size() - nh == 92 and EQ.items("ml").size() == 14 and EQ.items("eq").size() == 51 and EQ.items("ex").size() == 27, [all_ids.size(), EQ.items("ml").size(), EQ.items("eq").size(), EQ.items("ex").size()])
+	_chk("名鬼三格：兵器 29、護身 11、隨身物 11", EQ.items("eq", "wea").size() == 29 and EQ.items("eq", "arm").size() == 11 and EQ.items("eq", "acc").size() == 11, [EQ.items("eq", "wea").size(), EQ.items("eq", "arm").size(), EQ.items("eq", "acc").size()])
+	var grades = [0, 0, 0, 0, 0]
 	for id in EQ.items("eq"): grades[EQ.grade_of(id)] += 1
-	_chk("四個等級都有（凡良精名）", grades.min() >= 2, grades)
+	_chk("五個等級都有（凡良精名絕）", grades.min() >= 2, grades)
 	var badw = []
-	var RED = ["桃木", "符", "八卦", "念珠", "佛珠", "道士", "道袍", "神像", "經文", "佛經", "銅錢劍", "十字架", "法器", "Nike", "Adidas"]
+	var RED = ["桃木", "符", "八卦", "念珠", "佛珠", "道士", "道袍", "神像", "經文", "佛經", "銅錢劍", "十字架", "法器", "Keris", "判官筆", "法劍", "Nike", "Adidas", "Lui Char", "LV"]
 	for id in all_ids:
 		var tx = str(EQ.item(id).n) + str(EQ.item(id).d)
 		for w in RED: if tx.contains(w): badw.append([id, w])

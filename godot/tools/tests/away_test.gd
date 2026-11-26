@@ -1292,7 +1292,7 @@ func eq43(t) -> void:   # [補丁43] 裝備大改：類別、加工、套裝、�
 	EQ.reload()
 	var S = J.G.S
 	var nex = EQ.items("ex", "ex").size()
-	_chk("裝備 64 件、專屬物 19、套裝 3", EQ.D().ITEMS.size() == 64 and nex == 19 and EQ.D().SETS.size() == 3, "%d %d" % [EQ.D().ITEMS.size(), nex])
+	_chk("裝備 92 件、專屬物 27、套裝 4（[equip-list] 加真兵器 18＋武館 2＋軍團王專屬物 8）", EQ.D().ITEMS.size() - _n_hero(EQ) == 92 and nex == 27 and EQ.D().SETS.size() == 4, "%d %d" % [EQ.D().ITEMS.size(), nex])
 	_chk("來源：凡造得、名唔造得（燒落嚟）、絕／專屬唔造得", EQ.can_craft_src("eq_tuoxie") and not EQ.can_craft_src("eq_huoqi") and not EQ.can_craft_src("eq_jue_suit") and not EQ.can_craft_src("ex_heiwu") and EQ.src_txt("eq_huoqi") != "")
 	var ids = {}
 	for k in ["laojiang", "toyol", "mengpo", "heiwu"]:
@@ -1369,6 +1369,102 @@ func eq43(t) -> void:   # [補丁43] 裝備大改：類別、加工、套裝、�
 	EU.close_popup(); await _w(t, 0.3)
 	Menus.open_roster(); await _w(t, 0.9); await _shot(t, "eq43_roster")
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func _n_hero(EQ) -> int:   # 主角兵器（p44 整合組加，hero＝true）唔計入件數
+	var n = 0
+	for k in EQ.D().ITEMS: if J.t(EQ.D().ITEMS[k].get("hero")): n += 1
+	return n
+# [equip-list] 真兵器 18 件＋武館系列＋軍團王專屬物＋改名
+func eqw(t) -> void:
+	var m = await _boot(t)
+	var EQ = load("res://game/equip/eq_data.gd"); var EA = load("res://game/equip/eq_art.gd"); var EU = load("res://game/equip/eq_ui.gd"); var M = load("res://game/outpost/mat.gd")
+	EQ.reload()
+	var D = EQ.D(); var S = J.G.S
+	# 1. 每類每檔至少一件兵器
+	var cov = {}
+	for id in EQ.items("eq", "wea"): cov["%s%d" % [EQ.cat_of(id), EQ.grade_of(id)]] = int(cov.get("%s%d" % [EQ.cat_of(id), EQ.grade_of(id)], 0)) + 1
+	var miss = []
+	for c in ["重", "輕", "巧"]:
+		for g in 5: if int(cov.get("%s%d" % [c, g], 0)) < 1: miss.append("%s%s" % [c, ["凡", "良", "精", "名", "絕"][g]])
+	_chk("重輕巧 × 凡良精名絕：每格至少一件兵器", miss.is_empty(), miss if miss.size() else cov)
+	# 2. 新兵器：打法、刃口、長短、來源、數值預算
+	var W = {"eq_w_parang": "swing", "eq_w_qiang": "thrust", "eq_w_podao": "swing", "eq_w_hwando": "swing", "eq_w_tachi": "swing", "eq_w_chengtuo": "spin", "eq_w_guandao": "swing",
+		"eq_w_emei": "thrust", "eq_w_kerambit": "swing", "eq_w_sumpit": "thrust", "eq_w_shuangdao": "swing", "eq_w_kusarigama": "spin", "eq_w_nu": "thrust", "eq_w_miaodao": "swing",
+		"eq_w_tengtiao": "swing", "eq_w_shengbiao": "throw", "eq_w_tieshan": "spin", "eq_w_jiujie": "spin"}
+	var BLADE = ["eq_w_parang", "eq_w_podao", "eq_w_hwando", "eq_w_tachi", "eq_w_guandao", "eq_w_kerambit", "eq_w_shuangdao", "eq_w_kusarigama", "eq_w_miaodao"]
+	var badw = []
+	for id in W:
+		var it = EQ.item(id)
+		if it.is_empty() or str(it.get("slot")) != "wea": badw.append(id + " 冇／唔係兵器"); continue
+		if EA.atk_style(id) != W[id]: badw.append("%s 打法 %s≠%s" % [id, EA.atk_style(id), W[id]])
+		if not (EA.ATK.has(EA.shape_of(id)) or EA.ATK_W.has(EA.shape_of(id))): badw.append(id + " 打法靠預設")
+		if not EA.is_hand(EA.shape_of(id)): badw.append(id + " 圖示唔斜放")
+		var want_src = {0: ["make"], 1: ["make"], 2: ["make", "offer"], 3: ["offer"], 4: ["boss"]}[EQ.grade_of(id)]
+		if JSON.stringify(it.get("src")) != JSON.stringify(want_src): badw.append(id + " 來源")
+	for id in BLADE:
+		if not (EA.EDGE.has(id) or EA.EDGE_W.has(id)): badw.append(id + " 刃口未登記")
+		for fd in [1, -1]:
+			var mir = EA.edge_side(id) != fd
+			if EA.edge_side(id) * (-1 if mir else 1) != fd: badw.append("%s 面向%d 刀口唔向目標" % [id, fd])
+	_chk("18 件真兵器：打法、斜放、來源、刃口（面向左右都刀口向目標）", badw.is_empty() and W.size() == 18, badw)
+	var BUD = [[0.05, 0.12], [0.08, 0.12], [0.11, 0.16], [0.18, 0.23], [0.24, 0.29]]
+	var badb = []
+	for id in EQ.items("eq", "wea"):
+		if J.t(EQ.item(id).get("hero")): continue
+		var sm = 0.0
+		for s0 in EQ.item(id).st: sm += absf(J.num(EQ.item(id).st[s0]))
+		var bd = BUD[EQ.grade_of(id)]
+		if sm < bd[0] - 1e-6 or sm > bd[1] + 1e-6: badb.append("%s %.2f" % [id, sm])
+	_chk("全部兵器數值總和喺品級預算內（凡 .05–.12／良 .08–.12／精 .11–.16／名 .18–.23／絕 .24–.29）", badb.is_empty(), badb)
+	# 3. 名唔重複（粵／中）、遊魂兵版同名鬼版唔同名
+	var seen = [{}, {}]; var dup = []
+	for id in D.ITEMS:
+		var n = D.ITEMS[id].get("n", ["", ""])
+		for li in 2:
+			if seen[li].has(str(n[li])): dup.append("%s＝%s（%s）" % [id, seen[li][str(n[li])], n[li]])
+			seen[li][str(n[li])] = id
+	_chk("全部裝備名唔重複（粵、中）", dup.is_empty(), dup)
+	var RN = {"ml_jimao": "甩毛雞毛掃", "ml_wokchan": "大排檔鑊鏟", "ml_suogu": "爛骨遮", "ml_huanshou": "翻版環首刀", "ml_gongdi": "地盤帽", "eq_tengpai": "透氣藤盾", "ml_suanpan": "月尾找數盾",
+		"eq_liangcha": "鐵頭衫叉", "eq_dingshuji": "釘蓋釘書機", "eq_xizhuang": "紙紮返工衫", "eq_weiqun": "茶記圍裙", "eq_baoan": "看更制服", "eq_staffcard": "職員咭", "eq_jue_suit": "區域經理孖襟褸", "eq_jue_luichar": "準時收工限量手袋"}
+	var badn = []
+	for id in RN: if str(EQ.item(id).get("n", ["", ""])[0]) != RN[id]: badn.append(id)
+	_chk("改名 15 件生效", badn.is_empty(), badn)
+	var ML = load("res://game/militia/ml_data.gd")
+	_chk("遊魂兵 A 款名照舊同 militia 一樣（晾衫竹／紙紮藤牌）", JSON.stringify(EQ.item("ml_zhugan").n) == JSON.stringify(ML.TIERS[0].n) and JSON.stringify(EQ.item("ml_tengpai").n) == JSON.stringify(ML.TIERS[2].n), [EQ.item("ml_tengpai").n, ML.TIERS[2].n])
+	# 4. 武館系列
+	var g0 = (S.ghosts[0] as Dictionary).duplicate(true); g0["id"] = "eqw_lj"; g0["k"] = "laojiang"; g0["q"] = "名"; g0["name"] = "laojiang"; g0["post"] = null
+	S.ghosts.append(g0)
+	for id in ["eq_w_qiang", "eq_wg_shan", "eq_wg_dieda", "eq_w_podao"]: EQ.give(id)
+	EQ.wear("eqw_lj", "eq_w_qiang"); EQ.wear("eqw_lj", "eq_wg_shan"); EQ.wear("eqw_lj", "eq_wg_dieda")
+	var si = EQ.set_info("eqw_lj")
+	_chk("武館系列 3 件（長槍＋功夫衫＋跌打酒）：兩段效果＋開場攻 +20% 被動", si.size() == 1 and str(si[0].set) == "wuguan" and int(si[0].n) == 3 and si[0].on.size() == 2 and EQ.set_pas("eqw_lj").size() == 1, si)
+	EQ.wear("eqw_lj", "eq_w_podao")
+	_chk("換朴刀（同系列）照計 3 件", int(EQ.set_info("eqw_lj")[0].n) == 3)
+	var b = EQ.bonus("eqw_lj")
+	_chk("武館加成入合計（攻速 +8%、攻 > 0.15）", J.num(b.aspd) >= 0.08 - 1e-6 and J.num(b.atk) > 0.15, b)
+	# 5. 軍團王專屬物
+	var LG = ["lg_dpl_king", "lg_egs_king", "lg_jsj_jiangchen", "lg_klj_king", "lg_sgj_king", "lg_ssg_king", "lg_wkj_king", "lg_zzj_king"]
+	var U = load("res://game/soul/soul_up.gd"); var badx = []
+	for k in LG:
+		var it = EQ.item("ex_" + k)
+		if it.is_empty() or str(it.get("owner")) != k or not U.born_ace(k) or not J.t(it.get("act_up")): badx.append(k)
+	_chk("8 隻軍團王都有專屬物（ex_<key>、綁定、天生王牌、標咗加工升招牌技）", badx.is_empty(), badx)
+	var gw = g0.duplicate(true); gw["id"] = "eqw_wkj"; gw["k"] = "lg_wkj_king"; gw["name"] = "wkj"
+	S.ghosts.append(gw)
+	for id in EQ.items("ex", "ex"): if id != "ex_lg_wkj_king" and EQ.n_inv(id) <= 0: EQ.give(id)
+	var dr = EQ.drop_boss(true)
+	_chk("魔王首殺：收咗倭寇鬼王就掉佢件破帆披風", dr.has("ex_lg_wkj_king"), dr)
+	_chk("專屬物唔係本鬼著唔到；本鬼著得", EQ.why_not("eqw_lj", "ex_lg_wkj_king") != "" and EQ.why_not("eqw_wkj", "ex_lg_wkj_king") == "" and EQ.wear("eqw_wkj", "ex_lg_wkj_king"))
+	_chk("加工規則同其他專屬物一樣（+5：×1.25、cut 2）", _exp5(EQ, M, "ex_lg_wkj_king", "lg_wkj_king"), EQ.ace_fx_scale("lg_wkj_king"))
+	EU.open_craft(); await _w(t, 0.8); await _shot(t, "eqw_craft")
+	EU.close_popup(); await _w(t, 0.3)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+func _exp5(EQ, M, id: String, k: String) -> bool:
+	for mm in ["m_zhishan", "m_rope"]: M.add(mm, 999999.0)
+	J.G.S.res["coins"] = 1e9
+	for i in 5: EQ.do_plus(id)
+	var xs = EQ.ace_fx_scale(k)
+	return absf(J.num(xs.x) - 1.25) < 1e-4 and absf(J.num(xs.cut) - 2.0) < 1e-4
 
 # [補丁43] 漂浮兵器動作樣本：四種打法（直刺／揮斬／轉撞／飛出去）× 五個時刻；左右兩個面向
 class FwSheet extends Control:
