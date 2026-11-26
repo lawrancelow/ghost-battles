@@ -84,8 +84,8 @@ const CAT := {
 	"up_star": {"n": "星級突破", "fam": "soul", "at": "ui", "s": 1.0, "life": 1.4},
 	# ---- 第四批：升級（介面上播）----
 	"up_plus": {"n": "裝備加工", "fam": "coin", "at": "ui", "s": 1.0, "life": 1.1},
-	"up_ace": {"n": "專屬物加工升王牌技", "fam": "coin", "at": "ui", "s": 1.0, "life": 1.4},
-	"up_tame": {"n": "魔王收服", "fam": "circle", "at": "ui", "s": 1.0, "life": 2.0},
+	"up_ace": {"n": "專屬物加工升王牌技", "fam": "coin", "at": "ui", "s": 1.0, "life": 1.4, "ui_k": 0.9},
+	"up_tame": {"n": "魔王收服", "fam": "chain", "at": "ui", "s": 1.0, "life": 2.0, "ui_k": 1.1},
 	"up_set": {"n": "套裝湊齊", "fam": "soul", "at": "ui", "s": 1.0, "life": 1.2},
 }
 
@@ -93,10 +93,10 @@ const CAT := {
 #   pos：head 頭頂｜mouth 嘴前｜body 身中｜feet 腳底（地面層）｜back 背後（地面層，喺單位後面）
 #   s＝每格 256px 嘅縮放（0.2＝51px 格）；per＝16 格播一次幾秒（兩種一張圖嗰啲＝8 格循環×2，per 2.0＝每個循環 1 秒）
 #   dy＝世界座標上下微調（腳底圈連向上光柱嗰啲，圈心要對腳）；sheet＝共用另一張圖
-const ST_POS_S := {"head": 0.2, "mouth": 0.19, "body": 0.24, "feet": 0.23, "back": 0.3}
+const ST_POS_S := {"head": 0.2, "mouth": 0.19, "body": 0.24, "feet": 0.23, "back": 0.2}
 const ST := {
-	"st_stun": {"fam": "chain", "pos": "feet", "per": 1.6}, "st_silence": {"fam": "signal", "pos": "mouth", "per": 1.6}, "st_burn": {"fam": "wisp", "pos": "body", "per": 1.6},
-	"st_poison": {"fam": "miasma", "pos": "body", "per": 1.6}, "st_claw": {"fam": "slash", "pos": "body", "per": 2.0}, "st_mark": {"fam": "slash", "pos": "head", "per": 2.0},
+	"st_stun": {"fam": "chain", "pos": "feet", "per": 1.6, "gain": 2.6}, "st_silence": {"fam": "signal", "pos": "mouth", "per": 1.6}, "st_burn": {"fam": "wisp", "pos": "body", "per": 1.6},
+	"st_poison": {"fam": "miasma", "pos": "body", "per": 1.6}, "st_claw": {"fam": "slash", "pos": "body", "per": 2.0}, "st_mark": {"fam": "slash", "pos": "body", "per": 2.0},
 	"st_abreak": {"fam": "blast", "pos": "body", "per": 2.0}, "st_wound": {"fam": "miasma", "pos": "body", "per": 2.0}, "st_slow": {"fam": "frost", "pos": "feet", "per": 2.0},
 	"st_aslow": {"fam": "frost", "pos": "body", "per": 2.0}, "st_atkd": {"fam": "shadow", "pos": "head", "per": 2.0}, "st_flee": {"fam": "hair", "pos": "head", "per": 2.0},
 	"st_confuse": {"fam": "soul", "pos": "head", "per": 2.0}, "st_daze": {"fam": "soul", "pos": "head", "sheet": "st_confuse", "per": 2.0}, "st_charm": {"fam": "miasma", "pos": "head", "per": 2.0},

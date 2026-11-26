@@ -467,3 +467,78 @@ func st_sim_(t) -> void:
 	_p("真模擬疊上身嘅狀態循環：%s" % seen)
 	_chk("真模擬有狀態循環疊上身（≥ 5 種）", seen.size() >= 5, seen.keys())
 	_chk("rts_fx 冇爆上限（drop 0）", int(RFX.STATS.drop) == 0, RFX.STATS.drop)
+
+# ================= 第四批：升級類（介面上播）=================
+#   真按掣：紙紮師傅「加工」（普通件→up_plus、專屬物→up_ace）、換裝湊齊套裝（up_set）；魔王收服（up_tame，大型 2 秒）
+const B4 := ["up_plus", "up_ace", "up_set", "up_tame"]
+func b4(t) -> void:
+	await _boot(t); await b4_(t); _p("RESULT ok=%d bad=%d" % [ok, bad])
+func _find(n: Node, nm: String):
+	if n.name == nm: return n
+	for c in n.get_children():
+		var r = _find(c, nm)
+		if r != null: return r
+	return null
+func _b4shot(t, k: String, n, tag: String) -> void:
+	await _w(t, float(VC.get_e(k).life) * 0.42)
+	await RenderingServer.frame_post_draw
+	t.get_viewport().get_texture().get_image().save_png(SHOTS + "b4_" + tag + ".png")
+func b4_(t) -> void:
+	var VP = load("res://game/fxkit/vfx_play.gd"); var EQ = load("res://game/equip/eq_data.gd"); var EUI = load("res://game/equip/eq_ui.gd"); var M = load("res://game/outpost/mat.gd")
+	for k in B4:
+		var E = VC.get_e(k)
+		_chk(k + " 有圖", E != null and VC.tex(k) != null)
+	var vs = t.get_tree().root.get_visible_rect().size
+	_chk("魔王收服 2 秒", is_equal_approx(float(VC.get_e("up_tame").life), 2.0))
+	_chk("魔王收服大型（闊 ≥ 畫面闊）", minf(vs.x, vs.y) * float(VC.get_e("up_tame").get("ui_k", 0.8)) >= vs.x, VC.get_e("up_tame").get("ui_k"))
+	var S = J.G.S; S.res["coins"] = 9.0e7
+	for mid in M.D().MATS: M.add(str(mid), 5000.0)
+	var e = EQ.st()
+	# 1) 加工（普通件）：真按「加工」掣
+	var nid = "eq_wokchan"; e.inv[nid] = J.num(e.inv.get(nid, 0)) + 1.0
+	VP.LOG.clear(); EUI.open_craft(); await _w(t, 0.4)
+	var root = t.get_tree().root
+	var pb = _find(root, "Plus_" + nid)
+	_chk("加工掣搵到（" + nid + "）", pb != null)
+	if pb != null:
+		var p0 = EQ.plus(nid)
+		pb.emit_signal("pressed"); await _b4shot(t, "up_plus", null, "plus")
+		_chk("加工 +1 後播「裝備加工」", VP.LOG.has("up_plus") and EQ.plus(nid) == p0 + 1, [VP.LOG, EQ.plus(nid)])
+	EUI.close_popup(); await _w(t, 1.2)
+	# 2) 專屬物加工：揾一件 ex_
+	var xid = ""
+	for id in EQ.D().ITEMS: if str(EQ.D().ITEMS[id].get("kind")) == "ex": xid = str(id); break
+	e.inv[xid] = J.num(e.inv.get(xid, 0)) + 1.0
+	VP.LOG.clear(); EUI.open_craft(); await _w(t, 0.4)
+	var xb = _find(root, "Plus_" + xid)
+	_chk("專屬物加工掣搵到（" + xid + "）", xb != null)
+	if xb != null:
+		xb.emit_signal("pressed"); await _b4shot(t, "up_ace", null, "ace")
+		_chk("專屬物加工後播「升王牌技」（唔係普通加工）", VP.LOG.has("up_ace") and not VP.LOG.has("up_plus"), VP.LOG)
+	EUI.close_popup(); await _w(t, 1.6)
+	# 3) 套裝：茶餐廳系列，先著 2 件，再喺換裝面板真按第 3 件
+	var g = ""
+	for gh in S.ghosts:
+		if EQ.why_not(str(gh.id), "eq_wokchan") == "" or true: g = str(gh.id); break
+	if g != "":
+		for id in ["eq_wokchan", "eq_weiqun", "eq_liangchapot"]: e.inv[id] = J.num(e.inv.get(id, 0)) + 2.0
+		for sl in EQ.SLOTS: EQ.unwear(g, sl)
+		EQ.wear(g, "eq_wokchan"); EQ.wear(g, "eq_weiqun")
+		VP.LOG.clear(); EUI.open_slot(g, "acc"); await _w(t, 0.4)
+		var wb = _find(root, "Wear_eq_liangchapot")
+		_chk("換裝掣搵到（涼茶壺）", wb != null)
+		if wb != null:
+			wb.emit_signal("pressed"); await _b4shot(t, "up_set", null, "set")
+			_chk("著齊 3 件茶餐廳系列播「套裝湊齊」", VP.LOG.has("up_set"), VP.LOG)
+		EUI.close_popup(); await _w(t, 1.0)
+		VP.LOG.clear(); EQ.unwear(g, "acc"); EUI._set_fx(g, EUI._set_tier(g)); _chk("冇多開套裝唔播", not VP.LOG.has("up_set"), VP.LOG)
+	else: _chk("有名鬼試套裝", false)
+	# 4) 魔王收服：soul_ui 收服 bm_ 掛咗；介面上播兩張截圖（0.5 秒、1.1 秒）
+	var src = FileAccess.get_file_as_string("res://game/soul/soul_ui.gd")
+	_chk("魔王收服掛喺 soul_ui 收服 bm_", src.contains('burst("up_tame")'))
+	var n = VP.burst("up_tame"); await _w(t, 0.55); await RenderingServer.frame_post_draw
+	t.get_viewport().get_texture().get_image().save_png(SHOTS + "b4_tame_a.png")
+	await _w(t, 0.55); await RenderingServer.frame_post_draw
+	t.get_viewport().get_texture().get_image().save_png(SHOTS + "b4_tame_b.png")
+	await _w(t, 1.2)
+	_chk("魔王收服播完自己消失", not is_instance_valid(n))

@@ -166,7 +166,7 @@ func st_draw(ks: Array, p: Vector2, hd: Vector2, id: int) -> void:
 		var sc = float(E.get("s", VC.ST_POS_S.get(pos, 0.24)))
 		at.y += float(E.get("dy", 0.0))
 		var fi = int(floor((_lt + float(id % 97) * 0.13) / float(E.get("per", ST_PER)) * 16.0))
-		var f = FXK.spr_dict("vx:" + str(E.get("sheet", ks[i])), at.x, at.y, {"grid": VC.GRID, "fi": fi, "s0": sc, "s1": sc, "life": 1.0, "t": 0.0, "alpha": 0.9 if i == 0 else 0.75, "ground": pos in ["feet", "back"], "anchor": 0.5})
+		var f = FXK.spr_dict("vx:" + str(E.get("sheet", ks[i])), at.x, at.y, {"grid": VC.GRID, "fi": fi, "s0": sc, "s1": sc, "life": 1.0, "t": 0.0, "alpha": 0.95 if i == 0 else 0.8, "gain": float(E.get("gain", 1.7)), "ground": pos in ["feet", "back"], "anchor": 0.5})
 		loops.append(f)
 
 # [vfx] 副技／王牌技序列幀：u＝出手者、pe＝技能資料、ts＝目標 [[unit, k], ...]

@@ -107,7 +107,8 @@ static func draw_spr(c: CanvasItem, f: Dictionary, im: Texture2D) -> void:
 	if r != 0.0: X = X * Transform2D(r, Vector2.ZERO)
 	if f.get("flip", false): X = X * Transform2D(Vector2(-1, 0), Vector2(0, 1), Vector2.ZERO)
 	c.draw_set_transform_matrix(X)
-	if g > 0: c.draw_texture_rect_region(im, Rect2(-w / 2, -h * f.get("anchor", 0.5), w, h), src, Color(1, 1, 1, maxf(0, a)))
+	var gn = float(f.get("gain", 1.0))   # [vfx 第三批] 狀態循環細細粒：加色提亮
+	if g > 0: c.draw_texture_rect_region(im, Rect2(-w / 2, -h * f.get("anchor", 0.5), w, h), src, Color(gn, gn, gn, maxf(0, a)))
 	else: c.draw_texture_rect(im, Rect2(-w / 2, -h * f.get("anchor", 0.5), w, h), false, Color(1, 1, 1, maxf(0, a)))
 	c.draw_set_transform_matrix(Transform2D.IDENTITY)
 
