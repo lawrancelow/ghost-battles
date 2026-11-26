@@ -286,12 +286,58 @@ func _crow() -> AudioStreamWAV:
 
 func play(name: String, arg = null) -> void:
 	if not on: return
+	if _f43(name): return   # [sfx43] 補丁 43 新音效（音檔）
 	var st = _sfx_stream(name, arg)
 	if st == null: return
 	var p: AudioStreamPlayer = null
 	for q in _sfx: if not q.playing: p = q; break
 	if p == null: p = _sfx[0]
 	p.stream = st; p.volume_db = linear_to_db(0.85); p.play()
+
+# ====================================================================
+# [sfx43] 補丁 43 音效：res://assets/snd/sfx43/<key>.ogg（CC0 素材組合，見 LICENSES_sfx43.md）
+#   自己一組 8 個播放器（唔搶 UI 聲）；同一個聲有最短間隔；技能聲啱啱響過，狀態聲先唔出（免得一嚿）
+# ====================================================================
+const F43_DIR := "res://assets/snd/sfx43/"
+const F43_GAP := {"wp_": 0.11, "st_": 0.3, "sub_": 0.12, "ace_": 0.25}
+const F43_DB := {"wp_": -5.0, "st_": -2.0, "sub_": 0.0, "ace_": 0.0}
+var _f43s := {}       # key → AudioStream／null（冇檔）
+var _f43t := {}       # key → 上次播（毫秒）
+var _f43p: Array = []
+var _f43_sk := -100000
+var f43_log: Array = []   # 測試用：播過乜
+func _f43_pre(name: String) -> String:
+	for p in F43_GAP: if name.begins_with(p): return p
+	return ""
+func f43_stream(name: String):
+	if _f43s.has(name): return _f43s[name]
+	var path = F43_DIR + name + ".ogg"
+	var st = load(path) if ResourceLoader.exists(path) else null
+	_f43s[name] = st
+	return st
+func _f43(name: String) -> bool:
+	var st = f43_stream(name)
+	if st == null: return false
+	var now = Time.get_ticks_msec(); var pre = _f43_pre(name)
+	if now - int(_f43t.get(name, -100000)) < int(float(F43_GAP.get(pre, 0.08)) * 1000.0): return true
+	if pre == "st_" and now - _f43_sk < 200: return true
+	if pre in ["sub_", "ace_"]: _f43_sk = now
+	_f43t[name] = now
+	if _f43p.is_empty():
+		for i in 8:
+			var q = AudioStreamPlayer.new(); add_child(q); _f43p.append(q)
+	var p: AudioStreamPlayer = null
+	for q in _f43p: if not q.playing: p = q; break
+	if p == null:   # 全部響緊：搶播得最耐嗰個
+		p = _f43p[0]
+		for q in _f43p: if q.get_playback_position() > p.get_playback_position(): p = q
+	p.stream = st
+	p.volume_db = linear_to_db(0.85) + float(F43_DB.get(pre, 0.0))
+	p.pitch_scale = _rng.randf_range(0.95, 1.05) if pre in ["wp_", "st_"] else 1.0   # 密集嘅聲微微變調，唔似機關槍
+	p.play()
+	f43_log.append(name)
+	if f43_log.size() > 200: f43_log.pop_front()
+	return true
 
 # ====================================================================
 # 背景音樂
@@ -475,6 +521,17 @@ func warm() -> void:
 	for n in ["click", "chop", "coin", "paper", "waIn", "waOut", "key", "harvest", "craft", "hit", "praise", "whoosh", "build", "heartbeat", "flatline", "gong", "levelUp", "win", "chest", "skill", "treeFall"]:
 		_sfx_stream(n)
 		await get_tree().process_frame
+	# [sfx43] 補丁 43 音檔：開機慢慢預載（每格幾個），第一次播唔會卡一下
+	var d = DirAccess.open(F43_DIR)
+	if d != null:
+		var i = 0
+		for f in d.get_files():
+			var fn = f.trim_suffix(".import").trim_suffix(".remap")
+			if not fn.ends_with(".ogg"): continue
+			var k = fn.trim_suffix(".ogg")
+			if _f43s.has(k): continue
+			f43_stream(k); i += 1
+			if i % 6 == 0: await get_tree().process_frame
 
 # 合成過嘅聲存落機（user://snd/），第二次開遊戲唔使再計
 const CACHE_VER := "v1"

@@ -171,7 +171,19 @@ class Over extends Node2D:
 				if _sk >= 0.0:
 					_sk += dt
 					if _sk > EV2.SK_DUR: _sk = -1.0
+				_wp_sfx()   # [sfx43]
 			queue_redraw()
+	var _anprev := ""
+	func _wp_sfx() -> void:   # [sfx43] 漂浮兵器普攻：出手（strike）一刻按打法出聲
+		var a = u.get("anim")
+		var an = str(a.get("name", "")) if a is Dictionary else ""
+		var hit = an == "strike" and _anprev != "strike"
+		_anprev = an
+		if not hit or J.num(u.get("hp", 0)) <= 0 or not (u.get("eq") is Dictionary): return
+		var wea = str(u.eq.get("wea", ""))
+		if wea == "" or str(EQ2.item(wea).get("look")) != "hand": return
+		if load("res://game/equip/eq_view.gd").scheme() == "pin": return
+		Snd.play(load("res://core/sfx43.gd").wp_key(load("res://game/equip/eq_art.gd").atk_style(wea)))
 	func _peer_sk() -> float:   # [eqview2] 後層用前層嘅技能計時
 		var f = bc.get_node_or_null("EqOver") if bc != null else null
 		return f._sk if f != null else -1.0

@@ -446,13 +446,29 @@ func _events() -> void:
 					stamps.append({"p": op.head(u) + Vector2(0, -14), "text": L(e[2], e[2]) if e[2] != "打卡" else L("打卡", "打卡"), "t": 0.0, "life": 1.3, "kind": "stamp", "u": u, "op": op})
 				"contact":
 					if _on_screen(op.anchor): Snd.play("click")
-				"ab": AH.on_event(op, e)   # [abui] 能力事件飄字
+				"ab":
+					AH.on_event(op, e)   # [abui] 能力事件飄字
+					if _on_screen(op.anchor):   # [sfx43] 副技／王牌技／狀態中招音效
+						var sk = load("res://core/sfx43.gd").ev_key(e)
+						if sk != "": Snd.play(sk)
 		_ev_seen[op.id] = op.events.size()
 	var keep = []
 	for s in stamps:
 		s.t += get_process_delta_time()
 		if s.t < s.life: keep.append(s)
 	stamps = keep
+# [sfx43] 戰報卡第一次出：打贏有 MVP → mvp；之後排隊嘅（掉魂魄、專屬物）逐個慢慢出
+func _rep_sfx(op) -> void:
+	var SX = load("res://core/sfx43.gd")
+	var later = SX.take()
+	var rep = op.get_meta("report")
+	var srows = load("res://game/rts/abil.gd").stats_rows(op) if op.get("ab_log") is Dictionary else []
+	var d = 0.0
+	if rep is Dictionary and J.t(rep.get("win")) and srows.size(): Snd.play("mvp"); d = 0.9
+	for k in later:
+		if d <= 0.0: Snd.play(k)
+		else: get_tree().create_timer(d).timeout.connect(func(): Snd.play(k))
+		d += 0.8
 func _on_screen(p: Vector2) -> bool: return nv.view_rect().has_point(p)
 
 # ---------------- 字（畫面 px） ----------------
@@ -628,7 +644,9 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 		n.draw_set_transform_matrix(Transform2D.IDENTITY)
 	# 戰報（結算後 4.5 秒，喺戰場上面）
 	if op.has_meta("report") and op.phase in ["back", "done"]:
-		if not op.has_meta("rep_t"): op.set_meta("rep_t", _t)
+		if not op.has_meta("rep_t"):
+			op.set_meta("rep_t", _t)
+			_rep_sfx(op)   # [sfx43] 戰報卡出：MVP／魔王掉魂魄／專屬物
 		var age = _t - float(op.get_meta("rep_t"))
 		var srows = load("res://game/rts/abil.gd").stats_rows(op) if op.get("ab_log") is Dictionary else []   # [補丁43] 戰後統計
 		var life = 7.5 if srows.size() else 4.5

@@ -170,6 +170,7 @@ static func _summon_row(body: VBoxContainer, x: Dictionary, refresh: Callable) -
 	bb.add_child(_btn(lab, "gold", c.ok, func():
 		var r = SOUL.summon(k)
 		var m = _main()
+		if r == "ok" and k.begins_with("bm_"): Snd.play("boss_capture")   # [sfx43] 魔王收服
 		if r == "ok" and m != null:
 			if m.has_method("show_banner"): m.show_banner(L("【%s】簽咗入職合約！", "【%s】簽了入職合約！") % SOUL.gname(k))
 			var bsc = load("res://game/newghost/ng_boss.gd").recruit_scene(k) if k.begins_with("bm_") else null   # [補丁43] 收服魔王劇情
