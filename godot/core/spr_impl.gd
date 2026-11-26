@@ -26,7 +26,7 @@ func fem_ok() -> bool: return _man.has("afuf")
 var _ace = null   # [p44] 王牌晉級立繪（game/soul/ace_art.gd）
 func key_for(k: String) -> String:
 	if _ace == null: _ace = load("res://game/soul/ace_art.gd")
-	if _ace.STAGES.has(k): return _ace.map(k)
+	if _ace.STAGES.has(k) or _ace.NWP.has(k): return _ace.map(k)   # [p44] 王牌階段圖／軍團空手圖
 	if not k.contains("afu"): return k
 	if not DB.hero_female(): return k
 	var fk = fem_key(k)
