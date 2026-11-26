@@ -124,7 +124,8 @@ const IRON := Color("#a3a9ae")
 const SHAFT := Color("#4f3420")
 
 static func _xf(ci: CanvasItem, base: Transform2D, pos: Vector2, sc: Vector2) -> void: ci.draw_set_transform_matrix(base * Transform2D(0.0, sc, 0.0, pos))
-static func draw_soldier(ci: CanvasItem, pose: String, ph: float, dir: float, seed: int, base := Transform2D.IDENTITY) -> void:
+static func draw_soldier(ci: CanvasItem, pose: String, ph: float, dir: float, seed: int, base := Transform2D.IDENTITY, look := "") -> void:
+	if look != "" and _yb_draw(ci, look, pose, ph, dir, seed, base): return   # [yinbing] 兵種×階級立繪＋漂浮兵器
 	var tx = pose_tex(pose)
 	if tx != null:   # 正式圖：每姿勢一張（每格 2 個 draw：地影＋圖，8 隻都好平）
 		var nf = int(FRAMES.get(pose, 1)); var fw = float(tx.get_width()) / nf; var fh = float(tx.get_height())
@@ -212,3 +213,150 @@ static func draw_soldier(ci: CanvasItem, pose: String, ph: float, dir: float, se
 		ci.draw_line(sh_f, hf, ARMOR_D, 3.0)
 		ci.draw_circle(hf, 1.9, SKIN)
 	ci.draw_set_transform_matrix(base)
+
+# ================= [yinbing] 陰兵兵種 × 階級（look＝yb_<兵種>_<階級>） =================
+#   圖：assets/spr/<look>_stand.webp（一張企姿，透明底、面向右、煙尾尖喺圖底；16 張同一比例：衛兵連纓高 YB_REF px）
+#   行／打／敬禮用同一張圖做浮動、前衝（同現版正式圖一樣嘅動法）；兵器唔喺手：漂浮兵器 draw_weapon（程序圖，之後美術出正式圖）
+const YB_REF := 340.0
+static var _yb_tex := {}
+static var _yb_ax := {}
+static func yb_tex(look: String) -> Texture2D:
+	if _yb_tex.has(look): return _yb_tex[look]
+	var t: Texture2D = null
+	for ext in ["webp", "png"]:
+		var path = "res://assets/spr/%s_stand.%s" % [look, ext]
+		if ResourceLoader.exists(path): t = load(path); break
+	_yb_tex[look] = t
+	if t != null: _yb_ax[look] = _foot_x(t, 1)
+	return t
+static func _yb_draw(ci: CanvasItem, look: String, pose: String, ph: float, dir: float, seed: int, base: Transform2D) -> bool:
+	var tx = yb_tex(look)
+	var p = look.split("_")
+	var cls = p[1] if p.size() > 2 else ""
+	var rk = p[2] if p.size() > 2 else ""
+	if tx == null:   # 冇新圖：照畫現版陰兵，但都加漂浮兵器（兵種一眼睇得出）
+		var tx0 = pose_tex(pose)
+		if tx0 == null: return false
+	var y0 = 0.0; var rot = 0.0; var dx = 0.0
+	match pose:
+		"walk": y0 = -absf(sin(ph * 6.0)) * 2.0; rot = sin(ph * 6.0) * 0.04
+		"stand": y0 = -sin(ph * 2.2 + seed) * 0.6
+		"attack": dx = clampf(sin(ph * 10.0) * 0.5 + 0.5, 0.0, 1.0) * 3.0
+	_xf(ci, base, Vector2(0, -1), Vector2(1.0, 0.32)); ci.draw_circle(Vector2.ZERO, 9.0, Color(0, 0, 0, 0.28))
+	if tx != null:
+		var sc = H / YB_REF
+		var fw = float(tx.get_width()); var fh = float(tx.get_height())
+		ci.draw_set_transform_matrix(base * Transform2D(rot * dir, Vector2(dir * sc, sc), 0.0, Vector2(dx * dir, y0)))
+		var ax = float(_yb_ax.get(look, fw / 2))
+		ci.draw_texture_rect_region(tx, Rect2(-ax, -fh, fw, fh), Rect2(0, 0, fw, fh))
+	else:
+		var tx0 = pose_tex(pose); var fw0 = float(tx0.get_width()); var fh0 = float(tx0.get_height())
+		ci.draw_set_transform_matrix(base * Transform2D(rot * dir, Vector2(dir * _sc, _sc), 0.0, Vector2(dx * dir, y0)))
+		var ax0 = float(_ax.get(pose, fw0 / 2))
+		ci.draw_texture_rect_region(tx0, Rect2(-ax0, -fh0, fw0, fh0), Rect2(0, 0, fw0, fh0))
+	draw_weapon(ci, cls, rk, pose, ph, dir, seed, base)
+	ci.draw_set_transform_matrix(base)
+	return true
+
+# 漂浮兵器：喺身前（面向嗰邊）手位高度浮住，輕輕上下；打＝向前刺／斬
+const WOOD := Color("#7a5232")
+const WOOD_D := Color("#4f3420")
+const STEEL := Color("#b9bfc4")
+const STEEL_D := Color("#7d858c")
+const BRASS := Color("#c9a24a")
+const RUST := Color("#9a5a32")
+const CLOTH := Color("#e8e0cc")
+const GOURD := Color("#c8a04a")
+static func _poly(ci: CanvasItem, pts: Array, col: Color, ink := true) -> void:
+	var pa = PackedVector2Array(pts)
+	ci.draw_colored_polygon(pa, col)
+	if ink: pa.append(pts[0]); ci.draw_polyline(pa, INK, 0.7)
+static func _ln(ci: CanvasItem, a: Vector2, b: Vector2, col: Color, w: float) -> void:
+	ci.draw_line(a, b, INK, w + 1.0); ci.draw_line(a, b, col, w)
+static func draw_weapon(ci: CanvasItem, cls: String, rk: String, pose: String, ph: float, dir: float, seed: int, base: Transform2D) -> void:
+	var bob = sin(ph * 2.6 + seed * 0.7) * 1.2
+	var k = 0.0
+	if pose == "attack": k = clampf(sin(ph * 10.0) * 0.5 + 0.5, 0.0, 1.0)
+	var at = Vector2(13.0 + k * 6.0, -22.0 + bob)   # 身前、手位高度
+	var ang = 0.0
+	match cls:
+		"jin": ang = lerpf(-0.5, 0.9, k)                        # 刀：由舉高斬落
+		"zhong": ang = lerpf(-1.25, -0.15, k); at.x += k * 4.0  # 長兵：由斜企到平刺
+		"yuan": ang = 0.0
+		"yi": ang = 0.0; at = Vector2(12.0, -27.0 + bob * 1.4)
+	ci.draw_set_transform_matrix(base * Transform2D(0.0, Vector2(dir, 1.0), 0.0, Vector2.ZERO) * Transform2D(ang, at))
+	match cls + "_" + rk:
+		# —— 刀盾手：單手刀（刃向前） ——
+		"jin_za":   # 崩口短刀
+			_poly(ci, [Vector2(-1.5, 0), Vector2(1.5, 0), Vector2(2.2, -11), Vector2(0.5, -13), Vector2(-1.8, -11)], STEEL_D)
+			ci.draw_circle(Vector2(1.6, -6), 0.9, RUST); _ln(ci, Vector2(0, 0), Vector2(0, 4), WOOD, 1.6)
+		"jin_shi":  # 粗鐵腰刀
+			_poly(ci, [Vector2(-1.4, 0), Vector2(1.6, 0), Vector2(2.6, -14), Vector2(0.2, -17), Vector2(-1.4, -13)], STEEL_D)
+			_ln(ci, Vector2(-2.5, 0.5), Vector2(2.5, 0.5), WOOD_D, 1.0); _ln(ci, Vector2(0, 1), Vector2(0, 5), WOOD, 1.5)
+		"jin_wei":  # 制式雁翎刀
+			_poly(ci, [Vector2(-1.2, 0), Vector2(1.5, 0), Vector2(2.8, -15), Vector2(1.0, -19), Vector2(-1.0, -15)], STEEL)
+			_ln(ci, Vector2(-3, 0.5), Vector2(3, 0.5), BRASS, 1.1); _ln(ci, Vector2(0, 1), Vector2(0, 5.5), WOOD_D, 1.6)
+		"jin_qin":  # 精鋼橫刀（直刀、長啲、銅護手）
+			_poly(ci, [Vector2(-1.3, 0), Vector2(1.3, 0), Vector2(1.3, -19), Vector2(0, -21.5), Vector2(-1.3, -19)], STEEL)
+			ci.draw_line(Vector2(0, -1), Vector2(0, -19), Color(1, 1, 1, 0.5), 0.5)
+			_ln(ci, Vector2(-3.4, 0.5), Vector2(3.4, 0.5), BRASS, 1.4); _ln(ci, Vector2(0, 1), Vector2(0, 6), Color("#3a2418"), 1.7)
+			ci.draw_circle(Vector2(0, 6.8), 1.0, BRASS)
+		# —— 長兵手：長兵（以握位為原點，向上） ——
+		"zhong_za":  # 削尖竹竿
+			_ln(ci, Vector2(0, 12), Vector2(0, -26), Color("#9aa060"), 1.6)
+			for y in [-14, -2, 8]: ci.draw_line(Vector2(-1.2, y), Vector2(1.2, y), INK, 0.6)
+			_poly(ci, [Vector2(-0.9, -26), Vector2(0.9, -26), Vector2(0, -31)], Color("#c8c080"))
+		"zhong_shi":  # 白蠟木槍
+			_ln(ci, Vector2(0, 12), Vector2(0, -26), Color("#c8b088"), 1.4)
+			_poly(ci, [Vector2(-1.6, -26), Vector2(1.6, -26), Vector2(0, -33)], STEEL_D)
+		"zhong_wei":  # 制式長矛（紅纓）
+			_ln(ci, Vector2(0, 12), Vector2(0, -27), WOOD_D, 1.4)
+			_poly(ci, [Vector2(-1.8, -27), Vector2(1.8, -27), Vector2(0, -35)], STEEL)
+			ci.draw_line(Vector2(0, -26), Vector2(-2.5, -21), TASSEL, 1.4); ci.draw_line(Vector2(0, -26), Vector2(2.2, -21.5), TASSEL, 1.2)
+		"zhong_qin":  # 鳳嘴長刀（長柄、彎刃、銅箍）
+			_ln(ci, Vector2(0, 12), Vector2(0, -24), Color("#3a2418"), 1.6)
+			_poly(ci, [Vector2(-0.8, -24), Vector2(2.0, -24), Vector2(4.2, -31), Vector2(2.6, -38), Vector2(0.2, -33)], STEEL)
+			_ln(ci, Vector2(-1.8, -24), Vector2(2.6, -24), BRASS, 1.0); ci.draw_circle(Vector2(0, 12.5), 1.0, BRASS)
+		# —— 弓弩手 ——
+		"yuan_za":   # 投石索（布兜＋兩條繩）
+			ci.draw_line(Vector2(-1, -9), Vector2(-2, 3), Color("#a08a60"), 0.8); ci.draw_line(Vector2(1, -9), Vector2(2, 3), Color("#a08a60"), 0.8)
+			_poly(ci, [Vector2(-3, 3), Vector2(3, 3), Vector2(2, 6), Vector2(-2, 6)], Color("#8a7a5a")); ci.draw_circle(Vector2(0, 4.5), 1.4, Color("#8c8c8c"))
+		"yuan_shi", "yuan_wei":   # 竹片短弓／木胎角弓（弓背向前）
+			var c = Color("#b8a060") if rk == "shi" else Color("#6a4428")
+			var r = 9.0 if rk == "shi" else 11.0
+			ci.draw_arc(Vector2(-3, -6), r, -1.15, 1.15, 14, INK, 2.6); ci.draw_arc(Vector2(-3, -6), r, -1.15, 1.15, 14, c, 1.6)
+			var e1 = Vector2(-3, -6) + Vector2(cos(-1.15), sin(-1.15)) * r; var e2 = Vector2(-3, -6) + Vector2(cos(1.15), sin(1.15)) * r
+			ci.draw_line(e1, e2, Color("#efe6cc"), 0.5)
+			if rk == "wei": ci.draw_circle(Vector2(-3 + r, -6), 1.0, BRASS)
+		"yuan_qin":  # 鐵臂強弩（橫放，弩臂向前）
+			_ln(ci, Vector2(-7, -6), Vector2(7, -6), Color("#3a2418"), 1.8)
+			ci.draw_arc(Vector2(10, -6), 7.0, PI * 0.62, PI * 1.38, 10, INK, 2.4); ci.draw_arc(Vector2(10, -6), 7.0, PI * 0.62, PI * 1.38, 10, STEEL_D, 1.5)
+			ci.draw_line(Vector2(10 + 7 * cos(PI * 0.62), -6 + 7 * sin(PI * 0.62)), Vector2(10 + 7 * cos(PI * 1.38), -6 + 7 * sin(PI * 1.38)), CLOTH, 0.5)
+			ci.draw_circle(Vector2(-5, -6), 1.0, BRASS)
+		# —— 醫護兵（醫具浮喺身邊） ——
+		"yi_za":   # 舊布繃帶捲
+			ci.draw_circle(Vector2(0, -4), 3.4, INK); ci.draw_circle(Vector2(0, -4), 2.7, CLOTH); ci.draw_circle(Vector2(0, -4), 1.0, Color("#c8bca0"))
+			ci.draw_line(Vector2(2.5, -2.5), Vector2(6, 2), CLOTH, 1.6)
+		"yi_shi":  # 草藥葫蘆
+			ci.draw_circle(Vector2(0, -2), 3.6, INK); ci.draw_circle(Vector2(0, -2), 3.0, GOURD)
+			ci.draw_circle(Vector2(0, -7), 2.4, INK); ci.draw_circle(Vector2(0, -7), 1.8, GOURD)
+			ci.draw_line(Vector2(-2.4, -4.6), Vector2(2.4, -4.6), Color("#8a3a2a"), 1.0); _ln(ci, Vector2(0, -9), Vector2(0, -10.5), WOOD_D, 1.0)
+		"yi_wei", "yi_qin":   # 木製藥箱／銅角藥箱（細，浮喺身邊；冇任何符號）
+			var bc = Color("#8a5a32") if rk == "wei" else Color("#5a3420")
+			_poly(ci, [Vector2(-4.5, -1), Vector2(4.5, -1), Vector2(4.5, -8), Vector2(-4.5, -8)], bc)
+			ci.draw_line(Vector2(-4.5, -5), Vector2(4.5, -5), INK, 0.5)
+			ci.draw_arc(Vector2(0, -8), 2.0, PI, TAU, 6, INK, 0.8)
+			if rk == "qin":
+				for c2 in [Vector2(-4.5, -1), Vector2(4.5, -1), Vector2(4.5, -8), Vector2(-4.5, -8)]: ci.draw_circle(c2, 1.0, BRASS)
+	ci.draw_set_transform_matrix(base)
+
+# [yinbing] 弓弩手飛彈（畫面座標；ang＝飛行方向）：雜兵石仔、其餘箭（親兵弩箭短粗）
+static func draw_missile(ci: CanvasItem, p: Vector2, ang: float, rk: String) -> void:
+	if rk == "za":
+		ci.draw_circle(p, 2.4, INK); ci.draw_circle(p, 1.8, Color("#8c8c8c")); return
+	var d = Vector2(cos(ang), sin(ang)); var nv = Vector2(-d.y, d.x)
+	var L = 9.0 if rk == "qin" else 12.0
+	var a = p - d * L
+	ci.draw_line(a, p, INK, 2.0); ci.draw_line(a, p, Color("#8a6a42"), 1.1)
+	ci.draw_colored_polygon(PackedVector2Array([p + d * 3.0, p + nv * 1.6, p - nv * 1.6]), Color("#9aa1a6"))
+	ci.draw_line(a, a - d * 2.5 + nv * 2.0, Color("#e8e0cc"), 1.0); ci.draw_line(a, a - d * 2.5 - nv * 2.0, Color("#e8e0cc"), 1.0)

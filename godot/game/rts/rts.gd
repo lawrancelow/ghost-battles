@@ -217,6 +217,7 @@ static func _launch(pend: Dictionary, ny: int, nm: int) -> String:
 	var snap = _start_battle(pend.cb)
 	if snap.is_empty(): return "nobattle"
 	_trim(snap, ny, nm)
+	load("res://game/yinbing/yb_data.gd").reassign(snap.units)   # [yinbing] 揀少咗隊：按編制重新分兵種
 	_soften(snap, pend)   # [qaudit2]
 	var op = SIM.new()
 	op.id = _next_id; _next_id += 1
@@ -286,6 +287,7 @@ static func mk_squads(ny: int, nm: int) -> Array:
 		var t = int(sq[i][0]); var k = ML.pw(t)
 		var hp = (90 + 14 * lv) * k * float(ML.TUNE.hp_k)
 		o.append({"side": 0.0, "k": "youhun", "name": "遊魂兵", "minion": true, "ml": float(t), "hp": hp, "maxhp": hp, "atk": (9 + 2.2 * lv) * k * float(ML.TUNE.atk_k), "range": 38.0, "spd": 52.0, "energy": 0.0, "sk": null, "st": {}, "cd": randf()})
+	load("res://game/yinbing/yb_data.gd").assign(o)   # [yinbing] 純兵出擊都分兵種
 	return o
 static func mk_foes(ks: Array, p: float, weak := 1.0) -> Array:
 	var ET = J.G.get("ENEMY_T"); var o = []

@@ -336,7 +336,9 @@ class UnitVis extends Node2D:
 			var off = REP_OFF[i] if n > 1 else Vector2.ZERO
 			off_base.append(off)   # [abui]
 			if kind == "yin":
-				var s = SolRep.new(); s.position = off; s.seed = int(abs(hash(str(u.get("lane", 0)) + str(i)))) % 97; add_child(s); sols.append(s)
+				var s = SolRep.new(); s.position = off; s.seed = int(abs(hash(str(u.get("lane", 0)) + str(i)))) % 97
+				if u.get("yb_c") != null: s.look = "yb_%s_%s" % [str(u.yb_c), str(u.get("yb_r", "wei"))]   # [yinbing] 兵種×階級立繪
+				add_child(s); sols.append(s)
 			else:
 				var w = Node2D.new(); w.position = off; add_child(w); wraps.append(w)
 				var px = {"side": u.side, "k": J.str(u.k), "boss": J.t(u.get("boss")), "minion": minion, "x": 0.0, "lane": -5.0, "hp": 1.0, "maxhp": 1.0, "st": {}, "range": J.num(u.get("range", 46)), "_soul": (randi() % 1000)}
@@ -399,6 +401,7 @@ class UnitVis extends Node2D:
 			chars[i].sync(T + i * 0.37)
 
 class SolRep extends Node2D:
+	var look := ""   # [yinbing] yb_<兵種>_<階級>；空＝現版
 	var pose := "stand"
 	var dir := 1.0
 	var ph := 0.0
@@ -413,10 +416,10 @@ class SolRep extends Node2D:
 			if a <= 0.0: return
 			modulate = Color(1, 1, 1, a)
 			base = Transform2D(-dir * 1.25 * k, Vector2(K_SOL, K_SOL), 0.0, Vector2(-dir * 8 * k, 0))
-			BA.draw_soldier(self, "stand", 0.0, dir, seed, base)
+			BA.draw_soldier(self, "stand", 0.0, dir, seed, base, look)
 			return
 		modulate = Color(1 + flash * 1.2, 1 + flash, 1 + flash * 0.8, 1)
-		BA.draw_soldier(self, pose, ph, dir, seed, base)
+		BA.draw_soldier(self, pose, ph, dir, seed, base, look)
 
 # 腳底色圈：我方青綠、敵方暗紅（交戰先出；小隊圈大啲包住三個代表兵）
 func _draw_under(n: CanvasItem) -> void:
@@ -577,6 +580,11 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 		if not vr.has_point(p): continue
 		var col = Color(q.col)
 		var tr: Array = q.trail
+		var ysrc = q.get("src")
+		if ysrc is Dictionary and str(ysrc.get("yb_c", "")) == "yuan":   # [yinbing] 弓弩手：箭／石仔／弩箭（實物，冇鬼火、冇拖尾）
+			var pv: Vector2 = tr[tr.size() - 1] if tr.size() else p - Vector2(1, 0)
+			BA.draw_missile(n, p, (p - pv).angle(), str(ysrc.get("yb_r", "wei")))
+			continue
 		for i in tr.size():   # 拖尾
 			var c2 = col; c2.a = 0.08 + 0.35 * float(i) / maxf(1, tr.size())
 			n.draw_circle(tr[i], 1.5 + i * 0.5, c2)

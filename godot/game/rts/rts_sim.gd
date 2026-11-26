@@ -5,6 +5,7 @@
 #   冇 class_name（熱更新規矩）：const SIM = preload("res://game/rts/rts_sim.gd")
 extends RefCounted
 
+const YB = preload("res://game/yinbing/yb_data.gd")   # [yinbing] 陰兵兵種（醫護兵回血）
 const MD = preload("res://game/outpost/mv_data.gd")
 const AB = preload("res://game/rts/abil.gd")   # [ab] 能力引擎（AB.on() 假＝全部行舊路）
 const AF = preload("res://game/rts/abform.gd")   # [abform] 陣型、揀目標、AoE 半徑、護衛、自動施放 AI
@@ -590,6 +591,11 @@ func _step_fight(dt: float) -> void:
 			u["anim"] = null; st["push"] = J.num(st.push) - dt
 			u["p"] = (u.p as Vector2) + (u.get("pushD", Vector2.ZERO) as Vector2) * 160.0 * dt
 			continue
+		if u.get("yb_heal") is Dictionary:   # [yinbing] 醫護兵：唔出手，定時醫身邊血最少嘅陰兵／遊魂兵（唔醫名鬼）
+			var hr = YB.heal_tick(self, u, dt)
+			if hr != null:
+				text(head(hr[1]) + Vector2(0, -10), "+" + str(int(round(float(hr[0])))), "#8affb0", 0.8)
+				_vq(["ybheal", u, hr[1]])
 		if J.t(u.get("sk")): u["energy"] = minf(100.0, _nn(u, "energy") + (11.0 if J.t(u.get("boss")) else 9.0) * dt * (AB.emul(self, u) if ab else 1.0))   # [ab] 嚇氣光環／封口
 		if J.t(u.get("casting")):
 			u["cd"] = _nn(u, "cd") - dt
@@ -616,7 +622,7 @@ func _step_fight(dt: float) -> void:
 			u["p"] = (u.p as Vector2) + dv.normalized() * minf(_nn(u, "spd") * dt, dv.length()); u["walking"] = true
 		else:
 			u["walking"] = false; u["cd"] = _nn(u, "cd") - dt
-			if J.num(u.cd) <= lead_of(u, tg): u["anim"] = {"name": "windup", "t": 0.0, "dur": WIND, "tg": tg}
+			if J.num(u.cd) <= lead_of(u, tg) and not (u.get("yb_heal") is Dictionary): u["anim"] = {"name": "windup", "t": 0.0, "dur": WIND, "tg": tg}
 	# 軍師（唔上場）
 	if adviser is Dictionary:
 		adviser["energy"] = minf(100.0, _nn(adviser, "energy") + 7 * dt)
