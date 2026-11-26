@@ -323,6 +323,7 @@ static func set_job(gid, jb: String, arg = null) -> String:
 			if i < 0 and arg != null:
 				for j in s.team.size(): if J.str(s.team[j]) == J.str(arg): i = j
 			if i < 0: return T("出陣已滿（最多 5）", "出陣已滿（最多 5）")
+			if load("res://game/rts/ab_card.gd").ace_block(g.id, i): return T("一隊最多 2 隻王牌", "一隊最多 2 隻王牌")
 			clear_roles(g)
 			s.team[i] = g.id
 		"post":

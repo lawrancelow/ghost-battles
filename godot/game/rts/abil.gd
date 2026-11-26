@@ -587,6 +587,10 @@ static func compile(sim, u: Dictionary) -> void:
 		var R = load("res://game/rts/roles.gd")
 		a["cls"] = R.cls_of(k)
 		for pe in R.kit(k): a.pas.append(pe)
+		var ks = []
+		for w in sim.units:
+			if w is Dictionary and _nn(w, "side") == 0 and w.has("gid") and not J.t(w.get("minion")) and w != sim.get("adviser"): ks.append(J.str(w.k))
+		for pe in R.bond_kit(ks): a.pas.append(pe)   # [roles] 系羈絆
 	if a.act is Dictionary and not J.t(a.act.get("leg")) and J.t(u.get("sk")) == false: u["sk"] = {"name": J.str(a.act.get("name")), "kind": "ab"}
 	if a.act is Dictionary and not J.t(a.act.get("leg")) and u.get("sk") is Dictionary and J.str(u.sk.get("name")) != J.str(a.act.get("name")):
 		u["sk"] = (u.sk as Dictionary).duplicate(); u.sk["name"] = J.str(a.act.get("name"))

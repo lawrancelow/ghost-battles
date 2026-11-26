@@ -847,22 +847,31 @@ func roles(t) -> void:   # [roles] 定位：坦／攻／輔／醫 體質＋定�
 	m._hide_title(); await _w(t, 1.0); await _skip(t)
 	var AC = load("res://game/rts/ab_card.gd"); var BK = load("res://game/barracks/bk_data.gd"); var RO = load("res://game/rts/roles.gd")
 	var S = J.G.S
-	var want = {"laojiang": "坦", "toyol": "攻", "baiwu": "輔", "mengpo": "醫", "heiwu": "坦"}
+	var want = {"laojiang": "坦", "toyol": "刺", "baiwu": "輔", "mengpo": "醫", "heiwu": "坦", "nw_guihuo": "法", "nw_huli": "射", "mamian": "戰"}
 	for k in want:
 		if RO.cls_of(k) == want[k]: ok += 1
 		else: bad += 1; _p("BAD cls %s %s" % [k, RO.cls_of(k)])
 	var cnt = {}
 	for k in RO.data().CLS: cnt[str(RO.data().CLS[k])] = int(cnt.get(str(RO.data().CLS[k]), 0)) + 1
 	_p("mix %s" % [cnt])
-	if cnt.size() == 4 and int(cnt.get("醫", 0)) >= 8 and int(cnt.get("輔", 0)) >= 8: ok += 1
+	if cnt.size() == 7 and int(cnt.get("醫", 0)) >= 8 and int(cnt.get("法", 0)) >= 8: ok += 1
 	else: bad += 1; _p("BAD mix")
 	S["team"] = [null, null, null, null, null, null]
-	var ks = ["laojiang", "heiwu", "toyol", "baiwu", "mengpo"]
+	var ks = ["laojiang", "heiwu", "toyol", "nw_guihuo", "mengpo"]
+	# 王牌上限：已有黑無常＋孟婆（2 隻王牌）時加白無常（王牌）要被擋
+	if RO.is_ace("heiwu") and RO.is_ace("baiwu") and RO.is_ace("mengpo") and RO.tier("toyol") == "普通": ok += 1
+	else: bad += 1; _p("BAD tier")
 	var slots = [0, 1, 3, 4, 5]
 	for i in ks.size():
 		var g0 = (S.ghosts[0] as Dictionary).duplicate(true)
 		g0["id"] = "rl_%d" % i; g0["k"] = ks[i]; g0["q"] = "名"; g0["name"] = ks[i]; g0["post"] = null; g0["lv"] = 5
 		S.ghosts.append(g0); AC.put_slot(slots[i], g0.id)
+	var ex_ids = []
+	for k2 in ["baiwu", "nw_huli"]:
+		var g1 = (S.ghosts[0] as Dictionary).duplicate(true); g1["id"] = "rx_" + k2; g1["k"] = k2; g1["q"] = "名"; g1["name"] = k2; g1["post"] = null; S.ghosts.append(g1); ex_ids.append(g1.id)
+	_p("team %s" % [S.team])
+	if BK.team_count() == 5 and AC.ace_block(ex_ids[0], 2) and not AC.ace_block(ex_ids[1], 2): ok += 1
+	else: bad += 1; _p("BAD ace_block")
 	m.open_sheet("出擊", func(): pass)
 	var box = AC.add_to(m.sheet_body, ["egui", "zombie"], {})
 	await _w(t, 1.0); await _shot(t, "roles_card")
@@ -875,7 +884,7 @@ func roles(t) -> void:   # [roles] 定位：坦／攻／輔／醫 體質＋定�
 	else: bad += 1; _p("BAD units %d" % us.size())
 	if us.has("laojiang") and us.has("toyol"):
 		_p("hp tank %d dps %d / atk tank %d dps %d" % [J.num(us.laojiang.maxhp), J.num(us.toyol.maxhp), J.num(us.laojiang.atk), J.num(us.toyol.atk)])
-		if J.str(us.laojiang.get("cls")) == "坦" and J.str(us.toyol.get("cls")) == "攻" and J.num(us.laojiang.atk) < J.num(us.toyol.atk): ok += 1
+		if J.str(us.laojiang.get("cls")) == "坦" and J.str(us.toyol.get("cls")) == "刺" and J.num(us.laojiang.atk) < J.num(us.toyol.atk): ok += 1
 		else: bad += 1; _p("BAD stats")
 	await _w(t, 2.0); await _shot(t, "roles_battle")
 	J.G.get("Battle")["active"] = false
@@ -906,9 +915,32 @@ func roles(t) -> void:   # [roles] 定位：坦／攻／輔／醫 體質＋定�
 		var kp = 0
 		for pe in a.get("pas", []): if J.t(pe.get("cls")): kp += 1
 		_p("%s cls=%s kit=%d hp=%d/%d" % [k, J.str(a.get("cls")), kp, J.num(u.hp), J.num(u.maxhp)])
-		if J.str(a.get("cls")) == want[k] and kp == RO.CLS[want[k]].pas.size(): ok += 1
+		if J.str(a.get("cls")) == want[k] and kp == RO.kit(k).size(): ok += 1
 		else: bad += 1; _p("BAD kit %s" % k)
-	for need in ["taunt", "heal", "buff", "shield", "hot", "energy"]:
+	var bd = RO.bond_of(["laojiang", "pocong", "nw_baimao", "toyol"])
+	_p("bond %s / %s" % [bd, RO.bond_text(S.team)])
+	if J.str(bd.get("sys")) == "屍" and int(bd.get("n", 0)) == 3 and RO.bond_kit(["laojiang", "pocong", "nw_baimao"]).size() == 1 and RO.bond_of(["laojiang", "toyol"]).is_empty(): ok += 1
+	else: bad += 1; _p("BAD bond")
+	for need in ["taunt", "heal", "buff", "shield", "hot", "energy", "stealth", "dot"]:
 		if int(evs.get(need, 0)) > 0: ok += 1
 		else: bad += 1; _p("BAD ev %s" % need)
+	# 系羈絆真係入到戰鬥：3 隻屍系
+	var o3 = []
+	for kk in ["laojiang", "pocong", "nw_baimao"]:
+		o3.append({"side": 0.0, "k": kk, "gid": "b_" + kk, "name": kk, "hp": 900.0, "maxhp": 900.0, "atk": 50.0, "range": 46.0, "spd": 46.0, "energy": 0.0, "sk": null, "st": {}, "cd": 0.5, "boss": false})
+	var f3 = []
+	for j in 3: f3.append({"side": 1.0, "k": "egui", "name": "e", "hp": 2000.0, "maxhp": 2000.0, "atk": 40.0, "range": 46.0, "spd": 46.0, "energy": 0.0, "sk": null, "st": {}, "cd": 0.5, "boss": false})
+	var op3 = SIM.new()
+	op3.setup(o3 + f3, PackedVector2Array([Vector2(0, 900), Vector2(0, 300)]), Vector2(0, 220), Vector2(0, 900))
+	op3.phase = "fight"; op3.t = 0.0
+	for j in o3.size(): o3[j]["p"] = Vector2((j - 1) * 40.0, 300.0); o3[j]["out"] = true; o3[j]["eng"] = true
+	for j in f3.size(): f3[j]["p"] = Vector2((j - 1) * 40.0, 250.0); f3[j]["post"] = f3[j].p
+	op3._form()
+	for st3 in 20: op3.step(0.05)
+	var hasb = 0
+	for u in o3:
+		for pe in u.get("ab", {}).get("pas", []): if J.str(pe.get("bond")) == "屍": hasb += 1
+	_p("bond in battle %d/3" % hasb)
+	if hasb == 3: ok += 1
+	else: bad += 1; _p("BAD bond battle")
 	_p("RESULT ok=%d bad=%d" % [ok, bad])

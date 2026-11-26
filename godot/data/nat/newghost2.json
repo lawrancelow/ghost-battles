@@ -1766,7 +1766,7 @@
       "p": "dot",
       "dps": 0.1,
       "dur": 4.0,
-      "kind": "bleed"
+      "kind": "claw"
      }
     ],
     "ai": {
@@ -2398,7 +2398,7 @@
       "p": "dot",
       "dps": 0.1,
       "dur": 4.0,
-      "kind": "bleed"
+      "kind": "claw"
      },
      {
       "p": "buff",
@@ -4039,7 +4039,7 @@
      "p": "dot",
      "dps": 0.1,
      "dur": 4.0,
-     "kind": "bleed"
+     "kind": "claw"
     }
    ],
    "mult": 2.6,

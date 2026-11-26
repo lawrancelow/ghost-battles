@@ -268,7 +268,9 @@ static func _detail(body: VBoxContainer, k: String) -> void:
 		vb.add_child(_rich("[color=%s][b]%s品[/b][/color]　%s" % [FX.PINC.get(pin, Color.GRAY).to_html(false), pin if pin != "主" else "主角", (L("%s系", "%s系") % sysn if sysn != "" and sysn != "主" else "")], 18))
 		if SOUL.is_ghost(k) or k == "afu":   # [roles] 定位
 			var RO = load("res://game/rts/roles.gd"); var ci = RO.info(k)
-			vb.add_child(_rich("[color=%s][b]【%s】%s[/b][/color]　%s" % [str(ci.col), str(ci.zh), RO.T(ci.full), RO.T(ci.desc)], 15))
+			var tl = RO.tier(k); var sb0 = RO.sub(k)
+			vb.add_child(_rich("[color=%s][b]【%s】%s%s[/b][/color]　[color=%s][b]%s[/b][/color]　%s系" % [str(ci.col), str(ci.zh), RO.T(ci.full), ("・" + sb0) if sb0 != "" else "", str(RO.TIERS[tl].col), tl, RO.sys_of(k)], 15))
+			vb.add_child(_rich(RO.T(ci.desc) + ((RO.T(["　另有【毒】：每打三下令敵人中毒。", "　另有【毒】：每打三下讓敵人中毒。"])) if RO.has_poison(k) else ""), 14))
 		var reg = str(S2.C().REG.get(str(ent.get("reg", "")), ""))
 		if reg != "": vb.add_child(_rich(L("地區：%s", "地區：%s") % reg, 16, DIM))
 	vb.add_child(_rich(_state_line(k, st), 17, Color("#2e5a3a") if st == "own" else INK))
