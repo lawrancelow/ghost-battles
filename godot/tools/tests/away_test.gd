@@ -1369,3 +1369,46 @@ func eq43(t) -> void:   # [補丁43] 裝備大改：類別、加工、套裝、�
 	EU.close_popup(); await _w(t, 0.3)
 	Menus.open_roster(); await _w(t, 0.9); await _shot(t, "eq43_roster")
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+# [補丁43] 漂浮兵器動作樣本：四種打法（直刺／揮斬／轉撞／飛出去）× 五個時刻；左右兩個面向
+class FwSheet extends Control:
+	var cells := []   # [[k, wea, fd, act, ph, label]]
+	func _draw() -> void:
+		var f = UIKit.font("sans", 900)
+		draw_rect(Rect2(Vector2.ZERO, size), Color("#1e1820"))
+		var cw = 136.0; var ch = 106.0
+		var EV2 = load("res://game/equip/eq_view2.gd")
+		for i in cells.size():
+			var c = cells[i]
+			var x0 = 10.0 + (i % 3) * cw; var y0 = 30.0 + int(i / 3) * ch
+			draw_rect(Rect2(x0 + 2, y0 + 2, cw - 4, ch - 4), Color("#2c2430"))
+			var ctx = Ctx.new(self)
+			var tex = PtGfx.tex(Art.spr_key(str(c[0])))
+			var H = 62.0; var foot = Vector2(x0 + cw * (0.36 if c[2] > 0 else 0.64), y0 + ch - 24)
+			var st = {"T": 1.3, "act": c[3], "ph": c[4], "tg": Vector2(c[2] * 1.4 * H, -0.5 * H)}
+			EV2.draw(ctx, "float", str(c[0]), {"wea": str(c[1])}, foot, H, c[2], st, false, "back")
+			if tex != null:
+				var Wd = H * tex.get_width() / float(tex.get_height())
+				if c[2] < 0: draw_set_transform_matrix(Transform2D(Vector2(-1, 0), Vector2(0, 1), Vector2(2.0 * foot.x, 0)))
+				draw_texture_rect(tex, Rect2(foot.x - Wd * 0.5, foot.y - H, Wd, H), false)
+				draw_set_transform_matrix(Transform2D.IDENTITY)
+			EV2.draw(ctx, "float", str(c[0]), {"wea": str(c[1])}, foot, H, c[2], st, false, "front")
+			draw_string(f, Vector2(x0 + 6, y0 + ch - 7), str(c[5]), HORIZONTAL_ALIGNMENT_LEFT, cw - 10, 13, Color("#f0e2c8"))
+func fw43(t) -> void:
+	var m = await _boot(t)
+	var EA = load("res://game/equip/eq_art.gd")
+	var sty = {"eq_liangcha": "直刺", "eq_huanshou": "揮斬", "eq_suogu": "轉撞", "eq_tuoxie": "飛出去"}
+	for id in sty: _chk("%s 打法＝%s" % [id, sty[id]], EA.atk_style(id) == {"直刺": "thrust", "揮斬": "swing", "轉撞": "spin", "飛出去": "throw"}[sty[id]], EA.atk_style(id))
+	var sh = FwSheet.new(); sh.size = Vector2(450, 975); sh.position = Vector2(0, 0)
+	var cv = CanvasLayer.new(); cv.layer = 90; m.add_child(cv); cv.add_child(sh)
+	for id in sty:
+		var row = []
+		row.append(["heiwu", id, 1.0, "idle", 0.0, "%s・待機（面向右）" % sty[id]])
+		for ph in [0.2, 0.4, 0.58, 0.8]: row.append(["heiwu", id, 1.0, "atk", ph, "%s・%d%%" % [sty[id], int(ph * 100)]])
+		row.append(["heiwu", id, -1.0, "idle", 0.0, "待機（面向左）"])
+		sh.cells += row
+	var hd = Label.new(); hd.text = "漂浮兵器樣本：只顯示兵器、喺面向嗰邊（每兩行一款打法）"; hd.position = Vector2(10, 4); hd.add_theme_font_size_override("font_size", 15); hd.add_theme_color_override("font_color", Color("#f0e2c8")); sh.add_child(hd)
+	await _w(t, 0.6)
+	await _shot(t, "fw43_sheet")
+	cv.queue_free()
+	_p("RESULT ok=%d bad=%d" % [ok, bad])

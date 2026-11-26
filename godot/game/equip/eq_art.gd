@@ -15,6 +15,11 @@ static func icon_key(id: String) -> String: return "eqi_%s_i" % id
 static func has_icon(id: String) -> bool: return Spr.ok(icon_key(id)) and Spr.get_tex(icon_key(id)) != null
 static func shape_of(id: String) -> String: return str(EQ.item(id).get("shape", ""))
 static func is_long(id: String) -> bool: return LONG.has(shape_of(id))
+# [補丁43] 漂浮兵器普攻方式：thrust 直刺、swing 揮斬、spin 轉住撞、throw 飛出去
+const ATK := {"pole": "thrust", "fork_pole": "thrust", "mop": "thrust", "pipe": "swing", "cleaver": "swing", "cleaver_old": "swing", "ring_sword": "swing",
+	"spatula": "swing", "wok_spatula_gold": "swing", "abacus": "swing", "stapler": "swing", "axe": "swing", "duster": "spin", "umbrella": "spin", "shield": "spin",
+	"coffin_shield": "spin", "ruler": "spin", "slipper": "throw", "slingshot": "throw"}
+static func atk_style(id: String) -> String: return str(ATK.get(shape_of(id), "thrust"))
 
 # 圖示：(x, y)＝底部中間；sz＝闊高；ring＝畫底圓＋等級色邊
 static func icon(ctx: Ctx, id: String, x: float, y: float, sz: float, ring := true) -> void:

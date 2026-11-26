@@ -88,6 +88,11 @@ static func draw(ctx: Ctx, sch: String, k: String, w: Dictionary, foot: Vector2,
 		if sch == "float" and wb != "" and str(EQ.item(wb).get("look")) == "hand": r = _float(ctx, k, wb, foot, H, fd, st, low, "back")
 		LAST_BACK[k] = Rect2((r.position - foot) / H, r.size / H)
 		return r
+	if sch == "float":   # [補丁43] 老闆 11-26：盾、衫、隨身物、頭戴都唔顯示，只顯示漂浮兵器
+		var wf = str(w.get("wea", ""))
+		if wf != "" and str(EQ.item(wf).get("look")) == "hand": r = r.merge(_float(ctx, k, wf, foot, H, fd, st, low))
+		LAST[k] = Rect2((r.position - foot) / H, r.size / H)
+		return r
 	# 頭戴：照現行（壓喺頭頂）
 	var hw = {}
 	for sl in ["wea", "arm", "acc"]:
@@ -118,10 +123,10 @@ static func draw(ctx: Ctx, sch: String, k: String, w: Dictionary, foot: Vector2,
 # ---------------- 方案 B：鬼物飄浮 ----------------
 static func rest_of(k: String, wea: String, foot: Vector2, H: float, fd: float, T: float) -> Array:   # [中心, 角度(弧度，0＝向上), 長度]
 	var L = H * (0.46 if EA.is_long(wea) else 0.36)
-	var e = ext(k, -1.0, -0.78, -0.3)     # 圖嘅背側（左）上半身幾闊
-	var cx = clampf(e + 0.07, 0.30, 0.50)
-	var c = foot + Vector2(-fd * cx * H, (-0.50 + 0.035 * sin(T * 2.1)) * H)
-	var ang = -fd * (0.20 + 0.10 * sin(T * 1.35))
+	var e = ext(k, 1.0, -0.78, -0.3)      # [補丁43] 圖嘅面向側（右）上半身幾闊：兵器永遠喺面向嗰邊
+	var cx = clampf(e + 0.09, 0.30, 0.52)
+	var c = foot + Vector2(fd * cx * H, (-0.50 + 0.035 * sin(T * 2.1)) * H)
+	var ang = fd * (0.20 + 0.10 * sin(T * 1.35))
 	return [c, ang, L]
 static func _put(ctx: Ctx, id: String, c: Vector2, ang: float, L: float, a := 1.0, tint := Color.WHITE) -> void:
 	var dv = Vector2(sin(ang), -cos(ang))
@@ -200,7 +205,36 @@ static func float_at(k: String, wea: String, foot: Vector2, H: float, fd: float,
 		if ph < 0.6: return [hit + dn * 0.04 * H * sin((ph - 0.45) / 0.15 * PI), aim, L, 1.0]
 		var q2 = _ease((ph - 0.6) / 0.4)
 		return [hit.lerp(c0, q2) + sg * sin(q2 * PI), lerp_angle(aim, a0, q2), lerp(L, L / 1.45, q2), 1.0]
-	# 普攻：後拉 → 直刺 → 撞擊 → 飛返（細幅度）
+	var sty = EA.atk_style(wea)   # [補丁43] 每款兵器自己嘅打法
+	if sty == "swing":   # 揮斬：飛到目標側前、舉高 → 一刀斬落 → 飛返
+		var pre = hit - dn * 0.22 * H
+		var up = aim - fd * 1.3
+		if ph < 0.3:
+			var q = _ease(ph / 0.3)
+			return [c0.lerp(pre, q) + sg * sin(q * PI), lerp_angle(a0, up, q), L, 1.0]
+		if ph < 0.55:
+			var q = (ph - 0.3) / 0.25; q = q * q
+			return [pre.lerp(hit - dn * 0.12 * H, q), up + fd * 2.3 * q, L, 1.0]
+		if ph < 0.65: return [hit - dn * 0.12 * H, up + fd * 2.3, L, 1.0]
+		var qs = _ease((ph - 0.65) / 0.35)
+		return [(hit - dn * 0.12 * H).lerp(c0, qs) + sg * sin(qs * PI), lerp_angle(up + fd * 2.3, a0, qs), L, 1.0]
+	if sty == "spin":   # 轉住撞：一路轉兩圈飛去撞目標 → 彈返
+		if ph < 0.55:
+			var q = _ease(ph / 0.55)
+			return [c0.lerp(hit, q) + sg * sin(q * PI), a0 + fd * TAU * 2.0 * q, L, 1.0]
+		if ph < 0.65: return [hit + dn * 0.03 * H * sin((ph - 0.55) / 0.1 * PI), a0, L, 1.0]
+		var qp = _ease((ph - 0.65) / 0.35)
+		return [hit.lerp(c0, qp) + sg * sin(qp * PI), a0 - fd * TAU * qp, L, 1.0]
+	if sty == "throw":   # 飛出去：細後拉 → 打橫轉一圈飛過去 → 撞 → 飛返
+		var bk = c0 - dn * 0.05 * H
+		if ph < 0.15: return [c0.lerp(bk, _ease(ph / 0.15)), a0, L, 1.0]
+		if ph < 0.5:
+			var q = _ease((ph - 0.15) / 0.35)
+			return [bk.lerp(hit, q) + sg * sin(q * PI), a0 + fd * TAU * q, L, 1.0]
+		if ph < 0.6: return [hit, a0, L, 1.0]
+		var qt = _ease((ph - 0.6) / 0.4)
+		return [hit.lerp(c0, qt) + sg * sin(qt * PI), a0 + fd * TAU * qt, L, 1.0]
+	# 直刺（thrust）：後拉 → 直刺 → 撞擊 → 飛返（細幅度）
 	var back = c0 - dn * 0.08 * H
 	if ph < 0.3:
 		var q = _ease(ph / 0.3)
