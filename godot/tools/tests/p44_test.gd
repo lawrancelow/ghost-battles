@@ -5,6 +5,8 @@
 #   dlg   ：對話（dlg_begin）入面黑白無常、牛頭馬面、孟婆用原圖（手持兵器），其餘用階段圖；真劇情畫面頭像檢查
 #   hero  ：三個姿勢輪換（入場隨機、到時換另一個）、男女主預設兵器（斧／三角尺）、漂浮兵器刃口方向（面向左右兩邊、待機＋出手）
 #   battle：1-1 地圖實戰：主角整張空手圖＋漂浮兵器層、王牌用階段圖（唔行網格）；截圖
+#   solo  ：（另跑，乾淨開局）只派主角：男女主三姿勢＋普攻近鏡
+#   hero_sheet：（另跑）男女主空手三姿勢＋漂浮兵器對照表（遊戲畫法）
 #   ui    ：圖鑑詳情（★0／★3／★5）、圖鑑總表、名冊截圖；劇情對話截圖
 #   截圖：/home/claude/docs/shots/p44/
 extends "res://tools/tests/eqview2_test.gd"
@@ -26,7 +28,6 @@ func all(t) -> void:
 	await _dlg_story(t, m)
 	await _hero_sheet(t, m)
 	await _ui(t, m)
-	await _solo(t, m)
 	await _battle(t, m)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 func quick(t) -> void:
@@ -285,7 +286,8 @@ func _battle(t, m) -> void:
 	ACE.force_pose = -1; S.hero["sex"] = "m"; EQ.st()
 	_chk("戰鬥：男女主三個姿勢都畫到漂浮兵器（%s）" % [poses], poses.size() == 6 and not poses.values().has(false))
 	B_end(op)
-	await _w(t, 2.0)
+	await _w(t, 3.0)
+	await _skip(t, 6)
 
 # ---------------- 主角漂浮兵器對照表（用遊戲本身嘅畫法：PtGfx 姿勢圖＋EV2 float） ----------------
 class HeroSheet extends Control:
