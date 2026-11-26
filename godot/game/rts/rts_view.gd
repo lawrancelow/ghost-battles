@@ -171,19 +171,19 @@ func _draw_insp(n: CanvasItem, f: Font) -> void:
 	if insp == null: return
 	var u: Dictionary = insp.u; var op = insp.op
 	if J.num(u.get("hp", 0)) <= 0 or not (op.phase in ["fight", "end"]): insp = null; return
-	n.draw_set_transform_matrix(Transform2D.IDENTITY)
+	n.draw_set_transform_matrix(n.get_global_transform_with_canvas().affine_inverse())   # 畫面座標
 	var ls = insp_lines(u, op)
 	var vp = get_viewport().get_visible_rect().size
 	var W = minf(vp.x - 24.0, 420.0); var lh = 22.0
 	var H = 40.0 + ls.size() * lh + 8.0
-	var top_px = float(nv._zone_top_px()) if nv.has_method("_zone_top_px") else 0.0
-	var r = Rect2((vp.x - W) / 2.0, top_px + 8.0, W, H)
+	var r = Rect2((vp.x - W) / 2.0, vp.y - 150.0 - H, W, H)   # 放喺底部戰況條上面（頂部 HUD 會遮）
 	n.draw_style_box(_box(Color(0.08, 0.06, 0.1, 0.92), 8), r)
 	n.draw_rect(r, Color("#7a5a3a"), false, 2.0)
 	var nm = str(DB.L(J.str(u.get("name", u.get("k")))))
 	n.draw_string(f, r.position + Vector2(12, 26), nm + L("　身上狀態（撳其他地方收起）", "　身上狀態（點其他地方收起）"), HORIZONTAL_ALIGNMENT_LEFT, W - 20, 16, Color("#ffe8b0"))
 	for i in ls.size():
 		n.draw_string(f, r.position + Vector2(14, 48 + i * lh), str(ls[i][0]), HORIZONTAL_ALIGNMENT_LEFT, W - 24, 14, ls[i][1])
+	n.draw_set_transform_matrix(Transform2D.IDENTITY)
 
 func _main_op():   # 戰況條／技能鈕：名鬼帶隊嗰場優先
 	for o in RTS.ops: if o.phase != "done" and not o.no_heroes: return o

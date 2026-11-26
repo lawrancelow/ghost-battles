@@ -79,7 +79,11 @@ static func solve(view_r: Rect2, f: Font) -> void:
 		var mini = []   # 最後一招：圖示行只留頭 2 個（最緊要嘅盾／殼先排前），文字收埋
 		for l in lite:
 			if str(l.k) == "icons" and (l.keys as Array).size() > 2:
-				var l2 = l.duplicate(); l2.keys = (l.keys as Array).slice(0, 2); l2.w = 2 * (IC * 2.0 + GAP) + 2.0; mini.append(l2)
+				var l2 = l.duplicate(); l2.keys = (l.keys as Array).slice(0, 2); l2.w = 2 * (IC * 2.0 + GAP) + 2.0
+				if l.get("stk") is Array:   # [補丁43] 狀態行收細：「+N」計埋收起嗰啲
+					l2["stk"] = (l.stk as Array).slice(0, 2); l2["neg"] = (l.neg as Array).slice(0, 2)
+					l2["more"] = int(l.get("more", 0)) + (l.keys as Array).size() - 2; l2.w += 22.0
+				mini.append(l2)
 			else: mini.append(l)
 		for st in [[full, 4, 1], [lite, 4, 1], [full, 12, 2], [lite, 12, 2], [full, 16, 4], [lite, 16, 4], [full, 14, 4, true], [lite, 14, 4, true], [mini, 26, 6], [mini, 24, 6, true]]:   # 最後兩級：擠到頂 HUD 都仲搵到位（打橫錯開更遠，引線指返）
 			if (st[0] as Array).is_empty(): continue

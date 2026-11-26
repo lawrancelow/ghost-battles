@@ -426,3 +426,68 @@ func dense(t, m, op, foes: Array, heroes: Array) -> void:
 		_overlap_check("密集 %d 隻（0.6 秒後）" % n)
 		await _shot(t, "11_dense_%d_b" % n)
 	for d in extra: op.units.erase(d)
+
+# [補丁43] buff／debuff 目錄：頭頂一排最多 4 個＋「+N」、層數；撳單位睇全部
+func st43(t) -> void:
+	shots = true
+	var m = await _boot(t)
+	await _prep(t, m)
+	SO.force_open = true
+	var S = J.G.S
+	S["team"] = [_id_of("afu"), _id_of("xiaozhi"), _id_of("toyol")]
+	S.cleared.erase("1-1")
+	var Q = J.G.get("QUESTS")
+	for i in Q.size(): if str(Q[i].get("t")) == "stage" and str(Q[i].get("s")) == "1-1": S["qi"] = float(i)
+	await _f(t, 3)
+	var tg = ZD.stage_target()
+	if not tg.has("pos"): _chk("1-1 迎戰位", false); _p("RESULT ok=%d bad=%d" % [ok, bad]); return
+	ZD.start_stage(); await _f(t, 2)
+	RTS.card_go(); await _f(t, 2)
+	var op = RTS.op_for(str(tg.sid))
+	if op == null: _chk("出擊 op", false); _p("RESULT ok=%d bad=%d" % [ok, bad]); return
+	op.t_skip_march()
+	var n = 0
+	while op.phase == "march" and n < 300: await _w(t, 0.1); n += 1
+	for u in op.units:
+		if J.num(u.side) == 1: u["hp"] = 1e6; u["maxhp"] = 1e6; u["atk"] = 1.0
+		else: u["hp"] = 1e6; u["maxhp"] = 1e6
+	var foes = op.units.filter(func(u): return J.num(u.side) == 1)
+	var heroes = op.units.filter(func(u): return J.num(u.side) == 0 and not J.t(u.get("minion")))
+	_cam(m, op.anchor + Vector2(0, 60), m.village.size.x / 300.0)
+	await _w(t, 1.5)
+	var AB2 = load("res://game/rts/abil.gd"); var AH2 = load("res://game/rts/ab_hud.gd")
+	var f0 = foes[0]
+	for i in 3: AB2.add_bf(op, f0, {"id": "dot_burn", "p": "dot", "kind": "burn", "v": 0.0, "dur": 60.0, "neg": true, "src": heroes[0], "tick": 0.0, "stack": 3})
+	AB2.add_bf(op, f0, {"id": "mark", "p": "mark", "stat": "taken", "v": 0.0, "dur": 60.0, "neg": true})
+	AB2.add_bf(op, f0, {"id": "slow", "p": "slow", "stat": "spd", "v": -0.3, "dur": 60.0, "neg": true})
+	AB2.add_bf(op, f0, {"id": "silence", "p": "silence", "dur": 60.0, "neg": true})
+	AB2.add_bf(op, f0, {"id": "wound", "p": "wound", "stat": "heal_in", "v": -0.5, "dur": 60.0, "neg": true})
+	AB2.A(f0)["stun_until"] = op.t + 60.0
+	if foes.size() > 1: AB2.add_bf(op, foes[1], {"id": "dot_poison", "p": "dot", "kind": "poison", "v": 0.0, "dur": 60.0, "neg": true, "src": heroes[0], "tick": 0.0, "stack": 3})
+	var h0 = heroes[0]
+	AB2.add_bf(op, h0, {"id": "buff_atk", "p": "buff", "stat": "atk", "v": 0.2, "dur": 60.0})
+	AB2.add_bf(op, h0, {"id": "buff_taken", "p": "buff", "stat": "taken", "v": -0.1, "dur": -1})
+	AB2.add_bf(op, h0, {"id": "hot", "p": "hot", "v": 0.0, "dur": 60.0, "tick": 0.0})
+	var ef = AH2.effects(op, f0)
+	var ks = []
+	for e in ef: ks.append("%s×%d" % [e.k, e.n])
+	_p("foe effects %s" % [ks])
+	_chk("敵人狀態：控場排第一、燒傷 3 層", ef.size() >= 6 and str(ef[0].k) == "st_stun" and int(ef.filter(func(e): return e.k == "st_burn")[0].n) == 3, ks)
+	var ln = AH2.lines_of(op, f0, UIKit.font("sans", 900))
+	var row = null
+	for l in ln: if l.get("stk") != null: row = l
+	_chk("頭頂一排最多 4 個＋「+N」", row != null and (row.keys as Array).size() == 4 and int(row.more) == ef.size() - 4, row)
+	var ehs = AH2.effects(op, h0)
+	_chk("我方加攻／減傷／回血（正面）", ehs.size() >= 3 and not ehs[0].neg, ehs.map(func(e): return e.k))
+	await _w(t, 1.0); await _shot(t, "st43_icons")
+	# 撳敵人睇全部
+	var RVi = RV.inst
+	var sp = RVi._scr(op.head(f0).lerp(f0.p, 0.5))
+	var hit = RVi.pick_at(sp)
+	_chk("撳單位揀中", hit != null and hit[0] == f0)
+	RVi.insp = {"u": f0, "op": op, "t": 0.0}
+	var ls = RVi.insp_lines(f0, op)
+	_chk("清單列晒全部狀態", ls.size() >= ef.size(), ls.size())
+	await _w(t, 0.8); await _shot(t, "st43_inspect")
+	RVi.insp = null
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
