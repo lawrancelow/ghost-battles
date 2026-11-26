@@ -8,6 +8,8 @@
 #   solo  ：（另跑，乾淨開局）只派主角：男女主三姿勢＋普攻近鏡
 #   hero_sheet：（另跑）男女主空手三姿勢＋漂浮兵器對照表（遊戲畫法）
 #   ui    ：圖鑑詳情（★0／★3／★5）、圖鑑總表、名冊截圖；劇情對話截圖
+#   frame ：（另跑）最高階「撐爆畫框」：圖鑑總表／詳情／名冊／升職突破頭像：最高階立繪越過框上緣同左右邊、文字唔俾遮、
+#           低階照舊喺框內；截圖 frame_*.png（審批圖 HC_P44_FrameBreak_p1.jpg 用）
 #   截圖：/home/claude/docs/shots/p44/
 extends "res://tools/tests/eqview2_test.gd"
 
@@ -349,3 +351,187 @@ func _hero_sheet(t, m) -> void:
 		sv.get_texture().get_image().save_png(SH44 + "hero_sheet_%s.png" % sex); _p("shot hero_sheet_" + sex)
 		sv.queue_free(); await _f(t, 2)
 	J.G.S.hero["sex"] = sex0; EQ.st()
+
+# ---------------- frame：最高階「撐爆畫框」 ----------------
+const AF = preload("res://game/soul/ace_frame.gd")
+const CXP = "res://game/soul/soul_codex.gd"
+const FK := ["heiwu", "baiwu", "mengpo", "bm_shuten"]
+func frame(t) -> void:
+	var m = await _boot(t)
+	DirAccess.make_dir_recursive_absolute(SH44)
+	await _frame(t, m)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+func _find(n: Node, cls: String, out: Array) -> Array:
+	for c in n.get_children():
+		if c.has_method("prep") and cls == "Cell": out.append(c)
+		elif cls == "Big" and c.get("tex") != null and c.has_method("_edge_front"): out.append(c)
+		elif cls == "Por" and c.get("brk") != null and c.get("S") != null and c.has_method("setup") and not c.has_method("_edge_front"): out.append(c)
+		_find(c, cls, out)
+	return out
+func _gr(c: Control, r: Rect2) -> Rect2: return Rect2(c.get_global_transform() * r.position, r.size * c.get_global_transform().get_scale())
+func _shot_rect(t, name: String, R: Rect2, k := 2.0) -> void:
+	await RenderingServer.frame_post_draw
+	var img = t.get_viewport().get_texture().get_image()
+	var sc = Vector2(img.get_size()) / t.get_viewport().get_visible_rect().size
+	var ri = Rect2i(Vector2i(R.position * sc), Vector2i(R.size * sc)).intersection(Rect2i(Vector2i.ZERO, img.get_size()))
+	var c = img.get_region(ri)
+	c.resize(int(ri.size.x * k), int(ri.size.y * k), Image.INTERPOLATE_LANCZOS)
+	c.save_png(SH44 + name + ".png"); _p("shot " + name)
+func _stars(d: Dictionary) -> void:
+	for k in d: _set_star(k, int(d[k]))
+	ACE._cf = -1
+func _frame(t, m) -> void:
+	var SD = load("res://game/soul/soul_data.gd")
+	SD._bypass = true
+	for k in FK + ["pontianak", "niutou", "mamian"]:
+		if _gid(k) == "": J.cl(J.G.get("joinGhost"), null, [k])
+	SD._bypass = false
+	await _skip(t, 8)
+	# 1) 判定
+	var bl = []
+	for k in ACE.STAGES:
+		var want = [0, 0, 0, 0, 1, 2] if ACE.n_stages(k) == 4 else [0, 0, 0, 0, 0, 1]
+		for s in 6:
+			_stars({k: s})
+			if AF.lvl(k) != want[s]: bl.append([k, s, AF.lvl(k)])
+		_set_star(k, 0)
+	_chk("最高階判定：三階王牌 ★5（第三階）＝1；酒吞 ★4（第三階）＝1、★5（第四階）＝2；其餘 0", bl.is_empty(), bl)
+	ACE.dlg_begin(); _stars({"heiwu": 5}); var dl = AF.lvl("heiwu"); ACE.dlg_end()
+	_chk("對話中（用原圖）唔當最高階", dl == 0)
+	var CX = load(CXP)
+	var scroll: ScrollContainer = m.sheet_scroll
+	# 2) 圖鑑總表：兩組（A：一／二／三階＋酒吞三階；B：一／二／三階＋酒吞四階）
+	var sets = [{"heiwu": 0, "baiwu": 3, "mengpo": 5, "bm_shuten": 4}, {"heiwu": 0, "baiwu": 3, "mengpo": 5, "bm_shuten": 5}]
+	var gbad = []; var gtxt = []; var glow = []; var gclip = []; var gn = 0
+	for si in sets.size():
+		_stars(sets[si])
+		CX.f_pin = "王"; CX.f_sys = ""
+		CX.open(); await _w(t, 0.6)
+		var cells = _find(m.sheet_body, "Cell", [])
+		# 截圖對照：將四隻搬去第二行（一階／二階／三階／酒吞），上下都有其他格，睇到越界唔遮隔籬
+		var gr0 = cells[0].get_parent()
+		for i in FK.size():
+			for c in cells:
+				if c.k == FK[i]: gr0.move_child(c, -1)
+		for i in FK.size():
+			for c in cells:
+				if c.k == FK[i]: gr0.move_child(c, 4 + i)
+		await _f(t, 3)
+		var sr = scroll.get_global_rect()
+		var txt = []   # 所有格嘅文字範圍（全域）：名＋底行＋星；頂部編號／品級
+		for c in cells:
+			var H = c.size.y; var r = Rect2(1, H - 158 + 1, c.size.x - 3, 155)
+			txt.append([c, _gr(c, Rect2(r.position.x, r.end.y - 66 + 2, r.size.x, 64))])
+		var tops = []
+		for c in cells:
+			if not (c.k in FK): continue
+			var want = AF.lvl(c.k)
+			if want == 0:
+				if c.brk_l != 0 or c.pad != 0.0 or not c.brk.is_empty(): glow.append([c.k, c.brk_l, c.pad])
+				continue
+			gn += 1
+			if c.brk.is_empty(): gbad.append([c.k, "冇畫"]); continue
+			var r: Rect2 = c.brk[0]; var A: Rect2 = c.brk[1]
+			var up = (r.position.y - A.position.y) / r.size.y
+			var sd = maxf(r.position.x - A.position.x, A.end.x - r.end.x)
+			var need_up = 0.12 if want == 1 else 0.18
+			if up < need_up or up > 0.21 or sd <= 0.5 or sd > 5.0 * AF.SIDE_K[want] + 0.6 or A.position.y < -0.01: gbad.append([c.k, snappedf(up, 0.01), snappedf(sd, 0.1), A])
+			if A.end.y > (c.brk[2] as Rect2).position.y + 0.01: gtxt.append([c.k, "遮到名", A, c.brk[2]])
+			var AG = _gr(c, A)
+			for e in txt:
+				if e[0] != c and AG.intersects(e[1]): gtxt.append([c.k, "遮到隔籬 " + str(e[0].k)])
+			# 隔籬卡頂部文字（編號／品級）
+			for e in cells:
+				if e == c: continue
+				var H2 = e.size.y; var hr = _gr(e, Rect2(0, H2 - 158, e.size.x, 30))
+				if AG.intersects(hr): gtxt.append([c.k, "遮到隔籬頂字 " + str(e.k)])
+			if AG.position.x < sr.position.x - 0.01 or AG.end.x > sr.end.x + 0.01: gclip.append([c.k, AG, sr])
+			tops.append(c)
+		_chk("圖鑑總表%s：最高階立繪越過卡框上緣（12–21%%，酒吞四階 ≥18%%）同左右邊（≤5px×倍數），唔出控件頂" % ["A", "B"][si], gbad.is_empty() and tops.size() == (2 if si == 0 else 2), [gbad, tops.map(func(x): return x.k)])
+		# 截圖：揀包含 4 隻嘅範圍
+		scroll.scroll_vertical = int(gr0.get_parent().position.y + gr0.get_child(0).position.y) - 8
+		await _f(t, 4)
+		var R = Rect2()
+		for i in range(0, mini(12, gr0.get_child_count())):
+			var c = gr0.get_child(i)
+			R = c.get_global_rect() if R.size.x == 0 else R.merge(c.get_global_rect())
+		R = R.grow_individual(10, 6, 10, 4)
+		await _shot_rect(t, "frame_grid_%s" % ["A", "B"][si], R, 2.0)
+		await _shot44(t, "frame_grid_full_%s" % ["A", "B"][si])
+	_chk("圖鑑總表：名、等級、職級星、隔籬卡頂字全部冇俾越界立繪遮住（頂部編號／品級喺立繪之後畫、墊紙底）", gtxt.is_empty(), gtxt)
+	_chk("圖鑑總表：一階／二階照舊縮入框（冇預留位、冇越界）", glow.is_empty(), glow)
+	_chk("圖鑑總表：越界部分喺 ScrollContainer 範圍內（左右留邊），唔會俾裁走", gclip.is_empty() and gn >= 4, gclip)
+	# 3) 詳情
+	var dbad = []; var dlow = []; var dtxt = []
+	var plan = [["heiwu", [0, 3, 5]], ["bm_shuten", [0, 3, 4, 5]]]
+	for pl in plan:
+		var k = pl[0]
+		for s in pl[1]:
+			_stars({k: s})
+			CX.open_detail(k); await _w(t, 0.5)
+			var bg = _find(m.sheet_body, "Big", [])
+			if bg.is_empty(): dbad.append([k, s, "冇大圖"]); continue
+			var b = bg[0]
+			var want = AF.lvl(k)
+			if want == 0:
+				if b.brk_l != 0 or not b.brk.is_empty(): dlow.append([k, s])
+			else:
+				var r: Rect2 = b.brk[0]; var A: Rect2 = b.brk[1]
+				var up = (r.position.y - A.position.y) / r.size.y
+				var sd = maxf(r.position.x - A.position.x, A.end.x - r.end.x)
+				if up < (0.12 if want == 1 else 0.18) or up > 0.21 or sd <= 0.5 or sd > 8.0 * AF.SIDE_K[want] + 0.6 or A.position.x < 0 or A.position.y < 0 or A.end.y > r.end.y: dbad.append([k, s, snappedf(up, 0.01), snappedf(sd, 0.1)])
+				# 右邊文字欄（No.／名）唔俾遮；上面返回掣唔俾遮
+				var AG = _gr(b, A)
+				for sib in b.get_parent().get_children():
+					if sib != b and AG.intersects((sib as Control).get_global_rect()): dtxt.append([k, s, "遮到文字欄"])
+				var hbp = b.get_parent()
+				var prev = hbp.get_parent().get_child(hbp.get_index() - 1) as Control
+				if prev != null and AG.intersects(prev.get_global_rect()): dtxt.append([k, s, "遮到返回掣"])
+			var hb = b.get_parent() as Control
+			await _shot_rect(t, "frame_detail_%s_s%d" % [k, ACE.stage(k)], Rect2(Vector2(scroll.get_global_rect().position.x, b.get_global_rect().position.y - 4), Vector2(scroll.size.x, b.size.y + 8)), 2.0)
+	_chk("圖鑑詳情：最高階大圖越過框上緣同左右邊（黑無常三階、酒吞三階／四階）", dbad.is_empty(), dbad)
+	_chk("圖鑑詳情：一階／二階照舊喺框內", dlow.is_empty(), dlow)
+	_chk("圖鑑詳情：越界立繪唔遮右邊文字欄、唔遮返回掣", dtxt.is_empty(), dtxt)
+	# 4) 名冊
+	var rbad = []; var rlow = []; var rtxt = []
+	var rsets = [{"heiwu": 0, "baiwu": 3, "mengpo": 5, "bm_shuten": 4}, {"bm_shuten": 5}]
+	for si in rsets.size():
+		_stars(rsets[si])
+		Menus.open_roster(); await _w(t, 0.7)
+		var pors = _find(m.sheet_body, "Por", [])
+		var cards = {}
+		for id in Menus.r_cards: cards[id] = Menus.r_cards[id][1]
+		for k in FK:
+			var card = Menus.r_cards.get(_gid(k), [null, null])[1]
+			if card == null: rbad.append([k, "冇卡"]); continue
+			var pp = _find(card, "Por", [])
+			var want = AF.lvl(k)
+			if want == 0:
+				if not pp.is_empty(): rlow.append(k)
+			else:
+				if pp.is_empty() or pp[0].brk.is_empty(): rbad.append([k, "冇撐爆"]); continue
+				var p = pp[0]; var r: Rect2 = p.brk[0]; var A: Rect2 = p.brk[1]
+				var up = (r.position.y - A.position.y) / r.size.y
+				var sd = maxf(r.position.x - A.position.x, A.end.x - r.end.x)
+				if up < (0.12 if want == 1 else 0.18) or up > 0.21 or sd <= 0.3 or A.position.y < 0 or A.position.x < 0 or A.end.x > p.size.x or A.end.y > r.end.y: rbad.append([k, snappedf(up, 0.01), snappedf(sd, 0.1), A, p.size])
+				var AG = _gr(p, A)
+				for sib in p.get_parent().get_children():
+					if sib != p and AG.intersects((sib as Control).get_global_rect()): rtxt.append([k, "遮到 " + sib.get_class()])
+				for id in cards:
+					var oc = cards[id]
+					if oc != card and is_instance_valid(oc) and AG.intersects(oc.get_global_rect()): rtxt.append([k, "出咗自己張卡"])
+			scroll.ensure_control_visible(card); await _f(t, 3)
+			var cr = card.get_global_rect()
+			await _shot_rect(t, "frame_roster_%s_s%d" % [k, ACE.stage(k)], Rect2(cr.position - Vector2(4, 4), Vector2(cr.size.x + 8, minf(cr.size.y, 150) + 8)), 2.0)
+	_chk("名冊：最高階頭像越過框上緣同左右邊（喺自己控件範圍內）", rbad.is_empty(), rbad)
+	_chk("名冊：一階／二階照舊（原頭像框）", rlow.is_empty(), rlow)
+	_chk("名冊：越界頭像唔遮名／數值文字、唔出自己張卡", rtxt.is_empty(), rtxt)
+	# 5) 升職／突破頁頭像（soul_ui._por）
+	_stars({"mengpo": 5, "heiwu": 3})
+	var UIp = load("res://game/soul/soul_ui.gd")
+	var a = UIp._por("mengpo", 52, "own"); var b2 = UIp._por("heiwu", 52, "own"); var c2 = UIp._por("mengpo", 52, "gray")
+	_chk("升職／突破頁頭像：最高階用撐爆框、二階同未招降照舊", a.has_method("setup") and not b2.has_method("setup") and not c2.has_method("setup"))
+	a.free(); b2.free(); c2.free()
+	m.close_sheet(); await _w(t, 0.3)
+	CX.f_pin = ""
+	for k in FK: _set_star(k, 0)

@@ -12,6 +12,7 @@ const DIM := Color("#6e5838")
 const RED := Color("#9c2219")
 const COLS := 4                 # 手機直屏：4 欄（格闊約 100px，字夠大）
 const CELL_H := 158.0
+const AF_SIDE := 5.0            # [p44] 最高階立繪左右越界上限（< 格距 6，唔會掂到隔籬卡）
 
 static var f_pin := ""          # 篩選：品級（""＝全部）
 static var f_sys := ""          # 篩選：系
@@ -124,10 +125,14 @@ static func _grid(body: VBoxContainer) -> void:
 	for x in lst:
 		var c = Cell.new(); c.k = str(x.k); c.no = int(x.no)
 		c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		c.custom_minimum_size = Vector2(0, CELL_H)
 		c.prep()
+		c.custom_minimum_size = Vector2(0, CELL_H + c.pad)   # [p44] 最高階：格頂預留越界位（同一行一齊高，卡照貼底）
 		gr.add_child(c)
-	body.add_child(gr)
+	var gm = MarginContainer.new()   # [p44] 左右留 6px：最高階立繪越過卡邊唔會俾 ScrollContainer 切走
+	gm.add_theme_constant_override("margin_left", AF_SIDE + 1); gm.add_theme_constant_override("margin_right", AF_SIDE + 1)
+	gm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gm.add_child(gr)
+	body.add_child(gm)
 	if lst.is_empty(): body.add_child(_rich(L("呢個篩選冇鬼。", "這個篩選沒有鬼。"), 17, DIM))
 
 # ---- 格仔 ----
@@ -135,6 +140,8 @@ class Cell extends Control:
 	const SOUL = preload("res://game/soul/soul_data.gd")
 	const S2 = preload("res://game/soul/soul2.gd")
 	const FX = preload("res://game/soul/soul_fx.gd")
+	const CH := 158.0       # = CH
+	const SIDE := 5.0       # = SIDE
 	var k := ""
 	var no := 0
 	var st := "unseen"
@@ -145,6 +152,9 @@ class Cell extends Control:
 	var have := 0
 	var need := 1
 	var lv := 0
+	var brk_l := 0          # [p44] 撐爆畫框：0＝照舊；1＝最高階；2＝酒吞第四階（更強）
+	var pad := 0.0
+	var brk := []           # [p44] 測試：[卡框, 立繪實際範圍, 唔可以遮嘅文字範圍, 頂部文字（喺立繪之後畫）]
 	func prep() -> void:
 		st = S2.state(k)
 		tex = FX.tex_of(k) if SOUL.is_ghost(k) or k == "afu" else null
@@ -156,6 +166,9 @@ class Cell extends Control:
 		if st == "prog": have = SOUL.souls(k); need = maxi(1, SOUL.need_of(k))
 		mouse_filter = Control.MOUSE_FILTER_STOP
 		tooltip_text = ""
+		var AF = load("res://game/soul/ace_frame.gd")
+		brk_l = AF.lvl(k) if st == "own" and tex != null else 0
+		pad = AF.pad(brk_l, CH - 3)
 	func _gui_input(ev: InputEvent) -> void:
 		if (ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed) or (ev is InputEventScreenTouch and not ev.pressed):
 			accept_event(); Snd.play("paper")
@@ -164,7 +177,7 @@ class Cell extends Control:
 		var W = size.x; var H = size.y
 		var own = st == "own"
 		var bg = Color("#f6ecd2") if own else (Color("#e4dccb") if st != "unseen" else Color("#d3cbbb"))
-		var r = Rect2(1, 1, W - 3, H - 3)
+		var r = Rect2(1, H - CH + 1, W - 3, CH - 3)   # [p44] 卡貼底（最高階格頂多咗越界位）
 		draw_rect(Rect2(r.position + Vector2(2, 3), r.size), Color(0, 0, 0, 0.18))
 		draw_rect(r, bg)
 		var edge = Color("#d9a030") if own and rk >= 5 else FX.INK
@@ -172,19 +185,23 @@ class Cell extends Control:
 		# 品級色條
 		var pc = FX.PINC.get(pin, Color.GRAY)
 		draw_rect(Rect2(r.position.x + 2, r.position.y + 2, r.size.x - 4, 5), Color(pc, 0.9 if st != "unseen" else 0.35))
-		var f = FX.font("sans")
-		draw_string(f, Vector2(r.position.x + 6, r.position.y + 22), "%03d" % no, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(FX.INK, 0.55))
-		if st != "unseen" and pin != "":
-			var pl = load("res://game/soul/soul_up.gd").pin_label(pin)
-			var pw = f.get_string_size(pl, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
-			draw_string(f, Vector2(r.end.x - pw - 6, r.position.y + 23), pl, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, pc.darkened(0.15))
+		if brk_l == 0: _head(r, pc, false)
 		# 圖框：全身原圖縮入（唔裁切）
-		var box = Rect2(r.position.x + 6, r.position.y + 28, r.size.x - 12, H - 28 - 66)
+		var box = Rect2(r.position.x + 6, r.position.y + 28, r.size.x - 12, CH - 28 - 66)
 		var mod = Color.WHITE
 		match st:
 			"prog", "seen": mod = Color(0.5, 0.5, 0.53)
 			"unseen": mod = Color(0.06, 0.05, 0.07)
-		if tex != null: draw_texture_rect(tex, FX.fit(tex, box), false, mod)
+		if brk_l > 0:   # [p44] 最高階：撐爆畫框
+			var AF = load("res://game/soul/ace_frame.gd")
+			var yc = box.end.y
+			AF.top_light(self, r, 3.0 if own and rk >= 5 else 2.0)
+			var A = AF.draw_art(self, tex, r, yc, brk_l, 1.0, 1.18, SIDE, mod, 3.0 if own and rk >= 5 else 2.0, 0.0)
+			AF.bottom_shade(self, r, yc, 2.0, 0.09)
+			draw_line(Vector2(r.position.x + 2, yc), Vector2(r.end.x - 2, yc), Color(edge, 0.55), 1.5)   # 名牌上緣（喺立繪前面）
+			var hd = _head(r, pc, true, yc)
+			brk = [r, A, Rect2(r.position.x, yc + 1, r.size.x, r.end.y - yc - 1), hd]
+		elif tex != null: draw_texture_rect(tex, FX.fit(tex, box), false, mod)
 		else: load("res://game/soul/soul_codex.gd")._no_art(self, box, st)
 		if st == "prog":   # 進度環
 			var c = Vector2(box.end.x - 18, box.position.y + 18)
@@ -214,6 +231,28 @@ class Cell extends Control:
 			for i in SOUL.RANK_MAX:   # 職級星
 				_star(Vector2(W / 2 - 34 + i * 17, H - 12), 7.0, Color("#e8b040") if i < rk else Color(FX.INK, 0.18))
 		else: FX.text_c(self, line, W / 2, H - 12, 14, col, "sans", mw)
+	# 格頂：編號＋品級；返回文字範圍
+	#   最高階（plate）：頂部讓俾衝出框嘅頭，編號／品級改擺喺立繪窗底（名牌上緣之上、壓喺下半身），喺立繪之後畫、墊紙底，永遠睇得清
+	func _head(r: Rect2, pc: Color, plate: bool, yc := 0.0) -> Array:
+		var f = FX.font("sans")
+		var out = []
+		var ns = "%03d" % no
+		var nw = f.get_string_size(ns, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+		var y0 = r.position.y if not plate else yc - 28.0   # 文字基線 = y0 + 22／23（最高階：牌底離名牌線 1px）
+		var nr = Rect2(r.position.x + 3, y0 + 9, nw + 6, 17)
+		if plate:
+			draw_rect(nr, Color("#f6ecd2", 0.9)); draw_rect(nr, Color(FX.INK, 0.35), false, 1.0)
+		draw_string(f, Vector2(r.position.x + 6, y0 + 22), ns, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(FX.INK, 0.55 if not plate else 0.8))
+		out.append(nr)
+		if st != "unseen" and pin != "":
+			var pl = load("res://game/soul/soul_up.gd").pin_label(pin)
+			var pw = f.get_string_size(pl, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+			var pr = Rect2(r.end.x - pw - 9, y0 + 8, pw + 6, 19)
+			if plate:
+				draw_rect(pr, Color("#f6ecd2", 0.9)); draw_rect(pr, Color(FX.INK, 0.35), false, 1.0)
+			draw_string(f, Vector2(r.end.x - pw - 6, y0 + 23), pl, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, pc.darkened(0.15))
+			out.append(pr)
+		return out
 	func _star(p: Vector2, rr: float, col: Color) -> void:
 		var pts = PackedVector2Array()
 		for i in 10:
@@ -257,6 +296,7 @@ static func _detail(body: VBoxContainer, k: String) -> void:
 	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 12)
 	var art = Big.new(); art.k = k; art.st = st; art.custom_minimum_size = Vector2(170, 230); art.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	art.tex = FX.tex_of(k) if SOUL.is_ghost(k) or k == "afu" else null
+	art.setup()   # [p44] 最高階：頂部預留越界位、左邊留位（唔俾 ScrollContainer 切）
 	hb.add_child(art)
 	var vb = VBoxContainer.new(); vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL; vb.add_theme_constant_override("separation", 4); hb.add_child(vb)
 	var gd = SOUL.GH().get(k, {})
@@ -408,13 +448,43 @@ class Big extends Control:
 	var k := ""
 	var st := ""
 	var tex: Texture2D = null
+	var brk_l := 0
+	var pad := 0.0
+	var mx := 0.0
+	var brk := []        # [p44] 測試：[框, 立繪實際範圍]
+	const SD := 8.0
+	func setup() -> void:
+		var AF = load("res://game/soul/ace_frame.gd")
+		brk_l = AF.lvl(k) if st == "own" and tex != null else 0
+		if brk_l <= 0: return
+		pad = AF.pad(brk_l, 224.0); mx = SD * AF.SIDE_K[brk_l] + 2
+		custom_minimum_size = Vector2(170 + mx, 230 + pad)
 	func _draw() -> void:
-		var r = Rect2(Vector2(2, 2), size - Vector2(6, 6))
-		FX.ink_card(self, r, Color("#f6ecd2") if st == "own" else Color("#ddd4c2"), hash(k) % 50)
+		var r = Rect2(Vector2(2 + mx, 2 + pad), size - Vector2(6 + mx, 6 + pad))
+		var seed = hash(k) % 50
+		FX.ink_card(self, r, Color("#f6ecd2") if st == "own" else Color("#ddd4c2"), seed)
 		var box = r.grow(-10)
 		var mod = Color.WHITE if st == "own" else (Color(0.06, 0.05, 0.07) if st == "unseen" else Color(0.55, 0.55, 0.58))
-		if tex != null: draw_texture_rect(tex, FX.fit(tex, box), false, mod)
+		if brk_l > 0:   # [p44] 最高階：撐爆畫框
+			var AF = load("res://game/soul/ace_frame.gd")
+			var ins = 2.5; var yc = r.end.y - ins
+			AF.top_light(self, r, ins)
+			var A = AF.draw_art(self, tex, r, yc, brk_l, 0.95, 1.3, SD, mod, ins, 0.0)
+			AF.bottom_shade(self, r, yc, ins, 0.1)
+			_edge_front(r, seed, r.position.y + r.size.y * 0.3)
+			brk = [r, A]
+		elif tex != null: draw_texture_rect(tex, FX.fit(tex, box), false, mod)
 		else: load("res://game/soul/soul_codex.gd")._no_art(self, box, st)
+	# 框底緣＋下半段左右邊重畫喺立繪前面（同 FX.ink_card 一樣嘅抖動）
+	func _edge_front(r: Rect2, seed: int, y_from: float) -> void:
+		var rng = RandomNumberGenerator.new(); rng.seed = 9137 + seed
+		for i in 2:
+			var j = Vector2(rng.randf_range(-1, 1), rng.randf_range(-1, 1)) * (1.2 + i)
+			var c = Color(FX.INK, 0.9 if i == 0 else 0.35); var w = 2.6 if i == 0 else 1.2
+			var a = r.position + j; var b = r.end + j
+			draw_line(Vector2(a.x, b.y), Vector2(b.x, b.y), c, w)
+			draw_line(Vector2(a.x, y_from), Vector2(a.x, b.y), c, w)
+			draw_line(Vector2(b.x, y_from), Vector2(b.x, b.y), c, w)
 
 # ======================= 王座重遊 =======================
 static func _throne(body: VBoxContainer) -> void:

@@ -37,6 +37,7 @@ static func _confirm(t: String, msg: String, f: Callable) -> Button:
 		b.get_tree().create_timer(2.5).timeout.connect(func(): if is_instance_valid(b): b.text = t))
 	return b
 static func _por(k: String, size: int, mode: String) -> Control:   # mode: own／gray／shadow
+	if mode == "own" and load("res://game/soul/ace_frame.gd").lvl(k) > 0: return load("res://game/soul/ace_frame.gd").por(k, size)   # [p44] 最高階撐爆畫框（升職／突破／入職信）
 	var t = UIKit.portrait(k, size)
 	if mode == "gray": t.modulate = Color(0.42, 0.42, 0.45)
 	elif mode == "shadow": t.modulate = Color(0.05, 0.04, 0.06)
