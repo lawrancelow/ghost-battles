@@ -188,10 +188,10 @@ static func _preset_row(box: VBoxContainer, P: Dictionary) -> Control:
 		var b = UIKit.btn(preset_name(i), "gold" if has else "", true); b.focus_mode = Control.FOCUS_NONE; b.add_theme_font_size_override("font_size", 14); b.disabled = not has
 		b.tooltip_text = L("一鍵上陣", "一鍵上陣")
 		var ii = i
-		b.pressed.connect(func(): Snd.play("click"); preset_load(ii); _changed(box))
+		b.pressed.connect(func(): Snd.play("preset_load"); preset_load(ii); _changed(box))   # [sfx43]
 		hb.add_child(b)
 		var sb = UIKit.btn(L("存", "存"), "", true); sb.focus_mode = Control.FOCUS_NONE; sb.add_theme_font_size_override("font_size", 14)
-		sb.pressed.connect(func(): Snd.play("click"); preset_save(ii); _changed(box))
+		sb.pressed.connect(func(): Snd.play("preset_save"); preset_save(ii); _changed(box))   # [sfx43]
 		hb.add_child(sb)
 	return hb
 

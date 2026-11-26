@@ -191,7 +191,8 @@ static func _craft_row(body: VBoxContainer, id: String) -> Control:
 		mb.name = "Make_" + id; a.add_child(mb)
 	if EQ.n_inv(id) > 0:
 		var pb = _btn(L("加工", "加工") if EQ.plus(id) < 10 else L("已到頂", "已到頂"), "gold", EQ.can_plus(id) == "", func():
-			EQ.do_plus(id); _fill_craft(body))
+			if EQ.do_plus(id): Snd.play("eq_plus")   # [sfx43]
+			_fill_craft(body))
 		pb.name = "Plus_" + id; a.add_child(pb)
 	if EQ.n_free(id) > 0:
 		var rb = _btn(L("回收 +%d", "回收 +%d") % int(J.num(EQ.item(id).get("price", 0))), "", true, func():
@@ -225,7 +226,9 @@ static func roster_strip(card: PanelContainer, hb: Control, gid: String) -> void
 		row.add_child(b)
 	var row2 = HBoxContainer.new(); row2.add_theme_constant_override("separation", 6); v.add_child(row2)
 	var ab = _btn(L("一鍵穿戴", "一鍵穿戴"), "", true, func():
-		EQ.auto_wear(gid); _changed())
+		var s0 = set_lv(gid)   # [sfx43] 一鍵穿戴；套裝湊多一級再加一聲
+		if EQ.auto_wear(gid) > 0: wear_sfx(gid, s0)
+		_changed())
 	ab.name = "AutoWear"; ab.custom_minimum_size = Vector2(110, 38); row2.add_child(ab)
 	var sx = []
 	for si in EQ.set_info(gid): sx.append("%s %d/3" % [si.name, si.n])
@@ -287,10 +290,23 @@ static func _fill_slot(body: VBoxContainer, gid: String, sl: String) -> void:
 		if id == cur: h.add_child(_lbl(L("已穿", "已穿"), 14, UIKit.CINNABAR2, 900))
 		else:
 			var wb = _btn(L("穿上", "穿上"), "gold", why == "", func():
-				EQ.wear(gid, id); _changed(); _fill_slot(body, gid, sl))
+				var s0 = set_lv(gid)   # [sfx43]
+				if EQ.wear(gid, id): wear_sfx(gid, s0)
+				_changed(); _fill_slot(body, gid, sl))
 			wb.name = "Wear_" + id; h.add_child(wb)
 			if why != "": v.add_child(_lbl(why, 12, Color("#9c2219")))
 		body.add_child(pc)
 	if not any: body.add_child(_lbl(L("專屬物要打魔王先有機會掉。", "專屬物要打魔王才有機會掉落。") if sl == "ex" else L("倉庫冇呢格嘅裝備：去大排檔「紙紮兵器檔」訂製。", "倉庫沒有這格的裝備：去大排檔「紙紮兵器攤」訂製。"), 14, UIKit.INKDIM))
 static func _changed() -> void:
 	if on_change is Callable and on_change.is_valid(): on_change.call()
+
+# [sfx43] 套裝級數（任何一套 ≥2 件＝1，≥3 件＝2）；著完裝如果升咗級就再「叮」一聲
+static func set_lv(gid) -> int:
+	var lv = 0
+	for si in EQ.set_info(gid): lv = maxi(lv, 2 if int(si.n) >= 3 else (1 if int(si.n) >= 2 else 0))
+	return lv
+static func wear_sfx(gid, s0: int) -> void:
+	Snd.play("eq_wear")
+	if set_lv(gid) > s0:
+		var tr = Engine.get_main_loop()
+		if tr is SceneTree: (tr as SceneTree).create_timer(0.35).timeout.connect(func(): Snd.play("eq_set"))

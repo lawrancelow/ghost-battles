@@ -79,8 +79,12 @@ static func on_win(e: Dictionary, first: bool) -> String:
 	add_san(n, "boss:" + bm)
 	var dk = load("res://game/soul/soul_up.gd").drop_king(bm, true, first)   # [soul_up] 魔王：冥火＋精魄
 	var sd = soul_drop(bm, first)   # [補丁43] 魔王收服：魔王魂魄
+	var SX = load("res://core/sfx43.gd")   # [sfx43] 戰報卡出嗰陣先播
+	if sd != "" or dk != "": SX.queue("soul_drop")
 	var EQd = load("res://game/equip/eq_data.gd")   # [補丁43] 魔王：絕品／王牌專屬物
-	for eid in EQd.drop_boss(first): sd += ("、" if sd != "" else "") + "★" + EQd.name_of(eid)
+	for eid in EQd.drop_boss(first):
+		sd += ("、" if sd != "" else "") + "★" + EQd.name_of(eid)
+		if str(EQd.item(eid).get("kind")) == "ex": SX.queue("eq_ex")
 	return "散魂 +%d（打低魔王 %s）" % [n, str(b.get("name", bm))] + ("、" + dk if dk != "" else "") + ("、" + sd if sd != "" else "")
 
 # [補丁43] 魔王魂魄：首殺 15，之後每次 2–4（湊夠 120 先招得）
