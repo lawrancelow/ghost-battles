@@ -26,6 +26,9 @@ func _f(t, n := 1):
 	for i in n: await t.get_tree().process_frame
 func _shot(t, name: String):
 	if not shots: return
+	for i in 4:   # 升級／系統劇情彈窗遮住戰場：先跳走
+		var m = _main(t); var st = m.get("story") if m else null
+		if st and st.get("cur") != null: st.skip_scene(); await _w(t, 0.2)
 	await RenderingServer.frame_post_draw
 	t.get_viewport().get_texture().get_image().save_png(SHOTS + name + ".png"); _p("shot " + name)
 func _skip(t, n := 6):
@@ -67,6 +70,18 @@ func _cnt(us: Array) -> Dictionary:
 
 func logic(t) -> void: await _run(t)
 func shots_(t) -> void: shots = true; await _run(t)
+# 每個階級另開一次遊戲影（同一局連打幾場，第二場之後 1-1 唔再開得返）：shots_za／shots_shi／shots_wei／shots_qin
+var only := []
+func _solo(t, rk: String) -> void:
+	shots = true; only = [rk]
+	var m = await _boot(t)
+	J.G.S.erase("yinbing"); _team3(J.G.S)
+	await _shots(t, m)
+	print("RESULT yinbing_shots %s ok=%d bad=%d" % [rk, ok, bad])
+func shots_za(t) -> void: await _solo(t, "za")
+func shots_shi(t) -> void: await _solo(t, "shi")
+func shots_wei(t) -> void: await _solo(t, "wei")
+func shots_qin(t) -> void: await _solo(t, "qin")
 func _run(t) -> void:
 	var m = await _boot(t)
 	var S = J.G.S
@@ -288,8 +303,8 @@ func _run(t) -> void:
 # ---- 實機截圖：真入口出擊，交戰時影（四個階級各一場，每場影三張：射箭、醫護回血）＋兵營面板 ----
 func _shots(t, m) -> void:
 	var S = J.G.S; var nv = m.village
-	await _sheet(t, m, "idle"); await _sheet(t, m, "atk")
-	for rk in ["za", "shi", "wei", "qin"]:
+	if only.is_empty() or only[0] == "za": await _sheet(t, m, "idle"); await _sheet(t, m, "atk")
+	for rk in (only if not only.is_empty() else ["za", "shi", "wei", "qin"]):
 		YB.force_rank = rk
 		S.res["troops"] = 200.0
 		S.cleared.erase("1-1"); S["qi"] = float(_qidx_stage("1-1"))
@@ -311,9 +326,15 @@ func _shots(t, m) -> void:
 			await _w(t, 0.1)
 		for u in op.units:   # 截圖用：敵人血 ×3，打耐啲先影到射箭同回血（唔影響測試結果）
 			if J.num(u.side) == 1: u["hp"] = J.num(u.hp) * 3.0; u["maxhp"] = J.num(u.maxhp) * 3.0
-		c.tgt = null; c.vel = Vector2.ZERO; c.z = 3.0; c.x = op.anchor.x - c.vw() / 2.0; c.y = op.anchor.y + 30.0 - c.vh() / 2.0   # 截圖用：放大過遊戲上限（1.5），睇清楚兵種
+		var fr = func():   # 截圖用：鏡頭對準我方陰兵小隊中間（放大 2.2，過遊戲上限 1.5，睇清楚兵種）
+			var sm = Vector2.ZERO; var nn = 0
+			for u in op.units:
+				if u.get("yb_c") != null and J.num(u.hp) > 0 and u.get("p") is Vector2: sm += u.p; nn += 1
+			var ctr = sm / nn if nn > 0 else op.anchor
+			c.tgt = null; c.vel = Vector2.ZERO; c.z = 2.2; c.x = ctr.x + 20.0 - c.vw() / 2.0; c.y = ctr.y - 10.0 - c.vh() / 2.0
+		fr.call()
 		var h0 = YB.HEALS
-		await _w(t, 1.6); await _shot(t, "fight_%s_a" % rk)
+		await _w(t, 1.6); fr.call(); await _f(t, 2); await _shot(t, "fight_%s_a" % rk)
 		var got = false
 		for i in 120:   # 等有弓弩手飛彈喺天上＋醫護兵啱啱醫完（綠色 +數字）先影
 			await _w(t, 0.05)
@@ -321,13 +342,24 @@ func _shots(t, m) -> void:
 			for q in op.proj: if q.src is Dictionary and str(q.src.get("yb_c", "")) == "yuan": arrow = true
 			if arrow and YB.HEALS > h0: got = true; break
 			if i == 119: _p("no arrow+heal")
-		await _shot(t, "fight_%s_b" % rk)
+		await _w(t, 0.15)
+		var hp_at = null   # 回血數字（綠色 +N）喺邊：鏡頭對準佢同醫護兵中間
+		for d in op.fx:
+			if str(d.get("kind")) == "txt" and str(d.get("col")) == "#8affb0": hp_at = d.p
+		fr.call()
+		if hp_at is Vector2:
+			var mm = hp_at; var nn = 1
+			for u in op.units:
+				if str(u.get("yb_c", "")) == "yi" and J.num(u.hp) > 0: mm += u.p; nn += 1
+			mm /= nn; c.x = mm.x - c.vw() / 2.0; c.y = mm.y + 30.0 - c.vh() / 2.0
+		await _f(t, 1); await _shot(t, "fight_%s_b" % rk)
 		_p("shot %s arrow+heal=%s heals=%d" % [rk, str(got), YB.HEALS - h0])
-		await _w(t, 1.2); await _shot(t, "fight_%s_c" % rk)
+		await _w(t, 1.2); fr.call(); await _f(t, 2); await _shot(t, "fight_%s_c" % rk)
 		for i in 600:
 			if op.phase in ["back", "done"] or RTS.op_for("1-1") == null: break
 			await _w(t, 0.1)
 		await _w(t, 0.5)
+	if not only.is_empty() and only[0] != "qin": return
 	# 兵營面板（衛兵階級、8 隊）
 	YB.force_rank = ""
 	var mv = S.get("mv")
@@ -351,14 +383,14 @@ class Bg extends Control:
 func _sheet(t, m, mode: String) -> void:
 	var RV = load("res://game/rts/rts_view.gd")
 	var cv = CanvasLayer.new(); cv.layer = 90; m.add_child(cv)
-	var bg = Bg.new(); bg.size = Vector2(450, 975); cv.add_child(bg)
+	var bg = Bg.new(); bg.size = Vector2(390, 845); cv.add_child(bg)
 	var K = 2.2; var sols = []
 	var cls = ["jin", "zhong", "yuan", "yi"]; var rks = ["za", "shi", "wei", "qin"]
 	for ci in 4:
 		for ri in 4:
 			var fd = 1.0; var c = cls[ci]; var r = rks[ri]
 			if mode == "atk": c = ["jin", "zhong"][ci % 2]; fd = 1.0 if ci < 2 else -1.0
-			var cx = 56.0 + ri * 110.0; var y0 = 175.0 + ci * 205.0
+			var cx = 48.0 + ri * 98.0; var y0 = 175.0 + ci * 205.0   # 畫面邏輯闊 390
 			var x0 = cx - fd * 16.0
 			var u = {"p": Vector2(x0, y0), "hp": 1.0, "maxhp": 1.0, "side": 0.0}
 			if mode == "atk":
@@ -368,7 +400,7 @@ func _sheet(t, m, mode: String) -> void:
 			var sr = RV.SolRep.new(); sr.look = "yb_%s_%s" % [c, r]; sr.u = u; sr.dir = fd; sr.ph = 0.7 + ri * 0.3; sr.pose = "attack" if mode == "atk" else "stand"
 			var holder = Node2D.new(); holder.position = Vector2(x0, y0); holder.scale = Vector2(K, K); bg.add_child(holder); holder.add_child(sr)
 			sols.append(sr)
-			var lb = Label.new(); lb.text = YB.name_of(c, r) + ("・向左" if fd < 0 else ""); lb.position = Vector2(cx - 53, y0 + 14); lb.size = Vector2(106, 20)
+			var lb = Label.new(); lb.text = YB.name_of(c, r); lb.position = Vector2(cx - 48, y0 + 14); lb.size = Vector2(96, 20)
 			lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			lb.add_theme_font_size_override("font_size", 13); lb.add_theme_color_override("font_color", Color("#f0e2c8")); bg.add_child(lb)
 	var hd = Label.new(); hd.position = Vector2(12, 8); hd.add_theme_font_size_override("font_size", 17); hd.add_theme_color_override("font_color", Color("#f0e2c8"))
