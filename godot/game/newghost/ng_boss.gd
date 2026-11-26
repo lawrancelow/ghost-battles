@@ -78,7 +78,18 @@ static func on_win(e: Dictionary, first: bool) -> String:
 	o.beat[bm] = beat(bm) + 1
 	add_san(n, "boss:" + bm)
 	var dk = load("res://game/soul/soul_up.gd").drop_king(bm, true, first)   # [soul_up] 魔王：冥火＋精魄
-	return "散魂 +%d（打低魔王 %s）" % [n, str(b.get("name", bm))] + ("、" + dk if dk != "" else "")
+	var sd = soul_drop(bm, first)   # [補丁43] 魔王收服：魔王魂魄
+	return "散魂 +%d（打低魔王 %s）" % [n, str(b.get("name", bm))] + ("、" + dk if dk != "" else "") + ("、" + sd if sd != "" else "")
+
+# [補丁43] 魔王魂魄：首殺 15，之後每次 2–4（湊夠 120 先招得）
+static func soul_drop(bm: String, first: bool) -> String:
+	if not ResourceLoader.exists(SOUL_GD): return ""
+	var SD = load(SOUL_GD)
+	var cf = NG.BM().get("SOUL", {})
+	var w = cf.get("win", [2, 4])
+	var n = int(J.num(cf.get("first", 15))) if first else randi_range(int(J.num(w[0])), int(J.num(w[1])))
+	var g = SD.gain(bm, n, "boss")
+	return SD._gain_txt(g) if int(g.get("n", 0)) > 0 else ""
 
 static func add_san(n: int, why: String) -> void:
 	if ResourceLoader.exists(SOUL_GD):
@@ -88,3 +99,25 @@ static func add_san(n: int, why: String) -> void:
 	if s == null: return
 	if not (s.get("soul") is Dictionary): s["soul"] = {"v": 1.0, "mig": 0.0}
 	s.soul["san"] = J.num(s.soul.get("san", 0)) + n
+
+# [補丁43] 收服魔王劇情（男女主各一版）：data/nat/bm_scenes.json；講者「阿福」由 DB.N 換做玩家設定嘅名
+static func recruit_scene(bm: String):
+	var t = FileAccess.get_file_as_string("res://data/nat/bm_scenes.json")
+	var D0 = JSON.parse_string(t) if t != "" else null
+	if not (D0 is Dictionary) or not (D0.get(bm) is Dictionary): return null
+	var L0 = D0[bm].get("f" if DB.hero_female() else "m", [])
+	if not (L0 is Array) or L0.is_empty(): return null
+	var G = J.G.get("GHOSTS")
+	if G is Dictionary and G.has(bm):
+		var nm = J.str(G[bm].name); var sa = DB.D.get("SPEAKER_ART", {})
+		if sa is Dictionary and not sa.has(nm) and Art.char_h(bm) > 0: sa[nm] = bm
+	var lines = []; var zh = {}
+	for l in L0:
+		var txt = l[1]
+		if txt is Array: zh[txt[0]] = txt[1]; txt = txt[0]
+		lines.append([str(l[0]), txt])
+	if zh.size():
+		J.mc(J.G.get("LANG"), "add", [zh])
+		if not DB.D.has("LANG_ZH"): DB.D.LANG_ZH = {}
+		DB.D.LANG_ZH.merge(zh, true)
+	return {"style": "talk", "bg": "village", "lines": lines, "id": "bm_join_" + bm}

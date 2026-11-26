@@ -113,6 +113,21 @@ static func install() -> void:
 	installed = true
 	install2()   # [roster2] 第二批 30 隻（newghost2.json）
 	load("res://game/legion/lg_data.gd").install()   # [legion] 八大軍團 54 隻（legion.json）
+	install_bm()   # [補丁43] 魔王收服：7 個魔王登記做名鬼
+
+const BM_PATH := "res://data/nat/bm_recruit.json"
+static var _BM = null
+static func BM() -> Dictionary:
+	if _BM == null:
+		var t = FileAccess.get_file_as_string(BM_PATH)
+		var p = JSON.parse_string(t) if t != "" else null
+		_BM = p if p is Dictionary else {}
+	return _BM
+static func install_bm() -> void:
+	var d = BM()
+	if d.is_empty(): return
+	_put(J.G.get("GHOSTS"), d.get("GHOSTS", {}))
+	_put(DB.D.get("GHOSTS"), d.get("GHOSTS", {}))
 
 # [roster2] 同 install() 一樣登記第二批（GHOSTS／SKILLS／ENEMY_T／COMBOS／LANG／圖／ABIL／ENEMY／LINK）
 static func install2() -> void:

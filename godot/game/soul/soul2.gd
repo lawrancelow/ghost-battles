@@ -64,6 +64,7 @@ const LG_PATH := "res://data/nat/legion.json"   # [legion] 八大軍團 54 隻�
 static func _grow() -> void:
 	_grow_from(NG2_PATH, "ROSTER2", "CAMP2")
 	_grow_from(LG_PATH, "ROSTER3", "")   # [legion]
+	_grow_from("res://data/nat/bm_recruit.json", "ROSTER", "")   # [補丁43] 魔王收服
 static func _grow_from(path: String, rkey: String, ckey: String) -> void:
 	if not FileAccess.file_exists(path): return
 	var f = FileAccess.open(path, FileAccess.READ)

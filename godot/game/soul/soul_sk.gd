@@ -50,7 +50,7 @@ static func layers(k: String) -> Array:
 		o.append({"lay": L("副技", "副技"), "name": str(sb.name), "desc": sd + L("　自動放；被封口、定身就放唔到。", "　自動施放；被封口、定身時放不出。"), "on": true, "how": ""})
 	# 3 天生被動
 	var e = A.abil(k)
-	for pe in (e.get("pas", []) if e is Dictionary else []):
+	for pe in (e.get("pas", []) if e is Dictionary and not k.begins_with("bm_") else []):
 		if not (pe is Dictionary): continue
 		var need = int(J.num(pe.get("star", 0)))
 		o.append({"lay": L("被動", "被動"), "name": "", "desc": pas_txt(pe), "on": rk >= need, "how": "" if need <= 0 else L("職級升到【%s】開", "職級升到【%s】開放") % SOUL.rank_name(need)})

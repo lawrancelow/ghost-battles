@@ -612,6 +612,7 @@ static func compile(sim, u: Dictionary) -> void:
 		for t in _arr(en.get("tags")): a.tags.append(norm_tag(t))
 	if e.size() and (a.hero or J.t(_ent("ENEMY", k).get("use_abil"))):
 		for pe in _arr(e.get("pas")):   # 被動：star 0 一入隊就有；star n＝職級 ≥ n 先開（2 主任、4 總監）
+			if a.hero and J.str(k).begins_with("bm_"): break   # [補丁43] 收服咗嘅魔王：唔帶魔王專用被動（召喚嘍囉、分身），用副技／王牌技
 			if pe is Dictionary and int(J.num(pe.get("star", 0))) <= int(a.star): a.pas.append(pe)
 		for pe in perks_of(k, int(a.star) if a.hero else (2 if J.t(u.get("boss")) else 0)):   # 專長：按職級（做敵人：王當主任）
 			if pe.get("aura") is Dictionary: a.aura = pe.aura

@@ -100,8 +100,8 @@ static func pin(k: String) -> String:
 static func _lg(): return load("res://game/legion/lg_data.gd")   # [legion]
 static func pv(k: String) -> int: return int(PV[pin(k)])
 static func story(k: String) -> bool: return k in D().STORY_JOIN
-static func unsummonable(k: String) -> bool:   # 大魔王：counter.json boss／黃總
-	return k == "huang" or k.begins_with("bm_")
+static func unsummonable(k: String) -> bool:   # 黃總唔招得（補丁43：7 個魔王可以收服）
+	return k == "huang"
 
 # ======================= 存檔 =======================
 static func st():
@@ -251,6 +251,7 @@ static func ch_of(k: String) -> int:   # 招降費用嘅「章」
 	for key in D().get("CAMP2", {}):   # [roster2] 雙駐守
 		if str(D().CAMP2[key]) == k: best = mini(best, int(str(key).get_slice(":", 0)))
 	if best < 99: return best
+	if k.begins_with("bm_"): return int(J.num(load("res://game/newghost/ng_data.gd").BM().get("CH", {}).get(k, 0)))   # [補丁43] 魔王所屬章
 	if _lg().ch_of(k) >= 0: return _lg().ch_of(k)   # [legion] 所屬地圖（ci 6–11）
 	return int(J.num(D().STORY_CH.get(k, 0)))
 

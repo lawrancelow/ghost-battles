@@ -1178,3 +1178,61 @@ func codex7(t) -> void:   # [補丁43] 圖鑑技能七層：截圖＋層數
 		m.close_sheet(); await _w(t, 0.3)
 	o.star["toyol"] = 0.0; o.rk["toyol"] = 0.0
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func bmjoin(t) -> void:   # [補丁43] 魔王收服：登記名鬼、掉魂魄、招降、做我方、收服劇情（男女）
+	var m = await _boot(t)
+	var SD = load("res://game/soul/soul_data.gd"); var NGB = load("res://game/newghost/ng_boss.gd"); var AB = load("res://game/rts/abil.gd"); var S2 = load("res://game/soul/soul2.gd")
+	var S = J.G.S
+	var bms = ["bm_taotie", "bm_jembalang", "bm_hou", "bm_langsuir", "bm_krasue", "bm_pang", "bm_shuten"]
+	var nok = 0
+	for k in bms: if SD.is_ghost(k) and not SD.unsummonable(k) and SD.pin(k) == "王" and not S2.entry(k).is_empty(): nok += 1
+	_chk("7 魔王：名鬼、可招、王品、圖鑑有格", nok == 7 and SD.unsummonable("huang"), nok)
+	var s0 = SD.souls("bm_taotie")
+	var tx1 = NGB.on_win({"bm": "bm_taotie"}, true)
+	var s1 = SD.souls("bm_taotie")
+	var tx2 = NGB.on_win({"bm": "bm_taotie"}, false)
+	var s2 = SD.souls("bm_taotie")
+	_p("drop first %d then %d ; %s | %s" % [s1 - s0, s2 - s1, tx1, tx2])
+	_chk("首殺 15 魂魄、之後 2–4", s1 - s0 == 15 and s2 - s1 >= 2 and s2 - s1 <= 4)
+	var c0 = SD.can_summon("bm_taotie")
+	_chk("魂魄未夠唔招得", not c0.ok, c0.why)
+	var o = SD.st(); o.sh["bm_taotie"] = 130.0
+	if not (S.get("bld") is Dictionary): S["bld"] = {}
+	S.bld["altar"] = 6.0; S.res["coins"] = 999999.0
+	var cs = SD.summon_cost("bm_taotie")
+	for r in ["buns", "planks", "rice", "wood"]: S.res[r] = 99999.0
+	S.res[str(cs.wish)] = 99999.0
+	var c1 = SD.can_summon("bm_taotie")
+	_p("cost %s → %s" % [cs, c1.why])
+	_chk("夠 120 魂魄＋祭壇 4 招得", c1.ok and int(cs.souls) == 120 and int(cs.altar) == 4, c1.why)
+	var rr = SD.summon("bm_taotie")
+	_chk("招降成功", rr == "ok" and SD.owned("bm_taotie"), rr)
+	# 做我方：唔帶魔王召喚被動；有副技＋王牌技
+	var r = _rts_run(["bm_taotie", "bm_hou"], 3, 18.0)
+	var u0 = r.ours[0]
+	var has_sum = false; var has_sub = false; var has_ace = false
+	for pe in u0.ab.pas:
+		for fx in pe.get("fx", []): if str(fx.get("p")) == "summon": has_sum = true
+		if J.t(pe.get("sub")): has_sub = true
+		if J.t(pe.get("ace")): has_ace = true
+	_chk("我方饕餮：冇召喚嘍囉、有副技＋王牌技", not has_sum and has_sub and has_ace)
+	_chk("我方魔王副技有發動", r.who.has("bm_taotie:sub") or r.who.has("bm_hou:sub"), r.who.keys())
+	# 收服劇情：男女兩版唔同
+	var h = DB.hero()
+	var sex0 = str(h.get("sex", "m"))
+	h["sex"] = "m"; var scm = NGB.recruit_scene("bm_pang")
+	h["sex"] = "f"; var scf = NGB.recruit_scene("bm_pang")
+	var allsc = 0
+	for k in bms:
+		h["sex"] = "m"; var a1 = NGB.recruit_scene(k); h["sex"] = "f"; var a2 = NGB.recruit_scene(k)
+		if a1 != null and a2 != null and str(a1.lines) != str(a2.lines): allsc += 1
+	_chk("7 魔王男女各一版", allsc == 7, allsc)
+	h["sex"] = "f"
+	J.mc(J.G.get("Story"), "queue", [scf, func(_a = null, _b = null): pass])
+	await _w(t, 1.2); await _shot(t, "bmjoin_scene_f")
+	for i in 3:
+		J.mc(J.G.get("Story"), "next", []); await _w(t, 0.6)
+	await _shot(t, "bmjoin_scene_f2")
+	for i in 6: J.mc(J.G.get("Story"), "next", []); await _w(t, 0.3)
+	h["sex"] = sex0
+	_p("RESULT ok=%d bad=%d" % [ok, bad])

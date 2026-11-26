@@ -1,0 +1,289 @@
+{
+ "v": 1,
+ "note": "補丁43 魔王收服（tools/newghost/build_bm_recruit.py 生成）",
+ "GHOSTS": {
+  "bm_taotie": {
+   "name": "饕餮",
+   "title": "食極都唔飽",
+   "q": "名",
+   "base": [
+    125,
+    55,
+    120
+   ],
+   "range": "melee",
+   "trait": "食極都唔飽",
+   "lore": "《左傳·文公十八年》：「縉雲氏有不才子，貪于飲食，冒于貨賄……天下之民以比三凶，謂之饕餮。」第 1 章「餓」的盡頭：餓鬼王都係被佢餓壞的員工。",
+   "say": "你哋村啲包，我一啖就食晒；連個蒸籠都唔留畀你。",
+   "nw": true,
+   "bm": true
+  },
+  "bm_jembalang": {
+   "name": "Jembalang",
+   "title": "甘榜地底嘅大佬",
+   "q": "名",
+   "base": [
+    95,
+    70,
+    125
+   ],
+   "range": "melee",
+   "trait": "甘榜地底嘅大佬",
+   "lore": "馬來民間的地靈 Jembalang（土地鬼），動土、開墾冒犯它就會作祟；Skeat《Malay Magic》（1900）有記。原擬 Orang Minyak，因其傳說核心涉性侵犯，已換掉。",
+   "say": "你喺我頭頂起樓，有冇問過我？",
+   "nw": true,
+   "bm": true
+  },
+  "bm_hou": {
+   "name": "犼",
+   "title": "殭屍分級嘅頂",
+   "q": "名",
+   "base": [
+    130,
+    45,
+    120
+   ],
+   "range": "melee",
+   "trait": "殭屍分級嘅頂",
+   "lore": "民間殭屍傳說：殭屍再變為旱魃，旱魃再變為「犼」，是屍怪的最高一級；明代陳繼儒《偃曝談餘》亦記東海有獸名犼，能與龍鬥。（出處待美術出圖前再核對原文）",
+   "say": "老殭得七品，我係一品；見到我，要跪低跳。",
+   "nw": true,
+   "bm": true
+  },
+  "bm_langsuir": {
+   "name": "Langsuir",
+   "title": "指甲長過合約",
+   "q": "名",
+   "base": [
+    85,
+    80,
+    125
+   ],
+   "range": "melee",
+   "trait": "指甲長過合約",
+   "lore": "馬來民間 Langsuir：產後而死的女子化成的飛行女鬼，指甲極長，是 Pontianak 傳說的源頭；Skeat《Malay Magic》（1900）有記。",
+   "say": "香蕉樹下嗰個係我後輩；佢學嘢，都係由我度學。",
+   "nw": true,
+   "bm": true
+  },
+  "bm_krasue": {
+   "name": "Krasue",
+   "title": "會飛嘅夜光頭",
+   "q": "名",
+   "base": [
+    60,
+    130,
+    95
+   ],
+   "range": "ranged",
+   "trait": "會飛嘅夜光頭",
+   "lore": "泰國、柬埔寨民間 Krasue：夜間只得頭顱連着發光的長尾飛出覓食的女鬼，與第 5 章 Penanggal 同類而更兇（本作不畫內臟，頸下畫成發光燈籠尾）。",
+   "say": "你哋嗰個 Penanggal 要浸醋？我唔使，我自己發光。",
+   "nw": true,
+   "bm": true
+  },
+  "bm_pang": {
+   "name": "龐總",
+   "title": "地府集團區域經理",
+   "q": "名",
+   "base": [
+    70,
+    120,
+    100
+   ],
+   "range": "ranged",
+   "trait": "地府集團區域經理",
+   "lore": "本作原創（STORY_BIBLE 人物卡）：地府集團區域經理、阿福直屬上司；口頭禪「我哋係一個大家庭」，絕對唔會認錯，所以永遠唔會投降。立繪用老闆原有圖（未定之前用暫代圖）。",
+   "say": "我哋係一個大家庭；所以今晚，你哋全家一齊 OT。",
+   "nw": true,
+   "bm": true
+  },
+  "bm_shuten": {
+   "name": "酒吞童子",
+   "title": "飲完酒就嚟鬧事",
+   "q": "名",
+   "base": [
+    135,
+    50,
+    120
+   ],
+   "range": "melee",
+   "trait": "飲完酒就嚟鬧事",
+   "lore": "日本大江山「酒吞童子」傳說（《御伽草子》等）：嗜酒的鬼王，被源賴光一行灌醉後討伐。六隻章魔王全部打低之後，佢會喺第 1 關魔王據點出現。",
+   "say": "你哋村最出名係包？我淨係飲酒，唔食包。",
+   "nw": true,
+   "bm": true
+  }
+ },
+ "ENEMY": {
+  "bm_taotie": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "mech": [
+    "再生",
+    "召喚",
+    "霸體"
+   ],
+   "ch": 1
+  },
+  "bm_jembalang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "mech": [
+    "隱",
+    "分身",
+    "突襲"
+   ],
+   "ch": 2
+  },
+  "bm_hou": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "mech": [
+    "屍變",
+    "殼",
+    "霸體"
+   ],
+   "ch": 3
+  },
+  "bm_langsuir": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "mech": [
+    "飛",
+    "嚇氣光環",
+    "再生"
+   ],
+   "ch": 4
+  },
+  "bm_krasue": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "mech": [
+    "飛",
+    "反傷",
+    "散骨"
+   ],
+   "ch": 5
+  },
+  "bm_pang": {
+   "sys": "官",
+   "sc": [
+    "paper"
+   ],
+   "mech": [
+    "分身",
+    "反傷",
+    "召喚"
+   ],
+   "ch": 6
+  },
+  "bm_shuten": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "mech": [
+    "霸體",
+    "再生",
+    "嚇氣光環"
+   ],
+   "ch": 1
+  }
+ },
+ "ABIL": {
+  "bm_taotie": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": []
+  },
+  "bm_jembalang": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": []
+  },
+  "bm_hou": {
+   "sys": "屍",
+   "sc": [
+    "cold"
+   ],
+   "tags": []
+  },
+  "bm_langsuir": {
+   "sys": "厲",
+   "sc": [
+    "sound"
+   ],
+   "tags": []
+  },
+  "bm_krasue": {
+   "sys": "厲",
+   "sc": [
+    "face"
+   ],
+   "tags": []
+  },
+  "bm_pang": {
+   "sys": "官",
+   "sc": [
+    "paper"
+   ],
+   "tags": []
+  },
+  "bm_shuten": {
+   "sys": "妖",
+   "sc": [
+    "shadow"
+   ],
+   "tags": []
+  }
+ },
+ "PIN": {
+  "bm_taotie": "王",
+  "bm_jembalang": "王",
+  "bm_hou": "王",
+  "bm_langsuir": "王",
+  "bm_krasue": "王",
+  "bm_pang": "王",
+  "bm_shuten": "王"
+ },
+ "ROSTER": [
+  "bm_taotie",
+  "bm_jembalang",
+  "bm_hou",
+  "bm_langsuir",
+  "bm_krasue",
+  "bm_pang",
+  "bm_shuten"
+ ],
+ "SOUL": {
+  "first": 15,
+  "win": [
+   2,
+   4
+  ]
+ },
+ "CH": {
+  "bm_taotie": 0,
+  "bm_jembalang": 1,
+  "bm_hou": 2,
+  "bm_langsuir": 3,
+  "bm_krasue": 4,
+  "bm_pang": 5,
+  "bm_shuten": 0
+ }
+}
