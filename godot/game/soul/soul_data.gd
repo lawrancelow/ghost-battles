@@ -346,6 +346,8 @@ static func on_sortie_win(e: Dictionary, first: bool, good := false) -> Dictiona
 	var sn = SAN[r]
 	add_san(sn, "sortie"); out.san = sn
 	parts.append(L("散魂 +%d", "散魂 +%d") % sn)
+	var mhl = load("res://game/soul/soul_up.gd").drop_ring(r + 1)   # [soul_up] 第 4 圈：冥火
+	if mhl != "": parts.append(mhl)
 	var fr = _fr(); fr.n[key] = float(wins_today(key) + 1)
 	var line = L("魂魄：", "魂魄：") + "、".join(parts)
 	if good and k != "" and guard_live(e): line += L("（打得好 +%d）", "（打得好 +%d）") % GOOD_BONUS
@@ -516,7 +518,9 @@ static func stat_target(k: String, r: int) -> Array:
 	var d = GH().get(k)
 	var base = d.get("base", [0, 0, 0]) if d is Dictionary else [0, 0, 0]
 	var o = []
-	for i in 3: o.append(float(round(J.num(base[i]) * (1.0 + STAT_PCT[pin(k)] * r))))
+	var UP = load("res://game/soul/soul_up.gd")   # [soul_up] 品階、星級加成
+	var ex = UP.stat_mul(k) - 1.0
+	for i in 3: o.append(float(round(J.num(base[i]) * (1.0 + STAT_PCT[pin(k)] * r + ex))))
 	return o
 static func apply_stats(g) -> void:
 	var k = J.str(g.get("k"))

@@ -1,1376 +1,1383 @@
 {
- "v": 2,
- "note": "soul 線：品級、據點駐守臨時表（counter.json guard 優先）、心願供品；數值見 soul_data.gd 頂部",
- "PIN": {
-  "eguiking": "煞",
-  "toyol": "煞",
-  "laojiang": "王",
-  "pontianak": "王",
-  "pocong": "煞",
-  "penanggal": "王",
-  "baiwu": "王",
-  "heiwu": "王",
-  "n30_qionggui": "凡",
-  "n30_danxiao": "凡",
-  "n30_jiugui": "凡",
-  "pg_tuimo": "凡",
-  "n30_jerangkung": "靈",
-  "n30_wutou": "凡",
-  "nw_guihuo": "凡",
-  "n30_kasaobake": "凡",
-  "n30_chochin": "凡",
-  "n30_yesi": "凡",
-  "n30_maoshi": "凡",
-  "nw_huli": "靈",
-  "n30_pelesit": "凡",
-  "n30_polong": "凡",
-  "nw_bajang": "靈",
-  "n30_hanturaya": "煞",
-  "n30_bunian": "靈",
-  "n30_genderuwo": "煞",
-  "n30_jenglot": "凡",
-  "n30_yezi": "靈",
-  "n30_liulian": "靈",
-  "n30_shidu": "凡",
-  "n30_yangui": "凡",
-  "n30_dugui": "靈",
-  "n30_guhangui": "靈",
-  "n30_hantugalah": "靈",
-  "nw_teketeke": "靈",
-  "nw_baimao": "靈",
-  "nw_buhuagu": "煞",
-  "n30_hanba": "煞",
-  "n30_shanxiao": "靈",
-  "n30_tikbalang": "靈",
-  "n30_baigujing": "靈",
-  "nw_daqiang": "靈",
-  "nw_ganshi": "靈",
-  "n30_taozhai": "靈",
-  "n30_changgui": "凡",
-  "pg_songding": "靈",
-  "n30_diaosi": "靈",
-  "nw_huapi": "煞",
-  "n30_shedu": "靈",
-  "n30_churel": "靈",
-  "n30_maenak": "靈",
-  "n30_guixinniang": "靈",
-  "nw_ameonna": "靈",
-  "n30_kappa": "凡",
-  "n30_aswang": "煞",
-  "nw_shejing": "靈",
-  "nw_tiangou": "靈",
-  "nw_tisi": "靈",
-  "n30_zhongshu": "靈",
-  "n30_xiangcai": "煞",
-  "tianhua": "靈",
-  "n30_phiam": "凡",
-  "nw_krahang": "靈",
-  "nw_kapre": "煞",
-  "n30_xiasi": "凡",
-  "n30_kuchisake": "靈",
-  "n30_banshee": "煞",
-  "n30_yukionna": "煞",
-  "n30_hannya": "煞",
-  "n30_zipai": "凡",
-  "n30_chehuo": "靈",
-  "n30_daji": "凡",
-  "n30_xiaosi": "凡",
-  "n30_chengsi": "靈",
-  "n30_nopperabo": "靈",
-  "n30_rokurokubi": "靈",
-  "nw_honeonna": "靈",
-  "n30_gashadokuro": "煞",
-  "n30_vetala": "煞",
-  "nw_mummy": "煞",
-  "nw_zzphone": "靈",
-  "nw_zzcar": "靈",
-  "nw_kuaidi": "靈",
-  "niutou": "靈",
-  "mamian": "靈",
-  "n30_yecha": "煞",
-  "nw_shenpi": "煞",
-  "nw_toutai": "靈",
-  "pg_ex": "靈",
-  "pg_landlady": "煞",
-  "n30_diansi": "煞",
-  "n30_leipi": "煞",
-  "n30_dongsi": "煞",
-  "pg_ji": "煞",
-  "nw_zzhouse": "煞",
-  "nw_yeleng_guard": "靈",
-  "nw_yeleng_sales": "靈",
-  "nw_dullahan": "煞",
-  "mengpo": "王",
-  "xiaozhi": "靈",
-  "nw_bifang": "靈",
-  "nw_qiongqi": "煞",
-  "nw_nian": "煞",
-  "nw_shen": "靈",
-  "nw_wangliang": "凡",
-  "nw_niexiaoqian": "煞",
-  "nw_zhizhama": "凡",
-  "nw_luotoumin": "靈",
-  "nw_guiamngaan": "靈",
-  "nw_guisihknai": "凡",
-  "nw_paakbok": "凡",
-  "nw_dikseigwai": "凡",
-  "nw_mosinna": "靈",
-  "nw_kamaitachi": "凡",
-  "nw_nurikabe": "煞",
-  "nw_akaname": "凡",
-  "nw_makuragaeshi": "凡",
-  "nw_dodomeki": "靈",
-  "nw_ungaikyo": "靈",
-  "nw_jinmenken": "凡",
-  "nw_ushioni": "煞",
-  "nw_nekomata": "靈",
-  "nw_harimau": "煞",
-  "nw_banaspati": "靈",
-  "nw_bonceng": "凡",
-  "nw_nangtani": "靈",
-  "nw_manananggal": "靈",
-  "nw_nuno": "凡",
-  "nw_dokkaebi": "煞",
-  "nw_poltergeist": "靈"
- },
- "CAMP": {
-  "0:so1_r1_1": "n30_qionggui",
-  "0:so1_r1_2": "n30_wutou",
-  "0:so1_r1_3": "n30_kasaobake",
-  "0:so1_r1_4": "n30_yesi",
-  "0:so1_r2_1": "n30_danxiao",
-  "0:so1_r2_2": "nw_guihuo",
-  "0:so1_r2_3": "n30_chochin",
-  "0:so1_r2_4": "n30_maoshi",
-  "0:so1_r3_1": "n30_jiugui",
-  "0:so1_r3_2": "n30_jerangkung",
-  "0:so1_r3_3": "n30_kasaobake",
-  "0:so1_r3_4": "nw_huli",
-  "0:so1_r4_1": "pg_tuimo",
-  "0:so1_r4_2": "n30_chochin",
-  "0:so1_r4_3": "nw_huli",
-  "1:so2_r1_1": "n30_shidu",
-  "1:so2_r1_2": "n30_bunian",
-  "1:so2_r1_3": "n30_pelesit",
-  "1:so2_r1_4": "n30_yangui",
-  "1:so2_r2_1": "n30_yezi",
-  "1:so2_r2_2": "n30_bunian",
-  "1:so2_r2_3": "n30_polong",
-  "1:so2_r2_4": "n30_dugui",
-  "1:so2_r3_1": "n30_liulian",
-  "1:so2_r3_2": "n30_genderuwo",
-  "1:so2_r3_3": "nw_bajang",
-  "1:so2_r3_4": "n30_hantugalah",
-  "1:so2_r4_1": "n30_hanturaya",
-  "1:so2_r4_2": "n30_guhangui",
-  "1:so2_r4_3": "n30_liulian",
-  "2:so3_r1_1": "n30_changgui",
-  "2:so3_r1_2": "n30_jenglot",
-  "2:so3_r1_3": "nw_daqiang",
-  "2:so3_r1_4": "n30_shedu",
-  "2:so3_r2_1": "n30_taozhai",
-  "2:so3_r2_2": "nw_baimao",
-  "2:so3_r2_3": "n30_tikbalang",
-  "2:so3_r2_4": "n30_diaosi",
-  "2:so3_r3_1": "nw_ganshi",
-  "2:so3_r3_2": "nw_buhuagu",
-  "2:so3_r3_3": "n30_shanxiao",
-  "2:so3_r3_4": "nw_huapi",
-  "2:so3_r4_1": "pg_songding",
-  "2:so3_r4_2": "n30_hanba",
-  "2:so3_r4_3": "n30_baigujing",
-  "3:so4_r1_1": "n30_churel",
-  "3:so4_r1_2": "n30_kappa",
-  "3:so4_r1_3": "nw_tisi",
-  "3:so4_r1_4": "n30_phiam",
-  "3:so4_r2_1": "n30_maenak",
-  "3:so4_r2_2": "nw_tiangou",
-  "3:so4_r2_3": "n30_zhongshu",
-  "3:so4_r2_4": "n30_xiasi",
-  "3:so4_r3_1": "n30_guixinniang",
-  "3:so4_r3_2": "nw_shejing",
-  "3:so4_r3_3": "n30_xiangcai",
-  "3:so4_r3_4": "nw_kapre",
-  "3:so4_r4_1": "nw_krahang",
-  "3:so4_r4_2": "n30_xiangcai",
-  "3:so4_r4_3": "nw_ameonna",
-  "4:so5_r1_1": "n30_nopperabo",
-  "4:so5_r1_2": "n30_kuchisake",
-  "4:so5_r1_3": "n30_daji",
-  "4:so5_r1_4": "nw_zzphone",
-  "4:so5_r2_1": "n30_rokurokubi",
-  "4:so5_r2_2": "n30_yukionna",
-  "4:so5_r2_3": "n30_xiaosi",
-  "4:so5_r2_4": "n30_vetala",
-  "4:so5_r3_1": "nw_honeonna",
-  "4:so5_r3_2": "n30_hannya",
-  "4:so5_r3_3": "n30_chehuo",
-  "4:so5_r3_4": "n30_gashadokuro",
-  "4:so5_r4_1": "nw_teketeke",
-  "4:so5_r4_2": "n30_banshee",
-  "4:so5_r4_3": "nw_kuaidi",
-  "5:so6_r1_1": "nw_zzhouse",
-  "5:so6_r1_2": "pg_ex",
-  "5:so6_r1_3": "niutou",
-  "5:so6_r1_4": "n30_diansi",
-  "5:so6_r2_1": "nw_yeleng_sales",
-  "5:so6_r2_2": "nw_toutai",
-  "5:so6_r2_3": "nw_mummy",
-  "5:so6_r2_4": "n30_dongsi",
-  "5:so6_r3_1": "pg_ji",
-  "5:so6_r3_2": "nw_shenpi",
-  "5:so6_r3_3": "nw_yeleng_guard",
-  "5:so6_r3_4": "nw_dullahan",
-  "5:so6_r4_1": "n30_yecha",
-  "5:so6_r4_2": "n30_leipi",
-  "5:so6_r4_3": "pg_landlady",
-  "0:so1_r4_4": "n30_jerangkung",
-  "1:so2_r4_4": "n30_genderuwo",
-  "2:so3_r4_4": "n30_baigujing",
-  "3:so4_r4_4": "nw_kapre",
-  "4:so5_r4_4": "nw_zzcar",
-  "5:so6_r4_4": "nw_shenpi"
- },
- "WISH": {
-  "n30_qionggui": [
-   "coins",
-   "借住先，有錢即刻還……應該。",
-   "先借著，有錢馬上還……應該吧。"
-  ],
-  "n30_guhangui": [
-   "coins",
-   "冥幣放低，我數完先簽。",
-   "冥幣放下，我數完再簽。"
-  ],
-  "n30_dugui": [
-   "coins",
-   "本錢夠就入職，唔夠我照借。",
-   "本錢夠就入職，不夠我照樣借。"
-  ],
-  "n30_taozhai": [
-   "coins",
-   "人哋欠我嘅，你先幫佢還咗。",
-   "別人欠我的，你先幫他還了。"
-  ],
-  "n30_chengsi": [
-   "buns",
-   "壽包呢？我只係食少少……一籠。",
-   "壽包呢？我只吃一點點……一籠。"
-  ],
-  "n30_gashadokuro": [
-   "buns",
-   "餓咗幾百年，壽包先嚟。",
-   "餓了幾百年，壽包先來。"
-  ],
-  "n30_shidu": [
-   "buns",
-   "要新鮮嘅，過期嗰啲我食過喇。",
-   "要新鮮的，過期的我吃過了。"
-  ],
-  "n30_yesi": [
-   "buns",
-   "切細粒啲，我驚。",
-   "切小塊一點，我怕。"
-  ],
-  "laojiang": [
-   "planks",
-   "棺材板要厚，我瞓開實木。",
-   "棺材板要厚，我睡慣實木。"
-  ],
-  "pg_landlady": [
-   "planks",
-   "棺材板夠我間多兩間劏房。",
-   "棺材板夠我多隔兩間劏房。"
-  ],
-  "n30_kappa": [
-   "rice",
-   "冇青瓜，糯米頂住先。",
-   "沒有黃瓜，糯米先頂著。"
-  ],
-  "pg_tuimo": [
-   "rice",
-   "有米先有磨推，有錢都要有米。",
-   "有米才有磨推，有錢也要有米。"
-  ],
-  "tianhua": [
-   "wood",
-   "槐木畀我，我搭個棚先。",
-   "槐木給我，我先搭個棚。"
-  ],
-  "n30_yangui": [
-   "wood",
-   "槐木唔係用嚟燒嘅……係嘅，係用嚟燒嘅。",
-   "槐木不是用來燒的……是的，就是用來燒的。"
-  ],
-  "n30_jiugui": [
-   "rice",
-   "糯米釀酒，先釀先簽。",
-   "糯米釀酒，先釀再簽。"
-  ],
-  "n30_diaosi": [
-   "wood",
-   "槐樹要粗，枝要穩。",
-   "槐樹要粗，樹枝要穩。"
-  ],
-  "n30_hanba": [
-   "rice",
-   "我行過嘅田冇收成，糯米你哋自己帶。",
-   "我走過的田沒有收成，糯米你們自己帶。"
-  ],
-  "n30_zipai": [
-   "coins",
-   "冥幣買部新手機，舊嗰部跌咗落山。",
-   "冥幣買部新手機，舊的那部摔下山了。"
-  ],
-  "n30_daji": [
-   "coins",
-   "充值先，打完呢鋪就返工。",
-   "先充值，打完這局就上班。"
-  ],
-  "eguiking": [
-   "buns",
-   "壽包，越多越好，唔好問點解。",
-   "壽包，越多越好，別問為什麼。"
-  ],
-  "toyol": [
-   "coins",
-   "冥幣交畀我保管，好安全㗎。",
-   "冥幣交給我保管，很安全的。"
-  ],
-  "xiaozhi": [
-   "planks",
-   "棺材板？唔使……都係要啲。",
-   "棺材板？不用……還是要一點。"
-  ],
-  "n30_phiam": [
-   "rice",
-   "坐喺你心口嗰陣，有糯米食就最好。",
-   "壓在你胸口的時候，有糯米吃就最好。"
-  ],
-  "n30_xiangcai": [
-   "planks",
-   "棺材板要加大碼，我扁咗好闊。",
-   "棺材板要加大碼，我被踩扁了很寬。"
-  ]
- },
- "STORY_JOIN": [
-  "afu",
-  "xiaozhi",
-  "eguiking",
-  "toyol",
-  "laojiang",
-  "pontianak",
-  "pocong",
-  "penanggal",
-  "baiwu",
-  "heiwu",
-  "mengpo",
-  "tianhua"
- ],
- "STORY_CH": {
-  "xiaozhi": 0,
-  "eguiking": 0,
-  "toyol": 1,
-  "tianhua": 1,
-  "laojiang": 2,
-  "pontianak": 3,
-  "pocong": 4,
-  "penanggal": 4,
-  "baiwu": 5,
-  "heiwu": 5,
-  "mengpo": 5,
-  "pg_landlady": 5
- },
- "TMP_SUB": {
-  "new_s1": "pg_landlady",
-  "new_s2": "pg_ji",
-  "new_f1": "n30_yangui",
-  "new_f2": "n30_jiugui",
-  "new_f3": "n30_maoshi",
-  "new_l1": "n30_churel",
-  "new_l2": "n30_tikbalang",
-  "new_l3": "n30_maenak",
-  "new_f4": "n30_danxiao",
-  "new_f5": "n30_qionggui",
-  "new_f6": "pg_tuimo",
-  "new_f7": "n30_phiam",
-  "new_l4": "n30_diaosi",
-  "new_l5": "n30_taozhai",
-  "new_f8": "n30_pelesit",
-  "new_f9": "n30_polong",
-  "new_f10": "n30_jenglot",
-  "new_f11": "n30_kappa",
-  "new_f12": "n30_chochin",
-  "new_l6": "n30_hantugalah",
-  "new_l7": "n30_bunian",
-  "new_l8": "pg_ex",
-  "new_f13": "n30_xiaosi",
-  "new_f14": "n30_yesi",
-  "new_f15": "n30_xiasi",
-  "new_l9": "n30_guixinniang"
- },
- "CAMP_PLAN": {
-  "0:so1_r1_1": "n30_qionggui",
-  "0:so1_r1_2": "n30_wutou",
-  "0:so1_r1_3": "n30_kasaobake",
-  "0:so1_r1_4": "n30_yesi",
-  "0:so1_r2_1": "n30_danxiao",
-  "0:so1_r2_2": "nw_guihuo",
-  "0:so1_r2_3": "n30_chochin",
-  "0:so1_r2_4": "n30_maoshi",
-  "0:so1_r3_1": "n30_jiugui",
-  "0:so1_r3_2": "n30_jerangkung",
-  "0:so1_r3_3": "n30_kasaobake",
-  "0:so1_r3_4": "nw_huli",
-  "0:so1_r4_1": "pg_tuimo",
-  "0:so1_r4_2": "n30_chochin",
-  "0:so1_r4_3": "nw_huli",
-  "1:so2_r1_1": "n30_shidu",
-  "1:so2_r1_2": "n30_bunian",
-  "1:so2_r1_3": "n30_pelesit",
-  "1:so2_r1_4": "n30_yangui",
-  "1:so2_r2_1": "n30_yezi",
-  "1:so2_r2_2": "n30_bunian",
-  "1:so2_r2_3": "n30_polong",
-  "1:so2_r2_4": "n30_dugui",
-  "1:so2_r3_1": "n30_liulian",
-  "1:so2_r3_2": "n30_genderuwo",
-  "1:so2_r3_3": "nw_bajang",
-  "1:so2_r3_4": "n30_hantugalah",
-  "1:so2_r4_1": "n30_hanturaya",
-  "1:so2_r4_2": "n30_guhangui",
-  "1:so2_r4_3": "n30_liulian",
-  "2:so3_r1_1": "n30_changgui",
-  "2:so3_r1_2": "n30_jenglot",
-  "2:so3_r1_3": "nw_daqiang",
-  "2:so3_r1_4": "n30_shedu",
-  "2:so3_r2_1": "n30_taozhai",
-  "2:so3_r2_2": "nw_baimao",
-  "2:so3_r2_3": "n30_tikbalang",
-  "2:so3_r2_4": "n30_diaosi",
-  "2:so3_r3_1": "nw_ganshi",
-  "2:so3_r3_2": "nw_buhuagu",
-  "2:so3_r3_3": "n30_shanxiao",
-  "2:so3_r3_4": "nw_huapi",
-  "2:so3_r4_1": "pg_songding",
-  "2:so3_r4_2": "n30_hanba",
-  "2:so3_r4_3": "n30_baigujing",
-  "3:so4_r1_1": "n30_churel",
-  "3:so4_r1_2": "n30_kappa",
-  "3:so4_r1_3": "nw_tisi",
-  "3:so4_r1_4": "n30_phiam",
-  "3:so4_r2_1": "n30_maenak",
-  "3:so4_r2_2": "nw_tiangou",
-  "3:so4_r2_3": "n30_zhongshu",
-  "3:so4_r2_4": "n30_xiasi",
-  "3:so4_r3_1": "n30_guixinniang",
-  "3:so4_r3_2": "nw_shejing",
-  "3:so4_r3_3": "n30_xiangcai",
-  "3:so4_r3_4": "nw_kapre",
-  "3:so4_r4_1": "nw_krahang",
-  "3:so4_r4_2": "n30_xiangcai",
-  "3:so4_r4_3": "nw_ameonna",
-  "4:so5_r1_1": "n30_nopperabo",
-  "4:so5_r1_2": "n30_kuchisake",
-  "4:so5_r1_3": "n30_daji",
-  "4:so5_r1_4": "nw_zzphone",
-  "4:so5_r2_1": "n30_rokurokubi",
-  "4:so5_r2_2": "n30_yukionna",
-  "4:so5_r2_3": "n30_xiaosi",
-  "4:so5_r2_4": "n30_vetala",
-  "4:so5_r3_1": "nw_honeonna",
-  "4:so5_r3_2": "n30_hannya",
-  "4:so5_r3_3": "n30_chehuo",
-  "4:so5_r3_4": "n30_gashadokuro",
-  "4:so5_r4_1": "nw_teketeke",
-  "4:so5_r4_2": "n30_banshee",
-  "4:so5_r4_3": "nw_kuaidi",
-  "5:so6_r1_1": "nw_zzhouse",
-  "5:so6_r1_2": "pg_ex",
-  "5:so6_r1_3": "niutou",
-  "5:so6_r1_4": "n30_diansi",
-  "5:so6_r2_1": "nw_yeleng_sales",
-  "5:so6_r2_2": "nw_toutai",
-  "5:so6_r2_3": "nw_mummy",
-  "5:so6_r2_4": "n30_dongsi",
-  "5:so6_r3_1": "pg_ji",
-  "5:so6_r3_2": "nw_shenpi",
-  "5:so6_r3_3": "nw_yeleng_guard",
-  "5:so6_r3_4": "nw_dullahan",
-  "5:so6_r4_1": "n30_yecha",
-  "5:so6_r4_2": "n30_leipi",
-  "5:so6_r4_3": "pg_landlady",
-  "0:so1_r4_4": "n30_jerangkung",
-  "1:so2_r4_4": "n30_genderuwo",
-  "2:so3_r4_4": "n30_baigujing",
-  "3:so4_r4_4": "nw_kapre",
-  "4:so5_r4_4": "nw_zzcar",
-  "5:so6_r4_4": "nw_shenpi"
- },
- "CAMP_EN": {
-  "0:so1_r1_1": [
-   "n30_qionggui"
-  ],
-  "0:so1_r1_2": [
-   "n30_wutou"
-  ],
-  "0:so1_r1_3": [
-   "n30_kasaobake"
-  ],
-  "0:so1_r1_4": [
-   "n30_yesi"
-  ],
-  "0:so1_r2_1": [
-   "nw_guisihknai",
-   "n30_danxiao"
-  ],
-  "0:so1_r2_2": [
-   "nw_wangliang",
-   "nw_guihuo"
-  ],
-  "0:so1_r2_3": [
-   "nw_zhizhama",
-   "n30_chochin"
-  ],
-  "0:so1_r2_4": [
-   "nw_paakbok",
-   "n30_maoshi"
-  ],
-  "0:so1_r3_1": [
-   "n30_danxiao",
-   "n30_jiugui"
-  ],
-  "0:so1_r3_2": [
-   "nw_guihuo",
-   "n30_jerangkung"
-  ],
-  "0:so1_r3_3": [
-   "n30_chochin",
-   "n30_kasaobake"
-  ],
-  "0:so1_r3_4": [
-   "nw_huli",
-   "nw_huli"
-  ],
-  "0:so1_r4_1": [
-   "n30_danxiao",
-   "n30_jiugui",
-   "pg_tuimo"
-  ],
-  "0:so1_r4_2": [
-   "n30_chochin",
-   "n30_kasaobake",
-   "n30_chochin"
-  ],
-  "0:so1_r4_3": [
-   "n30_maoshi",
-   "nw_huli",
-   "nw_huli"
-  ],
-  "1:so2_r1_1": [
-   "n30_shidu"
-  ],
-  "1:so2_r1_2": [
-   "n30_bunian"
-  ],
-  "1:so2_r1_3": [
-   "n30_pelesit"
-  ],
-  "1:so2_r1_4": [
-   "n30_yangui"
-  ],
-  "1:so2_r2_1": [
-   "nw_bonceng",
-   "n30_shidu",
-   "n30_yezi"
-  ],
-  "1:so2_r2_2": [
-   "nw_banaspati",
-   "n30_bunian"
-  ],
-  "1:so2_r2_3": [
-   "n30_pelesit",
-   "n30_polong"
-  ],
-  "1:so2_r2_4": [
-   "nw_guiamngaan",
-   "n30_dugui"
-  ],
-  "1:so2_r3_1": [
-   "n30_yezi",
-   "n30_liulian"
-  ],
-  "1:so2_r3_2": [
-   "nw_harimau",
-   "n30_bunian",
-   "n30_genderuwo"
-  ],
-  "1:so2_r3_3": [
-   "n30_polong",
-   "nw_bajang"
-  ],
-  "1:so2_r3_4": [
-   "n30_guhangui",
-   "n30_hantugalah"
-  ],
-  "1:so2_r4_1": [
-   "n30_polong",
-   "nw_bajang",
-   "n30_hanturaya"
-  ],
-  "1:so2_r4_2": [
-   "n30_dugui",
-   "n30_hantugalah",
-   "n30_guhangui"
-  ],
-  "1:so2_r4_3": [
-   "n30_yezi",
-   "n30_liulian",
-   "n30_liulian"
-  ],
-  "2:so3_r1_1": [
-   "n30_changgui"
-  ],
-  "2:so3_r1_2": [
-   "n30_jenglot"
-  ],
-  "2:so3_r1_3": [
-   "nw_daqiang"
-  ],
-  "2:so3_r1_4": [
-   "n30_shedu"
-  ],
-  "2:so3_r2_1": [
-   "nw_mosinna",
-   "n30_taozhai"
-  ],
-  "2:so3_r2_2": [
-   "nw_luotoumin",
-   "nw_baimao"
-  ],
-  "2:so3_r2_3": [
-   "nw_bifang",
-   "n30_tikbalang"
-  ],
-  "2:so3_r2_4": [
-   "nw_niexiaoqian",
-   "n30_diaosi"
-  ],
-  "2:so3_r3_1": [
-   "nw_nian",
-   "n30_taozhai",
-   "nw_ganshi"
-  ],
-  "2:so3_r3_2": [
-   "nw_baimao",
-   "nw_buhuagu"
-  ],
-  "2:so3_r3_3": [
-   "nw_qiongqi",
-   "n30_tikbalang",
-   "n30_shanxiao"
-  ],
-  "2:so3_r3_4": [
-   "nw_huapi",
-   "nw_huapi"
-  ],
-  "2:so3_r4_1": [
-   "n30_taozhai",
-   "nw_ganshi",
-   "pg_songding"
-  ],
-  "2:so3_r4_2": [
-   "nw_baimao",
-   "nw_buhuagu",
-   "n30_hanba"
-  ],
-  "2:so3_r4_3": [
-   "n30_tikbalang",
-   "n30_shanxiao",
-   "n30_baigujing"
-  ],
-  "3:so4_r1_1": [
-   "n30_churel"
-  ],
-  "3:so4_r1_2": [
-   "n30_kappa"
-  ],
-  "3:so4_r1_3": [
-   "nw_tisi"
-  ],
-  "3:so4_r1_4": [
-   "n30_phiam"
-  ],
-  "3:so4_r2_1": [
-   "nw_nangtani",
-   "n30_churel",
-   "n30_maenak"
-  ],
-  "3:so4_r2_2": [
-   "nw_shen",
-   "n30_kappa",
-   "nw_tiangou"
-  ],
-  "3:so4_r2_3": [
-   "nw_akaname",
-   "n30_zhongshu"
-  ],
-  "3:so4_r2_4": [
-   "nw_manananggal",
-   "n30_xiasi"
-  ],
-  "3:so4_r3_1": [
-   "nw_nuno",
-   "n30_maenak",
-   "n30_guixinniang"
-  ],
-  "3:so4_r3_2": [
-   "nw_ushioni",
-   "nw_tiangou",
-   "nw_shejing"
-  ],
-  "3:so4_r3_3": [
-   "n30_zhongshu",
-   "n30_xiangcai"
-  ],
-  "3:so4_r3_4": [
-   "nw_krahang",
-   "nw_kapre"
-  ],
-  "3:so4_r4_1": [
-   "nw_shejing",
-   "n30_aswang",
-   "nw_krahang"
-  ],
-  "3:so4_r4_2": [
-   "n30_zhongshu",
-   "n30_xiangcai",
-   "n30_xiangcai"
-  ],
-  "3:so4_r4_3": [
-   "n30_maenak",
-   "n30_guixinniang",
-   "nw_ameonna"
-  ],
-  "4:so5_r1_1": [
-   "n30_nopperabo"
-  ],
-  "4:so5_r1_2": [
-   "n30_kuchisake"
-  ],
-  "4:so5_r1_3": [
-   "n30_daji"
-  ],
-  "4:so5_r1_4": [
-   "nw_zzphone"
-  ],
-  "4:so5_r2_1": [
-   "nw_jinmenken",
-   "n30_nopperabo",
-   "n30_rokurokubi"
-  ],
-  "4:so5_r2_2": [
-   "nw_makuragaeshi",
-   "nw_teketeke",
-   "n30_yukionna"
-  ],
-  "4:so5_r2_3": [
-   "nw_dikseigwai",
-   "n30_xiaosi"
-  ],
-  "4:so5_r2_4": [
-   "nw_nekomata",
-   "n30_vetala"
-  ],
-  "4:so5_r3_1": [
-   "nw_kamaitachi",
-   "nw_honeonna"
-  ],
-  "4:so5_r3_2": [
-   "n30_banshee",
-   "n30_hannya"
-  ],
-  "4:so5_r3_3": [
-   "nw_dodomeki",
-   "n30_chengsi",
-   "n30_chehuo"
-  ],
-  "4:so5_r3_4": [
-   "nw_mummy",
-   "n30_gashadokuro"
-  ],
-  "4:so5_r4_1": [
-   "nw_honeonna",
-   "nw_kuaidi",
-   "nw_teketeke"
-  ],
-  "4:so5_r4_2": [
-   "nw_honeonna",
-   "nw_kuaidi",
-   "n30_banshee"
-  ],
-  "4:so5_r4_3": [
-   "n30_nopperabo",
-   "n30_rokurokubi",
-   "nw_kuaidi"
-  ],
-  "5:so6_r1_1": [
-   "nw_zzhouse"
-  ],
-  "5:so6_r1_2": [
-   "pg_ex"
-  ],
-  "5:so6_r1_3": [
-   "niutou"
-  ],
-  "5:so6_r1_4": [
-   "n30_diansi"
-  ],
-  "5:so6_r2_1": [
-   "nw_zzhouse",
-   "nw_yeleng_sales"
-  ],
-  "5:so6_r2_2": [
-   "nw_ungaikyo",
-   "nw_toutai"
-  ],
-  "5:so6_r2_3": [
-   "mamian",
-   "nw_mummy"
-  ],
-  "5:so6_r2_4": [
-   "nw_poltergeist",
-   "n30_diansi",
-   "n30_dongsi"
-  ],
-  "5:so6_r3_1": [
-   "nw_dokkaebi",
-   "nw_zzhouse",
-   "pg_ji"
-  ],
-  "5:so6_r3_2": [
-   "pg_ex",
-   "nw_shenpi"
-  ],
-  "5:so6_r3_3": [
-   "nw_nurikabe",
-   "mamian",
-   "nw_yeleng_guard"
-  ],
-  "5:so6_r3_4": [
-   "pg_ji",
-   "nw_dullahan"
-  ],
-  "5:so6_r4_1": [
-   "mamian",
-   "nw_yeleng_guard",
-   "n30_yecha"
-  ],
-  "5:so6_r4_2": [
-   "pg_ji",
-   "nw_dullahan",
-   "n30_leipi"
-  ],
-  "5:so6_r4_3": [
-   "nw_yeleng_sales",
-   "nw_zzhouse",
-   "pg_landlady"
-  ],
-  "0:so1_r4_4": [
-   "n30_jerangkung"
-  ],
-  "1:so2_r4_4": [
-   "n30_genderuwo"
-  ],
-  "2:so3_r4_4": [
-   "n30_baigujing"
-  ],
-  "3:so4_r4_4": [
-   "nw_kapre"
-  ],
-  "4:so5_r4_4": [
-   "nw_zzcar"
-  ],
-  "5:so6_r4_4": [
-   "nw_shenpi"
-  ]
- },
- "CAMP_EN_PLAN": {
-  "0:so1_r1_1": [
-   "n30_qionggui"
-  ],
-  "0:so1_r1_2": [
-   "n30_wutou"
-  ],
-  "0:so1_r1_3": [
-   "n30_kasaobake"
-  ],
-  "0:so1_r1_4": [
-   "n30_yesi"
-  ],
-  "0:so1_r2_1": [
-   "nw_guisihknai",
-   "n30_danxiao"
-  ],
-  "0:so1_r2_2": [
-   "nw_wangliang",
-   "nw_guihuo"
-  ],
-  "0:so1_r2_3": [
-   "nw_zhizhama",
-   "n30_chochin"
-  ],
-  "0:so1_r2_4": [
-   "nw_paakbok",
-   "n30_maoshi"
-  ],
-  "0:so1_r3_1": [
-   "n30_danxiao",
-   "n30_jiugui"
-  ],
-  "0:so1_r3_2": [
-   "nw_guihuo",
-   "n30_jerangkung"
-  ],
-  "0:so1_r3_3": [
-   "n30_chochin",
-   "n30_kasaobake"
-  ],
-  "0:so1_r3_4": [
-   "nw_huli",
-   "nw_huli"
-  ],
-  "0:so1_r4_1": [
-   "n30_danxiao",
-   "n30_jiugui",
-   "pg_tuimo"
-  ],
-  "0:so1_r4_2": [
-   "n30_chochin",
-   "n30_kasaobake",
-   "n30_chochin"
-  ],
-  "0:so1_r4_3": [
-   "n30_maoshi",
-   "nw_huli",
-   "nw_huli"
-  ],
-  "1:so2_r1_1": [
-   "n30_shidu"
-  ],
-  "1:so2_r1_2": [
-   "n30_bunian"
-  ],
-  "1:so2_r1_3": [
-   "n30_pelesit"
-  ],
-  "1:so2_r1_4": [
-   "n30_yangui"
-  ],
-  "1:so2_r2_1": [
-   "nw_bonceng",
-   "n30_shidu",
-   "n30_yezi"
-  ],
-  "1:so2_r2_2": [
-   "nw_banaspati",
-   "n30_bunian"
-  ],
-  "1:so2_r2_3": [
-   "n30_pelesit",
-   "n30_polong"
-  ],
-  "1:so2_r2_4": [
-   "nw_guiamngaan",
-   "n30_dugui"
-  ],
-  "1:so2_r3_1": [
-   "n30_yezi",
-   "n30_liulian"
-  ],
-  "1:so2_r3_2": [
-   "nw_harimau",
-   "n30_bunian",
-   "n30_genderuwo"
-  ],
-  "1:so2_r3_3": [
-   "n30_polong",
-   "nw_bajang"
-  ],
-  "1:so2_r3_4": [
-   "n30_guhangui",
-   "n30_hantugalah"
-  ],
-  "1:so2_r4_1": [
-   "n30_polong",
-   "nw_bajang",
-   "n30_hanturaya"
-  ],
-  "1:so2_r4_2": [
-   "n30_dugui",
-   "n30_hantugalah",
-   "n30_guhangui"
-  ],
-  "1:so2_r4_3": [
-   "n30_yezi",
-   "n30_liulian",
-   "n30_liulian"
-  ],
-  "2:so3_r1_1": [
-   "n30_changgui"
-  ],
-  "2:so3_r1_2": [
-   "n30_jenglot"
-  ],
-  "2:so3_r1_3": [
-   "nw_daqiang"
-  ],
-  "2:so3_r1_4": [
-   "n30_shedu"
-  ],
-  "2:so3_r2_1": [
-   "nw_mosinna",
-   "n30_taozhai"
-  ],
-  "2:so3_r2_2": [
-   "nw_luotoumin",
-   "nw_baimao"
-  ],
-  "2:so3_r2_3": [
-   "nw_bifang",
-   "n30_tikbalang"
-  ],
-  "2:so3_r2_4": [
-   "nw_niexiaoqian",
-   "n30_diaosi"
-  ],
-  "2:so3_r3_1": [
-   "nw_nian",
-   "n30_taozhai",
-   "nw_ganshi"
-  ],
-  "2:so3_r3_2": [
-   "nw_baimao",
-   "nw_buhuagu"
-  ],
-  "2:so3_r3_3": [
-   "nw_qiongqi",
-   "n30_tikbalang",
-   "n30_shanxiao"
-  ],
-  "2:so3_r3_4": [
-   "nw_huapi",
-   "nw_huapi"
-  ],
-  "2:so3_r4_1": [
-   "n30_taozhai",
-   "nw_ganshi",
-   "pg_songding"
-  ],
-  "2:so3_r4_2": [
-   "nw_baimao",
-   "nw_buhuagu",
-   "n30_hanba"
-  ],
-  "2:so3_r4_3": [
-   "n30_tikbalang",
-   "n30_shanxiao",
-   "n30_baigujing"
-  ],
-  "3:so4_r1_1": [
-   "n30_churel"
-  ],
-  "3:so4_r1_2": [
-   "n30_kappa"
-  ],
-  "3:so4_r1_3": [
-   "nw_tisi"
-  ],
-  "3:so4_r1_4": [
-   "n30_phiam"
-  ],
-  "3:so4_r2_1": [
-   "nw_nangtani",
-   "n30_churel",
-   "n30_maenak"
-  ],
-  "3:so4_r2_2": [
-   "nw_shen",
-   "n30_kappa",
-   "nw_tiangou"
-  ],
-  "3:so4_r2_3": [
-   "nw_akaname",
-   "n30_zhongshu"
-  ],
-  "3:so4_r2_4": [
-   "nw_manananggal",
-   "n30_xiasi"
-  ],
-  "3:so4_r3_1": [
-   "nw_nuno",
-   "n30_maenak",
-   "n30_guixinniang"
-  ],
-  "3:so4_r3_2": [
-   "nw_ushioni",
-   "nw_tiangou",
-   "nw_shejing"
-  ],
-  "3:so4_r3_3": [
-   "n30_zhongshu",
-   "n30_xiangcai"
-  ],
-  "3:so4_r3_4": [
-   "nw_krahang",
-   "nw_kapre"
-  ],
-  "3:so4_r4_1": [
-   "nw_shejing",
-   "n30_aswang",
-   "nw_krahang"
-  ],
-  "3:so4_r4_2": [
-   "n30_zhongshu",
-   "n30_xiangcai",
-   "n30_xiangcai"
-  ],
-  "3:so4_r4_3": [
-   "n30_maenak",
-   "n30_guixinniang",
-   "nw_ameonna"
-  ],
-  "4:so5_r1_1": [
-   "n30_nopperabo"
-  ],
-  "4:so5_r1_2": [
-   "n30_kuchisake"
-  ],
-  "4:so5_r1_3": [
-   "n30_daji"
-  ],
-  "4:so5_r1_4": [
-   "nw_zzphone"
-  ],
-  "4:so5_r2_1": [
-   "nw_jinmenken",
-   "n30_nopperabo",
-   "n30_rokurokubi"
-  ],
-  "4:so5_r2_2": [
-   "nw_makuragaeshi",
-   "nw_teketeke",
-   "n30_yukionna"
-  ],
-  "4:so5_r2_3": [
-   "nw_dikseigwai",
-   "n30_xiaosi"
-  ],
-  "4:so5_r2_4": [
-   "nw_nekomata",
-   "n30_vetala"
-  ],
-  "4:so5_r3_1": [
-   "nw_kamaitachi",
-   "nw_honeonna"
-  ],
-  "4:so5_r3_2": [
-   "n30_banshee",
-   "n30_hannya"
-  ],
-  "4:so5_r3_3": [
-   "nw_dodomeki",
-   "n30_chengsi",
-   "n30_chehuo"
-  ],
-  "4:so5_r3_4": [
-   "nw_mummy",
-   "n30_gashadokuro"
-  ],
-  "4:so5_r4_1": [
-   "nw_honeonna",
-   "nw_kuaidi",
-   "nw_teketeke"
-  ],
-  "4:so5_r4_2": [
-   "nw_honeonna",
-   "nw_kuaidi",
-   "n30_banshee"
-  ],
-  "4:so5_r4_3": [
-   "n30_nopperabo",
-   "n30_rokurokubi",
-   "nw_kuaidi"
-  ],
-  "5:so6_r1_1": [
-   "nw_zzhouse"
-  ],
-  "5:so6_r1_2": [
-   "pg_ex"
-  ],
-  "5:so6_r1_3": [
-   "niutou"
-  ],
-  "5:so6_r1_4": [
-   "n30_diansi"
-  ],
-  "5:so6_r2_1": [
-   "nw_zzhouse",
-   "nw_yeleng_sales"
-  ],
-  "5:so6_r2_2": [
-   "nw_ungaikyo",
-   "nw_toutai"
-  ],
-  "5:so6_r2_3": [
-   "mamian",
-   "nw_mummy"
-  ],
-  "5:so6_r2_4": [
-   "nw_poltergeist",
-   "n30_diansi",
-   "n30_dongsi"
-  ],
-  "5:so6_r3_1": [
-   "nw_dokkaebi",
-   "nw_zzhouse",
-   "pg_ji"
-  ],
-  "5:so6_r3_2": [
-   "pg_ex",
-   "nw_shenpi"
-  ],
-  "5:so6_r3_3": [
-   "nw_nurikabe",
-   "mamian",
-   "nw_yeleng_guard"
-  ],
-  "5:so6_r3_4": [
-   "pg_ji",
-   "nw_dullahan"
-  ],
-  "5:so6_r4_1": [
-   "mamian",
-   "nw_yeleng_guard",
-   "n30_yecha"
-  ],
-  "5:so6_r4_2": [
-   "pg_ji",
-   "nw_dullahan",
-   "n30_leipi"
-  ],
-  "5:so6_r4_3": [
-   "nw_yeleng_sales",
-   "nw_zzhouse",
-   "pg_landlady"
-  ],
-  "0:so1_r4_4": [
-   "n30_jerangkung"
-  ],
-  "1:so2_r4_4": [
-   "n30_genderuwo"
-  ],
-  "2:so3_r4_4": [
-   "n30_baigujing"
-  ],
-  "3:so4_r4_4": [
-   "nw_kapre"
-  ],
-  "4:so5_r4_4": [
-   "nw_zzcar"
-  ],
-  "5:so6_r4_4": [
-   "nw_shenpi"
-  ]
- },
- "NEW": {
-  "nw_guihuo": 0,
-  "nw_huli": 0,
-  "nw_bajang": 1,
-  "nw_teketeke": 4,
-  "nw_baimao": 2,
-  "nw_buhuagu": 2,
-  "nw_daqiang": 2,
-  "nw_ganshi": 2,
-  "nw_huapi": 2,
-  "nw_ameonna": 3,
-  "nw_shejing": 3,
-  "nw_tiangou": 3,
-  "nw_tisi": 3,
-  "nw_krahang": 3,
-  "nw_kapre": 3,
-  "nw_honeonna": 4,
-  "nw_mummy": 4,
-  "nw_zzphone": 4,
-  "nw_zzcar": 4,
-  "nw_kuaidi": 4,
-  "nw_shenpi": 5,
-  "nw_toutai": 5,
-  "nw_zzhouse": 5,
-  "nw_yeleng_guard": 5,
-  "nw_yeleng_sales": 5,
-  "nw_dullahan": 5,
-  "nw_bifang": 2,
-  "nw_qiongqi": 2,
-  "nw_nian": 2,
-  "nw_shen": 3,
-  "nw_wangliang": 0,
-  "nw_niexiaoqian": 2,
-  "nw_zhizhama": 0,
-  "nw_luotoumin": 2,
-  "nw_guiamngaan": 1,
-  "nw_guisihknai": 0,
-  "nw_paakbok": 0,
-  "nw_dikseigwai": 4,
-  "nw_mosinna": 2,
-  "nw_kamaitachi": 4,
-  "nw_nurikabe": 5,
-  "nw_akaname": 3,
-  "nw_makuragaeshi": 4,
-  "nw_dodomeki": 4,
-  "nw_ungaikyo": 5,
-  "nw_jinmenken": 4,
-  "nw_ushioni": 3,
-  "nw_nekomata": 4,
-  "nw_harimau": 1,
-  "nw_banaspati": 1,
-  "nw_bonceng": 1,
-  "nw_nangtani": 3,
-  "nw_manananggal": 3,
-  "nw_nuno": 3,
-  "nw_dokkaebi": 5,
-  "nw_poltergeist": 5
- },
- "CAMP2": {
-  "0:so1_r2_1": "nw_guisihknai",
-  "0:so1_r2_2": "nw_wangliang",
-  "0:so1_r2_3": "nw_zhizhama",
-  "0:so1_r2_4": "nw_paakbok",
-  "1:so2_r2_1": "nw_bonceng",
-  "1:so2_r2_2": "nw_banaspati",
-  "1:so2_r2_4": "nw_guiamngaan",
-  "1:so2_r3_2": "nw_harimau",
-  "2:so3_r2_1": "nw_mosinna",
-  "2:so3_r2_2": "nw_luotoumin",
-  "2:so3_r2_3": "nw_bifang",
-  "2:so3_r2_4": "nw_niexiaoqian",
-  "2:so3_r3_1": "nw_nian",
-  "2:so3_r3_3": "nw_qiongqi",
-  "3:so4_r2_1": "nw_nangtani",
-  "3:so4_r2_2": "nw_shen",
-  "3:so4_r2_3": "nw_akaname",
-  "3:so4_r2_4": "nw_manananggal",
-  "3:so4_r3_1": "nw_nuno",
-  "3:so4_r3_2": "nw_ushioni",
-  "4:so5_r2_1": "nw_jinmenken",
-  "4:so5_r2_2": "nw_makuragaeshi",
-  "4:so5_r2_3": "nw_dikseigwai",
-  "4:so5_r2_4": "nw_nekomata",
-  "4:so5_r3_1": "nw_kamaitachi",
-  "4:so5_r3_3": "nw_dodomeki",
-  "5:so6_r2_2": "nw_ungaikyo",
-  "5:so6_r2_4": "nw_poltergeist",
-  "5:so6_r3_1": "nw_dokkaebi",
-  "5:so6_r3_3": "nw_nurikabe"
- }
+"v": 2,
+"note": "soul 線：品級、據點駐守臨時表（counter.json guard 優先）、心願供品；數值見 soul_data.gd 頂部",
+"PIN": {
+"eguiking": "靈",
+"toyol": "凡",
+"laojiang": "靈",
+"pontianak": "王",
+"pocong": "靈",
+"penanggal": "靈",
+"baiwu": "王",
+"heiwu": "王",
+"n30_qionggui": "凡",
+"n30_danxiao": "凡",
+"n30_jiugui": "凡",
+"pg_tuimo": "靈",
+"n30_jerangkung": "煞",
+"n30_wutou": "凡",
+"nw_guihuo": "凡",
+"n30_kasaobake": "凡",
+"n30_chochin": "凡",
+"n30_yesi": "凡",
+"n30_maoshi": "凡",
+"nw_huli": "煞",
+"n30_pelesit": "凡",
+"n30_polong": "凡",
+"nw_bajang": "煞",
+"n30_hanturaya": "煞",
+"n30_bunian": "煞",
+"n30_genderuwo": "煞",
+"n30_jenglot": "凡",
+"n30_yezi": "靈",
+"n30_liulian": "靈",
+"n30_shidu": "凡",
+"n30_yangui": "凡",
+"n30_dugui": "煞",
+"n30_guhangui": "煞",
+"n30_hantugalah": "靈",
+"nw_teketeke": "煞",
+"nw_baimao": "靈",
+"nw_buhuagu": "煞",
+"n30_hanba": "煞",
+"n30_shanxiao": "靈",
+"n30_tikbalang": "靈",
+"n30_baigujing": "煞",
+"nw_daqiang": "煞",
+"nw_ganshi": "煞",
+"n30_taozhai": "靈",
+"n30_changgui": "凡",
+"pg_songding": "靈",
+"n30_diaosi": "靈",
+"nw_huapi": "王",
+"n30_shedu": "靈",
+"n30_churel": "煞",
+"n30_maenak": "煞",
+"n30_guixinniang": "煞",
+"nw_ameonna": "煞",
+"n30_kappa": "凡",
+"n30_aswang": "煞",
+"nw_shejing": "煞",
+"nw_tiangou": "煞",
+"nw_tisi": "靈",
+"n30_zhongshu": "靈",
+"n30_xiangcai": "煞",
+"tianhua": "靈",
+"n30_phiam": "凡",
+"nw_krahang": "煞",
+"nw_kapre": "煞",
+"n30_xiasi": "凡",
+"n30_kuchisake": "煞",
+"n30_banshee": "煞",
+"n30_yukionna": "煞",
+"n30_hannya": "煞",
+"n30_zipai": "凡",
+"n30_chehuo": "靈",
+"n30_daji": "凡",
+"n30_xiaosi": "凡",
+"n30_chengsi": "靈",
+"n30_nopperabo": "煞",
+"n30_rokurokubi": "煞",
+"nw_honeonna": "煞",
+"n30_gashadokuro": "靈",
+"n30_vetala": "煞",
+"nw_mummy": "煞",
+"nw_zzphone": "靈",
+"nw_zzcar": "靈",
+"nw_kuaidi": "煞",
+"niutou": "王",
+"mamian": "王",
+"n30_yecha": "煞",
+"nw_shenpi": "煞",
+"nw_toutai": "靈",
+"pg_ex": "靈",
+"pg_landlady": "靈",
+"n30_diansi": "煞",
+"n30_leipi": "煞",
+"n30_dongsi": "煞",
+"pg_ji": "靈",
+"nw_zzhouse": "煞",
+"nw_yeleng_guard": "靈",
+"nw_yeleng_sales": "煞",
+"nw_dullahan": "王",
+"mengpo": "王",
+"xiaozhi": "靈",
+"nw_bifang": "煞",
+"nw_qiongqi": "王",
+"nw_nian": "王",
+"nw_shen": "煞",
+"nw_wangliang": "凡",
+"nw_niexiaoqian": "王",
+"nw_zhizhama": "凡",
+"nw_luotoumin": "煞",
+"nw_guiamngaan": "煞",
+"nw_guisihknai": "凡",
+"nw_paakbok": "凡",
+"nw_dikseigwai": "凡",
+"nw_mosinna": "煞",
+"nw_kamaitachi": "凡",
+"nw_nurikabe": "煞",
+"nw_akaname": "凡",
+"nw_makuragaeshi": "凡",
+"nw_dodomeki": "煞",
+"nw_ungaikyo": "靈",
+"nw_jinmenken": "凡",
+"nw_ushioni": "煞",
+"nw_nekomata": "煞",
+"nw_harimau": "煞",
+"nw_banaspati": "煞",
+"nw_bonceng": "凡",
+"nw_nangtani": "靈",
+"nw_manananggal": "煞",
+"nw_nuno": "凡",
+"nw_dokkaebi": "王",
+"nw_poltergeist": "煞",
+"bm_taotie": "王",
+"bm_jembalang": "王",
+"bm_hou": "王",
+"bm_langsuir": "王",
+"bm_krasue": "王",
+"bm_pang": "王",
+"bm_shuten": "王"
+},
+"CAMP": {
+"0:so1_r1_1": "n30_qionggui",
+"0:so1_r1_2": "n30_wutou",
+"0:so1_r1_3": "n30_kasaobake",
+"0:so1_r1_4": "n30_yesi",
+"0:so1_r2_1": "n30_danxiao",
+"0:so1_r2_2": "nw_guihuo",
+"0:so1_r2_3": "n30_chochin",
+"0:so1_r2_4": "n30_maoshi",
+"0:so1_r3_1": "n30_jiugui",
+"0:so1_r3_2": "n30_jerangkung",
+"0:so1_r3_3": "n30_kasaobake",
+"0:so1_r3_4": "nw_huli",
+"0:so1_r4_1": "pg_tuimo",
+"0:so1_r4_2": "n30_chochin",
+"0:so1_r4_3": "nw_huli",
+"1:so2_r1_1": "n30_shidu",
+"1:so2_r1_2": "n30_bunian",
+"1:so2_r1_3": "n30_pelesit",
+"1:so2_r1_4": "n30_yangui",
+"1:so2_r2_1": "n30_yezi",
+"1:so2_r2_2": "n30_bunian",
+"1:so2_r2_3": "n30_polong",
+"1:so2_r2_4": "n30_dugui",
+"1:so2_r3_1": "n30_liulian",
+"1:so2_r3_2": "n30_genderuwo",
+"1:so2_r3_3": "nw_bajang",
+"1:so2_r3_4": "n30_hantugalah",
+"1:so2_r4_1": "n30_hanturaya",
+"1:so2_r4_2": "n30_guhangui",
+"1:so2_r4_3": "n30_liulian",
+"2:so3_r1_1": "n30_changgui",
+"2:so3_r1_2": "n30_jenglot",
+"2:so3_r1_3": "nw_daqiang",
+"2:so3_r1_4": "n30_shedu",
+"2:so3_r2_1": "n30_taozhai",
+"2:so3_r2_2": "nw_baimao",
+"2:so3_r2_3": "n30_tikbalang",
+"2:so3_r2_4": "n30_diaosi",
+"2:so3_r3_1": "nw_ganshi",
+"2:so3_r3_2": "nw_buhuagu",
+"2:so3_r3_3": "n30_shanxiao",
+"2:so3_r3_4": "nw_huapi",
+"2:so3_r4_1": "pg_songding",
+"2:so3_r4_2": "n30_hanba",
+"2:so3_r4_3": "n30_baigujing",
+"3:so4_r1_1": "n30_churel",
+"3:so4_r1_2": "n30_kappa",
+"3:so4_r1_3": "nw_tisi",
+"3:so4_r1_4": "n30_phiam",
+"3:so4_r2_1": "n30_maenak",
+"3:so4_r2_2": "nw_tiangou",
+"3:so4_r2_3": "n30_zhongshu",
+"3:so4_r2_4": "n30_xiasi",
+"3:so4_r3_1": "n30_guixinniang",
+"3:so4_r3_2": "nw_shejing",
+"3:so4_r3_3": "n30_xiangcai",
+"3:so4_r3_4": "nw_kapre",
+"3:so4_r4_1": "nw_krahang",
+"3:so4_r4_2": "n30_xiangcai",
+"3:so4_r4_3": "nw_ameonna",
+"4:so5_r1_1": "n30_nopperabo",
+"4:so5_r1_2": "n30_kuchisake",
+"4:so5_r1_3": "n30_daji",
+"4:so5_r1_4": "nw_zzphone",
+"4:so5_r2_1": "n30_rokurokubi",
+"4:so5_r2_2": "n30_yukionna",
+"4:so5_r2_3": "n30_xiaosi",
+"4:so5_r2_4": "n30_vetala",
+"4:so5_r3_1": "nw_honeonna",
+"4:so5_r3_2": "n30_hannya",
+"4:so5_r3_3": "n30_chehuo",
+"4:so5_r3_4": "n30_gashadokuro",
+"4:so5_r4_1": "nw_teketeke",
+"4:so5_r4_2": "n30_banshee",
+"4:so5_r4_3": "nw_kuaidi",
+"5:so6_r1_1": "nw_zzhouse",
+"5:so6_r1_2": "pg_ex",
+"5:so6_r1_3": "niutou",
+"5:so6_r1_4": "n30_diansi",
+"5:so6_r2_1": "nw_yeleng_sales",
+"5:so6_r2_2": "nw_toutai",
+"5:so6_r2_3": "nw_mummy",
+"5:so6_r2_4": "n30_dongsi",
+"5:so6_r3_1": "pg_ji",
+"5:so6_r3_2": "nw_shenpi",
+"5:so6_r3_3": "nw_yeleng_guard",
+"5:so6_r3_4": "nw_dullahan",
+"5:so6_r4_1": "n30_yecha",
+"5:so6_r4_2": "n30_leipi",
+"5:so6_r4_3": "pg_landlady",
+"0:so1_r4_4": "n30_jerangkung",
+"1:so2_r4_4": "n30_genderuwo",
+"2:so3_r4_4": "n30_baigujing",
+"3:so4_r4_4": "nw_kapre",
+"4:so5_r4_4": "nw_zzcar",
+"5:so6_r4_4": "nw_shenpi"
+},
+"WISH": {
+"n30_qionggui": [
+"coins",
+"借住先，有錢即刻還……應該。",
+"先借著，有錢馬上還……應該吧。"
+],
+"n30_guhangui": [
+"coins",
+"冥幣放低，我數完先簽。",
+"冥幣放下，我數完再簽。"
+],
+"n30_dugui": [
+"coins",
+"本錢夠就入職，唔夠我照借。",
+"本錢夠就入職，不夠我照樣借。"
+],
+"n30_taozhai": [
+"coins",
+"人哋欠我嘅，你先幫佢還咗。",
+"別人欠我的，你先幫他還了。"
+],
+"n30_chengsi": [
+"buns",
+"壽包呢？我只係食少少……一籠。",
+"壽包呢？我只吃一點點……一籠。"
+],
+"n30_gashadokuro": [
+"buns",
+"餓咗幾百年，壽包先嚟。",
+"餓了幾百年，壽包先來。"
+],
+"n30_shidu": [
+"buns",
+"要新鮮嘅，過期嗰啲我食過喇。",
+"要新鮮的，過期的我吃過了。"
+],
+"n30_yesi": [
+"buns",
+"切細粒啲，我驚。",
+"切小塊一點，我怕。"
+],
+"laojiang": [
+"planks",
+"棺材板要厚，我瞓開實木。",
+"棺材板要厚，我睡慣實木。"
+],
+"pg_landlady": [
+"planks",
+"棺材板夠我間多兩間劏房。",
+"棺材板夠我多隔兩間劏房。"
+],
+"n30_kappa": [
+"rice",
+"冇青瓜，糯米頂住先。",
+"沒有黃瓜，糯米先頂著。"
+],
+"pg_tuimo": [
+"rice",
+"有米先有磨推，有錢都要有米。",
+"有米才有磨推，有錢也要有米。"
+],
+"tianhua": [
+"wood",
+"槐木畀我，我搭個棚先。",
+"槐木給我，我先搭個棚。"
+],
+"n30_yangui": [
+"wood",
+"槐木唔係用嚟燒嘅……係嘅，係用嚟燒嘅。",
+"槐木不是用來燒的……是的，就是用來燒的。"
+],
+"n30_jiugui": [
+"rice",
+"糯米釀酒，先釀先簽。",
+"糯米釀酒，先釀再簽。"
+],
+"n30_diaosi": [
+"wood",
+"槐樹要粗，枝要穩。",
+"槐樹要粗，樹枝要穩。"
+],
+"n30_hanba": [
+"rice",
+"我行過嘅田冇收成，糯米你哋自己帶。",
+"我走過的田沒有收成，糯米你們自己帶。"
+],
+"n30_zipai": [
+"coins",
+"冥幣買部新手機，舊嗰部跌咗落山。",
+"冥幣買部新手機，舊的那部摔下山了。"
+],
+"n30_daji": [
+"coins",
+"充值先，打完呢鋪就返工。",
+"先充值，打完這局就上班。"
+],
+"eguiking": [
+"buns",
+"壽包，越多越好，唔好問點解。",
+"壽包，越多越好，別問為什麼。"
+],
+"toyol": [
+"coins",
+"冥幣交畀我保管，好安全㗎。",
+"冥幣交給我保管，很安全的。"
+],
+"xiaozhi": [
+"planks",
+"棺材板？唔使……都係要啲。",
+"棺材板？不用……還是要一點。"
+],
+"n30_phiam": [
+"rice",
+"坐喺你心口嗰陣，有糯米食就最好。",
+"壓在你胸口的時候，有糯米吃就最好。"
+],
+"n30_xiangcai": [
+"planks",
+"棺材板要加大碼，我扁咗好闊。",
+"棺材板要加大碼，我被踩扁了很寬。"
+]
+},
+"STORY_JOIN": [
+"afu",
+"xiaozhi",
+"eguiking",
+"toyol",
+"laojiang",
+"pontianak",
+"pocong",
+"penanggal",
+"baiwu",
+"heiwu",
+"mengpo",
+"tianhua"
+],
+"STORY_CH": {
+"xiaozhi": 0,
+"eguiking": 0,
+"toyol": 1,
+"tianhua": 1,
+"laojiang": 2,
+"pontianak": 3,
+"pocong": 4,
+"penanggal": 4,
+"baiwu": 5,
+"heiwu": 5,
+"mengpo": 5,
+"pg_landlady": 5
+},
+"TMP_SUB": {
+"new_s1": "pg_landlady",
+"new_s2": "pg_ji",
+"new_f1": "n30_yangui",
+"new_f2": "n30_jiugui",
+"new_f3": "n30_maoshi",
+"new_l1": "n30_churel",
+"new_l2": "n30_tikbalang",
+"new_l3": "n30_maenak",
+"new_f4": "n30_danxiao",
+"new_f5": "n30_qionggui",
+"new_f6": "pg_tuimo",
+"new_f7": "n30_phiam",
+"new_l4": "n30_diaosi",
+"new_l5": "n30_taozhai",
+"new_f8": "n30_pelesit",
+"new_f9": "n30_polong",
+"new_f10": "n30_jenglot",
+"new_f11": "n30_kappa",
+"new_f12": "n30_chochin",
+"new_l6": "n30_hantugalah",
+"new_l7": "n30_bunian",
+"new_l8": "pg_ex",
+"new_f13": "n30_xiaosi",
+"new_f14": "n30_yesi",
+"new_f15": "n30_xiasi",
+"new_l9": "n30_guixinniang"
+},
+"CAMP_PLAN": {
+"0:so1_r1_1": "n30_qionggui",
+"0:so1_r1_2": "n30_wutou",
+"0:so1_r1_3": "n30_kasaobake",
+"0:so1_r1_4": "n30_yesi",
+"0:so1_r2_1": "n30_danxiao",
+"0:so1_r2_2": "nw_guihuo",
+"0:so1_r2_3": "n30_chochin",
+"0:so1_r2_4": "n30_maoshi",
+"0:so1_r3_1": "n30_jiugui",
+"0:so1_r3_2": "n30_jerangkung",
+"0:so1_r3_3": "n30_kasaobake",
+"0:so1_r3_4": "nw_huli",
+"0:so1_r4_1": "pg_tuimo",
+"0:so1_r4_2": "n30_chochin",
+"0:so1_r4_3": "nw_huli",
+"1:so2_r1_1": "n30_shidu",
+"1:so2_r1_2": "n30_bunian",
+"1:so2_r1_3": "n30_pelesit",
+"1:so2_r1_4": "n30_yangui",
+"1:so2_r2_1": "n30_yezi",
+"1:so2_r2_2": "n30_bunian",
+"1:so2_r2_3": "n30_polong",
+"1:so2_r2_4": "n30_dugui",
+"1:so2_r3_1": "n30_liulian",
+"1:so2_r3_2": "n30_genderuwo",
+"1:so2_r3_3": "nw_bajang",
+"1:so2_r3_4": "n30_hantugalah",
+"1:so2_r4_1": "n30_hanturaya",
+"1:so2_r4_2": "n30_guhangui",
+"1:so2_r4_3": "n30_liulian",
+"2:so3_r1_1": "n30_changgui",
+"2:so3_r1_2": "n30_jenglot",
+"2:so3_r1_3": "nw_daqiang",
+"2:so3_r1_4": "n30_shedu",
+"2:so3_r2_1": "n30_taozhai",
+"2:so3_r2_2": "nw_baimao",
+"2:so3_r2_3": "n30_tikbalang",
+"2:so3_r2_4": "n30_diaosi",
+"2:so3_r3_1": "nw_ganshi",
+"2:so3_r3_2": "nw_buhuagu",
+"2:so3_r3_3": "n30_shanxiao",
+"2:so3_r3_4": "nw_huapi",
+"2:so3_r4_1": "pg_songding",
+"2:so3_r4_2": "n30_hanba",
+"2:so3_r4_3": "n30_baigujing",
+"3:so4_r1_1": "n30_churel",
+"3:so4_r1_2": "n30_kappa",
+"3:so4_r1_3": "nw_tisi",
+"3:so4_r1_4": "n30_phiam",
+"3:so4_r2_1": "n30_maenak",
+"3:so4_r2_2": "nw_tiangou",
+"3:so4_r2_3": "n30_zhongshu",
+"3:so4_r2_4": "n30_xiasi",
+"3:so4_r3_1": "n30_guixinniang",
+"3:so4_r3_2": "nw_shejing",
+"3:so4_r3_3": "n30_xiangcai",
+"3:so4_r3_4": "nw_kapre",
+"3:so4_r4_1": "nw_krahang",
+"3:so4_r4_2": "n30_xiangcai",
+"3:so4_r4_3": "nw_ameonna",
+"4:so5_r1_1": "n30_nopperabo",
+"4:so5_r1_2": "n30_kuchisake",
+"4:so5_r1_3": "n30_daji",
+"4:so5_r1_4": "nw_zzphone",
+"4:so5_r2_1": "n30_rokurokubi",
+"4:so5_r2_2": "n30_yukionna",
+"4:so5_r2_3": "n30_xiaosi",
+"4:so5_r2_4": "n30_vetala",
+"4:so5_r3_1": "nw_honeonna",
+"4:so5_r3_2": "n30_hannya",
+"4:so5_r3_3": "n30_chehuo",
+"4:so5_r3_4": "n30_gashadokuro",
+"4:so5_r4_1": "nw_teketeke",
+"4:so5_r4_2": "n30_banshee",
+"4:so5_r4_3": "nw_kuaidi",
+"5:so6_r1_1": "nw_zzhouse",
+"5:so6_r1_2": "pg_ex",
+"5:so6_r1_3": "niutou",
+"5:so6_r1_4": "n30_diansi",
+"5:so6_r2_1": "nw_yeleng_sales",
+"5:so6_r2_2": "nw_toutai",
+"5:so6_r2_3": "nw_mummy",
+"5:so6_r2_4": "n30_dongsi",
+"5:so6_r3_1": "pg_ji",
+"5:so6_r3_2": "nw_shenpi",
+"5:so6_r3_3": "nw_yeleng_guard",
+"5:so6_r3_4": "nw_dullahan",
+"5:so6_r4_1": "n30_yecha",
+"5:so6_r4_2": "n30_leipi",
+"5:so6_r4_3": "pg_landlady",
+"0:so1_r4_4": "n30_jerangkung",
+"1:so2_r4_4": "n30_genderuwo",
+"2:so3_r4_4": "n30_baigujing",
+"3:so4_r4_4": "nw_kapre",
+"4:so5_r4_4": "nw_zzcar",
+"5:so6_r4_4": "nw_shenpi"
+},
+"CAMP_EN": {
+"0:so1_r1_1": [
+"n30_qionggui"
+],
+"0:so1_r1_2": [
+"n30_wutou"
+],
+"0:so1_r1_3": [
+"n30_kasaobake"
+],
+"0:so1_r1_4": [
+"n30_yesi"
+],
+"0:so1_r2_1": [
+"nw_guisihknai",
+"n30_danxiao"
+],
+"0:so1_r2_2": [
+"nw_wangliang",
+"nw_guihuo"
+],
+"0:so1_r2_3": [
+"nw_zhizhama",
+"n30_chochin"
+],
+"0:so1_r2_4": [
+"nw_paakbok",
+"n30_maoshi"
+],
+"0:so1_r3_1": [
+"n30_danxiao",
+"n30_jiugui"
+],
+"0:so1_r3_2": [
+"nw_guihuo",
+"n30_jerangkung"
+],
+"0:so1_r3_3": [
+"n30_chochin",
+"n30_kasaobake"
+],
+"0:so1_r3_4": [
+"nw_huli",
+"nw_huli"
+],
+"0:so1_r4_1": [
+"n30_danxiao",
+"n30_jiugui",
+"pg_tuimo"
+],
+"0:so1_r4_2": [
+"n30_chochin",
+"n30_kasaobake",
+"n30_chochin"
+],
+"0:so1_r4_3": [
+"n30_maoshi",
+"nw_huli",
+"nw_huli"
+],
+"1:so2_r1_1": [
+"n30_shidu"
+],
+"1:so2_r1_2": [
+"n30_bunian"
+],
+"1:so2_r1_3": [
+"n30_pelesit"
+],
+"1:so2_r1_4": [
+"n30_yangui"
+],
+"1:so2_r2_1": [
+"nw_bonceng",
+"n30_shidu",
+"n30_yezi"
+],
+"1:so2_r2_2": [
+"nw_banaspati",
+"n30_bunian"
+],
+"1:so2_r2_3": [
+"n30_pelesit",
+"n30_polong"
+],
+"1:so2_r2_4": [
+"nw_guiamngaan",
+"n30_dugui"
+],
+"1:so2_r3_1": [
+"n30_yezi",
+"n30_liulian"
+],
+"1:so2_r3_2": [
+"nw_harimau",
+"n30_bunian",
+"n30_genderuwo"
+],
+"1:so2_r3_3": [
+"n30_polong",
+"nw_bajang"
+],
+"1:so2_r3_4": [
+"n30_guhangui",
+"n30_hantugalah"
+],
+"1:so2_r4_1": [
+"n30_polong",
+"nw_bajang",
+"n30_hanturaya"
+],
+"1:so2_r4_2": [
+"n30_dugui",
+"n30_hantugalah",
+"n30_guhangui"
+],
+"1:so2_r4_3": [
+"n30_yezi",
+"n30_liulian",
+"n30_liulian"
+],
+"2:so3_r1_1": [
+"n30_changgui"
+],
+"2:so3_r1_2": [
+"n30_jenglot"
+],
+"2:so3_r1_3": [
+"nw_daqiang"
+],
+"2:so3_r1_4": [
+"n30_shedu"
+],
+"2:so3_r2_1": [
+"nw_mosinna",
+"n30_taozhai"
+],
+"2:so3_r2_2": [
+"nw_luotoumin",
+"nw_baimao"
+],
+"2:so3_r2_3": [
+"nw_bifang",
+"n30_tikbalang"
+],
+"2:so3_r2_4": [
+"nw_niexiaoqian",
+"n30_diaosi"
+],
+"2:so3_r3_1": [
+"nw_nian",
+"n30_taozhai",
+"nw_ganshi"
+],
+"2:so3_r3_2": [
+"nw_baimao",
+"nw_buhuagu"
+],
+"2:so3_r3_3": [
+"nw_qiongqi",
+"n30_tikbalang",
+"n30_shanxiao"
+],
+"2:so3_r3_4": [
+"nw_huapi",
+"nw_huapi"
+],
+"2:so3_r4_1": [
+"n30_taozhai",
+"nw_ganshi",
+"pg_songding"
+],
+"2:so3_r4_2": [
+"nw_baimao",
+"nw_buhuagu",
+"n30_hanba"
+],
+"2:so3_r4_3": [
+"n30_tikbalang",
+"n30_shanxiao",
+"n30_baigujing"
+],
+"3:so4_r1_1": [
+"n30_churel"
+],
+"3:so4_r1_2": [
+"n30_kappa"
+],
+"3:so4_r1_3": [
+"nw_tisi"
+],
+"3:so4_r1_4": [
+"n30_phiam"
+],
+"3:so4_r2_1": [
+"nw_nangtani",
+"n30_churel",
+"n30_maenak"
+],
+"3:so4_r2_2": [
+"nw_shen",
+"n30_kappa",
+"nw_tiangou"
+],
+"3:so4_r2_3": [
+"nw_akaname",
+"n30_zhongshu"
+],
+"3:so4_r2_4": [
+"nw_manananggal",
+"n30_xiasi"
+],
+"3:so4_r3_1": [
+"nw_nuno",
+"n30_maenak",
+"n30_guixinniang"
+],
+"3:so4_r3_2": [
+"nw_ushioni",
+"nw_tiangou",
+"nw_shejing"
+],
+"3:so4_r3_3": [
+"n30_zhongshu",
+"n30_xiangcai"
+],
+"3:so4_r3_4": [
+"nw_krahang",
+"nw_kapre"
+],
+"3:so4_r4_1": [
+"nw_shejing",
+"n30_aswang",
+"nw_krahang"
+],
+"3:so4_r4_2": [
+"n30_zhongshu",
+"n30_xiangcai",
+"n30_xiangcai"
+],
+"3:so4_r4_3": [
+"n30_maenak",
+"n30_guixinniang",
+"nw_ameonna"
+],
+"4:so5_r1_1": [
+"n30_nopperabo"
+],
+"4:so5_r1_2": [
+"n30_kuchisake"
+],
+"4:so5_r1_3": [
+"n30_daji"
+],
+"4:so5_r1_4": [
+"nw_zzphone"
+],
+"4:so5_r2_1": [
+"nw_jinmenken",
+"n30_nopperabo",
+"n30_rokurokubi"
+],
+"4:so5_r2_2": [
+"nw_makuragaeshi",
+"nw_teketeke",
+"n30_yukionna"
+],
+"4:so5_r2_3": [
+"nw_dikseigwai",
+"n30_xiaosi"
+],
+"4:so5_r2_4": [
+"nw_nekomata",
+"n30_vetala"
+],
+"4:so5_r3_1": [
+"nw_kamaitachi",
+"nw_honeonna"
+],
+"4:so5_r3_2": [
+"n30_banshee",
+"n30_hannya"
+],
+"4:so5_r3_3": [
+"nw_dodomeki",
+"n30_chengsi",
+"n30_chehuo"
+],
+"4:so5_r3_4": [
+"nw_mummy",
+"n30_gashadokuro"
+],
+"4:so5_r4_1": [
+"nw_honeonna",
+"nw_kuaidi",
+"nw_teketeke"
+],
+"4:so5_r4_2": [
+"nw_honeonna",
+"nw_kuaidi",
+"n30_banshee"
+],
+"4:so5_r4_3": [
+"n30_nopperabo",
+"n30_rokurokubi",
+"nw_kuaidi"
+],
+"5:so6_r1_1": [
+"nw_zzhouse"
+],
+"5:so6_r1_2": [
+"pg_ex"
+],
+"5:so6_r1_3": [
+"niutou"
+],
+"5:so6_r1_4": [
+"n30_diansi"
+],
+"5:so6_r2_1": [
+"nw_zzhouse",
+"nw_yeleng_sales"
+],
+"5:so6_r2_2": [
+"nw_ungaikyo",
+"nw_toutai"
+],
+"5:so6_r2_3": [
+"mamian",
+"nw_mummy"
+],
+"5:so6_r2_4": [
+"nw_poltergeist",
+"n30_diansi",
+"n30_dongsi"
+],
+"5:so6_r3_1": [
+"nw_dokkaebi",
+"nw_zzhouse",
+"pg_ji"
+],
+"5:so6_r3_2": [
+"pg_ex",
+"nw_shenpi"
+],
+"5:so6_r3_3": [
+"nw_nurikabe",
+"mamian",
+"nw_yeleng_guard"
+],
+"5:so6_r3_4": [
+"pg_ji",
+"nw_dullahan"
+],
+"5:so6_r4_1": [
+"mamian",
+"nw_yeleng_guard",
+"n30_yecha"
+],
+"5:so6_r4_2": [
+"pg_ji",
+"nw_dullahan",
+"n30_leipi"
+],
+"5:so6_r4_3": [
+"nw_yeleng_sales",
+"nw_zzhouse",
+"pg_landlady"
+],
+"0:so1_r4_4": [
+"n30_jerangkung"
+],
+"1:so2_r4_4": [
+"n30_genderuwo"
+],
+"2:so3_r4_4": [
+"n30_baigujing"
+],
+"3:so4_r4_4": [
+"nw_kapre"
+],
+"4:so5_r4_4": [
+"nw_zzcar"
+],
+"5:so6_r4_4": [
+"nw_shenpi"
+]
+},
+"CAMP_EN_PLAN": {
+"0:so1_r1_1": [
+"n30_qionggui"
+],
+"0:so1_r1_2": [
+"n30_wutou"
+],
+"0:so1_r1_3": [
+"n30_kasaobake"
+],
+"0:so1_r1_4": [
+"n30_yesi"
+],
+"0:so1_r2_1": [
+"nw_guisihknai",
+"n30_danxiao"
+],
+"0:so1_r2_2": [
+"nw_wangliang",
+"nw_guihuo"
+],
+"0:so1_r2_3": [
+"nw_zhizhama",
+"n30_chochin"
+],
+"0:so1_r2_4": [
+"nw_paakbok",
+"n30_maoshi"
+],
+"0:so1_r3_1": [
+"n30_danxiao",
+"n30_jiugui"
+],
+"0:so1_r3_2": [
+"nw_guihuo",
+"n30_jerangkung"
+],
+"0:so1_r3_3": [
+"n30_chochin",
+"n30_kasaobake"
+],
+"0:so1_r3_4": [
+"nw_huli",
+"nw_huli"
+],
+"0:so1_r4_1": [
+"n30_danxiao",
+"n30_jiugui",
+"pg_tuimo"
+],
+"0:so1_r4_2": [
+"n30_chochin",
+"n30_kasaobake",
+"n30_chochin"
+],
+"0:so1_r4_3": [
+"n30_maoshi",
+"nw_huli",
+"nw_huli"
+],
+"1:so2_r1_1": [
+"n30_shidu"
+],
+"1:so2_r1_2": [
+"n30_bunian"
+],
+"1:so2_r1_3": [
+"n30_pelesit"
+],
+"1:so2_r1_4": [
+"n30_yangui"
+],
+"1:so2_r2_1": [
+"nw_bonceng",
+"n30_shidu",
+"n30_yezi"
+],
+"1:so2_r2_2": [
+"nw_banaspati",
+"n30_bunian"
+],
+"1:so2_r2_3": [
+"n30_pelesit",
+"n30_polong"
+],
+"1:so2_r2_4": [
+"nw_guiamngaan",
+"n30_dugui"
+],
+"1:so2_r3_1": [
+"n30_yezi",
+"n30_liulian"
+],
+"1:so2_r3_2": [
+"nw_harimau",
+"n30_bunian",
+"n30_genderuwo"
+],
+"1:so2_r3_3": [
+"n30_polong",
+"nw_bajang"
+],
+"1:so2_r3_4": [
+"n30_guhangui",
+"n30_hantugalah"
+],
+"1:so2_r4_1": [
+"n30_polong",
+"nw_bajang",
+"n30_hanturaya"
+],
+"1:so2_r4_2": [
+"n30_dugui",
+"n30_hantugalah",
+"n30_guhangui"
+],
+"1:so2_r4_3": [
+"n30_yezi",
+"n30_liulian",
+"n30_liulian"
+],
+"2:so3_r1_1": [
+"n30_changgui"
+],
+"2:so3_r1_2": [
+"n30_jenglot"
+],
+"2:so3_r1_3": [
+"nw_daqiang"
+],
+"2:so3_r1_4": [
+"n30_shedu"
+],
+"2:so3_r2_1": [
+"nw_mosinna",
+"n30_taozhai"
+],
+"2:so3_r2_2": [
+"nw_luotoumin",
+"nw_baimao"
+],
+"2:so3_r2_3": [
+"nw_bifang",
+"n30_tikbalang"
+],
+"2:so3_r2_4": [
+"nw_niexiaoqian",
+"n30_diaosi"
+],
+"2:so3_r3_1": [
+"nw_nian",
+"n30_taozhai",
+"nw_ganshi"
+],
+"2:so3_r3_2": [
+"nw_baimao",
+"nw_buhuagu"
+],
+"2:so3_r3_3": [
+"nw_qiongqi",
+"n30_tikbalang",
+"n30_shanxiao"
+],
+"2:so3_r3_4": [
+"nw_huapi",
+"nw_huapi"
+],
+"2:so3_r4_1": [
+"n30_taozhai",
+"nw_ganshi",
+"pg_songding"
+],
+"2:so3_r4_2": [
+"nw_baimao",
+"nw_buhuagu",
+"n30_hanba"
+],
+"2:so3_r4_3": [
+"n30_tikbalang",
+"n30_shanxiao",
+"n30_baigujing"
+],
+"3:so4_r1_1": [
+"n30_churel"
+],
+"3:so4_r1_2": [
+"n30_kappa"
+],
+"3:so4_r1_3": [
+"nw_tisi"
+],
+"3:so4_r1_4": [
+"n30_phiam"
+],
+"3:so4_r2_1": [
+"nw_nangtani",
+"n30_churel",
+"n30_maenak"
+],
+"3:so4_r2_2": [
+"nw_shen",
+"n30_kappa",
+"nw_tiangou"
+],
+"3:so4_r2_3": [
+"nw_akaname",
+"n30_zhongshu"
+],
+"3:so4_r2_4": [
+"nw_manananggal",
+"n30_xiasi"
+],
+"3:so4_r3_1": [
+"nw_nuno",
+"n30_maenak",
+"n30_guixinniang"
+],
+"3:so4_r3_2": [
+"nw_ushioni",
+"nw_tiangou",
+"nw_shejing"
+],
+"3:so4_r3_3": [
+"n30_zhongshu",
+"n30_xiangcai"
+],
+"3:so4_r3_4": [
+"nw_krahang",
+"nw_kapre"
+],
+"3:so4_r4_1": [
+"nw_shejing",
+"n30_aswang",
+"nw_krahang"
+],
+"3:so4_r4_2": [
+"n30_zhongshu",
+"n30_xiangcai",
+"n30_xiangcai"
+],
+"3:so4_r4_3": [
+"n30_maenak",
+"n30_guixinniang",
+"nw_ameonna"
+],
+"4:so5_r1_1": [
+"n30_nopperabo"
+],
+"4:so5_r1_2": [
+"n30_kuchisake"
+],
+"4:so5_r1_3": [
+"n30_daji"
+],
+"4:so5_r1_4": [
+"nw_zzphone"
+],
+"4:so5_r2_1": [
+"nw_jinmenken",
+"n30_nopperabo",
+"n30_rokurokubi"
+],
+"4:so5_r2_2": [
+"nw_makuragaeshi",
+"nw_teketeke",
+"n30_yukionna"
+],
+"4:so5_r2_3": [
+"nw_dikseigwai",
+"n30_xiaosi"
+],
+"4:so5_r2_4": [
+"nw_nekomata",
+"n30_vetala"
+],
+"4:so5_r3_1": [
+"nw_kamaitachi",
+"nw_honeonna"
+],
+"4:so5_r3_2": [
+"n30_banshee",
+"n30_hannya"
+],
+"4:so5_r3_3": [
+"nw_dodomeki",
+"n30_chengsi",
+"n30_chehuo"
+],
+"4:so5_r3_4": [
+"nw_mummy",
+"n30_gashadokuro"
+],
+"4:so5_r4_1": [
+"nw_honeonna",
+"nw_kuaidi",
+"nw_teketeke"
+],
+"4:so5_r4_2": [
+"nw_honeonna",
+"nw_kuaidi",
+"n30_banshee"
+],
+"4:so5_r4_3": [
+"n30_nopperabo",
+"n30_rokurokubi",
+"nw_kuaidi"
+],
+"5:so6_r1_1": [
+"nw_zzhouse"
+],
+"5:so6_r1_2": [
+"pg_ex"
+],
+"5:so6_r1_3": [
+"niutou"
+],
+"5:so6_r1_4": [
+"n30_diansi"
+],
+"5:so6_r2_1": [
+"nw_zzhouse",
+"nw_yeleng_sales"
+],
+"5:so6_r2_2": [
+"nw_ungaikyo",
+"nw_toutai"
+],
+"5:so6_r2_3": [
+"mamian",
+"nw_mummy"
+],
+"5:so6_r2_4": [
+"nw_poltergeist",
+"n30_diansi",
+"n30_dongsi"
+],
+"5:so6_r3_1": [
+"nw_dokkaebi",
+"nw_zzhouse",
+"pg_ji"
+],
+"5:so6_r3_2": [
+"pg_ex",
+"nw_shenpi"
+],
+"5:so6_r3_3": [
+"nw_nurikabe",
+"mamian",
+"nw_yeleng_guard"
+],
+"5:so6_r3_4": [
+"pg_ji",
+"nw_dullahan"
+],
+"5:so6_r4_1": [
+"mamian",
+"nw_yeleng_guard",
+"n30_yecha"
+],
+"5:so6_r4_2": [
+"pg_ji",
+"nw_dullahan",
+"n30_leipi"
+],
+"5:so6_r4_3": [
+"nw_yeleng_sales",
+"nw_zzhouse",
+"pg_landlady"
+],
+"0:so1_r4_4": [
+"n30_jerangkung"
+],
+"1:so2_r4_4": [
+"n30_genderuwo"
+],
+"2:so3_r4_4": [
+"n30_baigujing"
+],
+"3:so4_r4_4": [
+"nw_kapre"
+],
+"4:so5_r4_4": [
+"nw_zzcar"
+],
+"5:so6_r4_4": [
+"nw_shenpi"
+]
+},
+"NEW": {
+"nw_guihuo": 0,
+"nw_huli": 0,
+"nw_bajang": 1,
+"nw_teketeke": 4,
+"nw_baimao": 2,
+"nw_buhuagu": 2,
+"nw_daqiang": 2,
+"nw_ganshi": 2,
+"nw_huapi": 2,
+"nw_ameonna": 3,
+"nw_shejing": 3,
+"nw_tiangou": 3,
+"nw_tisi": 3,
+"nw_krahang": 3,
+"nw_kapre": 3,
+"nw_honeonna": 4,
+"nw_mummy": 4,
+"nw_zzphone": 4,
+"nw_zzcar": 4,
+"nw_kuaidi": 4,
+"nw_shenpi": 5,
+"nw_toutai": 5,
+"nw_zzhouse": 5,
+"nw_yeleng_guard": 5,
+"nw_yeleng_sales": 5,
+"nw_dullahan": 5,
+"nw_bifang": 2,
+"nw_qiongqi": 2,
+"nw_nian": 2,
+"nw_shen": 3,
+"nw_wangliang": 0,
+"nw_niexiaoqian": 2,
+"nw_zhizhama": 0,
+"nw_luotoumin": 2,
+"nw_guiamngaan": 1,
+"nw_guisihknai": 0,
+"nw_paakbok": 0,
+"nw_dikseigwai": 4,
+"nw_mosinna": 2,
+"nw_kamaitachi": 4,
+"nw_nurikabe": 5,
+"nw_akaname": 3,
+"nw_makuragaeshi": 4,
+"nw_dodomeki": 4,
+"nw_ungaikyo": 5,
+"nw_jinmenken": 4,
+"nw_ushioni": 3,
+"nw_nekomata": 4,
+"nw_harimau": 1,
+"nw_banaspati": 1,
+"nw_bonceng": 1,
+"nw_nangtani": 3,
+"nw_manananggal": 3,
+"nw_nuno": 3,
+"nw_dokkaebi": 5,
+"nw_poltergeist": 5
+},
+"CAMP2": {
+"0:so1_r2_1": "nw_guisihknai",
+"0:so1_r2_2": "nw_wangliang",
+"0:so1_r2_3": "nw_zhizhama",
+"0:so1_r2_4": "nw_paakbok",
+"1:so2_r2_1": "nw_bonceng",
+"1:so2_r2_2": "nw_banaspati",
+"1:so2_r2_4": "nw_guiamngaan",
+"1:so2_r3_2": "nw_harimau",
+"2:so3_r2_1": "nw_mosinna",
+"2:so3_r2_2": "nw_luotoumin",
+"2:so3_r2_3": "nw_bifang",
+"2:so3_r2_4": "nw_niexiaoqian",
+"2:so3_r3_1": "nw_nian",
+"2:so3_r3_3": "nw_qiongqi",
+"3:so4_r2_1": "nw_nangtani",
+"3:so4_r2_2": "nw_shen",
+"3:so4_r2_3": "nw_akaname",
+"3:so4_r2_4": "nw_manananggal",
+"3:so4_r3_1": "nw_nuno",
+"3:so4_r3_2": "nw_ushioni",
+"4:so5_r2_1": "nw_jinmenken",
+"4:so5_r2_2": "nw_makuragaeshi",
+"4:so5_r2_3": "nw_dikseigwai",
+"4:so5_r2_4": "nw_nekomata",
+"4:so5_r3_1": "nw_kamaitachi",
+"4:so5_r3_3": "nw_dodomeki",
+"5:so6_r2_2": "nw_ungaikyo",
+"5:so6_r2_4": "nw_poltergeist",
+"5:so6_r3_1": "nw_dokkaebi",
+"5:so6_r3_3": "nw_nurikabe"
+}
 }

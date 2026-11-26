@@ -859,7 +859,7 @@ func roles(t) -> void:   # [roles] 定位：坦／攻／輔／醫 體質＋定�
 	S["team"] = [null, null, null, null, null, null]
 	var ks = ["laojiang", "heiwu", "toyol", "nw_guihuo", "mengpo"]
 	# 王牌上限：已有黑無常＋孟婆（2 隻王牌）時加白無常（王牌）要被擋
-	if RO.is_ace("heiwu") and RO.is_ace("baiwu") and RO.is_ace("mengpo") and RO.tier("toyol") == "普通": ok += 1
+	if RO.is_ace("heiwu") and RO.is_ace("baiwu") and RO.is_ace("mengpo") and RO.tier("toyol").begins_with("凡魂"): ok += 1
 	else: bad += 1; _p("BAD tier")
 	var slots = [0, 1, 3, 4, 5]
 	for i in ks.size():
@@ -943,4 +943,89 @@ func roles(t) -> void:   # [roles] 定位：坦／攻／輔／醫 體質＋定�
 	_p("bond in battle %d/3" % hasb)
 	if hasb == 3: ok += 1
 	else: bad += 1; _p("BAD bond battle")
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func soulup(t) -> void:   # [soul_up] 品階融合＋星級突破＋掉落＋祭壇兩頁截圖
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	for i in 120:
+		await _w(t, 0.5)
+		var m0 = _main(t)
+		if m0 and m0.get("loading") == null and J.G.get("S") is Dictionary: break
+	await _w(t, 1.5)
+	var m = _main(t)
+	m._hide_title(); await _w(t, 1.0); await _skip(t)
+	var SD = load("res://game/soul/soul_data.gd"); var UP = load("res://game/soul/soul_up.gd")
+	var S = J.G.S
+	var o = UP.st()
+	# toyol（凡）：入隊
+	var g0 = (S.ghosts[0] as Dictionary).duplicate(true); g0["id"] = "su_0"; g0["k"] = "toyol"; g0["q"] = "名"; g0["name"] = "Toyol"; g0["post"] = null
+	S.ghosts.append(g0)
+	S.res["coins"] = 999999.0; o["san"] = 99999.0
+	var p0 = UP.pj("toyol"); var b0 = SD.stat_target("toyol", 0)
+	_p("toyol pj %d %s born %d" % [p0, UP.pj_name("toyol"), UP.born("toyol")])
+	if p0 == 0 and UP.pj_name("toyol").begins_with("凡魂"): ok += 1
+	else: bad += 1; _p("BAD born")
+	# 冇料 → 唔得
+	if not UP.can_fuse("toyol").ok: ok += 1
+	else: bad += 1; _p("BAD fuse free")
+	o.sh["toyol"] = 500.0; o.sh["toyol_x"] = 0.0
+	o.sh["n30_pelesit"] = 300.0   # 同系（使）
+	if not (S.get("bld") is Dictionary): S["bld"] = {}
+	S.bld["altar"] = 6.0
+	# 祭壇等級：直接開到 6 級（測試）
+	var alv = SD.altar_lv()
+	_p("altar %d sys %s same %d" % [alv, UP.sys_of("toyol"), UP.same_sys_souls("toyol")])
+	var n_ok = 0
+	for i in 12:
+		var c = UP.can_fuse("toyol")
+		if not c.ok: _p("stop at %d why %s" % [UP.pj("toyol"), c.why]); break
+		if UP.fuse("toyol") == "ok": n_ok += 1
+	_p("fused %d → %s ; souls left %d pelesit %d" % [n_ok, UP.pj_name("toyol"), SD.souls("toyol"), SD.souls("n30_pelesit")])
+	if n_ok >= 1 and UP.pj("toyol") == n_ok: ok += 1
+	else: bad += 1; _p("BAD fuse step")
+	var b1 = SD.stat_target("toyol", 0)
+	if b1[0] > b0[0]: ok += 1
+	else: bad += 1; _p("BAD stat %s %s" % [b0, b1])
+	# 只升一級：pj 每次 +1
+	o.pj["toyol"] = 5.0
+	var c5 = UP.fuse_cost("toyol")
+	if int(c5.to) == 6 and int(c5.jp) == 1: ok += 1
+	else: bad += 1; _p("BAD cost %s" % [c5])
+	# 鎖：上限
+	o.pj["toyol"] = float(UP.OPEN_MAX)
+	if UP.can_fuse("toyol").why == "locked": ok += 1
+	else: bad += 1; _p("BAD lock")
+	# 鬼王＝王牌（王牌上限計）
+	if load("res://game/rts/roles.gd").is_ace("toyol"): ok += 1
+	else: bad += 1; _p("BAD ace via fuse")
+	o.pj["toyol"] = 0.0
+	# 突破：要合夥人
+	if UP.can_star("toyol").why == "rank": ok += 1
+	else: bad += 1; _p("BAD star rank")
+	o.rk["toyol"] = 5.0; o["mh"] = 100.0
+	var cs = UP.can_star("toyol")
+	_p("star cap %d why %s" % [UP.star_cap("toyol"), cs.why])
+	if UP.up_star("toyol") == "ok" and UP.star("toyol") == 1 and UP.can_star("toyol").why == "cap": ok += 1
+	else: bad += 1; _p("BAD star")
+	o.pj["toyol"] = 6.0   # 煞鬼 → 上限 4
+	var ns = 0
+	while UP.can_star("toyol").ok: UP.up_star("toyol"); ns += 1
+	_p("star now %d (cap %d)" % [UP.star("toyol"), UP.star_cap("toyol")])
+	if UP.star("toyol") == 4 and UP.act_lv("toyol") == 2 and UP.sub_lv("toyol") == 2 and UP.adv_art("toyol"): ok += 1
+	else: bad += 1; _p("BAD star4")
+	# 掉落：魔王 300 次，精魄要好少但唔係零
+	var jp0 = UP.jp("妖"); var mh0 = UP.mh()
+	for i in 300: UP.drop_king("bm_taotie", true, false)
+	var got = UP.jp("妖") - jp0
+	_p("boss drops jp %d mh +%d" % [got, UP.mh() - mh0])
+	if got >= 3 and got <= 40 and UP.mh() - mh0 == 300: ok += 1
+	else: bad += 1; _p("BAD drop")
+	# 祭壇兩頁截圖
+	var SU = load("res://game/soul/soul_ui.gd")
+	for tb in ["fuse", "star"]:
+		SU.tab = tb
+		m.open_sheet("祭壇", func(): pass)
+		SU.altar(m.sheet_body, func(): pass)
+		await _w(t, 1.0); await _shot(t, "soulup_" + tb)
+		m.close_sheet(); await _w(t, 0.4)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])

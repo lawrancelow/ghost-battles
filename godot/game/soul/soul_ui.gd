@@ -7,7 +7,7 @@ extends RefCounted
 const SOUL = preload("res://game/soul/soul_data.gd")
 
 static var tab := "summon"     # summon／promote／san／fodder
-const TABS := [["summon", ["招降", "招降"]], ["promote", ["升職", "升職"]], ["san", ["散魂", "散魂"]], ["fodder", ["招雜鬼", "招雜鬼"]]]
+const TABS := [["summon", ["招降", "招降"]], ["promote", ["升職", "升職"]], ["fuse", ["融合", "融合"]], ["star", ["突破", "突破"]], ["san", ["散魂", "散魂"]], ["fodder", ["招雜鬼", "招雜鬼"]]]
 const INK := Color("#2b1d12")
 const DIM := Color("#6e5838")
 const RED := Color("#b0281c")
@@ -62,7 +62,7 @@ static func _h(parent: Control, t: String) -> void:
 static func altar(body: VBoxContainer, refresh: Callable) -> bool:
 	if SOUL.st() == null: return false
 	SOUL.flush_toast()
-	var top = HBoxContainer.new(); top.add_theme_constant_override("separation", 4)
+	var top = GridContainer.new(); top.columns = 3; top.add_theme_constant_override("h_separation", 4); top.add_theme_constant_override("v_separation", 4)   # [soul_up] 六頁分兩行
 	for t in TABS:
 		var id = str(t[0])
 		var n = 0
@@ -70,7 +70,7 @@ static func altar(body: VBoxContainer, refresh: Callable) -> bool:
 		elif id == "promote": n = _ready_n(true)
 		var b = UIKit.btn(SOUL.T(t[1]) + ("・%d" % n if n > 0 else ""), "gold" if tab == id else "")
 		b.focus_mode = Control.FOCUS_NONE; b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.add_theme_font_size_override("font_size", 17); b.custom_minimum_size = Vector2(0, 46)
+		b.add_theme_font_size_override("font_size", 16); b.custom_minimum_size = Vector2(0, 42)
 		b.pressed.connect(func(): Snd.play("paper"); tab = id; refresh.call())
 		top.add_child(b)
 	body.add_child(top)
@@ -80,6 +80,8 @@ static func altar(body: VBoxContainer, refresh: Callable) -> bool:
 		"summon": _summon(body, refresh)
 		"promote": _promote(body, refresh)
 		"san": _san(body, refresh)
+		"fuse": load("res://game/soul/soul_up_ui.gd").fuse_page(body, refresh)
+		"star": load("res://game/soul/soul_up_ui.gd").star_page(body, refresh)
 		_: return false
 	return true
 static func _altar_hint() -> String:

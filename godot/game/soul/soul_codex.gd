@@ -269,7 +269,7 @@ static func _detail(body: VBoxContainer, k: String) -> void:
 		if SOUL.is_ghost(k) or k == "afu":   # [roles] 定位
 			var RO = load("res://game/rts/roles.gd"); var ci = RO.info(k)
 			var tl = RO.tier(k); var sb0 = RO.sub(k)
-			vb.add_child(_rich("[color=%s][b]【%s】%s%s[/b][/color]　[color=%s][b]%s[/b][/color]　%s系" % [str(ci.col), str(ci.zh), RO.T(ci.full), ("・" + sb0) if sb0 != "" else "", str(RO.TIERS[tl].col), tl, RO.sys_of(k)], 15))
+			vb.add_child(_rich("[color=%s][b]【%s】%s%s[/b][/color]　[color=%s][b]%s[/b][/color]　%s系" % [str(ci.col), str(ci.zh), RO.T(ci.full), ("・" + sb0) if sb0 != "" else "", "#" + RO.tier_col(k).to_html(false), tl, RO.sys_of(k)], 15))
 			vb.add_child(_rich(RO.T(ci.desc) + ((RO.T(["　另有【毒】：每打三下令敵人中毒。", "　另有【毒】：每打三下讓敵人中毒。"])) if RO.has_poison(k) else ""), 14))
 		var reg = str(S2.C().REG.get(str(ent.get("reg", "")), ""))
 		if reg != "": vb.add_child(_rich(L("地區：%s", "地區：%s") % reg, 16, DIM))

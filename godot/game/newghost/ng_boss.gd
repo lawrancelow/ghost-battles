@@ -77,7 +77,8 @@ static func on_win(e: Dictionary, first: bool) -> String:
 	if o.is_empty(): return ""
 	o.beat[bm] = beat(bm) + 1
 	add_san(n, "boss:" + bm)
-	return "散魂 +%d（打低魔王 %s）" % [n, str(b.get("name", bm))]
+	var dk = load("res://game/soul/soul_up.gd").drop_king(bm, true, first)   # [soul_up] 魔王：冥火＋精魄
+	return "散魂 +%d（打低魔王 %s）" % [n, str(b.get("name", bm))] + ("、" + dk if dk != "" else "")
 
 static func add_san(n: int, why: String) -> void:
 	if ResourceLoader.exists(SOUL_GD):

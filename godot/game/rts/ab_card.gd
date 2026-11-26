@@ -369,7 +369,7 @@ static func _team_picker(box: VBoxContainer, P: Dictionary, dark: bool, slot: in
 		var lg = HBoxContainer.new(); lg.add_theme_constant_override("separation", 3); lgf.add_child(lg)
 		var bd = RO.badge_cls(c, 13); bd.size_flags_vertical = Control.SIZE_SHRINK_CENTER; lg.add_child(bd)
 		lg.add_child(_lab(RO.T(RO.CLS[c].full) + "：" + RO.T(RO.SHORT[c]), 13, P.dim, false))
-	vb.add_child(_lab(L("框色＝品級：綠普通、藍精英、紫傳說、金王牌（一隊最多 %d 隻王牌）", "框色＝品級：綠普通、藍精英、紫傳說、金王牌（一隊最多 %d 隻王牌）") % RO.ace_max(), 13, P.dim))
+	vb.add_child(_lab(L("框色＝品：灰凡魂、藍靈鬼、紫煞鬼、金鬼王（鬼王＝王牌，一隊最多 %d 隻）", "框色＝品：灰凡魂、藍靈鬼、紫煞鬼、金鬼王（鬼王＝王牌，一隊最多 %d 隻）") % RO.ace_max(), 13, P.dim))
 	var cur0 = S.team[slot]
 	if not J.t(cur0) and BK.team_count() >= BK.TEAM_CAP:
 		vb.add_child(_lab(L("已經出陣 %d 隻（上限）：揀已喺隊嘅名鬼＝移位；揀其他名鬼要先喺別格「留空」。", "已出陣 %d 隻（上限）：選已在隊裡的名鬼＝移位；選其他名鬼要先在別格「留空」。") % BK.TEAM_CAP, 13, P.bad))

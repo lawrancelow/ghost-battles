@@ -101,12 +101,19 @@ static func kit(k) -> Array:
 		if ex is Array: for pe in ex: o.append((pe as Dictionary).duplicate(true))
 	return o
 
-# 品級
+# 品級（＝soul_up 品階：凡魂／靈鬼／煞鬼／鬼王…，下中上品）
+static func UP(): return load("res://game/soul/soul_up.gd")
 static func tier(k) -> String:
-	var t = data().get("TIER", {}).get(J.str(k))
-	return str(t) if t != null and TIERS.has(str(t)) else "精英"
-static func tier_col(k) -> Color: return Color(str(TIERS[tier(k)].col))
-static func is_ace(k) -> bool: return tier(k) == "王牌"
+	var ks = J.str(k)
+	if ks == "afu" or ks == "xiaozhi": return T(["主角", "主角"])
+	return UP().pj_name(ks)
+static func tier_col(k) -> Color:
+	var ks = J.str(k)
+	if ks == "afu" or ks == "xiaozhi": return Color("#e0a020")
+	return UP().pj_col(ks)
+static func is_ace(k) -> bool:
+	var ks = J.str(k)
+	return ks != "afu" and ks != "xiaozhi" and UP().is_ace_k(ks)
 static func ace_max() -> int: return int(J.num(data().get("ACE_MAX", 2)))
 static func sub(k) -> String: return str(data().get("SUB", {}).get(J.str(k), ""))
 static func sys_of(k) -> String:

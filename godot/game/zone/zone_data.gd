@@ -349,6 +349,9 @@ static func resolve(win: bool) -> Dictionary:
 				z.boss[_k(str(bs[bi].id), c)] = true
 				out["boss"] = T(bs[bi].get("n", ["", ""]))
 				out["soul"] = load("res://game/soul/soul_data.gd").on_king(str(bs[bi].id), c, kf)   # [soul] 野外王首殺：魂魄 +15
+				var kgk = load("res://game/soul/soul_data.gd").king_ghost(str(bs[bi].id), c)   # [soul_up] 冥火＋極罕精魄
+				var dk = load("res://game/soul/soul_up.gd").drop_king(kgk, false, kf)
+				if dk != "": out["soul"] = (str(out.soul) + "、" if str(out.soul) != "" else "") + dk
 				out["bid"] = str(bs[bi].id)
 	NEWS.append(out)
 	_save()
