@@ -113,7 +113,7 @@ func sim_(t) -> void:
 	_chk("有圖嘅王牌技全部喺真模擬播到", miss.is_empty(), miss)
 	var ms = []
 	for k in have:
-		if k.begins_with("sub_") and not RFX.SK2.keys.has(k): ms.append(k)
+		if k.begins_with("sub_") and want.has(k.substr(4)) and not RFX.SK2.keys.has(k): ms.append(k)   # 第二批由 b2 驗
 	_chk("有圖嘅副技模板全部喺真模擬播到", ms.is_empty(), ms)
 	_chk("rts_fx 冇爆上限（drop 0）", int(RFX.STATS.drop) == 0, RFX.STATS.drop)
 
@@ -148,6 +148,7 @@ func shots_(t) -> void:
 	var nshot = 0; var clip = []
 	for key in _have():
 		if key.begins_with("up_"): continue
+		if key.begins_with("sub_") and B2.has(key.substr(4).trim_suffix("_l")): continue   # 第二批樣本由 shots2_ 出（擺位唔同）
 		for c in un.get_children(): c.free()
 		var who = key.substr(4)
 		var gk = ""
