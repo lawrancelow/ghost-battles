@@ -5,7 +5,7 @@
 import sys, os, re, json, glob
 from PIL import Image
 G = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
-SRC = '/home/claude/art/out/NoWeapon'
+SRC = os.environ.get('NW_SRC', '/home/claude/art/out/NoWeapon')
 ks = sys.argv[1:] or sorted(re.match(r'HC_lg_(.+)_NoWeapon\.png', os.path.basename(f)).group(1) for f in glob.glob(SRC + '/HC_lg_*_NoWeapon.png'))
 mp = G + '/assets/spr_manifest.json'; man = json.load(open(mp))
 for k in ks:
