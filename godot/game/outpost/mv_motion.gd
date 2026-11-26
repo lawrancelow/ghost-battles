@@ -11,6 +11,7 @@ extends RefCounted
 
 const MD = preload("res://game/outpost/mv_data.gd")
 const SIM = preload("res://game/outpost/mv_sim.gd")
+const WA = preload("res://game/outpost/work_anim.gd")   # [workanim]
 const FW := 390.0
 var ww := 390.0   # [zone] 世界闊（step 每格由 sim 攞）
 const MAXP := 90
@@ -700,6 +701,14 @@ func worker(sc, ctx: Ctx, w: Dictionary) -> bool:
 		fx.append(["txt", "跌咗！" if q < 0.6 else "執返執返…", hp + Vector2(0, -16.0), _env(q, 0.05, 0.15, 1.1, 1.25), "#ffd27a"])
 		fx.append(["sweat", hp + Vector2(fwd0 * 10.0, 4.0), scr, sc.t])
 		_mark(k, "w_drop")
+	elif working and w.get("wait", false) == false and WA.ON and WA.verb_of_stall(art) != "" and not w.has("force_act"):   # [workanim] 名鬼做工動畫
+		var gd = str(MD.st_def(w.sid).get("good", ""))
+		var paper_fire2 = PAPER.has(k) and FIRE.has(art)
+		if paper_fire2: ctx.save(); ctx.translate(x, y); ctx.rotate(-0.1 * fwd0); ctx.translate(-x, -y); _mark(k, "fire_fear")
+		WA.draw_stall(ctx, k, x, y, s, o.flip, sc.t + w.ph, art, gd, w.ph)
+		if paper_fire2: ctx.restore()
+		_mark(k, "wa_" + WA.verb_of_stall(art))
+		drawn = true
 	elif working and w.get("wait", false) == false:
 		var acts: Array = ST_ACT.get(art, ["knead", "sight"])
 		var WK = J.G.get("WORK")
