@@ -99,13 +99,16 @@ static func draw_spr(c: CanvasItem, f: Dictionary, im: Texture2D) -> void:
 		var cw = im.get_width() / g; var ch = im.get_height() / g; var fi = mini(g * g - 1, int(p * g * g))
 		src = Rect2((fi % g) * cw, (fi / g) * ch, cw, ch); s = f.s0 + (f.s1 - f.s0) * p
 		a = f.alpha * (1.0 if p < 0.9 else (1 - p) / 0.1)
+		if f.has("fi"):   # [vfx 第三批] 狀態循環：外面指定第幾格，唔淡出
+			fi = int(f.fi) % (g * g); src = Rect2((fi % g) * cw, (fi / g) * ch, cw, ch); s = f.s0; a = f.alpha
 	var w = (src.size.x if g > 0 else im.get_width()) * s * f.sx; var h = (src.size.y if g > 0 else im.get_height()) * s * f.sy
 	var X = Transform2D(0, Vector2(f.x + f.get("vx", 0.0) * p, f.y - f.vy * p))
 	var r = f.rot + f.get("spin", 0.0) * p
 	if r != 0.0: X = X * Transform2D(r, Vector2.ZERO)
 	if f.get("flip", false): X = X * Transform2D(Vector2(-1, 0), Vector2(0, 1), Vector2.ZERO)
 	c.draw_set_transform_matrix(X)
-	if g > 0: c.draw_texture_rect_region(im, Rect2(-w / 2, -h * f.get("anchor", 0.5), w, h), src, Color(1, 1, 1, maxf(0, a)))
+	var gn = float(f.get("gain", 1.0))   # [vfx 第三批] 狀態循環細細粒：加色提亮
+	if g > 0: c.draw_texture_rect_region(im, Rect2(-w / 2, -h * f.get("anchor", 0.5), w, h), src, Color(gn, gn, gn, maxf(0, a)))
 	else: c.draw_texture_rect(im, Rect2(-w / 2, -h * f.get("anchor", 0.5), w, h), false, Color(1, 1, 1, maxf(0, a)))
 	c.draw_set_transform_matrix(Transform2D.IDENTITY)
 

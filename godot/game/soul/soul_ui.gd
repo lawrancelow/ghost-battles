@@ -175,6 +175,7 @@ static func _summon_row(body: VBoxContainer, x: Dictionary, refresh: Callable) -
 		if r == "ok" and m != null:
 			if m.has_method("show_banner"): m.show_banner(L("【%s】簽咗入職合約！", "【%s】簽了入職合約！") % SOUL.gname(k))
 			var bsc = load("res://game/newghost/ng_boss.gd").recruit_scene(k) if k.begins_with("bm_") else null   # [補丁43] 收服魔王劇情
+			if k.begins_with("bm_"): load("res://game/fxkit/vfx_play.gd").burst("up_tame")   # [vfx 第四批] 魔王收服（大型 2 秒）
 			if bsc != null and J.G.get("Story") != null: J.mc(J.G.get("Story"), "queue", [bsc, func(_a = null, _b = null): pass])
 			_letter(k, false)
 		refresh.call()))

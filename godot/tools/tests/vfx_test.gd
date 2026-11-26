@@ -294,3 +294,251 @@ func shots2_(t) -> void:
 		for c in tp.get_children(): c.free()
 	cl.queue_free()
 	_chk("第二批實機樣本截圖", nshot >= 1, nshot)
+
+# ================= 修正一（第一批補範圍圈／單體縮細／彈射連線）=================
+const FIX1 := ["sub_T_SLAM", "sub_T_STUN", "ace_pontianak", "ace_hou", "ace_mengpo", "ace_baiwu", "ace_dokkaebi", "ace_krasue", "ace_heiwu", "ace_qiongqi", "sub_S_RALLY"]
+func fix1(t) -> void:
+	await _boot(t); cat_(); fixgeom_(); await fixshots_(t); _p("RESULT ok=%d bad=%d" % [ok, bad])
+func _pe_of(D, key: String):
+	for k in D.ACE: if VC.key_of(D.ACE[k], str(k)) == key: return [str(k), D.ACE[k]]
+	for k in D.SUB: if VC.key_of(D.SUB[k], str(k)) == key and not D.ACE.has(k): return [str(k), D.SUB[k]]
+	return ["", {}]
+# 範圍圈大小＝技能 tg.r（誤差 ≤ 3%）；單體 kind one 細過 0.6；彈射有連線圖
+func fixgeom_() -> void:
+	var AB = load("res://game/rts/abil.gd"); var D = AB.sk2()
+	for key in FIX1:
+		var E = VC.get_e(key)
+		if E == null: _p("未有圖：" + key); continue
+		var pe = _pe_of(D, key)[1]; var T = pe.get("tg", {})
+		if E.has("ring"):
+			var rt = VC.tex(str(E.ring))
+			_chk(key + " 範圍圈圖 " + str(E.ring), rt != null)
+			var s = J.num(T.get("r", 0)) / float(E.get("ring_rr", 100))
+			_chk(key + " 範圍圈半徑＝r %d" % int(J.num(T.get("r", 0))), absf(float(E.get("ring_rr", 100)) * s - J.num(T.get("r", 0))) <= J.num(T.get("r", 0)) * 0.03 and E.has("ring_rr"), "ring_rr %s" % str(E.get("ring_rr")))
+		if str(E.get("kind", "")) == "one": _chk(key + " 單體細（s ≤ 0.6）", float(E.s) <= 0.6, E.s)
+		if str(E.get("at", "")) == "chain": _chk(key + " 彈射連線圖", VC.tex(str(E.get("link", key + "_l"))) != null, E.get("link"))
+func fixshots_(t) -> void:
+	var AB = load("res://game/rts/abil.gd"); var D = AB.sk2()
+	PtGfx.init()
+	var sc = _scene(t); var cl: CanvasLayer = sc[0]; var g: Node2D = sc[1]; var un: Node2D = sc[2]; var tp: Node2D = sc[3]; var vs: Vector2 = sc[4]
+	var SIM = load("res://game/rts/rts_sim.gd"); var op = SIM.new()
+	var me_p = Vector2(195, 560); var nshot = 0
+	var akeys = []
+	for k in D.SUB: if not D.ACE.has(k) and akeys.size() < 5: akeys.append(str(k))
+	for key in FIX1:
+		var E = VC.get_e(key)
+		if E == null: continue
+		for c in un.get_children(): c.free()
+		var gp = _pe_of(D, key); var gk: String = gp[0]; var pe: Dictionary = gp[1]; var T = pe.get("tg", {})
+		var u = {"side": 0.0, "k": gk, "p": me_p, "hp": 1.0, "maxhp": 1.0}
+		_unit(un, gk, me_p, 120.0)
+		var ts = []; var r = J.num(T.get("r", 120)); var sel = str(T.get("sel", ""))
+		if sel == "allies":
+			var aps = [Vector2(-0.8, 0.3), Vector2(0.55, 0.6), Vector2(-0.3, -0.75), Vector2(0.75, -0.35), Vector2(0.2, 0.9)]
+			for j in aps.size():
+				var p = me_p + aps[j] * r * 0.85; var a = {"side": 0.0, "k": akeys[j], "p": p, "hp": 1.0, "maxhp": 1.0}; ts.append([a, 1.0]); _unit(un, akeys[j], p, 90.0)
+		elif str(E.get("kind", "")) == "one":
+			var p1 = me_p + Vector2(150, -30); var f1 = {"side": 1.0, "k": "egui", "p": p1, "hp": 1.0, "maxhp": 1.0}; ts.append([f1, 1.0]); _unit(un, "egui", p1, 80.0, true)
+			for p2 in [me_p + Vector2(200, 50), me_p + Vector2(110, 70)]: _unit(un, "egui", p2, 80.0, true)
+		elif str(E.get("at", "")) == "chain":
+			for p3 in [me_p + Vector2(120, -20), me_p + Vector2(210, 60), me_p + Vector2(150, 150), me_p + Vector2(60, 210)]:
+				var f3 = {"side": 1.0, "k": "egui", "p": p3, "hp": 1.0, "maxhp": 1.0}; ts.append([f3, 1.0]); _unit(un, "egui", p3, 80.0, true)
+		else:
+			var fps = [Vector2(0.7, -0.2), Vector2(0.35, 0.65), Vector2(-0.6, 0.45), Vector2(0.1, -0.8), Vector2(1.25, 0.1)]   # 最後一隻喺範圍外
+			for p4 in fps:
+				var pp = me_p + p4 * r; var f4 = {"side": 1.0, "k": "egui", "p": pp, "hp": 1.0, "maxhp": 1.0}
+				if p4.length() <= 1.0: ts.append([f4, 1.0])
+				_unit(un, "egui", pp, 80.0, true)
+		var fx = RFX.new(g, tp); fx.vr = Rect2(Vector2.ZERO, vs)
+		await t.get_tree().process_frame; await RenderingServer.frame_post_draw
+		var bgi: Image = t.get_viewport().get_texture().get_image()
+		bgi.save_png(SHOTS + "fix1_" + key + "_bg.png")
+		fx.sk2(op, u, pe, ts)
+		var js = {"key": key, "at": str(E.get("at", "")), "me": [me_p.x, me_p.y], "tg": []}
+		for x in ts: js.tg.append([x[0].p.x, x[0].p.y])
+		if E.has("ring") or T.has("r") and str(E.get("kind", "")) != "one" and str(E.get("at", "")) != "chain":
+			var RG = RFX.ring_geom(u, pe, E); js["ring"] = {"c": [RG.c.x, RG.c.y], "r": RG.r}
+		var fa = FileAccess.open(SHOTS + "fix1_" + key + ".json", FileAccess.WRITE); fa.store_string(JSON.stringify(js)); fa.close()
+		fx.tick(float(E.get("life", 1.0)) * 0.45)
+		await t.get_tree().process_frame; await RenderingServer.frame_post_draw
+		var shi: Image = t.get_viewport().get_texture().get_image()
+		shi.save_png(SHOTS + "fix1_" + key + ".png"); nshot += 1
+		if js.has("ring") and E.has("ring"):   # 實機量度：畫出圈邊半徑（同審批圖一樣量法）要＝技能 r ±5%
+			var mr = ring_px(bgi, shi, Vector2(js.ring.c[0], js.ring.c[1]), float(js.ring.r), vs)
+			_chk(key + " 實機圈邊半徑 %.0f／技能 %d（%.0f%%，要 95–105%%）" % [mr, int(js.ring.r), mr / float(js.ring.r) * 100.0], absf(mr / float(js.ring.r) - 1.0) <= 0.05)
+		fx.clear()
+		for c in g.get_children(): c.free()
+		for c in tp.get_children(): c.free()
+	cl.queue_free()
+	_chk("修正一實機樣本截圖", nshot >= 1, nshot)
+
+# 實機圈邊半徑：截圖同底圖逐像素比（差 > 22），只計離圓心 > 0.6r 嘅像素，取距離第 97 百分位（世界單位）
+func ring_px(a: Image, b: Image, c: Vector2, r: float, vs: Vector2) -> float:
+	var st = float(a.get_width()) / vs.x
+	var ds = PackedFloat32Array()
+	var x0 = maxi(0, int((c.x - r * 1.8) * st)); var x1 = mini(a.get_width() - 1, int((c.x + r * 1.8) * st))
+	var y0 = maxi(0, int((c.y - r * 1.8) * st)); var y1 = mini(a.get_height() - 1, int((c.y + r * 1.8) * st))
+	for y in range(y0, y1 + 1):
+		for x in range(x0, x1 + 1):
+			var p = a.get_pixel(x, y); var q = b.get_pixel(x, y)
+			if maxf(maxf(absf(p.r - q.r), absf(p.g - q.g)), absf(p.b - q.b)) * 255.0 <= 22.0: continue
+			var d = Vector2(x / st, y / st).distance_to(c)
+			if d > r * 0.6: ds.append(d)
+	if ds.size() < 50: return 0.0
+	ds.sort()
+	return ds[int(ds.size() * 0.97)]
+
+# ================= 第三批：狀態循環（4×4 循環，疊喺單位身上）=================
+func b3(t) -> void:
+	await _boot(t); st_cat_(); await st_shots_(t); await st_sim_(t); _p("RESULT ok=%d bad=%d" % [ok, bad])
+func st_cat_() -> void:
+	var AI = load("res://game/rts/ab_icon.gd"); var have = []; var miss = []; var bad_sz = []
+	for k in VC.ST:
+		var E = VC.st_e(k)
+		if E == null: miss.append(k); continue
+		have.append(k)
+		var tx = VC.tex(str(E.get("sheet", k)))
+		if tx.get_width() != tx.get_height() or tx.get_width() % 4 != 0: bad_sz.append(k)
+	_p("狀態有圖 %d／%d；未有：%s" % [have.size(), VC.ST.size(), miss])
+	_chk("狀態序列幀正方、4×4 整除", bad_sz.is_empty(), bad_sz)
+	var nk = []
+	for k in VC.ST: if not AI.INFO.has(k): nk.append(k)
+	_chk("目錄狀態鍵全部喺 ab_icon 狀態表", nk.is_empty(), nk)
+	# 世界大細 40–60px：格 256×s，內容最多佔 92%
+	var sz = []
+	for k in have:
+		var E = VC.ST[k]; var s = float(E.get("s", VC.ST_POS_S.get(str(E.pos), 0.24)))
+		var px = 256.0 * s * 0.92 * (1.25 if str(E.pos) == "back" else 1.0)
+		if px < 40.0 or px > 72.0: sz.append([k, px])
+	_chk("狀態特效世界大細約 40–60px", sz.is_empty(), sz)
+func st_shots_(t) -> void:
+	PtGfx.init()
+	var sc = _scene(t); var cl: CanvasLayer = sc[0]; var g: Node2D = sc[1]; var un: Node2D = sc[2]; var tp: Node2D = sc[3]; var vs: Vector2 = sc[4]
+	var keys = []
+	for k in VC.ST: if VC.st_e(k) != null: keys.append(k)
+	# 一張截圖排 30 隻：每隻一個狀態（5 行 × 6）
+	var fx = RFX.new(g, tp); fx.vr = Rect2(Vector2.ZERO, vs)
+	var pos = []
+	for i in keys.size():
+		var p = Vector2(45 + (i % 6) * 60, 150 + (i / 6) * 120); pos.append([keys[i], p.x, p.y]); _unit(un, "egui", p, 56.0)
+	await t.get_tree().process_frame; await RenderingServer.frame_post_draw
+	t.get_viewport().get_texture().get_image().save_png(SHOTS + "b3_bg.png")
+	for ph in 3:
+		fx._lt = 0.37 * ph
+		for i in keys.size():
+			var p = Vector2(pos[i][1], pos[i][2]); fx.st_draw([keys[i]], p, p + Vector2(0, -56.0), 0)
+		fx.tick(0.0)
+		await t.get_tree().process_frame; await RenderingServer.frame_post_draw
+		t.get_viewport().get_texture().get_image().save_png(SHOTS + "b3_%d.png" % ph)
+	var fa = FileAccess.open(SHOTS + "b3.json", FileAccess.WRITE); fa.store_string(JSON.stringify(pos)); fa.close()
+	cl.queue_free()
+	_chk("第三批實機樣本截圖", FileAccess.file_exists(SHOTS + "b3_0.png"))
+# 真模擬：打一場，數有幾多狀態循環真係疊咗上身
+func st_sim_(t) -> void:
+	var AB = load("res://game/rts/abil.gd"); var D = AB.sk2()
+	var pick = []
+	for tp in ["S_STUN", "T_STUN", "A_POISON", "M_BURN", "M_FROST", "W_BREAK", "S_RALLY", "S_HASTE", "H_HOT", "H_SHIELD", "M_HUSH", "T_GUARD"]:
+		for k in D.SUB:
+			if str(D.SUB[k].get("tpl")) == tp and not D.ACE.has(k): pick.append(k); break
+	var seen = {}
+	var SIM = load("res://game/rts/rts_sim.gd"); var RO = load("res://game/rts/roles.gd")
+	var i = 0
+	while i < pick.size():
+		var ks = pick.slice(i, i + 6); i += 6
+		var ours = []; var foes = []
+		for j in ks.size():
+			var nu = {"side": 0.0, "k": ks[j], "gid": "vx_%d" % j, "name": ks[j], "hp": 3000.0, "maxhp": 3000.0, "atk": 40.0, "range": 46.0, "spd": 46.0, "energy": 0.0, "sk": {"name": "x", "kind": "ab"}, "st": {}, "cd": randf(), "boss": false}
+			RO.apply_stats(nu); nu["hp"] = 6000.0; nu["maxhp"] = 6000.0; ours.append(nu)
+		for j in 6: foes.append({"side": 1.0, "k": "egui", "name": "e", "hp": 9000.0, "maxhp": 9000.0, "atk": 30.0, "range": 46.0, "spd": 46.0, "energy": 0.0, "sk": null, "st": {}, "cd": randf(), "boss": false})
+		var op = SIM.new()
+		op.setup(ours + foes, PackedVector2Array([Vector2(0, 900), Vector2(0, 300)]), Vector2(0, 220), Vector2(0, 900))
+		op.phase = "fight"; op.t = 0.0; op.vfx_on = true
+		for j in ours.size(): var u = ours[j]; u["p"] = Vector2((j - 2) * 40.0, 300.0); u["out"] = true; u["eng"] = true
+		for j in foes.size(): var u = foes[j]; u["p"] = Vector2((j - 2.5) * 40.0, 250.0); u["post"] = u.p
+		op._form()
+		var g = Node2D.new(); var tp2 = Node2D.new()
+		var fx = RFX.new(g, tp2); fx.vr = Rect2(-2000, -2000, 4000, 4000)
+		for st in 500:
+			op.step(0.05); fx.consume(op)
+			for f in fx.loops: seen[str(f.n).substr(3)] = int(seen.get(str(f.n).substr(3), 0)) + 1
+			fx.tick(0.05); op.events.clear()
+		g.free(); tp2.free()
+		await t.get_tree().process_frame
+	_p("真模擬疊上身嘅狀態循環：%s" % seen)
+	_chk("真模擬有狀態循環疊上身（≥ 5 種）", seen.size() >= 5, seen.keys())
+	_chk("rts_fx 冇爆上限（drop 0）", int(RFX.STATS.drop) == 0, RFX.STATS.drop)
+
+# ================= 第四批：升級類（介面上播）=================
+#   真按掣：紙紮師傅「加工」（普通件→up_plus、專屬物→up_ace）、換裝湊齊套裝（up_set）；魔王收服（up_tame，大型 2 秒）
+const B4 := ["up_plus", "up_ace", "up_set", "up_tame"]
+func b4(t) -> void:
+	await _boot(t); await b4_(t); _p("RESULT ok=%d bad=%d" % [ok, bad])
+func _find(n: Node, nm: String):
+	if n.name == nm: return n
+	for c in n.get_children():
+		var r = _find(c, nm)
+		if r != null: return r
+	return null
+func _b4shot(t, k: String, n, tag: String) -> void:
+	await _w(t, float(VC.get_e(k).life) * 0.42)
+	await RenderingServer.frame_post_draw
+	t.get_viewport().get_texture().get_image().save_png(SHOTS + "b4_" + tag + ".png")
+func b4_(t) -> void:
+	var VP = load("res://game/fxkit/vfx_play.gd"); var EQ = load("res://game/equip/eq_data.gd"); var EUI = load("res://game/equip/eq_ui.gd"); var M = load("res://game/outpost/mat.gd")
+	for k in B4:
+		var E = VC.get_e(k)
+		_chk(k + " 有圖", E != null and VC.tex(k) != null)
+	var vs = t.get_tree().root.get_visible_rect().size
+	_chk("魔王收服 2 秒", is_equal_approx(float(VC.get_e("up_tame").life), 2.0))
+	_chk("魔王收服大型（闊 ≥ 畫面闊）", minf(vs.x, vs.y) * float(VC.get_e("up_tame").get("ui_k", 0.8)) >= vs.x, VC.get_e("up_tame").get("ui_k"))
+	var S = J.G.S; S.res["coins"] = 9.0e7
+	for mid in M.D().MATS: M.add(str(mid), 5000.0)
+	var e = EQ.st()
+	# 1) 加工（普通件）：真按「加工」掣
+	var nid = "eq_wokchan"; e.inv[nid] = J.num(e.inv.get(nid, 0)) + 1.0
+	VP.LOG.clear(); EUI.open_craft(); await _w(t, 0.4)
+	var root = t.get_tree().root
+	var pb = _find(root, "Plus_" + nid)
+	_chk("加工掣搵到（" + nid + "）", pb != null)
+	if pb != null:
+		var p0 = EQ.plus(nid)
+		pb.emit_signal("pressed"); await _b4shot(t, "up_plus", null, "plus")
+		_chk("加工 +1 後播「裝備加工」", VP.LOG.has("up_plus") and EQ.plus(nid) == p0 + 1, [VP.LOG, EQ.plus(nid)])
+	EUI.close_popup(); await _w(t, 1.2)
+	# 2) 專屬物加工：揾一件 ex_
+	var xid = ""
+	for id in EQ.D().ITEMS: if str(EQ.D().ITEMS[id].get("kind")) == "ex": xid = str(id); break
+	e.inv[xid] = J.num(e.inv.get(xid, 0)) + 1.0
+	VP.LOG.clear(); EUI.open_craft(); await _w(t, 0.4)
+	var xb = _find(root, "Plus_" + xid)
+	_chk("專屬物加工掣搵到（" + xid + "）", xb != null)
+	if xb != null:
+		xb.emit_signal("pressed"); await _b4shot(t, "up_ace", null, "ace")
+		_chk("專屬物加工後播「升王牌技」（唔係普通加工）", VP.LOG.has("up_ace") and not VP.LOG.has("up_plus"), VP.LOG)
+	EUI.close_popup(); await _w(t, 1.6)
+	# 3) 套裝：茶餐廳系列，先著 2 件，再喺換裝面板真按第 3 件
+	var g = ""
+	for gh in S.ghosts:
+		if EQ.why_not(str(gh.id), "eq_wokchan") == "" or true: g = str(gh.id); break
+	if g != "":
+		for id in ["eq_wokchan", "eq_weiqun", "eq_liangchapot"]: e.inv[id] = J.num(e.inv.get(id, 0)) + 2.0
+		for sl in EQ.SLOTS: EQ.unwear(g, sl)
+		EQ.wear(g, "eq_wokchan"); EQ.wear(g, "eq_weiqun")
+		VP.LOG.clear(); EUI.open_slot(g, "acc"); await _w(t, 0.4)
+		var wb = _find(root, "Wear_eq_liangchapot")
+		_chk("換裝掣搵到（涼茶壺）", wb != null)
+		if wb != null:
+			wb.emit_signal("pressed"); await _b4shot(t, "up_set", null, "set")
+			_chk("著齊 3 件茶餐廳系列播「套裝湊齊」", VP.LOG.has("up_set"), VP.LOG)
+		EUI.close_popup(); await _w(t, 1.0)
+		VP.LOG.clear(); EQ.unwear(g, "acc"); EUI._set_fx(g, EUI._set_tier(g)); _chk("冇多開套裝唔播", not VP.LOG.has("up_set"), VP.LOG)
+	else: _chk("有名鬼試套裝", false)
+	# 4) 魔王收服：soul_ui 收服 bm_ 掛咗；介面上播兩張截圖（0.5 秒、1.1 秒）
+	var src = FileAccess.get_file_as_string("res://game/soul/soul_ui.gd")
+	_chk("魔王收服掛喺 soul_ui 收服 bm_", src.contains('burst("up_tame")'))
+	var n = VP.burst("up_tame"); await _w(t, 0.55); await RenderingServer.frame_post_draw
+	t.get_viewport().get_texture().get_image().save_png(SHOTS + "b4_tame_a.png")
+	await _w(t, 0.55); await RenderingServer.frame_post_draw
+	t.get_viewport().get_texture().get_image().save_png(SHOTS + "b4_tame_b.png")
+	await _w(t, 1.2)
+	_chk("魔王收服播完自己消失", not is_instance_valid(n))

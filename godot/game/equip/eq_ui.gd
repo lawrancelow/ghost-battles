@@ -5,6 +5,13 @@ const EQ = preload("res://game/equip/eq_data.gd")
 const EA = preload("res://game/equip/eq_art.gd")
 const EV = preload("res://game/equip/eq_view.gd")
 const M = preload("res://game/outpost/mat.gd")
+const VP = preload("res://game/fxkit/vfx_play.gd")   # [vfx 第四批] 升級特效
+static func _set_tier(gid) -> int:   # 套裝已開幾段（2 件、3 件各算一段）
+	var n = 0
+	for si in EQ.set_info(gid): n += (si.on as Array).size()
+	return n
+static func _set_fx(gid, t0: int) -> void:   # 著完多開咗一段套裝 → 播「套裝湊齊」
+	if _set_tier(gid) > t0: VP.burst("up_set")
 const TAGW := {"遠": "遠程", "拉": "拉落地", "掃": "範圍", "破": "破殼", "刺": "斬召喚", "削": "停回血", "回": "吸血治療", "照": "現形", "定": "定驚", "收": "收屍變"}
 const SCW := {"breath": "吹氣", "light": "燈", "cold": "凍", "sound": "怪聲", "paper": "紙", "phone": "電話", "face": "鬼臉", "shadow": "黑影"}
 const STW := {"atk": "攻", "hp": "血", "taken": "受傷", "energy": "儲能", "aspd": "攻速", "spd": "行速", "heal_in": "受治療"}
@@ -194,7 +201,8 @@ static func _craft_row(body: VBoxContainer, id: String) -> Control:
 		mb.name = "Make_" + id; a.add_child(mb)
 	if EQ.n_inv(id) > 0:
 		var pb = _btn(L("加工", "加工") if EQ.plus(id) < 10 else L("已到頂", "已到頂"), "gold", EQ.can_plus(id) == "", func():
-			if EQ.do_plus(id): Snd.play("eq_plus")   # [sfx43]
+			if EQ.do_plus(id):   # [sfx43]＋[vfx 第四批] 加工／專屬物加工升王牌技
+				Snd.play("eq_plus"); VP.burst("up_ace" if id.begins_with("ex_") else "up_plus")
 			_fill_craft(body))
 		pb.name = "Plus_" + id; a.add_child(pb)
 	if EQ.n_free(id) > 0:
@@ -229,9 +237,9 @@ static func roster_strip(card: PanelContainer, hb: Control, gid: String) -> void
 		row.add_child(b)
 	var row2 = HBoxContainer.new(); row2.add_theme_constant_override("separation", 6); v.add_child(row2)
 	var ab = _btn(L("一鍵穿戴", "一鍵穿戴"), "", true, func():
-		var s0 = set_lv(gid)   # [sfx43] 一鍵穿戴；套裝湊多一級再加一聲
+		var s0 = set_lv(gid); var t0 = _set_tier(gid)   # [sfx43] 一鍵穿戴；套裝湊多一級再加一聲＋[vfx] 套裝湊齊
 		if EQ.auto_wear(gid) > 0: wear_sfx(gid, s0)
-		_changed())
+		_set_fx(gid, t0); _changed())
 	ab.name = "AutoWear"; ab.custom_minimum_size = Vector2(110, 38); row2.add_child(ab)
 	var sx = []
 	for si in EQ.set_info(gid): sx.append("%s %d/3" % [si.name, si.n])
@@ -293,9 +301,9 @@ static func _fill_slot(body: VBoxContainer, gid: String, sl: String) -> void:
 		if id == cur: h.add_child(_lbl(L("已穿", "已穿"), 14, UIKit.CINNABAR2, 900))
 		else:
 			var wb = _btn(L("穿上", "穿上"), "gold", why == "", func():
-				var s0 = set_lv(gid)   # [sfx43]
+				var s0 = set_lv(gid); var t0 = _set_tier(gid)   # [sfx43]＋[vfx]
 				if EQ.wear(gid, id): wear_sfx(gid, s0)
-				_changed(); _fill_slot(body, gid, sl))
+				_set_fx(gid, t0); _changed(); _fill_slot(body, gid, sl))
 			wb.name = "Wear_" + id; h.add_child(wb)
 			if why != "": v.add_child(_lbl(why, 12, Color("#9c2219")))
 		body.add_child(pc)
