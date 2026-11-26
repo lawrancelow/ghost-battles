@@ -1412,3 +1412,46 @@ func fw43(t) -> void:
 	await _shot(t, "fw43_sheet")
 	cv.queue_free()
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+# [補丁43 修正] 刀口方向：面向左右、揮斬中／斬中嗰刻，刀口要向住目標
+class EdgeSheet extends Control:
+	var cells := []   # [id, fd, ph, label]
+	func _draw() -> void:
+		var f = UIKit.font("sans", 900)
+		draw_rect(Rect2(Vector2.ZERO, size), Color("#1e1820"))
+		var EV2 = load("res://game/equip/eq_view2.gd")
+		var cw = 215.0; var ch = 225.0
+		for i in cells.size():
+			var c = cells[i]
+			var x0 = 10.0 + (i % 2) * cw; var y0 = 34.0 + int(i / 2) * ch
+			draw_rect(Rect2(x0 + 2, y0 + 2, cw - 4, ch - 4), Color("#2c2430"))
+			var ctx = Ctx.new(self)
+			var H = 120.0; var fd = c[1]
+			var foot = Vector2(x0 + cw * (0.25 if fd > 0 else 0.75), y0 + ch - 30)
+			var tgv = Vector2(fd * 0.95 * H, -0.45 * H)
+			draw_circle(foot + tgv, 9, Color("#c8483a"))   # 目標
+			var tex = PtGfx.tex(Art.spr_key("heiwu"))
+			if tex != null:
+				var Wd = H * 0.8 * tex.get_width() / float(tex.get_height())
+				if fd < 0: draw_set_transform_matrix(Transform2D(Vector2(-1, 0), Vector2(0, 1), Vector2(2.0 * foot.x, 0)))
+				draw_texture_rect(tex, Rect2(foot.x - Wd * 0.5, foot.y - H * 0.8, Wd, H * 0.8), false, Color(1, 1, 1, 0.35))
+				draw_set_transform_matrix(Transform2D.IDENTITY)
+			EV2.draw(ctx, "float", "heiwu", {"wea": str(c[0])}, foot, H, fd, {"T": 1.0, "act": "atk", "ph": c[2], "tg": tgv}, true, "front")
+			draw_string(f, Vector2(x0 + 6, y0 + 18), str(c[3]), HORIZONTAL_ALIGNMENT_LEFT, cw - 10, 14, Color("#f0e2c8"))
+func fwedge(t) -> void:
+	var m = await _boot(t)
+	var EA = load("res://game/equip/eq_art.gd")
+	_chk("環首刀刀口喺左、菜刀喺右", EA.edge_side("eq_huanshou") == -1 and EA.edge_side("eq_jue_caidao") == 1)
+	for id in ["eq_huanshou", "eq_jue_caidao"]:
+		for fd in [1, -1]:
+			var mir = EA.edge_side(id) != fd
+			_chk("%s 面向%s：揮落時刀口行先" % [id, "右" if fd > 0 else "左"], (EA.edge_side(id) * (-1 if mir else 1)) == fd)
+	var sh = EdgeSheet.new(); sh.size = Vector2(450, 975)
+	for id in ["eq_huanshou", "eq_jue_caidao"]:
+		var nm = "環首刀" if id == "eq_huanshou" else "菜刀"
+		sh.cells.append([id, 1.0, 0.45, nm + "・面向右・揮落中"]); sh.cells.append([id, -1.0, 0.45, nm + "・面向左・揮落中"])
+	sh.cells.append(["eq_huanshou", 1.0, 0.58, "環首刀・面向右・斬中"]); sh.cells.append(["eq_huanshou", -1.0, 0.58, "環首刀・面向左・斬中"])
+	var hd = Label.new(); hd.text = "刀口方向檢查（紅點＝目標）"; hd.position = Vector2(10, 6); hd.add_theme_font_size_override("font_size", 16); hd.add_theme_color_override("font_color", Color("#f0e2c8")); sh.add_child(hd)
+	var cv = CanvasLayer.new(); cv.layer = 90; m.add_child(cv); cv.add_child(sh)
+	await _w(t, 0.6); await _shot(t, "fwedge")
+	_p("RESULT ok=%d bad=%d" % [ok, bad])

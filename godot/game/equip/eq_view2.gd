@@ -128,12 +128,12 @@ static func rest_of(k: String, wea: String, foot: Vector2, H: float, fd: float, 
 	var c = foot + Vector2(fd * cx * H, (-0.50 + 0.035 * sin(T * 2.1)) * H)
 	var ang = fd * (0.20 + 0.10 * sin(T * 1.35))
 	return [c, ang, L]
-static func _put(ctx: Ctx, id: String, c: Vector2, ang: float, L: float, a := 1.0, tint := Color.WHITE) -> void:
+static func _put(ctx: Ctx, id: String, c: Vector2, ang: float, L: float, a := 1.0, tint := Color.WHITE, fd := 1.0) -> void:
 	var dv = Vector2(sin(ang), -cos(ang))
 	var g = c - dv * L * 0.5
 	ctx.save(); ctx.globalAlpha *= a
 	if tint != Color.WHITE: Art.tint = tint
-	EA.held(ctx, id, g.x, g.y, L, ang)
+	EA.held(ctx, id, g.x, g.y, L, ang, EA.edge_side(id) != (1 if fd >= 0 else -1))   # [補丁43 修正] 面向邊，刀口就向邊
 	Art.tint = Color.WHITE
 	ctx.restore()
 static func _aura(ctx: Ctx, c: Vector2, ang: float, L: float, H: float, k := 1.0, gc := YIN) -> void:
@@ -272,7 +272,7 @@ static func _float(ctx: Ctx, k: String, wea: String, foot: Vector2, H: float, fd
 			for j in range(n, 0, -1):
 				var Q = float_at(k, wea, foot, H, fd, st, maxf(0.0, ph - j * stp))
 				pts.append(Q[0])
-				_put(ctx, wea, Q[0], Q[1], Q[2], (0.30 if act == "sk" else 0.22) * (1.0 - float(j) / (n + 1)), gc.lerp(YIN, 0.4) if act == "sk" else YIN)
+				_put(ctx, wea, Q[0], Q[1], Q[2], (0.30 if act == "sk" else 0.22) * (1.0 - float(j) / (n + 1)), gc.lerp(YIN, 0.4) if act == "sk" else YIN, fd)
 			if pts.size() >= 2:   # 拖尾帶（技能：等級色、闊；普攻：陰氣色、幼）
 				var tp2 = []
 				for j in range(n * 2, -1, -1):
@@ -284,13 +284,13 @@ static func _float(ctx: Ctx, k: String, wea: String, foot: Vector2, H: float, fd
 		else:
 			for j in [2]:   # 待機殘影：慢慢跟住（一個，慳效能）
 				var Q = float_at(k, wea, foot, H, fd, {"T": T - j * 0.22, "act": act, "tg": st.get("tg")}, ph)
-				_put(ctx, wea, Q[0], Q[1], Q[2], 0.10 * j * 0.8, YIN)
+				_put(ctx, wea, Q[0], Q[1], Q[2], 0.10 * j * 0.8, YIN, fd)
 		_aura(ctx, c, ang, L, H, 1.35 if act in ["cast", "sk"] else 1.0, gc.lerp(YIN, 0.35) if act in ["cast", "sk"] else YIN)
 		if act == "idle": _wisps(ctx, c, H, T)
 		if act == "cast":   # 蓄力光圈
 			ctx.strokeStyle = "rgba(%d,%d,%d,%.2f)" % [int(gc.r8), int(gc.g8), int(gc.b8), 0.6 * ph]; ctx.lineWidth = H * 0.025
 			ctx.beginPath(); ctx.arc(c.x, c.y, L * (0.62 - 0.12 * ph), 0, TAU); ctx.stroke()
-	_put(ctx, wea, c, ang, L)
+	_put(ctx, wea, c, ang, L, 1.0, Color.WHITE, fd)
 	# 撞擊閃光
 	var imp = (act == "atk" and ph >= 0.55 and ph < 0.72) or (act == "sk" and ph >= 0.45 and ph < 0.66)
 	if imp and not low:

@@ -40,8 +40,12 @@ static func icon(ctx: Ctx, id: String, x: float, y: float, sz: float, ring := tr
 	ctx.restore()
 
 # 手持：(gx, gy)＝手位；L＝長度（世界 px）；ang＝弧度（0＝向上，正＝順時針）
-static func held(ctx: Ctx, id: String, gx: float, gy: float, L: float, ang: float) -> void:
+# [補丁43 修正] 刀口方向：兵器直立時刀口喺圖嘅邊一邊（+1 右、−1 左）。規矩：目標喺邊，刀鋒就向邊（揮落時刀口行先）
+const EDGE := {"eq_huanshou": -1, "ml_huanshou": -1}
+static func edge_side(id: String) -> int: return int(EDGE.get(id, 1))
+static func held(ctx: Ctx, id: String, gx: float, gy: float, L: float, ang: float, mir := false) -> void:
 	ctx.save(); ctx.translate(gx, gy); ctx.rotate(ang)
+	if mir: ctx.scale(-1, 1)   # 沿兵器長軸翻轉：刀口換邊
 	var k = L / 24.0
 	ctx.scale(k, k)
 	if has_img(id): Art.put(ctx, img_key(id), 0, 0, 24, 24)
