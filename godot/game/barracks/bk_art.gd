@@ -124,7 +124,8 @@ const IRON := Color("#a3a9ae")
 const SHAFT := Color("#4f3420")
 
 static func _xf(ci: CanvasItem, base: Transform2D, pos: Vector2, sc: Vector2) -> void: ci.draw_set_transform_matrix(base * Transform2D(0.0, sc, 0.0, pos))
-static func draw_soldier(ci: CanvasItem, pose: String, ph: float, dir: float, seed: int, base := Transform2D.IDENTITY) -> void:
+static func draw_soldier(ci: CanvasItem, pose: String, ph: float, dir: float, seed: int, base := Transform2D.IDENTITY, look := "") -> void:
+	if look != "" and _yb_draw(ci, look, pose, ph, dir, seed, base): return   # [yinbing] 兵種×階級立繪＋漂浮兵器
 	var tx = pose_tex(pose)
 	if tx != null:   # 正式圖：每姿勢一張（每格 2 個 draw：地影＋圖，8 隻都好平）
 		var nf = int(FRAMES.get(pose, 1)); var fw = float(tx.get_width()) / nf; var fh = float(tx.get_height())
@@ -212,3 +213,54 @@ static func draw_soldier(ci: CanvasItem, pose: String, ph: float, dir: float, se
 		ci.draw_line(sh_f, hf, ARMOR_D, 3.0)
 		ci.draw_circle(hf, 1.9, SKIN)
 	ci.draw_set_transform_matrix(base)
+
+# ================= [yinbing] 陰兵兵種 × 階級（look＝yb_<兵種>_<階級>） =================
+#   圖：assets/spr/<look>_stand.webp（一張企姿，透明底、面向右、煙尾尖喺圖底；16 張同一比例：衛兵連纓高 YB_REF px）
+#   行／打／敬禮用同一張圖做浮動、前衝（同現版正式圖一樣嘅動法）；兵器唔喺手：漂浮兵器 game/yinbing/yb_view.gd（eq_art 程序圖，之後美術出正式圖）
+const YB_REF := 340.0
+static var _yb_tex := {}
+static var _yb_ax := {}
+static func yb_tex(look: String) -> Texture2D:
+	if _yb_tex.has(look): return _yb_tex[look]
+	var t: Texture2D = null
+	for ext in ["webp", "png"]:
+		var path = "res://assets/spr/%s_stand.%s" % [look, ext]
+		if ResourceLoader.exists(path): t = load(path); break
+	_yb_tex[look] = t
+	if t != null: _yb_ax[look] = _foot_x(t, 1)
+	return t
+static func _yb_draw(ci: CanvasItem, look: String, pose: String, ph: float, dir: float, seed: int, base: Transform2D) -> bool:
+	var tx = yb_tex(look)
+	if tx == null:   # 冇新圖：照畫現版陰兵（漂浮兵器照加，兵種一眼睇得出）
+		var tx0 = pose_tex(pose)
+		if tx0 == null: return false
+	var y0 = 0.0; var rot = 0.0; var dx = 0.0
+	match pose:
+		"walk": y0 = -absf(sin(ph * 6.0)) * 2.0; rot = sin(ph * 6.0) * 0.04
+		"stand": y0 = -sin(ph * 2.2 + seed) * 0.6
+		"attack": dx = clampf(sin(ph * 10.0) * 0.5 + 0.5, 0.0, 1.0) * 3.0
+	_xf(ci, base, Vector2(0, -1), Vector2(1.0, 0.32)); ci.draw_circle(Vector2.ZERO, 9.0, Color(0, 0, 0, 0.28))
+	if tx != null:
+		var sc = H / YB_REF
+		var fw = float(tx.get_width()); var fh = float(tx.get_height())
+		ci.draw_set_transform_matrix(base * Transform2D(rot * dir, Vector2(dir * sc, sc), 0.0, Vector2(dx * dir, y0)))
+		var ax = float(_yb_ax.get(look, fw / 2))
+		ci.draw_texture_rect_region(tx, Rect2(-ax, -fh, fw, fh), Rect2(0, 0, fw, fh))
+	else:
+		var tx0 = pose_tex(pose); var fw0 = float(tx0.get_width()); var fh0 = float(tx0.get_height())
+		ci.draw_set_transform_matrix(base * Transform2D(rot * dir, Vector2(dir * _sc, _sc), 0.0, Vector2(dx * dir, y0)))
+		var ax0 = float(_ax.get(pose, fw0 / 2))
+		ci.draw_texture_rect_region(tx0, Rect2(-ax0, -fh0, fw0, fh0), Rect2(0, 0, fw0, fh0))
+	ci.draw_set_transform_matrix(base)   # 漂浮兵器由 rts_view SolRep 經 yb_view.gd 畫（eq_view2 float 方案）
+	return true
+
+# [yinbing] 弓弩手飛彈（畫面座標；ang＝飛行方向）：雜兵石仔、其餘箭（親兵弩箭短粗）
+static func draw_missile(ci: CanvasItem, p: Vector2, ang: float, rk: String) -> void:
+	if rk == "za":
+		ci.draw_circle(p, 2.4, INK); ci.draw_circle(p, 1.8, Color("#8c8c8c")); return
+	var d = Vector2(cos(ang), sin(ang)); var nv = Vector2(-d.y, d.x)
+	var L = 9.0 if rk == "qin" else 12.0
+	var a = p - d * L
+	ci.draw_line(a, p, INK, 2.0); ci.draw_line(a, p, Color("#8a6a42"), 1.1)
+	ci.draw_colored_polygon(PackedVector2Array([p + d * 3.0, p + nv * 1.6, p - nv * 1.6]), Color("#9aa1a6"))
+	ci.draw_line(a, a - d * 2.5 + nv * 2.0, Color("#e8e0cc"), 1.0); ci.draw_line(a, a - d * 2.5 - nv * 2.0, Color("#e8e0cc"), 1.0)

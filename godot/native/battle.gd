@@ -398,6 +398,7 @@ static func start(ci, si, wild) -> void:
 	for i in sq:
 		var hp = (90 + 14 * lv) * tb
 		B.units.append({"side": 0.0, "k": "youhun", "name": "陰兵", "minion": true, "hp": hp, "maxhp": hp, "atk": (9 + 2.2 * lv) * tb, "range": 38.0, "spd": 52.0, "x": 120.0 + floor(i / 4.0) * 18, "lane": (i % 4) * 0.95 + 0.4, "energy": 0.0, "sk": null, "st": {}, "cd": randf()})
+	load("res://game/yinbing/yb_data.gd").assign(B.units)   # [yinbing] 陰兵小隊按編制分兵種（刀盾／長兵／弓弩／醫護）
 	load("res://game/militia/ml_data.gd").battle_units(B, st, wild)   # [militia] 對外戰鬥：遊魂兵小隊＋敵方惡鬼嘍囉
 	load("res://game/equip/eq_data.gd").battle_units(B)   # [equip] 名鬼裝備血攻、遊魂兵 A/B 款
 	var ET = _g("ENEMY_T"); var SK = _g("SKILLS"); var en: Array = st.en

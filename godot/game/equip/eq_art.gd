@@ -16,8 +16,16 @@ static func has_img(id: String) -> bool: return Spr.ok(img_key(id)) and Spr.get_
 # 圖示專用（斜放 icon 版，商店／名冊／圖鑑用）：eqi_<id>_i；未有就退回手持圖 eqi_<id>（垂直，照舊轉 0.7）；再冇就程序畫
 static func icon_key(id: String) -> String: return "eqi_%s_i" % id
 static func has_icon(id: String) -> bool: return Spr.ok(icon_key(id)) and Spr.get_tex(icon_key(id)) != null
-static func shape_of(id: String) -> String: return str(EQ.item(id).get("shape", ""))
-static func is_long(id: String) -> bool: return LONG.has(shape_of(id)) or LONG_W.has(shape_of(id))
+static func shape_of(id: String) -> String:
+	if id.begins_with(YBW): return id.substr(YBW.length())   # [yinbing] 陰兵制式兵器（唔係裝備，冇 EQ 項）
+	return str(EQ.item(id).get("shape", ""))
+# [yinbing] 陰兵 16 格制式兵器：id ＝ "ybw_" + 形狀（data/nat/yinbing.json CELLS.shape）；刃口一律畫喺右邊（EDGE +1），長兵入 LONG
+const YBW := "ybw_"
+const YB_LONG := ["bamboo_pike", "spear_wax", "spear_std", "glaive_fengzui"]
+const YB_ATK := {"knife_chip": "swing", "saber_iron": "swing", "saber_yanling": "swing", "saber_hengdao": "swing",
+	"bamboo_pike": "thrust", "spear_wax": "thrust", "spear_std": "thrust", "glaive_fengzui": "swing"}
+const YB_BLADE := ["knife_chip", "saber_iron", "saber_yanling", "saber_hengdao", "glaive_fengzui"]   # 有刃口（揮斬要刃口向目標）
+static func is_long(id: String) -> bool: return LONG.has(shape_of(id)) or LONG_W.has(shape_of(id)) or YB_LONG.has(shape_of(id))
 static func is_hand(sh: String) -> bool: return HAND_SHAPES.has(sh) or HAND_W.has(sh)
 # [補丁43] 漂浮兵器普攻方式：thrust 直刺、swing 揮斬、spin 轉住撞、throw 飛出去
 const ATK := {"pole": "thrust", "fork_pole": "thrust", "mop": "thrust", "pipe": "swing", "cleaver": "swing", "cleaver_old": "swing", "ring_sword": "swing",
@@ -27,7 +35,7 @@ const ATK := {"pole": "thrust", "fork_pole": "thrust", "mop": "thrust", "pipe": 
 const ATK_W := {"parang": "swing", "spear": "thrust", "podao": "swing", "hwando": "swing", "tachi": "swing", "meteor": "spin", "guandao": "swing",
 	"emei": "thrust", "kerambit": "swing", "sumpit": "thrust", "butterfly": "swing", "kusarigama": "spin", "crossbow": "thrust", "miaodao": "swing",
 	"cane": "swing", "rope_dart": "throw", "iron_fan": "spin", "whip9": "spin"}
-static func atk_style(id: String) -> String: return str(ATK.get(shape_of(id), ATK_W.get(shape_of(id), "thrust")))
+static func atk_style(id: String) -> String: return str(ATK.get(shape_of(id), ATK_W.get(shape_of(id), YB_ATK.get(shape_of(id), "thrust"))))
 
 # 圖示：(x, y)＝底部中間；sz＝闊高；ring＝畫底圓＋等級色邊
 static func icon(ctx: Ctx, id: String, x: float, y: float, sz: float, ring := true) -> void:
@@ -52,7 +60,8 @@ static func icon(ctx: Ctx, id: String, x: float, y: float, sz: float, ring := tr
 #   [p44] 主角斧（eq_hero_axe）：斧刃喺右（預設 +1）；三角尺（eq_hero_ruler）：有刻度嗰條直邊（工作邊）喺左 → −1
 #   [美術組 equip-list] 正式圖核對：eq_jue_caidao 手持圖刃口喺右（+1）；ml_chaidao 崩口喺右（+1）——寫明唔靠預設
 #   [美術組 統一畫風重畫] 生鏽環首刀／翻版環首刀新圖刃口喺右，由 −1 改 +1；真兵器 9 把有刃（EDGE_W）逐件核對新圖都係刃口喺右 +1
-const EDGE := {"eq_huanshou": 1, "ml_huanshou": 1, "eq_jue_caidao": 1, "ml_chaidao": 1, "eq_hero_axe": 1, "eq_hero_ruler": -1}
+const EDGE := {"eq_huanshou": 1, "ml_huanshou": 1, "eq_jue_caidao": 1, "ml_chaidao": 1, "eq_hero_axe": 1, "eq_hero_ruler": -1,
+	"ybw_knife_chip": 1, "ybw_saber_iron": 1, "ybw_saber_yanling": 1, "ybw_saber_hengdao": 1, "ybw_glaive_fengzui": 1}   # [yinbing] 陰兵刀類：刃口喺右
 # [equip-list] 真兵器刃口（全部規定美術圖直立時刃口喺圖右 +1；美術圖入庫後美術組要逐件核對，畫反咗就改呢度做 −1）
 const EDGE_W := {"eq_w_parang": 1, "eq_w_podao": 1, "eq_w_hwando": 1, "eq_w_tachi": 1, "eq_w_guandao": 1, "eq_w_kerambit": 1, "eq_w_shuangdao": 1,
 	"eq_w_kusarigama": 1, "eq_w_miaodao": 1}
@@ -211,5 +220,73 @@ static func shape(ctx: Ctx, sh: String) -> void:
 		"oil_bottle":   # 驅風油：細綠瓶
 			Art.rr(ctx, -4, -14, 8, 14, 1.5, "#4e8a4a", INK, 1.0); Art.rr(ctx, -2, -18, 4, 4, 0.8, "#e0d8c0", INK, 0.8)
 			Art.rr(ctx, -3, -10, 6, 5, 0.5, "#f2ecd8", INK, 0.5)
+		# ---------- [yinbing] 陰兵制式兵器（刀類刃口喺右 +x；長兵槍頭向上；弓背向右） ----------
+		"knife_chip":   # 崩口短刀：短、刃口有崩位、鏽
+			Art.rr(ctx, -1.5, -6, 3, 8, 1, "#6a4428", INK, 0.9); _l(ctx, -3, -6, 3, -6, INK, 1.4)
+			Art.poly(ctx, [-2, -6, 3, -6, 4, -11, 3, -12.5, 4, -14, 3.5, -18, 0, -20, -2, -17], "#8c8a84", INK, 1.0)
+			Art.el(ctx, 0.5, -12, 1.2, 1.4, "#9a5a32"); _l(ctx, 3.6, -7, 3.6, -10.5, "#d8dcdc", 0.6)
+		"saber_iron":   # 粗鐵腰刀：闊身、黑鐵、刃口亮邊
+			Art.rr(ctx, -1.5, -6, 3, 8, 1, "#4a3020", INK, 0.9); _l(ctx, -3.6, -6, 3.6, -6, "#5a5a5a", 1.8)
+			Art.poly(ctx, [-2.2, -6, 3.2, -6, 4.6, -15, 3.6, -21, 1, -24, -2.2, -19], "#7a7e86", INK, 1.0)
+			_l(ctx, 3.8, -7, 4.4, -16, "#e0e4e8", 0.8)
+		"saber_yanling":   # 制式雁翎刀：刀背直、近尖微翹、銅護手
+			Art.rr(ctx, -1.4, -6, 2.8, 8, 1, "#3a2418", INK, 0.9); _l(ctx, -3.6, -6, 3.6, -6, "#c9a24a", 1.8)
+			Art.poly(ctx, [-1.8, -6, 2.6, -6, 3.2, -16, 2.4, -21, 0.4, -25, -1.8, -19], "#b9bfc4", INK, 1.0)
+			_l(ctx, 2.8, -7, 3.0, -17, "#f2f4f6", 0.8); Art.el(ctx, 0, 3, 1.2, 1.2, "#c9a24a")
+		"saber_hengdao":   # 精鋼橫刀：直刀、長、斜尖、銅護手＋柄頭
+			Art.rr(ctx, -1.3, -6, 2.6, 9, 1, "#2a1a14", INK, 0.9); Art.rr(ctx, -3.8, -7, 7.6, 2, 0.8, "#c9a24a", INK, 0.7)
+			Art.poly(ctx, [-1.6, -7, 2.0, -7, 2.0, -22, -0.2, -25.5, -1.6, -23], "#c8ced2", INK, 1.0)
+			_l(ctx, 1.6, -8, 1.6, -22, "#ffffff", 0.7); _l(ctx, -0.6, -8, -0.6, -22, "#9aa0a6", 0.5); Art.el(ctx, 0, 3.6, 1.4, 1.4, "#c9a24a", INK, 0.5)
+		"bamboo_pike":   # 削尖竹竿
+			_l(ctx, 0, 3, 0, -21, INK, 3.0); _l(ctx, 0, 3, 0, -21, "#9aa060", 2.0)
+			for y in [-4, -11, -17]: _l(ctx, -1.5, y, 1.5, y, INK, 0.8)
+			Art.poly(ctx, [-1.4, -21, 1.4, -21, 0, -27], "#d0c890", INK, 0.8)
+		"spear_wax":   # 白蠟木槍：淺木桿＋鐵槍頭
+			_l(ctx, 0, 3, 0, -20, INK, 2.8); _l(ctx, 0, 3, 0, -20, "#d0b890", 1.8)
+			Art.poly(ctx, [-2.2, -20, 0, -19, 2.2, -20, 0, -28], "#8a9096", INK, 0.9); _l(ctx, -1.4, -20, 1.4, -20, "#4a4a4a", 1.4)
+		"spear_std":   # 制式長矛：深木桿＋亮槍頭＋紅纓
+			_l(ctx, 0, 3, 0, -20, INK, 2.8); _l(ctx, 0, 3, 0, -20, "#4f3420", 1.8)
+			Art.poly(ctx, [-2.4, -20.5, 0, -19.5, 2.4, -20.5, 0, -29], "#c0c6cc", INK, 0.9)
+			for k in 4: _l(ctx, -0.5 + k * 0.4, -19.5, -3.5 + k * 2.2, -14.5, "#b8332b", 1.2)
+		"glaive_fengzui":   # 鳳嘴長刀：長柄、闊彎刃（刃口喺右）、刀背鳳嘴勾、銅箍
+			_l(ctx, 0, 3, 0, -15, INK, 3.0); _l(ctx, 0, 3, 0, -15, "#3a2418", 2.0); Art.el(ctx, 0, 3.4, 1.4, 1.4, "#c9a24a", INK, 0.5)
+			Art.rr(ctx, -2.2, -16, 4.4, 2, 0.8, "#c9a24a", INK, 0.7)
+			Art.poly(ctx, [-1.6, -16, 2.0, -16, 4.6, -20, 4.8, -25, 2.2, -29, -0.4, -27.5, -2.6, -25.5, -1.2, -24, -1.6, -20], "#c8ced2", INK, 1.0)
+			_l(ctx, 2.6, -17, 4.4, -24, "#ffffff", 0.8)
+		"sling":   # 投石索：兩條繩＋布兜＋石仔（揸住繩頭）
+			_l(ctx, -0.6, 0, -2.6, -15, "#a08a60", 1.0); _l(ctx, 0.6, 0, 2.6, -15, "#a08a60", 1.0)
+			Art.poly(ctx, [-3.6, -15, 3.6, -15, 2.6, -20, -2.6, -20], "#8a7a5a", INK, 0.8); Art.el(ctx, 0, -18, 2.2, 2.0, "#8c8c8c", INK, 0.6)
+			Art.el(ctx, 0, 0.5, 1.4, 1.4, "#6a5a3a", INK, 0.5)
+		"bow_bamboo", "bow_horn":   # 竹片短弓／木胎角弓：弓背向右（向目標）、弦喺左
+			var horn = sh == "bow_horn"
+			var r = 12.0 if horn else 10.5
+			var cy = -12.0
+			var a0 = -1.05; var a1 = 1.05
+			ctx.strokeStyle = INK; ctx.lineWidth = 3.4; ctx.beginPath(); ctx.arc(-r * 0.55, cy, r, a0, a1); ctx.stroke()
+			ctx.strokeStyle = "#5a3a22" if horn else "#c0a868"; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(-r * 0.55, cy, r, a0, a1); ctx.stroke()
+			var e1 = Vector2(-r * 0.55 + cos(a0) * r, cy + sin(a0) * r); var e2 = Vector2(-r * 0.55 + cos(a1) * r, cy + sin(a1) * r)
+			_l(ctx, e1.x, e1.y, e2.x, e2.y, "#efe6cc", 0.7)
+			Art.rr(ctx, r * 0.45 - 1.4, cy - 2, 2.8, 4, 0.8, "#c9a24a" if horn else "#8a6a40", INK, 0.6)
+		"xbow_iron":   # 鐵臂強弩：弩身向上（向目標）、鐵弩臂橫喺頂、弦拉後
+			Art.rr(ctx, -1.6, -20, 3.2, 22, 1, "#3a2418", INK, 0.9)
+			ctx.strokeStyle = INK; ctx.lineWidth = 3.0; ctx.beginPath(); ctx.arc(0, -10, 9.5, -PI * 0.86, -PI * 0.14); ctx.stroke()
+			ctx.strokeStyle = "#7d858c"; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.arc(0, -10, 9.5, -PI * 0.86, -PI * 0.14); ctx.stroke()
+			var l0 = Vector2(cos(-PI * 0.86), sin(-PI * 0.86)) * 9.5 + Vector2(0, -10); var l1 = Vector2(cos(-PI * 0.14), sin(-PI * 0.14)) * 9.5 + Vector2(0, -10)
+			_l(ctx, l0.x, l0.y, 0, -8, "#e8e0cc", 0.6); _l(ctx, l1.x, l1.y, 0, -8, "#e8e0cc", 0.6)
+			_l(ctx, 0, -8, 0, -23, "#9aa1a6", 1.0); Art.el(ctx, 0, -2, 1.4, 1.4, "#c9a24a", INK, 0.5)
+		"bandage_roll":   # 舊布繃帶捲
+			Art.el(ctx, 0, -11, 7, 7, "#e2d8c0", INK, 1.1); Art.el(ctx, 0, -11, 4.2, 4.2, null, "#b8ac90", 0.8); Art.el(ctx, 0, -11, 1.6, 1.6, "#a89a7a")
+			Art.poly(ctx, [5, -8, 9, -2, 7, -1, 3.5, -6], "#e2d8c0", INK, 0.8); Art.el(ctx, -3, -14, 1.0, 0.8, "#9a7a5a")
+		"herb_gourd":   # 草藥葫蘆：兩節、紅繩、木塞
+			Art.el(ctx, 0, -7, 7, 7, "#c8a04a", INK, 1.1); Art.el(ctx, 0, -17, 4.6, 4.6, "#c8a04a", INK, 1.0)
+			_l(ctx, -3.6, -12.5, 3.6, -12.5, "#8a3a2a", 1.4); Art.rr(ctx, -1.4, -24, 2.8, 3, 0.6, "#6a4428", INK, 0.6)
+			Art.el(ctx, -2.5, -9, 1.6, 2.4, "rgba(255,240,200,.35)")
+		"medbox_wood", "medbox_brass":   # 木製藥箱／銅角藥箱（冇任何符號）
+			var br = sh == "medbox_brass"
+			Art.rr(ctx, -9, -15, 18, 14, 1.5, "#5a3420" if br else "#8a5a32", INK, 1.1)
+			_l(ctx, -9, -10, 9, -10, INK, 0.8); Art.rr(ctx, -1.6, -11.5, 3.2, 3, 0.5, "#c9a24a" if br else "#c8b080", INK, 0.5)
+			ctx.strokeStyle = INK; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(0, -15, 3.4, PI, TAU); ctx.stroke()
+			if br:
+				for c2 in [[-9, -15], [9, -15], [-9, -1], [9, -1]]: Art.el(ctx, c2[0], c2[1], 1.6, 1.6, "#c9a24a", INK, 0.5)
 		_:
 			Art.el(ctx, 0, -12, 8, 8, "#a89a88", INK, 1.0)
