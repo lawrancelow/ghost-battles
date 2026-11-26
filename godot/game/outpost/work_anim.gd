@@ -105,7 +105,38 @@ const EDGE := {
 	"plane": [Vector2(-10, 0), Vector2(10, 0), Vector2(0, 1), "刨底刀口"],
 	"screwdriver": [Vector2(0, -24), Vector2(0, -24), Vector2(0, -1), "批咀"],
 }
-static var _TL := []   # 測試：今次 draw 每件工具工作面（世界座標）
+static var _TL := []
+# [取圖接口] 新工具美術圖：有圖就用圖，冇圖用程序線稿（shape）。
+#   美術組交圖規格：assets/spr/<key>.webp（加入 spr_manifest），工具「直立」畫——柄喺下、工作頭喺上；
+#     刀類刀口向右（+x）；杯／勺口方向同下面 EDGE 說明一致。
+#   預設錨點：揸位 (0.5, 0.95)、柄頂 (0.5, 0.04)；工作面由 EDGE（24 格框）按比例換成 uv。
+#   如果圖嘅柄唔喺正中，喺 TOOL_ART[id] 加 "grip"／"tip"／"edge"（uv：[a, b, n]）覆蓋就得。
+const TOOL_ART := {"fork": {"key": "tool_fork"}, "tongs": {"key": "tool_tongs"}, "needle": {"key": "tool_needle"}, "brush": {"key": "tool_brush"},
+	"pbrush": {"key": "tool_pbrush"}, "cup": {"key": "tool_cup"}, "shaker": {"key": "tool_shaker"}, "plane": {"key": "tool_plane"},
+	"screwdriver": {"key": "tool_screwdriver"}, "pumph": {"key": "tool_pumph"}}
+static var _dyn := {}   # id → [SPR_TOOL 格式, EDGE（uv）] 或 null
+static func _art(id: String):
+	if not TOOL_ART.has(id): return null
+	if _dyn.has(id) and _dyn[id] != null: return _dyn[id]
+	var A: Dictionary = TOOL_ART[id]
+	if not Spr.ok(str(A.key)): return null
+	var gr = A.get("grip", [0.5, 0.95]); var tp = A.get("tip", [0.5, 0.04])
+	var E = EDGE[id]; var tex = Spr.get_tex(str(A.key)); var asp = tex.get_height() / float(tex.get_width())
+	var span = absf(float(tp[1]) - float(gr[1]))
+	var uv = func(q: Vector2) -> Vector2:   # 24 格框 → uv（揸位 (0,0)→grip，(0,-24)→tip；橫向按圖闊高比）
+		return Vector2(float(gr[0]) + q.x / 24.0 * span * asp, lerpf(float(gr[1]), float(tp[1]), -q.y / 24.0))
+	var e2 = A.get("edge", [uv.call(E[0]), uv.call(E[1]), Vector2(E[2].x, E[2].y), E[3]])
+	_dyn[id] = [[str(A.key), float(gr[0]), float(gr[1]), float(tp[0]), float(tp[1]), false], e2]
+	return _dyn[id]
+static func _spr(id: String):
+	var a = _art(id)
+	if a != null: return a[0]
+	if SPR_TOOL.has(id) and Spr.ok(SPR_TOOL[id][0]): return SPR_TOOL[id]
+	return null
+static func _edge(id: String):
+	var a = _art(id)
+	if a != null: return a[1]
+	return EDGE.get(id)   # 測試：今次 draw 每件工具工作面（世界座標）
 
 # [空手版] 老闆規定：遊戲介面一律用空手版，只有劇情對話用原圖。
 #   王牌（game/soul/ace_art.gd 有階段圖）由 Art.draw_char → ACE 自動換空手階段圖，呢度唔使理；
@@ -172,8 +203,9 @@ static func _sprh(key: String, w: float) -> float:
 # 揸位 g、長 L、角度 ang（0＝向上、正＝向前）；本地框
 # 工具空間 → 本地框（同 tool() 畫法一模一樣；原圖工具嘅工具空間＝uv）
 static func tool_xf(id: String, g: Vector2, L: float, ang: float) -> Transform2D:
-	if SPR_TOOL.has(id) and Spr.ok(SPR_TOOL[id][0]):
-		var d = SPR_TOOL[id]; var tex = Spr.get_tex(d[0])
+	var d = _spr(id)
+	if d != null:
+		var tex = Spr.get_tex(d[0])
 		var h = L; var w = L * tex.get_width() / float(tex.get_height())
 		var m = -1.0 if d[5] else 1.0
 		var ai = atan2((d[3] - d[1]) * w * m, -(d[4] - d[2]) * h)
@@ -183,21 +215,22 @@ static func tool_xf(id: String, g: Vector2, L: float, ang: float) -> Transform2D
 	return Transform2D(ang, g) * Transform2D(Vector2(L / 24.0, 0), Vector2(0, L / 24.0), Vector2.ZERO)
 # 工作面喺本地框嘅位置：e＝0..1（a→b）；同法向量
 static func edge_pt(id: String, g: Vector2, L: float, ang: float, e := 0.5) -> Vector2:
-	var E = EDGE.get(id); if E == null: return g
+	var E = _edge(id); if E == null: return g
 	return tool_xf(id, g, L, ang) * (E[0] as Vector2).lerp(E[1], e)
 static func edge_n(id: String, ang: float) -> Vector2:
-	var E = EDGE.get(id); if E == null: return Vector2.UP
+	var E = _edge(id); if E == null: return Vector2.UP
 	return tool_xf(id, Vector2.ZERO, 1.0, ang).basis_xform(E[2]).normalized()
 # 要工作面上 e 嗰點落喺 at：倒計揸位
 static func place(id: String, L: float, ang: float, at: Vector2, e := 0.5) -> Vector2:
 	return at - edge_pt(id, Vector2.ZERO, L, ang, e)
 static func tool(ctx: Ctx, id: String, g: Vector2, L: float, ang: float, a := 1.0) -> void:
 	if EDGE.has(id):   # 測試記錄：真正畫落去嘅變換（包埋面向鏡像、放大）
-		var X = ctx.getTransform() * tool_xf(id, g, L, ang); var E = EDGE[id]
+		var X = ctx.getTransform() * tool_xf(id, g, L, ang); var E = _edge(id)
 		_TL.append({"id": id, "a": X * (E[0] as Vector2), "b": X * (E[1] as Vector2), "n": X.basis_xform(E[2]).normalized()})
 	ctx.save(); ctx.globalAlpha *= a; ctx.translate(g.x, g.y)
-	if SPR_TOOL.has(id) and Spr.ok(SPR_TOOL[id][0]):
-		var d = SPR_TOOL[id]; var tex = Spr.get_tex(d[0])
+	var d = _spr(id)
+	if d != null:
+		var tex = Spr.get_tex(d[0])
 		var h = L; var w = L * tex.get_width() / float(tex.get_height())
 		var m = -1.0 if d[5] else 1.0
 		var ai = atan2((d[3] - d[1]) * w * m, -(d[4] - d[2]) * h)

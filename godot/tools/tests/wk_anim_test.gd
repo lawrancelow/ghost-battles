@@ -752,7 +752,7 @@ func live2(t) -> void:
 			await RenderingServer.frame_post_draw
 			var img = t.get_viewport().get_texture().get_image()
 			var sp = _scr(m, w.pos)
-			var r = Rect2i(clampi(int(sp.x - 120), 0, img.get_width() - 260), clampi(int(sp.y - 190), 0, img.get_height() - 230), Vector2i(260, 230))
+			var r = Rect2i(Vector2i(clampi(int(sp.x - 120), 0, img.get_width() - 260), clampi(int(sp.y - 190), 0, img.get_height() - 230)), Vector2i(260, 230))
 			var sub = img.get_region(r); sub.resize(int(260 * 1.5), int(230 * 1.5), Image.INTERPOLATE_LANCZOS)
 			var v = WA.verb_of_stall(str(MD.st_def(w.sid).get("art", "")))
 			var seen = sc.mot.seen.get(w.k, {})
