@@ -5,8 +5,8 @@ extends RefCounted
 
 const EQ = preload("res://game/equip/eq_data.gd")
 const INK := "#2a1a10"
-const HAND_SHAPES := ["pole", "duster", "cleaver", "spatula", "shield", "umbrella", "mop", "pipe", "ring_sword", "abacus", "slipper", "slingshot", "fork_pole", "wok_spatula_gold", "coffin_shield"]
-const LONG := ["pole", "duster", "mop", "fork_pole", "umbrella", "pipe", "ring_sword", "slingshot", "spatula", "wok_spatula_gold", "cleaver"]
+const HAND_SHAPES := ["pole", "duster", "cleaver", "spatula", "shield", "umbrella", "mop", "pipe", "ring_sword", "abacus", "slipper", "slingshot", "fork_pole", "wok_spatula_gold", "coffin_shield", "cleaver_old", "stapler"]
+const LONG := ["pole", "duster", "mop", "fork_pole", "umbrella", "pipe", "ring_sword", "slingshot", "spatula", "wok_spatula_gold", "cleaver", "cleaver_old"]
 
 static func img_key(id: String) -> String: return "eqi_" + id
 static func has_img(id: String) -> bool: return Spr.ok(img_key(id)) and Spr.get_tex(img_key(id)) != null
@@ -41,7 +41,8 @@ static func icon(ctx: Ctx, id: String, x: float, y: float, sz: float, ring := tr
 
 # 手持：(gx, gy)＝手位；L＝長度（世界 px）；ang＝弧度（0＝向上，正＝順時針）
 # [補丁43 修正] 刀口方向：兵器直立時刀口喺圖嘅邊一邊（+1 右、−1 左）。規矩：目標喺邊，刀鋒就向邊（揮落時刀口行先）
-const EDGE := {"eq_huanshou": -1, "ml_huanshou": -1}
+#   [美術組 equip-list] 正式圖核對：eq_jue_caidao 手持圖刃口喺右（+1）；ml_chaidao 崩口喺右（+1）——寫明唔靠預設
+const EDGE := {"eq_huanshou": -1, "ml_huanshou": -1, "eq_jue_caidao": 1, "ml_chaidao": 1}
 static func edge_side(id: String) -> int: return int(EDGE.get(id, 1))
 static func held(ctx: Ctx, id: String, gx: float, gy: float, L: float, ang: float, mir := false) -> void:
 	ctx.save(); ctx.translate(gx, gy); ctx.rotate(ang)
@@ -74,9 +75,9 @@ static func shape(ctx: Ctx, sh: String) -> void:
 		"coffee_cup":   # [補丁43] 凍咗嘅咖啡杯
 			Art.rr(ctx, -6, -16, 12, 16, 2, "#f2ecd8", INK, 1.0); Art.el(ctx, 8, -9, 3.5, 4.5, null, INK, 1.4)
 			Art.el(ctx, 0, -15, 5, 1.4, "#5a3a20")
-		"luichar_bag":   # [補丁43] Lui Char 手袋（LC 字樣）
-			Art.rr(ctx, -9, -14, 18, 14, 2, "#6a4a2a", INK, 1.0); Art.el(ctx, 0, -14, 5, 5, null, INK, 1.2)
-			_l(ctx, -4, -9, -4, -4, "#e0c050", 1.2); _l(ctx, -4, -4, -1, -4, "#e0c050", 1.2); Art.el(ctx, 3, -6.5, 2.2, 2.6, null, "#e0c050", 1.2)
+		"luichar_bag":   # 限量手袋（原創：酒紅菱格＋打卡鐘扣，冇字母 logo；正式圖 eqi_eq_jue_luichar 蓋過）
+			Art.poly(ctx, [-8, -13, 8, -13, 10, 0, -10, 0], "#7a2a3a", INK, 1.0); Art.el(ctx, 0, -14, 5, 5, null, "#c8a040", 1.2)
+			_l(ctx, -6, -9, 2, -1, "#5a1a2a", 0.6); _l(ctx, 6, -9, -2, -1, "#5a1a2a", 0.6); Art.el(ctx, 0, -9, 2.4, 2.4, "#f0e8d0", "#c8a040", 0.8)
 		"ex":   # [補丁43] 王牌專屬物（暫代：金邊錦囊）
 			Art.el(ctx, 0, -9, 8, 9, "#8a2a5a", INK, 1.1); _l(ctx, -4, -17, 4, -17, "#e0c050", 1.6); Art.el(ctx, 0, -9, 3, 3, "#e0c050", INK, 0.6)
 		"cleaver", "cleaver_old":   # 生鏽柴刀（老字號菜刀共用）
