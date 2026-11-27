@@ -492,7 +492,7 @@ func _shots(t) -> void:
 	S.cleared["1-3"] = true
 	load("res://game/zone/zone_data.gd").mark_all_bosses(0)   # [zone] 新規則：第 1 關野外王全部打低先拔得營
 	_chk("真場景：可以拔營", sc.can_move())
-	_chk("真場景：拔營前冇其他劇情播緊", m.story.cur == null and m.story.q.is_empty() and not sc.story._playing, "cur=%s q=%d playing=%s" % [str(m.story.cur.sc.get("title", m.story.cur.sc.get("id", ""))) if m.story.cur != null else "null", m.story.q.size(), str(sc.story._playing)])
+	_chk("真場景：拔營前冇其他劇情播緊", m.story.cur == null and m.story.q.is_empty() and not sc.story._playing, "cur=%s q=%d playing=%s" % [(str(m.story.cur.sc.keys()) + " " + str(m.story.cur.sc.get("lines", [[""]])[0])) if m.story.cur != null else "null", m.story.q.size(), str(sc.story._playing)])
 	var r = sc.move_next()
 	await _w(t, 0.5)
 	var mb = ""; var mbt = ""

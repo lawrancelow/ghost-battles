@@ -101,7 +101,7 @@ func _map() -> void:
 		_set_star(k, 0)
 	_chk("三階王牌：★0–2 第一階、★3–4 第二階、★5 第三階（Spr／PtGfx 取圖自動換）", bad3.is_empty(), bad3)
 	_chk("酒吞童子四階：★0–2／★3／★4／★5 → 一／二／三／四階", bad4.is_empty(), bad4)
-	_chk("其他角色唔受影響（afu_body、toyol、xiaogui 照用原圖）", Spr.key_for("toyol") == "toyol" and Spr.key_for("xiaogui") == "xiaogui" and Spr.key_for("afu_body") in ["afu_body", "afuf_body"])
+	_chk("其他角色唔受影響（toyol、xiaogui 照用原圖）；主角手持兵器整張圖 afu_body 換空手姿勢（[p47]）", Spr.key_for("toyol") == "toyol" and Spr.key_for("xiaogui") == "xiaogui" and Spr.key_for("afu_body") in ["afu_pose_a", "afuf_pose_a"])
 	_chk("第一階＝空手原圖：網格／拆手唔用（active）", ACE.active("heiwu") and ACE.active("bm_shuten"))
 
 # ---------------- dlg ----------------
