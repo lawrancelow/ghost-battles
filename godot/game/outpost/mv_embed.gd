@@ -33,6 +33,7 @@ static func attach(m, vil: Control) -> Node:
 
 func _ready() -> void:
 	_rng.seed = 4242
+	J.G["MV_BUSY"] = _busy   # [xzfollow] 小紙跟隨用：呢隻鬼係咪喺大排檔做緊（員工／領班／守夜）
 	sc = Control.new(); sc.set_script(load(MV_SCENE)); sc.name = "MvScene"
 	sc.embed = true; sc.hide_host = false
 	sc.embed_draw = _draw_extra
@@ -190,6 +191,19 @@ func focus_outpost(frac := 0.5) -> void:
 		c.glide_to(Vector2(mr.get_center().x, mr.position.y + mr.size.y * frac)); return
 	var vh = village.size.y / maxf(0.01, village.size.x / 390.0)
 	_cam_anim = -eh() + eh() * frac - vh * 0.5
+
+# [xzfollow]
+func _busy(gid) -> bool:
+	if sc == null or not is_instance_valid(sc) or sc.get("sim") == null: return false
+	var m = sc.sim.st()
+	if m == null: return false
+	for sid in m.st:
+		var e = m.st[sid]
+		for k in ["workers", "fore"]:
+			if e.get(k) is Array:
+				for x in e[k]: if x != null and J.seq(x, gid): return true
+	for x in m.guards: if x != null and J.seq(x, gid): return true
+	return false
 
 # ---------------- 挑夫鬼（純畫面） ----------------
 func _has_stock() -> bool:

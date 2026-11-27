@@ -168,7 +168,7 @@ func all(t) -> void:
 	# ================= 5. 名鬼一職 =================
 	S.bld["wood"] = maxf(1.0, J.num(S.bld.get("wood", 1)))
 	_chk("出陣", BK.set_job(g2.id, "team") == "ok" or S.team.has(g2.id), BK.job_label(g2))
-	_chk("出陣 → 生產：自動離開出陣", BK.set_job(g2.id, "post", "wood") == "ok" and not S.team.has(g2.id) and J.str(g2.post) == "wood" and _roles(S, g2) == 1)
+	_chk("出陣 → 生產：[xzfollow] 新規則出陣隊照留（出擊時借調），崗位＝wood", BK.set_job(g2.id, "post", "wood") == "ok" and S.team.has(g2.id) and J.str(g2.post) == "wood")
 	_chk("生產 → 防衛隊長：自動離開工位", BK.set_job(g2.id, "cap_def") == "ok" and g2.get("post") == null and _roles(S, g2) == 1 and BK.job(g2) == "cap_def")
 	BK.st().cap_def = [g2.id]
 	var r_full = BK.set_job(g3.id, "cap_def")
@@ -182,7 +182,7 @@ func all(t) -> void:
 	var free = S.team.find(null)
 	if free < 0: S.team[2] = null; free = 2
 	S.team[free] = g3.id; BK.after_team(g3.id)
-	_chk("舊「佈陣」上陣：名鬼自動離開工位", BK.job(g3) == "team" and g3.get("post") == null and _roles(S, g3) == 1)
+	_chk("舊「佈陣」上陣：[xzfollow] 新規則工位照留（出擊時借調）", BK.job(g3) == "team" and J.t(g3.get("post")))
 	_chk("休息：乜職務都冇", BK.set_job(g3.id, "idle") == "ok" and _roles(S, g3) == 0)
 	var fod = null
 	for g in S.ghosts: if J.str(g.q) == "藍" or J.str(g.q) == "紫": fod = g

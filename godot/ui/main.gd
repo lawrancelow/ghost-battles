@@ -819,7 +819,8 @@ func pick_worker(post: String, back: String) -> void:
 			var b = UIKit.btn("派", "gold", true); hb.add_child(b)
 			b.pressed.connect(func():
 				if G.workersAt(post).size() >= G.slots(post): G.workersAt(post)[0].post = null
-				g.post = post; G.quest_check(); G.save(); refresh(); open_building(back))
+				g.post = post; load("res://game/barracks/bk_data.gd").after_post(g)   # [xzfollow] 名鬼一職：同 n_pick_do 一樣，派工即刻由出陣隊移走（以前留喺隊，之後一調隊就無聲咁清走崗位）
+				G.quest_check(); G.save(); refresh(); open_building(back))
 		sheet_body.add_child(pc)
 	if list.is_empty(): _p("沒有可以派的鬼怪。")
 	var bk = UIKit.btn("返回"); bk.pressed.connect(func(): open_building(back)); sheet_body.add_child(bk)

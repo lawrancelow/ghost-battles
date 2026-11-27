@@ -159,6 +159,7 @@ static func _card_body(m, pend: Dictionary) -> void:
 		if not J.t(id): continue
 		for g in J.iter(S.ghosts): if g is Dictionary and J.str(g.id) == J.str(id): hn.append(str(DB.L(J.str(g.name))))
 	body.add_child(UIKit.rich("[b]%s[/b]　%s" % [L("名鬼帶隊", "名鬼帶隊"), "、".join(hn) if hn.size() else L("（冇）", "（無）")], 17, UIKit.INKTXT))
+	for ln in load("res://game/rts/sortie_post.gd").busy_lines(): body.add_child(UIKit.rich("[color=#9c2219]%s[/color]" % ln, 15, UIKit.INKTXT))   # [xzfollow]
 	load("res://game/rts/ab_card.gd").add_to(body, load("res://game/rts/ab_card.gd").keys_for(pend), {"on_change": func(): _card_body(m, pend)})   # [abui] 偵察卡＋揀軍師
 	var row = func(label: String, key: String, mx: int, per: String):
 		var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 10)
@@ -240,6 +241,8 @@ static func _launch(pend: Dictionary, ny: int, nm: int) -> String:
 	var tk = str(g.get("tkey", ""))
 	if tk != "": TA.hide_keys[tk] = true
 	ops.append(op)
+	var bw = load("res://game/rts/sortie_post.gd").borrow(op, op.units)   # [xzfollow] 派工中嘅名鬼：崗位暫時空出，打完自動返去
+	for b in bw: toast(L("%s 暫時離開%s去出擊", "%s 暫時離開%s去出擊") % [str(DB.L(str(b[0]))), str(b[1])])
 	LOG.append(["dispatch", op.sid, _count(op), pend.kind])
 	var m = _main()
 	var nv = m.get("village") if m != null else null
@@ -490,6 +493,7 @@ static func tick(dt: float) -> void:
 			if _settle(op): op.settled = true; op.begin_back()
 		if op.phase == "done":
 			ops.erase(op); LOG.append(["done", op.sid])
+			for msg in load("res://game/rts/sortie_post.gd").restore(op.id): toast(msg)   # [xzfollow] 打完：返原崗位復工
 			var tk = str(op.get_meta("tkey", ""))
 			if tk != "": TA.hide_keys.erase(tk)
 	if pending != null and Engine.get_process_frames() > _pend_f + 2:

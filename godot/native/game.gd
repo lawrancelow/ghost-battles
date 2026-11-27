@@ -651,7 +651,7 @@ static func v_collect(this_, ctx) -> Array:
 			if WK != null: return J.mc(WK, "drawWorker", [ctx, ss, t, 0.62, work_info])
 			return J.mc(ART, "drawChar", [ctx, J.gp(J.gp(ss, "g"), "k"), J.gp(ss, "x"), J.gp(ss, "y"), 0.62, {"t": t + J.num(J.gp(ss, "ph")), "work": true, "flip": J.gp(ss, "flip"), "tamed": true, "untied": true}])})
 	var idle = []
-	for g in S.ghosts: if not J.t(g.get("post")) and J.str(g.k) != "afu" and J.str(g.k) != "xiaozhi": idle.append(g)   # [xzfollow] 小紙冇派工就跟住主角
+	for g in S.ghosts: if not J.t(g.get("post")) and J.str(g.k) != "afu" and J.str(g.k) != "xiaozhi" and not (g.get("sortie") is Dictionary): idle.append(g)   # [xzfollow] 小紙冇派工就跟住主角；出擊緊嘅鬼唔喺村入面
 	var n0 = items.size()
 	var PL = _g("PlazaLife")
 	if PL != null: J.mc(PL, "frame", [this_, idle, items, vis, ctx, t])
@@ -672,7 +672,15 @@ static func v_collect(this_, ctx) -> Array:
 static func _xz_follow(this_, S, items: Array, vis, ctx, t) -> void:
 	var xz = null
 	for g in S.ghosts: if J.str(g.k) == "xiaozhi": xz = g; break
-	if xz == null or J.t(xz.get("post")): return
+	this_["xz_on"] = false
+	load("res://game/rts/sortie_post.gd").heal()   # [xzfollow] 中途關遊戲遺留嘅借調：還原
+	if xz == null or J.t(xz.get("post")) or xz.get("sortie") is Dictionary: return   # 出擊緊：由出擊隊伍代表
+	# [xzfollow] 雙重保險：已經畫喺任何崗位（村子／營地做工位、大排檔員工／領班／守夜）就唔好再跟主角，同一隻鬼唔可以出兩次
+	if vis is Array:
+		for e in vis: if J.seq(J.gp(J.gp(e, "g"), "id"), xz.id): return
+	var em = J.G.get("MV_BUSY")
+	if em is Callable and bool(em.call(xz.id)): return
+	this_["xz_on"] = true
 	var H = this_.hero
 	var hx = J.num(H.x); var hy = J.num(H.y); var dir = -1.0 if J.num(H.dir) < 0 else 1.0
 	var tx = hx - dir * 30.0; var ty = hy + 4.0
@@ -1078,7 +1086,7 @@ static func v_draw(this_) -> void:
 			if WK != null: return J.mc(WK, "drawWorker", [ctx, ss, t, 0.62, work_info])
 			return J.mc(ART, "drawChar", [ctx, J.gp(J.gp(ss, "g"), "k"), J.gp(ss, "x"), J.gp(ss, "y"), 0.62, {"t": t + J.num(J.gp(ss, "ph")), "work": true, "flip": J.gp(ss, "flip"), "tamed": true, "untied": true}])})
 	var idle = []
-	for g in S.ghosts: if not J.t(g.get("post")) and J.str(g.k) != "afu" and J.str(g.k) != "xiaozhi": idle.append(g)   # [xzfollow] 小紙冇派工就跟住主角
+	for g in S.ghosts: if not J.t(g.get("post")) and J.str(g.k) != "afu" and J.str(g.k) != "xiaozhi" and not (g.get("sortie") is Dictionary): idle.append(g)   # [xzfollow] 小紙冇派工就跟住主角；出擊緊嘅鬼唔喺村入面
 	var PL = _g("PlazaLife")
 	if PL != null: J.mc(PL, "frame", [this_, idle, items, vis, ctx, t])
 	else:

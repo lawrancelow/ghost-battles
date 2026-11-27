@@ -248,18 +248,30 @@ static func validate() -> void:
 	var seen = {}
 	var st = s.mv.get("st", {})
 	if not (st is Dictionary): return
+	# [xzfollow] 員工、領班位（fore）、守夜位（guards）一齊計：以前只睇 workers，
+	#   領班／守夜嘅鬼每次返嚟遊戲（離線結算 → sync → 呢度）都會被當成「冇登記」放返自由
+	#   （post 清空 → 小紙又跟返主角、領班位冇咗人）。fore／guards 係定格陣列：唔要嘅位填 null，唔縮短。
+	var keep_ok = func(gid) -> bool:
+		var gh: Variant = ghost(gid); var key = J.str(gid)
+		if gh == null or seen.has(key) or J.seq(J.gp(gh, "k"), "afu"): return false
+		var p = gh.get("post")
+		if p == null or J.seq(p, "mv"):
+			gh["post"] = "mv"; seen[key] = true; return true
+		return false   # 其他崗位（分村 garrison／舊崗位）＝ 已經被調走，唔再算移動村員工
 	for sid in st:
 		var e = st[sid]
 		if not (e is Dictionary) or not (e.get("workers") is Array): continue
 		var keep = []
 		for gid in e.workers:
-			var gh: Variant = ghost(gid); var key = J.str(gid)
-			if gh == null or seen.has(key) or J.seq(J.gp(gh, "k"), "afu"): continue
-			var p = gh.get("post")
-			if p == null or J.seq(p, "mv"):
-				gh["post"] = "mv"; seen[key] = true; keep.append(gid)
-			# 其他崗位（分村 garrison／舊崗位）＝ 已經被調走，唔再算移動村員工
+			if keep_ok.call(gid): keep.append(gid)
 		if keep.size() != e.workers.size(): e["workers"] = keep
+	for sid in st:
+		var e = st[sid]
+		if e is Dictionary and e.get("fore") is Array:
+			for i in e.fore.size(): if e.fore[i] != null and not keep_ok.call(e.fore[i]): e.fore[i] = null
+	if s.mv.get("guards") is Array:
+		var ga: Array = s.mv.guards
+		for i in ga.size(): if ga[i] != null and not keep_ok.call(ga[i]): ga[i] = null
 	# 冇登記喺任何台嘅 "mv" 鬼（例如場景換咗）：放返自由
 	for gh in s.get("ghosts", []):
 		if J.seq(gh.get("post"), "mv") and not seen.has(J.str(gh.get("id"))): gh["post"] = null
