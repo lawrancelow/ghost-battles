@@ -241,7 +241,7 @@ func logic(_t) -> void:
 	# 每種特別獎
 	for rw in ["mat", "gear", "fore", "tix", "inf"]:
 		pp.orders.clear()
-		var o2 = EV.make_order(P, sim); o2.rw = rw
+		var o2 = EV.make_order(P, sim); o2.rw = rw; o2["star"] = {}   # 隨機單可能要品質星，測獎勵時唔驗星（星另有測試）
 		for g in o2.need: sim.st().counter[g] = J.num(o2.need[g])
 		var inf0 = MVW.inf(); var vol0 = MVW.vol_list().size(); var j = load("res://game/joss/joss.gd").st()
 		var tx0 = J.num(j.tix.get("spd")) + J.num(j.tix.get("inc")); var m0 = 0.0
@@ -255,7 +255,7 @@ func logic(_t) -> void:
 			"fore": _ok("獎：借領班 8 分鐘", pp.help is Dictionary and J.num(pp.help.left) == MVP.HELP_S)
 			"tix": _ok("獎：陽間包裹券 +1", J.num(j.tix.get("spd")) + J.num(j.tix.get("inc")) == tx0 + 1.0)
 			"inf": _chk("獎：影響力 +8", MVW.inf() - inf0, minf(8.0, 100.0 - inf0))
-	var hs = str(pp.help.sid)
+	var hs = str(pp.help.sid) if pp.help is Dictionary else ""
 	_chk("借領班：台速度 ×1.5", P.smul(sim, hs), 1.5)
 	pp.orders.clear()
 	var o3 = EV.make_order(P, sim); o3.left = 0.5
