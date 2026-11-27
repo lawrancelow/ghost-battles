@@ -185,29 +185,38 @@ func _guard_pan(q) -> void:
 			hole = target_rect()
 			return
 
-# [qa54] 教程進行中：提示（toast）唔准疊住教程目標——目標喺下半就將提示搬去頂（說明框下面）
+# [qa54] 教程進行中：提示（toast）唔准疊住教程目標——每格揀「底（原位）」或「頂（說明框下面）」入面唔撞洞嗰個
 var _toast_moved := false
 func _toast_avoid() -> void:
 	var ts = main.get("toasts")
 	if ts == null or not is_instance_valid(ts): return
-	var want_top = visible and hole.size != Vector2.ZERO and hole.get_center().y > size.y * 0.45
-	if want_top == _toast_moved: return
-	_toast_moved = want_top
-	if want_top:
-		ts.anchor_top = 0; ts.anchor_bottom = 0
-		ts.offset_top = maxf(float(main.TOP_H) + 52.0, tip_rect.end.y + 8.0); ts.offset_bottom = ts.offset_top + 10.0
-		ts.grow_vertical = Control.GROW_DIRECTION_END; ts.alignment = BoxContainer.ALIGNMENT_BEGIN
-	else:
-		_toast_avoid_reset()
+	if not visible or hole.size == Vector2.ZERO:
+		if _toast_moved: _toast_avoid_reset()
+		return
+	var w = size.x - 24.0
+	var hgt = maxf(10.0, ts.get_combined_minimum_size().y)
+	var yb = size.y - 86.0 - hgt
+	var yt = maxf(float(main.TOP_H) + 52.0, tip_rect.end.y + 8.0) if tip_rect.position.y < size.y * 0.5 else float(main.TOP_H) + 52.0
+	var rb = Rect2(12, yb, w, hgt); var rt = Rect2(12, yt, w, hgt)
+	var hz = hole.grow(4)
+	var y = yb
+	if rb.intersects(hz):
+		y = yt
+		if rt.intersects(hz):   # 兩邊都撞：放喺洞下面或者上面嗰條空位
+			y = hole.end.y + 8.0 if hole.end.y + 8.0 + hgt <= size.y - 86.0 else maxf(float(main.TOP_H) + 4.0, hole.position.y - hgt - 8.0)
+	_toast_moved = true
+	ts.anchor_top = 0; ts.anchor_bottom = 0
+	ts.offset_top = y; ts.offset_bottom = y + hgt
+	ts.grow_vertical = Control.GROW_DIRECTION_END; ts.alignment = BoxContainer.ALIGNMENT_BEGIN
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_VISIBILITY_CHANGED and not visible and _toast_moved:
 		_toast_avoid_reset()
 func _toast_avoid_reset() -> void:
 	var ts = main.get("toasts") if main != null else null
-	if ts == null or not is_instance_valid(ts): _toast_moved = false; return
+	_toast_moved = false
+	if ts == null or not is_instance_valid(ts): return
 	ts.anchor_top = 1; ts.anchor_bottom = 1; ts.offset_top = 0.0; ts.offset_bottom = -86.0   # 還原 main.gd 原本嘅位
 	ts.grow_vertical = Control.GROW_DIRECTION_BEGIN; ts.alignment = BoxContainer.ALIGNMENT_END
-	_toast_moved = false
 
 # 說明框：揀洞嘅對面嗰邊（上／下），一定唔疊住個洞
 func _place_tip() -> void:

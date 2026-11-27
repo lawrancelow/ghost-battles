@@ -10,6 +10,7 @@ const OB = preload("res://game/onboard/ob.gd")
 const MVW = preload("res://game/outpost/mv_war.gd")
 const SH := "/home/claude/docs/shots/onboard/"
 var shots := 0
+var SHP := ""   # [qa54] 截圖前綴（女主＝F_）
 var tmark := {}     # 事件 → simt
 var stage_t := {}   # 階段 → 開始 simt
 
@@ -33,7 +34,7 @@ func _shot_tut(t, m, name: String) -> void:
 		_chk("教程 guard：孤魂出咗之後手指喺畫面入面", tu.visible and Rect2(Vector2.ZERO, tu.size).intersects(tu.hole), "why=%s hole=%s" % [tu.why, str(tu.hole)])
 	await RenderingServer.frame_post_draw
 	shots += 1
-	var fn = SH + "HC_GB_Ch1_Tutorial_%02d_%s.jpg" % [shots, name]
+	var fn = SH + "HC_GB_Ch1_Tutorial_%s%02d_%s.jpg" % [SHP, shots, name]
 	t.get_viewport().get_texture().get_image().save_jpg(fn, 0.88)
 	if tu != null and tu.visible:
 		var lines = tu.tip_lbl.get_line_count()
@@ -63,6 +64,8 @@ func all(t) -> void:
 	DirAccess.make_dir_recursive_absolute(SH)
 	var m = await _boot(t)
 	var S = _S()
+	if OS.get_environment("OB_FEM") == "1":   # [qa54] 女主走一次：截圖另放
+		S["hero"] = DB.hero_make("阿珍", "f"); SHP = "F_"
 	S["ob"] = S.get("ob", {}) if S.get("ob") is Dictionary else {}
 	S.ob["test"] = 1.0
 	ZD.gate_on = true   # 測試預設唔閘霧：呢個測試要睇解霧次序
