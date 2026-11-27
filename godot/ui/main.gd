@@ -57,7 +57,8 @@ func _ready() -> void:
 	var bg = ColorRect.new(); bg.color = UIKit.INK; bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(bg)
 	load("res://ui/kit_skin.gd").install(get_tree())   # [uikit] 紙底面板自動換紙紋＋鐵櫃框
 	_build_village(); _build_top(); _build_nav(); _build_sheet()
-	story = Control.new(); story.set_script(load("res://ui/story.gd")); add_child(story)
+	story = Control.new(); story.set_script(load("res://ui/story.gd"))
+	var scl = CanvasLayer.new(); scl.layer = 125; scl.name = "StoryLayer"; add_child(scl); scl.add_child(story)   # [uxui] 劇情永遠喺最上（面板 100、提示 105、特效 110、裝備彈窗 115 都喺佢下面）
 	_build_fx()
 	load("res://game/outpost/ctl_ui.gd").attach(self)   # [ctl] 行動按鈕、出擊清單、地盤掣變灰
 	move_child(praise_box, sheet.get_index())   # 系統誇獎喺村子層，面板蓋住佢（同網頁版 z-index 一樣）
@@ -338,6 +339,9 @@ func _process(dt: float) -> void:
 			DisplayServer.clipboard_set(log_tail(200))
 		return
 	_process_js_state()
+	_mq_tick(dt)   # [uxui]
+	var scl = story.get_parent() if story != null else null
+	if scl is CanvasLayer and scl.visible != story.visible: scl.visible = story.visible   # [uxui] 冇劇情就收埋劇情層（唔好當咗最高層）
 	var _m0 = Time.get_ticks_usec()
 	LMm.tick(self)   # [landmark] 玩完舊玩法 → 返地標旁邊；地標解鎖 toast
 	ui_t += dt
@@ -678,7 +682,40 @@ func open_backyard() -> void:
 	sw.pressed.connect(func(): close_sheet(); set_mv(false); show_toast("已轉返舊村子畫面。喺「劇情」頁可以轉返移動村。"))
 
 # ---------------- 提示 ----------------
+# [uxui] 模態佇列：劇情（同名字卡、插圖）播緊 → 提示、橫幅、誇獎全部排隊；全螢幕面板／設置開住 → 橫幅、誇獎排隊（提示照出，係撳掣嘅即時回應）
+var _mq: Array = []
+var _mq_t := 0.0
+func story_modal() -> bool:
+	if story != null and is_instance_valid(story) and (story.visible or story.busy()): return true
+	var nc = get_node_or_null("NameCard")
+	return nc != null and nc.visible
+func panel_modal() -> bool:
+	if title_ov != null: return true
+	if sheet != null and sheet.visible: return true
+	if get_node_or_null("SettingsPanel") != null: return true
+	var mv = get("mv_view")
+	if mv != null and is_instance_valid(mv) and mv.get("ui_cl") != null and mv.ui_cl.visible: return true
+	return false
+func _mq_blocked(kind: String) -> bool:
+	if story_modal(): return true
+	return kind != "toast" and panel_modal()
+func _mq_tick(dt: float) -> void:
+	if _mq.is_empty(): return
+	_mq_t -= dt
+	if _mq_t > 0.0: return
+	for i in _mq.size():
+		var it = _mq[i]
+		if _mq_blocked(it[0]): continue
+		_mq.remove_at(i); _mq_t = 0.7
+		match it[0]:
+			"toast": show_toast(it[1])
+			"banner": show_banner(it[1])
+			"praise": show_praise(it[1])
+		return
 func show_toast(bb: String) -> void:
+	if _mq_blocked("toast"):
+		if _mq.size() < 12: _mq.append(["toast", bb])
+		return
 	while toasts.get_child_count() >= 3: toasts.get_child(0).free()
 	var p = PanelContainer.new()
 	var s = StyleBoxFlat.new(); s.bg_color = Color("#241b17"); s.border_color = UIKit.CINNABAR; s.border_width_left = 5; s.set_corner_radius_all(2)
@@ -689,6 +726,9 @@ func show_toast(bb: String) -> void:
 	var tw = create_tween(); tw.tween_interval(2.6); tw.tween_property(p, "modulate:a", 0.0, 0.6); tw.tween_callback(p.queue_free)
 
 func show_banner(text: String) -> void:
+	if _mq_blocked("banner"):
+		if _mq.size() < 12: _mq.append(["banner", text])
+		return
 	banner_lbl.text = text
 	banner.modulate.a = 0; banner.scale = Vector2(0.85, 0.85)
 	await get_tree().process_frame
@@ -697,6 +737,9 @@ func show_banner(text: String) -> void:
 	tw.tween_interval(1.4); tw.tween_property(banner, "modulate:a", 0.0, 0.4)
 
 func show_praise(kind: String) -> void:
+	if _mq_blocked("praise"):
+		if _mq.size() < 12: _mq.append(["praise", kind])
+		return
 	var D = DB.D
 	var pool: Array = D.PRAISE_KIND if G.S.ended else (D.PRAISE_CHOP if kind == "chop" else (D.PRAISE_RICE if kind == "rice" else D.PRAISE_CRAFT))
 	var i = randi() % pool.size()

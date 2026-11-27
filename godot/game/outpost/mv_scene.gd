@@ -253,6 +253,9 @@ var _cb_sz := Vector2.ZERO   # [play]
 func chain_btn_pos(sz: Vector2) -> Vector2:
 	_cb_sz = sz   # [play] 記低掣大細（對白框要避開）
 	var y0 = (float(sim.war.hud_y(self)) if sim != null and sim.war != null else top_pad + HUD_H) + 48.0
+	var ar = ux_alarm_rect()
+	if ar != null: y0 = maxf(y0, ar.end.y + 8.0)   # [uxui] 告急掣下面
+	if embed and _pill_rect is Rect2 and hud_k > 0.5: y0 = maxf(y0, _pill_rect.end.y + 8.0 if _pill_rect.position.x > FW * 0.5 - sz.x else y0)   # [uxui] 玩法掣喺右邊 → 再落一格
 	var cands = [Vector2(FW - sz.x - 8.0, y0), Vector2(8.0, y0)]
 	for k in range(1, 4): cands.append_array([Vector2(FW - sz.x - 8.0, y0 + 110.0 * k), Vector2(8.0, y0 + 110.0 * k)])
 	var best = cands[0]; var best_a = INF
@@ -476,12 +479,22 @@ func _float_dodge(ctx: Ctx, f: Dictionary, lrs: Array) -> Vector2:
 	else: cur = cur.lerp(tgt, 0.25)
 	f["dd"] = cur
 	return cur
+# [uxui] 劇情／全螢幕面板開住：客人對白唔出（即講即過，唔排隊）、告急等橫幅等關咗先出
+func _ux_hold() -> bool:
+	var sb = G.get("story_busy")
+	if sb is Callable and sb.is_valid() and bool(sb.call()): return true
+	if main != null and is_instance_valid(main) and main.has_method("panel_modal") and main.panel_modal(): return true
+	return false
+var _banner_pend = null
 func _bubble(p: Vector2, tx: String, who: String, life := 2.6) -> void:
-	if bubbles.size() >= 3: bubbles.pop_front()
+	if _ux_hold(): return
+	if bubbles.size() >= 2: bubbles.pop_front()   # [uxui] 同時最多 2 個
 	bubbles.append({"p": p, "text": tx, "who": who, "t": 0.0, "life": life})
 func _banner_set(a: String, b: String, life := 2.4) -> void:
+	if _ux_hold(): _banner_pend = {"a": a, "b": b, "t": 0.0, "life": life}; return
 	banner = {"a": a, "b": b, "t": 0.0, "life": life}
 func _step_fx(dt: float) -> void:
+	if _banner_pend != null and not _ux_hold(): banner = _banner_pend; _banner_pend = null   # [uxui]
 	for p in parts.duplicate():
 		p.t += dt
 		if p.k == "dot": p.p += p.v * dt; p.v *= 0.92
@@ -629,7 +642,7 @@ func _draw_stage() -> void:
 		for kk in _wbtns: if kk.begins_with("st:"): _brects.append(_wbtns[kk])
 	_brects.append_array(sim.plus.avoid_rects(self))
 	if zone: _brects.append_array(load("res://game/zone/zone_taunt.gd").world_rects)   # [mapbattle] 閒談對白框避開王嘅叫囂泡泡   # [play] 對白框避開事件名同右上「生產鏈」掣
-	if not _mbf() and not mk_hid:   # [mapbattle] 打緊仗：收埋閒談對白框
+	if not _mbf() and not mk_hid and banner == null:   # [mapbattle] 打緊仗：收埋閒談對白框   [uxui] 橫額出緊都收埋（唔好疊喺橫額上）
 		for b in bubbles: _draw_bubble(ctx, b)
 	if _ABL.active:   # [abui] 攤位名牌（烘圖畫，喺度登記）唔畀戰鬥字蓋住
 		for q in _plates: _ABL.avoid_ci(ctx.ci, ctx.T, q, true)
@@ -1395,13 +1408,21 @@ const PILL_OPEN_S := 8.0
 var _pexp := 0.0   # 展開剩低秒數
 var _pill_rect = null   # 上一格玩法掣位（畫面座標；「生產鏈」掣避開）
 var _pill_side := 0   # 0 左 1 右（有黏性）
+# [uxui] 告急「親自出征」掣（畫面座標；冇就 null）：玩法掣、生產鏈掣都唔准壓住佢
+func ux_alarm_rect():
+	if sim == null or sim.war == null: return null
+	var r = sim.war._btn.get("exp")
+	return r if r is Rect2 else null
 func _pill_xy(pw := 150.0) -> Vector2:   # 左（有「拔營！」就排佢右邊）或者右：揀遮台名牌／台／「生產鏈」掣最少嗰邊
 	var y = top_pad + EHUD_H + 6.0
 	var xs = [184.0 if (anim == null and sim.can_move()) else 8.0, FW - pw - 8.0]   # 「拔營！」掣最闊 168（跳動）
+	var ar = ux_alarm_rect()
+	if ar != null and Rect2(xs[0], y, pw, 34.0).intersects(ar.grow(4.0)) and Rect2(xs[1], y, pw, 34.0).intersects(ar.grow(4.0)): y = ar.end.y + 6.0   # [uxui] 兩邊都撞告急 → 排告急下面
 	var cost = []
 	for x in xs:
 		var r = Rect2(s2w(Vector2(x, y)), Vector2(pw, 34.0)).grow(4.0)
 		var a = 0.0
+		if ar != null and Rect2(x, y, pw, 34.0).intersects(ar.grow(4.0)): a += 1e12   # [uxui]
 		for q in _plates: a += r.intersection(q).get_area() * 3.0
 		for k in _wbtns: if k.begins_with("st:") or k.begins_with("ring:") or k.begins_with("unl:"): a += r.intersection(_wbtns[k]).get_area()
 		if _cb_pos is Vector2: a += r.intersection(Rect2(s2w(_cb_pos), _cb_sz)).get_area() * 10.0
