@@ -54,7 +54,7 @@ const MOVED := ["assign:1", "bLevel:wood"]
 
 static func _new_q(k: String) -> Dictionary:
 	match k:
-		"sell:10": return {"t": "sell", "n": 10.0, "text": "大排檔賣出 10 件貨、賺 100 冥幣", "go": "market", "r": {"exp": 40.0, "coins": 60.0}, "onStart": ["ob_market"],
+		"sell:10": return {"t": "sell", "n": 10.0, "text": "大排檔賣出 10 件貨、賺 40 冥幣", "go": "market", "r": {"exp": 40.0, "coins": 60.0}, "onStart": ["ob_market"],
 			"note": "遊魂食飽會再嚟，記得櫃台要有貨"}
 		"guard:3": return {"t": "guard", "n": float(GUARD_N), "text": "擊退第一次嚟搗亂嘅孤魂", "go": "market", "r": {"exp": 40.0, "troops": 30.0}, "onStart": ["ob_guard"],
 			"note": "之後鬼會不定時嚟，派鬼守夜同陰兵會自動幫你守"}
@@ -159,7 +159,7 @@ static func progress(q) -> Array:
 	if t == "guard": return [minf(n, _cnt("ob_guard")), n]
 	return []
 
-const SELL_COINS := 100.0
+const SELL_COINS := 40.0   # 前期貨價約 4 冥幣：10 件≈40，唔使磨
 static func on_sold(n: int, amt := 0.0) -> void:
 	if not guard_on() and _sell_on():
 		if n > 0: bump("ob_sold", float(n))
