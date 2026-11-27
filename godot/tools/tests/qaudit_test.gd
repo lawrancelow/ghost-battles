@@ -236,15 +236,15 @@ func _do_sell(t, m, q) -> String:
 		for sid in MDd.stations(sim.ci()):
 			if not sim.unlocked(sid): continue
 			var r = sim.tap_station(sid); taps += 1
-			if r == "starve": gave += await _sell_mat(t, m)
+			if r == "starve" and sid == "st_shoubao": gave += await _sell_mat(t, m)   # 其他台（紙扇、豆花）冇料唔理：任務只要賣貨，玩家都係撳蒸籠
 		await _w(t, 0.4)
 		if k % 25 == 0: await _skip(t, 1)
-		if k % 50 == 49:
+		if k % 50 == 49 or (k % 25 == 24 and get("nogift") == true):
 			var Mm = load("res://game/outpost/mat.gd"); var cs = []
 			for c in sim.custs: if c.st != "out": cs.append(str(c.wants))
 			var stx = []
 			for sid in MDd.stations(sim.ci()): stx.append("%s:%s/%s" % [sid, str(sim.unlocked(sid)), str(sim.pile_n(sid))])
-			_p("  sell… 進度%s 普通包子%s 壽包%s 客%s 台%s 櫃台%s" % [str(_prog(q)), str(Mm.amt("m_bao")), str(Mm.amt("m_shoubao")), str(cs), str(stx), str(sim.st().counter)])
+			_p("  sell… t=%s ts=%.1f sold=%s earn=%s 進度%s" % [str(get("simt")), Engine.time_scale, str(J.gp(_S().cnt, "ob_sold")), str(J.gp(_S().cnt, "ob_earn")), str(_prog(q))]); _p("  sell…… 進度%s 普通包子%s 壽包%s 客%s 台%s 櫃台%s" % [str(_prog(q)), str(Mm.amt("m_bao")), str(Mm.amt("m_shoubao")), str(cs), str(stx), str(sim.st().counter)])
 	if gave > 0: gifts.append([_qi(), "普通包子（做壽包料）", gave])
 	return "撳大排檔台 %d 下，等客人買（%s/%s）" % [taps, str(_prog(q)[0]), str(_prog(q)[1])]
 func _sell_mat(_t, _m) -> float:   # 大排檔冇料：畀普通包子（onboard_test pace 改做親手包）
