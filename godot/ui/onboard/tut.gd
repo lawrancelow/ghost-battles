@@ -153,10 +153,16 @@ func _process(dt: float) -> void:
 		_panned = key; main._quest_go()
 		return
 	hole = target_rect()
+	var go_tip = false
 	if hole.size == Vector2.ZERO or not Rect2(Vector2.ZERO, size).intersects(hole):
-		why = "nohole %s" % str(hole); visible = false; return
+		# 目標唔喺畫面（例如大排檔喺另一邊）：改為指住主線條「前往」，唔好黑晒都冇提示
+		var qg = main.get("quest_go")
+		if qg != null and is_instance_valid(qg) and qg.is_visible_in_tree():
+			hole = qg.get_global_rect().grow(6); go_tip = true
+		else:
+			why = "nohole %s" % str(hole); visible = false; return
 	hole = hole.intersection(Rect2(Vector2.ZERO, size))
-	tip_lbl.text = OB.tip_of(q)
+	tip_lbl.text = OB.T("撳「前往」，帶你去做呢一步", "點「前往」，帶你去做這一步") if go_tip else OB.tip_of(q)
 	_place_tip()
 	visible = true; shown = true
 	queue_redraw()
