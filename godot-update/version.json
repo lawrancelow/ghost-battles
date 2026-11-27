@@ -55,6 +55,20 @@
     "md5": "af99b91eef9a8ec0a753f32d007cb1c1",
     "size": 104479072
    }
+  },
+  "0.10.2": {
+   "android": {
+    "ver": 47,
+    "file": "p_0102_android_47.pck",
+    "md5": "76fc0cffe52e8f2d3132fdf3dfbc7276",
+    "size": 15431808
+   },
+   "linux": {
+    "ver": 47,
+    "file": "p_0102_linux_47.pck",
+    "md5": "76fc0cffe52e8f2d3132fdf3dfbc7276",
+    "size": 15431808
+   }
   }
  }
 }
