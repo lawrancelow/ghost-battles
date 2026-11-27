@@ -45,7 +45,8 @@ func logic(t) -> void:
 	var root = t.get_tree().root
 	_chk("台面板喺獨立高層", sc.ui_cl != null and sc.ui_cl.visible and sc.ui_cl.is_ancestor_of(sc.sheet), sc.ui_cl.layer if sc.ui_cl else -1)
 	_chk("台面板層數高過地圖其他層", sc.ui_cl.layer > _max_layer(root, sc.ui_cl), "%d > %d" % [sc.ui_cl.layer, _max_layer(root, sc.ui_cl)])
-	_chk("面板底色唔透明", (sc.sheet.get_theme_stylebox("panel") as StyleBoxFlat).bg_color.a >= 0.999)
+	var psb = sc.sheet.get_theme_stylebox("panel")   # [uikit] 套件：紙紋 StyleBoxTexture（不透明紙圖）亦算
+	_chk("面板底色唔透明", (psb is StyleBoxFlat and psb.bg_color.a >= 0.999) or (psb is StyleBoxTexture and psb.texture != null and psb.modulate_color.a >= 0.999), psb)
 	var srect: Rect2 = sc.sheet.get_global_rect()
 	var vsz = root.get_visible_rect().size
 	_chk("面板喺畫面入面", srect.size.y > 200 and srect.position.y >= 0 and srect.end.y <= vsz.y + 1, srect)
