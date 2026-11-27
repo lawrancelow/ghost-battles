@@ -58,7 +58,7 @@ func _build_act() -> void:
 	for k in ["normal", "hover", "focus"]: act_btn.add_theme_stylebox_override(k, n if k != "hover" else h)
 	act_btn.add_theme_stylebox_override("pressed", p)
 	act_btn.anchor_left = 0.5; act_btn.anchor_right = 0.5; act_btn.anchor_top = 1; act_btn.anchor_bottom = 1
-	act_btn.offset_left = -146; act_btn.offset_right = 146; act_btn.offset_top = -184; act_btn.offset_bottom = -114
+	act_btn.offset_left = -146; act_btn.offset_right = 146; act_btn.offset_top = -206; act_btn.offset_bottom = -136   # [uxui] 同下面「出擊／叫回」一行留 30px，唔再擠埋一齊
 	var hb = HBoxContainer.new(); hb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); hb.offset_left = 8; hb.offset_right = -12; hb.offset_top = 6; hb.offset_bottom = -6
 	hb.add_theme_constant_override("separation", 10); hb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	act_btn.add_child(hb)

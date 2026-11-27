@@ -725,6 +725,7 @@ func _sync_ui() -> void:
 		var top = 0.0
 		if nv.has_method("_zone_top_px"): top = float(nv._zone_top_px()) if ov.offset_top > 0 else 0.0
 		var dock_i = 0
+		var col = _ux_col()   # [uxui] 右邊豎排起點：避開「生產鏈」掣，唔切邊
 		for u in op.units:
 			if J.num(u.side) != 0 or J.t(u.get("minion")) or u.get("sk") == null: continue
 			if op.phase != "fight": continue
@@ -736,7 +737,7 @@ func _sync_ui() -> void:
 				b = SkillBtn.new(); b.u = u; b.op = op; b.view = self; ui.add_child(b); btns[key] = b
 			b.u = u; b.op = op
 			# 貼畫面右邊豎排（唔遮戰場；位置固定，手指易撳）；名鬼頭頂另有小金點提示「可以放」
-			var sp = Vector2(nv.size.x - BTN * 0.5 - 8, nv.size.y * 0.40 + dock_i * (BTN + 26)); dock_i += 1
+			var sp = Vector2(nv.size.x - BTN * 0.5 - 8, col.y + dock_i * col.x); dock_i += 1
 			b.docked = true
 			b.position = (sp - Vector2(BTN, BTN) * 0.5).round()
 			b.queue_redraw()
@@ -745,7 +746,25 @@ func _sync_ui() -> void:
 	chip_auto.visible = not btns.is_empty()
 	if chip_auto.visible:
 		_sync_auto()
-		chip_auto.position = Vector2(nv.size.x - 56 - 6, nv.size.y * 0.40 - BTN * 0.5 - 40)
+		var aw = maxf(chip_auto.size.x, chip_auto.get_combined_minimum_size().x)
+		chip_auto.position = Vector2(nv.size.x - aw - 8, _ux_col().y - BTN * 0.5 - 40)   # [uxui] 按實際闊度貼右邊，唔切邊
+# [uxui] 右邊技能豎排：回傳 Vector2(每粒間距, 第一粒中心 y)。「生產鏈」掣（同其他右邊浮動掣）喺上面就排佢下面；太多粒就收窄間距，唔出底
+var _cb_node = null
+func _ux_col() -> Vector2:
+	var y = nv.size.y * 0.40
+	if _cb_node == null or not is_instance_valid(_cb_node): _cb_node = nv.get_tree().root.find_child("ChainBtn", true, false)
+	if _cb_node != null and is_instance_valid(_cb_node) and _cb_node.is_visible_in_tree():
+		var g: Rect2 = _cb_node.get_global_rect()
+		var inv = ui.get_global_transform().affine_inverse()
+		var r = Rect2(inv * g.position, g.size)
+		if r.end.x > nv.size.x - BTN - 20:   # 喺右邊欄
+			y = maxf(y, r.end.y + 40.0 + 10.0 + BTN * 0.5)   # 「自動」掣（高 32＋8）都排佢下面
+	var n = maxi(1, btns.size())
+	var gap = BTN + 26.0
+	var bottom = nv.size.y - 120.0   # 底部留俾出擊／叫回／挑戰卡
+	if y + (n - 1) * gap > bottom: gap = maxf(BTN + 4.0, (bottom - y) / maxf(1.0, n - 1))
+	if y + (n - 1) * gap > bottom: y = maxf(nv.size.y * 0.18, bottom - (n - 1) * gap)
+	return Vector2(gap, y)
 func _chip_text(op) -> void:
 	var s = ""
 	match op.phase:
@@ -758,6 +777,10 @@ func _chip_text(op) -> void:
 	var nm = {"stage": op.sid, "boss": L("王戰", "王戰"), "cap": L("親征", "親征"), "capauto": L("攻佔", "攻佔"), "raid": L("迎擊", "迎擊"), "raidauto": L("守村", "守村")}.get(op.kind, op.sid)
 	chip_l.text = "%s %s" % [op.title if op.kind == "sortie" else nm, s]   # [sortie] 出擊顯示據點名
 	chip_recall.visible = op.phase in ["march", "fight"]
+	# [uxui] 戰況條按字闊伸長（唔好切字），但唔准伸到右邊「出擊」掣（右下 172px）
+	var f = chip_l.get_theme_font("font"); var tw = f.get_string_size(chip_l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x if f != null else 100.0
+	var avail = nv.size.x - 172.0 - 12.0 - 6.0 - (62.0 if chip_recall.visible else 0.0) - 26.0
+	chip_l.custom_minimum_size.x = clampf(tw + 6.0, 80.0, maxf(80.0, avail))
 
 class SkillBtn extends Control:
 	var u: Dictionary
