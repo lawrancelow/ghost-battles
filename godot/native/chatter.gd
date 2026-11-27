@@ -135,7 +135,7 @@ static func fill(s, g) -> String:
 	var nn = J.gp(e, "n") if J.t(e) else null
 	if not J.t(nn): nn = "新同事"
 	var who = (nick(g) if is_fodder(g) else J.str(J.gp(g, "name"))) if J.t(g) else ""
-	return J.str(s).replace("{N}", J.str(nn)).replace("{n}", who)
+	return str(DB.N(J.str(s).replace("{N}", J.str(nn)).replace("{n}", who)))   # [qa54] 女主：碎碎念「少爺」都要換
 
 # ---------- 揀一句 ----------
 static func pool_of(g):

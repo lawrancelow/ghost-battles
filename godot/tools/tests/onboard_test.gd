@@ -318,6 +318,9 @@ func _names() -> void:
 		for l in OB.SC[id].lines:
 			for s in [DB.N(l[1]), DB.N(l[2])]: if str(s).contains("阿福") or str(s).contains("少爺"): bad_n += 1
 	_chk("女主：新劇情冇男主名／男性稱呼", bad_n == 0, bad_n)
+	var CHn = load("res://native/chatter.gd")
+	var cl = CHn.fill("少爺，我想報個興趣班：游水。", null)
+	_chk("女主：村民碎碎念「少爺」換「大小姐」", not cl.contains("少爺") and cl.contains("大小姐"), cl)
 	S["hero"] = DB.hero_make("阿強", "m")
 	_chk("男主改名：講嘢人「阿強」", DB.N("阿福") == "阿強")
 	if h0 == null: S.erase("hero")
