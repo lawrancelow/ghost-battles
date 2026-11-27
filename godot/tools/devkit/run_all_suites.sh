@@ -1,6 +1,6 @@
 #!/bin/bash
 G=/home/claude/ghost-battles/godot
-run(){ /home/claude/setup/edtest.sh $G $1 $2 $3 1200; pkill -f "Xvfb :"; sleep 1; }
+run(){ /home/claude/setup/edtest.sh $G $1 $2 $3 1200; }   # edtest 自己清自己嘅 Xvfb
 run fogfix res://tools/tests/fogfix_test.gd all
 run zone res://tools/tests/zone_test.gd all
 run zstory res://tools/tests/zstory_test.gd logic

@@ -5,6 +5,7 @@ var _man = {}
 var _tex = {}
 var trace := false      # [perf2] 測試用：記低每張圖同步載入幾耐
 var trace_log := []
+var audit = null        # [p47] 測試：{key: 次數}（空手稽查：記低實際攞過嘅圖鍵）
 
 func _ready() -> void:
 	var f = FileAccess.open("res://assets/spr_manifest.json", FileAccess.READ)
@@ -23,11 +24,13 @@ static func fem_key(k: String) -> String:
 
 func fem_ok() -> bool: return _man.has("afuf")
 
+const HERO_FULL := {"afu": 1, "afuf": 1, "afu_body": 1, "afuf_body": 1}   # [p47] 主角手持兵器整張圖
 var _ace = null   # [p44] 王牌晉級立繪（game/soul/ace_art.gd）
 func key_for(k: String) -> String:
 	if _ace == null: _ace = load("res://game/soul/ace_art.gd")
 	if _ace.STAGES.has(k) or _ace.NWP.has(k): return _ace.map(k)   # [p44] 王牌階段圖／軍團空手圖
 	if not k.contains("afu"): return k
+	if HERO_FULL.has(k) and _ace.active("afu"): k = _ace.POSES[0]   # [p47] 主角整張圖（手揸斧頭／三角尺）一律換空手姿勢圖（頭像、圖鑑、劇情、回陽間等）
 	if not DB.hero_female(): return k
 	var fk = fem_key(k)
 	return fk if fk != k and _man.has(fk) else k
@@ -42,6 +45,7 @@ func fem_src(path: String) -> String:
 
 func get_tex(k: String) -> Texture2D:
 	k = key_for(k)
+	if audit != null: audit[k] = int(audit.get(k, 0)) + 1
 	if _tex.has(k): return _tex[k]
 	if not _man.has(k): return null
 	var tl0 = Time.get_ticks_usec()

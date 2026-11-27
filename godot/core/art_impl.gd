@@ -9,6 +9,7 @@ const HOP := {"laojiang": 1, "zombie": 1, "pocong": 1}
 const CHAR_H := {"npc_it": 60, "npc_mis": 62, "npc_ken": 64, "npc_boss": 64, "npc_guard": 64, "npc_auntie": 60, "afu": 58, "xiaozhi": 54, "egui": 54, "eguiking": 66, "xiaogui": 46, "toyol": 46, "laojiang": 58, "zombie": 54, "shuigui": 56, "pontianak": 60, "pocong": 54, "penanggal": 52, "mengpo": 56, "youhun": 46, "baiwu": 76, "heiwu": 76, "niutou": 64, "mamian": 64, "huang": 62, "zhiren": 54, "tianhua": 60, "npc_kiln": 58, "npc_receipt": 56, "npc_driver": 58, "npc_ferry": 60, "npc_shop": 58, "npc_rubber": 58, "npc_fisher": 58, "npc_dock": 60, "npc_stall": 58, "npc_ticket": 56, "npc_dj": 56, "npc_inn": 58, "npc_granny": 54, "npc_grandpa": 56, "npc_hq": 58, "npc_clerk": 56, "res_granny": 54, "res_guard": 58, "res_helper": 56}
 const SPECIAL_T := {"penanggal": 1, "pocong": 1, "toyol": 1}
 const ACE = preload("res://game/soul/ace_art.gd")   # [p44] 王牌晉級立繪
+const HV = preload("res://game/soul/hero_vil.gd")   # [p47] 主角空手＋漂浮兵器
 
 # ---------------- 基本形狀 ----------------
 func el(ctx: Ctx, x: float, y: float, rx: float, ry: float, fill = null, stroke = null, lw = null) -> void:
@@ -369,7 +370,7 @@ const LIMB_POSES := {"": 1, "idle": 1, "move": 1, "walk": 1, "run": 1, "windup":
 const MOVE_POSES := {"windup": 1, "strike": 1, "follow": 1, "recover": 1}
 const PUPPET_ANIM := {"walk": 1, "run": 1, "startle": 1, "cower": 1, "tremble": 1, "phone": 1, "look": 1, "mop": 1, "faint": 1, "sip": 1, "stand": 1, "hold": 1, "shrug": 1, "windup": 1, "strike": 1, "recover": 1, "hurt": 1, "cast": 1, "die": 1, "chop": 1, "hammer": 1, "knead": 1, "reap": 1, "proud": 1}
 
-func spr_key(type: String) -> String: return "afu_body" if type == "afu" else type
+func spr_key(type: String) -> String: return ("afu" if HV.active() else "afu_body") if type == "afu" else type   # [p47] 空手時經 Spr.key_for 換姿勢圖
 func has_spr(type: String) -> bool: return char_h(type) > 0 and PtGfx.tex(spr_key(type)) != null
 func _jart(k: String):
 	var A = J.G.get("ART")
@@ -408,6 +409,10 @@ func draw_char(ctx: Ctx, type: String, x: float, y: float, s: float, o: Dictiona
 	if type == "youhun" and not J.t(o.get("oldGhost")) and PtGfx.tex("soul_i") != null: type = soul_of(o)   # [eastsoul]
 	o["t"] = _ot(o)
 	if type.begins_with("soul_") and PtGfx.tex(type) != null: _draw_soul(ctx, type, x, y, s, o); return
+	if type == "afu" and HV.active():   # [p47] 主角：任何場景都係空手姿勢＋漂浮兵器（做嘢用做工動畫）
+		ctx.save()
+		if o.get("alpha") != null: ctx.globalAlpha = J.num(o.alpha)
+		HV.draw(ctx, x, y, s, o); ctx.restore(); return
 	if ACE.STAGES.has(type) and ACE.active(type): _draw_plain(ctx, type, x, y, s, o); return   # [p44] 王牌階段圖：整張圖畫（唔用網格／木偶，嗰啲係手持兵器原圖）
 	if char_h(type) > 0 and _ma_has(type) and not _special_has(type) and not J.t(o.get("noMesh")):
 		_draw_mesh(ctx, type, x, y, s, o, js, false); return
@@ -699,7 +704,7 @@ func _draw_youhun(ctx: Ctx, x: float, y: float, s: float, o: Dictionary) -> void
 	el(ctx, x + 10 * s, hy - 10 * s, 2 * s, 3 * s, "rgba(160,230,255,.8)")
 
 # 頭像（UI 用）：由原圖頂部裁一個正方形
-const PCROP := {"baiwu": [0.30, 0.95], "heiwu": [0.30, 0.95], "penanggal": [0.02, 0.85], "eguiking": [0.0, 0.8], "huang": [0.0, 0.8], "niutou": [0.04, 0.82], "mamian": [0.04, 0.82], "afu": [0.0, 0.72], "tree": [0, 1], "lg_dpl_bing": [0.15, 0.75]}   # [p44] 軍團空手改姿勢：古惑鬼頭位降低
+const PCROP := {"baiwu": [0.30, 0.95], "heiwu": [0.30, 0.95], "penanggal": [0.02, 0.85], "eguiking": [0.0, 0.8], "huang": [0.0, 0.8], "niutou": [0.04, 0.82], "mamian": [0.04, 0.82], "afu": [0.0, 0.72], "tree": [0, 1], "lg_dpl_bing": [0.15, 0.75], "lg_wkj_tank": [0.21, 0.8], "lg_zzj_king": [0.28, 0.9], "lg_wkj_elite": [0.13, 0.86]}   # [p44] 軍團空手改姿勢：古惑鬼頭位降低
 func portrait_region(type: String) -> Array:
 	var key = spr_key(type)
 	var img = PtGfx.tex(key)
@@ -709,5 +714,7 @@ func portrait_region(type: String) -> Array:
 	if ACE.STAGES.has(type) and Spr.key_for(type) != type:   # [p44] 階段圖（已裁到內容）：由頂部取頭膊；無常頂帽高，向下移少少
 		var S2 = minf(iw, ih * 0.6); var sy2 = ih * (0.13 if type in ["heiwu", "baiwu"] else 0.0)
 		return [img, Rect2((iw - S2) / 2, sy2, S2, S2)]
-	var S = minf(iw * c[1], ih); var sx = (iw - S) / 2 + (iw * 0.1 if type == "afu" else 0.0); var sy = minf(ih - S, iw * c[0])
+	var hv = type == "afu" and HV.active()   # [p47] 空手姿勢圖：頭喺正中，唔使向右移
+	if hv: c = [0.0, 0.62]
+	var S = minf(iw * c[1], ih); var sx = (iw - S) / 2 + (iw * 0.1 if type == "afu" and not hv else 0.0); var sy = minf(ih - S, iw * c[0])
 	return [img, Rect2(clampf(sx, 0, iw - S), maxf(0, sy), S, S)]

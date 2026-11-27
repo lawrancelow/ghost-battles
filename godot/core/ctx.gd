@@ -459,6 +459,7 @@ func setLineDashOffset(_a = 0) -> void: pass
 # ---------------- 圖片 ----------------
 # drawImage(tex, dx, dy) / (tex, dx, dy, dw, dh) / (tex, sx, sy, sw, sh, dx, dy, dw, dh)
 func drawImage(src, a: float, b: float, c = null, d = null, e = null, f = null, g = null, h = null) -> void:
+	if src is Texture2D and Spr.audit != null and src.resource_path != "": var ak = "@" + src.resource_path.get_file().get_basename(); Spr.audit[ak] = int(Spr.audit.get(ak, 0)) + 1   # [p47] 空手稽查
 	if src == null: return
 	var tex: Texture2D = null
 	if src is Texture2D: tex = src

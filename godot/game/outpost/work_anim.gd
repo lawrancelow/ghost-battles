@@ -420,8 +420,8 @@ static func draw(ctx: Ctx, k: String, x: float, y: float, s: float, flip: bool, 
 	ctx.scale(b.sx, b.sy)
 	var o = {"t": T, "flip": flip, "pose": "wk", "tamed": true, "untied": true, "shadow": false}
 	if opt.get("solid", false): o["solid"] = true
-	var nk = nwp_key(k)
-	if nk != "": _draw_nwp(ctx, k, nk, s, flip, T)   # 空手版（老闆：遊戲介面一律空手）
+	var nk = str(opt.get("body_key", "")) if opt.has("body_key") else nwp_key(k)   # [p47] 主角：空手姿勢圖做身體
+	if nk != "": _draw_nwp(ctx, k, nk, s, (not flip) if opt.get("body_face_left", false) else flip, T)   # [p47] 主角空手圖原本面向左   # 空手版（老闆：遊戲介面一律空手）
 	else: Art.draw_char(ctx, k, 0.0, 0.0, s, o)
 	ctx.restore()
 	# 前層：工具、特效

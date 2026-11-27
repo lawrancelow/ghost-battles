@@ -54,7 +54,11 @@ var ctx_always := false
 var _mv_o := {}
 const ACE = preload("res://game/soul/ace_art.gd")   # [p44]
 var ace := false               # 王牌用緊階段圖
-var hero := false              # 主角空手姿勢（戰鬥）
+var hero := false              # 主角空手姿勢（戰鬥＋巡陰）
+var hwpn_on := false           # [p47] 巡陰：主角漂浮兵器（eq_view2 float）
+var hwpn: PtDraw = null
+const EV2 = preload("res://game/equip/eq_view2.gd")   # [p47]
+const EQD = preload("res://game/equip/eq_data.gd")   # [p47]
 
 static func setup_static() -> void:
 	var ART = J.G.get("ART"); var MA = J.G.get("MeshAnim")
@@ -80,7 +84,8 @@ func _init(unit, r) -> void:
 	if not G.skin_ok() and (mode == "limbs" or mode == "mesh"): mode = "plain"   # 安全畫面模式：整張原圖（已證實所有手機都畫得到）
 	# [p44] 王牌晉級階段圖／主角空手姿勢（戰鬥）：整張圖畫（網格骨架係按手持兵器原圖砌嘅）
 	ace = ACE.STAGES.has(k) and ACE.active(k)
-	hero = k == "afu" and r is BtChar and ACE.active("afu")
+	hero = k == "afu" and ACE.active("afu")   # [p47] 巡陰／村外地圖都用空手姿勢（以前只係地圖戰鬥 BtChar）
+	hwpn_on = hero and not (r is BtChar)   # 地圖戰鬥由 eq_view Over 畫漂浮兵器；巡陰自己畫
 	if ace or hero:
 		mode = "plain"; if H0 <= 0: H0 = 58.0
 		if hero: ACE.new_scene()
@@ -108,6 +113,8 @@ func _init(unit, r) -> void:
 	gear = PtDraw.new(); ch.add_child(gear)
 	gear.fn = func(n): _draw_items(n, gear_items)
 	over = PtDraw.new(); over.fn = _draw_over; add_child(over)
+	if hwpn_on:   # [p47] 主角漂浮兵器：喺角色前面一層（同 ch 一樣跟透明度）
+		hwpn = PtDraw.new(); hwpn.fn = _draw_hwpn; ch.add_child(hwpn)
 
 func _use_mesh(m: Dictionary, key: String) -> void:
 	if cur_mesh == key or m.is_empty(): return
@@ -156,7 +163,8 @@ func sync(oo: Dictionary) -> void:
 	elif cloth_mi: cloth_mi.visible = false
 	# 工作證、裝備武器
 	if o.badge != null and o.rot == 0.0 and pose != "down" and not o.dying: _badge(s, t)
-	if o.wtex != null and pose != "down" and not o.dying: _gear_weapon(s, t, pose, o.pt, o.rot)
+	if o.wtex != null and pose != "down" and not o.dying and not hwpn_on: _gear_weapon(s, t, pose, o.pt, o.rot)
+	if hwpn != null: hwpn.queue_redraw()
 	back.queue_redraw(); front.queue_redraw(); gear.queue_redraw(); ch.queue_redraw(); glow.queue_redraw(); over.queue_redraw()
 
 # 出招／特殊鬼：收起網格同衣服，交俾 Ctx 畫；返嚟普通狀態就還原
@@ -286,9 +294,14 @@ func _draw_plain(n: CanvasItem) -> void:
 		tex_plain = PtGfx.tex(ACE.pose_key())
 		var pf = ACE.pose_fade(); fq = pf[1]
 		if str(pf[0]) != "": tex_old = PtGfx.tex(str(pf[0]))
-	elif ace: tex_plain = PtGfx.tex(k)   # 突破升星即時換階段圖
+	var hk = ACE.h_k(k) if ace else 1.0
+	if ace:   # 突破升星即時換階段圖
+		# [p47] 敵方同名鬼唔跟玩家星級：一律第一階（未收服／敵方 → 第一階）
+		var ek = ACE.key(k, 1) if J.t(o.get("enemy")) else ""
+		if ek != "" and Spr.ok(ek): tex_plain = PtGfx.tex(ek); hk = float(ACE.H_K.get(ek, 1.0))
+		else: tex_plain = PtGfx.tex(k)
 	if tex_plain == null: return
-	var H = H0 * s * (ACE.h_k(k) if ace else 1.0); var iw = tex_plain.get_width(); var ih = tex_plain.get_height(); var Wd = H * iw / ih
+	var H = H0 * s * hk; var iw = tex_plain.get_width(); var ih = tex_plain.get_height(); var Wd = H * iw / ih
 	var A = Transform2D.IDENTITY
 	# [face] 整張圖模式同網格模式用同一套規矩：原圖預設面向左（PLAIN_R／NATIVE_R 嘅係面向右）。
 	#   以前呢度直接用 o.flip，面向左嘅名鬼立繪會背住敵人出手（2026-11-24 修正）
@@ -380,3 +393,26 @@ func _draw_badge(n: CanvasItem, it: Array) -> void:
 func _draw_over(n: CanvasItem) -> void:
 	if o.is_empty() or o.dying: return
 	run.draw_over(n, u, o)
+
+# ---------------- [p47] 巡陰主角漂浮兵器（老闆 11-26：全員空手、兵器漂浮、刃口朝目標）----------------
+#   有裝備手持兵器就飄裝備兵器，冇就飄主角預設斧頭（男）／三角尺（女）；出手時飛去目標再飛返（同地圖戰鬥一樣用 eq_view2 float）
+func hero_wea() -> String:
+	var w = EQD.worn_of_k("afu") if EQD.on() else {}
+	var id = str(w.get("wea", ""))
+	if id != "" and str(EQD.item(id).get("look")) == "hand": return id
+	return ACE.hero_weapon()
+func _hwpn_state() -> Dictionary:
+	var T = float(o.get("t", 0.0)); var pose = str(o.get("pose", "")); var pt = float(o.get("pt", 0.0)); var ph = -1.0
+	match pose:
+		"windup": ph = clampf(pt, 0, 1) * 0.37
+		"strike": ph = 0.37 + clampf(pt, 0, 1) * 0.2
+		"follow", "recover": ph = 0.57 + clampf(pt, 0, 1) * 0.43
+	if ph < 0.0: return {"T": T, "act": "idle", "ph": 0.0}
+	var H = H0 * float(o.s)
+	return {"T": T, "act": "atk", "ph": ph, "tg": Vector2(float(o.get("tdx", 0.0)) - float(o.get("ox", 0.0)), float(o.get("tdy", 0.0)) - float(o.get("oy", 0.0)) - 0.5 * H)}
+func _draw_hwpn(n: CanvasItem) -> void:
+	if o.is_empty() or o.get("dying") or str(o.get("pose", "")) == "down": return
+	var H = H0 * float(o.s)
+	var fd = -1.0 if o.flip else 1.0
+	var yy = -(3 + sin(float(o.t) * 2.4) * 2) * float(o.s) if not solid else 0.0
+	EV2.draw(Ctx.new(n), "float", ACE.pose_key(), {"wea": hero_wea()}, Vector2(0, yy), H, fd, _hwpn_state(), false, "front")
