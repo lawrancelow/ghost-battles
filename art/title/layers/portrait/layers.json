@@ -1,0 +1,130 @@
+{
+ "size": [
+  1024,
+  1536
+ ],
+ "layers": [
+  {
+   "file": "L0_background.png",
+   "z": 0,
+   "parallax": 0.1,
+   "note": "底圖；角色後方已用 LaMa 補畫"
+  },
+  {
+   "file": "L1_ghosts_left.png",
+   "z": 1,
+   "parallax": 0.16,
+   "bbox": [
+    0,
+    396,
+    449,
+    380
+   ],
+   "anim": "idle",
+   "note": "下半身被隔板擋住，只做極小位移（≤3px）或輕微明暗變化，否則切口會露出"
+  },
+  {
+   "file": "L1_ghosts_right.png",
+   "z": 2,
+   "parallax": 0.16,
+   "bbox": [
+    604,
+    369,
+    420,
+    500
+   ],
+   "anim": "idle",
+   "note": "下半身被隔板擋住，只做極小位移（≤3px）或輕微明暗變化，否則切口會露出"
+  },
+  {
+   "file": "L2_ceiling_left.png",
+   "z": 3,
+   "parallax": 0.22,
+   "bbox": [
+    14,
+    0,
+    233,
+    324
+   ],
+   "anim": "sway",
+   "anchor": [
+    120,
+    0
+   ],
+   "note": "繞錨點緩慢擺動，建議 ±2.5°、週期 5–7 秒"
+  },
+  {
+   "file": "L2_ceiling_right.png",
+   "z": 4,
+   "parallax": 0.22,
+   "bbox": [
+    708,
+    65,
+    208,
+    220
+   ],
+   "anim": "sway",
+   "anchor": [
+    829,
+    65
+   ],
+   "note": "繞錨點緩慢擺動，建議 ±2.5°、週期 5–7 秒"
+  },
+  {
+   "file": "L3_male.png",
+   "z": 5,
+   "parallax": 0.38,
+   "bbox": [
+    187,
+    713,
+    314,
+    657
+   ],
+   "anim": "float_breathe",
+   "anchor": [
+    343,
+    1369
+   ],
+   "note": "上下漂浮 ±4px（週期約 3 秒）＋胸口呼吸縮放 1.0–1.015；男女主錯開相位"
+  },
+  {
+   "file": "L3_female.png",
+   "z": 6,
+   "parallax": 0.38,
+   "bbox": [
+    481,
+    710,
+    368,
+    672
+   ],
+   "anim": "float_breathe",
+   "anchor": [
+    664,
+    1381
+   ],
+   "note": "上下漂浮 ±4px（週期約 3 秒）＋胸口呼吸縮放 1.0–1.015；男女主錯開相位"
+  }
+ ],
+ "glow": [
+  {
+   "file": "glow_lights.png",
+   "note": "日光燈：偶爾閃一下（加亮或短暫變暗）",
+   "blend": "add（遮罩×原圖顏色疊加提亮）"
+  },
+  {
+   "file": "glow_monitors.png",
+   "note": "電腦螢幕：慢呼吸式明暗、偶爾雪花閃",
+   "blend": "add（遮罩×原圖顏色疊加提亮）"
+  },
+  {
+   "file": "glow_lamps.png",
+   "note": "檯燈：輕微暖光呼吸",
+   "blend": "add（遮罩×原圖顏色疊加提亮）"
+  },
+  {
+   "file": "glow_moon.png",
+   "note": "紅月：極慢的光暈脈動",
+   "blend": "add（遮罩×原圖顏色疊加提亮）"
+  }
+ ]
+}
