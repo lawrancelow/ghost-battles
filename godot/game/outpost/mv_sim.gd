@@ -889,7 +889,7 @@ func _pay(c: Dictionary) -> void:
 	var m = st()
 	var _obn = 0
 	for g in c.got: m.sold[g] = J.num(m.sold.get(g)) + float(c.got[g]); _obn += int(c.got[g])
-	load("res://game/onboard/ob.gd").on_sold(_obn)   # [onboard] 新手任務：大排檔賣貨
+	load("res://game/onboard/ob.gd").on_sold(_obn, amt)   # [onboard] 新手任務：大排檔賣貨
 	m.earned = J.num(m.get("earned")) + amt; m.served = J.num(m.get("served")) + 1.0
 	c.st = "out"
 	ev.append({"k": "pay", "amt": amt, "pos": c.pos + Vector2(0, -60), "cid": c.cid})

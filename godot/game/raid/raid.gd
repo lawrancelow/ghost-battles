@@ -247,6 +247,7 @@ static func hold_reason(main = null) -> String:
 	var s = S()
 	if s == null: return "nos"
 	if J.num(s.get("qi", 0)) < float(TUNE.min_qi): return "newbie"
+	if load("res://game/onboard/ob.gd").calm(): return "newbie"   # [onboard] 打低餓鬼王（1-3）之前唔襲擾（主線重排咗，qi 唔再準）
 	var MB = load("res://game/zone/zone_battle.gd")
 	if MB.busy(): return "battle"
 	var B = J.G.get("Battle")

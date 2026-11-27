@@ -432,6 +432,7 @@ func _main_tab(body: VBoxContainer) -> void:
 		go.pressed.connect(func():
 			var main = get_tree().root.get_node_or_null("Main")
 			main.close_sheet()
+			if main.has_method("_quest_go"): main._quest_go(); return   # [onboard] 同主線條「前往」一樣
 			if cur.get("go") == "roster": main.open_roster(); return
 			if cur.get("go") == "gate" and load("res://game/zone/zone_data.gd").on() and main.has_method("_go_out"): main._go_out(); return   # [outgate]
 			if cur.get("go") == "gate": J.mc(J.G.get("Patrol"), "openPrep", []); return

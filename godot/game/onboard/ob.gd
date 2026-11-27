@@ -54,7 +54,7 @@ const MOVED := ["assign:1", "bLevel:wood"]
 
 static func _new_q(k: String) -> Dictionary:
 	match k:
-		"sell:10": return {"t": "sell", "n": 10.0, "text": "大排檔賣出 10 件貨", "go": "market", "r": {"exp": 40.0, "coins": 60.0}, "onStart": ["ob_market"],
+		"sell:10": return {"t": "sell", "n": 10.0, "text": "大排檔賣出 10 件貨、賺 100 冥幣", "go": "market", "r": {"exp": 40.0, "coins": 60.0}, "onStart": ["ob_market"],
 			"note": "遊魂食飽會再嚟，記得櫃台要有貨"}
 		"guard:3": return {"t": "guard", "n": float(GUARD_N), "text": "擊退第一次嚟搗亂嘅孤魂", "go": "market", "r": {"exp": 40.0, "troops": 30.0}, "onStart": ["ob_guard"],
 			"note": "之後鬼會不定時嚟，派鬼守夜同陰兵會自動幫你守"}
@@ -155,12 +155,18 @@ static func calm() -> bool: return active() and not boss_done()
 # ================= 3. 任務進度（新類型） =================
 static func progress(q) -> Array:
 	var t = str(J.gp(q, "t")); var n = J.num(J.gp(q, "n"))
-	if t == "sell": return [minf(n, _cnt("ob_sold")), n]
+	if t == "sell": return [minf(minf(n, _cnt("ob_sold")), floor(n * _cnt("ob_earn") / SELL_COINS)), n]   # 件數同冥幣兩樣都要夠
 	if t == "guard": return [minf(n, _cnt("ob_guard")), n]
 	return []
 
-static func on_sold(n: int) -> void:
-	if n > 0: bump("ob_sold", float(n))
+const SELL_COINS := 100.0
+static func on_sold(n: int, amt := 0.0) -> void:
+	if not guard_on() and _sell_on():
+		if n > 0: bump("ob_sold", float(n))
+		if amt > 0: bump("ob_earn", amt)
+static func _sell_on() -> bool:   # 只計做緊「賣貨」任務期間（之前大排檔未開；之後唔使計）
+	var Q = J.G.get("QUESTS"); var i = qi()
+	return Q is Array and i < Q.size() and str(J.gp(Q[i], "t")) == "sell"
 
 # 小紙提前到：包子鋪起好就送（唔再等主公 4 級）；lv4＝舊玩家後備（any=true：唔理包子鋪）
 static var xz_queued := false

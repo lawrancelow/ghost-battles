@@ -30,7 +30,7 @@ func _shot_tut(t, m, name: String) -> void:
 		_chk("教程 %s：說明框唔遮住目標" % name, not tu.tip_rect.intersects(tu.hole), "hole=%s tip=%s" % [str(tu.hole), str(tu.tip_rect)])
 		_chk("教程 %s：說明 ≤ 2 行（%d）" % [name, lines], lines <= 2 and tu.tip_lbl.text.split("\n").size() <= 2, tu.tip_lbl.text)
 		_chk("教程 %s：說明框喺畫面入面" % name, Rect2(Vector2.ZERO, tu.size).encloses(tu.tip_rect), str(tu.tip_rect))
-	_p("shot " + fn + ("（教程顯示）" if tu != null and tu.visible else "（教程冇顯示）"))
+	_p("shot " + fn + ("（教程顯示）" if tu != null and tu.visible else "（教程冇顯示：%s）" % (tu.why if tu != null else "")))
 
 func _mark(k: String) -> void:
 	if not tmark.has(k): tmark[k] = simt; _p("  ⏱ %s @ %ds" % [k, int(simt)])
@@ -165,7 +165,12 @@ func all(t) -> void:
 var nogift := false
 func _rich() -> void:
 	if not nogift: super._rich()
-func _gather(t, m) -> void:   # 斬一棵樹＋割一次禾＋（夠木）做一次板
+func _idle(t) -> void:
+	var V = J.G.get("Village")
+	for j in 30:
+		await _w(t, 0.5)
+		if V.hero.get("target") == null and V.hero.get("act") == null: break
+func _gather(t, m) -> void:   # 斬倒一棵樹（撳到佢跌）＋割一次禾＋（要板先）做一次板
 	var V = J.G.get("Village"); var S = _S()
 	for kind in ["tree", "paddy"]:
 		var arr = S.trees if kind == "tree" else S.paddy
@@ -173,22 +178,24 @@ func _gather(t, m) -> void:   # 斬一棵樹＋割一次禾＋（夠木）做一
 		for j in arr.size(): if J.num(arr[j]) > 0: i = j; break
 		if i < 0: continue
 		var p = load("res://native/game.gd")._pos("TREE_POS" if kind == "tree" else "PADDY_POS", i)
-		J.mc(V, "tap", [J.num(p[0]), J.num(p[1]) - (20.0 if kind == "tree" else 0.0)])
-		for j in 14:
-			await _w(t, 0.5)
-			if V.hero.get("target") == null and V.hero.get("act") == null: break
-	if J.num(S.bld.get("plank", 0)) > 0 and J.num(S.res.wood) >= 8 and J.num(S.res.planks) < 60:
+		for hit in 4:
+			if J.num(arr[i]) <= 0: break
+			J.mc(V, "tap", [J.num(p[0]), J.num(p[1]) - (20.0 if kind == "tree" else 0.0)])
+			await _idle(t)
+	var cq = _cur(); var want_pl = cq is Dictionary and (str(cq.t) in ["craftPlank", "bLevel"] or (str(cq.t) == "level" and J.num(S.res.planks) < 30))
+	if want_pl and J.num(S.bld.get("plank", 0)) > 0 and J.num(S.res.wood) >= 8 and J.num(S.res.planks) < 60:
 		_bld("plank", "craft", 1)
-		for j in 14:
-			await _w(t, 0.5)
-			if V.hero.get("target") == null and V.hero.get("act") == null: break
+		await _idle(t)
 func _until(t, m, q, f: Callable, lim := 120) -> int:
 	var n = 0
 	for k in lim:
 		if _prog(q)[0] >= _prog(q)[1]: break
-		f.call(); await _w(t, 0.4); J.mc(_Q(), "check", [])
+		f.call(); await _idle(t); J.mc(_Q(), "check", [])
 		if _prog(q)[0] >= _prog(q)[1]: break
 		await _gather(t, m); n += 1; await _skip(t, 1)
+		if n % 5 == 0:
+			var S = _S(); var V = J.G.get("Village")
+			_p("  … %s 輪%d 進度%s 木%d 米%d 板%d 幣%d lv%d 英雄 act=%s tgt=%s 劇情=%s" % [OB._key(q), n, str(_prog(q)), int(J.num(S.res.wood)), int(J.num(S.res.rice)), int(J.num(S.res.planks)), int(J.num(S.res.coins)), int(J.num(S.lv)), str(V.hero.get("act")), str(V.hero.get("target")), str(_story_busy(_main(t)))])
 	return n
 func _sell_mat(t, m) -> float:
 	if not nogift: return await super._sell_mat(t, m)
@@ -209,6 +216,7 @@ func pace(t) -> void:
 	ZD.gate_on = true
 	if not J.t(S.seen.get("prologue_sys")) and int(J.num(S.qi)) == 0: S.seen["prologue_sys"] = true
 	CTL.attach(m)
+	await _skip(t, 4); await _w(t, 3.0)
 	var i11 = OB.EARLY.find("stage:1-1")
 	var last = -1; var st_t = {}
 	var seen0 = S.seen.keys().size()
@@ -218,7 +226,14 @@ func pace(t) -> void:
 		_watch(m)
 		var qi = _qi()
 		if qi > i11 or J.t(S.cleared.get("1-1")): break
-		if qi == last: _chk("pace：任務 %d 推得郁" % qi, false, "STUCK"); break
+		if qi == last:
+			for r in 6:   # 劇情／完成提示等緊：多等陣
+				await _skip(t, 4); J.mc(_Q(), "check", []); await _w(t, 1.0)
+				if _qi() != qi: break
+			if _qi() != qi: continue
+			var V = J.G.get("Village")
+			_p("  stuck %s 進度%s 劇情=%s cnt=%s trees=%s hero=%s qt=%s" % [OB._key(_cur()), str(_prog(_cur())), str(_story_busy(m)), str(_S().cnt), str(_S().trees), str([V.hero.get("x"), V.hero.get("y"), V.hero.get("act"), V.hero.get("target")]), str(J.mc(V, "questTarget", []))])
+			_chk("pace：任務 %d 推得郁" % qi, false, "STUCK"); break
 		last = qi
 		var q = _cur(); var t0 = simt; var how = ""
 		await _tap_bar(t, m)

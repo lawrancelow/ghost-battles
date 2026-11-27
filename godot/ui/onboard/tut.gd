@@ -67,25 +67,29 @@ func _has_point(p: Vector2) -> bool:
 func _gui_input(e) -> void:
 	if e is InputEventMouseButton or e is InputEventScreenTouch: accept_event()
 
+var why := ""   # 測試：點解冇顯示
 func _busy() -> bool:
-	if main == null: return true
+	why = _busy_why()
+	return why != ""
+func _busy_why() -> String:
+	if main == null: return "main"
 	var St = J.G.get("Story")
-	if St != null and J.t(J.mc(St, "busy", [])): return true
-	if J.t(J.mc(J.G.get("UI"), "modalOpen", [])): return true
-	if main.get("sheet") != null and main.sheet.visible: return true
-	if str(main.get("tab")) != "village": return true
+	if St != null and J.t(J.mc(St, "busy", [])): return "story"
+	if J.t(J.mc(J.G.get("UI"), "modalOpen", [])): return "modal"
+	if main.get("sheet") != null and main.sheet.visible: return "sheet"
+	if str(main.get("tab")) != "village": return "tab"
 	var pq = main.get_node_or_null("PopupQ")   # [uxui] G 組彈窗佇列（有就讓位）
-	if pq != null and pq.has_method("busy") and pq.busy(): return true
+	if pq != null and pq.has_method("busy") and pq.busy(): return "popupq"
 	for c in main.get_children():   # 其他全屏層（揀鬼、建築卡、出擊清單…）
 		if c == self or not (c is Control) or not c.visible: continue
-		if c.has_meta("modal") or c.name in ["Picker", "Card", "BldCard", "SortieList", "NameCard", "Settings"]: return true
+		if c.has_meta("modal") or c.name in ["Picker", "Card", "BldCard", "SortieList", "NameCard", "Settings"]: return "layer:" + str(c.name)
 	var em = main.get("mv_embed")
 	if em != null and em.get("sc") != null:
 		var sc = em.sc
-		if sc.get("card") != null and is_instance_valid(sc.card) and sc.card.visible: return true
-		if sc.get("sheet") != null and is_instance_valid(sc.sheet) and sc.sheet.visible: return true
-		if sc.get("picker") != null and is_instance_valid(sc.picker) and sc.picker.visible: return true
-	return false
+		if sc.get("card") != null and is_instance_valid(sc.card) and sc.card.visible: return "mvcard"
+		if sc.get("sheet") != null and is_instance_valid(sc.sheet) and sc.sheet.visible: return "mvsheet"
+		if sc.get("picker") != null and is_instance_valid(sc.picker) and sc.picker.visible: return "mvpicker"
+	return ""
 
 func _cur_q():
 	var Q = J.G.get("QUESTS"); var i = OB.qi()
@@ -106,14 +110,14 @@ func target_rect() -> Rect2:
 		if tg.has("pos") and vil != null and vil.has_method("zone_w2s"): return _wr(vil, tg.pos, Vector2(150, 120))
 		return Rect2()
 	if go == "market" and vil != null and vil.has_method("zone_w2s"):
-		var r: Rect2 = ZD.zrect("market")
-		if tt == "guard":   # 圍欄外：野外門嗰條線
-			return _wr(vil, ZD.front_anchor(), Vector2(320, 220))
-		var a = vil.zone_w2s(r.position) + vil.global_position; var b = vil.zone_w2s(r.end) + vil.global_position
-		var sr = Rect2(a, b - a).intersection(Rect2(Vector2(0, main.TOP_H + 50), size - Vector2(0, main.TOP_H + 50 + main.NAV_H)))
-		# 太大：只亮中間 70%（說明先放得落）
-		if sr.size.y > size.y * 0.5: sr = sr.grow_individual(0, -sr.size.y * 0.18, 0, -sr.size.y * 0.18)
-		return sr
+		var em = main.get("mv_embed"); var sim = em.sc.sim if em != null and em.get("sc") != null else null
+		if tt == "guard":   # 圍欄外最近嗰隻孤魂；未出就照野外門
+			if sim != null:
+				for f in sim.foes:
+					if f.get("ob") and f.st != "die": return _mr(em.sc, f.pos + Vector2(0, -28), Vector2(110, 110))
+			return _wr(vil, ZD.front_anchor(), Vector2(220, 160))
+		if sim != null and sim.st().st.has("st_shoubao"): return _mr(em.sc, sim.st_pos("st_shoubao") + Vector2(0, -20), Vector2(150, 140))   # 嘆氣蒸籠
+		return _wr(vil, ZD.zrect("market").get_center(), Vector2(260, 220))
 	var V = J.G.get("Village")
 	if V == null or vil == null or not vil.has_method("zone_w2s"): return Rect2()
 	var p = J.mc(V, "questTarget", [])
@@ -121,6 +125,12 @@ func target_rect() -> Rect2:
 	var big = go in ["plank", "bun", "wood", "rice", "house", "store", "home", "altar"]
 	return _wr(vil, Vector2(J.num(p[0]), J.num(p[1]) - (40.0 if big else 20.0)), Vector2(150, 140) if big else Vector2(110, 110))
 
+# 大排檔（移動村場景）座標 → 螢幕
+func _mr(sc, wp: Vector2, wsz: Vector2) -> Rect2:
+	var c = sc.w2s(wp) + sc.get_global_rect().position
+	var z = float(sc.zt.z) if sc.get("zone") and sc.get("zt") != null else 1.0
+	var sz = (wsz * maxf(0.4, z)).clamp(Vector2(88, 88), size * 0.7)
+	return Rect2(c - sz / 2, sz)
 func _wr(vil, wp: Vector2, wsz: Vector2) -> Rect2:
 	var c = vil.zone_w2s(wp) + vil.global_position
 	var z = maxf(0.4, float(vil.get("sc")) if vil.get("sc") != null else 1.0)
@@ -130,6 +140,7 @@ func _wr(vil, wp: Vector2, wsz: Vector2) -> Rect2:
 func _process(dt: float) -> void:
 	t += dt
 	var on = OB.tut_on() and not _busy()
+	if not OB.tut_on(): why = "off"
 	if not on:
 		if visible: visible = false
 		return
@@ -143,7 +154,7 @@ func _process(dt: float) -> void:
 		return
 	hole = target_rect()
 	if hole.size == Vector2.ZERO or not Rect2(Vector2.ZERO, size).intersects(hole):
-		visible = false; return
+		why = "nohole %s" % str(hole); visible = false; return
 	hole = hole.intersection(Rect2(Vector2.ZERO, size))
 	tip_lbl.text = OB.tip_of(q)
 	_place_tip()

@@ -656,7 +656,7 @@ static func cond_ok(zid: String, c := -1) -> bool:
 		if i >= 0 and qi > i: return true
 		var q = _quest(t0, k0)   # 舊存檔／任務次序唔同：按狀態判斷任務係咪已經做咗
 		match t0:
-			"level": if J.num(s.get("lv", 1)) >= float(k0) and qi > 0: return true
+			"level": if J.num(s.get("lv", 1)) >= float(k0) and qi > 0 and (i < 0 or int(J.num(s.get("qv", 0))) < 4): return true   # [onboard] 新次序（qv 4）：升級唔可以提早解霧（大排檔要等「升到 3 級」任務完）
 			"stage": if s.get("cleared") is Dictionary and J.t(s.cleared.get(k0)): return true
 			"build": if J.num(s.bld.get(k0, 0)) >= 1: return true
 			"bLevel": if not q.is_empty() and J.num(s.bld.get(k0, 0)) >= J.num(q.get("n", 99)): return true
