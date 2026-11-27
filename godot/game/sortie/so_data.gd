@@ -251,6 +251,7 @@ static func dispatch(e: Dictionary) -> String:
 	if stg.has("guard"): op.set_meta("guard", stg.guard)   # [counter] 駐守鬼（soul 線讀）
 	var at: Vector2 = e.pos
 	op.setup(snap.units, path_of(e, at), at, RTS.gate_pos())
+	op.hero_lead(RTS.hero_from())   # [sortiepos] 主角由自己個位出發
 	RTS.ops.append(op)
 	LOG.append(["dispatch", key(e), cs, lu])
 	var m = RTS._main()

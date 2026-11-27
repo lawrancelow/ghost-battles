@@ -321,6 +321,7 @@ static func throne_go(k: String) -> String:
 	op.set_meta("snap", snap); op.set_meta("zid", str(geo.get("zid", ""))); op.set_meta("throne", k)
 	op.set_meta("custom", func(win): return on_throne_end(k, win))
 	op.setup(snap.units, geo.path, geo.at, RTS.gate_pos())
+	op.hero_lead(RTS.hero_from())   # [sortiepos] 主角由自己個位出發
 	RTS.ops.append(op)
 	LOG.append(["throne", k, mul])
 	var m = _main()
