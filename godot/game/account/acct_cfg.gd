@@ -10,6 +10,8 @@ const FB_API_KEY := ""      # Firebase 專案設定 → 一般 → 網頁 API �
 const FB_PROJECT := ""      # Firebase 專案 ID
 const SUPA_URL := ""        # 例：https://xxxx.supabase.co
 const SUPA_KEY := ""        # anon public key
-const REQUIRE_LOGIN := true # true＝要登入先玩得（老闆 2026-11-27 要求「註冊帳號遊玩」）
+const REQUIRE_LOGIN := true # true＝未登入、又唔係遊客，開機先出登入面板（老闆 2026-11-27 要求「註冊帳號遊玩」）
+const ALLOW_GUEST := true   # [guest] true＝登入面板有「先以遊客身分遊玩」（冇網／唔想註冊都入到遊戲，進度存本機，之後可綁定）
+                            #         改 false＝強制登入：遊客入口收埋，已經係遊客嘅人下次開機都要登入／註冊（進度照綁定，唔會丟）
 const AUTO_SYNC_SEC := 300.0 # 遊戲中每 5 分鐘檢查一次要唔要上傳（只喺有改動先寫，慳免費額度）
 const MIN_PW := 8

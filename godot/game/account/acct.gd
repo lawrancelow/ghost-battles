@@ -20,6 +20,8 @@ static var last_sync := 0          # 上次成功同步（unix 秒）
 static var synced_ts := -1         # 上次同步時本機存檔嘅 last（-1＝未綁定）
 static var rev := -1               # 上次見到嘅雲端 rev（-1＝未綁定）
 static var force_gate := false     # 測試用：GB_TEST 下都要登入
+static var guest := false          # [guest] 揀咗「先以遊客身分遊玩」（未綁定帳號，進度只喺本機）
+static var allow_guest_test := -1  # 測試用：-1 跟 AC.ALLOW_GUEST；0／1 強制
 static var _loaded := false
 static var _svc = null
 
@@ -40,19 +42,27 @@ static func load_state() -> void:
 	if not (o is Dictionary): return
 	email = str(o.get("email", "")); uid = str(o.get("uid", "")); token = str(o.get("token", "")); rtoken = str(o.get("refresh", ""))
 	last_sync = int(o.get("last_sync", 0)); synced_ts = int(o.get("synced_ts", -1)); rev = int(o.get("rev", -1))
+	guest = bool(o.get("guest", false))
 
 static func save_state() -> void:
 	var f = FileAccess.open(FILE, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({"email": email, "uid": uid, "token": token, "refresh": rtoken, "last_sync": last_sync, "synced_ts": synced_ts, "rev": rev}))
+		f.store_string(JSON.stringify({"email": email, "uid": uid, "token": token, "refresh": rtoken, "last_sync": last_sync, "synced_ts": synced_ts, "rev": rev, "guest": guest}))
 		f.close()
 
 static func logged_in() -> bool: load_state(); return uid != "" and token != ""
+
+# [guest] 遊客：冇網或者唔想註冊都可以直接玩；進度照存本機。之後綁定帳號＝登入／註冊，第一次同步會將本機進度上傳（同舊玩家遷移一樣）
+static func allow_guest() -> bool: return AC.ALLOW_GUEST if allow_guest_test < 0 else allow_guest_test == 1
+static func is_guest() -> bool: load_state(); return guest and not logged_in()
+static func play_as_guest() -> void:
+	load_state(); guest = true; save_state()
 
 # 要唔要喺標題畫面前彈登入：自動測試／自檢唔彈（除非測試自己要）
 static func gate_needed() -> bool:
 	load_state()
 	if not AC.REQUIRE_LOGIN or logged_in(): return false
+	if guest and allow_guest(): return false   # [guest] 遊客唔再彈；ALLOW_GUEST 改 false 就照彈（強制登入）
 	if force_gate or OS.get_environment("GB_ACCT_GATE") == "1": return true
 	if OS.get_environment("GB_TEST") != "" or OS.get_environment("GB_SELFTEST") != "": return false
 	var st = Engine.get_main_loop().root.get_node_or_null("SelfTestHost") if Engine.get_main_loop() is SceneTree else null
@@ -109,6 +119,7 @@ static func _set_session(e: String, r: Dictionary) -> void:
 	load_state()
 	var same = e == email and str(r.uid) == uid
 	email = e; uid = str(r.uid); token = str(r.token); rtoken = str(r.get("refresh", ""))
+	guest = false   # [guest] 綁定咗帳號就唔再係遊客
 	if not same: synced_ts = -1; rev = -1   # 新帳號／換帳號：當第一次綁定
 	# 之前登出過同一帳號、本機冇存檔：接返登出前嘅本機進度
 	if _ls() is Dictionary and not _ls().has(SAVE_KEY) and _ls().has(BAK + uid):

@@ -2,6 +2,8 @@
 #   logic：註冊、格式檢查、未驗證、錯密碼、登入、舊進度綁定（遷移）、上傳、下載、衝突、離線、token 過期、登出備份接回、換帳號、登入門
 #   ui：登入門（標題前出登入面板）→ 註冊 → 驗證 → 登入 → 標題畫面＋帳號標籤；設置「存檔」頁帳號區；衝突對話框；截圖
 #   wide：1920×1080 截圖（登入、註冊、設置帳號區、衝突）
+#   guest：遊客邏輯（入遊戲、記住身分、強制登入開關、綁定上傳、自動同步跳過）
+#   guest_ui／guest_wide：登入門遊客入口 → 標題「遊客」標籤 → 設置綁定 → 註冊 → 進度上帳號；截圖
 # 跑法：bash /home/claude/setup/acct_edtest.sh <godotdir> acct res://tools/tests/account_test.gd logic 600 [450x975|1920x1080]
 extends RefCounted
 const SHOTS := "/tmp/account_shots/"
@@ -33,6 +35,7 @@ func _reset() -> void:
 	MK.mock_reset()
 	if FileAccess.file_exists(ACC.FILE): DirAccess.remove_absolute(ProjectSettings.globalize_path(ACC.FILE))
 	ACC._loaded = false; ACC.email = ""; ACC.uid = ""; ACC.token = ""; ACC.rtoken = ""; ACC.synced_ts = -1; ACC.rev = -1; ACC.last_sync = 0
+	ACC.guest = false; ACC.allow_guest_test = -1
 
 func _mk_save(lv: int, ts: int, name := "阿福") -> String:
 	var o = G.new_state(); o.lv = lv; o.last = ts; o.hero.name = name
@@ -208,5 +211,111 @@ func _flow(t, pre: String) -> void:
 	lp2.show_mode("forgot"); await _w(t, 0.3)
 	lp2.f_email.text = "boss@ghost.my"; _press(lp2.btn_main); await _w(t, 0.4)
 	await _shot(t, pre + "forgot"); lp2.queue_free()
+	_reset()
+	_done()
+
+
+# ---------------- [guest] 遊客模式 ----------------
+func guest(t) -> void:
+	await _boot(t)
+	_reset()
+	var keep = JSRun.ls.get(ACC.SAVE_KEY)
+	ACC.force_gate = true
+	_ck(ACC.gate_needed(), "未登入冇彈登入門")
+	ACC.allow_guest_test = 1
+	_ck(ACC.allow_guest(), "允許遊客開關無效")
+	ACC.play_as_guest()
+	_ck(ACC.is_guest() and not ACC.logged_in(), "揀遊客後身分錯")
+	_ck(not ACC.gate_needed(), "遊客仲彈登入門")
+	# 重開遊戲：遊客身分要記得
+	ACC._loaded = false; ACC.guest = false; ACC.load_state()
+	_ck(ACC.is_guest(), "重開後唔記得係遊客")
+	# 強制登入開關：遊客下次開機都要登入
+	ACC.allow_guest_test = 0
+	_ck(ACC.gate_needed(), "關咗遊客開關，遊客冇被要求登入")
+	ACC.allow_guest_test = 1
+	# 遊客玩咗 9 級：本機有進度；自動同步唔會打伺服器
+	var g9 = _mk_save(9, 7000, "遊客仔"); _set_local(g9)
+	var sn = _main(t).get_node_or_null("AcctSync")
+	if sn: _ck(await sn.run(true) == "skip", "遊客都去同步")
+	var r = await ACC.sync(); _ck(r.state == "logout", "遊客 sync 狀態錯：%s" % r.state)
+	# 綁定：註冊（自動驗證）→ 登入 → 第一次同步上傳遊客進度
+	MK.auto_verify = true
+	r = await ACC.sign_up("guest@ghost.my", "gggggggg"); _ck(r.ok and ACC.logged_in(), "遊客註冊失敗")
+	_ck(not ACC.is_guest() and not ACC.guest, "綁定後仲係遊客")
+	r = await ACC.sync(); _ck(r.state == "uploaded", "遊客進度冇上傳：%s" % r.state)
+	_ck(str(_cloud(ACC.uid).get("data", "")) == g9 and ACC.summary(g9).name == "遊客仔", "雲端唔係遊客進度")
+	_ck(JSRun.ls.get(ACC.SAVE_KEY) == g9, "綁定時本機遊客進度被改")
+	# 綁定後重開：記得帳號、唔係遊客
+	ACC._loaded = false; ACC.guest = true; ACC.uid = ""; ACC.load_state()
+	_ck(ACC.logged_in() and not ACC.guest, "綁定後重開身分錯")
+	# 登出：唔會變返遊客，要再揀
+	await ACC.sign_out()
+	_ck(not ACC.is_guest() and ACC.gate_needed(), "登出後狀態錯")
+	if keep != null: JSRun.ls[ACC.SAVE_KEY] = keep
+	else: JSRun.ls.erase(ACC.SAVE_KEY)
+	ACC.force_gate = false
+	_reset()
+	_done()
+
+func guest_ui(t) -> void:
+	await _guest_flow(t, "guest_")
+
+func guest_wide(t) -> void:
+	await _guest_flow(t, "wide_guest_")
+
+func _guest_flow(t, pre: String) -> void:
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	ACC.allow_guest_test = 1
+	var m = await _boot(t)
+	var lp = m.get("title_ov")
+	_ck(lp != null and lp.name == "LoginPanel", "開機冇先出登入面板")
+	if lp == null or lp.name != "LoginPanel": _done(); return
+	var gb = _find(lp, "BtnGuest"); _ck(gb != null and _find(lp, "GuestNote") != null, "登入面板冇遊客入口")
+	await _w(t, 0.6)
+	_in_view(t, lp.get_node("Win"), "登入面板（遊客入口）")
+	if gb: _in_view(t, gb, "遊客按鈕")
+	await _shot(t, pre + "gate")
+	_press(_find(lp, "LinkRegister")); await _w(t, 0.4)
+	_ck(_find(lp, "BtnGuest") != null, "註冊頁冇遊客入口")
+	_in_view(t, lp.get_node("Win"), "註冊頁（遊客入口）")
+	await _shot(t, pre + "gate_register")
+	_press(_find(lp, "BtnGuest"))
+	var tv = null
+	for i in 20:
+		await _w(t, 0.4); tv = m.get("title_ov")
+		if tv != null and tv.name == "Title": break
+	_ck(tv != null and tv.name == "Title", "揀遊客後冇出標題畫面")
+	_ck(ACC.is_guest(), "揀遊客後身分錯")
+	_ck(m.get_node_or_null("LoginPanel") == null and m.get_node_or_null("SyncDialog") == null, "遊客入標題畫面仲有彈窗")
+	if tv == null: _done(); return
+	await _w(t, 2.2)
+	var al = _find(tv, "AcctLabel"); _ck(al != null and str(al.text).contains("遊客"), "標題畫面冇遊客標籤")
+	if al: _in_view(t, al, "遊客標籤")
+	await _shot(t, pre + "title")
+	# 遊客玩咗：本機有進度
+	var g7 = _mk_save(7, 8000, "遊客仔"); _inject(g7)
+	_press(al); await _w(t, 0.7)
+	var sp = m.get_node_or_null("SettingsPanel"); _ck(sp != null and sp.tab == 3, "點遊客標籤冇開設置存檔頁")
+	if sp:
+		_ck(_find(sp, "AcctGuest") != null and _find(sp, "AcctBind") != null, "設置冇遊客／綁定項")
+		await _shot(t, pre + "settings")
+		_press(_find(sp, "AcctBind")); await _w(t, 0.5)
+		var lp2 = _find(sp, "LoginPanel"); _ck(lp2 != null and _find(lp2, "BtnGuest") == null, "綁定面板唔應該有遊客入口")
+		if lp2:
+			_press(_find(lp2, "LinkRegister")); await _w(t, 0.3)
+			MK.auto_verify = true
+			lp2.f_email.text = "bind@ghost.my"; lp2.f_pw.text = "bbbbbbbb"; lp2.f_pw2.text = "bbbbbbbb"
+			await _shot(t, pre + "bind_register")
+			_press(lp2.btn_main)
+			for i in 15:
+				await _w(t, 0.4)
+				if not is_instance_valid(lp2) or lp2.is_queued_for_deletion(): break
+			_ck(ACC.logged_in() and not ACC.is_guest(), "綁定後冇登入")
+			_ck(ACC.summary(str(_cloud(ACC.uid).get("data", ""))).name == "遊客仔", "遊客進度冇帶上帳號")
+			await _w(t, 0.5)
+			_ck(_find(sp, "AcctEmail") != null, "綁定後設置冇顯示帳號")
+			await _shot(t, pre + "settings_bound")
+		sp.close(); await _w(t, 0.3)
 	_reset()
 	_done()

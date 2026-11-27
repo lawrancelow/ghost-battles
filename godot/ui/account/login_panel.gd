@@ -14,6 +14,7 @@ const C_DIM := Color("#6e5838")
 const C_RED := Color("#9a2a1e")
 
 var host: Node
+var from_gate := true   # [guest] 開機登入門先有遊客入口；由設置「綁定帳號」開就唔出
 var on_done: Callable = Callable()
 var mode := "login"
 var busy := false
@@ -158,6 +159,7 @@ func _m_login() -> void:
 	var a = _link("忘記密碼？", func(): pend_email = f_email.text; show_mode("forgot")); a.name = "LinkForgot"; _body.remove_child(a); hb.add_child(a)
 	var sp = Control.new(); sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hb.add_child(sp)
 	var b = _link("沒有帳號？註冊", func(): pend_email = f_email.text; show_mode("register")); b.name = "LinkRegister"; _body.remove_child(b); hb.add_child(b)
+	_guest_row()
 
 func _m_register() -> void:
 	_title.text = "註冊帳號"
@@ -169,6 +171,7 @@ func _m_register() -> void:
 	_err_label()
 	btn_main = _btn("註冊", "gold", _do_register); btn_main.name = "BtnRegister"
 	var b = _link("已經有帳號？登入", func(): pend_email = f_email.text; show_mode("login")); b.name = "LinkLogin"
+	_guest_row()
 
 func _m_verify() -> void:
 	_title.text = "驗證郵箱"
@@ -198,6 +201,25 @@ func _m_forgot() -> void:
 		else: err(ACC.msg(str(r.err))))
 	btn_main.name = "BtnRecover"
 	_link("返回登入", func(): pend_email = f_email.text; show_mode("login"))
+
+# [guest] 遊客入口：冇網、唔想註冊都可以先玩；進度存本機，之後喺設置「存檔」頁或者標題畫面綁定
+func _guest_row() -> void:
+	if not from_gate or not ACC.allow_guest(): return
+	var sep = HBoxContainer.new(); sep.add_theme_constant_override("separation", 8); _body.add_child(sep)
+	for i in 3:
+		if i == 1:
+			var o = UIKit.label("或者", 13, C_DIM); sep.add_child(o); continue
+		var ln = ColorRect.new(); ln.color = Color(C_DIM, 0.4); ln.custom_minimum_size = Vector2(0, 1); ln.size_flags_horizontal = Control.SIZE_EXPAND_FILL; ln.size_flags_vertical = Control.SIZE_SHRINK_CENTER; sep.add_child(ln)
+	var gb = _btn("先以遊客身分遊玩", "", _do_guest); gb.name = "BtnGuest"
+	var n = _txt("進度只存在這部裝置。之後隨時可以在「設置 → 存檔」綁定帳號，進度會一起帶過去。", 12, C_DIM); n.name = "GuestNote"
+
+func _do_guest() -> void:
+	if busy: return
+	ACC.play_as_guest()
+	if host != null and host.has_method("show_toast"): host.call("show_toast", "以遊客身分遊玩。綁定帳號後，換機也不怕丟進度。")
+	var cb = on_done
+	queue_free()
+	if cb.is_valid(): cb.call()
 
 # ---------------- 動作 ----------------
 func _do_login() -> void:

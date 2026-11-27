@@ -930,13 +930,15 @@ func _show_title(fresh: bool) -> void:
 # [account] 標題畫面：左下角顯示帳號（點擊開設置「存檔」頁）；背景同步雲端進度
 func _acct_title(tv: Control) -> void:
 	var ACC = load("res://game/account/acct.gd")
-	if not ACC.logged_in(): return
+	var guest: bool = ACC.is_guest()   # [guest] 遊客：左下角細字「遊客・綁定帳號防丟失」，點擊開設置存檔頁；唔彈窗
+	if not ACC.logged_in() and not guest: return
 	var al = Button.new(); al.name = "AcctLabel"; al.flat = true; al.focus_mode = Control.FOCUS_NONE
-	al.text = "帳號：" + ACC.masked(); al.add_theme_font_override("font", UIKit.font("sans", 700)); al.add_theme_font_size_override("font_size", 12)
+	al.text = ("遊客・點此綁定帳號，防止進度丟失" if guest else "帳號：" + ACC.masked()); al.add_theme_font_override("font", UIKit.font("sans", 700)); al.add_theme_font_size_override("font_size", 12)
 	for k in ["font_color", "font_hover_color", "font_pressed_color"]: al.add_theme_color_override(k, Color(1, 1, 1, 0.62))
 	al.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8)); al.add_theme_constant_override("outline_size", 3)
 	al.anchor_top = 1; al.anchor_bottom = 1; al.offset_left = 6; al.offset_right = 260; al.offset_top = -26; al.offset_bottom = -2; al.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	al.pressed.connect(func(): open_settings(true, not G.S.is_empty(), 3)); tv.add_child(al)
+	if guest: al.offset_right = 330; return
 	var r: Dictionary = await ACC.sync()
 	if not is_instance_valid(tv) or title_ov != tv: return
 	var st = str(r.get("state", ""))

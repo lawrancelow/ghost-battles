@@ -297,8 +297,13 @@ const ACC = preload("res://game/account/acct.gd")
 func _acct_rows() -> void:
 	_h("帳號")
 	if not ACC.logged_in():
-		_note("還沒有登入。登入後進度會綁定郵箱，換機也不怕。")
-		var lb = _wide("登入／註冊", "gold", func(): _open_login()); lb.name = "AcctLogin"
+		if ACC.is_guest():   # [guest]
+			var gr = _row("身分", _val("遊客")); gr.name = "AcctGuest"
+			_note("現在是遊客身分，進度只存在這部裝置。綁定帳號後，進度會上傳到你的郵箱帳號，換手機、重裝遊戲都不會丟。")
+			var bb = _wide("綁定帳號（登入／註冊）", "gold", func(): _open_login()); bb.name = "AcctBind"
+		else:
+			_note("還沒有登入。登入後進度會綁定郵箱，換機也不怕。")
+			var lb = _wide("登入／註冊", "gold", func(): _open_login()); lb.name = "AcctLogin"
 		_body.add_child(Control.new()); return
 	var er = _row("郵箱", _val(ACC.email)); er.name = "AcctEmail"
 	var sl = _val(ACC.last_sync_text()); sl.name = "AcctSyncVal"
@@ -330,7 +335,7 @@ func _logout() -> void:
 	JSRun.skip_title = false; JSRun.reset_world(); get_tree().call_deferred("reload_current_scene")
 
 func _open_login() -> void:
-	var lp = load("res://ui/account/login_panel.gd").new(); lp.host = host
+	var lp = load("res://ui/account/login_panel.gd").new(); lp.host = host; lp.from_gate = false
 	lp.on_done = func(): if is_instance_valid(self): show_tab(3)
 	add_child(lp)
 
