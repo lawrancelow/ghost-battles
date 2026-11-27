@@ -1,0 +1,312 @@
+{
+ "portrait": {
+  "size": [
+   1024,
+   1536
+  ],
+  "layers": [
+   {
+    "key": "tl_p_L0_background",
+    "box": [
+     0,
+     0,
+     1024,
+     1536
+    ],
+    "anchor": [
+     512.0,
+     768.0
+    ],
+    "parallax": 0.1,
+    "anim": ""
+   },
+   {
+    "key": "tl_p_L1_ghosts_left",
+    "box": [
+     0,
+     392,
+     453,
+     388
+    ],
+    "anchor": [
+     226.5,
+     586.0
+    ],
+    "parallax": 0.16,
+    "anim": "idle"
+   },
+   {
+    "key": "tl_p_L1_ghosts_right",
+    "box": [
+     600,
+     365,
+     424,
+     508
+    ],
+    "anchor": [
+     812.0,
+     619.0
+    ],
+    "parallax": 0.16,
+    "anim": "idle"
+   },
+   {
+    "key": "tl_p_L2_ceiling_left",
+    "box": [
+     10,
+     0,
+     241,
+     328
+    ],
+    "anchor": [
+     120,
+     0
+    ],
+    "parallax": 0.22,
+    "anim": "sway"
+   },
+   {
+    "key": "tl_p_L2_ceiling_right",
+    "box": [
+     704,
+     61,
+     216,
+     228
+    ],
+    "anchor": [
+     829,
+     65
+    ],
+    "parallax": 0.22,
+    "anim": "sway"
+   },
+   {
+    "key": "tl_p_L3_male",
+    "box": [
+     183,
+     709,
+     322,
+     665
+    ],
+    "anchor": [
+     343,
+     1369
+    ],
+    "parallax": 0.38,
+    "anim": "float_breathe"
+   },
+   {
+    "key": "tl_p_L3_female",
+    "box": [
+     477,
+     706,
+     376,
+     680
+    ],
+    "anchor": [
+     664,
+     1381
+    ],
+    "parallax": 0.38,
+    "anim": "float_breathe"
+   }
+  ],
+  "glow": [
+   {
+    "key": "tl_p_glow_lights",
+    "kind": "lights",
+    "box": [
+     0,
+     0,
+     1024,
+     319
+    ]
+   },
+   {
+    "key": "tl_p_glow_monitors",
+    "kind": "monitors",
+    "box": [
+     311,
+     576,
+     494,
+     191
+    ]
+   },
+   {
+    "key": "tl_p_glow_lamps",
+    "kind": "lamps",
+    "box": [
+     249,
+     628,
+     157,
+     105
+    ]
+   },
+   {
+    "key": "tl_p_glow_moon",
+    "kind": "moon",
+    "box": [
+     520,
+     396,
+     119,
+     118
+    ]
+   }
+  ]
+ },
+ "wide": {
+  "size": [
+   1672,
+   941
+  ],
+  "layers": [
+   {
+    "key": "tl_w_L0_background",
+    "box": [
+     0,
+     0,
+     1672,
+     941
+    ],
+    "anchor": [
+     836.0,
+     470.5
+    ],
+    "parallax": 0.1,
+    "anim": ""
+   },
+   {
+    "key": "tl_w_L1_ghosts_left",
+    "box": [
+     0,
+     219,
+     721,
+     332
+    ],
+    "anchor": [
+     360.5,
+     385.0
+    ],
+    "parallax": 0.16,
+    "anim": "idle"
+   },
+   {
+    "key": "tl_w_L1_ghosts_right",
+    "box": [
+     1158,
+     134,
+     514,
+     402
+    ],
+    "anchor": [
+     1415.0,
+     335.0
+    ],
+    "parallax": 0.16,
+    "anim": "idle"
+   },
+   {
+    "key": "tl_w_L2_ceiling_left",
+    "box": [
+     508,
+     0,
+     227,
+     303
+    ],
+    "anchor": [
+     620,
+     0
+    ],
+    "parallax": 0.22,
+    "anim": "sway"
+   },
+   {
+    "key": "tl_w_L2_ceiling_right",
+    "box": [
+     1159,
+     9,
+     249,
+     221
+    ],
+    "anchor": [
+     1340,
+     13
+    ],
+    "parallax": 0.22,
+    "anim": "sway"
+   },
+   {
+    "key": "tl_w_L3_male",
+    "box": [
+     834,
+     331,
+     317,
+     556
+    ],
+    "anchor": [
+     992,
+     882
+    ],
+    "parallax": 0.38,
+    "anim": "float_breathe"
+   },
+   {
+    "key": "tl_w_L3_female",
+    "box": [
+     1134,
+     365,
+     314,
+     546
+    ],
+    "anchor": [
+     1290,
+     906
+    ],
+    "parallax": 0.38,
+    "anim": "float_breathe"
+   }
+  ],
+  "glow": [
+   {
+    "key": "tl_w_glow_lights",
+    "kind": "lights",
+    "box": [
+     0,
+     0,
+     1672,
+     253
+    ]
+   },
+   {
+    "key": "tl_w_glow_monitors",
+    "kind": "monitors",
+    "box": [
+     568,
+     344,
+     624,
+     282
+    ]
+   },
+   {
+    "key": "tl_w_glow_lamps",
+    "kind": "lamps",
+    "box": [
+     443,
+     357,
+     669,
+     231
+    ]
+   },
+   {
+    "key": "tl_w_glow_moon",
+    "kind": "moon",
+    "box": [
+     889,
+     174,
+     159,
+     145
+    ]
+   }
+  ]
+ }
+}

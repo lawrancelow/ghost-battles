@@ -157,6 +157,15 @@ func _layout() -> void:
 	_cover_sp.texture = ct; _cover_sp.material = _cover.material
 	_cov_pos = _cover.size / 2; _cov_scl = Vector2(_cover.size.x / tw, _cover.size.y / th)
 	_cover_sp.position = _cov_pos; _cover_sp.scale = _cov_scl
+	# [p48] 分層封面：有分層素材就用分層（視差＋細微動作），冇就照用單圖
+	var want := ""
+	if _new_cover and not _blur.visible:
+		want = "wide" if (land and ct == _wide_tex) else ("portrait" if ct == _cover_tex else "")
+	_use_layers(want)
+	if _rig != null:
+		var ls: Array = _lay_meta[_lay_set]["size"]
+		_rig_scl = Vector2(_cover.size.x / float(ls[0]), _cover.size.y / float(ls[1]))
+		_rig.position = _cov_pos; _rig.scale = _rig_scl
 	if _logo:
 		var lw: float; var lp: Vector2
 		var ar = _logo.texture.get_height() / float(_logo.texture.get_width())
@@ -208,7 +217,8 @@ func _process(dt: float) -> void:
 	_t += dt
 	# 封面慢推鏡（14 秒一來回）
 	# 封面慢推鏡＋極輕微平移（亞像素、餘弦緩動、首尾相接冇跳幀）
-	if _cover_sp:
+	if _rig != null: _anim_layers(dt)
+	elif _cover_sp:
 		var k = 0.5 - 0.5 * cos(_t * TAU / 28.0)
 		_cover_sp.scale = _cov_scl * (1.0 + 0.035 * k)
 		_cover_sp.position = _cov_pos + Vector2(sin(_t * TAU / 40.0) * _cover.size.x * 0.006, sin(_t * TAU / 33.0) * _cover.size.y * 0.004)
@@ -222,6 +232,105 @@ func _process(dt: float) -> void:
 		var w = size.x
 		if m[1] > 0 and sp.position.x > w + 260: sp.position.x = -260
 		elif m[1] < 0 and sp.position.x < -260: sp.position.x = w + 260
+
+# ---------------- [p48] 分層封面 ----------------
+# 美術組把 V3 封面拆成 L0 背景／L1 遠處鬼怪／L2 天花板鬼／L3 男女主＋光源遮罩（data/title_layers.json，素材 assets/spr/title_layers/）
+# 全部 Sprite2D（亞像素、線性＋mipmap），掛喺一個 Node2D（_rig）下面：rig 原點＝封面中心，座標用原圖像素
+#   視差：各層按 parallax 係數跟住同一條漂移曲線郁（遠慢近快；L1 鬼怪同背景相對位移 <1px，唔露下半身切口）
+#   sway：天花板鬼繞頂部錨點擺 ±2.5°；float_breathe：男女主底部錨點上下浮 ±4px＋輕呼吸，相位錯開
+#   光：日光燈偶爾閃、螢幕／檯燈慢呼吸、紅月微脈動（加色混合）。流暢模式：唔做光同擺動，淨係推鏡＋視差
+var _rig: Node2D
+var _rig_scl := Vector2.ONE
+var _lay_set := ""
+var _lay_meta: Dictionary = {}
+var _lay_loaded := false
+var _lays: Array = []    # [Sprite2D, base_pos, layer dict, phase]
+var _glows: Array = []   # [Sprite2D, kind, phase]
+var _lite := false
+var _fl_next := 2.5
+var _fl_t := -1.0
+const DRIFT := Vector2(14.0, 9.0)   # 原圖像素；乘 parallax（背景 0.1 → 1.4px）
+
+static func _lay_tex(key: String) -> Texture2D:
+	var p = "res://assets/spr/title_layers/%s.webp" % key
+	return load(p) if ResourceLoader.exists(p) else null
+
+func _use_layers(want: String) -> void:
+	if want == _lay_set and (_rig != null or want == ""): 
+		if _cover_sp: _cover_sp.visible = _rig == null
+		return
+	if _rig != null: _rig.queue_free(); _rig = null
+	_lays.clear(); _glows.clear(); _lay_set = ""
+	if _cover_sp: _cover_sp.visible = true
+	if want == "": return
+	if not _lay_loaded:
+		_lay_loaded = true
+		var p = "res://data/title_layers.json"
+		if FileAccess.file_exists(p):
+			var d = JSON.parse_string(FileAccess.get_file_as_string(p))
+			if d is Dictionary: _lay_meta = d
+	if not _lay_meta.has(want): return
+	var m: Dictionary = _lay_meta[want]
+	var texs := {}
+	for l in (m["layers"] as Array) + (m["glow"] as Array):
+		var t = _lay_tex(str(l.key))
+		if t == null: return   # 缺任何一層就唔用分層（照用單圖）
+		texs[str(l.key)] = t
+	var pm = load("res://ui/perf_mode.gd"); pm.load_pref(); _lite = bool(pm.on)
+	var half := Vector2(float(m["size"][0]), float(m["size"][1])) / 2.0
+	_rig = Node2D.new(); _rig.name = "cover_rig"; _cover.add_child(_rig)
+	var add_mat = CanvasItemMaterial.new(); add_mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	var ph := 0.0
+	for i in m.layers.size():
+		var l: Dictionary = m.layers[i]
+		var sp = _smooth_sprite(); sp.centered = false; sp.texture = texs[str(l.key)]; sp.name = str(l.key)
+		var anc := Vector2(float(l.anchor[0]), float(l.anchor[1]))
+		sp.position = anc - half; sp.offset = Vector2(float(l.box[0]), float(l.box[1])) - anc
+		_rig.add_child(sp); _lays.append([sp, sp.position, l, ph]); ph += 1.7
+		if i == 0 and not _lite:   # 光源疊喺背景上面、角色下面
+			for g in m.glow:
+				var gs = _smooth_sprite(); gs.centered = false; gs.texture = texs[str(g.key)]; gs.name = str(g.key)
+				gs.position = Vector2(float(g.box[0]), float(g.box[1])) - half; gs.material = add_mat; gs.modulate.a = 0.0
+				_rig.add_child(gs); _glows.append([gs, str(g.kind), randf() * TAU])
+	_lay_set = want
+	if _cover_sp: _cover_sp.visible = false
+	print("[p48] title layers ", want, " ", _lays.size(), " glow ", _glows.size(), " lite ", _lite)
+
+func _anim_layers(dt: float) -> void:
+	var k = 0.5 - 0.5 * cos(_t * TAU / 28.0)
+	_rig.scale = _rig_scl * (1.0 + 0.035 * k)
+	var drift = Vector2(sin(_t * TAU / 40.0) * DRIFT.x, sin(_t * TAU / 33.0) * DRIFT.y)
+	for e in _lays:
+		var sp: Sprite2D = e[0]; var l: Dictionary = e[2]; var ph: float = e[3]
+		var p: Vector2 = e[1] + drift * float(l.parallax)
+		match str(l.anim):
+			"sway":
+				if not _lite: sp.rotation = deg_to_rad(2.5) * sin(_t * TAU / 6.2 + ph)
+			"float_breathe":
+				p.y += sin(_t * TAU / 3.2 + ph) * (2.0 if _lite else 4.0)
+				if not _lite: sp.scale = Vector2(1.0 - 0.004 * sin(_t * TAU / 3.6 + ph), 1.0 + 0.012 * (0.5 + 0.5 * sin(_t * TAU / 3.6 + ph)))
+			"idle":
+				if not _lite:
+					var b = 0.97 + 0.03 * (0.5 + 0.5 * sin(_t * TAU / 7.0 + ph))
+					sp.modulate = Color(b, b, b)
+		sp.position = p
+	if _glows.is_empty(): return
+	# 日光燈：偶爾閃兩下（0.45 秒），平時極淡
+	var fl := 0.0
+	if _fl_t < 0.0 and _t > _fl_next: _fl_t = 0.0
+	if _fl_t >= 0.0:
+		_fl_t += dt
+		var x = _fl_t / 0.45
+		fl = (0.8 if fmod(_fl_t, 0.15) < 0.07 else 0.15) if x < 1.0 else 0.0
+		if x >= 1.0: _fl_t = -1.0; _fl_next = _t + randf_range(3.5, 8.0)
+	for g in _glows:
+		var sp: Sprite2D = g[0]; var ph: float = g[2]; var a := 0.0
+		match str(g[1]):
+			"lights": a = 0.1 + 0.04 * sin(_t * TAU / 5.0 + ph) + fl
+			"monitors": a = 0.22 + 0.14 * sin(_t * TAU / 2.6 + ph) + (0.12 if fmod(_t + ph, 5.3) < 0.08 else 0.0)
+			"lamps": a = 0.16 + 0.08 * sin(_t * TAU / 4.1 + ph)
+			"moon": a = 0.12 + 0.12 * (0.5 + 0.5 * sin(_t * TAU / 5.5 + ph))
+		sp.modulate.a = clampf(a, 0.0, 1.0)
 
 # ---------------- 霧、鬼火 ----------------
 static var _mist_tex: Texture2D
