@@ -85,8 +85,9 @@ func upper() -> void:
 	var evs = _run(sim, 30.0, true)
 	_chk("客人收到壽包付錢", _cnt(evs, "pay") >= 1 and int(c.got.get(G, 0)) == 1, c.got)
 	_chk("冇嬲走", _cnt(evs, "leave") == 0)
-	sim.custs.clear()
-	_chk("冇客等：照舊上層要料優先入倉", sim.split(A, 1) == [1, 0], sim.split(A, 1))
+	sim.custs.clear(); _S().res["buns"] = 0.0
+	var r0 = sim.split(A, 1)
+	_chk("冇客等：照舊上層要料優先入倉", r0 == [1, 0], r0)
 
 func workers() -> void:
 	_p("===== 3. 派員工自動做（唔撳），客人要 3 個 =====")
@@ -137,5 +138,6 @@ func all_maps() -> void:
 			sim.set_route(sid, "auto")
 			_cust(sim, {g: 2})
 			var r = sim.split(sid, 2)
-			if r[1] < 2: badl.append("%s→%s" % [sid, str(r)])
-	_chk("所有台（%d 個）客人優先" % seen.size(), badl.is_empty(), badl)
+			var needbuf = sim.buffer_of(M.rout(sid), sid) > 0.0 and M.amt(M.rout(sid)) < sim.buffer_of(M.rout(sid), sid)
+			if r[1] < (1 if needbuf else 2): badl.append("%s→%s" % [sid, str(r)])
+	_chk("所有台（%d 個）客人優先（上層要料時一半畀客）" % seen.size(), badl.is_empty(), badl)

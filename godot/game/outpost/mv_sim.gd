@@ -383,12 +383,16 @@ func split(sid: String, n: int) -> Array:
 		if ks < n or demand_short(gid) > 0: _hint_sell(sid, gid)
 		return [ks, n - ks]
 	if r == "sell": return [0, n]
-	var sell_first = mini(n, demand_short(gid))
+	var short = demand_short(gid)
+	var buf = buffer_of(mid, sid)
+	if buf > 0.0 and M.amt(mid) < buf:   # 上層要料：冇客等＝全入倉；有客等＝一件畀客、一件入倉（兩邊都唔斷）
+		var ks = n if short <= 0 else n - mini(short, n - _half_k(sid, n))
+		ks = mini(ks, int(floor(M.room(mid) + 1e-6)))
+		return [ks, n - ks]
+	var sell_first = mini(n, short)
 	var rest = n - sell_first; var k = 0
 	if rest > 0:
-		var buf = buffer_of(mid, sid)
-		if buf > 0.0 and M.amt(mid) < buf: k = rest
-		elif mid == "m_shoubao": k = _half_k(sid, rest)
+		if mid == "m_shoubao": k = _half_k(sid, rest)
 		elif M.is_item(mid) and M.amt(mid) < ITEM_KEEP: k = rest
 		if k < rest and storeable(mid) and counter_n(gid) >= MD.COUNTER_CAP: k = rest
 	k = mini(k, int(floor(M.room(mid) + 1e-6)))
