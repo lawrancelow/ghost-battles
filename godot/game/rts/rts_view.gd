@@ -750,6 +750,7 @@ func _sync_ui() -> void:
 		chip_auto.position = Vector2(nv.size.x - aw - 8, _ux_col().y - BTN * 0.5 - 40)   # [uxui] 按實際闊度貼右邊，唔切邊
 # [uxui] 右邊技能豎排：回傳 Vector2(每粒間距, 第一粒中心 y)。「生產鏈」掣（同其他右邊浮動掣）喺上面就排佢下面；太多粒就收窄間距，唔出底
 var _cb_node = null
+var _ca_node = null   # [uxui2] 挑戰卡
 func _ux_col() -> Vector2:
 	var y = nv.size.y * 0.40
 	if _cb_node == null or not is_instance_valid(_cb_node): _cb_node = nv.get_tree().root.find_child("ChainBtn", true, false)
@@ -762,6 +763,12 @@ func _ux_col() -> Vector2:
 	var n = maxi(1, btns.size())
 	var gap = BTN + 26.0
 	var bottom = nv.size.y - 120.0   # 底部留俾出擊／叫回／挑戰卡
+	if _ca_node == null or not is_instance_valid(_ca_node): _ca_node = nv.get_tree().root.find_child("CtlAct", true, false)
+	if _ca_node != null and is_instance_valid(_ca_node) and _ca_node.is_visible_in_tree():   # [uxui2] 挑戰卡伸到右邊欄：豎排停喺卡上面
+		var ga: Rect2 = _ca_node.get_global_rect()
+		var inv2 = ui.get_global_transform().affine_inverse()
+		var ra = Rect2(inv2 * ga.position, ga.size)
+		if ra.end.x > nv.size.x - BTN - 16.0: bottom = minf(bottom, ra.position.y - BTN * 0.5 - 6.0)
 	if y + (n - 1) * gap > bottom: gap = maxf(BTN + 4.0, (bottom - y) / maxf(1.0, n - 1))
 	if y + (n - 1) * gap > bottom: y = maxf(nv.size.y * 0.18, bottom - (n - 1) * gap)
 	return Vector2(gap, y)
