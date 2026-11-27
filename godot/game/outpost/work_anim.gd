@@ -456,6 +456,9 @@ static func draw(ctx: Ctx, k: String, x: float, y: float, s: float, flip: bool, 
 			SFX_LOG.append({"ev": ev, "k": k, "T": T})
 			if SFX_LOG.size() > 200: SFX_LOG.pop_front()
 			if on_sfx.is_valid(): on_sfx.call(ev, k, wp.x, wp.y)
+			else:   # [worksfx] 預設：交俾 Snd 播（限流、隨機音高、走 SFX 音軌）
+				var snd = Engine.get_main_loop().root.get_node_or_null("Snd") if Engine.get_main_loop() is SceneTree else null
+				if snd != null and snd.has_method("work_sfx"): snd.work_sfx(ev, k, wp.x, wp.y)
 	_beat[bk] = bt
 	return {"verb": verb, "hit": c.get("hit", false)}
 

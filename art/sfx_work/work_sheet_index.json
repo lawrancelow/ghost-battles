@@ -1,0 +1,154 @@
+{
+"wk_chop_hit": [
+0.0,
+0.2515
+],
+"wk_hack_hit": [
+0.3315,
+0.2099
+],
+"wk_split_hit": [
+0.6214,
+0.1354
+],
+"wk_poke_knock": [
+0.8368,
+0.3309
+],
+"wk_reap_cut": [
+1.2477,
+0.5971
+],
+"wk_crank_creak": [
+1.9248,
+0.5181
+],
+"wk_score_scrape": [
+2.5229,
+0.6971
+],
+"wk_net_splash": [
+3.3,
+0.8791
+],
+"wk_pick_drop": [
+4.259,
+0.6226
+],
+"wk_scoop_dig": [
+4.9616,
+0.7213
+],
+"wk_saw_stroke": [
+5.7629,
+1.05
+],
+"wk_knead_roll": [
+6.8929,
+0.1333
+],
+"wk_dip_slosh": [
+7.1062,
+0.5029
+],
+"wk_grate_rasp": [
+7.6891,
+0.6971
+],
+"wk_press_squeak": [
+8.4662,
+0.6181
+],
+"wk_twist_whirr": [
+9.1642,
+1.05
+],
+"wk_pound_thud": [
+10.2942,
+0.3264
+],
+"wk_stir_slosh": [
+10.7007,
+0.8971
+],
+"wk_wok_clang": [
+11.6778,
+0.446
+],
+"wk_ladle_pour": [
+12.2038,
+0.3685
+],
+"wk_fold_paper": [
+12.6523,
+0.3788
+],
+"wk_forge_knock": [
+13.1111,
+0.1898
+],
+"wk_steam_hiss": [
+13.3809,
+1.1005
+],
+"wk_stamp_thump": [
+14.5614,
+0.1112
+],
+"wk_fan_whoosh": [
+14.7526,
+0.2046
+],
+"wk_mill_grind": [
+15.0372,
+0.5421
+],
+"wk_fork_toss": [
+15.6594,
+0.3595
+],
+"wk_tongs_clack": [
+16.0989,
+0.1692
+],
+"wk_sew_pull": [
+16.3481,
+0.7471
+],
+"wk_brush_paste": [
+17.1752,
+0.7471
+],
+"wk_paint_stroke": [
+18.0023,
+0.5971
+],
+"wk_catch_thud": [
+18.6794,
+0.2336
+],
+"wk_pump_puff": [
+18.9929,
+0.5971
+],
+"wk_slice_cut": [
+19.67,
+0.283
+],
+"wk_pull_pour": [
+20.033,
+1.05
+],
+"wk_salt_sprinkle": [
+21.163,
+0.8471
+],
+"wk_plane_shave": [
+22.0901,
+0.4762
+],
+"wk_screw_tick": [
+22.6463,
+0.3643
+]
+}

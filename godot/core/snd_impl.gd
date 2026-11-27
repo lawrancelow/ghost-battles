@@ -572,3 +572,60 @@ func bake(dir: String) -> void:
 	var bl = await _battle_loop(); ResourceSaver.save(bl, dir + "/" + "battle_loop".md5_text().substr(0, 16) + ".res")
 	var ot = _office_ticks(); ResourceSaver.save(ot, dir + "/" + "office_tick".md5_text().substr(0, 16) + ".res")
 	baking = false
+
+# ====================================================================
+# [worksfx] 做工音效（老闆 11-27 揀定 38 個，全部 CC0）：work_anim 每下「落手」叫 work_sfx(事件, 鬼, 世界 x, y)
+#   全部聲合成一張 res://assets/snd/work/work_sheet.ogg（索引 game/outpost/work_sfx_idx.gd），play(起點) 再到時停
+#   唔好嘈：自己 4 個播放器、同時最多 3 個；同一個聲 0.16 秒內唔重複；同一位置（≈同一座建築，120px 一格）0.33 秒內只出一聲；
+#   任何兩聲最少隔 0.06 秒；音量比一般音效低 7dB；每聲隨機音高 0.93–1.07。走 SFX 音軌（跟設置「音效」音量）。
+# ====================================================================
+const WK_SHEET := "res://assets/snd/work/work_sheet.ogg"
+const WK_IDX = preload("res://game/outpost/work_sfx_idx.gd")
+const WK_GAP_EV := 0.16
+const WK_GAP_B := 0.33
+const WK_GAP_ALL := 0.06
+const WK_MAX := 3
+const WK_DB := -7.0
+var _wk_st = null
+var _wk_try := false
+var _wkp: Array = []
+var _wk_t := {}
+var _wk_b := {}
+var _wk_last := -100000
+var wk_log: Array = []      # 測試用：[事件, 播／限流原因]
+func work_stream():
+	if not _wk_try:
+		_wk_try = true
+		_wk_st = load(WK_SHEET) if ResourceLoader.exists(WK_SHEET) else null
+	return _wk_st
+func work_events() -> Array: return WK_IDX.IDX.keys()
+func _wk_note(ev: String, why: String) -> void:
+	wk_log.append([ev, why])
+	if wk_log.size() > 300: wk_log.pop_front()
+func work_sfx(ev: String, _k = "", x := 0.0, y := 0.0) -> bool:
+	var seg = WK_IDX.IDX.get(ev)
+	if seg == null: _wk_note(ev, "no_ev"); return false
+	var st = work_stream()
+	if st == null: _wk_note(ev, "no_file"); return false
+	var now = Time.get_ticks_msec()
+	if now - _wk_last < int(WK_GAP_ALL * 1000.0): _wk_note(ev, "gap_all"); return false
+	if now - int(_wk_t.get(ev, -100000)) < int(WK_GAP_EV * 1000.0): _wk_note(ev, "gap_ev"); return false
+	var bk = "%d,%d" % [int(floor(x / 120.0)), int(floor(y / 120.0))]
+	if now - int(_wk_b.get(bk, -100000)) < int(WK_GAP_B * 1000.0): _wk_note(ev, "gap_b"); return false
+	if _wkp.is_empty():
+		for i in 4:
+			var q = AudioStreamPlayer.new(); q.bus = PF.bus("sfx"); q.stream = st; add_child(q); _wkp.append(q)
+	var busy := 0; var p: AudioStreamPlayer = null
+	for q in _wkp:
+		if q.playing: busy += 1
+		elif p == null: p = q
+	if busy >= WK_MAX or p == null: _wk_note(ev, "busy"); return false
+	_wk_last = now; _wk_t[ev] = now; _wk_b[bk] = now
+	var tok = int(p.get_meta("tok", 0)) + 1; p.set_meta("tok", tok)
+	p.volume_db = linear_to_db(0.85) + WK_DB
+	var ps = _rng.randf_range(0.93, 1.07); p.pitch_scale = ps
+	p.play(float(seg[0]))
+	get_tree().create_timer(float(seg[1]) / ps + 0.02, true, false, true).timeout.connect(func():
+		if is_instance_valid(p) and int(p.get_meta("tok", 0)) == tok: p.stop())
+	_wk_note(ev, "play")
+	return true
