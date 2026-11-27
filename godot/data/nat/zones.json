@@ -332,8 +332,8 @@
      },
      "reveal": {
       "quest_done": [
-       "bLevel",
-       "wood"
+       "stage",
+       "1-2"
       ]
      }
     },

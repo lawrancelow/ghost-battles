@@ -19,6 +19,7 @@ const ZVm := preload("res://game/zone/zone_view.gd")   # [zone]
 const UNIFY := true          # [unify] 合一地圖（移動村獨立全屏畫面、後院掣、營地取消）
 var dom: Control
 var quest_bar: PanelContainer
+var quest_go: Button   # [onboard]
 var quest_lbl: RichTextLabel
 var quest_prog: Label
 var lv_lbl: Label
@@ -60,6 +61,7 @@ func _ready() -> void:
 	story = Control.new(); story.set_script(load("res://ui/story.gd")); add_child(story)
 	_build_fx()
 	load("res://game/outpost/ctl_ui.gd").attach(self)   # [ctl] 行動按鈕、出擊清單、地盤掣變灰
+	load("res://ui/onboard/tut.gd").attach(self)   # [onboard] 第一章新手教程（手指＋挖洞遮罩）
 	move_child(praise_box, sheet.get_index())   # 系統誇獎喺村子層，面板蓋住佢（同網頁版 z-index 一樣）
 	G.modal_open = func() -> bool: return J.t(J.mc(J.G.get("UI"), "modalOpen", []))
 	G.refreshed.connect(refresh); G.toast.connect(show_toast); G.banner.connect(show_banner); G.praise.connect(show_praise)
@@ -367,19 +369,29 @@ func _build_village() -> void:
 	quest_lbl = UIKit.rich("", 15, UIKit.INKTXT); quest_lbl.add_theme_font_override("normal_font", UIKit.font("sans", 700)); quest_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; quest_lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
 	quest_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE; quest_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hb.add_child(quest_lbl)
 	quest_prog = UIKit.label("", 15, UIKit.CINNABAR2, "sans", 900); quest_prog.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hb.add_child(quest_prog)
+	quest_go = UIKit.btn(OBm().T("前往", "前往"), "", true); quest_go.add_theme_font_size_override("font_size", 13); quest_go.custom_minimum_size = Vector2(52, 28)
+	quest_go.size_flags_vertical = Control.SIZE_SHRINK_CENTER; quest_go.focus_mode = Control.FOCUS_NONE; quest_go.pressed.connect(_quest_go); hb.add_child(quest_go)   # [onboard] 主線條「前往」掣
 	quest_bar.gui_input.connect(func(e):
-		if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
-			var q = G.quest_cur()
-			if q and q.go == "roster": open_roster(); return
-			if mv_on() and not UNIFY:   # [unify] 合一地圖：原村子任務照舊（鏡頭去原村子建築）
-				if q and (q.get("t") == "stage" or q.get("go") == "gate"): close_sheet(); J.mc(J.G.get("World"), "open", []); return
-				close_sheet(); _nav_on("village")
-				var cg = {"tree": "wood", "paddy": "rice"}.get(str(q.get("go")), str(q.get("go"))) if q else ""   # [camp] 營地建築任務：鏡頭移去嗰間
-				if mv_view != null and mv_view.has_method("focus_camp") and cg != "": mv_view.focus_camp(cg)
-				return
-			if ZDm.on() and _stage_focus(): return   # [outgate] 主線關卡：去大排檔前面迎戰
-			var p = J.mc(J.G.get("Village"), "questTarget", [])
-			if p: close_sheet(); J.mc(J.G.get("Village"), "focus", [p[0], p[1]]))
+		if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT: _quest_go())
+
+static func OBm(): return load("res://game/onboard/ob.gd")
+# 主線條：撳條或者「前往」→ 帶去當前階段目標
+func _quest_go() -> void:
+	var q = G.quest_cur()
+	if q and q.go == "roster": open_roster(); return
+	if mv_on() and not UNIFY:   # [unify] 合一地圖：原村子任務照舊（鏡頭去原村子建築）
+		if q and (q.get("t") == "stage" or q.get("go") == "gate"): close_sheet(); J.mc(J.G.get("World"), "open", []); return
+		close_sheet(); _nav_on("village")
+		var cg = {"tree": "wood", "paddy": "rice"}.get(str(q.get("go")), str(q.get("go"))) if q else ""   # [camp] 營地建築任務：鏡頭移去嗰間
+		if mv_view != null and mv_view.has_method("focus_camp") and cg != "": mv_view.focus_camp(cg)
+		return
+	if q and str(q.get("go", "")) == "market" and ZDm.on():   # [onboard] 大排檔賣貨／第一次守夜：鏡頭去大排檔
+		close_sheet(); _nav_on("village")
+		if ZDm.revealed("market"): _cam_to(ZDm.zrect("market").get_center())
+		return
+	if ZDm.on() and _stage_focus(): return   # [outgate] 主線關卡：去大排檔前面迎戰
+	var p = J.mc(J.G.get("Village"), "questTarget", [])
+	if p: close_sheet(); J.mc(J.G.get("Village"), "focus", [p[0], p[1]])
 
 func _build_top() -> void:
 	var top = Panel.new(); top.anchor_right = 1; top.offset_bottom = TOP_H
@@ -479,15 +491,24 @@ func _nav_on(t: String) -> void:
 		var kt = KS.tex("nav_%s%s" % [kn, "_on" if on else ""]) if KS.ok() and kn != "" else null   # [uikit] 導航圖示
 		nav_btns[k][1].texture = kt if kt != null else load("res://assets/ui/n-%s%s.svg" % [k, "_on" if on else ("_main" if k == "battle" else "")])
 		nav_btns[k][2].add_theme_color_override("font_color", UIKit.GOLD2 if on else (Color("#f0c8a0") if k == "battle" else Color("#b8a08e")))
+	_ob_nav_gray()
 	var jui = J.G.get("UI")
 	if jui is Dictionary: jui["tab"] = t
 
 func _nav(t: String) -> void:
 	var ui = J.G.get("UI")
+	var lk = OBm().tab_lock(t)   # [onboard] 新手階段：未開放嘅分頁講「XX 之後開放」
+	if lk != "": show_toast(lk); return
 	if t == "battle" and load("res://game/outpost/ctl_ui.gd").nav_battle(self): return   # [ctl] 「地盤」掣：灰色，之後開放
 	if t == "battle" and ZDm.on(): J.mc(J.G.get("UI"), "close", []); _go_out(); return   # [outgate] 新版：唔開舊世界地圖，鏡頭去出村門外
 	if t == "battle": J.mc(J.G.get("UI"), "close", []); J.mc(J.G.get("World"), "open", []); return
 	J.mc(ui, "open", [t])
+
+# [onboard] 鎖住嘅分頁：圖示同字變淡
+func _ob_nav_gray() -> void:
+	for k in nav_btns:
+		var b = nav_btns[k][0]
+		if is_instance_valid(b): b.modulate.a = 0.42 if OBm().tab_lock(k) != "" else 1.0
 
 # [outgate] 新版出村：舊世界地圖（夜班巡陰、冥街夜市、陰陽交界…）暫時唔開；「地盤」掣同主線關卡任務都帶鏡頭去出村門外
 func _cam_to(p: Vector2) -> void:
@@ -561,6 +582,7 @@ func refresh() -> void:
 		quest_lbl.text = (_unify_qtext(MVB.quest_text(q)) if UNIFY else MVB.quest_text(q)) if mv_on() else q.text; quest_prog.text = "%d/%d" % [int(a), int(p[1])]
 		quest_prog.add_theme_color_override("font_color", Color("#2e6d3a") if float(p[0]) >= float(p[1]) else UIKit.CINNABAR2)
 	else: quest_lbl.text = "第一季完。村子由你慢慢經營。" if S.ended else "—"; quest_prog.text = ""
+	_ob_nav_gray()
 	_mv_tick()
 	CBLD.install()   # [village] 後院拓展建築：包裝村子／建築卡／產出（已裝就即刻返）
 	var ch = int(S.chests.g) + int(S.chests.b) + int(S.chests.p)

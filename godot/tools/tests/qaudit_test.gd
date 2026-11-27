@@ -225,6 +225,37 @@ func _do_feast(t, q) -> String:
 			for g in _free_ghosts(): Menus.jn("rosterAct", ["up", J.str(g.id)])
 	return "鬼宅卡「擺宴」"
 
+# [onboard] 大排檔賣貨：撳嘆氣蒸籠（同其他開咗嘅台）做貨／收去櫃台，等客人買；冇料＝畀普通包子（記低）
+func _do_sell(t, m, q) -> String:
+	var sc = m.get("mv_view")
+	if sc == null: return "冇大排檔"
+	var sim = sc.sim; var MDd = load("res://game/outpost/mv_data.gd"); var Mt = load("res://game/outpost/mat.gd")
+	var taps = 0; var gave = 0.0
+	for k in 600:
+		if _prog(q)[0] >= _prog(q)[1]: break
+		for sid in MDd.stations(sim.ci()):
+			if not sim.unlocked(sid): continue
+			var r = sim.tap_station(sid); taps += 1
+			if r == "starve": gave += await _sell_mat(t, m)
+		await _w(t, 0.4)
+		if k % 25 == 0: await _skip(t, 1)
+	if gave > 0: gifts.append([_qi(), "普通包子（做壽包料）", gave])
+	return "撳大排檔台 %d 下，等客人買（%s/%s）" % [taps, str(_prog(q)[0]), str(_prog(q)[1])]
+func _sell_mat(_t, _m) -> float:   # 大排檔冇料：畀普通包子（onboard_test pace 改做親手包）
+	load("res://game/outpost/mat.gd").add("m_bao", 20.0); return 20.0
+# [onboard] 第一次守夜：撳圍欄外嘅孤魂
+func _do_guard(t, m, q) -> String:
+	var sc = m.get("mv_view")
+	if sc == null: return "冇大排檔"
+	var sim = sc.sim; var taps = 0
+	for k in 400:
+		if _prog(q)[0] >= _prog(q)[1]: break
+		for f in sim.foes.duplicate():
+			if f.st != "die" and f.get("ob"): sim.tap_foe(f.pos + Vector2(0, -28)); taps += 1
+		await _w(t, 0.25)
+		if k % 20 == 0: await _skip(t, 1)
+	return "撳孤魂 %d 下（%s/%s）" % [taps, str(_prog(q)[0]), str(_prog(q)[1])]
+
 # ================= 主線關卡：出擊清單 → 揀 → 行動按鈕 → 小卡出發 =================
 func _pick_target(tg: Dictionary):
 	var ctl = _ctl()
@@ -437,6 +468,8 @@ func play(t) -> void:
 			"drill": how = await _do_drill(t, q)
 			"feast": how = await _do_feast(t, q)
 			"stage": how = await _do_stage(t, m, q)
+			"sell": how = await _do_sell(t, m, q)   # [onboard]
+			"guard": how = await _do_guard(t, m, q)   # [onboard]
 			_: how = "未知類型 " + str(q.t)
 		await _skip(t, 3)
 		J.mc(_Q(), "check", [])

@@ -113,7 +113,8 @@ static func inf(ci := -1) -> float:
 	return INF0 if v == null else clampf(J.num(v), 0.0, 100.0)
 static func newbie() -> bool:
 	var w = ws(); if w == null: return false
-	return cur_ci() == 0 and J.num(w.get("t0")) < NEWBIE
+	return cur_ci() == 0 and (J.num(w.get("t0")) < NEWBIE or OBm().calm())   # [onboard] 第一張圖：打低餓鬼王（1-3）之前都唔告急、唔襲擾、唔偷
+static func OBm(): return load("res://game/onboard/ob.gd")
 static func floor_now() -> float: return NEWBIE_FLOOR if newbie() else 0.0
 # 改影響力：回實際改咗幾多
 static func add_inf(d: float, lo := -1.0) -> float:
@@ -329,10 +330,12 @@ func _step_wave(sim, w: Dictionary, dt: float) -> void:
 func start_wave(sim) -> void:
 	var w = ws(); var ci = sim.ci()
 	var n = wave_size(ci); var q = []
+	var gentle = ci == 0 and OBm().calm()   # [onboard] 1-3 之前：溫和鬼潮（少隻、冇頭目、間隔長）
+	if gentle: n = OBm().GENTLE_SIZE + (1 if wave_n(ci) >= 2 else 0)
 	for i in n - 1: q.append(false)
-	q.append(true)
+	q.append(not gentle)
 	wave = {"t": 0.0, "q": q, "qt": 0.0, "foes": [], "boss": null, "lost": 0, "died": 0, "n": n}
-	w.wave_t = WAVE_GAP; _warned = false
+	w.wave_t = OBm().GENTLE_GAP if gentle else WAVE_GAP; _warned = false
 	sim.ev.append({"k": "war_wave", "n": n})
 func _spawn_wave_foe(sim, boss: bool) -> void:
 	sim.spawn_foe()
@@ -769,7 +772,7 @@ func draw_hud(sc, ctx) -> void:
 	sc._txt(ctx, s2, x0 + 8, y + 31, 14, Color("#bff0a0"), "left", 900, 0)
 	sc._txt(ctx, s3, x0 + bw - 8, y + 31, 14, Color("#ffd27a") if wave != null else Color("#d8ccb8"), "right", 900, 0)
 	if newbie() and sim.ci() == 0:
-		sc._txt(ctx, T("war_newbie", "新手保護 %s", "新手保護 %s") % sc._mmss(NEWBIE - J.num(w.t0)), 10, y + 31, 14, Color("#9fd8ff"), "left", 900, 4)
+		sc._txt(ctx, T("war_newbie", "新手保護 %s", "新手保護 %s") % (sc._mmss(NEWBIE - J.num(w.t0)) if J.num(w.t0) < NEWBIE else T("war_newbie2", "（打低餓鬼王之前）", "（打倒餓鬼王之前）")), 10, y + 31, 14, Color("#9fd8ff"), "left", 900, 4)
 	# 告急：出征掣
 	if al and sc.anim == null:
 		var pw = bw * (1.0 + 0.03 * sin(tt * 6.0)); var cx = x0 + bw / 2.0; var px = cx - pw / 2.0; var py = y + 48.0

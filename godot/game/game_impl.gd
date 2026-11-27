@@ -113,7 +113,7 @@ func _migrate(fresh: bool) -> void:
 		if not S.has(k): S[k] = d[k]
 	if S.get("visit") == null: S.visit = {}
 	if S.get("wmSeen") == null: S.wmSeen = {}
-	if fresh: S.qv = 3; return   # [outgate] 3：冥街夜市、陰陽交界兩個插入任務已拎走（見 native/guide.gd）
+	if fresh: S.qv = 4; return   # [onboard] 4：第一章新手重排（game/onboard/ob.gd）；[outgate] 3：冥街夜市、陰陽交界兩個插入任務已拎走（見 native/guide.gd）
 	# guide.js：舊存檔（qv<2）喺「出征 1-2」「擊敗餓鬼王 1-3」之後插咗兩個任務，索引要往後挪
 	if int(S.get("qv", 1) if S.get("qv") != null else 1) >= 2: return
 	var Q: Array = D("QUESTS"); var at = []
@@ -363,6 +363,8 @@ func quest_progress(q: Dictionary) -> Array:
 			return [floor(minf(mx, q.n)), q.n]
 		"feast": return [S.cnt.feast, q.n]
 		"visit": return [1 if S.get("visit", {}).get(q.place, false) else 0, 1]
+	var obp = load("res://game/onboard/ob.gd").progress(q)   # [onboard] 大排檔賣貨／第一次守夜
+	if obp.size() == 2: return obp
 	return [0, 1]
 func quest_done(q: Dictionary) -> bool:
 	var p = quest_progress(q); return float(p[0]) >= float(p[1])

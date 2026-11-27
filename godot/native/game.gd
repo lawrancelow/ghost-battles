@@ -219,9 +219,11 @@ static func on_level_up(lv: float) -> void:
 	var S = _S(); var u = J.gp(_g("LEVEL_UNLOCKS"), lv)
 	_snd("levelUp"); _fx("banner", ["升級！Lv %s" % J.str(lv) + (("　解鎖【%s】" % J.str(u.name)) if J.t(u) else "")])
 	if J.t(u): J.mc(_g("Story"), "queue", [{"style": "sys", "lines": u.lines + [["旁白", "解鎖：" + J.str(u.desc)]]}])
-	if lv == 4 and not J.t(S.seen.get("gift_xiaozhi")):
-		J.mc(_g("Story"), "queue", ["gift_xiaozhi"])
-		J.mc(_g("Story"), "queue", ["gift_xiaozhi2", func(_t, _a): J.cl(_g("joinGhost"), null, ["xiaozhi"]); return null])
+	if lv == 4 and not J.t(S.seen.get("gift_xiaozhi")) and load("res://game/onboard/ob.gd").xz_due(true): xz_gift()   # [onboard] 舊玩家後備（新流程喺包子鋪起好就到）
+static func xz_gift() -> void:
+	load("res://game/onboard/ob.gd").xz_queued = true
+	J.mc(_g("Story"), "queue", ["gift_xiaozhi"])
+	J.mc(_g("Story"), "queue", ["gift_xiaozhi2", func(_t, _a): J.cl(_g("joinGhost"), null, ["xiaozhi"]); return null])
 static func join_ghost(k) -> void:
 	var S = _S(); var ks = J.str(k)
 	for g in S.ghosts: if J.str(g.k) == ks: return
@@ -283,6 +285,8 @@ static func q_progress(q) -> Array:
 			return [floor(minf(m, J.num(n))), n]
 		"feast": return [S.cnt.feast, n]
 		"visit": return [1.0 if J.t(S.get("visit")) and J.t(S.visit.get(J.str(q.place))) else 0.0, 1.0]   # guide
+	var obp = load("res://game/onboard/ob.gd").progress(q)   # [onboard] 大排檔賣貨／第一次守夜
+	if obp.size() == 2: return obp
 	return [0.0, 1.0]
 static func q_done(this_, q) -> bool:
 	var p = J.mc(this_, "progress", [q])
@@ -292,6 +296,9 @@ static func q_check(this_) -> void:
 	if not J.t(q): return
 	var St = _g("Story")
 	if J.t(J.mc(this_, "done", [q])) and not J.t(J.mc(St, "busy", [])): J.mc(this_, "complete", [])
+	var OB = load("res://game/onboard/ob.gd")
+	if OB.arrive_due() and not J.t(J.mc(St, "busy", [])): OB.arrive_q = true; J.mc(St, "queue", ["ob_arrive"])   # [onboard] 序章完：黑無常交村
+	if OB.xz_due() and not J.t(J.mc(St, "busy", [])): xz_gift()   # [onboard] 包子鋪起好：小紙即刻到（唔再等主公 4 級）
 	# 支線：鬼宅天花板上的「哎喲」
 	if J.t(S.seen.get("ch2_end")) and J.num(S.bld.house) >= 4 and not J.t(S.seen.get("side_tianhua")) and not J.t(J.mc(St, "busy", [])) and not J.t(J.gp(_g("Battle"), "active")):
 		J.mc(St, "queue", ["side_tianhua", func(_t, _a): J.cl(_g("joinGhost"), null, ["tianhua"]); return null])
@@ -1602,6 +1609,7 @@ static func start_game() -> void:
 	var d = _c("newState")
 	for k in d: if not (S as Dictionary).has(k): S[k] = d[k]
 	if _has("Guide"): J.mc(_g("Guide"), "migrate", [fresh])
+	load("res://game/onboard/ob.gd").migrate(S, fresh)   # [onboard] 第一章新手節奏：主線前段重排＋舊存檔對應
 	J.mc(_V(), "init", []); J.mc(_g("Battle"), "init", [])
 	for b in _qa("#nav button"):
 		var bb = b

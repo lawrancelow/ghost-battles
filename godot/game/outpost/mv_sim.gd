@@ -887,7 +887,9 @@ func _pay(c: Dictionary) -> void:
 	amt *= plus.pay_mul(self, c)   # [play]
 	add_coins(amt)
 	var m = st()
-	for g in c.got: m.sold[g] = J.num(m.sold.get(g)) + float(c.got[g])
+	var _obn = 0
+	for g in c.got: m.sold[g] = J.num(m.sold.get(g)) + float(c.got[g]); _obn += int(c.got[g])
+	load("res://game/onboard/ob.gd").on_sold(_obn)   # [onboard] 新手任務：大排檔賣貨
 	m.earned = J.num(m.get("earned")) + amt; m.served = J.num(m.get("served")) + 1.0
 	c.st = "out"
 	ev.append({"k": "pay", "amt": amt, "pos": c.pos + Vector2(0, -60), "cid": c.cid})
@@ -905,6 +907,7 @@ func _step_foes(dt: float) -> void:
 	foe_t -= dt
 	var alive = 0
 	for f in foes: if f.st != "die": alive += 1
+	load("res://game/onboard/ob.gd").guard_step(self, dt)   # [onboard] 第一次守夜：固定三隻弱孤魂
 	if foe_t <= 0.0:
 		foe_t = rng.randf_range(3.0, 6.5) / plus.foe_mul(self)   # [play] 夜潮
 		if alive < FOE_MAX and load("res://game/zone/zone_data.gd").wild_open(): spawn_foe()   # [fogfix] 野外區未開放：冇孤魂由野外出
@@ -949,6 +952,7 @@ func hit_foe(f: Dictionary, dmg: float, by: String) -> void:
 	ev.append({"k": "hit", "pos": f.pos + Vector2(0, -30), "dmg": dmg, "by": by})
 	if f.hp <= 0.0:
 		f.st = "die"; f.t = 0.0
+		load("res://game/onboard/ob.gd").guard_kill(f)   # [onboard]
 		var cc = MD.foe_coin(ci()) * plus.kill_mul(self); add_coins(cc)   # [play] 夜潮
 		ev.append({"k": "kill", "pos": f.pos + Vector2(0, -40), "coins": cc})
 func tap_foe(p: Vector2) -> bool:
