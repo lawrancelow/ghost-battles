@@ -60,6 +60,9 @@ func all(t) -> void:
 	for i in 12: k2.append(OB._key(Q2[i]))
 	_chk("主線前段次序（DB.D 同 J.G 對齊）", k2 == OB.EARLY, k2)
 	_chk("文字：包普通包子（冇「包壽包」）", str(Q[5].text).contains("普通包子") and not MB.quest_text(Q[5]).contains("壽包"), MB.quest_text(Q[5]))
+	for i in 12:   # 交村劇情由每 0.5 秒嘅任務檢查排入：等佢排咗先跳
+		if J.t(S.seen.get("ob_arrive")): break
+		await _w(t, 0.25)
 	await _skip(t, 4)
 	_chk("序章後：黑無常交村劇情播咗（ob_arrive）", J.t(S.seen.get("ob_arrive")), S.seen.keys())
 	_chk("階段 1", OB.stage() == 1, OB.stage())
