@@ -155,10 +155,18 @@ static func calm() -> bool: return active() and not boss_done()
 # ================= 3. 任務進度（新類型） =================
 static func progress(q) -> Array:
 	var t = str(J.gp(q, "t")); var n = J.num(J.gp(q, "n"))
+	if t == "sell": _starter()
 	if t == "sell": return [minf(minf(n, _cnt("ob_sold")), floor(n * _cnt("ob_earn") / SELL_COINS)), n]   # 件數同冥幣兩樣都要夠
 	if t == "guard": return [minf(n, _cnt("ob_guard")), n]
 	return []
 
+# 開張第一籠：做緊賣貨任務、新流程（唔係舊存檔）就送一次 10 個普通包子落倉（ob_market 小紙講明），唔使等包子鋪慢慢出
+const STARTER_BAO := 10.0
+static func _starter() -> void:
+	var ob = _ob()
+	if ob.is_empty() or J.t(ob.get("starter")) or old_save() or not active(): return
+	ob["starter"] = 1.0
+	load("res://game/outpost/mat.gd").add("m_bao", STARTER_BAO)
 const SELL_COINS := 40.0   # 前期貨價約 4 冥幣：10 件≈40，唔使磨
 static func on_sold(n: int, amt := 0.0) -> void:
 	if not guard_on() and _sell_on():
@@ -227,6 +235,7 @@ const SC := {
 		["遊魂", "聽講你哋有包食？我哋好耐冇食過熱嘢喇。", "聽說你們有包子吃？我們很久沒吃過熱的東西了。"],
 		["阿福", "……我死咗都要做生意？", "……我死了還要做生意？"],
 		["小紙", "出村口嗰個大排檔，嘆氣蒸籠可以將普通包子蒸成壽包，佢哋最鍾意。", "出村口那個大排檔，嘆氣蒸籠可以把普通包子蒸成壽包，他們最喜歡。"],
+		["小紙", "我包咗一籠普通包子攞咗過去，夠你開張先。", "我包了一籠普通包子拿過去了，夠你先開張。"],
 		["系統", "親，有需求就有市場！客人頭上個泡泡就係佢要嘅貨，櫃台有貨佢就會攞，俾錢就有冥幣～", "親，有需求就有市場！客人頭上的泡泡就是他要的貨，櫃台有貨他就會拿，付錢就有冥幣～"]]},
 	"ob_guard": {"style": "talk", "bg": "village", "title": "第一夜", "lines": [
 		["旁白", "大排檔收檔前，圍欄外面有三隻瘦孤魂聞到包子香，搖住欄杆。", "大排檔收攤前，圍欄外面有三隻瘦孤魂聞到包子香，搖著欄杆。"],
