@@ -4,18 +4,18 @@
 
 | 事件 | 動作 | 選定 | 原始檔 | 作者 | 來源頁 |
 |---|---|---|---|---|---|
-| wk_chop_hit | 斧頭砍樹（伐木場） | C（陰間化：降調＋短殘響） | 100-cc0-metal-and-wood-sfx/x/wood_hammer_01.ogg | rubberduck | https://opengameart.org/content/100-cc0-metal-and-wood-sfx |
+| wk_chop_hit | 斧頭砍樹（伐木場） | G（11-27 重選，去金屬感：中低頻木質「篤」） | 100-cc0-metal-and-wood-sfx/x/wood_close_02.ogg＋wood_cracking_01.ogg | rubberduck | https://opengameart.org/content/100-cc0-metal-and-wood-sfx |
 | wk_hack_hit | 柴刀砍竹／蕉（竹林、蕉園） | C（陰間化：降調＋短殘響） | 80-cc0-rpg-sfx/x/blade_01.ogg | rubberduck | https://opengameart.org/content/80-cc0-rpg-sfx |
 | wk_split_hit | 柴刀劈開（劈竹篾） | B | 100-cc0-metal-and-wood-sfx/x/wood_cracking_02.ogg | rubberduck | https://opengameart.org/content/100-cc0-metal-and-wood-sfx |
 | wk_poke_knock | 竹竿敲椰子（椰林） | A | 100-cc0-metal-and-wood-sfx/x/wood_misc_03.ogg | rubberduck | https://opengameart.org/content/100-cc0-metal-and-wood-sfx |
-| wk_reap_cut | 鐮刀割稻（糯米田） | A | 20-rustles-dry-leaves/x/rustle/rustle05.flac | qubodup | https://opengameart.org/content/20-rustles-dry-leaves |
+| wk_reap_cut | 鐮刀割稻（糯米田） | G（11-27 重選：稻葉沙沙＋稈子「卡」斷） | 20-rustles-dry-leaves/rustle16.flac＋100-cc0-metal-and-wood-sfx/wood_cracking_01.ogg＋swishes-sound-pack/swish-10.wav | qubodup／rubberduck／artisticdude | https://opengameart.org/content/20-rustles-dry-leaves ；https://opengameart.org/content/100-cc0-metal-and-wood-sfx ；https://opengameart.org/content/swishes-sound-pack |
 | wk_crank_creak | 轆轤搖柄（古井） | A | creak1.ogg | Kenney (kenney.nl) | https://kenney.nl/assets/rpg-audio （經 GitHub 鏡像 ismetcabbar9-oss/kenney-audio-assets） |
 | wk_score_scrape | 膠刀割膠（膠園） | B | cut-peel-a-pumpkin/peel_pumpkin_02.ogg | TinyWorlds | https://opengameart.org/content/cut-peel-a-pumpkin |
 | wk_net_splash | 拉罾撈魚（魚塘） | B | 40-cc0-water-splash-slime-sfx/x/splash_05.ogg | rubberduck | https://opengameart.org/content/40-cc0-water-splash-slime-sfx |
 | wk_pick_drop | 摘茶葉落竹籮（茶園） | B | 202-more-sound-effects/x/Cloth/Cloth_03.wav | OwlishMedia | https://opengameart.org/content/202-more-sound-effects |
 | wk_scoop_dig | 長柄勺鏟料（碳粉、雜料） | A | shovel-sound/shovel_0.ogg | themightyglider | https://opengameart.org/content/shovel-sound |
 | wk_saw_stroke | 鋸木（棺材鋪） | C（陰間化：降調＋短殘響） | action-sounds/x/Actions/Saw 1.wav | pauliuw | https://opengameart.org/content/action-sounds |
-| wk_knead_roll | 擀麵棍搓包（包子鋪） | A | general-household-sound-effects/kitchencuttingboard01.wav@3.0s | bretbernhoft | https://opengameart.org/content/general-household-sound-effects |
+| wk_knead_roll | 擀麵棍搓包（包子鋪） | G（11-27 重選：搓揉拉扯麵團軟韌聲） | rpg-audio/handleSmallLeather.ogg | Kenney (kenney.nl) | https://kenney.nl/assets/rpg-audio |
 | wk_dip_slosh | 竹簾撈紙漿（紙紮紙坊） | C（陰間化：降調＋短殘響） | 40-cc0-water-splash-slime-sfx/x/slime_03.ogg | rubberduck | https://opengameart.org/content/40-cc0-water-splash-slime-sfx |
 | wk_grate_rasp | 刨椰絲（椰漿坊） | A | scrapes/x/scrape-5.ogg | AntumDeluge | https://opengameart.org/content/scrapes |
 | wk_press_squeak | 壓膠轆（膠片坊、影印） | C（陰間化：降調＋短殘響） | mechanical-sounds/squeakyclick2.wav | BMacZero | https://opengameart.org/content/mechanical-sounds |
