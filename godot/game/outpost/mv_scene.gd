@@ -1836,7 +1836,12 @@ func _idle_rows(sid: String) -> void:
 	var fr = HBoxContainer.new(); fr.add_theme_constant_override("separation", 6); sheet_box.add_child(fr)
 	var fl = _lbl(MD.S("fore_t", "領班", "領班"), 15, DIMC, "sans", 900); fr.add_child(fl)
 	fr.add_child(_slot_btn("fore:" + sid, 0, IDL.fore(sim, sid)))
-	var fd = _lbl(MD.S("fore_on", "自動開工、自動收錢，做貨快 25%", "自動開工、自動收錢，做貨快 25%") if IDL.has_fore(sim, sid) else MD.S("fore_off", "冇領班：冇員工要自己撳台開工收貨", "沒有領班：沒員工要自己點台開工收貨"), 14, DIMC, "sans", 700)
+	# [xzfollow] 老闆以為「派去生產」＝領班：講清楚領班同員工嘅分別（領班冇員工時會自己動手做，等於一個人手做；員工同時做、做得多）
+	var ftx = MD.S("fore_off", "冇領班：冇員工要自己撳台開工收貨", "沒有領班：沒員工要自己點台開工收貨")
+	if IDL.has_fore(sim, sid):
+		ftx = MD.S("fore_on", "自動開工、自動收錢，做貨快 25%", "自動開工、自動收錢，做貨快 25%")
+		if sim.nworkers(sid) == 0: ftx += MD.S("fore_solo", "\n而家冇員工：領班自己一個慢慢做；僱用員工可以幾個一齊做，產量多好多", "\n現在沒有員工：領班自己一個慢慢做；僱用員工可以幾個一起做，產量多很多")
+	var fd = _lbl(ftx, 14, DIMC, "sans", 700)
 	fd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; fd.size_flags_horizontal = Control.SIZE_EXPAND_FILL; fr.add_child(fd)
 	var nx = IDL.next_of(sim.ci(), sid)
 	if nx != "" and not sim.unlocked(nx):

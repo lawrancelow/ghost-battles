@@ -301,9 +301,15 @@ static func clear_roles(g, keep := "") -> void:
 	var s = S(); var a = st()
 	if s == null or not (g is Dictionary): return
 	var id = g.get("id")
-	if keep != "team" and s.get("team") is Array:
+	# [xzfollow] 規則（老闆 11-27）：出陣隊同派工可以並存——派工中嘅鬼出擊＝借調，出發時崗位暫時空出、打完自動返去復工
+	#   （game/rts/sortie_post.gd）。所以 keep team 唔清崗位、keep post 唔清出陣；防衛隊長／清剿隊長仍然同其他職務互斥。
+	if keep != "team" and keep != "post" and s.get("team") is Array:
 		for i in s.team.size(): if s.team[i] != null and J.str(s.team[i]) == J.str(id): s.team[i] = null
-	if keep != "post" and village_post(g.get("post")): g["post"] = null
+	if keep != "post" and keep != "team" and village_post(g.get("post")):
+		if J.str(g.get("post")) == "mv":   # 大排檔員工／領班／守夜：連個位一齊放（唔好留低個名喺台度，變咗一隻鬼兩處出現）
+			var sim = load("res://game/rts/sortie_post.gd")._sim()
+			if sim != null: sim._release(id)
+		g["post"] = null
 	if a != null:
 		if keep != "cap_def": a["cap_def"] = a.cap_def.filter(func(x): return J.str(x) != J.str(id))
 		if keep != "cap_sweep":
@@ -324,14 +330,14 @@ static func set_job(gid, jb: String, arg = null) -> String:
 				for j in s.team.size(): if J.str(s.team[j]) == J.str(arg): i = j
 			if i < 0: return T("出陣已滿（最多 5）", "出陣已滿（最多 5）")
 			if load("res://game/rts/ab_card.gd").ace_block(g.id, i): return T("一隊最多 2 隻王牌", "一隊最多 2 隻王牌")
-			clear_roles(g)
+			clear_roles(g, "team")   # [xzfollow] 派工照留（出擊時借調）
 			s.team[i] = g.id
 		"post":
 			var post = J.str(arg)
 			var F = J.G.get("F")
 			var n = int(J.num(J.mc(F, "slots", [post]))) if F != null else 0
 			if n <= 0: return T("呢個工位未開", "這個工位還沒開")
-			clear_roles(g)
+			clear_roles(g, "post")   # [xzfollow] 出陣隊照留
 			var ws = []
 			for x in s.ghosts: if J.str(x.get("post")) == post and not is_same(x, g): ws.append(x)
 			if ws.size() >= n: ws[0]["post"] = null
