@@ -202,7 +202,11 @@ func _place_btn() -> void:
 	visible = scene.get("anim") == null and scene.get("card") == null and (panel == null or not is_instance_valid(panel))
 	var sm = scene.get("sim")   # [polish4] 大單／招牌彈出卡開住：收埋，唔好壓住卡嘅掣
 	if visible and sm != null and sm.get("plus") != null and sm.plus.get("card") != null: visible = false
-	if scene.get("embed") == true and scene.get("hud_k") != null and float(scene.hud_k) < 0.5: visible = false   # [unify] 合一地圖：睇到大排檔區先出
+	if scene.get("embed") == true and scene.get("hud_k") != null and float(scene.hud_k) < 0.5:   # [unify] 合一地圖：睇到大排檔區先出
+		var vs = get_viewport_rect().size
+		if vs.x > vs.y * 1.2 and visible and scene.get("zone") == true:   # [uxui2] 寬屏（PC）：大排檔 HUD 收埋都照出「生產鏈」，擺右側欄
+			position = Vector2(FW - size.x - 8.0, tp + 8.0)
+		else: visible = false
 func _btn_input(ev: InputEvent) -> void:
 	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed and Rect2(Vector2.ZERO, size).has_point(ev.position):
 		open_panel(); accept_event()

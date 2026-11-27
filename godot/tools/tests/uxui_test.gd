@@ -8,6 +8,7 @@ const RTS = preload("res://game/rts/rts.gd")
 const SO = preload("res://game/sortie/so_data.gd")
 const MVW = preload("res://game/outpost/mv_war.gd")
 const T0 = preload("res://tools/tests/sortie_test.gd")
+const MD = preload("res://game/outpost/mv_data.gd")
 var ok := 0
 var bad := 0
 func _p(m): print("[uxui] ", m)
@@ -123,4 +124,45 @@ func hud(t) -> void:
 		DirAccess.make_dir_recursive_absolute(od)
 		await RenderingServer.frame_post_draw
 		t.get_viewport().get_texture().get_image().save_png(od + "hud_%dx%d.png" % [int(vp.size.x), int(vp.size.y)])
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+# [uxui2] 地圖台名牌：大排檔區鏡頭內嘅名牌兩兩唔重疊、全部喺畫面內（唔裁字）；寬屏「生產鏈」掣照出
+func plates(t) -> void:
+	var m = await _boot(t)
+	T0.new()._rich()
+	var sc = m.mv_view; var sim = sc.sim
+	for sid in MD.stations(sim.ci()): sim.sst(sid)["unlocked"] = (MD.stations(sim.ci()).find(sid) % 2 == 0)   # 一半已解鎖一半未解鎖（老闆截圖情況：名牌＋「需…」牌混雜）
+	var mk = ZD.zrect("market")
+	var spots = []
+	if mk.size.x > 0: spots = [mk.get_center(), mk.position + Vector2(40, 60), Vector2(mk.end.x - 40, mk.position.y + 60), mk.get_center() + Vector2(0, 180)]
+	else: spots = [RTS.gate_pos() + Vector2(0, -260)]
+	var vp = Rect2(Vector2.ZERO, t.get_viewport().get_visible_rect().size)
+	var si = 0
+	for c in spots:
+		m.village.zone_cam().center_on(c); await _w(t, 0.8)
+		var pr: Array = sc.plate_rects()
+		var xf = sc.get_global_transform()
+		var vis = []
+		for r in pr:
+			var s0 = sc.w2s(r.position); var s1 = sc.w2s(r.end)
+			var sr = xf * Rect2(s0, s1 - s0)
+			if sr.end.y < 0 or sr.position.y > vp.size.y: continue   # 上下出咗鏡頭唔計
+			vis.append(sr)
+		_p("鏡頭 %d：名牌 %d 個" % [si, vis.size()])
+		for r in vis: _chk("名牌喺畫面內（左右唔裁字）#%d" % si, r.position.x >= -1.0 and r.end.x <= vp.size.x + 1.0, str(r))
+		for i in vis.size():
+			for j in range(i + 1, vis.size()):
+				var ov = vis[i].grow(-1).intersects(vis[j].grow(-1))
+				_chk("名牌唔重疊 #%d" % si, not ov, "%s %s" % [vis[i], vis[j]] if ov else "")
+		var od = OS.get_environment("UX_OUT")
+		if od != "":
+			DirAccess.make_dir_recursive_absolute(od)
+			await RenderingServer.frame_post_draw
+			t.get_viewport().get_texture().get_image().save_png(od + "plates_%d_%dx%d.png" % [si, int(vp.size.x), int(vp.size.y)])
+		si += 1
+	if vp.size.x > vp.size.y * 1.2:
+		m.village.zone_cam().center_on((ZD.zrect("village").get_center() if ZD.zrect("village").size.x > 0 else RTS.gate_pos())); await _w(t, 0.8)
+		var cb = t.get_tree().root.find_child("ChainBtn", true, false)
+		_chk("寬屏：鏡頭喺村子都見到「生產鏈」掣", cb != null and cb.is_visible_in_tree())
+		if cb != null and cb.is_visible_in_tree(): _chk("寬屏：生產鏈掣喺畫面內", vp.grow(1).encloses(cb.get_global_rect()), str(cb.get_global_rect()))
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
