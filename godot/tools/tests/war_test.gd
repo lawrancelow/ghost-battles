@@ -81,6 +81,7 @@ func _clear_live(sim) -> void:
 	MVW.ws().wave_t = 1e9
 
 func logic(_t) -> void:
+	load("res://game/econ/pace.gd").force = 2   # [ux] 呢個測試驗正常階段數值（前期節奏另有 econ_test）
 	_setup(); var S = _S()
 	var sim = SIM.new(); sim.reg_post(); sim.st(); sim.relayout(102.0, 786.0)
 	var w = MVW.ws()
