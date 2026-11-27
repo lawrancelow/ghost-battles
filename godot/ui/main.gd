@@ -58,7 +58,8 @@ func _ready() -> void:
 	var bg = ColorRect.new(); bg.color = UIKit.INK; bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(bg)
 	load("res://ui/kit_skin.gd").install(get_tree())   # [uikit] 紙底面板自動換紙紋＋鐵櫃框
 	_build_village(); _build_top(); _build_nav(); _build_sheet()
-	story = Control.new(); story.set_script(load("res://ui/story.gd")); add_child(story)
+	story = Control.new(); story.set_script(load("res://ui/story.gd"))
+	var scl = CanvasLayer.new(); scl.layer = 125; scl.name = "StoryLayer"; add_child(scl); scl.add_child(story)   # [uxui] 劇情永遠喺最上（面板 100、提示 105、特效 110、裝備彈窗 115 都喺佢下面）
 	_build_fx()
 	load("res://game/outpost/ctl_ui.gd").attach(self)   # [ctl] 行動按鈕、出擊清單、地盤掣變灰
 	load("res://ui/onboard/tut.gd").attach(self)   # [onboard] 第一章新手教程（手指＋挖洞遮罩）
@@ -340,6 +341,11 @@ func _process(dt: float) -> void:
 			DisplayServer.clipboard_set(log_tail(200))
 		return
 	_process_js_state()
+	if not G.S.is_empty():   # [ux] 庫存監察（倉庫總覽／頂欄 +n）
+		load("res://game/econ/stock_watch.gd").tick(dt); _res_float(dt)
+	_mq_tick(dt)   # [uxui]
+	var scl = story.get_parent() if story != null else null
+	if scl is CanvasLayer and scl.visible != story.visible: scl.visible = story.visible   # [uxui] 冇劇情就收埋劇情層（唔好當咗最高層）
 	var _m0 = Time.get_ticks_usec()
 	LMm.tick(self)   # [landmark] 玩完舊玩法 → 返地標旁邊；地標解鎖 toast
 	ui_t += dt
@@ -429,7 +435,7 @@ func _build_top() -> void:
 	var gt = load("res://ui/title/title_view.gd").tex("ico_gear")
 	if gt != null: snd.text = ""; snd.icon = gt; snd.expand_icon = true; snd.offset_left = -38; snd.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	snd.pressed.connect(func(): open_settings(false, true)); top.add_child(snd)
-	var help = {"wood": "槐木：主公親手砍樹，或派鬼怪去[b]伐木場[/b]伐木。", "rice": "糯米：主公親手收割，或派鬼怪去[b]糯米田[/b]割稻。", "planks": "棺材板：在[b]棺材鋪[/b]把 2 槐木做成 1 板（力量高的鬼做得快）。藍箱也會開出。用來建造和升級建築。", "buns": "壽包：在[b]包子鋪[/b]把 2 糯米包成 1 個（智力高的鬼包得快）。綠箱也會開出。用來升級鬼怪、練陰兵。", "coins": "冥幣：打關卡、開紫箱、賣貨。Toyol 管倉庫時也會「撿到」冥幣。", "troops": "陰兵：村裡的遊魂見你有地盤，自願加入。[b]民宅[/b]越高級來得越快、上限越高。"}   # [joss] 化寶爐唔再燒冥幣
+	var help = {"wood": "槐木：主公親手砍樹，或派鬼怪去[b]伐木場[/b]伐木。", "rice": "糯米：主公親手收割，或派鬼怪去[b]糯米田[/b]割稻。", "planks": "棺材板：在[b]棺材鋪[/b]把 2 槐木做成 1 板（力量高的鬼做得快）。藍箱也會開出。用來建造和升級建築。", "buns": "壽包：在[b]包子鋪[/b]把 2 糯米包成 1 個（智力高的鬼包得快）。綠箱也會開出。用來升級 Lv10 以上鬼怪、出擊口糧。（Lv10 前升級改用普通包子＋冥幣）", "coins": "冥幣：打關卡、開紫箱、賣貨。Toyol 管倉庫時也會「撿到」冥幣。", "troops": "陰兵：村裡的遊魂見你有地盤，自願加入。[b]民宅[/b]越高級來得越快、上限越高。"}   # [joss] 化寶爐唔再燒冥幣
 	for k in ["wood", "rice", "planks", "buns", "coins", "troops"]:
 		var cell = PanelContainer.new(); cell.custom_minimum_size = Vector2(0, 26); cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var cs = StyleBoxFlat.new(); cs.bg_color = Color("#1f3c36"); cs.border_color = Color("#4f8076"); cs.set_border_width_all(1); cs.set_corner_radius_all(3)
@@ -446,12 +452,37 @@ func _build_top() -> void:
 		var key: String = k
 		cell.gui_input.connect(func(e):
 			if e is InputEventMouseButton and e.pressed:
-				if mv_on(): show_toast(MV_HELP[key]); return
-				show_toast(help[key] + ("\n（建好民宅，遊魂才會來）" if key == "troops" and float(G.S.bld.home) == 0 else "")))
+				open_store(key, (MV_HELP[key] if mv_on() else help[key] + ("\n（建好民宅，遊魂才會來）" if key == "troops" and float(G.S.bld.home) == 0 else ""))))   # [ux] 撳資源格 → 倉庫總覽
 		grid.add_child(cell)
 	top.resized.connect(func(): exp_bar.size.x = top.size.x - 76 - 116)
 
-const MV_HELP := {"wood": "槐木（T1）：村子[b]伐木場[/b]派鬼斬。棺材鋪用嚟做棺材板。", "rice": "糯米（T1）：村子[b]糯米田[/b]派鬼割。包子鋪用嚟包普通包子。", "planks": "棺材板（T2）：村子[b]棺材鋪[/b]出（2 槐木 → 1 板）。藍箱也會開出。用嚟升級建築，移動村部分台都要用。", "buns": "壽包（T3）：只由隨村台[b]嘆氣蒸籠[/b]用普通包子蒸（包子鋪而家出普通包子）。綠箱也會開出。用嚟升級鬼怪、派宵夜、練嚇功。", "coins": "冥幣：大排檔賣貨收錢、打關卡、開紫箱。", "troops": "陰兵：村裡遊魂自願加入，[b]民宅[/b]越高級來得越快。撳「出擊」時每 25 個編成一隊。"}   # [chain] [qaudit] 合一地圖冇「後院」、冇舊巡陰：改字
+const MV_HELP := {"wood": "槐木（一級）：村子[b]伐木場[/b]派鬼砍伐。棺材鋪用來做棺材板。", "rice": "糯米（一級）：村子[b]糯米田[/b]派鬼收割。包子鋪用來包普通包子。", "planks": "棺材板（二級）：村子[b]棺材鋪[/b]生產（2 槐木 → 1 板）。藍箱也會開出。用來升級建築，移動村部分台也要用。", "buns": "壽包（三級）：只由隨村台[b]嘆氣蒸籠[/b]用普通包子蒸成。綠箱也會開出。用來升級 Lv10 以上鬼怪、派宵夜、出擊口糧、賣錢。（Lv10 前升級和練嚇功改用普通包子＋冥幣）", "coins": "冥幣：大排檔賣貨收錢、打關卡、開紫箱。", "troops": "陰兵：村裡遊魂自願加入，[b]民宅[/b]越高級來得越快。按「出擊」時每 25 個編成一隊。"}   # [chain] [qaudit] [ux] 改中文、寫明壽包新用途
+
+# [ux] 倉庫總覽（全部材料庫存、每分鐘進出、來源／用途、瓶頸）
+func open_store(key := "", help_t := "") -> void:
+	if get_node_or_null("StoreView") != null: return
+	var v = load("res://game/econ/store_view.gd").new(); v.focus = key; v.help_txt = help_t; add_child(v)
+
+# [ux] 頂欄資源有進出：喺嗰格冒「+n／−n」小字（每格最快 1.5 秒一次）
+var _rf_t := 0.0
+func _res_float(dt: float) -> void:
+	_rf_t += dt
+	if _rf_t < 1.5: return
+	_rf_t = 0.0
+	var SW = load("res://game/econ/stock_watch.gd")
+	for k in ["wood", "rice", "planks", "buns", "coins", "troops"]:
+		if not res_lbl.has(k) or not is_instance_valid(res_lbl[k]): continue
+		var mid = {"wood": "m_wood", "rice": "m_rice", "planks": "m_plank", "buns": "m_shoubao"}.get(k, k)
+		var d = SW.take_pending(mid, 1.0)
+		if d == 0.0: continue
+		var l = res_lbl[k]
+		var f = UIKit.label(("+" if d > 0 else "−") + G.fmt(absf(round(d))), 13, Color("#7dff8a") if d > 0 else Color("#ff8a7a"), "sans", 900)
+		f.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.02)); f.add_theme_constant_override("outline_size", 4); f.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		f.top_level = true; f.z_index = 60; f.global_position = l.global_position + Vector2(l.size.x - 30.0, -4.0); add_child(f)
+		var tw = f.create_tween(); tw.set_parallel(true)
+		tw.tween_property(f, "global_position:y", f.global_position.y - 14.0, 1.2)
+		tw.tween_property(f, "modulate:a", 0.0, 1.2).set_delay(0.3)
+		tw.chain().tween_callback(f.queue_free)
 
 func _build_nav() -> void:
 	var nav = Panel.new(); nav.anchor_top = 1; nav.anchor_bottom = 1; nav.anchor_right = 1; nav.offset_top = -NAV_H
@@ -700,7 +731,40 @@ func open_backyard() -> void:
 	sw.pressed.connect(func(): close_sheet(); set_mv(false); show_toast("已轉返舊村子畫面。喺「劇情」頁可以轉返移動村。"))
 
 # ---------------- 提示 ----------------
+# [uxui] 模態佇列：劇情（同名字卡、插圖）播緊 → 提示、橫幅、誇獎全部排隊；全螢幕面板／設置開住 → 橫幅、誇獎排隊（提示照出，係撳掣嘅即時回應）
+var _mq: Array = []
+var _mq_t := 0.0
+func story_modal() -> bool:
+	if story != null and is_instance_valid(story) and (story.visible or story.busy()): return true
+	var nc = get_node_or_null("NameCard")
+	return nc != null and nc.visible
+func panel_modal() -> bool:
+	if title_ov != null: return true
+	if sheet != null and sheet.visible: return true
+	if get_node_or_null("SettingsPanel") != null: return true
+	var mv = get("mv_view")
+	if mv != null and is_instance_valid(mv) and mv.get("ui_cl") != null and mv.ui_cl.visible: return true
+	return false
+func _mq_blocked(kind: String) -> bool:
+	if story_modal(): return true
+	return kind != "toast" and panel_modal()
+func _mq_tick(dt: float) -> void:
+	if _mq.is_empty(): return
+	_mq_t -= dt
+	if _mq_t > 0.0: return
+	for i in _mq.size():
+		var it = _mq[i]
+		if _mq_blocked(it[0]): continue
+		_mq.remove_at(i); _mq_t = 0.7
+		match it[0]:
+			"toast": show_toast(it[1])
+			"banner": show_banner(it[1])
+			"praise": show_praise(it[1])
+		return
 func show_toast(bb: String) -> void:
+	if _mq_blocked("toast"):
+		if _mq.size() < 12: _mq.append(["toast", bb])
+		return
 	while toasts.get_child_count() >= 3: toasts.get_child(0).free()
 	var p = PanelContainer.new()
 	var s = StyleBoxFlat.new(); s.bg_color = Color("#241b17"); s.border_color = UIKit.CINNABAR; s.border_width_left = 5; s.set_corner_radius_all(2)
@@ -711,6 +775,9 @@ func show_toast(bb: String) -> void:
 	var tw = create_tween(); tw.tween_interval(2.6); tw.tween_property(p, "modulate:a", 0.0, 0.6); tw.tween_callback(p.queue_free)
 
 func show_banner(text: String) -> void:
+	if _mq_blocked("banner"):
+		if _mq.size() < 12: _mq.append(["banner", text])
+		return
 	banner_lbl.text = text
 	banner.modulate.a = 0; banner.scale = Vector2(0.85, 0.85)
 	await get_tree().process_frame
@@ -719,6 +786,9 @@ func show_banner(text: String) -> void:
 	tw.tween_interval(1.4); tw.tween_property(banner, "modulate:a", 0.0, 0.4)
 
 func show_praise(kind: String) -> void:
+	if _mq_blocked("praise"):
+		if _mq.size() < 12: _mq.append(["praise", kind])
+		return
 	var D = DB.D
 	var pool: Array = D.PRAISE_KIND if G.S.ended else (D.PRAISE_CHOP if kind == "chop" else (D.PRAISE_RICE if kind == "rice" else D.PRAISE_CRAFT))
 	var i = randi() % pool.size()
@@ -814,7 +884,7 @@ func _bld_effect(id: String) -> String:
 		"bun": return "崗位 %d　目前 壽包 +%.1f/分（耗糯米 %.1f/分）\n綠箱可開出 壽包 %s" % [G.slots("bun"), r.buns, r.riceUse, G.fmt(G.chestGain("g").buns)]
 		"store": return "槐木、糯米、棺材板、壽包 存放上限：%s" % G.fmt(G.cap())
 		"home": return "雜鬼名額 %d　遊魂自願當陰兵 +%.1f/分　陰兵上限 %s" % [G.rosterCap(), r.troops, G.fmt(G.troopCap())]
-		"camp": return "練習速度 ×%.1f　崗位 %d　耗壽包 %.1f/分\n嚇功越高：回陽間招式更嚇人、更省陰氣；戰鬥嚇法更痛。" % [G.mult("camp"), G.slots("camp"), r.bunUse]
+		"camp": return "練習速度 ×%.1f　崗位 %d　耗普通包子 %.1f/分\n嚇功越高：回陽間招式更嚇人、更省陰氣；戰鬥嚇法更痛。" % [G.mult("camp"), G.slots("camp"), r.bunUse]
 	return ""
 
 func _post_ui(post: String, back: String) -> void:
@@ -880,7 +950,7 @@ func open_roster() -> void:
 func _render_roster() -> void:
 	_clear_body()
 	var S = G.S; var D = DB.D
-	_p("用壽包升級鬼怪。等級上限 %d。雜鬼名額 %d/%d　壽包 %s" % [G.ghostCap(), G.fodderCount(), G.rosterCap(), G.fmt(S.res.buns)])
+	_p("升級鬼怪：Lv10 前冥幣＋普通包子，Lv10 起壽包＋冥幣。等級上限 %d。雜鬼名額 %d/%d　壽包 %s" % [G.ghostCap(), G.fodderCount(), G.rosterCap(), G.fmt(S.res.buns)])
 	var order: Array = S.ghosts.duplicate()
 	order.sort_custom(func(a, b):
 		if a.k == "afu": return true
@@ -902,19 +972,20 @@ func _render_roster() -> void:
 		var act = VBoxContainer.new(); hb.add_child(act)
 		if g.k == "afu": act.add_child(UIKit.label("隨主公\n等級成長", 11, UIKit.INKDIM))
 		elif lv < G.ghostCap():
-			act.add_child(_act(UIKit.btn("升級\n壽包 %s" % G.fmt(cost), "gold", true), func():
-				var c = G.lvCost(int(g.lv))
-				if float(S.res.buns) < c: return
-				S.res.buns = float(S.res.buns) - c; g.spent = float(g.spent) + c; g.lv = int(g.lv) + 1; G.gainExp(2); G.quest_check(); G.save(); refresh(); _render_roster(), float(S.res.buns) >= cost))
+			var NG = load("res://native/game.gd"); var pp = NG.lv_pay(float(lv))   # [ux] 前期冥幣＋普通包子，Lv10 起壽包
+			act.add_child(_act(UIKit.btn("升級\n" + NG.pay_plain(pp).replace("＋", "\n"), "gold", true), func():
+				var c = G.lvCost(int(g.lv)); var p2 = NG.lv_pay(float(g.lv))
+				if not NG.can_pay(p2): return
+				NG.pay(p2); g.spent = float(g.spent) + c; g.lv = int(g.lv) + 1; G.gainExp(2); G.quest_check(); G.save(); refresh(); _render_roster(), NG.can_pay(pp)))
 		else: act.add_child(UIKit.label("已達上限", 11, UIKit.INKDIM))
 		if g.q != "名" and g.q != "主":
 			var rb = UIKit.btn("送去投胎", "ghost", true); act.add_child(rb)
 			rb.pressed.connect(func():
 				if not rb.has_meta("armed"): rb.set_meta("armed", 1); rb.text = "確定？"; return
-				var back = int(floor(float(g.spent) * 0.6)); S.res.buns = float(S.res.buns) + back
+				var back = int(floor(float(g.spent) * 0.9)); S.res.coins = float(S.res.coins) + back   # [ux] 退冥幣
 				S.ghosts.erase(g); S.team = S.team.map(func(x): return null if x == g.id else x)
 				if S.adviser == g.id: S.adviser = null
-				show_toast("%s 去投胎了。退回 壽包 %s" % [g.name, G.fmt(back)]); G.save(); refresh(); _render_roster())
+				show_toast("%s 去投胎了。退回 冥幣 %s" % [g.name, G.fmt(back)]); G.save(); refresh(); _render_roster())
 		load("res://game/equip/eq_ui.gd").roster_strip(pc, hb, J.str(g.id))   # [equip] 裝備三格
 		load("res://game/equip/eq_ui.gd").on_change = func(): _render_roster()   # [equip]
 		sheet_body.add_child(pc)

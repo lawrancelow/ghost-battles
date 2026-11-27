@@ -36,6 +36,7 @@ extends RefCounted
 const MD = preload("res://game/outpost/mv_data.gd")
 const M = preload("res://game/outpost/mat.gd")
 const RAID = preload("res://game/raid/raid.gd")   # [raid]
+const PACE = preload("res://game/econ/pace.gd")   # [ux] 前期節奏
 
 const INF0 := 60.0
 const ALARM := 30.0
@@ -113,8 +114,10 @@ static func inf(ci := -1) -> float:
 	return INF0 if v == null else clampf(J.num(v), 0.0, 100.0)
 static func newbie() -> bool:
 	var w = ws(); if w == null: return false
-	return cur_ci() == 0 and (J.num(w.get("t0")) < NEWBIE or OBm().calm())   # [onboard] 第一張圖：打低餓鬼王（1-3）之前都唔告急、唔襲擾、唔偷
+	if ob_ch1(): return true   # [onboard] 第一章（打低餓鬼王 1-3 之前）：唔告急、唔襲擾、唔偷——以新手節奏為準
+	return PACE.phase() == 0 or (cur_ci() == 0 and J.num(w.get("t0")) < PACE.newbie_s())   # [ux] 安頓期全程保護；新手保護 10 → 20 分鐘
 static func OBm(): return load("res://game/onboard/ob.gd")
+static func ob_ch1() -> bool: return cur_ci() == 0 and OBm().calm()   # [onboard]
 static func floor_now() -> float: return NEWBIE_FLOOR if newbie() else 0.0
 # 改影響力：回實際改咗幾多
 static func add_inf(d: float, lo := -1.0) -> float:
@@ -308,6 +311,9 @@ static func wave_hp(ci: int) -> float: return MD.foe_hp(ci) * minf(2.5, 1.0 + 0.
 static func wave_total_hp(ci: int) -> float: return wave_hp(ci) * (wave_size(ci) - 1 + 5)
 func _step_wave(sim, w: Dictionary, dt: float) -> void:
 	if wave == null:
+		var won = (OBm().stage() >= 8) if ob_ch1() else PACE.wave_on()   # [onboard] 第一章：出村 1-1 打完先有溫和鬼潮；之後跟 [ux] 節奏
+		if not won:   # [ux] 安頓期／鎖住：唔計鬼潮，解鎖後由「第一波」倒數開始
+			w.wave_t = maxf(J.num(w.wave_t), PACE.wave_first()); _warned = false; return
 		w.wave_t = J.num(w.wave_t) - dt
 		if J.num(w.wave_t) <= WAVE_WARN and not _warned:
 			_warned = true; sim.ev.append({"k": "war_warn"})
@@ -335,7 +341,7 @@ func start_wave(sim) -> void:
 	for i in n - 1: q.append(false)
 	q.append(not gentle)
 	wave = {"t": 0.0, "q": q, "qt": 0.0, "foes": [], "boss": null, "lost": 0, "died": 0, "n": n}
-	w.wave_t = OBm().GENTLE_GAP if gentle else WAVE_GAP; _warned = false
+	w.wave_t = OBm().GENTLE_GAP if gentle else PACE.wave_gap(); _warned = false   # [onboard] 溫和鬼潮 ／ [ux] 練手期疏啲
 	sim.ev.append({"k": "war_wave", "n": n})
 func _spawn_wave_foe(sim, boss: bool) -> void:
 	sim.spawn_foe()
@@ -493,8 +499,8 @@ func _step_alarm(sim, w: Dictionary, dt: float) -> void:
 					sim.ev.append({"k": "war_occ", "sid": sid})
 				w.alarm.t = 0.0
 		if v >= ALARM_OFF and occ_sid() == "": w.alarm = null; sim.ev.append({"k": "war_calm"})
-	elif v < ALARM and not newbie():
-		w.alarm = {"t": ALARM_T}
+	elif v < ALARM and not newbie() and PACE.alarm_on():   # [ux]
+		w.alarm = {"t": PACE.alarm_t()}
 		sim.ev.append({"k": "war_alarm"})
 func _occupy_pick(sim) -> String:   # 最好賺嗰個已解鎖檔
 	var best = ""; var bv = -1.0; var ci = sim.ci()
@@ -580,7 +586,7 @@ static func give_mat(mid: String, n: float) -> void:
 func offline(sim, secs: float) -> Dictionary:
 	var w = ws(); if w == null: return {}
 	var a = inf(); var ci = sim.ci()
-	var nw = mini(30, int(secs / WAVE_GAP))
+	var nw = mini(30, int(secs / PACE.wave_gap())) if PACE.wave_on() else 0   # [ux]
 	var dps = 0.0
 	for d in w.vol: dps += J.num(d.atk)
 	for gid in sim.st().guards:
@@ -592,7 +598,7 @@ func offline(sim, secs: float) -> Dictionary:
 		else: v -= 8.0
 	v = clampf(maxf(v, minf(a, OFF_FLOOR)), 0.0, 100.0)
 	w.inf[str(ci)] = v
-	if nw > 0: w.wave_t = WAVE_GAP
+	if nw > 0: w.wave_t = PACE.wave_gap()
 	var r = {"waves": nw, "won": won, "from": a, "to": v}
 	if nw > 0: NEWS.append({"off": true, "from": a, "to": v, "waves": nw, "won": won})
 	return r
@@ -772,7 +778,8 @@ func draw_hud(sc, ctx) -> void:
 	sc._txt(ctx, s2, x0 + 8, y + 31, 14, Color("#bff0a0"), "left", 900, 0)
 	sc._txt(ctx, s3, x0 + bw - 8, y + 31, 14, Color("#ffd27a") if wave != null else Color("#d8ccb8"), "right", 900, 0)
 	if newbie() and sim.ci() == 0:
-		sc._txt(ctx, T("war_newbie", "新手保護 %s", "新手保護 %s") % (sc._mmss(NEWBIE - J.num(w.t0)) if J.num(w.t0) < NEWBIE else T("war_newbie2", "（打低餓鬼王之前）", "（打倒餓鬼王之前）")), 10, y + 31, 14, Color("#9fd8ff"), "left", 900, 4)
+		if ob_ch1() and J.num(w.t0) >= PACE.newbie_s(): sc._txt(ctx, T("war_newbie2", "新手保護（打低餓鬼王之前）", "新手保護（打倒餓鬼王之前）"), 10, y + 31, 14, Color("#9fd8ff"), "left", 900, 4)   # [onboard]
+		else: sc._txt(ctx, T("war_newbie", "新手保護 %s", "新手保護 %s") % sc._mmss(maxf(0.0, PACE.newbie_s() - J.num(w.t0))), 10, y + 31, 14, Color("#9fd8ff"), "left", 900, 4)
 	# 告急：出征掣
 	if al and sc.anim == null:
 		var pw = bw * (1.0 + 0.03 * sin(tt * 6.0)); var cx = x0 + bw / 2.0; var px = cx - pw / 2.0; var py = y + 48.0

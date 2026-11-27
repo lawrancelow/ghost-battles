@@ -75,6 +75,13 @@ static func ghost_cap() -> float:
 static func glv(g) -> float: return minf(ghost_cap(), J.num(_S().lv) * 2) if J.str(g.k) == "afu" else J.num(g.lv)
 static func stat(g, i) -> float: return J.round(J.num(g.st[int(J.num(i))]) * (1 + 0.06 * (glv(g) - 1)))
 static func lv_cost(lv: float) -> float: return floor(6 * pow(lv, 1.5)) + 4
+# [ux] 鬼怪升級用料：前期（升到 Lv10 之前）用冥幣＋普通包子（T2，包子鋪出），唔再卡死喺 T3 壽包；
+#      Lv10 起先用壽包（數量打七折）＋冥幣。lv_cost 照舊當「價值」記入 spent（投胎退錢用）。
+const LV_EARLY := 10.0
+static func lv_pay(lv: float) -> Dictionary:
+	var c = lv_cost(lv)
+	if lv < LV_EARLY: return {"coins": J.round(c * 1.5), "bao": ceil(c * 0.25)}
+	return {"buns": ceil(c * 0.7), "coins": J.round(c * 1.0)}
 static func bld_max(id) -> float: return 20.0 if J.str(id) == "house" else J.num(_S().bld.house)
 static func builder_discount() -> float:
 	var ws = workers_at("boss")
@@ -172,8 +179,8 @@ static func produce(dt: float) -> void:
 	if rg.call("troops") != 0 and J.num(R.troops) < troop_cap(): R["troops"] = minf(troop_cap(), J.num(R.troops) + rg.call("troops") * m)
 	var by = J.gp(r, "drillBy")
 	if J.t(by):
-		var need = rg.call("bunUse") * m; var k = minf(1, J.num(R.buns) / need) if need > 0 else 0.0
-		R["buns"] = J.num(R.buns) - need * k
+		var need = rg.call("bunUse") * m; var k = minf(1, CM.amt("m_bao") / need) if need > 0 else 0.0   # [ux] 練嚇功改食普通包子（唔再同升級搶壽包）
+		CM.add("m_bao", -need * k)
 		if not J.t(S.get("drill")): S["drill"] = {}
 		for e in J.iter(by):
 			var gk = J.str(e[0]); S.drill[gk] = J.num(S.drill.get(gk)) + J.num(e[1]) * m * k
@@ -185,19 +192,27 @@ static func produce(dt: float) -> void:
 		var e = floor(acc); J.G["expAcc"] = acc - e; gain_exp(e, true)
 
 # ---------------- 資源操作 ----------------
+static func res_amt(k) -> float:   # [ux] "bao"（普通包子）存喺材料庫 S.mat.m_bao，其他照舊 S.res
+	if J.str(k) == "bao": return CM.amt("m_bao")
+	return J.num(_S().res.get(k))
 static func can_pay(c) -> bool:
-	var R = _S().res
-	for k in J.keys(c): if J.num(R.get(k)) < J.num(J.gp(c, k)) - 1e-6: return false
+	for k in J.keys(c): if res_amt(k) < J.num(J.gp(c, k)) - 1e-6: return false
 	return true
 static func pay(c) -> void:
 	var R = _S().res
-	for k in J.keys(c): R[k] = J.num(R.get(k)) - J.num(J.gp(c, k))
+	for k in J.keys(c):
+		if J.str(k) == "bao": CM.add("m_bao", -J.num(J.gp(c, k))); continue
+		R[k] = J.num(R.get(k)) - J.num(J.gp(c, k))
+static func pay_plain(c) -> String:   # [ux] 純文字（按鈕用）：「冥幣 15＋普通包子 3」
+	var RN = _g("RES_NAMES"); var o = []
+	for k in J.keys(c): if J.t(J.gp(c, k)): o.append("%s %s" % [J.str(RN.get(k)), fmt(J.gp(c, k))])
+	return "＋".join(o)
 static func cost_text(c) -> String:
-	var R = _S().res; var RN = _g("RES_NAMES"); var o = []
+	var RN = _g("RES_NAMES"); var o = []
 	for k in J.keys(c):
 		var v = J.gp(c, k)
 		if not J.t(v): continue
-		o.append("<span class=\"%s\">%s %s</span>" % ["" if J.num(R.get(k)) >= J.num(v) else "lack", J.str(RN.get(k)), fmt(v)])
+		o.append("<span class=\"%s\">%s %s</span>" % ["" if res_amt(k) >= J.num(v) else "lack", J.str(RN.get(k)), fmt(v)])
 	return "　".join(o)
 static func give(r, _src = null) -> String:
 	var S = _S(); var parts = []; var RN = _g("RES_NAMES")
@@ -1256,7 +1271,7 @@ static func ui_bld_effect(id) -> String:
 		"home": return L.call("雜鬼名額 %s　遊魂自願當陰兵 +%s/分　陰兵上限 %s" % [fm.call("rosterCap"), _tofix(r.troops), _c("fmt", [J.mc(F, "troopCap", [])])])
 		"camp":
 			var ws = J.iter(_c("workersAt", ["camp"]))
-			var h = L.call("練習速度 ×%s　崗位 %s　耗壽包 %s/分<br>嚇功越高：回陽間招式更嚇人、更省陰氣；戰鬥嚇法更痛。" % [_tofix(J.mc(F, "mult", ["camp"])), J.str(J.mc(F, "slots", ["camp"])), _tofix(r.bunUse)])
+			var h = L.call("練習速度 ×%s　崗位 %s　耗普通包子 %s/分<br>嚇功越高：回陽間招式更嚇人、更省陰氣；戰鬥嚇法更痛。" % [_tofix(J.mc(F, "mult", ["camp"])), J.str(J.mc(F, "slots", ["camp"])), _tofix(r.bunUse)])
 			if ws.size():
 				var RW = _g("Rework"); var parts = []
 				for g in ws:
@@ -1424,7 +1439,7 @@ static func n_roster() -> Dictionary:
 		var tag = "出陣" if J.iter(S.team).has(g.id) else ("軍師" if S.get("adviser") != null and J.str(S.adviser) == J.str(g.id) else "")
 		var e = {"id": g.id, "k": g.k, "name": g.name, "q": g.q, "lv": lv, "tag": tag, "title": J.gp(gd, "title") if gd != null else "", "st": [J.mc(F, "stat", [g, 0.0]), J.mc(F, "stat", [g, 1.0]), J.mc(F, "stat", [g, 2.0])], "ranged": J.str(J.gp(d, "range")) == "ranged", "gp": gp_now, "gpNext": gp_next,
 			"drill": J.mc(_g("Rework"), "drillLv", [g.k]) if _has("Rework") else null, "sk": J.gp(sk, "name") if J.t(sk) else "", "skd": J.gp(sk, "desc") if J.t(sk) else "", "trait": _L(J.gp(gd, "trait")) if gd != null else "", "lore": J.gp(gd, "lore") if gd != null and J.t(J.gp(gd, "lore")) else "",
-			"where": post_label(g.post) if J.t(g.get("post")) else ("主公本人" if J.str(g.k) == "afu" else "閒著"), "afu": J.str(g.k) == "afu", "maxed": lv >= cap, "cost": cost, "canUp": J.num(S.res.buns) >= J.num(cost), "canRel": J.str(g.q) != "名" and J.str(g.q) != "主", "extra": [], "alpha": 1.0, "gold": false}
+			"where": post_label(g.post) if J.t(g.get("post")) else ("主公本人" if J.str(g.k) == "afu" else "閒著"), "afu": J.str(g.k) == "afu", "maxed": lv >= cap, "cost": cost, "pay": lv_pay(lv), "payTxt": pay_plain(lv_pay(lv)), "canUp": can_pay(lv_pay(lv)), "canRel": J.str(g.q) != "名" and J.str(g.q) != "主", "extra": [], "alpha": 1.0, "gold": false}
 		if _has("Chatter") and (J.str(g.q) == "藍" or J.str(g.q) == "紫"):
 			var CH = _g("Chatter"); var ar = J.mc(CH, "archOf", [g])
 			if J.t(ar): e.extra.append(["#7a4a9a", "性格：%s　「%s」" % [J.str(J.gp(ar, "label")), J.str(J.mc(CH, "sample", [g])) if J.t(J.gp(CH, "sample")) else ""]])
@@ -1442,15 +1457,15 @@ static func n_roster_act(a, id) -> void:
 	var S = _S(); var F = _g("F"); var g = _c("ghostById", [id])
 	if not J.t(g): return
 	if J.str(a) == "up":
-		var c = J.num(J.mc(F, "lvCost", [g.lv]))
-		if J.num(S.res.buns) < c or J.num(J.mc(F, "glv", [g])) >= maxf(J.num(J.mc(F, "ghostCap", [])), load("res://game/soul/soul_data.gd").cap_of(g)): return   # [soul] 職級加上限
-		S.res["buns"] = J.num(S.res.buns) - c; g["spent"] = J.num(g.spent) + c; g["lv"] = J.num(g.lv) + 1; _c("gainExp", [2.0]); J.mc(_g("Quest"), "check", []); _c("save"); m(_ui(), "refresh")
+		var c = J.num(J.mc(F, "lvCost", [g.lv])); var pp = lv_pay(J.num(g.lv))   # [ux] 前期冥幣＋普通包子，Lv10 起壽包
+		if not can_pay(pp) or J.num(J.mc(F, "glv", [g])) >= maxf(J.num(J.mc(F, "ghostCap", [])), load("res://game/soul/soul_data.gd").cap_of(g)): return   # [soul] 職級加上限
+		pay(pp); g["spent"] = J.num(g.spent) + c; g["lv"] = J.num(g.lv) + 1; _c("gainExp", [2.0]); J.mc(_g("Quest"), "check", []); _c("save"); m(_ui(), "refresh")
 	if J.str(a) == "rel":
-		var back = floor(J.num(g.spent) * 0.6); S.res["buns"] = J.num(S.res.buns) + back
+		var back = floor(J.num(g.spent) * 0.9); S.res["coins"] = J.num(S.res.coins) + back   # [ux] 投胎退冥幣（升級已改用冥幣＋包子，唔再退壽包）
 		S["ghosts"] = S.ghosts.filter(func(x): return not is_same(x, g))
 		S["team"] = S.team.map(func(x): return null if x != null and J.str(x) == J.str(g.id) else x)
 		if S.get("adviser") != null and J.str(S.adviser) == J.str(g.id): S["adviser"] = null
-		_fx("toast", ["%s 去投胎了。退回 壽包 %s" % [J.str(g.name), J.str(back)]]); _c("save"); m(_ui(), "refresh")
+		_fx("toast", ["%s 去投胎了。退回 冥幣 %s" % [J.str(g.name), J.str(back)]]); _c("save"); m(_ui(), "refresh")
 static func n_chests() -> Array:
 	var S = _S(); var F = _g("F")
 	return [{"k": "g", "name": "綠箱", "n": S.chests.g, "d": "開出 壽包 %s（隨包子鋪等級提升）" % J.str(J.gp(J.mc(F, "chestGain", ["g"]), "buns"))},
@@ -1740,7 +1755,7 @@ func run(env) -> void:
 	F["furnaceCD"] = FURNACE_CD; F["feastCD"] = FEAST_CD; F["feastNeed"] = FEAST_NEED
 	F["furnaceCoins"] = func(_t, _a): return furnace_coins()
 	F["chestGain"] = func(_t, a): return chest_gain(J.arg(a, 0))
-	F["recruitCost"] = func(_t, _a): return {"coins": 150.0, "buns": 40.0}
+	F["recruitCost"] = func(_t, _a): return {"coins": 150.0, "bao": 20.0}   # [ux] 招魂改用普通包子
 	G["fodderCount"] = func(_t, _a): return fodder_count()
 	G["workersAt"] = func(_t, a): return workers_at(J.arg(a, 0))
 	G["ghostById"] = func(_t, a): return ghost_by_id(J.arg(a, 0))

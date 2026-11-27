@@ -246,6 +246,8 @@ func world_h() -> float: return maxf(float(sim.L.get("h", 844)), camp.bottom()) 
 # [camp] 頂部「生產鏈」掣（chain_panel.gd）擺位：影響力條下面，先試右邊、再試左邊、再試右邊低啲；
 #   邊個位冇遮住台名牌／台／營地建築就用邊個（而家用緊嘅位冇遮就唔郁，避免閃）
 var _plates: Array = []
+var _plate_off := {}   # [uxui2] sid → 名牌避讓位移（世界座標）
+var _plate_q: Array = []   # [uxui2] 名牌延後畫（喺所有角色／建築之上）
 var _cb_pos = null
 var _drects: Array = []   # [polish4] 今格已經畫咗嘅對白框
 var _wrects: Array = []   # [polish4] 今格客人要貨氣泡（連脾氣牌）位，對白框避開
@@ -253,6 +255,9 @@ var _cb_sz := Vector2.ZERO   # [play]
 func chain_btn_pos(sz: Vector2) -> Vector2:
 	_cb_sz = sz   # [play] 記低掣大細（對白框要避開）
 	var y0 = (float(sim.war.hud_y(self)) if sim != null and sim.war != null else top_pad + HUD_H) + 48.0
+	var ar = ux_alarm_rect()
+	if ar != null: y0 = maxf(y0, ar.end.y + 8.0)   # [uxui] 告急掣下面
+	if embed and _pill_rect is Rect2 and hud_k > 0.5: y0 = maxf(y0, _pill_rect.end.y + 8.0 if _pill_rect.position.x > FW * 0.5 - sz.x else y0)   # [uxui] 玩法掣喺右邊 → 再落一格
 	var cands = [Vector2(FW - sz.x - 8.0, y0), Vector2(8.0, y0)]
 	for k in range(1, 4): cands.append_array([Vector2(FW - sz.x - 8.0, y0 + 110.0 * k), Vector2(8.0, y0 + 110.0 * k)])
 	var best = cands[0]; var best_a = INF
@@ -476,12 +481,22 @@ func _float_dodge(ctx: Ctx, f: Dictionary, lrs: Array) -> Vector2:
 	else: cur = cur.lerp(tgt, 0.25)
 	f["dd"] = cur
 	return cur
+# [uxui] 劇情／全螢幕面板開住：客人對白唔出（即講即過，唔排隊）、告急等橫幅等關咗先出
+func _ux_hold() -> bool:
+	var sb = G.get("story_busy")
+	if sb is Callable and sb.is_valid() and bool(sb.call()): return true
+	if main != null and is_instance_valid(main) and main.has_method("panel_modal") and main.panel_modal(): return true
+	return false
+var _banner_pend = null
 func _bubble(p: Vector2, tx: String, who: String, life := 2.6) -> void:
-	if bubbles.size() >= 3: bubbles.pop_front()
+	if _ux_hold(): return
+	if bubbles.size() >= 2: bubbles.pop_front()   # [uxui] 同時最多 2 個
 	bubbles.append({"p": p, "text": tx, "who": who, "t": 0.0, "life": life})
 func _banner_set(a: String, b: String, life := 2.4) -> void:
+	if _ux_hold(): _banner_pend = {"a": a, "b": b, "t": 0.0, "life": life}; return
 	banner = {"a": a, "b": b, "t": 0.0, "life": life}
 func _step_fx(dt: float) -> void:
+	if _banner_pend != null and not _ux_hold(): banner = _banner_pend; _banner_pend = null   # [uxui]
 	for p in parts.duplicate():
 		p.t += dt
 		if p.k == "dot": p.p += p.v * dt; p.v *= 0.92
@@ -590,12 +605,16 @@ func _draw_stage() -> void:
 			if zone and not _in_view(c.pos, vy0, vy1): continue   # [perf] 鏡頭外（左右）唔畫
 			var cc = c
 			items.append([c.pos.y + c.slot * 0.01, func(): _draw_cust(ctx, cc)])
+	_plate_q.clear()
 	if fk > 0.04 and not mk_hid:
+		var vis_sids: Array = []
 		for sid in MD.stations(sim.ci()):
 			var sp = sim.st_pos(sid)
 			if sp.y + 90.0 < vy0 or sp.y - 160.0 > vy1: continue
+			vis_sids.append(sid)
 			var s2 = sid
 			items.append([sp.y - 30.0, func(): _draw_station(ctx, s2, fk)])
+		_layout_plates(ctx, vis_sids, vy0, vy1)   # [uxui2]
 	if not walking and not mk_hid:
 		for w in sim.workers:
 			if w.pos.y < vy0 - 20.0 or w.pos.y - 120.0 > vy1: continue
@@ -606,6 +625,8 @@ func _draw_stage() -> void:
 	if mot != null and not walking: mot.add_items(self, ctx, items, vy0, vy1)   # [motion] 粒子、領班
 	items.sort_custom(func(a, b): return a[0] < b[0])
 	for it in items: it[1].call()
+	for q in _plate_q: q.call()   # [uxui2] 名牌喺角色／建築之上
+	_plate_q.clear()
 	sim.war.draw_world(self, ctx, vy0, vy1)   # [war] 義勇軍＋霸檔標記
 	sim.plus.draw_world(self, ctx, vy0, vy1)   # [play] 夜色、事件記認、決定掣
 	if walking: _draw_proc(ctx)
@@ -626,10 +647,13 @@ func _draw_stage() -> void:
 	_brects.clear(); _drects.clear()
 	if embed:   # [unify] 對白框避開台名牌、台
 		for q in _plates: _brects.append(q.grow(2))
+		var gp = J.G.get("POS", {}).get("gate") if J.G.get("POS") is Dictionary else null   # [uxui2] 對白框避開出村門
+		if gp is Array and gp.size() >= 2: _brects.append(Rect2(float(gp[0]) - 90.0, float(gp[1]) - 120.0, 180.0, 160.0))
+		elif gp is Dictionary: _brects.append(Rect2(J.num(gp.get("x")) - 90.0, J.num(gp.get("y")) - 120.0, 180.0, 160.0))
 		for kk in _wbtns: if kk.begins_with("st:"): _brects.append(_wbtns[kk])
 	_brects.append_array(sim.plus.avoid_rects(self))
 	if zone: _brects.append_array(load("res://game/zone/zone_taunt.gd").world_rects)   # [mapbattle] 閒談對白框避開王嘅叫囂泡泡   # [play] 對白框避開事件名同右上「生產鏈」掣
-	if not _mbf() and not mk_hid:   # [mapbattle] 打緊仗：收埋閒談對白框
+	if not _mbf() and not mk_hid and banner == null:   # [mapbattle] 打緊仗：收埋閒談對白框   [uxui] 橫額出緊都收埋（唔好疊喺橫額上）
 		for b in bubbles: _draw_bubble(ctx, b)
 	if _ABL.active:   # [abui] 攤位名牌（烘圖畫，喺度登記）唔畀戰鬥字蓋住
 		for q in _plates: _ABL.avoid_ci(ctx.ci, ctx.T, q, true)
@@ -1113,10 +1137,11 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 	ctx.restore()
 	# 名牌：名＋等級＋里程碑星
 	if fk > 0.5:   # [perf] 名牌烘成圖（內容變先重烘），_plates／_wbtns 照登記
-		var sid2 = sid; var p2 = p; var un2 = un
-		MB.draw(self, ctx, "pl:" + sid, func(c): _draw_plate(c, sid2, p2, un2))
+		var sid2 = sid; var p2 = p; var un2 = un; var off2: Vector2 = _plate_off.get(sid, Vector2.ZERO)
+		_plate_q.append(func(): MB.draw(self, ctx, "pl:" + sid2, func(c): _draw_plate(c, sid2, p2, un2, off2)))   # [uxui2] 名牌最後先畫（唔畀角色／建築蓋住），位置由 _layout_plates 避讓
 
-func _draw_plate(ctx: Ctx, sid: String, p: Vector2, un: bool) -> void:   # [perf] 名牌（名＋Lv＋星／解鎖掣）：搬出嚟俾 MB 烘圖
+func _draw_plate(ctx: Ctx, sid: String, p0: Vector2, un: bool, off := Vector2.ZERO) -> void:   # [perf] 名牌（名＋Lv＋星／解鎖掣）：搬出嚟俾 MB 烘圖
+	var p = p0 + off   # [uxui2] 避讓後位置（鎖頭仍喺台上面：p0）
 	var ny = p.y + 42.0
 	var name = MD.T(MD.st_def(sid).get("n"))
 	if sid == "st_bingqi" and un: name = load("res://game/militia/ml_data.gd").plate_name()   # [militia] 名牌顯示今期兵器
@@ -1139,7 +1164,7 @@ func _draw_plate(ctx: Ctx, sid: String, p: Vector2, un: bool) -> void:   # [perf
 		var cost = float(MD.st_def(sid).get("unlock_cost", 0))
 		var ureq = IDL.unlock_req(sim, sid)   # [idle] 解鎖鏈：上一個台未到 Lv10 → 顯示條件、唔畀撳
 		var ok = sim.coins() >= cost and ureq[0]
-		_lock(ctx, Vector2(p.x, p.y - 46))
+		_lock(ctx, Vector2(p0.x, p0.y - 46))
 		_plates.append(Rect2(p.x - cw / 2, ny - 16, cw, 56))   # [camp]
 		var ft2 = _fit(ctx, name, cw, 15)
 		_txt(ctx, ft2[0], p.x, ny - 4, ft2[1], Color("#f0e2c8"), "center", 900, 4)
@@ -1395,13 +1420,21 @@ const PILL_OPEN_S := 8.0
 var _pexp := 0.0   # 展開剩低秒數
 var _pill_rect = null   # 上一格玩法掣位（畫面座標；「生產鏈」掣避開）
 var _pill_side := 0   # 0 左 1 右（有黏性）
+# [uxui] 告急「親自出征」掣（畫面座標；冇就 null）：玩法掣、生產鏈掣都唔准壓住佢
+func ux_alarm_rect():
+	if sim == null or sim.war == null: return null
+	var r = sim.war._btn.get("exp")
+	return r if r is Rect2 else null
 func _pill_xy(pw := 150.0) -> Vector2:   # 左（有「拔營！」就排佢右邊）或者右：揀遮台名牌／台／「生產鏈」掣最少嗰邊
 	var y = top_pad + EHUD_H + 6.0
 	var xs = [184.0 if (anim == null and sim.can_move()) else 8.0, FW - pw - 8.0]   # 「拔營！」掣最闊 168（跳動）
+	var ar = ux_alarm_rect()
+	if ar != null and Rect2(xs[0], y, pw, 34.0).intersects(ar.grow(4.0)) and Rect2(xs[1], y, pw, 34.0).intersects(ar.grow(4.0)): y = ar.end.y + 6.0   # [uxui] 兩邊都撞告急 → 排告急下面
 	var cost = []
 	for x in xs:
 		var r = Rect2(s2w(Vector2(x, y)), Vector2(pw, 34.0)).grow(4.0)
 		var a = 0.0
+		if ar != null and Rect2(x, y, pw, 34.0).intersects(ar.grow(4.0)): a += 1e12   # [uxui]
 		for q in _plates: a += r.intersection(q).get_area() * 3.0
 		for k in _wbtns: if k.begins_with("st:") or k.begins_with("ring:") or k.begins_with("unl:"): a += r.intersection(_wbtns[k]).get_area()
 		if _cb_pos is Vector2: a += r.intersection(Rect2(s2w(_cb_pos), _cb_sz)).get_area() * 10.0
@@ -1513,6 +1546,7 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 			var clash = false
 			for r in obs: if r.intersects(Rect2(cx, cy, w, h).grow(3)): clash = true; break
 			if not clash: best = cost; x = cx; y = cy; found = true
+	if not found and embed: return   # [uxui2] 放唔落（會遮台名牌／出村門／要貨氣泡）就唔出
 	if not found:   # 冇完全唔撞嘅位：揀遮得最少嘅（遮要貨氣泡算重啲）
 		var least = INF
 		for cx in [x0, X0, X1]:
@@ -2012,3 +2046,50 @@ func _hire(sid: String) -> bool:
 		if not J.t(J.gp(gh, "post")): return sim.assign(sid, slot, J.gp(gh, "id"))
 	return false
 func income_ps() -> float: return sim.offline_rate()
+
+
+# [uxui2] 台名牌避讓：估每個名牌矩形 → 夾入畫面（貼邊往內收，唔裁字）→ 由上而下逐個放，撞到就試左右／下面／上面細位移，揀最近冇撞嘅位
+func _plate_rect(ctx: Ctx, sid: String, p: Vector2) -> Rect2:
+	var ny = p.y + 42.0
+	var cw = _cell_w() - 8.0
+	if sim.unlocked(sid):
+		var name = MD.T(MD.st_def(sid).get("n"))
+		var ft = _fit(ctx, name, cw - 12.0, 15)
+		ctx.font = "900 %dpx sans-serif" % ft[1]
+		var pw2 = maxf(ctx.measureText(ft[0]).width + 14.0, 46.0 + 6.0 * 13.0)
+		return Rect2(p.x - pw2 / 2.0, ny - 11.0, pw2, 42.0)
+	return Rect2(p.x - cw / 2.0, ny - 16.0, cw, 56.0)
+func _layout_plates(ctx: Ctx, sids: Array, vy0: float, vy1: float) -> void:
+	_plate_off.clear()
+	var X0 = view_x0() + 4.0; var X1 = view_x1() - 4.0
+	var rows: Array = []
+	for sid in sids: rows.append([sid, _plate_rect(ctx, sid, sim.st_pos(sid))])
+	rows.sort_custom(func(a, b): return a[1].position.y < b[1].position.y or (a[1].position.y == b[1].position.y and a[1].position.x < b[1].position.x))
+	var placed: Array = []
+	for rw in rows:
+		var r0: Rect2 = rw[1]
+		var base = Vector2.ZERO
+		if r0.position.x < X0: base.x = X0 - r0.position.x   # 貼左邊：往內收
+		elif r0.end.x > X1: base.x = X1 - r0.end.x           # 貼右邊：往內收
+		var w = r0.size.x; var h = r0.size.y
+		var cands: Array = [Vector2.ZERO]
+		for k in [0.3, 0.55, 0.8]:
+			cands.append(Vector2(-w * k, 0)); cands.append(Vector2(w * k, 0))
+		for k in [1, 2]:
+			cands.append(Vector2(0, (h + 4.0) * k)); cands.append(Vector2(0, -(h + 4.0) * k))
+			for sx in [-0.5, 0.5]: cands.append(Vector2(w * sx, (h + 4.0) * k))
+		var best = INF; var pick = base
+		for c in cands:
+			var o = base + c
+			var rr = Rect2(r0.position + o, r0.size)
+			if rr.position.x < X0 - 0.5 or rr.end.x > X1 + 0.5: continue
+			var clash = false
+			for q in placed: if q.intersects(rr.grow(2.0)): clash = true; break
+			if clash: continue
+			var cost = absf(c.x) + absf(c.y) * 1.4
+			if cost < best: best = cost; pick = o
+		var fr = Rect2(r0.position + pick, r0.size)
+		placed.append(fr)
+		if pick != Vector2.ZERO: _plate_off[rw[0]] = pick
+func plate_rects() -> Array:   # [uxui2] 測試用：而家名牌矩形（世界座標）
+	return _plates.duplicate()

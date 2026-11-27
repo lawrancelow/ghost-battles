@@ -275,7 +275,7 @@ static func _render_roster(force: bool) -> void:
 		if n.get_index() != base + i: _body().move_child(n, base + i)
 
 static func _roster_head(d) -> String:
-	return "用壽包升級鬼怪。等級上限 %d。雜鬼名額 %d/%d　壽包 %s" % [int(J.num(d.cap)), int(J.num(d.fcnt)), int(J.num(d.rcap)), J.str(d.buns)]
+	return "升級鬼怪：Lv10 前用冥幣＋普通包子，Lv10 起用壽包＋冥幣。等級上限 %d。雜鬼名額 %d/%d　壽包 %s" % [int(J.num(d.cap)), int(J.num(d.fcnt)), int(J.num(d.rcap)), J.str(d.buns)]   # [ux]
 
 static func _draw_roster(d) -> void:
 	_clear(); r_cards.clear()
@@ -320,8 +320,9 @@ static func _gcard(g) -> Control:
 	var gid = J.str(g.id)
 	if J.t(g.afu): act.add_child(UIKit.label("隨主公等級成長", 11, UIKit.INKDIM))
 	elif not J.t(g.maxed):
-		var ub = _btn("升級\n壽包 %d" % int(J.num(g.cost)), "gold", J.t(g.canUp), func(): jn("rosterAct", ["up", gid]); _render_roster(false), true)
-		ub.custom_minimum_size = Vector2(76, 46); act.add_child(ub)
+		var pt = J.str(g.get("payTxt")) if g.get("payTxt") != null else "壽包 %d" % int(J.num(g.cost))   # [ux] 用料按等級（前期冥幣＋普通包子）
+		var ub = _btn("升級\n" + pt.replace("＋", "\n"), "gold", J.t(g.canUp), func(): jn("rosterAct", ["up", gid]); _render_roster(false), true)
+		ub.custom_minimum_size = Vector2(92, 46); ub.add_theme_font_size_override("font_size", 12); act.add_child(ub)
 	else: act.add_child(UIKit.label("已達上限", 11, UIKit.INKDIM))
 	if J.t(g.get("job")): act.add_child(load("res://game/barracks/bk_ui.gd").job_btn(gid))   # [barracks] 名鬼分配
 	if J.t(g.canRel):

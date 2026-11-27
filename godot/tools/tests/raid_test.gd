@@ -99,6 +99,7 @@ func logic(t) -> void: await _run(t)
 func all(t) -> void: shots = true; await _run(t)
 
 func _run(t) -> void:
+	load("res://game/econ/pace.gd").force = 2   # [ux] 呢個測試驗正常階段數值（前期節奏另有 econ_test）
 	var m = await _boot(t)
 	var S = J.G.S
 	_team3(S); S.res["troops"] = 300.0
