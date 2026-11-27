@@ -11,6 +11,7 @@ const CINNABAR := Color("#c2362b")
 const CINNABAR2 := Color("#9c2219")
 const GOLD2 := Color("#f3d68a")
 const DIM := Color("#a99fb4")
+const KS = preload("res://ui/kit_skin.gd")   # [uikit] A 款 UI 套件
 
 static func font(kind := "sans", weight := 400) -> Font:
 	return Ctx.font_res("serif" if kind == "serif" else "sans-serif", weight)
@@ -54,6 +55,8 @@ static func btn(text: String, kind := "", small := false) -> Button:
 	b.add_theme_stylebox_override("disabled", d); b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	b.add_theme_color_override("font_color", fg); b.add_theme_color_override("font_hover_color", fg); b.add_theme_color_override("font_pressed_color", fg)
 	b.add_theme_color_override("font_disabled_color", Color(fg, 0.45))
+	if text == "✕" or text == "×": KS.skin_close(b)   # [uikit]
+	else: KS.skin_btn(b, kind, pad)
 	return b
 
 static func portrait(k: String, size := 64) -> TextureRect:

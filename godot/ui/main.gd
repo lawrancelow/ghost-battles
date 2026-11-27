@@ -55,6 +55,7 @@ func _ready() -> void:
 	load("res://game/settings/prefs.gd").watch_orient(get_tree().root)   # [pc] 橫屏改用 expand 縮放
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var bg = ColorRect.new(); bg.color = UIKit.INK; bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(bg)
+	load("res://ui/kit_skin.gd").install(get_tree())   # [uikit] 紙底面板自動換紙紋＋鐵櫃框
 	_build_village(); _build_top(); _build_nav(); _build_sheet()
 	story = Control.new(); story.set_script(load("res://ui/story.gd")); add_child(story)
 	_build_fx()
@@ -383,16 +384,29 @@ func _build_village() -> void:
 func _build_top() -> void:
 	var top = Panel.new(); top.anchor_right = 1; top.offset_bottom = TOP_H
 	var st = StyleBoxFlat.new(); st.bg_color = Color("#1a1520"); st.border_color = Color("#3a2f2a"); st.border_width_bottom = 1; st.shadow_color = Color(0, 0, 0, 0.45); st.shadow_size = 8
-	top.add_theme_stylebox_override("panel", st); add_child(top)
+	var KS = load("res://ui/kit_skin.gd")
+	if KS.ok():
+		var dk = KS.dark(); dk.modulate_color = Color(0.55, 0.5, 0.5); top.add_theme_stylebox_override("panel", dk); top.set_meta("ks_done", true)
+	else: top.add_theme_stylebox_override("panel", st)
+	add_child(top)
 	# 主公印
 	var seal = Panel.new(); seal.position = Vector2(9, 22); seal.size = Vector2(58, 58); seal.rotation = deg_to_rad(-3); seal.pivot_offset = Vector2(29, 29)
 	var ss = UIKit.sb(UIKit.CINNABAR, 6, Color("#f0c8b4"), 2); ss.shadow_color = Color("#5a120c"); ss.shadow_size = 0; ss.shadow_offset = Vector2(0, 2)
 	seal.add_theme_stylebox_override("panel", ss); top.add_child(seal)
+	if KS.ok():   # [uikit] 主公等級牌
+		var pl = StyleBoxTexture.new(); pl.texture = KS.tex("lord_plaque"); seal.add_theme_stylebox_override("panel", pl); seal.rotation = 0.0
+		seal.position = Vector2(4, 18); seal.size = Vector2(68, 66)
 	var sm = UIKit.label("主公", 11, Color("#fbe6d6"), "serif", 700); sm.position = Vector2(0, 5); sm.size = Vector2(58, 14); sm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; seal.add_child(sm)
-	lv_lbl = UIKit.label("1", 26, Color("#fbe6d6"), "serif", 900); lv_lbl.position = Vector2(0, 17); lv_lbl.size = Vector2(58, 34); lv_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; seal.add_child(lv_lbl)
+	lv_lbl = UIKit.label("1", 26, Color("#fbe6d6"), "serif", 900); lv_lbl.position = Vector2(0, 20); lv_lbl.size = Vector2(seal.size.x, 36); lv_lbl.add_theme_color_override("font_outline_color", Color(0.1, 0.02, 0.02)); lv_lbl.add_theme_constant_override("outline_size", 5); lv_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; seal.add_child(lv_lbl)
 	# 好評條
 	exp_bar = ColorRect.new(); exp_bar.color = Color("#3a2e26"); exp_bar.position = Vector2(76, 16); exp_bar.size = Vector2(200, 6); top.add_child(exp_bar)
 	exp_fill = ColorRect.new(); exp_fill.color = Color("#b06a34"); exp_fill.size = Vector2(0, 6); exp_bar.add_child(exp_fill)
+	if KS.ok():   # [uikit] 好評條：鐵槽＋金條（大小照舊）
+		var tk = KS.tex("bar_track"); var fl = KS.tex("bar_fill")
+		var tr0 = NinePatchRect.new(); tr0.texture = tk; tr0.patch_margin_left = 6; tr0.patch_margin_right = 6; tr0.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); tr0.offset_top = -3; tr0.offset_bottom = 3; tr0.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		exp_bar.color = Color(0, 0, 0, 0); exp_bar.add_child(tr0); exp_bar.move_child(tr0, 0)
+		var f2 = NinePatchRect.new(); f2.texture = fl; f2.patch_margin_left = 4; f2.patch_margin_right = 4; f2.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); f2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		exp_fill.color = Color(0, 0, 0, 0); exp_fill.add_child(f2)
 	exp_txt = UIKit.label("", 12, UIKit.DIM); exp_txt.anchor_left = 1; exp_txt.anchor_right = 1; exp_txt.offset_left = -162; exp_txt.offset_right = -54; exp_txt.offset_top = 10
 	exp_txt.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; top.add_child(exp_txt)
 	# 資源格
@@ -409,6 +423,9 @@ func _build_top() -> void:
 		var cs = StyleBoxFlat.new(); cs.bg_color = Color("#1f3c36"); cs.border_color = Color("#4f8076"); cs.set_border_width_all(1); cs.set_corner_radius_all(3)
 		cs.content_margin_left = 3; cs.content_margin_right = 6
 		cell.add_theme_stylebox_override("panel", cs)
+		if KS.ok():   # [uikit] 頂欄資源格（左圓位放圖示）
+			var rs = KS.box("res_slot", Vector4(5, 0, 8, 0)); rs.texture_margin_top = 0; rs.texture_margin_bottom = 0
+			cell.add_theme_stylebox_override("panel", rs); cell.custom_minimum_size.y = 28
 		var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 4); cell.add_child(hb)
 		var ic = TextureRect.new(); ic.texture = load("res://assets/ui/i-%s.svg" % k); ic.custom_minimum_size = Vector2(18, 18); ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		hb.add_child(ic)
@@ -428,12 +445,17 @@ func _build_nav() -> void:
 	var nav = Panel.new(); nav.anchor_top = 1; nav.anchor_bottom = 1; nav.anchor_right = 1; nav.offset_top = -NAV_H
 	var ns = StyleBoxFlat.new(); ns.bg_color = Color("#22150f"); ns.border_color = Color("#5a2e22"); ns.border_width_top = 2
 	nav.add_theme_stylebox_override("panel", ns); add_child(nav)
+	var KS = load("res://ui/kit_skin.gd")
+	if KS.ok():   # [uikit] 底部導航底條
+		var nb = KS.box("nav_bar", Vector4(0, 0, 0, 0)); nb.texture_margin_top = 0; nb.texture_margin_bottom = 0
+		nav.add_theme_stylebox_override("panel", nb); nav.set_meta("ks_done", true)
 	var hb = HBoxContainer.new(); hb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); hb.add_theme_constant_override("separation", 0); nav.add_child(hb)
 	for it in [["village", "村子"], ["roster", "鬼怪"], ["battle", "地盤"], ["chest", "箱子"], ["story", "劇情"]]:
 		var b = Button.new(); b.flat = true; b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.focus_mode = Control.FOCUS_NONE
 		var vb = VBoxContainer.new(); vb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); vb.alignment = BoxContainer.ALIGNMENT_CENTER; vb.add_theme_constant_override("separation", 1); vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var ic = TextureRect.new(); ic.custom_minimum_size = Vector2(26, 26); ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var ic = TextureRect.new(); ic.custom_minimum_size = Vector2(40, 36) if KS.ok() else Vector2(26, 26); ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var lb = UIKit.label(it[1], 12, Color("#b8a08e"), "sans", 700); lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; lb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if KS.ok(): lb.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.02)); lb.add_theme_constant_override("outline_size", 4); vb.add_theme_constant_override("separation", -4)   # [uikit] 字唔俾底條吃掉
 		vb.add_child(ic); vb.add_child(lb); b.add_child(vb); hb.add_child(b)
 		nav_btns[it[0]] = [b, ic, lb]
 		var id: String = it[0]
@@ -452,7 +474,10 @@ func _nav_on(t: String) -> void:
 	_qx_btn_vis()
 	for k in nav_btns:
 		var on: bool = k == t
-		nav_btns[k][1].texture = load("res://assets/ui/n-%s%s.svg" % [k, "_on" if on else ("_main" if k == "battle" else "")])
+		var KS = load("res://ui/kit_skin.gd")
+		var kn = {"village": "village", "roster": "ghost", "battle": "map", "chest": "chest", "story": "book"}.get(k, "")
+		var kt = KS.tex("nav_%s%s" % [kn, "_on" if on else ""]) if KS.ok() and kn != "" else null   # [uikit] 導航圖示
+		nav_btns[k][1].texture = kt if kt != null else load("res://assets/ui/n-%s%s.svg" % [k, "_on" if on else ("_main" if k == "battle" else "")])
 		nav_btns[k][2].add_theme_color_override("font_color", UIKit.GOLD2 if on else (Color("#f0c8a0") if k == "battle" else Color("#b8a08e")))
 	var jui = J.G.get("UI")
 	if jui is Dictionary: jui["tab"] = t
