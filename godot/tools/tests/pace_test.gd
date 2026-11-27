@@ -263,8 +263,12 @@ func _test_boss(sim) -> void:
 	STY.auto_on = true
 
 # ---------------- D 新開檔第 1 關（跟主線任務次序） ----------------
+# [onboard] 第一章主線前段重排咗（ob.gd）：呢度寫嘅係舊清單位置，換算去新清單
+func _obq(qi: int) -> int:
+	for q in J.G.get("QUESTS"): if q is Dictionary and str(q.get("t", "")) == "sell": return load("res://game/onboard/ob.gd").map_old_qi(qi)
+	return qi
 func _qi_to(sim, st, sc, qi: int) -> void:
-	_S()["qi"] = float(qi)
+	_S()["qi"] = float(_obq(qi))
 	ZD.reveal_poll(true)
 	_settle(st, sc)
 func _test_new_l1(sim) -> void:
@@ -429,12 +433,22 @@ func _test_qv() -> void:
 	_chk("Q 1-1 開頭冇劇情、1-2 開頭係新聞＋餓鬼搶包", (Q[i11].get("onStart", []) as Array).is_empty() and Q[i12].get("onStart") == ["ch1_intro", "ch1_intro2"], [Q[i11].get("onStart"), Q[i12].get("onStart")])
 	# 第 2 版清單：[… 1-2(i12), 夜市(i12+1), …, 1-3(i13+1), 交界(i13+2), …]
 	var S = _S(); var save = [S.get("qi"), S.get("qv")]
+	# [onboard] 清單已經重排（ob.gd）：Guide.at 記嘅係重排前位置；Guide 遷移出嚟係第 3 版（重排前）索引，之後先由 ob.migrate 換去新清單
+	var obp = _obq(1000) != 1000
+	if obp and Gd.at.size() == 2: i12 = int(Gd.at[0]) - 1; i13 = int(Gd.at[1]) - 1
 	var cases = [[i12, i12], [i12 + 1, i12 + 1], [i12 + 2, i12 + 1], [i13 + 1, i13], [i13 + 2, i13 + 1], [i13 + 3, i13 + 1], [i13 + 10, i13 + 8]]
 	var bad = []
 	for c in cases:
 		S["qv"] = 2.0; S["qi"] = float(c[0]); Gd.migrate(false)
 		if int(S.qi) != int(c[1]) or J.num(S.qv) != 3.0: bad.append([c, S.qi])
 	_chk("Q 第 2 版存檔：主線索引減返已做嘅插入任務（做緊嗰個就跳去下一個）", bad.is_empty(), bad)
+	if obp:   # 成條鏈：Guide（2→3）再 ob（3→4）
+		var OBm = load("res://game/onboard/ob.gd"); var bad2 = []; var ob0 = (S.get("ob", {}) as Dictionary).duplicate(true)
+		for c in cases:
+			S["qv"] = 2.0; S["qi"] = float(c[0]); Gd.migrate(false); OBm.migrate(S, false)
+			if int(S.qi) != OBm.map_old_qi(int(c[1])) or int(J.num(S.qv)) != OBm.QV: bad2.append([c, S.qi])
+		_chk("Q 第 2 版存檔 → 新手重排：索引對返新清單", bad2.is_empty(), bad2)
+		S["ob"] = ob0
 	S["qv"] = 1.0; S["qi"] = 20.0; Gd.migrate(false)
 	_chk("Q 第 1 版存檔（未插過）：索引唔郁", int(S.qi) == 20 and J.num(S.qv) == 3.0, S.qi)
 	S["qi"] = save[0]; S["qv"] = save[1]

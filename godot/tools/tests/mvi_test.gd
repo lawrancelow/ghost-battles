@@ -175,7 +175,8 @@ func all(t) -> void:
 	var qbad = []
 	for q in qs: if B.quest_text(q).contains("營地") or B.quest_text(q).contains("後院"): qbad.append(B.quest_text(q))
 	_chk("任務文字（砍樹等）冇「營地／後院」字眼（qaudit）", qbad.is_empty() and B.quest_text(qs[0]) != "", [B.quest_text(qs[0]), qbad])
-	_chk("任務文字（包壽包）= 嘆氣蒸籠", B.quest_text(qs[5]).contains("嘆氣蒸籠"), B.quest_text(qs[5]))
+	# [onboard] 老闆 11-27 拍板：「包壽包」改名「包普通包子」（ob.gd 重排後任務字直接講包子鋪）
+	_chk("任務文字（包普通包子）＝嘆氣蒸籠／包子鋪普通包子", B.quest_text(qs[5]).contains("嘆氣蒸籠") or B.quest_text(qs[5]).contains("普通包子"), B.quest_text(qs[5]))
 	J.cl(J.G.get("save"), null, [])
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 

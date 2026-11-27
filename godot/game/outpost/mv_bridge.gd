@@ -238,6 +238,7 @@ static func _quest_text(q) -> String:
 		if CH is Array and p2.size() == 2 and int(p2[0]) - 1 < CH.size() and CH[int(p2[0]) - 1].get("stages") is Array and int(p2[1]) - 1 < CH[int(p2[0]) - 1].stages.size():
 			nm = str(CH[int(p2[0]) - 1].stages[int(p2[1]) - 1].get("name", sid))
 		return T("出村迎戰：%s（%s）" % [nm, sid], "出村迎戰：%s（%s）" % [nm, sid])
+	if t == "assign" and str(q.get("go", "")) == "bun": return T("派小紙去包子鋪開工", "派小紙去包子鋪打工")   # [onboard] 第一章：大排檔未開，唔好叫人派去大排檔
 	if t == "assign": return T("派 %d 隻鬼去打工（營地或者生產台）" % int(J.num(q.get("n", 1))), "派 %d 隻鬼去打工（營地或者生產台）" % int(J.num(q.get("n", 1))))   # [camp]
 	return txt
 
