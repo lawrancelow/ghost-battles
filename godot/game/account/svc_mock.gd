@@ -75,6 +75,7 @@ func sign_out(_token: String) -> Dictionary:
 	return {"ok": true}
 
 func load_save(uid: String, token: String) -> Dictionary:
+	full_calls += 1
 	await _tick()
 	if _off(): return {"ok": false, "err": "offline"}
 	var d = _db()
@@ -82,6 +83,15 @@ func load_save(uid: String, token: String) -> Dictionary:
 	var s = d.saves.get(uid)
 	if s == null: return {"ok": true, "data": "", "ts": 0, "rev": 0}
 	return {"ok": true, "data": str(s.data), "ts": int(s.ts), "rev": int(s.rev)}
+
+# [cost] 只回 rev／ts／有冇存檔（真後端只傳幾十 bytes）
+static var meta_calls := 0
+static var full_calls := 0
+func load_meta(uid: String, token: String) -> Dictionary:
+	meta_calls += 1
+	var r = await load_save(uid, token); full_calls -= 1
+	if r.ok: r["has"] = str(r.data) != ""; r.erase("data")
+	return r
 
 # base_rev：上次見到嘅雲端版本；雲端已經被其他機改過（rev 唔同）就拒絕（conflict），除非 force
 func store_save(uid: String, token: String, data: String, ts: int, base_rev: int, force := false) -> Dictionary:
@@ -107,4 +117,4 @@ static func mock_cloud_write(uid: String, data: String, ts: int) -> void:
 
 static func mock_reset() -> void:
 	if FileAccess.file_exists(FILE): DirAccess.remove_absolute(ProjectSettings.globalize_path(FILE))
-	offline = false; auto_verify = false
+	offline = false; auto_verify = false; meta_calls = 0; full_calls = 0

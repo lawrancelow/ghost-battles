@@ -28,10 +28,10 @@ static var _svc = null
 # ---------------- 後端 ----------------
 static func svc():
 	if _svc == null:
-		var p = {"supabase": "res://game/account/svc_supabase.gd", "firebase": "res://game/account/svc_firebase.gd"}.get(AC.BACKEND, "res://game/account/svc_mock.gd")
+		var p = {"supabase": "res://game/account/svc_supabase.gd", "firebase": "res://game/account/svc_firebase.gd", "nakama": "res://game/account/svc_nakama.gd"}.get(AC.BACKEND, "res://game/account/svc_mock.gd")
 		_svc = load(p).new()
 	return _svc
-static func is_mock() -> bool: return not (AC.BACKEND in ["supabase", "firebase"])
+static func is_mock() -> bool: return not (AC.BACKEND in ["supabase", "firebase", "nakama"])
 
 # ---------------- 登入狀態 ----------------
 static func load_state() -> void:
@@ -182,25 +182,52 @@ static func _call(m: String, args: Array) -> Dictionary:
 	return r
 
 static func _do(m: String, a: Array) -> Dictionary:
-	if m == "load_save": return await svc().load_save(uid, token)
-	return await svc().store_save(uid, token, str(a[0]), int(a[1]), int(a[2]), bool(a[3]))
+	if m == "load_meta":
+		# [cost] 只讀 rev／ts（唔落成份存檔）：後端有 load_meta 就用，冇就退返 load_save
+		if svc().has_method("load_meta"): return await svc().load_meta(uid, token)
+		var f: Dictionary = await svc().load_save(uid, token)
+		if f.ok: f["has"] = str(f.get("data", "")) != ""; f.erase("data")
+		return f
+	if m == "load_save":
+		var l: Dictionary = await svc().load_save(uid, token)
+		if l.ok: l["data"] = unpack(str(l.get("data", "")))
+		return l
+	return await svc().store_save(uid, token, pack(str(a[0])), int(a[1]), int(a[2]), bool(a[3]))
+
+# [cost] 雲端存檔壓縮：gzip＋base64，前綴 z1:（約細 7–10 倍，慳流量同儲存）；舊（冇前綴）照讀
+const PACK := "z1:"
+static func pack(d: String) -> String:
+	if d == "": return ""
+	return PACK + Marshalls.raw_to_base64(d.to_utf8_buffer().compress(FileAccess.COMPRESSION_GZIP))
+static func unpack(s: String) -> String:
+	if not s.begins_with(PACK): return s
+	var raw = Marshalls.base64_to_raw(s.substr(PACK.length()))
+	var out = raw.decompress_dynamic(-1, FileAccess.COMPRESSION_GZIP)
+	return out.get_string_from_utf8()
 
 # 同步：回傳 {state: none/same/uploaded/download/conflict/offline/expired/logout/…, data, rev, local, cloud}
 static func sync() -> Dictionary:
 	load_state()
 	if not logged_in(): return {"state": "logout"}
-	var l: Dictionary = await _call("load_save", [])
-	if not l.ok: return {"state": str(l.err)}
+	# [cost] 先只讀 rev／ts；淨係真係要比較內容（第一次綁定）、下載、衝突先落成份存檔
+	var mt: Dictionary = await _call("load_meta", [])
+	if not mt.ok: return {"state": str(mt.err)}
 	var loc = local_data(); var lts = data_ts(loc)
-	var cd = str(l.data); var crev = int(l.rev)
-	if loc == "" and cd == "": _mark(0, crev); return {"state": "none"}
-	if cd == "": return await _upload(loc, lts, crev, false)
-	if loc == "": return {"state": "download", "data": cd, "rev": crev}
-	if loc == cd: _mark(lts, crev); return {"state": "same"}
+	var crev = int(mt.get("rev", 0)); var has_cloud = bool(mt.get("has", crev > 0))
+	if loc == "" and not has_cloud: _mark(0, crev); return {"state": "none"}
+	if not has_cloud: return await _upload(loc, lts, crev, false)
 	var first = rev < 0 or synced_ts < 0
 	var loc_changed = lts != synced_ts
 	var cloud_changed = crev != rev
-	if not first and loc_changed and not cloud_changed: return await _upload(loc, lts, crev, false)
+	if loc != "" and not first:
+		if not loc_changed and not cloud_changed: _mark(lts, crev); return {"state": "same"}
+		if loc_changed and not cloud_changed: return await _upload(loc, lts, crev, false)
+	var l: Dictionary = await _call("load_save", [])
+	if not l.ok: return {"state": str(l.err)}
+	var cd = str(l.data); crev = int(l.rev)
+	if cd == "": return await _upload(loc, lts, crev, false)
+	if loc == "": return {"state": "download", "data": cd, "rev": crev}
+	if loc == cd: _mark(lts, crev); return {"state": "same"}
 	if not first and cloud_changed and not loc_changed: return {"state": "download", "data": cd, "rev": crev}
 	return {"state": "conflict", "data": cd, "rev": crev, "local": summary(loc), "cloud": summary(cd)}
 

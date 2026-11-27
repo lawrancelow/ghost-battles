@@ -3,6 +3,7 @@
 #   "mock"     本機模擬（開發／測試用，現時預設）
 #   "firebase" Firebase Spark 免費方案（推薦；填 FB_API_KEY、FB_PROJECT）
 #   "supabase" Supabase 免費方案（備選；填 SUPA_URL、SUPA_KEY）
+#   "nakama"   自架 Nakama（正式上線大規模／聯機／Steam 用；填 NAKAMA_URL、NAKAMA_KEY、NAKAMA_HTTP_KEY）見 Backend_Cost_Plan
 extends RefCounted
 
 const BACKEND := "mock"
@@ -10,6 +11,9 @@ const FB_API_KEY := ""      # Firebase 專案設定 → 一般 → 網頁 API �
 const FB_PROJECT := ""      # Firebase 專案 ID
 const SUPA_URL := ""        # 例：https://xxxx.supabase.co
 const SUPA_KEY := ""        # anon public key
+const NAKAMA_URL := ""      # 例：https://api.example.com（自架 Nakama，HTTPS）
+const NAKAMA_KEY := ""      # Nakama server key（客戶端用，非機密；預設 defaultkey 上線前一定要改）
+const NAKAMA_HTTP_KEY := "" # 冇登入都要叫嘅 RPC（忘記密碼）用
 const REQUIRE_LOGIN := true # true＝未登入、又唔係遊客，開機先出登入面板（老闆 2026-11-27 要求「註冊帳號遊玩」）
 const ALLOW_GUEST := true   # [guest] true＝登入面板有「先以遊客身分遊玩」（冇網／唔想註冊都入到遊戲，進度存本機，之後可綁定）
                             #         改 false＝強制登入：遊客入口收埋，已經係遊客嘅人下次開機都要登入／註冊（進度照綁定，唔會丟）

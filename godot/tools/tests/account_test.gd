@@ -45,8 +45,10 @@ func _set_local(d: String) -> void:
 	if d == "": JSRun.ls.erase(ACC.SAVE_KEY)
 	else: JSRun.ls[ACC.SAVE_KEY] = d
 
-func _cloud(uid: String) -> Dictionary:
-	var db = MK._db(); return db.saves.get(uid, {})
+func _cloud(uid: String) -> Dictionary:   # [cost] 雲端存嘅係壓縮字串，測試比較前解壓
+	var db = MK._db(); var c: Dictionary = (db.saves.get(uid, {}) as Dictionary).duplicate()
+	if c.has("data"): c["data"] = ACC.unpack(str(c.data))
+	return c
 
 func logic(t) -> void:
 	await _boot(t)
@@ -317,5 +319,51 @@ func _guest_flow(t, pre: String) -> void:
 			_ck(_find(sp, "AcctEmail") != null, "綁定後設置冇顯示帳號")
 			await _shot(t, pre + "settings_bound")
 		sp.close(); await _w(t, 0.3)
+	_reset()
+	_done()
+
+
+# ---------------- [cost] 慳額度：先讀 meta、冇改唔落成份存檔、雲端壓縮 ----------------
+func cost(t) -> void:
+	await _boot(t)
+	_reset()
+	var keep = JSRun.ls.get(ACC.SAVE_KEY)
+	MK.auto_verify = true
+	var big = G.new_state(); big.lv = 30; big.last = 9000
+	var filler = []
+	for i in 400: filler.append({"id": "g%d" % i, "lv": 60, "st": [30, 31, 32], "eq": {"w": "eq_w_%d" % (i % 18)}})
+	big.ghosts = filler
+	var d = JSON.stringify(big); _set_local(d)
+	var r = await ACC.sign_up("cost@ghost.my", "cccccccc"); _ck(r.ok, "註冊失敗")
+	r = await ACC.sync(); _ck(r.state == "uploaded", "第一次冇上傳")
+	var raw = str(MK._db().saves[ACC.uid].data)
+	_ck(raw.begins_with(ACC.PACK), "雲端冇壓縮")
+	_ck(raw.length() * 4 < d.length(), "壓縮唔夠細 %d vs %d" % [raw.length(), d.length()])
+	_ck(ACC.unpack(raw) == d, "解壓後唔等於原存檔")
+	_p("pack %d -> %d bytes" % [d.length(), raw.length()])
+	# 冇改：只讀 meta，唔落成份
+	MK.meta_calls = 0; MK.full_calls = 0
+	r = await ACC.sync(); _ck(r.state == "same", "冇改唔係 same：%s" % r.state)
+	_ck(MK.meta_calls == 1 and MK.full_calls == 0, "冇改都落咗成份存檔 meta=%d full=%d" % [MK.meta_calls, MK.full_calls])
+	# 本機改咗：上傳，唔使落成份
+	big.lv = 31; big.last = 9100; _set_local(JSON.stringify(big))
+	MK.meta_calls = 0; MK.full_calls = 0
+	r = await ACC.sync(); _ck(r.state == "uploaded" and MK.full_calls == 0, "上傳時落咗成份 full=%d (%s)" % [MK.full_calls, r.state])
+	# 雲端改咗：要落成份（下載）
+	MK.mock_cloud_write(ACC.uid, _mk_save(40, 9900), 9900)
+	r = await ACC.sync(); _ck(r.state == "download" and ACC.summary(str(r.data)).lv == 40, "雲端改咗冇下載 %s" % r.state)
+	# 舊雲端（未壓縮）照讀
+	_ck(ACC.unpack("{\"lv\":1}") == "{\"lv\":1}", "舊未壓縮存檔讀唔到")
+	# 各後端都有同一套介面（換後端唔使改遊戲其他地方）；未填網址時離線，唔會死機
+	for pth in ["res://game/account/svc_firebase.gd", "res://game/account/svc_supabase.gd", "res://game/account/svc_nakama.gd", "res://game/account/svc_mock.gd"]:
+		var sv = load(pth).new()
+		for fn in ["sign_up", "sign_in", "refresh", "recover", "resend", "sign_out", "load_save", "load_meta", "store_save"]:
+			_ck(sv.has_method(fn), "%s 缺 %s" % [pth.get_file(), fn])
+	var NK = load("res://game/account/svc_nakama.gd")
+	var pl = Marshalls.utf8_to_base64(JSON.stringify({"uid": "abc-123"})).replace("=", "").replace("+", "-").replace("/", "_")
+	_ck(NK.uid_of("h." + pl + ".s") == "abc-123", "Nakama JWT uid 解唔到")
+	var nr = await NK.new().load_meta("x", "t"); _ck(not nr.ok and nr.err == "offline", "Nakama 未設定時唔係 offline：%s" % nr)
+	if keep != null: JSRun.ls[ACC.SAVE_KEY] = keep
+	else: JSRun.ls.erase(ACC.SAVE_KEY)
 	_reset()
 	_done()

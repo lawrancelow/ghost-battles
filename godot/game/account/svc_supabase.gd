@@ -81,6 +81,13 @@ func load_save(uid: String, token: String) -> Dictionary:
 	var s = r.body[0]
 	return {"ok": true, "data": str(s.get("data", "")), "ts": int(s.get("ts", 0)), "rev": int(s.get("rev", 0))}
 
+# [cost] 只攞 rev／ts
+func load_meta(uid: String, token: String) -> Dictionary:
+	var r = await _req(HTTPClient.METHOD_GET, "/rest/v1/saves?user_id=eq.%s&select=ts,rev" % uid, null, token)
+	if int(r.code) != 200 or not (r.body is Array): return {"ok": false, "err": _err(r)}
+	if (r.body as Array).is_empty(): return {"ok": true, "has": false, "ts": 0, "rev": 0}
+	return {"ok": true, "has": true, "ts": int(r.body[0].get("ts", 0)), "rev": int(r.body[0].get("rev", 0))}
+
 # 樂觀鎖：只喺雲端 rev 仍然係 base_rev 先寫得入（PATCH ... &rev=eq.N）；第一次（rev 0）用 INSERT
 func store_save(uid: String, token: String, data: String, ts: int, base_rev: int, force := false) -> Dictionary:
 	var ret = PackedStringArray(["Prefer: return=representation"])
@@ -91,11 +98,11 @@ func store_save(uid: String, token: String, data: String, ts: int, base_rev: int
 		return {"ok": false, "err": _err(r0)}
 	var cur = base_rev
 	if force:
-		var l = await load_save(uid, token)
+		var l = await load_meta(uid, token)
 		if not l.ok: return l
 		cur = int(l.rev)
 		if cur == 0: return await store_save(uid, token, data, ts, 0, false)
-	var r = await _req(HTTPClient.METHOD_PATCH, "/rest/v1/saves?user_id=eq.%s&rev=eq.%d" % [uid, cur], {"data": data, "ts": ts, "rev": cur + 1}, token, ret)
+	var r = await _req(HTTPClient.METHOD_PATCH, "/rest/v1/saves?user_id=eq.%s&rev=eq.%d&select=rev" % [uid, cur], {"data": data, "ts": ts, "rev": cur + 1}, token, ret)   # [cost] 回應只帶 rev
 	if int(r.code) == 200 and r.body is Array:
 		if (r.body as Array).is_empty(): return {"ok": false, "err": "conflict"}
 		return {"ok": true, "rev": cur + 1}

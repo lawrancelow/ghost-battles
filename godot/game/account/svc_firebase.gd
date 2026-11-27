@@ -86,8 +86,10 @@ func resend(email: String, pw := "") -> Dictionary:
 
 func sign_out(_token: String) -> Dictionary: return {"ok": true}   # Firebase REST 冇伺服器端登出，客戶端清 token 就得
 
-func _doc(uid: String, token: String) -> Dictionary:
-	var r = await _req(HTTPClient.METHOD_GET, _fs() + "saves/" + uid, null, token)
+# [cost] meta=true：用欄位遮罩只攞 rev／ts（唔下載成份存檔，慳流量）；Firestore 照計 1 次讀取
+func _doc(uid: String, token: String, meta := false) -> Dictionary:
+	var q = "?mask.fieldPaths=rev&mask.fieldPaths=ts" if meta else ""
+	var r = await _req(HTTPClient.METHOD_GET, _fs() + "saves/" + uid + q, null, token)
 	if int(r.code) == 404: return {"ok": true, "data": "", "ts": 0, "rev": 0, "upd": ""}
 	if int(r.code) != 200 or not (r.body is Dictionary): return {"ok": false, "err": _err(r)}
 	var f = r.body.get("fields", {})
@@ -97,14 +99,19 @@ func _doc(uid: String, token: String) -> Dictionary:
 func load_save(uid: String, token: String) -> Dictionary:
 	var g = await _doc(uid, token); g.erase("upd"); return g
 
+func load_meta(uid: String, token: String) -> Dictionary:
+	var g = await _doc(uid, token, true); g.erase("upd"); g.erase("data")
+	if g.ok: g["has"] = int(g.rev) > 0
+	return g
+
 # 樂觀鎖：先讀 rev／updateTime；rev 唔等於 base_rev → 衝突；寫入帶 currentDocument 前置條件，期間被改都會失敗
 func store_save(uid: String, token: String, data: String, ts: int, base_rev: int, force := false) -> Dictionary:
-	var g = await _doc(uid, token)
+	var g = await _doc(uid, token, true)
 	if not g.ok: return g
 	if not force and int(g.rev) != base_rev: return {"ok": false, "err": "conflict"}
 	var nr = int(g.rev) + 1
 	var pre = ("currentDocument.exists=false" if str(g.upd) == "" else "currentDocument.updateTime=" + str(g.upd).uri_encode())
 	var body = {"fields": {"data": {"stringValue": data}, "ts": {"integerValue": str(ts)}, "rev": {"integerValue": str(nr)}}}
-	var r = await _req(HTTPClient.METHOD_PATCH, _fs() + "saves/" + uid + "?" + pre, body, token)
+	var r = await _req(HTTPClient.METHOD_PATCH, _fs() + "saves/" + uid + "?" + pre + "&mask.fieldPaths=rev", body, token)   # [cost] 回應只帶 rev
 	if int(r.code) == 200: return {"ok": true, "rev": nr}
 	return {"ok": false, "err": _err(r)}
