@@ -68,6 +68,7 @@ func modal(t) -> void:
 func _grect(c: Control) -> Rect2: return c.get_global_rect()
 func hud(t) -> void:
 	var m = await _boot(t)
+	J.G["pace_force"] = 2   # [ux] 測正常階段（要有告急掣）
 	SO.force_open = true; SO.test_now = 1000000.0
 	T0.new()._rich()
 	var S = J.G.S

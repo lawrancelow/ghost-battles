@@ -28,6 +28,8 @@ static func lv() -> int:
 
 static func phase() -> int:
 	if force >= 0: return force
+	var gf = J.G.get("pace_force")   # 測試用（跨腳本重載仍生效）
+	if gf != null and int(gf) >= 0: return int(gf)
 	if ci() > 0: return 2
 	var l = lv()
 	if l < P1_LV: return 0
