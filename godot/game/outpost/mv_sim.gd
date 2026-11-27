@@ -762,6 +762,15 @@ func _step_manual(dt: float, sp: float) -> void:
 			if put2 > 0: ev.append({"k": "collect", "sid": sid, "gid": gid2, "n": put2, "pos": st_pos(sid)})
 			st().pile[sid] = float(mini(pile_cap(sid), pile_n(sid) + sp2[1] - put2))
 			ev.append({"k": "made", "sid": sid, "n": n, "pos": st_pos(sid)})
+			# [qa54] 新手「大排檔賣貨」那一步：仲有客等緊呢樣貨就自動接住做下一籠（有料先做），玩家撳一下就得，唔使狂撳
+			if load("res://game/onboard/ob.gd")._sell_on() and _cust_wants(gid2) > counter_n(gid2) and M.take(need(sid)):
+				mk[sid] = 0.0
+func _cust_wants(gid: String) -> int:   # [qa54] 排隊客人仲差幾件呢樣貨
+	var n = 0
+	for c in custs:
+		if c.st == "out": continue
+		n += maxi(0, int(c.wants.get(gid, 0)) - int(c.got.get(gid, 0)))
+	return n
 
 # 撳台面：有貨＝收去櫃台；冇貨＝開始做一轉
 func tap_station(sid: String) -> String:

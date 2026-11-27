@@ -21,6 +21,16 @@ func _shot_tut(t, m, name: String) -> void:
 		if tu != null and tu.visible: break
 		await t.get_tree().create_timer(0.1).timeout
 	await t.get_tree().create_timer(0.35).timeout
+	if name == "guard_3" and tu != null:   # [qa54] 守夜：等孤魂出，再睇鏡頭有冇自動移過去、手指有冇出
+		var sc0 = m.get("mv_view")
+		for i in 40:
+			var has = false
+			if sc0 != null:
+				for f in sc0.sim.foes: if f.get("ob") and f.st != "die": has = true
+			if has: break
+			await t.get_tree().create_timer(0.1).timeout
+		await t.get_tree().create_timer(1.5).timeout
+		_chk("教程 guard：孤魂出咗之後手指喺畫面入面", tu.visible and Rect2(Vector2.ZERO, tu.size).intersects(tu.hole), "why=%s hole=%s" % [tu.why, str(tu.hole)])
 	await RenderingServer.frame_post_draw
 	shots += 1
 	var fn = SH + "HC_GB_Ch1_Tutorial_%02d_%s.jpg" % [shots, name]
@@ -30,6 +40,13 @@ func _shot_tut(t, m, name: String) -> void:
 		_chk("教程 %s：說明框唔遮住目標" % name, not tu.tip_rect.intersects(tu.hole), "hole=%s tip=%s" % [str(tu.hole), str(tu.tip_rect)])
 		_chk("教程 %s：說明 ≤ 2 行（%d）" % [name, lines], lines <= 2 and tu.tip_lbl.text.split("\n").size() <= 2, tu.tip_lbl.text)
 		_chk("教程 %s：說明框喺畫面入面" % name, Rect2(Vector2.ZERO, tu.size).encloses(tu.tip_rect), str(tu.tip_rect))
+		# [qa54] 提示（toast）唔准疊住教程目標：塞一條測試提示，量佢嘅位置
+		m.show_toast("（測試）任務完成：教程提示避讓")
+		await t.get_tree().process_frame; await t.get_tree().process_frame
+		var bad = []
+		for c in m.toasts.get_children():
+			if c is Control and c.visible and c.get_global_rect().intersects(tu.hole): bad.append(str(c.get_global_rect()))
+		_chk("教程 %s：提示唔遮住目標" % name, bad.is_empty(), "hole=%s toast=%s" % [str(tu.hole), str(bad)])
 	_p("shot " + fn + ("（教程顯示）" if tu != null and tu.visible else "（教程冇顯示：%s）" % (tu.why if tu != null else "")))
 
 func _mark(k: String) -> void:

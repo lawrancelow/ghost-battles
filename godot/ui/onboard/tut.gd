@@ -153,6 +153,7 @@ func _process(dt: float) -> void:
 		_panned = key; main._quest_go()
 		return
 	hole = target_rect()
+	_guard_pan(q)
 	var go_tip = false
 	if hole.size == Vector2.ZERO or not Rect2(Vector2.ZERO, size).intersects(hole):
 		# 目標唔喺畫面（例如大排檔喺另一邊）：改為指住主線條「前往」，唔好黑晒都冇提示
@@ -165,7 +166,48 @@ func _process(dt: float) -> void:
 	tip_lbl.text = OB.T("撳「前往」，帶你去做呢一步", "點「前往」，帶你去做這一步") if go_tip else OB.tip_of(q)
 	_place_tip()
 	visible = true; shown = true
+	_toast_avoid()
 	queue_redraw()
+
+# [qa54] 守夜：孤魂喺畫面外 → 鏡頭自動移過去（每 1.2 秒最多一次），手指先出到
+var _pan_t := 0.0
+func _guard_pan(q) -> void:
+	_pan_t -= get_process_delta_time()
+	if q == null or str(q.get("t", "")) != "guard" or _pan_t > 0.0: return
+	var scr = Rect2(Vector2.ZERO, size).grow(-30)
+	if hole.size != Vector2.ZERO and scr.encloses(hole): return
+	var em = main.get("mv_embed"); var sim = em.sc.sim if em != null and em.get("sc") != null else null
+	if sim == null: return
+	for f in sim.foes:
+		if f.get("ob") and f.st != "die":
+			if main.has_method("_cam_to"): main._cam_to(f.pos)
+			_pan_t = 1.2
+			hole = target_rect()
+			return
+
+# [qa54] 教程進行中：提示（toast）唔准疊住教程目標——目標喺下半就將提示搬去頂（說明框下面）
+var _toast_moved := false
+func _toast_avoid() -> void:
+	var ts = main.get("toasts")
+	if ts == null or not is_instance_valid(ts): return
+	var want_top = visible and hole.size != Vector2.ZERO and hole.get_center().y > size.y * 0.45
+	if want_top == _toast_moved: return
+	_toast_moved = want_top
+	if want_top:
+		ts.anchor_top = 0; ts.anchor_bottom = 0
+		ts.offset_top = maxf(float(main.TOP_H) + 52.0, tip_rect.end.y + 8.0); ts.offset_bottom = ts.offset_top + 10.0
+		ts.grow_vertical = Control.GROW_DIRECTION_END; ts.alignment = BoxContainer.ALIGNMENT_BEGIN
+	else:
+		_toast_avoid_reset()
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_VISIBILITY_CHANGED and not visible and _toast_moved:
+		_toast_avoid_reset()
+func _toast_avoid_reset() -> void:
+	var ts = main.get("toasts") if main != null else null
+	if ts == null or not is_instance_valid(ts): _toast_moved = false; return
+	ts.anchor_top = 1; ts.anchor_bottom = 1; ts.offset_top = 0.0; ts.offset_bottom = -86.0   # 還原 main.gd 原本嘅位
+	ts.grow_vertical = Control.GROW_DIRECTION_BEGIN; ts.alignment = BoxContainer.ALIGNMENT_END
+	_toast_moved = false
 
 # 說明框：揀洞嘅對面嗰邊（上／下），一定唔疊住個洞
 func _place_tip() -> void:
