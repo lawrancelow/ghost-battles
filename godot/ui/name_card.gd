@@ -214,7 +214,10 @@ func _tile(sx: String, cap: String, open: bool) -> Control:
 	var art: Control
 	var key = "afu" if sx == "m" else "afuf"
 	if Spr.ok(key) and (sx == "m" or open):
-		var tr = TextureRect.new(); tr.texture = Spr.get_tex(key); tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		# [p0102_1] 兩張卡要固定顯示「男主／女主」空手圖，唔可以經 Spr.key_for 跟存檔性別換圖（之前兩張都變咗男主）
+		var pk = "afu_pose_a" if sx == "m" else "afuf_pose_a"
+		var ptex: Texture2D = load(str(Spr._man[pk])) if Spr._man.has(pk) else Spr.get_tex(key)
+		var tr = TextureRect.new(); tr.texture = ptex; tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		tr.modulate = Color(0.62, 0.7, 0.8, 0.82)   # 黑色螢幕上嘅倒影：暗、偏冷
 		art = tr
 	else:

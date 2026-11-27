@@ -14,6 +14,7 @@ func all(t) -> void:
 	var m = await _boot(t)
 	DirAccess.make_dir_recursive_absolute(SH)
 	_logic()
+	await _namecard(t, m)
 	await _crops(t, m)
 	await _village(t, m)
 	await _patrol(t, m)
@@ -24,6 +25,32 @@ func audit(t) -> void:
 	DirAccess.make_dir_recursive_absolute(SH)
 	await _audit(t, m)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+# [p0102_1] 新開局名字卡「選擇個人頭像」：打工仔＝男主圖、四眼妹＝女主圖（老闆 11-27 截圖兩張都係男主）
+func namecard(t) -> void:
+	var m = await _boot(t)
+	DirAccess.make_dir_recursive_absolute(SH)
+	await _namecard(t, m)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+func _namecard(t, m) -> void:
+	var S = J.G.S
+	for sex in ["m", "f"]:
+		S.hero["sex"] = sex; EQ.st()
+		var nc = load("res://ui/name_card.gd").new(); m.add_child(nc)
+		await _w(t, 1.5)
+		var keys = {}
+		for sx in ["m", "f"]:
+			var b = nc.tiles.get(sx) if nc.get("tiles") is Dictionary else null
+			var tk = ""
+			if b != null:
+				for c in b.get_children():
+					if c is TextureRect and c.texture != null: tk = c.texture.resource_path.get_file().get_basename()
+			keys[sx] = tk
+		_chk("名字卡（存檔%s）打工仔＝男主圖（%s）" % [sex, keys.m], str(keys.m).begins_with("afu_pose"))
+		_chk("名字卡（存檔%s）四眼妹＝女主圖（%s）" % [sex, keys.f], str(keys.f).begins_with("afuf_pose"))
+		await _shot(t, "namecard_" + sex)
+		nc.queue_free(); await _w(t, 0.3)
+	S.hero["sex"] = "m"; EQ.st()
 
 func _logic() -> void:
 	for k in ["lg_wkj_tank", "lg_zzj_king", "lg_wkj_elite"]:
@@ -38,6 +65,15 @@ func _logic() -> void:
 		S.hero["sex"] = sex; EQ.st()
 		var w = HV.hero_wea()
 		_chk("村子主角預設兵器（%s）＝%s" % [sex, w], w == ACE.hero_weapon())
+	S.hero["sex"] = "m"; EQ.st()
+	# [p0102_1] 明確要女主圖（名字卡「四眼妹」、劇情插圖）：唔理存檔性別，都要係女主空手圖
+	for sex in ["m", "f"]:
+		S.hero["sex"] = sex; EQ.st()
+		for k in ["afuf", "afuf_body"]:
+			var r = Spr.key_for(k)
+			_chk("存檔%s：key_for(%s)＝女主空手圖（%s）" % [sex, k, r], r.begins_with("afuf_pose"))
+		var rm = Spr.key_for("afu")
+		_chk("存檔%s：key_for(afu)＝%s" % [sex, rm], rm.begins_with("afuf_pose") if sex == "f" else rm.begins_with("afu_pose"))
 	S.hero["sex"] = "m"; EQ.st()
 	# 敵方同名鬼：第一階圖存在
 	for k in ["niutou", "mamian", "heiwu"]:
@@ -167,9 +203,18 @@ const ART_TODO := {"huang": "黃總（高爾夫球棍）", "huang__body": "黃�
 	"zd_bone": "骷髏兵雜兵（矛＋盾）", "lg_ssg_bing": "食屍鬼兵（骨棒）", "n30_vetala": "韋陀羅（杖，疑似）", "n30_chehuo": "車禍鬼（扳手，疑似）",
 	"lg_dpl_tank": "地痞坦（坑渠蓋盾）", "lg_egs_tank": "餓死鬼坦（石球）", "lg_sgj_tank": "水鬼坦（門板）", "lg_ssg_tank": "食屍鬼坦（墓碑）", "lg_zzj_tank": "紙紮坦（盾）"}
 func _aud_begin() -> void: Spr.audit = {}
-func _aud_end(scene: String, fix: Dictionary, todo: Dictionary) -> void:
+# [p0102_1] 女主存檔：任何場景都唔准用男主圖（afu、afu_pose_*、afu_body、rg_afu_* 等）
+static func male_hero_key(k: String) -> bool:
+	return k == "afu" or (k.begins_with("afu_") and not k.begins_with("afuf")) or k.begins_with("rg_afu_") or k.begins_with("afu__")
+func _aud_end(scene: String, fix: Dictionary, todo: Dictionary, sex := "") -> void:
 	var a: Dictionary = Spr.audit if Spr.audit is Dictionary else {}
 	Spr.audit = null
+	if sex == "f":
+		var mk = []
+		for k0 in a:
+			var k1 = str(k0).trim_prefix("@")
+			if male_hero_key(k1): mk.append(k1)
+		_chk("稽查［%s］女主冇顯示男主圖" % scene, mk.is_empty(), str(mk))
 	var bad_k = []; var todo_k = []
 	for k0 in a:
 		var k = str(k0).trim_prefix("@")
@@ -187,17 +232,17 @@ func _audit(t, m) -> void:
 		var V = J.G.Village; V.hero["act"] = null
 		for i in 8:
 			_cam(m, Vector2(J.num(V.hero.x), J.num(V.hero.y) - 25), 60.0 + i * 20.0); await _w(t, 0.5)
-		_aud_end("村子・%s" % sex, fix, todo)
+		_aud_end("村子・%s" % sex, fix, todo, sex)
 		# 名冊
 		_aud_begin(); m.open_roster(); await _w(t, 1.5); await _shot(t, "aud_roster_" + sex); m.close_sheet(); await _w(t, 0.3)
-		_aud_end("名冊・%s" % sex, fix, todo)
+		_aud_end("名冊・%s" % sex, fix, todo, sex)
 		# 圖鑑
 		_aud_begin()
 		var CX = load("res://game/soul/soul_codex.gd")
 		CX.open(); await _w(t, 2.0); await _shot(t, "aud_codex_" + sex)
 		CX.open_detail("heiwu"); await _w(t, 1.0)
 		Menus.close_hook(); await _w(t, 0.3)
-		_aud_end("圖鑑・%s" % sex, fix, todo)
+		_aud_end("圖鑑・%s" % sex, fix, todo, sex)
 		# 巡陰
 		_aud_begin()
 		if PtRun.start_run(1, 0):
@@ -206,7 +251,7 @@ func _audit(t, m) -> void:
 			if is_instance_valid(r): r._cover(false); r.queue_free()
 			PtRun.cur = null
 		await _w(t, 1.0)
-		_aud_end("巡陰・%s" % sex, fix, todo)
+		_aud_end("巡陰・%s" % sex, fix, todo, sex)
 	S.hero["sex"] = "m"; EQ.st(); PtGfx._tex.clear()
 	# 地圖戰鬥：王牌＋軍團（主角＋幾隻王牌出陣，打 1-1）
 	_aud_begin()

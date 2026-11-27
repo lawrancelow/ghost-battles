@@ -30,7 +30,10 @@ func key_for(k: String) -> String:
 	if _ace == null: _ace = load("res://game/soul/ace_art.gd")
 	if _ace.STAGES.has(k) or _ace.NWP.has(k): return _ace.map(k)   # [p44] 王牌階段圖／軍團空手圖
 	if not k.contains("afu"): return k
-	if HERO_FULL.has(k) and _ace.active("afu"): k = _ace.POSES[0]   # [p47] 主角整張圖（手揸斧頭／三角尺）一律換空手姿勢圖（頭像、圖鑑、劇情、回陽間等）
+	if HERO_FULL.has(k) and _ace.active("afu"):   # [p47] 主角整張圖（手揸斧頭／三角尺）一律換空手姿勢圖（頭像、圖鑑、劇情、回陽間等）
+		# [p0102_1] 明確要女主圖（afuf／afuf_body，例如名字卡「四眼妹」、劇情插圖）就一定換女主空手圖，唔理而家存檔揀咗邊個
+		if k.begins_with("afuf") and _man.has(fem_key(_ace.POSES[0])): return fem_key(_ace.POSES[0])
+		k = _ace.POSES[0]
 	if not DB.hero_female(): return k
 	var fk = fem_key(k)
 	return fk if fk != k and _man.has(fk) else k
