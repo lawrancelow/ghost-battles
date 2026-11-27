@@ -12,7 +12,7 @@ for m in $(grep -v '^#' native/ACTIVE.txt | sed 's/[[:space:]]//g' | grep -v '^$
 	if grep -q "res://jsgen/$m.gd" "native/$m.gd" 2>/dev/null && ! grep -qx "$m" native/JSGEN_DROP_OK.txt 2>/dev/null; then continue; fi
 	DROP+=("jsgen/$m.gd")
 done
-EXC="tools/*"; for f in "${DROP[@]}"; do EXC="$EXC,$f"; done
+EXC="tools/*${EXTRA_EXC:+,$EXTRA_EXC}"; for f in "${DROP[@]}"; do EXC="$EXC,$f"; done
 python3 - "$EXC" <<'P'
 import sys,re
 p='export_presets.cfg'; s=open(p).read(); s=re.sub(r'exclude_filter="[^"]*"', 'exclude_filter="%s"' % sys.argv[1], s); open(p,'w').write(s)

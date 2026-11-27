@@ -15,6 +15,7 @@ lst = os.path.join(d, "_list.json")
 r=subprocess.run([g, "--headless", "-s", "/home/claude/ghost-battles/godot/tools/update/make_pck.gd", "--", lst, os.path.join(out, fn)], capture_output=True, text=True)
 assert os.path.exists(os.path.join(out, fn)), r.stderr[-400:]
 data = open(os.path.join(out, fn), "rb").read()
+assert len(data) < 100 * 1024 * 1024, "補丁 %d bytes 超過 GitHub 單檔 100MiB 上限，推唔上 main（要減圖／分包）" % len(data)
 if cur.get("file") and cur["file"]!=fn and os.path.exists(os.path.join(out, cur["file"])): os.remove(os.path.join(out, cur["file"]))
 o["base"].setdefault(ver, {})[k] = {"ver": n, "file": fn, "md5": hashlib.md5(data).hexdigest(), "size": len(data)}
 json.dump(o, open(vj, "w"), indent=1, ensure_ascii=False)

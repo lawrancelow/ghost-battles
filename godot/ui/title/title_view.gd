@@ -34,13 +34,16 @@ const CREAM := Color("#f6ead0")
 const GOLD := Color("#f3d68a")
 
 static func tex(k: String) -> Texture2D:
+	# 先睇檔案喺唔喺包入面（例如 cover2_wide 只入 PC 版）：唔喺就回 null，唔好俾 Spr 報「搵唔到檔」
+	var p := ""
+	for ext in ["webp", "png"]:
+		var q = "res://assets/spr/%s.%s" % [k, ext]
+		if ResourceLoader.exists(q): p = q; break
+	if p == "": return null
 	var sp = Engine.get_main_loop().root.get_node_or_null("Spr") if Engine.get_main_loop() is SceneTree else null
 	if sp != null and sp.has_method("ok") and sp.call("ok", k):
 		var t = sp.call("get_tex", k); if t is Texture2D: return t
-	for ext in ["webp", "png"]:
-		var p = "res://assets/spr/%s.%s" % [k, ext]
-		if ResourceLoader.exists(p): return load(p)
-	return null
+	return load(p)
 
 func _ready() -> void:
 	name = "Title"
