@@ -114,8 +114,12 @@ func data_check() -> void:
 	var L = S2.list()
 	var n2 = _ng2_keys()   # roster2 第二批（newghost2.json 有先計）
 	var nl = _lg_keys()   # [legion] 八大軍團 54 隻（legion.json 有先計）
-	var NT = 101 + n2.size() + nl.size()
-	_chk("圖鑑 %d 格（101＋第二批 %d＋軍團 %d）" % [NT, n2.size(), nl.size()], L.size() == NT, L.size())
+	var nb = []   # [p45] 補丁43 魔王收服：bm_recruit.json ROSTER 7 隻都自動加格
+	if FileAccess.file_exists("res://data/nat/bm_recruit.json"):
+		var B = JSON.parse_string(FileAccess.get_file_as_string("res://data/nat/bm_recruit.json"))
+		if B is Dictionary: nb = B.get("ROSTER", [])
+	var NT = 101 + n2.size() + nl.size() + nb.size()
+	_chk("圖鑑 %d 格（101＋第二批 %d＋軍團 %d＋魔王收服 %d）" % [NT, n2.size(), nl.size(), nb.size()], L.size() == NT and nb.all(func(k): return S2.entry(str(k)).size() > 0), L.size())
 	_chk("軍團 54 隻全部自動加格", nl.all(func(k): return S2.entry(k).size() > 0))
 	var ks = {}
 	for x in L: ks[str(x.k)] = true

@@ -421,7 +421,11 @@ func _shots(t) -> void:
 	for sid in MD.stations(0): sc.sim.sst(sid).unlocked = true
 	# 鏡頭去大排檔區 → 開場 beat 自動播
 	var E = em.eh()
-	J.mc(J.G.get("Village"), "setCam", [-E + 260.0])
+	var ZDh = load("res://game/zone/zone_data.gd")
+	if ZDh.on() and m.village.has_method("zone_cam"):   # [p45] 分區地圖：大排檔要散咗霧（fogfix：未散霧唔播開檔、唔開檔冇客），鏡頭用 2D 鏡頭對準大排檔
+		ZDh.reveal_all(-1, true)
+		var zc = m.village.zone_cam(); zc.center_on(ZDh.zrect("market").get_center()); zc.tgt = null; zc.vel = Vector2.ZERO
+	else: J.mc(J.G.get("Village"), "setCam", [-E + 260.0])
 	var got = false
 	for i in 30:
 		await _w(t, 0.3)

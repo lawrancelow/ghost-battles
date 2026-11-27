@@ -12,6 +12,8 @@ func all(t) -> void:
 	var m = _main(t)
 	var NC = load("res://ui/name_card.gd")
 	for f in ["/tmp/gift/GiftSave_Player1.txt", "/tmp/gift/GiftSave_Player2.txt"]:
+		if not FileAccess.file_exists(f):   # [p45] 存檔碼唔喺 repo（README：容器重開後冇咗，要老闆再提供）：清楚報缺檔，唔好行落去報腳本錯誤
+			_chk("存檔碼檔案存在 " + f + "（唔喺 repo，要老闆再提供）", false); continue
 		var code = FileAccess.get_file_as_string(f)
 		var o = G.dec(code)
 		_chk("解碼 " + f.get_file(), o is Dictionary and o.has("gift"))

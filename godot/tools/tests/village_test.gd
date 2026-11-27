@@ -192,7 +192,12 @@ func all(t) -> void:
 	var V = J.G.Village
 	J.mc(V, "setCam", [5000.0]); await _w(t, 0.3)
 	var vh = J.num(V.h) / J.num(V.scale)
-	_chk("鏡頭落得到後院底", absf(J.num(V.camY) - (CB.world_h() - vh)) < 1.0, "%.0f" % J.num(V.camY))
+	var nvz = m.get("village")
+	if nvz != null and nvz.get("zone") == true and nvz.get("zc") != null:   # [p45] 分區地圖：setCam 改郁 2D 鏡頭（nv_village._zone_wrap），底＝分區世界底
+		var zc = nvz.zc
+		var zb = maxf(zc.org.y - zc.top_extra, zc.org.y + zc.world.y - zc.vh())
+		_chk("鏡頭落得到地圖底（分區地圖 2D 鏡頭）", absf(J.num(V.camY) - zb) < 1.0 and absf(zc.y - zb) < 1.0, "%.0f／%.0f" % [J.num(V.camY), zb])
+	else: _chk("鏡頭落得到後院底", absf(J.num(V.camY) - (CB.world_h() - vh)) < 1.0, "%.0f" % J.num(V.camY))
 	var pb = CB.pos(b0)
 	await _calm(t)
 	J.mc(V, "tap", [pb.x, pb.y - 40]); await _w(t, 0.6)

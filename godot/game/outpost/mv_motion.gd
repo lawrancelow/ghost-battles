@@ -34,6 +34,26 @@ const GAIT := {
 	"pg_tuimo": "hunch", "n30_qionggui": "shuffle", "n30_wutou": "nodwalk", "n30_kuchisake": "glide", "n30_hannya": "stomp",
 	"n30_jenglot": "scamper", "n30_baigujing": "catwalk", "n30_phiam": "sleepy", "n30_kappa": "waddle", "n30_maenak": "glide", "n30_yezi": "sneak",
 	"n30_liulian": "walk", "n30_zhongshu": "sleepy", "n30_changgui": "trot",
+	# [p45] 第三批名鬼（nw_）、八大軍團（lg_）、魔王（bm_）：按傳說形態揀步法（之前全部行預設 walk）
+	"nw_guihuo": "float", "nw_huli": "catwalk", "nw_bajang": "scamper", "nw_teketeke": "scamper", "nw_baimao": "hop", "nw_buhuagu": "rattle",
+	"nw_daqiang": "stomp", "nw_ganshi": "brisk", "nw_huapi": "glide", "nw_ameonna": "float", "nw_shejing": "catwalk", "nw_tiangou": "trot",
+	"nw_tisi": "sulk", "nw_krahang": "flap", "nw_kapre": "smoke", "nw_honeonna": "glide", "nw_mummy": "shuffle", "nw_zzphone": "paper",
+	"nw_zzcar": "paper", "nw_kuaidi": "brisk", "nw_zzhouse": "waddle", "nw_shenpi": "hunch", "nw_toutai": "sleepy", "nw_yeleng_guard": "stomp",
+	"nw_yeleng_sales": "bounce", "nw_dullahan": "nodwalk", "nw_bifang": "hop1", "nw_qiongqi": "trot", "nw_nian": "stomp", "nw_shen": "fade",
+	"nw_wangliang": "hunch", "nw_niexiaoqian": "float", "nw_zhizhama": "trot", "nw_luotoumin": "head", "nw_guiamngaan": "sneak", "nw_guisihknai": "drunk",
+	"nw_paakbok": "sneak", "nw_dikseigwai": "glance", "nw_mosinna": "scamper", "nw_kamaitachi": "scamper", "nw_nurikabe": "stomp", "nw_akaname": "hunch",
+	"nw_makuragaeshi": "sleepy", "nw_dodomeki": "sneak", "nw_ungaikyo": "float", "nw_jinmenken": "trot", "nw_ushioni": "stomp", "nw_nekomata": "catwalk",
+	"nw_harimau": "trot", "nw_banaspati": "bounce", "nw_bonceng": "glance", "nw_nangtani": "glide", "nw_manananggal": "flap", "nw_nuno": "waddle",
+	"nw_dokkaebi": "bounce", "nw_poltergeist": "fade",
+	"lg_egs_bing": "shuffle", "lg_egs_shoot": "shuffle", "lg_egs_tank": "waddle", "lg_egs_elite": "scamper", "lg_egs_boss": "stomp", "lg_egs_boss2": "brisk", "lg_egs_king": "waddle",
+	"lg_sgj_bing": "float", "lg_sgj_shoot": "float", "lg_sgj_tank": "shuffle", "lg_sgj_elite": "glide", "lg_sgj_boss": "stomp", "lg_sgj_boss2": "float", "lg_sgj_king": "glide",
+	"lg_zzj_bing": "paper", "lg_zzj_shoot": "paper", "lg_zzj_tank": "paper", "lg_zzj_elite": "trot", "lg_zzj_boss": "paper", "lg_zzj_boss2": "paper", "lg_zzj_king": "paper",
+	"lg_jsj_yayi": "hop", "lg_jsj_guan": "hop", "lg_jsj_wangye": "hop", "lg_jsj_wutou": "hop", "lg_jsj_jiangchen": "glide",
+	"lg_dpl_bing": "brisk", "lg_dpl_shoot": "bounce", "lg_dpl_tank": "stomp", "lg_dpl_elite": "brisk", "lg_dpl_boss": "stomp", "lg_dpl_boss2": "brisk", "lg_dpl_king": "stomp",
+	"lg_klj_bing": "rattle", "lg_klj_shoot": "rattle", "lg_klj_tank": "rattle", "lg_klj_elite": "rattle", "lg_klj_boss": "rattle", "lg_klj_boss2": "rattle", "lg_klj_king": "rattle",
+	"lg_wkj_bing": "brisk", "lg_wkj_shoot": "sneak", "lg_wkj_tank": "stomp", "lg_wkj_elite": "scamper", "lg_wkj_boss": "brisk", "lg_wkj_boss2": "drunk", "lg_wkj_king": "stomp",
+	"lg_ssg_bing": "hunch", "lg_ssg_shoot": "shuffle", "lg_ssg_tank": "stomp", "lg_ssg_elite": "shuffle", "lg_ssg_boss": "hunch", "lg_ssg_boss2": "sleepy", "lg_ssg_king": "stomp",
+	"bm_taotie": "waddle", "bm_jembalang": "stomp", "bm_hou": "hop", "bm_langsuir": "float", "bm_krasue": "head", "bm_pang": "brisk", "bm_shuten": "drunk",
 }
 # 原版鬼（有網格）用嘅廣場平日動作（DAILY['plaza_*']，原圖）
 const PLAZA := {

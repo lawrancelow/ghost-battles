@@ -155,9 +155,37 @@ func _logic(t, m) -> void:
 	_chk("冥幣唔夠訂唔到（missing 寫明差幾多）", not EQ.can_make("eq_wokchan") and EQ.missing("eq_wokchan").has("coins"))
 	_rich_mats()
 	_stall(150.0)   # ★5：名品
-	_chk("★5：名品解鎖", EQ.unlocked("eq_huoqi") and EQ.unlocked("eq_laogong"))
-	for id in ["eq_huanshou", "eq_baoan", "eq_dianzhan", "eq_huoqi", "eq_laogong", "eq_jinzheng", "eq_liangcha", "eq_jimao", "eq_suanpan", "eq_weiqun", "eq_tiewok", "eq_yinji", "eq_guanban", "eq_xizhuang", "eq_staffcard"]:
+	# [p45] 補丁43 起：凡良精喺兵器檔造；名品只靠回陽間燒落嚟；絕品＝打魔王掉（equip_build.py SRC）
+	_chk("★5：凡良精全部造得（兵器檔 ★%d）" % EQ.stall_star(), EQ.unlocked("eq_huanshou") and EQ.unlocked("eq_tiewok") and EQ.unlocked("eq_dianzhan"))
+	var bad_src = []
+	for id in EQ.items("eq"):
+		var g5 = EQ.grade_of(id); var sr5 = EQ.item(id).get("src", [])
+		var want = ["make"] if g5 <= 1 else (["make", "offer"] if g5 == 2 else (["offer"] if g5 == 3 else ["boss"]))
+		if JSON.stringify(sr5) != JSON.stringify(want) or EQ.unlocked(id) != (g5 <= 2): bad_src.append([id, g5, sr5])
+	_chk("來源：凡良＝造、精＝造或燒、名＝只燒、絕＝只魔王；★5 名／絕都唔喺兵器檔造", bad_src.is_empty(), bad_src)
+	_chk("★5：名品唔造得、寫明「回陽間…燒下來」", not EQ.unlocked("eq_huoqi") and not EQ.make("eq_laogong") and EQ.lock_txt("eq_laogong").contains("陽間"), EQ.lock_txt("eq_laogong"))
+	_chk("絕品唔造得、寫明「打魔王」", not EQ.unlocked("eq_jue_caidao") and not EQ.make("eq_jue_caidao") and EQ.lock_txt("eq_jue_caidao").contains("魔王"), EQ.lock_txt("eq_jue_caidao"))
+	# 回陽間燒貨：三星先有名品；掉落池只有 src 有 offer 嘅精／名
+	seed(4545)
+	var got_o = {}; var bad_o = []
+	for i in 400:
+		var id_o = EQ.drop_offer(3)
+		if id_o == "": continue
+		got_o[EQ.grade_of(id_o)] = int(got_o.get(EQ.grade_of(id_o), 0)) + 1
+		if not (EQ.item(id_o).get("src", []) as Array).has("offer"): bad_o.append(id_o)
+	var g1_name = 0
+	for i in 400:
+		var id1 = EQ.drop_offer(1)
+		if id1 != "" and EQ.grade_of(id1) >= 3: g1_name += 1
+	_chk("回陽間燒落嚟：三星有名品（%s）、一星冇名品、池冇絕品" % str(got_o), int(got_o.get(3, 0)) > 0 and not got_o.has(4) and bad_o.is_empty() and g1_name == 0, [got_o, bad_o, g1_name])
+	var got_b = {}
+	for i in 300:
+		for id_b in EQ.drop_boss(false): got_b[str(EQ.item(id_b).get("kind")) + str(EQ.grade_of(id_b))] = 1
+	_chk("打魔王掉：只會係絕品（或專屬物）", got_b.has("eq4") and not got_b.has("eq3") and not got_b.has("eq2"), got_b)
+	EQ.st().inv.clear(); EQ.st().worn.clear()   # 清走上面掉落測試入倉嘅嘢，下面數倉準確
+	for id in ["eq_huanshou", "eq_baoan", "eq_dianzhan", "eq_liangcha", "eq_jimao", "eq_suanpan", "eq_weiqun", "eq_tiewok", "eq_yinji", "eq_guanban", "eq_xizhuang", "eq_staffcard"]:
 		EQ.make(id)
+	for id in ["eq_huoqi", "eq_laogong", "eq_jinzheng"]: EQ.give(id)   # 名品：當回陽間燒落嚟
 	EQ.make("eq_huanshou")
 	_chk("訂咗 2 把環首刀", EQ.n_inv("eq_huanshou") == 2)
 	var c1 = EQ.coins()
@@ -173,7 +201,15 @@ func _logic(t, m) -> void:
 	EQ.wear(gx, "eq_dianzhan")
 	_chk("三格齊：兵器／護身／隨身物", EQ.worn(gx).size() == 3, EQ.worn(gx))
 	var b = EQ.bonus(gx)
-	_chk("加成：攻 +13%、血 +18%、受傷 −6%、儲能 +10%", is_equal_approx(b.atk, 0.13) and is_equal_approx(b.hp, 0.18) and is_equal_approx(b.taken, -0.06) and is_equal_approx(b.energy, 0.10), b)
+	# [p45] 補丁43 起有職業類別 +20%：期望值按小紙職業逐件計（基礎值：刀攻 13%、制服血 18%／受傷 −6%／儲能 5%、電筒儲能 5%）
+	var clsx = load("res://game/rts/roles.gd").cls_of("xiaozhi")
+	var ex_b = {"atk": 0.0, "hp": 0.0, "taken": 0.0, "energy": 0.0}
+	for id in ["eq_huanshou", "eq_laogong", "eq_dianzhan"]:
+		var kx = 1.2 if EQ.cat_match(id, clsx) else 1.0
+		for s0 in EQ.item(id).st: if ex_b.has(s0): ex_b[s0] += J.num(EQ.item(id).st[s0]) * kx
+	if AB.scares_of("xiaozhi").has("light"): ex_b.atk += 0.08
+	var base_ok = is_equal_approx(J.num(EQ.item("eq_huanshou").st.atk), 0.13) and is_equal_approx(J.num(EQ.item("eq_laogong").st.hp), 0.18) and is_equal_approx(J.num(EQ.item("eq_laogong").st.taken), -0.06) and is_equal_approx(J.num(EQ.item("eq_laogong").st.energy) + J.num(EQ.item("eq_dianzhan").st.energy), 0.10)
+	_chk("加成：攻 +13%%、血 +18%%、受傷 −6%%、儲能 +10%%（×職業類別；小紙 %s）" % clsx, base_ok and is_equal_approx(b.atk, ex_b.atk) and is_equal_approx(b.hp, ex_b.hp) and is_equal_approx(b.taken, ex_b.taken) and is_equal_approx(b.energy, ex_b.energy), [b, ex_b])
 	# 標籤：小紙本身標籤
 	var own = AB.tags_of("xiaozhi")
 	var ti = EQ.tag_info(gx)

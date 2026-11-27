@@ -103,7 +103,14 @@ func reg_check() -> void:
 	_chk("54 張圖全部載入（貼圖、CHAR_H、頭像）", noart.is_empty(), noart)
 	_chk("品級：雜兵凡、精英靈、頭目煞、軍團王王", nopin.is_empty(), nopin)
 	_chk("54 隻有台詞", nosay.is_empty(), nosay)
-	_chk("圖鑑 54 格自動加（131＋54＝185）", nocodex.is_empty() and S2.list().size() == 185, [nocodex, S2.list().size()])
+	# [p45] 補丁43 起魔王收服：bm_recruit.json 7 隻魔王（收服後入名冊）亦自動加格 → 131＋54＋7＝192
+	var bmf = FileAccess.open("res://data/nat/bm_recruit.json", FileAccess.READ)
+	var BMR = JSON.parse_string(bmf.get_as_text()) if bmf != null else {}
+	var bmk: Array = (BMR.get("ROSTER", []) as Array) if BMR is Dictionary else []
+	var nobm = bmk.filter(func(k): return S2.entry(str(k)).is_empty())
+	var extra = []
+	for x in S2.list().slice(131 + 54): extra.append(str(x.k))
+	_chk("圖鑑：131＋軍團 54＋魔王收服 7＝192（後 7 格＝bm_ 魔王）", nocodex.is_empty() and nobm.is_empty() and bmk.size() == 7 and S2.list().size() == 192 and extra == bmk.map(func(k): return str(k)), [nocodex, nobm, S2.list().size(), extra])
 	var kings = ks.filter(func(k): return str(LG.unit(k).slot) == "king")
 	_chk("8 隻軍團王都係王品、可招降（唔係魔王）", kings.size() == 8 and kings.all(func(k): return SOUL.pin(k) == "王" and not SOUL.unsummonable(k)), kings)
 	# 機制、克制

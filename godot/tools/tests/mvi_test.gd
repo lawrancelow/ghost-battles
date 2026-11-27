@@ -170,8 +170,11 @@ func all(t) -> void:
 	m.close_sheet()
 	# 任務文字
 	var qs = J.G.get("QUESTS")
-	_chk("任務文字（建造棺材鋪）有移動村版", B.quest_text(qs[2]) != str(qs[2].text), B.quest_text(qs[2]))
-	_chk("任務文字（砍樹）指去營地", B.quest_text(qs[0]).contains("營地"), B.quest_text(qs[0]))   # [camp] 後院 → 營地
+	# [p45] qaudit（c08a27f）起合一地圖冇「營地」：村子建築任務用返原字，全部任務字唔再出「營地／後院」
+	_chk("任務文字（建造棺材鋪）＝原字（合一地圖，唔加營地前綴）", B.quest_text(qs[2]) == str(qs[2].text).trim_prefix("營地："), B.quest_text(qs[2]))
+	var qbad = []
+	for q in qs: if B.quest_text(q).contains("營地") or B.quest_text(q).contains("後院"): qbad.append(B.quest_text(q))
+	_chk("任務文字（砍樹等）冇「營地／後院」字眼（qaudit）", qbad.is_empty() and B.quest_text(qs[0]) != "", [B.quest_text(qs[0]), qbad])
 	_chk("任務文字（包壽包）= 嘆氣蒸籠", B.quest_text(qs[5]).contains("嘆氣蒸籠"), B.quest_text(qs[5]))
 	J.cl(J.G.get("save"), null, [])
 	_p("RESULT ok=%d bad=%d" % [ok, bad])

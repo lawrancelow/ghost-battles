@@ -219,6 +219,7 @@ static func sec_of(e: Dictionary) -> String:
 	var best = ""
 	for k in camp_named(e):
 		if k == g or k == g2: continue
+		if k.begins_with("bm_"): continue   # [p45] 魔王（補丁43 登記做名鬼）嘅魂魄只由 ng_boss.soul_drop 掉（首殺 15、之後 2–4），唔再當副魂重複掉
 		if not _guards().has(k): return k
 		if best == "": best = k
 	if best != "": return best
@@ -243,6 +244,13 @@ static func sources(k: String) -> Array:   # [{e, pri:bool}]：邊度有（所�
 			elif guard2_of(e) == k: o.append({"e": e, "pri": true, "co": true})   # [roster2]
 			elif sec_of(e) == k: o.append({"e": e, "pri": false})
 	o += _lg().sources(k)   # [legion] 軍團營（掛咗新地圖先有）
+	if k.begins_with("bm_") and o.is_empty():   # [p45] 魔王：主魂來源＝魔王據點（ng_boss.soul_drop）；隱藏魔王（酒吞童子）＝佢嗰章嘅魔王據點
+		var hid = load("res://game/newghost/ng_data.gd").D().get("HIDDEN", {})
+		for c in 6:
+			for e in _camps(c):
+				var bm = str(e.get("bm", ""))
+				if bm == "": continue
+				if bm == k or (hid.get(k) is Dictionary and int(J.num(hid[k].get("c", -1))) == c): o.append({"e": e, "pri": true, "bm": true})
 	return o
 static func ch_of(k: String) -> int:   # 招降費用嘅「章」
 	var best = 99

@@ -149,7 +149,13 @@ func _scene(tt) -> void:
 		sc = mv; own = false   # 主畫面已經嵌咗移動村：直接用佢（唔好疊兩個場景）
 		sc.on_show(); sc.card = null
 		if sc.get("embed") == true:   # [unify] 合一地圖：鏡頭移去大排檔區（HUD／生產鏈掣先出）
-			J.mc(J.G.get("Village"), "setCam", [-600.0]); await _frames(30)
+			var ZD = load("res://game/zone/zone_data.gd")
+			var nv = m.get("village")
+			if ZD.on() and nv != null and nv.has_method("zone_cam"):   # [p45] 分區地圖（zone）：HUD 睇 zone_hud_vis（畫面三成係大排檔），唔再睇舊 setCam；大排檔要先散霧
+				ZD.reveal_all(-1, true)
+				var c = nv.zone_cam(); c.center_on(ZD.zrect("market").get_center()); c.tgt = null; c.vel = Vector2.ZERO
+			else: J.mc(J.G.get("Village"), "setCam", [-600.0])
+			await _frames(30)
 		await _frames(3); return
 	own = true
 	sc = load("res://game/outpost/mv_scene.gd").new(); sc.name = "MvSceneCU"

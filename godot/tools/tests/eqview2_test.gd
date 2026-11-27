@@ -229,6 +229,20 @@ func _cmp(t, m) -> void:
 		if br.intersects(fr): face.append([k, "C", br, fr])
 		sv.queue_free(); await _f(t, 2)
 	_chk("B／C 待機：6 隻名鬼全部喺 1.25H 框內（唔爆格）", oob.is_empty(), oob)
+	# [p45] 全部有全身圖嘅角色 × 長／短兵器 × 待機浮動一個週期：漂浮兵器範圍（同 _float 一樣計法）唔出 1.25H 框
+	var allk = ["afu"]
+	for k in J.G.GHOSTS: if not allk.has(str(k)) and PtGfx.tex(Art.spr_key(str(k))) != null: allk.append(str(k))
+	var oob_all = []
+	for k in allk:
+		for wea in ["eq_liangcha", "eq_suanpan"]:   # 長（晾衫叉）／短（算盤）
+			for fdv in [1.0, -1.0]:
+				for q in 24:
+					var R2 = EV2.rest_of(k, wea, Vector2.ZERO, 1.0, fdv, q * 0.37)
+					var dv2 = Vector2(sin(R2[1]), -cos(R2[1]))
+					var rr2 = Rect2(R2[0], Vector2.ZERO)
+					for p in [R2[0] - dv2 * R2[2] * 0.5, R2[0] + dv2 * R2[2] * 0.5]: rr2 = rr2.expand(p - Vector2(0.05, 0.05)).expand(p + Vector2(0.05, 0.05))
+					if not EV.in_box(rr2): oob_all.append([k, wea, fdv, snappedf(rr2.end.x, 0.001), snappedf(rr2.position.x, 0.001)]); break
+	_chk("全部 %d 隻角色：長／短漂浮兵器待機（左右面向、成個浮動週期）都喺 1.25H 框內" % allk.size(), allk.size() > 100 and oob_all.is_empty(), oob_all.slice(0, 20))
 	_chk("B／C 任何狀態：兵器唔高過頭頂資訊線（血條、ab_lay 頭頂字唔遮）", high.is_empty(), high)
 	_chk("B 飄浮兵器（待機＋飛出飛返全程）、C 徽章唔遮臉", face.is_empty(), face)
 

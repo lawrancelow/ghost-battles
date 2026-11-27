@@ -12,6 +12,7 @@ extends RefCounted
 
 const EQ = preload("res://game/equip/eq_data.gd")
 const EA = preload("res://game/equip/eq_art.gd")
+const BOX_HALF := 0.625      # [p45] 1.25H 方框半闊（同 eq_view.gd BOX×0.5）
 const TOP := -0.98            # 兵器最高（以 H 為 1）：頭頂資訊喺呢條線以上
 const SK_DUR := 0.65          # 技能放出後飛撲幾秒（Over 自己計時）
 const YIN := Color(0.66, 0.88, 1.0)   # 陰氣色
@@ -125,6 +126,9 @@ static func rest_of(k: String, wea: String, foot: Vector2, H: float, fd: float, 
 	var L = H * (0.46 if EA.is_long(wea) else 0.36)
 	var e = ext(k, 1.0, -0.78, -0.3)      # [補丁43] 圖嘅面向側（右）上半身幾闊：兵器永遠喺面向嗰邊
 	var cx = clampf(e + 0.09, 0.30, 0.52)
+	# [p45] 唔爆格：闊身圖（紙紮大屋等）兵器貼住 0.52 時，長兵器斜到最盡（0.30 弧度）＋邊距 0.05H 會出 1.25H 框右邊；
+	#   按兵器長度收返中心，令 中心＋半長×sin(最大斜)＋0.05 ≤ 0.62（留 0.005 緩衝）
+	cx = minf(cx, BOX_HALF - 0.005 - 0.05 - sin(0.30) * (L / H) * 0.5)
 	var c = foot + Vector2(fd * cx * H, (-0.50 + 0.035 * sin(T * 2.1)) * H)
 	var ang = fd * (0.20 + 0.10 * sin(T * 1.35))
 	return [c, ang, L]

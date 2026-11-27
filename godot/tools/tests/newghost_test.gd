@@ -197,10 +197,13 @@ func enemy_check() -> void:
 	var b1 = []
 	for k in bs:
 		var e = NG.enemy(str(k)); var a = NG.abil(str(k))
-		if not (ET.get(k) is Array) or not _art_ok(str(k)) or (e.get("mech", []) as Array).size() != 3 or J.t(e.get("recruit")) or a.is_empty() or J.G.GHOSTS.has(k):
+		# [p45] 補丁43（864d4c8）：7 魔王登記做名鬼（王品），打低掉魔王魂魄、湊夠喺祭壇收服 → 而家應該喺 GHOSTS、可以招降
+		if not (ET.get(k) is Array) or not _art_ok(str(k)) or (e.get("mech", []) as Array).size() != 3 or J.t(e.get("recruit")) or a.is_empty() or not J.G.GHOSTS.has(k) or str(J.G.GHOSTS[k].get("q", "")) != "名":
 			b1.append(k)
+		var SDn = load("res://game/soul/soul_data.gd")
+		if SDn.unsummonable(str(k)) or SDn.pin(str(k)) != "王": b1.append(str(k) + ":tame")
 		if NG.D().BOSS[k].get("drop", {}).get("first", 0) <= 0: b1.append(str(k) + ":drop")
-	_chk("大魔王：ENEMY_T、圖、3 個機制、主動技＋被動、不可招降（唔喺 GHOSTS）、有散魂掉落", b1.is_empty(), b1)
+	_chk("大魔王：ENEMY_T、圖、3 個機制、主動技＋被動、名鬼（王品）可以收服、有散魂掉落", b1.is_empty(), b1)
 	var f1 = []
 	for k in fs:
 		var e = NG.enemy(str(k))

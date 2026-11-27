@@ -94,7 +94,9 @@ func _run(t) -> void:
 # ---- 數據 ----
 func data_check() -> void:
 	var D = SOUL.D()
-	_chk("soul.json：定案名冊 130 隻名鬼（不計阿福；roster2 加第二批 30）都有品級、現有 72 隻全部有", D.PIN.size() == 130 and J.G.GHOSTS.keys().filter(func(k): return k != "afu" and not D.PIN.has(k) and not str(k).begins_with("lg_")).is_empty(), D.PIN.size())
+	# [p45] 補丁43：7 個魔王（bm_）可以收服，入咗 PIN（王品）→ 130＋7＝137
+	var bmn = D.PIN.keys().filter(func(k): return str(k).begins_with("bm_"))
+	_chk("soul.json：定案名冊 130 隻名鬼＋補丁43 魔王 7 隻（王）都有品級、現有名鬼全部有", D.PIN.size() == 137 and bmn.size() == 7 and bmn.all(func(k): return D.PIN[k] == "王") and J.G.GHOSTS.keys().filter(func(k): return k != "afu" and not D.PIN.has(k) and not str(k).begins_with("lg_")).is_empty(), D.PIN.size())
 	var nocamp = []; var bad_g = []
 	for c in 6:
 		var cs = SO.camps(c)
@@ -109,7 +111,8 @@ func data_check() -> void:
 	_chk("駐守鬼全部係現有名鬼（有圖）", bad_g.is_empty(), bad_g)
 	var cnt = {"凡": 0, "靈": 0, "煞": 0, "王": 0}
 	for k in D.PIN: cnt[D.PIN[k]] += 1
-	_chk("品級分布（按名冊 T 值）凡22＋11 靈46＋12 煞26＋7 王6（roster2 第二批 30），冇 k1/k2", cnt == {"凡": 33, "靈": 58, "煞": 33, "王": 6} and not D.PIN.has("new_k1"), cnt)
+	# [p45] 補丁43（76e5a0c）「PIN 按新品級合一」：品級改跟品階（凡魂／靈鬼／煞鬼／鬼王），分布變咗；呢度驗合一後嘅定案數（含魔王 7 個王）
+	_chk("品級分布（補丁43 合一後）凡33 靈31 煞54 王19（含魔王 7），冇 k1/k2", cnt == {"凡": 33, "靈": 31, "煞": 54, "王": 19} and not D.PIN.has("new_k1"), cnt)
 	_chk("id 統一：審批官 nw_shenpi、Teke Teke nw_teketeke（冇 nw_panguan／nw_sundel）", D.PIN.has("nw_shenpi") and D.PIN.has("nw_teketeke") and not D.PIN.has("nw_panguan") and not D.PIN.has("nw_sundel") and not JSON.stringify(D).contains("nw_panguan") and not JSON.stringify(D).contains("nw_sundel"))
 	var e = SO.camps(0)[0]
 	_chk("第1章第1據點：主魂窮鬼、有副魂（往後第 5 個據點）", SOUL.guard_of(e) == "n30_qionggui" and SOUL.sec_of(e) == SOUL.guard_of(SO.camps(0)[5]), [SOUL.guard_of(e), SOUL.sec_of(e)])
@@ -280,17 +283,18 @@ func summon_check() -> void:
 	_chk("招降扣：魂魄清、散魂 −30、冥幣 −80、壽包 −20", SOUL.souls(k) == 0 and SOUL.san() == 970 and J.num(S.res.coins) == coin0 - 80 and J.num(S.res.buns) == bun0 - 20, [SOUL.souls(k), SOUL.san()])
 	_chk("招降後 q 仍然係「名」", J.str(SOUL.ghost(k).q) == "名")
 	_chk("已招降：唔可以再招", SOUL.can_summon(k).why == "owned")
-	# 品級要祭壇等級
-	var kl = "n30_guhangui"   # 孤寒鬼（靈）
+	# 品級要祭壇等級（[p45] 補丁43 起孤寒鬼係煞品：要祭壇 Lv3、品值 3；費用按品值計）
+	var kl = "n30_guhangui"   # 孤寒鬼
+	var al = int(SOUL.ALTAR_PIN[SOUL.pin(kl)]); var pvl = float(SOUL.pv(kl))
 	if SOUL.owned(kl): _drop_k(kl)
-	o.got.erase(kl); o.sh[kl] = 60.0
-	S.bld["altar"] = 1.0
-	_chk("靈品要祭壇 Lv2", SOUL.can_summon(kl).why == "altar")
-	S.bld["altar"] = 2.0
+	o.got.erase(kl); o.sh[kl] = float(SOUL.need_of(kl))
+	S.bld["altar"] = float(al - 1)
+	_chk("%s品要祭壇 Lv%d" % [SOUL.pin(kl), al], SOUL.can_summon(kl).why == "altar")
+	S.bld["altar"] = float(al)
 	var cs2 = SOUL.summon_cost(kl)
 	var c1 = float(SOUL.ch_of(kl) + 1)
-	_chk("心願供品：孤寒鬼要冥幣（招降 160×(章+1)＋心願 40×(章+1)）", cs2.wish == "coins" and cs2.coins == 160.0 * c1 and cs2.wish_n == 40.0 * c1, cs2)
-	S.res["coins"] = 200.0 * c1 - 1.0
+	_chk("心願供品：孤寒鬼要冥幣（招降 80×品值%d×(章+1)＋心願 20×品值×(章+1)）" % int(pvl), cs2.wish == "coins" and cs2.coins == 80.0 * pvl * c1 and cs2.wish_n == 20.0 * pvl * c1, cs2)
+	S.res["coins"] = (cs2.coins + cs2.wish_n) - 1.0
 	_chk("冥幣唔夠：唔招得", SOUL.can_summon(kl).why == "coins")
 	_rich()
 	_chk("夠晒：招得", SOUL.summon(kl) == "ok" and SOUL.owned(kl))
@@ -327,7 +331,9 @@ func promote_check() -> void:
 	for r in range(2, 6): SOUL.promote(k)
 	_chk("升到合夥人（5 級）用晒 %d 隻" % need_total, SOUL.rank(k) == 5 and SOUL.souls(k) == 0, [SOUL.rank(k), SOUL.souls(k)])
 	_chk("合夥人三圍 ＝ 基礎 ×1.25（凡；其餘品 ×1.20）、上限 +10", g.st == SOUL.stat_target(k, 5) and SOUL.stat_target("n30_guhangui", 5)[0] == round(J.G.GHOSTS.n30_guhangui.base[0] * 1.2) and SOUL.cap_of(g) == cap0 + 10)
-	_chk("專長格：合夥人 2、試用 0、王品試用 1", SOUL.perk_slots(k) == 2 and SOUL.perk_slots("n30_guhangui") == 0 and SOUL.perk_slots("laojiang") == 1)
+	var kw = ""   # [p45] 補丁43 起老殭係靈品：王品例子改搵一隻非魔王王品
+	for kk in SOUL.D().PIN: if kw == "" and SOUL.D().PIN[kk] == "王" and not str(kk).begins_with("bm_") and SOUL.rank(str(kk)) == 0: kw = str(kk)
+	_chk("專長格：合夥人 2、非王品試用 0、王品試用 1（%s）" % kw, SOUL.perk_slots(k) == 2 and SOUL.perk_slots("n30_guhangui") == 0 and kw != "" and SOUL.perk_slots(kw) == 1)
 	_chk("合夥人唔可以再升", SOUL.can_promote(k).why == "max")
 	var s0 = SOUL.san()
 	var gg = SOUL.gain(k, 4, "test")
@@ -336,13 +342,15 @@ func promote_check() -> void:
 	var k2 = "n30_guhangui"
 	o.sh[k2] = 0.0; o["san"] = 999.0
 	_chk("升職散魂頂替封頂一半：0/10 唔得", SOUL.can_promote(k2).why == "souls")
-	o.sh[k2] = 5.0
+	var need2 = SOUL.rank_cost(k2, 1); var half2 = int(floor(need2 * 0.5)); var pv2 = SOUL.pv(k2)
+	o.sh[k2] = float(need2 - half2)
 	var c = SOUL.can_promote(k2)
-	_chk("升職散魂頂替：靈差 5 隻 × 4 散魂 = 20", c.ok and c.sub == 5 and c.sub_cost == 20, c)
+	_chk("升職散魂頂替：%s差 %d 隻 × %d 散魂 = %d" % [SOUL.pin(k2), half2, pv2 * 2, half2 * pv2 * 2], c.ok and c.sub == half2 and c.sub_cost == half2 * pv2 * 2, c)
 	# 分解
 	o.sh[k2] = 10.0; o["san"] = 0.0; S.bld["altar"] = 5.0
 	var got = SOUL.dismantle(k2, 10)
-	_chk("分解：靈 10 隻 → 散魂 floor(10×2×1.10)=22", got == 22 and SOUL.san() == 22 and SOUL.souls(k2) == 0, got)
+	var exd = int(floor(10.0 * SOUL.pv(k2) * 1.10 + 1e-6))
+	_chk("分解：%s 10 隻 → 散魂 floor(10×%d×1.10)=%d" % [SOUL.pin(k2), SOUL.pv(k2), exd], got == exd and SOUL.san() == exd and SOUL.souls(k2) == 0, got)
 
 # ---- 舊直接加入途徑 → 送魂魄 ----
 func join_check() -> void:

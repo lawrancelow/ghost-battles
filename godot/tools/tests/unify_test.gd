@@ -176,6 +176,10 @@ func _run(t, shots: bool, full: bool, only0 := false) -> void:
 	for i in 40:
 		await _w(t, 0.25)
 		for cu in sc.sim.custs: sides[int(cu.get("side", 0))] = true   # 十秒內出現過嘅客人（隨機左右，唔好只睇最後一刻）
+	for i in 120:   # [p45] 客人係隨機時間到：十秒內未必有客喺場（試過 0 隻），最多再等 30 秒等到有客先驗（唔改遊戲節奏）
+		if sc.sim.custs.size() > 0: break
+		await _w(t, 0.25)
+		for cu in sc.sim.custs: sides[int(cu.get("side", 0))] = true
 	if sides.size() < 2:   # 隊排滿咗冇新客：直接再出 16 個客睇左右（一半由左邊入，隨機）
 		var keep = sc.sim.custs.duplicate()
 		for i in 16:
