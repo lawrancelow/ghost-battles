@@ -142,8 +142,10 @@ func logic(_t) -> void:
 	_p("===== 3. 冇員工：撳台面手動做貨 → 收去櫃台 =====")
 	_chk("撳台：開始做", 1.0 if sim.tap_station(A) == "make" else 0.0, 1.0)
 	var ev = _run(sim, _tm(A, 1) + 0.1)
-	_chk("做好：台面件數 = base_out", sim.pile_n(A), float(_out(A, 1)))
-	_chk("撳台：收貨", 1.0 if sim.tap_station(A) == "collect" else 0.0, 1.0)
+	_chk("做好：[sell] 出售件數自動送去櫃台，台面冇剩", sim.pile_n(A), 0.0)
+	var col = 0
+	for e in ev: if e.k == "collect": col += int(e.n)
+	_chk("做好：自動收貨事件件數 = base_out", float(col), float(_out(A, 1)))
 	var man = sim.counter_n(gA)
 	_chk("櫃台有貨", float(man), float(_out(A, 1)))
 

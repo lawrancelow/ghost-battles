@@ -119,6 +119,7 @@ static func supply(sim, sid: String) -> int:
 	if not sim.unlocked(sid) or sim.war.blocked(sim, sid): return 0
 	var g = str(MD.st_def(sid).get("good", ""))
 	if g == "": return 0
+	if sim.route(sid) == "stock" and sim.counter_n(g) <= 0 and sim.pile_n(sid) <= 0: return 0   # [sell] 全部入倉嘅貨唔招客
 	if sim.counter_n(g) > 0 or sim.pile_n(sid) > 0 or float(sim.mk.get(sid, -1.0)) >= 0.0: return 2
 	var ok_mat = sim.missing(sid).is_empty()
 	if (sim.nworkers(sid) > 0 or IDL.has_fore(sim, sid)) and ok_mat: return 2

@@ -344,6 +344,8 @@ func _eat_events() -> void:
 			"stock":   # [chain] 入倉：貨飛去紙紮大屋
 				for i in mini(int(e.n), 4): _item(e.pos + Vector2(_rng.randf_range(-16, 16), -40), sim.L.house + Vector2(0, -40), str(e.mid), 0.6 + i * 0.06)
 				_float(e.pos + Vector2(0, -100), MD.S("stocked", "入倉 +%s", "入倉 +%s") % MD.fmt(e.n), Color("#9fd8ff"), 15, 1.0)
+			"hint_sell":   # [sell] 全部入倉但客人等緊
+				_float(e.pos + Vector2(0, -120), MD.S("hint_sell", "客人等緊！撳台改「全部出售」", "客人在等！點台改「全部出售」"), Color("#ffd27a"), 15, 1.8)
 			"starve":   # [chain]
 				_float(e.pos + Vector2(0, -110), _starve_txt(e.miss), Color("#ffb0a0"), 15, 1.4)
 			"hit":
@@ -1801,7 +1803,7 @@ func _route_txt(sid: String) -> String:
 		var nm = []
 		for u in users.slice(0, 2): nm.append(MD.T(MD.st_def(u).get("n")))
 		return MD.S("rtt_up", "上層要料優先：%s 用緊，庫存未夠 %s 就入倉，夠咗先賣", "上層要料優先：%s 在用，庫存未夠 %s 就入倉，夠了才賣") % ["、".join(nm), M.qty(ceil(sim.buffer_of(mid, sid)))]
-	if mid == "m_shoubao": return MD.S("rtt_bun", "壽包係前線口糧：一半入倉、一半擺櫃台", "壽包是前線口糧：一半入倉、一半擺櫃台")
+	if mid == "m_shoubao": return MD.S("rtt_bun", "壽包：客人等緊就先擺櫃台，其餘一件入倉一件出售", "壽包：客人在等就先擺櫃台，其餘一件入倉一件出售")
 	if M.is_item(mid): return MD.S("rtt_item", "戰鬥道具：庫存未夠 %d 件就入倉", "戰鬥道具：庫存未夠 %d 件就入倉") % int(sim.ITEM_KEEP)
 	return MD.S("rtt_sale", "冇台用呢樣貨：全部擺櫃台賣", "沒有台用這樣貨：全部擺櫃台賣")
 # 材料圖示（Control）
