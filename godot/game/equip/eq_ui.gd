@@ -116,7 +116,7 @@ static func _btn(t: String, kind: String, en: bool, f: Callable) -> Button:
 static func popup(title: String, w := 440.0) -> VBoxContainer:
 	close_popup()
 	var tree = Engine.get_main_loop()
-	var cl = CanvasLayer.new(); cl.layer = 60; cl.name = "EqPopup"
+	var cl = CanvasLayer.new(); cl.layer = 115; cl.name = "EqPopup"   # [uilayer] 由台面板（100 層）開都喺上面
 	var bg = ColorRect.new(); bg.color = Color(0, 0, 0, 0.55); bg.set_anchors_preset(Control.PRESET_FULL_RECT); bg.mouse_filter = Control.MOUSE_FILTER_STOP; cl.add_child(bg)
 	var vs = tree.root.get_visible_rect().size if tree is SceneTree else Vector2(540, 960)
 	var pw = minf(w, vs.x - 20)

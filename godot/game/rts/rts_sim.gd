@@ -421,7 +421,35 @@ func step(dt: float) -> void:
 			for u in units: vis_tick(u, dt)
 		"back": _step_back(dt)
 
+# [sortiepos] 主角由自己而家企嘅位出發（例如已經行咗去大排檔）：先行一段「引路」去最近嘅行軍路線點，等隊伍行到先歸隊
+func hero_lead(from) -> void:
+	if not (from is Vector2) or path.size() < 2: return
+	var fp: Vector2 = from
+	if fp.distance_to(path[0]) < 40.0: return
+	var js = _s_of(fp)
+	var jp = _path_at(path, js, 0.0)
+	for u in units:
+		if _nn(u, "side") != 0 or J.t(u.get("minion")) or J.str(u.get("k")) != "afu": continue
+		u["p"] = fp; u["pre"] = PackedVector2Array([fp, jp]); u["pre_s"] = 0.0; u["join_s"] = js; u["origin"] = fp
+		if js >= gate_s: u["stamp"] = true   # 唔經村門：唔使打卡
+func _walk_pre(u: Dictionary, dt: float, spd: float) -> bool:   # 回 true＝仲喺引路／等歸隊（呢格唔行主路）
+	u["s"] = _nn(u, "s") + spd * dt   # 隊伍次序照計
+	var pre: PackedVector2Array = u.pre
+	var pl = MD.poly_len(pre)
+	if not J.t(u.get("out")): u["out"] = true; events.append(["depart", u])
+	if _nn(u, "pre_s") < pl:
+		var p0: Vector2 = u.p
+		u["pre_s"] = minf(pl, _nn(u, "pre_s") + spd * dt)
+		u["p"] = MD.poly_at(pre, _nn(u, "pre_s"))
+		var dx = (u.p as Vector2).x - p0.x
+		if absf(dx) > 0.02: u["face"] = _sign(dx)
+		u["walking"] = true
+		return true
+	if _nn(u, "s") < _nn(u, "join_s"): u["walking"] = false; return true   # 到咗會合點：等隊伍
+	u["s"] = _nn(u, "join_s"); u.erase("pre")
+	return false
 func _walk_path(u: Dictionary, dt: float, spd: float, pts: PackedVector2Array, plen: float) -> bool:   # 回 true＝行到尾
+	if phase != "back" and u.has("pre") and _walk_pre(u, dt, spd): return false   # [sortiepos]
 	var p0: Vector2 = u.p
 	u["s"] = _nn(u, "s") + spd * dt
 	if _nn(u, "s") < 0.0: u["walking"] = false; return false
@@ -462,6 +490,7 @@ func _step_march(dt: float) -> void:
 
 func _stop_s(u: Dictionary) -> float: return path_len - DEPLOY - _nn(u, "drow") * ROWGAP
 func _deploy_walk(u: Dictionary, dt: float) -> void:
+	if u.has("pre"): _walk_path(u, dt, MARCH, path, path_len); return   # [sortiepos] 引路中
 	if not u.has("dl"): _walk_path(u, dt, MARCH, path, path_len); return
 	var stop = _stop_s(u)
 	if dep_go:   # 推前：同一速度，行住橫隊
@@ -715,10 +744,31 @@ func begin_back() -> void:
 		for k in back.size():
 			if k > 0: acc += back[k - 1].distance_to(back[k])
 			if acc >= rev_from: pts.append(back[k])
+		if u.get("origin") is Vector2: pts = _back_to_origin(u)   # [sortiepos] 主角：行返出發嗰度（例如大排檔），唔係村口
 		u["bp"] = pts; u["blen"] = MD.poly_len(pts); u["s"] = -i * 14.0; u["lat"] = _nn(u, "lat")
 		u["stamp"] = false; u["sal"] = -1.0
 		i += 1
 	events.append(["back", null])
+func _back_to_origin(u: Dictionary) -> PackedVector2Array:   # [sortiepos] 而家位 → 沿路倒行到會合點 → 引路倒返出發點
+	var pts = PackedVector2Array([u.p])
+	if u.has("pre"):   # 未歸隊就收隊：直接行返出發點
+		u.erase("pre"); pts.append(u.origin); return pts
+	var js = _nn(u, "join_s")
+	var cur = maxf(js, _s_of(u.p))
+	var acc = []; var a = 0.0
+	for k in path.size():
+		if k > 0: a += path[k - 1].distance_to(path[k])
+		acc.append(a)
+	for k in range(path.size() - 1, -1, -1):
+		if acc[k] < cur and acc[k] > js: pts.append(path[k])
+	if cur > js: pts.append(_path_at(path, js, 0.0))
+	pts.append(u.origin)
+	return pts
+func _sync_village_hero(p: Vector2) -> void:
+	var V = J.G.get("Village")
+	if not (V is Dictionary) or not (V.get("hero") is Dictionary): return
+	var H = V.hero
+	H["x"] = p.x; H["y"] = p.y; H["tx"] = p.x; H["ty"] = p.y; H["walking"] = false; H["target"] = null
 func _step_back(dt: float) -> void:
 	var all_home = true
 	for u in units:
@@ -733,7 +783,9 @@ func _step_back(dt: float) -> void:
 		if J.t(u.get("home")) or not (u.get("bp") is PackedVector2Array): continue
 		if _nn(u, "sal") >= 0.0:   # 敬禮緊
 			u["sal"] = _nn(u, "sal") + dt
-			if _nn(u, "sal") >= SALUTE: u["home"] = true; events.append(["home", u])
+			if _nn(u, "sal") >= SALUTE:
+				u["home"] = true; events.append(["home", u])
+				if u.get("origin") is Vector2: _sync_village_hero(u.p)   # [sortiepos] 村入面嘅主角就喺收隊嗰度出現，唔會閃去第二度
 			else: all_home = false
 			continue
 		all_home = false
@@ -757,6 +809,7 @@ func t_skip_march() -> void:   # 成隊（保持次序）推到離迎戰點 200p
 	var sh = maxf(0.0, path_len - 200.0 - mx)
 	for u in units:
 		if _nn(u, "side") == 0: u["s"] = _nn(u, "s") + sh
+		if u.has("pre"): u.erase("pre")   # [sortiepos]
 	dep_go = true   # 測試跳行軍：當已排好
 	for u in units:
 		if _nn(u, "side") == 0 and u.has("dl"): u["wl"] = _nn(u, "dl"); u["dep"] = 2

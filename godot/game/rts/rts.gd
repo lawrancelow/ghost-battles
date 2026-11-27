@@ -50,6 +50,12 @@ static func toast(s: String) -> void:
 	if m != null and m.has_method("show_toast"): m.show_toast(s)
 
 # ================= 路線（村門內集合點 → 村門 → 大排檔 → 迎戰點） =================
+static func hero_from():   # [sortiepos] 村入面主角而家企嘅位（世界座標）；冇就 null
+	var V = J.G.get("Village")
+	if not (V is Dictionary) or not (V.get("hero") is Dictionary): return null
+	var H = V.hero
+	if H.get("x") == null or H.get("y") == null: return null
+	return Vector2(J.num(H.x), J.num(H.y))
 static func gate_pos() -> Vector2: return ZD.v2(ZD.cur().get("village", {}).get("POS", {}).get("gate", [0, 0]))
 static func stage_path(at: Vector2) -> PackedVector2Array:
 	var o = PackedVector2Array()
@@ -232,6 +238,7 @@ static func _launch(pend: Dictionary, ny: int, nm: int) -> String:
 	op.set_meta("tkey", str(g.get("tkey", "")))
 	if g.get("from") is Vector2: op.foe_from = g.from
 	op.setup(snap.units, g.path, g.at, gate_pos())
+	op.hero_lead(hero_from())   # [sortiepos] 主角由自己而家個位出發，唔係由村口再行多次
 	if pend.kind == "boss":   # 王用呢度嘅名（例如「亂葬崗守墓鬼」）
 		for z in ZD.of_type("wild"):
 			for b in ZD.bosses(str(z.id)):

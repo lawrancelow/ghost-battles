@@ -508,7 +508,8 @@ func _build_fx() -> void:
 	praise_box.anchor_right = 1; praise_box.offset_left = 14; praise_box.offset_right = -14; praise_box.offset_top = TOP_H + 56; praise_box.modulate.a = 0; praise_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	praise_lbl = UIKit.label("", 15, Color("#d4fff2")); praise_lbl.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; praise_box.add_child(praise_lbl); add_child(praise_box)
 	toasts = VBoxContainer.new(); toasts.anchor_top = 1; toasts.anchor_bottom = 1; toasts.anchor_right = 1; toasts.offset_left = 12; toasts.offset_right = -12; toasts.offset_bottom = -86; toasts.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	toasts.alignment = BoxContainer.ALIGNMENT_END; toasts.add_theme_constant_override("separation", 6); toasts.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(toasts)
+	toasts.alignment = BoxContainer.ALIGNMENT_END; toasts.add_theme_constant_override("separation", 6); toasts.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tcl = CanvasLayer.new(); tcl.layer = 105; tcl.name = "ToastLayer"; add_child(tcl); tcl.add_child(toasts)   # [uilayer] 提示字永遠喺面板上面（台面板喺 100 層）
 	banner = PanelContainer.new(); banner.add_theme_stylebox_override("panel", UIKit.sb(UIKit.CINNABAR, 3, Color("#f0c8b4"), 2, Vector4(30, 12, 30, 12)))
 	banner.anchor_left = 0.5; banner.anchor_right = 0.5; banner.anchor_top = 0.32; banner.anchor_bottom = 0.32; banner.grow_horizontal = Control.GROW_DIRECTION_BOTH; banner.grow_vertical = Control.GROW_DIRECTION_BOTH
 	banner.modulate.a = 0; banner.mouse_filter = Control.MOUSE_FILTER_IGNORE

@@ -39,6 +39,12 @@ var over: Control           # 蓋喺升級條上面：橫額、離線卡、拔�
 var sheet: PanelContainer
 var sheet_box: VBoxContainer
 var picker: Control = null
+var ui_cl: CanvasLayer = null   # [uilayer]
+var ui_mask: ColorRect = null
+var ui_holder: Control = null
+var ui_h := 844.0   # [uilayer] 高層座標（闊 FW）：高、頂／底留位
+var ui_top := 0.0
+var ui_bot := 0.0
 var sel := ""
 var k := 1.0
 var H := 844.0
@@ -165,11 +171,20 @@ func _build() -> void:
 	stage.draw.connect(_draw_stage); stage.gui_input.connect(_stage_input)
 	sheet = PanelContainer.new(); sheet.visible = false; sheet.mouse_filter = Control.MOUSE_FILTER_STOP
 	var s = UIKit.sb(PAPER, 14, LINE, 2, Vector4(14, 10, 14, 12)); s.corner_radius_bottom_left = 0; s.corner_radius_bottom_right = 0
-	sheet.add_theme_stylebox_override("panel", s); sheet.custom_minimum_size = Vector2(FW, 0); frame.add_child(sheet)
+	s.bg_color.a = 1.0   # [uilayer] 唔透明：後面地圖字唔會透出嚟
+	sheet.add_theme_stylebox_override("panel", s); sheet.custom_minimum_size = Vector2(FW, 0)
+	# [uilayer] 台面板／派鬼揀人放喺獨立高層（CanvasLayer 100）＋全螢幕遮罩：地圖角色、關卡提示、浮動掣全部喺下面、撳唔到
+	ui_cl = CanvasLayer.new(); ui_cl.layer = 100; ui_cl.visible = false; ui_cl.name = "MvSheetLayer"; add_child(ui_cl)
+	ui_mask = ColorRect.new(); ui_mask.color = Color(0, 0, 0, 0.55); ui_mask.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); ui_mask.mouse_filter = Control.MOUSE_FILTER_STOP
+	ui_mask.gui_input.connect(func(e): if e is InputEventMouseButton and e.pressed: (_close_picker() if picker != null else close_sheet()))
+	ui_cl.add_child(ui_mask)
+	ui_holder = Control.new(); ui_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE; ui_cl.add_child(ui_holder)
+	ui_holder.add_child(sheet)
 	sheet_box = VBoxContainer.new(); sheet_box.add_theme_constant_override("separation", 6); sheet.add_child(sheet_box)
 	over = Control.new(); over.mouse_filter = Control.MOUSE_FILTER_IGNORE; frame.add_child(over); over.draw.connect(_draw_over)
 	if ResourceLoader.exists("res://game/outpost/chain_panel.gd"): load("res://game/outpost/chain_panel.gd").attach(self)   # [chainui] 生產鏈掣＋面板
 	resized.connect(_layout)
+	visibility_changed.connect(_ui_sync)   # [uilayer]
 	set_process(false)
 	_layout()
 
@@ -191,6 +206,28 @@ func _layout() -> void:
 	sim.relayout()
 	_clamp_cam(true)
 	if sheet.visible: _place_sheet()
+	_ui_sync()
+
+# [uilayer] 高層跟返本場景喺畫面上嘅位置／縮放；有面板或揀人先顯示（同時收埋頂層特效）
+func _ui_metrics() -> void:   # 直屏同本場景一樣縮放；寬螢幕（PC）面板縮放按高度計、置中，唔會爆大
+	if ui_holder == null or not is_inside_tree(): return
+	var xf = get_global_transform_with_canvas()
+	var xs = xf.get_scale().x
+	var px = k * xs                          # 本場景每 1 單位幾多畫面點
+	var scr = size * xs                      # 本場景喺畫面嘅大小
+	var s2 = minf(px, scr.y / 844.0) if scr.x > scr.y else px
+	ui_holder.scale = Vector2(s2, s2)
+	ui_holder.position = xf.origin + Vector2(maxf(0.0, (scr.x - FW * s2) * 0.5), 0.0)
+	ui_h = scr.y / s2; ui_top = top_pad * px / s2; ui_bot = bot_pad * px / s2
+	ui_holder.size = Vector2(FW, ui_h)
+func _ui_sync() -> void:
+	if ui_cl == null: return
+	var on = (sheet != null and sheet.visible) or (picker != null and is_instance_valid(picker))
+	on = on and is_visible_in_tree()
+	ui_cl.visible = on
+	if on: _ui_metrics()
+	var vt = get_tree().root.get_node_or_null("VfxTop") if is_inside_tree() else null
+	if vt is CanvasLayer: vt.visible = not on
 
 func view_h() -> float: return H - top_pad - bot_pad
 func w2s(p: Vector2) -> Vector2:
@@ -287,6 +324,7 @@ func _save() -> void:
 
 # ================= 每格 =================
 func _process(dt: float) -> void:
+	if ui_cl != null and (ui_cl.visible or (sheet != null and sheet.visible)): _ui_sync()   # [uilayer]
 	if not visible or sim.st() == null: return
 	dt = minf(dt, 0.1)
 	t += dt
@@ -1686,15 +1724,17 @@ func tap(p: Vector2) -> void:
 # ================= 升級條 =================
 var _up_btns := []
 func open_sheet(sid: String) -> void:
-	sel = sid; sheet.visible = true; _snd("click"); _fill_sheet()
+	sel = sid; sheet.visible = true; _snd("click"); _fill_sheet(); _ui_sync()
 	focus(sim.st_pos(sid).y, top_pad + HUD_H + 150.0, sim.st_pos(sid).x)   # 個台移去升級條上面
 func focus_station(sid: String) -> void: focus(sim.st_pos(sid).y, top_pad + view_h() * 0.55, sim.st_pos(sid).x)
 func close_sheet() -> void:
 	sel = ""
 	if sheet != null: sheet.visible = false
+	_ui_sync()
 func _place_sheet() -> void:
+	_ui_metrics()   # [uilayer] 面板喺高層：用高層座標
 	sheet.size = Vector2(FW, 0); sheet.reset_size(); sheet.size.x = FW
-	sheet.position = Vector2(0, H - bot_pad - sheet.size.y)
+	sheet.position = Vector2(0, ui_h - ui_bot - sheet.size.y)
 
 func _lbl(t0: String, sz := 16, col := INK, kind := "sans", w := 700) -> Label:
 	var l = UIKit.label(t0, sz, col, kind, w); l.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1885,11 +1925,12 @@ func _slot_btn(sid: String, i: int, gid) -> Control:
 # ================= 揀鬼 =================
 func _open_picker(list: String, i: int) -> void:
 	_close_picker(); _snd("click")
-	picker = Control.new(); picker.position = Vector2.ZERO; picker.size = frame.size; picker.mouse_filter = Control.MOUSE_FILTER_STOP; frame.add_child(picker)
-	var dim = ColorRect.new(); dim.color = Color(0, 0, 0, 0.55); dim.position = Vector2.ZERO; dim.size = frame.size; picker.add_child(dim)
+	_ui_metrics()
+	picker = Control.new(); picker.position = Vector2.ZERO; picker.size = Vector2(FW, ui_h); picker.mouse_filter = Control.MOUSE_FILTER_STOP; ui_holder.add_child(picker); _ui_sync()   # [uilayer]
+	var dim = ColorRect.new(); dim.color = Color(0, 0, 0, 0.35 if sheet.visible else 0.0); dim.position = Vector2.ZERO; dim.size = picker.size; picker.add_child(dim)   # 全螢幕遮罩由高層出
 	dim.gui_input.connect(func(e): if e is InputEventMouseButton and e.pressed: _close_picker())
-	var top = maxf(top_pad + 60.0, H * 0.24)
-	var pn = PanelContainer.new(); pn.position = Vector2(0, top); pn.size = Vector2(FW, H - bot_pad - top)
+	var top = maxf(ui_top + 60.0, ui_h * 0.24)
+	var pn = PanelContainer.new(); pn.position = Vector2(0, top); pn.size = Vector2(FW, ui_h - ui_bot - top)
 	var s = UIKit.sb(Color("#ecd9a4"), 12, LINE, 1, Vector4(12, 12, 12, 10)); s.corner_radius_bottom_left = 0; s.corner_radius_bottom_right = 0
 	pn.add_theme_stylebox_override("panel", s); picker.add_child(pn)
 	var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 8); pn.add_child(v)
@@ -1936,6 +1977,7 @@ func _after_assign() -> void:
 func _close_picker() -> void:
 	if picker != null and is_instance_valid(picker): picker.queue_free()
 	picker = null
+	_ui_sync()
 
 # ================= 其他 =================
 func _snd(n: String) -> void:
