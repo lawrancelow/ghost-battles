@@ -1,0 +1,288 @@
+{
+ "event": "wk_reap_cut",
+ "zh": "割稻（鐮刀割稻）",
+ "reference": {
+  "cand": "A",
+  "spec": {
+   "att_ms": 13.7,
+   "dur": 0.597,
+   "dec30": 0.407,
+   "cent": 4716.0,
+   "b_lo": 0.453,
+   "b_mid": 0.032,
+   "b_metal": 0.146,
+   "b_air": 0.368,
+   "tail": 0.085,
+   "ring": 0.0018
+  },
+  "verdict": "太嘶、太低沉（手機喇叭聽不清）、尾音太長"
+ },
+ "candidates": [
+  {
+   "event": "wk_reap_cut",
+   "cand": "D",
+   "desc": "「唰」一下乾稻葉沙沙＋稈子斷聲",
+   "eerie": false,
+   "dur": 0.226,
+   "sources": [
+    {
+     "file": "rustle04.flac",
+     "author": "qubodup",
+     "url": "https://opengameart.org/content/20-rustles-dry-leaves",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "wood_cracking_02.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 17.3,
+    "dur": 0.223,
+    "dec30": 0.194,
+    "cent": 3434.0,
+    "b_lo": 0.015,
+    "b_mid": 0.188,
+    "b_metal": 0.698,
+    "b_air": 0.099,
+    "tail": 0.519,
+    "ring": 0.003
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_reap_cut",
+   "cand": "E",
+   "desc": "短促「嚓」，稻稈齊口割斷",
+   "eerie": false,
+   "dur": 0.19,
+   "sources": [
+    {
+     "file": "swish-4.wav",
+     "author": "artisticdude",
+     "url": "https://opengameart.org/content/swishes-sound-pack",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "rustle12.flac",
+     "author": "qubodup",
+     "url": "https://opengameart.org/content/20-rustles-dry-leaves",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 29.4,
+    "dur": 0.187,
+    "dec30": 0.144,
+    "cent": 3952.0,
+    "b_lo": 0.103,
+    "b_mid": 0.149,
+    "b_metal": 0.558,
+    "b_air": 0.19,
+    "tail": 0.174,
+    "ring": 0.0
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_reap_cut",
+   "cand": "F",
+   "desc": "稻稈「啪」斷一下＋葉子沙聲",
+   "eerie": false,
+   "dur": 0.23,
+   "sources": [
+    {
+     "file": "wood_cracking_04.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "rustle18.flac",
+     "author": "qubodup",
+     "url": "https://opengameart.org/content/20-rustles-dry-leaves",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 2.2,
+    "dur": 0.227,
+    "dec30": 0.131,
+    "cent": 4458.0,
+    "b_lo": 0.013,
+    "b_mid": 0.05,
+    "b_metal": 0.777,
+    "b_air": 0.16,
+    "tail": 0.036,
+    "ring": 0.006
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_reap_cut",
+   "cand": "G",
+   "desc": "一束稻葉沙沙＋稈子輕輕「卡」斷",
+   "eerie": false,
+   "dur": 0.208,
+   "sources": [
+    {
+     "file": "rustle16.flac",
+     "author": "qubodup",
+     "url": "https://opengameart.org/content/20-rustles-dry-leaves",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "wood_cracking_01.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "swish-10.wav",
+     "author": "artisticdude",
+     "url": "https://opengameart.org/content/swishes-sound-pack",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 10.5,
+    "dur": 0.205,
+    "dec30": 0.134,
+    "cent": 4310.0,
+    "b_lo": 0.01,
+    "b_mid": 0.104,
+    "b_metal": 0.719,
+    "b_air": 0.167,
+    "tail": 0.037,
+    "ring": 0.0025
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_reap_cut",
+   "cand": "H",
+   "desc": "紙質感「嚓」，偏乾脆",
+   "eerie": false,
+   "dur": 0.2,
+   "sources": [
+    {
+     "file": "paper_02.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-sfx",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "swish-12.wav",
+     "author": "artisticdude",
+     "url": "https://opengameart.org/content/swishes-sound-pack",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 11.7,
+    "dur": 0.197,
+    "dec30": 0.163,
+    "cent": 1964.0,
+    "b_lo": 0.007,
+    "b_mid": 0.438,
+    "b_metal": 0.553,
+    "b_air": 0.003,
+    "tail": 0.212,
+    "ring": 0.0046
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_reap_cut",
+   "cand": "I",
+   "desc": "程式合成：氣聲「唰」＋細碎纖維斷裂",
+   "eerie": false,
+   "dur": 0.298,
+   "sources": [
+    {
+     "file": "",
+     "author": "音效組程式合成（本專案原創）",
+     "url": "—",
+     "license": "原創（程式合成，無外部素材）"
+    }
+   ],
+   "spec": {
+    "att_ms": 16.0,
+    "dur": 0.295,
+    "dec30": 0.174,
+    "cent": 3092.0,
+    "b_lo": 0.0,
+    "b_mid": 0.14,
+    "b_metal": 0.833,
+    "b_air": 0.027,
+    "tail": 0.122,
+    "ring": 0.0038
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_reap_cut",
+   "cand": "J",
+   "desc": "陰間化：D 壓低音調＋空洞迴響",
+   "eerie": true,
+   "dur": 0.275,
+   "sources": [
+    {
+     "file": "rustle04.flac",
+     "author": "qubodup",
+     "url": "https://opengameart.org/content/20-rustles-dry-leaves",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "wood_cracking_02.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 3.1,
+    "dur": 0.272,
+    "dec30": 0.129,
+    "cent": 2088.0,
+    "b_lo": 0.047,
+    "b_mid": 0.275,
+    "b_metal": 0.677,
+    "b_air": 0.0,
+    "tail": 0.07,
+    "ring": 0.0022
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_reap_cut",
+   "cand": "K",
+   "desc": "陰間化：合成割稻壓低，像陰風掃過稻田",
+   "eerie": true,
+   "dur": 0.357,
+   "sources": [
+    {
+     "file": "",
+     "author": "音效組程式合成（本專案原創）",
+     "url": "—",
+     "license": "原創（程式合成，無外部素材）"
+    }
+   ],
+   "spec": {
+    "att_ms": 25.1,
+    "dur": 0.354,
+    "dec30": 0.215,
+    "cent": 2137.0,
+    "b_lo": 0.0,
+    "b_mid": 0.283,
+    "b_metal": 0.717,
+    "b_air": 0.0,
+    "tail": 0.106,
+    "ring": 0.0103
+   },
+   "verdict": "OK"
+  }
+ ]
+}

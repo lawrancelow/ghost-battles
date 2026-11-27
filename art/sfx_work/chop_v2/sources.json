@@ -1,0 +1,282 @@
+{
+ "event": "wk_chop_hit",
+ "zh": "伐木（斧頭砍樹）",
+ "reference": {
+  "cand": "C",
+  "spec": {
+   "att_ms": 13.6,
+   "dur": 0.252,
+   "dec30": 0.179,
+   "cent": 481.0,
+   "b_lo": 0.226,
+   "b_mid": 0.724,
+   "b_metal": 0.05,
+   "b_air": 0.0,
+   "tail": 0.151,
+   "ring": 0.0465
+  },
+  "verdict": "金屬殘響"
+ },
+ "candidates": [
+  {
+   "event": "wk_chop_hit",
+   "cand": "D",
+   "desc": "厚實「篤」＋細木纖維裂聲",
+   "eerie": false,
+   "dur": 0.164,
+   "sources": [
+    {
+     "file": "wood_hit_04.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "wood_cracking_01.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 4.3,
+    "dur": 0.161,
+    "dec30": 0.095,
+    "cent": 500.0,
+    "b_lo": 0.527,
+    "b_mid": 0.417,
+    "b_metal": 0.056,
+    "b_air": 0.0,
+    "tail": 0.017,
+    "ring": 0.0029
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_chop_hit",
+   "cand": "E",
+   "desc": "低沉「咚」，斧頭深砍入樹幹",
+   "eerie": false,
+   "dur": 0.171,
+   "sources": [
+    {
+     "file": "wood_slam_04.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "wood_cracking_04.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 6.3,
+    "dur": 0.168,
+    "dec30": 0.093,
+    "cent": 590.0,
+    "b_lo": 0.359,
+    "b_mid": 0.597,
+    "b_metal": 0.044,
+    "b_air": 0.0,
+    "tail": 0.02,
+    "ring": 0.0001
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_chop_hit",
+   "cand": "F",
+   "desc": "悶實短促，帶乾木碎裂",
+   "eerie": false,
+   "dur": 0.142,
+   "sources": [
+    {
+     "file": "wood_hit_08.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "wood_cracking_02.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 3.4,
+    "dur": 0.14,
+    "dec30": 0.077,
+    "cent": 673.0,
+    "b_lo": 0.368,
+    "b_mid": 0.532,
+    "b_metal": 0.089,
+    "b_air": 0.011,
+    "tail": 0.004,
+    "ring": 0.0003
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_chop_hit",
+   "cand": "G",
+   "desc": "中低頻「篤」，像砍進濕木",
+   "eerie": false,
+   "dur": 0.103,
+   "sources": [
+    {
+     "file": "wood_close_02.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "wood_cracking_01.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 3.7,
+    "dur": 0.123,
+    "dec30": 0.06,
+    "cent": 555.0,
+    "b_lo": 0.532,
+    "b_mid": 0.404,
+    "b_metal": 0.063,
+    "b_air": 0.0,
+    "tail": 0.0,
+    "ring": 0.0002
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_chop_hit",
+   "cand": "H",
+   "desc": "較清脆的乾柴一劈",
+   "eerie": false,
+   "dur": 0.111,
+   "sources": [
+    {
+     "file": "wood_slam_01.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "wood_cracking_02.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 7.2,
+    "dur": 0.108,
+    "dec30": 0.064,
+    "cent": 853.0,
+    "b_lo": 0.326,
+    "b_mid": 0.546,
+    "b_metal": 0.117,
+    "b_air": 0.011,
+    "tail": 0.0,
+    "ring": 0.0
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_chop_hit",
+   "cand": "I",
+   "desc": "程式合成：純木質撞擊＋纖維爆裂，完全無金屬",
+   "eerie": false,
+   "dur": 0.131,
+   "sources": [
+    {
+     "file": "",
+     "author": "音效組程式合成（本專案原創）",
+     "url": "—",
+     "license": "原創（程式合成，無外部素材）"
+    }
+   ],
+   "spec": {
+    "att_ms": 4.4,
+    "dur": 0.128,
+    "dec30": 0.06,
+    "cent": 913.0,
+    "b_lo": 0.115,
+    "b_mid": 0.759,
+    "b_metal": 0.123,
+    "b_air": 0.003,
+    "tail": 0.002,
+    "ring": 0.0
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_chop_hit",
+   "cand": "J",
+   "desc": "陰間化：E 壓低音調＋空洞迴響（非金屬）",
+   "eerie": true,
+   "dur": 0.296,
+   "sources": [
+    {
+     "file": "wood_slam_04.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "wood_cracking_04.ogg",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 7.6,
+    "dur": 0.293,
+    "dec30": 0.101,
+    "cent": 499.0,
+    "b_lo": 0.458,
+    "b_mid": 0.51,
+    "b_metal": 0.032,
+    "b_air": 0.0,
+    "tail": 0.009,
+    "ring": 0.0047
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_chop_hit",
+   "cand": "K",
+   "desc": "陰間化：合成木擊壓低，悶沉陰森（無金屬）",
+   "eerie": true,
+   "dur": 0.26,
+   "sources": [
+    {
+     "file": "",
+     "author": "音效組程式合成（本專案原創）",
+     "url": "—",
+     "license": "原創（程式合成，無外部素材）"
+    }
+   ],
+   "spec": {
+    "att_ms": 1.2,
+    "dur": 0.257,
+    "dec30": 0.157,
+    "cent": 613.0,
+    "b_lo": 0.129,
+    "b_mid": 0.818,
+    "b_metal": 0.053,
+    "b_air": 0.0,
+    "tail": 0.047,
+    "ring": 0.0099
+   },
+   "verdict": "OK"
+  }
+ ]
+}

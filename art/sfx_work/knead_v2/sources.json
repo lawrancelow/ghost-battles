@@ -1,0 +1,264 @@
+{
+ "event": "wk_knead_roll",
+ "zh": "揉麵團（包子鋪）",
+ "reference": {
+  "cand": "A",
+  "spec": {
+   "att_ms": 2.0,
+   "dur": 0.133,
+   "dec30": 0.079,
+   "cent": 1264.0,
+   "b_lo": 0.006,
+   "b_mid": 0.76,
+   "b_metal": 0.231,
+   "b_air": 0.003,
+   "tail": 0.006,
+   "ring": 0.0
+  },
+  "verdict": "OK"
+ },
+ "candidates": [
+  {
+   "event": "wk_knead_roll",
+   "cand": "D",
+   "desc": "軟悶「噗」，手掌壓進麵團",
+   "eerie": false,
+   "dur": 0.185,
+   "sources": [
+    {
+     "file": "cloth2.ogg",
+     "author": "Kenney (kenney.nl)",
+     "url": "https://kenney.nl/assets/rpg-audio",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 6.5,
+    "dur": 0.182,
+    "dec30": 0.068,
+    "cent": 802.0,
+    "b_lo": 0.028,
+    "b_mid": 0.885,
+    "b_metal": 0.087,
+    "b_air": 0.0,
+    "tail": 0.006,
+    "ring": 0.0
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_knead_roll",
+   "cand": "E",
+   "desc": "手抓起麵團再按下，帶皮肉摩擦感",
+   "eerie": false,
+   "dur": 0.144,
+   "sources": [
+    {
+     "file": "Impacts/shouldergrab.wav",
+     "author": "OwlishMedia",
+     "url": "https://opengameart.org/content/sound-effects-pack",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 2.6,
+    "dur": 0.142,
+    "dec30": 0.078,
+    "cent": 877.0,
+    "b_lo": 0.017,
+    "b_mid": 0.936,
+    "b_metal": 0.047,
+    "b_air": 0.0,
+    "tail": 0.003,
+    "ring": 0.0017
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_knead_roll",
+   "cand": "F",
+   "desc": "悶「啪」一拍麵團（掌心拍，非硬物）",
+   "eerie": false,
+   "dur": 0.196,
+   "sources": [
+    {
+     "file": "Human/solo-clap.wav",
+     "author": "OwlishMedia",
+     "url": "https://opengameart.org/content/sound-effects-pack",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "Impacts/fruit3.wav",
+     "author": "OwlishMedia",
+     "url": "https://opengameart.org/content/sound-effects-pack",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 6.1,
+    "dur": 0.193,
+    "dec30": 0.087,
+    "cent": 559.0,
+    "b_lo": 0.448,
+    "b_mid": 0.55,
+    "b_metal": 0.002,
+    "b_air": 0.0,
+    "tail": 0.006,
+    "ring": 0.0012
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_knead_roll",
+   "cand": "G",
+   "desc": "搓揉拉扯麵團的軟韌聲",
+   "eerie": false,
+   "dur": 0.116,
+   "sources": [
+    {
+     "file": "handleSmallLeather.ogg",
+     "author": "Kenney (kenney.nl)",
+     "url": "https://kenney.nl/assets/rpg-audio",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 4.1,
+    "dur": 0.113,
+    "dec30": 0.064,
+    "cent": 852.0,
+    "b_lo": 0.145,
+    "b_mid": 0.659,
+    "b_metal": 0.196,
+    "b_air": 0.0,
+    "tail": 0.001,
+    "ring": 0.0
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_knead_roll",
+   "cand": "H",
+   "desc": "麵團「噗」落案板＋少許麵粉沙沙",
+   "eerie": false,
+   "dur": 0.203,
+   "sources": [
+    {
+     "file": "Impacts/fruit2.wav",
+     "author": "OwlishMedia",
+     "url": "https://opengameart.org/content/sound-effects-pack",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "rustle04.flac",
+     "author": "qubodup",
+     "url": "https://opengameart.org/content/20-rustles-dry-leaves",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 19.9,
+    "dur": 0.201,
+    "dec30": 0.093,
+    "cent": 649.0,
+    "b_lo": 0.327,
+    "b_mid": 0.633,
+    "b_metal": 0.04,
+    "b_air": 0.001,
+    "tail": 0.012,
+    "ring": 0.0003
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_knead_roll",
+   "cand": "I",
+   "desc": "程式合成：掌心軟拍＋擠出空氣「噗」＋麵粉細沙",
+   "eerie": false,
+   "dur": 0.275,
+   "sources": [
+    {
+     "file": "",
+     "author": "音效組程式合成（本專案原創）",
+     "url": "—",
+     "license": "原創（程式合成，無外部素材）"
+    }
+   ],
+   "spec": {
+    "att_ms": 8.6,
+    "dur": 0.272,
+    "dec30": 0.14,
+    "cent": 724.0,
+    "b_lo": 0.035,
+    "b_mid": 0.919,
+    "b_metal": 0.044,
+    "b_air": 0.001,
+    "tail": 0.044,
+    "ring": 0.0026
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_knead_roll",
+   "cand": "J",
+   "desc": "陰間化：F 壓低音調＋空洞感",
+   "eerie": true,
+   "dur": 0.254,
+   "sources": [
+    {
+     "file": "Human/solo-clap.wav",
+     "author": "OwlishMedia",
+     "url": "https://opengameart.org/content/sound-effects-pack",
+     "license": "CC0 1.0"
+    },
+    {
+     "file": "Impacts/fruit3.wav",
+     "author": "OwlishMedia",
+     "url": "https://opengameart.org/content/sound-effects-pack",
+     "license": "CC0 1.0"
+    }
+   ],
+   "spec": {
+    "att_ms": 7.0,
+    "dur": 0.251,
+    "dec30": 0.071,
+    "cent": 545.0,
+    "b_lo": 0.44,
+    "b_mid": 0.559,
+    "b_metal": 0.001,
+    "b_air": 0.0,
+    "tail": 0.005,
+    "ring": 0.0082
+   },
+   "verdict": "OK"
+  },
+  {
+   "event": "wk_knead_roll",
+   "cand": "K",
+   "desc": "陰間化：合成揉麵壓低，黏糊陰沉",
+   "eerie": true,
+   "dur": 0.312,
+   "sources": [
+    {
+     "file": "",
+     "author": "音效組程式合成（本專案原創）",
+     "url": "—",
+     "license": "原創（程式合成，無外部素材）"
+    }
+   ],
+   "spec": {
+    "att_ms": 7.0,
+    "dur": 0.309,
+    "dec30": 0.173,
+    "cent": 574.0,
+    "b_lo": 0.072,
+    "b_mid": 0.919,
+    "b_metal": 0.009,
+    "b_air": 0.0,
+    "tail": 0.076,
+    "ring": 0.0073
+   },
+   "verdict": "OK"
+  }
+ ]
+}
