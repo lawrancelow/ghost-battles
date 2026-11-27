@@ -430,14 +430,8 @@ static func open_story() -> void:
 		var nc = load("res://ui/name_card.gd").new(); nc.rename_only = true
 		nc.on_done = func(): m.show_toast("已改名：" + str(DB.hero().get("name", "")))
 		m.add_child(nc))
-	var sb = _wide("聲音：" + ("開" if Snd.is_on() else "關"), "", true, func(): pass)
-	sb.pressed.connect(func(): sb.text = "聲音：" + ("開" if Snd.toggle() else "關"))
-	var lb = _wide("", "", true, func(): pass)
-	var lab = func(): lb.text = "對白：" + ("中文（點擊切換為粵語）" if DB.lang == "zh" else "粵語（點擊切換為中文）")
-	lab.call(); lb.pressed.connect(func(): DB.set_lang("yue" if DB.lang == "zh" else "zh"); J.mc(J.G.get("LANG"), "set", [DB.lang]); lab.call())
-	_wide("備份存檔（複製存檔碼）", "", true, func():
-		var code = J.str(_sa("export")); DisplayServer.clipboard_set(code); m.show_toast("存檔碼已複製，貼去記事本或者聊天軟件自己收好"))
-	_wide("導入存檔碼", "", true, func(): m.open_import())
+	var setb = _wide("設置（聲音、畫面、劇情、存檔）", "gold", true, func(): close_hook(); m.open_settings(false, true))   # [settings] 聲音、語言、存檔碼、畫面等搬入設置面板
+	setb.name = "OpenSettings"
 	var rs = d.get("restore")
 	if rs != null:
 		var k = J.str(rs.k)
@@ -446,21 +440,6 @@ static func open_story() -> void:
 			if JSRun.ls.has(SAVE_KEY): JSRun.ls[SAVE_KEY + "_bak"] = JSRun.ls[SAVE_KEY]
 			JSRun.ls[SAVE_KEY] = v; JSRun.flush_ls(); JSRun.skip_title = true; JSRun.reset_world(); m.get_tree().call_deferred("reload_current_scene"), false)
 		rb.custom_minimum_size = Vector2(0, 40); _body().add_child(rb)
-	var sgt = func(): return "安全畫面模式：" + ("開" if G.safe_gfx else "關") + "（閃退時用，重開遊戲生效）"
-	var sgb = _wide(sgt.call(), "ghost", true, func(): pass)
-	sgb.pressed.connect(func(): G.set_safe_gfx(not G.safe_gfx); sgb.text = sgt.call())
-	var PMd = load("res://ui/perf_mode.gd"); PMd.load_pref()   # [perf] 流暢模式
-	var pmb = _wide(PMd.label(), "ghost", true, func(): pass)
-	pmb.pressed.connect(func(): PMd.set_on(not PMd.on, m); pmb.text = PMd.label())
-	_wide("全面自檢（約 3–5 分鐘，出報告俾開發者）", "ghost", true, func(): SelfTest.start(true); JSRun.reset_world(); m.get_tree().call_deferred("reload_current_scene"))
-	var lgb = _wide("錯誤記錄（有問題時截圖俾開發者）", "ghost", true, func(): pass)
-	lgb.pressed.connect(func():
-		var lt = UIKit.label(m.log_tail(40), 10, UIKit.INKTXT); lt.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; _body().add_child(lt)
-		DisplayServer.clipboard_set(m.log_tail(200)); m.show_toast("記錄已複製，可以貼去訊息俾開發者"))
-	var del = _confirm_btn("重新開始（刪除存檔）", "ghost", "再按一次確定刪檔", func():
-		if JSRun.ls.has(SAVE_KEY): JSRun.ls[SAVE_KEY + "_del"] = JSRun.ls[SAVE_KEY]
-		m.restart_with(null, true), false)
-	del.custom_minimum_size = Vector2(0, 40); _body().add_child(del)
 	_p("[font_size=11]Godot 版 %s[/font_size]" % ProjectSettings.get_setting("application/config/version", "dev"), 11)
 
 # ---------------- 合約與存在感 ----------------

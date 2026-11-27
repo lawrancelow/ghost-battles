@@ -69,11 +69,15 @@ var loading: Control
 func _boot_js() -> void:
 	loading = ColorRect.new(); loading.color = Color("#0d0b10"); loading.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(loading)
 	# 封面闊度鋪滿、靠頂（長身手機唔再左右裁走），下面接底色
-	var ctex: Texture2D = Spr.get_tex("cover")
-	var cov = TextureRect.new(); cov.texture = ctex; cov.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; cov.stretch_mode = TextureRect.STRETCH_SCALE
-	cov.anchor_right = 1; cov.modulate = Color(0.55, 0.55, 0.55); loading.add_child(cov)
-	var cfit = func(): if ctex: cov.offset_bottom = loading.size.x * ctex.get_height() / ctex.get_width()
-	loading.resized.connect(cfit); cfit.call()
+	var TVc = load("res://ui/title/title_view.gd"); var ctex: Texture2D = TVc.tex("cover2")   # [title] 有新封面先用
+	var cov = TextureRect.new(); cov.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	if ctex != null:
+		cov.texture = ctex; cov.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED; cov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); cov.modulate = Color(0.7, 0.7, 0.72); loading.add_child(cov)
+	else:
+		ctex = Spr.get_tex("cover"); cov.texture = ctex; cov.stretch_mode = TextureRect.STRETCH_SCALE
+		cov.anchor_right = 1; cov.modulate = Color(0.55, 0.55, 0.55); loading.add_child(cov)
+		var cfit = func(): if ctex: cov.offset_bottom = loading.size.x * ctex.get_height() / ctex.get_width()
+		loading.resized.connect(cfit); cfit.call()
 	var lb = UIKit.label("陰間連線中…", 16, Color("#f3e6c8"), "serif", 900); lb.anchor_left = 0; lb.anchor_right = 1; lb.anchor_top = 0.82; lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; loading.add_child(lb)
 	var bar_bg = ColorRect.new(); bar_bg.color = Color("#3a2e26"); bar_bg.anchor_left = 0.15; bar_bg.anchor_right = 0.85; bar_bg.anchor_top = 0.87; bar_bg.anchor_bottom = 0.87; bar_bg.offset_bottom = 6; loading.add_child(bar_bg)
 	var bar = ColorRect.new(); bar.color = Color("#c2362b"); bar.size = Vector2(0, 6); bar_bg.add_child(bar)
@@ -383,14 +387,16 @@ func _build_top() -> void:
 	# 好評條
 	exp_bar = ColorRect.new(); exp_bar.color = Color("#3a2e26"); exp_bar.position = Vector2(76, 16); exp_bar.size = Vector2(200, 6); top.add_child(exp_bar)
 	exp_fill = ColorRect.new(); exp_fill.color = Color("#b06a34"); exp_fill.size = Vector2(0, 6); exp_bar.add_child(exp_fill)
-	exp_txt = UIKit.label("", 12, UIKit.DIM); exp_txt.anchor_left = 1; exp_txt.anchor_right = 1; exp_txt.offset_left = -150; exp_txt.offset_right = -42; exp_txt.offset_top = 10
+	exp_txt = UIKit.label("", 12, UIKit.DIM); exp_txt.anchor_left = 1; exp_txt.anchor_right = 1; exp_txt.offset_left = -162; exp_txt.offset_right = -54; exp_txt.offset_top = 10
 	exp_txt.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; top.add_child(exp_txt)
 	# 資源格
 	var grid = GridContainer.new(); grid.columns = 3; grid.add_theme_constant_override("h_separation", 4); grid.add_theme_constant_override("v_separation", 4)
 	grid.anchor_right = 1; grid.offset_left = 76; grid.offset_top = 36; grid.offset_right = -9; grid.add_theme_constant_override("v_separation", 5); top.add_child(grid)
-	var snd = UIKit.btn("聲", "", true); snd.anchor_left = 1; snd.anchor_right = 1; snd.offset_left = -35; snd.offset_right = -9; snd.offset_top = 6; snd.offset_bottom = 30; snd.add_theme_font_size_override("font_size", 12)
-	snd.text = "聲" if Snd.is_on() else "靜"
-	snd.pressed.connect(func(): snd.text = "聲" if Snd.toggle() else "靜"); top.add_child(snd)
+	# [settings] 頂欄右上：設置（原本嘅「聲／靜」開關搬入設置面板）
+	var snd = UIKit.btn("設置", "", true); snd.name = "SetBtn"; snd.anchor_left = 1; snd.anchor_right = 1; snd.offset_left = -48; snd.offset_right = -9; snd.offset_top = 5; snd.offset_bottom = 31; snd.add_theme_font_size_override("font_size", 12)
+	var gt = load("res://ui/title/title_view.gd").tex("ico_gear")
+	if gt != null: snd.text = ""; snd.icon = gt; snd.expand_icon = true; snd.offset_left = -38; snd.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	snd.pressed.connect(func(): open_settings(false, true)); top.add_child(snd)
 	var help = {"wood": "槐木：主公親手砍樹，或派鬼怪去[b]伐木場[/b]伐木。", "rice": "糯米：主公親手收割，或派鬼怪去[b]糯米田[/b]割稻。", "planks": "棺材板：在[b]棺材鋪[/b]把 2 槐木做成 1 板（力量高的鬼做得快）。藍箱也會開出。用來建造和升級建築。", "buns": "壽包：在[b]包子鋪[/b]把 2 糯米包成 1 個（智力高的鬼包得快）。綠箱也會開出。用來升級鬼怪、練陰兵。", "coins": "冥幣：打關卡、開紫箱、賣貨。Toyol 管倉庫時也會「撿到」冥幣。", "troops": "陰兵：村裡的遊魂見你有地盤，自願加入。[b]民宅[/b]越高級來得越快、上限越高。"}   # [joss] 化寶爐唔再燒冥幣
 	for k in ["wood", "rice", "planks", "buns", "coins", "troops"]:
 		var cell = PanelContainer.new(); cell.custom_minimum_size = Vector2(0, 26); cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -890,36 +896,10 @@ func open_story() -> void:
 				if S.seen.get(id, false): story.queue(id))
 		sheet_body.add_child(b)
 	sheet_body.add_child(UIKit.hsep())
-	var lb = UIKit.btn("對白語言：" + ("中文" if DB.lang == "zh" else "粵語"))
-	lb.pressed.connect(func(): DB.set_lang("yue" if DB.lang == "zh" else "zh"); lb.text = "對白語言：" + ("中文" if DB.lang == "zh" else "粵語"))
-	sheet_body.add_child(lb)
-	var ex = UIKit.btn("備份存檔（複製存檔碼）"); sheet_body.add_child(ex)
-	var ta = TextEdit.new(); ta.custom_minimum_size = Vector2(0, 90); ta.placeholder_text = "貼上存檔碼（網頁版的存檔碼也可以）"; ta.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
-	ta.add_theme_font_override("font", UIKit.font("sans", 400)); ta.add_theme_font_size_override("font_size", 13)
-	ex.pressed.connect(func(): G.save(); var code = G.enc(G.S); DisplayServer.clipboard_set(code); ta.text = code; show_toast("存檔碼已複製，貼去記事本或者聊天軟件自己收好"))
-	var im = UIKit.btn("導入存檔碼", "gold"); sheet_body.add_child(ta); sheet_body.add_child(im)
-	im.pressed.connect(func():
-		var o = G.dec(ta.text if ta.text.strip_edges() != "" else DisplayServer.clipboard_get())
-		if o == null: show_toast("存檔碼讀唔到，檢查吓有冇貼齊"); return
-		if not im.has_meta("armed"): im.set_meta("armed", 1); im.text = "再按一次：換成主公 %d 級嘅存檔" % int(o.get("lv", 1)); return
-		import_save(ta.text if ta.text.strip_edges() != "" else DisplayServer.clipboard_get()))
+	var setb = UIKit.btn("設置（聲音、畫面、劇情、存檔）", "gold"); setb.name = "OpenSettings"; sheet_body.add_child(setb)   # [settings] 語言、存檔碼等搬入設置面板
+	setb.pressed.connect(func(): open_settings(false, true))
 	var mvb = UIKit.btn("村子畫面：" + ("移動村（大排檔）" if mv_on() else "舊村子"), "ghost"); mvb.visible = not UNIFY; sheet_body.add_child(mvb)   # [unify] 合一地圖：唔再切換
 	mvb.pressed.connect(func(): set_mv(not mv_on()); mvb.text = "村子畫面：" + ("移動村（大排檔）" if mv_on() else "舊村子"))
-	var sgb = UIKit.btn("安全畫面模式：" + ("開" if G.safe_gfx else "關") + "（閃退時用，重開遊戲生效）", "ghost"); sheet_body.add_child(sgb)
-	sgb.pressed.connect(func(): G.set_safe_gfx(not G.safe_gfx); sgb.text = "安全畫面模式：" + ("開" if G.safe_gfx else "關") + "（閃退時用，重開遊戲生效）")
-	var PMd = load("res://ui/perf_mode.gd"); PMd.load_pref()   # [perf] 流暢模式
-	var pmb = UIKit.btn(PMd.label(), "ghost"); sheet_body.add_child(pmb)
-	pmb.pressed.connect(func(): PMd.set_on(not PMd.on, self); pmb.text = PMd.label())
-	var stb = UIKit.btn("全面自檢（約 3–5 分鐘，出報告俾開發者）", "ghost"); sheet_body.add_child(stb)
-	stb.pressed.connect(func(): SelfTest.start(true); JSRun.reset_world(); get_tree().call_deferred("reload_current_scene"))
-	var lgb = UIKit.btn("錯誤記錄（有問題時截圖俾開發者）", "ghost"); sheet_body.add_child(lgb)
-	lgb.pressed.connect(func():
-		var lt = UIKit.label(log_tail(40), 10, UIKit.INKTXT); lt.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; sheet_body.add_child(lt)
-		DisplayServer.clipboard_set(log_tail(200)); show_toast("記錄已複製，可以貼去訊息俾開發者"))
-	var rs = UIKit.btn("重新開始（刪除存檔）", "ghost"); sheet_body.add_child(rs)
-	rs.pressed.connect(func():
-		if not rs.has_meta("armed"): rs.set_meta("armed", 1); rs.text = "再按一次確定刪檔"; return
-		restart_with(null, true))
 	_p("[font_size=11]Godot 版 %s（對應網頁版 %s）[/font_size]" % [ProjectSettings.get_setting("application/config/version", "dev"), D.get("GAME_VER", "")], 11)
 
 # ---------------- 標題畫面 ----------------
@@ -928,52 +908,16 @@ func _show_title(fresh: bool) -> void:
 		var v = JSRun.skip_title; JSRun.skip_title = false
 		if v is String and v == "pre": call_deferred("start_opening")
 		return
-	title_ov = Control.new(); title_ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); title_ov.mouse_filter = Control.MOUSE_FILTER_STOP; add_child(title_ov)
-	var bg = ColorRect.new(); bg.color = Color("#2e2422"); bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); title_ov.add_child(bg)
-	# 封面：寬度鋪滿、靠頂（background-size:100% auto; position:center top），底部漸變接返底色
-	var tex: Texture2D = Spr.get_tex("cover")
-	var cov = TextureRect.new(); cov.texture = tex; cov.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; cov.stretch_mode = TextureRect.STRETCH_SCALE
-	cov.anchor_right = 1; cov.mouse_filter = Control.MOUSE_FILTER_IGNORE; title_ov.add_child(cov)
-	var cfade = TextureRect.new(); cfade.texture = _vgrad([[0.0, Color(0.18, 0.14, 0.13, 0)], [0.82, Color(0.18, 0.14, 0.13, 0)], [1.0, Color("#2e2422")]])
-	cfade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; cfade.stretch_mode = TextureRect.STRETCH_SCALE; cfade.anchor_right = 1; cfade.mouse_filter = Control.MOUSE_FILTER_IGNORE; title_ov.add_child(cfade)
-	var fit = func():
-		var w: float = title_ov.size.x; var h: float = w * tex.get_height() / tex.get_width()
-		cov.offset_bottom = h; cfade.offset_bottom = w * 1.5
-	title_ov.resized.connect(fit); fit.call()
-	var fog = TextureRect.new(); fog.texture = _vgrad([[0.0, Color(0.05, 0.04, 0.06, 0)], [0.45, Color(0.05, 0.04, 0.06, 0.55)], [1.0, Color(0.05, 0.04, 0.06, 0.85)]])
-	fog.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; fog.stretch_mode = TextureRect.STRETCH_SCALE
-	fog.anchor_right = 1; fog.anchor_top = 0.58; fog.anchor_bottom = 1; fog.mouse_filter = Control.MOUSE_FILTER_IGNORE; title_ov.add_child(fog)
-	var vb = VBoxContainer.new(); vb.anchor_left = 0; vb.anchor_right = 1; vb.anchor_top = 1; vb.anchor_bottom = 1; vb.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	vb.offset_bottom = -26; vb.add_theme_constant_override("separation", 10); vb.alignment = BoxContainer.ALIGNMENT_END
-	title_ov.add_child(vb)
-	var mk = func(key: String, off: bool) -> TextureButton:
-		var t2: Texture2D = Spr.get_tex(key)
-		var b = TextureButton.new(); b.texture_normal = t2; b.ignore_texture_size = true; b.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		var w = minf(390 * 0.78, 330); b.custom_minimum_size = Vector2(w, w * t2.get_height() / t2.get_width()); b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		b.pivot_offset = b.custom_minimum_size / 2
-		if off: b.modulate = Color(0.5, 0.5, 0.5, 0.7); b.material = _gray_mat()
-		else:
-			var tw = b.create_tween().set_loops(); tw.tween_property(b, "rotation", deg_to_rad(-1.2), 1.5).set_trans(Tween.TRANS_SINE); tw.tween_property(b, "rotation", deg_to_rad(1.2), 1.5).set_trans(Tween.TRANS_SINE)
-		vb.add_child(b); return b
-	var bn: TextureButton = mk.call("btn_new", false)
-	var bc: TextureButton = mk.call("btn_cont", fresh)
-	var hint = UIKit.label("還沒有存檔" if fresh else "", 13, Color("#e8dcc4")); hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; hint.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; hint.custom_minimum_size = Vector2(0, 18)
-	hint.add_theme_color_override("font_shadow_color", Color.BLACK); hint.add_theme_constant_override("shadow_offset_y", 1); vb.add_child(hint)
-	# 由網頁版搬進度過嚟：標題畫面就有入口，唔使先玩開場
-	var bi = Button.new(); bi.text = "導入網頁版存檔"; bi.flat = true; bi.focus_mode = Control.FOCUS_NONE; bi.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	bi.custom_minimum_size = Vector2(220, 40); bi.add_theme_font_size_override("font_size", 16)
-	for st in ["font_color", "font_hover_color", "font_pressed_color"]: bi.add_theme_color_override(st, Color("#f0d48a"))
-	bi.add_theme_color_override("font_outline_color", Color.BLACK); bi.add_theme_constant_override("outline_size", 4)
-	bi.pressed.connect(open_import); vb.add_child(bi)
-	# 版本號（測試員報問題時用）：右下角細字，唔遮內容
-	var vl = UIKit.label(_ver_text(), 11, Color(1, 1, 1, 0.45)); vl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	vl.anchor_left = 1; vl.anchor_right = 1; vl.anchor_top = 1; vl.anchor_bottom = 1; vl.offset_left = -200; vl.offset_right = -8; vl.offset_top = -20; vl.offset_bottom = -4
-	vl.mouse_filter = Control.MOUSE_FILTER_IGNORE; title_ov.add_child(vl)
-	vl.offset_left = -420; vl.autowrap_mode = TextServer.AUTOWRAP_OFF
-	var vt = Timer.new(); vt.wait_time = 1.0; vl.add_child(vt)   # 更新狀態即時顯示
-	vt.timeout.connect(func(): vl.text = _ver_text()); vt.start()
-	bc.pressed.connect(_title_cont.bind(fresh))
-	bn.pressed.connect(_title_new.bind(fresh, bn, hint))
+	# [title] 新版標題畫面（ui/title/title_view.gd）：封面推鏡、飄霧、鬼火、Logo、按鈕＋設置／導入存檔
+	var tv = load("res://ui/title/title_view.gd").new(); tv.host = self; tv.fresh = fresh
+	title_ov = tv; add_child(tv)
+
+# [settings] 設置面板（標題畫面、頂欄齒輪、劇情回顧頁都用呢個）
+func open_settings(in_title := false, has_save := true) -> void:
+	if get_node_or_null("SettingsPanel") != null: return
+	var sp = load("res://ui/settings/settings_panel.gd").new(); sp.host = self; sp.in_title = in_title
+	sp.has_save = has_save and G.S is Dictionary and not G.S.is_empty()
+	add_child(sp)
 
 # 版本號：開機畫面已經檢查／裝好更新（唔使重開）；只有 Boot 自己喺背景落緊／落好（後備）先用佢嘅字
 func _ver_text() -> String:
@@ -994,7 +938,7 @@ func _title_cont(fresh: bool) -> void:
 		_snd("gong"); _hide_title(); start_opening(); return
 	_snd("gong"); _hide_title(); phone_home("post")   # 網頁版：繼續遊戲 → 手機（陰間版 WhatsApp）→ 主對話 → 結算離線收益
 
-func _title_new(fresh: bool, bn: TextureButton, hint: Label) -> void:
+func _title_new(fresh: bool, bn: Control, hint: Label) -> void:
 	if not fresh and not bn.has_meta("armed"):
 		bn.set_meta("armed", 1); hint.text = "會刪掉現在的存檔。再點一次「開始新遊戲」確定。"; return
 	G.crumb("ng:click")

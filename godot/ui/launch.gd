@@ -103,12 +103,25 @@ class Overlay extends CanvasLayer:
 		root_c = Control.new(); root_c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(root_c)
 		root_c.mouse_filter = Control.MOUSE_FILTER_STOP   # 載入時唔好撳到後面
 		var bg = ColorRect.new(); bg.color = Color("#0d0b10"); bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); root_c.add_child(bg)
-		# 封面：闊度鋪滿、靠頂（同 main.gd 舊載入畫面一樣）；用 IGNORE 載入，唔好留舊版喺快取
-		var ctex = ResourceLoader.load("res://assets/spr/cover.webp", "", ResourceLoader.CACHE_MODE_IGNORE) as Texture2D
-		cover = TextureRect.new(); cover.texture = ctex; cover.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; cover.stretch_mode = TextureRect.STRETCH_SCALE
-		cover.anchor_right = 1; cover.modulate = Color(0.55, 0.55, 0.55); cover.mouse_filter = Control.MOUSE_FILTER_IGNORE; root_c.add_child(cover)
-		var fit = func(): if ctex: cover.offset_bottom = root_c.size.x * ctex.get_height() / ctex.get_width()
-		root_c.resized.connect(fit); fit.call_deferred()
+		# 封面：有新封面 cover2（無字）就鋪滿居中＋疊 Logo＋慢推鏡；冇就用舊 cover（闊度鋪滿、靠頂，字烤喺圖上）
+		# 用 IGNORE 載入，唔好留舊版喺快取
+		var nc = ResourceLoader.exists("res://assets/spr/cover2.webp")
+		var ctex = ResourceLoader.load("res://assets/spr/cover2.webp" if nc else "res://assets/spr/cover.webp", "", ResourceLoader.CACHE_MODE_IGNORE) as Texture2D
+		cover = TextureRect.new(); cover.texture = ctex; cover.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if nc:
+			cover.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED; cover.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); cover.modulate = Color(0.7, 0.7, 0.72)
+			root_c.add_child(cover)
+			var zf = func(): cover.pivot_offset = root_c.size / 2
+			root_c.resized.connect(zf); zf.call_deferred()
+			var zt = cover.create_tween().set_loops(); zt.tween_property(cover, "scale", Vector2(1.05, 1.05), 14.0).set_trans(Tween.TRANS_SINE); zt.tween_property(cover, "scale", Vector2.ONE, 14.0).set_trans(Tween.TRANS_SINE)
+			if ResourceLoader.exists("res://assets/spr/title_logo.webp"):
+				var lg = TextureRect.new(); lg.texture = ResourceLoader.load("res://assets/spr/title_logo.webp", "", ResourceLoader.CACHE_MODE_IGNORE) as Texture2D
+				lg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; lg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; lg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				lg.anchor_left = 0.07; lg.anchor_right = 0.93; lg.anchor_top = 0.045; lg.anchor_bottom = 0.25; root_c.add_child(lg)
+		else:
+			cover.stretch_mode = TextureRect.STRETCH_SCALE; cover.anchor_right = 1; cover.modulate = Color(0.55, 0.55, 0.55); root_c.add_child(cover)
+			var fit = func(): if ctex: cover.offset_bottom = root_c.size.x * ctex.get_height() / ctex.get_width()
+			root_c.resized.connect(fit); fit.call_deferred()
 		# 底部漸暗，令進度條清楚
 		var shade = ColorRect.new(); shade.anchor_right = 1; shade.anchor_top = 0.70; shade.anchor_bottom = 1; shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		shade.color = Color(0, 0, 0, 0.55); root_c.add_child(shade)
