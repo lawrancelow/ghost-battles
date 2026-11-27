@@ -11,7 +11,8 @@ const M = preload("res://game/outpost/mat.gd")   # [chain] 材料庫
 # [chain] 分流規則（每台可以喺資料卡揀：自動／全部入倉／全部出售；記喺 S.mv.route[sid]，跨地圖保留）：
 #   自動：① 上層要料優先——呢張圖有已解鎖嘅台用緊呢樣貨做原料，而材料庫存量 < 需求線
 #           （Σ 用料台每轉用量 × 員工數(最少 1) × BUF_CYCLES 轉，最少 BUF_MIN）→ 成轉入倉；
-#         ② 壽包（m_shoubao，前線命脈）→ 一半入倉（向上取整）、一半擺櫃台；
+#         ② 壽包（m_shoubao，前線命脈）→ 每台輪流：一件擺櫃台、一件入倉（[sell] 唔再向上取整，一轉 1 件都係一半）；
+#   [sell] 以上規則之前先做「客人優先」：排緊隊客人仲差嘅件數先擺櫃台（全部入倉除外，會提示改出售）。
 #         ③ 戰鬥道具（BATTLE_ITEMS）→ 庫存未夠 ITEM_KEEP 件就入倉，夠咗擺櫃台；
 #         ④ 其他（包括裝備 GEAR，要賣畀鬼佢先會做義勇軍）→ 擺櫃台出售。
 #   櫃台嗰樣貨滿咗（COUNTER_CAP）而呢樣貨入得倉（有人用／壽包／道具）→ 改入倉，唔使員工企喺度等。
@@ -346,22 +347,59 @@ func buffer_of(mid: String, except := "") -> float:   # 需求線
 	return maxf(BUF_MIN, b) if b > 0.0 else 0.0
 func storeable(mid: String) -> bool:
 	return mid != "" and (M.users(mid).size() > 0 or mid == "m_shoubao" or M.is_item(mid))
+# [sell] 客人優先：排緊隊嘅客人對 gid 仲差幾件（扣咗櫃台、台面、員工搬緊嘅貨）
+func demand_short(gid: String) -> int:
+	if gid == "": return 0
+	var need = 0
+	for c in custs:
+		if c.st == "out": continue
+		need += maxi(0, int(c.wants.get(gid, 0)) - int(c.got.get(gid, 0)))
+	if need <= 0: return 0
+	var have = counter_n(gid)
+	for sid in MD.stations(ci()):
+		if str(MD.st_def(sid).get("good", "")) == gid: have += pile_n(sid)
+	for w in workers:
+		if str(MD.st_def(w.sid).get("good", "")) == gid and w.st in ["to_path", "go"]: have += int(w.carry)
+	return maxi(0, need - have)
+# [sell] 壽包「一半一半」：每台輪流（第 1 件擺櫃台、第 2 件入倉…），一轉 1 件都真係一半
+func _half_k(sid: String, n: int) -> int:
+	var m = st()
+	if not (m.get("half") is Dictionary): m["half"] = {}
+	var acc = int(J.num(m.half.get(sid)))
+	var k = 0
+	for i in n:
+		if acc % 2 == 1: k += 1
+		acc += 1
+	m.half[sid] = float(acc % 2)
+	return k
 # 一轉 n 件：回 [入倉件數, 出售件數]（入倉已經夾咗倉位）
+# [sell] 自動／全部出售：先補足排緊隊客人要嘅數擺櫃台，剩低先按規則入倉（全部入倉＝玩家自己揀，照入倉）
 func split(sid: String, n: int) -> Array:
 	var mid = M.rout(sid)
 	if mid == "" or n <= 0: return [0, n]
-	var r = route(sid); var k = 0
-	if r == "stock": k = n
-	elif r == "sell": k = 0
-	else:
+	var r = route(sid); var gid = str(MD.st_def(sid).get("good", ""))
+	if r == "stock":
+		var ks = mini(n, int(floor(M.room(mid) + 1e-6)))
+		if ks < n or demand_short(gid) > 0: _hint_sell(sid, gid)
+		return [ks, n - ks]
+	if r == "sell": return [0, n]
+	var sell_first = mini(n, demand_short(gid))
+	var rest = n - sell_first; var k = 0
+	if rest > 0:
 		var buf = buffer_of(mid, sid)
-		if buf > 0.0 and M.amt(mid) < buf: k = n
-		elif mid == "m_shoubao": k = int(ceil(n / 2.0))
-		elif M.is_item(mid) and M.amt(mid) < ITEM_KEEP: k = n
-		var gid = str(MD.st_def(sid).get("good", ""))
-		if k < n and storeable(mid) and counter_n(gid) >= MD.COUNTER_CAP: k = n
+		if buf > 0.0 and M.amt(mid) < buf: k = rest
+		elif mid == "m_shoubao": k = _half_k(sid, rest)
+		elif M.is_item(mid) and M.amt(mid) < ITEM_KEEP: k = rest
+		if k < rest and storeable(mid) and counter_n(gid) >= MD.COUNTER_CAP: k = rest
 	k = mini(k, int(floor(M.room(mid) + 1e-6)))
 	return [k, n - k]
+var _hint_t := {}
+func _hint_sell(sid: String, gid: String) -> void:   # [sell] 全部入倉但客人等緊：提示改出售（每台 6 秒一次）
+	if demand_short(gid) <= 0: return
+	var t = now()
+	if t - float(_hint_t.get(sid, -1e12)) < 6000.0: return
+	_hint_t[sid] = t
+	ev.append({"k": "hint_sell", "sid": sid, "pos": st_pos(sid)})
 func _made(sid: String, n: int) -> void:   # 記數（任務「做壽包」= 嘆氣蒸籠產出數 → m.made.m_shoubao）
 	var mid = M.rout(sid)
 	var key = mid if mid != "" else str(MD.st_def(sid).get("good", ""))
@@ -574,6 +612,7 @@ func avail_goods() -> Array:   # 客人可以要嘅貨：有人做緊／櫃台�
 		if unlocked(sid):
 			var g = str(MD.st_def(sid).get("good", ""))
 			if g == "" or o.has(g): continue
+			if route(sid) == "stock" and counter_n(g) <= 0 and pile_n(sid) <= 0: continue   # [sell] 全部入倉嘅貨唔招客
 			o.append(g)
 			if (nworkers(sid) > 0 and not starving(sid)) or counter_n(g) > 0 or pile_n(sid) > 0 or float(mk.get(sid, -1.0)) >= 0.0: act.append(g)   # [chain] 斷料嘅台唔招客
 	return act if act.size() else o
@@ -713,7 +752,11 @@ func _step_manual(dt: float, sp: float) -> void:
 			var n = MD.out(sid, lv(sid)); _made(sid, n)
 			var sp2 = split(sid, n)   # [chain]
 			_stock(sid, sp2[0], st_pos(sid))
-			st().pile[sid] = float(mini(pile_cap(sid), pile_n(sid) + sp2[1]))
+			# [sell] 手做嘅出售件數直接送去櫃台（唔使再撳一下「收」）；櫃台滿先留喺台面
+			var gid2 = str(MD.st_def(sid).get("good", ""))
+			var put2 = _put_counter(gid2, sp2[1])
+			if put2 > 0: ev.append({"k": "collect", "sid": sid, "gid": gid2, "n": put2, "pos": st_pos(sid)})
+			st().pile[sid] = float(mini(pile_cap(sid), pile_n(sid) + sp2[1] - put2))
 			ev.append({"k": "made", "sid": sid, "n": n, "pos": st_pos(sid)})
 
 # 撳台面：有貨＝收去櫃台；冇貨＝開始做一轉
