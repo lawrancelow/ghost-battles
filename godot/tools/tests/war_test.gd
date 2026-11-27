@@ -93,7 +93,7 @@ func logic(_t) -> void:
 		_chk("回血加成 B(%d)" % int(v), MVW.gear_bonus(v), _B(v))
 	_chk("M(0) = 0.6×", MVW.mul(0.0), 0.6)
 	_chk("M(100) = 1.3×", MVW.mul(100.0), 1.3)
-	w.t0 = 601.0
+	w.t0 = load("res://game/econ/pace.gd").newbie_s() + 1.0
 	MVW.add_inf(500.0); _chk("加爆：上限 100", MVW.inf(), 100.0)
 	MVW.add_inf(-500.0); _chk("跌爆（非新手）：下限 0", MVW.inf(), 0.0)
 	_setinf(60.0)
@@ -221,7 +221,7 @@ func logic(_t) -> void:
 	w.vol.clear()
 
 	_p("===== 7. 告急 → 親自出征打贏 → 影響力回升＋材料 =====")
-	_clear_live(sim); sim.war.reset_live(); w.t0 = 601.0; w.alarm = null; w.occ = {}
+	_clear_live(sim); sim.war.reset_live(); w.t0 = load("res://game/econ/pace.gd").newbie_s() + 1.0; w.alarm = null; w.occ = {}
 	_setinf(25.0)
 	var ev7 = _run(sim, 0.5)
 	_ok("inf 25 < 30：告急", MVW.alarm_on() and _cnt(ev7, "war_alarm") == 1)
@@ -305,9 +305,9 @@ func logic(_t) -> void:
 	_ok("新手：inf 20 都唔告急", not MVW.alarm_on())
 	_chk("新手：孤魂唔偷貨", float(_cnt(ev10, "war_steal")), 0.0)
 	_chk("新手保護計時（在線秒數）", J.num(w.t0), 6.0, 0.01)
-	w.t0 = 599.0
+	w.t0 = load("res://game/econ/pace.gd").newbie_s() - 1.0
 	_run(sim, 1.5)
-	_ok("過咗 10 分鐘：告急", MVW.alarm_on())
+	_ok("過咗新手保護（20 分鐘）：告急", MVW.alarm_on())
 	w.alarm = null
 
 	_p("===== 10. 拔營：義勇軍解散、告急清走 =====")
@@ -353,7 +353,7 @@ func shots(tt) -> void:
 	if vil != null: m.move_child(sc, vil.get_index() + 1)
 	sc.setup(m)
 	var sim = sc.sim; sim.st()
-	var w = MVW.ws(); w.t0 = 601.0
+	var w = MVW.ws(); w.t0 = load("res://game/econ/pace.gd").newbie_s() + 1.0
 	var ids = MD.stations(0)
 	for sid in ids: S.mv.st[sid].unlocked = true
 	S.mv.st[ids[0]].lv = 9.0
