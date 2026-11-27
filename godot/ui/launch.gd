@@ -73,6 +73,12 @@ class Overlay extends CanvasLayer:
 		boot = get_node_or_null("/root/Boot")
 		base = str(boot.get("base")) if boot else str(ProjectSettings.get_setting("application/config/version", "0"))
 		plat = str(boot.get("plat")) if boot else OS.get_name().to_lower()
+		# [pc] 橫屏（PC 視窗）：keep_width 會令高度得返 200 幾點 → 改 expand；直屏照舊
+		var rt = get_tree().root
+		if not rt.has_meta("gb_orient_l"):
+			rt.set_meta("gb_orient_l", 1)
+			var fo = func(): rt.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND if rt.size.x > rt.size.y else Window.CONTENT_SCALE_ASPECT_KEEP_WIDTH
+			rt.size_changed.connect(fo); fo.call()
 		_build()
 		if passive:
 			text("載入遊戲中…"); stage(0.0, 0.96); return
@@ -108,20 +114,32 @@ class Overlay extends CanvasLayer:
 		var nc = ResourceLoader.exists("res://assets/spr/cover2.webp")
 		var ctex = ResourceLoader.load("res://assets/spr/cover2.webp" if nc else "res://assets/spr/cover.webp", "", ResourceLoader.CACHE_MODE_IGNORE) as Texture2D
 		cover = TextureRect.new(); cover.texture = ctex; cover.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		if nc:
-			cover.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED; cover.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); cover.modulate = Color(0.7, 0.7, 0.72)
-			root_c.add_child(cover)
-			var zf = func(): cover.pivot_offset = root_c.size / 2
-			root_c.resized.connect(zf); zf.call_deferred()
-			var zt = cover.create_tween().set_loops(); zt.tween_property(cover, "scale", Vector2(1.05, 1.05), 14.0).set_trans(Tween.TRANS_SINE); zt.tween_property(cover, "scale", Vector2.ONE, 14.0).set_trans(Tween.TRANS_SINE)
-			if ResourceLoader.exists("res://assets/spr/title_logo.webp"):
-				var lg = TextureRect.new(); lg.texture = ResourceLoader.load("res://assets/spr/title_logo.webp", "", ResourceLoader.CACHE_MODE_IGNORE) as Texture2D
-				lg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; lg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; lg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-				lg.anchor_left = 0.07; lg.anchor_right = 0.93; lg.anchor_top = 0.045; lg.anchor_bottom = 0.25; root_c.add_child(lg)
-		else:
-			cover.stretch_mode = TextureRect.STRETCH_SCALE; cover.anchor_right = 1; cover.modulate = Color(0.55, 0.55, 0.55); root_c.add_child(cover)
-			var fit = func(): if ctex: cover.offset_bottom = root_c.size.x * ctex.get_height() / ctex.get_width()
-			root_c.resized.connect(fit); fit.call_deferred()
+		cover.stretch_mode = TextureRect.STRETCH_SCALE; cover.anchor_right = 1; cover.modulate = Color(0.72, 0.72, 0.74) if nc else Color(0.55, 0.55, 0.55); root_c.add_child(cover)
+		var cf = TextureRect.new(); cf.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; cf.stretch_mode = TextureRect.STRETCH_SCALE; cf.anchor_right = 1; cf.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var gr = Gradient.new(); gr.offsets = PackedFloat32Array([0.0, 1.0]); gr.colors = PackedColorArray([Color(0.05, 0.04, 0.06, 0), Color("#0d0b10")])
+		var gt = GradientTexture2D.new(); gt.gradient = gr; gt.fill_from = Vector2(0, 0); gt.fill_to = Vector2(0, 1); gt.width = 4; gt.height = 64; cf.texture = gt
+		root_c.add_child(cf)
+		var wtex: Texture2D = null   # [pc] 橫版封面
+		if nc and ResourceLoader.exists("res://assets/spr/cover2_wide.webp"): wtex = ResourceLoader.load("res://assets/spr/cover2_wide.webp", "", ResourceLoader.CACHE_MODE_IGNORE) as Texture2D
+		var lg: TextureRect = null
+		if nc and ResourceLoader.exists("res://assets/spr/title_logo.webp"):
+			lg = TextureRect.new(); lg.texture = ResourceLoader.load("res://assets/spr/title_logo.webp", "", ResourceLoader.CACHE_MODE_IGNORE) as Texture2D
+			lg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; lg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; lg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			root_c.add_child(lg)
+		# 直屏：闊度鋪滿、靠頂；封面底 28% 漸變接返底色。橫屏：鋪滿（有橫版封面用橫版），Logo 去左上
+		var fit = func():
+			if ctex == null: return
+			var land = root_c.size.x > root_c.size.y
+			if land:
+				cover.texture = wtex if wtex else ctex; cover.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+				cover.anchor_bottom = 1; cover.offset_bottom = 0; cf.visible = false
+				if lg: lg.anchor_left = 0.03; lg.anchor_right = 0.40; lg.anchor_top = 0.05; lg.anchor_bottom = 0.45
+			else:
+				cover.texture = ctex; cover.stretch_mode = TextureRect.STRETCH_SCALE; cover.anchor_bottom = 0; cf.visible = true
+				var ch = root_c.size.x * ctex.get_height() / ctex.get_width()
+				cover.offset_bottom = ch; cf.offset_top = ch * 0.72; cf.offset_bottom = ch + 2
+				if lg: lg.anchor_left = 0.07; lg.anchor_right = 0.93; lg.anchor_top = 0.045; lg.anchor_bottom = 0.30
+		root_c.resized.connect(fit); fit.call_deferred()
 		# 底部漸暗，令進度條清楚
 		var shade = ColorRect.new(); shade.anchor_right = 1; shade.anchor_top = 0.70; shade.anchor_bottom = 1; shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		shade.color = Color(0, 0, 0, 0.55); root_c.add_child(shade)

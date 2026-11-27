@@ -18,6 +18,8 @@ var _body: VBoxContainer
 var _scroll: ScrollContainer
 var _tabs: Array = []
 var _toast: Label
+var _win: PanelContainer
+const MAX_W := 600.0   # [pc] 橫屏／闊螢幕：面板置中、限最大闊度
 var _toast_t := 0.0
 
 const C_BG := Color("#1b1519")
@@ -38,9 +40,8 @@ func _ready() -> void:
 	var pn = PanelContainer.new(); pn.name = "Win"
 	var ps = UIKit.sb(C_PANEL, 14, Color("#6b4a2b"), 3, Vector4(0, 0, 0, 0)); ps.shadow_color = Color(0, 0, 0, 0.6); ps.shadow_size = 18
 	pn.add_theme_stylebox_override("panel", ps)
-	pn.anchor_left = 0; pn.anchor_right = 1; pn.anchor_top = 0; pn.anchor_bottom = 1
-	pn.offset_left = 14; pn.offset_right = -14; pn.offset_top = 46; pn.offset_bottom = -30
-	add_child(pn)
+	add_child(pn); _win = pn
+	resized.connect(_fit); _fit()
 	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 0); pn.add_child(vb)
 	# 標題列
 	var head = PanelContainer.new(); var hs = UIKit.sb(Color("#3a2c26"), 0, Color(0, 0, 0, 0), 0, Vector4(18, 10, 10, 10))
@@ -72,8 +73,19 @@ func _ready() -> void:
 	_toast.visible = false; _toast.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(_toast)
 	show_tab(tab)
 	# 彈出動畫
-	pn.pivot_offset = Vector2(size.x / 2, size.y / 2); pn.modulate.a = 0; pn.scale = Vector2(0.96, 0.96)
+	pn.modulate.a = 0; pn.scale = Vector2(0.96, 0.96)
 	var tw = create_tween().set_parallel(); tw.tween_property(pn, "modulate:a", 1.0, 0.16); tw.tween_property(pn, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _fit() -> void:
+	if _win == null: return
+	var w = size.x; var h = size.y
+	_win.anchor_top = 0; _win.anchor_bottom = 1
+	if w > MAX_W + 28:   # 闊螢幕：置中
+		_win.anchor_left = 0.5; _win.anchor_right = 0.5; _win.offset_left = -MAX_W / 2; _win.offset_right = MAX_W / 2
+		_win.offset_top = 46 if h > w else 24; _win.offset_bottom = -30 if h > w else -24
+	else:
+		_win.anchor_left = 0; _win.anchor_right = 1; _win.offset_left = 14; _win.offset_right = -14; _win.offset_top = 46; _win.offset_bottom = -30
+	_win.pivot_offset = _win.size / 2
 
 func _process(dt: float) -> void:
 	if _toast_t > 0:
@@ -154,6 +166,7 @@ func _seg(opts: Array, cur: int, cb: Callable, w := 56) -> HBoxContainer:
 			for k in ["font_color", "font_hover_color", "font_pressed_color"]: b.add_theme_color_override(k, fg)
 	for j in opts.size():
 		var b = Button.new(); b.text = str(opts[j]); b.custom_minimum_size = Vector2(w, 42); b.focus_mode = Control.FOCUS_NONE
+		if w == 0: b.size_flags_horizontal = Control.SIZE_EXPAND_FILL   # 闊度 0：平均分滿成行
 		b.add_theme_font_override("font", UIKit.font("sans", 900)); b.add_theme_font_size_override("font_size", 15)
 		b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 		var jj = j; b.pressed.connect(func(): _snd("click"); paint.call(jj); cb.call(jj)); hb.add_child(b); btns.append(b)
@@ -227,6 +240,27 @@ func _tab_gfx() -> void:
 	fps_row.modulate.a = 0.45 if PM.on else 1.0
 	_row("螢幕常亮", _toggle(PF.keep_on, func(v): PF.set_keep_on(v)), "玩的時候手機不自動熄屏")
 	_row("安全畫面模式", _toggle(G.safe_gfx, func(v): G.set_safe_gfx(v)), "閃退時用；重開遊戲生效")
+	if PF.is_pc(): _pc_rows()
+
+# [pc] 電腦版（Steam）專屬：顯示模式、解析度、垂直同步（手機唔顯示）
+func _pc_rows() -> void:
+	_h("電腦版")
+	var res_row: Control
+	_row("顯示模式", _seg(PF.WIN_MODES, PF.win_mode, func(j):
+		PF.set_win_mode(j)
+		if res_row: res_row.modulate.a = 1.0 if j == 0 else 0.45), "無邊框＝全螢幕但切換視窗快")
+	var cur = PF.RES_OPTS.find(PF.res)
+	if cur < 0:
+		var ws = DisplayServer.window_get_size(); cur = PF.RES_OPTS.find("%d×%d" % [ws.x, ws.y])
+	# 解析度：三粒掣放標題下面成行（直屏視窗都唔會撐爆面板）
+	var rv = VBoxContainer.new(); rv.add_theme_constant_override("separation", 6); rv.custom_minimum_size.y = 52
+	var rl = UIKit.label("解析度", 17, C_TXT, "sans", 700); rv.add_child(rl)
+	var rd = UIKit.label("視窗模式用", 12, C_DIM); rv.add_child(rd)
+	var rseg = _seg(PF.RES_OPTS, cur, func(j): PF.set_res(PF.RES_OPTS[j]), 0); rseg.name = "ResSeg"
+	for b in rseg.get_children(): b.add_theme_font_size_override("font_size", 14)
+	rv.add_child(rseg); _body.add_child(rv); _body.add_child(_line())
+	res_row = rv
+	_row("垂直同步", _toggle(PF.vsync, func(v): PF.set_vsync(v)), "防止畫面撕裂；關閉後幀率可能更高")
 
 # ---------------- 劇情 ----------------
 func _tab_story() -> void:

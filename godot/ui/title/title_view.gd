@@ -22,6 +22,11 @@ var _cover_tex: Texture2D
 var _new_cover := false
 var _logo: TextureRect
 var _cfade: TextureRect
+var _blur: TextureRect
+var _lshade: TextureRect
+var _wide_tex: Texture2D
+var _vb: VBoxContainer
+var land := false
 var _mists: Array = []
 var _t := 0.0
 
@@ -44,6 +49,12 @@ func _ready() -> void:
 	var bg = ColorRect.new(); bg.color = Color("#17121a"); bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(bg)
 	_cover_tex = tex("cover2"); _new_cover = _cover_tex != null
 	if not _new_cover: _cover_tex = tex("cover")
+	_wide_tex = tex("cover2_wide") if _new_cover else null   # [pc] 橫版封面（美術組出；冇就用 cover2 置中＋模糊延伸背景）
+	_blur = TextureRect.new(); _blur.name = "blur_bg"; _blur.texture = _cover_tex; _blur.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; _blur.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_blur.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); _blur.modulate = Color(0.42, 0.4, 0.46); _blur.mouse_filter = Control.MOUSE_FILTER_IGNORE; _blur.visible = false
+	var gs0 = get_node_or_null("/root/G")
+	if gs0 == null or not bool(gs0.get("safe_gfx")): _blur.material = _blur_mat()
+	add_child(_blur)
 	_cover = TextureRect.new(); _cover.texture = _cover_tex; _cover.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; _cover.stretch_mode = TextureRect.STRETCH_SCALE
 	_cover.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(_cover)
 	# 舊封面高度唔夠鋪滿：喺封面底部做一段漸變接返底色（唔好見到硬邊）
@@ -56,7 +67,12 @@ func _ready() -> void:
 	cf.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; cf.stretch_mode = TextureRect.STRETCH_SCALE; cf.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); cf.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(cf)
 	var top = TextureRect.new(); top.texture = _grad([[0.0, Color(0.05, 0.04, 0.08, 0.55)], [1.0, Color(0.05, 0.04, 0.08, 0)]])
 	top.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; top.stretch_mode = TextureRect.STRETCH_SCALE; top.anchor_right = 1; top.anchor_bottom = 0.22; top.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	top.visible = _new_cover; add_child(top)
+	top.visible = _new_cover; add_child(top)   # 頂部壓暗：Logo 清楚啲
+	_lshade = TextureRect.new(); _lshade.name = "left_shade"; _lshade.mouse_filter = Control.MOUSE_FILTER_IGNORE; _lshade.visible = false
+	var lg = Gradient.new(); lg.offsets = PackedFloat32Array([0.0, 0.6, 1.0]); lg.colors = PackedColorArray([Color(0.05, 0.04, 0.07, 0.72), Color(0.05, 0.04, 0.07, 0.35), Color(0.05, 0.04, 0.07, 0)])
+	var lgt = GradientTexture2D.new(); lgt.gradient = lg; lgt.fill_from = Vector2(0, 0); lgt.fill_to = Vector2(1, 0); lgt.width = 128; lgt.height = 4
+	_lshade.texture = lgt; _lshade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; _lshade.stretch_mode = TextureRect.STRETCH_SCALE
+	_lshade.anchor_bottom = 1; add_child(_lshade)
 	_build_mist()
 	_build_embers()
 	# Logo
@@ -93,19 +109,74 @@ func _grad(stops: Array) -> Texture2D:
 func _layout() -> void:
 	var w = size.x; var h = size.y
 	if w <= 0 or _cover_tex == null: return
-	var tw = float(_cover_tex.get_width()); var th = float(_cover_tex.get_height())
-	if _new_cover:   # 鋪滿（cover），居中；預留 6% 推鏡空間
-		var s = maxf(w / tw, h / th) * 1.06
-		_cover.size = Vector2(tw * s, th * s); _cover.position = Vector2((w - _cover.size.x) / 2, (h - _cover.size.y) / 2)
-	else:            # 舊封面：闊度鋪滿、靠頂（字喺頂）
-		_cover.size = Vector2(w * 1.04, w * 1.04 * th / tw); _cover.position = Vector2(-w * 0.02, 0)
-		var fh = _cover.size.y * 0.28
-		_cfade.visible = true; _cfade.position = Vector2(0, _cover.size.y - fh); _cfade.size = Vector2(w, fh + _cover.size.y * 0.04)
+	land = w > h
+	var ct: Texture2D = (_wide_tex if _wide_tex != null else _cover_tex) if land else _cover_tex
+	_cover.texture = ct
+	var tw = float(ct.get_width()); var th = float(ct.get_height())
+	var side := 0.0   # 橫屏：封面兩邊空位（擺 Logo／按鈕）
+	var wide_left := false   # 橫版封面：主角喺中間偏右，Logo＋按鈕全部擺左邊一欄
+	_blur.visible = false
+	if land:
+		_cfade.visible = false
+		if tw / th >= w / h * 0.85:   # 橫版封面：鋪滿
+			var s = maxf(w / tw, h / th) * 1.06
+			_cover.size = Vector2(tw * s, th * s); _cover.position = (Vector2(w, h) - _cover.size) / 2
+			side = w * 0.32; wide_left = true
+		else:                          # 直版封面：高度鋪滿置中，兩邊模糊延伸
+			_blur.visible = true
+			if _blur.material != null and _cover.material == null: _cover.material = _edge_mat()   # 兩邊羽化入模糊背景
+			_cover.size = Vector2(h * 1.04 * tw / th, h * 1.04); _cover.position = (Vector2(w, h) - _cover.size) / 2
+			side = maxf((w - h * tw / th) / 2, w * 0.26)
+	if not _blur.visible: _cover.material = null
+	_lshade.visible = wide_left; _lshade.offset_right = w * 0.42   # 左邊壓暗：Logo、按鈕清楚
+	if not land:
+		var tall = h / w > th / tw * 1.15   # 手機比封面長好多：闊度鋪滿、靠頂，下面漸變接底色（唔好裁走兩邊嘅鬼）
+		if _new_cover and not tall:   # 鋪滿（cover），居中；預留 6% 推鏡空間
+			var s = maxf(w / tw, h / th) * 1.06
+			_cover.size = Vector2(tw * s, th * s); _cover.position = Vector2((w - _cover.size.x) / 2, (h - _cover.size.y) / 2)
+			_cfade.visible = false
+		else:            # 闊度鋪滿、靠頂
+			_cover.size = Vector2(w * 1.04, w * 1.04 * th / tw); _cover.position = Vector2(-w * 0.02, 0)
+			var fh = _cover.size.y * 0.28
+			_cfade.visible = true; _cfade.position = Vector2(0, _cover.size.y - fh); _cfade.size = Vector2(w, fh + _cover.size.y * 0.04)
 	_cover.pivot_offset = _cover.size / 2
 	if _logo:
-		var lw = minf(w * 0.86, 420.0); var lh = lw * _logo.texture.get_height() / _logo.texture.get_width()
-		_logo.size = Vector2(lw, lh); _logo.position = Vector2((w - lw) / 2, maxf(h * 0.045, 28.0)); _logo.pivot_offset = _logo.size / 2
-		_logo.set_meta("y0", _logo.position.y)
+		var lw: float; var lp: Vector2
+		var ar = _logo.texture.get_height() / float(_logo.texture.get_width())
+		if land:
+			lw = clampf(side * 0.9, 220.0, 560.0); lp = Vector2(maxf((side - lw) / 2, w * 0.02), h * 0.07)
+		else:
+			lw = minf(w * 0.86, 420.0); lp = Vector2((w - lw) / 2, maxf(h * 0.045, 28.0))
+		_logo.size = Vector2(lw, lw * ar); _logo.position = lp; _logo.pivot_offset = _logo.size / 2
+		_logo.set_meta("y0", lp.y)
+	if _vb:
+		if land:   # 按鈕：橫版封面放左下（唔遮主角）；直版封面放右邊空位
+			var bw = 380.0; var cx = (side / 2 if wide_left else w - side / 2)
+			_vb.anchor_left = 0; _vb.anchor_right = 0; _vb.anchor_top = 1; _vb.anchor_bottom = 1
+			_vb.offset_left = clampf(cx - bw / 2, w * 0.02, w - bw - w * 0.02); _vb.offset_right = _vb.offset_left + bw; _vb.offset_bottom = -h * 0.09
+		else:
+			_vb.anchor_left = 0; _vb.anchor_right = 1; _vb.anchor_top = 1; _vb.anchor_bottom = 1
+			_vb.offset_left = 0; _vb.offset_right = 0; _vb.offset_bottom = -30
+
+func _edge_mat() -> ShaderMaterial:
+	var sh = Shader.new()
+	sh.code = "shader_type canvas_item; void fragment(){ vec4 c = texture(TEXTURE, UV) * COLOR; c.a *= smoothstep(0.0, 0.07, UV.x) * smoothstep(1.0, 0.93, UV.x); COLOR = c; }"
+	var m = ShaderMaterial.new(); m.shader = sh; return m
+
+# 模糊背景（橫屏直版封面兩邊延伸用）：13 點高斯，夠用唔使 mipmap
+func _blur_mat() -> ShaderMaterial:
+	var sh = Shader.new()
+	sh.code = """shader_type canvas_item;
+uniform float r = 14.0;
+void fragment(){
+	vec2 px = TEXTURE_PIXEL_SIZE * r;
+	vec4 c = texture(TEXTURE, UV) * 0.2;
+	c += (texture(TEXTURE, UV + vec2(px.x, 0)) + texture(TEXTURE, UV - vec2(px.x, 0)) + texture(TEXTURE, UV + vec2(0, px.y)) + texture(TEXTURE, UV - vec2(0, px.y))) * 0.1;
+	c += (texture(TEXTURE, UV + px) + texture(TEXTURE, UV - px) + texture(TEXTURE, UV + vec2(px.x, -px.y)) + texture(TEXTURE, UV + vec2(-px.x, px.y))) * 0.07;
+	c += (texture(TEXTURE, UV + vec2(2.0*px.x, 0)) + texture(TEXTURE, UV - vec2(2.0*px.x, 0)) + texture(TEXTURE, UV + vec2(0, 2.0*px.y)) + texture(TEXTURE, UV - vec2(0, 2.0*px.y))) * 0.03;
+	COLOR = c * COLOR;
+}"""
+	var m = ShaderMaterial.new(); m.shader = sh; return m
 
 func _process(dt: float) -> void:
 	_t += dt
@@ -163,7 +234,7 @@ func _dot() -> Texture2D:
 
 # ---------------- 按鈕 ----------------
 func _build_buttons() -> void:
-	var vb = VBoxContainer.new(); vb.name = "Btns"
+	var vb = VBoxContainer.new(); vb.name = "Btns"; _vb = vb
 	vb.anchor_left = 0; vb.anchor_right = 1; vb.anchor_top = 1; vb.anchor_bottom = 1; vb.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	vb.offset_bottom = -30; vb.add_theme_constant_override("separation", 10); vb.alignment = BoxContainer.ALIGNMENT_END
 	add_child(vb)
@@ -174,7 +245,7 @@ func _build_buttons() -> void:
 	hint.custom_minimum_size = Vector2(0, 20); hint.add_theme_color_override("font_outline_color", Color.BLACK); hint.add_theme_constant_override("outline_size", 4); vb.add_child(hint)
 	var hb = HBoxContainer.new(); hb.name = "Sub"; hb.alignment = BoxContainer.ALIGNMENT_CENTER; hb.add_theme_constant_override("separation", 14); vb.add_child(hb)
 	btn_set = _sub_btn("設置", true); btn_set.name = "Settings"; hb.add_child(btn_set)
-	btn_imp = _sub_btn("導入存檔", false); btn_imp.name = "Import"; hb.add_child(btn_imp)
+	btn_imp = _sub_btn("導入網頁版存檔", false); btn_imp.name = "Import"; hb.add_child(btn_imp)
 	if btn_cont: (btn_cont as BaseButton).pressed.connect(func(): _press(btn_cont, func(): host.call("_title_cont", fresh)))
 	(btn_new as BaseButton).pressed.connect(func(): _press(btn_new, func(): host.call("_title_new", fresh, btn_new, hint)))
 	(btn_set as BaseButton).pressed.connect(func(): _press(btn_set, func(): host.call("open_settings", true, not fresh)))
@@ -187,7 +258,7 @@ func _press(b: Control, f: Callable) -> void:
 # 主按鈕：btn_main 底板＋字 → btn_new2／btn_cont2 → 舊圖
 func _main_btn(text: String, old_key: String) -> Control:
 	var w = 330.0
-	var base = tex("btn_main")
+	var base = null   # 老闆揀咗 btn_new2／btn_cont2（毛筆「加班」黃牌）；btn_main 未採用
 	var t2: Texture2D = base if base != null else tex(old_key + "2")
 	if t2 == null: t2 = tex(old_key)
 	if t2 == null:
@@ -204,8 +275,8 @@ func _main_btn(text: String, old_key: String) -> Control:
 	return tb
 
 func _sub_btn(text: String, gear: bool) -> Control:
-	var w = 150.0; var h = 52.0
-	var base = tex("btn_sub")
+	var w = 176.0; var h = 52.0
+	var base = null   # 老闆揀咗程序畫木框小按鈕（美術組 btn_sub 未採用）
 	var b: BaseButton
 	if base != null:
 		var tb = TextureButton.new(); tb.texture_normal = base; tb.ignore_texture_size = true; tb.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
@@ -220,7 +291,7 @@ func _sub_btn(text: String, gear: bool) -> Control:
 	var hb = HBoxContainer.new(); hb.alignment = BoxContainer.ALIGNMENT_CENTER; hb.add_theme_constant_override("separation", 6)
 	hb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); hb.mouse_filter = Control.MOUSE_FILTER_IGNORE; b.add_child(hb)
 	if gear:
-		var gt = tex("ico_gear")
+		var gt = null   # 齒輪圖未採用
 		if gt != null:
 			var ic = TextureRect.new(); ic.texture = gt; ic.custom_minimum_size = Vector2(26, 26); ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			ic.mouse_filter = Control.MOUSE_FILTER_IGNORE; ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hb.add_child(ic)

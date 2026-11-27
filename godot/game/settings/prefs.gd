@@ -19,6 +19,12 @@ static var text_speed := 1
 static var auto_play := false
 static var keep_on := true
 static var fps := 60
+# [pc] PC 版專屬（Steam）：顯示模式、解析度、垂直同步；手機唔顯示、唔套用
+const WIN_MODES := ["視窗", "全螢幕", "無邊框"]
+const RES_OPTS := ["1280×720", "1600×900", "1920×1080"]
+static var win_mode := 0
+static var res := ""        # "" ＝ 未揀過（唔郁視窗大小）
+static var vsync := true
 
 static func load_pref() -> void:
 	if _loaded: return
@@ -31,18 +37,21 @@ static func load_pref() -> void:
 	keep_on = bool(c.get_value(SEC, "keep_on", keep_on))
 	fps = int(c.get_value(SEC, "fps", fps))
 	if not FPS_OPTS.has(fps): fps = 60
+	win_mode = clampi(int(c.get_value(SEC, "win_mode", win_mode)), 0, 2)
+	res = str(c.get_value(SEC, "res", res)); vsync = bool(c.get_value(SEC, "vsync", vsync))
 
 static func save() -> void:
 	var c = ConfigFile.new(); c.load(FILE)   # 保留其他段（例如 ui/dialogue_lang）
 	for k in vol.keys(): c.set_value(SEC, "vol_" + k, vol[k])
 	c.set_value(SEC, "text_speed", text_speed); c.set_value(SEC, "auto_play", auto_play)
 	c.set_value(SEC, "keep_on", keep_on); c.set_value(SEC, "fps", fps)
+	c.set_value(SEC, "win_mode", win_mode); c.set_value(SEC, "res", res); c.set_value(SEC, "vsync", vsync)
 	c.save(FILE)
 
 # 測試用：清返預設（唔寫檔）
 static func reset_defaults() -> void:
 	vol = {"master": 0.9, "music": 0.8, "sfx": 0.9, "voice": 1.0}
-	text_speed = 1; auto_play = false; keep_on = true; fps = 60; _loaded = true
+	text_speed = 1; auto_play = false; keep_on = true; fps = 60; win_mode = 0; res = ""; vsync = true; _loaded = true
 
 # ---------------- 聲音 ----------------
 static func ensure_buses() -> void:
@@ -84,6 +93,44 @@ static func apply_display() -> void:
 	load_pref()
 	Engine.max_fps = cur_fps()
 	DisplayServer.screen_set_keep_on(keep_on)
+	if is_pc(): apply_window()
+
+# ---------------- PC（Steam）----------------
+static func is_pc() -> bool: return OS.has_feature("pc") and not OS.has_feature("mobile") and not OS.has_feature("web")
+
+static func res_size(r: String) -> Vector2i:
+	var p = r.split("×")
+	return Vector2i(int(p[0]), int(p[1])) if p.size() == 2 else Vector2i.ZERO
+
+static func apply_window() -> void:
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED)
+	match win_mode:
+		1: DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false); DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
+		2: DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+		_:
+			if DisplayServer.window_get_mode() != DisplayServer.WINDOW_MODE_WINDOWED: DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+			var sz = res_size(res)
+			if sz != Vector2i.ZERO:
+				DisplayServer.window_set_size(sz)
+				var sc = DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen())
+				DisplayServer.window_set_position(sc.position + (sc.size - sz) / 2)
+
+static func set_win_mode(i: int) -> void: load_pref(); win_mode = clampi(i, 0, 2); save(); apply_window()
+static func set_res(r: String) -> void: load_pref(); res = r; win_mode = 0; save(); apply_window()
+static func set_vsync(v: bool) -> void: load_pref(); vsync = v; save(); apply_window()
+
+# [pc] 橫屏（PC 視窗／之後 Steam 版）：keep_width 會令高度得返 200 幾點，改用 expand；直屏照舊 keep_width
+static func apply_orient(root: Window) -> void:
+	if root == null: return
+	var ws = root.size
+	var want = Window.CONTENT_SCALE_ASPECT_EXPAND if ws.x > ws.y else Window.CONTENT_SCALE_ASPECT_KEEP_WIDTH
+	if root.content_scale_aspect != want: root.content_scale_aspect = want
+
+static func watch_orient(root: Window) -> void:
+	if root == null or root.has_meta("gb_orient"): return
+	root.set_meta("gb_orient", 1)
+	root.size_changed.connect(func(): apply_orient(root))
+	apply_orient(root)
 
 static func set_fps(v: int) -> void:
 	load_pref(); fps = v if FPS_OPTS.has(v) else 60; save(); apply_display()

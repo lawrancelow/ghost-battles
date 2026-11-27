@@ -162,3 +162,45 @@ func ui(t) -> void:
 	tv2.queue_free()
 	PF.reset_defaults(); PF.save()
 	_done()
+
+# [pc] 1920×1080 橫屏：標題畫面、設置面板（置中、限闊）、PC 專屬項
+func wide(t) -> void:
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	var m = await _boot(t)
+	PF.reset_defaults(); PF.save()
+	var root: Window = t.get_tree().root
+	_p("window %s viewport %s aspect %d" % [root.size, t.get_viewport().get_visible_rect().size, root.content_scale_aspect])
+	_ck(root.content_scale_aspect == Window.CONTENT_SCALE_ASPECT_EXPAND, "橫屏冇轉 expand")
+	var vr = Rect2(Vector2.ZERO, t.get_viewport().get_visible_rect().size)
+	_ck(vr.size.x > vr.size.y, "橫屏 viewport 唔係橫")
+	var tv = m.get("title_ov")
+	_ck(tv != null and tv.land, "標題畫面冇用橫屏版面")
+	if tv == null: _done(); return
+	await _w(t, 2.2)
+	await _shot(t, "wide_title_fresh")
+	for b in [tv.btn_new, tv.btn_set, tv.btn_imp]: _ck(vr.encloses(b.get_global_rect()), "橫屏按鈕出畫面 %s %s" % [b.name, b.get_global_rect()])
+	if tv._logo: _ck(vr.encloses(tv._logo.get_global_rect()), "橫屏 Logo 出畫面")
+	if tv._logo: _ck(not tv._logo.get_global_rect().intersects(tv.btn_new.get_global_rect()), "橫屏 Logo 壓住按鈕")
+	var tv2 = load("res://ui/title/title_view.gd").new(); tv2.host = m; tv2.fresh = false; m.add_child(tv2)
+	await _w(t, 2.2); await _shot(t, "wide_title_save"); tv2.queue_free(); await _w(t, 0.3)
+	(tv.btn_set as BaseButton).pressed.emit(); await _w(t, 0.6)
+	var sp = m.get_node_or_null("SettingsPanel")
+	_ck(sp != null, "橫屏開唔到設置")
+	if sp:
+		var wr: Rect2 = sp.get_node("Win").get_global_rect()
+		_ck(wr.size.x <= sp.MAX_W + 1 and absf(wr.get_center().x - vr.get_center().x) < 2, "橫屏設置面板冇置中限闊 %s" % wr)
+		for i in 5:
+			sp.show_tab(i); await _w(t, 0.4); await _shot(t, "wide_settings_%d" % i)
+		sp.show_tab(1); await _w(t, 0.3)
+		var has_pc = false
+		for l in sp._body.find_children("*", "Label", true, false): if l.text == "顯示模式": has_pc = true
+		_ck(has_pc == PF.is_pc(), "PC 專屬項顯示唔啱")
+		_ck(sp._body.find_child("ResSeg", true, false) != null or not PF.is_pc(), "冇解析度選項")
+		PF.set_vsync(false); _ck(DisplayServer.window_get_vsync_mode() == DisplayServer.VSYNC_DISABLED or DisplayServer.get_name() == "headless", "垂直同步關唔到")
+		PF.set_vsync(true)
+		# Esc 關面板
+		var ev = InputEventKey.new(); ev.keycode = KEY_ESCAPE; ev.pressed = true; Input.parse_input_event(ev)
+		await _w(t, 0.5)
+		_ck(m.get_node_or_null("SettingsPanel") == null, "Esc 關唔到設置面板")
+	PF.reset_defaults(); PF.save()
+	_done()

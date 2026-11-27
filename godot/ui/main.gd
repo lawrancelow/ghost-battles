@@ -51,7 +51,8 @@ const NAV_H := 58.0
 
 func _ready() -> void:
 	print("[boot] main ready")
-	load("res://game/settings/prefs.gd").apply_display()   # [settings] 幀率、螢幕常亮
+	load("res://game/settings/prefs.gd").apply_display()   # [settings] 幀率、螢幕常亮（PC：視窗模式、解析度、垂直同步）
+	load("res://game/settings/prefs.gd").watch_orient(get_tree().root)   # [pc] 橫屏改用 expand 縮放
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var bg = ColorRect.new(); bg.color = UIKit.INK; bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(bg)
 	_build_village(); _build_top(); _build_nav(); _build_sheet()
@@ -70,14 +71,19 @@ func _boot_js() -> void:
 	loading = ColorRect.new(); loading.color = Color("#0d0b10"); loading.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(loading)
 	# 封面闊度鋪滿、靠頂（長身手機唔再左右裁走），下面接底色
 	var TVc = load("res://ui/title/title_view.gd"); var ctex: Texture2D = TVc.tex("cover2")   # [title] 有新封面先用
-	var cov = TextureRect.new(); cov.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	if ctex != null:
-		cov.texture = ctex; cov.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED; cov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); cov.modulate = Color(0.7, 0.7, 0.72); loading.add_child(cov)
-	else:
-		ctex = Spr.get_tex("cover"); cov.texture = ctex; cov.stretch_mode = TextureRect.STRETCH_SCALE
-		cov.anchor_right = 1; cov.modulate = Color(0.55, 0.55, 0.55); loading.add_child(cov)
-		var cfit = func(): if ctex: cov.offset_bottom = loading.size.x * ctex.get_height() / ctex.get_width()
-		loading.resized.connect(cfit); cfit.call()
+	var nc = ctex != null
+	if not nc: ctex = Spr.get_tex("cover")
+	var cov = TextureRect.new(); cov.texture = ctex; cov.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; cov.stretch_mode = TextureRect.STRETCH_SCALE
+	cov.anchor_right = 1; cov.modulate = Color(0.72, 0.72, 0.74) if nc else Color(0.55, 0.55, 0.55); loading.add_child(cov)
+	var cfd = TextureRect.new(); cfd.texture = _vgrad([[0.0, Color(0.05, 0.04, 0.06, 0)], [1.0, Color("#0d0b10")]]); cfd.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; cfd.stretch_mode = TextureRect.STRETCH_SCALE; cfd.anchor_right = 1; loading.add_child(cfd)
+	var lgt: Texture2D = TVc.tex("title_logo") if nc else null
+	if lgt != null:
+		var lg = TextureRect.new(); lg.texture = lgt; lg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; lg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		lg.anchor_left = 0.07; lg.anchor_right = 0.93; lg.anchor_top = 0.045; lg.anchor_bottom = 0.30; loading.add_child(lg)
+	var cfit = func():
+		if ctex == null: return
+		var ch = loading.size.x * ctex.get_height() / ctex.get_width(); cov.offset_bottom = ch; cfd.offset_top = ch * 0.72; cfd.offset_bottom = ch + 2
+	loading.resized.connect(cfit); cfit.call()
 	var lb = UIKit.label("陰間連線中…", 16, Color("#f3e6c8"), "serif", 900); lb.anchor_left = 0; lb.anchor_right = 1; lb.anchor_top = 0.82; lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; loading.add_child(lb)
 	var bar_bg = ColorRect.new(); bar_bg.color = Color("#3a2e26"); bar_bg.anchor_left = 0.15; bar_bg.anchor_right = 0.85; bar_bg.anchor_top = 0.87; bar_bg.anchor_bottom = 0.87; bar_bg.offset_bottom = 6; loading.add_child(bar_bg)
 	var bar = ColorRect.new(); bar.color = Color("#c2362b"); bar.size = Vector2(0, 6); bar_bg.add_child(bar)
