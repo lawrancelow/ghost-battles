@@ -276,6 +276,7 @@ func _set_lang(l: String) -> void:
 
 # ---------------- 存檔 ----------------
 func _tab_save() -> void:
+	_acct_rows()
 	_h("存檔")
 	if not has_save: _note("還沒有存檔。開始遊戲之後才可以備份。")
 	_wide("備份存檔（複製存檔碼）", "", func():
@@ -290,6 +291,48 @@ func _tab_save() -> void:
 	_confirm("重新開始（刪除存檔）", "再按一次確定刪檔", func():
 		if JSRun.ls.has(SAVE_KEY): JSRun.ls[SAVE_KEY + "_del"] = JSRun.ls[SAVE_KEY]
 		if host != null: host.call("restart_with", null, true), has_save)
+
+# [account] 帳號：郵箱、上次同步、立即同步、登出、更換帳號
+const ACC = preload("res://game/account/acct.gd")
+func _acct_rows() -> void:
+	_h("帳號")
+	if not ACC.logged_in():
+		_note("還沒有登入。登入後進度會綁定郵箱，換機也不怕。")
+		var lb = _wide("登入／註冊", "gold", func(): _open_login()); lb.name = "AcctLogin"
+		_body.add_child(Control.new()); return
+	var er = _row("郵箱", _val(ACC.email)); er.name = "AcctEmail"
+	var sl = _val(ACC.last_sync_text()); sl.name = "AcctSyncVal"
+	_row("上次同步", sl, "遊戲中每幾分鐘、切出去時自動同步")
+	var sb = _wide("立即同步", "", func(): pass); sb.name = "AcctSync"
+	sb.pressed.connect(func():
+		if sb.disabled: return
+		sb.disabled = true; sb.text = "同步中…"
+		var r: Dictionary = await ACC.sync()
+		if not is_instance_valid(sb): return
+		sb.disabled = false; sb.text = "立即同步"; sl.text = ACC.last_sync_text()
+		var st = str(r.get("state", ""))
+		if st in ["same", "none"]: toast("進度已經是最新。")
+		elif st == "uploaded": toast("已上傳到帳號。")
+		elif st == "download":
+			toast("帳號裡有較新的進度，正在載入…"); ACC.apply_cloud(str(r.data), int(r.rev))
+		elif st == "conflict":
+			var sd = load("res://ui/account/sync_dialog.gd").new(); sd.info = r; add_child(sd)
+		else: toast(ACC.msg(st)))
+	var lo = _confirm("登出", "再按一次確定登出（會先同步進度）", func(): _logout()); lo.name = "AcctLogout"
+	var sw = _confirm("更換帳號", "再按一次：登出並換另一個帳號", func(): _logout()); sw.name = "AcctSwitch"
+	_note("登出後這部裝置的進度會先上傳，再從這部裝置清走；登入回同一個帳號就會接回來。")
+	_body.add_child(Control.new())
+
+func _logout() -> void:
+	toast("登出中…")
+	var r: Dictionary = await ACC.sign_out()
+	if not bool(r.get("synced", false)): toast("沒能上傳（離線？）。進度已留在這部裝置，登入同一帳號會接回。")
+	JSRun.skip_title = false; JSRun.reset_world(); get_tree().call_deferred("reload_current_scene")
+
+func _open_login() -> void:
+	var lp = load("res://ui/account/login_panel.gd").new(); lp.host = host
+	lp.on_done = func(): if is_instance_valid(self): show_tab(3)
+	add_child(lp)
 
 # ---------------- 支援 ----------------
 func _tab_support() -> void:

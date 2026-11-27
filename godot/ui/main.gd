@@ -914,14 +914,42 @@ func _show_title(fresh: bool) -> void:
 		var v = JSRun.skip_title; JSRun.skip_title = false
 		if v is String and v == "pre": call_deferred("start_opening")
 		return
+	# [account] 要登入先玩得：未登入就先出登入／註冊面板（成功後同步進度，再出標題畫面）
+	var ACC = load("res://game/account/acct.gd")
+	if get_node_or_null("AcctSync") == null:
+		var sn = load("res://ui/account/sync_node.gd").new(); sn.host = self; add_child(sn)
+	if ACC.gate_needed():
+		var lp = load("res://ui/account/login_panel.gd").new(); lp.host = self
+		lp.on_done = func(): title_ov = null; _show_title(fresh)
+		title_ov = lp; add_child(lp); return
 	# [title] 新版標題畫面（ui/title/title_view.gd）：封面推鏡、飄霧、鬼火、Logo、按鈕＋設置／導入存檔
 	var tv = load("res://ui/title/title_view.gd").new(); tv.host = self; tv.fresh = fresh
 	title_ov = tv; add_child(tv)
+	_acct_title(tv)
+
+# [account] 標題畫面：左下角顯示帳號（點擊開設置「存檔」頁）；背景同步雲端進度
+func _acct_title(tv: Control) -> void:
+	var ACC = load("res://game/account/acct.gd")
+	if not ACC.logged_in(): return
+	var al = Button.new(); al.name = "AcctLabel"; al.flat = true; al.focus_mode = Control.FOCUS_NONE
+	al.text = "帳號：" + ACC.masked(); al.add_theme_font_override("font", UIKit.font("sans", 700)); al.add_theme_font_size_override("font_size", 12)
+	for k in ["font_color", "font_hover_color", "font_pressed_color"]: al.add_theme_color_override(k, Color(1, 1, 1, 0.62))
+	al.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8)); al.add_theme_constant_override("outline_size", 3)
+	al.anchor_top = 1; al.anchor_bottom = 1; al.offset_left = 6; al.offset_right = 260; al.offset_top = -26; al.offset_bottom = -2; al.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	al.pressed.connect(func(): open_settings(true, not G.S.is_empty(), 3)); tv.add_child(al)
+	var r: Dictionary = await ACC.sync()
+	if not is_instance_valid(tv) or title_ov != tv: return
+	var st = str(r.get("state", ""))
+	if st == "download":
+		show_toast("載入帳號裡較新的進度…"); ACC.apply_cloud(str(r.data), int(r.rev))
+	elif st == "conflict":
+		var sd = load("res://ui/account/sync_dialog.gd").new(); sd.info = r; add_child(sd)
+	if st in ["same", "uploaded", "none"]: load("res://ui/account/sync_node.gd").pending = false
 
 # [settings] 設置面板（標題畫面、頂欄齒輪、劇情回顧頁都用呢個）
-func open_settings(in_title := false, has_save := true) -> void:
+func open_settings(in_title := false, has_save := true, tab := 0) -> void:
 	if get_node_or_null("SettingsPanel") != null: return
-	var sp = load("res://ui/settings/settings_panel.gd").new(); sp.host = self; sp.in_title = in_title
+	var sp = load("res://ui/settings/settings_panel.gd").new(); sp.host = self; sp.in_title = in_title; sp.tab = tab
 	sp.has_save = has_save and G.S is Dictionary and not G.S.is_empty()
 	add_child(sp)
 
