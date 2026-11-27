@@ -17,6 +17,7 @@
 extends RefCounted
 
 const ZD = preload("res://game/zone/zone_data.gd")
+const PACE = preload("res://game/econ/pace.gd")   # [ux] 前期節奏
 
 # ================= 數值（老闆試完喺度調） =================
 const TUNE := {
@@ -247,6 +248,7 @@ static func hold_reason(main = null) -> String:
 	var s = S()
 	if s == null: return "nos"
 	if J.num(s.get("qi", 0)) < float(TUNE.min_qi): return "newbie"
+	if not PACE.raid_on(): return "pace"   # [ux] 安頓期／鎖住：唔襲擾
 	var MB = load("res://game/zone/zone_battle.gd")
 	if MB.busy(): return "battle"
 	var B = J.G.get("Battle")
@@ -278,10 +280,10 @@ static func tick(main = null, dt := -1.0) -> void:
 	if not ZD.on() or not unlocked(): return
 	if not J.t(r.on):
 		if not _start_ok(main): return
-		r["on"] = 1.0; r["ph"] = "idle"; r["left"] = float(TUNE.first); r["cur"] = null
+		r["on"] = 1.0; r["ph"] = "idle"; r["left"] = maxf(float(TUNE.first), PACE.raid_first()); r["cur"] = null   # [ux] 練手期第一次遲啲
 		_log("on", ci())
 		return
-	if gap > float(TUNE.offline_gap): offline(gap)
+	if gap > float(TUNE.offline_gap) and PACE.raid_on(): offline(gap)   # [ux] 安頓期離線都唔積襲擾
 	if hold_reason(main) != "": return
 	step(dt)
 
@@ -336,7 +338,7 @@ static func offline(gap: float) -> void:
 		"warn": r["left"] = float(TUNE.warn)   # 預告緊就走咗：返嚟重新預告一次（唔會趁你唔喺度就打埋）
 		_: pass                               # 圍住緊：等你返嚟先計
 
-static func next_gap() -> float: return randf_range(float(TUNE.every_min), float(TUNE.every_max))
+static func next_gap() -> float: return randf_range(float(TUNE.every_min), float(TUNE.every_max)) * PACE.raid_mul()   # [ux] 練手期 ×1.8
 
 static func begin_warn() -> void:
 	var r = st()
