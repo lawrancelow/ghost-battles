@@ -459,6 +459,7 @@ func _shots(t) -> void:
 		sc.bubbles.clear()
 		var c = cs[i % cs.size()]
 		sc.story.bubble_cust(sc, c, kinds[i])
+		if sc.bubbles.is_empty(): continue   # [qa54] 客人啱啱走咗／冷卻中就唔出氣泡，截圖跳過唔好報錯
 		sc.bubbles[sc.bubbles.size() - 1].life = 99.0
 		await _w(t, 0.5)
 		await _shot(t, "03_cust_%s" % kinds[i])
