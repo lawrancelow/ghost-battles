@@ -1,0 +1,426 @@
+{
+ "style": "A 辦公室鐵櫃・東方詭異版（ChatGPT Plus 生成，品紅底去背）",
+ "source_res": "原圖 1536×1024 每張，四宮格放大截取",
+ "items": [
+  {
+   "file": "panel_large.png",
+   "use": "大面板框（台面板、建築、名冊、圖鑑等）",
+   "size": [
+    685,
+    967
+   ],
+   "nine_slice_margin": 64,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "popup_small.png",
+   "use": "小彈窗框（確認框、提示）",
+   "size": [
+    702,
+    341
+   ],
+   "nine_slice_margin": 44,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "title_plate.png",
+   "use": "標題列名牌",
+   "size": [
+    531,
+    137
+   ],
+   "nine_slice_margin": 36,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "btn_close.png",
+   "use": "關閉鈕",
+   "size": [
+    128,
+    127
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "tab_on.png",
+   "use": "分頁籤・選中",
+   "size": [
+    339,
+    84
+   ],
+   "nine_slice_margin": 28,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "tab_off.png",
+   "use": "分頁籤・未選",
+   "size": [
+    322,
+    77
+   ],
+   "nine_slice_margin": 28,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "card.png",
+   "use": "列表卡片框",
+   "size": [
+    473,
+    235
+   ],
+   "nine_slice_margin": 36,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "avatar_slot.png",
+   "use": "頭像格",
+   "size": [
+    222,
+    247
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "btn_primary.png",
+   "use": "主按鈕（暗血紅）",
+   "size": [
+    673,
+    165
+   ],
+   "nine_slice_margin": 40,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "btn_primary_down.png",
+   "use": "主按鈕・按下",
+   "size": [
+    670,
+    166
+   ],
+   "nine_slice_margin": 40,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "btn_secondary.png",
+   "use": "次按鈕（墨綠）",
+   "size": [
+    674,
+    154
+   ],
+   "nine_slice_margin": 40,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "btn_secondary_down.png",
+   "use": "次按鈕・按下",
+   "size": [
+    668,
+    154
+   ],
+   "nine_slice_margin": 40,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "btn_danger.png",
+   "use": "危險按鈕（裂紋）",
+   "size": [
+    674,
+    173
+   ],
+   "nine_slice_margin": 44,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "btn_disabled.png",
+   "use": "停用按鈕（灰鏽）",
+   "size": [
+    676,
+    168
+   ],
+   "nine_slice_margin": 40,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "bar_track.png",
+   "use": "進度條底槽",
+   "size": [
+    753,
+    82
+   ],
+   "nine_slice_margin": 24,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "bar_fill.png",
+   "use": "進度條填充（金）",
+   "size": [
+    618,
+    57
+   ],
+   "nine_slice_margin": 16,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "toggle_on.png",
+   "use": "開關・開",
+   "size": [
+    248,
+    118
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "toggle_off.png",
+   "use": "開關・關",
+   "size": [
+    256,
+    120
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "slider.png",
+   "use": "滑桿（軌道＋拖柄，需再拆）",
+   "size": [
+    790,
+    102
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "badge_dot.png",
+   "use": "紅點通知",
+   "size": [
+    89,
+    89
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "badge_count.png",
+   "use": "數量角標底",
+   "size": [
+    145,
+    144
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "star_on.png",
+   "use": "星・亮",
+   "size": [
+    126,
+    122
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "star_off.png",
+   "use": "星・空",
+   "size": [
+    125,
+    122
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "stat_row.png",
+   "use": "數值列（黃紙條）",
+   "size": [
+    740,
+    141
+   ],
+   "nine_slice_margin": 48,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "nav_bar.png",
+   "use": "底部導航底條",
+   "size": [
+    1395,
+    139
+   ],
+   "nine_slice_margin": 80,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "nav_village.png",
+   "use": "導航・村子",
+   "size": [
+    177,
+    163
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "nav_ghost.png",
+   "use": "導航・鬼怪（東方長髮遊魂）",
+   "size": [
+    172,
+    164
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "nav_map.png",
+   "use": "導航・地盤",
+   "size": [
+    173,
+    164
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "nav_chest.png",
+   "use": "導航・箱子",
+   "size": [
+    173,
+    164
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "nav_book.png",
+   "use": "導航・劇情",
+   "size": [
+    173,
+    164
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "nav_village_on.png",
+   "use": "導航・村子（選中）",
+   "size": [
+    176,
+    164
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "nav_ghost_on.png",
+   "use": "導航・鬼怪（選中）",
+   "size": [
+    172,
+    164
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "nav_map_on.png",
+   "use": "導航・地盤（選中）",
+   "size": [
+    173,
+    164
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "nav_chest_on.png",
+   "use": "導航・箱子（選中）",
+   "size": [
+    173,
+    164
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "nav_book_on.png",
+   "use": "導航・劇情（選中）",
+   "size": [
+    172,
+    163
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "res_slot.png",
+   "use": "頂欄資源格",
+   "size": [
+    395,
+    115
+   ],
+   "nine_slice_margin": 56,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "lord_plaque.png",
+   "use": "主公等級牌",
+   "size": [
+    282,
+    232
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "quest_red.png",
+   "use": "主線任務條（紅）",
+   "size": [
+    755,
+    103
+   ],
+   "nine_slice_margin": 80,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "quest_grey.png",
+   "use": "支線任務條（灰）",
+   "size": [
+    749,
+    100
+   ],
+   "nine_slice_margin": 80,
+   "note": "九宮格拉伸"
+  },
+  {
+   "file": "fab.png",
+   "use": "浮動圓鈕",
+   "size": [
+    222,
+    214
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "fab_cd.png",
+   "use": "浮動圓鈕・冷卻",
+   "size": [
+    222,
+    214
+   ],
+   "nine_slice_margin": null,
+   "note": "固定尺寸"
+  },
+  {
+   "file": "dialog_box.png",
+   "use": "對白框（含名牌）",
+   "size": [
+    1416,
+    264
+   ],
+   "nine_slice_margin": 96,
+   "note": "九宮格拉伸"
+  }
+ ]
+}
