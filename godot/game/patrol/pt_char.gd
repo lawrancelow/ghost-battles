@@ -73,7 +73,10 @@ func _init(unit, r) -> void:
 	solid = SOLID.has(k)
 	var special = SPECIAL != null and J.t(J.mc(SPECIAL, "has", [k]))
 	var rig = RIG.get(k)
-	if H0 > 0 and Limbs.has(k) and rig != null and PtGfx.tex(k + "__body") != null:
+	var hero_pose = k == "afu" and ACE.active("afu")   # [p0102_1] 主角空手：唔好再探男主拆件身體圖（女主存檔會載入男主 afu__body）
+	if hero_pose:
+		mode = "plain"
+	elif H0 > 0 and Limbs.has(k) and rig != null and PtGfx.tex(k + "__body") != null:
 		mode = "limbs"; limb_c = Limbs.CH[k]
 	elif H0 > 0 and rig != null and PtGfx.tex(k) != null and not special:
 		mode = "mesh"

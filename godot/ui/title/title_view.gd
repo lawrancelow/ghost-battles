@@ -21,6 +21,12 @@ var _cover: TextureRect
 var _cover_tex: Texture2D
 var _new_cover := false
 var _logo: TextureRect
+# [p0102_1] 順滑：Control 嘅位置會被「對齊像素」取整（snap_controls_to_pixels），慢速推鏡／浮動會一格一格跳。
+#   封面、Logo 改由子節點 Sprite2D 畫（亞像素位置、線性＋mipmap 過濾），外面 TextureRect 只做版面計算（自己唔畫）
+var _cover_sp: Sprite2D
+var _logo_sp: Sprite2D
+var _cov_pos := Vector2.ZERO
+var _cov_scl := Vector2.ONE
 var _cfade: TextureRect
 var _blur: TextureRect
 var _lshade: TextureRect
@@ -60,6 +66,8 @@ func _ready() -> void:
 	add_child(_blur)
 	_cover = TextureRect.new(); _cover.texture = _cover_tex; _cover.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; _cover.stretch_mode = TextureRect.STRETCH_SCALE
 	_cover.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(_cover)
+	_cover.self_modulate = Color(1, 1, 1, 0)   # 只做版面；真正畫係 _cover_sp
+	_cover_sp = _smooth_sprite(); _cover_sp.name = "cover_sp"; _cover.add_child(_cover_sp)
 	# 舊封面高度唔夠鋪滿：喺封面底部做一段漸變接返底色（唔好見到硬邊）
 	_cfade = TextureRect.new(); _cfade.name = "cover_fade"; _cfade.texture = _grad([[0.0, Color(0.09, 0.07, 0.1, 0)], [1.0, Color("#17121a")]])
 	_cfade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; _cfade.stretch_mode = TextureRect.STRETCH_SCALE; _cfade.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -83,6 +91,8 @@ func _ready() -> void:
 	if lt != null and _new_cover:
 		_logo = TextureRect.new(); _logo.name = "Logo"; _logo.texture = lt; _logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; _logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		_logo.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(_logo)
+		_logo.self_modulate = Color(1, 1, 1, 0)
+		_logo_sp = _smooth_sprite(); _logo_sp.name = "logo_sp"; _logo_sp.texture = lt; _logo.add_child(_logo_sp)
 	elif _new_cover:   # 新封面但未有 Logo：程序字頂住
 		var l = Label.new(); l.name = "LogoText"; l.text = "過勞鬼大作戰"; l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l.add_theme_font_override("font", UIKit.font("serif", 900)); l.add_theme_font_size_override("font_size", 44)
@@ -143,6 +153,10 @@ func _layout() -> void:
 			var fh = _cover.size.y * 0.28
 			_cfade.visible = true; _cfade.position = Vector2(0, _cover.size.y - fh); _cfade.size = Vector2(w, fh + _cover.size.y * 0.04)
 	_cover.pivot_offset = _cover.size / 2
+	# 封面 Sprite2D：喺 _cover 本地座標中心，縮放對準版面大小（推鏡喺 _process 乘上去）
+	_cover_sp.texture = ct; _cover_sp.material = _cover.material
+	_cov_pos = _cover.size / 2; _cov_scl = Vector2(_cover.size.x / tw, _cover.size.y / th)
+	_cover_sp.position = _cov_pos; _cover_sp.scale = _cov_scl
 	if _logo:
 		var lw: float; var lp: Vector2
 		var ar = _logo.texture.get_height() / float(_logo.texture.get_width())
@@ -152,6 +166,10 @@ func _layout() -> void:
 			lw = minf(w * 0.86, 420.0); lp = Vector2((w - lw) / 2, maxf(h * 0.045, 28.0))
 		_logo.size = Vector2(lw, lw * ar); _logo.position = lp; _logo.pivot_offset = _logo.size / 2
 		_logo.set_meta("y0", lp.y)
+		if _logo_sp:
+			var lt2: Texture2D = _logo.texture
+			var sc = minf(_logo.size.x / lt2.get_width(), _logo.size.y / lt2.get_height())
+			_logo_sp.position = _logo.size / 2; _logo_sp.scale = Vector2.ONE * sc; _logo_sp.set_meta("s0", sc)
 	if _vb:
 		if land:   # 按鈕：橫版封面放左下（唔遮主角）；直版封面放右邊空位
 			var bw = 380.0; var cx = (side / 2 if wide_left else w - side / 2)
@@ -160,6 +178,11 @@ func _layout() -> void:
 		else:
 			_vb.anchor_left = 0; _vb.anchor_right = 1; _vb.anchor_top = 1; _vb.anchor_bottom = 1
 			_vb.offset_left = 0; _vb.offset_right = 0; _vb.offset_bottom = -30
+
+func _smooth_sprite() -> Sprite2D:
+	var sp = Sprite2D.new(); sp.centered = true
+	sp.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	return sp
 
 func _edge_mat() -> ShaderMaterial:
 	var sh = Shader.new()
@@ -184,10 +207,16 @@ void fragment(){
 func _process(dt: float) -> void:
 	_t += dt
 	# 封面慢推鏡（14 秒一來回）
-	if _cover: var k = 0.5 - 0.5 * cos(_t * TAU / 28.0); _cover.scale = Vector2.ONE * (1.0 + 0.035 * k)
-	if _logo and _logo.has_meta("y0"):
-		_logo.position.y = float(_logo.get_meta("y0")) + sin(_t * 1.3) * 5.0
-		_logo.rotation = deg_to_rad(sin(_t * 0.9) * 0.6)
+	# 封面慢推鏡＋極輕微平移（亞像素、餘弦緩動、首尾相接冇跳幀）
+	if _cover_sp:
+		var k = 0.5 - 0.5 * cos(_t * TAU / 28.0)
+		_cover_sp.scale = _cov_scl * (1.0 + 0.035 * k)
+		_cover_sp.position = _cov_pos + Vector2(sin(_t * TAU / 40.0) * _cover.size.x * 0.006, sin(_t * TAU / 33.0) * _cover.size.y * 0.004)
+	# Logo 輕浮：動 Sprite2D（亞像素），外框唔郁
+	if _logo_sp and _logo_sp.has_meta("s0"):
+		_logo_sp.position = _logo.size / 2 + Vector2(0, sin(_t * 1.3) * 5.0)
+		_logo_sp.rotation = deg_to_rad(sin(_t * 0.9) * 0.6)
+		_logo_sp.scale = Vector2.ONE * float(_logo_sp.get_meta("s0")) * (1.0 + 0.006 * sin(_t * 1.1))
 	for m in _mists:
 		var sp: Sprite2D = m[0]; sp.position.x += m[1] * dt
 		var w = size.x
