@@ -65,7 +65,7 @@ func all(t) -> void:
 	await _w(t, 0.5)
 	_ck(nv.get_node_or_null("perf_lowres") == null or nv.get_node("perf_lowres").is_queued_for_deletion(), "關咗仲有低解像度層")
 	_ck(nv.world.get_parent() == nv, "世界冇搬返出嚟")
-	_ck(Engine.max_fps == 0, "關咗仲鎖幀")
+	_ck(Engine.max_fps == int(load("res://game/settings/prefs.gd").fps), "關咗冇返去設置幀率")   # [settings] 關流暢模式 → 用設置嘅 30／60
 	_ck(FileAccess.get_file_as_string("user://perf_mode.txt").strip_edges() == "0", "關咗設定冇存")
 	# 6. 開關之後村子照常：撳地圖、主角照畫
 	await _w(t, 1.0)

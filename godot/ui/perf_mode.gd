@@ -29,14 +29,18 @@ static func set_on(v: bool, m = null) -> void:
 	if f: f.store_string("1" if v else "0"); f.close()
 	var nv = m.get("village") if m != null else null
 	if nv != null and is_instance_valid(nv): apply(nv)
-	else: Engine.max_fps = FPS if on else 0
+	else: Engine.max_fps = FPS if on else _user_fps()
 
 static func lite() -> bool: return on   # 少霧
+
+# [settings] 流暢模式關：用設置入面揀嘅幀率（30／60）
+static func _user_fps() -> int:
+	var PF = load("res://game/settings/prefs.gd"); PF.load_pref(); return int(PF.fps)
 
 # 村子畫面 _build 尾、切換開關時叫
 static func apply(nv) -> void:
 	load_pref()
-	Engine.max_fps = FPS if on else 0
+	Engine.max_fps = FPS if on else _user_fps()
 	var tr = nv.get_node_or_null("perf_lowres")
 	if on and tr == null:
 		tr = TextureRect.new(); tr.name = "perf_lowres"

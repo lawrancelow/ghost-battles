@@ -15,7 +15,7 @@ static var _cache := {}
 static var LOG: Array = []   # 測試用：播過嘅語氣 key
 
 func _ready() -> void:
-	_p = AudioStreamPlayer.new(); add_child(_p)
+	_p = AudioStreamPlayer.new(); _p.bus = load("res://game/settings/prefs.gd").bus("voice"); add_child(_p)   # [settings] 語音音軌
 	var f = FileAccess.open("res://data/vox.json", FileAccess.READ)
 	if f: var d = JSON.parse_string(f.get_as_text()); if d is Dictionary: _cfg = d
 
@@ -58,3 +58,4 @@ func line(sc: Dictionary, li: int, who: String, text: String) -> void:
 	_p.stream = st; _p.volume_db = linear_to_db(0.9); _p.play()
 
 func reset() -> void: _last = ""
+func playing() -> bool: return _p != null and _p.playing   # [settings] 自動播放等語音播完

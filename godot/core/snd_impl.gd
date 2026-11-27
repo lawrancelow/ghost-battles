@@ -21,18 +21,20 @@ var _bus_m := 0
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_rng.randomize()
+	PF.ensure_buses()   # [settings] 音樂／音效／語音各自一條音軌
 	for i in 10:
-		var p = AudioStreamPlayer.new(); add_child(p); _sfx.append(p)
+		var p = AudioStreamPlayer.new(); p.bus = PF.bus("sfx"); add_child(p); _sfx.append(p)
 	for i in 10:
-		var p = AudioStreamPlayer.new(); add_child(p); _mus.append(p)
-	_bed = AudioStreamPlayer.new(); add_child(_bed)
-	_bed2 = AudioStreamPlayer.new(); add_child(_bed2)
+		var p = AudioStreamPlayer.new(); p.bus = PF.bus("music"); add_child(p); _mus.append(p)
+	_bed = AudioStreamPlayer.new(); _bed.bus = PF.bus("music"); add_child(_bed)
+	_bed2 = AudioStreamPlayer.new(); _bed2.bus = PF.bus("music"); add_child(_bed2)
 	var v = JSRun.ls.get("gb_sound") if JSRun.get("ls") is Dictionary else null
 	on = str(v) != "0"
 	_apply_master()
 
+const PF = preload("res://game/settings/prefs.gd")
 func _apply_master() -> void:
-	AudioServer.set_bus_volume_db(0, linear_to_db(0.9) if on else -80.0)
+	PF.apply_audio(on)   # [settings] 總音量跟設置
 	AudioServer.set_bus_mute(0, not on)
 
 func is_on() -> bool: return on
@@ -325,7 +327,7 @@ func _f43(name: String) -> bool:
 	_f43t[name] = now
 	if _f43p.is_empty():
 		for i in 8:
-			var q = AudioStreamPlayer.new(); add_child(q); _f43p.append(q)
+			var q = AudioStreamPlayer.new(); q.bus = PF.bus("sfx"); add_child(q); _f43p.append(q)
 	var p: AudioStreamPlayer = null
 	for q in _f43p: if not q.playing: p = q; break
 	if p == null:   # 全部響緊：搶播得最耐嗰個

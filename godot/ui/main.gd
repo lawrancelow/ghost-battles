@@ -51,6 +51,7 @@ const NAV_H := 58.0
 
 func _ready() -> void:
 	print("[boot] main ready")
+	load("res://game/settings/prefs.gd").apply_display()   # [settings] 幀率、螢幕常亮
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var bg = ColorRect.new(); bg.color = UIKit.INK; bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(bg)
 	_build_village(); _build_top(); _build_nav(); _build_sheet()

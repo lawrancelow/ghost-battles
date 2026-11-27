@@ -150,7 +150,7 @@ func _show_line() -> void:
 	if vox == null or not is_instance_valid(vox):
 		vox = Node.new(); vox.set_script(VOX); add_child(vox)
 	vox.line(sc, li, who, text)
-	full_text = text; shown = 0; typing = true; type_acc = 0.0
+	full_text = text; shown = 0; typing = true; type_acc = 0.0; auto_acc = 0.0
 	if talkbox != null:
 		nm.get_parent().visible = who != "旁白"; nm.text = DB.N(who)   # 只換顯示；SPEAKER_ART 照用原講者名
 		var art = "sys" if who == "系統" else DB.D.SPEAKER_ART.get(who)
@@ -176,13 +176,27 @@ func _show_line() -> void:
 
 var _sysrow: RichTextLabel
 
+const PF = preload("res://game/settings/prefs.gd")   # [settings] 文字速度、自動播放
+var auto_acc := 0.0
 func _process(dt: float) -> void:
-	if cur == null or not typing: return
-	type_acc += dt
-	while type_acc >= 0.028 and shown < full_text.length():
-		type_acc -= 0.028; shown += 1
+	if cur == null: return
+	if not typing:
+		_auto_tick(dt); return
+	var sec: float = PF.type_sec()
+	if sec <= 0.0: shown = full_text.length()
+	else:
+		type_acc += dt
+		while type_acc >= sec and shown < full_text.length():
+			type_acc -= sec; shown += 1
 	_render_text()
-	if shown >= full_text.length(): typing = false
+	if shown >= full_text.length(): typing = false; auto_acc = 0.0
+
+# 自動播放：打完字 → 等語音播完 → 再等（按字數）→ 翻頁；WhatsApp 模式唔自動
+func _auto_tick(dt: float) -> void:
+	if not PF.auto_play or wa != null or not visible: auto_acc = 0.0; return
+	if vox != null and is_instance_valid(vox) and vox.has_method("playing") and vox.playing(): auto_acc = 0.0; return
+	auto_acc += dt
+	if auto_acc >= PF.auto_wait(full_text.length()): auto_acc = 0.0; advance()
 
 func _render_text() -> void:
 	var s = full_text.substr(0, shown)
