@@ -35,3 +35,11 @@
 - 同底包 Boot 分工：開機畫面一開始將 state.json 嘅 ver 寫做好大（Boot 背景檢查就當已是最新），查完寫返真版本；真版本另記 lv。冇網時即刻寫返，Boot 背景更新照做後備。
 - 由舊版（補丁 34 或之前）升上 35：舊 Boot 背景落 35，仍然要重開一次；35 之後每次更新都唔使重開。
 - 測試：GB_LAUNCH_SHOTS=<目錄> 開機畫面每秒截圖。升級實測腳本（限速／續傳／壞檔伺服器）寫喺交接文件。
+
+## 2026-11-27 底包 0.10.2（新安裝包，補丁歸零重新累積）
+- 原因：0.10.1 補丁累積到 46 已 104.5MB，撞 GitHub 單檔 100MiB 上限。0.10.2 底包＝補丁 46 全部內容（連 cover2_wide），之後補丁只算對 0.10.2 嘅改動。
+- 版本：project.godot config/version＝0.10.2，Android version/code＝32（0.10.1 係 31）。分支 base0102。
+- 底包 manifest：`base_0102/android.json`、`linux.json`（由 0.10.2 打包版 pck 生成，4454 檔）。
+- 出 0.10.2 補丁：`prep.sh <commit> /tmp/new12 0.10.2` → `NEW=/tmp/new12 mkpatch.sh <repo>/godot/tools/devkit/base_0102 0.10.2 <號>`（目錄冇 pck 就直接用 json diff）。補丁號沿用 47、48…（Boot／launch 只比較同一底包內嘅 ver，換底包自動清舊補丁）。
+- version.json：0.10.1 條目（ver 46）**唔好郁**，舊機照拎 46；0.10.2 未有補丁時唔使加條目（launch.gd 搵唔到條目＝已是最新）。
+- **簽名**：Android 覆蓋安裝一定要用 0.10.1 同一把簽名：舊容器 `~/.local/share/godot/keystores/debug.keystore`（SHA-256 bb26b868…），11-19 已備份去老闆 Mac `~/Downloads/GhostBattles_debug.keystore`。新容器 env.sh 會生一把新 debug.keystore，**唔可以用嚟出畀老闆裝嘅 APK**（簽名唔同要先卸載，存檔會冇）。拎到原 keystore 後：放 ~/keys/gb_debug.keystore，editor_settings 嘅 debug_keystore 指去佢（user androiddebugkey／pass android，如不符再問），再 `--export-debug Android`。出完用 `apksigner verify --print-certs` 核對 SHA-256 開頭係 bb26b868。**唔好 commit keystore。**
