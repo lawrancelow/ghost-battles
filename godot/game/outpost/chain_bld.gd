@@ -328,8 +328,7 @@ static func act(bid: String, a: String, arg) -> Variant:
 	return null
 static func NEED(): return load("res://game/onboard/need.gd")
 static func _why(t: String) -> void:   # [p56]
-	if t == "": return
-	_fx("toast", [t]); J.G["_p56_last_why"] = t
+	NEED().say(t)
 static func _fx(m: String, a: Array) -> void:
 	var fx = J.G.get("Fx")
 	if fx != null: J.mc(fx, m, a)

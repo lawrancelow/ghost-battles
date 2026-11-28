@@ -1363,9 +1363,7 @@ static func n_bld(id) -> Dictionary:
 		o.posts.append({"post": pp, "name": PD.name, "desc": PD.desc, "lock": lock, "slots": sl})
 	return o
 static func _why(txt: String) -> void:   # [p56] 付唔起／做唔到：提示缺乜、去邊攞（唔再無聲無息）
-	if txt == "": return
-	_fx("toast", [txt])
-	J.G["_p56_last_why"] = txt
+	load("res://game/onboard/need.gd").say(txt)
 static func n_bld_act(id, a, arg):
 	var S = _S(); var F = _g("F"); var sid = J.str(id); var act = J.str(a); var B = _g("BUILDINGS")[sid]; var UI = _ui()
 	if act == "build":

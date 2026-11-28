@@ -156,3 +156,15 @@ static func quest_short(q) -> String:
 	for x in ls: if str(x.k) == str(nl.k): sh = int(x.short)
 	var where = str(BLD[up].get("name", "")) if BLD is Dictionary and BLD.has(up) else ""
 	return T("（缺%s %d%s）", "（缺%s %d%s）") % [rname(str(nl.k)), sh, ("→" + where) if where != "" else ""]
+
+# 出提示（同一句 2.5 秒內唔重複，撳多幾下唔會洗版）
+static var _last_t := ""
+static var _last_ms := -100000
+static func say(t: String) -> void:
+	if t == "": return
+	J.G["_p56_last_why"] = t
+	var now = Time.get_ticks_msec()
+	if t == _last_t and now - _last_ms < 2500: return
+	_last_t = t; _last_ms = now
+	var fx = J.G.get("Fx")
+	if fx != null: J.mc(fx, "toast", [t])
