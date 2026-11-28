@@ -245,6 +245,8 @@ var ruin_part := 0   # [perf] 0＝成個廢墟；1＝淨係廢墟（唔畫木牌
 func draw_ruin(ctx: Ctx, x: float, y: float, name: String, can: bool, seed: int, t := 0.0, req := "") -> void:
 	if ruin_part != 2: _ruin_body(ctx, x, y, seed)   # [perf]
 	if ruin_part == 1: return
+	var rid2 = RUIN_IDS[seed] if seed >= 0 and seed < RUIN_IDS.size() else ""
+	if rid2 != "" and load("res://game/rebuild/rb.gd").fixing(rid2): return   # [rebuild3] 搭緊棚：唔好再畫「可重建」木牌（細棟例如化寶爐、招魂台會喺竹棚後面露出一塊牌）
 	_ruin_sign(ctx, x, y, name, can, t, req)
 const RUIN_IDS := ["house", "wood", "rice", "plank", "bun", "store", "home", "camp", "altar", "furnace"]   # 同 nv_village.BLD_SEED 一樣次序（seed＝index）
 func _ruin_body(ctx: Ctx, x: float, y: float, seed: int) -> void:

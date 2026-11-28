@@ -35,7 +35,7 @@ func _clear_ui(t, m, tries := 40) -> bool:
 	return not _busy()
 func _shot(t, m, name: String, at: Vector2):
 	J.mc(J.G.get("Village"), "focus", [at.x, at.y])
-	await _w(t, 0.5)
+	await _w(t, 2.4 if not name.ends_with("_1ruin") else 0.6)   # 等跳字散咗先影（測試一秒內撳十幾下，跳字會疊埋；真玩家唔會）
 	await RenderingServer.frame_post_draw
 	t.get_viewport().get_texture().get_image().save_png(SHOTS + name + ".png")
 func _tap(x: float, y: float) -> void: J.mc(J.G.get("Village"), "tap", [x, y])
@@ -95,6 +95,8 @@ func all(t) -> void:
 				if _has_ghost(S, RB.SLEEPER.k): break
 			_chk("睡著的名鬼：倉庫第 1 堆挖出椰子砸死鬼並入村", had_sleeper or _has_ghost(S, RB.SLEEPER.k), RB.SLEEPER.k)
 			_chk("睡著的名鬼：有 sleeper 事件、只一次", had_sleeper or ev.filter(func(e): return e[0] == "sleeper").size() == 1, ev.filter(func(e): return e[0] == "sleeper"))
+			var SD = load("res://game/soul/soul_data.gd")
+			_chk("睡著的名鬼：唔會變成「去祭壇簽約」（祭壇仲係廢墟）", had_sleeper or (J.num(S.bld.altar) == 0 and not J.t(SD.st().dir.get(RB.SLEEPER.k)) and J.t(SD.st().got.get(RB.SLEEPER.k))), SD.st().dir)
 			var n0 = S.ghosts.size(); RB._sleeper(); await _w(t, 0.3)
 			_chk("睡著的名鬼：再叫唔會重複加", S.ghosts.size() == n0 and not J.t(J.mc(J.G.get("Story"), "busy", [])))
 		await _clear_ui(t, m)
@@ -115,7 +117,7 @@ func all(t) -> void:
 		var fl0 = RB.fix_left(b)
 		_tap(bp.x, bp.y - 30)
 		_chk("%s：撳棚架加快 1 秒" % b, RB.fix_left(b) < fl0 - 0.5, "%.1f→%.1f" % [fl0, RB.fix_left(b)])
-		RB.st().fix[b] = J.now() / 1000.0 + 6.0   # 截圖用：留足時間（唔影響邏輯）
+		RB.st().fix[b] = J.now() / 1000.0 + 9.0   # 截圖用：留足時間（唔影響邏輯）
 		await _shot(t, m, "%s_2fix" % b, bp)
 		_chk("%s：搭棚期間其他系統冇偷改 bld" % b, J.num(S.bld[b]) == 0 and RB.fixing(b), S.bld[b])
 		RB.st().fix[b] = J.now() / 1000.0 + 0.3

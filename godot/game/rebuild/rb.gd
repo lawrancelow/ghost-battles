@@ -271,7 +271,24 @@ static func _sleeper() -> void:
 	_snd("gong")
 	var p = _pos("store")
 	_float(p.x, p.y - 80, T("瓦礫下面有鼻鼾聲……", "瓦礫底下有鼾聲……"), "#c9a6ff")
-	J.mc(J.G.get("Story"), "queue", [SLEEPER.scene, func(_t, _a): J.cl(J.G.get("joinGhost"), null, [k]); _emit("sleeper", k); return null])
+	J.mc(J.G.get("Story"), "queue", [SLEEPER.scene, func(_t, _a): _join_direct(k); _emit("sleeper", k); return null])
+
+# [rebuild3] 劇情直接入村：魂魄系統（soul_data）會攔 joinGhost，改成「送魂魄、去祭壇簽約」——
+#   但挖出椰子鬼嗰陣祭壇仲係廢墟，玩家根本簽唔到，劇情又講咗佢「決定留低幫手」。所以學祭壇招降（summon）咁繞過攔截，再補返魂魄系統嘅記錄。
+const SOUL_PATH := "res://game/soul/soul_data.gd"
+static func _join_direct(k: String) -> void:
+	var SD = load(SOUL_PATH) if ResourceLoader.exists(SOUL_PATH) else null
+	if SD != null: SD.set("_bypass", true)
+	J.cl(J.G.get("joinGhost"), null, [k])
+	if SD == null: return
+	SD.set("_bypass", false)
+	var o = SD.st() if SD.has_method("st") else null
+	var g = SD.ghost(k) if SD.has_method("ghost") else null
+	if o is Dictionary and g != null:
+		if o.get("got") is Dictionary: o.got[k] = 1.0
+		if o.get("seen") is Dictionary: o.seen[k] = 1.0
+		if o.get("rk") is Dictionary and o.rk.get(k) == null: o.rk[k] = 0.0
+		if SD.has_method("apply_stats"): SD.apply_stats(g)
 
 static func _tap_ruin(village, b: String) -> void:
 	var bp = _pos(b)
