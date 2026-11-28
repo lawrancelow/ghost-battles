@@ -69,7 +69,7 @@ static func draw(sc, ctx) -> void:
 		var head = "%s！%s" % [tn, MK.T(e.get("n", ["", ""]))]
 		var desc = MK.T(e.desc) if e.get("desc") is Array else ""
 		ctx.font = "700 14px sans-serif"
-		var dl: Array = sc._wrap(ctx, desc, W - 120.0) if desc != "" else []
+		var dl: Array = sc._wrap(ctx, desc, W - 48.0) if desc != "" else []
 		if dl.size() > 2: dl = [dl[0], str(dl[1]).substr(0, maxi(1, str(dl[1]).length() - 1)) + "…"]
 		var ch = 34.0 + 19.0 * dl.size() + (6.0 if dl.size() else 0.0)
 		Art.rr(ctx, 8, cy, W - 16.0, ch, 10, "rgba(120,96,24,.96)" if chase else "rgba(150,36,30,.96)", "#f3d68a" if chase else "#ffd0c0", 2.0)
@@ -124,6 +124,7 @@ static func draw(sc, ctx) -> void:
 		Art.put(ctx, "mk_bn_gate", W / 2.0, by + bh, bw, bh)
 		sc._txt(ctx, MK.name(street), W / 2.0, by + bh * 0.36, 26, Color("#3a2414"), "center", 900, 0, "serif")
 		ctx.globalAlpha = 1.0
+		hud_bot = maxf(hud_bot, by + bh + 6.0)
 
 static func _pump(sc) -> void:   # 攞演出事件／對白
 	var now = float(sc.t)
@@ -185,7 +186,8 @@ static func culprit_key(sim, e: Dictionary) -> String:
 static func _tag(sc, ctx, p: Vector2, txt: String, fill: String, col := Color("#fff6e0"), size := 15) -> void:
 	ctx.font = "900 %dpx sans-serif" % size
 	var w = ctx.measureText(txt).width + 16.0
-	var x = clampf(p.x - w / 2.0, sc.vx0() + 2.0, sc.vx1() - w - 2.0)
+	var lo = maxf(sc.vx0(), float(sc.s2w(Vector2(0, 0)).x)) + 2.0; var hi = minf(sc.vx1(), float(sc.s2w(Vector2(sc.FW, 0)).x)) - w - 2.0   # 夾喺畫面入面，唔出格
+	var x = clampf(p.x - w / 2.0, lo, maxf(lo, hi))
 	Art.rr(ctx, x, p.y - 12, w, 24, 8, fill, "#2a1a10", 1.5)
 	sc._txt(ctx, txt, x + w / 2.0, p.y + 1, size, col, "center", 900, 0)
 static func _char(sc, ctx, key: String, p: Vector2, flip: bool, walk: bool, seed: float, s := 1.0, alpha := 1.0) -> void:

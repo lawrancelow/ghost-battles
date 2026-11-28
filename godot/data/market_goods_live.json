@@ -1,5 +1,5 @@
 {
- "_doc": "過勞鬼市集新商品（已過審美術）：只有貨、冇攤，做現有攤嘅副貨（Lv25 解鎖）。mv_data.reload 併入 GOODS；wants_like＝想買主貨嘅客人都會買呢樣。價錢＝寄賣攤主貨價 × 街階倍率比（舊價格體系；按章重算延後）。",
+ "_doc": "過勞鬼市集新商品（已過審美術）：只有貨、冇攤，做現有攤嘅副貨（Lv25 解鎖）。mv_data.reload 併入 GOODS；wants_like＝想買主貨嘅客人都會買呢樣。價錢＝寄賣攤主貨價 × 街階倍率比（舊價格體系；按章重算延後）。　STATIONS＝已過審新攤（第 2 章 5 台，三段外觀：art、art_2（Lv25）、art_3（Lv100））；maps_add＝呢啲攤擺邊章邊條街。",
  "GOODS": {
   "m_c1_huaihua": {
    "n": [
@@ -64,6 +64,22 @@
    ],
    "icon": "mvi_c2_xianjing",
    "price": 3000
+  },
+  "m_c2_lingdang": {
+   "n": [
+    "防偷鈴鐺手鏈",
+    "防偷鈴鐺手鏈"
+   ],
+   "icon": "mvi_c2_lingdang",
+   "price": 100
+  },
+  "m_c2_bagua": {
+   "n": [
+    "八卦鏡吊墜",
+    "八卦鏡吊墜"
+   ],
+   "icon": "mvi_c2_bagua",
+   "price": 500
   }
  },
  "wants_like": {
@@ -74,7 +90,9 @@
   "m_c1_xianghuo": "m_denglong",
   "m_c2_banlan": "m_shoubao",
   "m_c2_kudai": "m_tuoxie",
-  "m_c2_xianjing": "m_zhulong"
+  "m_c2_xianjing": "m_zhulong",
+  "m_c2_lingdang": "m_tuoxie",
+  "m_c2_bagua": "m_zhulong"
  },
  "ci": {
   "m_c1_huaihua": 0,
@@ -84,6 +102,246 @@
   "m_c1_xianghuo": 0,
   "m_c2_banlan": 1,
   "m_c2_kudai": 1,
-  "m_c2_xianjing": 1
- }
+  "m_c2_xianjing": 1,
+  "m_c2_lingdang": 1,
+  "m_c2_bagua": 1
+ },
+ "STATIONS": {
+  "st_c2_banlan": {
+   "n": [
+    "斑蘭糕檔",
+    "斑蘭糕攤"
+   ],
+   "art": "mvs_c2_banlan",
+   "good": "m_c2_banlan",
+   "how": [
+    "甘榜竹林摘返嚟嘅斑蘭葉，蒸到成條村都聞到——Toyol 聞到就嚟。",
+    "甘榜竹林摘回來的斑蘭葉，蒸到整條村都聞得到——Toyol 聞到就來。"
+   ],
+   "base_time": 4,
+   "base_out": 1,
+   "unlock_cost": 600,
+   "up_cost0": 180,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "anim": {
+    "fx": [
+     "drip",
+     "bob"
+    ],
+    "pts": [
+     [
+      0.35,
+      0.35
+     ],
+     [
+      0.5,
+      1.0
+     ]
+    ],
+    "c": "#e0a040"
+   }
+  },
+  "st_c2_kudai": {
+   "n": [
+    "防盜袋紙褲檔",
+    "防盜口袋紙褲攤"
+   ],
+   "art": "mvs_c2_kudai",
+   "good": "m_c2_kudai",
+   "how": [
+    "八個袋，個個有扣。Toyol 摸咗成晚，淨係摸到自己隻手。",
+    "八個口袋，個個有扣。Toyol 摸了一整晚，只摸到自己的手。"
+   ],
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 18000,
+   "up_cost0": 5400,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "anim": {
+    "fx": [
+     "drip",
+     "bob"
+    ],
+    "pts": [
+     [
+      0.35,
+      0.35
+     ],
+     [
+      0.5,
+      1.0
+     ]
+    ],
+    "c": "#e0a040"
+   }
+  },
+  "st_c2_xianjing": {
+   "n": [
+    "鈴鐺陷阱檔",
+    "鈴鐺陷阱攤"
+   ],
+   "art": "mvs_c2_xianjing",
+   "good": "m_c2_xianjing",
+   "how": [
+    "膠繩拉一條，銅鈴掛一排。邊個偷嘢，成條街都聽到。",
+    "膠繩拉一條，銅鈴掛一排。誰偷東西，整條街都聽得到。"
+   ],
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 90000,
+   "up_cost0": 27000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "anim": {
+    "fx": [
+     "wiggle",
+     "puff"
+    ],
+    "pts": [
+     [
+      0.5,
+      1.0
+     ],
+     [
+      0.5,
+      0.15
+     ]
+    ],
+    "c": "#eef2e4"
+   }
+  },
+  "st_c2_lingdang": {
+   "n": [
+    "防偷鈴鐺手鏈檔",
+    "防偷鈴鐺手鏈攤"
+   ],
+   "art": "mvs_c2_lingdang",
+   "good": "m_c2_lingdang",
+   "how": [
+    "戴上手，一郁就響。賣得越多，細路鬼越難落手。",
+    "戴上手，一動就響。賣得越多，小鬼越難下手。"
+   ],
+   "base_time": 4,
+   "base_out": 1,
+   "unlock_cost": 3000,
+   "up_cost0": 900,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "anim": {
+    "fx": [
+     "drip",
+     "bob"
+    ],
+    "pts": [
+     [
+      0.35,
+      0.35
+     ],
+     [
+      0.5,
+      1.0
+     ]
+    ],
+    "c": "#e0a040"
+   }
+  },
+  "st_c2_bagua": {
+   "n": [
+    "八卦鏡吊墜檔",
+    "八卦鏡吊墜攤"
+   ],
+   "art": "mvs_c2_bagua",
+   "good": "m_c2_bagua",
+   "how": [
+    "椰殼磨滑，鑲塊鏡。細路鬼照到自己，嚇到跌低啲錢。",
+    "椰殼磨亮，鑲一塊鏡。小鬼照到自己，嚇得把錢掉下。"
+   ],
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 15000,
+   "up_cost0": 4500,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "anim": {
+    "fx": [
+     "wiggle",
+     "puff"
+    ],
+    "pts": [
+     [
+      0.5,
+      1.0
+     ],
+     [
+      0.5,
+      0.15
+     ]
+    ],
+    "c": "#eef2e4"
+   }
+  }
+ },
+ "maps_add": {
+  "1": {
+   "food": [
+    "st_c2_banlan"
+   ],
+   "cloth": [
+    "st_c2_kudai"
+   ],
+   "weapon": [
+    "st_c2_xianjing"
+   ],
+   "acc": [
+    "st_c2_lingdang",
+    "st_c2_bagua"
+   ]
+  }
+ },
+ "art_stages": [
+  25,
+  100
+ ]
 }

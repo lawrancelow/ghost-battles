@@ -1221,11 +1221,7 @@
    "st_bingqi": "m_c1_gun",
    "st_denglong": "m_c1_xianghuo"
   },
-  "1": {
-   "st_shoubao": "m_c2_banlan",
-   "st_tuoxie": "m_c2_kudai",
-   "st_zhulong": "m_c2_xianjing"
-  },
+  "1": {},
   "2": {
    "st_shoubao": "st_wucha",
    "st_zhishan": "st_caoxie",
@@ -1243,9 +1239,7 @@
  },
  "pairs_pending": {
   "0": {},
-  "1": {
-   "st_c2_lingdang": "st_c2_bagua"
-  },
+  "1": {},
   "2": {
    "st_c3_zong": "st_c3_jiuniang",
    "st_c3_bangtui": "st_ganlu",

@@ -385,10 +385,17 @@ func _ops(t, sim, sc, c: int, food: Array, cloth: Array) -> void:
 	MKO.D()["price_rebase"] = 0; MKO.price_refresh()
 	# ---- 第 1、2 章新商品（已過審美術；只有貨、做副貨）----
 	var miss_ic = []
-	for gid in ["m_c1_huaihua", "m_c1_mianao", "m_c1_gun", "m_c1_dun", "m_c1_xianghuo", "m_c2_banlan", "m_c2_kudai", "m_c2_xianjing"]:
+	for gid in ["m_c1_huaihua", "m_c1_mianao", "m_c1_gun", "m_c1_dun", "m_c1_xianghuo", "m_c2_banlan", "m_c2_kudai", "m_c2_xianjing", "m_c2_lingdang", "m_c2_bagua"]:
 		var gd9 = MD.good_def(gid)
 		if gd9.is_empty() or not Spr.ok(str(gd9.get("icon", ""))) or Spr.get_tex(str(gd9.icon)) == null: miss_ic.append(gid)
-	_chk("新商品 8 樣：數據＋圖示齊（冇佔位圖）", miss_ic.is_empty(), miss_ic)
+	_chk("新商品 10 樣：數據＋圖示齊（冇佔位圖）", miss_ic.is_empty(), miss_ic)
+	var c2 = MK.stall_list(1); var c2bad = []
+	for sid in ["st_c2_banlan", "st_c2_kudai", "st_c2_xianjing", "st_c2_lingdang", "st_c2_bagua"]:
+		if not c2.has(sid): c2bad.append(sid)
+		for lvx in [1.0, 25.0, 100.0]: if not Spr.ok(MD.stall_art(sid, lvx)) or Spr.get_tex(MD.stall_art(sid, lvx)) == null: c2bad.append([sid, lvx])
+	_chk("第 2 章新攤 5 台上架、三段外觀圖齊", c2bad.is_empty(), c2bad)
+	_chk("第 2 章五條街：食／衣／兵器／飾品都有攤（飾品街＝鈴鐺手鏈、八卦鏡）", MK.street_of(1, "st_c2_lingdang") == "acc" and MK.street_of(1, "st_c2_bagua") == "acc" and MK.street_of(1, "st_c2_banlan") == "food" and MK.street_of(1, "st_c2_kudai") == "cloth" and MK.street_of(1, "st_c2_xianjing") == "weapon")
+	_chk("第 3–6 章冇新攤（未過審唔開放）", not MK.stall_list(2).any(func(x): return str(x).begins_with("st_c")) and not MK.stall_list(5).any(func(x): return str(x).begins_with("st_c")))
 	if c == 0:
 		sim.sst("st_shoubao").lv = 25.0; MKO.st().sub.erase("st_shoubao")
 		_chk("嘆氣蒸籠 Lv25 預設副貨＝槐花粥；紙紮兵器可揀槐木棍／蒸籠盾", MKO.sub_of("st_shoubao") == "m_c1_huaihua" and MKO.default_sub(0, "st_bingqi") == "m_c1_gun", MKO.sub_of("st_shoubao"))
