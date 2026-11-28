@@ -176,6 +176,7 @@ func logic(_t) -> void:
 	sim.custs.clear(); sim.st().counter = {G: 10.0}
 	var hc = {"cid": "c0_guhan", "k": "n30_guhangui", "wants": {G: 1}, "got": {}, "st": "serve", "slot": 0, "take": 0.0, "s": 0.0, "pos": sim.queue_pos(0), "ph": 4.0, "flip": true, "tp": "haggle"}
 	sim.custs.append(hc); sim.spawn_t = 999.0
+	sim.foes.clear(); sim.war.vols.clear()   # [p55] 前面倉庫補櫃台令客人買到兵器 → 義勇軍出咗去打孤魂（kill +10）；講價驗算要隔開
 	# 隔開戰鬥線：圍欄外孤魂撞夠 PRESS 秒會偷櫃台貨（每偷一次影響力 −1），6 秒內影響力一變，付錢嗰刻嘅 M(inf) 就同驗算嗰刻唔同
 	# （實測：付錢時 inf=55 → 96.67，驗算時 inf=54 → 96.00）。開新手保護（t0=0）= 唔偷、唔扣，驗算先穩；完咗還原。
 	var _t0 = MVW.ws().get("t0"); MVW.ws().t0 = 0.0
@@ -365,6 +366,7 @@ func logic(_t) -> void:
 	var res = []
 	for mode in ["off", "idle"]:
 		_setup()
+		_zero_goods()   # [p55] 倉庫有 1e9 成品 → 自動補櫃台變無限貨；防坑比較要靠真生產
 		var s2 = _sim()
 		s2.plus.off = mode == "off"
 		for sid in MD.stations(0): s2.st().st[sid].unlocked = true
