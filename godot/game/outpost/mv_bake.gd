@@ -13,6 +13,7 @@ static var _frame := -1
 static var stats := {"bake": 0, "hit": 0, "live": 0}
 static var _probe_done := false
 const K_MAX := 4.0
+const K_MIN := 0.8
 const TEX_MAX := 2048
 const PAD := 3.0
 const SH := """shader_type canvas_item;
@@ -45,6 +46,8 @@ static func draw(owner: Node, ctx: Ctx, key: String, fn: Callable) -> void:
 	var now = Time.get_ticks_msec() / 1000.0
 	var xf = owner.get_viewport().get_final_transform() * ctx.ci.get_global_transform_with_canvas() * ctx.T
 	var k = minf(K_MAX, snappedf(maxf(xf.x.length(), 0.01), 1.0 / 64.0))
+	if k < K_MIN:   # [int] 鏡頭拉遠（k 細過 0.8）時烘出嚟嘅圖會變成成塊實心黑（整合版實測 k=0.5、0.64 都中，0.86 正常）；遠景名牌好細、逐格畫好平，直接逐格畫
+		_live(ctx, rec); return
 	var h = hash(rec.cmds)
 	if rec.cmds.is_empty(): return
 	if now < float(e.live_until):
