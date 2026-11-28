@@ -104,6 +104,13 @@ static func refresh(manual := false) -> Array:
 		t["dry"] = int(J.num(t.dry)) + 1
 		if int(t.dry) >= int(R.pity):
 			list[list.size() - 1] = GEN.gen(_next_seed(), 2, avoid_of(list.slice(0, list.size() - 1))); t["dry"] = 0
+	# 同一畫面口頭禪唔重複（名鬼／保底替換嗰格都要過一次）：撞就揀下一個未用
+	var used = {}; var ncp = D().CP.size()
+	for g in list:
+		var c = int(g.cp)
+		var k = 0
+		while used.has(c) and k < ncp: c = (c + 1) % ncp; k += 1
+		g["cp"] = c; used[c] = true
 	t["list"] = list
 	if not manual:
 		t["man"] = 0
