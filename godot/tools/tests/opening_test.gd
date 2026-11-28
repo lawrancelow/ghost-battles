@@ -337,12 +337,20 @@ func _plaque(t, m) -> void:
 		st.cg.show_spec({"k": "cg_note"}); await _f(t, 2)
 		var nn = st.cg.layer.get_node_or_null("Plaque0")
 		var ntxt = str(_scenes().op2_arrive.lines[6][1]).trim_prefix("「").trim_suffix("」")
-		_chk("交接便條：疊劇本原句、多行、字夠大（>=44）", nn != null and str(nn.get_meta("text")) == str(DB.L(ntxt)) and str(nn.get_meta("style")) == "note" and int(nn.get_meta("font_size")) >= 44, nn.get_meta("font_size") if nn != null else "冇")
+		_chk("交接便條：疊劇本原句、多行、字夠大（>=40）", nn != null and str(nn.get_meta("text")) == str(DB.L(ntxt)) and str(nn.get_meta("style")) == "note" and int(nn.get_meta("font_size")) >= 40, nn.get_meta("font_size") if nn != null else "冇")
 		if nn != null:
 			var nl: Label = nn.get_child(0).get_child(nn.get_child(0).get_child_count() - 1)
 			await _f(t, 2)
 			var nh = nl.get_line_count() * nl.get_line_height() + maxi(0, nl.get_line_count() - 1) * nl.get_theme_constant("line_spacing")
-			_chk("交接便條：成段字喺紙面內（唔出紙）", nh <= nl.size.y + 1.0 and nl.get_line_count() >= 3, "%d 行、高 %.0f／%.0f" % [nl.get_line_count(), nh, nl.size.y])
+			var area_h = float(nn.get_meta("tex_h")) * 0.88; var area_w = float(nn.get_meta("tex_w")) * 0.86   # Label 會自己撐大，唔可以同 nl.size 比
+			_chk("交接便條：成段字喺紙面內（唔出紙）", nh <= area_h + 1.0 and nl.position.y + nh <= float(nn.get_meta("tex_h")) * 0.96 and nl.get_line_count() >= 3, "%d 行、高 %.0f／%.0f" % [nl.get_line_count(), nh, area_h])
+			var nfont: Font = nl.get_theme_font("font"); var nfs = int(nn.get_meta("font_size")); var wmax = 0.0
+			for ln in nn.get_meta("lines"): wmax = maxf(wmax, nfont.get_string_size(str(ln), HORIZONTAL_ALIGNMENT_LEFT, -1, nfs).x)
+			_chk("交接便條：每行闊度喺紙面內（右邊唔出紙、唔被切）", wmax <= area_w + 0.5 and nl.position.x + wmax <= float(nn.get_meta("tex_w")) * 0.95 and "".join(nn.get_meta("lines")) == str(nn.get_meta("text")), "最闊 %.0f／%.0f" % [wmax, area_w])
+			var head_ok = true
+			for ln in nn.get_meta("lines"):
+				if "，。：；、！？」』）…".contains(str(ln).substr(0, 1)): head_ok = false
+			_chk("交接便條：冇一行以收尾標點開頭", head_ok, str(nn.get_meta("lines")))
 		await _w(t, 1.0); await RenderingServer.frame_post_draw
 		t.get_viewport().get_texture().get_image().save_png(SH + "plaque_note.png")
 		st.cg.show_spec({"k": "cg_road"}); await _f(t, 2)

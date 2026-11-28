@@ -368,6 +368,23 @@ func _plaques(k: String, d: Dictionary, tex: Texture2D, W: float, H: float) -> v
 			q.append(img_to_layer(v, ts, W, H))
 		layer.add_child(_plaque_node(text, q, Color(str(e.get("color", "#5a2a1c"))), J.t(e.get("vertical")), i, str(e.get("style", ""))))
 
+# 便條斷行：逐字量闊度，每行唔超過 maxw；行首唔放收尾標點（將上一行最後一個字一齊帶落嚟）
+static func note_wrap(text: String, f: Font, fs: int, maxw: float) -> Array:
+	var out: Array = []; var cur = ""
+	var NOHEAD = "，。：；、！？」』）…"
+	for ch in text.split(""):
+		if ch == "\n": out.append(cur); cur = ""; continue
+		if cur != "" and f.get_string_size(cur + ch, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > maxw:
+			if NOHEAD.contains(ch) and cur.length() > 1:
+				var kk = cur.length() - 1
+				while kk > 0 and NOHEAD.contains(cur[kk]): kk -= 1   # 連續收尾標點（例如 』。）成串帶落嚟，行首一定係字
+				out.append(cur.substr(0, kk)); cur = cur.substr(kk) + ch
+			else:
+				out.append(cur); cur = ch
+		else: cur += ch
+	if cur != "": out.append(cur)
+	return out
+
 func _plaque_node(text: String, q: Array, col: Color, vertical: bool, idx: int, style := "") -> Node2D:
 	var wtop = (q[1] - q[0]).length(); var wbot = (q[2] - q[3]).length(); var hl = (q[3] - q[0]).length(); var hr = (q[2] - q[1]).length()
 	var qw = maxf(8.0, (wtop + wbot) / 2.0); var qh = maxf(8.0, (hl + hr) / 2.0)
@@ -377,21 +394,26 @@ func _plaque_node(text: String, q: Array, col: Color, vertical: bool, idx: int, 
 	var lb = Label.new(); lb.text = "\n".join(text.split("")) if vertical else text
 	var n = maxi(1, text.length())
 	var fs = int(minf(TH * 0.66, TW * 0.9 / n)) if not vertical else int(minf(TW * 0.66, TH * 0.9 / n))
-	if style == "note":   # 便條：多行，字盡量大但成段要喺紙面內（每行字數 × 行數夠放全部字）
-		fs = int(sqrt(TW * 0.9 * TH * 0.9 / (n * 1.28)))
+	var note_lines: Array = []
+	if style == "note":   # 便條：多行，自己逐字量闊度斷行（唔靠 Label 自動斷行），字盡量大但成段要喺紙面內
+		var nf: Font = UIKit.font("serif", 700)
+		var aw = TW * 0.86; var ah = TH * 0.88
+		fs = int(sqrt(aw * ah / (n * 1.3)))
 		while fs > 10:
-			var per = int(TW * 0.9 / fs)
-			if per > 0 and ceili(float(n) / per) * fs * 1.28 <= TH * 0.92: break
+			note_lines = note_wrap(text, nf, fs, aw)
+			if note_lines.size() * (nf.get_height(fs) + int(fs * 0.12)) <= ah: break   # 用字體真行高（宋體行高約 1.45 倍字號），唔好估
 			fs -= 1
+	if style == "emboss": fs = int(minf(TH * 0.8, TW * 0.98 / n))   # 金匾浮雕字：盡量填滿匾面空位
 	lb.add_theme_font_override("font", UIKit.font("serif", 900)); lb.add_theme_font_size_override("font_size", maxi(10, fs))
 	lb.add_theme_color_override("font_color", col)
 	lb.add_theme_color_override("font_outline_color", Color(1.0, 0.93, 0.8, 0.35)); lb.add_theme_constant_override("outline_size", maxi(2, fs / 14))   # 淡淡亮邊，似刻喺匾面
 	lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; lb.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lb.position = Vector2.ZERO; lb.size = Vector2(TW, TH); lb.clip_text = true
 	if style == "note":
-		lb.clip_text = false; lb.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		lb.text = "\n".join(note_lines)
+		lb.clip_text = false; lb.autowrap_mode = TextServer.AUTOWRAP_OFF; lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		lb.add_theme_font_override("font", UIKit.font("serif", 700)); lb.add_theme_constant_override("outline_size", 0); lb.add_theme_constant_override("line_spacing", int(fs * 0.12))
-		lb.position = Vector2(TW * 0.05, TH * 0.04); lb.size = Vector2(TW * 0.9, TH * 0.92)
+		lb.position = Vector2(TW * 0.07, TH * 0.06); lb.size = Vector2(TW * 0.86, TH * 0.88)
 	if style == "emboss":   # 金匾浮雕字：下層深色內陰影（偏右下）＋亮色高光（偏左上）＋面層金色，似刻出嚟
 		var off = maxf(2.0, fs / 22.0)
 		lb.remove_theme_color_override("font_outline_color"); lb.add_theme_constant_override("outline_size", 0)
@@ -402,7 +424,7 @@ func _plaque_node(text: String, q: Array, col: Color, vertical: bool, idx: int, 
 	sv.add_child(lb)
 	var pg = Polygon2D.new(); pg.name = "Plaque%d" % idx; pg.add_child(sv)
 	pg.texture = sv.get_texture(); pg.modulate = Color(1, 1, 1, 0.9)
-	pg.set_meta("text", text); pg.set_meta("quad", q); pg.set_meta("font_size", fs); pg.set_meta("style", style); pg.set_meta("layers", sv.get_child_count())
+	pg.set_meta("text", text); pg.set_meta("quad", q); pg.set_meta("lines", note_lines); pg.set_meta("tex_w", TW); pg.set_meta("tex_h", TH); pg.set_meta("font_size", fs); pg.set_meta("style", style); pg.set_meta("layers", sv.get_child_count())
 	if style == "emboss": pg.modulate = Color(1, 1, 1, 1)
 	var NX = 12; var NY = 6; var m = homography(q)
 	var pts := PackedVector2Array(); var uvs := PackedVector2Array(); var polys: Array = []
