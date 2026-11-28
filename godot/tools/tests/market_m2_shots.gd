@@ -101,8 +101,9 @@ func all(t) -> void:
 	# 9. 第 6 章打卡鐘（截圖用：暫時當已解鎖）
 	FUN.D().ot["punch_ch"] = 0
 	for i in food.size(): MK.ot(food[i]).on = 1 if i < 2 else 0
-	FUN.st().punch[F] = FUN._clock() + 432.0
 	await _w(t, 0.3); _hold(food, fats); await _shot(t, "s12_punch_clock")
+	FUN.punch(F)
+	await _w(t, 1.8); await _shot(t, "s12b_punch_cooldown")
 	# 10. 大客走人、斷單
 	FUN._ev({"k": "vip_fail", "name": "富豪鬼", "pos": sim.st_pos(F) + Vector2(0, -150)})
 	await _w(t, 0.35); await _shot(t, "s13_vip_fail")
@@ -115,7 +116,7 @@ func all(t) -> void:
 	if cloth.size(): cam.center_on(sim.st_pos(cloth[0]) + Vector2(-20, -70))
 	await _w(t, 2.6); await _shot(t, "s14_cloth_street")
 	J.G.erase("mk_counter_n_fn"); FUN.reload()
-	_p("RESULT ok=15 bad=0")
+	_p("RESULT ok=16 bad=0")
 func _hold(food: Array, fats: Array) -> void:   # 截圖前定返過勞值（模擬一路行會變）
 	for i in food.size():
 		MK.ot(food[i]).fat = fats[i % fats.size()]
