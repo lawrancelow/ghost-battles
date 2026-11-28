@@ -276,7 +276,7 @@ func logic(t) -> void:
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
 # ---- 後備動態（單張圖）＋新接入嘅分層圖 ----
-const FLAT_KEYS := ["cg_lobby_m", "cg_stall_hook_m", "cg_pang_visit_m", "cg_joss_note_m", "cg_stall_hook_f", "cg_caught", "cg_he_wake", "cg_qian_bite", "cg_mk_weapon"]
+const FLAT_KEYS := ["cg_lobby_m", "cg_stall_hook_m", "cg_pang_visit_m", "cg_joss_note_m", "cg_stall_hook_f", "cg_caught", "cg_he_wake", "cg_qian_bite", "cg_mk_weapon", "cg_tavern_m", "cg_nuopo_taste"]
 const NEW_LAYERED := {"cg_f_soup": 2, "cg_f_bribe": 4}
 
 func flat(t) -> void:
@@ -457,3 +457,33 @@ func _inside(it, mk) -> bool:   # 原位離畫面邊有少少距離嘅層先查�
 	var p: Vector2 = it.pos; var n: TextureRect = it.n
 	var mg = mk.vs * 0.015
 	return p.x >= mg.x and p.y >= mg.y and p.x + n.size.x <= mk.vs.x - mg.x and p.y + n.size.y <= mk.vs.y - mg.y
+
+func shots(t) -> void:
+	var dir = OS.get_environment("CGM_SHOTS")
+	if dir == "": dir = "/tmp/cgm/shots/"
+	DirAccess.make_dir_recursive_absolute(dir)
+	var keys = OS.get_environment("CGM_KEYS").split(",", false)
+	if keys.is_empty(): keys = [OS.get_environment("CGM_KEY") if OS.get_environment("CGM_KEY") != "" else "cg_a2_rebuilt"]
+	var pc = _mk(t); var cg = pc[1]
+	await _w(t, 0.2)
+	var base = dir
+	for key in keys:
+		dir = base + (key + "/" if keys.size() > 1 else "")
+		DirAccess.make_dir_recursive_absolute(dir)
+		cg.hide_cg(); await _w(t, 0.6)
+		await _shots_one(t, cg, key, dir, pc)
+	_p("RESULT ok=1 bad=0 shots=" + base)
+
+func _shots_one(t, cg, key, dir, pc) -> void:
+	cg.show_spec({"k": key})
+	await _w(t, 0.1)
+	if false: _p("dbg par=%s cg.pos=%s cg.size=%s frame=%s screen=%s tv=%s vp=%s win=%s" % [pc[0].size, cg.position, cg.size, cg.frame.size, cg.screen.size, cg.tv.size, cg.vp.size, t.get_viewport().get_visible_rect().size])
+	var dt = float(OS.get_environment("CGM_DT")) if OS.get_environment("CGM_DT") != "" else 0.25
+	var n = int(OS.get_environment("CGM_N")) if OS.get_environment("CGM_N") != "" else 48
+	var per_frame = OS.get_environment("CGM_FRAMES") != ""   # 配合 --fixed-fps：逐格截，播放速度準
+	if per_frame: await _w(t, 1.3)   # 等老電視開機動畫完
+	for i in n:   # 預設 12 秒，每 0.25 秒一張；CGM_DT／CGM_N 可改
+		if per_frame: await t.get_tree().process_frame
+		else: await _w(t, dt)
+		var img = t.get_viewport().get_texture().get_image()
+		img.save_png(dir + "f%03d.png" % i)
