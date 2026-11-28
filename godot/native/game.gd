@@ -417,9 +417,14 @@ static func v_hit_test(x: float, y: float):
 		var bx = J.num(POS[id][0]); var by = J.num(POS[id][1])
 		var w = 70.0 if id == "house" else (65.0 if id == "gate" else (26.0 if id == "furnace" else 46.0)); var h = 115.0 if id == "house" else (92.0 if id == "gate" else 70.0)
 		if id != "gate" and SB is Dictionary and SB.has(id) and not J.t(SB.get(id)):   # [ruins13] 未起嘅地盤（廢墟）
+			var on_sign = false   # [rebuild4] 木牌擺咗喺廢墟腳邊：撳牌都計
+			if Spr.ok(J.str(id) + "_ruin"):
+				var sr: Rect2 = load("res://game/rebuild/rb.gd").sign_rect(J.str(id))
+				on_sign = Rect2(sr.position + Vector2(bx, by), sr.size).grow(3.0).has_point(Vector2(x, y))
 			if not J.t(_c("bldUnlocked", [id])):   # 未解鎖：唔彈建築卡（之前撳空地都會彈），撳廢墟／木牌淨係講點樣開
-				if absf(x - bx) < 40 and y > by - 80 and y < by + 10: return {"kind": "ruin", "id": id}
+				if on_sign or (absf(x - bx) < 40 and y > by - 80 and y < by + 10): return {"kind": "ruin", "id": id}
 				continue
+			if on_sign: return {"kind": "bld", "id": id}
 			w = 40.0; h = 80.0   # 可重建：撳廢墟／木牌
 		if absf(x - bx) < w and y > by - h and y < by + 10: return {"kind": "gate" if id == "gate" else "bld", "id": id}
 	return null

@@ -1,0 +1,235 @@
+# [rebuild2] 荒村重建補驗（vil2 P2）：
+#   1. 10 棟（ORDER 4＋LATER 6）每棟三態：廢墟 → 清理 → 搭棚（修復中）→ 開張；每態截圖（/tmp/rebuild2/shots/<棟>_<1ruin|2fix|3open>.png）
+#   2. 化寶爐排第 4；後段 6 棟行舊建造流程鈎（build_hook）：未清唔起、清完扣錢搭棚、撳加快、時間到開張
+#   3. 睡著的名鬼：倉庫第 1 堆挖出椰子砸死鬼 → 劇情 → 入村（只一次）
+#   4. 生氣值：0 → 每開一棟 +1/10 → 1.0；冇 juice（J.G.juice_vitality 冇人寫）時村子畫面照用 rb.vitality()；有 juice 式 listener 時每次開張收到最新值
+#   5. 全村點燈：10 棟開齊即點（唔使等兵營等後加建築），只點一次；村史館 8 件、集齊獎、存檔
+# 用法：bash /home/claude/setup/edtest.sh <godot目錄> rebuild2 res://tools/tests/rebuild2_test.gd all 900
+extends RefCounted
+
+const RB = preload("res://game/rebuild/rb.gd")
+const PF = preload("res://tools/tests/paddyfix_test.gd")
+const SHOTS := "/tmp/rebuild2/shots/"
+var ok := 0
+var bad := 0
+
+func _p(m): print("[rebuild2] ", m)
+func _chk(name: String, cond: bool, extra = "") -> void:
+	if cond: ok += 1; _p("ok  " + name + ("　" + str(extra) if str(extra) != "" else ""))
+	else: bad += 1; _p("BAD " + name + ("　" + str(extra) if str(extra) != "" else ""))
+func _w(t, s: float): await t.get_tree().create_timer(s).timeout
+func _busy() -> bool: return J.t(J.mc(J.G.get("Story"), "busy", [])) or J.t(J.mc(J.G.get("UI"), "modalOpen", []))
+# 好似玩家咁：有劇情就撳跳過、有彈窗就閂；回 true ＝ 而家撳得屏
+func _clear_ui(t, m, tries := 40) -> bool:
+	for i in tries:
+		if not _busy(): return true
+		var sn = m.get("story")
+		if sn != null and sn.get("cur") is Dictionary:
+			var ls = sn.cur.sc.get("lines", [])
+			_p("（撳屏被擋）劇情 id=%s style=%s 第一句=%s" % [sn.cur.get("id"), sn.cur.sc.get("style", ""), str(ls[0]).left(70) if ls.size() > 0 else ""])
+			sn.skip_scene()
+		elif J.t(J.mc(J.G.get("UI"), "modalOpen", [])): _p("（撳屏被擋）彈窗 tab=%s" % str(J.gp(J.G.get("UI"), "tab")))
+		J.mc(J.G.get("UI"), "close", [])
+		if m.get("sheet") != null and J.t(J.mc(J.G.get("UI"), "modalOpen", [])): m.sheet.visible = false
+		await _w(t, 0.2)
+	return not _busy()
+func _shot(t, m, name: String, at: Vector2):
+	J.mc(J.G.get("Village"), "focus", [at.x, at.y])
+	await _w(t, 2.4 if not name.ends_with("_1ruin") else 0.6)   # 等跳字散咗先影（測試一秒內撳十幾下，跳字會疊埋；真玩家唔會）
+	await RenderingServer.frame_post_draw
+	t.get_viewport().get_texture().get_image().save_png(SHOTS + name + ".png")
+func _tap(x: float, y: float) -> void: J.mc(J.G.get("Village"), "tap", [x, y])
+func _check() -> void: J.mc(J.G.get("Quest"), "check", [])
+func _has_ghost(S, k: String) -> bool:
+	for g in S.ghosts: if str(g.k) == k: return true
+	return false
+
+func all(t) -> void:
+	DirAccess.make_dir_recursive_absolute(SHOTS)
+	var pf = PF.new()
+	var m = await pf._boot(t)
+	var S: Dictionary = J.G.S
+	RB.start_fresh(S, true)
+	var ev := []
+	var jv := []   # 模擬 juice：listener 入面讀 vitality 寫 J.G.juice_vitality
+	RB.listen(func(k, a):
+		ev.append([k, a])
+		J.G["juice_vitality"] = {"v": RB.vitality()}; jv.append(RB.vitality()))
+	J.G.erase("juice_vitality")
+	await _w(t, 0.6)
+	_chk("化寶爐排第 4", RB.ORDER.size() == 4 and RB.ORDER[3] == "furnace" and J.t(J.cl(J.G.get("bldUnlocked"), null, ["furnace"])), RB.ORDER)
+	_chk("荒村 10 棟", RB.ALL.size() == 10)
+	_chk("生氣值：開局 0", RB.opened_count() == 0 and is_zero_approx(RB.vitality()), "%d %.2f" % [RB.opened_count(), RB.vitality()])
+	var nv = m.get("village")
+	_chk("冇 juice：村子畫面 vit() 照用 rb.vitality()（安全退化）", J.G.get("juice_vitality") == null and nv != null and nv.has_method("vit") and is_zero_approx(float(nv.vit())), nv.vit() if nv != null and nv.has_method("vit") else "-")
+	await _signs(t, m, S)
+	var had_sleeper = _has_ghost(S, RB.SLEEPER.k)
+	var n_open := 0
+	for b in RB.ALL:
+		var later = b in RB.LATER
+		var bp = RB._pos(b)
+		_chk("%s：有位置" % b, bp != Vector2.ZERO, bp)
+		await _clear_ui(t, m)
+		# —— 一、廢墟 ——
+		_chk("%s：廢墟（bld 0、未開、雜草密度滿）" % b, J.num(S.bld[b]) == 0 and not RB.is_open(b) and RB.holds(b) and RB.weed_k(b) > 0.99, "%s %.2f" % [S.bld[b], RB.weed_k(b)])
+		await _shot(t, m, "%s_1ruin" % b, bp)
+		await _clear_ui(t, m)
+		_tap(bp.x, bp.y - 30)
+		_chk("%s：未清雜物撳廢墟唔搭棚" % b, not RB.fixing(b))
+		if later:
+			_chk("%s：未清雜物建造鈎接手但唔起" % b, RB.build_hook(b) and not RB.fixing(b) and J.num(S.bld[b]) == 0)
+		# —— 清理 ——
+		var hits := 0
+		for e in RB.piles():
+			if e.b != b: continue
+			for k in RB.HITS:
+				if _busy(): await _clear_ui(t, m)
+				_tap((e.p as Vector2).x, (e.p as Vector2).y - 4); hits += 1
+				await _w(t, 0.04)
+		_chk("%s：撳 %d 下清晒（雜草密度跌到最低）" % [b, hits], RB.cleared(b) and hits == RB.PILES[b].size() * RB.HITS and RB.weed_k(b) < 0.11, "%d %.2f" % [RB.left_of(b), RB.weed_k(b)])
+		if b == "store":
+			# 睡著的名鬼：劇情播完（玩家撳跳過／撳完）先入村
+			for i in 50:
+				var sn = m.get("story")
+				if sn != null and sn.get("cur") != null: sn.skip_scene()
+				await _w(t, 0.2)
+				if _has_ghost(S, RB.SLEEPER.k): break
+			_chk("睡著的名鬼：倉庫第 1 堆挖出椰子砸死鬼並入村", had_sleeper or _has_ghost(S, RB.SLEEPER.k), RB.SLEEPER.k)
+			_chk("睡著的名鬼：有 sleeper 事件、只一次", had_sleeper or ev.filter(func(e): return e[0] == "sleeper").size() == 1, ev.filter(func(e): return e[0] == "sleeper"))
+			var SD = load("res://game/soul/soul_data.gd")
+			_chk("睡著的名鬼：唔會變成「去祭壇簽約」（祭壇仲係廢墟）", had_sleeper or (J.num(S.bld.altar) == 0 and not J.t(SD.st().dir.get(RB.SLEEPER.k)) and J.t(SD.st().got.get(RB.SLEEPER.k))), SD.st().dir)
+			var n0 = S.ghosts.size(); RB._sleeper(); await _w(t, 0.3)
+			_chk("睡著的名鬼：再叫唔會重複加", S.ghosts.size() == n0 and not J.t(J.mc(J.G.get("Story"), "busy", [])))
+		await _clear_ui(t, m)
+		# —— 二、搭棚 ——
+		var cost: Dictionary = RB.COST[b] if not later else (J.G.BUILDINGS[b].get("build") if J.G.BUILDINGS[b].get("build") is Dictionary else {})
+		if later: RB._costs(); cost = J.G.BUILDINGS[b].get("build") if J.G.BUILDINGS[b].get("build") is Dictionary else {}
+		for k in cost: S.res[k] = J.num(cost[k]) + 5.0
+		var before = S.res.duplicate()
+		if later: _chk("%s：清完建造鈎接手" % b, RB.build_hook(b))
+		else: _tap(bp.x, bp.y - 30)
+		_chk("%s：開始搭棚、bld 仲係 0" % b, RB.fixing(b) and J.num(S.bld[b]) == 0, S.bld[b])
+		var paid = true
+		for k in cost: if not is_equal_approx(J.num(S.res[k]), J.num(before[k]) - J.num(cost[k])): paid = false
+		_chk("%s：扣咗修復費 %s" % [b, cost], paid, S.res)
+		if later:
+			var r2 = S.res.duplicate(); RB.build_hook(b)
+			_chk("%s：搭緊棚再撳建造唔會重複扣錢" % b, r2 == S.res)
+		var fl0 = RB.fix_left(b)
+		_tap(bp.x, bp.y - 30)
+		_chk("%s：撳棚架加快 1 秒" % b, RB.fix_left(b) < fl0 - 0.5, "%.1f→%.1f" % [fl0, RB.fix_left(b)])
+		RB.st().fix[b] = J.now() / 1000.0 + 9.0   # 截圖用：留足時間（唔影響邏輯）
+		await _shot(t, m, "%s_2fix" % b, bp)
+		_chk("%s：搭棚期間其他系統冇偷改 bld" % b, J.num(S.bld[b]) == 0 and RB.fixing(b), S.bld[b])
+		RB.st().fix[b] = J.now() / 1000.0 + 0.3
+		# —— 三、開張 ——
+		for i in 60:
+			_check(); await _w(t, 0.1)
+			if RB.is_open(b): break
+		n_open += 1
+		_chk("%s：時間到開張（bld≥1、open 事件）" % b, RB.is_open(b) and J.num(S.bld[b]) >= 1 and not RB.fixing(b) and ev.has(["open", b]), S.bld[b])
+		_chk("%s：生氣值 %d/10" % [b, n_open], RB.opened_count() == n_open and is_equal_approx(RB.vitality(), n_open / 10.0) and is_equal_approx(float(nv.vit()), n_open / 10.0), "%d %.2f" % [RB.opened_count(), RB.vitality()])
+		_chk("%s：juice 接口收到最新生氣值" % b, J.G.get("juice_vitality") is Dictionary and is_equal_approx(float(J.G.juice_vitality.v), n_open / 10.0), J.G.get("juice_vitality"))
+		if b == "furnace": _chk("四棟修完：rb.done、虛擬任務完", J.t(RB.st().get("done")) and not RB.on() and RB.cur_q() == null)
+		await _w(t, 0.5); await _clear_ui(t, m)
+		await _shot(t, m, "%s_3open" % b, bp)
+	# —— 全村點燈 ——
+	_check(); await _w(t, 0.6); _check()
+	var BO = J.G.get("BLD_ORDER")
+	_chk("全村點燈：10 棟開齊即點（BLD_ORDER 而家 %d 項，唔使等後加建築）" % (BO as Array).size(), RB.all_lit() and ev.has(["lit", null]) and is_equal_approx(RB.vitality(), 1.0))
+	for i in 4: _check(); await _w(t, 0.3)
+	_chk("全村點燈：只點一次", ev.filter(func(e): return e[0] == "lit").size() == 1)
+	_chk("荒村做完：冇雜物、冇廢墟 hold", RB.piles().is_empty() and RB.ALL.all(func(b): return not RB.holds(b)))
+	# —— 村史館 ——
+	var c0 = J.num(S.res.coins)
+	var r0 = RB.relics().size()
+	for i in 12: RB._relic(Vector2(200, 400))
+	_chk("村史館：8 件唔重複", RB.relics().size() == 8 and ev.filter(func(e): return e[0] == "relic").size() >= 8 - r0, RB.relics())
+	_chk("村史館：集齊有冥幣獎（只一次）", (r0 == 8) or (J.num(S.res.coins) >= c0 + 200 and J.num(S.res.coins) < c0 + 400), J.num(S.res.coins) - c0)
+	# 提示排隊：一個一個出（每 NOTE_GAP 秒），劇情／彈窗期間唔出，最後出晒
+	var nl = RB.notes_left()
+	_chk("提示排隊：有嘢排緊", nl >= 2, nl)
+	await _clear_ui(t, m)
+	for i in int((nl + 2) * RB.NOTE_GAP / 0.5) + 10:
+		if _busy(): await _clear_ui(t, m, 3)
+		_check(); await _w(t, 0.5)
+		if RB.notes_left() == 0: break
+	_chk("提示排隊：最後全部顯示完", RB.notes_left() == 0, RB.notes_left())
+	var js = JSON.parse_string(J.to_json(S))
+	_chk("存檔：rb（done／lit／sleeper／relics 8／open 10）", js is Dictionary and js.get("rb") is Dictionary and J.t(js.rb.get("done")) and J.t(js.rb.get("lit")) and J.t(js.rb.get("sleeper")) and (js.rb.get("relics") as Array).size() == 8 and (js.rb.get("open") as Dictionary).size() == 10)
+	await _names(t, m, S)
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+# [rebuild4] 廢墟腳邊木牌：唔遮廢墟圖（同不透明像素重疊 ≤10%）、喺地圖入面、唔撞相鄰建築／其他木牌／雜物堆、撳牌＝撳廢墟
+const ZD = preload("res://game/zone/zone_data.gd")
+func _opaque_in(rid: String, r: Rect2) -> int:   # r：相對建築位置；回入面有幾多個不透明像素（換算成遊戲單位面積）
+	var tex = Spr.get_tex(rid + "_ruin")
+	var img: Image = tex.get_image()
+	if img.is_compressed(): img.decompress()
+	var w: float = float(Art.BW[rid]); var k = w / tex.get_width(); var h = tex.get_height() * k
+	var n := 0
+	var x0 = int(floor((r.position.x + w / 2) / k)); var x1 = int(ceil((r.end.x + w / 2) / k))
+	var y0 = int(floor((r.position.y - 6.0 + h) / k)); var y1 = int(ceil((r.end.y - 6.0 + h) / k))
+	for y in range(maxi(0, y0), mini(img.get_height(), y1)):
+		for x in range(maxi(0, x0), mini(img.get_width(), x1)):
+			if img.get_pixel(x, y).a > 0.12: n += 1
+	return int(n * k * k)
+func _signs(t, m, S) -> void:
+	var world = Rect2(Vector2.ZERO, ZD.world_size()) if ZD.on() else Rect2(0, 0, 390, 99999)
+	var rects := {}; var bodies := {}
+	for b in RB.ALL:
+		var bp = RB._pos(b)
+		rects[b] = Rect2(RB.sign_rect(b).position + bp, RB.sign_rect(b).size)
+		bodies[b] = Rect2(Art.ruin_opaque(b).position + bp, Art.ruin_opaque(b).size)
+	var gp = J.G.get("POS").get("gate")
+	if gp != null: bodies["gate"] = Rect2(float(gp[0]) - 75, float(gp[1]) - 90, 150, 96)
+	for b in RB.ALL:
+		var sr: Rect2 = RB.sign_rect(b); var wr: Rect2 = rects[b]
+		var ov = _opaque_in(b, sr); var pct = 100.0 * ov / (sr.size.x * sr.size.y)
+		_chk("木牌 %s：同廢墟圖不透明範圍重疊 ≤10%%" % b, pct <= 10.0, "%.1f%%　牌 %s" % [pct, sr])
+		_chk("木牌 %s：字夠大（牌高 34、闊 ≥76，名 14px）、闊度裝得落個名" % b, is_equal_approx(sr.size.y, 34.0) and sr.size.x >= 76.0 and sr.size.x >= RB.bname(b).length() * 14.0 + 16.0, sr.size)
+		_chk("木牌 %s：喺地圖可見範圍入面（唔出格）" % b, world.encloses(wr.grow(2.0)), "%s in %s" % [wr, world])
+		var hit = []
+		for o in bodies: if o != b and (bodies[o] as Rect2).intersects(wr): hit.append("體:" + o)
+		for o in rects: if o != b and (rects[o] as Rect2).intersects(wr): hit.append("牌:" + o)
+		for e in RB.piles():
+			var pr = Rect2((e.p as Vector2).x - RB.PILE_HW + 3, (e.p as Vector2).y - RB.PILE_UP + 3, RB.PILE_HW * 2 - 6, RB.PILE_UP - 2)
+			if pr.intersects(wr): hit.append("雜物:" + str(e.id))
+		_chk("木牌 %s：唔撞相鄰建築／其他木牌／雜物堆" % b, hit.is_empty(), hit)
+		var c = wr.get_center()
+		_chk("木牌 %s：撳牌＝撳廢墟（荒村接手）、撳中嘅唔係雜物" % b, RB.tap(null, c.x, c.y) and not RB.fixing(b) and RB.left_of(b) == RB.PILES[b].size())
+	await _w(t, 2.5)   # 等提示跳字散
+
+# [rebuild4] 主角名：荒村全部劇情文本經 DB.L／DB.N 換名（男主預設、男主改名、女主預設、女主改名），唔會出寫死嘅「阿福」
+func _names(t, m, S) -> void:
+	RB.add_scenes()
+	var h0 = (S.get("hero") as Dictionary).duplicate() if S.get("hero") is Dictionary else {}
+	var sn = m.get("story")
+	for hv in [["", "m", "阿福"], ["大強", "m", "大強"], ["", "f", str(DB.HERO_F.name)], ["小美", "f", "小美"]]:
+		DB.hero_apply(DB.hero_make(hv[0], hv[1]), S)
+		var want: String = hv[2]
+		for sid in RB.SC:
+			await _clear_ui(t, m)
+			var who_bad = []; var txt_bad = []; var hero_lines := 0; var n := 0
+			sn.queue(sid)
+			await _w(t, 0.15)
+			for i in 30:
+				if sn.cur == null or str(sn.cur.get("id")) != sid: break
+				var raw_who = str(sn.cur.sc.lines[sn.li][0])
+				var shown_who = str(sn.nm.text) if sn.get("talkbox") != null and sn.get("nm") != null and is_instance_valid(sn.nm) else str(DB.N(raw_who))
+				var txt = str(sn.full_text); n += 1
+				if raw_who == "阿福":
+					hero_lines += 1
+					if shown_who != want: who_bad.append(shown_who)
+				for bad_s in ["{主角}", "{主角全名}"] + (["阿福", "陳大福", "Kelvin"] if want != "阿福" else []):
+					if txt.contains(bad_s) or shown_who.contains(bad_s): txt_bad.append("%d:%s" % [sn.li, bad_s])
+				sn.typing = false; sn.advance()
+				await _w(t, 0.05)
+			_chk("換名 %s／%s：%s（%d 句、主角講 %d 句）名牌同台詞都啱" % [want, hv[1], sid, n, hero_lines], n >= 1 and who_bad.is_empty() and txt_bad.is_empty(), [who_bad, txt_bad])
+		# 非劇情文本（提示、任務、舊物件）：唔應該有任何主角名
+		var loose = []
+		for e in RB.RELICS: for x in e: if str(x).contains("阿福") or str(x).contains("主角"): loose.append(x)
+		for k in RB.PILE_NAME: for x in RB.PILE_NAME[k]: if str(x).contains("阿福"): loose.append(x)
+		_chk("換名 %s／%s：提示／舊物件文本冇寫死主角名" % [want, hv[1]], loose.is_empty(), loose)
+	if not h0.is_empty(): DB.hero_apply(h0, S)
+	await _clear_ui(t, m)

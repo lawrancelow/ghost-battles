@@ -75,12 +75,10 @@ static func _emit(kind: String, arg) -> void:
 static func opened_count() -> int:
 	var s = S(); var n := 0
 	if s == null: return 0
-	var BO = J.G.get("BLD_ORDER")
-	for b in (BO if BO is Array else ORDER): if J.num(s.bld.get(b, 0)) > 0 and not holds(str(b)): n += 1
+	# [rebuild3] 只數荒村 10 棟（ALL）：BLD_ORDER 執行時會被兵營等後加建築加長（變 11），會令生氣值頂位得 10/11、全村點燈永遠等唔到
+	for b in ALL: if J.num(s.bld.get(b, 0)) > 0 and not holds(str(b)): n += 1
 	return n
-static func vitality() -> float:
-	var BO = J.G.get("BLD_ORDER")
-	return float(opened_count()) / float(maxi(1, (BO as Array).size() if BO is Array else 10))
+static func vitality() -> float: return float(opened_count()) / float(ALL.size())
 static func all_lit() -> bool: return J.t(st().get("lit"))
 
 # ================= 存檔 =================
@@ -107,6 +105,25 @@ static func _pos(b: String) -> Vector2:
 	if P is Dictionary and P.has(b): return Vector2(float(P[b][0]), float(P[b][1]))
 	return Vector2.ZERO
 
+# [rebuild4] 廢墟腳邊木牌（相對建築位置）；同 nv_village 畫嘅一樣（名、解鎖條件）
+static func sign_rect(b: String) -> Rect2:
+	var can = J.t(J.cl(J.G.get("bldUnlocked"), null, [b]))
+	var rq = "" if can else str(load("res://native/game.gd").bld_req(b))
+	var r: Rect2 = Art.ruin_sign_rect(b, bname(b), rq, can)
+	return r
+# 雜物堆位置（相對建築）：避開腳邊木牌——同木牌打橫重疊就推去牌嘅左右，喺牌正下方就推落牌底
+const PILE_HW := 23.0   # 雜物圖半闊
+const PILE_UP := 30.0   # 雜物圖由落腳點向上幾高
+static func pile_off(b: String, i: int) -> Vector2:
+	var e = PILES[b][i]; var o = Vector2(float(e[0]), float(e[1]))
+	if not Spr.ok(b + "_ruin"): return o
+	var sr = sign_rect(b)
+	if o.y + 4.0 < sr.position.y or o.y - PILE_UP > sr.end.y: return o      # 成堆喺牌上面／下面
+	if absf(o.x) - PILE_HW >= sr.size.x / 2: return o                          # 喺牌左右兩邊
+	if absf(o.x) >= 25.0: o.x = signf(o.x) * (sr.size.x / 2 + PILE_HW + 2.0)   # 推去牌邊
+	else: o.y = maxf(o.y, sr.end.y + PILE_UP + 2.0)                            # 正中：推落牌底
+	return o
+
 static func piles() -> Array:   # [{id, b, kind, p: Vector2, left}]
 	var out := []
 	if not active(): return out
@@ -118,7 +135,7 @@ static func piles() -> Array:   # [{id, b, kind, p: Vector2, left}]
 			var left = J.num(pl.get(id, 0))
 			if left <= 0: continue
 			var e = PILES[b][i]
-			out.append({"id": id, "b": b, "kind": e[2], "p": bp + Vector2(float(e[0]), float(e[1])), "left": left})
+			out.append({"id": id, "b": b, "kind": e[2], "p": bp + pile_off(b, i), "left": left})
 	return out
 
 static func left_of(b: String) -> int:
@@ -128,6 +145,10 @@ static func left_of(b: String) -> int:
 	return n
 
 static func cleared(b: String) -> bool: return left_of(b) == 0
+# [rebuild2] 廢墟前景雜草密度 0.1–1（剩幾多堆雜物）；冇荒村（舊存檔未起嘅地盤）＝0.6
+static func weed_k(b: String) -> float:
+	if not active() or not PILES.has(b): return 0.6
+	return 0.1 + 0.9 * float(left_of(b)) / float(maxi(1, PILES[b].size()))
 static func is_open(b: String) -> bool: return J.t(st().get("open", {}).get(b))
 static func fixing(b: String) -> bool: return st().get("fix", {}).has(b)
 static func fix_left(b: String) -> float: return maxf(0.0, J.num(st().get("fix", {}).get(b, 0)) - J.now() / 1000.0)
@@ -146,7 +167,10 @@ static func tap(village, x: float, y: float) -> bool:
 		if is_open(b): continue
 		var bp = _pos(b)
 		var hw = 30.0 if b == "furnace" else 46.0
-		if not (absf(x - bp.x) < hw and y > bp.y - 90 and y < bp.y + 14): continue
+		var on_sign = false   # [rebuild4] 撳腳邊木牌＝撳廢墟
+		if Spr.ok(b + "_ruin") and not fixing(b):
+			var sr = sign_rect(b); on_sign = Rect2(sr.position + bp, sr.size).grow(3.0).has_point(p)
+		if not on_sign and not (absf(x - bp.x) < hw and y > bp.y - 90 and y < bp.y + 14): continue
 		if b in ORDER:
 			if not on(): continue
 			_tap_ruin(village, b); return true
@@ -158,7 +182,7 @@ static func tap(village, x: float, y: float) -> bool:
 
 static func _speed(b: String) -> void:
 	var bp = _pos(b); var f = st().fix; f[b] = J.num(f[b]) - 1.0
-	_snd("click"); _float(bp.x, bp.y - 70, T("加快！", "加快！"), "#ffe9a8")
+	_snd("click"); _float(bp.x + randf_range(-26.0, 26.0), bp.y - 92, T("加快！", "加快！"), "#ffe9a8")   # [rebuild2] 唔好同「搭棚修復中」疊埋
 
 # 舊建造流程鈎（native/game.gd n_bld_act、chain_bld.build、ui/main.gd 都叫）：回 true ＝ 荒村接手（唔好再行舊嘅「建好了」）
 static func build_hook(b: String) -> bool:
@@ -239,7 +263,7 @@ static func _relic(p: Vector2) -> void:   # 10% 挖到舊物件（未有嘅先�
 # ================= 提示排隊（唔好同劇情／彈窗／其他提示疊埋）=================
 static var _notes: Array = []
 static var _note_t := -99.0
-const NOTE_GAP := 1.6
+const NOTE_GAP := 3.0   # 等上一個提示收埋先出下一個（唔好兩張疊住）
 static func _note(kind: String, text: String) -> void: _notes.append([kind, text])
 static func notes_left() -> int: return _notes.size()
 static func _busy() -> bool:
@@ -269,7 +293,24 @@ static func _sleeper() -> void:
 	_snd("gong")
 	var p = _pos("store")
 	_float(p.x, p.y - 80, T("瓦礫下面有鼻鼾聲……", "瓦礫底下有鼾聲……"), "#c9a6ff")
-	J.mc(J.G.get("Story"), "queue", [SLEEPER.scene, func(_t, _a): J.cl(J.G.get("joinGhost"), null, [k]); _emit("sleeper", k); return null])
+	J.mc(J.G.get("Story"), "queue", [SLEEPER.scene, func(_t, _a): _join_direct(k); _emit("sleeper", k); return null])
+
+# [rebuild3] 劇情直接入村：魂魄系統（soul_data）會攔 joinGhost，改成「送魂魄、去祭壇簽約」——
+#   但挖出椰子鬼嗰陣祭壇仲係廢墟，玩家根本簽唔到，劇情又講咗佢「決定留低幫手」。所以學祭壇招降（summon）咁繞過攔截，再補返魂魄系統嘅記錄。
+const SOUL_PATH := "res://game/soul/soul_data.gd"
+static func _join_direct(k: String) -> void:
+	var SD = load(SOUL_PATH) if ResourceLoader.exists(SOUL_PATH) else null
+	if SD != null: SD.set("_bypass", true)
+	J.cl(J.G.get("joinGhost"), null, [k])
+	if SD == null: return
+	SD.set("_bypass", false)
+	var o = SD.st() if SD.has_method("st") else null
+	var g = SD.ghost(k) if SD.has_method("ghost") else null
+	if o is Dictionary and g != null:
+		if o.get("got") is Dictionary: o.got[k] = 1.0
+		if o.get("seen") is Dictionary: o.seen[k] = 1.0
+		if o.get("rk") is Dictionary and o.rk.get(k) == null: o.rk[k] = 0.0
+		if SD.has_method("apply_stats"): SD.apply_stats(g)
 
 static func _tap_ruin(village, b: String) -> void:
 	var bp = _pos(b)
@@ -410,7 +451,12 @@ static func _fix_b(bp: Vector2) -> String:
 static func draw_scaffold(ctx: Ctx, bp: Vector2, frac: float) -> void:
 	var key = _fix_b(bp) + "_repair"   # 美術 B 組：修復中（竹棚＋帆布）
 	if Spr.ok(key):
-		Art.put(ctx, key, bp.x, bp.y + 6, float(Art.BW.get(_fix_b(bp), 100)))
+		var b = _fix_b(bp); var w = float(Art.BW.get(b, 100)); var sd = ALL.find(b) + 3
+		Art.seat(ctx, bp.x, bp.y + 1, w, sd)   # [rebuild2] 同完成版一樣接地：泥地、後景、斜投影、前景（加木料磚堆）
+		Art.seat_back(ctx, bp.x, bp.y + 1, w, sd)
+		Art.cast(ctx, key, bp.x, bp.y + 2, w)
+		Art.put(ctx, key, bp.x, bp.y + 6, w)
+		Art.scaffold_front(ctx, bp.x, bp.y + 1, w, sd)
 	else:
 		ctx.strokeStyle = "#a07a4a"; ctx.lineWidth = 3
 		for i in 4:

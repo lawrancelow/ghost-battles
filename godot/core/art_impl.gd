@@ -245,13 +245,56 @@ var ruin_part := 0   # [perf] 0＝成個廢墟；1＝淨係廢墟（唔畫木牌
 func draw_ruin(ctx: Ctx, x: float, y: float, name: String, can: bool, seed: int, t := 0.0, req := "") -> void:
 	if ruin_part != 2: _ruin_body(ctx, x, y, seed)   # [perf]
 	if ruin_part == 1: return
+	var rid2 = RUIN_IDS[seed] if seed >= 0 and seed < RUIN_IDS.size() else ""
+	if rid2 != "" and load("res://game/rebuild/rb.gd").fixing(rid2): return   # [rebuild3] 搭緊棚：唔好再畫「可重建」木牌（細棟例如化寶爐、招魂台會喺竹棚後面露出一塊牌）
+	if rid2 != "" and Spr.ok(rid2 + "_ruin"):   # [rebuild4] 有專屬廢墟圖：木牌擺喺廢墟腳邊（唔好遮住幅圖），冇樁
+		var sr: Rect2 = ruin_sign_rect(rid2, name, req, can)
+		_ruin_sign(ctx, x, y + sr.position.y + 50.0, name, can, t, req, sr.size.x)
+		return
 	_ruin_sign(ctx, x, y, name, can, t, req)
+# [rebuild4] 廢墟圖嘅不透明範圍（相對建築位置；同 _ruin_body 一樣：闊 BW、底部中心對齊 y+6）
+var _ruin_op := {}
+func ruin_opaque(rid: String) -> Rect2:
+	if _ruin_op.has(rid): return _ruin_op[rid]
+	var r := Rect2(-40, -60, 80, 66)
+	var tex = Spr.get_tex(rid + "_ruin")
+	if tex != null:
+		var w: float = float(BW.get(rid, 100)); var k = w / tex.get_width(); var h = tex.get_height() * k
+		var img: Image = tex.get_image()
+		var u := Rect2i(0, 0, tex.get_width(), tex.get_height())
+		if img != null:
+			if img.is_compressed(): img.decompress()
+			u = img.get_used_rect()
+		r = Rect2(-w / 2 + u.position.x * k, 6.0 - h + u.position.y * k, u.size.x * k, u.size.y * k)
+	_ruin_op[rid] = r
+	return r
+# 木牌闊度（唔靠 ctx 量字：測試／撳屏範圍／雜物避位都用同一條數）：中日韓字 1 格、其他半格
+func _txt_w(s: String, px: float) -> float:
+	var n := 0.0
+	for i in s.length(): n += 1.0 if s.unicode_at(i) > 0x2e7f else 0.58
+	return n * px
+func ruin_sign_w(name: String, req: String, can: bool) -> float:
+	if can: return maxf(76.0, _txt_w(name, 14.0) + 20.0)
+	return maxf(84.0, maxf(_txt_w(name, 14.0), _txt_w(req, 12.0)) + 20.0)
+const SIGN_H := 34.0
+const SIGN_GAP := 3.0   # 木牌頂同廢墟圖底嘅距離
+# 木牌矩形（相對建築位置）：喺廢墟不透明範圍正下方、水平置中
+func ruin_sign_rect(rid: String, name: String, req: String, can: bool) -> Rect2:
+	var w = ruin_sign_w(name, req, can)
+	return Rect2(-w / 2, ruin_opaque(rid).end.y + SIGN_GAP, w, SIGN_H)
 const RUIN_IDS := ["house", "wood", "rice", "plank", "bun", "store", "home", "camp", "altar", "furnace"]   # 同 nv_village.BLD_SEED 一樣次序（seed＝index）
 func _ruin_body(ctx: Ctx, x: float, y: float, seed: int) -> void:
 	var rid = RUIN_IDS[seed] if seed >= 0 and seed < RUIN_IDS.size() else ""
 	if rid != "" and Spr.ok(rid + "_ruin"):   # [rebuild] 美術 B 組：每棟專屬廢墟圖（同完成版同尺寸、底部中心對齊）
-		seat(ctx, x, y + 1, BW[rid], seed)
-		put(ctx, rid + "_ruin", x, y + 6, BW[rid])
+		var RB = load("res://game/rebuild/rb.gd")
+		if RB.fixing(rid): return   # 搭緊棚：由 rb.draw_scaffold 畫（修復中圖＋接地層），廢墟唔好再疊喺底
+		var w: float = BW[rid]
+		seat(ctx, x, y + 1, w, seed)   # [rebuild2] 同完成版一樣嘅接地：泥地＋後景＋斜投影＋前景草石
+		seat_back(ctx, x, y + 1, w, seed)
+		cast(ctx, rid + "_ruin", x, y + 2, w)
+		put(ctx, rid + "_ruin", x, y + 6, w)
+		seat_front(ctx, x, y + 1, w, seed)
+		ruin_front(ctx, x, y + 1, w, seed, RB.weed_k(rid))   # 廢墟加厚：雜草、碎瓦、斷木（清得越多越少）
 		return
 	el(ctx, x, y - 4, 54, 16, "rgba(24,16,12,.55)")
 	el(ctx, x - 8, y - 6, 36, 10, "rgba(52,36,26,.45)")
@@ -265,18 +308,74 @@ func _ruin_body(ctx: Ctx, x: float, y: float, seed: int) -> void:
 	if Spr.ok("zb_bush"): put(ctx, "zb_bush", x + (-34.0 if flip else 34.0), y + 8, 28)
 	tint = sv
 	seat_front(ctx, x, y + 2, 104, seed + 40)   # [seat16]
-func _ruin_sign(ctx: Ctx, x: float, y: float, name: String, can: bool, t: float, req: String) -> void:
+# [rebuild2] 廢墟前景加厚：美術 B 組遮擋物件（野草碎瓦、斷木、碎磚、破紙紮、枯枝）壓喺廢墟底邊前面
+#   k＝雜物剩餘比例 0.1–1：清得越多越疏；冇圖時退回墨線枯草＋畫碎瓦
+const OVR_RUIN := ["weeds_a", "weeds_b", "weeds_c", "weeds_d"]
+const OVR_JUNK := ["rubble_wood", "rubble_brick", "rubble_paper", "rubble_branch"]
+const OVR_FIX := ["repair_lumber", "repair_bricks", "repair_rope", "repair_tools"]
+const OVR_TINT := Color(0.74, 0.70, 0.68)   # 壓暗少少，貼返夜色地面
+var _ov_tex := {}
+func ov(ctx: Ctx, k: String, x: float, y: float, w: float, flip := false, tintc := OVR_TINT) -> bool:
+	if not _ov_tex.has(k):
+		var p = "res://assets/spr/ovr_%s.webp" % k
+		_ov_tex[k] = load(p) if ResourceLoader.exists(p) else null
+	var im = _ov_tex[k]
+	if im == null: return false
+	var h = w * im.get_height() / im.get_width()
+	el(ctx, x, y - 1, w * 0.44, maxf(2.0, h * 0.14), "rgba(12,6,5,.40)")   # 貼地暗影
+	ctx.ci.draw_set_transform_matrix(ctx.T * Transform2D(Vector2(-1.0 if flip else 1.0, 0), Vector2(0, 1), Vector2(x, y)))
+	ctx.ci.draw_texture_rect(im, Rect2(-w / 2, -h, w, h), false, ctx._mod() * tintc)
+	ctx.ci.draw_set_transform_matrix(Transform2D.IDENTITY)
+	return true
+func ruin_front(ctx: Ctx, x: float, y: float, w: float, seed: int, k: float) -> void:
+	var sd = seed * 13 + 7
+	var n_w = int(round(1.0 + 2.0 * k))   # 野草碎瓦：1–3 叢，左右兩邊先
+	var slots = [-0.36, 0.34, 0.02]
+	var used = false
+	for i in n_w:
+		var gx = x + slots[i] * w + (_sr(sd, 30 + i) - 0.5) * 8.0
+		used = ov(ctx, OVR_RUIN[int(_sr(sd, 40 + i) * 4.0) % 4], gx, y + 15 + _sr(sd, 60 + i) * 4.0, w * (0.42 + _sr(sd, 70 + i) * 0.08) * (0.8 + 0.2 * k), _sr(sd, 80 + i) > 0.5) or used
+	if k > 0.4:   # 雜物：斷木／碎磚／破紙紮／枯枝 1–2 件
+		var n_j = 1 if k < 0.75 else 2
+		for i in n_j:
+			var jx = x + (0.18 if i == 0 else -0.16) * w * (1.0 if _sr(sd, 90) > 0.5 else -1.0)
+			ov(ctx, OVR_JUNK[int(_sr(sd, 100 + i) * 4.0) % 4], jx, y + 18 + i * 3.0, w * (0.34 + _sr(sd, 110 + i) * 0.06), _sr(sd, 120 + i) > 0.5)
+	if used: return
+	var n_t = int(round(2.0 + 6.0 * k))   # 冇圖：墨線枯草＋畫碎瓦
+	for i in n_t:
+		tuft(ctx, x + (_sr(sd, 90 + i) - 0.5) * w * 0.95, y + 8 + _sr(sd, 110 + i) * 12.0, 10.0 + _sr(sd, 130 + i) * 8.0 * (0.6 + k * 0.6), sd + i)
+	for i in int(round(2.0 + 4.0 * k)):
+		var tx = x + (_sr(sd, 150 + i) - 0.5) * w * 0.80; var ty = y + 10 + _sr(sd, 170 + i) * 10.0
+		var a = _sr(sd, 190 + i) * 3.0; var s2 = 4.0 + _sr(sd, 210 + i) * 3.0
+		var c = Vector2(cos(a), sin(a) * 0.45) * s2; var d = Vector2(-sin(a), cos(a) * 0.45) * s2 * 0.55
+		poly(ctx, [tx - c.x - d.x, ty - c.y - d.y, tx + c.x - d.x, ty + c.y - d.y, tx + c.x + d.x, ty + c.y + d.y, tx - c.x + d.x, ty - c.y + d.y], ["#6a3a2a", "#5a3228", "#7a4a34"][i % 3], "#1a110a", 0.7)
+# [rebuild2] 修復中前景：木料堆、新磚堆、麻繩麻袋、工具箱（左右各一件）＋完成版前景草石
+func scaffold_front(ctx: Ctx, x: float, y: float, w: float, seed: int) -> void:
+	var sd = seed * 17 + 3
+	seat_front(ctx, x, y, w, seed)
+	var i0 = int(_sr(sd, 1) * 4.0) % 4
+	var ok = ov(ctx, OVR_FIX[i0], x - w * 0.34, y + 16, w * 0.40, false)
+	ov(ctx, OVR_FIX[(i0 + 1 + int(_sr(sd, 2) * 3.0)) % 4], x + w * 0.34, y + 17, w * 0.38, true)
+	if ok: return
+	var bx = x + w * 0.30; var by = y + 16   # 冇圖：畫三層紅磚
+	for r in 3:
+		for c in 3 - r:
+			var px = bx - (2 - r) * 5.5 + c * 11.0; var py = by - r * 5.5
+			poly(ctx, [px - 5, py, px + 5, py, px + 5, py - 5, px - 5, py - 5], ["#8a4a32", "#7a4030", "#94563a"][(r + c) % 3], "#1a110a", 0.8)
+func _ruin_sign(ctx: Ctx, x: float, y: float, name: String, can: bool, t: float, req: String, foot_w := 0.0) -> void:   # foot_w > 0：腳邊款（闊度固定、冇樁、唔浮）
 	if not can:   # [ruins13b] 未解鎖：灰色木牌（建築名＋點樣開），唔郁
 		ctx.save(); ctx.font = "900 14px %s" % SERIF; var w0 = maxf(84, maxf(ctx.measureText(name).width, ctx.measureText(req).width * 0.86) + 20)
-		rr(ctx, x - 1.5, y - 26, 3, 22, 1, "#4a3a30")
+		if foot_w > 0.0: w0 = maxf(foot_w, w0)
+		else: rr(ctx, x - 1.5, y - 26, 3, 22, 1, "#4a3a30")
 		rr(ctx, x - w0 / 2, y - 50, w0, 34, 3, "#a9a092", "#4a3a30", 1.5)
 		ctx.textAlign = "center"; ctx.textBaseline = "middle"
 		ctx.fillStyle = "#2b2420"; ctx.fillText(name, x, y - 40)
 		ctx.fillStyle = "#5a2a20"; ctx.font = "900 12px sans-serif"; ctx.fillText(req, x, y - 25)
 		ctx.restore(); return
-	var bob = sin(t * 2.4) * 1.5
+	var bob = sin(t * 2.4) * 1.5 if foot_w <= 0.0 else 0.0
 	ctx.save(); ctx.font = "900 14px %s" % SERIF; var w = maxf(76, ctx.measureText(name).width + 20)
-	rr(ctx, x - 1.5, y - 26, 3, 22, 1, "#5a4030")
+	if foot_w > 0.0: w = maxf(foot_w, w)
+	else: rr(ctx, x - 1.5, y - 26, 3, 22, 1, "#5a4030")
 	rr(ctx, x - w / 2, y - 50 + bob, w, 34, 3, "#e6d2a0", "#5a4030", 1.5)
 	ctx.textAlign = "center"; ctx.textBaseline = "middle"
 	ctx.fillStyle = "#2b1d12"; ctx.fillText(name, x, y - 40 + bob)
