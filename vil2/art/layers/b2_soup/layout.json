@@ -1,0 +1,50 @@
+{
+ "canvas": [
+  1389,
+  1042
+ ],
+ "full": "_full.jpg",
+ "layers": [
+  {
+   "name": "bg",
+   "file": "bg.png",
+   "x": 0,
+   "y": 0,
+   "w": 1389,
+   "h": 1042,
+   "scale": 1.0,
+   "z": 0
+  },
+  {
+   "name": "mengpo",
+   "file": "mengpo.png",
+   "x": 598,
+   "y": 244,
+   "w": 480,
+   "h": 668,
+   "scale": 0.778,
+   "src_size": [
+    617,
+    859
+   ],
+   "match": 0.908,
+   "z": 10
+  },
+  {
+   "name": "afu",
+   "file": "afu.png",
+   "x": 282,
+   "y": 307,
+   "w": 383,
+   "h": 619,
+   "scale": 0.7661,
+   "src_size": [
+    501,
+    808
+   ],
+   "match": 0.904,
+   "z": 11
+  }
+ ],
+ "note": "canvas 像素座標、左上原點。角色 PNG 為高解析原尺寸 src_size，放到畫面時縮放 scale 後置於 (x,y)，顯示尺寸 w×h。z 越大越上層。"
+}

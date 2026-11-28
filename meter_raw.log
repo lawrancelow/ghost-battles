@@ -1,0 +1,310 @@
+Godot Engine v4.3.stable.official.77dcf97d8 - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:360)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.5 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:90)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio_server.cpp:247)
+
+[launch] live code ready 3038ms
+[launch] game scene loaded 3970ms
+[boot] main ready
+[boot] modules 8228ms
+[mv] unified embed
+[p48] title layers portrait 7 glow 4 lite false
+[boot] ready 19493ms
+[meter] EVENT 1 quest_start 0 砍倒 3 棵槐樹 rw=
+[meter] EVENT 1 stage 1
+[meter] EVENT 1 hero_lv 1
+[meter] EVENT 1 shot /home/claude/meeting/shots/meter_00min.jpg
+[meter] SAMPLE 11 qi=0 stg=1 lv=1 wood=0 rice=0 planks=0 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=0 taps=1 toasts=0 idle=4 busy=false
+[meter] EVENT 21 toast 任務完成：砍倒 3 棵槐樹 好評 +25
+[meter] EVENT 21 quest_start 1 收割 3 次糯米 rw=
+[meter] EVENT 21 hero_lv 2
+[meter] SAMPLE 21 qi=1 stg=1 lv=2 wood=12 rice=0 planks=0 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=1 taps=1 toasts=1 idle=6 busy=false
+[meter] QUEST 21 Q00 砍倒 3 棵槐樹｜撳樹｜17s
+[meter] SAMPLE 32 qi=1 stg=1 lv=2 wood=12 rice=6 planks=0 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=1 taps=2 toasts=1 idle=8 busy=false
+[meter] QUEST 34 Q01 收割 3 次糯米｜撳稻田｜12s
+[meter] EVENT 34 toast 任務完成：收割 3 次糯米 好評 +25
+[meter] EVENT 34 quest_start 2 建造棺材鋪 rw=
+[meter] EVENT 34 stage 2
+[meter] EVENT 34 story ob_coffin
+[meter] SAMPLE 42 qi=2 stg=2 lv=2 wood=16 rice=9 planks=0 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=3 taps=5 toasts=2 idle=10 busy=false
+[meter] SAMPLE 53 qi=2 stg=2 lv=2 wood=16 rice=12 planks=0 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=4 taps=7 toasts=2 idle=11 busy=false
+[meter] SAMPLE 63 qi=2 stg=2 lv=2 wood=20 rice=12 planks=0 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=4 taps=7 toasts=2 idle=12 busy=false
+[meter] QUEST 67 Q02 建造棺材鋪｜建造（等料 2 輪）｜33s
+[meter] EVENT 67 toast 任務完成：建造棺材鋪 好評 +30，槐木 +10
+[meter] EVENT 67 quest_start 3 在棺材鋪親手做 3 次棺材板 rw=
+[meter] SAMPLE 74 qi=3 stg=2 lv=2 wood=10 rice=15 planks=0 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=7 taps=8 toasts=3 idle=14 busy=false
+[meter] SAMPLE 84 qi=3 stg=2 lv=2 wood=10 rice=15 planks=2 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=7 taps=10 toasts=3 idle=14 busy=false
+[meter] SAMPLE 95 qi=3 stg=2 lv=2 wood=6 rice=18 planks=4 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=8 taps=10 toasts=3 idle=16 busy=false
+[meter] QUEST 97 Q03 在棺材鋪親手做 3 次棺材板｜親手做 1 輪｜29s
+[meter] EVENT 97 toast 任務完成：在棺材鋪親手做 3 次棺材板 好評 +35
+[meter] EVENT 97 quest_start 4 建造包子鋪（出普通包子） rw=
+[meter] EVENT 97 stage 3
+[meter] EVENT 97 hero_lv 3
+[meter] EVENT 97 unlock roster
+[meter] SAMPLE 105 qi=4 stg=3 lv=3 wood=6 rice=18 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=11 taps=13 toasts=4 idle=17 busy=false
+[meter] SAMPLE 116 qi=4 stg=3 lv=3 wood=6 rice=21 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=12 taps=15 toasts=4 idle=18 busy=false
+[meter] SAMPLE 126 qi=4 stg=3 lv=3 wood=10 rice=21 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=12 taps=15 toasts=4 idle=18 busy=false
+[meter] EVENT 128 shot /home/claude/meeting/shots/meter_02min.jpg
+[meter] SAMPLE 137 qi=4 stg=3 lv=3 wood=14 rice=24 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=13 taps=17 toasts=4 idle=21 busy=false
+[meter] SAMPLE 147 qi=4 stg=3 lv=3 wood=14 rice=27 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=14 taps=19 toasts=4 idle=23 busy=false
+[meter] SAMPLE 158 qi=4 stg=3 lv=3 wood=18 rice=27 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=14 taps=19 toasts=4 idle=23 busy=false
+[meter] SAMPLE 168 qi=4 stg=3 lv=3 wood=18 rice=30 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=15 taps=21 toasts=4 idle=24 busy=false
+[meter]   … build:bun 輪5 進度[0, 1] 木22 米33 板6 幣0 lv3 英雄 act=<null> tgt=<null> 劇情=false
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1448)
+[meter] EVENT 178 toast 任務完成：建造包子鋪 好評 +35，糯米 +10
+[meter] EVENT 178 quest_start 5 在包子鋪親手包 3 次普通包子 rw=
+[meter] EVENT 178 story gift_xiaozhi
+[meter] EVENT 179 story gift_xiaozhi2
+[meter] SAMPLE 179 qi=5 stg=3 lv=3 wood=2 rice=33 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=17 taps=21 toasts=5 idle=25 busy=true
+[meter] EVENT 180 story xo_paper
+[meter] QUEST 180 Q04 建造包子鋪（出普通包子）｜建造（等料 5 輪）｜83s
+[meter] SAMPLE 190 qi=5 stg=3 lv=3 wood=2 rice=29 planks=6 buns=0 coins=0 troops=0 mbao=2 ghosts=2 dec=18 taps=24 toasts=5 idle=26 busy=false
+[meter] SAMPLE 200 qi=5 stg=3 lv=3 wood=6 rice=29 planks=6 buns=0 coins=0 troops=0 mbao=2 ghosts=2 dec=18 taps=24 toasts=5 idle=26 busy=false
+[meter] EVENT 210 toast 系統太滿意了，掉落一個綠箱！
+[meter] SAMPLE 211 qi=5 stg=3 lv=3 wood=6 rice=28 planks=6 buns=0 coins=0 troops=0 mbao=4 ghosts=2 dec=19 taps=26 toasts=6 idle=28 busy=false
+[meter] SAMPLE 221 qi=5 stg=3 lv=3 wood=10 rice=28 planks=6 buns=0 coins=0 troops=0 mbao=4 ghosts=2 dec=19 taps=26 toasts=6 idle=28 busy=false
+[meter] QUEST 231 Q05 在包子鋪親手包 3 次普通包子｜親手做 2 輪｜51s
+[meter] EVENT 232 toast 任務完成：在包子鋪親手包 3 次普通包子 好評 +40，冥幣 +40
+[meter] EVENT 232 quest_start 6 派小紙去包子鋪打工 rw=
+[meter] SAMPLE 232 qi=6 stg=3 lv=3 wood=10 rice=27 planks=6 buns=0 coins=40 troops=0 mbao=6 ghosts=2 dec=21 taps=26 toasts=7 idle=29 busy=false
+[meter] EVENT 233 toast 任務完成：派小紙去包子鋪打工 好評 +40
+[meter] EVENT 233 quest_start 7 把伐木場升到 2 級 rw=
+[meter] EVENT 233 stage 4
+[meter] EVENT 233 story ob_village
+[meter] EVENT 233 unlock chest
+[meter] QUEST 233 Q06 派小紙去包子鋪打工｜建築卡「派人」（1 隻可派；崗位 bun 1/1, plank 0/1, wood 0/1, rice 0/1）｜1s
+[meter] SAMPLE 242 qi=7 stg=4 lv=3 wood=10 rice=25 planks=6 buns=0 coins=40 troops=0 mbao=8 ghosts=2 dec=23 taps=30 toasts=8 idle=31 busy=false
+[meter] SAMPLE 253 qi=7 stg=4 lv=3 wood=14 rice=24 planks=6 buns=0 coins=40 troops=0 mbao=10 ghosts=2 dec=23 taps=30 toasts=8 idle=31 busy=false
+[meter] EVENT 254 shot /home/claude/meeting/shots/meter_04min.jpg
+[meter] SAMPLE 263 qi=7 stg=4 lv=3 wood=10 rice=26 planks=8 buns=0 coins=40 troops=0 mbao=12 ghosts=2 dec=25 taps=32 toasts=8 idle=32 busy=false
+[meter] SAMPLE 274 qi=7 stg=4 lv=3 wood=14 rice=25 planks=8 buns=0 coins=40 troops=0 mbao=14 ghosts=2 dec=25 taps=32 toasts=8 idle=32 busy=false
+[meter] SAMPLE 284 qi=7 stg=4 lv=3 wood=10 rice=27 planks=10 buns=0 coins=40 troops=0 mbao=17 ghosts=2 dec=27 taps=34 toasts=8 idle=33 busy=false
+[meter] SAMPLE 295 qi=7 stg=4 lv=3 wood=14 rice=26 planks=10 buns=0 coins=40 troops=0 mbao=19 ghosts=2 dec=27 taps=34 toasts=8 idle=33 busy=false
+[meter] SAMPLE 306 qi=7 stg=4 lv=3 wood=10 rice=28 planks=12 buns=0 coins=40 troops=0 mbao=21 ghosts=2 dec=29 taps=36 toasts=8 idle=34 busy=false
+[meter] SAMPLE 316 qi=7 stg=4 lv=3 wood=14 rice=26 planks=12 buns=0 coins=40 troops=0 mbao=24 ghosts=2 dec=29 taps=36 toasts=8 idle=35 busy=false
+[meter] SAMPLE 327 qi=7 stg=4 lv=3 wood=10 rice=28 planks=14 buns=0 coins=40 troops=0 mbao=26 ghosts=2 dec=31 taps=38 toasts=8 idle=36 busy=false
+[meter] SAMPLE 337 qi=7 stg=4 lv=3 wood=14 rice=27 planks=14 buns=0 coins=40 troops=0 mbao=28 ghosts=2 dec=31 taps=38 toasts=8 idle=37 busy=false
+[meter]   … bLevel:wood 輪5 進度[1, 2] 木10 米29 板16 幣40 lv3 英雄 act=<null> tgt=<null> 劇情=false
+[meter] SAMPLE 348 qi=7 stg=4 lv=3 wood=10 rice=29 planks=16 buns=0 coins=40 troops=0 mbao=30 ghosts=2 dec=33 taps=40 toasts=8 idle=38 busy=false
+[meter] SAMPLE 358 qi=7 stg=4 lv=3 wood=14 rice=28 planks=16 buns=0 coins=40 troops=0 mbao=33 ghosts=2 dec=33 taps=40 toasts=8 idle=38 busy=false
+[meter] SAMPLE 369 qi=7 stg=4 lv=3 wood=10 rice=30 planks=18 buns=0 coins=40 troops=0 mbao=35 ghosts=2 dec=35 taps=42 toasts=8 idle=39 busy=false
+[meter] SAMPLE 380 qi=7 stg=4 lv=3 wood=14 rice=29 planks=18 buns=0 coins=40 troops=0 mbao=37 ghosts=2 dec=35 taps=42 toasts=8 idle=40 busy=false
+[meter] EVENT 381 shot /home/claude/meeting/shots/meter_06min.jpg
+[meter] SAMPLE 390 qi=7 stg=4 lv=3 wood=10 rice=31 planks=20 buns=0 coins=40 troops=0 mbao=39 ghosts=2 dec=37 taps=44 toasts=8 idle=41 busy=false
+[meter] EVENT 394 hero_lv 4
+[meter] SAMPLE 400 qi=7 stg=4 lv=4 wood=14 rice=29 planks=20 buns=0 coins=40 troops=0 mbao=42 ghosts=2 dec=38 taps=44 toasts=8 idle=41 busy=true
+[meter] SAMPLE 411 qi=7 stg=4 lv=4 wood=14 rice=28 planks=22 buns=0 coins=40 troops=0 mbao=44 ghosts=2 dec=39 taps=46 toasts=8 idle=42 busy=false
+[meter] SAMPLE 421 qi=7 stg=4 lv=4 wood=14 rice=30 planks=22 buns=0 coins=40 troops=0 mbao=46 ghosts=2 dec=40 taps=46 toasts=8 idle=43 busy=false
+[meter] EVENT 423 toast 任務完成：把伐木場升到 2 級 好評 +50，冥幣 +30
+[meter] EVENT 423 toast 任務完成：升到 3 級 陰兵 +60 村裡的遊魂自願當陰兵（陰兵 +60）；出村門外的大排檔開放了
+[meter] EVENT 423 quest_start 9 大排檔賣出 10 件貨、賺 25 冥幣 rw=
+[meter] EVENT 423 stage 5
+[meter] EVENT 423 story ob_market
+[meter] QUEST 424 Q07 把伐木場升到 2 級｜升級（等料 9 輪）｜191s
+[meter] EVENT 425 toast 出村門外的路開了！陰間大排檔
+[meter] EVENT 425 unlock market
+[meter] SAMPLE 432 qi=9 stg=5 lv=4 wood=10 rice=29 planks=1 buns=0 coins=53 troops=60 mbao=45 ghosts=2 dec=42 taps=47 toasts=11 idle=51 busy=false
+[meter]   sell… t=377.799999999999 ts=1.0 sold=2 earn=8 進度[2, 10]
+[meter]   sell…… 進度[2, 10] 普通包子45.9052782200006 壽包0 客["{ \"m_shoubao\": 2 }", "{ \"m_shoubao\": 2 }", "{ \"m_shoubao\": 2 }", "{ \"m_shoubao\": 2 }"] 台["st_shoubao:true/0", "st_zhishan:true/0", "st_douhua:true/0", "st_nuomici:false/0", "st_guancaichuang:false/0", "st_denglong:false/0", "st_tiaodan:false/0", "st_bingqi:false/0"] 櫃台{ "m_shoubao": 0 }
+[meter] SAMPLE 443 qi=9 stg=5 lv=4 wood=10 rice=28 planks=1 buns=0 coins=61 troops=60 mbao=45 ghosts=2 dec=42 taps=47 toasts=11 idle=61 busy=false
+[meter]   sell… t=387.799999999999 ts=1.0 sold=6 earn=24 進度[6, 10]
+[meter]   sell…… 進度[6, 10] 普通包子44.5305693700007 壽包0 客["{ \"m_shoubao\": 2 }", "{ \"m_shoubao\": 2 }", "{ \"m_shoubao\": 1 }", "{ \"m_shoubao\": 1 }"] 台["st_shoubao:true/0", "st_zhishan:true/0", "st_douhua:true/0", "st_nuomici:false/0", "st_guancaichuang:false/0", "st_denglong:false/0", "st_tiaodan:false/0", "st_bingqi:false/0"] 櫃台{ "m_shoubao": 0 }
+[meter] SAMPLE 453 qi=9 stg=5 lv=4 wood=10 rice=27 planks=1 buns=0 coins=77 troops=60 mbao=43 ghosts=2 dec=42 taps=47 toasts=11 idle=71 busy=false
+[meter] EVENT 457 toast 任務完成：大排檔賣出 10 件貨、賺 25 冥幣 好評 +40，冥幣 +60 遊魂食飽會再嚟，記得櫃台要有貨
+[meter] EVENT 457 quest_start 10 擊退第一次嚟搗亂嘅孤魂 rw=
+[meter] EVENT 457 stage 6
+[meter] EVENT 457 story ob_guard
+[meter] QUEST 457 Q09 大排檔賣出 10 件貨、賺 25 冥幣｜撳大排檔台 201 下，等客人買（10/10）｜33s
+[meter] QUEST 462 Q10 擊退第一次嚟搗亂嘅孤魂｜撳孤魂 6 下（3/3）｜5s
+[meter] EVENT 463 toast 任務完成：擊退第一次嚟搗亂嘅孤魂 好評 +40，陰兵 +30 之後鬼會不定時嚟，派鬼守夜同陰兵會自動幫你守
+[meter] EVENT 463 quest_start 11 出村迎戰：槐林邊（1-1） rw=
+[meter] EVENT 463 stage 7
+[meter]   stage try 0 tg=["sid", "c", "s", "name", "en", "boss", "pos"]
+[meter]   fight stage:1-1 kind=stage  team=["afu", "g1", <null>]
+[meter] SAMPLE 464 qi=11 stg=7 lv=4 wood=10 rice=26 planks=1 buns=0 coins=175 troops=90 mbao=45 ghosts=2 dec=44 taps=49 toasts=13 idle=81 busy=false
+[meter]   pressed; pending=true story=false
+[meter] EVENT 469 toast 小紙 暫時離開包壽包去出擊
+[meter] EVENT 470 toast 任務完成：出村迎戰：槐林邊（1-1） 好評 +20
+[meter] EVENT 470 toast 首次通關！　冥幣 +100，好評 +70，綠箱 ×1　散魂 +10（首次通關）
+[meter] EVENT 470 quest_start 12 升到 4 級 rw=
+[meter] EVENT 470 stage 8
+[meter] EVENT 470 unlock wild
+[meter]     戰後 { "win": true, "quit": false, "timeout": false }：我方[阿福Lv8 706/979, 小紙Lv3 646/646, 兵雜兵・刀盾手 197/307, 兵雜兵・長兵手 233/233, 兵雜兵・弓弩手 159/159] 敵方[遊魂 0/350, 遊魂 0/350, 遊魂 0/350] t=12
+[meter] EVENT 471 toast 霧散了！餓鬼坑
+[meter] EVENT 471 toast 任務完成：升到 4 級 壽包 +30
+[meter] EVENT 471 quest_start 13 出村迎戰：包子鋪後巷（1-2） rw=
+[meter] EVENT 471 story ch1_intro
+[meter] EVENT 471 story ch1_intro2
+WARNING: Target object freed before starting, aborting Tweener.
+     at: start (scene/animation/tween.cpp:550)
+[meter] QUEST 472 Q11 出村迎戰：槐林邊（1-1）｜出擊清單「迎戰：槐林邊」勝｜9s
+[meter] EVENT 472 toast 小紙 打完仗，回去包壽包復工
+[meter]   stage try 0 tg=["sid", "c", "s", "name", "en", "boss", "pos"]
+[meter]   fight stage:1-2 kind=stage  team=["afu", "g1", <null>, <null>, <null>, <null>]
+WARNING: Target object freed before starting, aborting Tweener.
+     at: start (scene/animation/tween.cpp:550)
+WARNING: Target object freed before starting, aborting Tweener.
+     at: start (scene/animation/tween.cpp:550)
+[meter]   pressed; pending=true story=false
+[meter] EVENT 475 toast 小紙 暫時離開包壽包去出擊
+[meter] SAMPLE 475 qi=13 stg=8 lv=4 wood=10 rice=25 planks=1 buns=30 coins=275 troops=90 mbao=47 ghosts=2 dec=45 taps=50 toasts=20 idle=91 busy=false
+[meter] EVENT 477 hero_lv 5
+[meter]     戰後 { "win": true, "quit": false, "timeout": false }：我方[阿福Lv8 293/979, 小紙Lv3 646/646, 兵雜兵・刀盾手 70/307, 兵雜兵・長兵手 233/233, 兵雜兵・弓弩手 159/159] 敵方[餓鬼 0/550, 遊魂 0/440, 餓鬼 0/550, 餓鬼 0/550] t=16
+[meter] QUEST 478 Q13 出村迎戰：包子鋪後巷（1-2）｜出擊清單「迎戰：包子鋪後巷」勝｜6s
+[meter] EVENT 478 toast 任務完成：出村迎戰：包子鋪後巷（1-2） 冥幣 +60
+[meter] EVENT 478 toast 首次通關！　冥幣 +160，好評 +100，藍箱 ×1　散魂 +10（首次通關）
+[meter] EVENT 478 quest_start 14 把任一鬼怪升到 6 級 rw=
+[meter] EVENT 479 toast 霧散了！亂葬崗、後山竹林
+[meter] QUEST 479 Q14 把任一鬼怪升到 6 級｜名冊「升級」｜2s
+[meter] EVENT 480 toast 發現新地方！無名義山
+[meter] EVENT 480 toast 任務完成：把任一鬼怪升到 6 級 壽包 +40
+[meter] EVENT 480 toast 小紙 打完仗，回去包壽包復工
+[meter] EVENT 480 quest_start 15 擊敗餓鬼王（先打倒餓鬼頭目） rw=
+WARNING: Target object freed before starting, aborting Tweener.
+     at: start (scene/animation/tween.cpp:550)
+WARNING: Target object freed before starting, aborting Tweener.
+     at: start (scene/animation/tween.cpp:550)
+[meter]   stage try 0 tg=["sid", "c", "s", "name", "en", "boss", "zid", "bi"]
+[meter]   fight king:zb_egui kind=king  team=["afu", "g1", <null>, <null>, <null>, <null>]
+WARNING: Target object freed before starting, aborting Tweener.
+     at: start (scene/animation/tween.cpp:550)
+WARNING: Target object freed before starting, aborting Tweener.
+     at: start (scene/animation/tween.cpp:550)
+[meter] EVENT 482 toast 冥街夜市・棟篤笑：阿福《凶宅打七折》今晚登台。 無名義山 → 冥街夜市 → 棟篤笑
+[meter]   pressed; pending=true story=false
+[meter] EVENT 483 toast 小紙 暫時離開包壽包去出擊
+[meter] EVENT 485 toast 勝利　冥幣 +40，好評 +16　冥火 ×3
+[meter] SAMPLE 485 qi=15 stg=8 lv=5 wood=10 rice=24 planks=1 buns=70 coins=297 troops=90 mbao=8 ghosts=2 dec=47 taps=52 toasts=29 idle=100 busy=false
+[meter]     戰後 { "win": true, "quit": false, "timeout": false }：我方[阿福Lv10 524/1022, 小紙Lv6 710/710, 兵雜兵・刀盾手 77/336, 兵雜兵・長兵手 255/255, 兵雜兵・弓弩手 175/175] 敵方[餓鬼 0/550, 餓鬼 0/550, 餓鬼 0/550] t=16
+[meter]   stage try 1 tg=["sid", "c", "s", "name", "en", "boss", "zid", "bi"]
+[meter]   fight king:zb_eguiking kind=king  team=["afu", "g1", <null>, <null>, <null>, <null>]
+[meter] EVENT 486 toast 小紙 打完仗，回去包壽包復工
+[meter]   pressed; pending=true story=false
+[meter] EVENT 487 toast 小紙 暫時離開包壽包去出擊
+[meter] EVENT 492 toast 戰敗　鬼力 525／建議 500　陰兵戰死 75
+[meter] EVENT 492 toast 這次打不贏……強化隊伍再來
+[meter] EVENT 492 toast 小紙 打完仗，回去包壽包復工
+[meter]     戰後 { "win": false, "quit": false, "timeout": false }：我方[阿福Lv10 51/1022, 小紙Lv6 35/710, 兵雜兵・刀盾手 0/336, 兵雜兵・長兵手 0/255, 兵雜兵・弓弩手 0/175] 敵方[惡鬼嘍囉 363/363, 餓鬼 662/662, 餓鬼王 0/1570, 餓鬼 662/662] t=31
+[meter]   stage try 2 tg=["sid", "c", "s", "name", "en", "boss", "zid", "bi"]
+[meter]   fight king:zb_eguiking kind=king  team=["afu", "g1", <null>, <null>, <null>, <null>]
+[meter] EVENT 493 toast 一陣青煙……陽間有人燒東西下來！化寶爐有包裹（1/3）
+[meter] EVENT 493 hero_lv 6
+[meter]   pressed; pending=true story=false
+[meter] EVENT 494 toast 小紙 暫時離開包壽包去出擊
+WARNING: Target object freed before starting, aborting Tweener.
+     at: start (scene/animation/tween.cpp:550)
+WARNING: Target object freed before starting, aborting Tweener.
+     at: start (scene/animation/tween.cpp:550)
+[meter] SAMPLE 496 qi=15 stg=8 lv=6 wood=10 rice=24 planks=1 buns=254 coins=297 troops=415 mbao=8 ghosts=2 dec=47 taps=52 toasts=36 idle=110 busy=false
+[meter] EVENT 497 story ch1_end
+[meter]     戰後 { "win": true, "quit": false, "timeout": false }：我方[阿福Lv12 100/1080, 小紙Lv6 710/710, 兵雜兵・刀盾手 359/359, 兵雜兵・刀盾手 0/359, 兵雜兵・刀盾手 359/359, 兵雜兵・長兵手 88/273, 兵雜兵・長兵手 0/273, 兵雜兵・弓弩手 186/186, 兵雜兵・弓弩手 186/186, 兵雜兵・醫護兵 229/229] 敵方[惡鬼嘍囉 0/363, 餓鬼 0/662, 餓鬼王 0/1424, 餓鬼 0/662] t=22
+[meter] QUEST 499 Q15 擊敗餓鬼王｜出擊清單「挑戰：餓鬼頭目」勝；出擊清單「挑戰：餓鬼王」結果:戰敗；出擊清單「挑戰：餓鬼王」勝｜20s
+[meter] EVENT 500 toast 任務完成：擊敗餓鬼王 好評 +60
+[meter] EVENT 500 toast 首次通關！　冥幣 +220，好評 +130，紫箱 ×1　陰兵戰死 50　冥火 ×3
+[meter] EVENT 500 toast 任務完成：建造招魂台 冥幣 +150，壽包 +30
+[meter] EVENT 500 quest_start 17 在招魂台招 1 隻雜鬼 rw=
+[meter] EVENT 500 story xo_ch1
+[meter] EVENT 501 toast 發現新地方！枯井巷
+[meter] EVENT 501 toast 冥街夜市・棟篤笑：倀鬼《你相信我》今晚登台。 無名義山 → 冥街夜市 → 棟篤笑
+WARNING: Target object freed before starting, aborting Tweener.
+     at: start (scene/animation/tween.cpp:550)
+[meter] EVENT 502 toast 發現新地方！紙錢陣
+WARNING: Target object freed before starting, aborting Tweener.
+     at: start (scene/animation/tween.cpp:550)
+WARNING: Target object freed before starting, aborting Tweener.
+     at: start (scene/animation/tween.cpp:550)
+[meter] QUEST 502 Q17 在招魂台招 1 隻雜鬼｜招魂台「招魂」｜2s
+[meter] EVENT 503 toast 小紙 打完仗，回去包壽包復工
+WARNING: Target object freed before starting, aborting Tweener.
+     at: start (scene/animation/tween.cpp:550)
+[meter] SAMPLE 507 qi=17 stg=8 lv=6 wood=10 rice=23 planks=1 buns=284 coins=667 troops=365 mbao=10 ghosts=3 dec=54 taps=53 toasts=43 idle=118 busy=false
+[meter] EVENT 508 shot /home/claude/meeting/shots/meter_08min.jpg
+[meter] EVENT 513 STUCK 17 在招魂台招 1 隻雜鬼 進度[0, 1]
+[meter] EVENT 513 quest_start 18 建造民宅（增加雜鬼名額） rw=
+[meter] SAMPLE 517 qi=18 stg=8 lv=6 wood=10 rice=22 planks=1 buns=284 coins=667 troops=365 mbao=13 ghosts=3 dec=55 taps=56 toasts=43 idle=128 busy=false
+[meter] SAMPLE 527 qi=18 stg=8 lv=6 wood=10 rice=21 planks=1 buns=284 coins=667 troops=365 mbao=15 ghosts=3 dec=57 taps=60 toasts=43 idle=134 busy=false
+[meter] SAMPLE 537 qi=18 stg=8 lv=6 wood=14 rice=22 planks=1 buns=284 coins=667 troops=365 mbao=18 ghosts=3 dec=58 taps=62 toasts=43 idle=136 busy=false
+[meter] SAMPLE 548 qi=18 stg=8 lv=6 wood=18 rice=24 planks=1 buns=284 coins=667 troops=365 mbao=20 ghosts=3 dec=59 taps=64 toasts=43 idle=137 busy=false
+[meter]   … build:home 輪5 進度[0, 1] 木22 米26 板1 幣667 lv6 英雄 act=<null> tgt=<null> 劇情=false
+[meter] SAMPLE 558 qi=18 stg=8 lv=6 wood=22 rice=26 planks=1 buns=284 coins=667 troops=365 mbao=23 ghosts=3 dec=60 taps=66 toasts=43 idle=139 busy=false
+[meter] SAMPLE 568 qi=18 stg=8 lv=6 wood=26 rice=28 planks=1 buns=284 coins=667 troops=365 mbao=25 ghosts=3 dec=61 taps=66 toasts=43 idle=140 busy=false
+[meter] SAMPLE 579 qi=18 stg=8 lv=6 wood=30 rice=26 planks=1 buns=284 coins=667 troops=365 mbao=28 ghosts=3 dec=61 taps=68 toasts=43 idle=140 busy=false
+[meter] SAMPLE 589 qi=18 stg=8 lv=6 wood=34 rice=28 planks=1 buns=284 coins=667 troops=365 mbao=30 ghosts=3 dec=62 taps=70 toasts=43 idle=142 busy=false
+[meter] SAMPLE 599 qi=18 stg=8 lv=6 wood=38 rice=30 planks=1 buns=284 coins=667 troops=365 mbao=33 ghosts=3 dec=63 taps=72 toasts=43 idle=143 busy=false
+[meter] SAMPLE 609 qi=18 stg=8 lv=6 wood=42 rice=32 planks=1 buns=284 coins=667 troops=365 mbao=35 ghosts=3 dec=64 taps=74 toasts=43 idle=145 busy=false
+[meter]   … build:home 輪10 進度[0, 1] 木42 米34 板1 幣667 lv6 英雄 act=<null> tgt=<null> 劇情=false
+[meter] SAMPLE 619 qi=18 stg=8 lv=6 wood=42 rice=33 planks=1 buns=284 coins=667 troops=365 mbao=38 ghosts=3 dec=65 taps=76 toasts=43 idle=146 busy=false
+[meter] SAMPLE 630 qi=18 stg=8 lv=6 wood=46 rice=35 planks=1 buns=284 coins=667 troops=365 mbao=40 ghosts=3 dec=66 taps=78 toasts=43 idle=147 busy=false
+[meter] EVENT 631 shot /home/claude/meeting/shots/meter_10min.jpg
+[meter] SAMPLE 640 qi=18 stg=8 lv=6 wood=50 rice=37 planks=1 buns=284 coins=667 troops=365 mbao=43 ghosts=3 dec=67 taps=80 toasts=43 idle=148 busy=false
+[meter] SAMPLE 650 qi=18 stg=8 lv=6 wood=54 rice=38 planks=1 buns=284 coins=667 troops=365 mbao=46 ghosts=3 dec=68 taps=82 toasts=43 idle=149 busy=false
+[meter] SAMPLE 660 qi=18 stg=8 lv=6 wood=58 rice=40 planks=1 buns=284 coins=667 troops=365 mbao=48 ghosts=3 dec=69 taps=84 toasts=43 idle=151 busy=false
+[meter]   … build:home 輪15 進度[0, 1] 木62 米42 板1 幣667 lv6 英雄 act=<null> tgt=<null> 劇情=false
+[meter] SAMPLE 671 qi=18 stg=8 lv=6 wood=62 rice=42 planks=1 buns=284 coins=667 troops=365 mbao=51 ghosts=3 dec=70 taps=86 toasts=43 idle=152 busy=false
+[meter] EVENT 676 toast 系統太滿意了，掉落一個綠箱！
+[meter] SAMPLE 681 qi=18 stg=8 lv=6 wood=66 rice=44 planks=1 buns=284 coins=667 troops=365 mbao=53 ghosts=3 dec=70 taps=86 toasts=44 idle=153 busy=false
+[meter] SAMPLE 691 qi=18 stg=8 lv=6 wood=70 rice=42 planks=1 buns=284 coins=667 troops=365 mbao=56 ghosts=3 dec=71 taps=88 toasts=44 idle=154 busy=false
+[meter] SAMPLE 702 qi=18 stg=8 lv=6 wood=74 rice=44 planks=1 buns=284 coins=667 troops=365 mbao=58 ghosts=3 dec=72 taps=90 toasts=44 idle=155 busy=false
+[meter] SAMPLE 712 qi=18 stg=8 lv=6 wood=78 rice=46 planks=1 buns=284 coins=667 troops=365 mbao=61 ghosts=3 dec=73 taps=92 toasts=44 idle=156 busy=false
+[meter] SAMPLE 722 qi=18 stg=8 lv=6 wood=82 rice=48 planks=1 buns=284 coins=667 troops=365 mbao=63 ghosts=3 dec=74 taps=94 toasts=44 idle=158 busy=false
+[meter]   … build:home 輪20 進度[0, 1] 木82 米50 板1 幣667 lv6 英雄 act=<null> tgt=<null> 劇情=false
+[meter] SAMPLE 732 qi=18 stg=8 lv=6 wood=86 rice=49 planks=1 buns=284 coins=667 troops=365 mbao=66 ghosts=3 dec=75 taps=96 toasts=44 idle=159 busy=false
+[meter] SAMPLE 742 qi=18 stg=8 lv=6 wood=86 rice=51 planks=1 buns=284 coins=667 troops=365 mbao=68 ghosts=3 dec=76 taps=98 toasts=44 idle=160 busy=false
+[meter] SAMPLE 753 qi=18 stg=8 lv=6 wood=90 rice=53 planks=1 buns=284 coins=667 troops=365 mbao=71 ghosts=3 dec=77 taps=100 toasts=44 idle=161 busy=false
+[meter] EVENT 754 shot /home/claude/meeting/shots/meter_12min.jpg
+[meter] SAMPLE 763 qi=18 stg=8 lv=6 wood=94 rice=55 planks=1 buns=284 coins=667 troops=365 mbao=73 ghosts=3 dec=78 taps=102 toasts=44 idle=163 busy=false
+[meter] SAMPLE 773 qi=18 stg=8 lv=6 wood=98 rice=56 planks=1 buns=284 coins=667 troops=365 mbao=76 ghosts=3 dec=79 taps=104 toasts=44 idle=164 busy=false
+[meter]   … build:home 輪25 進度[0, 1] 木102 米58 板1 幣667 lv6 英雄 act=<null> tgt=<null> 劇情=false
+[meter] SAMPLE 784 qi=18 stg=8 lv=6 wood=102 rice=58 planks=1 buns=284 coins=667 troops=365 mbao=78 ghosts=3 dec=80 taps=106 toasts=44 idle=166 busy=false
+[meter] SAMPLE 794 qi=18 stg=8 lv=6 wood=106 rice=60 planks=1 buns=284 coins=667 troops=365 mbao=81 ghosts=3 dec=81 taps=106 toasts=44 idle=168 busy=false
+[meter] SAMPLE 804 qi=18 stg=8 lv=6 wood=110 rice=59 planks=1 buns=284 coins=667 troops=365 mbao=83 ghosts=3 dec=81 taps=108 toasts=44 idle=168 busy=false
+[meter] SAMPLE 814 qi=18 stg=8 lv=6 wood=114 rice=60 planks=1 buns=284 coins=667 troops=365 mbao=86 ghosts=3 dec=82 taps=110 toasts=44 idle=170 busy=false
+[meter] SAMPLE 824 qi=18 stg=8 lv=6 wood=118 rice=62 planks=1 buns=284 coins=667 troops=365 mbao=89 ghosts=3 dec=83 taps=112 toasts=44 idle=171 busy=false
+[meter] SAMPLE 835 qi=18 stg=8 lv=6 wood=122 rice=64 planks=1 buns=284 coins=667 troops=365 mbao=91 ghosts=3 dec=84 taps=114 toasts=44 idle=173 busy=false
+[meter]   … build:home 輪30 進度[0, 1] 木122 米66 板1 幣667 lv6 英雄 act=<null> tgt=<null> 劇情=false
+[meter] SAMPLE 845 qi=18 stg=8 lv=6 wood=126 rice=65 planks=1 buns=284 coins=667 troops=365 mbao=94 ghosts=3 dec=85 taps=116 toasts=44 idle=175 busy=false
+[meter] SAMPLE 855 qi=18 stg=8 lv=6 wood=126 rice=67 planks=1 buns=284 coins=667 troops=365 mbao=96 ghosts=3 dec=86 taps=118 toasts=44 idle=176 busy=false
+[meter] SAMPLE 865 qi=18 stg=8 lv=6 wood=130 rice=69 planks=1 buns=284 coins=667 troops=365 mbao=99 ghosts=3 dec=87 taps=120 toasts=44 idle=177 busy=false
+[meter] SAMPLE 876 qi=18 stg=8 lv=6 wood=134 rice=71 planks=1 buns=284 coins=667 troops=365 mbao=101 ghosts=3 dec=88 taps=122 toasts=44 idle=178 busy=false
+[meter] EVENT 877 shot /home/claude/meeting/shots/meter_14min.jpg
+[meter] SAMPLE 886 qi=18 stg=8 lv=6 wood=138 rice=72 planks=1 buns=284 coins=667 troops=365 mbao=104 ghosts=3 dec=89 taps=124 toasts=44 idle=179 busy=false
+[meter]   … build:home 輪35 進度[0, 1] 木142 米74 板1 幣667 lv6 英雄 act=<null> tgt=<null> 劇情=false
+[meter] SAMPLE 896 qi=18 stg=8 lv=6 wood=142 rice=74 planks=1 buns=284 coins=667 troops=365 mbao=106 ghosts=3 dec=90 taps=126 toasts=44 idle=180 busy=false
+[meter] SAMPLE 907 qi=18 stg=8 lv=6 wood=146 rice=76 planks=1 buns=284 coins=667 troops=365 mbao=109 ghosts=3 dec=91 taps=126 toasts=44 idle=181 busy=false
+[meter] SAMPLE 917 qi=18 stg=8 lv=6 wood=150 rice=75 planks=1 buns=284 coins=667 troops=365 mbao=111 ghosts=3 dec=91 taps=128 toasts=44 idle=181 busy=false
+[meter] SAMPLE 927 qi=18 stg=8 lv=6 wood=154 rice=76 planks=1 buns=284 coins=667 troops=365 mbao=114 ghosts=3 dec=92 taps=130 toasts=44 idle=182 busy=false
+[meter] SAMPLE 937 qi=18 stg=8 lv=6 wood=158 rice=78 planks=1 buns=284 coins=667 troops=365 mbao=116 ghosts=3 dec=93 taps=132 toasts=44 idle=183 busy=false
+[meter] SAMPLE 947 qi=18 stg=8 lv=6 wood=162 rice=80 planks=1 buns=284 coins=667 troops=365 mbao=119 ghosts=3 dec=94 taps=134 toasts=44 idle=184 busy=false
+[meter]   … build:home 輪40 進度[0, 1] 木162 米82 板1 幣667 lv6 英雄 act=<null> tgt=<null> 劇情=false
+[meter] SAMPLE 958 qi=18 stg=8 lv=6 wood=166 rice=82 planks=1 buns=284 coins=667 troops=365 mbao=121 ghosts=3 dec=95 taps=136 toasts=44 idle=186 busy=false
+[meter] SAMPLE 968 qi=18 stg=8 lv=6 wood=166 rice=83 planks=1 buns=284 coins=667 troops=365 mbao=124 ghosts=3 dec=96 taps=138 toasts=44 idle=186 busy=false
+[meter] SAMPLE 978 qi=18 stg=8 lv=6 wood=170 rice=85 planks=1 buns=284 coins=667 troops=365 mbao=126 ghosts=3 dec=97 taps=140 toasts=44 idle=187 busy=false
+[meter] SAMPLE 989 qi=18 stg=8 lv=6 wood=174 rice=87 planks=1 buns=284 coins=667 troops=365 mbao=129 ghosts=3 dec=98 taps=142 toasts=44 idle=188 busy=false
+[meter] SAMPLE 999 qi=18 stg=8 lv=6 wood=178 rice=88 planks=1 buns=284 coins=667 troops=365 mbao=132 ghosts=3 dec=99 taps=144 toasts=44 idle=189 busy=false
+[meter] EVENT 1000 shot /home/claude/meeting/shots/meter_16min.jpg
+[meter]   … build:home 輪45 進度[0, 1] 木182 米90 板1 幣667 lv6 英雄 act=<null> tgt=<null> 劇情=false
+[meter] SAMPLE 1009 qi=18 stg=8 lv=6 wood=182 rice=90 planks=1 buns=284 coins=667 troops=365 mbao=134 ghosts=3 dec=100 taps=146 toasts=44 idle=190 busy=false
+[meter] SAMPLE 1019 qi=18 stg=8 lv=6 wood=186 rice=92 planks=1 buns=284 coins=667 troops=365 mbao=137 ghosts=3 dec=100 taps=146 toasts=44 idle=192 busy=false
+[meter] SAMPLE 1030 qi=18 stg=8 lv=6 wood=190 rice=91 planks=1 buns=284 coins=667 troops=365 mbao=139 ghosts=3 dec=101 taps=148 toasts=44 idle=192 busy=false
+[meter] SAMPLE 1040 qi=18 stg=8 lv=6 wood=194 rice=92 planks=1 buns=284 coins=667 troops=365 mbao=142 ghosts=3 dec=102 taps=150 toasts=44 idle=193 busy=false
+[meter] SAMPLE 1050 qi=18 stg=8 lv=6 wood=198 rice=94 planks=1 buns=284 coins=667 troops=365 mbao=144 ghosts=3 dec=103 taps=152 toasts=44 idle=195 busy=false
+[meter] SAMPLE 1060 qi=18 stg=8 lv=6 wood=202 rice=96 planks=1 buns=284 coins=667 troops=365 mbao=147 ghosts=3 dec=104 taps=154 toasts=44 idle=196 busy=false
+[meter]   … build:home 輪50 進度[0, 1] 木202 米98 板1 幣667 lv6 英雄 act=<null> tgt=<null> 劇情=false
+[meter] SAMPLE 1071 qi=18 stg=8 lv=6 wood=202 rice=98 planks=1 buns=284 coins=667 troops=365 mbao=149 ghosts=3 dec=105 taps=156 toasts=44 idle=197 busy=false
+[meter] SAMPLE 1081 qi=18 stg=8 lv=6 wood=206 rice=99 planks=1 buns=284 coins=667 troops=365 mbao=152 ghosts=3 dec=106 taps=158 toasts=44 idle=199 busy=false
+[meter] SAMPLE 1091 qi=18 stg=8 lv=6 wood=210 rice=101 planks=1 buns=284 coins=667 troops=365 mbao=154 ghosts=3 dec=107 taps=160 toasts=44 idle=200 busy=false
+[meter] SAMPLE 1102 qi=18 stg=8 lv=6 wood=214 rice=103 planks=1 buns=284 coins=667 troops=365 mbao=157 ghosts=3 dec=108 taps=162 toasts=44 idle=201 busy=false

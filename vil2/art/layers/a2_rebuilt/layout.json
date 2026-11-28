@@ -1,0 +1,95 @@
+{
+ "canvas": [
+  1016,
+  1524
+ ],
+ "full": "a2_rebuilt_v1.jpg",
+ "layers": [
+  {
+   "name": "bg",
+   "file": "bg.png",
+   "x": 0,
+   "y": 0,
+   "w": 1016,
+   "h": 1524,
+   "scale": 1.0,
+   "z": 0
+  },
+  {
+   "name": "wood_carrier",
+   "file": "wood_carrier.png",
+   "x": 376,
+   "y": 550,
+   "w": 140,
+   "h": 139,
+   "scale": 0.3427,
+   "src_size": [
+    410,
+    408
+   ],
+   "match": 0.925,
+   "z": 10
+  },
+  {
+   "name": "dough_girl",
+   "file": "dough_girl.png",
+   "x": 606,
+   "y": 647,
+   "w": 132,
+   "h": 152,
+   "scale": 0.3651,
+   "src_size": [
+    364,
+    417
+   ],
+   "match": 0.891,
+   "z": 11
+  },
+  {
+   "name": "water_carrier",
+   "file": "water_carrier.png",
+   "x": 397,
+   "y": 839,
+   "w": 158,
+   "h": 165,
+   "scale": 0.3651,
+   "src_size": [
+    434,
+    454
+   ],
+   "match": 0.918,
+   "z": 12
+  },
+  {
+   "name": "reaper",
+   "file": "reaper.png",
+   "x": 131,
+   "y": 1151,
+   "w": 153,
+   "h": 169,
+   "scale": 0.372,
+   "src_size": [
+    413,
+    455
+   ],
+   "match": 0.877,
+   "z": 13
+  },
+  {
+   "name": "paper_stall_kid",
+   "file": "paper_stall_kid.png",
+   "x": 610,
+   "y": 1169,
+   "w": 129,
+   "h": 156,
+   "scale": 0.4161,
+   "src_size": [
+    312,
+    376
+   ],
+   "match": 0.89,
+   "z": 14
+  }
+ ],
+ "note": "canvas 像素座標、左上原點。角色 PNG 為高解析原尺寸 src_size，放到畫面時縮放 scale 後置於 (x,y)，顯示尺寸 w×h。z 越大越上層。"
+}

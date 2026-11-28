@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>美術試稿意見表</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 審稿單，安靜、直接、方便手機填寫
+   IDEA: 陰間辦公室的「圖稿審批表」：每張圖一欄，蓋章（選用／要改／不用）＋意見
+   PICTURE: 圖片本身，大圖置頂，點擊可全屏
+   COLOUR and TYPE: 遊戲暗紫棕夜色底，燈籠紅做重點；思源宋體標題、思源黑體正文
+   LAYOUT: 單欄卡片，圖在上、用途與意見在下；寬屏兩欄 */
+:root{color-scheme:light dark;--bg:light-dark(#f3eee8,#1b1620);--card:light-dark(#fffdf9,#251e2b);--ink:light-dark(#21182a,#efe6f2);--mute:light-dark(#6b5e72,#b4a6bb);--line:light-dark(#ddd2c8,#3a2f42);--red:#c8322a;--ok:#2f7d4f;--warn:#b7791f}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Noto Sans TC",system-ui,sans-serif;overflow-x:clip}
+header{padding:28px max(5vw,16px) 8px;max-width:1240px;margin:auto}
+h1{font:700 clamp(28px,5vw,40px)/1.1 "Noto Serif TC",serif;margin:0 0 8px;text-wrap:balance}
+.lead{color:var(--mute);margin:0;max-width:68ch}
+.status{font-size:14px;color:var(--mute);margin-top:10px}
+.status b{color:var(--ok)}
+main{max-width:1240px;margin:auto;padding:16px max(5vw,16px) 64px;display:grid;gap:22px}
+h2{font:700 22px/1.2 "Noto Serif TC",serif;margin:26px 0 0}
+.grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(min(100%,520px),1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.card img{width:100%;display:block;cursor:zoom-in;background:#120e16;max-height:560px;object-fit:contain}
+.body{padding:14px 16px 16px;display:grid;gap:10px}
+.top{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.id{font-weight:700;color:var(--red)}
+.name{font-weight:700;font-size:17px}
+.use{font-size:15px}
+.use span{color:var(--mute)}
+.desc{font-size:14px;color:var(--mute)}
+.pick{display:flex;gap:8px;flex-wrap:wrap}
+.pick button{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);font:500 15px inherit;cursor:pointer}
+.pick button[aria-pressed=true][data-v=ok]{background:var(--ok);border-color:var(--ok);color:#fff}
+.pick button[aria-pressed=true][data-v=fix]{background:var(--warn);border-color:var(--warn);color:#fff}
+.pick button[aria-pressed=true][data-v=no]{background:var(--red);border-color:var(--red);color:#fff}
+textarea{width:100%;min-height:84px;border-radius:10px;border:1px solid var(--line);background:light-dark(#fff,#1d1723);color:var(--ink);font:16px/1.5 inherit;padding:10px 12px;resize:vertical}
+textarea:focus,button:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.saved{font-size:13px;color:var(--mute);min-height:18px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.kpi label{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer}
+.kpi input{width:20px;height:20px;margin-top:3px;accent-color:var(--red)}
+#zoom{position:fixed;inset:0;background:rgba(10,6,14,.94);display:none;align-items:center;justify-content:center;z-index:9;cursor:zoom-out}
+#zoom img{max-width:96vw;max-height:94vh}
+@media(prefers-reduced-motion:no-preference){.card{transition:transform .15s}.card:hover{transform:translateY(-2px)}}
+</style>
+</head>
+<body>
+<header>
+<h1>大排檔前大更新・美術試稿意見表</h1>
+<p class="lead">每張圖寫明用途。點圖可放大。每張選「選用／要改／不用」，有意見直接寫在框裡，打完字會自動保存，統籌會直接讀取並交給美術組。</p>
+<div class="status" id="st">正在連接保存服務…</div>
+</header>
+<main>
+<section><h2>一、要你拍板：KPI 逾期懲罰</h2>
+<div class="kpi" id="kpi">
+<label><input type="radio" name="kpi" value="輕"><span><b>輕</b>：冥界老闆來罵一頓（劇情），倒數重來，不扣任何東西。</span></label>
+<label><input type="radio" name="kpi" value="中"><span><b>中（建議）</b>：Bryan 來搶功，拿走倉庫 10% 某資源，村裡掛「本月最佳員工：Bryan」橫幅；達標後撕掉橫幅、拿回一半資源。</span></label>
+<label><input type="radio" name="kpi" value="重"><span><b>重</b>：隨機一隻打工鬼被「調職」離村 10 分鐘，村長扣「年終」冥幣 15%。鬼不會消失。</span></label>
+<textarea data-k="kpi_note" placeholder="其他意見（可留空）"></textarea>
+<div class="saved" data-s="kpi"></div>
+</div></section>
+<section><h2>二、劇情插圖（老電視框播放）</h2><div class="grid" id="g1"></div></section>
+<section><h2>三、遊戲內美術</h2><div class="grid" id="g2"></div></section>
+<section><h2>四、第二輪（按你上次意見改好的＋新做的）</h2><div class="grid" id="g3"></div></section>
+<section><h2>五、女主專屬版劇情插圖（10 張）</h2><div class="grid" id="g4"></div></section>
+</main>
+<div id="zoom"><img alt=""></div>
+<script>
+{
+const items=[
+{id:"a1",g:1,name:"荒村廢墟全景 第二版",use:"開場劇情插圖：主角剛被流放到村子時看到的荒村；也作為全體畫風基準",desc:"血紅月亮、歪牌坊、封住的井、塌掉的包子灶、紙紮殘骸。遊玩地圖仍用原本村子。"},
+{id:"a2",g:1,name:"荒村重建完成版",use:"劇情插圖：全村重建完成、點燈時播放，和廢墟版同一角度作前後對比",desc:"燈籠全亮、屋頂修好、包子鋪冒煙、稻田轉綠、無腳小鬼在幹活。"},
+{id:"b1",g:1,name:"孟婆遞湯（男主）第一版",use:"開場劇情插圖：孟婆遞入職湯、主角嫌噁心那一幕（女主會另畫她自己的版本）",desc:"孟婆笑著遞眼珠湯、額頭冒青筋；主角捂嘴反胃；黑白無常在後面偷笑。"},
+{id:"b2",g:1,name:"孟婆遞湯（男主）第二版",use:"同上，二選一",desc:"特寫：孟婆把湯匙硬塞到主角嘴邊，主角雙手交叉拒絕，橋上排隊的鬼在圍觀。"},
+{id:"c1",g:1,name:"牛頭馬面收賄 第一版",use:"KPI 考核賄賂成功時播放的劇情插圖（每區老闆不同，這張是畫風樣板）",desc:"主角遞包子，馬面別過臉但手已接住，牛頭寫收據，戴墨鏡的區域老闆在打瞌睡。"},
+{id:"c2",g:1,name:"牛頭馬面收賄 第二版",use:"同上，二選一",desc:"公堂版：老闆從墨鏡上方斜眼看，牛頭馬面背手掌心朝上，一個收冥幣、一個收包子。"},
+{id:"g1",g:2,name:"酒館普通鬼 拼裝測試",use:"陰間酒館可招募的普通鬼外觀：身體＋表情＋髮型帽子＋服飾＋配件隨機組合，數量不限",desc:"第一批部件拼出的 12 隻。確認方向後量產到 6 款身體、40 多個部件、稀有種光暈與特殊服飾。"},
+{id:"l1",g:3,name:"B2／C1／C2 分層對照",use:"動態劇情插圖用：每張拆成乾淨背景＋每個角色獨立透明圖，程序讓角色各自動起來",desc:"左為原圖、右為拆層後重組。B2 孟婆（拉遠全身）、C1 收賄打瞌睡版、C2 收賄公案版。老闆都已改宋朝官服；桌子另拆一層蓋住老闆下半身。驚嚇符號、陰影之後用特效補。"},
+{id:"c3",g:3,name:"C2 收賄公案版（宋朝官服）",use:"KPI 賄賂成功時的劇情插圖，按意見改宋朝官服",desc:"老闆戴展腳幞頭、穿圓領公服，從墨鏡上方斜眼看；牛頭馬面背手掌心朝上收冥幣和包子。"},
+{id:"g2",g:3,name:"酒館普通鬼 第二輪拼裝",use:"陰間酒館可招募的普通鬼外觀：按你要求加入 A2 鬼村民那樣的造型",desc:"新增 8 款整頭（紅頭巾、白布包頭老伯、雙髻、瓜皮帽掌櫃、斗笠、辮子、花頭巾、宋谷帽）＋8 款身體＋4 套稀有服飾（戲服、宋朝官袍、道袍、娘惹婚服，腳下紫／金光暈）。隨機拼 24 隻。"},
+{id:"o1",g:3,name:"廢墟前景遮擋素材",use:"解決廢墟建築「浮起來」：疊在建築前面遮住底邊，清理時逐步減少",desc:"廢墟用：雜草碎瓦 4 款、斷木、碎磚、破紙紮、枯枝；修復中用：木料堆、新磚堆、繩索麻袋、工具箱。"},
+{id:"f_lobby",g:4,name:"地府集團大堂",use:"女主版劇情插圖（老電視框播放）",desc:"黑白無常帶女主排隊攞籌（牛頭派籌）。手上籌號有幾條塗鴉線，不是文字。"},
+{id:"f_office",g:4,name:"龐總辦公室",use:"女主版劇情插圖（老電視框播放）",desc:"女主站在龐總辦公桌前，龐總翻文件。"},
+{id:"f_soup",g:4,name:"孟婆遞湯（女主專屬）",use:"女主版劇情插圖（老電視框播放）",desc:"女主推眼鏡、拿筆戳湯面，全身入鏡；孟婆氣得冒青筋。"},
+{id:"f_exile",g:4,name:"流放蓋章",use:"女主版劇情插圖（老電視框播放）",desc:"龐總蓋章流放女主，孟婆在旁把湯倒進盆栽。"},
+{id:"f_tavern",g:4,name:"陰間酒館開張",use:"女主版劇情插圖（老電視框播放）",desc:"老闆娘三更嬸遞「孟婆湯 Lite」，女主坐吧台。"},
+{id:"f_bribe",g:4,name:"收賄（女主版）",use:"女主版劇情插圖（老電視框播放）",desc:"女主遞包子，馬面接，牛頭寫收據，老闆宋朝官服打瞌睡。"},
+{id:"f_stall_hook",g:4,name:"大排檔前奏／巡村",use:"女主版劇情插圖（老電視框播放）",desc:"女主、龐總、小紙在村裡。右上背景有一個坐著的工人露出腿，要修；小紙是照文字畫的，可能和現有立繪不同。"},
+{id:"f_pang_visit",g:4,name:"龐總巡村考核",use:"女主版劇情插圖（老電視框播放）",desc:"龐總帶牛頭馬面來村裡考核，女主緊張陪同。"},
+{id:"f_joss_flood",g:4,name:"化寶爐包裹淹沒",use:"女主版劇情插圖（老電視框播放）",desc:"化寶爐修好，三個月積壓的包裹一次湧出，牛頭穿郵差制服。"},
+{id:"f_joss_note",g:4,name:"奶茶與道歉信",use:"女主版劇情插圖（老電視框播放）",desc:"女主收到組員燒來的珍珠奶茶和道歉信，邊喝邊哭笑。"},
+{id:"h1",g:2,name:"荒村建築三態（10 棟）",use:"遊戲內原村子地圖上的建築：荒村重建時每棟由廢墟→修復中→完成（完成版沿用現有圖），位置不變",desc:"每行左起廢墟、修復中、完成：鬼宅、伐木場、糯米田、棺材鋪、包子鋪、倉庫、民宅、訓練營、招魂台、化寶爐。照現有建築手繪質感畫，蠟筆味較淡；訓練營有矛頭盾牌擺設（非角色手持）。"},
+{id:"f1",g:2,name:"化寶爐 三種狀態",use:"遊戲內化寶爐建築：前期冥幣來源；荒村重建時由廢墟→修復中→完成",desc:"左起：原版對照、廢墟版、修復中（竹架＋帆布）、完成版（蠟筆風重繪）。"}
+];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const card=it=>`<article class="card" data-id="${it.id}"><img src="img/${it.id}.jpg" alt="${esc(it.name)}" loading="lazy"><div class="body"><div class="top"><span class="id">${it.id.toUpperCase()}</span><span class="name">${esc(it.name)}</span></div><div class="use"><span>用途：</span>${esc(it.use)}</div><div class="desc">${esc(it.desc)}</div><div class="pick">${[["ok","選用"],["fix","要改"],["no","不用"]].map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="false">${t}</button>`).join("")}</div><textarea data-k="${it.id}" placeholder="意見（例如：顏色再暗一點、表情不夠誇張…）"></textarea><div class="saved" data-s="${it.id}"></div></div></article>`;
+document.getElementById("g1").innerHTML=items.filter(i=>i.g==1).map(card).join("");
+document.getElementById("g2").innerHTML=items.filter(i=>i.g==2).map(card).join("");
+document.getElementById("g3").innerHTML=items.filter(i=>i.g==3).map(card).join("");
+document.getElementById("g4").innerHTML=items.filter(i=>i.g==4).map(card).join("");
+const st=document.getElementById("st");
+const state={};
+let db=null;const timers={};
+const mark=(k,t)=>{const e=document.querySelector(`[data-s="${k}"]`);if(e)e.textContent=t};
+async function save(k){
+  const d=state[k]||{};
+  try{localStorage.setItem("rv_"+k,JSON.stringify(d))}catch(e){}
+  if(!db){mark(k,"已暫存在此裝置（保存服務未連上）");return}
+  try{await db.doc("feedback/"+k).set({...d,name:(items.find(i=>i.id==k)||{name:"KPI 懲罰"}).name,t:Date.now()});mark(k,"已保存 ✓")}catch(e){mark(k,"保存失敗，請稍後再改一下重試")}
+}
+const queue=k=>{clearTimeout(timers[k]);mark(k,"保存中…");timers[k]=setTimeout(()=>save(k),600)};
+document.querySelectorAll(".card").forEach(c=>{
+  const k=c.dataset.id;state[k]={pick:"",note:""};
+  c.querySelectorAll(".pick button").forEach(b=>b.addEventListener("click",()=>{
+    c.querySelectorAll(".pick button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+    state[k].pick=b.textContent;queue(k)}));
+  c.querySelector("textarea").addEventListener("input",e=>{state[k].note=e.target.value;queue(k)});
+  c.querySelector("img").addEventListener("click",e=>{const z=document.getElementById("zoom");z.querySelector("img").src=e.target.src;z.style.display="flex"});
+});
+state.kpi={pick:"",note:""};
+document.querySelectorAll('#kpi input').forEach(r=>r.addEventListener("change",()=>{state.kpi.pick=r.value;queue("kpi")}));
+document.querySelector('#kpi textarea').addEventListener("input",e=>{state.kpi.note=e.target.value;queue("kpi")});
+document.getElementById("zoom").addEventListener("click",e=>e.currentTarget.style.display="none");
+document.addEventListener("keydown",e=>{if(e.key=="Escape")document.getElementById("zoom").style.display="none"});
+function apply(k,d){
+  if(!d)return;state[k]={pick:d.pick||"",note:d.note||""};
+  if(k=="kpi"){document.querySelectorAll('#kpi input').forEach(r=>r.checked=r.value==d.pick);document.querySelector('#kpi textarea').value=d.note||"";return}
+  const c=document.querySelector(`.card[data-id="${k}"]`);if(!c)return;
+  c.querySelectorAll(".pick button").forEach(b=>b.setAttribute("aria-pressed",b.textContent==d.pick?"true":"false"));
+  c.querySelector("textarea").value=d.note||"";
+}
+[...items.map(i=>i.id),"kpi"].forEach(k=>{try{apply(k,JSON.parse(localStorage.getItem("rv_"+k)||"null"))}catch(e){}});
+const to=setTimeout(()=>{st.textContent="保存服務未連上：意見會暫存在這台裝置，請截圖或在對話裡告訴統籌。"},10000);
+(async()=>{
+  try{db=await claude.use("db")}catch(e){db=null}
+  clearTimeout(to);
+  if(!db){st.textContent="保存服務未連上：意見會暫存在這台裝置，請截圖或在對話裡告訴統籌。";return}
+  st.innerHTML="<b>已連上</b>：你寫的意見會自動保存，統籌可直接讀取。";
+  for(const k of [...items.map(i=>i.id),"kpi"]){
+    try{const s=await db.doc("feedback/"+k).get();const d=s&&(s.data?s.data():s);if(d&&(d.pick||d.note))apply(k,d)}catch(e){}
+  }
+})();
+}
+</script>
+</body>
+</html>

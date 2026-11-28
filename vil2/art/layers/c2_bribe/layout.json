@@ -1,0 +1,94 @@
+{
+ "canvas": [
+  1340,
+  1005
+ ],
+ "full": "_full.jpg",
+ "layers": [
+  {
+   "name": "bg",
+   "file": "bg.png",
+   "x": 0,
+   "y": 0,
+   "w": 1340,
+   "h": 1005,
+   "scale": 1.0,
+   "z": 0
+  },
+  {
+   "name": "boss",
+   "file": "boss.png",
+   "x": 522,
+   "y": 158,
+   "w": 344,
+   "h": 292,
+   "scale": 0.9898,
+   "src_size": [
+    348,
+    296
+   ],
+   "match": 0.926,
+   "z": 10
+  },
+  {
+   "name": "desk_front",
+   "file": "desk_front.png",
+   "x": 200,
+   "y": 383,
+   "w": 960,
+   "h": 229,
+   "scale": 1.0,
+   "src_size": [
+    960,
+    229
+   ],
+   "z": 11
+  },
+  {
+   "name": "ox",
+   "file": "ox.png",
+   "x": 207,
+   "y": 387,
+   "w": 317,
+   "h": 540,
+   "scale": 1.2712,
+   "src_size": [
+    250,
+    425
+   ],
+   "match": 0.91,
+   "z": 12
+  },
+  {
+   "name": "horse",
+   "file": "horse.png",
+   "x": 815,
+   "y": 403,
+   "w": 312,
+   "h": 522,
+   "scale": 1.2237,
+   "src_size": [
+    255,
+    427
+   ],
+   "match": 0.906,
+   "z": 13
+  },
+  {
+   "name": "afu",
+   "file": "afu.png",
+   "x": 510,
+   "y": 554,
+   "w": 335,
+   "h": 364,
+   "scale": 1.0542,
+   "src_size": [
+    318,
+    346
+   ],
+   "match": 0.925,
+   "z": 14
+  }
+ ],
+ "note": "canvas 像素座標、左上原點。角色 PNG 為高解析原尺寸 src_size，放到畫面時縮放 scale 後置於 (x,y)，顯示尺寸 w×h。z 越大越上層。"
+}

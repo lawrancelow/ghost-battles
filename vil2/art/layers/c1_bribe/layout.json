@@ -1,0 +1,108 @@
+{
+ "canvas": [
+  1389,
+  1042
+ ],
+ "full": "_full.jpg",
+ "layers": [
+  {
+   "name": "bg",
+   "file": "bg.png",
+   "x": 0,
+   "y": 0,
+   "w": 1389,
+   "h": 1042,
+   "scale": 1.0,
+   "z": 0
+  },
+  {
+   "name": "ox",
+   "file": "ox.png",
+   "x": 193,
+   "y": 216,
+   "w": 344,
+   "h": 502,
+   "scale": 1.2305,
+   "src_size": [
+    280,
+    408
+   ],
+   "match": 0.913,
+   "z": 10
+  },
+  {
+   "name": "desk_left_front",
+   "file": "desk_left_front.png",
+   "x": 20,
+   "y": 518,
+   "w": 728,
+   "h": 269,
+   "scale": 1.0,
+   "src_size": [
+    728,
+    269
+   ],
+   "z": 11
+  },
+  {
+   "name": "boss",
+   "file": "boss.png",
+   "x": 885,
+   "y": 357,
+   "w": 475,
+   "h": 524,
+   "scale": 1.3627,
+   "src_size": [
+    349,
+    385
+   ],
+   "match": 0.879,
+   "z": 12
+  },
+  {
+   "name": "desk_right_front",
+   "file": "desk_right_front.png",
+   "x": 619,
+   "y": 715,
+   "w": 770,
+   "h": 327,
+   "scale": 1.0,
+   "src_size": [
+    770,
+    327
+   ],
+   "z": 13
+  },
+  {
+   "name": "horse",
+   "file": "horse.png",
+   "x": 531,
+   "y": 301,
+   "w": 402,
+   "h": 602,
+   "scale": 1.4085,
+   "src_size": [
+    286,
+    428
+   ],
+   "match": 0.886,
+   "z": 14
+  },
+  {
+   "name": "afu",
+   "file": "afu.png",
+   "x": 0,
+   "y": 502,
+   "w": 520,
+   "h": 507,
+   "scale": 1.4288,
+   "src_size": [
+    364,
+    355
+   ],
+   "match": 0.906,
+   "z": 15
+  }
+ ],
+ "note": "canvas 像素座標、左上原點。角色 PNG 為高解析原尺寸 src_size，放到畫面時縮放 scale 後置於 (x,y)，顯示尺寸 w×h。z 越大越上層。"
+}

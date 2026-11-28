@@ -1,0 +1,290 @@
+{
+ "base": "layout.json",
+ "use_bg": "_c_extra/bg_c.png",
+ "add_layers": [
+  {
+   "name": "lan1",
+   "file": "_c_extra/lan1.png",
+   "x": 591,
+   "y": 182,
+   "w": 62,
+   "h": 96,
+   "scale": 1.0,
+   "z": 5,
+   "kind": "lantern",
+   "pivot": [
+    0.5,
+    0.0
+   ],
+   "motion": [
+    "sway_hang",
+    "flicker"
+   ],
+   "needs_bg": "_c_extra/bg_c.png"
+  },
+  {
+   "name": "lan2",
+   "file": "_c_extra/lan2.png",
+   "x": 865,
+   "y": 148,
+   "w": 60,
+   "h": 92,
+   "scale": 1.0,
+   "z": 5,
+   "kind": "lantern",
+   "pivot": [
+    0.5,
+    0.0
+   ],
+   "motion": [
+    "sway_hang",
+    "flicker"
+   ],
+   "needs_bg": "_c_extra/bg_c.png"
+  },
+  {
+   "name": "lan3",
+   "file": "_c_extra/lan3.png",
+   "x": 281,
+   "y": 435,
+   "w": 58,
+   "h": 48,
+   "scale": 1.0,
+   "z": 5,
+   "kind": "lantern",
+   "pivot": [
+    0.5,
+    0.0
+   ],
+   "motion": [
+    "sway_hang",
+    "flicker"
+   ],
+   "needs_bg": "_c_extra/bg_c.png"
+  },
+  {
+   "name": "lan4",
+   "file": "_c_extra/lan4.png",
+   "x": 453,
+   "y": 399,
+   "w": 47,
+   "h": 79,
+   "scale": 1.0,
+   "z": 5,
+   "kind": "lantern",
+   "pivot": [
+    0.5,
+    0.0
+   ],
+   "motion": [
+    "sway_hang",
+    "flicker"
+   ],
+   "needs_bg": "_c_extra/bg_c.png"
+  },
+  {
+   "name": "lan5",
+   "file": "_c_extra/lan5.png",
+   "x": 548,
+   "y": 368,
+   "w": 40,
+   "h": 63,
+   "scale": 1.0,
+   "z": 5,
+   "kind": "lantern",
+   "pivot": [
+    0.5,
+    0.0
+   ],
+   "motion": [
+    "sway_hang",
+    "flicker"
+   ],
+   "needs_bg": "_c_extra/bg_c.png"
+  },
+  {
+   "name": "lan6",
+   "file": "_c_extra/lan6.png",
+   "x": 277,
+   "y": 593,
+   "w": 55,
+   "h": 82,
+   "scale": 1.0,
+   "z": 5,
+   "kind": "lantern",
+   "pivot": [
+    0.5,
+    0.0
+   ],
+   "motion": [
+    "sway_hang",
+    "flicker"
+   ],
+   "needs_bg": "_c_extra/bg_c.png"
+  },
+  {
+   "name": "lan7",
+   "file": "_c_extra/lan7.png",
+   "x": 583,
+   "y": 540,
+   "w": 58,
+   "h": 93,
+   "scale": 1.0,
+   "z": 5,
+   "kind": "lantern",
+   "pivot": [
+    0.5,
+    0.0
+   ],
+   "motion": [
+    "sway_hang",
+    "flicker"
+   ],
+   "needs_bg": "_c_extra/bg_c.png"
+  },
+  {
+   "name": "lan8",
+   "file": "_c_extra/lan8.png",
+   "x": 610,
+   "y": 863,
+   "w": 57,
+   "h": 89,
+   "scale": 1.0,
+   "z": 5,
+   "kind": "lantern",
+   "pivot": [
+    0.5,
+    0.0
+   ],
+   "motion": [
+    "sway_hang",
+    "flicker"
+   ],
+   "needs_bg": "_c_extra/bg_c.png"
+  },
+  {
+   "name": "lan9",
+   "file": "_c_extra/lan9.png",
+   "x": 549,
+   "y": 1106,
+   "w": 64,
+   "h": 110,
+   "scale": 1.0,
+   "z": 5,
+   "kind": "lantern",
+   "pivot": [
+    0.5,
+    0.0
+   ],
+   "motion": [
+    "sway_hang",
+    "flicker"
+   ],
+   "needs_bg": "_c_extra/bg_c.png"
+  },
+  {
+   "name": "lan10",
+   "file": "_c_extra/lan10.png",
+   "x": 627,
+   "y": 1079,
+   "w": 61,
+   "h": 72,
+   "scale": 1.0,
+   "z": 5,
+   "kind": "lantern",
+   "pivot": [
+    0.5,
+    0.0
+   ],
+   "motion": [
+    "sway_hang",
+    "flicker"
+   ],
+   "needs_bg": "_c_extra/bg_c.png"
+  },
+  {
+   "name": "lan11",
+   "file": "_c_extra/lan11.png",
+   "x": 918,
+   "y": 1118,
+   "w": 73,
+   "h": 130,
+   "scale": 1.0,
+   "z": 5,
+   "kind": "lantern",
+   "pivot": [
+    0.5,
+    0.0
+   ],
+   "motion": [
+    "sway_hang",
+    "flicker"
+   ],
+   "needs_bg": "_c_extra/bg_c.png"
+  },
+  {
+   "name": "lan12",
+   "file": "_c_extra/lan12.png",
+   "x": 353,
+   "y": 1236,
+   "w": 78,
+   "h": 134,
+   "scale": 1.0,
+   "z": 5,
+   "kind": "lantern",
+   "pivot": [
+    0.5,
+    0.0
+   ],
+   "motion": [
+    "sway_hang",
+    "flicker"
+   ],
+   "needs_bg": "_c_extra/bg_c.png"
+  },
+  {
+   "name": "smoke1",
+   "file": "_c_extra/smoke1.png",
+   "x": 713,
+   "y": 477,
+   "w": 215,
+   "h": 131,
+   "scale": 1.0,
+   "z": 3,
+   "kind": "smoke",
+   "pivot": [
+    0.5,
+    1.0
+   ],
+   "motion": [
+    "smoke_drift"
+   ],
+   "needs_bg": "_c_extra/bg_c.png"
+  },
+  {
+   "name": "smoke2",
+   "file": "_c_extra/smoke2.png",
+   "x": 917,
+   "y": 447,
+   "w": 99,
+   "h": 107,
+   "scale": 1.0,
+   "z": 3,
+   "kind": "smoke",
+   "pivot": [
+    0.5,
+    1.0
+   ],
+   "motion": [
+    "smoke_drift"
+   ],
+   "needs_bg": "_c_extra/bg_c.png"
+  }
+ ],
+ "motion_presets": {
+  "sway_hang": "以頂端為軸擺動 ±3°，週期 2.5–3.5 秒（每盞錯開）",
+  "flicker": "亮度 0.9–1.1 隨機閃，配暖色光暈",
+  "smoke_drift": "向上漂移 20px＋淡出再循環，可疊粒子"
+ },
+ "note": "美術 C 組附加層：燈籠 12 盞、炊煙 2 縷，從 bg.png 同位置切出；用這些層時背景改用 _c_extra/bg_c.png（已把燈籠和炊煙補掉）。不改美術 A 的 5 隻角色。"
+}
