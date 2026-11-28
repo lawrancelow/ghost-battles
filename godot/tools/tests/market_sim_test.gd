@@ -128,3 +128,33 @@ func all(t) -> void:
 	_chk("冇櫃檯員：錢照樣入到帳（店員去收），收入唔高過有櫃檯員", c0.banked > 0.0 and c0.income <= c3.income * 1.02, [c0.income, c3.income])
 	MK.st().erase("ops"); MK.st().erase("test")
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+# 加班平衡快跑（7 個方案）：目標 唔加班≈60%、狂加班唔理≈75%（輪替＝100%）；櫃檯 1 人 vs 3 人要有差
+# 用法：… edtest.sh <godot目錄> mkbal res://tools/tests/market_sim_test.gd bal 1500
+func bal(t) -> void:
+	var pf = PF.new()
+	var m = await pf._boot(t)
+	ZD.gate_on = false
+	var sim = m.mv_view.sim; var S = J.G.S
+	MK.st()["test"] = 1
+	load("res://game/kpi/kpi_data.gd").enable(false)
+	for i in 40: _gh(S, "t_s%d" % i)
+	sim.market_street("food")
+	var stalls = MK.sids_on(sim.ci(), "food").slice(0, 4)
+	sim.paused = false
+	var rot = await _run(t, sim, stalls, "rotate", 2, 1, 11)
+	var none = await _run(t, sim, stalls, "none", 2, 1, 11)
+	var alw = await _run(t, sim, stalls, "always", 2, 1, 11)
+	var rot2 = await _run(t, sim, stalls, "rotate", 2, 1, 23)
+	var c3 = await _run(t, sim, stalls, "rotate", 2, 3, 11)
+	var c0 = await _run(t, sim, stalls, "rotate", 2, 0, 11)
+	var base = (rot.income + rot2.income) / 2.0
+	var pn = 100.0 * none.income / base; var pa = 100.0 * alw.income / base
+	_p("加班平衡（輪替＝100%%，兩個種子平均 %.0f）：唔加班 %.0f%%｜狂加班唔理 %.0f%%（趴低 %.0f%%）｜目標 60%%／75%%" % [base, pn, pa, alw.down_pct])
+	_p("櫃檯：0 人 %.0f%%｜1 人 100%%｜3 人 %.0f%%" % [100.0 * c0.income / rot.income, 100.0 * c3.income / rot.income])
+	_chk("唔加班 ≈ 60%（50–70%）", pn >= 50.0 and pn <= 70.0, pn)
+	_chk("狂加班唔理 ≈ 75%（65–85%）", pa >= 65.0 and pa <= 85.0, pa)
+	_chk("櫃檯 3 人比 1 人多 ≥5%", c3.income >= rot.income * 1.05, [c3.income, rot.income])
+	_chk("冇櫃檯員比 1 人少 ≥10%", c0.income <= rot.income * 0.9, [c0.income, rot.income])
+	MK.st().erase("ops"); MK.st().erase("test")
+	_p("RESULT ok=%d bad=%d" % [ok, bad])

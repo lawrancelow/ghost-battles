@@ -241,6 +241,10 @@ func _ops(t, sim, sc, c: int, food: Array, cloth: Array) -> void:
 	sim.add_coins(100.0); MKO.on_pay(sim, {"got": {MKO.good_of(a): 1}}, 100.0)
 	_chk("玩家撳收銀箱：即收", is_equal_approx(MKO.collect(sim, "food"), 100.0) and MKO.till("food") == 0.0)
 	_chk("未開嘅街唔可以派人", MKO.assign(sim, "ctr", "acc", "t_mk9") == "closed")
+	_chk("結帳等候：3 名櫃檯員 0.3 秒、1 名 0.9 秒、冇人 2.5 秒", is_equal_approx(MKO.pay_wait("food"), 0.3) and is_equal_approx(MKO.pay_wait("cloth"), 2.5), [MKO.pay_wait("food"), MKO.pay_wait("cloth")])
+	var cw = {"wants": {MKO.good_of(a): 1}, "got": {MKO.good_of(a): 1}}; var holds = 0
+	for i in 40: if MKO.hold_pay(sim, cw): holds += 1
+	_chk("3 名櫃檯員：客人等 1 拍就結帳", holds == 1, holds)
 	# 巡邏隊 0–4
 	for i in 3: MKO.unassign(sim, "t_mk%d" % (5 + i))
 	sim.assign(b, 0, "t_mk4")
@@ -444,8 +448,12 @@ func _ops(t, sim, sc, c: int, food: Array, cloth: Array) -> void:
 	sim.sst(food[0]).lv = 200.0; sim.sst(food[1])["unlocked"] = false; MKO.tick(sim, 0.1)
 	sc.open_sheet(food[0]); await _w(t, 0.5)
 	var tx2 = _all_text(sc.sheet_box)
-	_chk("攤位資料卡有貨架（主貨／副貨）", tx2.find("主貨") >= 0 and tx2.find("副貨") >= 0)
+	_chk("攤位資料卡有貨架摘要＋「調整貨架」掣", tx2.find("貨架") >= 0 and _find_btn(sc.sheet_box, "調整貨架") != null)
 	_chk("Lv200 五個店員位：資料卡冇出格", _fits(sc.sheet_box, sc.sheet.size.x) and sc.sheet.size.x <= sc.FW + 0.5, sc.sheet.size)
+	var sb9 = _find_btn(sc.sheet_box, "調整貨架")
+	if sb9 != null: sb9.pressed.emit()
+	await _w(t, 0.5)
+	_chk("開貨架面板：主貨／副貨、冇出格", MKOU._panel == "shelf" and _all_text(sc.sheet_box).find("主貨") >= 0 and _fits(sc.sheet_box, sc.sheet.size.x))
 	var gb2 = MKO.good_of(food[1])
 	var cb2 = _find_btn(sc.sheet_box, MD.T(MD.good_def(gb2).get("n", ["", ""])))
 	if cb2 != null: cb2.pressed.emit()

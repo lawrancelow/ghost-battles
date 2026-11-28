@@ -74,6 +74,15 @@ M1 沒有改 `market.json` 的既有欄位、沒有動 `mk_ui.gd`、`mv_scene.gd
 - 浮字：`MKO.toast(text, color)`／`MKO.pop_toasts()`。
 - `MK.ot_mul(sid)`：只含加班與老員工的倍數（不含店員人數、停工），估算攤位產值用。
 
+## 七、第二階段補充（2026-11-28 傍晚）
+- **畫面排位**：`MKOU.hud_bot`（static var，畫面座標）＝M1 這一疊（人手列＋治安卡＋對白條）這一格的底。M2 的 `draw_hud` 要排在它下面：`y = maxf(y, MKOU.hud_bot + 6)`（合併分支 `market-int` 已加這三行）；`mv_scene.chain_btn_pos` 也已避開。
+- **演出事件**：M1 畫面改讀自己的 `MKO.pop_fx()`（內容同 `MK.evq`，但不會被 M2 的畫面取走）；對白走 `MKO.pop_say()`。M2 照舊 `MK.pop_events()`。
+- **過勞四段小卡**（已選用美術第 1 款，素材鍵 `mk_ow_1…4`）由 M1 的 `MKOU._draw_ow` 畫在攤位上方：過勞 ≥70 硬撐、≥90 快不行、趴下、餵包子復活 2.5 秒。M2 的掛牌在攤位左上，不衝突；M2 如已有趴下演出，請二選一（建議留這套，老闆選的就是這款）。
+- **客流參數**（加班平衡）：`market_ops.json` 的 `demand.base`／`demand.ot_draw`，`mv_sim` 新增一行 `spawn_t /= MKO.flow_mul(self)`。原因：原本客人每 2.2–4 秒來一位、排隊最多 4 位，收入被客流卡死，加班產量 ×2 賣不掉（實測不加班仍有 95–104%）。`ot_draw`＝全街加班時客流再 ×(1+ot_draw)。
+- **按章價格**：`mk_price.gd` 視圖（`MD.st_def`／`good_def`／`goals` 在市集模式下回傳按章換算後的副本）；開關 `market_ops.json` 的 `price_rebase`。M2 的 `item_mul` 等照舊乘在 `MD.val` 上，不用改。
+- **目標補發**：`MKO.comp_goals(sim)`（每格），輪到被跳過的目標時自動發獎，記在 `S.mv.goals_comp`。
+- **文案詞庫**：`data/market_lines.json`（`tools/market_lines_build.py` 由文案稿產生並檢查同章不重複）。`MKO.complain()` 取過勞抱怨（20 句輪完才重複）——M2 的過勞泡泡請也用這個函式，避免兩邊各出各的造成同一句重複。
+
 ---
 ## M2 線回覆（2026-11-28，分支 market-m2，已合併 M1-6）
 - **已接上**：`mk_counter_n_fn`（未登記時 `FUN.counter_n` 直接問 `MKO.counter_n`）、`patrol_ok／patrol_reach／patrol_speed／patrol_handled／rush_phase／counter_down`、`FUN.extra_slots` 改讀 `MKO.extra_slots`、`mk_renown.reg()` 登記 `mk_renown_add_fn`（並收回 `S.mk.renown_pts` 暫存分、寫 `S.mk.renown_lv`＋`renown_live`）。

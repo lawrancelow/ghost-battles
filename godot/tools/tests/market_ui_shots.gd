@@ -12,6 +12,7 @@ const M = preload("res://game/outpost/mat.gd")
 const MVW = preload("res://game/outpost/mv_war.gd")
 const PF = preload("res://tools/tests/paddyfix_test.gd")
 var SHOTS := "/home/claude/meeting/market/shots_ui/"
+var _view := Callable()
 var NAMES := ["阿土", "小紙", "三更", "阿蓮", "大頭", "阿旺", "細妹", "老陳", "阿福仔", "小滿", "阿貴", "秋姐"]
 
 func _p(m): print("[mkshots] ", m)
@@ -69,10 +70,10 @@ func all(t) -> void:
 	MKO._income("food", 180000.0)
 	MKO.pop_say(); MKOU._says.clear()
 	sc.hud_k = 1.0
-	cam.z = nv.size.x / 390.0; cam.vel = Vector2.ZERO
-	var mid = (sim.st_pos(stalls[0]) + Vector2((float(sim.L.counter_x0) + float(sim.L.counter_x1)) / 2.0, float(sim.L.counter_y))) / 2.0
+	var mid = Vector2((sim.st_pos(stalls[0]).x - 70.0 + float(sim.L.counter_x1) + 30.0) / 2.0, sim.st_pos(stalls[0]).y + 40.0)
+	_view = func(): cam.z = nv.size.x / 390.0 * 0.66; cam.vel = Vector2.ZERO; cam.center_on(mid)
+	_view.call()
 	_p("stalls %s pos %s counter (%s..%s, %s) q1 %s" % [stalls, sim.st_pos(stalls[0]), sim.L.counter_x0, sim.L.counter_x1, sim.L.counter_y, sim.queue_pos(1)])
-	cam.center_on(mid + Vector2(0, 30))
 	sim.paused = false
 	MKOU._title = {"st": "food", "t0": -99.0}
 	await _run(t, sim, stalls, 9.0)
@@ -84,16 +85,17 @@ func all(t) -> void:
 	# 雙貨：貨架卡
 	sim.sst(stalls[1])["unlocked"] = false; MKO.tick(sim, 0.05)
 	sc.open_sheet(stalls[0]); await _w(t, 0.6)
-	await _shot(t, "s03_shelf_pick")
-	MKO.set_sub(c, stalls[0], MKO.good_of(stalls[1])); MKO.st().swap.clear(); sc._fill_sheet(); await _w(t, 0.6)
+	await _shot(t, "s03_station_sheet")
+	MKO.set_sub(c, stalls[0], MKO.good_of(stalls[1])); MKO.st().swap.clear()
+	MKOU.open_shelf(sc, stalls[0]); await _w(t, 0.6)
 	await _shot(t, "s04_shelf_dual")
-	sc.close_sheet()
+	sc.close_sheet(); _view.call()
 	MKO.set_sub(c, stalls[0], ""); MKO.st().swap.clear(); sim.sst(stalls[1])["unlocked"] = true; MKO.tick(sim, 0.05)
 	# 人手面板
 	MKOU.open_panel(sc, "pat"); await _w(t, 0.6); await _shot(t, "s05_panel_patrol")
-	sc.close_sheet()
+	sc.close_sheet(); _view.call()
 	MKOU.open_panel(sc, "ctr"); await _w(t, 0.6); await _shot(t, "s06_panel_counter")
-	sc.close_sheet(); await _w(t, 0.3)
+	sc.close_sheet(); _view.call(); await _w(t, 0.3)
 	# 四類事件各一（特色版帶描述）；偷錢影「巡邏鬼去追」
 	MKO.rng.seed = 7
 	MKO.st().till["food"] = 8600.0; MKO.st().ctr_t["food"] = -999.0

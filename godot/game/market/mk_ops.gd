@@ -693,3 +693,35 @@ static func ghost_value(sim, gid) -> Dictionary:   # 呢隻鬼而家喺村／攤
 			v2 += q * CM.price(str(mid)); parts.append("%s %d" % [CM.name(str(mid)), int(round(q))])
 	var nm = CB.bname(p) if not CB.def(p).is_empty() else p
 	return {"coins": v2, "txt": nm + ("（少產 " + "、".join(parts) + "）" if parts.size() else "")}
+
+# ================= 客流（加班平衡用嘅參數） =================
+# 冇呢個之前：客人每 2.2–4 秒嚟一位、排隊最多 4 位，收入俾客流卡死，加班產量 ×2 都賣唔出（實測唔加班都有 95%）。
+# demand.ot_draw：呢條街每有一成攤位加班中，客流 +ot_draw×10%（加班＝大聲叫賣吸客）；demand.base：整體客流倍數。
+static func flow_mul(sim) -> float:
+	if not on(): return 1.0
+	var d = D().get("demand")
+	if not (d is Dictionary): return 1.0
+	var k = float(d.get("base", 1.0))
+	var L = open_stalls(sim.ci(), MK.cur()); var n = 0
+	for sid in L: if MK.ot_on(sid): n += 1
+	if L.size(): k *= 1.0 + float(d.get("ot_draw", 0.0)) * float(n) / float(L.size())
+	return maxf(0.1, k)
+
+# ================= 結帳等候（櫃檯人數嘅實感） =================
+# 客人攞齊貨之後要結帳：冇櫃檯員每位等 no_staff_pay_s 秒（夥計抽身嚟收）；有櫃檯員等 staff_pay_s ÷ 人數 秒。
+# 客流細嗰陣冇分別；加班吸客／子時高峰客流大，結帳慢就排爆隊（隊最多 4 位，後面嘅客唔入嚟）→ 少賺。
+static func pay_wait(street: String) -> float:
+	var n = counter_n(street)
+	if n > 0 and J.t(_fun("counter_down", [street], false)): n = 0
+	return cf("counter", "no_staff_pay_s", 2.5) if n <= 0 else cf("counter", "staff_pay_s", 0.9) / float(n)
+static func hold_pay(sim, c: Dictionary, step := 0.16) -> bool:   # mv_sim 結帳前問：true＝仲等緊結帳
+	if not on(): return false
+	var w = float(c.get("ckw", 0.0)) + step
+	c["ckw"] = w
+	return w < pay_wait(_cust_street_want(sim, c))
+static func _cust_street_want(sim, c: Dictionary) -> String:
+	for g in c.get("wants", {}):
+		var sid = sim.sid_of(str(g))
+		if sid == "": sid = host_of(str(g))
+		if sid != "": return MK.street_of(sim.ci(), sid)
+	return MK.cur()

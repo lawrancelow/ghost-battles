@@ -862,6 +862,7 @@ func _step_custs(dt: float) -> void:
 		spawn_t = rng.randf_range(2.2, 4.0) * (2.0 if fence_pressure() >= 2 else 1.0)
 		spawn_t /= war.freq_mul(self)   # [war]
 		spawn_t /= plus.freq_mul(self)   # [play] 夜潮
+		spawn_t /= MKO.flow_mul(self)   # [market M1 營運] 加班叫賣吸客（data/market_ops.json demand）
 		spawn_t /= FUN.flow_mul()   # [market M2] 子時高峰 ×3／喘息 ×0.5／一星負評
 		if waiting < MD.QUEUE_MAX and spawn_cust() and custs.size(): FUN.on_spawn(self, custs.back())   # [market M2] 熟客
 	var order = []
@@ -902,7 +903,7 @@ func _step_custs(dt: float) -> void:
 							st().counter[g] = float(counter_n(g) - 1); c.got[g] = int(c.got.get(g, 0)) + 1; c.wait = 0.0
 							ev.append({"k": "take", "gid": g, "from": counter_slot(g), "to": c.pos + Vector2(0, -40)})
 							break
-					if all_ok and not plus.hold_pay(self, c): _pay(c)   # [play] 講價／挑剔等決定
+					if all_ok and not plus.hold_pay(self, c) and not MKO.hold_pay(self, c, float(c.take)): _pay(c)   # [play] 講價／挑剔等決定   # [market M1 營運] 結帳等候（櫃檯人數）
 	for c in custs.duplicate():
 		if c.st == "out":
 			c.s = float(c.s) + 110.0 * dt

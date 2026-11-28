@@ -96,7 +96,7 @@ static func draw_hud(sc, ctx, y0 := -1.0) -> void:
 		if MKU != null and MKU.on(sc): y = MKU.strip_rect(sc).end.y + 6.0
 	if ResourceLoader.exists("res://game/market/mk_ops_ui.gd"):   # M1 人手列／治安卡／對白條：再排落去
 		var MKOU = load("res://game/market/mk_ops_ui.gd")
-		if MKOU != null and MKOU.on(sc): y = maxf(y, float(MKOU.hud_end) + 2.0)
+		if MKOU != null and MKOU.on(sc): y = maxf(y, float(MKOU.hud_bot) + 6.0)
 	var x = 8.0
 	hud_rects.clear()
 	# 全部排喺左邊一欄（右上角留畀「生產鏈」掣）：第一行＝潮流榜細牌＋連單數；下面＝子時高峰、限時大客
