@@ -73,6 +73,7 @@ func all(t) -> void:
 	await fight(t, m)
 	await boss_and_slow(t, m)
 	await one_tap(t, m)
+	await vitality_check(t, m)
 	await off_check(t, m)
 	JU.force = -1
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
@@ -288,3 +289,18 @@ func off_check(t, m) -> void:
 	_chk("特效關：冇暴擊（傷害照舊）", not AB._crit_enabled())
 	PF.juice = true
 	lb.queue_free()
+
+# [juice] 生氣值接口（vil2 荒村重建用）
+func vitality_check(t, m) -> void:
+	JU.force = 1; JU.log.clear()
+	var a = JU.vitality_fx(0.0); var b = JU.vitality_fx(0.5); var c = JU.vitality_fx(1.0)
+	_chk("生氣值 0：全暗、冇遊魂、路燈 0", is_equal_approx(a.dark_mul, 1.0) and a.wander_ghosts == 0 and is_equal_approx(a.lamps, 0.0), a)
+	_chk("生氣值越高越亮、霧越淡、遊魂越多", b.dark_mul < a.dark_mul and c.dark_mul < b.dark_mul and c.fog_mul < b.fog_mul and c.wander_ghosts > b.wander_ghosts, [b, c])
+	_chk("生氣值寫入 J.G.juice_vitality", J.G.get("juice_vitality") is Dictionary and is_equal_approx(float(J.G.juice_vitality.v), 1.0))
+	_chk("生氣值超界夾住 0–1", is_equal_approx(JU.vitality_fx(3.0).v, 1.0) and is_equal_approx(JU.vitality_fx(-1.0).v, 0.0))
+	JU.log.clear(); JU.on_rebuild("open", "lumber"); await _f(t, 2)
+	_chk("開張：橫幅粒子＋遞升音", _has_log("celebrate") and _has_log("chime"), JU.log)
+	JU.log.clear(); JU.on_rebuild("lit", null); await _f(t, 2)
+	_chk("全村點燈：大慶祝＋震機", _has_log("celebrate") and _has_log("vib"), JU.log)
+	_chk("冇 rb.gd 時 hook_rebuild 安全返回", ResourceLoader.exists(JU.RB_PATH) or JU.hook_rebuild() == false)
+	JU.vitality_fx(0.0)

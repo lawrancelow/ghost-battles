@@ -265,3 +265,45 @@ static func power_show(k: String, nm: String, before: float, after: float, full 
 		vib(70); shake(m, 5.0, 0.3)
 		root.gui_input.connect(func(e): if e is InputEventMouseButton and e.pressed and is_instance_valid(cl): cl.queue_free())
 	else: vib(20)
+
+# ---------------- [juice] 荒村重建／生氣值接口（vil2 用） ----------------
+# vil2 嘅 res://game/rebuild/rb.gd 有 listen(fn)（kind：open／relic／lit）同 vitality() 0–1。
+# hook_rebuild()：主畫面 _ready 叫一次；rb.gd 唔存在（未合 vil2）就乜都唔做。
+# vitality_fx(v)：生氣值 → 畫面參數（村子用嚟調暗角、路燈、遊魂數）；寫入 J.G["juice_vitality"] 俾 nv_village 讀。
+static var _rb_hooked := false
+const RB_PATH := "res://game/rebuild/rb.gd"
+static func hook_rebuild() -> bool:
+	if _rb_hooked or not ResourceLoader.exists(RB_PATH): return false
+	var RB = load(RB_PATH)
+	if RB == null or not RB.has_method("listen"): return false
+	RB.listen(func(kind: String, arg): on_rebuild(kind, arg))
+	_rb_hooked = true
+	return true
+static func on_rebuild(kind: String, arg) -> void:
+	var v := 0.0
+	if ResourceLoader.exists(RB_PATH):
+		var RB = load(RB_PATH)
+		if RB != null and RB.has_method("vitality"): v = float(RB.vitality())
+	vitality_fx(v)
+	if not on(): return
+	_log("rebuild", kind)
+	match kind:
+		"open": celebrate_banner(false); chime("coin"); vib(25)
+		"relic": chime("coin")
+		"lit":
+			celebrate_banner(true); vib(80)
+			var m = _main()
+			if m != null: shake(m, 4.0, 0.35)
+static func vitality_fx(v: float) -> Dictionary:
+	v = clampf(v, 0.0, 1.0)
+	var fx := {
+		"v": v,
+		"dark_mul": lerpf(1.0, 0.55, v),      # 全圖暗層透明度倍率（越修越亮）
+		"fog_mul": lerpf(1.0, 0.35, v),       # 霧濃度倍率
+		"lamps": v,                           # 路燈開幾成（0–1）
+		"wander_ghosts": int(round(lerpf(0.0, 8.0, v))),   # 路上遊魂數
+		"juice": on(),                        # 特效關：nv_village 可以直接跳到目標值唔做漸變
+	}
+	J.G["juice_vitality"] = fx
+	_log("vitality", v)
+	return fx
