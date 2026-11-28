@@ -387,6 +387,9 @@ func _eat_events() -> void:
 			"stock":   # [chain] 入倉：貨飛去紙紮大屋
 				for i in mini(int(e.n), 4): _item(e.pos + Vector2(_rng.randf_range(-16, 16), -40), sim.L.house + Vector2(0, -40), str(e.mid), 0.6 + i * 0.06)
 				_float(e.pos + Vector2(0, -100), MD.S("stocked", "入倉 +%s", "入倉 +%s") % MD.fmt(e.n), Color("#9fd8ff"), 15, 1.0)
+			"restock":   # [p55] 倉庫自動補上櫃台：貨由紙紮大屋飛去櫃台
+				for i in mini(int(e.n), 4): _item(sim.L.house + Vector2(_rng.randf_range(-16, 16), -40), e.to, str(e.gid), 0.6 + i * 0.06)
+				_float(e.to + Vector2(0, -30), MD.S("restocked", "倉庫補貨 +%s", "倉庫補貨 +%s") % MD.fmt(e.n), Color("#9fe39a"), 15, 1.0)
 			"hint_sell":   # [sell] 全部入倉但客人等緊
 				_float(e.pos + Vector2(0, -120), MD.S("hint_sell", "客人等緊！撳台改「全部出售」", "客人在等！點台改「全部出售」"), Color("#ffd27a"), 15, 1.8)
 			"starve":   # [chain]

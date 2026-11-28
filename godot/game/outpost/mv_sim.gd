@@ -792,7 +792,39 @@ func tap_station(sid: String) -> String:
 	return "make"
 
 # ---------------- 客人 ----------------
+# [p55] 客人等緊而櫃台唔夠：自動由倉庫補上櫃台（扣倉庫；保留上層台要料線＋升級／招魂最低庫存；呢台揀「全部入倉」唔補）
+const RESTOCK_EVERY := 0.5
+var _rs_t := 0.0
+func up_keep(mid: String) -> float:   # 升級／招魂要用嘅最低庫存
+	var rk = M.res_key(mid)
+	if rk == "buns": return 40.0   # 招魂台招雜鬼（recruitCost）
+	if rk == "planks":
+		var G = J.G; var k = 0.0
+		if G.get("upCost") is Callable and G.get("S") is Dictionary and G.S.get("bld") is Dictionary:
+			var best = INF
+			for b in G.S.bld:
+				var c = J.mc(G, "upCost", [str(b), J.num(G.S.bld[b])])
+				if c is Dictionary and J.num(G.S.bld[b]) > 0.0: best = minf(best, J.num(c.get("planks")))
+			if best < INF: k = best
+		return k
+	return 0.0
+func restock_keep(mid: String) -> float: return buffer_of(mid) + up_keep(mid)
+func restock_counter() -> int:
+	var moved = 0
+	for sid in MD.stations(ci()):
+		if not unlocked(sid) or route(sid) == "stock": continue
+		var gid = str(MD.st_def(sid).get("good", "")); var mid = M.rout(sid)
+		if gid == "" or mid == "": continue
+		var short = demand_short(gid)
+		if short <= 0: continue
+		var n = mini(short, mini(int(floor(M.amt(mid) - restock_keep(mid) + 1e-6)), MD.COUNTER_CAP - counter_n(gid)))
+		if n <= 0 or not M.take({mid: float(n)}): continue
+		st().counter[gid] = float(counter_n(gid) + n); moved += n
+		ev.append({"k": "restock", "sid": sid, "gid": gid, "n": n, "to": counter_slot(gid)})
+	return moved
 func _step_custs(dt: float) -> void:
+	_rs_t -= dt
+	if _rs_t <= 0.0: _rs_t = RESTOCK_EVERY; restock_counter()   # [p55]
 	var waiting = 0
 	for c in custs: if c.st != "out": waiting += 1
 	spawn_t -= dt
