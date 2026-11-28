@@ -19,7 +19,7 @@ func all(t) -> void:
 	_names()
 	_oldsave()
 	_mengpo()
-	_hooks()
+	_hooks(m)
 	await _play(t, m, "m")
 	await _play(t, m, "f")
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
@@ -52,7 +52,7 @@ func _data() -> void:
 	_chk("插圖佔位圖都存在", nph >= 10 and nbad == 0, "ph=%d 缺=%d" % [nph, nbad])
 	var ch1 = DB.D.get("CHAPTERS", [])
 	if not (ch1 is Array) or ch1.is_empty(): ch1 = J.G.get("CHAPTERS", [])
-	_chk("第一章開場最前係 stall_hook", ch1 is Array and ch1.size() > 0 and str(ch1[0].intro[0]) == "stall_hook", ch1[0].intro if ch1 is Array and ch1.size() > 0 else "")
+	_chk("stall_hook 唔放章節開場（改由大排檔開張 tick 播）", ch1 is Array and ch1.size() > 0 and not (ch1[0].intro as Array).has("stall_hook"), ch1[0].intro if ch1 is Array and ch1.size() > 0 else "")
 
 # 名字替換：改名、女主版
 func _names() -> void:
@@ -118,7 +118,7 @@ func _mengpo() -> void:
 	DB.lang = l0; S["hero"] = h0
 
 # 掛鈎：只播一次、女主揀 _f、大排檔前唔轉祭品
-func _hooks() -> void:
+func _hooks(m = null) -> void:
 	var Sm = {"seen": {}, "hero": {"sex": "m"}}
 	var Sf = {"seen": {}, "hero": {"sex": "f"}}
 	_chk("化寶爐重開：男", PS.scene_for("joss_repaired", Sm) == "joss_reopen")
@@ -142,16 +142,18 @@ func _hooks() -> void:
 	_chk("荒村開張監聽已註冊", PS._hooked)
 	# 大排檔開張 stall_hook：舊存檔（冇睇過新開場）唔觸發
 	var st = J.G.get("Story"); var sv = J.G.S.seen.duplicate()
+	var node = m.get("story") if m != null else null
+	var bz = func(): return node.busy() if node != null else false
 	J.G.S.seen.erase("stall_hook"); J.G.S.seen.erase("op2_arrive"); J.G.S.seen.erase("opf2_arrive")
 	J.G["stall_open_fn"] = func(): return true
-	var q0 = st.q.size() if st != null else 0
+	var b0 = bz.call()
 	PS.tick()
-	_chk("舊存檔：大排檔開張唔播 stall_hook", st == null or st.q.size() == q0)
+	_chk("舊存檔：大排檔開張唔播 stall_hook", b0 or not bz.call())
 	J.G.S.seen["op2_arrive"] = true
-	if st != null and not st.busy():
+	if st != null and not bz.call():
 		PS.tick()
-		_chk("新開場存檔：大排檔開張排 stall_hook", st.busy())
-		st.q.clear(); st.cur = null; st.visible = false
+		_chk("新開場存檔：大排檔開張排 stall_hook", bz.call())
+		if node != null: node.q.clear(); node.cur = null; node.visible = false
 	J.G.erase("stall_open_fn")
 	J.G.S["seen"] = sv
 
