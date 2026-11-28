@@ -243,9 +243,8 @@ static func look_stage(sid: String, lv: float) -> int:
 	return n
 static func extra_slots(sid: String, lv: float) -> int:   # 製作店員位＝1＋呢個數；權威表喺 M1（mk_ops.staff_slots），未合併時用自己嘅 slot_lv
 	if not on(): return 0
-	if ResourceLoader.exists("res://game/market/mk_ops.gd"):
-		var MKO = load("res://game/market/mk_ops.gd")
-		if MKO != null and MKO.has_method("extra_slots"): return int(MKO.extra_slots(sid, lv))
+	var MKO = _mko()
+	if MKO != null: return int(MKO.extra_slots(sid, lv))
 	var n = 0
 	for x in D().mile.get("slot_lv", [10, 25, 100, 200]): if lv >= float(x): n += 1
 	return n
@@ -292,6 +291,17 @@ static func item_mul(sim, sid: String) -> float:
 	if is_trend(sim, sid): m *= cf("trend", "mul", 1.5)
 	if int(J.num(st().stars.get(sid, 0))) >= 3: m *= 1.0 + cf("critic", "star3_price", 0.1)
 	return m
+static func _mko():
+	return load("res://game/market/mk_ops.gd") if ResourceLoader.exists("res://game/market/mk_ops.gd") else null
+static func sub_bonus(sim, c: Dictionary) -> float:   # 副貨（M1 雙貨）：按寄賣攤嘅倍數補差（cust_value 用）
+	if not on(): return 0.0
+	var MKO = _mko()
+	if MKO == null: return 0.0
+	var a = 0.0
+	for g in c.got:
+		var host = str(MKO.host_of(str(g)))
+		if host != "": a += float(c.got[g]) * float(MKO.sub_val(sim, str(g))) * (item_mul(sim, host) - 1.0)
+	return a
 # ---- 連單 ----
 static func _mark_first(sim, dt: float) -> void:
 	for c in sim.custs:

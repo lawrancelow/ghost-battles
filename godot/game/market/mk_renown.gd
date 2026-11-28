@@ -38,7 +38,7 @@ static func reg() -> void:
 		var m: Dictionary = s.mk
 		var pend = float(J.num(m.get("renown_pts", 0.0)))   # M2 未登記前 M1 暫存嘅分：收返
 		if pend > 0.0: m["renown_pts"] = 0.0; add(pend, "m1")
-		m["renown_lv"] = level()
+		m["renown_lv"] = level(); m["renown_live"] = 1   # KPI 指標 mk_renown_lv 讀真等級
 static func pts() -> float: return float(J.num(st().get("pts", 0.0)))
 static func level() -> int:   # 1–5
 	var L: Array = D().get("lv", [0, 200, 800, 3000, 10000])

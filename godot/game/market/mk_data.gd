@@ -163,7 +163,8 @@ static func reg_metrics() -> void:
 	K.register_metric("mk_combo", func(): return J.num(st().get("combo_n", 0)) if J.t(st().get("combo_live")) else floor(sold_total() / 6.0))   # M2 未接連單：暫用賣出件數 ÷6
 	K.register_metric("mk_renown_lv", func(): return J.num(st().get("renown_lv", 0)) if J.t(st().get("renown_live")) else (2.0 if sold_total() >= 300.0 else (1.0 if sold_total() >= 80.0 else 0.0)))
 	K.register_metric("mk_militia", func(): return militia_n())
-	K.register_metric("mk_patrol_done", func(): return J.num(st().get("patrol_done", 0)) if J.t(st().get("patrol_live")) else 5.0)   # 巡邏系統未上：當已完成
+	K.register_metric("mk_patrol_done", func(): return J.num(st().get("patrol_done", 0)))   # [M1 營運] 巡邏隊成功處理事件次數（mk_ops）
+	OPS().reg()
 static func _mv():
 	var s = S()
 	return s.get("mv") if s != null and s.get("mv") is Dictionary else null
@@ -240,7 +241,12 @@ static func mul(sid: String) -> float:   # 生產速度倍數（加班、趴低�
 	if float(o.get("down", 0.0)) > 0.0: return 0.0
 	var m = 1.0 + otf("rank_bonus", 0.1) * int(o.get("rank", 0))
 	if J.t(o.get("on")): m *= otf("mul", 2.0)
-	return m
+	return m * OPS().prod_k(sid)   # [M1 營運] 店員遞減、換貨中、吵架停工、冇櫃檯員去收錢
+static func OPS(): return load("res://game/market/mk_ops.gd")
+static func ot_mul(sid: String) -> float:   # 只計加班／老員工（唔計店員人數、停工）
+	if not active(): return 1.0
+	var o2 = ot(sid)
+	return (1.0 + otf("rank_bonus", 0.1) * int(o2.get("rank", 0))) * (otf("mul", 2.0) if J.t(o2.get("on")) else 1.0)
 static func feed(sid: String) -> String:   # "ok"／"no_bao"／"not_down"
 	if not is_down(sid): return "not_down"
 	var n = int(otf("feed_cost", 2))
