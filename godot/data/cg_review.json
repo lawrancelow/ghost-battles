@@ -1,0 +1,6 @@
+{
+ "_note": "未經老闆選定、但已放入素材庫的插圖鍵：正式版一律不顯示（該句只有對話）；設環境變數 GB_RV_SHOW=1 才顯示並貼「待審」（審圖截圖用）。選定後從 pending 刪走。rv_clear_test 會列出。",
+ "pending": [
+  "cg_dato_plaque"
+ ]
+}

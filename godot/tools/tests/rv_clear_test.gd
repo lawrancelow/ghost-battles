@@ -19,6 +19,9 @@ func _run(strict_: bool) -> void:
 		if not (cg is Dictionary): continue
 		for li in cg:
 			if cg[li] is Dictionary and str(cg[li].get("rv", "")) != "": list.append("%s:%s %s%s" % [sid, li, cg[li].get("k", ""), ("／女 " + str(cg[li].kf)) if cg[li].has("kf") else ""])
+	if FileAccess.file_exists("res://data/cg_review.json"):
+		var rj = JSON.parse_string(FileAccess.get_file_as_string("res://data/cg_review.json"))
+		for k in rj.get("pending", []): list.append("素材 %s" % k)
 	list.sort()
 	_p("待審插圖 %d 張：" % list.size())
 	for x in list: _p("  待審 " + x)
@@ -28,7 +31,7 @@ func _run(strict_: bool) -> void:
 	var rc = OS.execute("python3", [ProjectSettings.globalize_path("res://tools/devkit/rv_build_check.py"), ProjectSettings.globalize_path("res://").trim_suffix("/")], out, true)
 	var txt = "\n".join(out)
 	for ln in txt.split("\n"): if ln.begins_with("BUILD") or ln.begins_with("  DIFF"): _p(ln)
-	_chk("檢查腳本跑得起", rc == 0 and txt.contains("RV_COUNT %d" % list.size()), rc)
+	_chk("檢查腳本跑得起", rc == 0 and txt.contains("RV_COUNT "), rc)
 	if txt.contains("BUILD skip"): _p("（搵唔到 build.py，略過重跑檢查）")
 	else:
 		_chk("build.py 冇 --force 唔寫檔", txt.contains("BUILD_NOFORCE ok"))

@@ -2265,9 +2265,7 @@
 "cg": {
 "0": {
 "k": "cg_office",
-"ph": "cg1_office",
-"rv": "待審",
-"plaque": true
+"ph": "cg1_office"
 },
 "4": ""
 },
@@ -2316,8 +2314,7 @@
 "cg": {
 "0": {
 "k": "cg_b2_soup",
-"ph": "cg1_queue",
-"rv": "待審"
+"ph": "cg1_queue"
 }
 },
 "lines": [
@@ -2362,9 +2359,7 @@
 "cg": {
 "4": {
 "k": "cg_exile",
-"ph": "cg1_queue",
-"rv": "待審",
-"plaque": true
+"ph": "cg1_queue"
 }
 },
 "lines": [
@@ -3007,9 +3002,7 @@
 "0": {
 "k": "cg_tavern",
 "ph": "cg1_huai",
-"kf": "cg_tavern_f",
-"rv": "待審",
-"plaque": true
+"kf": "cg_tavern_f"
 },
 "13": ""
 },
