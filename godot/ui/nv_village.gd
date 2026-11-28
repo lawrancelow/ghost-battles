@@ -319,7 +319,10 @@ func _sync_statics() -> void:
 		_static("t_%d" % i, p[1], [hp, shake], shake, func(ctx): Art.draw_tree(ctx, p[0], p[1], hp, t, shake, hp == 3, ii))
 		i += 1
 	i = 0
-	for p in J.G.get("PADDY_POS"):
+	var PP = J.G.get("PADDY_POS")
+	if PP is Array and (not (S.get("paddy") is Array) or S.paddy.size() < PP.size()): load("res://game/zone/zone_data.gd").pad_fields(S, 8, PP.size())   # [p55] 稻田 6→8：舊存檔／非分區模式補格，避免越界
+	for p in PP:
+		if i >= S.paddy.size(): break
 		var ripe = J.t(S.paddy[i]); var ii2 = i
 		_static("p_%d" % i, p[1] - 10, ripe, false, func(ctx): Art.draw_paddy(ctx, p[0], p[1], ripe, t, ii2))
 		i += 1
