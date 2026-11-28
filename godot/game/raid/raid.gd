@@ -567,7 +567,7 @@ static func act_targets(_game = null) -> Array:
 static func siege_pos() -> Vector2:
 	var r = _peek()
 	if r == null or not (r.get("cur") is Dictionary): return Vector2.ZERO
-	var c = r.cur; var at = tpos(str(c.tgt)) + Vector2(0, 34)
+	var c = r.cur; var at = tpos(str(c.tgt)) + (Vector2(0, -26) if PO.is_tkey(str(c.tgt)) else Vector2(0, 34))   # [post] 駐點：圍喺木牌上面，唔好遮住木牌
 	if str(r.ph) != "siege": return ZD.v2(c.get("from", [at.x, at.y]))
 	var k = clampf(J.num(c.get("t", 0)) / maxf(0.1, float(TUNE.walk)), 0.0, 1.0)
 	return ZD.v2(c.get("from", [at.x, at.y])).lerp(at, k)

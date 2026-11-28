@@ -29,10 +29,20 @@ func _main(t): return t.get_tree().root.get_node_or_null("Main")
 func _w(t, s: float): await t.get_tree().create_timer(s).timeout
 func _f(t, n := 1):
 	for i in n: await t.get_tree().process_frame
-func _shot(t, name: String):
+func _clean(t) -> void:   # 截圖前清走提示同橫幅（測試跑得快會疊埋一齊，真玩唔會）
+	var m = _main(t)
+	if m == null: return
+	if m.get("toasts") != null:
+		for c in m.toasts.get_children(): c.visible = false
+	if m.get("banner") != null: m.banner.visible = false
+	if m.get("_mq") is Array: m._mq.clear()
+func _shot(t, name: String, clean := true):
 	if not shots: return
+	if clean: _clean(t)
 	await RenderingServer.frame_post_draw
 	t.get_viewport().get_texture().get_image().save_png(SHOTS + name + ".png"); _p("shot " + name)
+	var m = _main(t)
+	if m != null and m.get("banner") != null: m.banner.visible = true; m.banner.modulate.a = 0.0
 func _skip(t, n := 6):
 	var idle = 0
 	for i in maxi(n, 40):
@@ -222,7 +232,12 @@ func income_check(t, m) -> void:
 	if shots:
 		_cam(m, e.pos + Vector2(0, 60), m.village.size.x / 420.0)
 		await _w(t, 0.8); await _shot(t, "05_sign_open_till")
-		PV.open_card(e); await _w(t, 0.5); await _shot(t, "06_card_open"); PV.close_card()
+		PV.open_card(e); await _w(t, 0.5); await _shot(t, "06_card_open")
+		var cb = m.find_child("CtlSortie", true, false)
+		var cr: Rect2 = PV.card.get_global_rect()
+		var lim = m.get_viewport_rect().size.y - float(m.NAV_H)
+		_chk("駐點卡開住：浮動「出擊」掣收起，卡成張喺畫面入面、唔掂底部分頁列（底 %d ≤ %d）" % [int(cr.end.y), int(lim)], (cb == null or not cb.is_visible_in_tree()) and cr.end.y <= lim and cr.position.y >= 100.0 and cr.position.x >= 0.0 and cr.end.x <= m.get_viewport_rect().size.x)
+		PV.close_card()
 	_adv(4 * 3600)
 	PO.accrue(e)
 	tl = PO.till(e); var cap = PO.till_cap(e)
@@ -285,7 +300,7 @@ func raid_check(t, m) -> void:
 	_chk("親自迎戰嘅敵陣＝據點原班人馬（領隊照出）、強度八成", (fs.stage.en as Array).has(kl) and is_equal_approx(float(fs.stage.p), maxf(1.0, float(e.lv) * float(p.retake_k))) and str(fs.sid) == RAID.fight_sid(), fs.stage)
 	_chk("圍住期間可以派包子打發（要 %d 個壽包）" % int(PO.feed_cost()), PO.can_feed() and PV.card_lines(e).feed and str(PV.card_lines(e).feed_txt).contains(str(int(PO.feed_cost()))))
 	if shots:
-		_cam(m, e.pos + Vector2(0, 60), m.village.size.x / 420.0)
+		_cam(m, e.pos + Vector2(0, -150), m.village.size.x / 420.0)   # 據點放低啲：頭頂「撳我迎戰」唔好畀圍困提示條遮住
 		RAID.st().cur["t"] = 20.0
 		await _w(t, 1.2); await _shot(t, "08_raid_siege")
 		PV.open_card(e); await _w(t, 0.5); await _shot(t, "09_card_siege_feed"); PV.close_card()
@@ -560,8 +575,7 @@ func more_shots(t, m) -> void:
 	_cam(m, e.pos + Vector2(0, 60), m.village.size.x / 420.0)
 	for i in 4:
 		var tt = PO.tiers(SOUL.pin(k))[i]
-		RTS.toast("勝利　%s　魂魄：%s ×%d（%s）%s" % [SO.title(e), SOUL.gname(k), int(tt.n), tt.name, tt.say])
-		await _w(t, 0.7); await _shot(t, "15_tier_%d" % i)
+		await _w(t, 2.2); _clean(t); RTS.toast("勝利　%s　魂魄：%s ×%d（%s）%s" % [SO.title(e), SOUL.gname(k), int(tt.n), tt.name, tt.say]); await _w(t, 0.7); await _shot(t, "15_tier_%d" % i, false)
 		await _w(t, 0.3)
 	var c = Vector2.ZERO; var n = 0
 	for x in SO.camps(0): if int(x.ring) <= 1: c += x.pos; n += 1
