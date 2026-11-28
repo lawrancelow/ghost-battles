@@ -124,6 +124,10 @@ func show_spec(spec) -> void:
 	if spec == null: return
 	var d: Dictionary = spec if spec is Dictionary else {"k": str(spec)}
 	var k = str(d.get("k", ""))
+	# [opening] 女主版插圖：kf（有圖先用，冇就用男女共用嗰張）；rv＝待審標記（只俾美術／統籌睇，遊戲唔顯示）
+	if str(d.get("kf", "")) != "" and Spr.ok(str(d.kf)):
+		var H = J.G.get("S"); var hh = H.get("hero") if H is Dictionary else null
+		if hh is Dictionary and str(hh.get("sex", "m")) == "f": k = str(d.kf)
 	if k != "" and not Spr.ok(k) and str(d.get("ph", "")) != "": k = str(d.ph)   # [opening] 新插圖未到：先用佔位圖（ph）
 	if k == "" or not Spr.ok(k):
 		hide_cg(); return

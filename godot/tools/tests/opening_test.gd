@@ -16,6 +16,7 @@ func all(t) -> void:
 	var m = await _boot(t)
 	DirAccess.make_dir_recursive_absolute(SH)
 	_data()
+	_no_braces()
 	_names()
 	_oldsave()
 	_mengpo()
@@ -53,6 +54,22 @@ func _data() -> void:
 	var ch1 = DB.D.get("CHAPTERS", [])
 	if not (ch1 is Array) or ch1.is_empty(): ch1 = J.G.get("CHAPTERS", [])
 	_chk("stall_hook 唔放章節開場（改由大排檔開張 tick 播）", ch1 is Array and ch1.size() > 0 and not (ch1[0].intro as Array).has("stall_hook"), ch1[0].intro if ch1 is Array and ch1.size() > 0 else "")
+
+# 數據：新場景（講者／對白／中文對照）一律唔准有 {xxx} 佔位
+func _no_braces() -> void:
+	var bad: Array = []
+	var re = RegEx.new(); re.compile("[{}]")
+	for id in OM + OF + ["joss_reopen", "joss_reopen_f", "joss_shift", "tav_open", "stall_hook", "ch6_mengpo"]:
+		var sc = _scenes().get(id)
+		if not (sc is Dictionary): continue
+		for ln in sc.lines:
+			for i in mini(2, (ln as Array).size()):
+				if ln[i] is String and re.search(ln[i]) != null: bad.append("%s:%s" % [id, ln[i]])
+	_chk("新場景冇 {xxx} 佔位", bad.is_empty(), bad.slice(0, 5))
+	var miss: Array = []
+	for k in ["cg_ruins", "cg_b2_soup", "cg_lobby_f", "cg_office_f", "cg_exile_f", "cg_soup_f", "cg_joss_flood_f", "cg_joss_note_f", "cg_stall_hook_f", "cg_tavern_f", "cg_c1_bribe", "cg_c2_bribe", "cg_bribe_f"]:
+		if not Spr.ok(k): miss.append(k)
+	_chk("美術新圖已入 manifest", miss.is_empty(), miss)
 
 # 名字替換：改名、女主版
 func _names() -> void:
@@ -168,7 +185,7 @@ func _play(t, m, sex: String) -> void:
 	if st == null: return
 	for id in ids: S.seen.erase(id)
 	for id in ids: st.queue(id)
-	var played = {}; var names_ok = true; var guard = 0
+	var played = {}; var names_ok = true; var guard = 0; var brace_bad: Array = []
 	while st.cur != null and guard < 400:
 		guard += 1
 		var cid = str(st.cur.get("id", ""))
@@ -177,6 +194,10 @@ func _play(t, m, sex: String) -> void:
 			await _w(t, 0.9)
 			await RenderingServer.frame_post_draw
 			t.get_viewport().get_texture().get_image().save_png(SH + "%s_%s.png" % [sex, cid])
+		var shown_nm = str(st.nm.text) if st.get("nm") != null else ""
+		var shown_tx = str(st.full_text)
+		if shown_nm.contains("{") or shown_nm.contains("}") or shown_tx.contains("{") or shown_tx.contains("}"): brace_bad.append("%s:%s|%s" % [cid, shown_nm, shown_tx.left(20)])
+		if shown_nm.contains("阿福") and sex == "f": brace_bad.append("女主名牌顯示阿福 %s" % cid)
 		var who = str(st.speaker())
 		if who == "阿福" and st.get("nm") != null and str(st.nm.text) == "阿福": names_ok = false
 		st.advance(); await _f(t, 2)
@@ -185,4 +206,5 @@ func _play(t, m, sex: String) -> void:
 	for id in ids: if not (played.has(id) and S.seen.has(id)): all_seen = false
 	_chk("實機播完開場（%s）" % sex, all_seen and st.cur == null, played.keys())
 	_chk("實機名牌顯示玩家名（%s）" % sex, names_ok)
+	_chk("實機畫面冇「{」「}」佔位、名牌唔出阿福（%s）" % sex, brace_bad.is_empty(), brace_bad.slice(0, 5))
 	S["hero"] = h0; S["seen"] = seen0
