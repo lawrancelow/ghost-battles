@@ -83,14 +83,11 @@ func all(t) -> void:
 	await _w(t, 0.5); await _shot(t, "s02_title")
 	await _w(t, 1.8)
 	# 雙貨：貨架卡
-	sim.sst(stalls[1])["unlocked"] = false; MKO.tick(sim, 0.05)
 	sc.open_sheet(stalls[0]); await _w(t, 0.6)
 	await _shot(t, "s03_station_sheet")
-	MKO.set_sub(c, stalls[0], MKO.good_of(stalls[1])); MKO.st().swap.clear()
 	MKOU.open_shelf(sc, stalls[0]); await _w(t, 0.6)
 	await _shot(t, "s04_shelf_dual")
 	sc.close_sheet(); _view.call()
-	MKO.set_sub(c, stalls[0], ""); MKO.st().swap.clear(); sim.sst(stalls[1])["unlocked"] = true; MKO.tick(sim, 0.05)
 	# 人手面板
 	MKOU.open_panel(sc, "pat"); await _w(t, 0.6); await _shot(t, "s05_panel_patrol")
 	sc.close_sheet(); _view.call()
