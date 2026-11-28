@@ -69,7 +69,7 @@ static func pop_events() -> Array:
 	return e
 # 1. 酒館名鬼
 static func named_p() -> float:
-	var a: Array = D().get("named_p", [0.03, 0.03, 0.06, 0.10, 0.10])
+	var a: Array = D().get("named_p", [0.03, 0.06, 0.10, 0.10, 0.10])
 	return float(a[clampi(level() - 1, 0, a.size() - 1)]) if S() != null else 0.03
 static func named_pin() -> bool: return S() != null and level() >= int(cf("named_pin_lv", 4))
 # 2. 回陽間通行證

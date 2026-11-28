@@ -36,7 +36,9 @@
   "cap_n": 50,
   "cap_slow": 0.7,
   "pat_max": 4,
-  "ctr_max": 3
+  "ctr_max": 3,
+  "pat_rec": 0.1,
+  "_pat_doc": "巡邏員：每處理一件 +pat_add（隊友分擔）；閒時每秒回落 pat_rec；滿 100 趴低 60 秒"
  },
  "mile": {
   "look_lv": [
@@ -271,8 +273,8 @@
   "per_lux": 10,
   "named_p": [
    0.03,
-   0.03,
    0.06,
+   0.1,
    0.1,
    0.1
   ],

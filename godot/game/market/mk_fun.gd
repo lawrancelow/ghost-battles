@@ -228,7 +228,7 @@ static func _patrol_tick(dt: float) -> void:   # 巡邏員：趴低倒數、閒�
 		if float(o.get("down", 0.0)) > 0.0:
 			o.down = maxf(0.0, float(o.down) - dt)
 			if o.down <= 0.0: o.fat = MK.otf("reset_fat", 40.0); MK.evq.append({"k": "up", "sid": str(k)})
-		else: o.fat = maxf(0.0, float(o.get("fat", 0.0)) - MK.otf("rec_rate", 2.0) * 0.5 * dt)
+		else: o.fat = maxf(0.0, float(o.get("fat", 0.0)) - cf("ot", "pat_rec", 0.1) * dt)   # 閒時慢慢回氣（太快就永遠唔會趴）
 static func carry_captains() -> void:   # 拔營後：巡邏隊長跨章保留（同一隻鬼 id）
 	for who in st().get("caps", []):
 		var o = MK.ot(pat_key(str(who)))
