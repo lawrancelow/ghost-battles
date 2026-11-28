@@ -155,11 +155,18 @@ static func place_ready(pid: String) -> bool:
 	if pid == "back": return place_ready("scare") or place_ready("tower")
 	var s = spot(pid)
 	return s != null and (s.get("ready") == null or J.t(J.cl(s.ready, null, [])))
+static func _renown_back_ok(pid: String) -> bool:   # [market M2] 第 3 章起回陽間要市集名聲（地府官員批文）
+	if not (pid in ["back", "scare", "tower"]) or not ResourceLoader.exists("res://game/market/mk_renown.gd"): return true
+	var MKd = load("res://game/market/mk_data.gd")
+	if MKd == null or not MKd.active(): return true
+	return load("res://game/market/mk_renown.gd").back_ok(load("res://game/market/mk_fun.gd").ch())
 static func place_open(pid: String) -> bool:
+	if not _renown_back_ok(pid): return false
 	if pid == "back": return place_open("scare") or place_open("tower")
 	var s = spot(pid)
 	return s != null and load("res://native/guide.gd").open_(s)
 static func place_lock(pid: String) -> String:
+	if not _renown_back_ok(pid): return load("res://game/market/mk_renown.gd").back_lock_text()
 	if pid == "back": pid = "scare"
 	if not place_ready(pid): return L("仲喺度起緊，遲啲再嚟", "還在施工，晚點再來")
 	var s = spot(pid)

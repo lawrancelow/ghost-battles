@@ -14,12 +14,39 @@
   "rank_out_mul": 1.2,
   "punch_ch": 5,
   "punch_cd_s": 600,
-  "counter_mul": 2.0,
-  "counter_rest_mul": 0.6
+  "core": {
+   "fat_rate": 1.2,
+   "rec_rate": 2.0,
+   "down_s": 60.0,
+   "reset_fat": 40.0,
+   "feed_cost": 1,
+   "rank_s": [
+    1800
+   ],
+   "rank_bonus": 0.2,
+   "warn": 70.0
+  },
+  "staff_step": 0.1,
+  "staff_cap": 0.4,
+  "ctr_per": 0.4,
+  "ctr_win3": 14.0,
+  "ctr_busy": 0.8,
+  "ctr_peak": 1.0,
+  "pat_add": 15.0,
+  "cap_n": 50,
+  "cap_slow": 0.7
  },
  "mile": {
-  "look_lv": [25, 100, 200],
-  "slot_lv": [25, 100, 200]
+  "look_lv": [
+   25,
+   100,
+   200
+  ],
+  "slot_lv": [
+   25,
+   100,
+   200
+  ]
  },
  "combo": {
   "win_s": 10,
@@ -38,17 +65,56 @@
   "rest_flow": 0.5,
   "rest_fat": 4.0,
   "first_peak_s": 60,
-  "vip_n": [10, 30],
+  "vip_n": [
+   10,
+   30
+  ],
   "vip_s": 90,
   "vip_mul": 3.0,
   "vip_renown": 20,
   "vips": [
-   {"id": "rich", "n": ["富豪鬼", "富豪鬼"]},
-   {"id": "tour", "n": ["旅行團鬼", "旅行團鬼"]},
-   {"id": "wed", "n": ["婚宴鬼", "婚宴鬼"]},
-   {"id": "takeaway", "n": ["外賣大單", "外賣大單"]},
-   {"id": "group", "n": ["集團團購", "集團團購"]},
-   {"id": "famous", "n": ["名鬼包場", "名鬼包場"]}
+   {
+    "id": "rich",
+    "n": [
+     "富豪鬼",
+     "富豪鬼"
+    ]
+   },
+   {
+    "id": "tour",
+    "n": [
+     "旅行團鬼",
+     "旅行團鬼"
+    ]
+   },
+   {
+    "id": "wed",
+    "n": [
+     "婚宴鬼",
+     "婚宴鬼"
+    ]
+   },
+   {
+    "id": "takeaway",
+    "n": [
+     "外賣大單",
+     "外賣大單"
+    ]
+   },
+   {
+    "id": "group",
+    "n": [
+     "集團團購",
+     "集團團購"
+    ]
+   },
+   {
+    "id": "famous",
+    "n": [
+     "名鬼包場",
+     "名鬼包場"
+    ]
+   }
   ]
  },
  "trend": {
@@ -56,11 +122,23 @@
   "mul": 1.5,
   "flow_w": 2.0,
   "fest": {
-   "qingming": ["cloth"],
-   "ghost": ["acc", "food"],
-   "dongzhi": ["food"],
-   "cny": ["lux", "cloth"],
-   "bday": ["food"]
+   "qingming": [
+    "cloth"
+   ],
+   "ghost": [
+    "acc",
+    "food"
+   ],
+   "dongzhi": [
+    "food"
+   ],
+   "cny": [
+    "lux",
+    "cloth"
+   ],
+   "bday": [
+    "food"
+   ]
   }
  },
  "regular": {
@@ -73,7 +151,10 @@
  "critic": {
   "per_ch": 2,
   "first_s": 900,
-  "gap_s": [900, 1800],
+  "gap_s": [
+   900,
+   1800
+  ],
   "n_try": 3,
   "star3_renown": 50,
   "star3_price": 0.1,
@@ -82,27 +163,122 @@
  },
  "combos": {
   "0": [
-   {"id": "c1_food3", "street": "food", "need": ["st_shoubao", "st_douhua", "st_nuomici"], "lv": 25, "kind": "price", "v": 0.15, "n": ["宵夜三寶", "宵夜三寶"]},
-   {"id": "c1_cloth3", "street": "cloth", "need": ["st_zhishan", "st_caoxie", "st_zhiku"], "lv": 25, "kind": "multi", "v": 0.2, "n": ["全身紙紮", "全身紙紮"]}
+   {
+    "id": "c1_food3",
+    "street": "food",
+    "need": [
+     "st_shoubao",
+     "st_douhua",
+     "st_nuomici"
+    ],
+    "lv": 25,
+    "kind": "price",
+    "v": 0.15,
+    "n": [
+     "宵夜三寶",
+     "宵夜三寶"
+    ]
+   },
+   {
+    "id": "c1_cloth3",
+    "street": "cloth",
+    "need": [
+     "st_zhishan",
+     "st_caoxie",
+     "st_zhiku"
+    ],
+    "lv": 25,
+    "kind": "multi",
+    "v": 0.2,
+    "n": [
+     "全身紙紮",
+     "全身紙紮"
+    ]
+   }
   ]
  },
  "events": {
-  "1": [{"id": "toyol", "every_s": 300}],
-  "2": [{"id": "corpse_parade", "every_s": 600}],
-  "3": [{"id": "tide", "every_s": 720}],
-  "4": [{"id": "flying_head", "every_s": 480}],
-  "5": [{"id": "inspection", "every_s": 1200}]
+  "1": [
+   {
+    "id": "toyol",
+    "every_s": 300
+   }
+  ],
+  "2": [
+   {
+    "id": "corpse_parade",
+    "every_s": 600
+   }
+  ],
+  "3": [
+   {
+    "id": "tide",
+    "every_s": 720
+   }
+  ],
+  "4": [
+   {
+    "id": "flying_head",
+    "every_s": 480
+   }
+  ],
+  "5": [
+   {
+    "id": "inspection",
+    "every_s": 1200
+   }
+  ]
  },
  "renown": {
-  "lv": [0, 200, 800, 3000, 10000],
-  "names": [["無名小檔", "無名小檔"], ["街坊口碑", "街坊口碑"], ["陰間打卡點", "陰間打卡點"], ["地府米芝蓮", "地府米其林"], ["傳說老字號", "傳說老字號"]],
+  "lv": [
+   0,
+   200,
+   800,
+   3000,
+   10000
+  ],
+  "names": [
+   [
+    "無名小檔",
+    "無名小檔"
+   ],
+   [
+    "街坊口碑",
+    "街坊口碑"
+   ],
+   [
+    "陰間打卡點",
+    "陰間打卡點"
+   ],
+   [
+    "地府米芝蓮",
+    "地府米其林"
+   ],
+   [
+    "傳說老字號",
+    "傳說老字號"
+   ]
+  ],
   "per_item": 1,
   "per_lux": 10,
-  "named_p": [0.03, 0.03, 0.06, 0.10, 0.10],
+  "named_p": [
+   0.03,
+   0.03,
+   0.06,
+   0.1,
+   0.1
+  ],
   "named_pin_lv": 4,
   "back_ch": 2,
   "back_lv": 2,
-  "move_lv": [2, 2, 3, 3, 4, 4],
+  "move_lv": [
+   2,
+   2,
+   3,
+   3,
+   4,
+   4
+  ],
   "exch_day": 3,
   "exch_cost": 50,
   "exch_coin": 100,
