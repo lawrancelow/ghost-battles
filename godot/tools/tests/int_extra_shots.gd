@@ -13,15 +13,14 @@ func all(t) -> void:
 		MN.open_bld(id); await _w(t, 1.5); _clean(t)
 		await RenderingServer.frame_post_draw
 		t.get_viewport().get_texture().get_image().save_png("/tmp/xshots/%s.png" % id); _p("shot " + id)
-		# 祭壇：逐頁撳分頁掣搵酒館頁
-		if id == "altar":
-			var i = 0
+		if id == "altar":   # 祭壇「招雜鬼」頁＝陰間酒館
+			var tb = null
 			for b in m.find_children("*", "Button", true, false):
-				if b.is_visible_in_tree() and (str(b.text).find("雜鬼") >= 0 or str(b.text).find("酒館") >= 0 or str(b.text).find("招") == 0):
-					b.pressed.emit(); await _w(t, 1.0); _clean(t)
-					await RenderingServer.frame_post_draw
-					t.get_viewport().get_texture().get_image().save_png("/tmp/xshots/altar_tab%d.png" % i); _p("shot altar tab %d %s" % [i, b.text]); i += 1
-					if i >= 3: break
+				if is_instance_valid(b) and b.is_visible_in_tree() and str(b.text).find("招雜鬼") >= 0: tb = b; break
+			if tb != null:
+				tb.pressed.emit(); await _w(t, 1.2); _clean(t)
+				await RenderingServer.frame_post_draw
+				t.get_viewport().get_texture().get_image().save_png("/tmp/xshots/tavern.png"); _p("shot tavern")
 		if m.has_method("close_sheet"): m.close_sheet()
 		await _w(t, 0.6)
 	print("[post] RESULT ok=1 bad=0")
