@@ -292,7 +292,7 @@ static func _gcard(g) -> Control:
 	var st = UIKit.sb(Color(0, 0, 0, 0.05), 8, Color("#d9b440") if J.t(g.gold) else Color(UIKit.PAPERLINE, 0.6), 2 if J.t(g.gold) else 1, Vector4(8, 8, 8, 8))
 	card.add_theme_stylebox_override("panel", st)
 	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 8); card.add_child(hb)
-	var po = _por(J.str(g.k), 60, J.num(g.alpha) if g.get("alpha") != null else 1.0, true); po.size_flags_vertical = Control.SIZE_SHRINK_BEGIN; hb.add_child(po)
+	var po = _por(J.str(g.k), 96, J.num(g.alpha) if g.get("alpha") != null else 1.0, true); po.size_flags_vertical = Control.SIZE_SHRINK_BEGIN; hb.add_child(po)
 	# 一張卡只用一個 RichTextLabel（以前每行一個，7 張卡要 90ms）
 	var L = []
 	var tag = J.str(g.tag)

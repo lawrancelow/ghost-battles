@@ -714,7 +714,53 @@ func portrait_region(type: String) -> Array:
 	if ACE.STAGES.has(type) and Spr.key_for(type) != type:   # [p44] 階段圖（已裁到內容）：由頂部取頭膊；無常頂帽高，向下移少少
 		var S2 = minf(iw, ih * 0.6); var sy2 = ih * (0.13 if type in ["heiwu", "baiwu"] else 0.0)
 		return [img, Rect2((iw - S2) / 2, sy2, S2, S2)]
+	if (not PCROP.has(type) or type == "afu") and not (type in FACE_SKIP):   # [p55] 冇指定裁位：由圖嘅透明度自動搵塊面（頭頂下面 15–55%），唔再淨係切到額頭
+		var fr = face_rect(img, key)
+		if fr.size.x > 0.0: return [img, fr]
 	var hv = type == "afu" and HV.active()   # [p47] 空手姿勢圖：頭喺正中，唔使向右移
 	if hv: c = [0.0, 0.62]
 	var S = minf(iw * c[1], ih); var sx = (iw - S) / 2 + (iw * 0.1 if type == "afu" and not hv else 0.0); var sy = minf(ih - S, iw * c[0])
 	return [img, Rect2(clampf(sx, 0, iw - S), maxf(0, sy), S, S)]
+
+const FACE_SKIP := ["n30_wutou", "lg_jsj_wutou", "n30_pelesit", "n30_xiangcai", "nw_bajang", "nw_zzcar", "nw_shen", "nw_jinmenken", "nw_teketeke"]   # [p55] 冇頭／唔係人形：照舊裁法（逐隻睇過）
+# [p55] 自動搵塊面：縮細圖 → 實心範圍（alpha）→ 頭部（實心頂 12–40% 嘅行）中心同闊度 → 正方形
+var _face_cache := {}
+func face_rect(img: Texture2D, key: String) -> Rect2:
+	if _face_cache.has(key): return _face_cache[key]
+	var r = _face_calc(img)
+	_face_cache[key] = r
+	return r
+func _face_calc(img: Texture2D) -> Rect2:
+	var im: Image = img.get_image() if img != null else null
+	if im == null or im.get_width() < 8: return Rect2()
+	if im.is_compressed(): im.decompress()
+	var iw = float(im.get_width()); var ih = float(im.get_height())
+	var sw = 64; var sh = maxi(8, int(round(ih * 64.0 / iw)))
+	var sm = im.duplicate(); sm.resize(sw, sh, Image.INTERPOLATE_BILINEAR)
+	var A = 0.35
+	var y0 = -1; var y1 = -1
+	for y in sh:
+		for x in sw:
+			if sm.get_pixel(x, y).a > A:
+				if y0 < 0: y0 = y
+				y1 = y; break
+	if y0 < 0: return Rect2()
+	var Hc = float(y1 - y0 + 1)
+	var cs = []; var ws = []
+	for y in range(y0 + int(Hc * 0.12), y0 + int(Hc * 0.40) + 1):
+		var a = -1; var b = -1
+		for x in sw:
+			if sm.get_pixel(x, y).a > A:
+				if a < 0: a = x
+				b = x
+		if a >= 0: cs.append((a + b) / 2.0); ws.append(float(b - a + 1))
+	if ws.is_empty(): return Rect2()
+	ws.sort(); cs.sort()
+	var hw = ws[ws.size() / 2]; var cx = cs[cs.size() / 2]
+	var S = clampf(hw * 1.25, Hc * 0.30, minf(Hc * 0.60, float(sw)))
+	var cy = y0 + Hc * 0.27
+	var top = maxf(float(y0) - Hc * 0.03, cy - S * 0.5)
+	var k = iw / float(sw)
+	var R = Rect2((cx - S / 2.0) * k, top * k, S * k, S * k)
+	R.position.x = clampf(R.position.x, 0.0, maxf(0.0, iw - R.size.x)); R.position.y = clampf(R.position.y, 0.0, maxf(0.0, ih - R.size.y))
+	return R

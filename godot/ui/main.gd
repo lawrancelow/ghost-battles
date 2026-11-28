@@ -577,6 +577,7 @@ func _build_sheet() -> void:
 	sheet_scroll = ScrollContainer.new(); sheet_scroll.anchor_right = 1; sheet_scroll.anchor_bottom = 1; sheet_scroll.offset_top = 58; sheet_scroll.offset_left = 14; sheet_scroll.offset_right = -14; sheet_scroll.offset_bottom = -10
 	sheet_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	sheet.add_child(sheet_scroll)
+	load("res://ui/drag_scroll.gd").attach(sheet_scroll)   # [p55] 拖過門檻就當捲動（唔畀卡／掣食咗）＋慣性
 	sheet_body = VBoxContainer.new(); sheet_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL; sheet_body.add_theme_constant_override("separation", 6)
 	sheet_scroll.add_child(sheet_body)
 
