@@ -419,6 +419,9 @@ func _shots(t) -> void:
 	for b in STY.beats(0): if STY.is_zone(b): STY.mark(str(b.id))   # [zstory] 分區開場另外測（zstory_test），呢度淨係測大排檔 open
 	S.res.coins = 1e7
 	for sid in MD.stations(0): sc.sim.sst(sid).unlocked = true
+	# [p55] 倉庫自動補櫃台後，客人會買到兵器 → 遊魂兵入伍劇情（正常玩法）會插入拔營時序；呢度淨係測大排檔劇情，先標已播
+	var mla = load("res://game/militia/ml_data.gd").st()
+	if mla != null: mla["story"] = true
 	# 鏡頭去大排檔區 → 開場 beat 自動播
 	var E = em.eh()
 	var ZDh = load("res://game/zone/zone_data.gd")
