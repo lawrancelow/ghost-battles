@@ -266,7 +266,9 @@ static func _promote_row(body: VBoxContainer, x: Dictionary, refresh: Callable) 
 	if c.ok and int(c.sub) > 0: lab = L("用散魂補 %d 隻（%d 散魂）→ 升職", "用散魂補 %d 隻（%d 散魂）→ 升職") % [int(c.sub), int(c.sub_cost)]
 	elif not c.ok: lab = L("升職（%s）", "升職（%s）") % _why(str(c.why), c, k)
 	bb.add_child(_btn(lab, "gold", c.ok, func():
+		var pw0 = load("res://ui/juice.gd").pow_of_k(k)
 		if SOUL.promote(k) == "ok":
+			load("res://ui/juice.gd").power_show(k, SOUL.gname(k), pw0, load("res://ui/juice.gd").pow_of_k(k), true, L("升職做%s", "升職為%s") % SOUL.rank_name(SOUL.rank(k)))   # [juice] 全屏升職演出
 			var m = _main()
 			if m != null and m.has_method("show_banner"): m.show_banner(L("【%s】升職做%s！", "【%s】升職為%s！") % [SOUL.gname(k), SOUL.rank_name(SOUL.rank(k))])
 			_letter(k, true)

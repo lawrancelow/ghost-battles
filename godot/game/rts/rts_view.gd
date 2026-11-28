@@ -646,7 +646,7 @@ func _draw_op(n: CanvasItem, f: Font, op, vr: Rect2) -> void:
 				var wp = p + Vector2(J.num(fx.vx) * t, -60 * t + 0.5 * 160 * t * t)
 				_at(n, wp, pop)
 				var col = Color(fx.col); col.a = a
-				_str(n, f, str(fx.text), 0, 0, 20 if J.t(fx.get("big")) else 16, col, 5)
+				_str(n, f, str(fx.text), 0, 0, 27 if J.t(fx.get("crit")) else (20 if J.t(fx.get("big")) else 16), col, 6 if J.t(fx.get("crit")) else 5)   # [juice] 暴擊大字
 			"txt":   # [abui] 技能名、怕X・失神、連嚇：同 ab 飄字一齊排（唔重疊）
 				var dk = "%s@%d,%d" % [str(fx.text), int(p.x / 48.0), int(p.y / 48.0)]
 				if _txt_seen.has(dk): continue   # 同一句喺同一位（例如霸體每次擋控場都出）：只出一個

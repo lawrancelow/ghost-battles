@@ -423,11 +423,13 @@ func _eat_events() -> void:
 				_banner_set(MD.T(MD.st_def(str(e.sid)).get("n")) + MD.S("mile_a", " 到 Lv%d", " 達到 Lv%d") % int(e.lv), MD.S("mile_b", "收益 ×%d！", "收益 ×%d！") % int(e.x), 2.6)
 				for i in 4: _burst(p2 + Vector2(_rng.randf_range(-50, 50), -70 + _rng.randf_range(-30, 20)), Color("#ffd27a"), 12)
 				_snd("levelUp")
+				load("res://ui/juice.gd").vib(50)   # [juice] 里程碑震機
 			"unlock":
 				var p3 = sim.st_pos(str(e.sid))
 				for i in 3: _burst(p3 + Vector2(_rng.randf_range(-40, 40), -50), GOLD, 12)
 				_banner_set(MD.S("unl_a", "開新檔", "開新攤"), MD.T(MD.st_def(str(e.sid)).get("n")), 2.2)
 				_snd("build")
+				load("res://ui/juice.gd").vib(35)   # [juice] 開新檔震機
 			"claim":
 				_banner_set(MD.S("goal_a", "目標完成", "目標完成"), "+" + MD.fmt(e.coins) + " " + MD.S("coin", "冥幣", "冥幣"), 2.2)
 				for i in 6: _coin(Vector2(190, top_pad + 26), hud_coin, 0.5 + i * 0.07, float(e.coins) / 6.0)

@@ -14,6 +14,7 @@ func _chk(name: String, cond: bool, extra = "") -> void:
 	if cond: ok += 1; _p("ok  " + name + ("　" + str(extra) if str(extra) != "" else ""))
 	else: bad += 1; _p("BAD " + name + ("　" + str(extra) if str(extra) != "" else ""))
 func _boot(t) -> void:
+	AB.crit_on = false   # [juice] 暴擊有隨機起伏：單元測試要精確傷害，關咗佢（期望值不變，見 juice_test）
 	for i in 120:
 		await t.get_tree().create_timer(0.5).timeout
 		var NG = load("res://game/newghost/ng_data.gd")

@@ -134,6 +134,11 @@ static func swap_in(id, ms: Array) -> int:
 	var sv = J.G.get("save")
 	if sv != null: J.cl(sv, null, [])
 	return slot
+# [juice] 一鍵上陣：逐隻換上，回換咗幾隻
+static func one_tap(ids: Array, ms: Array) -> int:
+	var n = 0
+	for id in ids: if swap_in(id, ms) >= 0: n += 1
+	return n
 static func set_adviser(id) -> void:
 	var S = J.G.S
 	if id != null and S.get("team") is Array and (S.team as Array).has(id): return   # 出陣中嘅唔做軍師
@@ -336,7 +341,16 @@ static func render(box: VBoxContainer) -> void:
 	# ---- 推薦＋換上 ----
 	var rc = recommend(ms, 1 if cmp else 2)
 	if rc.size():
-		box.add_child(_lab(L("推薦：", "推薦："), 16, P.hd, false))
+		var rh = HBoxContainer.new(); rh.add_theme_constant_override("separation", 8); box.add_child(rh)
+		var rl = _lab(L("推薦：", "推薦："), 16, P.hd, false); rl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; rh.add_child(rl)
+		# [juice] 一鍵上陣：推薦嘅全部換上（逐隻 swap_in，唔換阿福）
+		var allb = _small_btn(L("一鍵上陣", "一鍵上陣"), dark); allb.name = "OneTapTeam"; allb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var rids = []
+		for r in recommend(ms, 3): rids.append(r.g.id)
+		allb.pressed.connect(func():
+			var n = one_tap(rids, ms)
+			if n > 0: Snd.play("levelUp"); _changed(box))
+		rh.add_child(allb)
 		for r in rc:
 			var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 8); box.add_child(hb)
 			var pr = UIKit.portrait(J.str(r.g.k), 40); pr.mouse_filter = Control.MOUSE_FILTER_IGNORE; hb.add_child(pr)
