@@ -26,8 +26,12 @@ static func scene(key: String) -> Dictionary:
 			if c == "f" and not f: continue
 		var tx = str(l[1]) if yue or l.size() < 3 else str(l[2])
 		tx = tx.replace("{少爺}", "大小姐" if f else "少爺")
+		if tx.contains("{rebuilt}"): tx = tx.replace("{rebuilt}", cn_num(int(KG.metric("rebuilt"))))
 		ls.append([str(l[0]), tx])
 	return {"style": "talk", "bg": "village", "title": str(sd.get("title", "")), "lines": ls}
+static func cn_num(n: int) -> String:
+	var D = ["零", "一", "兩", "三", "四", "五", "六", "七", "八", "九", "十"]
+	return D[n] if n >= 0 and n <= 10 else str(n)
 static func play(main, key: String, extra_sys := "", cb := Callable()) -> void:
 	var sc = scene(key)
 	if sc.is_empty():

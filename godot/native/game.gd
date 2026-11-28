@@ -278,9 +278,12 @@ static func q_cur():
 	var rq = load("res://game/rebuild/rb.gd").cur_q()   # [rebuild] 荒村重建虛擬任務（排喺正式主線之前）
 	if rq != null: return rq
 	var Q = _g("QUESTS"); var i = int(J.num(_S().qi))
-	return Q[i] if i >= 0 and i < Q.size() else null
+	var mq = Q[i] if i >= 0 and i < Q.size() else null
+	var kq = load("res://game/kpi/kpi_data.gd").cur_q(mq)   # [kpi] 主線去到要大排檔、大排檔未開：任務條改做「通過考核」
+	return kq if kq != null else mq
 static func q_progress(q) -> Array:
 	if J.t(J.gp(q, "rb")): return load("res://game/rebuild/rb.gd").progress(q)   # [rebuild]
+	if J.t(J.gp(q, "kpi")): return load("res://game/kpi/kpi_data.gd").q_progress(q)   # [kpi]
 	var S = _S(); var n = J.gp(q, "n")
 	match J.str(J.gp(q, "t")):
 		"chop": return [S.cnt.chop, n]
@@ -331,6 +334,7 @@ static func q_check(this_) -> void:
 static func q_complete(this_) -> void:
 	var q0 = J.mc(this_, "cur", [])
 	if J.t(J.gp(q0, "rb")): load("res://game/rebuild/rb.gd").complete(q0); return   # [rebuild] 虛擬任務唔郁 S.qi
+	if J.t(J.gp(q0, "kpi")): return   # [kpi] 考核虛擬任務：撳考核牌交考核先算（唔郁 S.qi）
 	var S = _S(); var q = J.mc(this_, "cur", []); S["qi"] = J.num(S.qi) + 1
 	var txt = J.str(J.cl(_g("give"), null, [q.r])); _snd("coin")
 	var qtx = J.str(q.text)

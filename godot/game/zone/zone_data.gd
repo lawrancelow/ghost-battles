@@ -650,6 +650,8 @@ static func cond_ok(zid: String, c := -1) -> bool:
 	if not (r is Dictionary): return true
 	var s = S()
 	if s == null: return false
+	var kr = _kg().reveal_rule(zid, str(z.get("type", "")), cc)   # [kpi] 考核開區：資源區／大排檔／野外由 KPI 話事
+	if kr != null: return bool(kr)
 	if J.t(r.get("always")): return true
 	if r.get("bld") != null and J.num(s.bld.get(str(r.bld), 0)) >= 1: return true
 	var qi = int(J.num(s.get("qi", 0)))

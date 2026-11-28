@@ -381,9 +381,23 @@ func _build_village() -> void:
 		if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT: _quest_go())
 
 static func OBm(): return load("res://game/onboard/ob.gd")
+# [kpi] 考核任務「前往」：資源區閘門＝鏡頭去嗰區；開考核卡（未輪到就講原因）
+func _kpi_go(gid: String) -> void:
+	var KGq = load("res://game/kpi/kpi_data.gd")
+	close_sheet()
+	if not KGq.turn(gid):
+		show_toast(OBm().T("繼續重建村子（鬼宅、伐木場、糯米田、化寶爐），考核官就會嚟巡查", "繼續重建村子（鬼宅、伐木場、糯米田、化寶爐），考核官就會來巡查"))
+		return
+	var op = str(KGq.gate(gid).get("opens", ""))
+	ZDm.reveal_poll(true)
+	if op.begins_with("zone:") and ZDm.on():
+		_nav_on("village")
+		_cam_to(ZDm.zrect(op.substr(5)).get_center())
+	load("res://game/kpi/kpi_ui.gd").open(self, gid)
 # 主線條：撳條或者「前往」→ 帶去當前階段目標
 func _quest_go() -> void:
 	var q = G.quest_cur()
+	if q and str(q.get("go", "")).begins_with("kpi:"): _kpi_go(str(q.go).substr(4)); return   # [kpi] 考核任務：鏡頭去考核區、開考核卡
 	if q and q.go == "roster": open_roster(); return
 	if mv_on() and not UNIFY:   # [unify] 合一地圖：原村子任務照舊（鏡頭去原村子建築）
 		if q and (q.get("t") == "stage" or q.get("go") == "gate"): close_sheet(); J.mc(J.G.get("World"), "open", []); return

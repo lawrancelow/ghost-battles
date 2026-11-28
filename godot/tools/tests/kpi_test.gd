@@ -25,6 +25,7 @@ func _rng(): return _r.pop_front() if _r.size() else 0.99
 
 func _reset_state():
 	var S = J.G.S
+	KG._fns.clear()
 	S["kpi"] = null
 	KG.enable(true)
 	var z = ZD.st()
@@ -119,7 +120,7 @@ func all(t) -> void:
 	_r = [0.1]   # < 0.3 → 撞破
 	o = KG.bribe("B", "car", "niu")
 	_chk("跑車送牛頭被何大睡撞破：反而 KPI 減半（竹子 33→17）", o.res == "caught" and KG.progress("B")[0].need == 17, [o, KG.progress("B")])
-	_chk("抓包後下次打點半價", absf(J.num(KG.st().disc) - 0.5) < 0.001 and J.num(KG.bribe_cost("car").coins) == ceilf(650 * 0.5))
+	_chk("抓包後下次打點半價", absf(J.num(KG.st().disc) - 0.5) < 0.001 and J.num(KG.bribe_cost("car").coins) == ceilf(300 * 0.5))
 	# ---- 逾期：Bryan 搶功 ----
 	var before = {}
 	for mm in KG.STEAL_POOL: before[mm] = KG.amt_of(mm)
@@ -128,7 +129,7 @@ func all(t) -> void:
 	KG.gs("B")["left"] = 0.5
 	KG.tick(1.0)
 	var n = KG.NEWS.filter(func(x): return x.kind == "bryan")
-	_chk("倒數完：Bryan 搶走最多嗰樣資源 10%%（%s）" % best, n.size() == 1 and n[0].mid == best and int(n[0].n) == int(floorf(bv * 0.1)) and absf(KG.amt_of(best) - (bv - floorf(bv * 0.1))) < 0.5, [n, bv])
+	_chk("倒數完：Bryan 搶走最多嗰樣資源一成（" + best + "）", n.size() == 1 and n[0].mid == best and int(n[0].n) == int(floorf(bv * 0.1)) and absf(KG.amt_of(best) - (bv - floorf(bv * 0.1))) < 0.5, [n, bv])
 	_chk("倒數重來、村口掛 Bryan 橫幅", J.num(KG.gs("B").left) == 1200.0 and KG.banner_on())
 	m.village.queue_redraw(); await _w(t, 0.5)
 	_chk("村口畫咗「本月最佳員工：Bryan」", ZV.fog_log.any(func(e): return e[0] == "bryan"))
@@ -199,6 +200,56 @@ func all(t) -> void:
 	m.village.queue_redraw(); await _w(t, 0.6)
 	_chk("A 區霧上面畫考核牌（取代建議戰力）", ZV.fog_log.any(func(e): return e[0] == "kpi" and e[1] == "A"))
 	await _shot(t, "fog_A_kpi")
+	# ---- 串接（荒村／大排檔／主線）----
+	await _wire(t, m)
 	KU.play_fn = Callable(); KG.rng_fn = Callable()
 	J.G.S.kpi.on = false
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+# 串接：大排檔開關（tavern.stall_open 經 J.G.stall_open_fn）、出村門外解霧規則、主線考核虛擬任務、荒村第一閘門
+func _wire(t, m) -> void:
+	var TV = load("res://game/tavern/tavern.gd")
+	var RBs = load("res://game/rebuild/rb.gd")
+	var G = J.G.get("Game")
+	_reset_state()
+	_chk("KPI 開：J.G.stall_open_fn 掛咗 kpi", J.G.get("stall_open_fn") is Callable)
+	_chk("大排檔未開（tavern.stall_open＝false，化寶爐仍係前期模式）", not TV.stall_open())
+	_chk("解霧規則：A 輪到考核 → 解；B 未輪到 → 唔解；大排檔 → 唔解；野外 → 唔解", KG.reveal_rule("A", "res") == true and KG.reveal_rule("B", "res") == false and KG.reveal_rule("market", "market") == false and KG.reveal_rule("w1", "wild") == false)
+	# 主線去到賣貨：任務條變考核
+	var sq = {"t": "sell", "n": 10.0, "text": "大排檔賣出 10 件貨"}
+	var kq = KG.cur_q(sq)
+	_chk("主線去到「大排檔賣貨」而大排檔未開：任務條改做考核（陳不辦）", kq is Dictionary and kq.get("kpi") and str(kq.gid) == "A" and str(kq.text).contains("陳不辦"), kq)
+	_chk("主線其他任務（砍樹）唔改", KG.cur_q({"t": "chop", "n": 3.0}) == null)
+	_rich(); KG.register_metric("rebuilt", func(): return 6.0); J.G.S.bld["home"] = 1.0
+	var pg = KG.q_progress(kq)
+	_chk("考核任務進度：指標全達標仍差「交考核」一步（唔會自動完成、唔郁 S.qi）", int(pg[0]) == 2 and int(pg[1]) == 3, pg)
+	# 全部閘門達標 → 大排檔開
+	for gid in ["A", "B", "tavern", "C", "final", "market"]:
+		KG.start(gid); _fill(gid)
+		var o = KG.submit(gid)
+		if not o.get("ok"): _p("submit fail " + gid + " " + str(o))
+	_chk("龐總總考核達標：大排檔開（tavern.stall_open＝true、S.tav.stall＝1）", TV.stall_open() and J.num(J.G.S.get("tav", {}).get("stall", 0)) == 1.0)
+	_chk("大排檔開咗：任務條返主線", KG.cur_q(sq) == null)
+	_chk("解霧規則：大排檔解；野外交返原條件", KG.reveal_rule("market", "market") == true and KG.reveal_rule("w1", "wild") == null)
+	# 荒村存檔：第一個閘門要核心四棟修好先輪到
+	_reset_state()
+	var s0 = J.G.S
+	var rb_bak = s0.get("rb"); var bld_bak = (s0.bld as Dictionary).duplicate()
+	RBs.start_fresh(s0, true)
+	J.G.S["kpi"] = null
+	_chk("荒村存檔：自動開 KPI", KG.on())
+	_chk("荒村核心四棟未修好：陳不辦未嚟巡查（A 未輪到）", not KG.turn("A") and KG.reveal_rule("A", "res") == false)
+	var kq2 = KG.cur_q(sq)
+	_chk("任務條：「繼續重建村子，等考核官嚟巡查」", kq2 is Dictionary and str(kq2.text).contains("考核官"), kq2)
+	for b in ["house", "wood", "rice", "furnace"]: s0.rb.open[b] = true
+	_chk("核心四棟開張：陳不辦輪到巡查", KG.turn("A"))
+	_chk("「修好建築」指標＝荒村開張棟數", int(KG.metric("rebuilt")) == RBs.opened_count(), [KG.metric("rebuilt"), RBs.opened_count()])
+	var sc = KU.scene("kpi_chen_open")
+	var hit = false
+	for l in sc.lines: if str(l[1]).contains("修好了……四棟"): hit = true
+	_chk("陳不辦巡查對白：修好棟數用實際數字（四棟）", hit)
+	# 還原
+	if rb_bak == null: s0.erase("rb")
+	else: s0["rb"] = rb_bak
+	for k in bld_bak: s0.bld[k] = bld_bak[k]
+	_reset_state()

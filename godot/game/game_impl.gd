@@ -336,9 +336,12 @@ func quest_cur() -> Variant:
 	var rq = load("res://game/rebuild/rb.gd").cur_q()   # [rebuild] 荒村重建虛擬任務
 	if rq != null: return rq
 	var Q: Array = D("QUESTS")
-	return Q[int(S.qi)] if int(S.qi) < Q.size() else null
+	var mq = Q[int(S.qi)] if int(S.qi) < Q.size() else null
+	var kq = load("res://game/kpi/kpi_data.gd").cur_q(mq)   # [kpi]
+	return kq if kq != null else mq
 func quest_progress(q: Dictionary) -> Array:
 	if q.get("rb"): return load("res://game/rebuild/rb.gd").progress(q)   # [rebuild]
+	if q.get("kpi"): return load("res://game/kpi/kpi_data.gd").q_progress(q)   # [kpi]
 	match q.t:
 		"chop": return [S.cnt.chop, q.n]
 		"rice": return [S.cnt.rice, q.n]
@@ -379,6 +382,7 @@ func quest_check() -> void:
 	if S.seen.get("ch2_end", false) and float(S.bld.house) >= 4 and not S.seen.get("side_tianhua", false) and not story_busy.call():
 		story_req.emit("side_tianhua", func(): joinGhost("tianhua"))
 func quest_complete() -> void:
+	if quest_cur() is Dictionary and quest_cur().get("kpi"): return   # [kpi] 考核虛擬任務唔郁 S.qi
 	var q: Dictionary = quest_cur(); S.qi = int(S.qi) + 1
 	var txt = give(q.r); sound.emit("coin")
 	toast.emit("任務完成：%s\n[b]%s[/b]" % [q.text, txt] + ("\n" + q.note if q.get("note") else ""))
