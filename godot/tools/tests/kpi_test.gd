@@ -61,6 +61,15 @@ func all(t) -> void:
 		for suf in ["open", "pass"] + ([] if J.t(g.get("nobribe")) else ["bribe_ok", "bribe_fail", "caught"]):
 			if KU.scene("kpi_%s_%s" % [g.boss, suf]).is_empty(): miss.append("%s_%s" % [g.boss, suf])
 	_chk("每位考核官場景齊（巡查／賄賂成功／失敗／抓包／達標）", miss.is_empty(), miss)
+	# [kpi-cg] 插圖場景：登場（何大睡／錢不漏／Dato'／糯婆）、收賄（男 C2、女專屬）、被抓包；其餘冇圖（詳細喺 kpi_cg_test.gd）
+	var cgbad = []
+	for pr in [["kpi_he_open", "cg_he_wake"], ["kpi_qian_open", "cg_qian_bite"], ["kpi_dato_open", "cg_dato_plaque"], ["kpi_nuo_open", "cg_nuopo_taste"], ["kpi_chen_bribe_ok", "cg_c2_bribe"], ["kpi_ma_food", "cg_c2_bribe"], ["kpi_chen_caught", "cg_caught"], ["kpi_nuo_caught", "cg_caught"]]:
+		var cgm = KU.scene(pr[0]).get("cg")
+		if not (cgm is Dictionary) or cgm.size() != 1 or str(cgm.values()[0].get("k")) != pr[1]: cgbad.append(pr[0])
+	for nk in ["kpi_chen_open", "kpi_pang_open", "kpi_chen_pass", "kpi_chen_bribe_fail", "kpi_pang_bribe", "kpi_photo", "kpi_bryan", "kpi_banner_down"]:
+		if KU.scene(nk).has("cg"): cgbad.append("extra:" + nk)
+	_chk("KPI 插圖場景：有圖嘅帶插圖鍵、冇專屬圖嘅唔帶", cgbad.is_empty(), cgbad)
+	_chk("收賄圖女主用專屬版（kf＝cg_f_bribe）", str(KU.scene("kpi_he_bribe_ok").cg.values()[0].get("kf", "")) == "cg_f_bribe")
 	# 男女主分句
 	J.G.S.hero["sex"] = "m"; var sm = KU.scene("kpi_chen_open").lines.map(func(l): return l[1])
 	J.G.S.hero["sex"] = "f"; var sf = KU.scene("kpi_chen_open").lines.map(func(l): return l[1])
