@@ -1387,6 +1387,7 @@ func _draw_hud_embed(ctx: Ctx) -> void:
 	if main != null and is_instance_valid(main):
 		var ql = main.get("quest_lbl"); var qpl = main.get("quest_prog")
 		if ql != null and is_instance_valid(ql): qt = ql.get_parsed_text() if ql.has_method("get_parsed_text") else str(ql.text)
+		qt = qt.split("\n")[0]   # [p56b] 精簡 HUD 只畫第一行（缺料行喺正式任務條先有）
 		if qpl != null and is_instance_valid(qpl): qp = str(qpl.text)
 	ctx.font = "900 14px sans-serif"; var pw = ctx.measureText(qp).width
 	_txt(ctx, _fit(ctx, qt, 186 - 48 - pw - 10, 14)[0], 48, y0 + 22, 14, INK, "left", 900, 0)

@@ -43,3 +43,15 @@
 - 出 0.10.2 補丁：`prep.sh <commit> /tmp/new12 0.10.2` → `NEW=/tmp/new12 mkpatch.sh <repo>/godot/tools/devkit/base_0102 0.10.2 <號>`（目錄冇 pck 就直接用 json diff）。補丁號沿用 47、48…（Boot／launch 只比較同一底包內嘅 ver，換底包自動清舊補丁）。
 - version.json：0.10.1 條目（ver 46）**唔好郁**，舊機照拎 46；0.10.2 未有補丁時唔使加條目（launch.gd 搵唔到條目＝已是最新）。
 - **簽名**：Android 覆蓋安裝一定要用 0.10.1 同一把簽名：舊容器 `~/.local/share/godot/keystores/debug.keystore`（SHA-256 bb26b868…），11-19 已備份去老闆 Mac `~/Downloads/GhostBattles_debug.keystore`。新容器 env.sh 會生一把新 debug.keystore，**唔可以用嚟出畀老闆裝嘅 APK**（簽名唔同要先卸載，存檔會冇）。拎到原 keystore 後：放 ~/keys/gb_debug.keystore，editor_settings 嘅 debug_keystore 指去佢（user androiddebugkey／pass android，如不符再問），再 `--export-debug Android`。出完用 `apksigner verify --print-certs` 核對 SHA-256 開頭係 bb26b868。**唔好 commit keystore。**
+
+## 2026-11-28 新伺服器（2 核 8GB）用法：session_20261128/
+舊腳本寫死嘅 /home/claude/wt/base、/home/claude/wt/title、/home/claude/gbgd 喺呢部機唔存在；呢個目錄係改好路徑嘅版本。
+1. 環境：`bash godot/tools/devkit/env.sh` → `mkdir -p /home/claude/setup && cp -r godot/tools/devkit/* /home/claude/setup/` → `cp session_20261128/gbslot.sh /home/claude/gbslot.sh`、`cp session_20261128/edtest.sh /home/claude/setup/edtest.sh`（edtest 內層鎖改咗做 `${GB_LOCK:-/tmp/gbtest.flock}`，先可以真係 2 個並行）。
+2. 匯入快取：喺一個 worktree 跑一次 `xvfb-run -a Godot --headless --path godot --import`（約 10 分鐘），其他 worktree `cp -r <嗰個>/godot/.godot` 再補跑一次 --import。
+3. 跑任何 Godot 一律 `bash /home/claude/gbslot.sh <命令>`（排號制，全機最多 2 個）。
+4. `prep.sh <commit> /tmp/newNN 0.10.2`：由 /home/claude/wt/fix56 做 git archive、由 /home/claude/wt/int/godot/.godot 抄快取（換分支就改呢兩個路徑）；出 /tmp/newNN/{Android,Linux}.pck。
+5. `st.sh`：打包版自檢 34 項＋一條龍（入面寫死 /tmp/new56、/tmp/v56，要改）。
+6. `NEW=/tmp/newNN mkpatch.sh <repo>/godot/tools/devkit/base_0102 0.10.2 <號>`：**輸出去 /tmp/patch56**（唔係 wt/main/godot-update；要先 `cp wt/main/godot-update/version.json /tmp/patch56/`）。真上線先改返 OUT。
+7. `ed56.sh`：同 edtest.sh 一樣，但 GB_TEST 多一步 `notitle`（p56_test、截圖腳本要用）。`suite.sh`：p56／fogfix／paddyfix／qaudit／meter 一次過。
+8. `p56_shots.gd`：缺料指路／失敗提示實機截圖（用 ed56.sh 跑，輸出 /tmp/p56shots）。
+9. meter 量測：`METER_SHOTS=/tmp/meter56/ METER_MIN=24 edtest.sh <godot> meter56 res://tools/tests/meter_test.gd run 1700`；機械人預設會跟缺料提示（派閒鬼＋親手做），`METER_NOFOLLOW=1` 關。整理：meeting-assets 嘅 parse_meter.py。

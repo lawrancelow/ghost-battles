@@ -91,6 +91,7 @@ static func up_cost(id, lv: float) -> Dictionary:
 	var k = 1.1 if J.str(id) == "house" else 0.9
 	# [p56] 會議第 0 批：成本指數 1.72／1.8 → 1.5／1.55，產量由線性改加速（mult），10 級成本÷產量由 ~14 倍降到 ~3.8 倍
 	var planks = J.round(25 * pow(lv, 1.5) * k); var coins = J.round(28 * pow(lv, 1.55) * k)
+	if lv <= 1.0: planks = J.round(planks * 0.5)   # [p56b] 每棟第一次升級（1→2 級）板半價：新手期「伐木場升 2 級」唔使齋等 3 分鐘；2 級以上成本照舊
 	planks = J.round(planks * (1 - builder_discount()))
 	return {"planks": planks, "coins": coins}
 static func slots(post) -> float:

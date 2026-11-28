@@ -24,6 +24,30 @@ func _tap_bar(t, m) -> String:
 func _gather(t, m) -> void:
 	taps += 2
 	await super._gather(t, m)
+	await _follow_hint(t)
+
+# [p56b] 好似真人咁跟缺料提示做：任務條／提示寫「→棺材鋪（冇人做工：派鬼去做，或親手做）」就去派閒鬼＋親手做
+# METER_NOFOLLOW=1 可以關（對照舊機械人）
+const NEED = preload("res://game/onboard/need.gd")
+var follow := not OS.has_environment("METER_NOFOLLOW")
+func _follow_hint(t) -> void:
+	if not follow: return
+	var q = _cur()
+	if not (q is Dictionary): return
+	var nl = NEED.quest_lack(q)
+	if nl.is_empty(): return
+	var up = str(nl.up)
+	if not (up in ["plank", "bun"]) or J.num(_S().bld.get(up, 0)) <= 0: return
+	if J.iter(J.cl(J.G.get("workersAt"), null, [up])).size() < J.num(J.mc(J.G.get("F"), "slots", [up])):
+		for g in _free_ghosts():
+			if J.t(g.get("post")): continue
+			Menus.open_pick(up, up); Menus.jn("pickDo", [up, J.str(g.id)]); Menus.close_hook(); m_close()
+			decisions += 1
+			_p("EVENT %.0f follow 派 %s 去 %s（post=%s）" % [_wall(), str(g.get("k")), up, str(g.get("post"))])
+			break
+	if str(q.t) == "build" or up == "bun":   # bLevel 缺板：super._gather 已經會親手做
+		_bld(up, "craft", 1)
+		await _idle(t)
 
 func _sampler(t, m) -> void:
 	var nshot = 0; var k = 0
