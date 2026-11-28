@@ -73,6 +73,12 @@ func _names() -> void:
 	DB.lang = "yue"
 	var t3 = str(DB.L(_scenes().op2_soup.lines[0][1]))
 	_chk("粵語未補：照出中文", t3 == "它在冒泡。", t3)
+	var t4 = str(DB.L("取號。"))
+	_chk("粵語欄有填：出粵語", t4 == "攞籌。", t4)
+	DB.lang = "zh"
+	var t5 = ""
+	for l in _scenes().joss_reopen.lines: t5 += str(l[1])
+	_chk("原文係書面中文（信件冇粵語口語）", not (t5.contains("唔") or t5.contains("喺") or t5.contains("啲")))
 	DB.lang = l0; S["hero"] = h0
 
 # 舊存檔：睇過 prologue_sys／有進度 → 唔觸發新開場；舊流程睇到黃泉路（未改名）都當完
@@ -85,6 +91,15 @@ func _oldsave() -> void:
 	_chk("新開場播到一半：會接續", NC.opening_unfinished(S2) and NC.opening(S2)[NC.resume_index(S2)] == "op2_lobby")
 	var S3 = {"lv": 1, "res": {}, "seen": {}, "hero": {"name": "阿明", "sex": "m", "set": true}}
 	_chk("新存檔：要播新開場", NC.opening_unfinished(S3) and NC.resume_index(S3) == 0)
+	# 荒村開局（vil2 rb.gd）：正式開場睇完就唔再播佔位四段 rb_op_*
+	var RBm = load("res://game/rebuild/rb.gd"); var S = J.G.S; var rb0 = S.get("rb"); var se0 = S.seen.duplicate()
+	S["rb"] = {"on": 1, "test": 1}; S.seen["prologue_sys"] = true; S.seen.erase("op2_arrive"); S.seen.erase("opf2_arrive")
+	var due0 = RBm.opening_due()
+	S.seen["op2_arrive"] = true
+	_chk("荒村：睇完正式開場唔播佔位", not RBm.opening_due(), "未睇時 due=%s" % due0)
+	S["seen"] = se0
+	if rb0 == null: S.erase("rb")
+	else: S["rb"] = rb0
 
 # 第 6 章孟婆：睇過新開場拒湯先有「又是你」
 func _mengpo() -> void:
