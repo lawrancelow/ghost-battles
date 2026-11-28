@@ -148,6 +148,7 @@ static func workers(bid: String) -> Array:
 static func build(bid: String) -> bool:
 	if not is_new(bid) or lv(bid) > 0 or not unlocked(bid): return false
 	if ZD.on() and not ZD.bid_ok(bid): return false   # [zone] 資源區未佔領／加工廠嘅資源田未夠級
+	if load("res://game/rebuild/rb.gd").build_hook(bid): return true   # [rebuild]
 	if not pay(build_cost(bid)): return false
 	S().bld[bid] = 1.0
 	_gain(15.0)

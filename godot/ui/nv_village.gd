@@ -18,6 +18,7 @@ const RV = preload("res://game/raid/raid_view.gd")   # [raid] 惡鬼襲擾：預
 const NB = preload("res://ui/nv_bake.gd")   # [perf] 靜態物件烘圖
 const HOL = preload("res://ui/nv_hero_ol.gd")   # [perf] 主角描邊 shader
 const PM = preload("res://ui/perf_mode.gd")   # [perf] 流暢模式
+const RBV = preload("res://game/rebuild/rb.gd")   # [rebuild] 生氣值：霧、路燈、遊魂跟開張比例
 const AW = preload("res://game/sortie/so_away.gd")   # [away] 出征中嘅名鬼唔留喺村
 
 var V: Dictionary
@@ -327,6 +328,7 @@ func _sync_statics() -> void:
 		_static("p_%d" % i, p[1] - 10, ripe, false, func(ctx): Art.draw_paddy(ctx, p[0], p[1], ripe, t, ii2))
 		i += 1
 	load("res://game/zone/landmark.gd").statics(self)   # [landmark] 地標圖（跟建築一齊 y 排序）
+	load("res://game/rebuild/rb.gd").statics(self)   # [rebuild] 雜物堆、搭棚
 	for k in statics:
 		var s = statics[k]
 		if not s.used and s.node.visible: s.node.visible = false
@@ -465,8 +467,11 @@ func _draw_lily(c: CanvasItem) -> void:
 		if absf(fy - VF.Y) < 22 and not VF.in_gap(fx): continue   # [village2] 柵欄位唔種花（唔好疊住柵欄）
 		if fy > cam_y - 20 and fy < cam_y + size.y / sc + 20: Art.draw_lily(ctx, fx, fy, t + i)
 
+# [rebuild] 生氣值 0–1（荒村存檔先有；舊存檔 1＝照舊）
+func vit() -> float: return RBV.vitality() if RBV.ever() else 1.0
 func _draw_mist(c: CanvasItem) -> void:
 	PtGfx.init()
+	var v = vit(); var mist_k = lerpf(2.2, 0.7, v) if RBV.ever() else 1.0   # 荒村霧濃，修得越多越淡
 	var WW = W; var nm = 6
 	if zone: WW = ZD.world_size().x; nm = int(ZD.world_size().y / 170.0)   # [zone]
 	VS.mist_pts.clear()   # [perf] 霧團交俾暗影 shader 一次畫（VS.DARK_SH）
@@ -475,9 +480,28 @@ func _draw_mist(c: CanvasItem) -> void:
 		var mx = fmod(t * 8 + i * 90 * WW / W, WW + 200) - 100; var my = 160 + i * 170
 		if my < cam_y - 100 or my > cam_y + size.y / sc + 100: continue
 		var mc = ZV.mist_col() if zone else Color(200 / 255.0, 210 / 255.0, 200 / 255.0, 0.06)   # [zone2] 每關霧色
+		mc.a = clampf(mc.a * mist_k, 0.0, 0.5)
 		if VS.mist_in_dark(): VS.mist_pts.append(Vector2(mx, my)); VS.mist_col = mc; continue   # [perf]
 		c.draw_texture_rect(PtGfx.RAD, Rect2(mx - 90, my - 90, 180, 180), false, mc)
+	_draw_lamps(c, v)
 	_draw_wander_souls(c)
+
+# [rebuild] 路燈：村內燈柱（DECOR "post"）按生氣值亮起（每支有自己門檻，修得越多亮得越多）
+func _draw_lamps(c: CanvasItem, v: float) -> void:
+	if not RBV.ever(): return
+	var D = J.G.get("DECOR")
+	if not (D is Array): return
+	var top = cam_y - 60; var bot = cam_y + size.y / sc + 60
+	var i = 0
+	for d in D:
+		if str(d[0]) != "post": continue
+		i += 1
+		var th = fmod(i * 0.37, 1.0) * 0.9   # 0–0.9 門檻
+		if v <= th: continue
+		var x = J.num(d[1]); var y = J.num(d[2]) - 38.0
+		if y < top or y > bot: continue
+		var a = clampf((v - th) * 4.0, 0.0, 1.0) * (0.42 + sin(t * 3.1 + i) * 0.05)
+		c.draw_texture_rect(PtGfx.RAD, Rect2(x - 34, y - 34, 68, 68), false, Color(1.0, 0.72, 0.32, a))
 
 # [souls14] 村入面半透明亡魂慢慢飄（純氣氛，唔撳得、唔影響玩法）：每隻有自己路線，隔一陣淡入淡出
 #   專登新畫嘅亡魂（有樣貌、冇腳、下身一縷煙）；鬼尾尾段再淡出，似飄緊
@@ -488,7 +512,9 @@ func _draw_wander_souls(c: CanvasItem) -> void:
 	var vr = Rect2(0, 150, W, WH - 150)
 	if zone: vr = ZD.zrect("village").grow(-30)
 	var top = cam_y - 80; var bot = cam_y + size.y / sc + 80
-	for i in SOUL_N:
+	var sn = SOUL_N
+	if RBV.ever(): sn = int(round(lerpf(2.0, float(SOUL_N), vit())))   # [rebuild] 荒村冇乜遊魂，修得越多越熱鬧
+	for i in sn:
 		if PM.lite() and i % 2 == 1: continue   # [perf] 流暢模式：亡魂減半
 		var ph = i * 2.399
 		var per = 16.0 + fmod(i * 5.3, 9.0)

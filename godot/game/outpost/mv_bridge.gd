@@ -188,7 +188,9 @@ static func sync() -> void:
 	var b = s.get("bld")
 	if b is Dictionary:
 		var mb = mapped_bld()
+		var RBm = load("res://game/rebuild/rb.gd")
 		for k in mb:
+			if RBm.holds(k): continue   # [rebuild] 荒村重建期間：未修好嘅鬼宅唔好被虛擬等級拉起
 			if J.num(b.get(k, 0)) < mb[k]: b[k] = float(mb[k])
 	# [chain] 任務計數（只升唔跌）：包壽包 = 嘆氣蒸籠蒸出嘅壽包數（砍樹／割稻／做板係後院真動作，唔再虛擬）
 	var cnt = s.get("cnt")
