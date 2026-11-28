@@ -243,7 +243,7 @@ static func _relic(p: Vector2) -> void:   # 10% 挖到舊物件（未有嘅先�
 # ================= 提示排隊（唔好同劇情／彈窗／其他提示疊埋）=================
 static var _notes: Array = []
 static var _note_t := -99.0
-const NOTE_GAP := 1.6
+const NOTE_GAP := 3.0   # 等上一個提示收埋先出下一個（唔好兩張疊住）
 static func _note(kind: String, text: String) -> void: _notes.append([kind, text])
 static func notes_left() -> int: return _notes.size()
 static func _busy() -> bool:
