@@ -28,8 +28,9 @@ def cut(sheet, outdir, min_px=1500):
         if m.sum() < min_px:
             continue
         crop = a[sl].copy()
-        alpha = np.clip((diff[sl] - 20) * 6, 0, 255) * m
-        crop[..., 3] = alpha
+        # 填實區域全不透明（淺色皮膚不會被當底色挖空），只在外緣做 1px 柔邊
+        soft = ndimage.gaussian_filter(m.astype(float), 0.8)
+        crop[..., 3] = np.clip(soft * 255, 0, 255) * (soft > 0.35)
         Image.fromarray(crop.astype("uint8")).save(f"{outdir}/part_{k:02d}.png")
         k += 1
     print("parts:", k)
