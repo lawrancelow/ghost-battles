@@ -275,36 +275,117 @@ func logic(t) -> void:
 	par.queue_free()
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
-func _inside(it, mk) -> bool:   # 原位本身完全喺畫面內嘅層先查出界（貼邊畫嘅層另計）
-	var p: Vector2 = it.pos; var n: TextureRect = it.n
-	return p.x >= 0.0 and p.y >= 0.0 and p.x + n.size.x <= mk.vs.x and p.y + n.size.y <= mk.vs.y
+# ---- [wide] 寬框：框跟插圖長寬比，原圖唔裁，唔遮對話框 ----
+class FakeTalk extends Control:
+	var talkbox = 1
+	var stage = null
+	var syswin = null
+class FakeSys extends Control:
+	var talkbox = null
+	var stage = null
+	var syswin: Control
+	var _sys_want := 180.0
+	func _sys_layout() -> void:
+		var c = get_node_or_null("cg")
+		if c != null and c.visible: c.set_top(maxf(8.0, (size.y - (c.custom_minimum_size.y + 12.0 + _sys_want)) / 2.0))
 
-func shots(t) -> void:
+func _all_keys() -> Array:
+	var ks := []
+	var man = JSON.parse_string(FileAccess.get_file_as_string("res://assets/spr_manifest.json"))
+	if man is Dictionary:
+		for k in man:
+			if str(k).begins_with("cg") and Spr.ok(str(k)): ks.append(str(k))
+	for k in CGM.conf():
+		if not ks.has(k): ks.append(k)
+	ks.sort()
+	return ks
+
+func _mkpar(t, kind: String, sz: Vector2) -> Array:
+	var par: Control
+	if kind == "sys":
+		par = FakeSys.new(); par.syswin = Control.new(); par.add_child(par.syswin)
+	elif kind == "talk": par = FakeTalk.new()
+	else: par = Control.new()
+	par.size = sz; par.position = Vector2.ZERO
+	t.get_tree().root.add_child(par)
+	var cg = CGC.new(); cg.name = "cg"; par.add_child(cg)
+	return [par, cg]
+
+func wide(t) -> void:
+	var keys = _all_keys()
+	_chk("插圖總數 ≥ 40", keys.size() >= 40, keys.size())
+	var cases = [["talk", Vector2(450, 975), "直屏對話"], ["talk", Vector2(390, 844), "直屏對話（細機）"], ["talk", Vector2(390, 650), "矮屏對話"],
+		["talk", Vector2(1500, 844), "寬屏對話（Steam）"], ["none", Vector2(450, 975), "直屏冇對話框"], ["sys", Vector2(390, 844), "系統窗"], ["sys", Vector2(1500, 844), "寬屏系統窗"]]
+	for cs in cases:
+		var pc = _mkpar(t, cs[0], cs[1]); var par: Control = pc[0]; var cg = pc[1]
+		await t.get_tree().process_frame
+		var nbad := []; var worst := 0.0; var fill_bad := []; var prev_tall := false
+		# 次序：直圖、橫圖梅花間竹咁出（以前直圖之後嘅橫圖會俾舊最細尺寸撐高）
+		for k in keys:
+			cg.show_spec({"k": k})
+			await t.get_tree().process_frame
+			if not cg.visible or cg.pic.texture == null: nbad.append([k, "冇顯示"]); continue
+			var tx: Texture2D = cg.pic.texture
+			var at = float(tx.get_width()) / float(tx.get_height())
+			var asc = cg.screen.size.x / cg.screen.size.y
+			var crop = 1.0 - minf(at / asc, asc / at)   # cover 鋪滿時被裁走嘅比例
+			worst = maxf(worst, crop)
+			var r = Rect2(cg.global_position, cg.size)
+			var bot_lim = cs[1].y - (182.0 if cs[0] == "talk" else 0.0)
+			if cs[0] == "sys": bot_lim = cs[1].y - 12.0 - 180.0
+			var msg := ""
+			if crop > 0.02: msg += "裁 %.1f%% " % (crop * 100.0)
+			if r.position.x < -0.5 or r.end.x > cs[1].x + 0.5: msg += "左右出界 "
+			if r.position.y < 7.5: msg += "頂出界 "
+			if r.end.y > bot_lim + 0.5: msg += "遮住對話框／系統窗 %.0f>%.0f " % [r.end.y, bot_lim]
+			if absf((r.position.x + r.size.x / 2.0) - cs[1].x / 2.0) > 1.0: msg += "冇置中 "
+			if cg.frame.size != cg.size or (cg.screen.size - (cg.size - Vector2(24, 24))).length() > 0.5: msg += "框同卡尺寸唔一致 "
+			if Vector2(cg.vp.size) != (cg.screen.size * 2.0).floor(): msg += "畫面解像度唔係 2 倍 "
+			var full_w = cg.size.x >= cs[1].x - 20.5
+			var full_h = cg.size.y >= cg._avail_h(cs[1]) - 0.5
+			if not (full_w or full_h): fill_bad.append(k)
+			if msg != "": nbad.append([k, msg])
+		_chk(cs[2] + "：全部插圖原圖四邊可見（裁 ≤2%）、唔出界、唔遮對話", nbad.is_empty(), nbad.slice(0, 6) if not nbad.is_empty() else "最大裁切 %.2f%%" % (worst * 100.0))
+		_chk(cs[2] + "：盡量放大（闊或高其中一邊用盡）", fill_bad.is_empty(), fill_bad.slice(0, 6))
+		par.queue_free()
+		await t.get_tree().process_frame
+	# 動態插圖喺寬框：層位置跟住新尺寸、鏡頭唔露邊
+	var pc2 = _mkpar(t, "talk", Vector2(1500, 844)); var cg2 = pc2[1]
+	await t.get_tree().process_frame
+	for kk in ["cg_a2_rebuilt", "cg_b2_soup", "cg_c1_bribe", "cg_c2_bribe"]:
+		cg2.show_spec({"k": kk}); await t.get_tree().process_frame
+		var m = cg2.mot
+		_chk("寬屏動態可播：" + kk, m != null and (m.vs - Vector2(cg2.vp.size)).length() < 0.5 and absf(m.cover_o.x) < 1.0 and absf(m.cover_o.y) < 1.0, [m.vs, m.cover_o] if m else "null")
+	# 視窗改大細：自動重排，動作接住播
+	cg2.show_spec({"k": "cg_b2_soup"}); await _w(t, 0.3)
+	var t_before = cg2.mot.t; var w_before = cg2.size.x
+	pc2[0].size = Vector2(450, 975)
+	await t.get_tree().process_frame; await t.get_tree().process_frame
+	_chk("視窗改大細：自動重排", cg2.size.x < w_before and cg2.size.x <= 430.5, [w_before, cg2.size.x])
+	_chk("視窗改大細：動作接住播", cg2.mot != null and cg2.mot.t >= t_before, [t_before, cg2.mot.t if cg2.mot else -1])
+	# 老電視框係九宮格（邊角唔拉伸）
+	var sb = cg2.frame.get_theme_stylebox("panel")
+	_chk("框素材係九宮格（StyleBoxTexture 有邊距）或者純色框", (sb is StyleBoxTexture and sb.texture_margin_left > 0 and sb.texture_margin_top > 0) or sb is StyleBoxFlat, sb.get_class())
+	pc2[0].queue_free()
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func wshots(t) -> void:   # 全部插圖喺寬框下截圖（CGM_SHOTS 目錄）
 	var dir = OS.get_environment("CGM_SHOTS")
-	if dir == "": dir = "/tmp/cgm/shots/"
+	if dir == "": dir = "/tmp/cgm/wshots/"
 	DirAccess.make_dir_recursive_absolute(dir)
-	var keys = OS.get_environment("CGM_KEYS").split(",", false)
-	if keys.is_empty(): keys = [OS.get_environment("CGM_KEY") if OS.get_environment("CGM_KEY") != "" else "cg_a2_rebuilt"]
-	var pc = _mk(t); var cg = pc[1]
+	var vr = t.get_viewport().get_visible_rect().size
+	var pc = _mkpar(t, "talk", vr); var par: Control = pc[0]; var cg = pc[1]
+	var bgc = ColorRect.new(); bgc.color = Color("#2a2030"); bgc.size = vr; par.add_child(bgc); par.move_child(bgc, 0)
+	var tb = ColorRect.new(); tb.color = Color("#e8dcc0"); tb.position = Vector2(8, vr.y - 168); tb.size = Vector2(vr.x - 16, 154); par.add_child(tb)   # 對話框位置示意
 	await _w(t, 0.2)
-	var base = dir
-	for key in keys:
-		dir = base + (key + "/" if keys.size() > 1 else "")
-		DirAccess.make_dir_recursive_absolute(dir)
-		cg.hide_cg(); await _w(t, 0.6)
-		await _shots_one(t, cg, key, dir, pc)
-	_p("RESULT ok=1 bad=0 shots=" + base)
+	var n := 0
+	for k in _all_keys():
+		cg.hide_cg(); await _w(t, 0.4)
+		cg.show_spec({"k": k}); await _w(t, 0.9)
+		t.get_viewport().get_texture().get_image().save_png(dir + k + ".png"); n += 1
+	_p("RESULT ok=%d bad=0 shots=%s" % [n, dir])
 
-func _shots_one(t, cg, key, dir, pc) -> void:
-	cg.show_spec({"k": key})
-	await _w(t, 0.1)
-	if false: _p("dbg par=%s cg.pos=%s cg.size=%s frame=%s screen=%s tv=%s vp=%s win=%s" % [pc[0].size, cg.position, cg.size, cg.frame.size, cg.screen.size, cg.tv.size, cg.vp.size, t.get_viewport().get_visible_rect().size])
-	var dt = float(OS.get_environment("CGM_DT")) if OS.get_environment("CGM_DT") != "" else 0.25
-	var n = int(OS.get_environment("CGM_N")) if OS.get_environment("CGM_N") != "" else 48
-	var per_frame = OS.get_environment("CGM_FRAMES") != ""   # 配合 --fixed-fps：逐格截，播放速度準
-	if per_frame: await _w(t, 1.3)   # 等老電視開機動畫完
-	for i in n:   # 預設 12 秒，每 0.25 秒一張；CGM_DT／CGM_N 可改
-		if per_frame: await t.get_tree().process_frame
-		else: await _w(t, dt)
-		var img = t.get_viewport().get_texture().get_image()
-		img.save_png(dir + "f%03d.png" % i)
+func _inside(it, mk) -> bool:   # 原位離畫面邊有少少距離嘅層先查出界（貼邊畫嘅層本身已經被畫面邊切住，向外郁少少冇影響）
+	var p: Vector2 = it.pos; var n: TextureRect = it.n
+	var mg = mk.vs * 0.015
+	return p.x >= mg.x and p.y >= mg.y and p.x + n.size.x <= mk.vs.x - mg.x and p.y + n.size.y <= mk.vs.y - mg.y
