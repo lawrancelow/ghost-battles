@@ -964,10 +964,15 @@ func hit_foe(f: Dictionary, dmg: float, by: String) -> void:
 		load("res://game/onboard/ob.gd").guard_kill(f)   # [onboard]
 		var cc = MD.foe_coin(ci()) * plus.kill_mul(self); add_coins(cc)   # [play] 夜潮
 		ev.append({"k": "kill", "pos": f.pos + Vector2(0, -40), "coins": cc})
+const TAP_R := 46.0   # [p55] 撳孤魂判定放大（34→46）：揀最近嗰隻
 func tap_foe(p: Vector2) -> bool:
+	var best = null; var bd = TAP_R
 	for f in foes:
-		if f.st != "die" and p.distance_to(f.pos + Vector2(0, -28)) < 34.0: hit_foe(f, MD.TAP_DMG, "tap"); return true
-	return false
+		if f.st == "die" or f.st == "flee": continue
+		var d = p.distance_to(f.pos + Vector2(0, -30))
+		if d < bd: bd = d; best = f
+	if best == null: return false
+	hit_foe(best, MD.TAP_DMG, "tap"); return true
 
 func _step_guards(dt: float) -> void:
 	for f in foes:
@@ -980,7 +985,7 @@ func _step_guards(dt: float) -> void:
 		if tgt == null or not (tgt in foes) or tgt.st == "die":
 			tgt = null; var best = 1e9
 			for f in foes:
-				if f.st == "die" or not at_fence(f.pos, 90.0): continue   # [zone2]
+				if f.st == "die" or f.has("occ") or not at_fence(f.pos, 90.0): continue   # [zone2]  [p55] 霸檔孤魂：玩家親手撳走
 				var taken = false
 				for g2 in guards: if g2 != g and g2.tgt == f: taken = true
 				var d = absf(f.pos.x - g.pos.x) + (60.0 if taken else 0.0) + (0.0 if f.st == "bang" else 40.0)

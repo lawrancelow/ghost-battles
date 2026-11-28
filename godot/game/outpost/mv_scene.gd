@@ -577,6 +577,7 @@ func _draw_stage() -> void:
 	if zone or vy0 < L.fence_y + 80.0:   # [zone2] 分區地圖：野外區可以喺大排檔下面
 		var fo = sim.foes.duplicate(); fo.sort_custom(func(a, b): return a.pos.y < b.pos.y)
 		for f in fo:
+			if f.has("occ") and f.st != "occ_go": continue   # [p55] 霸檔孤魂企喺檔度：入下面 y 排序（唔好畀個檔蓋住）
 			if zone and not f.get("boss", false) and not _in_view(f.pos, vy0, vy1): continue   # [perf] 鏡頭外唔畫（淨係畫，唔影響邏輯）
 			_draw_foe(ctx, f)
 		if not fence_art(): _draw_fence(ctx)   # [camp] fence_art：柵欄喺背景圖
@@ -621,6 +622,10 @@ func _draw_stage() -> void:
 			if zone and not _in_view(w.pos, vy0, vy1): continue   # [perf]
 			var ww = w
 			items.append([w.pos.y, func(): _draw_worker(ctx, ww)])
+	for f in sim.foes:   # [p55] 霸檔孤魂：同台／客一齊按 y 排
+		if not f.has("occ") or f.st == "occ_go" or not _in_view(f.pos, vy0, vy1): continue
+		var ff = f
+		items.append([f.pos.y + 0.5, func(): _draw_foe(ctx, ff)])
 	if embed and embed_draw != null: embed_draw.call(ctx, vy0, vy1, items)   # [unify] 留位、挑夫鬼（入 y 排序）
 	if mot != null and not walking: mot.add_items(self, ctx, items, vy0, vy1)   # [motion] 粒子、領班
 	items.sort_custom(func(a, b): return a[0] < b[0])
@@ -652,6 +657,7 @@ func _draw_stage() -> void:
 		elif gp is Dictionary: _brects.append(Rect2(J.num(gp.get("x")) - 90.0, J.num(gp.get("y")) - 120.0, 180.0, 160.0))
 		for kk in _wbtns: if kk.begins_with("st:"): _brects.append(_wbtns[kk])
 	_brects.append_array(sim.plus.avoid_rects(self))
+	_brects.append_array(sim.war.avoid_rects(sim))   # [p55] 對白框避開霸檔牌
 	if zone: _brects.append_array(load("res://game/zone/zone_taunt.gd").world_rects)   # [mapbattle] 閒談對白框避開王嘅叫囂泡泡   # [play] 對白框避開事件名同右上「生產鏈」掣
 	if not _mbf() and not mk_hid and banner == null:   # [mapbattle] 打緊仗：收埋閒談對白框   [uxui] 橫額出緊都收埋（唔好疊喺橫額上）
 		for b in bubbles: _draw_bubble(ctx, b)
@@ -1097,7 +1103,9 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 	if sel_on: Art.el(ctx, p.x, p.y + 2, w * 0.62, 16, "rgba(243,214,138,.32)")
 	Art.el(ctx, p.x, p.y + 2, w * 0.5, 10, "rgba(0,0,0,.35)")
 	if not un: ctx.globalAlpha = 0.4
-	var an = MD.st_def(sid).get("anim", {}); var on = un and _producing(sid); var ph = p.x * 0.05
+	var occ = un and sim.war.occ_sid() == sid   # [p55] 畀孤魂霸咗：成個檔變暗、停產
+	if occ: ctx.filter = "brightness(.42) saturate(.35)"
+	var an = MD.st_def(sid).get("anim", {}); var on = un and _producing(sid) and not occ; var ph = p.x * 0.05
 	if not (an is Dictionary): an = {}
 	ctx.save()
 	if un and an.size(): FX.pre(ctx, an, p + Vector2(0, 4), t, on, ph)
@@ -1109,9 +1117,9 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 	if un and an.size(): FX.post(ctx, an, r, t, on, ph)
 	if key != "" and un: _mist(ctx, "pd:" + sid, Vector2(p.x, p.y + 4), w * 0.92, mh, true)   # [unify] 血霧前層
 	ctx.restore()
-	ctx.globalAlpha = 1.0
+	ctx.globalAlpha = 1.0; ctx.filter = "none"
 	_wbtns["st:" + sid] = Rect2(p.x - w / 2, r.position.y, w, p.y + 8 - r.position.y)
-	if un:
+	if un and not occ:
 		# 台面貨（手做剩低／員工做緊）
 		var pn = sim.pile_n(sid); var gid = str(MD.st_def(sid).get("good", ""))
 		for i in mini(pn, 6): _icon(ctx, gid, p.x - 26 + (i % 3) * 14, p.y - 26 - (i / 3) * 10, 24.0)

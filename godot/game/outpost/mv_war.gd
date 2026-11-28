@@ -302,6 +302,7 @@ func step(sim, dt: float) -> void:
 	_step_vols(sim, dt)
 	_step_press(sim, dt)
 	_step_alarm(sim, w, dt)
+	_step_occ(sim, w, dt)   # [p55] 霸檔孤魂：行去被霸嗰個檔企住，打走晒先復工
 
 # ---------------- 鬼潮 ----------------
 static func wave_n(ci: int) -> float:
@@ -377,7 +378,7 @@ func _step_flee(sim, dt: float) -> void:
 		if f.pos.y < 20.0 or f.pos.y > float(sim.L.get("wh", 1e9)) - 20.0 or f.pos.x < -40.0 or f.pos.x > sim.ww() + 40.0: sim.foes.erase(f)
 
 # ---------------- 義勇軍 ----------------
-func _near_fence(sim, f) -> bool: return f.st != "die" and f.st != "flee" and sim.at_fence(f.pos, 90.0)   # [zone2] 任何方向嘅野外門
+func _near_fence(sim, f) -> bool: return f.st != "die" and f.st != "flee" and not f.has("occ") and sim.at_fence(f.pos, 90.0)   # [p55] 霸檔孤魂唔喺門口：唔使義勇軍去門口打   # [zone2] 任何方向嘅野外門
 func _step_vols(sim, dt: float) -> void:
 	var fy = float(sim.L.fence_y)
 	for r in vols.duplicate():
@@ -496,12 +497,57 @@ func _step_alarm(sim, w: Dictionary, dt: float) -> void:
 				var sid = _occupy_pick(sim)
 				if sid != "":
 					w.occ[str(sim.ci())] = sid; sim.mk[sid] = -1.0
+					_spawn_occ(sim, sid, false)   # [p55] 孤魂真係行去個檔度霸住
 					sim.ev.append({"k": "war_occ", "sid": sid})
 				w.alarm.t = 0.0
 		if v >= ALARM_OFF and occ_sid() == "": w.alarm = null; sim.ev.append({"k": "war_calm"})
 	elif v < ALARM and not newbie() and PACE.alarm_on():   # [ux]
 		w.alarm = {"t": PACE.alarm_t()}
 		sim.ev.append({"k": "war_alarm"})
+# ---------------- [p55] 霸檔孤魂（真係企喺被霸嘅檔度；撳佢哋／守夜打走晒先復工） ----------------
+const OCC_HP := 2.5          # 每隻 = 普通孤魂血 × 2.5
+const OCC_OFF := [Vector2(-34, 6), Vector2(30, 10), Vector2(-4, 22), Vector2(52, -4)]
+static func occ_n(ci: int) -> int: return mini(4, 2 + int(ci / 2))
+static func occ_foes(sim) -> Array:
+	var out = []
+	for f in sim.foes: if f.has("occ") and f.st != "die": out.append(f)
+	return out
+func _spawn_occ(sim, sid: String, at_stall: bool) -> void:
+	var ci = sim.ci(); var ks = MD.map_def(ci).get("fence_foes", ["youhun"])
+	if not (ks is Array) or ks.is_empty(): ks = ["youhun"]
+	var sp = sim.st_pos(sid); var hp = MD.foe_hp(ci) * OCC_HP
+	var g0 = sim.fence_tgt(sp.x, sp.y) if sim.L.get("gates") is Array and sim.L.gates.size() else Vector2(sp.x, float(sim.L.get("fence_y", sp.y - 200.0)))
+	for i in occ_n(ci):
+		var at = sp + OCC_OFF[i % OCC_OFF.size()]
+		var p0 = at if at_stall else g0 + Vector2(_rng.randf_range(-24, 24), _rng.randf_range(-10, 10))
+		sim.foes.append({"k": str(ks[i % ks.size()]), "pos": p0, "hp": hp, "mx": hp, "st": "occ" if at_stall else "occ_go", "t": 0.0, "tgt": at,
+			"ph": _rng.randf() * 10.0, "flip": at.x < p0.x, "occ": sid})
+func _step_occ(sim, w: Dictionary, dt: float) -> void:
+	var sid = occ_sid(); var mine = []
+	for f in sim.foes: if f.has("occ"): mine.append(f)
+	if sid == "":   # 出征打贏／拔營：霸檔孤魂散水
+		for f in mine: if f.st != "die" and f.st != "flee": f.st = "flee"; f.t = 0.0; f.erase("occ")
+		return
+	var alive = 0
+	for f in mine:
+		if f.st == "die" or f.st == "flee": continue
+		if str(f.occ) != sid: f.st = "flee"; f.t = 0.0; continue
+		alive += 1
+		if f.st == "occ_go":
+			if _mv(f, MD.v2(f.tgt) if f.tgt is Array else f.tgt, dt, 70.0): f.st = "occ"; f.t = 0.0
+			f["walk"] = f.st == "occ_go"
+		elif f.st == "occ":
+			f["walk"] = false; f["bob"] = sin(f.t * 3.0 + f.ph) * 2.0
+			f.flip = sim.st_pos(sid).x < f.pos.x
+	if mine.is_empty():   # 讀檔／返嚟：個檔仲畀人霸住但冇孤魂 → 直接企返喺檔度
+		_spawn_occ(sim, sid, true); return
+	if alive == 0:   # 打走晒：復工、告急解除
+		w.occ.erase(str(sim.ci())); w.alarm = null
+		var a = inf(); var b = clampf(maxf(a + 15.0, ALARM_OFF + 5.0), 0.0, 100.0)
+		w.inf[str(sim.ci())] = b
+		sim.mk[sid] = -1.0
+		sim.ev.append({"k": "war_free", "sid": sid, "d": b - a, "pos": sim.st_pos(sid) + Vector2(0, -90)})
+
 func _occupy_pick(sim) -> String:   # 最好賺嗰個已解鎖檔
 	var best = ""; var bv = -1.0; var ci = sim.ci()
 	for sid in MD.stations(ci):
@@ -661,7 +707,11 @@ func eat(sc) -> void:
 				sc._banner_set(T("war_alarm_a", "告急！", "告急！"), T("war_alarm_b", "影響力跌穿 %d，孤魂想霸檔", "影響力跌破 %d，孤魂想霸攤") % int(ALARM), 2.8)
 				sc._snd("scare")
 			"war_occ":
-				sc._banner_set(T("war_occ_a", "有檔畀孤魂霸咗！", "有攤位被孤魂霸佔！"), MD.T(MD.st_def(str(e.sid)).get("n")), 2.8)
+				sc._banner_set(T("war_occ_a", "有檔畀孤魂霸咗！", "有攤位被孤魂霸佔！"), MD.T(MD.st_def(str(e.sid)).get("n")) + T("war_occ_b", "：撳孤魂打走佢哋", "：點孤魂把它們打跑"), 2.8)
+			"war_free":   # [p55]
+				sc._banner_set(T("war_free_a", "孤魂打走晒！", "孤魂全被打跑！"), MD.T(MD.st_def(str(e.sid)).get("n")) + T("war_free_b", "　復工", "　復工"), 2.6)
+				sc._burst(e.pos, Color("#9fe39a"), 16)
+				sc._snd("levelUp")
 			"war_calm":
 				sc._float(sc.s2w(Vector2(195, sc.top_pad + HUD_H + 90)), T("war_calm", "告急解除", "告急解除"), Color("#9fe39a"), 18, 1.8)
 
@@ -697,26 +747,24 @@ func _draw_vol(sc, ctx, r: Dictionary) -> void:
 		Art.rr(ctx, p.x - 16, p.y - 65, 32 * clampf(hp / mx, 0, 1), 4, 2, "#7ad06a")
 	if r.st == "post": sc._txt(ctx, T("war_vol_tag", "義勇", "義勇"), p.x, p.y + 12, 14, Color("#bff0a0"), "center", 900, 4)
 
-func _draw_occ(sc, ctx, sim, sid: String) -> void:
+func avoid_rects(sim) -> Array:
+	var sid = occ_sid(); if sid == "": return []
+	var p = sim.st_pos(sid); return [Rect2(p.x - 90.0, p.y - 160.0, 180.0, 170.0)]
+func _draw_occ(sc, ctx, sim, sid: String) -> void:   # [p55] 檔已經畫暗（mv_scene._draw_station）；呢度畫頭頂「霸」牌＋剩幾隻
 	var p = sim.st_pos(sid); var tt = sc.t
-	ctx.save(); ctx.globalAlpha = 0.9
-	ctx.strokeStyle = "#b8322a"; ctx.lineWidth = 9; ctx.lineCap = "round"
-	ctx.beginPath(); ctx.moveTo(p.x - 54, p.y - 96); ctx.lineTo(p.x + 54, p.y - 8); ctx.stroke()
-	ctx.beginPath(); ctx.moveTo(p.x + 54, p.y - 96); ctx.lineTo(p.x - 54, p.y - 8); ctx.stroke()
-	ctx.strokeStyle = "#f2e2c0"; ctx.lineWidth = 2
-	ctx.beginPath(); ctx.moveTo(p.x - 54, p.y - 96); ctx.lineTo(p.x + 54, p.y - 8); ctx.stroke()
-	ctx.beginPath(); ctx.moveTo(p.x + 54, p.y - 96); ctx.lineTo(p.x - 54, p.y - 8); ctx.stroke()
-	ctx.restore()
-	var ks = MD.map_def(sim.ci()).get("fence_foes", ["youhun"])
-	var k = str(ks[0]) if ks is Array and ks.size() else "youhun"
-	Art.draw_char(ctx, k, p.x + 34, p.y - 46 + sin(tt * 2.0) * 3.0, CS * 0.8, {"t": tt, "flip": true, "alpha": 0.92, "noShadow": true})
-	var s1 = T("war_occ_tag", "畀孤魂霸咗", "被孤魂霸佔"); var s2 = T("war_occ_tag2", "出征打贏先復工", "出征打贏才復工")
-	ctx.font = "900 15px sans-serif"; var tw = maxf(ctx.measureText(s1).width, 0.0)
+	var n = occ_foes(sim).size(); var gone = 0
+	for f in sim.foes: if f.has("occ") and f.st == "occ_go": gone += 1
+	var y = p.y - 132.0 + sin(tt * 3.0) * 3.0
+	Art.el(ctx, p.x, y, 22, 22, "rgba(60,8,6,.92)", "#ff8a7a", 2.5)
+	sc._txt(ctx, T("war_occ_mk", "霸", "霸"), p.x, y + 1, 22, Color("#ffd8c8"), "center", 900, 0, "serif")
+	var s1 = T("war_occ_tag", "畀孤魂霸咗", "被孤魂霸佔") + ("　×%d" % n if n > 0 else "")
+	var s2 = T("war_occ_go", "孤魂行緊過嚟……", "孤魂正走過來……") if gone > 0 else T("war_occ_tag3", "撳孤魂打走佢哋", "點孤魂把它們打跑")
+	ctx.font = "900 15px sans-serif"; var tw = ctx.measureText(s1).width
 	ctx.font = "900 14px sans-serif"; tw = maxf(tw, ctx.measureText(s2).width) + 16.0
-	var bx = clampf(p.x - tw / 2.0, sc.vx0() + 4.0, sc.vx1() - tw - 4.0); var y = p.y + 74.0   # 名牌＋Lv 下面（[zone] 夾喺可見範圍）
-	Art.rr(ctx, bx, y, tw, 42, 7, "rgba(60,10,8,.88)", "#ff8a7a", 1.5)
-	sc._txt(ctx, s1, bx + tw / 2.0, y + 13, 15, Color("#ffd8c8"), "center", 900, 0)
-	sc._txt(ctx, s2, bx + tw / 2.0, y + 30, 14, Color("#ffd27a"), "center", 900, 0)
+	var bx = clampf(p.x - tw / 2.0, sc.vx0() + 4.0, sc.vx1() - tw - 4.0); var by = y + 26.0
+	Art.rr(ctx, bx, by, tw, 40, 7, "rgba(60,10,8,.88)", "#ff8a7a", 1.5)
+	sc._txt(ctx, s1, bx + tw / 2.0, by + 12, 15, Color("#ffd8c8"), "center", 900, 0)
+	sc._txt(ctx, s2, bx + tw / 2.0, by + 29, 14, Color("#ffd27a"), "center", 900, 0)
 
 # 頭目：放大＋名牌（mv_scene._draw_foe 第一行掛鈎）
 func draw_boss(sc, ctx, f: Dictionary) -> void:
@@ -788,7 +836,7 @@ func draw_hud(sc, ctx) -> void:
 		Art.rr(ctx, px, py, pw, 54, 12, "#9c2219", "#ffd27a", 3)
 		sc._txt(ctx, T("war_alarm_tag", "告急", "告急") + "！" + T("war_exp_btn", "親自出征", "親自出征"), cx, py + 18, 19, Color("#fff3e0"), "center", 900, 4, "serif")
 		var sub = ""
-		if occ_sid() != "": sub = T("war_exp_sub2", "打贏先攞返個檔", "打贏才能拿回攤位")
+		if occ_sid() != "": sub = T("war_exp_sub3", "或者撳檔度孤魂打走佢哋", "或點攤位上的孤魂把它們打跑")   # [p55]
 		else: sub = T("war_exp_sub", "%s 後有檔畀孤魂霸", "%s 後攤位會被孤魂霸佔") % sc._mmss(maxf(0.0, J.num(w.alarm.t)))
 		sc._txt(ctx, sub, cx, py + 40, 14, Color("#ffd8c8"), "center", 900, 3)
 		_btn["exp"] = Rect2(px, py, pw, 54)
