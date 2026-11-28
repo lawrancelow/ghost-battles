@@ -79,6 +79,8 @@ func _shake(v: float) -> void: shake = minf(SHAKE_MAX, maxf(shake, v * SHAKE_K))
 
 # 每格：食該場仗嘅 vq
 func consume(op) -> void:
+	if op.result is Dictionary and J.t(op.result.get("win")) and not op.has_meta("j_slow") and JU().on():   # [juice] 贏咗（最後一擊唔經 hit 都計）：終結慢鏡
+		op.set_meta("j_slow", true); JU().vib(40); JU().slowmo(0.4, 0.55)
 	for e in op.vq:
 		match str(e[0]):
 			"melee":
@@ -339,8 +341,8 @@ func _juice_kill(op, v: Dictionary, p: Vector2) -> void:
 	if J.t(v.get("boss")):
 		JU().vib(90); JU().slowmo(0.3, 0.9)
 		op.text(op.center() + Vector2(0, -140), "擊破！", "#ff5a3a", 1.4, 30)
-	elif last and op.phase in ["fight", "end"]:
-		JU().vib(40); JU().slowmo(0.4, 0.55)
+	elif last and not op.has_meta("j_slow"):
+		op.set_meta("j_slow", true); JU().vib(40); JU().slowmo(0.4, 0.55)
 
 # 名鬼／大王出場（開打嗰下，鏡頭內先出）
 func appear_op(op) -> void:
