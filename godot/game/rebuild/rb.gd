@@ -105,6 +105,25 @@ static func _pos(b: String) -> Vector2:
 	if P is Dictionary and P.has(b): return Vector2(float(P[b][0]), float(P[b][1]))
 	return Vector2.ZERO
 
+# [rebuild4] 廢墟腳邊木牌（相對建築位置）；同 nv_village 畫嘅一樣（名、解鎖條件）
+static func sign_rect(b: String) -> Rect2:
+	var can = J.t(J.cl(J.G.get("bldUnlocked"), null, [b]))
+	var rq = "" if can else str(load("res://native/game.gd").bld_req(b))
+	var r: Rect2 = Art.ruin_sign_rect(b, bname(b), rq, can)
+	return r
+# 雜物堆位置（相對建築）：避開腳邊木牌——同木牌打橫重疊就推去牌嘅左右，喺牌正下方就推落牌底
+const PILE_HW := 23.0   # 雜物圖半闊
+const PILE_UP := 30.0   # 雜物圖由落腳點向上幾高
+static func pile_off(b: String, i: int) -> Vector2:
+	var e = PILES[b][i]; var o = Vector2(float(e[0]), float(e[1]))
+	if not Spr.ok(b + "_ruin"): return o
+	var sr = sign_rect(b)
+	if o.y + 4.0 < sr.position.y or o.y - PILE_UP > sr.end.y: return o      # 成堆喺牌上面／下面
+	if absf(o.x) - PILE_HW >= sr.size.x / 2: return o                          # 喺牌左右兩邊
+	if absf(o.x) >= 25.0: o.x = signf(o.x) * (sr.size.x / 2 + PILE_HW + 2.0)   # 推去牌邊
+	else: o.y = maxf(o.y, sr.end.y + PILE_UP + 2.0)                            # 正中：推落牌底
+	return o
+
 static func piles() -> Array:   # [{id, b, kind, p: Vector2, left}]
 	var out := []
 	if not active(): return out
@@ -116,7 +135,7 @@ static func piles() -> Array:   # [{id, b, kind, p: Vector2, left}]
 			var left = J.num(pl.get(id, 0))
 			if left <= 0: continue
 			var e = PILES[b][i]
-			out.append({"id": id, "b": b, "kind": e[2], "p": bp + Vector2(float(e[0]), float(e[1])), "left": left})
+			out.append({"id": id, "b": b, "kind": e[2], "p": bp + pile_off(b, i), "left": left})
 	return out
 
 static func left_of(b: String) -> int:
@@ -148,7 +167,10 @@ static func tap(village, x: float, y: float) -> bool:
 		if is_open(b): continue
 		var bp = _pos(b)
 		var hw = 30.0 if b == "furnace" else 46.0
-		if not (absf(x - bp.x) < hw and y > bp.y - 90 and y < bp.y + 14): continue
+		var on_sign = false   # [rebuild4] 撳腳邊木牌＝撳廢墟
+		if Spr.ok(b + "_ruin") and not fixing(b):
+			var sr = sign_rect(b); on_sign = Rect2(sr.position + bp, sr.size).grow(3.0).has_point(p)
+		if not on_sign and not (absf(x - bp.x) < hw and y > bp.y - 90 and y < bp.y + 14): continue
 		if b in ORDER:
 			if not on(): continue
 			_tap_ruin(village, b); return true

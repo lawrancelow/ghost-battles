@@ -247,7 +247,41 @@ func draw_ruin(ctx: Ctx, x: float, y: float, name: String, can: bool, seed: int,
 	if ruin_part == 1: return
 	var rid2 = RUIN_IDS[seed] if seed >= 0 and seed < RUIN_IDS.size() else ""
 	if rid2 != "" and load("res://game/rebuild/rb.gd").fixing(rid2): return   # [rebuild3] 搭緊棚：唔好再畫「可重建」木牌（細棟例如化寶爐、招魂台會喺竹棚後面露出一塊牌）
+	if rid2 != "" and Spr.ok(rid2 + "_ruin"):   # [rebuild4] 有專屬廢墟圖：木牌擺喺廢墟腳邊（唔好遮住幅圖），冇樁
+		var sr: Rect2 = ruin_sign_rect(rid2, name, req, can)
+		_ruin_sign(ctx, x, y + sr.position.y + 50.0, name, can, t, req, sr.size.x)
+		return
 	_ruin_sign(ctx, x, y, name, can, t, req)
+# [rebuild4] 廢墟圖嘅不透明範圍（相對建築位置；同 _ruin_body 一樣：闊 BW、底部中心對齊 y+6）
+var _ruin_op := {}
+func ruin_opaque(rid: String) -> Rect2:
+	if _ruin_op.has(rid): return _ruin_op[rid]
+	var r := Rect2(-40, -60, 80, 66)
+	var tex = Spr.get_tex(rid + "_ruin")
+	if tex != null:
+		var w: float = float(BW.get(rid, 100)); var k = w / tex.get_width(); var h = tex.get_height() * k
+		var img: Image = tex.get_image()
+		var u := Rect2i(0, 0, tex.get_width(), tex.get_height())
+		if img != null:
+			if img.is_compressed(): img.decompress()
+			u = img.get_used_rect()
+		r = Rect2(-w / 2 + u.position.x * k, 6.0 - h + u.position.y * k, u.size.x * k, u.size.y * k)
+	_ruin_op[rid] = r
+	return r
+# 木牌闊度（唔靠 ctx 量字：測試／撳屏範圍／雜物避位都用同一條數）：中日韓字 1 格、其他半格
+func _txt_w(s: String, px: float) -> float:
+	var n := 0.0
+	for i in s.length(): n += 1.0 if s.unicode_at(i) > 0x2e7f else 0.58
+	return n * px
+func ruin_sign_w(name: String, req: String, can: bool) -> float:
+	if can: return maxf(76.0, _txt_w(name, 14.0) + 20.0)
+	return maxf(84.0, maxf(_txt_w(name, 14.0), _txt_w(req, 12.0)) + 20.0)
+const SIGN_H := 34.0
+const SIGN_GAP := 3.0   # 木牌頂同廢墟圖底嘅距離
+# 木牌矩形（相對建築位置）：喺廢墟不透明範圍正下方、水平置中
+func ruin_sign_rect(rid: String, name: String, req: String, can: bool) -> Rect2:
+	var w = ruin_sign_w(name, req, can)
+	return Rect2(-w / 2, ruin_opaque(rid).end.y + SIGN_GAP, w, SIGN_H)
 const RUIN_IDS := ["house", "wood", "rice", "plank", "bun", "store", "home", "camp", "altar", "furnace"]   # 同 nv_village.BLD_SEED 一樣次序（seed＝index）
 func _ruin_body(ctx: Ctx, x: float, y: float, seed: int) -> void:
 	var rid = RUIN_IDS[seed] if seed >= 0 and seed < RUIN_IDS.size() else ""
@@ -328,18 +362,20 @@ func scaffold_front(ctx: Ctx, x: float, y: float, w: float, seed: int) -> void:
 		for c in 3 - r:
 			var px = bx - (2 - r) * 5.5 + c * 11.0; var py = by - r * 5.5
 			poly(ctx, [px - 5, py, px + 5, py, px + 5, py - 5, px - 5, py - 5], ["#8a4a32", "#7a4030", "#94563a"][(r + c) % 3], "#1a110a", 0.8)
-func _ruin_sign(ctx: Ctx, x: float, y: float, name: String, can: bool, t: float, req: String) -> void:
+func _ruin_sign(ctx: Ctx, x: float, y: float, name: String, can: bool, t: float, req: String, foot_w := 0.0) -> void:   # foot_w > 0：腳邊款（闊度固定、冇樁、唔浮）
 	if not can:   # [ruins13b] 未解鎖：灰色木牌（建築名＋點樣開），唔郁
 		ctx.save(); ctx.font = "900 14px %s" % SERIF; var w0 = maxf(84, maxf(ctx.measureText(name).width, ctx.measureText(req).width * 0.86) + 20)
-		rr(ctx, x - 1.5, y - 26, 3, 22, 1, "#4a3a30")
+		if foot_w > 0.0: w0 = maxf(foot_w, w0)
+		else: rr(ctx, x - 1.5, y - 26, 3, 22, 1, "#4a3a30")
 		rr(ctx, x - w0 / 2, y - 50, w0, 34, 3, "#a9a092", "#4a3a30", 1.5)
 		ctx.textAlign = "center"; ctx.textBaseline = "middle"
 		ctx.fillStyle = "#2b2420"; ctx.fillText(name, x, y - 40)
 		ctx.fillStyle = "#5a2a20"; ctx.font = "900 12px sans-serif"; ctx.fillText(req, x, y - 25)
 		ctx.restore(); return
-	var bob = sin(t * 2.4) * 1.5
+	var bob = sin(t * 2.4) * 1.5 if foot_w <= 0.0 else 0.0
 	ctx.save(); ctx.font = "900 14px %s" % SERIF; var w = maxf(76, ctx.measureText(name).width + 20)
-	rr(ctx, x - 1.5, y - 26, 3, 22, 1, "#5a4030")
+	if foot_w > 0.0: w = maxf(foot_w, w)
+	else: rr(ctx, x - 1.5, y - 26, 3, 22, 1, "#5a4030")
 	rr(ctx, x - w / 2, y - 50 + bob, w, 34, 3, "#e6d2a0", "#5a4030", 1.5)
 	ctx.textAlign = "center"; ctx.textBaseline = "middle"
 	ctx.fillStyle = "#2b1d12"; ctx.fillText(name, x, y - 40 + bob)

@@ -62,6 +62,7 @@ func all(t) -> void:
 	_chk("生氣值：開局 0", RB.opened_count() == 0 and is_zero_approx(RB.vitality()), "%d %.2f" % [RB.opened_count(), RB.vitality()])
 	var nv = m.get("village")
 	_chk("冇 juice：村子畫面 vit() 照用 rb.vitality()（安全退化）", J.G.get("juice_vitality") == null and nv != null and nv.has_method("vit") and is_zero_approx(float(nv.vit())), nv.vit() if nv != null and nv.has_method("vit") else "-")
+	await _signs(t, m, S)
 	var had_sleeper = _has_ghost(S, RB.SLEEPER.k)
 	var n_open := 0
 	for b in RB.ALL:
@@ -156,4 +157,79 @@ func all(t) -> void:
 	_chk("提示排隊：最後全部顯示完", RB.notes_left() == 0, RB.notes_left())
 	var js = JSON.parse_string(J.to_json(S))
 	_chk("存檔：rb（done／lit／sleeper／relics 8／open 10）", js is Dictionary and js.get("rb") is Dictionary and J.t(js.rb.get("done")) and J.t(js.rb.get("lit")) and J.t(js.rb.get("sleeper")) and (js.rb.get("relics") as Array).size() == 8 and (js.rb.get("open") as Dictionary).size() == 10)
+	await _names(t, m, S)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+# [rebuild4] 廢墟腳邊木牌：唔遮廢墟圖（同不透明像素重疊 ≤10%）、喺地圖入面、唔撞相鄰建築／其他木牌／雜物堆、撳牌＝撳廢墟
+const ZD = preload("res://game/zone/zone_data.gd")
+func _opaque_in(rid: String, r: Rect2) -> int:   # r：相對建築位置；回入面有幾多個不透明像素（換算成遊戲單位面積）
+	var tex = Spr.get_tex(rid + "_ruin")
+	var img: Image = tex.get_image()
+	if img.is_compressed(): img.decompress()
+	var w: float = float(Art.BW[rid]); var k = w / tex.get_width(); var h = tex.get_height() * k
+	var n := 0
+	var x0 = int(floor((r.position.x + w / 2) / k)); var x1 = int(ceil((r.end.x + w / 2) / k))
+	var y0 = int(floor((r.position.y - 6.0 + h) / k)); var y1 = int(ceil((r.end.y - 6.0 + h) / k))
+	for y in range(maxi(0, y0), mini(img.get_height(), y1)):
+		for x in range(maxi(0, x0), mini(img.get_width(), x1)):
+			if img.get_pixel(x, y).a > 0.12: n += 1
+	return int(n * k * k)
+func _signs(t, m, S) -> void:
+	var world = Rect2(Vector2.ZERO, ZD.world_size()) if ZD.on() else Rect2(0, 0, 390, 99999)
+	var rects := {}; var bodies := {}
+	for b in RB.ALL:
+		var bp = RB._pos(b)
+		rects[b] = Rect2(RB.sign_rect(b).position + bp, RB.sign_rect(b).size)
+		bodies[b] = Rect2(Art.ruin_opaque(b).position + bp, Art.ruin_opaque(b).size)
+	var gp = J.G.get("POS").get("gate")
+	if gp != null: bodies["gate"] = Rect2(float(gp[0]) - 75, float(gp[1]) - 90, 150, 96)
+	for b in RB.ALL:
+		var sr: Rect2 = RB.sign_rect(b); var wr: Rect2 = rects[b]
+		var ov = _opaque_in(b, sr); var pct = 100.0 * ov / (sr.size.x * sr.size.y)
+		_chk("木牌 %s：同廢墟圖不透明範圍重疊 ≤10%%" % b, pct <= 10.0, "%.1f%%　牌 %s" % [pct, sr])
+		_chk("木牌 %s：字夠大（牌高 34、闊 ≥76，名 14px）、闊度裝得落個名" % b, is_equal_approx(sr.size.y, 34.0) and sr.size.x >= 76.0 and sr.size.x >= RB.bname(b).length() * 14.0 + 16.0, sr.size)
+		_chk("木牌 %s：喺地圖可見範圍入面（唔出格）" % b, world.encloses(wr.grow(2.0)), "%s in %s" % [wr, world])
+		var hit = []
+		for o in bodies: if o != b and (bodies[o] as Rect2).intersects(wr): hit.append("體:" + o)
+		for o in rects: if o != b and (rects[o] as Rect2).intersects(wr): hit.append("牌:" + o)
+		for e in RB.piles():
+			var pr = Rect2((e.p as Vector2).x - RB.PILE_HW + 3, (e.p as Vector2).y - RB.PILE_UP + 3, RB.PILE_HW * 2 - 6, RB.PILE_UP - 2)
+			if pr.intersects(wr): hit.append("雜物:" + str(e.id))
+		_chk("木牌 %s：唔撞相鄰建築／其他木牌／雜物堆" % b, hit.is_empty(), hit)
+		var c = wr.get_center()
+		_chk("木牌 %s：撳牌＝撳廢墟（荒村接手）、撳中嘅唔係雜物" % b, RB.tap(null, c.x, c.y) and not RB.fixing(b) and RB.left_of(b) == RB.PILES[b].size())
+	await _w(t, 2.5)   # 等提示跳字散
+
+# [rebuild4] 主角名：荒村全部劇情文本經 DB.L／DB.N 換名（男主預設、男主改名、女主預設、女主改名），唔會出寫死嘅「阿福」
+func _names(t, m, S) -> void:
+	RB.add_scenes()
+	var h0 = (S.get("hero") as Dictionary).duplicate() if S.get("hero") is Dictionary else {}
+	var sn = m.get("story")
+	for hv in [["", "m", "阿福"], ["大強", "m", "大強"], ["", "f", str(DB.HERO_F.name)], ["小美", "f", "小美"]]:
+		DB.hero_apply(DB.hero_make(hv[0], hv[1]), S)
+		var want: String = hv[2]
+		for sid in RB.SC:
+			await _clear_ui(t, m)
+			var who_bad = []; var txt_bad = []; var hero_lines := 0; var n := 0
+			sn.queue(sid)
+			await _w(t, 0.15)
+			for i in 30:
+				if sn.cur == null or str(sn.cur.get("id")) != sid: break
+				var raw_who = str(sn.cur.sc.lines[sn.li][0])
+				var shown_who = str(sn.nm.text) if sn.get("talkbox") != null and sn.get("nm") != null and is_instance_valid(sn.nm) else str(DB.N(raw_who))
+				var txt = str(sn.full_text); n += 1
+				if raw_who == "阿福":
+					hero_lines += 1
+					if shown_who != want: who_bad.append(shown_who)
+				for bad_s in ["{主角}", "{主角全名}"] + (["阿福", "陳大福", "Kelvin"] if want != "阿福" else []):
+					if txt.contains(bad_s) or shown_who.contains(bad_s): txt_bad.append("%d:%s" % [sn.li, bad_s])
+				sn.typing = false; sn.advance()
+				await _w(t, 0.05)
+			_chk("換名 %s／%s：%s（%d 句、主角講 %d 句）名牌同台詞都啱" % [want, hv[1], sid, n, hero_lines], n >= 1 and who_bad.is_empty() and txt_bad.is_empty(), [who_bad, txt_bad])
+		# 非劇情文本（提示、任務、舊物件）：唔應該有任何主角名
+		var loose = []
+		for e in RB.RELICS: for x in e: if str(x).contains("阿福") or str(x).contains("主角"): loose.append(x)
+		for k in RB.PILE_NAME: for x in RB.PILE_NAME[k]: if str(x).contains("阿福"): loose.append(x)
+		_chk("換名 %s／%s：提示／舊物件文本冇寫死主角名" % [want, hv[1]], loose.is_empty(), loose)
+	if not h0.is_empty(): DB.hero_apply(h0, S)
+	await _clear_ui(t, m)
