@@ -234,7 +234,9 @@ func bar_layout(t) -> void:
 			if str(ql.text) != want: ql.text = want
 			if str(m.quest_prog.text) != "99999/99999": m.quest_prog.text = "99999/99999"
 		RenderingServer.frame_pre_draw.connect(setter)
-		for i in 8: await t.get_tree().process_frame
+		for i in 60:   # [int] 整合版畫面較重，首輪要多幾幀先排好版：等到高度定咗先驗（最多 60 幀）
+			await t.get_tree().process_frame
+			if i >= 8 and str(ql.text) == want and ql.get_content_height() <= ql.size.y + 1.0: break
 		await RenderingServer.frame_post_draw
 		RenderingServer.frame_pre_draw.disconnect(setter)
 		setter.call()
