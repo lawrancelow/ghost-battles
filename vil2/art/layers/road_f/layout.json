@@ -1,0 +1,19 @@
+{
+ "size": [
+  1448,
+  1086
+ ],
+ "source": "cg_road_f.jpg",
+ "bg": "bg.png",
+ "note": "Gemini 原位去背：角色座標即原圖座標，可直接疊回 bg.png",
+ "chars": [
+  {
+   "file": "char_01.png",
+   "x": 0,
+   "y": 162,
+   "w": 1322,
+   "h": 852,
+   "touch_edge": true
+  }
+ ]
+}
