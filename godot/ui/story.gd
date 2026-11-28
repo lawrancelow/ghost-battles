@@ -78,7 +78,7 @@ func next() -> void:
 
 func _clear() -> void:
 	for c in get_children(): c.queue_free()
-	stage = null; talkbox = null; syswin = null; wa = null; cg = null; vox = null
+	stage = null; talkbox = null; syswin = null; wa = null; cg = null; vox = null; more_hint = null
 
 var wa: WA = null
 
@@ -155,7 +155,7 @@ func _show_line() -> void:
 	if vox == null or not is_instance_valid(vox):
 		vox = Node.new(); vox.set_script(VOX); add_child(vox)
 	vox.line(sc, li, who, text)
-	full_text = text; shown = 0; typing = true; type_acc = 0.0; auto_acc = 0.0
+	full_text = text; shown = 0; typing = true; type_acc = 0.0; auto_acc = 0.0; pages = [text]; pg = 0
 	if talkbox != null:
 		nm.get_parent().visible = who != "旁白"; nm.text = DB.N(who)   # 只換顯示；SPEAKER_ART 照用原講者名
 		var art = "sys" if who == "系統" else DB.D.SPEAKER_ART.get(who)
@@ -169,6 +169,7 @@ func _show_line() -> void:
 		elif art == "sys": pt.texture = null
 		tx.add_theme_color_override("font_color", UIKit.INKDIM if who == "旁白" else UIKit.INKTXT)
 		cur_line_label = tx; tx.text = ""
+		_set_pages(text); full_text = pages[0]; _more_refresh()   # [paging] offset_left（有冇頭像）定咗先量
 		if stage: stage.queue_redraw()
 	else:
 		var row = UIKit.rich("", 16, Color("#d8fff4") if sc.get("style") == "sys" else Color("#f0e2c8"))
@@ -180,6 +181,85 @@ func _show_line() -> void:
 		if who == "旁白": row.add_theme_color_override("default_color", Color("#c8c0b0"))
 
 var _sysrow: RichTextLabel
+
+# ---------------- [paging] 對話框自動分頁：長句超出對話框就喺句讀位斷開，撳一下睇下一頁（唔縮字） ----------------
+var pages: Array = []      # 呢一句分成幾頁
+var pg := 0
+var more_hint: Label = null
+const TX_TOP := 24.0       # 對白字頂（對話框內）
+const TX_BOTTOM := 10.0    # 對白字底留白
+const PG_END := "。！？…!?"
+const PG_MID := "，、；：,;:—"
+const PG_CLOSE := "」』）》〉”’)]】"
+
+# 對話框內對白可用高度
+static func tx_avail_h(box_h: float) -> float: return box_h - TX_TOP - TX_BOTTOM
+
+# 用實際字體量：text 喺闊度 w 嘅 Label（lb：同對白一樣嘅字體字號、自動換行）入面排版後幾高
+static func measure_h(lb: Label, text: String, w: float) -> float:
+	lb.size.x = w; lb.text = text
+	var n = lb.get_line_count()
+	var sp = lb.get_theme_constant("line_spacing")
+	return n * lb.get_line_height() + maxi(0, n - 1) * sp
+
+# 分頁：每頁排版高度 <= max_h；盡量喺句號位斷，其次逗號，最後先硬斷。回傳 Array[String]
+static func paginate(lb: Label, text: String, w: float, max_h: float) -> Array:
+	var out: Array = []
+	var rest := text
+	var guard := 0
+	while rest != "" and guard < 40:
+		guard += 1
+		if measure_h(lb, rest, w) <= max_h + 0.5: out.append(rest); rest = ""; break
+		var lo := 1; var hi := rest.length()   # 搵最長放得落嘅開頭
+		while lo < hi:
+			var mid := (lo + hi + 1) / 2
+			if measure_h(lb, rest.substr(0, mid), w) <= max_h + 0.5: lo = mid
+			else: hi = mid - 1
+		var cut := _cut_at(rest, lo)
+		out.append(rest.substr(0, cut).strip_edges(false, true))
+		rest = rest.substr(cut).strip_edges(true, false)
+	if rest != "": out.append(rest)
+	if out.is_empty(): out.append(text)
+	return out
+
+static func _cut_at(t: String, fit: int) -> int:
+	var floor_i := maxi(1, int(fit * 0.35))   # 唔好斷到第一頁得幾隻字
+	for set_ in [PG_END, PG_MID]:
+		var i := fit
+		while i > floor_i:
+			if set_.contains(t[i - 1]):
+				var j := i
+				while j < t.length() and (PG_CLOSE.contains(t[j]) or PG_END.contains(t[j])): j += 1   # 收尾引號／連續句讀跟住上一頁
+				if j <= fit: return j
+			i -= 1
+	var k := fit   # 硬斷：唔好斷喺括號／引號開頭後面、英文數字中間
+	while k > floor_i and (_is_word(t[k - 1]) and k < t.length() and _is_word(t[k])): k -= 1
+	return k if k > floor_i else fit
+
+static func _is_word(c: String) -> bool:
+	var u := c.unicode_at(0)
+	return (u >= 48 and u <= 57) or (u >= 65 and u <= 90) or (u >= 97 and u <= 122)
+
+func _tx_w() -> float:
+	var bw: float = talkbox.size.x if talkbox.size.x > 50.0 else size.x - 16.0
+	return bw - tx.offset_left - 14.0
+
+func _set_pages(text: String) -> void:
+	pg = 0
+	if talkbox == null or tx == null: pages = [text]; return
+	var bh: float = talkbox.size.y if talkbox.size.y > 50.0 else 154.0
+	var keep = tx.text
+	pages = paginate(tx, text, _tx_w(), tx_avail_h(bh))
+	tx.text = keep
+
+func _more_refresh() -> void:
+	if talkbox == null: return
+	if more_hint == null or not is_instance_valid(more_hint):
+		more_hint = UIKit.label("▼", 14, UIKit.CINNABAR, "sans", 900); more_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		more_hint.anchor_left = 1; more_hint.anchor_right = 1; more_hint.anchor_top = 1; more_hint.anchor_bottom = 1
+		more_hint.offset_left = -26; more_hint.offset_right = -8; more_hint.offset_top = -24; more_hint.offset_bottom = -4
+		talkbox.add_child(more_hint)
+	more_hint.visible = not typing and pg < pages.size() - 1
 
 const PF = preload("res://game/settings/prefs.gd")   # [settings] 文字速度、自動播放
 var auto_acc := 0.0
@@ -194,7 +274,7 @@ func _process(dt: float) -> void:
 		while type_acc >= sec and shown < full_text.length():
 			type_acc -= sec; shown += 1
 	_render_text()
-	if shown >= full_text.length(): typing = false; auto_acc = 0.0
+	if shown >= full_text.length(): typing = false; auto_acc = 0.0; _more_refresh()
 
 # 自動播放：打完字 → 等語音播完 → 再等（按字數）→ 翻頁；WhatsApp 模式唔自動
 func _auto_tick(dt: float) -> void:
@@ -220,7 +300,11 @@ func _gui_input(e: InputEvent) -> void:
 func advance() -> void:
 	if cur == null: return
 	if wa != null: wa.advance(false); return
-	if typing: shown = full_text.length(); _render_text(); typing = false; return
+	if typing: shown = full_text.length(); _render_text(); typing = false; _more_refresh(); return
+	if pg < pages.size() - 1:   # [paging] 同一句仲有下一頁
+		pg += 1; full_text = pages[pg]; shown = 0; typing = true; type_acc = 0.0; auto_acc = 0.0
+		if cur_line_label: cur_line_label.text = ""
+		_more_refresh(); return
 	li += 1
 	if li >= cur.sc.lines.size(): next(); return
 	_show_line()

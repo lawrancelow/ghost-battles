@@ -126,7 +126,11 @@ func _ensure_blur() -> void:   # 背景濛化＋黑化：放喺舞台之上、�
 func show_spec(spec) -> void:
 	if spec == null: return
 	var d: Dictionary = spec if spec is Dictionary else {"k": str(spec)}
-	var k = str(d.get("k", ""))
+	var k = str(d.get("k", "")); var used_kf = false
+	# [opening] 女主版插圖：kf（有圖先用，冇就用男女共用嗰張）；rv＝待審標記（插圖右上角貼「待審」，老闆選定後刪走）
+	if str(d.get("kf", "")) != "" and Spr.ok(str(d.kf)):
+		var H = J.G.get("S"); var hh = H.get("hero") if H is Dictionary else null
+		if hh is Dictionary and str(hh.get("sex", "m")) == "f": k = str(d.kf); used_kf = true
 	if k != "" and not Spr.ok(k) and not CGM.has(k) and str(d.get("ph", "")) != "": k = str(d.ph)   # [opening] 新插圖未到：先用佔位圖（ph）
 	if k == "" or (not Spr.ok(k) and not CGM.has(k)):
 		hide_cg(); return
@@ -202,6 +206,14 @@ func show_spec(spec) -> void:
 			lb.size = Vector2(bw, 10)
 			lb.position = Vector2(W * J.num(t.get("x", 0.5)) - bw / 2, H * J.num(t.get("y", 0.2)))
 		layer.add_child(lb)
+	_plaques(k, d, tex, W, H)
+	if str(d.get("rv", "")) != "" and not used_kf:   # 女主版（kf）老闆已全部選用，唔貼；[opening] 老闆未選定嘅圖：右上角貼「待審」；選定後喺 story_v2.json 刪走 rv
+		var rb = Label.new(); rb.name = "RvBadge"; rb.mouse_filter = Control.MOUSE_FILTER_IGNORE; rb.text = str(d.rv)
+		rb.add_theme_font_size_override("font_size", 34); rb.add_theme_color_override("font_color", Color("#fff4d8"))
+		var rs = StyleBoxFlat.new(); rs.bg_color = Color("#c8322a"); rs.set_corner_radius_all(8)
+		rs.content_margin_left = 14; rs.content_margin_right = 14; rs.content_margin_top = 4; rs.content_margin_bottom = 4
+		rb.add_theme_stylebox_override("normal", rs)
+		layer.add_child(rb); rb.reset_size(); rb.position = Vector2(W - rb.get_minimum_size().x - 16, 14)
 	visible = true; modulate.a = 1.0; _off = -1.0; _anim = true
 	if not same: _t = 0.0   # 換新圖先重新開機；同一張就唔再閃
 	_ensure_blur()
@@ -257,3 +269,89 @@ func _process(dt: float) -> void:
 	var z = 1.0 + minf(_t, 12.0) * 0.004   # 慢慢推近
 	pic.scale = Vector2(z, z)
 	layer.pivot_offset = layer.size / 2; layer.scale = pic.scale   # 疊圖／疊字跟插圖一齊推近，唔會錯位
+
+
+# ---------------- [plaque] 牌匾疊字：插圖上空白牌匾嘅字由程序貼（四角座標透視貼字，跟插圖一齊推近／移動） ----------------
+# 座標：data/cg_plaque.json → {"<插圖鍵>": [{"size":[原圖闊,高], "quad":[[左上],[右上],[右下],[左下]], "text":"…", "color":"#5a2a1c", "vertical":false}]}
+#   quad 可以係原圖像素（配 size）或者 0–1 比例。場景 cg 可以用 "plaque": {"t": "字"} 或 ["第一塊字", "第二塊字"] 覆蓋文字；"plaque": false＝唔貼。
+static var _pl_data = null
+static func plaque_data() -> Dictionary:
+	if _pl_data == null:
+		_pl_data = {}
+		if FileAccess.file_exists("res://data/cg_plaque.json"):
+			var j = JSON.parse_string(FileAccess.get_file_as_string("res://data/cg_plaque.json"))
+			if j is Dictionary: _pl_data = j
+	return _pl_data
+
+# 0–1 方格 → 四邊形嘅透視變換（Heckbert）；回傳 [a,b,c,d,e,f,g,h]
+static func homography(q: Array) -> Array:
+	var p0: Vector2 = q[0]; var p1: Vector2 = q[1]; var p2: Vector2 = q[2]; var p3: Vector2 = q[3]
+	var sx = p0.x - p1.x + p2.x - p3.x; var sy = p0.y - p1.y + p2.y - p3.y
+	if absf(sx) < 0.0001 and absf(sy) < 0.0001: return [p1.x - p0.x, p3.x - p0.x, p0.x, p1.y - p0.y, p3.y - p0.y, p0.y, 0.0, 0.0]
+	var dx1 = p1.x - p2.x; var dx2 = p3.x - p2.x; var dy1 = p1.y - p2.y; var dy2 = p3.y - p2.y
+	var den = dx1 * dy2 - dx2 * dy1
+	if absf(den) < 0.000001: return [p1.x - p0.x, p3.x - p0.x, p0.x, p1.y - p0.y, p3.y - p0.y, p0.y, 0.0, 0.0]
+	var g = (sx * dy2 - dx2 * sy) / den; var h = (dx1 * sy - sx * dy1) / den
+	return [p1.x - p0.x + g * p1.x, p3.x - p0.x + h * p3.x, p0.x, p1.y - p0.y + g * p1.y, p3.y - p0.y + h * p3.y, p0.y, g, h]
+static func hmap(m: Array, u: float, v: float) -> Vector2:
+	var w = m[6] * u + m[7] * v + 1.0
+	return Vector2((m[0] * u + m[1] * v + m[2]) / w, (m[3] * u + m[4] * v + m[5]) / w)
+
+# 原圖比例座標 → layer 座標（插圖係「鋪滿、置中裁切」）
+static func img_to_layer(uv: Vector2, tex_size: Vector2, W: float, H: float) -> Vector2:
+	var sc = maxf(W / tex_size.x, H / tex_size.y)
+	var o = (Vector2(W, H) - tex_size * sc) / 2.0
+	return o + uv * tex_size * sc
+
+func _plaques(k: String, d: Dictionary, tex: Texture2D, W: float, H: float) -> void:
+	var ov = d.get("plaque")
+	if ov is bool and not ov: return
+	var arr = plaque_data().get(k)
+	if not (arr is Array): return
+	var ts = Vector2(tex.get_width(), tex.get_height())
+	for i in arr.size():
+		var e = arr[i]
+		if not (e is Dictionary) or not (e.get("quad") is Array) or (e.quad as Array).size() != 4: continue
+		var text = str(e.get("text", ""))
+		if ov is Dictionary and ov.has("t"): text = str(ov.t)
+		elif ov is Array and i < ov.size(): text = str(ov[i])
+		elif ov is String: text = ov
+		text = str(DB.L(text))
+		if text.strip_edges() == "": continue
+		var sz = e.get("size")
+		var q: Array = []
+		for p in e.quad:
+			var v = Vector2(J.num(p[0]), J.num(p[1]))
+			if sz is Array and sz.size() == 2: v = v / Vector2(J.num(sz[0]), J.num(sz[1]))
+			q.append(img_to_layer(v, ts, W, H))
+		layer.add_child(_plaque_node(text, q, Color(str(e.get("color", "#5a2a1c"))), J.t(e.get("vertical")), i))
+
+func _plaque_node(text: String, q: Array, col: Color, vertical: bool, idx: int) -> Node2D:
+	var wtop = (q[1] - q[0]).length(); var wbot = (q[2] - q[3]).length(); var hl = (q[3] - q[0]).length(); var hr = (q[2] - q[1]).length()
+	var qw = maxf(8.0, (wtop + wbot) / 2.0); var qh = maxf(8.0, (hl + hr) / 2.0)
+	var TW = 768; var TH = maxi(48, int(768.0 * qh / qw))
+	var sv = SubViewport.new(); sv.transparent_bg = true; sv.size = Vector2i(TW, TH); sv.render_target_update_mode = SubViewport.UPDATE_ONCE; sv.disable_3d = true
+	var lb = Label.new(); lb.text = "\n".join(text.split("")) if vertical else text
+	var n = maxi(1, text.length())
+	var fs = int(minf(TH * 0.66, TW * 0.9 / n)) if not vertical else int(minf(TW * 0.66, TH * 0.9 / n))
+	lb.add_theme_font_override("font", UIKit.font("serif", 900)); lb.add_theme_font_size_override("font_size", maxi(10, fs))
+	lb.add_theme_color_override("font_color", col)
+	lb.add_theme_color_override("font_outline_color", Color(1.0, 0.93, 0.8, 0.35)); lb.add_theme_constant_override("outline_size", maxi(2, fs / 14))   # 淡淡亮邊，似刻喺匾面
+	lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; lb.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lb.position = Vector2.ZERO; lb.size = Vector2(TW, TH); lb.clip_text = true
+	sv.add_child(lb)
+	var pg = Polygon2D.new(); pg.name = "Plaque%d" % idx; pg.add_child(sv)
+	pg.texture = sv.get_texture(); pg.modulate = Color(1, 1, 1, 0.9)
+	pg.set_meta("text", text); pg.set_meta("quad", q); pg.set_meta("font_size", fs)
+	var NX = 12; var NY = 6; var m = homography(q)
+	var pts := PackedVector2Array(); var uvs := PackedVector2Array(); var polys: Array = []
+	for y in NY + 1:
+		for x in NX + 1:
+			var u = float(x) / NX; var v = float(y) / NY
+			pts.append(hmap(m, u, v)); uvs.append(Vector2(u * TW, v * TH))
+	for y in NY:
+		for x in NX:
+			var a = y * (NX + 1) + x
+			polys.append(PackedInt32Array([a, a + 1, a + NX + 2, a + NX + 1]))
+	pg.polygon = pts; pg.uv = uvs; pg.polygons = polys
+	return pg

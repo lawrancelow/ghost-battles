@@ -100,6 +100,7 @@ static func open_next() -> void:
 	var r = JS.collect()
 	if not J.t(r.get("ok")): _toast(T("而家未有包裹。", "現在還沒有包裹。")); return
 	_save()
+	load("res://game/onboard/prestall_story.gd").defer_joss(r)   # [opening] 積壓包裹／轉祭品：收起開箱畫面後播劇情
 	var u = Unbox.new(); u.name = "JossUnbox"; m.add_child(u); u.setup(r)
 	if r.get("early"): load("res://ui/joss_fx.gd").play(m)   # [tavern] 前期冥幣：金銀紙滿屏
 	if r.get("shift"): _toast(T("化寶爐轉咗「祭品模式」：以後陽間會燒用得着嘅嘢，冥幣靠大排檔自己賺。", "化寶爐轉為「祭品模式」：以後陽間會燒用得上的東西，冥幣靠大排檔自己賺。"))
@@ -346,10 +347,12 @@ class Unbox extends Control:
 		tw.tween_property(sc, "modulate:a", 1.0, 0.3); tw.tween_property(sc, "position:y", top, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	func _close() -> void:
 		Snd.play("paper"); name = "JossUnboxOld"; queue_free()
+		load("res://game/onboard/prestall_story.gd").flush_joss()   # [opening]
 	func _next() -> void:
 		var r = JZ.collect()
 		if not J.t(r.get("ok")): _close(); return
 		JSU._save()
+		load("res://game/onboard/prestall_story.gd").defer_joss(r)   # [opening]
 		for ch in get_children(): ch.queue_free()
 		card = null
 		setup(r)
