@@ -4,7 +4,7 @@
 #   圖層資料夾：layout.json（canvas、layers[x,y,w,h 像素、z]）＋ bg.png ＋ 角色 png
 #   extra_layout.json（可多份，按次序疊）：{"use_bg": "…", "add_layers": [ {name,file,x,y,w,h,z,pivot,motion} ]}
 #     use_bg：用咗呢份附加層就要換嘅底圖（已補走被切出嚟嘅嘢）；最後一份有 use_bg 嘅為準
-#   preset.json：鏡頭、粒子、每層動作（按 name），以及 motion 名 → 動作參數嘅對照
+#   preset.json：鏡頭、粒子、每層動作（按 name），以及 motion 名 → 動作參數嘅對照；"defringe": n＝角色層透明度向內收 n 像素（去白邊）
 import sys, os, json
 from PIL import Image
 src, gd, key, preset_p = sys.argv[1:5]
@@ -36,6 +36,10 @@ res = []
 for l in sorted(layers, key=lambda l: l.get("z", 0)):
     im = Image.open(os.path.join(l["_dir"], l["file"])).convert("RGBA")
     w, h = int(l["w"]), int(l["h"])
+    if P.get("defringe"):   # 白底角色表切出嚟有白邊：透明度向內收幾像素再柔邊
+        from PIL import ImageFilter
+        n = int(P["defringe"]); a = im.getchannel("A").filter(ImageFilter.MinFilter(2 * n + 1)).filter(ImageFilter.GaussianBlur(0.8))
+        im.putalpha(a)
     lim = max(2 * w, 2 * h, 64)   # 原圖最多留 2 倍顯示尺寸（SubViewport 2 倍解像度），慳記憶體
     if max(im.size) > lim: im.thumbnail((lim, lim), Image.LANCZOS)
     fn = l["name"] + ".webp"; im.save(os.path.join(od, fn), lossless=True, method=4)

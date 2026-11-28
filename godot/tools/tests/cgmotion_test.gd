@@ -275,6 +275,74 @@ func logic(t) -> void:
 	par.queue_free()
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
+# ---- 後備動態（單張圖）＋新接入嘅分層圖 ----
+const FLAT_KEYS := ["cg_lobby_m", "cg_stall_hook_m", "cg_pang_visit_m", "cg_joss_note_m", "cg_stall_hook_f", "cg_caught", "cg_he_wake", "cg_qian_bite", "cg_mk_weapon"]
+const NEW_LAYERED := {"cg_f_soup": 2, "cg_f_bribe": 4}
+
+func flat(t) -> void:
+	var pc = _mk(t); var par = pc[0]; var cg = pc[1]
+	await _w(t, 0.2)
+	for k in FLAT_KEYS:
+		cg.hide_cg(); await _w(t, 0.5)
+		_chk("後備設定：" + k, CGM.has(k) and J.t(CGM.conf()[k].get("flat")) and CGM.still(k) != null)
+		cg.show_spec({"k": k}); await _w(t, 0.1)
+		var m = cg.mot
+		if m == null or m.warp == null: _chk("後備可播：" + k, false); continue
+		_chk("後備：成張圖鋪滿畫面（冇裁）：" + k, m.warp.position.length() < 1.0 and (m.warp.size - m.vs).length() < 2.0, [m.warp.position, m.warp.size, m.vs])
+		m.t = 0.0
+		var shs := {}; var gap := 0.0; var zs := []; var ga := {}
+		for f in 1200:
+			var cz = m.tick(1.0 / 60.0)
+			shs[snappedf(float(m.warp.material.get_shader_parameter("sh")), 0.001)] = 1
+			gap = maxf(gap, maxf(absf(cz[1].x) - m.vs.x * (cz[0] - 1.0) / 2.0, absf(cz[1].y) - m.vs.y * (cz[0] - 1.0) / 2.0))
+			if f == 0 or f == 1199: zs.append(cz[0])
+			if m.glows.size() > 0: ga[snappedf(m.glows[0].n.modulate.a, 0.01)] = 1
+		var amt = J.num(CGM.conf()[k].depth.amt)
+		_chk("後備：前景會左右錯開、幅度 ≤ 圖闊 1.2%：" + k, shs.size() >= 8 and amt <= 0.012, [shs.size(), amt])
+		_chk("後備：慢推鏡有放大、全程唔露邊：" + k, zs[1] > zs[0] and gap <= 0.01, [zs, snappedf(gap, 0.01)])
+		_chk("後備：鏡頭放大蓋得住錯開（邊位唔拉絲）：" + k, (zs[0] - 1.0) / 2.0 >= amt, [zs[0], amt])
+		_chk("後備：有粒子：" + k, m.parts.size() >= 1, m.parts.size())
+		_chk("後備：微光會閃（有先查）：" + k, m.glows.is_empty() or ga.size() >= 4, [m.glows.size(), ga.size()])
+		CGM.disabled = true
+		cg.show_spec({"k": k}); await _w(t, 0.05)
+		_chk("後備：關動態＝靜態原圖：" + k, cg.visible and cg.mot == null and cg.pic.texture == CGM.still(k))
+		CGM.disabled = false
+	for k in NEW_LAYERED:
+		cg.hide_cg(); await _w(t, 0.5)
+		cg.show_spec({"k": k}); await _w(t, 0.1)
+		var m = cg.mot
+		_chk("分層版可播、層數啱：" + k, m != null and m.items.size() == NEW_LAYERED[k], m.items.size() if m else -1)
+		_chk("分層版有原整張圖：" + k, CGM.still(k) != null and str(CGM.still(k).resource_path).ends_with("still.webp"))
+		if m == null: continue
+		m.t = 0.0; var gap := 0.0; var moved := 0
+		var p0 := []
+		for it in m.items: p0.append(it.n.position)
+		var mx := []; mx.resize(m.items.size()); mx.fill(0.0)
+		for f in 1800:
+			var cz = m.tick(1.0 / 60.0)
+			gap = maxf(gap, maxf(absf(cz[1].x) - m.vs.x * (cz[0] - 1.0) / 2.0, absf(cz[1].y) - m.vs.y * (cz[0] - 1.0) / 2.0))
+			for i in m.items.size(): mx[i] = maxf(mx[i], (m.items[i].n.position - p0[i]).length() + absf(m.items[i].n.scale.x - 1.0) * 100.0)
+		for i in m.items.size():
+			if mx[i] > 0.5: moved += 1
+		var want_moving = m.items.filter(func(it): return not (it.fx as Dictionary).is_empty()).size()
+		_chk("分層版：有動作嘅層都有郁、鏡頭唔露邊：" + k, moved >= want_moving and gap <= 0.01, [moved, want_moving, snappedf(gap, 0.01)])
+	# 女主遞湯：枝筆掂住碗，兩層同步遊走
+	cg.show_spec({"k": "cg_f_soup"}); await _w(t, 0.1)
+	if cg.mot != null and cg.mot.items.size() == 2:
+		var a = cg.mot.items[0]; var b = cg.mot.items[1]
+		_chk("女主遞湯：兩層同一個 seed", a.fx.wander.get("seed") == b.fx.wander.get("seed") and a.fx.wander.has("seed"))
+	# 女主收賄：枱面前景喺牛頭之上、唔郁
+	cg.show_spec({"k": "cg_f_bribe"}); await _w(t, 0.1)
+	if cg.mot != null:
+		var ni := -1; var di := -1
+		for i in cg.mot.items.size():
+			var rp = str(cg.mot.items[i].main.resource_path)
+			if rp.contains("niutou"): ni = cg.mot.items[i].n.get_index()
+			if rp.contains("desk_front"): di = cg.mot.items[i].n.get_index()
+		_chk("女主收賄：枱面前景蓋住牛頭下半身", ni >= 0 and di > ni, [ni, di])
+	par.queue_free()
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
 # ---- [wide] 寬框：框跟插圖長寬比，原圖唔裁，唔遮對話框 ----
 class FakeTalk extends Control:
 	var talkbox = 1

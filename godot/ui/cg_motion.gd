@@ -18,6 +18,10 @@
 #   另一種定位（美術組分層產線用）：  "rect": [x, y, w, h]（左上＋闊高，底圖比例）, "pivot": [0.5, 0.0]（軸心，層內比例；預設腳底 [0.5,1]）
 #   多兩種動作：  "flicker": {"min":0.88, "max":1.12, "glow":0.55, "c":"#ffb060"}   燈籠閃（光暈用加色疊）
 #                 "drift":   {"dy":0.014, "per":4.0}                               炊煙：向上飄＋淡出，兩份錯開循環
+#   後備（單張圖，未有分層素材）：  "flat": true, "bg": "still.webp", "depth": {"amt":0.010, "y0":0.42, "per":9.0},
+#       "glow": [ {"x":0.3, "y":0.2, "r":0.05, "c":"#ffb060"} ]
+#     成張圖用著色器按「越近畫面底越前景」嘅深度漸變左右慢慢錯開（前景郁多啲、遠景唔郁，連續冇切口），
+#     加慢推鏡、燈籠／火光位置微光閃爍、鬼火粒子。之後分層素材到咗，換返 layers 版就得，key 唔變。
 #   冇 layout 或者停用就返 null，story_cg 照舊用靜態圖。
 extends RefCounted
 
@@ -84,11 +88,62 @@ static func make(key: String, parent: Node, view_size: Vector2, bg_tex: Texture2
 	m.root = Control.new(); m.root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	m.root.size = view_size; m.root.name = "cgm"
 	parent.add_child(m.root)
+	if J.t(m.L.get("flat")): m._build_flat(bg_tex)
 	m._build()
 	return m
 
 func img2view(p: Vector2) -> Vector2:   # 底圖比例座標 → SubViewport 像素
 	return cover_o + Vector2(p.x * tsz.x, p.y * tsz.y) * cover_s
+
+const FLAT_SHADER := """
+shader_type canvas_item;
+uniform float sh = 0.0;    // 前景橫向錯開（UV 比例）
+uniform float y0 = 0.42;   // 呢條線以上當遠景（唔郁）
+uniform float bob = 0.0;   // 前景上下微浮
+void fragment() {
+	float d = smoothstep(y0, 1.0, UV.y);
+	d = d * d;
+	vec2 uv = UV + vec2(sh * d, bob * d * (1.0 - UV.y));
+	COLOR = texture(TEXTURE, clamp(uv, vec2(0.001), vec2(0.999)));
+}
+"""
+var warp: TextureRect = null   # 後備：成張圖（深度漸變視差）
+var glows: Array = []          # 後備：微光點 [{n, a, ph}]
+
+func _build_flat(bg_tex: Texture2D) -> void:
+	warp = TextureRect.new(); warp.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	warp.texture = bg_tex; warp.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; warp.stretch_mode = TextureRect.STRETCH_SCALE
+	warp.position = cover_o; warp.size = tsz * cover_s
+	var sh = Shader.new(); sh.code = FLAT_SHADER
+	var mt = ShaderMaterial.new(); mt.shader = sh; warp.material = mt
+	var dp: Dictionary = L.get("depth", {}) if L.get("depth") is Dictionary else {}
+	mt.set_shader_parameter("y0", J.num(dp.get("y0", 0.42)))
+	root.add_child(warp)
+	var i := 0
+	for g in L.get("glow", []):
+		if not (g is Dictionary): continue
+		var n = TextureRect.new(); n.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		n.texture = _dot_tex(64, 1.0); n.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		var gs = maxf(J.num(g.get("r", 0.04)) * tsz.x * cover_s * 2.0, 8.0)
+		n.size = Vector2(gs, gs); n.pivot_offset = n.size / 2.0
+		n.position = img2view(Vector2(J.num(g.get("x", 0.5)), J.num(g.get("y", 0.5)))) - n.size / 2.0
+		n.modulate = Color(str(g.get("c", "#ffb060")))
+		var gm = CanvasItemMaterial.new(); gm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD; n.material = gm
+		root.add_child(n)
+		glows.append({"n": n, "a": J.num(g.get("a", 0.32)), "ph": float(i) * 2.17}); i += 1
+
+func _tick_flat() -> void:
+	var dp: Dictionary = L.get("depth", {}) if L.get("depth") is Dictionary else {}
+	var per = maxf(J.num(dp.get("per", 9.0)), 0.5)
+	var amt = J.num(dp.get("amt", 0.010))
+	var mt: ShaderMaterial = warp.material
+	mt.set_shader_parameter("sh", sin(t * TAU / per) * amt)
+	mt.set_shader_parameter("bob", sin(t * TAU / (per * 0.63) + 1.3) * amt * 0.35)
+	for g in glows:
+		var ph = float(g.ph)
+		var nz = 0.5 + 0.5 * (0.5 * sin(t * 6.1 + ph * 3.1) + 0.3 * sin(t * 11.9 + ph) + 0.2 * sin(t * 1.9 + ph * 5.0))
+		g.n.modulate.a = float(g.a) * (0.45 + 0.55 * nz)
+		g.n.scale = Vector2.ONE * (0.9 + 0.16 * nz)
 
 func _build() -> void:
 	var ls: Array = (L.get("layers", []) as Array).filter(func(o): return o is Dictionary)   # 壞資料先濾走（排序唔會撞）
@@ -211,6 +266,7 @@ func tick(dt: float) -> Array:
 	var cz = cam()
 	root.pivot_offset = vs / 2.0
 	root.scale = Vector2(cz[0], cz[0]); root.position = cz[1]
+	if warp != null: _tick_flat()
 	for it in items:
 		var n: TextureRect = it.n
 		var fx: Dictionary = it.fx
@@ -303,4 +359,4 @@ func free_all() -> void:
 	if root != null and is_instance_valid(root):
 		if root.get_parent() != null: root.get_parent().remove_child(root)   # 即刻拎走，新嗰套先攞到 "cgm" 個名、唔會疊兩套
 		root.queue_free()
-	items.clear(); parts.clear()
+	items.clear(); parts.clear(); glows.clear(); warp = null
