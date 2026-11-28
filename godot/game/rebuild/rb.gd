@@ -75,12 +75,10 @@ static func _emit(kind: String, arg) -> void:
 static func opened_count() -> int:
 	var s = S(); var n := 0
 	if s == null: return 0
-	var BO = J.G.get("BLD_ORDER")
-	for b in (BO if BO is Array else ORDER): if J.num(s.bld.get(b, 0)) > 0 and not holds(str(b)): n += 1
+	# [rebuild3] 只數荒村 10 棟（ALL）：BLD_ORDER 執行時會被兵營等後加建築加長（變 11），會令生氣值頂位得 10/11、全村點燈永遠等唔到
+	for b in ALL: if J.num(s.bld.get(b, 0)) > 0 and not holds(str(b)): n += 1
 	return n
-static func vitality() -> float:
-	var BO = J.G.get("BLD_ORDER")
-	return float(opened_count()) / float(maxi(1, (BO as Array).size() if BO is Array else 10))
+static func vitality() -> float: return float(opened_count()) / float(ALL.size())
 static func all_lit() -> bool: return J.t(st().get("lit"))
 
 # ================= 存檔 =================
