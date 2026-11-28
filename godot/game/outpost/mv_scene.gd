@@ -7,6 +7,7 @@ extends Control
 const _ABL = preload("res://game/rts/ab_lay.gd")   # [abui]
 
 const MD = preload("res://game/outpost/mv_data.gd")
+const MK = preload("res://game/market/mk_data.gd")   # [market] 過勞鬼市集：街道＋過勞營業
 const SIM = preload("res://game/outpost/mv_sim.gd")
 const FX = preload("res://game/outpost/mv_fx.gd")
 const M = preload("res://game/outpost/mat.gd")   # [chain]
@@ -613,6 +614,7 @@ func _draw_stage() -> void:
 	if fk > 0.04 and not mk_hid:
 		var vis_sids: Array = []
 		for sid in MD.stations(sim.ci()):
+			if not MK.shown(sim.ci(), sid): continue   # [market] 一次只畫一條街
 			var sp = sim.st_pos(sid)
 			if sp.y + 90.0 < vy0 or sp.y - 160.0 > vy1: continue
 			vis_sids.append(sid)
@@ -621,12 +623,14 @@ func _draw_stage() -> void:
 		_layout_plates(ctx, vis_sids, vy0, vy1)   # [uxui2]
 	if not walking and not mk_hid:
 		for w in sim.workers:
+			if not MK.shown(sim.ci(), str(w.sid)): continue   # [market]
 			if w.pos.y < vy0 - 20.0 or w.pos.y - 120.0 > vy1: continue
 			if zone and not _in_view(w.pos, vy0, vy1): continue   # [perf]
 			var ww = w
 			items.append([w.pos.y, func(): _draw_worker(ctx, ww)])
 	for f in sim.foes:   # [p55] 霸檔孤魂：同台／客一齊按 y 排
 		if not f.has("occ") or f.st == "occ_go" or not _in_view(f.pos, vy0, vy1): continue
+		if not MK.shown(sim.ci(), str(f.occ)): continue   # [market] 霸緊其他街嘅檔
 		var ff = f
 		items.append([f.pos.y + 0.5, func(): _draw_foe(ctx, ff)])
 	if embed and embed_draw != null: embed_draw.call(ctx, vy0, vy1, items)   # [unify] 留位、挑夫鬼（入 y 排序）

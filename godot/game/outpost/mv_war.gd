@@ -719,7 +719,7 @@ func eat(sc) -> void:
 func draw_world(sc, ctx, vy0: float, vy1: float) -> void:
 	var sim = sc.sim
 	var os = occ_sid()
-	if os != "": _draw_occ(sc, ctx, sim, os)
+	if os != "" and load("res://game/market/mk_data.gd").shown(sim.ci(), os): _draw_occ(sc, ctx, sim, os)   # [market] 其他街嘅檔：街名牌出紅點，唔畫喺呢條街
 	var vs = vols.duplicate(); vs.sort_custom(func(a, b): return a.pos.y < b.pos.y)
 	for r in vs:
 		if r.pos.y < vy0 - 20.0 or r.pos.y - 120.0 > vy1: continue

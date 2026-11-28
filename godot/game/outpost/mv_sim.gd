@@ -5,6 +5,7 @@ extends RefCounted
 
 const MD = preload("res://game/outpost/mv_data.gd")
 const M = preload("res://game/outpost/mat.gd")   # [chain] 材料庫
+const MK = preload("res://game/market/mk_data.gd")   # [market] 過勞鬼市集：街道＋過勞營業
 # [chain] 生產鏈：台做貨要按 chain.json RECIPES 由材料庫扣 in；冇料就停（斷料），有料自動復工。
 #   每轉（一次做 out(lv) 件）食 in × out(lv) ÷ RECIPES.n（即係 n 件要一份 in；升級多出嘅件數照比例食料）。
 #   開工嗰下先扣料（扣唔到就企喺台前等，顯示「斷料：缺 XX」）；鬼中途被調走，未做完嗰轉退返料。
@@ -529,8 +530,10 @@ func relayout(_top := 0.0, _bot := 0.0) -> void:
 	for q in Ly.get("q2", []): QP2.append(MD.v2(q))
 	QLEN2 = MD.poly_len(QP2)
 	PATHS.clear(); SPOS.clear()
+	var smap = MK.slot_map(c)   # [market] 過勞鬼市集：當前街嘅台輪流佔本章台位（其他街照生產、唔畫）
 	for sid in MD.stations(c):
-		SPOS[sid] = MD.st_xy(c, sid); PATHS[sid] = MD.st_path(c, sid)
+		var ps = str(smap.get(sid, sid))
+		SPOS[sid] = MD.st_xy(c, ps); PATHS[sid] = MD.st_path(c, ps)
 	for w in workers: w.home = slot_pos(w.sid, int(w.slot))
 	_sync_key = ""
 func queue_s(i: int) -> float: return 46.0 * i
@@ -542,6 +545,17 @@ func counter_slot(gid: String) -> Vector2:   # 櫃台面疊貨位
 	return Vector2(x, L.counter_y - 44.0)
 var SPOS := {}
 func _place_stations() -> void: relayout()
+func market_street(id: String) -> bool:   # [market] 切街：重排台位，喺位嘅員工跟住過去
+	if not MK.set_cur(id): return false
+	relayout()
+	for w in workers: if str(w.get("st", "")) in ["work", "home"]: w.pos = w.home
+	var i = 0
+	for f in foes:   # 霸檔孤魂跟返個檔嘅新位
+		if not f.has("occ") or f.st == "die" or f.st == "flee": continue
+		var at = st_pos(str(f.occ)) + MVW.OCC_OFF[i % MVW.OCC_OFF.size()]; i += 1
+		if f.st == "occ": f.pos = at
+		f.tgt = at
+	return true
 func st_pos(sid: String) -> Vector2: return SPOS.get(sid, Vector2(195, 600))
 func slot_pos(sid: String, i: int) -> Vector2:
 	var p = st_pos(sid); var off = [Vector2(-40, 26), Vector2(6, 32), Vector2(50, 26)]
@@ -682,6 +696,7 @@ func step(dt: float) -> void:
 	_step_guards(dt)
 	war.step(self, dt)   # [war]
 	plus.step(self, dt)   # [play]
+	if MK.active(): MK.tick(MD.stations(ci()), dt * sp, func(x): return nworkers(x) > 0 or float(mk.get(x, -1.0)) >= 0.0)   # [market] 過勞值
 
 func _move(e: Dictionary, to: Vector2, dt: float, spd := WALK) -> bool:
 	var d = to - e.pos
@@ -712,7 +727,7 @@ func _step_workers(dt: float, sp: float) -> void:
 					var nd = need(sid)
 					if not M.take(nd): w["starve"] = true; continue
 					w["paid"] = nd; w["starve"] = false
-				w.prog += dt * sp * IDL.eff(self, sid) * plus.wmul(self, w) / MD.tm(sid, lv(sid))   # [idle] 領班 ×1.25  [play] 羈絆／瞌眼瞓／借領班
+				w.prog += dt * sp * IDL.eff(self, sid) * plus.wmul(self, w) * MK.mul(sid) / MD.tm(sid, lv(sid))   # [market] 加班 ×2／趴低 0   # [idle] 領班 ×1.25  [play] 羈絆／瞌眼瞓／借領班
 				if w.prog >= 1.0:
 					var n = MD.out(sid, lv(sid))
 					w.prog = 0.0; w.erase("paid"); _made(sid, n)
@@ -750,7 +765,7 @@ func _along(e: Dictionary, P: PackedVector2Array, sv: float) -> void:
 func _step_manual(dt: float, sp: float) -> void:
 	for sid in mk.keys():
 		if float(mk[sid]) < 0.0: continue
-		mk[sid] = float(mk[sid]) + dt * sp * IDL.eff(self, sid) * plus.smul(self, sid) / MD.tm(sid, lv(sid))   # [idle]  [play] 借領班
+		mk[sid] = float(mk[sid]) + dt * sp * IDL.eff(self, sid) * plus.smul(self, sid) * MK.mul(sid) / MD.tm(sid, lv(sid))   # [market]   # [idle]  [play] 借領班
 		if mk[sid] >= 1.0:
 			mk[sid] = -1.0
 			var n = MD.out(sid, lv(sid)); _made(sid, n)

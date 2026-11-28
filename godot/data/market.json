@@ -1,0 +1,233 @@
+{
+ "_doc": "過勞鬼市集街道設定（market M1）。商品按章（地圖 ci）載入：maps[ci][街] 列出該章該街賣邊啲台；章內冇列到嘅台用 cat 自動歸街。設計組改清單只改 maps，唔使改代碼。",
+ "streets": [
+  {
+   "id": "food",
+   "n": [
+    "食街",
+    "食街"
+   ],
+   "icon": "mvi_shoubao",
+   "open": 1
+  },
+  {
+   "id": "cloth",
+   "n": [
+    "衣街",
+    "衣街"
+   ],
+   "icon": "mvi_zhishan",
+   "lock": [
+    "第 1 道市集考核達標開放",
+    "第 1 道市集考核達標開放"
+   ]
+  },
+  {
+   "id": "weapon",
+   "n": [
+    "兵器街",
+    "兵器街"
+   ],
+   "icon": "mvi_bingqi",
+   "lock": [
+    "第 2 道市集考核達標開放",
+    "第 2 道市集考核達標開放"
+   ]
+  },
+  {
+   "id": "acc",
+   "n": [
+    "飾品街",
+    "飾品街"
+   ],
+   "icon": "mvi_denglong",
+   "lock": [
+    "第 3 道市集考核達標開放",
+    "第 3 道市集考核達標開放"
+   ]
+  },
+  {
+   "id": "lux",
+   "n": [
+    "奢侈品店",
+    "奢侈品店"
+   ],
+   "icon": "mvi_paoche",
+   "lock": [
+    "第 3 章、回陽間帶到貨源先開",
+    "第 3 章、回陽間帶到貨源才開"
+   ]
+  }
+ ],
+ "cat": {
+  "st_shoubao": "food",
+  "st_douhua": "food",
+  "st_nuomici": "food",
+  "st_tiaodan": "food",
+  "st_zhulong": "food",
+  "st_liulian": "food",
+  "st_yejiangfan": "food",
+  "st_wucha": "food",
+  "st_ganlu": "food",
+  "st_jiaoye": "food",
+  "st_xianyu": "food",
+  "st_ningmeng": "food",
+  "st_waimai": "food",
+  "st_shougongcu": "food",
+  "st_baogu": "food",
+  "st_mengpotang": "food",
+  "st_yeketan": "food",
+  "st_zhishan": "cloth",
+  "st_tuoxie": "cloth",
+  "st_caoxie": "cloth",
+  "st_xizhuang": "cloth",
+  "st_zhiku": "cloth",
+  "st_bingqi": "weapon",
+  "st_jiuban": "weapon",
+  "st_denglong": "acc",
+  "st_xunren": "acc",
+  "st_jiushengquan": "acc",
+  "st_chuanpiao": "acc",
+  "st_xifei": "acc",
+  "st_duihuan": "acc",
+  "st_daka": "acc",
+  "st_biaoge": "acc",
+  "st_jiabandeng": "acc",
+  "st_guancaichuang": "lux",
+  "st_huajiao": "lux",
+  "st_paoche": "lux",
+  "st_ifon": "lux",
+  "st_mingbiao": "lux",
+  "st_tangyi": "lux"
+ },
+ "maps": {
+  "0": {
+   "food": [
+    "st_shoubao",
+    "st_douhua",
+    "st_nuomici",
+    "st_tiaodan"
+   ],
+   "cloth": [
+    "st_zhishan"
+   ],
+   "weapon": [],
+   "acc": [
+    "st_denglong"
+   ],
+   "lux": [
+    "st_guancaichuang"
+   ]
+  },
+  "1": {
+   "food": [
+    "st_yeketan",
+    "st_zhulong",
+    "st_liulian",
+    "st_yejiangfan",
+    "st_shoubao"
+   ],
+   "cloth": [
+    "st_tuoxie",
+    "st_zhishan"
+   ],
+   "weapon": [],
+   "acc": [],
+   "lux": []
+  },
+  "2": {
+   "food": [
+    "st_wucha",
+    "st_ganlu",
+    "st_shoubao"
+   ],
+   "cloth": [
+    "st_caoxie",
+    "st_zhishan"
+   ],
+   "weapon": [
+    "st_jiuban"
+   ],
+   "acc": [
+    "st_xunren"
+   ],
+   "lux": [
+    "st_huajiao"
+   ]
+  },
+  "3": {
+   "food": [
+    "st_jiaoye",
+    "st_xianyu",
+    "st_ningmeng",
+    "st_shoubao"
+   ],
+   "cloth": [
+    "st_zhishan"
+   ],
+   "weapon": [],
+   "acc": [
+    "st_duihuan",
+    "st_jiushengquan",
+    "st_chuanpiao"
+   ],
+   "lux": []
+  },
+  "4": {
+   "food": [
+    "st_waimai",
+    "st_shougongcu",
+    "st_baogu",
+    "st_shoubao"
+   ],
+   "cloth": [
+    "st_zhishan"
+   ],
+   "weapon": [],
+   "acc": [
+    "st_xifei"
+   ],
+   "lux": [
+    "st_ifon",
+    "st_mingbiao",
+    "st_paoche"
+   ]
+  },
+  "5": {
+   "food": [
+    "st_mengpotang",
+    "st_shoubao"
+   ],
+   "cloth": [
+    "st_xizhuang",
+    "st_zhiku",
+    "st_zhishan"
+   ],
+   "weapon": [],
+   "acc": [
+    "st_biaoge",
+    "st_jiabandeng",
+    "st_daka"
+   ],
+   "lux": [
+    "st_tangyi"
+   ]
+  }
+ },
+ "overtime": {
+  "mul": 2.0,
+  "fat_rate": 1.6,
+  "rec_rate": 2.5,
+  "fat_max": 100.0,
+  "down_s": 45.0,
+  "reset_fat": 35.0,
+  "feed_cost": 2,
+  "rank_s": [
+   180,
+   600,
+   1500
+  ],
+  "rank_bonus": 0.1,
+  "warn": 75.0
+ }
+}
