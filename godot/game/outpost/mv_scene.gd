@@ -637,6 +637,7 @@ func _draw_stage() -> void:
 		items.append([f.pos.y + 0.5, func(): _draw_foe(ctx, ff)])
 	if embed and embed_draw != null: embed_draw.call(ctx, vy0, vy1, items)   # [unify] 留位、挑夫鬼（入 y 排序）
 	if mot != null and not walking: mot.add_items(self, ctx, items, vy0, vy1)   # [motion] 粒子、領班
+	if not walking and not mk_hid: MKOU.world_items(self, ctx, items)   # [market M1 營運] 櫃檯員、巡邏鬼、治安事件演出、過勞小卡
 	items.sort_custom(func(a, b): return a[0] < b[0])
 	for it in items: it[1].call()
 	for q in _plate_q: q.call()   # [uxui2] 名牌喺角色／建築之上
@@ -1826,6 +1827,7 @@ func _fill_sheet() -> void:
 	var cb = UIKit.btn("✕", "ghost", true); cb.custom_minimum_size = Vector2(42, 40); cb.focus_mode = Control.FOCUS_NONE; cb.pressed.connect(close_sheet); h.add_child(cb)
 	var how = _lbl(MD.T(sd.get("how", "")), 14, DIMC, "sans", 700); how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; how.custom_minimum_size = Vector2(350, 0); sheet_box.add_child(how)
 	_recipe_row(sid)   # [chain] 用乜做 → 出乜
+	MKOU.sheet_rows(self, sheet_box, sid)   # [market M1 營運] 貨架：主貨／副貨
 	if sid == "st_bingqi": load("res://game/militia/ml_ui.gd").sheet_rows(self, sheet_box)   # [militia] 今期兵器、遊魂兵數
 	if sid == "st_bingqi": load("res://game/equip/eq_ui.gd").sheet_rows(self, sheet_box)   # [equip] 今期 A/B 款、訂製名鬼裝備
 	# 數值：而家 → 下一級
@@ -1835,13 +1837,13 @@ func _fill_sheet() -> void:
 	grid.add_child(_lbl(MD.S("s_out", "每次產量", "每次產量"), 15, DIMC)); grid.add_child(_lbl(arrow.call(MD.fmt(MD.out(sid, l)), MD.fmt(MD.out(sid, nx))), 16, INK, "sans", 900))
 	grid.add_child(_lbl(MD.S("s_tm", "做貨時間", "製作時間"), 15, DIMC)); grid.add_child(_lbl(arrow.call("%.1f秒" % MD.tm(sid, l), "%.1f秒" % MD.tm(sid, nx)), 16, INK, "sans", 900))
 	grid.add_child(_lbl(MD.S("s_val", "每件賣", "每件售價"), 15, DIMC)); grid.add_child(_lbl(arrow.call(_v(MD.val(sid, l, c)), _v(MD.val(sid, nx, c))), 16, INK, "sans", 900))
-	grid.add_child(_lbl(MD.S("s_w", "員工", "員工"), 15, DIMC)); grid.add_child(_lbl("%d／%d" % [sim.nworkers(sid), MD.slots(sid)], 16, INK, "sans", 900))
+	grid.add_child(_lbl(MD.S("s_w", "員工", "員工"), 15, DIMC)); grid.add_child(_lbl("%d／%d" % [sim.nworkers(sid), MKOU.slots(sim, sid)], 16, INK, "sans", 900))
 	_idle_rows(sid)   # [idle] 里程碑效果／累計產量／品質星／領班／解鎖下一台
 	sim.plus.sheet_rows(self, sid)   # [play] 夥計羈絆
 	# 員工位
-	var sr = HBoxContainer.new(); sr.add_theme_constant_override("separation", 6); sheet_box.add_child(sr)
+	var sr = GridContainer.new(); sr.columns = 3; sr.add_theme_constant_override("h_separation", 6); sr.add_theme_constant_override("v_separation", 6); sheet_box.add_child(sr)   # [market M1 營運] 最多 5 個位：3 個一行，唔出格
 	var ws = sim.sst(sid).workers
-	for i in ws.size(): sr.add_child(_slot_btn(sid, i, ws[i]))
+	for i in mini(ws.size(), MKOU.slots(sim, sid)): sr.add_child(_slot_btn(sid, i, ws[i]))
 	# 升級掣：升 1／升 10／升到下個里程碑
 	var br = HBoxContainer.new(); br.add_theme_constant_override("separation", 6); sheet_box.add_child(br)
 	if l >= mx:

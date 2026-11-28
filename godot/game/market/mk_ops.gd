@@ -21,11 +21,21 @@ const MD = preload("res://game/outpost/mv_data.gd")
 const POST_CTR := "mk_ctr"
 const POST_PAT := "mk_pat"
 const FUN_PATH := "res://game/market/mk_fun.gd"   # M2（有先用）
+const LINES_PATH := "res://data/market_lines.json"   # 文案詞庫（tools/market_lines_build.py 產生）
+const MKP = preload("res://game/market/mk_price.gd")
+static var _LN = null
 static var _D = null
 static var _FUN = null
 static var _fun_chk := false
 static var _fun_m := {}
 static var rng := RandomNumberGenerator.new()
+static var fxq: Array = []   # 演出事件（mk_ops_ui 攞；同 MK.evq 內容一樣，但唔會畀 M2 畫面攞走）
+static func _fx(d: Dictionary) -> void:
+	fxq.append(d); MK.evq.append(d)
+	if fxq.size() > 60: fxq = fxq.slice(-30)
+static func pop_fx() -> Array:
+	var a = fxq; fxq = []
+	return a
 static var toasts: Array = []   # 畫面浮字（mk_ops_ui 攞）：{"t": 文字, "c": "#色"}
 static func toast(t: String, c := "#fff3c8") -> void:
 	toasts.append({"t": t, "c": c})
@@ -182,7 +192,7 @@ static func set_sub(ci: int, sid: String, gid: String) -> String:   # "ok"／"lo
 	if sub_of(sid) == gid: return "ok"
 	o.sub[sid] = gid   # ""＝玩家揀咗唔賣副貨
 	o.swap[sid] = cf("goods2", "swap_s", 10.0)
-	MK.evq.append({"k": "swap", "sid": sid, "gid": gid})
+	_fx({"k": "swap", "sid": sid, "gid": gid})
 	return "ok"
 static func ratio(sid: String) -> float: return clampf(float(st().ratio.get(sid, cf("goods2", "ratio", 0.5))), 0.0, 1.0)   # 副貨佔產能比例
 static func set_ratio(sid: String, v: float) -> void: st().ratio[sid] = clampf(v, 0.0, 1.0)
@@ -265,6 +275,7 @@ static func assign(sim, kind: String, street: String, gid) -> String:   # "ok"�
 	J.sp(gh, "post", POST_CTR if kind == "ctr" else POST_PAT)
 	L.append(J.gp(gh, "id")); sim._sync_key = ""
 	MK.evq.append({"k": "staff", "kind": kind, "street": street, "n": L.size()})
+	if kind == "pat": _pat_n_say(L.size())
 	return "ok"
 static func unassign(sim, gid) -> bool:
 	var hit = false
@@ -275,6 +286,7 @@ static func unassign(sim, gid) -> bool:
 			for i in range(L.size() - 1, -1, -1):
 				if J.seq(L[i], gid): L.remove_at(i); hit = true
 	if hit:
+		for s9 in MK.ids(): if st().get("_pn_" + s9, -1) != patrol_n(s9): st()["_pn_" + s9] = patrol_n(s9); if s9 == MK.cur(): _pat_n_say(patrol_n(s9))
 		var gh = sim.ghost(gid)
 		if gh != null and (J.str(J.gp(gh, "post")) in [POST_CTR, POST_PAT]): J.sp(gh, "post", null)
 	return hit
@@ -315,7 +327,7 @@ static func collect(sim, street: String, by := "tap") -> float:   # 收銀箱入
 	if v <= 0.0: return 0.0
 	o.till[street] = 0.0
 	sim.add_coins(v)
-	MK.evq.append({"k": "till", "street": street, "amt": v, "by": by})
+	_fx({"k": "till", "street": street, "amt": v, "by": by})
 	return v
 static func _tick_counter(sim, dt: float) -> void:
 	var o = st()
@@ -412,8 +424,11 @@ static func spawn_event(sim, street: String, type := "", special := -1) -> Dicti
 	o.seq = int(o.seq) + 1
 	var e = {"id": int(o.seq), "k": type, "street": street, "sid": stalls[rng.randi() % stalls.size()], "sp": int(vr.get("sp", 0)), "var": str(vr.get("id", type)),
 		"n": vr.get("n", [type, type]), "t": 0.0, "st": "open", "who": null, "at": 0.0, "tried": []}
+	if sp:   # 該章特色版：由文案詞庫抽一條（同章內抽完先重洗，唔重複）
+		var ln = ev_line(ci, type)
+		if not ln.is_empty(): e["desc"] = ln.ev; e["say"] = ln.pat; e["var"] = "%s_c%d_%d" % [type, ci + 1, int(ln.i) + 1]
 	o.ev.append(e)
-	MK.evq.append({"k": "ev_new", "ev": e})
+	_fx({"k": "ev_new", "ev": e})
 	return e
 static func _team(street: String) -> Array:   # 可以處理呢條街事件嘅巡邏員：本街＋相鄰街嘅隊長（M2）
 	var o = []
@@ -437,7 +452,7 @@ static func _dispatch(street: String) -> void:
 			if (e.tried as Array).has(key) or _busy(m.gid): continue
 			if not J.t(_fun("patrol_ok", [key], true)): continue   # M2：趴低嘅巡邏員當冇
 			e.st = "chase"; e.who = m.gid; e.at = cf("patrol", "handle_s", 4.0) / maxf(0.1, float(m.slow)); (e.tried as Array).append(key)
-			MK.evq.append({"k": "ev_chase", "id": e.id, "who": m.gid})
+			_fx({"k": "ev_chase", "id": e.id, "who": m.gid})
 			break
 static func _done(sim, e: Dictionary, by: String) -> void:   # 處理成功
 	var o = st(); o.ev.erase(e)
@@ -451,8 +466,11 @@ static func _done(sim, e: Dictionary, by: String) -> void:   # 處理成功
 	if f is Callable and (f as Callable).is_valid(): f.call(rn, "patrol")
 	else: m["renown_pts"] = J.num(m.get("renown_pts", 0)) + rn
 	o["handled"] = int(o.get("handled", 0)) + 1
-	MK.evq.append({"k": "ev_done", "ev": e, "by": by, "renown": rn, "praise": int(o.handled) % int(cf("patrol", "praise_n", 10)) == 0})
-	toast(("搞掂：%s　名聲 +%d" if MK.yue() else "擺平：%s　名聲 +%d") % [MK.T(e.get("n", ["", ""])), rn], "#c8f0b0")
+	_fx({"k": "ev_done", "ev": e, "by": by, "renown": rn, "praise": int(o.handled) % int(cf("patrol", "praise_n", 10)) == 0})
+	if by == "patrol" and e.get("say") is Array: say.append({"who": e.who, "t": MK.T(e.say), "sid": str(e.sid), "k": "pat"})
+	if int(o.handled) % int(cf("patrol", "praise_n", 10)) == 0:
+		var pr = LN().get("praise", {}).get(str(sim.ci()))
+		if pr is Dictionary: say.append({"who": str(pr.get("who", "")), "t": MK.T(pr.get("t", ["", ""])), "sid": "", "k": "praise"})
 static func handle_event(sim, id: int) -> bool:   # 玩家親自撳事件：即刻處理、名聲 +2
 	if not on(): return false
 	for e in st().ev:
@@ -497,9 +515,7 @@ static func _lost(sim, e: Dictionary) -> void:   # 冇人理：結算損失（�
 			info = {"sids": hit}
 	if loss > 0.0: _add_loss(street, loss)
 	o["lost"] = int(o.get("lost", 0)) + 1
-	MK.evq.append({"k": "ev_lost", "ev": e, "loss": loss, "capped": loss <= 0.0, "info": info})
-	if loss > 0.0: toast(("冇人理：%s　蝕咗 %s" if MK.yue() else "沒人管：%s　損失 %s") % [MK.T(e.get("n", ["", ""])), MD.fmt(loss)], "#ffb0a0")
-	else: toast("市集風氣差，客人皺眉", "#d8c8b0")
+	_fx({"k": "ev_lost", "ev": e, "loss": loss, "capped": loss <= 0.0, "info": info})
 static func _near(sim, sid: String) -> Array:   # 事發攤＋隔籬一個已開攤
 	var L = open_stalls(sim.ci(), MK.street_of(sim.ci(), sid))
 	var i = L.find(sid)
@@ -523,7 +539,7 @@ static func _tick_events(sim, dt: float) -> void:
 	if not J.t(o.get("tut")) and clk() >= grace and J.t(cf("events", "tutorial", 1.0)):   # 開張第 3 分鐘：固定第一件插隊（教學）
 		var s0 = MK.cur() if MK.is_open(MK.cur()) else "food"
 		var e0 = spawn_event(sim, s0, "cut_queue", 0)
-		if not e0.is_empty(): o["tut"] = 1; e0["tut"] = 1; MK.evq.append({"k": "ev_tut", "ev": e0})
+		if not e0.is_empty(): o["tut"] = 1; e0["tut"] = 1; _fx({"k": "ev_tut", "ev": e0})
 	if clk() >= grace:
 		for street in MK.ids():
 			if not MK.is_open(street) or open_stalls(ci, street).is_empty(): continue
@@ -541,7 +557,7 @@ static func _tick_events(sim, dt: float) -> void:
 			if float(e.at) <= 0.0:
 				var p = cf("patrol", "catch_p_special", 0.3) if int(e.sp) == 1 else cf("patrol", "catch_p", 0.45)
 				if rng.randf() < p: _done(sim, e, "patrol"); continue
-				e.st = "open"; MK.evq.append({"k": "ev_miss", "id": e.id, "who": e.who}); e.who = null
+				e.st = "open"; _fx({"k": "ev_miss", "id": e.id, "who": e.who}); e.who = null
 		if str(e.st) == "open" and float(e.t) >= dl: _lost(sim, e)
 
 # ================= 每格 =================
@@ -551,6 +567,7 @@ static func tick(sim, dt: float) -> void:   # mv_sim.step 叫（離線唔叫 →
 	var o = st()
 	o.clk = float(o.clk) + dt
 	_fit_staff(sim); _validate(sim)
+	price_refresh(); comp_goals(sim)
 	_tick_swap(dt)
 	_tick_counter(sim, dt)
 	_tick_events(sim, dt)
@@ -558,3 +575,121 @@ static func tick(sim, dt: float) -> void:   # mv_sim.step 叫（離線唔叫 →
 static func summary() -> Dictionary:   # 模擬／KPI 用
 	var o = st()
 	return {"clk": clk(), "income": float(o.get("inc_all", 0.0)), "loss": float(o.get("loss_all", 0.0)), "handled": int(o.get("handled", 0)), "lost": int(o.get("lost", 0)), "village_cost": village_cost()}
+
+# ================= 文案詞庫（story_market_v2_add.md） =================
+static var say: Array = []   # 對白泡（mk_ops_ui 攞）：{"who", "t", "sid", "k": "pat"/"praise"/"pat_n"/"complain"}
+static func pop_say() -> Array:
+	var a = say; say = []
+	return a
+static func LN() -> Dictionary:
+	if _LN == null:
+		var f = FileAccess.open(LINES_PATH, FileAccess.READ)
+		var o = JSON.parse_string(f.get_as_text()) if f != null else null
+		_LN = o if o is Dictionary else {}
+	return _LN
+static func _bag(key: String, n: int) -> int:   # 唔重複抽：抽完先重洗
+	var o = st()
+	if not (o.get("bag") is Dictionary): o["bag"] = {}
+	var b = o.bag.get(key)
+	if not (b is Array) or (b as Array).is_empty():
+		b = []
+		for i in n: b.append(i)
+		var last = int(o.bag.get(key + ":last", -1))
+		for i in range(b.size() - 1, 0, -1):
+			var j = rng.randi() % (i + 1); var t = b[i]; b[i] = b[j]; b[j] = t
+		if b.size() > 1 and int(b.back()) == last: var t2 = b[0]; b[0] = b[b.size() - 1]; b[b.size() - 1] = t2   # 重洗後第一句唔好同上一句一樣
+	var v = int((b as Array).pop_back())
+	o.bag[key] = b; o.bag[key + ":last"] = v
+	return v
+static func ev_line(ci: int, type: String) -> Dictionary:   # {"ev": [粵, 中], "pat": [粵, 中], "i"}
+	var rows = LN().get("ev", {}).get(str(ci), {}).get(type)
+	if not (rows is Array) or (rows as Array).is_empty(): return {}
+	var i = _bag("ev:%d:%s" % [ci, type], rows.size())
+	return {"ev": rows[i].ev, "pat": rows[i].pat, "i": i}
+static func complain() -> String:   # 店員過勞抱怨（20 句輪住出，唔重複）
+	var rows = LN().get("complain")
+	if not (rows is Array) or (rows as Array).is_empty(): return ""
+	return MK.T(rows[_bag("complain", rows.size())])
+static func _pat_n_say(n: int) -> void:   # 巡邏人數變動冒一句（0 隻由客人講）
+	var d = LN().get("pat_n", {}).get(str(clampi(n, 0, 4)))
+	if d is Dictionary: say.append({"who": str(d.get("who", "")), "t": MK.T(d.get("t", ["", ""])), "sid": "", "k": "pat_n"})
+static func zhen_scene(key: String) -> Dictionary:   # kpi_ui 搵唔到 kpi_zhen_* 場景時問呢度（kpi.json 格式：lines [誰, 粵, 中]）
+	var z = LN().get("zhen", {}).get(str(MK.cur_ci()))
+	if not (z is Dictionary): return {}
+	var node = {"kpi_zhen_open": "open", "kpi_zhen_pass": "pass", "kpi_zhen_mid": "mid", "kpi_zhen_overdue": "overdue", "kpi_zhen_bribe_ok": str(MK.st().get("zhen_tier", "snack"))}.get(key, "")
+	if node == "" or not (z.get(node) is Array): return {}
+	return {"title": "市集管理處", "lines": [["甄好賣", str(z[node][0]), str(z[node][1])]]}
+
+# ================= 章節目標補發（副貨攤／改系統／降原料／移章：目標跳過，但獎勵照發） =================
+static func comp_goals(sim) -> void:
+	if not on(): return
+	var m = sim.st(); var c = sim.ci(); var G = MD.goals(c)
+	if not (m.get("goals_comp") is Array): m["goals_comp"] = []
+	for i in G.size():
+		var done = false
+		for x in m.goals_done: if int(J.num(x)) == i: done = true
+		if done: continue
+		if not MK.goal_skip(c, G[i]): break   # 輪到正常目標：停（後面嘅跳過目標等輪到先補）
+		var key = "%d:%d" % [c, i]
+		if (m.goals_comp as Array).has(key): continue
+		m.goals_comp.append(key)
+		var r = G[i].get("reward", {})
+		var cc = float(r.get("coins", 0)) if r is Dictionary else 0.0
+		if cc > 0.0:
+			sim.add_coins(cc)
+			sim.ev.append({"k": "claim", "i": i, "coins": cc, "comp": true})
+			toast(("目標改制，獎勵照發：+%s" if not MK.yue() else "目標改制，獎金照派：+%s") % MD.fmt(cc), "#ffe9a0")
+
+# ================= 按章價格（各章基價 × 街階倍率） =================
+static func price_on() -> bool: return on() and J.t(D().get("price_rebase", 1))
+static func price_refresh(force := false) -> void:   # 每格叫：章節變咗／開關變咗先重建
+	if not price_on():
+		if MKP.ci >= 0: MKP.clear(); MD._LC = {}
+		return
+	var c = MK.cur_ci()
+	if MKP.ci == c and not force: return
+	var rows = []
+	var gl = D().goods.get(str(c))
+	if gl is Dictionary:
+		for street in gl:
+			if gl[street] is Array:
+				for r in gl[street]: if r is Dictionary and not J.t(r.get("new")): rows.append(r)
+	MKP.build(c, rows, MD.D().STATIONS, MD.D().GOODS, MD.map_def(c).get("goals", []))
+
+# ================= 面板用估算：多派一隻救回幾多 vs 村子少咗幾多 =================
+static func handle_rate(n: int) -> float:   # n 隻巡邏嘅長期處理率（通用 60%／特色 40%）
+	var g = cf("events", "generic_p", 0.6)
+	return g * (1.0 - pow(1.0 - cf("patrol", "catch_p", 0.45), n)) + (1.0 - g) * (1.0 - pow(1.0 - cf("patrol", "catch_p_special", 0.3), n))
+static func income10(sim, street: String) -> float:   # 呢條街 10 分鐘收入（開張頭幾分鐘用攤位產能估）
+	var inc = win_income(street)
+	if clk() >= 300.0 and inc > 0.0: return inc
+	var est = 0.0
+	for sid in open_stalls(sim.ci(), street): est += _stall_rate(sim, sid)
+	return maxf(inc, est * 600.0 * cf("events", "est_util", 0.5))
+static func loss10(sim, street: String, n: int) -> float:   # 派 n 隻時，估計每 10 分鐘事件損失
+	var per = 600.0 / maxf(cf("events", "min_s", 45.0), cf("events", "base_s", 180.0) / flow(sim.ci(), street))
+	var frac = minf(cf("events", "cap_pct", 0.15), per * cf("events", "est_loss_pct", 0.85) / 100.0 * (1.0 - handle_rate(n)))
+	return income10(sim, street) * frac
+static func ghost_value(sim, gid) -> Dictionary:   # 呢隻鬼而家喺村／攤嘅 10 分鐘產值：{"coins", "txt"}
+	var gh = sim.ghost(gid)
+	if gh == null: return {"coins": 0.0, "txt": ""}
+	var p = J.str(J.gp(gh, "post")) if J.t(J.gp(gh, "post")) else ""
+	if p == "" or p in [POST_CTR, POST_PAT]: return {"coins": 0.0, "txt": "閒著" if not MK.yue() else "得閒"}
+	if p == "mv":
+		for sid in MD.stations(sim.ci()):
+			var e = _sst(sid)
+			if e == null: continue
+			for g in e.workers:
+				if J.seq(g, gid):
+					var n = _nworkers(sid)
+					var v = _stall_rate(sim, sid) * (1.0 - staff_mul(n - 1) / maxf(0.01, staff_mul(n))) * 600.0 * cf("events", "est_util", 0.5)
+					return {"coins": v, "txt": MD.T(MD.st_def(sid).get("n", sid))}
+		return {"coins": 0.0, "txt": "市集"}
+	var CB = load("res://game/outpost/chain_bld.gd"); var CM = load("res://game/outpost/mat.gd")
+	var r = CB.rates(p); var w = maxf(1.0, J.num(r.get("w", 1))); var v2 = 0.0; var parts = []
+	if r.get("out") is Dictionary:
+		for mid in r.out:
+			var q = J.num(r.out[mid]) / w * 10.0
+			v2 += q * CM.price(str(mid)); parts.append("%s %d" % [CM.name(str(mid)), int(round(q))])
+	var nm = CB.bname(p) if not CB.def(p).is_empty() else p
+	return {"coins": v2, "txt": nm + ("（少產 " + "、".join(parts) + "）" if parts.size() else "")}
