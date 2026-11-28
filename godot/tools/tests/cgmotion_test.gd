@@ -46,7 +46,7 @@ func logic(t) -> void:
 		var it = m.items[i]; var n: TextureRect = it.n
 		var ly = null
 		for o in L.layers:
-			if n.texture == load(CGM.ROOT + KEY + "/" + str(o.img)): ly = o
+			if it.main == load(CGM.ROOT + KEY + "/" + str(o.img)): ly = o   # 用原圖比（眨眼時 n.texture 係另一張）
 		if ly == null: errs.append("搵唔到層"); continue
 		var foot = it.pos + Vector2(n.size.x / 2.0, n.size.y)
 		var want = m.img2view(Vector2(J.num(ly.x), J.num(ly.y)))
@@ -158,8 +158,10 @@ func shots(t) -> void:
 	var pc = _mk(t); var cg = pc[1]
 	await _w(t, 0.2)
 	cg.show_spec({"k": key})
-	for i in 48:   # 12 秒，每 0.25 秒一張
-		await _w(t, 0.25)
+	var dt = float(OS.get_environment("CGM_DT")) if OS.get_environment("CGM_DT") != "" else 0.25
+	var n = int(OS.get_environment("CGM_N")) if OS.get_environment("CGM_N") != "" else 48
+	for i in n:   # 預設 12 秒，每 0.25 秒一張；CGM_DT／CGM_N 可改
+		await _w(t, dt)
 		var img = t.get_viewport().get_texture().get_image()
 		img.save_png(dir + "f%03d.png" % i)
 	_p("RESULT ok=1 bad=0 shots=" + dir)

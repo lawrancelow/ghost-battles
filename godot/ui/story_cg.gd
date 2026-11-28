@@ -131,8 +131,12 @@ func show_spec(spec) -> void:
 		hide_cg(); return
 	var tex: Texture2D = CGM.bg(k) if (CGM.has(k) and not (d.get("anim") is bool and not d.anim)) else null   # [cgm] 有分層素材：用挖走角色嘅底圖
 	var layered = tex != null
+	if tex == null and CGM.has(k): tex = CGM.still(k)   # [cgm] 關動態：用原整張圖（有就用）
 	if tex == null: tex = Spr.get_tex(k) if Spr.ok(k) else null
-	if tex == null: hide_cg(); return
+	if tex == null:
+		if mot != null: mot.free_all(); mot = null   # [cgm] 收起時唔再郁
+		hide_cg(); return
+	if not layered and mot != null: mot.free_all(); mot = null
 	var same = visible and cur_key == k and _off < 0.0
 	cur_key = k
 	var W = maxf(200.0, get_parent().size.x - 20.0)

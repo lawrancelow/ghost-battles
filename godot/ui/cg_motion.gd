@@ -42,6 +42,11 @@ static func _tex(k: String, f: String) -> Texture2D:
 	if not ResourceLoader.exists(p): return null
 	return load(p) as Texture2D
 
+static func still(k: String) -> Texture2D:   # 關動態／低效能：原整張插圖（conf "still"），冇就 null
+	if not (conf().get(k) is Dictionary): return null
+	var f = str(conf()[k].get("still", ""))
+	return _tex(k, f) if f != "" else null
+
 static func bg(k: String) -> Texture2D:
 	if not has(k): return null
 	return _tex(k, str(conf()[k].get("bg", "bg.webp")))
@@ -246,5 +251,7 @@ func tick(dt: float) -> Array:
 	return cz
 
 func free_all() -> void:
-	if root != null and is_instance_valid(root): root.queue_free()
+	if root != null and is_instance_valid(root):
+		if root.get_parent() != null: root.get_parent().remove_child(root)   # 即刻拎走，新嗰套先攞到 "cgm" 個名、唔會疊兩套
+		root.queue_free()
 	items.clear(); parts.clear()
