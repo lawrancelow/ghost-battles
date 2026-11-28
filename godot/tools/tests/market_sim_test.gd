@@ -12,6 +12,7 @@ const MK = preload("res://game/market/mk_data.gd")
 const MKO = preload("res://game/market/mk_ops.gd")
 const M = preload("res://game/outpost/mat.gd")
 const PF = preload("res://tools/tests/paddyfix_test.gd")
+const MVW = preload("res://game/outpost/mv_war.gd")
 const SECS := 1800.0
 const DT := 0.1
 const LV := 30.0
@@ -53,10 +54,13 @@ func _run(t, sim, stalls: Array, ot: String, n_pat: int, n_ctr: int, seed: int) 
 	for i in n_ctr: MKO.assign(sim, "ctr", "food", "t_s%d" % (20 + i))
 	for i in n_pat: MKO.assign(sim, "pat", "food", "t_s%d" % (30 + i))
 	var c0 = sim.coins()
-	var down_t = 0.0; var ot_t = 0.0; var steps = int(SECS / DT); var evn = 0
+	var down_t = 0.0; var ot_t = 0.0; var steps = int(SECS / DT); var evn = 0; var occ_n = 0
 	for i in steps:
 		if i % 10 == 0:
 			_feed_mats(sim, stalls)
+			var w = MVW.ws()   # 外來惡鬼霸攤屬於防守（遊魂兵），唔係呢個模擬要量嘅嘢：清走，保持各方案條件一樣
+			if w != null and w.get("occ") is Dictionary and w.occ.has(str(sim.ci())): w.occ.erase(str(sim.ci())); occ_n += 1
+			sim.foes.clear()
 			for sid in stalls:
 				var f = MK.fat(sid)
 				if ot == "always":
@@ -78,6 +82,9 @@ func _run(t, sim, stalls: Array, ot: String, n_pat: int, n_ctr: int, seed: int) 
 		"handle_pct": 100.0 * s.handled / maxf(1.0, float(s.handled + s.lost)), "clk": s.clk, "village": s.village_cost}
 	_p("方案 加班=%s 巡邏=%d 櫃檯=%d｜收入 %.0f｜過勞率 %.1f%%（加班中 %.0f%%）｜事件 %d 件、處理 %d、漏 %d（處理率 %.0f%%）｜事件損失 %.0f（%.2f%%）｜佔村鬼 %d" % [
 		ot, n_pat, n_ctr, r.income, r.down_pct, r.ot_pct, evn, s.handled, s.lost, r.handle_pct, r.loss, r.loss_pct, r.village])
+	var sold = {}
+	for g in sim.st().sold: sold[str(g)] = int(sim.st().sold[g])
+	_p("　賣出件數 " + str(sold) + "　客人 " + str(int(sim.st().served) - 30) + "　清走霸攤 " + str(occ_n) + " 次")
 	return r
 
 func all(t) -> void:

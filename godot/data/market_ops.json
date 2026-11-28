@@ -284,7 +284,8 @@
      "tier": 1,
      "new": 0,
      "good": "m_shoubao",
-     "sig": 1
+     "sig": 1,
+     "price": 4
     },
     {
      "sid": "st_douhua",
@@ -292,7 +293,8 @@
      "mat": "井水",
      "tier": 2,
      "new": 0,
-     "good": "m_douhua"
+     "good": "m_douhua",
+     "price": 20
     },
     {
      "sid": "st_nuomici",
@@ -300,14 +302,17 @@
      "mat": "糯米＋嘆氣包",
      "tier": 3,
      "new": 0,
-     "good": "m_nuomici"
+     "good": "m_nuomici",
+     "price": 100
     },
     {
      "sid": "st_c1_huaihua",
      "n": "槐花粥",
      "mat": "槐花＋糯米＋井水",
      "tier": 4,
-     "new": 1
+     "new": 1,
+     "price": 500,
+     "good": "m_c1_huaihua"
     },
     {
      "sid": "st_tiaodan",
@@ -315,7 +320,8 @@
      "mat": "豆花＋燈籠",
      "tier": 5,
      "new": 0,
-     "good": "m_tiaodan"
+     "good": "m_tiaodan",
+     "price": 2400
     }
    ],
    "cloth": [
@@ -326,14 +332,17 @@
      "tier": 1,
      "new": 0,
      "good": "m_zhishan",
-     "sig": 1
+     "sig": 1,
+     "price": 20
     },
     {
      "sid": "st_c1_mianao",
      "n": "加厚紙棉襖",
      "mat": "竹紙＋禾稈草（填充）",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 100,
+     "good": "m_c1_mianao"
     }
    ],
    "weapon": [
@@ -344,21 +353,26 @@
      "tier": 1,
      "new": 0,
      "good": "m_bingqi",
-     "sig": 1
+     "sig": 1,
+     "price": 40
     },
     {
      "sid": "st_c1_gun",
      "n": "槐木棍",
      "mat": "槐木",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 200,
+     "good": "m_c1_gun"
     },
     {
      "sid": "st_c1_dun",
      "n": "蒸籠盾",
      "mat": "竹篾＋棺材板",
      "tier": 3,
-     "new": 1
+     "new": 1,
+     "price": 1000,
+     "good": "m_c1_dun"
     }
    ],
    "acc": [
@@ -368,14 +382,17 @@
      "mat": "竹＋竹紙",
      "tier": 1,
      "new": 0,
-     "good": "m_denglong"
+     "good": "m_denglong",
+     "price": 100
     },
     {
      "sid": "st_c1_xianghuo",
      "n": "平安香火袋",
      "mat": "竹紙＋香灰",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 500,
+     "good": "m_c1_xianghuo"
     }
    ],
    "lux": []
@@ -389,14 +406,17 @@
      "tier": 1,
      "new": 0,
      "good": "m_shoubao",
-     "sig": 1
+     "sig": 1,
+     "price": 20
     },
     {
      "sid": "st_c2_banlan",
      "n": "斑蘭糕",
      "mat": "糯米＋斑蘭葉（甘榜竹林副產）",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 100,
+     "good": "m_c2_banlan"
     },
     {
      "sid": "st_yejiangfan",
@@ -404,7 +424,8 @@
      "mat": "椰漿＋糯米＋椰殼炭",
      "tier": 3,
      "new": 0,
-     "good": "m_yejiangfan"
+     "good": "m_yejiangfan",
+     "price": 500
     },
     {
      "sid": "st_liulian",
@@ -412,7 +433,8 @@
      "mat": "榴槤＋拖鞋",
      "tier": 4,
      "new": 0,
-     "good": "m_liulian"
+     "good": "m_liulian",
+     "price": 2500
     }
    ],
    "cloth": [
@@ -423,7 +445,8 @@
      "tier": 1,
      "new": 0,
      "good": "m_zhishan",
-     "sig": 1
+     "sig": 1,
+     "price": 100
     },
     {
      "sid": "st_tuoxie",
@@ -431,14 +454,17 @@
      "mat": "生膠片",
      "tier": 2,
      "new": 0,
-     "good": "m_tuoxie"
+     "good": "m_tuoxie",
+     "price": 500
     },
     {
      "sid": "st_c2_kudai",
      "n": "防盜口袋紙褲",
      "mat": "竹紙＋膠扣",
      "tier": 3,
-     "new": 1
+     "new": 1,
+     "price": 2500,
+     "good": "m_c2_kudai"
     }
    ],
    "weapon": [
@@ -449,7 +475,8 @@
      "tier": 1,
      "new": 0,
      "good": "m_bingqi",
-     "sig": 1
+     "sig": 1,
+     "price": 200
     },
     {
      "sid": "st_zhulong",
@@ -457,14 +484,17 @@
      "mat": "竹篾＋椰殼炭",
      "tier": 2,
      "new": 0,
-     "good": "m_zhulong"
+     "good": "m_zhulong",
+     "price": 1000
     },
     {
      "sid": "st_c2_xianjing",
      "n": "鈴鐺陷阱",
      "mat": "膠繩＋銅鈴",
      "tier": 3,
-     "new": 1
+     "new": 1,
+     "price": 5000,
+     "good": "m_c2_xianjing"
     }
    ],
    "acc": [
@@ -473,14 +503,18 @@
      "n": "防偷鈴鐺手鏈",
      "mat": "膠繩＋銅鈴",
      "tier": 1,
-     "new": 1
+     "new": 1,
+     "price": 500,
+     "good": "m_c2_lingdang"
     },
     {
      "sid": "st_c2_bagua",
      "n": "八卦鏡吊墜",
      "mat": "椰殼＋鏡片",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 2500,
+     "good": "m_c2_bagua"
     }
    ],
    "lux": []
@@ -494,7 +528,8 @@
      "tier": 1,
      "new": 0,
      "good": "m_shoubao",
-     "sig": 1
+     "sig": 1,
+     "price": 100
     },
     {
      "sid": "st_wucha",
@@ -502,21 +537,26 @@
      "mat": "茶葉＋井水",
      "tier": 2,
      "new": 0,
-     "good": "m_wucha"
+     "good": "m_wucha",
+     "price": 500
     },
     {
      "sid": "st_c3_zong",
      "n": "湘西臘肉粽",
      "mat": "糯米＋禾稈草（燻）＋竹葉",
      "tier": 3,
-     "new": 1
+     "new": 1,
+     "price": 2500,
+     "good": "m_c3_zong"
     },
     {
      "sid": "st_c3_jiuniang",
      "n": "糯米酒釀",
      "mat": "糯米＋井水",
      "tier": 4,
-     "new": 1
+     "new": 1,
+     "price": 12500,
+     "good": "m_c3_jiuniang"
     }
    ],
    "cloth": [
@@ -527,7 +567,8 @@
      "tier": 1,
      "new": 0,
      "good": "m_zhishan",
-     "sig": 1
+     "sig": 1,
+     "price": 500
     },
     {
      "sid": "st_caoxie",
@@ -535,14 +576,17 @@
      "mat": "禾稈草",
      "tier": 2,
      "new": 0,
-     "good": "m_caoxie"
+     "good": "m_caoxie",
+     "price": 2500
     },
     {
      "sid": "st_c3_bangtui",
      "n": "防跳綁腿",
      "mat": "禾稈草＋布條",
      "tier": 3,
-     "new": 1
+     "new": 1,
+     "price": 12500,
+     "good": "m_c3_bangtui"
     },
     {
      "sid": "st_ganlu",
@@ -550,7 +594,8 @@
      "mat": "草鞋＋茶",
      "tier": 4,
      "new": 0,
-     "good": "m_ganlu"
+     "good": "m_ganlu",
+     "price": 60000
     }
    ],
    "weapon": [
@@ -561,7 +606,8 @@
      "tier": 1,
      "new": 0,
      "good": "m_bingqi",
-     "sig": 1
+     "sig": 1,
+     "price": 1000
     },
     {
      "sid": "st_jiuban",
@@ -569,21 +615,26 @@
      "mat": "棺材板",
      "tier": 2,
      "new": 0,
-     "good": "m_jiuban"
+     "good": "m_jiuban",
+     "price": 5000
     },
     {
      "sid": "st_c3_modou",
      "n": "墨斗線",
      "mat": "茶墨＋繩",
      "tier": 3,
-     "new": 1
+     "new": 1,
+     "price": 25000,
+     "good": "m_c3_modou"
     },
     {
      "sid": "st_c3_taomu",
      "n": "桃木劍",
      "mat": "桃木（古道副產）",
      "tier": 4,
-     "new": 1
+     "new": 1,
+     "price": 120000,
+     "good": "m_c3_taomu"
     }
    ],
    "acc": [
@@ -592,14 +643,18 @@
      "n": "銅鈴耳環",
      "mat": "銅＋竹",
      "tier": 1,
-     "new": 1
+     "new": 1,
+     "price": 2500,
+     "good": "m_c3_tongling"
     },
     {
      "sid": "st_c3_huangfu",
      "n": "黃符髮夾",
      "mat": "竹紙＋硃砂",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 12500,
+     "good": "m_c3_huangfu"
     },
     {
      "sid": "st_xunren",
@@ -607,7 +662,8 @@
      "mat": "茶墨＋竹紙",
      "tier": 3,
      "new": 0,
-     "good": "m_xunren"
+     "good": "m_xunren",
+     "price": 60000
     }
    ],
    "lux": [
@@ -617,14 +673,17 @@
      "mat": "棺材板＋草繩＋紙衣",
      "tier": 1,
      "new": 0,
-     "good": "m_huajiao"
+     "good": "m_huajiao",
+     "price": 200000
     },
     {
      "sid": "st_c3_luichar",
      "n": "Lui Char 屍隊同款帆布包",
      "mat": "陽間貨源",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 800000,
+     "good": "m_c3_luichar"
     },
     {
      "sid": "st_guancaichuang",
@@ -632,14 +691,17 @@
      "mat": "棺材板＋紙衣",
      "tier": 3,
      "new": 0,
-     "good": "m_guancaichuang"
+     "good": "m_guancaichuang",
+     "price": 3000000
     },
     {
      "sid": "st_c3_tehlah",
      "n": "Tehlah 紙紮電動轎（不會跳）",
      "mat": "陽間貨源",
      "tier": 4,
-     "new": 1
+     "new": 1,
+     "price": 10000000,
+     "good": "m_c3_tehlah"
     }
    ]
   },
@@ -652,14 +714,17 @@
      "tier": 1,
      "new": 0,
      "good": "m_shoubao",
-     "sig": 1
+     "sig": 1,
+     "price": 500
     },
     {
      "sid": "st_c4_zhaxiangjiao",
      "n": "炸香蕉",
      "mat": "香蕉＋椰油",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 2500,
+     "good": "m_c4_zhaxiangjiao"
     },
     {
      "sid": "st_jiaoye",
@@ -667,7 +732,8 @@
      "mat": "蕉葉＋糯米",
      "tier": 3,
      "new": 0,
-     "good": "m_jiaoye"
+     "good": "m_jiaoye",
+     "price": 12500
     },
     {
      "sid": "st_xianyu",
@@ -675,7 +741,8 @@
      "mat": "魚",
      "tier": 4,
      "new": 0,
-     "good": "m_xianyu"
+     "good": "m_xianyu",
+     "price": 62500
     },
     {
      "sid": "st_ningmeng",
@@ -683,7 +750,8 @@
      "mat": "茶葉＋井水＋檸檬",
      "tier": 5,
      "new": 0,
-     "good": "m_ningmengcha"
+     "good": "m_ningmengcha",
+     "price": 300000
     }
    ],
    "cloth": [
@@ -694,21 +762,26 @@
      "tier": 1,
      "new": 0,
      "good": "m_zhishan",
-     "sig": 1
+     "sig": 1,
+     "price": 2500
     },
     {
      "sid": "st_c4_beixin",
      "n": "碼頭工人背心",
      "mat": "竹紙＋魚網",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 12500,
+     "good": "m_c4_beixin"
     },
     {
      "sid": "st_c4_kebaya",
      "n": "可峇雅紙衫",
      "mat": "竹紙＋蕉葉染",
      "tier": 3,
-     "new": 1
+     "new": 1,
+     "price": 62500,
+     "good": "m_c4_kebaya"
     }
    ],
    "weapon": [
@@ -719,14 +792,17 @@
      "tier": 1,
      "new": 0,
      "good": "m_bingqi",
-     "sig": 1
+     "sig": 1,
+     "price": 5000
     },
     {
      "sid": "st_c4_jingdun",
      "n": "香蕉莖盾",
      "mat": "香蕉莖",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 25000,
+     "good": "m_c4_jingdun"
     },
     {
      "sid": "st_jiushengquan",
@@ -734,14 +810,17 @@
      "mat": "生膠＋竹紙",
      "tier": 3,
      "new": 0,
-     "good": "m_jiushengquan"
+     "good": "m_jiushengquan",
+     "price": 125000
     },
     {
      "sid": "st_c4_tieding",
      "n": "鐵釘護頸",
      "mat": "鐵釘＋竹篾",
      "tier": 4,
-     "new": 1
+     "new": 1,
+     "price": 600000,
+     "good": "m_c4_tieding"
     }
    ],
    "acc": [
@@ -750,14 +829,18 @@
      "n": "白花髮夾",
      "mat": "竹紙＋白花",
      "tier": 1,
-     "new": 1
+     "new": 1,
+     "price": 12500,
+     "good": "m_c4_baihua"
     },
     {
      "sid": "st_c4_xiekou",
      "n": "紅鞋鞋扣",
      "mat": "竹紙＋紅染",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 62500,
+     "good": "m_c4_xiekou"
     }
    ],
    "lux": [
@@ -766,14 +849,18 @@
      "n": "Duckson 紙紮吹風機（吹乾長髮）",
      "mat": "陽間貨源",
      "tier": 1,
-     "new": 1
+     "new": 1,
+     "price": 1000000,
+     "good": "m_c4_duckson"
     },
     {
      "sid": "st_c4_luichar",
      "n": "Lui Char 熱帶限定款",
      "mat": "陽間貨源",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 4000000,
+     "good": "m_c4_luichar"
     }
    ]
   },
@@ -786,14 +873,17 @@
      "tier": 1,
      "new": 0,
      "good": "m_shoubao",
-     "sig": 1
+     "sig": 1,
+     "price": 2500
     },
     {
      "sid": "st_c5_baizhou",
      "n": "白粥配鹹蛋",
      "mat": "糯米＋井水＋鹹蛋",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 12500,
+     "good": "m_c5_baizhou"
     },
     {
      "sid": "st_waimai",
@@ -801,7 +891,8 @@
      "mat": "報紙漿＋普通包子",
      "tier": 3,
      "new": 0,
-     "good": "m_waimai"
+     "good": "m_waimai",
+     "price": 62500
     },
     {
      "sid": "st_shougongcu",
@@ -809,7 +900,8 @@
      "mat": "嘆氣包（醋種）",
      "tier": 4,
      "new": 0,
-     "good": "m_shougongcu"
+     "good": "m_shougongcu",
+     "price": 312500
     },
     {
      "sid": "st_baogu",
@@ -817,7 +909,8 @@
      "mat": "糯米＋醋＋跑車",
      "tier": 5,
      "new": 0,
-     "good": "m_baogu"
+     "good": "m_baogu",
+     "price": 1500000
     }
    ],
    "cloth": [
@@ -828,21 +921,26 @@
      "tier": 1,
      "new": 0,
      "good": "m_zhishan",
-     "sig": 1
+     "sig": 1,
+     "price": 12500
     },
     {
      "sid": "st_c5_shalong",
      "n": "紗籠",
      "mat": "竹紙＋染料",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 62500,
+     "good": "m_c5_shalong"
     },
     {
      "sid": "st_c5_lalian",
      "n": "免綁裹屍布（拉鍊款）",
      "mat": "竹紙＋報紙漿拉鍊",
      "tier": 3,
-     "new": 1
+     "new": 1,
+     "price": 312500,
+     "good": "m_c5_lalian"
     }
    ],
    "weapon": [
@@ -853,21 +951,26 @@
      "tier": 1,
      "new": 0,
      "good": "m_bingqi",
-     "sig": 1
+     "sig": 1,
+     "price": 25000
     },
     {
      "sid": "st_c5_bolizui",
      "n": "玻璃碎罐",
      "mat": "回收站玻璃",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 125000,
+     "good": "m_c5_bolizui"
     },
     {
      "sid": "st_c5_jingji",
      "n": "荊棘欄柵",
      "mat": "竹棚料＋荊棘",
      "tier": 3,
-     "new": 1
+     "new": 1,
+     "price": 625000,
+     "good": "m_c5_jingji"
     }
    ],
    "acc": [
@@ -876,14 +979,18 @@
      "n": "墳頭定位香囊",
      "mat": "竹紙＋香灰",
      "tier": 1,
-     "new": 1
+     "new": 1,
+     "price": 62500,
+     "good": "m_c5_xiangnang"
     },
     {
      "sid": "st_c5_jingquan",
      "n": "飛頭頸圈",
      "mat": "竹紙＋棉",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 312500,
+     "good": "m_c5_jingquan"
     },
     {
      "sid": "st_mingbiao",
@@ -891,7 +998,8 @@
      "mat": "外賣盒＋竹篾",
      "tier": 3,
      "new": 0,
-     "good": "m_mingbiao"
+     "good": "m_mingbiao",
+     "price": 1500000
     }
    ],
    "lux": [
@@ -901,7 +1009,8 @@
      "mat": "報紙漿",
      "tier": 1,
      "new": 0,
-     "good": "m_ifon"
+     "good": "m_ifon",
+     "price": 5000000
     },
     {
      "sid": "st_xifei",
@@ -909,14 +1018,17 @@
      "mat": "跑車＋停擺錶",
      "tier": 2,
      "new": 0,
-     "good": "m_xifei"
+     "good": "m_xifei",
+     "price": 20000000
     },
     {
      "sid": "st_c5_neckflip",
      "n": "Neckflip 陰間串流年卡（追劇不用飛出去）",
      "mat": "陽間貨源",
      "tier": 3,
-     "new": 1
+     "new": 1,
+     "price": 75000000,
+     "good": "m_c5_neckflip"
     },
     {
      "sid": "st_paoche",
@@ -924,7 +1036,8 @@
      "mat": "報紙＋iFon",
      "tier": 4,
      "new": 0,
-     "good": "m_paoche"
+     "good": "m_paoche",
+     "price": 250000000
     }
    ]
   },
@@ -937,21 +1050,26 @@
      "tier": 1,
      "new": 0,
      "good": "m_shoubao",
-     "sig": 1
+     "sig": 1,
+     "price": 12500
     },
     {
      "sid": "st_c6_canquan",
      "n": "員工餐券",
      "mat": "竹紙＋碳粉",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 62500,
+     "good": "m_c6_canquan"
     },
     {
      "sid": "st_c6_biandang",
      "n": "加班便當",
      "mat": "糯米＋報紙漿盒",
      "tier": 3,
-     "new": 1
+     "new": 1,
+     "price": 312500,
+     "good": "m_c6_biandang"
     },
     {
      "sid": "st_mengpotang",
@@ -959,7 +1077,8 @@
      "mat": "井水＋糯米",
      "tier": 4,
      "new": 0,
-     "good": "m_mengpotang"
+     "good": "m_mengpotang",
+     "price": 1562500
     }
    ],
    "cloth": [
@@ -970,7 +1089,8 @@
      "tier": 1,
      "new": 0,
      "good": "m_zhishan",
-     "sig": 1
+     "sig": 1,
+     "price": 62500
     },
     {
      "sid": "st_zhiku",
@@ -978,7 +1098,8 @@
      "mat": "紙衣",
      "tier": 2,
      "new": 0,
-     "good": "m_zhiku"
+     "good": "m_zhiku",
+     "price": 312500
     },
     {
      "sid": "st_xizhuang",
@@ -986,14 +1107,17 @@
      "mat": "紙衣＋碳粉",
      "tier": 3,
      "new": 0,
-     "good": "m_xizhuang"
+     "good": "m_xizhuang",
+     "price": 1562500
     },
     {
      "sid": "st_c6_lifu",
      "n": "晉升禮服",
      "mat": "西裝＋金箔紙",
      "tier": 4,
-     "new": 1
+     "new": 1,
+     "price": 7500000,
+     "good": "m_c6_lifu"
     }
    ],
    "weapon": [
@@ -1004,21 +1128,26 @@
      "tier": 1,
      "new": 0,
      "good": "m_bingqi",
-     "sig": 1
+     "sig": 1,
+     "price": 125000
     },
     {
      "sid": "st_c6_wenjia",
      "n": "公文夾盾",
      "mat": "竹紙＋板",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 625000,
+     "good": "m_c6_wenjia"
     },
     {
      "sid": "st_c6_dakaqiang",
      "n": "簽到打卡槍（打卡印記）",
      "mat": "碳粉＋竹",
      "tier": 3,
-     "new": 1
+     "new": 1,
+     "price": 3125000,
+     "good": "m_c6_dakaqiang"
     }
    ],
    "acc": [
@@ -1027,14 +1156,18 @@
      "n": "員工證吊繩",
      "mat": "墨＋繩",
      "tier": 1,
-     "new": 1
+     "new": 1,
+     "price": 312500,
+     "good": "m_c6_diaosheng"
     },
     {
      "sid": "st_c6_xiongzhang",
      "n": "晉升胸章",
      "mat": "金箔紙",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 1562500,
+     "good": "m_c6_xiongzhang"
     },
     {
      "sid": "st_jiabandeng",
@@ -1042,7 +1175,8 @@
      "mat": "竹篾＋表格",
      "tier": 3,
      "new": 0,
-     "good": "m_jiabandeng"
+     "good": "m_jiabandeng",
+     "price": 7500000
     }
    ],
    "lux": [
@@ -1052,23 +1186,90 @@
      "mat": "棺材板＋西裝＋紙褲",
      "tier": 1,
      "new": 0,
-     "good": "m_tangyi"
+     "good": "m_tangyi",
+     "price": 25000000
     },
     {
      "sid": "st_c6_luichar",
      "n": "Lui Char 董事會限量款",
      "mat": "陽間貨源",
      "tier": 2,
-     "new": 1
+     "new": 1,
+     "price": 100000000,
+     "good": "m_c6_luichar"
     },
     {
      "sid": "st_c6_tehlah",
      "n": "Tehlah 集團專車",
      "mat": "陽間貨源",
      "tier": 3,
-     "new": 1
+     "new": 1,
+     "price": 375000000,
+     "good": "m_c6_tehlah"
     }
    ]
   }
- }
+ },
+ "pairs": {
+  "0": {
+   "st_douhua": "st_tiaodan"
+  },
+  "1": {},
+  "2": {
+   "st_shoubao": "st_wucha",
+   "st_zhishan": "st_caoxie",
+   "st_bingqi": "st_jiuban"
+  },
+  "3": {
+   "st_jiaoye": "st_xianyu"
+  },
+  "4": {
+   "st_waimai": "st_shougongcu"
+  },
+  "5": {
+   "st_zhishan": "st_zhiku"
+  }
+ },
+ "pairs_pending": {
+  "0": {
+   "st_shoubao": "st_c1_huaihua",
+   "st_zhishan": "st_c1_mianao",
+   "st_bingqi": "st_c1_gun",
+   "st_denglong": "st_c1_xianghuo"
+  },
+  "1": {
+   "st_shoubao": "st_c2_banlan",
+   "st_c2_lingdang": "st_c2_bagua",
+   "st_yejiangfan": "st_liulian",
+   "st_zhishan": "st_tuoxie",
+   "st_bingqi": "st_zhulong"
+  },
+  "2": {
+   "st_c3_zong": "st_c3_jiuniang",
+   "st_c3_bangtui": "st_ganlu",
+   "st_c3_modou": "st_c3_taomu",
+   "st_c3_tongling": "st_c3_huangfu"
+  },
+  "3": {
+   "st_shoubao": "st_c4_zhaxiangjiao",
+   "st_zhishan": "st_c4_beixin",
+   "st_bingqi": "st_c4_jingdun",
+   "st_jiushengquan": "st_c4_tieding",
+   "st_c4_baihua": "st_c4_xiekou"
+  },
+  "4": {
+   "st_shoubao": "st_c5_baizhou",
+   "st_zhishan": "st_c5_shalong",
+   "st_bingqi": "st_c5_bolizui",
+   "st_c5_xiangnang": "st_c5_jingquan"
+  },
+  "5": {
+   "st_shoubao": "st_c6_canquan",
+   "st_c6_biandang": "st_mengpotang",
+   "st_xizhuang": "st_c6_lifu",
+   "st_bingqi": "st_c6_wenjia",
+   "st_c6_diaosheng": "st_c6_xiongzhang"
+  }
+ },
+ "_doc_pairs": "pairs[ci]＝{主攤: 副貨攤}：副貨攤唔再獨立擺攤，佢隻貨變成主攤 Lv25 解鎖嘅預設副貨（goods_final「每街第 1、2 階配一攤，第 3、4 階配一攤」）。pairs_pending＝其中一邊係新台，等新台數據併入後搬去 pairs。　第 2 章現有攤只有 7 個，配對先擺 pending（否則新台未到之前只剩 4 攤）。"
 }
