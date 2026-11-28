@@ -230,9 +230,11 @@ func bar_layout(t) -> void:
 		var q = {"t": "build", "b": cs[0], "text": longest, "go": cs[0], "r": {}}
 		var ql = m.quest_lbl; var qb = m.quest_bar
 		var want = longest + m._quest_lack_line(q)   # 同 refresh() 同一條砌字路
-		var setter = func(): ql.text = want; m.quest_prog.text = "99999/99999"   # 每幀畫之前寫返：refresh() 唔會中途蓋走
+		var setter = func():   # 每幀畫之前核對：俾 refresh() 蓋走先寫返（每幀照寫會令 RichTextLabel 不停重排、高度永遠未更新）
+			if str(ql.text) != want: ql.text = want
+			if str(m.quest_prog.text) != "99999/99999": m.quest_prog.text = "99999/99999"
 		RenderingServer.frame_pre_draw.connect(setter)
-		for i in 4: await t.get_tree().process_frame
+		for i in 8: await t.get_tree().process_frame
 		await RenderingServer.frame_post_draw
 		RenderingServer.frame_pre_draw.disconnect(setter)
 		setter.call()
