@@ -204,6 +204,15 @@ static func open_card(e: Dictionary, picking := false) -> void:
 		var cl = _btn(L("關閉", "關閉"), true, false, 96.0); cl.pressed.connect(func(): close_card()); bb.add_child(cl)
 	host.add_child(pc)
 	card = pc; card_key = PO.key(e); pick_on = picking
+	_fit.call_deferred(pc)
+# 卡太高（多咗加成／肚餓嗰啲行）就成張升上啲，底唔好掂到底部分頁列
+static func _fit(pc: Control) -> void:
+	if pc == null or not is_instance_valid(pc) or not pc.is_inside_tree(): return
+	var m = pc.get_tree().root.get_node_or_null("Main")
+	var nav = float(m.NAV_H) if m != null else 58.0
+	var lim = pc.get_viewport_rect().size.y - nav - 6.0
+	var over = pc.get_global_rect().end.y - lim
+	if over > 0.5: pc.offset_top = maxf(150.0, pc.offset_top - over)
 static func press_collect(e: Dictionary) -> Dictionary:
 	var g = PO.collect(e)
 	if g.coins > 0 or g.planks > 0:
