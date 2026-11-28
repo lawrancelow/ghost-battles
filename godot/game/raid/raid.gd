@@ -18,6 +18,7 @@ extends RefCounted
 
 const ZD = preload("res://game/zone/zone_data.gd")
 const PACE = preload("res://game/econ/pace.gd")   # [ux] 前期節奏
+const PO = preload("res://game/post/po_data.gd")   # [post] 駐點反撲：目標 "p:<ci>:<id>"，同村子襲擾共用呢個計時器（一次只嚟一隊）
 
 # ================= 數值（老闆試完喺度調） =================
 const TUNE := {
@@ -102,6 +103,7 @@ static func all_targets() -> Array:
 	if ZD.on() and ZD.revealed("market"): o.append("market")
 	if ZD.on():
 		for z in ZD.of_type("res"): if ZD.owned(str(z.id)): o.append(tkey_z(str(z.id)))
+		o.append_array(PO.raid_targets(ci()))   # [post] 營業中嘅駐點
 	return o
 # 運作中（未停工、未壞）
 static func targets() -> Array:
@@ -109,6 +111,7 @@ static func targets() -> Array:
 	for k in all_targets(): if state_of(k) == "": o.append(k)
 	return o
 static func tname(key: String) -> String:
+	if PO.is_tkey(key): return PO.camp_name(PO.camp_of_t(key))   # [post]
 	if key == "market": return L("大排檔", "大排檔")
 	if key.begins_with("b:"):
 		var B = J.G.get("BUILDINGS"); var id = key.substr(2)
@@ -119,6 +122,9 @@ static func tname(key: String) -> String:
 	return key
 # 目標位置（世界座標；建築＝地基中間）
 static func tpos(key: String) -> Vector2:
+	if PO.is_tkey(key):   # [post]
+		var pe = PO.camp_of_t(key)
+		return pe.pos if pe.has("pos") else Vector2.ZERO
 	if key == "market":
 		var sp = market_spots()
 		if sp.size(): return sp[0]
@@ -151,6 +157,7 @@ static func market_spots() -> Array:
 	return o
 # 資源區入面嘅建築 bid（畫損壞用）
 static func zone_bids(key: String) -> Array:
+	if PO.is_tkey(key): return []   # [post]
 	var p = key.split(":")
 	if p.size() < 3: return []
 	return ZD._zbids(ZD.zone(p[2], int(p[1])))
@@ -346,9 +353,14 @@ static func begin_warn() -> void:
 	var ts = targets()
 	if ts.is_empty():   # 冇嘢好搶：下一輪
 		r["ph"] = "idle"; r["left"] = next_gap(); _log("notgt"); return
-	var key: String = ts[randi() % ts.size()]
+	var key: String = PO.pick_target(ts) if not PO.off() else ts[randi() % ts.size()]   # [post] 第 1 關「討飯」：收銀箱越滿越易中
 	var ap = approach(key)
 	r["cur"] = {"tgt": key, "dir": ap[0], "from": [ap[1].x, ap[1].y], "pow": float(foe_pow()), "ks": foe_kinds(), "t": 0.0, "ci": float(ci())}
+	if PO.is_tkey(key):   # [post] 來犯＝據點原班人馬八成，唔隨次數變強
+		var pe = PO.camp_of_t(key)
+		r.cur["pow"] = float(PO.foe_pow(pe))
+		var pen: Array = PO.fight_stage(pe).stage.en
+		if pen.size(): r.cur["ks"] = pen.slice(maxi(0, pen.size() - 3))
 	r["ph"] = "warn"; r["left"] = clampf(J.num(r.left), 1.0, float(TUNE.warn))
 	NEWS.append({"k": "warn", "tgt": key})
 	_log("warn", key)
@@ -358,15 +370,18 @@ static func arrive() -> void:
 	if not (c is Dictionary): r["ph"] = "idle"; r["left"] = next_gap(); return
 	r["n"] = J.num(r.n) + 1.0
 	var dp = def_pow()
+	var is_p = PO.is_tkey(str(c.tgt))
+	if is_p: dp = PO.def_pow(PO.camp_of_t(str(c.tgt)))   # [post] 駐點由主任守（唔計村嘅陰兵）
 	if c.has("force"): dp = int(c.force)
 	c["def"] = float(dp)
 	if dp >= int(J.num(c.pow)):
 		_log("auto", [c.tgt, dp, c.pow])
-		load("res://game/rts/rts.gd").raid_show(c.duplicate(true))   # [rts] 睇到防衛隊出營迎擊
+		if not is_p: load("res://game/rts/rts.gd").raid_show(c.duplicate(true))   # [rts] 睇到防衛隊出營迎擊
 		repel("auto")
 	else:
 		r["ph"] = "siege"; c["t"] = 0.0
-		NEWS.append({"k": "siege", "tgt": str(c.tgt)})
+		if is_p: PO.NEWS.append({"k": "siege", "key": str(c.tgt).substr(2)})   # [post] 提示由 po_view 出
+		else: NEWS.append({"k": "siege", "tgt": str(c.tgt)})
 		_log("siege", [c.tgt, dp, c.pow])
 
 # 擊退（auto 陰兵自動／fight 親自迎戰）
@@ -374,10 +389,18 @@ static func repel(how: String) -> void:
 	var r = st(); var c = r.cur
 	var key = str(c.tgt) if c is Dictionary else ""
 	var coins = float(TUNE.auto_coins if how == "auto" else TUNE.fight_coins) * (ci() + 1)
+	if how == "feed": coins = 0.0   # [post] 派包子打發：冇獎
 	var s = S()
 	s.res["coins"] = J.num(s.res.get("coins", 0)) + coins
 	if key != "": r.streak.erase(key)
 	r["won"] = J.num(r.won) + 1.0
+	if PO.is_tkey(key):   # [post] 駐點：加成／領隊魂魄／提示都喺 PO
+		var pl = PO.on_repel(PO.camp_of_t(key), how)
+		if PO.NEWS.size(): PO.NEWS[PO.NEWS.size() - 1]["coins"] = coins
+		_log("repel", [how, key, coins, pl])
+		if how != "feed": load("res://game/soul/soul_data.gd").on_raid(how)
+		_next()
+		return
 	NEWS.append({"k": "repel", "how": how, "tgt": key, "coins": coins})
 	load("res://game/soul/soul_data.gd").on_raid(how)   # [soul] 擊退：散魂
 	_log("repel", [how, key, coins])
@@ -387,6 +410,12 @@ static func fail() -> void:
 	var r = st(); var c = r.cur
 	if not (c is Dictionary): _next(); return
 	var key = str(c.tgt)
+	if PO.is_tkey(key):   # [post] 駐點冇守住：停業整頓（唔行停工／壞咗嗰套）；一次只影響呢一個
+		r["lost"] = J.num(r.lost) + 1.0
+		PO.on_lost(PO.camp_of_t(key))
+		_log("post_lost", key)
+		_next()
+		return
 	var n = streak(key) + 1
 	r.streak[key] = float(n)
 	r["lost"] = J.num(r.lost) + 1.0
@@ -401,7 +430,7 @@ static func fail() -> void:
 	_next()
 static func _next() -> void:
 	var r = st()
-	r["ph"] = "idle"; r["cur"] = null; r["left"] = next_gap()
+	r["ph"] = "idle"; r["cur"] = null; r["left"] = next_gap() * PO.gap_mul(ci())   # [post] 第 1 關「討飯」：收銀箱半滿以上嚟得密啲
 	_save()
 
 # 停工時間到：恢復（出提示）
@@ -445,9 +474,13 @@ static func cost_txt(c: Dictionary) -> String:
 static func can_fight() -> bool:
 	var r = _peek()
 	return r != null and str(r.get("ph", "")) == "siege" and r.get("cur") is Dictionary and not (r.get("fight") is Dictionary)
-static func fight_sid() -> String: return L("襲擾", "襲擾") + "·%d" % (ci() + 1)
+static func fight_sid() -> String:
+	var r = _peek()
+	if r != null and r.get("cur") is Dictionary and PO.is_tkey(str(r.cur.get("tgt", ""))): return str(PO.fight_stage(PO.camp_of_t(str(r.cur.tgt))).sid)   # [post]
+	return L("襲擾", "襲擾") + "·%d" % (ci() + 1)
 static func fight_stage() -> Dictionary:
 	var r = st(); var c = r.cur
+	if c is Dictionary and PO.is_tkey(str(c.get("tgt", ""))): return PO.fight_stage(PO.camp_of_t(str(c.tgt)))   # [post] 駐點反撲：據點原班人馬八成
 	var ks: Array = c.ks if c is Dictionary and c.get("ks") is Array else foe_kinds()
 	var CH = J.G.get("CHAPTERS"); var p = 1.0 + 4.0 * ci(); var bg = "field"
 	if CH is Array and ci() < CH.size():

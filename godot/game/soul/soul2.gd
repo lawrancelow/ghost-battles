@@ -182,6 +182,7 @@ static func can_sweep(e: Dictionary) -> Dictionary:
 	out.need_gp = int(ceil(J.num(x.swp_gp.get(SOUL.ckey(e), 0)) * SWEEP_GP))
 	var st = SO.state(e)
 	if st == "locked": out.why = "locked"; return out
+	if load("res://game/post/po_data.gd").is_post(e): out.why = "locked"; return out   # [post] 普通據點（佔領做駐點）唔使抄功課；抄功課只留畀名鬼據點
 	if out.wins < SWEEP_WINS: out.why = "wins"; return out
 	if st == "cleared": out.why = "cleared"; return out
 	if st == "out": out.why = "out"; return out

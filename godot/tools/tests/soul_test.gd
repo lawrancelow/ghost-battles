@@ -77,6 +77,7 @@ func shots_(t) -> void: shots = true; await _run(t)
 func _run(t) -> void:
 	var m = await _boot(t)
 	SO.force_open = true
+	load("res://game/post/po_data.gd").force_off = true   # [post] 呢個測試驗舊規則（第 2 關起仍然用：按圈重生、舊魂魄公式、每日打折）；野外 v2 由 post_test 驗
 	SO.test_now = 1000000.0
 	SOUL.rng.seed = 777
 	data_check()
@@ -337,7 +338,17 @@ func promote_check() -> void:
 	_chk("合夥人唔可以再升", SOUL.can_promote(k).why == "max")
 	var s0 = SOUL.san()
 	var gg = SOUL.gain(k, 4, "test")
-	_chk("合夥人之後魂魄自動化散魂（凡 ×1）", SOUL.souls(k) == 0 and SOUL.san() == s0 + 4 and gg.to_san == 4)
+	_chk("[post] 合夥人但品階／星級未到頂：魂魄照留（突破、融合要用），唔化散魂", SOUL.souls(k) == 4 and SOUL.san() == s0 and gg.to_san == 0, [SOUL.souls(k), SOUL.san() - s0])
+	var SUx = load("res://game/soul/soul_up.gd")
+	var ox = SOUL.st(); var pj_bak = ox.pj.get(k); var st_bak = ox.star.get(k)
+	ox.pj[k] = float(SUx.OPEN_MAX); ox.star[k] = float(SUx.star_cap(k)); ox.sh.erase(k)
+	gg = SOUL.gain(k, 4, "test")
+	_chk("職級、品階、星級全部到頂之後魂魄自動化散魂（× 品值 %d）" % SOUL.pv(k), SOUL.all_max(k) and SOUL.souls(k) == 0 and SOUL.san() == s0 + 4 * SOUL.pv(k) and gg.to_san == 4 * SOUL.pv(k), [SOUL.souls(k), SOUL.san() - s0])
+	if pj_bak == null: ox.pj.erase(k)
+	else: ox.pj[k] = pj_bak
+	if st_bak == null: ox.star.erase(k)
+	else: ox.star[k] = st_bak
+	ox["san"] = float(s0 + 4)   # 同舊版測試之後嘅狀態一樣（散魂 +4、本鬼魂魄 0）
 	# 散魂頂升職（冇上限）
 	var k2 = "n30_guhangui"
 	o.sh[k2] = 0.0; o["san"] = 999.0

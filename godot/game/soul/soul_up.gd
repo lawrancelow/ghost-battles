@@ -82,7 +82,7 @@ static func same_sys_souls(k: String) -> int:
 
 static func fuse_cost(k: String) -> Dictionary:
 	var to = pj(k) + 1
-	var own = int(round(8.0 * pow(1.45, to)))
+	var own = int(round(round(8.0 * pow(1.45, to)) * load("res://game/post/po_data.gd").fuse_k(k)))   # [post] 王／煞消耗倍數（wild2.json fuse_k，預設關＝×1）
 	return {"to": to, "own": own, "sys": int(own / 2), "san": 10 * to, "coins": 100.0 * to * to,
 		"jp": maxi(0, to - 5), "altar": clampi(1 + to / 3, 1, 6)}
 

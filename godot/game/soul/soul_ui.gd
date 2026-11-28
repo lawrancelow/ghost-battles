@@ -306,6 +306,7 @@ static func card_info(e: Dictionary) -> Dictionary:
 	o["seen"] = k != "" and SOUL.seen(k)
 	o["fresh"] = SOUL.fresh_text(key)
 	o["mul"] = SOUL.fresh_mul(key)
+	o["v2"] = load("res://game/post/po_data.gd").on_for(int(J.num(e.get("c", 0))))   # [post] 野外 v2：掉落行由 po_view.sortie_rows 出（首殺必掉＋四檔），冇每日打折
 	o["san"] = SOUL.SAN[r]
 	if k != "":
 		o["name"] = SOUL.gname(k); o["pin"] = SOUL.pin(k)
@@ -315,7 +316,7 @@ static func card_info(e: Dictionary) -> Dictionary:
 		var lo = maxi(1, int(round(SOUL.PRI[r] * o.mul))); var hi = maxi(1, int(round((SOUL.PRI[r] + 1) * o.mul)))
 		o["per"] = "+%d～%d" % [lo, hi] if hi > lo else "+%d" % lo
 		o["first"] = SOUL.FIRST[r] if first else 0
-		o["partner"] = o.owned and o.rank >= SOUL.RANK_MAX
+		o["partner"] = SOUL.all_max(k)   # [post] 全部到頂先化散魂
 	var g2 = SOUL.guard2_of(e)   # [roster2] 雙駐守（第二批新鬼）
 	o["g2"] = g2
 	if g2 != "":
@@ -348,13 +349,13 @@ static func card_rows(vb: VBoxContainer, d) -> void:
 		elif J.t(d.get("owned")): tail = L("　升職魂魄 %d/%d", "　升職魂魄 %d/%d") % [int(d.have), int(d.need)]
 		else: tail = L("　魂魄 %d/%d", "　魂魄 %d/%d") % [int(d.have), int(d.need)]
 		lab.call(L("駐守：%s（%s）", "駐守：%s（%s）") % [str(d.name), str(d.pin)] + tail, 16, Color("#f4e2ff"))
-	if J.t(d.get("live")):
+	if J.t(d.get("live")) and not J.t(d.get("v2")):
 		var l2 = L("每次 %s", "每次 %s") % str(d.get("per", ""))
 		if int(d.get("first", 0)) > 0: l2 += L("　首勝 +%d", "　首勝 +%d") % int(d.first)
 		lab.call(l2, 15, Color("#ffd27a"))
 	if str(d.get("g2", "")) != "":   # [roster2] 雙駐守
-		lab.call(L("雙駐守：%s　魂魄 %d/%d（每次同樣掉）", "雙駐守：%s　魂魄 %d/%d（每次同樣掉）") % [str(d.g2_name), int(d.g2_have), int(d.g2_need)], 15, Color("#f4e2ff"))
-	lab.call(str(d.fresh), 15, Color("#a8f0a0") if float(d.mul) > 0.99 else Color("#ff9a7a"))
+		lab.call((L("雙駐守：%s　魂魄 %d/%d（各自抽）", "雙駐守：%s　魂魄 %d/%d（各自抽）") if J.t(d.get("v2")) else L("雙駐守：%s　魂魄 %d/%d（每次同樣掉）", "雙駐守：%s　魂魄 %d/%d（每次同樣掉）")) % [str(d.g2_name), int(d.g2_have), int(d.g2_need)], 15, Color("#f4e2ff"))
+	if not J.t(d.get("v2")): lab.call(str(d.fresh), 15, Color("#a8f0a0") if float(d.mul) > 0.99 else Color("#ff9a7a"))
 	var l3 = L("散魂 +%d", "散魂 +%d") % int(d.san)
 	if str(d.get("k2", "")) != "": l3 = L("副魂 %s 25%%（保底：再 %d 次必得）　", "副魂 %s 25%%（保底：再 %d 次必得）　") % [str(d.name2), int(d.pity2)] + l3
 	lab.call(l3, 14, Color("#d8c0f0"))

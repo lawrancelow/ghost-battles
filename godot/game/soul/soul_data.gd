@@ -276,12 +276,17 @@ static func guard_stage(e: Dictionary, stg: Dictionary) -> Dictionary:
 	return o
 
 # ======================= 得魂魄 =======================
-# 回 {k, n, to_san}：合夥人之後自動化散魂
+# 回 {k, n, to_san}：職級（合夥人）、品階（開放上限）、星級（該品上限）全部到頂之後，多出嚟嘅魂魄先自動化散魂
+#   [post] 修：以前一到合夥人就化散魂，但星級突破（要合夥人＋本鬼魂魄）同品階融合（要本鬼魂魄）就永遠儲唔到本鬼魂魄
+static func all_max(k: String) -> bool:
+	if not owned(k) or rank(k) < RANK_MAX: return false
+	var SU = load("res://game/soul/soul_up.gd")
+	return SU.pj(k) >= SU.OPEN_MAX and SU.star(k) >= SU.star_cap(k)
 static func gain(k: String, n: int, why := "") -> Dictionary:
 	var o = st()
 	if o == null or n <= 0 or not is_ghost(k): return {"k": k, "n": 0, "to_san": 0}
 	o.seen[k] = 1.0
-	if owned(k) and rank(k) >= RANK_MAX:
+	if all_max(k):
 		var sn = n * pv(k)
 		o["san"] = J.num(o.san) + sn
 		LOG.append(["gain", k, n, why, "san", sn])
@@ -309,13 +314,29 @@ static func on_sortie_win(e: Dictionary, first: bool, good := false) -> Dictiona
 	var o = st()
 	if o == null: return out
 	var key = ckey(e); var r = ri(e.get("ring", 1))
-	var mul = fresh_mul(key); out.mul = mul
+	var PO = load("res://game/post/po_data.gd")   # [post] 野外 v2（wild2.json maps）：首殺必掉、之後抽權重表、名鬼請假、取消每日打折
+	var v2 = PO.on_for(int(J.num(e.get("c", 0))))
+	var mul = 1.0 if v2 else fresh_mul(key); out.mul = mul
 	var parts = []
 	var k = guard_of(e)
 	var was_ready = {}
 	var k3 = guard2_of(e)   # [roster2] 雙駐守
 	for kk in [k, sec_of(e), k3]: if kk != "": was_ready[kk] = can_summon(kk).ok
-	if k != "" and guard_live(e):
+	if v2:   # [post]
+		var was_away = PO.guard_away(e)
+		for kk in [k, k3]:
+			if kk == "" or (kk == k and not guard_live(e)): continue
+			var ms = PO.main_soul(e, kk)
+			if int(ms.n) <= 0: continue
+			var nn = int(ms.n) + (GOOD_BONUS if good and not ms.first else 0)
+			var gg = gain(kk, nn, "sortie")
+			out.items.append({"k": kk, "n": nn, "sec": false, "co": kk == k3, "tier": ms.tier, "first": ms.first})
+			if ms.first: parts.append(_gain_txt(gg) + L("（首殺必掉）", "（首殺必掉）"))
+			else: parts.append("%s（%s）%s" % [_gain_txt(gg), ms.name, ms.say])
+			if kk == k: out["tier"] = ms.tier; out["say"] = ms.say; out["first_kill"] = ms.first
+		if was_away and k != "" and not PO.is_post(e): parts.append(L("名鬼請假緊，今場冇主魂", "名鬼請假中，這場沒有主魂")); out["away"] = true
+		elif k != "" and guard_live(e): PO.start_cd(e)
+	elif k != "" and guard_live(e):
 		var base = PRI[r] + (1 if rng.randf() < PRI_BONUS_P else 0)
 		var n = maxi(1, int(round(base * mul)))
 		if good: n += GOOD_BONUS
@@ -323,7 +344,7 @@ static func on_sortie_win(e: Dictionary, first: bool, good := false) -> Dictiona
 		var g = gain(k, n, "sortie")
 		out.items.append({"k": k, "n": n, "sec": false})
 		parts.append(_gain_txt(g))
-	if k3 != "":   # [roster2] 雙駐守：同原駐守一樣嘅主魂數（唔另外抽隨機，唔影響副魂機率）
+	if k3 != "" and not v2:   # [roster2] 雙駐守：同原駐守一樣嘅主魂數（唔另外抽隨機，唔影響副魂機率）
 		var n3 = maxi(1, int(round(PRI[r] * mul)))
 		if good: n3 += GOOD_BONUS
 		if first: n3 += FIRST[r]
@@ -359,7 +380,7 @@ static func on_sortie_win(e: Dictionary, first: bool, good := false) -> Dictiona
 	if mhl != "": parts.append(mhl)
 	var fr = _fr(); fr.n[key] = float(wins_today(key) + 1)
 	var line = L("魂魄：", "魂魄：") + "、".join(parts)
-	if good and k != "" and guard_live(e): line += L("（打得好 +%d）", "（打得好 +%d）") % GOOD_BONUS
+	if good and k != "" and guard_live(e) and (not v2 or (out.has("tier") and not J.t(out.get("first_kill")))): line += L("（打得好 +%d）", "（打得好 +%d）") % GOOD_BONUS
 	if mul < 0.99: line += L("（怨氣已散 ×%s）", "（怨氣已散 ×%s）") % ("½" if mul >= 0.5 else "¼")
 	for kk in was_ready:
 		if not was_ready[kk] and can_summon(kk).ok: out.ready.append(kk)

@@ -2,6 +2,8 @@
 extends RefCounted
 
 const SO = preload("res://game/sortie/so_data.gd")
+const PO = preload("res://game/post/po_data.gd")   # [post]
+const PV = preload("res://game/post/po_view.gd")   # [post] 駐點木牌／駐點卡／名鬼請假
 const ZD = preload("res://game/zone/zone_data.gd")
 
 static var _pv := {}       # 據點 key → 預覽單位
@@ -13,6 +15,7 @@ static func L(yue: String, zhs: String) -> String: return SO.L(yue, zhs)
 static func _rts(): return load("res://game/rts/rts.gd")
 
 # rts_view._want 掛鈎：未出擊、未清空嘅據點企住啲敵人
+static var _pv_away := {}
 static func want() -> Array:
 	var o = []
 	if not ZD.on(): return o
@@ -20,9 +23,12 @@ static func want() -> Array:
 	for e in SO.camps():
 		var k = SO.key(e)
 		var s = SO.state(e)
-		if s == "cleared" or s == "out": _pv.erase(k); continue
+		if s == "cleared" or s == "out" or s == "held": _pv.erase(k); _pv_away.erase(k); continue   # [post] 已佔領：冇敵人企喺度
+		var aw = PO.guard_away(e)   # [post] 名鬼請假／銷假：重排一次（代班雜兵頂上／名鬼返嚟）
+		if _pv.has(k) and J.t(_pv_away.get(k, false)) != aw: _pv.erase(k)
+		_pv_away[k] = aw
 		if not _pv.has(k):
-			var stg = load("res://game/soul/soul_data.gd").guard_stage(e, SO.stage_of(e))   # [soul] 駐守名鬼企喺據點
+			var stg = PO.stand_in(e, load("res://game/soul/soul_data.gd").guard_stage(e, SO.stage_of(e)))   # [soul] 駐守名鬼企喺據點
 			var pth = load("res://game/sortie/so_data.gd").path_of(e, e.pos)   # [integ]
 			var din = (pth[pth.size() - 1] - pth[pth.size() - 2]).normalized() if pth.size() >= 2 else Vector2(0, -1)
 			var pos = RTS.SIM.camp_layout(e.pos, stg.en.size(), din)
@@ -46,6 +52,7 @@ static func draw(v, n: CanvasItem, f: Font, vr: Rect2) -> void:
 		if not vr.has_point(at): continue
 		var s = SO.state(e)
 		v._at(n, at + Vector2(0, 40))
+		if PV.draw_sign(v, n, f, e, s, at): continue   # [post] 駐點／停業整頓／名鬼請假
 		var l1 = SO.short(e)
 		var l2 = ""
 		var bg = Color(0.32, 0.2, 0.1, 0.95); var bd = Color("#e8b060"); var col = Color("#fff0d0")
@@ -88,6 +95,7 @@ static func tap(_main, p: Vector2) -> bool:
 		var op = _rts().op_for(SO.sid_of(e))
 		if op != null: _rts().focus(op)
 		return true
+	if SO.state(e) == "held": PV.open_card(e); return true   # [post] 駐點卡
 	open_card(e)
 	return true
 
@@ -126,6 +134,7 @@ static func card_lines(e: Dictionary) -> Dictionary:
 	return o
 static func open_card(e: Dictionary) -> void:
 	close_card()
+	PV.close_card()   # [post]
 	var host = _host()
 	if host == null: return
 	var d = card_lines(e)
@@ -146,6 +155,7 @@ static func open_card(e: Dictionary) -> void:
 			lab.call(L("已清空：%d:%02d 後重生", "已清空：%d:%02d 後重生") % [left / 60, left % 60], 16, Color("#c0c0c0"))
 		"locked": lab.call(L("未開放：先打下上一圈據點", "未開放：先打下上一圈據點"), 16, Color("#c0c0c0"))
 	load("res://game/soul/soul_ui.gd").card_rows(vb, d.soul)   # [soul]
+	for pr in PV.sortie_rows(e): lab.call(pr[0], pr[1], pr[2])   # [post] 據點類型、首殺必掉、四檔掉落、請假倒數
 	lab.call(d.team, 15, Color("#f0e0d0"))
 	load("res://game/rts/ab_card.gd").add_to(vb, SO.stage_of(e).en, {"dark": true, "host": pc, "on_change": func(): open_card(e)})   # [abui] 偵察卡＋揀軍師
 	var hb = HFlowContainer.new(); hb.add_theme_constant_override("h_separation", 10); vb.add_child(hb)
@@ -179,7 +189,7 @@ static func open_card(e: Dictionary) -> void:
 static func press_go(e: Dictionary) -> String:
 	var r = SO.dispatch(e)
 	var msg = {"poor": L("資源不夠，不能出擊", "資源不夠，不能出擊"), "busy": L("而家打緊另一場，等佢打完先", "現在正在打另一場，等它打完再說"),
-		"noteam": L("未有出戰隊伍：去「鬼怪」揀隊先", "還沒有出戰隊伍：先到「鬼怪」選隊"), "cleared": L("據點已清空，等重生", "據點已清空，等重生"), "locked": L("未開放", "未開放")}
+		"noteam": L("未有出戰隊伍：去「鬼怪」揀隊先", "還沒有出戰隊伍：先到「鬼怪」選隊"), "cleared": L("據點已清空，等重生", "據點已清空，等重生"), "locked": L("未開放", "未開放"), "held": L("呢度已經係你嘅駐點", "這裡已經是你的駐點")}
 	last_msg = r
 	if r == "ok": close_card()
 	elif msg.has(r): _rts().toast(msg[r])
