@@ -249,7 +249,9 @@ static func _launch(pend: Dictionary, ny: int, nm: int) -> String:
 	if tk != "": TA.hide_keys[tk] = true
 	ops.append(op)
 	var bw = load("res://game/rts/sortie_post.gd").borrow(op, op.units)   # [xzfollow] 派工中嘅名鬼：崗位暫時空出，打完自動返去
-	for b in bw: toast(L("%s 暫時離開%s去出擊", "%s 暫時離開%s去出擊") % [str(DB.L(str(b[0]))), str(b[1])])
+	for b in bw:
+		if b.size() > 2 and b[2]: toast(L("%s 出擊：%s照開工（交低咗手尾）", "%s 出擊：%s照常開工（交代好了）") % [str(DB.L(str(b[0]))), str(b[1])])   # [p56] 唔停產
+		else: toast(L("%s 暫時離開%s去出擊", "%s 暫時離開%s去出擊") % [str(DB.L(str(b[0]))), str(b[1])])
 	LOG.append(["dispatch", op.sid, _count(op), pend.kind])
 	var m = _main()
 	var nv = m.get("village") if m != null else null

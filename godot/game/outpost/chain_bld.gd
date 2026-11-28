@@ -316,14 +316,20 @@ static func act(bid: String, a: String, arg) -> Variant:
 		"build":
 			if build(bid):
 				Snd.play("build"); _fx("banner", [(L("%s 開墾好咗！可以派鬼", "%s 開墾好了！可以派鬼") if CF.is_field(bid) else L("%s 起好咗！", "%s 建好了！")) % bname(bid)])
+			else: _why(zone_lock(bid) if zone_lock(bid) != "" else NEED().chain_hint(build_cost(bid)))   # [p56] 缺料講清楚
 		"up":
 			if upgrade(bid):
 				Snd.play("build"); _fx("banner", [L("%s 升到 Lv %d", "%s 升到 Lv %d") % [bname(bid), lv(bid)]])
+			elif lv(bid) > 0 and lv(bid) < max_lv(bid): _why(NEED().chain_hint(up_cost(bid, lv(bid))))   # [p56]
 		"unassign": unassign(arg)
 	var sv = J.G.get("save")
 	if sv != null: J.cl(sv, null, [])
 	J.mc(J.G.get("UI"), "refresh", [])
 	return null
+static func NEED(): return load("res://game/onboard/need.gd")
+static func _why(t: String) -> void:   # [p56]
+	if t == "": return
+	_fx("toast", [t]); J.G["_p56_last_why"] = t
 static func _fx(m: String, a: Array) -> void:
 	var fx = J.G.get("Fx")
 	if fx != null: J.mc(fx, m, a)

@@ -64,10 +64,12 @@ static func busy_lines() -> Array:
 		if not J.t(id): continue
 		var g: Variant = _ghost(id)
 		if g == null or not J.t(g.get("post")): continue
+		if KEEP.has(J.str(g.post)): o.append(T("%s 正在%s做工：出擊期間照開工（唔停產），打完繼續做。", "%s 正在%s做工：出擊期間照常開工（不停產），打完繼續做。") % [str(DB.L(J.str(g.name))), where(g)]); continue   # [p56]
 		o.append(T("%s 正在%s做工：出擊期間呢個崗位會暫時空出，打完自動返去復工。", "%s 正在%s做工：出擊期間這個崗位會暫時空出，打完自動回去復工。") % [str(DB.L(J.str(g.name))), where(g)])
 	return o
 
 # 出發：帶走嘅名鬼標記 sortie（就算冇派工都標，村入面就唔會再畫佢，例如跟住主角嘅小紙）
+const KEEP := {"wood": 1, "rice": 1, "plank": 1, "bun": 1, "camp": 1, "store": 1, "boss": 1}   # [p56] 出擊都照開工嘅村子崗位
 static func borrow(op, units: Array) -> Array:
 	var names = []
 	for u in units:
@@ -82,6 +84,8 @@ static func borrow(op, units: Array) -> Array:
 				if not sl.is_empty() and sim != null:
 					rec.mv = sl; names.append([J.str(g.name), where(g)])
 					sim.assign(str(sl[0]), int(sl[1]), null)   # 空出個位（post → null）
+			elif KEEP.has(p):   # [p56] 村子產線（伐木場、糯米田、棺材鋪、包子鋪…）：交低手尾，照開工（唔停產）；人唔喺村畫
+				rec["kept"] = true; names.append([J.str(g.name), where(g), true])
 			else:
 				names.append([J.str(g.name), where(g)])
 				g["post"] = null
@@ -97,6 +101,7 @@ static func restore(op_id) -> Array:
 		if not (g is Dictionary) or not (g.get("sortie") is Dictionary): continue
 		if op_id != null and J.num(g.sortie.get("op")) != J.num(op_id): continue
 		var r = g.sortie; g.erase("sortie")
+		if J.t(r.get("kept")): continue   # [p56] 崗位一直保留（照開工）：返嚟即係繼續做
 		if not J.t(r.get("post")) or J.t(g.get("post")): continue   # 本身冇派工／出擊期間已經派咗第二度
 		var ok = false
 		if r.get("mv") is Array:

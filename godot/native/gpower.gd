@@ -123,7 +123,7 @@ static func tag(have, need) -> String:
 
 static func hint(need) -> String:
 	if J.t(need): return T("鬼力唔夠（建議 %s）。返村幫隻鬼升級、落訓練班練嚇功，再嚟過！" % _n(need), "鬼力不足（建議 %s）。回村幫鬼升級、去訓練班練嚇功，再來一次！" % _n(need))
-	return T("打唔過？返村幫隻鬼升級、落訓練班練嚇功，再嚟過！", "打不過？回村幫鬼升級、去訓練班練嚇功，再來一次！")
+	return T("打唔過？鬼力只係隊員平均：出陣隊少過 3 隻、陰兵唔夠都會輸。多帶隻鬼、補陰兵，或者返村升級、練嚇功再嚟。", "打不過？鬼力只是隊員平均：出陣隊少於 3 隻、陰兵不夠都會輸。多帶一隻鬼、補陰兵，或回村升級、練嚇功再來。")   # [p56] 夠建議值都輸：講清楚點解
 
 static func fail_html(have, need, extra) -> String:
 	var h = J.str(extra) if J.t(extra) else hint(need if J.t(need) and J.num(have) < J.num(need) else 0.0)

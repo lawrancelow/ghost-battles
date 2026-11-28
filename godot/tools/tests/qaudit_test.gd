@@ -51,6 +51,8 @@ func _skip(t, n := 6):
 		if st and st.get("cur") != null: st.skip_scene()
 		var sv = m.get("mv_view") if m else null
 		if sv != null and sv.get("story") != null and sv.story.has_method("skip"): sv.story.skip()
+		var Th = J.G.get("Theater")   # [p56] 劇場都算劇情：測試撳「跳過」
+		if Th != null and J.t(J.gp(Th, "on")): J.mc(Th, "close", [true])
 		if not busy:
 			idle += 1
 			if idle >= 3 and i >= n - 1: break

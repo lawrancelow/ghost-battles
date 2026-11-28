@@ -161,7 +161,11 @@ static func step_actor(a, dt: float) -> void:
 		if a.turnT >= 0.11 and not J.t(a.get("_fl")): a.face = a.want; a["_fl"] = 1.0
 		if a.turnT >= 0.22: a["_fl"] = 0.0
 	if J.str(a.act) == "plaza_talk" or J.str(a.act) == "plaza_argue": J.sp(a.pl, "spk", a.spk)
-static func draw_actor(a, K: float, gy: float, t: float) -> void:
+static func draw_actor(a, K: float, gy: float, t: float) -> void:   # [p56] 劇場：主角唔畫漂浮兵器
+	var HV = load("res://game/soul/hero_vil.gd"); HV.story += 1
+	_draw_actor(a, K, gy, t)
+	HV.story = maxi(0, HV.story - 1)
+static func _draw_actor(a, K: float, gy: float, t: float) -> void:
 	var asc = J.num(a.sc) if J.t(a.get("sc")) else 1.0
 	if not can_draw(a.k):   # 原圖仲未到：只畫一個影
 		var h = char_h(a.k) * K * asc

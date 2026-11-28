@@ -15,6 +15,7 @@ const EQD = preload("res://game/equip/eq_data.gd")
 static var ON := true
 const VERB := {"chop": "chop", "reap": "reap", "hammer": "saw", "knead": "knead"}
 static var LAST := {}   # 測試：最後一次畫嘅 {"mode", "verb", "pose", "wea"}
+static var story := 0    # [p56] 劇場／劇情畫面入面 >0：唔畫漂浮兵器（以前主角面向龐總，斧頭浮喺兩人中間，似龐總揸斧頭）
 
 static func active() -> bool: return ON and ACE.active("afu")
 
@@ -68,8 +69,8 @@ static func draw(ctx, x: float, y: float, s: float, o) -> void:
 	if old_k != "" and fq < 1.0: _img(ctx, old_k, H, 1.0 - fq)
 	_img(ctx, pk, H, fq if old_k != "" else 1.0)
 	ctx.restore()
-	var wea = hero_wea()
-	EV2.draw(ctx, "float", pk, {"wea": wea}, Vector2(x, y), H, fd, {"T": T, "act": "idle", "ph": 0.0}, false, "front")
+	var wea = hero_wea() if story <= 0 else ""
+	if wea != "": EV2.draw(ctx, "float", pk, {"wea": wea}, Vector2(x, y), H, fd, {"T": T, "act": "idle", "ph": 0.0}, false, "front")
 	LAST = {"mode": "idle", "verb": "", "pose": pk, "wea": wea}
 
 static func _img(ctx: Ctx, key: String, H: float, a: float) -> void:

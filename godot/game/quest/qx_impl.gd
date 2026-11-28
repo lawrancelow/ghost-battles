@@ -427,7 +427,7 @@ func _main_tab(body: VBoxContainer) -> void:
 	if cur is Dictionary:
 		var p = J.mc(Q, "progress", [cur])
 		body.add_child(UIKit.rich("[b]目前主線[/b]（%d/%d）" % [qi + 1, qs.size()], 15, UIKit.INKTXT))
-		body.add_child(UIKit.rich("%s　[color=#9c2219]%d/%d[/color]" % [load("res://game/outpost/mv_bridge.gd").quest_text(cur), int(J.num(p[0])), int(J.num(p[1]))], 16, UIKit.INKTXT))
+		body.add_child(UIKit.rich("%s　[color=#9c2219]%d/%d[/color]" % [load("res://game/outpost/mv_bridge.gd").quest_text(cur) + load("res://game/onboard/need.gd").quest_short(cur), int(J.num(p[0])), int(J.num(p[1]))], 16, UIKit.INKTXT))
 		var go = UIKit.btn("前往", "gold", true); go.size_flags_horizontal = Control.SIZE_SHRINK_END
 		go.pressed.connect(func():
 			var main = get_tree().root.get_node_or_null("Main")

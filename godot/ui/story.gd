@@ -48,7 +48,11 @@ func _ready() -> void:
 	G.story_busy = func() -> bool: return busy()
 	G.story_req.connect(queue)
 
-func busy() -> bool: return cur != null or q.size() > 0
+func busy() -> bool: return cur != null or q.size() > 0 or theater_on()
+# [p56] 劇場（Theater，例如「試用期合約」）播緊都當劇情進行中：以前唔計，任務完成框、教程、閒談會疊上去
+func theater_on() -> bool:
+	var Th = J.G.get("Theater")
+	return Th != null and J.t(J.gp(Th, "on"))
 
 func queue(sc, cb: Callable = Callable()) -> void:
 	q.append({"sc": sc, "cb": cb})

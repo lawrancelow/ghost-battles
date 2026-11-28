@@ -548,6 +548,7 @@ func _draw_top_fx(c: CanvasItem) -> void:
 func _draw_top_ui(c: CanvasItem) -> void:
 	var fnt = UIKit.font("sans", 600); var fb = UIKit.font("sans", 900)
 	var b = V.get("bubble")
+	if b is Dictionary and _tut_on(): b = null   # [p56] 教程進行緊：閒談泡唔出（以前壓住教程高亮框）
 	if b is Dictionary:
 		var v = null
 		for o in V.get("vis", []):
@@ -562,6 +563,9 @@ func _draw_top_ui(c: CanvasItem) -> void:
 		c.draw_string_outline(fb, p, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, 4, Color(10 / 255.0, 6 / 255.0, 20 / 255.0, 0.9 * a))
 		c.draw_string(fb, p, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(J.str(f.col), a) if Color.html_is_valid(J.str(f.col)) else Color(1, 1, 1, a))
 
+func _tut_on() -> bool:   # [p56]
+	var tu = get_tree().root.get_node_or_null("Main/OnboardTut") if is_inside_tree() else null
+	return tu != null and tu.visible and bool(tu.get("shown"))
 func _bubble(c: CanvasItem, fnt: Font, text: String, bt: float, vx: float, vy: float) -> void:
 	var a = clampf(minf(minf(1, bt * 5), (4.6 - bt) * 3), 0, 1)
 	var fs = 12.5; var maxw = 168.0; var lines = []; var cur = ""

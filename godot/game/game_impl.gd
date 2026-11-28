@@ -146,7 +146,7 @@ func lvCost(lv: float) -> int: return int(floor(6 * pow(lv, 1.5))) + 4
 func bldMax(id: String) -> int: return 20 if id == "house" else int(S.bld.house)
 func upCost(id: String, lv: float) -> Dictionary:
 	var k = 1.1 if id == "house" else 0.9
-	var planks: float = round(25 * pow(lv, 1.72) * k); var coins: float = round(28 * pow(lv, 1.8) * k)
+	var planks: float = round(25 * pow(lv, 1.5) * k); var coins: float = round(28 * pow(lv, 1.55) * k)   # [p56]
 	planks = round(planks * (1 - builderDiscount()))
 	return {"planks": planks, "coins": coins}
 func builderDiscount() -> float:
@@ -159,7 +159,7 @@ func slots(post: String) -> int:
 	if lv == 0: return 0
 	if post == "boss": return 1
 	return mini(4, 1 + int(floor((lv - 1) / 3.0)))
-func mult(bid: String) -> float: return 1 + 0.3 * (float(S.bld[bid]) - 1)
+func mult(bid: String) -> float: var d = maxf(0.0, float(S.bld[bid]) - 1); return 1 + 0.45 * d + 0.04 * d * d   # [p56] 同 native/game.gd mult_lv
 func cap() -> int:
 	var c = 400.0 + (400 * pow(float(S.bld.store), 1.5) if float(S.bld.store) > 0 else 0.0) + (600.0 if S.lv >= 9 else 0.0)
 	var m = workersAt("store")

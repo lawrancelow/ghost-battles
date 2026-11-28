@@ -384,11 +384,14 @@ static func OBm(): return load("res://game/onboard/ob.gd")
 # 主線條：撳條或者「前往」→ 帶去當前階段目標
 func _quest_go() -> void:
 	var q = G.quest_cur()
+	var nl = load("res://game/onboard/need.gd").quest_lack(q) if q else {}   # [p56] 缺料先講清楚
+	if not nl.is_empty(): show_toast(str(nl.text))
 	if q and q.go == "roster": open_roster(); return
 	if mv_on() and not UNIFY:   # [unify] 合一地圖：原村子任務照舊（鏡頭去原村子建築）
 		if q and (q.get("t") == "stage" or q.get("go") == "gate"): close_sheet(); J.mc(J.G.get("World"), "open", []); return
 		close_sheet(); _nav_on("village")
 		var cg = {"tree": "wood", "paddy": "rice"}.get(str(q.get("go")), str(q.get("go"))) if q else ""   # [camp] 營地建築任務：鏡頭移去嗰間
+		if not nl.is_empty() and str(nl.up) != "": cg = str(nl.up)   # [p56]
 		if mv_view != null and mv_view.has_method("focus_camp") and cg != "": mv_view.focus_camp(cg)
 		return
 	if q and str(q.get("go", "")) == "market" and ZDm.on():   # [onboard] 大排檔賣貨／第一次守夜：鏡頭去大排檔
@@ -611,7 +614,7 @@ func refresh() -> void:
 		var p = G.quest_progress(q)
 		var a = minf(float(p[0]), float(p[1]))
 		if mv_on(): p = MVB.quest_disp(q, p); a = minf(float(p[0]), float(p[1]))
-		quest_lbl.text = (_unify_qtext(MVB.quest_text(q)) if UNIFY else MVB.quest_text(q)) if mv_on() else q.text; quest_prog.text = "%d/%d" % [int(a), int(p[1])]
+		quest_lbl.text = ((_unify_qtext(MVB.quest_text(q)) if UNIFY else MVB.quest_text(q)) if mv_on() else q.text) + load("res://game/onboard/need.gd").quest_short(q); quest_prog.text = "%d/%d" % [int(a), int(p[1])]
 		quest_prog.add_theme_color_override("font_color", Color("#2e6d3a") if float(p[0]) >= float(p[1]) else UIKit.CINNABAR2)
 	else: quest_lbl.text = "第一季完。村子由你慢慢經營。" if S.ended else "—"; quest_prog.text = ""
 	_ob_nav_gray()

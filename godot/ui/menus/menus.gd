@@ -80,6 +80,12 @@ static func _btn(text: String, kind: String, enabled: bool, f: Callable, small :
 	b.pressed.connect(func(): Snd.play("click"); f.call())
 	return b
 
+# [p56] 付唔起都撳得：顏色變淡，撳落講缺乜、去邊攞（以前灰咗撳極都冇反應）
+static func _btn_need(text: String, kind: String, can: bool, f: Callable, small := false) -> Button:
+	var b = _btn(text, kind if can else "", true, f, small)
+	if not can: b.modulate = Color(1, 1, 1, 0.62); b.set_meta("p56_need", true)
+	return b
+
 # 撳兩下先做（同網頁版 confirmInline 一樣）
 static func _confirm_btn(text: String, kind: String, msg: String, f: Callable, small := true) -> Button:
 	# 註：small=false 用喺闊掣
@@ -146,7 +152,7 @@ static func _draw_bld(id: String, d) -> void:
 	var lv = int(J.num(d.lv))
 	if lv == 0:
 		if not J.t(d.unlocked): _p("[color=#c2362b]尚未解鎖。[/color]")
-		else: _row(("%s費用：" % J.str(d.get("buildLbl")) if d.get("buildLbl") != null else "建造費用：") + bb(d.cost), [_btn(J.str(d.get("buildLbl")) if d.get("buildLbl") != null else "建造", "gold", J.t(d.canBuild), func(): _act_bld(id, "build"))])   # [village2] 資源田：「開墾」
+		else: _row(("%s費用：" % J.str(d.get("buildLbl")) if d.get("buildLbl") != null else "建造費用：") + bb(d.cost), [_btn_need(J.str(d.get("buildLbl")) if d.get("buildLbl") != null else "建造", "gold", J.t(d.canBuild), func(): _act_bld(id, "build"))])   # [village2] 資源田：「開墾」
 		return
 	_p("等級 [b][color=#9c2219]Lv %d[/color][/b]%s" % [lv, "" if id == "house" else "（上限 = 鬼宅等級 %d）" % int(J.num(d.house))], 15, UIKit.INKTXT)
 	var eff = bb(J.gp(d, "effect"))
@@ -155,7 +161,7 @@ static func _draw_bld(id: String, d) -> void:
 		ep.add_child(_rich(eff, 13.5, Color("#3a2e1a"))); _body().add_child(ep)
 	if d.get("upCost") != null:
 		var disc = int(J.num(d.get("disc", 0)))
-		_row("升級：" + bb(d.upCost) + ("\n[font_size=12]工頭省了 %d%% 棺材板[/font_size]" % disc if disc else ""), [_btn("升級", "gold", J.t(d.canUp), func(): _act_bld(id, "up"))])
+		_row("升級：" + bb(d.upCost) + ("\n[font_size=12]工頭省了 %d%% 棺材板[/font_size]" % disc if disc else ""), [_btn_need("升級", "gold", J.t(d.canUp), func(): _act_bld(id, "up"))])
 	else: _p("已達最高等級。" if id == "house" else "已達上限，先升級鬼宅。")
 	var cr = d.get("craft")
 	if cr != null:
@@ -172,7 +178,7 @@ static func _draw_bld(id: String, d) -> void:
 	var al = d.get("altar")
 	if al != null and load("res://game/soul/soul_ui.gd").altar(_body(), func(): _render_bld(id, true)): al = null   # [soul] 祭壇四頁（招雜鬼頁照用下面舊介面）
 	if al != null:
-		_row("招魂一次：%s\n[font_size=12]雜鬼名額 %d/%d（升級民宅增加；收服的名鬼不佔名額）[/font_size]" % [bb(al.cost), int(J.num(al.cnt)), int(J.num(al.cap))], [_btn("招魂", "gold", J.t(al.can), func(): _act_bld(id, "recruit"))])
+		_row("招魂一次：%s\n[font_size=12]雜鬼名額 %d/%d（升級民宅增加；收服的名鬼不佔名額）[/font_size]" % [bb(al.cost), int(J.num(al.cnt)), int(J.num(al.cap))], [_btn_need("招魂", "gold", J.t(al.can), func(): _act_bld(id, "recruit"))])
 		_p("目前可能招到：%s。收服更多鬼怪後，招魂池會變大。" % J.str(al.pool), 13)
 		var gone = al.get("gone")
 		if gone is Array and gone.size():

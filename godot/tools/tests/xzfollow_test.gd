@@ -152,7 +152,7 @@ func _sortie(t, m, V, xz) -> void:
 	load("res://native/game.gd").n_pick_do("bun", xz.id); await _w(t, 0.3)
 	_chk("包子鋪：派工後仍喺出陣隊", S.team.has(xz.id) and J.str(xz.post) == "bun")
 	SP.borrow({"id": 9904}, [{"side": 0.0, "gid": xz.id}]); await _w(t, 0.4)
-	_chk("包子鋪出擊：崗位空出、村入面見唔到", xz.get("post") == null and _count(V, xz) == 0, _dump(V, xz))
+	_chk("包子鋪出擊：[p56] 崗位保留照開工、村入面見唔到", J.str(xz.get("post")) == "bun" and _count(V, xz) == 0, _dump(V, xz))
 	SP.restore(9904); await _w(t, 0.4)
 	_chk("包子鋪打完：返去復工", J.str(xz.get("post")) == "bun" and _count(V, xz) == 1, _dump(V, xz))
 	xz["post"] = null

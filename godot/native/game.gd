@@ -88,7 +88,8 @@ static func builder_discount() -> float:
 	return minf(0.35, glv(ws[0]) * 0.012) if ws.size() > 0 else 0.0
 static func up_cost(id, lv: float) -> Dictionary:
 	var k = 1.1 if J.str(id) == "house" else 0.9
-	var planks = J.round(25 * pow(lv, 1.72) * k); var coins = J.round(28 * pow(lv, 1.8) * k)
+	# [p56] 會議第 0 批：成本指數 1.72／1.8 → 1.5／1.55，產量由線性改加速（mult），10 級成本÷產量由 ~14 倍降到 ~3.8 倍
+	var planks = J.round(25 * pow(lv, 1.5) * k); var coins = J.round(28 * pow(lv, 1.55) * k)
 	planks = J.round(planks * (1 - builder_discount()))
 	return {"planks": planks, "coins": coins}
 static func slots(post) -> float:
@@ -96,7 +97,9 @@ static func slots(post) -> float:
 	if lv == 0: return 0.0
 	if J.str(post) == "boss": return 1.0
 	return minf(4, 1 + floor((lv - 1) / 3))
-static func mult(bid) -> float: return 1 + 0.3 * (J.num(_S().bld[J.str(bid)]) - 1)
+static func mult(bid) -> float: return mult_lv(J.num(_S().bld[J.str(bid)]))
+static func mult_lv(lv: float) -> float:   # [p56] 1 級 ×1、2 級 ×1.49、5 級 ×3.4、10 級 ×8.3（舊：1.3／2.2／3.7）
+	var d = maxf(0.0, lv - 1); return 1 + 0.45 * d + 0.04 * d * d
 static func cap() -> float:
 	var S = _S(); var st = J.num(S.bld.store)
 	var c = 400 + (400 * pow(st, 1.5) if st != 0 else 0.0) + (600.0 if J.num(S.lv) >= 9 else 0.0)
@@ -632,6 +635,7 @@ static func v_worker_spots() -> Array:
 	var add = func(post: String, pts: Array):
 		var i = 0
 		for g in workers_at(post):
+			if g.get("sortie") is Dictionary: continue   # [p56] 出擊緊（崗位照開工）：村入面唔畫
 			var p = pts[i % pts.size()]
 			out.append({"g": g, "x": p[0], "y": p[1], "flip": p[2], "ph": i * 0.7, "post": post}); i += 1
 	add.call("wood", [[130.0, 520.0, 1.0], [178.0, 430.0, 1.0], [70.0, 540.0, 0.0], [24.0, 460.0, 0.0]])
@@ -646,6 +650,8 @@ static func v_quest_target():
 	var S = _S(); var q = J.mc(_g("Quest"), "cur", [])
 	if not J.t(q): return null
 	var go = J.str(q.get("go")); var POS = _g("POS")
+	var nl = load("res://game/onboard/need.gd").quest_lack(q)   # [p56] 缺料：箭頭／前往指去上游建築（例：民宅缺板 → 棺材鋪）
+	if not nl.is_empty() and POS.get(str(nl.up)) != null: return POS[str(nl.up)]
 	if go == "tree":
 		var i = -1
 		for j in S.trees.size(): if J.num(S.trees[j]) > 0: i = j; break
@@ -1356,21 +1362,25 @@ static func n_bld(id) -> Dictionary:
 			sl.append({"id": g.id, "k": g.k, "name": g.name, "lv": J.mc(F, "glv", [g]), "stat": J.mc(_ui(), "postStatTxt", [g, pp])} if g != null else null)
 		o.posts.append({"post": pp, "name": PD.name, "desc": PD.desc, "lock": lock, "slots": sl})
 	return o
+static func _why(txt: String) -> void:   # [p56] 付唔起／做唔到：提示缺乜、去邊攞（唔再無聲無息）
+	if txt == "": return
+	_fx("toast", [txt])
+	J.G["_p56_last_why"] = txt
 static func n_bld_act(id, a, arg):
 	var S = _S(); var F = _g("F"); var sid = J.str(id); var act = J.str(a); var B = _g("BUILDINGS")[sid]; var UI = _ui()
 	if act == "build":
-		if not J.t(_c("canPay", [B.build])): return null
+		if not J.t(_c("canPay", [B.build])): _why(load("res://game/onboard/need.gd").bld_why(sid, "build")); return null   # [p56] 缺料講清楚
 		_snd("build"); _c("pay", [B.build]); S.bld[sid] = 1.0; _c("gainExp", [15.0]); _fx("banner", ["%s 建好了！" % J.str(B.name)]); J.mc(_g("Quest"), "check", []); BK().on_built(sid)   # [barracks] 兵營第一次建成劇情
 	if act == "up":
 		var c = J.mc(F, "upCost", [id, S.bld[sid]])
-		if not J.t(_c("canPay", [c])) or J.num(S.bld[sid]) >= J.num(J.mc(F, "bldMax", [id])): return null
+		if not J.t(_c("canPay", [c])) or J.num(S.bld[sid]) >= J.num(J.mc(F, "bldMax", [id])): _why(load("res://game/onboard/need.gd").bld_why(sid, "up")); return null   # [p56]
 		_snd("build"); _c("pay", [c]); S.bld[sid] = J.num(S.bld[sid]) + 1; _c("gainExp", [10 + 8 * J.num(S.bld[sid])]); _fx("banner", ["%s 升到 Lv %s" % [J.str(B.name), J.str(S.bld[sid])]]); J.mc(_g("Quest"), "check", [])
 	if act == "craft":
 		m(UI, "close"); J.mc(_V(), "craft", [id, J.num(arg) if J.t(J.num(arg)) else 1.0]); return "close"
 	if act == "burn":   # [joss] 唔再燒冥幣：開陽間包裹
 		load("res://game/joss/joss_ui.gd").open_next(); return "close"
 	if act == "recruit":
-		if not J.t(_c("canPay", [J.mc(F, "recruitCost", [])])) or J.num(_c("fodderCount")) >= J.num(J.mc(F, "rosterCap", [])): return null
+		if not J.t(_c("canPay", [J.mc(F, "recruitCost", [])])) or J.num(_c("fodderCount")) >= J.num(J.mc(F, "rosterCap", [])): _why(load("res://game/onboard/need.gd").recruit_why()); return null   # [p56] 招魂失敗講清楚
 		_snd("whoosh"); _c("pay", [J.mc(F, "recruitCost", [])]); var g = _c("recruitFodder", [false]); S.cnt["recruit"] = J.num(S.cnt.recruit) + 1; _fx("toast", ["招來了 <b>%s</b>（%s）" % [J.str(g.name), J.str(g.q)]]); J.mc(_g("Quest"), "check", [])
 	if act == "feast":
 		_snd("gong"); S.res["buns"] = J.num(S.res.buns) - 300; S["feastAt"] = J.now(); S.cnt["feast"] = J.num(S.cnt.feast) + 1; _c("gainExp", [150.0])

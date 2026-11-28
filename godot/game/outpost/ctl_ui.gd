@@ -93,12 +93,18 @@ func press_act() -> void:
 static func pow_info(t: Dictionary) -> Array:
 	var my = int(t.get("my_pow", 0)); var foe = int(t.get("foe_pow", 0))
 	if foe <= 0: return ["", L("撳一下入去", "點一下進入"), C_OK]
-	var lab = L("陰兵 %d／建議 %d", "陰兵 %d／建議 %d") if str(t.get("kind")) == "res" else L("鬼力 %d／敵 %d", "鬼力 %d／敵 %d")
+	var lab = L("陰兵 %d／建議 %d", "陰兵 %d／建議 %d") if str(t.get("kind")) == "res" else L("鬼力 %d／穩贏 %d", "鬼力 %d／穩贏 %d")
 	if str(t.get("kind")) == "res" and load("res://game/militia/ml_data.gd").power() > 0: lab = L("兵力 %d／建議 %d", "兵力 %d／建議 %d")   # [militia] 陰兵＋遊魂兵
+	# [p56] 會議第 0 批：鬼力 525 對「建議」500 都會輸（建議值係「打得過嘅下限」，唔係穩贏）。
+	#   而家顯示「穩贏線」＝ 下限 × SAFE；夠下限但未到穩贏 → 黃色「可能會輸」，唔再一過線就話「勝算高」
+	var safe = safe_of(foe) if str(t.get("kind")) != "res" else foe
 	var r = float(my) / float(maxi(1, foe))
-	if r >= 1.0: return [lab % [my, foe], L("勝算高", "勝算高"), C_OK]
-	if r >= 0.8: return [lab % [my, foe], L("有啲險", "有點險"), C_MID]
-	return [lab % [my, foe], L("好危險", "很危險"), C_BAD]
+	if my >= safe: return [lab % [my, safe], L("勝算高", "勝算高"), C_OK]
+	if r >= 1.0: return [lab % [my, safe], L("可能會輸", "可能會輸"), C_MID]
+	if r >= 0.8: return [lab % [my, safe], L("有啲險", "有點險"), C_MID]
+	return [lab % [my, safe], L("好危險", "很危險"), C_BAD]
+const SAFE := 1.2   # [p56] 穩贏線倍數（下限 × 1.2，取整到 10）
+static func safe_of(foe: int) -> int: return int(ceil(foe * SAFE / 10.0) * 10)
 
 # 頭像：圓框＋角色上半身（資源區：鎖）
 func _draw_face(c: Control, t: Dictionary) -> void:
