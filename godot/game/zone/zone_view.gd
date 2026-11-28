@@ -731,9 +731,9 @@ static func _kpi_fog(ctx: Ctx, zid: String, cx: float, cy: float, t: float, a: f
 # [kpi] 考核官頭像：有美術（kpi_boss_<id>／龐總 bm_pang）畫圖；冇就圓牌＋姓（佔位）
 static func _kpi_face(ctx: Ctx, boss: String, x: float, y: float, r: float) -> void:
 	var k = load("res://game/kpi/kpi_ui.gd").boss_key(boss)
-	if k != "":   # 美術「探出圈」版：畫布＝圓直徑 2 倍，圓心喺中間（自帶圓底、金圈）
+	if k != "":   # 美術「探出圈」版：畫布＝圓直徑 3 倍，圓心喺中間（自帶圓底、金圈；展腳全長喺畫布內）
 		var t = Spr.get_tex(k)
-		ctx.drawImage(t, x - r * 2.0, y - r * 2.0, r * 4.0, r * 4.0)
+		ctx.drawImage(t, x - r * 3.0, y - r * 3.0, r * 6.0, r * 6.0)
 		return
 	ctx.beginPath(); ctx.arc(x, y, r, 0.0, TAU); ctx.fillStyle = "rgba(58,36,64,.95)"; ctx.fill()
 	var ch = {"chen": "陳", "he": "何", "qian": "錢", "dato": "冥", "nuo": "糯", "pang": "龐"}.get(boss, "?")

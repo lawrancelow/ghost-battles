@@ -214,8 +214,8 @@ static func _gift_card(main, gid: String, tier: String, sel: String) -> Control:
 	b.add_child(vb)
 	b.pressed.connect(func(): _bribe(main, gid, tier, sel))
 	return b
-# 冥界老闆頭像：美術「探出圈」版（kpi_boss_<id>：畫布＝圓直徑 2 倍、圓心喺正中、帽／頭越出圈）；冇就圓牌＋姓（佔位）
-# sz＝圓圈直徑；返回嘅格仔預留上方出圈位（唔裁切），圓圈貼格底
+# 冥界老闆頭像：美術「探出圈」版（kpi_boss_<id>：畫布＝圓直徑 3 倍、圓心喺正中；帽連展腳全長／頭頂越出圈，最闊離圓心 2.2R、最高 1.8R）；冇就圓牌＋姓（佔位）
+# sz＝圓圈直徑；返回嘅格仔預留展腳同頭頂出圈位（唔裁切）
 const BOSS_CH := {"chen": "陳", "he": "何", "qian": "錢", "dato": "冥", "nuo": "糯", "pang": "龐"}
 static func boss_key(boss: String) -> String:
 	if Spr.ok("kpi_boss_" + boss): return "kpi_boss_" + boss
@@ -223,15 +223,15 @@ static func boss_key(boss: String) -> String:
 static func boss_portrait(boss: String, sz: float) -> Control:
 	var k = boss_key(boss)
 	var box = Control.new(); box.mouse_filter = Control.MOUSE_FILTER_IGNORE; box.clip_contents = false
-	box.custom_minimum_size = Vector2(sz * 1.5, sz * 1.75)
+	box.custom_minimum_size = Vector2(sz * 2.2, sz * 1.5)   # 闊＝±1.1 直徑（展腳），高＝頭頂 0.9＋圓下半 0.5＋留白
 	if k != "":
-		var tr = TextureRect.new(); tr.texture = Spr.get_tex(k + ("_s" if sz <= 64 and Spr.ok(k + "_s") else ""))
+		var tr = TextureRect.new(); tr.texture = Spr.get_tex(k + ("_s" if sz <= 40 and Spr.ok(k + "_s") else ""))
 		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; tr.stretch_mode = TextureRect.STRETCH_SCALE; tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		tr.size = Vector2(sz * 2.0, sz * 2.0)
-		tr.position = Vector2(sz * 0.75 - sz, sz * 1.75 - sz * 0.5 - sz)   # 圓心 → (格中, 格底上半個圓)
+		tr.size = Vector2(sz * 3.0, sz * 3.0)
+		tr.position = Vector2(sz * 1.1 - sz * 1.5, sz * 0.92 - sz * 1.5)   # 圓心 → (格中, 頭頂下 0.92 直徑)
 		box.add_child(tr)
 		return box
-	var p = Panel.new(); p.size = Vector2(sz, sz); p.position = Vector2(sz * 0.25, sz * 0.75); p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var p = Panel.new(); p.size = Vector2(sz, sz); p.position = Vector2(sz * 0.6, sz * 0.42); p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var s = StyleBoxFlat.new(); s.bg_color = Color("#3a2440"); s.border_color = Color("#e8b04a"); s.set_border_width_all(2); s.set_corner_radius_all(int(sz / 2))
 	p.add_theme_stylebox_override("panel", s)
 	var l = UIKit.label(str(BOSS_CH.get(boss, "?")), int(sz * 0.5), Color("#ffe9a8"), "serif", 900)
