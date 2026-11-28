@@ -4,6 +4,8 @@
 #   "joss_repaired"   修好化寶爐（荒村重建）→ joss_reopen／joss_reopen_f
 #   "tavern_open"     陰間酒館開張 → tav_open
 #   "joss_open"       每次開化寶爐收件時叫：stall_hook 之後第一次 → joss_shift（化寶爐轉「祭品模式」）
+# 接 tavern 分支化寶爐（game/joss/joss.gd 收件結果）：on_joss_result(r)
+#   r.backlog＝第一次收件（積壓包裹）→ joss_reopen(_f)；r.shift＝轉祭品模式 → joss_shift
 # 大排檔接入點 stall_hook：已經放喺 CHAPTERS[0].intro 最前（data/nat/data.json），第一章開場自動先播
 extends RefCounted
 
@@ -46,3 +48,16 @@ static func joss_mode(S = null) -> String:
 	if S == null: S = _S()
 	var seen = S.get("seen", {})
 	return "offer" if seen is Dictionary and seen.has("stall_hook") else "cash"
+
+# 化寶爐收件結果（tavern：joss.gd 回傳 dict）→ 播對應劇情；回傳有冇排到
+static func on_joss_result(r, cb: Callable = Callable()) -> bool:
+	if not (r is Dictionary): return false
+	if bool(r.get("backlog", false)): return play("joss_repaired", cb)
+	if bool(r.get("shift", false)):
+		var S = _S(); var seen = S.get("seen", {})
+		if seen is Dictionary and seen.has("joss_shift"): return false
+		var st = J.G.get("Story")
+		if st == null or not DB.D.get("SCENES", {}).has("joss_shift"): return false
+		J.mc(st, "queue", ["joss_shift", cb] if cb.is_valid() else ["joss_shift"])
+		return true
+	return false
