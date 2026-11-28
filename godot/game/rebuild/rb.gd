@@ -128,6 +128,10 @@ static func left_of(b: String) -> int:
 	return n
 
 static func cleared(b: String) -> bool: return left_of(b) == 0
+# [rebuild2] 廢墟前景雜草密度 0.1–1（剩幾多堆雜物）；冇荒村（舊存檔未起嘅地盤）＝0.6
+static func weed_k(b: String) -> float:
+	if not active() or not PILES.has(b): return 0.6
+	return 0.1 + 0.9 * float(left_of(b)) / float(maxi(1, PILES[b].size()))
 static func is_open(b: String) -> bool: return J.t(st().get("open", {}).get(b))
 static func fixing(b: String) -> bool: return st().get("fix", {}).has(b)
 static func fix_left(b: String) -> float: return maxf(0.0, J.num(st().get("fix", {}).get(b, 0)) - J.now() / 1000.0)
@@ -158,7 +162,7 @@ static func tap(village, x: float, y: float) -> bool:
 
 static func _speed(b: String) -> void:
 	var bp = _pos(b); var f = st().fix; f[b] = J.num(f[b]) - 1.0
-	_snd("click"); _float(bp.x, bp.y - 70, T("加快！", "加快！"), "#ffe9a8")
+	_snd("click"); _float(bp.x + randf_range(-26.0, 26.0), bp.y - 92, T("加快！", "加快！"), "#ffe9a8")   # [rebuild2] 唔好同「搭棚修復中」疊埋
 
 # 舊建造流程鈎（native/game.gd n_bld_act、chain_bld.build、ui/main.gd 都叫）：回 true ＝ 荒村接手（唔好再行舊嘅「建好了」）
 static func build_hook(b: String) -> bool:
@@ -410,7 +414,12 @@ static func _fix_b(bp: Vector2) -> String:
 static func draw_scaffold(ctx: Ctx, bp: Vector2, frac: float) -> void:
 	var key = _fix_b(bp) + "_repair"   # 美術 B 組：修復中（竹棚＋帆布）
 	if Spr.ok(key):
-		Art.put(ctx, key, bp.x, bp.y + 6, float(Art.BW.get(_fix_b(bp), 100)))
+		var b = _fix_b(bp); var w = float(Art.BW.get(b, 100)); var sd = ALL.find(b) + 3
+		Art.seat(ctx, bp.x, bp.y + 1, w, sd)   # [rebuild2] 同完成版一樣接地：泥地、後景、斜投影、前景（加木料磚堆）
+		Art.seat_back(ctx, bp.x, bp.y + 1, w, sd)
+		Art.cast(ctx, key, bp.x, bp.y + 2, w)
+		Art.put(ctx, key, bp.x, bp.y + 6, w)
+		Art.scaffold_front(ctx, bp.x, bp.y + 1, w, sd)
 	else:
 		ctx.strokeStyle = "#a07a4a"; ctx.lineWidth = 3
 		for i in 4:

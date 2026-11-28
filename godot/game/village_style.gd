@@ -127,6 +127,14 @@ static func draw_dark(c: CanvasItem, nv, sm: ShaderMaterial) -> void:
 			if not vr.has_point(p): continue
 			var w: float = BW[id]
 			P.append(p + Vector2(0, -w * 0.26)); R.append(Vector2(w * 0.98, w * 0.80)); I.append(0.86 + sin(nv.t * 1.3 + p.x) * 0.05)
+		var RB = load("res://game/rebuild/rb.gd")   # [rebuild2] 荒村廢墟／搭緊棚：暗啲嘅光，睇得清楚但比開咗嘅暗
+		if RB.active():
+			for id in RB.ALL:
+				if not POS.has(id) or J.t(S.bld.get(id, 0)) or not BW.has(id) or P.size() >= NL: continue
+				var p2 = Vector2(J.num(POS[id][0]), J.num(POS[id][1]))
+				if not vr.has_point(p2): continue
+				var w2: float = BW[id]
+				P.append(p2 + Vector2(0, -w2 * 0.22)); R.append(Vector2(w2 * 0.85, w2 * 0.66)); I.append(0.62 if RB.fixing(id) else 0.42)
 		if POS.has("gate") and P.size() < NL:
 			P.append(Vector2(J.num(POS.gate[0]), J.num(POS.gate[1]) - 40)); R.append(Vector2(150, 110)); I.append(0.85)
 	var ZD = load("res://game/zone/zone_data.gd")

@@ -59,7 +59,15 @@ func all(t) -> void:
 	_chk("未輪到：撳伐木場唔郁", not RB.fixing("wood"))
 	for b in RB.ORDER:
 		var r0 = S.res.duplicate()
+		for _w9 in 40:   # 等劇情／彈窗（例如開張後嘅教程對白）完咗先撳
+			if not J.t(J.mc(J.G.get("Story"), "busy", [])) and not J.t(J.mc(J.G.get("UI"), "modalOpen", [])): break
+			var Stn = J.G.get("Story")
+			if _w9 % 8 == 0: _p("wait busy=%s modal=%s cur=%s q=%s" % [J.mc(Stn, "busy", []), J.mc(J.G.get("UI"), "modalOpen", []), str(Stn.cur.get("id")) if Stn is Object and Stn.get("cur") is Dictionary else "-", str((Stn.q as Array).map(func(e): return e.sc if e.sc is String else "obj")) if Stn is Object else "-"])
+			J.mc(J.G.get("Story"), "skip_scene", []); J.mc(J.G.get("UI"), "close", [])
+			await _w(t, 0.25)
 		var hits := 0
+		var HDd = J.G.get("HeroDaily"); var V0 = J.G.get("Village")
+		_p("dbg %s active=%s on=%s left=%d story=%s modal=%s hd=%s" % [b, RB.active(), RB.on(), RB.left_of(b), J.mc(J.G.get("Story"), "busy", []), J.mc(J.G.get("UI"), "modalOpen", []), J.mc(HDd, "tap", [V0, -9999.0, -9999.0]) if HDd != null else "-"])
 		for e in RB.piles():
 			if e.b != b: continue
 			for k in RB.HITS:
