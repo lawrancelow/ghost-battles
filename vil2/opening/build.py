@@ -1,6 +1,10 @@
 # 程序組 VIII：新開場等劇情寫入 story_v2.json / fem.json / standup.json / nat/data.json
 import json, sys, collections
 R = sys.argv[1]
+# 2026-11-28 開場線：data/story_v2.json 已經係正本（插圖鍵、kf 女主圖、rv 待審標記、stall_hook 掛鈎都喺嗰邊改過）。
+# 呢個腳本只用嚟「補新場景／更新對白」：已存在嘅場景保留 json 入面嘅 cg（連 rv），唔再郁章節開場。要加 --force 先會寫檔。
+if "--force" not in sys.argv:
+    print("build.py：story_v2.json 已是正本，預設不寫檔。確定要用腳本內的對白覆蓋，請加 --force（已存在場景的插圖設定與待審標記會保留）。"); sys.exit(0)
 H = "阿福"   # 主角佔位（DB.N() 顯示時換成玩家名；女主自動換）
 def T(sp, s): return [sp, s.replace("{主角}", H)]
 def hero_over(x=0.78, flip=True): return [{"spr": "hero", "x": x, "y": 0.97, "h": 0.42, "flip": flip}]
@@ -26,7 +30,7 @@ S["op2_lobby"] = {"style": "talk", "bg": "hq", "title": "地府集團總部・�
   T("牛頭","有。給押送的人用的，被押送的不算。")]}
 S["op2_office"] = {"style": "talk", "bg": "hq", "title": "區域經理辦公室",
  "cg": {"0": {"k": "cg_office", "ph": "cg1_office"}, "4": ""},
- "lines": [T("旁白","辦公室牆上掛著一幅字：「我們是一個大家庭」。字的下面，是一台碎紙機。"),
+ "lines": [T("旁白","辦公室牆上掛著一塊匾：「加班是福」。匾的下面，是一台碎紙機。"),
   T("龐總","坐。不用緊張。我不是針對你，我是針對你的檔案。（翻）陳大福，連續加班一千零九十五天，零請假，零投訴。很好，很好。"),
   T("{主角}","謝謝龐總。"),
   T("龐總","這種人才，集團要好好培養。孟婆，入職湯。"),
@@ -174,7 +178,7 @@ S["joss_shift"] = {"style": "letter", "title": "化寶爐",
 # ---------- 陰間酒館開張 ----------
 S["tav_open"] = {"style": "talk", "bg": "village", "title": "陰間酒館・三更",
  "cg": {"0": {"k": "cg_tavern", "ph": "cg1_huai"}, "13": ""},
- "lines": [T("旁白","中央村一角，一間門口掛著紅燈籠的破酒館，門牌寫著「三更」。"),
+ "lines": [T("旁白","中央村一角，一間門口掛著紅燈籠的破酒館，木匾上寫著「奈何一杯」。"),
   T("三更嬸","新村長？聽說你不喝孟婆的湯。"),
   T("{主角}","那碗東西像茶水間的杯底。"),
   T("三更嬸","（大笑）好！我開了一百年，第一次有人敢講真話。我這裡的孟婆湯 Lite，有成分表。"),
@@ -209,7 +213,10 @@ OP_M = ["op2_road", "op2_lobby", "op2_office", "op2_soup", "op2_exile", "op2_arr
 OP_F = ["opf2_road", "opf2_lobby", "opf2_office", "opf2_soup", "opf2_exile", "opf2_arrive"]
 
 p = R + "/data/story_v2.json"; v2 = json.load(open(p), object_pairs_hook=collections.OrderedDict)
-for k, v in S.items(): v2["scenes"][k] = v
+for k, v in S.items():
+    old = v2["scenes"].get(k)
+    if isinstance(old, dict) and "cg" in old: v["cg"] = old["cg"]   # 保留現有插圖設定（k／kf／ph／rv），唔會把已拿掉嘅 rv 加返、亦唔會抹走未審嘅 rv
+    v2["scenes"][k] = v
 def swap(arr, new):
     i = arr.index("prologue_road"); return arr[:i] + new + arr[i+1:]
 if "prologue_road" in v2["opening"]: v2["opening"] = swap(v2["opening"], OP_M)
@@ -240,6 +247,6 @@ json.dump(su, open(p, "w"), ensure_ascii=False, separators=(",", ":"))
 
 p = R + "/data/nat/data.json"; nd = json.load(open(p), object_pairs_hook=collections.OrderedDict)
 ch1 = nd["CHAPTERS"][0]
-if "stall_hook" not in ch1["intro"]: ch1["intro"] = ["stall_hook"] + ch1["intro"]
+# stall_hook 已改由大排檔開張 tick 播（opening 9b77176），唔再放章節開場
 json.dump(nd, open(p, "w"), ensure_ascii=False, separators=(",", ":"))
 print("ok", len(S), "scenes")
