@@ -52,14 +52,15 @@ textarea:focus,button:focus-visible{outline:2px solid var(--red);outline-offset:
 <body>
 <header>
 <h1>大排檔前大更新＋過勞鬼市集・試稿意見表</h1>
-<p class="lead">還沒審的排在最前面（一到四），審過的在後面。每張圖寫明用途。點圖可放大。每張選「選用／要改／不用」，有意見直接寫在框裡，打完字會自動保存，統籌會直接讀取並交給美術組。</p>
+<p class="lead">還沒審的「第三輪」排在最前面，審過的在後面。每張圖寫明用途。點圖可放大。每張選「選用／要改／不用」，有意見直接寫在框裡，打完字會自動保存，統籌會直接讀取並交給美術組。</p>
 <div class="status" id="st">正在連接保存服務…</div>
 </header>
 <main>
-<section><h2>一、過勞鬼市集試稿（新，待審）</h2><div class="grid" id="g5"></div></section>
-<section><h2>二、爽感包（新，待審）</h2><div class="grid" id="g6"></div></section>
-<section><h2>三、第二輪（按你上次意見改好的＋新做的，待審）</h2><div class="grid" id="g3"></div></section>
-<section><h2>四、女主專屬版劇情插圖（10 張，待審）</h2><div class="grid" id="g4"></div></section>
+<section><h2>第三輪（11 月 28 日下午新畫的 27 張，待審）</h2><div class="grid" id="g7"></div></section>
+<section><h2>一、已審：過勞鬼市集試稿</h2><div class="grid" id="g5"></div></section>
+<section><h2>二、已審：爽感包</h2><div class="grid" id="g6"></div></section>
+<section><h2>三、已審：第二輪</h2><div class="grid" id="g3"></div></section>
+<section><h2>四、已審：女主專屬版劇情插圖（10 張）</h2><div class="grid" id="g4"></div></section>
 <section><h2>五、已審：劇情插圖（老電視框播放）</h2><div class="grid" id="g1"></div></section>
 <section><h2>六、已審：遊戲內美術</h2><div class="grid" id="g2"></div></section>
 <section><h2>七、已定：KPI 逾期懲罰（你選了「中」）</h2>
@@ -75,6 +76,33 @@ textarea:focus,button:focus-visible{outline:2px solid var(--red);outline-offset:
 <script>
 {
 const items=[
+{id:"n_lobby_m",g:7,name:"地府集團大堂（男主）",use:"男主版劇情插圖（老電視框播放）",desc:"黑白無常帶男主排隊取號。"},
+{id:"n_office_m",g:7,name:"龐總辦公室（男主）",use:"男主版劇情插圖",desc:"男主站在龐總辦公桌前。"},
+{id:"n_exile_m",g:7,name:"流放蓋章（男主）",use:"男主版劇情插圖",desc:"龐總蓋章把男主流放到荒村。"},
+{id:"n_tavern_m",g:7,name:"陰間酒館開張（男主）",use:"男主版劇情插圖",desc:"男主在酒館吧台，老闆娘三更嬸。"},
+{id:"n_stall_m",g:7,name:"市集前奏／巡村（男主）",use:"男主版劇情插圖",desc:"美術組說這張沒有放大細看，請留意有沒有文字、鬼的腳、手上拿東西。"},
+{id:"n_pang_m",g:7,name:"龐總巡村考核（男主）",use:"男主版劇情插圖",desc:"同上，沒有放大細看。"},
+{id:"n_flood_m",g:7,name:"化寶爐包裹淹沒（男主）",use:"男主版劇情插圖",desc:"同上，沒有放大細看。"},
+{id:"n_note_m",g:7,name:"化寶爐收到的東西（男主）",use:"男主版劇情插圖",desc:"同上，沒有放大細看。"},
+{id:"n_stall_f",g:7,name:"市集前奏／巡村（女主，修正版）",use:"女主版劇情插圖：修掉背景工人露出的腿",desc:"您之前已選用原圖，這張是修正版。"},
+{id:"n_caught",g:7,name:"被抓包（共用）",use:"男女主共用劇情插圖",desc:"沒有放大細看。"},
+{id:"n_he",g:7,name:"何大睡被鬧鐘吵醒（共用）",use:"KPI 第 2 關考核官何大睡的劇情插圖",desc:"鬧鐘有鐘面刻度（沒有數字），介意的話會改。"},
+{id:"n_qian",g:7,name:"錢不漏咬冥幣（共用）",use:"KPI 第 3 關考核官錢不漏的劇情插圖",desc:""},
+{id:"n_cloth",g:7,name:"衣街 重畫",use:"市集第二條街背景，按您意見換佈局",desc:"兩側騎樓店面的直街。"},
+{id:"n_weapon",g:7,name:"兵器街 重畫",use:"市集第三條街背景，按您意見換佈局",desc:"圍著中央大鍛爐的環形廣場，俯視。"},
+{id:"n_acc",g:7,name:"飾品街 重畫",use:"市集第四條街背景，按您意見換佈局",desc:"沿河小橋與階梯的錯層小巷，有船攤。"},
+{id:"n_ow_cloth",g:7,name:"店員過勞四段：衣街店員",use:"過勞營業攤位動畫，照您選用的方向畫的第 2 款",desc:""},
+{id:"n_ow_weapon",g:7,name:"店員過勞四段：兵器街店員",use:"過勞營業攤位動畫第 3 款",desc:"目前只取回中解析度，選用後會取回原圖。"},
+{id:"n_ow_acc",g:7,name:"店員過勞四段：飾品街店員",use:"過勞營業攤位動畫第 4 款",desc:"目前只取回中解析度，選用後會取回原圖。"},
+{id:"n_named1",g:7,name:"有名字的普通名鬼（一）",use:"陰間酒館可遇到的有名字普通鬼，整格圖，程序切開使用",desc:""},
+{id:"n_named2",g:7,name:"有名字的普通名鬼（二）＋椰子砸死鬼",use:"同上；含荒村裡睡著的名鬼「椰子砸死鬼」",desc:""},
+{id:"n_people",g:7,name:"市集人物頭像：甄好賣、評論家甘先生、限時大客 6 位",use:"市集考核官、評論家系統、限時大客的頭像",desc:""},
+{id:"n_regulars",g:7,name:"熟客 8 位",use:"市集熟客系統的頭像",desc:"美術組自己指出：膚色偏活人，和其他鬼不一致；魏大狀穿黑袍白領巾（律師袍），算不算西方元素請您判斷。"},
+{id:"n_staff",g:7,name:"櫃檯員、巡邏隊與治安事件小圖",use:"櫃檯員 2 款、巡邏隊 2 款，小偷、抓賊、插隊、吵架",desc:""},
+{id:"n_goods1",g:7,name:"第 1 章商品 12 樣",use:"市集第 1 章各攤賣的商品圖示",desc:""},
+{id:"n_goods2",g:7,name:"第 2 章商品 9 樣＋Toyol、空白海報、裝修中門面",use:"市集第 2 章商品圖示",desc:"美術組自己指出：防盜紙褲畫成布料工裝褲，不像紙紮；竹蒸籠頭盔沒有小腳。"},
+{id:"n_stall1",g:7,name:"第 1 章新攤位 5 台 × 三段外觀",use:"攤位升級時的三段外觀",desc:""},
+{id:"n_props",g:7,name:"道具 16 樣",use:"考核官配件 5、巡邏臂章、哨子、錢箱、加班牌開關、星級牌、街名牌鎖開、櫃檯",desc:""},
 {id:"m_gate_a",g:5,name:"市集牌坊 A（石木牌坊）",use:"過勞鬼市集入口：進市集時的第一個畫面，也用作開張劇情插圖的底",desc:"瓦頂石木牌坊、紅燈籠、排隊的鬼客，一隻小鬼舉牌攬客。牌匾留空，文字由程序加。A、B 二選一。"},
 {id:"m_gate_b",g:5,name:"市集牌坊 B（竹棚夜市門）",use:"同上，二選一",desc:"竹棚搭的夜市門、彩燈串、掛金元寶，售票亭裡的店員在打瞌睡，紅繩排隊欄。"},
 {id:"m_food",g:5,name:"食街",use:"市集第一條街背景（一次只顯示一條街）：賣包子、湯麵等食物",desc:"蒸籠攤、紅色塑膠凳、彩色帆布棚。攤位招牌留空。"},
@@ -115,6 +143,7 @@ document.getElementById("g1").innerHTML=items.filter(i=>i.g==1).map(card).join("
 document.getElementById("g2").innerHTML=items.filter(i=>i.g==2).map(card).join("");
 document.getElementById("g3").innerHTML=items.filter(i=>i.g==3).map(card).join("");
 document.getElementById("g4").innerHTML=items.filter(i=>i.g==4).map(card).join("");
+document.getElementById("g7").innerHTML=items.filter(i=>i.g==7).map(card).join("");
 document.getElementById("g5").innerHTML=items.filter(i=>i.g==5).map(card).join("");
 document.getElementById("g6").innerHTML=items.filter(i=>i.g==6).map(card).join("");
 const st=document.getElementById("st");
