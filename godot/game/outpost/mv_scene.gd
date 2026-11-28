@@ -1113,7 +1113,7 @@ func _draw_want(ctx: Ctx, c: Dictionary) -> void:   # 頭頂氣泡：貨品圖�
 
 # ---------------- 生產台 ----------------
 func _st_key(sid: String) -> String:
-	var a = str(MD.st_def(sid).get("art", ""))
+	var a = MD.stall_art(sid, sim.lv(sid))   # [market M1] 新攤三段外觀
 	if _has(a): return a
 	var fb = ST_FALLBACK.get(a, "")
 	return fb if _has(fb) else ""

@@ -347,7 +347,8 @@ static func _draw_ow(sc, ctx, sid: String) -> void:
 	if stg <= 0: return
 	var now = float(sc.t); var sp = sc.sim.st_pos(sid)
 	var w = 128.0; var h = 64.0
-	var x = clampf(sp.x - w / 2.0, sc.vx0() + 4.0, sc.vx1() - w - 4.0); var y = sp.y - 150.0 + (2.0 * sin(now * 3.0) if stg != 3 else 0.0)
+	var lo = maxf(sc.vx0(), float(sc.s2w(Vector2(0, 0)).x)) + 6.0; var hi = minf(sc.vx1(), float(sc.s2w(Vector2(sc.FW, 0)).x)) - w - 6.0   # 成張卡夾喺畫面入面，唔出格
+	var x = clampf(sp.x - w / 2.0, lo, maxf(lo, hi)); var y = sp.y - 150.0 + (2.0 * sin(now * 3.0) if stg != 3 else 0.0)
 	var edge = ["", "#ffd27a", "#ff9a5a", "#ff5a4a", "#9fe08a"][stg]
 	Art.rr(ctx, x - 3, y - 3, w + 6, h + 6, 12, "rgba(44,28,16,.92)", edge, 2.5)
 	if Spr.ok("mk_ow_%d" % stg): Art.put(ctx, "mk_ow_%d" % stg, x + w / 2.0, y + h, w, h)
@@ -357,7 +358,7 @@ static func _draw_ow(sc, ctx, sid: String) -> void:
 	if stg in [1, 2] and now - float(o.say_t) > 9.0 and sc.bubbles.is_empty():   # 抱怨泡（詞庫 20 句輪住出）
 		o.say_t = now
 		var tx = MKO.complain()
-		if tx != "": sc._bubble(sp + Vector2(0, -40), tx, L("夥計", "店員"), 3.2)
+		if tx != "": sc._bubble(Vector2(x + w / 2.0, y - 8.0), tx, L("夥計", "店員"), 3.2)   # 泡出喺小卡上面，唔遮住小卡同「餵包」字
 
 # ============================ 人手面板 ============================
 static func _clear(box) -> void:

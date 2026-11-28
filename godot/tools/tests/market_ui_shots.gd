@@ -13,6 +13,7 @@ const MVW = preload("res://game/outpost/mv_war.gd")
 const PF = preload("res://tools/tests/paddyfix_test.gd")
 var SHOTS := "/home/claude/meeting/market/shots_ui/"
 var _view := Callable()
+var _near := Callable()
 var NAMES := ["阿土", "小紙", "三更", "阿蓮", "大頭", "阿旺", "細妹", "老陳", "阿福仔", "小滿", "阿貴", "秋姐"]
 
 func _p(m): print("[mkshots] ", m)
@@ -32,6 +33,7 @@ func _run(t, sim, stalls: Array, secs: float) -> void:   # 畀模擬行一陣（
 func _ev(t, sim, sc, stalls: Array, type: String, sp: int, wait: float, name: String) -> Dictionary:
 	MKO.st().ev.clear(); MKO.st().evt["food"] = 9999.0
 	var e = MKO.spawn_event(sim, "food", type, sp)
+	_near.call(MKOU.ev_pos(sc, e))   # 近鏡：搞事鬼擺喺畫面下半（上半係 HUD）
 	await _run(t, sim, stalls, wait)
 	MKO.st().evt["food"] = 9999.0
 	await _shot(t, name)
@@ -72,6 +74,7 @@ func all(t) -> void:
 	sc.hud_k = 1.0
 	var mid = Vector2((sim.st_pos(stalls[0]).x - 70.0 + float(sim.L.counter_x1) + 30.0) / 2.0, sim.st_pos(stalls[0]).y + 40.0)
 	_view = func(): cam.z = nv.size.x / 390.0 * 0.66; cam.vel = Vector2.ZERO; cam.center_on(mid)
+	_near = func(p): cam.z = nv.size.x / 390.0; cam.vel = Vector2.ZERO; cam.center_on(p + Vector2(0, -200))
 	_view.call()
 	_p("stalls %s pos %s counter (%s..%s, %s) q1 %s" % [stalls, sim.st_pos(stalls[0]), sim.L.counter_x0, sim.L.counter_x1, sim.L.counter_y, sim.queue_pos(1)])
 	sim.paused = false
@@ -104,6 +107,7 @@ func all(t) -> void:
 	var eb = await _ev(t, sim, sc, stalls, "brawl", 1, 1.5, "s10_brawl")
 	# 抓到（主角出手）
 	MKO.handle_event(sim, int(eb.id)); await _w(t, 0.5); await _shot(t, "s11_caught")
+	_near.call(sim.st_pos(stalls[0]) + Vector2(60, 60))
 	# 漏網：偷貨冇人理 → 結算
 	MKO.st().ev.clear()
 	sim.st().counter[MKO.good_of(stalls[0])] = 30.0
@@ -113,6 +117,7 @@ func all(t) -> void:
 	MKO.st().ev.clear(); MKOU._fx.clear()
 	MKO.assign(sim, "pat", "food", "t_u9"); MKO.assign(sim, "pat", "food", "t_u10")
 	await _w(t, 0.5); MKO.pop_say(); MKOU._says.clear()
+	_near.call(sim.st_pos(stalls[0]) + Vector2(70, 40))
 	# 過勞：一攤死頂（第 1 段）、一攤趴低（第 3 段）
 	MK.ot(stalls[0]).fat = 78.0; MK.ot(stalls[0]).on = 1
 	MK.ot(stalls[1]).down = 40.0; MK.ot(stalls[1]).fat = 100.0

@@ -27,6 +27,7 @@ static func reload() -> void:
 	var f = FileAccess.open(PATH, FileAccess.READ)
 	var o = JSON.parse_string(f.get_as_text()) if f != null else null
 	_D = o if o is Dictionary else {}
+	_mt = {}
 	for k in ["cat", "maps", "overtime"]: if not (_D.get(k) is Dictionary): _D[k] = {}
 	if not (_D.get("streets") is Array): _D["streets"] = []
 
@@ -61,9 +62,17 @@ static func street_def(id: String) -> Dictionary:
 	for s in streets(): if str(s.get("id", "")) == id: return s
 	return {}
 static func name(id: String) -> String: return T(street_def(id).get("n", id))
-static func map_tbl(ci: int) -> Dictionary:
+static var _mt := {}
+static func map_tbl(ci: int) -> Dictionary:   # maps[ci] ＋ 已過審新攤（market_goods_live.json maps_add）
+	if _mt.has(ci): return _mt[ci]
 	var m = D().maps.get(str(ci))
-	return m if m is Dictionary else {}
+	var o: Dictionary = (m as Dictionary).duplicate(true) if m is Dictionary else {}
+	var add = MD.live_maps_add(ci)
+	for street in add:
+		if not (o.get(street) is Array): o[street] = []
+		for sid in add[street]: if not (o[street] as Array).has(sid): o[street].append(sid)
+	_mt[ci] = o
+	return o
 static func street_of(ci: int, sid: String) -> String:   # 本章呢個台喺邊條街
 	var m = map_tbl(ci)
 	for k in m: if m[k] is Array and (m[k] as Array).has(sid): return str(k)
