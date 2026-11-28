@@ -681,6 +681,7 @@ func _mv_tick() -> void:
 	if not mv_on(): return
 	MVW.poll()   # [war]
 	ZDm.poll(); ZVm.eat_news(self)   # [zone] 攻佔／野外王戰鬥結果
+	load("res://game/kpi/kpi_ui.gd").eat_news(self)   # [kpi] 考核倒數、Bryan 搶功
 	RAID.tick(self)   # [raid]
 	MVB.tick()
 	# 舊存檔第一次入嚟：簡短介紹（等標題、手機、劇情、自檢都完先彈）
