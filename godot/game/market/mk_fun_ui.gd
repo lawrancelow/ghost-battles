@@ -13,6 +13,7 @@ static var _wbtn := {}   # 世界座標掣
 static var _hbtn := {}   # 畫面座標掣
 static var trend_open := false
 static var hud_rects: Array = []   # 市集 HUD 佔位（畫面座標）：「生產鏈」掣避開用
+static var _card := {}   # 人物小卡（熟客／評論家／大客）：{art, a, b, t0, life, col}
 static var _mid_n := 0
 static var _mid_t := -99.0
 static var hud_bot := 0.0   # 市集 HUD 底（畫面座標）：浮字唔好鑽入去
@@ -130,10 +131,32 @@ static func draw_hud(sc, ctx, y0 := -1.0) -> void:
 			var left2 = maxf(0.0, float(c.get("tend", 0.0)) - FUN._clock())
 			var need = 0; var got = 0
 			for g in c.wants: need += int(c.wants[g]); got += int(c.got.get(g, 0))
-			Art.rr(ctx, x, y, 240, 30, 8, "rgba(60,20,10,.88)", "#ffcf6a", 1.6)
-			sc._txt(ctx, L("%s　%d／%d　%d 秒", "%s　%d／%d　%d 秒") % [str(c.get("vipn", "")), got, need, int(ceil(left2))], x + 120.0, y + 15.0, 14, Color("#ffe8b0"), "center", 900, 0)
-			hud_rects.append(Rect2(x, y, 240, 30)); y += 36.0
+			var va = str(c.get("vipart", "")); var has = va != "" and Spr.ok(va)
+			var vh = 52.0 if has else 30.0
+			Art.rr(ctx, x, y, 240, vh, 8, "rgba(60,20,10,.9)", "#ffcf6a", 1.6)
+			if has: Art.put(ctx, va, x + 28.0, y + vh - 2.0, 0.0, vh - 4.0)
+			var tx0 = x + (56.0 if has else 12.0)
+			if has:
+				sc._txt(ctx, L("限時大客：%s", "限時大客：%s") % str(c.get("vipn", "")), tx0, y + 16.0, 15, Color("#ffe8b0"), "left", 900, 0)
+				sc._txt(ctx, L("%d／%d 件　剩 %d 秒", "%d／%d 件　剩 %d 秒") % [got, need, int(ceil(left2))], tx0, y + 37.0, 14, Color("#fff4e0"), "left", 800, 0)
+			else: sc._txt(ctx, L("%s　%d／%d　%d 秒", "%s　%d／%d　%d 秒") % [str(c.get("vipn", "")), got, need, int(ceil(left2))], x + 120.0, y + 15.0, 14, Color("#ffe8b0"), "center", 900, 0)
+			hud_rects.append(Rect2(x, y, 240, vh)); y += vh + 6.0
 			break
+	# 人物小卡（熟客來了／記住名字／評論家評分）：頭像＋兩行字，幾秒後收
+	if not _card.is_empty():
+		var tu = float(sc.t) - float(_card.t0)
+		if tu > float(_card.life): _card = {}
+		else:
+			var ca = clampf(minf(tu / 0.2, (float(_card.life) - tu) / 0.4), 0.0, 1.0)
+			var ka = str(_card.get("art", "")); var khas = ka != "" and Spr.ok(ka)
+			ctx.globalAlpha = ca
+			Art.rr(ctx, x, y, 240, 56, 8, "rgba(250,244,228,.97)", str(_card.get("col", "#5e4a30")), 2.0)
+			if khas: Art.put(ctx, ka, x + 30.0, y + 54.0, 0.0, 52.0)
+			var kx = x + (60.0 if khas else 12.0)
+			sc._txt(ctx, str(_card.get("a", "")), kx, y + 18.0, 15, Color("#2b1d12"), "left", 900, 0)
+			sc._txt(ctx, str(_card.get("b", "")), kx, y + 39.0, 14, Color("#5a3a1a"), "left", 800, 0)
+			ctx.globalAlpha = 1.0
+			hud_rects.append(Rect2(x, y, 240, 56)); y += 62.0
 	hud_bot = y
 	if tl.size() and trend_open:
 		var hh = 26.0 * tl.size() + 34.0
@@ -179,7 +202,7 @@ static func events(sc) -> void:
 		var stall = sid != "" and not sid.begins_with("_")
 		if stall and (not _seen(sc, sim.st_pos(sid)) or not MK.shown(sim.ci(), sid)): continue   # 唔喺畫面／唔係而家條街：唔出浮字
 		if str(e.k) in ["chain", "vip_fail"] and e.has("pos") and not _seen(sc, e.pos): e.erase("pos")
-		var at = _at(sc, sim.st_pos(sid) + Vector2(0, -150)) if stall else (Vector2.ZERO if str(e.k) in ["trend_new", "feed", "up", "trend_src", "ch_event", "rush_rest", "rush_end", "chain_break", "reg_arc", "critic"] or (str(e.k) in ["chain", "vip_fail"] and e.has("pos")) else _mid(sc))
+		var at = _at(sc, sim.st_pos(sid) + Vector2(0, -150)) if stall else (Vector2.ZERO if str(e.k) in ["trend_new", "feed", "up", "trend_src", "ch_event", "rush_rest", "rush_end", "chain_break", "reg_arc", "critic", "reg_in", "reg_name"] or (str(e.k) in ["chain", "vip_fail"] and e.has("pos")) else _mid(sc))
 		match str(e.k):
 			"down": sc._float(at, L(GAG[int(e.get("gag", 0)) % GAG.size()][0], GAG[int(e.get("gag", 0)) % GAG.size()][1]), Color("#ffb0a0"), 16, 2.2)
 			"vet": sc._float(at, L("升職做老員工！", "升職為老員工！"), Color("#ffd27a"), 18, 2.0)
@@ -196,11 +219,11 @@ static func events(sc) -> void:
 			"vip_fail": sc._float(_at(sc, e.get("pos", at)), L("「唔夠貨？下次啦。」", "「貨不夠？下次吧。」"), Color("#d9cdd2"), 15, 2.0)
 			"critic":
 				var b = e.get("best", ["", 1])
-				if not _seen(sc, sim.st_pos(str(b[0]))) or not MK.shown(sim.ci(), str(b[0])):   # 得獎攤唔喺畫面：改喺中間講
-					sc._float(_mid(sc), L("陰間米芝蓮：%d 星", "陰間米其林：%d 星") % int(b[1]), Color("#ffe98a") if int(b[1]) >= 3 else Color("#d9cdd2"), 20, 2.6)
-					continue
-				sc._float(_at(sc, sim.st_pos(str(b[0])) + Vector2(0, -160)), L("陰間米芝蓮：%d 星", "陰間米其林：%d 星") % int(b[1]), Color("#ffe98a") if int(b[1]) >= 3 else Color("#d9cdd2"), 20, 2.6)
-			"reg_name": sc._float(at, L("熟客：%s", "熟客：%s") % str(e.get("name", "")), Color("#ff9ac0"), 16, 2.0)
+				var cn = MK.T(FUN.D().critic.get("name", ["甘先生", "甘先生"])); var gd = MK.T(FUN.D().critic.get("guide", ["冥其林指南", "冥其林指南"]))
+				var stn = str(MD.st_def(str(b[0])).get("n", ["", ""])[1 if DB.lang != "yue" else 0]) if MD.st_def(str(b[0])).get("n") is Array else ""
+				card(sc, str(FUN.D().critic.get("art", "")), "%s《%s》" % [cn, gd], L("%s：%d 盞燈籠", "%s：%d 盞燈籠") % [stn, int(b[1])], 4.5, "#c9a227" if int(b[1]) >= 3 else "#6a5a50")
+			"reg_name": card(sc, str(e.get("art", "")), L("記住咗熟客個名", "記住熟客的名字了"), str(e.get("name", "")), 3.6, "#c8508a")
+			"reg_in": card(sc, str(e.get("art", "")), L("熟客嚟咗", "熟客來了"), str(e.get("name", "")) if str(e.get("name", "")) != "" else L("（幫襯多幾次就識佢）", "（多光顧幾次就認得他）"), 2.8, "#c8508a")
 			"renown_up": sc._float(at, L("名聲升級：%s", "名聲升級：%s") % str(e.get("name", "")), Color("#ffd27a"), 22, 2.6)
 			"trend_new": pass
 
@@ -218,3 +241,5 @@ static func _at(sc, wp: Vector2) -> Vector2:
 	sp.x = clampf(sp.x, 110.0, sc.FW - 110.0)
 	sp.y = maxf(sp.y, maxf(hud_bot, sc.top_pad + 200.0) + 44.0)
 	return sc.s2w(sp)
+static func card(sc, art: String, a: String, b: String, life := 3.0, col := "#5e4a30") -> void:
+	_card = {"art": art, "a": a, "b": b, "t0": float(sc.t), "life": life, "col": col}

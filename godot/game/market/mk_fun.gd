@@ -396,9 +396,9 @@ static func _spawn_vip(sim) -> void:
 	for i in goods.size(): wants[goods[i]] = maxi(1, total / goods.size() + (total % goods.size() if i == 0 else 0))
 	var c = {"cid": "vip_" + str(vd.id), "k": "youhun", "wants": wants, "got": {}, "st": "in", "slot": 99, "take": 0.3,
 		"s": sim.QLEN, "pos": MD.poly_at(sim.QP, sim.QLEN), "ph": randf() * 10.0, "flip": true, "lines": [], "vip": true,
-		"bigv": true, "vipn": T(vd.n), "tend": _clock() + cf("rush", "vip_s", 90.0)}
+		"bigv": true, "vipn": T(vd.n), "vipart": str(vd.get("art", "")), "tend": _clock() + cf("rush", "vip_s", 90.0)}
 	sim.custs.push_front(c)
-	_ev({"k": "vip_in", "name": T(vd.n), "n": total, "s": cf("rush", "vip_s", 90.0)})
+	_ev({"k": "vip_in", "name": T(vd.n), "n": total, "s": cf("rush", "vip_s", 90.0), "art": str(vd.get("art", ""))})
 static func _vip_tick(sim) -> void:   # 超時：搖頭走人，冇罰（已攞到嘅照正價俾）
 	for c in sim.custs:
 		if J.t(c.get("bigv")) and c.st != "out" and _clock() > float(c.get("tend", 0.0)):
@@ -444,17 +444,18 @@ static func _fest() -> String:
 	return str(JS.fest_of(JS._date()))
 static func is_trend(sim, sid: String) -> bool: return trend_list(sim).has(sid)
 # ---- 熟客（酒館普通鬼生成器）----
-static func regs(ci: int) -> Array:
+static func regs(ci: int) -> Array:   # 本章熟客（劇本名單：登場章 ≤ 本章；最多 per_ch 位，最新登場優先）；狀態 {id, name, art, v}
 	var R = st().regs
 	var k = str(ci)
 	if not (R.get(k) is Array):
-		var a = []
-		var TG = load("res://game/tavern/tv_gen.gd")
-		for i in int(cf("regular", "per_ch", 4)):
-			var sd = 7000 + ci * 37 + i * 101
-			var g = TG.gen(sd) if TG != null else {}
-			a.append({"seed": sd, "name": str(g.get("name", "熟客")), "v": 0})
-		R[k] = a
+		var all: Array = D().regular.get("list", [])
+		var pick = []
+		for x in all: if x is Dictionary and int(x.get("from", 0)) <= ci: pick.append(x)
+		pick.sort_custom(func(a, b): return int(a.get("from", 0)) > int(b.get("from", 0)))
+		pick = pick.slice(0, int(cf("regular", "per_ch", 4)))
+		var a2 = []
+		for x in pick: a2.append({"id": str(x.get("id", "")), "name": T(x.get("n", ["熟客", "熟客"])), "art": str(x.get("art", "")), "v": 0})
+		R[k] = a2
 	return R[k]
 static func on_spawn(sim, c: Dictionary) -> void:   # spawn_cust 之後叫：有機會變熟客
 	if not on() or J.t(c.get("bigv")) or randf() >= cf("regular", "p", 0.12): return
@@ -462,12 +463,13 @@ static func on_spawn(sim, c: Dictionary) -> void:   # spawn_cust 之後叫：有
 	if a.is_empty(): return
 	var i = randi() % a.size()
 	c["reg"] = i; c["regn"] = str(a[i].name) if int(a[i].v) >= int(cf("regular", "name_at", 5)) else ""
+	_ev({"k": "reg_in", "i": i, "name": str(c.regn), "art": str(a[i].get("art", ""))})
 static func _reg_visit(i: int) -> void:
 	var a = regs(ch())
 	if i < 0 or i >= a.size(): return
 	a[i].v = int(a[i].v) + 1
 	var v = int(a[i].v)
-	if v == int(cf("regular", "name_at", 5)): _ev({"k": "reg_name", "i": i, "name": str(a[i].name)})
+	if v == int(cf("regular", "name_at", 5)): _ev({"k": "reg_name", "i": i, "name": str(a[i].name), "art": str(a[i].get("art", ""))})
 	if v % int(cf("regular", "arc_every", 10)) == 0:
 		RN.add(cf("regular", "arc_renown", 30.0), "reg")
 		_ev({"k": "reg_arc", "i": i, "name": str(a[i].name), "n": v / int(cf("regular", "arc_every", 10)), "ch": ch()})

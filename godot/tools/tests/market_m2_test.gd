@@ -292,7 +292,13 @@ func logic(_t) -> void:
 	FUN.now_s = -1.0
 	_p("===== 8. 熟客、評論家、章事件 =====")
 	var regs = FUN.regs(0)
-	_chk("每章 4 位熟客（酒館生成器、同種子同名）", regs.size() == 4 and str(regs[0].name) == str(FUN.regs(0)[0].name))
+	_chk("第 1 章 4 位熟客（劇本名單：阿一、老蔡＋兩位街坊）", regs.size() == 4 and regs.any(func(x): return str(x.name) == "阿一") and regs.any(func(x): return str(x.name) == "討債鬼老蔡"), regs.map(func(x): return x.name))
+	var art_ok = true
+	for x in FUN.D().regular.list + FUN.D().rush.vips + [FUN.D().critic]: if not Spr.ok(str(x.get("art", ""))): art_ok = false
+	_chk("熟客／限時大客／甘先生頭像全部有圖（過審素材）", art_ok)
+	FUN.st().regs.erase("1")
+	_chk("第 2 章：陳太、阿 Ben 登場（最新登場優先）", FUN.regs(1).any(func(x): return str(x.name) == "陳太") and FUN.regs(1).any(func(x): return str(x.name) == "阿 Ben") and FUN.regs(1).size() == 4, FUN.regs(1).map(func(x): return x.name))
+	_chk("第 1 章唔會出後面章節嘅熟客（跳哥、阿蘭、布哥、Ivy）", not regs.any(func(x): return str(x.id) in ["tiaoge", "alan", "buge", "ivy", "chentai", "ben"]))
 	var arc = 0
 	for i in 10: FUN._reg_visit(0)
 	for e in FUN.pop_events(): if e.k == "reg_arc": arc += 1

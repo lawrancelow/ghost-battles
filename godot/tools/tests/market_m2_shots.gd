@@ -16,7 +16,7 @@ func _shot(t, name: String):
 func _vip(sim, got: int) -> void:
 	var c = {"cid": "vip_rich", "k": "youhun", "wants": {"m_shoubao": 12, "m_douhua": 6}, "got": {"m_shoubao": got}, "st": "in", "slot": 99, "take": 9e9,
 		"s": sim.QLEN, "pos": MD.poly_at(sim.QP, sim.QLEN), "ph": 0.0, "flip": true, "lines": [], "vip": true, "bigv": true,
-		"vipn": MK.T(FUN.D().rush.vips[0].n), "tend": FUN._clock() + 73.0}
+		"vipn": MK.T(FUN.D().rush.vips[0].n), "vipart": str(FUN.D().rush.vips[0].art), "tend": FUN._clock() + 73.0}
 	sim.custs.push_front(c)
 func all(t) -> void:
 	DirAccess.make_dir_recursive_absolute(SHOTS)
@@ -92,7 +92,7 @@ func all(t) -> void:
 	FUN._ev({"k": "critic", "res": [[F, 3]], "best": [F, 3]})
 	await _w(t, 0.35); await _shot(t, "s9_critic")
 	await _w(t, 2.0)
-	FUN._ev({"k": "reg_name", "i": 0, "name": str(FUN.regs(sim.ci())[0].name)})
+	FUN._ev({"k": "reg_name", "i": 0, "name": str(FUN.regs(sim.ci())[0].name), "art": str(FUN.regs(sim.ci())[0].art)})
 	await _w(t, 0.35); await _shot(t, "s10_regular")
 	await _w(t, 1.8)
 	RN.add(600.0, "test")

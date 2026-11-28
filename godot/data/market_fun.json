@@ -84,42 +84,48 @@
     "n": [
      "富豪鬼",
      "富豪鬼"
-    ]
+    ],
+    "art": "mk_mp_vip_tycoon"
    },
    {
     "id": "tour",
     "n": [
      "旅行團鬼",
      "旅行團鬼"
-    ]
+    ],
+    "art": "mk_mp_vip_tour"
    },
    {
     "id": "wed",
     "n": [
      "婚宴鬼",
      "婚宴鬼"
-    ]
+    ],
+    "art": "mk_mp_vip_bride"
    },
    {
     "id": "takeaway",
     "n": [
      "外賣大單",
      "外賣大單"
-    ]
+    ],
+    "art": "mk_mp_vip_delivery"
    },
    {
     "id": "group",
     "n": [
      "集團團購",
      "集團團購"
-    ]
+    ],
+    "art": "mk_mp_vip_corp"
    },
    {
     "id": "famous",
     "n": [
      "名鬼包場",
      "名鬼包場"
-    ]
+    ],
+    "art": "mk_mp_vip_star"
    }
   ]
  },
@@ -152,7 +158,118 @@
   "p": 0.12,
   "name_at": 5,
   "arc_every": 10,
-  "arc_renown": 30
+  "arc_renown": 30,
+  "list": [
+   {
+    "id": "ayi",
+    "from": 0,
+    "n": [
+     "阿一",
+     "阿一"
+    ],
+    "art": "mk_rg_ayi"
+   },
+   {
+    "id": "laocai",
+    "from": 0,
+    "n": [
+     "討債鬼老蔡",
+     "討債鬼老蔡"
+    ],
+    "art": "mk_rg_laocai"
+   },
+   {
+    "id": "auntie",
+    "from": 0,
+    "n": [
+     "街坊阿姨",
+     "街坊阿姨"
+    ],
+    "art": "mk_rg2_auntie"
+   },
+   {
+    "id": "grandpa",
+    "from": 0,
+    "n": [
+     "老伯",
+     "老伯"
+    ],
+    "art": "mk_rg2_grandpa"
+   },
+   {
+    "id": "chentai",
+    "from": 1,
+    "n": [
+     "陳太",
+     "陳太"
+    ],
+    "art": "mk_rg_chentai"
+   },
+   {
+    "id": "ben",
+    "from": 1,
+    "n": [
+     "阿 Ben",
+     "阿 Ben"
+    ],
+    "art": "mk_rg_ben"
+   },
+   {
+    "id": "seamstress",
+    "from": 1,
+    "n": [
+     "裁縫娘",
+     "裁縫娘"
+    ],
+    "art": "mk_rg2_seamstress"
+   },
+   {
+    "id": "teacher",
+    "from": 1,
+    "n": [
+     "教書先生",
+     "教書先生"
+    ],
+    "art": "mk_rg2_teacher"
+   },
+   {
+    "id": "tiaoge",
+    "from": 2,
+    "n": [
+     "跳哥",
+     "跳哥"
+    ],
+    "art": "mk_rg_tiaoge"
+   },
+   {
+    "id": "alan",
+    "from": 3,
+    "n": [
+     "阿蘭",
+     "阿蘭"
+    ],
+    "art": "mk_rg_alan"
+   },
+   {
+    "id": "buge",
+    "from": 4,
+    "n": [
+     "布哥",
+     "布哥"
+    ],
+    "art": "mk_rg_buge"
+   },
+   {
+    "id": "ivy",
+    "from": 5,
+    "n": [
+     "總務處 Ivy",
+     "總務處 Ivy"
+    ],
+    "art": "mk_rg_ivy"
+   }
+  ],
+  "_doc": "熟客名單（劇本第五節）：from＝登場章（0 起），之後每章都會回來；每章最多 per_ch 位（最新登場的優先）。art＝過審頭像"
  },
  "critic": {
   "per_ch": 2,
@@ -169,7 +286,16 @@
   "star_miles": [
    1,
    3
-  ]
+  ],
+  "name": [
+   "甘先生",
+   "甘先生"
+  ],
+  "guide": [
+   "冥其林指南",
+   "冥其林指南"
+  ],
+  "art": "mk_mp_critic"
  },
  "combos": {
   "0": [
