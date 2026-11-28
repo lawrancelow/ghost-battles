@@ -26,6 +26,13 @@ func _f(t, n := 1):
 func _shot(t, name: String):
 	await RenderingServer.frame_post_draw
 	t.get_viewport().get_texture().get_image().save_png(OUT + name + ".png"); _p("shot " + name)
+# 連續截圖（做 GIF 用）：OUT/gif/<name>_NN.png
+func _frames(t, name: String, n: int, dt: float) -> void:
+	DirAccess.make_dir_recursive_absolute(OUT + "gif")
+	for i in n:
+		await RenderingServer.frame_post_draw
+		t.get_viewport().get_texture().get_image().save_png(OUT + "gif/%s_%02d.png" % [name, i])
+		await t.get_tree().create_timer(dt, true, false, true).timeout
 func _skip(t, n := 6):
 	var idle = 0
 	for i in maxi(n, 40):
@@ -118,7 +125,7 @@ func topbar_coins(t, m) -> void:
 	JU.log.clear()
 	S.res["coins"] = J.num(S.res.coins) + 800.0
 	var want = G.fmt(S.res.coins)
-	m.refresh(); await _f(t, 3)
+	m.refresh(); await _frames(t, "coins_on", 10, 0.07)
 	var lb = m.res_lbl.coins
 	_chk("頂欄冥幣：升咗就滾（有滾動器）", lb.get_node_or_null("JuiceRoll") != null)
 	_chk("頂欄冥幣：響入帳音＋大額震屏震機", _has_log("chime") and _has_log("big") and _has_log("vib"), JU.log.slice(0, 6))
@@ -217,7 +224,9 @@ func fight(t, m) -> void:
 	J.G.get("Battle")["auto"] = true
 	JU.log.clear()
 	var r = ZD.start_stage()
-	if RTS.pending != null: RTS.card_go()
+	if RTS.pending != null:
+		await _w(t, 0.5); await _shot(t, "j09_sortie_card")   # 出擊卡：對面弱點＋推薦陣容／一鍵上陣
+		RTS.card_go()
 	var op = RTS.op_for("1-1")
 	if op == null: _chk("真打一場：開到仗", false, r); return
 	var c = m.village.zone_cam()
@@ -227,6 +236,7 @@ func fight(t, m) -> void:
 		if op.phase == "fight":
 			_cam(m, op.center() + Vector2(0, -40), m.village.size.x / 390.0)
 			if shot_n < 3 and n % 25 == 0: shot_n += 1; await _shot(t, "j07_fight_%d" % shot_n)
+			if shot_n == 1 and not op.has_meta("t_gif"): op.set_meta("t_gif", true); await _frames(t, "fight_on", 30, 0.07)
 		else: c.glide_to(op.center())
 		await _w(t, 0.1)
 		crits = int(op.get_meta("crits", 0)); ks = int(op.get_meta("ks_max", 0))
@@ -280,6 +290,9 @@ func one_tap(t, m) -> void:
 
 func off_check(t, m) -> void:
 	JU.force = 0; JU.log.clear()
+	var S0 = J.G.S; m.refresh(); await _f(t, 2)
+	S0.res["coins"] = J.num(S0.res.coins) + 800.0
+	m.refresh(); await _frames(t, "coins_off", 10, 0.07)
 	var lb = Label.new(); m.add_child(lb)
 	var fmt = func(x: float) -> String: return str(int(x))
 	JU.roll(lb, 10.0, fmt); JU.roll(lb, 999.0, fmt)
