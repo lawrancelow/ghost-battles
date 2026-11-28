@@ -25,7 +25,7 @@ func logic(t) -> void:
 	for k in _saved: S[k] = _saved[k]
 	_p("RESULT ok=%d bad=%d" % [rows - bad, bad])
 
-var _extra: Array = ["work_shots", "power_tag", "sortie_keep", "story_busy", "hero_story_wpn", "tut_bubble"]
+var _extra: Array = ["work_shots", "power_tag", "sortie_keep", "story_busy", "hero_story_wpn", "tut_bubble", "bar_layout", "toast_avoid"]
 
 # ---------- 8. 升級曲線 ----------
 func econ_curve(_t) -> void:
@@ -33,7 +33,10 @@ func econ_curve(_t) -> void:
 	var S = _S(); var keep = S.bld.duplicate()
 	S.bld["boss"] = 0.0
 	var c1 = NG.up_cost("wood", 1.0); var c10 = NG.up_cost("wood", 10.0)
-	var cr = J.num(c10.planks) / maxf(1.0, J.num(c1.planks))
+	var c2 = NG.up_cost("wood", 2.0)
+	_chk("[p56b] 1→2 級板半價（≤12）、冥幣照舊", J.num(c1.planks) <= 12 and J.num(c1.coins) >= 24, str(c1))
+	_chk("[p56b] 2 級以上成本冇變（2→3 級 64 板）", int(J.num(c2.planks)) == int(round(25 * pow(2.0, 1.5) * 0.9)), str(c2))
+	var cr = J.num(c10.planks) / maxf(1.0, round(25 * 0.9))   # 對比未打折嘅 1 級基數
 	var m10 = NG.mult_lv(10.0)
 	_p("  10 級板成本＝1 級 ×%.1f；產量 ×%.2f；成本÷產量 ×%.1f（舊 52÷3.7≈14）" % [cr, m10, cr / m10])
 	_chk("10 級成本÷產量 ≤ 5", cr / m10 <= 5.0, "%.2f" % (cr / m10))
@@ -205,3 +208,76 @@ func work_shots(t) -> void:
 		_chk("主角（%s）做嘢行做工動畫（工具浮喺旁，唔係揸住）" % sex, bad.is_empty() and info.size() >= 8, str(bad))
 		c.queue_free()
 	S["hero"] = keep_h
+
+# ---------- 10. [p56b] 任務條：最長缺料文案唔出格、唔切字 ----------
+func bar_layout(t) -> void:
+	_p("===== 10. 任務條最長缺料文案排版 =====")
+	var m = t.get_tree().root.get_node_or_null("Main")
+	if m == null or m.get("quest_lbl") == null: _chk("有任務條", false); return
+	var S = _S(); var keepb = S.bld.duplicate(); var keepr = S.res.duplicate()
+	# 最長組合：最長主線句＋缺 5 位數＋最長上游建築名
+	var longest = ""
+	var QL = J.G.get("QUESTS")
+	for q0 in J.iter(QL):
+		if q0 is Dictionary and str(q0.get("text", "")).length() > longest.length(): longest = str(q0.get("text", ""))
+	if longest.length() < 16: longest = "建造包子鋪（出普通包子）（增加雜鬼名額）"
+	var vp = m.get_viewport_rect().size
+	for cs in [["home", "planks", "plank"], ["altar", "bao", "bun"]]:
+		S.bld[cs[0]] = 0.0; S.bld[cs[2]] = 1.0
+		for k in S.res.keys(): S.res[k] = 0.0
+		var BLD = J.G.get("BUILDINGS"); var keepc = BLD[cs[0]].get("build")
+		BLD[cs[0]]["build"] = {cs[1]: 99999.0}
+		var q = {"t": "build", "b": cs[0], "text": longest, "go": cs[0], "r": {}}
+		var ql = m.quest_lbl; var qb = m.quest_bar
+		var want = longest + m._quest_lack_line(q)   # 同 refresh() 同一條砌字路
+		for rep in 3:
+			ql.text = want; m.quest_prog.text = "99999/99999"
+			for i in 3: await t.get_tree().process_frame
+			if str(ql.text) == want: break
+		var sh = NEED.quest_short(q)
+		var ptxt = ql.get_parsed_text()
+		_chk("%s：短句有出（%s）" % [cs[1], sh], sh != "" and ptxt.find(sh.trim_prefix("（").trim_suffix("）").replace("→", " → ")) >= 0, ptxt)
+		_chk("%s：內容闊度 ≤ 標籤闊度" % cs[1], ql.get_content_width() <= ql.size.x + 1.0, [ql.get_content_width(), ql.size.x])
+		_chk("%s：內容高度 ≤ 標籤高度（冇切行）" % cs[1], ql.get_content_height() <= ql.size.y + 1.0, [ql.get_content_height(), ql.size.y])
+		var lr = ql.get_global_rect(); var br = qb.get_global_rect()
+		_chk("%s：標籤喺任務條入面、任務條喺畫面入面" % cs[1], br.grow(1.0).encloses(lr) and br.position.x >= 0 and br.end.x <= vp.x + 0.5, [lr, br, vp])
+		_chk("%s：冇撞「前往」掣／進度數字" % cs[1], not lr.intersects(m.quest_go.get_global_rect()) and not lr.intersects(m.quest_prog.get_global_rect()))
+		_chk("%s：缺料行字號 ≥ 13" % cs[1], str(ql.text).find("[font_size=13]") >= 0)
+		if OS.has_environment("P56_SHOTS"):
+			await RenderingServer.frame_post_draw
+			t.get_viewport().get_texture().get_image().save_png("/tmp/p56shots/bar_%s.png" % cs[1])
+		BLD[cs[0]]["build"] = keepc
+	for k in keepb: S.bld[k] = keepb[k]
+	for k in keepr: S.res[k] = keepr[k]
+	m.refresh()
+
+# ---------- 11. [p56b] 提示框唔遮「出擊」掣 ----------
+func toast_avoid(t) -> void:
+	_p("===== 11. 提示框避開出擊掣 =====")
+	var m = t.get_tree().root.get_node_or_null("Main")
+	if m == null or m.get("toasts") == null: _chk("有提示層", false); return
+	var sb = m.find_child("CtlSortie", true, false)
+	if sb == null: _chk("有出擊掣", false); return
+	var ov = sb.visible
+	for vis in [true, false]:
+		sb.visible = vis
+		for c in m.toasts.get_children(): c.free()
+		for i in 3: m.show_toast("還差 冥幣 99999（大排檔賣貨，或化寶爐收陽間包裹），普通包子 99999（包子鋪沒人做工：派鬼去做，或親手包 4 糯米→2 包）第 %d 條" % i)
+		for i in 6: await t.get_tree().process_frame
+		var hit = false; var top = 1e9; var n = 0
+		for c in m.toasts.get_children():
+			var r = c.get_global_rect(); n += 1; top = minf(top, r.position.y)
+			if vis and sb.is_visible_in_tree() and r.intersects(sb.get_global_rect()): hit = true
+		var on = sb.is_visible_in_tree()
+		if vis: _chk("出擊掣顯示得到（測試前提）", on)
+		if on:
+			_chk("出擊掣顯示：3 條長提示都唔遮掣", n == 3 and not hit, [n, sb.get_global_rect(), m.toasts.get_global_rect()])
+			_chk("提示框底邊喺出擊掣上面", m.toasts.get_global_rect().end.y <= sb.get_global_rect().position.y - 4.0, [m.toasts.get_global_rect().end.y, sb.get_global_rect().position.y])
+			if vis and OS.has_environment("P56_SHOTS"):
+				await RenderingServer.frame_post_draw
+				t.get_viewport().get_texture().get_image().save_png("/tmp/p56shots/toast_avoid.png")
+		else:
+			_chk("出擊掣收埋：提示框返原位（底邊 -86）", absf(m.toasts.offset_bottom + 86.0) < 1.0, m.toasts.offset_bottom)
+		_chk("提示框冇頂出畫面頂（掣%s）" % ("顯示" if vis else "收埋"), top >= 0.0, top)
+	for c in m.toasts.get_children(): c.free()
+	sb.visible = ov
