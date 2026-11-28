@@ -26,6 +26,13 @@ func _f(t, n := 1):
 func _shot(t, name: String):
 	await RenderingServer.frame_post_draw
 	t.get_viewport().get_texture().get_image().save_png(OUT + name + ".png"); _p("shot " + name)
+# 連續截圖（做 GIF 用）：OUT/gif/<name>_NN.png
+func _frames(t, name: String, n: int, dt: float) -> void:
+	DirAccess.make_dir_recursive_absolute(OUT + "gif")
+	for i in n:
+		await RenderingServer.frame_post_draw
+		t.get_viewport().get_texture().get_image().save_png(OUT + "gif/%s_%02d.png" % [name, i])
+		await t.get_tree().create_timer(dt, true, false, true).timeout
 func _skip(t, n := 6):
 	var idle = 0
 	for i in maxi(n, 40):
@@ -73,6 +80,7 @@ func all(t) -> void:
 	await fight(t, m)
 	await boss_and_slow(t, m)
 	await one_tap(t, m)
+	await vitality_check(t, m)
 	await off_check(t, m)
 	JU.force = -1
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
@@ -117,7 +125,7 @@ func topbar_coins(t, m) -> void:
 	JU.log.clear()
 	S.res["coins"] = J.num(S.res.coins) + 800.0
 	var want = G.fmt(S.res.coins)
-	m.refresh(); await _f(t, 3)
+	m.refresh(); await _frames(t, "coins_on", 10, 0.07)
 	var lb = m.res_lbl.coins
 	_chk("頂欄冥幣：升咗就滾（有滾動器）", lb.get_node_or_null("JuiceRoll") != null)
 	_chk("頂欄冥幣：響入帳音＋大額震屏震機", _has_log("chime") and _has_log("big") and _has_log("vib"), JU.log.slice(0, 6))
@@ -216,7 +224,9 @@ func fight(t, m) -> void:
 	J.G.get("Battle")["auto"] = true
 	JU.log.clear()
 	var r = ZD.start_stage()
-	if RTS.pending != null: RTS.card_go()
+	if RTS.pending != null:
+		await _w(t, 0.5); await _shot(t, "j09_sortie_card")   # 出擊卡：對面弱點＋推薦陣容／一鍵上陣
+		RTS.card_go()
 	var op = RTS.op_for("1-1")
 	if op == null: _chk("真打一場：開到仗", false, r); return
 	var c = m.village.zone_cam()
@@ -226,6 +236,7 @@ func fight(t, m) -> void:
 		if op.phase == "fight":
 			_cam(m, op.center() + Vector2(0, -40), m.village.size.x / 390.0)
 			if shot_n < 3 and n % 25 == 0: shot_n += 1; await _shot(t, "j07_fight_%d" % shot_n)
+			if shot_n == 1 and not op.has_meta("t_gif"): op.set_meta("t_gif", true); await _frames(t, "fight_on", 30, 0.07)
 		else: c.glide_to(op.center())
 		await _w(t, 0.1)
 		crits = int(op.get_meta("crits", 0)); ks = int(op.get_meta("ks_max", 0))
@@ -234,7 +245,10 @@ func fight(t, m) -> void:
 	_chk("真打一場：有連殺計數（≥1）", ks >= 1, ks)
 	var won = op.result is Dictionary and J.t(op.result.get("win"))
 	_chk("真打一場：贏＝有終結慢鏡；輸＝冇", _has_log("slow") == won, [op.result, JU.log.slice(0, 8)])
-	_chk("慢鏡完咗時間返 1×", is_equal_approx(Engine.time_scale, 1.0) or Engine.time_scale > 1.0, Engine.time_scale)
+	await t.get_tree().create_timer(1.0, true, false, true).timeout   # 慢鏡 0.55 秒真時間，等佢完
+	var nslow = 0
+	for e in JU.log: if e[0] == "slow": nslow += 1
+	_chk("慢鏡完咗時間返 1×", is_equal_approx(Engine.time_scale, 1.0) or Engine.time_scale > 1.0, [Engine.time_scale, nslow, JU._slow_until, Time.get_ticks_msec()])
 	_p("戰鬥：暴擊 %d 次、最高連殺 %d" % [crits, ks])
 	await _until(t, func(): return op.phase == "done", 60.0)
 	await _skip(t, 4)
@@ -276,6 +290,9 @@ func one_tap(t, m) -> void:
 
 func off_check(t, m) -> void:
 	JU.force = 0; JU.log.clear()
+	var S0 = J.G.S; m.refresh(); await _f(t, 2)
+	S0.res["coins"] = J.num(S0.res.coins) + 800.0
+	m.refresh(); await _frames(t, "coins_off", 10, 0.07)
 	var lb = Label.new(); m.add_child(lb)
 	var fmt = func(x: float) -> String: return str(int(x))
 	JU.roll(lb, 10.0, fmt); JU.roll(lb, 999.0, fmt)
@@ -288,3 +305,18 @@ func off_check(t, m) -> void:
 	_chk("特效關：冇暴擊（傷害照舊）", not AB._crit_enabled())
 	PF.juice = true
 	lb.queue_free()
+
+# [juice] 生氣值接口（vil2 荒村重建用）
+func vitality_check(t, m) -> void:
+	JU.force = 1; JU.log.clear()
+	var a = JU.vitality_fx(0.0); var b = JU.vitality_fx(0.5); var c = JU.vitality_fx(1.0)
+	_chk("生氣值 0：全暗、冇遊魂、路燈 0", is_equal_approx(a.dark_mul, 1.0) and a.wander_ghosts == 0 and is_equal_approx(a.lamps, 0.0), a)
+	_chk("生氣值越高越亮、霧越淡、遊魂越多", b.dark_mul < a.dark_mul and c.dark_mul < b.dark_mul and c.fog_mul < b.fog_mul and c.wander_ghosts > b.wander_ghosts, [b, c])
+	_chk("生氣值寫入 J.G.juice_vitality", J.G.get("juice_vitality") is Dictionary and is_equal_approx(float(J.G.juice_vitality.v), 1.0))
+	_chk("生氣值超界夾住 0–1", is_equal_approx(JU.vitality_fx(3.0).v, 1.0) and is_equal_approx(JU.vitality_fx(-1.0).v, 0.0))
+	JU.log.clear(); JU.on_rebuild("open", "lumber"); await _f(t, 2)
+	_chk("開張：橫幅粒子＋遞升音", _has_log("celebrate") and _has_log("chime"), JU.log)
+	JU.log.clear(); JU.on_rebuild("lit", null); await _f(t, 2)
+	_chk("全村點燈：大慶祝＋震機", _has_log("celebrate") and _has_log("vib"), JU.log)
+	_chk("冇 rb.gd 時 hook_rebuild 安全返回", ResourceLoader.exists(JU.RB_PATH) or JU.hook_rebuild() == false)
+	JU.vitality_fx(0.0)
