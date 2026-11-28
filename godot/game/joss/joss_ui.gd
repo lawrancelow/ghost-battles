@@ -46,6 +46,8 @@ static func panel(body: Control, rerender: Callable) -> void:
 	if left < 0: tx.append(T("[color=#9c2219]儲滿咗！快啲收，唔係陽間燒落嚟都冇位擺。[/color]", "[color=#9c2219]存滿了！快點收，不然陽間燒下來也沒地方放。[/color]"))
 	else: tx.append(T("下一件：約 %d 分鐘後到", "下一件：約 %d 分鐘後到") % maxi(1, int(ceil(left / 60.0))))
 	var hr = _rich("\n".join(tx), 15); hr.size_flags_horizontal = Control.SIZE_EXPAND_FILL; head.add_child(hr)
+	if JS.early():   # [tavern] 前期：化寶爐係冥幣來源
+		vb.add_child(_rich(T("[b]前期：陽間屋企人燒冥幣落嚟[/b]　每件約冥幣 %d（大包裹 ×2.5）\n[color=#6e5838]大排檔開張之後，屋企人會改燒用得着嘅嘢（祭品模式）。[/color]", "[b]前期：陽間家人燒冥幣下來[/b]　每件約冥幣 %d（大包裹 ×2.5）\n[color=#6e5838]大排檔開張之後，家人會改燒用得上的東西（祭品模式）。[/color]") % int(JS.early_coins(maxi(1, l), false)), 14))
 	vb.add_child(_rich(T("Lv %d：每 %d 分鐘一件　品質：%s\n[color=#6e5838]升級化寶爐：包裹嚟得更密、質素更好。離線最多儲 %d 件。[/color]", "Lv %d：每 %d 分鐘一件　品質：%s\n[color=#6e5838]升級化寶爐：包裹來得更頻繁、品質更好。離線最多存 %d 件。[/color]") % [l, int(round(JS.interval_min(l))), JS.quality_text(l), JS.CAP], 14, Color("#3a2e1a")))
 	var get_b = _btn((T("收件（%d）", "收件（%d）") % n) if n > 0 else T("未有包裹", "還沒有包裹"), "gold", n > 0, func(): open_next())
 	get_b.custom_minimum_size = Vector2(0, 44); vb.add_child(get_b)
@@ -99,6 +101,8 @@ static func open_next() -> void:
 	if not J.t(r.get("ok")): _toast(T("而家未有包裹。", "現在還沒有包裹。")); return
 	_save()
 	var u = Unbox.new(); u.name = "JossUnbox"; m.add_child(u); u.setup(r)
+	if r.get("early"): load("res://ui/joss_fx.gd").play(m)   # [tavern] 前期冥幣：金銀紙滿屏
+	if r.get("shift"): _toast(T("化寶爐轉咗「祭品模式」：以後陽間會燒用得着嘅嘢，冥幣靠大排檔自己賺。", "化寶爐轉為「祭品模式」：以後陽間會燒用得上的東西，冥幣靠大排檔自己賺。"))
 static func open_entry(e: Dictionary) -> void:
 	var m = main()
 	if m == null: return
