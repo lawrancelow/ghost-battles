@@ -69,6 +69,7 @@ func next() -> void:
 		G.S.seen[sc] = true
 		sc = DB.D.SCENES.get(sc)
 		if sc == null: next(); return
+		sc = filter_lines(sc, G.S)
 	cur = {"sc": sc, "cb": it.cb, "id": it.sc if it.sc is String else ""}
 	li = 0; visible = true
 	_build(sc)
@@ -231,3 +232,27 @@ func speaker() -> String:
 	if wa != null: return ""
 	if cur == null or li >= cur.sc.lines.size(): return ""
 	return cur.sc.lines[li][0]
+
+# [opening] 條件句："only_seen": {"<行號>": ["場景id", ...]}：玩家未睇過其中任何一場，就略過嗰行
+# （例：第 6 章孟婆「又是你」只畀睇過新開場拒湯嘅玩家聽）。cg／vox 行號按原本行號重新對位。
+static func filter_lines(sc: Dictionary, S) -> Dictionary:
+	var os = sc.get("only_seen")
+	if not (os is Dictionary) or os.is_empty(): return sc
+	var seen = S.get("seen", {}) if S is Dictionary else {}
+	if not (seen is Dictionary): seen = {}
+	var keep: Array = []; var remap := {}
+	for i in (sc.lines as Array).size():
+		var need = os.get(str(i))
+		var ok = true
+		if need is Array:
+			ok = false
+			for id in need: if seen.has(str(id)): ok = true
+		if ok: remap[str(i)] = str(keep.size()); keep.append(sc.lines[i])
+	if keep.size() == (sc.lines as Array).size(): return sc
+	var o = sc.duplicate(); o["lines"] = keep
+	for fld in ["cg", "vox"]:
+		if sc.get(fld) is Dictionary:
+			var m := {}
+			for k in sc[fld]: if remap.has(str(k)): m[remap[str(k)]] = sc[fld][k]
+			o[fld] = m
+	return o
