@@ -271,9 +271,12 @@ static func recruit_fodder(rare) -> Dictionary:
 
 # ---------------- 任務 ----------------
 static func q_cur():
+	var rq = load("res://game/rebuild/rb.gd").cur_q()   # [rebuild] 荒村重建虛擬任務（排喺正式主線之前）
+	if rq != null: return rq
 	var Q = _g("QUESTS"); var i = int(J.num(_S().qi))
 	return Q[i] if i >= 0 and i < Q.size() else null
 static func q_progress(q) -> Array:
+	if J.t(J.gp(q, "rb")): return load("res://game/rebuild/rb.gd").progress(q)   # [rebuild]
 	var S = _S(); var n = J.gp(q, "n")
 	match J.str(J.gp(q, "t")):
 		"chop": return [S.cnt.chop, n]
@@ -307,7 +310,11 @@ static func q_done(this_, q) -> bool:
 	var p = J.mc(this_, "progress", [q])
 	return J.num(p[0]) >= J.num(p[1])
 static func q_check(this_) -> void:
-	var S = _S(); var q = J.mc(this_, "cur", [])
+	var S = _S()
+	var RBm = load("res://game/rebuild/rb.gd")
+	RBm.tick()   # [rebuild] 搭棚計時
+	if RBm.opening_due() and not J.t(J.mc(_g("Story"), "busy", [])): RBm.queue_opening()   # [rebuild] 地府→孟婆湯→流放→荒村
+	var q = J.mc(this_, "cur", [])
 	if not J.t(q): return
 	var St = _g("Story")
 	if J.t(J.mc(this_, "done", [q])) and not J.t(J.mc(St, "busy", [])): J.mc(this_, "complete", [])
@@ -318,6 +325,8 @@ static func q_check(this_) -> void:
 	if J.t(S.seen.get("ch2_end")) and J.num(S.bld.house) >= 4 and not J.t(S.seen.get("side_tianhua")) and not J.t(J.mc(St, "busy", [])) and not J.t(J.gp(_g("Battle"), "active")):
 		J.mc(St, "queue", ["side_tianhua", func(_t, _a): J.cl(_g("joinGhost"), null, ["tianhua"]); return null])
 static func q_complete(this_) -> void:
+	var q0 = J.mc(this_, "cur", [])
+	if J.t(J.gp(q0, "rb")): load("res://game/rebuild/rb.gd").complete(q0); return   # [rebuild] 虛擬任務唔郁 S.qi
 	var S = _S(); var q = J.mc(this_, "cur", []); S["qi"] = J.num(S.qi) + 1
 	var txt = J.str(J.cl(_g("give"), null, [q.r])); _snd("coin")
 	var qtx = J.str(q.text)
@@ -410,6 +419,7 @@ static func v_tap(this_, x: float, y: float) -> void:
 	if J.t(J.mc(_g("Story"), "busy", [])) or J.t(J.mc(UI, "modalOpen", [])): return
 	var HD = _g("HeroDaily")
 	if HD != null and J.t(J.mc(HD, "tap", [this_, x, y])): return   # 阿福打瞌睡時點他：驚醒（daily_hero）
+	if load("res://game/rebuild/rb.gd").tap(this_, x, y): return   # [rebuild] 撳雜物堆／撳要修嘅廢墟
 	var h = J.mc(this_, "hitTest", [x, y])
 	if not J.t(h): J.mc(this_, "walkTo", [x, y, null]); return
 	var k = J.str(h.kind)
@@ -1625,6 +1635,7 @@ static func start_game() -> void:
 	for k in d: if not (S as Dictionary).has(k): S[k] = d[k]
 	if _has("Guide"): J.mc(_g("Guide"), "migrate", [fresh])
 	load("res://game/onboard/ob.gd").migrate(S, fresh)   # [onboard] 第一章新手節奏：主線前段重排＋舊存檔對應
+	load("res://game/rebuild/rb.gd").migrate(S, fresh)   # [rebuild] 新存檔：荒村開局
 	J.mc(_V(), "init", []); J.mc(_g("Battle"), "init", [])
 	for b in _qa("#nav button"):
 		var bb = b

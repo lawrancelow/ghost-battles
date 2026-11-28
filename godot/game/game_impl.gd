@@ -333,9 +333,12 @@ func furnaceReady() -> bool:
 # ---------------- 任務 ----------------
 func quest_cur() -> Variant:
 	_drop_visit_quests()   # [landmark] [outgate] 開機路徑唔一定經 _migrate：用之前對齊一次（冇 visit 就即刻返）
+	var rq = load("res://game/rebuild/rb.gd").cur_q()   # [rebuild] 荒村重建虛擬任務
+	if rq != null: return rq
 	var Q: Array = D("QUESTS")
 	return Q[int(S.qi)] if int(S.qi) < Q.size() else null
 func quest_progress(q: Dictionary) -> Array:
+	if q.get("rb"): return load("res://game/rebuild/rb.gd").progress(q)   # [rebuild]
 	match q.t:
 		"chop": return [S.cnt.chop, q.n]
 		"rice": return [S.cnt.rice, q.n]

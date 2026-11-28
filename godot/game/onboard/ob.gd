@@ -268,6 +268,7 @@ static var arrive_q := false
 static func arrive_due() -> bool:
 	var s = S()
 	if s == null or arrive_q or old_save(): return false
+	if load("res://game/rebuild/rb.gd").ever(): return false   # [rebuild] 荒村開場（rb_op_*）取代「黑無常交村」
 	var seen = s.get("seen", {})
 	return J.t(J.gp(seen, "prologue_sys")) and not J.t(J.gp(seen, "ob_arrive")) and qi() == 0
 

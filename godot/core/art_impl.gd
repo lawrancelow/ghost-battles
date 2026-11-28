@@ -246,7 +246,13 @@ func draw_ruin(ctx: Ctx, x: float, y: float, name: String, can: bool, seed: int,
 	if ruin_part != 2: _ruin_body(ctx, x, y, seed)   # [perf]
 	if ruin_part == 1: return
 	_ruin_sign(ctx, x, y, name, can, t, req)
+const RUIN_IDS := ["house", "wood", "rice", "plank", "bun", "store", "home", "camp", "altar", "furnace"]   # 同 nv_village.BLD_SEED 一樣次序（seed＝index）
 func _ruin_body(ctx: Ctx, x: float, y: float, seed: int) -> void:
+	var rid = RUIN_IDS[seed] if seed >= 0 and seed < RUIN_IDS.size() else ""
+	if rid != "" and Spr.ok(rid + "_ruin"):   # [rebuild] 美術 B 組：每棟專屬廢墟圖（同完成版同尺寸、底部中心對齊）
+		seat(ctx, x, y + 1, BW[rid], seed)
+		put(ctx, rid + "_ruin", x, y + 6, BW[rid])
+		return
 	el(ctx, x, y - 4, 54, 16, "rgba(24,16,12,.55)")
 	el(ctx, x - 8, y - 6, 36, 10, "rgba(52,36,26,.45)")
 	hatch(ctx, x, y - 4, 52, 15, 2.8, "rgba(14,8,6,.5)", 0.8, seed + 5)   # [seat16]
