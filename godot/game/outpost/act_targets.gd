@@ -108,7 +108,7 @@ static func _p_king(game) -> Array:
 		var g = TA.gate_of(zid)
 		var gate: Vector2 = g[0]
 		var stand = _inside(r, at + (gate - at).normalized() * 95.0, 30.0)
-		var hit = Rect2(at.x - 70, at.y - 130, 140, 200)
+		var hit = Rect2(at.x - 50, at.y - 110, 100, 150)   # [p55] 140×200 → 100×150：唔好食咗身邊孤魂嘅撳
 		var tk = TA.boss_taunting(zid)
 		if tk != "":   # 輸咗：王企喺門外（大排檔嗰邊）叫囂
 			at = TA.spot(tk)

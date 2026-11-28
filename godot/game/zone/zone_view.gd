@@ -504,8 +504,9 @@ static func _wild_decor(ctx: Ctx, z: Dictionary, t: float) -> void:
 
 # ---------------- 上層：黑霧、鎖、區名牌、王 ----------------
 static var hits: Array = []      # [[Rect2, kind, zid]]（世界座標，畫嗰陣記低）
+static var wild_hit: Dictionary = {}   # [p55] 野外區淨係呢啲位撳得開王卡：{zid: [Rect2…]}（名牌、王、挑戰牌、已解放牌）
 static func draw_over(c: CanvasItem, nv) -> void:
-	hits.clear(); plates.clear()
+	hits.clear(); plates.clear(); wild_hit.clear()
 	if not ZD.on(): return
 	var ctx = Ctx.new(c)
 	var t: float = nv.t
@@ -775,7 +776,8 @@ static func _lock(ctx: Ctx, x: float, y: float, s: float) -> void:
 static func _wild_over(ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float) -> void:
 	var zid = str(z.id)
 	var npx = _name_px(nv); var px = 16; var da = _det(nv)
-	_plate(ctx, _name(nv, z), r.get_center().x, r.position.y + npx * 1.3, npx, _rgba(str(z.get("col", "#8a1c24")), 0.92))
+	var wh: Array = []; wild_hit[zid] = wh
+	wh.append(_plate(ctx, _name(nv, z), r.get_center().x, r.position.y + npx * 1.3, npx, _rgba(str(z.get("col", "#8a1c24")), 0.92)))
 	var bs = ZD.bosses(zid); var parts = []
 	for i in bs.size():
 		parts.append(("①②③④⑤")[i] + ZD.T(bs[i].n) + ("✓" if ZD.boss_done(zid, i) else ""))
@@ -786,7 +788,9 @@ static func _wild_over(ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float) -> void:
 	var bi = ZD.boss_next(zid)
 	var at = ZD.v2(z.get("boss_at", [r.get_center().x, r.get_center().y]))
 	if bi < 0:
-		_plate(ctx, ZD.L("已解放", "已解放"), at.x, at.y - 20, maxi(px, int(npx * 0.8)), "rgba(40,90,50,.92)")
+		ctx.globalAlpha = 0.78   # [p55] 已解放牌細啲、淡啲（唔好搶孤魂嘅撳）
+		wh.append(_plate(ctx, ZD.L("已解放", "已解放"), at.x, at.y - 20, 13, "rgba(40,90,50,.92)"))
+		ctx.globalAlpha = 1.0
 		return
 	var b = bs[bi]
 	if _mb().on_zone(zid) or TA.boss_taunting(zid) != "": return   # [mapbattle] 王喺戰場上／走咗去門外叫囂
@@ -796,18 +800,20 @@ static func _wild_over(ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float) -> void:
 	g.addColorStop(0, "rgba(200,30,30,.38)"); g.addColorStop(1, "rgba(200,30,30,0)")
 	ctx.fillStyle = g; ctx.fillRect(at.x - 70, at.y - 110, 140, 140)
 	Art.draw_char(ctx, k, at.x, at.y + bob, 1.05 if J.t(b.get("main")) else 0.9, {"t": t, "flip": false})
+	wh.append(Rect2(at.x - 46, at.y - 104, 92, 128))   # [p55] 王本身
 	if da <= 0.0: return
 	var lbl = ("①②③④⑤")[bi] + ZD.T(b.n) + (ZD.L("（主 Boss）", "（主 Boss）") if J.t(b.get("main")) else "")
 	ctx.globalAlpha = da
 	_txt(ctx, lbl, at.x, at.y + px * 1.0, px, "#ffb0a0")
 	ctx.globalAlpha = da * (0.75 + 0.25 * sin(t * 3.0))
-	_plate(ctx, ZD.L("撳我挑戰", "點我挑戰"), at.x, at.y + px * 2.6, px, "rgba(150,40,30,.95)")
+	wh.append(_plate(ctx, ZD.L("撳我挑戰", "點我挑戰"), at.x, at.y + px * 2.6, px, "rgba(150,40,30,.95)"))
 	ctx.globalAlpha = 1.0
 
 # ---------------- 點擊（世界座標）：回 true＝處理咗 ----------------
 static func tap(main, p: Vector2) -> bool:
 	if not ZD.on(): return false
 	if _mb().fighting(): return false   # [mapbattle] 打緊：唔開攻佔／挑戰卡（撳大排檔照得）
+	if foe_near(main, p): return false   # [p55] 撳優先：孤魂（敵人）最先——交俾大排檔打，唔好開到區域牌／王卡
 	if load("res://game/sortie/so_view.gd").tap(main, p): return true   # [sortie] 撳據點 → 出擊小卡
 	if load("res://game/outpost/ctl_ui.gd").tap(main, p): return true   # [ctl] 目標點擊範圍最少手指大小、重疊時敵人優先
 	var th = TA.hit(p)   # [mapbattle] 撳門外叫囂緊嘅王 → 再挑戰
@@ -833,15 +839,22 @@ static func tap(main, p: Vector2) -> bool:
 			if r == "noteam" and main != null and main.has_method("show_toast"): main.show_toast(ZD.L("未有出戰隊伍：去「鬼怪」揀隊先", "還沒有出戰隊伍：先到「鬼怪」選隊"))
 			return true
 		if h[1] == "res": open_capture(main, h[2]); return true
-		if h[1] == "wild":
-			var z = ZD.zone(h[2])
-			var at = ZD.v2(z.get("boss_at", [0, 0]))
-			var near_boss = Rect2(at.x - 70, at.y - 130, 140, 200).has_point(p)
-			var on_label = p.y < ZD.rect(z.rect).position.y + 110
-			if near_boss or on_label: open_boss(main, h[2]); return true
-			return false   # 其他位：交俾大排檔（孤魂撳得）
+		if h[1] == "wild":   # [p55] 撳優先：孤魂（敵人）＞ 王／名牌／挑戰牌 ＞ 已解放牌；其他位交俾大排檔
+			if foe_near(main, p): return false   # 孤魂喺手指範圍：交俾大排檔打孤魂
+			for wr in wild_hit.get(str(h[2]), []):
+				if (wr as Rect2).grow(4).has_point(p): open_boss(main, h[2]); return true
+			return false
 	return false
 
+static func foe_near(main, p: Vector2) -> bool:   # [p55] 手指範圍內有孤魂（大排檔 sim.foes，世界座標）
+	var mv = main.get("mv_view") if main != null else null
+	var sim = mv.get("sim") if mv != null else null
+	if sim == null: return false
+	var rr = 46.0   # 同 mv_sim.TAP_R
+	for f in sim.foes:
+		if f.st == "die" or f.st == "flee": continue
+		if p.distance_to(f.pos + Vector2(0, -30)) < rr: return true
+	return false
 static func _busy() -> bool:
 	var st = J.G.get("Story"); var ui = J.G.get("UI")
 	return (st != null and J.t(J.mc(st, "busy", []))) or (ui != null and J.t(J.mc(ui, "modalOpen", [])))
