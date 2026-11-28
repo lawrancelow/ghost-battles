@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""[story] 劇本線檢查：大排檔客人對白＋每關故事線＋圍欄外惡鬼對白。
+"""[story] 劇本線檢查：過勞鬼市集客人對白＋每關故事線＋圍欄外惡鬼對白。
 用法：python3 tools/story_check.py [data/nat/outpost.json] [data/nat/mv_story.json]
 （先跑 tools/outpost_build.py data/nat/outpost.json，佢會同時寫 mv_story.json）
 
@@ -16,7 +16,7 @@
      每關 map_enter 1 個（用該章敘事形式、6–10 句）；每個資源區／野外區 zone_seen、每個資源區 zone_cap、每個王 boss_pre＋boss_win、
      每個有加工廠嘅資源區 factory、liberate 1 個；過程 beat 2–5 句；id 對得上 zones.json（有定義嗰張圖）；
      收編角色（餓鬼王／Toyol／老殭／Pontianak／天花姐）講嘢要有 has:／seen: 出場條件（佢自己嘅 boss_win 除外）；
-     line 第 4 格只可以係 has:／seen:（可加 !）；舊大排檔 beat 嘅 need.after 可以指向分區 beat。
+     line 第 4 格只可以係 has:／seen:（可加 !）；舊過勞鬼市集 beat 嘅 need.after 可以指向分區 beat。
 """
 import json, os, re, sys
 

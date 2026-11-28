@@ -112,7 +112,7 @@ static func targets() -> Array:
 	return o
 static func tname(key: String) -> String:
 	if PO.is_tkey(key): return PO.camp_name(PO.camp_of_t(key))   # [post]
-	if key == "market": return L("大排檔", "大排檔")
+	if key == "market": return L("過勞鬼市集", "過勞鬼市集")
 	if key.begins_with("b:"):
 		var B = J.G.get("BUILDINGS"); var id = key.substr(2)
 		return J.str(DB.L(J.str(B[id].name))) if B is Dictionary and B.get(id) != null else id

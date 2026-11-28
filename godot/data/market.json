@@ -1,0 +1,308 @@
+{
+ "_doc": "過勞鬼市集街道設定（market M1，依 design_market_v1）。【老闆鐵則】每章（地圖 ci）賣的東西不同：maps[ci][街] 列出該章該街的攤位（次序＝顯示次序）；signature 三樣招牌每章保留（就算 maps 冇列都會補）；system＝改成系統、不再當攤；raw＝降為原料、不上架；新台（設計稿「新」標記）待美術＋數據到位後加入 outpost.json 再列入 maps。",
+ "streets": [
+  {
+   "id": "food",
+   "n": [
+    "食街",
+    "食街"
+   ],
+   "icon": "mvi_shoubao",
+   "open": 1
+  },
+  {
+   "id": "cloth",
+   "n": [
+    "衣街",
+    "衣街"
+   ],
+   "icon": "mvi_zhishan",
+   "lock": [
+    "第 1 道市集考核達標開放",
+    "第 1 道市集考核達標開放"
+   ]
+  },
+  {
+   "id": "weapon",
+   "n": [
+    "兵器街",
+    "兵器街"
+   ],
+   "icon": "mvi_bingqi",
+   "lock": [
+    "第 2 道市集考核達標開放",
+    "第 2 道市集考核達標開放"
+   ]
+  },
+  {
+   "id": "acc",
+   "n": [
+    "飾品街",
+    "飾品街"
+   ],
+   "icon": "mvi_denglong",
+   "lock": [
+    "第 3 道市集考核達標開放",
+    "第 3 道市集考核達標開放"
+   ]
+  },
+  {
+   "id": "lux",
+   "n": [
+    "奢侈品店",
+    "奢侈品店"
+   ],
+   "icon": "mvi_paoche",
+   "lock": [
+    "第 3 章起、回陽間帶到第一批貨源先開",
+    "第 3 章起、回陽間帶到第一批貨源才開"
+   ],
+   "reno": [
+    "裝修中・陽間貨源洽談中",
+    "裝修中・陽間貨源洽談中"
+   ]
+  }
+ ],
+ "cat": {
+  "st_shoubao": "food",
+  "st_douhua": "food",
+  "st_nuomici": "food",
+  "st_tiaodan": "food",
+  "st_zhulong": "food",
+  "st_liulian": "food",
+  "st_yejiangfan": "food",
+  "st_wucha": "food",
+  "st_ganlu": "food",
+  "st_jiaoye": "food",
+  "st_xianyu": "food",
+  "st_ningmeng": "food",
+  "st_waimai": "food",
+  "st_shougongcu": "food",
+  "st_baogu": "food",
+  "st_mengpotang": "food",
+  "st_yeketan": "food",
+  "st_zhishan": "cloth",
+  "st_tuoxie": "cloth",
+  "st_caoxie": "cloth",
+  "st_xizhuang": "cloth",
+  "st_zhiku": "cloth",
+  "st_bingqi": "weapon",
+  "st_jiuban": "weapon",
+  "st_denglong": "acc",
+  "st_xunren": "acc",
+  "st_jiushengquan": "acc",
+  "st_chuanpiao": "acc",
+  "st_xifei": "acc",
+  "st_duihuan": "acc",
+  "st_daka": "acc",
+  "st_biaoge": "acc",
+  "st_jiabandeng": "acc",
+  "st_guancaichuang": "lux",
+  "st_huajiao": "lux",
+  "st_paoche": "lux",
+  "st_ifon": "lux",
+  "st_mingbiao": "lux",
+  "st_tangyi": "lux"
+ },
+ "maps": {
+  "0": {
+   "food": [
+    "st_shoubao",
+    "st_douhua",
+    "st_nuomici",
+    "st_tiaodan"
+   ],
+   "cloth": [
+    "st_zhishan"
+   ],
+   "weapon": [
+    "st_bingqi"
+   ],
+   "acc": [
+    "st_denglong"
+   ],
+   "lux": []
+  },
+  "1": {
+   "food": [
+    "st_shoubao",
+    "st_yejiangfan",
+    "st_liulian"
+   ],
+   "cloth": [
+    "st_zhishan",
+    "st_tuoxie"
+   ],
+   "weapon": [
+    "st_bingqi",
+    "st_zhulong"
+   ],
+   "acc": [],
+   "lux": []
+  },
+  "2": {
+   "food": [
+    "st_shoubao",
+    "st_wucha"
+   ],
+   "cloth": [
+    "st_zhishan",
+    "st_caoxie",
+    "st_ganlu"
+   ],
+   "weapon": [
+    "st_bingqi",
+    "st_jiuban"
+   ],
+   "acc": [
+    "st_xunren"
+   ],
+   "lux": [
+    "st_huajiao",
+    "st_guancaichuang"
+   ]
+  },
+  "3": {
+   "food": [
+    "st_shoubao",
+    "st_jiaoye",
+    "st_xianyu",
+    "st_ningmeng"
+   ],
+   "cloth": [
+    "st_zhishan"
+   ],
+   "weapon": [
+    "st_bingqi",
+    "st_jiushengquan"
+   ],
+   "acc": [],
+   "lux": []
+  },
+  "4": {
+   "food": [
+    "st_shoubao",
+    "st_waimai",
+    "st_shougongcu",
+    "st_baogu"
+   ],
+   "cloth": [
+    "st_zhishan"
+   ],
+   "weapon": [
+    "st_bingqi"
+   ],
+   "acc": [
+    "st_mingbiao"
+   ],
+   "lux": [
+    "st_ifon",
+    "st_paoche",
+    "st_xifei"
+   ]
+  },
+  "5": {
+   "food": [
+    "st_shoubao",
+    "st_mengpotang"
+   ],
+   "cloth": [
+    "st_zhishan",
+    "st_xizhuang",
+    "st_zhiku"
+   ],
+   "weapon": [
+    "st_bingqi"
+   ],
+   "acc": [
+    "st_jiabandeng"
+   ],
+   "lux": [
+    "st_tangyi"
+   ]
+  }
+ },
+ "overtime": {
+  "_doc": "過勞營業（M2 接手調）",
+  "mul": 2.0,
+  "price_mul": 1.2,
+  "fat_rate": 1.2,
+  "base_rate": 0.15,
+  "rec_rate": 2.0,
+  "fat_max": 100.0,
+  "warn": 70.0,
+  "down_s": 60.0,
+  "reset_fat": 40.0,
+  "feed_cost": 1,
+  "rank_s": [
+   1800
+  ],
+  "rank_down_n": 5,
+  "rank_bonus": 0.2
+ },
+ "signature": {
+  "food": "st_shoubao",
+  "cloth": "st_zhishan",
+  "weapon": "st_bingqi"
+ },
+ "system": {
+  "st_duihuan": "市集管理處匯兌",
+  "st_biaoge": "第 6 章 KPI 交考核必需品",
+  "st_daka": "第 6 章過勞營業道具打卡鐘",
+  "st_chuanpiao": "第 4 章拔營劇情道具"
+ },
+ "raw": {
+  "st_yeketan": "第 2 章中間料（村子工坊燒）"
+ },
+ "lux_from_ci": 2,
+ "nostalgia": {
+  "_doc": "懷舊熱賣流動攤：上一章特色貨偶爾由行商鬼擺 1 個流動攤（限時），由潮流榜觸發（M2）",
+  "dur_s": 600,
+  "street": "food"
+ },
+ "stall_slots": {
+  "_doc": "攤位升級後可同時賣 1–2 種商品（預留：Lv 達 goods2_lv 開第 2 種貨；具體貨單等設計組）",
+  "goods2_lv": 25,
+  "per_stall": {}
+ },
+ "staff": {
+  "_doc": "每棟員工數重新設計（預留：按街、按等級的店員位；未填用 outpost.json worker_slots）",
+  "by_street": {},
+  "by_lv": [
+   [
+    1,
+    1
+   ],
+   [
+    25,
+    2
+   ],
+   [
+    100,
+    3
+   ]
+  ]
+ },
+ "counter": {
+  "_doc": "櫃檯工作人員：加速服務、收錢；沒櫃檯人員收得慢（預留）",
+  "slots": 2,
+  "no_staff_mul": 0.5,
+  "per_staff_mul": 0.5
+ },
+ "patrol": {
+  "_doc": "市集巡邏隊：從村子調鬼過去，處理小偷、插隊、吵架打鬧等事件（和遊魂兵打外來惡鬼分開）（預留）",
+  "slots": 3,
+  "events": [
+   "thief",
+   "cut_queue",
+   "brawl"
+  ]
+ },
+ "defense": {
+  "one_street": 1,
+  "street_cd_s": 1200,
+  "stop_only_stall": 1,
+  "auto_clear_s": 10.0,
+  "auto_clear_militia": 12
+ }
+}

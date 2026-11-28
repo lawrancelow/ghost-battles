@@ -76,7 +76,7 @@ func _build() -> void:
 	top_ui = PtDraw.new(); top_ui.tag = "topui"; top_ui.fn = _draw_top_ui; world.add_child(top_ui)
 	rec_ctx = Ctx.new(Recorder.new())
 	plaza = NvPlaza.new(self)
-	yard_back = UIKit.btn(CB.L("返大排檔", "回大排檔"), "gold", true); yard_back.add_theme_font_size_override("font_size", 15)
+	yard_back = UIKit.btn(CB.L("返過勞鬼市集", "回過勞鬼市集"), "gold", true); yard_back.add_theme_font_size_override("font_size", 15)
 	yard_back.anchor_left = 1; yard_back.anchor_right = 1; yard_back.offset_left = -112; yard_back.offset_right = -8; yard_back.offset_top = 58; yard_back.offset_bottom = 94
 	yard_back.visible = false; yard_back.focus_mode = Control.FOCUS_NONE
 	yard_back.pressed.connect(func():
@@ -724,6 +724,8 @@ func extra_hit(p: Vector2) -> String:
 
 func _gui_input(ev: InputEvent) -> void:
 	if zone and zc != null:   # [zone] 分區地圖：鏡頭自己處理（拖動／兩指縮放／慣性），撳先分派
+		var em0 = _zone_em()   # [market] 市集街名牌列：左右滑切街（唔畀鏡頭食）
+		if em0 != null and em0.get("sc") != null and load("res://game/market/mk_ui.gd").swipe(em0.sc, ev, float(em0.sc.k)): accept_event(); return
 		var r = zc.handle(ev)
 		if r.has("tap"): zone_tap(r.tap)
 		accept_event(); return

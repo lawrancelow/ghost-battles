@@ -44,7 +44,7 @@ static func panel(body: VBoxContainer, refresh: Callable) -> void:
 	load("res://game/yinbing/yb_data.gd").box(body, rf)   # [yinbing] 陰兵兵種編制＋階級
 	load("res://game/militia/ml_ui.gd").bk_box(body)   # [militia] 遊魂兵（民兵）一欄
 	# 防衛
-	var v1 = _box(body, T("村子防衛（守村口、大排檔、已佔資源區）", "村子防衛（守村口、大排檔、已佔資源區）"))
+	var v1 = _box(body, T("村子防衛（守村口、過勞鬼市集、已佔資源區）", "村子防衛（守村口、過勞鬼市集、已佔資源區）"))
 	var can_add = BK.standby() > 0
 	_line(v1, T("防衛陰兵 [b]%d[/b]　防衛戰力 [b]%d[/b]", "防衛陰兵 [b]%d[/b]　防衛戰力 [b]%d[/b]") % [BK.def_n(), BK.def_power()], [
 		_b("−%d" % BK.STEP, "", BK.def_n() > 0, func(): BK.add_def(-BK.STEP); rf.call()),

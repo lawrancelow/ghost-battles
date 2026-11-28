@@ -477,7 +477,7 @@ func _build_top() -> void:
 		grid.add_child(cell)
 	top.resized.connect(func(): exp_bar.size.x = top.size.x - 76 - 116)
 
-const MV_HELP := {"wood": "槐木（一級）：村子[b]伐木場[/b]派鬼砍伐。棺材鋪用來做棺材板。", "rice": "糯米（一級）：村子[b]糯米田[/b]派鬼收割。包子鋪用來包普通包子。", "planks": "棺材板（二級）：村子[b]棺材鋪[/b]生產（2 槐木 → 1 板）。藍箱也會開出。用來升級建築，移動村部分台也要用。", "buns": "壽包（三級）：只由隨村台[b]嘆氣蒸籠[/b]用普通包子蒸成。綠箱也會開出。用來升級 Lv10 以上鬼怪、派宵夜、出擊口糧、賣錢。（Lv10 前升級和練嚇功改用普通包子＋冥幣）", "coins": "冥幣：大排檔賣貨收錢、打關卡、開紫箱。", "troops": "陰兵：村裡遊魂自願加入，[b]民宅[/b]越高級來得越快。按「出擊」時每 25 個編成一隊。"}   # [chain] [qaudit] [ux] 改中文、寫明壽包新用途
+const MV_HELP := {"wood": "槐木（一級）：村子[b]伐木場[/b]派鬼砍伐。棺材鋪用來做棺材板。", "rice": "糯米（一級）：村子[b]糯米田[/b]派鬼收割。包子鋪用來包普通包子。", "planks": "棺材板（二級）：村子[b]棺材鋪[/b]生產（2 槐木 → 1 板）。藍箱也會開出。用來升級建築，移動村部分台也要用。", "buns": "壽包（三級）：只由隨村台[b]嘆氣蒸籠[/b]用普通包子蒸成。綠箱也會開出。用來升級 Lv10 以上鬼怪、派宵夜、出擊口糧、賣錢。（Lv10 前升級和練嚇功改用普通包子＋冥幣）", "coins": "冥幣：過勞鬼市集賣貨收錢、打關卡、開紫箱。", "troops": "陰兵：村裡遊魂自願加入，[b]民宅[/b]越高級來得越快。按「出擊」時每 25 個編成一隊。"}   # [chain] [qaudit] [ux] 改中文、寫明壽包新用途
 
 # [ux] 倉庫總覽（全部材料庫存、每分鐘進出、來源／用途、瓶頸）
 func open_store(key := "", help_t := "") -> void:
@@ -726,7 +726,7 @@ func toast_avoid() -> void:
 	if absf(toasts.offset_bottom - ob) > 0.5: toasts.offset_bottom = ob
 
 func _unify_qtext(s: String) -> String:
-	return s.trim_prefix("營地：").replace("營地或者生產台", "村子或者大排檔")
+	return s.trim_prefix("營地：").replace("營地或者生產台", "村子或者過勞鬼市集")
 
 # [unify] 合一地圖：村子分頁頂段嵌入大排檔區（原村子位置全部唔變）；mv_on 一律開（生產鏈／戰鬥／橋接層都靠佢）
 func _unify_apply() -> void:
@@ -1108,8 +1108,8 @@ func open_story() -> void:
 	sheet_body.add_child(UIKit.hsep())
 	var setb = UIKit.btn("設置（聲音、畫面、劇情、存檔）", "gold"); setb.name = "OpenSettings"; sheet_body.add_child(setb)   # [settings] 語言、存檔碼等搬入設置面板
 	setb.pressed.connect(func(): open_settings(false, true))
-	var mvb = UIKit.btn("村子畫面：" + ("移動村（大排檔）" if mv_on() else "舊村子"), "ghost"); mvb.visible = not UNIFY; sheet_body.add_child(mvb)   # [unify] 合一地圖：唔再切換
-	mvb.pressed.connect(func(): set_mv(not mv_on()); mvb.text = "村子畫面：" + ("移動村（大排檔）" if mv_on() else "舊村子"))
+	var mvb = UIKit.btn("村子畫面：" + ("移動村（過勞鬼市集）" if mv_on() else "舊村子"), "ghost"); mvb.visible = not UNIFY; sheet_body.add_child(mvb)   # [unify] 合一地圖：唔再切換
+	mvb.pressed.connect(func(): set_mv(not mv_on()); mvb.text = "村子畫面：" + ("移動村（過勞鬼市集）" if mv_on() else "舊村子"))
 	_p("[font_size=11]Godot 版 %s（對應網頁版 %s）[/font_size]" % [ProjectSettings.get_setting("application/config/version", "dev"), D.get("GAME_VER", "")], 11)
 
 # ---------------- 標題畫面 ----------------

@@ -14,7 +14,8 @@ static func L(yue: String, zhs: String) -> String: return zhs if DB.lang != "yue
 # ---------------- 劇情 ----------------
 static func scene(key: String) -> Dictionary:
 	var sd = KG.D().get("scenes", {}).get(key)
-	if not (sd is Dictionary): return {}
+	if not (sd is Dictionary) and key.begins_with("kpi_zhen_"): sd = load("res://game/market/mk_ops.gd").zhen_scene(key)   # [market] 甄好賣各章台詞（文案詞庫）
+	if not (sd is Dictionary) or sd.is_empty(): return {}
 	var f = DB.hero_female()
 	var yue = DB.lang == "yue"
 	var ls = []
@@ -277,6 +278,7 @@ static func _bribe(main, gid: String, tier: String, to: String) -> void:
 			tx += L("牛頭馬面心虛：下次打點半價。", "牛頭馬面心虛：下次打點半價。")
 			play(main, "kpi_%s_caught" % boss, tx, back)
 		_:
+			if boss == "zhen": load("res://game/market/mk_data.gd").st()["zhen_tier"] = tier   # [market] 甄好賣三檔賄賂各有台詞
 			var key = "kpi_ma_food" if boss == "chen" and to == "ma" and tier == "snack" else "kpi_%s_bribe_ok" % boss
 			var tx2 = L("系統核實：%s。", "系統核實：%s。") % _eff_txt(o)
 			if J.t(o.get("half")): tx2 = L("牛頭：「我淨係收名牌㗎……不過都唔好浪費。」（送錯：效果減半）", "牛頭：「我只收名牌的……不過也別浪費。」（送錯：效果減半）") + tx2

@@ -111,7 +111,7 @@ static func intro_lines() -> Array:
 	var moved = []
 	for i in c: moved.append(map_name(i))
 	var l = [
-		["系統", T("通知：落魄村升級做「出殯巡遊大排檔」！間紙紮大屋由抬棺鬼抬住，一張地圖接一張地圖咁擺檔。", "通知：落魄村升級成「出殯巡遊大排檔」！紙紮大屋由抬棺鬼抬著，一張地圖接一張地圖地擺攤。")],
+		["系統", T("通知：落魄村升級做「出殯巡遊・過勞鬼市集」！間紙紮大屋由抬棺鬼抬住，一張地圖接一張地圖咁擺檔。", "通知：落魄村升級成「出殯巡遊・過勞鬼市集」！紙紮大屋由抬棺鬼抬著，一張地圖接一張地圖地擺攤。")],
 		["系統", T("而家喺「%s」開檔：生產台做貨、客人排隊買、賺冥幣、完成目標；打低主線 Boss 就可以拔營去下一張圖。" % nm, "現在在「%s」開攤：生產台做貨、客人排隊買、賺冥幣、完成目標；打倒主線 Boss 就能拔營去下一張圖。" % nm)],
 	]
 	if moved.size() > 0:
@@ -205,7 +205,7 @@ const QTXT := {
 }
 const BTXT := {
 	"bun": ["營地起包子鋪（出普通包子）", "營地建造包子鋪（出普通包子）"],   # [camp] 後院 → 營地
-	"store": ["起倉庫（或者拔營一次／大排檔各台合共 20 級）", "建造倉庫（或拔營一次／大排檔各台合計 20 級）"],   # [qaudit] 建築卡都起得
+	"store": ["起倉庫（或者拔營一次／過勞鬼市集各台合共 20 級）", "建造倉庫（或拔營一次／過勞鬼市集各台合計 20 級）"],   # [qaudit] 建築卡都起得
 	"altar": ["打低餓鬼王，開招魂台", "打倒餓鬼王，開放招魂台"], "furnace": ["升到 6 級（營地化寶爐）", "升到 6 級（營地化寶爐）"],   # [camp] [qaudit] 招魂台唔使起：打低餓鬼王自動開
 }
 static func quest_disp(_q, p: Array) -> Array: return p   # 進度照舊（後院建築係真等級）
@@ -213,7 +213,7 @@ static func quest_disp(_q, p: Array) -> Array: return p   # 進度照舊（後�
 static func quest_text(q) -> String: return _qx_unify(_quest_text(q), q)   # [qaudit] 全部入口（任務條、任務面板、完成提示、解霧提示）用同一套字
 # [qaudit] 合一地圖已經冇「營地」：統一換做村子；野外王任務：王前面仲有頭目要先打，講清楚
 static func _qx_unify(s: String, q) -> String:
-	s = s.trim_prefix("營地：").replace("營地或者生產台", "村子或者大排檔").replace("營地建造", "建造").replace("（營地招魂台）", "（招魂台）").replace("（營地化寶爐）", "（化寶爐）")
+	s = s.trim_prefix("營地：").replace("營地或者生產台", "村子或者過勞鬼市集").replace("營地建造", "建造").replace("（營地招魂台）", "（招魂台）").replace("（營地化寶爐）", "（化寶爐）")
 	if on() and q is Dictionary and str(q.get("t", "")) == "stage":
 		var ZDq = load("res://game/zone/zone_data.gd")
 		var tg = ZDq.stage_target()
@@ -335,7 +335,7 @@ static func mv_offline() -> float:
 	if sc != null and sc.visible and float(r.coins) > 0.0 and sc.has_method("_show_card"): sc._show_card(r)
 	var st = J.G.get("Story")
 	if parts.size() and st != null:
-		J.mc(st, "queue", [{"style": "sys", "lines": [["系統", T("親，你離開咗 %d 小時 %d 分鐘。後院同大排檔都冇偷懶（最多計 8 小時，上層貨要有下層料先做得）", "親，你離開了 %d 小時 %d 分鐘。後院和大排檔都沒有偷懶（最多計 8 小時，上層貨要有下層料才做得）") % [int(secs / 3600), int(fmod(secs, 3600) / 60)]], ["旁白", T("離線收益：", "離線收益：") + "，".join(parts)]]}])
+		J.mc(st, "queue", [{"style": "sys", "lines": [["系統", T("親，你離開咗 %d 小時 %d 分鐘。後院同過勞鬼市集都冇偷懶（最多計 8 小時，上層貨要有下層料先做得）", "親，你離開了 %d 小時 %d 分鐘。後院和過勞鬼市集都沒有偷懶（最多計 8 小時，上層貨要有下層料才做得）") % [int(secs / 3600), int(fmod(secs, 3600) / 60)]], ["旁白", T("離線收益：", "離線收益：") + "，".join(parts)]]}])
 	return float(r.coins)
 
 # 每 0.5 秒（main.refresh）叫：同步虛擬等級、計數、員工

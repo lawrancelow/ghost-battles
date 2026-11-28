@@ -45,7 +45,7 @@ static func where(g) -> String:
 	if p == "": return ""
 	if p == "mv":
 		var sl = mv_slot(g.get("id"))
-		if sl.is_empty(): return T("大排檔", "大排檔")
+		if sl.is_empty(): return T("過勞鬼市集", "過勞鬼市集")
 		var MD = load("res://game/outpost/mv_data.gd")
 		var l = str(sl[0])
 		if l == "guard": return T("守夜", "守夜")

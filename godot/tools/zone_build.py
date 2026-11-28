@@ -34,7 +34,7 @@ M0 = {
        {"id": "zb_egui", "n": ["餓鬼頭目", "餓鬼頭目"], "art": "egui", "stage": {"en": ["egui", "egui", "egui"], "boss": "egui", "p": 2}},
        {"id": "zb_eguiking", "n": ["餓鬼王", "餓鬼王"], "art": "eguiking", "main": True, "chapter": [0, 2]}],
      "decor": [["zp_deadtree", 740, 300, 70], ["zp_deadtree", 1060, 260, 70], ["zp_deadtree", 760, 160, 64]]},
-    {"id": "market", "type": "market", "rect": [230, 440, 1110, 1080], "n": ["開放區　陰間大排檔", "開放區　陰間大排檔"], "col": "#a8602a"},
+    {"id": "market", "type": "market", "rect": [230, 440, 1110, 1080], "n": ["開放區　過勞鬼市集", "開放區　過勞鬼市集"], "col": "#a8602a"},
     {"id": "village", "type": "village", "rect": [230, 1160, 1110, 1984], "n": ["中央村", "中央村"], "col": "#a8602a"},
     {"id": "A", "type": "res", "rect": [0, 1160, 220, 1984], "n": ["資源區 A　後山竹林", "資源區 A　後山竹林"], "col": "#3a5a32",
      "door": {"rect": [215, 1545, 240, 1607], "in": [262, 1576], "out": [196, 1576]}, "power": 300, "loss": 0.3,
@@ -367,7 +367,7 @@ M1 = {
                 {"id": "zb_toyol", "n": ["Toyol", "Toyol"], "art": "toyol", "main": True, "chapter": [1, 2]}],
      "decor": [["zt_stilt", 1460, 1900, 110], ["zq_latexcups", 1740, 2200, 70], ["zq_latexcups", 1720, 1880, 64], ["zb_rock2", 1440, 2140, 66],
                ["zp_deadtree", 1760, 2010, 70], ["zb_rock2", 1450, 2230, 70], ["zt_stilt", 1730, 2120, 0]]},
-    {"id": "market", "type": "market", "rect": [1380, 548, 1800, 1736], "n": ["開放區　陰間大排檔", "開放區　陰間大排檔"], "col": "#a8602a"},
+    {"id": "market", "type": "market", "rect": [1380, 548, 1800, 1736], "n": ["開放區　過勞鬼市集", "開放區　過勞鬼市集"], "col": "#a8602a"},
     {"id": "village", "type": "village", "rect": [460, 760, 1340, 1584], "n": ["中央村", "中央村"], "col": "#a8602a"},
     {"id": "A", "type": "res", "rect": [460, 228, 1340, 640], "n": ["資源區 A　椰林", "資源區 A　椰林"], "col": "#3a5a32",
      "door": {"rect": [868, 630, 932, 768], "in": [900, 794], "out": [900, 612], "vis": [866, 624, 934, 652]}, "power": 1500, "loss": 0.3,
@@ -444,7 +444,7 @@ M2 = {
                 _boss("zb_shanxiao", "山魈", "n30_shanxiao", ["egui", "n30_shanxiao", "zombie"], 11.0, False)],
      "decor": [["zb_rock1", 820, 2600, 120], ["zb_rock1", 1400, 2620, 130], ["zt_cliffpine", 1320, 2880, 120], ["zb_rock2", 900, 2880, 100],
                ["zb_rock2", 1220, 2560, 90], ["zt_cliffpine", 860, 2780, 100]]},
-    {"id": "market", "type": "market", "rect": [300, 1760, 1180, 2400], "n": ["開放區　陰間大排檔（古道驛站市集）", "開放區　陰間大排檔（古道驛站市集）"], "col": "#a8602a"},
+    {"id": "market", "type": "market", "rect": [300, 1760, 1180, 2400], "n": ["開放區　過勞鬼市集（古道驛站市集）", "開放區　過勞鬼市集（古道驛站市集）"], "col": "#a8602a"},
     {"id": "village", "type": "village", "rect": [300, 900, 1180, 1724], "n": ["中央村", "中央村"], "col": "#a8602a"},
     {"id": "A", "type": "res", "rect": [0, 220, 620, 860], "n": ["資源區 A　霧谷茶田", "資源區 A　霧谷茶田"], "col": "#3a5a32",
      "door": {"rect": [470, 836, 780, 906], "in": [740, 928], "out": [556, 830], "vis": [508, 846, 600, 878]}, "power": 4000, "loss": 0.3,
@@ -527,7 +527,7 @@ M3 = {
                 _boss("zb_shuiguiking", "沉船灘水鬼王", "shuigui", ["shuigui", "shuigui", "youhun"], 14.8)],
      "decor": [["zt_boat", 90, 1820, 130], ["zt_boat", 400, 2180, 140], ["zt_reeds", 60, 2120, 100], ["zt_reeds", 420, 1800, 96],
                ["zb_rock2", 300, 2230, 90], ["zt_boat", 120, 2230, 110], ["zt_mangrove", 430, 1990, 110]]},
-    {"id": "market", "type": "market", "rect": [0, 700, 480, 1590], "n": ["開放區　碼頭大排檔", "開放區　碼頭大排檔"], "col": "#a8602a"},
+    {"id": "market", "type": "market", "rect": [0, 700, 480, 1590], "n": ["開放區　過勞鬼市集（碼頭）", "開放區　過勞鬼市集（碼頭）"], "col": "#a8602a"},
     {"id": "village", "type": "village", "rect": [560, 700, 1440, 1524], "n": ["中央村", "中央村"], "col": "#a8602a"},
     {"id": "A", "type": "res", "rect": [560, 160, 1440, 612], "n": ["資源區 A　蕉園", "資源區 A　蕉園"], "col": "#3a5a32",
      "door": {"rect": [968, 600, 1032, 708], "in": [1000, 732], "out": [1000, 590], "vis": [966, 596, 1034, 624]}, "power": 9000, "loss": 0.3,
@@ -646,7 +646,7 @@ _z["w_gorge"].update({"id": "w_cinema", "n": ["野外區　舊戲院", "野外�
               {"id": "zb_penanggal", "n": ["Penanggal", "Penanggal"], "art": "penanggal", "main": True, "chapter": [4, 2]}],
    "decor": [["zt_flats", 860, 2800, 140], ["zt_sodium", 1400, 2780, 110], ["zq_newsstack", 1240, 3060, 58], ["zq_bins", 860, 3060, 60],
              ["zq_planter", 1320, 2960, 66], ["zt_flyover", 1380, 3070, 130]]})
-_z["market"]["n"] = ["開放區　陰間大排檔（巴士總站夜市）", "開放區　陰間大排檔（巴士總站夜市）"]
+_z["market"]["n"] = ["開放區　過勞鬼市集（巴士總站夜市）", "開放區　過勞鬼市集（巴士總站夜市）"]
 _z["A"].update({"n": ["資源區 A　拆樓竹棚", "資源區 A　拆樓竹棚"], "power": 18000, "loss": 0.3, "col": "#5a5a2a", "nofac": False,
    "fields": {"b_bamboo": {"nodes": [[110, 470], [250, 450], [390, 476], [200, 590]], "sign": [300, 700], "n": ["拆樓竹棚", "拆樓竹棚"]}},
    "shops": {"b_strip": {"pos": [140, 760], "need": {"b_bamboo": 3}}},
@@ -704,7 +704,7 @@ _z["w_rubber"].update({"id": "w_board", "n": ["野外區　董事會走廊", "�
               {"id": "zb_huang", "n": ["黃總", "黃總"], "art": "huang", "main": True, "chapter": [5, 2]}],
    "decor": [["zt_pillar", 1450, 1880, 120], ["zt_pillar", 1730, 1880, 120], ["zq_filecab", 1440, 2180, 52], ["zq_chair", 1740, 2200, 56],
              ["zq_deadplant", 1460, 2050, 56], ["zq_punch", 1740, 2050, 58], ["zt_tubelamp", 1590, 2220, 100]]})
-_z["market"]["n"] = ["開放區　陰間大排檔（集團員工飯堂）", "開放區　陰間大排檔（集團員工飯堂）"]
+_z["market"]["n"] = ["開放區　過勞鬼市集（集團員工飯堂）", "開放區　過勞鬼市集（集團員工飯堂）"]
 _z["A"].update({"n": ["資源區 A　地庫碳粉房", "資源區 A　地庫碳粉房"], "power": 27000, "loss": 0.3, "col": "#2a2a30",
    "fields": {"b_toner": {"nodes": [[600, 430], [720, 404], [840, 436], [680, 524]], "sign": [790, 600]}},
    "shops": {"b_ink": {"pos": [1150, 560], "need": {"b_toner": 3}}},
@@ -993,7 +993,7 @@ def _wild_gate(z):
     gy = float(g.get("y", r[3] + 10 if d > 0 else r[1] - 10))
     return [float(g.get("x", (r[0] + r[2]) / 2)), gy], d
 def _base_route(M, wz):
-    """村門 → 挑夫路 → 大排檔 → 野外門 → 野外區（同 ctl_walk._hop／rts.stage_path 一樣嘅路點）"""
+    """村門 → 挑夫路 → 過勞鬼市集 → 野外門 → 野外區（同 ctl_walk._hop／rts.stage_path 一樣嘅路點）"""
     mk = M["market"]; por = [list(map(float, q)) for q in mk["porter"]]
     vr = next(z["rect"] for z in M["zones"] if z["type"] == "village"); mr = next(z["rect"] for z in M["zones"] if z["type"] == "market")
     iv = max(i for i, q in enumerate(por) if _in_r(q, vr)) if any(_in_r(q, vr) for q in por) else 0

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""移動村（出殯巡遊大排檔）資料檢查：godot/data/nat/outpost.json
+"""移動村（出殯巡遊・過勞鬼市集）資料檢查：godot/data/nat/outpost.json
 
 用法：python3 tools/outpost_check.py [--extra-manifest 另一條線嘅 spr_manifest.json ...] [--sim]
   檢查：格式、引用（sid／gid／cid／boss／圖檔鍵）、重複句、目標做唔做得到、紅線字眼。

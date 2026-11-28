@@ -5,6 +5,8 @@ extends RefCounted
 
 const MD = preload("res://game/outpost/mv_data.gd")
 const M = preload("res://game/outpost/mat.gd")   # [chain] 材料庫
+const MK = preload("res://game/market/mk_data.gd")   # [market] 過勞鬼市集：街道＋過勞營業
+const MKO = preload("res://game/market/mk_ops.gd")   # [market M1 營運] 店員位、雙貨、櫃檯、巡邏、事件
 # [chain] 生產鏈：台做貨要按 chain.json RECIPES 由材料庫扣 in；冇料就停（斷料），有料自動復工。
 #   每轉（一次做 out(lv) 件）食 in × out(lv) ÷ RECIPES.n（即係 n 件要一份 in；升級多出嘅件數照比例食料）。
 #   開工嗰下先扣料（扣唔到就企喺台前等，顯示「斷料：缺 XX」）；鬼中途被調走，未做完嗰轉退返料。
@@ -128,7 +130,7 @@ func glv(gh) -> float:
 func reg_post() -> void:
 	var PO = J.G.get("POSTS")
 	if PO is Dictionary and not PO.has("mv"):
-		PO["mv"] = {"name": "移動村開工", "bld": null, "stat": 0.0, "desc": "喺出殯巡遊大排檔做貨／守圍欄"}
+		PO["mv"] = {"name": "移動村開工", "bld": null, "stat": 0.0, "desc": "喺出殯巡遊・過勞鬼市集做貨／守圍欄"}
 # 存檔一致：格入面嘅鬼要 post == "mv"；post == "mv" 但冇格嘅鬼放返自由
 func validate() -> void:
 	var m = st(); if m == null: return
@@ -260,6 +262,7 @@ func goal_done(i: int) -> bool:
 	var p = goal_prog(i); return p[0] >= p[1]
 func goal_claimed(i: int) -> bool:
 	for x in st().goals_done: if int(J.num(x)) == i: return true
+	if MK.goal_skip(ci(), MD.goals(ci())[i] if i >= 0 and i < MD.goals(ci()).size() else {}): return true   # [market] 改成系統／原料／移去別章嘅台：目標當跳過（唔畀獎）
 	return false
 func cur_goal() -> int:
 	var G = MD.goals(ci())
@@ -529,8 +532,10 @@ func relayout(_top := 0.0, _bot := 0.0) -> void:
 	for q in Ly.get("q2", []): QP2.append(MD.v2(q))
 	QLEN2 = MD.poly_len(QP2)
 	PATHS.clear(); SPOS.clear()
+	var smap = MK.slot_map(c)   # [market] 過勞鬼市集：當前街嘅台輪流佔本章台位（其他街照生產、唔畫）
 	for sid in MD.stations(c):
-		SPOS[sid] = MD.st_xy(c, sid); PATHS[sid] = MD.st_path(c, sid)
+		var ps = str(smap.get(sid, sid))
+		SPOS[sid] = MD.st_xy(c, ps); PATHS[sid] = MD.st_path(c, ps)
 	for w in workers: w.home = slot_pos(w.sid, int(w.slot))
 	_sync_key = ""
 func queue_s(i: int) -> float: return 46.0 * i
@@ -542,6 +547,17 @@ func counter_slot(gid: String) -> Vector2:   # 櫃台面疊貨位
 	return Vector2(x, L.counter_y - 44.0)
 var SPOS := {}
 func _place_stations() -> void: relayout()
+func market_street(id: String) -> bool:   # [market] 切街：重排台位，喺位嘅員工跟住過去
+	if not MK.set_cur(id): return false
+	relayout()
+	for w in workers: if str(w.get("st", "")) in ["work", "home"]: w.pos = w.home
+	var i = 0
+	for f in foes:   # 霸檔孤魂跟返個檔嘅新位
+		if not f.has("occ") or f.st == "die" or f.st == "flee": continue
+		var at = st_pos(str(f.occ)) + MVW.OCC_OFF[i % MVW.OCC_OFF.size()]; i += 1
+		if f.st == "occ": f.pos = at
+		f.tgt = at
+	return true
 func st_pos(sid: String) -> Vector2: return SPOS.get(sid, Vector2(195, 600))
 func slot_pos(sid: String, i: int) -> Vector2:
 	var p = st_pos(sid); var off = [Vector2(-40, 26), Vector2(6, 32), Vector2(50, 26)]
@@ -609,6 +625,7 @@ func goods_list() -> Array:
 	for sid in MD.stations(ci()):
 		var g = str(MD.st_def(sid).get("good", ""))
 		if g != "" and not o.has(g): o.append(g)
+	for g in MKO.sub_goods(): if not o.has(g): o.append(g)   # [market M1 營運] 副貨都上櫃台
 	return o
 func avail_goods() -> Array:   # 客人可以要嘅貨：有人做緊／櫃台有貨／台面有貨／手做緊嘅台優先；全部都冇就用所有已解鎖
 	var o = []; var act = []
@@ -619,6 +636,11 @@ func avail_goods() -> Array:   # 客人可以要嘅貨：有人做緊／櫃台�
 			if route(sid) == "stock" and counter_n(g) <= 0 and pile_n(sid) <= 0: continue   # [sell] 全部入倉嘅貨唔招客
 			o.append(g)
 			if (nworkers(sid) > 0 and not starving(sid)) or counter_n(g) > 0 or pile_n(sid) > 0 or float(mk.get(sid, -1.0)) >= 0.0: act.append(g)   # [chain] 斷料嘅台唔招客
+	for g in MKO.sub_goods():   # [market M1 營運] 副貨：寄賣攤有人做／櫃台有貨先招客
+		var h = MKO.host_of(g)
+		if o.has(g) or h == "": continue
+		o.append(g)
+		if (nworkers(h) > 0 and not starving(h)) or counter_n(g) > 0: act.append(g)
 	return act if act.size() else o
 func sid_of(gid: String) -> String:
 	for sid in MD.stations(ci()):
@@ -682,6 +704,8 @@ func step(dt: float) -> void:
 	_step_guards(dt)
 	war.step(self, dt)   # [war]
 	plus.step(self, dt)   # [play]
+	if MK.active(): MK.tick(MD.stations(ci()), dt * sp, func(x): return nworkers(x) > 0 or float(mk.get(x, -1.0)) >= 0.0)   # [market] 過勞值
+	if MK.active(): MKO.tick(self, dt * sp)   # [market M1 營運] 店員位、換貨、收銀箱、治安事件＋巡邏
 
 func _move(e: Dictionary, to: Vector2, dt: float, spd := WALK) -> bool:
 	var d = to - e.pos
@@ -697,6 +721,7 @@ func _put_counter(gid: String, n: int) -> int:
 func _step_workers(dt: float, sp: float) -> void:
 	for w in workers:
 		var sid: String = w.sid; var gid = str(MD.st_def(sid).get("good", ""))
+		gid = MKO.wgood(w, gid)   # [market M1 營運] 呢轉係副貨
 		if war.blocked(self, sid): w["walk"] = false; continue   # [war]
 		var P: PackedVector2Array = PATHS.get(sid, PackedVector2Array())
 		var plen = MD.poly_len(P)
@@ -712,10 +737,11 @@ func _step_workers(dt: float, sp: float) -> void:
 					var nd = need(sid)
 					if not M.take(nd): w["starve"] = true; continue
 					w["paid"] = nd; w["starve"] = false
-				w.prog += dt * sp * IDL.eff(self, sid) * plus.wmul(self, w) / MD.tm(sid, lv(sid))   # [idle] 領班 ×1.25  [play] 羈絆／瞌眼瞓／借領班
+				w.prog += dt * sp * IDL.eff(self, sid) * plus.wmul(self, w) * MK.mul(sid) / MD.tm(sid, lv(sid))   # [market] 加班 ×2／趴低 0   # [idle] 領班 ×1.25  [play] 羈絆／瞌眼瞓／借領班
 				if w.prog >= 1.0:
 					var n = MD.out(sid, lv(sid))
 					w.prog = 0.0; w.erase("paid"); _made(sid, n)
+					if MKO.batch_sub(self, sid, w, n): continue   # [market M1 營運] 雙貨：呢轉做副貨，全數搬去櫃台
 					var sp2 = split(sid, n)   # [chain] 分流：入倉即刻入庫，出售先搬去櫃台
 					_stock(sid, sp2[0], w.home)
 					ev.append({"k": "made", "sid": sid, "n": n, "pos": w.home})
@@ -750,7 +776,7 @@ func _along(e: Dictionary, P: PackedVector2Array, sv: float) -> void:
 func _step_manual(dt: float, sp: float) -> void:
 	for sid in mk.keys():
 		if float(mk[sid]) < 0.0: continue
-		mk[sid] = float(mk[sid]) + dt * sp * IDL.eff(self, sid) * plus.smul(self, sid) / MD.tm(sid, lv(sid))   # [idle]  [play] 借領班
+		mk[sid] = float(mk[sid]) + dt * sp * IDL.eff(self, sid) * plus.smul(self, sid) * MK.mul(sid) / MD.tm(sid, lv(sid))   # [market]   # [idle]  [play] 借領班
 		if mk[sid] >= 1.0:
 			mk[sid] = -1.0
 			var n = MD.out(sid, lv(sid)); _made(sid, n)
@@ -832,6 +858,7 @@ func _step_custs(dt: float) -> void:
 		spawn_t = rng.randf_range(2.2, 4.0) * (2.0 if fence_pressure() >= 2 else 1.0)
 		spawn_t /= war.freq_mul(self)   # [war]
 		spawn_t /= plus.freq_mul(self)   # [play] 夜潮
+		spawn_t /= MKO.flow_mul(self)   # [market M1 營運] 加班叫賣吸客（data/market_ops.json demand）
 		if waiting < MD.QUEUE_MAX: spawn_cust()
 	var order = []
 	for c in custs: if c.st != "out": order.append(c)
@@ -871,7 +898,7 @@ func _step_custs(dt: float) -> void:
 							st().counter[g] = float(counter_n(g) - 1); c.got[g] = int(c.got.get(g, 0)) + 1; c.wait = 0.0
 							ev.append({"k": "take", "gid": g, "from": counter_slot(g), "to": c.pos + Vector2(0, -40)})
 							break
-					if all_ok and not plus.hold_pay(self, c): _pay(c)   # [play] 講價／挑剔等決定
+					if all_ok and not plus.hold_pay(self, c) and not MKO.hold_pay(self, c, float(c.take)): _pay(c)   # [play] 講價／挑剔等決定   # [market M1 營運] 結帳等候（櫃檯人數）
 	for c in custs.duplicate():
 		if c.st == "out":
 			c.s = float(c.s) + 110.0 * dt
@@ -921,12 +948,14 @@ func cust_value(c: Dictionary) -> float:   # 按實際攞到嘅件數計（收�
 	for g in c.got:
 		var sid = sid_of(g)
 		if sid != "": amt += float(c.got[g]) * MD.val(sid, lv(sid), cc)
+	amt += MKO.sub_adj(self, c)   # [market M1 營運] 副貨按自己底價計
 	return amt * inc_mul()
 func _pay(c: Dictionary) -> void:
 	var amt = cust_value(c)
 	amt *= war.pay_mul(self, c)   # [war]
 	amt *= plus.pay_mul(self, c)   # [play]
 	add_coins(amt)
+	MKO.on_pay(self, c, amt)   # [market M1 營運] 錢先入收銀箱，櫃檯員／店員／玩家收咗先入帳
 	var m = st()
 	var _obn = 0
 	for g in c.got: m.sold[g] = J.num(m.sold.get(g)) + float(c.got[g]); _obn += int(c.got[g])

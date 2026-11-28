@@ -160,7 +160,7 @@ static func cur_q(main_q):
 	var who = str(gd.get("boss_n", ""))
 	var tx = ""
 	if not turn(gid): tx = T("繼續重建村子，等考核官嚟巡查", "繼續重建村子，等考核官來巡查")
-	elif str(gd.get("opens", "")) == "flag:market": tx = T("通過龐總總考核（開大排檔）", "通過龐總總考核（開大排檔）")
+	elif str(gd.get("opens", "")) == "flag:market": tx = T("通過龐總總考核（開過勞鬼市集）", "通過龐總總考核（開過勞鬼市集）")
 	else: tx = T("通過「%s」嘅 KPI 考核", "通過「%s」的 KPI 考核") % who
 	return {"t": "kpi", "kpi": true, "gid": gid, "n": 1.0, "go": "kpi:" + gid, "text": tx, "r": {}}
 static func T(y: String, z: String) -> String: return y if DB.lang == "yue" else z
@@ -350,6 +350,9 @@ static func bribe_cost(tier: String) -> Dictionary:
 	var c = (bribe_def(tier).get("cost", {}) as Dictionary).duplicate()
 	var d = J.num(st().get("disc", 0.0)) if st() != null else 0.0
 	if d > 0.0: for k in c: c[k] = ceilf(J.num(c[k]) * (1.0 - d))
+	var ag = active_gate()   # [market] 市集考核價錢 ×cost_mul（市集比較有錢）
+	var cm = J.num(gate(ag).get("cost_mul", 1.0)) if ag != "" else 1.0
+	if cm > 0.0 and cm != 1.0: for k in c: c[k] = ceilf(J.num(c[k]) * cm)
 	return c
 static func can_pay(cost: Dictionary) -> bool:
 	for k in cost: if amt_of(str(k)) < J.num(cost[k]): return false

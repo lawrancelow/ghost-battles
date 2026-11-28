@@ -7,6 +7,9 @@ extends Control
 const _ABL = preload("res://game/rts/ab_lay.gd")   # [abui]
 
 const MD = preload("res://game/outpost/mv_data.gd")
+const MK = preload("res://game/market/mk_data.gd")   # [market] 過勞鬼市集：街道＋過勞營業
+const MKU = preload("res://game/market/mk_ui.gd")   # [market] 街名牌列／切街
+const MKOU = preload("res://game/market/mk_ops_ui.gd")   # [market M1 營運] 人手／治安列（佔位版）
 const SIM = preload("res://game/outpost/mv_sim.gd")
 const FX = preload("res://game/outpost/mv_fx.gd")
 const M = preload("res://game/outpost/mat.gd")   # [chain]
@@ -257,6 +260,7 @@ func chain_btn_pos(sz: Vector2) -> Vector2:
 	var y0 = (float(sim.war.hud_y(self)) if sim != null and sim.war != null else top_pad + HUD_H) + 48.0
 	var ar = ux_alarm_rect()
 	if ar != null: y0 = maxf(y0, ar.end.y + 8.0)   # [uxui] 告急掣下面
+	if float(MKOU.hud_bot) > 0.0: y0 = maxf(y0, float(MKOU.hud_bot) + 8.0)   # [market M1 營運] 人手列／治安卡下面
 	if embed and _pill_rect is Rect2 and hud_k > 0.5: y0 = maxf(y0, _pill_rect.end.y + 8.0 if _pill_rect.position.x > FW * 0.5 - sz.x else y0)   # [uxui] 玩法掣喺右邊 → 再落一格
 	var cands = [Vector2(FW - sz.x - 8.0, y0), Vector2(8.0, y0)]
 	for k in range(1, 4): cands.append_array([Vector2(FW - sz.x - 8.0, y0 + 110.0 * k), Vector2(8.0, y0 + 110.0 * k)])
@@ -615,6 +619,7 @@ func _draw_stage() -> void:
 	if fk > 0.04 and not mk_hid:
 		var vis_sids: Array = []
 		for sid in MD.stations(sim.ci()):
+			if not MK.shown(sim.ci(), sid): continue   # [market] 一次只畫一條街
 			var sp = sim.st_pos(sid)
 			if sp.y + 90.0 < vy0 or sp.y - 160.0 > vy1: continue
 			vis_sids.append(sid)
@@ -623,16 +628,19 @@ func _draw_stage() -> void:
 		_layout_plates(ctx, vis_sids, vy0, vy1)   # [uxui2]
 	if not walking and not mk_hid:
 		for w in sim.workers:
+			if not MK.shown(sim.ci(), str(w.sid)): continue   # [market]
 			if w.pos.y < vy0 - 20.0 or w.pos.y - 120.0 > vy1: continue
 			if zone and not _in_view(w.pos, vy0, vy1): continue   # [perf]
 			var ww = w
 			items.append([w.pos.y, func(): _draw_worker(ctx, ww)])
 	for f in sim.foes:   # [p55] 霸檔孤魂：同台／客一齊按 y 排
 		if not f.has("occ") or f.st == "occ_go" or not _in_view(f.pos, vy0, vy1): continue
+		if not MK.shown(sim.ci(), str(f.occ)): continue   # [market] 霸緊其他街嘅檔
 		var ff = f
 		items.append([f.pos.y + 0.5, func(): _draw_foe(ctx, ff)])
 	if embed and embed_draw != null: embed_draw.call(ctx, vy0, vy1, items)   # [unify] 留位、挑夫鬼（入 y 排序）
 	if mot != null and not walking: mot.add_items(self, ctx, items, vy0, vy1)   # [motion] 粒子、領班
+	if not walking and not mk_hid: MKOU.world_items(self, ctx, items)   # [market M1 營運] 櫃檯員、巡邏鬼、治安事件演出、過勞小卡
 	items.sort_custom(func(a, b): return a[0] < b[0])
 	for it in items: it[1].call()
 	for q in _plate_q: q.call()   # [uxui2] 名牌喺角色／建築之上
@@ -682,6 +690,8 @@ func _draw_stage() -> void:
 	if not embed or hud_k > 0.01:   # [unify] 嵌入：睇到大排檔區先出 HUD
 		ctx.globalAlpha = hud_k if embed else 1.0
 		MB.draw(self, ctx, "hud", func(c): _draw_hud(c))   # [perf] HUD 內容冇變就用烘圖（數值變先重烘；閃動多就自動逐格畫）
+		MKU.draw_strip(self, ctx)   # [market] 五條街名牌列（逐格畫，唔入烘圖）
+		MKOU.draw(self, ctx)   # [market M1 營運] 人手／治安列
 		ctx.globalAlpha = 1.0
 		if _ABL.active and embed and hud_k > 0.3: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(0, top_pad, FW, EHUD_H + 14.0), true)   # [abui] 頂部 HUD（任務、收益、影響力條）唔畀戰鬥字蓋住（HUD 係烘圖，喺度登記）
 	MB.gc(self)   # [perf]
@@ -1008,7 +1018,7 @@ func _draw_counter(ctx: Ctx, fk: float) -> void:
 		Art.rr(ctx, x0, y - 22, x1 - x0, 34, 4, "#7a2a1e", "#f2c060", 2)
 		Art.rr(ctx, x0 - 6, y - 30, x1 - x0 + 12, 10, 3, "#e8d2a0", "#5a3a1a", 1.5)
 		for i in 6: Art.rr(ctx, x0 + 10 + i * 30, y - 14, 18, 18, 3, "rgba(255,210,120,.12)", "rgba(242,192,96,.5)", 1)
-		_txt(ctx, MD.S("counter", "陰間大排檔", "陰間大排檔"), (x0 + x1) / 2.0, y - 4, 15, GOLD, "center", 900, 3, "serif")
+		_txt(ctx, MD.S("counter", "過勞鬼市集", "過勞鬼市集"), (x0 + x1) / 2.0, y - 4, 15, GOLD, "center", 900, 3, "serif")
 	# 櫃台面疊貨
 	# [play] 貨種多、格太窄（< 34px）：每格只疊細堆，唔逐格寫數，改喺櫃台中間寫一個「×總數」（免得數字黐埋爆格）
 	var gl = sim.goods_list(); var tight = (x1 - x0 - 52.0) / maxf(1.0, gl.size()) < 34.0; var tot = 0
@@ -1709,6 +1719,7 @@ func _txt(ctx: Ctx, s: String, x: float, y: float, sz: int, col: Color, align :=
 
 # ================= 撳 =================
 func _stage_input(ev: InputEvent) -> void:
+	if MKU.swipe(self, ev): return   # [market] 街名牌列左右滑切街
 	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
 		if ev.pressed:
 			_press = {"p": ev.position, "cam": cam, "t": t, "drag": false, "last": ev.position.y, "lt": t}
@@ -1754,6 +1765,8 @@ func tap(p: Vector2) -> void:
 		if _hit("boost:" + kind, p):
 			if not sim.use_boost(kind): _float(s2w(p + Vector2(0, 30)), MD.S("cd", "冷卻緊", "冷卻中"), Color("#ffb0a0"), 15)
 			return
+	if MKOU.tap(self, p): return   # [market M1 營運] 人手／治安列
+	if MKU.tap(self, p): return   # [market] 街名牌列
 	if sim.plus.tap(self, p): return   # [play]
 	if sim.war.tap(self, p): return   # [war] 出征掣／頭目
 	if p.y < top_pad + (EHUD_H if embed else HUD_H) and (not embed or hud_on): return
@@ -1818,6 +1831,7 @@ func _fill_sheet() -> void:
 	var cb = UIKit.btn("✕", "ghost", true); cb.custom_minimum_size = Vector2(42, 40); cb.focus_mode = Control.FOCUS_NONE; cb.pressed.connect(close_sheet); h.add_child(cb)
 	var how = _lbl(MD.T(sd.get("how", "")), 14, DIMC, "sans", 700); how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; how.custom_minimum_size = Vector2(350, 0); sheet_box.add_child(how)
 	_recipe_row(sid)   # [chain] 用乜做 → 出乜
+	MKOU.sheet_rows(self, sheet_box, sid)   # [market M1 營運] 貨架：主貨／副貨
 	if sid == "st_bingqi": load("res://game/militia/ml_ui.gd").sheet_rows(self, sheet_box)   # [militia] 今期兵器、遊魂兵數
 	if sid == "st_bingqi": load("res://game/equip/eq_ui.gd").sheet_rows(self, sheet_box)   # [equip] 今期 A/B 款、訂製名鬼裝備
 	# 數值：而家 → 下一級
@@ -1827,13 +1841,13 @@ func _fill_sheet() -> void:
 	grid.add_child(_lbl(MD.S("s_out", "每次產量", "每次產量"), 15, DIMC)); grid.add_child(_lbl(arrow.call(MD.fmt(MD.out(sid, l)), MD.fmt(MD.out(sid, nx))), 16, INK, "sans", 900))
 	grid.add_child(_lbl(MD.S("s_tm", "做貨時間", "製作時間"), 15, DIMC)); grid.add_child(_lbl(arrow.call("%.1f秒" % MD.tm(sid, l), "%.1f秒" % MD.tm(sid, nx)), 16, INK, "sans", 900))
 	grid.add_child(_lbl(MD.S("s_val", "每件賣", "每件售價"), 15, DIMC)); grid.add_child(_lbl(arrow.call(_v(MD.val(sid, l, c)), _v(MD.val(sid, nx, c))), 16, INK, "sans", 900))
-	grid.add_child(_lbl(MD.S("s_w", "員工", "員工"), 15, DIMC)); grid.add_child(_lbl("%d／%d" % [sim.nworkers(sid), MD.slots(sid)], 16, INK, "sans", 900))
+	grid.add_child(_lbl(MD.S("s_w", "員工", "員工"), 15, DIMC)); grid.add_child(_lbl("%d／%d" % [sim.nworkers(sid), MKOU.slots(sim, sid)], 16, INK, "sans", 900))
 	_idle_rows(sid)   # [idle] 里程碑效果／累計產量／品質星／領班／解鎖下一台
 	sim.plus.sheet_rows(self, sid)   # [play] 夥計羈絆
 	# 員工位
-	var sr = HBoxContainer.new(); sr.add_theme_constant_override("separation", 6); sheet_box.add_child(sr)
+	var sr = GridContainer.new(); sr.columns = 3; sr.add_theme_constant_override("h_separation", 6); sr.add_theme_constant_override("v_separation", 6); sheet_box.add_child(sr)   # [market M1 營運] 最多 5 個位：3 個一行，唔出格
 	var ws = sim.sst(sid).workers
-	for i in ws.size(): sr.add_child(_slot_btn(sid, i, ws[i]))
+	for i in mini(ws.size(), MKOU.slots(sim, sid)): sr.add_child(_slot_btn(sid, i, ws[i]))
 	# 升級掣：升 1／升 10／升到下個里程碑
 	var br = HBoxContainer.new(); br.add_theme_constant_override("separation", 6); sheet_box.add_child(br)
 	if l >= mx:

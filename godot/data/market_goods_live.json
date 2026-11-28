@@ -1,0 +1,89 @@
+{
+ "_doc": "過勞鬼市集新商品（已過審美術）：只有貨、冇攤，做現有攤嘅副貨（Lv25 解鎖）。mv_data.reload 併入 GOODS；wants_like＝想買主貨嘅客人都會買呢樣。價錢＝寄賣攤主貨價 × 街階倍率比（舊價格體系；按章重算延後）。",
+ "GOODS": {
+  "m_c1_huaihua": {
+   "n": [
+    "槐花粥",
+    "槐花粥"
+   ],
+   "icon": "mvi_c1_huaihua",
+   "price": 500
+  },
+  "m_c1_mianao": {
+   "n": [
+    "加厚紙棉襖",
+    "加厚紙棉襖"
+   ],
+   "icon": "mvi_c1_mianao",
+   "price": 100
+  },
+  "m_c1_gun": {
+   "n": [
+    "槐木棍",
+    "槐木棍"
+   ],
+   "icon": "mvi_c1_gun",
+   "price": 200
+  },
+  "m_c1_dun": {
+   "n": [
+    "蒸籠盾",
+    "蒸籠盾"
+   ],
+   "icon": "mvi_c1_dun",
+   "price": 1000
+  },
+  "m_c1_xianghuo": {
+   "n": [
+    "平安香火袋",
+    "平安香火袋"
+   ],
+   "icon": "mvi_c1_xianghuo",
+   "price": 30000
+  },
+  "m_c2_banlan": {
+   "n": [
+    "斑蘭糕",
+    "斑蘭糕"
+   ],
+   "icon": "mvi_c2_banlan",
+   "price": 20
+  },
+  "m_c2_kudai": {
+   "n": [
+    "防盜袋紙褲",
+    "防盜口袋紙褲"
+   ],
+   "icon": "mvi_c2_kudai",
+   "price": 600
+  },
+  "m_c2_xianjing": {
+   "n": [
+    "鈴鐺陷阱",
+    "鈴鐺陷阱"
+   ],
+   "icon": "mvi_c2_xianjing",
+   "price": 3000
+  }
+ },
+ "wants_like": {
+  "m_c1_huaihua": "m_shoubao",
+  "m_c1_mianao": "m_zhishan",
+  "m_c1_gun": "m_bingqi",
+  "m_c1_dun": "m_bingqi",
+  "m_c1_xianghuo": "m_denglong",
+  "m_c2_banlan": "m_shoubao",
+  "m_c2_kudai": "m_tuoxie",
+  "m_c2_xianjing": "m_zhulong"
+ },
+ "ci": {
+  "m_c1_huaihua": 0,
+  "m_c1_mianao": 0,
+  "m_c1_gun": 0,
+  "m_c1_dun": 0,
+  "m_c1_xianghuo": 0,
+  "m_c2_banlan": 1,
+  "m_c2_kudai": 1,
+  "m_c2_xianjing": 1
+ }
+}

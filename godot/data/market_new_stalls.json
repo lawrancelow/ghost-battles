@@ -1,0 +1,1627 @@
+{
+ "STATIONS": {
+  "st_c1_huaihua": {
+   "n": [
+    "槐花粥",
+    "槐花粥"
+   ],
+   "art": "mvs_c1_huaihua",
+   "good": "m_c1_huaihua",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 70000,
+   "up_cost0": 3000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 0,
+   "street": "food",
+   "tier": 4
+  },
+  "st_c1_mianao": {
+   "n": [
+    "加厚紙棉襖",
+    "加厚紙棉襖"
+   ],
+   "art": "mvs_c1_mianao",
+   "good": "m_c1_mianao",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 14000,
+   "up_cost0": 600,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 0,
+   "street": "cloth",
+   "tier": 2
+  },
+  "st_c1_gun": {
+   "n": [
+    "槐木棍",
+    "槐木棍"
+   ],
+   "art": "mvs_c1_gun",
+   "good": "m_c1_gun",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 28000,
+   "up_cost0": 1200,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 0,
+   "street": "weapon",
+   "tier": 2
+  },
+  "st_c1_dun": {
+   "n": [
+    "蒸籠盾",
+    "蒸籠盾"
+   ],
+   "art": "mvs_c1_dun",
+   "good": "m_c1_dun",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 140000,
+   "up_cost0": 6000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 0,
+   "street": "weapon",
+   "tier": 3
+  },
+  "st_c1_xianghuo": {
+   "n": [
+    "平安香火袋",
+    "平安香火袋"
+   ],
+   "art": "mvs_c1_xianghuo",
+   "good": "m_c1_xianghuo",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 70000,
+   "up_cost0": 3000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 0,
+   "street": "acc",
+   "tier": 2
+  },
+  "st_c2_banlan": {
+   "n": [
+    "斑蘭糕",
+    "斑蘭糕"
+   ],
+   "art": "mvs_c2_banlan",
+   "good": "m_c2_banlan",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 9600,
+   "up_cost0": 960,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 1,
+   "street": "food",
+   "tier": 2
+  },
+  "st_c2_kudai": {
+   "n": [
+    "防盜口袋紙褲",
+    "防盜口袋紙褲"
+   ],
+   "art": "mvs_c2_kudai",
+   "good": "m_c2_kudai",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 240000,
+   "up_cost0": 24000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 1,
+   "street": "cloth",
+   "tier": 3
+  },
+  "st_c2_xianjing": {
+   "n": [
+    "鈴鐺陷阱",
+    "鈴鐺陷阱"
+   ],
+   "art": "mvs_c2_xianjing",
+   "good": "m_c2_xianjing",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 480000,
+   "up_cost0": 48000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 1,
+   "street": "weapon",
+   "tier": 3
+  },
+  "st_c2_lingdang": {
+   "n": [
+    "防偷鈴鐺手鏈",
+    "防偷鈴鐺手鏈"
+   ],
+   "art": "mvs_c2_lingdang",
+   "good": "m_c2_lingdang",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 48000,
+   "up_cost0": 4800,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 1,
+   "street": "acc",
+   "tier": 1
+  },
+  "st_c2_bagua": {
+   "n": [
+    "八卦鏡吊墜",
+    "八卦鏡吊墜"
+   ],
+   "art": "mvs_c2_bagua",
+   "good": "m_c2_bagua",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 240000,
+   "up_cost0": 24000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 1,
+   "street": "acc",
+   "tier": 2
+  },
+  "st_c3_zong": {
+   "n": [
+    "湘西臘肉粽",
+    "湘西臘肉粽"
+   ],
+   "art": "mvs_c3_zong",
+   "good": "m_c3_zong",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 340000,
+   "up_cost0": 23750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 2,
+   "street": "food",
+   "tier": 3
+  },
+  "st_c3_jiuniang": {
+   "n": [
+    "糯米酒釀",
+    "糯米酒釀"
+   ],
+   "art": "mvs_c3_jiuniang",
+   "good": "m_c3_jiuniang",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 1700000,
+   "up_cost0": 118750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 2,
+   "street": "food",
+   "tier": 4
+  },
+  "st_c3_bangtui": {
+   "n": [
+    "防跳綁腿",
+    "防跳綁腿"
+   ],
+   "art": "mvs_c3_bangtui",
+   "good": "m_c3_bangtui",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 1700000,
+   "up_cost0": 118750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 2,
+   "street": "cloth",
+   "tier": 3
+  },
+  "st_c3_modou": {
+   "n": [
+    "墨斗線",
+    "墨斗線"
+   ],
+   "art": "mvs_c3_modou",
+   "good": "m_c3_modou",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 3400000,
+   "up_cost0": 237500,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 2,
+   "street": "weapon",
+   "tier": 3
+  },
+  "st_c3_taomu": {
+   "n": [
+    "桃木劍",
+    "桃木劍"
+   ],
+   "art": "mvs_c3_taomu",
+   "good": "m_c3_taomu",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 16320000,
+   "up_cost0": 1140000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 2,
+   "street": "weapon",
+   "tier": 4
+  },
+  "st_c3_tongling": {
+   "n": [
+    "銅鈴耳環",
+    "銅鈴耳環"
+   ],
+   "art": "mvs_c3_tongling",
+   "good": "m_c3_tongling",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 340000,
+   "up_cost0": 23750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 2,
+   "street": "acc",
+   "tier": 1
+  },
+  "st_c3_huangfu": {
+   "n": [
+    "黃符髮夾",
+    "黃符髮夾"
+   ],
+   "art": "mvs_c3_huangfu",
+   "good": "m_c3_huangfu",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 1700000,
+   "up_cost0": 118750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 2,
+   "street": "acc",
+   "tier": 2
+  },
+  "st_c3_luichar": {
+   "n": [
+    "Lui Char 屍隊同款帆布包",
+    "Lui Char 屍隊同款帆布包"
+   ],
+   "art": "mvs_c3_luichar",
+   "good": "m_c3_luichar",
+   "base_time": 6,
+   "base_out": 1,
+   "unlock_cost": 108800000,
+   "up_cost0": 7600000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 2,
+   "street": "lux",
+   "tier": 2
+  },
+  "st_c3_tehlah": {
+   "n": [
+    "Tehlah 紙紮電動轎（不會跳）",
+    "Tehlah 紙紮電動轎（不會跳）"
+   ],
+   "art": "mvs_c3_tehlah",
+   "good": "m_c3_tehlah",
+   "base_time": 6,
+   "base_out": 1,
+   "unlock_cost": 1360000000,
+   "up_cost0": 95000000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 2,
+   "street": "lux",
+   "tier": 4
+  },
+  "st_c4_zhaxiangjiao": {
+   "n": [
+    "炸香蕉",
+    "炸香蕉"
+   ],
+   "art": "mvs_c4_zhaxiangjiao",
+   "good": "m_c4_zhaxiangjiao",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 360000,
+   "up_cost0": 23750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 3,
+   "street": "food",
+   "tier": 2
+  },
+  "st_c4_beixin": {
+   "n": [
+    "碼頭工人背心",
+    "碼頭工人背心"
+   ],
+   "art": "mvs_c4_beixin",
+   "good": "m_c4_beixin",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 1800000,
+   "up_cost0": 118750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 3,
+   "street": "cloth",
+   "tier": 2
+  },
+  "st_c4_kebaya": {
+   "n": [
+    "可峇雅紙衫",
+    "可峇雅紙衫"
+   ],
+   "art": "mvs_c4_kebaya",
+   "good": "m_c4_kebaya",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 9000000,
+   "up_cost0": 593750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 3,
+   "street": "cloth",
+   "tier": 3
+  },
+  "st_c4_jingdun": {
+   "n": [
+    "香蕉莖盾",
+    "香蕉莖盾"
+   ],
+   "art": "mvs_c4_jingdun",
+   "good": "m_c4_jingdun",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 3600000,
+   "up_cost0": 237500,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 3,
+   "street": "weapon",
+   "tier": 2
+  },
+  "st_c4_tieding": {
+   "n": [
+    "鐵釘護頸",
+    "鐵釘護頸"
+   ],
+   "art": "mvs_c4_tieding",
+   "good": "m_c4_tieding",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 86400000,
+   "up_cost0": 5700000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 3,
+   "street": "weapon",
+   "tier": 4
+  },
+  "st_c4_baihua": {
+   "n": [
+    "白花髮夾",
+    "白花髮夾"
+   ],
+   "art": "mvs_c4_baihua",
+   "good": "m_c4_baihua",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 1800000,
+   "up_cost0": 118750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 3,
+   "street": "acc",
+   "tier": 1
+  },
+  "st_c4_xiekou": {
+   "n": [
+    "紅鞋鞋扣",
+    "紅鞋鞋扣"
+   ],
+   "art": "mvs_c4_xiekou",
+   "good": "m_c4_xiekou",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 9000000,
+   "up_cost0": 593750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 3,
+   "street": "acc",
+   "tier": 2
+  },
+  "st_c4_duckson": {
+   "n": [
+    "Duckson 紙紮吹風機（吹乾長髮）",
+    "Duckson 紙紮吹風機（吹乾長髮）"
+   ],
+   "art": "mvs_c4_duckson",
+   "good": "m_c4_duckson",
+   "base_time": 6,
+   "base_out": 1,
+   "unlock_cost": 144000000,
+   "up_cost0": 9500000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 3,
+   "street": "lux",
+   "tier": 1
+  },
+  "st_c4_luichar": {
+   "n": [
+    "Lui Char 熱帶限定款",
+    "Lui Char 熱帶限定款"
+   ],
+   "art": "mvs_c4_luichar",
+   "good": "m_c4_luichar",
+   "base_time": 6,
+   "base_out": 1,
+   "unlock_cost": 576000000,
+   "up_cost0": 38000000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 3,
+   "street": "lux",
+   "tier": 2
+  },
+  "st_c5_baizhou": {
+   "n": [
+    "白粥配鹹蛋",
+    "白粥配鹹蛋"
+   ],
+   "art": "mvs_c5_baizhou",
+   "good": "m_c5_baizhou",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 2137500,
+   "up_cost0": 118750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 4,
+   "street": "food",
+   "tier": 2
+  },
+  "st_c5_shalong": {
+   "n": [
+    "紗籠",
+    "紗籠"
+   ],
+   "art": "mvs_c5_shalong",
+   "good": "m_c5_shalong",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 10687500,
+   "up_cost0": 593750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 4,
+   "street": "cloth",
+   "tier": 2
+  },
+  "st_c5_lalian": {
+   "n": [
+    "免綁裹屍布（拉鍊款）",
+    "免綁裹屍布（拉鍊款）"
+   ],
+   "art": "mvs_c5_lalian",
+   "good": "m_c5_lalian",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 53437500,
+   "up_cost0": 2968750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 4,
+   "street": "cloth",
+   "tier": 3
+  },
+  "st_c5_bolizui": {
+   "n": [
+    "玻璃碎罐",
+    "玻璃碎罐"
+   ],
+   "art": "mvs_c5_bolizui",
+   "good": "m_c5_bolizui",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 21375000,
+   "up_cost0": 1187500,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 4,
+   "street": "weapon",
+   "tier": 2
+  },
+  "st_c5_jingji": {
+   "n": [
+    "荊棘欄柵",
+    "荊棘欄柵"
+   ],
+   "art": "mvs_c5_jingji",
+   "good": "m_c5_jingji",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 106875000,
+   "up_cost0": 5937500,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 4,
+   "street": "weapon",
+   "tier": 3
+  },
+  "st_c5_xiangnang": {
+   "n": [
+    "墳頭定位香囊",
+    "墳頭定位香囊"
+   ],
+   "art": "mvs_c5_xiangnang",
+   "good": "m_c5_xiangnang",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 10687500,
+   "up_cost0": 593750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 4,
+   "street": "acc",
+   "tier": 1
+  },
+  "st_c5_jingquan": {
+   "n": [
+    "飛頭頸圈",
+    "飛頭頸圈"
+   ],
+   "art": "mvs_c5_jingquan",
+   "good": "m_c5_jingquan",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 53437500,
+   "up_cost0": 2968750,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 4,
+   "street": "acc",
+   "tier": 2
+  },
+  "st_c5_neckflip": {
+   "n": [
+    "Neckflip 陰間串流年卡（追劇不用飛出去）",
+    "Neckflip 陰間串流年卡（追劇不用飛出去）"
+   ],
+   "art": "mvs_c5_neckflip",
+   "good": "m_c5_neckflip",
+   "base_time": 6,
+   "base_out": 1,
+   "unlock_cost": 12825000000,
+   "up_cost0": 712500000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 4,
+   "street": "lux",
+   "tier": 3
+  },
+  "st_c6_canquan": {
+   "n": [
+    "員工餐券",
+    "員工餐券"
+   ],
+   "art": "mvs_c6_canquan",
+   "good": "m_c6_canquan",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 11250000,
+   "up_cost0": 625000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 5,
+   "street": "food",
+   "tier": 2
+  },
+  "st_c6_biandang": {
+   "n": [
+    "加班便當",
+    "加班便當"
+   ],
+   "art": "mvs_c6_biandang",
+   "good": "m_c6_biandang",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 56250000,
+   "up_cost0": 3125000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 5,
+   "street": "food",
+   "tier": 3
+  },
+  "st_c6_lifu": {
+   "n": [
+    "晉升禮服",
+    "晉升禮服"
+   ],
+   "art": "mvs_c6_lifu",
+   "good": "m_c6_lifu",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 1350000000,
+   "up_cost0": 75000000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 5,
+   "street": "cloth",
+   "tier": 4
+  },
+  "st_c6_wenjia": {
+   "n": [
+    "公文夾盾",
+    "公文夾盾"
+   ],
+   "art": "mvs_c6_wenjia",
+   "good": "m_c6_wenjia",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 112500000,
+   "up_cost0": 6250000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 5,
+   "street": "weapon",
+   "tier": 2
+  },
+  "st_c6_dakaqiang": {
+   "n": [
+    "簽到打卡槍（打卡印記）",
+    "簽到打卡槍（打卡印記）"
+   ],
+   "art": "mvs_c6_dakaqiang",
+   "good": "m_c6_dakaqiang",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 562500000,
+   "up_cost0": 31250000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 5,
+   "street": "weapon",
+   "tier": 3
+  },
+  "st_c6_diaosheng": {
+   "n": [
+    "員工證吊繩",
+    "員工證吊繩"
+   ],
+   "art": "mvs_c6_diaosheng",
+   "good": "m_c6_diaosheng",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 56250000,
+   "up_cost0": 3125000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 5,
+   "street": "acc",
+   "tier": 1
+  },
+  "st_c6_xiongzhang": {
+   "n": [
+    "晉升胸章",
+    "晉升胸章"
+   ],
+   "art": "mvs_c6_xiongzhang",
+   "good": "m_c6_xiongzhang",
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 281250000,
+   "up_cost0": 15625000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 5,
+   "street": "acc",
+   "tier": 2
+  },
+  "st_c6_luichar": {
+   "n": [
+    "Lui Char 董事會限量款",
+    "Lui Char 董事會限量款"
+   ],
+   "art": "mvs_c6_luichar",
+   "good": "m_c6_luichar",
+   "base_time": 6,
+   "base_out": 1,
+   "unlock_cost": 18000000000,
+   "up_cost0": 1000000000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 5,
+   "street": "lux",
+   "tier": 2
+  },
+  "st_c6_tehlah": {
+   "n": [
+    "Tehlah 集團專車",
+    "Tehlah 集團專車"
+   ],
+   "art": "mvs_c6_tehlah",
+   "good": "m_c6_tehlah",
+   "base_time": 6,
+   "base_out": 1,
+   "unlock_cost": 67500000000,
+   "up_cost0": 3750000000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "ci": 5,
+   "street": "lux",
+   "tier": 3
+  }
+ },
+ "GOODS": {
+  "m_c1_huaihua": {
+   "n": [
+    "槐花粥",
+    "槐花粥"
+   ],
+   "icon": "mvi_c1_huaihua",
+   "price": 500,
+   "ci": 0,
+   "street": "food",
+   "mat": "槐花＋糯米＋井水"
+  },
+  "m_c1_mianao": {
+   "n": [
+    "加厚紙棉襖",
+    "加厚紙棉襖"
+   ],
+   "icon": "mvi_c1_mianao",
+   "price": 100,
+   "ci": 0,
+   "street": "cloth",
+   "mat": "竹紙＋禾稈草（填充）"
+  },
+  "m_c1_gun": {
+   "n": [
+    "槐木棍",
+    "槐木棍"
+   ],
+   "icon": "mvi_c1_gun",
+   "price": 200,
+   "ci": 0,
+   "street": "weapon",
+   "mat": "槐木"
+  },
+  "m_c1_dun": {
+   "n": [
+    "蒸籠盾",
+    "蒸籠盾"
+   ],
+   "icon": "mvi_c1_dun",
+   "price": 1000,
+   "ci": 0,
+   "street": "weapon",
+   "mat": "竹篾＋棺材板"
+  },
+  "m_c1_xianghuo": {
+   "n": [
+    "平安香火袋",
+    "平安香火袋"
+   ],
+   "icon": "mvi_c1_xianghuo",
+   "price": 500,
+   "ci": 0,
+   "street": "acc",
+   "mat": "竹紙＋香灰"
+  },
+  "m_c2_banlan": {
+   "n": [
+    "斑蘭糕",
+    "斑蘭糕"
+   ],
+   "icon": "mvi_c2_banlan",
+   "price": 100,
+   "ci": 1,
+   "street": "food",
+   "mat": "糯米＋斑蘭葉（甘榜竹林副產）"
+  },
+  "m_c2_kudai": {
+   "n": [
+    "防盜口袋紙褲",
+    "防盜口袋紙褲"
+   ],
+   "icon": "mvi_c2_kudai",
+   "price": 2500,
+   "ci": 1,
+   "street": "cloth",
+   "mat": "竹紙＋膠扣"
+  },
+  "m_c2_xianjing": {
+   "n": [
+    "鈴鐺陷阱",
+    "鈴鐺陷阱"
+   ],
+   "icon": "mvi_c2_xianjing",
+   "price": 5000,
+   "ci": 1,
+   "street": "weapon",
+   "mat": "膠繩＋銅鈴"
+  },
+  "m_c2_lingdang": {
+   "n": [
+    "防偷鈴鐺手鏈",
+    "防偷鈴鐺手鏈"
+   ],
+   "icon": "mvi_c2_lingdang",
+   "price": 500,
+   "ci": 1,
+   "street": "acc",
+   "mat": "膠繩＋銅鈴"
+  },
+  "m_c2_bagua": {
+   "n": [
+    "八卦鏡吊墜",
+    "八卦鏡吊墜"
+   ],
+   "icon": "mvi_c2_bagua",
+   "price": 2500,
+   "ci": 1,
+   "street": "acc",
+   "mat": "椰殼＋鏡片"
+  },
+  "m_c3_zong": {
+   "n": [
+    "湘西臘肉粽",
+    "湘西臘肉粽"
+   ],
+   "icon": "mvi_c3_zong",
+   "price": 2500,
+   "ci": 2,
+   "street": "food",
+   "mat": "糯米＋禾稈草（燻）＋竹葉"
+  },
+  "m_c3_jiuniang": {
+   "n": [
+    "糯米酒釀",
+    "糯米酒釀"
+   ],
+   "icon": "mvi_c3_jiuniang",
+   "price": 12500,
+   "ci": 2,
+   "street": "food",
+   "mat": "糯米＋井水"
+  },
+  "m_c3_bangtui": {
+   "n": [
+    "防跳綁腿",
+    "防跳綁腿"
+   ],
+   "icon": "mvi_c3_bangtui",
+   "price": 12500,
+   "ci": 2,
+   "street": "cloth",
+   "mat": "禾稈草＋布條"
+  },
+  "m_c3_modou": {
+   "n": [
+    "墨斗線",
+    "墨斗線"
+   ],
+   "icon": "mvi_c3_modou",
+   "price": 25000,
+   "ci": 2,
+   "street": "weapon",
+   "mat": "茶墨＋繩"
+  },
+  "m_c3_taomu": {
+   "n": [
+    "桃木劍",
+    "桃木劍"
+   ],
+   "icon": "mvi_c3_taomu",
+   "price": 120000,
+   "ci": 2,
+   "street": "weapon",
+   "mat": "桃木（古道副產）"
+  },
+  "m_c3_tongling": {
+   "n": [
+    "銅鈴耳環",
+    "銅鈴耳環"
+   ],
+   "icon": "mvi_c3_tongling",
+   "price": 2500,
+   "ci": 2,
+   "street": "acc",
+   "mat": "銅＋竹"
+  },
+  "m_c3_huangfu": {
+   "n": [
+    "黃符髮夾",
+    "黃符髮夾"
+   ],
+   "icon": "mvi_c3_huangfu",
+   "price": 12500,
+   "ci": 2,
+   "street": "acc",
+   "mat": "竹紙＋硃砂"
+  },
+  "m_c3_luichar": {
+   "n": [
+    "Lui Char 屍隊同款帆布包",
+    "Lui Char 屍隊同款帆布包"
+   ],
+   "icon": "mvi_c3_luichar",
+   "price": 800000,
+   "ci": 2,
+   "street": "lux",
+   "mat": "陽間貨源"
+  },
+  "m_c3_tehlah": {
+   "n": [
+    "Tehlah 紙紮電動轎（不會跳）",
+    "Tehlah 紙紮電動轎（不會跳）"
+   ],
+   "icon": "mvi_c3_tehlah",
+   "price": 10000000,
+   "ci": 2,
+   "street": "lux",
+   "mat": "陽間貨源"
+  },
+  "m_c4_zhaxiangjiao": {
+   "n": [
+    "炸香蕉",
+    "炸香蕉"
+   ],
+   "icon": "mvi_c4_zhaxiangjiao",
+   "price": 2500,
+   "ci": 3,
+   "street": "food",
+   "mat": "香蕉＋椰油"
+  },
+  "m_c4_beixin": {
+   "n": [
+    "碼頭工人背心",
+    "碼頭工人背心"
+   ],
+   "icon": "mvi_c4_beixin",
+   "price": 12500,
+   "ci": 3,
+   "street": "cloth",
+   "mat": "竹紙＋魚網"
+  },
+  "m_c4_kebaya": {
+   "n": [
+    "可峇雅紙衫",
+    "可峇雅紙衫"
+   ],
+   "icon": "mvi_c4_kebaya",
+   "price": 62500,
+   "ci": 3,
+   "street": "cloth",
+   "mat": "竹紙＋蕉葉染"
+  },
+  "m_c4_jingdun": {
+   "n": [
+    "香蕉莖盾",
+    "香蕉莖盾"
+   ],
+   "icon": "mvi_c4_jingdun",
+   "price": 25000,
+   "ci": 3,
+   "street": "weapon",
+   "mat": "香蕉莖"
+  },
+  "m_c4_tieding": {
+   "n": [
+    "鐵釘護頸",
+    "鐵釘護頸"
+   ],
+   "icon": "mvi_c4_tieding",
+   "price": 600000,
+   "ci": 3,
+   "street": "weapon",
+   "mat": "鐵釘＋竹篾"
+  },
+  "m_c4_baihua": {
+   "n": [
+    "白花髮夾",
+    "白花髮夾"
+   ],
+   "icon": "mvi_c4_baihua",
+   "price": 12500,
+   "ci": 3,
+   "street": "acc",
+   "mat": "竹紙＋白花"
+  },
+  "m_c4_xiekou": {
+   "n": [
+    "紅鞋鞋扣",
+    "紅鞋鞋扣"
+   ],
+   "icon": "mvi_c4_xiekou",
+   "price": 62500,
+   "ci": 3,
+   "street": "acc",
+   "mat": "竹紙＋紅染"
+  },
+  "m_c4_duckson": {
+   "n": [
+    "Duckson 紙紮吹風機（吹乾長髮）",
+    "Duckson 紙紮吹風機（吹乾長髮）"
+   ],
+   "icon": "mvi_c4_duckson",
+   "price": 1000000,
+   "ci": 3,
+   "street": "lux",
+   "mat": "陽間貨源"
+  },
+  "m_c4_luichar": {
+   "n": [
+    "Lui Char 熱帶限定款",
+    "Lui Char 熱帶限定款"
+   ],
+   "icon": "mvi_c4_luichar",
+   "price": 4000000,
+   "ci": 3,
+   "street": "lux",
+   "mat": "陽間貨源"
+  },
+  "m_c5_baizhou": {
+   "n": [
+    "白粥配鹹蛋",
+    "白粥配鹹蛋"
+   ],
+   "icon": "mvi_c5_baizhou",
+   "price": 12500,
+   "ci": 4,
+   "street": "food",
+   "mat": "糯米＋井水＋鹹蛋"
+  },
+  "m_c5_shalong": {
+   "n": [
+    "紗籠",
+    "紗籠"
+   ],
+   "icon": "mvi_c5_shalong",
+   "price": 62500,
+   "ci": 4,
+   "street": "cloth",
+   "mat": "竹紙＋染料"
+  },
+  "m_c5_lalian": {
+   "n": [
+    "免綁裹屍布（拉鍊款）",
+    "免綁裹屍布（拉鍊款）"
+   ],
+   "icon": "mvi_c5_lalian",
+   "price": 312500,
+   "ci": 4,
+   "street": "cloth",
+   "mat": "竹紙＋報紙漿拉鍊"
+  },
+  "m_c5_bolizui": {
+   "n": [
+    "玻璃碎罐",
+    "玻璃碎罐"
+   ],
+   "icon": "mvi_c5_bolizui",
+   "price": 125000,
+   "ci": 4,
+   "street": "weapon",
+   "mat": "回收站玻璃"
+  },
+  "m_c5_jingji": {
+   "n": [
+    "荊棘欄柵",
+    "荊棘欄柵"
+   ],
+   "icon": "mvi_c5_jingji",
+   "price": 625000,
+   "ci": 4,
+   "street": "weapon",
+   "mat": "竹棚料＋荊棘"
+  },
+  "m_c5_xiangnang": {
+   "n": [
+    "墳頭定位香囊",
+    "墳頭定位香囊"
+   ],
+   "icon": "mvi_c5_xiangnang",
+   "price": 62500,
+   "ci": 4,
+   "street": "acc",
+   "mat": "竹紙＋香灰"
+  },
+  "m_c5_jingquan": {
+   "n": [
+    "飛頭頸圈",
+    "飛頭頸圈"
+   ],
+   "icon": "mvi_c5_jingquan",
+   "price": 312500,
+   "ci": 4,
+   "street": "acc",
+   "mat": "竹紙＋棉"
+  },
+  "m_c5_neckflip": {
+   "n": [
+    "Neckflip 陰間串流年卡（追劇不用飛出去）",
+    "Neckflip 陰間串流年卡（追劇不用飛出去）"
+   ],
+   "icon": "mvi_c5_neckflip",
+   "price": 75000000,
+   "ci": 4,
+   "street": "lux",
+   "mat": "陽間貨源"
+  },
+  "m_c6_canquan": {
+   "n": [
+    "員工餐券",
+    "員工餐券"
+   ],
+   "icon": "mvi_c6_canquan",
+   "price": 62500,
+   "ci": 5,
+   "street": "food",
+   "mat": "竹紙＋碳粉"
+  },
+  "m_c6_biandang": {
+   "n": [
+    "加班便當",
+    "加班便當"
+   ],
+   "icon": "mvi_c6_biandang",
+   "price": 312500,
+   "ci": 5,
+   "street": "food",
+   "mat": "糯米＋報紙漿盒"
+  },
+  "m_c6_lifu": {
+   "n": [
+    "晉升禮服",
+    "晉升禮服"
+   ],
+   "icon": "mvi_c6_lifu",
+   "price": 7500000,
+   "ci": 5,
+   "street": "cloth",
+   "mat": "西裝＋金箔紙"
+  },
+  "m_c6_wenjia": {
+   "n": [
+    "公文夾盾",
+    "公文夾盾"
+   ],
+   "icon": "mvi_c6_wenjia",
+   "price": 625000,
+   "ci": 5,
+   "street": "weapon",
+   "mat": "竹紙＋板"
+  },
+  "m_c6_dakaqiang": {
+   "n": [
+    "簽到打卡槍（打卡印記）",
+    "簽到打卡槍（打卡印記）"
+   ],
+   "icon": "mvi_c6_dakaqiang",
+   "price": 3125000,
+   "ci": 5,
+   "street": "weapon",
+   "mat": "碳粉＋竹"
+  },
+  "m_c6_diaosheng": {
+   "n": [
+    "員工證吊繩",
+    "員工證吊繩"
+   ],
+   "icon": "mvi_c6_diaosheng",
+   "price": 312500,
+   "ci": 5,
+   "street": "acc",
+   "mat": "墨＋繩"
+  },
+  "m_c6_xiongzhang": {
+   "n": [
+    "晉升胸章",
+    "晉升胸章"
+   ],
+   "icon": "mvi_c6_xiongzhang",
+   "price": 1562500,
+   "ci": 5,
+   "street": "acc",
+   "mat": "金箔紙"
+  },
+  "m_c6_luichar": {
+   "n": [
+    "Lui Char 董事會限量款",
+    "Lui Char 董事會限量款"
+   ],
+   "icon": "mvi_c6_luichar",
+   "price": 100000000,
+   "ci": 5,
+   "street": "lux",
+   "mat": "陽間貨源"
+  },
+  "m_c6_tehlah": {
+   "n": [
+    "Tehlah 集團專車",
+    "Tehlah 集團專車"
+   ],
+   "icon": "mvi_c6_tehlah",
+   "price": 375000000,
+   "ci": 5,
+   "street": "lux",
+   "mat": "陽間貨源"
+  }
+ },
+ "_doc": "過勞鬼市集 45 個新攤的數據初稿（goods_final.md）。未併入 outpost.json：等美術（攤位三段外觀＋商品圖示）老闆過目後，由 tools 併入並列進 market.json maps。價格＝該章基價 × 街階倍率；base_time／up_cost0／unlock_cost 照同章現有攤的比例。"
+}

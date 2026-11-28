@@ -21,6 +21,7 @@ extends RefCounted
 
 const PATH := "res://data/nat/outpost.json"
 const CM = preload("res://game/outpost/mat.gd")   # [chain] 隨村台（CARRY）
+const MKP = preload("res://game/market/mk_price.gd")   # [market M1] 按章價格視圖（市集模式先有內容）
 const CARRY_S := 3.0        # 離線計：每轉搬貨來回大約秒數
 const OFFLINE_H := 8.0
 const COUNTER_CAP := 40     # 櫃台每種貨最多疊幾件
@@ -43,24 +44,54 @@ static func reload() -> void:
 	_D = o if o is Dictionary else {"GOODS": {}, "STATIONS": {}, "CUSTOMERS": [], "MAPS": [], "FOE_LINES": [], "STRINGS": {}}
 	for k in ["GOODS", "STATIONS", "STRINGS"]: if not (_D.get(k) is Dictionary): _D[k] = {}
 	for k in ["CUSTOMERS", "MAPS", "FOE_LINES"]: if not (_D.get(k) is Array): _D[k] = []
+	_merge_market_goods()
+static func _merge_market_goods() -> void:   # [market M1] 已過審新商品（只有貨、冇攤，做副貨）：data/market_goods_live.json
+	var f = FileAccess.open("res://data/market_goods_live.json", FileAccess.READ)
+	var o = JSON.parse_string(f.get_as_text()) if f != null else null
+	if not (o is Dictionary) or not (o.get("GOODS") is Dictionary): return
+	for gid in o.GOODS: if not _D.GOODS.has(gid): _D.GOODS[gid] = o.GOODS[gid]
+	var wl = o.get("wants_like", {}); var gci = o.get("ci", {})
+	if not (wl is Dictionary): return
+	var by_map = {}   # 客人 id → 佢出現喺邊啲章
+	for m in _D.MAPS:
+		for cid in m.get("customers", []):
+			if not by_map.has(str(cid)): by_map[str(cid)] = []
+			by_map[str(cid)].append(int(m.get("ci", -1)))
+	for c in _D.CUSTOMERS:
+		if not (c is Dictionary) or not (c.get("wants") is Array): continue
+		for gid in wl:
+			if c.wants.has(gid) or not c.wants.has(str(wl[gid])): continue
+			if gci is Dictionary and gci.has(gid) and not (by_map.get(str(c.get("id", "")), []) as Array).has(int(gci[gid])): continue   # 只加畀嗰章嘅客
+			c.wants.append(gid)
 
 static func maps_n() -> int: return D().MAPS.size()
 static func map_def(ci: int) -> Dictionary:
 	for m in D().MAPS: if int(m.get("ci", -1)) == ci: return m
 	return D().MAPS[clampi(ci, 0, maps_n() - 1)] if maps_n() > 0 else {}
-static func st_def(sid: String) -> Dictionary: return D().STATIONS.get(sid, {})
-static func good_def(gid: String) -> Dictionary: return D().GOODS.get(gid, {})
+static func st_def(sid: String) -> Dictionary:
+	if MKP.ci >= 0 and MKP.st.has(sid): return MKP.st[sid]   # [market M1] 各章基價 × 街階倍率
+	return D().STATIONS.get(sid, {})
+static func good_def(gid: String) -> Dictionary:
+	if MKP.ci >= 0 and MKP.gd.has(gid): return MKP.gd[gid]   # [market M1]
+	return D().GOODS.get(gid, {})
 static func cust_def(cid: String) -> Dictionary:
 	for c in D().CUSTOMERS: if str(c.get("id")) == cid: return c
 	return {}
 static func stations(ci: int) -> Array:
+	var mk = load("res://game/market/mk_data.gd")   # [market] 過勞鬼市集：按章攤位清單（data/market.json maps＋招牌；剔走改系統／原料嘅台）
+	if mk.active(): return mk.stall_list(ci)
+	if MKP.ci >= 0: MKP.clear(); _LC = {}   # [market M1] 市集模式關咗：價格視圖清走
+	return stations_raw(ci)
+static func stations_raw(ci: int) -> Array:   # 原版（outpost.json MAPS）＋隨村台
 	var o = []
 	for s in map_def(ci).get("stations", []): if D().STATIONS.has(str(s)): o.append(str(s))
 	for s in CM.carry():   # [chain] 隨村台：每張圖都有（資料冇列入呢張圖都補返）
 		if D().STATIONS.has(s) and not o.has(s): o.append(s)
 	return o
 static func is_carry(sid: String) -> bool: return CM.carry().has(sid)   # [chain]
-static func goals(ci: int) -> Array: return map_def(ci).get("goals", [])
+static func goals(ci: int) -> Array:
+	if MKP.ci == ci and MKP.goals is Array: return MKP.goals   # [market M1] 獎勵跟價格縮放
+	return map_def(ci).get("goals", [])
 static func map_mul(ci: int) -> float: return float(map_def(ci).get("mul", 1.0))
 
 static func T(a) -> String:
@@ -156,7 +187,7 @@ static func layout(ci: int) -> Dictionary:
 # 新台排喺新帶入面（左右交替），搬貨路線接去最頂嗰個路點。圍欄、最頂路點唔郁。
 static func _fit_missing(L0: Dictionary, ci: int) -> Dictionary:
 	var miss = []
-	for sid in stations(ci): if not (L0.get("st", {}) as Dictionary).has(sid): miss.append(sid)
+	for sid in stations_raw(ci): if not (L0.get("st", {}) as Dictionary).has(sid): miss.append(sid)
 	if miss.is_empty(): return L0
 	var L = L0.duplicate(true)
 	var fy = float(L.get("fence_y", 230)); var cut = fy + 30.0; var dy = 270.0 * miss.size()
@@ -181,7 +212,7 @@ static func _fit_missing(L0: Dictionary, ci: int) -> Dictionary:
 	L.decor = dc
 	return L
 static func _auto_layout(ci: int) -> Dictionary:   # 資料冇 layout：照 tools/outpost_layout.py 嘅排法
-	var ids = stations(ci); var n = ids.size()
+	var ids = stations_raw(ci); var n = ids.size()
 	var h = 430.0 + 270.0 * maxf(0, n - 1) + 570.0
 	var road = [[292, h + 30], [262, h - 140], [240, h - 268]]
 	var st = {}
