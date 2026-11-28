@@ -115,6 +115,14 @@ func logic(_t) -> void:
 	FUN.carry_vets(0)
 	_chk("跨章派返老員工俾同街攤", int(MK.ot(MK.sids_on(0, "food")[0]).get("rank", 0)) >= 1)
 	_p("===== 3. 櫃台（每街一個，跟整街加班連動）=====")
+	for i in 4: _gh("t_c%d" % i)
+	for i in 6: _gh("t_p%d" % i)
+	MKO.reload(); MKO.rng.seed = 20261128
+	MK.st().erase("ops"); MKO.st()["tut"] = 1
+	for s2 in MK.ids(): MKO.st().evt[s2] = 1e9   # 測試自己出事件
+	(MKO.D().patrol as Dictionary)["catch_p"] = 1.0   # 測試：巡邏員一定處理到（機率另由 M1 market_test 驗）
+	_chk("未派櫃檯員：M2 讀到 0 人（真 M1 接口）", FUN.counter_n("food") == 0 and not FUN.counter_staffed("food"), FUN.counter_n("food"))
+	_ctr(sim, 1)
 	var ck = FUN.ctr_key("food"); var oc = MK.ot(ck); oc.fat = 0.0; oc.down = 0.0
 	for sid in MK.sids_on(0, "food"):
 		if sim.st().st.has(sid): sim.st().st[sid].unlocked = true; MK.ot(sid).on = 0; MK.ot(sid).down = 0.0
@@ -123,12 +131,6 @@ func logic(_t) -> void:
 	_chk("一半以上加班：櫃台繁忙", FUN.counter_busy(sim, "food") == "busy")
 	FUN._counter_tick(sim, 10.0)
 	_chk("繁忙 10 秒 +8（1 人）", absf(float(oc.fat) - 8.0) < 0.5, oc.fat)
-	for i in 4: _gh("t_c%d" % i)
-	for i in 6: _gh("t_p%d" % i)
-	MKO.reload(); MKO.rng.seed = 20261128
-	MK.st().erase("ops"); MKO.st()["tut"] = 1
-	for s2 in MK.ids(): MKO.st().evt[s2] = 1e9   # 測試自己出事件
-	(MKO.D().patrol as Dictionary)["catch_p"] = 1.0   # 測試：巡邏員一定處理到（機率另由 M1 market_test 驗）
 	_chk("真 M1 調派 3 名櫃檯員", _ctr(sim, 3) == ["ok", "ok", "ok"] and MKO.counter_n("food") == 3)
 	_chk("3 人結帳 ×2.2、連單 14 秒", is_equal_approx(FUN.serve_mul("food"), 2.2) and is_equal_approx(FUN.chain_win("food"), 14.0), FUN.serve_mul("food"))
 	oc.fat = 99.9; FUN._counter_tick(sim, 1.0)

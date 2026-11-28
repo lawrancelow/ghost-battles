@@ -12,6 +12,9 @@ const MD = preload("res://game/outpost/mv_data.gd")
 static var _wbtn := {}   # 世界座標掣
 static var _hbtn := {}   # 畫面座標掣
 static var trend_open := false
+static var hud_rects: Array = []   # 市集 HUD 佔位（畫面座標）：「生產鏈」掣避開用
+static var _mid_n := 0
+static var _mid_t := -99.0
 static var hud_bot := 0.0   # 市集 HUD 底（畫面座標）：浮字唔好鑽入去
 const GAG := [["口吐白煙……", "口吐白煙……"], ["魂飛咗出去，又被自己扯返嚟", "魂飛了出去，又被自己扯回來"],
 	["趴喺蒸籠度扯鼻鼾", "趴在蒸籠上打呼"], ["口水流成條河", "口水流成一條河"]]
@@ -92,22 +95,22 @@ static func draw_hud(sc, ctx, y0 := -1.0) -> void:
 		var MKU = load("res://game/market/mk_ui.gd")
 		if MKU != null and MKU.on(sc): y = MKU.strip_rect(sc).end.y + 6.0
 	var x = 8.0
-	var ytop = y
-	# 右邊：潮流榜（細牌；撳開睇全部）→ 下面連單數
-	var ry = ytop
+	hud_rects.clear()
+	# 全部排喺左邊一欄（右上角留畀「生產鏈」掣）：第一行＝潮流榜細牌＋連單數；下面＝子時高峰、限時大客
 	var tl = FUN.trend_list(sim)
-	var r = Rect2(sc.FW - 150.0, ry, 142.0, 30.0)
+	var r = Rect2(x, y, 142.0, 30.0)
 	if tl.size():
 		Art.rr(ctx, r.position.x, r.position.y, r.size.x, r.size.y, 7, "rgba(16,30,22,.88)", "#7fe0a0", 1.4)
 		sc._txt(ctx, L("陽間潮流榜 ▾", "陽間潮流榜 ▾"), r.get_center().x, r.get_center().y, 14, Color("#c8ffd8"), "center", 900, 0)
-		_hbtn["trend"] = r
-		ry += 36.0
+		_hbtn["trend"] = r; hud_rects.append(r)
 	var ch = int(FUN.st().get("chain", 0))
-	if ch >= 2 and not trend_open:
-		Art.rr(ctx, r.position.x, ry, r.size.x, 30, 8, "rgba(40,28,8,.86)", "#ffe98a", 1.4)
-		sc._txt(ctx, L("連單 %d 連", "連單 %d 連") % ch, r.get_center().x, ry + 15.0, 16, Color("#ffe98a"), "center", 900, 0)
-		ry += 36.0
-	# 左邊：子時高峰 → 限時大客
+	if ch >= 2:
+		var cr = Rect2(x + 148.0 if tl.size() else x, y, 92.0, 30.0)
+		Art.rr(ctx, cr.position.x, cr.position.y, cr.size.x, cr.size.y, 8, "rgba(40,28,8,.86)", "#ffe98a", 1.4)
+		sc._txt(ctx, L("連單 %d 連", "連單 %d 連") % ch, cr.get_center().x, cr.get_center().y, 15, Color("#ffe98a"), "center", 900, 0)
+		hud_rects.append(cr)
+	if tl.size() or ch >= 2: y += 36.0
+	var ypop = y
 	var ph = FUN.rush_phase()
 	if ph != "idle":
 		var left = FUN.rush_left()
@@ -116,28 +119,28 @@ static func draw_hud(sc, ctx, y0 := -1.0) -> void:
 			"warn": tx = L("子時高峰 %d 秒後到！", "子時高峰 %d 秒後到！") % int(ceil(left)); col = "#ffd27a"
 			"peak": tx = L("子時高峰！客 ×%s　%d", "子時高峰！客流 ×%s　%d") % [FUN.txt_peak_flow(), int(ceil(left))]; col = "#ff7a5a"
 			"rest": tx = L("喘息：飲涼茶　%d", "喘息：喝涼茶　%d") % int(ceil(left)); col = "#8fd0ff"
-		Art.rr(ctx, x, y, 228, 30, 8, "rgba(14,8,18,.86)", col, 1.6)
-		sc._txt(ctx, tx, x + 114.0, y + 15.0, 14, Color(col), "center", 900, 0)
-		y += 36.0
+		Art.rr(ctx, x, y, 240, 30, 8, "rgba(14,8,18,.86)", col, 1.6)
+		sc._txt(ctx, tx, x + 120.0, y + 15.0, 14, Color(col), "center", 900, 0)
+		hud_rects.append(Rect2(x, y, 240, 30)); y += 36.0
 	for c in sim.custs:
 		if J.t(c.get("bigv")) and c.st != "out":
 			var left2 = maxf(0.0, float(c.get("tend", 0.0)) - FUN._clock())
 			var need = 0; var got = 0
 			for g in c.wants: need += int(c.wants[g]); got += int(c.got.get(g, 0))
-			Art.rr(ctx, x, y, 228, 30, 8, "rgba(60,20,10,.88)", "#ffcf6a", 1.6)
-			sc._txt(ctx, L("%s　%d／%d　%d 秒", "%s　%d／%d　%d 秒") % [str(c.get("vipn", "")), got, need, int(ceil(left2))], x + 114.0, y + 15.0, 14, Color("#ffe8b0"), "center", 900, 0)
-			y += 36.0
+			Art.rr(ctx, x, y, 240, 30, 8, "rgba(60,20,10,.88)", "#ffcf6a", 1.6)
+			sc._txt(ctx, L("%s　%d／%d　%d 秒", "%s　%d／%d　%d 秒") % [str(c.get("vipn", "")), got, need, int(ceil(left2))], x + 120.0, y + 15.0, 14, Color("#ffe8b0"), "center", 900, 0)
+			hud_rects.append(Rect2(x, y, 240, 30)); y += 36.0
 			break
-	hud_bot = maxf(y, ry)
+	hud_bot = y
 	if tl.size() and trend_open:
-		var yy = r.end.y + 4.0
 		var hh = 26.0 * tl.size() + 34.0
-		Art.rr(ctx, r.position.x - 40.0, yy, r.size.x + 40.0, hh, 8, "rgba(10,20,14,.94)", "#7fe0a0", 1.4)
+		Art.rr(ctx, x, ypop, 200.0, hh, 8, "rgba(10,20,14,.96)", "#7fe0a0", 1.4)
 		for i in tl.size():
 			var sid = str(tl[i])
-			sc._txt(ctx, "%s ×%s" % [str(MD.st_def(sid).get("n", [sid, sid])[1 if DB.lang != "yue" else 0]) if MD.st_def(sid).get("n") is Array else sid, FUN.txt_trend_mul()], r.position.x - 30.0, yy + 17.0 + 26.0 * i, 14, Color("#e8fff0"), "left", 800, 0)
-		sc._txt(ctx, L("名聲：%s", "名聲：%s") % RN.level_name(), r.position.x - 30.0, yy + 19.0 + 26.0 * tl.size(), 14, Color("#ffd27a"), "left", 800, 0)
-		hud_bot = maxf(hud_bot, yy + hh)
+			sc._txt(ctx, "%s ×%s" % [str(MD.st_def(sid).get("n", [sid, sid])[1 if DB.lang != "yue" else 0]) if MD.st_def(sid).get("n") is Array else sid, FUN.txt_trend_mul()], x + 12.0, ypop + 17.0 + 26.0 * i, 14, Color("#e8fff0"), "left", 800, 0)
+		sc._txt(ctx, L("名聲：%s", "名聲：%s") % RN.level_name(), x + 12.0, ypop + 19.0 + 26.0 * tl.size(), 14, Color("#ffd27a"), "left", 800, 0)
+		hud_rects.append(Rect2(x, ypop, 200.0, hh))
+		hud_bot = maxf(hud_bot, ypop + hh)
 
 # ---------------- 撳 ----------------
 static func tap(sc, p: Vector2) -> bool:
@@ -170,7 +173,10 @@ static func events(sc) -> void:
 	var evs = FUN.pop_events() + RN.pop_events()
 	for e in evs:
 		var sid = str(e.get("sid", ""))
-		var at = _at(sc, sim.st_pos(sid) + Vector2(0, -150)) if sid != "" and not sid.begins_with("_") else _mid(sc)
+		var stall = sid != "" and not sid.begins_with("_")
+		if stall and (not _seen(sc, sim.st_pos(sid)) or not MK.shown(sim.ci(), sid)): continue   # 唔喺畫面／唔係而家條街：唔出浮字
+		if str(e.k) in ["chain", "vip_fail"] and e.has("pos") and not _seen(sc, e.pos): e.erase("pos")
+		var at = _at(sc, sim.st_pos(sid) + Vector2(0, -150)) if stall else (Vector2.ZERO if str(e.k) in ["trend_new", "feed", "up", "trend_src", "ch_event", "rush_rest", "rush_end", "chain_break", "reg_arc", "critic"] or (str(e.k) in ["chain", "vip_fail"] and e.has("pos")) else _mid(sc))
 		match str(e.k):
 			"down": sc._float(at, L(GAG[int(e.get("gag", 0)) % GAG.size()][0], GAG[int(e.get("gag", 0)) % GAG.size()][1]), Color("#ffb0a0"), 16, 2.2)
 			"vet": sc._float(at, L("升職做老員工！", "升職為老員工！"), Color("#ffd27a"), 18, 2.0)
@@ -187,15 +193,25 @@ static func events(sc) -> void:
 			"vip_fail": sc._float(_at(sc, e.get("pos", at)), L("「唔夠貨？下次啦。」", "「貨不夠？下次吧。」"), Color("#d9cdd2"), 15, 2.0)
 			"critic":
 				var b = e.get("best", ["", 1])
+				if not _seen(sc, sim.st_pos(str(b[0]))) or not MK.shown(sim.ci(), str(b[0])):   # 得獎攤唔喺畫面：改喺中間講
+					sc._float(_mid(sc), L("陰間米芝蓮：%d 星", "陰間米其林：%d 星") % int(b[1]), Color("#ffe98a") if int(b[1]) >= 3 else Color("#d9cdd2"), 20, 2.6)
+					continue
 				sc._float(_at(sc, sim.st_pos(str(b[0])) + Vector2(0, -160)), L("陰間米芝蓮：%d 星", "陰間米其林：%d 星") % int(b[1]), Color("#ffe98a") if int(b[1]) >= 3 else Color("#d9cdd2"), 20, 2.6)
 			"reg_name": sc._float(at, L("熟客：%s", "熟客：%s") % str(e.get("name", "")), Color("#ff9ac0"), 16, 2.0)
 			"renown_up": sc._float(at, L("名聲升級：%s", "名聲升級：%s") % str(e.get("name", "")), Color("#ffd27a"), 22, 2.6)
 			"trend_new": pass
 
-# 浮字位置（世界座標）：畫面中間、市集 HUD 下面；攤位上面嘅浮字唔好鑽入 HUD、唔好出左右邊
-static func _mid(sc) -> Vector2: return sc.s2w(Vector2(sc.FW / 2.0, maxf(hud_bot, sc.top_pad + 200.0) + 44.0))
+# 浮字位置（世界座標）：畫面中間、市集 HUD 下面，連續幾條就逐行排落去；攤位上面嘅浮字唔好鑽入 HUD
+static func _mid(sc) -> Vector2:
+	if float(sc.t) - _mid_t < 1.6: _mid_n = (_mid_n + 1) % 5
+	else: _mid_n = 0
+	_mid_t = float(sc.t)
+	return sc.s2w(Vector2(sc.FW / 2.0, maxf(hud_bot, sc.top_pad + 200.0) + 64.0 + 36.0 * _mid_n))
+static func _seen(sc, wp: Vector2) -> bool:   # 呢個世界位喺唔喺畫面入面（畫面外嘅攤唔出浮字，費事疊埋一齊）
+	var sp: Vector2 = sc.w2s(wp)
+	return sp.x >= 40.0 and sp.x <= sc.FW - 40.0
 static func _at(sc, wp: Vector2) -> Vector2:
 	var sp: Vector2 = sc.w2s(wp)
-	sp.x = clampf(sp.x, 130.0, sc.FW - 130.0)
+	sp.x = clampf(sp.x, 110.0, sc.FW - 110.0)
 	sp.y = maxf(sp.y, maxf(hud_bot, sc.top_pad + 200.0) + 44.0)
 	return sc.s2w(sp)

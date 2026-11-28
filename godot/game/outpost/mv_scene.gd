@@ -277,6 +277,7 @@ func _cover(r: Rect2) -> float:
 	for q in _plates: a += r.intersection(q).get_area() * 3.0
 	for k in _wbtns:
 		if k.begins_with("st:") or k.begins_with("camp") or k.begins_with("unl:"): a += r.intersection(_wbtns[k]).get_area()
+	if MK.active(): for q in MKUI.hud_rects: a += r.intersection(Rect2(s2w(q.position), q.size)).get_area() * 3.0   # [market M2] 唔好遮住潮流榜／高峰／大客牌
 	if sim != null and sim.plus != null:   # [polish4] 唔好遮住事件名（「棺材自己開蓋」嗰啲）同左下小卡
 		for q in sim.plus.label_rects: if q is Rect2: a += r.intersection(q).get_area() * 3.0
 		for k in sim.plus._btn: if not str(k).begins_with("card:"): a += r.intersection(Rect2(s2w(sim.plus._btn[k].position), sim.plus._btn[k].size)).get_area() * 3.0

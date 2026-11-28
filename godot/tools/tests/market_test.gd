@@ -293,7 +293,7 @@ func _ops(t, sim, sc, c: int, food: Array, cloth: Array) -> void:
 	_chk("吵架冇人理：事發攤停工 15 秒，之後復工（永不超過 15 秒）", stopped and MKO.prod_k(str(e2.sid)) > 0.0, stopped)
 	# 巡邏處理率：1−(1−p)^n；4 隻滿編都壓唔到 0
 	var rates = []; var rates_sp = []
-	var FN = load("res://game/market/mk_fun.gd"); FN.ensure(); FN.D().ot["pat_add"] = 0.0   # 呢段只量 M1 純處理率：暫停 M2 巡邏員過勞（過勞另由 market_m2_test 驗），完咗 reload
+	var FN = load("res://game/market/mk_fun.gd"); FN.ensure(); FN.D().ot["pat_add"] = 0.0; FN.D().ot["cap_n"] = 1e9   # 呢段只量 M1 純處理率：暫停 M2 巡邏員過勞同升隊長（隊長會兼顧隔籬街，令處理數變多；兩樣另由 market_m2_test 驗），完咗 reload
 	for n in [0, 1, 2, 3, 4]:
 		for sp in [0, 1]:
 			MK.st().erase("ops"); MKO.tick(sim, 0.1); MKO.st()["tut"] = 1

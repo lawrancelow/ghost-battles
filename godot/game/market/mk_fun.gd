@@ -145,6 +145,8 @@ static func ctr_key(street: String) -> String: return "_ctr:" + street
 static func counter_n(street: String) -> int:   # 櫃台員人數（M1 嘅櫃台資料：J.G.mk_counter_n_fn(street)；未接時當 1 人）
 	var f = J.G.get("mk_counter_n_fn")
 	if f is Callable and (f as Callable).is_valid(): return clampi(int(J.num(f.call(street))), 0, ctr_max())
+	var MKO = _mko()   # M1 未登記接口之前（開局第一格）：直接問 M1
+	if MKO != null: return clampi(int(MKO.counter_n(street)), 0, ctr_max())
 	f = J.G.get("mk_counter_staff_fn")
 	if f is Callable and (f as Callable).is_valid(): return 1 if J.t(f.call()) else 0
 	return 1
