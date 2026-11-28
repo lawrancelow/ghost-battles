@@ -171,7 +171,9 @@ static func slowmo(scale: float, real_s: float) -> void:
 	_slow_until = Time.get_ticks_msec() + int(real_s * 1000.0)
 	Engine.time_scale = scale
 	t.create_timer(real_s, true, false, true).timeout.connect(func():
-		if Time.get_ticks_msec() >= _slow_until - 20: Engine.time_scale = 1.0)
+		if Time.get_ticks_msec() >= _slow_until - 80: Engine.time_scale = 1.0)   # 計時器可能早幾十毫秒到
+	t.create_timer(real_s + 1.0, true, false, true).timeout.connect(func():   # 保險：慢鏡過咗仲未返 1× 就強制返（唔會卡死慢動作）
+		if Time.get_ticks_msec() > _slow_until and Engine.time_scale < 1.0 and Engine.time_scale > 0.0: Engine.time_scale = 1.0)
 
 # ---------------- 王登場 ----------------
 static func boss_intro(nm: String, _k := "") -> void:

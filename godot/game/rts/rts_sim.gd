@@ -717,7 +717,7 @@ func finish(win: bool, quit := false, timeout := false) -> void:
 	for u in units: u["walking"] = false; u["casting"] = null
 	proj.clear()
 	events.append(["result", result])
-	if win and not quit and not has_meta("j_slow"):   # [juice] 終結慢鏡：喺結算一刻觸發（唔靠畫面喺唔喺鏡頭內）
+	if win and not quit and vfx_on and not has_meta("j_slow"):   # [juice] 終結慢鏡：喺結算一刻觸發（只限鏡頭內嗰場；背景仗唔好拖慢全遊戲）
 		var JU = load("res://ui/juice.gd")
 		if JU.on(): set_meta("j_slow", true); JU.vib(40); JU.slowmo(0.4, 0.55)
 

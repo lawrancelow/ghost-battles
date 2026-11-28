@@ -235,7 +235,10 @@ func fight(t, m) -> void:
 	_chk("真打一場：有連殺計數（≥1）", ks >= 1, ks)
 	var won = op.result is Dictionary and J.t(op.result.get("win"))
 	_chk("真打一場：贏＝有終結慢鏡；輸＝冇", _has_log("slow") == won, [op.result, JU.log.slice(0, 8)])
-	_chk("慢鏡完咗時間返 1×", is_equal_approx(Engine.time_scale, 1.0) or Engine.time_scale > 1.0, Engine.time_scale)
+	await t.get_tree().create_timer(1.0, true, false, true).timeout   # 慢鏡 0.55 秒真時間，等佢完
+	var nslow = 0
+	for e in JU.log: if e[0] == "slow": nslow += 1
+	_chk("慢鏡完咗時間返 1×", is_equal_approx(Engine.time_scale, 1.0) or Engine.time_scale > 1.0, [Engine.time_scale, nslow, JU._slow_until, Time.get_ticks_msec()])
 	_p("戰鬥：暴擊 %d 次、最高連殺 %d" % [crits, ks])
 	await _until(t, func(): return op.phase == "done", 60.0)
 	await _skip(t, 4)
