@@ -44,6 +44,25 @@ static func reload() -> void:
 	_D = o if o is Dictionary else {"GOODS": {}, "STATIONS": {}, "CUSTOMERS": [], "MAPS": [], "FOE_LINES": [], "STRINGS": {}}
 	for k in ["GOODS", "STATIONS", "STRINGS"]: if not (_D.get(k) is Dictionary): _D[k] = {}
 	for k in ["CUSTOMERS", "MAPS", "FOE_LINES"]: if not (_D.get(k) is Array): _D[k] = []
+	_merge_market_goods()
+static func _merge_market_goods() -> void:   # [market M1] 已過審新商品（只有貨、冇攤，做副貨）：data/market_goods_live.json
+	var f = FileAccess.open("res://data/market_goods_live.json", FileAccess.READ)
+	var o = JSON.parse_string(f.get_as_text()) if f != null else null
+	if not (o is Dictionary) or not (o.get("GOODS") is Dictionary): return
+	for gid in o.GOODS: if not _D.GOODS.has(gid): _D.GOODS[gid] = o.GOODS[gid]
+	var wl = o.get("wants_like", {}); var gci = o.get("ci", {})
+	if not (wl is Dictionary): return
+	var by_map = {}   # 客人 id → 佢出現喺邊啲章
+	for m in _D.MAPS:
+		for cid in m.get("customers", []):
+			if not by_map.has(str(cid)): by_map[str(cid)] = []
+			by_map[str(cid)].append(int(m.get("ci", -1)))
+	for c in _D.CUSTOMERS:
+		if not (c is Dictionary) or not (c.get("wants") is Array): continue
+		for gid in wl:
+			if c.wants.has(gid) or not c.wants.has(str(wl[gid])): continue
+			if gci is Dictionary and gci.has(gid) and not (by_map.get(str(c.get("id", "")), []) as Array).has(int(gci[gid])): continue   # 只加畀嗰章嘅客
+			c.wants.append(gid)
 
 static func maps_n() -> int: return D().MAPS.size()
 static func map_def(ci: int) -> Dictionary:

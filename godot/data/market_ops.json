@@ -1215,9 +1215,17 @@
  },
  "pairs": {
   "0": {
-   "st_douhua": "st_tiaodan"
+   "st_douhua": "st_tiaodan",
+   "st_shoubao": "m_c1_huaihua",
+   "st_zhishan": "m_c1_mianao",
+   "st_bingqi": "m_c1_gun",
+   "st_denglong": "m_c1_xianghuo"
   },
-  "1": {},
+  "1": {
+   "st_shoubao": "m_c2_banlan",
+   "st_tuoxie": "m_c2_kudai",
+   "st_zhulong": "m_c2_xianjing"
+  },
   "2": {
    "st_shoubao": "st_wucha",
    "st_zhishan": "st_caoxie",
@@ -1234,18 +1242,9 @@
   }
  },
  "pairs_pending": {
-  "0": {
-   "st_shoubao": "st_c1_huaihua",
-   "st_zhishan": "st_c1_mianao",
-   "st_bingqi": "st_c1_gun",
-   "st_denglong": "st_c1_xianghuo"
-  },
+  "0": {},
   "1": {
-   "st_shoubao": "st_c2_banlan",
-   "st_c2_lingdang": "st_c2_bagua",
-   "st_yejiangfan": "st_liulian",
-   "st_zhishan": "st_tuoxie",
-   "st_bingqi": "st_zhulong"
+   "st_c2_lingdang": "st_c2_bagua"
   },
   "2": {
    "st_c3_zong": "st_c3_jiuniang",
@@ -1274,11 +1273,18 @@
    "st_c6_diaosheng": "st_c6_xiongzhang"
   }
  },
- "_doc_pairs": "pairs[ci]＝{主攤: 副貨攤}：副貨攤唔再獨立擺攤，佢隻貨變成主攤 Lv25 解鎖嘅預設副貨（goods_final「每街第 1、2 階配一攤，第 3、4 階配一攤」）。pairs_pending＝其中一邊係新台，等新台數據併入後搬去 pairs。　第 2 章現有攤只有 7 個，配對先擺 pending（否則新台未到之前只剩 4 攤）。",
+ "_doc_pairs": "pairs[ci]＝{主攤: 副貨}：值係攤 id（st_…：嗰個攤唔再獨立擺，佢隻貨變主攤 Lv25 預設副貨）或者商品 id（m_…：只有貨嘅新商品）。sub_extra＝同一主攤可以揀嘅其他副貨。第 3–6 章新商品未過審，未列入。第 2 章飾品街（鈴鐺手鏈／八卦鏡）等攤位美術。",
  "demand": {
   "_doc": "客流參數（加班平衡）：base＝整體客流倍數；ot_draw＝全街加班時客流再 ×(1+ot_draw)，按加班攤位比例計。目標：唔加班≈輪替嘅 60%、狂加班唔理≈75%。",
   "base": 1.0,
   "ot_draw": 1.0
  },
- "price_rebase": 1
+ "price_rebase": 0,
+ "sub_extra": {
+  "0": {
+   "st_bingqi": [
+    "m_c1_dun"
+   ]
+  }
+ }
 }
