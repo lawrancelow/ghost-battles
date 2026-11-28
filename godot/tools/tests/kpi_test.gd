@@ -191,7 +191,10 @@ func all(t) -> void:
 	KG.start("A"); KG.gs("A").left = 734.0
 	KG.gs("A")["bryan"] = 1.0; KG.gs("A").stolen["m_wood"] = 120.0
 	await _w(t, 4.0)   # 等之前嘅橫額／提示散咗先影
-	KU._sheet(m, "A"); await _w(t, 0.4); await _shot(t, "sheet_A_mid")
+	KU._to["A"] = "ma"   # 揀咗馬面：禮物卡亮起
+	KU._sheet(m, "A"); await _w(t, 0.4); await _shot(t, "sheet_A_v2")
+	_chk("考核卡 v2：牛頭馬面頭像＋三件禮物卡＋指標進度條", _count(m.sheet_body, "ProgressBar") == 2 and _count(m.sheet_body, "Button") >= 6, [_count(m.sheet_body, "ProgressBar"), _count(m.sheet_body, "Button")])
+	KU._to.erase("A")
 	m.close_sheet()
 	# 霧上面嘅考核牌
 	var cam = m.village.zone_cam() if m.village.has_method("zone_cam") else null
@@ -266,3 +269,8 @@ func _wire(t, m) -> void:
 	else: s0["rb"] = rb_bak
 	for k in bld_bak: s0.bld[k] = bld_bak[k]
 	_reset_state()
+
+func _count(n: Node, cls: String) -> int:
+	var c = 1 if n.is_class(cls) else 0
+	for ch in n.get_children(): c += _count(ch, cls)
+	return c
