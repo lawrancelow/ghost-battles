@@ -556,11 +556,28 @@ func _draw_top_ui(c: CanvasItem) -> void:
 	_pointer(c)
 	for f in V.get("floats", []):
 		var ft = J.num(f.t); var a = maxf(0, 1 - ft / J.num(f.life)); var txt = J.str(f.text)
+		if not f.has("jfly"): f["jfly"] = true; _jfly(c, txt, Vector2(J.num(f.x), J.num(f.y)))   # [juice] 收成：圖示飛向頂欄
 		var sw = fb.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
 		var p = Vector2(J.num(f.x) - sw / 2, J.num(f.y) - ft * 26)
 		if _ABL.active: _ABL.avoid_ci(c, Transform2D.IDENTITY, Rect2(p.x - 3, p.y - 15, sw + 6, 20), true)   # [abui] 村子浮字（收成等）唔畀戰鬥字蓋住
 		c.draw_string_outline(fb, p, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, 4, Color(10 / 255.0, 6 / 255.0, 20 / 255.0, 0.9 * a))
 		c.draw_string(fb, p, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(J.str(f.col), a) if Color.html_is_valid(J.str(f.col)) else Color(1, 1, 1, a))
+
+# [juice] 浮字有「槐木 +n／糯米 +n…」→ 個資源圖示由嗰度飛去頂欄嗰格
+const _JFLY := {"槐木": "wood", "糯米": "rice", "棺材板": "planks", "壽包": "buns", "冥幣": "coins"}
+func _jfly(c: CanvasItem, txt: String, wp: Vector2) -> void:
+	var JU = load("res://ui/juice.gd")
+	if not JU.on(): return
+	var m = get_tree().root.get_node_or_null("Main") if is_inside_tree() else null
+	if m == null or not ("res_lbl" in m): return
+	for nm in _JFLY:
+		if txt.begins_with(nm + " +"):
+			var k: String = _JFLY[nm]
+			var lb = m.res_lbl.get(k)
+			if lb == null: return
+			var sp = c.get_global_transform_with_canvas() * wp
+			JU.gain_fly(m, sp, "", load("res://ui/res_icon.gd").tex(k), lb)
+			return
 
 func _bubble(c: CanvasItem, fnt: Font, text: String, bt: float, vx: float, vy: float) -> void:
 	var a = clampf(minf(minf(1, bt * 5), (4.6 - bt) * 3), 0, 1)

@@ -224,6 +224,19 @@ func sfx_voices(name: String, arg = null) -> Array:
 		"chest": return [{"f": 180, "f2": 320, "d": 0.35, "v": 0.15, "type": "sawtooth"}, {"f": 1320, "d": 0.35, "v": 0.12, "wet": 0.3}, {"f": 1980, "t": 0.06, "d": 0.4, "v": 0.1, "wet": 0.3}]
 		"flatline": return [{"f": 988, "a": 0.01, "d": 3.2, "v": 0.09}]
 		"heartbeat": return [{"f": 60, "f2": 40, "d": 0.12, "v": 0.5}, {"f": 55, "f2": 38, "t": 0.22, "d": 0.12, "v": 0.35}]
+		# [juice] 爽感包（全部即場合成，冇外部素材）
+		"crit": return [_N({"d": 0.06, "type": "highpass", "f": 2500, "v": 0.35}), {"f": 180, "f2": 50, "d": 0.18, "v": 0.6}, {"f": 1760, "f2": 880, "d": 0.12, "v": 0.12, "type": "square"}]
+		"bossIn":
+			var r = _gong()
+			r.append({"f": 55, "f2": 40, "d": 1.1, "v": 0.5}); r.append(_N({"d": 0.9, "type": "lowpass", "f": 500, "f2": 120, "v": 0.3, "a": 0.2}))
+			return r
+		"tick": return [{"f": 2400, "d": 0.02, "v": 0.035, "type": "triangle"}]
+		"pop": return [{"f": 660, "f2": 1320, "d": 0.09, "v": 0.12, "type": "triangle"}, _N({"d": 0.04, "type": "highpass", "f": 4000, "v": 0.08})]
+		"powerUp":
+			var r = []; var ks = [0, 2, 4, 7, 9]
+			for i in 5: r.append_array(_musicbox(SCALE[mini(8, ks[i])] * 2, i * 0.07, 0.09))
+			r.append({"f": 110, "f2": 220, "d": 0.5, "v": 0.18, "type": "sawtooth"})
+			return r
 		"whoosh", "scare": return [_N({"d": 0.5, "f": 300, "f2": 2500, "q": 1.5, "v": 0.2, "a": 0.15})]
 	return []
 
@@ -294,7 +307,17 @@ func play(name: String, arg = null) -> void:
 	var p: AudioStreamPlayer = null
 	for q in _sfx: if not q.playing: p = q; break
 	if p == null: p = _sfx[0]
-	p.stream = st; p.volume_db = linear_to_db(0.85); p.play()
+	p.stream = st; p.volume_db = linear_to_db(0.85); p.pitch_scale = 1.0; p.play()
+
+# [juice] 帶音高播（連續入帳 do re mi 遞升）
+func play_p(name: String, pitch := 1.0, gain := 0.85) -> void:
+	if not on: return
+	var st = _sfx_stream(name)
+	if st == null: return
+	var p: AudioStreamPlayer = null
+	for q in _sfx: if not q.playing: p = q; break
+	if p == null: p = _sfx[0]
+	p.stream = st; p.volume_db = linear_to_db(gain); p.pitch_scale = clampf(pitch, 0.25, 4.0); p.play()
 
 # ====================================================================
 # [sfx43] 補丁 43 音效：res://assets/snd/sfx43/<key>.ogg（CC0 素材組合，見 LICENSES_sfx43.md）

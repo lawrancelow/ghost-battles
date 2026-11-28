@@ -239,6 +239,8 @@ func _tab_gfx() -> void:
 	fps_row = _row("幀率上限", _seg(["30", "60"], 0 if PF.fps == 30 else 1, func(j): PF.set_fps(30 if j == 0 else 60)), "流暢模式開時固定 30")
 	fps_row.modulate.a = 0.45 if PM.on else 1.0
 	_row("螢幕常亮", _toggle(PF.keep_on, func(v): PF.set_keep_on(v)), "玩的時候手機不自動熄屏")
+	_row("爽感特效", _toggle(PF.juice, func(v): PF.juice = v; PF.save()), "數字滾動、震屏、粒子、暴擊大字、慢鏡")
+	if not PF.is_pc(): _row("手機震動", _toggle(PF.vibrate, func(v): PF.vibrate = v; PF.save()), "升級、打王、大額收入時輕震")
 	_row("安全畫面模式", _toggle(G.safe_gfx, func(v): G.set_safe_gfx(v)), "閃退時用；重開遊戲生效")
 	if PF.is_pc(): _pc_rows()
 

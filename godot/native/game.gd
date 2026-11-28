@@ -233,6 +233,7 @@ static func gain_exp(n: float, _silent = false) -> void:
 static func on_level_up(lv: float) -> void:
 	var S = _S(); var u = J.gp(_g("LEVEL_UNLOCKS"), lv)
 	_snd("levelUp"); _fx("banner", ["升級！Lv %s" % J.str(lv) + (("　解鎖【%s】" % J.str(u.name)) if J.t(u) else "")])
+	load("res://ui/juice.gd").celebrate_banner(true)   # [juice] 主公升級
 	if J.t(u): J.mc(_g("Story"), "queue", [{"style": "sys", "lines": u.lines + [["旁白", "解鎖：" + J.str(u.desc)]]}])
 	if lv == 4 and not J.t(S.seen.get("gift_xiaozhi")) and load("res://game/onboard/ob.gd").xz_due(true): xz_gift()   # [onboard] 舊玩家後備（新流程喺包子鋪起好就到）
 static func xz_gift() -> void:
@@ -1361,10 +1362,12 @@ static func n_bld_act(id, a, arg):
 	if act == "build":
 		if not J.t(_c("canPay", [B.build])): return null
 		_snd("build"); _c("pay", [B.build]); S.bld[sid] = 1.0; _c("gainExp", [15.0]); _fx("banner", ["%s 建好了！" % J.str(B.name)]); J.mc(_g("Quest"), "check", []); BK().on_built(sid)   # [barracks] 兵營第一次建成劇情
+		load("res://ui/juice.gd").celebrate_banner(true)   # [juice] 建成：粒子＋彈＋震機
 	if act == "up":
 		var c = J.mc(F, "upCost", [id, S.bld[sid]])
 		if not J.t(_c("canPay", [c])) or J.num(S.bld[sid]) >= J.num(J.mc(F, "bldMax", [id])): return null
 		_snd("build"); _c("pay", [c]); S.bld[sid] = J.num(S.bld[sid]) + 1; _c("gainExp", [10 + 8 * J.num(S.bld[sid])]); _fx("banner", ["%s 升到 Lv %s" % [J.str(B.name), J.str(S.bld[sid])]]); J.mc(_g("Quest"), "check", [])
+		load("res://ui/juice.gd").celebrate_banner(false)   # [juice] 升級：粒子
 	if act == "craft":
 		m(UI, "close"); J.mc(_V(), "craft", [id, J.num(arg) if J.t(J.num(arg)) else 1.0]); return "close"
 	if act == "burn":   # [joss] 唔再燒冥幣：開陽間包裹
@@ -1459,7 +1462,9 @@ static func n_roster_act(a, id) -> void:
 	if J.str(a) == "up":
 		var c = J.num(J.mc(F, "lvCost", [g.lv])); var pp = lv_pay(J.num(g.lv))   # [ux] 前期冥幣＋普通包子，Lv10 起壽包
 		if not can_pay(pp) or J.num(J.mc(F, "glv", [g])) >= maxf(J.num(J.mc(F, "ghostCap", [])), load("res://game/soul/soul_data.gd").cap_of(g)): return   # [soul] 職級加上限
+		var pw0 = J.num(J.mc(_g("GP"), "pow", [g]))   # [juice] 升級演出：鬼力舊→新
 		pay(pp); g["spent"] = J.num(g.spent) + c; g["lv"] = J.num(g.lv) + 1; _c("gainExp", [2.0]); J.mc(_g("Quest"), "check", []); _c("save"); m(_ui(), "refresh")
+		load("res://ui/juice.gd").power_show(J.str(g.k), J.str(g.name), pw0, J.num(J.mc(_g("GP"), "pow", [g])), false, "%s　Lv%d" % [J.str(g.name), int(J.num(g.lv))])
 	if J.str(a) == "rel":
 		var back = floor(J.num(g.spent) * 0.9); S.res["coins"] = J.num(S.res.coins) + back   # [ux] 投胎退冥幣（升級已改用冥幣＋包子，唔再退壽包）
 		S["ghosts"] = S.ghosts.filter(func(x): return not is_same(x, g))

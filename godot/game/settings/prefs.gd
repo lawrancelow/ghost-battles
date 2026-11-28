@@ -25,6 +25,9 @@ const RES_OPTS := ["1280×720", "1600×900", "1920×1080"]
 static var win_mode := 0
 static var res := ""        # "" ＝ 未揀過（唔郁視窗大小）
 static var vsync := true
+# [juice] 爽感包：特效總開關（數字滾動、震屏、粒子、打擊感演出）、手機震動
+static var juice := true
+static var vibrate := true
 
 static func load_pref() -> void:
 	if _loaded: return
@@ -39,6 +42,7 @@ static func load_pref() -> void:
 	if not FPS_OPTS.has(fps): fps = 60
 	win_mode = clampi(int(c.get_value(SEC, "win_mode", win_mode)), 0, 2)
 	res = str(c.get_value(SEC, "res", res)); vsync = bool(c.get_value(SEC, "vsync", vsync))
+	juice = bool(c.get_value(SEC, "juice", juice)); vibrate = bool(c.get_value(SEC, "vibrate", vibrate))
 
 static func save() -> void:
 	var c = ConfigFile.new(); c.load(FILE)   # 保留其他段（例如 ui/dialogue_lang）
@@ -46,12 +50,13 @@ static func save() -> void:
 	c.set_value(SEC, "text_speed", text_speed); c.set_value(SEC, "auto_play", auto_play)
 	c.set_value(SEC, "keep_on", keep_on); c.set_value(SEC, "fps", fps)
 	c.set_value(SEC, "win_mode", win_mode); c.set_value(SEC, "res", res); c.set_value(SEC, "vsync", vsync)
+	c.set_value(SEC, "juice", juice); c.set_value(SEC, "vibrate", vibrate)
 	c.save(FILE)
 
 # 測試用：清返預設（唔寫檔）
 static func reset_defaults() -> void:
 	vol = {"master": 0.9, "music": 0.8, "sfx": 0.9, "voice": 1.0}
-	text_speed = 1; auto_play = false; keep_on = true; fps = 60; win_mode = 0; res = ""; vsync = true; _loaded = true
+	text_speed = 1; auto_play = false; keep_on = true; fps = 60; win_mode = 0; res = ""; vsync = true; juice = true; vibrate = true; _loaded = true
 
 # ---------------- 聲音 ----------------
 static func ensure_buses() -> void:

@@ -51,7 +51,9 @@ static func fuse_page(body: VBoxContainer, refresh: Callable) -> void:
 		if not c.ok: vb.add_child(UI._rich("[color=#b0281c]" + UP.why_txt(str(c.why), c, k) + "[/color]", 14))
 		var lab = L("融合", "融合")
 		bb.add_child(UI._btn(lab, "gold", c.ok, func():
+			var pw0 = load("res://ui/juice.gd").pow_of_k(k)
 			if UP.fuse(k) == "ok":
+				load("res://ui/juice.gd").power_show(k, SOUL.gname(k), pw0, load("res://ui/juice.gd").pow_of_k(k), true, L("融合成%s", "融合成%s") % UP.pj_name(k))   # [juice] 全屏升品演出
 				Snd.play("fuse")   # [sfx43]
 				load("res://game/fxkit/vfx_play.gd").burst("up_fuse")   # [vfx] 融合升品特效
 				var m = UI._main()
@@ -82,7 +84,9 @@ static func star_page(body: VBoxContainer, refresh: Callable) -> void:
 		if not c.ok: vb.add_child(UI._rich("[color=#b0281c]" + UP.why_txt(str(c.why), c, k) + "[/color]", 14))
 		var lab = L("突破", "突破")
 		bb.add_child(UI._btn(lab, "gold", c.ok, func():
+			var pw0 = load("res://ui/juice.gd").pow_of_k(k)
 			if UP.up_star(k) == "ok":
+				load("res://ui/juice.gd").power_show(k, SOUL.gname(k), pw0, load("res://ui/juice.gd").pow_of_k(k), true, "★%d %s" % [UP.star(k), L("突破！", "突破！")])   # [juice] 全屏突破演出
 				Snd.play("star")   # [sfx43]
 				load("res://game/fxkit/vfx_play.gd").burst("up_star")   # [vfx] 星級突破特效
 				var m = UI._main()

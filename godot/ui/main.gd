@@ -427,6 +427,8 @@ func _build_top() -> void:
 		exp_fill.color = Color(0, 0, 0, 0); exp_fill.add_child(f2)
 	exp_txt = UIKit.label("", 12, UIKit.DIM); exp_txt.anchor_left = 1; exp_txt.anchor_right = 1; exp_txt.offset_left = -162; exp_txt.offset_right = -54; exp_txt.offset_top = 10
 	exp_txt.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; top.add_child(exp_txt)
+	power_lbl = UIKit.label("戰力 0", 12, Color("#ffd84a"), "sans", 900); power_lbl.name = "PowerLbl"; power_lbl.position = Vector2(78, 0); power_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE   # [juice] 戰力總值
+	power_lbl.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.02)); power_lbl.add_theme_constant_override("outline_size", 4); top.add_child(power_lbl)
 	# 資源格
 	var grid = GridContainer.new(); grid.columns = 3; grid.add_theme_constant_override("h_separation", 4); grid.add_theme_constant_override("v_separation", 4)
 	grid.anchor_right = 1; grid.offset_left = 76; grid.offset_top = 36; grid.offset_right = -9; grid.add_theme_constant_override("v_separation", 5); top.add_child(grid)
@@ -483,6 +485,44 @@ func _res_float(dt: float) -> void:
 		tw.tween_property(f, "global_position:y", f.global_position.y - 14.0, 1.2)
 		tw.tween_property(f, "modulate:a", 0.0, 1.2).set_delay(0.3)
 		tw.chain().tween_callback(f.queue_free)
+
+# [juice] 頂欄數字：升就滾（冥幣仲有 do-re-mi 遞升音＋大額震屏震機），跌就直接變
+var _jlast := {}
+const JU = preload("res://ui/juice.gd")
+func _jset(k: String, v: float) -> void:
+	var lb = res_lbl.get(k)
+	if lb == null or not is_instance_valid(lb): return
+	var prev = float(_jlast.get(k, v)); _jlast[k] = v
+	var fmt = func(x: float) -> String: return G.fmt(x)
+	if v > prev + 0.5 and JU.on():
+		JU.roll(lb, v, fmt, 0.45 if v - prev < 100 else 0.7)
+		if k == "coins":
+			JU.chime("coin")
+			if v - prev >= maxf(200.0, prev * 0.15): JU.big_income(v - prev)
+	elif absf(v - prev) < 0.5:   # 冇變：滾緊就由佢滾，冇滾就確保字啱
+		var r0 = lb.get_node_or_null("JuiceRoll")
+		if r0 == null or not r0.is_processing(): lb.text = G.fmt(v)
+	else:   # 跌（或者特效關）：直接變
+		var r = lb.get_node_or_null("JuiceRoll")
+		if r != null: r.set_process(false); r.cur = v; r._to = v
+		lb.text = G.fmt(v)
+
+# [juice] 戰力總值（頂欄好評條左上；升咗就滾＋彈）
+var power_lbl: Label = null
+var _jpow := -1
+var _jpow_t := 0.0
+func _jpower() -> void:
+	if power_lbl == null or not is_instance_valid(power_lbl): return
+	var nowt = Time.get_ticks_msec() / 1000.0
+	if nowt - _jpow_t < 0.25 and _jpow >= 0: return
+	_jpow_t = nowt
+	var p = JU.power_total()
+	var fmt = func(x: float) -> String: return "戰力 %s" % G.fmt(round(x))
+	if _jpow < 0 or not JU.on(): power_lbl.text = fmt.call(p)
+	elif p > _jpow:
+		JU.roll(power_lbl, p, fmt, 0.6); JU.pop(power_lbl, 1.2)
+	elif p < _jpow: power_lbl.text = fmt.call(p)
+	_jpow = p
 
 func _build_nav() -> void:
 	var nav = Panel.new(); nav.anchor_top = 1; nav.anchor_bottom = 1; nav.anchor_right = 1; nav.offset_top = -NAV_H
@@ -603,9 +643,10 @@ func refresh() -> void:
 	exp_txt.text = "好評 MAX" if S.lv >= 20 else "好評 %s/%s" % [G.fmt(S.exp), G.fmt(need)]
 	var cap = G.cap()
 	for k in ["wood", "rice", "planks", "buns"]:
-		res_lbl[k].text = G.fmt(S.res[k])
+		_jset(k, float(S.res[k]))
 		res_lbl[k].add_theme_color_override("font_color", Color("#ffb46a") if float(S.res[k]) >= cap - 0.5 else Color("#f4ecd4"))
-	res_lbl.coins.text = G.fmt(S.res.coins); res_lbl.troops.text = G.fmt(S.res.troops)
+	_jset("coins", float(S.res.coins)); _jset("troops", float(S.res.troops))
+	_jpower()
 	var q = G.quest_cur()
 	if q:
 		var p = G.quest_progress(q)

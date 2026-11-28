@@ -96,7 +96,11 @@ func consume(op) -> void:
 				var mn = J.t(v2.get("minion"))
 				FXK.spark(emit, hp_.x, hp_.y, 1.35 if big else (0.7 if mn else 0.9), J.num(v2.get("side", 0)) == 0)
 				glow(hp_.x, hp_.y, 1.2 if big else 0.8, 0.35)
-				if big: _shake(4.0); _hitstop(op, 0.05)
+				var crit: bool = e.size() > 5 and bool(e[5])
+				if crit and JU().on():   # [juice] 暴擊：大光、重震、停頓長啲、專屬聲
+					glow(hp_.x, hp_.y, 1.8, 0.55); _shake(9.0); _hitstop(op, 0.07)
+					if Time.get_ticks_msec() - _snd_at > 60: _snd_at = Time.get_ticks_msec(); Snd.play("crit")
+				elif big: _shake(4.0); _hitstop(op, 0.05)
 				if Time.get_ticks_msec() - _snd_at > 80: _snd_at = Time.get_ticks_msec(); Snd.play("hit")
 				if dead: _down(op, v2, hp_)
 			"sk2": sk2(op, e[1], e[2], e[3])
@@ -317,6 +321,26 @@ func _down(op, v: Dictionary, hp_: Vector2) -> void:
 			spr("fx2_smoke", p.x, p.y - 30, {"s0": 0.2, "s1": 0.5, "life": 0.7, "add": false, "alpha": 0.9})
 	else: _shake(3.0)
 	FXK.dust(emit, p.x - 12, p.y, 1.2); FXK.dust(emit, p.x + 12, p.y, 1.0)
+	if J.num(v.get("side", 0)) == 1 and JU().on(): _juice_kill(op, v, p)
+
+# [juice] 敵人倒下：化灰＋魂火升天；連殺數；最後一隻＝終結慢鏡；打低王＝震機
+static func JU(): return load("res://ui/juice.gd")
+func _juice_kill(op, v: Dictionary, p: Vector2) -> void:
+	var mn = J.t(v.get("minion"))
+	spr("fx2_smoke", p.x, p.y - 18, {"s0": 0.12 if mn else 0.2, "s1": 0.32 if mn else 0.55, "life": 0.8, "add": false, "alpha": 0.55, "vy": 18.0, "hue": 0.0})   # 化灰
+	spr("fx2_ghostfire", p.x, p.y - 24, {"s0": 0.08 if mn else 0.14, "s1": 0.18 if mn else 0.3, "life": 0.9, "vy": 70.0, "anchor": 0.9, "alpha": 0.85, "hue": 190.0})   # 魂火升天
+	var now = float(op.T)
+	var n = int(op.get_meta("ks_n", 0)) + 1 if now - float(op.get_meta("ks_t", -9.0)) < 2.2 else 1
+	op.set_meta("ks_n", n); op.set_meta("ks_t", now); op.set_meta("ks_max", maxi(n, int(op.get_meta("ks_max", 0))))
+	if n >= 3:
+		op.text(op.center() + Vector2(0, -112), "%d 連殺！" % n, "#ffcf4a" if n < 8 else "#ff6a3a", 1.0, mini(30, 16 + n))
+		Snd.play("combo", n)
+	var last = op.foes_alive() == 0
+	if J.t(v.get("boss")):
+		JU().vib(90); JU().slowmo(0.3, 0.9)
+		op.text(op.center() + Vector2(0, -140), "擊破！", "#ff5a3a", 1.4, 30)
+	elif last and op.phase == "fight":
+		JU().vib(40); JU().slowmo(0.4, 0.55)
 
 # 名鬼／大王出場（開打嗰下，鏡頭內先出）
 func appear_op(op) -> void:
@@ -331,6 +355,8 @@ func appear_op(op) -> void:
 		var p: Vector2 = u.p
 		FXK.appear(func(nm, x, y, o): o["prio"] = true; spr(nm, x, y, o), p.x, p.y, S.app, k)
 		n += 1
+		if J.t(u.get("boss")) and J.num(u.get("side", 0)) == 1 and JU().on():   # [juice] 王登場演出
+			_shake(9.0); JU().boss_intro(J.str(u.get("name", "")), J.str(u.get("k", ""))); JU().vib(60)
 	if n: Snd.play("hit")
 
 func tick(dt: float) -> void:

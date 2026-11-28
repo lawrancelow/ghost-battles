@@ -14,6 +14,15 @@ const LG_PATH := "res://data/nat/legion.json"   # [legion] 八大軍團
 const CAP_LO := 0.2           # 兩層克制＋機制＋追擊 總倍率封頂
 const CAP_HI := 4.0
 const ADV_CAP := 0.25         # 軍師加成封頂 +25%
+# [juice] 暴擊：期望傷害不變（非暴擊 ÷ NORM，暴擊 ×X÷NORM；NORM＝1＋P×(X−1)）→ 平均 DPS 同以前一樣，只係有起伏
+const CRIT_P := 0.12
+const CRIT_X := 1.75
+const CRIT_NORM := 1.0 + CRIT_P * (CRIT_X - 1.0)
+static var crit_on := true      # 測試／設定可關（爽感特效關 → 冇暴擊，傷害照舊）
+static func _crit_enabled() -> bool:
+	if not crit_on: return false
+	var PF = load("res://game/settings/prefs.gd"); PF.load_pref()
+	return PF.juice
 const AOE_R := 130.0          # 舊 aoe 技：以目標為圓心 130px（唔再係全場）
 const SUM_CAP := 12           # 每場召喚物／分裂體上限
 const TICK := 0.25            # 光環／定時觸發
@@ -1420,6 +1429,10 @@ static func hit(sim, src: Dictionary, v: Dictionary, mult: float, c = null) -> f
 	var atk = _nn(src, "atk") * stat(sim, src, "atk")
 	if sd == 0 and J.t(src.get("minion")) and J.t(sa.get("in_fear")): atk *= mp("嚇氣光環", "minion_atk", 0.8)
 	var dmg = J.round(atk * mult * mod * bonus * (0.9 + randf() * 0.2))
+	var crit = false
+	if dmg > 0 and not J.t(c.get("exec")) and _crit_enabled():   # [juice] 暴擊（期望值不變）
+		if randf() < CRIT_P: crit = true; dmg = J.round(float(dmg) * CRIT_X / CRIT_NORM)
+		else: dmg = maxf(1.0, J.round(float(dmg) / CRIT_NORM))
 	var dmg_hp = float(dmg)
 	# 護衛：我方陰兵小隊受傷，部份轉去身邊有「護衛」嘅名鬼
 	if vsd == 0 and J.t(v.get("minion")) and dmg_hp > 0:
@@ -1462,8 +1475,9 @@ static func hit(sim, src: Dictionary, v: Dictionary, mult: float, c = null) -> f
 	if not J.t(v.get("anim")) and not J.t(v.get("casting")): v["hurtT"] = 0.25
 	var hp_ = sim.head(v)
 	sim.spark(hp_.lerp(v.p, 0.45) - Vector2(dir * 5, 0), 1.35 if combo_hit or sk else (0.7 if J.t(v.get("minion")) else 1.0), "#ff9a7a" if vsd == 0 else ("#ffd84a" if combo_hit else "#fff4c0"))
-	sim._fx({"kind": "num", "p": hp_ + Vector2((randf() - 0.5) * 14, -6), "vx": dir * (14 + randf() * 18), "text": J.str(J.round(dmg_hp)) if not shell_hit or dmg_hp > 0 else "殼", "life": 0.95,
-		"col": "#ffd84a" if combo_hit else ("#9aa" if shell_hit else ("#ff8a8a" if vsd == 0 else "#ffffff")), "big": combo_hit or sk})
+	sim._fx({"kind": "num", "p": hp_ + Vector2((randf() - 0.5) * 14, -6), "vx": dir * (14 + randf() * 18), "text": (J.str(J.round(dmg_hp)) + ("!" if crit else "")) if not shell_hit or dmg_hp > 0 else "殼", "life": 1.15 if crit else 0.95,
+		"col": "#ff5a2a" if crit else ("#ffd84a" if combo_hit else ("#9aa" if shell_hit else ("#ff8a8a" if vsd == 0 else "#ffffff"))), "big": combo_hit or sk or crit, "crit": crit})
+	if crit: sim.text(hp_ + Vector2(0, -34), "暴擊", "#ff7a3a", 0.9, 17); sim.set_meta("crits", int(sim.get_meta("crits", 0)) + 1)
 	if tag != null: sim.text(hp_ + Vector2(0, -22), tag, tcol)
 	if chain: sim.text(sim.center() + Vector2(0, -90), "連嚇！", "#ffd84a", 1.2, 20)
 	# ---- 舊式 apply（直接叫 op.hit 嗰啲） ----
@@ -1486,7 +1500,7 @@ static func hit(sim, src: Dictionary, v: Dictionary, mult: float, c = null) -> f
 	if _nn(v, "hp") <= 0:
 		sim.ab_down(v, dir)
 		on_down(sim, v, src, c)
-	sim._vq(["hit", src, v, sk or combo_hit, _nn(v, "hp") <= 0])
+	sim._vq(["hit", src, v, sk or combo_hit or crit, _nn(v, "hp") <= 0, crit])
 	sim.events.append(["hit", v])
 	# ---- 觸發（depth ≤ 1） ----
 	if int(sim.ab_st.get("depth", 0)) == 0:
