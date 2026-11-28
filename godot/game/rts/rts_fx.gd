@@ -339,7 +339,7 @@ func _juice_kill(op, v: Dictionary, p: Vector2) -> void:
 	if J.t(v.get("boss")):
 		JU().vib(90); JU().slowmo(0.3, 0.9)
 		op.text(op.center() + Vector2(0, -140), "擊破！", "#ff5a3a", 1.4, 30)
-	elif last and op.phase == "fight":
+	elif last and op.phase in ["fight", "end"]:
 		JU().vib(40); JU().slowmo(0.4, 0.55)
 
 # 名鬼／大王出場（開打嗰下，鏡頭內先出）

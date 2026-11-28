@@ -226,7 +226,7 @@ static func power_show(k: String, nm: String, before: float, after: float, full 
 	if m == null: return
 	_log("power", [k, before, after, full])
 	var old = m.get_node_or_null("PowerShow")
-	if old != null: old.queue_free()
+	if old != null: old.name = "PowerShowOld"; old.queue_free()   # 改名先，唔係新嗰個會撞名
 	var cl = CanvasLayer.new(); cl.layer = 112; cl.name = "PowerShow"; m.add_child(cl)
 	var vs = m.get_viewport().get_visible_rect().size
 	var root = Control.new(); root.size = vs; root.mouse_filter = Control.MOUSE_FILTER_STOP if full else Control.MOUSE_FILTER_IGNORE; cl.add_child(root)
