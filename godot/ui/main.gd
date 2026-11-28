@@ -331,6 +331,7 @@ func _notification(what: int) -> void:
 var boot_full_t := 0
 var _boot_diag = null
 func _process(dt: float) -> void:
+	if toasts != null and toasts.get_child_count() > 0: toast_avoid()   # [p56b]
 	if loading != null:
 		# 看門狗：模塊載完 20 秒仲未入到遊戲 → 喺載入畫面顯示錯誤記錄，可以截圖俾開發者
 		if boot_full_t > 0 and Time.get_ticks_msec() - boot_full_t > 20000 and _boot_diag == null:
@@ -372,7 +373,7 @@ func _build_village() -> void:
 	var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 9); quest_bar.add_child(hb)
 	var tagp = PanelContainer.new(); tagp.add_theme_stylebox_override("panel", UIKit.sb(UIKit.CINNABAR, 2, Color(0, 0, 0, 0), 0, Vector4(7, 3, 7, 3)))
 	tagp.add_child(UIKit.label("主線", 13, Color("#fbe6d6"), "serif", 900)); hb.add_child(tagp)
-	quest_lbl = UIKit.rich("", 15, UIKit.INKTXT); quest_lbl.add_theme_font_override("normal_font", UIKit.font("sans", 700)); quest_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; quest_lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
+	quest_lbl = UIKit.rich("", 15, UIKit.INKTXT); quest_lbl.add_theme_font_override("normal_font", UIKit.font("sans", 700)); quest_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; quest_lbl.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY   # [p56b] 長句自動換行，唔再右邊切走
 	quest_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE; quest_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hb.add_child(quest_lbl)
 	quest_prog = UIKit.label("", 15, UIKit.CINNABAR2, "sans", 900); quest_prog.size_flags_vertical = Control.SIZE_SHRINK_CENTER; hb.add_child(quest_prog)
 	quest_go = UIKit.btn(OBm().T("前往", "前往"), "", true); quest_go.add_theme_font_size_override("font_size", 13); quest_go.custom_minimum_size = Vector2(52, 28)
@@ -655,7 +656,7 @@ func refresh() -> void:
 		var p = G.quest_progress(q)
 		var a = minf(float(p[0]), float(p[1]))
 		if mv_on(): p = MVB.quest_disp(q, p); a = minf(float(p[0]), float(p[1]))
-		quest_lbl.text = ((_unify_qtext(MVB.quest_text(q)) if UNIFY else MVB.quest_text(q)) if mv_on() else q.text) + load("res://game/onboard/need.gd").quest_short(q); quest_prog.text = "%d/%d" % [int(a), int(p[1])]
+		quest_lbl.text = ((_unify_qtext(MVB.quest_text(q)) if UNIFY else MVB.quest_text(q)) if mv_on() else q.text) + _quest_lack_line(q); quest_prog.text = "%d/%d" % [int(a), int(p[1])]
 		quest_prog.add_theme_color_override("font_color", Color("#2e6d3a") if float(p[0]) >= float(p[1]) else UIKit.CINNABAR2)
 	else: quest_lbl.text = "第一季完。村子由你慢慢經營。" if S.ended else "—"; quest_prog.text = ""
 	_ob_nav_gray()
@@ -690,6 +691,25 @@ func _mv_apply() -> void:
 	_qx_btn_vis()
 
 # [unify] 任務字：原村子建築已經返晒原位，唔再講「營地」
+# [p56b] 任務條缺料短句：另起一行（13 號朱砂字），長過一行就自動換行，最長組合都睇得晒
+func _quest_lack_line(q) -> String:
+	var sh = str(load("res://game/onboard/need.gd").quest_short(q))
+	if sh == "": return ""
+	return "\n[font_size=13][color=#9c2219]%s[/color][/font_size]" % sh.trim_prefix("（").trim_suffix("）").replace("→", " → ")
+
+# [p56b] 提示框自動避開主要掣（出擊／行動掣）：見到就升上佢哋上面
+func toast_avoid() -> void:
+	if toasts == null: return
+	var vh = get_viewport_rect().size.y
+	var bottom = vh - 86.0
+	for nm in ["CtlSortie", "CtlAct"]:
+		var b = find_child(nm, true, false)
+		if b is Control and b.is_visible_in_tree():
+			var r = b.get_global_rect()
+			if r.size.y > 0 and r.end.y > vh * 0.5: bottom = minf(bottom, r.position.y - 8.0)
+	var ob = bottom - vh
+	if absf(toasts.offset_bottom - ob) > 0.5: toasts.offset_bottom = ob
+
 func _unify_qtext(s: String) -> String:
 	return s.trim_prefix("營地：").replace("營地或者生產台", "村子或者大排檔")
 
@@ -812,6 +832,7 @@ func show_toast(bb: String) -> void:
 		if _mq.size() < 12: _mq.append(["toast", bb])
 		return
 	while toasts.get_child_count() >= 3: toasts.get_child(0).free()
+	toast_avoid()
 	var p = PanelContainer.new()
 	var s = StyleBoxFlat.new(); s.bg_color = Color("#241b17"); s.border_color = UIKit.CINNABAR; s.border_width_left = 5; s.set_corner_radius_all(2)
 	s.content_margin_left = 12; s.content_margin_right = 12; s.content_margin_top = 9; s.content_margin_bottom = 9; s.shadow_color = Color(0, 0, 0, 0.5); s.shadow_size = 8
