@@ -45,6 +45,25 @@ static func on() -> bool:
 	if OS.has_environment("GB_TEST") and not J.t(r.get("test")): return false
 	return not J.t(r.get("done"))
 
+# ================= 對外接口（kpi／opening／tavern／juice 用）=================
+# opened_count()：村子 10 棟（BLD_ORDER）已開張幾多棟；vitality()：生氣值 0–1（＝開張比例，畫面亮度／遊魂數量可跟）
+# all_lit()：全村點燈咗未；listen(fn)：fn.call(kind, arg) — kind：open（開張，arg＝建築 id）／relic（舊物件 id）／lit（全村點燈）
+# J.G["rb_opening"]（Array）：opening 組可換開場場景 id 次序；未設就用 OPENING
+static var _ls: Array = []
+static func listen(fn: Callable) -> void: if not (fn in _ls): _ls.append(fn)
+static func _emit(kind: String, arg) -> void:
+	for f in _ls: if f.is_valid(): f.call(kind, arg)
+static func opened_count() -> int:
+	var s = S(); var n := 0
+	if s == null: return 0
+	var BO = J.G.get("BLD_ORDER")
+	for b in (BO if BO is Array else ORDER): if J.num(s.bld.get(b, 0)) > 0 and not holds(str(b)): n += 1
+	return n
+static func vitality() -> float:
+	var BO = J.G.get("BLD_ORDER")
+	return float(opened_count()) / float(maxi(1, (BO as Array).size() if BO is Array else 10))
+static func all_lit() -> bool: return J.t(st().get("lit"))
+
 # ================= 存檔 =================
 static func fresh_state() -> Dictionary:
 	var piles := {}
@@ -138,9 +157,30 @@ static func _hit_pile(village, e: Dictionary) -> void:
 	J.mc(J.G.get("Quest"), "check", [])
 	J.mc(J.G.get("UI"), "refresh", [])
 
-static func _relic(p: Vector2) -> void:   # 10% 挖到舊物件（村史館收集，P2 先有收集冊；而家記數＋跳字）
-	var r = st(); r["found"] = J.num(r.get("found", 0)) + 1.0
-	_float(p.x, p.y - 66, T("挖到舊物件！", "挖到舊物件！"), "#c9a6ff")
+# 村史館：前任村長留低嘅舊物件（每件一次；集齊有獎）。文案組可改 RELICS 文字
+const RELICS := [
+	["clock", "生鏽打卡鐘", "指針停喺兩點四十七分。"], ["diary", "前任村長日記殘頁", "「第三百日：KPI 又加咗。」"],
+	["mahjong", "缺咗一隻嘅麻雀", "缺嗰隻係紅中。"], ["badge", "地府員工證", "相片位置係一片空白。"],
+	["abacus", "崩齒算盤", "撥埋撥埋都係負數。"], ["lantern", "褪色燈籠", "上面寫住「落魄村」三個字。"],
+	["teacup", "缺口茶杯", "杯底刻住「孟」字。"], ["seal", "生鏽公章", "印出嚟係「已批」。"],
+]
+const RELIC_REWARD := {"coins": 200.0, "exp": 60.0}
+static func relics() -> Array: return st().get("relics", []) if st().get("relics") is Array else []
+static func _relic(p: Vector2) -> void:   # 10% 挖到舊物件（未有嘅先出）
+	var r = st()
+	if not (r.get("relics") is Array): r["relics"] = []
+	var have: Array = r.relics; var left = []
+	for e in RELICS: if not (e[0] in have): left.append(e)
+	if left.is_empty(): return
+	var e = left[randi() % left.size()]
+	have.append(e[0]); r["found"] = float(have.size())
+	_snd("gong")
+	_float(p.x, p.y - 66, T("挖到舊物件：%s（村史館 %d/%d）", "挖到舊物件：%s（村史館 %d/%d）") % [e[1], have.size(), RELICS.size()], "#c9a6ff")
+	J.mc(J.G.get("Fx"), "toast", ["<b>%s</b><br>%s" % [e[1], e[2]]])
+	if have.size() == RELICS.size():
+		var txt = J.str(J.cl(J.G.get("give"), null, [RELIC_REWARD]))
+		_banner(T("村史館集齊！", "村史館集齊！")); J.mc(J.G.get("Fx"), "toast", [txt])
+	_emit("relic", e[0])
 
 static func _tap_ruin(village, b: String) -> void:
 	var bp = _pos(b)
@@ -171,6 +211,7 @@ static func _next_b() -> String:
 
 # ================= 每 0.5 秒（Quest.check） =================
 static func tick() -> void:
+	_lit_check()
 	if not on(): return
 	guard()
 	var f: Dictionary = st().fix
@@ -185,6 +226,13 @@ static func guard() -> void:
 	for b in ORDER:
 		if not J.t(op.get(b)) and J.num(s.bld.get(b, 0)) != 0.0: s.bld[b] = 0.0
 
+static func _lit_check() -> void:   # 全村 10 棟開張：全村點燈（一次）
+	if not ever() or all_lit(): return
+	if vitality() < 1.0: return
+	st()["lit"] = 1.0
+	_snd("gong"); _banner(T("全村點燈！落魄村活返嚟喇！", "全村點燈！落魄村活過來了！"))
+	_emit("lit", null)
+
 static func _open(b: String) -> void:
 	var s = S(); var r = st()
 	r.fix.erase(b); r.open[b] = 1.0
@@ -193,6 +241,7 @@ static func _open(b: String) -> void:
 	_banner(T("%s 重開！", "%s 重新開張！") % BNAME[b])
 	var bp = _pos(b)
 	_float(bp.x, bp.y - 120, "✦ ✦ ✦", "#ffd54a")
+	_emit("open", b)
 	if _next_b() == "": r["done"] = true; _banner(T("荒村重建第一步完成！", "荒村重建第一步完成！"))
 	J.mc(J.G.get("UI"), "refresh", [])
 
@@ -302,8 +351,10 @@ static var _op_q := false
 static func opening_due() -> bool:
 	if not on() or _op_q: return false
 	var s = S(); var seen = s.get("seen", {})
-	return J.t(J.gp(seen, "prologue_sys")) and not J.t(J.gp(seen, "rb_op_arrive"))
+	var ids = J.G.get("rb_opening") if J.G.get("rb_opening") is Array and not (J.G.get("rb_opening") as Array).is_empty() else OPENING
+	return J.t(J.gp(seen, "prologue_sys")) and not J.t(J.gp(seen, str(ids.back())))
 static func queue_opening() -> void:
 	add_scenes(); _op_q = true
 	var St = J.G.get("Story")
-	for id in OPENING: J.mc(St, "queue", [id])
+	var ids = J.G.get("rb_opening") if J.G.get("rb_opening") is Array else OPENING
+	for id in ids: J.mc(St, "queue", [id])

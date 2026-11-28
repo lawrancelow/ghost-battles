@@ -118,7 +118,9 @@ static func rates() -> Dictionary:
 	for g in J.iter(s.get("ghosts")):
 		var p = J.gp(g, "post")
 		if not (p is String) or not (p in nb): continue
-		units.append([str(p), worker_f(g, str(p))])
+		var hm = load("res://game/tavern/tavern.gd").work_mul(g)   # [tavern] 酒館鬼：肚餓 ×0.5、罷工 0（資源區工坊都計）
+		if hm <= 0: continue
+		units.append([str(p), worker_f(g, str(p)) * hm])
 	for u in units:
 		var bid: String = u[0]; var d = M.bld(bid); var wf: float = u[1]; var p = bid
 		if not (s.get("bld") is Dictionary) or J.num(s.bld.get(p, 0)) <= 0: continue

@@ -86,6 +86,19 @@ func all(t) -> void:
 		_check(); await _w(t, 0.6)
 		if b == "house": await _shot(t, m, "04_house_open", RB._pos(b))
 	_chk("三棟修完：rb.done", J.t(RB.st().get("done")) and not RB.on())
+	_chk("接口：opened_count ≥ 3、vitality 0–1", RB.opened_count() >= 3 and RB.vitality() > 0 and RB.vitality() <= 1.0, "%d %.2f" % [RB.opened_count(), RB.vitality()])
+	# 村史館：連挖 8 件集齊有獎、唔重複
+	var ev = []
+	RB.listen(func(k, a): ev.append(k))
+	var c0 = J.num(S.res.coins); var r0 = RB.relics().size()
+	for i in 10: RB._relic(Vector2(200, 400))
+	_chk("村史館：8 件唔重複、集齊", RB.relics().size() == 8, RB.relics())
+	_chk("村史館：集齊有冥幣獎", J.num(S.res.coins) >= c0 + 200)
+	_chk("接口：listen 收到 relic 事件（新挖 %d 件）" % (8 - r0), ev.count("relic") == 8 - r0, ev.size())
+	# 全村點燈：10 棟開張
+	for id in J.G.get("BLD_ORDER"): S.bld[id] = maxf(1.0, J.num(S.bld.get(id, 0)))
+	_check(); await _w(t, 0.6)
+	_chk("全村點燈：10 棟開張 → lit＋事件", RB.all_lit() and "lit" in ev, ev)
 	q = _q()
 	_chk("返正式主線：S.qi 冇郁過、任務唔係 rb", J.num(S.qi) == qi0 and q != null and not J.t(q.get("rb")), str(q.get("text")) if q != null else "null")
 	var js = JSON.parse_string(J.to_json(S))

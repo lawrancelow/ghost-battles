@@ -82,7 +82,9 @@
 - 牛頭馬面各有個性：牛頭貪吃、收食物最有效；馬面愛面子、收名牌最有效。送錯對象效果減半＋吐槽台詞。
 - 每區只能賄賂一次（防止無腦跳過）。
 
-### 4.3 KPI 逾期懲罰（請老闆三選一）
+### 4.3 KPI 逾期懲罰（**老闆定案：中**）
+> 定案：逾期 → Bryan 搶功，拿走倉庫 10% 某資源，村裡掛「本月最佳員工：Bryan」橫幅；達標時撕橫幅、拿回一半。冥界老闆統一穿**宋朝官服**。（程序組 VII kpi 分支實作）
+
 | 檔 | 逾期後果 |
 |---|---|
 | **輕** | 沒懲罰，只是冥界老闆來罵一頓（劇情），倒數重來，下一輪指標不變 |
@@ -181,6 +183,19 @@
 **插圖（CRT 電視）**：孟婆湯、流放、荒村初見、KPI 蓋章、賄賂被撞破、全村點燈。
 
 ---
+
+## 十二、荒村重建對外接口（game/rebuild/rb.gd，vil2 分支）
+| 接口 | 用途 |
+|---|---|
+| `RB.ever()` / `RB.on()` | 此存檔用荒村開局／重建階段進行中（GB_TEST 下要 `S.rb.test=1`） |
+| `RB.opened_count()` / `RB.vitality()` | 已開張棟數（KPI ①② 用）／生氣值 0–1（juice 組畫面亮度、遊魂數量可跟） |
+| `RB.all_lit()` | 全村點燈咗未（KPI ③ 用） |
+| `RB.listen(fn)` | `fn.call(kind, arg)`：`open`（開張，建築 id）、`relic`（舊物件 id）、`lit`（全村點燈） |
+| `RB.relics()` | 村史館已收集舊物件 id（8 件，集齊 冥幣 200＋好評 60） |
+| `RB.holds(id)` | 重建中建築由 rb 話事（mv_bridge.sync 虛擬等級已跳過） |
+| `J.G["rb_opening"]` | opening 組換開場場景 id 次序（未設用 `rb_op_hall/soup/exile/arrive` 佔位） |
+| 大排檔開關 | KPI 組設 `J.G["stall_open_fn"]` 或 `S.tav.stall=1`（tavern.stall_open 讀） |
+| 酒館鬼肚餓 | 村內建築（native/game.gd）＋資源區工坊（chain_eco.gd）都乘 `tavern.work_mul(g)` |
 
 ## 十一、前 30 分鐘數值表（各組對齊用；本組定）
 | 項目 | 數值 |
