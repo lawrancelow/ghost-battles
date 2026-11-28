@@ -7,7 +7,7 @@ import json, os, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = sys.argv[1] if len(sys.argv) > 1 else "/home/claude/meeting/market/story_market_v2_add.md"
 md = open(SRC, encoding="utf8").read().split("\n")
-NODE = {"開場": "open", "考核中": "mid", "達標": "pass", "逾期": "overdue", "賄賂·點心": "snack", "賄賂·名錶": "watch", "賄賂·跑車": "car"}
+NODE = {"開場": "open", "考核中": "mid", "達標": "pass", "逾期": "overdue", "賄賂·點心": "snack", "賄賂·名錶": "watch", "賄賂·跑車": "car", "賄賂·失敗": "bribe_fail", "被抓包": "caught"}
 TYPE = {"偷錢": "steal_cash", "偷貨": "steal_goods", "插隊": "cut_queue", "吵架打鬧": "brawl"}
 out = {"_note": "market_lines_build.py 由 story_market_v2_add.md 產生；每句 [粵語, 書面中文]",
        "zhen": {}, "praise": {}, "complain": [], "ev": {}, "pat_n": {}}
@@ -43,7 +43,7 @@ for a in out["complain"]:
 if sorted(out["pat_n"]) != ["0", "1", "2", "3", "4"]: err.append("巡邏人數台詞要 0–4：%s" % sorted(out["pat_n"]))
 for ci in range(6):
     k = str(ci)
-    if len(out["zhen"].get(k, {})) != 7: err.append("第 %d 章甄好賣台詞唔齊" % (ci + 1))
+    if len(out["zhen"].get(k, {})) != 9: err.append("第 %d 章甄好賣台詞唔齊" % (ci + 1))
     if k not in out["praise"]: err.append("第 %d 章冇誇獎句" % (ci + 1))
     for t in TYPE.values():
         n = len(out["ev"].get(k, {}).get(t, []))
@@ -67,4 +67,4 @@ for t, rows in out["ev"].get("2", {}).items():
 if err:
     print("\n".join(err)); sys.exit(1)
 json.dump(out, open(os.path.join(ROOT, "data", "market_lines.json"), "w", encoding="utf8"), ensure_ascii=False, indent=1)
-print("OK 甄好賣 %d 章×7、誇獎 %d、抱怨 %d、事件 %d 條、巡邏人數 %d" % (len(out["zhen"]), len(out["praise"]), len(out["complain"]), sum(len(r) for c in out["ev"].values() for r in c.values()), len(out["pat_n"])))
+print("OK 甄好賣 %d 章×9、誇獎 %d、抱怨 %d、事件 %d 條、巡邏人數 %d" % (len(out["zhen"]), len(out["praise"]), len(out["complain"]), sum(len(r) for c in out["ev"].values() for r in c.values()), len(out["pat_n"])))

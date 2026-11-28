@@ -32,10 +32,12 @@ static func draw_strip(sc, ctx) -> void:
 		Art.rr(ctx, x + 2, y0 + 5, cw - 4, STRIP_H - 10, 7, fill, "#f3d68a" if sel else "#5e4a30", 1.5)
 		var col = Color("#3a2414") if sel else (Color("#f5e8cc") if op else Color("#8a7f78"))
 		var nm = MK.name(id)   # 未開嘅街：名照樣大字，左上角細紅牌寫「鎖」（之前「鎖・XX街」要縮到 11 號字，睇唔清）
-		sc._txt(ctx, nm, x + cw / 2.0, y0 + STRIP_H / 2.0 + 1, 16 if nm.length() <= 2 else (15 if nm.length() == 3 else 14), col, "center", 900, 0)
-		if not op:
-			Art.rr(ctx, x + 3, y0 + 3, 17, 15, 4, "rgba(150,36,30,.95)", "#e8b8a0", 1.0)
-			sc._txt(ctx, "鎖", x + 11.5, y0 + 11, 11, Color("#fff0e0"), "center", 900, 0)
+		if op:
+			sc._txt(ctx, nm, x + cw / 2.0, y0 + STRIP_H / 2.0 + 1, 16 if nm.length() <= 2 else (15 if nm.length() == 3 else 14), col, "center", 900, 0)
+		else:   # 左邊細紅牌「鎖」，街名靠右排，兩樣唔疊
+			Art.rr(ctx, x + 5, y0 + 12, 16, 16, 4, "rgba(150,36,30,.95)", "#e8b8a0", 1.0)
+			sc._txt(ctx, "鎖", x + 13, y0 + 20.5, 11, Color("#fff0e0"), "center", 900, 0)
+			sc._txt(ctx, nm, x + 23 + (cw - 26) / 2.0, y0 + STRIP_H / 2.0 + 1, 14 if nm.length() <= 3 else 13, col, "center", 900, 0)
 		if MK.sids_on(ci, id).is_empty() and op: sc._txt(ctx, "無貨", x + cw - 12, y0 + 10, 9, Color("#c9b9a0"), "center", 700, 0)
 		if _alert(sc, id):   # 被霸：紅點閃
 			var a = 0.55 + 0.45 * sin(float(sc.t) * 6.0)
