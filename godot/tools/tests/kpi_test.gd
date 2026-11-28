@@ -26,10 +26,10 @@ func _rng(): return _r.pop_front() if _r.size() else 0.99
 func _reset_state():
 	var S = J.G.S
 	KG._fns.clear()
+	var z = ZD.st()
+	for k in ["0:A", "0:B", "0:C"]: z.own.erase(k)   # 先清佔領（enable 遷移會將已佔領嘅區當達標）
 	S["kpi"] = null
 	KG.enable(true)
-	var z = ZD.st()
-	for k in ["0:A", "0:B", "0:C"]: z.own.erase(k)
 	KG.NEWS.clear()
 func _fill(gid: String, extra := 0.0):   # 補夠指標
 	for p in KG.progress(gid):
@@ -220,6 +220,18 @@ func _wire(t, m) -> void:
 	var kq = KG.cur_q(sq)
 	_chk("主線去到「大排檔賣貨」而大排檔未開：任務條改做考核（陳不辦）", kq is Dictionary and kq.get("kpi") and str(kq.gid) == "A" and str(kq.text).contains("陳不辦"), kq)
 	_chk("主線其他任務（砍樹）唔改", KG.cur_q({"t": "chop", "n": 3.0}) == null)
+	# 任務條截圖：主線推到「大排檔賣貨」
+	var Q = J.G.get("QUESTS"); var si = -1
+	for i in (Q as Array).size(): if Q[i] is Dictionary and str(Q[i].get("t", "")) == "sell": si = i; break
+	var qi0 = J.G.S.get("qi", 0)
+	if si >= 0:
+		J.G.S["qi"] = float(si)
+		if m.has_method("refresh"): m.refresh()
+		await _w(t, 0.4)
+		var cq = J.mc(J.G.get("Quest"), "cur", [])
+		_chk("遊戲任務條（Quest.cur）顯示考核任務", cq is Dictionary and J.t(cq.get("kpi")), cq)
+		await _shot(t, "questbar_kpi")
+		J.G.S["qi"] = qi0
 	_rich(); KG.register_metric("rebuilt", func(): return 6.0); J.G.S.bld["home"] = 1.0
 	var pg = KG.q_progress(kq)
 	_chk("考核任務進度：指標全達標仍差「交考核」一步（唔會自動完成、唔郁 S.qi）", int(pg[0]) == 2 and int(pg[1]) == 3, pg)
@@ -241,7 +253,7 @@ func _wire(t, m) -> void:
 	_chk("荒村核心四棟未修好：陳不辦未嚟巡查（A 未輪到）", not KG.turn("A") and KG.reveal_rule("A", "res") == false)
 	var kq2 = KG.cur_q(sq)
 	_chk("任務條：「繼續重建村子，等考核官嚟巡查」", kq2 is Dictionary and str(kq2.text).contains("考核官"), kq2)
-	for b in ["house", "wood", "rice", "furnace"]: s0.rb.open[b] = true
+	for b in ["house", "wood", "rice", "furnace"]: s0.rb.open[b] = true; s0.bld[b] = 1.0
 	_chk("核心四棟開張：陳不辦輪到巡查", KG.turn("A"))
 	_chk("「修好建築」指標＝荒村開張棟數", int(KG.metric("rebuilt")) == RBs.opened_count(), [KG.metric("rebuilt"), RBs.opened_count()])
 	var sc = KU.scene("kpi_chen_open")

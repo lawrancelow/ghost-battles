@@ -132,7 +132,10 @@ static func active(gid: String, c := -1) -> bool:
 static func turn(gid: String, c := -1) -> bool:
 	if not on_for(ci() if c < 0 else c) or passed(gid, c) or active_gate(c) != gid: return false
 	var gl = gates(c)
-	if not gl.is_empty() and str(gl[0].id) == gid and _rb_on() and RB().on(): return false
+	if not gl.is_empty() and str(gl[0].id) == gid and _rb_on() and not _rb_core_done(): return false
+	return true
+static func _rb_core_done() -> bool:   # 荒村核心四棟（虛擬任務嗰四棟）全部開張
+	for b in RB().ORDER: if not RB().is_open(str(b)): return false
 	return true
 # zone_data.cond_ok 用：KPI 開咗時，出村門外各區幾時解霧（null＝KPI 唔管，用 zones.json 原條件）
 #   資源區（有閘門）：輪到佢考核或者已達標先解霧（霧上面寫考核官）

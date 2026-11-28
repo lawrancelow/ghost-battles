@@ -22,6 +22,10 @@ static func _save() -> void:
 
 static func panel(body: Control, refresh: Callable) -> void:
 	if not TV.on(): return
+	var KGq = load("res://game/kpi/kpi_data.gd")
+	if KGq.on() and not KGq.is_open("tavern"):   # [kpi] 酒館要錢不漏考核達標先開門
+		body.add_child(_rich(T("[b]陰間酒館（未開門）[/b]　三更嬸：「水電賬未清，錢不漏總管未簽字，我唔開得檔。」\n通過錢不漏嘅 KPI 考核之後，酒館就開門招鬼。", "[b]陰間酒館（未開門）[/b]　三更嬸：「水電帳還沒清，錢不漏總管還沒簽字，我開不了門。」\n通過錢不漏的 KPI 考核之後，酒館就開門招鬼。"), 15, Color("#7a2416")))
+		return
 	TV.tick_list()
 	var t = TV.st(); var s = TV.S()
 	body.add_child(_rich(T("[b]陰間酒館[/b]　三更嬸：「請佢哋飲杯，傾得掂就跟你走。」", "[b]陰間酒館[/b]　三更嬸：「請他們喝一杯，談得攏就跟你走。」"), 16, Color("#7a2416")))
