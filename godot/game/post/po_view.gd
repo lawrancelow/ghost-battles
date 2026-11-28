@@ -101,11 +101,11 @@ static func draw_sign(v, n: CanvasItem, f: Font, e: Dictionary, s: String, at: V
 	n.draw_style_box(v._box(Color(0, 0, 0, 0.35), 6), Rect2(-w / 2 - 6, -13, w + 16, 44))
 	n.draw_style_box(v._box(d.bd, 6), Rect2(-w / 2 - 8, -16, w + 16, 44))
 	n.draw_style_box(v._box(d.bg, 5), Rect2(-w / 2 - 6, -14, w + 12, 40))
+	if J.t(d.get("seal")):   # 停業封條：紅色斜條畫喺字下面（淡），字照樣睇得清
+		n.draw_line(Vector2(-w / 2 - 6, 24), Vector2(w / 2 + 6, -12), Color(0.86, 0.16, 0.12, 0.38), 6.0)
+		n.draw_line(Vector2(-w / 2 - 6, -12), Vector2(w / 2 + 6, 24), Color(0.86, 0.16, 0.12, 0.38), 6.0)
 	v._str(n, f, l1, 0, 4, 15, d.col, 0)
 	v._str(n, f, l2, 0, 22, 14, d.col2, 0)
-	if J.t(d.get("seal")):   # 停業封條：紅色斜條
-		n.draw_line(Vector2(-w / 2 - 8, 26), Vector2(w / 2 + 8, -14), Color(0.86, 0.16, 0.12, 0.85), 5.0)
-		n.draw_line(Vector2(-w / 2 - 8, -14), Vector2(w / 2 + 8, 26), Color(0.86, 0.16, 0.12, 0.85), 5.0)
 	if str(d.get("dot", "")) != "":   # 收銀箱：金色圓點＋數
 		var tw = f.get_string_size(str(d.dot), HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
 		var c = Vector2(w / 2 + 6, -18)
@@ -170,7 +170,7 @@ static func open_card(e: Dictionary, picking := false) -> void:
 	pc.offset_left = 10; pc.offset_right = -10; pc.offset_top = 232; pc.grow_vertical = Control.GROW_DIRECTION_END
 	var vb = VBoxContainer.new(); vb.add_theme_constant_override("separation", 5); pc.add_child(vb)
 	var lab = func(t: String, px: int, col: Color):
-		var l = UIKit.label(t, px, col, "sans", 900); l.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; l.custom_minimum_size = Vector2(0, 0); l.size_flags_horizontal = Control.SIZE_EXPAND_FILL; vb.add_child(l); return l
+		var l = UIKit.label(t, px, col, "sans", 900); l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; l.custom_minimum_size = Vector2(0, 0); l.size_flags_horizontal = Control.SIZE_EXPAND_FILL; vb.add_child(l); return l
 	lab.call(d.head, 21, Color("#d8ffd0"))
 	lab.call(d.sub, 15, Color("#b8d8b8"))
 	if picking:

@@ -290,9 +290,12 @@ func _draw_foes(c: CanvasItem, ctx: Ctx, cu: Dictionary, px: int) -> void:
 		var jit = Vector2(sin(_t * 1.7 + i * 2.0) * 6.0, 0) if arrived else Vector2.ZERO
 		Art.draw_char(ctx, str(ks[i % ks.size()]), p.x + o.x + jit.x, p.y + o.y + bob, 1.0, {"t": _t + i, "flip": fl, "seed": "raid%d" % i})
 	ctx.globalAlpha = 0.75 + 0.25 * sin(_t * 3.0)
-	var pr = ZV._plate(ctx, RAID.L("撳我迎戰", "點我迎戰"), p.x, p.y + px * 2.4, px, "rgba(150,40,30,.95)")
+	var up = RAID.PO.is_tkey(str(cu.tgt))   # [post] 駐點：字放喺頭頂，下面留返畀木牌
+	var pr = ZV._plate(ctx, RAID.L("撳我迎戰", "點我迎戰"), p.x, (p.y - 92.0 - px * 1.7) if up else (p.y + px * 2.4), px, "rgba(150,40,30,.95)")
 	ctx.globalAlpha = 1.0
-	ZV._txt(ctx, RAID.L("%s　戰力 %d", "%s　戰力 %d") % [RAID.foe_name(), int(J.num(cu.get("pow", 0)))], p.x, p.y + px * 1.0, px, "#ffb0a0")
+	var nm = RAID.L("%s　戰力 %d", "%s　戰力 %d") % [RAID.foe_name(), int(J.num(cu.get("pow", 0)))]
+	if up: ZV._plate(ctx, nm, p.x, p.y - 92.0, px, "rgba(40,14,12,.85)", "#ffb0a0")
+	else: ZV._txt(ctx, nm, p.x, p.y + px * 1.0, px, "#ffb0a0")
 	hits.insert(0, [Rect2(p.x - 110, p.y - 150, 220, 200).merge(pr), "fight", str(cu.tgt)])
 
 # ================= 點擊（世界座標）：回 true＝處理咗 =================

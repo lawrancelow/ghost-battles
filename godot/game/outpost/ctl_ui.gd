@@ -230,6 +230,8 @@ func ui_ok() -> bool:
 	if main.sheet != null and main.sheet.visible: return false
 	var SOVc = load("res://game/sortie/so_view.gd").card   # [soul2] 出擊小卡開住：浮動「出擊」掣、行動按鈕收起（唔遮小卡）
 	if SOVc != null and is_instance_valid(SOVc): return false
+	var POc = load("res://game/post/po_view.gd").card   # [post] 駐點卡開住：一樣收起（唔遮卡底嗰排掣）
+	if POc != null and is_instance_valid(POc): return false
 	if _busy(): return false
 	if load("res://game/zone/zone_battle.gd").busy(): return false
 	var sc = main.get("mv_view")
