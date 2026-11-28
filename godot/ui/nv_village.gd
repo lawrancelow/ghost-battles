@@ -294,9 +294,10 @@ func _sync_statics() -> void:
 		elif BUILDINGS.get(id) != null:   # [ruins13] 未起：廢墟；已解鎖加「可重建」牌（撳得），未解鎖淨係廢墟（撳唔到）
 			var nm = J.str(BUILDINGS[id].name); var can = J.t(J.cl(bunl, null, [id])); var sd = BLD_SEED.find(id)
 			var rq = "" if can else str(load("res://native/game.gd").bld_req(id))
+			var RBk = load("res://game/rebuild/rb.gd"); var rbk = [RBk.left_of(id) if RBk.active() and RBk.PILES.has(id) else -1, RBk.fixing(id)]   # [rebuild2] 雜物剩幾多／搭緊棚：烘圖要重畫
 			if can:   # [perf] 可重建：廢墟烘成圖，木牌（上下浮）每格照畫
-				_static("b_" + id, p[1], ["ruin", can, rq], can, func(ctx): _ruin_part(ctx, 1, p, nm, can, sd, rq), func(ctx): _ruin_part(ctx, 2, p, nm, can, sd, rq))
-			else: _static("b_" + id, p[1], ["ruin", can, rq], can, func(ctx): Art.draw_ruin(ctx, p[0], p[1], nm, can, sd, t, rq))
+				_static("b_" + id, p[1], ["ruin", can, rq, rbk], can, func(ctx): _ruin_part(ctx, 1, p, nm, can, sd, rq), func(ctx): _ruin_part(ctx, 2, p, nm, can, sd, rq))
+			else: _static("b_" + id, p[1], ["ruin", can, rq, rbk], can, func(ctx): Art.draw_ruin(ctx, p[0], p[1], nm, can, sd, t, rq))
 	# 原生新增：任務公告板（撳落去開任務面板）、投胎辦事處
 	for e in extras():
 		var ek: String = e[0]; var ex: float = e[1]; var ey: float = e[2]; var ew: float = e[3]

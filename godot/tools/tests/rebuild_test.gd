@@ -26,6 +26,19 @@ func _shot(t, m, name: String, at: Vector2):
 	await RenderingServer.frame_post_draw
 	t.get_viewport().get_texture().get_image().save_png(SHOTS + name + ".png"); _p("shot " + name)
 
+# 好似玩家咁撳走劇情／閂彈窗（升級解鎖視窗、教程對白等會食咗撳屏）
+func _unblock(t, m) -> void:
+	for i in 40:
+		var st = J.t(J.mc(J.G.get("Story"), "busy", [])); var md = J.t(J.mc(J.G.get("UI"), "modalOpen", []))
+		if not st and not md: return
+		var sn = m.get("story")
+		if sn != null and sn.get("cur") is Dictionary:
+			var ls = sn.cur.sc.get("lines", [])
+			_p("unblock 劇情 id=%s style=%s 第一句=%s" % [sn.cur.get("id"), sn.cur.sc.get("style", ""), str(ls[0]).left(70) if ls.size() > 0 else ""])
+			sn.skip_scene()
+		J.mc(J.G.get("UI"), "close", [])
+		if md and m.get("sheet") != null: m.sheet.visible = false
+		await _w(t, 0.25)
 func _tap(x: float, y: float) -> void: J.mc(J.G.get("Village"), "tap", [x, y])
 func _q(): return J.mc(J.G.get("Quest"), "cur", [])
 func _check() -> void: J.mc(J.G.get("Quest"), "check", [])
@@ -59,7 +72,18 @@ func all(t) -> void:
 	_chk("未輪到：撳伐木場唔郁", not RB.fixing("wood"))
 	for b in RB.ORDER:
 		var r0 = S.res.duplicate()
+		for _w9 in 40:   # 等劇情／彈窗（例如開張後嘅教程對白）完咗先撳
+			if not J.t(J.mc(J.G.get("Story"), "busy", [])) and not J.t(J.mc(J.G.get("UI"), "modalOpen", [])): break
+			var Stn = J.G.get("Story")
+			var cid = "-"
+			var sn = m.get("story") if m is Object else null
+			if sn != null: cid = (str(sn.cur.get("id")) + "/" + str(sn.cur.sc.get("style", "")) if sn.cur is Dictionary else "null") + " q=" + str(sn.q.map(func(e): return e.sc if e.sc is String else "obj")) + " wa=" + str(sn.get("wa") != null)
+			if _w9 % 8 == 0: _p("wait busy=%s modal=%s cur=%s" % [J.mc(Stn, "busy", []), J.mc(J.G.get("UI"), "modalOpen", []), cid])
+			J.mc(Stn, "skipScene" if Stn is Dictionary else "skip_scene", []); J.mc(J.G.get("UI"), "close", [])
+			await _w(t, 0.25)
 		var hits := 0
+		var HDd = J.G.get("HeroDaily"); var V0 = J.G.get("Village")
+		_p("dbg %s active=%s on=%s left=%d story=%s modal=%s hd=%s" % [b, RB.active(), RB.on(), RB.left_of(b), J.mc(J.G.get("Story"), "busy", []), J.mc(J.G.get("UI"), "modalOpen", []), J.mc(HDd, "tap", [V0, -9999.0, -9999.0]) if HDd != null else "-"])
 		for e in RB.piles():
 			if e.b != b: continue
 			for k in RB.HITS:
@@ -111,6 +135,7 @@ func all(t) -> void:
 	# 睡著的名鬼：倉庫第 1 堆
 	var had = false
 	for g in S.ghosts: if str(g.k) == RB.SLEEPER.k: had = true
+	await _unblock(t, m)   # 棺材鋪開張 → 好評升級 → 「解鎖」系統視窗會食咗撳屏（玩家要撳走佢）
 	for e in RB.piles():
 		if e.id != RB.SLEEPER.pile: continue
 		for k in RB.HITS: _tap((e.p as Vector2).x, (e.p as Vector2).y - 4); await _w(t, 0.03)
@@ -138,7 +163,8 @@ func all(t) -> void:
 	for id in J.G.get("BLD_ORDER"): S.bld[id] = maxf(1.0, J.num(S.bld.get(id, 0)))
 	_check(); await _w(t, 0.6)
 	_chk("全村點燈：10 棟開張 → lit＋事件", RB.all_lit() and "lit" in ev, ev)
-	for i in 40:
+	for i in int((RB.notes_left() + 2) * RB.NOTE_GAP / 0.5) + 10:   # 每 NOTE_GAP 秒出一個；劇情／彈窗期間唔出（要撳走）
+		if J.t(J.mc(J.G.get("Story"), "busy", [])) or J.t(J.mc(J.G.get("UI"), "modalOpen", [])): await _unblock(t, m)
 		_check(); await _w(t, 0.5)
 		if RB.notes_left() == 0: break
 	_chk("提示排隊：最後全部顯示完", RB.notes_left() == 0, RB.notes_left())
