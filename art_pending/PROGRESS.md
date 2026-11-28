@@ -131,3 +131,12 @@
 ## 沒做（兩個可用帳號都到限額）
 - 分層：女主 exile、tavern、pang_visit、joss_flood、joss_note；化寶爐廢墟、Dato' 金匾 v2、交接便條；caught 的紅色大印與雙手、he_wake 的毯子。
 - 新圖：市集開張插圖女主版（提示詞已送出、因限額未生成）；第 5 章商品與新攤 8 台；第 6 章商品與新攤 9 台。Bryan 市集插圖按指示沒畫。
+
+# 第六班（2026-11-28 19:40–20:15，只用 Gemini；Chrome 369be60b）
+- 369be60b 的上傳權利確認框：老闆 19:27 授權代按「同意」，已按一次，之後不再彈。45b51715 本班沒用到（同意框還沒按）；e3d5ff2f、6441589f 沒重試。
+- 369be60b 本班成功 10 張，未遇限額。
+- 注意：新對話第一則訊息偶爾會失敗（側欄出現對話但打開顯示「對話不存在」，草稿文字還在、附圖消失）——重新上傳附圖再按送出鈕即可；送出用點擊送出鈕，不要用 Enter。選單「上傳檔案」的位置會隨輸入框高度變，點之前先截圖。
+- 原位去背提示詞要寫「所有背景和物件塗成完全純白色，不要留下任何線稿或輪廓；只留下全彩的角色」，否則攤位會留成白色線稿（market_open_m／f 就是這樣）。f_tavern_v2 用新寫法是乾淨的。
+- 完成：cg_shared/cg_dato_plaque_v3.jpg（紅褐底鎏金「拿督」，最佳）、_v3b（全金匾）——字是圖上直接雕刻，兩字筆畫核對正確；cg_f/cg_tavern_f_v2.jpg（女主酒館換男主同款麻繩木板匾，匾面留空）；cg_f/cg_market_open_f.jpg（市集開張女主版，暖棕）；分層 market_open_m、market_open_f、f_tavern_v2；plaque.json 加 tavern_f、office_f、exile_f、dato_plaque_v3；sheet_11.jpg。
+- 女主 office／exile 的匾和男主同款，沒改圖。
+- 沒做：女主 exile、pang_visit、joss_flood、joss_note 的分層；化寶爐廢墟、交接便條分層；caught 大印與雙手、he_wake 毯子；market_open_m／f 的原位去背用新提示詞重做（去掉線稿攤位）；第 5、6 章商品與攤位。
