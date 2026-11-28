@@ -94,7 +94,7 @@ static func draw_hud(sc, ctx, y0 := -1.0) -> void:
 		var tx = ""; var col = "#ffd27a"
 		match ph:
 			"warn": tx = L("子時高峰 %d 秒後到！", "子時高峰 %d 秒後到！") % int(ceil(left)); col = "#ffd27a"
-			"peak": tx = L("子時高峰！客 ×3　%d", "子時高峰！客流 ×3　%d") % int(ceil(left)); col = "#ff7a5a"
+			"peak": tx = L("子時高峰！客 ×%s　%d", "子時高峰！客流 ×%s　%d") % [FUN.txt_peak_flow(), int(ceil(left))]; col = "#ff7a5a"
 			"rest": tx = L("喘息：飲涼茶　%d", "喘息：喝涼茶　%d") % int(ceil(left)); col = "#8fd0ff"
 		Art.rr(ctx, x, y, 228, 30, 8, "rgba(14,8,18,.86)", col, 1.6)
 		sc._txt(ctx, tx, x + 114.0, y + 15.0, 14, Color(col), "center", 900, 0)
@@ -112,7 +112,7 @@ static func draw_hud(sc, ctx, y0 := -1.0) -> void:
 	# 連單
 	var ch = int(FUN.st().get("chain", 0))
 	if ch >= 2:
-		sc._txt(ctx, L("連單 ×%d", "連單 ×%d") % ch, 390.0 - 70.0, sc.top_pad + 110.0, 18, Color("#ffe98a"), "center", 900, 4)
+		sc._txt(ctx, L("連單 %d 連", "連單 %d 連") % ch, 390.0 - 70.0, sc.top_pad + 110.0, 18, Color("#ffe98a"), "center", 900, 4)
 	# 潮流榜（細牌；撳開睇全部）
 	var tl = FUN.trend_list(sim)
 	if tl.size():
@@ -126,7 +126,7 @@ static func draw_hud(sc, ctx, y0 := -1.0) -> void:
 			Art.rr(ctx, r.position.x - 40.0, yy, r.size.x + 40.0, hh, 8, "rgba(10,20,14,.94)", "#7fe0a0", 1.4)
 			for i in tl.size():
 				var sid = str(tl[i])
-				sc._txt(ctx, "%s ×%.1f" % [str(MD.st_def(sid).get("n", [sid, sid])[1 if DB.lang != "yue" else 0]) if MD.st_def(sid).get("n") is Array else sid, FUN.cf("trend", "mul", 1.5)], r.position.x - 30.0, yy + 16.0 + 24.0 * i, 13, Color("#e8fff0"), "left", 800, 0)
+				sc._txt(ctx, "%s ×%s" % [str(MD.st_def(sid).get("n", [sid, sid])[1 if DB.lang != "yue" else 0]) if MD.st_def(sid).get("n") is Array else sid, FUN.txt_trend_mul()], r.position.x - 30.0, yy + 16.0 + 24.0 * i, 13, Color("#e8fff0"), "left", 800, 0)
 			sc._txt(ctx, L("名聲：%s", "名聲：%s") % RN.level_name(), r.position.x - 30.0, yy + 16.0 + 24.0 * tl.size(), 12, Color("#ffd27a"), "left", 800, 0)
 
 # ---------------- 撳 ----------------
@@ -169,11 +169,11 @@ static func events(sc) -> void:
 			"punch": sc._float(at, L("打卡放工～", "打卡下班～"), Color("#bfe8ff"), 16)
 			"mile": sc._float(at, L("速度翻倍！", "速度翻倍！"), Color("#ffe98a"), 22, 2.2)
 			"street_combo": sc._float(at, L("街組合：%s！", "街組合：%s！") % str(e.get("n", "")), Color("#ffe98a"), 20, 2.4)
-			"chain": sc._float(e.get("pos", at), L("連單 ×%.1f", "連單 ×%.1f") % float(e.get("mul", 1.5)), Color("#ffe98a"), 18)
+			"chain": sc._float(e.get("pos", at), L("連單 ×%s", "連單 ×%s") % FUN.txt_chain_mul(float(e.get("mul", 1.5))), Color("#ffe98a"), 18)
 			"rush_warn": sc._float(at, L("更夫敲鑼：子時高峰要到！", "更夫敲鑼：子時高峰要到！"), Color("#ffd27a"), 18, 2.2)
 			"rush_peak": sc._float(at, L("子時高峰！", "子時高峰！"), Color("#ff7a5a"), 24, 2.0)
 			"vip_in": sc._float(at, L("限時大客：%s 要 %d 件！", "限時大客：%s 要 %d 件！") % [str(e.get("name", "")), int(e.get("n", 0))], Color("#ffcf6a"), 18, 2.4)
-			"vip_ok": sc._float(at, L("大客收齊！×3", "大客收齊！×3"), Color("#ffe98a"), 22, 2.2)
+			"vip_ok": sc._float(at, L("大客收齊！×%s", "大客收齊！×%s") % FUN.txt_vip_mul(), Color("#ffe98a"), 22, 2.2)
 			"vip_fail": sc._float(e.get("pos", at), L("「唔夠貨？下次啦。」", "「貨不夠？下次吧。」"), Color("#d9cdd2"), 15, 2.0)
 			"critic":
 				var b = e.get("best", ["", 1])

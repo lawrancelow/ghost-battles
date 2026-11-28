@@ -9,6 +9,8 @@ const MK = preload("res://game/market/mk_data.gd")
 const FUN = preload("res://game/market/mk_fun.gd")
 const RN = preload("res://game/market/mk_renown.gd")
 const TV = preload("res://game/tavern/tavern.gd")
+const STUB = preload("res://tools/tests/mk_m1_stub.gd")   # M1 接口替身（合併 M1 後刪）
+const MKUI = preload("res://game/market/mk_fun_ui.gd")
 const A := "st_shoubao"
 var bad := 0
 var rows := 0
@@ -48,7 +50,13 @@ func logic(_t) -> void:
 	var sim = _setup()
 	_chk("市集啟用（S.mk.test）", MK.active() and FUN.on())
 	_p("===== 1. 過勞營業：數值 =====")
-	_chk("設計數值寫入 overtime：fat_rate 1.2、down 60、包子 1、回 40", is_equal_approx(MK.otf("fat_rate", 0), 1.2) and is_equal_approx(MK.otf("down_s", 0), 60.0) and int(MK.otf("feed_cost", 0)) == 1 and is_equal_approx(MK.otf("reset_fat", 0), 40.0))
+	_chk("設計數值寫入 overtime：fat_rate 1.2", is_equal_approx(MK.otf("fat_rate", 0), 1.2), MK.otf("fat_rate", 0))
+	_chk("設計數值：趴低 60 秒", is_equal_approx(MK.otf("down_s", 0), 60.0), MK.otf("down_s", 0))
+	_chk("設計數值：包子 1 個", int(MK.otf("feed_cost", 0)) == 1, MK.otf("feed_cost", 0))
+	_chk("設計數值：起身回 40", is_equal_approx(MK.otf("reset_fat", 0), 40.0), MK.otf("reset_fat", 0))
+	_chk("設計數值：冒汗線 70（M1 M2 同一個數）", is_equal_approx(MK.otf("warn", 0), 70.0) and is_equal_approx(FUN.cf("ot", "warn", 0), 70.0))
+	MK.reload()
+	_chk("M1 重新載入 market.json 後，設計數值會自動寫返", (func(): FUN.ensure(); return is_equal_approx(MK.otf("fat_rate", 0), 1.2)).call(), MK.otf("fat_rate", 0))
 	sim.st().st[A].unlocked = true; sim.st().st[A].lv = 1.0
 	var o = MK.ot(A)
 	_chk("加班售價 ×1.2", is_equal_approx(FUN.ot_price(A), 1.0) and (func(): MK.toggle_ot(A); return is_equal_approx(FUN.ot_price(A), 1.2)).call())
@@ -91,12 +99,30 @@ func logic(_t) -> void:
 	_chk("一半以上加班：櫃台繁忙", FUN.counter_busy(sim, "food") == "busy")
 	FUN._counter_tick(sim, 10.0)
 	_chk("繁忙 10 秒 +8（1 人）", absf(float(oc.fat) - 8.0) < 0.5, oc.fat)
-	J.G["mk_counter_n_fn"] = func(_s): return 3
+	STUB.install(); STUB.set_counter("food", 3)
 	_chk("3 人結帳 ×2.2、連單 14 秒", is_equal_approx(FUN.serve_mul("food"), 2.2) and is_equal_approx(FUN.chain_win("food"), 14.0), FUN.serve_mul("food"))
 	oc.fat = 99.9; FUN._counter_tick(sim, 1.0)
 	_chk("櫃台趴低 60 秒＝當冇櫃台員（結帳 ×1）", FUN.counter_down("food") and is_equal_approx(FUN.serve_mul("food"), 1.0))
 	_chk("櫃台可以餵包子", FUN.feed(ck) == "ok" and not FUN.counter_down("food"))
-	J.G.erase("mk_counter_n_fn")
+	STUB.set_counter("food", 9)
+	_chk("櫃台員上限 3 人（多派都當 3）", FUN.counter_n("food") == 3 and FUN.ctr_max() == 3)
+	STUB.set_counter("food", 0)
+	_chk("0 人：結帳 ×1、連單 10 秒", is_equal_approx(FUN.serve_mul("food"), 1.0) and is_equal_approx(FUN.chain_win("food"), 10.0) and not FUN.counter_staffed("food"))
+	STUB.set_counter("food", 1)
+	_chk("1 人 ×1.4、2 人 ×1.8", is_equal_approx(FUN.serve_mul("food"), 1.4) and (func(): STUB.set_counter("food", 2); return is_equal_approx(FUN.serve_mul("food"), 1.8)).call())
+	FUN.st().rush["ph"] = "peak"; oc.fat = 0.0; oc.down = 0.0
+	for sid in MK.sids_on(0, "food"): MK.ot(sid).on = 0
+	FUN._counter_tick(sim, 10.0)
+	_chk("子時高峰：櫃台 +1.0/秒（2 人分擔 ×0.9 → 10 秒 +9）", absf(float(oc.fat) - 9.0) < 0.3, oc.fat)
+	FUN.st().rush["ph"] = "idle"
+	FUN._counter_tick(sim, 2.0)
+	_chk("唔忙：櫃台過勞每秒 −2", absf(float(oc.fat) - 5.0) < 0.3, oc.fat)
+	oc.rank = 0; oc.downs = 5; FUN.st().rush["ph"] = "peak"; FUN._counter_tick(sim, 0.1); FUN.st().rush["ph"] = "idle"
+	_chk("櫃台趴低 5 次 → 老收銀、記入跨章名冊", FUN.vet(ck) and int(FUN.st().vets.get("ctr:food", 0)) == 1)
+	oc.fat = 0.0
+	_chk("老收銀：結帳再 ×1.2（2 人 1.8 → 2.16）", is_equal_approx(FUN.serve_mul("food"), 2.16), FUN.serve_mul("food"))
+	oc.rank = 0; FUN.carry_vets(0)
+	_chk("老收銀跨章保留", int(MK.ot(ck).get("rank", 0)) == 1)
 	for sid in MK.sids_on(0, "food"): MK.ot(sid).on = 0
 	_p("===== 4. 巡邏員 =====")
 	var r = {}
@@ -109,6 +135,64 @@ func logic(_t) -> void:
 	var po = MK.ot(FUN.pat_key("t_pat1")); po.done = 49; po.fat = 0.0
 	r = FUN.patrol_handled("t_pat1")
 	_chk("處理滿 50 件 → 巡邏隊長、可兼顧相鄰一條街", r.get("captain", false) and FUN.patrol_captain("t_pat1") and FUN.patrol_reach("t_pat1") == 1)
+	_chk("巡邏隊長處理速度 ×0.7、普通 ×1", is_equal_approx(FUN.patrol_speed("t_pat1"), 0.7) and is_equal_approx(FUN.patrol_speed("t_nobody"), 1.0))
+	FUN.carry_captains(); MK.ot(FUN.pat_key("t_pat1")).rank = 0; FUN.carry_captains()
+	_chk("巡邏隊長跨章保留", FUN.patrol_captain("t_pat1"))
+	_chk("每街巡邏位上限 4（老闆 11-28 定）", FUN.pat_max() == 4)
+	var okn = 0
+	for i in 6: if STUB.assign_patrol("food", "t_p%d" % i): okn += 1
+	_chk("替身 M1 調派：一條街最多派到 4 隻", okn == 4, okn)
+	var r4 = STUB.incident("food")
+	_chk("4 人隊：每件 +15 ×0.7＝10.5", r4.get("handled", false) and absf(float(MK.ot(FUN.pat_key(str(r4.who))).fat) - 10.5) < 0.01, MK.ot(FUN.pat_key(str(r4.get("who", "")))).get("fat"))
+	MK.ot(FUN.pat_key("t_p0")).down = 60.0
+	var r5 = STUB.incident("food")
+	_chk("第一隻趴低：輪到下一隻處理", r5.get("handled", false) and str(r5.who) == "t_p1")
+	for i in 4: MK.ot(FUN.pat_key("t_p%d" % i)).down = 60.0
+	_chk("成隊趴晒：當冇巡邏（事件未處理）", not STUB.incident("food").get("handled", true))
+	FUN._patrol_tick(30.0)
+	_chk("趴低 30 秒未起", not FUN.patrol_ok("t_p0"))
+	FUN._patrol_tick(31.0)
+	_chk("起身後過勞值 40", FUN.patrol_ok("t_p0") and is_equal_approx(float(MK.ot(FUN.pat_key("t_p0")).fat), 40.0))
+	FUN._patrol_tick(10.0)
+	_chk("閒時巡邏員每秒回落 1（40 → 30）", absf(float(MK.ot(FUN.pat_key("t_p0")).fat) - 30.0) < 0.1, MK.ot(FUN.pat_key("t_p0")).fat)
+	_p("===== 4b. 里程碑、店員位、打卡鐘、同街組合 =====")
+	var caps = []
+	for L in [1, 9, 10, 24, 25, 50, 99, 100, 199, 200]: caps.append(STUB.staff_cap(A, float(L)))
+	_chk("製作店員位 Lv1/10/25/50/100/200 → 1/2/3/3/4/5", caps == [1, 1, 2, 2, 3, 3, 3, 4, 4, 5], caps)
+	_chk("外觀三段：Lv25／100／200", FUN.look_stage(A, 24.0) == 0 and FUN.look_stage(A, 25.0) == 1 and FUN.look_stage(A, 100.0) == 2 and FUN.look_stage(A, 200.0) == 3)
+	FUN.st().mile.clear(); FUN.pop_events()
+	sim.st().st[A].lv = 9.0; FUN._miles(sim)
+	sim.st().st[A].lv = 10.0; FUN._miles(sim)
+	var me = FUN.pop_events().filter(func(e): return e.k == "mile")
+	_chk("升到 Lv10 里程碑：出一次演出事件、店員位 +1", me.size() == 1 and int(me[0].slots) == 1 and int(me[0].lv) == 10, me)
+	FUN._miles(sim)
+	_chk("同一個里程碑唔會重複演出", FUN.pop_events().filter(func(e): return e.k == "mile").is_empty())
+	_chk("第 1 章未有打卡鐘", not FUN.punch_ok() and FUN.punch(A) == "locked")
+	sim.st().ci = 5
+	MK.ot(A).on = 1; MK.ot(A).fat = 88.0
+	_chk("第 6 章打卡鐘：整攤下班、過勞清零", FUN.punch_ok() and FUN.punch(A) == "ok" and not MK.ot_on(A) and is_equal_approx(float(MK.ot(A).fat), 0.0))
+	_chk("打卡鐘冷卻 10 分鐘", FUN.punch(A) == "cd" and absf(FUN.punch_left(A) - 600.0) < 1.0, FUN.punch_left(A))
+	FUN.st().clk = FUN._clock() + 601.0
+	_chk("冷卻完可以再打卡", FUN.punch(A) == "ok")
+	sim.st().ci = 0
+	for sid in ["st_shoubao", "st_douhua", "st_nuomici"]: sim.st().st[sid].unlocked = true; sim.st().st[sid].lv = 24.0
+	_chk("宵夜三寶未齊（Lv24）：食街售價冇加成", is_equal_approx(FUN.street_bonus(sim, "food", "price"), 0.0))
+	for sid in ["st_shoubao", "st_douhua", "st_nuomici"]: sim.st().st[sid].lv = 25.0
+	_chk("宵夜三寶齊（三樣 Lv25）：食街售價 +15%", is_equal_approx(FUN.street_bonus(sim, "food", "price"), 0.15))
+	_chk("唔關事嘅街冇加成", is_equal_approx(FUN.street_bonus(sim, "cloth", "price"), 0.0))
+	FUN.st().erase("cbseen"); FUN.pop_events(); FUN._combos_tick(sim); FUN._combos_tick(sim)
+	_chk("組合達成只演出一次", FUN.pop_events().filter(func(e): return e.k == "street_combo").size() == 1)
+	FUN.now_s = 1.9e9; FUN.st().trend.clear(); FUN.st().stars.clear()
+	var tl0 = FUN.trend_list(sim)
+	var nt = "st_nuomici" if not tl0.has("st_nuomici") else ("st_douhua" if not tl0.has("st_douhua") else "st_shoubao")
+	MK.ot(nt).on = 0; MK.ot(nt).down = 0.0
+	if not tl0.has(nt): _chk("售價倍數：只有街組合 ＝ ×1.15", is_equal_approx(FUN.item_mul(sim, nt), 1.15), FUN.item_mul(sim, nt))
+	MK.ot(nt).on = 1
+	if not tl0.has(nt): _chk("加班 ×1.2 再乘街組合 ×1.15 ＝ ×1.38", is_equal_approx(FUN.item_mul(sim, nt), 1.38), FUN.item_mul(sim, nt))
+	FUN.st().stars[nt] = 3
+	if not tl0.has(nt): _chk("再掛三星牌 +10% ＝ ×1.518", is_equal_approx(FUN.item_mul(sim, nt), 1.518), FUN.item_mul(sim, nt))
+	MK.ot(nt).on = 0; FUN.st().stars.clear(); FUN.now_s = -1.0
+	for sid in ["st_shoubao", "st_douhua", "st_nuomici"]: sim.st().st[sid].lv = 1.0
 	_p("===== 5. 連單、限時大客 =====")
 	FUN.st().chain = 0
 	var c = _cust(sim, {"m_shoubao": 2, "m_douhua": 1}); c.got = {"m_shoubao": 2, "m_douhua": 1}; c["t1"] = FUN._clock() - 3.0
@@ -166,8 +250,104 @@ func logic(_t) -> void:
 	FUN.st().evt.clear(); FUN._events_tick(sim); FUN.st().clk = FUN._clock() + 6.0; FUN._events_tick(sim)
 	_chk("章事件框架：到鐘叫 handler", hit[0] == 1)
 	FUN.D().events.erase("0"); FUN.handlers.erase("t_ev")
+	var S = _S(); var S0_pts = [0.0]
+	_p("===== 8b. 評論家出場、大客、熟客、名聲入帳 =====")
+	FUN.pop_events(); RN.pop_events()
+	for sid in MD.stations(0): if sim.st().st.has(sid): sim.st().st[sid].unlocked = (sid == A)
+	sim.st().st[A].lv = 60.0; MK.ot(A).on = 0; MK.ot(A).down = 0.0
+	FUN.st().critic.clear(); FUN.st().stars.clear(); S0_pts[0] = RN.pts()
+	FUN._critic_tick(sim)
+	_chk("評論家：開張 15 分鐘後先第一次嚟", absf(float(FUN.st().critic["0"].next) - FUN._clock() - 900.0) < 1.0 and int(FUN.st().critic["0"].n) == 0)
+	FUN.st().clk = FUN._clock() + 901.0; FUN._critic_tick(sim)
+	_chk("三星：掛星級牌、名聲 +50", int(FUN.st().stars.get(A, 0)) == 3 and is_equal_approx(RN.pts() - S0_pts[0], 50.0), RN.pts() - S0_pts[0])
+	_chk("三星牌：該攤永久售價 +10%", absf(FUN.item_mul(sim, A) / (1.5 if FUN.is_trend(sim, A) else 1.0) - 1.1) < 0.001, FUN.item_mul(sim, A))
+	var gap = float(FUN.st().critic["0"].next) - FUN._clock()
+	_chk("下一次相隔 15–30 分鐘", gap >= 899.0 and gap <= 1801.0, gap)
+	sim.st().st[A].lv = 1.0; FUN.st().clk = float(FUN.st().critic["0"].next) + 1.0; FUN._critic_tick(sim)
+	_chk("一星：負評掛 10 分鐘、客流 ×0.8", absf(float(FUN.st().critic.get("bad_until", 0.0)) - FUN._clock() - 600.0) < 1.0 and is_equal_approx(FUN.flow_mul(), 0.8), FUN.flow_mul())
+	FUN.st().clk = FUN._clock() + 601.0
+	_chk("10 分鐘後負評消失", is_equal_approx(FUN.flow_mul(), 1.0))
+	FUN.st().clk = FUN._clock() + 99999.0; var n_before = int(FUN.st().critic["0"].n); FUN._critic_tick(sim)
+	_chk("每章只嚟 2 次", n_before == 2 and int(FUN.st().critic["0"].n) == 2)
+	sim.st().st[A].lv = 5.0; MK.ot(A).down = 30.0
+	_chk("趴低 −1 星（最低 1 星）", FUN.critic_score(sim, A) == 1)
+	MK.ot(A).down = 0.0
+	# 限時大客：真出場
+	sim.custs.clear(); FUN.pop_events()
+	FUN._spawn_vip(sim)
+	var vin = FUN.pop_events().filter(func(e): return e.k == "vip_in")
+	var vc = sim.custs[0] if sim.custs.size() else {}
+	var vtot = 0
+	for g in vc.get("wants", {}): vtot += int(vc.wants[g])
+	_chk("大客出場：10–30 件", vin.size() == 1 and vtot >= 10 and vtot <= 30, vtot)
+	_chk("畫面講嘅件數＝真正要嘅件數", vin.size() == 1 and int(vin[0].n) == vtot, [vin, vtot])
+	_chk("畫面講嘅限時＝真正限時（90 秒）", vin.size() == 1 and is_equal_approx(float(vin[0].s), float(vc.tend) - FUN._clock()) and is_equal_approx(float(vin[0].s), 90.0))
+	var coins0 = float(S.res.coins); var rn1 = RN.pts()
+	FUN.st().clk = FUN._clock() + 91.0; FUN._vip_tick(sim)
+	_chk("大客超時：搖頭走人、唔扣錢、唔扣名聲", vc.st == "out" and float(S.res.coins) >= coins0 and RN.pts() >= rn1 and FUN.pop_events().any(func(e): return e.k == "vip_fail"))
+	sim.custs.clear()
+	# 熟客
+	FUN.D().regular["p"] = 1.0
+	var rc = _cust(sim, {"m_shoubao": 1}); FUN.on_spawn(sim, rc)
+	_chk("熟客標記：未夠 5 次唔顯示名", rc.has("reg") and str(rc.get("regn", "x")) == "")
+	FUN.st().regs.clear(); var rr = FUN.regs(0)
+	for i in 4: FUN._reg_visit(0)
+	FUN.pop_events(); FUN._reg_visit(0)
+	_chk("第 5 次光顧解鎖名字", FUN.pop_events().any(func(e): return e.k == "reg_name") and int(rr[0].v) == 5)
+	FUN.D().regular["p"] = 0.0
+	var rc2 = _cust(sim, {"m_shoubao": 1}); FUN.on_spawn(sim, rc2)
+	_chk("機率 0 唔會變熟客", not rc2.has("reg"))
+	FUN.reload(); sim.custs.clear()
+	# 名聲入帳：真 sim._pay
+	var pc = _cust(sim, {"m_shoubao": 3}); pc.got = {"m_shoubao": 3}
+	var rn2 = RN.pts(); sim._pay(pc)
+	_chk("每件貨名聲 +1（3 件 +3）", is_equal_approx(RN.pts() - rn2, 3.0), RN.pts() - rn2)
+	_p("===== 8c. 過勞：淨回落、離線、人手 =====")
+	var oa = MK.ot(A); oa.on = 0; oa.down = 0.0; oa.fat = 50.0; oa.rank = 0; oa["_rk"] = 0; oa.downs = 0
+	MK.tick([A], 10.0, func(_x): return true); FUN.ot_tick([A], 10.0, func(_x): return true, sim)
+	_chk("收咗加班照開檔：每秒淨回落 1.85（−2 ＋0.15）", absf(float(oa.fat) - 31.5) < 0.2, oa.fat)
+	oa.fat = 50.0
+	MK.tick([A], 10.0, func(_x): return false); FUN.ot_tick([A], 10.0, func(_x): return false, sim)
+	_chk("冇人做嘢：每秒回落 2", absf(float(oa.fat) - 30.0) < 0.2, oa.fat)
+	oa.fat = 99.0; oa.on = 0
+	FUN.ot_tick([A], 100.0, func(_x): return true, sim)
+	_chk("正常營業點都唔會趴低（封頂 99.99）", not MK.is_down(A) and float(oa.fat) < 100.0, oa.fat)
+	oa.fat = 50.0; oa.on = 1; var clk0 = FUN._clock()
+	FUN.tick(sim, 0.0); MK.tick([A], 0.0, func(_x): return true)
+	_chk("離線（dt 0）：唔加班唔累、時鐘唔行", is_equal_approx(float(oa.fat), 50.0) and is_equal_approx(FUN._clock(), clk0))
+	oa.fat = 0.0; oa.rank = 1; oa["_rk"] = 1
+	MK.tick([A], 10.0, func(_x): return true); FUN.ot_tick([A], 10.0, func(_x): return true, sim)
+	_chk("老員工加班：過勞升慢 30%（10 秒 +8.4）", absf(float(oa.fat) - 8.4) < 0.3, oa.fat)
+	oa.rank = 0; oa["_rk"] = 0; oa.on = 0; oa.fat = 0.0
+	_p("===== 8d. 畫面文字＝實際計算 =====")
+	_chk("高峰字「客流 ×N」＝真倍數", FUN.txt_peak_flow() == "3" and (func(): FUN.st().rush["ph"] = "peak"; var m = FUN.flow_mul(); FUN.st().rush["ph"] = "idle"; return FUN.fmt_mul(m) == FUN.txt_peak_flow()).call())
+	_chk("大客字「×N」＝真倍數", FUN.txt_vip_mul() == FUN.fmt_mul(FUN.cf("rush", "vip_mul", 0.0)) and FUN.txt_vip_mul() == "3")
+	_chk("潮流榜字「×N」＝真倍數", FUN.txt_trend_mul() == "1.5" and is_equal_approx(float(FUN.txt_trend_mul()), FUN.cf("trend", "mul", 0.0)))
+	FUN.st().chain = 0; FUN.pop_events()
+	var cc = _cust(sim, {"m_shoubao": 1, "m_douhua": 1}); cc.got = cc.wants.duplicate(); cc["t1"] = FUN._clock()
+	var pm = FUN.pay_mul(sim, cc)
+	var ce = FUN.pop_events().filter(func(e): return e.k == "chain")
+	_chk("連單浮字倍數＝真正乘落去嘅倍數", ce.size() == 1 and is_equal_approx(float(ce[0].mul), pm) and FUN.txt_chain_mul(float(ce[0].mul)) == "1.5", [ce, pm])
+	FUN.st().chain = 24
+	var cc2 = _cust(sim, {"m_shoubao": 1, "m_douhua": 1}); cc2.got = cc2.wants.duplicate(); cc2["t1"] = FUN._clock()
+	_chk("連單上限 ×2（第 25 連）", is_equal_approx(FUN.pay_mul(sim, cc2), 2.0))
+	FUN.st().chain = 60
+	var cc3 = _cust(sim, {"m_shoubao": 1, "m_douhua": 1}); cc3.got = cc3.wants.duplicate(); cc3["t1"] = FUN._clock()
+	_chk("再連落去都唔過 ×2", is_equal_approx(FUN.pay_mul(sim, cc3), 2.0))
+	var c1 = _cust(sim, {"m_shoubao": 1}); c1.got = {"m_shoubao": 1}; c1["t1"] = FUN._clock()
+	_chk("只要一件：唔算連單、亦唔會斷單", is_equal_approx(FUN.pay_mul(sim, c1), 1.0) and int(FUN.st().chain) == 61, FUN.st().chain)
+	sim.custs.clear(); FUN.st().chain = 0
+	FUN.st().rush.clear(); FUN.pop_events(); FUN._rush_tick(sim); FUN.st().clk = float(FUN.st().rush.next) + 0.1; FUN._rush_tick(sim)
+	var rw = FUN.pop_events().filter(func(e): return e.k == "rush_warn")
+	_chk("預告倒數＝真正剩餘秒數", rw.size() == 1 and absf(float(rw[0].s) - FUN.rush_left()) < 0.01, [rw, FUN.rush_left()])
+	FUN.st().rush.clear()
+	var src = FileAccess.get_file_as_string("res://game/market/mk_fun_ui.gd")
+	var rx = RegEx.new(); rx.compile("×\\s*[0-9]")
+	_chk("mk_fun_ui 冇寫死倍數（全部讀數值表）", rx.search(src) == null, rx.search(src).get_string() if rx.search(src) != null else "")
+	_chk("名聲等級名同門檻對得上（5 級 5 個名）", (RN.D().get("lv", []) as Array).size() == 5 and (RN.D().get("names", []) as Array).size() == 5)
+	_chk("回陽間鎖字講嘅等級名＝真正要求嘅等級", RN.back_lock_text().contains(RN.level_name(int(RN.cf("back_lv", 2)))))
 	_p("===== 9. 名聲 =====")
-	var S = _S(); S["mkr"] = {"v": 1, "pts": 0.0, "lv_seen": 1}
+	S["mkr"] = {"v": 1, "pts": 0.0, "lv_seen": 1}
 	_chk("0 分＝1 級無名小檔", RN.level() == 1 and RN.level_name() != "")
 	RN.add(250.0)
 	_chk("250 分＝2 級＋升級事件", RN.level() == 2 and RN.pop_events().size() == 1)
@@ -175,11 +355,12 @@ func logic(_t) -> void:
 	_chk("回陽間：第 1、2 章唔使、第 3 章要 2 級", RN.back_ok(0) and RN.back_ok(2) and (func(): S.mkr.pts = 0.0; return not RN.back_ok(2)).call())
 	S.mkr.pts = 250.0
 	_chk("拔營：第 1 章要 2 級（有）、第 3 章要 3 級（冇）", RN.move_ok(0) and not RN.move_ok(2))
-	RN.now_s = 1.9e9; S.mkr.pts = 900.0; S.res["coins"] = 0.0
+	RN.now_s = 1.9e9; S.mkr.pts = 1000.0; S.res["coins"] = 0.0
 	var ex = RN.exchange(0)
-	_chk("匯兌：50 名聲 → 100 冥幣", ex.get("ok", false) and is_equal_approx(float(S.res.coins), 100.0) and is_equal_approx(RN.pts(), 850.0))
+	_chk("匯兌：50 名聲 → 100 冥幣", ex.get("ok", false) and is_equal_approx(float(S.res.coins), 100.0) and is_equal_approx(RN.pts(), 950.0))
+	_chk("匯兌按章放大：第 3 章 ×25＝2500", is_equal_approx(RN.exch_coins(2), 2500.0))
 	RN.exchange(0); RN.exchange(0)
-	_chk("每日 3 次", not RN.exchange(0).get("ok", true) and RN.exch_left() == 0)
+	_chk("每日 3 次", not RN.exchange(0).get("ok", true) and RN.exch_left() == 0, [RN.exch_left(), RN.pts()])
 	S.mkr.pts = 210.0; RN.now_s = 1.9e9 + 86400.0
 	_chk("換咗會跌級：唔俾換", RN.exchange(0).get("why", "") == "pts")
 	RN.now_s = -1.0
@@ -192,6 +373,7 @@ func logic(_t) -> void:
 	sim.st().st[A].lv = 5.0; MK.ot(A).on = 1
 	_run(sim, 30.0)
 	_chk("sim.step＋FUN.tick 跑 30 秒冇出錯", FUN._clock() > 29.0, FUN._clock())
+	STUB.remove()
 	# 還原
 	for k in S.keys(): if not _saved.has(k): S.erase(k)
 	for k in _saved: S[k] = _saved[k]

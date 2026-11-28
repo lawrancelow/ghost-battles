@@ -8,7 +8,7 @@ const _ABL = preload("res://game/rts/ab_lay.gd")   # [abui]
 
 const MD = preload("res://game/outpost/mv_data.gd")
 const MK = preload("res://game/market/mk_data.gd")   # [market] 過勞鬼市集：街道＋過勞營業
-const MKUI = preload("res://game/market/mk_ui.gd")   # [market M2] 加班牌、過勞條、子時高峰、潮流榜
+const MKUI = preload("res://game/market/mk_fun_ui.gd")   # [market M2] 加班牌、過勞條、子時高峰、潮流榜
 const SIM = preload("res://game/outpost/mv_sim.gd")
 const FX = preload("res://game/outpost/mv_fx.gd")
 const M = preload("res://game/outpost/mat.gd")   # [chain]

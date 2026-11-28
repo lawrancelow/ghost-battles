@@ -37,7 +37,10 @@ static func reload() -> void:
 static func _apply_core() -> void:   # 設計第 3.1 節數值寫入 M1 嘅 overtime（唔改 M1 檔案；M1 嘅結構照用）
 	var core = _D.ot.get("core", {})
 	if core is Dictionary: for k in core: MK.OT()[k] = core[k]
-static func ensure() -> void: if _D == null: reload()
+	MK.OT()["_m2"] = 1
+static func ensure() -> void:
+	if _D == null: reload()
+	elif not MK.OT().has("_m2"): _apply_core()   # M1 重新載入過 market.json：再寫一次設計數值
 static func cf(sec: String, k: String, d: float) -> float: return float(D()[sec].get(k, d))
 static func T(a) -> String: return MK.T(a)
 static func on() -> bool: return MK.active()
@@ -141,10 +144,12 @@ static func staff_fat_mul(n: int) -> float: return 1.0 - minf(cf("ot", "staff_ca
 static func ctr_key(street: String) -> String: return "_ctr:" + street
 static func counter_n(street: String) -> int:   # 櫃台員人數（M1 嘅櫃台資料：J.G.mk_counter_n_fn(street)；未接時當 1 人）
 	var f = J.G.get("mk_counter_n_fn")
-	if f is Callable and (f as Callable).is_valid(): return int(J.num(f.call(street)))
+	if f is Callable and (f as Callable).is_valid(): return clampi(int(J.num(f.call(street))), 0, ctr_max())
 	f = J.G.get("mk_counter_staff_fn")
 	if f is Callable and (f as Callable).is_valid(): return 1 if J.t(f.call()) else 0
 	return 1
+static func ctr_max() -> int: return int(cf("ot", "ctr_max", 3))   # 每條街櫃台員上限
+static func pat_max() -> int: return int(cf("ot", "pat_max", 4))   # 每條街巡邏位上限（老闆 11-28：0–4 隻）
 static func counter_staffed(street := "") -> bool: return counter_n(street if street != "" else MK.cur()) > 0
 static func counter_down(street: String) -> bool: return on() and MK.is_down(ctr_key(street))
 static func counter_busy(sim, street: String) -> String:   # "peak"／"busy"／""
@@ -239,7 +244,7 @@ static func look_stage(sid: String, lv: float) -> int:
 static func extra_slots(sid: String, lv: float) -> int:
 	if not on(): return 0
 	var n = 0
-	for x in D().mile.get("slot_lv", [25, 100, 200]): if lv >= float(x): n += 1
+	for x in D().mile.get("slot_lv", [10, 25, 100, 200]): if lv >= float(x): n += 1
 	return n
 static func _miles(sim) -> void:
 	var seen = st().mile
@@ -475,8 +480,11 @@ static func _critic_tick(sim) -> void:
 	elif int(best[1]) <= 1:
 		cr["bad_until"] = _clock() + cf("critic", "star1_s", 600.0)
 	_ev({"k": "critic", "res": res, "best": best})
-static func critic_score(sim, sid: String) -> int:   # 等級星（里程碑數）→ 1–3；加班中 −1（味道趕急）；趴低 −1
-	var s = clampi(1 + int(MD.nm(sid, sim.lv(sid)) / 2), 1, 3)
+static func critic_score(sim, sid: String) -> int:   # 等級 → 1–3 星；加班中 −1（味道趕急）；趴低 −1
+	var n = MD.nm(sid, sim.lv(sid))   # 里程碑數：0 → 1 星、1–2 個（Lv10 起）→ 2 星、3 個以上（Lv50 起）→ 3 星
+	var th: Array = D().critic.get("star_miles", [1, 3])
+	var s = 1
+	for x in th: if n >= int(x): s += 1
 	if MK.ot_on(sid): s -= 1
 	if MK.is_down(sid): s -= 1
 	return clampi(s, 1, 3)
@@ -511,3 +519,11 @@ static func tick(sim, dt: float) -> void:   # sim.step 尾叫（dt 已乘遊戲�
 static func _serving(sim) -> bool:
 	for c in sim.custs: if c.st == "serve": return true
 	return false
+
+# ================= 畫面文字用數值（同計算同一個來源；mk_ui 只准由呢度攞） =================
+static func fmt_mul(v: float) -> String:   # 1.5 → "1.5"、3.0 → "3"
+	return str(int(round(v))) if is_equal_approx(v, round(v)) else ("%.1f" % v)
+static func txt_peak_flow() -> String: return fmt_mul(cf("rush", "peak_flow", 3.0))
+static func txt_vip_mul() -> String: return fmt_mul(cf("rush", "vip_mul", 3.0))
+static func txt_trend_mul() -> String: return fmt_mul(cf("trend", "mul", 1.5))
+static func txt_chain_mul(v: float) -> String: return "%.1f" % v
