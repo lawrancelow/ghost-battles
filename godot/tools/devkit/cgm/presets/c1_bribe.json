@@ -1,0 +1,120 @@
+{
+ "still_src": "/home/claude/meeting/vil2/art/layers/c1_bribe/_full.jpg",
+ "cam": {
+  "zoom": [
+   1.0,
+   1.06
+  ],
+  "pan": [
+   0,
+   0,
+   0.008,
+   0.004
+  ],
+  "dur": 14
+ },
+ "layer_fx": {
+  "ox": {
+   "par": 0.15,
+   "fx": {
+    "breathe": {
+     "amp": 0.012,
+     "per": 2.6
+    },
+    "float": {
+     "amp": 0.003,
+     "per": 3.0
+    },
+    "wander": {
+     "ax": 0.006,
+     "ay": 0.002,
+     "per": 6.5,
+     "hold": 0.55,
+     "tilt": 1.0
+    }
+   }
+  },
+  "boss": {
+   "par": 0.2,
+   "fx": {
+    "breathe": {
+     "amp": 0.022,
+     "per": 3.4
+    },
+    "sway": {
+     "deg": 1.2,
+     "per": 5.0
+    }
+   }
+  },
+  "horse": {
+   "par": 0.25,
+   "fx": {
+    "float": {
+     "amp": 0.006,
+     "per": 2.5
+    },
+    "sway": {
+     "deg": 1.0,
+     "per": 3.6
+    },
+    "wander": {
+     "ax": 0.008,
+     "ay": 0.004,
+     "per": 5.6,
+     "hold": 0.45,
+     "tilt": 1.5
+    }
+   }
+  },
+  "afu": {
+   "par": 0.35,
+   "fx": {
+    "float": {
+     "amp": 0.007,
+     "per": 2.2
+    },
+    "breathe": {
+     "amp": 0.012,
+     "per": 1.8
+    },
+    "wander": {
+     "ax": 0.009,
+     "ay": 0.004,
+     "axis": [
+      1,
+      -0.2
+     ],
+     "per": 4.8,
+     "hold": 0.4,
+     "tilt": 2.0
+    }
+   }
+  },
+  "desk_left_front": {
+   "par": 0.15,
+   "fx": {}
+  },
+  "desk_right_front": {
+   "par": 0.2,
+   "fx": {}
+  }
+ },
+ "fx": [
+  {
+   "type": "steam",
+   "x": 0.24,
+   "y": 0.55,
+   "w": 0.05,
+   "n": 8
+  },
+  {
+   "type": "wisp",
+   "x": 0.5,
+   "y": 0.55,
+   "w": 0.8,
+   "h": 0.5,
+   "n": 6
+  }
+ ]
+}

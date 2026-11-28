@@ -147,6 +147,33 @@ func logic(t) -> void:
 	for k in 600: cg.mot.tick(1.0 / 60.0)
 	ms = (Time.get_ticks_usec() - t0) / 1000.0 / 600.0
 	_chk("每格 tick < 0.6 ms（A2 19 層）", ms < 0.6, snappedf(ms, 0.001))
+	# 遊走：A2 搬木層有 wander；20 秒內位移唔超過幅度、會停頓、會轉向傾斜
+	cg.show_spec({"k": "cg_a2_rebuilt"}); await _w(t, 0.1)
+	var mw = cg.mot
+	var wi = null
+	for it in mw.items:
+		if it.fx.get("wander") is Dictionary and str(it.n.texture.resource_path).contains("wood_carrier"): wi = it
+	_chk("遊走：搬木層有 wander", wi != null)
+	if wi != null:
+		var wd: Dictionary = wi.fx.wander
+		var w_lim = Vector2(J.num(wd.ax) * mw.tsz.x * mw.cover_s, J.num(wd.ay) * mw.tsz.y * mw.cover_s).length() * 1.05 + 1.0
+		var w_mx := 0.0; var w_st := 0; var w_mv := 0; var w_rot := 0.0
+		var w_last = Vector2.ZERO
+		for k in 1200:
+			var ww = mw._wander(wd, float(wi.ph))
+			w_mx = maxf(w_mx, (ww[0] as Vector2).length())
+			if (ww[0] as Vector2).distance_to(w_last) < 0.01: w_st += 1
+			else: w_mv += 1
+			w_rot = maxf(w_rot, absf(ww[1])); w_last = ww[0]
+			mw.t += 1.0 / 60.0
+		_chk("遊走：唔走出幅度", w_mx <= w_lim, [snappedf(w_mx, 0.1), snappedf(w_lim, 0.1)])
+		_chk("遊走：有實際位移（> 4 像素）", w_mx > 4.0, snappedf(w_mx, 0.1))
+		_chk("遊走：有停頓又有行", w_st > 120 and w_mv > 300, [w_st, w_mv])
+		_chk("遊走：轉向會斜少少", w_rot > 0.005 and w_rot < 0.1, snappedf(w_rot, 0.001))
+	for kk in ["cg_b2_soup", "cg_c1_bribe", "cg_c2_bribe"]:
+		cg.show_spec({"k": kk}); await _w(t, 0.1)
+		_chk("分層插圖可播：" + kk, cg.mot != null and cg.mot.items.size() >= 2, cg.mot.items.size() if cg.mot else -1)
+		_chk("有原整張圖（關動態用）：" + kk, CGM.still(kk) != null)
 	par.queue_free()
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
@@ -154,10 +181,19 @@ func shots(t) -> void:
 	var dir = OS.get_environment("CGM_SHOTS")
 	if dir == "": dir = "/tmp/cgm/shots/"
 	DirAccess.make_dir_recursive_absolute(dir)
-	var key = OS.get_environment("CGM_KEY")
-	if key == "": key = "cg_a2_rebuilt"
+	var keys = OS.get_environment("CGM_KEYS").split(",", false)
+	if keys.is_empty(): keys = [OS.get_environment("CGM_KEY") if OS.get_environment("CGM_KEY") != "" else "cg_a2_rebuilt"]
 	var pc = _mk(t); var cg = pc[1]
 	await _w(t, 0.2)
+	var base = dir
+	for key in keys:
+		dir = base + (key + "/" if keys.size() > 1 else "")
+		DirAccess.make_dir_recursive_absolute(dir)
+		cg.hide_cg(); await _w(t, 0.6)
+		await _shots_one(t, cg, key, dir, pc)
+	_p("RESULT ok=1 bad=0 shots=" + base)
+
+func _shots_one(t, cg, key, dir, pc) -> void:
 	cg.show_spec({"k": key})
 	await _w(t, 0.1)
 	if false: _p("dbg par=%s cg.pos=%s cg.size=%s frame=%s screen=%s tv=%s vp=%s win=%s" % [pc[0].size, cg.position, cg.size, cg.frame.size, cg.screen.size, cg.tv.size, cg.vp.size, t.get_viewport().get_visible_rect().size])
@@ -167,4 +203,3 @@ func shots(t) -> void:
 		await _w(t, dt)
 		var img = t.get_viewport().get_texture().get_image()
 		img.save_png(dir + "f%03d.png" % i)
-	_p("RESULT ok=1 bad=0 shots=" + dir)

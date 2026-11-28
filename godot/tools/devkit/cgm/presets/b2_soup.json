@@ -1,0 +1,95 @@
+{
+ "still_src": "/home/claude/meeting/vil2/art/layers/b2_soup/_full.jpg",
+ "cam": {
+  "zoom": [
+   1.0,
+   1.06
+  ],
+  "pan": [
+   0,
+   0,
+   -0.01,
+   0.004
+  ],
+  "dur": 14
+ },
+ "layer_fx": {
+  "mengpo": {
+   "par": 0.25,
+   "fx": {
+    "float": {
+     "amp": 0.006,
+     "per": 2.7
+    },
+    "breathe": {
+     "amp": 0.015,
+     "per": 2.2
+    },
+    "sway": {
+     "deg": 1.5,
+     "per": 3.1
+    },
+    "wander": {
+     "ax": 0.006,
+     "ay": 0.003,
+     "axis": [
+      1,
+      0
+     ],
+     "per": 5.0,
+     "hold": 0.5,
+     "tilt": 1.5
+    }
+   }
+  },
+  "afu": {
+   "par": 0.3,
+   "fx": {
+    "float": {
+     "amp": 0.007,
+     "per": 2.3
+    },
+    "shake": {
+     "amp": 0.0025,
+     "every": 3.6,
+     "dur": 0.35
+    },
+    "wander": {
+     "ax": 0.008,
+     "ay": 0.004,
+     "axis": [
+      1,
+      0.2
+     ],
+     "per": 4.4,
+     "hold": 0.45,
+     "tilt": 2.0
+    }
+   }
+  }
+ },
+ "fx": [
+  {
+   "type": "steam",
+   "x": 0.83,
+   "y": 0.74,
+   "w": 0.1,
+   "n": 12
+  },
+  {
+   "type": "ember",
+   "x": 0.83,
+   "y": 0.86,
+   "w": 0.08,
+   "n": 8
+  },
+  {
+   "type": "wisp",
+   "x": 0.4,
+   "y": 0.6,
+   "w": 0.7,
+   "h": 0.5,
+   "n": 8
+  }
+ ]
+}

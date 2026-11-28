@@ -221,6 +221,9 @@ func tick(dt: float) -> Array:
 			if on:
 				var am = J.num(sh.get("amp", 0.004)) * tsz.y * cover_s
 				off += Vector2(sin(t * 71.0 + ph) * am, cos(t * 53.0 + ph) * am * 0.6)
+		if fx.get("wander") is Dictionary:   # 遊走：原位附近慢慢行（走一段、停一陣、再揀新目標），轉向時順勢斜少少
+			var wv = _wander(fx.wander, ph)
+			off += wv[0]; rot += wv[1]
 		if it.alt != null and fx.get("blink") is Dictionary:
 			var bl = fx.blink
 			var ev2 = maxf(J.num(bl.get("every", 3.2)), 0.2)
@@ -249,6 +252,37 @@ func tick(dt: float) -> Array:
 		n.position = it.pos + off
 		n.scale = Vector2(sc, sc); n.rotation = rot
 	return cz
+
+static func _h(i: float, sd: float) -> float:   # 決定性亂數 -1..1（同一張圖每次一樣）
+	var v = sin(i * 12.9898 + sd * 78.233) * 43758.5453
+	return (v - floor(v)) * 2.0 - 1.0
+
+# wander 參數（全部可每層調）：ax／ay＝左右／上下幅度（底圖闊／高嘅比例）、per＝每段（行＋停）秒數、
+# hold＝停頓佔每段比例、tilt＝轉向時傾斜度數、axis＝[dx,dy] 有就淨係沿呢個方向來回（搬木、挑水等工作方向）
+func _wander(w: Dictionary, ph: float) -> Array:
+	var ax = J.num(w.get("ax", 0.012)) * tsz.x * cover_s
+	var ay = J.num(w.get("ay", 0.004)) * tsz.y * cover_s
+	var per = maxf(J.num(w.get("per", 6.0)), 0.5)
+	var hold = clampf(J.num(w.get("hold", 0.35)), 0.0, 0.9)
+	var sd = ph * 3.7 + 1.0
+	var tt = t / per + ph * 0.61
+	var i = floor(tt); var fr = tt - i
+	var mv = clampf(fr / maxf(1.0 - hold, 0.05), 0.0, 1.0)
+	var e = mv * mv * (3.0 - 2.0 * mv)
+	var de = 6.0 * mv * (1.0 - mv) / maxf(1.0 - hold, 0.05)   # 速度（0..1.5），停頓時＝0
+	var a: Vector2; var b: Vector2
+	if w.get("axis") is Array and (w.axis as Array).size() >= 2:
+		var dir = Vector2(J.num(w.axis[0]), J.num(w.axis[1])).normalized()
+		var lim = Vector2(ax * absf(dir.x), ay * absf(dir.y)).length()
+		lim = maxf(lim, ax)
+		a = dir * _h(i, sd) * lim; b = dir * _h(i + 1.0, sd) * lim
+		a += Vector2(0, _h(i, sd + 9.0) * ay * 0.3); b += Vector2(0, _h(i + 1.0, sd + 9.0) * ay * 0.3)
+	else:
+		a = Vector2(_h(i, sd) * ax, _h(i, sd + 5.0) * ay); b = Vector2(_h(i + 1.0, sd) * ax, _h(i + 1.0, sd + 5.0) * ay)
+	var p = a.lerp(b, e)
+	var vx = (b.x - a.x) / maxf(ax, 1.0)
+	var rot = deg_to_rad(J.num(w.get("tilt", 2.5))) * clampf(vx, -1.0, 1.0) * clampf(de, 0.0, 1.0)
+	return [p, rot]
 
 func free_all() -> void:
 	if root != null and is_instance_valid(root):

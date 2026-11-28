@@ -20,11 +20,15 @@ for ep in extras:
     for l in E.get("add_layers", []): layers.append(dict(l, _dir=src))
 od = os.path.join(gd, "assets", "cg_layers", key); os.makedirs(od, exist_ok=True)
 for f in os.listdir(od):
-    if f.endswith(".webp") or f.endswith(".webp.import"): os.remove(os.path.join(od, f))
+    if f.endswith(".webp"): os.remove(os.path.join(od, f))   # .import 留低（同名重出唔使重新匯入設定）
 bg = Image.open(os.path.join(src, bg_file)).convert("RGB")
 if max(bg.size) > 1600: bg.thumbnail((1600, 1600), Image.LANCZOS)
 bg.save(os.path.join(od, "bg.webp"), quality=88, method=4)
 out = {"bg": "bg.webp", "src_canvas": [CW, CH]}
+if P.get("still_src"):   # 關動態用嘅原整張圖（preset 指定路徑；相對路徑以 preset 所在資料夾為準）
+    sp = P["still_src"] if os.path.isabs(P["still_src"]) else os.path.join(os.path.dirname(preset_p), P["still_src"])
+    st = Image.open(sp).convert("RGB").resize(bg.size, Image.LANCZOS)
+    st.save(os.path.join(od, "still.webp"), quality=86, method=4); out["still"] = "still.webp"
 if "cam" in P: out["cam"] = P["cam"]
 out["fx"] = P.get("fx", [])
 MM = P.get("motion_map", {}); LF = P.get("layer_fx", {})
