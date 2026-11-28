@@ -276,8 +276,8 @@ func logic(t) -> void:
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
 # ---- 後備動態（單張圖）＋新接入嘅分層圖 ----
-const FLAT_KEYS := ["cg_lobby_m", "cg_stall_hook_m", "cg_pang_visit_m", "cg_joss_note_m", "cg_stall_hook_f", "cg_caught", "cg_he_wake", "cg_qian_bite", "cg_mk_weapon", "cg_tavern_m", "cg_nuopo_taste"]
-const NEW_LAYERED := {"cg_f_soup": 2, "cg_f_bribe": 4}
+const FLAT_KEYS := ["cg_lobby", "cg_stall_hook", "cg_pang_visit_m", "cg_joss_note_m", "cg_stall_hook_f", "cg_caught", "cg_he_wake", "cg_qian_bite", "cg_mk_weapon", "cg_tavern", "cg_nuopo_taste"]
+const NEW_LAYERED := {"cg_soup_f": 2, "cg_f_bribe": 4}
 
 func flat(t) -> void:
 	var pc = _mk(t); var par = pc[0]; var cg = pc[1]
@@ -327,7 +327,7 @@ func flat(t) -> void:
 		var want_moving = m.items.filter(func(it): return not (it.fx as Dictionary).is_empty()).size()
 		_chk("分層版：有動作嘅層都有郁、鏡頭唔露邊：" + k, moved >= want_moving and gap <= 0.01, [moved, want_moving, snappedf(gap, 0.01)])
 	# 女主遞湯：枝筆掂住碗，兩層同步遊走
-	cg.show_spec({"k": "cg_f_soup"}); await _w(t, 0.1)
+	cg.show_spec({"k": "cg_soup_f"}); await _w(t, 0.1)
 	if cg.mot != null and cg.mot.items.size() == 2:
 		var a = cg.mot.items[0]; var b = cg.mot.items[1]
 		_chk("女主遞湯：兩層同一個 seed", a.fx.wander.get("seed") == b.fx.wander.get("seed") and a.fx.wander.has("seed"))

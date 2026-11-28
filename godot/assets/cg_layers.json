@@ -1211,7 +1211,7 @@
    }
   ]
  },
- "cg_lobby_m": {
+ "cg_lobby": {
   "flat": true,
   "bg": "still.webp",
   "still": "still.webp",
@@ -1265,7 +1265,7 @@
    }
   ]
  },
- "cg_stall_hook_m": {
+ "cg_stall_hook": {
   "flat": true,
   "bg": "still.webp",
   "still": "still.webp",
@@ -1879,7 +1879,7 @@
    }
   ]
  },
- "cg_f_soup": {
+ "cg_soup_f": {
   "bg": "bg.webp",
   "src_canvas": [
    1340,
@@ -2152,7 +2152,7 @@
    }
   ]
  },
- "cg_tavern_m": {
+ "cg_tavern": {
   "flat": true,
   "bg": "still.webp",
   "still": "still.webp",
