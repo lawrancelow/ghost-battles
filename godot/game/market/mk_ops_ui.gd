@@ -21,6 +21,7 @@ const TYPE_C := {"steal_cash": "#c9a227", "steal_goods": "#b8562a", "cut_queue":
 static var _fx: Array = []        # 演出中：{"k", "ev", "t0", "life", ...}
 static var _says: Array = []      # 對白條：{"who", "t", "t0", "life"}
 static var _ow := {}              # 過勞小卡狀態：sid → {"down": bool, "up_t": float, "say_t": float}
+static var hud_end := 0.0          # [M2 接口] 人手列＋治安卡＋對白條嘅底（畫面座標）；M2 嘅 HUD 排喺下面
 static var _panel := ""           # 開緊嘅人手面板（""＝冇）
 static var _culprit := {}         # 事件 id → 搞事鬼圖鍵
 static var _title := {"st": "", "t0": -99.0}   # 切街標題卡（已選用美術：牌坊 A／食街／奢侈品店橫幅）
@@ -96,6 +97,8 @@ static func draw(sc, ctx) -> void:
 		Art.rr(ctx, 8, cy, W - 16.0, sh, 10, "rgba(250,244,228,.97)", "#5e4a30", 2.0)
 		for i in ls.size(): sc._txt(ctx, str(ls[i]), 20, cy + 16 + 19.0 * i, 14, Color("#2b1d12"), "left", 700, 0)
 		ctx.globalAlpha = 1.0
+		hud_end = cy + sh + 4.0
+	else: hud_end = cy
 	for tt in MKO.pop_toasts(): sc._float(sc.s2w(Vector2(W / 2.0, cy + 70.0)), str(tt.t), Color(str(tt.c)), 16)
 	# 切街標題卡：牌坊橫幅＋街名（1.8 秒，淡入淡出；有治安卡就唔出，避免疊住）
 	if str(_title.st) != street: _title = {"st": street, "t0": now}

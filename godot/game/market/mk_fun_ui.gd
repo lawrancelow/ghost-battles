@@ -35,7 +35,7 @@ static func draw_world(sc, ctx, vy0: float, vy1: float) -> void:
 		if not MK.shown(sim.ci(), sid) or not sim.unlocked(sid): continue
 		var p = sim.st_pos(sid)
 		if p.y + 60.0 < vy0 or p.y - 200.0 > vy1: continue
-		_draw_ot(sc, ctx, sid, p + Vector2(-56, -132))   # 攤位左上；右上角係「做／收」圓掣，唔好撞
+		_draw_ot(sc, ctx, sid, p + Vector2(-118, -146))   # 攤位左上角外面：中間頂係 M1 過勞小卡（128 闊）、右上角係「做／收」圓掣，三樣唔好撞
 	var Lx = sim.L
 	if Lx.has("counter_y") and FUN.counter_staffed():   # 當前街嘅櫃台：冇加班掣，只顯示過勞條／趴低／餵包子
 		_draw_ot(sc, ctx, FUN.ctr_key(MK.cur()), Vector2(float(Lx.counter_x1) - 10.0, float(Lx.counter_y) - 96.0), true)
@@ -94,6 +94,9 @@ static func draw_hud(sc, ctx, y0 := -1.0) -> void:
 	if ResourceLoader.exists("res://game/market/mk_ui.gd"):   # M1 街名牌列：排喺佢下面，唔好疊
 		var MKU = load("res://game/market/mk_ui.gd")
 		if MKU != null and MKU.on(sc): y = MKU.strip_rect(sc).end.y + 6.0
+	if ResourceLoader.exists("res://game/market/mk_ops_ui.gd"):   # M1 人手列／治安卡／對白條：再排落去
+		var MKOU = load("res://game/market/mk_ops_ui.gd")
+		if MKOU != null and MKOU.on(sc): y = maxf(y, float(MKOU.hud_end) + 2.0)
 	var x = 8.0
 	hud_rects.clear()
 	# 全部排喺左邊一欄（右上角留畀「生產鏈」掣）：第一行＝潮流榜細牌＋連單數；下面＝子時高峰、限時大客
