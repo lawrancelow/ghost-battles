@@ -898,7 +898,7 @@ func _step_custs(dt: float) -> void:
 							st().counter[g] = float(counter_n(g) - 1); c.got[g] = int(c.got.get(g, 0)) + 1; c.wait = 0.0
 							ev.append({"k": "take", "gid": g, "from": counter_slot(g), "to": c.pos + Vector2(0, -40)})
 							break
-					if all_ok and not plus.hold_pay(self, c): _pay(c)   # [play] 講價／挑剔等決定
+					if all_ok and not plus.hold_pay(self, c) and not MKO.hold_pay(self, c): _pay(c)   # [play] 講價／挑剔等決定   # [market M1 營運] 結帳等候（櫃檯人數）
 	for c in custs.duplicate():
 		if c.st == "out":
 			c.s = float(c.s) + 110.0 * dt

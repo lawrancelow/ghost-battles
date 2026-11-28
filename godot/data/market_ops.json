@@ -46,7 +46,10 @@
   "max": 3,
   "staff_s": 6,
   "auto_s": 20,
-  "stop_s": 3
+  "stop_s": 3,
+  "no_staff_pay_s": 2.5,
+  "staff_pay_s": 0.9,
+  "_doc": "max＝每街櫃檯員上限；staff_s÷人數＝幾秒入帳一次；auto_s／stop_s＝冇櫃檯員時店員幾耐去收一次／全街停幾秒；no_staff_pay_s／staff_pay_s÷人數＝每位客結帳要等幾秒"
  },
  "patrol": {
   "max": 4,
