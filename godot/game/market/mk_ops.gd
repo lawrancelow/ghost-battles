@@ -41,6 +41,7 @@ static func reload() -> void:
 	var f = FileAccess.open(PATH, FileAccess.READ)
 	var o = JSON.parse_string(f.get_as_text()) if f != null else null
 	_D = o if o is Dictionary else {}
+	_pairs_c = {}
 	for k in ["staff", "goods2", "counter", "patrol", "events", "variants", "goods"]: if not (_D.get(k) is Dictionary): _D[k] = {}
 static func cf(sec: String, k: String, dflt: float) -> float:
 	var d = D().get(sec)
@@ -128,8 +129,11 @@ static func _fit_staff(sim) -> void:   # 位數跟等級：唔夠位就補陣列
 # ================= 二、雙貨 =================
 static func good_of(sid: String) -> String: return str(MD.st_def(sid).get("good", ""))
 static func sub_open(sid: String) -> bool: return on() and _unlocked(sid) and _lv(sid) >= cf("goods2", "lv", 25.0)
-static func pairs(ci: int) -> Dictionary:   # 主攤 → 副貨攤（兩邊都有數據先算）
+static var _pairs_c := {}
+static func pairs(ci: int) -> Dictionary:   # 主攤 → 副貨攤（兩邊都有數據先算）；有快取（reload 清）
+	if _pairs_c.has(ci): return _pairs_c[ci]
 	var o = {}
+	_pairs_c[ci] = o
 	var p = D().get("pairs")
 	if not (p is Dictionary) or not (p.get(str(ci)) is Dictionary): return o
 	for h in p[str(ci)]:

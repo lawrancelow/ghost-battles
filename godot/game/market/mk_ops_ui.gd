@@ -40,13 +40,13 @@ static func draw(sc, ctx) -> void:
 		var nm = MK.T(e.get("n", ["", ""]))
 		var tn = MK.T(TYPE_N.get(str(e.k), [str(e.k), str(e.k)]))
 		var tail = ("巡邏追緊" if yue else "巡邏員追捕中") if chase else (("撳我處理 %d 秒" if yue else "點我處理 %d 秒") % int(ceil(left)))
-		var a = 1.0 if chase else 0.78 + 0.22 * sin(float(sc.t) * 7.0)
+		var a = 1.0 if chase else 0.9 + 0.1 * sin(float(sc.t) * 7.0)
 		ctx.globalAlpha = a
 		_pill(sc, ctx, "mkoe:%d" % int(e.id), 10, ey, sc.FW - 20.0, EV_H - 4, "%s｜%s　%s" % [tn, nm, tail], "rgba(150,120,30,.94)" if chase else "rgba(160,40,32,.94)", Color("#fff6e0"), 12)
 		ctx.globalAlpha = 1.0
 		ey += EV_H
 	for tt in MKO.pop_toasts():
-		sc._float(sc.s2w(Vector2(sc.FW / 2.0, ey + 20.0)), str(tt.t), Color(str(tt.c)), 15)
+		sc._float(sc.s2w(Vector2(sc.FW / 2.0, ey + 64.0)), str(tt.t), Color(str(tt.c)), 15)
 
 static func tap(sc, p: Vector2) -> bool:
 	if not on(sc): return false
