@@ -234,11 +234,13 @@ func bar_layout(t) -> void:
 			if str(ql.text) != want: ql.text = want
 			if str(m.quest_prog.text) != "99999/99999": m.quest_prog.text = "99999/99999"
 		RenderingServer.frame_pre_draw.connect(setter)
+		var was_paused = t.get_tree().paused; t.get_tree().paused = true   # [int] 量版面嗰陣暫停遊戲：整合版多咗市集／駐點計時會不停 refresh()，同 setter 互相蓋字，高度永遠排唔定（真實遊玩 refresh 寫返同一句字，唔會重排）
 		for i in 60:   # [int] 整合版畫面較重，首輪要多幾幀先排好版：等到高度定咗先驗（最多 60 幀）
 			await t.get_tree().process_frame
 			if i >= 8 and str(ql.text) == want and ql.get_content_height() <= ql.size.y + 1.0: break
 		await RenderingServer.frame_post_draw
 		RenderingServer.frame_pre_draw.disconnect(setter)
+		t.get_tree().paused = was_paused
 		setter.call()
 		var sh = NEED.quest_short(q)
 		var ptxt = ql.get_parsed_text()
