@@ -190,6 +190,7 @@ func all(t) -> void:
 	_reset_state(); _rich(); KG.register_metric("rebuilt", func(): return 4.0); J.G.S.bld["home"] = 0.0
 	KG.start("A"); KG.gs("A").left = 734.0
 	KG.gs("A")["bryan"] = 1.0; KG.gs("A").stolen["m_wood"] = 120.0
+	await _w(t, 4.0)   # 等之前嘅橫額／提示散咗先影
 	KU._sheet(m, "A"); await _w(t, 0.4); await _shot(t, "sheet_A_mid")
 	m.close_sheet()
 	# 霧上面嘅考核牌

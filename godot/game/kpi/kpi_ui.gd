@@ -106,13 +106,18 @@ static func _sheet(main, gid: String) -> void:
 		["car", "niu", L("跑車 → 牛頭：全部 -40%（30% 被老闆撞破）", "跑車 → 牛頭：全部 -40%（30% 被老闆撞破）")],
 		["snack", "niu", L("點心 → 牛頭（送錯：-10%）", "點心 → 牛頭（送錯：-10%）")],
 		["watch", "ma", L("名錶 → 馬面（會被退回）", "名錶 → 馬面（會被退回）")]]
-	for r in rows:
+	for r in rows:   # 每行：說明（自動換行）＋短掣（送出＋價錢），手機窄屏唔會爆出框
 		var cost = KG.bribe_cost(r[0])
-		var b = UIKit.btn("%s　[%s]" % [r[2], _cost_txt(cost)], "")
+		var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 8)
+		var d = UIKit.rich(str(r[2]), 14, UIKit.INKTXT); d.size_flags_horizontal = Control.SIZE_EXPAND_FILL; d.fit_content = true; d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		hb.add_child(d)
+		var b = UIKit.btn(L("送（%s）", "送（%s）") % _cost_txt(cost), "", true)
 		b.disabled = not KG.can_pay(cost)
+		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var t0 = r[0]; var to0 = r[1]
 		b.pressed.connect(func(): _bribe(main, gid, t0, to0))
-		body.add_child(b)
+		hb.add_child(b)
+		body.add_child(hb)
 static func M_amt(m: String) -> float: return KG.amt_of(m)
 
 static func _eff_txt(o: Dictionary) -> String:
