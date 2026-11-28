@@ -10,7 +10,7 @@
 #     over 入面 spr 寫 "hero"＝主角（跟性別揀 afu／afuf）
 #     over＝喺插圖上疊遊戲現有立繪（老闆原創角色唔交 AI 重畫，一律用程式疊）；x、y 係腳底位置（0–1），h 係高度（插圖高度的比例）
 #     txt＝喺插圖上疊文字（插圖本身冇字）
-#   插圖冇入 manifest（未批／未到）就自動唔顯示，劇情照播。
+#   插圖冇入 manifest（未批／未到）就自動唔顯示，劇情照播；spec 有 "ph"（佔位圖 key）就先顯示佔位圖。
 # 熱更新：冇 class_name；story.gd 用 preload
 extends Control
 
@@ -124,6 +124,7 @@ func show_spec(spec) -> void:
 	if spec == null: return
 	var d: Dictionary = spec if spec is Dictionary else {"k": str(spec)}
 	var k = str(d.get("k", ""))
+	if k != "" and not Spr.ok(k) and str(d.get("ph", "")) != "": k = str(d.ph)   # [opening] 新插圖未到：先用佔位圖（ph）
 	if k == "" or not Spr.ok(k):
 		hide_cg(); return
 	var tex: Texture2D = Spr.get_tex(k)
