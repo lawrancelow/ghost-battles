@@ -11,6 +11,7 @@ const MD = preload("res://game/outpost/mv_data.gd")
 const MK = preload("res://game/market/mk_data.gd")
 const MKU = preload("res://game/market/mk_ui.gd")
 const MKO = preload("res://game/market/mk_ops.gd")
+const MKOU = preload("res://game/market/mk_ops_ui.gd")
 const MVW = preload("res://game/outpost/mv_war.gd")
 const KG = preload("res://game/kpi/kpi_data.gd")
 const M = preload("res://game/outpost/mat.gd")
@@ -205,6 +206,19 @@ func _ops(t, sim, sc, c: int, food: Array, cloth: Array) -> void:
 	_chk("客人買副貨：按副貨價計錢", is_equal_approx(sim.cust_value(cst), 2.0 * MKO.sub_val(sim, gb) * sim.inc_mul()), sim.cust_value(cst))
 	MKO.set_sub(c, a, ""); MKO.tick(sim, 11.0)
 	sim.sst(b)["unlocked"] = true
+	# 預設副貨配對（goods_final）：副貨攤唔再獨立擺攤，Lv25 自動成為主攤副貨
+	_chk("第 1 章配對：豆花擔併入枯井豆花攤（唔再獨立擺攤）", MKO.sub_only(0).get("st_tiaodan", "") == "st_douhua" and not MK.stall_list(0).has("st_tiaodan") and MK.stall_list(0).has("st_douhua"), MK.stall_list(0))
+	if c == 0:
+		sim.sst("st_douhua")["unlocked"] = true; sim.sst("st_douhua").lv = 24.0
+		var g_td = MKO.good_of("st_tiaodan")
+		_chk("枯井豆花攤 Lv24：未有副貨、豆花擔未上架", MKO.sub_of("st_douhua") == "" and not sim.goods_list().has(g_td))
+		sim.sst("st_douhua").lv = 25.0
+		_chk("枯井豆花攤 Lv25：預設副貨＝豆花擔，上架", MKO.sub_of("st_douhua") == g_td and sim.goods_list().has(g_td) and MKO.host_of(g_td) == "st_douhua", MKO.sub_of("st_douhua"))
+		_chk("玩家可以揀唔賣副貨", MKO.set_sub(0, "st_douhua", "") == "ok" and MKO.sub_of("st_douhua") == "")
+		MKO.st().sub.erase("st_douhua"); MKO.tick(sim, 11.0); sim.sst("st_douhua").lv = 1.0
+	var st_n = []
+	for ci in 6: st_n.append(MK.stall_list(ci).size())
+	_p("各章攤數（配對後、未計新台）：" + str(st_n))
 	# 櫃檯
 	_chk("mk_counter_n_fn 已登記（M2 接口）", J.G.get("mk_counter_n_fn") is Callable and int(J.G.mk_counter_n_fn.call("food")) == 0)
 	var c0 = sim.coins()
@@ -313,6 +327,37 @@ func _ops(t, sim, sc, c: int, food: Array, cloth: Array) -> void:
 	MK.st().erase("ops"); MK.st()["patrol_done"] = 0
 	for i in 12: MKO.unassign(sim, "t_mk%d" % i)
 	for sid in food: for i in sim.sst(sid).workers.size(): sim.assign(sid, i, null)
+	# 佔位畫面：人手／治安列
+	sim.market_street("food"); MKO.tick(sim, 0.1); MKO.st()["tut"] = 1; MKO._income("food", 50000.0)
+	sc.hud_k = 1.0
+	await _w(t, 0.4)
+	var bp = sc._btns.get("mko:+pat")
+	_chk("人手／治安列有畫（巡邏 ＋ 掣）", bp is Rect2, bp)
+	if bp is Rect2:
+		for i in 2: MKOU.tap(sc, bp.get_center())
+		_chk("撳兩下巡邏 ＋：由村子調 2 隻鬼", MKO.patrol_n("food") == 2, MKO.patrol_n("food"))
+		MKOU.tap(sc, sc._btns["mko:+ctr"].get_center())
+		_chk("撳櫃檯 ＋：調 1 隻鬼", MKO.counter_n("food") == 1)
+		MKOU.tap(sc, sc._btns["mko:-pat"].get_center())
+		_chk("撳巡邏 −：放返 1 隻", MKO.patrol_n("food") == 1)
+	MKO.unassign(sim, MKO.staff_of("pat", "food").back() if MKO.patrol_n("food") else "")
+	var e9 = MKO.spawn_event(sim, "food", "steal_goods", 1)
+	MKO.spawn_event(sim, "food", "cut_queue", 0)
+	MKO.st().till["food"] = 12345.0
+	await _w(t, 0.4); await _shot(t, "m5_ops")
+	var be = sc._btns.get("mkoe:%d" % int(e9.id))
+	_chk("事件紅牌有畫", be is Rect2, be)
+	if be is Rect2:
+		MKOU.tap(sc, be.get_center())
+		_chk("撳事件紅牌：主角親自處理", not MKO.events("food").has(e9))
+	var bt = sc._btns.get("mko:till")
+	if bt is Rect2:
+		var cc0 = sim.coins(); MKOU.tap(sc, bt.get_center())
+		_chk("撳收銀箱：即刻入帳", is_equal_approx(sim.coins() - cc0, 12345.0) and MKO.till("food") == 0.0, sim.coins() - cc0)
+	else: _chk("收銀箱掣有畫", false)
+	await _w(t, 0.5); await _shot(t, "m6_ops_done")
+	MK.st().erase("ops"); MK.st()["patrol_done"] = 0
+	for g in S.ghosts: if str(J.gp(g, "post")) in ["mk_ctr", "mk_pat"]: J.sp(g, "post", null)
 	sim.paused = false
 
 func _uniq(a: int, b: int) -> bool:

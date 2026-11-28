@@ -26,6 +26,13 @@ static var _FUN = null
 static var _fun_chk := false
 static var _fun_m := {}
 static var rng := RandomNumberGenerator.new()
+static var toasts: Array = []   # 畫面浮字（mk_ops_ui 攞）：{"t": 文字, "c": "#色"}
+static func toast(t: String, c := "#fff3c8") -> void:
+	toasts.append({"t": t, "c": c})
+	if toasts.size() > 8: toasts = toasts.slice(-8)
+static func pop_toasts() -> Array:
+	var a = toasts; toasts = []
+	return a
 
 static func D() -> Dictionary:
 	if _D == null: reload()
@@ -121,16 +128,38 @@ static func _fit_staff(sim) -> void:   # 位數跟等級：唔夠位就補陣列
 # ================= 二、雙貨 =================
 static func good_of(sid: String) -> String: return str(MD.st_def(sid).get("good", ""))
 static func sub_open(sid: String) -> bool: return on() and _unlocked(sid) and _lv(sid) >= cf("goods2", "lv", 25.0)
-static func sub_of(sid: String) -> String:   # 副貨（冇＝""）
-	if not on(): return ""
-	var g = str(st().sub.get(sid, ""))
-	return g if g != "" and sub_open(sid) else ""
+static func pairs(ci: int) -> Dictionary:   # 主攤 → 副貨攤（兩邊都有數據先算）
+	var o = {}
+	var p = D().get("pairs")
+	if not (p is Dictionary) or not (p.get(str(ci)) is Dictionary): return o
+	for h in p[str(ci)]:
+		var s2 = str(p[str(ci)][h])
+		if MD.st_def(str(h)).size() and MD.st_def(s2).size(): o[str(h)] = s2
+	return o
+static func sub_only(ci: int) -> Dictionary:   # 唔再獨立擺攤嘅副貨攤（sid → 主攤）；MK.stall_list 會剔走
+	var o = {}
+	var p = pairs(ci)
+	for h in p: o[str(p[h])] = str(h)
+	return o
+static func default_sub(ci: int, sid: String) -> String:
+	var p = pairs(ci)
+	return good_of(str(p[sid])) if p.has(sid) else ""
+static func sub_of(sid: String) -> String:   # 副貨（冇＝""）；玩家未揀過就用預設配對
+	if not on() or not sub_open(sid): return ""
+	var o = st().sub
+	return str(o[sid]) if o.has(sid) else default_sub(MK.cur_ci(), sid)
 static func sub_choices(ci: int, sid: String) -> Array:   # 可揀副貨：同章同街、唔係已開攤主貨、未被其他攤揀咗
 	var o = []
 	if not sub_open(sid): return o
 	var street = MK.street_of(ci, sid)
 	var taken = {}
-	for k in st().sub: if str(k) != sid and str(st().sub[k]) != "": taken[str(st().sub[k])] = 1
+	for k in MD.stations(ci):
+		if str(k) != sid and sub_of(str(k)) != "": taken[sub_of(str(k))] = 1
+	var so = sub_only(ci)
+	for s3 in so:   # 配對表嘅副貨攤（同街）
+		if MK.street_of(ci, str(s3)) != street: continue
+		var g3 = good_of(str(s3))
+		if g3 != "" and not taken.has(g3) and not o.has(g3): o.append(g3)
 	for s2 in MK.sids_on(ci, street):
 		if s2 == sid or _unlocked(s2): continue
 		var g = good_of(s2)
@@ -146,9 +175,8 @@ static func set_sub(ci: int, sid: String, gid: String) -> String:   # "ok"／"lo
 	if not sub_open(sid): return "locked"
 	if gid != "" and not sub_choices(ci, sid).has(gid): return "bad"
 	var o = st()
-	if str(o.sub.get(sid, "")) == gid: return "ok"
-	if gid == "": o.sub.erase(sid)
-	else: o.sub[sid] = gid
+	if sub_of(sid) == gid: return "ok"
+	o.sub[sid] = gid   # ""＝玩家揀咗唔賣副貨
 	o.swap[sid] = cf("goods2", "swap_s", 10.0)
 	MK.evq.append({"k": "swap", "sid": sid, "gid": gid})
 	return "ok"
@@ -158,13 +186,12 @@ static func smart(sid: String) -> bool: return J.t(st().smart.get(sid, 1))
 static func set_smart(sid: String, v: bool) -> void: st().smart[sid] = 1 if v else 0
 static func host_of(gid: String) -> String:   # 邊個攤用副貨格賣緊呢樣貨
 	if not on(): return ""
-	var o = st().sub
-	for sid in o: if str(o[sid]) == gid and sub_open(str(sid)): return str(sid)
+	for sid in MD.stations(MK.cur_ci()): if sub_of(str(sid)) == gid: return str(sid)
 	return ""
 static func sub_goods() -> Array:
 	var o = []
 	if not on(): return o
-	for sid in st().sub:
+	for sid in MD.stations(MK.cur_ci()):
 		var g = sub_of(str(sid))
 		if g != "" and not o.has(g): o.append(g)
 	return o
@@ -421,6 +448,7 @@ static func _done(sim, e: Dictionary, by: String) -> void:   # 處理成功
 	else: m["renown_pts"] = J.num(m.get("renown_pts", 0)) + rn
 	o["handled"] = int(o.get("handled", 0)) + 1
 	MK.evq.append({"k": "ev_done", "ev": e, "by": by, "renown": rn, "praise": int(o.handled) % int(cf("patrol", "praise_n", 10)) == 0})
+	toast(("搞掂：%s　名聲 +%d" if MK.yue() else "擺平：%s　名聲 +%d") % [MK.T(e.get("n", ["", ""])), rn], "#c8f0b0")
 static func handle_event(sim, id: int) -> bool:   # 玩家親自撳事件：即刻處理、名聲 +2
 	if not on(): return false
 	for e in st().ev:
@@ -466,6 +494,8 @@ static func _lost(sim, e: Dictionary) -> void:   # 冇人理：結算損失（�
 	if loss > 0.0: _add_loss(street, loss)
 	o["lost"] = int(o.get("lost", 0)) + 1
 	MK.evq.append({"k": "ev_lost", "ev": e, "loss": loss, "capped": loss <= 0.0, "info": info})
+	if loss > 0.0: toast(("冇人理：%s　蝕咗 %s" if MK.yue() else "沒人管：%s　損失 %s") % [MK.T(e.get("n", ["", ""])), MD.fmt(loss)], "#ffb0a0")
+	else: toast("市集風氣差，客人皺眉", "#d8c8b0")
 static func _near(sim, sid: String) -> Array:   # 事發攤＋隔籬一個已開攤
 	var L = open_stalls(sim.ci(), MK.street_of(sim.ci(), sid))
 	var i = L.find(sid)
@@ -520,6 +550,7 @@ static func tick(sim, dt: float) -> void:   # mv_sim.step 叫（離線唔叫 →
 	_tick_swap(dt)
 	_tick_counter(sim, dt)
 	_tick_events(sim, dt)
+	if MK.evq.size() > 240: MK.evq = MK.evq.slice(-120)   # 冇人攞（M2 畫面未合併）都唔好無限長
 static func summary() -> Dictionary:   # 模擬／KPI 用
 	var o = st()
 	return {"clk": clk(), "income": float(o.get("inc_all", 0.0)), "loss": float(o.get("loss_all", 0.0)), "handled": int(o.get("handled", 0)), "lost": int(o.get("lost", 0)), "village_cost": village_cost()}

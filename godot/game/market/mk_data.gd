@@ -84,8 +84,9 @@ static func stall_list(ci: int) -> Array:   # 本章所有攤（maps 表＋招�
 	if sg is Dictionary: for k in sg: if not o.has(str(sg[k])) and MD.st_def(str(sg[k])).size(): o.append(str(sg[k]))
 	if m.is_empty():   # 冇按章表（例如第 7 章起地圖未做）：照原版
 		for s in MD.stations_raw(ci): if not o.has(s): o.append(s)
+	var so = OPS().sub_only(ci)   # [M1 營運] 配對表：副貨攤唔再獨立擺攤（佢隻貨變主攤 Lv25 副貨）
 	var out = []
-	for s in o: if not rm.has(s): out.append(s)
+	for s in o: if not rm.has(s) and not so.has(s): out.append(s)
 	return out
 static func base_slots(ci: int) -> Array:   # 本章地圖上有位置嘅台位（次序＝原版）
 	var st = MD.layout(ci).get("st", {}); var o = []
