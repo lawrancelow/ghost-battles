@@ -112,7 +112,7 @@ static func draw(sc, ctx) -> void:
 		_pill(sc, ctx, "mkog:%d" % int(e2.id), px, oy, 88, 32, lab, "rgba(170,36,30,.97)", Color("#fff6e0"), 15, "#ffd0c0")
 		ctx.globalAlpha = 1.0
 		oy += 38.0
-	for tt in MKO.pop_toasts(): sc._float(sc.s2w(Vector2(W / 2.0, cy + 70.0)), str(tt.t), Color(str(tt.c)), 16)
+	for tt in MKO.pop_toasts(): load("res://game/market/mk_fun_ui.gd").toast(sc, str(tt.t), Color(str(tt.c)), 2.2)   # 通告牌（左欄、有底板）；之前浮喺畫面中間會壓住潮流榜／加班牌
 	# 切街標題卡：牌坊橫幅＋街名（1.8 秒，淡入淡出；有治安卡就唔出，避免疊住）
 	if str(_title.st) != street: _title = {"st": street, "t0": now}
 	var tu = now - float(_title.t0)

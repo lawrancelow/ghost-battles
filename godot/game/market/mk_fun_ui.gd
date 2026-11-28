@@ -12,6 +12,21 @@ const MD = preload("res://game/outpost/mv_data.gd")
 static var _wbtn := {}   # 世界座標掣
 static var _hbtn := {}   # 畫面座標掣
 static var trend_open := false
+static var _toasts: Array = []    # 通告牌（取代浮喺場景嘅字）：{t, c, t0, life}；排喺左欄最底，有底板，同其他牌唔重疊
+static var fit_bad: Array = []    # 今格畫 HUD 時有冇字闊過個框（測試用）
+static var world_hid := 0         # 今格有幾多個加班牌因為會撞到頂部牌而唔畫（測試用）
+const TOAST_W := 240.0
+static func toast(sc, tx: String, col: Color, life := 2.4) -> void:
+	if tx == "": return
+	for q in _toasts: if str(q.t) == tx: q.t0 = float(sc.t); q.life = life; return   # 同一句：續時間，唔好疊兩行
+	_toasts.append({"t": tx, "c": col, "t0": float(sc.t), "life": life})
+	while _toasts.size() > 3: _toasts.pop_front()
+static func _gap(ctx, x: float, y: float, top: float) -> void:   # 兩塊牌之間 6px 罅填實（唔係第一塊先填），後面場景嘅字唔會喺罅度露半截
+	if y - 6.0 >= top: ctx.fillStyle = "rgba(24,16,12,.96)"; ctx.fillRect(x + 4.0, y - 6.0, TOAST_W - 8.0, 6.0)
+static func _fit(ctx, name: String, tx: String, font: String, box_w: float) -> void:
+	ctx.font = font
+	var w = float(ctx.measureText(tx).width)
+	if w > box_w + 0.5: fit_bad.append([name, tx, w, box_w])
 static var hud_rects: Array = []   # 市集 HUD 佔位（畫面座標）：「生產鏈」掣避開用
 static var _card := {}   # 人物小卡（熟客／評論家／大客）：{art, a, b, t0, life, col}
 static var _mid_n := 0
@@ -28,7 +43,7 @@ static func _bar_col(k: float) -> String:
 
 # ---------------- 世界：每個攤／櫃台 ----------------
 static func draw_world(sc, ctx, vy0: float, vy1: float) -> void:
-	_wbtn.clear()
+	_wbtn.clear(); world_hid = 0
 	FUN.ensure()
 	if not FUN.on(): return
 	var sim = sc.sim
@@ -43,6 +58,14 @@ static func draw_world(sc, ctx, vy0: float, vy1: float) -> void:
 static func _draw_ot(sc, ctx, sid: String, at: Vector2, counter := false) -> void:
 	var o = MK.ot(sid)
 	if o.is_empty(): return
+	# 成組牌（加班牌＋過勞條＋打卡鐘／餵包子）嘅畫面位置：撞到頂部任何一塊牌，或者鑽咗入頂部列，就成組唔畫（等鏡頭移開先出），唔好半遮半掩
+	var sp0: Vector2 = sc.w2s(Vector2(at.x - 62.0, at.y - 22.0)); var sp1: Vector2 = sc.w2s(Vector2(at.x + 62.0, at.y + 72.0))
+	var scr = Rect2(sp0, sp1 - sp0)
+	var top_lim = 0.0
+	if ResourceLoader.exists("res://game/market/mk_ops_ui.gd"): top_lim = float(load("res://game/market/mk_ops_ui.gd").hud_bot)
+	if ResourceLoader.exists("res://game/market/mk_ui.gd"): top_lim = maxf(top_lim, float(load("res://game/market/mk_ui.gd").strip_rect(sc).end.y))
+	if scr.position.y < top_lim + 2.0: world_hid += 1; return
+	for q in hud_rects: if scr.intersects((q as Rect2).grow(2.0)): world_hid += 1; return
 	var down = MK.is_down(sid)
 	var on = MK.ot_on(sid)
 	var k = MK.fat_k(sid)
@@ -99,22 +122,42 @@ static func draw_hud(sc, ctx, y0 := -1.0) -> void:
 		var MKOU = load("res://game/market/mk_ops_ui.gd")
 		if MKOU != null and MKOU.on(sc): y = maxf(y, float(MKOU.hud_bot) + 6.0)
 	var x = 8.0
-	hud_rects.clear()
+	hud_rects.clear(); fit_bad.clear()
 	# 全部排喺左邊一欄（右上角留畀「生產鏈」掣）：第一行＝潮流榜細牌＋連單數；下面＝子時高峰、限時大客
 	var tl = FUN.trend_list(sim)
+	var ytop = y
 	var r = Rect2(x, y, 142.0, 30.0)
 	if tl.size():
-		Art.rr(ctx, r.position.x, r.position.y, r.size.x, r.size.y, 7, "rgba(16,30,22,.88)", "#7fe0a0", 1.4)
+		Art.rr(ctx, r.position.x, r.position.y, r.size.x, r.size.y, 7, "rgba(16,30,22,.96)", "#7fe0a0", 1.4)
 		sc._txt(ctx, L("陽間潮流榜 ▾", "陽間潮流榜 ▾"), r.get_center().x, r.get_center().y, 14, Color("#c8ffd8"), "center", 900, 0)
+		_fit(ctx, "trend_btn", L("陽間潮流榜 ▾", "陽間潮流榜 ▾"), "900 14px sans-serif", r.size.x - 8.0)
 		_hbtn["trend"] = r; hud_rects.append(r)
 	var ch = int(FUN.st().get("chain", 0))
 	if ch >= 2:
 		var cr = Rect2(x + 148.0 if tl.size() else x, y, 92.0, 30.0)
-		Art.rr(ctx, cr.position.x, cr.position.y, cr.size.x, cr.size.y, 8, "rgba(40,28,8,.86)", "#ffe98a", 1.4)
+		Art.rr(ctx, cr.position.x, cr.position.y, cr.size.x, cr.size.y, 8, "rgba(40,28,8,.96)", "#ffe98a", 1.4)
 		sc._txt(ctx, L("連單 %d 連", "連單 %d 連") % ch, cr.get_center().x, cr.get_center().y, 15, Color("#ffe98a"), "center", 900, 0)
+		_fit(ctx, "chain", L("連單 %d 連", "連單 %d 連") % ch, "900 15px sans-serif", cr.size.x - 6.0)
 		hud_rects.append(cr)
 	if tl.size() or ch >= 2: y += 36.0
 	var ypop = y
+	if tl.size() and trend_open:   # 潮流榜：過審素材（名次牌 mk_tr_b1–3、熱賣火 mk_tr_hot）；冇圖就淨字
+		var rh = 38.0; var bw = 228.0
+		var hh = rh * tl.size() + 36.0
+		Art.rr(ctx, x, ypop, bw, hh, 8, "rgba(46,30,18,.97)", "#e8b04a", 1.6)
+		for i in tl.size():
+			var sid = str(tl[i]); var ry = ypop + 6.0 + rh * i
+			var bk = "mk_tr_b%d" % (i + 1); var tx = x + 12.0
+			if Spr.ok(bk): Art.put(ctx, bk, x + 20.0, ry + rh - 2.0, 20.0, 35.0); tx = x + 38.0
+			else: sc._txt(ctx, str(i + 1), x + 14.0, ry + rh / 2.0, 15, Color("#ffd27a"), "center", 900, 0); tx = x + 28.0
+			var nm = str(MD.st_def(sid).get("n", [sid, sid])[1 if DB.lang != "yue" else 0]) if MD.st_def(sid).get("n") is Array else sid
+			sc._txt(ctx, nm, tx, ry + rh / 2.0 + 1.0, 15 if nm.length() <= 6 else 13, Color("#fff0d8"), "left", 800, 0)
+			if Spr.ok("mk_tr_hot"): Art.put(ctx, "mk_tr_hot", x + bw - 58.0, ry + rh - 7.0, 16.0, 24.0)
+			sc._txt(ctx, "×%s" % FUN.txt_trend_mul(), x + bw - 10.0, ry + rh / 2.0 + 1.0, 15, Color("#ffd27a"), "right", 900, 0)
+		sc._txt(ctx, L("名聲：%s", "名聲：%s") % RN.level_name(), x + 12.0, ypop + 20.0 + rh * tl.size(), 14, Color("#ffd27a"), "left", 800, 0)
+		hud_rects.append(Rect2(x, ypop, 228.0, hh))
+		hud_bot = ypop + hh
+		return   # 榜打開嗰陣：高峰牌／大客牌／小卡／通告牌暫時收埋（之前係蓋住佢哋；撳任何地方就收榜）
 	var ph = FUN.rush_phase()
 	if ph != "idle":
 		var left = FUN.rush_left()
@@ -123,8 +166,10 @@ static func draw_hud(sc, ctx, y0 := -1.0) -> void:
 			"warn": tx = L("子時高峰 %d 秒後到！", "子時高峰 %d 秒後到！") % int(ceil(left)); col = "#ffd27a"
 			"peak": tx = L("子時高峰！客 ×%s　%d", "子時高峰！客流 ×%s　%d") % [FUN.txt_peak_flow(), int(ceil(left))]; col = "#ff7a5a"
 			"rest": tx = L("喘息：飲涼茶　%d", "喘息：喝涼茶　%d") % int(ceil(left)); col = "#8fd0ff"
-		Art.rr(ctx, x, y, 240, 30, 8, "rgba(14,8,18,.86)", col, 1.6)
+		_gap(ctx, x, y, ytop + 1.0)
+		Art.rr(ctx, x, y, 240, 30, 8, "rgba(14,8,18,.96)", col, 1.6)
 		sc._txt(ctx, tx, x + 120.0, y + 15.0, 14, Color(col), "center", 900, 0)
+		_fit(ctx, "rush", tx, "900 14px sans-serif", 232.0)
 		hud_rects.append(Rect2(x, y, 240, 30)); y += 36.0
 	for c in sim.custs:
 		if J.t(c.get("bigv")) and c.st != "out":
@@ -133,7 +178,8 @@ static func draw_hud(sc, ctx, y0 := -1.0) -> void:
 			for g in c.wants: need += int(c.wants[g]); got += int(c.got.get(g, 0))
 			var va = str(c.get("vipart", "")); var has = va != "" and Spr.ok(va)
 			var vh = 52.0 if has else 30.0
-			Art.rr(ctx, x, y, 240, vh, 8, "rgba(60,20,10,.9)", "#ffcf6a", 1.6)
+			_gap(ctx, x, y, ytop + 1.0)
+			Art.rr(ctx, x, y, 240, vh, 8, "rgba(60,20,10,.96)", "#ffcf6a", 1.6)
 			if has: Art.put(ctx, va, x + 28.0, y + vh - 2.0, 0.0, vh - 4.0)
 			var tx0 = x + (56.0 if has else 12.0)
 			if has:
@@ -150,30 +196,34 @@ static func draw_hud(sc, ctx, y0 := -1.0) -> void:
 			var ca = clampf(minf(tu / 0.2, (float(_card.life) - tu) / 0.4), 0.0, 1.0)
 			var ka = str(_card.get("art", "")); var khas = ka != "" and Spr.ok(ka)
 			ctx.globalAlpha = ca
+			if ca > 0.6: _gap(ctx, x, y, ytop + 1.0)
 			Art.rr(ctx, x, y, 240, 56, 8, "rgba(250,244,228,.97)", str(_card.get("col", "#5e4a30")), 2.0)
 			if khas: Art.put(ctx, ka, x + 30.0, y + 54.0, 0.0, 52.0)
 			var kx = x + (60.0 if khas else 12.0)
 			sc._txt(ctx, str(_card.get("a", "")), kx, y + 18.0, 15, Color("#2b1d12"), "left", 900, 0)
 			sc._txt(ctx, str(_card.get("b", "")), kx, y + 39.0, 14, Color("#5a3a1a"), "left", 800, 0)
+			_fit(ctx, "card_a", str(_card.get("a", "")), "900 15px sans-serif", x + 240.0 - kx - 6.0)
+			_fit(ctx, "card_b", str(_card.get("b", "")), "800 14px sans-serif", x + 240.0 - kx - 6.0)
 			ctx.globalAlpha = 1.0
 			hud_rects.append(Rect2(x, y, 240, 56)); y += 62.0
+	# 通告牌：一句一塊，逐塊向下排（長句自動分兩行，字唔細過 14）
+	var now2 = float(sc.t)
+	for i in range(_toasts.size() - 1, -1, -1): if now2 - float(_toasts[i].t0) >= float(_toasts[i].life) or now2 < float(_toasts[i].t0) - 0.5: _toasts.remove_at(i)
+	for q in _toasts:
+		ctx.font = "900 14px sans-serif"
+		var ls: Array = sc._wrap(ctx, str(q.t), TOAST_W - 20.0)
+		if ls.size() > 3: ls = ls.slice(0, 3)
+		var th = 12.0 + 20.0 * ls.size()
+		var ta = clampf(minf((now2 - float(q.t0)) / 0.15, (float(q.life) - (now2 - float(q.t0))) / 0.35), 0.0, 1.0)
+		ctx.globalAlpha = ta
+		if ta > 0.6: _gap(ctx, x, y, ytop + 1.0)
+		Art.rr(ctx, x, y, TOAST_W, th, 8, "rgba(30,20,14,.97)", "#" + (q.c as Color).to_html(false), 1.6)
+		for li in ls.size():
+			sc._txt(ctx, str(ls[li]), x + TOAST_W / 2.0, y + 16.0 + 20.0 * li, 14, q.c, "center", 900, 0)
+			_fit(ctx, "toast", str(ls[li]), "900 14px sans-serif", TOAST_W - 8.0)
+		ctx.globalAlpha = 1.0
+		hud_rects.append(Rect2(x, y, TOAST_W, th)); y += th + 6.0
 	hud_bot = y
-	if tl.size() and trend_open:   # 潮流榜：過審素材（名次牌 mk_tr_b1–3、熱賣火 mk_tr_hot）；冇圖就淨字
-		var rh = 38.0; var bw = 228.0
-		var hh = rh * tl.size() + 36.0
-		Art.rr(ctx, x, ypop, bw, hh, 8, "rgba(46,30,18,.97)", "#e8b04a", 1.6)
-		for i in tl.size():
-			var sid = str(tl[i]); var ry = ypop + 6.0 + rh * i
-			var bk = "mk_tr_b%d" % (i + 1); var tx = x + 12.0
-			if Spr.ok(bk): Art.put(ctx, bk, x + 20.0, ry + rh - 2.0, 20.0, 35.0); tx = x + 38.0
-			else: sc._txt(ctx, str(i + 1), x + 14.0, ry + rh / 2.0, 15, Color("#ffd27a"), "center", 900, 0); tx = x + 28.0
-			var nm = str(MD.st_def(sid).get("n", [sid, sid])[1 if DB.lang != "yue" else 0]) if MD.st_def(sid).get("n") is Array else sid
-			sc._txt(ctx, nm, tx, ry + rh / 2.0 + 1.0, 15 if nm.length() <= 6 else 13, Color("#fff0d8"), "left", 800, 0)
-			if Spr.ok("mk_tr_hot"): Art.put(ctx, "mk_tr_hot", x + bw - 58.0, ry + rh - 7.0, 16.0, 24.0)
-			sc._txt(ctx, "×%s" % FUN.txt_trend_mul(), x + bw - 10.0, ry + rh / 2.0 + 1.0, 15, Color("#ffd27a"), "right", 900, 0)
-		sc._txt(ctx, L("名聲：%s", "名聲：%s") % RN.level_name(), x + 12.0, ypop + 20.0 + rh * tl.size(), 14, Color("#ffd27a"), "left", 800, 0)
-		hud_rects.append(Rect2(x, ypop, 228.0, hh))
-		hud_bot = maxf(hud_bot, ypop + hh)
 
 # ---------------- 撳 ----------------
 static func tap(sc, p: Vector2) -> bool:
@@ -188,15 +238,15 @@ static func tap(sc, p: Vector2) -> bool:
 		var sid = k.substr(k.find(":") + 1)
 		if k.begins_with("ot:"):
 			var now_on = MK.toggle_ot(sid)
-			sc._float(wp + Vector2(0, -30), L("加班！", "加班！") if now_on else L("收工唞下", "收工歇會"), Color("#ffb0a0") if now_on else Color("#bfe8ff"), 16)
+			toast(sc, _sn(sid) + (L("加班！", "加班！") if now_on else L("收工唞下", "收工歇會")), Color("#ffb0a0") if now_on else Color("#bfe8ff"), 1.6)
 			sc._snd("click"); return true
 		if k.begins_with("feed:"):
 			var r = FUN.feed(sid)
-			if r == "no_bao": sc._float(wp + Vector2(0, -30), L("冇普通包子", "沒有普通包子"), Color("#ffb0a0"), 15)
+			if r == "no_bao": toast(sc, L("冇普通包子", "沒有普通包子"), Color("#ffb0a0"), 1.8)
 			sc._snd("click"); return true
 		if k.begins_with("punch:"):
 			var r2 = FUN.punch(sid)
-			if r2 == "cd": sc._float(wp + Vector2(0, -30), L("打卡鐘冷卻緊", "打卡鐘冷卻中"), Color("#ffb0a0"), 15)
+			if r2 == "cd": toast(sc, L("打卡鐘冷卻緊", "打卡鐘冷卻中"), Color("#ffb0a0"), 1.8)
 			sc._snd("click"); return true
 	return false
 
@@ -209,21 +259,21 @@ static func events(sc) -> void:
 		var stall = sid != "" and not sid.begins_with("_")
 		if stall and (not _seen(sc, sim.st_pos(sid)) or not MK.shown(sim.ci(), sid)): continue   # 唔喺畫面／唔係而家條街：唔出浮字
 		if str(e.k) in ["chain", "vip_fail"] and e.has("pos") and not _seen(sc, e.pos): e.erase("pos")
-		var at = _at(sc, sim.st_pos(sid) + Vector2(0, -150)) if stall else (Vector2.ZERO if str(e.k) in ["trend_new", "feed", "up", "trend_src", "ch_event", "rush_rest", "rush_end", "chain_break", "reg_arc", "critic", "reg_in", "reg_name"] or (str(e.k) in ["chain", "vip_fail"] and e.has("pos")) else _mid(sc))
+		var pre = _sn(sid) if stall else ""   # 攤位事件：通告牌前面寫攤名
 		match str(e.k):
-			"down": sc._float(at, L(GAG[int(e.get("gag", 0)) % GAG.size()][0], GAG[int(e.get("gag", 0)) % GAG.size()][1]), Color("#ffb0a0"), 16, 2.2)
-			"vet": sc._float(at, L("升職做老員工！", "升職為老員工！"), Color("#ffd27a"), 18, 2.0)
-			"cashier": sc._float(at, L("升職做老收銀！算盤打到飛起", "升職為老收銀！算盤打得飛快"), Color("#ffd27a"), 18, 2.2)
-			"captain": sc._float(at, L("升職做巡邏隊長！", "升職為巡邏隊長！"), Color("#ffd27a"), 18, 2.2)
-			"punch": sc._float(at, L("打卡放工～", "打卡下班～"), Color("#bfe8ff"), 16)
-			"mile": sc._float(at, L("速度翻倍！", "速度翻倍！"), Color("#ffe98a"), 22, 2.2)
-			"street_combo": sc._float(at, L("街組合：%s！", "街組合：%s！") % str(e.get("n", "")), Color("#ffe98a"), 20, 2.4)
-			"chain": sc._float(_at(sc, e.get("pos", at)), L("連單 ×%s", "連單 ×%s") % FUN.txt_chain_mul(float(e.get("mul", 1.5))), Color("#ffe98a"), 18)
-			"rush_warn": sc._float(at, L("更夫敲鑼：子時高峰要到！", "更夫敲鑼：子時高峰要到！"), Color("#ffd27a"), 18, 2.2)
-			"rush_peak": sc._float(at, L("子時高峰！", "子時高峰！"), Color("#ff7a5a"), 24, 2.0)
-			"vip_in": sc._float(at, L("限時大客：%s 要 %d 件！", "限時大客：%s 要 %d 件！") % [str(e.get("name", "")), int(e.get("n", 0))], Color("#ffcf6a"), 18, 2.4)
-			"vip_ok": sc._float(at, L("大客收齊！×%s", "大客收齊！×%s") % FUN.txt_vip_mul(), Color("#ffe98a"), 22, 2.2)
-			"vip_fail": sc._float(_at(sc, e.get("pos", at)), L("「唔夠貨？下次啦。」", "「貨不夠？下次吧。」"), Color("#d9cdd2"), 15, 2.0)
+			"down": toast(sc, pre + L(GAG[int(e.get("gag", 0)) % GAG.size()][0], GAG[int(e.get("gag", 0)) % GAG.size()][1]), Color("#ffb0a0"), 2.2)
+			"vet": toast(sc, pre + L("升職做老員工！", "升職為老員工！"), Color("#ffd27a"), 2.0)
+			"cashier": toast(sc, pre + L("升職做老收銀！算盤打到飛起", "升職為老收銀！算盤打得飛快"), Color("#ffd27a"), 2.2)
+			"captain": toast(sc, pre + L("升職做巡邏隊長！", "升職為巡邏隊長！"), Color("#ffd27a"), 2.2)
+			"punch": toast(sc, pre + L("打卡放工～", "打卡下班～"), Color("#bfe8ff"), 2.2)
+			"mile": toast(sc, pre + L("速度翻倍！", "速度翻倍！"), Color("#ffe98a"), 2.2)
+			"street_combo": toast(sc, pre + L("街組合：%s！", "街組合：%s！") % str(e.get("n", "")), Color("#ffe98a"), 2.4)
+			"chain": pass   # 連單數喺左上角細牌度睇（之前浮喺客人頭上，會壓住其他字）
+			"rush_warn": toast(sc, pre + L("更夫敲鑼：子時高峰要到！", "更夫敲鑼：子時高峰要到！"), Color("#ffd27a"), 2.2)
+			"rush_peak": toast(sc, pre + L("子時高峰！", "子時高峰！"), Color("#ff7a5a"), 2.0)
+			"vip_in": toast(sc, pre + L("限時大客：%s 要 %d 件！", "限時大客：%s 要 %d 件！") % [str(e.get("name", "")), int(e.get("n", 0))], Color("#ffcf6a"), 2.4)
+			"vip_ok": toast(sc, pre + L("大客收齊！×%s", "大客收齊！×%s") % FUN.txt_vip_mul(), Color("#ffe98a"), 2.2)
+			"vip_fail": toast(sc, pre + L("「唔夠貨？下次啦。」", "「貨不夠？下次吧。」"), Color("#d9cdd2"), 2.0)
 			"critic":
 				var b = e.get("best", ["", 1])
 				var cn = MK.T(FUN.D().critic.get("name", ["甘先生", "甘先生"])); var gd = MK.T(FUN.D().critic.get("guide", ["冥其林指南", "冥其林指南"]))
@@ -231,7 +281,7 @@ static func events(sc) -> void:
 				card(sc, str(FUN.D().critic.get("art", "")), "%s《%s》" % [cn, gd], L("%s：%d 盞燈籠", "%s：%d 盞燈籠") % [stn, int(b[1])], 4.5, "#c9a227" if int(b[1]) >= 3 else "#6a5a50")
 			"reg_name": card(sc, str(e.get("art", "")), L("記住咗熟客個名", "記住熟客的名字了"), str(e.get("name", "")), 3.6, "#c8508a")
 			"reg_in": card(sc, str(e.get("art", "")), L("熟客嚟咗", "熟客來了"), str(e.get("name", "")) if str(e.get("name", "")) != "" else L("（幫襯多幾次就識佢）", "（多光顧幾次就認得他）"), 2.8, "#c8508a")
-			"renown_up": sc._float(at, L("名聲升級：%s", "名聲升級：%s") % str(e.get("name", "")), Color("#ffd27a"), 22, 2.6)
+			"renown_up": toast(sc, pre + L("名聲升級：%s", "名聲升級：%s") % str(e.get("name", "")), Color("#ffd27a"), 2.6)
 			"trend_new": pass
 
 # 浮字位置（世界座標）：畫面中間、市集 HUD 下面，連續幾條就逐行排落去；攤位上面嘅浮字唔好鑽入 HUD
@@ -248,5 +298,24 @@ static func _at(sc, wp: Vector2) -> Vector2:
 	sp.x = clampf(sp.x, 110.0, sc.FW - 110.0)
 	sp.y = maxf(sp.y, maxf(hud_bot, sc.top_pad + 200.0) + 44.0)
 	return sc.s2w(sp)
+static func _sn(sid: String) -> String:   # 「攤名：」
+	if sid == "" or sid.begins_with("_"): return ""
+	var d = MD.st_def(sid).get("n")
+	return (str(d[1 if DB.lang != "yue" else 0]) + "：") if d is Array and d.size() >= 2 else ""
+# 測試用：今格版面有冇問題（頂部牌互相重疊／出畫面／字闊過框／撞到 M1 頂部列／撞到「生產鏈」掣／加班牌撞到頂部牌）
+static func layout_bad(sc) -> Array:
+	var bad: Array = []
+	var top_lim = 0.0
+	if ResourceLoader.exists("res://game/market/mk_ops_ui.gd"): top_lim = float(load("res://game/market/mk_ops_ui.gd").hud_bot)
+	for i in hud_rects.size():
+		var a: Rect2 = hud_rects[i]
+		if a.position.x < 0.0 or a.end.x > float(sc.FW) or a.position.y < top_lim - 0.5: bad.append("牌出界 %s" % str(a))
+		for j in range(i + 1, hud_rects.size()): if a.intersects(hud_rects[j]): bad.append("牌重疊 %s %s" % [str(a), str(hud_rects[j])])
+		if sc._cb_pos != null and a.intersects(Rect2(sc._cb_pos, sc._cb_sz)): bad.append("牌撞生產鏈掣 %s" % str(a))
+		for k in _wbtn:
+			var w: Rect2 = _wbtn[k]; var p0: Vector2 = sc.w2s(w.position); var p1: Vector2 = sc.w2s(w.end)
+			if a.intersects(Rect2(p0, p1 - p0)): bad.append("牌撞 %s" % str(k))
+	for f in fit_bad: bad.append("字出框 %s" % str(f))
+	return bad
 static func card(sc, art: String, a: String, b: String, life := 3.0, col := "#5e4a30") -> void:
 	_card = {"art": art, "a": a, "b": b, "t0": float(sc.t), "life": life, "col": col}

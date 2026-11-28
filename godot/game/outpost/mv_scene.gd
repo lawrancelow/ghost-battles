@@ -676,6 +676,7 @@ func _draw_stage() -> void:
 		elif gp is Dictionary: _brects.append(Rect2(J.num(gp.get("x")) - 90.0, J.num(gp.get("y")) - 120.0, 180.0, 160.0))
 		for kk in _wbtns: if kk.begins_with("st:"): _brects.append(_wbtns[kk])
 	_brects.append_array(sim.plus.avoid_rects(self))
+	if MK.active(): for kk2 in MKUI._wbtn: _brects.append(MKUI._wbtn[kk2])   # [market] 對白框避開加班牌／打卡鐘／餵包子掣
 	_brects.append_array(sim.war.avoid_rects(sim))   # [p55] 對白框避開霸檔牌
 	if zone: _brects.append_array(load("res://game/zone/zone_taunt.gd").world_rects)   # [mapbattle] 閒談對白框避開王嘅叫囂泡泡   # [play] 對白框避開事件名同右上「生產鏈」掣
 	if not _mbf() and not mk_hid and banner == null:   # [mapbattle] 打緊仗：收埋閒談對白框   [uxui] 橫額出緊都收埋（唔好疊喺橫額上）
@@ -1248,6 +1249,9 @@ func _proc_station(ctx: Ctx, sid: String, p: Vector2, w: float) -> Rect2:   # �
 	return Rect2(x, y, w, h)
 
 func _ring(ctx: Ctx, c: Vector2, r: float, prog: float, manned: bool, pile: int, sid: String) -> void:
+	if MK.active() and not MKUI.hud_rects.is_empty():   # [market] 「做／收」圓掣撞到市集頂部牌（潮流榜、通告牌⋯）就成個唔畫，唔好半遮半掩；牌收咗即刻返嚟
+		var q0: Vector2 = w2s(Vector2(c.x - r - 4.0, c.y - r - 4.0)); var q1: Vector2 = w2s(Vector2(c.x + r + 4.0, c.y + r + 20.0))
+		for q in MKUI.hud_rects: if (q as Rect2).intersects(Rect2(q0, q1 - q0)): return
 	Art.el(ctx, c.x, c.y, r + 3, r + 3, "rgba(20,14,24,.82)", "#f3d68a" if not manned else "#9fe39a", 2)
 	if prog > 0.0:
 		ctx.strokeStyle = "#9fe39a" if manned else "#f3d68a"; ctx.lineWidth = 5
@@ -1569,6 +1573,7 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 	w += 20.0; var h = lines.size() * 20.0 + 12.0 + (18.0 if b.who != "" else 0.0)
 	var wtop = s2w(Vector2(0, top_pad + HUD_H + 4.0)).y; var wbot = s2w(Vector2(0, top_pad + view_h())).y - h - 10.0   # [zone] 經 s2w
 	if sim.war != null: wtop = maxf(wtop, s2w(Vector2(0, float(sim.war.hud_y(self)) + 46.0)).y)   # [camp] 對白框唔好俾影響力條遮住
+	if MK.active(): wtop = maxf(wtop, s2w(Vector2(0, maxf(float(MKOU.hud_bot), float(MKUI.hud_bot)) + 6.0)).y)   # [market] 對白框排喺市集頂部牌（人手列、潮流榜、通告牌）下面，唔好鑽入去
 	if zone and float(zt.z) < 0.7: return   # [zone] 縮到好細：對白框唔出（字會細過 14px）
 	if embed:   # [unify] 嵌入：講嘢嘅人唔喺鏡頭（或者喺原村子）就唔出框；框唔好落到出村門下面
 		if b.p.y > world_h() or b.p.y < s2w(Vector2.ZERO).y or b.p.y > s2w(Vector2(0, H)).y: return

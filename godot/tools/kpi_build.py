@@ -108,8 +108,8 @@ gates = [
      "need": [{"kind": "fn", "key": "mk_combo", "n": 10, "label": "連單"}, {"kind": "fn", "key": "mk_lv25_fc", "n": 2, "label": "食衣兩街各一攤 Lv25"}],
      "fav": {"niu": "food", "ma": "food"}, "fail_add": {"mk_combo": 3}, "caught": {"lose": True}, "cost_mul": 2.0},
     {"id": "mk3", "boss": "zhen", "boss_n": "甄好賣", "title": "市集管理處", "opens": "flag:mk_acc", "time": 1500,
-     "need": [{"kind": "fn", "key": "mk_renown_lv", "n": 2, "label": "名聲等級"}, {"kind": "fn", "key": "mk_militia", "n": 20, "label": "遊魂兵"}, {"kind": "fn", "key": "mk_patrol_done", "n": 5, "label": "巡邏處理事件"}],
-     "fav": {"niu": "brand", "ma": "brand"}, "fail_add": {"mk_militia": 5}, "caught": {"lose": True}, "cost_mul": 2.0},
+     "need": [{"kind": "fn", "key": "mk_renown_lv", "n": 2, "label": "名聲等級"}, {"kind": "fn", "key": "mk_reg_visits", "n": 20, "label": "熟客來訪"}, {"kind": "fn", "key": "mk_patrol_done", "n": 5, "label": "巡邏處理事件"}],
+     "fav": {"niu": "brand", "ma": "brand"}, "fail_add": {"mk_reg_visits": 5}, "caught": {"lose": True}, "cost_mul": 2.0},
 ]
 
 # 賄賂三檔（設計 4.2）：效果、成本、風險
