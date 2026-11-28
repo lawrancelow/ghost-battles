@@ -158,14 +158,21 @@ static func draw_hud(sc, ctx, y0 := -1.0) -> void:
 			ctx.globalAlpha = 1.0
 			hud_rects.append(Rect2(x, y, 240, 56)); y += 62.0
 	hud_bot = y
-	if tl.size() and trend_open:
-		var hh = 26.0 * tl.size() + 34.0
-		Art.rr(ctx, x, ypop, 200.0, hh, 8, "rgba(10,20,14,.96)", "#7fe0a0", 1.4)
+	if tl.size() and trend_open:   # 潮流榜：過審素材（名次牌 mk_tr_b1–3、熱賣火 mk_tr_hot）；冇圖就淨字
+		var rh = 38.0; var bw = 228.0
+		var hh = rh * tl.size() + 36.0
+		Art.rr(ctx, x, ypop, bw, hh, 8, "rgba(46,30,18,.97)", "#e8b04a", 1.6)
 		for i in tl.size():
-			var sid = str(tl[i])
-			sc._txt(ctx, "%s ×%s" % [str(MD.st_def(sid).get("n", [sid, sid])[1 if DB.lang != "yue" else 0]) if MD.st_def(sid).get("n") is Array else sid, FUN.txt_trend_mul()], x + 12.0, ypop + 17.0 + 26.0 * i, 14, Color("#e8fff0"), "left", 800, 0)
-		sc._txt(ctx, L("名聲：%s", "名聲：%s") % RN.level_name(), x + 12.0, ypop + 19.0 + 26.0 * tl.size(), 14, Color("#ffd27a"), "left", 800, 0)
-		hud_rects.append(Rect2(x, ypop, 200.0, hh))
+			var sid = str(tl[i]); var ry = ypop + 6.0 + rh * i
+			var bk = "mk_tr_b%d" % (i + 1); var tx = x + 12.0
+			if Spr.ok(bk): Art.put(ctx, bk, x + 20.0, ry + rh - 2.0, 20.0, 35.0); tx = x + 38.0
+			else: sc._txt(ctx, str(i + 1), x + 14.0, ry + rh / 2.0, 15, Color("#ffd27a"), "center", 900, 0); tx = x + 28.0
+			var nm = str(MD.st_def(sid).get("n", [sid, sid])[1 if DB.lang != "yue" else 0]) if MD.st_def(sid).get("n") is Array else sid
+			sc._txt(ctx, nm, tx, ry + rh / 2.0 + 1.0, 15 if nm.length() <= 6 else 13, Color("#fff0d8"), "left", 800, 0)
+			if Spr.ok("mk_tr_hot"): Art.put(ctx, "mk_tr_hot", x + bw - 58.0, ry + rh - 7.0, 16.0, 24.0)
+			sc._txt(ctx, "×%s" % FUN.txt_trend_mul(), x + bw - 10.0, ry + rh / 2.0 + 1.0, 15, Color("#ffd27a"), "right", 900, 0)
+		sc._txt(ctx, L("名聲：%s", "名聲：%s") % RN.level_name(), x + 12.0, ypop + 20.0 + rh * tl.size(), 14, Color("#ffd27a"), "left", 800, 0)
+		hud_rects.append(Rect2(x, ypop, 228.0, hh))
 		hud_bot = maxf(hud_bot, ypop + hh)
 
 # ---------------- 撳 ----------------
