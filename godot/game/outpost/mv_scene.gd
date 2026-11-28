@@ -490,7 +490,7 @@ func _ux_hold() -> bool:
 var _banner_pend = null
 func _bubble(p: Vector2, tx: String, who: String, life := 2.6) -> void:
 	if _ux_hold(): return
-	if bubbles.size() >= 2: bubbles.pop_front()   # [uxui] 同時最多 2 個
+	if bubbles.size() >= (1 if embed else 2): bubbles.pop_front()   # [uxui] 同時最多 2 個  [p55] 合一地圖：最多 1 個（減雜亂）
 	bubbles.append({"p": p, "text": tx, "who": who, "t": 0.0, "life": life})
 func _banner_set(a: String, b: String, life := 2.4) -> void:
 	if _ux_hold(): _banner_pend = {"a": a, "b": b, "t": 0.0, "life": life}; return
@@ -639,7 +639,11 @@ func _draw_stage() -> void:
 		_wrects.clear()   # [polish4] 要貨氣泡由櫃台頭排起，撞到就推高
 		var qs = sim.custs.duplicate(); qs.sort_custom(func(a, b): return int(a.get("slot", 0)) < int(b.get("slot", 0)))
 		if not _mbf() and not mk_hid:   # [mapbattle] 打緊仗：收埋要貨氣泡
-			for c in qs: if c.st != "out" and c.pos.y > vy0 and c.pos.y - 200.0 < vy1: _draw_want(ctx, c)
+			var nw = 0
+			for c in qs:
+				if c.st == "out" or c.pos.y <= vy0 or c.pos.y - 200.0 >= vy1: continue
+				if embed and nw >= WANT_MAX and sim.plus.tag_txt(c) == "": continue   # [p55] 合一地圖：淨係排頭幾個客出要貨泡（有脾氣牌嘅照出）
+				nw += 1; _draw_want(ctx, c)
 	_draw_fog(ctx, vy0, vy1)
 	_draw_amb_fly(ctx)
 	_draw_parts(ctx, true)
@@ -1024,6 +1028,7 @@ func _draw_cust(ctx: Ctx, c: Dictionary) -> void:
 	if c.st == "out" and (mot == null or mot.happy(c)):   # [motion] 嬲走唔出 ♪
 		_txt(ctx, "♪", c.pos.x + 16, c.pos.y - 72 + sin(t * 6.0) * 3.0, 16, Color("#ffd27a"), "center", 900, 3)
 
+const WANT_MAX := 2   # [p55]
 func _draw_want(ctx: Ctx, c: Dictionary) -> void:   # 頭頂氣泡：貨品圖示 × 仲要幾多
 	var rows = []
 	for g in c.wants:
@@ -1173,6 +1178,14 @@ func _draw_plate(ctx: Ctx, sid: String, p0: Vector2, un: bool, off := Vector2.ZE
 		var ureq = IDL.unlock_req(sim, sid)   # [idle] 解鎖鏈：上一個台未到 Lv10 → 顯示條件、唔畀撳
 		var ok = sim.coins() >= cost and ureq[0]
 		_lock(ctx, Vector2(p0.x, p0.y - 46))
+		if not ureq[0]:   # [p55] 未輪到解鎖：淨係鎖頭＋暗名（條件撳先講），減少大排檔滿畫面「需 XX Lv10」牌
+			var ft3 = _fit(ctx, name, cw, 14)
+			ctx.save(); ctx.globalAlpha = 0.6
+			_txt(ctx, ft3[0], p.x, ny - 4, ft3[1], Color("#d8c8b0"), "center", 900, 4)
+			ctx.restore()
+			_plates.append(Rect2(p.x - cw / 2, ny - 16, cw, 26))
+			_wbtns["unl:" + sid] = Rect2(p.x - cw / 2, p0.y - 70, cw, ny + 12 - (p0.y - 70))
+			return
 		_plates.append(Rect2(p.x - cw / 2, ny - 16, cw, 56))   # [camp]
 		var ft2 = _fit(ctx, name, cw, 15)
 		_txt(ctx, ft2[0], p.x, ny - 4, ft2[1], Color("#f0e2c8"), "center", 900, 4)
@@ -1432,7 +1445,10 @@ var _pill_side := 0   # 0 左 1 右（有黏性）
 func ux_alarm_rect():
 	if sim == null or sim.war == null: return null
 	var r = sim.war._btn.get("exp")
-	return r if r is Rect2 else null
+	if r is Rect2: return r
+	if (sim.war.alarm_on() or sim.war.occ_sid() != "") and anim == null:   # [p55] 告急掣仲未畫（呢格玩法掣先畫）：照 mv_war.draw_hud 計返個位，唔好壓住
+		var x0 = 178.0; return Rect2(x0, sim.war.hud_y(self) + 48.0, FW - x0 - 6.0, 54.0)
+	return null
 func _pill_xy(pw := 150.0) -> Vector2:   # 左（有「拔營！」就排佢右邊）或者右：揀遮台名牌／台／「生產鏈」掣最少嗰邊
 	var y = top_pad + EHUD_H + 6.0
 	var xs = [184.0 if (anim == null and sim.can_move()) else 8.0, FW - pw - 8.0]   # 「拔營！」掣最闊 168（跳動）
