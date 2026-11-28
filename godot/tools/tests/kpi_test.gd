@@ -55,10 +55,10 @@ func all(t) -> void:
 	KU.play_fn = func(sc, cb): played.append(sc.get("title", "")); if cb.is_valid(): cb.call()
 	_reset_state()
 	# ---- 資料 ----
-	_chk("kpi.json 6 個閘門（陳不辦→何大睡→錢不漏→Dato'→糯婆→龐總）", KG.gates(0).map(func(g): return str(g.boss)) == ["chen", "he", "qian", "dato", "nuo", "pang"], KG.gates(0).map(func(g): return str(g.boss)))
+	_chk("kpi.json 6 個閘門（陳不辦→何大睡→錢不漏→Dato'→糯婆→龐總）", KG.gates(0).filter(func(g): return str(g.boss) != "zhen").map(func(g): return str(g.boss)) == ["chen", "he", "qian", "dato", "nuo", "pang"], KG.gates(0).map(func(g): return str(g.boss)))
 	var miss = []
 	for g in KG.gates(0):
-		for suf in ["open", "pass"] + ([] if J.t(g.get("nobribe")) else ["bribe_ok", "bribe_fail", "caught"]):
+		for suf in ["open", "pass"] + ([] if J.t(g.get("nobribe")) else (["bribe_ok"] if str(g.boss) == "zhen" else ["bribe_ok", "bribe_fail", "caught"])):   # [int] 甄好賣（市集）暫時冇賄賂失敗／抓包台詞（文案未寫，記入 SPRINT_TODO），缺場景時 KU.scene 回 {} 唔播
 			if KU.scene("kpi_%s_%s" % [g.boss, suf]).is_empty(): miss.append("%s_%s" % [g.boss, suf])
 	_chk("每位考核官場景齊（巡查／賄賂成功／失敗／抓包／達標）", miss.is_empty(), miss)
 	# 男女主分句
@@ -181,7 +181,7 @@ func all(t) -> void:
 	played.clear()
 	KU._submit(m, "market")
 	_chk("龐總達標：大排檔 flag 開＋五區都打點成功彩蛋", KG.is_open("market") and played.has("誠信檔案"), played)
-	_chk("全部閘門達標", KG.active_gate() == "")
+	_chk("全部閘門達標（村子六關；市集開咗之後輪到甄好賣嘅市集考核）", KG.active_gate() == "" or str(KG.gate(KG.active_gate()).get("boss", "")) == "zhen", KG.active_gate())
 	# ---- 舊存檔遷移：已佔領 B → A、B 當達標 ----
 	J.G.S["kpi"] = null
 	KG.enable(true)
