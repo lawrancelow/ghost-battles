@@ -624,7 +624,7 @@ static func _pat_n_say(n: int) -> void:   # 巡邏人數變動冒一句（0 隻�
 static func zhen_scene(key: String) -> Dictionary:   # kpi_ui 搵唔到 kpi_zhen_* 場景時問呢度（kpi.json 格式：lines [誰, 粵, 中]）
 	var z = LN().get("zhen", {}).get(str(MK.cur_ci()))
 	if not (z is Dictionary): return {}
-	var node = {"kpi_zhen_open": "open", "kpi_zhen_pass": "pass", "kpi_zhen_mid": "mid", "kpi_zhen_overdue": "overdue", "kpi_zhen_bribe_ok": str(MK.st().get("zhen_tier", "snack"))}.get(key, "")
+	var node = {"kpi_zhen_open": "open", "kpi_zhen_pass": "pass", "kpi_zhen_mid": "mid", "kpi_zhen_overdue": "overdue", "kpi_zhen_bribe_fail": "bribe_fail", "kpi_zhen_caught": "caught", "kpi_zhen_bribe_ok": str(MK.st().get("zhen_tier", "snack"))}.get(key, "")
 	if node == "" or not (z.get(node) is Array): return {}
 	return {"title": "市集管理處", "lines": [["甄好賣", str(z[node][0]), str(z[node][1])]]}
 

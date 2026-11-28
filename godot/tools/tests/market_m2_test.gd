@@ -83,7 +83,10 @@ func logic(_t) -> void:
 	_chk("M1 重新載入 market.json 後，設計數值會自動寫返", (func(): FUN.ensure(); return is_equal_approx(MK.otf("fat_rate", 0), 1.2)).call(), MK.otf("fat_rate", 0))
 	sim.st().st[A].unlocked = true; sim.st().st[A].lv = 1.0
 	var o = MK.ot(A)
-	_chk("加班售價 ×1.2", is_equal_approx(FUN.ot_price(A), 1.0) and (func(): MK.toggle_ot(A); return is_equal_approx(FUN.ot_price(A), 1.2)).call())
+	_chk("加班售價倍數＝設定值（market_fun.json ot.price_mul）", is_equal_approx(FUN.ot_price(A), 1.0) and (func(): MK.toggle_ot(A); return is_equal_approx(FUN.ot_price(A), FUN.cf("ot", "price_mul", 0.0)) and FUN.ot_price(A) > 1.0).call())
+	o.down = 30.0
+	_chk("趴低：嗰攤每件只收設定值（ot.down_price_mul，細過 1）", is_equal_approx(FUN.ot_price(A), FUN.cf("ot", "down_price_mul", 1.0)) and FUN.ot_price(A) < 1.0, FUN.ot_price(A))
+	o.down = 0.0
 	# 冇人做：加班唔累
 	o.fat = 0.0
 	FUN.tick(sim, 0.0)
@@ -247,7 +250,7 @@ func logic(_t) -> void:
 		var im = FUN.item_mul(sim, A)
 		_chk("副貨：冇加班＝副貨價 × 寄賣攤倍數", is_equal_approx(sim.cust_value({"got": {gb: 2}}), base * im), [sim.cust_value({"got": {gb: 2}}), base, im])
 		MK.ot(A).on = 1
-		_chk("副貨：寄賣攤加班 → 售價再 ×1.2", is_equal_approx(sim.cust_value({"got": {gb: 2}}), base * im * 1.2), sim.cust_value({"got": {gb: 2}}))
+		_chk("副貨：寄賣攤加班 → 售價再 × 設定值（ot.price_mul）", is_equal_approx(sim.cust_value({"got": {gb: 2}}), base * im * FUN.cf("ot", "price_mul", 0.0)), sim.cust_value({"got": {gb: 2}}))
 		MK.ot(A).on = 0; MKO.set_sub(0, A, ""); MKO.tick(sim, 11.0)
 	else: _chk("副貨可以設定（Lv25）", false, MKO.sub_choices(0, A))
 	sim.st().st["st_douhua"].unlocked = true; sim.st().st[A].lv = 1.0
@@ -352,7 +355,7 @@ func logic(_t) -> void:
 	sim.custs.clear()
 	# 熟客
 	FUN.D().regular["p"] = 1.0
-	for rg0 in FUN.regs(sim.ci()): rg0["v"] = 0   # [int] 前面幾節可能已累積來訪次數（隨機抽中同一位就會顯示名），呢度由 0 開始先驗「未夠 5 次」
+	FUN.st().regs.clear()   # 之前測試累積嘅來訪次數會令抽中嘅熟客已夠 5 次（隨機抽人，唔清就時過時唔過）
 	var rc = _cust(sim, {"m_shoubao": 1}); FUN.on_spawn(sim, rc)
 	_chk("熟客標記：未夠 5 次唔顯示名", rc.has("reg") and str(rc.get("regn", "x")) == "")
 	FUN.st().regs.clear(); var rr = FUN.regs(0)
