@@ -34,4 +34,18 @@ func run(t) -> void:
 	await t.get_tree().create_timer(0.6).timeout
 	await _shot(t, "live_03_recruit_fail")
 	QQ["cur"] = ocur
-	print("[p56shot] RESULT ok=4 bad=0")
+	# [p56b] 任務條最長缺料文案（每幀畫之前寫返，refresh 唔會蓋走）
+	var m = t.get_tree().root.get_node_or_null("Main")
+	var BLD = J.G.get("BUILDINGS"); var keepc = BLD["altar"].get("build")
+	S.bld["altar"] = 0.0; S.bld["bun"] = 1.0; S.res["bao"] = 0.0; BLD["altar"]["build"] = {"bao": 99999.0}
+	var lq = {"t": "build", "b": "altar", "text": "建造招魂台（招雜鬼、增加雜鬼名額、開放名冊）", "go": "altar", "r": {}}
+	var want = str(lq.text) + m._quest_lack_line(lq)
+	var setter = func(): m.quest_lbl.text = want; m.quest_prog.text = "0/1"
+	RenderingServer.frame_pre_draw.connect(setter)
+	for c in m.toasts.get_children(): c.free()
+	m.show_toast(NEED.hint({"coins": 99999.0, "bao": 99999.0}))
+	await t.get_tree().create_timer(0.5).timeout
+	await _shot(t, "live_05_bar_longest_toast_avoid")
+	RenderingServer.frame_pre_draw.disconnect(setter)
+	BLD["altar"]["build"] = keepc
+	print("[p56shot] RESULT ok=5 bad=0")
