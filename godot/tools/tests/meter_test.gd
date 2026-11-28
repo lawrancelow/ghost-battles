@@ -3,7 +3,7 @@
 # 輸出：[meter] 行（SAMPLE / EVENT / QUEST），之後由 /home/claude/meeting/parse_meter.py 整理
 extends "res://tools/tests/onboard_test.gd"
 
-const SHOTS := "/home/claude/meeting/shots/"
+var SHOTS: String = OS.get_environment("METER_SHOTS") if OS.has_environment("METER_SHOTS") else "/home/claude/meeting/shots/"
 var t_start := 0
 var decisions := 0
 var taps := 0
