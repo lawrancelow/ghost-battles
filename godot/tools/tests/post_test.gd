@@ -538,12 +538,13 @@ func partner_check() -> void:
 		if kk9 == "" and pp == "王": kk9 = str(x)
 		if kk6 == "" and pp == "煞": kk6 = str(x)
 		if kk0 == "" and pp == "凡": kk0 = str(x)
+	_chk("融合消耗倍數已開（老闆 11-28 17:20 同意：煞 ×1.2、王 ×2.2）", J.t(PO.D().get("fuse_k_on")))
+	PO.D()["fuse_k_on"] = false
 	var c_off = [SU.fuse_cost(kk0).own, SU.fuse_cost(kk6).own, SU.fuse_cost(kk9).own]
-	_chk("融合消耗倍數預設關：同以前一樣（下一階：凡 %d、煞 %d、王 %d）" % c_off, c_off == [int(round(8.0 * pow(1.45, 1))), int(round(8.0 * pow(1.45, 7))), int(round(8.0 * pow(1.45, 10)))], c_off)
+	_chk("融合消耗倍數關咗：同以前一樣（下一階：凡 %d、煞 %d、王 %d）" % c_off, c_off == [int(round(8.0 * pow(1.45, 1))), int(round(8.0 * pow(1.45, 7))), int(round(8.0 * pow(1.45, 10)))], c_off)
 	PO.D()["fuse_k_on"] = true
 	var c_on = [SU.fuse_cost(kk0).own, SU.fuse_cost(kk6).own, SU.fuse_cost(kk9).own]
-	_chk("融合消耗倍數打開：凡不變、煞 ×1.2、王 ×2.2（%d、%d、%d）" % c_on, c_on == [c_off[0], 130, 724], c_on)
-	PO.D()["fuse_k_on"] = false
+	_chk("融合消耗倍數打開：凡不變、煞 ×1.2、王 ×2.2（%d、%d、%d）；同系魂魄＝一半" % c_on, c_on == [c_off[0], 130, 724] and SU.fuse_cost(kk9).sys == 362, c_on)
 	for f in ["rk", "pj", "star", "sh"]:
 		if bak[f] == null: o[f].erase(k)
 		else: o[f][k] = bak[f]
