@@ -1,0 +1,35 @@
+{
+ "size": [
+  1200,
+  896
+ ],
+ "source": "cg_market_open_f.jpg",
+ "bg": "bg.png",
+ "note": "Gemini 原位去背：角色座標即原圖座標，可直接疊回 bg.png；注意：Gemini 的原位去背把左右攤位留成了白色線稿，連在店員身上（char_01、char_03 含線稿攤位，只可整塊淡入或不用）；中間那塊（主角＋小孩＋遠處鬼客）可直接用。",
+ "chars": [
+  {
+   "file": "char_01.png",
+   "x": 0,
+   "y": 229,
+   "w": 322,
+   "h": 507,
+   "touch_edge": true
+  },
+  {
+   "file": "char_02.png",
+   "x": 416,
+   "y": 343,
+   "w": 488,
+   "h": 471,
+   "touch_edge": false
+  },
+  {
+   "file": "char_03.png",
+   "x": 997,
+   "y": 346,
+   "w": 203,
+   "h": 275,
+   "touch_edge": true
+  }
+ ]
+}
