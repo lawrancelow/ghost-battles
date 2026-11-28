@@ -74,6 +74,10 @@ func _rich() -> void:   # 給資源：建／升級／招魂唔使等（只係資
 	for k in ["wood", "rice", "planks", "buns", "coins"]:
 		if J.num(S.res.get(k, 0)) < 3000: r[k] = 3000.0
 	if r.size(): _give(r, "資源")
+	# [p55] 補丁 52 起：Lv10 前鬼怪升級、招魂用「冥幣＋普通包子」（m_bao，存喺材料庫）——真玩家由包子鋪出，測試照畀（記低）
+	var CM = load("res://game/outpost/mat.gd")
+	if CM.amt("m_bao") < 500.0:
+		var add = 1500.0 - CM.amt("m_bao"); CM.add("m_bao", add); gifts.append([_qi(), "普通包子", add])
 # 撳任務條（玩家第一下）：記低鏡頭帶去邊
 func _tap_bar(t, m) -> String:
 	var c = m.village.zone_cam() if m.village and m.village.has_method("zone_cam") else null
@@ -210,7 +214,10 @@ func _do_drill(t, q) -> String:
 	var t0 = simt
 	for k in 600:
 		if _prog(q)[0] >= _prog(q)[1]: break
-		if k % 20 == 0: _give({"buns": 500.0}, "壽包（練功食）")
+		if k % 20 == 0:   # [p55] 練嚇功食普通包子（m_bao，補丁 52 起），唔係壽包
+			var CM = load("res://game/outpost/mat.gd")
+			if CM.amt("m_bao") < 800.0:
+				var add = 1500.0 - CM.amt("m_bao"); CM.add("m_bao", add); gifts.append([_qi(), "普通包子（練功食）", add])
 		await t.get_tree().create_timer(1.0, true, false, true).timeout
 		simt += FAST
 	J.G["TIME_SCALE"] = 1.0
