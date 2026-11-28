@@ -87,7 +87,10 @@ static func refresh(manual := false) -> Array:
 				var dup = false
 				for y in list: if str(y.get("named", "")) == str(x.id): dup = true
 				if not dup: named_ok.append(str(x.id))
-		if named_ok.size() and r.randf() < float(R.named):
+		var pn = float(R.named)
+		if ResourceLoader.exists("res://game/market/mk_renown.gd"): pn = maxf(pn, load("res://game/market/mk_renown.gd").named_p())   # [market M2] 名聲越高名鬼越多
+		var pin = i == 0 and ResourceLoader.exists("res://game/market/mk_renown.gd") and load("res://game/market/mk_renown.gd").named_pin()   # 名聲 4 級起：名單必有 1 格名鬼
+		if named_ok.size() and (pin or r.randf() < pn):
 			g = GEN.named(named_ok[r.randi_range(0, named_ok.size() - 1)], _next_seed())
 		else:
 			g = GEN.gen(_next_seed(), -1, avoid_of(list))

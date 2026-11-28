@@ -9,6 +9,7 @@ const _ABL = preload("res://game/rts/ab_lay.gd")   # [abui]
 const MD = preload("res://game/outpost/mv_data.gd")
 const MK = preload("res://game/market/mk_data.gd")   # [market] 過勞鬼市集：街道＋過勞營業
 const MKU = preload("res://game/market/mk_ui.gd")   # [market] 街名牌列／切街
+const MKUI = preload("res://game/market/mk_fun_ui.gd")   # [market M2] 加班牌、過勞條、子時高峰、潮流榜
 const MKOU = preload("res://game/market/mk_ops_ui.gd")   # [market M1 營運] 人手／治安列（佔位版）
 const SIM = preload("res://game/outpost/mv_sim.gd")
 const FX = preload("res://game/outpost/mv_fx.gd")
@@ -278,6 +279,7 @@ func _cover(r: Rect2) -> float:
 	for q in _plates: a += r.intersection(q).get_area() * 3.0
 	for k in _wbtns:
 		if k.begins_with("st:") or k.begins_with("camp") or k.begins_with("unl:"): a += r.intersection(_wbtns[k]).get_area()
+	if MK.active(): for q in MKUI.hud_rects: a += r.intersection(Rect2(s2w(q.position), q.size)).get_area() * 3.0   # [market M2] 唔好遮住潮流榜／高峰／大客牌
 	if sim != null and sim.plus != null:   # [polish4] 唔好遮住事件名（「棺材自己開蓋」嗰啲）同左下小卡
 		for q in sim.plus.label_rects: if q is Rect2: a += r.intersection(q).get_area() * 3.0
 		for k in sim.plus._btn: if not str(k).begins_with("card:"): a += r.intersection(Rect2(s2w(sim.plus._btn[k].position), sim.plus._btn[k].size)).get_area() * 3.0
@@ -369,6 +371,7 @@ func _eat_events() -> void:
 	sim.war.eat(self)   # [war]
 	sim.plus.eat(self)   # [play]
 	load("res://game/militia/ml_ui.gd").eat(self)   # [militia] 遊魂兵加入飄字
+	if MK.active(): MKUI.events(self)   # [market M2] 浮字
 	for e in sim.ev:
 		match e.k:
 			"pay":
@@ -647,6 +650,7 @@ func _draw_stage() -> void:
 	_plate_q.clear()
 	sim.war.draw_world(self, ctx, vy0, vy1)   # [war] 義勇軍＋霸檔標記
 	sim.plus.draw_world(self, ctx, vy0, vy1)   # [play] 夜色、事件記認、決定掣
+	if MK.active() and not walking: MKUI.draw_world(self, ctx, vy0, vy1)   # [market M2]
 	if walking: _draw_proc(ctx)
 	if not walking:
 		_wrects.clear()   # [polish4] 要貨氣泡由櫃台頭排起，撞到就推高
@@ -1325,7 +1329,10 @@ func _draw_parts(ctx: Ctx, world: bool) -> void:   # 冥幣飛去頂部係畫面
 
 # ---------------- 頂部 HUD ----------------
 func _draw_hud(ctx: Ctx) -> void:
-	if embed: _draw_hud_embed(ctx); return   # [unify]
+	if embed:
+		_draw_hud_embed(ctx)   # [unify]
+		if MK.active(): MKUI.draw_hud(self, ctx, top_pad + EHUD_H + 56.0)   # [market M2]
+		return
 	var y0 = top_pad
 	ctx.fillStyle = "rgba(10,6,14,.62)"; ctx.fillRect(0, y0, FW, HUD_H)
 	_map_label(ctx)
@@ -1381,6 +1388,7 @@ func _draw_hud(ctx: Ctx) -> void:
 			_txt(ctx, MD.S("need_boss", "要先打低主線 Boss", "要先打倒主線 Boss") + MD.S("need_boss2", "（去巡陰）", "（去巡陰）"), 195, y0 + 128, 15, Color("#ffb0a0"), "center", 900, 4)
 	sim.war.draw_hud(self, ctx)   # [war] 影響力條、義勇軍數、鬼潮、告急、出征掣
 	sim.plus.draw_hud(self, ctx)   # [play] 左下小卡（夜潮／大單／招牌／匯率）＋彈出卡
+	if MK.active(): MKUI.draw_hud(self, ctx)   # [market M2]
 
 # [unify] 嵌入模式精簡 HUD（主線任務條收埋，併入第一行）：
 #   第一行（40）：左半＝主線任務（撳落去＝原本任務條）；右半＝呢張圖目標（做齊變「領獎」）
@@ -1523,6 +1531,7 @@ func _draw_plus_embed(ctx: Ctx) -> void:
 		load("res://game/outpost/mv_event.gd").draw_hud(P, self, ctx, -1000.0)   # 收埋都要畫紙錢雨（匯率小卡畫喺畫面外）
 		P._btn.erase("ev")
 func _boost_btn(ctx: Ctx, kind: String, r: Rect2, label: String, fs := 15) -> void:
+	if MK.active(): return   # [market M2] 舊「收益×2／加速×2」由過勞營業取代：唔畫、唔登記掣
 	var on = sim.boost_left(kind) > 0.0; var cd = sim.boost_cd(kind)
 	var col = "#3d7a3a" if on else ("#4a3a30" if cd > 0.0 else "#bb3427")
 	Art.rr(ctx, r.position.x, r.position.y, r.size.x, r.size.y, 8, col, "#f2d090" if not (cd > 0.0 and not on) else "#7a6050", 1.5)
@@ -1767,6 +1776,7 @@ func tap(p: Vector2) -> void:
 			return
 	if MKOU.tap(self, p): return   # [market M1 營運] 人手／治安列
 	if MKU.tap(self, p): return   # [market] 街名牌列
+	if MK.active() and MKUI.tap(self, p): return   # [market M2] 加班牌、餵包子、打卡鐘、潮流榜
 	if sim.plus.tap(self, p): return   # [play]
 	if sim.war.tap(self, p): return   # [war] 出征掣／頭目
 	if p.y < top_pad + (EHUD_H if embed else HUD_H) and (not embed or hud_on): return

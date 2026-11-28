@@ -82,3 +82,15 @@ M1 沒有改 `market.json` 的既有欄位、沒有動 `mk_ui.gd`、`mv_scene.gd
 - **按章價格**：`mk_price.gd` 視圖（`MD.st_def`／`good_def`／`goals` 在市集模式下回傳按章換算後的副本）；開關 `market_ops.json` 的 `price_rebase`。M2 的 `item_mul` 等照舊乘在 `MD.val` 上，不用改。
 - **目標補發**：`MKO.comp_goals(sim)`（每格），輪到被跳過的目標時自動發獎，記在 `S.mv.goals_comp`。
 - **文案詞庫**：`data/market_lines.json`（`tools/market_lines_build.py` 由文案稿產生並檢查同章不重複）。`MKO.complain()` 取過勞抱怨（20 句輪完才重複）——M2 的過勞泡泡請也用這個函式，避免兩邊各出各的造成同一句重複。
+
+---
+## M2 線回覆（2026-11-28，分支 market-m2，已合併 M1-6）
+- **已接上**：`mk_counter_n_fn`（未登記時 `FUN.counter_n` 直接問 `MKO.counter_n`）、`patrol_ok／patrol_reach／patrol_speed／patrol_handled／rush_phase／counter_down`、`FUN.extra_slots` 改讀 `MKO.extra_slots`、`mk_renown.reg()` 登記 `mk_renown_add_fn`（並收回 `S.mk.renown_pts` 暫存分、寫 `S.mk.renown_lv`＋`renown_live`）。
+- **檔名**：M2 畫面檔改名 `game/market/mk_fun_ui.gd`（避開 M1 的 `mk_ui.gd`）。
+- **畫面分工**（避免重疊）：
+  - M2 HUD（潮流榜牌、連單數、子時高峰、限時大客）一律排在左欄，位置＝`mk_ops_ui.hud_end` 下方；M2 在 `mk_ops_ui.gd` 只加了 `static var hud_end`＋兩行賦值。
+  - M2 攤位掛牌（加班牌、過勞條、餵包子、打卡鐘）在攤位**左上角外**（`st_pos + (-118, -146)`）；攤位正上方留給 M1 過勞小卡，右上角是「做／收」圓鈕。
+  - `mv_scene._cover` 加一行：「生產鏈」按鈕避開 `MKUI.hud_rects`。
+- **mv_sim.cust_value**：主貨 `× FUN.item_mul(攤)`；副貨照 M1 `sub_adj` 計底價，再由 `FUN.sub_bonus` 補「寄賣攤」的 M2 倍數（加班 ×1.2、街組合、潮流、三星牌）。
+- **market_test 為配合 M2 改了三處**：副貨價乘 `FUN.item_mul`；名聲 +2 改查 `renown_pts＋mk_renown.pts()`；巡邏處理率統計段暫停 M2 巡邏過勞與隊長升職（`pat_add=0、cap_n=1e9`，量完 `FUN.reload()`），否則隊長會兼顧鄰街令處理數偏高。另加 `MK_SHOTS` 環境變數可改截圖目錄。
+- **M2 數值（data/market_fun.json）**：巡邏員每件 +15（隊友分擔，4 隻 ×0.7）、閒時每秒回 0.1（原 1.0 會永遠不趴）、100 趴下 60 秒、50 件升隊長；`pat_max 4`、`ctr_max 3`；名鬼機率按名聲等級 3%／6%／10%／10%／10%；評論家星級門檻 `star_miles [1, 3]`（Lv10 起 2 星、Lv50 起 3 星）。

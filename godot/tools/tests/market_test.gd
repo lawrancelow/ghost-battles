@@ -16,7 +16,7 @@ const MVW = preload("res://game/outpost/mv_war.gd")
 const KG = preload("res://game/kpi/kpi_data.gd")
 const M = preload("res://game/outpost/mat.gd")
 const PF = preload("res://tools/tests/paddyfix_test.gd")
-var SHOTS := "/home/claude/meeting/market/shots/"
+var SHOTS := (OS.get_environment("MK_SHOTS") if OS.has_environment("MK_SHOTS") else "/home/claude/meeting/market/shots/")   # M2 線跑時另存，唔好冚 M1 嘅圖
 
 func _p(m): print("[market] ", m)
 func _chk(name: String, cond: bool, extra = "") -> void:
@@ -203,7 +203,7 @@ func _ops(t, sim, sc, c: int, food: Array, cloth: Array) -> void:
 	_chk("智能補貨：副貨格缺貨就先做副貨", MKO.pick_sub(sim, a))
 	_chk("副貨單價＝副貨底價 × 寄賣攤等級倍數（＞0）", MKO.sub_val(sim, gb) > 0.0, MKO.sub_val(sim, gb))
 	var cst = {"got": {gb: 2}, "wants": {gb: 2}}
-	_chk("客人買副貨：按副貨價計錢", is_equal_approx(sim.cust_value(cst), 2.0 * MKO.sub_val(sim, gb) * sim.inc_mul()), sim.cust_value(cst))
+	_chk("客人買副貨：按副貨價計錢", is_equal_approx(sim.cust_value(cst), 2.0 * MKO.sub_val(sim, gb) * sim.inc_mul() * load("res://game/market/mk_fun.gd").item_mul(sim, a)), sim.cust_value(cst))
 	MKO.set_sub(c, a, ""); MKO.tick(sim, 11.0)
 	sim.sst(b)["unlocked"] = true
 	# 預設副貨配對（goods_final）：副貨攤唔再獨立擺攤，Lv25 自動成為主攤副貨
@@ -264,7 +264,7 @@ func _ops(t, sim, sc, c: int, food: Array, cloth: Array) -> void:
 	for i in 12: MKO.tick(sim, 1.0)
 	var ev = MKO.events()
 	_chk("第 3 分鐘：固定第一件插隊（教學、通用版）", ev.size() >= 1 and str(ev[0].k) == "cut_queue" and int(ev[0].sp) == 0 and J.t(ev[0].get("tut")), ev)
-	_chk("玩家撳事件：即刻處理、名聲 +2", ev.size() >= 1 and MKO.handle_event(sim, int(ev[0].id)) and MKO.events().is_empty() and J.num(MK.st().get("renown_pts", 0)) >= 2.0)
+	_chk("玩家撳事件：即刻處理、名聲 +2", ev.size() >= 1 and MKO.handle_event(sim, int(ev[0].id)) and MKO.events().is_empty() and J.num(MK.st().get("renown_pts", 0)) + load("res://game/market/mk_renown.gd").pts() >= 2.0)   # M2 合併後名聲入 mk_renown
 	MKO.st().ev.clear()
 	var n_ok = 0
 	for i in 8: if not MKO.spawn_event(sim, "food").is_empty(): n_ok += 1
@@ -311,6 +311,7 @@ func _ops(t, sim, sc, c: int, food: Array, cloth: Array) -> void:
 	_chk("吵架冇人理：事發攤停工 15 秒，之後復工（永不超過 15 秒）", stopped and MKO.prod_k(str(e2.sid)) > 0.0, stopped)
 	# 巡邏處理率：1−(1−p)^n；4 隻滿編都壓唔到 0
 	var rates = []; var rates_sp = []
+	var FN = load("res://game/market/mk_fun.gd"); FN.ensure(); FN.D().ot["pat_add"] = 0.0; FN.D().ot["cap_n"] = 1e9   # 呢段只量 M1 純處理率：暫停 M2 巡邏員過勞同升隊長（隊長會兼顧隔籬街，令處理數變多；兩樣另由 market_m2_test 驗），完咗 reload
 	for n in [0, 1, 2, 3, 4]:
 		for sp in [0, 1]:
 			MK.st().erase("ops"); MKO.tick(sim, 0.1); MKO.st()["tut"] = 1
@@ -322,6 +323,7 @@ func _ops(t, sim, sc, c: int, food: Array, cloth: Array) -> void:
 			if sp == 0: rates.append(snappedf(h, 0.01))
 			else: rates_sp.append(snappedf(h, 0.01))
 			for i in n: MKO.unassign(sim, "t_mk%d" % (6 + i))
+	FN.reload()
 	_p("巡邏處理率（通用版）0–4 隻：" + str(rates) + "　特色版：" + str(rates_sp))
 	_chk("巡邏 0 隻：處理率 0", rates[0] == 0.0)
 	_chk("巡邏 1／2／3／4 隻（通用版）≈ 45／70／83／91%（±7%）", absf(rates[1] - 0.45) < 0.07 and absf(rates[2] - 0.70) < 0.07 and absf(rates[3] - 0.83) < 0.07 and absf(rates[4] - 0.91) < 0.07, rates)
