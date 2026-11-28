@@ -463,6 +463,8 @@ static var _op_q := false
 static func opening_due() -> bool:
 	if not on() or _op_q: return false
 	var s = S(); var seen = s.get("seen", {})
+	# [opening] 正式劇本已入序章（name_card 開場列表：op2_*／opf2_* 喺 prologue_sys 之前），睇過就唔再播佔位四段
+	if J.t(J.gp(seen, "op2_arrive")) or J.t(J.gp(seen, "opf2_arrive")): return false
 	var ids = J.G.get("rb_opening") if J.G.get("rb_opening") is Array and not (J.G.get("rb_opening") as Array).is_empty() else OPENING
 	return J.t(J.gp(seen, "prologue_sys")) and not J.t(J.gp(seen, str(ids.back())))
 static func queue_opening() -> void:
