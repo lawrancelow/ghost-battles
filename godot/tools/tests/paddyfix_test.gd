@@ -144,11 +144,15 @@ func _level(t, m, c: int) -> void:
 		nv.zone_tap(nv.zone_w2s(vr.get_center()))
 		var post = _diag(m, V)
 		var dl = Time.get_ticks_msec() + 90000   # 實時 90 秒上限（機慢、幀率低時 dt 被夾，遊戲時間行得慢）
+		var retap := 0
 		for k in 100000:
 			if Time.get_ticks_msec() > dl: break
 			await _w(t, 0.1)
 			if not J.t(S.paddy[i]): break
-			if k % 10 == 9: _unblock(m)
+			if k % 10 == 9:
+				_unblock(m)
+				if V.hero.get("target") == null and V.hero.get("act") == null and not J.t(V.hero.get("walking")) and retap < 3 and not J.t(J.mc(J.G.get("Story"), "busy", [])):
+					retap += 1; _p("paddy %d 重撳（第 %d 次）" % [i, retap]); nv.zone_tap(nv.zone_w2s(vr.get_center()))
 		if not J.t(S.paddy[i]): got.append(i); S.paddyRegrow[i] = 999.0   # 截圖時唔好生返
 		else: _p("diag paddy %d\n  pre  %s\n  post %s\n  end  %s" % [i, pre, post, _diag(m, V)])
 	_chk(tag + "8 格稻田全部撳得、行得到、割得", got.size() == 8, got)
@@ -158,13 +162,19 @@ func _level(t, m, c: int) -> void:
 		var vr = _tree_vis(ZD.v2(TP[i]), i)
 		cam.center_on(vr.get_center()); await _w(t, 0.1)
 		_unblock(m)
+		var pre_t = _diag(m, V)
 		nv.zone_tap(nv.zone_w2s(vr.get_center()))
 		var dl = Time.get_ticks_msec() + 120000
+		var retap := 0
 		for k in 100000:
 			if Time.get_ticks_msec() > dl: break
 			await _w(t, 0.1)
 			if int(J.num(S.trees[i])) <= 0: break
-			if k % 10 == 9: _unblock(m)
+			if k % 10 == 9:
+				_unblock(m)
+				# [p56] 前一棵砍完會升級／出任務完成劇情（顯示中嘅彈窗會食咗嗰一下撳屏，真人會見到彈窗再撳多下）：彈窗收咗而主角冇目標 → 再撳一次
+				if V.hero.get("target") == null and V.hero.get("act") == null and not J.t(V.hero.get("walking")) and retap < 3 and not J.t(J.mc(J.G.get("Story"), "busy", [])):
+					retap += 1; _p("tree %d 重撳（第 %d 次）pre=%s" % [i, retap, pre_t]); nv.zone_tap(nv.zone_w2s(vr.get_center()))
 		if int(J.num(S.trees[i])) <= 0: cut.append(i); S.treeRegrow[i] = 999.0
 		else: _p("diag tree %d %s" % [i, _diag(m, V)])
 	_chk(tag + "8 棵槐樹全部撳得、行得到、砍得", cut.size() == 8, cut)
