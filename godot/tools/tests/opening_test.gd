@@ -6,7 +6,7 @@ extends "res://tools/tests/eqview2_test.gd"
 const NC = preload("res://ui/name_card.gd")
 const PS = preload("res://game/onboard/prestall_story.gd")
 const STG = preload("res://ui/story.gd")
-const SH := "/home/claude/docs/shots/opening/"
+const SH := "/home/claude/meeting/vil2/opening/"
 const OM := ["op2_road", "op2_lobby", "op2_office", "op2_soup", "op2_exile", "op2_arrive"]
 const OF := ["opf2_road", "opf2_lobby", "opf2_office", "opf2_soup", "opf2_exile", "opf2_arrive"]
 
@@ -130,6 +130,30 @@ func _hooks() -> void:
 	_chk("大排檔後：第一次開爐轉祭品", PS.scene_for("joss_open", S5) == "joss_shift" and PS.joss_mode(S5) == "offer")
 	_chk("化寶爐結果：冇旗唔播", not PS.on_joss_result({"coins": 10.0}))
 	_chk("轉祭品只一次", PS.scene_for("joss_open", {"seen": {"stall_hook": true, "joss_shift": true}}) == "")
+	# 開箱畫面收起先播：defer 唔即播，flush 先排
+	PS._pend = null
+	PS.defer_joss({"coins": 5.0})
+	_chk("普通收件唔留待播", PS._pend == null)
+	PS.defer_joss({"backlog": true})
+	_chk("積壓包裹留待開箱收起後播", PS._pend is Dictionary)
+	PS._pend = null
+	# 荒村開張招魂台（酒館）→ 有註冊監聽
+	PS.hook()
+	_chk("荒村開張監聽已註冊", PS._hooked)
+	# 大排檔開張 stall_hook：舊存檔（冇睇過新開場）唔觸發
+	var st = J.G.get("Story"); var sv = J.G.S.seen.duplicate()
+	J.G.S.seen.erase("stall_hook"); J.G.S.seen.erase("op2_arrive"); J.G.S.seen.erase("opf2_arrive")
+	J.G["stall_open_fn"] = func(): return true
+	var q0 = st.q.size() if st != null else 0
+	PS.tick()
+	_chk("舊存檔：大排檔開張唔播 stall_hook", st == null or st.q.size() == q0)
+	J.G.S.seen["op2_arrive"] = true
+	if st != null and not st.busy():
+		PS.tick()
+		_chk("新開場存檔：大排檔開張排 stall_hook", st.busy())
+		st.q.clear(); st.cur = null; st.visible = false
+	J.G.erase("stall_open_fn")
+	J.G.S["seen"] = sv
 
 # 實機：男女各走一遍新開場（劇情框逐句播，每場截一張）
 func _play(t, m, sex: String) -> void:

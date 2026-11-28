@@ -34,6 +34,7 @@ static func apply_v2() -> void:
 	for id in v2.scenes: sc[id] = v2.scenes[id]
 	# 中文對照：入 DB（原生劇情框）同 JS LANG
 	ZH2 = v2.get("zh", {})
+	load("res://game/onboard/prestall_story.gd").hook()   # [opening] 荒村開張酒館 → tav_open
 	var yue = v2.get("yue", {})   # [opening] 中文原句 → 粵語（文案組補；空字串＝未補）
 	if yue is Dictionary:
 		if not (D.get("LANG_YUE") is Dictionary): D["LANG_YUE"] = {}

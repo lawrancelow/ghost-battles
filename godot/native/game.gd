@@ -12,6 +12,7 @@ const CE = preload("res://game/outpost/chain_eco.gd")   # [chain] 拓展建築�
 const CM = preload("res://game/outpost/mat.gd")           # [chain] 材料庫
 const FURNACE_CD := 300.0
 const JOSS = preload("res://game/joss/joss.gd")
+const PSTORY = preload("res://game/onboard/prestall_story.gd")   # [opening]
 const TAV = preload("res://game/tavern/tavern.gd")   # [tavern] 陰間酒館   # [joss] 化寶爐＝陽間包裹
 const RAID = preload("res://game/raid/raid.gd")   # [raid] 惡鬼襲擾：停工／壞咗嘅建築唔產出
 const FEAST_CD := 1200.0
@@ -189,6 +190,7 @@ static func produce(dt: float) -> void:
 			var gk = J.str(e[0]); S.drill[gk] = J.num(S.drill.get(gk)) + J.num(e[1]) * m * k
 	R["coins"] = J.num(R.coins) + rg.call("coins") * m
 	TAV.tick(dt)   # [tavern] 夜宵／罷工、酒館名單刷新
+	PSTORY.tick()   # [opening] 大排檔開張劇情 stall_hook（只播一次）
 	CE.produce(dt)   # [chain] 拓展採集／加工建築（chain.json GATHER／WORKSHOPS，崗位鍵 = bid）
 	var acc = J.num(_g("expAcc")) + rg.call("exp") * m
 	J.G["expAcc"] = acc
