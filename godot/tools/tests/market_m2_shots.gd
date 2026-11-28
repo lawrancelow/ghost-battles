@@ -40,7 +40,7 @@ func all(t) -> void:
 	mid /= float(mini(3, food.size()))
 	_p("stall pos " + str(food.map(func(x): return sim.st_pos(x))))
 	var F = food[mini(1, food.size() - 1)]   # 主角攤：放喺畫面中間偏下，掛牌唔會俾 HUD 遮
-	cam.center_on(sim.st_pos(F) + Vector2(-20, -70)); await _w(t, 0.6)
+	cam.center_on(sim.st_pos(F) + Vector2(-20, -70)); await _w(t, 2.6)   # 等 M1 切街標題卡收咗
 	FUN.st().rush["next"] = FUN._clock() + 1e9; FUN.st().rush["ph"] = "idle"; FUN.st().rush["n"] = 1
 	FUN.st().critic[str(sim.ci())] = {"n": 9, "next": 1e12}
 	# 1. 加班牌＋過勞條（綠／黃／紅冒汗／老員工）
@@ -52,7 +52,10 @@ func all(t) -> void:
 	# 2. 趴低＋餵包子；櫃台過勞條
 	MK.ot(F).down = 48.0; MK.ot(F).on = 0; MK.ot(F)["_dn"] = 1
 	var ck = FUN.ctr_key("food"); MK.ot(ck).fat = 62.0
-	J.G["mk_counter_n_fn"] = func(_s): return 2
+	var MKO = load("res://game/market/mk_ops.gd")
+	for i in 2:
+		if not S.ghosts.any(func(g): return str(g.get("id")) == "t_sc%d" % i): S.ghosts.append({"id": "t_sc%d" % i, "k": "youhun", "name": "t_sc%d" % i, "lv": 1.0, "post": null})
+		MKO.assign(sim, "ctr", "food", "t_sc%d" % i)
 	await _w(t, 0.3); _hold(food, fats); MK.ot(F).down = 48.0; MK.ot(ck).fat = 62.0
 	await _shot(t, "s2_down_feed")
 	MK.ot(F).down = 0.0; MK.ot(F).fat = 40.0; fats[1] = 40.0
@@ -115,7 +118,8 @@ func all(t) -> void:
 		MK.ot(sid).on = 1; MK.ot(sid).fat = 30.0
 	if cloth.size(): cam.center_on(sim.st_pos(cloth[0]) + Vector2(-20, -70))
 	await _w(t, 2.6); await _shot(t, "s14_cloth_street")
-	J.G.erase("mk_counter_n_fn"); FUN.reload()
+	for i in 2: MKO.unassign(sim, "t_sc%d" % i)
+	FUN.reload()
 	_p("RESULT ok=16 bad=0")
 func _hold(food: Array, fats: Array) -> void:   # 截圖前定返過勞值（模擬一路行會變）
 	for i in food.size():

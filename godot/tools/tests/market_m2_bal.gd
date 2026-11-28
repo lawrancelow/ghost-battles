@@ -15,8 +15,10 @@ func all(t) -> void:
 	load("res://game/kpi/kpi_data.gd").enable(false)
 	for i in 40: T._gh(S, "t_s%d" % i)
 	sim.market_street("food")
-	var stalls = MK.sids_on(sim.ci(), "food").slice(0, 4)
+	var stalls = MK.sids_on(sim.ci(), "food").slice(0, 3)   # 唔計豆花擔：單價高過頭三攤幾百倍，賣幾件就蓋過晒其他收入，量唔到加班差別
 	sim.paused = false
+	var MKO = load("res://game/market/mk_ops.gd")
+	if MKO.D().get("goods2") is Dictionary: MKO.D().goods2["lv"] = 9999.0   # 呢個模擬唔開副貨：副貨豆花擔單價係主貨幾百倍（上一轮：賣 8 件＝800 萬，蓋過晒），量唔到加班差別
 	var out = {}
 	for mode in ["rotate", "none", "always"]:
 		S.erase("mkf")
@@ -25,5 +27,5 @@ func all(t) -> void:
 		print("[m2bal] %s 收入 %.0f 趴低 %.1f%% 加班中 %.0f%% 連單最高記錄/名聲 %.0f" % [mode, r.income, r.down_pct, r.ot_pct, load("res://game/market/mk_renown.gd").pts()])
 	var base = float(out.rotate.income)
 	print("[m2bal] 輪替＝100%%｜唔加班 %.0f%%｜狂加班唔理 %.0f%%（目標約 60%%／75%%）" % [100.0 * out.none.income / base, 100.0 * out.always.income / base])
-	MK.st().erase("ops"); MK.st().erase("test")
+	MKO.reload(); MK.st().erase("ops"); MK.st().erase("test")
 	print("[m2bal] RESULT ok=1 bad=0")
