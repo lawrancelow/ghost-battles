@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://djsbysciycr0t"
-path="res://.godot/imported/still.webp-0b8987e258a5edf1191dda0e9a1a7ee6.ctex"
+uid="uid://b1g7dobrjabp2"
+path="res://.godot/imported/bg.webp-4e232d4fac35318719b747f07e7c5559.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/cg_layers/cg_tavern_m/still.webp"
-dest_files=["res://.godot/imported/still.webp-0b8987e258a5edf1191dda0e9a1a7ee6.ctex"]
+source_file="res://assets/cg_layers/cg_soup_f/bg.webp"
+dest_files=["res://.godot/imported/bg.webp-4e232d4fac35318719b747f07e7c5559.ctex"]
 
 [params]
 

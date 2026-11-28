@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cgtjp2l2tlbh0"
-path="res://.godot/imported/still.webp-ffeca8803f5f3042fa865e8d1cdb8147.ctex"
+uid="uid://bvt5dvqd6oke5"
+path="res://.godot/imported/still.webp-e6e3cf1832ab58a64959b30a0d41aea4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/cg_layers/cg_stall_hook_m/still.webp"
-dest_files=["res://.godot/imported/still.webp-ffeca8803f5f3042fa865e8d1cdb8147.ctex"]
+source_file="res://assets/cg_layers/cg_lobby/still.webp"
+dest_files=["res://.godot/imported/still.webp-e6e3cf1832ab58a64959b30a0d41aea4.ctex"]
 
 [params]
 
