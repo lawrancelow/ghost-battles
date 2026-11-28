@@ -1,0 +1,362 @@
+# [cgm] 動態劇情插圖（分層＋動態），由 ui/story_cg.gd 用；熱更新：冇 class_name，story_cg.gd 用 preload
+#   素材：res://assets/cg_layers/<圖名>/ 底圖＋每個角色透明圖（webp）
+#   設定：res://assets/cg_layers.json  {"<圖名>": layout}（一個檔，符合匯出 assets/*.json 規則）
+#   layout：
+#     "bg": "bg.webp"                    背景（已挖走角色、補好洞）
+#     "cam": {"zoom":[1.0,1.06], "pan":[0,0,-0.01,0.005], "dur":14}   慢推鏡：zoom 起→止，pan＝起 x,y → 止 x,y（畫面比例）
+#     "layers": [ {
+#        "img": "wood.webp",  "x": 0.44, "y": 0.47, "h": 0.11,     x＝中心、y＝腳底（底圖比例），h＝高度（底圖高度比例）
+#        "z": 1,  "par": 0.4,                                       z 序；視差（慢推鏡時比背景多郁幾多）
+#        "flip": false,
+#        "fx": { "float":  {"amp":0.006, "per":2.6},                上下飄（鬼）
+#                "breathe":{"amp":0.018, "per":3.2},                呼吸（腳底為軸輕微縮放）
+#                "sway":   {"deg":2.5, "per":4.0},                  左右晃（腳底為軸）
+#                "shake":  {"amp":0.004, "every":4.0, "dur":0.45},  抖（驚嚇）：每 every 秒抖 dur 秒；every=0 一直抖
+#                "blink":  {"alt":"wood_b.webp", "every":3.2, "dur":0.14} } }  換表情／眨眼：第二張圖
+#     ],
+#     "fx": [ {"type":"smoke|steam|wisp|ember", "x":0.93, "y":0.33, "w":0.03, "h":0.0, "n":10} ]   粒子；x,y＝發射中心，w,h＝範圍
+#   另一種定位（美術組分層產線用）：  "rect": [x, y, w, h]（左上＋闊高，底圖比例）, "pivot": [0.5, 0.0]（軸心，層內比例；預設腳底 [0.5,1]）
+#   多兩種動作：  "flicker": {"min":0.88, "max":1.12, "glow":0.55, "c":"#ffb060"}   燈籠閃（光暈用加色疊）
+#                 "drift":   {"dy":0.014, "per":4.0}                               炊煙：向上飄＋淡出，兩份錯開循環
+#   後備（單張圖，未有分層素材）：  "flat": true, "bg": "still.webp", "depth": {"amt":0.010, "y0":0.42, "per":9.0},
+#       "glow": [ {"x":0.3, "y":0.2, "r":0.05, "c":"#ffb060"} ]
+#     成張圖用著色器按「越近畫面底越前景」嘅深度漸變左右慢慢錯開（前景郁多啲、遠景唔郁，連續冇切口），
+#     加慢推鏡、燈籠／火光位置微光閃爍、鬼火粒子。之後分層素材到咗，換返 layers 版就得，key 唔變。
+#   冇 layout 或者停用就返 null，story_cg 照舊用靜態圖。
+extends RefCounted
+
+const ROOT := "res://assets/cg_layers/"
+const CONF := "res://assets/cg_layers.json"
+static var _conf = null
+static var disabled := false   # 設定／低效能可以關（關咗退返靜態）
+
+static func conf() -> Dictionary:
+	if _conf == null:
+		_conf = {}
+		if FileAccess.file_exists(CONF):
+			var d = JSON.parse_string(FileAccess.get_file_as_string(CONF))
+			if d is Dictionary: _conf = d
+	return _conf
+
+const PM = preload("res://ui/perf_mode.gd")   # 流暢模式開＝唔播動態，用原整張圖
+
+static func known(k: String) -> bool:   # 有分層設定（唔理開關）
+	return conf().get(k) is Dictionary
+
+static func off() -> bool:   # 動態關咗：測試／程式停用，或者設定頁開咗流暢模式
+	PM.load_pref()
+	return disabled or PM.lite()
+
+static func has(k: String) -> bool:   # 有分層設定而且動態開住
+	return known(k) and not off()
+
+static func _tex(k: String, f: String) -> Texture2D:
+	var p = ROOT + k + "/" + f
+	if not ResourceLoader.exists(p): return null
+	return load(p) as Texture2D
+
+static func still(k: String) -> Texture2D:   # 關動態／低效能：原整張插圖（conf "still"），冇就 null
+	if not known(k): return null
+	var f = str(conf()[k].get("still", ""))
+	var tx = _tex(k, f) if f != "" else null
+	if tx == null: tx = _tex(k, str(conf()[k].get("bg", "bg.webp")))   # 冇整張圖：最少出底圖，唔好黑畫面
+	return tx
+
+static func bg(k: String) -> Texture2D:
+	if not has(k): return null
+	return _tex(k, str(conf()[k].get("bg", "bg.webp")))
+
+# ---- 一張動態插圖嘅實例 ----
+var k := ""
+var L: Dictionary
+var root: Control        # 掛喺 SubViewport 入面（pic 之上、疊字之下）
+var vs := Vector2.ONE    # SubViewport 尺寸
+var tsz := Vector2.ONE   # 底圖原尺寸
+var cover_s := 1.0       # 底圖鋪滿（cover）嘅縮放
+var cover_o := Vector2.ZERO
+var items: Array = []    # [{node, base_pos, base_size, fx, alt, main, par, ph}]
+var parts: Array = []
+var t := 0.0
+
+static func make(key: String, parent: Node, view_size: Vector2, bg_tex: Texture2D):
+	if not has(key) or bg_tex == null: return null
+	var m = new()
+	m.k = key; m.L = conf()[key]; m.vs = view_size
+	m.tsz = Vector2(bg_tex.get_width(), bg_tex.get_height())
+	m.cover_s = maxf(view_size.x / m.tsz.x, view_size.y / m.tsz.y)
+	m.cover_o = (view_size - m.tsz * m.cover_s) / 2.0
+	m.root = Control.new(); m.root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	m.root.size = view_size; m.root.name = "cgm"
+	parent.add_child(m.root)
+	if J.t(m.L.get("flat")): m._build_flat(bg_tex)
+	m._build()
+	return m
+
+func img2view(p: Vector2) -> Vector2:   # 底圖比例座標 → SubViewport 像素
+	return cover_o + Vector2(p.x * tsz.x, p.y * tsz.y) * cover_s
+
+const FLAT_SHADER := """
+shader_type canvas_item;
+uniform float sh = 0.0;    // 前景橫向錯開（UV 比例）
+uniform float y0 = 0.42;   // 呢條線以上當遠景（唔郁）
+uniform float bob = 0.0;   // 前景上下微浮
+void fragment() {
+	float d = smoothstep(y0, 1.0, UV.y);
+	d = d * d;
+	vec2 uv = UV + vec2(sh * d, bob * d * (1.0 - UV.y));
+	COLOR = texture(TEXTURE, clamp(uv, vec2(0.001), vec2(0.999)));
+}
+"""
+var warp: TextureRect = null   # 後備：成張圖（深度漸變視差）
+var glows: Array = []          # 後備：微光點 [{n, a, ph}]
+
+func _build_flat(bg_tex: Texture2D) -> void:
+	warp = TextureRect.new(); warp.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	warp.texture = bg_tex; warp.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; warp.stretch_mode = TextureRect.STRETCH_SCALE
+	warp.position = cover_o; warp.size = tsz * cover_s
+	var sh = Shader.new(); sh.code = FLAT_SHADER
+	var mt = ShaderMaterial.new(); mt.shader = sh; warp.material = mt
+	var dp: Dictionary = L.get("depth", {}) if L.get("depth") is Dictionary else {}
+	mt.set_shader_parameter("y0", J.num(dp.get("y0", 0.42)))
+	root.add_child(warp)
+	var i := 0
+	for g in L.get("glow", []):
+		if not (g is Dictionary): continue
+		var n = TextureRect.new(); n.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		n.texture = _dot_tex(64, 1.0); n.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		var gs = maxf(J.num(g.get("r", 0.04)) * tsz.x * cover_s * 2.0, 8.0)
+		n.size = Vector2(gs, gs); n.pivot_offset = n.size / 2.0
+		n.position = img2view(Vector2(J.num(g.get("x", 0.5)), J.num(g.get("y", 0.5)))) - n.size / 2.0
+		n.modulate = Color(str(g.get("c", "#ffb060")))
+		var gm = CanvasItemMaterial.new(); gm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD; n.material = gm
+		root.add_child(n)
+		glows.append({"n": n, "a": J.num(g.get("a", 0.32)), "ph": float(i) * 2.17}); i += 1
+
+func _tick_flat() -> void:
+	var dp: Dictionary = L.get("depth", {}) if L.get("depth") is Dictionary else {}
+	var per = maxf(J.num(dp.get("per", 9.0)), 0.5)
+	var amt = J.num(dp.get("amt", 0.010))
+	var mt: ShaderMaterial = warp.material
+	mt.set_shader_parameter("sh", sin(t * TAU / per) * amt)
+	mt.set_shader_parameter("bob", sin(t * TAU / (per * 0.63) + 1.3) * amt * 0.35)
+	for g in glows:
+		var ph = float(g.ph)
+		var nz = 0.5 + 0.5 * (0.5 * sin(t * 6.1 + ph * 3.1) + 0.3 * sin(t * 11.9 + ph) + 0.2 * sin(t * 1.9 + ph * 5.0))
+		g.n.modulate.a = float(g.a) * (0.45 + 0.55 * nz)
+		g.n.scale = Vector2.ONE * (0.9 + 0.16 * nz)
+
+func _build() -> void:
+	var ls: Array = (L.get("layers", []) as Array).filter(func(o): return o is Dictionary)   # 壞資料先濾走（排序唔會撞）
+	ls.sort_custom(func(a, b): return J.num(a.get("z", 0)) < J.num(b.get("z", 0)))
+	var i := 0
+	for o in ls:
+		if not (o is Dictionary): continue
+		var tx = _tex(k, str(o.get("img", "")))
+		if tx == null: continue
+		var tr = TextureRect.new(); tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tr.texture = tx; tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; tr.stretch_mode = TextureRect.STRETCH_SCALE
+		var pv: Array = o.get("pivot", [0.5, 1.0]) if o.get("pivot") is Array else [0.5, 1.0]
+		if o.get("rect") is Array and (o.rect as Array).size() >= 4:   # 美術產線：左上＋闊高
+			var r: Array = o.rect
+			tr.position = img2view(Vector2(J.num(r[0]), J.num(r[1])))
+			tr.size = Vector2(J.num(r[2]) * tsz.x, J.num(r[3]) * tsz.y) * cover_s
+		else:   # 腳底＋高度
+			var hh = J.num(o.get("h", 0.2)) * tsz.y * cover_s
+			var ww = hh * float(tx.get_width()) / float(tx.get_height())
+			var foot = img2view(Vector2(J.num(o.get("x", 0.5)), J.num(o.get("y", 0.9))))
+			tr.size = Vector2(ww, hh); tr.position = foot - Vector2(ww / 2.0, hh)
+		tr.pivot_offset = Vector2(tr.size.x * J.num(pv[0]), tr.size.y * J.num(pv[1]))   # 軸心：人＝腳底（唔離地），燈籠＝頂（吊住擺）
+		tr.flip_h = J.t(o.get("flip"))
+		root.add_child(tr)
+		var fx: Dictionary = o.get("fx", {}) if o.get("fx") is Dictionary else {}
+		var alt = null
+		if fx.get("blink") is Dictionary: alt = _tex(k, str(fx.blink.get("alt", "")))
+		var glow = null
+		if fx.get("flicker") is Dictionary and J.num(fx.flicker.get("glow", 0.0)) > 0.0:   # 燈籠光暈：層後面一個加色柔光點
+			glow = TextureRect.new(); glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			glow.texture = _dot_tex(64, 1.0); glow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			var gs = maxf(tr.size.x, tr.size.y) * 2.2
+			glow.size = Vector2(gs, gs); glow.pivot_offset = glow.size / 2.0
+			glow.modulate = Color(str(fx.flicker.get("c", "#ffb060")))
+			var gm = CanvasItemMaterial.new(); gm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD; glow.material = gm
+			root.add_child(glow); root.move_child(glow, tr.get_index())
+		var twin = null
+		if fx.get("drift") is Dictionary:   # 炊煙：第二份錯開半個周期，循環時唔會一下閃走
+			twin = tr.duplicate(); root.add_child(twin)
+		items.append({"n": tr, "pos": tr.position, "fx": fx, "main": tx, "alt": alt, "glow": glow, "twin": twin,
+			"par": J.num(o.get("par", 0.0)), "ph": float(i) * 1.37})
+		i += 1
+	for f in L.get("fx", []):
+		if f is Dictionary: _particles(f)
+
+static func _dot_tex(sz: int, soft: float) -> Texture2D:   # 程式畫嘅柔邊圓點，唔使多一張圖
+	var im = Image.create(sz, sz, false, Image.FORMAT_RGBA8)
+	var c = (sz - 1) / 2.0
+	for y in sz:
+		for x in sz:
+			var d = Vector2(x - c, y - c).length() / c
+			var a = clampf((1.0 - d) / maxf(soft, 0.01), 0.0, 1.0)
+			im.set_pixel(x, y, Color(1, 1, 1, a * a))
+	return ImageTexture.create_from_image(im)
+
+func _particles(f: Dictionary) -> void:
+	var p = CPUParticles2D.new()
+	var ty = str(f.get("type", "smoke"))
+	var at = img2view(Vector2(J.num(f.get("x", 0.5)), J.num(f.get("y", 0.5))))
+	var ew = J.num(f.get("w", 0.03)) * tsz.x * cover_s
+	var eh = J.num(f.get("h", 0.0)) * tsz.y * cover_s
+	var u = tsz.y * cover_s / 1000.0   # 1 單位＝底圖高 1/1000（唔同解像度一樣大細）
+	p.position = at
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	p.emission_rect_extents = Vector2(maxf(ew / 2.0, 1.0), maxf(eh / 2.0, 1.0))
+	p.amount = clampi(int(J.num(f.get("n", 10))), 1, 40)   # 手機：每組最多 40 粒
+	p.local_coords = false
+	var g = Gradient.new()
+	match ty:
+		"smoke":
+			p.texture = _dot_tex(32, 0.9); p.lifetime = 3.2
+			p.direction = Vector2(0.15, -1); p.spread = 12; p.gravity = Vector2(6 * u, -4 * u)
+			p.initial_velocity_min = 14 * u; p.initial_velocity_max = 24 * u
+			p.scale_amount_min = 0.6 * u * 10; p.scale_amount_max = 1.0 * u * 10
+			var cv = Curve.new(); cv.add_point(Vector2(0, 0.4)); cv.add_point(Vector2(1, 1.6)); p.scale_amount_curve = cv
+			g.set_color(0, Color(0.78, 0.74, 0.8, 0.0)); g.add_point(0.15, Color(0.78, 0.74, 0.8, 0.38)); g.set_color(g.get_point_count() - 1, Color(0.7, 0.66, 0.74, 0.0))
+		"steam":
+			p.texture = _dot_tex(24, 0.9); p.lifetime = 1.6
+			p.direction = Vector2(0, -1); p.spread = 18; p.gravity = Vector2(0, -6 * u)
+			p.initial_velocity_min = 18 * u; p.initial_velocity_max = 30 * u
+			p.scale_amount_min = 0.4 * u * 10; p.scale_amount_max = 0.7 * u * 10
+			var cv2 = Curve.new(); cv2.add_point(Vector2(0, 0.5)); cv2.add_point(Vector2(1, 1.8)); p.scale_amount_curve = cv2
+			g.set_color(0, Color(1, 1, 1, 0.0)); g.add_point(0.2, Color(1, 1, 1, 0.45)); g.set_color(g.get_point_count() - 1, Color(1, 1, 1, 0.0))
+		"wisp":   # 鬼火：青綠、慢飄、閃爍
+			p.texture = _dot_tex(32, 0.6); p.lifetime = 4.5
+			p.direction = Vector2(0, -1); p.spread = 180; p.gravity = Vector2(0, -2 * u)
+			p.initial_velocity_min = 3 * u; p.initial_velocity_max = 9 * u
+			p.scale_amount_min = 0.08 * u * 10; p.scale_amount_max = 0.16 * u * 10   # 細粒鬼火，唔好變大團青煙
+			g.set_color(0, Color(0.45, 1.0, 0.75, 0.0)); g.add_point(0.25, Color(0.5, 1.0, 0.8, 0.7))
+			g.add_point(0.5, Color(0.4, 0.9, 0.7, 0.3)); g.add_point(0.7, Color(0.5, 1.0, 0.8, 0.65)); g.set_color(g.get_point_count() - 1, Color(0.4, 0.9, 0.7, 0.0))
+			var mat = CanvasItemMaterial.new(); mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD; p.material = mat
+		_:   # ember：火星
+			p.texture = _dot_tex(16, 0.5); p.lifetime = 1.8
+			p.direction = Vector2(0, -1); p.spread = 25; p.gravity = Vector2(0, -10 * u)
+			p.initial_velocity_min = 10 * u; p.initial_velocity_max = 22 * u
+			p.scale_amount_min = 0.15 * u * 10; p.scale_amount_max = 0.3 * u * 10
+			g.set_color(0, Color(1.0, 0.75, 0.35, 0.0)); g.add_point(0.1, Color(1.0, 0.7, 0.3, 0.9)); g.set_color(g.get_point_count() - 1, Color(1.0, 0.35, 0.1, 0.0))
+			var mat2 = CanvasItemMaterial.new(); mat2.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD; p.material = mat2
+	p.color_ramp = g
+	p.preprocess = p.lifetime   # 一出場已經有煙，唔會由零開始
+	root.add_child(p)
+	parts.append(p)
+
+# 鏡頭：返 [zoom, pan(像素)]；story_cg 用嚟郁底圖，同一套變換套落 root
+func cam() -> Array:
+	var c: Dictionary = L.get("cam", {}) if L.get("cam") is Dictionary else {}
+	var dur = maxf(J.num(c.get("dur", 14.0)), 0.1)
+	var a = clampf(t / dur, 0.0, 1.0); a = a * a * (3.0 - 2.0 * a)
+	var zz: Array = c.get("zoom", [1.0, 1.05]) if c.get("zoom") is Array else [1.0, 1.05]
+	var pp: Array = c.get("pan", [0, 0, 0, 0]) if c.get("pan") is Array else [0, 0, 0, 0]
+	while pp.size() < 4: pp.append(0)
+	var z = lerpf(J.num(zz[0]), J.num(zz[min(1, zz.size() - 1)]), a)
+	var pan = Vector2(lerpf(J.num(pp[0]), J.num(pp[2]), a), lerpf(J.num(pp[1]), J.num(pp[3]), a)) * vs
+	var lim = vs * maxf(z - 1.0, 0.0) / 2.0   # 平移唔可以大過放大多出嚟嘅邊，否則畫面邊露底
+	pan = Vector2(clampf(pan.x, -lim.x, lim.x), clampf(pan.y, -lim.y, lim.y))
+	return [z, pan]
+
+func tick(dt: float) -> Array:
+	t += dt
+	var cz = cam()
+	root.pivot_offset = vs / 2.0
+	root.scale = Vector2(cz[0], cz[0]); root.position = cz[1]
+	if warp != null: _tick_flat()
+	for it in items:
+		var n: TextureRect = it.n
+		var fx: Dictionary = it.fx
+		var off = cz[1] * float(it.par) / maxf(cz[0], 0.01)   # 視差：近景比背景多郁
+		var sc = 1.0; var rot = 0.0
+		var hh = n.size.y
+		var ph = float(it.ph)
+		if fx.get("float") is Dictionary:
+			var f = fx.float
+			off.y += sin((t + ph) * TAU / maxf(J.num(f.get("per", 2.6)), 0.1)) * J.num(f.get("amp", 0.006)) * tsz.y * cover_s
+		if fx.get("breathe") is Dictionary:
+			var b = fx.breathe
+			sc += sin((t + ph * 0.7) * TAU / maxf(J.num(b.get("per", 3.2)), 0.1)) * J.num(b.get("amp", 0.018))
+		if fx.get("sway") is Dictionary:
+			var s = fx.sway
+			rot = deg_to_rad(sin((t + ph) * TAU / maxf(J.num(s.get("per", 4.0)), 0.1)) * J.num(s.get("deg", 2.5)))
+		if fx.get("shake") is Dictionary:
+			var sh = fx.shake
+			var ev = J.num(sh.get("every", 4.0)); var du = J.num(sh.get("dur", 0.45))
+			var on = ev <= 0.0 or fmod(t + ph, ev) < du
+			if on:
+				var am = J.num(sh.get("amp", 0.004)) * tsz.y * cover_s
+				off += Vector2(sin(t * 71.0 + ph) * am, cos(t * 53.0 + ph) * am * 0.6)
+		if fx.get("wander") is Dictionary:   # 遊走：原位附近慢慢行（走一段、停一陣、再揀新目標），轉向時順勢斜少少
+			var wv = _wander(fx.wander, ph)
+			off += wv[0]; rot += wv[1]
+		if it.alt != null and fx.get("blink") is Dictionary:
+			var bl = fx.blink
+			var ev2 = maxf(J.num(bl.get("every", 3.2)), 0.2)
+			var want = it.alt if fmod(t + ph * 1.9, ev2) < J.num(bl.get("dur", 0.14)) else it.main
+			if n.texture != want: n.texture = want
+		if fx.get("flicker") is Dictionary:   # 燈籠閃：幾條唔同頻率嘅正弦疊埋，似火光唔規則
+			var fl = fx.flicker
+			var nz = 0.5 + 0.5 * (0.5 * sin(t * 7.3 + ph * 3.1) + 0.3 * sin(t * 13.7 + ph) + 0.2 * sin(t * 2.1 + ph * 5.0))
+			var v = lerpf(J.num(fl.get("min", 0.88)), J.num(fl.get("max", 1.12)), nz)
+			n.modulate = Color(v, v, v, 1.0)
+			if it.glow != null:
+				var g: TextureRect = it.glow
+				g.position = it.pos + off + n.size / 2.0 - g.size / 2.0 + Vector2(0, n.size.y * 0.1)
+				g.modulate.a = J.num(fl.get("glow", 0.55)) * (0.6 + 0.4 * nz)
+				g.scale = Vector2.ONE * (0.92 + 0.12 * nz)
+		if fx.get("drift") is Dictionary:   # 炊煙：向上飄、淡入淡出，兩份錯開
+			var dr = fx.drift
+			var per = maxf(J.num(dr.get("per", 4.0)), 0.2); var dy = J.num(dr.get("dy", 0.014)) * tsz.y * cover_s
+			var pa = fmod(t + ph, per) / per
+			n.modulate.a = sin(pa * PI)
+			off.y -= dy * pa
+			if it.twin != null:
+				var pb = fmod(t + ph + per / 2.0, per) / per
+				it.twin.position = it.pos + off + Vector2(0, dy * pa - dy * pb)
+				it.twin.modulate.a = sin(pb * PI)
+		n.position = it.pos + off
+		n.scale = Vector2(sc, sc); n.rotation = rot
+	return cz
+
+static func _h(i: float, sd: float) -> float:   # 決定性亂數 -1..1（同一張圖每次一樣）
+	var v = sin(i * 12.9898 + sd * 78.233) * 43758.5453
+	return (v - floor(v)) * 2.0 - 1.0
+
+# wander 參數（全部可每層調）：ax／ay＝左右／上下幅度（底圖闊／高嘅比例）、per＝每段（行＋停）秒數、
+# hold＝停頓佔每段比例、tilt＝轉向時傾斜度數、axis＝[dx,dy] 有就淨係沿呢個方向來回（搬木、挑水等工作方向）、
+# seed＝有就用佢做亂數種子（幾層寫同一個 seed＋同一組參數＝一齊行）
+func _wander(w: Dictionary, ph: float) -> Array:
+	var ax = J.num(w.get("ax", 0.012)) * tsz.x * cover_s
+	var ay = J.num(w.get("ay", 0.004)) * tsz.y * cover_s
+	var per = maxf(J.num(w.get("per", 6.0)), 0.5)
+	var hold = clampf(J.num(w.get("hold", 0.35)), 0.0, 0.9)
+	if w.has("seed"): ph = J.num(w.seed)   # 同一個 seed 嘅層一齊行（有接觸嘅角色，例如遞湯嘅手，唔會拉開）
+	var sd = ph * 3.7 + 1.0
+	var tt = t / per + ph * 0.61
+	var i = floor(tt); var fr = tt - i
+	var mv = clampf(fr / maxf(1.0 - hold, 0.05), 0.0, 1.0)
+	var e = mv * mv * (3.0 - 2.0 * mv)
+	var de = 6.0 * mv * (1.0 - mv) / maxf(1.0 - hold, 0.05)   # 速度（0..1.5），停頓時＝0
+	var a: Vector2; var b: Vector2
+	if w.get("axis") is Array and (w.axis as Array).size() >= 2:
+		var dir = Vector2(J.num(w.axis[0]), J.num(w.axis[1])).normalized()
+		var lim = Vector2(ax * absf(dir.x), ay * absf(dir.y)).length()
+		lim = maxf(lim, ax)
+		a = dir * _h(i, sd) * lim; b = dir * _h(i + 1.0, sd) * lim
+		a += Vector2(0, _h(i, sd + 9.0) * ay * 0.3); b += Vector2(0, _h(i + 1.0, sd + 9.0) * ay * 0.3)
+	else:
+		a = Vector2(_h(i, sd) * ax, _h(i, sd + 5.0) * ay); b = Vector2(_h(i + 1.0, sd) * ax, _h(i + 1.0, sd + 5.0) * ay)
+	var p = a.lerp(b, e)
+	var vx = (b.x - a.x) / maxf(ax, 1.0)
+	var rot = deg_to_rad(J.num(w.get("tilt", 2.5))) * clampf(vx, -1.0, 1.0) * clampf(de, 0.0, 1.0)
+	return [p, rot]
+
+func free_all() -> void:
+	if root != null and is_instance_valid(root):
+		if root.get_parent() != null: root.get_parent().remove_child(root)   # 即刻拎走，新嗰套先攞到 "cgm" 個名、唔會疊兩套
+		root.queue_free()
+	items.clear(); parts.clear(); glows.clear(); warp = null

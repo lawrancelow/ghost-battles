@@ -26,11 +26,12 @@ func _sys_layout() -> void:   # [cg] 系統窗位置：有插圖時，插圖＋�
 	var want = _sys_want
 	var on = cg != null and is_instance_valid(cg) and cg.visible
 	if on:
-		var total = cg.size.y + 12.0 + want
+		var ch = cg.custom_minimum_size.y   # [wide] 用插圖卡定好嘅高度（唔好用 size，未排好時會唔準）
+		var total = ch + 12.0 + want
 		var top = maxf(8.0, (size.y - total) / 2.0)
-		cg.offset_top = top
+		cg.set_top(top)
 		syswin.anchor_top = 0; syswin.anchor_bottom = 0
-		syswin.offset_top = top + cg.size.y + 12.0; syswin.offset_bottom = syswin.offset_top + want
+		syswin.offset_top = top + ch + 12.0; syswin.offset_bottom = syswin.offset_top + want
 	else:
 		syswin.anchor_top = 0.5; syswin.anchor_bottom = 0.5
 		syswin.offset_top = -want / 2; syswin.offset_bottom = want / 2

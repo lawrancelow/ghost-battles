@@ -14,6 +14,9 @@
 # 熱更新：冇 class_name；story.gd 用 preload
 extends Control
 
+const CGM = preload("res://ui/cg_motion.gd")   # [cgm] 分層動態插圖
+var mot = null   # [cgm] 當前動態插圖實例（冇分層素材＝null，用靜態圖）
+
 const TV_SHADER := """
 shader_type canvas_item;
 uniform float pw = 1.0;      // 開機進度 0→1（<0.35 光線橫向拉開；之後上下撐開）
@@ -75,11 +78,13 @@ var _off := -1.0   # >=0：關機中
 var _tvmat: ShaderMaterial
 var _blmat: ShaderMaterial
 const B := 12.0   # 電視機殼闊度
+var _psz := Vector2.ZERO   # [wide] 上次排版時父節點大細（視窗改大細／轉向就重排）
+var _spec = null
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	anchor_left = 0.0; anchor_right = 1.0; anchor_top = 0.0; anchor_bottom = 0.0
-	offset_left = 10; offset_right = -10; offset_top = 56
+	anchor_left = 0.5; anchor_right = 0.5; anchor_top = 0.0; anchor_bottom = 0.0
+	offset_top = 56
 	frame = Panel.new(); frame.mouse_filter = Control.MOUSE_FILTER_IGNORE   # 舊電視機殼（深啡木＋黑邊）
 	var sb = StyleBoxFlat.new(); sb.bg_color = Color("#3b2a1c"); sb.border_color = Color("#140d08"); sb.set_border_width_all(3)
 	sb.set_corner_radius_all(16); sb.shadow_color = Color(0, 0, 0, 0.7); sb.shadow_size = 18
@@ -125,25 +130,41 @@ func show_spec(spec) -> void:
 	var d: Dictionary = spec if spec is Dictionary else {"k": str(spec)}
 	var k = str(d.get("k", "")); var used_kf = false
 	# [opening] 女主版插圖：kf（有圖先用，冇就用男女共用嗰張）；rv＝待審標記（插圖右下角貼「待審」，老闆選定後刪走）
-	if str(d.get("kf", "")) != "" and Spr.ok(str(d.kf)):
-		var H = J.G.get("S"); var hh = H.get("hero") if H is Dictionary else null
-		if hh is Dictionary and str(hh.get("sex", "m")) == "f": k = str(d.kf); used_kf = true
+	if str(d.get("kf", "")) != "" and (Spr.ok(str(d.kf)) or CGM.known(str(d.kf))):
+		var HS = J.G.get("S"); var hh0 = HS.get("hero") if HS is Dictionary else null
+		if hh0 is Dictionary and str(hh0.get("sex", "m")) == "f": k = str(d.kf); used_kf = true
 	# [opening] 上線規矩：圖未到／未經老闆選定（rv、cg_review.json）→ 呢句唔顯示插圖（只有對話），唔用佔位圖、唔出「待審」。
 	#   審圖截圖先設 GB_RV_SHOW=1：未到用佔位圖（ph）、未選定照顯示並貼「待審」。
 	var rv_show = OS.get_environment("GB_RV_SHOW") == "1"
 	var pending = (str(d.get("rv", "")) != "" and not used_kf) or review_pending(k)
-	if not rv_show and (pending or not Spr.ok(k)): hide_cg(); return
-	if k != "" and not Spr.ok(k) and str(d.get("ph", "")) != "": k = str(d.ph)
-	if k == "" or not Spr.ok(k):
+	var have = k != "" and (Spr.ok(k) or CGM.known(k))   # [cgm] 分層／後備動態素材都算有圖
+	if not rv_show and (pending or not have): hide_cg(); return
+	if not have and str(d.get("ph", "")) != "": k = str(d.ph)
+	if k == "" or (not Spr.ok(k) and not CGM.known(k)):
 		hide_cg(); return
-	var tex: Texture2D = Spr.get_tex(k)
-	if tex == null: hide_cg(); return
+	var tex: Texture2D = CGM.bg(k) if (CGM.has(k) and not (d.get("anim") is bool and not d.anim)) else null   # [cgm] 有分層素材：用挖走角色嘅底圖
+	var layered = tex != null
+	if tex == null and CGM.known(k): tex = CGM.still(k)   # [cgm] 關動態：用原整張圖（有就用）
+	if tex == null: tex = Spr.get_tex(k) if Spr.ok(k) else null
+	if tex == null:
+		if mot != null: mot.free_all(); mot = null   # [cgm] 收起時唔再郁
+		hide_cg(); return
+	if not layered and mot != null: mot.free_all(); mot = null
 	var same = visible and cur_key == k and _off < 0.0
 	cur_key = k
-	var W = maxf(200.0, get_parent().size.x - 20.0)
-	var H = W * float(tex.get_height()) / float(tex.get_width())
-	H = minf(H, get_parent().size.y * 0.46)
-	size = Vector2(W, H); custom_minimum_size = size
+	# [wide] 框跟插圖長寬比：先盡量佔滿闊度；高度超過可用空間（對話框／系統窗以上）就按比例縮細、左右置中。原圖唔裁。
+	var psz: Vector2 = get_parent().size
+	_psz = psz; _spec = d
+	var ar = float(tex.get_height()) / float(tex.get_width())
+	var ws = maxf(160.0, psz.x - 20.0 - B * 2)
+	var hs = ws * ar
+	var ah = maxf(120.0, _avail_h(psz) - B * 2)
+	if hs > ah: hs = ah; ws = hs / ar
+	var W = ws + B * 2; var H = hs + B * 2
+	anchor_left = 0.5; anchor_right = 0.5
+	custom_minimum_size = Vector2(W, H)   # 先改最細尺寸再改 size（調轉會俾上一張圖嘅最細尺寸撐住，直圖之後嘅橫圖會變高、被裁）
+	offset_left = -W / 2.0; offset_right = W / 2.0
+	size = Vector2(W, H)
 	frame.position = Vector2.ZERO; frame.size = size
 	screen.position = Vector2(B, B); screen.size = size - Vector2(B, B) * 2
 	tv.position = Vector2.ZERO; tv.size = screen.size
@@ -151,6 +172,13 @@ func show_spec(spec) -> void:
 	vp.size = vs
 	pic.texture = tex; pic.position = Vector2.ZERO; pic.size = Vector2(vs); pic.pivot_offset = pic.size / 2
 	layer.position = Vector2.ZERO; layer.size = Vector2(vs)
+	var keep_t = mot.t if (same and mot != null) else 0.0   # [cgm] 同一張圖換行：動作接住播，唔重頭
+	if mot != null: mot.free_all(); mot = null
+	if layered:
+		mot = CGM.make(k, vp, Vector2(vs), tex)
+		if mot != null:
+			mot.t = keep_t
+			vp.move_child(mot.root, layer.get_index())   # 底圖之上、疊人／疊字之下
 	W = layer.size.x; H = layer.size.y
 	for c in layer.get_children(): layer.remove_child(c); c.queue_free()   # 即刻移走：新一張嘅疊圖／牌匾節點名唔會同舊嘅撞
 	for o in d.get("over", []):
@@ -215,13 +243,23 @@ func show_spec(spec) -> void:
 	var stg = get_parent().get("stage")   # 插圖出現時，舞台只畫背景、唔畫角色（唔好同插圖入面嘅角色重複）
 	if stg != null and is_instance_valid(stg): stg.set("hide_acts", true); stg.queue_redraw()
 
+func _avail_h(psz: Vector2) -> float:   # 插圖卡可以用嘅高度：唔好遮對話框；系統窗場要留位畀系統窗
+	var par = get_parent()
+	if par.get("syswin") != null and is_instance_valid(par.get("syswin")):
+		return maxf(psz.y * 0.3, psz.y - 16.0 - 12.0 - J.num(par.get("_sys_want")))
+	if par.get("talkbox") != null: return psz.y - 182.0 - 16.0
+	return psz.y - 16.0
+
 func _place() -> void:   # 居中：對話場＝對話框以上嘅空間正中；系統窗場＝插圖＋系統窗成組居中（由 story.gd 排）
 	var par = get_parent()
 	if par == null: return
 	if par.get("syswin") != null and is_instance_valid(par.get("syswin")):
 		par.call("_sys_layout"); return
 	var bot = par.size.y - (182.0 if par.get("talkbox") != null else 0.0)
-	offset_top = maxf(8.0, (bot - size.y) / 2.0)
+	set_top(maxf(8.0, (bot - custom_minimum_size.y) / 2.0))
+
+func set_top(v: float) -> void:   # [wide] 上下一齊郁（淨改 offset_top 會連高度都變，卡同框尺寸唔一致、撐落對話框）
+	offset_top = v; offset_bottom = v + custom_minimum_size.y
 
 static func _hero_spr() -> String:
 	var S = J.G.get("S")
@@ -234,7 +272,8 @@ func hide_cg() -> void:   # 關機：畫面縮返做一條線再熄
 	cur_key = ""
 
 func _restore() -> void:
-	visible = false; cur_key = ""; _off = -1.0
+	visible = false; cur_key = ""; _off = -1.0; _spec = null
+	if mot != null: mot.free_all(); mot = null
 	if blur != null and is_instance_valid(blur): blur.visible = false
 	var par = get_parent()
 	if par != null and par.has_method("_sys_layout"): par.call("_sys_layout")
@@ -243,6 +282,8 @@ func _restore() -> void:
 
 func _process(dt: float) -> void:
 	if not visible: return
+	if _off < 0.0 and _spec != null and get_parent() != null and (get_parent().size - _psz).length() > 1.0:
+		show_spec(_spec)   # [wide] 視窗改咗大細：按新尺寸重排（同一張圖，動作接住播）
 	_t += dt
 	var pw = clampf(_t / 0.55, 0.0, 1.0)
 	var amt = clampf(_t / 0.4, 0.0, 1.0)
@@ -254,6 +295,11 @@ func _process(dt: float) -> void:
 	_tvmat.set_shader_parameter("pw", pw)
 	_tvmat.set_shader_parameter("tm", _t)
 	if _blmat != null: _blmat.set_shader_parameter("amt", amt)
+	if mot != null:   # [cgm] 分層動態：慢推鏡＋視差＋每層動作由 cg_motion 計
+		var cz = mot.tick(dt)
+		pic.pivot_offset = pic.size / 2; pic.scale = Vector2(cz[0], cz[0]); pic.position = cz[1]
+		layer.pivot_offset = layer.size / 2; layer.scale = pic.scale; layer.position = cz[1]
+		return
 	var z = 1.0 + minf(_t, 12.0) * 0.004   # 慢慢推近
 	pic.scale = Vector2(z, z)
 	layer.pivot_offset = layer.size / 2; layer.scale = pic.scale   # 疊圖／疊字跟插圖一齊推近，唔會錯位

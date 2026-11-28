@@ -1,0 +1,89 @@
+{
+ "still_src": "/home/claude/meeting/vil2/review/img/f_bribe.jpg",
+ "defringe": 2,
+ "cam": {
+  "zoom": [
+   1.0,
+   1.06
+  ],
+  "pan": [
+   0,
+   0,
+   0.008,
+   0.004
+  ],
+  "dur": 14
+ },
+ "fx": [
+  {
+   "type": "steam",
+   "x": 0.455,
+   "y": 0.52,
+   "w": 0.04,
+   "n": 7
+  },
+  {
+   "type": "wisp",
+   "x": 0.5,
+   "y": 0.6,
+   "w": 0.8,
+   "h": 0.5,
+   "n": 7
+  }
+ ],
+ "layer_fx": {
+  "heroine_mamian": {
+   "par": 0.3,
+   "fx": {
+    "float": {
+     "amp": 0.006,
+     "per": 2.5
+    },
+    "wander": {
+     "ax": 0.007,
+     "ay": 0.003,
+     "axis": [
+      1,
+      0.15
+     ],
+     "per": 5.2,
+     "hold": 0.45,
+     "tilt": 0.0
+    }
+   }
+  },
+  "niutou": {
+   "par": 0.2,
+   "fx": {
+    "breathe": {
+     "amp": 0.012,
+     "per": 2.6
+    },
+    "float": {
+     "amp": 0.003,
+     "per": 3.0
+    },
+    "wander": {
+     "ax": 0.005,
+     "ay": 0.002,
+     "per": 6.5,
+     "hold": 0.55,
+     "tilt": 1.0
+    }
+   }
+  },
+  "boss": {
+   "par": 0.15,
+   "fx": {
+    "breathe": {
+     "amp": 0.02,
+     "per": 3.4
+    },
+    "sway": {
+     "deg": 1.2,
+     "per": 5.0
+    }
+   }
+  }
+ }
+}
