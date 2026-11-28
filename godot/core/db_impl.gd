@@ -22,7 +22,9 @@ func t(name: String) -> Variant: return D.get(name)
 # 先查 LANG_ZH（用粵語原句做 key），之後先經 N() 換主角名（次序唔可以倒轉）
 func L(s: Variant) -> Variant:
 	if not (s is String): return s
-	if lang != "zh": return N(s)
+	if lang != "zh":
+		var y = D.get("LANG_YUE", {}).get(s)   # [opening] 中文原句嘅粵語版（story_v2.json "yue"；未填就照出中文）
+		return N(y if y != null and y != "" else s)
 	var z = D.get("LANG_ZH", {}).get(s)
 	return N(z if z != null and z != "" else s)
 
