@@ -2565,8 +2565,7 @@
 "cg": {
 "0": {
 "k": "cg_lobby_f",
-"ph": "cg1_queue",
-"rv": "待審"
+"ph": "cg1_queue"
 },
 "2": ""
 },
@@ -2604,8 +2603,7 @@
 "cg": {
 "0": {
 "k": "cg_office_f",
-"ph": "cg1_office",
-"rv": "待審"
+"ph": "cg1_office"
 },
 "3": ""
 },
@@ -2642,8 +2640,7 @@
 "cg": {
 "3": {
 "k": "cg_soup_f",
-"ph": "cg1_queue",
-"rv": "待審"
+"ph": "cg1_queue"
 }
 },
 "lines": [
@@ -2688,8 +2685,7 @@
 "cg": {
 "2": {
 "k": "cg_exile_f",
-"ph": "cg1_queue",
-"rv": "待審"
+"ph": "cg1_queue"
 }
 },
 "lines": [
@@ -2903,13 +2899,11 @@
 },
 "5": {
 "k": "cg_joss_flood_f",
-"ph": "cg1_descend",
-"rv": "待審"
+"ph": "cg1_descend"
 },
 "8": {
 "k": "cg_joss_note_f",
-"ph": "cg1_descend",
-"rv": "待審"
+"ph": "cg1_descend"
 },
 "14": ""
 },

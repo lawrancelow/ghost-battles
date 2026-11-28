@@ -70,6 +70,34 @@ func _no_braces() -> void:
 	for k in ["cg_ruins", "cg_b2_soup", "cg_lobby_f", "cg_office_f", "cg_exile_f", "cg_soup_f", "cg_joss_flood_f", "cg_joss_note_f", "cg_stall_hook_f", "cg_tavern_f", "cg_c1_bribe", "cg_c2_bribe", "cg_bribe_f"]:
 		if not Spr.ok(k): miss.append(k)
 	_chk("美術新圖已入 manifest", miss.is_empty(), miss)
+	# 全部場景（唔止新場景）：講者、對白都唔准有花括號佔位
+	var bad2: Array = []
+	for id in _scenes():
+		var sc2 = _scenes()[id]
+		if not (sc2 is Dictionary) or not (sc2.get("lines") is Array): continue
+		for ln in sc2.lines:
+			if not (ln is Array): continue
+			for i in mini(2, ln.size()):
+				if ln[i] is String and (ln[i].contains("{主角") or ln[i].contains("｛主角")): bad2.append("%s:%s" % [id, ln[i]])
+	_chk("全部場景冇 {主角} 佔位", bad2.is_empty(), bad2.slice(0, 5))
+	# 防呆：就算文案再寫 {主角}，出口（名牌、對白、任務欄、提示都經 DB.N）一樣換成玩家名
+	var S = J.G.S; var h0 = S.get("hero", {}).duplicate()
+	S["hero"] = {"name": "阿福", "full": "陳大福", "en": "Kelvin", "sex": "m", "set": true}
+	_chk("防呆：預設男主 {主角}→阿福", str(DB.N("{主角}")) == "阿福" and str(DB.N("{主角}，你來了。")) == "阿福，你來了。", DB.N("{主角}"))
+	S["hero"] = {"name": "阿明", "full": "李大明", "en": "Ming", "sex": "m", "set": true}
+	_chk("防呆：改名男主 {主角}→阿明", str(DB.N("{主角}")) == "阿明" and str(DB.N("{主角全名}")) == "李大明", DB.N("{主角}"))
+	S["hero"] = {"name": "小慧", "full": "林慧", "en": "", "sex": "f", "set": true}
+	_chk("防呆：女主 {主角}→小慧", str(DB.N("{主角}")) == "小慧" and not str(DB.N("找{主角}談談")).contains("{"), DB.N("{主角}"))
+	S["hero"] = h0
+	# 待審：未選定嘅插圖有 rv 欄；已選用（A1 荒村廢墟 cg_ruins）冇
+	var nrv = 0; var ruins_rv = false
+	for id in OM + OF + ["joss_reopen", "joss_reopen_f", "tav_open", "stall_hook"]:
+		var cg = _scenes()[id].get("cg", {})
+		for k in cg:
+			if cg[k] is Dictionary and str(cg[k].get("rv", "")) != "":
+				nrv += 1
+				if str(cg[k].get("k", "")) == "cg_ruins": ruins_rv = true
+	_chk("待審標記：未畫嘅男主／共用插圖有 rv、已選用（cg_ruins、女主 f_*）冇", nrv >= 10 and not ruins_rv and not _scenes().opf2_soup.cg["3"].has("rv") and not _scenes().joss_reopen_f.cg["5"].has("rv"), nrv)
 
 # 名字替換：改名、女主版
 func _names() -> void:
@@ -185,7 +213,7 @@ func _play(t, m, sex: String) -> void:
 	if st == null: return
 	for id in ids: S.seen.erase(id)
 	for id in ids: st.queue(id)
-	var played = {}; var names_ok = true; var guard = 0; var brace_bad: Array = []
+	var played = {}; var names_ok = true; var guard = 0; var brace_bad: Array = []; var rv_bad: Array = []; var rv_seen = 0; var rv_n = 0
 	while st.cur != null and guard < 400:
 		guard += 1
 		var cid = str(st.cur.get("id", ""))
@@ -194,6 +222,17 @@ func _play(t, m, sex: String) -> void:
 			await _w(t, 0.9)
 			await RenderingServer.frame_post_draw
 			t.get_viewport().get_texture().get_image().save_png(SH + "%s_%s.png" % [sex, cid])
+		var cgspec = st.cur.sc.get("cg", {}).get(str(st.li)) if st.cur.sc.get("cg") is Dictionary else null
+		if cgspec is Dictionary and st.get("cg") != null and is_instance_valid(st.cg) and st.cg.visible:
+			var has_b = st.cg.layer.get_node_or_null("RvBadge") != null
+			var want_b = str(cgspec.get("rv", "")) != "" and not (sex == "f" and str(cgspec.get("kf", "")) != "" and Spr.ok(str(cgspec.kf)))
+			if has_b != want_b: rv_bad.append("%s:%d" % [cid, st.li])
+			if want_b: rv_n += 1
+			rv_seen += 1
+			if st.li > 0:   # 插圖唔喺第一句先出嘅場景：出圖嗰句再截一張（總覽圖用）
+				await _w(t, 0.9)
+				await RenderingServer.frame_post_draw
+				t.get_viewport().get_texture().get_image().save_png(SH + "%s_%s_cg%d.png" % [sex, cid, st.li])
 		var shown_nm = str(st.nm.text) if st.get("nm") != null else ""
 		var shown_tx = str(st.full_text)
 		if shown_nm.contains("{") or shown_nm.contains("}") or shown_tx.contains("{") or shown_tx.contains("}"): brace_bad.append("%s:%s|%s" % [cid, shown_nm, shown_tx.left(20)])
@@ -207,4 +246,5 @@ func _play(t, m, sex: String) -> void:
 	_chk("實機播完開場（%s）" % sex, all_seen and st.cur == null, played.keys())
 	_chk("實機名牌顯示玩家名（%s）" % sex, names_ok)
 	_chk("實機畫面冇「{」「}」佔位、名牌唔出阿福（%s）" % sex, brace_bad.is_empty(), brace_bad.slice(0, 5))
+	_chk("實機「待審」角標同數據一致（%s）" % sex, rv_bad.is_empty() and rv_seen >= 5 and (rv_n >= 5 if sex == "m" else rv_n <= 2), [rv_seen, rv_n, rv_bad.slice(0, 5)])
 	S["hero"] = h0; S["seen"] = seen0

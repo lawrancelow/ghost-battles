@@ -123,11 +123,11 @@ func _ensure_blur() -> void:   # 背景濛化＋黑化：放喺舞台之上、�
 func show_spec(spec) -> void:
 	if spec == null: return
 	var d: Dictionary = spec if spec is Dictionary else {"k": str(spec)}
-	var k = str(d.get("k", ""))
-	# [opening] 女主版插圖：kf（有圖先用，冇就用男女共用嗰張）；rv＝待審標記（只俾美術／統籌睇，遊戲唔顯示）
+	var k = str(d.get("k", "")); var used_kf = false
+	# [opening] 女主版插圖：kf（有圖先用，冇就用男女共用嗰張）；rv＝待審標記（插圖右上角貼「待審」，老闆選定後刪走）
 	if str(d.get("kf", "")) != "" and Spr.ok(str(d.kf)):
 		var H = J.G.get("S"); var hh = H.get("hero") if H is Dictionary else null
-		if hh is Dictionary and str(hh.get("sex", "m")) == "f": k = str(d.kf)
+		if hh is Dictionary and str(hh.get("sex", "m")) == "f": k = str(d.kf); used_kf = true
 	if k != "" and not Spr.ok(k) and str(d.get("ph", "")) != "": k = str(d.ph)   # [opening] 新插圖未到：先用佔位圖（ph）
 	if k == "" or not Spr.ok(k):
 		hide_cg(); return
@@ -194,6 +194,13 @@ func show_spec(spec) -> void:
 			lb.size = Vector2(bw, 10)
 			lb.position = Vector2(W * J.num(t.get("x", 0.5)) - bw / 2, H * J.num(t.get("y", 0.2)))
 		layer.add_child(lb)
+	if str(d.get("rv", "")) != "" and not used_kf:   # 女主版（kf）老闆已全部選用，唔貼；[opening] 老闆未選定嘅圖：右上角貼「待審」；選定後喺 story_v2.json 刪走 rv
+		var rb = Label.new(); rb.name = "RvBadge"; rb.mouse_filter = Control.MOUSE_FILTER_IGNORE; rb.text = str(d.rv)
+		rb.add_theme_font_size_override("font_size", 34); rb.add_theme_color_override("font_color", Color("#fff4d8"))
+		var rs = StyleBoxFlat.new(); rs.bg_color = Color("#c8322a"); rs.set_corner_radius_all(8)
+		rs.content_margin_left = 14; rs.content_margin_right = 14; rs.content_margin_top = 4; rs.content_margin_bottom = 4
+		rb.add_theme_stylebox_override("normal", rs)
+		layer.add_child(rb); rb.reset_size(); rb.position = Vector2(W - rb.get_minimum_size().x - 16, 14)
 	visible = true; modulate.a = 1.0; _off = -1.0; _anim = true
 	if not same: _t = 0.0   # 換新圖先重新開機；同一張就唔再閃
 	_ensure_blur()
