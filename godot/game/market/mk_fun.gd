@@ -69,7 +69,7 @@ static func ch() -> int:
 	var s = MK.S()
 	return int(J.num(s.mv.get("ci", 0))) if s != null and s.get("mv") is Dictionary else 0
 static func ot_price(sid: String) -> float:   # 加班：每件賣貴啲；趴低：冇人睇檔，客人自助，只收到一成半
-	if on() and MK.is_down(sid): return cf("ot", "down_price_mul", 0.15)
+	if on() and MK.is_down(sid): return cf("ot", "down_price_mul", 0.12)
 	return cf("ot", "price_mul", 1.5) if MK.ot_on(sid) else 1.0
 static func warn(sid: String) -> bool: return on() and MK.fat(sid) >= cf("ot", "warn", 70.0) and not MK.is_down(sid)
 static func vet(sid: String) -> bool: return on() and MK.rank(sid) > 0   # 老員工＝M1 嘅 rank ≥1（產量加成由 M1 rank_bonus 計）
