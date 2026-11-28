@@ -129,11 +129,17 @@ func show_spec(spec) -> void:
 	if spec == null: return
 	var d: Dictionary = spec if spec is Dictionary else {"k": str(spec)}
 	var k = str(d.get("k", "")); var used_kf = false
-	# [opening] 女主版插圖：kf（有圖先用，冇就用男女共用嗰張）；rv＝待審標記（插圖右上角貼「待審」，老闆選定後刪走）
-	if str(d.get("kf", "")) != "" and Spr.ok(str(d.kf)):
-		var H0 = J.G.get("S"); var hh = H0.get("hero") if H0 is Dictionary else null
-		if hh is Dictionary and str(hh.get("sex", "m")) == "f": k = str(d.kf); used_kf = true
-	if k != "" and not Spr.ok(k) and not CGM.known(k) and str(d.get("ph", "")) != "": k = str(d.ph)   # [opening] 新插圖未到：先用佔位圖（ph）
+	# [opening] 女主版插圖：kf（有圖先用，冇就用男女共用嗰張）；rv＝待審標記（插圖右下角貼「待審」，老闆選定後刪走）
+	if str(d.get("kf", "")) != "" and (Spr.ok(str(d.kf)) or CGM.known(str(d.kf))):
+		var HS = J.G.get("S"); var hh0 = HS.get("hero") if HS is Dictionary else null
+		if hh0 is Dictionary and str(hh0.get("sex", "m")) == "f": k = str(d.kf); used_kf = true
+	# [opening] 上線規矩：圖未到／未經老闆選定（rv、cg_review.json）→ 呢句唔顯示插圖（只有對話），唔用佔位圖、唔出「待審」。
+	#   審圖截圖先設 GB_RV_SHOW=1：未到用佔位圖（ph）、未選定照顯示並貼「待審」。
+	var rv_show = OS.get_environment("GB_RV_SHOW") == "1"
+	var pending = (str(d.get("rv", "")) != "" and not used_kf) or review_pending(k)
+	var have = k != "" and (Spr.ok(k) or CGM.known(k))   # [cgm] 分層／後備動態素材都算有圖
+	if not rv_show and (pending or not have): hide_cg(); return
+	if not have and str(d.get("ph", "")) != "": k = str(d.ph)
 	if k == "" or (not Spr.ok(k) and not CGM.known(k)):
 		hide_cg(); return
 	var tex: Texture2D = CGM.bg(k) if (CGM.has(k) and not (d.get("anim") is bool and not d.anim)) else null   # [cgm] 有分層素材：用挖走角色嘅底圖
@@ -174,7 +180,7 @@ func show_spec(spec) -> void:
 			mot.t = keep_t
 			vp.move_child(mot.root, layer.get_index())   # 底圖之上、疊人／疊字之下
 	W = layer.size.x; H = layer.size.y
-	for c in layer.get_children(): c.queue_free()
+	for c in layer.get_children(): layer.remove_child(c); c.queue_free()   # 即刻移走：新一張嘅疊圖／牌匾節點名唔會同舊嘅撞
 	for o in d.get("over", []):
 		if not (o is Dictionary): continue
 		var sk = str(o.get("spr", ""))
@@ -222,13 +228,14 @@ func show_spec(spec) -> void:
 			lb.position = Vector2(W * J.num(t.get("x", 0.5)) - bw / 2, H * J.num(t.get("y", 0.2)))
 		layer.add_child(lb)
 	_plaques(k, d, tex, W, H)
-	if str(d.get("rv", "")) != "" and not used_kf:   # 女主版（kf）老闆已全部選用，唔貼；[opening] 老闆未選定嘅圖：右上角貼「待審」；選定後喺 story_v2.json 刪走 rv
+	if pending and str(d.get("rv", "")) == "": d = d.duplicate(); d["rv"] = "待審"; used_kf = false   # 素材本身未選定（data/cg_review.json）
+	if str(d.get("rv", "")) != "" and not used_kf:   # 女主版（kf）老闆已全部選用，唔貼；[opening] 老闆未選定嘅圖：右下角貼「待審」；選定後喺 story_v2.json 刪走 rv
 		var rb = Label.new(); rb.name = "RvBadge"; rb.mouse_filter = Control.MOUSE_FILTER_IGNORE; rb.text = str(d.rv)
 		rb.add_theme_font_size_override("font_size", 34); rb.add_theme_color_override("font_color", Color("#fff4d8"))
 		var rs = StyleBoxFlat.new(); rs.bg_color = Color("#c8322a"); rs.set_corner_radius_all(8)
 		rs.content_margin_left = 14; rs.content_margin_right = 14; rs.content_margin_top = 4; rs.content_margin_bottom = 4
 		rb.add_theme_stylebox_override("normal", rs)
-		layer.add_child(rb); rb.reset_size(); rb.position = Vector2(W - rb.get_minimum_size().x - 16, 14)
+		layer.add_child(rb); rb.reset_size(); rb.position = Vector2(W - rb.get_minimum_size().x - 16, H - rb.get_minimum_size().y - 14)   # 右下角：唔遮牌匾
 	visible = true; modulate.a = 1.0; _off = -1.0; _anim = true
 	if not same: _t = 0.0   # 換新圖先重新開機；同一張就唔再閃
 	_ensure_blur()
@@ -301,6 +308,14 @@ func _process(dt: float) -> void:
 # ---------------- [plaque] 牌匾疊字：插圖上空白牌匾嘅字由程序貼（四角座標透視貼字，跟插圖一齊推近／移動） ----------------
 # 座標：data/cg_plaque.json → {"<插圖鍵>": [{"size":[原圖闊,高], "quad":[[左上],[右上],[右下],[左下]], "text":"…", "color":"#5a2a1c", "vertical":false}]}
 #   quad 可以係原圖像素（配 size）或者 0–1 比例。場景 cg 可以用 "plaque": {"t": "字"} 或 ["第一塊字", "第二塊字"] 覆蓋文字；"plaque": false＝唔貼。
+static var _rv_keys = null
+static func review_pending(k: String) -> bool:   # data/cg_review.json 嘅 pending：未經老闆選定嘅插圖鍵
+	if _rv_keys == null:
+		_rv_keys = []
+		if FileAccess.file_exists("res://data/cg_review.json"):
+			var j = JSON.parse_string(FileAccess.get_file_as_string("res://data/cg_review.json"))
+			if j is Dictionary and j.get("pending") is Array: _rv_keys = j.pending
+	return (_rv_keys as Array).has(k)
 static var _pl_data = null
 static func plaque_data() -> Dictionary:
 	if _pl_data == null:
@@ -351,25 +366,66 @@ func _plaques(k: String, d: Dictionary, tex: Texture2D, W: float, H: float) -> v
 			var v = Vector2(J.num(p[0]), J.num(p[1]))
 			if sz is Array and sz.size() == 2: v = v / Vector2(J.num(sz[0]), J.num(sz[1]))
 			q.append(img_to_layer(v, ts, W, H))
-		layer.add_child(_plaque_node(text, q, Color(str(e.get("color", "#5a2a1c"))), J.t(e.get("vertical")), i))
+		layer.add_child(_plaque_node(text, q, Color(str(e.get("color", "#5a2a1c"))), J.t(e.get("vertical")), i, str(e.get("style", ""))))
 
-func _plaque_node(text: String, q: Array, col: Color, vertical: bool, idx: int) -> Node2D:
+# 便條斷行：逐字量闊度，每行唔超過 maxw；行首唔放收尾標點（將上一行最後一個字一齊帶落嚟）
+static func note_wrap(text: String, f: Font, fs: int, maxw: float) -> Array:
+	var out: Array = []; var cur = ""
+	var NOHEAD = "，。：；、！？」』）…"
+	for ch in text.split(""):
+		if ch == "\n": out.append(cur); cur = ""; continue
+		if cur != "" and f.get_string_size(cur + ch, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > maxw:
+			if NOHEAD.contains(ch) and cur.length() > 1:
+				var kk = cur.length() - 1
+				while kk > 0 and NOHEAD.contains(cur[kk]): kk -= 1   # 連續收尾標點（例如 』。）成串帶落嚟，行首一定係字
+				out.append(cur.substr(0, kk)); cur = cur.substr(kk) + ch
+			else:
+				out.append(cur); cur = ch
+		else: cur += ch
+	if cur != "": out.append(cur)
+	return out
+
+func _plaque_node(text: String, q: Array, col: Color, vertical: bool, idx: int, style := "") -> Node2D:
 	var wtop = (q[1] - q[0]).length(); var wbot = (q[2] - q[3]).length(); var hl = (q[3] - q[0]).length(); var hr = (q[2] - q[1]).length()
 	var qw = maxf(8.0, (wtop + wbot) / 2.0); var qh = maxf(8.0, (hl + hr) / 2.0)
 	var TW = 768; var TH = maxi(48, int(768.0 * qh / qw))
 	var sv = SubViewport.new(); sv.transparent_bg = true; sv.size = Vector2i(TW, TH); sv.render_target_update_mode = SubViewport.UPDATE_ONCE; sv.disable_3d = true
+	if style == "note": text = text.trim_prefix("「").trim_suffix("」")
 	var lb = Label.new(); lb.text = "\n".join(text.split("")) if vertical else text
 	var n = maxi(1, text.length())
 	var fs = int(minf(TH * 0.66, TW * 0.9 / n)) if not vertical else int(minf(TW * 0.66, TH * 0.9 / n))
+	var note_lines: Array = []
+	if style == "note":   # 便條：多行，自己逐字量闊度斷行（唔靠 Label 自動斷行），字盡量大但成段要喺紙面內
+		var nf: Font = UIKit.font("serif", 700)
+		var aw = TW * 0.86; var ah = TH * 0.88
+		fs = int(sqrt(aw * ah / (n * 1.3)))
+		while fs > 10:
+			note_lines = note_wrap(text, nf, fs, aw)
+			if note_lines.size() * (nf.get_height(fs) + int(fs * 0.12)) <= ah: break   # 用字體真行高（宋體行高約 1.45 倍字號），唔好估
+			fs -= 1
+	if style == "emboss": fs = int(minf(TH * 0.8, TW * 0.98 / n))   # 金匾浮雕字：盡量填滿匾面空位
 	lb.add_theme_font_override("font", UIKit.font("serif", 900)); lb.add_theme_font_size_override("font_size", maxi(10, fs))
 	lb.add_theme_color_override("font_color", col)
 	lb.add_theme_color_override("font_outline_color", Color(1.0, 0.93, 0.8, 0.35)); lb.add_theme_constant_override("outline_size", maxi(2, fs / 14))   # 淡淡亮邊，似刻喺匾面
 	lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; lb.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lb.position = Vector2.ZERO; lb.size = Vector2(TW, TH); lb.clip_text = true
+	if style == "note":
+		lb.text = "\n".join(note_lines)
+		lb.clip_text = false; lb.autowrap_mode = TextServer.AUTOWRAP_OFF; lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		lb.add_theme_font_override("font", UIKit.font("serif", 700)); lb.add_theme_constant_override("outline_size", 0); lb.add_theme_constant_override("line_spacing", int(fs * 0.12))
+		lb.position = Vector2(TW * 0.07, TH * 0.06); lb.size = Vector2(TW * 0.86, TH * 0.88)
+	if style == "emboss":   # 金匾浮雕字：下層深色內陰影（偏右下）＋亮色高光（偏左上）＋面層金色，似刻出嚟
+		var off = maxf(2.0, fs / 22.0)
+		lb.remove_theme_color_override("font_outline_color"); lb.add_theme_constant_override("outline_size", 0)
+		var sh = lb.duplicate(); sh.name = "EmbossShadow"; sh.add_theme_color_override("font_color", Color(0.22, 0.1, 0.02, 0.85)); sh.position = Vector2(off, off)
+		var hi = lb.duplicate(); hi.name = "EmbossHi"; hi.add_theme_color_override("font_color", Color(1.0, 0.96, 0.75, 0.95)); hi.position = Vector2(-off * 0.7, -off * 0.7)
+		lb.add_theme_color_override("font_outline_color", col.darkened(0.45)); lb.add_theme_constant_override("outline_size", maxi(1, int(off * 0.6)))
+		sv.add_child(sh); sv.add_child(hi)
 	sv.add_child(lb)
 	var pg = Polygon2D.new(); pg.name = "Plaque%d" % idx; pg.add_child(sv)
 	pg.texture = sv.get_texture(); pg.modulate = Color(1, 1, 1, 0.9)
-	pg.set_meta("text", text); pg.set_meta("quad", q); pg.set_meta("font_size", fs)
+	pg.set_meta("text", text); pg.set_meta("quad", q); pg.set_meta("lines", note_lines); pg.set_meta("tex_w", TW); pg.set_meta("tex_h", TH); pg.set_meta("font_size", fs); pg.set_meta("style", style); pg.set_meta("layers", sv.get_child_count())
+	if style == "emboss": pg.modulate = Color(1, 1, 1, 1)
 	var NX = 12; var NY = 6; var m = homography(q)
 	var pts := PackedVector2Array(); var uvs := PackedVector2Array(); var polys: Array = []
 	for y in NY + 1:

@@ -69,7 +69,7 @@ func _no_braces() -> void:
 				if ln[i] is String and re.search(ln[i]) != null: bad.append("%s:%s" % [id, ln[i]])
 	_chk("新場景冇 {xxx} 佔位", bad.is_empty(), bad.slice(0, 5))
 	var miss: Array = []
-	for k in ["cg_ruins", "cg_b2_soup", "cg_lobby_f", "cg_office_f", "cg_exile_f", "cg_soup_f", "cg_joss_flood_f", "cg_joss_note_f", "cg_stall_hook_f", "cg_tavern_f", "cg_c1_bribe", "cg_c2_bribe", "cg_bribe_f", "cg_lobby", "cg_stall_hook", "cg_pang_visit", "cg_joss_flood", "cg_joss_note_m", "cg_caught", "cg_he_wake", "cg_qian_bite", "cg_office", "cg_exile", "cg_tavern"]:
+	for k in ["cg_ruins", "cg_b2_soup", "cg_lobby_f", "cg_office_f", "cg_exile_f", "cg_soup_f", "cg_joss_flood_f", "cg_joss_note_f", "cg_stall_hook_f", "cg_tavern_f", "cg_c1_bribe", "cg_c2_bribe", "cg_bribe_f", "cg_lobby", "cg_stall_hook", "cg_pang_visit", "cg_joss_flood", "cg_joss_note_m", "cg_caught", "cg_he_wake", "cg_qian_bite", "cg_office", "cg_exile", "cg_tavern", "cg_road", "cg_road_f", "cg_joss_ruin", "cg_note", "cg_dato_plaque", "cg_nuopo_taste"]:
 		if not Spr.ok(k): miss.append(k)
 	_chk("美術新圖已入 manifest", miss.is_empty(), miss)
 	# 全部場景（唔止新場景）：講者、對白都唔准有花括號佔位
@@ -99,7 +99,7 @@ func _no_braces() -> void:
 			if cg[k] is Dictionary and str(cg[k].get("rv", "")) != "":
 				nrv += 1
 				if str(cg[k].get("k", "")) == "cg_ruins": ruins_rv = true
-	_chk("待審標記：未畫嘅男主／共用插圖有 rv、已選用（cg_ruins、女主 f_*）冇", nrv >= 6 and not ruins_rv and not _scenes().op2_lobby.cg["0"].has("rv") and not _scenes().stall_hook.cg["0"].has("rv") and _scenes().op2_office.cg["0"].has("rv") and not _scenes().opf2_soup.cg["3"].has("rv") and not _scenes().joss_reopen_f.cg["5"].has("rv"), nrv)
+	_chk("待審清零：全部開場／化寶爐／酒館／大排檔插圖都係定稿（冇 rv）", nrv == 0, nrv)
 
 # 名字替換：改名、女主版
 func _names() -> void:
@@ -225,11 +225,14 @@ func _play(t, m, sex: String) -> void:
 			await RenderingServer.frame_post_draw
 			t.get_viewport().get_texture().get_image().save_png(SH + "%s_%s.png" % [sex, cid])
 		var cgspec = st.cur.sc.get("cg", {}).get(str(st.li)) if st.cur.sc.get("cg") is Dictionary else null
-		if cgspec is Dictionary and st.get("cg") != null and is_instance_valid(st.cg) and st.cg.visible:
-			var has_b = st.cg.layer.get_node_or_null("RvBadge") != null
-			var want_b = str(cgspec.get("rv", "")) != "" and not (sex == "f" and str(cgspec.get("kf", "")) != "" and Spr.ok(str(cgspec.kf)))
-			if has_b != want_b: rv_bad.append("%s:%d" % [cid, st.li])
-			if want_b: rv_n += 1
+		if cgspec is Dictionary and st.get("cg") != null and is_instance_valid(st.cg):
+			if st.cg.layer.get_node_or_null("RvBadge") != null: rv_bad.append("角標 %s:%d" % [cid, st.li])
+			var rk = str(cgspec.get("k", ""))
+			if sex == "f" and str(cgspec.get("kf", "")) != "" and Spr.ok(str(cgspec.kf)): rk = str(cgspec.kf)
+			var pend = (str(cgspec.get("rv", "")) != "" and rk == str(cgspec.get("k", ""))) or not Spr.ok(rk)
+			if pend and st.cg.cur_key != "": rv_bad.append("未有圖但顯示咗 %s:%d %s" % [cid, st.li, st.cg.cur_key]); 
+			if not pend and st.cg.cur_key != rk: rv_bad.append("應顯示 %s:%d %s≠%s" % [cid, st.li, st.cg.cur_key, rk])
+			if pend: rv_n += 1
 			rv_seen += 1
 			if st.li > 0:   # 插圖唔喺第一句先出嘅場景：出圖嗰句再截一張（總覽圖用）
 				await _w(t, 0.9)
@@ -248,7 +251,7 @@ func _play(t, m, sex: String) -> void:
 	_chk("實機播完開場（%s）" % sex, all_seen and st.cur == null, played.keys())
 	_chk("實機名牌顯示玩家名（%s）" % sex, names_ok)
 	_chk("實機畫面冇「{」「}」佔位、名牌唔出阿福（%s）" % sex, brace_bad.is_empty(), brace_bad.slice(0, 5))
-	_chk("實機「待審」角標同數據一致（%s）" % sex, rv_bad.is_empty() and rv_seen >= 5 and (rv_n >= 3 if sex == "m" else rv_n <= 2), [rv_seen, rv_n, rv_bad.slice(0, 5)])
+	_chk("實機：冇「待審」角標、冇佔位圖；未有圖嘅幕只有對話、有圖嘅幕顯示正確嗰張（%s）" % sex, rv_bad.is_empty() and rv_seen >= 6 and rv_n == 0, [rv_seen, rv_n, rv_bad.slice(0, 5)])
 	S["hero"] = h0; S["seen"] = seen0
 
 # 實機：{主角} 防呆喺「選項（按鈕）／任務欄／提示」三個出口都換成玩家名（男主預設名、改名、女主）
@@ -293,32 +296,31 @@ func _plaque(t, m) -> void:
 	_chk("牌匾：中心點喺兩條對角線交點（係透視唔係平均）", Geometry2D.segment_intersects_segment(q[0], q[2], q[1], q[3]).distance_to(mid) < 0.05, mid)
 	_chk("牌匾：原圖座標 → 畫面（鋪滿置中裁切）", CG.img_to_layer(Vector2(0.5, 0.5), Vector2(1024, 768), 700, 400).distance_to(Vector2(350, 200)) < 0.01 and absf(CG.img_to_layer(Vector2(0, 0), Vector2(1024, 768), 700, 400).y - (400 - 525) / 2.0) < 0.01)
 	var PD = CG.plaque_data()
+	_chk("牌匾文字（老闆定）：辦公室／流放「加班是福」、酒館「奈何一杯」，男女一致、由左至右", str(PD.cg_office[0].text) == "加班是福" and str(PD.cg_office_f[0].text) == "加班是福" and str(PD.cg_exile_f[0].text) == "加班是福" and str(PD.cg_tavern[0].text) == "奈何一杯" and str(PD.cg_tavern_f[0].text) == "奈何一杯")
 	_chk("牌匾資料：辦公室同流放係同一塊匾、同樣嘅字", PD.has("cg_office") and PD.has("cg_exile") and str(PD.cg_office[0].text) == str(PD.cg_exile[0].text) and str(PD.cg_office[0].quad) == str(PD.cg_exile[0].quad) and PD.has("cg_tavern"))
 	var S = J.G.S; var h0 = S.get("hero", {}).duplicate(); var seen0 = S.seen.duplicate()
 	var st = m.get("story")
 	for sex in ["m", "f"]:
 		S["hero"] = {"name": "阿明" if sex == "m" else "小慧", "full": "李大明" if sex == "m" else "林慧", "en": "", "sex": sex, "set": true}
-		for sid in (["op2_office", "op2_exile", "tav_open"] if sex == "m" else ["opf2_office", "tav_open"]):
+		var KM = {"op2_office": "cg_office", "op2_exile": "cg_exile", "tav_open": "cg_tavern" if sex == "m" else "cg_tavern_f", "opf2_office": "cg_office_f", "opf2_exile": "cg_exile_f"}
+		for sid in (["op2_office", "op2_exile", "tav_open"] if sex == "m" else ["opf2_office", "opf2_exile", "tav_open"]):
 			st.queue(sid)
 			var found = null; var guard = 0
 			while st.cur != null and str(st.cur.get("id", "")) == sid and guard < 60:
 				guard += 1
-				if st.cg != null and is_instance_valid(st.cg) and st.cg.visible:
+				if st.cg != null and is_instance_valid(st.cg) and st.cg.visible and st.cg.cur_key == KM[sid]:
 					found = st.cg.layer.get_node_or_null("Plaque0")
-					if sex == "f" or found != null: break
+					if found != null: break
 				st.advance(); await _f(t, 2)
-			if sex == "m":
-				var want = str(PD[{"op2_office": "cg_office", "op2_exile": "cg_exile", "tav_open": "cg_tavern"}[sid]][0].text)
-				var inb = false
-				if found != null:
-					inb = true
-					for p in found.get_meta("quad"): if p.x < 0 or p.y < 0 or p.x > st.cg.layer.size.x or p.y > st.cg.layer.size.y: inb = false
-				_chk("牌匾實機（男 %s）：有貼字「%s」、四角喺畫面內、字夠大" % [sid, want], found != null and str(found.get_meta("text")) == want and inb and int(found.get_meta("font_size")) >= 40, found.get_meta("font_size") if found != null else "冇")
-				if found != null and st.cg.layer.scale.x >= 1.0: _chk("牌匾跟插圖一齊推近（同一個 layer）", found.get_parent() == st.cg.layer)
-				await _w(t, 1.0); await RenderingServer.frame_post_draw
-				t.get_viewport().get_texture().get_image().save_png(SH + "plaque_%s.png" % sid)
-			else:
-				_chk("牌匾實機（女 %s）：女主圖冇牌匾資料就唔貼" % sid, st.cg == null or st.cg.layer.get_node_or_null("Plaque0") == null)
+			var want = str(PD[KM[sid]][0].text)
+			var inb = false
+			if found != null:
+				inb = true
+				for p in found.get_meta("quad"): if p.x < 0 or p.y < 0 or p.x > st.cg.layer.size.x or p.y > st.cg.layer.size.y: inb = false
+			_chk("牌匾實機（%s %s）：有貼字「%s」、四角喺畫面內、字夠大" % [sex, sid, want], found != null and str(found.get_meta("text")) == want and inb and int(found.get_meta("font_size")) >= 40, found.get_meta("font_size") if found != null else "冇")
+			if found != null: _chk("牌匾跟插圖一齊推近（同一個 layer）", found.get_parent() == st.cg.layer)
+			await _w(t, 1.0); await RenderingServer.frame_post_draw
+			t.get_viewport().get_texture().get_image().save_png(SH + "plaque_%s_%s.png" % [sex, sid])
 			st.q.clear(); st.skip_scene(); await _f(t, 3)
 	# 參數覆蓋／關閉
 	st.queue("tav_open"); await _f(t, 2)
@@ -327,6 +329,49 @@ func _plaque(t, m) -> void:
 		st.cg.show_spec({"k": "cg_tavern", "plaque": {"t": "三更酒館"}}); await _f(t, 2)
 		var pn = st.cg.layer.get_node_or_null("Plaque0")
 		_chk("牌匾：場景參數覆蓋文字", pn != null and str(pn.get_meta("text")) == "三更酒館")
+		st.cg.show_spec({"k": "cg_dato_plaque"}); await _f(t, 2)
+		var dn = st.cg.layer.get_node_or_null("Plaque0")
+		_chk("Dato' 金匾：疊「拿督」浮雕字（三層）、冇角標", st.cg.cur_key == "cg_dato_plaque" and dn != null and str(dn.get_meta("text")) == "拿督" and str(dn.get_meta("style")) == "emboss" and int(dn.get_meta("layers")) == 3 and st.cg.layer.get_node_or_null("RvBadge") == null)
+		await _w(t, 1.0); await RenderingServer.frame_post_draw
+		t.get_viewport().get_texture().get_image().save_png(SH + "plaque_dato.png")
+		st.cg.show_spec({"k": "cg_note"}); await _f(t, 2)
+		var nn = st.cg.layer.get_node_or_null("Plaque0")
+		var ntxt = str(_scenes().op2_arrive.lines[6][1]).trim_prefix("「").trim_suffix("」")
+		_chk("交接便條：疊劇本原句、多行、字夠大（>=40）", nn != null and str(nn.get_meta("text")) == str(DB.L(ntxt)) and str(nn.get_meta("style")) == "note" and int(nn.get_meta("font_size")) >= 40, nn.get_meta("font_size") if nn != null else "冇")
+		if nn != null:
+			var nl: Label = nn.get_child(0).get_child(nn.get_child(0).get_child_count() - 1)
+			await _f(t, 2)
+			var nh = nl.get_line_count() * nl.get_line_height() + maxi(0, nl.get_line_count() - 1) * nl.get_theme_constant("line_spacing")
+			var area_h = float(nn.get_meta("tex_h")) * 0.88; var area_w = float(nn.get_meta("tex_w")) * 0.86   # Label 會自己撐大，唔可以同 nl.size 比
+			_chk("交接便條：成段字喺紙面內（唔出紙）", nh <= area_h + 1.0 and nl.position.y + nh <= float(nn.get_meta("tex_h")) * 0.96 and nl.get_line_count() >= 3, "%d 行、高 %.0f／%.0f" % [nl.get_line_count(), nh, area_h])
+			var nfont: Font = nl.get_theme_font("font"); var nfs = int(nn.get_meta("font_size")); var wmax = 0.0
+			for ln in nn.get_meta("lines"): wmax = maxf(wmax, nfont.get_string_size(str(ln), HORIZONTAL_ALIGNMENT_LEFT, -1, nfs).x)
+			_chk("交接便條：每行闊度喺紙面內（右邊唔出紙、唔被切）", wmax <= area_w + 0.5 and nl.position.x + wmax <= float(nn.get_meta("tex_w")) * 0.95 and "".join(nn.get_meta("lines")) == str(nn.get_meta("text")), "最闊 %.0f／%.0f" % [wmax, area_w])
+			var head_ok = true
+			for ln in nn.get_meta("lines"):
+				if "，。：；、！？」』）…".contains(str(ln).substr(0, 1)): head_ok = false
+			_chk("交接便條：冇一行以收尾標點開頭", head_ok, str(nn.get_meta("lines")))
+		await _w(t, 1.0); await RenderingServer.frame_post_draw
+		t.get_viewport().get_texture().get_image().save_png(SH + "plaque_note.png")
+		st.cg.show_spec({"k": "cg_road"}); await _f(t, 2)
+		_chk("男主黃泉路（3:2）：插圖框跟圖比例、唔超出畫面", st.cg.cur_key == "cg_road" and absf(st.cg.size.x / st.cg.size.y - 1.5) < 0.08 and st.cg.size.x <= st.size.x and st.cg.size.y <= st.size.y * 0.47, st.cg.size)
+		await _w(t, 1.0); await RenderingServer.frame_post_draw
+		t.get_viewport().get_texture().get_image().save_png(SH + "cg_road_m_frame.png")
+		var keys0 = CG._rv_keys
+		CG.review_pending(""); CG._rv_keys = ["cg_he_wake"]
+		st.cg.show_spec({"k": "cg_he_wake"}); await _f(t, 2)
+		_chk("未選定素材（cg_review.json pending）正式版唔顯示、冇角標", st.cg.cur_key == "" and st.cg.layer.get_node_or_null("RvBadge") == null)
+		CG._rv_keys = keys0
+		st.cg.show_spec({"k": "cg_road", "ph": "cg1_queue", "rv": "待審"}); await _f(t, 2)
+		_chk("未有圖（黃泉路）正式版唔用佔位圖", st.cg.cur_key == "")
+		st.cg.show_spec({"k": "cg_nuopo_taste"}); await _f(t, 2)
+		_chk("已選用（糯婆試食）照顯示、冇角標", st.cg.cur_key == "cg_nuopo_taste" and st.cg.layer.get_node_or_null("RvBadge") == null)
+		var en = st.cg._plaque_node("拿督", [Vector2(100, 40), Vector2(500, 40), Vector2(500, 160), Vector2(100, 160)], Color("#e9b949"), false, 9, "emboss")
+		st.cg.layer.add_child(en)
+		_chk("牌匾浮雕樣式：三層（內陰影＋高光＋面層）", str(en.get_meta("style")) == "emboss" and int(en.get_meta("layers")) == 3 and str(CG.plaque_data().cg_dato_plaque[0].style) == "emboss" and str(CG.plaque_data().cg_dato_plaque[0].text) == "拿督")
+		await _w(t, 0.6); await RenderingServer.frame_post_draw
+		t.get_viewport().get_texture().get_image().save_png(SH + "plaque_emboss_demo.png")
+		st.cg.show_spec({"k": "cg_tavern", "plaque": {"t": "三更酒館"}}); await _f(t, 2)
 		st.cg.show_spec({"k": "cg_tavern", "plaque": false}); await _f(t, 2)
 		_chk("牌匾：plaque=false 唔貼", st.cg.layer.get_node_or_null("Plaque0") == null)
 	st.q.clear(); st.skip_scene(); await _f(t, 3)

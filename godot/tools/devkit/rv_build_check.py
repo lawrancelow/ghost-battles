@@ -4,7 +4,7 @@
 # 1. 列出 data/story_v2.json 仍帶 rv（待審）的插圖。
 # 2. 把 data/ 複製到暫存目錄，重跑 build.py --force，確認：已拿掉的 rv 沒有被加回來、仍待審的 rv 沒有被抹走、插圖鍵沒有變、第一章開場沒有被塞回 stall_hook。
 import json, sys, os, shutil, subprocess, tempfile
-R = sys.argv[1]; B = sys.argv[2] if len(sys.argv) > 2 else "/home/claude/meeting/vil2/opening/build.py"
+R = sys.argv[1]; B = sys.argv[2] if len(sys.argv) > 2 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "opening_build.py")   # repo 內嘅正本（meeting-assets 嗰份係副本）
 def specs(root):
     d = json.load(open(root + "/data/story_v2.json")); o = {}
     for sid, sc in d["scenes"].items():
