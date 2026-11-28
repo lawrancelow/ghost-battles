@@ -165,9 +165,9 @@ func _particles(f: Dictionary) -> void:
 			p.texture = _dot_tex(32, 0.6); p.lifetime = 4.5
 			p.direction = Vector2(0, -1); p.spread = 180; p.gravity = Vector2(0, -2 * u)
 			p.initial_velocity_min = 3 * u; p.initial_velocity_max = 9 * u
-			p.scale_amount_min = 0.3 * u * 10; p.scale_amount_max = 0.6 * u * 10
-			g.set_color(0, Color(0.45, 1.0, 0.75, 0.0)); g.add_point(0.25, Color(0.5, 1.0, 0.8, 0.85))
-			g.add_point(0.5, Color(0.4, 0.9, 0.7, 0.4)); g.add_point(0.7, Color(0.5, 1.0, 0.8, 0.8)); g.set_color(g.get_point_count() - 1, Color(0.4, 0.9, 0.7, 0.0))
+			p.scale_amount_min = 0.08 * u * 10; p.scale_amount_max = 0.16 * u * 10   # 細粒鬼火，唔好變大團青煙
+			g.set_color(0, Color(0.45, 1.0, 0.75, 0.0)); g.add_point(0.25, Color(0.5, 1.0, 0.8, 0.7))
+			g.add_point(0.5, Color(0.4, 0.9, 0.7, 0.3)); g.add_point(0.7, Color(0.5, 1.0, 0.8, 0.65)); g.set_color(g.get_point_count() - 1, Color(0.4, 0.9, 0.7, 0.0))
 			var mat = CanvasItemMaterial.new(); mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD; p.material = mat
 		_:   # ember：火星
 			p.texture = _dot_tex(16, 0.5); p.lifetime = 1.8

@@ -20,7 +20,8 @@ func _w(t, s: float): await t.get_tree().create_timer(s).timeout
 func _mk(t) -> Array:   # 假劇情畫面：全屏 Control，入面放插圖卡
 	var root = t.get_tree().root
 	var par = Control.new(); par.name = "cgm_par"
-	par.size = Vector2(450, 975); par.position = Vector2.ZERO
+	var vr = t.get_viewport().get_visible_rect().size   # 跟真實畫面大細（測試窗會縮放）
+	par.size = vr if vr.x > 10 else Vector2(450, 975); par.position = Vector2.ZERO
 	var bgc = ColorRect.new(); bgc.color = Color("#2a2030"); bgc.size = par.size; par.add_child(bgc)
 	root.add_child(par)
 	var cg = CGC.new(); par.add_child(cg)
@@ -158,6 +159,8 @@ func shots(t) -> void:
 	var pc = _mk(t); var cg = pc[1]
 	await _w(t, 0.2)
 	cg.show_spec({"k": key})
+	await _w(t, 0.1)
+	if false: _p("dbg par=%s cg.pos=%s cg.size=%s frame=%s screen=%s tv=%s vp=%s win=%s" % [pc[0].size, cg.position, cg.size, cg.frame.size, cg.screen.size, cg.tv.size, cg.vp.size, t.get_viewport().get_visible_rect().size])
 	var dt = float(OS.get_environment("CGM_DT")) if OS.get_environment("CGM_DT") != "" else 0.25
 	var n = int(OS.get_environment("CGM_N")) if OS.get_environment("CGM_N") != "" else 48
 	for i in n:   # 預設 12 秒，每 0.25 秒一張；CGM_DT／CGM_N 可改
