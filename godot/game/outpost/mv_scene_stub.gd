@@ -112,7 +112,7 @@ func _render() -> void:
 	if box == null or B.S() == null: return
 	for c in box.get_children(): box.remove_child(c); c.queue_free()
 	var c = ci()
-	head = _lbl("出殯巡遊大排檔・%s（%d/%d）" % [B.map_name(c), c + 1, B.maps_n()], 18, Color("#ffd884")); box.add_child(head)
+	head = _lbl("出殯巡遊・過勞鬼市集・%s（%d/%d）" % [B.map_name(c), c + 1, B.maps_n()], 18, Color("#ffd884")); box.add_child(head)
 	info = _lbl("", 15); box.add_child(info); _render_info()
 	var g_ok = 0
 	for g in goals(): if g.ok: g_ok += 1

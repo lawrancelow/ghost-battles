@@ -52,7 +52,7 @@ static func bk_box(body: Control) -> void:
 	R.call(L("遊魂兵 [b]%d[/b]／%d　出擊兵力 [b][color=#9c2219]%d[/color][/b]", "遊魂兵 [b]%d[/b]／%d　出擊兵力 [b][color=#9c2219]%d[/color][/b]") % [ML.total(), ML.cap(), ML.power()])
 	R.call("[font_size=12]%s[/font_size]" % roster_txt())
 	R.call("[font_size=12]%s[/font_size]" % army_txt())
-	R.call("[font_size=12]%s[/font_size]" % L("來源：大排檔「紙紮兵器檔」賣兵器；兵器檔升級（★）就賣更好嘅兵器。陰兵＝正規軍（少、耐打、守村）；遊魂兵＝民兵（多、免費、脆）。", "來源：大排檔「紙紮兵器攤」賣兵器；兵器攤升級（★）就賣更好的兵器。陰兵＝正規軍（少、耐打、守村）；遊魂兵＝民兵（多、免費、脆）。"), 12)
+	R.call("[font_size=12]%s[/font_size]" % L("來源：過勞鬼市集「紙紮兵器檔」賣兵器；兵器檔升級（★）就賣更好嘅兵器。陰兵＝正規軍（少、耐打、守村）；遊魂兵＝民兵（多、免費、脆）。", "來源：過勞鬼市集「紙紮兵器攤」賣兵器；兵器攤升級（★）就賣更好的兵器。陰兵＝正規軍（少、耐打、守村）；遊魂兵＝民兵（多、免費、脆）。"), 12)
 
 # 攻佔面板（zone_view 掛鈎）
 static func cap_split_txt() -> String:

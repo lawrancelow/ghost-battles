@@ -307,7 +307,7 @@ static func _fill_slot(body: VBoxContainer, gid: String, sl: String) -> void:
 			wb.name = "Wear_" + id; h.add_child(wb)
 			if why != "": v.add_child(_lbl(why, 12, Color("#9c2219")))
 		body.add_child(pc)
-	if not any: body.add_child(_lbl(L("專屬物要打魔王先有機會掉。", "專屬物要打魔王才有機會掉落。") if sl == "ex" else L("倉庫冇呢格嘅裝備：去大排檔「紙紮兵器檔」訂製。", "倉庫沒有這格的裝備：去大排檔「紙紮兵器攤」訂製。"), 14, UIKit.INKDIM))
+	if not any: body.add_child(_lbl(L("專屬物要打魔王先有機會掉。", "專屬物要打魔王才有機會掉落。") if sl == "ex" else L("倉庫冇呢格嘅裝備：去過勞鬼市集「紙紮兵器檔」訂製。", "倉庫沒有這格的裝備：去過勞鬼市集「紙紮兵器攤」訂製。"), 14, UIKit.INKDIM))
 static func _changed() -> void:
 	if on_change is Callable and on_change.is_valid(): on_change.call()
 

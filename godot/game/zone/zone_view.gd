@@ -953,7 +953,7 @@ static func open_boss(main, zid: String) -> void:
 	var body = main.sheet_body
 	var R = func(bb: String, sz := 16): var r = UIKit.rich(bb, sz, UIKit.INKTXT); body.add_child(r); return r
 	var bs = ZD.bosses(zid); var bi = ZD.boss_next(zid)
-	R.call(ZD.L("呢度嘅孤魂野鬼會衝落嚟大排檔搞事。王要按次序打：", "這裡的孤魂野鬼會衝下來大排檔搗亂。王要按順序打："), 15)
+	R.call(ZD.L("呢度嘅孤魂野鬼會衝落嚟過勞鬼市集搞事。王要按次序打：", "這裡的孤魂野鬼會衝下來過勞鬼市集搗亂。王要按順序打："), 15)
 	for i in bs.size():
 		var st = ZD.L("已打低", "已擊敗") if ZD.boss_done(zid, i) else (ZD.L("而家挑戰", "可挑戰") if i == bi else ZD.L("未開", "未開放"))
 		R.call("%s [b]%s[/b]%s　—　%s" % [("①②③④⑤")[i], ZD.T(bs[i].n), (ZD.L("（主 Boss）", "（主 Boss）") if J.t(bs[i].get("main")) else ""), st], 16)

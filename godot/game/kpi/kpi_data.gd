@@ -160,7 +160,7 @@ static func cur_q(main_q):
 	var who = str(gd.get("boss_n", ""))
 	var tx = ""
 	if not turn(gid): tx = T("繼續重建村子，等考核官嚟巡查", "繼續重建村子，等考核官來巡查")
-	elif str(gd.get("opens", "")) == "flag:market": tx = T("通過龐總總考核（開大排檔）", "通過龐總總考核（開大排檔）")
+	elif str(gd.get("opens", "")) == "flag:market": tx = T("通過龐總總考核（開過勞鬼市集）", "通過龐總總考核（開過勞鬼市集）")
 	else: tx = T("通過「%s」嘅 KPI 考核", "通過「%s」的 KPI 考核") % who
 	return {"t": "kpi", "kpi": true, "gid": gid, "n": 1.0, "go": "kpi:" + gid, "text": tx, "r": {}}
 static func T(y: String, z: String) -> String: return y if DB.lang == "yue" else z

@@ -1006,7 +1006,7 @@ func _draw_counter(ctx: Ctx, fk: float) -> void:
 		Art.rr(ctx, x0, y - 22, x1 - x0, 34, 4, "#7a2a1e", "#f2c060", 2)
 		Art.rr(ctx, x0 - 6, y - 30, x1 - x0 + 12, 10, 3, "#e8d2a0", "#5a3a1a", 1.5)
 		for i in 6: Art.rr(ctx, x0 + 10 + i * 30, y - 14, 18, 18, 3, "rgba(255,210,120,.12)", "rgba(242,192,96,.5)", 1)
-		_txt(ctx, MD.S("counter", "陰間大排檔", "陰間大排檔"), (x0 + x1) / 2.0, y - 4, 15, GOLD, "center", 900, 3, "serif")
+		_txt(ctx, MD.S("counter", "過勞鬼市集", "過勞鬼市集"), (x0 + x1) / 2.0, y - 4, 15, GOLD, "center", 900, 3, "serif")
 	# 櫃台面疊貨
 	# [play] 貨種多、格太窄（< 34px）：每格只疊細堆，唔逐格寫數，改喺櫃台中間寫一個「×總數」（免得數字黐埋爆格）
 	var gl = sim.goods_list(); var tight = (x1 - x0 - 52.0) / maxf(1.0, gl.size()) < 34.0; var tot = 0

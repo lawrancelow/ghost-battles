@@ -128,7 +128,7 @@ func glv(gh) -> float:
 func reg_post() -> void:
 	var PO = J.G.get("POSTS")
 	if PO is Dictionary and not PO.has("mv"):
-		PO["mv"] = {"name": "移動村開工", "bld": null, "stat": 0.0, "desc": "喺出殯巡遊大排檔做貨／守圍欄"}
+		PO["mv"] = {"name": "移動村開工", "bld": null, "stat": 0.0, "desc": "喺出殯巡遊・過勞鬼市集做貨／守圍欄"}
 # 存檔一致：格入面嘅鬼要 post == "mv"；post == "mv" 但冇格嘅鬼放返自由
 func validate() -> void:
 	var m = st(); if m == null: return
