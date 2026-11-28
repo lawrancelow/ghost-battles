@@ -138,7 +138,7 @@ func _harvest_all(t, m) -> void:
 			await _w(t, 0.2)
 			if not J.t(S.paddy[i]): break
 		if not J.t(S.paddy[i]): got.append(i)
-	_chk("第 1 關：6 格稻田全部撳得收割", got.size() == 6, got)
+	_chk("第 1 關：8 格稻田全部撳得收割（p55 6→8）", got.size() == 8, got)
 	await _skip(t, 8)
 	await _shot(t, "L1_03_paddy_harvested")
 	var cut = []
