@@ -1,0 +1,412 @@
+[meter] EVENT 1 quest_start 0 砍倒 3 棵槐樹 rw=
+[meter] EVENT 1 stage 1
+[meter] EVENT 1 hero_lv 1
+[meter] EVENT 1 shot /tmp/meter56/meter_00min.jpg
+[meter] SAMPLE 10 qi=0 stg=1 lv=1 wood=0 rice=0 planks=0 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=0 taps=1 toasts=0 idle=4 busy=false
+[meter] EVENT 19 quest_start 1 收割 3 次糯米 rw=
+[meter] EVENT 19 hero_lv 2
+[meter] QUEST 19 Q00 砍倒 3 棵槐樹｜撳樹｜15s
+[meter] EVENT 20 toast 任務完成：砍倒 3 棵槐樹 好評 +25
+[meter] SAMPLE 21 qi=1 stg=1 lv=2 wood=12 rice=0 planks=0 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=1 taps=2 toasts=1 idle=6 busy=false
+[meter] EVENT 30 toast 任務完成：收割 3 次糯米 好評 +25
+[meter] EVENT 30 quest_start 2 建造棺材鋪 rw=
+[meter] EVENT 30 stage 2
+[meter] EVENT 30 story ob_coffin
+[meter] QUEST 31 Q01 收割 3 次糯米｜撳稻田｜11s
+[meter] EVENT 31 toast 還差 槐木 8（去砍樹，或派鬼去伐木場）
+[meter] EVENT 31 toast 還差 槐木 8（去砍樹，或派鬼去伐木場）
+[meter] SAMPLE 31 qi=2 stg=2 lv=2 wood=12 rice=9 planks=0 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=2 taps=3 toasts=4 idle=8 busy=false
+[meter] EVENT 32 toast 還差 槐木 8（去砍樹，或派鬼去伐木場）
+[meter] SAMPLE 41 qi=2 stg=2 lv=2 wood=16 rice=9 planks=0 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=3 taps=5 toasts=5 idle=8 busy=false
+[meter] EVENT 46 toast 還差 槐木 4（去砍樹，或派鬼去伐木場）
+[meter] SAMPLE 52 qi=2 stg=2 lv=2 wood=16 rice=12 planks=0 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=4 taps=7 toasts=6 idle=8 busy=false
+[meter] SAMPLE 62 qi=2 stg=2 lv=2 wood=20 rice=15 planks=0 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=4 taps=7 toasts=6 idle=9 busy=false
+[meter] EVENT 63 toast 任務完成：建造棺材鋪 好評 +30，槐木 +10
+[meter] EVENT 63 quest_start 3 在棺材鋪親手做 3 次棺材板 rw=
+[meter] QUEST 64 Q02 建造棺材鋪｜建造（等料 2 輪）｜33s
+[meter] SAMPLE 73 qi=3 stg=2 lv=2 wood=6 rice=15 planks=2 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=7 taps=10 toasts=7 idle=10 busy=false
+[meter] SAMPLE 83 qi=3 stg=2 lv=2 wood=10 rice=18 planks=2 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=8 taps=10 toasts=7 idle=10 busy=false
+[meter] QUEST 91 Q03 在棺材鋪親手做 3 次棺材板｜親手做 1 輪｜28s
+[meter] EVENT 92 toast 還差 槐木 18（去砍樹，或派鬼去伐木場）
+[meter] EVENT 92 quest_start 4 建造包子鋪（出普通包子） rw=
+[meter] EVENT 92 stage 3
+[meter] EVENT 92 hero_lv 3
+[meter] EVENT 92 unlock roster
+[meter] EVENT 93 toast 任務完成：在棺材鋪親手做 3 次棺材板 好評 +35
+[meter] EVENT 93 toast 還差 槐木 18（去砍樹，或派鬼去伐木場）
+[meter] EVENT 93 toast 還差 槐木 18（去砍樹，或派鬼去伐木場）
+[meter] SAMPLE 94 qi=4 stg=3 lv=3 wood=2 rice=18 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=11 taps=13 toasts=11 idle=12 busy=false
+[meter] SAMPLE 104 qi=4 stg=3 lv=3 wood=6 rice=18 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=11 taps=13 toasts=11 idle=12 busy=false
+[meter] EVENT 107 toast 還差 槐木 14（去砍樹，或派鬼去伐木場）
+[meter] SAMPLE 114 qi=4 stg=3 lv=3 wood=10 rice=21 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=12 taps=15 toasts=12 idle=13 busy=false
+[meter] EVENT 123 toast 還差 槐木 10（去砍樹，或派鬼去伐木場）
+[meter] SAMPLE 125 qi=4 stg=3 lv=3 wood=10 rice=24 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=13 taps=17 toasts=13 idle=14 busy=false
+[meter] EVENT 126 shot /tmp/meter56/meter_02min.jpg
+[meter] SAMPLE 135 qi=4 stg=3 lv=3 wood=14 rice=24 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=13 taps=17 toasts=13 idle=15 busy=false
+[meter] EVENT 138 toast 還差 槐木 6（去砍樹，或派鬼去伐木場）
+[meter] SAMPLE 146 qi=4 stg=3 lv=3 wood=14 rice=27 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=14 taps=19 toasts=14 idle=17 busy=false
+[meter] EVENT 156 toast 還差 槐木 2（去砍樹，或派鬼去伐木場）
+[meter] SAMPLE 156 qi=4 stg=3 lv=3 wood=18 rice=30 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=15 taps=19 toasts=15 idle=19 busy=false
+[meter] SAMPLE 166 qi=4 stg=3 lv=3 wood=22 rice=30 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=1 dec=15 taps=21 toasts=15 idle=19 busy=false
+[meter]   … build:bun 輪5 進度[0, 1] 木22 米33 板6 幣0 lv3 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 173 toast 任務完成：建造包子鋪 好評 +35，糯米 +10
+[meter] EVENT 173 quest_start 5 在包子鋪親手包 3 次普通包子 rw=
+[meter] EVENT 173 story gift_xiaozhi
+[meter] EVENT 174 story gift_xiaozhi2
+[meter] EVENT 174 story xo_paper
+[meter] QUEST 174 Q04 建造包子鋪（出普通包子）｜建造（等料 5 輪）｜82s
+[meter] SAMPLE 177 qi=5 stg=3 lv=3 wood=2 rice=33 planks=6 buns=0 coins=0 troops=0 mbao=0 ghosts=2 dec=18 taps=22 toasts=16 idle=21 busy=false
+[meter] SAMPLE 187 qi=5 stg=3 lv=3 wood=2 rice=29 planks=6 buns=0 coins=0 troops=0 mbao=2 ghosts=2 dec=18 taps=24 toasts=16 idle=21 busy=false
+[meter] SAMPLE 198 qi=5 stg=3 lv=3 wood=6 rice=32 planks=6 buns=0 coins=0 troops=0 mbao=2 ghosts=2 dec=19 taps=24 toasts=16 idle=21 busy=false
+[meter] EVENT 203 toast 系統太滿意了，掉落一個綠箱！
+[meter] SAMPLE 208 qi=5 stg=3 lv=3 wood=6 rice=28 planks=6 buns=0 coins=0 troops=0 mbao=4 ghosts=2 dec=19 taps=26 toasts=17 idle=21 busy=false
+[meter] SAMPLE 219 qi=5 stg=3 lv=3 wood=10 rice=31 planks=6 buns=0 coins=0 troops=0 mbao=4 ghosts=2 dec=19 taps=26 toasts=17 idle=23 busy=false
+[meter] EVENT 224 toast 任務完成：在包子鋪親手包 3 次普通包子 好評 +40，冥幣 +40
+[meter] EVENT 224 quest_start 6 派小紙去包子鋪打工 rw=
+[meter] QUEST 224 Q05 在包子鋪親手包 3 次普通包子｜親手做 2 輪｜50s
+[meter] QUEST 226 Q06 派小紙去包子鋪打工｜建築卡「派人」（1 隻可派；崗位 bun 1/1, plank 0/1, wood 0/1, rice 0/1）｜1s
+[meter] EVENT 226 toast 任務完成：派小紙去包子鋪打工 好評 +40
+[meter] EVENT 226 toast 還差 棺材板 17（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] EVENT 226 quest_start 7 把伐木場升到 2 級 rw=
+[meter] EVENT 226 stage 4
+[meter] EVENT 226 story ob_village
+[meter] EVENT 226 unlock chest
+[meter] EVENT 227 toast 還差 棺材板 17（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] EVENT 227 toast 還差 棺材板 17（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 229 qi=7 stg=4 lv=3 wood=10 rice=26 planks=6 buns=0 coins=40 troops=0 mbao=6 ghosts=2 dec=23 taps=30 toasts=22 idle=27 busy=false
+[meter] SAMPLE 239 qi=7 stg=4 lv=3 wood=14 rice=25 planks=6 buns=0 coins=40 troops=0 mbao=9 ghosts=2 dec=23 taps=30 toasts=22 idle=28 busy=false
+[meter] SAMPLE 250 qi=7 stg=4 lv=3 wood=14 rice=27 planks=6 buns=0 coins=40 troops=0 mbao=11 ghosts=2 dec=24 taps=30 toasts=22 idle=28 busy=false
+[meter] EVENT 251 shot /tmp/meter56/meter_04min.jpg
+[meter] EVENT 252 toast 還差 棺材板 15（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 260 qi=7 stg=4 lv=3 wood=14 rice=26 planks=8 buns=0 coins=40 troops=0 mbao=13 ghosts=2 dec=25 taps=32 toasts=23 idle=28 busy=false
+[meter] EVENT 271 toast 系統太滿意了，掉落一個綠箱！
+[meter] EVENT 271 toast 還差 棺材板 13（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 271 qi=7 stg=4 lv=3 wood=10 rice=27 planks=10 buns=0 coins=40 troops=0 mbao=16 ghosts=2 dec=27 taps=32 toasts=25 idle=30 busy=false
+[meter] SAMPLE 281 qi=7 stg=4 lv=3 wood=14 rice=26 planks=10 buns=0 coins=40 troops=0 mbao=18 ghosts=2 dec=27 taps=34 toasts=25 idle=31 busy=false
+[meter] SAMPLE 292 qi=7 stg=4 lv=3 wood=14 rice=28 planks=10 buns=0 coins=40 troops=0 mbao=20 ghosts=2 dec=28 taps=34 toasts=25 idle=32 busy=false
+[meter] EVENT 294 toast 還差 棺材板 11（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 302 qi=7 stg=4 lv=3 wood=14 rice=27 planks=12 buns=0 coins=40 troops=0 mbao=23 ghosts=2 dec=29 taps=36 toasts=26 idle=33 busy=false
+[meter] SAMPLE 313 qi=7 stg=4 lv=3 wood=10 rice=29 planks=14 buns=0 coins=40 troops=0 mbao=25 ghosts=2 dec=30 taps=36 toasts=26 idle=34 busy=false
+[meter] EVENT 314 toast 還差 棺材板 9（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 323 qi=7 stg=4 lv=3 wood=14 rice=28 planks=14 buns=0 coins=40 troops=0 mbao=27 ghosts=2 dec=31 taps=38 toasts=27 idle=34 busy=false
+[meter] SAMPLE 334 qi=7 stg=4 lv=3 wood=14 rice=30 planks=14 buns=0 coins=40 troops=0 mbao=29 ghosts=2 dec=32 taps=38 toasts=27 idle=35 busy=false
+[meter]   … bLevel:wood 輪5 進度[1, 2] 木10 米29 板16 幣40 lv3 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 336 toast 還差 棺材板 7（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 344 qi=7 stg=4 lv=3 wood=14 rice=28 planks=16 buns=0 coins=40 troops=0 mbao=32 ghosts=2 dec=33 taps=40 toasts=28 idle=36 busy=false
+[meter] EVENT 355 toast 還差 棺材板 5（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 355 qi=7 stg=4 lv=3 wood=10 rice=30 planks=18 buns=0 coins=40 troops=0 mbao=34 ghosts=2 dec=35 taps=40 toasts=29 idle=38 busy=false
+[meter] SAMPLE 365 qi=7 stg=4 lv=3 wood=14 rice=29 planks=18 buns=0 coins=40 troops=0 mbao=36 ghosts=2 dec=35 taps=42 toasts=29 idle=38 busy=false
+[meter] SAMPLE 375 qi=7 stg=4 lv=3 wood=10 rice=31 planks=20 buns=0 coins=40 troops=0 mbao=39 ghosts=2 dec=36 taps=42 toasts=29 idle=39 busy=false
+[meter] EVENT 376 toast 還差 棺材板 3（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] EVENT 376 shot /tmp/meter56/meter_06min.jpg
+[meter] EVENT 382 hero_lv 4
+[meter] SAMPLE 386 qi=7 stg=4 lv=4 wood=14 rice=30 planks=20 buns=0 coins=40 troops=0 mbao=41 ghosts=2 dec=38 taps=44 toasts=30 idle=39 busy=true
+[meter] EVENT 390 toast 還差 棺材板 1（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 396 qi=7 stg=4 lv=4 wood=14 rice=29 planks=22 buns=0 coins=40 troops=0 mbao=43 ghosts=2 dec=39 taps=46 toasts=31 idle=40 busy=false
+[meter] SAMPLE 407 qi=7 stg=4 lv=4 wood=14 rice=30 planks=22 buns=0 coins=40 troops=0 mbao=46 ghosts=2 dec=40 taps=46 toasts=31 idle=41 busy=false
+[meter] EVENT 410 toast 任務完成：把伐木場升到 2 級 好評 +50，冥幣 +30
+[meter] EVENT 410 toast 任務完成：升到 3 級 陰兵 +60 村裡的遊魂自願當陰兵（陰兵 +60）；出村門外的大排檔開放了
+[meter] EVENT 410 quest_start 9 大排檔賣出 10 件貨、賺 25 冥幣 rw=
+[meter] EVENT 410 stage 5
+[meter] EVENT 410 story ob_market
+[meter] QUEST 411 Q07 把伐木場升到 2 級｜升級（等料 9 輪）｜185s
+[meter] EVENT 411 toast 出村門外的路開了！陰間大排檔
+[meter] EVENT 411 unlock market
+[meter] SAMPLE 417 qi=9 stg=5 lv=4 wood=10 rice=29 planks=1 buns=0 coins=49 troops=60 mbao=46 ghosts=2 dec=42 taps=47 toasts=34 idle=48 busy=false
+[meter]   sell… t=374.299999999999 ts=1.0 sold=3 earn=12 進度[3, 10]
+[meter]   sell…… 進度[3, 10] 普通包子45.4880095900003 壽包0 客["{ \"m_shoubao\": 1 }", "{ \"m_shoubao\": 1 }", "{ \"m_shoubao\": 2 }"] 台["st_shoubao:true/0", "st_zhishan:true/0", "st_douhua:true/0", "st_nuomici:false/0", "st_guancaichuang:false/0", "st_denglong:false/0", "st_tiaodan:false/0", "st_bingqi:false/0"] 櫃台{ "m_shoubao": 0 }
+[meter] SAMPLE 428 qi=9 stg=5 lv=4 wood=10 rice=28 planks=1 buns=0 coins=65 troops=60 mbao=44 ghosts=2 dec=42 taps=47 toasts=34 idle=58 busy=false
+[meter]   sell… t=384.299999999999 ts=1.0 sold=7 earn=28 進度[7, 10]
+[meter]   sell…… 進度[7, 10] 普通包子43.9151370733336 壽包0 客["{ \"m_shoubao\": 1 }", "{ \"m_shoubao\": 1 }", "{ \"m_shoubao\": 2 }"] 台["st_shoubao:true/0", "st_zhishan:true/0", "st_douhua:true/0", "st_nuomici:false/0", "st_guancaichuang:false/0", "st_denglong:false/0", "st_tiaodan:false/0", "st_bingqi:false/0"] 櫃台{ "m_shoubao": 0 }
+[meter] SAMPLE 438 qi=9 stg=5 lv=4 wood=10 rice=27 planks=1 buns=0 coins=77 troops=60 mbao=43 ghosts=2 dec=42 taps=47 toasts=34 idle=68 busy=false
+[meter]   sell… t=394.299999999998 ts=1.0 sold=9 earn=36 進度[9, 10]
+[meter]   sell…… 進度[9, 10] 普通包子43.4120341133337 壽包0 客["{ \"m_shoubao\": 2 }", "{ \"m_shoubao\": 2 }", "{ \"m_shoubao\": 1 }"] 台["st_shoubao:true/0", "st_zhishan:true/0", "st_douhua:true/0", "st_nuomici:false/0", "st_guancaichuang:false/0", "st_denglong:false/0", "st_tiaodan:false/0", "st_bingqi:false/0"] 櫃台{ "m_shoubao": 1 }
+[meter] QUEST 446 Q09 大排檔賣出 10 件貨、賺 25 冥幣｜撳大排檔台 228 下，等客人買（10/10）｜35s
+[meter] EVENT 447 toast 任務完成：大排檔賣出 10 件貨、賺 25 冥幣 好評 +40，冥幣 +60 遊魂食飽會再嚟，記得櫃台要有貨
+[meter] EVENT 447 quest_start 10 擊退第一次嚟搗亂嘅孤魂 rw=
+[meter] EVENT 447 stage 6
+[meter] EVENT 447 story ob_guard
+[meter] SAMPLE 449 qi=10 stg=6 lv=4 wood=10 rice=26 planks=1 buns=0 coins=159 troops=60 mbao=44 ghosts=2 dec=43 taps=48 toasts=35 idle=78 busy=false
+[meter] QUEST 451 Q10 擊退第一次嚟搗亂嘅孤魂｜撳孤魂 6 下（3/3）｜5s
+[meter] EVENT 452 toast 任務完成：擊退第一次嚟搗亂嘅孤魂 好評 +40，陰兵 +30 之後鬼會不定時嚟，派鬼守夜同陰兵會自動幫你守
+[meter] EVENT 452 quest_start 11 出村迎戰：槐林邊（1-1） rw=
+[meter] EVENT 452 stage 7
+[meter]   stage try 0 tg=["sid", "c", "s", "name", "en", "boss", "pos"]
+[meter]   fight stage:1-1 kind=stage  team=["afu", "g1", <null>]
+[meter]   pressed; pending=true story=false
+[meter] EVENT 457 toast 小紙 出擊：包子鋪照常開工（交代好了）
+[meter] EVENT 458 toast 任務完成：出村迎戰：槐林邊（1-1） 好評 +20
+[meter] EVENT 458 toast 首次通關！　冥幣 +100，好評 +70，綠箱 ×1　散魂 +10（首次通關）
+[meter] EVENT 458 toast 霧散了！餓鬼坑
+[meter] EVENT 458 quest_start 12 升到 4 級 rw=
+[meter] EVENT 458 stage 8
+[meter] EVENT 458 unlock wild
+[meter]     戰後 { "win": true, "quit": false, "timeout": false }：我方[阿福Lv8 716/979, 小紙Lv3 646/646, 兵雜兵・刀盾手 193/307, 兵雜兵・長兵手 233/233, 兵雜兵・弓弩手 159/159] 敵方[遊魂 0/350, 遊魂 0/350, 遊魂 0/350] t=12
+[meter] EVENT 459 toast 任務完成：升到 4 級 壽包 +30
+[meter] EVENT 459 quest_start 13 出村迎戰：包子鋪後巷（1-2） rw=
+[meter] EVENT 459 story ch1_intro
+[meter] EVENT 459 story ch1_intro2
+[meter] SAMPLE 459 qi=13 stg=8 lv=4 wood=10 rice=25 planks=1 buns=30 coins=279 troops=90 mbao=46 ghosts=2 dec=44 taps=49 toasts=41 idle=87 busy=true
+[meter] QUEST 460 Q11 出村迎戰：槐林邊（1-1）｜出擊清單「迎戰：槐林邊」勝｜8s
+[meter]   stage try 0 tg=["sid", "c", "s", "name", "en", "boss", "pos"]
+[meter]   fight stage:1-2 kind=stage  team=["afu", "g1", <null>, <null>, <null>, <null>]
+[meter]   pressed; pending=true story=false
+[meter] EVENT 463 toast 小紙 出擊：包子鋪照常開工（交代好了）
+[meter] EVENT 464 hero_lv 5
+[meter]     戰後 { "win": true, "quit": false, "timeout": false }：我方[阿福Lv8 453/979, 小紙Lv3 646/646, 兵雜兵・刀盾手 55/307, 兵雜兵・長兵手 233/233, 兵雜兵・弓弩手 159/159] 敵方[餓鬼 0/550, 遊魂 0/440, 餓鬼 0/550, 餓鬼 0/550] t=16
+[meter] QUEST 465 Q13 出村迎戰：包子鋪後巷（1-2）｜出擊清單「迎戰：包子鋪後巷」勝｜5s
+[meter] EVENT 466 toast 任務完成：出村迎戰：包子鋪後巷（1-2） 冥幣 +60
+[meter] EVENT 466 toast 首次通關！　冥幣 +160，好評 +100，藍箱 ×1　散魂 +10（首次通關）
+[meter] EVENT 466 toast 發現新地方！無名義山
+[meter] EVENT 466 quest_start 14 把任一鬼怪升到 6 級 rw=
+[meter] EVENT 467 toast 霧散了！亂葬崗、後山竹林
+[meter] EVENT 467 toast 任務完成：把任一鬼怪升到 6 級 壽包 +40
+[meter] EVENT 467 quest_start 15 擊敗餓鬼王（先打倒餓鬼頭目） rw=
+[meter] QUEST 467 Q14 把任一鬼怪升到 6 級｜名冊「升級」｜2s
+[meter] EVENT 468 toast 冥街夜市・棟篤笑：阿福《凶宅打七折》今晚登台。 無名義山 → 冥街夜市 → 棟篤笑
+[meter]   stage try 0 tg=["sid", "c", "s", "name", "en", "boss", "zid", "bi"]
+[meter]   fight king:zb_egui kind=king  team=["afu", "g1", <null>, <null>, <null>, <null>]
+[meter] SAMPLE 470 qi=15 stg=8 lv=5 wood=10 rice=24 planks=1 buns=66 coins=265 troops=90 mbao=8 ghosts=2 dec=47 taps=52 toasts=48 idle=95 busy=false
+[meter]   pressed; pending=true story=false
+[meter] EVENT 471 toast 小紙 出擊：包子鋪照常開工（交代好了）
+[meter] EVENT 472 toast 勝利　冥幣 +40，好評 +16　冥火 ×3
+[meter]     戰後 { "win": true, "quit": false, "timeout": false }：我方[阿福Lv10 558/1022, 小紙Lv6 710/710, 兵雜兵・刀盾手 30/336, 兵雜兵・長兵手 255/255, 兵雜兵・弓弩手 175/175] 敵方[餓鬼 0/550, 餓鬼 0/550, 餓鬼 0/550] t=16
+[meter]   stage try 1 tg=["sid", "c", "s", "name", "en", "boss", "zid", "bi"]
+[meter]   fight king:zb_eguiking kind=king  team=["afu", "g1", <null>, <null>, <null>, <null>]
+[meter]   pressed; pending=true story=false
+[meter] EVENT 475 toast 小紙 出擊：包子鋪照常開工（交代好了）
+[meter] EVENT 479 story ch1_end
+[meter]     戰後 { "win": true, "quit": false, "timeout": false }：我方[阿福Lv10 51/1022, 小紙Lv6 309/710, 兵雜兵・刀盾手 0/336, 兵雜兵・長兵手 0/255, 兵雜兵・弓弩手 0/175] 敵方[惡鬼嘍囉 0/363, 餓鬼 0/662, 餓鬼王 0/1495, 餓鬼 0/662] t=49
+[meter] QUEST 480 Q15 擊敗餓鬼王｜出擊清單「挑戰：餓鬼頭目」勝；出擊清單「挑戰：餓鬼王」勝｜13s
+[meter] EVENT 480 toast 首次通關！　冥幣 +220，好評 +130，紫箱 ×1　陰兵戰死 75　冥火 ×3
+[meter] EVENT 480 toast 冥街夜市・棟篤笑：倀鬼《你相信我》今晚登台。 無名義山 → 冥街夜市 → 棟篤笑
+[meter] EVENT 480 toast 任務完成：建造招魂台 冥幣 +150，壽包 +30
+[meter] EVENT 480 quest_start 17 在招魂台招 1 隻雜鬼 rw=
+[meter] EVENT 480 story xo_ch1
+[meter] SAMPLE 480 qi=17 stg=8 lv=5 wood=10 rice=23 planks=1 buns=87 coins=703 troops=15 mbao=10 ghosts=3 dec=48 taps=52 toasts=54 idle=104 busy=false
+[meter] EVENT 482 toast 試用期合約：10 日內 KPI 60。右下角可以查看合約。
+[meter] EVENT 482 toast 發現新地方！枯井巷
+[meter] QUEST 483 Q17 在招魂台招 1 隻雜鬼｜招魂台「招魂」｜3s
+[meter] EVENT 484 toast 還差 普通包子 9（包子鋪正在做，可以升級包子鋪或多派鬼）
+[meter] EVENT 484 toast 發現新地方！紙錢陣
+[meter] EVENT 485 toast 還差 普通包子 10（包子鋪正在做，可以升級包子鋪或多派鬼）
+[meter] SAMPLE 491 qi=17 stg=8 lv=5 wood=10 rice=22 planks=1 buns=82 coins=719 troops=15 mbao=12 ghosts=3 dec=54 taps=53 toasts=59 idle=114 busy=false
+[meter] EVENT 494 STUCK 17 在招魂台招 1 隻雜鬼 進度[0, 1]
+[meter] EVENT 495 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] EVENT 495 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] EVENT 495 quest_start 18 建造民宅（增加雜鬼名額） rw=
+[meter] EVENT 501 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 502 qi=18 stg=8 lv=5 wood=10 rice=20 planks=1 buns=80 coins=735 troops=15 mbao=15 ghosts=3 dec=56 taps=58 toasts=62 idle=124 busy=false
+[meter] EVENT 503 shot /tmp/meter56/meter_08min.jpg
+[meter] EVENT 506 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 512 qi=18 stg=8 lv=5 wood=14 rice=19 planks=1 buns=75 coins=750 troops=15 mbao=17 ghosts=3 dec=57 taps=60 toasts=63 idle=129 busy=false
+[meter] EVENT 517 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 522 qi=18 stg=8 lv=5 wood=14 rice=21 planks=1 buns=72 coins=759 troops=15 mbao=20 ghosts=3 dec=58 taps=62 toasts=64 idle=131 busy=false
+[meter] EVENT 530 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 533 qi=18 stg=8 lv=5 wood=18 rice=23 planks=1 buns=68 coins=774 troops=15 mbao=22 ghosts=3 dec=59 taps=64 toasts=65 idle=132 busy=false
+[meter]   … build:home 輪5 進度[0, 1] 木22 米25 板1 幣774 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 540 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 543 qi=18 stg=8 lv=5 wood=22 rice=24 planks=1 buns=65 coins=774 troops=15 mbao=25 ghosts=3 dec=60 taps=66 toasts=66 idle=134 busy=false
+[meter] EVENT 552 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 554 qi=18 stg=8 lv=5 wood=26 rice=26 planks=1 buns=61 coins=790 troops=15 mbao=28 ghosts=3 dec=61 taps=68 toasts=67 idle=136 busy=false
+[meter] EVENT 564 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 564 qi=18 stg=8 lv=5 wood=30 rice=28 planks=1 buns=57 coins=802 troops=15 mbao=30 ghosts=3 dec=62 taps=70 toasts=68 idle=137 busy=false
+[meter] EVENT 575 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 575 qi=18 stg=8 lv=5 wood=34 rice=29 planks=1 buns=54 coins=818 troops=15 mbao=33 ghosts=3 dec=63 taps=72 toasts=69 idle=138 busy=false
+[meter] SAMPLE 585 qi=18 stg=8 lv=5 wood=38 rice=28 planks=1 buns=52 coins=830 troops=15 mbao=35 ghosts=3 dec=63 taps=72 toasts=69 idle=138 busy=false
+[meter] EVENT 587 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 595 qi=18 stg=8 lv=5 wood=42 rice=30 planks=1 buns=47 coins=847 troops=15 mbao=38 ghosts=3 dec=64 taps=74 toasts=70 idle=140 busy=false
+[meter]   … build:home 輪10 進度[0, 1] 木42 米33 板1 幣847 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 599 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 606 qi=18 stg=8 lv=5 wood=46 rice=32 planks=1 buns=43 coins=855 troops=15 mbao=40 ghosts=3 dec=65 taps=76 toasts=71 idle=142 busy=false
+[meter] EVENT 610 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 616 qi=18 stg=8 lv=5 wood=50 rice=33 planks=1 buns=41 coins=871 troops=15 mbao=43 ghosts=3 dec=66 taps=78 toasts=72 idle=143 busy=false
+[meter] EVENT 623 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 627 qi=18 stg=8 lv=5 wood=50 rice=35 planks=1 buns=40 coins=879 troops=15 mbao=45 ghosts=3 dec=67 taps=80 toasts=73 idle=144 busy=false
+[meter] EVENT 628 shot /tmp/meter56/meter_10min.jpg
+[meter] EVENT 634 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 637 qi=18 stg=8 lv=5 wood=54 rice=37 planks=1 buns=40 coins=879 troops=15 mbao=48 ghosts=3 dec=68 taps=82 toasts=74 idle=146 busy=false
+[meter] EVENT 645 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] EVENT 648 wave
+[meter] SAMPLE 648 qi=18 stg=8 lv=5 wood=58 rice=39 planks=1 buns=40 coins=879 troops=15 mbao=50 ghosts=3 dec=69 taps=84 toasts=75 idle=147 busy=false
+[meter]   … build:home 輪15 進度[0, 1] 木62 米40 板1 幣879 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 657 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 658 qi=18 stg=8 lv=5 wood=62 rice=40 planks=1 buns=40 coins=879 troops=15 mbao=53 ghosts=3 dec=70 taps=86 toasts=76 idle=150 busy=false
+[meter] EVENT 669 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 669 qi=18 stg=8 lv=5 wood=66 rice=42 planks=1 buns=40 coins=879 troops=15 mbao=55 ghosts=3 dec=71 taps=86 toasts=77 idle=151 busy=false
+[meter] SAMPLE 679 qi=18 stg=8 lv=5 wood=70 rice=41 planks=1 buns=40 coins=879 troops=15 mbao=58 ghosts=3 dec=71 taps=88 toasts=77 idle=152 busy=false
+[meter] EVENT 680 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 690 qi=18 stg=8 lv=5 wood=74 rice=42 planks=1 buns=40 coins=879 troops=15 mbao=61 ghosts=3 dec=72 taps=90 toasts=78 idle=154 busy=false
+[meter] EVENT 693 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 700 qi=18 stg=8 lv=5 wood=78 rice=44 planks=1 buns=40 coins=879 troops=15 mbao=63 ghosts=3 dec=73 taps=92 toasts=79 idle=156 busy=false
+[meter] EVENT 705 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 711 qi=18 stg=8 lv=5 wood=82 rice=46 planks=1 buns=40 coins=879 troops=15 mbao=66 ghosts=3 dec=74 taps=94 toasts=80 idle=158 busy=false
+[meter]   … build:home 輪20 進度[0, 1] 木82 米48 板1 幣879 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 716 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 721 qi=18 stg=8 lv=5 wood=82 rice=48 planks=1 buns=40 coins=879 troops=15 mbao=68 ghosts=3 dec=75 taps=96 toasts=81 idle=159 busy=false
+[meter] EVENT 729 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 732 qi=18 stg=8 lv=5 wood=86 rice=49 planks=1 buns=40 coins=879 troops=15 mbao=71 ghosts=3 dec=76 taps=98 toasts=82 idle=160 busy=false
+[meter] EVENT 740 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 742 qi=18 stg=8 lv=5 wood=90 rice=51 planks=1 buns=40 coins=879 troops=15 mbao=73 ghosts=3 dec=77 taps=100 toasts=83 idle=163 busy=false
+[meter] EVENT 751 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 752 qi=18 stg=8 lv=5 wood=94 rice=53 planks=1 buns=40 coins=879 troops=15 mbao=76 ghosts=3 dec=78 taps=102 toasts=84 idle=164 busy=false
+[meter] EVENT 753 shot /tmp/meter56/meter_12min.jpg
+[meter] SAMPLE 763 qi=18 stg=8 lv=5 wood=98 rice=55 planks=1 buns=40 coins=879 troops=15 mbao=78 ghosts=3 dec=78 taps=102 toasts=84 idle=165 busy=false
+[meter] EVENT 764 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 774 qi=18 stg=8 lv=5 wood=102 rice=53 planks=1 buns=40 coins=879 troops=15 mbao=81 ghosts=3 dec=79 taps=104 toasts=85 idle=165 busy=false
+[meter]   … build:home 輪25 進度[0, 1] 木102 米56 板1 幣879 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 776 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 784 qi=18 stg=8 lv=5 wood=106 rice=55 planks=1 buns=40 coins=879 troops=15 mbao=83 ghosts=3 dec=80 taps=106 toasts=86 idle=166 busy=false
+[meter] EVENT 787 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 794 qi=18 stg=8 lv=5 wood=110 rice=57 planks=1 buns=40 coins=879 troops=15 mbao=86 ghosts=3 dec=81 taps=108 toasts=87 idle=168 busy=false
+[meter] EVENT 800 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 805 qi=18 stg=8 lv=5 wood=114 rice=58 planks=1 buns=40 coins=879 troops=15 mbao=89 ghosts=3 dec=82 taps=110 toasts=88 idle=169 busy=false
+[meter] EVENT 810 toast 系統太滿意了，掉落一個綠箱！
+[meter] EVENT 811 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 815 qi=18 stg=8 lv=5 wood=114 rice=60 planks=1 buns=40 coins=879 troops=15 mbao=91 ghosts=3 dec=83 taps=112 toasts=90 idle=170 busy=false
+[meter] EVENT 817 toast 系統太滿意了，掉落一個綠箱！
+[meter] EVENT 822 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 826 qi=18 stg=8 lv=5 wood=118 rice=62 planks=1 buns=40 coins=879 troops=15 mbao=94 ghosts=3 dec=84 taps=114 toasts=92 idle=172 busy=false
+[meter]   … build:home 輪30 進度[0, 1] 木122 米64 板1 幣879 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 834 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 836 qi=18 stg=8 lv=5 wood=122 rice=64 planks=1 buns=40 coins=879 troops=15 mbao=96 ghosts=3 dec=85 taps=116 toasts=93 idle=173 busy=false
+[meter] EVENT 846 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 847 qi=18 stg=8 lv=5 wood=126 rice=65 planks=1 buns=40 coins=879 troops=15 mbao=99 ghosts=3 dec=86 taps=118 toasts=94 idle=175 busy=false
+[meter] EVENT 856 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 857 qi=18 stg=8 lv=5 wood=130 rice=67 planks=1 buns=40 coins=879 troops=15 mbao=101 ghosts=3 dec=87 taps=120 toasts=95 idle=176 busy=false
+[meter] SAMPLE 868 qi=18 stg=8 lv=5 wood=134 rice=69 planks=1 buns=40 coins=879 troops=15 mbao=104 ghosts=3 dec=87 taps=120 toasts=95 idle=178 busy=false
+[meter] EVENT 869 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 878 qi=18 stg=8 lv=5 wood=138 rice=68 planks=1 buns=40 coins=879 troops=15 mbao=106 ghosts=3 dec=88 taps=122 toasts=96 idle=179 busy=false
+[meter] EVENT 879 shot /tmp/meter56/meter_14min.jpg
+[meter] EVENT 881 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 888 qi=18 stg=8 lv=5 wood=142 rice=69 planks=1 buns=40 coins=879 troops=15 mbao=109 ghosts=3 dec=89 taps=124 toasts=97 idle=180 busy=false
+[meter]   … build:home 輪35 進度[0, 1] 木142 米72 板1 幣879 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 893 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 899 qi=18 stg=8 lv=5 wood=146 rice=71 planks=1 buns=40 coins=879 troops=15 mbao=111 ghosts=3 dec=90 taps=126 toasts=98 idle=181 busy=false
+[meter] EVENT 905 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 909 qi=18 stg=8 lv=5 wood=146 rice=73 planks=1 buns=40 coins=879 troops=15 mbao=114 ghosts=3 dec=91 taps=128 toasts=99 idle=182 busy=false
+[meter] EVENT 916 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 920 qi=18 stg=8 lv=5 wood=150 rice=75 planks=1 buns=40 coins=879 troops=15 mbao=116 ghosts=3 dec=92 taps=130 toasts=100 idle=184 busy=false
+[meter] EVENT 923 toast 系統太滿意了，掉落一個綠箱！
+[meter] EVENT 928 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 930 qi=18 stg=8 lv=5 wood=154 rice=76 planks=1 buns=40 coins=879 troops=15 mbao=119 ghosts=3 dec=93 taps=132 toasts=102 idle=185 busy=false
+[meter] EVENT 941 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 941 qi=18 stg=8 lv=5 wood=158 rice=78 planks=1 buns=40 coins=879 troops=15 mbao=121 ghosts=3 dec=94 taps=134 toasts=103 idle=186 busy=false
+[meter] SAMPLE 951 qi=18 stg=8 lv=5 wood=162 rice=77 planks=1 buns=40 coins=879 troops=15 mbao=124 ghosts=3 dec=94 taps=134 toasts=103 idle=187 busy=false
+[meter]   … build:home 輪40 進度[0, 1] 木162 米80 板1 幣879 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 952 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 961 qi=18 stg=8 lv=5 wood=166 rice=79 planks=1 buns=40 coins=879 troops=15 mbao=126 ghosts=3 dec=95 taps=136 toasts=104 idle=188 busy=false
+[meter] EVENT 963 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 972 qi=18 stg=8 lv=5 wood=170 rice=80 planks=1 buns=40 coins=879 troops=15 mbao=129 ghosts=3 dec=96 taps=138 toasts=105 idle=189 busy=false
+[meter] EVENT 975 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 982 qi=18 stg=8 lv=5 wood=174 rice=82 planks=1 buns=40 coins=879 troops=15 mbao=131 ghosts=3 dec=97 taps=140 toasts=106 idle=190 busy=false
+[meter] EVENT 986 toast 系統太滿意了，掉落一個綠箱！
+[meter] EVENT 987 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 992 qi=18 stg=8 lv=5 wood=174 rice=84 planks=1 buns=40 coins=879 troops=15 mbao=134 ghosts=3 dec=98 taps=142 toasts=108 idle=191 busy=false
+[meter] EVENT 999 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1003 qi=18 stg=8 lv=5 wood=178 rice=86 planks=1 buns=40 coins=879 troops=15 mbao=136 ghosts=3 dec=99 taps=144 toasts=109 idle=192 busy=false
+[meter] EVENT 1004 shot /tmp/meter56/meter_16min.jpg
+[meter]   … build:home 輪45 進度[0, 1] 木182 米88 板1 幣879 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 1013 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1014 qi=18 stg=8 lv=5 wood=182 rice=88 planks=1 buns=40 coins=879 troops=15 mbao=138 ghosts=3 dec=100 taps=146 toasts=110 idle=193 busy=false
+[meter] SAMPLE 1024 qi=18 stg=8 lv=5 wood=186 rice=87 planks=1 buns=40 coins=879 troops=15 mbao=140 ghosts=3 dec=100 taps=146 toasts=110 idle=193 busy=false
+[meter] EVENT 1026 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] EVENT 1033 toast 系統太滿意了，掉落一個綠箱！
+[meter] SAMPLE 1035 qi=18 stg=8 lv=5 wood=190 rice=88 planks=1 buns=40 coins=879 troops=15 mbao=143 ghosts=3 dec=101 taps=148 toasts=112 idle=193 busy=false
+[meter] EVENT 1039 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1046 qi=18 stg=8 lv=5 wood=190 rice=90 planks=1 buns=40 coins=879 troops=15 mbao=145 ghosts=3 dec=102 taps=150 toasts=113 idle=195 busy=false
+[meter] EVENT 1054 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1056 qi=18 stg=8 lv=5 wood=194 rice=92 planks=1 buns=40 coins=879 troops=15 mbao=147 ghosts=3 dec=103 taps=152 toasts=114 idle=197 busy=false
+[meter] EVENT 1067 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1067 qi=18 stg=8 lv=5 wood=198 rice=94 planks=1 buns=40 coins=879 troops=15 mbao=150 ghosts=3 dec=104 taps=154 toasts=115 idle=198 busy=false
+[meter] SAMPLE 1077 qi=18 stg=8 lv=5 wood=202 rice=96 planks=1 buns=40 coins=879 troops=15 mbao=152 ghosts=3 dec=104 taps=154 toasts=115 idle=199 busy=false
+[meter]   … build:home 輪50 進度[0, 1] 木202 米96 板1 幣879 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 1078 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1088 qi=18 stg=8 lv=5 wood=206 rice=94 planks=1 buns=40 coins=879 troops=15 mbao=155 ghosts=3 dec=105 taps=156 toasts=116 idle=200 busy=false
+[meter] EVENT 1090 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1098 qi=18 stg=8 lv=5 wood=210 rice=96 planks=1 buns=40 coins=879 troops=15 mbao=157 ghosts=3 dec=106 taps=158 toasts=117 idle=201 busy=false
+[meter] EVENT 1101 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] EVENT 1108 toast 系統太滿意了，掉落一個綠箱！
+[meter] SAMPLE 1109 qi=18 stg=8 lv=5 wood=214 rice=98 planks=1 buns=40 coins=879 troops=15 mbao=160 ghosts=3 dec=107 taps=160 toasts=119 idle=202 busy=false
+[meter] EVENT 1113 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1119 qi=18 stg=8 lv=5 wood=218 rice=100 planks=1 buns=40 coins=879 troops=15 mbao=162 ghosts=3 dec=108 taps=162 toasts=120 idle=203 busy=false
+[meter] EVENT 1124 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1129 qi=18 stg=8 lv=5 wood=218 rice=101 planks=1 buns=40 coins=879 troops=15 mbao=165 ghosts=3 dec=109 taps=164 toasts=121 idle=204 busy=false
+[meter] EVENT 1130 shot /tmp/meter56/meter_18min.jpg
+[meter]   … build:home 輪55 進度[0, 1] 木222 米104 板1 幣879 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 1137 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1140 qi=18 stg=8 lv=5 wood=222 rice=103 planks=1 buns=40 coins=879 troops=15 mbao=167 ghosts=3 dec=110 taps=166 toasts=122 idle=206 busy=false
+[meter] EVENT 1148 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1150 qi=18 stg=8 lv=5 wood=226 rice=105 planks=1 buns=40 coins=879 troops=15 mbao=170 ghosts=3 dec=111 taps=168 toasts=123 idle=207 busy=false
+[meter] EVENT 1160 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1161 qi=18 stg=8 lv=5 wood=230 rice=107 planks=1 buns=40 coins=879 troops=15 mbao=172 ghosts=3 dec=112 taps=170 toasts=124 idle=209 busy=false
+[meter] EVENT 1171 toast 系統太滿意了，掉落一個綠箱！
+[meter] SAMPLE 1171 qi=18 stg=8 lv=5 wood=234 rice=108 planks=1 buns=40 coins=879 troops=15 mbao=175 ghosts=3 dec=112 taps=170 toasts=125 idle=210 busy=false
+[meter] EVENT 1172 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1182 qi=18 stg=8 lv=5 wood=238 rice=107 planks=1 buns=40 coins=879 troops=15 mbao=178 ghosts=3 dec=113 taps=172 toasts=126 idle=211 busy=false
+[meter] EVENT 1183 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1192 qi=18 stg=8 lv=5 wood=242 rice=109 planks=1 buns=40 coins=879 troops=15 mbao=180 ghosts=3 dec=114 taps=174 toasts=127 idle=213 busy=false
+[meter]   … build:home 輪60 進度[0, 1] 木242 米111 板1 幣879 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 1195 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1202 qi=18 stg=8 lv=5 wood=246 rice=110 planks=1 buns=40 coins=879 troops=15 mbao=183 ghosts=3 dec=115 taps=176 toasts=128 idle=215 busy=false
+[meter] EVENT 1207 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1213 qi=18 stg=8 lv=5 wood=250 rice=112 planks=1 buns=40 coins=879 troops=15 mbao=185 ghosts=3 dec=116 taps=178 toasts=129 idle=216 busy=false
+[meter] EVENT 1217 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1223 qi=18 stg=8 lv=5 wood=254 rice=114 planks=1 buns=40 coins=879 troops=15 mbao=188 ghosts=3 dec=117 taps=180 toasts=130 idle=218 busy=false
+[meter] EVENT 1230 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1234 qi=18 stg=8 lv=5 wood=254 rice=116 planks=1 buns=40 coins=879 troops=15 mbao=190 ghosts=3 dec=118 taps=182 toasts=131 idle=220 busy=false
+[meter] EVENT 1241 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1244 qi=18 stg=8 lv=5 wood=258 rice=117 planks=1 buns=40 coins=879 troops=15 mbao=193 ghosts=3 dec=119 taps=184 toasts=132 idle=221 busy=false
+[meter]   … build:home 輪65 進度[0, 1] 木262 米119 板1 幣879 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 1253 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1255 qi=18 stg=8 lv=5 wood=262 rice=119 planks=1 buns=40 coins=879 troops=15 mbao=195 ghosts=3 dec=120 taps=186 toasts=133 idle=222 busy=false
+[meter] EVENT 1256 shot /tmp/meter56/meter_20min.jpg
+[meter] EVENT 1264 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1265 qi=18 stg=8 lv=5 wood=266 rice=121 planks=1 buns=40 coins=879 troops=15 mbao=198 ghosts=3 dec=121 taps=188 toasts=134 idle=223 busy=false
+[meter] SAMPLE 1276 qi=18 stg=8 lv=5 wood=270 rice=123 planks=1 buns=40 coins=879 troops=15 mbao=200 ghosts=3 dec=121 taps=188 toasts=134 idle=224 busy=false
+[meter] EVENT 1277 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1286 qi=18 stg=8 lv=5 wood=274 rice=121 planks=1 buns=40 coins=879 troops=15 mbao=203 ghosts=3 dec=122 taps=190 toasts=135 idle=224 busy=false
+[meter] EVENT 1287 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1297 qi=18 stg=8 lv=5 wood=278 rice=123 planks=1 buns=40 coins=879 troops=15 mbao=206 ghosts=3 dec=123 taps=192 toasts=136 idle=225 busy=false
+[meter] EVENT 1300 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1307 qi=18 stg=8 lv=5 wood=282 rice=125 planks=1 buns=40 coins=882 troops=15 mbao=208 ghosts=3 dec=124 taps=194 toasts=137 idle=227 busy=false
+[meter]   … build:home 輪70 進度[0, 1] 木282 米127 板1 幣882 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 1312 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1318 qi=18 stg=8 lv=5 wood=282 rice=126 planks=1 buns=40 coins=882 troops=15 mbao=211 ghosts=3 dec=125 taps=196 toasts=138 idle=228 busy=false
+[meter] EVENT 1324 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1328 qi=18 stg=8 lv=5 wood=286 rice=128 planks=1 buns=40 coins=882 troops=15 mbao=213 ghosts=3 dec=126 taps=198 toasts=139 idle=229 busy=false
+[meter] EVENT 1335 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1339 qi=18 stg=8 lv=5 wood=290 rice=130 planks=1 buns=40 coins=882 troops=15 mbao=216 ghosts=3 dec=127 taps=200 toasts=140 idle=230 busy=false
+[meter] EVENT 1347 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1349 qi=18 stg=8 lv=5 wood=294 rice=132 planks=1 buns=40 coins=882 troops=15 mbao=218 ghosts=3 dec=128 taps=202 toasts=141 idle=231 busy=false
+[meter] EVENT 1358 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1360 qi=18 stg=8 lv=5 wood=298 rice=133 planks=1 buns=40 coins=882 troops=15 mbao=221 ghosts=3 dec=129 taps=204 toasts=142 idle=233 busy=false
+[meter]   … build:home 輪75 進度[0, 1] 木302 米135 板1 幣882 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 1369 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1370 qi=18 stg=8 lv=5 wood=302 rice=135 planks=1 buns=40 coins=882 troops=15 mbao=223 ghosts=3 dec=130 taps=206 toasts=143 idle=234 busy=false
+[meter] SAMPLE 1381 qi=18 stg=8 lv=5 wood=306 rice=134 planks=1 buns=40 coins=882 troops=15 mbao=226 ghosts=3 dec=130 taps=206 toasts=143 idle=235 busy=false
+[meter] EVENT 1382 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] EVENT 1382 shot /tmp/meter56/meter_23min.jpg
+[meter] SAMPLE 1391 qi=18 stg=8 lv=5 wood=310 rice=136 planks=1 buns=40 coins=882 troops=15 mbao=228 ghosts=3 dec=131 taps=208 toasts=144 idle=236 busy=false
+[meter] EVENT 1393 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1402 qi=18 stg=8 lv=5 wood=314 rice=137 planks=1 buns=40 coins=882 troops=15 mbao=231 ghosts=3 dec=132 taps=210 toasts=145 idle=237 busy=false
+[meter] EVENT 1406 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1412 qi=18 stg=8 lv=5 wood=318 rice=139 planks=1 buns=40 coins=882 troops=15 mbao=234 ghosts=3 dec=133 taps=212 toasts=146 idle=238 busy=false
+[meter] EVENT 1417 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1422 qi=18 stg=8 lv=5 wood=322 rice=141 planks=1 buns=40 coins=882 troops=15 mbao=236 ghosts=3 dec=134 taps=214 toasts=147 idle=240 busy=false
+[meter]   … build:home 輪80 進度[0, 1] 木322 米143 板1 幣882 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 1428 toast 系統太滿意了，掉落一個綠箱！
+[meter] EVENT 1428 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1433 qi=18 stg=8 lv=5 wood=322 rice=142 planks=1 buns=40 coins=882 troops=15 mbao=239 ghosts=3 dec=135 taps=216 toasts=149 idle=241 busy=false
+[meter] EVENT 1434 toast 系統太滿意了，掉落一個綠箱！
+[meter] EVENT 1440 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1443 qi=18 stg=8 lv=5 wood=326 rice=144 planks=1 buns=40 coins=882 troops=15 mbao=241 ghosts=3 dec=136 taps=218 toasts=151 idle=242 busy=false
+[meter] EVENT 1451 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1454 qi=18 stg=8 lv=5 wood=330 rice=146 planks=1 buns=40 coins=882 troops=15 mbao=244 ghosts=3 dec=137 taps=220 toasts=152 idle=244 busy=false
+[meter] EVENT 1463 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1464 qi=18 stg=8 lv=5 wood=334 rice=148 planks=1 buns=40 coins=882 troops=15 mbao=246 ghosts=3 dec=138 taps=222 toasts=153 idle=246 busy=false
+[meter] SAMPLE 1474 qi=18 stg=8 lv=5 wood=338 rice=149 planks=1 buns=40 coins=882 troops=15 mbao=249 ghosts=3 dec=138 taps=222 toasts=153 idle=247 busy=false
+[meter] EVENT 1475 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
+[meter] SAMPLE 1485 qi=18 stg=8 lv=5 wood=342 rice=148 planks=1 buns=40 coins=882 troops=15 mbao=251 ghosts=3 dec=139 taps=224 toasts=154 idle=247 busy=false
+[meter]   … build:home 輪85 進度[0, 1] 木342 米151 板1 幣882 lv5 英雄 act=<null> tgt=<null> 劇情=false
+[meter] EVENT 1487 toast 還差 棺材板 59（棺材鋪沒人做工：派鬼去做，或親手做 4 槐木→2 板）
