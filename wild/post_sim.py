@@ -4,7 +4,7 @@ REW_COIN=30; REPLAY_COIN=20            # so_data.gd REW_COIN＋Battle.finish「�
 PLANK=[4,8,14,20]; RESP=[5,10,20,40]   # so_data.gd REW_PLANK、RESPAWN_MIN
 LV=[1.3,2.3,3.8,5.3]                   # 第 1 章各圈平均難度等級（LV_BASE[0]=1＋LV_RING＋圈內次序）
 POST=[3,3,3,0]; NAMED=[1,1,1,4]        # 參數：每圈普通據點／名鬼據點數（每章 9＋7）
-POST_WINS_H=2.0                        # 參數：駐點每小時產出＝該據點打贏 2 場的獎勵
+POST_WINS_H=3.0                        # 參數：駐點每小時產出＝該據點打贏 3 場的獎勵（老闆定案）
 TILL_H=2; OFF_H=8                      # 參數：沒有名鬼主任時收銀箱只存 2 小時；有名鬼主任自動入帳，離線最多算 8 小時
 CYCLE_S=90; PAR=2                      # 假設：一場出擊（行軍＋打＋回村）90 秒，同時 2 場
 BOOST=1.5; BOOST_MIN=30                # 參數：親自擊退反撲，該駐點 30 分鐘產出 ×1.5
