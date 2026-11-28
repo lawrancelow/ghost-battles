@@ -10,6 +10,7 @@ const ZD = preload("res://game/zone/zone_data.gd")
 const MD = preload("res://game/outpost/mv_data.gd")
 const MK = preload("res://game/market/mk_data.gd")
 const MKU = preload("res://game/market/mk_ui.gd")
+const MKO = preload("res://game/market/mk_ops.gd")
 const MVW = preload("res://game/outpost/mv_war.gd")
 const KG = preload("res://game/kpi/kpi_data.gd")
 const M = preload("res://game/outpost/mat.gd")
@@ -138,8 +139,181 @@ func all(t) -> void:
 	_chk("要貨泡：排頭 2 位", sc.WANT_MAX == 2)
 	for i in 4: sc._bubble(sim.st_pos(sid), "測試%d" % i, "鬼", 2.0)
 	_chk("閒聊泡：合一地圖同時最多 1 個", sc.bubbles.size() <= 1, sc.bubbles.size())
+	await _ops(t, sim, sc, c, food, cloth)
 	MK.st().erase("test")
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+# ---- M1 營運：店員位、雙貨、櫃檯、巡邏（0–4）、常態事件、15% 上限 ----
+func _gh(S, id: String) -> void:
+	for g in S.ghosts: if str(J.gp(g, "id")) == id: return
+	S.ghosts.append({"id": id, "k": "youhun", "name": id, "lv": 1.0, "post": null})
+func _ops(t, sim, sc, c: int, food: Array, cloth: Array) -> void:
+	var S = J.G.S
+	sim.paused = true   # 測試自己推時間（MKO.tick），唔畀即時模擬插手
+	MKO.rng.seed = 20261128
+	MK.st().erase("ops"); MK.st()["patrol_done"] = 0
+	for i in 12: _gh(S, "t_mk%d" % i)
+	var a = food[0]; var b = food[1] if food.size() > 1 else cloth[0]
+	for sid in food: sim.sst(sid)["unlocked"] = true
+	# 店員位
+	var sl = []
+	for lv in [1, 9, 10, 25, 50, 100, 200]: sl.append(MKO.staff_slots(a, float(lv)))
+	_chk("店員位按等級 1/1/2/3/3/4/5（Lv1/9/10/25/50/100/200）", sl == [1, 1, 2, 3, 3, 4, 5], sl)
+	_chk("extra_slots＝店員位−1（Lv200＝4）", MKO.extra_slots(a, 200.0) == 4 and MKO.extra_slots(a, 1.0) == 0)
+	_chk("產能倍數 1／1.35／1.70／1.95／2.20（遞減）", is_equal_approx(MKO.staff_mul(1), 1.0) and is_equal_approx(MKO.staff_mul(2), 1.35) and is_equal_approx(MKO.staff_mul(3), 1.7) and is_equal_approx(MKO.staff_mul(4), 1.95) and is_equal_approx(MKO.staff_mul(5), 2.2))
+	var lux = MK.sids_on(2, "lux")
+	if lux.size():
+		var ci0 = sim.st().ci; sim.st().ci = 2.0
+		_chk("奢侈品店最多 2 名店員", MKO.staff_slots(lux[0], 200.0) == 2, MKO.staff_slots(lux[0], 200.0))
+		sim.st().ci = ci0
+	sim.sst(a).lv = 1.0
+	for i in 3: sim.assign(a, i, "t_mk%d" % i)
+	MKO.tick(sim, 0.1)
+	_chk("Lv1 只留 1 名店員，多出嘅放返村（post 清空）", sim.nworkers(a) == 1 and not J.t(J.gp(sim.ghost("t_mk2"), "post")), sim.nworkers(a))
+	sim.sst(a).lv = 200.0; MKO.tick(sim, 0.1)
+	_chk("Lv200：店員位陣列擴到 5", sim.sst(a).workers.size() >= 5, sim.sst(a).workers.size())
+	for i in 5: sim.assign(a, i, "t_mk%d" % i)
+	MKO.tick(sim, 0.1)
+	_chk("5 名店員：每人速度＝2.2÷5", sim.nworkers(a) == 5 and is_equal_approx(MKO.prod_k(a), 2.2 / 5.0), [sim.nworkers(a), MKO.prod_k(a)])
+	for i in 5: sim.assign(a, i, null)
+	sim.assign(a, 0, "t_mk0")
+	# 雙貨
+	sim.sst(a).lv = 24.0
+	_chk("Lv24：副貨未開", not MKO.sub_open(a) and MKO.set_sub(c, a, "x") == "locked")
+	sim.sst(a).lv = 25.0
+	sim.sst(b)["unlocked"] = false   # b 未開攤 → 佢隻貨可以做 a 嘅副貨
+	var ch = MKO.sub_choices(c, a); var gb = MKO.good_of(b)
+	_chk("Lv25：副貨開、可揀同街未開攤嘅貨", MKO.sub_open(a) and ch.has(gb), ch)
+	_chk("唔可以揀其他街嘅貨", MKO.set_sub(c, a, MKO.good_of(cloth[0])) == "bad")
+	_chk("揀副貨成功", MKO.set_sub(c, a, gb) == "ok" and MKO.sub_of(a) == gb and MKO.host_of(gb) == a)
+	_chk("換貨中 10 秒唔產出", MKO.prod_k(a) == 0.0 and MK.mul(a) == 0.0)
+	MKO.tick(sim, 10.5)
+	_chk("10 秒後復產", MKO.prod_k(a) > 0.0)
+	_chk("副貨上櫃台清單、可以招客", sim.goods_list().has(gb))
+	MKO.set_smart(a, false); MKO.set_ratio(a, 0.5)
+	var ns = 0
+	for i in 20: if MKO.pick_sub(sim, a): ns += 1
+	_chk("產能 50／50：20 轉有 10 轉副貨", ns == 10, ns)
+	MKO.set_ratio(a, 0.3); ns = 0
+	for i in 20: if MKO.pick_sub(sim, a): ns += 1
+	_chk("滑桿 30%：20 轉有 6 轉副貨", ns == 6, ns)
+	MKO.set_smart(a, true); MKO.set_ratio(a, 0.0)
+	sim.st().counter[MKO.good_of(a)] = 10.0; sim.st().counter[gb] = 0.0
+	_chk("智能補貨：副貨格缺貨就先做副貨", MKO.pick_sub(sim, a))
+	_chk("副貨單價＝副貨底價 × 寄賣攤等級倍數（＞0）", MKO.sub_val(sim, gb) > 0.0, MKO.sub_val(sim, gb))
+	var cst = {"got": {gb: 2}, "wants": {gb: 2}}
+	_chk("客人買副貨：按副貨價計錢", is_equal_approx(sim.cust_value(cst), 2.0 * MKO.sub_val(sim, gb) * sim.inc_mul()), sim.cust_value(cst))
+	MKO.set_sub(c, a, ""); MKO.tick(sim, 11.0)
+	sim.sst(b)["unlocked"] = true
+	# 櫃檯
+	_chk("mk_counter_n_fn 已登記（M2 接口）", J.G.get("mk_counter_n_fn") is Callable and int(J.G.mk_counter_n_fn.call("food")) == 0)
+	var c0 = sim.coins()
+	sim.add_coins(500.0); MKO.on_pay(sim, {"got": {MKO.good_of(a): 1}}, 500.0)
+	_chk("客人俾錢：先入收銀箱，未入帳", is_equal_approx(sim.coins(), c0) and is_equal_approx(MKO.till("food"), 500.0), [sim.coins() - c0, MKO.till("food")])
+	for i in 19: MKO.tick(sim, 1.0)
+	_chk("冇櫃檯員：19 秒仲未收", MKO.till("food") > 0.0)
+	MKO.tick(sim, 1.5)
+	_chk("冇櫃檯員：20 秒店員去收一次，錢入帳", MKO.till("food") == 0.0 and is_equal_approx(sim.coins(), c0 + 500.0))
+	_chk("店員去收錢：全街停產 3 秒", MKO.prod_k(a) == 0.0)
+	MKO.tick(sim, 3.5)
+	_chk("3 秒後復產", MKO.prod_k(a) > 0.0)
+	var r = []
+	for i in 4: r.append(MKO.assign(sim, "ctr", "food", "t_mk%d" % (5 + i)))
+	_chk("櫃檯每街最多 3 人（第 4 個 full）", r == ["ok", "ok", "ok", "full"] and MKO.counter_n("food") == 3 and int(J.G.mk_counter_n_fn.call("food")) == 3, r)
+	_chk("櫃檯員由村子調走（post＝mk_ctr）", str(J.gp(sim.ghost("t_mk5"), "post")) == "mk_ctr")
+	sim.add_coins(300.0); MKO.on_pay(sim, {"got": {MKO.good_of(a): 1}}, 300.0)
+	MKO.tick(sim, 1.0); MKO.tick(sim, 1.2)
+	_chk("3 名櫃檯員：約 2 秒自動入帳、唔停產", MKO.till("food") == 0.0 and MKO.prod_k(a) > 0.0)
+	sim.add_coins(100.0); MKO.on_pay(sim, {"got": {MKO.good_of(a): 1}}, 100.0)
+	_chk("玩家撳收銀箱：即收", is_equal_approx(MKO.collect(sim, "food"), 100.0) and MKO.till("food") == 0.0)
+	_chk("未開嘅街唔可以派人", MKO.assign(sim, "ctr", "acc", "t_mk9") == "closed")
+	# 巡邏隊 0–4
+	for i in 3: MKO.unassign(sim, "t_mk%d" % (5 + i))
+	sim.assign(b, 0, "t_mk4")
+	r = []
+	for i in 5: r.append(MKO.assign(sim, "pat", "food", "t_mk%d" % (4 + i)))
+	_chk("巡邏每街最多 4 隻鬼（第 5 隻 full）", r == ["ok", "ok", "ok", "ok", "full"] and MKO.patrol_n("food") == 4, r)
+	_chk("巡邏員由崗位調走：原本喺攤做嘢嘅鬼離開個攤", sim.nworkers(b) == 0 and str(J.gp(sim.ghost("t_mk4"), "post")) == "mk_pat")
+	_chk("市集佔用村鬼數", MKO.village_cost() == 4, MKO.village_cost())
+	J.sp(sim.ghost("t_mk7"), "post", null); MKO.tick(sim, 0.1)
+	_chk("鬼被調走／冇咗：自動由巡邏名單剔走", MKO.patrol_n("food") == 3)
+	for i in 4: MKO.unassign(sim, "t_mk%d" % (4 + i))
+	_chk("撤走：post 清空", MKO.patrol_n("food") == 0 and not J.t(J.gp(sim.ghost("t_mk4"), "post")))
+	# 常態事件
+	MK.st().erase("ops"); MKO.tick(sim, 0.1)
+	for i in 170: MKO.tick(sim, 1.0)
+	_chk("新手保護：開張頭 3 分鐘冇事件", MKO.events().is_empty(), MKO.events().size())
+	for i in 12: MKO.tick(sim, 1.0)
+	var ev = MKO.events()
+	_chk("第 3 分鐘：固定第一件插隊（教學、通用版）", ev.size() >= 1 and str(ev[0].k) == "cut_queue" and int(ev[0].sp) == 0 and J.t(ev[0].get("tut")), ev)
+	_chk("玩家撳事件：即刻處理、名聲 +2", ev.size() >= 1 and MKO.handle_event(sim, int(ev[0].id)) and MKO.events().is_empty() and J.num(MK.st().get("renown_pts", 0)) >= 2.0)
+	MKO.st().ev.clear()
+	var n_ok = 0
+	for i in 8: if not MKO.spawn_event(sim, "food").is_empty(): n_ok += 1
+	_chk("同一條街最多 2 件未處理事件", n_ok == 2 and MKO.events("food").size() == 2, n_ok)
+	MK.set_open("cloth"); for sid in cloth: sim.sst(sid)["unlocked"] = true
+	MK.set_open("weapon"); for sid in MK.sids_on(c, "weapon"): sim.sst(sid)["unlocked"] = true
+	for i in 4: MKO.spawn_event(sim, "cloth"); MKO.spawn_event(sim, "weapon")
+	_chk("全市集最多 5 件（兩街滿之後第三條街只入到 1 件）", MKO.events().size() <= 5, MKO.events().size())
+	MKO.st().ev.clear()
+	var cnt = {"steal_cash": 0, "steal_goods": 0, "cut_queue": 0, "brawl": 0}; var spn = 0
+	for i in 2000:
+		MKO.st().ev.clear()
+		var e = MKO.spawn_event(sim, "food"); cnt[str(e.k)] += 1; spn += int(e.sp)
+	MKO.st().ev.clear()
+	_chk("類型比例 偷錢 30／偷貨 20／插隊 25／吵架 25（±4%）", absf(cnt.steal_cash / 2000.0 - 0.3) < 0.04 and absf(cnt.steal_goods / 2000.0 - 0.2) < 0.04 and absf(cnt.cut_queue / 2000.0 - 0.25) < 0.04 and absf(cnt.brawl / 2000.0 - 0.25) < 0.04, cnt)
+	_chk("通用版 60%／該章特色版 40%（±4%）", absf(spn / 2000.0 - 0.4) < 0.04, spn / 2000.0)
+	var vr = MKO.variant(1, "steal_cash", true)
+	_chk("第 2 章偷錢特色版＝Toyol", str(vr.n[1]).find("Toyol") >= 0 and int(vr.sp) == 1, vr)
+	# 冇巡邏：20 秒後結算損失，唔超過 15% 上限
+	MKO.st().evt.clear()
+	MKO._income("food", 10000.0)
+	MKO.st().till["food"] = 4000.0
+	MKO.st()["tut"] = 1
+	var e1 = MKO.spawn_event(sim, "food", "steal_cash", 0)
+	for i in 19: MKO.st().evt["food"] = 9999.0; MKO.tick(sim, 1.0)
+	_chk("冇人理：19 秒仲未結算", MKO.events("food").has(e1))
+	var t0 = MKO.till("food")
+	MKO.st().evt["food"] = 9999.0; MKO.st().ctr_t["food"] = 0.0; MKO.tick(sim, 1.5)
+	var lost1 = MKO.win_loss("food")
+	_chk("偷錢：20 秒後偷走收銀箱 15%（唔扣已入帳冥幣）", not MKO.events("food").has(e1) and lost1 > 0.0 and lost1 <= 0.15 * 4000.0 + 1.0, [lost1, t0])
+	for i in 6:
+		MKO.st().till["food"] = 4000.0
+		MKO.spawn_event(sim, "food", "steal_cash", 0)
+		for j in 22: MKO.st().evt["food"] = 9999.0; MKO.st().ctr_t["food"] = 0.0; MKO.tick(sim, 1.0)
+	_chk("每條街 10 分鐘事件損失 ≤ 該街收入 15%（到頂只演出）", MKO.win_loss("food") <= 0.15 * MKO.win_income("food") + 0.01 and MKO.loss_room("food") < 1.0, [MKO.win_loss("food"), MKO.win_income("food")])
+	# 吵架：停工 15 秒，唔會更耐
+	MK.st().erase("ops"); MKO.tick(sim, 0.1); MKO.st()["tut"] = 1; MKO._income("food", 1e9)
+	for i in 2: sim.assign(food[i], 0, "t_mk%d" % i)
+	MKO.tick(sim, 0.1)
+	var e2 = MKO.spawn_event(sim, "food", "brawl", 0)
+	for i in 21: MKO.st().evt["food"] = 9999.0; MKO.tick(sim, 1.0)
+	var stopped = MKO.prod_k(str(e2.sid)) == 0.0
+	for i in 15: MKO.st().evt["food"] = 9999.0; MKO.tick(sim, 1.0)
+	_chk("吵架冇人理：事發攤停工 15 秒，之後復工（永不超過 15 秒）", stopped and MKO.prod_k(str(e2.sid)) > 0.0, stopped)
+	# 巡邏處理率：1−(1−p)^n；4 隻滿編都壓唔到 0
+	var rates = []; var rates_sp = []
+	for n in [0, 1, 2, 3, 4]:
+		for sp in [0, 1]:
+			MK.st().erase("ops"); MKO.tick(sim, 0.1); MKO.st()["tut"] = 1
+			for i in n: MKO.assign(sim, "pat", "food", "t_mk%d" % (6 + i))
+			for i in 400:
+				MKO.spawn_event(sim, "food", "cut_queue", sp)
+				for j in 22: MKO.st().evt["food"] = 9999.0; MKO.tick(sim, 1.0)
+			var h = MKO.summary().handled / 400.0
+			if sp == 0: rates.append(snappedf(h, 0.01))
+			else: rates_sp.append(snappedf(h, 0.01))
+			for i in n: MKO.unassign(sim, "t_mk%d" % (6 + i))
+	_p("巡邏處理率（通用版）0–4 隻：" + str(rates) + "　特色版：" + str(rates_sp))
+	_chk("巡邏 0 隻：處理率 0", rates[0] == 0.0)
+	_chk("巡邏 1／2／3／4 隻（通用版）≈ 45／70／83／91%（±7%）", absf(rates[1] - 0.45) < 0.07 and absf(rates[2] - 0.70) < 0.07 and absf(rates[3] - 0.83) < 0.07 and absf(rates[4] - 0.91) < 0.07, rates)
+	_chk("人越多越好、但遞減；4 隻滿編仍有漏網（＜100%）", rates[1] < rates[2] and rates[2] < rates[3] and rates[3] <= rates[4] and rates[4] < 0.99 and rates_sp[4] < 0.9, [rates, rates_sp])
+	_chk("特色版較難捉（4 隻 ≈ 76%）", absf(rates_sp[4] - 0.76) < 0.08 and rates_sp[1] < rates[1], rates_sp)
+	_chk("KPI 指標 mk_patrol_done 跟實際處理次數", KG._metric("mk_patrol_done", "fn") == J.num(MK.st().get("patrol_done", 0)) and J.num(MK.st().get("patrol_done", 0)) > 100.0, MK.st().get("patrol_done"))
+	MK.st().erase("ops"); MK.st()["patrol_done"] = 0
+	for i in 12: MKO.unassign(sim, "t_mk%d" % i)
+	for sid in food: for i in sim.sst(sid).workers.size(): sim.assign(sid, i, null)
+	sim.paused = false
 
 func _uniq(a: int, b: int) -> bool:
 	var sig = ["st_shoubao", "st_zhishan", "st_bingqi"]
