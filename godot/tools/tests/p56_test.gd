@@ -263,7 +263,9 @@ func toast_avoid(t) -> void:
 		sb.visible = vis
 		for c in m.toasts.get_children(): c.free()
 		for i in 3: m.show_toast("還差 冥幣 99999（大排檔賣貨，或化寶爐收陽間包裹），普通包子 99999（包子鋪沒人做工：派鬼去做，或親手包 4 糯米→2 包）第 %d 條" % i)
-		for i in 6: await t.get_tree().process_frame
+		for i in 6:
+			await t.get_tree().process_frame
+			if OS.has_environment("P56_DBG"): _p("  dbg f%d ob=%s sbvis=%s tree=%s proc=%s n=%d" % [i, str(m.toasts.offset_bottom), str(sb.visible), str(sb.is_visible_in_tree()), str(m.is_processing()), m.toasts.get_child_count()])
 		var hit = false; var top = 1e9; var n = 0
 		for c in m.toasts.get_children():
 			var r = c.get_global_rect(); n += 1; top = minf(top, r.position.y)

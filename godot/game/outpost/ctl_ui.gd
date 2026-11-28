@@ -278,6 +278,7 @@ func _process(dt: float) -> void:
 func _toasts_up(up: bool) -> void:
 	var tb = main.get("toasts")
 	if not (tb is Control): return
+	if main.has_method("toast_avoid"): main.toast_avoid(); return   # [p56b] 交畀 main 按實際矩形避開出擊／行動掣（以前只識避行動掣，出擊掣照遮）
 	if _toast_b0 == null: _toast_b0 = tb.offset_bottom
 	var want = -190.0 if up else float(_toast_b0)
 	if tb.offset_bottom != want: tb.offset_bottom = want
