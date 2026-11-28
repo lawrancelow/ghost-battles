@@ -163,6 +163,7 @@ static func power() -> int:   # [barracks] 只計待命陰兵（防衛、清剿�
 	if S() == null: return 0
 	return _bk().power() + _ml().power()   # [militia] ＋遊魂兵出擊兵力（冇遊魂兵＝同舊一樣）
 static func _ml(): return load("res://game/militia/ml_data.gd")   # [militia]
+static func _kg(): return load("res://game/kpi/kpi_data.gd")   # [kpi] 區域 KPI 閘門
 static func need(zid: String) -> int: return int(round(float(zone(zid).get("power", 0)) * _ml().res_mul()))   # [militia] × RES_MUL[關]
 static func loss(zid: String) -> int:
 	return int(_ml().cap_loss(need(zid), float(zone(zid).get("loss", 0.3)))[0])   # [militia] 陰兵嗰份（遊魂兵分擔咗嘅唔計；冇遊魂兵＝舊公式）
@@ -170,6 +171,7 @@ static func loss_ml(zid: String) -> int: return int(_ml().cap_loss(need(zid), fl
 # 派陰兵攻佔：回 "ok"／"owned"／"weak"
 static func capture_auto(zid: String) -> String:
 	if owned(zid): return "owned"
+	if _kg().gated(zid): return "kpi"   # [kpi] 呢區由考核開（攻佔唔得）
 	if power() < need(zid): return "weak"
 	_ml().apply_cap_loss(need(zid), float(zone(zid).get("loss", 0.3)))   # [militia] 折損：陰兵＋遊魂兵按比例（冇遊魂兵＝同舊 loss() 一樣）
 	set_owned(zid)
@@ -231,6 +233,7 @@ static func _start_battle(kind: String, zid: String) -> String:
 	var stage = null; var bg = "field"; var nm = T(z.get("n", ["", ""])); var chap = null; var bi = -1
 	if kind == "cap":
 		if owned(zid): return "done"
+		if _kg().gated(zid): return "kpi"   # [kpi]
 		stage = z.get("stage", {"en": ["youhun", "youhun", "youhun"], "boss": "youhun", "p": 1.0})
 	else:
 		bi = boss_next(zid)
@@ -647,6 +650,8 @@ static func cond_ok(zid: String, c := -1) -> bool:
 	if not (r is Dictionary): return true
 	var s = S()
 	if s == null: return false
+	var kr = _kg().reveal_rule(zid, str(z.get("type", "")), cc)   # [kpi] 考核開區：資源區／大排檔／野外由 KPI 話事
+	if kr != null: return bool(kr)
 	if J.t(r.get("always")): return true
 	if r.get("bld") != null and J.num(s.bld.get(str(r.bld), 0)) >= 1: return true
 	var qi = int(J.num(s.get("qi", 0)))

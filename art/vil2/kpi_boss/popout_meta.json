@@ -1,0 +1,124 @@
+{
+ "R": 128,
+ "CAN": 768,
+ "bosses": {
+  "chen": {
+   "src": "kpi_boss_chen_full.webp",
+   "prop": [
+    0.7,
+    0.185,
+    1.0,
+    0.56
+   ],
+   "neck_y": 426,
+   "scale": 1.267,
+   "ox": 136,
+   "oy": 176,
+   "head_src_canvas": [
+    136,
+    176,
+    594,
+    425
+   ],
+   "neck_x": [
+    272,
+    497
+   ]
+  },
+  "he": {
+   "src": "kpi_boss_he_full.webp",
+   "prop": [
+    0.675,
+    0.13,
+    1.0,
+    0.42
+   ],
+   "neck_y": 426,
+   "scale": 1.3277,
+   "ox": 186,
+   "oy": 176,
+   "head_src_canvas": [
+    186,
+    176,
+    513,
+    425
+   ],
+   "neck_x": [
+    304,
+    471
+   ]
+  },
+  "qian": {
+   "src": "kpi_boss_qian_full.webp",
+   "prop": null,
+   "neck_y": 426,
+   "scale": 1.3277,
+   "ox": 202,
+   "oy": 176,
+   "head_src_canvas": [
+    202,
+    176,
+    583,
+    425
+   ],
+   "neck_x": [
+    357,
+    497
+   ]
+  },
+  "dato": {
+   "src": "kpi_boss_dato_full.webp",
+   "prop": null,
+   "neck_y": 413,
+   "scale": 1.28,
+   "ox": 152,
+   "oy": 176,
+   "head_src_canvas": [
+    152,
+    176,
+    555,
+    412
+   ],
+   "neck_x": [
+    272,
+    500
+   ]
+  },
+  "nuo": {
+   "src": "kpi_boss_nuo_full.webp",
+   "prop": null,
+   "neck_y": 370,
+   "scale": 1.1507,
+   "ox": 204,
+   "oy": 177,
+   "head_src_canvas": [
+    204,
+    177,
+    503,
+    370
+   ],
+   "neck_x": [
+    265,
+    493
+   ]
+  },
+  "pang": {
+   "src": "bm_pang.webp",
+   "prop": null,
+   "neck_y": 346,
+   "scale": 1.3643,
+   "ox": 133,
+   "oy": 180,
+   "head_src_canvas": [
+    243,
+    181,
+    501,
+    346
+   ],
+   "neck_x": [
+    271,
+    499
+   ]
+  }
+ }
+}

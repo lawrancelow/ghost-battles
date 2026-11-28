@@ -555,6 +555,7 @@ static func draw_over(c: CanvasItem, nv) -> void:
 			_plate(ctx, lb, r.get_center().x, r.position.y + px * 1.3, px, _rgba(str(z.get("col", "#a8602a")), 0.92))
 	if not mbf: _stage_over(ctx, nv, vr, t)   # [outgate] 主線關卡：敵人企喺大排檔前面等
 	LM.draw_over(c, nv, ctx, vr, t)   # [landmark] 地標：黑霧／名牌／紅點
+	_bryan_banner(ctx, nv, t)   # [kpi]
 	TA.draw(c, nv)   # [mapbattle] 打唔過嘅王喺柵欄／野外門外面叫囂（泡泡喺大排檔 HUD 下面）
 # [outgate] 主線關卡（x-1、x-2…）：敵人喺大排檔前面（近野外門）企住，撳就喺度開打
 static func _stage_over(ctx: Ctx, nv, vr: Rect2, t: float) -> void:
@@ -701,6 +702,7 @@ static func _fog(c: CanvasItem, ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float,
 	fog_log.append(["lock", zid])
 	if da <= 0.0: ctx.globalAlpha = 1.0; return
 	ctx.globalAlpha = da * ra
+	if _kpi_fog(ctx, zid, cx, cy, t, da * ra): ctx.globalAlpha = 1.0; return   # [kpi]
 	var need = ZD.need(zid); var pw = ZD.power()
 	_txt(ctx, ZD.L("建議戰力 %d", "建議戰力 %d") % need, cx, cy + px * 0.4, px + 2, "#ffd27a")
 	_txt(ctx, (ZD.L("你嘅出擊兵力 %d", "你的出擊兵力 %d") if load("res://game/militia/ml_data.gd").power() > 0 else ZD.L("你嘅陰兵戰力 %d", "你的陰兵戰力 %d")) % pw, cx, cy + px * 2.0, px, "#9fe39a" if pw >= need else "#ff9a7a")   # [militia] 有遊魂兵：叫「出擊兵力」
@@ -709,6 +711,44 @@ static func _fog(c: CanvasItem, ctx: Ctx, nv, z: Dictionary, r: Rect2, t: float,
 	_plate(ctx, ZD.L("撳我攻佔", "點我攻佔"), cx, cy + px * 3.8, px, "rgba(150,40,30,.95)")
 	fog_log.append(["btn", zid])
 	ctx.globalAlpha = 1.0
+# [kpi] 考核開區：霧上面寫考核官＋進度＋「點我考核」（取代建議戰力）
+static func _kpi_fog(ctx: Ctx, zid: String, cx: float, cy: float, t: float, a: float) -> bool:
+	var KGq = load("res://game/kpi/kpi_data.gd")
+	if not KGq.gated(zid): return false
+	var gid = KGq.gate_for_zone(zid); var px = 16
+	var gd = KGq.gate(gid)
+	_kpi_face(ctx, str(gd.get("boss", "")), cx, cy - px * 2.4, px * 1.9)   # 冥界老闆頭像（暫用佔位）
+	_txt(ctx, ZD.L("考核官：%s", "考核官：%s") % str(gd.get("boss_n", "")), cx, cy + px * 0.4, px + 2, "#ffd27a")
+	if KGq.active(gid):
+		var mc = KGq.met_count(gid)
+		_txt(ctx, ZD.L("KPI 達標 %d/%d", "KPI 達標 %d/%d") % [mc[0], mc[1]], cx, cy + px * 2.0, px, "#9fe39a" if mc[0] >= mc[1] else "#ff9a7a")
+		ctx.globalAlpha = a * (0.75 + 0.25 * sin(t * 3.0))
+		_plate(ctx, ZD.L("撳我考核", "點我考核"), cx, cy + px * 3.8, px, "rgba(150,40,30,.95)")
+	else:
+		_txt(ctx, ZD.L("等上一個考核達標", "等上一個考核達標"), cx, cy + px * 2.0, px, "#d8ccb4")
+	fog_log.append(["kpi", zid])
+	return true
+# [kpi] 考核官頭像：有美術（kpi_boss_<id>／龐總 bm_pang）畫圖；冇就圓牌＋姓（佔位）
+static func _kpi_face(ctx: Ctx, boss: String, x: float, y: float, r: float) -> void:
+	var k = load("res://game/kpi/kpi_ui.gd").boss_key(boss)
+	if k != "":   # 美術「探出圈」版：畫布＝圓直徑 3 倍，圓心喺中間（自帶圓底、金圈；展腳全長喺畫布內）
+		var t = Spr.get_tex(k)
+		ctx.drawImage(t, x - r * 3.0, y - r * 3.0, r * 6.0, r * 6.0)
+		return
+	ctx.beginPath(); ctx.arc(x, y, r, 0.0, TAU); ctx.fillStyle = "rgba(58,36,64,.95)"; ctx.fill()
+	var ch = {"chen": "陳", "he": "何", "qian": "錢", "dato": "冥", "nuo": "糯", "pang": "龐"}.get(boss, "?")
+	_txt(ctx, ch, x, y + 1, int(r * 1.05), "#ffe9a8")
+	ctx.beginPath(); ctx.arc(x, y, r, 0.0, TAU); ctx.strokeStyle = "#e8b04a"; ctx.lineWidth = 3.0; ctx.stroke()
+# [kpi] 村口「本月最佳員工：Bryan」橫幅（逾期搶功時掛，達標撕走）
+static func _bryan_banner(ctx: Ctx, nv, t: float) -> void:
+	if not load("res://game/kpi/kpi_data.gd").banner_on(): return
+	var vz = {}
+	for z in ZD.zones(): if str(z.type) == "village": vz = z
+	if vz.is_empty(): return
+	var r = ZD.rect(vz.rect)
+	var px = maxi(16, _name_px(nv) - 2)
+	_plate(ctx, ZD.L("本月最佳員工：Bryan", "本月最佳員工：Bryan"), r.get_center().x, r.position.y + px * 3.4 + sin(t * 2.4) * 2.0, px, "rgba(170,40,30,.95)", "#fff2c8")
+	fog_log.append(["bryan", ""])
 static func _fog_only(c: CanvasItem, _nv, z: Dictionary, r: Rect2, t: float, vr := Rect2()) -> void:   # [mapbattle] 淨係霧（冇牌冇字）
 	_fog_body(c, r, t, vr if vr.has_area() else r)
 	fog_log.append(["fog", str(z.id)])
@@ -862,6 +902,12 @@ static func _busy() -> bool:
 # ---------------- 彈出卡（main.gd 嘅 sheet） ----------------
 static func open_capture(main, zid: String) -> void:
 	if main == null or _busy(): return
+	var KGq = load("res://game/kpi/kpi_data.gd")
+	if KGq.gated(zid):   # [kpi] 考核開區：撳門洞／區＝開考核卡
+		var gid = KGq.gate_for_zone(zid)
+		if KGq.active(gid): load("res://game/kpi/kpi_ui.gd").open(main, gid)
+		elif main.has_method("show_toast"): main.show_toast(ZD.L("要等上一個考核達標先開呢區", "要等上一個考核達標才開放這區"))
+		return
 	var z = ZD.zone(zid)
 	main.open_sheet(ZD.T(z.n), func(): pass)
 	var body = main.sheet_body
