@@ -104,9 +104,10 @@ gates = [
 
 # 賄賂三檔（設計 4.2）：效果、成本、風險
 bribes = {
-    "snack": {"n": "紙紮點心", "type": "food", "cost": {"coins": 60}, "eff": "cut1", "val": 0.2, "risk": "none", "p": 0.0},
-    "watch": {"n": "紙紮名錶", "type": "brand", "cost": {"coins": 220, "m_plank": 30}, "eff": "skip1", "val": 1.0, "risk": "photo", "p": 0.2},
-    "car": {"n": "紙紮跑車", "type": "brand", "cost": {"coins": 650}, "eff": "cutall", "val": 0.4, "risk": "caught", "p": 0.3},
+    # 價錢對齊設計 v1 第十一節（各組對齊用）
+    "snack": {"n": "紙紮點心", "type": "food", "cost": {"coins": 40}, "eff": "cut1", "val": 0.2, "risk": "none", "p": 0.0},
+    "watch": {"n": "紙紮名錶", "type": "brand", "cost": {"coins": 120, "m_plank": 20}, "eff": "skip1", "val": 1.0, "risk": "photo", "p": 0.2},
+    "car": {"n": "紙紮跑車", "type": "brand", "cost": {"coins": 300, "m_plank": 60}, "eff": "cutall", "val": 0.4, "risk": "caught", "p": 0.3},
 }
 
 need_scenes = []
@@ -121,6 +122,18 @@ for k, v in alias.items():
     if k not in scenes and v in scenes:
         scenes[k] = scenes[v]
 missing = [k for k in need_scenes if k not in scenes]
+
+# 遊戲流程修正（唔改劇本原意）：
+# 1. 陳不辦巡查：「修好了……三棟」改成實際數字（{rebuilt}，顯示時換中文數字）
+# 2. Dato' 冥達標＝荒田禾稈場開放（閘門 C 開 zone:C）：系統句補一句，同糯婆考核接得上
+def _patch(key, old, new):
+    sc = scenes.get(key)
+    if not sc: return
+    for l in sc["lines"]:
+        for i in (1, 2):
+            if old in l[i]: l[i] = l[i].replace(old, new)
+_patch("kpi_chen_open", "修好了……三棟", "修好了……{rebuilt}棟")
+_patch("kpi_dato_pass", "名鬼招募全面開放！", "名鬼招募全面開放，荒田禾稈場也開放了！")
 
 out = {
     "_note": "kpi_build.py 由 story_v2.md 產生；唔好手改，改劇本再跑",

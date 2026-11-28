@@ -717,6 +717,7 @@ static func _kpi_fog(ctx: Ctx, zid: String, cx: float, cy: float, t: float, a: f
 	if not KGq.gated(zid): return false
 	var gid = KGq.gate_for_zone(zid); var px = 16
 	var gd = KGq.gate(gid)
+	_kpi_face(ctx, str(gd.get("boss", "")), cx, cy - px * 2.4, px * 1.9)   # 冥界老闆頭像（暫用佔位）
 	_txt(ctx, ZD.L("考核官：%s", "考核官：%s") % str(gd.get("boss_n", "")), cx, cy + px * 0.4, px + 2, "#ffd27a")
 	if KGq.active(gid):
 		var mc = KGq.met_count(gid)
@@ -727,6 +728,17 @@ static func _kpi_fog(ctx: Ctx, zid: String, cx: float, cy: float, t: float, a: f
 		_txt(ctx, ZD.L("等上一個考核達標", "等上一個考核達標"), cx, cy + px * 2.0, px, "#d8ccb4")
 	fog_log.append(["kpi", zid])
 	return true
+# [kpi] 考核官頭像：有美術（kpi_boss_<id>／龐總 bm_pang）畫圖；冇就圓牌＋姓（佔位）
+static func _kpi_face(ctx: Ctx, boss: String, x: float, y: float, r: float) -> void:
+	var k = load("res://game/kpi/kpi_ui.gd").boss_key(boss)
+	if k != "":   # 美術「探出圈」版：畫布＝圓直徑 3 倍，圓心喺中間（自帶圓底、金圈；展腳全長喺畫布內）
+		var t = Spr.get_tex(k)
+		ctx.drawImage(t, x - r * 3.0, y - r * 3.0, r * 6.0, r * 6.0)
+		return
+	ctx.beginPath(); ctx.arc(x, y, r, 0.0, TAU); ctx.fillStyle = "rgba(58,36,64,.95)"; ctx.fill()
+	var ch = {"chen": "陳", "he": "何", "qian": "錢", "dato": "冥", "nuo": "糯", "pang": "龐"}.get(boss, "?")
+	_txt(ctx, ch, x, y + 1, int(r * 1.05), "#ffe9a8")
+	ctx.beginPath(); ctx.arc(x, y, r, 0.0, TAU); ctx.strokeStyle = "#e8b04a"; ctx.lineWidth = 3.0; ctx.stroke()
 # [kpi] 村口「本月最佳員工：Bryan」橫幅（逾期搶功時掛，達標撕走）
 static func _bryan_banner(ctx: Ctx, nv, t: float) -> void:
 	if not load("res://game/kpi/kpi_data.gd").banner_on(): return

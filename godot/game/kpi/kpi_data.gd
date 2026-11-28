@@ -64,7 +64,29 @@ static func enable(on := true) -> void:
 static func on_for(c: int) -> bool:
 	if OS.has_environment("GB_NOKPI"): return false
 	var k = st()
-	return k != null and J.t(k.get("on")) and not gates(c).is_empty()
+	if k == null or gates(c).is_empty(): return false
+	if not J.t(k.get("on")) and _rb_on(): enable(true)   # 荒村開局存檔：自動開考核（vil2 唔使另外叫 enable）
+	if J.t(k.get("on")): _hook()
+	return J.t(k.get("on"))
+static func RB(): return load("res://game/rebuild/rb.gd")
+static func _rb_on() -> bool: return RB().active()   # 荒村存檔（GB_TEST 下要 S.rb.test＝1）
+# 大排檔開關：KPI 開咗＝龐總總考核（flag:market）達標先開；冇 KPI ＝ 舊判斷（S.tav.stall／新手階段 ≥ 5）
+static var _hooked := false
+static func _hook() -> void:
+	if _hooked: return
+	_hooked = true
+	J.G["stall_open_fn"] = Callable(load("res://game/kpi/kpi_data.gd"), "stall_open")
+static func stall_open() -> bool:
+	if on_for_quiet(): return is_open("market")
+	var s = S()
+	if s == null: return false
+	var t = s.get("tav")
+	if t is Dictionary and J.num(t.get("stall", 0)) > 0: return true
+	return load("res://game/onboard/ob.gd").stage() >= 5
+static func on_for_quiet() -> bool:   # 唔觸發 enable／hook（stall_open 內部用，避免遞歸）
+	if OS.has_environment("GB_NOKPI"): return false
+	var k = st()
+	return k != null and J.t(k.get("on")) and not gates().is_empty()
 static func on() -> bool: return on_for(ci())
 static func register_metric(key: String, fn: Callable) -> void: _fns[key] = fn
 static func on_open(fn: Callable) -> void: if not _opens.has(fn): _opens.append(fn)
@@ -102,10 +124,51 @@ static func active_gate(c := -1) -> String:   # 而家輪到邊個閘門（"" = 
 		if not passed(str(g.id), c): return str(g.id)
 	return ""
 static func active(gid: String, c := -1) -> bool:
-	if not on_for(ci() if c < 0 else c) or passed(gid, c) or active_gate(c) != gid: return false
+	if not turn(gid, c): return false
 	var op = str(gate(gid, c).get("opens", ""))
 	if op.begins_with("zone:") and not ZD().revealed(op.substr(5), c): return false
 	return true
+# 輪到呢個閘門未（唔理有冇解霧）：上一個達標；第一個閘門要荒村核心四棟（鬼宅／伐木場／糯米田／化寶爐）修好先嚟巡查
+static func turn(gid: String, c := -1) -> bool:
+	if not on_for(ci() if c < 0 else c) or passed(gid, c) or active_gate(c) != gid: return false
+	var gl = gates(c)
+	if not gl.is_empty() and str(gl[0].id) == gid and _rb_on() and not _rb_core_done(): return false
+	return true
+static func _rb_core_done() -> bool:   # 荒村核心四棟（虛擬任務嗰四棟）全部開張
+	for b in RB().ORDER: if not RB().is_open(str(b)): return false
+	return true
+# zone_data.cond_ok 用：KPI 開咗時，出村門外各區幾時解霧（null＝KPI 唔管，用 zones.json 原條件）
+#   資源區（有閘門）：輪到佢考核或者已達標先解霧（霧上面寫考核官）
+#   大排檔：龐總總考核達標先解；野外：大排檔開咗先照原條件解
+static func reveal_rule(zid: String, ztype: String, c := -1):
+	if not on_for(ci() if c < 0 else c): return null
+	var gid = gate_for_zone(zid, c)
+	if gid != "": return passed(gid, c) or turn(gid, c)
+	if ztype == "market": return is_open("market", c)
+	if ztype == "wild" and not is_open("market", c): return false
+	return null
+
+# ---------------- 虛擬任務（主線去到要用大排檔嘅任務、大排檔又未開：任務條改做「通過考核」） ----------------
+const STALL_Q := ["sell", "guard", "stage"]
+static func cur_q(main_q):
+	if not on() or is_open("market"): return null
+	var t = str(J.gp(main_q, "t")) if main_q is Dictionary else ""
+	if main_q != null and not (t in STALL_Q): return null
+	var gid = active_gate()
+	if gid == "": return null
+	var gd = gate(gid)
+	var who = str(gd.get("boss_n", ""))
+	var tx = ""
+	if not turn(gid): tx = T("繼續重建村子，等考核官嚟巡查", "繼續重建村子，等考核官來巡查")
+	elif str(gd.get("opens", "")) == "flag:market": tx = T("通過龐總總考核（開大排檔）", "通過龐總總考核（開大排檔）")
+	else: tx = T("通過「%s」嘅 KPI 考核", "通過「%s」的 KPI 考核") % who
+	return {"t": "kpi", "kpi": true, "gid": gid, "n": 1.0, "go": "kpi:" + gid, "text": tx, "r": {}}
+static func T(y: String, z: String) -> String: return y if DB.lang == "yue" else z
+static func q_progress(q) -> Array:
+	var gid = str(J.gp(q, "gid"))
+	if not turn(gid): return [0.0, 1.0]
+	var mc = met_count(gid)
+	return [float(mc[0]), float(mc[1]) + 1.0]   # +1＝「交考核」：指標全達標仍要撳考核牌交（唔會自動完成任務）
 static func gated(zid: String, c := -1) -> bool:   # 資源區由考核開（攻佔／親征都唔得）
 	if not on_for(ci() if c < 0 else c): return false
 	var gid = gate_for_zone(zid, c)
@@ -122,6 +185,7 @@ static func _metric(key: String, kind: String) -> float:
 	if _fns.has(key) and (_fns[key] as Callable).is_valid(): return float(_fns[key].call())
 	match key:
 		"rebuilt":
+			if _rb_on(): return float(RB().opened_count())   # 荒村存檔：開張咗幾多棟
 			var n = 0
 			var b = s.get("bld") if s.get("bld") is Dictionary else {}
 			for k in VILLAGE_BLDS: if J.num(b.get(k, 0)) >= 1: n += 1
@@ -129,7 +193,9 @@ static func _metric(key: String, kind: String) -> float:
 		"named_hired", "named_working":
 			var GH = J.G.get("GHOSTS"); var n2 = 0
 			for g in J.iter(s.get("ghosts")):
-				if not (g is Dictionary) or not (GH is Dictionary) or not GH.has(str(g.get("k", ""))): continue
+				if not (g is Dictionary): continue
+				var named = g.get("gen") is Dictionary or (GH is Dictionary and GH.has(str(g.get("k", ""))))   # 名鬼＝設計名鬼＋酒館有名有姓嘅普通鬼
+				if not named: continue
 				if key == "named_working" and (g.get("post") == null or str(g.post) == ""): continue
 				n2 += 1
 			return float(n2)
@@ -138,6 +204,10 @@ static func _metric(key: String, kind: String) -> float:
 			for m in SELF_RES: if M().amt(m) >= 50.0: n3 += 1
 			return float(n3)
 	return 0.0
+static func metric(key: String) -> float:   # 對外：一項指標而家幾多（fn 類）
+	for g in gates():
+		for nd in g.get("need", []): if str(nd.key) == key: return _metric(key, str(nd.kind))
+	return _metric(key, "fn")
 static func amt_of(key: String) -> float:   # 被搶／追回用：coins 係 S.res，其餘經 mat.gd
 	if key == "coins": return _metric("coins", "res")
 	return M().amt(key)
@@ -254,7 +324,11 @@ static func submit(gid: String) -> Dictionary:
 		if not ZD().owned(zid):
 			ZD().set_owned(zid)
 			ZD().ev("zone_cap", zid)   # 原本攻佔劇情（zs0_zone_cap_*）改由考核達標觸發
+	if op == "flag:market":   # 大排檔開（存檔記住，tavern／化寶爐轉祭品模式都睇得到）
+		var s = S()
+		if s != null and s.get("tav") is Dictionary: s.tav["stall"] = 1
 	for f in _opens: if (f as Callable).is_valid(): f.call(gid, op)
+	ZD().reveal_poll(true)   # 下一區（輪到佢考核）／大排檔即刻解霧
 	var egg = gid == "market" and _all_bribed_ok()
 	var out = {"ok": true, "kind": "pass", "gid": gid, "opens": op, "back": back, "banner": had_banner, "egg": egg}
 	NEWS.append(out); _save()

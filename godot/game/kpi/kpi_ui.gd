@@ -26,8 +26,12 @@ static func scene(key: String) -> Dictionary:
 			if c == "f" and not f: continue
 		var tx = str(l[1]) if yue or l.size() < 3 else str(l[2])
 		tx = tx.replace("{少爺}", "大小姐" if f else "少爺")
+		if tx.contains("{rebuilt}"): tx = tx.replace("{rebuilt}", cn_num(int(KG.metric("rebuilt"))))
 		ls.append([str(l[0]), tx])
 	return {"style": "talk", "bg": "village", "title": str(sd.get("title", "")), "lines": ls}
+static func cn_num(n: int) -> String:
+	var D = ["零", "一", "兩", "三", "四", "五", "六", "七", "八", "九", "十"]
+	return D[n] if n >= 0 and n <= 10 else str(n)
 static func play(main, key: String, extra_sys := "", cb := Callable()) -> void:
 	var sc = scene(key)
 	if sc.is_empty():
@@ -62,53 +66,178 @@ static func open(main, gid: String) -> void:
 			_sheet(main, gid))
 		return
 	_sheet(main, gid)
+# 考核卡（v2：少字、多圖）：大倒數＋指標進度條＋牛頭／馬面頭像＋三件禮物卡；送錯唔預先講，送咗先吐槽
+static var _to := {}   # gid → "niu"／"ma"（揀咗送俾邊個）
+const KS = preload("res://ui/kit_skin.gd")
+const GIFT_ICON := {"snack": "mvi_nuomici", "watch": "mvi_watch", "car": "mvi_car"}
+const WHO := {"niu": ["ace_niutou_s1", "牛頭"], "ma": ["ace_mamian_s1", "馬面"]}
+static func _tex(k: String) -> Texture2D: return Spr.get_tex(k) if Spr.ok(k) else null
+static func _img(k: String, sz: float) -> TextureRect:
+	var r = TextureRect.new(); r.texture = _tex(k); r.custom_minimum_size = Vector2(sz, sz)
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return r
+static func metric_icon(key: String, kind: String) -> Texture2D:   # 指標圖示：舊資源用美術資源圖示；材料用 mvi_*；其他用建築／鬼
+	var RI = load("res://ui/res_icon.gd")
+	if key == "coins": return RI.tex("coins")
+	if kind == "mat":
+		var Mm = load("res://game/outpost/mat.gd")
+		var rk = Mm.res_key(key)
+		if rk != "" and RI.tex(rk) != null: return RI.tex(rk)
+		return _tex(str(Mm.icon(key)))
+	match key:
+		"rebuilt": return _tex("house") if Spr.ok("house") else RI.tex("planks")
+		"home": return _tex("home") if Spr.ok("home") else RI.tex("planks")
+		"named_hired", "named_working": return RI.tex("troops")
+		"self_sufficient": return RI.tex("rice")
+	return _tex(key) if kind == "bld" else null
+static func _bar(frac: float, met: bool) -> Control:
+	var pb = ProgressBar.new(); pb.min_value = 0.0; pb.max_value = 1.0; pb.value = clampf(frac, 0.0, 1.0); pb.show_percentage = false
+	pb.custom_minimum_size = Vector2(0, 14); pb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var tr = KS.box("bar_track", Vector4(0, 0, 0, 0)); var fl = KS.box("bar_fill", Vector4(0, 0, 0, 0))
+	if tr != null and not KS.OFF: pb.add_theme_stylebox_override("background", tr)
+	else: pb.add_theme_stylebox_override("background", UIKit.sb(Color("#3a2c26"), 6))
+	if met or fl == null or KS.OFF: pb.add_theme_stylebox_override("fill", UIKit.sb(Color("#3d7a3a") if met else Color("#a8322a"), 6))
+	else: pb.add_theme_stylebox_override("fill", fl)
+	return pb
 static func _sheet(main, gid: String) -> void:
 	var gd = KG.gate(gid); var g = KG.gs(gid)
 	main.open_sheet(L("%s・KPI 考核", "%s・KPI 考核") % str(gd.boss_n), func(): _sheet(main, gid))
 	var body = main.sheet_body
-	var R = func(bb: String, sz := 16): var r = UIKit.rich(bb, sz, UIKit.INKTXT); body.add_child(r); return r
-	R.call("[color=#6b5e52]%s[/color]" % str(gd.get("title", "")), 14)
-	R.call("[b]%s[/b]　[color=#a8322a]%s[/color]" % [L("本季度剩", "本季度剩"), _fmt_t(J.num(g.left))], 17)
+	# ① 大倒數
+	var top = HBoxContainer.new(); top.add_theme_constant_override("separation", 10)
+	var who = boss_portrait(str(gd.boss), 60); top.add_child(who)
+	var tv = VBoxContainer.new(); tv.add_theme_constant_override("separation", 0); tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tv.add_child(UIKit.label(str(gd.get("title", "")), 13, UIKit.INKDIM))
+	var cd = UIKit.label(_fmt_t(J.num(g.left)), 34, UIKit.CINNABAR2, "sans", 900); tv.add_child(cd)
+	top.add_child(tv); body.add_child(top)
+	body.add_child(UIKit.rich("[color=#8a7a6a]%s[/color]" % L("逾期：Bryan 搶功拎走倉庫一成", "逾期：Bryan 搶功拿走倉庫一成"), 12))
+	if g.stolen.size() > 0: body.add_child(UIKit.rich("[color=#a8322a]%s[/color]" % (L("已被搶：%s（達標追回一半）", "已被搶：%s（達標追回一半）") % KG.stolen_txt(gid)), 12))
+	if J.num(g.get("plus", 0.0)) > 0.0: body.add_child(UIKit.rich("[color=#a8322a]%s[/color]" % L("上一區被拍照：KPI +10%", "上一區被拍照：KPI +10%"), 12))
+	# ② 指標：圖示＋名＋進度條＋數字
 	for p in KG.progress(gid):
-		var col = "#3d7a3a" if p.met else "#a8322a"
-		var st = L("（免考：已打點）", "（免考：已打點）") if p.skip else ""
-		var nd = int(p.need)
-		var cut = "" if p.skip or nd == int(p.base) else "[color=#8a7a6a]（原本 %d）[/color]" % int(p.base)
-		R.call("%s　[color=%s][b]%d / %d[/b][/color]%s%s" % [p.label, col, int(p.cur), nd, cut, st], 17)
-	if J.num(g.get("plus", 0.0)) > 0.0: R.call("[color=#a8322a]%s[/color]" % L("上一區被馬面拍照存證：本區 KPI +10%", "上一區被馬面拍照存證：本區 KPI +10%"), 14)
-	if g.stolen.size() > 0: R.call("[color=#a8322a]%s[/color]" % (L("Bryan 搶功拎走：%s（達標可追回一半）", "Bryan 搶功拿走：%s（達標可追回一半）") % KG.stolen_txt(gid)), 14)
-	R.call(L("倒數完仲未達標：Bryan 會嚟搶功（拎走倉庫最多嗰樣 10%），倒數重來。", "倒數結束仍未達標：Bryan 會來搶功（拿走倉庫最多那樣的 10%），倒數重來。"), 13)
-	body.add_child(UIKit.hsep())
+		var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 8)
+		var ic = TextureRect.new(); ic.texture = metric_icon(str(p.key), _kind(gid, str(p.key))); ic.custom_minimum_size = Vector2(30, 30)
+		ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; row.add_child(ic)
+		var col = VBoxContainer.new(); col.add_theme_constant_override("separation", 2); col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var nl = HBoxContainer.new()
+		var lb = UIKit.label(str(p.label), 15, UIKit.INKTXT, "sans", 700); lb.size_flags_horizontal = Control.SIZE_EXPAND_FILL; nl.add_child(lb)
+		var nt = L("免考", "免考") if p.skip else "%d / %d" % [int(p.cur), int(p.need)]
+		nl.add_child(UIKit.label(nt, 15, Color("#3d7a3a") if p.met else UIKit.CINNABAR2, "sans", 900))
+		col.add_child(nl)
+		col.add_child(_bar(1.0 if p.skip else float(p.cur) / maxf(1.0, float(p.need)), p.met))
+		row.add_child(col); body.add_child(row)
 	var b1 = UIKit.btn(L("交考核", "交考核"), "gold")
 	b1.disabled = not KG.all_met(gid)
 	b1.pressed.connect(func(): _submit(main, gid))
 	body.add_child(b1)
+	# ③ 打點
 	if J.t(gd.get("nobribe")):
-		var bp = UIKit.btn(L("送龐總一籠包子（普通包子 10）", "送龐總一籠包子（普通包子 10）"), "")
+		var hp = HBoxContainer.new(); hp.add_theme_constant_override("separation", 10)
+		hp.add_child(boss_portrait("pang", 46))
+		var bp = UIKit.btn(L("送一籠包子", "送一籠包子"), "")
+		bp.icon = metric_icon("m_bao", "mat"); bp.expand_icon = false
 		bp.disabled = M_amt("m_bao") < 10.0
+		bp.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		bp.pressed.connect(func():
 			if KG.gift_pang(gid).get("ok"):
 				main.close_sheet(); play(main, "kpi_pang_bribe", L("（考核指標冇變）", "（考核指標沒有變化）"), func(): _sheet(main, gid)))
-		body.add_child(bp)
+		hp.add_child(bp); body.add_child(hp)
 		return
 	var why = KG.can_bribe(gid)
-	R.call("[b]%s[/b]" % L("請牛頭馬面飲茶", "請牛頭馬面飲茶"), 16)
-	if why == "used": R.call(L("呢區已經打點過（每區一次）", "這區已經打點過（每區一次）"), 14); return
-	if J.t(g.get("rebribe")): R.call("[color=#3d7a3a]%s[/color]" % L("老闆話再送一次就算：今次唔會畀人撞破", "老闆說再送一次就算：這次不會被撞破"), 14)
-	if J.num(KG.st().get("disc", 0.0)) > 0.0: R.call("[color=#3d7a3a]%s[/color]" % L("牛頭馬面心虛：今次賄賂半價", "牛頭馬面心虛：這次賄賂半價"), 14)
-	R.call(L("牛頭只收名牌（收據一式三份），馬面只收食物。送錯：點心減半；名牌送馬面會被退回，仲要加 KPI。", "牛頭只收名牌（收據一式三份），馬面只收食物。送錯：點心效果減半；名牌送馬面會被退回，還要加 KPI。"), 13)
-	var rows = [["snack", "ma", L("點心 → 馬面：最差一項 -20%", "點心 → 馬面：最差一項 -20%")],
-		["watch", "niu", L("名錶 → 牛頭：最差一項免考（20% 被拍照：下一區 +10%）", "名錶 → 牛頭：最差一項免考（20% 被拍照：下一區 +10%）")],
-		["car", "niu", L("跑車 → 牛頭：全部 -40%（30% 被老闆撞破）", "跑車 → 牛頭：全部 -40%（30% 被老闆撞破）")],
-		["snack", "niu", L("點心 → 牛頭（送錯：-10%）", "點心 → 牛頭（送錯：-10%）")],
-		["watch", "ma", L("名錶 → 馬面（會被退回）", "名錶 → 馬面（會被退回）")]]
-	for r in rows:
-		var cost = KG.bribe_cost(r[0])
-		var b = UIKit.btn("%s　[%s]" % [r[2], _cost_txt(cost)], "")
-		b.disabled = not KG.can_pay(cost)
-		var t0 = r[0]; var to0 = r[1]
-		b.pressed.connect(func(): _bribe(main, gid, t0, to0))
-		body.add_child(b)
+	body.add_child(UIKit.hsep())
+	if why == "used":
+		body.add_child(UIKit.rich("[color=#8a7a6a]%s[/color]" % L("呢區已經打點過", "這區已經打點過"), 13)); return
+	var tip = L("請飲茶：先揀人，再揀禮物", "請喝茶：先選人，再選禮物")
+	if J.t(g.get("rebribe")): tip = L("老闆話再送一次就算", "老闆說再送一次就算")
+	if J.num(KG.st().get("disc", 0.0)) > 0.0: tip += L("　牛頭馬面心虛：半價", "　牛頭馬面心虛：半價")
+	body.add_child(UIKit.label(tip, 14, UIKit.INKTXT, "sans", 700))
+	var sel = str(_to.get(gid, ""))
+	var hw = HBoxContainer.new(); hw.add_theme_constant_override("separation", 12); hw.alignment = BoxContainer.ALIGNMENT_CENTER
+	for w in ["niu", "ma"]:
+		var bw = Button.new(); bw.toggle_mode = true; bw.button_pressed = sel == w; bw.focus_mode = Control.FOCUS_NONE
+		bw.custom_minimum_size = Vector2(96, 112); bw.text = ""
+		var on = sel == w
+		var sb = KS.box("avatar_slot") if not KS.OFF else null
+		if sb == null: sb = UIKit.sb(Color("#3a2c26"), 8)
+		for st0 in ["normal", "hover", "pressed", "hover_pressed", "focus"]: bw.add_theme_stylebox_override(st0, sb)
+		bw.modulate = Color(1, 1, 1) if on or sel == "" else Color(0.78, 0.76, 0.76)
+		var vb = VBoxContainer.new(); vb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		vb.add_theme_constant_override("separation", 0)
+		var im = _img(WHO[w][0], 84); im.size_flags_vertical = Control.SIZE_EXPAND_FILL; vb.add_child(im)
+		var nm = UIKit.label(WHO[w][1], 14, Color("#fff2c8") if on else Color("#f0e2c8"), "sans", 900); nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; vb.add_child(nm)
+		bw.add_child(vb)
+		if on:
+			var ring = Panel.new(); ring.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			var rs = StyleBoxFlat.new(); rs.bg_color = Color(0, 0, 0, 0); rs.border_color = Color("#e8b04a"); rs.set_border_width_all(3); rs.set_corner_radius_all(8)
+			ring.add_theme_stylebox_override("panel", rs); bw.add_child(ring)
+		var w0 = w
+		bw.pressed.connect(func(): _to[gid] = w0; _sheet(main, gid))
+		hw.add_child(bw)
+	body.add_child(hw)
+	var hg = HBoxContainer.new(); hg.add_theme_constant_override("separation", 6)
+	for tier in ["snack", "watch", "car"]:
+		hg.add_child(_gift_card(main, gid, tier, sel))
+	body.add_child(hg)
+static func _kind(gid: String, key: String) -> String:
+	for nd in KG.gate(gid).get("need", []): if str(nd.key) == key: return str(nd.kind)
+	return "fn"
+# 禮物卡：圖＋名＋效果（短字）＋風險小圖示＋價錢；未揀人＝灰
+static func _gift_card(main, gid: String, tier: String, sel: String) -> Control:
+	var bd = KG.bribe_def(tier); var cost = KG.bribe_cost(tier)
+	var b = Button.new(); b.focus_mode = Control.FOCUS_NONE; b.text = ""
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size = Vector2(0, 150)
+	var sb = KS.box("card") if not KS.OFF else null
+	if sb == null: sb = UIKit.sb(Color("#efe2c8"), 8, Color("#b89a52"), 1)
+	for st0 in ["normal", "hover", "pressed", "disabled", "focus"]: b.add_theme_stylebox_override(st0, sb)
+	b.disabled = sel == "" or not KG.can_pay(cost)
+	b.modulate = Color(1, 1, 1) if not b.disabled else Color(0.7, 0.68, 0.66)
+	var vb = VBoxContainer.new(); vb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_theme_constant_override("separation", 1); vb.offset_top = 6; vb.offset_bottom = -6
+	var im = _img(GIFT_ICON[tier], 52); im.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; vb.add_child(im)
+	var nm = UIKit.label(str(bd.get("n", "")).replace("紙紮", ""), 14, UIKit.INKTXT, "sans", 900); nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; vb.add_child(nm)
+	var eff = {"snack": L("一項 -20%", "一項 -20%"), "watch": L("一項免考", "一項免考"), "car": L("全部 -40%", "全部 -40%")}[tier]
+	var el = UIKit.label(eff, 14, Color("#3d7a3a"), "sans", 900); el.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; vb.add_child(el)
+	var risk = str(bd.get("risk", "none"))
+	var rr = HBoxContainer.new(); rr.alignment = BoxContainer.ALIGNMENT_CENTER; rr.add_theme_constant_override("separation", 2); rr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if risk != "none":
+		rr.add_child(_img("kpi_risk_photo" if risk == "photo" else "kpi_risk_caught", 18))
+		rr.add_child(UIKit.label("%d%%" % int(round(J.num(bd.get("p", 0)) * 100)), 12, UIKit.CINNABAR2, "sans", 900))
+	else: rr.add_child(UIKit.label(L("冇風險", "無風險"), 12, UIKit.INKDIM, "sans", 700))
+	vb.add_child(rr)
+	var cr = HBoxContainer.new(); cr.alignment = BoxContainer.ALIGNMENT_CENTER; cr.add_theme_constant_override("separation", 2); cr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for k in cost:
+		var t = metric_icon(str(k), "res" if str(k) == "coins" else "mat")
+		var ic = TextureRect.new(); ic.texture = t; ic.custom_minimum_size = Vector2(15, 15); ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cr.add_child(ic); cr.add_child(UIKit.label(str(int(J.num(cost[k]))), 12, UIKit.INKTXT, "sans", 700))
+	vb.add_child(cr)
+	b.add_child(vb)
+	b.pressed.connect(func(): _bribe(main, gid, tier, sel))
+	return b
+# 冥界老闆頭像：美術「探出圈」版（kpi_boss_<id>：畫布＝圓直徑 3 倍、圓心喺正中；帽連展腳全長／頭頂越出圈，最闊離圓心 2.2R、最高 1.8R）；冇就圓牌＋姓（佔位）
+# sz＝圓圈直徑；返回嘅格仔預留展腳同頭頂出圈位（唔裁切）
+const BOSS_CH := {"chen": "陳", "he": "何", "qian": "錢", "dato": "冥", "nuo": "糯", "pang": "龐"}
+static func boss_key(boss: String) -> String:
+	if Spr.ok("kpi_boss_" + boss): return "kpi_boss_" + boss
+	return ""
+static func boss_portrait(boss: String, sz: float) -> Control:
+	var k = boss_key(boss)
+	var box = Control.new(); box.mouse_filter = Control.MOUSE_FILTER_IGNORE; box.clip_contents = false
+	box.custom_minimum_size = Vector2(sz * 2.2, sz * 1.5)   # 闊＝±1.1 直徑（展腳），高＝頭頂 0.9＋圓下半 0.5＋留白
+	if k != "":
+		var tr = TextureRect.new(); tr.texture = Spr.get_tex(k + ("_s" if sz <= 40 and Spr.ok(k + "_s") else ""))
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; tr.stretch_mode = TextureRect.STRETCH_SCALE; tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tr.size = Vector2(sz * 3.0, sz * 3.0)
+		tr.position = Vector2(sz * 1.1 - sz * 1.5, sz * 0.92 - sz * 1.5)   # 圓心 → (格中, 頭頂下 0.92 直徑)
+		box.add_child(tr)
+		return box
+	var p = Panel.new(); p.size = Vector2(sz, sz); p.position = Vector2(sz * 0.6, sz * 0.42); p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var s = StyleBoxFlat.new(); s.bg_color = Color("#3a2440"); s.border_color = Color("#e8b04a"); s.set_border_width_all(2); s.set_corner_radius_all(int(sz / 2))
+	p.add_theme_stylebox_override("panel", s)
+	var l = UIKit.label(str(BOSS_CH.get(boss, "?")), int(sz * 0.5), Color("#ffe9a8"), "serif", 900)
+	l.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	p.add_child(l); box.add_child(p)
+	return box
 static func M_amt(m: String) -> float: return KG.amt_of(m)
 
 static func _eff_txt(o: Dictionary) -> String:
@@ -150,6 +279,7 @@ static func _bribe(main, gid: String, tier: String, to: String) -> void:
 		_:
 			var key = "kpi_ma_food" if boss == "chen" and to == "ma" and tier == "snack" else "kpi_%s_bribe_ok" % boss
 			var tx2 = L("系統核實：%s。", "系統核實：%s。") % _eff_txt(o)
+			if J.t(o.get("half")): tx2 = L("牛頭：「我淨係收名牌㗎……不過都唔好浪費。」（送錯：效果減半）", "牛頭：「我只收名牌的……不過也別浪費。」（送錯：效果減半）") + tx2
 			if J.t(o.get("photo")):
 				play(main, key, tx2, func(): play(main, "kpi_photo", "", back))
 			else: play(main, key, tx2, back)
