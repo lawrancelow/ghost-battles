@@ -51,12 +51,18 @@ textarea:focus,button:focus-visible{outline:2px solid var(--red);outline-offset:
 </head>
 <body>
 <header>
-<h1>大排檔前大更新・美術試稿意見表</h1>
-<p class="lead">每張圖寫明用途。點圖可放大。每張選「選用／要改／不用」，有意見直接寫在框裡，打完字會自動保存，統籌會直接讀取並交給美術組。</p>
+<h1>大排檔前大更新＋過勞鬼市集・試稿意見表</h1>
+<p class="lead">還沒審的排在最前面（一到四），審過的在後面。每張圖寫明用途。點圖可放大。每張選「選用／要改／不用」，有意見直接寫在框裡，打完字會自動保存，統籌會直接讀取並交給美術組。</p>
 <div class="status" id="st">正在連接保存服務…</div>
 </header>
 <main>
-<section><h2>一、要你拍板：KPI 逾期懲罰</h2>
+<section><h2>一、過勞鬼市集試稿（新，待審）</h2><div class="grid" id="g5"></div></section>
+<section><h2>二、爽感包（新，待審）</h2><div class="grid" id="g6"></div></section>
+<section><h2>三、第二輪（按你上次意見改好的＋新做的，待審）</h2><div class="grid" id="g3"></div></section>
+<section><h2>四、女主專屬版劇情插圖（10 張，待審）</h2><div class="grid" id="g4"></div></section>
+<section><h2>五、已審：劇情插圖（老電視框播放）</h2><div class="grid" id="g1"></div></section>
+<section><h2>六、已審：遊戲內美術</h2><div class="grid" id="g2"></div></section>
+<section><h2>七、已定：KPI 逾期懲罰（你選了「中」）</h2>
 <div class="kpi" id="kpi">
 <label><input type="radio" name="kpi" value="輕"><span><b>輕</b>：冥界老闆來罵一頓（劇情），倒數重來，不扣任何東西。</span></label>
 <label><input type="radio" name="kpi" value="中"><span><b>中（建議）</b>：Bryan 來搶功，拿走倉庫 10% 某資源，村裡掛「本月最佳員工：Bryan」橫幅；達標後撕掉橫幅、拿回一半資源。</span></label>
@@ -64,15 +70,21 @@ textarea:focus,button:focus-visible{outline:2px solid var(--red);outline-offset:
 <textarea data-k="kpi_note" placeholder="其他意見（可留空）"></textarea>
 <div class="saved" data-s="kpi"></div>
 </div></section>
-<section><h2>二、劇情插圖（老電視框播放）</h2><div class="grid" id="g1"></div></section>
-<section><h2>三、遊戲內美術</h2><div class="grid" id="g2"></div></section>
-<section><h2>四、第二輪（按你上次意見改好的＋新做的）</h2><div class="grid" id="g3"></div></section>
-<section><h2>五、女主專屬版劇情插圖（10 張）</h2><div class="grid" id="g4"></div></section>
 </main>
 <div id="zoom"><img alt=""></div>
 <script>
 {
 const items=[
+{id:"m_gate_a",g:5,name:"市集牌坊 A（石木牌坊）",use:"過勞鬼市集入口：進市集時的第一個畫面，也用作開張劇情插圖的底",desc:"瓦頂石木牌坊、紅燈籠、排隊的鬼客，一隻小鬼舉牌攬客。牌匾留空，文字由程序加。A、B 二選一。"},
+{id:"m_gate_b",g:5,name:"市集牌坊 B（竹棚夜市門）",use:"同上，二選一",desc:"竹棚搭的夜市門、彩燈串、掛金元寶，售票亭裡的店員在打瞌睡，紅繩排隊欄。"},
+{id:"m_food",g:5,name:"食街",use:"市集第一條街背景（一次只顯示一條街）：賣包子、湯麵等食物",desc:"蒸籠攤、紅色塑膠凳、彩色帆布棚。攤位招牌留空。"},
+{id:"m_cloth",g:5,name:"衣街",use:"市集第二條街背景：賣紙衣、服裝",desc:"掛衣架、布匹、縫紉機、立鏡、試衣簾。"},
+{id:"m_weapon",g:5,name:"兵器街",use:"市集第三條街背景：賣武器裝備",desc:"打鐵爐、鐵砧、盾牌、盔甲架、水桶。"},
+{id:"m_acc",g:5,name:"飾品街",use:"市集第四條街背景：賣飾品",desc:"玻璃櫃、蓮花燈、流蘇掛飾、鬼火，色調偏紫藍。"},
+{id:"m_luxury",g:5,name:"奢侈品店",use:"市集第五條街背景：第 3 章回陽間之後才開",desc:"金色大門面、紅幔、紅地毯和圍欄、門口保安。請特別看：金色捲草雕飾和穿西裝戴墨鏡的保安，算不算西方元素？算的話我會改成東亞樣式（例如描金木雕、穿長衫的門神保安）。"},
+{id:"m_overwork",g:5,name:"店員過勞四段動作",use:"過勞營業核心玩法：店員由拼命→累趴→靈魂出竅→被餵包子復活的攤位動畫",desc:"由上到下四個狀態。確認方向後再做 4 款店員。"},
+{id:"j_overview",g:6,name:"爽感包總覽",use:"全遊戲手感強化：數字滾動、暴擊大字、連殺、王登場、戰力總值、突破演出、慶祝粒子、收成數字飛向頂欄；設定裡可以關",desc:"八格實機截圖。請看字的大小、演出會不會太吵或擋住畫面。"},
+{id:"j_coins",ext:"gif",g:6,name:"冥幣數字滾動 前後對比",use:"收錢時頂欄數字由直接跳變改為滾動上升",desc:"動圖：關閉與開啟爽感特效的對比。"},
 {id:"a1",g:1,name:"荒村廢墟全景 第二版",use:"開場劇情插圖：主角剛被流放到村子時看到的荒村；也作為全體畫風基準",desc:"血紅月亮、歪牌坊、封住的井、塌掉的包子灶、紙紮殘骸。遊玩地圖仍用原本村子。"},
 {id:"a2",g:1,name:"荒村重建完成版",use:"劇情插圖：全村重建完成、點燈時播放，和廢墟版同一角度作前後對比",desc:"燈籠全亮、屋頂修好、包子鋪冒煙、稻田轉綠、無腳小鬼在幹活。"},
 {id:"b1",g:1,name:"孟婆遞湯（男主）第一版",use:"開場劇情插圖：孟婆遞入職湯、主角嫌噁心那一幕（女主會另畫她自己的版本）",desc:"孟婆笑著遞眼珠湯、額頭冒青筋；主角捂嘴反胃；黑白無常在後面偷笑。"},
@@ -98,11 +110,13 @@ const items=[
 {id:"f1",g:2,name:"化寶爐 三種狀態",use:"遊戲內化寶爐建築：前期冥幣來源；荒村重建時由廢墟→修復中→完成",desc:"左起：原版對照、廢墟版、修復中（竹架＋帆布）、完成版（蠟筆風重繪）。"}
 ];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const card=it=>`<article class="card" data-id="${it.id}"><img src="img/${it.id}.jpg" alt="${esc(it.name)}" loading="lazy"><div class="body"><div class="top"><span class="id">${it.id.toUpperCase()}</span><span class="name">${esc(it.name)}</span></div><div class="use"><span>用途：</span>${esc(it.use)}</div><div class="desc">${esc(it.desc)}</div><div class="pick">${[["ok","選用"],["fix","要改"],["no","不用"]].map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="false">${t}</button>`).join("")}</div><textarea data-k="${it.id}" placeholder="意見（例如：顏色再暗一點、表情不夠誇張…）"></textarea><div class="saved" data-s="${it.id}"></div></div></article>`;
+const card=it=>`<article class="card" data-id="${it.id}"><img src="img/${it.id}.${it.ext||"jpg"}" alt="${esc(it.name)}" loading="lazy"><div class="body"><div class="top"><span class="id">${it.id.toUpperCase()}</span><span class="name">${esc(it.name)}</span></div><div class="use"><span>用途：</span>${esc(it.use)}</div><div class="desc">${esc(it.desc)}</div><div class="pick">${[["ok","選用"],["fix","要改"],["no","不用"]].map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="false">${t}</button>`).join("")}</div><textarea data-k="${it.id}" placeholder="意見（例如：顏色再暗一點、表情不夠誇張…）"></textarea><div class="saved" data-s="${it.id}"></div></div></article>`;
 document.getElementById("g1").innerHTML=items.filter(i=>i.g==1).map(card).join("");
 document.getElementById("g2").innerHTML=items.filter(i=>i.g==2).map(card).join("");
 document.getElementById("g3").innerHTML=items.filter(i=>i.g==3).map(card).join("");
 document.getElementById("g4").innerHTML=items.filter(i=>i.g==4).map(card).join("");
+document.getElementById("g5").innerHTML=items.filter(i=>i.g==5).map(card).join("");
+document.getElementById("g6").innerHTML=items.filter(i=>i.g==6).map(card).join("");
 const st=document.getElementById("st");
 const state={};
 let db=null;const timers={};
