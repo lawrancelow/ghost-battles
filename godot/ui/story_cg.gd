@@ -138,6 +138,7 @@ func show_spec(spec) -> void:
 	var rv_show = OS.get_environment("GB_RV_SHOW") == "1"
 	var pending = (str(d.get("rv", "")) != "" and not used_kf) or review_pending(k)
 	var have = k != "" and (Spr.ok(k) or CGM.known(k))   # [cgm] 分層／後備動態素材都算有圖
+	if review_hold(k) or (used_kf and review_hold(str(d.get("kf", "")))): hide_cg(); return   # [kpi-cg] 老闆退回重做緊嘅圖：一律唔出（連審圖模式都唔出），新圖到咗由 hold 刪走
 	if not rv_show and (pending or not have): hide_cg(); return
 	if not have and str(d.get("ph", "")) != "": k = str(d.ph)
 	if k == "" or (not Spr.ok(k) and not CGM.known(k)):
@@ -299,11 +300,24 @@ func _process(dt: float) -> void:
 		var cz = mot.tick(dt)
 		pic.pivot_offset = pic.size / 2; pic.scale = Vector2(cz[0], cz[0]); pic.position = cz[1]
 		layer.pivot_offset = layer.size / 2; layer.scale = pic.scale; layer.position = cz[1]
+		_plaque_follow()
 		return
 	var z = 1.0 + minf(_t, 12.0) * 0.004   # 慢慢推近
 	pic.scale = Vector2(z, z)
 	layer.pivot_offset = layer.size / 2; layer.scale = pic.scale   # 疊圖／疊字跟插圖一齊推近，唔會錯位
 
+
+# [kpi-cg] 後備動態嘅深度視差（cg_motion FLAT_SHADER：uv += (sh·d, bob·d·(1-v))，d＝smoothstep(y0,1,v)²）會令畫面內容反方向移；匾上嘅字跟返同一個位移
+static func flat_shift(v: float, y0: float, sh: float, bob: float, wsz: Vector2) -> Vector2:
+	var d = smoothstep(y0, 1.0, v); d = d * d
+	return Vector2(-sh * d * wsz.x, -bob * d * (1.0 - v) * wsz.y)
+func _plaque_follow() -> void:
+	if mot == null or mot.warp == null or not is_instance_valid(mot.warp): return
+	var mt = mot.warp.material
+	if not (mt is ShaderMaterial): return
+	var y0 = float(mt.get_shader_parameter("y0")); var sh = float(mt.get_shader_parameter("sh")); var bob = float(mt.get_shader_parameter("bob"))
+	for c in layer.get_children():
+		if c.has_meta("pl_v"): c.position = (c.get_meta("pl_p0") as Vector2) + flat_shift(float(c.get_meta("pl_v")), y0, sh, bob, mot.warp.size)
 
 # ---------------- [plaque] 牌匾疊字：插圖上空白牌匾嘅字由程序貼（四角座標透視貼字，跟插圖一齊推近／移動） ----------------
 # 座標：data/cg_plaque.json → {"<插圖鍵>": [{"size":[原圖闊,高], "quad":[[左上],[右上],[右下],[左下]], "text":"…", "color":"#5a2a1c", "vertical":false}]}
@@ -316,6 +330,15 @@ static func review_pending(k: String) -> bool:   # data/cg_review.json 嘅 pendi
 			var j = JSON.parse_string(FileAccess.get_file_as_string("res://data/cg_review.json"))
 			if j is Dictionary and j.get("pending") is Array: _rv_keys = j.pending
 	return (_rv_keys as Array).has(k)
+static var _rv_hold = null
+static func review_hold(k: String) -> bool:   # data/cg_review.json 嘅 hold：老闆睇過話唔得、重做緊嘅插圖鍵——正式版同審圖模式都唔顯示
+	if k == "": return false
+	if _rv_hold == null:
+		_rv_hold = []
+		if FileAccess.file_exists("res://data/cg_review.json"):
+			var j = JSON.parse_string(FileAccess.get_file_as_string("res://data/cg_review.json"))
+			if j is Dictionary and j.get("hold") is Array: _rv_hold = j.hold
+	return (_rv_hold as Array).has(k)
 static var _pl_data = null
 static func plaque_data() -> Dictionary:
 	if _pl_data == null:
@@ -366,7 +389,13 @@ func _plaques(k: String, d: Dictionary, tex: Texture2D, W: float, H: float) -> v
 			var v = Vector2(J.num(p[0]), J.num(p[1]))
 			if sz is Array and sz.size() == 2: v = v / Vector2(J.num(sz[0]), J.num(sz[1]))
 			q.append(img_to_layer(v, ts, W, H))
-		layer.add_child(_plaque_node(text, q, Color(str(e.get("color", "#5a2a1c"))), J.t(e.get("vertical")), i, str(e.get("style", ""))))
+		var pn = _plaque_node(text, q, Color(str(e.get("color", "#5a2a1c"))), J.t(e.get("vertical")), i, str(e.get("style", "")))
+		# [kpi-cg] 後備動態（成張圖做深度視差）時，匾面跟住圖一齊錯開，字先唔會「浮」喺匾上面：記低匾心喺原圖嘅縱向比例同起始位
+		var cv := 0.0
+		for p2 in e.quad:
+			cv += (J.num(p2[1]) / J.num(sz[1])) if (sz is Array and sz.size() == 2) else J.num(p2[1])
+		pn.set_meta("pl_v", cv / 4.0); pn.set_meta("pl_p0", pn.position)
+		layer.add_child(pn)
 
 # 便條斷行：逐字量闊度，每行唔超過 maxw；行首唔放收尾標點（將上一行最後一個字一齊帶落嚟）
 static func note_wrap(text: String, f: Font, fs: int, maxw: float) -> Array:

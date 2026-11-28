@@ -19,17 +19,63 @@ static func scene(key: String) -> Dictionary:
 	var f = DB.hero_female()
 	var yue = DB.lang == "yue"
 	var ls = []
+	var oi := -1; var imap := {}   # [kpi-cg] 原行號 → 篩走男女專句之後嘅行號（插圖要跟返原行）
 	for l in sd.get("lines", []):
+		oi += 1
 		if not (l is Array) or l.size() < 2: continue
 		if l.size() >= 4:
 			var c = str(l[3])
 			if c == "m" and f: continue
 			if c == "f" and not f: continue
+		imap[oi] = ls.size()
 		var tx = str(l[1]) if yue or l.size() < 3 else str(l[2])
 		tx = tx.replace("{少爺}", "大小姐" if f else "少爺")
 		if tx.contains("{rebuilt}"): tx = tx.replace("{rebuilt}", cn_num(int(KG.metric("rebuilt"))))
 		ls.append([str(l[0]), tx])
-	return {"style": "talk", "bg": "village", "title": str(sd.get("title", "")), "lines": ls}
+	var out = {"style": "talk", "bg": "village", "title": str(sd.get("title", "")), "lines": ls}
+	var cg = cg_of(key, sd, imap, ls.size())
+	if not cg.is_empty(): out["cg"] = cg
+	return out
+# [kpi-cg] KPI 劇情插圖：同主線劇情用同一套插圖卡（寬框＋分層／後備動態＋牌匾疊字），老闆已選用嘅圖先接。
+#   CG_AT：場景 → [由第幾行（原行號）開始出圖, 插圖鍵, 女主版鍵]；*_bribe_ok／kpi_ma_food＝收賄圖（男 C2 公案版、女主專屬版）；*_caught＝被抓包。
+#   陳不辦、龐總、甄好賣冇專屬登場圖＝唔出；*_bribe_fail（送錯人被推返）冇啱嘅圖＝唔出。kpi.json 場景自己寫 "cg" 就以資料為準。
+const CG_AT := {
+	"kpi_he_open": [1, "cg_he_wake", ""],
+	"kpi_qian_open": [0, "cg_qian_bite", ""],
+	"kpi_dato_open": [1, "cg_dato_plaque", ""],
+	"kpi_nuo_open": [0, "cg_nuopo_taste", ""],
+	"kpi_ma_food": [0, "cg_c2_bribe", "cg_f_bribe"],
+}
+const CG_BRIBE := [0, "cg_c2_bribe", "cg_f_bribe"]
+const CG_CAUGHT := [0, "cg_caught", ""]
+static func cg_rule(key: String) -> Array:
+	if CG_AT.has(key): return CG_AT[key]
+	if key == "kpi_pang_bribe": return []
+	if key.ends_with("_bribe_ok"): return CG_BRIBE
+	if key.ends_with("_caught") or key == "kpi_caught": return CG_CAUGHT
+	return []
+static func cg_has(k: String) -> bool:
+	if k == "": return false
+	if load("res://ui/story_cg.gd").review_hold(k): return false   # 老闆退回重做緊嘅圖（data/cg_review.json 的 hold）唔出
+	var CGM = load("res://ui/cg_motion.gd")
+	return Spr.ok(k) or (CGM != null and CGM.known(k))
+static func cg_of(key: String, sd: Dictionary, imap: Dictionary, n: int) -> Dictionary:
+	if n <= 0: return {}
+	var own = sd.get("cg")
+	if own is Dictionary:   # 資料自帶：行號按篩句後重新對位
+		var o2 = {}
+		for k in own:
+			var i0 = int(str(k))
+			if imap.has(i0): o2[str(imap[i0])] = own[k]
+		return o2
+	var r = cg_rule(key)
+	if r.is_empty() or not cg_has(str(r[1])): return {}
+	var at = int(r[0])
+	while at > 0 and not imap.has(at): at -= 1
+	var li = int(imap.get(at, 0))
+	var spec = {"k": str(r[1])}
+	if str(r[2]) != "" and cg_has(str(r[2])): spec["kf"] = str(r[2])
+	return {str(li): spec}
 static func cn_num(n: int) -> String:
 	var D = ["零", "一", "兩", "三", "四", "五", "六", "七", "八", "九", "十"]
 	return D[n] if n >= 0 and n <= 10 else str(n)
