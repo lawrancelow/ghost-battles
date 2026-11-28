@@ -20,7 +20,8 @@ func _w(t, s: float): await t.get_tree().create_timer(s).timeout
 func _mk(t) -> Array:   # 假劇情畫面：全屏 Control，入面放插圖卡
 	var root = t.get_tree().root
 	var par = Control.new(); par.name = "cgm_par"
-	par.size = Vector2(450, 975); par.position = Vector2.ZERO
+	var vr = t.get_viewport().get_visible_rect().size   # 跟真實畫面大細（測試窗會縮放）
+	par.size = vr if vr.x > 10 else Vector2(450, 975); par.position = Vector2.ZERO
 	var bgc = ColorRect.new(); bgc.color = Color("#2a2030"); bgc.size = par.size; par.add_child(bgc)
 	root.add_child(par)
 	var cg = CGC.new(); par.add_child(cg)
@@ -46,7 +47,7 @@ func logic(t) -> void:
 		var it = m.items[i]; var n: TextureRect = it.n
 		var ly = null
 		for o in L.layers:
-			if n.texture == load(CGM.ROOT + KEY + "/" + str(o.img)): ly = o
+			if it.main == load(CGM.ROOT + KEY + "/" + str(o.img)): ly = o   # 用原圖比（眨眼時 n.texture 係另一張）
 		if ly == null: errs.append("搵唔到層"); continue
 		var foot = it.pos + Vector2(n.size.x / 2.0, n.size.y)
 		var want = m.img2view(Vector2(J.num(ly.x), J.num(ly.y)))
@@ -100,8 +101,61 @@ func logic(t) -> void:
 	CGM.disabled = true
 	cg.show_spec({"k": KEY})
 	await _w(t, 0.05)
-	_chk("停用動態：冇素材 key 照舊收起／有就用靜態", cg.mot == null)
+	_chk("停用動態：冇動態層", cg.mot == null)
+	_chk("停用動態：冇整張圖嘅都出底圖，唔黑畫面", cg.visible and cg.pic.texture == CGM.still(KEY) and cg.pic.texture != null)
+	for kk in ["cg_a2_rebuilt", "cg_b2_soup", "cg_c1_bribe", "cg_c2_bribe"]:
+		cg.show_spec({"k": kk}); await _w(t, 0.05)
+		_chk("停用動態：退返原整張靜態圖 " + kk, cg.visible and cg.mot == null and cg.pic.texture != null and str(cg.pic.texture.resource_path).ends_with("still.webp"), cg.pic.texture.resource_path if cg.pic.texture else "null")
 	CGM.disabled = false
+	# 設定頁「流暢模式」開＝唔播動態
+	var PM = load("res://ui/perf_mode.gd")
+	PM.load_pref(); var pm0 = PM.on
+	PM.on = true
+	_chk("流暢模式開：has=false、known=true", not CGM.has("cg_a2_rebuilt") and CGM.known("cg_a2_rebuilt"))
+	cg.show_spec({"k": "cg_a2_rebuilt"}); await _w(t, 0.05)
+	_chk("流暢模式開：用靜態整張圖", cg.visible and cg.mot == null and str(cg.pic.texture.resource_path).ends_with("still.webp"))
+	PM.on = false
+	cg.show_spec({"k": "cg_a2_rebuilt"}); await _w(t, 0.05)
+	_chk("流暢模式關：動態返嚟", cg.mot != null)
+	PM.on = pm0
+	# 缺層／缺底圖：唔崩
+	var keep = CGM.conf()[KEY]
+	var brk = keep.duplicate(true)
+	brk.layers.append({"img": "no_such_layer.webp", "x": 0.5, "y": 0.5, "h": 0.1, "fx": {"float": {}, "blink": {"alt": "no_alt.webp"}}})
+	brk.layers.append("壞資料")
+	brk.layers[0].fx["blink"] = {"alt": "no_alt.webp", "every": 1.0}
+	brk.fx.append("壞資料"); brk.fx.append({"type": "no_such_type"})
+	CGM.conf()[KEY] = brk
+	cg.hide_cg(); await _w(t, 0.6)
+	cg.show_spec({"k": KEY}); await _w(t, 0.1)
+	_chk("缺層：照播，缺嗰層跳過", cg.mot != null and cg.mot.items.size() == 2, cg.mot.items.size() if cg.mot else -1)
+	if cg.mot != null:
+		for k in 240: cg.mot.tick(1.0 / 60.0)
+	_chk("缺換表情圖：唔崩、照用原圖", cg.mot != null and cg.mot.items[0].n.texture != null)
+	var nob = keep.duplicate(true); nob["bg"] = "no_bg.webp"; nob.erase("still")
+	CGM.conf()[KEY] = nob
+	cg.hide_cg(); await _w(t, 0.6)
+	cg.show_spec({"k": KEY}); await _w(t, 0.6)
+	_chk("缺底圖：冇動態、收起，唔崩", cg.mot == null and not cg.visible)
+	# 視差：par 大嘅層喺慢推鏡平移時多郁
+	var pr = keep.duplicate(true)
+	pr["cam"] = {"zoom": [1.2, 1.2], "pan": [0, 0, -0.05, 0.03], "dur": 1.0}
+	pr.layers = [{"img": "wood.webp", "x": 0.3, "y": 0.5, "h": 0.1, "par": 0.0}, {"img": "water.webp", "x": 0.6, "y": 0.5, "h": 0.1, "par": 0.5}]
+	pr.fx = []
+	CGM.conf()[KEY] = pr
+	cg.show_spec({"k": KEY}); await _w(t, 0.1)
+	var mp = cg.mot
+	if mp != null:
+		mp.t = 0.0; mp.tick(2.0)
+		var cz = mp.cam()
+		var d0 = (mp.items[0].n.position - mp.items[0].pos) as Vector2
+		var d1 = (mp.items[1].n.position - mp.items[1].pos) as Vector2
+		var want1 = (cz[1] as Vector2) * 0.5 / cz[0]
+		_chk("視差：par 0 層唔額外郁", d0.length() < 0.01, d0)
+		_chk("視差：par 0.5 層多郁鏡頭平移嘅一半", d1.distance_to(want1) < 0.05 and d1.length() > 1.0, [d1, want1])
+	else: _chk("視差測試建到", false)
+	CGM.conf()[KEY] = keep
+	cg.hide_cg(); await _w(t, 0.6)
 	# 收起清走
 	cg.show_spec({"k": KEY}); await _w(t, 0.1)
 	cg.hide_cg(); await _w(t, 0.6)
@@ -146,20 +200,260 @@ func logic(t) -> void:
 	for k in 600: cg.mot.tick(1.0 / 60.0)
 	ms = (Time.get_ticks_usec() - t0) / 1000.0 / 600.0
 	_chk("每格 tick < 0.6 ms（A2 19 層）", ms < 0.6, snappedf(ms, 0.001))
+	# 遊走：A2 搬木層有 wander；20 秒內位移唔超過幅度、會停頓、會轉向傾斜
+	cg.show_spec({"k": "cg_a2_rebuilt"}); await _w(t, 0.1)
+	var mw = cg.mot
+	var wi = null
+	for it in mw.items:
+		if it.fx.get("wander") is Dictionary and str(it.n.texture.resource_path).contains("wood_carrier"): wi = it
+	_chk("遊走：搬木層有 wander", wi != null)
+	if wi != null:
+		var wd: Dictionary = wi.fx.wander
+		var w_lim = Vector2(J.num(wd.ax) * mw.tsz.x * mw.cover_s, J.num(wd.ay) * mw.tsz.y * mw.cover_s).length() * 1.05 + 1.0
+		var w_mx := 0.0; var w_st := 0; var w_mv := 0; var w_rot := 0.0
+		var w_last = Vector2.ZERO
+		for k in 1200:
+			var ww = mw._wander(wd, float(wi.ph))
+			w_mx = maxf(w_mx, (ww[0] as Vector2).length())
+			if (ww[0] as Vector2).distance_to(w_last) < 0.01: w_st += 1
+			else: w_mv += 1
+			w_rot = maxf(w_rot, absf(ww[1])); w_last = ww[0]
+			mw.t += 1.0 / 60.0
+		_chk("遊走：唔走出幅度", w_mx <= w_lim, [snappedf(w_mx, 0.1), snappedf(w_lim, 0.1)])
+		_chk("遊走：有實際位移（> 4 像素）", w_mx > 4.0, snappedf(w_mx, 0.1))
+		_chk("遊走：有停頓又有行", w_st > 120 and w_mv > 300, [w_st, w_mv])
+		_chk("遊走：轉向會斜少少", w_rot > 0.005 and w_rot < 0.1, snappedf(w_rot, 0.001))
+	for kk in ["cg_b2_soup", "cg_c1_bribe", "cg_c2_bribe"]:
+		cg.show_spec({"k": kk}); await _w(t, 0.1)
+		_chk("分層插圖可播：" + kk, cg.mot != null and cg.mot.items.size() >= 2, cg.mot.items.size() if cg.mot else -1)
+		_chk("有原整張圖（關動態用）：" + kk, CGM.still(kk) != null)
+	# 全部正式插圖：鏡頭全程唔露邊；每個角色（有 wander）全程喺畫面內、慢、唔似行路
+	for kk in ["cg_a2_rebuilt", "cg_b2_soup", "cg_c1_bribe", "cg_c2_bribe"]:
+		cg.hide_cg(); await _w(t, 0.6)
+		cg.show_spec({"k": kk}); await _w(t, 0.1)
+		var mk = cg.mot
+		if mk == null: _chk("可播 " + kk, false); continue
+		_chk("粒子有出：" + kk, mk.parts.size() >= 1, mk.parts.size())
+		mk.t = 0.0
+		var gap := 0.0; var out := 0.0; var spd := 0.0; var rotm := 0.0; var nw := 0; var wmin := 1e9
+		var last := {}; var mxo := {}
+		for f in 1800:   # 30 秒
+			var cz = mk.tick(1.0 / 60.0)
+			var z: float = cz[0]; var pan: Vector2 = cz[1]
+			gap = maxf(gap, maxf(absf(pan.x) - mk.vs.x * (z - 1.0) / 2.0, absf(pan.y) - mk.vs.y * (z - 1.0) / 2.0))
+			for i in mk.items.size():
+				var it = mk.items[i]
+				if not (it.fx.get("wander") is Dictionary): continue
+				var n: TextureRect = it.n
+				var d: Vector2 = n.position - it.pos
+				out = maxf(out, maxf(maxf(-n.position.x, -n.position.y), maxf(n.position.x + n.size.x - mk.vs.x, n.position.y + n.size.y - mk.vs.y)) if _inside(it, mk) else 0.0)
+				var wv = mk._wander(it.fx.wander, float(it.ph))
+				if last.has(i): spd = maxf(spd, ((wv[0] as Vector2) - last[i]).length() * 60.0 / (mk.tsz.x * mk.cover_s))
+				last[i] = wv[0]
+				mxo[i] = maxf(mxo.get(i, 0.0), (wv[0] as Vector2).length())
+				rotm = maxf(rotm, absf(wv[1]))
+		for i in mxo: nw += 1; wmin = minf(wmin, mxo[i] / (mk.tsz.x * mk.cover_s))
+		_chk("鏡頭全程唔露邊：" + kk, gap <= 0.01, snappedf(gap, 0.01))
+		_chk("角色全程喺畫面內：" + kk, out <= 0.5, snappedf(out, 0.1))
+		_chk("每個遊走角色都真係有移動（≥ 圖闊 0.3%）：" + kk, nw >= 2 and wmin >= 0.003, [nw, snappedf(wmin, 0.0001)])
+		_chk("遊走夠慢（每秒 ≤ 圖闊 2.5%）：" + kk, spd <= 0.025, snappedf(spd, 0.0001))
+		_chk("遊走傾斜 ≤ 3.5 度（飄，唔係行）：" + kk, rad_to_deg(rotm) <= 3.5, snappedf(rad_to_deg(rotm), 0.01))
+	# B2：孟婆隻手搭住主角，兩層用同一個 seed 一齊行，接觸位唔會拉開
+	cg.hide_cg(); await _w(t, 0.6)
+	cg.show_spec({"k": "cg_b2_soup"}); await _w(t, 0.1)
+	var mb = cg.mot
+	if mb != null and mb.items.size() == 2:
+		var gapx := 0.0; var mvx := 0.0
+		mb.t = 0.0
+		for f in 1800:
+			mb.t += 1.0 / 60.0
+			var wa = mb._wander(mb.items[0].fx.wander, float(mb.items[0].ph))
+			var wb = mb._wander(mb.items[1].fx.wander, float(mb.items[1].ph))
+			gapx = maxf(gapx, ((wa[0] as Vector2) - (wb[0] as Vector2)).length()); mvx = maxf(mvx, (wa[0] as Vector2).length())
+		_chk("B2 兩個角色一齊遊走（相對位移 0）", gapx < 0.01 and mvx > 2.0, [snappedf(gapx, 0.01), snappedf(mvx, 0.1)])
+	else: _chk("B2 兩層", false)
 	par.queue_free()
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
-func shots(t) -> void:
-	var dir = OS.get_environment("CGM_SHOTS")
-	if dir == "": dir = "/tmp/cgm/shots/"
-	DirAccess.make_dir_recursive_absolute(dir)
-	var key = OS.get_environment("CGM_KEY")
-	if key == "": key = "cg_a2_rebuilt"
-	var pc = _mk(t); var cg = pc[1]
+# ---- 後備動態（單張圖）＋新接入嘅分層圖 ----
+const FLAT_KEYS := ["cg_lobby_m", "cg_stall_hook_m", "cg_pang_visit_m", "cg_joss_note_m", "cg_stall_hook_f", "cg_caught", "cg_he_wake", "cg_qian_bite", "cg_mk_weapon"]
+const NEW_LAYERED := {"cg_f_soup": 2, "cg_f_bribe": 4}
+
+func flat(t) -> void:
+	var pc = _mk(t); var par = pc[0]; var cg = pc[1]
 	await _w(t, 0.2)
-	cg.show_spec({"k": key})
-	for i in 48:   # 12 秒，每 0.25 秒一張
-		await _w(t, 0.25)
-		var img = t.get_viewport().get_texture().get_image()
-		img.save_png(dir + "f%03d.png" % i)
-	_p("RESULT ok=1 bad=0 shots=" + dir)
+	for k in FLAT_KEYS:
+		cg.hide_cg(); await _w(t, 0.5)
+		_chk("後備設定：" + k, CGM.has(k) and J.t(CGM.conf()[k].get("flat")) and CGM.still(k) != null)
+		cg.show_spec({"k": k}); await _w(t, 0.1)
+		var m = cg.mot
+		if m == null or m.warp == null: _chk("後備可播：" + k, false); continue
+		_chk("後備：成張圖鋪滿畫面（冇裁）：" + k, m.warp.position.length() < 1.0 and (m.warp.size - m.vs).length() < 2.0, [m.warp.position, m.warp.size, m.vs])
+		m.t = 0.0
+		var shs := {}; var gap := 0.0; var zs := []; var ga := {}
+		for f in 1200:
+			var cz = m.tick(1.0 / 60.0)
+			shs[snappedf(float(m.warp.material.get_shader_parameter("sh")), 0.001)] = 1
+			gap = maxf(gap, maxf(absf(cz[1].x) - m.vs.x * (cz[0] - 1.0) / 2.0, absf(cz[1].y) - m.vs.y * (cz[0] - 1.0) / 2.0))
+			if f == 0 or f == 1199: zs.append(cz[0])
+			if m.glows.size() > 0: ga[snappedf(m.glows[0].n.modulate.a, 0.01)] = 1
+		var amt = J.num(CGM.conf()[k].depth.amt)
+		_chk("後備：前景會左右錯開、幅度 ≤ 圖闊 1.2%：" + k, shs.size() >= 8 and amt <= 0.012, [shs.size(), amt])
+		_chk("後備：慢推鏡有放大、全程唔露邊：" + k, zs[1] > zs[0] and gap <= 0.01, [zs, snappedf(gap, 0.01)])
+		_chk("後備：鏡頭放大蓋得住錯開（邊位唔拉絲）：" + k, (zs[0] - 1.0) / 2.0 >= amt, [zs[0], amt])
+		_chk("後備：有粒子：" + k, m.parts.size() >= 1, m.parts.size())
+		_chk("後備：微光會閃（有先查）：" + k, m.glows.is_empty() or ga.size() >= 4, [m.glows.size(), ga.size()])
+		CGM.disabled = true
+		cg.show_spec({"k": k}); await _w(t, 0.05)
+		_chk("後備：關動態＝靜態原圖：" + k, cg.visible and cg.mot == null and cg.pic.texture == CGM.still(k))
+		CGM.disabled = false
+	for k in NEW_LAYERED:
+		cg.hide_cg(); await _w(t, 0.5)
+		cg.show_spec({"k": k}); await _w(t, 0.1)
+		var m = cg.mot
+		_chk("分層版可播、層數啱：" + k, m != null and m.items.size() == NEW_LAYERED[k], m.items.size() if m else -1)
+		_chk("分層版有原整張圖：" + k, CGM.still(k) != null and str(CGM.still(k).resource_path).ends_with("still.webp"))
+		if m == null: continue
+		m.t = 0.0; var gap := 0.0; var moved := 0
+		var p0 := []
+		for it in m.items: p0.append(it.n.position)
+		var mx := []; mx.resize(m.items.size()); mx.fill(0.0)
+		for f in 1800:
+			var cz = m.tick(1.0 / 60.0)
+			gap = maxf(gap, maxf(absf(cz[1].x) - m.vs.x * (cz[0] - 1.0) / 2.0, absf(cz[1].y) - m.vs.y * (cz[0] - 1.0) / 2.0))
+			for i in m.items.size(): mx[i] = maxf(mx[i], (m.items[i].n.position - p0[i]).length() + absf(m.items[i].n.scale.x - 1.0) * 100.0)
+		for i in m.items.size():
+			if mx[i] > 0.5: moved += 1
+		var want_moving = m.items.filter(func(it): return not (it.fx as Dictionary).is_empty()).size()
+		_chk("分層版：有動作嘅層都有郁、鏡頭唔露邊：" + k, moved >= want_moving and gap <= 0.01, [moved, want_moving, snappedf(gap, 0.01)])
+	# 女主遞湯：枝筆掂住碗，兩層同步遊走
+	cg.show_spec({"k": "cg_f_soup"}); await _w(t, 0.1)
+	if cg.mot != null and cg.mot.items.size() == 2:
+		var a = cg.mot.items[0]; var b = cg.mot.items[1]
+		_chk("女主遞湯：兩層同一個 seed", a.fx.wander.get("seed") == b.fx.wander.get("seed") and a.fx.wander.has("seed"))
+	# 女主收賄：枱面前景喺牛頭之上、唔郁
+	cg.show_spec({"k": "cg_f_bribe"}); await _w(t, 0.1)
+	if cg.mot != null:
+		var ni := -1; var di := -1
+		for i in cg.mot.items.size():
+			var rp = str(cg.mot.items[i].main.resource_path)
+			if rp.contains("niutou"): ni = cg.mot.items[i].n.get_index()
+			if rp.contains("desk_front"): di = cg.mot.items[i].n.get_index()
+		_chk("女主收賄：枱面前景蓋住牛頭下半身", ni >= 0 and di > ni, [ni, di])
+	par.queue_free()
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+# ---- [wide] 寬框：框跟插圖長寬比，原圖唔裁，唔遮對話框 ----
+class FakeTalk extends Control:
+	var talkbox = 1
+	var stage = null
+	var syswin = null
+class FakeSys extends Control:
+	var talkbox = null
+	var stage = null
+	var syswin: Control
+	var _sys_want := 180.0
+	func _sys_layout() -> void:
+		var c = get_node_or_null("cg")
+		if c != null and c.visible: c.set_top(maxf(8.0, (size.y - (c.custom_minimum_size.y + 12.0 + _sys_want)) / 2.0))
+
+func _all_keys() -> Array:
+	var ks := []
+	var man = JSON.parse_string(FileAccess.get_file_as_string("res://assets/spr_manifest.json"))
+	if man is Dictionary:
+		for k in man:
+			if str(k).begins_with("cg") and Spr.ok(str(k)): ks.append(str(k))
+	for k in CGM.conf():
+		if not ks.has(k): ks.append(k)
+	ks.sort()
+	return ks
+
+func _mkpar(t, kind: String, sz: Vector2) -> Array:
+	var par: Control
+	if kind == "sys":
+		par = FakeSys.new(); par.syswin = Control.new(); par.add_child(par.syswin)
+	elif kind == "talk": par = FakeTalk.new()
+	else: par = Control.new()
+	par.size = sz; par.position = Vector2.ZERO
+	t.get_tree().root.add_child(par)
+	var cg = CGC.new(); cg.name = "cg"; par.add_child(cg)
+	return [par, cg]
+
+func wide(t) -> void:
+	var keys = _all_keys()
+	_chk("插圖總數 ≥ 40", keys.size() >= 40, keys.size())
+	var cases = [["talk", Vector2(450, 975), "直屏對話"], ["talk", Vector2(390, 844), "直屏對話（細機）"], ["talk", Vector2(390, 650), "矮屏對話"],
+		["talk", Vector2(1500, 844), "寬屏對話（Steam）"], ["none", Vector2(450, 975), "直屏冇對話框"], ["sys", Vector2(390, 844), "系統窗"], ["sys", Vector2(1500, 844), "寬屏系統窗"]]
+	for cs in cases:
+		var pc = _mkpar(t, cs[0], cs[1]); var par: Control = pc[0]; var cg = pc[1]
+		await t.get_tree().process_frame
+		var nbad := []; var worst := 0.0; var fill_bad := []; var prev_tall := false
+		# 次序：直圖、橫圖梅花間竹咁出（以前直圖之後嘅橫圖會俾舊最細尺寸撐高）
+		for k in keys:
+			cg.show_spec({"k": k})
+			await t.get_tree().process_frame
+			if not cg.visible or cg.pic.texture == null: nbad.append([k, "冇顯示"]); continue
+			var tx: Texture2D = cg.pic.texture
+			var at = float(tx.get_width()) / float(tx.get_height())
+			var asc = cg.screen.size.x / cg.screen.size.y
+			var crop = 1.0 - minf(at / asc, asc / at)   # cover 鋪滿時被裁走嘅比例
+			worst = maxf(worst, crop)
+			var r = Rect2(cg.global_position, cg.size)
+			var bot_lim = cs[1].y - (182.0 if cs[0] == "talk" else 0.0)
+			if cs[0] == "sys": bot_lim = cs[1].y - 12.0 - 180.0
+			var msg := ""
+			if crop > 0.02: msg += "裁 %.1f%% " % (crop * 100.0)
+			if r.position.x < -0.5 or r.end.x > cs[1].x + 0.5: msg += "左右出界 "
+			if r.position.y < 7.5: msg += "頂出界 "
+			if r.end.y > bot_lim + 0.5: msg += "遮住對話框／系統窗 %.0f>%.0f " % [r.end.y, bot_lim]
+			if absf((r.position.x + r.size.x / 2.0) - cs[1].x / 2.0) > 1.0: msg += "冇置中 "
+			if cg.frame.size != cg.size or (cg.screen.size - (cg.size - Vector2(24, 24))).length() > 0.5: msg += "框同卡尺寸唔一致 "
+			if Vector2(cg.vp.size) != (cg.screen.size * 2.0).floor(): msg += "畫面解像度唔係 2 倍 "
+			var full_w = cg.size.x >= cs[1].x - 20.5
+			var full_h = cg.size.y >= cg._avail_h(cs[1]) - 0.5
+			if not (full_w or full_h): fill_bad.append(k)
+			if msg != "": nbad.append([k, msg])
+		_chk(cs[2] + "：全部插圖原圖四邊可見（裁 ≤2%）、唔出界、唔遮對話", nbad.is_empty(), nbad.slice(0, 6) if not nbad.is_empty() else "最大裁切 %.2f%%" % (worst * 100.0))
+		_chk(cs[2] + "：盡量放大（闊或高其中一邊用盡）", fill_bad.is_empty(), fill_bad.slice(0, 6))
+		par.queue_free()
+		await t.get_tree().process_frame
+	# 動態插圖喺寬框：層位置跟住新尺寸、鏡頭唔露邊
+	var pc2 = _mkpar(t, "talk", Vector2(1500, 844)); var cg2 = pc2[1]
+	await t.get_tree().process_frame
+	for kk in ["cg_a2_rebuilt", "cg_b2_soup", "cg_c1_bribe", "cg_c2_bribe"]:
+		cg2.show_spec({"k": kk}); await t.get_tree().process_frame
+		var m = cg2.mot
+		_chk("寬屏動態可播：" + kk, m != null and (m.vs - Vector2(cg2.vp.size)).length() < 0.5 and absf(m.cover_o.x) < 1.0 and absf(m.cover_o.y) < 1.0, [m.vs, m.cover_o] if m else "null")
+	# 視窗改大細：自動重排，動作接住播
+	cg2.show_spec({"k": "cg_b2_soup"}); await _w(t, 0.3)
+	var t_before = cg2.mot.t; var w_before = cg2.size.x
+	pc2[0].size = Vector2(450, 975)
+	await t.get_tree().process_frame; await t.get_tree().process_frame
+	_chk("視窗改大細：自動重排", cg2.size.x < w_before and cg2.size.x <= 430.5, [w_before, cg2.size.x])
+	_chk("視窗改大細：動作接住播", cg2.mot != null and cg2.mot.t >= t_before, [t_before, cg2.mot.t if cg2.mot else -1])
+	# 老電視框係九宮格（邊角唔拉伸）
+	var sb = cg2.frame.get_theme_stylebox("panel")
+	_chk("框素材係九宮格（StyleBoxTexture 有邊距）或者純色框", (sb is StyleBoxTexture and sb.texture_margin_left > 0 and sb.texture_margin_top > 0) or sb is StyleBoxFlat, sb.get_class())
+	pc2[0].queue_free()
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func wshots(t) -> void:   # 全部插圖喺寬框下截圖（CGM_SHOTS 目錄）
+	var dir = OS.get_environment("CGM_SHOTS")
+	if dir == "": dir = "/tmp/cgm/wshots/"
+	DirAccess.make_dir_recursive_absolute(dir)
+	var vr = t.get_viewport().get_visible_rect().size
+	var pc = _mkpar(t, "talk", vr); var par: Control = pc[0]; var cg = pc[1]
+	var bgc = ColorRect.new(); bgc.color = Color("#2a2030"); bgc.size = vr; par.add_child(bgc); par.move_child(bgc, 0)
+	var tb = ColorRect.new(); tb.color = Color("#e8dcc0"); tb.position = Vector2(8, vr.y - 168); tb.size = Vector2(vr.x - 16, 154); par.add_child(tb)   # 對話框位置示意
+	await _w(t, 0.2)
+	var n := 0
+	for k in _all_keys():
+		cg.hide_cg(); await _w(t, 0.4)
+		cg.show_spec({"k": k}); await _w(t, 0.9)
+		t.get_viewport().get_texture().get_image().save_png(dir + k + ".png"); n += 1
+	_p("RESULT ok=%d bad=0 shots=%s" % [n, dir])
+
+func _inside(it, mk) -> bool:   # 原位離畫面邊有少少距離嘅層先查出界（貼邊畫嘅層本身已經被畫面邊切住，向外郁少少冇影響）
+	var p: Vector2 = it.pos; var n: TextureRect = it.n
+	var mg = mk.vs * 0.015
+	return p.x >= mg.x and p.y >= mg.y and p.x + n.size.x <= mk.vs.x - mg.x and p.y + n.size.y <= mk.vs.y - mg.y
