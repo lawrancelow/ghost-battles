@@ -97,7 +97,7 @@ func all(t) -> void:
 	# ---- 點心送馬面：最差一項 -20% ----
 	_reset_state(); _rich(); KG.register_metric("rebuilt", func(): return 3.0); J.G.S.bld["home"] = 0.0; KG.start("A")
 	o = KG.bribe("A", "snack", "ma")
-	_chk("點心送馬面：最差一項（民宅 0/1 或建築 3/6）-20%", o.res == "ok" and o.eff == "cut1" and absf(J.num(o.val) - 0.2) < 0.001, o)
+	_chk("點心送馬面：減咗之後真係會少嘅最差一項（建築 3/6；民宅 1 減兩成都係 1，唔揀）-20%", o.res == "ok" and o.eff == "cut1" and o.key == "rebuilt" and absf(J.num(o.val) - 0.2) < 0.001, o)
 	var pk = KG.progress("A").filter(func(p): return p.key == o.key)[0]
 	_chk("被減嗰項 need = ceil(base × 0.8)", pk.need == int(ceil(pk.base * 0.8 - 0.0001)), pk)
 	# ---- 點心送牛頭（送錯）：-10% ----
@@ -128,7 +128,7 @@ func all(t) -> void:
 	KG.gs("B")["left"] = 0.5
 	KG.tick(1.0)
 	var n = KG.NEWS.filter(func(x): return x.kind == "bryan")
-	_chk("倒數完：Bryan 搶走最多嗰樣資源 10%（%s）" % best, n.size() == 1 and n[0].mid == best and int(n[0].n) == int(floorf(bv * 0.1)) and absf(KG.amt_of(best) - (bv - floorf(bv * 0.1))) < 0.5, [n, bv])
+	_chk("倒數完：Bryan 搶走最多嗰樣資源 10%%（%s）" % best, n.size() == 1 and n[0].mid == best and int(n[0].n) == int(floorf(bv * 0.1)) and absf(KG.amt_of(best) - (bv - floorf(bv * 0.1))) < 0.5, [n, bv])
 	_chk("倒數重來、村口掛 Bryan 橫幅", J.num(KG.gs("B").left) == 1200.0 and KG.banner_on())
 	m.village.queue_redraw(); await _w(t, 0.5)
 	_chk("村口畫咗「本月最佳員工：Bryan」", ZV.fog_log.any(func(e): return e[0] == "bryan"))

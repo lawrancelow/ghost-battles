@@ -171,13 +171,14 @@ static func met_count(gid: String, c := -1) -> Array:
 	var p = progress(gid, c); var n = 0
 	for x in p: if x.met: n += 1
 	return [n, p.size()]
-static func _worst(gid: String) -> String:   # 進度最差（未達標、未免考）嗰項
+static func _worst(gid: String, cut := 0.0) -> String:   # 進度最差（未達標、未免考）嗰項；cut > 0：只揀減咗之後 need 真係會少嘅
 	var best = ""; var r0 = 9.0
 	for p in progress(gid):
 		if p.skip or p.met: continue
+		if cut > 0.0 and int(ceil(float(p.need) * (1.0 - cut) - 0.0001)) >= int(p.need): continue
 		var r = p.cur / maxf(1.0, p.need)
 		if r < r0: r0 = r; best = p.key
-	if best == "":
+	if best == "" and cut <= 0.0:
 		for p in progress(gid): if not p.skip: return p.key
 	return best
 
@@ -323,7 +324,8 @@ static func bribe(gid: String, tier: String, to: String) -> Dictionary:
 	var v = J.num(bd.get("val", 0.2)) * (0.5 if half else 1.0)
 	match str(bd.get("eff", "")):
 		"cut1":
-			var key1 = _worst(gid)
+			var key1 = _worst(gid, v)
+			if key1 == "": key1 = _worst(gid)
 			g.mods[key1] = J.num(g.mods.get(key1, 1.0)) * (1.0 - v)
 			out["eff"] = "cut1"; out["key"] = key1; out["val"] = v
 		"skip1":
