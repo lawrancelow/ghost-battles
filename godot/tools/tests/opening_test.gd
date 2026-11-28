@@ -296,7 +296,7 @@ func _plaque(t, m) -> void:
 	_chk("牌匾：中心點喺兩條對角線交點（係透視唔係平均）", Geometry2D.segment_intersects_segment(q[0], q[2], q[1], q[3]).distance_to(mid) < 0.05, mid)
 	_chk("牌匾：原圖座標 → 畫面（鋪滿置中裁切）", CG.img_to_layer(Vector2(0.5, 0.5), Vector2(1024, 768), 700, 400).distance_to(Vector2(350, 200)) < 0.01 and absf(CG.img_to_layer(Vector2(0, 0), Vector2(1024, 768), 700, 400).y - (400 - 525) / 2.0) < 0.01)
 	var PD = CG.plaque_data()
-	_chk("牌匾文字（老闆定）：辦公室／流放「加班是福」、酒館「奈何一杯」，男女一致、由左至右", str(PD.cg_office[0].text) == "加班是福" and str(PD.cg_office_f[0].text) == "加班是福" and str(PD.cg_exile_f[0].text) == "加班是福" and str(PD.cg_tavern[0].text) == "奈何一杯" and str(PD.cg_tavern_f[0].text) == "奈何一杯")
+	_chk("牌匾文字（老闆定）：辦公室／流放「加班是福」、酒館「奈河一杯」，男女一致、由左至右", str(PD.cg_office[0].text) == "加班是福" and str(PD.cg_office_f[0].text) == "加班是福" and str(PD.cg_exile_f[0].text) == "加班是福" and str(PD.cg_tavern[0].text) == "奈河一杯" and str(PD.cg_tavern_f[0].text) == "奈河一杯")
 	_chk("牌匾資料：辦公室同流放係同一塊匾、同樣嘅字", PD.has("cg_office") and PD.has("cg_exile") and str(PD.cg_office[0].text) == str(PD.cg_exile[0].text) and str(PD.cg_office[0].quad) == str(PD.cg_exile[0].quad) and PD.has("cg_tavern"))
 	var S = J.G.S; var h0 = S.get("hero", {}).duplicate(); var seen0 = S.seen.duplicate()
 	var st = m.get("story")
@@ -330,8 +330,7 @@ func _plaque(t, m) -> void:
 		var pn = st.cg.layer.get_node_or_null("Plaque0")
 		_chk("牌匾：場景參數覆蓋文字", pn != null and str(pn.get_meta("text")) == "三更酒館")
 		st.cg.show_spec({"k": "cg_dato_plaque"}); await _f(t, 2)
-		var dn = st.cg.layer.get_node_or_null("Plaque0")
-		_chk("Dato' 金匾：疊「拿督」浮雕字（三層）、冇角標", st.cg.cur_key == "cg_dato_plaque" and dn != null and str(dn.get_meta("text")) == "拿督" and str(dn.get_meta("style")) == "emboss" and int(dn.get_meta("layers")) == 3 and st.cg.layer.get_node_or_null("RvBadge") == null)
+		_chk("Dato' 金匾 v3：字直接雕喺匾上（Gemini），冇程序疊字、冇角標、唔喺 hold", st.cg.cur_key == "cg_dato_plaque" and st.cg.layer.get_node_or_null("Plaque0") == null and not CG.plaque_data().has("cg_dato_plaque") and not CG.review_hold("cg_dato_plaque") and st.cg.layer.get_node_or_null("RvBadge") == null)
 		await _w(t, 1.0); await RenderingServer.frame_post_draw
 		t.get_viewport().get_texture().get_image().save_png(SH + "plaque_dato.png")
 		st.cg.show_spec({"k": "cg_note"}); await _f(t, 2)
@@ -368,7 +367,7 @@ func _plaque(t, m) -> void:
 		_chk("已選用（糯婆試食）照顯示、冇角標", st.cg.cur_key == "cg_nuopo_taste" and st.cg.layer.get_node_or_null("RvBadge") == null)
 		var en = st.cg._plaque_node("拿督", [Vector2(100, 40), Vector2(500, 40), Vector2(500, 160), Vector2(100, 160)], Color("#e9b949"), false, 9, "emboss")
 		st.cg.layer.add_child(en)
-		_chk("牌匾浮雕樣式：三層（內陰影＋高光＋面層）", str(en.get_meta("style")) == "emboss" and int(en.get_meta("layers")) == 3 and str(CG.plaque_data().cg_dato_plaque[0].style) == "emboss" and str(CG.plaque_data().cg_dato_plaque[0].text) == "拿督")
+		_chk("牌匾浮雕樣式：三層（內陰影＋高光＋面層）", str(en.get_meta("style")) == "emboss" and int(en.get_meta("layers")) == 3)
 		await _w(t, 0.6); await RenderingServer.frame_post_draw
 		t.get_viewport().get_texture().get_image().save_png(SH + "plaque_emboss_demo.png")
 		st.cg.show_spec({"k": "cg_tavern", "plaque": {"t": "三更酒館"}}); await _f(t, 2)

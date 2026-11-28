@@ -138,6 +138,7 @@ func show_spec(spec) -> void:
 	var rv_show = OS.get_environment("GB_RV_SHOW") == "1"
 	var pending = (str(d.get("rv", "")) != "" and not used_kf) or review_pending(k)
 	var have = k != "" and (Spr.ok(k) or CGM.known(k))   # [cgm] 分層／後備動態素材都算有圖
+	if review_hold(k) or (used_kf and review_hold(str(d.get("kf", "")))): hide_cg(); return   # [kpi-cg] 老闆退回重做緊嘅圖：一律唔出（連審圖模式都唔出），新圖到咗由 hold 刪走
 	if not rv_show and (pending or not have): hide_cg(); return
 	if not have and str(d.get("ph", "")) != "": k = str(d.ph)
 	if k == "" or (not Spr.ok(k) and not CGM.known(k)):
@@ -329,6 +330,15 @@ static func review_pending(k: String) -> bool:   # data/cg_review.json 嘅 pendi
 			var j = JSON.parse_string(FileAccess.get_file_as_string("res://data/cg_review.json"))
 			if j is Dictionary and j.get("pending") is Array: _rv_keys = j.pending
 	return (_rv_keys as Array).has(k)
+static var _rv_hold = null
+static func review_hold(k: String) -> bool:   # data/cg_review.json 嘅 hold：老闆睇過話唔得、重做緊嘅插圖鍵——正式版同審圖模式都唔顯示
+	if k == "": return false
+	if _rv_hold == null:
+		_rv_hold = []
+		if FileAccess.file_exists("res://data/cg_review.json"):
+			var j = JSON.parse_string(FileAccess.get_file_as_string("res://data/cg_review.json"))
+			if j is Dictionary and j.get("hold") is Array: _rv_hold = j.hold
+	return (_rv_hold as Array).has(k)
 static var _pl_data = null
 static func plaque_data() -> Dictionary:
 	if _pl_data == null:

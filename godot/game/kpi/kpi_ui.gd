@@ -55,6 +55,7 @@ static func cg_rule(key: String) -> Array:
 	return []
 static func cg_has(k: String) -> bool:
 	if k == "": return false
+	if load("res://ui/story_cg.gd").review_hold(k): return false   # 老闆退回重做緊嘅圖（data/cg_review.json 的 hold）唔出
 	var CGM = load("res://ui/cg_motion.gd")
 	return Spr.ok(k) or (CGM != null and CGM.known(k))
 static func cg_of(key: String, sd: Dictionary, imap: Dictionary, n: int) -> Dictionary:

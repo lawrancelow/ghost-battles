@@ -29,7 +29,7 @@ func _sex(s: String) -> Dictionary:
 func _data() -> void:
 	var S = J.G.S; var h0 = _sex("m")
 	var SC = KG.D().get("scenes", {})
-	var exp = {"kpi_he_open": "cg_he_wake", "kpi_qian_open": "cg_qian_bite", "kpi_dato_open": "cg_dato_plaque", "kpi_nuo_open": "cg_nuopo_taste", "kpi_ma_food": "cg_c2_bribe"}
+	var exp = {"kpi_he_open": "cg_he_wake", "kpi_qian_open": "cg_qian_bite", "kpi_dato_open": "cg_dato_plaque", "kpi_nuo_open": "cg_nuopo_taste", "kpi_ma_food": "cg_c2_bribe", "kpi_caught": "cg_caught"}
 	for b in ["chen", "he", "qian", "dato", "nuo"]:
 		exp["kpi_%s_bribe_ok" % b] = "cg_c2_bribe"; exp["kpi_%s_caught" % b] = "cg_caught"
 	var badk = []; var n := 0
@@ -52,7 +52,6 @@ func _data() -> void:
 	_chk("龐總收包子（kpi_pang_bribe）唔出收賄圖", KU.cg_rule("kpi_pang_bribe").is_empty() and not KU.scene("kpi_pang_bribe").has("cg"))
 	# 開始行：何大睡由「鬧鐘響」嗰句、Dato' 由牛頭報銜頭嗰句
 	_chk("何大睡：由第 2 句（牛頭：鬧鐘響）開始出圖", KU.scene("kpi_he_open").cg.has("1") and str(KU.scene("kpi_he_open").lines[1][1]).contains("鐘"))
-	_chk("Dato' 冥：由第 2 句（牛頭報銜頭）開始出圖", KU.scene("kpi_dato_open").cg.has("1") and str(KU.scene("kpi_dato_open").lines[1][0]) == "牛頭")
 	# 男女主：收賄圖女主用專屬版（kf），其餘共用
 	var sp_m = KU.scene("kpi_chen_bribe_ok").cg.values()[0]
 	_chk("收賄圖：男主 C2 公案版、女主專屬版（kf）", str(sp_m.k) == "cg_c2_bribe" and str(sp_m.get("kf", "")) == "cg_f_bribe" and CGM.known("cg_f_bribe"))
@@ -64,7 +63,19 @@ func _data() -> void:
 	var imap = {0: 0, 1: 1, 3: 2}
 	var own = KU.cg_of("x", {"cg": {"3": {"k": "cg_caught"}, "2": ""}}, imap, 3)
 	_chk("kpi.json 自帶 cg 時以資料為準、行號重新對位（被篩走嗰行唔出）", own.has("2") and str(own["2"].k) == "cg_caught" and own.size() == 1, own)
-	_chk("牌匾資料：Dato' 金匾疊「拿督」浮雕字", str(CG.plaque_data().cg_dato_plaque[0].text) == "拿督" and str(CG.plaque_data().cg_dato_plaque[0].style) == "emboss")
+	# 老闆 19:25：女主版匾字要同男主一樣（同字體、字重、顏色、相對匾面大小）；全遊戲「奈河一杯」
+	var PDx = CG.plaque_data(); var same_ok = true; var rr = []
+	for pr in [["cg_office", "cg_office_f"], ["cg_exile", "cg_exile_f"]]:
+		var a = PDx[pr[0]][0]; var b = PDx[pr[1]][0]
+		var ha = (float(a.quad[3][1]) - float(a.quad[0][1])) / float(a.size[1]); var hb = (float(b.quad[3][1]) - float(b.quad[0][1])) / float(b.size[1])
+		var wa = (float(a.quad[1][0]) - float(a.quad[0][0])) / float(a.size[0]); var wb = (float(b.quad[1][0]) - float(b.quad[0][0])) / float(b.size[0])
+		rr.append([ha, hb, wa, wb])
+		if absf(ha - hb) / ha > 0.08 or absf(wa - wb) / wa > 0.08 or str(a.text) != str(b.text) or str(a.get("color")) != str(b.get("color")) or str(a.get("style", "")) != str(b.get("style", "")): same_ok = false
+	_chk("女主辦公室／流放匾：字同男主一樣大（匾面框佔圖比例差 ≤8%）、同色同樣式同文字", same_ok, rr)
+	var txt_all = FileAccess.get_file_as_string("res://data/story_v2.json") + FileAccess.get_file_as_string("res://data/cg_plaque.json")
+	_chk("全遊戲用「奈河一杯」，冇殘留「奈何一杯」", not txt_all.contains("奈何一杯") and txt_all.contains("奈河一杯") and str(PDx.cg_tavern[0].text) == "奈河一杯" and str(PDx.cg_tavern_f[0].text) == "奈河一杯")
+	_chk("Dato' 金匾 v3：字雕喺圖上，冇程序疊字資料、唔喺 hold；由第 2 句（牛頭報銜頭）開始出圖", not CG.review_hold("cg_dato_plaque") and not CG.plaque_data().has("cg_dato_plaque") and KU.scene("kpi_dato_open").cg.has("1") and str(KU.scene("kpi_dato_open").lines[1][0]) == "牛頭")
+	_chk("hold 機制：退回重做嘅圖唔出（KPI 規則同插圖卡都擋）", not CG.review_hold("") and not CG.review_hold("cg_office"))
 	S["hero"] = h0
 
 # ---------------- 實機：經 KU.play 播，睇插圖出現、唔遮對話框、播完收起 ----------------
@@ -106,7 +117,7 @@ func _live(t, m) -> void:
 	_sex("m")
 	await _run_scene(t, st, "kpi_he_open", "cg_he_wake", "he_wake")
 	await _run_scene(t, st, "kpi_qian_open", "cg_qian_bite", "qian_bite")
-	await _run_scene(t, st, "kpi_dato_open", "cg_dato_plaque", "dato_plaque", "拿督")
+	await _run_scene(t, st, "kpi_dato_open", "cg_dato_plaque", "dato_plaque")
 	await _run_scene(t, st, "kpi_nuo_open", "cg_nuopo_taste", "nuopo_taste")
 	await _run_scene(t, st, "kpi_chen_bribe_ok", "cg_c2_bribe", "bribe_m")
 	await _run_scene(t, st, "kpi_chen_caught", "cg_caught", "caught")
@@ -140,7 +151,7 @@ func _follow(t, m) -> void:
 	var c = st.cg
 	if c == null or not is_instance_valid(c): _chk("搵到插圖卡", false); return
 	# (1) 靜態慢推（辦公室、Dato' 金匾、便條）
-	for k in ["cg_office", "cg_dato_plaque", "cg_note"]:
+	for k in ["cg_office", "cg_note"]:
 		c.show_spec({"k": k}); await _f(t, 2)
 		var okx = c.mot == null and c.layer.get_node_or_null("Plaque0") != null
 		var s0 = c.pic.scale.x
@@ -165,7 +176,7 @@ func _follow(t, m) -> void:
 			if i in [0, 4, 7]:
 				await RenderingServer.frame_post_draw
 				t.get_viewport().get_texture().get_image().save_png(SH + "follow_tavern_t%d.png" % i)
-	_chk("後備動態 cg_tavern：鏡頭推移時疊字層＝底圖＝動態層同一套變換；「奈何一杯」喺遠景匾上唔漂移", flat_ok and xf and drift < 0.01 and zs[7] > zs[0], [drift, zs])
+	_chk("後備動態 cg_tavern：鏡頭推移時疊字層＝底圖＝動態層同一套變換；「奈河一杯」喺遠景匾上唔漂移", flat_ok and xf and drift < 0.01 and zs[7] > zs[0], [drift, zs])
 	# (3) 後備動態＋匾喺前景（合成個案：被抓包圖臨時加一塊低位匾）→ 字要跟視差一齊錯開
 	var PD = CG.plaque_data()
 	PD["cg_caught"] = [{"quad": [[0.30, 0.72], [0.70, 0.72], [0.70, 0.86], [0.30, 0.86]], "text": "測試匾"}]
@@ -200,7 +211,7 @@ func _follow(t, m) -> void:
 	CGM.disabled = true
 	c.show_spec({"k": "cg_tavern"}); await _f(t, 2)
 	c._t = 6.0; c._process(0.0)
-	_chk("關動態：酒館退返靜態圖，「奈何一杯」照貼、跟慢推", c.mot == null and c.layer.get_node_or_null("Plaque0") != null and _xf_same(c))
+	_chk("關動態：酒館退返靜態圖，「奈河一杯」照貼、跟慢推", c.mot == null and c.layer.get_node_or_null("Plaque0") != null and _xf_same(c))
 	CGM.disabled = false
 	st.skip_scene(); await _f(t, 3)
 	var g = 0
