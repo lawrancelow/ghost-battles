@@ -15,7 +15,10 @@
 #                "blink":  {"alt":"wood_b.webp", "every":3.2, "dur":0.14} } }  換表情／眨眼：第二張圖
 #     ],
 #     "fx": [ {"type":"smoke|steam|wisp|ember", "x":0.93, "y":0.33, "w":0.03, "h":0.0, "n":10} ]   粒子；x,y＝發射中心，w,h＝範圍
-#   冇 layout 或者 Tst.no_cgm 就返 null，story_cg 照舊用靜態圖。
+#   另一種定位（美術組分層產線用）：  "rect": [x, y, w, h]（左上＋闊高，底圖比例）, "pivot": [0.5, 0.0]（軸心，層內比例；預設腳底 [0.5,1]）
+#   多兩種動作：  "flicker": {"min":0.88, "max":1.12, "glow":0.55, "c":"#ffb060"}   燈籠閃（光暈用加色疊）
+#                 "drift":   {"dy":0.014, "per":4.0}                               炊煙：向上飄＋淡出，兩份錯開循環
+#   冇 layout 或者停用就返 null，story_cg 照舊用靜態圖。
 extends RefCounted
 
 const ROOT := "res://assets/cg_layers/"
@@ -55,7 +58,7 @@ var items: Array = []    # [{node, base_pos, base_size, fx, alt, main, par, ph}]
 var parts: Array = []
 var t := 0.0
 
-static func make(key: String, parent: Control, view_size: Vector2, bg_tex: Texture2D):
+static func make(key: String, parent: Node, view_size: Vector2, bg_tex: Texture2D):
 	if not has(key) or bg_tex == null: return null
 	var m = new()
 	m.k = key; m.L = conf()[key]; m.vs = view_size
@@ -79,19 +82,37 @@ func _build() -> void:
 		if not (o is Dictionary): continue
 		var tx = _tex(k, str(o.get("img", "")))
 		if tx == null: continue
-		var hh = J.num(o.get("h", 0.2)) * tsz.y * cover_s
-		var ww = hh * float(tx.get_width()) / float(tx.get_height())
-		var foot = img2view(Vector2(J.num(o.get("x", 0.5)), J.num(o.get("y", 0.9))))
 		var tr = TextureRect.new(); tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		tr.texture = tx; tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; tr.stretch_mode = TextureRect.STRETCH_SCALE
-		tr.size = Vector2(ww, hh); tr.position = foot - Vector2(ww / 2.0, hh)
-		tr.pivot_offset = Vector2(ww / 2.0, hh)   # 腳底做軸：呼吸／晃唔會離地
+		var pv: Array = o.get("pivot", [0.5, 1.0]) if o.get("pivot") is Array else [0.5, 1.0]
+		if o.get("rect") is Array and (o.rect as Array).size() >= 4:   # 美術產線：左上＋闊高
+			var r: Array = o.rect
+			tr.position = img2view(Vector2(J.num(r[0]), J.num(r[1])))
+			tr.size = Vector2(J.num(r[2]) * tsz.x, J.num(r[3]) * tsz.y) * cover_s
+		else:   # 腳底＋高度
+			var hh = J.num(o.get("h", 0.2)) * tsz.y * cover_s
+			var ww = hh * float(tx.get_width()) / float(tx.get_height())
+			var foot = img2view(Vector2(J.num(o.get("x", 0.5)), J.num(o.get("y", 0.9))))
+			tr.size = Vector2(ww, hh); tr.position = foot - Vector2(ww / 2.0, hh)
+		tr.pivot_offset = Vector2(tr.size.x * J.num(pv[0]), tr.size.y * J.num(pv[1]))   # 軸心：人＝腳底（唔離地），燈籠＝頂（吊住擺）
 		tr.flip_h = J.t(o.get("flip"))
 		root.add_child(tr)
 		var fx: Dictionary = o.get("fx", {}) if o.get("fx") is Dictionary else {}
 		var alt = null
 		if fx.get("blink") is Dictionary: alt = _tex(k, str(fx.blink.get("alt", "")))
-		items.append({"n": tr, "pos": tr.position, "fx": fx, "main": tx, "alt": alt,
+		var glow = null
+		if fx.get("flicker") is Dictionary and J.num(fx.flicker.get("glow", 0.0)) > 0.0:   # 燈籠光暈：層後面一個加色柔光點
+			glow = TextureRect.new(); glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			glow.texture = _dot_tex(64, 1.0); glow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			var gs = maxf(tr.size.x, tr.size.y) * 2.2
+			glow.size = Vector2(gs, gs); glow.pivot_offset = glow.size / 2.0
+			glow.modulate = Color(str(fx.flicker.get("c", "#ffb060")))
+			var gm = CanvasItemMaterial.new(); gm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD; glow.material = gm
+			root.add_child(glow); root.move_child(glow, tr.get_index())
+		var twin = null
+		if fx.get("drift") is Dictionary:   # 炊煙：第二份錯開半個周期，循環時唔會一下閃走
+			twin = tr.duplicate(); root.add_child(twin)
+		items.append({"n": tr, "pos": tr.position, "fx": fx, "main": tx, "alt": alt, "glow": glow, "twin": twin,
 			"par": J.num(o.get("par", 0.0)), "ph": float(i) * 1.37})
 		i += 1
 	for f in L.get("fx", []):
@@ -200,6 +221,26 @@ func tick(dt: float) -> Array:
 			var ev2 = maxf(J.num(bl.get("every", 3.2)), 0.2)
 			var want = it.alt if fmod(t + ph * 1.9, ev2) < J.num(bl.get("dur", 0.14)) else it.main
 			if n.texture != want: n.texture = want
+		if fx.get("flicker") is Dictionary:   # 燈籠閃：幾條唔同頻率嘅正弦疊埋，似火光唔規則
+			var fl = fx.flicker
+			var nz = 0.5 + 0.5 * (0.5 * sin(t * 7.3 + ph * 3.1) + 0.3 * sin(t * 13.7 + ph) + 0.2 * sin(t * 2.1 + ph * 5.0))
+			var v = lerpf(J.num(fl.get("min", 0.88)), J.num(fl.get("max", 1.12)), nz)
+			n.modulate = Color(v, v, v, 1.0)
+			if it.glow != null:
+				var g: TextureRect = it.glow
+				g.position = it.pos + off + n.size / 2.0 - g.size / 2.0 + Vector2(0, n.size.y * 0.1)
+				g.modulate.a = J.num(fl.get("glow", 0.55)) * (0.6 + 0.4 * nz)
+				g.scale = Vector2.ONE * (0.92 + 0.12 * nz)
+		if fx.get("drift") is Dictionary:   # 炊煙：向上飄、淡入淡出，兩份錯開
+			var dr = fx.drift
+			var per = maxf(J.num(dr.get("per", 4.0)), 0.2); var dy = J.num(dr.get("dy", 0.014)) * tsz.y * cover_s
+			var pa = fmod(t + ph, per) / per
+			n.modulate.a = sin(pa * PI)
+			off.y -= dy * pa
+			if it.twin != null:
+				var pb = fmod(t + ph + per / 2.0, per) / per
+				it.twin.position = it.pos + off + Vector2(0, dy * pa - dy * pb)
+				it.twin.modulate.a = sin(pb * PI)
 		n.position = it.pos + off
 		n.scale = Vector2(sc, sc); n.rotation = rot
 	return cz

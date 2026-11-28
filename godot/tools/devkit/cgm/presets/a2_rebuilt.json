@@ -1,0 +1,20 @@
+{
+ "cam": {"zoom": [1.0, 1.08], "pan": [0, 0.01, -0.012, -0.004], "dur": 16},
+ "motion_map": {
+  "sway_hang": {"sway": {"deg": 3.0, "per": 3.0}},
+  "flicker": {"flicker": {"min": 0.88, "max": 1.15, "glow": 0.5, "c": "#ff9a4a"}},
+  "smoke_drift": {"drift": {"dy": 0.014, "per": 4.2}}
+ },
+ "layer_fx": {
+  "wood_carrier":    {"par": 0.25, "fx": {"float": {"amp": 0.004, "per": 2.4}, "breathe": {"amp": 0.02, "per": 2.0}}},
+  "dough_girl":      {"par": 0.2,  "fx": {"breathe": {"amp": 0.025, "per": 1.1}, "float": {"amp": 0.002, "per": 3.0}}},
+  "water_carrier":   {"par": 0.3,  "fx": {"float": {"amp": 0.005, "per": 2.8}, "sway": {"deg": 2.0, "per": 3.4}}},
+  "reaper":          {"par": 0.4,  "fx": {"sway": {"deg": 3.0, "per": 1.6}, "float": {"amp": 0.003, "per": 2.2}}},
+  "paper_stall_kid": {"par": 0.4,  "fx": {"float": {"amp": 0.006, "per": 2.6}, "breathe": {"amp": 0.015, "per": 3.3}, "shake": {"amp": 0.003, "every": 6.0, "dur": 0.35}}}
+ },
+ "fx": [
+  {"type": "steam", "x": 0.73, "y": 0.385, "w": 0.09, "n": 10},
+  {"type": "ember", "x": 0.89, "y": 0.47, "w": 0.03, "n": 8},
+  {"type": "wisp", "x": 0.5, "y": 0.6, "w": 0.8, "h": 0.55, "n": 10}
+ ]
+}

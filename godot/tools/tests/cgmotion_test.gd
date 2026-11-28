@@ -106,12 +106,46 @@ func logic(t) -> void:
 	cg.show_spec({"k": KEY}); await _w(t, 0.1)
 	cg.hide_cg(); await _w(t, 0.6)
 	_chk("收起後清走動態層", cg.mot == null and not cg.visible)
+	# 美術產線分層（A2：5 角色＋12 燈籠＋2 炊煙，rect／pivot 定位，燈籠閃＋擺、炊煙飄）
+	var K2 = "cg_a2_rebuilt"
+	_chk("A2 分層設定", CGM.has(K2))
+	cg.show_spec({"k": K2}); await _w(t, 0.1)
+	var m2 = cg.mot
+	_chk("A2 層數 19", m2 != null and m2.items.size() == 19, m2.items.size() if m2 else -1)
+	var L2 = CGM.conf()[K2]
+	var rerr := []
+	for o in L2.layers:   # rect 換算：t≈0 時（未郁）左上角＝rect 位置
+		for it in m2.items:
+			if it.main == load(CGM.ROOT + K2 + "/" + str(o.img)):
+				var want = m2.img2view(Vector2(J.num(o.rect[0]), J.num(o.rect[1])))
+				if it.pos.distance_to(want) > 1.5: rerr.append([o.name, it.pos, want])
+	_chk("A2 rect 位置對齊", rerr.is_empty(), rerr)
+	var lan = null; var smk = null
+	for it in m2.items:
+		if it.fx.has("flicker") and lan == null: lan = it
+		if it.fx.has("drift") and smk == null: smk = it
+	_chk("燈籠：軸心喺頂（吊住擺）", lan != null and absf(lan.n.pivot_offset.y) < 0.5)
+	_chk("燈籠：有光暈", lan != null and lan.glow != null)
+	var mods := {}
+	for k in 120:
+		m2.tick(1.0 / 60.0); mods[snappedf(lan.n.modulate.r, 0.02)] = 1
+	_chk("燈籠：亮度會閃", mods.size() >= 4, mods.size())
+	var alphas := []
+	for k in 300:
+		m2.tick(1.0 / 60.0); alphas.append(smk.n.modulate.a)
+	_chk("炊煙：淡入淡出循環", alphas.min() < 0.15 and alphas.max() > 0.85, [snappedf(alphas.min(), 0.01), snappedf(alphas.max(), 0.01)])
+	_chk("炊煙：有第二份錯開", smk.twin != null and absf(smk.twin.modulate.a - smk.n.modulate.a) > 0.05)
 	# 效能：600 格 tick（只計 CPU 計算）
 	cg.show_spec({"k": KEY}); await _w(t, 0.1)
 	var t0 = Time.get_ticks_usec()
 	for k in 600: cg.mot.tick(1.0 / 60.0)
 	var ms = (Time.get_ticks_usec() - t0) / 1000.0 / 600.0
-	_chk("每格 tick < 0.3 ms", ms < 0.3, snappedf(ms, 0.001))
+	_chk("每格 tick < 0.3 ms（佔位 2 層）", ms < 0.3, snappedf(ms, 0.001))
+	cg.show_spec({"k": "cg_a2_rebuilt"}); await _w(t, 0.1)
+	t0 = Time.get_ticks_usec()
+	for k in 600: cg.mot.tick(1.0 / 60.0)
+	ms = (Time.get_ticks_usec() - t0) / 1000.0 / 600.0
+	_chk("每格 tick < 0.6 ms（A2 19 層）", ms < 0.6, snappedf(ms, 0.001))
 	par.queue_free()
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
@@ -119,9 +153,11 @@ func shots(t) -> void:
 	var dir = OS.get_environment("CGM_SHOTS")
 	if dir == "": dir = "/tmp/cgm/shots/"
 	DirAccess.make_dir_recursive_absolute(dir)
+	var key = OS.get_environment("CGM_KEY")
+	if key == "": key = "cg_a2_rebuilt"
 	var pc = _mk(t); var cg = pc[1]
 	await _w(t, 0.2)
-	cg.show_spec({"k": KEY})
+	cg.show_spec({"k": key})
 	for i in 48:   # 12 秒，每 0.25 秒一張
 		await _w(t, 0.25)
 		var img = t.get_viewport().get_texture().get_image()
