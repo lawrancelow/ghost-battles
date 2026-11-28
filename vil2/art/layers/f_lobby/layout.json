@@ -1,0 +1,27 @@
+{
+ "size": [
+  1340,
+  1005
+ ],
+ "source": "f_lobby.jpg",
+ "bg": "bg.png",
+ "note": "Gemini 原位去背：角色座標即原圖座標，可直接疊回 bg.png",
+ "chars": [
+  {
+   "file": "char_01.png",
+   "x": 0,
+   "y": 220,
+   "w": 903,
+   "h": 785,
+   "touch_edge": true
+  },
+  {
+   "file": "char_02.png",
+   "x": 1025,
+   "y": 223,
+   "w": 232,
+   "h": 192,
+   "touch_edge": false
+  }
+ ]
+}

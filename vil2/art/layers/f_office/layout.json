@@ -1,0 +1,27 @@
+{
+ "size": [
+  1340,
+  1005
+ ],
+ "source": "f_office.jpg",
+ "bg": "bg.png",
+ "note": "Gemini 原位去背：角色座標即原圖座標，可直接疊回 bg.png",
+ "chars": [
+  {
+   "file": "char_01.png",
+   "x": 114,
+   "y": 299,
+   "w": 290,
+   "h": 578,
+   "touch_edge": false
+  },
+  {
+   "file": "char_02.png",
+   "x": 782,
+   "y": 357,
+   "w": 499,
+   "h": 596,
+   "touch_edge": false
+  }
+ ]
+}

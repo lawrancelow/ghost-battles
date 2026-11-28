@@ -99,3 +99,35 @@
 - 第 4 章商品、第 4 章新攤 9 台；市集開張插圖男女各一；Bryan 市集插圖
 - 第 5 章商品與新攤 8 台；第 6 章商品與新攤 9 台；潮流榜介面素材
 - 分層：男主 office、exile、joss_flood；女主 lobby、office、exile、tavern、pang_visit、joss_flood、joss_note
+
+# 第五班（2026-11-28 18:28–18:56，改用 Gemini；ChatGPT 各號今晚沒額度，沒碰）
+## 用 Gemini 的做法（已穩定）
+- 上傳：Gemini 沒有常駐的 file input。先在頁內掛鉤攔截 `HTMLInputElement.prototype.click`（type=file 時不彈系統選檔視窗，改把 input 掛進 DOM、id=hcgb_fi），再點「上傳與工具 → 上傳檔案」，用 find 找 file-input，**第 2 個**就是它，file_upload 進去（一次可多張，合計 <3.8MB）。每開一個新分頁要重掛鉤；同一分頁點「新對話」鉤子還在。
+- 取圖：直接用真實點擊按圖片右上角「下載完整尺寸」，檔案進 Mac 下載資料夾（Gemini_Generated_Image_*.jpeg，約 1200×896），不受「每分頁一次自動下載」限制；device_list_dir 按時間對應順序 → device_stage_files 取回。本班 21 張全數取回。下載鈕位置用頁內 JS 取（按鈕 aria-label 含「下載完整尺寸／Download full」）。
+- 同一對話可追問第二個編輯（「回到最初上傳的原圖…」），一張圖一個對話出「純背景」＋「角色原位去背」兩張。
+- 同一帳號不要兩個分頁同時生成（會回 something went wrong）；分頁不在前景時進度會停。
+- 伺服器過載（temporarily overloaded）時按「重做 → 重試」即可。
+## 分層新做法：原位去背（比角色表好用）
+- 提示詞 A（純背景）：移除全部角色並補全背景，其餘不變。提示詞 B（原位去背）：背景全部換純白，角色留在原位、原大小、不重畫。
+- `/home/claude/scripts/inplace.py <layers目錄> <原圖>`：把 B 對齊原圖尺寸 → chars_inplace.png（整張透明）＋各連通塊 char_NN.png ＋ **layout.json（座標即原圖座標，可直接疊回 bg.png）** ＋ _compare.jpg（原圖｜純背景｜重組｜角色）。
+- 限制：互相重疊的角色會連成一塊（例如黃泉路的主角＋黑白無常＋排隊鬼是一件），被遮住的部分沒有補；要各自獨立動，需再逐個角色單獨提取。
+- 試驗結論（art_pending/gemini_vs_chatgpt_layers.jpg）：純背景 Gemini 更忠於原圖（逐像素對齊）；「角色表（分開排列）」ChatGPT 更忠於原圖，Gemini 會改姿勢、多畫角色。
+## 各 Chrome 的 Gemini 狀況
+- e3d5ff2f（Low Zen keong，免費）：已登入，本班 14 張後出現「limit resets」限額。
+- 6441589f（LawranceLow，免費）：已登入，本班 7 張後出現限額（Image Editing／Generation Limit Reached）。
+- 369be60b、45b51715（zen keong low，免費）：已登入，但第一次上傳會彈「根據圖片和檔案生成內容——請確認你擁有上傳圖片的必要權利…同意／取消」。這是同意條款，沒有老闆明確許可我不能代按，兩個都按了取消，沒用到。**老闆在這兩個 Chrome 各按一次「同意」（或明確授權）後就能用。**
+## 已完成（sheet_09.jpg 分層對照、sheet_10.jpg 新圖；全部未進遊戲）
+- 分層（vil2/art/layers/，各有 _bg_raw.jpg、_inplace_raw.jpg、bg.png、chars_inplace.png、char_NN.png、layout.json、_compare.jpg）：road_m、road_f、office_m、exile_m、joss_flood_m、f_lobby、f_office；另 lobby_m_gemini（試驗）。
+- 第 4 章商品 16 樣：market_goods/goods_ch4_sheet.jpg（cut_ch4/，16 件全過）。
+- 第 4 章新攤 9 台三段：market_stall/stall_ch4_sheet_a.jpg、_b.jpg（cut_ch4/，27 件全過）。
+- 潮流榜介面素材：market_ui/trend_ui_sheet.jpg（cut/ 按連通塊切）。
+- 市集開張插圖男主版：cg_m/cg_market_open_m.jpg。
+## 自審備註
+- 第 4 章商品筆觸比 ChatGPT 版略乾淨、蠟筆顆粒感較淡；「紅鞋鞋扣」畫成一雙紅繡花鞋；「紙紮兵器」和已定稿的招牌款不同（招牌三樣本來就沿用舊圖，這格可不用）。
+- 潮流榜素材多畫了一個徽章（4 個：金、銀、銀灰、銅），排列不是整齊 3×3。
+- 開張插圖男主版：小紙是照參考圖畫的，和遊戲內立繪可能不同；夜空仍偏紫，匾面空白。
+- office_m、exile_m、f_office 的原位去背：Gemini 把被桌子遮住的下半身補畫了（龐總有腿，是西裝人物可接受），疊回時桌子要另拆一層或用遮罩。
+- joss_flood_m 純背景保留了滿地包裹（屬物件，不是角色）。
+## 沒做（兩個可用帳號都到限額）
+- 分層：女主 exile、tavern、pang_visit、joss_flood、joss_note；化寶爐廢墟、Dato' 金匾 v2、交接便條；caught 的紅色大印與雙手、he_wake 的毯子。
+- 新圖：市集開張插圖女主版（提示詞已送出、因限額未生成）；第 5 章商品與新攤 8 台；第 6 章商品與新攤 9 台。Bryan 市集插圖按指示沒畫。
