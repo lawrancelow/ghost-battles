@@ -8,7 +8,7 @@
 - 裝備 eqi_*_i、兵器 mvi_bingqi_*、狀態圖示（art/ab 戰鬥圖示 29 個）、UI 套件 45 件
 ## 本次產出
 - 過渡版：res_planks（mvi_plank）、res_buns（mvi_bun）、res_troops（soul_a）、mat_bao（mvi_baozi）→ assets/ui/icons/*_128/_64.webp
-- 待生成：res_wood、res_rice、res_coins（Chrome 全部離線，ChatGPT 無法使用）
+- 已生成（2026-11-28 ChatGPT）：res_wood、res_rice、res_coins（B 鬼臉銅幣，預設）、res_coins_alt（A 金屬金元寶）；預覽 art/ICONS_coins_AB_preview.jpg
 
 ## 生成規矩（老闆長期規矩，2026-11-28）
 所有生成圖必須是亞洲風格，以東亞為主，可帶一點東南亞元素。

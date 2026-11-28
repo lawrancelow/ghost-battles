@@ -17,16 +17,20 @@
     "src": "mvi_baozi"
   },
   "res_wood": {
-    "use": "槐木 m_wood（取代 i-wood.svg）",
-    "status": "待生成"
+    "use": "槐木 i-wood.svg",
+    "src": "ChatGPT 生成 2026-11-28 art/src/icons_wood_rice_coins_sheet.png"
   },
   "res_rice": {
-    "use": "糯米 m_rice（取代 i-rice.svg）",
-    "status": "待生成"
+    "use": "糯米 i-rice.svg",
+    "src": "同上"
   },
   "res_coins": {
-    "use": "冥幣（取代 i-coins.svg；gs_panel、main 頂欄）",
-    "status": "待生成：A 金元寶（金屬錠，非紙元寶）／B 自創圓形陰間銅幣（鬼臉浮雕、無方孔）"
+    "use": "冥幣 i-coins.svg（方案B：鬼臉浮雕圓形銅幣，無方孔，預設）",
+    "src": "同上"
   },
-  "_prompt_rule": "East Asian (Chinese/Hong Kong/Malaysian-Chinese) style, no Western elements; transparent, no text, refined crayon/pastel; no religion/talismans/joss paper/square-hole coins/brands/letters"
+  "_prompt_rule": "East Asian (Chinese/Hong Kong/Malaysian-Chinese) style, no Western elements; transparent, no text, refined crayon/pastel; no religion/talismans/joss paper/square-hole coins/brands/letters",
+  "res_coins_alt": {
+    "use": "冥幣方案A：金屬金元寶（老闆選A就改名為 res_coins）",
+    "src": "同上"
+  }
 }
