@@ -149,7 +149,7 @@ func _run(t, shots: bool) -> void:
 	var same = true
 	for k in Z.village.POS: if Vector2(J.num(POS[k][0]), J.num(POS[k][1])) != ZD.v2(Z.village.POS[k]): same = false
 	_chk("村子 POS 換咗做分區座標", same, POS.gate)
-	_chk("槐樹 8 棵、稻田 6 格（[fogfix] 全部砍得／割得）", J.G.TREE_POS.size() == 8 and J.G.PADDY_POS.size() == 6)
+	_chk("槐樹 8 棵、稻田 8 格（[fogfix] 全部砍得／割得）", J.G.TREE_POS.size() == 8 and J.G.PADDY_POS.size() == 8)
 	_chk("世界大細 1340×2410", J.num(J.G.W) == 1340.0 and J.num(J.G.WH) == 2410.0)
 	# 原村子建築（棺材鋪、包子鋪…）喺舊存檔照樣存在、畫喺新位
 	var b0 = {}

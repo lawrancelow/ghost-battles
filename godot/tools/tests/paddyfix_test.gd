@@ -1,4 +1,4 @@
-# [paddyfix] 第 1–4 關中央村：6 格稻田全部割得、8 棵槐樹全部砍得（經玩家同一條撳屏路：nv_village.zone_tap → ZV.tap → Village.tap → hitTest → walkTo（分區排路）→ update 收割）
+# [paddyfix] 第 1–4 關中央村：8 格稻田（p55 起 6→8）全部割得、8 棵槐樹全部砍得（經玩家同一條撳屏路：nv_village.zone_tap → ZV.tap → Village.tap → hitTest → walkTo（分區排路）→ update 收割）
 #   阿福由村子出生點自己行過去（唔瞬移），證明每格／每棵都行得到；撳位＝畫出嚟嘅圖中心（唔係邏輯座標），證明撳中範圍同圖對得上
 #   另查：冇任何裝飾（村子 DECOR／props、各區 decor／props／scenery、黑霧外圍 kit）用槐樹／稻田嘅圖
 # 用法：/home/claude/setup/edtest.sh <godot目錄> paddyfix res://tools/tests/paddyfix_test.gd logic|all
@@ -90,8 +90,8 @@ func _level(t, m, c: int) -> void:
 	var TP = J.G.TREE_POS; var PP = J.G.PADDY_POS
 	var Z = ZD.cur()
 	_chk(tag + "已套用呢關村子座標", ZD.applied() == str(c) and TP == ZD._fa(Z.village.TREE_POS) and PP == ZD._fa(Z.village.PADDY_POS), ZD.applied())
-	_chk(tag + "槐樹 8 棵、稻田 6 格；存檔 trees／treeRegrow 8 格、paddy／paddyRegrow 6 格",
-		TP.size() == 8 and PP.size() == 6 and S.trees.size() == 8 and S.treeRegrow.size() == 8 and S.paddy.size() == 6 and S.paddyRegrow.size() == 6,
+	_chk(tag + "槐樹 8 棵、稻田 8 格；存檔 trees／treeRegrow 8 格、paddy／paddyRegrow 8 格",
+		TP.size() == 8 and PP.size() == 8 and S.trees.size() == 8 and S.treeRegrow.size() == 8 and S.paddy.size() == 8 and S.paddyRegrow.size() == 8,
 		[TP.size(), PP.size(), S.trees.size(), S.paddy.size()])
 	# 撳圖中心／圖上半／圖下半：hitTest 都係佢自己
 	var hb = []
@@ -129,7 +129,7 @@ func _level(t, m, c: int) -> void:
 	for i in PP.size(): S.paddy[i] = 1.0; S.paddyRegrow[i] = 0.0
 	for i in TP.size(): S.trees[i] = 3.0; S.treeRegrow[i] = 0.0
 	cam.z = nv.size.x / 390.0; cam.vel = Vector2.ZERO
-	var pc = (ZD.v2(PP[0]) + ZD.v2(PP[5])) / 2.0; var tc = (ZD.v2(TP[0]) + ZD.v2(TP[7])) / 2.0
+	var pc = (ZD.v2(PP[0]) + ZD.v2(PP[7])) / 2.0; var tc = (ZD.v2(TP[0]) + ZD.v2(TP[7])) / 2.0
 	cam.center_on(pc + Vector2(0, -10)); await _w(t, 0.6); await _shot(t, "L%d_paddy_before" % (c + 1))
 	cam.center_on(tc + Vector2(0, -30)); await _w(t, 0.6); await _shot(t, "L%d_trees_before" % (c + 1))
 	# 逐格撳（阿福由出生點行過去）
@@ -151,7 +151,7 @@ func _level(t, m, c: int) -> void:
 			if k % 10 == 9: _unblock(m)
 		if not J.t(S.paddy[i]): got.append(i); S.paddyRegrow[i] = 999.0   # 截圖時唔好生返
 		else: _p("diag paddy %d\n  pre  %s\n  post %s\n  end  %s" % [i, pre, post, _diag(m, V)])
-	_chk(tag + "6 格稻田全部撳得、行得到、割得", got.size() == 6, got)
+	_chk(tag + "8 格稻田全部撳得、行得到、割得", got.size() == 8, got)
 	var cut = []
 	for i in TP.size():
 		_reset_hero(V)

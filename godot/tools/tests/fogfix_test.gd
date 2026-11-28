@@ -67,7 +67,7 @@ func _level(t, m, c: int) -> void:
 	var tag = "第 %d 關：" % (c + 1)
 	var V = _V(); var S = J.G.S; var nv = m.village; var cam = nv.zone_cam()
 	var TP = J.G.TREE_POS; var PP = J.G.PADDY_POS
-	_chk(tag + "槐樹 8 棵、稻田 6 格（存檔 8／6 格）", TP.size() == 8 and PP.size() == 6 and S.trees.size() >= 8 and S.paddy.size() >= 6, [TP.size(), PP.size()])
+	_chk(tag + "槐樹 8 棵、稻田 8 格（存檔 8／8 格）", TP.size() == 8 and PP.size() == 8 and S.trees.size() >= 8 and S.paddy.size() >= 8, [TP.size(), PP.size()])
 	# 撳中邊棵就係邊棵（撳樹範圍／撳田範圍唔重疊）
 	var hit_ok = true; var dbg = []
 	for i in TP.size():
@@ -402,7 +402,7 @@ func _save_check(t, m) -> void:
 	S.trees = [3.0, 0.0, 3.0, 2.0, 3.0, 3.0]; S.treeRegrow = [0.0, 12.0, 0.0, 0.0, 0.0, 0.0]
 	S.paddy = [1.0, 0.0, 1.0, 1.0]; S.paddyRegrow = [0.0, 9.0, 0.0, 0.0]
 	ZD.st()
-	_chk("舊存檔 6 棵／4 格：自動補返 8 棵／6 格，已砍／已割索引照舊", S.trees.size() == 8 and S.paddy.size() == 6 and S.treeRegrow.size() == 8 and S.paddyRegrow.size() == 6
+	_chk("舊存檔 6 棵／4 格：自動補返 8 棵／8 格，已砍／已割索引照舊", S.trees.size() == 8 and S.paddy.size() == 8 and S.treeRegrow.size() == 8 and S.paddyRegrow.size() == 8
 		and J.num(S.trees[1]) == 0.0 and J.num(S.trees[3]) == 2.0 and J.num(S.trees[7]) == 3.0 and not J.t(S.paddy[1]) and J.t(S.paddy[5]) and J.num(S.treeRegrow[1]) == 12.0, [S.trees, S.paddy])
 	# 還原
 	S.zone = keep.zone; S.qi = keep.qi; S.lv = keep.lv; S.cleared = keep.cleared; S.mv.ci = keep.ci; S.bld = keep.bld

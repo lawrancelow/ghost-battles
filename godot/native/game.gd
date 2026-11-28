@@ -43,7 +43,7 @@ static func new_state() -> Dictionary:
 		"team": ["afu", null, null], "adviser": null,
 		"cleared": {}, "qi": 0.0, "cnt": {"chop": 0.0, "rice": 0.0, "craftPlank": 0.0, "craftBun": 0.0, "recruit": 0.0, "feast": 0.0, "chest": 0.0},
 		"seen": {}, "chests": {"g": 0.0, "b": 0.0, "p": 0.0}, "furnaceAt": 0.0, "feastAt": 0.0, "last": J.now(), "ended": false,
-		"trees": [3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0], "treeRegrow": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "paddy": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0], "paddyRegrow": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+		"trees": [3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0], "treeRegrow": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "paddy": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], "paddyRegrow": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
 		"uid": 1.0, "prod": {},
 		"hero": {"name": "阿福", "full": "陳大福", "en": "Kelvin", "sex": "m", "set": false},   # 主角名／性別（DB.N 顯示時替換）
 	}
@@ -1712,7 +1712,7 @@ static func set_globals() -> void:
 		dec.append([e[0], float(e[1]), float(e[2])])
 	G["DECOR"] = dec
 	G["TREE_POS"] = [[38.0, 402.0], [92.0, 392.0], [146.0, 404.0], [62.0, 452.0], [118.0, 448.0], [168.0, 458.0], [40.0, 506.0], [100.0, 512.0]]
-	G["PADDY_POS"] = [[248.0, 412.0], [338.0, 412.0], [248.0, 462.0], [338.0, 462.0], [248.0, 512.0], [338.0, 512.0]]
+	G["PADDY_POS"] = [[248.0, 412.0], [338.0, 412.0], [248.0, 462.0], [338.0, 462.0], [248.0, 512.0], [338.0, 512.0], [248.0, 562.0], [338.0, 562.0]]
 	G["FRAME_MS"] = FRAME_MS; G["lastT"] = J.S_performance_("now", []); G["saveT"] = 0.0; G["uiT"] = 0.0; G["_ground"] = null
 	G["F"] = {}; G["Quest"] = {}; G["Village"] = make_village()
 	for n in ["fmt", "newState", "save", "load", "fodderCount", "workersAt", "ghostById", "gdef", "ratesPerMin", "produce", "canPay", "pay", "costText", "give", "gainExp", "onLevelUp", "joinGhost", "recruitFodder", "bldUnlocked", "furnaceReady", "standOk", "offlineGain"]:

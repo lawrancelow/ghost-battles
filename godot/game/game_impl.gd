@@ -46,7 +46,7 @@ func new_state() -> Dictionary:
 		"team": ["afu", null, null], "adviser": null,
 		"cleared": {}, "qi": 0, "cnt": {"chop": 0, "rice": 0, "craftPlank": 0, "craftBun": 0, "recruit": 0, "feast": 0, "chest": 0},
 		"seen": {}, "chests": {"g": 0, "b": 0, "p": 0}, "furnaceAt": 0, "feastAt": 0, "last": now_ms(), "ended": false,
-		"trees": [3, 3, 3, 3, 3, 3, 3, 3], "treeRegrow": [0, 0, 0, 0, 0, 0, 0, 0], "paddy": [1, 1, 1, 1, 1, 1], "paddyRegrow": [0, 0, 0, 0, 0, 0],
+		"trees": [3, 3, 3, 3, 3, 3, 3, 3], "treeRegrow": [0, 0, 0, 0, 0, 0, 0, 0], "paddy": [1, 1, 1, 1, 1, 1, 1, 1], "paddyRegrow": [0, 0, 0, 0, 0, 0, 0, 0],
 		"uid": 1, "prod": {}, "visit": {}, "wmSeen": {}, "qv": 3,
 		"hero": {"name": "阿福", "full": "陳大福", "en": "Kelvin", "sex": "m", "set": false},   # 主角名／性別（DB.N 顯示時替換）
 	}

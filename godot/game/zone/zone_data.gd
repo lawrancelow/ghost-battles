@@ -90,7 +90,7 @@ static func door_at(p: Vector2, c := -1) -> String:   # 撳中門洞（屬於邊
 static func st():
 	var s = S()
 	if s == null: return null
-	if not (s.get("trees") is Array) or s.trees.size() < 8 or not (s.get("paddy") is Array) or s.paddy.size() < 6: pad_fields(s)   # [fogfix]
+	if not (s.get("trees") is Array) or s.trees.size() < 8 or not (s.get("paddy") is Array) or s.paddy.size() < 8: pad_fields(s)   # [fogfix]
 	if not (s.get("zone") is Dictionary): s["zone"] = {"v": 1.0, "own": {}, "boss": {}, "exp": null}
 	var z = s.zone
 	for k in ["own", "boss"]: if not (z.get(k) is Dictionary): z[k] = {}
@@ -470,9 +470,9 @@ static func apply() -> void:
 	if V is Dictionary and V.get("plaza") is Dictionary:   # 廣場鬼：重新擺（舊位喺新圖外面）
 		V.erase("plaza")
 # [fogfix] 存檔 S.trees／S.paddy（＋Regrow）格數唔夠就補：新補嘅樹 3 血、稻田熟咗；已有嘅格（已砍／已割）照舊對應索引
-static func pad_fields(s, nt := 8, np := 6) -> void:
+static func pad_fields(s, nt := 8, np := 8) -> void:
 	if not (s is Dictionary): return
-	nt = maxi(nt, 8); np = maxi(np, 6)
+	nt = maxi(nt, 8); np = maxi(np, 8)   # [p55] 稻田 6→8 格
 	for kv in [["trees", nt, 3.0], ["treeRegrow", nt, 0.0], ["paddy", np, 1.0], ["paddyRegrow", np, 0.0]]:
 		if not (s.get(kv[0]) is Array): s[kv[0]] = []
 		var a: Array = s[kv[0]]

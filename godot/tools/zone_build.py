@@ -82,7 +82,7 @@ M0 = {
     # [fogfix] 老闆：中央村嘅槐樹／稻田全部都要砍得／割得 → 恢復 8 棵＋6 格（存檔 S.trees 8、S.paddy 6），唔再用同一張圖做裝飾
     #   槐樹兩行（行距 84：撳樹範圍 y−72..y+8 唔重疊；棵距 55 ≥ 撳樹闊 48）；稻田 3 行 × 2（行距 60、列距 80）
     "TREE_POS": P((285, 1278), (340, 1274), (395, 1280), (450, 1276), (300, 1362), (355, 1366), (410, 1360), (465, 1364)),
-    "PADDY_POS": P((950, 1240), (1030, 1240), (950, 1300), (1030, 1300), (950, 1360), (1030, 1360)),
+    "PADDY_POS": P((950, 1240), (1030, 1240), (950, 1300), (1030, 1300), (950, 1360), (1030, 1360), (950, 1420), (1030, 1420)),   # [p55] 加多一行 → 8 格
     "DECOR": [["post", 628, 1230], ["post", 712, 1230], ["post", 628, 1650], ["post", 712, 1650], ["post", 628, 1900], ["post", 712, 1900],
               ["banana", 258, 1660], ["banana", 1086, 1640], ["scarecrow", 1086, 1360], ["grave", 1070, 1720], ["grave", 1092, 1745],
               ["willo", 470, 1420], ["willo", 760, 1440], ["willo", 960, 1700]],
@@ -945,7 +945,7 @@ def _grove_clear(M):
 for _c, _m in D["maps"].items():
     _grove_clear(_m)
     _V = _m["village"]
-    assert len(_V["TREE_POS"]) == 8 and len(_V["PADDY_POS"]) == 6, ("槐樹要 8 棵、稻田要 6 格", _c)
+    assert len(_V["TREE_POS"]) == 8 and len(_V["PADDY_POS"]) == 8, ("槐樹要 8 棵、稻田要 8 格", _c)
     _all = [("props", p) for p in _V["props"]] + [("DECOR", d) for d in _V["DECOR"]] + [("scenery", s) for s in _m.get("scenery", [])]
     for _z in _m["zones"]: _all += [(_z["id"], p) for p in _z.get("props", []) + _z.get("decor", [])]
     for _w, _p in _all: assert _p[0] not in INTERACTIVE_ART, ("裝飾用咗槐樹／稻田圖", _c, _w, _p)
