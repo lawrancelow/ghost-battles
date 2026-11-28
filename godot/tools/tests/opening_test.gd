@@ -69,7 +69,7 @@ func _no_braces() -> void:
 				if ln[i] is String and re.search(ln[i]) != null: bad.append("%s:%s" % [id, ln[i]])
 	_chk("新場景冇 {xxx} 佔位", bad.is_empty(), bad.slice(0, 5))
 	var miss: Array = []
-	for k in ["cg_ruins", "cg_b2_soup", "cg_lobby_f", "cg_office_f", "cg_exile_f", "cg_soup_f", "cg_joss_flood_f", "cg_joss_note_f", "cg_stall_hook_f", "cg_tavern_f", "cg_c1_bribe", "cg_c2_bribe", "cg_bribe_f", "cg_lobby", "cg_stall_hook", "cg_pang_visit", "cg_joss_flood", "cg_joss_note_m", "cg_caught", "cg_he_wake", "cg_qian_bite", "cg_office", "cg_exile", "cg_tavern"]:
+	for k in ["cg_ruins", "cg_b2_soup", "cg_lobby_f", "cg_office_f", "cg_exile_f", "cg_soup_f", "cg_joss_flood_f", "cg_joss_note_f", "cg_stall_hook_f", "cg_tavern_f", "cg_c1_bribe", "cg_c2_bribe", "cg_bribe_f", "cg_lobby", "cg_stall_hook", "cg_pang_visit", "cg_joss_flood", "cg_joss_note_m", "cg_caught", "cg_he_wake", "cg_qian_bite", "cg_office", "cg_exile", "cg_tavern", "cg_road", "cg_road_f", "cg_joss_ruin", "cg_note", "cg_dato_plaque", "cg_nuopo_taste"]:
 		if not Spr.ok(k): miss.append(k)
 	_chk("美術新圖已入 manifest", miss.is_empty(), miss)
 	# 全部場景（唔止新場景）：講者、對白都唔准有花括號佔位
@@ -99,7 +99,7 @@ func _no_braces() -> void:
 			if cg[k] is Dictionary and str(cg[k].get("rv", "")) != "":
 				nrv += 1
 				if str(cg[k].get("k", "")) == "cg_ruins": ruins_rv = true
-	_chk("待審標記：只剩未有圖嘅幕（黃泉路男女、紙條、化寶爐廢墟）；已選用／定稿嘅冇 rv", nrv >= 4 and not ruins_rv and not _scenes().op2_lobby.cg["0"].has("rv") and not _scenes().stall_hook.cg["0"].has("rv") and not _scenes().op2_office.cg["0"].has("rv") and not _scenes().op2_exile.cg["4"].has("rv") and not _scenes().tav_open.cg["0"].has("rv") and _scenes().op2_road.cg["0"].has("rv"), nrv)
+	_chk("待審清零：全部開場／化寶爐／酒館／大排檔插圖都係定稿（冇 rv）", nrv == 0, nrv)
 
 # 名字替換：改名、女主版
 func _names() -> void:
@@ -251,7 +251,7 @@ func _play(t, m, sex: String) -> void:
 	_chk("實機播完開場（%s）" % sex, all_seen and st.cur == null, played.keys())
 	_chk("實機名牌顯示玩家名（%s）" % sex, names_ok)
 	_chk("實機畫面冇「{」「}」佔位、名牌唔出阿福（%s）" % sex, brace_bad.is_empty(), brace_bad.slice(0, 5))
-	_chk("實機：冇「待審」角標、冇佔位圖；未有圖嘅幕只有對話、有圖嘅幕顯示正確嗰張（%s）" % sex, rv_bad.is_empty() and rv_seen >= 5 and rv_n >= 1, [rv_seen, rv_n, rv_bad.slice(0, 5)])
+	_chk("實機：冇「待審」角標、冇佔位圖；未有圖嘅幕只有對話、有圖嘅幕顯示正確嗰張（%s）" % sex, rv_bad.is_empty() and rv_seen >= 6 and rv_n == 0, [rv_seen, rv_n, rv_bad.slice(0, 5)])
 	S["hero"] = h0; S["seen"] = seen0
 
 # 實機：{主角} 防呆喺「選項（按鈕）／任務欄／提示」三個出口都換成玩家名（男主預設名、改名、女主）
@@ -330,7 +330,30 @@ func _plaque(t, m) -> void:
 		var pn = st.cg.layer.get_node_or_null("Plaque0")
 		_chk("牌匾：場景參數覆蓋文字", pn != null and str(pn.get_meta("text")) == "三更酒館")
 		st.cg.show_spec({"k": "cg_dato_plaque"}); await _f(t, 2)
-		_chk("未選定素材（cg_review.json：Dato' 金匾）正式版唔顯示、冇角標", Spr.ok("cg_dato_plaque") and st.cg.cur_key == "" and st.cg.layer.get_node_or_null("RvBadge") == null)
+		var dn = st.cg.layer.get_node_or_null("Plaque0")
+		_chk("Dato' 金匾：疊「拿督」浮雕字（三層）、冇角標", st.cg.cur_key == "cg_dato_plaque" and dn != null and str(dn.get_meta("text")) == "拿督" and str(dn.get_meta("style")) == "emboss" and int(dn.get_meta("layers")) == 3 and st.cg.layer.get_node_or_null("RvBadge") == null)
+		await _w(t, 1.0); await RenderingServer.frame_post_draw
+		t.get_viewport().get_texture().get_image().save_png(SH + "plaque_dato.png")
+		st.cg.show_spec({"k": "cg_note"}); await _f(t, 2)
+		var nn = st.cg.layer.get_node_or_null("Plaque0")
+		var ntxt = str(_scenes().op2_arrive.lines[6][1]).trim_prefix("「").trim_suffix("」")
+		_chk("交接便條：疊劇本原句、多行、字夠大（>=44）", nn != null and str(nn.get_meta("text")) == str(DB.L(ntxt)) and str(nn.get_meta("style")) == "note" and int(nn.get_meta("font_size")) >= 44, nn.get_meta("font_size") if nn != null else "冇")
+		if nn != null:
+			var nl: Label = nn.get_child(0).get_child(nn.get_child(0).get_child_count() - 1)
+			await _f(t, 2)
+			var nh = nl.get_line_count() * nl.get_line_height() + maxi(0, nl.get_line_count() - 1) * nl.get_theme_constant("line_spacing")
+			_chk("交接便條：成段字喺紙面內（唔出紙）", nh <= nl.size.y + 1.0 and nl.get_line_count() >= 3, "%d 行、高 %.0f／%.0f" % [nl.get_line_count(), nh, nl.size.y])
+		await _w(t, 1.0); await RenderingServer.frame_post_draw
+		t.get_viewport().get_texture().get_image().save_png(SH + "plaque_note.png")
+		st.cg.show_spec({"k": "cg_road"}); await _f(t, 2)
+		_chk("男主黃泉路（3:2）：插圖框跟圖比例、唔超出畫面", st.cg.cur_key == "cg_road" and absf(st.cg.size.x / st.cg.size.y - 1.5) < 0.08 and st.cg.size.x <= st.size.x and st.cg.size.y <= st.size.y * 0.47, st.cg.size)
+		await _w(t, 1.0); await RenderingServer.frame_post_draw
+		t.get_viewport().get_texture().get_image().save_png(SH + "cg_road_m_frame.png")
+		var keys0 = CG._rv_keys
+		CG.review_pending(""); CG._rv_keys = ["cg_he_wake"]
+		st.cg.show_spec({"k": "cg_he_wake"}); await _f(t, 2)
+		_chk("未選定素材（cg_review.json pending）正式版唔顯示、冇角標", st.cg.cur_key == "" and st.cg.layer.get_node_or_null("RvBadge") == null)
+		CG._rv_keys = keys0
 		st.cg.show_spec({"k": "cg_road", "ph": "cg1_queue", "rv": "待審"}); await _f(t, 2)
 		_chk("未有圖（黃泉路）正式版唔用佔位圖", st.cg.cur_key == "")
 		st.cg.show_spec({"k": "cg_nuopo_taste"}); await _f(t, 2)

@@ -17,6 +17,7 @@ for k, v in src.items():
         o = dict(old[i]) if i < len(old) else {}
         for f in ("size", "quad", "color", "vertical", "style"):
             if f in e: o[f] = e[f]
+        if "clear_quad" in e: o["quad"] = e["clear_quad"]   # 匾面有部分被手／鬍子遮住：字只放喺冇遮住嘅範圍
         if e.get("text"): o["text"] = e["text"]
         o.setdefault("text", ""); out.append(o)
     cur[key] = out; print("更新", key, len(out), "塊")

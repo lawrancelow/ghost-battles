@@ -327,14 +327,25 @@ func _plaque_node(text: String, q: Array, col: Color, vertical: bool, idx: int, 
 	var qw = maxf(8.0, (wtop + wbot) / 2.0); var qh = maxf(8.0, (hl + hr) / 2.0)
 	var TW = 768; var TH = maxi(48, int(768.0 * qh / qw))
 	var sv = SubViewport.new(); sv.transparent_bg = true; sv.size = Vector2i(TW, TH); sv.render_target_update_mode = SubViewport.UPDATE_ONCE; sv.disable_3d = true
+	if style == "note": text = text.trim_prefix("「").trim_suffix("」")
 	var lb = Label.new(); lb.text = "\n".join(text.split("")) if vertical else text
 	var n = maxi(1, text.length())
 	var fs = int(minf(TH * 0.66, TW * 0.9 / n)) if not vertical else int(minf(TW * 0.66, TH * 0.9 / n))
+	if style == "note":   # 便條：多行，字盡量大但成段要喺紙面內（每行字數 × 行數夠放全部字）
+		fs = int(sqrt(TW * 0.9 * TH * 0.9 / (n * 1.28)))
+		while fs > 10:
+			var per = int(TW * 0.9 / fs)
+			if per > 0 and ceili(float(n) / per) * fs * 1.28 <= TH * 0.92: break
+			fs -= 1
 	lb.add_theme_font_override("font", UIKit.font("serif", 900)); lb.add_theme_font_size_override("font_size", maxi(10, fs))
 	lb.add_theme_color_override("font_color", col)
 	lb.add_theme_color_override("font_outline_color", Color(1.0, 0.93, 0.8, 0.35)); lb.add_theme_constant_override("outline_size", maxi(2, fs / 14))   # 淡淡亮邊，似刻喺匾面
 	lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; lb.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lb.position = Vector2.ZERO; lb.size = Vector2(TW, TH); lb.clip_text = true
+	if style == "note":
+		lb.clip_text = false; lb.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY; lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		lb.add_theme_font_override("font", UIKit.font("serif", 700)); lb.add_theme_constant_override("outline_size", 0); lb.add_theme_constant_override("line_spacing", int(fs * 0.12))
+		lb.position = Vector2(TW * 0.05, TH * 0.04); lb.size = Vector2(TW * 0.9, TH * 0.92)
 	if style == "emboss":   # 金匾浮雕字：下層深色內陰影（偏右下）＋亮色高光（偏左上）＋面層金色，似刻出嚟
 		var off = maxf(2.0, fs / 22.0)
 		lb.remove_theme_color_override("font_outline_color"); lb.add_theme_constant_override("outline_size", 0)

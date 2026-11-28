@@ -1,5 +1,5 @@
 {
- "_note": "牌匾疊字（由左至右橫寫）。quad＝匾面四角（左上、右上、右下、左下），原圖像素座標，size＝原圖闊高；text 可被場景 cg 的 plaque.t 覆蓋。男主三張座標來自美術線 art_pending/cg_m/plaque.json（tools/devkit/plaque_import.py 匯入）；女主三張由程序組量。文字 2026-11-28 老闆定：辦公室／流放「加班是福」、酒館「奈何一杯」。 style＝\"emboss\"：金匾浮雕字（內陰影＋高光）。cg_dato_plaque 的 quad 等美術線重畫版座標（plaque.json 的 dato_plaque）匯入後才會顯示。",
+ "_note": "牌匾疊字（由左至右橫寫）。quad＝匾面四角（左上、右上、右下、左下），原圖像素座標，size＝原圖闊高；text 可被場景 cg 的 plaque.t 覆蓋。男主三張座標來自美術線 art_pending/cg_m/plaque.json（tools/devkit/plaque_import.py 匯入）；女主三張由程序組量。文字 2026-11-28 老闆定：辦公室／流放「加班是福」、酒館「奈何一杯」。 style＝\"emboss\"：金匾浮雕字（內陰影＋高光）。cg_dato_plaque 的 quad 等美術線重畫版座標（plaque.json 的 dato_plaque）匯入後才會顯示。 style＝\"note\"：便條——多行自動換行、字盡量大但唔出紙面；文字用劇本原句（跟對白語言）。",
  "cg_office": [
   {
    "size": [
@@ -172,7 +172,58 @@
   {
    "text": "拿督",
    "style": "emboss",
-   "color": "#e9b949"
+   "color": "#e9b949",
+   "size": [
+    1447,
+    1087
+   ],
+   "quad": [
+    [
+     805,
+     720
+    ],
+    [
+     965,
+     720
+    ],
+    [
+     965,
+     880
+    ],
+    [
+     805,
+     880
+    ]
+   ]
+  }
+ ],
+ "cg_note": [
+  {
+   "size": [
+    1448,
+    1086
+   ],
+   "quad": [
+    [
+     510,
+     250
+    ],
+    [
+     1040,
+     225
+    ],
+    [
+     1005,
+     820
+    ],
+    [
+     485,
+     845
+    ]
+   ],
+   "text": "「接任的同事：斧頭在樹下，稻田在東邊，鍋在包子鋪，包子鋪沒有屋頂。祝你好運。PS：不要相信龐總說的『只是暫時』。」",
+   "style": "note",
+   "color": "#3b2416"
   }
  ]
 }
