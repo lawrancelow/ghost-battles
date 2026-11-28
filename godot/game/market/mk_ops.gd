@@ -148,16 +148,17 @@ static func pairs(ci: int) -> Dictionary:   # 主攤 → 副貨攤（兩邊都�
 	if not (p is Dictionary) or not (p.get(str(ci)) is Dictionary): return o
 	for h in p[str(ci)]:
 		var s2 = str(p[str(ci)][h])
-		if MD.st_def(str(h)).size() and MD.st_def(s2).size(): o[str(h)] = s2
+		if MD.st_def(str(h)).size() and (MD.st_def(s2).size() if s2.begins_with("st_") else not MD.good_def(s2).is_empty()): o[str(h)] = s2
 	return o
 static func sub_only(ci: int) -> Dictionary:   # 唔再獨立擺攤嘅副貨攤（sid → 主攤）；MK.stall_list 會剔走
 	var o = {}
 	var p = pairs(ci)
-	for h in p: o[str(p[h])] = str(h)
+	for h in p: if str(p[h]).begins_with("st_"): o[str(p[h])] = str(h)
 	return o
+static func _pair_good(v: String) -> String: return good_of(v) if v.begins_with("st_") else v
 static func default_sub(ci: int, sid: String) -> String:
 	var p = pairs(ci)
-	return good_of(str(p[sid])) if p.has(sid) else ""
+	return _pair_good(str(p[sid])) if p.has(sid) else ""
 static func sub_of(sid: String) -> String:   # 副貨（冇＝""）；玩家未揀過就用預設配對
 	if not on() or not sub_open(sid): return ""
 	var o = st().sub
@@ -178,6 +179,13 @@ static func sub_choices(ci: int, sid: String) -> Array:   # 可揀副貨：同�
 		if s2 == sid or _unlocked(s2): continue
 		var g = good_of(s2)
 		if g != "" and not taken.has(g) and not o.has(g): o.append(g)
+	var pr = pairs(ci)   # 配對表：自己嗰樣預設副貨（只有貨嘅新商品）＋ sub_extra 其他可揀
+	if pr.has(sid):
+		var g4 = _pair_good(str(pr[sid]))
+		if g4 != "" and not taken.has(g4) and not o.has(g4): o.push_front(g4)
+	var ex = D().get("sub_extra", {})
+	if ex is Dictionary and ex.get(str(ci)) is Dictionary and ex[str(ci)].get(sid) is Array:
+		for g5 in ex[str(ci)][sid]: if not MD.good_def(str(g5)).is_empty() and not taken.has(str(g5)) and not o.has(str(g5)): o.append(str(g5))
 	var gl = D().goods.get(str(ci))
 	if gl is Dictionary and gl.get(street) is Array:   # 只有貨、冇攤嘅商品（goods_final「副貨」欄）
 		for row in gl[street]:

@@ -26,8 +26,8 @@ static var hud_bot := 0.0         # 我哋呢疊（人手列＋治安卡＋對�
 static var _culprit := {}         # 事件 id → 搞事鬼圖鍵
 static var _title := {"st": "", "t0": -99.0}   # 切街標題卡（已選用美術：牌坊 A／食街／奢侈品店橫幅）
 static func banner_key(street: String) -> String:
-	var k = {"food": "mk_bn_food", "lux": "mk_bn_lux"}.get(street, "mk_bn_gate")
-	return k if Spr.ok(k) else ""
+	var k = "mk_bn_" + street
+	return k if Spr.ok(k) else ("mk_bn_gate" if Spr.ok("mk_bn_gate") else "")
 
 static func on(sc) -> bool: return MKU.on(sc) and MK.is_open(MK.cur())
 static func y0(sc) -> float: return MKU.strip_y(sc) + MKU.STRIP_H
@@ -47,16 +47,16 @@ static func draw(sc, ctx) -> void:
 	if not on(sc): return
 	_pump(sc)
 	var street = MK.cur(); var y = y0(sc); var W = float(sc.FW)
-	ctx.fillStyle = "rgba(14,8,18,.78)"; ctx.fillRect(0, y, W, BAR_H)
+	ctx.fillStyle = "rgba(38,24,14,.86)"; ctx.fillRect(0, y, W, BAR_H)
 	var cn = MKO.counter_n(street); var pn = MKO.patrol_n(street)
-	_pill(sc, ctx, "mko:ctr", 6, y + 4, 104, BAR_H - 8, L("櫃檯 %d/%d", "櫃檯 %d/%d") % [cn, MKO.cap("ctr")], "rgba(243,214,138,.96)" if cn > 0 else "rgba(92,70,52,.96)", Color("#3a2414") if cn > 0 else Color("#f5e8cc"))
-	_pill(sc, ctx, "mko:pat", 116, y + 4, 104, BAR_H - 8, L("巡邏 %d/%d", "巡邏 %d/%d") % [pn, MKO.cap("pat")], "rgba(243,214,138,.96)" if pn > 0 else "rgba(92,70,52,.96)", Color("#3a2414") if pn > 0 else Color("#f5e8cc"))
+	_pill(sc, ctx, "mko:ctr", 6, y + 4, 104, BAR_H - 8, L("櫃檯 %d/%d", "櫃檯 %d/%d") % [cn, MKO.cap("ctr")], "rgba(243,214,138,.96)" if cn > 0 else "rgba(96,70,46,.96)", Color("#3a2414") if cn > 0 else Color("#f5e8cc"))
+	_pill(sc, ctx, "mko:pat", 116, y + 4, 104, BAR_H - 8, L("巡邏 %d/%d", "巡邏 %d/%d") % [pn, MKO.cap("pat")], "rgba(243,214,138,.96)" if pn > 0 else "rgba(96,70,46,.96)", Color("#3a2414") if pn > 0 else Color("#f5e8cc"))
 	var tl = MKO.till(street)
 	if tl > 0.0:
 		var pulse = 0.5 + 0.5 * sin(float(sc.t) * 5.0) if cn <= 0 else 0.0
 		_pill(sc, ctx, "mko:till", 226, y + 4, W - 232.0, BAR_H - 8, L("收銀箱 %s・收", "收銀箱 %s・收") % MD.fmt(tl), "rgba(%d,96,30,.97)" % int(130 + 50 * pulse), Color("#fff3c8"), 15, "#f3d68a")
 	else:
-		_pill(sc, ctx, "", 226, y + 4, W - 232.0, BAR_H - 8, L("收銀箱 已入帳", "收銀箱 已入帳"), "rgba(50,44,48,.9)", Color("#b8ac9c"), 14)
+		_pill(sc, ctx, "", 226, y + 4, W - 232.0, BAR_H - 8, L("收銀箱 已入帳", "收銀箱 已入帳"), "rgba(64,48,34,.92)", Color("#b8ac9c"), 14)
 	var cy = y + BAR_H + 4.0
 	# ② 治安卡（最急嗰件）
 	var evs = MKO.events(street)
@@ -120,7 +120,7 @@ static func draw(sc, ctx) -> void:
 		var ta = clampf(minf(tu / 0.2, (1.8 - tu) / 0.4), 0.0, 1.0)
 		ctx.globalAlpha = ta
 		var bw = W - 40.0; var bh = bw * 260.0 / 780.0; var by = cy + 6.0
-		Art.rr(ctx, 17, by - 3, bw + 6, bh + 6, 16, "rgba(20,10,24,.9)", "#f3d68a", 2.0)
+		Art.rr(ctx, 17, by - 3, bw + 6, bh + 6, 16, "rgba(44,28,16,.92)", "#f3d68a", 2.0)
 		Art.put(ctx, "mk_bn_gate", W / 2.0, by + bh, bw, bh)
 		sc._txt(ctx, MK.name(street), W / 2.0, by + bh * 0.36, 26, Color("#3a2414"), "center", 900, 0, "serif")
 		ctx.globalAlpha = 1.0
@@ -237,7 +237,7 @@ static func world_items(sc, ctx, items: Array) -> void:
 		if not sim.unlocked(sid): continue
 		var sp = sim.st_pos(sid); var s2 = sid
 		var sw = float(MKO.st().swap.get(sid, 0.0))
-		if sw > 0.0: items.append([99991.0, func(): _tag(sc, ctx, sp + Vector2(0, -36), L("換貨中 %d 秒", "換貨中 %d 秒") % int(ceil(sw)), "rgba(60,90,120,.95)")])
+		if sw > 0.0: items.append([99991.0, func(): _tag(sc, ctx, sp + Vector2(0, -36), L("換貨中 %d 秒", "換貨中 %d 秒") % int(ceil(sw)), "rgba(110,84,40,.96)")])
 		elif float(MKO.st().brawl.get(sid, 0.0)) > MKO.clk():
 			var bl = float(MKO.st().brawl[sid]) - MKO.clk()
 			items.append([99991.0, func(): _tag(sc, ctx, sp + Vector2(0, -36), L("嗌交停工 %d 秒", "吵架停工 %d 秒") % int(ceil(bl)), "rgba(150,36,30,.95)")])
@@ -291,7 +291,7 @@ static func _draw_event(sc, ctx, e: Dictionary, p: Vector2) -> void:
 	if not chase:
 		var bw = 44.0; var k = clampf(left / maxf(1.0, MKO.cf("events", "deadline_s", 20.0)), 0.0, 1.0)
 		var bx = clampf(tp.x - bw / 2.0, sc.vx0() + 2.0, sc.vx1() - bw - 2.0)
-		Art.rr(ctx, bx, tp.y + 14, bw, 5, 2, "rgba(20,10,10,.8)")
+		Art.rr(ctx, bx, tp.y + 14, bw, 5, 2, "rgba(44,28,16,.85)")
 		Art.rr(ctx, bx, tp.y + 14, bw * k, 5, 2, "#ffd27a" if k > 0.35 else "#ff6a5a")
 
 static func _draw_fx(sc, ctx, f: Dictionary) -> void:
@@ -347,10 +347,10 @@ static func _draw_ow(sc, ctx, sid: String) -> void:
 	var w = 128.0; var h = 64.0
 	var x = clampf(sp.x - w / 2.0, sc.vx0() + 4.0, sc.vx1() - w - 4.0); var y = sp.y - 150.0 + (2.0 * sin(now * 3.0) if stg != 3 else 0.0)
 	var edge = ["", "#ffd27a", "#ff9a5a", "#ff5a4a", "#9fe08a"][stg]
-	Art.rr(ctx, x - 3, y - 3, w + 6, h + 6, 12, "rgba(20,10,24,.9)", edge, 2.5)
+	Art.rr(ctx, x - 3, y - 3, w + 6, h + 6, 12, "rgba(44,28,16,.92)", edge, 2.5)
 	if Spr.ok("mk_ow_%d" % stg): Art.put(ctx, "mk_ow_%d" % stg, x + w / 2.0, y + h, w, h)
 	var cap = [L("", ""), L("死頂緊", "硬撐中"), L("就嚟唔得", "快不行了"), L("趴低咗！餵個包", "趴下了！餵個包子"), L("食飽返生！", "吃飽復活！")][stg]
-	_tag(sc, ctx, Vector2(x + w / 2.0, y + h + 14), cap, "rgba(20,10,24,.92)", Color(edge), 14)
+	_tag(sc, ctx, Vector2(x + w / 2.0, y + h + 14), cap, "rgba(44,28,16,.94)", Color(edge), 14)
 	var o: Dictionary = _ow[sid]
 	if stg in [1, 2] and now - float(o.say_t) > 9.0 and sc.bubbles.is_empty():   # 抱怨泡（詞庫 20 句輪住出）
 		o.say_t = now

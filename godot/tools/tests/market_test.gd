@@ -370,6 +370,8 @@ func _ops(t, sim, sc, c: int, food: Array, cloth: Array) -> void:
 	_chk("派第 1 隻巡邏：冒巡邏人數台詞", sy.size() == 1 and str(sy[0].k) == "pat_n" and str(sy[0].t).length() > 4, sy)
 	MKO.unassign(sim, "t_mk6"); MKO.pop_say()
 	# ---- 按章價格（各章基價 × 街階倍率）----
+	_chk("按章價格重算：預設關（延後），outpost.json 原價生效", not MKO.price_on() and is_equal_approx(float(MD.good_def("m_douhua").price), 100.0))
+	MKO.D()["price_rebase"] = 1
 	MKO.price_refresh(true)
 	if c == 0:
 		_chk("第 1 章：枯井豆花 階 2＝20、嘆氣包＝4", is_equal_approx(float(MD.good_def("m_douhua").price), 20.0) and is_equal_approx(float(MD.good_def("m_shoubao").price), 4.0), MD.good_def("m_douhua").price)
@@ -380,6 +382,25 @@ func _ops(t, sim, sc, c: int, food: Array, cloth: Array) -> void:
 		var ci0 = sim.st().ci; sim.st().ci = 1.0; MKO.price_refresh()
 		_chk("招牌價跟章走：第 2 章嘆氣包＝20", is_equal_approx(float(MD.good_def("m_shoubao").price), 20.0), MD.good_def("m_shoubao").price)
 		sim.st().ci = ci0; MKO.price_refresh()
+	MKO.D()["price_rebase"] = 0; MKO.price_refresh()
+	# ---- 第 1、2 章新商品（已過審美術；只有貨、做副貨）----
+	var miss_ic = []
+	for gid in ["m_c1_huaihua", "m_c1_mianao", "m_c1_gun", "m_c1_dun", "m_c1_xianghuo", "m_c2_banlan", "m_c2_kudai", "m_c2_xianjing"]:
+		var gd9 = MD.good_def(gid)
+		if gd9.is_empty() or not Spr.ok(str(gd9.get("icon", ""))) or Spr.get_tex(str(gd9.icon)) == null: miss_ic.append(gid)
+	_chk("新商品 8 樣：數據＋圖示齊（冇佔位圖）", miss_ic.is_empty(), miss_ic)
+	if c == 0:
+		sim.sst("st_shoubao").lv = 25.0; MKO.st().sub.erase("st_shoubao")
+		_chk("嘆氣蒸籠 Lv25 預設副貨＝槐花粥；紙紮兵器可揀槐木棍／蒸籠盾", MKO.sub_of("st_shoubao") == "m_c1_huaihua" and MKO.default_sub(0, "st_bingqi") == "m_c1_gun", MKO.sub_of("st_shoubao"))
+		var wn = 0
+		for cd9 in MD.D().CUSTOMERS: if cd9.wants.has("m_c1_huaihua"): wn += 1
+		_chk("有客人會買槐花粥", wn > 0, wn)
+		MKO.set_sub(0, "st_shoubao", "")
+	var no_art = []
+	for ci in 6:
+		for sid in MK.stall_list(ci): if not Spr.ok(str(MD.st_def(sid).get("art", ""))): no_art.append(sid)
+		for h9 in MKO.pairs(ci): if not Spr.ok(str(MD.good_def(MKO._pair_good(str(MKO.pairs(ci)[h9]))).get("icon", ""))): no_art.append(str(MKO.pairs(ci)[h9]))
+	_chk("全 6 章：上架嘅攤同副貨都有過審圖（未過審嘅唔出現）", no_art.is_empty(), no_art)
 	# ---- 目標補發：副貨攤／移章嘅目標跳過，但獎勵照發 ----
 	var gi = -1
 	for i in MD.goals(0).size(): if str(MD.goals(0)[i].get("k", "")) == "st_guancaichuang": gi = i
