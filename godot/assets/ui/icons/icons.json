@@ -1,31 +1,32 @@
 {
- "_note": "頂欄資源圖示美術版（過渡版：先用已審批的現有美術圖；res_wood/res_rice/res_coins 待 ChatGPT 生成，Chrome 離線未出）",
- "res_planks": {
-  "use": "頂欄/倉庫 棺材板 m_plank（取代 assets/ui/i-planks.svg）",
-  "src": "mvi_plank"
- },
- "res_buns": {
-  "use": "頂欄/倉庫 壽包 m_shoubao（取代 i-buns.svg）",
-  "src": "mvi_bun"
- },
- "res_troops": {
-  "use": "頂欄 鬼/兵力（取代 i-troops.svg）",
-  "src": "soul_a（東方有樣貌無腳遊魂）"
- },
- "mat_bao": {
-  "use": "普通包子 m_bao（已有 mvi_baozi，備用尺寸）",
-  "src": "mvi_baozi"
- },
- "res_wood": {
-  "use": "槐木 m_wood（取代 i-wood.svg）",
-  "status": "待生成"
- },
- "res_rice": {
-  "use": "糯米 m_rice（取代 i-rice.svg）",
-  "status": "待生成"
- },
- "res_coins": {
-  "use": "冥幣（取代 i-coins.svg；gs_panel、main 頂欄）",
-  "status": "待生成：A 金元寶（金屬錠，非紙元寶）／B 自創圓形陰間銅幣（鬼臉浮雕、無方孔）"
- }
+  "_note": "頂欄資源圖示美術版（過渡版：先用已審批的現有美術圖；res_wood/res_rice/res_coins 待 ChatGPT 生成，Chrome 離線未出）",
+  "res_planks": {
+    "use": "頂欄/倉庫 棺材板 m_plank（取代 assets/ui/i-planks.svg）",
+    "src": "mvi_plank"
+  },
+  "res_buns": {
+    "use": "頂欄/倉庫 壽包 m_shoubao（取代 i-buns.svg）",
+    "src": "mvi_bun"
+  },
+  "res_troops": {
+    "use": "頂欄 鬼/兵力（取代 i-troops.svg）",
+    "src": "soul_a（東方有樣貌無腳遊魂）"
+  },
+  "mat_bao": {
+    "use": "普通包子 m_bao（已有 mvi_baozi，備用尺寸）",
+    "src": "mvi_baozi"
+  },
+  "res_wood": {
+    "use": "槐木 m_wood（取代 i-wood.svg）",
+    "status": "待生成"
+  },
+  "res_rice": {
+    "use": "糯米 m_rice（取代 i-rice.svg）",
+    "status": "待生成"
+  },
+  "res_coins": {
+    "use": "冥幣（取代 i-coins.svg；gs_panel、main 頂欄）",
+    "status": "待生成：A 金元寶（金屬錠，非紙元寶）／B 自創圓形陰間銅幣（鬼臉浮雕、無方孔）"
+  },
+  "_prompt_rule": "East Asian (Chinese/Hong Kong/Malaysian-Chinese) style, no Western elements; transparent, no text, refined crayon/pastel; no religion/talismans/joss paper/square-hole coins/brands/letters"
 }
