@@ -257,7 +257,7 @@ static func mat_add(mid: String, n: float) -> void:
 	if OLD_RES.has(mid): s.res[OLD_RES[mid]] = J.num(s.res.get(OLD_RES[mid], 0)) + n; return
 	M.add(mid, n)
 static func mat_icon(mid: String) -> String:   # 回圖片路徑（冇就 ""）
-	if OLD_RES.has(mid): return "res://assets/ui/i-%s.svg" % OLD_RES[mid]
+	if OLD_RES.has(mid): return load("res://ui/res_icon.gd").path(OLD_RES[mid])   # [p55] 美術版優先
 	return ""
 
 # 基本材料：等級越高，越多半成品／壽包

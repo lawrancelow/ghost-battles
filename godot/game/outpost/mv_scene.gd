@@ -1269,9 +1269,9 @@ func _icon(ctx: Ctx, gid: String, x: float, y: float, sz: float) -> void:
 	var gd = MD.good_def(gid); var key = str(gd.get("icon", ""))
 	if gd.is_empty() and M.has_def(gid):   # [chain] 材料（唔喺 GOODS）：用 MATS 圖鍵，冇就用舊資源圖示
 		key = M.icon(gid); gd = {"n": M.def(gid).get("n", [gid, gid])}
-		if not _has(key) and M.res_key(gid) != "" and ResourceLoader.exists("res://assets/ui/i-%s.svg" % M.res_key(gid)):
+		if not _has(key) and M.res_key(gid) != "" and load("res://ui/res_icon.gd").path(M.res_key(gid)) != "":   # [p55] 美術版優先
 			ctx.ci.draw_set_transform_matrix(ctx.T)
-			ctx.ci.draw_texture_rect(load("res://assets/ui/i-%s.svg" % M.res_key(gid)), Rect2(x - sz / 2, y - sz, sz, sz), false)
+			ctx.ci.draw_texture_rect(load("res://ui/res_icon.gd").tex(M.res_key(gid), sz > 40.0), Rect2(x - sz / 2, y - sz, sz, sz), false)
 			ctx.ci.draw_set_transform_matrix(Transform2D.IDENTITY); return
 	if _has(key):
 		Art.put(ctx, key, x, y, sz, sz); return

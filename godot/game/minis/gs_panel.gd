@@ -74,7 +74,7 @@ func _build() -> void:
 	var t = UIKit.label(L("冥街夜市"), 20, Color("#f3d68a"), "serif", 900); t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; hb.add_child(t)
 	var cb = HBoxContainer.new(); cb.add_theme_constant_override("separation", 4); cb.custom_minimum_size.x = 76; cb.alignment = BoxContainer.ALIGNMENT_END; hb.add_child(cb)
-	var ic = TextureRect.new(); ic.texture = load("res://assets/ui/i-coins.svg"); ic.custom_minimum_size = Vector2(20, 20)
+	var ic = TextureRect.new(); ic.texture = load("res://ui/res_icon.gd").tex("coins"); ic.custom_minimum_size = Vector2(20, 20)
 	ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER; cb.add_child(ic)
 	coins = UIKit.label("", 16, Color("#ffe08a"), "sans", 800); coins.vertical_alignment = VERTICAL_ALIGNMENT_CENTER; cb.add_child(coins)
 	# ---- 底部面板（蓋喺畫布上，最高 47%）----

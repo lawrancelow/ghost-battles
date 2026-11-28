@@ -445,7 +445,7 @@ func _build_top() -> void:
 			var rs = KS.box("res_slot", Vector4(5, 0, 8, 0)); rs.texture_margin_top = 0; rs.texture_margin_bottom = 0
 			cell.add_theme_stylebox_override("panel", rs); cell.custom_minimum_size.y = 28
 		var hb = HBoxContainer.new(); hb.add_theme_constant_override("separation", 4); cell.add_child(hb)
-		var ic = TextureRect.new(); ic.texture = load("res://assets/ui/i-%s.svg" % k); ic.custom_minimum_size = Vector2(18, 18); ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		var ic = TextureRect.new(); ic.texture = load("res://ui/res_icon.gd").tex(k); ic.custom_minimum_size = Vector2(22, 22) if load("res://ui/res_icon.gd").is_art(k) else Vector2(18, 18); ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		hb.add_child(ic)
 		var v = UIKit.label("0", 15, Color("#f4ecd4"), "sans", 700); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; v.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		hb.add_child(v); res_lbl[k] = v; res_cell[k] = cs
