@@ -199,6 +199,7 @@ static func boss_intro(nm: String, _k := "") -> void:
 	tw.tween_interval(1.05)
 	tw.tween_property(band, "modulate:a", 0.0, 0.3)
 	tw.tween_callback(cl.queue_free)
+	_tree().create_timer(2.4, true, false, true).timeout.connect(func(): if is_instance_valid(cl): cl.queue_free())   # 後備：卡幀都會收
 	shake(m, 6.0, 0.35)
 
 # ---------------- 戰力 ----------------
