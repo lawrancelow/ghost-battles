@@ -140,3 +140,32 @@
 - 完成：cg_shared/cg_dato_plaque_v3.jpg（紅褐底鎏金「拿督」，最佳）、_v3b（全金匾）——字是圖上直接雕刻，兩字筆畫核對正確；cg_f/cg_tavern_f_v2.jpg（女主酒館換男主同款麻繩木板匾，匾面留空）；cg_f/cg_market_open_f.jpg（市集開張女主版，暖棕）；分層 market_open_m、market_open_f、f_tavern_v2；plaque.json 加 tavern_f、office_f、exile_f、dato_plaque_v3；sheet_11.jpg。
 - 女主 office／exile 的匾和男主同款，沒改圖。
 - 沒做：女主 exile、pang_visit、joss_flood、joss_note 的分層；化寶爐廢墟、交接便條分層；caught 大印與雙手、he_wake 毯子；market_open_m／f 的原位去背用新提示詞重做（去掉線稿攤位）；第 5、6 章商品與攤位。
+
+# 第七班（2026-11-28 20:05–20:50，只用 Gemini；不碰遊戲分支）
+## 分層新做法：差異摳圖 diffcut（取代原位去背）
+- 每張圖只讓 Gemini 生一張「純背景」（逐像素對齊），角色直接從**原圖**按 Lab 色差（原圖 − 純背景）摳出：角色是原圖像素、座標即原圖座標、沒有線稿殘留、每圖只花 1 次生成。要跟角色一起動的道具，在背景提示詞裡寫明一併移除。
+- `NOIP=1 python3 art_pending/diffcut.py <layers目錄> <原圖> [門檻 14]`（目錄內要有 _bg_raw.jpg）→ bg.png、chars_inplace.png、char_NN.png、layout.json、_compare.jpg。環境變數 MINA（最小面積 1500）、DIL（3）、GROW。
+- 限制：互相重疊的角色連成一塊；Gemini 背景和原圖有色差的地方，角色邊緣會帶一圈背景色（疊回原位看不出，單獨移動時才看得到）。
+- 背景提示詞（單段）：「請編輯這張圖：把所有角色（人物和鬼）連同他們手上拿的東西和身邊飄浮的物品、符號完全移除，並把被遮住的背景自然補全；（列出要保留的背景物件）全部保留；其餘構圖、物件位置、筆觸、顏色和原圖完全一致、逐像素對齊，不要移動或重畫背景物件，不要加文字。」
+## 操作改進
+- 送出和下載都改用頁內 JS `.click()`（送出鈕 aria-label「发送」；下載鈕 aria-label 含「下载完整／下載完整／Download full」取最後一個），不要用固定座標點（會點進圖片編輯器）。生成約 50–100 秒，等 ≥90 秒再下載。
+- 取圖：device_list_dir 下載資料夾 → `python3 /home/claude/artwork7/newdl.py <毫秒時間>` 按時間列新檔 → device_stage_files。
+## 各 Chrome 的 Gemini 用量
+- 45b51715：本班 12 張後「已達上限，額度 20:59 重置」。
+- 369be60b：已達上限，11 月 29 日重置。
+- e3d5ff2f：本班 12 張左右，收工時未見限額。
+- 6441589f：本班沒用。
+## 已完成（sheet_12.jpg 分層對照、sheet_13.jpg 新圖；全部未進遊戲）
+- 分層（vil2/art/layers/）：market_open_m、market_open_f（重切）、f_exile、f_pang_visit、f_joss_flood、f_joss_note、caught_g、he_wake_g、nuopo_taste_g、qian_bite_g、dato_plaque_v3、tavern_m_v2_g、lobby_m_g、joss_note_m_g、stall_hook_m_g、stall_hook_f_g、weapon_street_g。帶 _g 的是 diffcut 版，和舊 ChatGPT 版目錄並存。cg_joss_ruin、cg_note 沒有角色，不用分層。
+- 第 5 章商品 16 樣：market_goods/goods_ch5_sheet.jpg（cut_ch5/ 16 件全過）。
+- 第 5 章新攤 8 台三段：market_stall/stall_ch5_sheet_a.jpg、_b.jpg（cut_ch5/ 24 件全過）。
+- 第 6 章商品 16 樣：market_goods/goods_ch6_sheet.jpg（cut_ch6/ 16 件全過，DIL=2）。
+- 第 6 章新攤 9 台三段：market_stall/stall_ch6_sheet_a.jpg、_b.jpg（cut_ch6/ 27 件全過）。
+## 自審備註（新圖要老闆審）
+- 第 5 章商品底色是純白，其他章是米白（去背後無差）；停擺錶畫成一般金屬腕錶，不像竹篾紙紮；Neckflip 卡上的小鬼是白色布幽靈造型，偏西式。
+- 第 6 章商品：加班便當的報紙盒上有像字的塗線；晉升胸章是綬帶花結款，偏西式；公文夾盾只是一塊黑板夾，不太像盾。
+- 第 6 章攤位：員工餐券第三段貨品畫得像一串香蕉；打卡槍攤的槍偏小。
+- 第 5 章 Neckflip 攤畫的是紅卡＋紙糊小電視。
+- 重做建議：停擺錶、Neckflip 卡、晉升胸章、公文夾盾、餐券攤第三段。
+## 沒做
+- Bryan 市集插圖（指示不畫）。重疊角色逐個單獨提取。上面「重做建議」的幾格。

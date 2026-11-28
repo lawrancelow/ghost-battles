@@ -1,0 +1,75 @@
+{
+ "size": [
+  1269,
+  952
+ ],
+ "source": "cg_qian_bite.jpg",
+ "bg": "bg.png",
+ "note": "差異摳圖：角色像素直接取自原圖（原圖−Gemini 純背景），座標即原圖座標，可直接疊回 bg.png",
+ "chars": [
+  {
+   "file": "char_01.png",
+   "x": 0,
+   "y": 193,
+   "w": 525,
+   "h": 530,
+   "touch_edge": true
+  },
+  {
+   "file": "char_02.png",
+   "x": 366,
+   "y": 114,
+   "w": 56,
+   "h": 73,
+   "touch_edge": false
+  },
+  {
+   "file": "char_03.png",
+   "x": 540,
+   "y": 210,
+   "w": 723,
+   "h": 605,
+   "touch_edge": false
+  },
+  {
+   "file": "char_04.png",
+   "x": 667,
+   "y": 184,
+   "w": 66,
+   "h": 59,
+   "touch_edge": false
+  },
+  {
+   "file": "char_05.png",
+   "x": 873,
+   "y": 757,
+   "w": 178,
+   "h": 131,
+   "touch_edge": false
+  },
+  {
+   "file": "char_06.png",
+   "x": 927,
+   "y": 607,
+   "w": 166,
+   "h": 169,
+   "touch_edge": false
+  },
+  {
+   "file": "char_07.png",
+   "x": 1044,
+   "y": 196,
+   "w": 90,
+   "h": 125,
+   "touch_edge": false
+  },
+  {
+   "file": "char_08.png",
+   "x": 1190,
+   "y": 619,
+   "w": 50,
+   "h": 150,
+   "touch_edge": false
+  }
+ ]
+}

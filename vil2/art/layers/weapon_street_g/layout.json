@@ -1,0 +1,99 @@
+{
+ "size": [
+  896,
+  1344
+ ],
+ "source": "weapon_warm.jpg",
+ "bg": "bg.png",
+ "note": "差異摳圖：角色像素直接取自原圖（原圖−Gemini 純背景），座標即原圖座標，可直接疊回 bg.png",
+ "chars": [
+  {
+   "file": "char_01.png",
+   "x": 22,
+   "y": 675,
+   "w": 84,
+   "h": 140,
+   "touch_edge": false
+  },
+  {
+   "file": "char_02.png",
+   "x": 93,
+   "y": 512,
+   "w": 71,
+   "h": 90,
+   "touch_edge": false
+  },
+  {
+   "file": "char_03.png",
+   "x": 118,
+   "y": 626,
+   "w": 101,
+   "h": 138,
+   "touch_edge": false
+  },
+  {
+   "file": "char_04.png",
+   "x": 205,
+   "y": 446,
+   "w": 92,
+   "h": 141,
+   "touch_edge": false
+  },
+  {
+   "file": "char_05.png",
+   "x": 240,
+   "y": 951,
+   "w": 164,
+   "h": 150,
+   "touch_edge": false
+  },
+  {
+   "file": "char_06.png",
+   "x": 251,
+   "y": 254,
+   "w": 119,
+   "h": 132,
+   "touch_edge": false
+  },
+  {
+   "file": "char_07.png",
+   "x": 308,
+   "y": 661,
+   "w": 213,
+   "h": 209,
+   "touch_edge": false
+  },
+  {
+   "file": "char_08.png",
+   "x": 544,
+   "y": 693,
+   "w": 101,
+   "h": 179,
+   "touch_edge": false
+  },
+  {
+   "file": "char_09.png",
+   "x": 601,
+   "y": 276,
+   "w": 116,
+   "h": 121,
+   "touch_edge": false
+  },
+  {
+   "file": "char_10.png",
+   "x": 636,
+   "y": 479,
+   "w": 84,
+   "h": 165,
+   "touch_edge": false
+  },
+  {
+   "file": "char_11.png",
+   "x": 799,
+   "y": 648,
+   "w": 91,
+   "h": 131,
+   "touch_edge": false
+  }
+ ]
+}

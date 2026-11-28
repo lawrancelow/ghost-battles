@@ -1,0 +1,91 @@
+{
+ "size": [
+  1269,
+  952
+ ],
+ "source": "cg_he_wake.jpg",
+ "bg": "bg.png",
+ "note": "差異摳圖：角色像素直接取自原圖（原圖−Gemini 純背景），座標即原圖座標，可直接疊回 bg.png",
+ "chars": [
+  {
+   "file": "char_01.png",
+   "x": 0,
+   "y": 224,
+   "w": 488,
+   "h": 699,
+   "touch_edge": true
+  },
+  {
+   "file": "char_02.png",
+   "x": 0,
+   "y": 650,
+   "w": 87,
+   "h": 72,
+   "touch_edge": true
+  },
+  {
+   "file": "char_03.png",
+   "x": 186,
+   "y": 168,
+   "w": 71,
+   "h": 65,
+   "touch_edge": false
+  },
+  {
+   "file": "char_04.png",
+   "x": 448,
+   "y": 835,
+   "w": 102,
+   "h": 72,
+   "touch_edge": false
+  },
+  {
+   "file": "char_05.png",
+   "x": 478,
+   "y": 525,
+   "w": 61,
+   "h": 82,
+   "touch_edge": false
+  },
+  {
+   "file": "char_06.png",
+   "x": 551,
+   "y": 100,
+   "w": 718,
+   "h": 791,
+   "touch_edge": true
+  },
+  {
+   "file": "char_07.png",
+   "x": 555,
+   "y": 334,
+   "w": 118,
+   "h": 41,
+   "touch_edge": false
+  },
+  {
+   "file": "char_08.png",
+   "x": 669,
+   "y": 178,
+   "w": 84,
+   "h": 71,
+   "touch_edge": false
+  },
+  {
+   "file": "char_09.png",
+   "x": 707,
+   "y": 137,
+   "w": 65,
+   "h": 91,
+   "touch_edge": false
+  },
+  {
+   "file": "char_10.png",
+   "x": 838,
+   "y": 627,
+   "w": 69,
+   "h": 88,
+   "touch_edge": false
+  }
+ ]
+}

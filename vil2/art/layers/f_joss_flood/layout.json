@@ -1,0 +1,27 @@
+{
+ "size": [
+  1340,
+  1005
+ ],
+ "source": "f_joss_flood.jpg",
+ "bg": "bg.png",
+ "note": "差異摳圖：角色像素直接取自原圖（原圖−Gemini 純背景），座標即原圖座標，可直接疊回 bg.png",
+ "chars": [
+  {
+   "file": "char_01.png",
+   "x": 68,
+   "y": 289,
+   "w": 367,
+   "h": 304,
+   "touch_edge": false
+  },
+  {
+   "file": "char_02.png",
+   "x": 460,
+   "y": 353,
+   "w": 404,
+   "h": 434,
+   "touch_edge": false
+  }
+ ]
+}

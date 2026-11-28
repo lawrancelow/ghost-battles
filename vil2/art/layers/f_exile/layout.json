@@ -1,0 +1,27 @@
+{
+ "size": [
+  1340,
+  1005
+ ],
+ "source": "f_exile.jpg",
+ "bg": "bg.png",
+ "note": "差異摳圖：角色像素直接取自原圖（原圖−Gemini 純背景），座標即原圖座標，可直接疊回 bg.png",
+ "chars": [
+  {
+   "file": "char_01.png",
+   "x": 67,
+   "y": 224,
+   "w": 368,
+   "h": 657,
+   "touch_edge": false
+  },
+  {
+   "file": "char_02.png",
+   "x": 419,
+   "y": 319,
+   "w": 921,
+   "h": 540,
+   "touch_edge": true
+  }
+ ]
+}

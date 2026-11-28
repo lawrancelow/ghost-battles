@@ -1,0 +1,19 @@
+{
+ "size": [
+  1340,
+  1005
+ ],
+ "source": "f_joss_note.jpg",
+ "bg": "bg.png",
+ "note": "差異摳圖：角色像素直接取自原圖（原圖−Gemini 純背景），座標即原圖座標，可直接疊回 bg.png",
+ "chars": [
+  {
+   "file": "char_01.png",
+   "x": 82,
+   "y": 0,
+   "w": 998,
+   "h": 1005,
+   "touch_edge": true
+  }
+ ]
+}

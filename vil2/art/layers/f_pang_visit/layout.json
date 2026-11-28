@@ -1,0 +1,43 @@
+{
+ "size": [
+  1340,
+  1005
+ ],
+ "source": "f_pang_visit.jpg",
+ "bg": "bg.png",
+ "note": "差異摳圖：角色像素直接取自原圖（原圖−Gemini 純背景），座標即原圖座標，可直接疊回 bg.png",
+ "chars": [
+  {
+   "file": "char_01.png",
+   "x": 0,
+   "y": 311,
+   "w": 185,
+   "h": 459,
+   "touch_edge": true
+  },
+  {
+   "file": "char_02.png",
+   "x": 207,
+   "y": 180,
+   "w": 1133,
+   "h": 728,
+   "touch_edge": true
+  },
+  {
+   "file": "char_03.png",
+   "x": 652,
+   "y": 857,
+   "w": 220,
+   "h": 55,
+   "touch_edge": false
+  },
+  {
+   "file": "char_04.png",
+   "x": 875,
+   "y": 165,
+   "w": 96,
+   "h": 90,
+   "touch_edge": false
+  }
+ ]
+}

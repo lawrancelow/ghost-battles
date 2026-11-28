@@ -1,0 +1,83 @@
+{
+ "size": [
+  1269,
+  952
+ ],
+ "source": "cg_stall_hook_f_fix.jpg",
+ "bg": "bg.png",
+ "note": "差異摳圖：角色像素直接取自原圖（原圖−Gemini 純背景），座標即原圖座標，可直接疊回 bg.png",
+ "chars": [
+  {
+   "file": "char_01.png",
+   "x": 35,
+   "y": 234,
+   "w": 883,
+   "h": 657,
+   "touch_edge": false
+  },
+  {
+   "file": "char_02.png",
+   "x": 131,
+   "y": 236,
+   "w": 172,
+   "h": 89,
+   "touch_edge": false
+  },
+  {
+   "file": "char_03.png",
+   "x": 318,
+   "y": 243,
+   "w": 155,
+   "h": 216,
+   "touch_edge": false
+  },
+  {
+   "file": "char_04.png",
+   "x": 473,
+   "y": 847,
+   "w": 161,
+   "h": 40,
+   "touch_edge": false
+  },
+  {
+   "file": "char_05.png",
+   "x": 579,
+   "y": 87,
+   "w": 68,
+   "h": 89,
+   "touch_edge": false
+  },
+  {
+   "file": "char_06.png",
+   "x": 732,
+   "y": 825,
+   "w": 146,
+   "h": 35,
+   "touch_edge": false
+  },
+  {
+   "file": "char_07.png",
+   "x": 965,
+   "y": 317,
+   "w": 304,
+   "h": 286,
+   "touch_edge": true
+  },
+  {
+   "file": "char_08.png",
+   "x": 1134,
+   "y": 618,
+   "w": 78,
+   "h": 77,
+   "touch_edge": false
+  },
+  {
+   "file": "char_09.png",
+   "x": 1153,
+   "y": 191,
+   "w": 104,
+   "h": 125,
+   "touch_edge": false
+  }
+ ]
+}
