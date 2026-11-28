@@ -1,6 +1,6 @@
 # [int-prestall] 大排檔前大更新：新流程機器人走查（程序組 IX 整合用）
 # 用法：edtest.sh <godot目錄> pflow res://tools/tests/prestall_flow_test.gd all 1500
-#   新存檔 → ① 新開場（opening）→ ② 荒村重建（game/rebuild/rb.gd）→ ③ KPI 第一區（game/kpi/kpi.gd）→ ④ 陰間酒館（game/tavern）
+#   新存檔 → ① 新開場（SCENES op2_*）→ ② 荒村重建（game/rebuild/rb.gd）→ ③ KPI 第一區（game/kpi/kpi_data.gd）→ ④ 陰間酒館（game/tavern）
 #   各模塊未合入時記「未接」（唔當失敗），已接就逐項驗；最後印 RESULT rows/bad/skip
 #   只用模塊公開函數（有就用），唔直接改 S 入面嘅進度，盡量貼近玩家路徑；截圖 /home/claude/meeting/int/shots/
 extends RefCounted
@@ -49,82 +49,76 @@ func all(t) -> void:
 func logic(t) -> void:
 	await all(t)
 
-# ① 新開場：黑白無常→龐總辦公室→孟婆遞湯→流放→到村
+# ① 新開場：黃泉路→大堂→龐總辦公室→孟婆遞湯→流放→到荒村（opening 分支：SCENES op2_*／opf2_*）
 func _opening(t) -> void:
 	_p("① 新開場")
-	var P := "res://game/opening/opening.gd"
-	if not _has(P):
-		_skip("新開場", "game/opening/opening.gd 未合入（opening 分支）")
+	var SC = J.G.get("SCENES")
+	if not (SC is Dictionary) or not SC.has("op2_soup"):
+		_skip("新開場", "SCENES 冇 op2_*（opening 分支未合入）")
 		return
-	var O = load(P)
-	var beats = _call(O, "beats")
-	_chk("開場有分鏡清單", beats is Array and beats.size() >= 4, beats.size() if beats is Array else beats)
-	if beats is Array:
-		var ids = beats.map(func(b): return str(b.get("id", "")) if b is Dictionary else str(b))
-		_chk("開場含孟婆遞湯", ids.any(func(i): return "soup" in i or "孟婆" in i), ids)
-		_chk("開場含流放到村", ids.any(func(i): return "exile" in i or "流放" in i), ids)
-	for fem in [false, true]:
-		var lines = _call(O, "lines", [fem])
-		if lines == null: _skip("開場對白（%s）" % ("女" if fem else "男"), "opening.lines() 未提供"); continue
-		_chk("開場對白非空（%s）" % ("女" if fem else "男"), lines is Array and lines.size() > 0, lines.size() if lines is Array else lines)
-		var seen := {}
-		var dup := []
-		for l in lines:
-			var s = str(l.get("t", l)) if l is Dictionary else str(l)
-			if seen.has(s): dup.append(s)
-			seen[s] = true
-		_chk("開場對白無重複句（%s）" % ("女" if fem else "男"), dup.is_empty(), dup)
-	var ml = _call(O, "lines", [false]); var fl = _call(O, "lines", [true])
-	if ml is Array and fl is Array:
-		_chk("男女主開場不是同一份對白", str(ml) != str(fl))
+	var M := ["op2_road", "op2_lobby", "op2_office", "op2_soup", "op2_exile", "op2_arrive"]
+	var F := ["opf2_road", "opf2_lobby", "opf2_office", "opf2_soup", "opf2_exile", "opf2_arrive"]
+	_chk("男主開場 6 段齊", M.all(func(i): return SC.has(i)), M.filter(func(i): return not SC.has(i)))
+	_chk("女主開場 6 段齊", F.all(func(i): return SC.has(i)), F.filter(func(i): return not SC.has(i)))
+	for pair in [[M, "男"], [F, "女"]]:
+		var seen := {}; var dup := []; var n := 0
+		for id in pair[0]:
+			if not SC.has(id): continue
+			for l in SC[id].get("lines", []):
+				var s = str(l[1]) if l is Array and l.size() > 1 else str(l)
+				n += 1
+				if seen.has(s): dup.append(s)
+				seen[s] = true
+		_chk("開場對白非空、無重複句（%s）" % pair[1], n > 0 and dup.is_empty(), "%d 句 重複%s" % [n, str(dup)])
+	var ms = str(SC.get("op2_soup", {}).get("lines", [])); var fs = str(SC.get("opf2_soup", {}).get("lines", []))
+	_chk("男女主孟婆場唔係同一份對白", ms != fs)
 
-# ② 荒村重建：開局廢墟、清理堆、三步重建、外觀變新
+# ② 荒村重建：開局廢墟、清理堆、搭棚、開張（vil2：game/rebuild/rb.gd）
 func _rebuild(t) -> void:
 	_p("② 荒村重建")
 	var P := "res://game/rebuild/rb.gd"
 	if not _has(P):
-		_skip("荒村重建", "game/rebuild/rb.gd 未合入（vil2 分支 P1 進行中）")
+		_skip("荒村重建", "game/rebuild/rb.gd 未合入")
 		return
 	var RB = load(P)
-	var ruins = _call(RB, "ruined_list")
-	_chk("新存檔有廢墟建築", ruins is Array and ruins.size() >= 3, ruins)
-	var piles = _call(RB, "piles")
-	_chk("村內有清理堆", piles is Array and piles.size() >= 10, piles.size() if piles is Array else piles)
-	if piles is Array and piles.size():
-		var pid = piles[0].get("id") if piles[0] is Dictionary else piles[0]
-		var before = J.num(_S().res.get("wood", 0)) + J.num(_S().res.get("rice", 0)) + J.num(_S().res.get("coins", 0))
-		for i in 6: _call(RB, "tap_pile", [pid])
-		var after = J.num(_S().res.get("wood", 0)) + J.num(_S().res.get("rice", 0)) + J.num(_S().res.get("coins", 0))
-		_chk("點清理堆有資源回饋", after > before, "%s→%s" % [before, after])
-	if ruins is Array and ruins.size():
-		var bid = ruins[0]
-		var st0 = _call(RB, "state", [bid])
-		_chk("第一棟初始＝廢墟", str(st0) in ["ruin", "ruined", "廢墟"], st0)
-		_call(RB, "restore", [bid])
-		var st1 = _call(RB, "state", [bid])
-		await _wait(t, 9.0)
-		var st2 = _call(RB, "state", [bid])
-		_chk("修復後外觀推進（廢墟→修復中→完成）", str(st2) != str(st0), "%s→%s→%s" % [st0, st1, st2])
+	RB.start_fresh(_S(), true)   # GB_TEST 下荒村預設關：用測試開關開新荒村
+	var bld = _S().bld
+	_chk("新存檔：鬼宅、伐木場、糯米田係廢墟", J.num(bld.get("house", 1)) == 0 and J.num(bld.get("wood", 1)) == 0 and J.num(bld.get("rice", 1)) == 0, {"house": bld.get("house"), "wood": bld.get("wood"), "rice": bld.get("rice")})
+	var piles = RB.piles()
+	_chk("村內有清理堆", piles.size() >= 10, piles.size())
+	_chk("任務排頭係清理", RB.cur_q() != null and str(RB.cur_q().get("t")) == "rb_clear", RB.cur_q())
+	var hp = piles.filter(func(e): return e.b == "house")
+	var before = J.num(_S().res.get("wood", 0)) + J.num(_S().res.get("rice", 0)) + J.num(_S().res.get("coins", 0))
+	var vil = J.G.get("Village")
+	for e in hp:
+		for k in RB.HITS:
+			RB.tap(vil, (e.p as Vector2).x, (e.p as Vector2).y - 4)
+	var after = J.num(_S().res.get("wood", 0)) + J.num(_S().res.get("rice", 0)) + J.num(_S().res.get("coins", 0))
+	_chk("清鬼宅雜物：有資源回饋、清晒", after > before and RB.cleared("house"), "%s→%s 剩%d" % [before, after, RB.left_of("house")])
+	_chk("生氣值 0–1", RB.vitality() >= 0.0 and RB.vitality() <= 1.0, RB.vitality())
 	await _shot(t, "rebuild")
 
-# ③ KPI 第一區：考核牌、指標、賄賂、逾期（中檔：Bryan 搶功）
+# ③ KPI 第一區：閘門、指標、賄賂三檔、逾期＝中（Bryan 搶功＋橫幅）（kpi 分支：game/kpi/kpi_data.gd）
 func _kpi(t) -> void:
 	_p("③ KPI 第一區")
-	var P := "res://game/kpi/kpi.gd"
+	var P := "res://game/kpi/kpi_data.gd"
 	if not _has(P):
-		_skip("KPI 閘門", "game/kpi/kpi.gd 未合入（kpi 分支）")
+		_skip("KPI 閘門", "game/kpi/kpi_data.gd 未合入")
 		return
 	var K = load(P)
-	var zid = _call(K, "first_zone")
-	_chk("有第一個考核區", zid != null and str(zid) != "", zid)
-	var goals = _call(K, "goals", [zid])
-	_chk("考核指標 2–3 項", goals is Array and goals.size() >= 2 and goals.size() <= 3, goals)
-	_chk("未達標時區域未開", _call(K, "is_open", [zid]) == false)
-	var pen = _call(K, "penalty_tier")
-	if pen != null: _chk("逾期懲罰＝中（老闆定案）", str(pen) in ["mid", "中", "medium"], pen)
-	else: _skip("逾期懲罰檔次", "kpi.penalty_tier() 未提供")
-	var br = _call(K, "bribe_options", [zid])
-	_chk("有三檔賄賂", br is Array and br.size() == 3, br.size() if br is Array else br)
+	K.enable(true)
+	var gl = K.gates()
+	_chk("有考核閘門", gl is Array and gl.size() >= 1, gl.size() if gl is Array else gl)
+	if not (gl is Array) or gl.is_empty(): return
+	var gid = str(gl[0].id)
+	var pr = K.progress(gid)
+	_chk("第一閘門指標 2–3 項", pr is Array and pr.size() >= 2 and pr.size() <= 3, pr)
+	for tier in ["snack", "watch", "car"]:
+		_chk("賄賂檔次 %s 有定義、有價" % tier, not K.bribe_def(tier).is_empty() and not K.bribe_cost(tier).is_empty(), K.bribe_cost(tier))
+	K.start(gid)
+	var od = K.overdue(gid)
+	_chk("逾期＝中檔：Bryan 搶功", str(od.get("kind", "")) == "bryan", od)
+	_chk("逾期後村口掛 Bryan 橫幅", K.banner_on(), K.banner_on())
 	await _shot(t, "kpi")
 
 # ④ 陰間酒館：名單、刷新、招募、夜宵罷工（tavern 分支已合入，做串接檢查）
