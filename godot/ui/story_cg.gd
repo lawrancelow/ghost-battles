@@ -14,6 +14,9 @@
 # 熱更新：冇 class_name；story.gd 用 preload
 extends Control
 
+const CGM = preload("res://ui/cg_motion.gd")   # [cgm] 分層動態插圖
+var mot = null   # [cgm] 當前動態插圖實例（冇分層素材＝null，用靜態圖）
+
 const TV_SHADER := """
 shader_type canvas_item;
 uniform float pw = 1.0;      // 開機進度 0→1（<0.35 光線橫向拉開；之後上下撐開）
@@ -124,9 +127,11 @@ func show_spec(spec) -> void:
 	if spec == null: return
 	var d: Dictionary = spec if spec is Dictionary else {"k": str(spec)}
 	var k = str(d.get("k", ""))
-	if k == "" or not Spr.ok(k):
+	if k == "" or (not Spr.ok(k) and not CGM.has(k)):
 		hide_cg(); return
-	var tex: Texture2D = Spr.get_tex(k)
+	var tex: Texture2D = CGM.bg(k) if (CGM.has(k) and not (d.get("anim") is bool and not d.anim)) else null   # [cgm] 有分層素材：用挖走角色嘅底圖
+	var layered = tex != null
+	if tex == null: tex = Spr.get_tex(k) if Spr.ok(k) else null
 	if tex == null: hide_cg(); return
 	var same = visible and cur_key == k and _off < 0.0
 	cur_key = k
@@ -141,6 +146,13 @@ func show_spec(spec) -> void:
 	vp.size = vs
 	pic.texture = tex; pic.position = Vector2.ZERO; pic.size = Vector2(vs); pic.pivot_offset = pic.size / 2
 	layer.position = Vector2.ZERO; layer.size = Vector2(vs)
+	var keep_t = mot.t if (same and mot != null) else 0.0   # [cgm] 同一張圖換行：動作接住播，唔重頭
+	if mot != null: mot.free_all(); mot = null
+	if layered:
+		mot = CGM.make(k, vp, Vector2(vs), tex)
+		if mot != null:
+			mot.t = keep_t
+			vp.move_child(mot.root, layer.get_index())   # 底圖之上、疊人／疊字之下
 	W = layer.size.x; H = layer.size.y
 	for c in layer.get_children(): c.queue_free()
 	for o in d.get("over", []):
@@ -216,6 +228,7 @@ func hide_cg() -> void:   # 關機：畫面縮返做一條線再熄
 
 func _restore() -> void:
 	visible = false; cur_key = ""; _off = -1.0
+	if mot != null: mot.free_all(); mot = null
 	if blur != null and is_instance_valid(blur): blur.visible = false
 	var par = get_parent()
 	if par != null and par.has_method("_sys_layout"): par.call("_sys_layout")
@@ -235,6 +248,11 @@ func _process(dt: float) -> void:
 	_tvmat.set_shader_parameter("pw", pw)
 	_tvmat.set_shader_parameter("tm", _t)
 	if _blmat != null: _blmat.set_shader_parameter("amt", amt)
+	if mot != null:   # [cgm] 分層動態：慢推鏡＋視差＋每層動作由 cg_motion 計
+		var cz = mot.tick(dt)
+		pic.pivot_offset = pic.size / 2; pic.scale = Vector2(cz[0], cz[0]); pic.position = cz[1]
+		layer.pivot_offset = layer.size / 2; layer.scale = pic.scale; layer.position = cz[1]
+		return
 	var z = 1.0 + minf(_t, 12.0) * 0.004   # 慢慢推近
 	pic.scale = Vector2(z, z)
 	layer.pivot_offset = layer.size / 2; layer.scale = pic.scale   # 疊圖／疊字跟插圖一齊推近，唔會錯位
