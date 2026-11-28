@@ -192,7 +192,8 @@ func all(t) -> void:
 	KG.gs("A")["bryan"] = 1.0; KG.gs("A").stolen["m_wood"] = 120.0
 	await _w(t, 4.0)   # 等之前嘅橫額／提示散咗先影
 	KU._to["A"] = "ma"   # 揀咗馬面：禮物卡亮起
-	KU._sheet(m, "A"); await _w(t, 0.4); await _shot(t, "sheet_A_v2")
+	KU._sheet(m, "A"); await _w(t, 0.4); await _shot(t, "sheet_A_v4")
+	_chk("美術頭像＋風險圖示已導入", Spr.ok("kpi_boss_chen") and Spr.get_tex("kpi_boss_chen") != null and Spr.get_tex("kpi_risk_photo") != null and Spr.get_tex("kpi_risk_caught") != null)
 	_chk("考核卡 v2：牛頭馬面頭像＋三件禮物卡＋指標進度條", _count(m.sheet_body, "ProgressBar") == 2 and _count(m.sheet_body, "Button") >= 6, [_count(m.sheet_body, "ProgressBar"), _count(m.sheet_body, "Button")])
 	KU._to.erase("A")
 	m.close_sheet()
@@ -203,7 +204,7 @@ func all(t) -> void:
 		cam.z = m.village.size.x / 390.0; cam.vel = Vector2.ZERO; cam.center_on(za.get_center())
 	m.village.queue_redraw(); await _w(t, 0.6)
 	_chk("A 區霧上面畫考核牌（取代建議戰力）", ZV.fog_log.any(func(e): return e[0] == "kpi" and e[1] == "A"))
-	await _shot(t, "fog_A_kpi")
+	await _shot(t, "fog_A_kpi_v3")
 	# ---- 串接（荒村／大排檔／主線）----
 	await _wire(t, m)
 	KU.play_fn = Callable(); KG.rng_fn = Callable()
