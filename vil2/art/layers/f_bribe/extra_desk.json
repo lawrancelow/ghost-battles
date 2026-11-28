@@ -1,0 +1,13 @@
+{
+ "add_layers": [
+  {
+   "name": "desk_front",
+   "file": "desk_front.png",
+   "x": 937,
+   "y": 618,
+   "w": 403,
+   "h": 387,
+   "z": 10.5
+  }
+ ]
+}

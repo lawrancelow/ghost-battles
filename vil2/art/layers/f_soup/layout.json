@@ -1,0 +1,49 @@
+{
+ "canvas": [
+  1340,
+  1005
+ ],
+ "full": "f_soup.jpg",
+ "layers": [
+  {
+   "name": "bg",
+   "file": "bg.png",
+   "x": 0,
+   "y": 0,
+   "w": 1340,
+   "h": 1005,
+   "scale": 1.0,
+   "z": 0
+  },
+  {
+   "name": "heroine",
+   "file": "heroine.png",
+   "x": 311,
+   "y": 345,
+   "w": 359,
+   "h": 529,
+   "scale": 0.7,
+   "src_size": [
+    514,
+    756
+   ],
+   "match": 0.659,
+   "z": 10
+  },
+  {
+   "name": "mengpo",
+   "file": "mengpo.png",
+   "x": 617,
+   "y": 382,
+   "w": 347,
+   "h": 502,
+   "scale": 0.719,
+   "src_size": [
+    484,
+    699
+   ],
+   "match": 0.576,
+   "z": 11
+  }
+ ]
+}

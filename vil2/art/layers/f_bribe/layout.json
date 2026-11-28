@@ -1,0 +1,64 @@
+{
+ "canvas": [
+  1340,
+  1005
+ ],
+ "full": "f_bribe.jpg",
+ "layers": [
+  {
+   "name": "bg",
+   "file": "bg.png",
+   "x": 0,
+   "y": 0,
+   "w": 1340,
+   "h": 1005,
+   "scale": 1.0,
+   "z": 0
+  },
+  {
+   "name": "niutou",
+   "file": "niutou.png",
+   "x": 942,
+   "y": 309,
+   "w": 392,
+   "h": 485,
+   "scale": 1.066,
+   "src_size": [
+    368,
+    455
+   ],
+   "match": 0.59,
+   "z": 10
+  },
+  {
+   "name": "boss",
+   "file": "boss.png",
+   "x": 3,
+   "y": 272,
+   "w": 373,
+   "h": 567,
+   "scale": 1.084,
+   "src_size": [
+    345,
+    524
+   ],
+   "match": 0.485,
+   "z": 11
+  },
+  {
+   "name": "heroine_mamian",
+   "file": "heroine_mamian.png",
+   "x": 276,
+   "y": 308,
+   "w": 709,
+   "h": 614,
+   "scale": 1.1308,
+   "src_size": [
+    627,
+    543
+   ],
+   "match": 0.509,
+   "z": 12
+  }
+ ]
+}
