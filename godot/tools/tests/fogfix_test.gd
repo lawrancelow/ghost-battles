@@ -227,8 +227,9 @@ func _hidden(c := 0) -> Array:
 	o.sort()
 	return o
 # 每區對應主線任務（第 1 關）
-const STEPS := [["level", "3", ["market"], "R03_gate_open"], ["stage", "1-1", ["w_pit"], "R05_pit_open"], ["stage", "1-2", ["w_graves"], "R07_graves_open"],
-	["bLevel", "wood", ["A"], "R08_A_open"], ["stage", "1-3", ["B"], "R09_B_open"], ["build", "home", ["C"], "R10_C_open"]]
+# [p56] 補丁 53 新手節奏：資源區 A 改為同 1-2（包子鋪後巷）一齊開（zones.json A.reveal＝stage 1-2），唔再跟「伐木場升到 2 級」
+const STEPS := [["level", "3", ["market"], "R03_gate_open"], ["stage", "1-1", ["w_pit"], "R05_pit_open"], ["stage", "1-2", ["w_graves", "A"], "R07_graves_open"],
+	["stage", "1-3", ["B"], "R09_B_open"], ["build", "home", ["C"], "R10_C_open"]]
 func _reveal_check(t, m) -> void:
 	ZD.gate_on = true
 	var S = J.G.S; var nv = m.village; var cam = nv.zone_cam(); var em = m.mv_embed
@@ -292,9 +293,10 @@ func _reveal_check(t, m) -> void:
 	var hints = {}
 	for z in ZD.zones(0): if str(z.type) != "village": hints[str(z.id)] = ZD.reveal_hint(str(z.id))
 	_p("hints=%s" % hints)
-	_chk("每區提示講明要完成邊個主線任務", hints.A.contains("伐木場升到 2 級") and hints.B.contains("擊敗餓鬼王") and hints.C.contains("建造民宅") and hints.w_pit.contains("1-1") and hints.w_graves.contains("1-2"), hints)
+	_chk("每區提示講明要完成邊個主線任務", hints.A.contains("1-2") and hints.B.contains("擊敗餓鬼王") and hints.C.contains("建造民宅") and hints.w_pit.contains("1-1") and hints.w_graves.contains("1-2"), hints)
 	# 逐步：每完成一個對應任務，淨係嗰區散霧
 	var opened = ["market", "w_pit", "w_graves", "A", "B", "C"]
+	var n_open := 0   # [p56] 一步可以散多過一區（1-2：w_graves＋A）
 	for i in STEPS.size():
 		var st = STEPS[i]
 		var qi = _qidx(st[0], st[1])
@@ -307,13 +309,14 @@ func _reveal_check(t, m) -> void:
 		if st[0] == "build": S.bld[st[1]] = 1.0
 		if st[0] == "bLevel": S.bld[st[1]] = 2.0
 		var r1 = ZD.reveal_poll(true)
-		var exp_hidden = opened.slice(i + 1); exp_hidden.sort()
+		n_open += (STEPS[i][2] as Array).size()
+		var exp_hidden = opened.slice(n_open); exp_hidden.sort()
 		var evr = []; var evs = []
 		for e in ZD.EV_LOG:
 			if e[0] == "reveal": evr.append(e[1])
 			if e[0] == "zone_seen": evs.append(e[1])
 		_chk("解 %s：介紹劇情 zone_seen 喺解霧嗰刻發一次（大排檔用開場劇情）" % st[2][0], evs == ([] if st[2][0] == "market" else st[2]), evs)
-		_chk("完成「%s」→ 只散 %s 嘅霧（未完成唔散）" % [ZD._quest(st[0], st[1]).get("text", st[1]), st[2]], r0.is_empty() and r1 == st[2] and _hidden() == exp_hidden and evr == st[2] and ZD.REV_NEWS.size() == 1, [r0, r1, _hidden(), evr])
+		_chk("完成「%s」→ 只散 %s 嘅霧（未完成唔散）" % [ZD._quest(st[0], st[1]).get("text", st[1]), st[2]], r0.is_empty() and r1 == st[2] and _hidden() == exp_hidden and evr == st[2] and ZD.REV_NEWS.size() == (st[2] as Array).size(), [r0, r1, _hidden(), evr])
 		var zr = ZD.zrect(st[2][0])
 		cam.z = nv.size.x / 390.0 if st[2][0] != "market" else cam.z
 		cam.center_on(zr.get_center() if st[2][0] != "market" else Vector2(670, 900)); await _w(t, 0.5)
