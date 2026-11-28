@@ -33,6 +33,18 @@ const BOOST_INC := {"dur": 300.0, "cd": 1200.0}   # 收益 ×2：5 分鐘，冷�
 const BOOST_SPD := {"dur": 120.0, "cd": 600.0}    # 加速 ×2：2 分鐘，冷卻 10 分鐘
 
 static var _D = null
+static var _live = {}   # [market M1] data/market_goods_live.json（已過審新商品／新攤）
+static func live_maps_add(ci: int) -> Dictionary:
+	D()
+	var a = _live.get("maps_add") if _live is Dictionary else null
+	return a[str(ci)] if a is Dictionary and a.get(str(ci)) is Dictionary else {}
+static func stall_art(sid: String, lv: float) -> String:   # 新攤三段外觀：Lv25 第 2 段、Lv100 第 3 段
+	var a = str(st_def(sid).get("art", ""))
+	var stg = _live.get("art_stages") if _live is Dictionary else null
+	if not (stg is Array) or not _live.get("STATIONS", {}).has(sid): return a
+	var n = 1
+	for x in stg: if lv >= float(x): n += 1
+	return a if n <= 1 else "%s_%d" % [a, n]
 
 static func D() -> Dictionary:
 	if _D == null: reload()
@@ -50,6 +62,8 @@ static func _merge_market_goods() -> void:   # [market M1] 已過審新商品（
 	var o = JSON.parse_string(f.get_as_text()) if f != null else null
 	if not (o is Dictionary) or not (o.get("GOODS") is Dictionary): return
 	for gid in o.GOODS: if not _D.GOODS.has(gid): _D.GOODS[gid] = o.GOODS[gid]
+	if o.get("STATIONS") is Dictionary: for sid in o.STATIONS: if not _D.STATIONS.has(sid): _D.STATIONS[sid] = o.STATIONS[sid]
+	_live = o
 	var wl = o.get("wants_like", {}); var gci = o.get("ci", {})
 	if not (wl is Dictionary): return
 	var by_map = {}   # 客人 id → 佢出現喺邊啲章
