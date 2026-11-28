@@ -63,3 +63,13 @@ M1 沒有改 `market.json` 的既有欄位、沒有動 `mk_ui.gd`、`mv_scene.gd
 4. `cust_value()`：`amt += MKO.sub_adj(self, c)`
 5. `_pay()`：`add_coins(amt)` 後 `MKO.on_pay(self, c, amt)`（錢先進收銀箱）
 6. `goods_list()`／`avail_goods()`：加入副貨
+
+## 六、2026-11-28 15:45 補充
+- **預設副貨配對**（goods_final）：`market_ops.json` 的 `pairs[ci]＝{主攤: 副貨攤}`。副貨攤不再獨立擺攤（`MK.stall_list()` 會剔掉），它的貨在主攤 **Lv25** 自動成為副貨（`MKO.sub_of()`；玩家選過就用玩家的，選 "" ＝不賣副貨）。
+  - 目前生效：第 1 章 枯井豆花＋豆花擔；第 3 章 嘆氣包＋霧谷茶寮、補丁紙衣＋單腳草鞋、紙紮兵器＋義莊板盾；第 4 章 夜捲蕉葉＋碟頂鹹魚；第 5 章 外賣＋收工醋；第 6 章 補丁紙衣＋單褲管紙褲。
+  - `pairs_pending`＝其中一邊是新台（或第 2 章現有攤太少），等新台數據併入再生效。
+  - **M2 注意**：`MD.stations(ci)`、`MK.sids_on()` 因此少了副貨攤；副貨的 gid 會出現在 `sim.goods_list()`／櫃台／客人 `wants`，`sim.sid_of(gid)` 對未擺攤的副貨回 ""，要查寄賣攤用 `MKO.host_of(gid)`、單價用 `MKO.sub_val(sim, gid)`。`FUN.item_mul(self, sid)` 那行對副貨不會乘到（sid 為空），如要讓副貨也吃加班 ×1.2／潮流，請在 `MKO.sub_adj` 之後另乘。
+- **45 個新攤數據初稿**：`godot/data/market_new_stalls.json`（STATIONS＋GOODS，價格＝該章基價 × 街階倍率）。**未併入 outpost.json**，等美術過審。
+- **佔位畫面** `godot/game/market/mk_ops_ui.gd`（M1 新檔）：街名牌列下方一條「櫃檯 n/3 −＋｜巡邏 n/4 −＋｜收銀箱」，再下面是事件紅牌（點＝主角處理）。`mv_scene.gd` 新增三行：`const MKOU`、`MKOU.draw(self, ctx)`（在 `MKU.draw_strip` 後）、`if MKOU.tap(self, p): return`（在 `MKU.tap` 前）。M2 的 mk_ui 如要接管，把這兩個呼叫拿掉即可。
+- 浮字：`MKO.toast(text, color)`／`MKO.pop_toasts()`。
+- `MK.ot_mul(sid)`：只含加班與老員工的倍數（不含店員人數、停工），估算攤位產值用。
