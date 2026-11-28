@@ -531,6 +531,19 @@ func partner_check() -> void:
 	san0 = SOUL.san()
 	gg = SOUL.gain(k, 5, "test")
 	_chk("職級、品階、星級全部到頂：多出嚟嘅魂魄先化散魂（× 品值）", SOUL.all_max(k) and SOUL.souls(k) == 0 and SOUL.san() == san0 + 5 * SOUL.pv(k) and int(gg.to_san) == 5 * SOUL.pv(k), [SOUL.souls(k), SOUL.san() - san0])
+	# 融合消耗倍數（參數，預設關）
+	var kk9 = ""; var kk6 = ""; var kk0 = ""
+	for x in SOUL.D().PIN:
+		var pp = str(SOUL.D().PIN[x])
+		if kk9 == "" and pp == "王": kk9 = str(x)
+		if kk6 == "" and pp == "煞": kk6 = str(x)
+		if kk0 == "" and pp == "凡": kk0 = str(x)
+	var c_off = [SU.fuse_cost(kk0).own, SU.fuse_cost(kk6).own, SU.fuse_cost(kk9).own]
+	_chk("融合消耗倍數預設關：同以前一樣（下一階：凡 %d、煞 %d、王 %d）" % c_off, c_off == [int(round(8.0 * pow(1.45, 1))), int(round(8.0 * pow(1.45, 7))), int(round(8.0 * pow(1.45, 10)))], c_off)
+	PO.D()["fuse_k_on"] = true
+	var c_on = [SU.fuse_cost(kk0).own, SU.fuse_cost(kk6).own, SU.fuse_cost(kk9).own]
+	_chk("融合消耗倍數打開：凡不變、煞 ×1.2、王 ×2.2（%d、%d、%d）" % c_on, c_on == [c_off[0], 130, 724], c_on)
+	PO.D()["fuse_k_on"] = false
 	for f in ["rk", "pj", "star", "sh"]:
 		if bak[f] == null: o[f].erase(k)
 		else: o[f][k] = bak[f]

@@ -481,6 +481,11 @@ static func stand_in(e: Dictionary, stg: Dictionary) -> Dictionary:
 	o["stand_in"] = true
 	return o
 
+# ======================= 品階融合消耗倍數（按出生品；老闆睇完數字先開：fuse_k_on） =======================
+static func fuse_k(k: String) -> float:
+	if off() or not J.t(D().get("fuse_k_on", false)): return 1.0
+	return float(D().get("fuse_k", {}).get(_SOUL().pin(k), 1.0))
+
 # ======================= KPI 累計指標（唔會倒退） =======================
 static func n_open() -> int:
 	var o = st()

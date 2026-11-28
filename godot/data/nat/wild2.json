@@ -2,6 +2,8 @@
   "v": 1,
   "note": "野外 v2：外派駐點＋名鬼據點可刷（設計：meeting-assets wild/design_wild_v2.md）。介面顯示和實際計算都讀這個檔；改數值只改這裡。",
   "maps": [0],
+  "fuse_k_on": false,
+  "fuse_k": {"凡": 1.0, "靈": 1.0, "煞": 1.2, "王": 2.2},
   "post": {
     "wins_h": 3.0,
     "win_coin_lv": 50.0,

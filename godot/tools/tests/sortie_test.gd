@@ -99,6 +99,7 @@ func _run(t) -> void:
 	var m = await _boot(t)
 	await _prep(t, m)
 	SO.force_open = true
+	load("res://game/post/po_data.gd").force_off = true   # [post] 呢個測試驗舊規則（第 2 關起仍然用：按圈重生、舊魂魄公式、每日打折）；野外 v2 由 post_test 驗
 	SO.test_now = 1000000.0
 	await old_save(t, m)
 	await camps_check(t, m)
