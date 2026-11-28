@@ -10,6 +10,7 @@ const M = preload("res://game/outpost/mat.gd")
 const CT = preload("res://game/counter/ct_data.gd")   # [counter] 據點敵人／打折讀 counter.json
 const NGB = preload("res://game/newghost/ng_boss.gd")   # [newghost] 魔王據點
 const LG = preload("res://game/legion/lg_data.gd")   # [legion] 軍團據點（掛咗圖先有）
+const PO = preload("res://game/post/po_data.gd")   # [post] 野外 v2：普通據點佔領做駐點、名鬼據點可刷
 
 # ======================= 常數表（測試員試玩後只改呢度） =======================
 const LV_BASE := [1.0, 5.0, 9.0, 13.0, 17.0, 21.0]   # fallback：每關第 1 圈等級（＝主線 x-1 難度）
@@ -134,10 +135,11 @@ static func ring_open(ring: int, c := -1) -> bool:
 static func cleared_left_s(e: Dictionary) -> float:   # 已清空仲有幾多秒重生（0＝冇清空）
 	var t = J.num(cst(e).get("clr", 0))
 	return maxf(0.0, (t - now_ms()) / 1000.0)
-static func state(e: Dictionary) -> String:   # "open"／"cleared"／"locked"／"out"（出擊中）
+static func state(e: Dictionary) -> String:   # "open"／"cleared"／"locked"／"out"（出擊中）／[post] "held"（已佔領做駐點，唔使打；停業整頓＝照 "open" 可以出擊收復）
 	if not ring_open(int(e.ring), int(e.c)): return "locked"
 	if NGB.locked(e): return "locked"   # [newghost] 魔王據點：第 4 圈其他據點全部首勝先開
 	if LG.locked(e): return "locked"   # [legion] 頭目營要雜兵營首勝、王營要頭目營首勝
+	if PO.camp_state(e) == "held": return "held"   # [post]
 	if cleared_left_s(e) > 0: return "cleared"
 	var RTS = _rts()
 	if RTS.op_for(sid_of(e)) != null: return "out"
@@ -224,12 +226,14 @@ static func dispatch(e: Dictionary) -> String:
 	if not afford(cs): return "poor"
 	var stg = stage_of(e)
 	stg = load("res://game/soul/soul_data.gd").guard_stage(e, stg)   # [soul] 駐守名鬼做頭目
+	stg = PO.stand_in(e, stg)   # [post] 名鬼請假中：代班雜兵頂上
 	var sid = sid_of(e)
 	var wild = {"stage": stg, "bg": stg.bg, "sid": sid, "sortie": true}
 	var snap = RTS._start_battle(func(): J.mc(B, "start", [-1.0, -1.0, wild]))
 	if snap.is_empty(): return "nobattle"
 	var gu = CT.apply_camp(snap, stg.ct) if stg.has("ct") else null   # [counter] 頂替雜兵縮細；gu＝駐守鬼
 	RTS._soften(snap, {"kind": "sortie", "c": int(e.c)})   # [counter] 據點同樣打折（修據點未打折 bug）
+	if PO.lost(e): CT.soften(snap, float(PO.P().get("retake_k", 0.8)), float(PO.P().get("retake_k", 0.8)))   # [post] 收復停業嘅駐點：強度八成
 	if int(e.ring) >= 4:   # 第 4 圈：最後一隻做頭目（[legion] 軍團王營同樣血 ×1.25；名牌由 LG.decorate 改做「軍團王」）
 		var last = gu
 		if last == null:
@@ -299,6 +303,7 @@ static func settle(op) -> bool:
 	if r.win:
 		var g = reward(e)
 		rep["first"] = g.first
+		if str(g.get("post", "")) != "": rep["post"] = g.post   # [post]
 		rep["head"] = L("首勝！", "首勝！") + title(e) if g.first else L("勝利　%s", "勝利　%s") % title(e)
 		rep["full"] = "，".join([str(rep.get("reward", ""))] + g.lines)
 		rep["reward"] = L("冥幣 +%d　好評 +%d　棺材板 +%d", "冥幣 +%d　好評 +%d　棺材板 +%d") % [int(g.coin + 20.0 * float(e.lv)), int(8.0 * float(e.lv)), REW_PLANK[ri(e.ring)]]
@@ -324,7 +329,7 @@ static func settle(op) -> bool:
 # 打贏：普通＋首勝＋極稀有；清空據點。回 {first, rare, lines}
 static func reward(e: Dictionary) -> Dictionary:
 	var c = cst(e); var r = ri(e.ring); var lv = float(e.lv)
-	var out = {"first": false, "rare": "", "lines": [], "coin": REW_COIN * lv, "first_txt": ""}
+	var out = {"first": false, "rare": "", "lines": [], "coin": REW_COIN * lv, "first_txt": "", "post": ""}
 	var s = S()
 	var bml = NGB.on_win(e, not J.t(c.get("first")))   # [newghost] 魔王據點：掉散魂（不可招降）
 	if bml != "": out.lines.append(bml)
@@ -352,8 +357,12 @@ static func reward(e: Dictionary) -> Dictionary:
 	if roll_rare(c, r):
 		out.rare = give_rare(r)
 		out.lines.append(L("極稀有！", "極稀有！") + out.rare)
-	# 清空 → 重生
-	c["clr"] = now_ms() + RESPAWN_MIN[r] * 60000.0
+	# 清空 → 重生（[post] 普通據點：打贏＝佔領／收復，唔再重生）
+	var pw = PO.on_win(e)
+	if pw == "": c["clr"] = now_ms() + RESPAWN_MIN[r] * 60000.0
+	else:
+		c["clr"] = 0.0; out["post"] = pw
+		out.lines.append(L("佔領！開張做駐點辦事處，派隻鬼去做主任就有收入", "佔領！開張成為駐點辦事處，派一隻鬼去當主任就有收入") if pw == "open" else L("收復！駐點辦事處重新開張，記得再派主任", "收復！駐點辦事處重新開張，記得再派主任"))
 	var o = st(); o["n"] = J.num(o.get("n", 0)) + 1
 	return out
 # 擲極稀有：回 true＝掉；保底計數喺 c.pity

@@ -748,6 +748,7 @@ func _mv_tick() -> void:
 	ZDm.poll(); ZVm.eat_news(self)   # [zone] 攻佔／野外王戰鬥結果
 	load("res://game/kpi/kpi_ui.gd").eat_news(self)   # [kpi] 考核倒數、Bryan 搶功
 	RAID.tick(self)   # [raid]
+	load("res://game/post/po_view.gd").tick(self)   # [post] 駐點產出結算、提示
 	MVB.tick()
 	# 舊存檔第一次入嚟：簡短介紹（等標題、手機、劇情、自檢都完先彈）
 	if MVB.intro_pending() and title_ov == null and phone == null and loading == null and selftest == null:
