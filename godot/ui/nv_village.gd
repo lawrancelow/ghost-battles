@@ -701,6 +701,8 @@ func extra_hit(p: Vector2) -> String:
 
 func _gui_input(ev: InputEvent) -> void:
 	if zone and zc != null:   # [zone] 分區地圖：鏡頭自己處理（拖動／兩指縮放／慣性），撳先分派
+		var em0 = _zone_em()   # [market] 市集街名牌列：左右滑切街（唔畀鏡頭食）
+		if em0 != null and em0.get("sc") != null and load("res://game/market/mk_ui.gd").swipe(em0.sc, ev, float(em0.sc.k)): accept_event(); return
 		var r = zc.handle(ev)
 		if r.has("tap"): zone_tap(r.tap)
 		accept_event(); return

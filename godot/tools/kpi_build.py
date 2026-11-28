@@ -100,6 +100,16 @@ gates = [
     {"id": "market", "boss": "pang", "boss_n": "龐總", "title": "地府集團總考核", "opens": "flag:market", "time": 1800, "nobribe": True,
      "need": [{"kind": "fn", "key": "self_sufficient", "n": 5, "label": "資源穩定產出"}, {"kind": "fn", "key": "named_working", "n": 5, "label": "名鬼排班"}],
      "fav": {}, "fail_add": {}, "caught": {}},
+    # [market] 過勞鬼市集 KPI ①②③（design_market_v1 第八、十二節）：考核官固定「市集管理處處長甄好賣」；劇本待文案組（kpi_zhen_*），未有就唔播
+    {"id": "mk1", "boss": "zhen", "boss_n": "甄好賣", "title": "市集管理處", "opens": "flag:mk_cloth", "time": 900,
+     "need": [{"kind": "fn", "key": "mk_food_lv", "n": 20, "label": "食街總等級"}, {"kind": "res", "key": "coins", "n": 500, "label": "冥幣存款"}],
+     "fav": {"niu": "brand", "ma": "food"}, "fail_add": {"coins": 100}, "caught": {"lose": True}, "cost_mul": 2.0},
+    {"id": "mk2", "boss": "zhen", "boss_n": "甄好賣", "title": "市集管理處", "opens": "flag:mk_weapon", "time": 1200,
+     "need": [{"kind": "fn", "key": "mk_combo", "n": 10, "label": "連單"}, {"kind": "fn", "key": "mk_lv25_fc", "n": 2, "label": "食衣兩街各一攤 Lv25"}],
+     "fav": {"niu": "food", "ma": "food"}, "fail_add": {"mk_combo": 3}, "caught": {"lose": True}, "cost_mul": 2.0},
+    {"id": "mk3", "boss": "zhen", "boss_n": "甄好賣", "title": "市集管理處", "opens": "flag:mk_acc", "time": 1500,
+     "need": [{"kind": "fn", "key": "mk_renown_lv", "n": 2, "label": "名聲等級"}, {"kind": "fn", "key": "mk_militia", "n": 20, "label": "遊魂兵"}, {"kind": "fn", "key": "mk_patrol_done", "n": 5, "label": "巡邏處理事件"}],
+     "fav": {"niu": "brand", "ma": "brand"}, "fail_add": {"mk_militia": 5}, "caught": {"lose": True}, "cost_mul": 2.0},
 ]
 
 # 賄賂三檔（設計 4.2）：效果、成本、風險
@@ -112,6 +122,7 @@ bribes = {
 
 need_scenes = []
 for g in gates:
+    if g["boss"] == "zhen": continue   # [market] 甄好賣劇本待文案組
     b = g["boss"]
     for suf in ["open", "pass"] + ([] if g.get("nobribe") else ["bribe_ok", "bribe_fail", "caught"]):
         need_scenes.append("kpi_%s_%s" % (b, suf))

@@ -263,6 +263,7 @@ func goal_done(i: int) -> bool:
 	var p = goal_prog(i); return p[0] >= p[1]
 func goal_claimed(i: int) -> bool:
 	for x in st().goals_done: if int(J.num(x)) == i: return true
+	if MK.goal_skip(ci(), MD.goals(ci())[i] if i >= 0 and i < MD.goals(ci()).size() else {}): return true   # [market] 改成系統／原料／移去別章嘅台：目標當跳過（唔畀獎）
 	return false
 func cur_goal() -> int:
 	var G = MD.goals(ci())

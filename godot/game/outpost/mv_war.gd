@@ -161,7 +161,7 @@ static func occ_sid() -> String:
 	var w = ws(); if w == null: return ""
 	var v = w.occ.get(str(cur_ci()))
 	return str(v) if v != null else ""
-func blocked(_sim, sid: String) -> bool: return sid != "" and (occ_sid() == sid or RAID.market_down())   # [raid] 大排檔被襲擾：全部檔停工
+func blocked(_sim, sid: String) -> bool: return sid != "" and (occ_sid() == sid or (RAID.market_down() and not load("res://game/market/mk_data.gd").active()))   # [market] 市集：只停被霸嗰檔，唔再全市集停工   # [raid] 大排檔被襲擾：全部檔停工
 static func alarm_on() -> bool:
 	var w = ws(); return w != null and w.get("alarm") is Dictionary
 static func need_exp() -> bool: return alarm_on() or occ_sid() != ""
@@ -496,6 +496,7 @@ func _step_alarm(sim, w: Dictionary, dt: float) -> void:
 			if J.num(w.alarm.t) <= 0.0:
 				var sid = _occupy_pick(sim)
 				if sid != "":
+					load("res://game/market/mk_data.gd").on_occupy(sim.ci(), sid)   # [market] 呢條街入冷卻（每條街每 20 分鐘最多一次）
 					w.occ[str(sim.ci())] = sid; sim.mk[sid] = -1.0
 					_spawn_occ(sim, sid, false)   # [p55] 孤魂真係行去個檔度霸住
 					sim.ev.append({"k": "war_occ", "sid": sid})
@@ -541,6 +542,10 @@ func _step_occ(sim, w: Dictionary, dt: float) -> void:
 			f.flip = sim.st_pos(sid).x < f.pos.x
 	if mine.is_empty():   # 讀檔／返嚟：個檔仲畀人霸住但冇孤魂 → 直接企返喺檔度
 		_spawn_occ(sim, sid, true); return
+	if alive > 0 and load("res://game/market/mk_data.gd").patrol_clear(dt, w.vol.size()):   # [market] 遊魂兵巡街：夠人就自動打走霸檔孤魂
+		for f in mine: if f.st != "die" and f.st != "flee": f.st = "die"; f.t = 0.0
+		alive = 0
+		sim.ev.append({"k": "mk_patrol", "sid": sid, "pos": sim.st_pos(sid) + Vector2(0, -110)})
 	if alive == 0:   # 打走晒：復工、告急解除
 		w.occ.erase(str(sim.ci())); w.alarm = null
 		var a = inf(); var b = clampf(maxf(a + 15.0, ALARM_OFF + 5.0), 0.0, 100.0)
@@ -549,9 +554,10 @@ func _step_occ(sim, w: Dictionary, dt: float) -> void:
 		sim.ev.append({"k": "war_free", "sid": sid, "d": b - a, "pos": sim.st_pos(sid) + Vector2(0, -90)})
 
 func _occupy_pick(sim) -> String:   # 最好賺嗰個已解鎖檔
-	var best = ""; var bv = -1.0; var ci = sim.ci()
+	var best = ""; var bv = -1.0; var ci = sim.ci(); var MK = load("res://game/market/mk_data.gd")
 	for sid in MD.stations(ci):
 		if not sim.unlocked(sid): continue
+		if not MK.can_occupy(ci, sid): continue   # [market] 未開嘅街／冷卻中嘅街唔霸
 		var v = MD.val(sid, sim.lv(sid), ci) * MD.out(sid, sim.lv(sid)) / MD.tm(sid, sim.lv(sid)) * (1.0 + sim.nworkers(sid))
 		if v > bv: bv = v; best = sid
 	return best
@@ -707,11 +713,15 @@ func eat(sc) -> void:
 				sc._banner_set(T("war_alarm_a", "告急！", "告急！"), T("war_alarm_b", "影響力跌穿 %d，孤魂想霸檔", "影響力跌破 %d，孤魂想霸攤") % int(ALARM), 2.8)
 				sc._snd("scare")
 			"war_occ":
-				sc._banner_set(T("war_occ_a", "有檔畀孤魂霸咗！", "有攤位被孤魂霸佔！"), MD.T(MD.st_def(str(e.sid)).get("n")) + T("war_occ_b", "：撳孤魂打走佢哋", "：點孤魂把它們打跑"), 2.8)
+				var MK = load("res://game/market/mk_data.gd")
+				var stn = (MK.name(MK.street_of(sim.ci(), str(e.sid))) + "・") if MK.active() else ""   # [market] 街告急：講明邊條街
+				sc._banner_set(T("war_occ_a", "有檔畀孤魂霸咗！", "有攤位被孤魂霸佔！"), stn + MD.T(MD.st_def(str(e.sid)).get("n")) + T("war_occ_b", "：撳孤魂打走佢哋", "：點孤魂把它們打跑"), 2.8)
 			"war_free":   # [p55]
 				sc._banner_set(T("war_free_a", "孤魂打走晒！", "孤魂全被打跑！"), MD.T(MD.st_def(str(e.sid)).get("n")) + T("war_free_b", "　復工", "　復工"), 2.6)
 				sc._burst(e.pos, Color("#9fe39a"), 16)
 				sc._snd("levelUp")
+			"mk_patrol":   # [market] 遊魂兵巡街自動打走霸檔孤魂
+				sc._float(e.pos, T("mk_patrol", "遊魂兵巡街，趕走晒！", "遊魂兵巡街，全部趕走！"), Color("#9fe39a"), 16, 1.8)
 			"war_calm":
 				sc._float(sc.s2w(Vector2(195, sc.top_pad + HUD_H + 90)), T("war_calm", "告急解除", "告急解除"), Color("#9fe39a"), 18, 1.8)
 

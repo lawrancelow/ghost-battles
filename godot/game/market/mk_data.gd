@@ -48,6 +48,7 @@ static func st() -> Dictionary:
 static func active() -> bool:
 	if not ON or S() == null: return false
 	if OS.has_environment("GB_TEST") and not J.t(st().get("test")): return false
+	reg_metrics()
 	return true
 
 # ---------------- 街 ----------------
@@ -67,13 +68,54 @@ static func street_of(ci: int, sid: String) -> String:   # 本章呢個台喺邊
 	var m = map_tbl(ci)
 	for k in m: if m[k] is Array and (m[k] as Array).has(sid): return str(k)
 	return str(D().cat.get(sid, "food"))
+static func removed() -> Dictionary:   # 改成系統／降原料：唔再當攤（sid → 去向）
+	var o = {}
+	for k in ["system", "raw"]:
+		var d = D().get(k)
+		if d is Dictionary: for sid in d: o[str(sid)] = d[sid]
+	return o
+static func stall_list(ci: int) -> Array:   # 本章所有攤（maps 表＋招牌＋原版未分街嘅），剔走改系統／原料
+	var o = []; var rm = removed()
+	var m = map_tbl(ci)
+	for k in ids():
+		var a = m.get(k)
+		if a is Array: for s in a: if not o.has(str(s)) and MD.st_def(str(s)).size(): o.append(str(s))
+	var sg = D().get("signature")
+	if sg is Dictionary: for k in sg: if not o.has(str(sg[k])) and MD.st_def(str(sg[k])).size(): o.append(str(sg[k]))
+	if m.is_empty():   # 冇按章表（例如第 7 章起地圖未做）：照原版
+		for s in MD.stations_raw(ci): if not o.has(s): o.append(s)
+	var out = []
+	for s in o: if not rm.has(s): out.append(s)
+	return out
+static func base_slots(ci: int) -> Array:   # 本章地圖上有位置嘅台位（次序＝原版）
+	var st = MD.layout(ci).get("st", {}); var o = []
+	for s in MD.stations_raw(ci): if st is Dictionary and st.has(s): o.append(s)
+	if st is Dictionary: for s in st: if not o.has(str(s)): o.append(str(s))
+	return o
+static func goal_skip(ci: int, g) -> bool:   # 目標指住唔再喺本章擺嘅台：當跳過
+	if not active() or not (g is Dictionary): return false
+	var k = str(g.get("k", ""))
+	if not k.begins_with("st_") or not (str(g.get("t", "")) in ["unlock", "level", "hire", "sell"]): return false
+	return not stall_list(ci).has(k)
 static func sids_on(ci: int, street: String) -> Array:   # 本章呢條街賣嘅台（次序跟 maps 表，其次本章台次序）
 	var o = []; var all = MD.stations(ci)
 	var m = map_tbl(ci).get(street)
 	if m is Array: for s in m: if all.has(str(s)) and not o.has(str(s)): o.append(str(s))
 	for s in all: if not o.has(s) and street_of(ci, s) == street: o.append(s)
 	return o
+static func cur_ci() -> int:
+	var s = S()
+	if s == null or not (s.get("mv") is Dictionary): return 0
+	return int(J.num(s.mv.get("ci", 0)))
+static func lux_ready(ci: int) -> bool: return ci >= int(D().get("lux_from_ci", 2))
+const KPI_FLAG := {"cloth": "mk_cloth", "weapon": "mk_weapon", "acc": "mk_acc"}   # 市集 KPI ①②③（甄好賣）開街
+const KPI_GATE := {"cloth": "mk1", "weapon": "mk2", "acc": "mk3"}
+static func KG(): return load("res://game/kpi/kpi_data.gd")
+static func kpi_gate(street: String) -> String: return str(KPI_GATE.get(street, ""))
 static func is_open(street: String) -> bool:
+	if street == "lux" and not lux_ready(cur_ci()): return false   # 第 1、2 章奢侈品店「裝修中」
+	if KPI_FLAG.has(street) and KG().on() and not KG().gate(kpi_gate(street)).is_empty():   # KPI 開咗：照考核
+		return KG().is_open(str(KPI_FLAG[street]))
 	var f = J.G.get("mk_open_fn")
 	if f is Callable and (f as Callable).is_valid():
 		var r = f.call(street)
@@ -82,7 +124,9 @@ static func is_open(street: String) -> bool:
 	if o is Dictionary and o.has(street): return J.t(o[street])
 	return J.t(street_def(street).get("open", 0))
 static func set_open(street: String, v := true) -> void: st().open[street] = 1 if v else 0
-static func lock_text(street: String) -> String: return T(street_def(street).get("lock", ["未開放", "未開放"]))
+static func lock_text(street: String, ci := -1) -> String:
+	if street == "lux" and ci >= 0 and not lux_ready(ci) and street_def(street).has("reno"): return T(street_def(street).reno)
+	return T(street_def(street).get("lock", ["未開放", "未開放"]))
 static func cur() -> String:
 	var c = str(st().get("cur", "food"))
 	return c if ids().has(c) else (ids()[0] if ids().size() else "food")
@@ -97,13 +141,81 @@ static func step_cur(dir: int) -> String:   # 左右滑：順序切街（鎖住�
 static func shown(ci: int, sid: String) -> bool:   # 呢個台而家畫唔畫
 	if not active(): return true
 	return street_of(ci, sid) == cur() and is_open(cur())
-static func slot_map(ci: int) -> Dictionary:   # sid → 佔用邊個台嘅位（當前街）；未啟用：自己位
+static func slot_map(ci: int) -> Dictionary:   # sid → 佔用邊個台位（當前街排頭幾個位）；未啟用：自己位
 	var o = {}; var all = MD.stations(ci)
 	for s in all: o[s] = s
 	if not active(): return o
+	var slots = base_slots(ci)
+	if slots.is_empty(): return o
+	for s in all: if not slots.has(s): o[s] = slots[0]   # 冇自己位嘅台（移章／新台）：唔顯示時暫借第一個位
 	var on = sids_on(ci, cur())
-	for i in on.size(): if i < all.size(): o[on[i]] = all[i]
+	for i in on.size(): o[on[i]] = slots[i % slots.size()]
 	return o
+
+# ---------------- 市集 KPI 指標（M2 有正式數據就 register_metric 覆蓋）----------------
+static var _metrics_done := false
+static func reg_metrics() -> void:
+	if _metrics_done: return
+	_metrics_done = true
+	var K = KG()
+	K.register_metric("mk_food_lv", func(): return street_lv(cur_ci(), "food"))
+	K.register_metric("mk_lv25_fc", func(): return float(int(street_max_lv(cur_ci(), "food") >= 25.0) + int(street_max_lv(cur_ci(), "cloth") >= 25.0)))
+	K.register_metric("mk_combo", func(): return J.num(st().get("combo_n", 0)) if J.t(st().get("combo_live")) else floor(sold_total() / 6.0))   # M2 未接連單：暫用賣出件數 ÷6
+	K.register_metric("mk_renown_lv", func(): return J.num(st().get("renown_lv", 0)) if J.t(st().get("renown_live")) else (2.0 if sold_total() >= 300.0 else (1.0 if sold_total() >= 80.0 else 0.0)))
+	K.register_metric("mk_militia", func(): return militia_n())
+	K.register_metric("mk_patrol_done", func(): return J.num(st().get("patrol_done", 0)) if J.t(st().get("patrol_live")) else 5.0)   # 巡邏系統未上：當已完成
+static func _mv():
+	var s = S()
+	return s.get("mv") if s != null and s.get("mv") is Dictionary else null
+static func _lv(sid: String) -> float:
+	var m = _mv(); if m == null or not (m.get("st") is Dictionary): return 0.0
+	var e = m.st.get(sid)
+	return J.num(e.get("lv", 0)) if e is Dictionary else 0.0
+static func street_lv(ci: int, street: String) -> float:
+	var n = 0.0
+	for sid in sids_on(ci, street): n += _lv(sid)
+	return n
+static func street_max_lv(ci: int, street: String) -> float:
+	var n = 0.0
+	for sid in sids_on(ci, street): n = maxf(n, _lv(sid))
+	return n
+static func sold_total() -> float:
+	var m = _mv(); if m == null or not (m.get("sold") is Dictionary): return 0.0
+	var n = 0.0
+	for k in m.sold: n += J.num(m.sold[k])
+	return n
+static func militia_n() -> float:
+	var m = _mv(); if m == null or not (m.get("war") is Dictionary): return 0.0
+	var v = m.war.get("vol")
+	return float((v as Array).size()) if v is Array else 0.0
+
+# ---------------- 防守簡化 ----------------
+static func DEF() -> Dictionary:
+	var d = D().get("defense")
+	return d if d is Dictionary else {}
+static func can_occupy(ci: int, sid: String) -> bool:
+	if not active(): return true
+	var stt = street_of(ci, sid)
+	if not is_open(stt): return false
+	var cd = st().get("occ_cd", {})
+	return not (cd is Dictionary and float(cd.get(stt, 0.0)) > 0.0)
+static func on_occupy(ci: int, sid: String) -> void:
+	if not active(): return
+	var m = st()
+	if not (m.get("occ_cd") is Dictionary): m["occ_cd"] = {}
+	m.occ_cd[street_of(ci, sid)] = float(DEF().get("street_cd_s", 1200.0))
+	m["occ_t"] = 0.0
+static func patrol_clear(dt: float, militia: int) -> bool:   # 霸檔期間：遊魂兵夠數，auto_clear_s 秒後自動打走
+	if not active(): return false
+	var m = st(); m["occ_t"] = float(m.get("occ_t", 0.0)) + dt
+	if militia < int(DEF().get("auto_clear_militia", 12)): return false
+	if float(m.occ_t) < float(DEF().get("auto_clear_s", 10.0)): return false
+	m.occ_t = 0.0
+	return true
+static func _tick_cd(dt: float) -> void:
+	var cd = st().get("occ_cd")
+	if not (cd is Dictionary): return
+	for k in cd.keys(): cd[k] = maxf(0.0, float(cd[k]) - dt)
 
 # ---------------- 過勞營業 ----------------
 static func OT() -> Dictionary: return D().overtime
@@ -138,6 +250,7 @@ static func feed(sid: String) -> String:   # "ok"／"no_bao"／"not_down"
 	return "ok"
 static func tick(sids: Array, dt: float, working: Callable = Callable()) -> void:   # sim.step 每格叫（working(sid)＝有冇人做緊）
 	if not active() or dt <= 0.0: return
+	_tick_cd(dt)
 	var fmax = otf("fat_max", 100.0); var ranks: Array = OT().get("rank_s", [180, 600, 1500])
 	for sid in sids:
 		var o = ot(sid)

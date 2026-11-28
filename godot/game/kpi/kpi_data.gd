@@ -350,6 +350,9 @@ static func bribe_cost(tier: String) -> Dictionary:
 	var c = (bribe_def(tier).get("cost", {}) as Dictionary).duplicate()
 	var d = J.num(st().get("disc", 0.0)) if st() != null else 0.0
 	if d > 0.0: for k in c: c[k] = ceilf(J.num(c[k]) * (1.0 - d))
+	var ag = active_gate()   # [market] 市集考核價錢 ×cost_mul（市集比較有錢）
+	var cm = J.num(gate(ag).get("cost_mul", 1.0)) if ag != "" else 1.0
+	if cm > 0.0 and cm != 1.0: for k in c: c[k] = ceilf(J.num(c[k]) * cm)
 	return c
 static func can_pay(cost: Dictionary) -> bool:
 	for k in cost: if amt_of(str(k)) < J.num(cost[k]): return false

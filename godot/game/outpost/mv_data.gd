@@ -54,6 +54,10 @@ static func cust_def(cid: String) -> Dictionary:
 	for c in D().CUSTOMERS: if str(c.get("id")) == cid: return c
 	return {}
 static func stations(ci: int) -> Array:
+	var mk = load("res://game/market/mk_data.gd")   # [market] 過勞鬼市集：按章攤位清單（data/market.json maps＋招牌；剔走改系統／原料嘅台）
+	if mk.active(): return mk.stall_list(ci)
+	return stations_raw(ci)
+static func stations_raw(ci: int) -> Array:   # 原版（outpost.json MAPS）＋隨村台
 	var o = []
 	for s in map_def(ci).get("stations", []): if D().STATIONS.has(str(s)): o.append(str(s))
 	for s in CM.carry():   # [chain] 隨村台：每張圖都有（資料冇列入呢張圖都補返）
@@ -156,7 +160,7 @@ static func layout(ci: int) -> Dictionary:
 # 新台排喺新帶入面（左右交替），搬貨路線接去最頂嗰個路點。圍欄、最頂路點唔郁。
 static func _fit_missing(L0: Dictionary, ci: int) -> Dictionary:
 	var miss = []
-	for sid in stations(ci): if not (L0.get("st", {}) as Dictionary).has(sid): miss.append(sid)
+	for sid in stations_raw(ci): if not (L0.get("st", {}) as Dictionary).has(sid): miss.append(sid)
 	if miss.is_empty(): return L0
 	var L = L0.duplicate(true)
 	var fy = float(L.get("fence_y", 230)); var cut = fy + 30.0; var dy = 270.0 * miss.size()
@@ -181,7 +185,7 @@ static func _fit_missing(L0: Dictionary, ci: int) -> Dictionary:
 	L.decor = dc
 	return L
 static func _auto_layout(ci: int) -> Dictionary:   # 資料冇 layout：照 tools/outpost_layout.py 嘅排法
-	var ids = stations(ci); var n = ids.size()
+	var ids = stations_raw(ci); var n = ids.size()
 	var h = 430.0 + 270.0 * maxf(0, n - 1) + 570.0
 	var road = [[292, h + 30], [262, h - 140], [240, h - 268]]
 	var st = {}
