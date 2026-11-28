@@ -1,5 +1,5 @@
 {
- "_doc": "過勞鬼市集新商品（已過審美術）：只有貨、冇攤，做現有攤嘅副貨（Lv25 解鎖）。mv_data.reload 併入 GOODS；wants_like＝想買主貨嘅客人都會買呢樣。價錢＝寄賣攤主貨價 × 街階倍率比（舊價格體系；按章重算延後）。　STATIONS＝已過審新攤（第 2 章 5 台，三段外觀：art、art_2（Lv25）、art_3（Lv100））；maps_add＝呢啲攤擺邊章邊條街。",
+ "_doc": "過勞鬼市集新商品（已過審美術）：只有貨、冇攤，做現有攤嘅副貨（Lv25 解鎖）。mv_data.reload 併入 GOODS；wants_like＝想買主貨嘅客人都會買呢樣。價錢＝寄賣攤主貨價 × 街階倍率比（舊價格體系；按章重算延後）。　STATIONS＝已過審新攤（第 2 章 5 台，三段外觀：art、art_2（Lv25）、art_3（Lv100））；maps_add＝呢啲攤擺邊章邊條街。　2026-11-28 18:10 老闆選用第 3 章新攤 9 台與商品：上架 8 台（Tehlah 紙紮電動轎商品圖示未畫，未上架）；價錢照舊價格體系（同街上一階 ×5），解鎖＝價 ×30、升級起價＝價 ×9。",
  "GOODS": {
   "m_c1_huaihua": {
    "n": [
@@ -80,6 +80,70 @@
    ],
    "icon": "mvi_c2_bagua",
    "price": 500
+  },
+  "m_c3_zong": {
+   "n": [
+    "湘西臘肉粽",
+    "湘西臘肉粽"
+   ],
+   "icon": "mvi_c3_zong",
+   "price": 3600
+  },
+  "m_c3_jiuniang": {
+   "n": [
+    "糯米酒釀",
+    "糯米酒釀"
+   ],
+   "icon": "mvi_c3_jiuniang",
+   "price": 18000
+  },
+  "m_c3_bangtui": {
+   "n": [
+    "防跳綁腿",
+    "防跳綁腿"
+   ],
+   "icon": "mvi_c3_bangtui",
+   "price": 720
+  },
+  "m_c3_modou": {
+   "n": [
+    "墨斗線",
+    "墨斗線"
+   ],
+   "icon": "mvi_c3_modou",
+   "price": 18000
+  },
+  "m_c3_taomu": {
+   "n": [
+    "桃木劍",
+    "桃木劍"
+   ],
+   "icon": "mvi_c3_taomu",
+   "price": 90000
+  },
+  "m_c3_tongling": {
+   "n": [
+    "銅鈴耳環",
+    "銅鈴耳環"
+   ],
+   "icon": "mvi_c3_tongling",
+   "price": 600
+  },
+  "m_c3_huangfu": {
+   "n": [
+    "黃符髮夾",
+    "黃符髮夾"
+   ],
+   "icon": "mvi_c3_huangfu",
+   "price": 3000
+  },
+  "m_c3_luichar": {
+   "n": [
+    "Lui Char 屍隊同款帆布包",
+    "Lui Char 屍隊同款帆布包"
+   ],
+   "icon": "mvi_c3_luichar",
+   "price": 90000
   }
  },
  "wants_like": {
@@ -92,7 +156,15 @@
   "m_c2_kudai": "m_tuoxie",
   "m_c2_xianjing": "m_zhulong",
   "m_c2_lingdang": "m_tuoxie",
-  "m_c2_bagua": "m_zhulong"
+  "m_c2_bagua": "m_zhulong",
+  "m_c3_zong": "m_wucha",
+  "m_c3_jiuniang": "m_wucha",
+  "m_c3_bangtui": "m_caoxie",
+  "m_c3_modou": "m_jiuban",
+  "m_c3_taomu": "m_jiuban",
+  "m_c3_tongling": "m_xunren",
+  "m_c3_huangfu": "m_xunren",
+  "m_c3_luichar": "m_huajiao"
  },
  "ci": {
   "m_c1_huaihua": 0,
@@ -104,7 +176,15 @@
   "m_c2_kudai": 1,
   "m_c2_xianjing": 1,
   "m_c2_lingdang": 1,
-  "m_c2_bagua": 1
+  "m_c2_bagua": 1,
+  "m_c3_zong": 2,
+  "m_c3_jiuniang": 2,
+  "m_c3_bangtui": 2,
+  "m_c3_modou": 2,
+  "m_c3_taomu": 2,
+  "m_c3_tongling": 2,
+  "m_c3_huangfu": 2,
+  "m_c3_luichar": 2
  },
  "STATIONS": {
   "st_c2_banlan": {
@@ -321,6 +401,350 @@
     ],
     "c": "#eef2e4"
    }
+  },
+  "st_c3_zong": {
+   "n": [
+    "湘西臘肉粽檔",
+    "湘西臘肉粽攤"
+   ],
+   "art": "mvs_c3_zong",
+   "good": "m_c3_zong",
+   "how": [
+    "禾稈草燻足三日三夜，屍隊行到邊，香到邊。",
+    "禾稈草燻足三天三夜，屍隊走到哪，香到哪。"
+   ],
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 108000,
+   "up_cost0": 32400,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "anim": {
+    "fx": [
+     "drip",
+     "bob"
+    ],
+    "pts": [
+     [
+      0.35,
+      0.35
+     ],
+     [
+      0.5,
+      1.0
+     ]
+    ],
+    "c": "#e0a040"
+   }
+  },
+  "st_c3_jiuniang": {
+   "n": [
+    "糯米酒釀檔",
+    "糯米酒釀攤"
+   ],
+   "art": "mvs_c3_jiuniang",
+   "good": "m_c3_jiuniang",
+   "how": [
+    "糯米落井水發酵，飲完隻腳冇咁硬，跳都跳得高啲。",
+    "糯米加井水發酵，喝完腿沒那麼僵，跳也跳得高一點。"
+   ],
+   "base_time": 6,
+   "base_out": 1,
+   "unlock_cost": 540000,
+   "up_cost0": 162000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "anim": {
+    "fx": [
+     "drip",
+     "bob"
+    ],
+    "pts": [
+     [
+      0.35,
+      0.35
+     ],
+     [
+      0.5,
+      1.0
+     ]
+    ],
+    "c": "#e0a040"
+   }
+  },
+  "st_c3_bangtui": {
+   "n": [
+    "防跳綁腿檔",
+    "防跳綁腿攤"
+   ],
+   "art": "mvs_c3_bangtui",
+   "good": "m_c3_bangtui",
+   "how": [
+    "紮實隻腳，叫你行就行，唔好成日跳嚟跳去。",
+    "把腿紮緊，叫你走就走，別老是跳來跳去。"
+   ],
+   "base_time": 4,
+   "base_out": 1,
+   "unlock_cost": 21600,
+   "up_cost0": 6480,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "anim": {
+    "fx": [
+     "drip",
+     "bob"
+    ],
+    "pts": [
+     [
+      0.35,
+      0.35
+     ],
+     [
+      0.5,
+      1.0
+     ]
+    ],
+    "c": "#e0a040"
+   }
+  },
+  "st_c3_modou": {
+   "n": [
+    "墨斗線檔",
+    "墨斗線攤"
+   ],
+   "art": "mvs_c3_modou",
+   "good": "m_c3_modou",
+   "how": [
+    "彈一下，一條黑線；彈兩下，成隊企定定。",
+    "彈一下，一條黑線；彈兩下，整隊站得筆直。"
+   ],
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 540000,
+   "up_cost0": 162000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "anim": {
+    "fx": [
+     "drip",
+     "bob"
+    ],
+    "pts": [
+     [
+      0.35,
+      0.35
+     ],
+     [
+      0.5,
+      1.0
+     ]
+    ],
+    "c": "#e0a040"
+   }
+  },
+  "st_c3_taomu": {
+   "n": [
+    "桃木劍檔",
+    "桃木劍攤"
+   ],
+   "art": "mvs_c3_taomu",
+   "good": "m_c3_taomu",
+   "how": [
+    "古道邊嗰棵桃樹斬落嚟，握手位已經磨到起晒光。",
+    "古道旁那棵桃樹砍下來的，握柄已經磨得發亮。"
+   ],
+   "base_time": 6,
+   "base_out": 1,
+   "unlock_cost": 2700000,
+   "up_cost0": 810000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "anim": {
+    "fx": [
+     "drip",
+     "bob"
+    ],
+    "pts": [
+     [
+      0.35,
+      0.35
+     ],
+     [
+      0.5,
+      1.0
+     ]
+    ],
+    "c": "#e0a040"
+   }
+  },
+  "st_c3_tongling": {
+   "n": [
+    "銅鈴耳環檔",
+    "銅鈴耳環攤"
+   ],
+   "art": "mvs_c3_tongling",
+   "good": "m_c3_tongling",
+   "how": [
+    "行一步響一下，領隊唔使回頭都知你有冇甩隊。",
+    "走一步響一下，領隊不用回頭也知道你有沒有脫隊。"
+   ],
+   "base_time": 4,
+   "base_out": 1,
+   "unlock_cost": 18000,
+   "up_cost0": 5400,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "anim": {
+    "fx": [
+     "drip",
+     "bob"
+    ],
+    "pts": [
+     [
+      0.35,
+      0.35
+     ],
+     [
+      0.5,
+      1.0
+     ]
+    ],
+    "c": "#e0a040"
+   }
+  },
+  "st_c3_huangfu": {
+   "n": [
+    "黃符髮夾檔",
+    "黃符髮夾攤"
+   ],
+   "art": "mvs_c3_huangfu",
+   "good": "m_c3_huangfu",
+   "how": [
+    "夾住額頭嗰張紙，風再大都吹唔甩。",
+    "夾住額頭那張紙，風再大也吹不掉。"
+   ],
+   "base_time": 5,
+   "base_out": 1,
+   "unlock_cost": 90000,
+   "up_cost0": 27000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "anim": {
+    "fx": [
+     "drip",
+     "bob"
+    ],
+    "pts": [
+     [
+      0.35,
+      0.35
+     ],
+     [
+      0.5,
+      1.0
+     ]
+    ],
+    "c": "#e0a040"
+   }
+  },
+  "st_c3_luichar": {
+   "n": [
+    "Lui Char 屍隊同款帆布包檔",
+    "Lui Char 屍隊同款帆布包攤"
+   ],
+   "art": "mvs_c3_luichar",
+   "good": "m_c3_luichar",
+   "how": [
+    "成隊人孭同一款，排隊排到義莊門口。",
+    "整隊人背同一款，排隊排到義莊門口。"
+   ],
+   "base_time": 6,
+   "base_out": 1,
+   "unlock_cost": 2700000,
+   "up_cost0": 810000,
+   "up_mul": 1.18,
+   "worker_slots": 3,
+   "miles": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+   ],
+   "anim": {
+    "fx": [
+     "drip",
+     "bob"
+    ],
+    "pts": [
+     [
+      0.35,
+      0.35
+     ],
+     [
+      0.5,
+      1.0
+     ]
+    ],
+    "c": "#e0a040"
+   }
   }
  },
  "maps_add": {
@@ -337,6 +761,26 @@
    "acc": [
     "st_c2_lingdang",
     "st_c2_bagua"
+   ]
+  },
+  "2": {
+   "food": [
+    "st_c3_zong",
+    "st_c3_jiuniang"
+   ],
+   "cloth": [
+    "st_c3_bangtui"
+   ],
+   "weapon": [
+    "st_c3_modou",
+    "st_c3_taomu"
+   ],
+   "acc": [
+    "st_c3_tongling",
+    "st_c3_huangfu"
+   ],
+   "lux": [
+    "st_c3_luichar"
    ]
   }
  },

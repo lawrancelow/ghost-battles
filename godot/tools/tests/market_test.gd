@@ -395,7 +395,17 @@ func _ops(t, sim, sc, c: int, food: Array, cloth: Array) -> void:
 		for lvx in [1.0, 25.0, 100.0]: if not Spr.ok(MD.stall_art(sid, lvx)) or Spr.get_tex(MD.stall_art(sid, lvx)) == null: c2bad.append([sid, lvx])
 	_chk("第 2 章新攤 5 台上架、三段外觀圖齊", c2bad.is_empty(), c2bad)
 	_chk("第 2 章五條街：食／衣／兵器／飾品都有攤（飾品街＝鈴鐺手鏈、八卦鏡）", MK.street_of(1, "st_c2_lingdang") == "acc" and MK.street_of(1, "st_c2_bagua") == "acc" and MK.street_of(1, "st_c2_banlan") == "food" and MK.street_of(1, "st_c2_kudai") == "cloth" and MK.street_of(1, "st_c2_xianjing") == "weapon")
-	_chk("第 3–6 章冇新攤（未過審唔開放）", not MK.stall_list(2).any(func(x): return str(x).begins_with("st_c")) and not MK.stall_list(5).any(func(x): return str(x).begins_with("st_c")))
+	var c3 = MK.stall_list(2); var c3bad = []
+	for sid in ["st_c3_zong", "st_c3_jiuniang", "st_c3_bangtui", "st_c3_modou", "st_c3_taomu", "st_c3_tongling", "st_c3_huangfu", "st_c3_luichar"]:
+		if not c3.has(sid): c3bad.append(sid)
+		var gd3 = MD.good_def(str(MD.st_def(sid).get("good", "")))
+		if gd3.is_empty() or not Spr.ok(str(gd3.get("icon", ""))) or Spr.get_tex(str(gd3.icon)) == null: c3bad.append([sid, "icon"])
+		for lvx in [1.0, 25.0, 100.0]: if not Spr.ok(MD.stall_art(sid, lvx)) or Spr.get_tex(MD.stall_art(sid, lvx)) == null: c3bad.append([sid, lvx])
+	_chk("第 3 章新攤 8 台上架、三段外觀＋商品圖示齊（2026-11-28 老闆選用）", c3bad.is_empty(), c3bad)
+	_chk("第 3 章街道：食 2／衣 1／兵器 2／飾品 2／奢侈品 1；Tehlah 電動轎未有圖示唔上架", MK.street_of(2, "st_c3_zong") == "food" and MK.street_of(2, "st_c3_bangtui") == "cloth" and MK.street_of(2, "st_c3_taomu") == "weapon" and MK.street_of(2, "st_c3_huangfu") == "acc" and MK.street_of(2, "st_c3_luichar") == "lux" and not c3.has("st_c3_tehlah"))
+	var late_bad = []
+	for cx in [3, 4, 5]: for x in MK.stall_list(cx): if str(x).begins_with("st_c"): late_bad.append(x)
+	_chk("第 4–6 章冇新攤（未過審唔開放）", late_bad.is_empty(), late_bad)
 	if c == 0:
 		sim.sst("st_shoubao").lv = 25.0; MKO.st().sub.erase("st_shoubao")
 		_chk("嘆氣蒸籠 Lv25 預設副貨＝槐花粥；紙紮兵器可揀槐木棍／蒸籠盾", MKO.sub_of("st_shoubao") == "m_c1_huaihua" and MKO.default_sub(0, "st_bingqi") == "m_c1_gun", MKO.sub_of("st_shoubao"))
