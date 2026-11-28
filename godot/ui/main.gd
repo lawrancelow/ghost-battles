@@ -57,6 +57,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var bg = ColorRect.new(); bg.color = UIKit.INK; bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(bg)
 	load("res://ui/kit_skin.gd").install(get_tree())   # [uikit] 紙底面板自動換紙紋＋鐵櫃框
+	load("res://ui/juice.gd").hook_rebuild()   # [juice] 荒村重建開張／點燈慶祝＋生氣值（冇 rb.gd 就唔做嘢）
 	_build_village(); _build_top(); _build_nav(); _build_sheet()
 	story = Control.new(); story.set_script(load("res://ui/story.gd"))
 	var scl = CanvasLayer.new(); scl.layer = 125; scl.name = "StoryLayer"; add_child(scl); scl.add_child(story)   # [uxui] 劇情永遠喺最上（面板 100、提示 105、特效 110、裝備彈窗 115 都喺佢下面）
