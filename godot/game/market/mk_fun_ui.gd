@@ -42,8 +42,9 @@ static func _bar_col(k: float) -> String:
 	return "#7fd06a"
 
 # ---------------- 世界：每個攤／櫃台 ----------------
+static var grp: Array = []   # [57] 今格畫咗嘅加班成組牌（世界座標）
 static func draw_world(sc, ctx, vy0: float, vy1: float) -> void:
-	_wbtn.clear(); world_hid = 0
+	_wbtn.clear(); world_hid = 0; grp.clear()
 	FUN.ensure()
 	if not FUN.on(): return
 	var sim = sc.sim
@@ -66,6 +67,7 @@ static func _draw_ot(sc, ctx, sid: String, at: Vector2, counter := false) -> voi
 	if ResourceLoader.exists("res://game/market/mk_ui.gd"): top_lim = maxf(top_lim, float(load("res://game/market/mk_ui.gd").strip_rect(sc).end.y))
 	if scr.position.y < top_lim + 2.0: world_hid += 1; return
 	for q in hud_rects: if scr.intersects((q as Rect2).grow(2.0)): world_hid += 1; return
+	grp.append(Rect2(at.x - 62.0, at.y - 20.0, 124.0, 86.0))   # [57] 成組牌佔位（M1 牌／卡避開）
 	var down = MK.is_down(sid)
 	var on = MK.ot_on(sid)
 	var k = MK.fat_k(sid)

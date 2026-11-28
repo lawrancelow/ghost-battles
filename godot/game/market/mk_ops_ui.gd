@@ -22,6 +22,8 @@ static var _fx: Array = []        # 演出中：{"k", "ev", "t0", "life", ...}
 static var _says: Array = []      # 對白條：{"who", "t", "t0", "life"}
 static var _ow := {}              # 過勞小卡狀態：sid → {"down": bool, "up_t": float, "say_t": float}
 static var _panel := ""           # 開緊嘅人手面板（""＝冇）
+static var lay: Array = []         # [57] 今格世界入面已畫嘅牌／卡（世界座標）：後畫嗰塊避開、唔貼住；對白框都避
+static var lay_bad: Array = []     # [57] 測試用：避唔開（仲撞）嘅記錄
 static var hud_bot := 0.0         # 我哋呢疊（人手列＋治安卡＋對白條）今格嘅底（畫面座標）；M2 嘅 HUD 排喺佢下面
 static var _culprit := {}         # 事件 id → 搞事鬼圖鍵
 static var _title := {"st": "", "t0": -99.0}   # 切街標題卡（已選用美術：牌坊 A／食街／奢侈品店橫幅）
@@ -183,17 +185,43 @@ static func culprit_key(sim, e: Dictionary) -> String:
 	if _culprit.size() > 40: _culprit.clear()
 	_culprit[id] = k
 	return k
-static func _tag(sc, ctx, p: Vector2, txt: String, fill: String, col := Color("#fff6e0"), size := 15) -> void:
+const GAP := 6.0   # [57] 牌與牌、牌與畫面邊最少隔幾多（唔貼住）
+static func _avoid(sc, r: Rect2) -> Rect2:   # [57] 撞到已畫嘅牌／卡／加班牌：向上推（逐次推到啱啱避開），推唔開就記低
+	var obs: Array = lay.duplicate()
+	if ResourceLoader.exists("res://game/market/mk_fun_ui.gd"):
+		var fu = load("res://game/market/mk_fun_ui.gd")
+		for k in fu._wbtn: obs.append(fu._wbtn[k])
+		for q in fu.grp: obs.append(q)
+	var r0 = r
+	for dn in [false, true]:   # 先向上推；推上去鑽入頂部牌／生產鏈掣就改向下推
+		r = r0
+		var ok = false
+		for _i in 10:
+			var hit = false
+			for q in obs:
+				var g = (q as Rect2).grow(GAP - 0.5)
+				if g.intersects(r): r.position.y = (g.end.y + 0.5 if dn else g.position.y - 0.5 - r.size.y); hit = true
+			if not hit: ok = true; break
+		if ok and (dn or not sc.mk_hid_w(r)): return r
+	lay_bad.append(r)
+	return r
+static func _tag(sc, ctx, p: Vector2, txt: String, fill: String, col := Color("#fff6e0"), size := 15, avoid := true) -> Vector2:
 	ctx.font = "900 %dpx sans-serif" % size
 	var w = ctx.measureText(txt).width + 16.0
-	var lo = maxf(sc.vx0(), float(sc.s2w(Vector2(0, 0)).x)) + 2.0; var hi = minf(sc.vx1(), float(sc.s2w(Vector2(sc.FW, 0)).x)) - w - 2.0   # 夾喺畫面入面，唔出格
+	var lo = maxf(sc.vx0(), float(sc.s2w(Vector2(0, 0)).x)) + GAP; var hi = minf(sc.vx1(), float(sc.s2w(Vector2(sc.FW, 0)).x)) - w - GAP   # 夾喺畫面入面，唔出格、唔貼邊
 	var x = clampf(p.x - w / 2.0, lo, maxf(lo, hi))
-	Art.rr(ctx, x, p.y - 12, w, 24, 8, fill, "#2a1a10", 1.5)
-	sc._txt(ctx, txt, x + w / 2.0, p.y + 1, size, col, "center", 900, 0)
+	var r = Rect2(x, p.y - 12, w, 24)
+	if avoid: r = _avoid(sc, r)
+	if sc.mk_hid_w(r): return r.get_center()   # 撞到頂部牌：成塊唔畫
+	lay.append(r)
+	Art.rr(ctx, r.position.x, r.position.y, w, 24, 8, fill, "#2a1a10", 1.5)
+	sc._txt(ctx, txt, r.position.x + w / 2.0, r.position.y + 13, size, col, "center", 900, 0)
+	return r.get_center()
 static func _char(sc, ctx, key: String, p: Vector2, flip: bool, walk: bool, seed: float, s := 1.0, alpha := 1.0) -> void:
 	Art.draw_char(ctx, key, p.x, p.y, float(sc.CS) * 0.9 * s, {"t": float(sc.t) + seed, "seed": seed, "walk": walk, "flip": flip, "alpha": alpha, "tamed": true, "shadow": true})
 
 static func world_items(sc, ctx, items: Array) -> void:
+	lay.clear(); lay_bad.clear()   # [57] 每格重新排
 	if not on(sc) or sc.sim == null or sc.sim.L.is_empty(): return
 	var sim = sc.sim; var street = MK.cur(); var now = float(sc.t)
 	# 櫃檯員
@@ -288,9 +316,10 @@ static func _draw_event(sc, ctx, e: Dictionary, p: Vector2) -> void:
 	var tp = p + Vector2(0, -104)
 	var pulse = 1.0 if chase else 0.85 + 0.15 * sin(now * 8.0)
 	ctx.globalAlpha = pulse
-	_tag(sc, ctx, tp, tn + "！", "rgba(120,96,24,.97)" if chase else "rgba(170,36,30,.97)", Color("#fff6e0"), 16)
+	if not chase: tp.y -= 4.0   # [57] 倒數條連埋入牌一齊避
+	tp = _tag(sc, ctx, tp, tn + "！", "rgba(120,96,24,.97)" if chase else "rgba(170,36,30,.97)", Color("#fff6e0"), 16)
 	ctx.globalAlpha = 1.0
-	if not chase:
+	if not chase and not sc.mk_hid_w(Rect2(tp.x - 22.0, tp.y + 12.0, 44.0, 8.0)):
 		var bw = 44.0; var k = clampf(left / maxf(1.0, MKO.cf("events", "deadline_s", 20.0)), 0.0, 1.0)
 		var bx = clampf(tp.x - bw / 2.0, sc.vx0() + 2.0, sc.vx1() - bw - 2.0)
 		Art.rr(ctx, bx, tp.y + 14, bw, 5, 2, "rgba(44,28,16,.85)")
@@ -348,12 +377,16 @@ static func _draw_ow(sc, ctx, sid: String) -> void:
 	var now = float(sc.t); var sp = sc.sim.st_pos(sid)
 	var w = 128.0; var h = 64.0
 	var lo = maxf(sc.vx0(), float(sc.s2w(Vector2(0, 0)).x)) + 6.0; var hi = minf(sc.vx1(), float(sc.s2w(Vector2(sc.FW, 0)).x)) - w - 6.0   # 成張卡夾喺畫面入面，唔出格
-	var x = clampf(sp.x - w / 2.0, lo, maxf(lo, hi)); var y = sp.y - 150.0 + (2.0 * sin(now * 3.0) if stg != 3 else 0.0)
+	var x = clampf(sp.x - w / 2.0, lo, maxf(lo, hi)); var y = sp.y - 150.0
+	var gr = _avoid(sc, Rect2(x - 3, y - 3, w + 6, h + 6 + 32.0))   # [57] 小卡連下面嗰行字成組避開其他牌（唔貼住）
+	y = gr.position.y + 3.0 + (2.0 * sin(now * 3.0) if stg != 3 else 0.0)
+	if sc.mk_hid_w(gr): return   # 撞到頂部牌：成組唔畫
+	lay.append(gr)
 	var edge = ["", "#ffd27a", "#ff9a5a", "#ff5a4a", "#9fe08a"][stg]
 	Art.rr(ctx, x - 3, y - 3, w + 6, h + 6, 12, "rgba(44,28,16,.92)", edge, 2.5)
 	if Spr.ok("mk_ow_%d" % stg): Art.put(ctx, "mk_ow_%d" % stg, x + w / 2.0, y + h, w, h)
 	var cap = [L("", ""), L("死頂緊", "硬撐中"), L("就嚟唔得", "快不行了"), L("趴低咗！餵個包", "趴下了！餵個包子"), L("食飽返生！", "吃飽復活！")][stg]
-	_tag(sc, ctx, Vector2(x + w / 2.0, y + h + 14), cap, "rgba(44,28,16,.94)", Color(edge), 14)
+	_tag(sc, ctx, Vector2(x + w / 2.0, y + h + 16), cap, "rgba(44,28,16,.94)", Color(edge), 14, false)
 	var o: Dictionary = _ow[sid]
 	if stg in [1, 2] and now - float(o.say_t) > 9.0 and sc.bubbles.is_empty():   # 抱怨泡（詞庫 20 句輪住出）
 		o.say_t = now
@@ -514,3 +547,22 @@ static func open_shelf(sc, sid: String) -> void:   # 貨架面板：主貨／副
 	sc._ui_sync()
 	await sc.get_tree().process_frame
 	if is_instance_valid(sc) and is_instance_valid(sc.sheet) and sc.sheet.visible: sc._place_sheet()
+
+# [57] 測試用：今格世界牌／卡之間、同畫面邊、同對白框有冇撞（唔貼住）
+static func layout_bad(sc) -> Array:
+	var bad: Array = []
+	for r in lay_bad: bad.append("避唔開 %s" % str(r))
+	for i in lay.size():
+		var a: Rect2 = lay[i]
+		for j in range(i + 1, lay.size()):
+			var b: Rect2 = lay[j]
+			if a.encloses(b) or b.encloses(a): continue   # 小卡同佢自己嗰行字
+			if a.grow(GAP - 1.0).intersects(b): bad.append("牌貼住／重疊 %s %s" % [str(a), str(b)])
+		var sa = Rect2(sc.w2s(a.position), sc.w2s(a.end) - sc.w2s(a.position))
+		if sa.position.x < 2.0 or sa.end.x > float(sc.FW) - 2.0: bad.append("牌出格 %s" % str(sa))
+		for d in sc._drects: if a.intersects(d): bad.append("對白框疊牌 %s %s" % [str(a), str(d)])
+		for d in sc._wrects: if a.grow(GAP - 1.0).intersects(d): bad.append("要貨泡貼住／疊牌 %s %s" % [str(a), str(d)])
+		if ResourceLoader.exists("res://game/market/mk_fun_ui.gd"):
+			var fu = load("res://game/market/mk_fun_ui.gd")
+			for g in fu.grp: if a.intersects(g): bad.append("牌疊加班牌 %s %s" % [str(a), str(g)])
+	return bad

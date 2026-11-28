@@ -41,6 +41,7 @@ func _lay(name: String) -> void:
 		var w = float(str(f.text).length()) * float(f.s); var c: Vector2 = sc.w2s(f.p)
 		var fr = Rect2(c.x - w / 2.0, c.y - float(f.s) / 2.0, w, float(f.s))
 		for q in MKUI.hud_rects: if fr.intersects(q): b.append("浮字撞頂部牌「%s」" % str(f.text))
+	b.append_array(load("res://tools/tests/mk_layout_chk.gd").bad(sc))   # [57] 字唔畀頂部牌切開、事件牌／小卡／對白框唔疊唔貼
 	_chk("版面 " + name, b.is_empty(), b)
 func _has_toast(key: String) -> bool:
 	for q in MKUI._toasts: if str(q.t).contains(key): return true
@@ -69,6 +70,7 @@ func all(t) -> void:
 	ZD.gate_on = false
 	var sc = m.mv_view; var sim = sc.sim; var nv = m.village; var cam = nv.zone_cam()
 	_sc = sc
+	sc.mk_log = true   # [57]
 	var S = J.G.S
 	MK.st()["test"] = 1; MK.st().open = {"food": 1, "cloth": 1}
 	FUN.reload(); S.erase("mkf"); S["mkr"] = {"v": 1, "pts": 260.0, "lv_seen": 2}
