@@ -69,8 +69,8 @@ static func ch() -> int:
 	var s = MK.S()
 	return int(J.num(s.mv.get("ci", 0))) if s != null and s.get("mv") is Dictionary else 0
 static func ot_price(sid: String) -> float:   # 加班：每件賣貴啲；趴低：冇人睇檔，客人自助，只收到一成半
-	if on() and MK.is_down(sid): return cf("ot", "down_price_mul", 0.15)
-	return cf("ot", "price_mul", 1.9) if MK.ot_on(sid) else 1.0
+	if on() and MK.is_down(sid): return cf("ot", "down_price_mul", 0.12)
+	return cf("ot", "price_mul", 1.5) if MK.ot_on(sid) else 1.0
 static func warn(sid: String) -> bool: return on() and MK.fat(sid) >= cf("ot", "warn", 70.0) and not MK.is_down(sid)
 static func vet(sid: String) -> bool: return on() and MK.rank(sid) > 0   # 老員工＝M1 嘅 rank ≥1（產量加成由 M1 rank_bonus 計）
 static func out_mul(sid: String) -> float:   # 疊喺 MK.mul 上：冒汗慢 10%
@@ -466,6 +466,10 @@ static func on_spawn(sim, c: Dictionary) -> void:   # spawn_cust 之後叫：有
 	var i = randi() % a.size()
 	c["reg"] = i; c["regn"] = str(a[i].name) if int(a[i].v) >= int(cf("regular", "name_at", 5)) else ""
 	_ev({"k": "reg_in", "i": i, "name": str(c.regn), "art": str(a[i].get("art", ""))})
+static func reg_visits() -> float:   # 本章熟客累計來訪次數（KPI 指標 mk_reg_visits；畫面顯示嘅就係呢個數）
+	var n = 0
+	for r in regs(ch()): n += int(J.num(r.get("v", 0)))
+	return float(n)
 static func _reg_visit(i: int) -> void:
 	var a = regs(ch())
 	if i < 0 or i >= a.size(): return

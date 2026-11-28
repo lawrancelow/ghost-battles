@@ -362,6 +362,18 @@ func logic(_t) -> void:
 	for i in 4: FUN._reg_visit(0)
 	FUN.pop_events(); FUN._reg_visit(0)
 	_chk("第 5 次光顧解鎖名字", FUN.pop_events().any(func(e): return e.k == "reg_name") and int(rr[0].v) == 5)
+	# 市集考核③：唔准出兵種目標；改用熟客累計來訪，顯示值＝實際計數
+	var KG2 = load("res://game/kpi/kpi_data.gd"); MK.reg_metrics()
+	var g3n: Array = KG2.gate("mk3", 0).get("need", [])
+	_chk("市集考核③冇「遊魂兵」目標，有「熟客來訪 20」", not g3n.any(func(n): return str(n.key) == "mk_militia") and g3n.any(func(n): return str(n.key) == "mk_reg_visits" and int(n.n) == 20 and str(n.label) == "熟客來訪"), g3n)
+	var zk = []
+	for g in KG2.gates(0): if str(g.get("boss", "")) == "zhen": for n in g.get("need", []): zk.append(str(n.key))
+	_chk("甄好賣三場考核嘅目標全部係市集指標（或者冥幣）", zk.size() >= 6 and zk.all(func(k): return k == "coins" or (k.begins_with("mk_") and k != "mk_militia")), zk)
+	var vsum = 0
+	for r0 in FUN.regs(FUN.ch()): vsum += int(r0.v)
+	_chk("熟客來訪指標＝實際來訪次數（而家 5）", is_equal_approx(float(KG2._metric("mk_reg_visits", "fn")), float(vsum)) and vsum == 5, [KG2._metric("mk_reg_visits", "fn"), vsum])
+	FUN._reg_visit(1); FUN.pop_events()
+	_chk("另一位熟客嚟多一次：指標 +1", is_equal_approx(float(KG2._metric("mk_reg_visits", "fn")), 6.0), KG2._metric("mk_reg_visits", "fn"))
 	FUN.D().regular["p"] = 0.0
 	var rc2 = _cust(sim, {"m_shoubao": 1}); FUN.on_spawn(sim, rc2)
 	_chk("機率 0 唔會變熟客", not rc2.has("reg"))

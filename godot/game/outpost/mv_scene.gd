@@ -254,6 +254,12 @@ var _plate_off := {}   # [uxui2] sid → 名牌避讓位移（世界座標）
 var _plate_q: Array = []   # [uxui2] 名牌延後畫（喺所有角色／建築之上）
 var _cb_pos = null
 var _drects: Array = []   # [polish4] 今格已經畫咗嘅對白框
+var _mkw := false   # [market 57] 而家喺畫世界（唔係 HUD）
+var _mk_cov: Array = []   # [market 57] 上一格市集頂部牌（潮流榜、通告牌、人手列⋯）嘅畫面範圍：世界字撞到就成句唔畫（唔好畀不透明底板切開半截）
+var mk_log := false   # [market 57] 測試用：記低每句世界字嘅畫面範圍
+var mk_txt_log: Array = []   # [market 57] [字, 畫面 Rect2, 係咪喺名牌之前畫]
+var _mk_pl: Array = []   # [market 57] 今格名牌畫面範圍
+var _mk_it := false   # [market 57] 而家畫緊名牌下面嗰層（角色／台）
 var _wrects: Array = []   # [polish4] 今格客人要貨氣泡（連脾氣牌）位，對白框避開
 var _cb_sz := Vector2.ZERO   # [play]
 func chain_btn_pos(sz: Vector2) -> Vector2:
@@ -573,7 +579,9 @@ func _draw_stage() -> void:
 	_btns.clear(); _wbtns.clear(); _plates.clear()
 	if embed: sim.plus._btn.clear()   # [polish4] 合一地圖：HUD 收埋嗰陣唔留舊小卡掣
 	var vy0 = cam - top_pad - 10.0; var vy1 = cam - top_pad + H + 10.0     # 鏡頭內（世界 y）
+	mk_txt_log.clear()
 	ctx.save()
+	_mkw = true   # [market 57]
 	if zone:   # [zone] 2D 鏡頭；地面由村子畫
 		vy0 = float(zt.y) - 10.0; vy1 = float(zt.y) + H / float(zt.z) + 10.0
 		ctx.scale(float(zt.z), float(zt.z)); ctx.translate(-float(zt.x), -float(zt.y))
@@ -619,6 +627,7 @@ func _draw_stage() -> void:
 			var cc = c
 			items.append([c.pos.y + c.slot * 0.01, func(): _draw_cust(ctx, cc)])
 	_plate_q.clear()
+	_mk_pl.clear()
 	if fk > 0.04 and not mk_hid:
 		var vis_sids: Array = []
 		for sid in MD.stations(sim.ci()):
@@ -629,6 +638,12 @@ func _draw_stage() -> void:
 			var s2 = sid
 			items.append([sp.y - 30.0, func(): _draw_station(ctx, s2, fk)])
 		_layout_plates(ctx, vis_sids, vy0, vy1)   # [uxui2]
+		if MK.active():   # [market 57] 名牌（最後先畫、會蓋住佢下面嘅字）嘅畫面範圍
+			for sd in vis_sids:
+				var pr: Rect2 = _plate_rect(ctx, sd, sim.st_pos(sd))
+				pr.position += _plate_off.get(sd, Vector2.ZERO)
+				var a0 = w2s(pr.position); var a1 = w2s(pr.end)
+				_mk_pl.append(Rect2(a0, a1 - a0).abs())
 	if not walking and not mk_hid:
 		for w in sim.workers:
 			if not MK.shown(sim.ci(), str(w.sid)): continue   # [market]
@@ -645,7 +660,9 @@ func _draw_stage() -> void:
 	if mot != null and not walking: mot.add_items(self, ctx, items, vy0, vy1)   # [motion] 粒子、領班
 	if not walking and not mk_hid: MKOU.world_items(self, ctx, items)   # [market M1 營運] 櫃檯員、巡邏鬼、治安事件演出、過勞小卡
 	items.sort_custom(func(a, b): return a[0] < b[0])
+	_mk_it = true
 	for it in items: it[1].call()
+	_mk_it = false
 	for q in _plate_q: q.call()   # [uxui2] 名牌喺角色／建築之上
 	_plate_q.clear()
 	sim.war.draw_world(self, ctx, vy0, vy1)   # [war] 義勇軍＋霸檔標記
@@ -678,6 +695,8 @@ func _draw_stage() -> void:
 		elif gp is Dictionary: _brects.append(Rect2(J.num(gp.get("x")) - 90.0, J.num(gp.get("y")) - 120.0, 180.0, 160.0))
 		for kk in _wbtns: if kk.begins_with("st:"): _brects.append(_wbtns[kk])
 	_brects.append_array(sim.plus.avoid_rects(self))
+	if MK.active(): for kk2 in MKUI._wbtn: _brects.append(MKUI._wbtn[kk2])   # [market] 對白框避開加班牌／打卡鐘／餵包子掣
+	if MK.active(): for q in MKOU.lay: _brects.append((q as Rect2).grow(4.0))   # [market 57] 對白框避開事件牌、過勞小卡、狀態牌（唔好貼住）
 	_brects.append_array(sim.war.avoid_rects(sim))   # [p55] 對白框避開霸檔牌
 	if zone: _brects.append_array(load("res://game/zone/zone_taunt.gd").world_rects)   # [mapbattle] 閒談對白框避開王嘅叫囂泡泡   # [play] 對白框避開事件名同右上「生產鏈」掣
 	if not _mbf() and not mk_hid and banner == null:   # [mapbattle] 打緊仗：收埋閒談對白框   [uxui] 橫額出緊都收埋（唔好疊喺橫額上）
@@ -688,15 +707,21 @@ func _draw_stage() -> void:
 	if embed and anim != null:   # [unify] 拔營：大排檔區＋村外區淡出、換圖、淡入（原村子唔變）
 		var fa = clampf(1.0 - absf(float(anim.t) - A_SWAP) / 1.8, 0.0, 1.0)
 		if fa > 0.0: ctx.fillStyle = "rgba(8,4,10,%.3f)" % fa; ctx.fillRect(0, maxf(vy0, -40.0), float(sim.L.get("w", FW)), minf(vy1, world_h()) - maxf(vy0, -40.0))
+	_mkw = false   # [market 57]
 	ctx.restore()
 	_tx0 = 0.0; _tx1 = FW   # [zone] HUD 用畫面闊
 	_draw_parts(ctx, false)
+	_mk_cov = []   # [market 57]
 	if not embed or hud_k > 0.01:   # [unify] 嵌入：睇到大排檔區先出 HUD
 		ctx.globalAlpha = hud_k if embed else 1.0
 		MB.draw(self, ctx, "hud", func(c): _draw_hud(c))   # [perf] HUD 內容冇變就用烘圖（數值變先重烘；閃動多就自動逐格畫）
 		MKU.draw_strip(self, ctx)   # [market] 五條街名牌列（逐格畫，唔入烘圖）
 		MKOU.draw(self, ctx)   # [market M1 營運] 人手／治安列
 		ctx.globalAlpha = 1.0
+		if MK.active():   # [market 57] 記低頂部牌範圍（下一格畫世界字用）
+			for q in MKUI.hud_rects: _mk_cov.append(q)
+			if _cb_pos != null and _cb_sz != Vector2.ZERO: _mk_cov.append(Rect2(_cb_pos, _cb_sz).grow(2.0))   # 「生產鏈」掣（HUD 層）
+			if MKOU.on(self) and float(MKOU.hud_bot) > 0.0: _mk_cov.append(Rect2(-100000.0, -100000.0, 200000.0, 100000.0 + float(MKOU.hud_bot)))
 		if _ABL.active and embed and hud_k > 0.3: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(0, top_pad, FW, EHUD_H + 14.0), true)   # [abui] 頂部 HUD（任務、收益、影響力條）唔畀戰鬥字蓋住（HUD 係烘圖，喺度登記）
 	MB.gc(self)   # [perf]
 
@@ -1063,6 +1088,9 @@ func _draw_want(ctx: Ctx, c: Dictionary) -> void:   # 頭頂氣泡：貨品圖�
 		th = 22.0; ctx.font = "900 14px sans-serif"; tgw = maxf(w, ctx.measureText(tg).width + 12.0)
 	var y_nat = y; var x_nat = x
 	var obst: Array = _wrects + sim.plus.avoid_rects(self)   # 一定要避
+	if MK.active():   # [market 57] 事件牌／過勞小卡／加班成組牌：要貨泡同佢哋隔開（唔貼住）
+		for q in MKOU.lay: obst.append((q as Rect2).grow(MKOU.GAP))
+		for q in MKUI.grp: obst.append((q as Rect2).grow(MKOU.GAP))
 	var soft: Array = []   # 台名牌（盡量避）
 	for q in _plates: soft.append(q)
 	var y_lo = y_nat + (40.0 if int(c.slot) % 2 == 1 else 0.0)   # 最低去到冇錯開時嘅位（唔好遮個客）
@@ -1093,6 +1121,7 @@ func _draw_want(ctx: Ctx, c: Dictionary) -> void:   # 頭頂氣泡：貨品圖�
 			for r in obst:
 				if r is Rect2 and r.intersects(box.call(x, y).grow(1.0)): y = r.position.y - h - 4.0; hit = true
 			if not hit: break
+	if mk_hid_w(box.call(x, y).grow(2.0)): return   # [market 57] 要貨泡撞到市集頂部牌：成個唔畫
 	_wrects.append(box.call(x, y))
 	Art.rr(ctx, x, y, w, h, 8, "rgba(250,244,228,.95)", "#5e4a30", 1.5)
 	var px = clampf(c.pos.x, x + 10.0, x + w - 10.0)   # 尖角（打橫移咗都喺氣泡底）
@@ -1157,7 +1186,7 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 		if (manned or sim.mk_starve.has(sid)) and sim.missing(sid).size() > 0:   # [chain] 斷料牌
 			var st_t = _starve_txt(sim.missing(sid))
 			ctx.font = "900 14px sans-serif"; var sw = minf(ctx.measureText(st_t).width + 14.0, _cell_w())
-			Art.rr(ctx, p.x - sw / 2.0, r.position.y - 30, sw, 24, 7, "rgba(120,20,16,.9)", "#ffb0a0", 1.5)
+			if not mk_hid_w(Rect2(p.x - sw / 2.0, r.position.y - 30, sw, 24)): Art.rr(ctx, p.x - sw / 2.0, r.position.y - 30, sw, 24, 7, "rgba(120,20,16,.9)", "#ffb0a0", 1.5)
 			_txt(ctx, _fit(ctx, st_t, sw - 10.0, 14)[0], p.x, r.position.y - 18, 14, Color("#fff0e0"), "center", 900, 0)
 		# 員工空位
 		var ws = sim.sst(sid).workers
@@ -1170,7 +1199,9 @@ func _draw_station(ctx: Ctx, sid: String, fk: float) -> void:
 	# 名牌：名＋等級＋里程碑星
 	if fk > 0.5:   # [perf] 名牌烘成圖（內容變先重烘），_plates／_wbtns 照登記
 		var sid2 = sid; var p2 = p; var un2 = un; var off2: Vector2 = _plate_off.get(sid, Vector2.ZERO)
-		_plate_q.append(func(): MB.draw(self, ctx, "pl:" + sid2, func(c): _draw_plate(c, sid2, p2, un2, off2)))   # [uxui2] 名牌最後先畫（唔畀角色／建築蓋住），位置由 _layout_plates 避讓
+		_plate_q.append(func():
+			if _mk_plate_hid(p2 + off2, p2): return   # [market 57] 名牌撞到市集頂部牌：成塊唔畫（唔好切半截）
+			MB.draw(self, ctx, "pl:" + sid2, func(c): _draw_plate(c, sid2, p2, un2, off2)))   # [uxui2] 名牌最後先畫（唔畀角色／建築蓋住），位置由 _layout_plates 避讓
 
 func _draw_plate(ctx: Ctx, sid: String, p0: Vector2, un: bool, off := Vector2.ZERO) -> void:   # [perf] 名牌（名＋Lv＋星／解鎖掣）：搬出嚟俾 MB 烘圖
 	var p = p0 + off   # [uxui2] 避讓後位置（鎖頭仍喺台上面：p0）
@@ -1250,6 +1281,9 @@ func _proc_station(ctx: Ctx, sid: String, p: Vector2, w: float) -> Rect2:   # �
 	return Rect2(x, y, w, h)
 
 func _ring(ctx: Ctx, c: Vector2, r: float, prog: float, manned: bool, pile: int, sid: String) -> void:
+	if MK.active() and not MKUI.hud_rects.is_empty():   # [market] 「做／收」圓掣撞到市集頂部牌（潮流榜、通告牌⋯）就成個唔畫，唔好半遮半掩；牌收咗即刻返嚟
+		var q0: Vector2 = w2s(Vector2(c.x - r - 4.0, c.y - r - 4.0)); var q1: Vector2 = w2s(Vector2(c.x + r + 4.0, c.y + r + 20.0))
+		for q in MKUI.hud_rects: if (q as Rect2).intersects(Rect2(q0, q1 - q0)): return
 	Art.el(ctx, c.x, c.y, r + 3, r + 3, "rgba(20,14,24,.82)", "#f3d68a" if not manned else "#9fe39a", 2)
 	if prog > 0.0:
 		ctx.strokeStyle = "#9fe39a" if manned else "#f3d68a"; ctx.lineWidth = 5
@@ -1572,6 +1606,7 @@ func _draw_bubble(ctx: Ctx, b: Dictionary) -> void:
 	w += 20.0; var h = lines.size() * 20.0 + 12.0 + (18.0 if b.who != "" else 0.0)
 	var wtop = s2w(Vector2(0, top_pad + HUD_H + 4.0)).y; var wbot = s2w(Vector2(0, top_pad + view_h())).y - h - 10.0   # [zone] 經 s2w
 	if sim.war != null: wtop = maxf(wtop, s2w(Vector2(0, float(sim.war.hud_y(self)) + 46.0)).y)   # [camp] 對白框唔好俾影響力條遮住
+	if MK.active(): wtop = maxf(wtop, s2w(Vector2(0, maxf(float(MKOU.hud_bot), float(MKUI.hud_bot)) + 6.0)).y)   # [market] 對白框排喺市集頂部牌（人手列、潮流榜、通告牌）下面，唔好鑽入去
 	if zone and float(zt.z) < 0.7: return   # [zone] 縮到好細：對白框唔出（字會細過 14px）
 	if embed:   # [unify] 嵌入：講嘢嘅人唔喺鏡頭（或者喺原村子）就唔出框；框唔好落到出村門下面
 		if b.p.y > world_h() or b.p.y < s2w(Vector2.ZERO).y or b.p.y > s2w(Vector2(0, H)).y: return
@@ -1711,6 +1746,19 @@ func _draw_proc(ctx: Ctx) -> void:
 		var q2 = MD.poly_at(sim.QP, s0 - 60.0 - (i - 3) * 34.0)
 		Art.draw_char(ctx, crew[i], q2.x, q2.y, CS * 0.8, {"t": tt + i, "walk": true, "tamed": true})
 
+func mk_hid_w(wr: Rect2) -> bool:   # [market 57] 世界範圍（世界座標）撞唔撞到市集頂部牌（畫面座標）
+	if not _mkw or _mk_cov.is_empty(): return false
+	var a = w2s(wr.position); var b = w2s(wr.end)
+	var sr = Rect2(a, b - a).abs()
+	for q in _mk_cov: if sr.intersects(q): return true
+	return false
+func _mk_plate_hid(p: Vector2, p0: Vector2) -> bool:   # [market 57] 名牌（連鎖頭／解鎖掣）成塊範圍
+	if not _mkw or _mk_cov.is_empty(): return false
+	var cw = maxf(_cell_w() - 8.0, 124.0) + 8.0
+	var ny = p.y + 42.0
+	var top = minf(p0.y - 72.0, ny - 18.0)
+	return mk_hid_w(Rect2(p.x - cw / 2.0, top, cw, ny + 44.0 - top))
+
 func _txt(ctx: Ctx, s: String, x: float, y: float, sz: int, col: Color, align := "center", w := 900, outline := 4, fam := "sans-serif") -> void:
 	ctx.font = "%d %dpx %s" % [w, sz, fam]; ctx.textAlign = align; ctx.textBaseline = "middle"
 	var tw = ctx.measureText(s).width
@@ -1718,6 +1766,12 @@ func _txt(ctx: Ctx, s: String, x: float, y: float, sz: int, col: Color, align :=
 		"center": x = clampf(x, _tx0 + tw / 2.0 + 4.0, _tx1 - tw / 2.0 - 4.0)   # [zone] _tx0／_tx1：畫世界時係可見範圍
 		"left": x = clampf(x, _tx0 + 4.0, _tx1 - tw - 4.0)
 		"right": x = clampf(x, _tx0 + tw + 4.0, _tx1 - 4.0)
+	if _mkw and ctx.ci is CanvasItem and (mk_log or not _mk_cov.is_empty()):   # [market 57] 世界字撞到市集頂部牌（不透明底板）：成句唔畫，唔好畀板邊切開半截
+		var tr0 = Rect2(x - (tw / 2.0 if align == "center" else (tw if align == "right" else 0.0)) - 2.0, y - sz * 0.62, tw + 4.0, sz * 1.24)
+		var sr0: Rect2 = ctx.T * tr0
+		for q in _mk_cov: if sr0.intersects(q): return
+		if _mk_it: for q in _mk_pl: if sr0.intersects(q): return   # 名牌之後會蓋住呢句字：唔畫
+		if mk_log: mk_txt_log.append([s, sr0, _mk_it])
 	if _ABL.active:   # [abui] 村子字（例如「派鬼守夜」）唔畀戰鬥字蓋住；撞到血條／戰鬥字（郁唔到）就嗰格讓路唔畫
 		var tr = Rect2(x - (tw / 2.0 if align == "center" else (tw if align == "right" else 0.0)) - 3.0, y - sz * 0.65, tw + 6.0, sz * 1.3)
 		if _ABL.busy_hit(ctx.ci, ctx.T, tr): return

@@ -173,6 +173,7 @@ static func reg_metrics() -> void:
 	K.register_metric("mk_combo", func(): return J.num(st().get("combo_n", 0)) if J.t(st().get("combo_live")) else floor(sold_total() / 6.0))   # M2 未接連單：暫用賣出件數 ÷6
 	K.register_metric("mk_renown_lv", func(): return J.num(st().get("renown_lv", 0)) if J.t(st().get("renown_live")) else (2.0 if sold_total() >= 300.0 else (1.0 if sold_total() >= 80.0 else 0.0)))
 	K.register_metric("mk_militia", func(): return militia_n())
+	K.register_metric("mk_reg_visits", func(): return float(load("res://game/market/mk_fun.gd").reg_visits()))   # [M2] 熟客累計來訪（市集考核 ③ 用；取代遊魂兵）
 	K.register_metric("mk_patrol_done", func(): return J.num(st().get("patrol_done", 0)))   # [M1 營運] 巡邏隊成功處理事件次數（mk_ops）
 	OPS().reg()
 static func _mv():

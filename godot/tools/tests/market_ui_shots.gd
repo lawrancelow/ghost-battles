@@ -1,4 +1,4 @@
-# [market] 過勞鬼市集 M1 正式畫面：實機截圖（畀老闆睇嘅總覽用）。唔計 ok／bad，只出圖。
+# [market] 過勞鬼市集 M1 正式畫面：實機截圖（畀老闆睇嘅總覽用）。[57] 每張截圖都驗版面（mk_layout_chk）：計 ok／bad。
 # 用法：bash /home/claude/gbslot.sh bash /home/claude/setup/edtest.sh <godot目錄> mkshots res://tools/tests/market_ui_shots.gd all 600
 # 出圖：/home/claude/meeting/market/shots_ui/s01…；之後用 tools/market_overview.py 砌成 m1_ui_overview.jpg
 extends RefCounted
@@ -14,6 +14,9 @@ const PF = preload("res://tools/tests/paddyfix_test.gd")
 var SHOTS := "/home/claude/meeting/market/shots_ui/"
 var _view := Callable()
 var _near := Callable()
+var ok := 0
+var bad := 0
+var _sc = null
 var NAMES := ["阿土", "小紙", "三更", "阿蓮", "大頭", "阿旺", "細妹", "老陳", "阿福仔", "小滿", "阿貴", "秋姐"]
 
 func _p(m): print("[mkshots] ", m)
@@ -21,6 +24,10 @@ func _w(t, s: float): await t.get_tree().create_timer(s).timeout
 func _shot(t, name: String):
 	await RenderingServer.frame_post_draw
 	t.get_viewport().get_texture().get_image().save_png(SHOTS + name + ".png"); _p("shot " + name)
+	if _sc != null and not name.begins_with("s03") and not name.begins_with("s04") and not name.begins_with("s05") and not name.begins_with("s06"):   # [57] 卡／面板打開嗰幾張唔驗世界版面
+		var b = load("res://tools/tests/mk_layout_chk.gd").bad(_sc)
+		if b.is_empty(): ok += 1
+		else: bad += 1; _p("<<< 唔對 版面 %s %s" % [name, str(b)])
 func _feed(sim, stalls: Array) -> void:
 	for sid in stalls: for mid in sim.need(sid): M.add(str(mid), 99999.0)
 	M.add("m_bao", 50.0)
@@ -45,6 +52,7 @@ func all(t) -> void:
 	var m = await pf._boot(t)
 	ZD.gate_on = false
 	var sc = m.mv_view; var sim = sc.sim; var nv = m.village; var cam = nv.zone_cam()
+	_sc = sc; sc.mk_log = true   # [57]
 	var S = J.G.S
 	MK.st()["test"] = 1
 	load("res://game/kpi/kpi_data.gd").enable(false)
@@ -126,4 +134,4 @@ func all(t) -> void:
 	await _w(t, 0.6); await _shot(t, "s14_overwork_revive")
 	MK.st()["ot"] = {}
 	MK.st().erase("ops"); MK.st().erase("test")
-	_p("RESULT ok=1 bad=0")
+	_p("RESULT ok=%d bad=%d" % [ok, bad])
