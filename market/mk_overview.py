@@ -35,4 +35,5 @@ sheet("過勞鬼市集・進階玩法（實機截圖）", [
     ("街組合", M + "s8_street_combo.png"), ("評論家甘先生", M + "s9_critic.png"),
     ("熟客", M + "s10_regular.png"), ("名聲升級", M + "s11_renown_up.png"), ("打卡鐘", M + "s12_punch_clock.png"),
     ("限時大客 失敗", M + "s13_vip_fail.png"), ("甄好賣 考核卡", kpi),
+    ("最擠情況（全部牌同時出）", M + "s13b_stress.png"), ("街道分頁：四條街鎖", M + "s13c_tabs_locked.png"),
 ], H + "/m2_overview.jpg")
