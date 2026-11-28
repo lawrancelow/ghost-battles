@@ -187,6 +187,14 @@ static func next_beat(sim, kind := "") -> Dictionary:
 
 # ================= 播 =================
 # 劇本 beat → 劇情播放器用嘅 scene（lines 變 [講者, 句]；title 揀語言；art 補 SPEAKER_ART）
+static var _cg_map = null
+static func cg_map() -> Dictionary:
+	if _cg_map == null:
+		_cg_map = {}
+		if FileAccess.file_exists("res://data/cg_scene_map.json"):
+			var j = JSON.parse_string(FileAccess.get_file_as_string("res://data/cg_scene_map.json"))
+			if j is Dictionary: _cg_map = j
+	return _cg_map
 static func build_scene(b: Dictionary) -> Dictionary:
 	var sc: Dictionary = (b.get("scene", {}) as Dictionary).duplicate(true)
 	if sc.get("title") is Array: sc["title"] = MD.T(sc.title)
@@ -201,6 +209,12 @@ static func build_scene(b: Dictionary) -> Dictionary:
 		ls.append([str(l[0]), tx])
 	sc["lines"] = ls
 	if not sc.has("style"): sc["style"] = "talk"
+	if not sc.has("cg"):   # [kpi-cg] 插圖對應表 data/cg_scene_map.json（市集開張插圖等）；句數唔夠就唔掛
+		var cgm = cg_map().get(str(b.get("id", "")))
+		if cgm is Dictionary:
+			var okc = true
+			for ck in cgm: if int(str(ck)) >= ls.size(): okc = false
+			if okc: sc["cg"] = (cgm as Dictionary).duplicate(true)
 	var art = b.get("art", {})
 	var SA = DB.D.get("SPEAKER_ART")
 	if art is Dictionary and SA is Dictionary:

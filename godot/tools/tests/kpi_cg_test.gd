@@ -18,6 +18,7 @@ func all(t) -> void:
 	_data()
 	await _live(t, m)
 	await _follow(t, m)
+	await _market_open(t, m)
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
 func _sex(s: String) -> Dictionary:
@@ -216,3 +217,34 @@ func _follow(t, m) -> void:
 	st.skip_scene(); await _f(t, 3)
 	var g = 0
 	while st.cur != null and g < 20: g += 1; st.advance(); await _f(t, 2)
+
+
+# ---------------- 市集開張插圖（老闆選用男女主版）：接喺第 1 章市集開張嗰幕（mv0_open）系統宣佈開張嗰句，後備動態 ----------------
+func _market_open(t, m) -> void:
+	var MS = load("res://game/outpost/mv_story.gd")
+	var j = JSON.parse_string(FileAccess.get_file_as_string("res://data/nat/mv_story.json"))
+	var b = null
+	for bb in j.MAPS[0].beats: if str(bb.get("id")) == "mv0_open": b = bb
+	if b == null: _chk("搵到 mv0_open", false); return
+	var sc = MS.build_scene(b)
+	var cg = sc.get("cg")
+	_chk("市集開張幕：由系統宣佈開張嗰句出開張插圖（男 cg_market_open／女 cg_market_open_f），之後收起", cg is Dictionary and cg.has("3") and str(cg["3"].k) == "cg_market_open" and str(cg["3"].kf) == "cg_market_open_f" and str(sc.lines[3][0]) == "系統" and str(sc.lines[3][1]).contains("開張") and str(cg.get("6", "x")) == "", cg)
+	_chk("開張插圖男女主版已入庫（後備動態）", CGM.known("cg_market_open") and CGM.known("cg_market_open_f"))
+	var other = MS.build_scene(j.MAPS[0].beats[0])
+	_chk("其他地圖劇情冇插圖欄位，行為不變", not other.has("cg"))
+	var st = m.get("story")
+	if st == null: _chk("搵到劇情節點", false); return
+	if st.cur == null:
+		st.queue({"style": "talk", "bg": "village", "title": "測試", "lines": [["旁白", "一"], ["旁白", "二"]]}); await _f(t, 4)
+	if st.cg == null or not is_instance_valid(st.cg): _chk("搵到插圖卡（開張插圖）", false); return
+	var h0 = J.G.S.get("hero", {}).duplicate()
+	for sx in ["m", "f"]:
+		_sex(sx)
+		st.cg.show_spec(cg["3"]); await _f(t, 3); await _w(t, 0.8)
+		var want = "cg_market_open" if sx == "m" else "cg_market_open_f"
+		var a: Rect2 = st.cg.get_global_rect(); var vr = Rect2(Vector2.ZERO, t.get_viewport().get_visible_rect().size)
+		_chk("開張插圖（%s）：顯示啱版本、有動態、喺畫面內" % sx, st.cg.visible and st.cg.cur_key == want and st.cg.mot != null and vr.grow(1.0).encloses(a), [st.cg.cur_key, a])
+		await RenderingServer.frame_post_draw
+		t.get_viewport().get_texture().get_image().save_png(SH + "market_open_%s.png" % sx)
+	st.cg.hide_cg()
+	J.G.S["hero"] = h0
