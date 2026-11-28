@@ -50,6 +50,10 @@ func logic(_t) -> void:
 	var sim = _setup()
 	_chk("市集啟用（S.mk.test）", MK.active() and FUN.on())
 	_p("===== 1. 過勞營業：數值 =====")
+	var raw = JSON.parse_string(FileAccess.get_file_as_string("res://data/market.json")).overtime
+	var core = FUN.D().ot.core; var same = true
+	for k in core: if not raw.has(k) or str(raw[k]) != str(core[k]): same = false
+	_chk("market.json（M1）同 market_fun.json（M2）嘅過勞核心數值一樣", same, [raw, core])
 	_chk("設計數值寫入 overtime：fat_rate 1.2", is_equal_approx(MK.otf("fat_rate", 0), 1.2), MK.otf("fat_rate", 0))
 	_chk("設計數值：趴低 60 秒", is_equal_approx(MK.otf("down_s", 0), 60.0), MK.otf("down_s", 0))
 	_chk("設計數值：包子 1 個", int(MK.otf("feed_cost", 0)) == 1, MK.otf("feed_cost", 0))
@@ -366,6 +370,12 @@ func logic(_t) -> void:
 	RN.now_s = -1.0
 	S.mkr.pts = 3500.0
 	_chk("4 級：酒館名單必有名鬼（pin）", RN.named_pin())
+	J.G.erase("mk_renown_add_fn"); S.mk["renown_pts"] = 7.0; S.mkr.pts = 0.0; RN.reg()
+	_chk("M1 接口：未登記前暫存嘅名聲分收返（7 分）", is_equal_approx(RN.pts(), 7.0) and is_equal_approx(float(S.mk.renown_pts), 0.0))
+	J.G.mk_renown_add_fn.call(2, "tap")
+	_chk("M1 接口：mk_renown_add_fn(2) → 名聲 +2", is_equal_approx(RN.pts(), 9.0))
+	S.mkr.pts = 900.0; RN.reg()
+	_chk("M1 接口：S.mk.renown_lv 跟住真等級（3 級）", int(S.mk.get("renown_lv", 0)) == 3 and RN.level() == 3)
 	_p("===== 10. 舊收益×2／加速×2 =====")
 	sim.st().boost.inc_end = J.test_clock + 1e6
 	_chk("市集啟用時舊收益×2 唔生效", is_equal_approx(sim.inc_mul(), 1.0))

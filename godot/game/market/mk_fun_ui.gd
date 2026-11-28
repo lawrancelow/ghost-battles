@@ -56,11 +56,12 @@ static func _draw_ot(sc, ctx, sid: String, at: Vector2, counter := false) -> voi
 		return
 	if counter:   # 櫃台：繁忙牌＋過勞條
 		var bz = FUN.counter_busy(sc.sim, MK.cur())
-		Art.rr(ctx, x - 8, y, w + 16, h, 7, "rgba(120,60,20,.9)" if bz != "" else "rgba(60,40,48,.82)", "#f6d7a8", 1.4)
-		sc._txt(ctx, (L("收銀 %d 人", "收銀 %d 人") % FUN.counter_n(MK.cur())) + (L("・忙", "・忙") if bz != "" else ""), at.x, y + h / 2.0, 12, Color("#fff4e0"), "center", 900, 0)
+		var cw = 112.0 if bz != "" else 84.0   # 字 14px：按字數定牌闊，唔出格
+		Art.rr(ctx, at.x - cw / 2.0, y, cw, h, 7, "rgba(120,60,20,.9)" if bz != "" else "rgba(60,40,48,.82)", "#f6d7a8", 1.4)
+		sc._txt(ctx, (L("收銀 %d 人", "收銀 %d 人") % FUN.counter_n(MK.cur())) + (L("・忙", "・忙") if bz != "" else ""), at.x, y + h / 2.0, 14, Color("#fff4e0"), "center", 900, 0)
 		Art.rr(ctx, x, y + h + 4.0, w, 7, 3, "rgba(20,12,18,.8)", "", 0)
 		if k > 0.0: Art.rr(ctx, x, y + h + 4.0, w * k, 7, 3, _bar_col(k), "", 0)
-		if FUN.vet(sid): sc._txt(ctx, L("老收銀", "老收銀"), at.x, y - 10.0, 12, Color("#ffd27a"), "center", 900, 3)
+		if FUN.vet(sid): sc._txt(ctx, L("老收銀", "老收銀"), at.x, y - 11.0, 14, Color("#ffd27a"), "center", 900, 3)
 		return
 	var fill = "rgba(196,38,30,.95)" if on else "rgba(60,40,48,.82)"
 	Art.rr(ctx, x, y, w, h, 7, fill, "#f6d7a8" if on else "#9a8a90", 1.6)
@@ -70,13 +71,13 @@ static func _draw_ot(sc, ctx, sid: String, at: Vector2, counter := false) -> voi
 	var by = y + h + 4.0
 	Art.rr(ctx, x, by, w, 7, 3, "rgba(20,12,18,.8)", "", 0)
 	if k > 0.0: Art.rr(ctx, x, by, w * k, 7, 3, _bar_col(k), "", 0)
-	if FUN.warn(sid): sc._txt(ctx, L("汗", "汗"), x + w + 10.0, by + 3.0, 12, Color("#9fd8ff"), "center", 900, 2)
-	if FUN.vet(sid): sc._txt(ctx, L("老", "老"), x - 10.0, y + h / 2.0, 13, Color("#ffd27a"), "center", 900, 3)
+	if FUN.warn(sid): sc._txt(ctx, L("汗", "汗"), x + w + 11.0, by + 3.0, 14, Color("#9fd8ff"), "center", 900, 2)
+	if FUN.vet(sid): sc._txt(ctx, L("老", "老"), x - 11.0, y + h / 2.0, 14, Color("#ffd27a"), "center", 900, 3)
 	if FUN.punch_ok():
-		var pb = Rect2(x, by + 10.0, w, 20)
+		var pb = Rect2(at.x - 37.0, by + 10.0, 74.0, 24.0)
 		var cd = FUN.punch_left(sid)
 		Art.rr(ctx, pb.position.x, pb.position.y, pb.size.x, pb.size.y, 6, "rgba(40,60,90,.85)" if cd <= 0.0 else "rgba(40,40,40,.6)", "#b8d0f0", 1.2)
-		sc._txt(ctx, L("打卡放工", "打卡下班") if cd <= 0.0 else "%d:%02d" % [int(cd) / 60, int(cd) % 60], pb.get_center().x, pb.get_center().y, 11, Color("#e8f0ff"), "center", 900, 0)
+		sc._txt(ctx, L("打卡放工", "打卡下班") if cd <= 0.0 else "%d:%02d" % [int(cd) / 60, int(cd) % 60], pb.get_center().x, pb.get_center().y, 14, Color("#e8f0ff"), "center", 900, 0)
 		_wbtn["punch:" + sid] = pb
 
 # ---------------- 頂部 HUD ----------------
@@ -118,16 +119,16 @@ static func draw_hud(sc, ctx, y0 := -1.0) -> void:
 	if tl.size():
 		var r = Rect2(390.0 - 150.0, sc.top_pad + 128.0, 142.0, 26.0)
 		Art.rr(ctx, r.position.x, r.position.y, r.size.x, r.size.y, 7, "rgba(16,30,22,.88)", "#7fe0a0", 1.4)
-		sc._txt(ctx, L("陽間潮流榜 ▾", "陽間潮流榜 ▾"), r.get_center().x, r.get_center().y, 13, Color("#c8ffd8"), "center", 900, 0)
+		sc._txt(ctx, L("陽間潮流榜 ▾", "陽間潮流榜 ▾"), r.get_center().x, r.get_center().y, 14, Color("#c8ffd8"), "center", 900, 0)
 		_hbtn["trend"] = r
 		if trend_open:
 			var yy = r.end.y + 4.0
-			var hh = 24.0 * tl.size() + 30.0
+			var hh = 26.0 * tl.size() + 34.0
 			Art.rr(ctx, r.position.x - 40.0, yy, r.size.x + 40.0, hh, 8, "rgba(10,20,14,.94)", "#7fe0a0", 1.4)
 			for i in tl.size():
 				var sid = str(tl[i])
-				sc._txt(ctx, "%s ×%s" % [str(MD.st_def(sid).get("n", [sid, sid])[1 if DB.lang != "yue" else 0]) if MD.st_def(sid).get("n") is Array else sid, FUN.txt_trend_mul()], r.position.x - 30.0, yy + 16.0 + 24.0 * i, 13, Color("#e8fff0"), "left", 800, 0)
-			sc._txt(ctx, L("名聲：%s", "名聲：%s") % RN.level_name(), r.position.x - 30.0, yy + 16.0 + 24.0 * tl.size(), 12, Color("#ffd27a"), "left", 800, 0)
+				sc._txt(ctx, "%s ×%s" % [str(MD.st_def(sid).get("n", [sid, sid])[1 if DB.lang != "yue" else 0]) if MD.st_def(sid).get("n") is Array else sid, FUN.txt_trend_mul()], r.position.x - 30.0, yy + 17.0 + 26.0 * i, 14, Color("#e8fff0"), "left", 800, 0)
+			sc._txt(ctx, L("名聲：%s", "名聲：%s") % RN.level_name(), r.position.x - 30.0, yy + 19.0 + 26.0 * tl.size(), 14, Color("#ffd27a"), "left", 800, 0)
 
 # ---------------- 撳 ----------------
 static func tap(sc, p: Vector2) -> bool:

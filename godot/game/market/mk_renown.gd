@@ -28,6 +28,17 @@ static func st() -> Dictionary:
 	if s == null: return {}
 	if not (s.get("mkr") is Dictionary): s["mkr"] = {"v": 1, "pts": 0.0, "lv_seen": 1, "ex_day": -1, "ex_n": 0}
 	return s.mkr
+# M1 接口：巡邏處理成功／玩家親自處理時 M1 叫 J.G.mk_renown_add_fn(pts, why)；人流係數讀 S.mk.renown_lv
+static func reg() -> void:
+	var f = J.G.get("mk_renown_add_fn")
+	if not (f is Callable and (f as Callable).is_valid()): J.G["mk_renown_add_fn"] = func(p, why = ""): add(float(J.num(p)), str(why))
+	var s = S()
+	if s == null: return
+	if s.get("mk") is Dictionary:
+		var m: Dictionary = s.mk
+		var pend = float(J.num(m.get("renown_pts", 0.0)))   # M2 未登記前 M1 暫存嘅分：收返
+		if pend > 0.0: m["renown_pts"] = 0.0; add(pend, "m1")
+		m["renown_lv"] = level()
 static func pts() -> float: return float(J.num(st().get("pts", 0.0)))
 static func level() -> int:   # 1–5
 	var L: Array = D().get("lv", [0, 200, 800, 3000, 10000])
@@ -52,7 +63,7 @@ static func add(n: float, why := "") -> void:
 	if lv > int(J.num(s.get("lv_seen", 1))):
 		s.lv_seen = lv
 		evq.append({"k": "renown_up", "lv": lv, "name": level_name(lv), "why": why})
-static func tick() -> void: pass
+static func tick() -> void: reg()
 static func pop_events() -> Array:
 	var e = evq; evq = []
 	return e

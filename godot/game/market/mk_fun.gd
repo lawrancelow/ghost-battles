@@ -241,8 +241,11 @@ static func look_stage(sid: String, lv: float) -> int:
 	var n = 0
 	for x in D().mile.get("look_lv", [25, 100, 200]): if lv >= float(x): n += 1
 	return n
-static func extra_slots(sid: String, lv: float) -> int:
+static func extra_slots(sid: String, lv: float) -> int:   # 製作店員位＝1＋呢個數；權威表喺 M1（mk_ops.staff_slots），未合併時用自己嘅 slot_lv
 	if not on(): return 0
+	if ResourceLoader.exists("res://game/market/mk_ops.gd"):
+		var MKO = load("res://game/market/mk_ops.gd")
+		if MKO != null and MKO.has_method("extra_slots"): return int(MKO.extra_slots(sid, lv))
 	var n = 0
 	for x in D().mile.get("slot_lv", [10, 25, 100, 200]): if lv >= float(x): n += 1
 	return n
