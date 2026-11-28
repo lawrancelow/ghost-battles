@@ -611,7 +611,7 @@ func refresh() -> void:
 		var p = G.quest_progress(q)
 		var a = minf(float(p[0]), float(p[1]))
 		if mv_on(): p = MVB.quest_disp(q, p); a = minf(float(p[0]), float(p[1]))
-		quest_lbl.text = (_unify_qtext(MVB.quest_text(q)) if UNIFY else MVB.quest_text(q)) if mv_on() else q.text; quest_prog.text = "%d/%d" % [int(a), int(p[1])]
+		quest_lbl.text = str(DB.N((_unify_qtext(MVB.quest_text(q)) if UNIFY else MVB.quest_text(q)) if mv_on() else q.text)); quest_prog.text = "%d/%d" % [int(a), int(p[1])]
 		quest_prog.add_theme_color_override("font_color", Color("#2e6d3a") if float(p[0]) >= float(p[1]) else UIKit.CINNABAR2)
 	else: quest_lbl.text = "第一季完。村子由你慢慢經營。" if S.ended else "—"; quest_prog.text = ""
 	_ob_nav_gray()
@@ -763,6 +763,7 @@ func _mq_tick(dt: float) -> void:
 			"praise": show_praise(it[1])
 		return
 func show_toast(bb: String) -> void:
+	bb = str(DB.N(bb))   # [opening] 提示出口：主角名／{主角} 佔位一律換玩家名
 	if _mq_blocked("toast"):
 		if _mq.size() < 12: _mq.append(["toast", bb])
 		return

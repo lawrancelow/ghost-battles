@@ -40,8 +40,14 @@ static func rich(bb: String, size := 14, col := INKTXT, kind := "sans") -> RichT
 	return r
 
 # kind: '' 普通（深色）| 'gold'（朱紅）| 'ghost'（淡）
+# [opening] 選項／按鈕出口：文案誤寫 {主角} 佔位都換成玩家名（冇花括號就原句，唔影響其他按鈕）
+static func _hero_ph(text: String) -> String:
+	if not text.contains("{主角"): return text
+	var db = Engine.get_main_loop().root.get_node_or_null("DB") if Engine.get_main_loop() is SceneTree else null
+	return str(db.N(text)) if db != null and db.has_method("N") else text.replace("{主角全名}", "陳大福").replace("{主角}", "阿福")
+
 static func btn(text: String, kind := "", small := false) -> Button:
-	var b = Button.new(); b.text = text
+	var b = Button.new(); b.text = _hero_ph(text)
 	b.add_theme_font_override("font", font("sans", 900)); b.add_theme_font_size_override("font_size", 13 if small else 15)
 	var pad = Vector4(11, 6, 11, 6) if small else Vector4(15, 8, 15, 8)
 	var bg = Color("#3a2c26"); var fg = Color("#f0e2c8"); var bd = Color("#6a5040")

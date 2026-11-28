@@ -72,7 +72,7 @@ func hero_female() -> bool: return str(hero().get("sex", "m")) == "f"
 
 func N(s: Variant) -> Variant:
 	if not (s is String) or s == "": return s
-	if s.contains("{"): s = s.replace("{主角}", "阿福").replace("{主角全名}", "陳大福").replace("{player}", "阿福")   # [opening] 文案誤寫佔位符：統一當「阿福」再換名，畫面永遠唔出花括號
+	if s.contains("{"): s = s.replace("{主角}", "阿福").replace("{主角全名}", "陳大福")   # [opening] 文案誤寫佔位符：統一當「阿福」再換名，畫面永遠唔出花括號
 	var h = hero()
 	if h.is_empty(): return s
 	var f = str(h.get("sex", "m")) == "f"

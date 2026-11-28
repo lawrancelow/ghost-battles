@@ -2227,8 +2227,7 @@
 "cg": {
 "0": {
 "k": "cg_lobby",
-"ph": "cg1_queue",
-"rv": "待審"
+"ph": "cg1_queue"
 },
 "2": ""
 },
@@ -2267,7 +2266,8 @@
 "0": {
 "k": "cg_office",
 "ph": "cg1_office",
-"rv": "待審"
+"rv": "待審",
+"plaque": true
 },
 "4": ""
 },
@@ -2363,7 +2363,8 @@
 "4": {
 "k": "cg_exile",
 "ph": "cg1_queue",
-"rv": "待審"
+"rv": "待審",
+"plaque": true
 }
 },
 "lines": [
@@ -2807,13 +2808,11 @@
 },
 "5": {
 "k": "cg_joss_flood",
-"ph": "cg1_descend",
-"rv": "待審"
+"ph": "cg1_descend"
 },
 "11": {
 "k": "cg_joss_note_m",
-"ph": "cg1_descend",
-"rv": "待審"
+"ph": "cg1_descend"
 },
 "13": ""
 },
@@ -3009,7 +3008,8 @@
 "k": "cg_tavern",
 "ph": "cg1_huai",
 "kf": "cg_tavern_f",
-"rv": "待審"
+"rv": "待審",
+"plaque": true
 },
 "13": ""
 },
@@ -3072,8 +3072,7 @@
 "0": {
 "k": "cg_stall_hook",
 "ph": "cg1_huai",
-"kf": "cg_stall_hook_f",
-"rv": "待審"
+"kf": "cg_stall_hook_f"
 },
 "6": ""
 },
