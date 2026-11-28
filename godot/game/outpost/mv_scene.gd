@@ -8,6 +8,7 @@ const _ABL = preload("res://game/rts/ab_lay.gd")   # [abui]
 
 const MD = preload("res://game/outpost/mv_data.gd")
 const MK = preload("res://game/market/mk_data.gd")   # [market] 過勞鬼市集：街道＋過勞營業
+const MKU = preload("res://game/market/mk_ui.gd")   # [market] 街名牌列／切街
 const SIM = preload("res://game/outpost/mv_sim.gd")
 const FX = preload("res://game/outpost/mv_fx.gd")
 const M = preload("res://game/outpost/mat.gd")   # [chain]
@@ -684,6 +685,7 @@ func _draw_stage() -> void:
 	if not embed or hud_k > 0.01:   # [unify] 嵌入：睇到大排檔區先出 HUD
 		ctx.globalAlpha = hud_k if embed else 1.0
 		MB.draw(self, ctx, "hud", func(c): _draw_hud(c))   # [perf] HUD 內容冇變就用烘圖（數值變先重烘；閃動多就自動逐格畫）
+		MKU.draw_strip(self, ctx)   # [market] 五條街名牌列（逐格畫，唔入烘圖）
 		ctx.globalAlpha = 1.0
 		if _ABL.active and embed and hud_k > 0.3: _ABL.avoid_ci(ctx.ci, ctx.T, Rect2(0, top_pad, FW, EHUD_H + 14.0), true)   # [abui] 頂部 HUD（任務、收益、影響力條）唔畀戰鬥字蓋住（HUD 係烘圖，喺度登記）
 	MB.gc(self)   # [perf]
@@ -1710,6 +1712,7 @@ func _txt(ctx: Ctx, s: String, x: float, y: float, sz: int, col: Color, align :=
 
 # ================= 撳 =================
 func _stage_input(ev: InputEvent) -> void:
+	if MKU.swipe(self, ev): return   # [market] 街名牌列左右滑切街
 	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
 		if ev.pressed:
 			_press = {"p": ev.position, "cam": cam, "t": t, "drag": false, "last": ev.position.y, "lt": t}
@@ -1755,6 +1758,7 @@ func tap(p: Vector2) -> void:
 		if _hit("boost:" + kind, p):
 			if not sim.use_boost(kind): _float(s2w(p + Vector2(0, 30)), MD.S("cd", "冷卻緊", "冷卻中"), Color("#ffb0a0"), 15)
 			return
+	if MKU.tap(self, p): return   # [market] 街名牌列
 	if sim.plus.tap(self, p): return   # [play]
 	if sim.war.tap(self, p): return   # [war] 出征掣／頭目
 	if p.y < top_pad + (EHUD_H if embed else HUD_H) and (not embed or hud_on): return
