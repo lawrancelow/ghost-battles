@@ -171,9 +171,12 @@ static func _draw_bld(id: String, d) -> void:
 	if d.get("furnace") != null: load("res://game/joss/joss_ui.gd").panel(_body(), func(): _render_bld(id, true))   # [joss] 陽間包裹
 	var al = d.get("altar")
 	if al != null and load("res://game/soul/soul_ui.gd").altar(_body(), func(): _render_bld(id, true)): al = null   # [soul] 祭壇四頁（招雜鬼頁照用下面舊介面）
-	if al != null:
+	if al != null and load("res://game/tavern/tavern.gd").on():   # [tavern] 招雜鬼頁＝陰間酒館（普通鬼名單、招募、夜宵）
+		load("res://game/tavern/tavern_ui.gd").panel(_body(), func(): _render_bld(id, true)); al["_tav"] = true
+	if al != null and not al.get("_tav"):
 		_row("招魂一次：%s\n[font_size=12]雜鬼名額 %d/%d（升級民宅增加；收服的名鬼不佔名額）[/font_size]" % [bb(al.cost), int(J.num(al.cnt)), int(J.num(al.cap))], [_btn("招魂", "gold", J.t(al.can), func(): _act_bld(id, "recruit"))])
 		_p("目前可能招到：%s。收服更多鬼怪後，招魂池會變大。" % J.str(al.pool), 13)
+	if al != null:
 		var gone = al.get("gone")
 		if gone is Array and gone.size():
 			_p("[b]魂飛魄散名單[/b]", 15, UIKit.INKTXT, "serif")

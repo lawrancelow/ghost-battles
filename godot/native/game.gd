@@ -11,7 +11,8 @@ const HERO_S := 0.9   # [herobig] 主角喺村／分區地圖嘅大細（舊 0.7
 const CE = preload("res://game/outpost/chain_eco.gd")   # [chain] 拓展建築產量
 const CM = preload("res://game/outpost/mat.gd")           # [chain] 材料庫
 const FURNACE_CD := 300.0
-const JOSS = preload("res://game/joss/joss.gd")   # [joss] 化寶爐＝陽間包裹
+const JOSS = preload("res://game/joss/joss.gd")
+const TAV = preload("res://game/tavern/tavern.gd")   # [tavern] 陰間酒館   # [joss] 化寶爐＝陽間包裹
 const RAID = preload("res://game/raid/raid.gd")   # [raid] 惡鬼襲擾：停工／壞咗嘅建築唔產出
 const FEAST_CD := 1200.0
 const FEAST_NEED := 350.0
@@ -141,22 +142,24 @@ static func rates_per_min() -> Dictionary:
 	for g in S.ghosts:
 		if not J.t(g.get("post")): continue
 		if RAID.post_down(J.str(g.post)): continue   # [raid] 被襲擾：停工／壞咗
+		var hm = TAV.work_mul(g)   # [tavern] 酒館鬼：肚餓 ×0.5、罷工 0
+		if hm <= 0: continue
 		var lv = glv(g)
 		match J.str(g.post):
-			"wood": r.wood += (9 + 0.7 * lv) * mult("wood")
-			"rice": r.rice += (9 + 0.7 * lv) * mult("rice")
-			"plank": var o = (2.5 + stat(g, 0) * 0.05) * mult("plank"); r.planks += o; r.woodUse += o * 2
+			"wood": r.wood += (9 + 0.7 * lv) * hm * mult("wood")
+			"rice": r.rice += (9 + 0.7 * lv) * hm * mult("rice")
+			"plank": var o = (2.5 + stat(g, 0) * 0.05) * hm * mult("plank"); r.planks += o; r.woodUse += o * 2
 			"bun":   # [chain] 包子鋪出普通包子 m_bao（唔再直接出壽包）：速度照舊公式（每分鐘 o 批），每批用料／出貨跟 chain.json（冇就 2 糯米 → 1 包）
-				var o = (2.5 + stat(g, 1) * 0.05) * mult("bun"); var bb = CM.bld(CM.bld_of_old("bun"))
+				var o = (2.5 + stat(g, 1) * 0.05) * hm * mult("bun"); var bb = CM.bld(CM.bld_of_old("bun"))
 				var ri = J.num(J.gp(bb.get("in", {}), "m_rice")) if bb.get("in") is Dictionary and bb["in"].has("m_rice") else 2.0
 				var bo = J.num(J.gp(bb.get("out", {}), "m_bao")) if bb.get("out") is Dictionary and bb["out"].has("m_bao") else 1.0
 				r["bao"] = J.num(r.get("bao")) + o * bo; r.riceUse += o * ri; r["baoUse"] = J.num(r.get("baoUse")) + o * ri
 			"camp":   # 嚇人訓練班：練嚇功（rework）
-				var o = (2 + stat(g, 2) * 0.04) * mult("camp")
+				var o = (2 + stat(g, 2) * 0.04) * hm * mult("camp")
 				r["drill"] = J.num(r.get("drill")) + o; r.bunUse += o * 0.6
 				if not r.has("drillBy"): r["drillBy"] = []
 				r.drillBy.append([g.k, o])
-			"store": if J.str(g.k) == "toyol": r.coins += 2 + lv * 0.25
+			"store": if J.str(g.k) == "toyol": r.coins += (2 + lv * 0.25) * hm
 		r.exp += 0.6
 	if J.t(S.bld.get("home")) and not RAID.post_down("home"): r.troops += (1.2 + 1.3 * J.num(S.bld.home)) * BK().train_mul()   # 村裡的遊魂自願當陰兵（民宅）；[raid] 停工唔出兵；[barracks] 兵營加訓練速度
 	return r
@@ -185,6 +188,7 @@ static func produce(dt: float) -> void:
 		for e in J.iter(by):
 			var gk = J.str(e[0]); S.drill[gk] = J.num(S.drill.get(gk)) + J.num(e[1]) * m * k
 	R["coins"] = J.num(R.coins) + rg.call("coins") * m
+	TAV.tick(dt)   # [tavern] 夜宵／罷工、酒館名單刷新
 	CE.produce(dt)   # [chain] 拓展採集／加工建築（chain.json GATHER／WORKSHOPS，崗位鍵 = bid）
 	var acc = J.num(_g("expAcc")) + rg.call("exp") * m
 	J.G["expAcc"] = acc

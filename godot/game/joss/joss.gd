@@ -68,7 +68,52 @@ static func letter(id: String) -> Dictionary:
 static func interval_min(l: int) -> float:   # 每件相隔（分鐘）
 	var k = clampi(l, 1, MAXLV)
 	return 40.0 - (k - 1) * 20.0 / (MAXLV - 1)
-static func interval_ms(l: int) -> float: return interval_min(l) * 60000.0 / tscale()
+static func interval_ms(l: int) -> float:
+	if early(): return float(TVD().JOSS_EARLY.int_s) * 1000.0 / tscale()   # [tavern] 前期：舊化寶爐 5 分鐘一件
+	return interval_min(l) * 60000.0 / tscale()
+
+# ---------------- [tavern] 前期冥幣模式 ----------------
+# 大排檔未開（tavern.stall_open() == false）：化寶爐係前期冥幣來源——每件包裹以冥幣為主（媽、爸、表姐、隔籬陳太輪流，間中寄錯地址）。
+# 第一次收件＝地府郵政積壓三個月嘅包裹，一次過送到（backlog）。大排檔開咗之後第一次收件：轉「祭品模式」（返回原有來信系統），回傳 shift=true 俾 UI 播 joss_shift。
+static func TVD() -> Dictionary: return load("res://game/tavern/tv_gen.gd").D()
+static func early() -> bool:
+	var tv = load("res://game/tavern/tavern.gd")
+	if not tv.ON: return false
+	var s = S()
+	if s != null and s.get("joss") is Dictionary and str(s.joss.get("mode", "")) == "gift": return false
+	return not tv.stall_open()
+static func early_coins(l: int, big: bool) -> float:
+	var E = TVD().JOSS_EARLY; var s = S()
+	var hl = J.num(s.get("lv", 1)) if s != null else 1.0
+	return roundf((float(E.base) + float(E.per_lv) * maxi(1, l) + float(E.per_hero) * hl) * (2.5 if big else 1.0))
+static func collect_early(j: Dictionary, kind: String) -> Dictionary:
+	var l = maxi(1, lv()); var big = kind != "n"
+	var E = TVD().JOSS_EARLY; var ss: Array = E.senders
+	var first = J.num(j.get("early_n", 0)) <= 0
+	var o: Dictionary = ss[0] if first else ss[int(J.num(j.get("early_n", 0))) % (ss.size() - 1)]
+	if not first and rng.randf() < 0.1: o = ss[ss.size() - 1]   # 寄錯地址
+	var c = early_coins(l, big)
+	if o.get("wrong"): c = roundf(c * 0.5)
+	var rw = []
+	if first:
+		c += float(E.backlog)
+		rw.append({"k": "coins", "n": float(E.backlog), "label": T("積壓包裹 冥幣 +%d", "積壓包裹 冥幣 +%d") % int(E.backlog), "icon": load("res://ui/res_icon.gd").path("coins")})
+	var s = S()
+	s.res["coins"] = J.num(s.res.get("coins", 0)) + c
+	rw.append({"k": "coins", "n": c - (float(E.backlog) if first else 0.0), "label": T("冥幣 +%d", "冥幣 +%d") % int(c - (float(E.backlog) if first else 0.0)), "icon": load("res://ui/res_icon.gd").path("coins")})
+	var mid = "m_wood" if rng.randf() < 0.5 else "m_rice"; var mn = roundf(6 * qmul(l))
+	mat_add(mid, mn); rw.append({"k": "mat", "mid": mid, "n": mn, "label": "%s +%d" % [mat_name(mid), int(mn)], "icon": mat_icon(mid)})
+	j["early_n"] = J.num(j.get("early_n", 0)) + 1
+	j["n"] = J.num(j.n) + 1; j["mode"] = "early"
+	var name = str(DB.hero().get("name", "")) if DB.has_method("hero") else ""
+	var txt = P(o.t).replace("阿仔／阿女", name if name != "" else ("阿女" if female() else "阿仔")).replace("孩子", name if name != "" else "孩子")
+	var labels = []
+	for x in rw: labels.append(str(x.label))
+	j.log.push_front({"id": "early", "t": now(), "r": "，".join(labels), "k": kind})
+	while j.log.size() > LOG_MAX: j.log.pop_back()
+	if s.get("cnt") is Dictionary: s.cnt["joss"] = J.num(s.cnt.get("joss", 0)) + 1
+	return {"ok": true, "id": "early", "kind": kind, "fest": fest_name(kind), "item": T("一疊冥幣", "一疊冥幣"), "sender": P(o.s), "text": txt, "note": "",
+		"shape": "box", "art": "", "rw": rw, "more": j.q.size(), "early": true, "backlog": first, "coins": c}
 static func qmul(l: int) -> float: return 1.0 + 0.2 * (clampi(l, 1, MAXLV) - 1)   # 數量倍數
 static func rare_mul(l: int) -> float: return 0.3 + 0.15 * clampi(l, 1, MAXLV)      # 稀有信權重倍數
 static func quality_text(l: int) -> String:
@@ -276,6 +321,9 @@ static func collect() -> Dictionary:
 	if j == null or count() <= 0: return {"ok": false}
 	var p = j.q.pop_front()
 	var kind = str(p.get("k", "n"))
+	if early(): return collect_early(j, kind)   # [tavern] 前期冥幣模式
+	var shift = str(j.get("mode", "")) == "early"   # [tavern] 大排檔開咗後第一次收件：轉祭品模式
+	j["mode"] = "gift"
 	var o = pick(kind if kind != "n" else "n")
 	if o.is_empty(): return {"ok": false}
 	var l = maxi(1, lv()); var big = kind != "n"
@@ -314,7 +362,7 @@ static func collect() -> Dictionary:
 	var s = S()
 	if s != null and s.get("cnt") is Dictionary: s.cnt["joss"] = J.num(s.cnt.get("joss", 0)) + 1
 	return {"ok": true, "id": id, "kind": kind, "fest": fest_name(kind), "item": item_of(o), "sender": sender_of(o), "text": text_of(o), "note": note_of(o),
-		"shape": str(o.get("shape", "box")), "art": str(o.get("art", "")), "rw": rw, "more": j.q.size()}
+		"shape": str(o.get("shape", "box")), "art": str(o.get("art", "")), "rw": rw, "more": j.q.size(), "shift": shift}
 
 # 舊信重溫（唔再派獎勵）
 static func reread(entry: Dictionary) -> Dictionary:
