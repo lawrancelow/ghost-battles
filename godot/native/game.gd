@@ -353,6 +353,7 @@ static func bld_req(id) -> String:
 	return ""
 static func bld_unlocked(id) -> bool:
 	var S = _S(); var b = _g("BUILDINGS")[J.str(id)]
+	if J.str(id) in ["house", "wood", "rice", "furnace"] and load("res://game/rebuild/rb.gd").active(): return true   # [rebuild] 化寶爐排第 4，荒村一開始就修得
 	if J.t(b.get("unlockLv")) and J.num(S.lv) < J.num(b.unlockLv): return false
 	if J.t(b.get("unlockStage")) and not J.t(S.cleared.get(J.str(b.unlockStage))): return false
 	if J.t(b.get("unlockQuest")):
@@ -1373,6 +1374,7 @@ static func n_bld(id) -> Dictionary:
 static func n_bld_act(id, a, arg):
 	var S = _S(); var F = _g("F"); var sid = J.str(id); var act = J.str(a); var B = _g("BUILDINGS")[sid]; var UI = _ui()
 	if act == "build":
+		if load("res://game/rebuild/rb.gd").build_hook(sid): return "close"   # [rebuild] 荒村：清雜物→搭棚→開張
 		if not J.t(_c("canPay", [B.build])): return null
 		_snd("build"); _c("pay", [B.build]); S.bld[sid] = 1.0; _c("gainExp", [15.0]); _fx("banner", ["%s 建好了！" % J.str(B.name)]); J.mc(_g("Quest"), "check", []); BK().on_built(sid)   # [barracks] 兵營第一次建成劇情
 	if act == "up":

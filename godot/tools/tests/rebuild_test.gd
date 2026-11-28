@@ -40,7 +40,10 @@ func all(t) -> void:
 	_chk("舊存檔：冇 S.rb → 虛擬任務 null", RB.cur_q() == null and not RB.on())
 	# 開荒村
 	RB.start_fresh(S, true)
-	_chk("開荒村：三棟係 0", J.num(S.bld.house) == 0 and J.num(S.bld.wood) == 0 and J.num(S.bld.rice) == 0)
+	var z = true
+	for b in RB.ALL: if J.num(S.bld.get(b, 0)) != 0: z = false
+	_chk("開荒村：10 棟都係 0", z, S.bld)
+	_chk("化寶爐一開始已解鎖（排第 4）", J.t(J.cl(J.G.get("bldUnlocked"), null, ["furnace"])))
 	var q = _q()
 	_chk("任務排頭：清理鬼宅", q != null and str(q.get("t")) == "rb_clear" and str(q.b) == "house", str(q))
 	await _shot(t, m, "01_ruins", RB._pos("house"))
@@ -60,7 +63,6 @@ func all(t) -> void:
 		for e in RB.piles():
 			if e.b != b: continue
 			for k in RB.HITS:
-				J.mc(J.G.get("Story"), "skip", []) if J.t(J.mc(J.G.get("Story"), "busy", [])) else null
 				_tap((e.p as Vector2).x, (e.p as Vector2).y - 4); hits += 1
 				await _w(t, 0.05)
 		var gain = 0.0
@@ -85,13 +87,50 @@ func all(t) -> void:
 		_chk("%s：時間到開張（bld≥1）" % b, J.num(S.bld[b]) >= 1, S.bld[b])
 		_check(); await _w(t, 0.6)
 		if b == "house": await _shot(t, m, "04_house_open", RB._pos(b))
-	_chk("三棟修完：rb.done", J.t(RB.st().get("done")) and not RB.on())
+	_chk("四棟（含化寶爐）修完：rb.done", J.t(RB.st().get("done")) and not RB.on())
 	_chk("接口：opened_count ≥ 3、vitality 0–1", RB.opened_count() >= 3 and RB.vitality() > 0 and RB.vitality() <= 1.0, "%d %.2f" % [RB.opened_count(), RB.vitality()])
+	# 後段：棺材鋪跟舊建造流程（建築卡「建造」）
+	var N = J.gp(J.G.get("UI"), "_n")
+	var b2 = "plank"
+	var r1 = J.mc(N, "bldAct", [b2, "build", null])
+	_chk("後段：未清雜物撳建造唔起（唔扣錢、唔搭棚）", not RB.fixing(b2) and J.num(S.bld[b2]) == 0, r1)
+	for e in RB.piles():
+		if e.b != b2: continue
+		for k in RB.HITS: _tap((e.p as Vector2).x, (e.p as Vector2).y - 4); await _w(t, 0.03)
+	_chk("後段：棺材鋪雜物清晒", RB.cleared(b2))
+	S.res.wood = 999.0; S.res.planks = 999.0; S.res.coins = 999.0; S.res.rice = 999.0
+	var w0 = J.num(S.res.wood)
+	J.mc(N, "bldAct", [b2, "build", null])
+	_chk("後段：撳建造 → 扣錢、搭棚、bld 仲係 0", RB.fixing(b2) and J.num(S.bld[b2]) == 0 and J.num(S.res.wood) < w0, "%s %s" % [S.bld[b2], S.res.wood])
+	await _shot(t, m, "06_plank_scaffold", RB._pos(b2))
+	for i in 120:
+		_check(); await _w(t, 0.1)
+		if RB.is_open(b2): break
+	_chk("後段：時間到開張", RB.is_open(b2) and J.num(S.bld[b2]) >= 1)
+	_chk("後段：民宅修復費改棺材板 30", J.num(J.G.BUILDINGS.home.build.get("planks", 0)) == 30.0, J.G.BUILDINGS.home.build)
+	# 睡著的名鬼：倉庫第 1 堆
+	var had = false
+	for g in S.ghosts: if str(g.k) == RB.SLEEPER.k: had = true
+	for e in RB.piles():
+		if e.id != RB.SLEEPER.pile: continue
+		for k in RB.HITS: _tap((e.p as Vector2).x, (e.p as Vector2).y - 4); await _w(t, 0.03)
+	await _w(t, 0.5)
+	await _shot(t, m, "07_sleeper", RB._pos("store"))
+	for i in 60:
+		await pf._skip(t)
+		await _w(t, 0.2)
+		var got = false
+		for g in S.ghosts: if str(g.k) == RB.SLEEPER.k: got = true
+		if got: break
+	var got2 = false
+	for g in S.ghosts: if str(g.k) == RB.SLEEPER.k: got2 = true
+	_chk("睡著的名鬼：挖出椰子砸死鬼並入村", had or got2, RB.SLEEPER.k)
 	# 村史館：連挖 8 件集齊有獎、唔重複
 	var ev = []
 	RB.listen(func(k, a): ev.append(k))
 	var c0 = J.num(S.res.coins); var r0 = RB.relics().size()
 	for i in 10: RB._relic(Vector2(200, 400))
+	_chk("提示排隊：唔會即刻全部彈出", RB.notes_left() >= 2, RB.notes_left())
 	_chk("村史館：8 件唔重複、集齊", RB.relics().size() == 8, RB.relics())
 	_chk("村史館：集齊有冥幣獎", J.num(S.res.coins) >= c0 + 200)
 	_chk("接口：listen 收到 relic 事件（新挖 %d 件）" % (8 - r0), ev.count("relic") == 8 - r0, ev.size())
@@ -99,6 +138,16 @@ func all(t) -> void:
 	for id in J.G.get("BLD_ORDER"): S.bld[id] = maxf(1.0, J.num(S.bld.get(id, 0)))
 	_check(); await _w(t, 0.6)
 	_chk("全村點燈：10 棟開張 → lit＋事件", RB.all_lit() and "lit" in ev, ev)
+	for i in 40:
+		_check(); await _w(t, 0.5)
+		if RB.notes_left() == 0: break
+	_chk("提示排隊：最後全部顯示完", RB.notes_left() == 0, RB.notes_left())
+	# 粵語只喺粵語欄：書面模式下村史館文字唔准有粵語字
+	var bad_y = []
+	for e in RB.RELICS:
+		for w in ["咗", "嘅", "嗰", "喺", "嚟", "係", "住"]:
+			if (e[2] + e[4]).contains(w): bad_y.append(e[0] + ":" + w)
+	_chk("村史館書面中文欄冇粵語字", bad_y.is_empty(), bad_y)
 	q = _q()
 	_chk("返正式主線：S.qi 冇郁過、任務唔係 rb", J.num(S.qi) == qi0 and q != null and not J.t(q.get("rb")), str(q.get("text")) if q != null else "null")
 	var js = JSON.parse_string(J.to_json(S))
