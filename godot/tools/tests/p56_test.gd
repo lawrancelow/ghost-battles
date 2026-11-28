@@ -25,7 +25,7 @@ func logic(t) -> void:
 	for k in _saved: S[k] = _saved[k]
 	_p("RESULT ok=%d bad=%d" % [rows - bad, bad])
 
-var _extra: Array = ["power_tag", "sortie_keep", "story_busy", "hero_story_wpn", "tut_bubble"]
+var _extra: Array = ["work_shots", "power_tag", "sortie_keep", "story_busy", "hero_story_wpn", "tut_bubble"]
 
 # ---------- 8. 升級曲線 ----------
 func econ_curve(_t) -> void:
@@ -174,3 +174,34 @@ func tut_bubble(t) -> void:
 	tu.visible = false; tu.shown = false
 	_chk("教程收埋 → 唔擋", not vil._tut_on())
 	tu.visible = ov; tu.shown = os_
+
+# ---------- 9. 主角做嘢（斬樹／割禾／做板／搓包）：空手＋工具浮喺旁邊（男女主）----------
+func work_shots(t) -> void:
+	_p("===== 9. 主角做工動畫：空手＋漂浮工具 =====")
+	var HV = load("res://game/soul/hero_vil.gd"); var WA = load("res://game/outpost/work_anim.gd")
+	var S = _S(); var keep_h = S.get("hero", {}).duplicate() if S.get("hero") is Dictionary else {}
+	if not (S.get("hero") is Dictionary): S["hero"] = {}
+	DirAccess.make_dir_recursive_absolute("/tmp/p56shots")
+	for sex in ["m", "f"]:
+		S.hero["sex"] = sex
+		_chk("主角（%s）用空手圖" % sex, HV.active())
+		var c = Control.new(); c.size = Vector2(720, 260); t.get_tree().root.add_child(c)
+		var info = []
+		c.draw.connect(func():
+			c.draw_rect(Rect2(Vector2.ZERO, c.size), Color(0.35, 0.33, 0.3))
+			var i = 0
+			for pose in ["chop", "reap", "hammer", "knead"]:
+				for pt in [0.15, 0.55]:
+					HV.draw(Ctx.new(c), 50.0 + i * 88.0, 220.0, 1.0, {"t": 1.0, "pose": pose, "pt": pt})
+					info.append([pose, pt, HV.LAST.duplicate(), WA.LAST.get("afu", {}).get("tools", -1)])
+					i += 1)
+		c.queue_redraw()
+		for k in 4: await t.get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		var img = t.get_viewport().get_texture().get_image()
+		img.get_region(Rect2i(0, 0, 720, 260)).save_png("/tmp/p56shots/work_%s.png" % sex)
+		var bad = []
+		for x in info: if str(x[2].get("mode", "")) != "work": bad.append(x)
+		_chk("主角（%s）做嘢行做工動畫（工具浮喺旁，唔係揸住）" % sex, bad.is_empty() and info.size() >= 8, str(bad))
+		c.queue_free()
+	S["hero"] = keep_h
