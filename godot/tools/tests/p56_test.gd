@@ -25,7 +25,7 @@ func logic(t) -> void:
 	for k in _saved: S[k] = _saved[k]
 	_p("RESULT ok=%d bad=%d" % [rows - bad, bad])
 
-var _extra: Array = ["work_shots", "power_tag", "sortie_keep", "story_busy", "hero_story_wpn", "tut_bubble", "bar_layout", "toast_avoid"]
+var _extra: Array = ["work_shots", "power_tag", "sortie_keep", "story_busy", "hero_story_wpn", "tut_bubble", "bar_layout", "toast_avoid", "home_cost"]
 
 # ---------- 8. 升級曲線 ----------
 func econ_curve(_t) -> void:
@@ -230,10 +230,14 @@ func bar_layout(t) -> void:
 		var q = {"t": "build", "b": cs[0], "text": longest, "go": cs[0], "r": {}}
 		var ql = m.quest_lbl; var qb = m.quest_bar
 		var want = longest + m._quest_lack_line(q)   # 同 refresh() 同一條砌字路
-		for rep in 3:
-			ql.text = want; m.quest_prog.text = "99999/99999"
-			for i in 3: await t.get_tree().process_frame
-			if str(ql.text) == want: break
+		var setter = func():   # 每幀畫之前核對：俾 refresh() 蓋走先寫返（每幀照寫會令 RichTextLabel 不停重排、高度永遠未更新）
+			if str(ql.text) != want: ql.text = want
+			if str(m.quest_prog.text) != "99999/99999": m.quest_prog.text = "99999/99999"
+		RenderingServer.frame_pre_draw.connect(setter)
+		for i in 8: await t.get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		RenderingServer.frame_pre_draw.disconnect(setter)
+		setter.call()
 		var sh = NEED.quest_short(q)
 		var ptxt = ql.get_parsed_text()
 		_chk("%s：短句有出（%s）" % [cs[1], sh], sh != "" and ptxt.find(sh.trim_prefix("（").trim_suffix("）").replace("→", " → ")) >= 0, ptxt)
@@ -283,3 +287,24 @@ func toast_avoid(t) -> void:
 		_chk("提示框冇頂出畫面頂（掣%s）" % ("顯示" if vis else "收埋"), top >= 0.0, top)
 	for c in m.toasts.get_children(): c.free()
 	sb.visible = ov
+
+# ---------- 12. [p56c] 民宅建造成本 60 → 36 棺材板：數值同顯示一致 ----------
+func home_cost(_t) -> void:
+	_p("===== 12. 民宅建造成本 36 板 =====")
+	var S = _S(); var keepb = S.bld.duplicate(); var keepr = S.res.duplicate()
+	var BLD = J.G.get("BUILDINGS")
+	var c = BLD["home"].get("build")
+	_chk("民宅建造成本＝{planks:36}", c is Dictionary and c.size() == 1 and int(J.num(c.get("planks", 0))) == 36, str(c))
+	_chk("data/core.json 同運行時一致", int(J.num(DB.D.BUILDINGS.home.build.planks)) == 36, str(DB.D.BUILDINGS.home.build))
+	S.bld["home"] = 0.0; S.bld["plank"] = 1.0; S.res["planks"] = 1.0
+	var q = {"t": "build", "b": "home", "text": "建造民宅", "go": "home", "r": {}}
+	_chk("任務費用＝36 板", int(J.num(NEED.quest_cost(q).get("planks", 0))) == 36, str(NEED.quest_cost(q)))
+	_chk("任務條短句：缺棺材板 35", NEED.quest_short(q).find("缺棺材板 35") >= 0, NEED.quest_short(q))
+	_chk("失敗提示：還差 棺材板 35", NEED.bld_why("home", "build").find("棺材板 35") >= 0, NEED.bld_why("home", "build"))
+	_chk("村子資料檔（data/nat/data.json）＝36", int(J.num(JSON.parse_string(FileAccess.get_file_as_string("res://data/nat/data.json")).get("BUILDINGS", {}).get("home", {}).get("build", {}).get("planks", 0))) == 36)
+	S.res["planks"] = 35.0
+	_chk("35 板：付唔起（提示仲差 1）", NEED.hint(c).find("棺材板 1") >= 0, NEED.hint(c))
+	S.res["planks"] = 36.0
+	_chk("36 板：夠料（冇缺料提示）", NEED.hint(c) == "" and NEED.quest_lack(q).is_empty(), NEED.hint(c))
+	for k in keepb: S.bld[k] = keepb[k]
+	for k in keepr: S.res[k] = keepr[k]
