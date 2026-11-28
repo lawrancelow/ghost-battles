@@ -276,8 +276,8 @@ func logic(t) -> void:
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
 
 # ---- 後備動態（單張圖）＋新接入嘅分層圖 ----
-const FLAT_KEYS := ["cg_lobby", "cg_stall_hook", "cg_pang_visit_m", "cg_joss_note_m", "cg_stall_hook_f", "cg_caught", "cg_he_wake", "cg_qian_bite", "cg_mk_weapon", "cg_tavern", "cg_nuopo_taste"]
-const NEW_LAYERED := {"cg_soup_f": 2, "cg_f_bribe": 4}
+const FLAT_KEYS := ["cg_lobby", "cg_stall_hook", "cg_joss_note_m", "cg_stall_hook_f", "cg_caught", "cg_he_wake", "cg_qian_bite", "cg_mk_weapon", "cg_tavern", "cg_nuopo_taste", "cg_road", "cg_road_f", "cg_joss_ruin"]
+const NEW_LAYERED := {"cg_soup_f": 2, "cg_f_bribe": 4, "cg_pang_visit_m": 4}
 
 func flat(t) -> void:
 	var pc = _mk(t); var par = pc[0]; var cg = pc[1]

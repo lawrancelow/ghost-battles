@@ -6,21 +6,27 @@ full, bgp, d = sys.argv[1:4]; names = sys.argv[4:]
 A = cv2.imread(full); H, W = A.shape[:2]
 B = cv2.imread(bgp)
 if B.shape != A.shape: B = cv2.resize(B, (W, H), interpolation=cv2.INTER_AREA)
-gA = cv2.cvtColor(A, cv2.COLOR_BGR2GRAY).astype(np.float32)
+A2 = cv2.resize(A, (W // 2, H // 2), interpolation=cv2.INTER_AREA).astype(np.float32); Af = A.astype(np.float32)
+def match(img, T, m0, sc, k):   # 彩色模板匹配（k＝圖縮細倍數）
+    tw, th = int(T.shape[1] * sc / k), int(T.shape[0] * sc / k)
+    if tw < 12 or th < 12 or tw > img.shape[1] or th > img.shape[0]: return None
+    gT = cv2.resize(T[:, :, :3], (tw, th), interpolation=cv2.INTER_AREA).astype(np.float32)
+    mk = cv2.resize(m0, (tw, th), interpolation=cv2.INTER_NEAREST); mk = cv2.merge([mk, mk, mk])
+    r = np.nan_to_num(cv2.matchTemplate(img, gT, cv2.TM_CCOEFF_NORMED, mask=mk), nan=-1, posinf=-1, neginf=-1)
+    _, v, _, loc = cv2.minMaxLoc(r)
+    return (v, sc, loc[0] * k, loc[1] * k, int(T.shape[1] * sc), int(T.shape[0] * sc))
 layers = []
 for fn in names:
     T = cv2.imread(os.path.join(d, fn), cv2.IMREAD_UNCHANGED)
-    g0 = cv2.cvtColor(T[:, :, :3], cv2.COLOR_BGR2GRAY).astype(np.float32); m0 = (T[:, :, 3] > 128).astype(np.float32)
+    m0 = (T[:, :, 3] > 128).astype(np.float32)
     best = None
-    for rng, n in [((0.3, 1.4), 45), (None, 25)]:   # 先粗後細
-        lo, hi = rng if rng else (best[1] * 0.95, best[1] * 1.05)
-        for sc in np.linspace(lo, hi, n):
-            tw, th = int(T.shape[1] * sc), int(T.shape[0] * sc)
-            if tw < 16 or th < 16 or tw > W or th > H: continue
-            gT = cv2.resize(g0, (tw, th), interpolation=cv2.INTER_AREA); mk = cv2.resize(m0, (tw, th), interpolation=cv2.INTER_NEAREST)
-            r = np.nan_to_num(cv2.matchTemplate(gA, gT, cv2.TM_CCOEFF_NORMED, mask=mk), nan=-1, posinf=-1, neginf=-1)
-            _, v, _, loc = cv2.minMaxLoc(r)
-            if best is None or v > best[0]: best = (v, sc, loc[0], loc[1], tw, th)
+    for sc in np.linspace(0.3, 1.5, 49):   # 先喺半解像度粗搵比例
+        b = match(A2, T, m0, sc, 2)
+        if b and (best is None or b[0] > best[0]): best = b
+    c0 = best[1]; best = None
+    for sc in np.linspace(c0 * 0.96, c0 * 1.04, 9):   # 再喺原解像度搵準
+        b = match(Af, T, m0, sc, 1)
+        if b and (best is None or b[0] > best[0]): best = b
     v, sc, x, y, tw, th = best
     layers.append(dict(name=fn[:-4], file=fn, x=int(x), y=int(y), w=tw, h=th, scale=round(float(sc), 4), src_size=[int(T.shape[1]), int(T.shape[0])], match=round(float(v), 3)))
     print(fn, "match", round(v, 3), "scale", round(sc, 3), "at", x, y, tw, th)
