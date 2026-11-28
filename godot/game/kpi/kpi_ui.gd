@@ -106,7 +106,7 @@ static func _sheet(main, gid: String) -> void:
 	var body = main.sheet_body
 	# ① 大倒數
 	var top = HBoxContainer.new(); top.add_theme_constant_override("separation", 10)
-	var who = boss_portrait(str(gd.boss), 54); top.add_child(who)
+	var who = boss_portrait(str(gd.boss), 60); top.add_child(who)
 	var tv = VBoxContainer.new(); tv.add_theme_constant_override("separation", 0); tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tv.add_child(UIKit.label(str(gd.get("title", "")), 13, UIKit.INKDIM))
 	var cd = UIKit.label(_fmt_t(J.num(g.left)), 34, UIKit.CINNABAR2, "sans", 900); tv.add_child(cd)
@@ -201,7 +201,7 @@ static func _gift_card(main, gid: String, tier: String, sel: String) -> Control:
 	var risk = str(bd.get("risk", "none"))
 	var rr = HBoxContainer.new(); rr.alignment = BoxContainer.ALIGNMENT_CENTER; rr.add_theme_constant_override("separation", 2); rr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if risk != "none":
-		rr.add_child(_img("mvi_phone" if risk == "photo" else "mvi_notice", 16))
+		rr.add_child(_img("kpi_risk_photo" if risk == "photo" else "kpi_risk_caught", 18))
 		rr.add_child(UIKit.label("%d%%" % int(round(J.num(bd.get("p", 0)) * 100)), 12, UIKit.CINNABAR2, "sans", 900))
 	else: rr.add_child(UIKit.label(L("冇風險", "無風險"), 12, UIKit.INKDIM, "sans", 700))
 	vb.add_child(rr)
@@ -214,22 +214,30 @@ static func _gift_card(main, gid: String, tier: String, sel: String) -> Control:
 	b.add_child(vb)
 	b.pressed.connect(func(): _bribe(main, gid, tier, sel))
 	return b
-# 冥界老闆頭像：有美術（kpi_boss_<id>）用美術；龐總用 bm_pang；其餘暫用佔位（圓牌＋姓）
+# 冥界老闆頭像：美術「探出圈」版（kpi_boss_<id>：畫布＝圓直徑 2 倍、圓心喺正中、帽／頭越出圈）；冇就圓牌＋姓（佔位）
+# sz＝圓圈直徑；返回嘅格仔預留上方出圈位（唔裁切），圓圈貼格底
 const BOSS_CH := {"chen": "陳", "he": "何", "qian": "錢", "dato": "冥", "nuo": "糯", "pang": "龐"}
 static func boss_key(boss: String) -> String:
 	if Spr.ok("kpi_boss_" + boss): return "kpi_boss_" + boss
-	if boss == "pang" and Spr.ok("bm_pang"): return "bm_pang"
 	return ""
 static func boss_portrait(boss: String, sz: float) -> Control:
 	var k = boss_key(boss)
-	if k != "": return _img(k, sz)
-	var p = Panel.new(); p.custom_minimum_size = Vector2(sz, sz); p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var box = Control.new(); box.mouse_filter = Control.MOUSE_FILTER_IGNORE; box.clip_contents = false
+	box.custom_minimum_size = Vector2(sz * 1.5, sz * 1.75)
+	if k != "":
+		var tr = TextureRect.new(); tr.texture = Spr.get_tex(k + ("_s" if sz <= 64 and Spr.ok(k + "_s") else ""))
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; tr.stretch_mode = TextureRect.STRETCH_SCALE; tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tr.size = Vector2(sz * 2.0, sz * 2.0)
+		tr.position = Vector2(sz * 0.75 - sz, sz * 1.75 - sz * 0.5 - sz)   # 圓心 → (格中, 格底上半個圓)
+		box.add_child(tr)
+		return box
+	var p = Panel.new(); p.size = Vector2(sz, sz); p.position = Vector2(sz * 0.25, sz * 0.75); p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var s = StyleBoxFlat.new(); s.bg_color = Color("#3a2440"); s.border_color = Color("#e8b04a"); s.set_border_width_all(2); s.set_corner_radius_all(int(sz / 2))
 	p.add_theme_stylebox_override("panel", s)
 	var l = UIKit.label(str(BOSS_CH.get(boss, "?")), int(sz * 0.5), Color("#ffe9a8"), "serif", 900)
 	l.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	p.add_child(l)
-	return p
+	p.add_child(l); box.add_child(p)
+	return box
 static func M_amt(m: String) -> float: return KG.amt_of(m)
 
 static func _eff_txt(o: Dictionary) -> String:
