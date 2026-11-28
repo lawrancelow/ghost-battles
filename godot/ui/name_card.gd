@@ -8,7 +8,7 @@ const DEF_M := {"name": "阿福", "full": "陳大福", "en": "Kelvin", "sex": "m
 const DEF_F := {"name": "阿慧", "full": "陳嘉慧", "en": "", "sex": "f"}
 # 名字會被塞入對白（ApaKhabar 對白用「時間|內容」、富文本用 [ ]），呢啲字元唔准入
 const BAD := ["|", "[", "]", "{", "}", "<", ">", "\\", "\n", "\r", "\t"]
-const OPEN_DEF := ["prologue_chat", "op_wake", "op_guard", "op_desk", "op_home", "op_dinner", "op_photo", "op_door", "prologue_road", "prologue_sys"]
+const OPEN_DEF := ["prologue_chat", "op_wake", "op_guard", "op_desk", "op_home", "op_dinner", "op_photo", "op_door", "op2_road", "op2_lobby", "op2_office", "op2_soup", "op2_exile", "op2_arrive", "prologue_sys"]
 const SCREEN := Color("#07080c")
 const GLOW := Color("#9fe8d8")
 const TXT := Color("#eef2f0")
@@ -61,7 +61,7 @@ static func opening_unfinished(S) -> bool:
 	if seen.has("prologue_sys"): return false
 	# 舊流程（冇新開場）播到黑白無常就當完：只限未改過名、又未睇過新開場任何一場
 	var any_op = false
-	for id in opening(S): if str(id).begins_with("op_") and seen.has(id): any_op = true
+	for id in opening(S): if not str(id).begins_with("prologue_") and seen.has(id): any_op = true   # [opening] op_／opf_／op2_／opf2_ 都算
 	if seen.has("prologue_road") and not hero_set(S) and not any_op: return false
 	return true
 
