@@ -352,6 +352,7 @@ func logic(_t) -> void:
 	sim.custs.clear()
 	# 熟客
 	FUN.D().regular["p"] = 1.0
+	for rg0 in FUN.regs(sim.ci()): rg0["v"] = 0   # [int] 前面幾節可能已累積來訪次數（隨機抽中同一位就會顯示名），呢度由 0 開始先驗「未夠 5 次」
 	var rc = _cust(sim, {"m_shoubao": 1}); FUN.on_spawn(sim, rc)
 	_chk("熟客標記：未夠 5 次唔顯示名", rc.has("reg") and str(rc.get("regn", "x")) == "")
 	FUN.st().regs.clear(); var rr = FUN.regs(0)
