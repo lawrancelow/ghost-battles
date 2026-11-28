@@ -73,3 +73,15 @@ M1 沒有改 `market.json` 的既有欄位、沒有動 `mk_ui.gd`、`mv_scene.gd
 - **佔位畫面** `godot/game/market/mk_ops_ui.gd`（M1 新檔）：街名牌列下方一條「櫃檯 n/3 −＋｜巡邏 n/4 −＋｜收銀箱」，再下面是事件紅牌（點＝主角處理）。`mv_scene.gd` 新增三行：`const MKOU`、`MKOU.draw(self, ctx)`（在 `MKU.draw_strip` 後）、`if MKOU.tap(self, p): return`（在 `MKU.tap` 前）。M2 的 mk_ui 如要接管，把這兩個呼叫拿掉即可。
 - 浮字：`MKO.toast(text, color)`／`MKO.pop_toasts()`。
 - `MK.ot_mul(sid)`：只含加班與老員工的倍數（不含店員人數、停工），估算攤位產值用。
+
+---
+## M2 線回覆（2026-11-28，分支 market-m2，已合併 M1-6）
+- **已接上**：`mk_counter_n_fn`（未登記時 `FUN.counter_n` 直接問 `MKO.counter_n`）、`patrol_ok／patrol_reach／patrol_speed／patrol_handled／rush_phase／counter_down`、`FUN.extra_slots` 改讀 `MKO.extra_slots`、`mk_renown.reg()` 登記 `mk_renown_add_fn`（並收回 `S.mk.renown_pts` 暫存分、寫 `S.mk.renown_lv`＋`renown_live`）。
+- **檔名**：M2 畫面檔改名 `game/market/mk_fun_ui.gd`（避開 M1 的 `mk_ui.gd`）。
+- **畫面分工**（避免重疊）：
+  - M2 HUD（潮流榜牌、連單數、子時高峰、限時大客）一律排在左欄，位置＝`mk_ops_ui.hud_end` 下方；M2 在 `mk_ops_ui.gd` 只加了 `static var hud_end`＋兩行賦值。
+  - M2 攤位掛牌（加班牌、過勞條、餵包子、打卡鐘）在攤位**左上角外**（`st_pos + (-118, -146)`）；攤位正上方留給 M1 過勞小卡，右上角是「做／收」圓鈕。
+  - `mv_scene._cover` 加一行：「生產鏈」按鈕避開 `MKUI.hud_rects`。
+- **mv_sim.cust_value**：主貨 `× FUN.item_mul(攤)`；副貨照 M1 `sub_adj` 計底價，再由 `FUN.sub_bonus` 補「寄賣攤」的 M2 倍數（加班 ×1.2、街組合、潮流、三星牌）。
+- **market_test 為配合 M2 改了三處**：副貨價乘 `FUN.item_mul`；名聲 +2 改查 `renown_pts＋mk_renown.pts()`；巡邏處理率統計段暫停 M2 巡邏過勞與隊長升職（`pat_add=0、cap_n=1e9`，量完 `FUN.reload()`），否則隊長會兼顧鄰街令處理數偏高。另加 `MK_SHOTS` 環境變數可改截圖目錄。
+- **M2 數值（data/market_fun.json）**：巡邏員每件 +15（隊友分擔，4 隻 ×0.7）、閒時每秒回 0.1（原 1.0 會永遠不趴）、100 趴下 60 秒、50 件升隊長；`pat_max 4`、`ctr_max 3`；名鬼機率按名聲等級 3%／6%／10%／10%／10%；評論家星級門檻 `star_miles [1, 3]`（Lv10 起 2 星、Lv50 起 3 星）。
