@@ -101,8 +101,61 @@ func logic(t) -> void:
 	CGM.disabled = true
 	cg.show_spec({"k": KEY})
 	await _w(t, 0.05)
-	_chk("停用動態：冇素材 key 照舊收起／有就用靜態", cg.mot == null)
+	_chk("停用動態：冇動態層", cg.mot == null)
+	_chk("停用動態：冇整張圖嘅都出底圖，唔黑畫面", cg.visible and cg.pic.texture == CGM.still(KEY) and cg.pic.texture != null)
+	for kk in ["cg_a2_rebuilt", "cg_b2_soup", "cg_c1_bribe", "cg_c2_bribe"]:
+		cg.show_spec({"k": kk}); await _w(t, 0.05)
+		_chk("停用動態：退返原整張靜態圖 " + kk, cg.visible and cg.mot == null and cg.pic.texture != null and str(cg.pic.texture.resource_path).ends_with("still.webp"), cg.pic.texture.resource_path if cg.pic.texture else "null")
 	CGM.disabled = false
+	# 設定頁「流暢模式」開＝唔播動態
+	var PM = load("res://ui/perf_mode.gd")
+	PM.load_pref(); var pm0 = PM.on
+	PM.on = true
+	_chk("流暢模式開：has=false、known=true", not CGM.has("cg_a2_rebuilt") and CGM.known("cg_a2_rebuilt"))
+	cg.show_spec({"k": "cg_a2_rebuilt"}); await _w(t, 0.05)
+	_chk("流暢模式開：用靜態整張圖", cg.visible and cg.mot == null and str(cg.pic.texture.resource_path).ends_with("still.webp"))
+	PM.on = false
+	cg.show_spec({"k": "cg_a2_rebuilt"}); await _w(t, 0.05)
+	_chk("流暢模式關：動態返嚟", cg.mot != null)
+	PM.on = pm0
+	# 缺層／缺底圖：唔崩
+	var keep = CGM.conf()[KEY]
+	var brk = keep.duplicate(true)
+	brk.layers.append({"img": "no_such_layer.webp", "x": 0.5, "y": 0.5, "h": 0.1, "fx": {"float": {}, "blink": {"alt": "no_alt.webp"}}})
+	brk.layers.append("壞資料")
+	brk.layers[0].fx["blink"] = {"alt": "no_alt.webp", "every": 1.0}
+	brk.fx.append("壞資料"); brk.fx.append({"type": "no_such_type"})
+	CGM.conf()[KEY] = brk
+	cg.hide_cg(); await _w(t, 0.6)
+	cg.show_spec({"k": KEY}); await _w(t, 0.1)
+	_chk("缺層：照播，缺嗰層跳過", cg.mot != null and cg.mot.items.size() == 2, cg.mot.items.size() if cg.mot else -1)
+	if cg.mot != null:
+		for k in 240: cg.mot.tick(1.0 / 60.0)
+	_chk("缺換表情圖：唔崩、照用原圖", cg.mot != null and cg.mot.items[0].n.texture != null)
+	var nob = keep.duplicate(true); nob["bg"] = "no_bg.webp"; nob.erase("still")
+	CGM.conf()[KEY] = nob
+	cg.hide_cg(); await _w(t, 0.6)
+	cg.show_spec({"k": KEY}); await _w(t, 0.6)
+	_chk("缺底圖：冇動態、收起，唔崩", cg.mot == null and not cg.visible)
+	# 視差：par 大嘅層喺慢推鏡平移時多郁
+	var pr = keep.duplicate(true)
+	pr["cam"] = {"zoom": [1.2, 1.2], "pan": [0, 0, -0.05, 0.03], "dur": 1.0}
+	pr.layers = [{"img": "wood.webp", "x": 0.3, "y": 0.5, "h": 0.1, "par": 0.0}, {"img": "water.webp", "x": 0.6, "y": 0.5, "h": 0.1, "par": 0.5}]
+	pr.fx = []
+	CGM.conf()[KEY] = pr
+	cg.show_spec({"k": KEY}); await _w(t, 0.1)
+	var mp = cg.mot
+	if mp != null:
+		mp.t = 0.0; mp.tick(2.0)
+		var cz = mp.cam()
+		var d0 = (mp.items[0].n.position - mp.items[0].pos) as Vector2
+		var d1 = (mp.items[1].n.position - mp.items[1].pos) as Vector2
+		var want1 = (cz[1] as Vector2) * 0.5 / cz[0]
+		_chk("視差：par 0 層唔額外郁", d0.length() < 0.01, d0)
+		_chk("視差：par 0.5 層多郁鏡頭平移嘅一半", d1.distance_to(want1) < 0.05 and d1.length() > 1.0, [d1, want1])
+	else: _chk("視差測試建到", false)
+	CGM.conf()[KEY] = keep
+	cg.hide_cg(); await _w(t, 0.6)
 	# 收起清走
 	cg.show_spec({"k": KEY}); await _w(t, 0.1)
 	cg.hide_cg(); await _w(t, 0.6)
@@ -174,8 +227,57 @@ func logic(t) -> void:
 		cg.show_spec({"k": kk}); await _w(t, 0.1)
 		_chk("分層插圖可播：" + kk, cg.mot != null and cg.mot.items.size() >= 2, cg.mot.items.size() if cg.mot else -1)
 		_chk("有原整張圖（關動態用）：" + kk, CGM.still(kk) != null)
+	# 全部正式插圖：鏡頭全程唔露邊；每個角色（有 wander）全程喺畫面內、慢、唔似行路
+	for kk in ["cg_a2_rebuilt", "cg_b2_soup", "cg_c1_bribe", "cg_c2_bribe"]:
+		cg.hide_cg(); await _w(t, 0.6)
+		cg.show_spec({"k": kk}); await _w(t, 0.1)
+		var mk = cg.mot
+		if mk == null: _chk("可播 " + kk, false); continue
+		_chk("粒子有出：" + kk, mk.parts.size() >= 1, mk.parts.size())
+		mk.t = 0.0
+		var gap := 0.0; var out := 0.0; var spd := 0.0; var rotm := 0.0; var nw := 0; var wmin := 1e9
+		var last := {}; var mxo := {}
+		for f in 1800:   # 30 秒
+			var cz = mk.tick(1.0 / 60.0)
+			var z: float = cz[0]; var pan: Vector2 = cz[1]
+			gap = maxf(gap, maxf(absf(pan.x) - mk.vs.x * (z - 1.0) / 2.0, absf(pan.y) - mk.vs.y * (z - 1.0) / 2.0))
+			for i in mk.items.size():
+				var it = mk.items[i]
+				if not (it.fx.get("wander") is Dictionary): continue
+				var n: TextureRect = it.n
+				var d: Vector2 = n.position - it.pos
+				out = maxf(out, maxf(maxf(-n.position.x, -n.position.y), maxf(n.position.x + n.size.x - mk.vs.x, n.position.y + n.size.y - mk.vs.y)) if _inside(it, mk) else 0.0)
+				var wv = mk._wander(it.fx.wander, float(it.ph))
+				if last.has(i): spd = maxf(spd, ((wv[0] as Vector2) - last[i]).length() * 60.0 / (mk.tsz.x * mk.cover_s))
+				last[i] = wv[0]
+				mxo[i] = maxf(mxo.get(i, 0.0), (wv[0] as Vector2).length())
+				rotm = maxf(rotm, absf(wv[1]))
+		for i in mxo: nw += 1; wmin = minf(wmin, mxo[i] / (mk.tsz.x * mk.cover_s))
+		_chk("鏡頭全程唔露邊：" + kk, gap <= 0.01, snappedf(gap, 0.01))
+		_chk("角色全程喺畫面內：" + kk, out <= 0.5, snappedf(out, 0.1))
+		_chk("每個遊走角色都真係有移動（≥ 圖闊 0.3%）：" + kk, nw >= 2 and wmin >= 0.003, [nw, snappedf(wmin, 0.0001)])
+		_chk("遊走夠慢（每秒 ≤ 圖闊 2.5%）：" + kk, spd <= 0.025, snappedf(spd, 0.0001))
+		_chk("遊走傾斜 ≤ 3.5 度（飄，唔係行）：" + kk, rad_to_deg(rotm) <= 3.5, snappedf(rad_to_deg(rotm), 0.01))
+	# B2：孟婆隻手搭住主角，兩層用同一個 seed 一齊行，接觸位唔會拉開
+	cg.hide_cg(); await _w(t, 0.6)
+	cg.show_spec({"k": "cg_b2_soup"}); await _w(t, 0.1)
+	var mb = cg.mot
+	if mb != null and mb.items.size() == 2:
+		var gapx := 0.0; var mvx := 0.0
+		mb.t = 0.0
+		for f in 1800:
+			mb.t += 1.0 / 60.0
+			var wa = mb._wander(mb.items[0].fx.wander, float(mb.items[0].ph))
+			var wb = mb._wander(mb.items[1].fx.wander, float(mb.items[1].ph))
+			gapx = maxf(gapx, ((wa[0] as Vector2) - (wb[0] as Vector2)).length()); mvx = maxf(mvx, (wa[0] as Vector2).length())
+		_chk("B2 兩個角色一齊遊走（相對位移 0）", gapx < 0.01 and mvx > 2.0, [snappedf(gapx, 0.01), snappedf(mvx, 0.1)])
+	else: _chk("B2 兩層", false)
 	par.queue_free()
 	_p("RESULT ok=%d bad=%d" % [ok, bad])
+
+func _inside(it, mk) -> bool:   # 原位本身完全喺畫面內嘅層先查出界（貼邊畫嘅層另計）
+	var p: Vector2 = it.pos; var n: TextureRect = it.n
+	return p.x >= 0.0 and p.y >= 0.0 and p.x + n.size.x <= mk.vs.x and p.y + n.size.y <= mk.vs.y
 
 func shots(t) -> void:
 	var dir = OS.get_environment("CGM_SHOTS")
@@ -199,7 +301,10 @@ func _shots_one(t, cg, key, dir, pc) -> void:
 	if false: _p("dbg par=%s cg.pos=%s cg.size=%s frame=%s screen=%s tv=%s vp=%s win=%s" % [pc[0].size, cg.position, cg.size, cg.frame.size, cg.screen.size, cg.tv.size, cg.vp.size, t.get_viewport().get_visible_rect().size])
 	var dt = float(OS.get_environment("CGM_DT")) if OS.get_environment("CGM_DT") != "" else 0.25
 	var n = int(OS.get_environment("CGM_N")) if OS.get_environment("CGM_N") != "" else 48
+	var per_frame = OS.get_environment("CGM_FRAMES") != ""   # 配合 --fixed-fps：逐格截，播放速度準
+	if per_frame: await _w(t, 1.3)   # 等老電視開機動畫完
 	for i in n:   # 預設 12 秒，每 0.25 秒一張；CGM_DT／CGM_N 可改
-		await _w(t, dt)
+		if per_frame: await t.get_tree().process_frame
+		else: await _w(t, dt)
 		var img = t.get_viewport().get_texture().get_image()
 		img.save_png(dir + "f%03d.png" % i)

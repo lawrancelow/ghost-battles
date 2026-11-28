@@ -127,11 +127,11 @@ func show_spec(spec) -> void:
 	if spec == null: return
 	var d: Dictionary = spec if spec is Dictionary else {"k": str(spec)}
 	var k = str(d.get("k", ""))
-	if k == "" or (not Spr.ok(k) and not CGM.has(k)):
+	if k == "" or (not Spr.ok(k) and not CGM.known(k)):
 		hide_cg(); return
 	var tex: Texture2D = CGM.bg(k) if (CGM.has(k) and not (d.get("anim") is bool and not d.anim)) else null   # [cgm] 有分層素材：用挖走角色嘅底圖
 	var layered = tex != null
-	if tex == null and CGM.has(k): tex = CGM.still(k)   # [cgm] 關動態：用原整張圖（有就用）
+	if tex == null and CGM.known(k): tex = CGM.still(k)   # [cgm] 關動態：用原整張圖（有就用）
 	if tex == null: tex = Spr.get_tex(k) if Spr.ok(k) else null
 	if tex == null:
 		if mot != null: mot.free_all(); mot = null   # [cgm] 收起時唔再郁

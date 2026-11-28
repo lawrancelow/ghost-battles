@@ -34,8 +34,17 @@ static func conf() -> Dictionary:
 			if d is Dictionary: _conf = d
 	return _conf
 
-static func has(k: String) -> bool:
-	return not disabled and conf().get(k) is Dictionary
+const PM = preload("res://ui/perf_mode.gd")   # 流暢模式開＝唔播動態，用原整張圖
+
+static func known(k: String) -> bool:   # 有分層設定（唔理開關）
+	return conf().get(k) is Dictionary
+
+static func off() -> bool:   # 動態關咗：測試／程式停用，或者設定頁開咗流暢模式
+	PM.load_pref()
+	return disabled or PM.lite()
+
+static func has(k: String) -> bool:   # 有分層設定而且動態開住
+	return known(k) and not off()
 
 static func _tex(k: String, f: String) -> Texture2D:
 	var p = ROOT + k + "/" + f
@@ -43,9 +52,11 @@ static func _tex(k: String, f: String) -> Texture2D:
 	return load(p) as Texture2D
 
 static func still(k: String) -> Texture2D:   # 關動態／低效能：原整張插圖（conf "still"），冇就 null
-	if not (conf().get(k) is Dictionary): return null
+	if not known(k): return null
 	var f = str(conf()[k].get("still", ""))
-	return _tex(k, f) if f != "" else null
+	var tx = _tex(k, f) if f != "" else null
+	if tx == null: tx = _tex(k, str(conf()[k].get("bg", "bg.webp")))   # 冇整張圖：最少出底圖，唔好黑畫面
+	return tx
 
 static func bg(k: String) -> Texture2D:
 	if not has(k): return null
@@ -80,7 +91,7 @@ func img2view(p: Vector2) -> Vector2:   # 底圖比例座標 → SubViewport 像
 	return cover_o + Vector2(p.x * tsz.x, p.y * tsz.y) * cover_s
 
 func _build() -> void:
-	var ls: Array = (L.get("layers", []) as Array).duplicate()
+	var ls: Array = (L.get("layers", []) as Array).filter(func(o): return o is Dictionary)   # 壞資料先濾走（排序唔會撞）
 	ls.sort_custom(func(a, b): return J.num(a.get("z", 0)) < J.num(b.get("z", 0)))
 	var i := 0
 	for o in ls:
@@ -191,6 +202,8 @@ func cam() -> Array:
 	while pp.size() < 4: pp.append(0)
 	var z = lerpf(J.num(zz[0]), J.num(zz[min(1, zz.size() - 1)]), a)
 	var pan = Vector2(lerpf(J.num(pp[0]), J.num(pp[2]), a), lerpf(J.num(pp[1]), J.num(pp[3]), a)) * vs
+	var lim = vs * maxf(z - 1.0, 0.0) / 2.0   # 平移唔可以大過放大多出嚟嘅邊，否則畫面邊露底
+	pan = Vector2(clampf(pan.x, -lim.x, lim.x), clampf(pan.y, -lim.y, lim.y))
 	return [z, pan]
 
 func tick(dt: float) -> Array:
@@ -258,12 +271,14 @@ static func _h(i: float, sd: float) -> float:   # 決定性亂數 -1..1（同一
 	return (v - floor(v)) * 2.0 - 1.0
 
 # wander 參數（全部可每層調）：ax／ay＝左右／上下幅度（底圖闊／高嘅比例）、per＝每段（行＋停）秒數、
-# hold＝停頓佔每段比例、tilt＝轉向時傾斜度數、axis＝[dx,dy] 有就淨係沿呢個方向來回（搬木、挑水等工作方向）
+# hold＝停頓佔每段比例、tilt＝轉向時傾斜度數、axis＝[dx,dy] 有就淨係沿呢個方向來回（搬木、挑水等工作方向）、
+# seed＝有就用佢做亂數種子（幾層寫同一個 seed＋同一組參數＝一齊行）
 func _wander(w: Dictionary, ph: float) -> Array:
 	var ax = J.num(w.get("ax", 0.012)) * tsz.x * cover_s
 	var ay = J.num(w.get("ay", 0.004)) * tsz.y * cover_s
 	var per = maxf(J.num(w.get("per", 6.0)), 0.5)
 	var hold = clampf(J.num(w.get("hold", 0.35)), 0.0, 0.9)
+	if w.has("seed"): ph = J.num(w.seed)   # 同一個 seed 嘅層一齊行（有接觸嘅角色，例如遞湯嘅手，唔會拉開）
 	var sd = ph * 3.7 + 1.0
 	var tt = t / per + ph * 0.61
 	var i = floor(tt); var fr = tt - i
