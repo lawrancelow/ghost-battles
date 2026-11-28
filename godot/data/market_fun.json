@@ -1,0 +1,111 @@
+{
+ "_doc": "過勞鬼市集 M2：過勞營業補完、爽點（里程碑／同街組合／連單／子時高峰／潮流榜／熟客／評論家／章事件）、名聲。數值全部可調。設計：design_market_v1 第三、四節。",
+ "ot": {
+  "price_mul": 1.2,
+  "base_rate": 0.15,
+  "warn": 70,
+  "warn_mul": 0.9,
+  "down_s": 60,
+  "feed_cost": 1,
+  "feed_fat": 40,
+  "rank_downs": 5,
+  "rank_xp_s": 1800,
+  "rank_fat_mul": 0.7,
+  "rank_out_mul": 1.2,
+  "punch_ch": 5,
+  "punch_cd_s": 600,
+  "counter_mul": 2.0,
+  "counter_rest_mul": 0.6
+ },
+ "mile": {
+  "look_lv": [25, 100, 200],
+  "slot_lv": [25, 100, 200]
+ },
+ "combo": {
+  "win_s": 10,
+  "mul": 1.5,
+  "step_n": 5,
+  "step_add": 0.1,
+  "cap": 2.0
+ },
+ "rush": {
+  "every_s": 900,
+  "first_s": 300,
+  "warn_s": 30,
+  "peak_s": 90,
+  "rest_s": 60,
+  "peak_flow": 3.0,
+  "rest_flow": 0.5,
+  "rest_fat": 4.0,
+  "first_peak_s": 60,
+  "vip_n": [10, 30],
+  "vip_s": 90,
+  "vip_mul": 3.0,
+  "vip_renown": 20,
+  "vips": [
+   {"id": "rich", "n": ["富豪鬼", "富豪鬼"]},
+   {"id": "tour", "n": ["旅行團鬼", "旅行團鬼"]},
+   {"id": "wed", "n": ["婚宴鬼", "婚宴鬼"]},
+   {"id": "takeaway", "n": ["外賣大單", "外賣大單"]},
+   {"id": "group", "n": ["集團團購", "集團團購"]},
+   {"id": "famous", "n": ["名鬼包場", "名鬼包場"]}
+  ]
+ },
+ "trend": {
+  "n": 3,
+  "mul": 1.5,
+  "flow_w": 2.0,
+  "fest": {
+   "qingming": ["cloth"],
+   "ghost": ["acc", "food"],
+   "dongzhi": ["food"],
+   "cny": ["lux", "cloth"],
+   "bday": ["food"]
+  }
+ },
+ "regular": {
+  "per_ch": 4,
+  "p": 0.12,
+  "name_at": 5,
+  "arc_every": 10,
+  "arc_renown": 30
+ },
+ "critic": {
+  "per_ch": 2,
+  "first_s": 900,
+  "gap_s": [900, 1800],
+  "n_try": 3,
+  "star3_renown": 50,
+  "star3_price": 0.1,
+  "star1_flow": 0.8,
+  "star1_s": 600
+ },
+ "combos": {
+  "0": [
+   {"id": "c1_food3", "street": "food", "need": ["st_shoubao", "st_douhua", "st_nuomici"], "lv": 25, "kind": "price", "v": 0.15, "n": ["宵夜三寶", "宵夜三寶"]},
+   {"id": "c1_cloth3", "street": "cloth", "need": ["st_zhishan", "st_caoxie", "st_zhiku"], "lv": 25, "kind": "multi", "v": 0.2, "n": ["全身紙紮", "全身紙紮"]}
+  ]
+ },
+ "events": {
+  "1": [{"id": "toyol", "every_s": 300}],
+  "2": [{"id": "corpse_parade", "every_s": 600}],
+  "3": [{"id": "tide", "every_s": 720}],
+  "4": [{"id": "flying_head", "every_s": 480}],
+  "5": [{"id": "inspection", "every_s": 1200}]
+ },
+ "renown": {
+  "lv": [0, 200, 800, 3000, 10000],
+  "names": [["無名小檔", "無名小檔"], ["街坊口碑", "街坊口碑"], ["陰間打卡點", "陰間打卡點"], ["地府米芝蓮", "地府米其林"], ["傳說老字號", "傳說老字號"]],
+  "per_item": 1,
+  "per_lux": 10,
+  "named_p": [0.03, 0.03, 0.06, 0.10, 0.10],
+  "named_pin_lv": 4,
+  "back_ch": 2,
+  "back_lv": 2,
+  "move_lv": [2, 2, 3, 3, 4, 4],
+  "exch_day": 3,
+  "exch_cost": 50,
+  "exch_coin": 100,
+  "exch_scale": 5
+ }
+}
