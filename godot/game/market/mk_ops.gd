@@ -693,3 +693,16 @@ static func ghost_value(sim, gid) -> Dictionary:   # 呢隻鬼而家喺村／攤
 			v2 += q * CM.price(str(mid)); parts.append("%s %d" % [CM.name(str(mid)), int(round(q))])
 	var nm = CB.bname(p) if not CB.def(p).is_empty() else p
 	return {"coins": v2, "txt": nm + ("（少產 " + "、".join(parts) + "）" if parts.size() else "")}
+
+# ================= 客流（加班平衡用嘅參數） =================
+# 冇呢個之前：客人每 2.2–4 秒嚟一位、排隊最多 4 位，收入俾客流卡死，加班產量 ×2 都賣唔出（實測唔加班都有 95%）。
+# demand.ot_draw：呢條街每有一成攤位加班中，客流 +ot_draw×10%（加班＝大聲叫賣吸客）；demand.base：整體客流倍數。
+static func flow_mul(sim) -> float:
+	if not on(): return 1.0
+	var d = D().get("demand")
+	if not (d is Dictionary): return 1.0
+	var k = float(d.get("base", 1.0))
+	var L = open_stalls(sim.ci(), MK.cur()); var n = 0
+	for sid in L: if MK.ot_on(sid): n += 1
+	if L.size(): k *= 1.0 + float(d.get("ot_draw", 0.0)) * float(n) / float(L.size())
+	return maxf(0.1, k)

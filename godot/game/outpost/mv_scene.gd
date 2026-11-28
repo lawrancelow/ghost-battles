@@ -260,6 +260,7 @@ func chain_btn_pos(sz: Vector2) -> Vector2:
 	var y0 = (float(sim.war.hud_y(self)) if sim != null and sim.war != null else top_pad + HUD_H) + 48.0
 	var ar = ux_alarm_rect()
 	if ar != null: y0 = maxf(y0, ar.end.y + 8.0)   # [uxui] 告急掣下面
+	if float(MKOU.hud_bot) > 0.0: y0 = maxf(y0, float(MKOU.hud_bot) + 8.0)   # [market M1 營運] 人手列／治安卡下面
 	if embed and _pill_rect is Rect2 and hud_k > 0.5: y0 = maxf(y0, _pill_rect.end.y + 8.0 if _pill_rect.position.x > FW * 0.5 - sz.x else y0)   # [uxui] 玩法掣喺右邊 → 再落一格
 	var cands = [Vector2(FW - sz.x - 8.0, y0), Vector2(8.0, y0)]
 	for k in range(1, 4): cands.append_array([Vector2(FW - sz.x - 8.0, y0 + 110.0 * k), Vector2(8.0, y0 + 110.0 * k)])

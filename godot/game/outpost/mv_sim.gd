@@ -858,6 +858,7 @@ func _step_custs(dt: float) -> void:
 		spawn_t = rng.randf_range(2.2, 4.0) * (2.0 if fence_pressure() >= 2 else 1.0)
 		spawn_t /= war.freq_mul(self)   # [war]
 		spawn_t /= plus.freq_mul(self)   # [play] 夜潮
+		spawn_t /= MKO.flow_mul(self)   # [market M1 營運] 加班叫賣吸客（data/market_ops.json demand）
 		if waiting < MD.QUEUE_MAX: spawn_cust()
 	var order = []
 	for c in custs: if c.st != "out": order.append(c)

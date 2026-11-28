@@ -1271,5 +1271,11 @@
    "st_c6_diaosheng": "st_c6_xiongzhang"
   }
  },
- "_doc_pairs": "pairs[ci]＝{主攤: 副貨攤}：副貨攤唔再獨立擺攤，佢隻貨變成主攤 Lv25 解鎖嘅預設副貨（goods_final「每街第 1、2 階配一攤，第 3、4 階配一攤」）。pairs_pending＝其中一邊係新台，等新台數據併入後搬去 pairs。　第 2 章現有攤只有 7 個，配對先擺 pending（否則新台未到之前只剩 4 攤）。"
+ "_doc_pairs": "pairs[ci]＝{主攤: 副貨攤}：副貨攤唔再獨立擺攤，佢隻貨變成主攤 Lv25 解鎖嘅預設副貨（goods_final「每街第 1、2 階配一攤，第 3、4 階配一攤」）。pairs_pending＝其中一邊係新台，等新台數據併入後搬去 pairs。　第 2 章現有攤只有 7 個，配對先擺 pending（否則新台未到之前只剩 4 攤）。",
+ "demand": {
+  "_doc": "客流參數（加班平衡）：base＝整體客流倍數；ot_draw＝全街加班時客流再 ×(1+ot_draw)，按加班攤位比例計。目標：唔加班≈輪替嘅 60%、狂加班唔理≈75%。",
+  "base": 1.0,
+  "ot_draw": 1.0
+ },
+ "price_rebase": 1
 }

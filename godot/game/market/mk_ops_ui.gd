@@ -22,6 +22,7 @@ static var _fx: Array = []        # 演出中：{"k", "ev", "t0", "life", ...}
 static var _says: Array = []      # 對白條：{"who", "t", "t0", "life"}
 static var _ow := {}              # 過勞小卡狀態：sid → {"down": bool, "up_t": float, "say_t": float}
 static var _panel := ""           # 開緊嘅人手面板（""＝冇）
+static var hud_bot := 0.0         # 我哋呢疊（人手列＋治安卡＋對白條）今格嘅底（畫面座標）；M2 嘅 HUD 排喺佢下面
 static var _culprit := {}         # 事件 id → 搞事鬼圖鍵
 static var _title := {"st": "", "t0": -99.0}   # 切街標題卡（已選用美術：牌坊 A／食街／奢侈品店橫幅）
 static func banner_key(street: String) -> String:
@@ -42,6 +43,7 @@ static func _pill(sc, ctx, key: String, x: float, y: float, w: float, h: float, 
 	if key != "": sc._btns[key] = Rect2(x, y, w, h)
 
 static func draw(sc, ctx) -> void:
+	hud_bot = 0.0
 	if not on(sc): return
 	_pump(sc)
 	var street = MK.cur(); var y = y0(sc); var W = float(sc.FW)
@@ -96,6 +98,20 @@ static func draw(sc, ctx) -> void:
 		Art.rr(ctx, 8, cy, W - 16.0, sh, 10, "rgba(250,244,228,.97)", "#5e4a30", 2.0)
 		for i in ls.size(): sc._txt(ctx, str(ls[i]), 20, cy + 16 + 19.0 * i, 14, Color("#2b1d12"), "left", 700, 0)
 		ctx.globalAlpha = 1.0
+	hud_bot = cy + (0.0 if _says.is_empty() else 12.0 + 19.0 * 3.0)
+	# 搞事鬼喺畫面外：邊緣出指示牌（撳＝鏡頭移過去）
+	var oy = maxf(hud_bot + 30.0, y + 200.0)
+	for e2 in evs:
+		var wp = ev_pos(sc, e2); var spt: Vector2 = sc.w2s(wp)
+		if spt.x >= 20.0 and spt.x <= W - 20.0 and spt.y >= hud_bot + 20.0 and spt.y <= float(sc.view_h()) - 40.0: continue
+		var right = spt.x > W / 2.0
+		var tn2 = MK.T(TYPE_N.get(str(e2.k), ["", ""]))
+		var lab = (tn2 + " ▶") if right else ("◀ " + tn2)
+		var px = W - 96.0 if right else 8.0
+		ctx.globalAlpha = 0.85 + 0.15 * sin(now * 8.0)
+		_pill(sc, ctx, "mkog:%d" % int(e2.id), px, oy, 88, 32, lab, "rgba(170,36,30,.97)", Color("#fff6e0"), 15, "#ffd0c0")
+		ctx.globalAlpha = 1.0
+		oy += 38.0
 	for tt in MKO.pop_toasts(): sc._float(sc.s2w(Vector2(W / 2.0, cy + 70.0)), str(tt.t), Color(str(tt.c)), 16)
 	# 切街標題卡：牌坊橫幅＋街名（1.8 秒，淡入淡出；有治安卡就唔出，避免疊住）
 	if str(_title.st) != street: _title = {"st": street, "t0": now}
@@ -129,8 +145,11 @@ static func tap(sc, p: Vector2) -> bool:
 	var sim = sc.sim; var street = MK.cur()
 	for k in sc._btns.keys():
 		var ks = str(k)
-		if not (ks.begins_with("mko:") or ks.begins_with("mkoe:")) or not sc._btns[k].has_point(p): continue
+		if not (ks.begins_with("mko:") or ks.begins_with("mkoe:") or ks.begins_with("mkog:")) or not sc._btns[k].has_point(p): continue
 		if ks.begins_with("mkoe:"): MKO.handle_event(sim, int(ks.substr(5)))
+		elif ks.begins_with("mkog:"):
+			for e in MKO.events(street):
+				if int(e.id) == int(ks.substr(5)) and sc.has_method("focus"): var wp = ev_pos(sc, e); sc.focus(wp.y, float(sc.top_pad) + float(sc.view_h()) * 0.62, wp.x)
 		elif ks == "mko:till": MKO.collect(sim, street, "tap")
 		elif ks == "mko:ctr" or ks == "mko:pat": open_panel(sc, ks.substr(4))
 		sc._snd("click")
@@ -434,43 +453,61 @@ static func _wl2(sc, t: String, sz: int, col: Color, w := 700) -> Label:
 # ============================ 貨架卡（攤位資料卡入面） ============================
 static func slots(sim, sid: String) -> int: return MKO.staff_slots(sid, sim.lv(sid)) if MKO.on() else MD.slots(sid)
 static func _good_n(gid: String) -> String: return MD.T(MD.good_def(gid).get("n", [gid, gid]))
-static func sheet_rows(sc, box, sid: String) -> void:
+static func sheet_rows(sc, box, sid: String) -> void:   # 攤位資料卡入面：一行摘要＋「調整」掣（詳細喺貨架面板，唔好撐爆資料卡）
 	if not MKO.on(): return
-	var sim = sc.sim; var c = sim.ci()
-	var pc = PanelContainer.new(); pc.add_theme_stylebox_override("panel", UIKit.sb(Color(0.3, 0.2, 0.08, 0.1), 8, sc.LINE, 1, Vector4(10, 6, 10, 8)))
+	var pc = PanelContainer.new(); pc.add_theme_stylebox_override("panel", UIKit.sb(Color(0.3, 0.2, 0.08, 0.1), 8, sc.LINE, 1, Vector4(10, 4, 6, 4)))
 	box.add_child(pc)
-	var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 4); pc.add_child(v)
+	var h = HBoxContainer.new(); h.add_theme_constant_override("separation", 6); pc.add_child(h)
 	var g1 = MKO.good_of(sid); var g2 = MKO.sub_of(sid)
-	v.add_child(sc._lbl(L("貨架", "貨架"), 17, sc.INK, "serif", 900))
-	var main_l = sc._lbl(L("主貨：%s", "主貨：%s") % _good_n(g1), 16, sc.INK, "sans", 900); main_l.clip_text = true; main_l.custom_minimum_size = Vector2(326, 0); v.add_child(main_l)
-	if not MKO.sub_open(sid):
-		v.add_child(_wl2(sc, L("副貨：升到 Lv%d 解鎖（同時多 1 個夥計位）", "副貨：升到 Lv%d 解鎖（同時多 1 個店員位）") % int(MKO.cf("goods2", "lv", 25.0)), 15, sc.DIMC))
-		return
+	var t = L("貨架　主：%s", "貨架　主：%s") % _good_n(g1)
+	if not MKO.sub_open(sid): t += L("　副：Lv%d 開", "　副：Lv%d 解鎖") % int(MKO.cf("goods2", "lv", 25.0))
+	else: t += L("　副：%s", "　副：%s") % (_good_n(g2) if g2 != "" else L("未揀", "未選"))
+	var l = sc._lbl(t, 15, sc.INK, "sans", 900); l.clip_text = true; l.size_flags_horizontal = Control.SIZE_EXPAND_FILL; l.custom_minimum_size = Vector2(120, 0); h.add_child(l)
+	var b = UIKit.btn(L("調整貨架", "調整貨架"), "", true); b.custom_minimum_size = Vector2(104, 40); b.focus_mode = Control.FOCUS_NONE
+	b.disabled = not MKO.sub_open(sid)
+	b.pressed.connect(func(): sc._snd("click"); open_shelf(sc, sid)); h.add_child(b)
+
+static func open_shelf(sc, sid: String) -> void:   # 貨架面板：主貨／副貨、揀副貨、產能分配、智能補貨
+	var sim = sc.sim; var c = sim.ci()
+	_panel = "shelf"
+	sc.sel = ""; sc.sheet.visible = true
+	var box = sc.sheet_box; _clear(box)
+	var h = HBoxContainer.new(); h.add_theme_constant_override("separation", 8); box.add_child(h)
+	var tl = sc._lbl("%s・%s" % [MD.T(MD.st_def(sid).get("n", sid)), L("貨架", "貨架")], 21, sc.INK, "serif", 900); tl.clip_text = true; tl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; h.add_child(tl)
+	var cb = UIKit.btn("✕", "ghost", true); cb.custom_minimum_size = Vector2(42, 40); cb.focus_mode = Control.FOCUS_NONE
+	cb.pressed.connect(func(): _panel = ""; sc.open_sheet(sid)); h.add_child(cb)
+	var v = box
+	var g1 = MKO.good_of(sid); var g2 = MKO.sub_of(sid)
+	var main_l = sc._lbl(L("主貨：%s", "主貨：%s") % _good_n(g1), 17, sc.INK, "sans", 900); main_l.clip_text = true; main_l.custom_minimum_size = Vector2(340, 0); v.add_child(main_l)
 	var sw = float(MKO.st().swap.get(sid, 0.0))
-	var sub_t = (L("副貨：%s", "副貨：%s") % _good_n(g2)) if g2 != "" else L("副貨：未揀", "副貨：還沒選")
+	var sub_t = (L("副貨：%s", "副貨：%s") % _good_n(g2)) if g2 != "" else L("副貨：未揀（下面揀一樣）", "副貨：還沒選（在下面選一樣）")
 	if sw > 0.0: sub_t += L("（換貨中 %d 秒）", "（換貨中 %d 秒）") % int(ceil(sw))
-	var sub_l = sc._lbl(sub_t, 16, sc.RED if sw > 0.0 else sc.INK, "sans", 900); sub_l.clip_text = true; sub_l.custom_minimum_size = Vector2(326, 0); v.add_child(sub_l)
+	var sub_l = sc._lbl(sub_t, 17, sc.RED if sw > 0.0 else sc.INK, "sans", 900); sub_l.clip_text = true; sub_l.custom_minimum_size = Vector2(340, 0); v.add_child(sub_l)
+	v.add_child(_wl(sc, L("同一個檔可以賣兩樣貨，夥計共用。換貨免費，換完停 10 秒。", "同一個攤可以賣兩樣貨，店員共用。換貨免費，換完停 10 秒。"), 14, sc.DIMC))
 	var grid = GridContainer.new(); grid.columns = 2; grid.add_theme_constant_override("h_separation", 6); grid.add_theme_constant_override("v_separation", 6); v.add_child(grid)
 	var opts = MKO.sub_choices(c, sid)
 	if g2 != "" and not opts.has(g2): opts.push_front(g2)
 	for g in opts:
 		var gg = str(g)
-		var b = _btn(_good_n(gg), "gold" if gg == g2 else "", 44.0); b.custom_minimum_size = Vector2(160, 44); b.disabled = gg == g2
-		b.pressed.connect(func(): MKO.set_sub(c, sid, gg); sc._save(); sc._snd("click"); sc._fill_sheet())
+		var b = _btn(_good_n(gg), "gold" if gg == g2 else "", 46.0); b.custom_minimum_size = Vector2(168, 46); b.disabled = gg == g2
+		b.pressed.connect(func(): MKO.set_sub(c, sid, gg); sc._save(); sc._snd("click"); open_shelf(sc, sid))
 		grid.add_child(b)
 	if g2 != "":
-		var nb = _btn(L("唔賣副貨", "不賣副貨"), "ghost", 44.0); nb.custom_minimum_size = Vector2(160, 44)
-		nb.pressed.connect(func(): MKO.set_sub(c, sid, ""); sc._save(); sc._snd("click"); sc._fill_sheet())
+		var nb = _btn(L("唔賣副貨", "不賣副貨"), "ghost", 46.0); nb.custom_minimum_size = Vector2(168, 46)
+		nb.pressed.connect(func(): MKO.set_sub(c, sid, ""); sc._save(); sc._snd("click"); open_shelf(sc, sid))
 		grid.add_child(nb)
-		v.add_child(sc._lbl(L("做貨分配（換貨免費，換完停 10 秒）", "產能分配（換貨免費，換完停 10 秒）"), 14, sc.DIMC, "sans", 700))
+		v.add_child(sc._lbl(L("做貨分配", "產能分配"), 15, sc.DIMC, "sans", 900))
 		var rr = HBoxContainer.new(); rr.add_theme_constant_override("separation", 6); v.add_child(rr)
 		var cur = MKO.ratio(sid)
 		for pr in [[0.3, L("主貨多", "主貨多")], [0.5, L("各一半", "各一半")], [0.7, L("副貨多", "副貨多")]]:
 			var rv = float(pr[0])
-			var rb = _btn(str(pr[1]), "gold" if absf(cur - rv) < 0.05 else "", 44.0); rb.add_theme_font_size_override("font_size", 15)
-			rb.pressed.connect(func(): MKO.set_ratio(sid, rv); sc._save(); sc._snd("click"); sc._fill_sheet())
+			var rb = _btn(str(pr[1]), "gold" if absf(cur - rv) < 0.05 else "", 46.0)
+			rb.pressed.connect(func(): MKO.set_ratio(sid, rv); sc._save(); sc._snd("click"); open_shelf(sc, sid))
 			rr.add_child(rb)
 		var sm = MKO.smart(sid)
-		var sb2 = _btn((L("智能補貨：開（邊格缺貨先做邊格）", "智能補貨：開（哪格缺貨先做哪格）") if sm else L("智能補貨：關（照上面比例）", "智能補貨：關（照上面比例）")), "" if sm else "ghost", 44.0); sb2.add_theme_font_size_override("font_size", 15)
-		sb2.pressed.connect(func(): MKO.set_smart(sid, not sm); sc._save(); sc._snd("click"); sc._fill_sheet())
+		var sb2 = _btn((L("智能補貨：開（邊格缺貨先做邊格）", "智能補貨：開（哪格缺貨先做哪格）") if sm else L("智能補貨：關（照上面分配）", "智能補貨：關（照上面分配）")), "" if sm else "ghost", 46.0); sb2.add_theme_font_size_override("font_size", 15)
+		sb2.pressed.connect(func(): MKO.set_smart(sid, not sm); sc._save(); sc._snd("click"); open_shelf(sc, sid))
 		v.add_child(sb2)
+	sc._ui_sync()
+	await sc.get_tree().process_frame
+	if is_instance_valid(sc) and is_instance_valid(sc.sheet) and sc.sheet.visible: sc._place_sheet()
