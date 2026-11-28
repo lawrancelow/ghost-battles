@@ -52,6 +52,8 @@ static func where(g) -> String:
 		if l.begins_with("fore:"): return T("%s領班", "%s領班") % MD.T(MD.st_def(l.substr(5)).get("n"))
 		return T("%s員工", "%s員工") % MD.T(MD.st_def(l).get("n"))
 	var PO = J.G.get("POSTS")
+	var BD = J.G.get("BUILDINGS")   # [p56] 村子崗位講建築名（「包子鋪」），唔講舊崗位名（「包壽包」）
+	if PO is Dictionary and PO.has(p) and BD is Dictionary and BD.has(str(PO[p].get("bld", ""))) and p != "boss": return str(BD[str(PO[p].bld)].get("name", p))
 	if PO is Dictionary and PO.has(p): return str(PO[p].get("name", p))
 	return p
 
